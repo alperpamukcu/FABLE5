@@ -45,6 +45,9 @@ namespace LastCall.DebugUI
         private RectTransform _shopPanel;
         private RectTransform _shopOffersPanel;
         private Text _shopTitle;
+        private RectTransform _recipePanel;
+        private Text _recipeText;
+        private bool _recipesVisible;
         private Button _mixButton;
         private Button _restockButton;
         private InputField _seedInput;
@@ -189,6 +192,12 @@ namespace LastCall.DebugUI
 
         private void OnNewRunClicked() => _bootstrap.StartNewRun(_seedInput.text);
 
+        private void OnToggleRecipesClicked()
+        {
+            _recipesVisible = !_recipesVisible;
+            RenderAll();
+        }
+
         /// <summary>Debug UI stays alive on misuse: rule violations land in the log instead of the console.</summary>
         private void Guarded(Action action)
         {
@@ -232,6 +241,7 @@ namespace LastCall.DebugUI
             RenderPatrons();
             RenderTools();
             RenderShop();
+            RenderRecipeBook();
             RenderBanner();
 
             bool inRound = Run.Phase == RunPhase.CustomerRound;
@@ -337,6 +347,58 @@ namespace LastCall.DebugUI
             var next = NewButton("Continue", _shopOffersPanel,
                 "Next customer →", new Color(0.30f, 0.55f, 0.30f), OnContinueClicked, 13);
             SetRowHeight(next, 30);
+        }
+
+        // ─────────────────────────────── recipe book ───────────────────────────────
+
+        /// <summary>
+        /// The casual-player teaching surface (GDD 10.2): every recipe as a color-coded
+        /// Type pattern — no cocktail knowledge needed, just match the dots.
+        /// </summary>
+        private void RenderRecipeBook()
+        {
+            _recipePanel.gameObject.SetActive(_recipesVisible);
+            if (!_recipesVisible) return;
+
+            var lines = new List<string>
+            {
+                "<b>Legend:</b>  " + string.Join("  ",
+                    TypeColors.Keys.Select(t => $"{TypeDot(t)} {t}")),
+                ""
+            };
+
+            foreach (var recipe in Run.Recipes.OrderBy(r => r.Rank))
+            {
+                int level = Run.RecipeLevelOf(recipe.Id);
+                lines.Add($"{PatternDots(recipe)}  <b>{recipe.Name}</b> (Lv{level})  " +
+                          $"{recipe.FlavorAtLevel(level)} × {recipe.MultAtLevel(level)}{ConstraintText(recipe)}");
+            }
+
+            lines.Add("");
+            lines.Add("Pick any 1–5 cards — the bar auto-detects the best recipe.");
+            lines.Add("Cards outside the pattern still get played but add no Flavor.");
+            _recipeText.text = string.Join("\n", lines);
+        }
+
+        private string TypeDot(IngredientType type) =>
+            $"<color=#{ColorUtility.ToHtmlStringRGB(TypeColors[type])}>●</color>";
+
+        private string PatternDots(RecipeDefinition recipe)
+        {
+            var parts = new List<string>();
+            foreach (var req in recipe.Requirements)
+                for (int i = 0; i < req.Count; i++)
+                    parts.Add(string.Join("/", req.Types.Select(TypeDot)));
+            return string.Join(" ", parts);
+        }
+
+        private static string ConstraintText(RecipeDefinition recipe)
+        {
+            if (recipe.AllEqualFlavor) return "  — 5 different types, all the same number";
+            if (recipe.AllDistinctTypes) return "  — exactly 5 cards, all different types";
+            if (recipe.MinMixSize >= 5) return "  + any 5th card";
+            if (recipe.ExactMixSize == 1) return "  — played alone";
+            return string.Empty;
         }
 
         private void RenderBanner()
@@ -446,6 +508,21 @@ namespace LastCall.DebugUI
             shopLayout.childControlHeight = true;
             shopLayout.childControlWidth = true;
             _shopPanel.gameObject.SetActive(false);
+
+            // Recipe Book overlay (created after the shop so it draws on top).
+            var recipesButton = NewButton("RecipesToggle", root, "RECIPES",
+                new Color(0.80f, 0.68f, 0.42f), OnToggleRecipesClicked, 14);
+            Place((RectTransform)recipesButton.transform, new Vector2(0.5f, 1), new Vector2(120, 30), new Vector2(0, -12));
+
+            _recipePanel = NewRect("RecipePanel", root);
+            Place(_recipePanel, new Vector2(0.5f, 0.5f), new Vector2(660, 440), new Vector2(-60, 10));
+            _recipePanel.gameObject.AddComponent<Image>().color = new Color(0.08f, 0.06f, 0.12f, 0.97f);
+            var recipeTitle = NewText("RecipeTitle", _recipePanel, 18, TextAnchor.MiddleCenter, new Color(1f, 0.9f, 0.6f));
+            recipeTitle.text = "RECIPE BOOK";
+            Stretch((RectTransform)recipeTitle.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(8, -38), new Vector2(-8, -6));
+            _recipeText = NewText("RecipeText", _recipePanel, 15, TextAnchor.UpperLeft, new Color(0.92f, 0.92f, 0.88f));
+            Stretch((RectTransform)_recipeText.transform, Vector2.zero, Vector2.one, new Vector2(16, 10), new Vector2(-16, -44));
+            _recipePanel.gameObject.SetActive(false);
 
             _previewText = NewText("Preview", root, 20, TextAnchor.MiddleCenter, new Color(1f, 0.95f, 0.75f));
             var previewRt = (RectTransform)_previewText.transform;

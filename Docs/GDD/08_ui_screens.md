@@ -12,13 +12,14 @@
 - **Left panel (fixed):** Customer portrait + speech bubble, required score, current score progress bar, Mixes remaining, Restocks remaining, Tips ($), Night number, Recipe preview panel (live-updates: shows which Recipe the current selection forms, and its Flavor × Mult).
 - **Center:** the bar counter. Selected ingredients slide to the counter; on MIX, a shaker animation plays, cards flip/score one by one with rising numbers, glass fills, final score slams into the progress bar.
 - **Bottom:** the Rail — 8 ingredient cards, fanned. Sort toggles: by Flavor / by Type. Buttons: **MIX** (big, warm gold) and **RESTOCK** (smaller, cool gray). Cabinet pile (deck viewer on click) bottom-right; Tool slots (2) bottom-left.
+- **RECIPES button (book icon, always visible, hotkey R):** toggles the **Recipe Book overlay** — the full recipe table as **color-coded Type patterns** (e.g. ●amber ●green ●pink = Sour), each with its current Level and base Flavor × Mult. Cocktail names are secondary flavor text; the pattern icons are the primary read. Design rule: the game must be fully learnable by color-matching alone — **zero real-world cocktail knowledge is ever required** (players never declare a recipe; the engine auto-matches the best one, and the live preview shows the result before committing).
 - **Hover/inspect:** every card and Patron shows a tooltip with full rules text. Right-click = zoom inspect.
 
 ### 10.3 Back Room (shop) screen
 Wooden shelf backdrop; item cards on shelves with price tags; NEXT CUSTOMER button (door with neon EXIT sign); reroll = cash register bell.
 
 ### 10.4 Pause menu (ESC)
-Resume / Run Info (current VIP pool, deck list, stats) / Settings / Abandon Run (confirm) / Quit to Menu. Game auto-saves every state change; pause is safe anywhere.
+Resume / Run Info (current VIP pool, deck list, **Recipe Book with current levels**, stats) / Settings / Abandon Run (confirm) / Quit to Menu. Game auto-saves every state change; pause is safe anywhere.
 
 ### 10.5 Game Over / Victory screens
 Show: Nights survived, best hand score, most-mixed recipe, money earned, defeat cause (which customer), full Patron lineup, "New discoveries" toasts, buttons: NEW RUN (same setup) / MAIN MENU. Victory adds the winning drink stamped on a polaroid.
