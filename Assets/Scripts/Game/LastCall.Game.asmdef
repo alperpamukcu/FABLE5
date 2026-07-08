@@ -1,0 +1,16 @@
+{
+    "name": "LastCall.Game",
+    "rootNamespace": "LastCall.Game",
+    "references": [
+        "LastCall.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
