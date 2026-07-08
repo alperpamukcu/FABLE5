@@ -114,6 +114,33 @@ namespace LastCall.Game
             return patrons;
         }
 
+        public static IReadOnlyList<ToolDefinition> ParseTools(string json)
+        {
+            var dto = FromJson<ToolsFileDto>(json, "tools");
+            if (dto.tools == null || dto.tools.Count == 0)
+                throw new FormatException("Tools file contains no tools.");
+
+            var tools = new List<ToolDefinition>(dto.tools.Count);
+            foreach (var tool in dto.tools)
+            {
+                if (string.IsNullOrWhiteSpace(tool.id))
+                    throw new FormatException("Tools file has a tool with an empty id.");
+
+                var op = ParseEnum<ToolOp>(tool.op, tool.id, "op");
+                var enhancement = string.IsNullOrEmpty(tool.enhancement)
+                    ? Enhancement.None
+                    : ParseEnum<Enhancement>(tool.enhancement, tool.id, "enhancement");
+                IngredientType convertTo = default;
+                if (!string.IsNullOrEmpty(tool.convertTo)) convertTo = ParseType(tool.convertTo, tool.id);
+                if (op == ToolOp.ConvertType && string.IsNullOrEmpty(tool.convertTo))
+                    throw new FormatException($"Tool '{tool.id}' converts type but has no convertTo.");
+
+                tools.Add(new ToolDefinition(tool.id, tool.name, tool.cost, op, tool.maxTargets,
+                    enhancement, convertTo, tool.description));
+            }
+            return tools;
+        }
+
         private static EffectCondition ParseCondition(ConditionDto dto, string context)
         {
             if (dto == null || string.IsNullOrEmpty(dto.kind)) return EffectCondition.Always;
@@ -231,6 +258,26 @@ namespace LastCall.Game
         {
             public int version;
             public List<PatronDto> patrons;
+        }
+
+        [Serializable]
+        private sealed class ToolDto
+        {
+            public string id;
+            public string name;
+            public int cost;
+            public string op;
+            public string enhancement;
+            public string convertTo;
+            public int maxTargets;
+            public string description;
+        }
+
+        [Serializable]
+        private sealed class ToolsFileDto
+        {
+            public int version;
+            public List<ToolDto> tools;
         }
 #pragma warning restore 0649
     }

@@ -120,6 +120,53 @@ namespace LastCall.Core
             return breakdown;
         }
 
+        /// <summary>
+        /// Applies a single-use Tool to rail cards (GDD 7.3). Consuming the tool from the
+        /// inventory is the run layer's job. Destroyed cards leave the run for good (they
+        /// never return to the deck); copies join the rail and get discarded into the deck
+        /// with it, becoming permanent.
+        /// </summary>
+        public void ApplyTool(ToolDefinition tool, IReadOnlyList<IngredientCard> targets)
+        {
+            if (tool == null) throw new ArgumentNullException(nameof(tool));
+            EnsureRoundInProgress();
+            ValidateToolTargets(tool, targets);
+
+            switch (tool.Op)
+            {
+                case ToolOp.Enhance:
+                    foreach (var card in targets) card.Enhance(tool.Enhancement);
+                    break;
+                case ToolOp.Destroy:
+                    foreach (var card in targets) _rail.Remove(card);
+                    break;
+                case ToolOp.Copy:
+                    foreach (var card in targets)
+                        _rail.Insert(_rail.IndexOf(card) + 1, card.Clone());
+                    break;
+                case ToolOp.ConvertType:
+                    foreach (var card in targets) card.ConvertType(tool.ConvertTo);
+                    break;
+            }
+        }
+
+        private void ValidateToolTargets(ToolDefinition tool, IReadOnlyList<IngredientCard> targets)
+        {
+            if (targets == null || targets.Count == 0)
+                throw new ArgumentException("Select at least one card.", nameof(targets));
+            if (targets.Count > tool.MaxTargets)
+                throw new ArgumentException($"{tool.Name} targets at most {tool.MaxTargets} card(s).", nameof(targets));
+
+            var seen = new HashSet<IngredientCard>();
+            foreach (var card in targets)
+            {
+                if (!seen.Add(card))
+                    throw new ArgumentException($"Card '{card.Name}' selected twice.", nameof(targets));
+                if (!_rail.Contains(card))
+                    throw new ArgumentException($"Card '{card.Name}' is not on the rail.", nameof(targets));
+            }
+        }
+
         /// <summary>Discards the selection and draws replacements.</summary>
         public void Restock(IReadOnlyList<IngredientCard> selection)
         {

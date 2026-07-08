@@ -141,6 +141,27 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void ToolsJson_LoadsAllFiveStarters()
+        {
+            var tools = DataLoader.ParseTools(ReadDataFile("tools/tools.json"));
+
+            Assert.AreEqual(5, tools.Count);
+            CollectionAssert.AllItemsAreUnique(tools.Select(t => t.Id).ToList());
+            Assert.IsTrue(tools.All(t => t.Cost == 3), "GDD 7.1: Tools cost $3");
+
+            var icePick = tools.Single(t => t.Id == "ice_pick");
+            Assert.AreEqual(ToolOp.Destroy, icePick.Op);
+            Assert.AreEqual(2, icePick.MaxTargets);
+
+            var muddler = tools.Single(t => t.Id == "muddler");
+            Assert.AreEqual(Enhancement.Infused, muddler.Enhancement);
+
+            var press = tools.Single(t => t.Id == "citrus_press");
+            Assert.AreEqual(ToolOp.ConvertType, press.Op);
+            Assert.AreEqual(IngredientType.Sour, press.ConvertTo);
+        }
+
+        [Test]
         public void ParsePatrons_UnknownTrigger_Throws()
         {
             const string json = "{\"version\":1,\"patrons\":[{\"id\":\"bad\",\"name\":\"Bad\",\"rarity\":\"Common\",\"cost\":4,\"description\":\"\",\"effects\":[{\"trigger\":\"OnFullMoon\",\"op\":\"AddMult\",\"value\":1,\"valueSource\":\"Constant\",\"condition\":{\"kind\":\"Always\",\"type\":\"\",\"intValue\":0,\"recipeIds\":[]}}]}]}";

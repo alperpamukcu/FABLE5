@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "tools": [
+    {
+      "id": "muddler", "name": "Muddler", "cost": 3,
+      "op": "Enhance", "enhancement": "Infused", "convertTo": "", "maxTargets": 2,
+      "description": "Infuse up to 2 cards (+40 Flavor when scored)."
+    },
+    {
+      "id": "jigger", "name": "Jigger", "cost": 3,
+      "op": "Enhance", "enhancement": "Overproof", "convertTo": "", "maxTargets": 1,
+      "description": "Turn a card Overproof (+4 Mult when scored)."
+    },
+    {
+      "id": "ice_pick", "name": "Ice Pick", "cost": 3,
+      "op": "Destroy", "enhancement": "", "convertTo": "", "maxTargets": 2,
+      "description": "Destroy up to 2 cards."
+    },
+    {
+      "id": "citrus_press", "name": "Citrus Press", "cost": 3,
+      "op": "ConvertType", "enhancement": "", "convertTo": "Sour", "maxTargets": 3,
+      "description": "Convert up to 3 cards to Sour."
+    },
+    {
+      "id": "bar_spoon", "name": "Bar Spoon", "cost": 3,
+      "op": "Copy", "enhancement": "", "convertTo": "", "maxTargets": 1,
+      "description": "Copy a card."
+    }
+  ]
+}

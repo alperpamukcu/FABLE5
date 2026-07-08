@@ -79,6 +79,20 @@ namespace LastCall.Core
                     break;
             }
 
+            switch (card.Enhancement)
+            {
+                case Enhancement.Infused:
+                    flavor += 40;
+                    steps.Add(new ScoreStep($"{card.Name} (Infused)", EffectOp.AddFlavor, 40, flavor, mult));
+                    break;
+                case Enhancement.Overproof:
+                    mult += 4;
+                    steps.Add(new ScoreStep($"{card.Name} (Overproof)", EffectOp.AddMult, 4, flavor, mult));
+                    break;
+                // Premium is a matcher concern; Frozen/Doubled/Golden resolve in the round/run
+                // layer — all arrive with the M3 tools that create them.
+            }
+
             int retriggers = 0;
             foreach (var patron in patrons)
             {
