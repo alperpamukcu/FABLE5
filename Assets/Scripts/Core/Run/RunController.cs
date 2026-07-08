@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LastCall.Core
 {
@@ -26,6 +27,10 @@ namespace LastCall.Core
         private readonly RunRng _rng;
         private readonly List<PatronInstance> _patrons;
         private readonly Dictionary<string, int> _recipeLevels = new Dictionary<string, int>();
+        private readonly IReadOnlyList<PatronDefinition> _patronPool;
+        private readonly IReadOnlyList<ToolDefinition> _toolPool;
+        private readonly List<ToolDefinition> _tools = new List<ToolDefinition>();
+        private bool _firstShopOpened;
 
         public RunConfig Config { get; }
         public int Night { get; private set; } = 1;
@@ -42,12 +47,21 @@ namespace LastCall.Core
 
         public IReadOnlyDictionary<string, int> RecipeLevels => _recipeLevels;
 
+        /// <summary>Single-use consumables held (GDD 7.3, max <see cref="RunConfig.MaxToolSlots"/>).</summary>
+        public IReadOnlyList<ToolDefinition> ToolInventory => _tools;
+
+        /// <summary>The current Back Room inventory; non-null only during the BackRoom phase.</summary>
+        public ShopState Shop { get; private set; }
+
         public RunController(IEnumerable<IngredientCard> cards, IReadOnlyList<RecipeDefinition> recipes,
-            RunRng rng, IEnumerable<PatronInstance> patrons = null, RunConfig config = null)
+            RunRng rng, IEnumerable<PatronInstance> patrons = null, RunConfig config = null,
+            IReadOnlyList<PatronDefinition> patronPool = null, IReadOnlyList<ToolDefinition> toolPool = null)
         {
             _recipes = recipes ?? throw new ArgumentNullException(nameof(recipes));
             _rng = rng ?? throw new ArgumentNullException(nameof(rng));
             _patrons = patrons != null ? new List<PatronInstance>(patrons) : new List<PatronInstance>();
+            _patronPool = patronPool ?? Array.Empty<PatronDefinition>();
+            _toolPool = toolPool ?? Array.Empty<ToolDefinition>();
             Config = config ?? RunConfig.Default;
             Money = Config.StartingMoney;
             _deck = new Deck(cards);
@@ -72,10 +86,81 @@ namespace LastCall.Core
             CurrentRound.Restock(selection);
         }
 
+        /// <summary>Uses a held Tool on rail cards during the current customer round.</summary>
+        public void UseTool(ToolDefinition tool, IReadOnlyList<IngredientCard> targets)
+        {
+            EnsurePhase(RunPhase.CustomerRound);
+            if (!_tools.Contains(tool))
+                throw new InvalidOperationException($"'{tool?.Name}' is not in the tool inventory.");
+
+            CurrentRound.ApplyTool(tool, targets);
+            _tools.Remove(tool); // single-use
+        }
+
+        /// <summary>Buys the shop offer at <paramref name="index"/> (Back Room only).</summary>
+        public void BuyOffer(int index)
+        {
+            EnsurePhase(RunPhase.BackRoom);
+            if (index < 0 || index >= Shop.Offers.Count)
+                throw new ArgumentOutOfRangeException(nameof(index));
+            var offer = Shop.Offers[index];
+            if (offer.Sold) throw new InvalidOperationException("Offer already sold.");
+            if (Money < offer.Price)
+                throw new InvalidOperationException($"Not enough money (${Money} < ${offer.Price}).");
+
+            switch (offer.Kind)
+            {
+                case ShopOfferKind.Patron:
+                    if (_patrons.Count >= Config.MaxPatronSlots)
+                        throw new InvalidOperationException("All patron slots are taken.");
+                    if (_patrons.Exists(p => p.Definition.Id == offer.Patron.Id))
+                        throw new InvalidOperationException($"{offer.Patron.Name} already sits at the bar.");
+                    _patrons.Add(new PatronInstance(offer.Patron));
+                    break;
+                case ShopOfferKind.Tool:
+                    if (_tools.Count >= Config.MaxToolSlots)
+                        throw new InvalidOperationException("Tool inventory is full.");
+                    _tools.Add(offer.Tool);
+                    break;
+                case ShopOfferKind.Book:
+                    _recipeLevels[offer.Recipe.Id] = RecipeLevelOf(offer.Recipe.Id) + 1;
+                    break;
+            }
+
+            Money -= offer.Price;
+            offer.MarkSold();
+        }
+
+        /// <summary>Rerolls the shop for its escalating fee (GDD 7: $5, +$1 per reroll).</summary>
+        public void RerollShop()
+        {
+            EnsurePhase(RunPhase.BackRoom);
+            if (Money < Shop.RerollCost)
+                throw new InvalidOperationException($"Not enough money (${Money} < ${Shop.RerollCost}).");
+
+            Money -= Shop.RerollCost;
+            Shop.Reroll();
+        }
+
+        /// <summary>Sells a patron for half price, rounded up (GDD 8).</summary>
+        public void SellPatron(PatronInstance patron)
+        {
+            if (Phase != RunPhase.CustomerRound && Phase != RunPhase.BackRoom)
+                throw new InvalidOperationException($"Run is over ({Phase}).");
+            if (!_patrons.Remove(patron))
+                throw new InvalidOperationException("That patron is not at the bar.");
+
+            Money += (patron.Definition.Cost + 1) / 2;
+        }
+
+        public int RecipeLevelOf(string recipeId) =>
+            _recipeLevels.TryGetValue(recipeId, out int level) ? level : 1;
+
         /// <summary>Leaves the Back Room and deals the next customer.</summary>
         public void ContinueToNextCustomer()
         {
             EnsurePhase(RunPhase.BackRoom);
+            Shop = null;
 
             if (Slot == CustomerSlot.Vip)
             {
@@ -115,7 +200,19 @@ namespace LastCall.Core
 
             bool runComplete = Night == Config.Nights && Slot == CustomerSlot.Vip;
             Phase = runComplete ? RunPhase.RunWon : RunPhase.BackRoom;
+            if (Phase == RunPhase.BackRoom) OpenShop();
         }
+
+        private void OpenShop()
+        {
+            Shop = new ShopState(_rng.GetStream("shop"), PatronCandidates, _toolPool, _recipes,
+                Config.ShopSlots, Config.BookPrice, Config.RerollBaseCost,
+                firstShopOfRun: !_firstShopOpened);
+            _firstShopOpened = true;
+        }
+
+        private IReadOnlyList<PatronDefinition> PatronCandidates() =>
+            _patronPool.Where(p => !_patrons.Exists(owned => owned.Definition.Id == p.Id)).ToList();
 
         private void StartCustomer()
         {
