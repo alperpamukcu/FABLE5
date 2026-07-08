@@ -1,52 +1,48 @@
 using System;
-using System.Linq;
 using LastCall.Core;
 using UnityEngine;
 
 namespace LastCall.Game
 {
     /// <summary>
-    /// Owns the game state in play mode: loads the data files and (re)starts customer
-    /// rounds. The M1 debug HUD renders and drives <see cref="Round"/> through this.
+    /// Owns the game state in play mode: loads the data files and (re)starts full runs
+    /// (8 Nights, GDD 5.1). The M1/M2 debug HUD renders and drives <see cref="Run"/>.
     /// </summary>
     public sealed class GameBootstrap : MonoBehaviour
     {
         [SerializeField] private TextAsset deckJson;
         [SerializeField] private TextAsset recipesJson;
+        [SerializeField] private TextAsset patronsJson;
+        [SerializeField] private TextAsset toolsJson;
         [SerializeField] private string seed = "LASTCALL-DEV";
-        [SerializeField] private string customerName = "First Regular";
-        [SerializeField] private double targetScore = 300;
 
-        public RoundController Round { get; private set; }
-        public RunRng Rng { get; private set; }
+        public RunController Run { get; private set; }
         public string CurrentSeed { get; private set; }
 
-        /// <summary>Raised after a new round is dealt (including the initial one).</summary>
-        public event Action RoundStarted;
+        /// <summary>Raised after a new run is dealt (including the initial one).</summary>
+        public event Action RunStarted;
 
         private void Start()
         {
-            StartNewRound(seed, targetScore);
+            StartNewRun(seed);
         }
 
-        /// <summary>Deals a fresh round. Null/empty seed keeps the inspector default.</summary>
-        public void StartNewRound(string newSeed, double newTarget)
+        /// <summary>Starts a fresh run. Null/empty seed keeps the inspector default.</summary>
+        public void StartNewRun(string newSeed)
         {
             CurrentSeed = string.IsNullOrWhiteSpace(newSeed) ? seed : newSeed.Trim();
-            if (newTarget <= 0) newTarget = targetScore;
 
-            var loadedDeck = DataLoader.ParseDeck(deckJson.text);
+            var deck = DataLoader.ParseDeck(deckJson.text);
             var recipes = DataLoader.ParseRecipes(recipesJson.text);
+            var patronPool = DataLoader.ParsePatrons(patronsJson.text);
+            var toolPool = DataLoader.ParseTools(toolsJson.text);
 
-            Rng = new RunRng(CurrentSeed);
-            var deck = new Deck(loadedDeck.Cards);
-            deck.Shuffle(Rng.GetStream("deck"));
+            Run = new RunController(deck.Cards, recipes, new RunRng(CurrentSeed),
+                patronPool: patronPool, toolPool: toolPool);
 
-            Round = new RoundController(deck, recipes, new CustomerOrder(customerName, newTarget));
-
-            string rail = string.Join(", ", Round.Rail.Select(c => c.ToString()));
-            Debug.Log($"[LastCall] Seed '{CurrentSeed}' — {Round.Customer.Name} wants {Round.Customer.TargetScore}. Rail: {rail}");
-            RoundStarted?.Invoke();
+            Debug.Log($"[LastCall] Run started — seed '{CurrentSeed}', " +
+                      $"{Run.CurrentRound.Customer.Name} wants {Run.CurrentRound.Customer.TargetScore}, wallet ${Run.Money}.");
+            RunStarted?.Invoke();
         }
     }
 }

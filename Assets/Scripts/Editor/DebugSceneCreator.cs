@@ -16,6 +16,8 @@ namespace LastCall.EditorTools
         private const string ScenePath = "Assets/Scenes/Main.unity";
         private const string DeckPath = "Assets/Data/decks/classic_bar.json";
         private const string RecipesPath = "Assets/Data/recipes/recipes.json";
+        private const string PatronsPath = "Assets/Data/patrons/patrons.json";
+        private const string ToolsPath = "Assets/Data/tools/tools.json";
 
         [MenuItem("LastCall/Create Debug Scene")]
         public static void CreateDebugScene()
@@ -38,6 +40,8 @@ namespace LastCall.EditorTools
             var so = new SerializedObject(bootstrap);
             so.FindProperty("deckJson").objectReferenceValue = LoadRequired<TextAsset>(DeckPath);
             so.FindProperty("recipesJson").objectReferenceValue = LoadRequired<TextAsset>(RecipesPath);
+            so.FindProperty("patronsJson").objectReferenceValue = LoadRequired<TextAsset>(PatronsPath);
+            so.FindProperty("toolsJson").objectReferenceValue = LoadRequired<TextAsset>(ToolsPath);
             so.ApplyModifiedPropertiesWithoutUndo();
             game.AddComponent<DebugHud>();
 
