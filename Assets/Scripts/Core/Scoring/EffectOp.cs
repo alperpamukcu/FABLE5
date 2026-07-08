@@ -13,6 +13,8 @@ namespace LastCall.Core
         Retrigger,
         CreateCard,
         DestroyCard,
-        TransformCard
+        TransformCard,
+        /// <summary>Engine-internal: bump a patron's run-scoped counter (scaling patrons).</summary>
+        Accumulate
     }
 }

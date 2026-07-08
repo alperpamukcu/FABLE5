@@ -79,6 +79,57 @@ namespace LastCall.Game
             return recipes;
         }
 
+        public static IReadOnlyList<PatronDefinition> ParsePatrons(string json)
+        {
+            var dto = FromJson<PatronsFileDto>(json, "patrons");
+            if (dto.patrons == null || dto.patrons.Count == 0)
+                throw new FormatException("Patrons file contains no patrons.");
+
+            var patrons = new List<PatronDefinition>(dto.patrons.Count);
+            foreach (var patron in dto.patrons)
+            {
+                if (string.IsNullOrWhiteSpace(patron.id))
+                    throw new FormatException("Patrons file has a patron with an empty id.");
+                if (patron.effects == null || patron.effects.Count == 0)
+                    throw new FormatException($"Patron '{patron.id}' has no effects.");
+
+                var effects = new List<PatronEffect>(patron.effects.Count);
+                foreach (var effect in patron.effects)
+                {
+                    effects.Add(new PatronEffect(
+                        ParseEnum<EffectTrigger>(effect.trigger, patron.id, "trigger"),
+                        ParseEnum<EffectOp>(effect.op, patron.id, "op"),
+                        effect.value,
+                        ParseCondition(effect.condition, patron.id),
+                        string.IsNullOrEmpty(effect.valueSource)
+                            ? EffectValueSource.Constant
+                            : ParseEnum<EffectValueSource>(effect.valueSource, patron.id, "valueSource")));
+                }
+
+                patrons.Add(new PatronDefinition(
+                    patron.id, patron.name,
+                    ParseEnum<PatronRarity>(patron.rarity, patron.id, "rarity"),
+                    patron.cost, patron.description, effects));
+            }
+            return patrons;
+        }
+
+        private static EffectCondition ParseCondition(ConditionDto dto, string context)
+        {
+            if (dto == null || string.IsNullOrEmpty(dto.kind)) return EffectCondition.Always;
+
+            var kind = ParseEnum<ConditionKind>(dto.kind, context, "condition kind");
+            IngredientType type = default;
+            if (!string.IsNullOrEmpty(dto.type)) type = ParseType(dto.type, context);
+            return new EffectCondition(kind, type, dto.intValue, dto.recipeIds);
+        }
+
+        private static T ParseEnum<T>(string raw, string context, string field) where T : struct
+        {
+            if (Enum.TryParse(raw, ignoreCase: false, out T value)) return value;
+            throw new FormatException($"Unknown {field} '{raw}' (in '{context}').");
+        }
+
         private static T FromJson<T>(string json, string label) where T : class
         {
             if (string.IsNullOrWhiteSpace(json))
@@ -143,6 +194,43 @@ namespace LastCall.Game
         {
             public int version;
             public List<RecipeDto> recipes;
+        }
+
+        [Serializable]
+        private sealed class ConditionDto
+        {
+            public string kind;
+            public string type;
+            public int intValue;
+            public List<string> recipeIds;
+        }
+
+        [Serializable]
+        private sealed class EffectDto
+        {
+            public string trigger;
+            public string op;
+            public double value;
+            public string valueSource;
+            public ConditionDto condition;
+        }
+
+        [Serializable]
+        private sealed class PatronDto
+        {
+            public string id;
+            public string name;
+            public string rarity;
+            public int cost;
+            public string description;
+            public List<EffectDto> effects;
+        }
+
+        [Serializable]
+        private sealed class PatronsFileDto
+        {
+            public int version;
+            public List<PatronDto> patrons;
         }
 #pragma warning restore 0649
     }

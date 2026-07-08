@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "patrons": [
+    {
+      "id": "sailor_musa", "name": "Sailor Musa", "rarity": "Common", "cost": 4,
+      "description": "+4 Mult if the Mix contains a Spirit.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "AddMult", "value": 4, "valueSource": "Constant",
+          "condition": { "kind": "MixContainsType", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "the_poet", "name": "The Poet", "rarity": "Common", "cost": 4,
+      "description": "+30 Flavor if the Mix has exactly 3 ingredients.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 30, "valueSource": "Constant",
+          "condition": { "kind": "MixSizeEquals", "type": "Spirit", "intValue": 3, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "aunt_perihan", "name": "Aunt Perihan", "rarity": "Common", "cost": 5,
+      "description": "Sweet cards give +15 extra Flavor.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "AddFlavor", "value": 15, "valueSource": "Constant",
+          "condition": { "kind": "CardTypeIs", "type": "Sweet", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "night_cabbie", "name": "The Night Cabbie", "rarity": "Common", "cost": 5,
+      "description": "+$2 at end of each customer.",
+      "effects": [
+        { "trigger": "OnCustomerEnd", "op": "AddMoney", "value": 2, "valueSource": "Constant",
+          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "twins_table4", "name": "Twins at Table 4", "rarity": "Uncommon", "cost": 6,
+      "description": "Retrigger the first scored card.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "Retrigger", "value": 1, "valueSource": "Constant",
+          "condition": { "kind": "CardIndexEquals", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "the_chemist", "name": "The Chemist", "rarity": "Uncommon", "cost": 6,
+      "description": "Sour cards each give +2 Mult.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "AddMult", "value": 2, "valueSource": "Constant",
+          "condition": { "kind": "CardTypeIs", "type": "Sour", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "offduty_cop", "name": "Off-Duty Cop", "rarity": "Uncommon", "cost": 7,
+      "description": "x2 Mult if no Restocks were used this order.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "MultMult", "value": 2, "valueSource": "Constant",
+          "condition": { "kind": "RestocksUsedEquals", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "the_insomniac", "name": "The Insomniac", "rarity": "Uncommon", "cost": 7,
+      "description": "First Mix each customer: x2 Mult.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "MultMult", "value": 2, "valueSource": "Constant",
+          "condition": { "kind": "MixesUsedEquals", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "jazz_singer", "name": "Jazz Singer", "rarity": "Rare", "cost": 8,
+      "description": "x3 Mult if the Mix is a Martini or Negroni.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "MultMult", "value": 3, "valueSource": "Constant",
+          "condition": { "kind": "RecipeIdIn", "type": "Spirit", "intValue": 0, "recipeIds": ["martini", "negroni"] } }
+      ]
+    },
+    {
+      "id": "the_collector", "name": "The Collector", "rarity": "Rare", "cost": 9,
+      "description": "Gains +1 Mult permanently every time you mix a Perfect Serve (this run).",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "Accumulate", "value": 1, "valueSource": "Constant",
+          "condition": { "kind": "RecipeIdIn", "type": "Spirit", "intValue": 0, "recipeIds": ["perfect_serve", "double_perfect"] } },
+        { "trigger": "OnHandScored", "op": "AddMult", "value": 0, "valueSource": "Accumulated",
+          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    }
+  ]
+}
