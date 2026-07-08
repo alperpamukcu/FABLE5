@@ -47,6 +47,9 @@ namespace LastCall.Core
 
         public IReadOnlyDictionary<string, int> RecipeLevels => _recipeLevels;
 
+        /// <summary>The run's recipe table (for the Recipe Book UI and previews).</summary>
+        public IReadOnlyList<RecipeDefinition> Recipes => _recipes;
+
         /// <summary>Single-use consumables held (GDD 7.3, max <see cref="RunConfig.MaxToolSlots"/>).</summary>
         public IReadOnlyList<ToolDefinition> ToolInventory => _tools;
 
