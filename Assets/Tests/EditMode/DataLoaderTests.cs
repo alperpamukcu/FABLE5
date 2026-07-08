@@ -105,6 +105,50 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void PatronsJson_LoadsAllTenStarters()
+        {
+            var patrons = DataLoader.ParsePatrons(ReadDataFile("patrons/patrons.json"));
+
+            Assert.AreEqual(10, patrons.Count);
+            CollectionAssert.AllItemsAreUnique(patrons.Select(p => p.Id).ToList());
+            Assert.IsTrue(patrons.All(p => p.Effects.Count >= 1));
+
+            var singer = patrons.Single(p => p.Id == "jazz_singer");
+            Assert.AreEqual(PatronRarity.Rare, singer.Rarity);
+            CollectionAssert.Contains(singer.Effects[0].Condition.RecipeIds.ToList(), "martini");
+
+            var collector = patrons.Single(p => p.Id == "the_collector");
+            Assert.IsTrue(collector.Effects.Any(e => e.Op == EffectOp.Accumulate));
+            Assert.IsTrue(collector.Effects.Any(e => e.ValueSource == EffectValueSource.Accumulated));
+
+            var cabbie = patrons.Single(p => p.Id == "night_cabbie");
+            Assert.AreEqual(EffectTrigger.OnCustomerEnd, cabbie.Effects[0].Trigger);
+            Assert.AreEqual(EffectOp.AddMoney, cabbie.Effects[0].Op);
+
+            // GDD 7.1 price bands per rarity
+            foreach (var patron in patrons)
+            {
+                (int min, int max) band;
+                switch (patron.Rarity)
+                {
+                    case PatronRarity.Common: band = (4, 5); break;
+                    case PatronRarity.Uncommon: band = (6, 7); break;
+                    case PatronRarity.Rare: band = (8, 9); break;
+                    default: band = (20, 20); break;
+                }
+                Assert.That(patron.Cost, Is.InRange(band.min, band.max), patron.Id);
+            }
+        }
+
+        [Test]
+        public void ParsePatrons_UnknownTrigger_Throws()
+        {
+            const string json = "{\"version\":1,\"patrons\":[{\"id\":\"bad\",\"name\":\"Bad\",\"rarity\":\"Common\",\"cost\":4,\"description\":\"\",\"effects\":[{\"trigger\":\"OnFullMoon\",\"op\":\"AddMult\",\"value\":1,\"valueSource\":\"Constant\",\"condition\":{\"kind\":\"Always\",\"type\":\"\",\"intValue\":0,\"recipeIds\":[]}}]}]}";
+            var ex = Assert.Throws<FormatException>(() => DataLoader.ParsePatrons(json));
+            StringAssert.Contains("OnFullMoon", ex.Message);
+        }
+
+        [Test]
         public void ParseDeck_UnknownType_Throws()
         {
             const string json = "{\"deckId\":\"x\",\"name\":\"X\",\"cards\":[{\"id\":\"bad\",\"name\":\"Bad\",\"type\":\"Umami\",\"flavor\":3}]}";
