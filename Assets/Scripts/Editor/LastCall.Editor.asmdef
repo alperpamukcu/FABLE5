@@ -1,0 +1,20 @@
+{
+    "name": "LastCall.Editor",
+    "rootNamespace": "LastCall.EditorTools",
+    "references": [
+        "LastCall.Core",
+        "LastCall.Game",
+        "LastCall.DebugUI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
