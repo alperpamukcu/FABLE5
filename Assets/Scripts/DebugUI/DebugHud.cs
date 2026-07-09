@@ -181,6 +181,16 @@ namespace LastCall.DebugUI
             });
         }
 
+        private void OnBuyVoucherClicked()
+        {
+            Guarded(() =>
+            {
+                var voucher = Run.Shop.VoucherOffer.Voucher;
+                Run.BuyVoucher();
+                AppendLog($"— Voucher: {voucher.Name} — {voucher.Description} (wallet ${Run.Money})");
+            });
+        }
+
         private void OnRerollClicked()
         {
             Guarded(() =>
@@ -358,6 +368,18 @@ namespace LastCall.DebugUI
                     new Color(0.80f, 0.68f, 0.42f), () => OnBuyOfferClicked(index), 13);
                 SetRowHeight(button, 30);
                 button.interactable = !offer.Sold && Run.Money >= offer.Price;
+            }
+
+            var voucherOffer = Run.Shop.VoucherOffer;
+            if (voucherOffer != null)
+            {
+                string label = voucherOffer.Sold
+                    ? $"{voucherOffer.DisplayName} — SOLD"
+                    : $"Buy {voucherOffer.DisplayName} — ${voucherOffer.Price}\n<size=10>{voucherOffer.Voucher.Description}</size>";
+                var voucherButton = NewButton("VoucherOffer", _shopOffersPanel, label,
+                    new Color(0.72f, 0.52f, 0.78f), OnBuyVoucherClicked, 12);
+                SetRowHeight(voucherButton, 40);
+                voucherButton.interactable = !voucherOffer.Sold && Run.Money >= voucherOffer.Price;
             }
 
             var reroll = NewButton("Reroll", _shopOffersPanel,

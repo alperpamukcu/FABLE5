@@ -20,6 +20,8 @@ Rulings (locked 2026-07-09, matching implementation): **Cocktail Umbrella** targ
 ### 7.4 Vouchers (permanent run upgrades, $10)
 Examples: **Happy Hour** (+1 Restock), **Double Shift** (+1 Mix), **Wider Rail** (+1 Rail size), **Loyal Clientele** (Patrons $2 cheaper), **Neon Sign** (rarer Patrons appear more often), **Deep Cellar** (ingredient packs contain +1 card).
 
+Rulings (locked 2026-07-09, matching implementation): every Back Room shows **one dedicated Voucher slot** offering a random voucher the player doesn't own yet; the slot is not affected by rerolls and each voucher can be owned once. Loyal Clientele's discount applies from the *next* shop (prices already on the table don't change) and never drops a patron below $1. **Neon Sign** and **Deep Cellar** ship together with the Booster Pack / rarity-weighting slice — their systems don't exist yet. Launch pool lives in `Assets/Data/vouchers/vouchers.json`.
+
 ### 7.5 Money (Tips) economy
 - Satisfy Customer A: $3. Customer B: $4. VIP: $5.
 - +$1 per unused Mix.

@@ -30,7 +30,9 @@ namespace LastCall.Core
         private readonly IReadOnlyList<PatronDefinition> _patronPool;
         private readonly IReadOnlyList<ToolDefinition> _toolPool;
         private readonly IReadOnlyList<VipDefinition> _vipPool;
+        private readonly IReadOnlyList<VoucherDefinition> _voucherPool;
         private readonly List<ToolDefinition> _tools = new List<ToolDefinition>();
+        private readonly List<VoucherDefinition> _vouchers = new List<VoucherDefinition>();
         private readonly HashSet<string> _usedVipIds = new HashSet<string>();
         private ToolDefinition _lastToolUsed;
         private bool _firstShopOpened;
@@ -56,6 +58,9 @@ namespace LastCall.Core
         /// <summary>Single-use consumables held (GDD 7.3, max <see cref="RunConfig.MaxToolSlots"/>).</summary>
         public IReadOnlyList<ToolDefinition> ToolInventory => _tools;
 
+        /// <summary>Permanent run upgrades owned (GDD 7.4); each voucher at most once.</summary>
+        public IReadOnlyList<VoucherDefinition> Vouchers => _vouchers;
+
         /// <summary>The current Back Room inventory; non-null only during the BackRoom phase.</summary>
         public ShopState Shop { get; private set; }
 
@@ -65,7 +70,7 @@ namespace LastCall.Core
         public RunController(IEnumerable<IngredientCard> cards, IReadOnlyList<RecipeDefinition> recipes,
             RunRng rng, IEnumerable<PatronInstance> patrons = null, RunConfig config = null,
             IReadOnlyList<PatronDefinition> patronPool = null, IReadOnlyList<ToolDefinition> toolPool = null,
-            IReadOnlyList<VipDefinition> vipPool = null)
+            IReadOnlyList<VipDefinition> vipPool = null, IReadOnlyList<VoucherDefinition> voucherPool = null)
         {
             _recipes = recipes ?? throw new ArgumentNullException(nameof(recipes));
             _rng = rng ?? throw new ArgumentNullException(nameof(rng));
@@ -73,6 +78,7 @@ namespace LastCall.Core
             _patronPool = patronPool ?? Array.Empty<PatronDefinition>();
             _toolPool = toolPool ?? Array.Empty<ToolDefinition>();
             _vipPool = vipPool ?? Array.Empty<VipDefinition>();
+            _voucherPool = voucherPool ?? Array.Empty<VoucherDefinition>();
             Config = config ?? RunConfig.Default;
             Money = Config.StartingMoney;
             _deck = new Deck(cards);
@@ -161,6 +167,21 @@ namespace LastCall.Core
             offer.MarkSold();
         }
 
+        /// <summary>Buys the shop's Voucher slot: a permanent upgrade for the rest of the run.</summary>
+        public void BuyVoucher()
+        {
+            EnsurePhase(RunPhase.BackRoom);
+            var offer = Shop.VoucherOffer;
+            if (offer == null) throw new InvalidOperationException("No voucher on offer.");
+            if (offer.Sold) throw new InvalidOperationException("Voucher already sold.");
+            if (Money < offer.Price)
+                throw new InvalidOperationException($"Not enough money (${Money} < ${offer.Price}).");
+
+            _vouchers.Add(offer.Voucher);
+            Money -= offer.Price;
+            offer.MarkSold();
+        }
+
         /// <summary>Rerolls the shop for its escalating fee (GDD 7: $5, +$1 per reroll).</summary>
         public void RerollShop()
         {
@@ -241,10 +262,23 @@ namespace LastCall.Core
         {
             // Walking into the Back Room is itself a patron trigger (Coat Check Girl et al).
             Money += (int)PatronTriggers.ResolveMoney(EffectTrigger.OnShopEnter, _patrons, EffectContext.Empty);
+            var voucherCandidates = _voucherPool
+                .Where(v => !_vouchers.Exists(owned => owned.Id == v.Id)).ToList();
             Shop = new ShopState(_rng.GetStream("shop"), PatronCandidates, _toolPool, _recipes,
                 Config.ShopSlots, Config.BookPrice, Config.RerollBaseCost,
-                firstShopOfRun: !_firstShopOpened);
+                firstShopOfRun: !_firstShopOpened,
+                voucherCandidates: voucherCandidates, voucherRng: _rng.GetStream("voucher"),
+                patronDiscount: VoucherValue(VoucherOp.PatronDiscount));
             _firstShopOpened = true;
+        }
+
+        /// <summary>Sum of IntValues across owned vouchers of one op (0 when none owned).</summary>
+        private int VoucherValue(VoucherOp op)
+        {
+            int total = 0;
+            foreach (var voucher in _vouchers)
+                if (voucher.Op == op) total += voucher.IntValue;
+            return total;
         }
 
         private IReadOnlyList<PatronDefinition> PatronCandidates() =>
@@ -256,6 +290,15 @@ namespace LastCall.Core
             double target = Config.TargetProvider(Night, Slot);
             string name = $"Night {Night} — {SlotName(Slot)}";
             var roundConfig = Config.RoundConfig;
+            if (_vouchers.Count > 0)
+            {
+                // Vouchers upgrade the base rules; VIP rules then modify on top.
+                roundConfig = new RoundConfig(
+                    roundConfig.RailSize + VoucherValue(VoucherOp.ExtraRail),
+                    roundConfig.MaxMixSelection,
+                    roundConfig.MixesPerCustomer + VoucherValue(VoucherOp.ExtraMix),
+                    roundConfig.RestocksPerCustomer + VoucherValue(VoucherOp.ExtraRestock));
+            }
             var ruleSet = VipRuleSet.Empty;
             string ruleText = null;
             CurrentVip = null;

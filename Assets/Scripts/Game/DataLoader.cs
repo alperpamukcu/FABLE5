@@ -177,6 +177,25 @@ namespace LastCall.Game
             return vips;
         }
 
+        public static IReadOnlyList<VoucherDefinition> ParseVouchers(string json)
+        {
+            var dto = FromJson<VouchersFileDto>(json, "vouchers");
+            if (dto.vouchers == null || dto.vouchers.Count == 0)
+                throw new FormatException("Vouchers file contains no vouchers.");
+
+            var vouchers = new List<VoucherDefinition>(dto.vouchers.Count);
+            foreach (var voucher in dto.vouchers)
+            {
+                if (string.IsNullOrWhiteSpace(voucher.id))
+                    throw new FormatException("Vouchers file has a voucher with an empty id.");
+
+                vouchers.Add(new VoucherDefinition(voucher.id, voucher.name, voucher.cost,
+                    ParseEnum<VoucherOp>(voucher.op, voucher.id, "op"),
+                    voucher.intValue, voucher.description));
+            }
+            return vouchers;
+        }
+
         private static EffectCondition ParseCondition(ConditionDto dto, string context)
         {
             if (dto == null || string.IsNullOrEmpty(dto.kind)) return EffectCondition.Always;
@@ -342,6 +361,24 @@ namespace LastCall.Game
         {
             public int version;
             public List<VipDto> vips;
+        }
+
+        [Serializable]
+        private sealed class VoucherDto
+        {
+            public string id;
+            public string name;
+            public int cost;
+            public string op;
+            public int intValue;
+            public string description;
+        }
+
+        [Serializable]
+        private sealed class VouchersFileDto
+        {
+            public int version;
+            public List<VoucherDto> vouchers;
         }
 #pragma warning restore 0649
     }

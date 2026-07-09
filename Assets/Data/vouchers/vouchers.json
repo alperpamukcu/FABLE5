@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "vouchers": [
+    {
+      "id": "happy_hour", "name": "Happy Hour", "cost": 10,
+      "op": "ExtraRestock", "intValue": 1,
+      "description": "+1 Restock every customer, for the rest of the run."
+    },
+    {
+      "id": "double_shift", "name": "Double Shift", "cost": 10,
+      "op": "ExtraMix", "intValue": 1,
+      "description": "+1 Mix every customer, for the rest of the run."
+    },
+    {
+      "id": "wider_rail", "name": "Wider Rail", "cost": 10,
+      "op": "ExtraRail", "intValue": 1,
+      "description": "+1 Rail size, for the rest of the run."
+    },
+    {
+      "id": "loyal_clientele", "name": "Loyal Clientele", "cost": 10,
+      "op": "PatronDiscount", "intValue": 2,
+      "description": "Patrons cost $2 less (never below $1)."
+    }
+  ]
+}

@@ -211,6 +211,23 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void VouchersJson_LoadsTheLaunchFour()
+        {
+            var vouchers = DataLoader.ParseVouchers(ReadDataFile("vouchers/vouchers.json"));
+
+            Assert.AreEqual(4, vouchers.Count);
+            CollectionAssert.AllItemsAreUnique(vouchers.Select(v => v.Id).ToList());
+            Assert.IsTrue(vouchers.All(v => v.Cost == 10), "GDD 7.4: vouchers cost $10");
+
+            Assert.AreEqual(VoucherOp.ExtraRestock, vouchers.Single(v => v.Id == "happy_hour").Op);
+            Assert.AreEqual(VoucherOp.ExtraMix, vouchers.Single(v => v.Id == "double_shift").Op);
+            Assert.AreEqual(VoucherOp.ExtraRail, vouchers.Single(v => v.Id == "wider_rail").Op);
+            var loyal = vouchers.Single(v => v.Id == "loyal_clientele");
+            Assert.AreEqual(VoucherOp.PatronDiscount, loyal.Op);
+            Assert.AreEqual(2, loyal.IntValue);
+        }
+
+        [Test]
         public void ParsePatrons_UnknownTrigger_Throws()
         {
             const string json = "{\"version\":1,\"patrons\":[{\"id\":\"bad\",\"name\":\"Bad\",\"rarity\":\"Common\",\"cost\":4,\"description\":\"\",\"effects\":[{\"trigger\":\"OnFullMoon\",\"op\":\"AddMult\",\"value\":1,\"valueSource\":\"Constant\",\"condition\":{\"kind\":\"Always\",\"type\":\"\",\"intValue\":0,\"recipeIds\":[]}}]}]}";

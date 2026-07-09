@@ -19,6 +19,7 @@ namespace LastCall.EditorTools
         private const string PatronsPath = "Assets/Data/patrons/patrons.json";
         private const string ToolsPath = "Assets/Data/tools/tools.json";
         private const string VipsPath = "Assets/Data/vips/vips.json";
+        private const string VouchersPath = "Assets/Data/vouchers/vouchers.json";
 
         [MenuItem("LastCall/Create Debug Scene")]
         public static void CreateDebugScene()
@@ -44,6 +45,7 @@ namespace LastCall.EditorTools
             so.FindProperty("patronsJson").objectReferenceValue = LoadRequired<TextAsset>(PatronsPath);
             so.FindProperty("toolsJson").objectReferenceValue = LoadRequired<TextAsset>(ToolsPath);
             so.FindProperty("vipsJson").objectReferenceValue = LoadRequired<TextAsset>(VipsPath);
+            so.FindProperty("vouchersJson").objectReferenceValue = LoadRequired<TextAsset>(VouchersPath);
             so.ApplyModifiedPropertiesWithoutUndo();
             game.AddComponent<DebugHud>();
 
