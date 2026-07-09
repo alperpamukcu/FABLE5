@@ -21,6 +21,8 @@ Each Night = Customer A (small), Customer B (big), VIP (boss). Targets:
 
 Customer A may be **skipped** (like skipping a blind) for a **Regular's Favor** tag reward (random bonus: free Patron, coupon, doubled next tip, etc.), trading money/XP for tempo.
 
+Rulings (locked 2026-07-09, matching implementation): skipping is only allowed while the Customer A round is **untouched** (no Mix or Restock spent), pays no tips and opens no Back Room — the run jumps straight to Customer B. The favor rolls from the seeded "favor" stream: free (non-legendary) Patron, free Tool, next tip doubled, or $5 cash; rewards that can't apply (full bar, full tool belt, empty pools) fall through to cash.
+
 ### 5.2 Endless Mode
 After Night 8, targets continue scaling ×2.2/night indefinitely; leaderboard-style personal best tracked ("Latest Last Call: Night 14").
 

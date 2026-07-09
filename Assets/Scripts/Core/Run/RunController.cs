@@ -36,6 +36,9 @@ namespace LastCall.Core
         private readonly HashSet<string> _usedVipIds = new HashSet<string>();
         private ToolDefinition _lastToolUsed;
         private bool _firstShopOpened;
+        private bool _nextTipDoubled;
+
+        private const int FavorCashAmount = 5; // GDD 5.2 ruling: the cash favor pays $5
 
         public RunConfig Config { get; }
         public int Night { get; private set; } = 1;
@@ -66,6 +69,17 @@ namespace LastCall.Core
 
         /// <summary>A bought pack waiting for its pick/skip; non-null only in the BackRoom.</summary>
         public OpenPackState OpenPack { get; private set; }
+
+        /// <summary>The reward of the most recent Customer A skip; null before the first skip.</summary>
+        public RegularsFavorKind? LastFavor { get; private set; }
+
+        /// <summary>Human-readable line for the most recent favor (HUD log).</summary>
+        public string LastFavorText { get; private set; }
+
+        /// <summary>True while Customer A can still be skipped: their round is untouched.</summary>
+        public bool CanSkipCustomerA =>
+            Phase == RunPhase.CustomerRound && Slot == CustomerSlot.CustomerA &&
+            CurrentRound.MixesUsed == 0 && CurrentRound.RestocksUsed == 0;
 
         /// <summary>The VIP whose rules govern the current order; null for regular customers.</summary>
         public VipDefinition CurrentVip { get; private set; }
@@ -211,6 +225,66 @@ namespace LastCall.Core
             _vouchers.Add(offer.Voucher);
             Money -= offer.Price;
             offer.MarkSold();
+        }
+
+        /// <summary>
+        /// Skips Customer A for a Regular's Favor (GDD 5.2): no tips, no Back Room,
+        /// straight to Customer B with a random seeded reward. Only allowed while the
+        /// round is untouched.
+        /// </summary>
+        public RegularsFavorKind SkipCustomerA()
+        {
+            if (!CanSkipCustomerA)
+                throw new InvalidOperationException(
+                    "Only an untouched Customer A round can be skipped.");
+
+            _deck.Discard(CurrentRound.Rail); // the dealt rail returns to the cabinet
+            GrantFavor(_rng.GetStream("favor"));
+
+            Slot = CustomerSlot.CustomerB;
+            StartCustomer();
+            return LastFavor.Value;
+        }
+
+        private void GrantFavor(SeededRng rng)
+        {
+            switch (rng.NextInt(4))
+            {
+                case 0:
+                    var patron = PatronRoll.Weighted(rng, PatronCandidates());
+                    if (patron != null && _patrons.Count < Config.MaxPatronSlots)
+                    {
+                        _patrons.Add(new PatronInstance(patron));
+                        SetFavor(RegularsFavorKind.FreePatron,
+                            $"Regular's Favor: {patron.Name} joins the bar for free!");
+                        return;
+                    }
+                    break;
+                case 1:
+                    if (_toolPool.Count > 0 && _tools.Count < Config.MaxToolSlots)
+                    {
+                        var tool = _toolPool[rng.NextInt(_toolPool.Count)];
+                        _tools.Add(tool);
+                        SetFavor(RegularsFavorKind.FreeTool,
+                            $"Regular's Favor: a free {tool.Name}!");
+                        return;
+                    }
+                    break;
+                case 2:
+                    _nextTipDoubled = true;
+                    SetFavor(RegularsFavorKind.DoubledTip,
+                        "Regular's Favor: the next tip is doubled!");
+                    return;
+            }
+            Money += FavorCashAmount;
+            SetFavor(RegularsFavorKind.Cash,
+                $"Regular's Favor: the regular covers ${FavorCashAmount} of the till!");
+        }
+
+        private void SetFavor(RegularsFavorKind kind, string text)
+        {
+            LastFavor = kind;
+            LastFavorText = text;
         }
 
         /// <summary>Buys one of the shop's two Booster Pack slots and opens it.</summary>
@@ -399,6 +473,11 @@ namespace LastCall.Core
             // banking to $25 is the intended play, so the payout itself must not compound).
             int interest = Math.Min(Money / Config.InterestPerDollars, Config.InterestCap);
             int baseTip = BaseTipFor(Slot);
+            if (_nextTipDoubled)
+            {
+                baseTip *= 2; // Regular's Favor: DoubledTip, one-shot
+                _nextTipDoubled = false;
+            }
             int unusedMixBonus = CurrentRound.MixesRemaining;
             int vipBonus = Slot == CustomerSlot.Vip ? Config.VipDefeatBonus : 0;
 

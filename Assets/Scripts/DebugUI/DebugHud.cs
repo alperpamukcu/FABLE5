@@ -50,6 +50,7 @@ namespace LastCall.DebugUI
         private bool _recipesVisible;
         private Button _mixButton;
         private Button _restockButton;
+        private Button _skipButton;
         private InputField _seedInput;
 
         private RunController Run => _bootstrap.Run;
@@ -191,6 +192,16 @@ namespace LastCall.DebugUI
             });
         }
 
+        private void OnSkipCustomerAClicked()
+        {
+            Guarded(() =>
+            {
+                Run.SkipCustomerA();
+                AppendLog($"— {Run.LastFavorText}");
+                AppendLog(CustomerHeader());
+            });
+        }
+
         private void OnBuyPackClicked(int index)
         {
             Guarded(() =>
@@ -302,6 +313,7 @@ namespace LastCall.DebugUI
             bool hasSelection = _selected.Count >= 1 && _selected.Count <= Round.Config.MaxMixSelection;
             _mixButton.interactable = inRound && hasSelection;
             _restockButton.interactable = inRound && hasSelection && Round.RestocksRemaining > 0;
+            _skipButton.gameObject.SetActive(Run.CanSkipCustomerA);
         }
 
         private void RenderPreview()
@@ -657,6 +669,13 @@ namespace LastCall.DebugUI
             restockRt.anchorMin = restockRt.anchorMax = restockRt.pivot = new Vector2(0.5f, 0);
             restockRt.sizeDelta = new Vector2(170, 42);
             restockRt.anchoredPosition = new Vector2(95, 168);
+
+            // Only shows on an untouched Customer A round (GDD 5.2).
+            _skipButton = NewButton("SkipA", root, "SKIP → FAVOR", new Color(0.60f, 0.50f, 0.75f), OnSkipCustomerAClicked, 14);
+            var skipRt = (RectTransform)_skipButton.transform;
+            skipRt.anchorMin = skipRt.anchorMax = skipRt.pivot = new Vector2(0.5f, 0);
+            skipRt.sizeDelta = new Vector2(150, 42);
+            skipRt.anchoredPosition = new Vector2(265, 168);
 
             _railPanel = NewRect("Rail", root);
             Stretch(_railPanel, new Vector2(0, 0), new Vector2(1, 0), new Vector2(12, 12), new Vector2(-12, 160));
