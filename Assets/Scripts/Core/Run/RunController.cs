@@ -73,7 +73,8 @@ namespace LastCall.Core
         public RunController(IEnumerable<IngredientCard> cards, IReadOnlyList<RecipeDefinition> recipes,
             RunRng rng, IEnumerable<PatronInstance> patrons = null, RunConfig config = null,
             IReadOnlyList<PatronDefinition> patronPool = null, IReadOnlyList<ToolDefinition> toolPool = null,
-            IReadOnlyList<VipDefinition> vipPool = null, IReadOnlyList<VoucherDefinition> voucherPool = null)
+            IReadOnlyList<VipDefinition> vipPool = null, IReadOnlyList<VoucherDefinition> voucherPool = null,
+            BarDefinition bar = null)
         {
             _recipes = recipes ?? throw new ArgumentNullException(nameof(recipes));
             _rng = rng ?? throw new ArgumentNullException(nameof(rng));
@@ -84,8 +85,35 @@ namespace LastCall.Core
             _voucherPool = voucherPool ?? Array.Empty<VoucherDefinition>();
             Config = config ?? RunConfig.Default;
             Money = Config.StartingMoney;
-            _deck = new Deck(cards);
+            var startingCards = new List<IngredientCard>(cards);
+            if (bar != null) ApplyBar(bar, startingCards);
+            _deck = new Deck(startingCards);
             StartCustomer();
+        }
+
+        /// <summary>Applies the Bar's starting configuration (GDD 9) before the first deal.</summary>
+        private void ApplyBar(BarDefinition bar, List<IngredientCard> startingCards)
+        {
+            Money = Math.Max(0, Money + bar.MoneyDelta);
+
+            foreach (var spec in bar.ExtraCards)
+                startingCards.Add(new IngredientCard(
+                    $"bar_{spec.Type}_{spec.Flavor}".ToLowerInvariant(),
+                    $"{spec.Type} {spec.Flavor}", spec.Type, spec.Flavor));
+
+            foreach (var pair in bar.RecipeLevels)
+                _recipeLevels[pair.Key] = pair.Value;
+
+            var barRng = _rng.GetStream("bar");
+            for (int i = 0; i < bar.RandomRarePatrons; i++)
+            {
+                var rares = _patronPool
+                    .Where(p => p.Rarity == PatronRarity.Rare)
+                    .Where(p => !_patrons.Exists(owned => owned.Definition.Id == p.Id))
+                    .ToList();
+                if (rares.Count == 0 || _patrons.Count >= Config.MaxPatronSlots) break;
+                _patrons.Add(new PatronInstance(rares[barRng.NextInt(rares.Count)]));
+            }
         }
 
         /// <summary>Delegates to the current round and settles the run state on a terminal result.</summary>

@@ -17,6 +17,8 @@ namespace LastCall.Game
         [SerializeField] private TextAsset vipsJson;
         [SerializeField] private TextAsset vouchersJson;
         [SerializeField] private string seed = "LASTCALL-DEV";
+        [SerializeField, Range(StakeTable.Min, StakeTable.Max)] private int stake = 1;
+        [SerializeField] private string barId = "classic";
 
         public RunController Run { get; private set; }
         public string CurrentSeed { get; private set; }
@@ -40,12 +42,15 @@ namespace LastCall.Game
             var toolPool = DataLoader.ParseTools(toolsJson.text);
             var vipPool = DataLoader.ParseVips(vipsJson.text);
             var voucherPool = DataLoader.ParseVouchers(vouchersJson.text);
+            var bar = BarCatalog.Find(BarCatalog.CreateDefault(), barId);
+            var config = StakeTable.Apply(RunConfig.Default, stake);
 
-            Run = new RunController(deck.Cards, recipes, new RunRng(CurrentSeed),
+            Run = new RunController(deck.Cards, recipes, new RunRng(CurrentSeed), config: config,
                 patronPool: patronPool, toolPool: toolPool, vipPool: vipPool,
-                voucherPool: voucherPool);
+                voucherPool: voucherPool, bar: bar);
 
-            Debug.Log($"[LastCall] Run started — seed '{CurrentSeed}', " +
+            Debug.Log($"[LastCall] Run started — seed '{CurrentSeed}', {bar.Name}, " +
+                      $"Stake {stake} ({StakeTable.NameOf(stake)}), " +
                       $"{Run.CurrentRound.Customer.Name} wants {Run.CurrentRound.Customer.TargetScore}, wallet ${Run.Money}.");
             RunStarted?.Invoke();
         }

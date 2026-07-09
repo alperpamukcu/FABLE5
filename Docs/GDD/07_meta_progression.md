@@ -15,4 +15,6 @@ Unlockable starting configurations, like Balatro decks:
 
 **Collection screen** tracks every Patron/Tool/Book/VIP discovered (silhouette until found). **Challenges** (20 scripted scenario runs) and **unlock toasts** drive long-tail retention. Completion stats: win count per Bar per Stake (sticker system).
 
+Rulings (locked 2026-07-09, matching implementation): M3 ships the first three Bars (Classic / Speakeasy / Tiki Hut), selectable on GameBootstrap; unlock gating is an M4+ meta feature. Tiki Hut's +4 Garnish cards are flavors 4/6/8/10. The Speakeasy's random Rare comes from the run seed ("bar" stream) and skips patrons already seated. Stakes 1–4 are implemented per GDD 5.3 and stack cumulatively (`StakeTable.Apply`).
+
 ---
