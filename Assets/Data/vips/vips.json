@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "vips": [
+    {
+      "id": "teetotaler", "name": "The Teetotaler", "gentle": false, "finaleOnly": false,
+      "description": "Spirits score 0 Flavor this order.",
+      "rules": [ { "kind": "DebuffType", "type": "Spirit", "intValue": 0, "doubleValue": 0 } ]
+    },
+    {
+      "id": "purist", "name": "The Purist", "gentle": false, "finaleOnly": false,
+      "description": "Only your first Mix counts; others score 0.",
+      "rules": [ { "kind": "OnlyFirstMixScores", "type": "", "intValue": 0, "doubleValue": 0 } ]
+    },
+    {
+      "id": "allergic", "name": "The Allergic", "gentle": true, "finaleOnly": false,
+      "description": "All Garnish cards are debuffed.",
+      "rules": [ { "kind": "DebuffType", "type": "Garnish", "intValue": 0, "doubleValue": 0 } ]
+    },
+    {
+      "id": "snob", "name": "The Snob", "gentle": false, "finaleOnly": false,
+      "description": "Only Recipes level 2+ score.",
+      "rules": [ { "kind": "MinRecipeLevel", "type": "", "intValue": 2, "doubleValue": 0 } ]
+    },
+    {
+      "id": "regulars_ghost", "name": "The Regular's Ghost", "gentle": false, "finaleOnly": false,
+      "description": "Every Mix must be a different Recipe.",
+      "rules": [ { "kind": "EachMixDifferentRecipe", "type": "", "intValue": 0, "doubleValue": 0 } ]
+    },
+    {
+      "id": "health_inspector", "name": "The Health Inspector", "gentle": true, "finaleOnly": false,
+      "description": "Rail size -3 this order.",
+      "rules": [ { "kind": "RailSizeDelta", "type": "", "intValue": -3, "doubleValue": 0 } ]
+    },
+    {
+      "id": "critic", "name": "The Critic", "gentle": false, "finaleOnly": true,
+      "description": "Target x1.5 and one random Ingredient Type is debuffed.",
+      "rules": [
+        { "kind": "TargetScale", "type": "", "intValue": 0, "doubleValue": 1.5 },
+        { "kind": "DebuffRandomType", "type": "", "intValue": 0, "doubleValue": 0 }
+      ]
+    }
+  ]
+}

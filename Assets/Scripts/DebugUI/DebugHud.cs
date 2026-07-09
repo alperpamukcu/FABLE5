@@ -110,6 +110,11 @@ namespace LastCall.DebugUI
             {
                 AppendLog($"— Mix {mixNumber}: no recipe, 0 points  [{Round.AccumulatedScore:0.#} / {Round.Customer.TargetScore:0.#}]");
             }
+            else if (breakdown.IsVoided)
+            {
+                AppendLog($"— Mix {mixNumber}: {breakdown.Recipe.Name} VOIDED ({breakdown.VoidReason})  " +
+                          $"[{Round.AccumulatedScore:0.#} / {Round.Customer.TargetScore:0.#}]");
+            }
             else
             {
                 AppendLog($"— Mix {mixNumber}: {breakdown.Recipe.Name} (Lv{breakdown.RecipeLevel}) → " +
@@ -228,13 +233,17 @@ namespace LastCall.DebugUI
         {
             if (Run == null) return;
 
+            string vipLine = string.IsNullOrEmpty(Round.Customer.RuleText)
+                ? string.Empty
+                : $"\n<color=#FF9F5A>VIP RULE: {Round.Customer.RuleText}</color>";
             _infoText.text =
                 $"Night {Run.Night}/{Run.Config.Nights} — {Run.Slot}\n" +
                 $"Wallet:   ${Run.Money}\n" +
                 $"Target:   {Round.Customer.TargetScore:0.#}\n" +
                 $"Score:    {Round.AccumulatedScore:0.#}\n" +
                 $"Mixes:    {Round.MixesRemaining}   Restocks: {Round.RestocksRemaining}\n" +
-                $"Cabinet:  {Round.DeckDrawCount} draw / {Round.DeckDiscardCount} discard";
+                $"Cabinet:  {Round.DeckDrawCount} draw / {Round.DeckDiscardCount} discard" +
+                vipLine;
 
             RenderPreview();
             RenderRail();
@@ -263,9 +272,12 @@ namespace LastCall.DebugUI
                 return;
             }
             var preview = Round.PreviewScore(_selected);
-            _previewText.text = preview.Recipe == null
-                ? $"{_selected.Count} selected — no recipe (scores 0)"
-                : $"{preview.Recipe.Name} (Lv{preview.RecipeLevel}) — {preview.TotalFlavor:0.#} × {preview.TotalMult:0.#} = {preview.FinalScore:0.#}";
+            if (preview.Recipe == null)
+                _previewText.text = $"{_selected.Count} selected — no recipe (scores 0)";
+            else if (preview.IsVoided)
+                _previewText.text = $"{preview.Recipe.Name} — VOIDED: {preview.VoidReason}";
+            else
+                _previewText.text = $"{preview.Recipe.Name} (Lv{preview.RecipeLevel}) — {preview.TotalFlavor:0.#} × {preview.TotalMult:0.#} = {preview.FinalScore:0.#}";
         }
 
         private void RenderRail()
@@ -277,10 +289,13 @@ namespace LastCall.DebugUI
             {
                 var captured = card;
                 bool selected = _selected.Contains(card);
+                bool debuffed = Round.VipRules.DebuffedTypes.Contains(card.Type);
                 var baseColor = TypeColors[card.Type];
+                if (debuffed) baseColor = Color.Lerp(baseColor, Color.black, 0.6f);
                 var color = selected ? Color.Lerp(baseColor, Color.white, 0.55f) : baseColor;
                 string extras = string.Empty;
                 if (card.Enhancement != Enhancement.None) extras += $"\n<{card.Enhancement}>";
+                if (debuffed) extras += "\nDEBUFFED";
                 string label = $"{(selected ? "✔ " : string.Empty)}{card.Flavor}\n{card.Type}\n{card.Name}{extras}";
                 NewButton($"Card_{card.InstanceId}", _railPanel, label, color, () => ToggleCard(captured), 13);
             }

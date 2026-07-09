@@ -162,6 +162,26 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void VipsJson_LoadsAllSevenStarters()
+        {
+            var vips = DataLoader.ParseVips(ReadDataFile("vips/vips.json"));
+
+            Assert.AreEqual(7, vips.Count);
+            CollectionAssert.AllItemsAreUnique(vips.Select(v => v.Id).ToList());
+
+            var critic = vips.Single(v => v.Id == "critic");
+            Assert.IsTrue(critic.FinaleOnly, "The Critic is the Night 8 finisher");
+            Assert.IsTrue(critic.Rules.Any(r => r.Kind == VipRuleKind.TargetScale && r.DoubleValue == 1.5));
+            Assert.IsTrue(critic.Rules.Any(r => r.Kind == VipRuleKind.DebuffRandomType));
+
+            Assert.AreEqual(2, vips.Count(v => v.Gentle), "gentle Night 1-2 subset exists");
+
+            var teetotaler = vips.Single(v => v.Id == "teetotaler");
+            Assert.AreEqual(VipRuleKind.DebuffType, teetotaler.Rules[0].Kind);
+            Assert.AreEqual(IngredientType.Spirit, teetotaler.Rules[0].Type);
+        }
+
+        [Test]
         public void ParsePatrons_UnknownTrigger_Throws()
         {
             const string json = "{\"version\":1,\"patrons\":[{\"id\":\"bad\",\"name\":\"Bad\",\"rarity\":\"Common\",\"cost\":4,\"description\":\"\",\"effects\":[{\"trigger\":\"OnFullMoon\",\"op\":\"AddMult\",\"value\":1,\"valueSource\":\"Constant\",\"condition\":{\"kind\":\"Always\",\"type\":\"\",\"intValue\":0,\"recipeIds\":[]}}]}]}";

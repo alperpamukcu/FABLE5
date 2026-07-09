@@ -13,6 +13,7 @@
 - **Center:** the bar counter. Selected ingredients slide to the counter; on MIX, a shaker animation plays, cards flip/score one by one with rising numbers, glass fills, final score slams into the progress bar.
 - **Bottom:** the Rail — 8 ingredient cards, fanned. Sort toggles: by Flavor / by Type. Buttons: **MIX** (big, warm gold) and **RESTOCK** (smaller, cool gray). Cabinet pile (deck viewer on click) bottom-right; Tool slots (2) bottom-left.
 - **RECIPES button (book icon, always visible, hotkey R):** toggles the **Recipe Book overlay** — the full recipe table as **color-coded Type patterns** (e.g. ●amber ●green ●pink = Sour), each with its current Level and base Flavor × Mult. Cocktail names are secondary flavor text; the pattern icons are the primary read. Design rule: the game must be fully learnable by color-matching alone — **zero real-world cocktail knowledge is ever required** (players never declare a recipe; the engine auto-matches the best one, and the live preview shows the result before committing).
+  - *Playtest note (2026-07-08, debug build):* the overlay is consulted very frequently during normal play. For the M4 gameplay screen, pattern information should also be **ambient** — e.g. a compact always-visible recipe strip or dimmed pattern hints near the rail — so consulting recipes never interrupts the flow.
 - **Hover/inspect:** every card and Patron shows a tooltip with full rules text. Right-click = zoom inspect.
 
 ### 10.3 Back Room (shop) screen

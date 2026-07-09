@@ -8,11 +8,15 @@ namespace LastCall.Core
         public string Name { get; }
         public double TargetScore { get; }
 
-        public CustomerOrder(string name, double targetScore)
+        /// <summary>VIP rule shown on the order ticket (GDD 6); empty for regulars.</summary>
+        public string RuleText { get; }
+
+        public CustomerOrder(string name, double targetScore, string ruleText = null)
         {
             if (targetScore <= 0) throw new ArgumentOutOfRangeException(nameof(targetScore));
             Name = string.IsNullOrWhiteSpace(name) ? "Customer" : name;
             TargetScore = targetScore;
+            RuleText = ruleText ?? string.Empty;
         }
     }
 }

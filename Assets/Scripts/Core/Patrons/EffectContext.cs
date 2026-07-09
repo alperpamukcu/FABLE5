@@ -23,13 +23,18 @@ namespace LastCall.Core
         /// <summary>Restocks spent so far this customer.</summary>
         public int RestocksUsed { get; }
 
+        /// <summary>Types debuffed by the active VIP rule: they score nothing and trigger nothing.</summary>
+        public IReadOnlyCollection<IngredientType> DebuffedTypes { get; }
+
         public EffectContext(IReadOnlyList<IngredientCard> mix, RecipeDefinition recipe,
-            int mixesUsedBefore, int restocksUsed)
+            int mixesUsedBefore, int restocksUsed,
+            IReadOnlyCollection<IngredientType> debuffedTypes = null)
         {
             Mix = mix;
             Recipe = recipe;
             MixesUsedBefore = mixesUsedBefore;
             RestocksUsed = restocksUsed;
+            DebuffedTypes = debuffedTypes ?? new IngredientType[0];
         }
     }
 }
