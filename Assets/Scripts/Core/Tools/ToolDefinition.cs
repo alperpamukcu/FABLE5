@@ -2,13 +2,19 @@ using System;
 
 namespace LastCall.Core
 {
-    /// <summary>What a Tool does to its selected rail cards (GDD 7.3).</summary>
+    /// <summary>
+    /// What a Tool does (GDD 7.3). The first five target rail cards; DoubleMoney and
+    /// CreateLastTool are run-level ops that ignore card targets entirely.
+    /// </summary>
     public enum ToolOp
     {
-        Enhance,      // apply an Enhancement (Muddler → Infused, Jigger → Overproof)
-        Destroy,      // remove cards from the run permanently (Ice Pick)
-        Copy,         // add a fresh identical instance next to the original (Bar Spoon)
-        ConvertType   // rewrite the ingredient type (Citrus Press → Sour)
+        Enhance,        // apply an Enhancement (Muddler → Infused, Jigger → Overproof)
+        Destroy,        // remove cards from the run permanently (Ice Pick)
+        Copy,           // add a fresh identical instance next to the original (Bar Spoon)
+        ConvertType,    // rewrite the ingredient type (Citrus Press → Sour)
+        SetQuality,     // rewrite the quality tier (Cocktail Umbrella → Signature)
+        DoubleMoney,    // double the wallet, capped (Tab Ledger)
+        CreateLastTool  // recreate the last Tool used this run (Bottle Opener)
     }
 
     /// <summary>
@@ -24,11 +30,15 @@ namespace LastCall.Core
         public int MaxTargets { get; }
         public Enhancement Enhancement { get; }
         public IngredientType ConvertTo { get; }
+        public QualityTier Quality { get; }
         public string Description { get; }
+
+        /// <summary>True for ops the run resolves without rail targets.</summary>
+        public bool IsRunOp => Op == ToolOp.DoubleMoney || Op == ToolOp.CreateLastTool;
 
         public ToolDefinition(string id, string name, int cost, ToolOp op, int maxTargets,
             Enhancement enhancement = Enhancement.None, IngredientType convertTo = default,
-            string description = null)
+            string description = null, QualityTier quality = QualityTier.HousePour)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Tool id is required", nameof(id));
             if (maxTargets <= 0) throw new ArgumentOutOfRangeException(nameof(maxTargets));
@@ -41,6 +51,7 @@ namespace LastCall.Core
             MaxTargets = maxTargets;
             Enhancement = enhancement;
             ConvertTo = convertTo;
+            Quality = quality;
             Description = description ?? string.Empty;
         }
     }

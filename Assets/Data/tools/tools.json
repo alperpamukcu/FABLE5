@@ -45,6 +45,36 @@
       "id": "gold_rim", "name": "Gold Rim", "cost": 3,
       "op": "Enhance", "enhancement": "Golden", "convertTo": "", "maxTargets": 1,
       "description": "Gild a card: +$3 if it sits unplayed on the rail when the customer is satisfied."
+    },
+    {
+      "id": "cocktail_umbrella", "name": "Cocktail Umbrella", "cost": 3,
+      "op": "SetQuality", "enhancement": "", "convertTo": "", "quality": "Signature", "maxTargets": 1,
+      "description": "Make a card Signature quality: x1.5 Mult when scored."
+    },
+    {
+      "id": "bottle_opener", "name": "Bottle Opener", "cost": 3,
+      "op": "CreateLastTool", "enhancement": "", "convertTo": "", "maxTargets": 1,
+      "description": "Recreate the last Tool you used this run."
+    },
+    {
+      "id": "tab_ledger", "name": "Tab Ledger", "cost": 3,
+      "op": "DoubleMoney", "enhancement": "", "convertTo": "", "maxTargets": 1,
+      "description": "Double your money (max +$20)."
+    },
+    {
+      "id": "soda_gun", "name": "Soda Gun", "cost": 3,
+      "op": "ConvertType", "enhancement": "", "convertTo": "Bubbly", "maxTargets": 2,
+      "description": "Convert up to 2 cards to Bubbly."
+    },
+    {
+      "id": "paring_knife", "name": "Paring Knife", "cost": 3,
+      "op": "ConvertType", "enhancement": "", "convertTo": "Garnish", "maxTargets": 2,
+      "description": "Convert up to 2 cards to Garnish."
+    },
+    {
+      "id": "bitters_bottle", "name": "Bitters Bottle", "cost": 3,
+      "op": "ConvertType", "enhancement": "", "convertTo": "Bitter", "maxTargets": 2,
+      "description": "Convert up to 2 cards to Bitter."
     }
   ]
 }

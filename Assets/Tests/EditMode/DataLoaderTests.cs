@@ -155,11 +155,11 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void ToolsJson_LoadsAllNineStarters()
+        public void ToolsJson_LoadsTheFullFifteenPool()
         {
             var tools = DataLoader.ParseTools(ReadDataFile("tools/tools.json"));
 
-            Assert.AreEqual(9, tools.Count);
+            Assert.AreEqual(15, tools.Count, "GDD M3: 15 Tools at launch");
             CollectionAssert.AllItemsAreUnique(tools.Select(t => t.Id).ToList());
             Assert.IsTrue(tools.All(t => t.Cost == 3), "GDD 7.1: Tools cost $3");
 
@@ -179,22 +179,31 @@ namespace LastCall.Tests
             Assert.AreEqual(Enhancement.Frozen, tools.Single(t => t.Id == "ice_tray").Enhancement);
             Assert.AreEqual(Enhancement.Doubled, tools.Single(t => t.Id == "double_strainer").Enhancement);
             Assert.AreEqual(Enhancement.Golden, tools.Single(t => t.Id == "gold_rim").Enhancement);
+
+            // The three GDD 7.1 specials.
+            Assert.AreEqual(QualityTier.Signature, tools.Single(t => t.Id == "cocktail_umbrella").Quality);
+            Assert.AreEqual(ToolOp.CreateLastTool, tools.Single(t => t.Id == "bottle_opener").Op);
+            Assert.AreEqual(ToolOp.DoubleMoney, tools.Single(t => t.Id == "tab_ledger").Op);
         }
 
         [Test]
-        public void VipsJson_LoadsAllSevenStarters()
+        public void VipsJson_LoadsTheFullTwentyPool()
         {
             var vips = DataLoader.ParseVips(ReadDataFile("vips/vips.json"));
 
-            Assert.AreEqual(7, vips.Count);
+            Assert.AreEqual(20, vips.Count, "GDD M3: 20 VIPs at launch");
             CollectionAssert.AllItemsAreUnique(vips.Select(v => v.Id).ToList());
+            CollectionAssert.AllItemsAreUnique(vips.Select(v => v.Name).ToList());
 
             var critic = vips.Single(v => v.Id == "critic");
-            Assert.IsTrue(critic.FinaleOnly, "The Critic is the Night 8 finisher");
+            Assert.IsTrue(critic.FinaleOnly, "The Critic is a Night 8 finisher");
             Assert.IsTrue(critic.Rules.Any(r => r.Kind == VipRuleKind.TargetScale && r.DoubleValue == 1.5));
             Assert.IsTrue(critic.Rules.Any(r => r.Kind == VipRuleKind.DebuffRandomType));
 
-            Assert.AreEqual(2, vips.Count(v => v.Gentle), "gentle Night 1-2 subset exists");
+            Assert.AreEqual(2, vips.Count(v => v.FinaleOnly), "two finale candidates for run variety");
+            Assert.IsTrue(vips.Single(v => v.Id == "landlord").FinaleOnly);
+            Assert.AreEqual(5, vips.Count(v => v.Gentle), "gentle Night 1-2 subset exists");
+            Assert.IsTrue(vips.Where(v => v.Gentle).All(v => !v.FinaleOnly), "gentle and finale never overlap");
 
             var teetotaler = vips.Single(v => v.Id == "teetotaler");
             Assert.AreEqual(VipRuleKind.DebuffType, teetotaler.Rules[0].Kind);

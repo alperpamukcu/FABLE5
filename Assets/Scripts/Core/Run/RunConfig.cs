@@ -22,6 +22,7 @@ namespace LastCall.Core
         public int RerollBaseCost { get; }
         public int BookPrice { get; }
         public int GoldenCardBonus { get; }
+        public int MoneyDoubleCap { get; }
         public Func<int, CustomerSlot, double> TargetProvider { get; }
         public RoundConfig RoundConfig { get; }
 
@@ -30,6 +31,7 @@ namespace LastCall.Core
             int interestPerDollars = 5, int interestCap = 5,
             int shopSlots = 2, int maxPatronSlots = 5, int maxToolSlots = 2,
             int rerollBaseCost = 5, int bookPrice = 4, int goldenCardBonus = 3,
+            int moneyDoubleCap = 20,
             Func<int, CustomerSlot, double> targetProvider = null,
             RoundConfig roundConfig = null)
         {
@@ -48,6 +50,7 @@ namespace LastCall.Core
             RerollBaseCost = rerollBaseCost;
             BookPrice = bookPrice;
             GoldenCardBonus = goldenCardBonus;
+            MoneyDoubleCap = moneyDoubleCap;
             TargetProvider = targetProvider ?? TargetTable.GreenStake;
             RoundConfig = roundConfig ?? RoundConfig.Default;
         }

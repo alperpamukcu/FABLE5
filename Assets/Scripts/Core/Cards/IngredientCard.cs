@@ -16,7 +16,7 @@ namespace LastCall.Core
         public string Name { get; }
         public IngredientType Type { get; private set; }
         public int Flavor { get; }
-        public QualityTier Quality { get; }
+        public QualityTier Quality { get; private set; }
         public Enhancement Enhancement { get; private set; }
         public int InstanceId { get; }
 
@@ -39,6 +39,9 @@ namespace LastCall.Core
 
         /// <summary>Rewrites the ingredient type — Tools like Citrus Press.</summary>
         public void ConvertType(IngredientType type) => Type = type;
+
+        /// <summary>Rewrites the quality tier — Tools like Cocktail Umbrella.</summary>
+        public void Refine(QualityTier quality) => Quality = quality;
 
         /// <summary>A fresh instance with identical stats (Bar Spoon); gets its own InstanceId.</summary>
         public IngredientCard Clone()

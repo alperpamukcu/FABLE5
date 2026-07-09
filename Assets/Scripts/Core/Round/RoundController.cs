@@ -178,6 +178,11 @@ namespace LastCall.Core
                 case ToolOp.ConvertType:
                     foreach (var card in targets) card.ConvertType(tool.ConvertTo);
                     break;
+                case ToolOp.SetQuality:
+                    foreach (var card in targets) card.Refine(tool.Quality);
+                    break;
+                default:
+                    throw new InvalidOperationException($"{tool.Name} is a run-level Tool, not a rail Tool.");
             }
         }
 

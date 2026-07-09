@@ -32,6 +32,7 @@ namespace LastCall.Core
         private readonly IReadOnlyList<VipDefinition> _vipPool;
         private readonly List<ToolDefinition> _tools = new List<ToolDefinition>();
         private readonly HashSet<string> _usedVipIds = new HashSet<string>();
+        private ToolDefinition _lastToolUsed;
         private bool _firstShopOpened;
 
         public RunConfig Config { get; }
@@ -96,15 +97,34 @@ namespace LastCall.Core
             CurrentRound.Restock(selection);
         }
 
-        /// <summary>Uses a held Tool on rail cards during the current customer round.</summary>
+        /// <summary>
+        /// Uses a held Tool during the current customer round. Rail Tools act on the
+        /// selected cards; run Tools (Tab Ledger, Bottle Opener) ignore the selection.
+        /// </summary>
         public void UseTool(ToolDefinition tool, IReadOnlyList<IngredientCard> targets)
         {
             EnsurePhase(RunPhase.CustomerRound);
             if (!_tools.Contains(tool))
                 throw new InvalidOperationException($"'{tool?.Name}' is not in the tool inventory.");
 
-            CurrentRound.ApplyTool(tool, targets);
+            switch (tool.Op)
+            {
+                case ToolOp.DoubleMoney:
+                    Money += Math.Min(Money, Config.MoneyDoubleCap);
+                    break;
+                case ToolOp.CreateLastTool:
+                    if (_lastToolUsed == null)
+                        throw new InvalidOperationException("No Tool has been used yet this run.");
+                    _tools.Remove(tool);
+                    _tools.Add(_lastToolUsed); // the freed slot takes the recreated tool
+                    return;                    // the opener itself never counts as last used
+                default:
+                    CurrentRound.ApplyTool(tool, targets);
+                    break;
+            }
+
             _tools.Remove(tool); // single-use
+            _lastToolUsed = tool;
         }
 
         /// <summary>Buys the shop offer at <paramref name="index"/> (Back Room only).</summary>

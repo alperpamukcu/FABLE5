@@ -134,9 +134,14 @@ namespace LastCall.Game
                 if (!string.IsNullOrEmpty(tool.convertTo)) convertTo = ParseType(tool.convertTo, tool.id);
                 if (op == ToolOp.ConvertType && string.IsNullOrEmpty(tool.convertTo))
                     throw new FormatException($"Tool '{tool.id}' converts type but has no convertTo.");
+                if (op == ToolOp.SetQuality && string.IsNullOrEmpty(tool.quality))
+                    throw new FormatException($"Tool '{tool.id}' sets quality but has no quality.");
+                var quality = string.IsNullOrEmpty(tool.quality)
+                    ? QualityTier.HousePour
+                    : ParseEnum<QualityTier>(tool.quality, tool.id, "quality");
 
                 tools.Add(new ToolDefinition(tool.id, tool.name, tool.cost, op, tool.maxTargets,
-                    enhancement, convertTo, tool.description));
+                    enhancement, convertTo, tool.description, quality));
             }
             return tools;
         }
@@ -300,6 +305,7 @@ namespace LastCall.Game
             public string op;
             public string enhancement;
             public string convertTo;
+            public string quality;
             public int maxTargets;
             public string description;
         }

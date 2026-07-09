@@ -38,6 +38,83 @@
         { "kind": "TargetScale", "type": "", "intValue": 0, "doubleValue": 1.5 },
         { "kind": "DebuffRandomType", "type": "", "intValue": 0, "doubleValue": 0 }
       ]
+    },
+    {
+      "id": "dentist", "name": "The Dentist", "gentle": true, "finaleOnly": false,
+      "description": "All Sweet cards are debuffed.",
+      "rules": [ { "kind": "DebuffType", "type": "Sweet", "intValue": 0, "doubleValue": 0 } ]
+    },
+    {
+      "id": "sweet_tooth", "name": "The Sweet Tooth", "gentle": true, "finaleOnly": false,
+      "description": "All Bitter cards are debuffed.",
+      "rules": [ { "kind": "DebuffType", "type": "Bitter", "intValue": 0, "doubleValue": 0 } ]
+    },
+    {
+      "id": "generous_aunt", "name": "The Generous Aunt", "gentle": true, "finaleOnly": false,
+      "description": "Rail size +2 this order. Enjoy.",
+      "rules": [ { "kind": "RailSizeDelta", "type": "", "intValue": 2, "doubleValue": 0 } ]
+    },
+    {
+      "id": "delicate_stomach", "name": "The Delicate Stomach", "gentle": false, "finaleOnly": false,
+      "description": "All Sour cards are debuffed.",
+      "rules": [ { "kind": "DebuffType", "type": "Sour", "intValue": 0, "doubleValue": 0 } ]
+    },
+    {
+      "id": "flat_earther", "name": "The Flat Earther", "gentle": false, "finaleOnly": false,
+      "description": "All Bubbly cards are debuffed. No bubbles.",
+      "rules": [ { "kind": "DebuffType", "type": "Bubbly", "intValue": 0, "doubleValue": 0 } ]
+    },
+    {
+      "id": "double_or_nothing", "name": "Double or Nothing", "gentle": false, "finaleOnly": false,
+      "description": "Target x2 this order.",
+      "rules": [ { "kind": "TargetScale", "type": "", "intValue": 0, "doubleValue": 2.0 } ]
+    },
+    {
+      "id": "connoisseur", "name": "The Connoisseur", "gentle": false, "finaleOnly": false,
+      "description": "Only Recipes level 3+ score.",
+      "rules": [ { "kind": "MinRecipeLevel", "type": "", "intValue": 3, "doubleValue": 0 } ]
+    },
+    {
+      "id": "speed_dater", "name": "The Speed Dater", "gentle": false, "finaleOnly": false,
+      "description": "Only your first Mix counts, but the target is x0.75.",
+      "rules": [
+        { "kind": "OnlyFirstMixScores", "type": "", "intValue": 0, "doubleValue": 0 },
+        { "kind": "TargetScale", "type": "", "intValue": 0, "doubleValue": 0.75 }
+      ]
+    },
+    {
+      "id": "food_blogger", "name": "The Food Blogger", "gentle": false, "finaleOnly": false,
+      "description": "Every Mix must be a different Recipe and the target is x1.2.",
+      "rules": [
+        { "kind": "EachMixDifferentRecipe", "type": "", "intValue": 0, "doubleValue": 0 },
+        { "kind": "TargetScale", "type": "", "intValue": 0, "doubleValue": 1.2 }
+      ]
+    },
+    {
+      "id": "roulette_rita", "name": "Roulette Rita", "gentle": false, "finaleOnly": false,
+      "description": "One random Ingredient Type is debuffed.",
+      "rules": [ { "kind": "DebuffRandomType", "type": "", "intValue": 0, "doubleValue": 0 } ]
+    },
+    {
+      "id": "ascetic", "name": "The Ascetic", "gentle": false, "finaleOnly": false,
+      "description": "All Spirit and Sweet cards are debuffed.",
+      "rules": [
+        { "kind": "DebuffType", "type": "Spirit", "intValue": 0, "doubleValue": 0 },
+        { "kind": "DebuffType", "type": "Sweet", "intValue": 0, "doubleValue": 0 }
+      ]
+    },
+    {
+      "id": "fire_marshal", "name": "The Fire Marshal", "gentle": false, "finaleOnly": false,
+      "description": "Rail size -4 this order. Occupancy limits.",
+      "rules": [ { "kind": "RailSizeDelta", "type": "", "intValue": -4, "doubleValue": 0 } ]
+    },
+    {
+      "id": "landlord", "name": "The Landlord", "gentle": false, "finaleOnly": true,
+      "description": "Target x1.4 and every Mix must be a different Recipe.",
+      "rules": [
+        { "kind": "TargetScale", "type": "", "intValue": 0, "doubleValue": 1.4 },
+        { "kind": "EachMixDifferentRecipe", "type": "", "intValue": 0, "doubleValue": 0 }
+      ]
     }
   ]
 }

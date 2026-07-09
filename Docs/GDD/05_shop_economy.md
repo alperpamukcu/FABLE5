@@ -15,6 +15,8 @@ Each Book targets one Recipe and raises its level permanently for the run (value
 ### 7.3 Tools (Tarot equivalent — single-use consumables, max held: 2)
 15 at launch. Examples: **Muddler** (Infuse up to 2 cards), **Jigger** (turn a card Overproof), **Ice Pick** (destroy up to 2 cards), **Citrus Press** (convert up to 3 cards to Sour), **Bar Spoon** (copy a card), **Coupe Glass** (turn a card Premium/wild), **Cocktail Umbrella** (add Signature quality to a random Patron), **Bottle Opener** (create the last Tool used), **Tab Ledger** (double your money, max +$20).
 
+Rulings (locked 2026-07-09, matching implementation): **Cocktail Umbrella** targets a chosen rail *card* and makes it Signature quality (×1.5 Mult when scored) — patrons have no quality track, so the original "random Patron" wording was a spec bug. **Bottle Opener** recreates the last Tool *used* this run (the Opener itself never counts as last used; using it with no tool history is an error the UI surfaces). **Tab Ledger** and **Bottle Opener** are run-level tools: they are used during a customer round but ignore card selection. Full launch pool of 15 lives in `Assets/Data/tools/tools.json`.
+
 ### 7.4 Vouchers (permanent run upgrades, $10)
 Examples: **Happy Hour** (+1 Restock), **Double Shift** (+1 Mix), **Wider Rail** (+1 Rail size), **Loyal Clientele** (Patrons $2 cheaper), **Neon Sign** (rarer Patrons appear more often), **Deep Cellar** (ingredient packs contain +1 card).
 
