@@ -219,6 +219,8 @@ namespace LastCall.Core
 
         private void OpenShop()
         {
+            // Walking into the Back Room is itself a patron trigger (Coat Check Girl et al).
+            Money += (int)PatronTriggers.ResolveMoney(EffectTrigger.OnShopEnter, _patrons, EffectContext.Empty);
             Shop = new ShopState(_rng.GetStream("shop"), PatronCandidates, _toolPool, _recipes,
                 Config.ShopSlots, Config.BookPrice, Config.RerollBaseCost,
                 firstShopOfRun: !_firstShopOpened);

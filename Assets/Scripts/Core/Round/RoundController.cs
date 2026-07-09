@@ -135,8 +135,9 @@ namespace LastCall.Core
             if (AccumulatedScore >= Customer.TargetScore)
             {
                 Phase = RoundPhase.Won;
-                PatronPayout = PatronTriggers.ResolveMoney(EffectTrigger.OnCustomerEnd, _patrons,
-                    new EffectContext(null, null, MixesUsed, RestocksUsed));
+                var endContext = new EffectContext(null, null, MixesUsed, RestocksUsed);
+                PatronTriggers.ResolveAccumulation(EffectTrigger.OnCustomerEnd, _patrons, endContext);
+                PatronPayout = PatronTriggers.ResolveMoney(EffectTrigger.OnCustomerEnd, _patrons, endContext);
             }
             else if (MixesRemaining == 0)
             {
@@ -207,6 +208,8 @@ namespace LastCall.Core
             RemoveFromRail(selection);
             _deck.Discard(selection);
             RestocksRemaining--;
+            PatronTriggers.ResolveAccumulation(EffectTrigger.OnRestock, _patrons,
+                new EffectContext(selection, null, MixesUsed, RestocksUsed));
             FillRail();
         }
 

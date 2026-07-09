@@ -28,5 +28,29 @@ namespace LastCall.Core
             }
             return total;
         }
+
+        /// <summary>
+        /// Applies Accumulate ops for a non-scoring trigger — the growth hook behind
+        /// patrons like The Gossip (grows on Restock) or The Accountant (grows per
+        /// customer). Call it BEFORE <see cref="ResolveMoney"/> on the same trigger so
+        /// Accumulated-value payouts can read what they just banked.
+        /// </summary>
+        public static void ResolveAccumulation(EffectTrigger trigger,
+            IReadOnlyList<PatronInstance> patrons, EffectContext context)
+        {
+            if (patrons == null) return;
+            context = context ?? EffectContext.Empty;
+
+            foreach (var patron in patrons)
+            {
+                foreach (var effect in patron.Definition.Effects)
+                {
+                    if (effect.Trigger != trigger) continue;
+                    if (effect.Op != EffectOp.Accumulate) continue;
+                    if (!effect.Condition.Evaluate(context)) continue;
+                    patron.Accumulate(effect.Value);
+                }
+            }
+        }
     }
 }

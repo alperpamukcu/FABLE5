@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "patrons": [
     {
       "id": "sailor_musa", "name": "Sailor Musa", "rarity": "Common", "cost": 4,
@@ -31,6 +31,166 @@
       "effects": [
         { "trigger": "OnCustomerEnd", "op": "AddMoney", "value": 2, "valueSource": "Constant",
           "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "uncle_demir", "name": "Uncle Demir", "rarity": "Common", "cost": 4,
+      "description": "Spirit cards give +15 extra Flavor.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "AddFlavor", "value": 15, "valueSource": "Constant",
+          "condition": { "kind": "CardTypeIs", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "lemon_vendor", "name": "The Lemon Vendor", "rarity": "Common", "cost": 4,
+      "description": "Sour cards give +15 extra Flavor.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "AddFlavor", "value": 15, "valueSource": "Constant",
+          "condition": { "kind": "CardTypeIs", "type": "Sour", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "pharmacist", "name": "The Pharmacist", "rarity": "Common", "cost": 4,
+      "description": "Bitter cards give +15 extra Flavor.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "AddFlavor", "value": 15, "valueSource": "Constant",
+          "condition": { "kind": "CardTypeIs", "type": "Bitter", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "madame_bubbles", "name": "Madame Bubbles", "rarity": "Common", "cost": 4,
+      "description": "Bubbly cards give +15 extra Flavor.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "AddFlavor", "value": 15, "valueSource": "Constant",
+          "condition": { "kind": "CardTypeIs", "type": "Bubbly", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "the_florist", "name": "The Florist", "rarity": "Common", "cost": 4,
+      "description": "Garnish cards give +15 extra Flavor.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "AddFlavor", "value": 15, "valueSource": "Constant",
+          "condition": { "kind": "CardTypeIs", "type": "Garnish", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "pickle_pete", "name": "Pickle Pete", "rarity": "Common", "cost": 4,
+      "description": "+4 Mult if the Mix contains a Sour.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "AddMult", "value": 4, "valueSource": "Constant",
+          "condition": { "kind": "MixContainsType", "type": "Sour", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "candy_man", "name": "The Candy Man", "rarity": "Common", "cost": 4,
+      "description": "+4 Mult if the Mix contains a Sweet.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "AddMult", "value": 4, "valueSource": "Constant",
+          "condition": { "kind": "MixContainsType", "type": "Sweet", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "espresso_nino", "name": "Espresso Nino", "rarity": "Common", "cost": 4,
+      "description": "+4 Mult if the Mix contains a Bitter.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "AddMult", "value": 4, "valueSource": "Constant",
+          "condition": { "kind": "MixContainsType", "type": "Bitter", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "toastmaster", "name": "The Toastmaster", "rarity": "Common", "cost": 4,
+      "description": "+4 Mult if the Mix contains a Bubbly.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "AddMult", "value": 4, "valueSource": "Constant",
+          "condition": { "kind": "MixContainsType", "type": "Bubbly", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "olive_olga", "name": "Olive Olga", "rarity": "Common", "cost": 4,
+      "description": "+4 Mult if the Mix contains a Garnish.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "AddMult", "value": 4, "valueSource": "Constant",
+          "condition": { "kind": "MixContainsType", "type": "Garnish", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "the_minimalist", "name": "The Minimalist", "rarity": "Common", "cost": 5,
+      "description": "+6 Mult if the Mix is a single card.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "AddMult", "value": 6, "valueSource": "Constant",
+          "condition": { "kind": "MixSizeEquals", "type": "Spirit", "intValue": 1, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "the_couple", "name": "The Couple", "rarity": "Common", "cost": 5,
+      "description": "+5 Mult if the Mix has exactly 2 ingredients.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "AddMult", "value": 5, "valueSource": "Constant",
+          "condition": { "kind": "MixSizeEquals", "type": "Spirit", "intValue": 2, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "bridge_club", "name": "The Bridge Club", "rarity": "Common", "cost": 5,
+      "description": "+40 Flavor if the Mix has exactly 4 ingredients.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 40, "valueSource": "Constant",
+          "condition": { "kind": "MixSizeEquals", "type": "Spirit", "intValue": 4, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "crowd_pleaser", "name": "The Crowd Pleaser", "rarity": "Common", "cost": 5,
+      "description": "+50 Flavor if the Mix has exactly 5 ingredients.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 50, "valueSource": "Constant",
+          "condition": { "kind": "MixSizeEquals", "type": "Spirit", "intValue": 5, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "the_regular", "name": "The Regular", "rarity": "Common", "cost": 4,
+      "description": "+$1 at end of each customer.",
+      "effects": [
+        { "trigger": "OnCustomerEnd", "op": "AddMoney", "value": 1, "valueSource": "Constant",
+          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "the_doorman", "name": "The Doorman", "rarity": "Common", "cost": 4,
+      "description": "The first scored card gives +20 extra Flavor.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "AddFlavor", "value": 20, "valueSource": "Constant",
+          "condition": { "kind": "CardIndexEquals", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "night_owl", "name": "The Night Owl", "rarity": "Common", "cost": 5,
+      "description": "+$3 at the end of each Night.",
+      "effects": [
+        { "trigger": "OnNightEnd", "op": "AddMoney", "value": 3, "valueSource": "Constant",
+          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "karaoke_queen", "name": "Karaoke Queen", "rarity": "Common", "cost": 5,
+      "description": "+25 Flavor if the Mix contains a Bubbly.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 25, "valueSource": "Constant",
+          "condition": { "kind": "MixContainsType", "type": "Bubbly", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "street_magician", "name": "Street Magician", "rarity": "Common", "cost": 5,
+      "description": "The second scored card gives +20 extra Flavor.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "AddFlavor", "value": 20, "valueSource": "Constant",
+          "condition": { "kind": "CardIndexEquals", "type": "Spirit", "intValue": 1, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "quiet_monk", "name": "The Quiet Monk", "rarity": "Common", "cost": 5,
+      "description": "+30 Flavor if no Restocks were used this order.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 30, "valueSource": "Constant",
+          "condition": { "kind": "RestocksUsedEquals", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
       ]
     },
     {
@@ -66,6 +226,136 @@
       ]
     },
     {
+      "id": "bootlegger", "name": "The Bootlegger", "rarity": "Uncommon", "cost": 6,
+      "description": "Spirit cards each give +2 Mult.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "AddMult", "value": 2, "valueSource": "Constant",
+          "condition": { "kind": "CardTypeIs", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "chocolatier", "name": "The Chocolatier", "rarity": "Uncommon", "cost": 6,
+      "description": "Sweet cards each give +2 Mult.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "AddMult", "value": 2, "valueSource": "Constant",
+          "condition": { "kind": "CardTypeIs", "type": "Sweet", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "herbalist", "name": "The Herbalist", "rarity": "Uncommon", "cost": 6,
+      "description": "Bitter cards each give +2 Mult.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "AddMult", "value": 2, "valueSource": "Constant",
+          "condition": { "kind": "CardTypeIs", "type": "Bitter", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "sommelier", "name": "The Sommelier", "rarity": "Uncommon", "cost": 6,
+      "description": "Bubbly cards each give +2 Mult.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "AddMult", "value": 2, "valueSource": "Constant",
+          "condition": { "kind": "CardTypeIs", "type": "Bubbly", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "gardener", "name": "The Gardener", "rarity": "Uncommon", "cost": 6,
+      "description": "Garnish cards each give +2 Mult.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "AddMult", "value": 2, "valueSource": "Constant",
+          "condition": { "kind": "CardTypeIs", "type": "Garnish", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "the_parrot", "name": "The Parrot", "rarity": "Uncommon", "cost": 7,
+      "description": "Retrigger the second scored card.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "Retrigger", "value": 1, "valueSource": "Constant",
+          "condition": { "kind": "CardIndexEquals", "type": "Spirit", "intValue": 1, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "magpie", "name": "The Magpie", "rarity": "Uncommon", "cost": 7,
+      "description": "Retrigger every Garnish card.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "Retrigger", "value": 1, "valueSource": "Constant",
+          "condition": { "kind": "CardTypeIs", "type": "Garnish", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "second_wind", "name": "Second Wind", "rarity": "Uncommon", "cost": 6,
+      "description": "Second Mix each customer: +40 Flavor.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 40, "valueSource": "Constant",
+          "condition": { "kind": "MixesUsedEquals", "type": "Spirit", "intValue": 1, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "last_call_larry", "name": "Last Call Larry", "rarity": "Uncommon", "cost": 7,
+      "description": "The final (4th) Mix of a customer: x3 Mult.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "MultMult", "value": 3, "valueSource": "Constant",
+          "condition": { "kind": "MixesUsedEquals", "type": "Spirit", "intValue": 3, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "the_gossip", "name": "The Gossip", "rarity": "Uncommon", "cost": 7,
+      "description": "Gains +5 Flavor permanently every time you Restock (this run).",
+      "effects": [
+        { "trigger": "OnRestock", "op": "Accumulate", "value": 5, "valueSource": "Constant",
+          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } },
+        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 0, "valueSource": "Accumulated",
+          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "soda_jerk", "name": "The Soda Jerk", "rarity": "Uncommon", "cost": 6,
+      "description": "x2 Mult if the Mix is a Spritz, Highball or Fizz.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "MultMult", "value": 2, "valueSource": "Constant",
+          "condition": { "kind": "RecipeIdIn", "type": "Spirit", "intValue": 0, "recipeIds": ["spritz", "highball", "fizz"] } }
+      ]
+    },
+    {
+      "id": "sourpuss", "name": "The Sourpuss", "rarity": "Uncommon", "cost": 6,
+      "description": "+50 Flavor if the Mix is a Sour or Fizz.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 50, "valueSource": "Constant",
+          "condition": { "kind": "RecipeIdIn", "type": "Spirit", "intValue": 0, "recipeIds": ["sour", "fizz"] } }
+      ]
+    },
+    {
+      "id": "old_timer", "name": "The Old Timer", "rarity": "Uncommon", "cost": 7,
+      "description": "x2 Mult if the Mix is an Old Fashioned or Negroni.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "MultMult", "value": 2, "valueSource": "Constant",
+          "condition": { "kind": "RecipeIdIn", "type": "Spirit", "intValue": 0, "recipeIds": ["old_fashioned", "negroni"] } }
+      ]
+    },
+    {
+      "id": "coat_check", "name": "The Coat Check Girl", "rarity": "Uncommon", "cost": 6,
+      "description": "+$2 every time you enter the Back Room.",
+      "effects": [
+        { "trigger": "OnShopEnter", "op": "AddMoney", "value": 2, "valueSource": "Constant",
+          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "efficiency_expert", "name": "The Efficiency Expert", "rarity": "Uncommon", "cost": 7,
+      "description": "+$4 if the customer is satisfied with a single Mix.",
+      "effects": [
+        { "trigger": "OnCustomerEnd", "op": "AddMoney", "value": 4, "valueSource": "Constant",
+          "condition": { "kind": "MixesUsedEquals", "type": "Spirit", "intValue": 1, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "apprentice", "name": "The Apprentice", "rarity": "Uncommon", "cost": 7,
+      "description": "Every scored card gives +1 Mult.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "AddMult", "value": 1, "valueSource": "Constant",
+          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
       "id": "jazz_singer", "name": "Jazz Singer", "rarity": "Rare", "cost": 8,
       "description": "x3 Mult if the Mix is a Martini or Negroni.",
       "effects": [
@@ -80,6 +370,128 @@
         { "trigger": "OnHandScored", "op": "Accumulate", "value": 1, "valueSource": "Constant",
           "condition": { "kind": "RecipeIdIn", "type": "Spirit", "intValue": 0, "recipeIds": ["perfect_serve", "double_perfect"] } },
         { "trigger": "OnHandScored", "op": "AddMult", "value": 0, "valueSource": "Accumulated",
+          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "the_barnacle", "name": "The Barnacle", "rarity": "Rare", "cost": 8,
+      "description": "Gains +10 Flavor permanently for every customer served (this run).",
+      "effects": [
+        { "trigger": "OnCustomerEnd", "op": "Accumulate", "value": 10, "valueSource": "Constant",
+          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } },
+        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 0, "valueSource": "Accumulated",
+          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "high_roller", "name": "The High Roller", "rarity": "Rare", "cost": 9,
+      "description": "x3 Mult if the Mix has exactly 5 ingredients.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "MultMult", "value": 3, "valueSource": "Constant",
+          "condition": { "kind": "MixSizeEquals", "type": "Spirit", "intValue": 5, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "moonshiner", "name": "The Moonshiner", "rarity": "Rare", "cost": 9,
+      "description": "Retrigger every Spirit card.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "Retrigger", "value": 1, "valueSource": "Constant",
+          "condition": { "kind": "CardTypeIs", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "perfectionist", "name": "The Perfectionist", "rarity": "Rare", "cost": 9,
+      "description": "x4 Mult if the Mix is a Perfect Serve or Double Perfect.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "MultMult", "value": 4, "valueSource": "Constant",
+          "condition": { "kind": "RecipeIdIn", "type": "Spirit", "intValue": 0, "recipeIds": ["perfect_serve", "double_perfect"] } }
+      ]
+    },
+    {
+      "id": "the_accountant", "name": "The Accountant", "rarity": "Rare", "cost": 9,
+      "description": "Pays $1 per customer served so far, at the end of every customer.",
+      "effects": [
+        { "trigger": "OnCustomerEnd", "op": "Accumulate", "value": 1, "valueSource": "Constant",
+          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } },
+        { "trigger": "OnCustomerEnd", "op": "AddMoney", "value": 0, "valueSource": "Accumulated",
+          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "velvet_glove", "name": "The Velvet Glove", "rarity": "Rare", "cost": 8,
+      "description": "The first scored card gives x2 Mult.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "MultMult", "value": 2, "valueSource": "Constant",
+          "condition": { "kind": "CardIndexEquals", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "the_widow", "name": "The Widow", "rarity": "Rare", "cost": 8,
+      "description": "+80 Flavor if the Mix contains a Bitter.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 80, "valueSource": "Constant",
+          "condition": { "kind": "MixContainsType", "type": "Bitter", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "stage_manager", "name": "The Stage Manager", "rarity": "Rare", "cost": 8,
+      "description": "Bubbly and Garnish cards each give +2 Mult.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "AddMult", "value": 2, "valueSource": "Constant",
+          "condition": { "kind": "CardTypeIs", "type": "Bubbly", "intValue": 0, "recipeIds": [] } },
+        { "trigger": "OnCardScored", "op": "AddMult", "value": 2, "valueSource": "Constant",
+          "condition": { "kind": "CardTypeIs", "type": "Garnish", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "bell_ringer", "name": "The Bell Ringer", "rarity": "Rare", "cost": 8,
+      "description": "+$4 every time you enter the Back Room.",
+      "effects": [
+        { "trigger": "OnShopEnter", "op": "AddMoney", "value": 4, "valueSource": "Constant",
+          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "the_oracle", "name": "The Oracle", "rarity": "Rare", "cost": 9,
+      "description": "First Mix each customer: x3 Mult.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "MultMult", "value": 3, "valueSource": "Constant",
+          "condition": { "kind": "MixesUsedEquals", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "the_owner", "name": "The Owner", "rarity": "Legendary", "cost": 20,
+      "description": "x2 Mult. Always.",
+      "effects": [
+        { "trigger": "OnHandScored", "op": "MultMult", "value": 2, "valueSource": "Constant",
+          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "lady_fortune", "name": "Lady Fortune", "rarity": "Legendary", "cost": 20,
+      "description": "Retrigger the first and second scored cards.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "Retrigger", "value": 1, "valueSource": "Constant",
+          "condition": { "kind": "CardIndexEquals", "type": "Spirit", "intValue": 0, "recipeIds": [] } },
+        { "trigger": "OnCardScored", "op": "Retrigger", "value": 1, "valueSource": "Constant",
+          "condition": { "kind": "CardIndexEquals", "type": "Spirit", "intValue": 1, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "madame_vermouth", "name": "Madame Vermouth", "rarity": "Legendary", "cost": 20,
+      "description": "Gains +2 Mult permanently for every customer served (this run).",
+      "effects": [
+        { "trigger": "OnCustomerEnd", "op": "Accumulate", "value": 2, "valueSource": "Constant",
+          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } },
+        { "trigger": "OnHandScored", "op": "AddMult", "value": 0, "valueSource": "Accumulated",
+          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
+      ]
+    },
+    {
+      "id": "the_alchemist", "name": "The Alchemist", "rarity": "Legendary", "cost": 20,
+      "description": "Every scored card gives +3 Mult.",
+      "effects": [
+        { "trigger": "OnCardScored", "op": "AddMult", "value": 3, "valueSource": "Constant",
           "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
       ]
     }

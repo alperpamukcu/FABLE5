@@ -105,13 +105,27 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void PatronsJson_LoadsAllTenStarters()
+        public void PatronsJson_LoadsTheFullSixtyPool()
         {
             var patrons = DataLoader.ParsePatrons(ReadDataFile("patrons/patrons.json"));
 
-            Assert.AreEqual(10, patrons.Count);
+            Assert.AreEqual(60, patrons.Count, "GDD M3: 60 Patrons at launch");
             CollectionAssert.AllItemsAreUnique(patrons.Select(p => p.Id).ToList());
+            CollectionAssert.AllItemsAreUnique(patrons.Select(p => p.Name).ToList());
             Assert.IsTrue(patrons.All(p => p.Effects.Count >= 1));
+
+            var byRarity = patrons.GroupBy(p => p.Rarity).ToDictionary(g => g.Key, g => g.Count());
+            Assert.AreEqual(24, byRarity[PatronRarity.Common]);
+            Assert.AreEqual(20, byRarity[PatronRarity.Uncommon]);
+            Assert.AreEqual(12, byRarity[PatronRarity.Rare]);
+            Assert.AreEqual(4, byRarity[PatronRarity.Legendary]);
+
+            // Every RecipeIdIn condition must reference a real recipe.
+            var recipeIds = new HashSet<string>(RecipeCatalog.CreateDefault().Select(r => r.Id));
+            foreach (var patron in patrons)
+                foreach (var effect in patron.Effects)
+                    foreach (var id in effect.Condition.RecipeIds)
+                        Assert.IsTrue(recipeIds.Contains(id), $"{patron.Id} references unknown recipe '{id}'");
 
             var singer = patrons.Single(p => p.Id == "jazz_singer");
             Assert.AreEqual(PatronRarity.Rare, singer.Rarity);
