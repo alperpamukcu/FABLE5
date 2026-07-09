@@ -607,8 +607,10 @@ namespace LastCall.DebugUI
             _bannerText = NewText("Banner", root, 34, TextAnchor.MiddleCenter, Color.white);
             Place((RectTransform)_bannerText.transform, new Vector2(0.5f, 0.5f), new Vector2(900, 60), new Vector2(0, 150));
 
+            // Tall enough for the full GDD 7 layout: 2 card slots + voucher + 2 packs
+            // + reroll + continue (~260px of rows) with headroom for SOLD relabels.
             _shopPanel = NewRect("ShopPanel", root);
-            Place(_shopPanel, new Vector2(0.5f, 0.5f), new Vector2(460, 300), new Vector2(-60, 0));
+            Place(_shopPanel, new Vector2(0.5f, 0.5f), new Vector2(460, 440), new Vector2(-60, 0));
             _shopPanel.gameObject.AddComponent<Image>().color = new Color(0.10f, 0.08f, 0.14f, 0.95f);
             _shopTitle = NewText("ShopTitle", _shopPanel, 18, TextAnchor.MiddleCenter, new Color(1f, 0.9f, 0.6f));
             Stretch((RectTransform)_shopTitle.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(8, -40), new Vector2(-8, -6));
