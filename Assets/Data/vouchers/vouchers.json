@@ -20,6 +20,16 @@
       "id": "loyal_clientele", "name": "Loyal Clientele", "cost": 10,
       "op": "PatronDiscount", "intValue": 2,
       "description": "Patrons cost $2 less (never below $1)."
+    },
+    {
+      "id": "neon_sign", "name": "Neon Sign", "cost": 10,
+      "op": "RarePatronBoost", "intValue": 1,
+      "description": "Uncommon and Rare Patrons show up twice as often in the shop."
+    },
+    {
+      "id": "deep_cellar", "name": "Deep Cellar", "cost": 10,
+      "op": "PackExtraCard", "intValue": 1,
+      "description": "Cellar Packs contain 1 extra card to choose from."
     }
   ]
 }

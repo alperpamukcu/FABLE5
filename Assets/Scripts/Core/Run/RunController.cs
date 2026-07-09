@@ -64,6 +64,9 @@ namespace LastCall.Core
         /// <summary>The current Back Room inventory; non-null only during the BackRoom phase.</summary>
         public ShopState Shop { get; private set; }
 
+        /// <summary>A bought pack waiting for its pick/skip; non-null only in the BackRoom.</summary>
+        public OpenPackState OpenPack { get; private set; }
+
         /// <summary>The VIP whose rules govern the current order; null for regular customers.</summary>
         public VipDefinition CurrentVip { get; private set; }
 
@@ -182,6 +185,134 @@ namespace LastCall.Core
             offer.MarkSold();
         }
 
+        /// <summary>Buys one of the shop's two Booster Pack slots and opens it.</summary>
+        public void BuyPack(int index)
+        {
+            EnsurePhase(RunPhase.BackRoom);
+            if (OpenPack != null) throw new InvalidOperationException("Resolve the open pack first.");
+            if (index < 0 || index >= Shop.PackOffers.Count)
+                throw new ArgumentOutOfRangeException(nameof(index));
+            var offer = Shop.PackOffers[index];
+            if (offer.Sold) throw new InvalidOperationException("Pack already sold.");
+            if (Money < offer.Price)
+                throw new InvalidOperationException($"Not enough money (${Money} < ${offer.Price}).");
+
+            Money -= offer.Price;
+            offer.MarkSold();
+            OpenPack = GeneratePack(offer.Pack);
+        }
+
+        /// <summary>Takes one reward from the open pack. Throws (pack stays open) when the
+        /// reward can't be applied — e.g. patron slots or the tool inventory are full.</summary>
+        public void PickFromPack(int optionIndex)
+        {
+            if (OpenPack == null) throw new InvalidOperationException("No pack is open.");
+            if (optionIndex < 0 || optionIndex >= OpenPack.Options.Count)
+                throw new ArgumentOutOfRangeException(nameof(optionIndex));
+
+            var option = OpenPack.Options[optionIndex];
+            switch (option.Kind)
+            {
+                case PackOptionKind.IngredientCard:
+                    _deck.Discard(new[] { option.Card }); // permanent from the next shuffle on
+                    break;
+                case PackOptionKind.Patron:
+                    if (_patrons.Count >= Config.MaxPatronSlots)
+                        throw new InvalidOperationException("All patron slots are taken.");
+                    if (_patrons.Exists(p => p.Definition.Id == option.Patron.Id))
+                        throw new InvalidOperationException($"{option.Patron.Name} already sits at the bar.");
+                    _patrons.Add(new PatronInstance(option.Patron));
+                    break;
+                case PackOptionKind.Tool:
+                    if (_tools.Count >= Config.MaxToolSlots)
+                        throw new InvalidOperationException("Tool inventory is full.");
+                    _tools.Add(option.Tool);
+                    break;
+                case PackOptionKind.Book:
+                    _recipeLevels[option.Recipe.Id] = RecipeLevelOf(option.Recipe.Id) + 1;
+                    break;
+            }
+            OpenPack = null;
+        }
+
+        /// <summary>Closes the open pack without taking anything (money stays spent).</summary>
+        public void SkipPack()
+        {
+            if (OpenPack == null) throw new InvalidOperationException("No pack is open.");
+            OpenPack = null;
+        }
+
+        private OpenPackState GeneratePack(PackKind kind)
+        {
+            var rng = _rng.GetStream("pack_contents");
+            var options = new List<PackOption>();
+
+            switch (kind)
+            {
+                case PackKind.Cellar:
+                    int count = 3 + VoucherValue(VoucherOp.PackExtraCard); // Deep Cellar
+                    for (int i = 0; i < count; i++) options.Add(PackOption.ForCard(RollPackCard(rng)));
+                    break;
+                case PackKind.Distiller:
+                    foreach (var recipe in RollDistinct(rng, _recipes, 2))
+                        options.Add(PackOption.ForBook(recipe));
+                    break;
+                case PackKind.BarKit:
+                    for (int i = 0; i < 2 && _toolPool.Count > 0; i++)
+                        options.Add(PackOption.ForTool(_toolPool[rng.NextInt(_toolPool.Count)]));
+                    break;
+                case PackKind.Regulars:
+                    foreach (var patron in RollDistinct(rng, PatronCandidates(), 2))
+                        options.Add(PackOption.ForPatron(patron));
+                    break;
+                case PackKind.Speakeasy:
+                    // GDD 7.1: the "special means" — the one place Legendaries can roll.
+                    var rarePlus = PatronCandidates()
+                        .Where(p => p.Rarity == PatronRarity.Rare || p.Rarity == PatronRarity.Legendary)
+                        .ToList();
+                    if (rarePlus.Count > 0)
+                    {
+                        var legendaries = rarePlus.Where(p => p.Rarity == PatronRarity.Legendary).ToList();
+                        var pool = legendaries.Count > 0 && rng.NextInt(4) == 0 ? legendaries : rarePlus;
+                        options.Add(PackOption.ForPatron(pool[rng.NextInt(pool.Count)]));
+                    }
+                    if (_toolPool.Count > 0)
+                        options.Add(PackOption.ForTool(_toolPool[rng.NextInt(_toolPool.Count)]));
+                    options.Add(PackOption.ForBook(_recipes[rng.NextInt(_recipes.Count)]));
+                    break;
+            }
+            return new OpenPackState(kind, options);
+        }
+
+        /// <summary>A fresh random ingredient card: any type, flavor 2–10, 1-in-4 quality upgrade.</summary>
+        private static IngredientCard RollPackCard(SeededRng rng)
+        {
+            var types = (IngredientType[])Enum.GetValues(typeof(IngredientType));
+            var type = types[rng.NextInt(types.Length)];
+            int flavor = 2 + rng.NextInt(9);
+            var quality = QualityTier.HousePour;
+            if (rng.NextInt(4) == 0)
+            {
+                var upgrades = new[] { QualityTier.TopShelf, QualityTier.BarrelAged, QualityTier.Signature };
+                quality = upgrades[rng.NextInt(upgrades.Length)];
+            }
+            return new IngredientCard($"pack_{type}_{flavor}".ToLowerInvariant(),
+                $"{type} {flavor}", type, flavor, quality);
+        }
+
+        private static List<T> RollDistinct<T>(SeededRng rng, IReadOnlyList<T> pool, int count)
+        {
+            var indices = Enumerable.Range(0, pool.Count).ToList();
+            var picks = new List<T>();
+            for (int i = 0; i < count && indices.Count > 0; i++)
+            {
+                int at = rng.NextInt(indices.Count);
+                picks.Add(pool[indices[at]]);
+                indices.RemoveAt(at);
+            }
+            return picks;
+        }
+
         /// <summary>Rerolls the shop for its escalating fee (GDD 7: $5, +$1 per reroll).</summary>
         public void RerollShop()
         {
@@ -211,6 +342,7 @@ namespace LastCall.Core
         public void ContinueToNextCustomer()
         {
             EnsurePhase(RunPhase.BackRoom);
+            if (OpenPack != null) throw new InvalidOperationException("Resolve the open pack first.");
             Shop = null;
 
             if (Slot == CustomerSlot.Vip)
@@ -268,7 +400,9 @@ namespace LastCall.Core
                 Config.ShopSlots, Config.BookPrice, Config.RerollBaseCost,
                 firstShopOfRun: !_firstShopOpened,
                 voucherCandidates: voucherCandidates, voucherRng: _rng.GetStream("voucher"),
-                patronDiscount: VoucherValue(VoucherOp.PatronDiscount));
+                patronDiscount: VoucherValue(VoucherOp.PatronDiscount),
+                packRng: _rng.GetStream("packs"),
+                rarePatronBoost: 1 + VoucherValue(VoucherOp.RarePatronBoost));
             _firstShopOpened = true;
         }
 

@@ -20,7 +20,9 @@ Rulings (locked 2026-07-09, matching implementation): **Cocktail Umbrella** targ
 ### 7.4 Vouchers (permanent run upgrades, $10)
 Examples: **Happy Hour** (+1 Restock), **Double Shift** (+1 Mix), **Wider Rail** (+1 Rail size), **Loyal Clientele** (Patrons $2 cheaper), **Neon Sign** (rarer Patrons appear more often), **Deep Cellar** (ingredient packs contain +1 card).
 
-Rulings (locked 2026-07-09, matching implementation): every Back Room shows **one dedicated Voucher slot** offering a random voucher the player doesn't own yet; the slot is not affected by rerolls and each voucher can be owned once. Loyal Clientele's discount applies from the *next* shop (prices already on the table don't change) and never drops a patron below $1. **Neon Sign** and **Deep Cellar** ship together with the Booster Pack / rarity-weighting slice — their systems don't exist yet. Launch pool lives in `Assets/Data/vouchers/vouchers.json`.
+Rulings (locked 2026-07-09, matching implementation): every Back Room shows **one dedicated Voucher slot** offering a random voucher the player doesn't own yet; the slot is not affected by rerolls and each voucher can be owned once. Loyal Clientele's discount applies from the *next* shop (prices already on the table don't change) and never drops a patron below $1. **Neon Sign** doubles the Uncommon/Rare shop weights (base weights C60/U30/R10; Legendary weight 0 — "only via special means" = the Speakeasy Pack). **Deep Cellar** adds a 4th card to Cellar Packs. Launch pool of 6 lives in `Assets/Data/vouchers/vouchers.json`.
+
+Pack rulings: the two **Booster Pack slots** roll two *distinct* kinds per shop (among kinds the run's pools can fill) and do not reroll. Buying a pack opens it immediately: the player takes exactly one reward or skips (money stays spent); the Back Room can't be left with a pack open. Cellar Packs offer 3 random cards (any type, flavor 2–10, 1-in-4 quality upgrade); Distiller 1-of-2 Books; Bar Kit 1-of-2 Tools; Regulars 1-of-2 Patrons; Speakeasy one rare-or-legendary Patron (legendary 1-in-4 when available) + a Tool + a Book.
 
 ### 7.5 Money (Tips) economy
 - Satisfy Customer A: $3. Customer B: $4. VIP: $5.

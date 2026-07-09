@@ -211,13 +211,15 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void VouchersJson_LoadsTheLaunchFour()
+        public void VouchersJson_LoadsTheLaunchSix()
         {
             var vouchers = DataLoader.ParseVouchers(ReadDataFile("vouchers/vouchers.json"));
 
-            Assert.AreEqual(4, vouchers.Count);
+            Assert.AreEqual(6, vouchers.Count, "GDD 7.4: all six launch vouchers");
             CollectionAssert.AllItemsAreUnique(vouchers.Select(v => v.Id).ToList());
             Assert.IsTrue(vouchers.All(v => v.Cost == 10), "GDD 7.4: vouchers cost $10");
+            Assert.AreEqual(VoucherOp.RarePatronBoost, vouchers.Single(v => v.Id == "neon_sign").Op);
+            Assert.AreEqual(VoucherOp.PackExtraCard, vouchers.Single(v => v.Id == "deep_cellar").Op);
 
             Assert.AreEqual(VoucherOp.ExtraRestock, vouchers.Single(v => v.Id == "happy_hour").Op);
             Assert.AreEqual(VoucherOp.ExtraMix, vouchers.Single(v => v.Id == "double_shift").Op);

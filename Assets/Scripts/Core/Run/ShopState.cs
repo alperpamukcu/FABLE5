@@ -9,7 +9,8 @@ namespace LastCall.Core
         Patron,
         Tool,
         Book,
-        Voucher
+        Voucher,
+        Pack
     }
 
     /// <summary>One purchasable slot in the Back Room.</summary>
@@ -20,6 +21,7 @@ namespace LastCall.Core
         public ToolDefinition Tool { get; }
         public RecipeDefinition Recipe { get; }
         public VoucherDefinition Voucher { get; }
+        public PackKind Pack { get; }
         public int Price { get; }
         public bool Sold { get; private set; }
 
@@ -32,34 +34,39 @@ namespace LastCall.Core
                     case ShopOfferKind.Patron: return Patron.Name;
                     case ShopOfferKind.Tool: return Tool.Name;
                     case ShopOfferKind.Voucher: return $"Voucher: {Voucher.Name}";
+                    case ShopOfferKind.Pack: return PackCatalog.NameOf(Pack);
                     default: return $"Recipe Book: {Recipe.Name}";
                 }
             }
         }
 
         private ShopOffer(ShopOfferKind kind, PatronDefinition patron, ToolDefinition tool,
-            RecipeDefinition recipe, VoucherDefinition voucher, int price)
+            RecipeDefinition recipe, VoucherDefinition voucher, PackKind pack, int price)
         {
             Kind = kind;
             Patron = patron;
             Tool = tool;
             Recipe = recipe;
             Voucher = voucher;
+            Pack = pack;
             Price = price;
         }
 
         internal static ShopOffer ForPatron(PatronDefinition patron, int discount) =>
-            new ShopOffer(ShopOfferKind.Patron, patron, null, null, null,
+            new ShopOffer(ShopOfferKind.Patron, patron, null, null, null, default,
                 Math.Max(1, patron.Cost - discount));
 
         internal static ShopOffer ForTool(ToolDefinition tool) =>
-            new ShopOffer(ShopOfferKind.Tool, null, tool, null, null, tool.Cost);
+            new ShopOffer(ShopOfferKind.Tool, null, tool, null, null, default, tool.Cost);
 
         internal static ShopOffer ForBook(RecipeDefinition recipe, int price) =>
-            new ShopOffer(ShopOfferKind.Book, null, null, recipe, null, price);
+            new ShopOffer(ShopOfferKind.Book, null, null, recipe, null, default, price);
 
         internal static ShopOffer ForVoucher(VoucherDefinition voucher) =>
-            new ShopOffer(ShopOfferKind.Voucher, null, null, null, voucher, voucher.Cost);
+            new ShopOffer(ShopOfferKind.Voucher, null, null, null, voucher, default, voucher.Cost);
+
+        internal static ShopOffer ForPack(PackKind pack) =>
+            new ShopOffer(ShopOfferKind.Pack, null, null, null, null, pack, PackCatalog.PriceOf(pack));
 
         internal void MarkSold() => Sold = true;
     }
@@ -78,7 +85,9 @@ namespace LastCall.Core
         private readonly int _slots;
         private readonly int _bookPrice;
         private readonly int _patronDiscount;
+        private readonly int _rarePatronBoost;
         private readonly List<ShopOffer> _offers = new List<ShopOffer>();
+        private readonly List<ShopOffer> _packOffers = new List<ShopOffer>();
 
         public IReadOnlyList<ShopOffer> Offers => _offers;
         public int RerollCost { get; private set; }
@@ -86,11 +95,14 @@ namespace LastCall.Core
         /// <summary>The dedicated Voucher slot; null when every voucher is owned. Never rerolls.</summary>
         public ShopOffer VoucherOffer { get; }
 
+        /// <summary>The two Booster Pack slots (GDD 7 layout). Never reroll.</summary>
+        public IReadOnlyList<ShopOffer> PackOffers => _packOffers;
+
         internal ShopState(SeededRng rng, Func<IReadOnlyList<PatronDefinition>> patronCandidates,
             IReadOnlyList<ToolDefinition> toolPool, IReadOnlyList<RecipeDefinition> recipes,
             int slots, int bookPrice, int rerollBaseCost, bool firstShopOfRun,
             IReadOnlyList<VoucherDefinition> voucherCandidates = null, SeededRng voucherRng = null,
-            int patronDiscount = 0)
+            int patronDiscount = 0, SeededRng packRng = null, int rarePatronBoost = 1)
         {
             _rng = rng;
             _patronCandidates = patronCandidates;
@@ -99,6 +111,7 @@ namespace LastCall.Core
             _slots = slots;
             _bookPrice = bookPrice;
             _patronDiscount = patronDiscount;
+            _rarePatronBoost = rarePatronBoost;
             RerollCost = rerollBaseCost;
 
             if (firstShopOfRun) GenerateFirstShop();
@@ -107,6 +120,27 @@ namespace LastCall.Core
             if (voucherCandidates != null && voucherCandidates.Count > 0 && voucherRng != null)
                 VoucherOffer = ShopOffer.ForVoucher(
                     voucherCandidates[voucherRng.NextInt(voucherCandidates.Count)]);
+
+            if (packRng != null) RollPackOffers(packRng);
+        }
+
+        /// <summary>Two distinct pack kinds among those the run's pools can actually fill.</summary>
+        private void RollPackOffers(SeededRng packRng)
+        {
+            var available = new List<PackKind> { PackKind.Cellar, PackKind.Distiller };
+            if (_toolPool.Count > 0) available.Add(PackKind.BarKit);
+            var candidates = _patronCandidates();
+            if (candidates.Count > 0) available.Add(PackKind.Regulars);
+            if (_toolPool.Count > 0 || candidates.Any(
+                    p => p.Rarity == PatronRarity.Rare || p.Rarity == PatronRarity.Legendary))
+                available.Add(PackKind.Speakeasy);
+
+            for (int i = 0; i < 2 && available.Count > 0; i++)
+            {
+                int pick = packRng.NextInt(available.Count);
+                _packOffers.Add(ShopOffer.ForPack(available[pick]));
+                available.RemoveAt(pick);
+            }
         }
 
         /// <summary>Regenerates the offers; the escalating fee is charged by the run layer.</summary>
@@ -149,8 +183,9 @@ namespace LastCall.Core
             if (roll <= 1)
             {
                 var candidates = _patronCandidates().Where(p => !excludePatronIds.Contains(p.Id)).ToList();
-                if (candidates.Count > 0)
-                    return ShopOffer.ForPatron(candidates[_rng.NextInt(candidates.Count)], _patronDiscount);
+                var patron = PatronRoll.Weighted(_rng, candidates, _rarePatronBoost);
+                if (patron != null)
+                    return ShopOffer.ForPatron(patron, _patronDiscount);
             }
 
             if (roll <= 2 && _toolPool.Count > 0)

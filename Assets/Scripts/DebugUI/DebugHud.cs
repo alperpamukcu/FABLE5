@@ -191,6 +191,35 @@ namespace LastCall.DebugUI
             });
         }
 
+        private void OnBuyPackClicked(int index)
+        {
+            Guarded(() =>
+            {
+                var offer = Run.Shop.PackOffers[index];
+                Run.BuyPack(index);
+                AppendLog($"— Opened {offer.DisplayName} for ${offer.Price}");
+            });
+        }
+
+        private void OnPickPackOptionClicked(int optionIndex)
+        {
+            Guarded(() =>
+            {
+                var option = Run.OpenPack.Options[optionIndex];
+                Run.PickFromPack(optionIndex);
+                AppendLog($"— Took {option.DisplayName} from the pack");
+            });
+        }
+
+        private void OnSkipPackClicked()
+        {
+            Guarded(() =>
+            {
+                Run.SkipPack();
+                AppendLog("— Pack skipped");
+            });
+        }
+
         private void OnRerollClicked()
         {
             Guarded(() =>
@@ -356,6 +385,32 @@ namespace LastCall.DebugUI
             _shopTitle.text = $"BACK ROOM — wallet ${Run.Money}";
             ClearChildren(_shopOffersPanel);
 
+            // An opened pack takes over the whole panel until it's resolved.
+            if (Run.OpenPack != null)
+            {
+                var packTitle = NewText("PackTitle", _shopOffersPanel, 14, TextAnchor.MiddleCenter,
+                    new Color(1f, 0.85f, 0.55f));
+                packTitle.text = $"{PackCatalog.NameOf(Run.OpenPack.Kind)} — pick one:";
+                var titleElement = packTitle.gameObject.AddComponent<LayoutElement>();
+                titleElement.preferredHeight = 26;
+                titleElement.flexibleWidth = 1;
+
+                var packOptions = Run.OpenPack.Options;
+                for (int i = 0; i < packOptions.Count; i++)
+                {
+                    int optionIndex = i;
+                    var optionButton = NewButton($"PackOption_{i}", _shopOffersPanel,
+                        packOptions[i].DisplayName, new Color(0.85f, 0.75f, 0.50f),
+                        () => OnPickPackOptionClicked(optionIndex), 13);
+                    SetRowHeight(optionButton, 30);
+                }
+
+                var skip = NewButton("SkipPack", _shopOffersPanel, "Skip pack",
+                    new Color(0.55f, 0.45f, 0.45f), OnSkipPackClicked, 13);
+                SetRowHeight(skip, 28);
+                return;
+            }
+
             var offers = Run.Shop.Offers;
             for (int i = 0; i < offers.Count; i++)
             {
@@ -380,6 +435,20 @@ namespace LastCall.DebugUI
                     new Color(0.72f, 0.52f, 0.78f), OnBuyVoucherClicked, 12);
                 SetRowHeight(voucherButton, 40);
                 voucherButton.interactable = !voucherOffer.Sold && Run.Money >= voucherOffer.Price;
+            }
+
+            var packs = Run.Shop.PackOffers;
+            for (int i = 0; i < packs.Count; i++)
+            {
+                int packIndex = i;
+                var pack = packs[i];
+                string packLabel = pack.Sold
+                    ? $"{pack.DisplayName} — SOLD"
+                    : $"Open {pack.DisplayName} — ${pack.Price}";
+                var packButton = NewButton($"Pack_{i}", _shopOffersPanel, packLabel,
+                    new Color(0.55f, 0.70f, 0.85f), () => OnBuyPackClicked(packIndex), 13);
+                SetRowHeight(packButton, 30);
+                packButton.interactable = !pack.Sold && Run.Money >= pack.Price;
             }
 
             var reroll = NewButton("Reroll", _shopOffersPanel,

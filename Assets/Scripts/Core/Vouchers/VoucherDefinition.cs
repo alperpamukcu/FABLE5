@@ -5,10 +5,12 @@ namespace LastCall.Core
     /// <summary>What a Voucher permanently upgrades for the rest of the run (GDD 7.4).</summary>
     public enum VoucherOp
     {
-        ExtraRestock,   // +N Restocks every customer (Happy Hour)
-        ExtraMix,       // +N Mixes every customer (Double Shift)
-        ExtraRail,      // +N Rail size (Wider Rail)
-        PatronDiscount  // Patrons cost $N less, min $1 (Loyal Clientele)
+        ExtraRestock,    // +N Restocks every customer (Happy Hour)
+        ExtraMix,        // +N Mixes every customer (Double Shift)
+        ExtraRail,       // +N Rail size (Wider Rail)
+        PatronDiscount,  // Patrons cost $N less, min $1 (Loyal Clientele)
+        RarePatronBoost, // Uncommon/Rare shop weights xN+1 (Neon Sign)
+        PackExtraCard    // Cellar Packs show +N options (Deep Cellar)
     }
 
     /// <summary>
