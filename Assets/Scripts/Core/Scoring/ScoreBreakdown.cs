@@ -35,6 +35,12 @@ namespace LastCall.Core
         public double TotalMult { get; }
         public double FinalScore { get; }
 
+        /// <summary>True when a VIP rule voided this mix (recipe recognized, score forced to 0).</summary>
+        public bool IsVoided { get; private set; }
+
+        /// <summary>The rule text explaining the void; empty otherwise.</summary>
+        public string VoidReason { get; private set; } = string.Empty;
+
         public ScoreBreakdown(RecipeDefinition recipe, int recipeLevel,
             IReadOnlyList<IngredientCard> scoredCards, IReadOnlyList<ScoreStep> steps,
             double totalFlavor, double totalMult)
@@ -50,5 +56,13 @@ namespace LastCall.Core
 
         public static ScoreBreakdown NoRecipe { get; } = new ScoreBreakdown(
             null, 1, new IngredientCard[0], new ScoreStep[0], 0, 0);
+
+        /// <summary>A mix cancelled by a VIP rule: the recipe is shown, the score is zero.</summary>
+        public static ScoreBreakdown Voided(RecipeDefinition recipe, int recipeLevel, string reason) =>
+            new ScoreBreakdown(recipe, recipeLevel, new IngredientCard[0], new ScoreStep[0], 0, 0)
+            {
+                IsVoided = true,
+                VoidReason = reason ?? string.Empty
+            };
     }
 }

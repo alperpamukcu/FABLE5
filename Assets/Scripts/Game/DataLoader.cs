@@ -141,6 +141,37 @@ namespace LastCall.Game
             return tools;
         }
 
+        public static IReadOnlyList<VipDefinition> ParseVips(string json)
+        {
+            var dto = FromJson<VipsFileDto>(json, "vips");
+            if (dto.vips == null || dto.vips.Count == 0)
+                throw new FormatException("VIPs file contains no VIPs.");
+
+            var vips = new List<VipDefinition>(dto.vips.Count);
+            foreach (var vip in dto.vips)
+            {
+                if (string.IsNullOrWhiteSpace(vip.id))
+                    throw new FormatException("VIPs file has a VIP with an empty id.");
+                if (vip.rules == null || vip.rules.Count == 0)
+                    throw new FormatException($"VIP '{vip.id}' has no rules.");
+
+                var rules = new List<VipRule>(vip.rules.Count);
+                foreach (var rule in vip.rules)
+                {
+                    var kind = ParseEnum<VipRuleKind>(rule.kind, vip.id, "rule kind");
+                    IngredientType type = default;
+                    if (!string.IsNullOrEmpty(rule.type)) type = ParseType(rule.type, vip.id);
+                    if (kind == VipRuleKind.DebuffType && string.IsNullOrEmpty(rule.type))
+                        throw new FormatException($"VIP '{vip.id}' debuffs a type but has no type.");
+                    rules.Add(new VipRule(kind, type, rule.intValue, rule.doubleValue));
+                }
+
+                vips.Add(new VipDefinition(vip.id, vip.name, vip.description,
+                    vip.gentle, vip.finaleOnly, rules));
+            }
+            return vips;
+        }
+
         private static EffectCondition ParseCondition(ConditionDto dto, string context)
         {
             if (dto == null || string.IsNullOrEmpty(dto.kind)) return EffectCondition.Always;
@@ -278,6 +309,33 @@ namespace LastCall.Game
         {
             public int version;
             public List<ToolDto> tools;
+        }
+
+        [Serializable]
+        private sealed class VipRuleDto
+        {
+            public string kind;
+            public string type;
+            public int intValue;
+            public double doubleValue;
+        }
+
+        [Serializable]
+        private sealed class VipDto
+        {
+            public string id;
+            public string name;
+            public string description;
+            public bool gentle;
+            public bool finaleOnly;
+            public List<VipRuleDto> rules;
+        }
+
+        [Serializable]
+        private sealed class VipsFileDto
+        {
+            public int version;
+            public List<VipDto> vips;
         }
 #pragma warning restore 0649
     }

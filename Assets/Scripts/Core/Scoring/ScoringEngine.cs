@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LastCall.Core
 {
@@ -53,6 +54,14 @@ namespace LastCall.Core
             IReadOnlyList<PatronInstance> patrons, EffectContext context, List<ScoreStep> steps,
             bool allowRetriggerOps, ref double flavor, ref double mult)
         {
+            // VIP debuff (GDD 6): the card is played but scores nothing and triggers
+            // nothing — no flavor, no quality/enhancement, no patron card effects.
+            if (context.DebuffedTypes.Contains(card.Type))
+            {
+                steps.Add(new ScoreStep($"{card.Name} (debuffed)", EffectOp.AddFlavor, 0, flavor, mult));
+                return 0;
+            }
+
             if (card.Quality != QualityTier.Bootleg)
             {
                 flavor += card.Flavor;

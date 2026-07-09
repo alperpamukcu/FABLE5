@@ -14,6 +14,7 @@ namespace LastCall.Game
         [SerializeField] private TextAsset recipesJson;
         [SerializeField] private TextAsset patronsJson;
         [SerializeField] private TextAsset toolsJson;
+        [SerializeField] private TextAsset vipsJson;
         [SerializeField] private string seed = "LASTCALL-DEV";
 
         public RunController Run { get; private set; }
@@ -36,9 +37,10 @@ namespace LastCall.Game
             var recipes = DataLoader.ParseRecipes(recipesJson.text);
             var patronPool = DataLoader.ParsePatrons(patronsJson.text);
             var toolPool = DataLoader.ParseTools(toolsJson.text);
+            var vipPool = DataLoader.ParseVips(vipsJson.text);
 
             Run = new RunController(deck.Cards, recipes, new RunRng(CurrentSeed),
-                patronPool: patronPool, toolPool: toolPool);
+                patronPool: patronPool, toolPool: toolPool, vipPool: vipPool);
 
             Debug.Log($"[LastCall] Run started — seed '{CurrentSeed}', " +
                       $"{Run.CurrentRound.Customer.Name} wants {Run.CurrentRound.Customer.TargetScore}, wallet ${Run.Money}.");

@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &644607344
+--- !u!1 &1041656463
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 644607346}
-  - component: {fileID: 644607345}
+  - component: {fileID: 1041656465}
+  - component: {fileID: 1041656464}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!20 &644607345
+--- !u!20 &1041656464
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 644607344}
+  m_GameObject: {fileID: 1041656463}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
@@ -187,13 +187,13 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &644607346
+--- !u!4 &1041656465
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 644607344}
+  m_GameObject: {fileID: 1041656463}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -10}
@@ -202,7 +202,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1552657580
+--- !u!1 &1463856524
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -210,9 +210,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1552657583}
-  - component: {fileID: 1552657582}
-  - component: {fileID: 1552657581}
+  - component: {fileID: 1463856527}
+  - component: {fileID: 1463856526}
+  - component: {fileID: 1463856525}
   m_Layer: 0
   m_Name: Game
   m_TagString: Untagged
@@ -220,25 +220,25 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1552657581
+--- !u!114 &1463856525
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1552657580}
+  m_GameObject: {fileID: 1463856524}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 189e4c75064cbed429fe7262ed7f25dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: LastCall.DebugUI::LastCall.DebugUI.DebugHud
---- !u!114 &1552657582
+--- !u!114 &1463856526
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1552657580}
+  m_GameObject: {fileID: 1463856524}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9afd43bbfb204eb4a85fbe44baffeb8d, type: 3}
@@ -248,14 +248,15 @@ MonoBehaviour:
   recipesJson: {fileID: 4900000, guid: 5b26aeb63984a164e85d8728d96cd20d, type: 3}
   patronsJson: {fileID: 4900000, guid: 4d28ef5b63376ba48beecdaaaa44502a, type: 3}
   toolsJson: {fileID: 4900000, guid: 196dc4f0da1fab845ac3ce4d564490b5, type: 3}
+  vipsJson: {fileID: 4900000, guid: 08599c403ba89ae4a9bb90987350ad4f, type: 3}
   seed: LASTCALL-DEV
---- !u!4 &1552657583
+--- !u!4 &1463856527
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1552657580}
+  m_GameObject: {fileID: 1463856524}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -268,5 +269,5 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 644607346}
-  - {fileID: 1552657583}
+  - {fileID: 1041656465}
+  - {fileID: 1463856527}

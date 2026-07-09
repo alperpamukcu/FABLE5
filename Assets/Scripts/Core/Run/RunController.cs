@@ -29,7 +29,9 @@ namespace LastCall.Core
         private readonly Dictionary<string, int> _recipeLevels = new Dictionary<string, int>();
         private readonly IReadOnlyList<PatronDefinition> _patronPool;
         private readonly IReadOnlyList<ToolDefinition> _toolPool;
+        private readonly IReadOnlyList<VipDefinition> _vipPool;
         private readonly List<ToolDefinition> _tools = new List<ToolDefinition>();
+        private readonly HashSet<string> _usedVipIds = new HashSet<string>();
         private bool _firstShopOpened;
 
         public RunConfig Config { get; }
@@ -56,15 +58,20 @@ namespace LastCall.Core
         /// <summary>The current Back Room inventory; non-null only during the BackRoom phase.</summary>
         public ShopState Shop { get; private set; }
 
+        /// <summary>The VIP whose rules govern the current order; null for regular customers.</summary>
+        public VipDefinition CurrentVip { get; private set; }
+
         public RunController(IEnumerable<IngredientCard> cards, IReadOnlyList<RecipeDefinition> recipes,
             RunRng rng, IEnumerable<PatronInstance> patrons = null, RunConfig config = null,
-            IReadOnlyList<PatronDefinition> patronPool = null, IReadOnlyList<ToolDefinition> toolPool = null)
+            IReadOnlyList<PatronDefinition> patronPool = null, IReadOnlyList<ToolDefinition> toolPool = null,
+            IReadOnlyList<VipDefinition> vipPool = null)
         {
             _recipes = recipes ?? throw new ArgumentNullException(nameof(recipes));
             _rng = rng ?? throw new ArgumentNullException(nameof(rng));
             _patrons = patrons != null ? new List<PatronInstance>(patrons) : new List<PatronInstance>();
             _patronPool = patronPool ?? Array.Empty<PatronDefinition>();
             _toolPool = toolPool ?? Array.Empty<ToolDefinition>();
+            _vipPool = vipPool ?? Array.Empty<VipDefinition>();
             Config = config ?? RunConfig.Default;
             Money = Config.StartingMoney;
             _deck = new Deck(cards);
@@ -222,8 +229,98 @@ namespace LastCall.Core
             _deck.ResetForNewCustomer(_rng.GetStream("deck"));
             double target = Config.TargetProvider(Night, Slot);
             string name = $"Night {Night} — {SlotName(Slot)}";
+            var roundConfig = Config.RoundConfig;
+            var ruleSet = VipRuleSet.Empty;
+            string ruleText = null;
+            CurrentVip = null;
+
+            if (Slot == CustomerSlot.Vip && _vipPool.Count > 0)
+            {
+                CurrentVip = PickVip();
+                name = $"Night {Night} — VIP: {CurrentVip.Name}";
+                ruleText = CurrentVip.Description;
+                (ruleSet, roundConfig, target) = ResolveVipRules(CurrentVip, roundConfig, target);
+            }
+
             CurrentRound = new RoundController(_deck, _recipes,
-                new CustomerOrder(name, target), Config.RoundConfig, _recipeLevels, _patrons);
+                new CustomerOrder(name, target, ruleText), roundConfig, _recipeLevels, _patrons, ruleSet);
+        }
+
+        /// <summary>Draws from the "vip" stream: finale VIP on the last Night, the gentle
+        /// subset on Nights 1–2 (GDD 11), no repeats until the pool is exhausted.</summary>
+        private VipDefinition PickVip()
+        {
+            var rng = _rng.GetStream("vip");
+
+            if (Night == Config.Nights)
+            {
+                var finale = _vipPool.Where(v => v.FinaleOnly).ToList();
+                if (finale.Count > 0) return finale[rng.NextInt(finale.Count)];
+            }
+
+            var candidates = _vipPool
+                .Where(v => !v.FinaleOnly && !_usedVipIds.Contains(v.Id))
+                .Where(v => Night > 2 || v.Gentle)
+                .ToList();
+            if (candidates.Count == 0)
+            {
+                _usedVipIds.Clear();
+                candidates = _vipPool.Where(v => !v.FinaleOnly)
+                    .Where(v => Night > 2 || v.Gentle).ToList();
+            }
+            if (candidates.Count == 0)
+                candidates = _vipPool.Where(v => !v.FinaleOnly).ToList();
+            if (candidates.Count == 0)
+                candidates = _vipPool.ToList();
+
+            var vip = candidates[rng.NextInt(candidates.Count)];
+            _usedVipIds.Add(vip.Id);
+            return vip;
+        }
+
+        private (VipRuleSet rules, RoundConfig config, double target) ResolveVipRules(
+            VipDefinition vip, RoundConfig roundConfig, double target)
+        {
+            var debuffed = new HashSet<IngredientType>();
+            bool onlyFirstMix = false;
+            int minRecipeLevel = 0;
+            bool eachMixDifferent = false;
+
+            foreach (var rule in vip.Rules)
+            {
+                switch (rule.Kind)
+                {
+                    case VipRuleKind.DebuffType:
+                        debuffed.Add(rule.Type);
+                        break;
+                    case VipRuleKind.DebuffRandomType:
+                        var types = (IngredientType[])Enum.GetValues(typeof(IngredientType));
+                        debuffed.Add(types[_rng.GetStream("vip").NextInt(types.Length)]);
+                        break;
+                    case VipRuleKind.OnlyFirstMixScores:
+                        onlyFirstMix = true;
+                        break;
+                    case VipRuleKind.MinRecipeLevel:
+                        minRecipeLevel = rule.IntValue;
+                        break;
+                    case VipRuleKind.EachMixDifferentRecipe:
+                        eachMixDifferent = true;
+                        break;
+                    case VipRuleKind.RailSizeDelta:
+                        roundConfig = new RoundConfig(
+                            Math.Max(1, roundConfig.RailSize + rule.IntValue),
+                            roundConfig.MaxMixSelection,
+                            roundConfig.MixesPerCustomer,
+                            roundConfig.RestocksPerCustomer);
+                        break;
+                    case VipRuleKind.TargetScale:
+                        target *= rule.DoubleValue;
+                        break;
+                }
+            }
+
+            return (new VipRuleSet(debuffed, onlyFirstMix, minRecipeLevel, eachMixDifferent),
+                roundConfig, target);
         }
 
         private int BaseTipFor(CustomerSlot slot)

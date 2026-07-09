@@ -25,6 +25,7 @@ namespace LastCall.Core
         private readonly IReadOnlyDictionary<string, int> _recipeLevels;
         private readonly IReadOnlyList<PatronInstance> _patrons;
         private readonly List<IngredientCard> _rail = new List<IngredientCard>();
+        private readonly HashSet<string> _mixedRecipeIds = new HashSet<string>();
 
         public CustomerOrder Customer { get; }
         public RoundConfig Config { get; }
@@ -42,10 +43,14 @@ namespace LastCall.Core
         /// <summary>Money owed by OnCustomerEnd patron effects; set once when the round is won.</summary>
         public double PatronPayout { get; private set; }
 
+        /// <summary>The active VIP rules; <see cref="VipRuleSet.Empty"/> for regular customers.</summary>
+        public VipRuleSet VipRules { get; }
+
         public RoundController(Deck deck, IReadOnlyList<RecipeDefinition> recipes,
             CustomerOrder customer, RoundConfig config = null,
             IReadOnlyDictionary<string, int> recipeLevels = null,
-            IReadOnlyList<PatronInstance> patrons = null)
+            IReadOnlyList<PatronInstance> patrons = null,
+            VipRuleSet vipRules = null)
         {
             _deck = deck ?? throw new ArgumentNullException(nameof(deck));
             _recipes = recipes ?? throw new ArgumentNullException(nameof(recipes));
@@ -53,6 +58,7 @@ namespace LastCall.Core
             Config = config ?? RoundConfig.Default;
             _recipeLevels = recipeLevels;
             _patrons = patrons ?? Array.Empty<PatronInstance>();
+            VipRules = vipRules ?? VipRuleSet.Empty;
 
             MixesRemaining = Config.MixesPerCustomer;
             RestocksRemaining = Config.RestocksPerCustomer;
@@ -74,6 +80,8 @@ namespace LastCall.Core
         {
             var match = PreviewMatch(selection);
             if (match == null) return ScoreBreakdown.NoRecipe;
+            if (IsVoidedByVipRule(match, out string voidReason))
+                return ScoreBreakdown.Voided(match.Recipe, LevelOf(match), voidReason);
 
             var accumulatedBefore = new double[_patrons.Count];
             for (int i = 0; i < _patrons.Count; i++) accumulatedBefore[i] = _patrons[i].Accumulated;
@@ -95,7 +103,18 @@ namespace LastCall.Core
             ValidateSelection(selection);
 
             var match = RecipeMatcher.Match(selection, _recipes);
-            var breakdown = ScoringEngine.Score(match, LevelOf(match), _patrons, BuildContext(selection, match));
+            ScoreBreakdown breakdown;
+            if (match != null && IsVoidedByVipRule(match, out string voidReason))
+            {
+                // Voided mixes still consume the attempt and the cards — the rule text
+                // is on the ticket; ignoring it is the player's mistake (GDD 6).
+                breakdown = ScoreBreakdown.Voided(match.Recipe, LevelOf(match), voidReason);
+            }
+            else
+            {
+                breakdown = ScoringEngine.Score(match, LevelOf(match), _patrons, BuildContext(selection, match));
+            }
+            if (match != null) _mixedRecipeIds.Add(match.Recipe.Id);
             AccumulatedScore += breakdown.FinalScore;
 
             RemoveFromRail(selection);
@@ -181,7 +200,28 @@ namespace LastCall.Core
         }
 
         private EffectContext BuildContext(IReadOnlyList<IngredientCard> selection, RecipeMatch match) =>
-            new EffectContext(selection, match?.Recipe, MixesUsed, RestocksUsed);
+            new EffectContext(selection, match?.Recipe, MixesUsed, RestocksUsed, VipRules.DebuffedTypes);
+
+        private bool IsVoidedByVipRule(RecipeMatch match, out string reason)
+        {
+            if (VipRules.OnlyFirstMixScores && MixesUsed > 0)
+            {
+                reason = "only the first Mix counts";
+                return true;
+            }
+            if (VipRules.MinRecipeLevel > 0 && LevelOf(match) < VipRules.MinRecipeLevel)
+            {
+                reason = $"only Recipes level {VipRules.MinRecipeLevel}+ score";
+                return true;
+            }
+            if (VipRules.EachMixDifferentRecipe && _mixedRecipeIds.Contains(match.Recipe.Id))
+            {
+                reason = "every Mix must be a different Recipe";
+                return true;
+            }
+            reason = string.Empty;
+            return false;
+        }
 
         private int LevelOf(RecipeMatch match) =>
             match != null && _recipeLevels != null && _recipeLevels.TryGetValue(match.Recipe.Id, out int level)
