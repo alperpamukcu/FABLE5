@@ -124,12 +124,18 @@ namespace LastCall.DebugUI
                     AppendLog($"      {step.Source}: {StepText(step)} → F {step.FlavorAfter:0.#}, M {step.MultAfter:0.#}");
             }
 
+            foreach (var card in Round.LastShatteredCards)
+                AppendLog($"      ✖ {card.Name} shattered — destroyed for good");
+            foreach (var copy in Round.LastDoubledCopies)
+                AppendLog($"      + {copy.Name} doubled — a copy joins the deck");
+
             if (Round.Phase == RoundPhase.Won)
             {
                 var tips = Run.LastTips;
                 AppendLog($"★ Satisfied! Tips: base {tips.Base} + mixes {tips.UnusedMixBonus} + interest {tips.Interest}" +
                           $"{(tips.VipBonus > 0 ? $" + VIP {tips.VipBonus}" : "")}" +
-                          $"{(tips.PatronBonus > 0 ? $" + patrons {tips.PatronBonus}" : "")} = ${tips.Total} (wallet ${Run.Money})");
+                          $"{(tips.PatronBonus > 0 ? $" + patrons {tips.PatronBonus}" : "")}" +
+                          $"{(tips.GoldenBonus > 0 ? $" + golden {tips.GoldenBonus}" : "")} = ${tips.Total} (wallet ${Run.Money})");
             }
 
             if (Run.Phase == RunPhase.RunWon) AppendLog("★ OPENING WEEK SURVIVED — run won!");

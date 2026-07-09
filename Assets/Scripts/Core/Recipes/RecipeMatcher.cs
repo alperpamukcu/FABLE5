@@ -42,7 +42,7 @@ namespace LastCall.Core
         {
             if (recipe.ExactMixSize > 0 && mix.Count != recipe.ExactMixSize) return null;
             if (recipe.MinMixSize > 0 && mix.Count < recipe.MinMixSize) return null;
-            if (recipe.AllDistinctTypes && mix.Select(c => c.Type).Distinct().Count() != mix.Count) return null;
+            if (recipe.AllDistinctTypes && !AllTypesDistinct(mix)) return null;
             if (recipe.AllEqualFlavor && mix.Select(c => c.Flavor).Distinct().Count() != 1) return null;
 
             // Expand requirements into single-card slots, most restrictive (fewest types) first,
@@ -64,15 +64,31 @@ namespace LastCall.Core
             return mix.Where(c => scoredSet.Contains(c)).ToList();
         }
 
+        /// <summary>A Premium (wild) card counts as any one Type (GDD 3.3).</summary>
+        private static bool IsWild(IngredientCard card) => card.Enhancement == Enhancement.Premium;
+
+        /// <summary>
+        /// Distinctness check with wilds: printed types must not repeat, and each wild
+        /// claims one of the remaining unused types (6 exist, mixes hold at most 5).
+        /// </summary>
+        private static bool AllTypesDistinct(IReadOnlyList<IngredientCard> mix)
+        {
+            var printed = mix.Where(c => !IsWild(c)).Select(c => c.Type).ToList();
+            return printed.Distinct().Count() == printed.Count;
+        }
+
         private static bool AssignSlot(int slotIndex, List<PatternRequirement> slots,
             IReadOnlyList<IngredientCard> mix, HashSet<int> used, IngredientCard[] assigned)
         {
             if (slotIndex == slots.Count) return true;
 
             var slot = slots[slotIndex];
+            // Natural type matches are tried before wilds so a Premium card is only
+            // spent on a slot no printed type can fill.
             var candidates = Enumerable.Range(0, mix.Count)
-                .Where(i => !used.Contains(i) && slot.Types.Contains(mix[i].Type))
-                .OrderByDescending(i => mix[i].Flavor);
+                .Where(i => !used.Contains(i) && (slot.Types.Contains(mix[i].Type) || IsWild(mix[i])))
+                .OrderBy(i => slot.Types.Contains(mix[i].Type) ? 0 : 1)
+                .ThenByDescending(i => mix[i].Flavor);
 
             foreach (int i in candidates)
             {

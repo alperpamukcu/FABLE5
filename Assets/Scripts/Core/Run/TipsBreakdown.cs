@@ -11,15 +11,21 @@ namespace LastCall.Core
         public int Interest { get; }
         public int VipBonus { get; }
         public int PatronBonus { get; }
-        public int Total => Base + UnusedMixBonus + Interest + VipBonus + PatronBonus;
 
-        public TipsBreakdown(int baseTip, int unusedMixBonus, int interest, int vipBonus, int patronBonus)
+        /// <summary>$ per Golden card still on the rail when the customer is satisfied (GDD 3.3).</summary>
+        public int GoldenBonus { get; }
+
+        public int Total => Base + UnusedMixBonus + Interest + VipBonus + PatronBonus + GoldenBonus;
+
+        public TipsBreakdown(int baseTip, int unusedMixBonus, int interest, int vipBonus,
+            int patronBonus, int goldenBonus = 0)
         {
             Base = baseTip;
             UnusedMixBonus = unusedMixBonus;
             Interest = interest;
             VipBonus = vipBonus;
             PatronBonus = patronBonus;
+            GoldenBonus = goldenBonus;
         }
     }
 }

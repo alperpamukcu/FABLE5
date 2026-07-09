@@ -1,9 +1,9 @@
 namespace LastCall.Core
 {
     /// <summary>
-    /// Ingredient enhancements applied by Tools (GDD 3.3). M2 implements Infused and
-    /// Overproof; Premium (wild type), Frozen (rng shatter), Doubled and Golden land
-    /// with the tools that create them in M3.
+    /// Ingredient enhancements applied by Tools (GDD 3.3, rulings in 01_ingredients).
+    /// Premium resolves in the matcher, Infused/Overproof/Frozen in the scoring engine,
+    /// the Frozen shatter roll and Doubled copy in the round, Golden in the run payout.
     /// </summary>
     public enum Enhancement
     {

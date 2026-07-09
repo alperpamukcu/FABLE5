@@ -98,8 +98,13 @@ namespace LastCall.Core
                     mult += 4;
                     steps.Add(new ScoreStep($"{card.Name} (Overproof)", EffectOp.AddMult, 4, flavor, mult));
                     break;
-                // Premium is a matcher concern; Frozen/Doubled/Golden resolve in the round/run
-                // layer — all arrive with the M3 tools that create them.
+                case Enhancement.Frozen:
+                    mult *= 2;
+                    steps.Add(new ScoreStep($"{card.Name} (Frozen)", EffectOp.MultMult, 2, flavor, mult));
+                    break;
+                // Premium is a matcher concern; the Frozen shatter roll and the Doubled
+                // copy happen in the round layer (they mutate the deck); Golden pays out
+                // in the run layer at customer end.
             }
 
             int retriggers = 0;

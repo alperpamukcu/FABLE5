@@ -188,7 +188,10 @@ namespace LastCall.Core
 
         private void OnCustomerSatisfied()
         {
-            // Rail leftovers go back to the cabinet before the payout is counted.
+            // Golden cards pay for sitting on the rail when the customer is satisfied
+            // (GDD 3.3) — count them before the leftovers go back to the cabinet.
+            int goldenBonus = Config.GoldenCardBonus *
+                CurrentRound.Rail.Count(c => c.Enhancement == Enhancement.Golden);
             _deck.Discard(CurrentRound.Rail);
 
             // Interest is computed on money held BEFORE this customer's payout (GDD 7.5:
@@ -205,7 +208,8 @@ namespace LastCall.Core
                     new EffectContext(null, null, CurrentRound.MixesUsed, CurrentRound.RestocksUsed));
             }
 
-            LastTips = new TipsBreakdown(baseTip, unusedMixBonus, interest, vipBonus, (int)patronMoney);
+            LastTips = new TipsBreakdown(baseTip, unusedMixBonus, interest, vipBonus,
+                (int)patronMoney, goldenBonus);
             Money += LastTips.Total;
 
             bool runComplete = Night == Config.Nights && Slot == CustomerSlot.Vip;
@@ -243,7 +247,8 @@ namespace LastCall.Core
             }
 
             CurrentRound = new RoundController(_deck, _recipes,
-                new CustomerOrder(name, target, ruleText), roundConfig, _recipeLevels, _patrons, ruleSet);
+                new CustomerOrder(name, target, ruleText), roundConfig, _recipeLevels, _patrons,
+                ruleSet, _rng.GetStream("shatter"));
         }
 
         /// <summary>Draws from the "vip" stream: finale VIP on the last Night, the gentle

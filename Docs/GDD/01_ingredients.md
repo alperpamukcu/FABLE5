@@ -33,4 +33,6 @@ Each card has a **Flavor value** (the "rank"), from 1 to 11 in the starter deck.
 ### 3.3 Ingredient enhancements (like card enhancements)
 Applied by Tools: **Infused** (+40 Flavor), **Overproof** (+4 Mult), **Premium** (counts as any one Type — wild), **Frozen** (×2 Mult but 1-in-4 chance to shatter and be destroyed after scoring), **Doubled** (permanent copy stays in deck), **Golden** ($3 if held at end of round).
 
+Rulings (locked 2026-07-09, matching implementation): Premium is wild **for recipe matching only** — it keeps its printed Type for Patron effects and VIP debuffs. Frozen shatters and Doubled copies trigger **only when the card actually scores** (not in voided mixes, not while debuffed). A Doubled card mints its copy **each time it scores**; the copy is a plain card (no enhancement), so copies never re-copy. Golden pays for sitting **unplayed on the rail** at the moment the customer is satisfied.
+
 ---

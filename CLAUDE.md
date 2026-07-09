@@ -29,13 +29,13 @@ Hard rules:
 
 Unity is normally open alongside the IDE; drive it via the UnityMCP HTTP server
 (see memory: unity-mcp-setup) — `refresh_unity` (compile) → `read_console` (errors) →
-`run_tests` with `assembly_names: "LastCall.Tests"`. All 52+ tests must pass before a PR.
+`run_tests` with `assembly_names: "LastCall.Tests"`. All tests must pass before a push.
 The debug scene can be rebuilt with the **LastCall → Create Debug Scene** menu item.
 
 ## Workflow
 
-- Branch from `main`: `feature/<topic>`, `chore/<topic>`, `fix/<topic>`. PRs into `main`
-  on GitHub (`alperpamukcu/FABLE5`); no direct pushes to `main` after M1.
+- Work directly on `main` and push to GitHub (`alperpamukcu/FABLE5`); the branch/PR
+  flow was retired on 2026-07-09 to keep iteration fast.
 - Commit messages: imperative summary line, body explains what/why, in English.
 - Scene edits go through code (editor tooling) where possible — scenes are hard to review.
 

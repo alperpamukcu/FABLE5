@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LastCall.Core
 {
@@ -26,6 +27,9 @@ namespace LastCall.Core
         private readonly IReadOnlyList<PatronInstance> _patrons;
         private readonly List<IngredientCard> _rail = new List<IngredientCard>();
         private readonly HashSet<string> _mixedRecipeIds = new HashSet<string>();
+        private readonly SeededRng _shatterRng;
+        private readonly List<IngredientCard> _lastShattered = new List<IngredientCard>();
+        private readonly List<IngredientCard> _lastDoubledCopies = new List<IngredientCard>();
 
         public CustomerOrder Customer { get; }
         public RoundConfig Config { get; }
@@ -46,11 +50,17 @@ namespace LastCall.Core
         /// <summary>The active VIP rules; <see cref="VipRuleSet.Empty"/> for regular customers.</summary>
         public VipRuleSet VipRules { get; }
 
+        /// <summary>Frozen cards destroyed by the shatter roll of the most recent Mix.</summary>
+        public IReadOnlyList<IngredientCard> LastShatteredCards => _lastShattered;
+
+        /// <summary>Permanent copies minted by Doubled cards in the most recent Mix.</summary>
+        public IReadOnlyList<IngredientCard> LastDoubledCopies => _lastDoubledCopies;
+
         public RoundController(Deck deck, IReadOnlyList<RecipeDefinition> recipes,
             CustomerOrder customer, RoundConfig config = null,
             IReadOnlyDictionary<string, int> recipeLevels = null,
             IReadOnlyList<PatronInstance> patrons = null,
-            VipRuleSet vipRules = null)
+            VipRuleSet vipRules = null, SeededRng shatterRng = null)
         {
             _deck = deck ?? throw new ArgumentNullException(nameof(deck));
             _recipes = recipes ?? throw new ArgumentNullException(nameof(recipes));
@@ -59,6 +69,7 @@ namespace LastCall.Core
             _recipeLevels = recipeLevels;
             _patrons = patrons ?? Array.Empty<PatronInstance>();
             VipRules = vipRules ?? VipRuleSet.Empty;
+            _shatterRng = shatterRng; // null = Frozen cards never shatter (bench setups)
 
             MixesRemaining = Config.MixesPerCustomer;
             RestocksRemaining = Config.RestocksPerCustomer;
@@ -118,7 +129,7 @@ namespace LastCall.Core
             AccumulatedScore += breakdown.FinalScore;
 
             RemoveFromRail(selection);
-            _deck.Discard(selection);
+            _deck.Discard(ResolveScoredEnhancements(selection, match, breakdown.IsVoided));
             MixesRemaining--;
 
             if (AccumulatedScore >= Customer.TargetScore)
@@ -197,6 +208,42 @@ namespace LastCall.Core
             _deck.Discard(selection);
             RestocksRemaining--;
             FillRail();
+        }
+
+        /// <summary>
+        /// Post-scoring deck mutations for scored, non-debuffed cards (GDD 3.3): a Frozen
+        /// card rolls 1-in-4 to shatter (destroyed instead of discarded); a Doubled card
+        /// mints a plain permanent copy into the deck (plain, so copies don't re-copy).
+        /// Voided and recipe-less mixes score nothing, so nothing shatters or doubles.
+        /// Returns the cards to discard.
+        /// </summary>
+        private IReadOnlyList<IngredientCard> ResolveScoredEnhancements(
+            IReadOnlyList<IngredientCard> selection, RecipeMatch match, bool voided)
+        {
+            _lastShattered.Clear();
+            _lastDoubledCopies.Clear();
+            if (match == null || voided) return selection;
+
+            var discard = new List<IngredientCard>(selection);
+            foreach (var card in match.ScoredCards)
+            {
+                if (VipRules.DebuffedTypes.Contains(card.Type)) continue;
+
+                if (card.Enhancement == Enhancement.Frozen &&
+                    _shatterRng != null && _shatterRng.NextInt(4) == 0)
+                {
+                    discard.Remove(card);
+                    _lastShattered.Add(card);
+                }
+                else if (card.Enhancement == Enhancement.Doubled)
+                {
+                    var copy = card.Clone();
+                    copy.Enhance(Enhancement.None);
+                    discard.Add(copy);
+                    _lastDoubledCopies.Add(copy);
+                }
+            }
+            return discard;
         }
 
         private EffectContext BuildContext(IReadOnlyList<IngredientCard> selection, RecipeMatch match) =>

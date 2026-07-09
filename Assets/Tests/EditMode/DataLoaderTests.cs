@@ -141,11 +141,11 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void ToolsJson_LoadsAllFiveStarters()
+        public void ToolsJson_LoadsAllNineStarters()
         {
             var tools = DataLoader.ParseTools(ReadDataFile("tools/tools.json"));
 
-            Assert.AreEqual(5, tools.Count);
+            Assert.AreEqual(9, tools.Count);
             CollectionAssert.AllItemsAreUnique(tools.Select(t => t.Id).ToList());
             Assert.IsTrue(tools.All(t => t.Cost == 3), "GDD 7.1: Tools cost $3");
 
@@ -159,6 +159,12 @@ namespace LastCall.Tests
             var press = tools.Single(t => t.Id == "citrus_press");
             Assert.AreEqual(ToolOp.ConvertType, press.Op);
             Assert.AreEqual(IngredientType.Sour, press.ConvertTo);
+
+            // The M3 enhancement tools cover all four late enhancements.
+            Assert.AreEqual(Enhancement.Premium, tools.Single(t => t.Id == "coupe_glass").Enhancement);
+            Assert.AreEqual(Enhancement.Frozen, tools.Single(t => t.Id == "ice_tray").Enhancement);
+            Assert.AreEqual(Enhancement.Doubled, tools.Single(t => t.Id == "double_strainer").Enhancement);
+            Assert.AreEqual(Enhancement.Golden, tools.Single(t => t.Id == "gold_rim").Enhancement);
         }
 
         [Test]

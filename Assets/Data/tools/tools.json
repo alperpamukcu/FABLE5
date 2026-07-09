@@ -25,6 +25,26 @@
       "id": "bar_spoon", "name": "Bar Spoon", "cost": 3,
       "op": "Copy", "enhancement": "", "convertTo": "", "maxTargets": 1,
       "description": "Copy a card."
+    },
+    {
+      "id": "coupe_glass", "name": "Coupe Glass", "cost": 3,
+      "op": "Enhance", "enhancement": "Premium", "convertTo": "", "maxTargets": 1,
+      "description": "Turn a card Premium: it counts as any type in recipes."
+    },
+    {
+      "id": "ice_tray", "name": "Ice Tray", "cost": 3,
+      "op": "Enhance", "enhancement": "Frozen", "convertTo": "", "maxTargets": 2,
+      "description": "Freeze up to 2 cards: x2 Mult when scored, but 1-in-4 chance to shatter."
+    },
+    {
+      "id": "double_strainer", "name": "Double Strainer", "cost": 3,
+      "op": "Enhance", "enhancement": "Doubled", "convertTo": "", "maxTargets": 1,
+      "description": "Double a card: each time it scores, a plain copy joins your deck for good."
+    },
+    {
+      "id": "gold_rim", "name": "Gold Rim", "cost": 3,
+      "op": "Enhance", "enhancement": "Golden", "convertTo": "", "maxTargets": 1,
+      "description": "Gild a card: +$3 if it sits unplayed on the rail when the customer is satisfied."
     }
   ]
 }
