@@ -97,9 +97,10 @@ namespace LastCall.Tests
                 EffectOp.AddFlavor, 15, EffectCondition.CardTypeIs(IngredientType.Sweet)));
 
             // Old Fashioned + an extra unscored Sweet: pattern keeps the higher sweet (5).
-            // (20 + 6+5+3 + 15) x 2 = 98 — the unscored Sweet(4) triggers nothing.
+            // (20 + 6+5+3 + 15) x 2 = 98 — the unscored Sweet(3) triggers nothing.
+            // (Values 6/3/5/3 on purpose: 4 distinct values would be a Layered Pour, v1.1.)
             var result = Score(new[] { perihan },
-                Card(IngredientType.Spirit, 6), Card(IngredientType.Sweet, 4),
+                Card(IngredientType.Spirit, 6), Card(IngredientType.Sweet, 3),
                 Card(IngredientType.Sweet, 5), Card(IngredientType.Bitter, 3));
             Assert.AreEqual("old_fashioned", result.Recipe.Id);
             Assert.AreEqual(98, result.FinalScore);

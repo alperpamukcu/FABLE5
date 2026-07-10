@@ -181,6 +181,9 @@ namespace LastCall.Core
                 case ToolOp.SetQuality:
                     foreach (var card in targets) card.Refine(tool.Quality);
                     break;
+                case ToolOp.ShiftValue:
+                    foreach (var card in targets) card.ShiftFlavor(tool.ShiftAmount);
+                    break;
                 default:
                     throw new InvalidOperationException($"{tool.Name} is a run-level Tool, not a rail Tool.");
             }

@@ -30,49 +30,73 @@
       "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false
     },
     {
-      "id": "sour", "name": "Sour", "rank": 5,
+      "id": "house_special", "name": "House Special", "rank": 5,
+      "baseFlavor": 30, "baseMult": 3, "flavorPerLevel": 25, "multPerLevel": 2,
+      "requirements": [],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "equalFlavorGroupSize": 3
+    },
+    {
+      "id": "sour", "name": "Sour", "rank": 6,
       "baseFlavor": 30, "baseMult": 3, "flavorPerLevel": 25, "multPerLevel": 2,
       "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 1 }, { "types": ["Sweet"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
       "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false
     },
     {
-      "id": "martini", "name": "Martini", "rank": 6,
+      "id": "martini", "name": "Martini", "rank": 7,
       "baseFlavor": 35, "baseMult": 4, "flavorPerLevel": 25, "multPerLevel": 2,
       "requirements": [ { "types": ["Spirit"], "count": 2 }, { "types": ["Bitter", "Garnish"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
       "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false
     },
     {
-      "id": "fizz", "name": "Fizz", "rank": 7,
+      "id": "layered_pour", "name": "Layered Pour", "rank": 8,
+      "baseFlavor": 40, "baseMult": 4, "flavorPerLevel": 30, "multPerLevel": 2,
+      "requirements": [],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "ascendingFlavorGroupSize": 4
+    },
+    {
+      "id": "fizz", "name": "Fizz", "rank": 9,
       "baseFlavor": 45, "baseMult": 4, "flavorPerLevel": 30, "multPerLevel": 2,
       "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 1 }, { "types": ["Sweet"], "count": 1 }, { "types": ["Bubbly"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
       "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false
     },
     {
-      "id": "negroni", "name": "Negroni", "rank": 8,
+      "id": "straight_booze", "name": "Straight Booze", "rank": 10,
+      "baseFlavor": 50, "baseMult": 5, "flavorPerLevel": 30, "multPerLevel": 3,
+      "requirements": [],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "sameTypeGroupMin": 4
+    },
+    {
+      "id": "negroni", "name": "Negroni", "rank": 11,
       "baseFlavor": 55, "baseMult": 5, "flavorPerLevel": 30, "multPerLevel": 3,
       "requirements": [ { "types": ["Spirit"], "count": 2 }, { "types": ["Bitter"], "count": 1 }, { "types": ["Garnish"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
       "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false
     },
     {
-      "id": "tiki", "name": "Tiki", "rank": 9,
+      "id": "tiki", "name": "Tiki", "rank": 12,
       "baseFlavor": 70, "baseMult": 6, "flavorPerLevel": 35, "multPerLevel": 3,
       "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 1 }, { "types": ["Sweet"], "count": 1 }, { "types": ["Garnish"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 5,
       "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": true
     },
     {
-      "id": "perfect_serve", "name": "Perfect Serve", "rank": 10,
+      "id": "perfect_serve", "name": "Perfect Serve", "rank": 13,
       "baseFlavor": 100, "baseMult": 8, "flavorPerLevel": 40, "multPerLevel": 4,
       "requirements": [ { "types": ["Spirit"], "count": 1 } ],
       "exactMixSize": 5, "minMixSize": 0,
       "allDistinctTypes": true, "allEqualFlavor": false, "scoreAllMixCards": true
     },
     {
-      "id": "double_perfect", "name": "Double Perfect", "rank": 11,
+      "id": "double_perfect", "name": "Double Perfect", "rank": 14,
       "baseFlavor": 160, "baseMult": 14, "flavorPerLevel": 50, "multPerLevel": 5,
       "requirements": [ { "types": ["Spirit"], "count": 1 } ],
       "exactMixSize": 5, "minMixSize": 0,

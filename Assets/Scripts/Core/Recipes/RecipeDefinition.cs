@@ -52,13 +52,27 @@ namespace LastCall.Core
         /// <summary>All mix cards count as scored, not just requirement slots (Tiki, Perfect Serve).</summary>
         public bool ScoreAllMixCards { get; }
 
+        // Value/mono-Type group patterns (GDD 02 v1.1). The pattern is exactly the
+        // qualifying group; other selected cards are non-pattern and score nothing.
+
+        /// <summary>0 = off. House Special: N cards sharing one Flavor value.</summary>
+        public int EqualFlavorGroupSize { get; }
+
+        /// <summary>0 = off. Layered Pour: N cards with strictly ascending (all-distinct) Flavor values.</summary>
+        public int AscendingFlavorGroupSize { get; }
+
+        /// <summary>0 = off. Straight Booze: at least N cards of one Type.</summary>
+        public int SameTypeGroupMin { get; }
+
         public RecipeDefinition(
             string id, string name, int rank,
             int baseFlavor, int baseMult, int flavorPerLevel, int multPerLevel,
             IReadOnlyList<PatternRequirement> requirements,
             int exactMixSize = 0, int minMixSize = 0,
             bool allDistinctTypes = false, bool allEqualFlavor = false,
-            bool scoreAllMixCards = false)
+            bool scoreAllMixCards = false,
+            int equalFlavorGroupSize = 0, int ascendingFlavorGroupSize = 0,
+            int sameTypeGroupMin = 0)
         {
             Id = id;
             Name = name;
@@ -73,6 +87,9 @@ namespace LastCall.Core
             AllDistinctTypes = allDistinctTypes;
             AllEqualFlavor = allEqualFlavor;
             ScoreAllMixCards = scoreAllMixCards;
+            EqualFlavorGroupSize = equalFlavorGroupSize;
+            AscendingFlavorGroupSize = ascendingFlavorGroupSize;
+            SameTypeGroupMin = sameTypeGroupMin;
         }
 
         /// <summary>Level 1 = base values; Recipe Books raise the level (GDD 02 table, last column).</summary>

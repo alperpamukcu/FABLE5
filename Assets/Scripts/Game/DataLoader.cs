@@ -55,11 +55,14 @@ namespace LastCall.Game
             {
                 if (string.IsNullOrWhiteSpace(recipe.id))
                     throw new FormatException("Recipes file has a recipe with an empty id.");
-                if (recipe.requirements == null || recipe.requirements.Count == 0)
+                bool isGroupRecipe = recipe.equalFlavorGroupSize > 0 ||
+                                     recipe.ascendingFlavorGroupSize > 0 ||
+                                     recipe.sameTypeGroupMin > 0;
+                if (!isGroupRecipe && (recipe.requirements == null || recipe.requirements.Count == 0))
                     throw new FormatException($"Recipe '{recipe.id}' has no requirements.");
 
-                var requirements = new List<PatternRequirement>(recipe.requirements.Count);
-                foreach (var req in recipe.requirements)
+                var requirements = new List<PatternRequirement>(recipe.requirements?.Count ?? 0);
+                foreach (var req in recipe.requirements ?? new List<RequirementDto>())
                 {
                     if (req.types == null || req.types.Count == 0)
                         throw new FormatException($"Recipe '{recipe.id}' has a requirement with no types.");
@@ -74,7 +77,9 @@ namespace LastCall.Game
                     recipe.baseFlavor, recipe.baseMult, recipe.flavorPerLevel, recipe.multPerLevel,
                     requirements,
                     recipe.exactMixSize, recipe.minMixSize,
-                    recipe.allDistinctTypes, recipe.allEqualFlavor, recipe.scoreAllMixCards));
+                    recipe.allDistinctTypes, recipe.allEqualFlavor, recipe.scoreAllMixCards,
+                    recipe.equalFlavorGroupSize, recipe.ascendingFlavorGroupSize,
+                    recipe.sameTypeGroupMin));
             }
             return recipes;
         }
@@ -136,12 +141,14 @@ namespace LastCall.Game
                     throw new FormatException($"Tool '{tool.id}' converts type but has no convertTo.");
                 if (op == ToolOp.SetQuality && string.IsNullOrEmpty(tool.quality))
                     throw new FormatException($"Tool '{tool.id}' sets quality but has no quality.");
+                if (op == ToolOp.ShiftValue && tool.shiftAmount == 0)
+                    throw new FormatException($"Tool '{tool.id}' shifts value but has no shiftAmount.");
                 var quality = string.IsNullOrEmpty(tool.quality)
                     ? QualityTier.HousePour
                     : ParseEnum<QualityTier>(tool.quality, tool.id, "quality");
 
                 tools.Add(new ToolDefinition(tool.id, tool.name, tool.cost, op, tool.maxTargets,
-                    enhancement, convertTo, tool.description, quality));
+                    enhancement, convertTo, tool.description, quality, tool.shiftAmount));
             }
             return tools;
         }
@@ -269,6 +276,9 @@ namespace LastCall.Game
             public bool allDistinctTypes;
             public bool allEqualFlavor;
             public bool scoreAllMixCards;
+            public int equalFlavorGroupSize;
+            public int ascendingFlavorGroupSize;
+            public int sameTypeGroupMin;
         }
 
         [Serializable]
@@ -325,6 +335,7 @@ namespace LastCall.Game
             public string enhancement;
             public string convertTo;
             public string quality;
+            public int shiftAmount;
             public int maxTargets;
             public string description;
         }

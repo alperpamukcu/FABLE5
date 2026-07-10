@@ -45,6 +45,12 @@ namespace LastCall.Core
             if (recipe.AllDistinctTypes && !AllTypesDistinct(mix)) return null;
             if (recipe.AllEqualFlavor && mix.Select(c => c.Flavor).Distinct().Count() != 1) return null;
 
+            // Value/mono-Type group recipes (GDD 02 v1.1) have no type-slot requirements;
+            // the qualifying group IS the pattern and the only scoring set.
+            if (recipe.EqualFlavorGroupSize > 0) return MatchEqualFlavorGroup(mix, recipe.EqualFlavorGroupSize);
+            if (recipe.AscendingFlavorGroupSize > 0) return MatchAscendingGroup(mix, recipe.AscendingFlavorGroupSize);
+            if (recipe.SameTypeGroupMin > 0) return MatchSameTypeGroup(mix, recipe.SameTypeGroupMin);
+
             // Expand requirements into single-card slots, most restrictive (fewest types) first,
             // then backtrack. Candidates are tried highest Flavor first so when a requirement
             // could consume either of two cards the player keeps the better one scoring.
@@ -66,6 +72,47 @@ namespace LastCall.Core
 
         /// <summary>A Premium (wild) card counts as any one Type (GDD 3.3).</summary>
         private static bool IsWild(IngredientCard card) => card.Enhancement == Enhancement.Premium;
+
+        /// <summary>House Special: the highest Flavor value shared by ≥ size cards scores.</summary>
+        private static IReadOnlyList<IngredientCard> MatchEqualFlavorGroup(
+            IReadOnlyList<IngredientCard> mix, int size)
+        {
+            var best = mix.GroupBy(c => c.Flavor)
+                .Where(g => g.Count() >= size)
+                .OrderByDescending(g => g.Key)
+                .FirstOrDefault();
+            if (best == null) return null;
+            var scored = new HashSet<IngredientCard>(best.Take(size));
+            return mix.Where(scored.Contains).ToList();
+        }
+
+        /// <summary>Layered Pour: one card each of the top <paramref name="size"/> distinct values.</summary>
+        private static IReadOnlyList<IngredientCard> MatchAscendingGroup(
+            IReadOnlyList<IngredientCard> mix, int size)
+        {
+            var groups = mix.GroupBy(c => c.Flavor).OrderByDescending(g => g.Key).ToList();
+            if (groups.Count < size) return null;
+            var scored = new HashSet<IngredientCard>(groups.Take(size).Select(g => g.First()));
+            return mix.Where(scored.Contains).ToList();
+        }
+
+        /// <summary>Straight Booze: every card of the strongest Type (wilds complete the set).</summary>
+        private static IReadOnlyList<IngredientCard> MatchSameTypeGroup(
+            IReadOnlyList<IngredientCard> mix, int min)
+        {
+            var wilds = mix.Where(IsWild).ToList();
+            var best = mix.Where(c => !IsWild(c))
+                .GroupBy(c => c.Type)
+                .OrderByDescending(g => g.Count())
+                .ThenByDescending(g => g.Sum(c => c.Flavor))
+                .FirstOrDefault();
+            int printedCount = best != null ? best.Count() : 0;
+            if (printedCount + wilds.Count < min) return null;
+
+            var scored = new HashSet<IngredientCard>(wilds);
+            if (best != null) foreach (var card in best) scored.Add(card);
+            return mix.Where(scored.Contains).ToList();
+        }
 
         /// <summary>
         /// Distinctness check with wilds: printed types must not repeat, and each wild

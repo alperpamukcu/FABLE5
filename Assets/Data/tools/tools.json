@@ -75,6 +75,11 @@
       "id": "bitters_bottle", "name": "Bitters Bottle", "cost": 3,
       "op": "ConvertType", "enhancement": "", "convertTo": "Bitter", "maxTargets": 2,
       "description": "Convert up to 2 cards to Bitter."
+    },
+    {
+      "id": "muddling_stick", "name": "Muddling Stick", "cost": 3,
+      "op": "ShiftValue", "enhancement": "", "convertTo": "", "shiftAmount": 1, "maxTargets": 2,
+      "description": "Raise the value of up to 2 cards by +1 (for House Special and Layered Pour)."
     }
   ]
 }

@@ -74,6 +74,9 @@ namespace LastCall.Tests
                 Assert.AreEqual(expected.AllDistinctTypes, actual.AllDistinctTypes, expected.Id);
                 Assert.AreEqual(expected.AllEqualFlavor, actual.AllEqualFlavor, expected.Id);
                 Assert.AreEqual(expected.ScoreAllMixCards, actual.ScoreAllMixCards, expected.Id);
+                Assert.AreEqual(expected.EqualFlavorGroupSize, actual.EqualFlavorGroupSize, expected.Id);
+                Assert.AreEqual(expected.AscendingFlavorGroupSize, actual.AscendingFlavorGroupSize, expected.Id);
+                Assert.AreEqual(expected.SameTypeGroupMin, actual.SameTypeGroupMin, expected.Id);
 
                 Assert.AreEqual(expected.Requirements.Count, actual.Requirements.Count, expected.Id);
                 for (int r = 0; r < expected.Requirements.Count; r++)
@@ -155,11 +158,14 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void ToolsJson_LoadsTheFullFifteenPool()
+        public void ToolsJson_LoadsTheFullSixteenPool()
         {
             var tools = DataLoader.ParseTools(ReadDataFile("tools/tools.json"));
 
-            Assert.AreEqual(15, tools.Count, "GDD M3: 15 Tools at launch");
+            Assert.AreEqual(16, tools.Count, "15 at M3 + Muddling Stick (GDD 02 v1.1)");
+            var stick = tools.Single(t => t.Id == "muddling_stick");
+            Assert.AreEqual(ToolOp.ShiftValue, stick.Op);
+            Assert.AreEqual(1, stick.ShiftAmount);
             CollectionAssert.AllItemsAreUnique(tools.Select(t => t.Id).ToList());
             Assert.IsTrue(tools.All(t => t.Cost == 3), "GDD 7.1: Tools cost $3");
 

@@ -15,7 +15,7 @@ namespace LastCall.Core
         public string Id { get; }
         public string Name { get; }
         public IngredientType Type { get; private set; }
-        public int Flavor { get; }
+        public int Flavor { get; private set; }
         public QualityTier Quality { get; private set; }
         public Enhancement Enhancement { get; private set; }
         public int InstanceId { get; }
@@ -42,6 +42,9 @@ namespace LastCall.Core
 
         /// <summary>Rewrites the quality tier — Tools like Cocktail Umbrella.</summary>
         public void Refine(QualityTier quality) => Quality = quality;
+
+        /// <summary>Shifts the Flavor value, floored at 1 — Tools like Muddling Stick (GDD 02 v1.1).</summary>
+        public void ShiftFlavor(int delta) => Flavor = Math.Max(1, Flavor + delta);
 
         /// <summary>A fresh instance with identical stats (Bar Spoon); gets its own InstanceId.</summary>
         public IngredientCard Clone()

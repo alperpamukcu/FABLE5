@@ -534,6 +534,12 @@ namespace LastCall.DebugUI
 
         private static string ConstraintText(RecipeDefinition recipe)
         {
+            if (recipe.EqualFlavorGroupSize > 0)
+                return $"  — any {recipe.EqualFlavorGroupSize} cards with the SAME number";
+            if (recipe.AscendingFlavorGroupSize > 0)
+                return $"  — any {recipe.AscendingFlavorGroupSize} cards, all DIFFERENT numbers";
+            if (recipe.SameTypeGroupMin > 0)
+                return $"  — {recipe.SameTypeGroupMin}+ cards of one color";
             if (recipe.AllEqualFlavor) return "  — 5 different types, all the same number";
             if (recipe.AllDistinctTypes) return "  — exactly 5 cards, all different types";
             if (recipe.MinMixSize >= 5) return "  + any 5th card";

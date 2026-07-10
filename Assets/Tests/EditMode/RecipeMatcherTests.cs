@@ -36,12 +36,19 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void MixWithoutSpirit_MatchesNothing()
+        public void MixWithoutSpirit_MatchesNoTypeRecipe_ButValueRecipesCanRescue()
         {
+            // No type recipe fires without a Spirit and no value group qualifies here.
             Assert.IsNull(Match(
+                Card(IngredientType.Sour, 3), Card(IngredientType.Sweet, 3),
+                Card(IngredientType.Bitter, 5)));
+
+            // But the v1.1 value recipes are type-agnostic by design (GDD 02).
+            var rescued = Match(
                 Card(IngredientType.Sour, 3), Card(IngredientType.Sweet, 4),
                 Card(IngredientType.Bitter, 5), Card(IngredientType.Bubbly, 6),
-                Card(IngredientType.Garnish, 2)));
+                Card(IngredientType.Garnish, 2));
+            Assert.AreEqual("layered_pour", rescued.Recipe.Id);
         }
 
         [Test]
