@@ -5,6 +5,7 @@ Shader "LastCall/UI/SmokeSwirl"
 {
     Properties
     {
+        [HideInInspector] _MainTex ("Texture", 2D) = "white" {} // RawImage compatibility
         _ColorDeep ("Deep Purple", Color) = (0.055, 0.04, 0.10, 1)
         _ColorSmoke ("Smoke Purple", Color) = (0.16, 0.11, 0.24, 1)
         _ColorAmber ("Bar Light Amber", Color) = (0.55, 0.33, 0.12, 1)

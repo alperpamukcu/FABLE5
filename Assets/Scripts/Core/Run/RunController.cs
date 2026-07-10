@@ -36,9 +36,11 @@ namespace LastCall.Core
         private readonly HashSet<string> _usedVipIds = new HashSet<string>();
         private ToolDefinition _lastToolUsed;
         private bool _firstShopOpened;
-        private bool _nextTipDoubled;
+        private readonly List<FavorTag> _favorTags = new List<FavorTag>();
+        private int _bouncerUsedNight;
 
-        private const int FavorCashAmount = 5; // GDD 5.2 ruling: the cash favor pays $5
+        private const int MaxFavorTags = 4;    // GDD 5.4: tags queue, max 4 held
+        private const int InvestorPayout = 15; // GDD 5.4: Investor pays after the next VIP
 
         public RunConfig Config { get; }
         public int Night { get; private set; } = 1;
@@ -70,16 +72,29 @@ namespace LastCall.Core
         /// <summary>A bought pack waiting for its pick/skip; non-null only in the BackRoom.</summary>
         public OpenPackState OpenPack { get; private set; }
 
-        /// <summary>The reward of the most recent Customer A skip; null before the first skip.</summary>
-        public RegularsFavorKind? LastFavor { get; private set; }
+        /// <summary>The tag granted by the most recent skip; null when nothing was grantable.</summary>
+        public FavorTag? LastFavor { get; private set; }
 
         /// <summary>Human-readable line for the most recent favor (HUD log).</summary>
         public string LastFavorText { get; private set; }
+
+        /// <summary>Held favor tags (GDD 5.4: queue of max 4, consumed automatically).</summary>
+        public IReadOnlyList<FavorTag> FavorTags => _favorTags;
+
+        /// <summary>Tonight's VIP, revealed when the Night begins (GDD 5.5); null without a pool.</summary>
+        public VipDefinition TonightsVip { get; private set; }
 
         /// <summary>True while Customer A can still be skipped: their round is untouched.</summary>
         public bool CanSkipCustomerA =>
             Phase == RunPhase.CustomerRound && Slot == CustomerSlot.CustomerA &&
             CurrentRound.MixesUsed == 0 && CurrentRound.RestocksUsed == 0;
+
+        /// <summary>Bouncer voucher (GDD 7.4 v1.1): once per Night, before the VIP is faced.</summary>
+        public bool CanRerollTonightsVip =>
+            TonightsVip != null && Slot != CustomerSlot.Vip &&
+            (Phase == RunPhase.CustomerRound || Phase == RunPhase.BackRoom) &&
+            _bouncerUsedNight != Night &&
+            _vouchers.Exists(v => v.Op == VoucherOp.RerollVip);
 
         /// <summary>The VIP whose rules govern the current order; null for regular customers.</summary>
         public VipDefinition CurrentVip { get; private set; }
@@ -232,7 +247,7 @@ namespace LastCall.Core
         /// straight to Customer B with a random seeded reward. Only allowed while the
         /// round is untouched.
         /// </summary>
-        public RegularsFavorKind SkipCustomerA()
+        public FavorTag? SkipCustomerA()
         {
             if (!CanSkipCustomerA)
                 throw new InvalidOperationException(
@@ -243,48 +258,77 @@ namespace LastCall.Core
 
             Slot = CustomerSlot.CustomerB;
             StartCustomer();
-            return LastFavor.Value;
+            return LastFavor;
         }
 
+        /// <summary>One random tag, no duplicates held, queue capped at 4 (GDD 5.4).
+        /// Word of Mouth resolves immediately and only rolls when it can apply.</summary>
         private void GrantFavor(SeededRng rng)
         {
-            switch (rng.NextInt(4))
+            var eligible = new List<FavorTag>();
+            if (_favorTags.Count < MaxFavorTags)
             {
-                case 0:
-                    var patron = PatronRoll.Weighted(rng, PatronCandidates());
-                    if (patron != null && _patrons.Count < Config.MaxPatronSlots)
-                    {
-                        _patrons.Add(new PatronInstance(patron));
-                        SetFavor(RegularsFavorKind.FreePatron,
-                            $"Regular's Favor: {patron.Name} joins the bar for free!");
-                        return;
-                    }
-                    break;
-                case 1:
-                    if (_toolPool.Count > 0 && _tools.Count < Config.MaxToolSlots)
-                    {
-                        var tool = _toolPool[rng.NextInt(_toolPool.Count)];
-                        _tools.Add(tool);
-                        SetFavor(RegularsFavorKind.FreeTool,
-                            $"Regular's Favor: a free {tool.Name}!");
-                        return;
-                    }
-                    break;
-                case 2:
-                    _nextTipDoubled = true;
-                    SetFavor(RegularsFavorKind.DoubledTip,
-                        "Regular's Favor: the next tip is doubled!");
-                    return;
+                foreach (FavorTag tag in Enum.GetValues(typeof(FavorTag)))
+                    if (tag != FavorTag.WordOfMouth && !_favorTags.Contains(tag))
+                        eligible.Add(tag);
             }
-            Money += FavorCashAmount;
-            SetFavor(RegularsFavorKind.Cash,
-                $"Regular's Favor: the regular covers ${FavorCashAmount} of the till!");
+            if (_patrons.Count < Config.MaxPatronSlots && CommonCandidates().Count > 0)
+                eligible.Add(FavorTag.WordOfMouth);
+
+            if (eligible.Count == 0)
+            {
+                LastFavor = null;
+                LastFavorText = "Regular's Favor: the regulars had nothing left to offer.";
+                return;
+            }
+
+            var granted = eligible[rng.NextInt(eligible.Count)];
+            if (granted == FavorTag.WordOfMouth)
+            {
+                var commons = CommonCandidates();
+                var patron = commons[rng.NextInt(commons.Count)];
+                _patrons.Add(new PatronInstance(patron));
+                SetFavor(granted, $"Regular's Favor — Word of Mouth: {patron.Name} joins the bar!");
+                return;
+            }
+
+            _favorTags.Add(granted);
+            SetFavor(granted, $"Regular's Favor — {TagText(granted)}");
         }
 
-        private void SetFavor(RegularsFavorKind kind, string text)
+        private List<PatronDefinition> CommonCandidates() =>
+            _patronPool.Where(p => p.Rarity == PatronRarity.Common)
+                .Where(p => !_patrons.Exists(owned => owned.Definition.Id == p.Id)).ToList();
+
+        private static string TagText(FavorTag tag)
         {
-            LastFavor = kind;
+            switch (tag)
+            {
+                case FavorTag.LoyalTab: return "Loyal Tab: next shop, one Patron is free!";
+                case FavorTag.OnTheHouse: return "On the House: next shop, packs cost $0!";
+                case FavorTag.DoubleTip: return "Double Tip: the next tip is doubled!";
+                case FavorTag.Investor: return "Investor: +$15 after beating the next VIP!";
+                case FavorTag.TopShelfCellar: return "Top Shelf Cellar: next Cellar Pack is all Top Shelf!";
+                case FavorTag.SpeakeasyKey: return "Speakeasy Key: next shop stocks a Speakeasy Pack!";
+                default: return "Quick Hands: +1 Mix for the next customer!";
+            }
+        }
+
+        private bool ConsumeTag(FavorTag tag) => _favorTags.Remove(tag);
+
+        private void SetFavor(FavorTag tag, string text)
+        {
+            LastFavor = tag;
             LastFavorText = text;
+        }
+
+        /// <summary>Bouncer voucher: reroll tonight's VIP to a random valid one (no repeats).</summary>
+        public void RerollTonightsVip()
+        {
+            if (!CanRerollTonightsVip)
+                throw new InvalidOperationException("The Bouncer can't act right now.");
+            TonightsVip = PickVip();
+            _bouncerUsedNight = Night;
         }
 
         /// <summary>Buys one of the shop's two Booster Pack slots and opens it.</summary>
@@ -353,7 +397,13 @@ namespace LastCall.Core
             {
                 case PackKind.Cellar:
                     int count = 3 + VoucherValue(VoucherOp.PackExtraCard); // Deep Cellar
-                    for (int i = 0; i < count; i++) options.Add(PackOption.ForCard(RollPackCard(rng)));
+                    bool topShelf = ConsumeTag(FavorTag.TopShelfCellar);
+                    for (int i = 0; i < count; i++)
+                    {
+                        var card = RollPackCard(rng);
+                        if (topShelf) card.Refine(QualityTier.TopShelf);
+                        options.Add(PackOption.ForCard(card));
+                    }
                     break;
                 case PackKind.Distiller:
                     foreach (var recipe in RollDistinct(rng, _recipes, 2))
@@ -426,6 +476,17 @@ namespace LastCall.Core
             Shop.Reroll();
         }
 
+        /// <summary>Sells a held Tool for half price, rounded up (GDD 7.0 v1.1).</summary>
+        public void SellTool(ToolDefinition tool)
+        {
+            if (Phase != RunPhase.CustomerRound && Phase != RunPhase.BackRoom)
+                throw new InvalidOperationException($"Run is over ({Phase}).");
+            if (!_tools.Remove(tool))
+                throw new InvalidOperationException("That tool is not in the inventory.");
+
+            Money += (tool.Cost + 1) / 2;
+        }
+
         /// <summary>Sells a patron for half price, rounded up (GDD 8).</summary>
         public void SellPatron(PatronInstance patron)
         {
@@ -473,11 +534,9 @@ namespace LastCall.Core
             // banking to $25 is the intended play, so the payout itself must not compound).
             int interest = Math.Min(Money / Config.InterestPerDollars, Config.InterestCap);
             int baseTip = BaseTipFor(Slot);
-            if (_nextTipDoubled)
-            {
-                baseTip *= 2; // Regular's Favor: DoubledTip, one-shot
-                _nextTipDoubled = false;
-            }
+            if (ConsumeTag(FavorTag.DoubleTip)) baseTip *= 2;
+            int favorBonus = Slot == CustomerSlot.Vip && ConsumeTag(FavorTag.Investor)
+                ? InvestorPayout : 0;
             int unusedMixBonus = CurrentRound.MixesRemaining;
             int vipBonus = Slot == CustomerSlot.Vip ? Config.VipDefeatBonus : 0;
 
@@ -489,7 +548,7 @@ namespace LastCall.Core
             }
 
             LastTips = new TipsBreakdown(baseTip, unusedMixBonus, interest, vipBonus,
-                (int)patronMoney, goldenBonus);
+                (int)patronMoney, goldenBonus, favorBonus);
             Money += LastTips.Total;
 
             bool runComplete = Night == Config.Nights && Slot == CustomerSlot.Vip;
@@ -509,7 +568,10 @@ namespace LastCall.Core
                 voucherCandidates: voucherCandidates, voucherRng: _rng.GetStream("voucher"),
                 patronDiscount: VoucherValue(VoucherOp.PatronDiscount),
                 packRng: _rng.GetStream("packs"),
-                rarePatronBoost: 1 + VoucherValue(VoucherOp.RarePatronBoost));
+                rarePatronBoost: 1 + VoucherValue(VoucherOp.RarePatronBoost),
+                firstPatronFree: ConsumeTag(FavorTag.LoyalTab),
+                packsFree: ConsumeTag(FavorTag.OnTheHouse),
+                forceSpeakeasyPack: ConsumeTag(FavorTag.SpeakeasyKey));
             _firstShopOpened = true;
         }
 
@@ -540,13 +602,24 @@ namespace LastCall.Core
                     roundConfig.MixesPerCustomer + VoucherValue(VoucherOp.ExtraMix),
                     roundConfig.RestocksPerCustomer + VoucherValue(VoucherOp.ExtraRestock));
             }
+            if (ConsumeTag(FavorTag.QuickHands))
+            {
+                roundConfig = new RoundConfig(roundConfig.RailSize, roundConfig.MaxMixSelection,
+                    roundConfig.MixesPerCustomer + 1, roundConfig.RestocksPerCustomer);
+            }
+
+            // GDD 5.5: tonight's VIP is revealed when the Night begins, before Customer A,
+            // so skip and economy decisions can react to it.
+            if (Slot == CustomerSlot.CustomerA && _vipPool.Count > 0)
+                TonightsVip = PickVip();
+
             var ruleSet = VipRuleSet.Empty;
             string ruleText = null;
             CurrentVip = null;
 
-            if (Slot == CustomerSlot.Vip && _vipPool.Count > 0)
+            if (Slot == CustomerSlot.Vip && TonightsVip != null)
             {
-                CurrentVip = PickVip();
+                CurrentVip = TonightsVip;
                 name = $"Night {Night} — VIP: {CurrentVip.Name}";
                 ruleText = CurrentVip.Description;
                 (ruleSet, roundConfig, target) = ResolveVipRules(CurrentVip, roundConfig, target);

@@ -2,12 +2,12 @@
   "version": 1,
   "vips": [
     {
-      "id": "teetotaler", "name": "The Teetotaler", "gentle": false, "finaleOnly": false,
+      "id": "teetotaler", "name": "The Teetotaler", "gentle": true, "finaleOnly": false,
       "description": "Spirits score 0 Flavor this order.",
       "rules": [ { "kind": "DebuffType", "type": "Spirit", "intValue": 0, "doubleValue": 0 } ]
     },
     {
-      "id": "purist", "name": "The Purist", "gentle": false, "finaleOnly": false,
+      "id": "purist", "name": "The Purist", "gentle": true, "finaleOnly": false,
       "description": "Only your first Mix counts; others score 0.",
       "rules": [ { "kind": "OnlyFirstMixScores", "type": "", "intValue": 0, "doubleValue": 0 } ]
     },
@@ -40,17 +40,17 @@
       ]
     },
     {
-      "id": "dentist", "name": "The Dentist", "gentle": true, "finaleOnly": false,
+      "id": "dentist", "name": "The Dentist", "gentle": false, "finaleOnly": false,
       "description": "All Sweet cards are debuffed.",
       "rules": [ { "kind": "DebuffType", "type": "Sweet", "intValue": 0, "doubleValue": 0 } ]
     },
     {
-      "id": "sweet_tooth", "name": "The Sweet Tooth", "gentle": true, "finaleOnly": false,
+      "id": "sweet_tooth", "name": "The Sweet Tooth", "gentle": false, "finaleOnly": false,
       "description": "All Bitter cards are debuffed.",
       "rules": [ { "kind": "DebuffType", "type": "Bitter", "intValue": 0, "doubleValue": 0 } ]
     },
     {
-      "id": "generous_aunt", "name": "The Generous Aunt", "gentle": true, "finaleOnly": false,
+      "id": "generous_aunt", "name": "The Generous Aunt", "gentle": false, "finaleOnly": false,
       "description": "Rail size +2 this order. Enjoy.",
       "rules": [ { "kind": "RailSizeDelta", "type": "", "intValue": 2, "doubleValue": 0 } ]
     },
@@ -109,7 +109,7 @@
       "rules": [ { "kind": "RailSizeDelta", "type": "", "intValue": -4, "doubleValue": 0 } ]
     },
     {
-      "id": "landlord", "name": "The Landlord", "gentle": false, "finaleOnly": true,
+      "id": "landlord", "name": "The Landlord", "gentle": false, "finaleOnly": false,
       "description": "Target x1.4 and every Mix must be a different Recipe.",
       "rules": [
         { "kind": "TargetScale", "type": "", "intValue": 0, "doubleValue": 1.4 },

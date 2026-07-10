@@ -10,7 +10,8 @@ namespace LastCall.Core
         ExtraRail,       // +N Rail size (Wider Rail)
         PatronDiscount,  // Patrons cost $N less, min $1 (Loyal Clientele)
         RarePatronBoost, // Uncommon/Rare shop weights xN+1 (Neon Sign)
-        PackExtraCard    // Cellar Packs show +N options (Deep Cellar)
+        PackExtraCard,   // Cellar Packs show +N options (Deep Cellar)
+        RerollVip        // once per Night, reroll tonight's VIP (Bouncer, GDD 7.4 v1.1)
     }
 
     /// <summary>

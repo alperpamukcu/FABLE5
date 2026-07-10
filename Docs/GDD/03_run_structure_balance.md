@@ -19,9 +19,30 @@ Each Night = Customer A (small), Customer B (big), VIP (boss). Targets:
 
 (Scaling factor ≈ ×2.0–2.5 per Night, tuned so an un-synergized deck dies around Night 3–4 and a well-built deck cruises to Night 8.)
 
-Customer A may be **skipped** (like skipping a blind) for a **Regular's Favor** tag reward (random bonus: free Patron, coupon, doubled next tip, etc.), trading money/XP for tempo.
+Customer A may be **skipped** (like skipping a blind) for a **Regular's Favor** tag reward (see §5.4), trading money/XP for tempo. Rulings (v1.1, matching implementation): skipping is only allowed while the Customer A round is **untouched** (no Mix or Restock spent), pays no tips and opens no Back Room — the run jumps straight to Customer B.
 
-Rulings (locked 2026-07-09, matching implementation): skipping is only allowed while the Customer A round is **untouched** (no Mix or Restock spent), pays no tips and opens no Back Room — the run jumps straight to Customer B. The favor rolls from the seeded "favor" stream: free (non-legendary) Patron, free Tool, next tip doubled, or $5 cash; rewards that can't apply (full bar, full tool belt, empty pools) fall through to cash.
+### 5.4 Regular's Favor tags (Customer A skip rewards)
+Skipping Customer A grants ONE random tag (weighted; no duplicates held):
+
+| Tag | Effect |
+|---|---|
+| Loyal Tab | Next shop: one Patron slot is free. |
+| On the House | Next shop: booster packs cost $0. |
+| Double Tip | Next satisfied customer pays double tip. |
+| Investor | Gain $15 after beating the next VIP. |
+| Top Shelf Cellar | Next ingredient pack: all cards Top Shelf. |
+| Speakeasy Key | Next shop guaranteed to stock a Speakeasy Pack. |
+| Word of Mouth | Immediately gain a random Common Patron. |
+| Quick Hands | +1 Mix for the next customer only. |
+
+Tags stack in a queue (max 4 held), consumed automatically when their condition occurs. Rulings (matching implementation): the roll comes from the seeded "favor" stream, uniform over eligible tags; Word of Mouth resolves instantly (never held) and is only eligible while a Common patron and a free bar seat exist; when the queue is full and nothing is eligible the skip grants nothing.
+
+### 5.5 VIP pool rules
+- No VIP repeats within a single run.
+- Nights 1–2 draw from the "gentle" subset (Teetotaler, Allergic, Health Inspector, Purist).
+- Night 8 is always The Critic (in addition to the no-repeat rule).
+- The Night's VIP identity is revealed when the Night begins (before Customer A), so skip/economy decisions can react to it.
+- Counterplay: the "Bouncer" voucher (see 05, §7.4) rerolls tonight's VIP once per Night.
 
 ### 5.2 Endless Mode
 After Night 8, targets continue scaling ×2.2/night indefinitely; leaderboard-style personal best tracked ("Latest Last Call: Night 14").

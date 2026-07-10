@@ -15,10 +15,13 @@ namespace LastCall.Core
         /// <summary>$ per Golden card still on the rail when the customer is satisfied (GDD 3.3).</summary>
         public int GoldenBonus { get; }
 
-        public int Total => Base + UnusedMixBonus + Interest + VipBonus + PatronBonus + GoldenBonus;
+        /// <summary>Favor tag payouts consumed on this win (e.g. Investor, GDD 5.4).</summary>
+        public int FavorBonus { get; }
+
+        public int Total => Base + UnusedMixBonus + Interest + VipBonus + PatronBonus + GoldenBonus + FavorBonus;
 
         public TipsBreakdown(int baseTip, int unusedMixBonus, int interest, int vipBonus,
-            int patronBonus, int goldenBonus = 0)
+            int patronBonus, int goldenBonus = 0, int favorBonus = 0)
         {
             Base = baseTip;
             UnusedMixBonus = unusedMixBonus;
@@ -26,6 +29,7 @@ namespace LastCall.Core
             VipBonus = vipBonus;
             PatronBonus = patronBonus;
             GoldenBonus = goldenBonus;
+            FavorBonus = favorBonus;
         }
     }
 }

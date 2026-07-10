@@ -65,6 +65,7 @@ namespace LastCall.DebugUI
         private Button _mixButton;
         private Button _restockButton;
         private Button _skipButton;
+        private Button _bouncerButton;
         private InputField _seedInput;
 
         private RunController Run => _bootstrap.Run;
@@ -152,7 +153,8 @@ namespace LastCall.DebugUI
                 AppendLog($"★ Satisfied! Tips: base {tips.Base} + mixes {tips.UnusedMixBonus} + interest {tips.Interest}" +
                           $"{(tips.VipBonus > 0 ? $" + VIP {tips.VipBonus}" : "")}" +
                           $"{(tips.PatronBonus > 0 ? $" + patrons {tips.PatronBonus}" : "")}" +
-                          $"{(tips.GoldenBonus > 0 ? $" + golden {tips.GoldenBonus}" : "")} = ${tips.Total} (wallet ${Run.Money})");
+                          $"{(tips.GoldenBonus > 0 ? $" + golden {tips.GoldenBonus}" : "")}" +
+                          $"{(tips.FavorBonus > 0 ? $" + favor {tips.FavorBonus}" : "")} = ${tips.Total} (wallet ${Run.Money})");
             }
 
             if (Run.Phase == RunPhase.RunWon) AppendLog("★ OPENING WEEK SURVIVED — run won!");
@@ -215,6 +217,15 @@ namespace LastCall.DebugUI
                 Run.SkipCustomerA();
                 AppendLog($"— {Run.LastFavorText}");
                 AppendLog(CustomerHeader());
+            });
+        }
+
+        private void OnBouncerClicked()
+        {
+            Guarded(() =>
+            {
+                Run.RerollTonightsVip();
+                AppendLog($"— Bouncer: tonight's VIP is now {Run.TonightsVip.Name}");
             });
         }
 
@@ -308,6 +319,13 @@ namespace LastCall.DebugUI
             string vipLine = string.IsNullOrEmpty(Round.Customer.RuleText)
                 ? string.Empty
                 : $"\n<color=#FF9F5A>VIP RULE: {Round.Customer.RuleText}</color>";
+            // GDD 5.5: the Night's VIP is public knowledge from Customer A on.
+            string tonightLine = Run.TonightsVip != null && Run.Slot != CustomerSlot.Vip
+                ? $"\n<color=#C9A0E8>Tonight's VIP: {Run.TonightsVip.Name}</color>"
+                : string.Empty;
+            string tagsLine = Run.FavorTags.Count > 0
+                ? $"\n<color=#8FD4A8>Tags: {string.Join(", ", Run.FavorTags)}</color>"
+                : string.Empty;
             _infoText.text =
                 $"Night {Run.Night}/{Run.Config.Nights} — {Run.Slot}\n" +
                 $"Wallet:   ${Run.Money}\n" +
@@ -315,7 +333,7 @@ namespace LastCall.DebugUI
                 $"Score:    {Round.AccumulatedScore:0.#}\n" +
                 $"Mixes:    {Round.MixesRemaining}   Restocks: {Round.RestocksRemaining}\n" +
                 $"Cabinet:  {Round.DeckDrawCount} draw / {Round.DeckDiscardCount} discard" +
-                vipLine;
+                vipLine + tonightLine + tagsLine;
 
             RenderPreview();
             RenderRail();
@@ -330,6 +348,7 @@ namespace LastCall.DebugUI
             _mixButton.interactable = inRound && hasSelection;
             _restockButton.interactable = inRound && hasSelection && Round.RestocksRemaining > 0;
             _skipButton.gameObject.SetActive(Run.CanSkipCustomerA);
+            _bouncerButton.gameObject.SetActive(Run.CanRerollTonightsVip);
         }
 
         private void RenderPreview()
@@ -711,6 +730,13 @@ namespace LastCall.DebugUI
             skipRt.anchorMin = skipRt.anchorMax = skipRt.pivot = new Vector2(0.5f, 0);
             skipRt.sizeDelta = new Vector2(150, 42);
             skipRt.anchoredPosition = new Vector2(265, 168);
+
+            // Bouncer voucher: visible only while tonight's VIP can still be rerolled.
+            _bouncerButton = NewButton("Bouncer", root, "BOUNCER: NEW VIP", new Color(0.80f, 0.45f, 0.45f), OnBouncerClicked, 13);
+            var bouncerRt = (RectTransform)_bouncerButton.transform;
+            bouncerRt.anchorMin = bouncerRt.anchorMax = bouncerRt.pivot = new Vector2(0.5f, 0);
+            bouncerRt.sizeDelta = new Vector2(150, 34);
+            bouncerRt.anchoredPosition = new Vector2(265, 216);
 
             _railPanel = NewRect("Rail", root);
             Stretch(_railPanel, new Vector2(0, 0), new Vector2(1, 0), new Vector2(12, 12), new Vector2(-12, 160));

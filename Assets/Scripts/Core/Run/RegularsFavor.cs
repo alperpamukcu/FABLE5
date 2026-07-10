@@ -1,15 +1,19 @@
 namespace LastCall.Core
 {
     /// <summary>
-    /// The reward for skipping Customer A (GDD 5.2): tempo instead of money.
-    /// Rolled from the run's "favor" stream; rewards that can't apply (full bar,
-    /// full tool belt, empty pools) fall through to cash.
+    /// Regular's Favor tags (GDD 5.4 v1.1): skipping Customer A grants ONE random tag.
+    /// Tags stack in a queue (max 4 held, no duplicates) and are consumed automatically
+    /// when their condition occurs. Word of Mouth resolves immediately and is never held.
     /// </summary>
-    public enum RegularsFavorKind
+    public enum FavorTag
     {
-        FreePatron, // a random (non-legendary) patron joins the bar for free
-        FreeTool,   // a random tool from the pool joins the inventory
-        DoubledTip, // the next satisfied customer's base tip is doubled
-        Cash        // the regular covers part of the till
+        LoyalTab,       // next shop: one Patron slot is free
+        OnTheHouse,     // next shop: booster packs cost $0
+        DoubleTip,      // next satisfied customer pays double base tip
+        Investor,       // gain $15 after beating the next VIP
+        TopShelfCellar, // next Cellar pack: all cards Top Shelf
+        SpeakeasyKey,   // next shop guaranteed to stock a Speakeasy Pack
+        WordOfMouth,    // immediately gain a random Common Patron
+        QuickHands      // +1 Mix for the next customer only
     }
 }

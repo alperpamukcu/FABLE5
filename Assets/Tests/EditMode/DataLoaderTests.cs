@@ -206,10 +206,12 @@ namespace LastCall.Tests
             Assert.IsTrue(critic.Rules.Any(r => r.Kind == VipRuleKind.TargetScale && r.DoubleValue == 1.5));
             Assert.IsTrue(critic.Rules.Any(r => r.Kind == VipRuleKind.DebuffRandomType));
 
-            Assert.AreEqual(2, vips.Count(v => v.FinaleOnly), "two finale candidates for run variety");
-            Assert.IsTrue(vips.Single(v => v.Id == "landlord").FinaleOnly);
-            Assert.AreEqual(5, vips.Count(v => v.Gentle), "gentle Night 1-2 subset exists");
-            Assert.IsTrue(vips.Where(v => v.Gentle).All(v => !v.FinaleOnly), "gentle and finale never overlap");
+            // GDD 5.5 (v1.1): Night 8 is always The Critic; the gentle pool is exactly
+            // Teetotaler, Allergic, Health Inspector, Purist.
+            Assert.AreEqual(1, vips.Count(v => v.FinaleOnly), "The Critic is the only finale VIP");
+            CollectionAssert.AreEquivalent(
+                new[] { "teetotaler", "allergic", "health_inspector", "purist" },
+                vips.Where(v => v.Gentle).Select(v => v.Id).ToList());
 
             var teetotaler = vips.Single(v => v.Id == "teetotaler");
             Assert.AreEqual(VipRuleKind.DebuffType, teetotaler.Rules[0].Kind);
@@ -217,15 +219,16 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void VouchersJson_LoadsTheLaunchSix()
+        public void VouchersJson_LoadsTheLaunchSeven()
         {
             var vouchers = DataLoader.ParseVouchers(ReadDataFile("vouchers/vouchers.json"));
 
-            Assert.AreEqual(6, vouchers.Count, "GDD 7.4: all six launch vouchers");
+            Assert.AreEqual(7, vouchers.Count, "GDD 7.4 v1.1: six launch vouchers + Bouncer");
             CollectionAssert.AllItemsAreUnique(vouchers.Select(v => v.Id).ToList());
             Assert.IsTrue(vouchers.All(v => v.Cost == 10), "GDD 7.4: vouchers cost $10");
             Assert.AreEqual(VoucherOp.RarePatronBoost, vouchers.Single(v => v.Id == "neon_sign").Op);
             Assert.AreEqual(VoucherOp.PackExtraCard, vouchers.Single(v => v.Id == "deep_cellar").Op);
+            Assert.AreEqual(VoucherOp.RerollVip, vouchers.Single(v => v.Id == "bouncer").Op);
 
             Assert.AreEqual(VoucherOp.ExtraRestock, vouchers.Single(v => v.Id == "happy_hour").Op);
             Assert.AreEqual(VoucherOp.ExtraMix, vouchers.Single(v => v.Id == "double_shift").Op);

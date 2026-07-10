@@ -30,6 +30,11 @@
       "id": "deep_cellar", "name": "Deep Cellar", "cost": 10,
       "op": "PackExtraCard", "intValue": 1,
       "description": "Cellar Packs contain 1 extra card to choose from."
+    },
+    {
+      "id": "bouncer", "name": "Bouncer", "cost": 10,
+      "op": "RerollVip", "intValue": 1,
+      "description": "Once per Night: turn tonight's VIP away for a random other one."
     }
   ]
 }
