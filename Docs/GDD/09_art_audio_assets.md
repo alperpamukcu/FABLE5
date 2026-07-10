@@ -16,6 +16,7 @@
 - SFX (~40): card pick/place/flip, shaker loop, pour, ice clink, cash register, bell, neon buzz, crowd murmur loop, big-score sting set (5 escalating), UI clicks.
 - Music: 4 lo-fi jazz loops (menu, gameplay calm, VIP tension variant via layered stem, shop), 1 victory sting, 1 game-over sting.
 - Fonts: 1 display (title/scores), 1 readable UI font, dyslexia-friendly alternative.
+  - **Chosen (2026-07-10, in `Assets/Fonts/`):** display = **Limelight** (art-deco marquee — the speakeasy sign the game is named after), UI = **Barlow** (signage-inspired grotesque, highly readable at small sizes). Both SIL OFL with Latin-Extended (Turkish ready for M5 localization); licenses committed next to the TTFs. Dyslexia-friendly alternative still open (M4 settings).
 - 1 background shader (smoke swirl), 1 CRT optional shader, particle sprites (foam, sparkle, steam).
 
 ### 12.3 Audio behavior

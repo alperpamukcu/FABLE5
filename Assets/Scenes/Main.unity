@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &52549296
+--- !u!1 &361440221
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,74 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 52549299}
-  - component: {fileID: 52549298}
-  - component: {fileID: 52549297}
-  m_Layer: 0
-  m_Name: Game
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &52549297
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 52549296}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 189e4c75064cbed429fe7262ed7f25dd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: LastCall.DebugUI::LastCall.DebugUI.DebugHud
---- !u!114 &52549298
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 52549296}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9afd43bbfb204eb4a85fbe44baffeb8d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: LastCall.Game::LastCall.Game.GameBootstrap
-  deckJson: {fileID: 4900000, guid: c0bda31c926722a4c842df81acecf1e0, type: 3}
-  recipesJson: {fileID: 4900000, guid: 5b26aeb63984a164e85d8728d96cd20d, type: 3}
-  patronsJson: {fileID: 4900000, guid: 4d28ef5b63376ba48beecdaaaa44502a, type: 3}
-  toolsJson: {fileID: 4900000, guid: 196dc4f0da1fab845ac3ce4d564490b5, type: 3}
-  vipsJson: {fileID: 4900000, guid: 08599c403ba89ae4a9bb90987350ad4f, type: 3}
-  vouchersJson: {fileID: 4900000, guid: 4045d66d38d43c24eaf985d909fb3592, type: 3}
-  seed: LASTCALL-DEV
-  stake: 1
-  barId: classic
---- !u!4 &52549299
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 52549296}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &686262567
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 686262569}
-  - component: {fileID: 686262568}
+  - component: {fileID: 361440223}
+  - component: {fileID: 361440222}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -202,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!20 &686262568
+--- !u!20 &361440222
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 686262567}
+  m_GameObject: {fileID: 361440221}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
@@ -253,16 +187,84 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &686262569
+--- !u!4 &361440223
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 686262567}
+  m_GameObject: {fileID: 361440221}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &937518206
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 937518209}
+  - component: {fileID: 937518208}
+  - component: {fileID: 937518207}
+  m_Layer: 0
+  m_Name: Game
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &937518207
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 937518206}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 189e4c75064cbed429fe7262ed7f25dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LastCall.DebugUI::LastCall.DebugUI.DebugHud
+  displayFont: {fileID: 12800000, guid: 131c0040d660be04993ff128ddecd75d, type: 3}
+  bodyFont: {fileID: 12800000, guid: 3f6a27f783d8c164cbba0fe6bfc021a3, type: 3}
+--- !u!114 &937518208
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 937518206}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9afd43bbfb204eb4a85fbe44baffeb8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LastCall.Game::LastCall.Game.GameBootstrap
+  deckJson: {fileID: 4900000, guid: c0bda31c926722a4c842df81acecf1e0, type: 3}
+  recipesJson: {fileID: 4900000, guid: 5b26aeb63984a164e85d8728d96cd20d, type: 3}
+  patronsJson: {fileID: 4900000, guid: 4d28ef5b63376ba48beecdaaaa44502a, type: 3}
+  toolsJson: {fileID: 4900000, guid: 196dc4f0da1fab845ac3ce4d564490b5, type: 3}
+  vipsJson: {fileID: 4900000, guid: 08599c403ba89ae4a9bb90987350ad4f, type: 3}
+  vouchersJson: {fileID: 4900000, guid: 4045d66d38d43c24eaf985d909fb3592, type: 3}
+  seed: LASTCALL-DEV
+  stake: 1
+  barId: classic
+--- !u!4 &937518209
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 937518206}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -272,5 +274,5 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 686262569}
-  - {fileID: 52549299}
+  - {fileID: 361440223}
+  - {fileID: 937518209}

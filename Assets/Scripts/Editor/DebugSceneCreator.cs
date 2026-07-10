@@ -20,6 +20,8 @@ namespace LastCall.EditorTools
         private const string ToolsPath = "Assets/Data/tools/tools.json";
         private const string VipsPath = "Assets/Data/vips/vips.json";
         private const string VouchersPath = "Assets/Data/vouchers/vouchers.json";
+        private const string DisplayFontPath = "Assets/Fonts/Limelight-Regular.ttf";
+        private const string BodyFontPath = "Assets/Fonts/Barlow-Regular.ttf";
 
         [MenuItem("LastCall/Create Debug Scene")]
         public static void CreateDebugScene()
@@ -47,7 +49,12 @@ namespace LastCall.EditorTools
             so.FindProperty("vipsJson").objectReferenceValue = LoadRequired<TextAsset>(VipsPath);
             so.FindProperty("vouchersJson").objectReferenceValue = LoadRequired<TextAsset>(VouchersPath);
             so.ApplyModifiedPropertiesWithoutUndo();
-            game.AddComponent<DebugHud>();
+
+            var hud = game.AddComponent<DebugHud>();
+            var hudSo = new SerializedObject(hud);
+            hudSo.FindProperty("displayFont").objectReferenceValue = LoadRequired<Font>(DisplayFontPath);
+            hudSo.FindProperty("bodyFont").objectReferenceValue = LoadRequired<Font>(BodyFontPath);
+            hudSo.ApplyModifiedPropertiesWithoutUndo();
 
             Directory.CreateDirectory("Assets/Scenes");
             EditorSceneManager.SaveScene(scene, ScenePath);

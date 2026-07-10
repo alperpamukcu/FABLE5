@@ -29,9 +29,16 @@ namespace LastCall.DebugUI
             [IngredientType.Garnish] = new Color(0.85f, 0.70f, 0.23f)
         };
 
+        // Theme fonts (GDD 9 art direction): Limelight for marquee headers, Barlow for
+        // body/UI. Wired by DebugSceneCreator; missing references fall back to the
+        // built-in LegacyRuntime font so the HUD never breaks.
+        [SerializeField] private Font displayFont;
+        [SerializeField] private Font bodyFont;
+
         private GameBootstrap _bootstrap;
         private readonly List<IngredientCard> _selected = new List<IngredientCard>();
         private Font _font;
+        private Font _headerFont;
         private bool _uiBuilt;
 
         private Text _infoText;
@@ -69,7 +76,9 @@ namespace LastCall.DebugUI
 
         private void Start()
         {
-            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            var fallback = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _font = bodyFont != null ? bodyFont : fallback;
+            _headerFont = displayFont != null ? displayFont : _font;
             BuildUi();
             _uiBuilt = true;
             if (Run != null) OnRunStarted();
@@ -617,6 +626,7 @@ namespace LastCall.DebugUI
 
             // Center: banner, shop overlay, live preview.
             _bannerText = NewText("Banner", root, 34, TextAnchor.MiddleCenter, Color.white);
+            _bannerText.font = _headerFont; // marquee moments deserve the marquee font
             Place((RectTransform)_bannerText.transform, new Vector2(0.5f, 0.5f), new Vector2(900, 60), new Vector2(0, 150));
 
             // Tall enough for the full GDD 7 layout: 2 card slots + voucher + 2 packs
@@ -625,6 +635,7 @@ namespace LastCall.DebugUI
             Place(_shopPanel, new Vector2(0.5f, 0.5f), new Vector2(460, 440), new Vector2(-60, 0));
             _shopPanel.gameObject.AddComponent<Image>().color = new Color(0.10f, 0.08f, 0.14f, 0.95f);
             _shopTitle = NewText("ShopTitle", _shopPanel, 18, TextAnchor.MiddleCenter, new Color(1f, 0.9f, 0.6f));
+            _shopTitle.font = _headerFont;
             Stretch((RectTransform)_shopTitle.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(8, -40), new Vector2(-8, -6));
             _shopOffersPanel = NewRect("ShopOffers", _shopPanel);
             Stretch(_shopOffersPanel, Vector2.zero, Vector2.one, new Vector2(12, 12), new Vector2(-12, -46));
