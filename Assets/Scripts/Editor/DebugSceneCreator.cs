@@ -54,6 +54,15 @@ namespace LastCall.EditorTools
             var hudSo = new SerializedObject(hud);
             hudSo.FindProperty("displayFont").objectReferenceValue = LoadRequired<Font>(DisplayFontPath);
             hudSo.FindProperty("bodyFont").objectReferenceValue = LoadRequired<Font>(BodyFontPath);
+            // UI kit is optional: the HUD falls back to flat colors when unwired.
+            hudSo.FindProperty("panelSprite").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/UI/panel.png");
+            hudSo.FindProperty("buttonSprite").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/UI/button.png");
+            hudSo.FindProperty("vignetteSprite").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/UI/vignette.png");
+            hudSo.FindProperty("backgroundMaterial").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<Material>("Assets/Art/UI/SmokeSwirl.mat");
             hudSo.ApplyModifiedPropertiesWithoutUndo();
 
             Directory.CreateDirectory("Assets/Scenes");

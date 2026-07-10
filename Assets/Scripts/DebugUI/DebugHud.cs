@@ -35,6 +35,13 @@ namespace LastCall.DebugUI
         [SerializeField] private Font displayFont;
         [SerializeField] private Font bodyFont;
 
+        // Cozy noir UI kit (LastCall/Generate UI Sprites): rounded white sprites tinted
+        // at runtime, a screen vignette and the animated smoke backdrop. All optional.
+        [SerializeField] private Sprite panelSprite;
+        [SerializeField] private Sprite buttonSprite;
+        [SerializeField] private Sprite vignetteSprite;
+        [SerializeField] private Material backgroundMaterial;
+
         private GameBootstrap _bootstrap;
         private readonly List<IngredientCard> _selected = new List<IngredientCard>();
         private Font _font;
@@ -588,6 +595,17 @@ namespace LastCall.DebugUI
             scaler.referenceResolution = new Vector2(1280, 720);
             var root = (RectTransform)canvasGo.transform;
 
+            // Cozy noir backdrop (GDD 12.1): the animated smoke swirl sits behind
+            // everything; the whole kit degrades to flat colors when art is unwired.
+            if (backgroundMaterial != null)
+            {
+                var bg = NewRect("Background", root);
+                Stretch(bg, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var raw = bg.gameObject.AddComponent<RawImage>();
+                raw.material = backgroundMaterial;
+                raw.raycastTarget = false;
+            }
+
             // Top-left: run/round state.
             _infoText = NewText("Info", root, 15, TextAnchor.UpperLeft, Color.white);
             Stretch((RectTransform)_infoText.transform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(12, -140), new Vector2(392, -12));
@@ -605,7 +623,7 @@ namespace LastCall.DebugUI
             // Right: score log.
             var logPanel = NewRect("LogPanel", root);
             Stretch(logPanel, new Vector2(1, 0), new Vector2(1, 1), new Vector2(-372, 170), new Vector2(-12, -52));
-            logPanel.gameObject.AddComponent<Image>().color = new Color(0, 0, 0, 0.45f);
+            StylePanel(logPanel, new Color(0.07f, 0.05f, 0.11f, 0.78f));
             _logScroll = logPanel.gameObject.AddComponent<ScrollRect>();
             var viewport = NewRect("Viewport", logPanel);
             Stretch(viewport, Vector2.zero, Vector2.one, new Vector2(6, 6), new Vector2(-6, -6));
@@ -633,7 +651,7 @@ namespace LastCall.DebugUI
             // + reroll + continue (~260px of rows) with headroom for SOLD relabels.
             _shopPanel = NewRect("ShopPanel", root);
             Place(_shopPanel, new Vector2(0.5f, 0.5f), new Vector2(460, 440), new Vector2(-60, 0));
-            _shopPanel.gameObject.AddComponent<Image>().color = new Color(0.10f, 0.08f, 0.14f, 0.95f);
+            StylePanel(_shopPanel, new Color(0.13f, 0.10f, 0.20f, 0.97f));
             _shopTitle = NewText("ShopTitle", _shopPanel, 18, TextAnchor.MiddleCenter, new Color(1f, 0.9f, 0.6f));
             _shopTitle.font = _headerFont;
             Stretch((RectTransform)_shopTitle.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(8, -40), new Vector2(-8, -6));
@@ -653,7 +671,7 @@ namespace LastCall.DebugUI
 
             _recipePanel = NewRect("RecipePanel", root);
             Place(_recipePanel, new Vector2(0.5f, 0.5f), new Vector2(660, 440), new Vector2(-60, 10));
-            _recipePanel.gameObject.AddComponent<Image>().color = new Color(0.08f, 0.06f, 0.12f, 0.97f);
+            StylePanel(_recipePanel, new Color(0.09f, 0.07f, 0.14f, 0.97f));
             var recipeTitle = NewText("RecipeTitle", _recipePanel, 18, TextAnchor.MiddleCenter, new Color(1f, 0.9f, 0.6f));
             recipeTitle.text = "RECIPE BOOK";
             Stretch((RectTransform)recipeTitle.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(8, -38), new Vector2(-8, -6));
@@ -670,12 +688,12 @@ namespace LastCall.DebugUI
             previewRt.anchoredPosition = new Vector2(0, 218);
 
             // Bottom: action buttons + rail.
-            _mixButton = NewButton("Mix", root, "MIX", new Color(0.30f, 0.55f, 0.30f), OnMixClicked, 18);
+            _mixButton = NewButton("Mix", root, "MIX", new Color(0.36f, 0.66f, 0.38f), OnMixClicked, 18);
             var mixRt = (RectTransform)_mixButton.transform;
             mixRt.anchorMin = mixRt.anchorMax = mixRt.pivot = new Vector2(0.5f, 0);
             mixRt.sizeDelta = new Vector2(170, 42);
             mixRt.anchoredPosition = new Vector2(-95, 168);
-            _restockButton = NewButton("Restock", root, "RESTOCK", new Color(0.55f, 0.40f, 0.25f), OnRestockClicked, 18);
+            _restockButton = NewButton("Restock", root, "RESTOCK", new Color(0.82f, 0.56f, 0.30f), OnRestockClicked, 18);
             var restockRt = (RectTransform)_restockButton.transform;
             restockRt.anchorMin = restockRt.anchorMax = restockRt.pivot = new Vector2(0.5f, 0);
             restockRt.sizeDelta = new Vector2(170, 42);
@@ -690,7 +708,7 @@ namespace LastCall.DebugUI
 
             _railPanel = NewRect("Rail", root);
             Stretch(_railPanel, new Vector2(0, 0), new Vector2(1, 0), new Vector2(12, 12), new Vector2(-12, 160));
-            _railPanel.gameObject.AddComponent<Image>().color = new Color(0, 0, 0, 0.35f);
+            StylePanel(_railPanel, new Color(0.09f, 0.07f, 0.14f, 0.70f));
             var layout = _railPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
             layout.spacing = 8;
             layout.padding = new RectOffset(8, 8, 8, 8);
@@ -698,13 +716,36 @@ namespace LastCall.DebugUI
             layout.childForceExpandHeight = true;
             layout.childControlWidth = true;
             layout.childControlHeight = true;
+
+            // Soft darkness pooling at the screen edges, over everything, never clickable.
+            if (vignetteSprite != null)
+            {
+                var vin = NewRect("Vignette", root);
+                Stretch(vin, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var image = vin.gameObject.AddComponent<Image>();
+                image.sprite = vignetteSprite;
+                image.raycastTarget = false;
+            }
+        }
+
+        /// <summary>Panel background: the rounded kit sprite when wired, a flat tint otherwise.</summary>
+        private Image StylePanel(RectTransform rt, Color color)
+        {
+            var image = rt.gameObject.AddComponent<Image>();
+            image.color = color;
+            if (panelSprite != null)
+            {
+                image.sprite = panelSprite;
+                image.type = Image.Type.Sliced;
+            }
+            return image;
         }
 
         private RectTransform NewSidePanel(RectTransform root, string name, float top, float bottom)
         {
             var panel = NewRect(name, root);
             Stretch(panel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(12, bottom), new Vector2(392, top));
-            panel.gameObject.AddComponent<Image>().color = new Color(0, 0, 0, 0.30f);
+            StylePanel(panel, new Color(0.10f, 0.08f, 0.16f, 0.72f));
             var layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 4;
             layout.padding = new RectOffset(6, 6, 6, 6);
@@ -770,6 +811,11 @@ namespace LastCall.DebugUI
             var rt = NewRect(name, parent);
             var image = rt.gameObject.AddComponent<Image>();
             image.color = bg;
+            if (buttonSprite != null)
+            {
+                image.sprite = buttonSprite;
+                image.type = Image.Type.Sliced;
+            }
             var button = rt.gameObject.AddComponent<Button>();
             button.targetGraphic = image;
             button.onClick.AddListener(onClick);
