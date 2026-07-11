@@ -108,3 +108,6 @@ InitTestScene*.unity*
 
 # IDE agent metadata (Antigravity)
 .agents/
+Tools/AssetPipeline/__pycache__/
+Tools/AssetPipeline/staging/
+Tools/AssetPipeline/generation_log.jsonl

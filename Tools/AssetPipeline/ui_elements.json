@@ -1,0 +1,34 @@
+{
+  "items": [
+    {
+      "id": "speech_bubble",
+      "name": "Customer speech bubble",
+      "art_prompt": "rounded rectangular comic speech bubble with a short tail pointing down-left, cream parchment fill, thin warm amber outline, subtle paper texture, empty inside"
+    },
+    {
+      "id": "price_tag",
+      "name": "Shop price tag",
+      "art_prompt": "small vintage paper price tag with a punched hole and short string, warm cream paper, amber border, empty face with no text"
+    },
+    {
+      "id": "polaroid_frame",
+      "name": "Polaroid photo frame",
+      "art_prompt": "blank instant photo frame slightly tilted, cream border with a wider bottom edge, soft drop shadow, empty dark plum photo window, no text"
+    },
+    {
+      "id": "toast_card",
+      "name": "Notification toast card",
+      "art_prompt": "small horizontal rounded notification card, deep plum surface with a thin amber rim light on the top edge, subtle candle-glow gradient, empty, no text"
+    },
+    {
+      "id": "tooltip_panel",
+      "name": "Tooltip panel",
+      "art_prompt": "compact rounded tooltip panel with a small pointer notch on the left edge, dark plum surface, faint teal inner shadow, thin cream border, empty, no text"
+    },
+    {
+      "id": "coin_tip",
+      "name": "Tip coin icon",
+      "art_prompt": "single round brass bar token seen at a slight angle, embossed cocktail glass silhouette in the center, warm amber highlights, teal shadow side, clean game icon"
+    }
+  ]
+}

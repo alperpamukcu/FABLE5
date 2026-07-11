@@ -40,12 +40,23 @@ def _load_content(category: str) -> list[dict]:
     if not src.exists():
         raise FileNotFoundError(f"Content source missing: {src}")
     data = json.loads(src.read_text(encoding="utf-8"))
-    items = data if isinstance(data, list) else data.get("items", [])
-    out = []
+    if isinstance(data, list):
+        items = data
+    else:
+        # Game data files keep their list under a schema-specific key.
+        items = next((data[k] for k in ("items", "patrons", "vips", "cards", "tools")
+                      if isinstance(data.get(k), list)), [])
+    out, seen = [], set()
     for it in items:
+        iid = it.get("id") or it.get("name", "unknown").lower().replace(" ", "_")
+        if iid in seen:  # deck files repeat ids for duplicate cards; one asset each
+            continue
+        seen.add(iid)
+        # art_prompt is the authored art direction; the name beats the mechanical
+        # rules description as a fallback subject.
         out.append({
-            "id": it.get("id") or it.get("name", "unknown").lower().replace(" ", "_"),
-            "subject": it.get("art_prompt") or it.get("description") or it.get("name", ""),
+            "id": iid,
+            "subject": it.get("art_prompt") or it.get("name") or it.get("description", ""),
         })
     return out
 

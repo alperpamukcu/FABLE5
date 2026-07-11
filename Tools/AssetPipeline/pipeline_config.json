@@ -3,10 +3,10 @@
   "staging_dir": "./staging",
   "log_file": "./generation_log.jsonl",
   "content_sources": {
-    "portraits":   "../../Assets/StreamingAssets/Content/patrons.json",
-    "vips":        "../../Assets/StreamingAssets/Content/vips.json",
-    "ingredients": "../../Assets/StreamingAssets/Content/ingredients.json",
-    "tools":       "../../Assets/StreamingAssets/Content/tools.json",
+    "portraits":   "../../Assets/Data/patrons/patrons.json",
+    "vips":        "../../Assets/Data/vips/vips.json",
+    "ingredients": "../../Assets/Data/decks/classic_bar.json",
+    "tools":       "../../Assets/Data/tools/tools.json",
     "backgrounds": "./backgrounds.json",
     "ui":          "./ui_elements.json"
   },

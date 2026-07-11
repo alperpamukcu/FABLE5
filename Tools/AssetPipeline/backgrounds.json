@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "id": "bg_title",
+      "name": "Title background",
+      "art_prompt": "empty late-night cocktail bar seen from the entrance, warm amber lamplight pooling on a polished wooden counter, shelves of softly glowing unlabeled bottles, thin drifting smoke, deep plum darkness wrapping the edges"
+    },
+    {
+      "id": "bg_bar_counter",
+      "name": "Bar counter gameplay scene",
+      "art_prompt": "first-person view from behind the bar counter looking at an empty guest seat, wooden counter foreground with subtle brush texture, candle-lit, shelves of glowing bottles blurred behind, generous empty space in the lower half for UI"
+    },
+    {
+      "id": "bg_back_room",
+      "name": "Back Room shop scene",
+      "art_prompt": "cozy speakeasy back room with a velvet curtain doorway, small round table with a cash tin and stacked crates of bottles, single warm bulb hanging, teal shadows in the corners, slightly mysterious but inviting"
+    }
+  ]
+}
