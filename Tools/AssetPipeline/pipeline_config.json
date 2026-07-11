@@ -12,9 +12,32 @@
   },
   "models": {
     "flux_lora": "alperpamukcu/lastcall-cozy-noir:REPLACE_WITH_VERSION_HASH",
+    "flux_base": "black-forest-labs/flux-dev",
     "recraft":   "recraft-ai/recraft-v3",
-    "remove_bg": "recraft-ai/recraft-remove-background"
+    "remove_bg": "recraft-ai/recraft-remove-background",
+    "lora_trainer": "ostris/flux-dev-lora-trainer"
   },
+  "lora_destination": "alperpamukcu/lastcall-cozy-noir",
+  "golden_set_subjects": [
+    "bust portrait of a weathered older bartender with a warm smile, 3/4 view",
+    "bust portrait of a glamorous jazz singer in a beaded dress, 3/4 view",
+    "bust portrait of a young poet with round glasses holding a notebook, 3/4 view",
+    "bust portrait of a tired but kind off-duty police officer, 3/4 view",
+    "bust portrait of a sharp-suited theater critic with a pocket watch, 3/4 view",
+    "bust portrait of an elderly aunt in a knitted shawl, 3/4 view",
+    "a cut crystal old fashioned glass with amber liquid and one large ice cube on a wooden counter",
+    "a copper cocktail shaker with condensation droplets, dark plum background",
+    "an unlabeled dark rum bottle with a wax seal, dark plum background",
+    "a coupe glass of pale sparkling cocktail with a lemon twist",
+    "a wooden muddler and a brass jigger crossed on a folded bar towel",
+    "a bowl of bright citrus fruit beside a paring knife on a cutting board",
+    "wide view of a dim cozy cocktail bar interior with shelves of glowing bottles",
+    "a velvet-curtained speakeasy back room with a single warm hanging bulb",
+    "a rain-streaked bar window at night with soft neon glow bleeding through",
+    "a bar counter corner with a lit candle and a folded newspaper",
+    "a vintage brass cash register on a worn wooden counter",
+    "a hand-chalked cocktail menu board leaning on a bottle shelf, no readable text"
+  ],
   "trigger_word": "lstcll",
   "style_block": "cozy-noir painterly illustration, warm amber and deep plum and teal palette, single warm key light from upper-left at 45 degrees, teal fill in shadows, visible brush texture, no photorealism, no pixel art",
   "categories": {
@@ -26,6 +49,7 @@
     "ui":          {"model": "recraft",  "template": "{subject}, flat game UI element, warm amber and deep plum palette, clean silhouette, centered on plain background", "recraft_style": "digital_illustration", "size": [1024, 1024], "target": [256, 256], "remove_bg": true, "grade": false, "out_subdir": "UI"}
   },
   "palette_grade": {"warm_gain": 1.06, "teal_shadow_shift": 6, "saturation": 1.05},
+  "throttle_pause_s": 12,
   "max_rerolls_per_asset": 4,
   "base_seed": 41100
 }

@@ -73,6 +73,13 @@ def _download(url: str) -> bytes:
         return r.read()
 
 
+def _pause():
+    """Low-credit accounts get 6 requests/min with burst 1; space out prediction
+    creates so the second call of an asset (remove_bg) doesn't 429 and waste the
+    first. Set throttle_pause_s to 0 once the account holds >= $5."""
+    time.sleep(CFG.get("throttle_pause_s", 0))
+
+
 def _run_model(category: str, prompt: str, seed: int) -> bytes:
     spec = CFG["categories"][category]
     w, h = spec["size"]
@@ -173,6 +180,7 @@ def generate(category: str, ids: list[str] | None = None, seed_offset: int = 0) 
         try:
             raw = _run_model(category, prompt, seed)
             if spec["remove_bg"]:
+                _pause()  # second prediction of the asset; see _pause docstring
                 raw = _remove_bg(raw)
             img = _finalize(raw, category)
             p = _staging_path(category, it["id"], seed)
@@ -183,6 +191,7 @@ def generate(category: str, ids: list[str] | None = None, seed_offset: int = 0) 
         except Exception as e:
             _log({"event": "error", "category": category, "id": it["id"], "error": str(e)})
             results.append(f"ERR {it['id']}: {e}")
+        _pause()
     return "\n".join(results) or "Nothing matched."
 
 
@@ -224,6 +233,93 @@ def reject(category: str, filename: str, reason: str) -> str:
         p.unlink()
     _log({"event": "reject", "category": category, "file": filename, "reason": reason})
     return f"Rejected ({reason}). Reroll with generate(category, ids=[...], seed_offset+1)."
+
+
+# ---------- style LoRA bootstrap (golden set + training) ----------
+
+GOLDEN_DIR = ROOT / CFG["staging_dir"] / "golden_set"
+
+
+@mcp.tool()
+def golden_set_generate(indices: list[int] | None = None, seed_offset: int = 0) -> str:
+    """Generate style-reference candidates with base FLUX (no LoRA) from
+    pipeline_config golden_set_subjects. These train the cozy-noir style LoRA;
+    they are NOT game assets. Files land in staging/golden_set/."""
+    GOLDEN_DIR.mkdir(parents=True, exist_ok=True)
+    subjects = CFG["golden_set_subjects"]
+    picks = indices if indices else list(range(len(subjects)))
+    results = []
+    for i in picks:
+        seed = CFG["base_seed"] + 7000 + i + seed_offset * 100000
+        prompt = f"{CFG['style_block']}, {subjects[i]}"
+        try:
+            out = replicate.run(CFG["models"]["flux_base"], input={
+                "prompt": prompt, "aspect_ratio": "1:1", "seed": seed,
+                "num_inference_steps": 28, "guidance": 3.5, "output_format": "png",
+            })
+            url = out[0] if isinstance(out, list) else out
+            p = GOLDEN_DIR / f"ref_{i:02d}__seed{seed}.png"
+            p.write_bytes(_download(str(url)))
+            _log({"event": "golden_set", "index": i, "seed": seed, "prompt": prompt, "file": str(p)})
+            results.append(f"OK  ref_{i:02d} -> {p.name}")
+        except Exception as e:
+            _log({"event": "error", "category": "golden_set", "index": i, "error": str(e)})
+            results.append(f"ERR ref_{i:02d}: {e}")
+        _pause()
+    return "\n".join(results)
+
+
+@mcp.tool()
+def golden_set_pack(min_images: int = 15) -> str:
+    """Zip the reviewed golden-set images for the LoRA trainer."""
+    import zipfile
+    pngs = sorted(GOLDEN_DIR.glob("*.png"))
+    if len(pngs) < min_images:
+        return f"Only {len(pngs)} refs staged; need at least {min_images}."
+    zpath = GOLDEN_DIR / "golden_set.zip"
+    with zipfile.ZipFile(zpath, "w") as z:
+        for p in pngs:
+            z.write(p, p.name)
+    return f"Packed {len(pngs)} images -> {zpath}"
+
+
+@mcp.tool()
+def train_style_lora(steps: int = 1000) -> str:
+    """Launch the cozy-noir style LoRA training on Replicate from the packed golden
+    set. Creates the destination model when missing. Returns the training id."""
+    zpath = GOLDEN_DIR / "golden_set.zip"
+    if not zpath.exists():
+        return "golden_set.zip missing - run golden_set_pack first."
+
+    owner, name = CFG["lora_destination"].split("/")
+    try:
+        replicate.models.create(owner=owner, name=name, visibility="private",
+                                hardware="cpu", description="LAST CALL cozy-noir style LoRA")
+    except Exception as e:  # already exists is fine
+        _log({"event": "model_create_note", "error": str(e)})
+
+    trainer = replicate.models.get(CFG["models"]["lora_trainer"])
+    version = trainer.latest_version.id
+    with open(zpath, "rb") as f:
+        training = replicate.trainings.create(
+            model=CFG["models"]["lora_trainer"], version=version,
+            destination=CFG["lora_destination"],
+            input={"input_images": f, "trigger_word": CFG["trigger_word"],
+                   "steps": steps, "is_style": True},
+        )
+    _log({"event": "training_started", "id": training.id, "steps": steps})
+    return f"Training started: {training.id} (status: {training.status})"
+
+
+@mcp.tool()
+def training_status(training_id: str) -> str:
+    """Poll a LoRA training. When it succeeds, returns the model:version to paste
+    into pipeline_config.json models.flux_lora."""
+    t = replicate.trainings.get(training_id)
+    if t.status == "succeeded":
+        version = (t.output or {}).get("version", "?")
+        return f"succeeded - flux_lora value: {version}"
+    return f"{t.status}" + (f" - {t.error}" if t.error else "")
 
 
 if __name__ == "__main__":
