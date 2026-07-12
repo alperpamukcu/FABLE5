@@ -13,17 +13,17 @@
     {
       "id": "polaroid_frame",
       "name": "Polaroid photo frame",
-      "art_prompt": "blank instant photo frame slightly tilted, cream border with a wider bottom edge, soft drop shadow, empty dark plum photo window, no text"
+      "art_prompt": "flat 2D vintage photo frame shape, cream border wider at the bottom edge, empty dark plum rectangular window, slight tilt, simple flat vector illustration, no camera, no device, no text"
     },
     {
       "id": "toast_card",
       "name": "Notification toast card",
-      "art_prompt": "small horizontal rounded notification card, deep plum surface with a thin amber rim light on the top edge, subtle candle-glow gradient, empty, no text"
+      "art_prompt": "one single flat rounded-rectangle panel shape, deep plum fill with a thin amber outline and a soft glow along the top edge, completely empty interior, simple flat vector illustration, no text, no letters, no words"
     },
     {
       "id": "tooltip_panel",
       "name": "Tooltip panel",
-      "art_prompt": "compact rounded tooltip panel with a small pointer notch on the left edge, dark plum surface, faint teal inner shadow, thin cream border, empty, no text"
+      "art_prompt": "flat 2D rounded rectangle callout box shape with a small triangular pointer notch on its left edge, dark plum fill, thin cream outline, completely empty, simple flat vector illustration, no device, no buttons, no text"
     },
     {
       "id": "coin_tip",

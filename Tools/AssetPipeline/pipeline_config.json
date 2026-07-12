@@ -3,17 +3,17 @@
   "staging_dir": "./staging",
   "log_file": "./generation_log.jsonl",
   "content_sources": {
-    "portraits":   "../../Assets/Data/patrons/patrons.json",
-    "vips":        "../../Assets/Data/vips/vips.json",
+    "portraits": "../../Assets/Data/patrons/patrons.json",
+    "vips": "../../Assets/Data/vips/vips.json",
     "ingredients": "../../Assets/Data/decks/classic_bar.json",
-    "tools":       "../../Assets/Data/tools/tools.json",
+    "tools": "../../Assets/Data/tools/tools.json",
     "backgrounds": "./backgrounds.json",
-    "ui":          "./ui_elements.json"
+    "ui": "./ui_elements.json"
   },
   "models": {
-    "flux_lora": "alperpamukcu/lastcall-cozy-noir:REPLACE_WITH_VERSION_HASH",
+    "flux_lora": "alperpamukcu/lastcall-cozy-noir:dd78d5c7505bb3d4953a2822ed42a4a3248de26c7355e11ded59dd1b2740401d",
     "flux_base": "black-forest-labs/flux-dev",
-    "recraft":   "recraft-ai/recraft-v3",
+    "recraft": "recraft-ai/recraft-v3",
     "remove_bg": "recraft-ai/recraft-remove-background",
     "lora_trainer": "ostris/flux-dev-lora-trainer"
   },
@@ -21,8 +21,8 @@
   "golden_set_subjects": [
     "bust portrait of a weathered older bartender with a warm smile, 3/4 view",
     "bust portrait of a glamorous jazz singer in a beaded dress, 3/4 view",
-    "bust portrait of a young poet with round glasses holding a notebook, 3/4 view",
-    "bust portrait of a tired but kind off-duty police officer, 3/4 view",
+    "oil painting bust portrait of a mustached middle-aged playwright with round spectacles holding a small closed notebook, 3/4 view",
+    "bust portrait of a tired but kind off-duty police officer with loosened collar, 3/4 view, oil painting style",
     "bust portrait of a sharp-suited theater critic with a pocket watch, 3/4 view",
     "bust portrait of an elderly aunt in a knitted shawl, 3/4 view",
     "a cut crystal old fashioned glass with amber liquid and one large ice cube on a wooden counter",
@@ -33,23 +33,112 @@
     "a bowl of bright citrus fruit beside a paring knife on a cutting board",
     "wide view of a dim cozy cocktail bar interior with shelves of glowing bottles",
     "a velvet-curtained speakeasy back room with a single warm hanging bulb",
-    "a rain-streaked bar window at night with soft neon glow bleeding through",
+    "a worn leather armchair beside a small round table with a burning candle in a dim bar corner",
     "a bar counter corner with a lit candle and a folded newspaper",
     "a vintage brass cash register on a worn wooden counter",
-    "a hand-chalked cocktail menu board leaning on a bottle shelf, no readable text"
+    "a shelf of assorted empty cocktail glassware catching warm candlelight, no labels, no lettering"
   ],
   "trigger_word": "lstcll",
   "style_block": "cozy-noir painterly illustration, warm amber and deep plum and teal palette, single warm key light from upper-left at 45 degrees, teal fill in shadows, visible brush texture, no photorealism, no pixel art",
   "categories": {
-    "portraits":   {"model": "flux_lora", "template": "{trigger} {style}, bust portrait of {subject}, 3/4 view facing screen-left, flat dark-teal vignette background, no hands, no props crossing frame", "size": [768, 1024], "target": [240, 300], "remove_bg": true,  "grade": true,  "out_subdir": "Portraits"},
-    "vips":        {"model": "flux_lora", "template": "{trigger} {style}, dramatic bust portrait of {subject}, 3/4 view facing screen-left, subtle neon magenta accent, dark-teal vignette background", "size": [768, 1024], "target": [340, 420], "remove_bg": true,  "grade": true,  "out_subdir": "VIPs"},
-    "ingredients": {"model": "flux_lora", "template": "{trigger} {style}, single {subject} as a game item sprite, centered, whole object fully visible, dark plum plain background, no text", "size": [768, 768],  "target": [220, 280], "remove_bg": true,  "grade": true,  "out_subdir": "Ingredients"},
-    "tools":       {"model": "flux_lora", "template": "{trigger} {style}, single {subject} bar tool as a game item illustration, centered, dark plum plain background", "size": [768, 768],  "target": [220, 280], "remove_bg": true,  "grade": true,  "out_subdir": "Tools"},
-    "backgrounds": {"model": "flux_lora", "template": "{trigger} {style}, {subject}, wide dim cocktail bar interior, shelves of glowing bottles, candle-lit counter, atmospheric depth", "size": [1344, 768], "target": [1920, 1080], "remove_bg": false, "grade": true,  "out_subdir": "Backgrounds"},
-    "ui":          {"model": "recraft",  "template": "{subject}, flat game UI element, warm amber and deep plum palette, clean silhouette, centered on plain background", "recraft_style": "digital_illustration", "size": [1024, 1024], "target": [256, 256], "remove_bg": true, "grade": false, "out_subdir": "UI"}
+    "portraits": {
+      "model": "flux_lora",
+      "template": "{trigger} {style}, bust portrait of {subject}, 3/4 view facing screen-left, flat dark-teal vignette background, no hands, no props crossing frame",
+      "size": [
+        768,
+        1024
+      ],
+      "target": [
+        240,
+        300
+      ],
+      "remove_bg": true,
+      "grade": true,
+      "out_subdir": "Portraits"
+    },
+    "vips": {
+      "model": "flux_lora",
+      "template": "{trigger} {style}, dramatic bust portrait of {subject}, 3/4 view facing screen-left, subtle neon magenta accent, dark-teal vignette background",
+      "size": [
+        768,
+        1024
+      ],
+      "target": [
+        340,
+        420
+      ],
+      "remove_bg": true,
+      "grade": true,
+      "out_subdir": "VIPs"
+    },
+    "ingredients": {
+      "model": "flux_lora",
+      "template": "{trigger} {style}, single {subject} as a game item sprite, centered, whole object fully visible, dark plum plain background, no text",
+      "size": [
+        768,
+        768
+      ],
+      "target": [
+        220,
+        280
+      ],
+      "remove_bg": true,
+      "grade": true,
+      "out_subdir": "Ingredients"
+    },
+    "tools": {
+      "model": "flux_lora",
+      "template": "{trigger} {style}, single {subject} bar tool as a game item illustration, centered, dark plum plain background",
+      "size": [
+        768,
+        768
+      ],
+      "target": [
+        220,
+        280
+      ],
+      "remove_bg": true,
+      "grade": true,
+      "out_subdir": "Tools"
+    },
+    "backgrounds": {
+      "model": "flux_lora",
+      "template": "{trigger} {style}, {subject}, wide dim cocktail bar interior, shelves of glowing bottles, candle-lit counter, atmospheric depth",
+      "size": [
+        1344,
+        768
+      ],
+      "target": [
+        1920,
+        1080
+      ],
+      "remove_bg": false,
+      "grade": true,
+      "out_subdir": "Backgrounds"
+    },
+    "ui": {
+      "model": "recraft",
+      "template": "{subject}, flat game UI element, warm amber and deep plum palette, clean silhouette, centered on plain background",
+      "recraft_style": "digital_illustration",
+      "size": [
+        1024,
+        1024
+      ],
+      "target": [
+        256,
+        256
+      ],
+      "remove_bg": true,
+      "grade": false,
+      "out_subdir": "UI"
+    }
   },
-  "palette_grade": {"warm_gain": 1.06, "teal_shadow_shift": 6, "saturation": 1.05},
-  "throttle_pause_s": 12,
+  "palette_grade": {
+    "warm_gain": 1.06,
+    "teal_shadow_shift": 6,
+    "saturation": 1.05
+  },
+  "throttle_pause_s": 0,
   "max_rerolls_per_asset": 4,
   "base_seed": 41100
 }
