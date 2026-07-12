@@ -1,34 +1,3 @@
 {
-  "items": [
-    {
-      "id": "speech_bubble",
-      "name": "Customer speech bubble",
-      "art_prompt": "rounded rectangular comic speech bubble with a short tail pointing down-left, cream parchment fill, thin warm amber outline, subtle paper texture, empty inside"
-    },
-    {
-      "id": "price_tag",
-      "name": "Shop price tag",
-      "art_prompt": "small vintage paper price tag with a punched hole and short string, warm cream paper, amber border, empty face with no text"
-    },
-    {
-      "id": "polaroid_frame",
-      "name": "Polaroid photo frame",
-      "art_prompt": "flat 2D vintage photo frame shape, cream border wider at the bottom edge, empty dark plum rectangular window, slight tilt, simple flat vector illustration, no camera, no device, no text"
-    },
-    {
-      "id": "toast_card",
-      "name": "Notification toast card",
-      "art_prompt": "one single flat rounded-rectangle panel shape, deep plum fill with a thin amber outline and a soft glow along the top edge, completely empty interior, simple flat vector illustration, no text, no letters, no words"
-    },
-    {
-      "id": "tooltip_panel",
-      "name": "Tooltip panel",
-      "art_prompt": "flat 2D rounded rectangle callout box shape with a small triangular pointer notch on its left edge, dark plum fill, thin cream outline, completely empty, simple flat vector illustration, no device, no buttons, no text"
-    },
-    {
-      "id": "coin_tip",
-      "name": "Tip coin icon",
-      "art_prompt": "single round brass bar token seen at a slight angle, embossed cocktail glass silhouette in the center, warm amber highlights, teal shadow side, clean game icon"
-    }
-  ]
+  "items": []
 }

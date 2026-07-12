@@ -36,3 +36,6 @@ DON'T: real brands or bottle labels, drunkenness depiction, photoreal glass rend
 
 ## 8. AI-generation compliance hooks
 Every prompt template must embed: style block (Section 1 wording), palette words (amber/teal/plum), light rule (Section 3), framing spec (Section 4). Every generated batch passes a manual review against Sections 3–4 before import; rejects are regenerated, never hand-fixed into inconsistency.
+
+### 8.1 Division of labor (ruling, 2026-07-12)
+**UI chrome is never AI-generated.** Panels, buttons, bubbles, tooltips, toasts, tags, frames and bars are authored procedurally (`LastCall → Generate UI Sprites`) from the Section 2 hex tokens, with the Section 3 light rule baked into every sprite (bright rim toward the upper-left, shade toward the lower-right, candle-glow falloff). AI generation (the `lstcll` LoRA) is reserved for **illustrative** content — portraits, VIPs, ingredients, tools, icons, scenes — so everything painted shares one brush and everything structural shares one geometry. Runtime tints in code must come from the palette-token constants, not ad-hoc colors. (First AI UI batch was retired for exactly this cohesion failure.)

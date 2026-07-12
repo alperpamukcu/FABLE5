@@ -8,7 +8,8 @@
     "ingredients": "../../Assets/Data/decks/classic_bar.json",
     "tools": "../../Assets/Data/tools/tools.json",
     "backgrounds": "./backgrounds.json",
-    "ui": "./ui_elements.json"
+    "ui": "./ui_elements.json",
+    "icons": "./icons.json"
   },
   "models": {
     "flux_lora": "alperpamukcu/lastcall-cozy-noir:dd78d5c7505bb3d4953a2822ed42a4a3248de26c7355e11ded59dd1b2740401d",
@@ -131,6 +132,21 @@
       "remove_bg": true,
       "grade": false,
       "out_subdir": "UI"
+    },
+    "icons": {
+      "model": "flux_lora",
+      "template": "{trigger} {style}, {subject}, small game icon illustration, centered, dark plum plain background, no text",
+      "size": [
+        768,
+        768
+      ],
+      "target": [
+        128,
+        128
+      ],
+      "remove_bg": true,
+      "grade": true,
+      "out_subdir": "Icons"
     }
   },
   "palette_grade": {

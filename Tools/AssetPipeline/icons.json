@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "id": "coin_tip",
+      "name": "Tip coin icon",
+      "art_prompt": "a single round brass bar token with an embossed cocktail glass silhouette and a plain smooth rim with no inscriptions, seen slightly angled"
+    },
+    {
+      "id": "book_recipe",
+      "name": "Recipe book icon",
+      "art_prompt": "a small worn leather-bound recipe book with a brass clasp"
+    },
+    {
+      "id": "bell_service",
+      "name": "Service bell icon",
+      "art_prompt": "macro close-up of one large dome-shaped hotel counter bell filling the frame, shiny brass dome with a round press button on top, sitting on a dark counter"
+    }
+  ]
+}

@@ -42,6 +42,26 @@ namespace LastCall.DebugUI
         [SerializeField] private Sprite vignetteSprite;
         [SerializeField] private Material backgroundMaterial;
 
+        // Art bible §2 locked palette (Docs/GDD/14_art_bible.md) — every UI tint
+        // must come from these tokens so the whole screen shares one language.
+        private static readonly Color DeepPlum = Hex(0x1A1023);
+        private static readonly Color PanelPlum = Hex(0x241830);
+        private static readonly Color Amber = Hex(0xE8A33D);
+        private static readonly Color CandleGlow = Hex(0xF5C97B);
+        private static readonly Color WoodBrown = Hex(0x6B4226);
+        private static readonly Color TealShadow = Hex(0x1E4D4A);
+        private static readonly Color Cream = Hex(0xF2E8D5);
+        private static readonly Color NeonMagenta = Hex(0xD94D8F);
+
+        private static Color Hex(int rgb) => new Color(
+            ((rgb >> 16) & 255) / 255f, ((rgb >> 8) & 255) / 255f, (rgb & 255) / 255f);
+
+        private static Color WithAlpha(Color color, float alpha)
+        {
+            color.a = alpha;
+            return color;
+        }
+
         private GameBootstrap _bootstrap;
         private readonly List<IngredientCard> _selected = new List<IngredientCard>();
         private Font _font;
@@ -499,12 +519,12 @@ namespace LastCall.DebugUI
             }
 
             var reroll = NewButton("Reroll", _shopOffersPanel,
-                $"Reroll — ${Run.Shop.RerollCost}", new Color(0.62f, 0.62f, 0.82f), OnRerollClicked, 13);
+                $"Reroll — ${Run.Shop.RerollCost}", TealShadow, OnRerollClicked, 13);
             SetRowHeight(reroll, 30);
             reroll.interactable = Run.Money >= Run.Shop.RerollCost;
 
             var next = NewButton("Continue", _shopOffersPanel,
-                "Next customer →", new Color(0.30f, 0.55f, 0.30f), OnContinueClicked, 13);
+                "Next customer →", CandleGlow, OnContinueClicked, 13);
             SetRowHeight(next, 30);
         }
 
@@ -648,7 +668,7 @@ namespace LastCall.DebugUI
             // Right: score log.
             var logPanel = NewRect("LogPanel", root);
             Stretch(logPanel, new Vector2(1, 0), new Vector2(1, 1), new Vector2(-372, 170), new Vector2(-12, -52));
-            StylePanel(logPanel, new Color(0.07f, 0.05f, 0.11f, 0.78f));
+            StylePanel(logPanel, WithAlpha(DeepPlum, 0.80f));
             _logScroll = logPanel.gameObject.AddComponent<ScrollRect>();
             var viewport = NewRect("Viewport", logPanel);
             Stretch(viewport, Vector2.zero, Vector2.one, new Vector2(6, 6), new Vector2(-6, -6));
@@ -676,7 +696,7 @@ namespace LastCall.DebugUI
             // + reroll + continue (~260px of rows) with headroom for SOLD relabels.
             _shopPanel = NewRect("ShopPanel", root);
             Place(_shopPanel, new Vector2(0.5f, 0.5f), new Vector2(460, 440), new Vector2(-60, 0));
-            StylePanel(_shopPanel, new Color(0.13f, 0.10f, 0.20f, 0.97f));
+            StylePanel(_shopPanel, WithAlpha(PanelPlum, 0.97f));
             _shopTitle = NewText("ShopTitle", _shopPanel, 18, TextAnchor.MiddleCenter, new Color(1f, 0.9f, 0.6f));
             _shopTitle.font = _headerFont;
             Stretch((RectTransform)_shopTitle.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(8, -40), new Vector2(-8, -6));
@@ -691,12 +711,12 @@ namespace LastCall.DebugUI
 
             // Recipe Book overlay (created after the shop so it draws on top).
             var recipesButton = NewButton("RecipesToggle", root, "RECIPES",
-                new Color(0.80f, 0.68f, 0.42f), OnToggleRecipesClicked, 14);
+                Amber, OnToggleRecipesClicked, 14);
             Place((RectTransform)recipesButton.transform, new Vector2(0.5f, 1), new Vector2(120, 30), new Vector2(0, -12));
 
             _recipePanel = NewRect("RecipePanel", root);
             Place(_recipePanel, new Vector2(0.5f, 0.5f), new Vector2(660, 440), new Vector2(-60, 10));
-            StylePanel(_recipePanel, new Color(0.09f, 0.07f, 0.14f, 0.97f));
+            StylePanel(_recipePanel, WithAlpha(DeepPlum, 0.97f));
             var recipeTitle = NewText("RecipeTitle", _recipePanel, 18, TextAnchor.MiddleCenter, new Color(1f, 0.9f, 0.6f));
             recipeTitle.text = "RECIPE BOOK";
             Stretch((RectTransform)recipeTitle.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(8, -38), new Vector2(-8, -6));
@@ -713,12 +733,12 @@ namespace LastCall.DebugUI
             previewRt.anchoredPosition = new Vector2(0, 218);
 
             // Bottom: action buttons + rail.
-            _mixButton = NewButton("Mix", root, "MIX", new Color(0.36f, 0.66f, 0.38f), OnMixClicked, 18);
+            _mixButton = NewButton("Mix", root, "MIX", Amber, OnMixClicked, 18);
             var mixRt = (RectTransform)_mixButton.transform;
             mixRt.anchorMin = mixRt.anchorMax = mixRt.pivot = new Vector2(0.5f, 0);
             mixRt.sizeDelta = new Vector2(170, 42);
             mixRt.anchoredPosition = new Vector2(-95, 168);
-            _restockButton = NewButton("Restock", root, "RESTOCK", new Color(0.82f, 0.56f, 0.30f), OnRestockClicked, 18);
+            _restockButton = NewButton("Restock", root, "RESTOCK", WoodBrown, OnRestockClicked, 18);
             var restockRt = (RectTransform)_restockButton.transform;
             restockRt.anchorMin = restockRt.anchorMax = restockRt.pivot = new Vector2(0.5f, 0);
             restockRt.sizeDelta = new Vector2(170, 42);
@@ -732,7 +752,7 @@ namespace LastCall.DebugUI
             skipRt.anchoredPosition = new Vector2(265, 168);
 
             // Bouncer voucher: visible only while tonight's VIP can still be rerolled.
-            _bouncerButton = NewButton("Bouncer", root, "BOUNCER: NEW VIP", new Color(0.80f, 0.45f, 0.45f), OnBouncerClicked, 13);
+            _bouncerButton = NewButton("Bouncer", root, "BOUNCER: NEW VIP", NeonMagenta, OnBouncerClicked, 13);
             var bouncerRt = (RectTransform)_bouncerButton.transform;
             bouncerRt.anchorMin = bouncerRt.anchorMax = bouncerRt.pivot = new Vector2(0.5f, 0);
             bouncerRt.sizeDelta = new Vector2(150, 34);
@@ -740,7 +760,7 @@ namespace LastCall.DebugUI
 
             _railPanel = NewRect("Rail", root);
             Stretch(_railPanel, new Vector2(0, 0), new Vector2(1, 0), new Vector2(12, 12), new Vector2(-12, 160));
-            StylePanel(_railPanel, new Color(0.09f, 0.07f, 0.14f, 0.70f));
+            StylePanel(_railPanel, WithAlpha(PanelPlum, 0.72f));
             var layout = _railPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
             layout.spacing = 8;
             layout.padding = new RectOffset(8, 8, 8, 8);
@@ -777,7 +797,7 @@ namespace LastCall.DebugUI
         {
             var panel = NewRect(name, root);
             Stretch(panel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(12, bottom), new Vector2(392, top));
-            StylePanel(panel, new Color(0.10f, 0.08f, 0.16f, 0.72f));
+            StylePanel(panel, WithAlpha(PanelPlum, 0.72f));
             var layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 4;
             layout.padding = new RectOffset(6, 6, 6, 6);
@@ -855,7 +875,9 @@ namespace LastCall.DebugUI
             var textRt = NewRect("Text", rt);
             Stretch(textRt, Vector2.zero, Vector2.one, new Vector2(4, 4), new Vector2(-4, -4));
             var text = textRt.gameObject.AddComponent<Text>();
-            ConfigureText(text, fontSize, TextAnchor.MiddleCenter, Color.black);
+            // Art bible: cream on dark, plum on light — never pure black/white.
+            float luminance = bg.r * 0.299f + bg.g * 0.587f + bg.b * 0.114f;
+            ConfigureText(text, fontSize, TextAnchor.MiddleCenter, luminance < 0.45f ? Cream : PanelPlum);
             text.text = label;
             return button;
         }
