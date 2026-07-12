@@ -898,7 +898,7 @@
           }
         }
       ],
-      "art_prompt": "a permanently unimpressed older woman with pursed lips, a high lace collar and a withering stare"
+      "art_prompt": "a sour-faced elderly dowager in her seventies with deeply pursed lips, narrowed disapproving eyes, tight grey bun and a high lace collar"
     },
     {
       "id": "old_timer",
@@ -1129,7 +1129,7 @@
           }
         }
       ],
-      "art_prompt": "a wild-eyed backwoods distiller with a singed beard, patched overalls and a triumphant grin"
+      "art_prompt": "a wild-eyed backwoods distiller with a singed bushy beard and plain unmarked denim overalls over a flannel shirt, triumphant grin"
     },
     {
       "id": "perfectionist",
@@ -1400,7 +1400,7 @@
           }
         }
       ],
-      "art_prompt": "a legendary grande dame in a plum velvet gown and opera necklace, decades of long nights in her wry gaze"
+      "art_prompt": "a regal grande dame in her late sixties with a silver-streaked updo, plum velvet gown and heavy opera necklace, decades of long nights in her amused wry gaze"
     },
     {
       "id": "the_alchemist",
@@ -1422,7 +1422,7 @@
           }
         }
       ],
-      "art_prompt": "a mysterious figure in a high-collared coat with faintly glowing amber vials strapped across the chest, half-shadowed face"
+      "art_prompt": "a tall androgynous figure in a high-collared dark coat with a low hood, face half-lost in shadow, faintly glowing amber vials strapped in a bandolier across the chest"
     }
   ]
 }
