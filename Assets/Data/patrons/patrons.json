@@ -2,498 +2,1427 @@
   "version": 2,
   "patrons": [
     {
-      "id": "sailor_musa", "name": "Sailor Musa", "rarity": "Common", "cost": 4,
+      "id": "sailor_musa",
+      "name": "Sailor Musa",
+      "rarity": "Common",
+      "cost": 4,
       "description": "+4 Mult if the Mix contains a Spirit.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "AddMult", "value": 4, "valueSource": "Constant",
-          "condition": { "kind": "MixContainsType", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "AddMult",
+          "value": 4,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixContainsType",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a weathered merchant sailor in his sixties with a short grey beard, dark knitted cap and navy pea coat, easy warm grin"
     },
     {
-      "id": "the_poet", "name": "The Poet", "rarity": "Common", "cost": 4,
+      "id": "the_poet",
+      "name": "The Poet",
+      "rarity": "Common",
+      "cost": 4,
       "description": "+30 Flavor if the Mix has exactly 3 ingredients.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 30, "valueSource": "Constant",
-          "condition": { "kind": "MixSizeEquals", "type": "Spirit", "intValue": 3, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "AddFlavor",
+          "value": 30,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixSizeEquals",
+            "type": "Spirit",
+            "intValue": 3,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a lean young man with tousled dark hair and a corduroy jacket, dreamy faraway gaze, small notebook tucked in his breast pocket"
     },
     {
-      "id": "aunt_perihan", "name": "Aunt Perihan", "rarity": "Common", "cost": 5,
+      "id": "aunt_perihan",
+      "name": "Aunt Perihan",
+      "rarity": "Common",
+      "cost": 5,
       "description": "Sweet cards give +15 extra Flavor.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "AddFlavor", "value": 15, "valueSource": "Constant",
-          "condition": { "kind": "CardTypeIs", "type": "Sweet", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "AddFlavor",
+          "value": 15,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardTypeIs",
+            "type": "Sweet",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a plump warm-hearted aunt in her seventies with silver hair in a bun, floral shawl around her shoulders, kind knowing smile"
     },
     {
-      "id": "night_cabbie", "name": "The Night Cabbie", "rarity": "Common", "cost": 5,
+      "id": "night_cabbie",
+      "name": "The Night Cabbie",
+      "rarity": "Common",
+      "cost": 5,
       "description": "+$2 at end of each customer.",
       "effects": [
-        { "trigger": "OnCustomerEnd", "op": "AddMoney", "value": 2, "valueSource": "Constant",
-          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCustomerEnd",
+          "op": "AddMoney",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "Always",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a stocky middle-aged taxi driver with a flat cap and stubble, tired friendly eyes, jacket collar turned up"
     },
     {
-      "id": "uncle_demir", "name": "Uncle Demir", "rarity": "Common", "cost": 4,
+      "id": "uncle_demir",
+      "name": "Uncle Demir",
+      "rarity": "Common",
+      "cost": 4,
       "description": "Spirit cards give +15 extra Flavor.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "AddFlavor", "value": 15, "valueSource": "Constant",
-          "condition": { "kind": "CardTypeIs", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "AddFlavor",
+          "value": 15,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardTypeIs",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a barrel-chested older man with a magnificent grey mustache and rolled shirtsleeves, raising one approving eyebrow"
     },
     {
-      "id": "lemon_vendor", "name": "The Lemon Vendor", "rarity": "Common", "cost": 4,
+      "id": "lemon_vendor",
+      "name": "The Lemon Vendor",
+      "rarity": "Common",
+      "cost": 4,
       "description": "Sour cards give +15 extra Flavor.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "AddFlavor", "value": 15, "valueSource": "Constant",
-          "condition": { "kind": "CardTypeIs", "type": "Sour", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "AddFlavor",
+          "value": 15,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardTypeIs",
+            "type": "Sour",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a wiry market vendor woman in her fifties with sun-weathered skin and a yellow headwrap, sharp playful squint"
     },
     {
-      "id": "pharmacist", "name": "The Pharmacist", "rarity": "Common", "cost": 4,
+      "id": "pharmacist",
+      "name": "The Pharmacist",
+      "rarity": "Common",
+      "cost": 4,
       "description": "Bitter cards give +15 extra Flavor.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "AddFlavor", "value": 15, "valueSource": "Constant",
-          "condition": { "kind": "CardTypeIs", "type": "Bitter", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "AddFlavor",
+          "value": 15,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardTypeIs",
+            "type": "Bitter",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a prim elderly pharmacist with round wire glasses, white coat over a knitted vest, skeptical pursed lips"
     },
     {
-      "id": "madame_bubbles", "name": "Madame Bubbles", "rarity": "Common", "cost": 4,
+      "id": "madame_bubbles",
+      "name": "Madame Bubbles",
+      "rarity": "Common",
+      "cost": 4,
       "description": "Bubbly cards give +15 extra Flavor.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "AddFlavor", "value": 15, "valueSource": "Constant",
-          "condition": { "kind": "CardTypeIs", "type": "Bubbly", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "AddFlavor",
+          "value": 15,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardTypeIs",
+            "type": "Bubbly",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a round joyful woman in her forties with rosy cheeks and champagne-blonde curls, pearl earrings, caught mid-laugh"
     },
     {
-      "id": "the_florist", "name": "The Florist", "rarity": "Common", "cost": 4,
+      "id": "the_florist",
+      "name": "The Florist",
+      "rarity": "Common",
+      "cost": 4,
       "description": "Garnish cards give +15 extra Flavor.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "AddFlavor", "value": 15, "valueSource": "Constant",
-          "condition": { "kind": "CardTypeIs", "type": "Garnish", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "AddFlavor",
+          "value": 15,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardTypeIs",
+            "type": "Garnish",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a gentle young woman with a loose braid, apron dusted with petals, a single flower tucked behind her ear"
     },
     {
-      "id": "pickle_pete", "name": "Pickle Pete", "rarity": "Common", "cost": 4,
+      "id": "pickle_pete",
+      "name": "Pickle Pete",
+      "rarity": "Common",
+      "cost": 4,
       "description": "+4 Mult if the Mix contains a Sour.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "AddMult", "value": 4, "valueSource": "Constant",
-          "condition": { "kind": "MixContainsType", "type": "Sour", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "AddMult",
+          "value": 4,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixContainsType",
+            "type": "Sour",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a gangly deli owner with a big nose and a bigger grin, striped apron, one eyebrow permanently raised"
     },
     {
-      "id": "candy_man", "name": "The Candy Man", "rarity": "Common", "cost": 4,
+      "id": "candy_man",
+      "name": "The Candy Man",
+      "rarity": "Common",
+      "cost": 4,
       "description": "+4 Mult if the Mix contains a Sweet.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "AddMult", "value": 4, "valueSource": "Constant",
-          "condition": { "kind": "MixContainsType", "type": "Sweet", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "AddMult",
+          "value": 4,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixContainsType",
+            "type": "Sweet",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a dapper round confectioner with a pastel bow tie and waistcoat, twinkling eyes, powdered sugar on his lapel"
     },
     {
-      "id": "espresso_nino", "name": "Espresso Nino", "rarity": "Common", "cost": 4,
+      "id": "espresso_nino",
+      "name": "Espresso Nino",
+      "rarity": "Common",
+      "cost": 4,
       "description": "+4 Mult if the Mix contains a Bitter.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "AddMult", "value": 4, "valueSource": "Constant",
-          "condition": { "kind": "MixContainsType", "type": "Bitter", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "AddMult",
+          "value": 4,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixContainsType",
+            "type": "Bitter",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a small intense barista with slicked dark hair, a pencil mustache and espresso-dark circles under his eyes"
     },
     {
-      "id": "toastmaster", "name": "The Toastmaster", "rarity": "Common", "cost": 4,
+      "id": "toastmaster",
+      "name": "The Toastmaster",
+      "rarity": "Common",
+      "cost": 4,
       "description": "+4 Mult if the Mix contains a Bubbly.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "AddMult", "value": 4, "valueSource": "Constant",
-          "condition": { "kind": "MixContainsType", "type": "Bubbly", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "AddMult",
+          "value": 4,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixContainsType",
+            "type": "Bubbly",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a flushed jovial master of ceremonies in a slightly crooked bow tie and burgundy vest, mouth open mid-toast"
     },
     {
-      "id": "olive_olga", "name": "Olive Olga", "rarity": "Common", "cost": 4,
+      "id": "olive_olga",
+      "name": "Olive Olga",
+      "rarity": "Common",
+      "cost": 4,
       "description": "+4 Mult if the Mix contains a Garnish.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "AddMult", "value": 4, "valueSource": "Constant",
-          "condition": { "kind": "MixContainsType", "type": "Garnish", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "AddMult",
+          "value": 4,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixContainsType",
+            "type": "Garnish",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a sharp-eyed older woman with olive skin and dark hair in a tight bun, green shawl, wry half-smile"
     },
     {
-      "id": "the_minimalist", "name": "The Minimalist", "rarity": "Common", "cost": 5,
+      "id": "the_minimalist",
+      "name": "The Minimalist",
+      "rarity": "Common",
+      "cost": 5,
       "description": "+6 Mult if the Mix is a single card.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "AddMult", "value": 6, "valueSource": "Constant",
-          "condition": { "kind": "MixSizeEquals", "type": "Spirit", "intValue": 1, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "AddMult",
+          "value": 6,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixSizeEquals",
+            "type": "Spirit",
+            "intValue": 1,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a serene young architect with a shaved head and plain black turtleneck, calm level gaze"
     },
     {
-      "id": "the_couple", "name": "The Couple", "rarity": "Common", "cost": 5,
+      "id": "the_couple",
+      "name": "The Couple",
+      "rarity": "Common",
+      "cost": 5,
       "description": "+5 Mult if the Mix has exactly 2 ingredients.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "AddMult", "value": 5, "valueSource": "Constant",
-          "condition": { "kind": "MixSizeEquals", "type": "Spirit", "intValue": 2, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "AddMult",
+          "value": 5,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixSizeEquals",
+            "type": "Spirit",
+            "intValue": 2,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "an inseparable elderly couple leaning cheek to cheek, matching knitted scarves, both beaming"
     },
     {
-      "id": "bridge_club", "name": "The Bridge Club", "rarity": "Common", "cost": 5,
+      "id": "bridge_club",
+      "name": "The Bridge Club",
+      "rarity": "Common",
+      "cost": 5,
       "description": "+40 Flavor if the Mix has exactly 4 ingredients.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 40, "valueSource": "Constant",
-          "condition": { "kind": "MixSizeEquals", "type": "Spirit", "intValue": 4, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "AddFlavor",
+          "value": 40,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixSizeEquals",
+            "type": "Spirit",
+            "intValue": 4,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "three sharp elderly ladies in cardigans side by side, peering over their reading glasses"
     },
     {
-      "id": "crowd_pleaser", "name": "The Crowd Pleaser", "rarity": "Common", "cost": 5,
+      "id": "crowd_pleaser",
+      "name": "The Crowd Pleaser",
+      "rarity": "Common",
+      "cost": 5,
       "description": "+50 Flavor if the Mix has exactly 5 ingredients.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 50, "valueSource": "Constant",
-          "condition": { "kind": "MixSizeEquals", "type": "Spirit", "intValue": 5, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "AddFlavor",
+          "value": 50,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixSizeEquals",
+            "type": "Spirit",
+            "intValue": 5,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a broad-shouldered showman with a huge white smile, checkered suit jacket and slicked-back hair"
     },
     {
-      "id": "the_regular", "name": "The Regular", "rarity": "Common", "cost": 4,
+      "id": "the_regular",
+      "name": "The Regular",
+      "rarity": "Common",
+      "cost": 4,
       "description": "+$1 at end of each customer.",
       "effects": [
-        { "trigger": "OnCustomerEnd", "op": "AddMoney", "value": 1, "valueSource": "Constant",
-          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCustomerEnd",
+          "op": "AddMoney",
+          "value": 1,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "Always",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "an unremarkable middle-aged man in a beige coat who has sat in the same seat for twenty years, content sleepy smile"
     },
     {
-      "id": "the_doorman", "name": "The Doorman", "rarity": "Common", "cost": 4,
+      "id": "the_doorman",
+      "name": "The Doorman",
+      "rarity": "Common",
+      "cost": 4,
       "description": "The first scored card gives +20 extra Flavor.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "AddFlavor", "value": 20, "valueSource": "Constant",
-          "condition": { "kind": "CardIndexEquals", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "AddFlavor",
+          "value": 20,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardIndexEquals",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a towering broad doorman with a neat goatee, long dark coat with epaulettes, softly amused eyes"
     },
     {
-      "id": "night_owl", "name": "The Night Owl", "rarity": "Common", "cost": 5,
+      "id": "night_owl",
+      "name": "The Night Owl",
+      "rarity": "Common",
+      "cost": 5,
       "description": "+$3 at the end of each Night.",
       "effects": [
-        { "trigger": "OnNightEnd", "op": "AddMoney", "value": 3, "valueSource": "Constant",
-          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnNightEnd",
+          "op": "AddMoney",
+          "value": 3,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "Always",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a pale night-shift nurse with an owlish wide-eyed stare, messy bun and an oversized cardigan"
     },
     {
-      "id": "karaoke_queen", "name": "Karaoke Queen", "rarity": "Common", "cost": 5,
+      "id": "karaoke_queen",
+      "name": "Karaoke Queen",
+      "rarity": "Common",
+      "cost": 5,
       "description": "+25 Flavor if the Mix contains a Bubbly.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 25, "valueSource": "Constant",
-          "condition": { "kind": "MixContainsType", "type": "Bubbly", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "AddFlavor",
+          "value": 25,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixContainsType",
+            "type": "Bubbly",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a glittering woman in her thirties with a sequined top and huge hoop earrings, head thrown back joyfully"
     },
     {
-      "id": "street_magician", "name": "Street Magician", "rarity": "Common", "cost": 5,
+      "id": "street_magician",
+      "name": "Street Magician",
+      "rarity": "Common",
+      "cost": 5,
       "description": "The second scored card gives +20 extra Flavor.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "AddFlavor", "value": 20, "valueSource": "Constant",
-          "condition": { "kind": "CardIndexEquals", "type": "Spirit", "intValue": 1, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "AddFlavor",
+          "value": 20,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardIndexEquals",
+            "type": "Spirit",
+            "intValue": 1,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a young street magician with a thin mustache, red-lined cape and a playing card tucked into his hatband"
     },
     {
-      "id": "quiet_monk", "name": "The Quiet Monk", "rarity": "Common", "cost": 5,
+      "id": "quiet_monk",
+      "name": "The Quiet Monk",
+      "rarity": "Common",
+      "cost": 5,
       "description": "+30 Flavor if no Restocks were used this order.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 30, "valueSource": "Constant",
-          "condition": { "kind": "RestocksUsedEquals", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "AddFlavor",
+          "value": 30,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "RestocksUsedEquals",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a serene bald monk in simple robes with closed eyes and a faint knowing smile"
     },
     {
-      "id": "twins_table4", "name": "Twins at Table 4", "rarity": "Uncommon", "cost": 6,
+      "id": "twins_table4",
+      "name": "Twins at Table 4",
+      "rarity": "Uncommon",
+      "cost": 6,
       "description": "Retrigger the first scored card.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "Retrigger", "value": 1, "valueSource": "Constant",
-          "condition": { "kind": "CardIndexEquals", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "Retrigger",
+          "value": 1,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardIndexEquals",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "identical twins in matching vintage suits leaning shoulder to shoulder with mirrored smirks"
     },
     {
-      "id": "the_chemist", "name": "The Chemist", "rarity": "Uncommon", "cost": 6,
+      "id": "the_chemist",
+      "name": "The Chemist",
+      "rarity": "Uncommon",
+      "cost": 6,
       "description": "Sour cards each give +2 Mult.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "AddMult", "value": 2, "valueSource": "Constant",
-          "condition": { "kind": "CardTypeIs", "type": "Sour", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "AddMult",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardTypeIs",
+            "type": "Sour",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a sharp young chemist with goggles pushed up into wild hair, stained lab coat over shirt and tie"
     },
     {
-      "id": "offduty_cop", "name": "Off-Duty Cop", "rarity": "Uncommon", "cost": 7,
+      "id": "offduty_cop",
+      "name": "Off-Duty Cop",
+      "rarity": "Uncommon",
+      "cost": 7,
       "description": "x2 Mult if no Restocks were used this order.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "MultMult", "value": 2, "valueSource": "Constant",
-          "condition": { "kind": "RestocksUsedEquals", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "MultMult",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "RestocksUsedEquals",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "an off-duty policewoman with a loosened collar and let-down hair, relieved end-of-shift smile"
     },
     {
-      "id": "the_insomniac", "name": "The Insomniac", "rarity": "Uncommon", "cost": 7,
+      "id": "the_insomniac",
+      "name": "The Insomniac",
+      "rarity": "Uncommon",
+      "cost": 7,
       "description": "First Mix each customer: x2 Mult.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "MultMult", "value": 2, "valueSource": "Constant",
-          "condition": { "kind": "MixesUsedEquals", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "MultMult",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixesUsedEquals",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a gaunt wide-eyed man with hair like an exclamation mark, vibrating with caffeinated alertness"
     },
     {
-      "id": "bootlegger", "name": "The Bootlegger", "rarity": "Uncommon", "cost": 6,
+      "id": "bootlegger",
+      "name": "The Bootlegger",
+      "rarity": "Uncommon",
+      "cost": 6,
       "description": "Spirit cards each give +2 Mult.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "AddMult", "value": 2, "valueSource": "Constant",
-          "condition": { "kind": "CardTypeIs", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "AddMult",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardTypeIs",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a roguish woman in a longshoreman coat and flat cap, toothpick at the corner of her grin"
     },
     {
-      "id": "chocolatier", "name": "The Chocolatier", "rarity": "Uncommon", "cost": 6,
+      "id": "chocolatier",
+      "name": "The Chocolatier",
+      "rarity": "Uncommon",
+      "cost": 6,
       "description": "Sweet cards each give +2 Mult.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "AddMult", "value": 2, "valueSource": "Constant",
-          "condition": { "kind": "CardTypeIs", "type": "Sweet", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "AddMult",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardTypeIs",
+            "type": "Sweet",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a soft-spoken chocolatier with a cocoa-dusted apron, warm brown eyes and a neat little beard"
     },
     {
-      "id": "herbalist", "name": "The Herbalist", "rarity": "Uncommon", "cost": 6,
+      "id": "herbalist",
+      "name": "The Herbalist",
+      "rarity": "Uncommon",
+      "cost": 6,
       "description": "Bitter cards each give +2 Mult.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "AddMult", "value": 2, "valueSource": "Constant",
-          "condition": { "kind": "CardTypeIs", "type": "Bitter", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "AddMult",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardTypeIs",
+            "type": "Bitter",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "an earthy older woman with wild grey-streaked hair, layered shawls and dried herbs pinned to her lapel"
     },
     {
-      "id": "sommelier", "name": "The Sommelier", "rarity": "Uncommon", "cost": 6,
+      "id": "sommelier",
+      "name": "The Sommelier",
+      "rarity": "Uncommon",
+      "cost": 6,
       "description": "Bubbly cards each give +2 Mult.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "AddMult", "value": 2, "valueSource": "Constant",
-          "condition": { "kind": "CardTypeIs", "type": "Bubbly", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "AddMult",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardTypeIs",
+            "type": "Bubbly",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "an elegant sommelier with a silver tasting cup on a neck chain, immaculate posture, one appraising brow"
     },
     {
-      "id": "gardener", "name": "The Gardener", "rarity": "Uncommon", "cost": 6,
+      "id": "gardener",
+      "name": "The Gardener",
+      "rarity": "Uncommon",
+      "cost": 6,
       "description": "Garnish cards each give +2 Mult.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "AddMult", "value": 2, "valueSource": "Constant",
-          "condition": { "kind": "CardTypeIs", "type": "Garnish", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "AddMult",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardTypeIs",
+            "type": "Garnish",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a ruddy gardener with soil-freckled cheeks, straw hat pushed back, sprig of mint in his shirt pocket"
     },
     {
-      "id": "the_parrot", "name": "The Parrot", "rarity": "Uncommon", "cost": 7,
+      "id": "the_parrot",
+      "name": "The Parrot",
+      "rarity": "Uncommon",
+      "cost": 7,
       "description": "Retrigger the second scored card.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "Retrigger", "value": 1, "valueSource": "Constant",
-          "condition": { "kind": "CardIndexEquals", "type": "Spirit", "intValue": 1, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "Retrigger",
+          "value": 1,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardIndexEquals",
+            "type": "Spirit",
+            "intValue": 1,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a flamboyant old sailor with a bright green parrot perched on his shoulder, both tilting their heads the same way"
     },
     {
-      "id": "magpie", "name": "The Magpie", "rarity": "Uncommon", "cost": 7,
+      "id": "magpie",
+      "name": "The Magpie",
+      "rarity": "Uncommon",
+      "cost": 7,
       "description": "Retrigger every Garnish card.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "Retrigger", "value": 1, "valueSource": "Constant",
-          "condition": { "kind": "CardTypeIs", "type": "Garnish", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "Retrigger",
+          "value": 1,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardTypeIs",
+            "type": "Garnish",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a sharp-featured woman in a feathered black coat, gleaming eyes drawn to something shiny beyond the frame"
     },
     {
-      "id": "second_wind", "name": "Second Wind", "rarity": "Uncommon", "cost": 6,
+      "id": "second_wind",
+      "name": "Second Wind",
+      "rarity": "Uncommon",
+      "cost": 6,
       "description": "Second Mix each customer: +40 Flavor.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 40, "valueSource": "Constant",
-          "condition": { "kind": "MixesUsedEquals", "type": "Spirit", "intValue": 1, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "AddFlavor",
+          "value": 40,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixesUsedEquals",
+            "type": "Spirit",
+            "intValue": 1,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "an athletic man in a vintage tracksuit jacket with a towel around his neck, catching his breath mid-grin"
     },
     {
-      "id": "last_call_larry", "name": "Last Call Larry", "rarity": "Uncommon", "cost": 7,
+      "id": "last_call_larry",
+      "name": "Last Call Larry",
+      "rarity": "Uncommon",
+      "cost": 7,
       "description": "The final (4th) Mix of a customer: x3 Mult.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "MultMult", "value": 3, "valueSource": "Constant",
-          "condition": { "kind": "MixesUsedEquals", "type": "Spirit", "intValue": 3, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "MultMult",
+          "value": 3,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixesUsedEquals",
+            "type": "Spirit",
+            "intValue": 3,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a rumpled barfly in his fifties with a loosened tie and five o'clock shadow, chin raised for one more round"
     },
     {
-      "id": "the_gossip", "name": "The Gossip", "rarity": "Uncommon", "cost": 7,
+      "id": "the_gossip",
+      "name": "The Gossip",
+      "rarity": "Uncommon",
+      "cost": 7,
       "description": "Gains +5 Flavor permanently every time you Restock (this run).",
       "effects": [
-        { "trigger": "OnRestock", "op": "Accumulate", "value": 5, "valueSource": "Constant",
-          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } },
-        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 0, "valueSource": "Accumulated",
-          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnRestock",
+          "op": "Accumulate",
+          "value": 5,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "Always",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        },
+        {
+          "trigger": "OnHandScored",
+          "op": "AddFlavor",
+          "value": 0,
+          "valueSource": "Accumulated",
+          "condition": {
+            "kind": "Always",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a bright-eyed hairdresser with cat-eye glasses and towering lacquered hair, conspiratorial mid-whisper smile"
     },
     {
-      "id": "soda_jerk", "name": "The Soda Jerk", "rarity": "Uncommon", "cost": 6,
+      "id": "soda_jerk",
+      "name": "The Soda Jerk",
+      "rarity": "Uncommon",
+      "cost": 6,
       "description": "x2 Mult if the Mix is a Spritz, Highball or Fizz.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "MultMult", "value": 2, "valueSource": "Constant",
-          "condition": { "kind": "RecipeIdIn", "type": "Spirit", "intValue": 0, "recipeIds": ["spritz", "highball", "fizz"] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "MultMult",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "RecipeIdIn",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": [
+              "spritz",
+              "highball",
+              "fizz"
+            ]
+          }
+        }
+      ],
+      "art_prompt": "a fresh-faced young man in a white soda-fountain cap and bow tie, freckles and an eager grin"
     },
     {
-      "id": "sourpuss", "name": "The Sourpuss", "rarity": "Uncommon", "cost": 6,
+      "id": "sourpuss",
+      "name": "The Sourpuss",
+      "rarity": "Uncommon",
+      "cost": 6,
       "description": "+50 Flavor if the Mix is a Sour or Fizz.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 50, "valueSource": "Constant",
-          "condition": { "kind": "RecipeIdIn", "type": "Spirit", "intValue": 0, "recipeIds": ["sour", "fizz"] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "AddFlavor",
+          "value": 50,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "RecipeIdIn",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": [
+              "sour",
+              "fizz"
+            ]
+          }
+        }
+      ],
+      "art_prompt": "a permanently unimpressed older woman with pursed lips, a high lace collar and a withering stare"
     },
     {
-      "id": "old_timer", "name": "The Old Timer", "rarity": "Uncommon", "cost": 7,
+      "id": "old_timer",
+      "name": "The Old Timer",
+      "rarity": "Uncommon",
+      "cost": 7,
       "description": "x2 Mult if the Mix is an Old Fashioned or Negroni.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "MultMult", "value": 2, "valueSource": "Constant",
-          "condition": { "kind": "RecipeIdIn", "type": "Spirit", "intValue": 0, "recipeIds": ["old_fashioned", "negroni"] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "MultMult",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "RecipeIdIn",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": [
+              "old_fashioned",
+              "negroni"
+            ]
+          }
+        }
+      ],
+      "art_prompt": "a leathery old regular in suspenders and a newsboy cap, eyes lost in a fond memory"
     },
     {
-      "id": "coat_check", "name": "The Coat Check Girl", "rarity": "Uncommon", "cost": 6,
+      "id": "coat_check",
+      "name": "The Coat Check Girl",
+      "rarity": "Uncommon",
+      "cost": 6,
       "description": "+$2 every time you enter the Back Room.",
       "effects": [
-        { "trigger": "OnShopEnter", "op": "AddMoney", "value": 2, "valueSource": "Constant",
-          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnShopEnter",
+          "op": "AddMoney",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "Always",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a chic coat-check attendant with a pillbox hat and a brass ticket pinned to her uniform, professional wink"
     },
     {
-      "id": "efficiency_expert", "name": "The Efficiency Expert", "rarity": "Uncommon", "cost": 7,
+      "id": "efficiency_expert",
+      "name": "The Efficiency Expert",
+      "rarity": "Uncommon",
+      "cost": 7,
       "description": "+$4 if the customer is satisfied with a single Mix.",
       "effects": [
-        { "trigger": "OnCustomerEnd", "op": "AddMoney", "value": 4, "valueSource": "Constant",
-          "condition": { "kind": "MixesUsedEquals", "type": "Spirit", "intValue": 1, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCustomerEnd",
+          "op": "AddMoney",
+          "value": 4,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixesUsedEquals",
+            "type": "Spirit",
+            "intValue": 1,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a crisp consultant with a pocket protector and a stopwatch on a lanyard, giving a satisfied nod"
     },
     {
-      "id": "apprentice", "name": "The Apprentice", "rarity": "Uncommon", "cost": 7,
+      "id": "apprentice",
+      "name": "The Apprentice",
+      "rarity": "Uncommon",
+      "cost": 7,
       "description": "Every scored card gives +1 Mult.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "AddMult", "value": 1, "valueSource": "Constant",
-          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "AddMult",
+          "value": 1,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "Always",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "an eager teenage bar-back with rolled sleeves, cowlicked hair and a bar towel over one shoulder"
     },
     {
-      "id": "jazz_singer", "name": "Jazz Singer", "rarity": "Rare", "cost": 8,
+      "id": "jazz_singer",
+      "name": "Jazz Singer",
+      "rarity": "Rare",
+      "cost": 8,
       "description": "x3 Mult if the Mix is a Martini or Negroni.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "MultMult", "value": 3, "valueSource": "Constant",
-          "condition": { "kind": "RecipeIdIn", "type": "Spirit", "intValue": 0, "recipeIds": ["martini", "negroni"] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "MultMult",
+          "value": 3,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "RecipeIdIn",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": [
+              "martini",
+              "negroni"
+            ]
+          }
+        }
+      ],
+      "art_prompt": "a glamorous jazz singer with finger-waved hair, beaded gown and long gloves, eyes closed mid-note"
     },
     {
-      "id": "the_collector", "name": "The Collector", "rarity": "Rare", "cost": 9,
+      "id": "the_collector",
+      "name": "The Collector",
+      "rarity": "Rare",
+      "cost": 9,
       "description": "Gains +1 Mult permanently every time you mix a Perfect Serve (this run).",
       "effects": [
-        { "trigger": "OnHandScored", "op": "Accumulate", "value": 1, "valueSource": "Constant",
-          "condition": { "kind": "RecipeIdIn", "type": "Spirit", "intValue": 0, "recipeIds": ["perfect_serve", "double_perfect"] } },
-        { "trigger": "OnHandScored", "op": "AddMult", "value": 0, "valueSource": "Accumulated",
-          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "Accumulate",
+          "value": 1,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "RecipeIdIn",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": [
+              "perfect_serve",
+              "double_perfect"
+            ]
+          }
+        },
+        {
+          "trigger": "OnHandScored",
+          "op": "AddMult",
+          "value": 0,
+          "valueSource": "Accumulated",
+          "condition": {
+            "kind": "Always",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a hawkish man in a tweed coat with rows of tiny enamel pins on the lapel and a magnifying glass on a neck chain"
     },
     {
-      "id": "the_barnacle", "name": "The Barnacle", "rarity": "Rare", "cost": 8,
+      "id": "the_barnacle",
+      "name": "The Barnacle",
+      "rarity": "Rare",
+      "cost": 8,
       "description": "Gains +10 Flavor permanently for every customer served (this run).",
       "effects": [
-        { "trigger": "OnCustomerEnd", "op": "Accumulate", "value": 10, "valueSource": "Constant",
-          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } },
-        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 0, "valueSource": "Accumulated",
-          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCustomerEnd",
+          "op": "Accumulate",
+          "value": 10,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "Always",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        },
+        {
+          "trigger": "OnHandScored",
+          "op": "AddFlavor",
+          "value": 0,
+          "valueSource": "Accumulated",
+          "condition": {
+            "kind": "Always",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a bearded old sea dog who seems fused to his bar stool, layered coats, permanent contented squint"
     },
     {
-      "id": "high_roller", "name": "The High Roller", "rarity": "Rare", "cost": 9,
+      "id": "high_roller",
+      "name": "The High Roller",
+      "rarity": "Rare",
+      "cost": 9,
       "description": "x3 Mult if the Mix has exactly 5 ingredients.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "MultMult", "value": 3, "valueSource": "Constant",
-          "condition": { "kind": "MixSizeEquals", "type": "Spirit", "intValue": 5, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "MultMult",
+          "value": 3,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixSizeEquals",
+            "type": "Spirit",
+            "intValue": 5,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a silver-haired gambler in a white dinner jacket with a red carnation, cool appraising smile"
     },
     {
-      "id": "moonshiner", "name": "The Moonshiner", "rarity": "Rare", "cost": 9,
+      "id": "moonshiner",
+      "name": "The Moonshiner",
+      "rarity": "Rare",
+      "cost": 9,
       "description": "Retrigger every Spirit card.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "Retrigger", "value": 1, "valueSource": "Constant",
-          "condition": { "kind": "CardTypeIs", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "Retrigger",
+          "value": 1,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardTypeIs",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a wild-eyed backwoods distiller with a singed beard, patched overalls and a triumphant grin"
     },
     {
-      "id": "perfectionist", "name": "The Perfectionist", "rarity": "Rare", "cost": 9,
+      "id": "perfectionist",
+      "name": "The Perfectionist",
+      "rarity": "Rare",
+      "cost": 9,
       "description": "x4 Mult if the Mix is a Perfect Serve or Double Perfect.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "MultMult", "value": 4, "valueSource": "Constant",
-          "condition": { "kind": "RecipeIdIn", "type": "Spirit", "intValue": 0, "recipeIds": ["perfect_serve", "double_perfect"] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "MultMult",
+          "value": 4,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "RecipeIdIn",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": [
+              "perfect_serve",
+              "double_perfect"
+            ]
+          }
+        }
+      ],
+      "art_prompt": "an ice-cool cocktail champion with geometric hair, monochrome suit and a jeweler's loupe on a chain"
     },
     {
-      "id": "the_accountant", "name": "The Accountant", "rarity": "Rare", "cost": 9,
+      "id": "the_accountant",
+      "name": "The Accountant",
+      "rarity": "Rare",
+      "cost": 9,
       "description": "Pays $1 per customer served so far, at the end of every customer.",
       "effects": [
-        { "trigger": "OnCustomerEnd", "op": "Accumulate", "value": 1, "valueSource": "Constant",
-          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } },
-        { "trigger": "OnCustomerEnd", "op": "AddMoney", "value": 0, "valueSource": "Accumulated",
-          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCustomerEnd",
+          "op": "Accumulate",
+          "value": 1,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "Always",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        },
+        {
+          "trigger": "OnCustomerEnd",
+          "op": "AddMoney",
+          "value": 0,
+          "valueSource": "Accumulated",
+          "condition": {
+            "kind": "Always",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a mild bespectacled accountant with sleeve garters and a pencil behind his ear, quietly pleased"
     },
     {
-      "id": "velvet_glove", "name": "The Velvet Glove", "rarity": "Rare", "cost": 8,
+      "id": "velvet_glove",
+      "name": "The Velvet Glove",
+      "rarity": "Rare",
+      "cost": 8,
       "description": "The first scored card gives x2 Mult.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "MultMult", "value": 2, "valueSource": "Constant",
-          "condition": { "kind": "CardIndexEquals", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "MultMult",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardIndexEquals",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "an aristocratic woman in long velvet gloves and a fur stole, chin high, faintly amused"
     },
     {
-      "id": "the_widow", "name": "The Widow", "rarity": "Rare", "cost": 8,
+      "id": "the_widow",
+      "name": "The Widow",
+      "rarity": "Rare",
+      "cost": 8,
       "description": "+80 Flavor if the Mix contains a Bitter.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "AddFlavor", "value": 80, "valueSource": "Constant",
-          "condition": { "kind": "MixContainsType", "type": "Bitter", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "AddFlavor",
+          "value": 80,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixContainsType",
+            "type": "Bitter",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "an elegant widow in black lace with a small veil and a piercing unhurried gaze"
     },
     {
-      "id": "stage_manager", "name": "The Stage Manager", "rarity": "Rare", "cost": 8,
+      "id": "stage_manager",
+      "name": "The Stage Manager",
+      "rarity": "Rare",
+      "cost": 8,
       "description": "Bubbly and Garnish cards each give +2 Mult.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "AddMult", "value": 2, "valueSource": "Constant",
-          "condition": { "kind": "CardTypeIs", "type": "Bubbly", "intValue": 0, "recipeIds": [] } },
-        { "trigger": "OnCardScored", "op": "AddMult", "value": 2, "valueSource": "Constant",
-          "condition": { "kind": "CardTypeIs", "type": "Garnish", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "AddMult",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardTypeIs",
+            "type": "Bubbly",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        },
+        {
+          "trigger": "OnCardScored",
+          "op": "AddMult",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardTypeIs",
+            "type": "Garnish",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a harried theater stage manager with a headset around her neck and a pencil through her bun, alert eyes"
     },
     {
-      "id": "bell_ringer", "name": "The Bell Ringer", "rarity": "Rare", "cost": 8,
+      "id": "bell_ringer",
+      "name": "The Bell Ringer",
+      "rarity": "Rare",
+      "cost": 8,
       "description": "+$4 every time you enter the Back Room.",
       "effects": [
-        { "trigger": "OnShopEnter", "op": "AddMoney", "value": 4, "valueSource": "Constant",
-          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnShopEnter",
+          "op": "AddMoney",
+          "value": 4,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "Always",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a beaming hotel bellhop in a pillbox cap and brass-buttoned uniform, standing at proud attention"
     },
     {
-      "id": "the_oracle", "name": "The Oracle", "rarity": "Rare", "cost": 9,
+      "id": "the_oracle",
+      "name": "The Oracle",
+      "rarity": "Rare",
+      "cost": 9,
       "description": "First Mix each customer: x3 Mult.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "MultMult", "value": 3, "valueSource": "Constant",
-          "condition": { "kind": "MixesUsedEquals", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "MultMult",
+          "value": 3,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "MixesUsedEquals",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "an ageless fortune teller with mirrored earrings, kohl-lined knowing eyes and a deep indigo headscarf"
     },
     {
-      "id": "the_owner", "name": "The Owner", "rarity": "Legendary", "cost": 20,
+      "id": "the_owner",
+      "name": "The Owner",
+      "rarity": "Legendary",
+      "cost": 20,
       "description": "x2 Mult. Always.",
       "effects": [
-        { "trigger": "OnHandScored", "op": "MultMult", "value": 2, "valueSource": "Constant",
-          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnHandScored",
+          "op": "MultMult",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "Always",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "the bar's owner: an imposing silver-templed man in a midnight three-piece suit, unreadable calm authority"
     },
     {
-      "id": "lady_fortune", "name": "Lady Fortune", "rarity": "Legendary", "cost": 20,
+      "id": "lady_fortune",
+      "name": "Lady Fortune",
+      "rarity": "Legendary",
+      "cost": 20,
       "description": "Retrigger the first and second scored cards.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "Retrigger", "value": 1, "valueSource": "Constant",
-          "condition": { "kind": "CardIndexEquals", "type": "Spirit", "intValue": 0, "recipeIds": [] } },
-        { "trigger": "OnCardScored", "op": "Retrigger", "value": 1, "valueSource": "Constant",
-          "condition": { "kind": "CardIndexEquals", "type": "Spirit", "intValue": 1, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "Retrigger",
+          "value": 1,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardIndexEquals",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        },
+        {
+          "trigger": "OnCardScored",
+          "op": "Retrigger",
+          "value": 1,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "CardIndexEquals",
+            "type": "Spirit",
+            "intValue": 1,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a radiant woman who seems lit from within, gown of shifting gold, tiny dice earrings, serene lucky smile"
     },
     {
-      "id": "madame_vermouth", "name": "Madame Vermouth", "rarity": "Legendary", "cost": 20,
+      "id": "madame_vermouth",
+      "name": "Madame Vermouth",
+      "rarity": "Legendary",
+      "cost": 20,
       "description": "Gains +2 Mult permanently for every customer served (this run).",
       "effects": [
-        { "trigger": "OnCustomerEnd", "op": "Accumulate", "value": 2, "valueSource": "Constant",
-          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } },
-        { "trigger": "OnHandScored", "op": "AddMult", "value": 0, "valueSource": "Accumulated",
-          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCustomerEnd",
+          "op": "Accumulate",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "Always",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        },
+        {
+          "trigger": "OnHandScored",
+          "op": "AddMult",
+          "value": 0,
+          "valueSource": "Accumulated",
+          "condition": {
+            "kind": "Always",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a legendary grande dame in a plum velvet gown and opera necklace, decades of long nights in her wry gaze"
     },
     {
-      "id": "the_alchemist", "name": "The Alchemist", "rarity": "Legendary", "cost": 20,
+      "id": "the_alchemist",
+      "name": "The Alchemist",
+      "rarity": "Legendary",
+      "cost": 20,
       "description": "Every scored card gives +3 Mult.",
       "effects": [
-        { "trigger": "OnCardScored", "op": "AddMult", "value": 3, "valueSource": "Constant",
-          "condition": { "kind": "Always", "type": "Spirit", "intValue": 0, "recipeIds": [] } }
-      ]
+        {
+          "trigger": "OnCardScored",
+          "op": "AddMult",
+          "value": 3,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "Always",
+            "type": "Spirit",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a mysterious figure in a high-collared coat with faintly glowing amber vials strapped across the chest, half-shadowed face"
     }
   ]
 }

@@ -2,119 +2,354 @@
   "version": 1,
   "vips": [
     {
-      "id": "teetotaler", "name": "The Teetotaler", "gentle": true, "finaleOnly": false,
+      "id": "teetotaler",
+      "name": "The Teetotaler",
+      "gentle": true,
+      "finaleOnly": false,
       "description": "Spirits score 0 Flavor this order.",
-      "rules": [ { "kind": "DebuffType", "type": "Spirit", "intValue": 0, "doubleValue": 0 } ]
+      "rules": [
+        {
+          "kind": "DebuffType",
+          "type": "Spirit",
+          "intValue": 0,
+          "doubleValue": 0
+        }
+      ],
+      "art_prompt": "a stern temperance preacher with a starched collar, flat black hat and disapproving thin lips"
     },
     {
-      "id": "purist", "name": "The Purist", "gentle": true, "finaleOnly": false,
+      "id": "purist",
+      "name": "The Purist",
+      "gentle": true,
+      "finaleOnly": false,
       "description": "Only your first Mix counts; others score 0.",
-      "rules": [ { "kind": "OnlyFirstMixScores", "type": "", "intValue": 0, "doubleValue": 0 } ]
+      "rules": [
+        {
+          "kind": "OnlyFirstMixScores",
+          "type": "",
+          "intValue": 0,
+          "doubleValue": 0
+        }
+      ],
+      "art_prompt": "a severe minimalist critic with rimless glasses and a single white glove, an expression of absolute exacting standards"
     },
     {
-      "id": "allergic", "name": "The Allergic", "gentle": true, "finaleOnly": false,
+      "id": "allergic",
+      "name": "The Allergic",
+      "gentle": true,
+      "finaleOnly": false,
       "description": "All Garnish cards are debuffed.",
-      "rules": [ { "kind": "DebuffType", "type": "Garnish", "intValue": 0, "doubleValue": 0 } ]
+      "rules": [
+        {
+          "kind": "DebuffType",
+          "type": "Garnish",
+          "intValue": 0,
+          "doubleValue": 0
+        }
+      ],
+      "art_prompt": "a sniffly aristocrat with a silk handkerchief near his reddened nose and watery wary eyes"
     },
     {
-      "id": "snob", "name": "The Snob", "gentle": false, "finaleOnly": false,
+      "id": "snob",
+      "name": "The Snob",
+      "gentle": false,
+      "finaleOnly": false,
       "description": "Only Recipes level 2+ score.",
-      "rules": [ { "kind": "MinRecipeLevel", "type": "", "intValue": 2, "doubleValue": 0 } ]
+      "rules": [
+        {
+          "kind": "MinRecipeLevel",
+          "type": "",
+          "intValue": 2,
+          "doubleValue": 0
+        }
+      ],
+      "art_prompt": "an insufferable wine snob with an ascot, upturned nose and heavy-lidded condescension"
     },
     {
-      "id": "regulars_ghost", "name": "The Regular's Ghost", "gentle": false, "finaleOnly": false,
+      "id": "regulars_ghost",
+      "name": "The Regular's Ghost",
+      "gentle": false,
+      "finaleOnly": false,
       "description": "Every Mix must be a different Recipe.",
-      "rules": [ { "kind": "EachMixDifferentRecipe", "type": "", "intValue": 0, "doubleValue": 0 } ]
+      "rules": [
+        {
+          "kind": "EachMixDifferentRecipe",
+          "type": "",
+          "intValue": 0,
+          "doubleValue": 0
+        }
+      ],
+      "art_prompt": "a gently translucent ghost of an old regular in a faded suit, hat held to his chest, melancholy smile"
     },
     {
-      "id": "health_inspector", "name": "The Health Inspector", "gentle": true, "finaleOnly": false,
+      "id": "health_inspector",
+      "name": "The Health Inspector",
+      "gentle": true,
+      "finaleOnly": false,
       "description": "Rail size -3 this order.",
-      "rules": [ { "kind": "RailSizeDelta", "type": "", "intValue": -3, "doubleValue": 0 } ]
+      "rules": [
+        {
+          "kind": "RailSizeDelta",
+          "type": "",
+          "intValue": -3,
+          "doubleValue": 0
+        }
+      ],
+      "art_prompt": "a no-nonsense health inspector in a hairnet and spotless white coat, pen poised over a checklist"
     },
     {
-      "id": "critic", "name": "The Critic", "gentle": false, "finaleOnly": true,
+      "id": "critic",
+      "name": "The Critic",
+      "gentle": false,
+      "finaleOnly": true,
       "description": "Target x1.5 and one random Ingredient Type is debuffed.",
       "rules": [
-        { "kind": "TargetScale", "type": "", "intValue": 0, "doubleValue": 1.5 },
-        { "kind": "DebuffRandomType", "type": "", "intValue": 0, "doubleValue": 0 }
-      ]
+        {
+          "kind": "TargetScale",
+          "type": "",
+          "intValue": 0,
+          "doubleValue": 1.5
+        },
+        {
+          "kind": "DebuffRandomType",
+          "type": "",
+          "intValue": 0,
+          "doubleValue": 0
+        }
+      ],
+      "art_prompt": "a devastatingly elegant figure half-hidden by a wide-brimmed hat, single magenta pocket square, eyes that end careers"
     },
     {
-      "id": "dentist", "name": "The Dentist", "gentle": false, "finaleOnly": false,
+      "id": "dentist",
+      "name": "The Dentist",
+      "gentle": false,
+      "finaleOnly": false,
       "description": "All Sweet cards are debuffed.",
-      "rules": [ { "kind": "DebuffType", "type": "Sweet", "intValue": 0, "doubleValue": 0 } ]
+      "rules": [
+        {
+          "kind": "DebuffType",
+          "type": "Sweet",
+          "intValue": 0,
+          "doubleValue": 0
+        }
+      ],
+      "art_prompt": "a too-cheerful dentist in mint scrubs with a blinding white smile and a small mouth mirror in his breast pocket"
     },
     {
-      "id": "sweet_tooth", "name": "The Sweet Tooth", "gentle": false, "finaleOnly": false,
+      "id": "sweet_tooth",
+      "name": "The Sweet Tooth",
+      "gentle": false,
+      "finaleOnly": false,
       "description": "All Bitter cards are debuffed.",
-      "rules": [ { "kind": "DebuffType", "type": "Bitter", "intValue": 0, "doubleValue": 0 } ]
+      "rules": [
+        {
+          "kind": "DebuffType",
+          "type": "Bitter",
+          "intValue": 0,
+          "doubleValue": 0
+        }
+      ],
+      "art_prompt": "a round gleeful man in a candy-striped waistcoat with a lollipop tucked behind his ear like a pencil"
     },
     {
-      "id": "generous_aunt", "name": "The Generous Aunt", "gentle": false, "finaleOnly": false,
+      "id": "generous_aunt",
+      "name": "The Generous Aunt",
+      "gentle": false,
+      "finaleOnly": false,
       "description": "Rail size +2 this order. Enjoy.",
-      "rules": [ { "kind": "RailSizeDelta", "type": "", "intValue": 2, "doubleValue": 0 } ]
+      "rules": [
+        {
+          "kind": "RailSizeDelta",
+          "type": "",
+          "intValue": 2,
+          "doubleValue": 0
+        }
+      ],
+      "art_prompt": "a beaming wealthy aunt in furs and clinking costume jewelry, leaning in as if to pinch a cheek"
     },
     {
-      "id": "delicate_stomach", "name": "The Delicate Stomach", "gentle": false, "finaleOnly": false,
+      "id": "delicate_stomach",
+      "name": "The Delicate Stomach",
+      "gentle": false,
+      "finaleOnly": false,
       "description": "All Sour cards are debuffed.",
-      "rules": [ { "kind": "DebuffType", "type": "Sour", "intValue": 0, "doubleValue": 0 } ]
+      "rules": [
+        {
+          "kind": "DebuffType",
+          "type": "Sour",
+          "intValue": 0,
+          "doubleValue": 0
+        }
+      ],
+      "art_prompt": "a queasy pale gentleman with straining waistcoat buttons, faintly green around the gills"
     },
     {
-      "id": "flat_earther", "name": "The Flat Earther", "gentle": false, "finaleOnly": false,
+      "id": "flat_earther",
+      "name": "The Flat Earther",
+      "gentle": false,
+      "finaleOnly": false,
       "description": "All Bubbly cards are debuffed. No bubbles.",
-      "rules": [ { "kind": "DebuffType", "type": "Bubbly", "intValue": 0, "doubleValue": 0 } ]
+      "rules": [
+        {
+          "kind": "DebuffType",
+          "type": "Bubbly",
+          "intValue": 0,
+          "doubleValue": 0
+        }
+      ],
+      "art_prompt": "a wild-haired conspiracy enthusiast in a hand-knitted sweater, one finger raised mid-theory"
     },
     {
-      "id": "double_or_nothing", "name": "Double or Nothing", "gentle": false, "finaleOnly": false,
+      "id": "double_or_nothing",
+      "name": "Double or Nothing",
+      "gentle": false,
+      "finaleOnly": false,
       "description": "Target x2 this order.",
-      "rules": [ { "kind": "TargetScale", "type": "", "intValue": 0, "doubleValue": 2.0 } ]
+      "rules": [
+        {
+          "kind": "TargetScale",
+          "type": "",
+          "intValue": 0,
+          "doubleValue": 2.0
+        }
+      ],
+      "art_prompt": "a grinning gambler in sharp pinstripes with a coin frozen mid-flip above his palm, dangerous glee"
     },
     {
-      "id": "connoisseur", "name": "The Connoisseur", "gentle": false, "finaleOnly": false,
+      "id": "connoisseur",
+      "name": "The Connoisseur",
+      "gentle": false,
+      "finaleOnly": false,
       "description": "Only Recipes level 3+ score.",
-      "rules": [ { "kind": "MinRecipeLevel", "type": "", "intValue": 3, "doubleValue": 0 } ]
+      "rules": [
+        {
+          "kind": "MinRecipeLevel",
+          "type": "",
+          "intValue": 3,
+          "doubleValue": 0
+        }
+      ],
+      "art_prompt": "an ancient master taster with closed eyes and one raised finger, silk cravat, absolute concentration"
     },
     {
-      "id": "speed_dater", "name": "The Speed Dater", "gentle": false, "finaleOnly": false,
+      "id": "speed_dater",
+      "name": "The Speed Dater",
+      "gentle": false,
+      "finaleOnly": false,
       "description": "Only your first Mix counts, but the target is x0.75.",
       "rules": [
-        { "kind": "OnlyFirstMixScores", "type": "", "intValue": 0, "doubleValue": 0 },
-        { "kind": "TargetScale", "type": "", "intValue": 0, "doubleValue": 0.75 }
-      ]
+        {
+          "kind": "OnlyFirstMixScores",
+          "type": "",
+          "intValue": 0,
+          "doubleValue": 0
+        },
+        {
+          "kind": "TargetScale",
+          "type": "",
+          "intValue": 0,
+          "doubleValue": 0.75
+        }
+      ],
+      "art_prompt": "a jittery man with a crooked tie, a blank name-tag sticker and a hopeful sweaty smile"
     },
     {
-      "id": "food_blogger", "name": "The Food Blogger", "gentle": false, "finaleOnly": false,
+      "id": "food_blogger",
+      "name": "The Food Blogger",
+      "gentle": false,
+      "finaleOnly": false,
       "description": "Every Mix must be a different Recipe and the target is x1.2.",
       "rules": [
-        { "kind": "EachMixDifferentRecipe", "type": "", "intValue": 0, "doubleValue": 0 },
-        { "kind": "TargetScale", "type": "", "intValue": 0, "doubleValue": 1.2 }
-      ]
+        {
+          "kind": "EachMixDifferentRecipe",
+          "type": "",
+          "intValue": 0,
+          "doubleValue": 0
+        },
+        {
+          "kind": "TargetScale",
+          "type": "",
+          "intValue": 0,
+          "doubleValue": 1.2
+        }
+      ],
+      "art_prompt": "a young influencer with oversized glasses, ring-light glow in her eyes and a curated head-tilt smile"
     },
     {
-      "id": "roulette_rita", "name": "Roulette Rita", "gentle": false, "finaleOnly": false,
+      "id": "roulette_rita",
+      "name": "Roulette Rita",
+      "gentle": false,
+      "finaleOnly": false,
       "description": "One random Ingredient Type is debuffed.",
-      "rules": [ { "kind": "DebuffRandomType", "type": "", "intValue": 0, "doubleValue": 0 } ]
+      "rules": [
+        {
+          "kind": "DebuffRandomType",
+          "type": "",
+          "intValue": 0,
+          "doubleValue": 0
+        }
+      ],
+      "art_prompt": "a dazzling croupier with a roulette-wheel brooch and one arched eyebrow, shuffling fate itself"
     },
     {
-      "id": "ascetic", "name": "The Ascetic", "gentle": false, "finaleOnly": false,
+      "id": "ascetic",
+      "name": "The Ascetic",
+      "gentle": false,
+      "finaleOnly": false,
       "description": "All Spirit and Sweet cards are debuffed.",
       "rules": [
-        { "kind": "DebuffType", "type": "Spirit", "intValue": 0, "doubleValue": 0 },
-        { "kind": "DebuffType", "type": "Sweet", "intValue": 0, "doubleValue": 0 }
-      ]
+        {
+          "kind": "DebuffType",
+          "type": "Spirit",
+          "intValue": 0,
+          "doubleValue": 0
+        },
+        {
+          "kind": "DebuffType",
+          "type": "Sweet",
+          "intValue": 0,
+          "doubleValue": 0
+        }
+      ],
+      "art_prompt": "a hollow-cheeked ascetic in rough undyed robes with serene sunken eyes"
     },
     {
-      "id": "fire_marshal", "name": "The Fire Marshal", "gentle": false, "finaleOnly": false,
+      "id": "fire_marshal",
+      "name": "The Fire Marshal",
+      "gentle": false,
+      "finaleOnly": false,
       "description": "Rail size -4 this order. Occupancy limits.",
-      "rules": [ { "kind": "RailSizeDelta", "type": "", "intValue": -4, "doubleValue": 0 } ]
+      "rules": [
+        {
+          "kind": "RailSizeDelta",
+          "type": "",
+          "intValue": -4,
+          "doubleValue": 0
+        }
+      ],
+      "art_prompt": "a granite-faced fire marshal in a helmet and heavy coat, arms crossed, absolutely immovable"
     },
     {
-      "id": "landlord", "name": "The Landlord", "gentle": false, "finaleOnly": false,
+      "id": "landlord",
+      "name": "The Landlord",
+      "gentle": false,
+      "finaleOnly": false,
       "description": "Target x1.4 and every Mix must be a different Recipe.",
       "rules": [
-        { "kind": "TargetScale", "type": "", "intValue": 0, "doubleValue": 1.4 },
-        { "kind": "EachMixDifferentRecipe", "type": "", "intValue": 0, "doubleValue": 0 }
-      ]
+        {
+          "kind": "TargetScale",
+          "type": "",
+          "intValue": 0,
+          "doubleValue": 1.4
+        },
+        {
+          "kind": "EachMixDifferentRecipe",
+          "type": "",
+          "intValue": 0,
+          "doubleValue": 0
+        }
+      ],
+      "art_prompt": "a smug landlord in a camel coat with a heavy ring of keys at his belt and a rent-day smile"
     }
   ]
 }
