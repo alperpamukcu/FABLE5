@@ -2,58 +2,341 @@
   "deckId": "classic_bar",
   "name": "Classic Bar",
   "cards": [
-    { "id": "rail_vodka",       "name": "Rail Vodka",          "type": "Spirit",  "flavor": 2 },
-    { "id": "blanco_tequila",   "name": "Blanco Tequila",      "type": "Spirit",  "flavor": 3 },
-    { "id": "london_dry_gin",   "name": "London Dry Gin",      "type": "Spirit",  "flavor": 4 },
-    { "id": "white_rum",        "name": "White Rum",           "type": "Spirit",  "flavor": 5 },
-    { "id": "bourbon",          "name": "Bourbon",             "type": "Spirit",  "flavor": 6 },
-    { "id": "rye_whiskey",      "name": "Rye Whiskey",         "type": "Spirit",  "flavor": 7 },
-    { "id": "rye_whiskey",      "name": "Rye Whiskey",         "type": "Spirit",  "flavor": 7 },
-    { "id": "aged_rum",         "name": "Aged Rum",            "type": "Spirit",  "flavor": 8 },
-    { "id": "mezcal",           "name": "Mezcal",              "type": "Spirit",  "flavor": 9 },
-    { "id": "single_malt",      "name": "Single Malt",         "type": "Spirit",  "flavor": 10 },
-    { "id": "single_malt",      "name": "Single Malt",         "type": "Spirit",  "flavor": 10 },
-    { "id": "overproof_rum",    "name": "Overproof Rum",       "type": "Spirit",  "flavor": 11 },
-
-    { "id": "sour_mix",         "name": "Sour Mix",            "type": "Sour",    "flavor": 2 },
-    { "id": "lemon_juice",      "name": "Lemon Juice",         "type": "Sour",    "flavor": 3 },
-    { "id": "lime_juice",       "name": "Lime Juice",          "type": "Sour",    "flavor": 4 },
-    { "id": "grapefruit_juice", "name": "Grapefruit Juice",    "type": "Sour",    "flavor": 5 },
-    { "id": "verjus",           "name": "Verjus",              "type": "Sour",    "flavor": 6 },
-    { "id": "blood_orange",     "name": "Blood Orange",        "type": "Sour",    "flavor": 7 },
-    { "id": "yuzu_juice",       "name": "Yuzu Juice",          "type": "Sour",    "flavor": 8 },
-    { "id": "citric_acid",      "name": "Citric Acid",         "type": "Sour",    "flavor": 9 },
-
-    { "id": "simple_syrup",     "name": "Simple Syrup",        "type": "Sweet",   "flavor": 2 },
-    { "id": "grenadine",        "name": "Grenadine",           "type": "Sweet",   "flavor": 3 },
-    { "id": "honey_syrup",      "name": "Honey Syrup",         "type": "Sweet",   "flavor": 4 },
-    { "id": "orgeat",           "name": "Orgeat",              "type": "Sweet",   "flavor": 5 },
-    { "id": "agave_nectar",     "name": "Agave Nectar",        "type": "Sweet",   "flavor": 6 },
-    { "id": "maple_syrup",      "name": "Maple Syrup",         "type": "Sweet",   "flavor": 7 },
-    { "id": "elderflower",      "name": "Elderflower Liqueur", "type": "Sweet",   "flavor": 8 },
-    { "id": "demerara_syrup",   "name": "Demerara Syrup",      "type": "Sweet",   "flavor": 9 },
-
-    { "id": "angostura",        "name": "Angostura Bitters",   "type": "Bitter",  "flavor": 3 },
-    { "id": "orange_bitters",   "name": "Orange Bitters",      "type": "Bitter",  "flavor": 4 },
-    { "id": "campari",          "name": "Campari",             "type": "Bitter",  "flavor": 5 },
-    { "id": "aperol",           "name": "Aperol",              "type": "Bitter",  "flavor": 6 },
-    { "id": "amaro",            "name": "Amaro",               "type": "Bitter",  "flavor": 7 },
-    { "id": "fernet",           "name": "Fernet",              "type": "Bitter",  "flavor": 8 },
-
-    { "id": "soda_water",       "name": "Soda Water",          "type": "Bubbly",  "flavor": 1 },
-    { "id": "tonic_water",      "name": "Tonic Water",         "type": "Bubbly",  "flavor": 2 },
-    { "id": "ginger_beer",      "name": "Ginger Beer",         "type": "Bubbly",  "flavor": 3 },
-    { "id": "cola",             "name": "Cola",                "type": "Bubbly",  "flavor": 4 },
-    { "id": "ginger_ale",       "name": "Ginger Ale",          "type": "Bubbly",  "flavor": 5 },
-    { "id": "prosecco",         "name": "Prosecco",            "type": "Bubbly",  "flavor": 6 },
-    { "id": "champagne",        "name": "Champagne",           "type": "Bubbly",  "flavor": 7 },
-    { "id": "sparkling_rose",   "name": "Sparkling Rosé",      "type": "Bubbly",  "flavor": 8 },
-
-    { "id": "mint_sprig",       "name": "Mint Sprig",          "type": "Garnish", "flavor": 1 },
-    { "id": "lemon_twist",      "name": "Lemon Twist",         "type": "Garnish", "flavor": 2 },
-    { "id": "olive",            "name": "Olive",               "type": "Garnish", "flavor": 3 },
-    { "id": "cherry",           "name": "Cocktail Cherry",     "type": "Garnish", "flavor": 4 },
-    { "id": "orange_peel",      "name": "Orange Peel",         "type": "Garnish", "flavor": 5 },
-    { "id": "edible_flower",    "name": "Edible Flower",       "type": "Garnish", "flavor": 6 }
+    {
+      "id": "rail_vodka",
+      "name": "Rail Vodka",
+      "type": "Spirit",
+      "flavor": 2,
+      "art_prompt": "a plain clear glass vodka bottle with a simple cork, unlabelled"
+    },
+    {
+      "id": "blanco_tequila",
+      "name": "Blanco Tequila",
+      "type": "Spirit",
+      "flavor": 3,
+      "art_prompt": "a clear tall unlabelled tequila bottle with pale silver liquid"
+    },
+    {
+      "id": "london_dry_gin",
+      "name": "London Dry Gin",
+      "type": "Spirit",
+      "flavor": 4,
+      "art_prompt": "a squat green-tinted unlabelled gin bottle"
+    },
+    {
+      "id": "white_rum",
+      "name": "White Rum",
+      "type": "Spirit",
+      "flavor": 5,
+      "art_prompt": "a clear round unlabelled white rum bottle"
+    },
+    {
+      "id": "bourbon",
+      "name": "Bourbon",
+      "type": "Spirit",
+      "flavor": 6,
+      "art_prompt": "a stout amber bourbon bottle with a wax-dipped top, unlabelled"
+    },
+    {
+      "id": "rye_whiskey",
+      "name": "Rye Whiskey",
+      "type": "Spirit",
+      "flavor": 7,
+      "art_prompt": "a tall dark rye whiskey bottle with an amber glow, unlabelled"
+    },
+    {
+      "id": "rye_whiskey",
+      "name": "Rye Whiskey",
+      "type": "Spirit",
+      "flavor": 7,
+      "art_prompt": "a tall dark rye whiskey bottle with an amber glow, unlabelled"
+    },
+    {
+      "id": "aged_rum",
+      "name": "Aged Rum",
+      "type": "Spirit",
+      "flavor": 8,
+      "art_prompt": "a dark curvy unlabelled aged rum bottle with a wax seal"
+    },
+    {
+      "id": "mezcal",
+      "name": "Mezcal",
+      "type": "Spirit",
+      "flavor": 9,
+      "art_prompt": "a rustic hand-blown unlabelled mezcal bottle with a rope tie"
+    },
+    {
+      "id": "single_malt",
+      "name": "Single Malt",
+      "type": "Spirit",
+      "flavor": 10,
+      "art_prompt": "an elegant heavy-bottomed unlabelled single malt whisky bottle"
+    },
+    {
+      "id": "single_malt",
+      "name": "Single Malt",
+      "type": "Spirit",
+      "flavor": 10,
+      "art_prompt": "an elegant heavy-bottomed unlabelled single malt whisky bottle"
+    },
+    {
+      "id": "overproof_rum",
+      "name": "Overproof Rum",
+      "type": "Spirit",
+      "flavor": 11,
+      "art_prompt": "a plain tall clear overproof rum bottle with a small flame flicker on top"
+    },
+    {
+      "id": "sour_mix",
+      "name": "Sour Mix",
+      "type": "Sour",
+      "flavor": 2,
+      "art_prompt": "a small glass bottle of cloudy pale sour mix"
+    },
+    {
+      "id": "lemon_juice",
+      "name": "Lemon Juice",
+      "type": "Sour",
+      "flavor": 3,
+      "art_prompt": "a small glass bottle of pale yellow lemon juice with a fresh lemon beside it"
+    },
+    {
+      "id": "lime_juice",
+      "name": "Lime Juice",
+      "type": "Sour",
+      "flavor": 4,
+      "art_prompt": "a small glass bottle of green lime juice with a lime wedge beside it"
+    },
+    {
+      "id": "grapefruit_juice",
+      "name": "Grapefruit Juice",
+      "type": "Sour",
+      "flavor": 5,
+      "art_prompt": "a small glass bottle of pink grapefruit juice"
+    },
+    {
+      "id": "verjus",
+      "name": "Verjus",
+      "type": "Sour",
+      "flavor": 6,
+      "art_prompt": "a slim bottle of pale green verjus with unripe grapes beside it"
+    },
+    {
+      "id": "blood_orange",
+      "name": "Blood Orange",
+      "type": "Sour",
+      "flavor": 7,
+      "art_prompt": "a single blood orange sliced to show its deep red flesh"
+    },
+    {
+      "id": "yuzu_juice",
+      "name": "Yuzu Juice",
+      "type": "Sour",
+      "flavor": 8,
+      "art_prompt": "a small glass bottle of golden yuzu juice with a knobby yuzu fruit"
+    },
+    {
+      "id": "citric_acid",
+      "name": "Citric Acid",
+      "type": "Sour",
+      "flavor": 9,
+      "art_prompt": "a small apothecary jar of white citric acid crystals"
+    },
+    {
+      "id": "simple_syrup",
+      "name": "Simple Syrup",
+      "type": "Sweet",
+      "flavor": 2,
+      "art_prompt": "a small glass cruet of clear simple syrup mid-pour"
+    },
+    {
+      "id": "grenadine",
+      "name": "Grenadine",
+      "type": "Sweet",
+      "flavor": 3,
+      "art_prompt": "a small bottle of deep red grenadine syrup"
+    },
+    {
+      "id": "honey_syrup",
+      "name": "Honey Syrup",
+      "type": "Sweet",
+      "flavor": 4,
+      "art_prompt": "a small jar of golden honey with a wooden dipper"
+    },
+    {
+      "id": "orgeat",
+      "name": "Orgeat",
+      "type": "Sweet",
+      "flavor": 5,
+      "art_prompt": "a small milky-white bottle of orgeat almond syrup with almonds beside it"
+    },
+    {
+      "id": "agave_nectar",
+      "name": "Agave Nectar",
+      "type": "Sweet",
+      "flavor": 6,
+      "art_prompt": "a small glass bottle of amber agave nectar"
+    },
+    {
+      "id": "maple_syrup",
+      "name": "Maple Syrup",
+      "type": "Sweet",
+      "flavor": 7,
+      "art_prompt": "a small glass jug of amber maple syrup"
+    },
+    {
+      "id": "elderflower",
+      "name": "Elderflower Liqueur",
+      "type": "Sweet",
+      "flavor": 8,
+      "art_prompt": "a delicate pale bottle of elderflower cordial with tiny white blossoms"
+    },
+    {
+      "id": "demerara_syrup",
+      "name": "Demerara Syrup",
+      "type": "Sweet",
+      "flavor": 9,
+      "art_prompt": "a small bottle of rich dark brown demerara syrup"
+    },
+    {
+      "id": "angostura",
+      "name": "Angostura Bitters",
+      "type": "Bitter",
+      "flavor": 3,
+      "art_prompt": "a small bottle with an oversized cream paper neck wrap that is completely blank, no text, no letters, aromatic bitters"
+    },
+    {
+      "id": "orange_bitters",
+      "name": "Orange Bitters",
+      "type": "Bitter",
+      "flavor": 4,
+      "art_prompt": "a small dropper bottle of orange bitters with an orange peel curl"
+    },
+    {
+      "id": "campari",
+      "name": "Campari",
+      "type": "Bitter",
+      "flavor": 5,
+      "art_prompt": "a slim bright red bottle of bitter aperitif, unlabelled"
+    },
+    {
+      "id": "aperol",
+      "name": "Aperol",
+      "type": "Bitter",
+      "flavor": 6,
+      "art_prompt": "a rounded vivid orange bottle of bitter aperitif, unlabelled"
+    },
+    {
+      "id": "amaro",
+      "name": "Amaro",
+      "type": "Bitter",
+      "flavor": 7,
+      "art_prompt": "a dark brooding bottle of herbal amaro liqueur with a plain blank dark label, absolutely no text, no letters, no writing"
+    },
+    {
+      "id": "fernet",
+      "name": "Fernet",
+      "type": "Bitter",
+      "flavor": 8,
+      "art_prompt": "a severe dark green bottle of intense bitter fernet with a plain blank label, no text, no letters, no writing"
+    },
+    {
+      "id": "soda_water",
+      "name": "Soda Water",
+      "type": "Bubbly",
+      "flavor": 1,
+      "art_prompt": "a vintage siphon bottle of fizzing soda water"
+    },
+    {
+      "id": "tonic_water",
+      "name": "Tonic Water",
+      "type": "Bubbly",
+      "flavor": 2,
+      "art_prompt": "a small clear bottle of tonic water with rising bubbles"
+    },
+    {
+      "id": "ginger_beer",
+      "name": "Ginger Beer",
+      "type": "Bubbly",
+      "flavor": 3,
+      "art_prompt": "a cloudy amber bottle of spicy ginger beer with a ceramic cap"
+    },
+    {
+      "id": "cola",
+      "name": "Cola",
+      "type": "Bubbly",
+      "flavor": 4,
+      "art_prompt": "a dark fizzing glass of cola over ice"
+    },
+    {
+      "id": "ginger_ale",
+      "name": "Ginger Ale",
+      "type": "Bubbly",
+      "flavor": 5,
+      "art_prompt": "a clear pale gold bottle of fizzing ginger ale"
+    },
+    {
+      "id": "prosecco",
+      "name": "Prosecco",
+      "type": "Bubbly",
+      "flavor": 6,
+      "art_prompt": "a green sparkling prosecco bottle with a foil-topped cork, unlabelled"
+    },
+    {
+      "id": "champagne",
+      "name": "Champagne",
+      "type": "Bubbly",
+      "flavor": 7,
+      "art_prompt": "a classic dark champagne bottle with a gold foil neck, unlabelled"
+    },
+    {
+      "id": "sparkling_rose",
+      "name": "Sparkling Rosé",
+      "type": "Bubbly",
+      "flavor": 8,
+      "art_prompt": "a blush-pink sparkling rose bottle with fine bubbles, unlabelled"
+    },
+    {
+      "id": "mint_sprig",
+      "name": "Mint Sprig",
+      "type": "Garnish",
+      "flavor": 1,
+      "art_prompt": "a fresh green sprig of mint leaves"
+    },
+    {
+      "id": "lemon_twist",
+      "name": "Lemon Twist",
+      "type": "Garnish",
+      "flavor": 2,
+      "art_prompt": "a single thin spiral curl of bright yellow lemon peel, just the curled twist of rind alone, no whole fruit"
+    },
+    {
+      "id": "olive",
+      "name": "Olive",
+      "type": "Garnish",
+      "flavor": 3,
+      "art_prompt": "a single plump green cocktail olive skewered on a wooden cocktail pick, just the olive on the pick alone, no glass, no drink"
+    },
+    {
+      "id": "cherry",
+      "name": "Cocktail Cherry",
+      "type": "Garnish",
+      "flavor": 4,
+      "art_prompt": "a single glossy dark cocktail cherry with a stem"
+    },
+    {
+      "id": "orange_peel",
+      "name": "Orange Peel",
+      "type": "Garnish",
+      "flavor": 5,
+      "art_prompt": "a single wide curl of orange peel"
+    },
+    {
+      "id": "edible_flower",
+      "name": "Edible Flower",
+      "type": "Garnish",
+      "flavor": 6,
+      "art_prompt": "a single delicate purple edible flower blossom"
+    }
   ]
 }
