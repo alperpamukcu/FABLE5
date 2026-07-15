@@ -91,6 +91,9 @@ namespace LastCall.DebugUI
         private Button _skipButton;
         private Button _bouncerButton;
         private InputField _seedInput;
+        private RectTransform _customerCard;
+        private Image _customerPortrait;
+        private Text _customerCaption;
 
         private RunController Run => _bootstrap.Run;
         private RoundController Round => Run?.CurrentRound;
@@ -508,6 +511,19 @@ namespace LastCall.DebugUI
             }
         }
 
+        /// <summary>The catalogue thumbnail for a shop offer, by kind.</summary>
+        private Sprite SpriteForOffer(ShopOffer offer)
+        {
+            if (art == null) return null;
+            switch (offer.Kind)
+            {
+                case ShopOfferKind.Patron: return art.Portrait(offer.Patron.Id);
+                case ShopOfferKind.Tool: return art.Tool(offer.Tool.Id);
+                case ShopOfferKind.Book: return art.Icon("book_recipe");
+                default: return null;
+            }
+        }
+
         /// <summary>Layout-element row height for a RectTransform (SetRowHeight targets Button).</summary>
         private static void SetRowHeight2(RectTransform rt, float height)
         {
@@ -523,10 +539,27 @@ namespace LastCall.DebugUI
             foreach (var tool in Run.ToolInventory)
             {
                 var captured = tool;
-                var button = NewButton($"Tool_{tool.Id}", _toolPanel,
-                    $"{tool.Name} → use on selection (max {tool.MaxTargets})",
-                    new Color(0.52f, 0.74f, 0.70f), () => OnUseToolClicked(captured), 12);
-                SetRowHeight(button, 26);
+                var row = NewRect($"ToolRow_{tool.Id}", _toolPanel);
+                var rowLayout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+                rowLayout.spacing = 4;
+                rowLayout.childControlWidth = true;
+                rowLayout.childControlHeight = true;
+                rowLayout.childForceExpandWidth = false;
+                SetRowHeight2(row, 38);
+
+                var thumb = NewRect("Thumb", row);
+                var thumbImg = thumb.gameObject.AddComponent<Image>();
+                thumbImg.preserveAspect = true;
+                var sprite = art != null ? art.Tool(tool.Id) : null;
+                if (sprite != null) thumbImg.sprite = sprite; else thumbImg.color = TealShadow;
+                var thumbLayout = thumb.gameObject.AddComponent<LayoutElement>();
+                thumbLayout.preferredWidth = 34; thumbLayout.preferredHeight = 34;
+
+                var button = NewButton($"Tool_{tool.Id}", row,
+                    $"{tool.Name}\nuse (max {tool.MaxTargets})",
+                    PanelPlum, () => OnUseToolClicked(captured), 11);
+                var btnLayout = button.gameObject.AddComponent<LayoutElement>();
+                btnLayout.flexibleWidth = 1;
                 button.interactable = inRound && _selected.Count >= 1 && _selected.Count <= tool.MaxTargets;
             }
         }
@@ -574,9 +607,27 @@ namespace LastCall.DebugUI
                 string label = offer.Sold
                     ? $"{offer.DisplayName} — SOLD"
                     : $"Buy {offer.DisplayName} — ${offer.Price}";
-                var button = NewButton($"Offer_{i}", _shopOffersPanel, label,
-                    new Color(0.80f, 0.68f, 0.42f), () => OnBuyOfferClicked(index), 13);
-                SetRowHeight(button, 30);
+
+                var row = NewRect($"OfferRow_{i}", _shopOffersPanel);
+                var rowLayout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+                rowLayout.spacing = 6;
+                rowLayout.childControlWidth = true;
+                rowLayout.childControlHeight = true;
+                rowLayout.childForceExpandWidth = false;
+                SetRowHeight2(row, 40);
+
+                var thumb = NewRect("Thumb", row);
+                var thumbImg = thumb.gameObject.AddComponent<Image>();
+                thumbImg.preserveAspect = true;
+                var sprite = SpriteForOffer(offer);
+                if (sprite != null) thumbImg.sprite = sprite; else thumbImg.color = TealShadow;
+                var thumbLayout = thumb.gameObject.AddComponent<LayoutElement>();
+                thumbLayout.preferredWidth = 36; thumbLayout.preferredHeight = 36;
+
+                var button = NewButton($"Offer_{i}", row, label,
+                    Amber, () => OnBuyOfferClicked(index), 13);
+                var btnLayout = button.gameObject.AddComponent<LayoutElement>();
+                btnLayout.flexibleWidth = 1;
                 button.interactable = !offer.Sold && Run.Money >= offer.Price;
             }
 
@@ -690,6 +741,36 @@ namespace LastCall.DebugUI
                     _bannerText.text = string.Empty;
                     break;
             }
+            RenderCustomer();
+        }
+
+        /// <summary>Shows the current customer's face: the VIP under the light on a VIP
+        /// round, or tonight's revealed VIP as a preview during the warm-up customers.</summary>
+        private void RenderCustomer()
+        {
+            Sprite face = null;
+            string caption = null;
+            if (art != null && Run.Phase == RunPhase.CustomerRound)
+            {
+                if (Run.Slot == CustomerSlot.Vip && Run.CurrentVip != null)
+                {
+                    face = art.Vip(Run.CurrentVip.Id);
+                    caption = $"<color=#D94D8F>VIP</color>\n{Run.CurrentVip.Name}";
+                }
+                else if (Run.TonightsVip != null)
+                {
+                    face = art.Vip(Run.TonightsVip.Id);
+                    caption = $"tonight's VIP\n{Run.TonightsVip.Name}";
+                }
+            }
+
+            bool show = face != null;
+            _customerCard.gameObject.SetActive(show);
+            if (show)
+            {
+                _customerPortrait.sprite = face;
+                _customerCaption.text = caption;
+            }
         }
 
         private void AppendLog(string line)
@@ -779,6 +860,20 @@ namespace LastCall.DebugUI
             _bannerText = NewText("Banner", root, 34, TextAnchor.MiddleCenter, Color.white);
             _bannerText.font = _headerFont; // marquee moments deserve the marquee font
             Place((RectTransform)_bannerText.transform, new Vector2(0.5f, 0.5f), new Vector2(900, 60), new Vector2(0, 150));
+
+            // Customer portrait card: the VIP under the bar light, upper centre so it
+            // clears the live preview text and the action buttons below.
+            _customerCard = NewRect("CustomerCard", root);
+            Place(_customerCard, new Vector2(0.5f, 1f), new Vector2(230, 300), new Vector2(-40, -128));
+            StylePanel(_customerCard, WithAlpha(DeepPlum, 0.55f));
+            var portraitRt = NewRect("Portrait", _customerCard);
+            Stretch(portraitRt, new Vector2(0, 0.16f), new Vector2(1, 1), new Vector2(10, 6), new Vector2(-10, -10));
+            _customerPortrait = portraitRt.gameObject.AddComponent<Image>();
+            _customerPortrait.preserveAspect = true;
+            _customerCaption = NewText("Caption", _customerCard, 16, TextAnchor.UpperCenter, Cream);
+            _customerCaption.font = _headerFont;
+            Stretch((RectTransform)_customerCaption.transform, Vector2.zero, new Vector2(1, 0.16f), new Vector2(4, 4), new Vector2(-4, -2));
+            _customerCard.gameObject.SetActive(false);
 
             // Tall enough for the full GDD 7 layout: 2 card slots + voucher + 2 packs
             // + reroll + continue (~260px of rows) with headroom for SOLD relabels.
