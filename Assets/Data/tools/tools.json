@@ -2,84 +2,182 @@
   "version": 1,
   "tools": [
     {
-      "id": "muddler", "name": "Muddler", "cost": 3,
-      "op": "Enhance", "enhancement": "Infused", "convertTo": "", "maxTargets": 2,
-      "description": "Infuse up to 2 cards (+40 Flavor when scored)."
+      "id": "muddler",
+      "name": "Muddler",
+      "cost": 3,
+      "op": "Enhance",
+      "enhancement": "Infused",
+      "convertTo": "",
+      "maxTargets": 2,
+      "description": "Infuse up to 2 cards (+40 Flavor when scored).",
+      "art_prompt": "a plain thick wooden cocktail muddler pestle with a rounded pounding end, standing upright, isolated object alone on a plain dark background, no hands, no drink, no glass, no table, no flame"
     },
     {
-      "id": "jigger", "name": "Jigger", "cost": 3,
-      "op": "Enhance", "enhancement": "Overproof", "convertTo": "", "maxTargets": 1,
-      "description": "Turn a card Overproof (+4 Mult when scored)."
+      "id": "jigger",
+      "name": "Jigger",
+      "cost": 3,
+      "op": "Enhance",
+      "enhancement": "Overproof",
+      "convertTo": "",
+      "maxTargets": 1,
+      "description": "Turn a card Overproof (+4 Mult when scored).",
+      "art_prompt": "a polished double-sided brass jigger measure"
     },
     {
-      "id": "ice_pick", "name": "Ice Pick", "cost": 3,
-      "op": "Destroy", "enhancement": "", "convertTo": "", "maxTargets": 2,
-      "description": "Destroy up to 2 cards."
+      "id": "ice_pick",
+      "name": "Ice Pick",
+      "cost": 3,
+      "op": "Destroy",
+      "enhancement": "",
+      "convertTo": "",
+      "maxTargets": 2,
+      "description": "Destroy up to 2 cards.",
+      "art_prompt": "a steel bar ice pick with a worn wooden handle"
     },
     {
-      "id": "citrus_press", "name": "Citrus Press", "cost": 3,
-      "op": "ConvertType", "enhancement": "", "convertTo": "Sour", "maxTargets": 3,
-      "description": "Convert up to 3 cards to Sour."
+      "id": "citrus_press",
+      "name": "Citrus Press",
+      "cost": 3,
+      "op": "ConvertType",
+      "enhancement": "",
+      "convertTo": "Sour",
+      "maxTargets": 3,
+      "description": "Convert up to 3 cards to Sour.",
+      "art_prompt": "a bright stainless steel two-handled handheld citrus juicer squeezer, closed, held upright, isolated object alone on a plain dark background, no hands, no drink, no glass, no table, no flame"
     },
     {
-      "id": "bar_spoon", "name": "Bar Spoon", "cost": 3,
-      "op": "Copy", "enhancement": "", "convertTo": "", "maxTargets": 1,
-      "description": "Copy a card."
+      "id": "bar_spoon",
+      "name": "Bar Spoon",
+      "cost": 3,
+      "op": "Copy",
+      "enhancement": "",
+      "convertTo": "",
+      "maxTargets": 1,
+      "description": "Copy a card.",
+      "art_prompt": "a long spiral-handled brass bar spoon"
     },
     {
-      "id": "coupe_glass", "name": "Coupe Glass", "cost": 3,
-      "op": "Enhance", "enhancement": "Premium", "convertTo": "", "maxTargets": 1,
-      "description": "Turn a card Premium: it counts as any type in recipes."
+      "id": "coupe_glass",
+      "name": "Coupe Glass",
+      "cost": 3,
+      "op": "Enhance",
+      "enhancement": "Premium",
+      "convertTo": "",
+      "maxTargets": 1,
+      "description": "Turn a card Premium: it counts as any type in recipes.",
+      "art_prompt": "an elegant empty crystal coupe glass catching warm light"
     },
     {
-      "id": "ice_tray", "name": "Ice Tray", "cost": 3,
-      "op": "Enhance", "enhancement": "Frozen", "convertTo": "", "maxTargets": 2,
-      "description": "Freeze up to 2 cards: x2 Mult when scored, but 1-in-4 chance to shatter."
+      "id": "ice_tray",
+      "name": "Ice Tray",
+      "cost": 3,
+      "op": "Enhance",
+      "enhancement": "Frozen",
+      "convertTo": "",
+      "maxTargets": 2,
+      "description": "Freeze up to 2 cards: x2 Mult when scored, but 1-in-4 chance to shatter.",
+      "art_prompt": "a frosted metal ice cube tray with a few clear cubes"
     },
     {
-      "id": "double_strainer", "name": "Double Strainer", "cost": 3,
-      "op": "Enhance", "enhancement": "Doubled", "convertTo": "", "maxTargets": 1,
-      "description": "Double a card: each time it scores, a plain copy joins your deck for good."
+      "id": "double_strainer",
+      "name": "Double Strainer",
+      "cost": 3,
+      "op": "Enhance",
+      "enhancement": "Doubled",
+      "convertTo": "",
+      "maxTargets": 1,
+      "description": "Double a card: each time it scores, a plain copy joins your deck for good.",
+      "art_prompt": "a metal spring-coil hawthorne cocktail strainer disc with a handle, laid flat, isolated object alone on a plain dark background, no hands, no drink, no glass, no table, no flame"
     },
     {
-      "id": "gold_rim", "name": "Gold Rim", "cost": 3,
-      "op": "Enhance", "enhancement": "Golden", "convertTo": "", "maxTargets": 1,
-      "description": "Gild a card: +$3 if it sits unplayed on the rail when the customer is satisfied."
+      "id": "gold_rim",
+      "name": "Gold Rim",
+      "cost": 3,
+      "op": "Enhance",
+      "enhancement": "Golden",
+      "convertTo": "",
+      "maxTargets": 1,
+      "description": "Gild a card: +$3 if it sits unplayed on the rail when the customer is satisfied.",
+      "art_prompt": "a small dish of gold sugar with a coupe glass rim being dipped, golden sparkle"
     },
     {
-      "id": "cocktail_umbrella", "name": "Cocktail Umbrella", "cost": 3,
-      "op": "SetQuality", "enhancement": "", "convertTo": "", "quality": "Signature", "maxTargets": 1,
-      "description": "Make a card Signature quality: x1.5 Mult when scored."
+      "id": "cocktail_umbrella",
+      "name": "Cocktail Umbrella",
+      "cost": 3,
+      "op": "SetQuality",
+      "enhancement": "",
+      "convertTo": "",
+      "quality": "Signature",
+      "maxTargets": 1,
+      "description": "Make a card Signature quality: x1.5 Mult when scored.",
+      "art_prompt": "a single small open paper cocktail parasol umbrella in warm amber and pink, isolated object alone on a plain dark background, no hands, no drink, no glass, no table, no flame"
     },
     {
-      "id": "bottle_opener", "name": "Bottle Opener", "cost": 3,
-      "op": "CreateLastTool", "enhancement": "", "convertTo": "", "maxTargets": 1,
-      "description": "Recreate the last Tool you used this run."
+      "id": "bottle_opener",
+      "name": "Bottle Opener",
+      "cost": 3,
+      "op": "CreateLastTool",
+      "enhancement": "",
+      "convertTo": "",
+      "maxTargets": 1,
+      "description": "Recreate the last Tool you used this run.",
+      "art_prompt": "a worn brass wall-mounted bottle opener"
     },
     {
-      "id": "tab_ledger", "name": "Tab Ledger", "cost": 3,
-      "op": "DoubleMoney", "enhancement": "", "convertTo": "", "maxTargets": 1,
-      "description": "Double your money (max +$20)."
+      "id": "tab_ledger",
+      "name": "Tab Ledger",
+      "cost": 3,
+      "op": "DoubleMoney",
+      "enhancement": "",
+      "convertTo": "",
+      "maxTargets": 1,
+      "description": "Double your money (max +$20).",
+      "art_prompt": "a small leather bar tab ledger book with a fountain pen and a few coins"
     },
     {
-      "id": "soda_gun", "name": "Soda Gun", "cost": 3,
-      "op": "ConvertType", "enhancement": "", "convertTo": "Bubbly", "maxTargets": 2,
-      "description": "Convert up to 2 cards to Bubbly."
+      "id": "soda_gun",
+      "name": "Soda Gun",
+      "cost": 3,
+      "op": "ConvertType",
+      "enhancement": "",
+      "convertTo": "Bubbly",
+      "maxTargets": 2,
+      "description": "Convert up to 2 cards to Bubbly.",
+      "art_prompt": "a chrome bar soda gun dispenser with a coiled hose"
     },
     {
-      "id": "paring_knife", "name": "Paring Knife", "cost": 3,
-      "op": "ConvertType", "enhancement": "", "convertTo": "Garnish", "maxTargets": 2,
-      "description": "Convert up to 2 cards to Garnish."
+      "id": "paring_knife",
+      "name": "Paring Knife",
+      "cost": 3,
+      "op": "ConvertType",
+      "enhancement": "",
+      "convertTo": "Garnish",
+      "maxTargets": 2,
+      "description": "Convert up to 2 cards to Garnish.",
+      "art_prompt": "a small sharp paring knife beside a curl of citrus peel"
     },
     {
-      "id": "bitters_bottle", "name": "Bitters Bottle", "cost": 3,
-      "op": "ConvertType", "enhancement": "", "convertTo": "Bitter", "maxTargets": 2,
-      "description": "Convert up to 2 cards to Bitter."
+      "id": "bitters_bottle",
+      "name": "Bitters Bottle",
+      "cost": 3,
+      "op": "ConvertType",
+      "enhancement": "",
+      "convertTo": "Bitter",
+      "maxTargets": 2,
+      "description": "Convert up to 2 cards to Bitter.",
+      "art_prompt": "a small dasher bottle of dark aromatic bitters, blank neck wrap, no text"
     },
     {
-      "id": "muddling_stick", "name": "Muddling Stick", "cost": 3,
-      "op": "ShiftValue", "enhancement": "", "convertTo": "", "shiftAmount": 1, "maxTargets": 2,
-      "description": "Raise the value of up to 2 cards by +1 (for House Special and Layered Pour)."
+      "id": "muddling_stick",
+      "name": "Muddling Stick",
+      "cost": 3,
+      "op": "ShiftValue",
+      "enhancement": "",
+      "convertTo": "",
+      "shiftAmount": 1,
+      "maxTargets": 2,
+      "description": "Raise the value of up to 2 cards by +1 (for House Special and Layered Pour).",
+      "art_prompt": "a slender wooden muddling stick with a rounded end"
     }
   ]
 }
