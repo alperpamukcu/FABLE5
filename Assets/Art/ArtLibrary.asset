@@ -1,0 +1,309 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4516350e7e1948541a1e7c07665b17b3, type: 3}
+  m_Name: ArtLibrary
+  m_EditorClassIdentifier: LastCall.Game::LastCall.Game.ArtLibrary
+  ingredients:
+  - id: agave_nectar
+    sprite: {fileID: 21300000, guid: 520cb7c97d3d0ac4fbc3bf00c55f6626, type: 3}
+  - id: aged_rum
+    sprite: {fileID: 21300000, guid: c63265630631c7248b8faf4260f8cab0, type: 3}
+  - id: amaro
+    sprite: {fileID: 21300000, guid: 45084f298b9edd449839901cc5f4a2ab, type: 3}
+  - id: angostura
+    sprite: {fileID: 21300000, guid: 4f1b272d103123140af7c582c9395be0, type: 3}
+  - id: aperol
+    sprite: {fileID: 21300000, guid: bcf7c9a5a5c46624d9f576d57c23a267, type: 3}
+  - id: blanco_tequila
+    sprite: {fileID: 21300000, guid: afa5e6e5253c2b346a306772537ee6a2, type: 3}
+  - id: blood_orange
+    sprite: {fileID: 21300000, guid: e28b26e8742debc42850db15ecdd20e5, type: 3}
+  - id: bourbon
+    sprite: {fileID: 21300000, guid: 37b06df3e0da6ed4fa3e12ab993b54f3, type: 3}
+  - id: campari
+    sprite: {fileID: 21300000, guid: 21cf36e090ccf1c4b81038790ba6c838, type: 3}
+  - id: champagne
+    sprite: {fileID: 21300000, guid: 1ab968a44e42f3f4e9808555d50b8306, type: 3}
+  - id: cherry
+    sprite: {fileID: 21300000, guid: fa2eaf499ba5b114e92fa2e4b7a8c9ed, type: 3}
+  - id: citric_acid
+    sprite: {fileID: 21300000, guid: 59e5f9378883683449e49190204ffffa, type: 3}
+  - id: cola
+    sprite: {fileID: 21300000, guid: d228bcca5cce33144b55a70bab42a756, type: 3}
+  - id: demerara_syrup
+    sprite: {fileID: 21300000, guid: 89bd8ff280459d042af01cfcffa40ae6, type: 3}
+  - id: edible_flower
+    sprite: {fileID: 21300000, guid: 0169dbfadc55c3241b687ef11bb8d4fc, type: 3}
+  - id: elderflower
+    sprite: {fileID: 21300000, guid: 6ef6d3352d39a524f9acbc075f69166a, type: 3}
+  - id: fernet
+    sprite: {fileID: 21300000, guid: 2d63908d9bb1237419665aee6457f2cd, type: 3}
+  - id: ginger_ale
+    sprite: {fileID: 21300000, guid: 4f80eabd63e437a49ba388159818ede3, type: 3}
+  - id: ginger_beer
+    sprite: {fileID: 21300000, guid: 4d91d22b0ab3fb746950348684c3e82f, type: 3}
+  - id: grapefruit_juice
+    sprite: {fileID: 21300000, guid: c185be323d6e5e34d8185d7b75130f14, type: 3}
+  - id: grenadine
+    sprite: {fileID: 21300000, guid: dca4731c52e1bc54d87cd04300a16904, type: 3}
+  - id: honey_syrup
+    sprite: {fileID: 21300000, guid: fec6a09ee9d603c4d970c220bddb316b, type: 3}
+  - id: lemon_juice
+    sprite: {fileID: 21300000, guid: adfd839b57b258b49bf1cb1f772a7993, type: 3}
+  - id: lemon_twist
+    sprite: {fileID: 21300000, guid: eaea01ccfc10b9549b4a889dadb7fe01, type: 3}
+  - id: lime_juice
+    sprite: {fileID: 21300000, guid: 32bf5f82c386fcd42ac3c76554f2833e, type: 3}
+  - id: london_dry_gin
+    sprite: {fileID: 21300000, guid: fd8e0ba116893d74a827813a8d822822, type: 3}
+  - id: maple_syrup
+    sprite: {fileID: 21300000, guid: 68ce1817d583df34db4f8e1ed228eecb, type: 3}
+  - id: mezcal
+    sprite: {fileID: 21300000, guid: dbb6b4dd2c59c21418a85ec66d931bec, type: 3}
+  - id: mint_sprig
+    sprite: {fileID: 21300000, guid: e0be8d28fe9861741842b0b5705ecfe1, type: 3}
+  - id: olive
+    sprite: {fileID: 21300000, guid: bdc76aa3d33919b4aadcf3feb7da52ed, type: 3}
+  - id: orange_bitters
+    sprite: {fileID: 21300000, guid: f3602c1701b330147a2367362cdd8c31, type: 3}
+  - id: orange_peel
+    sprite: {fileID: 21300000, guid: e2508357fce82a845953c37908164146, type: 3}
+  - id: orgeat
+    sprite: {fileID: 21300000, guid: d9ff562011eb21641967006a1c94fec4, type: 3}
+  - id: overproof_rum
+    sprite: {fileID: 21300000, guid: 617b9b4e925a0e54c9b731c66ebd68a4, type: 3}
+  - id: prosecco
+    sprite: {fileID: 21300000, guid: 11f77730458d1e141a782341b3988df7, type: 3}
+  - id: rail_vodka
+    sprite: {fileID: 21300000, guid: 7f19a63c30fe821478df8a1133cf87f7, type: 3}
+  - id: rye_whiskey
+    sprite: {fileID: 21300000, guid: d9d74079d8c238d459bf2cf535f0cea6, type: 3}
+  - id: simple_syrup
+    sprite: {fileID: 21300000, guid: b4f131e5204139f48b02b6b21fb8b616, type: 3}
+  - id: single_malt
+    sprite: {fileID: 21300000, guid: e2fb354ff35b59345bd0c77ee0b8c2df, type: 3}
+  - id: soda_water
+    sprite: {fileID: 21300000, guid: c66a71f060ce0cf45b4107e23fdbee91, type: 3}
+  - id: sour_mix
+    sprite: {fileID: 21300000, guid: e4b2131b91f7e264d91e89ee492c3e23, type: 3}
+  - id: sparkling_rose
+    sprite: {fileID: 21300000, guid: 7cb948d7cab1e9a43820437229405ba8, type: 3}
+  - id: tonic_water
+    sprite: {fileID: 21300000, guid: 6fe0afef5ff65c64abc6ef455505e264, type: 3}
+  - id: verjus
+    sprite: {fileID: 21300000, guid: 8d1d138a53939cd4eb1237ada21fc923, type: 3}
+  - id: white_rum
+    sprite: {fileID: 21300000, guid: 18d3a34d27785eb4f953feac7cd4a5bd, type: 3}
+  - id: yuzu_juice
+    sprite: {fileID: 21300000, guid: 670de6289746ff948b94a4d78cdd9d2e, type: 3}
+  portraits:
+  - id: apprentice
+    sprite: {fileID: 21300000, guid: 497c75d20e54e314480da70b30d83b73, type: 3}
+  - id: aunt_perihan
+    sprite: {fileID: 21300000, guid: 72139d23b0e772c4cbd63c50fb1c8078, type: 3}
+  - id: bell_ringer
+    sprite: {fileID: 21300000, guid: ef1194fc6fe89f74b90c04eb1307fe13, type: 3}
+  - id: bootlegger
+    sprite: {fileID: 21300000, guid: 15bdf05823c378e4e80b6393e408bc28, type: 3}
+  - id: bridge_club
+    sprite: {fileID: 21300000, guid: cc75598a0d61a8749b82991ccf5135f3, type: 3}
+  - id: candy_man
+    sprite: {fileID: 21300000, guid: 13ba80baa78b9b24a863475db0d53e5a, type: 3}
+  - id: chocolatier
+    sprite: {fileID: 21300000, guid: 2e0de0d033b3bd443b776fae757d3403, type: 3}
+  - id: coat_check
+    sprite: {fileID: 21300000, guid: 87cde6c89233dd54289de4190bb36fc4, type: 3}
+  - id: crowd_pleaser
+    sprite: {fileID: 21300000, guid: 28720aac13c0a2141bb76079f22aee3c, type: 3}
+  - id: efficiency_expert
+    sprite: {fileID: 21300000, guid: 37ce2c0f4cc81ef43878ae110d46037f, type: 3}
+  - id: espresso_nino
+    sprite: {fileID: 21300000, guid: acf8fa6e4b7e5644ab3504135acc2e52, type: 3}
+  - id: gardener
+    sprite: {fileID: 21300000, guid: ab5cb0038357b774b9ba63cc9eb42a04, type: 3}
+  - id: herbalist
+    sprite: {fileID: 21300000, guid: 2151e5157abba814dabcc8541552e24b, type: 3}
+  - id: high_roller
+    sprite: {fileID: 21300000, guid: 566010a08d58e09439f0454ccf340406, type: 3}
+  - id: jazz_singer
+    sprite: {fileID: 21300000, guid: c9c1935bce29f204096415870953cc9f, type: 3}
+  - id: karaoke_queen
+    sprite: {fileID: 21300000, guid: 5704d55133ddd6149af574229af608c4, type: 3}
+  - id: lady_fortune
+    sprite: {fileID: 21300000, guid: 890e706d658d5394cbaf19c8b3077cc2, type: 3}
+  - id: last_call_larry
+    sprite: {fileID: 21300000, guid: 8d38682449a3c994dae84e83872caff7, type: 3}
+  - id: lemon_vendor
+    sprite: {fileID: 21300000, guid: c79abdbc31a74c349b8528972d767377, type: 3}
+  - id: madame_bubbles
+    sprite: {fileID: 21300000, guid: f676ae0009dac0447a538450fdf8d1a0, type: 3}
+  - id: madame_vermouth
+    sprite: {fileID: 21300000, guid: 98ed04f5d52747c4d81360e66ad6ec6d, type: 3}
+  - id: magpie
+    sprite: {fileID: 21300000, guid: eba1599aa0f6ce243a3538a293786531, type: 3}
+  - id: moonshiner
+    sprite: {fileID: 21300000, guid: 1505ca65746547444b5b58a2252dde66, type: 3}
+  - id: night_cabbie
+    sprite: {fileID: 21300000, guid: 81957623adc90c04a957701ee9c00c4e, type: 3}
+  - id: night_owl
+    sprite: {fileID: 21300000, guid: 8451c6219a3647d40b9206506e003ce2, type: 3}
+  - id: offduty_cop
+    sprite: {fileID: 21300000, guid: 5ac2197760567c8468b3d226eb583f4e, type: 3}
+  - id: old_timer
+    sprite: {fileID: 21300000, guid: ab9e57a630e110346a0df5cea4e5bca7, type: 3}
+  - id: olive_olga
+    sprite: {fileID: 21300000, guid: bd8badcfb2864f743868f41665b31450, type: 3}
+  - id: perfectionist
+    sprite: {fileID: 21300000, guid: 7a5923c3190d57d4a9d4c8e21a7d7075, type: 3}
+  - id: pharmacist
+    sprite: {fileID: 21300000, guid: e234f01ee5f663b4e8af211225c7aa29, type: 3}
+  - id: pickle_pete
+    sprite: {fileID: 21300000, guid: f4f1e75cfe34da14487891fe3c7c2f71, type: 3}
+  - id: quiet_monk
+    sprite: {fileID: 21300000, guid: 9844717fcb75c4a458e70d3f7657c6cd, type: 3}
+  - id: sailor_musa
+    sprite: {fileID: 21300000, guid: abf12ba9c79a276448acb7f29f76a76e, type: 3}
+  - id: second_wind
+    sprite: {fileID: 21300000, guid: 5d0296bd7fb14244c9f38f810cfeec15, type: 3}
+  - id: soda_jerk
+    sprite: {fileID: 21300000, guid: 8ba94dcbed6c0ca4cbf04f3168b463e7, type: 3}
+  - id: sommelier
+    sprite: {fileID: 21300000, guid: b76720418abd75b4698b620258ff605e, type: 3}
+  - id: sourpuss
+    sprite: {fileID: 21300000, guid: 0348549b80d81ea479c8f0fe044cfb76, type: 3}
+  - id: stage_manager
+    sprite: {fileID: 21300000, guid: e56d6443ee77b6f40b47a72e3925232e, type: 3}
+  - id: street_magician
+    sprite: {fileID: 21300000, guid: b7bb4640d3ef73d478bfb07b383fa8e1, type: 3}
+  - id: the_accountant
+    sprite: {fileID: 21300000, guid: 0741cbfed71eae14ba706db549f63e23, type: 3}
+  - id: the_alchemist
+    sprite: {fileID: 21300000, guid: 7339cb4d05a71e64698fff60045aab52, type: 3}
+  - id: the_barnacle
+    sprite: {fileID: 21300000, guid: 3d986f65162828a4a884ebe9a479e41d, type: 3}
+  - id: the_chemist
+    sprite: {fileID: 21300000, guid: 3bd208323110cf04fb607fc6b5943609, type: 3}
+  - id: the_collector
+    sprite: {fileID: 21300000, guid: 19f2eb163d2486f44a3dea63efa22b23, type: 3}
+  - id: the_couple
+    sprite: {fileID: 21300000, guid: 83b4721826cbf4b4b8f5f825d14f4a7d, type: 3}
+  - id: the_doorman
+    sprite: {fileID: 21300000, guid: 6dd853eb30a581647ba49fe50c0a0ec0, type: 3}
+  - id: the_florist
+    sprite: {fileID: 21300000, guid: da47a1dbefdacfb46af7bf42fb04b4b2, type: 3}
+  - id: the_gossip
+    sprite: {fileID: 21300000, guid: 64398250acf85a54282aa0628054adb3, type: 3}
+  - id: the_insomniac
+    sprite: {fileID: 21300000, guid: a272d7ce71c4c8f41bd33b8822980246, type: 3}
+  - id: the_minimalist
+    sprite: {fileID: 21300000, guid: 354ae36007966a74ab159fd65c63b592, type: 3}
+  - id: the_oracle
+    sprite: {fileID: 21300000, guid: 7f7d4262331aede4980d59cd0278fd12, type: 3}
+  - id: the_owner
+    sprite: {fileID: 21300000, guid: bf8ad0260dfcb564b967e67498d4ac9e, type: 3}
+  - id: the_parrot
+    sprite: {fileID: 21300000, guid: 34fa8d19196a3b94cae41c12122e48c8, type: 3}
+  - id: the_poet
+    sprite: {fileID: 21300000, guid: ff8c3a47baf7539418b68fc1edf184e7, type: 3}
+  - id: the_regular
+    sprite: {fileID: 21300000, guid: 76f126d5474f46a41b8247a5eaacc3c5, type: 3}
+  - id: the_widow
+    sprite: {fileID: 21300000, guid: 9b4c402aadf498d4cb5818f2d56a65b2, type: 3}
+  - id: toastmaster
+    sprite: {fileID: 21300000, guid: cc131edf7b8b3204e9cec90af28a90a2, type: 3}
+  - id: twins_table4
+    sprite: {fileID: 21300000, guid: 66a1eebc59d939044bd290a3f0b06191, type: 3}
+  - id: uncle_demir
+    sprite: {fileID: 21300000, guid: a0d6a74dbe0f086428b8ceff29d89628, type: 3}
+  - id: velvet_glove
+    sprite: {fileID: 21300000, guid: 40ebc9a55c783f34292d0b6fbe1a0f77, type: 3}
+  vips:
+  - id: allergic
+    sprite: {fileID: 21300000, guid: db815cffa35772942a47be3704ae01e2, type: 3}
+  - id: ascetic
+    sprite: {fileID: 21300000, guid: 3b8f973b2809d624983ca0a33def84ff, type: 3}
+  - id: connoisseur
+    sprite: {fileID: 21300000, guid: d2d1c75e062b74a4aa8dda681332515c, type: 3}
+  - id: critic
+    sprite: {fileID: 21300000, guid: e204eafb290a9d14e8a5cbdc2e6a067c, type: 3}
+  - id: delicate_stomach
+    sprite: {fileID: 21300000, guid: 294101a652ce7874e8711e992c61b3d8, type: 3}
+  - id: dentist
+    sprite: {fileID: 21300000, guid: e79816e2f87276949abf288a564ef74c, type: 3}
+  - id: double_or_nothing
+    sprite: {fileID: 21300000, guid: e90c4a35edb2716409e6f65b267be4e7, type: 3}
+  - id: fire_marshal
+    sprite: {fileID: 21300000, guid: 9a297c3591f29ee479eadec14b912c08, type: 3}
+  - id: flat_earther
+    sprite: {fileID: 21300000, guid: aeef62a6bdf274a4e8f32f56b1d4a565, type: 3}
+  - id: food_blogger
+    sprite: {fileID: 21300000, guid: 9903e54d8bf0529409156acff83e4eb2, type: 3}
+  - id: generous_aunt
+    sprite: {fileID: 21300000, guid: 99431df6cf44d694aa24ea936afa41a3, type: 3}
+  - id: health_inspector
+    sprite: {fileID: 21300000, guid: e5e736627ceec114cb15d4a7e4431fab, type: 3}
+  - id: landlord
+    sprite: {fileID: 21300000, guid: 35592d9f643cb9549a8a46fa0ad9ffc3, type: 3}
+  - id: purist
+    sprite: {fileID: 21300000, guid: 5d49e1de4b42395478ee6fa3eecc7f3b, type: 3}
+  - id: regulars_ghost
+    sprite: {fileID: 21300000, guid: 5601b65649a08514babdc36beda32f4f, type: 3}
+  - id: roulette_rita
+    sprite: {fileID: 21300000, guid: 6550f9a96e0d90b4ea1b8603ea4b4d6f, type: 3}
+  - id: snob
+    sprite: {fileID: 21300000, guid: c7e61b6aac5334e42bf658d8fe5a8fac, type: 3}
+  - id: speed_dater
+    sprite: {fileID: 21300000, guid: 8dc4c58cf84b84047a5a53bab90f308b, type: 3}
+  - id: sweet_tooth
+    sprite: {fileID: 21300000, guid: 3e174265f70b1e74d9c540be66fc61b4, type: 3}
+  - id: teetotaler
+    sprite: {fileID: 21300000, guid: 4b71de2cb0eae7d4396ae039f458f825, type: 3}
+  tools:
+  - id: bar_spoon
+    sprite: {fileID: 21300000, guid: ea47e7958385ab84a925bf18350e337b, type: 3}
+  - id: bitters_bottle
+    sprite: {fileID: 21300000, guid: 426f3abe61eb9b546898933ffa192b88, type: 3}
+  - id: bottle_opener
+    sprite: {fileID: 21300000, guid: a9fa24680ac175143a42490d9d105e3b, type: 3}
+  - id: citrus_press
+    sprite: {fileID: 21300000, guid: e03164609cccc47418bb686bc4c9dc61, type: 3}
+  - id: cocktail_umbrella
+    sprite: {fileID: 21300000, guid: c61cc73e79090af44abb6b2d3938fdd8, type: 3}
+  - id: coupe_glass
+    sprite: {fileID: 21300000, guid: 39f47e358157d6d43bc0740435cf6b45, type: 3}
+  - id: double_strainer
+    sprite: {fileID: 21300000, guid: 5f4af9d1f315a404893649b006a38439, type: 3}
+  - id: gold_rim
+    sprite: {fileID: 21300000, guid: c73c023a9ca7af143aa4bd9a7b39edf5, type: 3}
+  - id: ice_pick
+    sprite: {fileID: 21300000, guid: 3bb70a8f7fa4afe4fa2d6b87b6a19da8, type: 3}
+  - id: ice_tray
+    sprite: {fileID: 21300000, guid: caecd5b8ede2b9a4bbc229e073417efc, type: 3}
+  - id: jigger
+    sprite: {fileID: 21300000, guid: ae4a720ecb5042f4f9b6c6bc8936b6f4, type: 3}
+  - id: muddler
+    sprite: {fileID: 21300000, guid: bf96b3d559b8a614a9a0fa4bb9933a9c, type: 3}
+  - id: muddling_stick
+    sprite: {fileID: 21300000, guid: b0259fd18bfced34681be6d01ad3b7ce, type: 3}
+  - id: paring_knife
+    sprite: {fileID: 21300000, guid: 13b478f42dd176e41bf417788017c4b4, type: 3}
+  - id: soda_gun
+    sprite: {fileID: 21300000, guid: 9d4e1d1ec1bb0ac4cb813a9d481d101e, type: 3}
+  - id: tab_ledger
+    sprite: {fileID: 21300000, guid: 417d0b07b3cb7c84ca4b35ed1f25357b, type: 3}
+  icons:
+  - id: bell_service
+    sprite: {fileID: 21300000, guid: 30f82a2473396ab419bf206391147af1, type: 3}
+  - id: book_recipe
+    sprite: {fileID: 21300000, guid: eeed1aa2fabecf34faad7c73ba109025, type: 3}
+  - id: coin_tip
+    sprite: {fileID: 21300000, guid: c241bb596dd638e4fb17c0c3d256e597, type: 3}

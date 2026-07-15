@@ -42,6 +42,10 @@ namespace LastCall.DebugUI
         [SerializeField] private Sprite vignetteSprite;
         [SerializeField] private Material backgroundMaterial;
 
+        // Generated illustration registry (LastCall/Build Art Library); optional — cards
+        // and portraits fall back to flat tints when a sprite is missing.
+        [SerializeField] private ArtLibrary art;
+
         // Art bible §2 locked palette (Docs/GDD/14_art_bible.md) — every UI tint
         // must come from these tokens so the whole screen shares one language.
         private static readonly Color DeepPlum = Hex(0x1A1023);
@@ -400,16 +404,71 @@ namespace LastCall.DebugUI
             foreach (var card in Round.Rail)
             {
                 var captured = card;
-                bool selected = _selected.Contains(card);
-                bool debuffed = Round.VipRules.DebuffedTypes.Contains(card.Type);
-                var baseColor = TypeColors[card.Type];
-                if (debuffed) baseColor = Color.Lerp(baseColor, Color.black, 0.6f);
-                var color = selected ? Color.Lerp(baseColor, Color.white, 0.55f) : baseColor;
-                string extras = string.Empty;
-                if (card.Enhancement != Enhancement.None) extras += $"\n<{card.Enhancement}>";
-                if (debuffed) extras += "\nDEBUFFED";
-                string label = $"{(selected ? "✔ " : string.Empty)}{card.Flavor}\n{card.Type}\n{card.Name}{extras}";
-                NewButton($"Card_{card.InstanceId}", _railPanel, label, color, () => ToggleCard(captured), 13);
+                BuildIngredientCard(_railPanel, card, _selected.Contains(card),
+                    Round.VipRules.DebuffedTypes.Contains(card.Type), () => ToggleCard(captured));
+            }
+        }
+
+        /// <summary>
+        /// A real ingredient card per art bible §4: art window on top, a type-colour band,
+        /// the Flavor value in a top-left circle, and the name on a bottom plate. Degrades
+        /// to a tinted plate when the sprite is missing.
+        /// </summary>
+        private void BuildIngredientCard(Transform parent, IngredientCard card, bool selected,
+            bool debuffed, UnityAction onClick)
+        {
+            var typeColor = TypeColors[card.Type];
+            var root = NewRect($"Card_{card.InstanceId}", parent);
+
+            // Card body: cream frame, tinted darker plum inside; the frame reads as one
+            // object with the rounded kit sprite.
+            var body = root.gameObject.AddComponent<Image>();
+            body.color = selected ? CandleGlow : Cream;
+            if (panelSprite != null) { body.sprite = panelSprite; body.type = Image.Type.Sliced; }
+            var button = root.gameObject.AddComponent<Button>();
+            button.targetGraphic = body;
+            button.onClick.AddListener(onClick);
+
+            // Art window (upper ~62%).
+            var artRt = NewRect("Art", root);
+            Stretch(artRt, new Vector2(0, 0.30f), new Vector2(1, 1), new Vector2(5, 2), new Vector2(-5, -5));
+            var artImg = artRt.gameObject.AddComponent<Image>();
+            artImg.preserveAspect = true;
+            var sprite = art != null ? art.Ingredient(card.Id) : null;
+            if (sprite != null) { artImg.sprite = sprite; artImg.color = debuffed ? new Color(0.4f, 0.4f, 0.45f) : Color.white; }
+            else { artImg.color = debuffed ? Color.Lerp(typeColor, Color.black, 0.6f) : typeColor; }
+
+            // Type colour band under the art.
+            var band = NewRect("Band", root);
+            Stretch(band, new Vector2(0, 0.26f), new Vector2(1, 0.30f), new Vector2(5, 0), new Vector2(-5, 0));
+            band.gameObject.AddComponent<Image>().color = debuffed ? Color.Lerp(typeColor, Color.black, 0.5f) : typeColor;
+
+            // Value circle, top-left.
+            var circle = NewRect("Value", root);
+            Place(circle, new Vector2(0, 1), new Vector2(28, 28), new Vector2(4, -4));
+            var circleImg = circle.gameObject.AddComponent<Image>();
+            circleImg.color = DeepPlum;
+            var valueText = NewText("V", circle, 15, TextAnchor.MiddleCenter, CandleGlow);
+            Stretch((RectTransform)valueText.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            valueText.text = card.Flavor.ToString();
+            valueText.font = _headerFont;
+
+            // Name plate (bottom).
+            var name = NewText("Name", root, 11, TextAnchor.LowerCenter, PanelPlum);
+            Stretch((RectTransform)name.transform, Vector2.zero, new Vector2(1, 0.28f), new Vector2(3, 3), new Vector2(-3, 0));
+            string tag = card.Enhancement != Enhancement.None ? $"\n<color=#E8A33D>{card.Enhancement}</color>" : string.Empty;
+            if (debuffed) tag += "\n<color=#D94D8F>DEBUFF</color>";
+            name.text = card.Name + tag;
+
+            // Selection ring.
+            if (selected)
+            {
+                var ring = NewRect("Ring", root);
+                Stretch(ring, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var ringImg = ring.gameObject.AddComponent<Image>();
+                if (panelSprite != null) { ringImg.sprite = panelSprite; ringImg.type = Image.Type.Sliced; }
+                ringImg.color = new Color(1f, 0.85f, 0.35f, 0.35f);
+                ringImg.raycastTarget = false;
             }
         }
 
@@ -421,11 +480,40 @@ namespace LastCall.DebugUI
                 var captured = patron;
                 int refund = (patron.Definition.Cost + 1) / 2;
                 string stored = patron.Accumulated != 0 ? $" [{patron.Accumulated:0.#}]" : string.Empty;
-                var button = NewButton($"Patron_{patron.Definition.Id}", _patronPanel,
-                    $"{patron.Definition.Name}{stored} — sell ${refund}",
-                    new Color(0.62f, 0.58f, 0.78f), () => OnSellPatronClicked(captured), 12);
-                SetRowHeight(button, 26);
+
+                // Row: portrait thumbnail + name/sell button.
+                var row = NewRect($"PatronRow_{patron.Definition.Id}", _patronPanel);
+                var rowLayout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+                rowLayout.spacing = 4;
+                rowLayout.childControlWidth = true;
+                rowLayout.childControlHeight = true;
+                rowLayout.childForceExpandWidth = false;
+                SetRowHeight2(row, 40);
+
+                var thumb = NewRect("Thumb", row);
+                var thumbImg = thumb.gameObject.AddComponent<Image>();
+                var portrait = art != null ? art.Portrait(patron.Definition.Id) : null;
+                thumbImg.preserveAspect = true;
+                if (portrait != null) thumbImg.sprite = portrait;
+                else thumbImg.color = TealShadow;
+                var thumbLayout = thumb.gameObject.AddComponent<LayoutElement>();
+                thumbLayout.preferredWidth = 34;
+                thumbLayout.preferredHeight = 38;
+
+                var button = NewButton($"Patron_{patron.Definition.Id}", row,
+                    $"{patron.Definition.Name}{stored}\nsell ${refund}",
+                    PanelPlum, () => OnSellPatronClicked(captured), 11);
+                var btnLayout = button.gameObject.AddComponent<LayoutElement>();
+                btnLayout.flexibleWidth = 1;
             }
+        }
+
+        /// <summary>Layout-element row height for a RectTransform (SetRowHeight targets Button).</summary>
+        private static void SetRowHeight2(RectTransform rt, float height)
+        {
+            var element = rt.gameObject.AddComponent<LayoutElement>();
+            element.preferredHeight = height;
+            element.flexibleWidth = 1;
         }
 
         private void RenderTools()

@@ -63,6 +63,8 @@ namespace LastCall.EditorTools
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/UI/vignette.png");
             hudSo.FindProperty("backgroundMaterial").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<Material>("Assets/Art/UI/SmokeSwirl.mat");
+            hudSo.FindProperty("art").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<LastCall.Game.ArtLibrary>("Assets/Art/ArtLibrary.asset");
             hudSo.ApplyModifiedPropertiesWithoutUndo();
 
             Directory.CreateDirectory("Assets/Scenes");
