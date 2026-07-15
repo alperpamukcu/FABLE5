@@ -94,6 +94,8 @@ namespace LastCall.DebugUI
         private RectTransform _customerCard;
         private Image _customerPortrait;
         private Text _customerCaption;
+        private RectTransform _actionBar;
+        private RectTransform _scrim;
 
         private RunController Run => _bootstrap.Run;
         private RoundController Round => Run?.CurrentRound;
@@ -374,8 +376,15 @@ namespace LastCall.DebugUI
             bool hasSelection = _selected.Count >= 1 && _selected.Count <= Round.Config.MaxMixSelection;
             _mixButton.interactable = inRound && hasSelection;
             _restockButton.interactable = inRound && hasSelection && Round.RestocksRemaining > 0;
-            _skipButton.gameObject.SetActive(Run.CanSkipCustomerA);
-            _bouncerButton.gameObject.SetActive(Run.CanRerollTonightsVip);
+            _skipButton.gameObject.SetActive(inRound && Run.CanSkipCustomerA);
+            _bouncerButton.gameObject.SetActive(inRound && Run.CanRerollTonightsVip);
+
+            // Only the current context's controls are on screen — the action bar and rail
+            // during a round, the Back Room modal (over the scrim) between customers.
+            bool recipesOpen = _recipesVisible;
+            _actionBar.gameObject.SetActive(inRound && !recipesOpen);
+            _railPanel.gameObject.SetActive(inRound);
+            _scrim.gameObject.SetActive(Run.Phase == RunPhase.BackRoom || recipesOpen);
         }
 
         private void RenderPreview()
@@ -475,9 +484,28 @@ namespace LastCall.DebugUI
             }
         }
 
+        /// <summary>A small caps header + optional empty hint at the top of a shelf.</summary>
+        private void ShelfHeader(RectTransform panel, string title, bool empty)
+        {
+            var header = NewText($"{title}_Header", panel, 13, TextAnchor.MiddleLeft, CandleGlow);
+            header.font = _headerFont;
+            header.text = title;
+            var hl = header.gameObject.AddComponent<LayoutElement>();
+            hl.preferredHeight = 20; hl.flexibleWidth = 1;
+            if (empty)
+            {
+                var hint = NewText($"{title}_Empty", panel, 12, TextAnchor.MiddleLeft,
+                    new Color(0.7f, 0.66f, 0.6f, 0.6f));
+                hint.text = "— none yet —";
+                var el = hint.gameObject.AddComponent<LayoutElement>();
+                el.preferredHeight = 18; el.flexibleWidth = 1;
+            }
+        }
+
         private void RenderPatrons()
         {
             ClearChildren(_patronPanel);
+            ShelfHeader(_patronPanel, "PATRONS", Run.Patrons.Count == 0);
             foreach (var patron in Run.Patrons)
             {
                 var captured = patron;
@@ -511,6 +539,27 @@ namespace LastCall.DebugUI
             }
         }
 
+        /// <summary>
+        /// A fixed-height shop row: a button with an optional left-anchored thumbnail
+        /// inside it. Avoids nested layout groups so every row is exactly its height.
+        /// </summary>
+        private Button ShopButton(string name, string label, Sprite thumb, Color bg,
+            UnityAction onClick, float height, int fontSize)
+        {
+            var button = NewButton(name, _shopOffersPanel, label, bg, onClick, fontSize);
+            SetRowHeight(button, height);
+            if (thumb != null)
+            {
+                var t = NewRect("Thumb", (RectTransform)button.transform);
+                Place(t, new Vector2(0, 0.5f), new Vector2(height - 8, height - 8), new Vector2(6, 0));
+                var img = t.gameObject.AddComponent<Image>();
+                img.sprite = thumb;
+                img.preserveAspect = true;
+                img.raycastTarget = false;
+            }
+            return button;
+        }
+
         /// <summary>The catalogue thumbnail for a shop offer, by kind.</summary>
         private Sprite SpriteForOffer(ShopOffer offer)
         {
@@ -535,6 +584,7 @@ namespace LastCall.DebugUI
         private void RenderTools()
         {
             ClearChildren(_toolPanel);
+            ShelfHeader(_toolPanel, "TOOLS", Run.ToolInventory.Count == 0);
             bool inRound = Run.Phase == RunPhase.CustomerRound;
             foreach (var tool in Run.ToolInventory)
             {
@@ -608,26 +658,8 @@ namespace LastCall.DebugUI
                     ? $"{offer.DisplayName} — SOLD"
                     : $"Buy {offer.DisplayName} — ${offer.Price}";
 
-                var row = NewRect($"OfferRow_{i}", _shopOffersPanel);
-                var rowLayout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
-                rowLayout.spacing = 6;
-                rowLayout.childControlWidth = true;
-                rowLayout.childControlHeight = true;
-                rowLayout.childForceExpandWidth = false;
-                SetRowHeight2(row, 40);
-
-                var thumb = NewRect("Thumb", row);
-                var thumbImg = thumb.gameObject.AddComponent<Image>();
-                thumbImg.preserveAspect = true;
-                var sprite = SpriteForOffer(offer);
-                if (sprite != null) thumbImg.sprite = sprite; else thumbImg.color = TealShadow;
-                var thumbLayout = thumb.gameObject.AddComponent<LayoutElement>();
-                thumbLayout.preferredWidth = 36; thumbLayout.preferredHeight = 36;
-
-                var button = NewButton($"Offer_{i}", row, label,
-                    Amber, () => OnBuyOfferClicked(index), 13);
-                var btnLayout = button.gameObject.AddComponent<LayoutElement>();
-                btnLayout.flexibleWidth = 1;
+                var button = ShopButton($"Offer_{i}", label, SpriteForOffer(offer),
+                    Amber, () => OnBuyOfferClicked(index), 46, 13);
                 button.interactable = !offer.Sold && Run.Money >= offer.Price;
             }
 
@@ -637,9 +669,9 @@ namespace LastCall.DebugUI
                 string label = voucherOffer.Sold
                     ? $"{voucherOffer.DisplayName} — SOLD"
                     : $"Buy {voucherOffer.DisplayName} — ${voucherOffer.Price}\n<size=10>{voucherOffer.Voucher.Description}</size>";
-                var voucherButton = NewButton("VoucherOffer", _shopOffersPanel, label,
-                    new Color(0.72f, 0.52f, 0.78f), OnBuyVoucherClicked, 12);
-                SetRowHeight(voucherButton, 40);
+                var voucherButton = ShopButton("VoucherOffer", label,
+                    art != null ? art.Icon("book_recipe") : null,
+                    new Color(0.46f, 0.34f, 0.52f), OnBuyVoucherClicked, 46, 12);
                 voucherButton.interactable = !voucherOffer.Sold && Run.Money >= voucherOffer.Price;
             }
 
@@ -651,20 +683,24 @@ namespace LastCall.DebugUI
                 string packLabel = pack.Sold
                     ? $"{pack.DisplayName} — SOLD"
                     : $"Open {pack.DisplayName} — ${pack.Price}";
-                var packButton = NewButton($"Pack_{i}", _shopOffersPanel, packLabel,
-                    new Color(0.55f, 0.70f, 0.85f), () => OnBuyPackClicked(packIndex), 13);
-                SetRowHeight(packButton, 30);
+                var packButton = ShopButton($"Pack_{i}", packLabel, null,
+                    new Color(0.32f, 0.46f, 0.52f), () => OnBuyPackClicked(packIndex), 38, 13);
                 packButton.interactable = !pack.Sold && Run.Money >= pack.Price;
             }
 
+            // Footer: a thin divider, then reroll (subtle) and continue (primary).
+            var spacer = NewRect("Spacer", _shopOffersPanel);
+            var spacerLayout = spacer.gameObject.AddComponent<LayoutElement>();
+            spacerLayout.preferredHeight = 6; spacerLayout.flexibleWidth = 1;
+
             var reroll = NewButton("Reroll", _shopOffersPanel,
-                $"Reroll — ${Run.Shop.RerollCost}", TealShadow, OnRerollClicked, 13);
-            SetRowHeight(reroll, 30);
+                $"Reroll — ${Run.Shop.RerollCost}", new Color(0.26f, 0.20f, 0.34f), OnRerollClicked, 13);
+            SetRowHeight(reroll, 34);
             reroll.interactable = Run.Money >= Run.Shop.RerollCost;
 
             var next = NewButton("Continue", _shopOffersPanel,
-                "Next customer →", CandleGlow, OnContinueClicked, 13);
-            SetRowHeight(next, 30);
+                "Next customer →", Amber, OnContinueClicked, 15);
+            SetRowHeight(next, 42);
         }
 
         // ─────────────────────────────── recipe book ───────────────────────────────
@@ -856,10 +892,10 @@ namespace LastCall.DebugUI
             _logScroll.horizontal = false;
             _logScroll.movementType = ScrollRect.MovementType.Clamped;
 
-            // Center: banner, shop overlay, live preview.
-            _bannerText = NewText("Banner", root, 34, TextAnchor.MiddleCenter, Color.white);
-            _bannerText.font = _headerFont; // marquee moments deserve the marquee font
-            Place((RectTransform)_bannerText.transform, new Vector2(0.5f, 0.5f), new Vector2(900, 60), new Vector2(0, 150));
+            // Recipes toggle: top centre, under the marquee.
+            var recipesButton = NewButton("RecipesToggle", root, "RECIPES",
+                WithAlpha(PanelPlum, 0.95f), OnToggleRecipesClicked, 13);
+            Place((RectTransform)recipesButton.transform, new Vector2(0.5f, 1), new Vector2(128, 32), new Vector2(0, -12));
 
             // Customer portrait card: the VIP under the bar light, upper centre so it
             // clears the live preview text and the action buttons below.
@@ -875,82 +911,93 @@ namespace LastCall.DebugUI
             Stretch((RectTransform)_customerCaption.transform, Vector2.zero, new Vector2(1, 0.16f), new Vector2(4, 4), new Vector2(-4, -2));
             _customerCard.gameObject.SetActive(false);
 
-            // Tall enough for the full GDD 7 layout: 2 card slots + voucher + 2 packs
-            // + reroll + continue (~260px of rows) with headroom for SOLD relabels.
+            // Rail (bottom band): the ingredient cards.
+            _railPanel = NewRect("Rail", root);
+            Stretch(_railPanel, new Vector2(0, 0), new Vector2(1, 0), new Vector2(12, 12), new Vector2(-12, 168));
+            StylePanel(_railPanel, WithAlpha(DeepPlum, 0.55f));
+            var layout = _railPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 10;
+            layout.padding = new RectOffset(10, 10, 10, 10);
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = true;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+
+            // Action bar: preview line + Mix/Restock/Skip/Bouncer, grouped so a single
+            // toggle hides the whole cluster when a modal (shop) takes the screen.
+            _actionBar = NewRect("ActionBar", root);
+            Stretch(_actionBar, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _actionBar.gameObject.AddComponent<CanvasRenderer>();
+
+            _previewText = NewText("Preview", _actionBar, 20, TextAnchor.MiddleCenter, CandleGlow);
+            var previewRt = (RectTransform)_previewText.transform;
+            previewRt.anchorMin = previewRt.anchorMax = previewRt.pivot = new Vector2(0.5f, 0);
+            previewRt.sizeDelta = new Vector2(760, 34);
+            previewRt.anchoredPosition = new Vector2(0, 224);
+
+            _mixButton = NewButton("Mix", _actionBar, "MIX", Amber, OnMixClicked, 18);
+            var mixRt = (RectTransform)_mixButton.transform;
+            mixRt.anchorMin = mixRt.anchorMax = mixRt.pivot = new Vector2(0.5f, 0);
+            mixRt.sizeDelta = new Vector2(180, 46);
+            mixRt.anchoredPosition = new Vector2(-100, 176);
+            _restockButton = NewButton("Restock", _actionBar, "RESTOCK", WithAlpha(WoodBrown, 0.95f), OnRestockClicked, 18);
+            var restockRt = (RectTransform)_restockButton.transform;
+            restockRt.anchorMin = restockRt.anchorMax = restockRt.pivot = new Vector2(0.5f, 0);
+            restockRt.sizeDelta = new Vector2(180, 46);
+            restockRt.anchoredPosition = new Vector2(100, 176);
+
+            // Only shows on an untouched Customer A round (GDD 5.2).
+            _skipButton = NewButton("SkipA", _actionBar, "SKIP → FAVOR", WithAlpha(TealShadow, 0.95f), OnSkipCustomerAClicked, 13);
+            var skipRt = (RectTransform)_skipButton.transform;
+            skipRt.anchorMin = skipRt.anchorMax = skipRt.pivot = new Vector2(0.5f, 0);
+            skipRt.sizeDelta = new Vector2(160, 46);
+            skipRt.anchoredPosition = new Vector2(300, 176);
+
+            // Bouncer voucher: visible only while tonight's VIP can still be rerolled.
+            _bouncerButton = NewButton("Bouncer", _actionBar, "BOUNCER: NEW VIP", NeonMagenta, OnBouncerClicked, 12);
+            var bouncerRt = (RectTransform)_bouncerButton.transform;
+            bouncerRt.anchorMin = bouncerRt.anchorMax = bouncerRt.pivot = new Vector2(0.5f, 0);
+            bouncerRt.sizeDelta = new Vector2(160, 32);
+            bouncerRt.anchoredPosition = new Vector2(300, 228);
+
+            // Modal scrim: dims and blocks the game behind shop / recipe overlays.
+            _scrim = NewRect("Scrim", root);
+            Stretch(_scrim, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _scrim.gameObject.AddComponent<Image>().color = new Color(0.02f, 0.01f, 0.04f, 0.62f);
+            _scrim.gameObject.SetActive(false);
+
+            // Back Room modal (drawn above the scrim).
             _shopPanel = NewRect("ShopPanel", root);
-            Place(_shopPanel, new Vector2(0.5f, 0.5f), new Vector2(460, 440), new Vector2(-60, 0));
-            StylePanel(_shopPanel, WithAlpha(PanelPlum, 0.97f));
-            _shopTitle = NewText("ShopTitle", _shopPanel, 18, TextAnchor.MiddleCenter, new Color(1f, 0.9f, 0.6f));
+            Place(_shopPanel, new Vector2(0.5f, 0.5f), new Vector2(520, 470), new Vector2(0, 0));
+            StylePanel(_shopPanel, PanelPlum);
+            _shopTitle = NewText("ShopTitle", _shopPanel, 20, TextAnchor.MiddleCenter, CandleGlow);
             _shopTitle.font = _headerFont;
-            Stretch((RectTransform)_shopTitle.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(8, -40), new Vector2(-8, -6));
+            Stretch((RectTransform)_shopTitle.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(12, -46), new Vector2(-12, -10));
             _shopOffersPanel = NewRect("ShopOffers", _shopPanel);
-            Stretch(_shopOffersPanel, Vector2.zero, Vector2.one, new Vector2(12, 12), new Vector2(-12, -46));
+            Stretch(_shopOffersPanel, Vector2.zero, Vector2.one, new Vector2(16, 16), new Vector2(-16, -52));
             var shopLayout = _shopOffersPanel.gameObject.AddComponent<VerticalLayoutGroup>();
-            shopLayout.spacing = 6;
+            shopLayout.spacing = 8;
             shopLayout.childForceExpandHeight = false;
             shopLayout.childControlHeight = true;
             shopLayout.childControlWidth = true;
             _shopPanel.gameObject.SetActive(false);
 
-            // Recipe Book overlay (created after the shop so it draws on top).
-            var recipesButton = NewButton("RecipesToggle", root, "RECIPES",
-                Amber, OnToggleRecipesClicked, 14);
-            Place((RectTransform)recipesButton.transform, new Vector2(0.5f, 1), new Vector2(120, 30), new Vector2(0, -12));
-
+            // Recipe Book modal (drawn above the scrim).
             _recipePanel = NewRect("RecipePanel", root);
-            Place(_recipePanel, new Vector2(0.5f, 0.5f), new Vector2(660, 440), new Vector2(-60, 10));
-            StylePanel(_recipePanel, WithAlpha(DeepPlum, 0.97f));
-            var recipeTitle = NewText("RecipeTitle", _recipePanel, 18, TextAnchor.MiddleCenter, new Color(1f, 0.9f, 0.6f));
+            Place(_recipePanel, new Vector2(0.5f, 0.5f), new Vector2(700, 520), new Vector2(0, 0));
+            StylePanel(_recipePanel, PanelPlum);
+            var recipeTitle = NewText("RecipeTitle", _recipePanel, 20, TextAnchor.MiddleCenter, CandleGlow);
+            recipeTitle.font = _headerFont;
             recipeTitle.text = "RECIPE BOOK";
-            Stretch((RectTransform)recipeTitle.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(8, -38), new Vector2(-8, -6));
-            _recipeText = NewText("RecipeText", _recipePanel, 15, TextAnchor.UpperLeft, new Color(0.92f, 0.92f, 0.88f));
-            Stretch((RectTransform)_recipeText.transform, Vector2.zero, Vector2.one, new Vector2(16, 10), new Vector2(-16, -44));
+            Stretch((RectTransform)recipeTitle.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(12, -44), new Vector2(-12, -10));
+            _recipeText = NewText("RecipeText", _recipePanel, 15, TextAnchor.UpperLeft, Cream);
+            Stretch((RectTransform)_recipeText.transform, Vector2.zero, Vector2.one, new Vector2(20, 12), new Vector2(-20, -50));
             _recipePanel.gameObject.SetActive(false);
 
-            _previewText = NewText("Preview", root, 20, TextAnchor.MiddleCenter, new Color(1f, 0.95f, 0.75f));
-            var previewRt = (RectTransform)_previewText.transform;
-            previewRt.anchorMin = new Vector2(0.5f, 0);
-            previewRt.anchorMax = new Vector2(0.5f, 0);
-            previewRt.pivot = new Vector2(0.5f, 0);
-            previewRt.sizeDelta = new Vector2(760, 34);
-            previewRt.anchoredPosition = new Vector2(0, 218);
-
-            // Bottom: action buttons + rail.
-            _mixButton = NewButton("Mix", root, "MIX", Amber, OnMixClicked, 18);
-            var mixRt = (RectTransform)_mixButton.transform;
-            mixRt.anchorMin = mixRt.anchorMax = mixRt.pivot = new Vector2(0.5f, 0);
-            mixRt.sizeDelta = new Vector2(170, 42);
-            mixRt.anchoredPosition = new Vector2(-95, 168);
-            _restockButton = NewButton("Restock", root, "RESTOCK", WoodBrown, OnRestockClicked, 18);
-            var restockRt = (RectTransform)_restockButton.transform;
-            restockRt.anchorMin = restockRt.anchorMax = restockRt.pivot = new Vector2(0.5f, 0);
-            restockRt.sizeDelta = new Vector2(170, 42);
-            restockRt.anchoredPosition = new Vector2(95, 168);
-
-            // Only shows on an untouched Customer A round (GDD 5.2).
-            _skipButton = NewButton("SkipA", root, "SKIP → FAVOR", new Color(0.60f, 0.50f, 0.75f), OnSkipCustomerAClicked, 14);
-            var skipRt = (RectTransform)_skipButton.transform;
-            skipRt.anchorMin = skipRt.anchorMax = skipRt.pivot = new Vector2(0.5f, 0);
-            skipRt.sizeDelta = new Vector2(150, 42);
-            skipRt.anchoredPosition = new Vector2(265, 168);
-
-            // Bouncer voucher: visible only while tonight's VIP can still be rerolled.
-            _bouncerButton = NewButton("Bouncer", root, "BOUNCER: NEW VIP", NeonMagenta, OnBouncerClicked, 13);
-            var bouncerRt = (RectTransform)_bouncerButton.transform;
-            bouncerRt.anchorMin = bouncerRt.anchorMax = bouncerRt.pivot = new Vector2(0.5f, 0);
-            bouncerRt.sizeDelta = new Vector2(150, 34);
-            bouncerRt.anchoredPosition = new Vector2(265, 216);
-
-            _railPanel = NewRect("Rail", root);
-            Stretch(_railPanel, new Vector2(0, 0), new Vector2(1, 0), new Vector2(12, 12), new Vector2(-12, 160));
-            StylePanel(_railPanel, WithAlpha(PanelPlum, 0.72f));
-            var layout = _railPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 8;
-            layout.padding = new RectOffset(8, 8, 8, 8);
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = true;
-            layout.childControlWidth = true;
-            layout.childControlHeight = true;
+            // Banner (win/lose marquee) above the modals.
+            _bannerText = NewText("Banner", root, 40, TextAnchor.MiddleCenter, Color.white);
+            _bannerText.font = _headerFont;
+            Place((RectTransform)_bannerText.transform, new Vector2(0.5f, 0.5f), new Vector2(1000, 70), new Vector2(0, 150));
 
             // Soft darkness pooling at the screen edges, over everything, never clickable.
             if (vignetteSprite != null)
@@ -1055,12 +1102,23 @@ namespace LastCall.DebugUI
             button.targetGraphic = image;
             button.onClick.AddListener(onClick);
 
+            // Cozy-noir button feedback: lift toward candle-glow on hover, sink on press,
+            // dim when disabled. Tint multiplies the base colour so every button reacts.
+            var colors = button.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color(1.14f, 1.10f, 1.02f);
+            colors.pressedColor = new Color(0.82f, 0.80f, 0.86f);
+            colors.selectedColor = Color.white;
+            colors.disabledColor = new Color(0.5f, 0.5f, 0.55f, 0.7f);
+            colors.fadeDuration = 0.08f;
+            button.colors = colors;
+
             var textRt = NewRect("Text", rt);
-            Stretch(textRt, Vector2.zero, Vector2.one, new Vector2(4, 4), new Vector2(-4, -4));
+            Stretch(textRt, Vector2.zero, Vector2.one, new Vector2(8, 4), new Vector2(-8, -4));
             var text = textRt.gameObject.AddComponent<Text>();
             // Art bible: cream on dark, plum on light — never pure black/white.
             float luminance = bg.r * 0.299f + bg.g * 0.587f + bg.b * 0.114f;
-            ConfigureText(text, fontSize, TextAnchor.MiddleCenter, luminance < 0.45f ? Cream : PanelPlum);
+            ConfigureText(text, fontSize, TextAnchor.MiddleCenter, luminance < 0.5f ? Cream : DeepPlum);
             text.text = label;
             return button;
         }
