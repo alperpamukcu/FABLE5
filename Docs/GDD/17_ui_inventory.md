@@ -18,9 +18,9 @@
 | Component | Owner | Status | Notes |
 |---|---|---|---|
 | Background (animated smoke shader) | `SmokeSwirl.shader` / DebugHud | legacy-cozy-noir | Superseded by the diegetic BackgroundLayers; disabled when the stage is present. |
-| **Diegetic stage — BackgroundLayers** (far club/crowd, mid neon/light, front counter face) | `DiegeticStage` | placeholder | 3 parallax-ready layers, flat v2-palette silhouettes. |
-| **Diegetic stage — BarCounter** | `DiegeticStage` | placeholder | Amber-lit counter band across the screen bottom. |
-| **Diegetic stage — BottleRail** (8 bottle slots on the counter) | `DiegeticStage` | placeholder | Replaces the UI ingredient rail; bound to the round's rail cards; slide animations. |
+| **Diegetic stage — BackgroundLayers** (sky/windows, club-far crowd, club-mid neon, customer) | `DiegeticStage` | placeholder | 640×360 spec-18 layer stack, flat v2-palette silhouettes. Awaits PixelLab sky_city / club_far / club_mid / customer sprites (18 §5). |
+| **Diegetic stage — BarCounter** | `DiegeticStage` | placeholder | Bottom-96px amber-lit band, surface line y=264, chrome lip + amber key rest line (18 §2). Awaits `counter` 640×96 sprite. |
+| **Diegetic stage — BottleRail** (8 bottle slots on the counter) | `DiegeticStage` | placeholder | Fitted to spec-18: 24×40 bottles, slot pitch 56 from x=88, base y=232. Draw/Select/Mix/Refresh choreography per 18 §3 (240ms OutQuad + 2px overshoot, 4px select-rise, 180ms InQuad exit). Bottles drawn from the type ramp (fill + 1px outline + neon rim); awaits 48 bottle sprites. |
 | Ingredient rail (UI card version) | DebugHud | legacy-cozy-noir | **Removed** — replaced by the diegetic BottleRail. |
 | Info panel (night/wallet/target/score/mixes) | DebugHud | legacy-cozy-noir | Text overlay; restyle in v2 UI pass (module 16). |
 | Patron shelf | DebugHud | legacy-cozy-noir | Portrait thumbnails + sell; portraits are v1 painterly. |
@@ -61,10 +61,13 @@
 
 | System | Owner | Status | Notes |
 |---|---|---|---|
+| Design tokens (40-palette, ramps, 4px grid, number roles) | `UITheme` | migrated-v2 | Single source for every scene/UI colour; ramps + type→ramp map per 14 v2 §3/§5. |
+| Pixel Perfect Camera (640×360 ref, PPU 1, integer upscale) | `DebugSceneCreator` | migrated-v2 | Governs future world-space sprites; UI canvases integer-scale via 640×360 CanvasScaler. |
 | Motion / reduced-motion | `Motion` | placeholder | PlayerPrefs-backed; drives every stage animation. |
-| Tweening (OutBack coroutine util) | `Tweening` | placeholder | Lightweight stand-in for DOTween; swappable. |
+| Tweening (OutBack/OutCubic/OutQuad/InQuad coroutine util) | `Tweening` | placeholder | Lightweight stand-in for DOTween; carries the 18 §3 easings; swappable. |
 | Art library (id → sprite) | `ArtLibrary` | legacy-cozy-noir | Indexes the v1 painterly assets; repoint at v2 sprites when regenerated. |
-| Fonts (Limelight display, Barlow body) | — | legacy-cozy-noir | Replace with a pixel bitmap font in v2. |
+| Pixel fonts (Press Start 2P display/numbers, Silkscreen body/caption) | — | placeholder | v2 pixel fonts, wired into the diegetic stage. Spec-sanctioned fallbacks for m6x11/m5x7 (itch.io-gated). |
+| Legacy fonts (Limelight display, Barlow body) | — | legacy-cozy-noir | Still on the temporary HUD overlay; drop when the HUD is repixeled. |
 | Procedural UI kit (panel/button/bubble/tag/frame/vignette/glow) | `UiSpriteGenerator` | legacy-cozy-noir | SDF rounded kit; replace with pixel 9-slice in v2. |
 
 ## 6. Art asset banks (all v1 — regenerate for v2)
