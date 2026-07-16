@@ -3,7 +3,7 @@
   <Project Path="LastCall.Editor.csproj" />
   <Project Path="LastCall.Core.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="LastCall.DebugUI.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="LastCall.Game.csproj" />
-  <Project Path="LastCall.DebugUI.csproj" />
 </Solution>
