@@ -8,56 +8,47 @@ using UnityEngine.UI;
 namespace LastCall.DebugUI
 {
     /// <summary>
-    /// The diegetic gameplay stage (v2, module 18): a layered night-club scene that sits
-    /// BEHIND the UI overlay. Layers, back to front:
-    ///   BackgroundLayers (far club/crowd, mid neon, front counter face) → parallax-ready
-    ///   BarCounter (amber-lit band across the bottom)
-    ///   BottleRail (the round's rail cards as bottle slots standing ON the counter)
+    /// The diegetic gameplay stage (v2, module 18): a layered night-club scene authored at
+    /// 640×360 that sits BEHIND the UI overlay. Layers back → front (18 §1):
+    ///   Sky/City → Club Far (crowd) → Club Mid (neon "LAST CALL") → Customer →
+    ///   Counter (amber-lit bottom 96px) → Bottle rail (8 slots ON the counter).
     /// The UI overlay (HUD/panels) draws on its own higher-order canvas.
     ///
     /// Everything here is placeholder: flat silhouettes drawn straight from the locked v2
-    /// palette (14_art_bible v2). Final pixel sprites drop in without touching the layout
-    /// or the slide system. Bottle motion is DOTween-shaped (see <see cref="Tweening"/>)
-    /// and collapses to instant snaps under <see cref="Motion.Reduced"/>.
+    /// palette (<see cref="UITheme"/>). Final pixel sprites drop in without touching the
+    /// layout or the slide system. Bottle motion is DOTween-shaped (see <see cref="Tweening"/>)
+    /// and collapses to instant snaps under <see cref="Motion.Reduced"/>. All coordinates
+    /// are in the 640×360 reference space with a bottom-left origin (18 §2 y-values are
+    /// top-down, so y_here = 360 − y_spec).
     /// </summary>
     public sealed class DiegeticStage : MonoBehaviour
     {
-        // ── locked v2 palette (14_art_bible v2 §3) ──────────────────────────────
-        private static readonly Color NightDeep = Hex(0x0D0813);
-        private static readonly Color Night2 = Hex(0x1A1023);
-        private static readonly Color Night3 = Hex(0x241830);
-        private static readonly Color Night4 = Hex(0x362447);
-        private static readonly Color MagentaNeon = Hex(0xE84DA6);
-        private static readonly Color CyanNeon = Hex(0x3BC8BE);
-        private static readonly Color AmberBar = Hex(0x8F5A1E);
-        private static readonly Color AmberEdge = Hex(0xC9822B);
-        private static readonly Color Cream = Hex(0xF2E8D5);
-        private static readonly Color Night1Text = Hex(0x241830);
+        // ── layout (18 §2, converted to bottom-left origin) ─────────────────────
+        private const int Slots = 8;                       // GDD: 8-card rail
+        private static readonly Vector2 Reference = new Vector2(640, 360);
+        private const float SlotPitch = 56f;               // 18 §2: slot pitch 56px
+        private const float FirstSlotX = 88f;              // 18 §2: first slot x=88
+        private const float BottleBaseY = 128f;            // 18 §2: y=232 top-down → 360−232
+        private const float CounterFrontY = 96f;           // 18 §2: surface line y=264 → 360−264 (bottom 96px)
+        private const float BottleW = 24f;                 // 14 §6: bottle sprite 24×40
+        private const float BottleH = 40f;
+        private const float SelectRise = 4f;               // 18 §3: select rises 4px
+        private const float OffscreenRight = 680f;
+        private const float OffscreenLeft = -40f;
 
-        // Ingredient ramp anchors, v2 §5 (Spirit=Amber, Sour=Lime, Sweet=Magenta,
-        // Bitter=Vice Red, Bubbly=Cyan, Garnish=Cream).
-        private static readonly Dictionary<IngredientType, Color> RampColor = new Dictionary<IngredientType, Color>
-        {
-            [IngredientType.Spirit] = Hex(0xE8A33D),
-            [IngredientType.Sour] = Hex(0x6FCC4B),
-            [IngredientType.Sweet] = Hex(0xE84DA6),
-            [IngredientType.Bitter] = Hex(0xD9455C),
-            [IngredientType.Bubbly] = Hex(0x3BC8BE),
-            [IngredientType.Garnish] = Hex(0xC9BCA8),
-        };
+        // ── choreography timings (18 §3) ────────────────────────────────────────
+        private const float EnterStagger = 0.06f;          // 60 ms per bottle
+        private const float DrawDur = 0.24f;               // 240 ms OutQuad each
+        private const float SettleDur = 0.06f;             // 2px overshoot settle
+        private const float Overshoot = 2f;                // px past the slot on entry
+        private const float MixExitDur = 0.18f;            // 180 ms InQuad off-screen
+        private const float MixPopDur = 0.14f;             // forward+up flourish
 
-        private const int Slots = 8;                // GDD: 8-card rail
-        private static readonly Vector2 Reference = new Vector2(1280, 720);
-        private const float Spacing = 150f;         // between slot centres
-        private const float SlotY = 196f;           // bottle base sits on the counter top
-        private const float BottleW = 96f;
-        private const float BottleH = 168f;
-        private const float OffscreenRight = 760f;
-        private const float OffscreenLeft = -760f;
-        private const float EnterStagger = 0.06f;   // 60 ms per slot
-        private const float SlideDur = 0.26f;       // within the 180–300 ms window
+        private Font _body;
+        private Font _display;
+        [SerializeField] private Font bodyFont;            // Silkscreen (16 v2 §1 BODY/CAPTION)
+        [SerializeField] private Font displayFont;         // Press Start 2P (headings/numbers)
 
-        private Font _font;
         private RectTransform _railRoot;
         private readonly Dictionary<int, BottleView> _bottles = new Dictionary<int, BottleView>();
         private string _railSignature = "";
@@ -67,10 +58,14 @@ namespace LastCall.DebugUI
             public IngredientCard Card;
             public RectTransform Root;
             public Image Rim;
+            public Image Outline;
             public Image Body;
+            public Image Neck;
             public Text Value;
             public Text Name;
+            public bool Selected;
             public Coroutine Move;
+            public Coroutine Rise;
         }
 
         /// <summary>How exiting bottles leave, so the wave reads as the right action.</summary>
@@ -85,7 +80,9 @@ namespace LastCall.DebugUI
         private void Awake()
         {
             Application.runInBackground = true; // keep the slide animations advancing unfocused
-            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            var legacy = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _body = bodyFont != null ? bodyFont : legacy;
+            _display = displayFont != null ? displayFont : legacy;
             BuildScene();
         }
 
@@ -99,36 +96,48 @@ namespace LastCall.DebugUI
             canvas.sortingOrder = -10; // behind the HUD overlay (order 0)
             var scaler = canvasGo.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = Reference;
+            scaler.referenceResolution = Reference;     // 640×360 → ×3 = 1080p, integer scaling
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 1f;             // match height: keeps the 96px counter band exact
             var root = (RectTransform)canvasGo.transform;
 
-            // BackgroundLayers (named for future parallax offsetting), back to front.
-            // BgFar: the dark club room.
-            var far = FullLayer(root, "BgFar", NightDeep);
-            // Back wall behind the bar (everything above the counter surface).
-            var wall = NewRect("BackWall", far);
-            Stretch(wall, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, 168), new Vector2(0, 0));
-            var wallImg = wall.gameObject.AddComponent<Image>();
-            wallImg.color = Night2; wallImg.raycastTarget = false;
-            AddCrowd(far);                                   // club patrons along the back wall
+            // Layer 0 — Sky/City: dim window glow high on the wall (placeholder).
+            var sky = FullLayer(root, "SkyCity", UITheme.Night[0]);
+            Window(sky, new Vector2(60, 40), new Vector2(70, 300));
+            Window(sky, new Vector2(80, 44), new Vector2(510, 300));
 
-            // BgMid: neon signage high on the back wall.
-            var mid = FullLayer(root, "BgMid", new Color(0, 0, 0, 0));
+            // Layer 1 — Club Far: back wall + dance-floor crowd silhouettes.
+            var far = NewRect("ClubFar", root);
+            Stretch(far, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var wall = NewRect("BackWall", far);
+            Stretch(wall, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, CounterFrontY), Vector2.zero);
+            var wallImg = wall.gameObject.AddComponent<Image>();
+            wallImg.color = UITheme.Night[1]; wallImg.raycastTarget = false;
+            AddCrowd(far);
+
+            // Layer 2 — Club Mid: neon signage (the "LAST CALL" wall sign).
+            var mid = FullLayer(root, "ClubMid", new Color(0, 0, 0, 0));
             AddNeonSigns(mid);
 
-            // Bar: dark front face + a bright amber lit surface the bottles stand on.
-            var face = NewRect("CounterFace", root);
-            Stretch(face, new Vector2(0, 0), new Vector2(1, 0), Vector2.zero, new Vector2(0, 150));
-            var faceImg = face.gameObject.AddComponent<Image>();
-            faceImg.color = Hex(0x4A2E14); faceImg.raycastTarget = false; // dark wood
-            var top = NewRect("CounterTop", root);
-            Stretch(top, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 150), new Vector2(0, 176));
-            top.gameObject.AddComponent<Image>().color = AmberBar;
-            var edge = NewRect("CounterEdge", root);
-            Stretch(edge, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 170), new Vector2(0, 178));
-            edge.gameObject.AddComponent<Image>().color = AmberEdge; // amber key highlight line
+            // Layer 6 — Customer: patron silhouette standing behind the counter, center-left
+            // (18 §2 x=200-296). Drawn before the counter so the bar occludes their base.
+            AddCustomer(root);
 
-            // BottleRail root: bottles anchor to bottom-centre and position by slot.
+            // Layer 4 — Counter: dark wood front face + amber-lit surface the bottles stand on.
+            var face = NewRect("CounterFace", root);
+            Stretch(face, new Vector2(0, 0), new Vector2(1, 0), Vector2.zero, new Vector2(0, CounterFrontY));
+            face.gameObject.AddComponent<Image>().color = UITheme.Amber[0];      // dark wood
+            var surface = NewRect("CounterSurface", root);
+            Stretch(surface, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, CounterFrontY), new Vector2(0, BottleBaseY));
+            surface.gameObject.AddComponent<Image>().color = UITheme.Amber[1];   // lit wood surface
+            var lip = NewRect("CounterLip", root);                               // chrome front edge
+            Stretch(lip, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, CounterFrontY - 2), new Vector2(0, CounterFrontY));
+            lip.gameObject.AddComponent<Image>().color = UITheme.Cream[2];
+            var keyLine = NewRect("CounterKey", root);                           // amber key highlight (rest line)
+            Stretch(keyLine, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, BottleBaseY - 2), new Vector2(0, BottleBaseY));
+            keyLine.gameObject.AddComponent<Image>().color = UITheme.Amber[3];
+
+            // Layer 5 — Bottle rail: bottles anchor to the bottom-left and position by slot.
             _railRoot = NewRect("BottleRail", root);
             Stretch(_railRoot, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         }
@@ -143,39 +152,74 @@ namespace LastCall.DebugUI
             return layer;
         }
 
+        private void Window(RectTransform layer, Vector2 size, Vector2 pos)
+        {
+            var w = NewRect("Window", layer);
+            Place(w, new Vector2(0, 0), size, pos);
+            var img = w.gameObject.AddComponent<Image>();
+            img.color = new Color(UITheme.ClubBlue[1].r, UITheme.ClubBlue[1].g, UITheme.ClubBlue[1].b, 0.55f);
+            img.raycastTarget = false;
+        }
+
         private void AddCrowd(RectTransform layer)
         {
-            // A row of dim head + shoulder silhouettes along the back wall, well above the
-            // bar surface (bottles top out ~340) so they read as patrons behind the bar.
-            for (int i = 0; i < 11; i++)
+            // Dim head + shoulder silhouettes across the dance floor, well above the bar
+            // surface so they read as patrons in the club behind the counter.
+            for (int i = 0; i < 9; i++)
             {
                 var head = NewRect($"Head{i}", layer);
-                Place(head, new Vector2(0, 0), new Vector2(64, 110), new Vector2(80 + i * 116, 360));
+                Place(head, new Vector2(0, 0), new Vector2(22, 34), new Vector2(40 + i * 70, 196));
                 var img = head.gameObject.AddComponent<Image>();
-                img.color = i % 2 == 0 ? Night3 : Night4;
+                img.color = i % 2 == 0 ? UITheme.Night[2] : UITheme.Night[3];
                 img.raycastTarget = false;
             }
         }
 
         private void AddNeonSigns(RectTransform layer)
         {
-            // A few small neon signs high on the back wall (not full-width lasers).
-            NeonSign(layer, MagentaNeon, new Vector2(150, 34), new Vector2(200, 560));
-            NeonSign(layer, CyanNeon, new Vector2(110, 26), new Vector2(560, 600));
-            NeonSign(layer, MagentaNeon, new Vector2(90, 22), new Vector2(1040, 580));
+            // The wall sign "LAST CALL" (Magenta ramp) + a couple of small cyan accents high
+            // on the back wall. Placeholder for the club_mid neon layer (18 §5).
+            NeonSign(layer, UITheme.Magenta[3], new Vector2(200, 22), new Vector2(320, 300), "LAST CALL");
+            NeonSign(layer, UITheme.Cyan[3], new Vector2(56, 10), new Vector2(120, 322), null);
+            NeonSign(layer, UITheme.Magenta[3], new Vector2(48, 10), new Vector2(548, 316), null);
         }
 
-        private void NeonSign(RectTransform layer, Color c, Vector2 size, Vector2 pos)
+        private void NeonSign(RectTransform layer, Color c, Vector2 size, Vector2 center, string label)
         {
-            // Glow halo (dim, larger) + bright core — v2 glow = hand-placed halo.
+            // Glow halo (dim, larger) + bright core — v2 glow = hand-placed halo, no shader.
             var halo = NewRect("Halo", layer);
-            Place(halo, new Vector2(0, 0), size + new Vector2(16, 16), pos);
+            Place(halo, new Vector2(0.5f, 0.5f), size + new Vector2(12, 12), center);
             var haloImg = halo.gameObject.AddComponent<Image>();
-            haloImg.color = new Color(c.r, c.g, c.b, 0.28f); haloImg.raycastTarget = false;
+            haloImg.color = new Color(c.r, c.g, c.b, 0.25f); haloImg.raycastTarget = false;
             var core = NewRect("Sign", layer);
-            Place(core, new Vector2(0, 0), size, pos);
+            Place(core, new Vector2(0.5f, 0.5f), size, center);
             var coreImg = core.gameObject.AddComponent<Image>();
             coreImg.color = c; coreImg.raycastTarget = false;
+            if (!string.IsNullOrEmpty(label))
+            {
+                var t = NewText("Label", core, _display, 12, TextAnchor.MiddleCenter, UITheme.Night[0]);
+                Stretch((RectTransform)t.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            }
+        }
+
+        private void AddCustomer(RectTransform root)
+        {
+            // 96×128 patron placeholder — a quiet dark silhouette behind the counter
+            // (18 §2 x=200-296). The real pixel customer sprite (18 §5) replaces this; kept
+            // deliberately dim so it reads as "someone stands here" without stealing focus.
+            var cust = NewRect("Customer", root);
+            Place(cust, new Vector2(0, 0), new Vector2(96, 128), new Vector2(200, CounterFrontY - 12));
+            var rim = NewRect("CustomerRim", cust);            // faint magenta club rim behind
+            Stretch(rim, Vector2.zero, Vector2.one, new Vector2(-1, -1), new Vector2(1, 1));
+            rim.SetAsFirstSibling();
+            var rimImg = rim.gameObject.AddComponent<Image>();
+            rimImg.color = new Color(UITheme.Magenta[2].r, UITheme.Magenta[2].g, UITheme.Magenta[2].b, 0.16f);
+            rimImg.raycastTarget = false;
+            var body = cust.gameObject.AddComponent<Image>();
+            body.color = UITheme.Night[2]; body.raycastTarget = false; // dim shoulders
+            var head = NewRect("Head", cust);                  // head cap
+            Place(head, new Vector2(0.5f, 1), new Vector2(40, 40), new Vector2(0, -8));
+            head.gameObject.AddComponent<Image>().color = UITheme.Night[3];
         }
 
         // ── bottle rail binding + slide reconcile ───────────────────────────────
@@ -184,7 +228,7 @@ namespace LastCall.DebugUI
         /// Reconciles the 8 bottle slots to the new rail. Staying bottles tween to their
         /// slot; new bottles enter from the right with a 60 ms stagger; removed bottles
         /// leave per <paramref name="exitStyle"/>. A selection-only change (same rail)
-        /// just refreshes tints — no wave.
+        /// refreshes tints and the 4px select-rise — no wave.
         /// </summary>
         public void SetBottles(IReadOnlyList<IngredientCard> rail, ICollection<IngredientCard> selected,
             IEnumerable<IngredientType> debuffedTypes, UnityAction<IngredientCard> onClick, Exit exitStyle)
@@ -198,7 +242,7 @@ namespace LastCall.DebugUI
 
             if (!composition)
             {
-                foreach (var kv in _bottles) StyleBottle(kv.Value, selected, debuffed);
+                foreach (var kv in _bottles) StyleBottle(kv.Value, selected, debuffed, animateRise: true);
                 return;
             }
 
@@ -221,19 +265,20 @@ namespace LastCall.DebugUI
             for (int i = 0; i < rail.Count && i < Slots; i++)
             {
                 var card = rail[i];
-                Vector2 target = new Vector2(SlotX(i), SlotY);
+                bool sel = selected != null && selected.Contains(card);
+                Vector2 target = new Vector2(SlotX(i), RestY(sel));
                 if (_bottles.TryGetValue(card.InstanceId, out var view))
                 {
                     if (view.Move != null) StopCoroutine(view.Move);
-                    view.Move = StartCoroutine(Tweening.MoveAnchored(view.Root, target, SlideDur, Tweening.OutBack));
-                    StyleBottle(view, selected, debuffed);
+                    view.Move = StartCoroutine(Tweening.MoveAnchored(view.Root, target, DrawDur, Tweening.OutQuad));
+                    StyleBottle(view, selected, debuffed, animateRise: false);
                 }
                 else
                 {
                     view = CreateBottle(card, onClick);
                     _bottles[card.InstanceId] = view;
-                    StyleBottle(view, selected, debuffed);
-                    view.Root.anchoredPosition = new Vector2(OffscreenRight, SlotY);
+                    StyleBottle(view, selected, debuffed, animateRise: false);
+                    view.Root.anchoredPosition = new Vector2(OffscreenRight, target.y);
                     float delay = enterOrder++ * EnterStagger;
                     view.Move = StartCoroutine(EnterAfter(view.Root, target, delay));
                 }
@@ -247,24 +292,30 @@ namespace LastCall.DebugUI
                 float t = 0f;
                 while (t < delay) { t += Time.unscaledDeltaTime; yield return null; }
             }
-            yield return Tweening.MoveAnchored(rt, target, SlideDur, Tweening.OutBack);
+            // Slide in from the right, overshoot 2px past the slot, then settle (18 §3 Draw).
+            Vector2 overshoot = new Vector2(target.x - Overshoot, target.y);
+            yield return Tweening.MoveAnchored(rt, overshoot, DrawDur, Tweening.OutQuad);
+            yield return Tweening.MoveAnchored(rt, target, SettleDur, Tweening.OutCubic);
         }
 
         private void ExitBottle(BottleView view, Exit style, int order)
         {
             if (view.Move != null) StopCoroutine(view.Move);
+            if (view.Rise != null) StopCoroutine(view.Rise);
             void Destroy() { if (view.Root != null) UnityEngine.Object.Destroy(view.Root.gameObject); }
 
             if (style == Exit.Mix)
             {
-                // Pop forward-up off the counter, then slide out to the left.
-                Vector2 up = view.Root.anchoredPosition + new Vector2(0, 90);
-                StartCoroutine(Tweening.MoveAnchored(view.Root, up, 0.14f, Tweening.OutBack, () =>
+                // Slide forward+up to the mixing area, then the empty slides LEFT off-screen
+                // (180 ms InQuad, 18 §3 Mix).
+                Vector2 up = new Vector2(320f, BottleBaseY + 70f); // center mixing area
+                StartCoroutine(Tweening.MoveAnchored(view.Root, up, MixPopDur, Tweening.OutBack, () =>
                     StartCoroutine(Tweening.MoveAnchored(view.Root,
-                        new Vector2(OffscreenLeft, SlotY + 90), SlideDur, Tweening.OutCubic, Destroy))));
+                        new Vector2(OffscreenLeft, up.y), MixExitDur, Tweening.InQuad, Destroy))));
             }
             else
             {
+                // Restock / Refresh: slide left off-screen; Refresh staggers as one wave.
                 float delay = style == Exit.Refresh ? order * EnterStagger : 0f;
                 StartCoroutine(ExitLeftAfter(view.Root, delay, Destroy));
             }
@@ -277,30 +328,36 @@ namespace LastCall.DebugUI
                 float t = 0f;
                 while (t < delay) { t += Time.unscaledDeltaTime; yield return null; }
             }
-            yield return Tweening.MoveAnchored(rt, new Vector2(OffscreenLeft, SlotY), SlideDur, Tweening.OutCubic, done);
+            yield return Tweening.MoveAnchored(rt, new Vector2(OffscreenLeft, BottleBaseY), MixExitDur, Tweening.InQuad, done);
         }
 
         private BottleView CreateBottle(IngredientCard card, UnityAction<IngredientCard> onClick)
         {
             var root = NewRect($"Bottle_{card.InstanceId}", _railRoot);
-            root.anchorMin = root.anchorMax = root.pivot = new Vector2(0.5f, 0);
+            root.anchorMin = root.anchorMax = new Vector2(0, 0);
+            root.pivot = new Vector2(0.5f, 0);
             root.sizeDelta = new Vector2(BottleW, BottleH);
 
-            // Bottle body silhouette (type ramp colour) — placeholder slab, ~60 wide.
-            var body = NewRect("Body", root);
-            Stretch(body, Vector2.zero, Vector2.one, new Vector2(18, 0), new Vector2(-18, -40));
-            var bodyImg = body.gameObject.AddComponent<Image>();
-
-            // Neon rim: a thin (3 px) back-light hugging the body silhouette (v2 §4).
+            // Neon rim (back-light glow, hugs the silhouette), 1px dark outline, then body.
             var rim = NewRect("Rim", root);
-            Stretch(rim, Vector2.zero, Vector2.one, new Vector2(15, -3), new Vector2(-15, -37));
+            Place(rim, new Vector2(0.5f, 0), new Vector2(BottleW + 4, BottleH + 2), new Vector2(0, -1));
             var rimImg = rim.gameObject.AddComponent<Image>();
-            rim.SetAsFirstSibling(); // behind the body
+            rimImg.raycastTarget = false;
 
-            // Neck.
+            var outline = NewRect("Outline", root);
+            Place(outline, new Vector2(0.5f, 0), new Vector2(BottleW + 2, BottleH), Vector2.zero);
+            var outlineImg = outline.gameObject.AddComponent<Image>();
+            outlineImg.raycastTarget = false;
+
+            var body = NewRect("Body", root);
+            Place(body, new Vector2(0.5f, 0), new Vector2(BottleW, BottleH - 8), Vector2.zero);
+            var bodyImg = body.gameObject.AddComponent<Image>();
+            bodyImg.raycastTarget = false;
+
             var neck = NewRect("Neck", root);
-            Place(neck, new Vector2(0.5f, 1), new Vector2(26, 44), new Vector2(0, -2));
-            neck.gameObject.AddComponent<Image>().color = bodyImg.color;
+            Place(neck, new Vector2(0.5f, 0), new Vector2(10, 12), new Vector2(0, BottleH - 12));
+            var neckImg = neck.gameObject.AddComponent<Image>();
+            neckImg.raycastTarget = false;
 
             var button = root.gameObject.AddComponent<Image>();  // full-slot click target
             button.color = new Color(0, 0, 0, 0);
@@ -309,40 +366,77 @@ namespace LastCall.DebugUI
             var captured = card;
             btn.onClick.AddListener(() => onClick(captured));
 
-            // Value chip (top) and name (base).
-            var value = NewText("Value", root, 22, TextAnchor.MiddleCenter, Night1Text);
-            Place((RectTransform)value.transform, new Vector2(0.5f, 1), new Vector2(34, 30), new Vector2(0, -6));
+            // Value chip (flavor number, Flavor=Cyan per 16 §2) floats just above the bottle.
+            var chip = NewRect("ValueChip", root);
+            Place(chip, new Vector2(0.5f, 0), new Vector2(BottleW + 6, 12), new Vector2(0, BottleH + 4));
+            var chipImg = chip.gameObject.AddComponent<Image>();
+            chipImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.75f);
+            chipImg.raycastTarget = false;
+            var value = NewText("Value", chip, _display, 8, TextAnchor.MiddleCenter, UITheme.Flavor);
+            Stretch((RectTransform)value.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             value.text = card.Flavor.ToString();
-            var name = NewText("Name", root, 12, TextAnchor.UpperCenter, Cream);
-            Stretch((RectTransform)name.transform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(-8, -28), new Vector2(8, -2));
-            name.text = card.Name;
 
-            return new BottleView { Card = card, Root = root, Rim = rimImg, Body = bodyImg, Value = value, Name = name };
+            // Name caption — shown only when selected (too small to keep on every bottle).
+            var name = NewText("Name", root, _body, 7, TextAnchor.LowerCenter, UITheme.TextPrimary);
+            Place((RectTransform)name.transform, new Vector2(0.5f, 0), new Vector2(56, 10), new Vector2(0, BottleH + 18));
+            name.gameObject.SetActive(false);
+
+            return new BottleView
+            {
+                Card = card, Root = root, Rim = rimImg, Outline = outlineImg,
+                Body = bodyImg, Neck = neckImg, Value = value, Name = name,
+            };
         }
 
-        private void StyleBottle(BottleView view, ICollection<IngredientCard> selected, HashSet<IngredientType> debuffed)
+        private void StyleBottle(BottleView view, ICollection<IngredientCard> selected,
+            HashSet<IngredientType> debuffed, bool animateRise)
         {
             bool isSelected = selected != null && selected.Contains(view.Card);
             bool isDebuffed = debuffed != null && debuffed.Contains(view.Card.Type);
-            var ramp = RampColor[view.Card.Type];
-            if (isDebuffed) ramp = Color.Lerp(ramp, NightDeep, 0.6f);
 
-            view.Body.color = ramp;
-            foreach (Transform child in view.Root)
-                if (child.name == "Neck") child.GetComponent<Image>().color = ramp;
+            Color fill = UITheme.TypeFill(view.Card.Type);
+            Color outline = UITheme.TypeOutline(view.Card.Type);
+            if (isDebuffed)
+            {
+                fill = Color.Lerp(fill, UITheme.Night[0], 0.55f);
+                outline = Color.Lerp(outline, UITheme.Night[0], 0.4f);
+            }
+            if (isSelected) fill = Color.Lerp(fill, UITheme.Cream[4], 0.22f);
 
-            // Selected → bright cyan rim + brighter body (v2 selection colour); else the
-            // magenta club rim. Selection never moves the bottle (that would fight the
-            // slide tweens); the mix "pop forward-up" is the exit flourish instead.
-            view.Rim.color = isSelected ? CyanNeon : new Color(MagentaNeon.r, MagentaNeon.g, MagentaNeon.b, 0.9f);
-            if (isSelected) view.Body.color = Color.Lerp(ramp, Cream, 0.25f);
-            view.Name.supportRichText = true;
-            view.Name.text = isDebuffed ? $"{view.Card.Name}\n<color=#E84DA6>DEBUFF</color>" : view.Card.Name;
+            view.Body.color = fill;
+            view.Neck.color = fill;
+            view.Outline.color = outline;
+
+            // Selected → cyan back-light + a 4px rise; else the magenta club rim.
+            view.Rim.color = isSelected
+                ? new Color(UITheme.Selection.r, UITheme.Selection.g, UITheme.Selection.b, 0.9f)
+                : new Color(UITheme.Magenta[3].r, UITheme.Magenta[3].g, UITheme.Magenta[3].b, 0.55f);
+
+            view.Name.gameObject.SetActive(isSelected);
+            if (isSelected)
+            {
+                view.Name.supportRichText = true;
+                view.Name.text = isDebuffed
+                    ? $"{view.Card.Name} <color=#E84DA6>DEBUFF</color>"
+                    : view.Card.Name;
+            }
+
+            if (view.Selected != isSelected)
+            {
+                view.Selected = isSelected;
+                if (animateRise)
+                {
+                    if (view.Rise != null) StopCoroutine(view.Rise);
+                    var to = new Vector2(view.Root.anchoredPosition.x, RestY(isSelected));
+                    view.Rise = StartCoroutine(Tweening.MoveAnchored(view.Root, to, 0.10f, Tweening.OutCubic));
+                }
+            }
         }
 
         // ── helpers ──────────────────────────────────────────────────────────────
 
-        private static float SlotX(int i) => (i - (Slots - 1) * 0.5f) * Spacing;
+        private static float SlotX(int i) => FirstSlotX + i * SlotPitch;
+        private static float RestY(bool selected) => BottleBaseY + (selected ? SelectRise : 0f);
 
         private static string Signature(IReadOnlyList<IngredientCard> rail)
         {
@@ -350,9 +444,6 @@ namespace LastCall.DebugUI
             for (int i = 0; i < rail.Count && i < Slots; i++) sb.Append(rail[i].InstanceId).Append(',');
             return sb.ToString();
         }
-
-        private static Color Hex(int rgb) => new Color(
-            ((rgb >> 16) & 255) / 255f, ((rgb >> 8) & 255) / 255f, (rgb & 255) / 255f);
 
         private static RectTransform NewRect(string name, Transform parent)
         {
@@ -373,16 +464,16 @@ namespace LastCall.DebugUI
             rt.anchorMin = min; rt.anchorMax = max; rt.offsetMin = offMin; rt.offsetMax = offMax;
         }
 
-        private Text NewText(string name, Transform parent, int size, TextAnchor anchor, Color color)
+        private Text NewText(string name, Transform parent, Font font, int size, TextAnchor anchor, Color color)
         {
             var rt = NewRect(name, parent);
             var text = rt.gameObject.AddComponent<Text>();
-            text.font = _font;
+            text.font = font;
             text.fontSize = size;
             text.alignment = anchor;
             text.color = color;
             text.raycastTarget = false;
-            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
             text.verticalOverflow = VerticalWrapMode.Overflow;
             return text;
         }

@@ -102,5 +102,11 @@ namespace LastCall.DebugUI
             float p = 1f - x;
             return 1f - p * p * p;
         }
+
+        /// <summary>Decelerating quad (18 §3 Draw slide — settles without overshoot).</summary>
+        public static float OutQuad(float x) => 1f - (1f - x) * (1f - x);
+
+        /// <summary>Accelerating quad (18 §3 Mix empties sliding off-screen).</summary>
+        public static float InQuad(float x) => x * x;
     }
 }
