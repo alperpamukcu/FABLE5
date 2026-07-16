@@ -50,6 +50,7 @@ namespace LastCall.EditorTools
             so.FindProperty("vouchersJson").objectReferenceValue = LoadRequired<TextAsset>(VouchersPath);
             so.ApplyModifiedPropertiesWithoutUndo();
 
+            var stage = game.AddComponent<LastCall.DebugUI.DiegeticStage>();
             var hud = game.AddComponent<DebugHud>();
             var hudSo = new SerializedObject(hud);
             hudSo.FindProperty("displayFont").objectReferenceValue = LoadRequired<Font>(DisplayFontPath);
@@ -65,6 +66,7 @@ namespace LastCall.EditorTools
                 AssetDatabase.LoadAssetAtPath<Material>("Assets/Art/UI/SmokeSwirl.mat");
             hudSo.FindProperty("art").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<LastCall.Game.ArtLibrary>("Assets/Art/ArtLibrary.asset");
+            hudSo.FindProperty("stage").objectReferenceValue = stage;
             hudSo.ApplyModifiedPropertiesWithoutUndo();
 
             Directory.CreateDirectory("Assets/Scenes");

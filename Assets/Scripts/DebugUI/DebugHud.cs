@@ -46,6 +46,10 @@ namespace LastCall.DebugUI
         // and portraits fall back to flat tints when a sprite is missing.
         [SerializeField] private ArtLibrary art;
 
+        // The diegetic night-club stage behind this overlay (v2). When present, the rail
+        // is rendered as bottles on the counter and the smoke backdrop is suppressed.
+        [SerializeField] private DiegeticStage stage;
+
         // Art bible §2 locked palette (Docs/GDD/14_art_bible.md) — every UI tint
         // must come from these tokens so the whole screen shares one language.
         private static readonly Color DeepPlum = Hex(0x1A1023);
@@ -77,7 +81,6 @@ namespace LastCall.DebugUI
         private Text _bannerText;
         private Text _logText;
         private ScrollRect _logScroll;
-        private RectTransform _railPanel;
         private RectTransform _patronPanel;
         private RectTransform _toolPanel;
         private RectTransform _shopPanel;
@@ -96,6 +99,8 @@ namespace LastCall.DebugUI
         private Text _customerCaption;
         private RectTransform _actionBar;
         private RectTransform _scrim;
+        private GameObject _logPanel;
+        private DiegeticStage.Exit _pendingExit = DiegeticStage.Exit.Refresh;
 
         private RunController Run => _bootstrap.Run;
         private RoundController Round => Run?.CurrentRound;
@@ -118,13 +123,23 @@ namespace LastCall.DebugUI
             _headerFont = displayFont != null ? displayFont : _font;
             BuildUi();
             _uiBuilt = true;
+            if (_logPanel != null) _logPanel.SetActive(false); // debug log off in the game view
             if (Run != null) OnRunStarted();
+        }
+
+        private void Update()
+        {
+            // F1 toggles the debug score log (kept off the game view by default).
+            var kb = UnityEngine.InputSystem.Keyboard.current;
+            if (kb != null && kb.f1Key.wasPressedThisFrame && _logPanel != null)
+                _logPanel.SetActive(!_logPanel.activeSelf);
         }
 
         private void OnRunStarted()
         {
             if (!_uiBuilt) return;
             _selected.Clear();
+            _pendingExit = DiegeticStage.Exit.Refresh;
             AppendLog($"═══ New run — seed '{_bootstrap.CurrentSeed}' ═══");
             AppendLog(CustomerHeader());
             if (_seedInput != null) _seedInput.text = _bootstrap.CurrentSeed;
@@ -150,6 +165,7 @@ namespace LastCall.DebugUI
         private void OnMixClicked()
         {
             int mixNumber = Round.Config.MixesPerCustomer - Round.MixesRemaining + 1;
+            _pendingExit = DiegeticStage.Exit.Mix; // mixed bottles pop forward-up then slide out
             var breakdown = Run.Mix(_selected.ToList());
             _selected.Clear();
 
@@ -194,6 +210,7 @@ namespace LastCall.DebugUI
         private void OnRestockClicked()
         {
             int count = _selected.Count;
+            _pendingExit = DiegeticStage.Exit.Restock; // restocked bottles slide left out
             Run.Restock(_selected.ToList());
             _selected.Clear();
             AppendLog($"— Restock: {count} card(s) swapped ({Round.RestocksRemaining} left)");
@@ -301,6 +318,7 @@ namespace LastCall.DebugUI
         {
             Guarded(() =>
             {
+                _pendingExit = DiegeticStage.Exit.Refresh; // whole counter refreshes in one wave
                 Run.ContinueToNextCustomer();
                 _selected.Clear();
                 AppendLog(CustomerHeader());
@@ -379,11 +397,11 @@ namespace LastCall.DebugUI
             _skipButton.gameObject.SetActive(inRound && Run.CanSkipCustomerA);
             _bouncerButton.gameObject.SetActive(inRound && Run.CanRerollTonightsVip);
 
-            // Only the current context's controls are on screen — the action bar and rail
-            // during a round, the Back Room modal (over the scrim) between customers.
+            // Only the current context's controls are on screen — the action bar during a
+            // round, the Back Room modal (over the scrim) between customers. The diegetic
+            // rail is gated inside RenderRail.
             bool recipesOpen = _recipesVisible;
             _actionBar.gameObject.SetActive(inRound && !recipesOpen);
-            _railPanel.gameObject.SetActive(inRound);
             _scrim.gameObject.SetActive(Run.Phase == RunPhase.BackRoom || recipesOpen);
         }
 
@@ -410,78 +428,14 @@ namespace LastCall.DebugUI
 
         private void RenderRail()
         {
-            ClearChildren(_railPanel);
-            if (Run.Phase != RunPhase.CustomerRound) return;
-
-            foreach (var card in Round.Rail)
-            {
-                var captured = card;
-                BuildIngredientCard(_railPanel, card, _selected.Contains(card),
-                    Round.VipRules.DebuffedTypes.Contains(card.Type), () => ToggleCard(captured));
-            }
-        }
-
-        /// <summary>
-        /// A real ingredient card per art bible §4: art window on top, a type-colour band,
-        /// the Flavor value in a top-left circle, and the name on a bottom plate. Degrades
-        /// to a tinted plate when the sprite is missing.
-        /// </summary>
-        private void BuildIngredientCard(Transform parent, IngredientCard card, bool selected,
-            bool debuffed, UnityAction onClick)
-        {
-            var typeColor = TypeColors[card.Type];
-            var root = NewRect($"Card_{card.InstanceId}", parent);
-
-            // Card body: cream frame, tinted darker plum inside; the frame reads as one
-            // object with the rounded kit sprite.
-            var body = root.gameObject.AddComponent<Image>();
-            body.color = selected ? CandleGlow : Cream;
-            if (panelSprite != null) { body.sprite = panelSprite; body.type = Image.Type.Sliced; }
-            var button = root.gameObject.AddComponent<Button>();
-            button.targetGraphic = body;
-            button.onClick.AddListener(onClick);
-
-            // Art window (upper ~62%).
-            var artRt = NewRect("Art", root);
-            Stretch(artRt, new Vector2(0, 0.30f), new Vector2(1, 1), new Vector2(5, 2), new Vector2(-5, -5));
-            var artImg = artRt.gameObject.AddComponent<Image>();
-            artImg.preserveAspect = true;
-            var sprite = art != null ? art.Ingredient(card.Id) : null;
-            if (sprite != null) { artImg.sprite = sprite; artImg.color = debuffed ? new Color(0.4f, 0.4f, 0.45f) : Color.white; }
-            else { artImg.color = debuffed ? Color.Lerp(typeColor, Color.black, 0.6f) : typeColor; }
-
-            // Type colour band under the art.
-            var band = NewRect("Band", root);
-            Stretch(band, new Vector2(0, 0.26f), new Vector2(1, 0.30f), new Vector2(5, 0), new Vector2(-5, 0));
-            band.gameObject.AddComponent<Image>().color = debuffed ? Color.Lerp(typeColor, Color.black, 0.5f) : typeColor;
-
-            // Value circle, top-left.
-            var circle = NewRect("Value", root);
-            Place(circle, new Vector2(0, 1), new Vector2(28, 28), new Vector2(4, -4));
-            var circleImg = circle.gameObject.AddComponent<Image>();
-            circleImg.color = DeepPlum;
-            var valueText = NewText("V", circle, 15, TextAnchor.MiddleCenter, CandleGlow);
-            Stretch((RectTransform)valueText.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            valueText.text = card.Flavor.ToString();
-            valueText.font = _headerFont;
-
-            // Name plate (bottom).
-            var name = NewText("Name", root, 11, TextAnchor.LowerCenter, PanelPlum);
-            Stretch((RectTransform)name.transform, Vector2.zero, new Vector2(1, 0.28f), new Vector2(3, 3), new Vector2(-3, 0));
-            string tag = card.Enhancement != Enhancement.None ? $"\n<color=#E8A33D>{card.Enhancement}</color>" : string.Empty;
-            if (debuffed) tag += "\n<color=#D94D8F>DEBUFF</color>";
-            name.text = card.Name + tag;
-
-            // Selection ring.
-            if (selected)
-            {
-                var ring = NewRect("Ring", root);
-                Stretch(ring, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                var ringImg = ring.gameObject.AddComponent<Image>();
-                if (panelSprite != null) { ringImg.sprite = panelSprite; ringImg.type = Image.Type.Sliced; }
-                ringImg.color = new Color(1f, 0.85f, 0.35f, 0.35f);
-                ringImg.raycastTarget = false;
-            }
+            // The diegetic stage renders the rail as bottles on the counter (v2). The old
+            // UI-card rail is retired; when no stage is wired we simply show nothing.
+            if (stage == null) return;
+            bool inRound = Run.Phase == RunPhase.CustomerRound;
+            stage.SetRailVisible(inRound);
+            if (!inRound) return;
+            stage.SetBottles(Round.Rail, _selected, Round.VipRules.DebuffedTypes, ToggleCard, _pendingExit);
+            _pendingExit = DiegeticStage.Exit.None; // consumed; selection re-renders don't re-wave
         }
 
         /// <summary>A small caps header + optional empty hint at the top of a shelf.</summary>
@@ -845,9 +799,9 @@ namespace LastCall.DebugUI
             scaler.referenceResolution = new Vector2(1280, 720);
             var root = (RectTransform)canvasGo.transform;
 
-            // Cozy noir backdrop (GDD 12.1): the animated smoke swirl sits behind
-            // everything; the whole kit degrades to flat colors when art is unwired.
-            if (backgroundMaterial != null)
+            // Legacy cozy-noir backdrop. Suppressed when the diegetic stage is present
+            // (the stage's night-club BackgroundLayers replace it in v2).
+            if (backgroundMaterial != null && stage == null)
             {
                 var bg = NewRect("Background", root);
                 Stretch(bg, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
@@ -870,8 +824,9 @@ namespace LastCall.DebugUI
             var newRun = NewButton("NewRun", root, "New Run", new Color(0.62f, 0.62f, 0.82f), OnNewRunClicked, 14);
             Place((RectTransform)newRun.transform, new Vector2(1, 1), new Vector2(120, 30), new Vector2(-12, -12));
 
-            // Right: score log.
+            // Right: score log — hidden by default in the game view, toggled with F1.
             var logPanel = NewRect("LogPanel", root);
+            _logPanel = logPanel.gameObject;
             Stretch(logPanel, new Vector2(1, 0), new Vector2(1, 1), new Vector2(-372, 170), new Vector2(-12, -52));
             StylePanel(logPanel, WithAlpha(DeepPlum, 0.80f));
             _logScroll = logPanel.gameObject.AddComponent<ScrollRect>();
@@ -897,10 +852,10 @@ namespace LastCall.DebugUI
                 WithAlpha(PanelPlum, 0.95f), OnToggleRecipesClicked, 13);
             Place((RectTransform)recipesButton.transform, new Vector2(0.5f, 1), new Vector2(128, 32), new Vector2(0, -12));
 
-            // Customer portrait card: the VIP under the bar light, upper centre so it
-            // clears the live preview text and the action buttons below.
+            // Customer portrait card: the VIP across the bar, upper centre so it sits
+            // above the bottle rail (which owns the bottom band).
             _customerCard = NewRect("CustomerCard", root);
-            Place(_customerCard, new Vector2(0.5f, 1f), new Vector2(230, 300), new Vector2(-40, -128));
+            Place(_customerCard, new Vector2(0.5f, 1f), new Vector2(200, 260), new Vector2(0, -40));
             StylePanel(_customerCard, WithAlpha(DeepPlum, 0.55f));
             var portraitRt = NewRect("Portrait", _customerCard);
             Stretch(portraitRt, new Vector2(0, 0.16f), new Vector2(1, 1), new Vector2(10, 6), new Vector2(-10, -10));
@@ -911,54 +866,47 @@ namespace LastCall.DebugUI
             Stretch((RectTransform)_customerCaption.transform, Vector2.zero, new Vector2(1, 0.16f), new Vector2(4, 4), new Vector2(-4, -2));
             _customerCard.gameObject.SetActive(false);
 
-            // Rail (bottom band): the ingredient cards.
-            _railPanel = NewRect("Rail", root);
-            Stretch(_railPanel, new Vector2(0, 0), new Vector2(1, 0), new Vector2(12, 12), new Vector2(-12, 168));
-            StylePanel(_railPanel, WithAlpha(DeepPlum, 0.55f));
-            var layout = _railPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 10;
-            layout.padding = new RectOffset(10, 10, 10, 10);
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = true;
-            layout.childControlWidth = true;
-            layout.childControlHeight = true;
+            // The rail is now diegetic (bottles on the counter, DiegeticStage). No UI rail.
 
-            // Action bar: preview line + Mix/Restock/Skip/Bouncer, grouped so a single
-            // toggle hides the whole cluster when a modal (shop) takes the screen.
+            // Action bar: a right-side vertical stack (the log is F1-hidden, so the right
+            // is free) plus the live preview line just above the bottle rail. Grouped so
+            // one toggle hides the cluster when the Back Room modal takes the screen.
             _actionBar = NewRect("ActionBar", root);
             Stretch(_actionBar, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            _actionBar.gameObject.AddComponent<CanvasRenderer>();
 
+            // Preview line sits in the gap between the customer (upper centre) and the
+            // bottle rail (bottom band).
             _previewText = NewText("Preview", _actionBar, 20, TextAnchor.MiddleCenter, CandleGlow);
             var previewRt = (RectTransform)_previewText.transform;
             previewRt.anchorMin = previewRt.anchorMax = previewRt.pivot = new Vector2(0.5f, 0);
-            previewRt.sizeDelta = new Vector2(760, 34);
-            previewRt.anchoredPosition = new Vector2(0, 224);
+            previewRt.sizeDelta = new Vector2(680, 34);
+            previewRt.anchoredPosition = new Vector2(0, 384);
 
+            // Action buttons: a top-right vertical stack, clear of the bottle rail below.
             _mixButton = NewButton("Mix", _actionBar, "MIX", Amber, OnMixClicked, 18);
             var mixRt = (RectTransform)_mixButton.transform;
-            mixRt.anchorMin = mixRt.anchorMax = mixRt.pivot = new Vector2(0.5f, 0);
-            mixRt.sizeDelta = new Vector2(180, 46);
-            mixRt.anchoredPosition = new Vector2(-100, 176);
+            mixRt.anchorMin = mixRt.anchorMax = mixRt.pivot = new Vector2(1, 1);
+            mixRt.sizeDelta = new Vector2(196, 48);
+            mixRt.anchoredPosition = new Vector2(-24, -56);
             _restockButton = NewButton("Restock", _actionBar, "RESTOCK", WithAlpha(WoodBrown, 0.95f), OnRestockClicked, 18);
             var restockRt = (RectTransform)_restockButton.transform;
-            restockRt.anchorMin = restockRt.anchorMax = restockRt.pivot = new Vector2(0.5f, 0);
-            restockRt.sizeDelta = new Vector2(180, 46);
-            restockRt.anchoredPosition = new Vector2(100, 176);
+            restockRt.anchorMin = restockRt.anchorMax = restockRt.pivot = new Vector2(1, 1);
+            restockRt.sizeDelta = new Vector2(196, 48);
+            restockRt.anchoredPosition = new Vector2(-24, -110);
 
             // Only shows on an untouched Customer A round (GDD 5.2).
             _skipButton = NewButton("SkipA", _actionBar, "SKIP → FAVOR", WithAlpha(TealShadow, 0.95f), OnSkipCustomerAClicked, 13);
             var skipRt = (RectTransform)_skipButton.transform;
-            skipRt.anchorMin = skipRt.anchorMax = skipRt.pivot = new Vector2(0.5f, 0);
-            skipRt.sizeDelta = new Vector2(160, 46);
-            skipRt.anchoredPosition = new Vector2(300, 176);
+            skipRt.anchorMin = skipRt.anchorMax = skipRt.pivot = new Vector2(1, 1);
+            skipRt.sizeDelta = new Vector2(196, 42);
+            skipRt.anchoredPosition = new Vector2(-24, -164);
 
             // Bouncer voucher: visible only while tonight's VIP can still be rerolled.
             _bouncerButton = NewButton("Bouncer", _actionBar, "BOUNCER: NEW VIP", NeonMagenta, OnBouncerClicked, 12);
             var bouncerRt = (RectTransform)_bouncerButton.transform;
-            bouncerRt.anchorMin = bouncerRt.anchorMax = bouncerRt.pivot = new Vector2(0.5f, 0);
-            bouncerRt.sizeDelta = new Vector2(160, 32);
-            bouncerRt.anchoredPosition = new Vector2(300, 228);
+            bouncerRt.anchorMin = bouncerRt.anchorMax = bouncerRt.pivot = new Vector2(1, 1);
+            bouncerRt.sizeDelta = new Vector2(196, 36);
+            bouncerRt.anchoredPosition = new Vector2(-24, -212);
 
             // Modal scrim: dims and blocks the game behind shop / recipe overlays.
             _scrim = NewRect("Scrim", root);
