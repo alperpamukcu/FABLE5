@@ -75,9 +75,12 @@ namespace LastCall.EditorTools
             // back to the flat placeholder silhouette.
             var bottles = new (LastCall.Core.IngredientType type, string path)[]
             {
-                (LastCall.Core.IngredientType.Spirit, "Assets/Art/Bottles/bottle_spirit.png"),
-                (LastCall.Core.IngredientType.Bubbly, "Assets/Art/Bottles/bottle_bubbly.png"),
-                (LastCall.Core.IngredientType.Sweet,  "Assets/Art/Bottles/bottle_sweet.png"),
+                (LastCall.Core.IngredientType.Spirit,  "Assets/Art/Bottles/bottle_spirit.png"),
+                (LastCall.Core.IngredientType.Bubbly,  "Assets/Art/Bottles/bottle_bubbly.png"),
+                (LastCall.Core.IngredientType.Sweet,   "Assets/Art/Bottles/bottle_sweet.png"),
+                (LastCall.Core.IngredientType.Sour,    "Assets/Art/Bottles/bottle_sour.png"),
+                (LastCall.Core.IngredientType.Bitter,  "Assets/Art/Bottles/bottle_bitter.png"),
+                (LastCall.Core.IngredientType.Garnish, "Assets/Art/Bottles/bottle_garnish.png"),
             };
             var spritesProp = stageSo.FindProperty("bottleSprites");
             spritesProp.arraySize = bottles.Length;
@@ -88,6 +91,12 @@ namespace LastCall.EditorTools
                 el.FindPropertyRelative("sprite").objectReferenceValue =
                     AssetDatabase.LoadAssetAtPath<Sprite>(bottles[i].path);
             }
+            // Environment art (18 §5): club background + bar counter. Optional — the stage
+            // falls back to flat procedural layers when either is missing.
+            stageSo.FindProperty("backgroundSprite").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/club_bg.png");
+            stageSo.FindProperty("counterSprite").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/counter.png");
             stageSo.ApplyModifiedPropertiesWithoutUndo();
 
             var hud = game.AddComponent<DebugHud>();

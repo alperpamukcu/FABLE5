@@ -18,9 +18,9 @@
 | Component | Owner | Status | Notes |
 |---|---|---|---|
 | Background (animated smoke shader) | `SmokeSwirl.shader` / DebugHud | legacy-cozy-noir | Superseded by the diegetic BackgroundLayers; disabled when the stage is present. |
-| **Diegetic stage — BackgroundLayers** (sky/windows, club-far crowd, club-mid neon, customer) | `DiegeticStage` | placeholder | 640×360 spec-18 layer stack, flat v2-palette silhouettes. Awaits PixelLab sky_city / club_far / club_mid / customer sprites (18 §5). |
-| **Diegetic stage — BarCounter** | `DiegeticStage` | placeholder | Bottom-96px amber-lit band, surface line y=264, chrome lip + amber key rest line (18 §2). Awaits `counter` 640×96 sprite. |
-| **Diegetic stage — BottleRail** (8 bottle slots on the counter) | `DiegeticStage` | placeholder | Fitted to spec-18: 24×40 bottles, slot pitch 56 from x=88, base y=232. Draw/Select/Mix/Refresh choreography per 18 §3 (240ms OutQuad + 2px overshoot, 4px select-rise, 180ms InQuad exit). **First real v2 pixel sprites installed for Spirit/Bubbly/Sweet** (32×48, PixelLab→quantized); the other 3 types still render the type-ramp placeholder (fill + 1px outline + neon rim). |
+| **Diegetic stage — BackgroundLayers** (nightclub interior: neon, windows+city, crowd, back-bar) | `DiegeticStage` | migrated-v2 | Real PixelLab club background (`club_bg`, 640×360, palette-quantized) fills the scene; opaque overscanned backdrop behind it. Procedural sky/crowd/neon kept as a fallback when unwired. |
+| **Diegetic stage — BarCounter** | `DiegeticStage` | migrated-v2 | Real PixelLab bar counter (`counter`, polished amber-lit wood + chrome edge) cropped to its surface line and aligned to the bottle rest line. Flat procedural band kept as fallback. |
+| **Diegetic stage — BottleRail** (8 bottle slots on the counter) | `DiegeticStage` | placeholder | Fitted to spec-18: 24×40 bottles, slot pitch 56 from x=88, base y=232. Draw/Select/Mix/Refresh choreography per 18 §3 (240ms OutQuad + 2px overshoot, 4px select-rise, 180ms InQuad exit). **All six ingredient-type bottles are real v2 pixel sprites** (Spirit/Bubbly/Sweet/Sour/Bitter/Garnish, 32×48, PixelLab→quantized); sprite bottles carry a baked rim, selection washes them cyan + a 4px rise. |
 | Ingredient rail (UI card version) | DebugHud | legacy-cozy-noir | **Removed** — replaced by the diegetic BottleRail. |
 | Info panel (night/wallet/target/score/mixes) | DebugHud | legacy-cozy-noir | Text overlay; restyle in v2 UI pass (module 16). |
 | Patron shelf | DebugHud | legacy-cozy-noir | Portrait thumbnails + sell; portraits are v1 painterly. |
@@ -76,7 +76,7 @@
 |---|---|---|
 | Patron portraits | 60 | legacy-cozy-noir |
 | VIP portraits | 20 | legacy-cozy-noir |
-| Ingredient sprites | 46 | legacy-cozy-noir (3 v2 pixel test bottles produced: spirit/bubbly/sweet, 32×48) |
+| Ingredient sprites | 46 | legacy-cozy-noir (6 v2 pixel type-bottles live on the rail: spirit/bubbly/sweet/sour/bitter/garnish, 32×48) |
 | Tool sprites | 16 | legacy-cozy-noir |
 | Icons | 3 | legacy-cozy-noir |
-| Scene backgrounds | 3 | legacy-cozy-noir |
+| Scene backgrounds | 3 | legacy-cozy-noir (v2 `club_bg` 640×360 + `counter` live in the diegetic stage) |

@@ -35,6 +35,7 @@ namespace LastCall.DebugUI
         private const float SelectRise = 4f;               // 18 §3: select rises 4px
         private const float OffscreenRight = 680f;
         private const float OffscreenLeft = -40f;
+        private const float Overscan = 24f;         // bleed past screen edges (aspect safety)
 
         // ── choreography timings (18 §3) ────────────────────────────────────────
         private const float EnterStagger = 0.06f;          // 60 ms per bottle
@@ -55,6 +56,11 @@ namespace LastCall.DebugUI
         public struct BottleSprite { public IngredientType type; public Sprite sprite; }
         [SerializeField] private BottleSprite[] bottleSprites;
         private readonly Dictionary<IngredientType, Sprite> _bottleSprites = new Dictionary<IngredientType, Sprite>();
+
+        /// <summary>Installed environment art (18 §5). When set, the full-screen club
+        /// background and the bar counter replace their flat procedural placeholders.</summary>
+        [SerializeField] private Sprite backgroundSprite;
+        [SerializeField] private Sprite counterSprite;
 
         private RectTransform _railRoot;
         private readonly Dictionary<int, BottleView> _bottles = new Dictionary<int, BottleView>();
@@ -112,41 +118,69 @@ namespace LastCall.DebugUI
             scaler.matchWidthOrHeight = 1f;             // match height: keeps the 96px counter band exact
             var root = (RectTransform)canvasGo.transform;
 
-            // Layer 0 — Sky/City: dim window glow high on the wall (placeholder).
-            var sky = FullLayer(root, "SkyCity", UITheme.Night[0]);
-            Window(sky, new Vector2(60, 40), new Vector2(70, 300));
-            Window(sky, new Vector2(80, 44), new Vector2(510, 300));
+            // Opaque backdrop behind everything, overscanned past the screen edges so no
+            // aspect-ratio border ever exposes the clear colour / editor checker.
+            var backdrop = NewRect("Backdrop", root);
+            Stretch(backdrop, Vector2.zero, Vector2.one, new Vector2(-Overscan, -Overscan), new Vector2(Overscan, Overscan));
+            var backdropImg = backdrop.gameObject.AddComponent<Image>();
+            backdropImg.color = UITheme.Night[0]; backdropImg.raycastTarget = false;
 
-            // Layer 1 — Club Far: back wall + dance-floor crowd silhouettes.
-            var far = NewRect("ClubFar", root);
-            Stretch(far, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var wall = NewRect("BackWall", far);
-            Stretch(wall, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, CounterFrontY), Vector2.zero);
-            var wallImg = wall.gameObject.AddComponent<Image>();
-            wallImg.color = UITheme.Night[1]; wallImg.raycastTarget = false;
-            AddCrowd(far);
+            // Layers 0-2, 6 — environment. Real club background when installed, else the
+            // flat procedural sky / crowd / neon / customer placeholders.
+            if (backgroundSprite != null)
+            {
+                var bg = NewRect("Background", root);
+                Stretch(bg, Vector2.zero, Vector2.one, new Vector2(-Overscan, -Overscan), new Vector2(Overscan, Overscan));
+                var bgImg = bg.gameObject.AddComponent<Image>();
+                bgImg.sprite = backgroundSprite; bgImg.raycastTarget = false;
+            }
+            else
+            {
+                var sky = FullLayer(root, "SkyCity", UITheme.Night[0]);
+                Window(sky, new Vector2(60, 40), new Vector2(70, 300));
+                Window(sky, new Vector2(80, 44), new Vector2(510, 300));
 
-            // Layer 2 — Club Mid: neon signage (the "LAST CALL" wall sign).
-            var mid = FullLayer(root, "ClubMid", new Color(0, 0, 0, 0));
-            AddNeonSigns(mid);
+                var far = NewRect("ClubFar", root);
+                Stretch(far, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var wall = NewRect("BackWall", far);
+                Stretch(wall, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, CounterFrontY), Vector2.zero);
+                var wallImg = wall.gameObject.AddComponent<Image>();
+                wallImg.color = UITheme.Night[1]; wallImg.raycastTarget = false;
+                AddCrowd(far);
 
-            // Layer 6 — Customer: patron silhouette standing behind the counter, center-left
-            // (18 §2 x=200-296). Drawn before the counter so the bar occludes their base.
-            AddCustomer(root);
+                var mid = FullLayer(root, "ClubMid", new Color(0, 0, 0, 0));
+                AddNeonSigns(mid);
 
-            // Layer 4 — Counter: dark wood front face + amber-lit surface the bottles stand on.
-            var face = NewRect("CounterFace", root);
-            Stretch(face, new Vector2(0, 0), new Vector2(1, 0), Vector2.zero, new Vector2(0, CounterFrontY));
-            face.gameObject.AddComponent<Image>().color = UITheme.Amber[0];      // dark wood
-            var surface = NewRect("CounterSurface", root);
-            Stretch(surface, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, CounterFrontY), new Vector2(0, BottleBaseY));
-            surface.gameObject.AddComponent<Image>().color = UITheme.Amber[1];   // lit wood surface
-            var lip = NewRect("CounterLip", root);                               // chrome front edge
-            Stretch(lip, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, CounterFrontY - 2), new Vector2(0, CounterFrontY));
-            lip.gameObject.AddComponent<Image>().color = UITheme.Cream[2];
-            var keyLine = NewRect("CounterKey", root);                           // amber key highlight (rest line)
-            Stretch(keyLine, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, BottleBaseY - 2), new Vector2(0, BottleBaseY));
-            keyLine.gameObject.AddComponent<Image>().color = UITheme.Amber[3];
+                AddCustomer(root);
+            }
+
+            // Layer 4 — Counter. Real bar art when installed (positioned so its top surface
+            // meets the bottle rest line); else the flat procedural amber band.
+            if (counterSprite != null)
+            {
+                float h = counterSprite.rect.height;
+                float cy = BottleBaseY + 2f - h;   // surface (sprite top) sits at the rest line
+                var c = NewRect("Counter", root);
+                c.anchorMin = new Vector2(0, 0); c.anchorMax = new Vector2(1, 0);
+                c.offsetMin = new Vector2(-Overscan, cy - Overscan); c.offsetMax = new Vector2(Overscan, cy + h);
+                var cImg = c.gameObject.AddComponent<Image>();
+                cImg.sprite = counterSprite; cImg.raycastTarget = false;
+            }
+            else
+            {
+                var face = NewRect("CounterFace", root);
+                Stretch(face, new Vector2(0, 0), new Vector2(1, 0), Vector2.zero, new Vector2(0, CounterFrontY));
+                face.gameObject.AddComponent<Image>().color = UITheme.Amber[0];      // dark wood
+                var surface = NewRect("CounterSurface", root);
+                Stretch(surface, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, CounterFrontY), new Vector2(0, BottleBaseY));
+                surface.gameObject.AddComponent<Image>().color = UITheme.Amber[1];   // lit wood surface
+                var lip = NewRect("CounterLip", root);                               // chrome front edge
+                Stretch(lip, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, CounterFrontY - 2), new Vector2(0, CounterFrontY));
+                lip.gameObject.AddComponent<Image>().color = UITheme.Cream[2];
+                var keyLine = NewRect("CounterKey", root);                           // amber key highlight (rest line)
+                Stretch(keyLine, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, BottleBaseY - 2), new Vector2(0, BottleBaseY));
+                keyLine.gameObject.AddComponent<Image>().color = UITheme.Amber[3];
+            }
 
             // Layer 5 — Bottle rail: bottles anchor to the bottom-left and position by slot.
             _railRoot = NewRect("BottleRail", root);
