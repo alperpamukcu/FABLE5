@@ -19,14 +19,15 @@
 |---|---|---|---|
 | Background (animated smoke shader) | `SmokeSwirl.shader` / DebugHud | legacy-cozy-noir | Superseded by the diegetic BackgroundLayers; disabled when the stage is present. |
 | **Diegetic stage — BackgroundLayers** (nightclub interior: neon, windows+city, crowd, back-bar) | `DiegeticStage` | migrated-v2 | Real PixelLab club background (`club_bg`, 640×360, palette-quantized) fills the scene; opaque overscanned backdrop behind it. Procedural sky/crowd/neon kept as a fallback when unwired. |
-| **Diegetic stage — BarCounter** | `DiegeticStage` | migrated-v2 | Real PixelLab bar counter (`counter`, polished amber-lit wood + chrome edge) cropped to its surface line and aligned to the bottle rest line. Flat procedural band kept as fallback. |
+| **Diegetic stage — BarCounter** | `DiegeticStage` | migrated-v2 | Real PixelLab **bartender-POV** counter (`counter`): amber bar top + chrome edge with the under-shelf stocked with cocktail glasses (martini / highball / rocks) and a speed rail, aligned so bottles rest on the bar top. Flat procedural band kept as fallback. Idea: surface HUD stats/preview into the empty shelf compartments. |
+| **Diegetic stage — Customer/VIP** | `DiegeticStage` | migrated-v2 | Pixel patron (`vip_patron`) leaning both forearms on the bar, bottom-right, in contact with the counter. Replaces the legacy painterly portrait card (now suppressed when the stage is present). One generic patron for now — per-VIP pixel art is a follow-up. |
 | **Diegetic stage — BottleRail** (8 bottle slots on the counter) | `DiegeticStage` | placeholder | Fitted to spec-18: 24×40 bottles, slot pitch 56 from x=88, base y=232. Draw/Select/Mix/Refresh choreography per 18 §3 (240ms OutQuad + 2px overshoot, 4px select-rise, 180ms InQuad exit). **All six ingredient-type bottles are real v2 pixel sprites** (Spirit/Bubbly/Sweet/Sour/Bitter/Garnish, 32×48, PixelLab→quantized); sprite bottles carry a baked rim, selection washes them cyan + a 4px rise. |
 | Ingredient rail (UI card version) | DebugHud | legacy-cozy-noir | **Removed** — replaced by the diegetic BottleRail. |
 | Info panel (night/wallet/target/score/mixes) | DebugHud | legacy-cozy-noir | Text overlay; restyle in v2 UI pass (module 16). |
 | Patron shelf | DebugHud | legacy-cozy-noir | Portrait thumbnails + sell; portraits are v1 painterly. |
 | Tool belt | DebugHud | legacy-cozy-noir | Tool sprites are v1 painterly. |
 | Live recipe preview line | DebugHud | legacy-cozy-noir | |
-| MIX / RESTOCK / SKIP→FAVOR / BOUNCER buttons | DebugHud | legacy-cozy-noir | Procedural rounded kit; retone in v2. |
+| MIX / RESTOCK / SKIP→FAVOR / BOUNCER / RECIPES / New Run buttons | DebugHud | placeholder | Restyled to flat v2 pixel buttons: palette fill + 2px dark border + Silkscreen pixel font (dropped the rounded procedural sprite). Stats block + section headers (PATRONS/TOOLS) still legacy font — pixel pass pending. |
 | Customer / VIP portrait card | DebugHud | legacy-cozy-noir | VIP portraits are v1 painterly. |
 | RECIPES toggle | DebugHud | legacy-cozy-noir | |
 | Win / lose banner | DebugHud | legacy-cozy-noir | Limelight font. |

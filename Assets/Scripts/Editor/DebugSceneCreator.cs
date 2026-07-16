@@ -97,12 +97,15 @@ namespace LastCall.EditorTools
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/club_bg.png");
             stageSo.FindProperty("counterSprite").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/counter.png");
+            stageSo.FindProperty("customerSprite").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Characters/vip_patron.png");
             stageSo.ApplyModifiedPropertiesWithoutUndo();
 
             var hud = game.AddComponent<DebugHud>();
             var hudSo = new SerializedObject(hud);
             hudSo.FindProperty("displayFont").objectReferenceValue = LoadRequired<Font>(LegacyDisplayFontPath);
             hudSo.FindProperty("bodyFont").objectReferenceValue = LoadRequired<Font>(LegacyBodyFontPath);
+            hudSo.FindProperty("pixelFont").objectReferenceValue = LoadRequired<Font>(PixelBodyFontPath);
             // UI kit is optional: the HUD falls back to flat colors when unwired.
             hudSo.FindProperty("panelSprite").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/UI/panel.png");

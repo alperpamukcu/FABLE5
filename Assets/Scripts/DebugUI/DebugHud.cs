@@ -34,6 +34,7 @@ namespace LastCall.DebugUI
         // built-in LegacyRuntime font so the HUD never breaks.
         [SerializeField] private Font displayFont;
         [SerializeField] private Font bodyFont;
+        [SerializeField] private Font pixelFont;   // v2 pixel font for buttons/controls (Silkscreen)
 
         // Cozy noir UI kit (LastCall/Generate UI Sprites): rounded white sprites tinted
         // at runtime, a screen vignette and the animated smoke backdrop. All optional.
@@ -74,6 +75,7 @@ namespace LastCall.DebugUI
         private readonly List<IngredientCard> _selected = new List<IngredientCard>();
         private Font _font;
         private Font _headerFont;
+        private Font _pixelFont;
         private bool _uiBuilt;
 
         private Text _infoText;
@@ -121,6 +123,7 @@ namespace LastCall.DebugUI
             var fallback = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             _font = bodyFont != null ? bodyFont : fallback;
             _headerFont = displayFont != null ? displayFont : _font;
+            _pixelFont = pixelFont != null ? pixelFont : _font;
             BuildUi();
             _uiBuilt = true;
             if (_logPanel != null) _logPanel.SetActive(false); // debug log off in the game view
@@ -754,7 +757,9 @@ namespace LastCall.DebugUI
                 }
             }
 
-            bool show = face != null;
+            // With the diegetic stage present, the VIP is the in-scene pixel sprite leaning
+            // on the bar — suppress the legacy painterly portrait card.
+            bool show = face != null && stage == null;
             _customerCard.gameObject.SetActive(show);
             if (show)
             {
@@ -1038,35 +1043,42 @@ namespace LastCall.DebugUI
 
         private Button NewButton(string name, Transform parent, string label, Color bg, UnityAction onClick, int fontSize)
         {
+            // v2 pixel button: a flat palette fill inside a 2px dark border (no rounded
+            // procedural sprite), pixel font label. The border is the click/tint target.
             var rt = NewRect(name, parent);
-            var image = rt.gameObject.AddComponent<Image>();
-            image.color = bg;
-            if (buttonSprite != null)
-            {
-                image.sprite = buttonSprite;
-                image.type = Image.Type.Sliced;
-            }
+            var border = rt.gameObject.AddComponent<Image>();
+            border.color = DeepPlum;
             var button = rt.gameObject.AddComponent<Button>();
-            button.targetGraphic = image;
+            button.targetGraphic = border;
             button.onClick.AddListener(onClick);
 
-            // Cozy-noir button feedback: lift toward candle-glow on hover, sink on press,
-            // dim when disabled. Tint multiplies the base colour so every button reacts.
+            var fillRt = NewRect("Fill", rt);
+            Stretch(fillRt, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
+            var fill = fillRt.gameObject.AddComponent<Image>();
+            fill.color = bg;
+            fill.raycastTarget = false;
+
+            // Pixel feedback: brighten the border ring on hover, sink on press, dim when off.
             var colors = button.colors;
             colors.normalColor = Color.white;
-            colors.highlightedColor = new Color(1.14f, 1.10f, 1.02f);
-            colors.pressedColor = new Color(0.82f, 0.80f, 0.86f);
+            colors.highlightedColor = new Color(1.35f, 1.30f, 1.15f);
+            colors.pressedColor = new Color(0.75f, 0.72f, 0.80f);
             colors.selectedColor = Color.white;
-            colors.disabledColor = new Color(0.5f, 0.5f, 0.55f, 0.7f);
-            colors.fadeDuration = 0.08f;
+            colors.disabledColor = new Color(0.45f, 0.45f, 0.5f, 0.7f);
+            colors.fadeDuration = 0.05f;
             button.colors = colors;
 
             var textRt = NewRect("Text", rt);
             Stretch(textRt, Vector2.zero, Vector2.one, new Vector2(8, 4), new Vector2(-8, -4));
             var text = textRt.gameObject.AddComponent<Text>();
-            // Art bible: cream on dark, plum on light — never pure black/white.
+            // Cream on dark, plum on light — never pure black/white.
             float luminance = bg.r * 0.299f + bg.g * 0.587f + bg.b * 0.114f;
-            ConfigureText(text, fontSize, TextAnchor.MiddleCenter, luminance < 0.5f ? Cream : DeepPlum);
+            text.font = _pixelFont;
+            text.fontSize = fontSize;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = luminance < 0.5f ? Cream : DeepPlum;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
             text.text = label;
             return button;
         }

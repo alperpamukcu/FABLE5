@@ -26,8 +26,10 @@ namespace LastCall.DebugUI
         // ── layout (18 §2, converted to bottom-left origin) ─────────────────────
         private const int Slots = 8;                       // GDD: 8-card rail
         private static readonly Vector2 Reference = new Vector2(640, 360);
-        private const float SlotPitch = 56f;               // 18 §2: slot pitch 56px
-        private const float FirstSlotX = 88f;              // 18 §2: first slot x=88
+        private const float SlotPitch = 50f;               // tightened so the rail clears the VIP
+        private const float FirstSlotX = 36f;              // shifted left; VIP sits bottom-right
+        private const float CustomerX = 520f;              // VIP centre, bottom-right on the bar
+        private const float CustomerBaseY = 83f;           // desk/forearms (45px up) meet the counter line
         private const float BottleBaseY = 128f;            // 18 §2: y=232 top-down → 360−232
         private const float CounterFrontY = 96f;           // 18 §2: surface line y=264 → 360−264 (bottom 96px)
         private const float BottleW = 24f;                 // 14 §6: bottle sprite 24×40
@@ -61,6 +63,7 @@ namespace LastCall.DebugUI
         /// background and the bar counter replace their flat procedural placeholders.</summary>
         [SerializeField] private Sprite backgroundSprite;
         [SerializeField] private Sprite counterSprite;
+        [SerializeField] private Sprite customerSprite;   // VIP/patron leaning on the bar (18 §6)
 
         private RectTransform _railRoot;
         private readonly Dictionary<int, BottleView> _bottles = new Dictionary<int, BottleView>();
@@ -180,6 +183,19 @@ namespace LastCall.DebugUI
                 var keyLine = NewRect("CounterKey", root);                           // amber key highlight (rest line)
                 Stretch(keyLine, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, BottleBaseY - 2), new Vector2(0, BottleBaseY));
                 keyLine.gameObject.AddComponent<Image>().color = UITheme.Amber[3];
+            }
+
+            // Layer 6 — Customer: the VIP/patron pixel sprite leaning on the bar, bottom-right,
+            // in front of the counter so the bar reads as being between us and them (18 §6).
+            if (customerSprite != null)
+            {
+                var cust = NewRect("Customer", root);
+                cust.anchorMin = cust.anchorMax = new Vector2(0, 0);   // absolute from bottom-left
+                cust.pivot = new Vector2(0.5f, 0);                      // centred on CustomerX
+                cust.sizeDelta = new Vector2(customerSprite.rect.width, customerSprite.rect.height);
+                cust.anchoredPosition = new Vector2(CustomerX, CustomerBaseY);
+                var img = cust.gameObject.AddComponent<Image>();
+                img.sprite = customerSprite; img.preserveAspect = true; img.raycastTarget = false;
             }
 
             // Layer 5 — Bottle rail: bottles anchor to the bottom-left and position by slot.
