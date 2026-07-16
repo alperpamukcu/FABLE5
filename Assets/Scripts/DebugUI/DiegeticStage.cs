@@ -49,6 +49,13 @@ namespace LastCall.DebugUI
         [SerializeField] private Font bodyFont;            // Silkscreen (16 v2 §1 BODY/CAPTION)
         [SerializeField] private Font displayFont;         // Press Start 2P (headings/numbers)
 
+        /// <summary>Installed pixel bottle sprites (18 §5), keyed by ingredient type. Types
+        /// without a sprite fall back to the flat-silhouette placeholder.</summary>
+        [System.Serializable]
+        public struct BottleSprite { public IngredientType type; public Sprite sprite; }
+        [SerializeField] private BottleSprite[] bottleSprites;
+        private readonly Dictionary<IngredientType, Sprite> _bottleSprites = new Dictionary<IngredientType, Sprite>();
+
         private RectTransform _railRoot;
         private readonly Dictionary<int, BottleView> _bottles = new Dictionary<int, BottleView>();
         private string _railSignature = "";
@@ -61,6 +68,7 @@ namespace LastCall.DebugUI
             public Image Outline;
             public Image Body;
             public Image Neck;
+            public Image SpriteImg;    // non-null when a real pixel sprite is installed
             public Text Value;
             public Text Name;
             public bool Selected;
@@ -83,6 +91,9 @@ namespace LastCall.DebugUI
             var legacy = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             _body = bodyFont != null ? bodyFont : legacy;
             _display = displayFont != null ? displayFont : legacy;
+            if (bottleSprites != null)
+                foreach (var b in bottleSprites)
+                    if (b.sprite != null) _bottleSprites[b.type] = b.sprite;
             BuildScene();
         }
 
@@ -336,28 +347,50 @@ namespace LastCall.DebugUI
             var root = NewRect($"Bottle_{card.InstanceId}", _railRoot);
             root.anchorMin = root.anchorMax = new Vector2(0, 0);
             root.pivot = new Vector2(0.5f, 0);
-            root.sizeDelta = new Vector2(BottleW, BottleH);
 
-            // Neon rim (back-light glow, hugs the silhouette), 1px dark outline, then body.
-            var rim = NewRect("Rim", root);
-            Place(rim, new Vector2(0.5f, 0), new Vector2(BottleW + 4, BottleH + 2), new Vector2(0, -1));
-            var rimImg = rim.gameObject.AddComponent<Image>();
-            rimImg.raycastTarget = false;
+            bool hasSprite = _bottleSprites.TryGetValue(card.Type, out var sprite);
+            Vector2 size = hasSprite
+                ? new Vector2(sprite.rect.width, sprite.rect.height)
+                : new Vector2(BottleW, BottleH);
+            root.sizeDelta = size;
+            var view = new BottleView { Card = card, Root = root };
 
-            var outline = NewRect("Outline", root);
-            Place(outline, new Vector2(0.5f, 0), new Vector2(BottleW + 2, BottleH), Vector2.zero);
-            var outlineImg = outline.gameObject.AddComponent<Image>();
-            outlineImg.raycastTarget = false;
+            if (hasSprite)
+            {
+                // Installed sprite carries its own baked neon rim, so no rim rectangle here
+                // (a rect would show through the sprite's transparent margins as a box).
+                var img = NewRect("Sprite", root);
+                Place(img, new Vector2(0.5f, 0), size, Vector2.zero);
+                view.SpriteImg = img.gameObject.AddComponent<Image>();
+                view.SpriteImg.sprite = sprite;
+                view.SpriteImg.preserveAspect = true;
+                view.SpriteImg.raycastTarget = false;
+            }
+            else
+            {
+                // Neon rim (back-light glow) hugs the placeholder silhouette; the body rect
+                // covers all but a thin edge of it.
+                var rim = NewRect("Rim", root);
+                Place(rim, new Vector2(0.5f, 0), size + new Vector2(4, 2), new Vector2(0, -1));
+                view.Rim = rim.gameObject.AddComponent<Image>();
+                view.Rim.raycastTarget = false;
 
-            var body = NewRect("Body", root);
-            Place(body, new Vector2(0.5f, 0), new Vector2(BottleW, BottleH - 8), Vector2.zero);
-            var bodyImg = body.gameObject.AddComponent<Image>();
-            bodyImg.raycastTarget = false;
+                // Flat-silhouette placeholder: 1px dark outline behind a ramp-coloured body.
+                var outline = NewRect("Outline", root);
+                Place(outline, new Vector2(0.5f, 0), new Vector2(BottleW + 2, BottleH), Vector2.zero);
+                view.Outline = outline.gameObject.AddComponent<Image>();
+                view.Outline.raycastTarget = false;
 
-            var neck = NewRect("Neck", root);
-            Place(neck, new Vector2(0.5f, 0), new Vector2(10, 12), new Vector2(0, BottleH - 12));
-            var neckImg = neck.gameObject.AddComponent<Image>();
-            neckImg.raycastTarget = false;
+                var body = NewRect("Body", root);
+                Place(body, new Vector2(0.5f, 0), new Vector2(BottleW, BottleH - 8), Vector2.zero);
+                view.Body = body.gameObject.AddComponent<Image>();
+                view.Body.raycastTarget = false;
+
+                var neck = NewRect("Neck", root);
+                Place(neck, new Vector2(0.5f, 0), new Vector2(10, 12), new Vector2(0, BottleH - 12));
+                view.Neck = neck.gameObject.AddComponent<Image>();
+                view.Neck.raycastTarget = false;
+            }
 
             var button = root.gameObject.AddComponent<Image>();  // full-slot click target
             button.color = new Color(0, 0, 0, 0);
@@ -368,24 +401,20 @@ namespace LastCall.DebugUI
 
             // Value chip (flavor number, Flavor=Cyan per 16 §2) floats just above the bottle.
             var chip = NewRect("ValueChip", root);
-            Place(chip, new Vector2(0.5f, 0), new Vector2(BottleW + 6, 12), new Vector2(0, BottleH + 4));
+            Place(chip, new Vector2(0.5f, 0), new Vector2(BottleW + 6, 12), new Vector2(0, size.y + 4));
             var chipImg = chip.gameObject.AddComponent<Image>();
             chipImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.75f);
             chipImg.raycastTarget = false;
-            var value = NewText("Value", chip, _display, 8, TextAnchor.MiddleCenter, UITheme.Flavor);
-            Stretch((RectTransform)value.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            value.text = card.Flavor.ToString();
+            view.Value = NewText("Value", chip, _display, 8, TextAnchor.MiddleCenter, UITheme.Flavor);
+            Stretch((RectTransform)view.Value.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            view.Value.text = card.Flavor.ToString();
 
             // Name caption — shown only when selected (too small to keep on every bottle).
-            var name = NewText("Name", root, _body, 7, TextAnchor.LowerCenter, UITheme.TextPrimary);
-            Place((RectTransform)name.transform, new Vector2(0.5f, 0), new Vector2(56, 10), new Vector2(0, BottleH + 18));
-            name.gameObject.SetActive(false);
+            view.Name = NewText("Name", root, _body, 7, TextAnchor.LowerCenter, UITheme.TextPrimary);
+            Place((RectTransform)view.Name.transform, new Vector2(0.5f, 0), new Vector2(56, 10), new Vector2(0, size.y + 18));
+            view.Name.gameObject.SetActive(false);
 
-            return new BottleView
-            {
-                Card = card, Root = root, Rim = rimImg, Outline = outlineImg,
-                Body = bodyImg, Neck = neckImg, Value = value, Name = name,
-            };
+            return view;
         }
 
         private void StyleBottle(BottleView view, ICollection<IngredientCard> selected,
@@ -394,23 +423,35 @@ namespace LastCall.DebugUI
             bool isSelected = selected != null && selected.Contains(view.Card);
             bool isDebuffed = debuffed != null && debuffed.Contains(view.Card.Type);
 
-            Color fill = UITheme.TypeFill(view.Card.Type);
-            Color outline = UITheme.TypeOutline(view.Card.Type);
-            if (isDebuffed)
+            if (view.SpriteImg != null)
             {
-                fill = Color.Lerp(fill, UITheme.Night[0], 0.55f);
-                outline = Color.Lerp(outline, UITheme.Night[0], 0.4f);
+                // Installed pixel sprite: keep its baked colours. Debuff dims it; selection
+                // washes it cyan (+ the 4px rise) since it has no procedural rim.
+                view.SpriteImg.color = isDebuffed
+                    ? Color.Lerp(Color.white, UITheme.Night[1], 0.5f)
+                    : (isSelected ? Color.Lerp(Color.white, UITheme.Cyan[4], 0.35f) : Color.white);
             }
-            if (isSelected) fill = Color.Lerp(fill, UITheme.Cream[4], 0.22f);
+            else
+            {
+                Color fill = UITheme.TypeFill(view.Card.Type);
+                Color outline = UITheme.TypeOutline(view.Card.Type);
+                if (isDebuffed)
+                {
+                    fill = Color.Lerp(fill, UITheme.Night[0], 0.55f);
+                    outline = Color.Lerp(outline, UITheme.Night[0], 0.4f);
+                }
+                if (isSelected) fill = Color.Lerp(fill, UITheme.Cream[4], 0.22f);
+                view.Body.color = fill;
+                view.Neck.color = fill;
+                view.Outline.color = outline;
+            }
 
-            view.Body.color = fill;
-            view.Neck.color = fill;
-            view.Outline.color = outline;
-
-            // Selected → cyan back-light + a 4px rise; else the magenta club rim.
-            view.Rim.color = isSelected
-                ? new Color(UITheme.Selection.r, UITheme.Selection.g, UITheme.Selection.b, 0.9f)
-                : new Color(UITheme.Magenta[3].r, UITheme.Magenta[3].g, UITheme.Magenta[3].b, 0.55f);
+            // Selected → cyan back-light + a 4px rise; else the magenta club rim
+            // (placeholder bottles only; sprite bottles carry a baked rim).
+            if (view.Rim != null)
+                view.Rim.color = isSelected
+                    ? new Color(UITheme.Selection.r, UITheme.Selection.g, UITheme.Selection.b, 0.9f)
+                    : new Color(UITheme.Magenta[3].r, UITheme.Magenta[3].g, UITheme.Magenta[3].b, 0.55f);
 
             view.Name.gameObject.SetActive(isSelected);
             if (isSelected)

@@ -71,6 +71,23 @@ namespace LastCall.EditorTools
             var stageSo = new SerializedObject(stage);
             stageSo.FindProperty("displayFont").objectReferenceValue = LoadRequired<Font>(PixelDisplayFontPath);
             stageSo.FindProperty("bodyFont").objectReferenceValue = LoadRequired<Font>(PixelBodyFontPath);
+            // Installed v2 pixel bottle sprites (18 §5 first batch); types without one fall
+            // back to the flat placeholder silhouette.
+            var bottles = new (LastCall.Core.IngredientType type, string path)[]
+            {
+                (LastCall.Core.IngredientType.Spirit, "Assets/Art/Bottles/bottle_spirit.png"),
+                (LastCall.Core.IngredientType.Bubbly, "Assets/Art/Bottles/bottle_bubbly.png"),
+                (LastCall.Core.IngredientType.Sweet,  "Assets/Art/Bottles/bottle_sweet.png"),
+            };
+            var spritesProp = stageSo.FindProperty("bottleSprites");
+            spritesProp.arraySize = bottles.Length;
+            for (int i = 0; i < bottles.Length; i++)
+            {
+                var el = spritesProp.GetArrayElementAtIndex(i);
+                el.FindPropertyRelative("type").intValue = (int)bottles[i].type;
+                el.FindPropertyRelative("sprite").objectReferenceValue =
+                    AssetDatabase.LoadAssetAtPath<Sprite>(bottles[i].path);
+            }
             stageSo.ApplyModifiedPropertiesWithoutUndo();
 
             var hud = game.AddComponent<DebugHud>();
