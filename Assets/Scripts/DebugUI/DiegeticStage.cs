@@ -60,6 +60,14 @@ namespace LastCall.DebugUI
         [SerializeField] private BottleSprite[] bottleSprites;
         private readonly Dictionary<IngredientType, Sprite> _bottleSprites = new Dictionary<IngredientType, Sprite>();
 
+        /// <summary>Per-ingredient bottle sprites (18 §5): same colour ramp per type, a
+        /// distinct recognizable silhouette per ingredient. Keyed by ingredient id; falls
+        /// back to the per-type sprite, then the flat placeholder.</summary>
+        [System.Serializable]
+        public struct IdSprite { public string id; public Sprite sprite; }
+        [SerializeField] private IdSprite[] bottleById;
+        private readonly Dictionary<string, Sprite> _bottleById = new Dictionary<string, Sprite>();
+
         /// <summary>Installed environment art (18 §5). When set, the full-screen club
         /// background and the bar counter replace their flat procedural placeholders.</summary>
         [SerializeField] private Sprite backgroundSprite;
@@ -112,6 +120,9 @@ namespace LastCall.DebugUI
             if (bottleSprites != null)
                 foreach (var b in bottleSprites)
                     if (b.sprite != null) _bottleSprites[b.type] = b.sprite;
+            if (bottleById != null)
+                foreach (var b in bottleById)
+                    if (b.sprite != null && !string.IsNullOrEmpty(b.id)) _bottleById[b.id] = b.sprite;
             BuildScene();
         }
 
@@ -433,7 +444,8 @@ namespace LastCall.DebugUI
             root.anchorMin = root.anchorMax = new Vector2(0, 0);
             root.pivot = new Vector2(0.5f, 0);
 
-            bool hasSprite = _bottleSprites.TryGetValue(card.Type, out var sprite);
+            bool hasSprite = _bottleById.TryGetValue(card.Id, out var sprite)
+                             || _bottleSprites.TryGetValue(card.Type, out sprite);
             Vector2 size = hasSprite
                 ? new Vector2(sprite.rect.width, sprite.rect.height)
                 : new Vector2(BottleW, BottleH);

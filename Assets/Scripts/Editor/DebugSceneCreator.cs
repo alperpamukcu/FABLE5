@@ -91,6 +91,25 @@ namespace LastCall.EditorTools
                 el.FindPropertyRelative("sprite").objectReferenceValue =
                     AssetDatabase.LoadAssetAtPath<Sprite>(bottles[i].path);
             }
+            // Per-ingredient bottles: every Assets/Art/Bottles/<id>.png that is not a
+            // per-type fallback (bottle_*) is wired by its ingredient id.
+            var byIdProp = stageSo.FindProperty("bottleById");
+            var idPaths = new System.Collections.Generic.List<(string id, string path)>();
+            foreach (var g in AssetDatabase.FindAssets("t:Sprite", new[] { "Assets/Art/Bottles" }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(g);
+                var fn = Path.GetFileNameWithoutExtension(path);
+                if (fn.StartsWith("bottle_")) continue;   // skip the per-type fallbacks
+                idPaths.Add((fn, path));
+            }
+            byIdProp.arraySize = idPaths.Count;
+            for (int i = 0; i < idPaths.Count; i++)
+            {
+                var el = byIdProp.GetArrayElementAtIndex(i);
+                el.FindPropertyRelative("id").stringValue = idPaths[i].id;
+                el.FindPropertyRelative("sprite").objectReferenceValue =
+                    AssetDatabase.LoadAssetAtPath<Sprite>(idPaths[i].path);
+            }
             // Environment art (18 §5): club background + bar counter. Optional — the stage
             // falls back to flat procedural layers when either is missing.
             stageSo.FindProperty("backgroundSprite").objectReferenceValue =
