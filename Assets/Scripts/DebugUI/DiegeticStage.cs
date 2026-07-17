@@ -38,12 +38,12 @@ namespace LastCall.DebugUI
         private const float BottleW = 40f;                 // placeholder fallback size
         private const float BottleH = 60f;
         private const float SelectRise = 4f;               // 18 §3: select rises 4px
-        private const float ArcHeight = 55f;               // curved bar: centre slots rise this much
+        private const float ArcHeight = 30f;               // curved bar: centre slots rise this much
         private const float BottleTilt = 7f;               // max radial lean at the arc ends
         private const float OffscreenRight = 680f;
         private const float OffscreenLeft = -40f;
         private const float Overscan = 48f;         // bleed past screen edges (aspect safety)
-        private const float CounterSurfaceInset = 148f; // rest line = px below the counter sprite top (arc centre)
+        private const float CounterSurfaceInset = 118f; // rest line = px below the counter sprite top (arc centre)
 
         // ── choreography timings (18 §3) ────────────────────────────────────────
         private const float EnterStagger = 0.06f;          // 60 ms per bottle
