@@ -30,18 +30,20 @@ namespace LastCall.DebugUI
         private const float FirstSlotX = 100f;             // clears the bottom-left cash register
         private const float CustomerX = 556f;              // VIP centre, bottom-right on the bar
         private const float CustomerBaseY = 126f;          // hands rest on the bar-top surface
-        private const float CustomerTilt = 5f;             // POV: leans toward centre
+        private const float CustomerTilt = -10f;           // right end leans right (radial, arc)
         private const float RegisterX = 44f;               // cash register centre, bottom-left
-        private const float RegisterTilt = -5f;            // POV: leans toward centre
+        private const float RegisterTilt = 10f;            // left end leans left (radial, arc)
         private const float BottleBaseY = 128f;            // 18 §2: y=232 top-down → 360−232
         private const float CounterFrontY = 96f;           // 18 §2: surface line y=264 → 360−264 (bottom 96px)
         private const float BottleW = 40f;                 // placeholder fallback size
         private const float BottleH = 60f;
         private const float SelectRise = 4f;               // 18 §3: select rises 4px
+        private const float ArcHeight = 55f;               // curved bar: centre slots rise this much
+        private const float BottleTilt = 7f;               // max radial lean at the arc ends
         private const float OffscreenRight = 680f;
         private const float OffscreenLeft = -40f;
         private const float Overscan = 48f;         // bleed past screen edges (aspect safety)
-        private const float CounterSurfaceInset = 34f;  // rest line = px below the counter sprite top
+        private const float CounterSurfaceInset = 148f; // rest line = px below the counter sprite top (arc centre)
 
         // ── choreography timings (18 §3) ────────────────────────────────────────
         private const float EnterStagger = 0.06f;          // 60 ms per bottle
@@ -95,6 +97,7 @@ namespace LastCall.DebugUI
             public Text Value;
             public Text Name;
             public bool Selected;
+            public float RestBaseY;    // arc rest y for this slot (select adds SelectRise)
             public Coroutine Move;
             public Coroutine Rise;
         }
@@ -381,9 +384,12 @@ namespace LastCall.DebugUI
             {
                 var card = rail[i];
                 bool sel = selected != null && selected.Contains(card);
-                Vector2 target = new Vector2(SlotX(i), RestY(sel));
+                float arcY = SlotArcY(i);
+                Vector2 target = new Vector2(SlotX(i), arcY + (sel ? SelectRise : 0f));
                 if (_bottles.TryGetValue(card.InstanceId, out var view))
                 {
+                    view.RestBaseY = arcY;
+                    view.Root.localRotation = Quaternion.Euler(0, 0, SlotTilt(i));
                     if (view.Move != null) StopCoroutine(view.Move);
                     view.Move = StartCoroutine(Tweening.MoveAnchored(view.Root, target, DrawDur, Tweening.OutQuad));
                     StyleBottle(view, selected, debuffed, animateRise: false);
@@ -391,6 +397,8 @@ namespace LastCall.DebugUI
                 else
                 {
                     view = CreateBottle(card, onClick);
+                    view.RestBaseY = arcY;
+                    view.Root.localRotation = Quaternion.Euler(0, 0, SlotTilt(i));
                     _bottles[card.InstanceId] = view;
                     StyleBottle(view, selected, debuffed, animateRise: false);
                     view.Root.anchoredPosition = new Vector2(OffscreenRight, target.y);
@@ -573,7 +581,7 @@ namespace LastCall.DebugUI
                 if (animateRise)
                 {
                     if (view.Rise != null) StopCoroutine(view.Rise);
-                    var to = new Vector2(view.Root.anchoredPosition.x, RestY(isSelected));
+                    var to = new Vector2(view.Root.anchoredPosition.x, view.RestBaseY + (isSelected ? SelectRise : 0f));
                     view.Rise = StartCoroutine(Tweening.MoveAnchored(view.Root, to, 0.10f, Tweening.OutCubic));
                 }
             }
@@ -582,7 +590,11 @@ namespace LastCall.DebugUI
         // ── helpers ──────────────────────────────────────────────────────────────
 
         private static float SlotX(int i) => FirstSlotX + i * SlotPitch;
-        private static float RestY(bool selected) => BottleBaseY + (selected ? SelectRise : 0f);
+        // Curved bar: t ∈ [-1,1] across the rail; centre slots rise (dome), ends sit low and
+        // lean outward so the row reads as an arc wrapping around the bartender.
+        private static float SlotT(int i) => Slots > 1 ? (2f * i / (Slots - 1) - 1f) : 0f;
+        private static float SlotArcY(int i) { float t = SlotT(i); return BottleBaseY + ArcHeight * (1f - t * t); }
+        private static float SlotTilt(int i) => -SlotT(i) * BottleTilt;
 
         private static string Signature(IReadOnlyList<IngredientCard> rail)
         {
