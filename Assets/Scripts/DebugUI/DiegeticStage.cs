@@ -26,19 +26,22 @@ namespace LastCall.DebugUI
         // ── layout (18 §2, converted to bottom-left origin) ─────────────────────
         private const int Slots = 8;                       // GDD: 8-card rail
         private static readonly Vector2 Reference = new Vector2(640, 360);
-        private const float SlotPitch = 44f;               // rail sits between the register and the VIP
-        private const float FirstSlotX = 112f;             // clears the bottom-left cash register
-        private const float CustomerX = 524f;              // VIP centre, bottom-right on the bar
+        private const float SlotPitch = 48f;               // rail sits between the register and the VIP
+        private const float FirstSlotX = 100f;             // clears the bottom-left cash register
+        private const float CustomerX = 556f;              // VIP centre, bottom-right on the bar
         private const float CustomerBaseY = 126f;          // hands rest on the bar-top surface
-        private const float RegisterX = 54f;               // cash register centre, bottom-left
+        private const float CustomerTilt = 5f;             // POV: leans toward centre
+        private const float RegisterX = 44f;               // cash register centre, bottom-left
+        private const float RegisterTilt = -5f;            // POV: leans toward centre
         private const float BottleBaseY = 128f;            // 18 §2: y=232 top-down → 360−232
         private const float CounterFrontY = 96f;           // 18 §2: surface line y=264 → 360−264 (bottom 96px)
-        private const float BottleW = 24f;                 // 14 §6: bottle sprite 24×40
-        private const float BottleH = 40f;
+        private const float BottleW = 40f;                 // placeholder fallback size
+        private const float BottleH = 60f;
         private const float SelectRise = 4f;               // 18 §3: select rises 4px
         private const float OffscreenRight = 680f;
         private const float OffscreenLeft = -40f;
-        private const float Overscan = 24f;         // bleed past screen edges (aspect safety)
+        private const float Overscan = 48f;         // bleed past screen edges (aspect safety)
+        private const float CounterSurfaceInset = 34f;  // rest line = px below the counter sprite top
 
         // ── choreography timings (18 §3) ────────────────────────────────────────
         private const float EnterStagger = 0.06f;          // 60 ms per bottle
@@ -182,7 +185,10 @@ namespace LastCall.DebugUI
             if (counterSprite != null)
             {
                 float h = counterSprite.rect.height;
-                float cy = BottleBaseY + 2f - h;   // surface (sprite top) sits at the rest line
+                // The bar-top surface front (the rest line) sits CounterSurfaceInset px below
+                // the sprite's top, so align that line to BottleBaseY; the deep surface then
+                // recedes up behind the bottles.
+                float cy = BottleBaseY + CounterSurfaceInset - h;
                 var c = NewRect("Counter", root);
                 c.anchorMin = new Vector2(0, 0); c.anchorMax = new Vector2(1, 0);
                 c.offsetMin = new Vector2(-Overscan, cy - Overscan); c.offsetMax = new Vector2(Overscan, cy + h);
@@ -214,6 +220,7 @@ namespace LastCall.DebugUI
                 reg.pivot = new Vector2(0.5f, 0);
                 reg.sizeDelta = new Vector2(registerSprite.rect.width, registerSprite.rect.height);
                 reg.anchoredPosition = new Vector2(RegisterX, BottleBaseY);
+                reg.localRotation = Quaternion.Euler(0, 0, RegisterTilt);   // POV angle
                 var regImg = reg.gameObject.AddComponent<Image>();
                 regImg.sprite = registerSprite; regImg.preserveAspect = true; regImg.raycastTarget = false;
 
@@ -244,6 +251,7 @@ namespace LastCall.DebugUI
                 cust.pivot = new Vector2(0.5f, 0);                      // centred on CustomerX
                 cust.sizeDelta = new Vector2(customerSprite.rect.width, customerSprite.rect.height);
                 cust.anchoredPosition = new Vector2(CustomerX, CustomerBaseY);
+                cust.localRotation = Quaternion.Euler(0, 0, CustomerTilt);   // POV angle
                 var img = cust.gameObject.AddComponent<Image>();
                 img.sprite = customerSprite; img.preserveAspect = true; img.raycastTarget = false;
             }
