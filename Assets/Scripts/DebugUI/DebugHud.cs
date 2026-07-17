@@ -735,6 +735,7 @@ namespace LastCall.DebugUI
                     break;
             }
             RenderCustomer();
+            if (stage != null && Run != null) stage.SetMoney($"${Run.Money}");
         }
 
         /// <summary>Shows the current customer's face: the VIP under the light on a VIP

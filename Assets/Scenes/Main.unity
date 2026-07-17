@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &1341442198
+--- !u!1 &699896662
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,115 +127,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1341442202}
-  - component: {fileID: 1341442201}
-  - component: {fileID: 1341442200}
-  - component: {fileID: 1341442199}
-  m_Layer: 0
-  m_Name: Game
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1341442199
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1341442198}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 189e4c75064cbed429fe7262ed7f25dd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: LastCall.DebugUI::LastCall.DebugUI.DebugHud
-  displayFont: {fileID: 12800000, guid: 131c0040d660be04993ff128ddecd75d, type: 3}
-  bodyFont: {fileID: 12800000, guid: 3f6a27f783d8c164cbba0fe6bfc021a3, type: 3}
-  pixelFont: {fileID: 12800000, guid: a893aa4bf7c146844a0852a5b793cfe7, type: 3}
-  panelSprite: {fileID: 21300000, guid: a0518c0f262835d47b22dcac653e6c6b, type: 3}
-  buttonSprite: {fileID: 21300000, guid: 12b43cc54606d9144a7bea4891f8d0f1, type: 3}
-  vignetteSprite: {fileID: 21300000, guid: 5f48097771af6644d83039445f04f5a1, type: 3}
-  backgroundMaterial: {fileID: 2100000, guid: 4b72e7f1ab335a84989cceba8f7620c8, type: 2}
-  art: {fileID: 11400000, guid: 24ef82b28cef4d844a967d9532ec6a43, type: 2}
-  stage: {fileID: 1341442200}
---- !u!114 &1341442200
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1341442198}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 653d485306ced894daca17d15fcc9b75, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: LastCall.DebugUI::LastCall.DebugUI.DiegeticStage
-  bodyFont: {fileID: 12800000, guid: a893aa4bf7c146844a0852a5b793cfe7, type: 3}
-  displayFont: {fileID: 12800000, guid: dff9897f49bf420488d3b02734457084, type: 3}
-  bottleSprites:
-  - type: 0
-    sprite: {fileID: 21300000, guid: 340cc918099d08b4086f6738fc9676e9, type: 3}
-  - type: 4
-    sprite: {fileID: 21300000, guid: dd5873799dd53304b8865d7c3ec2708e, type: 3}
-  - type: 2
-    sprite: {fileID: 21300000, guid: d5dea95c4cedf0542a3e4ac8bf89c689, type: 3}
-  - type: 1
-    sprite: {fileID: 21300000, guid: dc71769943cecef4c8b20e7acfa7c26f, type: 3}
-  - type: 3
-    sprite: {fileID: 21300000, guid: 1f5fcc33fa724114e9f8501e63c01a51, type: 3}
-  - type: 5
-    sprite: {fileID: 21300000, guid: ebadc55a39b4c974295fe1a2e18883ca, type: 3}
-  backgroundSprite: {fileID: 21300000, guid: 5e2ac820d6bc643489b91881f4cbcee0, type: 3}
-  counterSprite: {fileID: 21300000, guid: 510a888f65961b84899aae26cf44345b, type: 3}
-  customerSprite: {fileID: 21300000, guid: c7db53fb61db61643b115cca9a051345, type: 3}
---- !u!114 &1341442201
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1341442198}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9afd43bbfb204eb4a85fbe44baffeb8d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: LastCall.Game::LastCall.Game.GameBootstrap
-  deckJson: {fileID: 4900000, guid: c0bda31c926722a4c842df81acecf1e0, type: 3}
-  recipesJson: {fileID: 4900000, guid: 5b26aeb63984a164e85d8728d96cd20d, type: 3}
-  patronsJson: {fileID: 4900000, guid: 4d28ef5b63376ba48beecdaaaa44502a, type: 3}
-  toolsJson: {fileID: 4900000, guid: 196dc4f0da1fab845ac3ce4d564490b5, type: 3}
-  vipsJson: {fileID: 4900000, guid: 08599c403ba89ae4a9bb90987350ad4f, type: 3}
-  vouchersJson: {fileID: 4900000, guid: 4045d66d38d43c24eaf985d909fb3592, type: 3}
-  seed: LASTCALL-DEV
-  stake: 1
-  barId: classic
---- !u!4 &1341442202
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1341442198}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1884219374
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1884219377}
-  - component: {fileID: 1884219376}
-  - component: {fileID: 1884219375}
+  - component: {fileID: 699896665}
+  - component: {fileID: 699896664}
+  - component: {fileID: 699896663}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -243,13 +137,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1884219375
+--- !u!114 &699896663
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1884219374}
+  m_GameObject: {fileID: 699896662}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6a160d838ff8b4b4693ac20007e008c7, type: 3}
@@ -263,13 +157,13 @@ MonoBehaviour:
   m_CropFrameX: 0
   m_CropFrameY: 0
   m_StretchFill: 0
---- !u!20 &1884219376
+--- !u!20 &699896664
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1884219374}
+  m_GameObject: {fileID: 699896662}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
@@ -314,16 +208,123 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &1884219377
+--- !u!4 &699896665
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1884219374}
+  m_GameObject: {fileID: 699896662}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1248096613
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1248096617}
+  - component: {fileID: 1248096616}
+  - component: {fileID: 1248096615}
+  - component: {fileID: 1248096614}
+  m_Layer: 0
+  m_Name: Game
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1248096614
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1248096613}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 189e4c75064cbed429fe7262ed7f25dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LastCall.DebugUI::LastCall.DebugUI.DebugHud
+  displayFont: {fileID: 12800000, guid: 131c0040d660be04993ff128ddecd75d, type: 3}
+  bodyFont: {fileID: 12800000, guid: 3f6a27f783d8c164cbba0fe6bfc021a3, type: 3}
+  pixelFont: {fileID: 12800000, guid: a893aa4bf7c146844a0852a5b793cfe7, type: 3}
+  panelSprite: {fileID: 21300000, guid: a0518c0f262835d47b22dcac653e6c6b, type: 3}
+  buttonSprite: {fileID: 21300000, guid: 12b43cc54606d9144a7bea4891f8d0f1, type: 3}
+  vignetteSprite: {fileID: 21300000, guid: 5f48097771af6644d83039445f04f5a1, type: 3}
+  backgroundMaterial: {fileID: 2100000, guid: 4b72e7f1ab335a84989cceba8f7620c8, type: 2}
+  art: {fileID: 11400000, guid: 24ef82b28cef4d844a967d9532ec6a43, type: 2}
+  stage: {fileID: 1248096615}
+--- !u!114 &1248096615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1248096613}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 653d485306ced894daca17d15fcc9b75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LastCall.DebugUI::LastCall.DebugUI.DiegeticStage
+  bodyFont: {fileID: 12800000, guid: a893aa4bf7c146844a0852a5b793cfe7, type: 3}
+  displayFont: {fileID: 12800000, guid: dff9897f49bf420488d3b02734457084, type: 3}
+  bottleSprites:
+  - type: 0
+    sprite: {fileID: 21300000, guid: 340cc918099d08b4086f6738fc9676e9, type: 3}
+  - type: 4
+    sprite: {fileID: 21300000, guid: dd5873799dd53304b8865d7c3ec2708e, type: 3}
+  - type: 2
+    sprite: {fileID: 21300000, guid: d5dea95c4cedf0542a3e4ac8bf89c689, type: 3}
+  - type: 1
+    sprite: {fileID: 21300000, guid: dc71769943cecef4c8b20e7acfa7c26f, type: 3}
+  - type: 3
+    sprite: {fileID: 21300000, guid: 1f5fcc33fa724114e9f8501e63c01a51, type: 3}
+  - type: 5
+    sprite: {fileID: 21300000, guid: ebadc55a39b4c974295fe1a2e18883ca, type: 3}
+  backgroundSprite: {fileID: 21300000, guid: 5e2ac820d6bc643489b91881f4cbcee0, type: 3}
+  counterSprite: {fileID: 21300000, guid: 510a888f65961b84899aae26cf44345b, type: 3}
+  customerSprite: {fileID: 21300000, guid: c7db53fb61db61643b115cca9a051345, type: 3}
+  registerSprite: {fileID: 21300000, guid: 6a38ffeaffa8bb94589ea72371ee5227, type: 3}
+--- !u!114 &1248096616
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1248096613}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9afd43bbfb204eb4a85fbe44baffeb8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LastCall.Game::LastCall.Game.GameBootstrap
+  deckJson: {fileID: 4900000, guid: c0bda31c926722a4c842df81acecf1e0, type: 3}
+  recipesJson: {fileID: 4900000, guid: 5b26aeb63984a164e85d8728d96cd20d, type: 3}
+  patronsJson: {fileID: 4900000, guid: 4d28ef5b63376ba48beecdaaaa44502a, type: 3}
+  toolsJson: {fileID: 4900000, guid: 196dc4f0da1fab845ac3ce4d564490b5, type: 3}
+  vipsJson: {fileID: 4900000, guid: 08599c403ba89ae4a9bb90987350ad4f, type: 3}
+  vouchersJson: {fileID: 4900000, guid: 4045d66d38d43c24eaf985d909fb3592, type: 3}
+  seed: LASTCALL-DEV
+  stake: 1
+  barId: classic
+--- !u!4 &1248096617
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1248096613}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -333,5 +334,5 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1884219377}
-  - {fileID: 1341442202}
+  - {fileID: 699896665}
+  - {fileID: 1248096617}

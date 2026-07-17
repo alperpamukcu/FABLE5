@@ -26,10 +26,11 @@ namespace LastCall.DebugUI
         // ── layout (18 §2, converted to bottom-left origin) ─────────────────────
         private const int Slots = 8;                       // GDD: 8-card rail
         private static readonly Vector2 Reference = new Vector2(640, 360);
-        private const float SlotPitch = 50f;               // tightened so the rail clears the VIP
-        private const float FirstSlotX = 36f;              // shifted left; VIP sits bottom-right
-        private const float CustomerX = 520f;              // VIP centre, bottom-right on the bar
-        private const float CustomerBaseY = 83f;           // desk/forearms (45px up) meet the counter line
+        private const float SlotPitch = 44f;               // rail sits between the register and the VIP
+        private const float FirstSlotX = 112f;             // clears the bottom-left cash register
+        private const float CustomerX = 524f;              // VIP centre, bottom-right on the bar
+        private const float CustomerBaseY = 126f;          // hands rest on the bar-top surface
+        private const float RegisterX = 54f;               // cash register centre, bottom-left
         private const float BottleBaseY = 128f;            // 18 §2: y=232 top-down → 360−232
         private const float CounterFrontY = 96f;           // 18 §2: surface line y=264 → 360−264 (bottom 96px)
         private const float BottleW = 24f;                 // 14 §6: bottle sprite 24×40
@@ -64,6 +65,8 @@ namespace LastCall.DebugUI
         [SerializeField] private Sprite backgroundSprite;
         [SerializeField] private Sprite counterSprite;
         [SerializeField] private Sprite customerSprite;   // VIP/patron leaning on the bar (18 §6)
+        [SerializeField] private Sprite registerSprite;   // cash register, bottom-left, shows the wallet
+        private Text _moneyText;
 
         private RectTransform _railRoot;
         private readonly Dictionary<int, BottleView> _bottles = new Dictionary<int, BottleView>();
@@ -92,6 +95,12 @@ namespace LastCall.DebugUI
         public void SetRailVisible(bool visible)
         {
             if (_railRoot != null) _railRoot.gameObject.SetActive(visible);
+        }
+
+        /// <summary>Update the diegetic wallet shown on the cash register plaque.</summary>
+        public void SetMoney(string text)
+        {
+            if (_moneyText != null) _moneyText.text = text;
         }
 
         private void Awake()
@@ -185,8 +194,38 @@ namespace LastCall.DebugUI
                 keyLine.gameObject.AddComponent<Image>().color = UITheme.Amber[3];
             }
 
-            // Layer 6 — Customer: the VIP/patron pixel sprite leaning on the bar, bottom-right,
-            // in front of the counter so the bar reads as being between us and them (18 §6).
+            // Cash register on the bar top, bottom-left, with the wallet on a plaque above it
+            // (18 §2 — the player reads their money diegetically from the till).
+            if (registerSprite != null)
+            {
+                var reg = NewRect("Register", root);
+                reg.anchorMin = reg.anchorMax = new Vector2(0, 0);
+                reg.pivot = new Vector2(0.5f, 0);
+                reg.sizeDelta = new Vector2(registerSprite.rect.width, registerSprite.rect.height);
+                reg.anchoredPosition = new Vector2(RegisterX, BottleBaseY);
+                var regImg = reg.gameObject.AddComponent<Image>();
+                regImg.sprite = registerSprite; regImg.preserveAspect = true; regImg.raycastTarget = false;
+
+                float plaqueY = BottleBaseY + registerSprite.rect.height - 18f;  // on the till's display
+                var plaque = NewRect("MoneyPlaque", root);
+                plaque.anchorMin = plaque.anchorMax = new Vector2(0, 0);   // absolute, on the till
+                plaque.pivot = new Vector2(0.5f, 0);
+                plaque.sizeDelta = new Vector2(46, 14);
+                plaque.anchoredPosition = new Vector2(RegisterX, plaqueY);
+                var pImg = plaque.gameObject.AddComponent<Image>();
+                pImg.color = UITheme.Night[0]; pImg.raycastTarget = false;
+                _moneyText = NewText("Money", plaque, _display, 10, TextAnchor.MiddleCenter, UITheme.Money);
+                Stretch((RectTransform)_moneyText.transform, Vector2.zero, Vector2.one, new Vector2(2, 0), new Vector2(-2, 0));
+                _moneyText.text = "$0";
+            }
+
+            // Layer 5 — Bottle rail: bottles anchor to the bottom-left and position by slot.
+            _railRoot = NewRect("BottleRail", root);
+            Stretch(_railRoot, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+            // Layer 6 — Customer: the VIP/patron pixel sprite, hands resting on the bar top,
+            // bottom-right. Created LAST so it draws in front of the counter and the rail —
+            // he's seated at our wooden bar, not floating above it (18 §6).
             if (customerSprite != null)
             {
                 var cust = NewRect("Customer", root);
@@ -197,10 +236,6 @@ namespace LastCall.DebugUI
                 var img = cust.gameObject.AddComponent<Image>();
                 img.sprite = customerSprite; img.preserveAspect = true; img.raycastTarget = false;
             }
-
-            // Layer 5 — Bottle rail: bottles anchor to the bottom-left and position by slot.
-            _railRoot = NewRect("BottleRail", root);
-            Stretch(_railRoot, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         }
 
         private RectTransform FullLayer(RectTransform root, string name, Color fill)

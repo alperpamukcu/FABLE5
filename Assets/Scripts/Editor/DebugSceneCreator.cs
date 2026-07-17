@@ -99,6 +99,8 @@ namespace LastCall.EditorTools
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/counter.png");
             stageSo.FindProperty("customerSprite").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Characters/vip_patron.png");
+            stageSo.FindProperty("registerSprite").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Props/register.png");
             stageSo.ApplyModifiedPropertiesWithoutUndo();
 
             var hud = game.AddComponent<DebugHud>();
