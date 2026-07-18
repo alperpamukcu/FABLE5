@@ -101,6 +101,11 @@ namespace LastCall.DebugUI
         private Image _customerPortrait;
         private Text _customerCaption;
         private RectTransform _actionBar;
+        private RectTransform _scorePopup;
+        private CanvasGroup _scorePopupGroup;
+        private Text _scoreRecipeText;
+        private Text _scoreMathText;
+        private Coroutine _scorePopupRoutine;
         private RectTransform _scrim;
         private GameObject _logPanel;
         private DiegeticStage.Exit _pendingExit = DiegeticStage.Exit.Refresh;
@@ -172,6 +177,7 @@ namespace LastCall.DebugUI
             _pendingExit = DiegeticStage.Exit.Mix; // mixed bottles pop forward-up then slide out
             var breakdown = Run.Mix(_selected.ToList());
             _selected.Clear();
+            ShowScorePopup(breakdown);
 
             if (breakdown.Recipe == null)
             {
@@ -335,6 +341,79 @@ namespace LastCall.DebugUI
         {
             _recipesVisible = !_recipesVisible;
             RenderAll();
+        }
+
+        /// <summary>
+        /// The score moment: reveal the mix result big and centred for a beat, using the
+        /// sacred number colours (Flavor cyan × Mult magenta, 16 §2).
+        /// </summary>
+        private void ShowScorePopup(ScoreBreakdown breakdown)
+        {
+            if (_scorePopup == null) return;
+
+            if (breakdown.Recipe == null)
+            {
+                _scoreRecipeText.text = "NO RECIPE";
+                _scoreMathText.text = "<color=#9C8F80>0</color>";
+            }
+            else if (breakdown.IsVoided)
+            {
+                _scoreRecipeText.text = $"{breakdown.Recipe.Name} — VOIDED";
+                _scoreMathText.text = $"<color=#D9455C>{breakdown.VoidReason}</color>";
+            }
+            else
+            {
+                _scoreRecipeText.text = $"{breakdown.Recipe.Name}  (Lv{breakdown.RecipeLevel})";
+                _scoreMathText.text =
+                    $"<color=#3BC8BE>{breakdown.TotalFlavor:0.#}</color>   ×   " +
+                    $"<color=#E84DA6>{breakdown.TotalMult:0.#}</color>   =   {breakdown.FinalScore:0.#}";
+            }
+
+            if (_scorePopupRoutine != null) StopCoroutine(_scorePopupRoutine);
+            _scorePopupRoutine = StartCoroutine(ScorePopupRoutine());
+        }
+
+        private System.Collections.IEnumerator ScorePopupRoutine()
+        {
+            const float baseY = 120f, rise = 10f, inDur = 0.16f, hold = 1.2f, outDur = 0.3f;
+            _scorePopup.gameObject.SetActive(true);
+            _scorePopup.anchoredPosition = new Vector2(0, baseY);
+            // The score moment owns the screen: mute the preview line underneath it.
+            if (_previewText != null) _previewText.gameObject.SetActive(false);
+
+            if (Motion.Reduced)
+            {
+                _scorePopupGroup.alpha = 1f;
+                yield return new WaitForSecondsRealtime(hold);
+                _scorePopup.gameObject.SetActive(false);
+                if (_previewText != null) _previewText.gameObject.SetActive(true);
+                yield break;
+            }
+
+            // Rise + fade in on whole pixels (no scaling, so the pixel grid stays intact).
+            float t = 0f;
+            while (t < inDur)
+            {
+                t += Time.unscaledDeltaTime;
+                float k = Tweening.OutCubic(Mathf.Clamp01(t / inDur));
+                _scorePopupGroup.alpha = k;
+                _scorePopup.anchoredPosition = new Vector2(0, Mathf.Round(baseY - rise * (1f - k)));
+                yield return null;
+            }
+            _scorePopupGroup.alpha = 1f;
+            _scorePopup.anchoredPosition = new Vector2(0, baseY);
+
+            yield return new WaitForSecondsRealtime(hold);
+
+            t = 0f;
+            while (t < outDur)
+            {
+                t += Time.unscaledDeltaTime;
+                _scorePopupGroup.alpha = 1f - Mathf.Clamp01(t / outDur);
+                yield return null;
+            }
+            _scorePopup.gameObject.SetActive(false);
+            if (_previewText != null) _previewText.gameObject.SetActive(true);
         }
 
         /// <summary>Debug UI stays alive on misuse: rule violations land in the log instead of the console.</summary>
@@ -1014,6 +1093,29 @@ namespace LastCall.DebugUI
             Stretch((RectTransform)_recipeText.transform, Vector2.zero, Vector2.one, new Vector2(20, 12), new Vector2(-20, -50));
             _recipeText.gameObject.SetActive(false);   // superseded by the visual rows
             _recipePanel.gameObject.SetActive(false);
+
+            // Score moment: the mix result owns the screen for a beat (16 §2 number colours —
+            // Flavor cyan × Mult magenta). Non-interactive, fades itself out.
+            _scorePopup = NewRect("ScorePopup", root);
+            Place(_scorePopup, new Vector2(0.5f, 0.5f), new Vector2(560, 116), new Vector2(0, 120));
+            // Flat pixel card: solid amber border + fully opaque fill (no rounded/translucent
+            // kit sprite), so nothing behind it bleeds through the number moment.
+            _scorePopup.gameObject.AddComponent<Image>().color = Amber;
+            _scorePopupGroup = _scorePopup.gameObject.AddComponent<CanvasGroup>();
+            _scorePopupGroup.blocksRaycasts = false;
+            _scorePopupGroup.interactable = false;
+
+            var scoreFill = NewRect("ScoreFill", _scorePopup);
+            Stretch(scoreFill, Vector2.zero, Vector2.one, new Vector2(3, 3), new Vector2(-3, -3));
+            scoreFill.gameObject.AddComponent<Image>().color = DeepPlum;
+
+            _scoreRecipeText = NewText("ScoreRecipe", scoreFill, 18, TextAnchor.MiddleCenter, CandleGlow);
+            Stretch((RectTransform)_scoreRecipeText.transform, new Vector2(0, 1), new Vector2(1, 1),
+                new Vector2(10, -46), new Vector2(-10, -10));
+            _scoreMathText = NewText("ScoreMath", scoreFill, 26, TextAnchor.MiddleCenter, Cream);
+            Stretch((RectTransform)_scoreMathText.transform, new Vector2(0, 0), new Vector2(1, 0),
+                new Vector2(10, 10), new Vector2(-10, 58));
+            _scorePopup.gameObject.SetActive(false);
 
             // Banner (win/lose marquee) above the modals.
             _bannerText = NewText("Banner", root, 40, TextAnchor.MiddleCenter, Color.white);
