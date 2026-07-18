@@ -27,7 +27,9 @@
 | Info panel (night/wallet/target/score/mixes) | DebugHud | legacy-cozy-noir | Text overlay; restyle in v2 UI pass (module 16). |
 | Patron shelf | DebugHud | legacy-cozy-noir | Portrait thumbnails + sell; portraits are v1 painterly. |
 | Tool belt | DebugHud | legacy-cozy-noir | Tool sprites are v1 painterly. |
-| Live recipe preview line | DebugHud | legacy-cozy-noir | |
+| Live recipe preview line | DebugHud | legacy-cozy-noir | Lifted out of the rail; muted while the score card is up. |
+| **Score moment** (mix result card) | DebugHud | placeholder | Amber-framed opaque pixel card: recipe + `Flavor cyan × Mult magenta = score`. Rises 10px + fades in (160ms), holds 1.2s, fades out; plain hold under reduced motion. Covers no-recipe and VOIDED. |
+| **Ambient life** (neon flicker, patron idle) | `DiegeticStage` | migrated-v2 | 18 §4 budget: neon wall flickers ~1 frame every 3-7s, patron breathes on a 1px 2-frame idle. Skipped under reduced motion; cosmetic only, never touches RunRng. |
 | MIX / RESTOCK / SKIP→FAVOR / BOUNCER / RECIPES / New Run buttons | DebugHud | placeholder | Restyled to flat v2 pixel buttons: palette fill + 2px dark border + Silkscreen pixel font (dropped the rounded procedural sprite). Stats block + section headers (PATRONS/TOOLS) still legacy font — pixel pass pending. |
 | Customer / VIP portrait card | DebugHud | legacy-cozy-noir | VIP portraits are v1 painterly. |
 | RECIPES toggle | DebugHud | legacy-cozy-noir | |
