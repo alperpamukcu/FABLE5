@@ -124,8 +124,10 @@ namespace LastCall.EditorTools
 
             var hud = game.AddComponent<DebugHud>();
             var hudSo = new SerializedObject(hud);
-            hudSo.FindProperty("displayFont").objectReferenceValue = LoadRequired<Font>(LegacyDisplayFontPath);
-            hudSo.FindProperty("bodyFont").objectReferenceValue = LoadRequired<Font>(LegacyBodyFontPath);
+            // v2 HUD pixel pass: the whole overlay uses the pixel fonts now (Silkscreen for
+            // body/headers, Press Start 2P for buttons/numbers via pixelFont).
+            hudSo.FindProperty("displayFont").objectReferenceValue = LoadRequired<Font>(PixelBodyFontPath);
+            hudSo.FindProperty("bodyFont").objectReferenceValue = LoadRequired<Font>(PixelBodyFontPath);
             hudSo.FindProperty("pixelFont").objectReferenceValue = LoadRequired<Font>(PixelBodyFontPath);
             // UI kit is optional: the HUD falls back to flat colors when unwired.
             hudSo.FindProperty("panelSprite").objectReferenceValue =

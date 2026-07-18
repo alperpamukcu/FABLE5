@@ -30,20 +30,20 @@ namespace LastCall.DebugUI
         private const float FirstSlotX = 100f;             // clears the bottom-left cash register
         private const float CustomerX = 556f;              // VIP centre, bottom-right on the bar
         private const float CustomerBaseY = 126f;          // hands rest on the bar-top surface
-        private const float CustomerTilt = -10f;           // right end leans right (radial, arc)
+        private const float CustomerTilt = 0f;           // right end leans right (radial, arc)
         private const float RegisterX = 44f;               // cash register centre, bottom-left
-        private const float RegisterTilt = 10f;            // left end leans left (radial, arc)
+        private const float RegisterTilt = 0f;            // left end leans left (radial, arc)
         private const float BottleBaseY = 128f;            // 18 §2: y=232 top-down → 360−232
         private const float CounterFrontY = 96f;           // 18 §2: surface line y=264 → 360−264 (bottom 96px)
         private const float BottleW = 40f;                 // placeholder fallback size
         private const float BottleH = 60f;
         private const float SelectRise = 4f;               // 18 §3: select rises 4px
-        private const float ArcHeight = 30f;               // curved bar: centre slots rise this much
-        private const float BottleTilt = 7f;               // max radial lean at the arc ends
+        private const float ArcHeight = 0f;               // curved bar: centre slots rise this much
+        private const float BottleTilt = 0f;               // max radial lean at the arc ends
         private const float OffscreenRight = 680f;
         private const float OffscreenLeft = -40f;
         private const float Overscan = 48f;         // bleed past screen edges (aspect safety)
-        private const float CounterSurfaceInset = 118f; // rest line = px below the counter sprite top (arc centre)
+        private const float CounterSurfaceInset = 12f; // rest line = px below the counter sprite top (arc centre)
 
         // ── choreography timings (18 §3) ────────────────────────────────────────
         private const float EnterStagger = 0.06f;          // 60 ms per bottle

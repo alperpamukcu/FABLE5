@@ -816,9 +816,12 @@ namespace LastCall.DebugUI
                 raw.raycastTarget = false;
             }
 
-            // Top-left: run/round state.
-            _infoText = NewText("Info", root, 15, TextAnchor.UpperLeft, Color.white);
-            Stretch((RectTransform)_infoText.transform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(12, -140), new Vector2(392, -12));
+            // Top-left: run/round state on a framed panel (v2 professional HUD).
+            var infoPanel = NewRect("InfoPanel", root);
+            Stretch(infoPanel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(8, -150), new Vector2(404, -8));
+            StylePanel(infoPanel, WithAlpha(DeepPlum, 0.82f));
+            _infoText = NewText("Info", infoPanel, 15, TextAnchor.UpperLeft, Cream);
+            Stretch((RectTransform)_infoText.transform, Vector2.zero, Vector2.one, new Vector2(12, 10), new Vector2(-10, -10));
 
             // Left column: patron shelf, then tool belt.
             _patronPanel = NewSidePanel(root, "Patrons", -146, -300);
