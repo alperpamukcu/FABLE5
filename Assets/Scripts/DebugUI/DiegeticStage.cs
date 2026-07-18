@@ -117,6 +117,11 @@ namespace LastCall.DebugUI
             if (_moneyText != null) _moneyText.text = text;
         }
 
+        /// <summary>The per-type bottle sprite, so UI (e.g. the recipe book) can show the
+        /// same art the rail uses instead of abstract colour dots.</summary>
+        public Sprite BottleIcon(IngredientType type) =>
+            _bottleSprites.TryGetValue(type, out var s) ? s : null;
+
         private void Awake()
         {
             Application.runInBackground = true; // keep the slide animations advancing unfocused

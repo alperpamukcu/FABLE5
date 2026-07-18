@@ -89,6 +89,7 @@ namespace LastCall.DebugUI
         private RectTransform _shopOffersPanel;
         private Text _shopTitle;
         private RectTransform _recipePanel;
+        private RectTransform _recipeRows;
         private Text _recipeText;
         private bool _recipesVisible;
         private Button _mixButton;
@@ -671,24 +672,65 @@ namespace LastCall.DebugUI
             _recipePanel.gameObject.SetActive(_recipesVisible);
             if (!_recipesVisible) return;
 
-            var lines = new List<string>
+            ClearChildren(_recipeRows);
+
+            // Legend: the actual bottle art per ingredient type, so the patterns below read
+            // as "these bottles" rather than abstract colour dots.
+            var legend = NewRecipeRow(26);
+            foreach (var type in TypeColors.Keys)
             {
-                "<b>Legend:</b>  " + string.Join("  ",
-                    TypeColors.Keys.Select(t => $"{TypeDot(t)} {t}")),
-                ""
-            };
+                AddTypeIcon(legend, type, 18, 24);
+                var label = NewText($"Legend_{type}", legend, 12, TextAnchor.MiddleLeft, Cream);
+                label.text = type.ToString();
+                label.gameObject.AddComponent<LayoutElement>().preferredWidth = 74;
+            }
 
             foreach (var recipe in Run.Recipes.OrderBy(r => r.Rank))
             {
                 int level = Run.RecipeLevelOf(recipe.Id);
-                lines.Add($"{PatternDots(recipe)}  <b>{recipe.Name}</b> (Lv{level})  " +
-                          $"{recipe.FlavorAtLevel(level)} × {recipe.MultAtLevel(level)}{ConstraintText(recipe)}");
+                var row = NewRecipeRow(28);
+                foreach (var req in recipe.Requirements)
+                    for (int i = 0; i < req.Count; i++)
+                        AddTypeIcon(row, req.Types.First(), 18, 26);
+
+                var text = NewText($"Recipe_{recipe.Id}", row, 13, TextAnchor.MiddleLeft, Cream);
+                text.text = $"<b>{recipe.Name}</b> (Lv{level})   " +
+                            $"{recipe.FlavorAtLevel(level)} × {recipe.MultAtLevel(level)}{ConstraintText(recipe)}";
+                text.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
             }
 
-            lines.Add("");
-            lines.Add("Pick any 1–5 cards — the bar auto-detects the best recipe.");
-            lines.Add("Cards outside the pattern still get played but add no Flavor.");
-            _recipeText.text = string.Join("\n", lines);
+            var hint = NewRecipeRow(24);
+            var hintText = NewText("RecipeHint", hint, 12, TextAnchor.MiddleLeft, CandleGlow);
+            hintText.text = "Pick any 1–5 bottles — the bar auto-detects the best recipe. Extras add no Flavor.";
+            hintText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+        }
+
+        /// <summary>One horizontal strip inside the recipe book's vertical list.</summary>
+        private RectTransform NewRecipeRow(float height)
+        {
+            var row = NewRect("Row", _recipeRows);
+            var layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 3f;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = true;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childAlignment = TextAnchor.MiddleLeft;
+            row.gameObject.AddComponent<LayoutElement>().preferredHeight = height;
+            return row;
+        }
+
+        /// <summary>An ingredient-type icon: the real bottle sprite when installed, else a
+        /// flat swatch in that type's colour.</summary>
+        private void AddTypeIcon(RectTransform parent, IngredientType type, float w, float h)
+        {
+            var rt = NewRect($"Icon_{type}", parent);
+            var image = rt.gameObject.AddComponent<Image>();
+            var sprite = stage != null ? stage.BottleIcon(type) : null;
+            if (sprite != null) { image.sprite = sprite; image.preserveAspect = true; }
+            else image.color = TypeColors[type];
+            var le = rt.gameObject.AddComponent<LayoutElement>();
+            le.preferredWidth = w; le.preferredHeight = h;
         }
 
         private string TypeDot(IngredientType type) =>
@@ -818,14 +860,14 @@ namespace LastCall.DebugUI
 
             // Top-left: run/round state on a framed panel (v2 professional HUD).
             var infoPanel = NewRect("InfoPanel", root);
-            Stretch(infoPanel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(8, -150), new Vector2(404, -8));
+            Stretch(infoPanel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(8, -162), new Vector2(404, -8));
             StylePanel(infoPanel, WithAlpha(DeepPlum, 0.82f));
             _infoText = NewText("Info", infoPanel, 15, TextAnchor.UpperLeft, Cream);
             Stretch((RectTransform)_infoText.transform, Vector2.zero, Vector2.one, new Vector2(12, 10), new Vector2(-10, -10));
 
             // Left column: patron shelf, then tool belt.
-            _patronPanel = NewSidePanel(root, "Patrons", -146, -300);
-            _toolPanel = NewSidePanel(root, "Tools", -306, -400);
+            _patronPanel = NewSidePanel(root, "Patrons", -172, -248);
+            _toolPanel = NewSidePanel(root, "Tools", -256, -338);
 
             // Top-right: seed + new run.
             _seedInput = NewInput("SeedInput", root, "LASTCALL-DEV");
@@ -920,7 +962,14 @@ namespace LastCall.DebugUI
             // Modal scrim: dims and blocks the game behind shop / recipe overlays.
             _scrim = NewRect("Scrim", root);
             Stretch(_scrim, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            _scrim.gameObject.AddComponent<Image>().color = new Color(0.02f, 0.01f, 0.04f, 0.62f);
+            var scrimImage = _scrim.gameObject.AddComponent<Image>();
+            scrimImage.color = new Color(0.02f, 0.01f, 0.04f, 0.62f);
+            // The scrim covers the RECIPES toggle, so clicking it closes the recipe book
+            // (the Back Room modal has its own Continue button and is left alone).
+            var scrimButton = _scrim.gameObject.AddComponent<Button>();
+            scrimButton.targetGraphic = scrimImage;
+            scrimButton.transition = Selectable.Transition.None;
+            scrimButton.onClick.AddListener(() => { if (_recipesVisible) OnToggleRecipesClicked(); });
             _scrim.gameObject.SetActive(false);
 
             // Back Room modal (drawn above the scrim).
@@ -947,8 +996,23 @@ namespace LastCall.DebugUI
             recipeTitle.font = _headerFont;
             recipeTitle.text = "RECIPE BOOK";
             Stretch((RectTransform)recipeTitle.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(12, -44), new Vector2(-12, -10));
+            var recipeClose = NewButton("RecipeClose", _recipePanel, "CLOSE",
+                WithAlpha(WoodBrown, 0.95f), OnToggleRecipesClicked, 12);
+            Place((RectTransform)recipeClose.transform, new Vector2(1, 1), new Vector2(92, 28), new Vector2(-10, -8));
+
+            // Visual recipe rows: type icons (the real bottle sprites) + name/stats.
+            _recipeRows = NewRect("RecipeRows", _recipePanel);
+            Stretch(_recipeRows, Vector2.zero, Vector2.one, new Vector2(16, 12), new Vector2(-16, -48));
+            var rowsLayout = _recipeRows.gameObject.AddComponent<VerticalLayoutGroup>();
+            rowsLayout.spacing = 3f;
+            rowsLayout.childForceExpandHeight = false;
+            rowsLayout.childForceExpandWidth = true;
+            rowsLayout.childControlHeight = true;
+            rowsLayout.childControlWidth = true;
+
             _recipeText = NewText("RecipeText", _recipePanel, 15, TextAnchor.UpperLeft, Cream);
             Stretch((RectTransform)_recipeText.transform, Vector2.zero, Vector2.one, new Vector2(20, 12), new Vector2(-20, -50));
+            _recipeText.gameObject.SetActive(false);   // superseded by the visual rows
             _recipePanel.gameObject.SetActive(false);
 
             // Banner (win/lose marquee) above the modals.
