@@ -24,6 +24,13 @@ namespace LastCall.Core
         public int GoldenCardBonus { get; }
         public int MoneyDoubleCap { get; }
         public Func<int, CustomerSlot, double> TargetProvider { get; }
+
+        /// <summary>
+        /// Satisfaction required to survive week N (GDD 20). The only loss gate after the
+        /// pivot — see <c>Docs/PLAN_emotion_pivot.md</c> D3.
+        /// </summary>
+        public Func<int, int> QuotaProvider { get; }
+
         public RoundConfig RoundConfig { get; }
 
         public RunConfig(int nights = 8, int startingMoney = 4,
@@ -33,7 +40,8 @@ namespace LastCall.Core
             int rerollBaseCost = 5, int bookPrice = 4, int goldenCardBonus = 3,
             int moneyDoubleCap = 20,
             Func<int, CustomerSlot, double> targetProvider = null,
-            RoundConfig roundConfig = null)
+            RoundConfig roundConfig = null,
+            Func<int, int> quotaProvider = null)
         {
             if (nights <= 0) throw new ArgumentOutOfRangeException(nameof(nights));
             Nights = nights;
@@ -52,6 +60,7 @@ namespace LastCall.Core
             GoldenCardBonus = goldenCardBonus;
             MoneyDoubleCap = moneyDoubleCap;
             TargetProvider = targetProvider ?? TargetTable.GreenStake;
+            QuotaProvider = quotaProvider ?? QuotaTable.Standard;
             RoundConfig = roundConfig ?? RoundConfig.Default;
         }
 

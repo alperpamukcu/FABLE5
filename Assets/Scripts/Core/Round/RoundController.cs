@@ -7,8 +7,16 @@ namespace LastCall.Core
     public enum RoundPhase
     {
         InProgress,
+
+        /// <summary>The order was filled — the score target was reached.</summary>
         Won,
-        Lost
+
+        /// <summary>
+        /// The visit ended without filling the order. Not a loss: the customer leaves with
+        /// whatever satisfaction the night earned them (fork B — only the week's quota can
+        /// end a run). See <c>Docs/PLAN_emotion_pivot.md</c> D2.
+        /// </summary>
+        Closed
     }
 
     /// <summary>
@@ -28,6 +36,7 @@ namespace LastCall.Core
         private readonly List<IngredientCard> _rail = new List<IngredientCard>();
         private readonly HashSet<string> _mixedRecipeIds = new HashSet<string>();
         private readonly SeededRng _shatterRng;
+        private readonly int _night;
         private readonly List<IngredientCard> _lastShattered = new List<IngredientCard>();
         private readonly List<IngredientCard> _lastDoubledCopies = new List<IngredientCard>();
 
@@ -43,6 +52,15 @@ namespace LastCall.Core
         public int MixesUsed => Config.MixesPerCustomer - MixesRemaining;
         public int RestocksUsed => Config.RestocksPerCustomer - RestocksRemaining;
         public IReadOnlyList<PatronInstance> Patrons => _patrons;
+
+        /// <summary>Chats left this visit (GDD 19 §8); each one spends a Restock charge.</summary>
+        public int ChatsRemaining { get; private set; }
+
+        /// <summary>Verdict on the most recent Mix; null before the first one.</summary>
+        public ResonanceResult LastResonance { get; private set; }
+
+        /// <summary>Satisfaction this visit has earned toward the week's quota (GDD 19 §10).</summary>
+        public int SatisfactionEarned { get; private set; }
 
         /// <summary>Money owed by OnCustomerEnd patron effects; set once when the round is won.</summary>
         public double PatronPayout { get; private set; }
@@ -60,8 +78,9 @@ namespace LastCall.Core
             CustomerOrder customer, RoundConfig config = null,
             IReadOnlyDictionary<string, int> recipeLevels = null,
             IReadOnlyList<PatronInstance> patrons = null,
-            VipRuleSet vipRules = null, SeededRng shatterRng = null)
+            VipRuleSet vipRules = null, SeededRng shatterRng = null, int night = 1)
         {
+            _night = night;
             _deck = deck ?? throw new ArgumentNullException(nameof(deck));
             _recipes = recipes ?? throw new ArgumentNullException(nameof(recipes));
             Customer = customer ?? throw new ArgumentNullException(nameof(customer));
@@ -73,6 +92,7 @@ namespace LastCall.Core
 
             MixesRemaining = Config.MixesPerCustomer;
             RestocksRemaining = Config.RestocksPerCustomer;
+            ChatsRemaining = Customer.HasEmotion ? Config.ChatsPerCustomer : 0;
             Phase = RoundPhase.InProgress;
             FillRail();
         }
@@ -97,7 +117,8 @@ namespace LastCall.Core
             var accumulatedBefore = new double[_patrons.Count];
             for (int i = 0; i < _patrons.Count; i++) accumulatedBefore[i] = _patrons[i].Accumulated;
 
-            var breakdown = ScoringEngine.Score(match, LevelOf(match), _patrons, BuildContext(selection, match));
+            var breakdown = ScoringEngine.Score(match, LevelOf(match), _patrons,
+                BuildContext(selection, match), PreviewResonance(selection));
 
             for (int i = 0; i < _patrons.Count; i++)
             {
@@ -118,12 +139,20 @@ namespace LastCall.Core
             if (match != null && IsVoidedByVipRule(match, out string voidReason))
             {
                 // Voided mixes still consume the attempt and the cards — the rule text
-                // is on the ticket; ignoring it is the player's mistake (GDD 6).
+                // is on the ticket; ignoring it is the player's mistake (GDD 6). The drink
+                // never reaches the customer, so it says nothing to them either.
                 breakdown = ScoreBreakdown.Voided(match.Recipe, LevelOf(match), voidReason);
+                LastResonance = null;
             }
             else
             {
-                breakdown = ScoringEngine.Score(match, LevelOf(match), _patrons, BuildContext(selection, match));
+                var resonance = JudgeServe(selection, match);
+                LastResonance = resonance;
+                breakdown = match == null
+                    ? ScoreBreakdown.NoRecipeWith(resonance)
+                    : ScoringEngine.Score(match, LevelOf(match), _patrons,
+                        BuildContext(selection, match), resonance);
+                CommitServe(resonance);
             }
             if (match != null) _mixedRecipeIds.Add(match.Recipe.Id);
             AccumulatedScore += breakdown.FinalScore;
@@ -141,7 +170,7 @@ namespace LastCall.Core
             }
             else if (MixesRemaining == 0)
             {
-                Phase = RoundPhase.Lost;
+                Phase = RoundPhase.Closed;
             }
             else
             {
@@ -149,6 +178,77 @@ namespace LastCall.Core
             }
 
             return breakdown;
+        }
+
+        /// <summary>
+        /// Non-consuming projection of what a selection would do to the customer — the
+        /// pre-commit preview on the ID card (GDD 19 §5). Returns the raw, unclamped delta:
+        /// the UI needs to be able to show an overshoot before it happens.
+        /// </summary>
+        public EmotionDelta PreviewCharges(IReadOnlyList<IngredientCard> selection)
+        {
+            if (!Customer.HasEmotion || selection == null || selection.Count == 0)
+                return EmotionDelta.Empty;
+            if (selection.Count > Config.MaxMixSelection) return EmotionDelta.Empty;
+
+            var match = RecipeMatcher.Match(selection, _recipes);
+            if (match != null && IsVoidedByVipRule(match, out _)) return EmotionDelta.Empty;
+            return EmotionResolver.Resolve(selection, match);
+        }
+
+        /// <summary>Non-consuming preview of the verdict a selection would earn.</summary>
+        public ResonanceResult PreviewResonance(IReadOnlyList<IngredientCard> selection)
+        {
+            if (!Customer.HasEmotion) return ResonanceResult.None;
+            var delta = PreviewCharges(selection);
+            return delta.IsEmpty
+                ? ResonanceResult.None
+                : ResonanceJudge.Judge(Customer.Regular.Stats, delta, Customer.Read);
+        }
+
+        /// <summary>
+        /// Ask instead of pour (GDD 19 §8). Spends a Restock charge to tighten one reading
+        /// on the ID card. Deliberately does *not* count toward <see cref="RestocksUsed"/>:
+        /// patron conditions keyed on restocks are about churning the rail, and listening to
+        /// someone is not that (see <c>Docs/PLAN_emotion_pivot.md</c> D8).
+        /// </summary>
+        public StatReading Chat(Emotion emotion)
+        {
+            EnsureRoundInProgress();
+            if (!Customer.HasEmotion)
+                throw new InvalidOperationException("This customer has no emotional read.");
+            if (ChatsRemaining <= 0) throw new InvalidOperationException("No Chats remaining.");
+            if (RestocksRemaining <= 0) throw new InvalidOperationException("Chatting costs a Restock.");
+
+            ChatsRemaining--;
+            RestocksRemaining--;
+
+            int truth = Customer.Regular.Stats[emotion];
+            int halfWidth = CustomerReadFactory.HalfWidthFor(_night, Customer.Regular.Relationship);
+            Customer.Learn(Customer.Read.Narrowing(emotion, truth, halfWidth));
+            return Customer.Read[emotion];
+        }
+
+        /// <summary>
+        /// Works out what this serve does to the person on the other side of the bar. Returns
+        /// null when there is no emotional layer (bench setups), which keeps scoring unchanged.
+        /// </summary>
+        private ResonanceResult JudgeServe(IReadOnlyList<IngredientCard> selection, RecipeMatch match)
+        {
+            if (!Customer.HasEmotion) return null;
+            var delta = EmotionResolver.Resolve(selection, match);
+            return ResonanceJudge.Judge(Customer.Regular.Stats, delta, Customer.Read);
+        }
+
+        /// <summary>
+        /// Writes the verdict through to the person. A bust commits nothing — pushing someone
+        /// too far doesn't leave them further along, it just doesn't land.
+        /// </summary>
+        private void CommitServe(ResonanceResult resonance)
+        {
+            if (resonance == null || !Customer.HasEmotion) return;
+            Customer.Regular.Stats.Apply(resonance.CommittedDelta);
+            SatisfactionEarned += resonance.Satisfaction;
         }
 
         /// <summary>

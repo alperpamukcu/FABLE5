@@ -41,10 +41,17 @@ namespace LastCall.Core
         /// <summary>The rule text explaining the void; empty otherwise.</summary>
         public string VoidReason { get; private set; } = string.Empty;
 
+        /// <summary>
+        /// How the serve read the customer (GDD 19 §6); null for mixes scored without the
+        /// emotion layer (bench setups, previews with no customer).
+        /// </summary>
+        public ResonanceResult Resonance { get; }
+
         public ScoreBreakdown(RecipeDefinition recipe, int recipeLevel,
             IReadOnlyList<IngredientCard> scoredCards, IReadOnlyList<ScoreStep> steps,
-            double totalFlavor, double totalMult)
+            double totalFlavor, double totalMult, ResonanceResult resonance = null)
         {
+            Resonance = resonance;
             Recipe = recipe;
             RecipeLevel = recipeLevel;
             ScoredCards = scoredCards;
@@ -56,6 +63,14 @@ namespace LastCall.Core
 
         public static ScoreBreakdown NoRecipe { get; } = new ScoreBreakdown(
             null, 1, new IngredientCard[0], new ScoreStep[0], 0, 0);
+
+        /// <summary>
+        /// A mix that matched nothing still reached the customer, so it still carries a
+        /// verdict (GDD 19 §5, D5) — it just scores zero points doing it.
+        /// </summary>
+        public static ScoreBreakdown NoRecipeWith(ResonanceResult resonance) =>
+            resonance == null ? NoRecipe
+                : new ScoreBreakdown(null, 1, new IngredientCard[0], new ScoreStep[0], 0, 0, resonance);
 
         /// <summary>A mix cancelled by a VIP rule: the recipe is shown, the score is zero.</summary>
         public static ScoreBreakdown Voided(RecipeDefinition recipe, int recipeLevel, string reason) =>

@@ -116,14 +116,17 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void FailingAnOrder_LosesTheRun()
+        public void FailingAnOrder_DoesNotLoseTheRun_TheCustomerJustLeaves()
         {
+            // Fork B: only the week's satisfaction quota can end a run. An order you could
+            // not fill costs you the tips and nothing else.
             var run = NewRun(new RunConfig(targetProvider: (n, s) => 1e9));
             for (int mix = 0; mix < 4; mix++)
                 run.Mix(new[] { run.CurrentRound.Rail[0] });
 
-            Assert.AreEqual(RunPhase.RunLost, run.Phase);
-            Assert.Throws<InvalidOperationException>(() => run.ContinueToNextCustomer());
+            Assert.AreEqual(RunPhase.BackRoom, run.Phase);
+            Assert.AreEqual(0, run.LastTips.Total);
+            Assert.DoesNotThrow(() => run.ContinueToNextCustomer());
         }
 
         [Test]

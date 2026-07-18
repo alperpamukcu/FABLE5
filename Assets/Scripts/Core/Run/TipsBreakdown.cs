@@ -31,5 +31,8 @@ namespace LastCall.Core
             GoldenBonus = goldenBonus;
             FavorBonus = favorBonus;
         }
+
+        /// <summary>Nobody paid: the customer left before the order was filled (fork B).</summary>
+        public static TipsBreakdown None { get; } = new TipsBreakdown(0, 0, 0, 0, 0);
     }
 }

@@ -64,6 +64,18 @@ namespace LastCall.Core
         /// <summary>0 = off. Straight Booze: at least N cards of one Type.</summary>
         public int SameTypeGroupMin { get; }
 
+        /// <summary>
+        /// How far this recipe carries an ingredient's emotional charges (GDD 19 §5). The
+        /// craft layer's whole job after the pivot: the same bottles say more in a drink that
+        /// was actually made well. Derived from <see cref="BaseMult"/> unless overridden, so
+        /// there is only ever one number to balance.
+        /// </summary>
+        public double ChargeMultiplier { get; }
+
+        /// <summary>Charge multiplier implied by a recipe's base Mult (GDD 19 §5).</summary>
+        public static double ChargeMultiplierFor(int baseMult) =>
+            Math.Min(3.0, 1.0 + 0.2 * (baseMult - 1));
+
         public RecipeDefinition(
             string id, string name, int rank,
             int baseFlavor, int baseMult, int flavorPerLevel, int multPerLevel,
@@ -72,7 +84,8 @@ namespace LastCall.Core
             bool allDistinctTypes = false, bool allEqualFlavor = false,
             bool scoreAllMixCards = false,
             int equalFlavorGroupSize = 0, int ascendingFlavorGroupSize = 0,
-            int sameTypeGroupMin = 0)
+            int sameTypeGroupMin = 0,
+            double chargeMultiplier = 0)
         {
             Id = id;
             Name = name;
@@ -90,6 +103,9 @@ namespace LastCall.Core
             EqualFlavorGroupSize = equalFlavorGroupSize;
             AscendingFlavorGroupSize = ascendingFlavorGroupSize;
             SameTypeGroupMin = sameTypeGroupMin;
+            ChargeMultiplier = chargeMultiplier > 0
+                ? Math.Min(3.0, chargeMultiplier)
+                : ChargeMultiplierFor(baseMult);
         }
 
         /// <summary>Level 1 = base values; Recipe Books raise the level (GDD 02 table, last column).</summary>

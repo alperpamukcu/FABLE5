@@ -213,7 +213,7 @@ namespace LastCall.DebugUI
             }
 
             if (Run.Phase == RunPhase.RunWon) AppendLog("★ OPENING WEEK SURVIVED — run won!");
-            if (Run.Phase == RunPhase.RunLost) AppendLog("✖ LAST CALL — order failed, run over.");
+            if (Run.Phase == RunPhase.RunLost) AppendLog("✖ LAST CALL — the week's quota went unmet.");
             RenderAll();
         }
 

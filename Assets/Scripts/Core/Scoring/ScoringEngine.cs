@@ -11,16 +11,29 @@ namespace LastCall.Core
     ///      (quality tier), then patron OnCardScored triggers in slot order. Retriggers
     ///      repeat the whole card scoring (retrigger ops themselves fire only once).
     ///   3. Patron OnHandScored effects in slot order.
-    ///   4. FinalScore = Flavor × Mult.
-    /// A mix that matched no recipe scores 0 and fires no patron effects.
+    ///   4. The resonance block (GDD 19 §6): how well the drink read the person.
+    ///   5. FinalScore = Flavor × Mult.
+    /// A mix that matched no recipe scores 0 and fires no patron effects (its emotional
+    /// charges still pour, at half strength — that is the round layer's job, not scoring's).
+    ///
+    /// Resonance is applied last on purpose: the Clean Serve burst is the closing flourish
+    /// of the score card, and it should not be compounded by patron MultMult effects.
     /// </summary>
     public static class ScoringEngine
     {
+        /// <summary>Mult can be penalised but never driven below this (GDD 19 §6).</summary>
+        public const double MinMult = 1.0;
+
         public static ScoreBreakdown Score(RecipeMatch match, int recipeLevel = 1) =>
             Score(match, recipeLevel, null, EffectContext.Empty);
 
         public static ScoreBreakdown Score(RecipeMatch match, int recipeLevel,
-            IReadOnlyList<PatronInstance> patrons, EffectContext context)
+            IReadOnlyList<PatronInstance> patrons, EffectContext context) =>
+            Score(match, recipeLevel, patrons, context, null);
+
+        public static ScoreBreakdown Score(RecipeMatch match, int recipeLevel,
+            IReadOnlyList<PatronInstance> patrons, EffectContext context,
+            ResonanceResult resonance)
         {
             if (match == null) return ScoreBreakdown.NoRecipe;
             patrons = patrons ?? System.Array.Empty<PatronInstance>();
@@ -45,8 +58,46 @@ namespace LastCall.Core
             }
 
             ApplyHandEffects(patrons, context, steps, ref flavor, ref mult);
+            ApplyResonance(resonance, steps, ref flavor, ref mult);
 
-            return new ScoreBreakdown(recipe, recipeLevel, match.ScoredCards, steps, flavor, mult);
+            return new ScoreBreakdown(recipe, recipeLevel, match.ScoredCards, steps, flavor, mult, resonance);
+        }
+
+        /// <summary>
+        /// The emotional half of the score (GDD 19 §6): additive Mult for how much closer the
+        /// customer got to what they asked for, a flat bonus for reading a stat you could not
+        /// see, a burst for landing it exactly — and a penalty for pushing them too far.
+        /// </summary>
+        private static void ApplyResonance(ResonanceResult resonance, List<ScoreStep> steps,
+            ref double flavor, ref double mult)
+        {
+            if (resonance == null) return;
+
+            if (resonance.ResonanceMult != 0)
+            {
+                mult += resonance.ResonanceMult;
+                steps.Add(new ScoreStep("Resonance", EffectOp.AddMult, resonance.ResonanceMult, flavor, mult));
+            }
+
+            if (resonance.LuckyReadMult != 0)
+            {
+                mult += resonance.LuckyReadMult;
+                steps.Add(new ScoreStep("Lucky read", EffectOp.AddMult, resonance.LuckyReadMult, flavor, mult));
+            }
+
+            if (resonance.BustPenalty != 0)
+            {
+                mult = System.Math.Max(MinMult, mult - resonance.BustPenalty);
+                steps.Add(new ScoreStep($"Bust ({resonance.Bust})", EffectOp.AddMult,
+                    -resonance.BustPenalty, flavor, mult));
+            }
+
+            if (resonance.ServeBurst != 1)
+            {
+                mult *= resonance.ServeBurst;
+                steps.Add(new ScoreStep(resonance.BlindRead ? "Clean Serve (blind)" : "Clean Serve",
+                    EffectOp.MultMult, resonance.ServeBurst, flavor, mult));
+            }
         }
 
         /// <summary>Scores one pass of a card; returns how many retriggers were requested.</summary>

@@ -55,12 +55,12 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void Mix_ExhaustingMixesBelowTarget_Loses()
+        public void Mix_ExhaustingMixesBelowTarget_ClosesTheVisit()
         {
             var round = NewRound(SpiritDeck(48, flavor: 6), target: 100000);
             for (int i = 0; i < 4; i++) round.Mix(new[] { round.Rail[0] });
 
-            Assert.AreEqual(RoundPhase.Lost, round.Phase);
+            Assert.AreEqual(RoundPhase.Closed, round.Phase);
             Assert.AreEqual(0, round.MixesRemaining);
         }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace LastCall.Core
 {
@@ -20,8 +21,16 @@ namespace LastCall.Core
         public Enhancement Enhancement { get; private set; }
         public int InstanceId { get; }
 
+        /// <summary>
+        /// What this ingredient does to a person (GDD 19 §4). Always printed on the card —
+        /// the charges are never the hidden information; the customer is. Immutable and tied
+        /// to the ingredient's identity, so a Tool that rewrites Type leaves them alone.
+        /// </summary>
+        public IReadOnlyList<EmotionCharge> Charges { get; }
+
         public IngredientCard(string id, string name, IngredientType type, int flavor,
-            QualityTier quality = QualityTier.HousePour)
+            QualityTier quality = QualityTier.HousePour,
+            IReadOnlyList<EmotionCharge> charges = null)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Card id is required", nameof(id));
             if (flavor < 0) throw new ArgumentOutOfRangeException(nameof(flavor));
@@ -31,6 +40,7 @@ namespace LastCall.Core
             Flavor = flavor;
             Quality = quality;
             Enhancement = Enhancement.None;
+            Charges = charges ?? Array.Empty<EmotionCharge>();
             InstanceId = _nextInstanceId++;
         }
 
@@ -49,7 +59,7 @@ namespace LastCall.Core
         /// <summary>A fresh instance with identical stats (Bar Spoon); gets its own InstanceId.</summary>
         public IngredientCard Clone()
         {
-            var copy = new IngredientCard(Id, Name, Type, Flavor, Quality);
+            var copy = new IngredientCard(Id, Name, Type, Flavor, Quality, Charges);
             copy.Enhancement = Enhancement;
             return copy;
         }

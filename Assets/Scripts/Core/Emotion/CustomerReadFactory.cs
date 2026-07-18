@@ -1,0 +1,131 @@
+using System;
+using System.Collections.Generic;
+
+namespace LastCall.Core
+{
+    /// <summary>
+    /// Builds the per-visit customer ID card (GDD 19 §3): exactly one Exact reading, three
+    /// Ranges and two Unknowns, shuffled per customer, with bands that widen as the week
+    /// gets later and narrow as you get to know someone.
+    /// Pure apart from the injected stream — callers pass <c>RunRng.GetStream("read")</c>.
+    /// </summary>
+    public static class CustomerReadFactory
+    {
+        public const int ExactCount = 1;
+        public const int RangeCount = 3;
+        public const int UnknownCount = 2;
+
+        /// <summary>How far a Range band reaches either side of the truth, by night (GDD 19 §3).</summary>
+        public static int HalfWidthForNight(int night) =>
+            night <= 2 ? 8 : night <= 5 ? 12 : 16;
+
+        /// <summary>Knowing someone tightens the bands you can read on them (GDD 19 §10).</summary>
+        public static int HalfWidthFor(int night, Relationship relationship) =>
+            Math.Max(2, HalfWidthForNight(night) - 3 * (int)relationship);
+
+        public static CustomerRead Build(EmotionStats truth, int night, SeededRng rng,
+            Relationship relationship = Relationship.Stranger)
+        {
+            if (truth == null) throw new ArgumentNullException(nameof(truth));
+            if (rng == null) throw new ArgumentNullException(nameof(rng));
+
+            int halfWidth = HalfWidthFor(night, relationship);
+            var tiers = ShuffledTiers(rng);
+            var readings = new StatReading[Emotions.Count];
+
+            for (int i = 0; i < readings.Length; i++)
+            {
+                var emotion = Emotions.All[i];
+                switch (tiers[i])
+                {
+                    case VisibilityTier.Exact:
+                        readings[i] = StatReading.Exact(truth[emotion]);
+                        break;
+                    case VisibilityTier.Range:
+                        readings[i] = StatReading.Range(truth[emotion], halfWidth);
+                        break;
+                    default:
+                        readings[i] = StatReading.Unknown;
+                        break;
+                }
+            }
+
+            var intent = RollIntent(truth, rng, out var direction);
+            return new CustomerRead(readings, intent, direction);
+        }
+
+        /// <summary>
+        /// Rebuilds a read from tiers a regular already carries, decayed by staleness
+        /// (GDD 19 §10) rather than rolled fresh.
+        /// </summary>
+        public static CustomerRead FromTiers(EmotionStats truth, IReadOnlyList<VisibilityTier> tiers,
+            int night, SeededRng rng, Relationship relationship = Relationship.Stranger)
+        {
+            if (truth == null) throw new ArgumentNullException(nameof(truth));
+            if (tiers == null || tiers.Count != Emotions.Count)
+                throw new ArgumentException($"Expected {Emotions.Count} tiers.", nameof(tiers));
+            if (rng == null) throw new ArgumentNullException(nameof(rng));
+
+            int halfWidth = HalfWidthFor(night, relationship);
+            var readings = new StatReading[Emotions.Count];
+            for (int i = 0; i < readings.Length; i++)
+            {
+                var emotion = Emotions.All[i];
+                readings[i] = tiers[i] == VisibilityTier.Exact ? StatReading.Exact(truth[emotion])
+                    : tiers[i] == VisibilityTier.Range ? StatReading.Range(truth[emotion], halfWidth)
+                    : StatReading.Unknown;
+            }
+
+            var intent = RollIntent(truth, rng, out var direction);
+            return new CustomerRead(readings, intent, direction);
+        }
+
+        /// <summary>The tier bag, Fisher-Yates shuffled on the caller's stream.</summary>
+        public static VisibilityTier[] ShuffledTiers(SeededRng rng)
+        {
+            var bag = new VisibilityTier[Emotions.Count];
+            int index = 0;
+            for (int i = 0; i < ExactCount; i++) bag[index++] = VisibilityTier.Exact;
+            for (int i = 0; i < RangeCount; i++) bag[index++] = VisibilityTier.Range;
+            for (int i = 0; i < UnknownCount; i++) bag[index++] = VisibilityTier.Unknown;
+
+            for (int i = bag.Length - 1; i > 0; i--)
+            {
+                int j = rng.NextInt(i + 1);
+                (bag[i], bag[j]) = (bag[j], bag[i]);
+            }
+            return bag;
+        }
+
+        /// <summary>
+        /// What they came here about. Usually the loudest thing they are carrying, sometimes
+        /// not — people don't always lead with the real problem. The direction follows the
+        /// emotion's natural pull three times in four, and is forced when a stat is already
+        /// pinned (you cannot extinguish a 0).
+        /// </summary>
+        private static Emotion RollIntent(EmotionStats truth, SeededRng rng, out IntentDirection direction)
+        {
+            var intent = rng.NextInt(100) < 60
+                ? truth.Dominant
+                : Emotions.All[rng.NextInt(Emotions.Count)];
+
+            int value = truth[intent];
+            if (value <= 5) direction = IntentDirection.Fuel;
+            else if (value >= 95) direction = IntentDirection.Extinguish;
+            else
+            {
+                bool natural = rng.NextInt(100) < 75;
+                var pull = NaturalDirection(intent);
+                direction = natural ? pull : Opposite(pull);
+            }
+            return intent;
+        }
+
+        /// <summary>Excitement is the one people come in wanting more of; the rest they want put down.</summary>
+        private static IntentDirection NaturalDirection(Emotion emotion) =>
+            emotion == Emotion.Excitement ? IntentDirection.Fuel : IntentDirection.Extinguish;
+
+        private static IntentDirection Opposite(IntentDirection direction) =>
+            direction == IntentDirection.Fuel ? IntentDirection.Extinguish : IntentDirection.Fuel;
+    }
+}

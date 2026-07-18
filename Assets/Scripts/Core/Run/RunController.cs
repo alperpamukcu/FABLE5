@@ -38,6 +38,7 @@ namespace LastCall.Core
         private bool _firstShopOpened;
         private readonly List<FavorTag> _favorTags = new List<FavorTag>();
         private int _bouncerUsedNight;
+        private readonly RegularsRegistry _regulars;
 
         private const int MaxFavorTags = 4;    // GDD 5.4: tags queue, max 4 held
         private const int InvestorPayout = 15; // GDD 5.4: Investor pays after the next VIP
@@ -99,11 +100,27 @@ namespace LastCall.Core
         /// <summary>The VIP whose rules govern the current order; null for regular customers.</summary>
         public VipDefinition CurrentVip { get; private set; }
 
+        /// <summary>
+        /// Everyone this run has served, with their persistent emotional state (GDD 19 §10).
+        /// Null when the run was built without archetypes — the emotion layer is opt-in until
+        /// the content pass lands, and without it the run behaves exactly as it did before.
+        /// </summary>
+        public RegularsRegistry Regulars => _regulars;
+
+        /// <summary>True when this run is playing the read-the-customer layer.</summary>
+        public bool HasEmotionLayer => _regulars != null;
+
+        /// <summary>
+        /// This week's satisfaction quota — the run's only loss condition (fork B). Missing it
+        /// ends the run; a single customer you couldn't read never does.
+        /// </summary>
+        public WeekQuota Quota { get; private set; }
+
         public RunController(IEnumerable<IngredientCard> cards, IReadOnlyList<RecipeDefinition> recipes,
             RunRng rng, IEnumerable<PatronInstance> patrons = null, RunConfig config = null,
             IReadOnlyList<PatronDefinition> patronPool = null, IReadOnlyList<ToolDefinition> toolPool = null,
             IReadOnlyList<VipDefinition> vipPool = null, IReadOnlyList<VoucherDefinition> voucherPool = null,
-            BarDefinition bar = null)
+            BarDefinition bar = null, IReadOnlyList<ArchetypeDefinition> archetypes = null)
         {
             _recipes = recipes ?? throw new ArgumentNullException(nameof(recipes));
             _rng = rng ?? throw new ArgumentNullException(nameof(rng));
@@ -114,6 +131,9 @@ namespace LastCall.Core
             _voucherPool = voucherPool ?? Array.Empty<VoucherDefinition>();
             Config = config ?? RunConfig.Default;
             Money = Config.StartingMoney;
+            if (archetypes != null && archetypes.Count > 0)
+                _regulars = new RegularsRegistry(archetypes);
+            Quota = new WeekQuota(1, Config.QuotaProvider(1));
             var startingCards = new List<IngredientCard>(cards);
             if (bar != null) ApplyBar(bar, startingCards);
             _deck = new Deck(startingCards);
@@ -145,14 +165,18 @@ namespace LastCall.Core
             }
         }
 
-        /// <summary>Delegates to the current round and settles the run state on a terminal result.</summary>
+        /// <summary>
+        /// Delegates to the current round and settles the run state when the visit ends.
+        /// Falling short of an order no longer ends the run (fork B): the customer simply
+        /// leaves, having got whatever they got, and the week's quota does the judging.
+        /// </summary>
         public ScoreBreakdown Mix(IReadOnlyList<IngredientCard> selection)
         {
             EnsurePhase(RunPhase.CustomerRound);
             var breakdown = CurrentRound.Mix(selection);
 
             if (CurrentRound.Phase == RoundPhase.Won) OnCustomerSatisfied();
-            else if (CurrentRound.Phase == RoundPhase.Lost) Phase = RunPhase.RunLost;
+            else if (CurrentRound.Phase == RoundPhase.Closed) OnCustomerLeft();
 
             return breakdown;
         }
@@ -551,7 +575,48 @@ namespace LastCall.Core
                 (int)patronMoney, goldenBonus, favorBonus);
             Money += LastTips.Total;
 
+            EndCustomer();
+        }
+
+        /// <summary>
+        /// The customer ran out of patience before the order was filled. They still drank
+        /// what you made them, so whatever the serves earned still counts toward the week —
+        /// there are just no tips in it.
+        /// </summary>
+        private void OnCustomerLeft()
+        {
+            _deck.Discard(CurrentRound.Rail);
+            LastTips = TipsBreakdown.None;
+            EndCustomer();
+        }
+
+        /// <summary>
+        /// Closes out a visit: banks its satisfaction, and — when the week's last VIP has
+        /// been served — runs the quota gate, drifts everyone, and opens the next week.
+        /// </summary>
+        private void EndCustomer()
+        {
+            Quota.Add(CurrentRound.SatisfactionEarned);
+            CurrentRound.Customer.Regular?.RecordVisit(CurrentRound.SatisfactionEarned);
+
             bool runComplete = Night == Config.Nights && Slot == CustomerSlot.Vip;
+            bool weekCloses = Slot == CustomerSlot.Vip && QuotaTable.IsWeekEnd(Night);
+
+            // The quota only judges runs that are actually playing the emotion layer; a run
+            // built without archetypes has no satisfaction to earn and must not be failed.
+            if (weekCloses && HasEmotionLayer)
+            {
+                if (!Quota.Met)
+                {
+                    Phase = RunPhase.RunLost;
+                    return;
+                }
+
+                _regulars.DriftAll(_rng.GetStream("drift"));
+                if (!runComplete)
+                    Quota = new WeekQuota(Quota.Week + 1, Config.QuotaProvider(Quota.Week + 1));
+            }
+
             Phase = runComplete ? RunPhase.RunWon : RunPhase.BackRoom;
             if (Phase == RunPhase.BackRoom) OpenShop();
         }
@@ -625,9 +690,43 @@ namespace LastCall.Core
                 (ruleSet, roundConfig, target) = ResolveVipRules(CurrentVip, roundConfig, target);
             }
 
+            var order = BuildOrder(name, target, ruleText);
             CurrentRound = new RoundController(_deck, _recipes,
-                new CustomerOrder(name, target, ruleText), roundConfig, _recipeLevels, _patrons,
-                ruleSet, _rng.GetStream("shatter"));
+                order, roundConfig, _recipeLevels, _patrons,
+                ruleSet, _rng.GetStream("shatter"), Night);
+        }
+
+        /// <summary>
+        /// Decides who is at the bar and how much of them the bartender can see tonight
+        /// (GDD 19 §3/§10). Without archetypes this is the pre-pivot anonymous order.
+        /// </summary>
+        private CustomerOrder BuildOrder(string name, double target, string ruleText)
+        {
+            if (!HasEmotionLayer) return new CustomerOrder(name, target, ruleText);
+
+            var regular = _regulars.RollNext(_rng.GetStream("customer"));
+            var readRng = _rng.GetStream("read");
+
+            // A face you have seen before is read through what you remember of them, decayed;
+            // a stranger gets a fresh roll of tiers.
+            bool returning = regular.Visits > 0;
+            var read = returning
+                ? CustomerReadFactory.FromTiers(regular.Stats, regular.KnownTiers, Night, readRng,
+                    regular.Relationship)
+                : CustomerReadFactory.Build(regular.Stats, Night, readRng, regular.Relationship);
+
+            if (!returning)
+                regular.RememberTiers(TiersOf(read));
+
+            string label = ruleText != null ? $"{regular.Name} — {name}" : regular.Name;
+            return new CustomerOrder(label, target, regular, read, ruleText);
+        }
+
+        private static VisibilityTier[] TiersOf(CustomerRead read)
+        {
+            var tiers = new VisibilityTier[Emotions.Count];
+            for (int i = 0; i < tiers.Length; i++) tiers[i] = read[Emotions.All[i]].Tier;
+            return tiers;
         }
 
         /// <summary>Draws from the "vip" stream: finale VIP on the last Night, the gentle
