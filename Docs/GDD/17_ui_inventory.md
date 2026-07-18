@@ -78,7 +78,7 @@
 |---|---|---|
 | Patron portraits | 60 | legacy-cozy-noir |
 | VIP portraits | 20 | legacy-cozy-noir |
-| Ingredient sprites | 46 | legacy-cozy-noir (6 v2 pixel type-bottles live on the rail: spirit/bubbly/sweet/sour/bitter/garnish, 32×48) |
+| Ingredient sprites | 46 (v2) | migrated-v2 — v1 painterly `Ingredients/` bank **deleted** (unused; `art.Ingredient()` never called); the 46 per-ingredient pixel bottles in `Bottles/` are the ingredient art now. |
 | Tool sprites | 16 | legacy-cozy-noir |
 | Icons | 3 | legacy-cozy-noir |
 | Scene backgrounds | 3 | legacy-cozy-noir (v2 `club_bg` 640×360 + `counter` live in the diegetic stage) |
