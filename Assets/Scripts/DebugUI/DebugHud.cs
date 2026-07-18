@@ -889,7 +889,7 @@ namespace LastCall.DebugUI
             var previewRt = (RectTransform)_previewText.transform;
             previewRt.anchorMin = previewRt.anchorMax = previewRt.pivot = new Vector2(0.5f, 0);
             previewRt.sizeDelta = new Vector2(680, 34);
-            previewRt.anchoredPosition = new Vector2(0, 384);
+            previewRt.anchoredPosition = new Vector2(0, 440);  // in the gap above the rail + value chips
 
             // Action buttons: a top-right vertical stack, clear of the bottle rail below.
             _mixButton = NewButton("Mix", _actionBar, "MIX", Amber, OnMixClicked, 18);
