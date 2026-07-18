@@ -85,6 +85,11 @@ namespace LastCall.DebugUI
         private readonly Dictionary<int, BottleView> _bottles = new Dictionary<int, BottleView>();
         private string _railSignature = "";
 
+        // Ambient life (18 §4): at most a neon flicker + a customer idle, both subtle and
+        // both silenced under reduced motion.
+        private Image _backgroundImage;
+        private RectTransform _customerRect;
+
         private sealed class BottleView
         {
             public IngredientCard Card;
@@ -167,6 +172,7 @@ namespace LastCall.DebugUI
                 Stretch(bg, Vector2.zero, Vector2.one, new Vector2(-Overscan, -Overscan), new Vector2(Overscan, Overscan));
                 var bgImg = bg.gameObject.AddComponent<Image>();
                 bgImg.sprite = backgroundSprite; bgImg.raycastTarget = false;
+                _backgroundImage = bgImg;
             }
             else
             {
@@ -262,6 +268,50 @@ namespace LastCall.DebugUI
                 cust.localRotation = Quaternion.Euler(0, 0, CustomerTilt);   // POV angle
                 var img = cust.gameObject.AddComponent<Image>();
                 img.sprite = customerSprite; img.preserveAspect = true; img.raycastTarget = false;
+                _customerRect = cust;
+            }
+
+            if (!Motion.Reduced) StartCoroutine(Ambient());
+        }
+
+        /// <summary>
+        /// Ambient life (18 §4), deliberately sparse: the neon wall flickers off for a frame
+        /// every few seconds and the patron breathes on a 2-frame whole-pixel idle. Nothing
+        /// else moves, so the score moment still owns the screen. Purely cosmetic — this
+        /// jitter never touches RunRng, so run determinism is unaffected.
+        /// </summary>
+        private System.Collections.IEnumerator Ambient()
+        {
+            float nextFlicker = Random.Range(3f, 7f);
+            float bobTimer = 0f;
+            bool bobUp = false;
+            float customerY = _customerRect != null ? _customerRect.anchoredPosition.y : 0f;
+
+            while (true)
+            {
+                float dt = Time.unscaledDeltaTime;
+
+                // Neon flicker: a brief dip in the wall's brightness, then back.
+                nextFlicker -= dt;
+                if (nextFlicker <= 0f && _backgroundImage != null)
+                {
+                    _backgroundImage.color = new Color(0.72f, 0.72f, 0.78f);
+                    yield return new WaitForSecondsRealtime(0.05f);
+                    if (_backgroundImage != null) _backgroundImage.color = Color.white;
+                    nextFlicker = Random.Range(3f, 7f);
+                }
+
+                // Patron idle: 1px whole-pixel bob so he reads as alive, never drifting.
+                bobTimer += dt;
+                if (bobTimer >= 1.1f && _customerRect != null)
+                {
+                    bobUp = !bobUp;
+                    _customerRect.anchoredPosition = new Vector2(
+                        _customerRect.anchoredPosition.x, customerY + (bobUp ? 1f : 0f));
+                    bobTimer = 0f;
+                }
+
+                yield return null;
             }
         }
 
