@@ -533,7 +533,7 @@ namespace LastCall.DebugUI
             }
             if (Round.Glass.IsEmpty)
             {
-                _previewText.text = "Select 1–5 ingredients…";
+                _previewText.text = "Pour something…";
                 return;
             }
             var preview = Round.PreviewScore();
@@ -603,6 +603,8 @@ namespace LastCall.DebugUI
             stage.SetCustomerRead(inRound ? Round.Customer : null);
             if (!inRound) return;
             stage.SetShelf(Round.Shelf, Round.VipRules.DebuffedTypes, PourFrom, _pendingExit);
+            stage.SetGlass(Round.Glass, id => Round.Shelf.Find(id)?.Ingredient);
+            stage.SetSatisfaction(Round.SatisfactionEarned, Round.Customer.HasEmotion);
 
             // Pre-commit preview (GDD 19 §5): the projected movement is shown while the
             // selection is still reversible, so a bust is a decision and not an ambush.

@@ -88,6 +88,24 @@ namespace LastCall.Core
         public ShelfBottle Find(string ingredientId) =>
             ingredientId != null && _byId.TryGetValue(ingredientId, out var bottle) ? bottle : null;
 
+        /// <summary>
+        /// Swaps one bottle for another in place, keeping its shelf position — muscle memory
+        /// for where the vodka lives must survive upgrading the vodka (GDD 22 §4).
+        /// </summary>
+        public void Replace(ShelfBottle oldBottle, ShelfBottle newBottle)
+        {
+            if (oldBottle == null) throw new ArgumentNullException(nameof(oldBottle));
+            if (newBottle == null) throw new ArgumentNullException(nameof(newBottle));
+            int index = _bottles.IndexOf(oldBottle);
+            if (index < 0) throw new ArgumentException("Bottle is not on the shelf.", nameof(oldBottle));
+            if (newBottle.Id != oldBottle.Id && _byId.ContainsKey(newBottle.Id))
+                throw new ArgumentException($"'{newBottle.Id}' is already on the shelf.", nameof(newBottle));
+
+            _bottles[index] = newBottle;
+            _byId.Remove(oldBottle.Id);
+            _byId[newBottle.Id] = newBottle;
+        }
+
         public void Add(ShelfBottle bottle)
         {
             if (bottle == null) throw new ArgumentNullException(nameof(bottle));

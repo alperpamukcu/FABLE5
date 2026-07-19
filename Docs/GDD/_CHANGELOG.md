@@ -1,6 +1,24 @@
 # GDD Changelog
 
-## v2.0 (current) — The emotion pivot
+## v3.1 (current) — Bottles, brands, the market & the hi-bit art pass
+
+- NEW `22_bottles_brands_market.md` — the curated 12-bottle base bar with brand identity
+  papers (style/tier/origin/ABV/blurb), the end-of-night brand market, the licence-style
+  patron ID (name/age/hometown, happiness gauge), preparation infrastructure
+  (shaker/ice/rims, plumbing only), and the v2.5 hi-bit art direction (2x texel density in
+  the same 640x360 layout).
+- The Flavor numbers came off the bottles; brand-name shelf tags replace them. Flavor still
+  feeds volume-weighted scoring and will surface in the bottle-info popup.
+- `classic_bar.json` remains as data for tests and packs; the shipped shelf is
+  `bottles/base_bar.json`.
+
+## v3.0 — The pour pivot
+
+- NEW `21_pour_system.md` — hold-to-pour, the glass, ratio recipes, bottle volume economy.
+  The deck, rail and Restock are deleted; see the audit and casualty list in
+  `PLAN_pour_pivot.md`.
+
+## v2.0 — The emotion pivot
 
 The core loop changed from "recognise a pattern, score points" to **read the person and serve
 what they need**. Recipes were demoted to the craft layer, not deleted.

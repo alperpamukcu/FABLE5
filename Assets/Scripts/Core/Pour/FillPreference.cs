@@ -58,6 +58,10 @@ namespace LastCall.Core
             }
         }
 
+        /// <summary>Three letters for tight UI: SHORT / MID / LONG.</summary>
+        public string ShortLabel =>
+            Length == GlassLength.Short ? "SHORT" : Length == GlassLength.Regular ? "MID" : "LONG";
+
         public string Label
         {
             get

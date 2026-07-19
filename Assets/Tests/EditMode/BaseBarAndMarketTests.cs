@@ -1,0 +1,277 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using LastCall.Core;
+using LastCall.Game;
+using NUnit.Framework;
+using UnityEngine;
+
+namespace LastCall.Tests
+{
+    /// <summary>
+    /// The branded base bar (GDD 22): a small curated shelf where every bottle is knowable,
+    /// plus the brand catalogue the end-of-night market sells from. Same philosophy as the
+    /// other content suites — pin the shape the design guarantees, not tunable numbers.
+    /// </summary>
+    public class BaseBarContentTests
+    {
+        private static string ReadDataFile(string relativePath) =>
+            File.ReadAllText(Path.Combine(Application.dataPath, "Data", relativePath));
+
+        private static IReadOnlyList<IngredientCard> All() =>
+            DataLoader.ParseDeck(ReadDataFile("bottles/base_bar.json")).Cards;
+
+        private static IReadOnlyList<IngredientCard> Starting() =>
+            All().Where(c => c.Info == null || c.Info.Tier <= 1).ToList();
+
+        [Test]
+        public void TheStartingShelf_IsSmallEnoughToKnowByHeart()
+        {
+            // The whole point of the base bar: the 46-bottle wall was unreadable.
+            var starting = Starting();
+            Assert.LessOrEqual(starting.Count, 12);
+            Assert.GreaterOrEqual(starting.Count, 8);
+        }
+
+        [Test]
+        public void EveryBottle_CarriesItsIdentityPapers()
+        {
+            foreach (var card in All())
+            {
+                Assert.IsNotNull(card.Info, card.Id);
+                Assert.IsNotEmpty(card.Info.Style, card.Id);
+                Assert.IsNotEmpty(card.Info.Origin, $"{card.Id} has no origin");
+                Assert.IsNotEmpty(card.Info.Blurb, $"{card.Id} has no blurb");
+            }
+        }
+
+        [Test]
+        public void MixersAndGarnishes_CarryNoAlcohol()
+        {
+            // Tone guardrail bookkeeping: the fill axis must be reachable with zero-ABV
+            // volume, so the mixers must actually be zero-ABV.
+            foreach (var card in All().Where(c =>
+                         c.Type == IngredientType.Bubbly || c.Type == IngredientType.Sour ||
+                         c.Type == IngredientType.Garnish ||
+                         (c.Type == IngredientType.Sweet && c.Info.Style == "syrup")))
+                Assert.AreEqual(0, card.Info.Abv, card.Id);
+        }
+
+        [Test]
+        public void EveryEmotion_CanBeMovedBothWays_OnTheStartingShelf()
+        {
+            var charges = Starting().SelectMany(c => c.Charges).ToList();
+            foreach (var emotion in Emotions.All)
+            {
+                Assert.IsTrue(charges.Any(c => c.Emotion == emotion && c.Amount < 0),
+                    $"nothing extinguishes {emotion}");
+                Assert.IsTrue(charges.Any(c => c.Emotion == emotion && c.Amount > 0),
+                    $"nothing fuels {emotion}");
+            }
+        }
+
+        [Test]
+        public void StartingStyles_AreUnique()
+        {
+            // One bottle per style on the opening shelf, or the market's "replace your vodka"
+            // upgrade would be ambiguous about which vodka.
+            var styles = Starting().Select(c => c.Info.Style).ToList();
+            CollectionAssert.AllItemsAreUnique(styles);
+        }
+
+        [Test]
+        public void EveryMarketBrand_UpgradesAStyleTheShelfStocks()
+        {
+            var startingStyles = new HashSet<string>(Starting().Select(c => c.Info.Style));
+            foreach (var brand in All().Where(c => c.Info.Tier > 1))
+            {
+                Assert.IsTrue(startingStyles.Contains(brand.Info.Style),
+                    $"{brand.Id} upgrades '{brand.Info.Style}', which nothing stocks");
+                Assert.Greater(brand.Info.Price, 0, brand.Id);
+            }
+        }
+
+        [Test]
+        public void TheStartingShelf_CoversTheRecipeTable()
+        {
+            // The derived ratio bands are by type, so the shelf needs every type present.
+            var types = Starting().Select(c => c.Type).Distinct().ToList();
+            foreach (IngredientType type in System.Enum.GetValues(typeof(IngredientType)))
+                CollectionAssert.Contains(types, type);
+        }
+    }
+
+    public class MarketTests
+    {
+        private static IngredientCard Bottle(string id, string style, int tier, int price = 0,
+            int charge = -10) =>
+            new IngredientCard(id, id, IngredientType.Spirit, 5, QualityTier.HousePour,
+                new[] { new EmotionCharge(Emotion.Anger, charge) },
+                new IngredientInfo(style, tier, price, "somewhere", 40, "test"));
+
+        private static RunController NewRun(IReadOnlyList<IngredientCard> catalogue)
+        {
+            var starting = new List<IngredientCard>
+            {
+                Bottle("vodka_a", "vodka", 1),
+                Bottle("gin_a", "gin", 1),
+            };
+            return new RunController(starting, RecipeCatalog.CreateDefault(), new RunRng("MKT"),
+                config: new RunConfig(startingMoney: 100, targetProvider: (n, s) => 1),
+                brandCatalogue: catalogue);
+        }
+
+        private static void WinCustomer(RunController run) => PourTestKit.WinCurrentCustomer(run);
+
+        [Test]
+        public void TheMarket_OnlyOpensWhenTheNightCloses()
+        {
+            var run = NewRun(new[] { Bottle("vodka_b", "vodka", 2, 6) });
+
+            WinCustomer(run); // Customer A -> Back Room, mid-night
+            Assert.IsEmpty(run.MarketOffers, "no deliveries between customers");
+
+            run.ContinueToNextCustomer();
+            WinCustomer(run); // B
+            run.ContinueToNextCustomer();
+            WinCustomer(run); // VIP -> the night closes
+            Assert.AreEqual(1, run.MarketOffers.Count, "deliveries come at closing time");
+        }
+
+        [Test]
+        public void BuyingABrand_SwapsTheBottleInPlace_Full()
+        {
+            var run = NewRun(new[] { Bottle("vodka_b", "vodka", 2, 6, charge: -14) });
+            // Drain some vodka first, so "arrives full" is observable.
+            run.PourMeasure("vodka_a", 0.8);
+            run.DiscardGlass();
+
+            WinCustomer(run); run.ContinueToNextCustomer();
+            WinCustomer(run); run.ContinueToNextCustomer();
+            WinCustomer(run);
+
+            int money = run.Money;
+            int index = run.Shelf.Bottles.ToList().FindIndex(b => b.Id == "vodka_a");
+            run.BuyBrand(0);
+
+            Assert.AreEqual(money - 6, run.Money);
+            Assert.IsNull(run.Shelf.Find("vodka_a"), "the old brand went back to the distributor");
+            var upgraded = run.Shelf.Find("vodka_b");
+            Assert.IsNotNull(upgraded);
+            Assert.AreEqual(upgraded.Capacity, upgraded.Remaining, 1e-9, "the new brand arrives full");
+            Assert.AreEqual(index, run.Shelf.Bottles.ToList().FindIndex(b => b.Id == "vodka_b"),
+                "muscle memory: the vodka lives where the vodka lived");
+        }
+
+        [Test]
+        public void AnOwnedTier_NoLongerAppearsOnTheMarket()
+        {
+            var run = NewRun(new[] { Bottle("vodka_b", "vodka", 2, 6) });
+            WinCustomer(run); run.ContinueToNextCustomer();
+            WinCustomer(run); run.ContinueToNextCustomer();
+            WinCustomer(run);
+            run.BuyBrand(0);
+            run.ContinueToNextCustomer();
+
+            WinCustomer(run); run.ContinueToNextCustomer();
+            WinCustomer(run); run.ContinueToNextCustomer();
+            WinCustomer(run); // next night closes
+
+            Assert.IsEmpty(run.MarketOffers, "tier 2 is stocked; nothing better exists");
+        }
+
+        [Test]
+        public void BuyingBeyondTheWallet_Throws()
+        {
+            var starting = new List<IngredientCard> { Bottle("vodka_a", "vodka", 1) };
+            var run = new RunController(starting, RecipeCatalog.CreateDefault(), new RunRng("MKT2"),
+                config: new RunConfig(startingMoney: 0, tipCustomerA: 0, tipCustomerB: 0,
+                    tipVip: 0, vipDefeatBonus: 0, targetProvider: (n, s) => 1),
+                brandCatalogue: new[] { Bottle("vodka_b", "vodka", 2, 999) });
+
+            WinCustomer(run); run.ContinueToNextCustomer();
+            WinCustomer(run); run.ContinueToNextCustomer();
+            WinCustomer(run);
+
+            Assert.Throws<System.InvalidOperationException>(() => run.BuyBrand(0));
+        }
+    }
+
+    public class PreparationTests
+    {
+        [Test]
+        public void PreparationsRecord_AndDeduplicate()
+        {
+            var glass = new GlassContents(1.0);
+            glass.AddPreparation(Preparations.Ice);
+            glass.AddPreparation(Preparations.Ice);
+
+            Assert.AreEqual(1, glass.PreparationSteps.Count);
+            Assert.IsTrue(glass.HasPreparation("ice"));
+        }
+
+        [Test]
+        public void ShakenAndStirred_ShareOneSlot()
+        {
+            // A drink is shaken or stirred, never both; the later choice wins.
+            var glass = new GlassContents(1.0);
+            glass.AddPreparation(Preparations.Shaken);
+            glass.AddPreparation(Preparations.Stirred);
+
+            Assert.IsFalse(glass.HasPreparation("shaken"));
+            Assert.IsTrue(glass.HasPreparation("stirred"));
+        }
+
+        [Test]
+        public void ClearingTheGlass_ClearsThePreparations()
+        {
+            var glass = new GlassContents(1.0);
+            glass.Add("gin", 0.5);
+            glass.AddPreparation(Preparations.SaltRim);
+
+            glass.Clear();
+
+            Assert.IsEmpty(glass.PreparationSteps);
+        }
+    }
+
+    public class LicenceDataTests
+    {
+        private static ArchetypeDefinition Archetype(params string[] hometowns)
+        {
+            var bands = Emotions.All.Select(_ => new EmotionBand(40, 60)).ToList();
+            return new ArchetypeDefinition("test", "Test", bands, new[] { "Sam" },
+                hometowns: hometowns.Length > 0 ? hometowns : null);
+        }
+
+        [Test]
+        public void EveryRegular_GetsAnAdultAge_AndAHometownFromThePool()
+        {
+            var registry = new RegularsRegistry(new[] { Archetype("Eastport", "Milltown") }, 0);
+            var rng = new RunRng("licence").GetStream("customer");
+
+            for (int i = 0; i < 20; i++)
+            {
+                var regular = registry.RollNext(rng);
+                Assert.GreaterOrEqual(regular.Age, 21, "nobody underage in the bar");
+                Assert.Less(regular.Age, 68);
+                CollectionAssert.Contains(new[] { "Eastport", "Milltown" }, regular.Hometown);
+            }
+        }
+
+        [Test]
+        public void LicenceDetails_AreSeedDeterministic()
+        {
+            RegularState Roll(string seed)
+            {
+                var registry = new RegularsRegistry(new[] { Archetype("Eastport", "Milltown") }, 0);
+                return registry.RollNext(new RunRng(seed).GetStream("customer"));
+            }
+
+            var a = Roll("PAIR");
+            var b = Roll("PAIR");
+            Assert.AreEqual(a.Age, b.Age);
+            Assert.AreEqual(a.Hometown, b.Hometown);
+        }
+    }
+}

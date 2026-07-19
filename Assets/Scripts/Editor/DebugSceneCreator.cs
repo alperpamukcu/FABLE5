@@ -15,7 +15,7 @@ namespace LastCall.EditorTools
     public static class DebugSceneCreator
     {
         private const string ScenePath = "Assets/Scenes/Main.unity";
-        private const string DeckPath = "Assets/Data/decks/classic_bar.json";
+        private const string DeckPath = "Assets/Data/bottles/base_bar.json";
         private const string RecipesPath = "Assets/Data/recipes/recipes.json";
         private const string PatronsPath = "Assets/Data/patrons/patrons.json";
         private const string ToolsPath = "Assets/Data/tools/tools.json";
@@ -68,6 +68,8 @@ namespace LastCall.EditorTools
 
             var stage = game.AddComponent<LastCall.DebugUI.DiegeticStage>();
             var stageSo = new SerializedObject(stage);
+            stageSo.FindProperty("glassSprite").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Props/pour_glass.png");
             stageSo.FindProperty("displayFont").objectReferenceValue = LoadRequired<Font>(PixelDisplayFontPath);
             stageSo.FindProperty("bodyFont").objectReferenceValue = LoadRequired<Font>(PixelBodyFontPath);
             // Installed v2 pixel bottle sprites (18 §5 first batch); types without one fall

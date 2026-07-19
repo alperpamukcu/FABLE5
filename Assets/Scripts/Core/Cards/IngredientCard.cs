@@ -28,10 +28,18 @@ namespace LastCall.Core
         /// </summary>
         public IReadOnlyList<EmotionCharge> Charges { get; }
 
+        /// <summary>
+        /// The bottle's identity papers (GDD 22): brand style, tier, origin, ABV, blurb.
+        /// Null for bench-test cards; the shipped base bar always carries one.
+        /// </summary>
+        public IngredientInfo Info { get; }
+
         public IngredientCard(string id, string name, IngredientType type, int flavor,
             QualityTier quality = QualityTier.HousePour,
-            IReadOnlyList<EmotionCharge> charges = null)
+            IReadOnlyList<EmotionCharge> charges = null,
+            IngredientInfo info = null)
         {
+            Info = info;
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Card id is required", nameof(id));
             if (flavor < 0) throw new ArgumentOutOfRangeException(nameof(flavor));
             Id = id;
@@ -59,7 +67,7 @@ namespace LastCall.Core
         /// <summary>A fresh instance with identical stats (Bar Spoon); gets its own InstanceId.</summary>
         public IngredientCard Clone()
         {
-            var copy = new IngredientCard(Id, Name, Type, Flavor, Quality, Charges);
+            var copy = new IngredientCard(Id, Name, Type, Flavor, Quality, Charges, Info);
             copy.Enhancement = Enhancement;
             return copy;
         }

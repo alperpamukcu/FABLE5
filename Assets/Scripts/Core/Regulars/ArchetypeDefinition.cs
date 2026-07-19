@@ -46,10 +46,17 @@ namespace LastCall.Core
         /// </summary>
         public DemandLevel BaseDemand { get; }
 
+        /// <summary>Places this kind of person tends to be from (licence + future dialogue).</summary>
+        public IReadOnlyList<string> Hometowns { get; }
+
         public ArchetypeDefinition(string id, string name, IReadOnlyList<EmotionBand> bands,
             IReadOnlyList<string> namePool = null, int weight = 1,
-            DemandLevel baseDemand = DemandLevel.Easygoing)
+            DemandLevel baseDemand = DemandLevel.Easygoing,
+            IReadOnlyList<string> hometowns = null)
         {
+            Hometowns = hometowns != null && hometowns.Count > 0
+                ? hometowns
+                : new[] { "this side of town" };
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Archetype id is required", nameof(id));
             if (bands == null || bands.Count != Emotions.Count)
                 throw new ArgumentException($"Expected {Emotions.Count} bands.", nameof(bands));

@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &1701994244
+--- !u!1 &9424049
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,10 +127,10 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1701994248}
-  - component: {fileID: 1701994247}
-  - component: {fileID: 1701994246}
-  - component: {fileID: 1701994245}
+  - component: {fileID: 9424053}
+  - component: {fileID: 9424052}
+  - component: {fileID: 9424051}
+  - component: {fileID: 9424050}
   m_Layer: 0
   m_Name: Game
   m_TagString: Untagged
@@ -138,13 +138,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1701994245
+--- !u!114 &9424050
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1701994244}
+  m_GameObject: {fileID: 9424049}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 189e4c75064cbed429fe7262ed7f25dd, type: 3}
@@ -156,16 +156,15 @@ MonoBehaviour:
   panelSprite: {fileID: 21300000, guid: a0518c0f262835d47b22dcac653e6c6b, type: 3}
   buttonSprite: {fileID: 21300000, guid: 12b43cc54606d9144a7bea4891f8d0f1, type: 3}
   vignetteSprite: {fileID: 21300000, guid: 5f48097771af6644d83039445f04f5a1, type: 3}
-  backgroundMaterial: {fileID: 2100000, guid: 4b72e7f1ab335a84989cceba8f7620c8, type: 2}
   art: {fileID: 11400000, guid: 24ef82b28cef4d844a967d9532ec6a43, type: 2}
-  stage: {fileID: 1701994246}
---- !u!114 &1701994246
+  stage: {fileID: 9424051}
+--- !u!114 &9424051
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1701994244}
+  m_GameObject: {fileID: 9424049}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 653d485306ced894daca17d15fcc9b75, type: 3}
@@ -193,6 +192,8 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 84ea893a9ed1e8141b6b969fc8a48a08, type: 3}
   - id: amaro
     sprite: {fileID: 21300000, guid: 9d3f3f76b29c9f34babe5e1faefa70c2, type: 3}
+  - id: amaro_notte
+    sprite: {fileID: 21300000, guid: 0bb4e2ab63063fc43a1eb9f0728620ad, type: 3}
   - id: angostura
     sprite: {fileID: 21300000, guid: e6ccb1934439ceb48a00be5dc0085c82, type: 3}
   - id: aperol
@@ -203,6 +204,10 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 2a43e5b1d2957cb49af206991b2b4faa, type: 3}
   - id: bourbon
     sprite: {fileID: 21300000, guid: f1868ddffecd5514dae4e78fb00b2868, type: 3}
+  - id: bourbon_old_harrow
+    sprite: {fileID: 21300000, guid: 4679cd8c630b01645b7d07ea418d7d81, type: 3}
+  - id: bourbon_redline
+    sprite: {fileID: 21300000, guid: 316661dda8b0b2c4c94271602954dfb9, type: 3}
   - id: campari
     sprite: {fileID: 21300000, guid: c700997038df27949ad178b2581a645f, type: 3}
   - id: champagne
@@ -221,16 +226,24 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: ce91b426fe520b144986a64e2d7a679a, type: 3}
   - id: fernet
     sprite: {fileID: 21300000, guid: 589fc6a5da4a0b546b02f06d839b729d, type: 3}
+  - id: gin_boothby
+    sprite: {fileID: 21300000, guid: 89bdefbf100e71447aafef3f411c4488, type: 3}
+  - id: gin_juniper_crown
+    sprite: {fileID: 21300000, guid: 3316175105f55574b97d8c781acc9a05, type: 3}
   - id: ginger_ale
     sprite: {fileID: 21300000, guid: 8b3eb6421936b4b4db6b7b6449b52aac, type: 3}
   - id: ginger_beer
     sprite: {fileID: 21300000, guid: 77851d95e2e4b60448d039dc49bc92cf, type: 3}
+  - id: ginger_kicker
+    sprite: {fileID: 21300000, guid: de087f5f73207874f9bf739e6488f06e, type: 3}
   - id: grapefruit_juice
     sprite: {fileID: 21300000, guid: 5660f2001e838094ebf64cfc9052bae9, type: 3}
   - id: grenadine
     sprite: {fileID: 21300000, guid: e881d95496bb4d84797d381cede97461, type: 3}
   - id: honey_syrup
     sprite: {fileID: 21300000, guid: a876c65a42cab8d48bae027fb4a59409, type: 3}
+  - id: lemon_fresh
+    sprite: {fileID: 21300000, guid: a5c2f7f5c164275439b5b693b9ef6eef, type: 3}
   - id: lemon_juice
     sprite: {fileID: 21300000, guid: 285c82b089ee0a94892dce46433eebcb, type: 3}
   - id: lemon_twist
@@ -243,10 +256,14 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 3ca8ae97b3fb56646923c690d021a697, type: 3}
   - id: mezcal
     sprite: {fileID: 21300000, guid: 0233b90d3a3d6af48be5c20cab518f9c, type: 3}
+  - id: mint_fresh
+    sprite: {fileID: 21300000, guid: 02af6ca8513e016498c7d46a669dc179, type: 3}
   - id: mint_sprig
     sprite: {fileID: 21300000, guid: 1607a7d19b7141449a1a5f522c80df8f, type: 3}
   - id: olive
     sprite: {fileID: 21300000, guid: a61027cc3d4430a4d8aebc30a2a366b1, type: 3}
+  - id: olive_luca
+    sprite: {fileID: 21300000, guid: eaf21b2d28dc2a14280c845b434434c9, type: 3}
   - id: orange_bitters
     sprite: {fileID: 21300000, guid: 585c9c57c49d09a4c95531e79468e7bc, type: 3}
   - id: orange_peel
@@ -259,22 +276,34 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: c0ce8aea7d2727d479a877ba57fa0b57, type: 3}
   - id: rail_vodka
     sprite: {fileID: 21300000, guid: 6c783ee796218e640b690fc97e07f18b, type: 3}
+  - id: rum_cane_coral
+    sprite: {fileID: 21300000, guid: 7fe200eb18bf42d4f9964420dbc9d092, type: 3}
   - id: rye_whiskey
     sprite: {fileID: 21300000, guid: 27575844b6627d24681dddb5c2e15766, type: 3}
   - id: simple_syrup
     sprite: {fileID: 21300000, guid: 4cb8385d815393947b21fb6c8b461617, type: 3}
   - id: single_malt
     sprite: {fileID: 21300000, guid: 852d3f1ff4a337d4296f368f0ba9581d, type: 3}
+  - id: soda_klara
+    sprite: {fileID: 21300000, guid: 362466afa9964ea4e977eb7c92347b3c, type: 3}
   - id: soda_water
     sprite: {fileID: 21300000, guid: 116d2976813a3744aa16994034080828, type: 3}
   - id: sour_mix
     sprite: {fileID: 21300000, guid: c3cdd5b6f8e7b1f4b83c81cbb59344ce, type: 3}
   - id: sparkling_rose
     sprite: {fileID: 21300000, guid: b570239115acf3f4d86e6c5600c13493, type: 3}
+  - id: syrup_house
+    sprite: {fileID: 21300000, guid: cf299ce87b0d2724092359f5aa57bcf4, type: 3}
   - id: tonic_water
     sprite: {fileID: 21300000, guid: a59113f446672ef489e2c46ae956380c, type: 3}
   - id: verjus
     sprite: {fileID: 21300000, guid: 34f48f33b3eded240a08985dc6dc2317, type: 3}
+  - id: vermouth_velvet
+    sprite: {fileID: 21300000, guid: df091106d05135b4db25028073dae59c, type: 3}
+  - id: vodka_astra
+    sprite: {fileID: 21300000, guid: 45cafa5c0ad8a4344a55e190225ce93e, type: 3}
+  - id: vodka_vor
+    sprite: {fileID: 21300000, guid: 651b9dd4d99f933439bdb1d512efacc2, type: 3}
   - id: white_rum
     sprite: {fileID: 21300000, guid: e51ac73ba01698141b9e74bf963620cf, type: 3}
   - id: yuzu_juice
@@ -300,19 +329,20 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: f13c3a36dda32bb458e94dada2da066a, type: 3}
   - archetypeId: wound_tight
     sprite: {fileID: 21300000, guid: bb0bc77546995d54cbbe19688d09d164, type: 3}
---- !u!114 &1701994247
+  glassSprite: {fileID: 21300000, guid: 1cd6329ea98b2ea4db320db64f5c6856, type: 3}
+--- !u!114 &9424052
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1701994244}
+  m_GameObject: {fileID: 9424049}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9afd43bbfb204eb4a85fbe44baffeb8d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: LastCall.Game::LastCall.Game.GameBootstrap
-  deckJson: {fileID: 4900000, guid: c0bda31c926722a4c842df81acecf1e0, type: 3}
+  deckJson: {fileID: 4900000, guid: 28f1aeeaa52fedd41b19a50fc131feb3, type: 3}
   recipesJson: {fileID: 4900000, guid: 5b26aeb63984a164e85d8728d96cd20d, type: 3}
   patronsJson: {fileID: 4900000, guid: 4d28ef5b63376ba48beecdaaaa44502a, type: 3}
   toolsJson: {fileID: 4900000, guid: 196dc4f0da1fab845ac3ce4d564490b5, type: 3}
@@ -322,13 +352,13 @@ MonoBehaviour:
   seed: LASTCALL-DEV
   stake: 1
   barId: classic
---- !u!4 &1701994248
+--- !u!4 &9424053
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1701994244}
+  m_GameObject: {fileID: 9424049}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -337,7 +367,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &2065743028
+--- !u!1 &226618689
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -345,10 +375,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2065743031}
-  - component: {fileID: 2065743030}
-  - component: {fileID: 2065743029}
-  - component: {fileID: 2065743032}
+  - component: {fileID: 226618692}
+  - component: {fileID: 226618691}
+  - component: {fileID: 226618690}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -356,13 +385,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &2065743029
+--- !u!114 &226618690
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2065743028}
+  m_GameObject: {fileID: 226618689}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6a160d838ff8b4b4693ac20007e008c7, type: 3}
@@ -376,13 +405,13 @@ MonoBehaviour:
   m_CropFrameX: 0
   m_CropFrameY: 0
   m_StretchFill: 0
---- !u!20 &2065743030
+--- !u!20 &226618691
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2065743028}
+  m_GameObject: {fileID: 226618689}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
@@ -427,13 +456,13 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &2065743031
+--- !u!4 &226618692
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2065743028}
+  m_GameObject: {fileID: 226618689}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -10}
@@ -442,53 +471,9 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2065743032
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2065743028}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
-  m_RenderShadows: 1
-  m_RequiresDepthTextureOption: 2
-  m_RequiresOpaqueTextureOption: 2
-  m_CameraType: 0
-  m_Cameras: []
-  m_RendererIndex: -1
-  m_VolumeLayerMask:
-    serializedVersion: 2
-    m_Bits: 1
-  m_VolumeTrigger: {fileID: 0}
-  m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
-  m_Antialiasing: 0
-  m_AntialiasingQuality: 2
-  m_StopNaN: 0
-  m_Dithering: 0
-  m_ClearDepth: 1
-  m_AllowXRRendering: 1
-  m_AllowHDROutput: 1
-  m_UseScreenCoordOverride: 0
-  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
-  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
-  m_RequiresDepthTexture: 0
-  m_RequiresColorTexture: 0
-  m_TaaSettings:
-    m_Quality: 3
-    m_FrameInfluence: 0.1
-    m_JitterScale: 1
-    m_MipBias: 0
-    m_VarianceClampScale: 0.9
-    m_ContrastAdaptiveSharpening: 0
-  m_Version: 2
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 2065743031}
-  - {fileID: 1701994248}
+  - {fileID: 226618692}
+  - {fileID: 9424053}

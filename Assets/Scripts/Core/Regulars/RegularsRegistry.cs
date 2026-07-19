@@ -61,8 +61,11 @@ namespace LastCall.Core
             string id = $"{archetype.Id}_{_nextSerial++}";
             string name = archetype.NamePool[rng.NextInt(archetype.NamePool.Count)];
 
+            // Licence details roll on the same stream, so a seed reproduces the whole person.
+            int age = rng.NextInt(21, 68);
+            string hometown = archetype.Hometowns[rng.NextInt(archetype.Hometowns.Count)];
             var state = new RegularState(id, name, archetype.Id, baseline.Clone(), baseline,
-                archetype.BaseDemand);
+                archetype.BaseDemand, age, hometown);
             _byId[id] = state;
             _order.Add(state);
             return state;

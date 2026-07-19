@@ -24,10 +24,10 @@ namespace LastCall.DebugUI
     public sealed class DiegeticStage : MonoBehaviour
     {
         // ── layout (18 §2, converted to bottom-left origin) ─────────────────────
-        private const int Slots = 8;                       // GDD: 8-card rail
+        private const int Slots = 12;                      // GDD 22: the whole base bar is out
         private static readonly Vector2 Reference = new Vector2(640, 360);
-        private const float SlotPitch = 48f;               // rail sits between the register and the VIP
-        private const float FirstSlotX = 100f;             // clears the bottom-left cash register
+        private const float SlotPitch = 34f;               // shelf sits between the register and the VIP
+        private const float FirstSlotX = 82f;              // clears the bottom-left cash register
         private const float CustomerX = 556f;              // VIP centre, bottom-right on the bar
         private const float CustomerBaseY = 126f;          // hands rest on the bar-top surface
         private const float CustomerTilt = 0f;           // right end leans right (radial, arc)
@@ -35,8 +35,9 @@ namespace LastCall.DebugUI
         private const float RegisterTilt = 0f;            // left end leans left (radial, arc)
         private const float BottleBaseY = 128f;            // 18 §2: y=232 top-down → 360−232
         private const float CounterFrontY = 96f;           // 18 §2: surface line y=264 → 360−264 (bottom 96px)
-        private const float BottleW = 40f;                 // placeholder fallback size
-        private const float BottleH = 60f;
+        private const float BottleW = 30f;                 // placeholder fallback size
+        private const float BottleH = 52f;
+        private const float BottleDisplayW = 32f;          // fixed slot width for sprite bottles
         private const float SelectRise = 4f;               // 18 §3: select rises 4px
         private const float ArcHeight = 0f;               // curved bar: centre slots rise this much
         private const float BottleTilt = 0f;               // max radial lean at the arc ends
@@ -282,9 +283,11 @@ namespace LastCall.DebugUI
                 _customerRect = cust;
             }
 
-            // Layer 7 — the "see ID" nudge on the stage, and the licence itself on its own
-            // canvas above everything.
+            // Layer 7 — the "see ID" nudge, the pour glass, the mood gauge, and the licence
+            // on its own canvas above everything.
             BuildIdPrompt(root);
+            BuildGlassHud(root);
+            BuildMoodGauge(root);
             BuildIdCard();
 
             if (!Motion.Reduced) StartCoroutine(Ambient());
@@ -546,8 +549,10 @@ namespace LastCall.DebugUI
 
             bool hasSprite = _bottleById.TryGetValue(card.Id, out var sprite)
                              || _bottleSprites.TryGetValue(card.Type, out sprite);
+            // The slot box is fixed; art authored at 2x texel density (v2.5 hi-bit) simply
+            // renders finer pixels into the same slot instead of growing.
             Vector2 size = hasSprite
-                ? new Vector2(sprite.rect.width, sprite.rect.height)
+                ? new Vector2(BottleDisplayW, BottleDisplayW * sprite.rect.height / sprite.rect.width)
                 : new Vector2(BottleW, BottleH);
             root.sizeDelta = size;
             var view = new BottleView { Card = card, Root = root };
@@ -596,20 +601,22 @@ namespace LastCall.DebugUI
             var captured = card;
             btn.onClick.AddListener(() => onClick(captured));
 
-            // Value chip (flavor number, Flavor=Cyan per 16 §2) floats just above the bottle.
-            var chip = NewRect("ValueChip", root);
-            Place(chip, new Vector2(0.5f, 0), new Vector2(BottleW + 6, 12), new Vector2(0, size.y + 4));
-            var chipImg = chip.gameObject.AddComponent<Image>();
-            chipImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.75f);
-            chipImg.raycastTarget = false;
-            view.Value = NewText("Value", chip, _display, 8, TextAnchor.MiddleCenter, UITheme.Flavor);
-            Stretch((RectTransform)view.Value.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            view.Value.text = card.Flavor.ToString();
-
-            // Name caption — shown only when selected (too small to keep on every bottle).
-            view.Name = NewText("Name", root, _body, 7, TextAnchor.LowerCenter, UITheme.TextPrimary);
-            Place((RectTransform)view.Name.transform, new Vector2(0.5f, 0), new Vector2(56, 10), new Vector2(0, size.y + 18));
-            view.Name.gameObject.SetActive(false);
+            // The old Flavor-number chip is gone: the number still feeds weighted scoring,
+            // but what the player needs at a glance is *which bottle this is*. The brand name
+            // sits under the bottle like a shelf tag; Flavor moves to the bottle-info popup
+            // (GDD 22 §2, future).
+            var tag = NewRect("NameTag", root);
+            // Staggered like shelf tags: even slots high, odd slots low, so twelve names sit
+            // side by side without colliding at 34px pitch.
+            float tagY = (_bottles.Count % 2 == 0) ? -12f : -22f;
+            Place(tag, new Vector2(0.5f, 0), new Vector2(44, 10), new Vector2(0, tagY));
+            var tagImg = tag.gameObject.AddComponent<Image>();
+            tagImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.72f);
+            tagImg.raycastTarget = false;
+            view.Name = NewText("Name", tag, _body, 7, TextAnchor.MiddleCenter,
+                UITheme.TypeRamp[card.Type][4]);
+            Stretch((RectTransform)view.Name.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            view.Name.text = card.Name.ToUpperInvariant();
 
             return view;
         }
@@ -650,14 +657,10 @@ namespace LastCall.DebugUI
                     ? new Color(UITheme.Selection.r, UITheme.Selection.g, UITheme.Selection.b, 0.9f)
                     : new Color(UITheme.Magenta[3].r, UITheme.Magenta[3].g, UITheme.Magenta[3].b, 0.55f);
 
-            view.Name.gameObject.SetActive(isSelected);
-            if (isSelected)
-            {
-                view.Name.supportRichText = true;
-                view.Name.text = isDebuffed
-                    ? $"{view.Card.Name} <color=#E84DA6>DEBUFF</color>"
-                    : view.Card.Name;
-            }
+            view.Name.supportRichText = true;
+            view.Name.text = isDebuffed
+                ? $"<color=#E84DA6>{view.Card.Name.ToUpperInvariant()}</color>"
+                : view.Card.Name.ToUpperInvariant();
 
             if (view.Selected != isSelected)
             {
@@ -693,6 +696,8 @@ namespace LastCall.DebugUI
         private Text _idIntent;
         private Text _idRelationship;
         private Text _idArchetype;
+        private Text _idAgeFrom;
+        private Image _idMoodFill;
         private Image _idPortrait;
         private RectTransform _idPrompt;    // "click for ID" nudge over the customer
         private readonly Dictionary<Emotion, StatCell> _statCells = new Dictionary<Emotion, StatCell>();
@@ -704,18 +709,19 @@ namespace LastCall.DebugUI
         [SerializeField] private PortraitSprite[] portraits;
         private readonly Dictionary<string, Sprite> _portraits = new Dictionary<string, Sprite>();
 
-        // The ID is a licence held up across the bar: a photo on the left, the six readings
-        // in a 3×2 grid on the right. Sized in 640×360 pixel space and centred, because it
-        // is a deliberate popup — it is allowed to cover the room while it is open.
-        private const float CardW = 262f;
-        private const float CardH = 108f;
-        private const float PhotoW = 52f;
-        private const float PhotoH = 66f;
-        private const float CellW = 58f;   // fits "TIR* 35-51" on one line at 7px
-        private const float CellH = 28f;
-        private const float CellGapX = 4f;
-        private const float CellGapY = 4f;
-        private const float TrackW = 52f;
+        // The ID is a full state-licence prop (GDD 22 §3): light card stock, a coloured
+        // header band, the photo left, licence fields right, and the six readings as a 3×2
+        // grid of record fields below. Deliberately big — it is a modal you hold up.
+        private const float CardW = 288f;
+        private const float CardH = 186f;
+        private const float HeaderH = 18f;
+        private const float PhotoW = 56f;
+        private const float PhotoH = 70f;
+        private const float CellW = 88f;
+        private const float CellH = 26f;
+        private const float CellGapX = 5f;
+        private const float CellGapY = 5f;
+        private const float TrackW = 82f;
 
         private void BuildIdCard()
         {
@@ -747,52 +753,95 @@ namespace LastCall.DebugUI
             _idCard = NewRect("IdCard", _idRoot);
             _idCard.anchorMin = _idCard.anchorMax = _idCard.pivot = new Vector2(0.5f, 0.5f);
             _idCard.sizeDelta = new Vector2(CardW, CardH);
-            // Lifted off centre so the licence sits against the back wall rather than across
-            // the bottle rail — the room still reads while it is held up.
-            _idCard.anchoredPosition = new Vector2(0, 46);
+            _idCard.anchoredPosition = new Vector2(0, 24);
             var frame = _idCard.gameObject.AddComponent<Image>();
-            frame.color = UITheme.Amber[2];               // laminated edge
+            frame.color = UITheme.Night[0];               // dark laminated edge
 
+            // Light card stock — the one place the night palette inverts, because a licence
+            // is a bright object in a dark room.
             var fill = NewRect("Fill", _idCard);
             Stretch(fill, Vector2.zero, Vector2.one, Vector2.one, -Vector2.one);
             var fillImg = fill.gameObject.AddComponent<Image>();
-            fillImg.color = UITheme.Night[1];
+            fillImg.color = UITheme.Cream[4];
 
-            _idName = NewText("Name", fill, _display, 8, TextAnchor.UpperLeft, UITheme.TextPrimary);
-            Place((RectTransform)_idName.transform, new Vector2(0, 1), new Vector2(CardW - 60, 10), new Vector2(5, -4));
+            // Header band, state-licence style.
+            var header = NewRect("Header", fill);
+            Stretch(header, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -HeaderH), Vector2.zero);
+            var headerImg = header.gameObject.AddComponent<Image>();
+            headerImg.color = UITheme.ClubBlue[2];
+            headerImg.raycastTarget = false;
+            var headerText = NewText("Title", header, _display, 7, TextAnchor.MiddleLeft, UITheme.Cream[4]);
+            Stretch((RectTransform)headerText.transform, Vector2.zero, Vector2.one, new Vector2(6, 0), new Vector2(-6, 0));
+            headerText.text = "CITY OF NEW ARDEN — PATRON ID";
+            _idRelationship = NewText("Relationship", header, _body, 7, TextAnchor.MiddleRight, UITheme.Cream[4]);
+            Stretch((RectTransform)_idRelationship.transform, Vector2.zero, Vector2.one, new Vector2(6, 0), new Vector2(-6, 0));
 
-            _idRelationship = NewText("Relationship", fill, _body, 7, TextAnchor.UpperRight, UITheme.TextSecondary);
-            Place((RectTransform)_idRelationship.transform, new Vector2(1, 1), new Vector2(56, 9), new Vector2(-5, -4));
-
-            _idArchetype = NewText("Archetype", fill, _body, 7, TextAnchor.UpperLeft, UITheme.TextSecondary);
-            Place((RectTransform)_idArchetype.transform, new Vector2(0, 1), new Vector2(CardW - 10, 9), new Vector2(5, -15));
-
-            // Photo: left column, under the header block.
+            // Photo, left, with the classic double border.
             var photoFrame = NewRect("PhotoFrame", fill);
-            Place(photoFrame, new Vector2(0, 1), new Vector2(PhotoW + 2, PhotoH + 2), new Vector2(5, -26));
+            Place(photoFrame, new Vector2(0, 1), new Vector2(PhotoW + 4, PhotoH + 4), new Vector2(7, -HeaderH - 6));
             var photoFrameImg = photoFrame.gameObject.AddComponent<Image>();
-            photoFrameImg.color = UITheme.Amber[0];
+            photoFrameImg.color = UITheme.Night[1];
             photoFrameImg.raycastTarget = false;
-
             var photo = NewRect("Photo", photoFrame);
-            Stretch(photo, Vector2.zero, Vector2.one, Vector2.one, -Vector2.one);
+            Stretch(photo, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
             _idPortrait = photo.gameObject.AddComponent<Image>();
             _idPortrait.preserveAspect = true;
             _idPortrait.raycastTarget = false;
 
-            _idIntent = NewText("Intent", fill, _display, 8, TextAnchor.LowerLeft, UITheme.PrimaryAction);
-            Place((RectTransform)_idIntent.transform, new Vector2(0, 0), new Vector2(CardW - 10, 10), new Vector2(5, 4));
+            // Licence fields, right of the photo: NAME / AGE / FROM / DEMEANOR.
+            float fieldsX = 7 + PhotoW + 4 + 8;
+            _idName = NewText("Name", fill, _display, 10, TextAnchor.UpperLeft, UITheme.Night[1]);
+            Place((RectTransform)_idName.transform, new Vector2(0, 1), new Vector2(CardW - fieldsX - 8, 12),
+                new Vector2(fieldsX, -HeaderH - 8));
+            _idAgeFrom = NewText("AgeFrom", fill, _body, 8, TextAnchor.UpperLeft, UITheme.Night[2]);
+            Place((RectTransform)_idAgeFrom.transform, new Vector2(0, 1), new Vector2(CardW - fieldsX - 8, 22),
+                new Vector2(fieldsX, -HeaderH - 26));
+            _idAgeFrom.supportRichText = true;
+            _idArchetype = NewText("Archetype", fill, _body, 8, TextAnchor.UpperLeft, UITheme.Night[2]);
+            Place((RectTransform)_idArchetype.transform, new Vector2(0, 1), new Vector2(CardW - fieldsX - 8, 10),
+                new Vector2(fieldsX, -HeaderH - 50));
+            _idArchetype.supportRichText = true;
 
-            // 3×2 stat grid, right of the photo. Reading order matches Emotions.All.
-            float gridX = 5 + PhotoW + 2 + 6;
+            // The six readings as a 3×2 grid of record fields, full width below the photo row.
+            float gridTop = -(HeaderH + PhotoH + 14);
             for (int i = 0; i < Emotions.Count; i++)
             {
                 int col = i % 3, rowIndex = i / 3;
                 var pos = new Vector2(
-                    gridX + col * (CellW + CellGapX),
-                    -26 - rowIndex * (CellH + CellGapY));
+                    7 + col * (CellW + CellGapX),
+                    gridTop - rowIndex * (CellH + CellGapY));
                 _statCells[Emotions.All[i]] = BuildStatCell(fill, Emotions.All[i], pos);
             }
+
+            // The one thing never hidden, printed like a licence endorsement.
+            var intentBand = NewRect("IntentBand", fill);
+            Stretch(intentBand, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 14));
+            var intentImg = intentBand.gameObject.AddComponent<Image>();
+            intentImg.color = UITheme.Amber[3];
+            intentImg.raycastTarget = false;
+            _idIntent = NewText("Intent", intentBand, _display, 7, TextAnchor.MiddleLeft, UITheme.Night[1]);
+            _idIntent.horizontalOverflow = HorizontalWrapMode.Wrap;
+            Stretch((RectTransform)_idIntent.transform, Vector2.zero, Vector2.one, new Vector2(6, 0), new Vector2(-110, 0));
+
+            // Visit satisfaction on the licence too, mirroring the stage gauge.
+            var moodLabel = NewText("MoodLabel", intentBand, _body, 7, TextAnchor.MiddleRight, UITheme.Night[1]);
+            Place((RectTransform)moodLabel.transform, new Vector2(1, 0.5f), new Vector2(30, 10), new Vector2(-54, 0));
+            moodLabel.text = "VISIT";
+            var moodBg = NewRect("MoodBg", intentBand);
+            moodBg.anchorMin = moodBg.anchorMax = new Vector2(1, 0.5f);
+            moodBg.pivot = new Vector2(1, 0.5f);
+            moodBg.sizeDelta = new Vector2(44, 6);
+            moodBg.anchoredPosition = new Vector2(-6, 0);
+            var moodBgImg = moodBg.gameObject.AddComponent<Image>();
+            moodBgImg.color = UITheme.Night[1];
+            moodBgImg.raycastTarget = false;
+            var moodFill = NewRect("MoodFill", moodBg);
+            moodFill.anchorMin = new Vector2(0, 0); moodFill.anchorMax = new Vector2(0, 1);
+            moodFill.pivot = new Vector2(0, 0.5f);
+            moodFill.sizeDelta = new Vector2(0, -2);
+            moodFill.anchoredPosition = new Vector2(1, 0);
+            _idMoodFill = moodFill.gameObject.AddComponent<Image>();
+            _idMoodFill.raycastTarget = false;
 
             _idRoot.gameObject.SetActive(false);
         }
@@ -804,22 +853,22 @@ namespace LastCall.DebugUI
 
             var box = NewRect($"Cell{emotion}", parent);
             Place(box, new Vector2(0, 1), new Vector2(CellW, CellH), pos);
-            // Each stat gets its own tinted slab, so six readings scan as a grid of six
-            // things rather than one run-on line.
+            // Printed record fields on light card stock: a pale slab, a ramp-coloured tag,
+            // dark ink for the value.
             var boxBg = box.gameObject.AddComponent<Image>();
-            boxBg.color = new Color(ramp[0].r, ramp[0].g, ramp[0].b, 0.45f);
+            boxBg.color = UITheme.Cream[3];
             boxBg.raycastTarget = false;
 
-            cell.Tag = NewText("Tag", box, _body, 7, TextAnchor.UpperLeft, ramp[3]);
-            Place((RectTransform)cell.Tag.transform, new Vector2(0, 1), new Vector2(24, 9), new Vector2(3, -3));
+            cell.Tag = NewText("Tag", box, _body, 7, TextAnchor.UpperLeft, ramp[2]);
+            Place((RectTransform)cell.Tag.transform, new Vector2(0, 1), new Vector2(30, 9), new Vector2(3, -3));
 
-            cell.Value = NewText("Val", box, _body, 7, TextAnchor.UpperRight, ramp[4]);
-            Place((RectTransform)cell.Value.transform, new Vector2(1, 1), new Vector2(32, 9), new Vector2(-3, -3));
+            cell.Value = NewText("Val", box, _body, 8, TextAnchor.UpperRight, UITheme.Night[1]);
+            Place((RectTransform)cell.Value.transform, new Vector2(1, 1), new Vector2(52, 9), new Vector2(-3, -3));
 
             var track = NewRect("Track", box);
-            Place(track, new Vector2(0, 1), new Vector2(TrackW, 5), new Vector2(3, -15));
+            Place(track, new Vector2(0, 1), new Vector2(TrackW, 5), new Vector2(3, -16));
             cell.Track = track.gameObject.AddComponent<Image>();
-            cell.Track.color = ramp[0];
+            cell.Track.color = UITheme.Cream[2];
             cell.Track.raycastTarget = false;
 
             // Drawn under the band, so a ghost that disappears behind it reads as
@@ -829,7 +878,7 @@ namespace LastCall.DebugUI
             ghost.pivot = new Vector2(0.5f, 0.5f);
             ghost.sizeDelta = new Vector2(2, 7);
             cell.Ghost = ghost.gameObject.AddComponent<Image>();
-            cell.Ghost.color = UITheme.Cream[4];
+            cell.Ghost.color = UITheme.Night[1];
             cell.Ghost.raycastTarget = false;
             ghost.gameObject.SetActive(false);
 
@@ -838,10 +887,199 @@ namespace LastCall.DebugUI
             band.pivot = new Vector2(0, 0.5f);
             band.sizeDelta = new Vector2(2, 5);
             cell.Band = band.gameObject.AddComponent<Image>();
-            cell.Band.color = ramp[3];
+            cell.Band.color = ramp[2];
             cell.Band.raycastTarget = false;
 
             return cell;
+        }
+
+        // ── the pour glass (GDD 21 §3.1 / GDD 22) ────────────────────────────────
+
+        [SerializeField] private Sprite glassSprite;   // hi-bit rocks glass; fills draw beneath it
+
+        private RectTransform _glassRoot;
+        private RectTransform _glassFillArea;
+        private Text _glassPercent;
+        private Text _glassRatios;
+        private Image _glassSpill;
+
+        // Big, top-left, deliberately dominant: the glass is the primary feedback channel.
+        private const float GlassX = 10f;
+        private const float GlassY = 214f;
+        private const float GlassW = 84f;
+        private const float GlassH = 118f;
+        // The liquid area inside the glass sprite, relative to its rect.
+        private const float GlassInnerL = 0.16f, GlassInnerR = 0.84f;
+        private const float GlassInnerB = 0.12f, GlassInnerT = 0.80f;
+
+        private void BuildGlassHud(RectTransform root)
+        {
+            _glassRoot = NewRect("GlassHud", root);
+            _glassRoot.anchorMin = _glassRoot.anchorMax = new Vector2(0, 0);
+            _glassRoot.pivot = new Vector2(0, 0);
+            _glassRoot.sizeDelta = new Vector2(GlassW, GlassH);
+            _glassRoot.anchoredPosition = new Vector2(GlassX, GlassY);
+
+            if (glassSprite != null)
+            {
+                var glass = NewRect("Glass", _glassRoot);
+                Stretch(glass, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var img = glass.gameObject.AddComponent<Image>();
+                img.sprite = glassSprite; img.preserveAspect = true; img.raycastTarget = false;
+            }
+            else
+            {
+                // Placeholder tumbler: two walls and a base, straight from the palette.
+                var wallL = NewRect("WallL", _glassRoot);
+                Stretch(wallL, new Vector2(0.10f, 0.06f), new Vector2(0.16f, 0.92f), Vector2.zero, Vector2.zero);
+                wallL.gameObject.AddComponent<Image>().color = UITheme.Cream[2];
+                var wallR = NewRect("WallR", _glassRoot);
+                Stretch(wallR, new Vector2(0.84f, 0.06f), new Vector2(0.90f, 0.92f), Vector2.zero, Vector2.zero);
+                wallR.gameObject.AddComponent<Image>().color = UITheme.Cream[2];
+                var baseR = NewRect("Base", _glassRoot);
+                Stretch(baseR, new Vector2(0.10f, 0.02f), new Vector2(0.90f, 0.12f), Vector2.zero, Vector2.zero);
+                baseR.gameObject.AddComponent<Image>().color = UITheme.Cream[3];
+            }
+
+            // Liquid layers draw OVER the glass sprite: the generated glass has an opaque
+            // interior, so anything beneath it would be invisible. Slightly translucent bands
+            // over pale glass read as liquid well enough.
+            var area = NewRect("FillArea", _glassRoot);
+            Stretch(area, new Vector2(GlassInnerL, GlassInnerB), new Vector2(GlassInnerR, GlassInnerT),
+                Vector2.zero, Vector2.zero);
+            _glassFillArea = area;
+
+            // The % lives inside the glass (GDD 22 §1) — the number you steer by.
+            _glassPercent = NewText("Percent", _glassRoot, _display, 12, TextAnchor.MiddleCenter, UITheme.Night[1]);
+            Stretch((RectTransform)_glassPercent.transform, new Vector2(0, 0.30f), new Vector2(1, 0.62f),
+                Vector2.zero, Vector2.zero);
+            _glassPercent.text = "0%";
+
+            _glassSpill = null;
+            var spill = NewText("Spill", _glassRoot, _display, 8, TextAnchor.UpperCenter, UITheme.ViceRed[3]);
+            Place((RectTransform)spill.transform, new Vector2(0.5f, 1), new Vector2(GlassW + 20, 10), new Vector2(0, 12));
+            spill.text = "SPILLED";
+            spill.gameObject.SetActive(false);
+            _spillLabel = spill;
+
+            // Live ratios beside the glass — fill and ratio are different numbers, and the
+            // Phase-1 finding was that hiding the ratios makes players systematically wrong.
+            _glassRatios = NewText("Ratios", root, _body, 8, TextAnchor.UpperLeft, UITheme.TextSecondary);
+            var ratioRt = (RectTransform)_glassRatios.transform;
+            ratioRt.anchorMin = ratioRt.anchorMax = new Vector2(0, 0);
+            ratioRt.pivot = new Vector2(0, 1);
+            ratioRt.sizeDelta = new Vector2(96, 92);
+            ratioRt.anchoredPosition = new Vector2(GlassX + GlassW + 6, GlassY + GlassH - 4);
+            _glassRatios.supportRichText = true;
+        }
+
+        private Text _spillLabel;
+        private readonly List<Image> _glassLayers = new List<Image>();
+
+        /// <summary>
+        /// Redraws the glass: one colour band per pour, bottom-up in pour order, the fill %
+        /// inside the glass and the live ratio list beside it.
+        /// </summary>
+        public void SetGlass(GlassContents glass, System.Func<string, IngredientCard> lookup)
+        {
+            if (_glassRoot == null || glass == null) return;
+
+            foreach (var layer in _glassLayers)
+                if (layer != null) Destroy(layer.gameObject);
+            _glassLayers.Clear();
+
+            float areaH = _glassFillArea.rect.height;
+            float y = 0;
+            foreach (var pour in glass.Pours)
+            {
+                var card = lookup?.Invoke(pour.IngredientId);
+                float h = (float)(pour.Volume / glass.Capacity) * areaH;
+                var layer = NewRect($"Layer_{pour.IngredientId}", _glassFillArea);
+                layer.anchorMin = new Vector2(0, 0); layer.anchorMax = new Vector2(1, 0);
+                layer.pivot = new Vector2(0.5f, 0);
+                layer.offsetMin = new Vector2(0, 0); layer.offsetMax = new Vector2(0, 0);
+                layer.sizeDelta = new Vector2(0, h);
+                layer.anchoredPosition = new Vector2(0, y);
+                var img = layer.gameObject.AddComponent<Image>();
+                var ramp = card != null ? UITheme.TypeRamp[card.Type] : UITheme.Cream;
+                img.color = new Color(ramp[3].r, ramp[3].g, ramp[3].b, 0.88f);
+                img.raycastTarget = false;
+                layer.SetSiblingIndex(0); // beneath earlier-created glass sprite? area holds only layers
+                _glassLayers.Add(img);
+                y += h;
+            }
+
+            _glassPercent.text = $"{glass.FillFraction:P0}".Replace(" ", "");
+            _glassPercent.color = glass.IsOverflowing ? UITheme.ViceRed[3] : UITheme.Night[1];
+            if (_spillLabel != null) _spillLabel.gameObject.SetActive(glass.IsOverflowing);
+
+            if (glass.IsEmpty)
+            {
+                _glassRatios.text = "";
+                return;
+            }
+            var sb = new StringBuilder();
+            foreach (var id in glass.Ingredients)
+            {
+                var card = lookup?.Invoke(id);
+                var ramp = card != null ? UITheme.TypeRamp[card.Type] : UITheme.Cream;
+                string hex = ColorUtility.ToHtmlStringRGB(ramp[4]);
+                sb.AppendLine($"<color=#{hex}>{(card?.Name ?? id).ToUpperInvariant()} {glass.RatioOf(id):P0}</color>");
+            }
+            _glassRatios.text = sb.ToString().Replace(" %", "%");
+        }
+
+        // ── the visit-satisfaction gauge (GDD 22 §3) ─────────────────────────────
+
+        private RectTransform _moodRoot;
+        private Image _moodFill;
+        private const int MoodCap = 8;   // a very good visit; the bar tops out here
+
+        private void BuildMoodGauge(RectTransform root)
+        {
+            _moodRoot = NewRect("MoodGauge", root);
+            _moodRoot.anchorMin = _moodRoot.anchorMax = new Vector2(0, 0);
+            _moodRoot.pivot = new Vector2(0.5f, 0);
+            _moodRoot.sizeDelta = new Vector2(48, 6);
+            _moodRoot.anchoredPosition = new Vector2(CustomerX, CustomerBaseY + 118);
+            var bg = _moodRoot.gameObject.AddComponent<Image>();
+            bg.color = UITheme.Night[0];
+            bg.raycastTarget = false;
+
+            var fill = NewRect("Fill", _moodRoot);
+            fill.anchorMin = new Vector2(0, 0); fill.anchorMax = new Vector2(0, 1);
+            fill.pivot = new Vector2(0, 0.5f);
+            fill.offsetMin = new Vector2(1, 1); fill.offsetMax = new Vector2(1, -1);
+            fill.sizeDelta = new Vector2(0, -2);
+            fill.anchoredPosition = new Vector2(1, 0);
+            _moodFill = fill.gameObject.AddComponent<Image>();
+            _moodFill.raycastTarget = false;
+            _moodRoot.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// The happiness gauge: fills and greens as the visit's earned satisfaction grows.
+        /// Driven by *earned* satisfaction, never by the hidden stats — a gauge computed from
+        /// the truth would leak exactly what the tier system hides.
+        /// </summary>
+        public void SetSatisfaction(int earned, bool visible)
+        {
+            if (_moodRoot == null) return;
+            _moodRoot.gameObject.SetActive(visible);
+
+            float t = Mathf.Clamp01(earned / (float)MoodCap);
+            var colour = Color.Lerp(UITheme.ViceRed[3], UITheme.Lime[3], t);
+
+            if (visible)
+            {
+                _moodFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(46f * t), -2);
+                _moodFill.color = colour;
+            }
+            if (_idMoodFill != null)
+            {
+                _idMoodFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(42f * t), -2);
+                _idMoodFill.color = colour;
+            }
         }
 
         /// <summary>The little nudge over the customer telling you the ID can be asked for.</summary>
@@ -902,20 +1140,23 @@ namespace LastCall.DebugUI
             var regular = customer.Regular;
             _idName.text = regular.Name.ToUpperInvariant();
             _idRelationship.text = regular.Visits > 0
-                ? regular.Relationship.ToString().ToLowerInvariant()
-                : "new face";
-            _idArchetype.text = $"{regular.ArchetypeId.Replace('_', ' ')} · {Demands.Label(read.Demand)}";
-            _idArchetype.color = read.Demand == DemandLevel.Demanding
-                ? UITheme.ViceRed[3]
-                : read.Demand == DemandLevel.Particular
-                    ? UITheme.Amber[3]
-                    : UITheme.TextSecondary;
+                ? regular.Relationship.ToString().ToUpperInvariant()
+                : "NEW FACE";
+
+            // Licence fields: age and hometown are real ID data; demeanor reads like a
+            // printed restriction code. Dialogue will draw on the same fields later.
+            string demandHex = read.Demand == DemandLevel.Demanding ? "A62B44"
+                : read.Demand == DemandLevel.Particular ? "8F5A1E" : "6E6459";
+            _idAgeFrom.text = $"AGE <b>{regular.Age}</b>   FROM {regular.Hometown.ToUpperInvariant()}";
+            _idArchetype.text =
+                $"FILE: {regular.ArchetypeId.Replace('_', ' ')} · " +
+                $"<color=#{demandHex}>{Demands.Label(read.Demand).ToUpperInvariant()}</color>";
             _idPortrait.sprite = PortraitFor(regular.ArchetypeId);
             _idPortrait.color = _idPortrait.sprite != null ? Color.white : UITheme.Night[3];
 
-            _idIntent.text = (read.Direction == IntentDirection.Extinguish ? "WANTS TO SETTLE " : "WANTS TO LIFT ")
-                             + read.Intent.ToString().ToUpperInvariant();
-            _idIntent.color = UITheme.EmotionFill(read.Intent);
+            _idIntent.text = (read.Direction == IntentDirection.Extinguish ? "WANTS: SETTLE " : "WANTS: LIFT ")
+                             + read.Intent.ToString().ToUpperInvariant()
+                             + " · GLASS " + read.FillPreference.ShortLabel;
 
             foreach (var emotion in Emotions.All)
             {
@@ -925,8 +1166,8 @@ namespace LastCall.DebugUI
                 cell.Tag.text = UITheme.EmotionTag(emotion) + (emotion == read.Intent ? "*" : "");
                 cell.Value.text = reading.ToString();
                 cell.Value.color = reading.Tier == VisibilityTier.Unknown
-                    ? UITheme.EmotionDim(emotion)
-                    : UITheme.EmotionRamp[emotion][4];
+                    ? UITheme.Cream[1]
+                    : UITheme.Night[1];
 
                 // Exact = a 2px tick at the value. Range = a span. Unknown = nothing lit.
                 var band = (RectTransform)cell.Band.transform;
@@ -989,7 +1230,7 @@ namespace LastCall.DebugUI
                     ghost.pivot = new Vector2(0.5f, 0.5f);
                     ghost.sizeDelta = new Vector2(2, 7);
                     ghost.anchoredPosition = new Vector2(TrackAt(EmotionStats.Clamp(projected)), 0);
-                    row.Ghost.color = overshot ? UITheme.ViceRed[3] : UITheme.Cream[4];
+                    row.Ghost.color = overshot ? UITheme.ViceRed[3] : UITheme.Night[1];
                 }
                 else
                 {
@@ -1003,7 +1244,7 @@ namespace LastCall.DebugUI
                     ghost.pivot = new Vector2(0, 0.5f);
                     ghost.sizeDelta = new Vector2(Mathf.Max(2f, x1 - x0), 7);
                     ghost.anchoredPosition = new Vector2(x0, 0);
-                    row.Ghost.color = mayOvershoot ? UITheme.ViceRed[2] : UITheme.Cream[2];
+                    row.Ghost.color = mayOvershoot ? UITheme.ViceRed[2] : UITheme.Night[3];
                 }
             }
         }

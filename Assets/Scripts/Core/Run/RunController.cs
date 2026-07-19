@@ -39,6 +39,7 @@ namespace LastCall.Core
         private readonly List<FavorTag> _favorTags = new List<FavorTag>();
         private int _bouncerUsedNight;
         private readonly RegularsRegistry _regulars;
+        private readonly IReadOnlyList<IngredientCard> _brandCatalogue;
 
         private const int MaxFavorTags = 4;    // GDD 5.4: tags queue, max 4 held
         private const int InvestorPayout = 15; // GDD 5.4: Investor pays after the next VIP
@@ -126,8 +127,10 @@ namespace LastCall.Core
             RunRng rng, IEnumerable<PatronInstance> patrons = null, RunConfig config = null,
             IReadOnlyList<PatronDefinition> patronPool = null, IReadOnlyList<ToolDefinition> toolPool = null,
             IReadOnlyList<VipDefinition> vipPool = null, IReadOnlyList<VoucherDefinition> voucherPool = null,
-            BarDefinition bar = null, IReadOnlyList<ArchetypeDefinition> archetypes = null)
+            BarDefinition bar = null, IReadOnlyList<ArchetypeDefinition> archetypes = null,
+            IReadOnlyList<IngredientCard> brandCatalogue = null)
         {
+            _brandCatalogue = brandCatalogue ?? Array.Empty<IngredientCard>();
             _recipes = recipes ?? throw new ArgumentNullException(nameof(recipes));
             _rng = rng ?? throw new ArgumentNullException(nameof(rng));
             _patrons = patrons != null ? new List<PatronInstance>(patrons) : new List<PatronInstance>();
@@ -665,6 +668,11 @@ namespace LastCall.Core
 
         private void OpenShop()
         {
+            // Deliveries come at closing time: the market only stocks after the VIP.
+            _marketOffers = Slot == CustomerSlot.Vip
+                ? Market.OffersFor(_shelf, _brandCatalogue)
+                : new List<MarketOffer>();
+
             // Walking into the Back Room is itself a patron trigger (Coat Check Girl et al).
             Money += (int)PatronTriggers.ResolveMoney(EffectTrigger.OnShopEnter, _patrons, EffectContext.Empty);
             var voucherCandidates = _voucherPool
@@ -758,6 +766,33 @@ namespace LastCall.Core
 
         /// <summary>The shelf, for the UI and the Back Room.</summary>
         public Shelf Shelf => _shelf;
+
+        /// <summary>
+        /// Brand upgrades on offer (GDD 22 §4). Non-empty only in the Back Room after a VIP —
+        /// the market takes deliveries when the night closes, not between customers.
+        /// </summary>
+        public IReadOnlyList<MarketOffer> MarketOffers => _marketOffers;
+        private List<MarketOffer> _marketOffers = new List<MarketOffer>();
+
+        /// <summary>Buys a brand upgrade: the shelf bottle of that style is replaced, full.</summary>
+        public void BuyBrand(int offerIndex)
+        {
+            EnsurePhase(RunPhase.BackRoom);
+            if (offerIndex < 0 || offerIndex >= _marketOffers.Count)
+                throw new ArgumentOutOfRangeException(nameof(offerIndex));
+            var offer = _marketOffers[offerIndex];
+            if (offer.Sold) throw new InvalidOperationException("That brand is already yours.");
+            if (Money < offer.Price)
+                throw new InvalidOperationException($"Not enough money (${Money} < ${offer.Price}).");
+
+            var current = Market.FindByStyle(_shelf, offer.Style);
+            if (current == null)
+                throw new InvalidOperationException($"Nothing on the shelf pours {offer.Style}.");
+
+            Money -= offer.Price;
+            _shelf.Replace(current, new ShelfBottle(offer.Bottle));
+            offer.MarkSold();
+        }
 
         /// <summary>Sum of IntValues across owned vouchers of one op (0 when none owned).</summary>
         private int VoucherValue(VoucherOp op)

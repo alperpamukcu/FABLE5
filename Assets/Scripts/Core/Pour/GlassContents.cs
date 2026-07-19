@@ -90,11 +90,39 @@ namespace LastCall.Core
             TotalVolume += volume;
         }
 
+        // ── preparations (GDD 22 §5, infrastructure only) ────────────────────────
+
+        private readonly List<PreparationDefinition> _preparations = new List<PreparationDefinition>();
+
+        /// <summary>Preparation steps applied to this glass, in order. No effect yet by design.</summary>
+        public IReadOnlyList<PreparationDefinition> PreparationSteps => _preparations;
+
+        /// <summary>Records a preparation. The same step never applies twice — a drink is shaken or it is not.</summary>
+        public void AddPreparation(PreparationDefinition preparation)
+        {
+            if (preparation == null) return;
+            foreach (var existing in _preparations)
+                if (existing.Id == preparation.Id) return;
+
+            // Shaken and stirred are the same slot: the second one replaces the first.
+            if (preparation.Id == "shaken" || preparation.Id == "stirred")
+                _preparations.RemoveAll(p => p.Id == "shaken" || p.Id == "stirred");
+            _preparations.Add(preparation);
+        }
+
+        public bool HasPreparation(string id)
+        {
+            foreach (var preparation in _preparations)
+                if (preparation.Id == id) return true;
+            return false;
+        }
+
         /// <summary>Empties the glass — served, spilled or binned.</summary>
         public void Clear()
         {
             _pours.Clear();
             _byIngredient.Clear();
+            _preparations.Clear();
             TotalVolume = 0;
         }
 

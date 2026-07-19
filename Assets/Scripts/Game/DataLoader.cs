@@ -39,8 +39,20 @@ namespace LastCall.Game
                     throw new FormatException("Deck file has a card with an empty id.");
                 if (card.flavor < 0)
                     throw new FormatException($"Card '{card.id}' has negative flavor.");
+                // Branded bottles (GDD 22) carry their identity papers; older files without
+                // a style are plain cards and load as before.
+                IngredientInfo info = null;
+                if (!string.IsNullOrEmpty(card.style))
+                {
+                    if (card.tier < 1)
+                        throw new FormatException($"Bottle '{card.id}' has tier {card.tier}; brands start at 1.");
+                    if (card.tier > 1 && card.price <= 0)
+                        throw new FormatException($"Bottle '{card.id}' is a market brand but has no price.");
+                    info = new IngredientInfo(card.style, card.tier, card.price,
+                        card.origin, card.abv, card.blurb);
+                }
                 cards.Add(new IngredientCard(card.id, card.name, ParseType(card.type, card.id),
-                    card.flavor, QualityTier.HousePour, ParseCharges(card.charges, card.id)));
+                    card.flavor, QualityTier.HousePour, ParseCharges(card.charges, card.id), info));
             }
             return new LoadedDeck(dto.deckId, dto.name, cards);
         }
@@ -240,11 +252,12 @@ namespace LastCall.Game
                 }
 
                 int weight = archetype.weight > 0 ? archetype.weight : 1;
+                var hometowns = archetype.hometowns;
                 var demand = string.IsNullOrEmpty(archetype.demand)
                     ? DemandLevel.Easygoing
                     : ParseEnum<DemandLevel>(archetype.demand, archetype.id, "demand");
                 archetypes.Add(new ArchetypeDefinition(
-                    archetype.id, archetype.name, bands, archetype.names, weight, demand));
+                    archetype.id, archetype.name, bands, archetype.names, weight, demand, hometowns));
             }
             return archetypes;
         }
@@ -319,6 +332,13 @@ namespace LastCall.Game
             public string type;
             public int flavor;
             public List<ChargeDto> charges;
+            // Brand papers (GDD 22); style empty = plain unbranded card.
+            public string style;
+            public int tier;
+            public int price;
+            public string origin;
+            public double abv;
+            public string blurb;
         }
 
         [Serializable]
@@ -337,6 +357,7 @@ namespace LastCall.Game
             public int weight;
             public string demand;
             public List<string> names;
+            public List<string> hometowns;
             public List<BandDto> bands;
         }
 

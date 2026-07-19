@@ -45,6 +45,11 @@
           "min": 20,
           "max": 40
         }
+      ],
+      "hometowns": [
+        "Mercy General district",
+        "the night-bus line",
+        "Eastport"
       ]
     },
     {
@@ -90,6 +95,11 @@
           "min": 25,
           "max": 50
         }
+      ],
+      "hometowns": [
+        "Marrow Heights",
+        "two streets over",
+        "Lakeview, formerly"
       ]
     },
     {
@@ -135,6 +145,11 @@
           "min": 10,
           "max": 30
         }
+      ],
+      "hometowns": [
+        "Uptown",
+        "the marina flats",
+        "Carverton"
       ]
     },
     {
@@ -180,6 +195,11 @@
           "min": 60,
           "max": 85
         }
+      ],
+      "hometowns": [
+        "the financial quarter",
+        "Halden Row",
+        "New Arden"
       ]
     },
     {
@@ -225,6 +245,11 @@
           "min": 25,
           "max": 45
         }
+      ],
+      "hometowns": [
+        "the docks",
+        "Ironbridge",
+        "south of the yards"
       ]
     },
     {
@@ -270,6 +295,11 @@
           "min": 20,
           "max": 40
         }
+      ],
+      "hometowns": [
+        "Izmir, originally",
+        "a village near Tromso",
+        "three time zones east"
       ]
     },
     {
@@ -315,6 +345,11 @@
           "min": 15,
           "max": 35
         }
+      ],
+      "hometowns": [
+        "around the corner",
+        "Milltown",
+        "the same block as the bar"
       ]
     },
     {
@@ -360,6 +395,11 @@
           "min": 55,
           "max": 80
         }
+      ],
+      "hometowns": [
+        "the university quarter",
+        "a studio on Ninth",
+        "Pressgate"
       ]
     }
   ]

@@ -9,8 +9,8 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
 |---|---|---|
 | 1 | Core pour model, pure C# | ☑ 31 tests |
 | 2 | Round/run rewiring: shelf replaces deck | ☑ 298 tests green |
-| 3 | UI: hold-to-pour, the glass, the shelf | ☐ |
-| 4 | Economy: bottle volume, refills, three upgrade tracks | ☐ |
+| 3 | UI: the glass readout, shelf tags, licence ID | ◐ tap-to-measure + big glass + ratios shipped; hold-to-pour input pending |
+| 4 | Economy: bottle volume, refills, brand market | ◐ volume + refills + brand market shipped (GDD 22); glassware/bar tracks pending |
 | 5 | Content + balance re-measure | ☐ |
 | 6 | Docs and the audit of what broke | ☐ |
 

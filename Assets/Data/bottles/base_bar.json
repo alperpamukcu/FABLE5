@@ -1,0 +1,113 @@
+{
+  "deckId": "base_bar",
+  "name": "The Base Bar",
+  "_comment": "GDD 22: the curated starting shelf. Twelve branded bottles - few enough to know by silhouette, each with an emotional identity. Tier 1 is the well you open with; tier 2+ are brand upgrades sold on the end-of-night market. Charges are per full glass (GDD 21 s4). ABV and origin are display/dialogue only and must never feed scoring.",
+  "cards": [
+    {
+      "id": "vodka_astra", "name": "Astra", "type": "Spirit", "flavor": 4,
+      "style": "vodka", "tier": 1, "origin": "Gdansk, Poland", "abv": 40,
+      "blurb": "Filters clean. Lifts the evening without asking questions.",
+      "charges": [ { "emotion": "Excitement", "amount": 10 }, { "emotion": "Anxiety", "amount": -5 } ],
+      "art_prompt": "a slim clear vodka bottle with a pale blue-grey label band, minimal and cold"
+    },
+    {
+      "id": "gin_boothby", "name": "Boothby", "type": "Spirit", "flavor": 6,
+      "style": "gin", "tier": 1, "origin": "London", "abv": 43,
+      "blurb": "Juniper-forward. Settles a racing mind, at the cost of a quiet one.",
+      "charges": [ { "emotion": "Anxiety", "amount": -12 }, { "emotion": "Sadness", "amount": 5 } ],
+      "art_prompt": "a squat dark green gin bottle with a cream label and a small crest, London dry style"
+    },
+    {
+      "id": "rum_cane_coral", "name": "Cane & Coral", "type": "Spirit", "flavor": 5,
+      "style": "rum", "tier": 1, "origin": "Bridgetown, Barbados", "abv": 37.5,
+      "blurb": "Sunlight in a bottle. Wakes people up and warms them through.",
+      "charges": [ { "emotion": "Excitement", "amount": 12 }, { "emotion": "Fatigue", "amount": -6 } ],
+      "art_prompt": "a rounded white rum bottle with a coral-pink label and a palm motif"
+    },
+    {
+      "id": "bourbon_redline", "name": "Redline", "type": "Spirit", "flavor": 7,
+      "style": "bourbon", "tier": 1, "origin": "Bardstown, Kentucky", "abv": 45,
+      "blurb": "Charred oak and patience. Talks people down off the ledge of a bad day.",
+      "charges": [ { "emotion": "Anger", "amount": -14 }, { "emotion": "Sadness", "amount": 6 } ],
+      "art_prompt": "a stout amber bourbon bottle with a deep red wax top and a cream label"
+    },
+    {
+      "id": "amaro_notte", "name": "Amaro Notte", "type": "Bitter", "flavor": 6,
+      "style": "amaro", "tier": 1, "origin": "Torino, Italy", "abv": 30,
+      "blurb": "Bitter herbs for bitter moods. Meets anger head-on and wins.",
+      "charges": [ { "emotion": "Anger", "amount": -12 }, { "emotion": "Heartbreak", "amount": 5 } ],
+      "art_prompt": "a dark brooding Italian amaro bottle with a midnight blue label, gold accents"
+    },
+    {
+      "id": "vermouth_velvet", "name": "Velvet Rosso", "type": "Sweet", "flavor": 5,
+      "style": "vermouth", "tier": 1, "origin": "Torino, Italy", "abv": 16,
+      "blurb": "Sweet red vermouth. Softens what ended badly.",
+      "charges": [ { "emotion": "Heartbreak", "amount": -12 }, { "emotion": "Excitement", "amount": 4 } ],
+      "art_prompt": "an elegant red vermouth bottle with a burgundy label and ornate serif frame"
+    },
+    {
+      "id": "syrup_house", "name": "House Syrup", "type": "Sweet", "flavor": 2,
+      "style": "syrup", "tier": 1, "origin": "made in the back", "abv": 0,
+      "blurb": "Plain sugar, dissolved slow. Comfort by the spoonful.",
+      "charges": [ { "emotion": "Sadness", "amount": -6 }, { "emotion": "Fatigue", "amount": 4 } ],
+      "art_prompt": "a small clear glass cruet of simple syrup with a hand-written cream tag"
+    },
+    {
+      "id": "lemon_fresh", "name": "Fresh Lemon", "type": "Sour", "flavor": 3,
+      "style": "lemon", "tier": 1, "origin": "the market crate", "abv": 0,
+      "blurb": "Cuts through the fog. Sharp enough to make some people flinch.",
+      "charges": [ { "emotion": "Fatigue", "amount": -8 }, { "emotion": "Anxiety", "amount": 4 } ],
+      "art_prompt": "a small glass carafe of fresh lemon juice with a cut lemon beside it"
+    },
+    {
+      "id": "ginger_kicker", "name": "Kicker", "type": "Bubbly", "flavor": 3,
+      "style": "ginger", "tier": 1, "origin": "bottled next door", "abv": 0,
+      "blurb": "Spiced ginger brew. Puts a spark back in - or a fire, if there was one already.",
+      "charges": [ { "emotion": "Anger", "amount": 5 }, { "emotion": "Excitement", "amount": 5 } ],
+      "art_prompt": "a cloudy amber ginger beer bottle with a rust-orange label and a ceramic swing top"
+    },
+    {
+      "id": "soda_klara", "name": "Klara", "type": "Bubbly", "flavor": 1,
+      "style": "soda", "tier": 1, "origin": "Bergen, Norway", "abv": 0,
+      "blurb": "Cold, clear, and calming. Waters everything down, on purpose.",
+      "charges": [ { "emotion": "Anxiety", "amount": -4 }, { "emotion": "Excitement", "amount": -4 } ],
+      "art_prompt": "a tall clear soda siphon bottle with a pale teal label and rising bubbles"
+    },
+    {
+      "id": "mint_fresh", "name": "Mint", "type": "Garnish", "flavor": 1,
+      "style": "mint", "tier": 1, "origin": "the window box", "abv": 0,
+      "blurb": "A sprig on top. Small, green, and quietly restorative.",
+      "charges": [ { "emotion": "Fatigue", "amount": -4 } ],
+      "art_prompt": "a small glass jar of fresh mint sprigs, bright green"
+    },
+    {
+      "id": "olive_luca", "name": "Luca Olives", "type": "Garnish", "flavor": 2,
+      "style": "olive", "tier": 1, "origin": "Puglia, Italy", "abv": 0,
+      "blurb": "Brined and patient. Takes the edge off an argument.",
+      "charges": [ { "emotion": "Anger", "amount": -5 } ],
+      "art_prompt": "a small jar of green olives in brine with a rustic olive-branch label"
+    },
+
+    {
+      "id": "vodka_vor", "name": "Vor", "type": "Spirit", "flavor": 6,
+      "style": "vodka", "tier": 2, "price": 6, "origin": "Reykjavik, Iceland", "abv": 40,
+      "blurb": "Glacier-filtered. The same lift, cleaner and further.",
+      "charges": [ { "emotion": "Excitement", "amount": 14 }, { "emotion": "Anxiety", "amount": -7 } ],
+      "art_prompt": "a premium frosted-glass vodka bottle with an ice-white label and silver cap"
+    },
+    {
+      "id": "gin_juniper_crown", "name": "Juniper Crown", "type": "Spirit", "flavor": 8,
+      "style": "gin", "tier": 2, "price": 6, "origin": "Plymouth", "abv": 47,
+      "blurb": "Navy strength calm. Settles nerves that Boothby cannot reach.",
+      "charges": [ { "emotion": "Anxiety", "amount": -16 }, { "emotion": "Sadness", "amount": 6 } ],
+      "art_prompt": "a tall regal gin bottle in deep navy glass with a gold crown on the label"
+    },
+    {
+      "id": "bourbon_old_harrow", "name": "Old Harrow", "type": "Spirit", "flavor": 9,
+      "style": "bourbon", "tier": 2, "price": 7, "origin": "Frankfort, Kentucky", "abv": 50.5,
+      "blurb": "Twelve years in the barrel. Anger does not argue with it.",
+      "charges": [ { "emotion": "Anger", "amount": -18 }, { "emotion": "Sadness", "amount": 8 } ],
+      "art_prompt": "a heavy-bottomed aged bourbon bottle with a black wax seal and parchment label"
+    }
+  ]
+}

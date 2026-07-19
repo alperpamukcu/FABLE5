@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using LastCall.Core;
 using UnityEngine;
 
@@ -43,7 +44,15 @@ namespace LastCall.Game
         {
             CurrentSeed = string.IsNullOrWhiteSpace(newSeed) ? seed : newSeed.Trim();
 
-            var deck = DataLoader.ParseDeck(deckJson.text);
+            var bar = DataLoader.ParseDeck(deckJson.text);
+            // Tier 1 is the well you open with; higher tiers go to the end-of-night market.
+            var startingBottles = new List<IngredientCard>();
+            var brandCatalogue = new List<IngredientCard>();
+            foreach (var card in bar.Cards)
+            {
+                if (card.Info != null && card.Info.Tier > 1) brandCatalogue.Add(card);
+                else startingBottles.Add(card);
+            }
             var recipes = DataLoader.ParseRecipes(recipesJson.text);
             var patronPool = DataLoader.ParsePatrons(patronsJson.text);
             var toolPool = DataLoader.ParseTools(toolsJson.text);
@@ -52,15 +61,16 @@ namespace LastCall.Game
             var archetypes = archetypesJson != null
                 ? DataLoader.ParseArchetypes(archetypesJson.text)
                 : null;
-            var bar = BarCatalog.Find(BarCatalog.CreateDefault(), barId);
+            var barTheme = BarCatalog.Find(BarCatalog.CreateDefault(), barId);
             var config = StakeTable.Apply(RunConfig.Default, stake);
 
-            Run = new RunController(deck.Cards, recipes, new RunRng(CurrentSeed), config: config,
+            Run = new RunController(startingBottles, recipes, new RunRng(CurrentSeed), config: config,
                 patronPool: patronPool, toolPool: toolPool, vipPool: vipPool,
-                voucherPool: voucherPool, bar: bar, archetypes: archetypes);
+                voucherPool: voucherPool, bar: barTheme, archetypes: archetypes,
+                brandCatalogue: brandCatalogue);
 
             var customer = Run.CurrentRound.Customer;
-            Debug.Log($"[LastCall] Run started — seed '{CurrentSeed}', {bar.Name}, " +
+            Debug.Log($"[LastCall] Run started — seed '{CurrentSeed}', {barTheme.Name}, " +
                       $"Stake {stake} ({StakeTable.NameOf(stake)}), " +
                       $"{customer.Name} wants {customer.TargetScore}, wallet ${Run.Money}." +
                       (customer.HasEmotion

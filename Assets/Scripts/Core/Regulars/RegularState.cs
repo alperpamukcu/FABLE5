@@ -19,6 +19,10 @@ namespace LastCall.Core
         /// <summary>Their archetype's disposition, carried so the run layer need not re-look it up.</summary>
         public DemandLevel BaseDemand { get; }
 
+        /// <summary>Printed on the licence (GDD 22 §3); dialogue will use both later.</summary>
+        public int Age { get; }
+        public string Hometown { get; }
+
         /// <summary>Live values — what they are carrying right now.</summary>
         public EmotionStats Stats { get; }
 
@@ -37,8 +41,11 @@ namespace LastCall.Core
 
         public RegularState(string id, string name, string archetypeId,
             EmotionStats stats, EmotionStats baseline,
-            DemandLevel baseDemand = DemandLevel.Easygoing)
+            DemandLevel baseDemand = DemandLevel.Easygoing,
+            int age = 30, string hometown = null)
         {
+            Age = age;
+            Hometown = hometown ?? "this side of town";
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Regular id is required", nameof(id));
             Id = id;
             Name = string.IsNullOrWhiteSpace(name) ? id : name;
