@@ -21,9 +21,11 @@ Each serve is worth 0–3 toward the week, decided by `ResonanceJudge.Satisfacti
 | Serve | Satisfaction |
 |---|---|
 | Clean Serve (landed exactly on 0 or 100) | 3 |
-| Strong progress (≥ 20 toward the intent) | 2 |
+| Strong progress toward the intent | 2 |
 | Any progress | 1 |
 | No movement, a wrong-way slip, or a bust | 0 |
+
+"Strong progress" is not a constant — it depends on how hard the customer is to please. See §2.1.
 
 Deliberately coarse. The player should feel "I got that one" or "I didn't", not compute a
 decimal. A customer with 4 Mixes can bank several serves, so the practical ceiling per
@@ -101,7 +103,7 @@ If playtests say it is too punishing, week 4 is the dial: it is doing most of th
 **How much to trust these numbers.** They come from a greedy one-ply bot that reads only the
 ID and never shops. The *shape* comparison is sound — same bot, same seeds, one variable. The
 absolute win rate is a **floor**: real players buy patrons and tools and think more than one
-mix ahead. Do not quote 29% as a predicted player win rate.
+mix ahead. Do not quote 25% as a predicted player win rate.
 
 ## 4. Regulars
 

@@ -21,8 +21,18 @@ what they need**. Recipes were demoted to the craft layer, not deleted.
 - **Mult gains a resonance block** applied after patron hand effects.
 - **Content counts:** 64 patrons (+4), 17 tools (+1), 23 VIPs (+3), all on the information axis.
 
+**Customer difficulty**
+- NEW `DemandLevel` (Easygoing / Particular / Demanding): customers get harder to please as
+  the run goes on. Moves the goalposts (how much movement counts as "strong"), never the
+  ceiling (a Clean Serve is always worth 3). Shown on the ID.
+- The quota curve flattened to 7/10/11/12 in response — the escalation now lives in the
+  customers, and stacking both double-counted the difficulty.
+
+**Rewritten**
+- `12_tutorial_ftue.md` — rebuilt around what is actually opaque now: asking for ID, reading a
+  RANGE, busting, the weekly gate, and demand. Busting is the top teaching priority.
+
 **Stale, flagged in-place rather than rewritten**
-- `12_tutorial_ftue.md` teaches the pre-pivot loop end to end and needs a rewrite before M4.
 - `08_ui_screens.md` is stale on the gameplay screen, current on menus and modals.
 
 **Housekeeping**

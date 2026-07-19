@@ -20,8 +20,8 @@ Structurally it owes more to *Papers, Please* than to Balatro: a case to read, a
 to spot, a quota to hit. **The bartender listens — the drink is the gesture, never the cure.**
 
 **Engine:** Unity 6000.3.10f1 (URP) · **Platform:** PC (Win/Linux/macOS)
-**Status:** the emotion loop is playable end to end and measured; the tutorial and the Tip
-target curve are the known gaps.
+**Status:** the emotion loop is playable end to end and measured. The Tip target curve and
+the tutorial's *implementation* (its design is written) are the known gaps.
 
 ## Quickstart
 
@@ -45,7 +45,7 @@ it wires the camera, data assets, art and HUD from scratch.
 
 ## Running tests
 
-Unity **Test Runner → EditMode** runs the `LastCall.Tests` assembly — **263 tests** covering
+Unity **Test Runner → EditMode** runs the `LastCall.Tests` assembly — **269 tests** covering
 recipe matching, scoring goldens, deck/RNG determinism, round and run flow, shop economy,
 the emotion model and its boundaries, information leaks, and data-file parity. All tests must
 be green before pushing.
@@ -132,7 +132,7 @@ game rule.
 - Modules 14–18 (art bible, asset pipeline, UI style guide, UI inventory, nightclub scene
   spec) are on **v2**.
 - Modules 00–13 predate the pivot. The ones it touched carry a banner saying what is stale;
-  `12_tutorial_ftue.md` is stale end to end and needs a rewrite before M4.
+  `12_tutorial_ftue.md` has been rewritten around the new loop.
 - [`Docs/PLAN_emotion_pivot.md`](Docs/PLAN_emotion_pivot.md) records the phased plan and the
   rulings behind it.
 
@@ -144,7 +144,7 @@ game rule.
 | M2 — Run loop | Nights, targets, tips, Back Room (patrons / tools / books / vouchers / packs) | ✅ Done |
 | M3 — Content pass | Patrons, VIPs, Tools, vouchers, packs, Bars, Stakes | ✅ Data in |
 | **Emotion pivot** | Read-the-customer loop, ID popup, information economy, weekly quota | ✅ Core / UI / content / balance done |
-| M4 — Juice & UX | v2 pixel art, animation, score moment, SFX/music, settings, controller, save, **new tutorial** | 🔨 In progress |
+| M4 — Juice & UX | v2 pixel art, animation, score moment, SFX/music, settings, controller, save, **tutorial (designed, not built)** | 🔨 In progress |
 | M5 — Balance & polish | Playtests, Tip-target retune, localization (EN/TR), achievements, Steam demo | 🔨 Sim harness in |
 
 See [`Docs/GDD/11_milestones.md`](Docs/GDD/11_milestones.md) for the full breakdown.
