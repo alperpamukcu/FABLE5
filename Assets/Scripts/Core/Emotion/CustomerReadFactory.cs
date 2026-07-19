@@ -55,30 +55,43 @@ namespace LastCall.Core
         }
 
         /// <summary>
-        /// Rebuilds a read from tiers a regular already carries, decayed by staleness
-        /// (GDD 19 §10) rather than rolled fresh.
+        /// The read for a face you have served before (GDD 19 §10). You look at them fresh
+        /// tonight — a full tier roll — and whatever you still remember is merged in as a
+        /// *floor*, taking the clearer of the two per stat.
+        ///
+        /// The merge is what makes a regular worth having. An earlier build decayed the
+        /// remembered tiers and used them alone, which meant every returning customer got
+        /// strictly less legible each week until the whole cast was blank — the opposite of
+        /// the design, and a bust rate to match. Knowing someone must only ever help.
         /// </summary>
-        public static CustomerRead FromTiers(EmotionStats truth, IReadOnlyList<VisibilityTier> tiers,
+        public static CustomerRead FromTiers(EmotionStats truth, IReadOnlyList<VisibilityTier> remembered,
             int night, SeededRng rng, Relationship relationship = Relationship.Stranger)
         {
             if (truth == null) throw new ArgumentNullException(nameof(truth));
-            if (tiers == null || tiers.Count != Emotions.Count)
-                throw new ArgumentException($"Expected {Emotions.Count} tiers.", nameof(tiers));
+            if (remembered == null || remembered.Count != Emotions.Count)
+                throw new ArgumentException($"Expected {Emotions.Count} tiers.", nameof(remembered));
             if (rng == null) throw new ArgumentNullException(nameof(rng));
 
             int halfWidth = HalfWidthFor(night, relationship);
+            var tonight = ShuffledTiers(rng);
             var readings = new StatReading[Emotions.Count];
+
             for (int i = 0; i < readings.Length; i++)
             {
                 var emotion = Emotions.All[i];
-                readings[i] = tiers[i] == VisibilityTier.Exact ? StatReading.Exact(truth[emotion])
-                    : tiers[i] == VisibilityTier.Range ? StatReading.Range(truth[emotion], halfWidth)
+                var tier = Clearer(tonight[i], remembered[i]);
+                readings[i] = tier == VisibilityTier.Exact ? StatReading.Exact(truth[emotion])
+                    : tier == VisibilityTier.Range ? StatReading.Range(truth[emotion], halfWidth)
                     : StatReading.Unknown;
             }
 
             var intent = RollIntent(truth, rng, out var direction);
             return new CustomerRead(readings, intent, direction);
         }
+
+        /// <summary>Exact beats Range beats Unknown.</summary>
+        private static VisibilityTier Clearer(VisibilityTier a, VisibilityTier b) =>
+            (int)a <= (int)b ? a : b;
 
         /// <summary>
         /// How far a lie strays from the truth (GDD 19 §8, The Liar). Big enough that acting

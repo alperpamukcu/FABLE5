@@ -23,6 +23,14 @@ namespace LastCall.Core
 
         public bool Met => Earned >= Required;
 
+        /// <summary>A frozen copy, for reporting a week after the gate has moved on.</summary>
+        public WeekQuota Snapshot()
+        {
+            var copy = new WeekQuota(Week, Required);
+            copy.Earned = Earned;
+            return copy;
+        }
+
         /// <summary>How much is still owed; 0 once the quota is met.</summary>
         public int Remaining => Math.Max(0, Required - Earned);
 
@@ -32,16 +40,25 @@ namespace LastCall.Core
     }
 
     /// <summary>
-    /// The pressure curve (GDD 20). Tuned against a ceiling of 3 satisfaction per customer
-    /// and <see cref="NightsPerWeek"/> × 3 customers per week, so week 1 asks for a third of
-    /// a perfect week and the last asks for most of one.
+    /// The pressure curve (GDD 20), measured rather than guessed — see `Docs/sim_report.md`
+    /// and the `LastCall/Simulate` menu item.
+    ///
+    /// The first pass (6/9/12/14) held up on overall difficulty but had the wrong shape: a
+    /// greedy bot cleared week 1 97% of the time and week 2 93%, so half the run was a
+    /// formality and every decision that mattered lived in weeks 3–4. This curve keeps the
+    /// end-to-end difficulty roughly where it was and moves pressure earlier, so week 2 is a
+    /// real gate instead of a lap of honour.
+    ///
+    /// Caveat worth keeping in mind before trusting these numbers too far: they come from a
+    /// one-ply bot that never shops. The *shape* comparison is sound; the absolute win rate
+    /// is a floor, not a prediction.
     /// </summary>
     public static class QuotaTable
     {
         /// <summary>Nights in a week; the quota gate fires when the last one closes.</summary>
         public const int NightsPerWeek = 2;
 
-        private static readonly int[] Curve = { 6, 9, 12, 14 };
+        private static readonly int[] Curve = { 7, 11, 12, 14 };
 
         /// <summary>Satisfaction required to survive the given 1-based week.</summary>
         public static int Standard(int week)

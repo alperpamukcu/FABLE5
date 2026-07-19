@@ -116,6 +116,12 @@ namespace LastCall.Core
         /// </summary>
         public WeekQuota Quota { get; private set; }
 
+        /// <summary>
+        /// The week that just closed, with its final tally — the gate has already moved on
+        /// by the time anyone wants to show or measure it. Null until the first week ends.
+        /// </summary>
+        public WeekQuota LastClosedWeek { get; private set; }
+
         public RunController(IEnumerable<IngredientCard> cards, IReadOnlyList<RecipeDefinition> recipes,
             RunRng rng, IEnumerable<PatronInstance> patrons = null, RunConfig config = null,
             IReadOnlyList<PatronDefinition> patronPool = null, IReadOnlyList<ToolDefinition> toolPool = null,
@@ -612,6 +618,7 @@ namespace LastCall.Core
             // built without archetypes has no satisfaction to earn and must not be failed.
             if (weekCloses && HasEmotionLayer)
             {
+                LastClosedWeek = Quota.Snapshot();
                 if (!Quota.Met)
                 {
                     Phase = RunPhase.RunLost;
@@ -727,8 +734,9 @@ namespace LastCall.Core
             read = CustomerReadFactory.ApplyVipRules(read, regular.Stats, rules, Night, readRng,
                 regular.Relationship);
 
-            if (!returning)
-                regular.RememberTiers(TiersOf(read));
+            // Every visit teaches you something, so what you know is refreshed each time —
+            // not only on the first meeting. Drift still stales it between weeks.
+            regular.RememberTiers(TiersOf(read));
 
             string label = ruleText != null ? $"{regular.Name} — {name}" : regular.Name;
             return new CustomerOrder(label, target, regular, read, ruleText);

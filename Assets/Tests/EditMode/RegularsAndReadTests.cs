@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using LastCall.Core;
 using NUnit.Framework;
 
@@ -115,6 +116,41 @@ namespace LastCall.Tests
             Assert.AreEqual(VisibilityTier.Range, learned[Emotion.Sadness].Tier);
             Assert.IsTrue(learned[Emotion.Sadness].Contains(44));
             Assert.AreEqual(VisibilityTier.Unknown, learned[Emotion.Anger].Tier, "untouched");
+        }
+
+        [Test]
+        public void AReturningFace_IsNeverHarderToReadThanAStranger()
+        {
+            // Regression: the remembered tiers used to be used *instead of* a fresh roll, so
+            // every regular decayed toward blank and the whole cast became unreadable by
+            // week three. Memory is a floor on tonight's read, never a ceiling.
+            var truth = Stats(45);
+            var forgotten = Enumerable.Repeat(VisibilityTier.Unknown, Emotions.Count).ToList();
+
+            for (int i = 0; i < 30; i++)
+            {
+                var read = CustomerReadFactory.FromTiers(truth, forgotten, 4, Rng($"ret{i}"));
+                int legible = Emotions.All.Count(e => read[e].Tier != VisibilityTier.Unknown);
+                Assert.AreEqual(CustomerReadFactory.ExactCount + CustomerReadFactory.RangeCount,
+                    legible, "a fresh roll still happens for a face you have met");
+            }
+        }
+
+        [Test]
+        public void WhatYouRemember_SharpensTonightsRead()
+        {
+            var truth = Stats(45);
+            var remembered = new List<VisibilityTier>
+            {
+                VisibilityTier.Exact, VisibilityTier.Exact, VisibilityTier.Exact,
+                VisibilityTier.Exact, VisibilityTier.Exact, VisibilityTier.Exact
+            };
+
+            var read = CustomerReadFactory.FromTiers(truth, remembered, 4, Rng("remembered"));
+
+            foreach (var emotion in Emotions.All)
+                Assert.AreEqual(VisibilityTier.Exact, read[emotion].Tier,
+                    "a stat you already knew exactly cannot come back blurrier");
         }
 
         [Test]
