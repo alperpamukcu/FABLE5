@@ -1423,6 +1423,94 @@
         }
       ],
       "art_prompt": "a tall androgynous figure in a high-collared dark coat with a low hood, face half-lost in shadow, faintly glowing amber vials strapped in a bandolier across the chest"
+    },
+    {
+      "id": "the_empath",
+      "name": "The Empath",
+      "rarity": "Uncommon",
+      "cost": 6,
+      "description": "Sharpens the reading for whatever the customer actually came in about.",
+      "effects": [
+        {
+          "trigger": "OnCustomerStart",
+          "op": "NarrowIntentReading",
+          "value": 1,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "Always",
+            "type": "",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a calm listener in a soft grey cardigan leaning in with their chin on one hand, attention entirely on the person opposite"
+    },
+    {
+      "id": "the_confidant",
+      "name": "The Confidant",
+      "rarity": "Rare",
+      "cost": 8,
+      "description": "Two unclear readings get sharper the moment a customer sits down.",
+      "effects": [
+        {
+          "trigger": "OnCustomerStart",
+          "op": "NarrowReading",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "Always",
+            "type": "",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "an older bartender in shirtsleeves and a long apron, forearms on the bar, unhurried and impossible to surprise"
+    },
+    {
+      "id": "regulars_memory",
+      "name": "Regular's Memory",
+      "rarity": "Uncommon",
+      "cost": 6,
+      "description": "For a face you have served before, two readings start sharper.",
+      "effects": [
+        {
+          "trigger": "OnCustomerStart",
+          "op": "NarrowReading",
+          "value": 2,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "ReturningCustomer",
+            "type": "",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a battered leather tab-book open on the bar, pages dense with names and pencilled notes, a stub of pencil resting in the crease"
+    },
+    {
+      "id": "loose_lips",
+      "name": "Loose Lips",
+      "rarity": "Common",
+      "cost": 4,
+      "description": "When a customer sits down, one unclear reading on their ID gets sharper.",
+      "effects": [
+        {
+          "trigger": "OnCustomerStart",
+          "op": "NarrowReading",
+          "value": 1,
+          "valueSource": "Constant",
+          "condition": {
+            "kind": "Always",
+            "type": "",
+            "intValue": 0,
+            "recipeIds": []
+          }
+        }
+      ],
+      "art_prompt": "a wiry regular perched sideways on a barstool mid-whisper, one hand cupped beside their mouth, eyes tracking someone off to the side"
     }
   ]
 }

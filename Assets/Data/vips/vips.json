@@ -350,6 +350,60 @@
         }
       ],
       "art_prompt": "a smug landlord in a camel coat with a heavy ring of keys at his belt and a rent-day smile"
+    },
+    {
+      "id": "poker_face",
+      "name": "Poker Face",
+      "gentle": false,
+      "finaleOnly": false,
+      "description": "Their ID tells you nothing. Every reading is blank.",
+      "rules": [
+        {
+          "kind": "AllReadingsUnknown",
+          "type": "",
+          "intValue": 0,
+          "doubleValue": 0.0
+        }
+      ],
+      "art_prompt": "an immaculately composed gambler in a charcoal suit, expression completely flat, hands folded, eyes giving away nothing"
+    },
+    {
+      "id": "open_book",
+      "name": "Open Book",
+      "gentle": false,
+      "finaleOnly": false,
+      "description": "Every reading is exact — but the target is x1.5. Nowhere to hide.",
+      "rules": [
+        {
+          "kind": "AllReadingsExact",
+          "type": "",
+          "intValue": 0,
+          "doubleValue": 0.0
+        },
+        {
+          "kind": "TargetScale",
+          "type": "",
+          "intValue": 0,
+          "doubleValue": 1.5
+        }
+      ],
+      "art_prompt": "an open, guileless drinker with rolled sleeves and an easy posture, talking with both hands, nothing held back"
+    },
+    {
+      "id": "the_liar",
+      "name": "The Liar",
+      "gentle": false,
+      "finaleOnly": false,
+      "description": "One reading on their ID is false. It looks exactly like the others.",
+      "rules": [
+        {
+          "kind": "OneReadingFalse",
+          "type": "",
+          "intValue": 0,
+          "doubleValue": 0.0
+        }
+      ],
+      "art_prompt": "a charming storyteller mid-anecdote in a too-good jacket, smiling warmly, one hand raised as if swearing to every word"
     }
   ]
 }

@@ -208,6 +208,12 @@ namespace LastCall.Core
                     _tools.Remove(tool);
                     _tools.Add(_lastToolUsed); // the freed slot takes the recreated tool
                     return;                    // the opener itself never counts as last used
+                case ToolOp.RevealReading:
+                    if (!CurrentRound.Customer.HasEmotion)
+                        throw new InvalidOperationException("This customer has no reading to overhear.");
+                    if (!CurrentRound.NarrowDarkestReading())
+                        throw new InvalidOperationException("Nothing left to learn about them.");
+                    break;
                 default:
                     CurrentRound.ApplyTool(tool, targets);
                     break;
@@ -690,17 +696,19 @@ namespace LastCall.Core
                 (ruleSet, roundConfig, target) = ResolveVipRules(CurrentVip, roundConfig, target);
             }
 
-            var order = BuildOrder(name, target, ruleText);
+            var order = BuildOrder(name, target, ruleText, ruleSet);
             CurrentRound = new RoundController(_deck, _recipes,
                 order, roundConfig, _recipeLevels, _patrons,
                 ruleSet, _rng.GetStream("shatter"), Night);
+
+            ResolveInformationPatrons(order);
         }
 
         /// <summary>
         /// Decides who is at the bar and how much of them the bartender can see tonight
         /// (GDD 19 §3/§10). Without archetypes this is the pre-pivot anonymous order.
         /// </summary>
-        private CustomerOrder BuildOrder(string name, double target, string ruleText)
+        private CustomerOrder BuildOrder(string name, double target, string ruleText, VipRuleSet rules)
         {
             if (!HasEmotionLayer) return new CustomerOrder(name, target, ruleText);
 
@@ -715,11 +723,49 @@ namespace LastCall.Core
                     regular.Relationship)
                 : CustomerReadFactory.Build(regular.Stats, Night, readRng, regular.Relationship);
 
+            // A VIP can blank the licence, print it in full, or plant a lie on it (GDD 19 §8).
+            read = CustomerReadFactory.ApplyVipRules(read, regular.Stats, rules, Night, readRng,
+                regular.Relationship);
+
             if (!returning)
                 regular.RememberTiers(TiersOf(read));
 
             string label = ruleText != null ? $"{regular.Name} — {name}" : regular.Name;
             return new CustomerOrder(label, target, regular, read, ruleText);
+        }
+
+        /// <summary>
+        /// The information patrons take their turn as the customer sits down (GDD 19 §8).
+        /// They buy clarity, never score — a Gossip at the end of the bar tells you something
+        /// about the person who just walked in, and that is the whole effect.
+        /// </summary>
+        private void ResolveInformationPatrons(CustomerOrder order)
+        {
+            if (!order.HasEmotion || _patrons.Count == 0) return;
+
+            var context = new EffectContext(null, null, 0, 0,
+                returningCustomer: order.Regular.Visits > 0);
+
+            foreach (var patron in _patrons)
+            {
+                foreach (var effect in patron.Definition.Effects)
+                {
+                    if (effect.Trigger != EffectTrigger.OnCustomerStart) continue;
+                    if (!effect.Condition.Evaluate(context)) continue;
+
+                    switch (effect.Op)
+                    {
+                        case EffectOp.NarrowReading:
+                            int times = Math.Max(1, (int)effect.Value);
+                            for (int i = 0; i < times; i++)
+                                if (!CurrentRound.NarrowDarkestReading()) break;
+                            break;
+                        case EffectOp.NarrowIntentReading:
+                            CurrentRound.NarrowReading(order.Read.Intent);
+                            break;
+                    }
+                }
+            }
         }
 
         private static VisibilityTier[] TiersOf(CustomerRead read)
@@ -768,6 +814,8 @@ namespace LastCall.Core
             bool onlyFirstMix = false;
             int minRecipeLevel = 0;
             bool eachMixDifferent = false;
+            var readOverride = ReadOverride.None;
+            bool oneReadingFalse = false;
 
             foreach (var rule in vip.Rules)
             {
@@ -799,10 +847,20 @@ namespace LastCall.Core
                     case VipRuleKind.TargetScale:
                         target *= rule.DoubleValue;
                         break;
+                    case VipRuleKind.AllReadingsUnknown:
+                        readOverride = ReadOverride.AllUnknown;
+                        break;
+                    case VipRuleKind.AllReadingsExact:
+                        readOverride = ReadOverride.AllExact;
+                        break;
+                    case VipRuleKind.OneReadingFalse:
+                        oneReadingFalse = true;
+                        break;
                 }
             }
 
-            return (new VipRuleSet(debuffed, onlyFirstMix, minRecipeLevel, eachMixDifferent),
+            return (new VipRuleSet(debuffed, onlyFirstMix, minRecipeLevel, eachMixDifferent,
+                    readOverride, oneReadingFalse),
                 roundConfig, target);
         }
 

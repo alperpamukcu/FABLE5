@@ -80,6 +80,58 @@ namespace LastCall.Core
             return new CustomerRead(readings, intent, direction);
         }
 
+        /// <summary>
+        /// How far a lie strays from the truth (GDD 19 §8, The Liar). Big enough that acting
+        /// on it busts, not so big that it is obviously absurd.
+        /// </summary>
+        public const int LieOffset = 28;
+
+        /// <summary>
+        /// Applies a VIP's read rules to a finished card (GDD 19 §8). Blanket overrides come
+        /// first, then the lie — so The Liar can plant a false reading on a licence that
+        /// Open Book just made fully legible, and Poker Face has nothing left to lie about.
+        /// </summary>
+        public static CustomerRead ApplyVipRules(CustomerRead read, EmotionStats truth,
+            VipRuleSet rules, int night, SeededRng rng, Relationship relationship = Relationship.Stranger)
+        {
+            if (read == null) throw new ArgumentNullException(nameof(read));
+            if (rules == null || !rules.HasAnyRule) return read;
+
+            int halfWidth = HalfWidthFor(night, relationship);
+
+            if (rules.ReadOverride != ReadOverride.None)
+            {
+                var readings = new StatReading[Emotions.Count];
+                for (int i = 0; i < readings.Length; i++)
+                    readings[i] = rules.ReadOverride == ReadOverride.AllExact
+                        ? StatReading.Exact(truth[Emotions.All[i]])
+                        : StatReading.Unknown;
+                read = new CustomerRead(readings, read.Intent, read.Direction);
+            }
+
+            if (rules.OneReadingFalse)
+            {
+                // Only a legible reading can lie; if the licence says nothing, nothing lies.
+                var legible = new List<Emotion>();
+                foreach (var emotion in Emotions.All)
+                    if (read[emotion].Tier != VisibilityTier.Unknown) legible.Add(emotion);
+
+                if (legible.Count > 0)
+                {
+                    var target = legible[rng.NextInt(legible.Count)];
+                    int actual = truth[target];
+                    // Push the lie whichever way leaves room on the 0–100 scale.
+                    int lied = actual <= 50 ? actual + LieOffset : actual - LieOffset;
+                    var reading = read[target].Tier == VisibilityTier.Exact
+                        ? StatReading.Exact(lied)
+                        : StatReading.Range(lied, halfWidth);
+                    read = read.Replacing(target, reading);
+                }
+            }
+
+            return read;
+        }
+
         /// <summary>The tier bag, Fisher-Yates shuffled on the caller's stream.</summary>
         public static VisibilityTier[] ShuffledTiers(SeededRng rng)
         {

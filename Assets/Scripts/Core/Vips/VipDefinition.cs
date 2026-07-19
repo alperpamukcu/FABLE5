@@ -12,7 +12,12 @@ namespace LastCall.Core
         MinRecipeLevel,        // recipes below IntValue score nothing (The Snob)
         EachMixDifferentRecipe,// repeating a recipe this order voids it (Regular's Ghost)
         RailSizeDelta,         // IntValue added to rail size (The Health Inspector, -3)
-        TargetScale            // DoubleValue multiplies the satisfaction target (The Critic, 1.5)
+        TargetScale,           // DoubleValue multiplies the satisfaction target (The Critic, 1.5)
+
+        // Read rules (GDD 19 §8) — these shape the ID, not the scoring.
+        AllReadingsUnknown,    // nothing legible on the licence (Poker Face)
+        AllReadingsExact,      // every stat printed outright (Open Book)
+        OneReadingFalse        // one legible reading is a lie, at the same tier (The Liar)
     }
 
     public sealed class VipRule

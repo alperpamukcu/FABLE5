@@ -15,6 +15,15 @@ namespace LastCall.Core
         DestroyCard,
         TransformCard,
         /// <summary>Engine-internal: bump a patron's run-scoped counter (scaling patrons).</summary>
-        Accumulate
+        Accumulate,
+
+        // Information effects (GDD 19 §8). Resolved by the run layer when a customer sits
+        // down; they change what the ID says, never what the mix scores.
+
+        /// <summary>Tighten Value readings, darkest first (Gossip, Confidant).</summary>
+        NarrowReading,
+
+        /// <summary>Tighten the reading for the stat they actually came in about (Empath).</summary>
+        NarrowIntentReading
     }
 }

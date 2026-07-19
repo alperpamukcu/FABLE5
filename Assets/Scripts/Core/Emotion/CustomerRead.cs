@@ -49,6 +49,45 @@ namespace LastCall.Core
             return new CustomerRead(next, Intent, Direction);
         }
 
+        /// <summary>
+        /// Replaces one reading outright — used to plant a false one (GDD 19 §8, The Liar).
+        /// The tier is unchanged, so a lie looks exactly as trustworthy as the truth.
+        /// </summary>
+        public CustomerRead Replacing(Emotion emotion, StatReading reading)
+        {
+            var next = new StatReading[Emotions.Count];
+            Array.Copy(_readings, next, next.Length);
+            next[(int)emotion] = reading;
+            return new CustomerRead(next, Intent, Direction);
+        }
+
+        /// <summary>
+        /// The stat the bartender is most in the dark about, for effects that narrow "one
+        /// reading" without naming it. Unknown beats Range, and the intent stat wins ties —
+        /// information about what they actually came in for is always worth more.
+        /// Returns false when every reading is already Exact.
+        /// </summary>
+        public bool TryPickDarkest(out Emotion darkest)
+        {
+            darkest = Intent;
+            int best = -1;
+
+            foreach (var emotion in Emotions.All)
+            {
+                var tier = _readings[(int)emotion].Tier;
+                if (tier == VisibilityTier.Exact) continue;
+
+                // Unknown (2) outranks Range (1); +1 more for the stat that matters tonight.
+                int score = (tier == VisibilityTier.Unknown ? 2 : 1) * 2 + (emotion == Intent ? 1 : 0);
+                if (score > best)
+                {
+                    best = score;
+                    darkest = emotion;
+                }
+            }
+            return best >= 0;
+        }
+
         public override string ToString()
         {
             var parts = new List<string>(Emotions.Count);

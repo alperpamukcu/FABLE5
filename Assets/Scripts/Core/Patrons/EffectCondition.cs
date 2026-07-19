@@ -13,7 +13,8 @@ namespace LastCall.Core
         MixSizeEquals,       // the played mix has exactly this many cards
         RecipeIdIn,          // the matched recipe id is one of these
         RestocksUsedEquals,  // restocks spent so far this customer
-        MixesUsedEquals      // mixes spent before this one (0 = first mix of the customer)
+        MixesUsedEquals,     // mixes spent before this one (0 = first mix of the customer)
+        ReturningCustomer    // this face has been served before (Regular's Memory, GDD 19 §8)
     }
 
     /// <summary>
@@ -59,6 +60,9 @@ namespace LastCall.Core
         public static EffectCondition MixesUsedEquals(int count) =>
             new EffectCondition(ConditionKind.MixesUsedEquals, intValue: count);
 
+        public static EffectCondition ReturningCustomer { get; } =
+            new EffectCondition(ConditionKind.ReturningCustomer);
+
         /// <summary>
         /// Evaluates against the context; <paramref name="card"/>/<paramref name="cardIndex"/>
         /// are only set while scoring an individual card.
@@ -83,6 +87,8 @@ namespace LastCall.Core
                     return ctx.RestocksUsed == IntValue;
                 case ConditionKind.MixesUsedEquals:
                     return ctx.MixesUsedBefore == IntValue;
+                case ConditionKind.ReturningCustomer:
+                    return ctx.ReturningCustomer;
                 default:
                     return false;
             }

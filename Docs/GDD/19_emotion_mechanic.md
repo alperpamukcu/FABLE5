@@ -228,26 +228,50 @@ Money now buys **power or knowledge**. "Unknown" must always be *solvable*, neve
 
 ### 8.2 Patrons (jokers)
 
-| Patron | Rarity | Effect |
-|---|---|---|
-| **The Gossip** | Uncommon | All RANGE half-widths narrowed 50% |
-| **The Confidant** | Uncommon | +1 Chat per customer |
-| **The Empath** | Rare | Overshoot no longer busts — it counts as landing on the boundary (no burst) |
-| **The Regular's Memory** | Rare | An archetype seen earlier this run arrives fully revealed |
+All four fire on `OnCustomerStart` and resolve through `NarrowReading` /
+`NarrowIntentReading`. They buy clarity and never touch the score — a Gossip at the end of
+the bar tells you something about whoever just walked in, and that is the whole effect.
+
+| Patron | Rarity | Cost | Effect |
+|---|---|---|---|
+| **Loose Lips** | Common | $4 | One unclear reading gets sharper |
+| **The Empath** | Uncommon | $6 | The reading for the stat they came in about gets sharper |
+| **Regular's Memory** | Uncommon | $6 | Two readings start sharper, for a face served before |
+| **The Confidant** | Rare | $8 | Two unclear readings get sharper |
+
+"Sharper" is always one tier: UNKNOWN → RANGE → EXACT. When an effect narrows *an* unnamed
+reading it picks the **darkest** one — UNKNOWN before RANGE, and the intent stat wins ties,
+because information about what they actually came in for is worth more.
+
+> The id `the_gossip` was already taken by an existing scaling-Flavor patron, hence
+> **Loose Lips**. Do not reuse it.
 
 ### 8.3 Tools
 
-| Tool | Effect |
-|---|---|
-| **Eavesdrop** | Single use: reveal one UNKNOWN stat straight to EXACT |
+| Tool | Cost | Effect |
+|---|---|---|
+| **Eavesdrop** | $3 | Single use: the darkest reading on the current ID gets sharper |
+
+`ToolOp.RevealReading` is a run-level op (like Tab Ledger) — it takes no rail selection, but
+still declares `maxTargets: 1`, since 0 is reserved to mean "misconfigured".
 
 ### 8.4 VIP rules on the information axis (new rule kinds)
 
-| VIP | Rule |
-|---|---|
-| **Poker Face** | No tiers at all — every stat starts UNKNOWN (Chat still works) |
-| **The Open Book** | All six stats EXACT, but target ×1.5 |
-| **The Liar** | One RANGE is deliberately offset; which one is not shown |
+| VIP | Gentle | Rule |
+|---|---|---|
+| **Poker Face** | no | `AllReadingsUnknown` — nothing legible on the licence (Chat still works) |
+| **Open Book** | no | `AllReadingsExact` + target ×1.5 — you can see everything, now land it |
+| **The Liar** | no | `OneReadingFalse` — one legible reading is off by ±28, at its own tier |
+
+**Ordering ruling:** blanket overrides apply first, then the lie. So The Liar can plant a
+false reading on a licence Open Book just made fully legible, and Poker Face leaves nothing
+to lie about — a blank card claims nothing, so it cannot be false.
+
+**Tier ruling:** a lie renders at the *same tier* as the reading it replaces. A lie that
+looked different from the truth would not be a lie.
+
+Open Book is **not** gentle despite handing over full information: the ×1.5 target makes it
+a mid-run challenge, not a Night 1–2 opener.
 
 ## 9. Data model (all data-driven)
 

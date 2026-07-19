@@ -178,6 +178,19 @@
       "maxTargets": 2,
       "description": "Raise the value of up to 2 cards by +1 (for House Special and Layered Pour).",
       "art_prompt": "a slender wooden muddling stick with a rounded end"
+    },
+    {
+      "id": "eavesdrop",
+      "name": "Eavesdrop",
+      "cost": 3,
+      "op": "RevealReading",
+      "enhancement": "",
+      "convertTo": "",
+      "quality": "",
+      "shiftAmount": 0,
+      "maxTargets": 1,
+      "description": "Overhear the table behind you: the murkiest reading on the current customer's ID gets sharper.",
+      "art_prompt": "an empty glass turned upside down against a wall, a hand resting on its base"
     }
   ]
 }

@@ -10,6 +10,10 @@ namespace LastCall.Core
         OnHandScored,
         OnRestock,
         OnShopEnter,
+
+        /// <summary>A customer sits down and the ID is built — the information patrons' moment.</summary>
+        OnCustomerStart,
+
         OnCustomerEnd,
         OnNightEnd
     }

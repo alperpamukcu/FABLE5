@@ -26,15 +26,23 @@ namespace LastCall.Core
         /// <summary>Types debuffed by the active VIP rule: they score nothing and trigger nothing.</summary>
         public IReadOnlyCollection<IngredientType> DebuffedTypes { get; }
 
+        /// <summary>
+        /// True when the customer sitting down has been served before this run (GDD 19 §10).
+        /// Only meaningful at <see cref="EffectTrigger.OnCustomerStart"/>.
+        /// </summary>
+        public bool ReturningCustomer { get; }
+
         public EffectContext(IReadOnlyList<IngredientCard> mix, RecipeDefinition recipe,
             int mixesUsedBefore, int restocksUsed,
-            IReadOnlyCollection<IngredientType> debuffedTypes = null)
+            IReadOnlyCollection<IngredientType> debuffedTypes = null,
+            bool returningCustomer = false)
         {
             Mix = mix;
             Recipe = recipe;
             MixesUsedBefore = mixesUsedBefore;
             RestocksUsed = restocksUsed;
             DebuffedTypes = debuffedTypes ?? new IngredientType[0];
+            ReturningCustomer = returningCustomer;
         }
     }
 }

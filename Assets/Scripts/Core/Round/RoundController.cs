@@ -232,10 +232,33 @@ namespace LastCall.Core
             RestocksRemaining--;
             _chatsSpent++;
 
+            NarrowReading(emotion);
+            return Customer.Read[emotion];
+        }
+
+        /// <summary>
+        /// Tightens one reading by a step, free of charge. The paid-for entry points (Chat,
+        /// Eavesdrop, the information patrons) all funnel through here so there is one place
+        /// that decides how much a piece of information is worth.
+        /// </summary>
+        public void NarrowReading(Emotion emotion)
+        {
+            if (!Customer.HasEmotion) return;
             int truth = Customer.Regular.Stats[emotion];
             int halfWidth = CustomerReadFactory.HalfWidthFor(_night, Customer.Regular.Relationship);
             Customer.Learn(Customer.Read.Narrowing(emotion, truth, halfWidth));
-            return Customer.Read[emotion];
+        }
+
+        /// <summary>
+        /// Tightens whichever reading the bartender is most in the dark about. Returns false
+        /// when the licence is already fully legible and there is nothing left to learn.
+        /// </summary>
+        public bool NarrowDarkestReading()
+        {
+            if (!Customer.HasEmotion) return false;
+            if (!Customer.Read.TryPickDarkest(out var darkest)) return false;
+            NarrowReading(darkest);
+            return true;
         }
 
         /// <summary>

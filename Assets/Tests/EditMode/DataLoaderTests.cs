@@ -112,15 +112,16 @@ namespace LastCall.Tests
         {
             var patrons = DataLoader.ParsePatrons(ReadDataFile("patrons/patrons.json"));
 
-            Assert.AreEqual(60, patrons.Count, "GDD M3: 60 Patrons at launch");
+            // 60 at GDD M3 + the 4 information patrons the emotion pivot adds (GDD 19 §8).
+            Assert.AreEqual(64, patrons.Count);
             CollectionAssert.AllItemsAreUnique(patrons.Select(p => p.Id).ToList());
             CollectionAssert.AllItemsAreUnique(patrons.Select(p => p.Name).ToList());
             Assert.IsTrue(patrons.All(p => p.Effects.Count >= 1));
 
             var byRarity = patrons.GroupBy(p => p.Rarity).ToDictionary(g => g.Key, g => g.Count());
-            Assert.AreEqual(24, byRarity[PatronRarity.Common]);
-            Assert.AreEqual(20, byRarity[PatronRarity.Uncommon]);
-            Assert.AreEqual(12, byRarity[PatronRarity.Rare]);
+            Assert.AreEqual(25, byRarity[PatronRarity.Common]);
+            Assert.AreEqual(22, byRarity[PatronRarity.Uncommon]);
+            Assert.AreEqual(13, byRarity[PatronRarity.Rare]);
             Assert.AreEqual(4, byRarity[PatronRarity.Legendary]);
 
             // Every RecipeIdIn condition must reference a real recipe.
@@ -162,7 +163,8 @@ namespace LastCall.Tests
         {
             var tools = DataLoader.ParseTools(ReadDataFile("tools/tools.json"));
 
-            Assert.AreEqual(16, tools.Count, "15 at M3 + Muddling Stick (GDD 02 v1.1)");
+            // 15 at M3 + Muddling Stick (GDD 02 v1.1) + Eavesdrop (GDD 19 §8).
+            Assert.AreEqual(17, tools.Count);
             var stick = tools.Single(t => t.Id == "muddling_stick");
             Assert.AreEqual(ToolOp.ShiftValue, stick.Op);
             Assert.AreEqual(1, stick.ShiftAmount);
@@ -197,7 +199,8 @@ namespace LastCall.Tests
         {
             var vips = DataLoader.ParseVips(ReadDataFile("vips/vips.json"));
 
-            Assert.AreEqual(20, vips.Count, "GDD M3: 20 VIPs at launch");
+            // 20 at GDD M3 + the 3 read-rule VIPs the emotion pivot adds (GDD 19 §8).
+            Assert.AreEqual(23, vips.Count);
             CollectionAssert.AllItemsAreUnique(vips.Select(v => v.Id).ToList());
             CollectionAssert.AllItemsAreUnique(vips.Select(v => v.Name).ToList());
 

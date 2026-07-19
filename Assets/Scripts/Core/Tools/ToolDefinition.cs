@@ -15,7 +15,8 @@ namespace LastCall.Core
         SetQuality,     // rewrite the quality tier (Cocktail Umbrella → Signature)
         ShiftValue,     // shift Flavor values (Muddling Stick +1, GDD 02 v1.1 value axis)
         DoubleMoney,    // double the wallet, capped (Tab Ledger)
-        CreateLastTool  // recreate the last Tool used this run (Bottle Opener)
+        CreateLastTool, // recreate the last Tool used this run (Bottle Opener)
+        RevealReading   // tighten the darkest reading on the ID (Eavesdrop, GDD 19 §8)
     }
 
     /// <summary>
@@ -36,7 +37,13 @@ namespace LastCall.Core
         public string Description { get; }
 
         /// <summary>True for ops the run resolves without rail targets.</summary>
-        public bool IsRunOp => Op == ToolOp.DoubleMoney || Op == ToolOp.CreateLastTool;
+        /// <summary>
+        /// Resolved by the run layer instead of acting on rail cards. These still declare
+        /// <c>maxTargets = 1</c> — the field is a rail-selection cap, and 0 is reserved to
+        /// mean "misconfigured".
+        /// </summary>
+        public bool IsRunOp => Op == ToolOp.DoubleMoney || Op == ToolOp.CreateLastTool ||
+                               Op == ToolOp.RevealReading;
 
         public ToolDefinition(string id, string name, int cost, ToolOp op, int maxTargets,
             Enhancement enhancement = Enhancement.None, IngredientType convertTo = default,
