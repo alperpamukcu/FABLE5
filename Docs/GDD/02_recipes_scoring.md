@@ -1,6 +1,21 @@
 # LAST CALL — GDD Module: Recipes & Scoring Engine Rules
 
 > Source of truth for the scoring formula. The scoring engine must be a pure, unit-testable function.
+>
+> **v2.0 emotion pivot — recipes are demoted, not deleted.** They still supply base Flavor and
+> base Mult exactly as described here, and every pattern below is unchanged. What changed:
+>
+> 1. **Recipes are now the craft layer.** Each recipe carries a `chargeMultiplier` — derived as
+>    `1 + 0.2 × (baseMult − 1)`, capped ×3 — deciding how far an ingredient's *emotional
+>    charges* carry. A well-made drink says more with the same bottles.
+> 2. **A mix that matches no recipe still scores 0** — there is still no "high card" fallback —
+>    **but its charges now pour at ×0.5.** The drink still reached the customer and still says
+>    something, just at half volume. This closes what was previously an open design question.
+> 3. **Mult gains a resonance block**, applied *after* patron hand effects: `+progress÷10` for
+>    movement toward what the customer asked for, `+3` for landing a stat you could not see,
+>    `×2` (or `×3` blind) for a Clean Serve, and `−2` on a bust with Mult floored at 1.
+>
+> `19_emotion_mechanic.md` §5–§6 owns those rules.
 
 ## 4. RECIPES (THE HAND RANKINGS)
 

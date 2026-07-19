@@ -1,5 +1,9 @@
 # LAST CALL — GDD Module: Tutorial & First-Time User Experience
 
+> **v2.0 emotion pivot — this module is stale.** It teaches the pre-pivot loop (patterns and
+> score targets) and says nothing about reading a customer, the ID, busting, or the weekly
+> quota, which are now the things a new player most needs taught. Needs a rewrite before M4.
+
 > Implementation milestone: M4. Design locked in v1.1.
 
 ## 1. Philosophy

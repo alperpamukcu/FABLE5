@@ -1,5 +1,9 @@
 # LAST CALL — GDD Module: Scope & Milestones
 
+> **v2.0 emotion pivot:** M3's launch counts are superseded — 64 patrons, 17 tools and 23
+> VIPs now ship, the extras being the information axis. `PLAN_emotion_pivot.md` tracks the
+> pivot's own phases.
+
 ## 15. SCOPE & MILESTONES (SOLO DEV)
 
 1. **M1 — Core prototype (3–4 wks):** rail, mix, recipe detection, scoring, 1 customer loop, debug UI.

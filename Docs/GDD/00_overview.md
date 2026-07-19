@@ -1,47 +1,75 @@
-# LAST CALL — Game Design Document (v1.0)
+# LAST CALL — Game Design Document (v2.0)
 
-**Genre:** Roguelike Deckbuilder / Score-Attack (Balatro-like)
+> **v2.0 — the emotion pivot.** The core loop is no longer "recognise a pattern, score points".
+> It is **read the person in front of you and serve what they actually need**. Recipes were not
+> deleted; they were demoted to the craft layer. `19_emotion_mechanic.md` and
+> `20_regulars_and_week.md` are the source of truth for the new loop, and they win wherever an
+> older module disagrees.
+
+**Genre:** Deckbuilder / social-deduction hybrid, with a roguelike run structure
+**Structural reference:** *Papers, Please* — a case to read, a discrepancy to spot, a quota to hit.
+Mechanically and tonally, not thematically.
 **Platform:** PC (Windows/Linux/macOS), keyboard + mouse, full controller support
 **Perspective:** 2D, fixed single-screen "behind the bar" view (no 3D camera, no player character model — the player IS the bartender, seen implicitly through hands/UI only)
 **Target session length:** 30–60 minutes per run
 **Team size:** Solo developer
-**Recommended engine:** Godot 4.x (GDScript), data-driven design (all cards/patrons/bosses defined in JSON/Resource files)
-
----
+**Engine:** Unity 6000.3 (C#, URP), data-driven — all cards/patrons/VIPs/archetypes defined in JSON
 
 ---
 
 ## 1. HIGH CONCEPT
 
-You are the bartender of a dim, smoky late-night cocktail bar. Each run is one "Opening Week" of 8 escalating Nights. Customers approach the counter and place orders with a required **Satisfaction score**. You draw **Ingredient cards** from your **Cabinet** (your deck) and combine them into cocktails. Each cocktail is recognized as a **Recipe** (the equivalent of a poker hand) which grants base **Flavor** (chips) and a **Multiplier**. Persistent **Patrons** sitting at your bar (the equivalent of Jokers) modify scoring and enable wild synergies. Between customers you spend **Tips** (money) in the **Back Room** (shop) to buy new ingredients, Patrons, Recipe Books, and Tools. Fail to satisfy a customer and the run ends.
+You are the bartender of a dim, neon-soaked late-night cocktail bar. Each run is one "Opening
+Week" of 8 Nights, grouped into 4 weeks.
 
-Core fantasy: turning a humble rail drink into an absurd 50,000-point masterpiece through stacked synergies, in a cozy, mysterious, neon-soaked bar.
+Every customer walks in carrying six **emotions** — Anger, Sadness, Fatigue, Excitement,
+Heartbreak, Anxiety — rated 0–100. You cannot see most of them. Asking for ID gets you a
+licence showing **one exact value, three rough ranges and two blanks**, plus the one thing
+never hidden: what they came in wanting done about it, and which way.
 
----
+Every ingredient is printed with what it does to a person. You draw from your **Cabinet**
+(deck), combine 1–5 bottles, and the mix moves their stats. Land the target emotion exactly on
+0 or 100 and you get a **Clean Serve**; push past it and you **bust**. Recipes still matter —
+a well-made drink carries what you put in it further — but the Multiplier now comes from how
+well you read the room.
+
+Survive by hitting a **weekly satisfaction quota**. One customer you misjudge does not end the
+run; a week of them does.
+
+Core fantasy: the bartender who listens. Not alcohol as medicine — attention as the gift.
+
+> **Tone guardrail, non-negotiable:** frame this as the bartender *listening* to people. Never
+> as alcohol curing emotions. No glorification of drunkenness (this also matters for the age
+> rating). Customer reactions stay stylized and short.
 
 ---
 
 ## 2. CORE GAME LOOP
 
 ```
-RUN START → Night 1
-  ├── Customer 1 (Regular Order)   → score check → Tips
-  ├── BACK ROOM (shop)
-  ├── Customer 2 (Regular Order)   → score check → Tips
-  ├── BACK ROOM (shop)
-  └── Customer 3 (VIP / Critic = Boss) → score check → Tips
-        └── Night complete → Night 2 (higher targets) ... Night 8
-RUN END: Win after Night 8 VIP → Endless Mode unlock, or LOSE on any failed order.
+RUN START → Week 1, Night 1
+  ├── Customer 1  → read → serve → satisfaction + Tips
+  ├── BACK ROOM (shop: power OR knowledge)
+  ├── Customer 2  → read → serve → satisfaction + Tips
+  ├── BACK ROOM
+  └── Customer 3 (VIP)  → read → serve → satisfaction + Tips
+        └── Night 2 … then the WEEK GATE: quota met? → Week 2, else RUN OVER
+RUN END: clear week 4 → win. Only a missed weekly quota ends a run.
 ```
 
 **Per-customer loop (one "round"):**
-1. Customer appears with a required Satisfaction target and (for VIPs) a special rule.
-2. Player's **Rail** (hand) is filled to 8 Ingredient cards drawn from the Cabinet.
-3. Player selects 1–5 ingredients and either:
-   - **MIX** (play the hand): the selection is scored as a cocktail, or
-   - **RESTOCK** (discard): dump selected cards, draw replacements.
-4. Player has **4 Mixes** and **3 Restocks** per customer (modifiable).
-5. Scores from all Mixes accumulate. Reach the target before running out of Mixes → success.
-6. On success: earn Tips, proceed. On failure: run over, show Game Over summary.
+1. A customer sits down. Click them to see their ID: six readings of varying clarity, plus
+   their intent (e.g. *WANTS TO SETTLE FATIGUE*).
+2. The **Rail** (hand) is filled to 8 bottles drawn from the Cabinet.
+3. Select 1–5 ingredients; the projected movement is previewed on the ID before committing.
+4. Then either:
+   - **MIX** — serve it. Scores points *and* moves their emotions.
+   - **RESTOCK** — dump the selection, draw replacements.
+   - **CHAT** — spend a Restock to sharpen one reading instead of pouring.
+5. **4 Mixes** and **3 Restocks** per customer (modifiable); Chat costs a Restock but does not
+   count as one for patron conditions.
+6. Each serve earns 0–3 satisfaction toward the week. Hitting the score target additionally
+   pays Tips.
+7. Running out of Mixes just ends the visit. The customer leaves; the run continues.
 
 ---

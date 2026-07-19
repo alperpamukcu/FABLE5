@@ -1,10 +1,23 @@
 # LAST CALL — GDD Module: Run Structure, Difficulty Curve & Balance
 
+> **SUPERSEDED IN PART (v2.0 emotion pivot).** The loss condition described in this module —
+> "fail one order and the run ends" — no longer exists. The run's only loss condition is the
+> **weekly satisfaction quota**; a customer whose score target you miss simply leaves unpaid.
+> See `20_regulars_and_week.md` for the week structure and the measured quota curve.
+>
+> The score targets in §5.1 still exist and still gate **Tips**, so this table is not dead —
+> but it is no longer what kills you. It is also **known to be mistuned** for the new loop:
+> simulation puts orders at only ~27% of targets met, because the player's attention is now
+> split between points and the read. Retuning it is an open task (GDD 20 §6).
+>
+> Everything below about skips, Favor tags, stakes and the Back Room cadence is current.
+
 ## 5. RUN STRUCTURE, TARGETS & DIFFICULTY CURVE
 
-### 5.1 Nights and targets (Green Stake / default difficulty)
+### 5.1 Nights and Tip targets (Green Stake / default difficulty)
 
-Each Night = Customer A (small), Customer B (big), VIP (boss). Targets:
+Each Night = Customer A (small), Customer B (big), VIP (boss). Two Nights make a **week**, and
+the quota gate fires when a week's last Night closes. Targets:
 
 | Night | Customer A | Customer B | VIP |
 |---|---|---|---|

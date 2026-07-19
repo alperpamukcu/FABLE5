@@ -1,5 +1,11 @@
 # LAST CALL — GDD Module: Screens, Menus & UI Flow
 
+> **v2.0 emotion pivot:** the gameplay screen described here has been substantially rebuilt.
+> The customer's stats are not displayed — clicking the customer opens an ID popup (photo +
+> 3x2 stat grid). The HUD moved into the bottom band over the counter front, leaving the
+> upper two-thirds to the room. `17_ui_inventory.md` is the live tracker; this module is
+> stale on the gameplay screen and still current on the menus and modals.
+
 ## 10. GAME SCREENS & UI FLOW
 
 ### 10.1 Boot & Main Menu

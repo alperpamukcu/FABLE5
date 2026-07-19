@@ -1,5 +1,9 @@
 # LAST CALL — GDD Module: VIP / Critic Customers (Bosses)
 
+> **v2.0 emotion pivot:** all 20 VIPs here survive unchanged. Three more were added on the
+> information axis — Poker Face, Open Book and The Liar rewrite what the customer's ID shows
+> rather than how the mix scores. See `19_emotion_mechanic.md` §8.4.
+
 ## 6. VIP / CRITIC CUSTOMERS (BOSSES)
 
 One VIP per Night, drawn from a pool; each imposes a rule for that order. 20 at launch, examples:

@@ -1,5 +1,11 @@
 # LAST CALL — GDD Module: Patrons (Jokers)
 
+> **v2.0 emotion pivot:** every patron here is unchanged — an audit found none broken by the
+> pivot, since recipes survive as the craft layer. Four were added (Loose Lips, The Empath,
+> Regular's Memory, The Confidant) which sharpen ID readings and never touch the score.
+> Note `the_gossip` is the existing scaling-Flavor patron below; the new reader is **Loose
+> Lips**. See `19_emotion_mechanic.md` §8.2.
+
 ## 8. PATRONS (JOKERS) — THE HEART OF BUILD VARIETY
 
 Patrons sit on a shelf-row at the top of the screen. **5 slots** by default. They are characters with names, one-line personalities, and passive effects. **60 at launch.** Rarity: 40 Common/Uncommon, 15 Rare, 5 Legendary. Sample table:

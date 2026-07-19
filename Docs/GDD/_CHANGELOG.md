@@ -1,6 +1,35 @@
 # GDD Changelog
 
-## v1.1 (current) — Design additions during M2
+## v2.0 (current) — The emotion pivot
+
+The core loop changed from "recognise a pattern, score points" to **read the person and serve
+what they need**. Recipes were demoted to the craft layer, not deleted.
+
+**New modules**
+- NEW `19_emotion_mechanic.md` — the six emotions, tiered visibility, the ID, charges,
+  resonance/Clean Serve/bust, and the information economy.
+- NEW `20_regulars_and_week.md` — persistent regulars, drift, relationship, archetypes, and
+  the weekly quota with its measured balance figures.
+- NEW `../PLAN_emotion_pivot.md` — the phased delivery plan and the rulings behind it.
+- NEW `../sim_report.md` — output of `LastCall → Simulate`, regenerated on demand.
+
+**Rule changes**
+- **Loss condition replaced.** Failing one order no longer ends the run; only a missed weekly
+  satisfaction quota does. `03_run_structure_balance.md` §5.1's table now gates Tips only.
+- **No-recipe mixes** still score 0, but their emotional charges pour at ×0.5 — this closes
+  the open "high card fallback" question in `02_recipes_scoring.md`.
+- **Mult gains a resonance block** applied after patron hand effects.
+- **Content counts:** 64 patrons (+4), 17 tools (+1), 23 VIPs (+3), all on the information axis.
+
+**Stale, flagged in-place rather than rewritten**
+- `12_tutorial_ftue.md` teaches the pre-pivot loop end to end and needs a rewrite before M4.
+- `08_ui_screens.md` is stale on the gameplay screen, current on menus and modals.
+
+**Housekeeping**
+- Unused assets, code and packages removed; the build was pointing at `SampleScene` and now
+  points at `Main`.
+
+## v1.1 — Design additions during M2
 **⚠ M2-BLOCKING (implement before content lock):**
 - `02_recipes_scoring.md`: recipe table expanded 11 → 14 (adds value-based and mono-Type recipes), explicit priority numbers, deterministic tie-break rule. **ScoringEngine recipe detection must use this table.**
 - `03_run_structure_balance.md`: added §5.4 Regular's Favor tags (skip rewards), §5.5 VIP pool rules (no-repeat, gentle pool, reveal timing).

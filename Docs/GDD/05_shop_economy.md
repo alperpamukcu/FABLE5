@@ -1,5 +1,10 @@
 # LAST CALL — GDD Module: Back Room Shop & Economy
 
+> **v2.0 emotion pivot:** the shop gains a third purchase axis — **information**. Reading
+> patrons and the Eavesdrop tool buy clarity about the customer instead of points. They are
+> ordinary patron/tool entries, so the offer roll below needed no changes.
+> See `19_emotion_mechanic.md` §8.
+
 ## 7. THE BACK ROOM (SHOP)
 
 Opens after every satisfied customer. Layout: **2 card slots** (Patrons/Tools/Ingredient packs randomly), **1 Voucher slot** (permanent run upgrade, refreshes each Night), **2 Booster Pack slots**. **Reroll** button: $5, +$1 per reroll this visit.

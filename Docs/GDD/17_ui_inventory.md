@@ -17,7 +17,7 @@
 
 | Component | Owner | Status | Notes |
 |---|---|---|---|
-| Background (animated smoke shader) | `SmokeSwirl.shader` / DebugHud | legacy-cozy-noir | Superseded by the diegetic BackgroundLayers; disabled when the stage is present. |
+| ~~Background (animated smoke shader)~~ | — | **deleted** | Superseded by the diegetic BackgroundLayers. Its render branch required `stage == null`, which never happens in the shipped scene, so the shader, material, generator step and HUD field were all removed. |
 | **Diegetic stage — BackgroundLayers** (nightclub interior: neon, windows+city, crowd, back-bar) | `DiegeticStage` | migrated-v2 | Real PixelLab club background (`club_bg`, dimmed ~40% so it recedes and the foreground pops — less eye-tiring), palette-quantized; opaque overscanned backdrop behind it. Procedural sky/crowd/neon kept as a fallback. |
 | **Diegetic stage — BarCounter** | `DiegeticStage` | migrated-v2 | **Curved (arc) bartender-POV bar** (`counter`): a dome-shaped wood surface + chrome edge with cocktail glasses following the arc, strong FOV. Bottles ride the arc (`SlotArcY` parabola, centre rises `ArcHeight`); register (left) and VIP (right) sit at the tilted arc ends. `CounterSurfaceInset` aligns the chrome rest line to the rail. |
 | **Diegetic stage — Customer/VIP** | `DiegeticStage` | migrated-v2 | Pixel patron (`vip_patron`) leaning forearms on the bar top (own desk removed), bottom-right, hands on the wood, drawn on top of the counter + rail. Replaces the legacy painterly card. One generic patron for now — per-VIP pixel art is a follow-up. |
@@ -73,8 +73,8 @@
 | Tweening (OutBack/OutCubic/OutQuad/InQuad coroutine util) | `Tweening` | placeholder | Lightweight stand-in for DOTween; carries the 18 §3 easings; swappable. |
 | Art library (id → sprite) | `ArtLibrary` | legacy-cozy-noir | Indexes the v1 painterly assets; repoint at v2 sprites when regenerated. |
 | Pixel fonts (Press Start 2P display/numbers, Silkscreen body/caption) | — | placeholder | v2 pixel fonts, wired into the diegetic stage. Spec-sanctioned fallbacks for m6x11/m5x7 (itch.io-gated). |
-| Legacy fonts (Limelight display, Barlow body) | — | legacy-cozy-noir | Still on the temporary HUD overlay; drop when the HUD is repixeled. |
-| Procedural UI kit (panel/button/bubble/tag/frame/vignette/glow) | `UiSpriteGenerator` | legacy-cozy-noir | SDF rounded kit; replace with pixel 9-slice in v2. |
+| ~~Legacy fonts (Limelight display, Barlow body)~~ | — | **deleted** | The HUD pixel pass wired a pixel font into every slot; the pair had no remaining references. Silkscreen-Bold went with them (only Regular is used). |
+| Procedural UI kit (panel / button / vignette) | `UiSpriteGenerator` | legacy-cozy-noir | SDF rounded kit; replace with pixel 9-slice in v2. Trimmed from nine sprites to the three actually referenced — bubble/tag/frame/toast/tooltip/glow were speculative chrome for screens never built. |
 
 ## 6. Art asset banks (all v1 — regenerate for v2)
 
