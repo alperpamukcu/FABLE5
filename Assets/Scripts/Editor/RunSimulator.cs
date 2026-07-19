@@ -122,6 +122,8 @@ namespace LastCall.EditorTools
             }
             stats.Customers++;
             if (round.Phase == RoundPhase.Won) stats.OrdersFilled++;
+            if (round.Customer.HasEmotion)
+                stats.RecordDemand(round.Customer.Read.Demand, round.SatisfactionEarned);
         }
 
         /// <summary>
@@ -209,6 +211,32 @@ namespace LastCall.EditorTools
 
             /// <summary>Satisfaction actually earned in each closed week, per week number.</summary>
             private readonly Dictionary<int, List<int>> _weekEarned = new Dictionary<int, List<int>>();
+
+            private readonly Dictionary<DemandLevel, List<int>> _byDemand =
+                new Dictionary<DemandLevel, List<int>>();
+
+            public void RecordDemand(DemandLevel demand, int satisfaction)
+            {
+                if (!_byDemand.TryGetValue(demand, out var list))
+                    _byDemand[demand] = list = new List<int>();
+                list.Add(satisfaction);
+            }
+
+            private string DemandBreakdown()
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("## How hard customers were to please");
+                sb.AppendLine();
+                sb.AppendLine("| Demand | Customers | Satisfaction each |");
+                sb.AppendLine("|---|---|---|");
+                foreach (DemandLevel demand in Enum.GetValues(typeof(DemandLevel)))
+                {
+                    if (!_byDemand.TryGetValue(demand, out var list) || list.Count == 0) continue;
+                    sb.AppendLine($"| {demand} | {Pct(list.Count, Customers)} | " +
+                                  $"{list.Average():0.00} |");
+                }
+                return sb.ToString();
+            }
 
             public void RecordWeek(int week, bool passed, int earned)
             {
@@ -306,6 +334,8 @@ namespace LastCall.EditorTools
                     sb.AppendLine($"| {week} | {QuotaTable.Standard(week)} | " +
                                   $"{_weekAttempts[week]} | {Pct(passed, _weekAttempts[week])} |");
                 }
+                sb.AppendLine();
+                sb.Append(DemandBreakdown());
                 sb.AppendLine();
                 sb.Append(QuotaSweep());
                 return sb.ToString();

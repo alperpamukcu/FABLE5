@@ -39,8 +39,16 @@ namespace LastCall.Core
         /// <summary>Name pool for regulars rolled from this archetype.</summary>
         public IReadOnlyList<string> NamePool { get; }
 
+        /// <summary>
+        /// This kind of person's disposition before the night is taken into account
+        /// (GDD 20 §2.1). Someone carrying something heavy is harder to please than someone
+        /// out celebrating, and the night pushes everyone up from there.
+        /// </summary>
+        public DemandLevel BaseDemand { get; }
+
         public ArchetypeDefinition(string id, string name, IReadOnlyList<EmotionBand> bands,
-            IReadOnlyList<string> namePool = null, int weight = 1)
+            IReadOnlyList<string> namePool = null, int weight = 1,
+            DemandLevel baseDemand = DemandLevel.Easygoing)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Archetype id is required", nameof(id));
             if (bands == null || bands.Count != Emotions.Count)
@@ -52,6 +60,7 @@ namespace LastCall.Core
             for (int i = 0; i < _bands.Length; i++) _bands[i] = bands[i];
             NamePool = namePool != null && namePool.Count > 0 ? namePool : new[] { Name };
             Weight = weight;
+            BaseDemand = baseDemand;
         }
 
         public EmotionBand this[Emotion emotion] => _bands[(int)emotion];

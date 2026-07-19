@@ -16,6 +16,9 @@ namespace LastCall.Core
         public string Name { get; }
         public string ArchetypeId { get; }
 
+        /// <summary>Their archetype's disposition, carried so the run layer need not re-look it up.</summary>
+        public DemandLevel BaseDemand { get; }
+
         /// <summary>Live values — what they are carrying right now.</summary>
         public EmotionStats Stats { get; }
 
@@ -33,12 +36,14 @@ namespace LastCall.Core
         public IReadOnlyList<VisibilityTier> KnownTiers => _knownTiers;
 
         public RegularState(string id, string name, string archetypeId,
-            EmotionStats stats, EmotionStats baseline)
+            EmotionStats stats, EmotionStats baseline,
+            DemandLevel baseDemand = DemandLevel.Easygoing)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Regular id is required", nameof(id));
             Id = id;
             Name = string.IsNullOrWhiteSpace(name) ? id : name;
             ArchetypeId = archetypeId ?? string.Empty;
+            BaseDemand = baseDemand;
             Stats = stats ?? throw new ArgumentNullException(nameof(stats));
             Baseline = baseline ?? stats.Clone();
             for (int i = 0; i < _knownTiers.Length; i++) _knownTiers[i] = VisibilityTier.Unknown;

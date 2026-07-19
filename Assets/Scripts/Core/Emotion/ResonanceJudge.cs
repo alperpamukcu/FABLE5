@@ -28,8 +28,8 @@ namespace LastCall.Core
         /// <summary>Wrong-way movement up to this much is a slip, not a bust (GDD 19 §6).</summary>
         public const int DriftTolerance = 10;
 
-        /// <summary>Progress at or above this reads as a real change, not a nudge.</summary>
-        public const int StrongProgress = 20;
+        // How much progress reads as "a real change, not a nudge" is no longer a constant:
+        // it scales with how hard the customer is to please. See Demands.StrongProgress.
 
         /// <summary>
         /// Judges the intent stat only. <paramref name="delta"/> must be the raw, unclamped
@@ -72,18 +72,25 @@ namespace LastCall.Core
             double burst = cleanServe ? (blind ? BlindCleanServeBurst : CleanServeBurst) : 1;
 
             return new ResonanceResult(resonance, lucky, burst, 0, BustKind.None,
-                cleanServe, blind, progress, SatisfactionFor(progress, cleanServe), delta);
+                cleanServe, blind, progress,
+                SatisfactionFor(progress, cleanServe, read.Demand), delta);
         }
 
         /// <summary>
         /// What the serve is worth to the week (GDD 19 §10). Deliberately coarse: the player
         /// should feel "I got that one" or "I didn't", not compute a decimal.
+        ///
+        /// A demanding customer moves the goalposts, not the ceiling: a Clean Serve is always
+        /// worth 3, because landing someone exactly where they asked cannot be improved on.
+        /// What rises is how much movement counts as *feeling* something — and only the
+        /// Demanding have a floor beneath which a serve is worth nothing at all.
         /// </summary>
-        public static int SatisfactionFor(int progress, bool cleanServe)
+        public static int SatisfactionFor(int progress, bool cleanServe,
+            DemandLevel demand = DemandLevel.Easygoing)
         {
             if (cleanServe) return 3;
-            if (progress >= StrongProgress) return 2;
-            return progress > 0 ? 1 : 0;
+            if (progress >= Demands.StrongProgress(demand)) return 2;
+            return progress >= Demands.MinProgress(demand) ? 1 : 0;
         }
 
         /// <summary>A bust scores badly and — critically — never touches their stats.</summary>

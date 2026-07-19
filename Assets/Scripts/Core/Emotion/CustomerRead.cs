@@ -19,7 +19,14 @@ namespace LastCall.Core
         /// <summary>Which way they want it moved. Always visible.</summary>
         public IntentDirection Direction { get; }
 
-        public CustomerRead(IReadOnlyList<StatReading> readings, Emotion intent, IntentDirection direction)
+        /// <summary>
+        /// How hard they are to please (GDD 20 §2.1). Always visible — hidden difficulty is
+        /// unfair, visible difficulty is tension.
+        /// </summary>
+        public DemandLevel Demand { get; }
+
+        public CustomerRead(IReadOnlyList<StatReading> readings, Emotion intent,
+            IntentDirection direction, DemandLevel demand = DemandLevel.Easygoing)
         {
             if (readings == null) throw new ArgumentNullException(nameof(readings));
             if (readings.Count != Emotions.Count)
@@ -27,6 +34,7 @@ namespace LastCall.Core
             for (int i = 0; i < _readings.Length; i++) _readings[i] = readings[i];
             Intent = intent;
             Direction = direction;
+            Demand = demand;
         }
 
         public StatReading this[Emotion emotion] => _readings[(int)emotion];
@@ -46,7 +54,7 @@ namespace LastCall.Core
             var next = new StatReading[Emotions.Count];
             Array.Copy(_readings, next, next.Length);
             next[(int)emotion] = _readings[(int)emotion].Narrowed(trueValue, halfWidth);
-            return new CustomerRead(next, Intent, Direction);
+            return new CustomerRead(next, Intent, Direction, Demand);
         }
 
         /// <summary>
@@ -58,7 +66,7 @@ namespace LastCall.Core
             var next = new StatReading[Emotions.Count];
             Array.Copy(_readings, next, next.Length);
             next[(int)emotion] = reading;
-            return new CustomerRead(next, Intent, Direction);
+            return new CustomerRead(next, Intent, Direction, Demand);
         }
 
         /// <summary>

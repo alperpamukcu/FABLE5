@@ -24,7 +24,8 @@ namespace LastCall.Core
             Math.Max(2, HalfWidthForNight(night) - 3 * (int)relationship);
 
         public static CustomerRead Build(EmotionStats truth, int night, SeededRng rng,
-            Relationship relationship = Relationship.Stranger)
+            Relationship relationship = Relationship.Stranger,
+            DemandLevel archetypeDemand = DemandLevel.Easygoing)
         {
             if (truth == null) throw new ArgumentNullException(nameof(truth));
             if (rng == null) throw new ArgumentNullException(nameof(rng));
@@ -51,7 +52,8 @@ namespace LastCall.Core
             }
 
             var intent = RollIntent(truth, rng, out var direction);
-            return new CustomerRead(readings, intent, direction);
+            return new CustomerRead(readings, intent, direction,
+                Demands.For(night, archetypeDemand));
         }
 
         /// <summary>
@@ -65,7 +67,8 @@ namespace LastCall.Core
         /// the design, and a bust rate to match. Knowing someone must only ever help.
         /// </summary>
         public static CustomerRead FromTiers(EmotionStats truth, IReadOnlyList<VisibilityTier> remembered,
-            int night, SeededRng rng, Relationship relationship = Relationship.Stranger)
+            int night, SeededRng rng, Relationship relationship = Relationship.Stranger,
+            DemandLevel archetypeDemand = DemandLevel.Easygoing)
         {
             if (truth == null) throw new ArgumentNullException(nameof(truth));
             if (remembered == null || remembered.Count != Emotions.Count)
@@ -86,7 +89,8 @@ namespace LastCall.Core
             }
 
             var intent = RollIntent(truth, rng, out var direction);
-            return new CustomerRead(readings, intent, direction);
+            return new CustomerRead(readings, intent, direction,
+                Demands.For(night, archetypeDemand));
         }
 
         /// <summary>Exact beats Range beats Unknown.</summary>
@@ -119,7 +123,7 @@ namespace LastCall.Core
                     readings[i] = rules.ReadOverride == ReadOverride.AllExact
                         ? StatReading.Exact(truth[Emotions.All[i]])
                         : StatReading.Unknown;
-                read = new CustomerRead(readings, read.Intent, read.Direction);
+                read = new CustomerRead(readings, read.Intent, read.Direction, read.Demand);
             }
 
             if (rules.OneReadingFalse)

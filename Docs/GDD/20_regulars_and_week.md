@@ -27,28 +27,76 @@ Each serve is worth 0–3 toward the week, decided by `ResonanceJudge.Satisfacti
 
 Deliberately coarse. The player should feel "I got that one" or "I didn't", not compute a
 decimal. A customer with 4 Mixes can bank several serves, so the practical ceiling per
-customer is well above 3; measured average is **2.10**.
+customer is well above 3; measured average is **1.95**.
+
+## 2.1 How hard they are to please
+
+"Strong progress" is not a fixed number — it scales with the customer. This is the difficulty
+axis that scales *the person*, as opposed to the quota, which scales what the week asks of you.
+
+| Demand | Needs for 2 | Ignores below | Clean Serve |
+|---|---|---|---|
+| Easygoing | 15 | — | 3 |
+| Particular | 22 | — | 3 |
+| Demanding | 30 | 8 | 3 |
+
+**Demand moves the goalposts, never the ceiling.** A Clean Serve is worth 3 to anyone, because
+landing someone exactly where they asked cannot be improved on. What rises is how much
+movement *feels* like something — and only the Demanding have a floor beneath which a serve is
+worth nothing at all.
+
+`demand = archetypeDisposition + nightStep`, clamped to the scale. Night step is 0 for Nights
+1–3, +1 for 4–6, +2 for 7–8. Four archetypes are `Particular` by disposition (people carrying
+something heavy) and four are `Easygoing`, so the run opens with a mix and closes with
+everyone difficult:
+
+| Night | Easygoing archetype | Particular archetype |
+|---|---|---|
+| 1–3 | Easygoing | Particular |
+| 4–6 | Particular | Demanding |
+| 7–8 | Demanding | Demanding |
+
+It is always shown on the ID, colour-coded. Hidden difficulty is unfair; visible difficulty is
+tension.
+
+**Tuning history, because the first pass was badly wrong.** Stepping at Nights 3 and 6 with
+thresholds 15/25/35 made every customer from Night 6 on Demanding, dropped satisfaction per
+customer 2.10 → 1.74 and crushed the bot win rate from 29% to **4%**. Two things went wrong at
+once: the demand curve was too steep, *and* the quota was still tuned against the old
+satisfaction level, so the run was being escalated twice over. The fix was to soften both —
+see §3.
+
+Measured distribution at the current settings: 22% Easygoing, 41% Particular, 37% Demanding,
+earning 1.90 / 2.00 / 1.94 satisfaction respectively. That near-flatness is the point: the bot
+compensates by committing to bigger moves, so demand punishes *marginal* serves rather than
+crushing everything. A player coasting on small nudges gets caught; one who commits gets
+through.
 
 ## 3. The quota curve
 
 | Week | Required | Bot pass rate |
 |---|---|---|
-| 1 | 7 | 93% |
-| 2 | 11 | 80% |
-| 3 | 12 | 76% |
-| 4 | 14 | 52% |
+| 1 | 7 | 94% |
+| 2 | 10 | 85% |
+| 3 | 11 | 72% |
+| 4 | 12 | 43% |
 
-Beyond week 4 (endless): `14 + 3 × (week − 4)`.
+Beyond week 4 (endless): `12 + 3 × (week − 4)`.
 
-**How this was chosen.** The first pass was 6/9/12/14, which measured 97/94/75/53. The
-end-to-end difficulty was defensible but the *shape* was wrong: half the run was a formality
-and every decision that mattered lived in weeks 3–4. The current curve moves pressure earlier.
+**Why it is nearly flat.** Because the escalation moved into §2.1. Customers get harder to
+please as the run goes on, so later weeks earn *less* satisfaction from the same standard of
+play — measured medians run 10 / 11 / 10 / 9, falling at the end even as the player improves.
+A steeply rising quota on top of a rising demand curve double-counts the difficulty, and doing
+both at once cost 25 points of win rate on its own. The week asks for roughly the same thing
+throughout; **the people are what change.**
 
-**The trade, stated honestly:** this cost real difficulty, not just shape. Bot win rate went
-from 36.3% to 29.0%. The intent was a neutral redistribution; it isn't one. If playtests say
-the run is too punishing, week 2 is the dial — dropping it 11 → 10 buys back roughly 4 points
-and is the least damaging place to give ground, because weeks 3–4 are where the game is
-supposed to bite.
+**History.** 6/9/12/14 measured 97/94/75/53 — defensible difficulty, wrong shape, half the run
+a formality. 7/11/12/14 fixed the shape at a cost of 7 points (36.3% → 29.0%). The current
+7/10/11/12 accompanies the demand axis and lands at **25.0%**, which is a little harder than
+the pre-demand baseline — appropriate, since a difficulty axis was deliberately added.
+
+If playtests say it is too punishing, week 4 is the dial: it is doing most of the killing at
+43%, and the demand curve is already carrying the late-run tension on its own.
 
 **How much to trust these numbers.** They come from a greedy one-ply bot that reads only the
 ID and never shops. The *shape* comparison is sound — same bot, same seeds, one variable. The
@@ -104,16 +152,16 @@ someone badly keeps you strangers.
 each regular is one roll inside its baseline bands, so two of the same archetype are
 recognisably alike and still different.
 
-| Id | Name | Leads with | Weight |
-|---|---|---|---|
-| `after_shift` | Off the Late Shift | Fatigue | 4 |
-| `wound_tight` | Wound Tight | Anxiety | 4 |
-| `recently_ended` | Something Recently Ended | Heartbreak | 3 |
-| `celebrating` | Celebrating Something | Excitement | 3 |
-| `slow_burn` | Still Chewing On It | Anger | 3 |
-| `nothing_much` | Nothing Much, Honestly | flat | 3 |
-| `long_way_from_home` | A Long Way From Home | Sadness | 2 |
-| `deadline` | Something Due Tomorrow | Anxiety + Fatigue | 2 |
+| Id | Name | Leads with | Weight | Disposition |
+|---|---|---|---|---|
+| `after_shift` | Off the Late Shift | Fatigue | 4 | Easygoing |
+| `wound_tight` | Wound Tight | Anxiety | 4 | Particular |
+| `recently_ended` | Something Recently Ended | Heartbreak | 3 | Particular |
+| `celebrating` | Celebrating Something | Excitement | 3 | Easygoing |
+| `slow_burn` | Still Chewing On It | Anger | 3 | Particular |
+| `nothing_much` | Nothing Much, Honestly | flat | 3 | Easygoing |
+| `long_way_from_home` | A Long Way From Home | Sadness | 2 | Easygoing |
+| `deadline` | Something Due Tomorrow | Anxiety + Fatigue | 2 | Particular |
 
 Two content invariants are enforced by `EmotionContentTests`, because breaking either makes
 intents unplayable rather than merely unbalanced:

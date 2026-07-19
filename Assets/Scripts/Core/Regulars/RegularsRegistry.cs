@@ -61,7 +61,8 @@ namespace LastCall.Core
             string id = $"{archetype.Id}_{_nextSerial++}";
             string name = archetype.NamePool[rng.NextInt(archetype.NamePool.Count)];
 
-            var state = new RegularState(id, name, archetype.Id, baseline.Clone(), baseline);
+            var state = new RegularState(id, name, archetype.Id, baseline.Clone(), baseline,
+                archetype.BaseDemand);
             _byId[id] = state;
             _order.Add(state);
             return state;

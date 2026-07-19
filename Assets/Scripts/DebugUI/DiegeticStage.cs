@@ -891,7 +891,12 @@ namespace LastCall.DebugUI
             _idRelationship.text = regular.Visits > 0
                 ? regular.Relationship.ToString().ToLowerInvariant()
                 : "new face";
-            _idArchetype.text = regular.ArchetypeId.Replace('_', ' ');
+            _idArchetype.text = $"{regular.ArchetypeId.Replace('_', ' ')} · {Demands.Label(read.Demand)}";
+            _idArchetype.color = read.Demand == DemandLevel.Demanding
+                ? UITheme.ViceRed[3]
+                : read.Demand == DemandLevel.Particular
+                    ? UITheme.Amber[3]
+                    : UITheme.TextSecondary;
             _idPortrait.sprite = PortraitFor(regular.ArchetypeId);
             _idPortrait.color = _idPortrait.sprite != null ? Color.white : UITheme.Night[3];
 

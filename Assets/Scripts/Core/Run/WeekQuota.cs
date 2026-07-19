@@ -45,9 +45,14 @@ namespace LastCall.Core
     ///
     /// The first pass (6/9/12/14) held up on overall difficulty but had the wrong shape: a
     /// greedy bot cleared week 1 97% of the time and week 2 93%, so half the run was a
-    /// formality and every decision that mattered lived in weeks 3–4. This curve keeps the
-    /// end-to-end difficulty roughly where it was and moves pressure earlier, so week 2 is a
-    /// real gate instead of a lap of honour.
+    /// formality. The second (7/11/12/14) fixed the shape.
+    ///
+    /// This curve is flatter than either, because the escalation moved. Customers now get
+    /// harder to please as the run goes on (<see cref="DemandLevel"/>), so later weeks earn
+    /// *less* satisfaction from the same play — measured medians run 10/11/10/9. Stacking a
+    /// steep quota on top of a rising demand curve double-counts the difficulty and was worth
+    /// a 25-point drop in win rate on its own. The week asks for roughly the same thing
+    /// throughout; the people are what change.
     ///
     /// Caveat worth keeping in mind before trusting these numbers too far: they come from a
     /// one-ply bot that never shops. The *shape* comparison is sound; the absolute win rate
@@ -58,7 +63,7 @@ namespace LastCall.Core
         /// <summary>Nights in a week; the quota gate fires when the last one closes.</summary>
         public const int NightsPerWeek = 2;
 
-        private static readonly int[] Curve = { 7, 11, 12, 14 };
+        private static readonly int[] Curve = { 7, 10, 11, 12 };
 
         /// <summary>Satisfaction required to survive the given 1-based week.</summary>
         public static int Standard(int week)

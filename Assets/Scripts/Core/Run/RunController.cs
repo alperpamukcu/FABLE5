@@ -727,8 +727,9 @@ namespace LastCall.Core
             bool returning = regular.Visits > 0;
             var read = returning
                 ? CustomerReadFactory.FromTiers(regular.Stats, regular.KnownTiers, Night, readRng,
-                    regular.Relationship)
-                : CustomerReadFactory.Build(regular.Stats, Night, readRng, regular.Relationship);
+                    regular.Relationship, regular.BaseDemand)
+                : CustomerReadFactory.Build(regular.Stats, Night, readRng,
+                    regular.Relationship, regular.BaseDemand);
 
             // A VIP can blank the licence, print it in full, or plant a lie on it (GDD 19 §8).
             read = CustomerReadFactory.ApplyVipRules(read, regular.Stats, rules, Night, readRng,

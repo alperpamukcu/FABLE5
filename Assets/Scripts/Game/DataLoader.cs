@@ -240,8 +240,11 @@ namespace LastCall.Game
                 }
 
                 int weight = archetype.weight > 0 ? archetype.weight : 1;
+                var demand = string.IsNullOrEmpty(archetype.demand)
+                    ? DemandLevel.Easygoing
+                    : ParseEnum<DemandLevel>(archetype.demand, archetype.id, "demand");
                 archetypes.Add(new ArchetypeDefinition(
-                    archetype.id, archetype.name, bands, archetype.names, weight));
+                    archetype.id, archetype.name, bands, archetype.names, weight, demand));
             }
             return archetypes;
         }
@@ -332,6 +335,7 @@ namespace LastCall.Game
             public string id;
             public string name;
             public int weight;
+            public string demand;
             public List<string> names;
             public List<BandDto> bands;
         }

@@ -395,12 +395,13 @@ namespace LastCall.DebugUI
                     ? "<color=#F5C97B>CLEAN SERVE — CALLED IT</color>"
                     : "<color=#F5C97B>CLEAN SERVE</color>";
 
-            if (resonance.Progress >= ResonanceJudge.StrongProgress)
-                return "<color=#3BC8BE>THEY FEEL HEARD</color>";
-
-            return resonance.Progress > 0
+            // Keyed off earned satisfaction rather than raw progress, so a hard-to-please
+            // customer shrugging at a serve that would have delighted someone easier is
+            // reported honestly and for free.
+            if (resonance.Satisfaction >= 2) return "<color=#3BC8BE>THEY FEEL HEARD</color>";
+            return resonance.Satisfaction == 1
                 ? "<color=#9C8F80>a little lighter</color>"
-                : "<color=#9C8F80>no change</color>";
+                : "<color=#9C8F80>didn't land</color>";
         }
 
         private System.Collections.IEnumerator ScorePopupRoutine()
