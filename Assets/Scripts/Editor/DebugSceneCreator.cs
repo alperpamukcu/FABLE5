@@ -22,12 +22,9 @@ namespace LastCall.EditorTools
         private const string VipsPath = "Assets/Data/vips/vips.json";
         private const string VouchersPath = "Assets/Data/vouchers/vouchers.json";
         private const string ArchetypesPath = "Assets/Data/customers/archetypes.json";
-        // Legacy HUD overlay fonts (temporary, cozy-noir — do not polish). The diegetic
-        // pixel stage uses the v2 pixel fonts below.
-        private const string LegacyDisplayFontPath = "Assets/Fonts/Limelight-Regular.ttf";
-        private const string LegacyBodyFontPath = "Assets/Fonts/Barlow-Regular.ttf";
         // v2 pixel fonts (16_ui_style_guide v2 §1: Press Start 2P headings/numbers,
-        // Silkscreen body/caption — spec-sanctioned fallbacks for m6x11/m5x7).
+        // Silkscreen body/caption — spec-sanctioned fallbacks for m6x11/m5x7). The legacy
+        // Limelight/Barlow pair is gone: every slot wires a pixel font now.
         private const string PixelDisplayFontPath = "Assets/Fonts/PressStart2P-Regular.ttf";
         private const string PixelBodyFontPath = "Assets/Fonts/Silkscreen-Regular.ttf";
 
@@ -155,8 +152,6 @@ namespace LastCall.EditorTools
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/UI/button.png");
             hudSo.FindProperty("vignetteSprite").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/UI/vignette.png");
-            hudSo.FindProperty("backgroundMaterial").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<Material>("Assets/Art/UI/SmokeSwirl.mat");
             hudSo.FindProperty("art").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<LastCall.Game.ArtLibrary>("Assets/Art/ArtLibrary.asset");
             hudSo.FindProperty("stage").objectReferenceValue = stage;

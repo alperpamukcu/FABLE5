@@ -37,18 +37,17 @@ namespace LastCall.DebugUI
         [SerializeField] private Font pixelFont;   // v2 pixel font for buttons/controls (Silkscreen)
 
         // Cozy noir UI kit (LastCall/Generate UI Sprites): rounded white sprites tinted
-        // at runtime, a screen vignette and the animated smoke backdrop. All optional.
+        // at runtime, plus a screen vignette. All optional.
         [SerializeField] private Sprite panelSprite;
         [SerializeField] private Sprite buttonSprite;
         [SerializeField] private Sprite vignetteSprite;
-        [SerializeField] private Material backgroundMaterial;
 
         // Generated illustration registry (LastCall/Build Art Library); optional — cards
         // and portraits fall back to flat tints when a sprite is missing.
         [SerializeField] private ArtLibrary art;
 
-        // The diegetic night-club stage behind this overlay (v2). When present, the rail
-        // is rendered as bottles on the counter and the smoke backdrop is suppressed.
+        // The diegetic night-club stage behind this overlay (v2): the rail is rendered as
+        // bottles on the counter.
         [SerializeField] private DiegeticStage stage;
 
         // Art bible §2 locked palette (Docs/GDD/14_art_bible.md) — every UI tint
@@ -1019,17 +1018,6 @@ namespace LastCall.DebugUI
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1280, 720);
             var root = (RectTransform)canvasGo.transform;
-
-            // Legacy cozy-noir backdrop. Suppressed when the diegetic stage is present
-            // (the stage's night-club BackgroundLayers replace it in v2).
-            if (backgroundMaterial != null && stage == null)
-            {
-                var bg = NewRect("Background", root);
-                Stretch(bg, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                var raw = bg.gameObject.AddComponent<RawImage>();
-                raw.material = backgroundMaterial;
-                raw.raycastTarget = false;
-            }
 
             // ── the bottom band ──────────────────────────────────────────────────
             // The counter front and its glassware fill the bottom 192px of the 720 HUD space

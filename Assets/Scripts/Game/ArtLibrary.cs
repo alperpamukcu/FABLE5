@@ -20,15 +20,13 @@ namespace LastCall.Game
             public Sprite sprite;
         }
 
-        [SerializeField] private List<Entry> ingredients = new List<Entry>();
         [SerializeField] private List<Entry> portraits = new List<Entry>();
         [SerializeField] private List<Entry> vips = new List<Entry>();
         [SerializeField] private List<Entry> tools = new List<Entry>();
         [SerializeField] private List<Entry> icons = new List<Entry>();
 
-        private Dictionary<string, Sprite> _ingredients, _portraits, _vips, _tools, _icons;
+        private Dictionary<string, Sprite> _portraits, _vips, _tools, _icons;
 
-        public Sprite Ingredient(string id) => Lookup(ref _ingredients, ingredients, id);
         public Sprite Portrait(string id) => Lookup(ref _portraits, portraits, id);
         public Sprite Vip(string id) => Lookup(ref _vips, vips, id);
         public Sprite Tool(string id) => Lookup(ref _tools, tools, id);
@@ -51,7 +49,6 @@ namespace LastCall.Game
         {
             switch (category)
             {
-                case "Ingredients": ingredients = values; _ingredients = null; break;
                 case "Portraits": portraits = values; _portraits = null; break;
                 case "VIPs": vips = values; _vips = null; break;
                 case "Tools": tools = values; _tools = null; break;

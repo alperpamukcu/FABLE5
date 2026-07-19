@@ -14,7 +14,7 @@ namespace LastCall.EditorTools
     {
         private const string AssetPath = "Assets/Art/ArtLibrary.asset";
         private static readonly string[] Categories =
-            { "Ingredients", "Portraits", "VIPs", "Tools", "Icons" };
+            { "Portraits", "VIPs", "Tools", "Icons" };
 
         [MenuItem("LastCall/Build Art Library")]
         public static void Build()
