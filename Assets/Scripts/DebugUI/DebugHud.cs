@@ -603,6 +603,8 @@ namespace LastCall.DebugUI
             if (stage == null) return;
             bool inRound = Run.Phase == RunPhase.CustomerRound;
             stage.SetRailVisible(inRound);
+            // A modal owns the screen, so the licence goes back in the pocket while one is up.
+            if (!inRound || _recipesVisible) stage.CloseId();
             stage.SetCustomerRead(inRound ? Round.Customer : null);
             if (!inRound) return;
             stage.SetBottles(Round.Rail, _selected, Round.VipRules.DebuffedTypes, ToggleCard, _pendingExit);
@@ -1029,16 +1031,21 @@ namespace LastCall.DebugUI
                 raw.raycastTarget = false;
             }
 
-            // Top-left: run/round state on a framed panel (v2 professional HUD).
+            // ── the bottom band ──────────────────────────────────────────────────
+            // The counter front and its glassware fill the bottom 192px of the 720 HUD space
+            // (the bar surface starts at y≈192, bottles at y≈256). That band was pure
+            // decoration while every control crowded the top third, so the HUD lives down
+            // here now: it reads as the bartender's side of the bar, and the whole upper
+            // two-thirds — the room, the customer, the score moment — is left clear.
             var infoPanel = NewRect("InfoPanel", root);
-            Stretch(infoPanel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(8, -162), new Vector2(404, -8));
-            StylePanel(infoPanel, WithAlpha(DeepPlum, 0.82f));
+            Stretch(infoPanel, new Vector2(0, 0), new Vector2(0, 0), new Vector2(8, 8), new Vector2(420, 184));
+            StyleBandPanel(infoPanel, DeepPlum);
             _infoText = NewText("Info", infoPanel, 15, TextAnchor.UpperLeft, Cream);
-            Stretch((RectTransform)_infoText.transform, Vector2.zero, Vector2.one, new Vector2(12, 10), new Vector2(-10, -10));
+            Stretch((RectTransform)_infoText.transform, Vector2.zero, Vector2.one, new Vector2(12, 8), new Vector2(-10, -8));
 
-            // Left column: patron shelf, then tool belt.
-            _patronPanel = NewSidePanel(root, "Patrons", -172, -248);
-            _toolPanel = NewSidePanel(root, "Tools", -256, -338);
+            // Patron shelf over the tool belt, centre of the band.
+            _patronPanel = NewSidePanel(root, "Patrons", 428, 820, 98, 184);
+            _toolPanel = NewSidePanel(root, "Tools", 428, 820, 8, 90);
 
             // Top-right: seed + new run.
             _seedInput = NewInput("SeedInput", root, "LASTCALL-DEV");
@@ -1049,7 +1056,8 @@ namespace LastCall.DebugUI
             // Right: score log — hidden by default in the game view, toggled with F1.
             var logPanel = NewRect("LogPanel", root);
             _logPanel = logPanel.gameObject;
-            Stretch(logPanel, new Vector2(1, 0), new Vector2(1, 1), new Vector2(-372, 170), new Vector2(-12, -52));
+            // Sits above the bottom band so it never covers the action grid.
+            Stretch(logPanel, new Vector2(1, 0), new Vector2(1, 1), new Vector2(-372, 200), new Vector2(-12, -52));
             StylePanel(logPanel, WithAlpha(DeepPlum, 0.80f));
             _logScroll = logPanel.gameObject.AddComponent<ScrollRect>();
             var viewport = NewRect("Viewport", logPanel);
@@ -1090,45 +1098,30 @@ namespace LastCall.DebugUI
 
             // The rail is now diegetic (bottles on the counter, DiegeticStage). No UI rail.
 
-            // Action bar: a right-side vertical stack (the log is F1-hidden, so the right
-            // is free) plus the live preview line just above the bottle rail. Grouped so
-            // one toggle hides the cluster when the Back Room modal takes the screen.
+            // Action bar: a 2×2 grid at the right end of the bottom band, within thumb reach
+            // of the bottles. Grouped so one toggle hides the cluster when a modal takes over.
             _actionBar = NewRect("ActionBar", root);
             Stretch(_actionBar, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
-            // Preview line sits in the gap between the customer (upper centre) and the
-            // bottle rail (bottom band).
+            // Preview line stays up by the rail, where the eye already is while picking.
             _previewText = NewText("Preview", _actionBar, 20, TextAnchor.MiddleCenter, CandleGlow);
             var previewRt = (RectTransform)_previewText.transform;
             previewRt.anchorMin = previewRt.anchorMax = previewRt.pivot = new Vector2(0.5f, 0);
             previewRt.sizeDelta = new Vector2(680, 34);
             previewRt.anchoredPosition = new Vector2(0, 440);  // in the gap above the rail + value chips
 
-            // Action buttons: a top-right vertical stack, clear of the bottle rail below.
-            _mixButton = NewButton("Mix", _actionBar, "MIX", Amber, OnMixClicked, 18);
-            var mixRt = (RectTransform)_mixButton.transform;
-            mixRt.anchorMin = mixRt.anchorMax = mixRt.pivot = new Vector2(1, 1);
-            mixRt.sizeDelta = new Vector2(196, 48);
-            mixRt.anchoredPosition = new Vector2(-24, -56);
+            _mixButton = NewButton("Mix", _actionBar, "MIX", Amber, OnMixClicked, 20);
+            PlaceInBand((RectTransform)_mixButton.transform, 828, 1046, 98, 184);
             _restockButton = NewButton("Restock", _actionBar, "RESTOCK", WithAlpha(WoodBrown, 0.95f), OnRestockClicked, 18);
-            var restockRt = (RectTransform)_restockButton.transform;
-            restockRt.anchorMin = restockRt.anchorMax = restockRt.pivot = new Vector2(1, 1);
-            restockRt.sizeDelta = new Vector2(196, 48);
-            restockRt.anchoredPosition = new Vector2(-24, -110);
+            PlaceInBand((RectTransform)_restockButton.transform, 1054, 1272, 98, 184);
 
             // Only shows on an untouched Customer A round (GDD 5.2).
             _skipButton = NewButton("SkipA", _actionBar, "SKIP → FAVOR", WithAlpha(TealShadow, 0.95f), OnSkipCustomerAClicked, 13);
-            var skipRt = (RectTransform)_skipButton.transform;
-            skipRt.anchorMin = skipRt.anchorMax = skipRt.pivot = new Vector2(1, 1);
-            skipRt.sizeDelta = new Vector2(196, 42);
-            skipRt.anchoredPosition = new Vector2(-24, -164);
+            PlaceInBand((RectTransform)_skipButton.transform, 828, 1046, 8, 90);
 
             // Bouncer voucher: visible only while tonight's VIP can still be rerolled.
             _bouncerButton = NewButton("Bouncer", _actionBar, "BOUNCER: NEW VIP", NeonMagenta, OnBouncerClicked, 12);
-            var bouncerRt = (RectTransform)_bouncerButton.transform;
-            bouncerRt.anchorMin = bouncerRt.anchorMax = bouncerRt.pivot = new Vector2(1, 1);
-            bouncerRt.sizeDelta = new Vector2(196, 36);
-            bouncerRt.anchoredPosition = new Vector2(-24, -212);
+            PlaceInBand((RectTransform)_bouncerButton.transform, 1054, 1272, 8, 90);
 
             // Modal scrim: dims and blocks the game behind shop / recipe overlays.
             _scrim = NewRect("Scrim", root);
@@ -1238,11 +1231,39 @@ namespace LastCall.DebugUI
             return image;
         }
 
-        private RectTransform NewSidePanel(RectTransform root, string name, float top, float bottom)
+        /// <summary>
+        /// A bottom-band panel. The rounded kit sprite carries its own soft alpha, which is
+        /// unreadable over the lit glassware behind the counter, so these get a flat opaque
+        /// slab first and the frame on top of it.
+        /// </summary>
+        private Image StyleBandPanel(RectTransform rt, Color color)
+        {
+            var slab = rt.gameObject.AddComponent<Image>();
+            slab.color = new Color(color.r, color.g, color.b, 1f);
+
+            var frame = NewRect("Frame", rt);
+            Stretch(frame, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var frameImage = frame.gameObject.AddComponent<Image>();
+            frameImage.color = WithAlpha(Cream, 0.10f);
+            frameImage.raycastTarget = false;
+            if (panelSprite != null)
+            {
+                frameImage.sprite = panelSprite;
+                frameImage.type = Image.Type.Sliced;
+            }
+            return slab;
+        }
+
+        /// <summary>
+        /// A shelf panel in the bottom band, anchored from the counter up. Opaque enough to
+        /// read over the glassware behind it.
+        /// </summary>
+        private RectTransform NewSidePanel(RectTransform root, string name,
+            float left, float right, float bottom, float top)
         {
             var panel = NewRect(name, root);
-            Stretch(panel, new Vector2(0, 1), new Vector2(0, 1), new Vector2(12, bottom), new Vector2(392, top));
-            StylePanel(panel, WithAlpha(PanelPlum, 0.72f));
+            Stretch(panel, new Vector2(0, 0), new Vector2(0, 0), new Vector2(left, bottom), new Vector2(right, top));
+            StyleBandPanel(panel, PanelPlum);
             var layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 4;
             layout.padding = new RectOffset(6, 6, 6, 6);
@@ -1250,6 +1271,15 @@ namespace LastCall.DebugUI
             layout.childControlHeight = true;
             layout.childControlWidth = true;
             return panel;
+        }
+
+        /// <summary>Anchors a rect into the bottom band by explicit edges (HUD 1280×720 space).</summary>
+        private static void PlaceInBand(RectTransform rt, float left, float right, float bottom, float top)
+        {
+            rt.anchorMin = rt.anchorMax = new Vector2(0, 0);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(right - left, top - bottom);
+            rt.anchoredPosition = new Vector2((left + right) * 0.5f, (bottom + top) * 0.5f);
         }
 
         private static void EnsureEventSystem()

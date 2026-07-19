@@ -47,7 +47,17 @@ only the values are hidden. That is the whole game: the rules are known, the han
 
 ## 3. Tiered visibility
 
-Hovering a customer opens the **ID card**. Each of the six stats sits in one of three tiers:
+**The stats are never on screen by default.** Clicking the customer asks them for ID, the way
+you would ask anyone ordering a drink, and they hold up a licence: a photo, their name, how
+well you know them, and the six readings in a 3×2 grid. Clicking anywhere else puts it away.
+
+This is deliberate and load-bearing. An always-visible readout turns the game into arithmetic
+on a dashboard; making the read an *action the bartender takes* keeps the fiction (you are
+looking at a person, not a stat block) and keeps the screen clear for the room. It also gives
+the information economy something to attach to — Chat, Eavesdrop and the reading patrons all
+change what that licence says when it comes out.
+
+Each of the six stats sits in one of three tiers:
 
 | Tier | Count | Shown as |
 |---|---|---|

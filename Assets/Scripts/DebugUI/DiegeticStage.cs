@@ -139,6 +139,9 @@ namespace LastCall.DebugUI
             if (bottleById != null)
                 foreach (var b in bottleById)
                     if (b.sprite != null && !string.IsNullOrEmpty(b.id)) _bottleById[b.id] = b.sprite;
+            if (portraits != null)
+                foreach (var p in portraits)
+                    if (p.sprite != null && !string.IsNullOrEmpty(p.archetypeId)) _portraits[p.archetypeId] = p.sprite;
             BuildScene();
         }
 
@@ -267,12 +270,22 @@ namespace LastCall.DebugUI
                 cust.anchoredPosition = new Vector2(CustomerX, CustomerBaseY);
                 cust.localRotation = Quaternion.Euler(0, 0, CustomerTilt);   // POV angle
                 var img = cust.gameObject.AddComponent<Image>();
-                img.sprite = customerSprite; img.preserveAspect = true; img.raycastTarget = false;
+                img.sprite = customerSprite; img.preserveAspect = true;
+
+                // You do not get to read someone by staring at them: the stats live on an ID
+                // the customer hands over when asked, so the sprite itself is the ask.
+                img.raycastTarget = true;
+                var idButton = cust.gameObject.AddComponent<Button>();
+                idButton.targetGraphic = img;
+                idButton.transition = Selectable.Transition.None;
+                idButton.onClick.AddListener(ToggleId);
                 _customerRect = cust;
             }
 
-            // Layer 7 — the read on them, pinned above their head where only we can see it.
-            BuildIdCard(root);
+            // Layer 7 — the "see ID" nudge on the stage, and the licence itself on its own
+            // canvas above everything.
+            BuildIdPrompt(root);
+            BuildIdCard();
 
             if (!Motion.Reduced) StartCoroutine(Ambient());
         }
@@ -645,14 +658,13 @@ namespace LastCall.DebugUI
             }
         }
 
-        // ── customer ID card (GDD 19 §3) ─────────────────────────────────────────
+        // ── customer ID (GDD 19 §3) ──────────────────────────────────────────────
 
         /// <summary>
-        /// The read on the person at the bar. Sits on the back-bar above them like a slip
-        /// pinned where only the bartender can see it: six stat rows of varying clarity,
-        /// and the one line that is never hidden — what they want done.
+        /// One cell of the 3×2 stat grid on the ID: a tag, a reading of whatever clarity the
+        /// bartender has earned, and a 0–100 bar under it.
         /// </summary>
-        private sealed class StatRow
+        private sealed class StatCell
         {
             public Text Tag;
             public Text Value;
@@ -661,136 +673,245 @@ namespace LastCall.DebugUI
             public Image Ghost;    // where the current selection would put them
         }
 
+        private Canvas _idCanvas;
+        private RectTransform _idRoot;      // scrim + card; the whole popup
         private RectTransform _idCard;
         private Text _idName;
         private Text _idIntent;
         private Text _idRelationship;
-        private readonly Dictionary<Emotion, StatRow> _statRows = new Dictionary<Emotion, StatRow>();
+        private Text _idArchetype;
+        private Image _idPortrait;
+        private RectTransform _idPrompt;    // "click for ID" nudge over the customer
+        private readonly Dictionary<Emotion, StatCell> _statCells = new Dictionary<Emotion, StatCell>();
+        private bool _idOpen;
 
-        // Measured against the HUD overlay in 640×360 space: the InfoPanel/Patrons/Tools
-        // column ends at x≈202, the Mix/Restock/Skip column starts at x≈530, the live preview
-        // line tops out at y≈237 and the seed row sits above y≈338. That leaves one real gap,
-        // x 200..528 × y 240..336 — the card is sized to live inside it, leaning right so it
-        // stays near the person it describes.
-        private const float CardX = 360f;
-        private const float CardY = 240f;
-        private const float CardW = 160f;
-        private const float CardH = 96f;
-        private const float RowH = 11f;
-        private const float TrackX = 52f;      // where the 0–100 rail starts inside the card
-        private const float TrackW = 62f;
+        /// <summary>Per-archetype ID photos (18 §5). Falls back to a flat silhouette.</summary>
+        [System.Serializable]
+        public struct PortraitSprite { public string archetypeId; public Sprite sprite; }
+        [SerializeField] private PortraitSprite[] portraits;
+        private readonly Dictionary<string, Sprite> _portraits = new Dictionary<string, Sprite>();
 
-        private void BuildIdCard(RectTransform root)
+        // The ID is a licence held up across the bar: a photo on the left, the six readings
+        // in a 3×2 grid on the right. Sized in 640×360 pixel space and centred, because it
+        // is a deliberate popup — it is allowed to cover the room while it is open.
+        private const float CardW = 262f;
+        private const float CardH = 108f;
+        private const float PhotoW = 52f;
+        private const float PhotoH = 66f;
+        private const float CellW = 58f;   // fits "TIR* 35-51" on one line at 7px
+        private const float CellH = 28f;
+        private const float CellGapX = 4f;
+        private const float CellGapY = 4f;
+        private const float TrackW = 52f;
+
+        private void BuildIdCard()
         {
-            _idCard = NewRect("CustomerIdCard", root);
-            _idCard.anchorMin = _idCard.anchorMax = new Vector2(0, 0);
-            _idCard.pivot = new Vector2(0, 0);
-            _idCard.sizeDelta = new Vector2(CardW, CardH);
-            _idCard.anchoredPosition = new Vector2(CardX, CardY);
+            // Its own canvas above the HUD overlay: the ID must never be half-covered by a
+            // button, and it has to stay pixel-crisp, so it keeps the 640×360 reference.
+            var canvasGo = new GameObject("IdCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            _idCanvas = canvasGo.GetComponent<Canvas>();
+            _idCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _idCanvas.sortingOrder = 20;                  // above the HUD (0) and its modals
+            var scaler = canvasGo.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = Reference;
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 1f;
 
+            _idRoot = NewRect("CustomerId", (RectTransform)canvasGo.transform);
+            Stretch(_idRoot, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+            // Dimmed room behind the licence; clicking anywhere off the card puts it away.
+            var scrim = NewRect("IdScrim", _idRoot);
+            Stretch(scrim, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var scrimImg = scrim.gameObject.AddComponent<Image>();
+            scrimImg.color = UITheme.Scrim;
+            var scrimButton = scrim.gameObject.AddComponent<Button>();
+            scrimButton.targetGraphic = scrimImg;
+            scrimButton.transition = Selectable.Transition.None;
+            scrimButton.onClick.AddListener(CloseId);
+
+            _idCard = NewRect("IdCard", _idRoot);
+            _idCard.anchorMin = _idCard.anchorMax = _idCard.pivot = new Vector2(0.5f, 0.5f);
+            _idCard.sizeDelta = new Vector2(CardW, CardH);
+            // Lifted off centre so the licence sits against the back wall rather than across
+            // the bottle rail — the room still reads while it is held up.
+            _idCard.anchoredPosition = new Vector2(0, 46);
             var frame = _idCard.gameObject.AddComponent<Image>();
-            frame.color = UITheme.Amber[1];          // 1px amber frame, same language as the score card
-            frame.raycastTarget = false;
+            frame.color = UITheme.Amber[2];               // laminated edge
 
             var fill = NewRect("Fill", _idCard);
             Stretch(fill, Vector2.zero, Vector2.one, Vector2.one, -Vector2.one);
             var fillImg = fill.gameObject.AddComponent<Image>();
-            fillImg.color = UITheme.Night[0];
-            fillImg.raycastTarget = false;
+            fillImg.color = UITheme.Night[1];
 
-            _idName = NewText("Name", fill, _display, 7, TextAnchor.UpperLeft, UITheme.TextPrimary);
-            Place((RectTransform)_idName.transform, new Vector2(0, 1), new Vector2(CardW - 44, 9), new Vector2(4, -3));
+            _idName = NewText("Name", fill, _display, 8, TextAnchor.UpperLeft, UITheme.TextPrimary);
+            Place((RectTransform)_idName.transform, new Vector2(0, 1), new Vector2(CardW - 60, 10), new Vector2(5, -4));
 
             _idRelationship = NewText("Relationship", fill, _body, 7, TextAnchor.UpperRight, UITheme.TextSecondary);
-            Place((RectTransform)_idRelationship.transform, new Vector2(1, 1), new Vector2(40, 9), new Vector2(-4, -3));
+            Place((RectTransform)_idRelationship.transform, new Vector2(1, 1), new Vector2(56, 9), new Vector2(-5, -4));
 
-            _idIntent = NewText("Intent", fill, _display, 7, TextAnchor.UpperLeft, UITheme.PrimaryAction);
-            Place((RectTransform)_idIntent.transform, new Vector2(0, 1), new Vector2(CardW - 8, 9), new Vector2(4, -13));
+            _idArchetype = NewText("Archetype", fill, _body, 7, TextAnchor.UpperLeft, UITheme.TextSecondary);
+            Place((RectTransform)_idArchetype.transform, new Vector2(0, 1), new Vector2(CardW - 10, 9), new Vector2(5, -15));
 
-            float y = -25f;
-            foreach (var emotion in Emotions.All)
+            // Photo: left column, under the header block.
+            var photoFrame = NewRect("PhotoFrame", fill);
+            Place(photoFrame, new Vector2(0, 1), new Vector2(PhotoW + 2, PhotoH + 2), new Vector2(5, -26));
+            var photoFrameImg = photoFrame.gameObject.AddComponent<Image>();
+            photoFrameImg.color = UITheme.Amber[0];
+            photoFrameImg.raycastTarget = false;
+
+            var photo = NewRect("Photo", photoFrame);
+            Stretch(photo, Vector2.zero, Vector2.one, Vector2.one, -Vector2.one);
+            _idPortrait = photo.gameObject.AddComponent<Image>();
+            _idPortrait.preserveAspect = true;
+            _idPortrait.raycastTarget = false;
+
+            _idIntent = NewText("Intent", fill, _display, 8, TextAnchor.LowerLeft, UITheme.PrimaryAction);
+            Place((RectTransform)_idIntent.transform, new Vector2(0, 0), new Vector2(CardW - 10, 10), new Vector2(5, 4));
+
+            // 3×2 stat grid, right of the photo. Reading order matches Emotions.All.
+            float gridX = 5 + PhotoW + 2 + 6;
+            for (int i = 0; i < Emotions.Count; i++)
             {
-                _statRows[emotion] = BuildStatRow(fill, emotion, y);
-                y -= RowH;
+                int col = i % 3, rowIndex = i / 3;
+                var pos = new Vector2(
+                    gridX + col * (CellW + CellGapX),
+                    -26 - rowIndex * (CellH + CellGapY));
+                _statCells[Emotions.All[i]] = BuildStatCell(fill, Emotions.All[i], pos);
             }
+
+            _idRoot.gameObject.SetActive(false);
         }
 
-        private StatRow BuildStatRow(RectTransform parent, Emotion emotion, float y)
+        private StatCell BuildStatCell(RectTransform parent, Emotion emotion, Vector2 pos)
         {
-            var row = new StatRow();
+            var cell = new StatCell();
             var ramp = UITheme.EmotionRamp[emotion];
 
-            row.Tag = NewText($"Tag{emotion}", parent, _body, 7, TextAnchor.UpperLeft, ramp[3]);
-            Place((RectTransform)row.Tag.transform, new Vector2(0, 1), new Vector2(28, 9), new Vector2(4, y));
+            var box = NewRect($"Cell{emotion}", parent);
+            Place(box, new Vector2(0, 1), new Vector2(CellW, CellH), pos);
+            // Each stat gets its own tinted slab, so six readings scan as a grid of six
+            // things rather than one run-on line.
+            var boxBg = box.gameObject.AddComponent<Image>();
+            boxBg.color = new Color(ramp[0].r, ramp[0].g, ramp[0].b, 0.45f);
+            boxBg.raycastTarget = false;
 
-            var track = NewRect($"Track{emotion}", parent);
-            Place(track, new Vector2(0, 1), new Vector2(TrackW, 5), new Vector2(TrackX, y - 2));
-            row.Track = track.gameObject.AddComponent<Image>();
-            row.Track.color = ramp[0];
-            row.Track.raycastTarget = false;
+            cell.Tag = NewText("Tag", box, _body, 7, TextAnchor.UpperLeft, ramp[3]);
+            Place((RectTransform)cell.Tag.transform, new Vector2(0, 1), new Vector2(24, 9), new Vector2(3, -3));
 
-            // Where the selection would land them — drawn under the band so a covered ghost
-            // reads as "this lands inside what you already know".
-            var ghost = NewRect($"Ghost{emotion}", track);
+            cell.Value = NewText("Val", box, _body, 7, TextAnchor.UpperRight, ramp[4]);
+            Place((RectTransform)cell.Value.transform, new Vector2(1, 1), new Vector2(32, 9), new Vector2(-3, -3));
+
+            var track = NewRect("Track", box);
+            Place(track, new Vector2(0, 1), new Vector2(TrackW, 5), new Vector2(3, -15));
+            cell.Track = track.gameObject.AddComponent<Image>();
+            cell.Track.color = ramp[0];
+            cell.Track.raycastTarget = false;
+
+            // Drawn under the band, so a ghost that disappears behind it reads as
+            // "this lands inside what you already know".
+            var ghost = NewRect("Ghost", track);
             ghost.anchorMin = ghost.anchorMax = new Vector2(0, 0.5f);
             ghost.pivot = new Vector2(0.5f, 0.5f);
             ghost.sizeDelta = new Vector2(2, 7);
-            row.Ghost = ghost.gameObject.AddComponent<Image>();
-            row.Ghost.color = UITheme.Cream[4];
-            row.Ghost.raycastTarget = false;
+            cell.Ghost = ghost.gameObject.AddComponent<Image>();
+            cell.Ghost.color = UITheme.Cream[4];
+            cell.Ghost.raycastTarget = false;
             ghost.gameObject.SetActive(false);
 
-            var band = NewRect($"Band{emotion}", track);
+            var band = NewRect("Band", track);
             band.anchorMin = band.anchorMax = new Vector2(0, 0.5f);
             band.pivot = new Vector2(0, 0.5f);
             band.sizeDelta = new Vector2(2, 5);
-            row.Band = band.gameObject.AddComponent<Image>();
-            row.Band.color = ramp[3];
-            row.Band.raycastTarget = false;
+            cell.Band = band.gameObject.AddComponent<Image>();
+            cell.Band.color = ramp[3];
+            cell.Band.raycastTarget = false;
 
-            row.Value = NewText($"Val{emotion}", parent, _body, 7, TextAnchor.UpperRight, ramp[4]);
-            Place((RectTransform)row.Value.transform, new Vector2(1, 1), new Vector2(40, 9), new Vector2(-4, y));
+            return cell;
+        }
 
-            return row;
+        /// <summary>The little nudge over the customer telling you the ID can be asked for.</summary>
+        private void BuildIdPrompt(RectTransform root)
+        {
+            _idPrompt = NewRect("IdPrompt", root);
+            _idPrompt.anchorMin = _idPrompt.anchorMax = new Vector2(0, 0);
+            _idPrompt.pivot = new Vector2(0.5f, 0);
+            _idPrompt.sizeDelta = new Vector2(44, 11);
+            _idPrompt.anchoredPosition = new Vector2(CustomerX, CustomerBaseY + 104);
+            var bg = _idPrompt.gameObject.AddComponent<Image>();
+            bg.color = UITheme.Night[0];
+            bg.raycastTarget = false;
+            var label = NewText("Label", _idPrompt, _body, 7, TextAnchor.MiddleCenter, UITheme.PrimaryAction);
+            Stretch((RectTransform)label.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            label.text = "SEE ID";
+            _idPrompt.gameObject.SetActive(false);
+        }
+
+        public void OpenId()
+        {
+            if (_idRoot == null) return;
+            _idOpen = true;
+            _idRoot.gameObject.SetActive(true);
+        }
+
+        public void CloseId()
+        {
+            if (_idRoot == null) return;
+            _idOpen = false;
+            _idRoot.gameObject.SetActive(false);
+        }
+
+        public void ToggleId()
+        {
+            if (_idOpen) CloseId(); else OpenId();
         }
 
         /// <summary>
-        /// Shows the current read. Pass a null customer (or one without the emotion layer)
-        /// to hide the card entirely — the pre-pivot loop must still render.
+        /// Fills in the ID for the person at the bar and shows the "see ID" nudge. Does not
+        /// open it — the player asks. Pass a null customer (or one without the emotion layer)
+        /// to shut the whole thing down: the pre-pivot loop must still render.
         /// </summary>
         public void SetCustomerRead(CustomerOrder customer)
         {
-            if (_idCard == null) return;
+            if (_idRoot == null) return;
+
             if (customer == null || !customer.HasEmotion)
             {
-                _idCard.gameObject.SetActive(false);
+                if (_idPrompt != null) _idPrompt.gameObject.SetActive(false);
+                CloseId();
                 return;
             }
 
-            _idCard.gameObject.SetActive(true);
+            if (_idPrompt != null) _idPrompt.gameObject.SetActive(true);
+
             var read = customer.Read;
-            _idName.text = customer.Regular.Name.ToUpperInvariant();
-            _idRelationship.text = customer.Regular.Visits > 0
-                ? customer.Regular.Relationship.ToString().ToLowerInvariant()
-                : "new";
-            _idIntent.text = (read.Direction == IntentDirection.Extinguish ? "SETTLE " : "LIFT ")
+            var regular = customer.Regular;
+            _idName.text = regular.Name.ToUpperInvariant();
+            _idRelationship.text = regular.Visits > 0
+                ? regular.Relationship.ToString().ToLowerInvariant()
+                : "new face";
+            _idArchetype.text = regular.ArchetypeId.Replace('_', ' ');
+            _idPortrait.sprite = PortraitFor(regular.ArchetypeId);
+            _idPortrait.color = _idPortrait.sprite != null ? Color.white : UITheme.Night[3];
+
+            _idIntent.text = (read.Direction == IntentDirection.Extinguish ? "WANTS TO SETTLE " : "WANTS TO LIFT ")
                              + read.Intent.ToString().ToUpperInvariant();
             _idIntent.color = UITheme.EmotionFill(read.Intent);
 
             foreach (var emotion in Emotions.All)
             {
-                var row = _statRows[emotion];
+                var cell = _statCells[emotion];
                 var reading = read[emotion];
-                bool isIntent = emotion == read.Intent;
 
-                row.Tag.text = UITheme.EmotionTag(emotion) + (isIntent ? "*" : "");
-                row.Value.text = reading.ToString();
-                row.Value.color = reading.Tier == VisibilityTier.Unknown
+                cell.Tag.text = UITheme.EmotionTag(emotion) + (emotion == read.Intent ? "*" : "");
+                cell.Value.text = reading.ToString();
+                cell.Value.color = reading.Tier == VisibilityTier.Unknown
                     ? UITheme.EmotionDim(emotion)
                     : UITheme.EmotionRamp[emotion][4];
 
                 // Exact = a 2px tick at the value. Range = a span. Unknown = nothing lit.
-                var band = (RectTransform)row.Band.transform;
+                var band = (RectTransform)cell.Band.transform;
                 switch (reading.Tier)
                 {
                     case VisibilityTier.Exact:
@@ -811,6 +932,9 @@ namespace LastCall.DebugUI
             }
         }
 
+        private Sprite PortraitFor(string archetypeId) =>
+            !string.IsNullOrEmpty(archetypeId) && _portraits.TryGetValue(archetypeId, out var s) ? s : null;
+
         /// <summary>
         /// Ghosts where the current selection would leave each stat, before committing —
         /// the pre-commit preview (GDD 19 §5). Pass an empty delta to clear it.
@@ -822,12 +946,12 @@ namespace LastCall.DebugUI
         /// </summary>
         public void SetChargePreview(CustomerOrder customer, EmotionDelta delta)
         {
-            if (_idCard == null || customer == null || !customer.HasEmotion) return;
+            if (_idRoot == null || customer == null || !customer.HasEmotion) return;
 
             bool any = delta != null && !delta.IsEmpty;
             foreach (var emotion in Emotions.All)
             {
-                var row = _statRows[emotion];
+                var row = _statCells[emotion];
                 var reading = customer.Read[emotion];
                 int move = any ? delta[emotion] : 0;
 

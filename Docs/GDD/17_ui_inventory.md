@@ -30,7 +30,9 @@
 | Live recipe preview line | DebugHud | legacy-cozy-noir | Lifted out of the rail; muted while the score card is up. |
 | **Score moment** (mix result card) | DebugHud | placeholder | Amber-framed opaque pixel card: recipe + `Flavor cyan × Mult magenta = score`. Rises 10px + fades in (160ms), holds 1.2s, fades out; plain hold under reduced motion. Covers no-recipe and VOIDED. |
 | **Ambient life** (neon flicker, patron idle) | `DiegeticStage` | migrated-v2 | 18 §4 budget: neon wall flickers ~1 frame every 3-7s, patron breathes on a 1px 2-frame idle. Skipped under reduced motion; cosmetic only, never touches RunRng. |
-| MIX / RESTOCK / SKIP→FAVOR / BOUNCER / RECIPES / New Run buttons | DebugHud | placeholder | Restyled to flat v2 pixel buttons: palette fill + 2px dark border + Silkscreen pixel font (dropped the rounded procedural sprite). Stats block + section headers (PATRONS/TOOLS) still legacy font — pixel pass pending. |
+| MIX / RESTOCK / SKIP→FAVOR / BOUNCER / RECIPES / New Run buttons | DebugHud | placeholder | Restyled to flat v2 pixel buttons: palette fill + 2px dark border + Silkscreen pixel font (dropped the rounded procedural sprite). Stats block + section headers (PATRONS/TOOLS) still legacy font — pixel pass pending. **Action buttons moved to a 2×2 grid in the bottom band.** |
+| **Customer ID popup** (photo + 3×2 stat grid) | `DiegeticStage` | placeholder | GDD 19 §3. Opens by clicking the customer ("SEE ID" nudge), closes on the scrim. Own canvas at sortingOrder 20 with the 640×360 reference so it is never half-covered by HUD chrome. Photo slot is wired per archetype; stat cells render Exact/Range/Unknown plus the pre-commit ghost. |
+| **Bottom HUD band** (info / patrons / tools / actions over the counter front) | DebugHud | placeholder | The counter front and glassware fill the bottom 192px of 720-space and were pure decoration while every control crowded the top third. The HUD lives there now; the upper two-thirds is left to the room, the customer and the score moment. Band panels get a flat opaque slab under the rounded kit frame — the kit's soft alpha is unreadable over lit glassware. |
 | Customer / VIP portrait card | DebugHud | legacy-cozy-noir | VIP portraits are v1 painterly. |
 | RECIPES toggle | DebugHud | legacy-cozy-noir | |
 | Win / lose banner | DebugHud | legacy-cozy-noir | Limelight font. |
@@ -79,6 +81,7 @@
 | Bank | Count | Status |
 |---|---|---|
 | Patron portraits | 60 | legacy-cozy-noir |
+| Archetype ID photos | 8 | migrated-v2 — `Art/Portraits/Archetypes/<archetypeId>.png`, 52×66, PixelLab→quantized. Tight passport crop; sober and undramatised per the GDD 19 tone guardrail. |
 | VIP portraits | 20 | legacy-cozy-noir |
 | Ingredient sprites | 46 (v2) | migrated-v2 — v1 painterly `Ingredients/` bank **deleted** (unused; `art.Ingredient()` never called); the 46 per-ingredient pixel bottles in `Bottles/` are the ingredient art now. |
 | Tool sprites | 16 | legacy-cozy-noir |

@@ -112,6 +112,23 @@ namespace LastCall.EditorTools
                 el.FindPropertyRelative("sprite").objectReferenceValue =
                     AssetDatabase.LoadAssetAtPath<Sprite>(idPaths[i].path);
             }
+
+            // ID photos, keyed by archetype id — the file name is the key (GDD 19 §9).
+            var portraitProp = stageSo.FindProperty("portraits");
+            var portraitPaths = new System.Collections.Generic.List<(string id, string path)>();
+            foreach (var g in AssetDatabase.FindAssets("t:Sprite", new[] { "Assets/Art/Portraits/Archetypes" }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(g);
+                portraitPaths.Add((Path.GetFileNameWithoutExtension(path), path));
+            }
+            portraitProp.arraySize = portraitPaths.Count;
+            for (int i = 0; i < portraitPaths.Count; i++)
+            {
+                var el = portraitProp.GetArrayElementAtIndex(i);
+                el.FindPropertyRelative("archetypeId").stringValue = portraitPaths[i].id;
+                el.FindPropertyRelative("sprite").objectReferenceValue =
+                    AssetDatabase.LoadAssetAtPath<Sprite>(portraitPaths[i].path);
+            }
             // Environment art (18 §5): club background + bar counter. Optional — the stage
             // falls back to flat procedural layers when either is missing.
             stageSo.FindProperty("backgroundSprite").objectReferenceValue =

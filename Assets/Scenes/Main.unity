@@ -283,6 +283,23 @@ MonoBehaviour:
   counterSprite: {fileID: 21300000, guid: 510a888f65961b84899aae26cf44345b, type: 3}
   customerSprite: {fileID: 21300000, guid: c7db53fb61db61643b115cca9a051345, type: 3}
   registerSprite: {fileID: 21300000, guid: 6a38ffeaffa8bb94589ea72371ee5227, type: 3}
+  portraits:
+  - archetypeId: after_shift
+    sprite: {fileID: 21300000, guid: 7d5685613cd8caa428c0ce7764c50233, type: 3}
+  - archetypeId: celebrating
+    sprite: {fileID: 21300000, guid: 7499ac7b9a48e594f9eb29a1d9460b45, type: 3}
+  - archetypeId: deadline
+    sprite: {fileID: 21300000, guid: c2ef00e3dd39d7c4f8788128d6c4eb32, type: 3}
+  - archetypeId: long_way_from_home
+    sprite: {fileID: 21300000, guid: eab2e1e0623edf84cbefe28a9d3d8d8f, type: 3}
+  - archetypeId: nothing_much
+    sprite: {fileID: 21300000, guid: 90bc466818199744281bef3f24edb395, type: 3}
+  - archetypeId: recently_ended
+    sprite: {fileID: 21300000, guid: 69362a37117d0c546b68dfacdb224ae8, type: 3}
+  - archetypeId: slow_burn
+    sprite: {fileID: 21300000, guid: f13c3a36dda32bb458e94dada2da066a, type: 3}
+  - archetypeId: wound_tight
+    sprite: {fileID: 21300000, guid: bb0bc77546995d54cbbe19688d09d164, type: 3}
 --- !u!114 &1701994247
 MonoBehaviour:
   m_ObjectHideFlags: 0
