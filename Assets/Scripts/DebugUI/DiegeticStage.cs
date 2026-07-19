@@ -24,10 +24,19 @@ namespace LastCall.DebugUI
     public sealed class DiegeticStage : MonoBehaviour
     {
         // ── layout (18 §2, converted to bottom-left origin) ─────────────────────
-        private const int Slots = 12;                      // GDD 22: the whole base bar is out
+        private const int Slots = 10;                      // liquid bottles on the counter (GDD 22)
         private static readonly Vector2 Reference = new Vector2(640, 360);
-        private const float SlotPitch = 34f;               // shelf sits between the register and the VIP
-        private const float FirstSlotX = 82f;              // clears the bottom-left cash register
+        private const float SlotPitch = 42f;               // wider pitch: bottles read, not huddle
+        private const float FirstSlotX = 80f;              // clears the bottom-left cash register
+
+        // The garnish rack (GDD 22): mint, olives and future rim garnishes live on a shelf
+        // under the counter, where a bartender actually keeps them — and where the Patrons
+        // and Tools tables used to crowd the band before they moved into the STAFF popup.
+        private const int GarnishSlots = 4;
+        private const float GarnishPitch = 52f;
+        private const float GarnishFirstX = 246f;
+        private const float GarnishBaseY = 26f;
+        private const float GarnishDisplayW = 30f;
         private const float CustomerX = 556f;              // VIP centre, bottom-right on the bar
         private const float CustomerBaseY = 126f;          // hands rest on the bar-top surface
         private const float CustomerTilt = 0f;           // right end leans right (radial, arc)
@@ -37,7 +46,7 @@ namespace LastCall.DebugUI
         private const float CounterFrontY = 96f;           // 18 §2: surface line y=264 → 360−264 (bottom 96px)
         private const float BottleW = 30f;                 // placeholder fallback size
         private const float BottleH = 52f;
-        private const float BottleDisplayW = 32f;          // fixed slot width for sprite bottles
+        private const float BottleDisplayW = 40f;          // fixed slot width for sprite bottles
         private const float SelectRise = 4f;               // 18 §3: select rises 4px
         private const float ArcHeight = 0f;               // curved bar: centre slots rise this much
         private const float BottleTilt = 0f;               // max radial lean at the arc ends
@@ -236,13 +245,16 @@ namespace LastCall.DebugUI
                 var reg = NewRect("Register", root);
                 reg.anchorMin = reg.anchorMax = new Vector2(0, 0);
                 reg.pivot = new Vector2(0.5f, 0);
-                reg.sizeDelta = new Vector2(registerSprite.rect.width, registerSprite.rect.height);
+                // Fixed footprint (v2.5 hi-bit): a 2x-density sprite renders finer pixels
+                // into the same 57px slot instead of doubling on screen.
+                const float regW = 57f;
+                reg.sizeDelta = new Vector2(regW, regW * registerSprite.rect.height / registerSprite.rect.width);
                 reg.anchoredPosition = new Vector2(RegisterX, BottleBaseY);
                 reg.localRotation = Quaternion.Euler(0, 0, RegisterTilt);   // POV angle
                 var regImg = reg.gameObject.AddComponent<Image>();
                 regImg.sprite = registerSprite; regImg.preserveAspect = true; regImg.raycastTarget = false;
 
-                float plaqueY = BottleBaseY + registerSprite.rect.height - 18f;  // on the till's display
+                float plaqueY = BottleBaseY + reg.sizeDelta.y - 18f;  // on the till's display
                 var plaque = NewRect("MoneyPlaque", root);
                 plaque.anchorMin = plaque.anchorMax = new Vector2(0, 0);   // absolute, on the till
                 plaque.pivot = new Vector2(0.5f, 0);
@@ -267,7 +279,8 @@ namespace LastCall.DebugUI
                 var cust = NewRect("Customer", root);
                 cust.anchorMin = cust.anchorMax = new Vector2(0, 0);   // absolute from bottom-left
                 cust.pivot = new Vector2(0.5f, 0);                      // centred on CustomerX
-                cust.sizeDelta = new Vector2(customerSprite.rect.width, customerSprite.rect.height);
+                const float custW = 144f;   // fixed footprint; hi-bit art just gets finer
+                cust.sizeDelta = new Vector2(custW, custW * customerSprite.rect.height / customerSprite.rect.width);
                 cust.anchoredPosition = new Vector2(CustomerX, CustomerBaseY);
                 cust.localRotation = Quaternion.Euler(0, 0, CustomerTilt);   // POV angle
                 var img = cust.gameObject.AddComponent<Image>();
@@ -427,21 +440,36 @@ namespace LastCall.DebugUI
         /// go, so the composition only changes when the run gains one. Selection is gone with
         /// the cards — clicking a bottle pours from it.
         /// </summary>
+        private UnityAction<IngredientCard> _onPourStart;
+        private UnityAction<IngredientCard> _onPourEnd;
+
         public void SetShelf(Shelf shelf, IEnumerable<IngredientType> debuffedTypes,
-            UnityAction<IngredientCard> onClick, Exit exitStyle)
+            UnityAction<IngredientCard> onPourStart, UnityAction<IngredientCard> onPourEnd,
+            Exit exitStyle)
         {
+            _onPourStart = onPourStart;
+            _onPourEnd = onPourEnd;
+
+            // Liquids stand on the counter; garnishes rack under it (GDD 22).
             var rail = new List<IngredientCard>();
+            var rack = new List<IngredientCard>();
             foreach (var bottle in shelf.Bottles)
             {
-                if (rail.Count >= Slots) break;
-                rail.Add(bottle.Ingredient);
+                if (bottle.Ingredient.Type == IngredientType.Garnish)
+                {
+                    if (rack.Count < GarnishSlots) rack.Add(bottle.Ingredient);
+                }
+                else if (rail.Count < Slots)
+                {
+                    rail.Add(bottle.Ingredient);
+                }
             }
             var selected = new List<IngredientCard>();
 
             var debuffed = debuffedTypes != null
                 ? new HashSet<IngredientType>(debuffedTypes)
                 : new HashSet<IngredientType>();
-            string signature = Signature(rail);
+            string signature = Signature(rail) + "|" + Signature(rack);
             bool composition = signature != _railSignature;
             _railSignature = signature;
 
@@ -453,6 +481,7 @@ namespace LastCall.DebugUI
 
             var present = new HashSet<int>();
             for (int i = 0; i < rail.Count && i < Slots; i++) present.Add(rail[i].InstanceId);
+            foreach (var garnish in rack) present.Add(garnish.InstanceId);
 
             // Exit: bottles no longer on the rail.
             var leaving = new List<int>();
@@ -483,7 +512,7 @@ namespace LastCall.DebugUI
                 }
                 else
                 {
-                    view = CreateBottle(card, onClick);
+                    view = CreateBottle(card);
                     view.RestBaseY = arcY;
                     view.Root.localRotation = Quaternion.Euler(0, 0, SlotTilt(i));
                     _bottles[card.InstanceId] = view;
@@ -492,6 +521,22 @@ namespace LastCall.DebugUI
                     float delay = enterOrder++ * EnterStagger;
                     view.Move = StartCoroutine(EnterAfter(view.Root, target, delay));
                 }
+            }
+
+            // The garnish rack, under the counter. No slide choreography — jars sit still.
+            for (int i = 0; i < rack.Count; i++)
+            {
+                var card = rack[i];
+                var target = new Vector2(GarnishFirstX + i * GarnishPitch, GarnishBaseY);
+                if (!_bottles.TryGetValue(card.InstanceId, out var view))
+                {
+                    view = CreateBottle(card, GarnishDisplayW);
+                    _bottles[card.InstanceId] = view;
+                }
+                view.RestBaseY = GarnishBaseY;
+                view.Root.localRotation = Quaternion.identity;
+                view.Root.anchoredPosition = target;
+                StyleBottle(view, selected, debuffed, animateRise: false);
             }
         }
 
@@ -541,7 +586,7 @@ namespace LastCall.DebugUI
             yield return Tweening.MoveAnchored(rt, new Vector2(OffscreenLeft, BottleBaseY), MixExitDur, Tweening.InQuad, done);
         }
 
-        private BottleView CreateBottle(IngredientCard card, UnityAction<IngredientCard> onClick)
+        private BottleView CreateBottle(IngredientCard card, float displayW = 0)
         {
             var root = NewRect($"Bottle_{card.InstanceId}", _railRoot);
             root.anchorMin = root.anchorMax = new Vector2(0, 0);
@@ -551,8 +596,9 @@ namespace LastCall.DebugUI
                              || _bottleSprites.TryGetValue(card.Type, out sprite);
             // The slot box is fixed; art authored at 2x texel density (v2.5 hi-bit) simply
             // renders finer pixels into the same slot instead of growing.
+            float w = displayW > 0 ? displayW : BottleDisplayW;
             Vector2 size = hasSprite
-                ? new Vector2(BottleDisplayW, BottleDisplayW * sprite.rect.height / sprite.rect.width)
+                ? new Vector2(w, w * sprite.rect.height / sprite.rect.width)
                 : new Vector2(BottleW, BottleH);
             root.sizeDelta = size;
             var view = new BottleView { Card = card, Root = root };
@@ -594,22 +640,37 @@ namespace LastCall.DebugUI
                 view.Neck.raycastTarget = false;
             }
 
-            var button = root.gameObject.AddComponent<Image>();  // full-slot click target
+            // Hold-to-pour (GDD 21 §3): press starts the pour, holding keeps it flowing,
+            // release stops it. A Button's click event fires on release only, which is
+            // exactly wrong for pouring, so this is an EventTrigger pair instead.
+            var button = root.gameObject.AddComponent<Image>();  // full-slot press target
             button.color = new Color(0, 0, 0, 0);
-            var btn = root.gameObject.AddComponent<Button>();
-            btn.targetGraphic = button;
+            var trigger = root.gameObject.AddComponent<UnityEngine.EventSystems.EventTrigger>();
             var captured = card;
-            btn.onClick.AddListener(() => onClick(captured));
+            var down = new UnityEngine.EventSystems.EventTrigger.Entry
+                { eventID = UnityEngine.EventSystems.EventTriggerType.PointerDown };
+            down.callback.AddListener(_ => _onPourStart?.Invoke(captured));
+            trigger.triggers.Add(down);
+            var up = new UnityEngine.EventSystems.EventTrigger.Entry
+                { eventID = UnityEngine.EventSystems.EventTriggerType.PointerUp };
+            up.callback.AddListener(_ => _onPourEnd?.Invoke(captured));
+            trigger.triggers.Add(up);
+            // Dragging off the bottle mid-pour must also stop it, or the pour runs forever.
+            var exit = new UnityEngine.EventSystems.EventTrigger.Entry
+                { eventID = UnityEngine.EventSystems.EventTriggerType.PointerExit };
+            exit.callback.AddListener(_ => _onPourEnd?.Invoke(captured));
+            trigger.triggers.Add(exit);
 
             // The old Flavor-number chip is gone: the number still feeds weighted scoring,
             // but what the player needs at a glance is *which bottle this is*. The brand name
             // sits under the bottle like a shelf tag; Flavor moves to the bottle-info popup
             // (GDD 22 §2, future).
             var tag = NewRect("NameTag", root);
-            // Staggered like shelf tags: even slots high, odd slots low, so twelve names sit
-            // side by side without colliding at 34px pitch.
-            float tagY = (_bottles.Count % 2 == 0) ? -12f : -22f;
-            Place(tag, new Vector2(0.5f, 0), new Vector2(44, 10), new Vector2(0, tagY));
+            // Counter bottles stagger their tags in two rows so ten names sit side by side;
+            // rack jars (wider pitch, screen bottom) keep a single fixed row.
+            bool rack = card.Type == IngredientType.Garnish;
+            float tagY = rack ? -12f : (_bottles.Count % 2 == 0 ? -12f : -22f);
+            Place(tag, new Vector2(0.5f, 0), new Vector2(rack ? 52 : 44, 10), new Vector2(0, tagY));
             var tagImg = tag.gameObject.AddComponent<Image>();
             tagImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.72f);
             tagImg.raycastTarget = false;
@@ -909,8 +970,10 @@ namespace LastCall.DebugUI
         private const float GlassW = 84f;
         private const float GlassH = 118f;
         // The liquid area inside the glass sprite, relative to its rect.
-        private const float GlassInnerL = 0.16f, GlassInnerR = 0.84f;
-        private const float GlassInnerB = 0.12f, GlassInnerT = 0.80f;
+        // Tuned for the stemmed goblet: the bowl occupies the upper part of the sprite,
+        // so the fill area must too — liquid in the stem would be nonsense.
+        private const float GlassInnerL = 0.24f, GlassInnerR = 0.76f;
+        private const float GlassInnerB = 0.46f, GlassInnerT = 0.84f;
 
         private void BuildGlassHud(RectTransform root)
         {
@@ -951,7 +1014,7 @@ namespace LastCall.DebugUI
 
             // The % lives inside the glass (GDD 22 §1) — the number you steer by.
             _glassPercent = NewText("Percent", _glassRoot, _display, 12, TextAnchor.MiddleCenter, UITheme.Night[1]);
-            Stretch((RectTransform)_glassPercent.transform, new Vector2(0, 0.30f), new Vector2(1, 0.62f),
+            Stretch((RectTransform)_glassPercent.transform, new Vector2(0, GlassInnerB), new Vector2(1, GlassInnerT),
                 Vector2.zero, Vector2.zero);
             _glassPercent.text = "0%";
 

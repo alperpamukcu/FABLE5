@@ -71,6 +71,22 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void PrimaryCharges_SitInTheirFlavorBand()
+        {
+            // GDD 19 s4: Flavor 1-3 light (4-8), 4-7 standard (9-15), 8-11 heavy (16-24).
+            // Ported from the retired classic-bar suite; the rule outlives the deck.
+            foreach (var card in All())
+            {
+                int primary = card.Charges.Max(c => System.Math.Abs(c.Amount));
+                var (low, high) = card.Flavor <= 3 ? (4, 8)
+                    : card.Flavor <= 7 ? (9, 15)
+                    : (16, 24);
+                Assert.GreaterOrEqual(primary, low, $"{card.Id} (Flavor {card.Flavor})");
+                Assert.LessOrEqual(primary, high, $"{card.Id} (Flavor {card.Flavor})");
+            }
+        }
+
+        [Test]
         public void StartingStyles_AreUnique()
         {
             // One bottle per style on the opening shelf, or the market's "replace your vodka"

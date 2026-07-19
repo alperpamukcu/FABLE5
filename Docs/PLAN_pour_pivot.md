@@ -9,7 +9,7 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
 |---|---|---|
 | 1 | Core pour model, pure C# | ☑ 31 tests |
 | 2 | Round/run rewiring: shelf replaces deck | ☑ 298 tests green |
-| 3 | UI: the glass readout, shelf tags, licence ID | ◐ tap-to-measure + big glass + ratios shipped; hold-to-pour input pending |
+| 3 | UI: the glass readout, shelf tags, licence ID | ☑ hold-to-pour (press/hold/release + drag-off stop), stemmed goblet, garnish rack under the counter, STAFF popup |
 | 4 | Economy: bottle volume, refills, brand market | ◐ volume + refills + brand market shipped (GDD 22); glassware/bar tracks pending |
 | 5 | Content + balance re-measure | ☐ |
 | 6 | Docs and the audit of what broke | ☐ |
@@ -185,6 +185,19 @@ rate to jump for that reason alone; the comparison to pre-pivot numbers will not
 apples-to-apples and should not be presented as one.
 
 ---
+
+## Art pipeline lessons (hi-bit pass 2)
+
+- **`create_ui_asset` is for panels, not scenery.** Asked for a nightclub interior, it
+  returned an ornate UI frame; asked for a counter, a decorated slab. Scenery needs
+  `create_map_object` (≤400px) or another route entirely.
+- **`include_preview` bakes a transparency checkerboard into the preview PNG.** Quantizing
+  that preview with forced alpha turned the checker into literal wall pixels. Always fetch
+  the real asset, never the preview, for installation.
+- **"transparent background" in a prompt loses to scene-implying descriptions.** "Leaning on
+  a bar counter" produced a full bar scene behind the VIP. Characters need "isolated
+  character only, no background, no scenery" phrasing — the environment upgrade (bg,
+  counter, VIP at 2×) is still owed and should be its own careful pass.
 
 ## Risk register
 

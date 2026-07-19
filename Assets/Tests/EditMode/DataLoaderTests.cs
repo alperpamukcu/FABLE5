@@ -14,40 +14,8 @@ namespace LastCall.Tests
         private static string ReadDataFile(string relativePath) =>
             File.ReadAllText(Path.Combine(Application.dataPath, "Data", relativePath));
 
-        [Test]
-        public void ClassicBar_Has48Cards_WithGddTypeCounts()
-        {
-            var deck = DataLoader.ParseDeck(ReadDataFile("decks/classic_bar.json"));
-
-            Assert.AreEqual("classic_bar", deck.DeckId);
-            Assert.AreEqual(48, deck.Cards.Count);
-
-            var counts = deck.Cards.GroupBy(c => c.Type).ToDictionary(g => g.Key, g => g.Count());
-            Assert.AreEqual(12, counts[IngredientType.Spirit]);
-            Assert.AreEqual(8, counts[IngredientType.Sour]);
-            Assert.AreEqual(8, counts[IngredientType.Sweet]);
-            Assert.AreEqual(6, counts[IngredientType.Bitter]);
-            Assert.AreEqual(8, counts[IngredientType.Bubbly]);
-            Assert.AreEqual(6, counts[IngredientType.Garnish]);
-            Assert.IsTrue(deck.Cards.All(c => c.Flavor >= 1 && c.Flavor <= 11), "starter flavors are 1–11");
-        }
-
-        [Test]
-        public void ClassicBar_DoublePerfect_IsAchievable()
-        {
-            // Some flavor value must exist on the Spirit type plus at least 4 other distinct types.
-            var deck = DataLoader.ParseDeck(ReadDataFile("decks/classic_bar.json"));
-
-            bool achievable = deck.Cards
-                .GroupBy(c => c.Flavor)
-                .Any(g =>
-                {
-                    var types = g.Select(c => c.Type).Distinct().ToList();
-                    return types.Contains(IngredientType.Spirit) && types.Count >= 5;
-                });
-
-            Assert.IsTrue(achievable);
-        }
+        // The classic_bar deck retired with the pour pivot's base bar (GDD 22); its
+        // content guarantees live in BaseBarContentTests now.
 
         [Test]
         public void RecipesJson_MatchesRecipeCatalog()
@@ -94,15 +62,16 @@ namespace LastCall.Tests
         public void LoadedData_PlaysARound_EndToEnd()
         {
             // Same wiring GameBootstrap does in play mode, minus the MonoBehaviour.
-            var loaded = DataLoader.ParseDeck(ReadDataFile("decks/classic_bar.json"));
+            var loaded = DataLoader.ParseDeck(ReadDataFile("bottles/base_bar.json"));
             var recipes = DataLoader.ParseRecipes(ReadDataFile("recipes/recipes.json"));
-            var shelf = PourTestKit.NewShelf(loaded.Cards);
+            var starting = loaded.Cards.Where(c => c.Info == null || c.Info.Tier <= 1).ToList();
+            var shelf = PourTestKit.NewShelf(starting);
 
             var round = new RoundController(shelf, recipes, new CustomerOrder("Smoke", 1));
             round.PourMeasure(shelf.Bottles[0].Id, 0.5);
             var breakdown = round.Serve();
 
-            Assert.AreEqual(46, shelf.Count, "48 starter cards, 2 of them duplicates");
+            Assert.AreEqual(12, shelf.Count, "the whole base bar stands ready");
             Assert.GreaterOrEqual(breakdown.FinalScore, 0);
             Assert.AreEqual(3, round.DrinksRemaining);
         }

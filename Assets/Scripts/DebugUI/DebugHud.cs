@@ -71,12 +71,8 @@ namespace LastCall.DebugUI
         }
 
         private GameBootstrap _bootstrap;
-        /// <summary>
-        /// How much one click of a bottle pours (GDD 21 §10, tap-to-measure). Hold-to-pour and
-        /// the layered glass readout are Phase 3; this is the accessible input mode, built
-        /// first because it is the one that has to exist anyway.
-        /// </summary>
-        private const double MeasurePerClick = 0.1;
+        /// <summary>The bottle currently held down, driven by Update while the button is held.</summary>
+        private string _heldBottleId;
         private Font _font;
         private Font _headerFont;
         private Font _pixelFont;
@@ -96,6 +92,8 @@ namespace LastCall.DebugUI
         private RectTransform _recipeRows;
         private Text _recipeText;
         private bool _recipesVisible;
+        private bool _staffVisible;
+        private RectTransform _staffPanel;
         private Button _mixButton;
         private Button _restockButton;
         private Button _skipButton;
@@ -146,6 +144,28 @@ namespace LastCall.DebugUI
             var kb = UnityEngine.InputSystem.Keyboard.current;
             if (kb != null && kb.f1Key.wasPressedThisFrame && _logPanel != null)
                 _logPanel.SetActive(!_logPanel.activeSelf);
+
+            // Hold-to-pour: while a bottle is held, volume flows every frame and the glass
+            // readout updates live — the 1-2-3-4 climb the pour is about (GDD 21 §3).
+            if (_heldBottleId != null && Run != null && Run.Phase == RunPhase.CustomerRound)
+            {
+                double poured = Run.PourTick(Time.deltaTime);
+                bool overflowed = Round.Glass.IsOverflowing;
+                bool ranDry = Round.PouringId == null;      // the bottle emptied mid-pour
+                if (poured > 0 || overflowed) RenderPour();
+                if (overflowed || ranDry) StopPour();
+            }
+        }
+
+        /// <summary>The light per-frame render while pouring: glass, ratios, preview, info.</summary>
+        private void RenderPour()
+        {
+            if (stage == null) return;
+            stage.SetGlass(Round.Glass, id => Round.Shelf.Find(id)?.Ingredient);
+            stage.SetChargePreview(Round.Customer, Round.PreviewCharges());
+            RenderPreview();
+            _mixButton.interactable = !Round.Glass.IsEmpty && !Round.Glass.IsOverflowing;
+            _restockButton.interactable = !Round.Glass.IsEmpty;
         }
 
         private void OnRunStarted()
@@ -163,12 +183,25 @@ namespace LastCall.DebugUI
 
         // ─────────────────────────────── actions ───────────────────────────────
 
-        /// <summary>Clicking a bottle pours one measure of it into the glass.</summary>
-        private void PourFrom(IngredientCard card)
+        /// <summary>Pressing a bottle opens it; the pour flows in Update until release.</summary>
+        private void StartPour(IngredientCard card)
         {
             if (Run == null || Run.Phase != RunPhase.CustomerRound) return;
             if (Round.Glass.IsOverflowing) return;
-            Run.PourMeasure(card.Id, MeasurePerClick);
+            Run.BeginPour(card.Id);
+            _heldBottleId = card.Id;
+        }
+
+        private void EndPour(IngredientCard card)
+        {
+            if (_heldBottleId == null || card == null || card.Id != _heldBottleId) return;
+            StopPour();
+        }
+
+        private void StopPour()
+        {
+            _heldBottleId = null;
+            Run?.EndPour();
             RenderAll();
         }
 
@@ -329,9 +362,17 @@ namespace LastCall.DebugUI
 
         private void OnNewRunClicked() => _bootstrap.StartNewRun(_seedInput.text);
 
+        private void OnToggleStaffClicked()
+        {
+            _staffVisible = !_staffVisible;
+            if (_staffVisible) _recipesVisible = false;
+            RenderAll();
+        }
+
         private void OnToggleRecipesClicked()
         {
             _recipesVisible = !_recipesVisible;
+            if (_recipesVisible) _staffVisible = false;
             RenderAll();
         }
 
@@ -520,8 +561,9 @@ namespace LastCall.DebugUI
             // round, the Back Room modal (over the scrim) between customers. The diegetic
             // rail is gated inside RenderRail.
             bool recipesOpen = _recipesVisible;
-            _actionBar.gameObject.SetActive(inRound && !recipesOpen);
-            _scrim.gameObject.SetActive(Run.Phase == RunPhase.BackRoom || recipesOpen);
+            _actionBar.gameObject.SetActive(inRound && !recipesOpen && !_staffVisible);
+            _scrim.gameObject.SetActive(Run.Phase == RunPhase.BackRoom || recipesOpen || _staffVisible);
+            _staffPanel.gameObject.SetActive(_staffVisible);
         }
 
         private void RenderPreview()
@@ -599,10 +641,10 @@ namespace LastCall.DebugUI
             bool inRound = Run.Phase == RunPhase.CustomerRound;
             stage.SetRailVisible(inRound);
             // A modal owns the screen, so the licence goes back in the pocket while one is up.
-            if (!inRound || _recipesVisible) stage.CloseId();
+            if (!inRound || _recipesVisible || _staffVisible) stage.CloseId();
             stage.SetCustomerRead(inRound ? Round.Customer : null);
             if (!inRound) return;
-            stage.SetShelf(Round.Shelf, Round.VipRules.DebuffedTypes, PourFrom, _pendingExit);
+            stage.SetShelf(Round.Shelf, Round.VipRules.DebuffedTypes, StartPour, EndPour, _pendingExit);
             stage.SetGlass(Round.Glass, id => Round.Shelf.Find(id)?.Ingredient);
             stage.SetSatisfaction(Round.SatisfactionEarned, Round.Customer.HasEmotion);
 
@@ -1029,9 +1071,15 @@ namespace LastCall.DebugUI
             _infoText = NewText("Info", infoPanel, 15, TextAnchor.UpperLeft, Cream);
             Stretch((RectTransform)_infoText.transform, Vector2.zero, Vector2.one, new Vector2(12, 8), new Vector2(-10, -8));
 
-            // Patron shelf over the tool belt, centre of the band.
-            _patronPanel = NewSidePanel(root, "Patrons", 428, 820, 98, 184);
-            _toolPanel = NewSidePanel(root, "Tools", 428, 820, 8, 90);
+            // Patrons and Tools live in the STAFF popup: the middle of the bottom band is
+            // the garnish shelf now (GDD 22), and two dense tables were fighting it for the
+            // same pixels. A popup also gives them room to breathe.
+            _staffPanel = NewRect("StaffPanel", root);
+            Place(_staffPanel, new Vector2(0.5f, 0.5f), new Vector2(480, 460), new Vector2(0, 10));
+            StylePanel(_staffPanel, WithAlpha(DeepPlum, 0.97f));
+            _patronPanel = NewStaffSection(_staffPanel, "Patrons", 0.52f, 1f);
+            _toolPanel = NewStaffSection(_staffPanel, "Tools", 0f, 0.48f);
+            _staffPanel.gameObject.SetActive(false);
 
             // Top-right: seed + new run.
             _seedInput = NewInput("SeedInput", root, "LASTCALL-DEV");
@@ -1066,7 +1114,10 @@ namespace LastCall.DebugUI
             // Recipes toggle: top centre, under the marquee.
             var recipesButton = NewButton("RecipesToggle", root, "RECIPES",
                 WithAlpha(PanelPlum, 0.95f), OnToggleRecipesClicked, 13);
-            Place((RectTransform)recipesButton.transform, new Vector2(0.5f, 1), new Vector2(128, 32), new Vector2(0, -12));
+            Place((RectTransform)recipesButton.transform, new Vector2(0.5f, 1), new Vector2(128, 32), new Vector2(-70, -12));
+            var staffButton = NewButton("StaffToggle", root, "STAFF",
+                WithAlpha(PanelPlum, 0.95f), OnToggleStaffClicked, 13);
+            Place((RectTransform)staffButton.transform, new Vector2(0.5f, 1), new Vector2(128, 32), new Vector2(70, -12));
 
             // Customer portrait card: the VIP across the bar, upper centre so it sits
             // above the bottle rail (which owns the bottom band).
@@ -1119,7 +1170,11 @@ namespace LastCall.DebugUI
             var scrimButton = _scrim.gameObject.AddComponent<Button>();
             scrimButton.targetGraphic = scrimImage;
             scrimButton.transition = Selectable.Transition.None;
-            scrimButton.onClick.AddListener(() => { if (_recipesVisible) OnToggleRecipesClicked(); });
+            scrimButton.onClick.AddListener(() =>
+            {
+                if (_recipesVisible) OnToggleRecipesClicked();
+                else if (_staffVisible) OnToggleStaffClicked();
+            });
             _scrim.gameObject.SetActive(false);
 
             // Back Room modal (drawn above the scrim).
@@ -1240,16 +1295,13 @@ namespace LastCall.DebugUI
             return slab;
         }
 
-        /// <summary>
-        /// A shelf panel in the bottom band, anchored from the counter up. Opaque enough to
-        /// read over the glassware behind it.
-        /// </summary>
-        private RectTransform NewSidePanel(RectTransform root, string name,
-            float left, float right, float bottom, float top)
+        /// <summary>One half of the STAFF popup, with the usual vertical layout.</summary>
+        private RectTransform NewStaffSection(RectTransform parent, string name,
+            float yMin, float yMax)
         {
-            var panel = NewRect(name, root);
-            Stretch(panel, new Vector2(0, 0), new Vector2(0, 0), new Vector2(left, bottom), new Vector2(right, top));
-            StyleBandPanel(panel, PanelPlum);
+            var panel = NewRect(name, parent);
+            Stretch(panel, new Vector2(0, yMin), new Vector2(1, yMax), new Vector2(10, 6), new Vector2(-10, -6));
+            StylePanel(panel, WithAlpha(PanelPlum, 0.6f));
             var layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 4;
             layout.padding = new RectOffset(6, 6, 6, 6);
