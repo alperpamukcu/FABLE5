@@ -50,33 +50,15 @@ namespace LastCall.Tests
             throw new InvalidOperationException($"'{toolId}' never appeared in 100 rerolls.");
         }
 
-        [Test]
-        public void CocktailUmbrella_MakesACardSignature()
-        {
-            var round = new RoundController(new Deck(SpiritCards(9)), Recipes,
-                new CustomerOrder("T", 100000));
-            var card = round.Rail[0];
-            round.ApplyTool(Umbrella, new[] { card });
-
-            Assert.AreEqual(QualityTier.Signature, card.Quality);
-            var breakdown = round.Mix(new[] { card });
-            Assert.AreEqual((5 + 6) * 1.5, breakdown.FinalScore, 0.001, "Neat Pour x Signature");
-        }
-
-        [Test]
-        public void RunLevelTools_RejectRailApplication()
-        {
-            var round = new RoundController(new Deck(SpiritCards(9)), Recipes,
-                new CustomerOrder("T", 100000));
-            Assert.Throws<InvalidOperationException>(() =>
-                round.ApplyTool(Ledger, new[] { round.Rail[0] }));
-        }
+        // Tools no longer act on rail cards — they rework shelf bottles at the run layer
+        // (GDD 21 §7.1). The round-level ApplyTool is gone with the rail; BackRoomTests covers
+        // the shelf path. Ice Pick and Bar Spoon had no bottle equivalent and were cut.
 
         [Test]
         public void TabLedger_DoublesMoney_CappedAt20()
         {
             var run = NewRun(new[] { Ledger }, startingMoney: 3000);
-            run.Mix(new[] { run.CurrentRound.Rail[0] }); // open the first Back Room
+            PourTestKit.ServeSomething(run); // open the first Back Room
             var ledger = Acquire(run, "tab_ledger");
             run.ContinueToNextCustomer();
 
@@ -91,12 +73,12 @@ namespace LastCall.Tests
         public void BottleOpener_RecreatesTheLastUsedTool()
         {
             var run = NewRun(new[] { Muddler, Opener }, startingMoney: 3000);
-            run.Mix(new[] { run.CurrentRound.Rail[0] });
+            PourTestKit.ServeSomething(run);
             var muddler = Acquire(run, "muddler");
             var opener = Acquire(run, "bottle_opener");
             run.ContinueToNextCustomer();
 
-            run.UseTool(muddler, run.CurrentRound.Rail.Take(1).ToList());
+            run.UseTool(muddler, new[] { run.Shelf.Bottles[0].Ingredient });
             run.UseTool(opener, null);
 
             Assert.AreEqual(1, run.ToolInventory.Count);
@@ -107,7 +89,7 @@ namespace LastCall.Tests
         public void BottleOpener_ThrowsWithoutToolHistory()
         {
             var run = NewRun(new[] { Opener }, startingMoney: 3000);
-            run.Mix(new[] { run.CurrentRound.Rail[0] });
+            PourTestKit.ServeSomething(run);
             var opener = Acquire(run, "bottle_opener");
             run.ContinueToNextCustomer();
 

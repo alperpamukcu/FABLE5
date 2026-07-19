@@ -71,7 +71,12 @@ namespace LastCall.DebugUI
         }
 
         private GameBootstrap _bootstrap;
-        private readonly List<IngredientCard> _selected = new List<IngredientCard>();
+        /// <summary>
+        /// How much one click of a bottle pours (GDD 21 §10, tap-to-measure). Hold-to-pour and
+        /// the layered glass readout are Phase 3; this is the accessible input mode, built
+        /// first because it is the one that has to exist anyway.
+        /// </summary>
+        private const double MeasurePerClick = 0.1;
         private Font _font;
         private Font _headerFont;
         private Font _pixelFont;
@@ -146,7 +151,6 @@ namespace LastCall.DebugUI
         private void OnRunStarted()
         {
             if (!_uiBuilt) return;
-            _selected.Clear();
             _pendingExit = DiegeticStage.Exit.Refresh;
             AppendLog($"═══ New run — seed '{_bootstrap.CurrentSeed}' ═══");
             AppendLog(CustomerHeader());
@@ -159,47 +163,39 @@ namespace LastCall.DebugUI
 
         // ─────────────────────────────── actions ───────────────────────────────
 
-        private void ToggleCard(IngredientCard card)
+        /// <summary>Clicking a bottle pours one measure of it into the glass.</summary>
+        private void PourFrom(IngredientCard card)
         {
             if (Run == null || Run.Phase != RunPhase.CustomerRound) return;
-            if (!_selected.Remove(card))
-            {
-                if (_selected.Count >= Round.Config.MaxMixSelection) return;
-                _selected.Add(card);
-            }
+            if (Round.Glass.IsOverflowing) return;
+            Run.PourMeasure(card.Id, MeasurePerClick);
             RenderAll();
         }
 
         private void OnMixClicked()
         {
-            int mixNumber = Round.Config.MixesPerCustomer - Round.MixesRemaining + 1;
-            _pendingExit = DiegeticStage.Exit.Mix; // mixed bottles pop forward-up then slide out
-            var breakdown = Run.Mix(_selected.ToList());
-            _selected.Clear();
+            int drinkNumber = Round.DrinksServed + 1;
+            _pendingExit = DiegeticStage.Exit.Mix;
+            var breakdown = Run.Serve();
             ShowScorePopup(breakdown);
 
             if (breakdown.Recipe == null)
             {
-                AppendLog($"— Mix {mixNumber}: no recipe, 0 points  [{Round.AccumulatedScore:0.#} / {Round.Customer.TargetScore:0.#}]");
+                AppendLog($"— Mix {drinkNumber}: no recipe, 0 points  [{Round.AccumulatedScore:0.#} / {Round.Customer.TargetScore:0.#}]");
             }
             else if (breakdown.IsVoided)
             {
-                AppendLog($"— Mix {mixNumber}: {breakdown.Recipe.Name} VOIDED ({breakdown.VoidReason})  " +
+                AppendLog($"— Mix {drinkNumber}: {breakdown.Recipe.Name} VOIDED ({breakdown.VoidReason})  " +
                           $"[{Round.AccumulatedScore:0.#} / {Round.Customer.TargetScore:0.#}]");
             }
             else
             {
-                AppendLog($"— Mix {mixNumber}: {breakdown.Recipe.Name} (Lv{breakdown.RecipeLevel}) → " +
+                AppendLog($"— Mix {drinkNumber}: {breakdown.Recipe.Name} (Lv{breakdown.RecipeLevel}) → " +
                           $"{breakdown.TotalFlavor:0.#} × {breakdown.TotalMult:0.#} = {breakdown.FinalScore:0.#}  " +
                           $"[{Round.AccumulatedScore:0.#} / {Round.Customer.TargetScore:0.#}]");
                 foreach (var step in breakdown.Steps)
                     AppendLog($"      {step.Source}: {StepText(step)} → F {step.FlavorAfter:0.#}, M {step.MultAfter:0.#}");
             }
-
-            foreach (var card in Round.LastShatteredCards)
-                AppendLog($"      ✖ {card.Name} shattered — destroyed for good");
-            foreach (var copy in Round.LastDoubledCopies)
-                AppendLog($"      + {copy.Name} doubled — a copy joins the deck");
 
             if (Round.Phase == RoundPhase.Won)
             {
@@ -216,13 +212,12 @@ namespace LastCall.DebugUI
             RenderAll();
         }
 
-        private void OnRestockClicked()
+        private void OnBinClicked()
         {
-            int count = _selected.Count;
-            _pendingExit = DiegeticStage.Exit.Restock; // restocked bottles slide left out
-            Run.Restock(_selected.ToList());
-            _selected.Clear();
-            AppendLog($"— Restock: {count} card(s) swapped ({Round.RestocksRemaining} left)");
+            _pendingExit = DiegeticStage.Exit.Restock;
+            bool spilled = Round.Glass.IsOverflowing;
+            Run.DiscardGlass();
+            AppendLog(spilled ? "— spilled; the glass goes in the sink" : "— glass binned");
             RenderAll();
         }
 
@@ -230,10 +225,9 @@ namespace LastCall.DebugUI
         {
             Guarded(() =>
             {
-                Run.UseTool(tool, _selected.ToList());
-                AppendLog($"— {tool.Name} used on {_selected.Count} card(s)");
-                _selected.Clear();
-            });
+                Run.UseTool(tool, new[] { Run.Shelf.Bottles[0].Ingredient });
+                AppendLog($"— {tool.Name} used");
+                });
         }
 
         private void OnSellPatronClicked(PatronInstance patron)
@@ -329,8 +323,7 @@ namespace LastCall.DebugUI
             {
                 _pendingExit = DiegeticStage.Exit.Refresh; // whole counter refreshes in one wave
                 Run.ContinueToNextCustomer();
-                _selected.Clear();
-                AppendLog(CustomerHeader());
+                    AppendLog(CustomerHeader());
             });
         }
 
@@ -502,8 +495,10 @@ namespace LastCall.DebugUI
                 $"Wallet:   ${Run.Money}\n" +
                 $"Target:   {Round.Customer.TargetScore:0.#}\n" +
                 $"Score:    {Round.AccumulatedScore:0.#}\n" +
-                $"Mixes:    {Round.MixesRemaining}   Restocks: {Round.RestocksRemaining}{chatLine}\n" +
-                $"Cabinet:  {Round.DeckDrawCount} draw / {Round.DeckDiscardCount} discard" +
+                $"Drinks:   {Round.DrinksRemaining}{chatLine}\n" +
+                $"Glass:    {Round.Glass.FillFraction:P0}" +
+                (Round.Glass.IsOverflowing ? "  <color=#D9455C>SPILLED</color>" : "") +
+                $"   Spills: {Round.Spills}" +
                 quotaLine + vipLine + tonightLine + tagsLine;
 
             RenderPreview();
@@ -515,9 +510,9 @@ namespace LastCall.DebugUI
             RenderBanner();
 
             bool inRound = Run.Phase == RunPhase.CustomerRound;
-            bool hasSelection = _selected.Count >= 1 && _selected.Count <= Round.Config.MaxMixSelection;
-            _mixButton.interactable = inRound && hasSelection;
-            _restockButton.interactable = inRound && hasSelection && Round.RestocksRemaining > 0;
+            bool servable = !Round.Glass.IsEmpty && !Round.Glass.IsOverflowing;
+            _mixButton.interactable = inRound && servable;
+            _restockButton.interactable = inRound && !Round.Glass.IsEmpty;
             _skipButton.gameObject.SetActive(inRound && Run.CanSkipCustomerA);
             _bouncerButton.gameObject.SetActive(inRound && Run.CanRerollTonightsVip);
 
@@ -536,12 +531,12 @@ namespace LastCall.DebugUI
                 _previewText.text = string.Empty;
                 return;
             }
-            if (_selected.Count == 0)
+            if (Round.Glass.IsEmpty)
             {
                 _previewText.text = "Select 1–5 ingredients…";
                 return;
             }
-            var preview = Round.PreviewScore(_selected);
+            var preview = Round.PreviewScore();
             // The line is a single row of pixel type — it wraps and collides with the ID card
             // past ~45 characters, so the craft half stays terse whenever the read is showing.
             string read = ReadPreview();
@@ -549,7 +544,7 @@ namespace LastCall.DebugUI
             if (preview.Recipe == null)
                 _previewText.text = terse
                     ? $"no recipe (0){read}"
-                    : $"{_selected.Count} selected — no recipe (scores 0)";
+                    : $"{Round.Glass.FillFraction:P0} poured — no recipe (scores 0)";
             else if (preview.IsVoided)
                 _previewText.text = $"{preview.Recipe.Name} — VOIDED: {preview.VoidReason}";
             else if (terse)
@@ -567,13 +562,13 @@ namespace LastCall.DebugUI
         private string ReadPreview()
         {
             var customer = Round.Customer;
-            if (!customer.HasEmotion || _selected.Count == 0) return string.Empty;
+            if (!customer.HasEmotion || Round.Glass.IsEmpty) return string.Empty;
 
             var intent = customer.Read.Intent;
             var reading = customer.Read[intent];
             if (reading.Tier == VisibilityTier.Unknown) return string.Empty;
 
-            int move = Round.PreviewCharges(_selected)[intent];
+            int move = Round.PreviewCharges()[intent];
             if (move == 0) return string.Empty;
 
             string tag = UITheme.EmotionTag(intent);
@@ -585,7 +580,7 @@ namespace LastCall.DebugUI
                     : $"  <color=#D9455C>{tag} {move:+#;-#} WRONG WAY</color>";
 
             // Exact: they know precisely where the customer stands, so show the real verdict.
-            var verdict = Round.PreviewResonance(_selected);
+            var verdict = Round.PreviewResonance();
             if (verdict.IsBust)
                 return verdict.Bust == BustKind.Overshoot
                     ? $"  <color=#D9455C>{tag} TOO FAR</color>"
@@ -607,11 +602,11 @@ namespace LastCall.DebugUI
             if (!inRound || _recipesVisible) stage.CloseId();
             stage.SetCustomerRead(inRound ? Round.Customer : null);
             if (!inRound) return;
-            stage.SetBottles(Round.Rail, _selected, Round.VipRules.DebuffedTypes, ToggleCard, _pendingExit);
+            stage.SetShelf(Round.Shelf, Round.VipRules.DebuffedTypes, PourFrom, _pendingExit);
 
             // Pre-commit preview (GDD 19 §5): the projected movement is shown while the
             // selection is still reversible, so a bust is a decision and not an ambush.
-            stage.SetChargePreview(Round.Customer, Round.PreviewCharges(_selected));
+            stage.SetChargePreview(Round.Customer, Round.PreviewCharges());
             _pendingExit = DiegeticStage.Exit.None; // consumed; selection re-renders don't re-wave
         }
 
@@ -741,7 +736,7 @@ namespace LastCall.DebugUI
                     PanelPlum, () => OnUseToolClicked(captured), 11);
                 var btnLayout = button.gameObject.AddComponent<LayoutElement>();
                 btnLayout.flexibleWidth = 1;
-                button.interactable = inRound && _selected.Count >= 1 && _selected.Count <= tool.MaxTargets;
+                button.interactable = inRound;
             }
         }
 
@@ -1099,9 +1094,9 @@ namespace LastCall.DebugUI
             previewRt.sizeDelta = new Vector2(680, 34);
             previewRt.anchoredPosition = new Vector2(0, 440);  // in the gap above the rail + value chips
 
-            _mixButton = NewButton("Mix", _actionBar, "MIX", Amber, OnMixClicked, 20);
+            _mixButton = NewButton("Serve", _actionBar, "SERVE", Amber, OnMixClicked, 20);
             PlaceInBand((RectTransform)_mixButton.transform, 828, 1046, 98, 184);
-            _restockButton = NewButton("Restock", _actionBar, "RESTOCK", WithAlpha(WoodBrown, 0.95f), OnRestockClicked, 18);
+            _restockButton = NewButton("Bin", _actionBar, "BIN GLASS", WithAlpha(WoodBrown, 0.95f), OnBinClicked, 16);
             PlaceInBand((RectTransform)_restockButton.transform, 1054, 1272, 98, 184);
 
             // Only shows on an untouched Customer A round (GDD 5.2).

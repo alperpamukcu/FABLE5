@@ -138,27 +138,10 @@ namespace LastCall.Tests
 
         // ── Muddling Stick (value axis) ──────────────────────────────────────────
 
-        [Test]
-        public void MuddlingStick_ShiftsValues_IntoAHouseSpecial()
-        {
-            var stick = new ToolDefinition("muddling_stick", "Muddling Stick", 3,
-                ToolOp.ShiftValue, 2, shiftAmount: 1);
-            var deck = new Deck(new[]
-            {
-                Card(IngredientType.Sour, 6), Card(IngredientType.Sweet, 6),
-                Card(IngredientType.Bitter, 5), Card(IngredientType.Spirit, 1),
-                Card(IngredientType.Spirit, 1), Card(IngredientType.Spirit, 1),
-                Card(IngredientType.Spirit, 1), Card(IngredientType.Spirit, 1)
-            });
-            var round = new RoundController(deck, Recipes, new CustomerOrder("T", 100000));
+        // The Muddling Stick's round-level rail application went with the rail; it now
+        // shifts a shelf bottle's Flavor at the run layer (see BackRoomTests). The value-axis
+        // recipes it fed are still covered by the matcher tests above.
 
-            var bitter = round.Rail.First(c => c.Type == IngredientType.Bitter);
-            round.ApplyTool(stick, new[] { bitter });
-            Assert.AreEqual(6, bitter.Flavor);
-
-            var mix = round.Rail.Where(c => c.Flavor == 6).ToList();
-            Assert.AreEqual("house_special", round.PreviewMatch(mix).Recipe.Id);
-        }
 
         [Test]
         public void CatalogHasFourteen_AndPrioritiesAreUniqueAndComplete()

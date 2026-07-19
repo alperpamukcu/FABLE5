@@ -32,10 +32,16 @@ namespace LastCall.Core
         /// </summary>
         public bool ReturningCustomer { get; }
 
+        /// <summary>
+        /// Nothing has been spilled this visit (GDD 21 §3). The pour system's clean-play
+        /// signal — it inherited the role Restocks-unused played before the deck went away.
+        /// </summary>
+        public bool NoSpills { get; }
+
         public EffectContext(IReadOnlyList<IngredientCard> mix, RecipeDefinition recipe,
             int mixesUsedBefore, int restocksUsed,
             IReadOnlyCollection<IngredientType> debuffedTypes = null,
-            bool returningCustomer = false)
+            bool returningCustomer = false, bool noSpills = true)
         {
             Mix = mix;
             Recipe = recipe;
@@ -43,6 +49,7 @@ namespace LastCall.Core
             RestocksUsed = restocksUsed;
             DebuffedTypes = debuffedTypes ?? new IngredientType[0];
             ReturningCustomer = returningCustomer;
+            NoSpills = noSpills;
         }
     }
 }

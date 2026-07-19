@@ -512,7 +512,7 @@
       "name": "The Quiet Monk",
       "rarity": "Common",
       "cost": 5,
-      "description": "+30 Flavor if no Restocks were used this order.",
+      "description": "+30 Flavor if nothing was spilled this order.",
       "effects": [
         {
           "trigger": "OnHandScored",
@@ -520,7 +520,7 @@
           "value": 30,
           "valueSource": "Constant",
           "condition": {
-            "kind": "RestocksUsedEquals",
+            "kind": "NoSpillsThisCustomer",
             "type": "Spirit",
             "intValue": 0,
             "recipeIds": []
@@ -578,7 +578,7 @@
       "name": "Off-Duty Cop",
       "rarity": "Uncommon",
       "cost": 7,
-      "description": "x2 Mult if no Restocks were used this order.",
+      "description": "x2 Mult if nothing was spilled this order.",
       "effects": [
         {
           "trigger": "OnHandScored",
@@ -586,7 +586,7 @@
           "value": 2,
           "valueSource": "Constant",
           "condition": {
-            "kind": "RestocksUsedEquals",
+            "kind": "NoSpillsThisCustomer",
             "type": "Spirit",
             "intValue": 0,
             "recipeIds": []
@@ -820,10 +820,10 @@
       "name": "The Gossip",
       "rarity": "Uncommon",
       "cost": 7,
-      "description": "Gains +5 Flavor permanently every time you Restock (this run).",
+      "description": "Gains +5 Flavor permanently every time you refill a bottle (this run).",
       "effects": [
         {
-          "trigger": "OnRestock",
+          "trigger": "OnRefill",
           "op": "Accumulate",
           "value": 5,
           "valueSource": "Constant",

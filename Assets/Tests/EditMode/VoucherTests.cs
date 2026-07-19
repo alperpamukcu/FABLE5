@@ -34,42 +34,33 @@ namespace LastCall.Tests
         }
 
         private static void WinAndOpenShop(RunController run) =>
-            run.Mix(new[] { run.CurrentRound.Rail[0] });
+            PourTestKit.ServeSomething(run);
 
         [Test]
-        public void DoubleShift_GrantsAnExtraMix_EveryCustomer()
+        public void DoubleShift_GrantsAnExtraDrink_EveryCustomer()
         {
             var run = NewRun(new[] { DoubleShift });
             WinAndOpenShop(run);
             run.BuyVoucher();
             run.ContinueToNextCustomer();
 
-            Assert.AreEqual(5, run.CurrentRound.MixesRemaining);
+            Assert.AreEqual(5, run.CurrentRound.DrinksRemaining);
             CollectionAssert.Contains(run.Vouchers.ToList(), DoubleShift);
         }
 
+        // Happy Hour (+1 Restock) and Wider Rail (+1 rail slot) were removed with the deck —
+        // see the casualty list in Docs/PLAN_pour_pivot.md. Buying a voucher still costs $10,
+        // which is what those two tests were incidentally covering, so that is asserted here.
         [Test]
-        public void HappyHour_GrantsAnExtraRestock_EveryCustomer()
+        public void BuyingAVoucher_CostsTen()
         {
-            var run = NewRun(new[] { HappyHour });
-            WinAndOpenShop(run);
-            run.BuyVoucher();
-            run.ContinueToNextCustomer();
-
-            Assert.AreEqual(4, run.CurrentRound.RestocksRemaining);
-        }
-
-        [Test]
-        public void WiderRail_GrowsTheRail()
-        {
-            var run = NewRun(new[] { WiderRail });
+            var run = NewRun(new[] { DoubleShift });
             WinAndOpenShop(run);
             int moneyBefore = run.Money;
-            run.BuyVoucher();
-            run.ContinueToNextCustomer();
 
-            Assert.AreEqual(9, run.CurrentRound.Rail.Count);
-            Assert.AreEqual(moneyBefore - 10, run.Money, "vouchers cost $10");
+            run.BuyVoucher();
+
+            Assert.AreEqual(moneyBefore - 10, run.Money);
         }
 
         [Test]

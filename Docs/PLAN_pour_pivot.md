@@ -8,7 +8,7 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Core pour model, pure C# | ☑ 31 tests |
-| 2 | Round/run rewiring: shelf replaces deck | ☐ |
+| 2 | Round/run rewiring: shelf replaces deck | ☑ 298 tests green |
 | 3 | UI: hold-to-pour, the glass, the shelf | ☐ |
 | 4 | Economy: bottle volume, refills, three upgrade tracks | ☐ |
 | 5 | Content + balance re-measure | ☐ |
@@ -160,6 +160,21 @@ Bottle volume, refill pricing, and the three upgrade tracks (bottles / glassware
 information economy from GDD 19 §8 relocates onto the bar track.
 
 ---
+
+### Phase 2 findings
+
+- **Recipes derive their ratio bands from the old type pattern.** Hand-authoring fourteen
+  recipes as bands is fourteen chances to write something unmatchable, so
+  `RatioRecipeMatcher.DeriveBands` converts "2 Spirit + 1 Bubbly" into "Spirit ~2/3, Bubbly
+  ~1/3" with a ±15% tolerance. Eight of the fourteen convert cleanly.
+- **Six recipes deliberately stay unpourable.** Perfect Serve, Double Perfect, House Special,
+  Layered Pour, Straight Booze and Martini are ruled by things with no proportional meaning —
+  distinct types, equal Flavor values, ascending Flavor, mono-type group size, or a slot that
+  accepts either of two types. They need a design pass, not a derivation.
+- **A derivation bug worth remembering.** Perfect Serve and Double Perfect *do* list a single
+  Spirit slot, so the first version of the derivation gave them "Spirit 85–100%" — and a glass
+  of neat whisky scored as Double Perfect, the highest-ranked recipe in the game, off one pour
+  of one bottle. `RecipesWhoseRuleIsNotProportional_StayUnpourable` pins it.
 
 ## Phase 5 — Balance
 

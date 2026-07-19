@@ -14,7 +14,7 @@ namespace LastCall.Core
 
     /// <summary>
     /// One full run: 8 Nights × (Customer A, Customer B, VIP) per GDD 5.1. Owns the wallet,
-    /// the persistent deck, the patron roster and the recipe levels; spins up a
+    /// the shelf, the patron roster and the recipe levels; spins up a
     /// <see cref="RoundController"/> per customer and pays out tips (GDD 7.5) on wins.
     /// Deterministic: all randomness comes from the injected <see cref="RunRng"/>.
     /// VIP special rules and the Back Room inventory arrive in later slices — the BackRoom
@@ -22,7 +22,7 @@ namespace LastCall.Core
     /// </summary>
     public sealed class RunController
     {
-        private readonly Deck _deck;
+        private readonly Shelf _shelf;
         private readonly IReadOnlyList<RecipeDefinition> _recipes;
         private readonly RunRng _rng;
         private readonly List<PatronInstance> _patrons;
@@ -88,7 +88,7 @@ namespace LastCall.Core
         /// <summary>True while Customer A can still be skipped: their round is untouched.</summary>
         public bool CanSkipCustomerA =>
             Phase == RunPhase.CustomerRound && Slot == CustomerSlot.CustomerA &&
-            CurrentRound.MixesUsed == 0 && CurrentRound.RestocksUsed == 0;
+            CurrentRound.DrinksServed == 0 && CurrentRound.Glass.IsEmpty;
 
         /// <summary>Bouncer voucher (GDD 7.4 v1.1): once per Night, before the VIP is faced.</summary>
         public bool CanRerollTonightsVip =>
@@ -142,8 +142,10 @@ namespace LastCall.Core
             Quota = new WeekQuota(1, Config.QuotaProvider(1));
             var startingCards = new List<IngredientCard>(cards);
             if (bar != null) ApplyBar(bar, startingCards);
-            _deck = new Deck(startingCards);
+            _shelf = BuildShelf(startingCards);
             StartCustomer();
+
+
         }
 
         /// <summary>Applies the Bar's starting configuration (GDD 9) before the first deal.</summary>
@@ -176,10 +178,10 @@ namespace LastCall.Core
         /// Falling short of an order no longer ends the run (fork B): the customer simply
         /// leaves, having got whatever they got, and the week's quota does the judging.
         /// </summary>
-        public ScoreBreakdown Mix(IReadOnlyList<IngredientCard> selection)
+        public ScoreBreakdown Serve()
         {
             EnsurePhase(RunPhase.CustomerRound);
-            var breakdown = CurrentRound.Mix(selection);
+            var breakdown = CurrentRound.Serve();
 
             if (CurrentRound.Phase == RoundPhase.Won) OnCustomerSatisfied();
             else if (CurrentRound.Phase == RoundPhase.Closed) OnCustomerLeft();
@@ -187,10 +189,34 @@ namespace LastCall.Core
             return breakdown;
         }
 
-        public void Restock(IReadOnlyList<IngredientCard> selection)
+        /// <summary>Starts pouring a bottle into the glass (GDD 21 §3).</summary>
+        public void BeginPour(string ingredientId)
         {
             EnsurePhase(RunPhase.CustomerRound);
-            CurrentRound.Restock(selection);
+            CurrentRound.BeginPour(ingredientId);
+        }
+
+        /// <summary>Advances the held pour; returns the volume that actually went in.</summary>
+        public double PourTick(double seconds)
+        {
+            EnsurePhase(RunPhase.CustomerRound);
+            return CurrentRound.PourTick(seconds);
+        }
+
+        public void EndPour() => CurrentRound?.EndPour();
+
+        /// <summary>Pours an exact measure — the tap-to-measure input mode (GDD 21 §10).</summary>
+        public double PourMeasure(string ingredientId, double volume)
+        {
+            EnsurePhase(RunPhase.CustomerRound);
+            return CurrentRound.PourMeasure(ingredientId, volume);
+        }
+
+        /// <summary>Bins the glass — the volume is gone.</summary>
+        public void DiscardGlass()
+        {
+            EnsurePhase(RunPhase.CustomerRound);
+            CurrentRound.Discard();
         }
 
         /// <summary>
@@ -221,7 +247,7 @@ namespace LastCall.Core
                         throw new InvalidOperationException("Nothing left to learn about them.");
                     break;
                 default:
-                    CurrentRound.ApplyTool(tool, targets);
+                    ApplyBottleTool(tool, targets);
                     break;
             }
 
@@ -289,7 +315,6 @@ namespace LastCall.Core
                 throw new InvalidOperationException(
                     "Only an untouched Customer A round can be skipped.");
 
-            _deck.Discard(CurrentRound.Rail); // the dealt rail returns to the cabinet
             GrantFavor(_rng.GetStream("favor"));
 
             Slot = CustomerSlot.CustomerB;
@@ -396,7 +421,12 @@ namespace LastCall.Core
             switch (option.Kind)
             {
                 case PackOptionKind.IngredientCard:
-                    _deck.Discard(new[] { option.Card }); // permanent from the next shuffle on
+                    // A pack ingredient now joins the shelf as a new bottle. Drawing a
+                    // duplicate of something already stocked tops that bottle up instead,
+                    // since shelf bottles are unique by id.
+                    var existing = _shelf.Find(option.Card.Id);
+                    if (existing != null) existing.Refill();
+                    else _shelf.Add(new ShelfBottle(option.Card));
                     break;
                 case PackOptionKind.Patron:
                     if (_patrons.Count >= Config.MaxPatronSlots)
@@ -560,11 +590,10 @@ namespace LastCall.Core
 
         private void OnCustomerSatisfied()
         {
-            // Golden cards pay for sitting on the rail when the customer is satisfied
-            // (GDD 3.3) — count them before the leftovers go back to the cabinet.
-            int goldenBonus = Config.GoldenCardBonus *
-                CurrentRound.Rail.Count(c => c.Enhancement == Enhancement.Golden);
-            _deck.Discard(CurrentRound.Rail);
+            // Enhancement.Golden paid per Golden card left on the rail at customer end.
+            // There is no rail under the pour system, so it is a casualty of the pivot —
+            // see the audit in Docs/PLAN_pour_pivot.md.
+            const int goldenBonus = 0;
 
             // Interest is computed on money held BEFORE this customer's payout (GDD 7.5:
             // banking to $25 is the intended play, so the payout itself must not compound).
@@ -573,14 +602,15 @@ namespace LastCall.Core
             if (ConsumeTag(FavorTag.DoubleTip)) baseTip *= 2;
             int favorBonus = Slot == CustomerSlot.Vip && ConsumeTag(FavorTag.Investor)
                 ? InvestorPayout : 0;
-            int unusedMixBonus = CurrentRound.MixesRemaining;
+            int unusedMixBonus = CurrentRound.DrinksRemaining;
             int vipBonus = Slot == CustomerSlot.Vip ? Config.VipDefeatBonus : 0;
 
             double patronMoney = CurrentRound.PatronPayout;
             if (Slot == CustomerSlot.Vip)
             {
                 patronMoney += PatronTriggers.ResolveMoney(EffectTrigger.OnNightEnd, _patrons,
-                    new EffectContext(null, null, CurrentRound.MixesUsed, CurrentRound.RestocksUsed));
+                    new EffectContext(null, null, CurrentRound.DrinksServed, 0,
+                        noSpills: CurrentRound.Spills == 0));
             }
 
             LastTips = new TipsBreakdown(baseTip, unusedMixBonus, interest, vipBonus,
@@ -597,7 +627,6 @@ namespace LastCall.Core
         /// </summary>
         private void OnCustomerLeft()
         {
-            _deck.Discard(CurrentRound.Rail);
             LastTips = TipsBreakdown.None;
             EndCustomer();
         }
@@ -653,6 +682,83 @@ namespace LastCall.Core
             _firstShopOpened = true;
         }
 
+        /// <summary>
+        /// Turns the starting cards into the shelf (GDD 21 §2). Duplicates in the old starter
+        /// deck (two Rye, two Single Malt) become one bottle with more in it — the deck used
+        /// copies to weight the draw, and the shelf has no draw to weight.
+        /// </summary>
+        private static Shelf BuildShelf(IEnumerable<IngredientCard> cards)
+        {
+            var bottles = new List<ShelfBottle>();
+            var byId = new Dictionary<string, ShelfBottle>();
+            foreach (var card in cards)
+            {
+                if (byId.TryGetValue(card.Id, out var bottle))
+                {
+                    bottle.Upgrade(capacityDelta: DuplicateBottleBonus, pourRateDelta: 0);
+                    continue;
+                }
+                bottle = new ShelfBottle(card);
+                byId[card.Id] = bottle;
+                bottles.Add(bottle);
+            }
+            return new Shelf(bottles);
+        }
+
+        /// <summary>Extra capacity a duplicate starter card contributes to its bottle.</summary>
+        private const double DuplicateBottleBonus = 2.0;
+
+        /// <summary>
+        /// Tools that used to rework rail cards now rework shelf bottles (GDD 21 §7.1), which
+        /// makes them permanent upgrades rather than one-shot card edits. Ice Pick and Bar
+        /// Spoon have no bottle equivalent and are casualties — see the audit.
+        /// </summary>
+        private void ApplyBottleTool(ToolDefinition tool, IReadOnlyList<IngredientCard> targets)
+        {
+            if (targets == null || targets.Count == 0)
+                throw new ArgumentException("Pick a bottle.", nameof(targets));
+            if (targets.Count > tool.MaxTargets)
+                throw new ArgumentException($"{tool.Name} works on at most {tool.MaxTargets} bottle(s).",
+                    nameof(targets));
+
+            foreach (var target in targets)
+            {
+                var bottle = _shelf.Find(target.Id);
+                if (bottle == null)
+                    throw new ArgumentException($"'{target.Id}' is not on the shelf.", nameof(targets));
+
+                switch (tool.Op)
+                {
+                    case ToolOp.Enhance: bottle.Ingredient.Enhance(tool.Enhancement); break;
+                    case ToolOp.ConvertType: bottle.Ingredient.ConvertType(tool.ConvertTo); break;
+                    case ToolOp.SetQuality: bottle.Ingredient.Refine(tool.Quality); break;
+                    case ToolOp.ShiftValue: bottle.Ingredient.ShiftFlavor(tool.ShiftAmount); break;
+                    default:
+                        throw new InvalidOperationException(
+                            $"{tool.Name} has no meaning under the pour system.");
+                }
+            }
+        }
+
+        /// <summary>Refills every bottle for a price, and wakes the refill patrons.</summary>
+        public int RefillShelf()
+        {
+            EnsurePhase(RunPhase.BackRoom);
+            int cost = _shelf.RefillCost(Config.RefillPricePerCapacity);
+            if (cost == 0) return 0;
+            if (Money < cost)
+                throw new InvalidOperationException($"Not enough money (${Money} < ${cost}).");
+
+            Money -= cost;
+            _shelf.RefillAll();
+            PatronTriggers.ResolveAccumulation(EffectTrigger.OnRefill, _patrons, EffectContext.Empty);
+            Money += (int)PatronTriggers.ResolveMoney(EffectTrigger.OnRefill, _patrons, EffectContext.Empty);
+            return cost;
+        }
+
+        /// <summary>The shelf, for the UI and the Back Room.</summary>
+        public Shelf Shelf => _shelf;
+
         /// <summary>Sum of IntValues across owned vouchers of one op (0 when none owned).</summary>
         private int VoucherValue(VoucherOp op)
         {
@@ -667,24 +773,19 @@ namespace LastCall.Core
 
         private void StartCustomer()
         {
-            _deck.ResetForNewCustomer(_rng.GetStream("deck"));
             double target = Config.TargetProvider(Night, Slot);
             string name = $"Night {Night} — {SlotName(Slot)}";
             var roundConfig = Config.RoundConfig;
             if (_vouchers.Count > 0)
             {
-                // Vouchers upgrade the base rules; VIP rules then modify on top.
-                roundConfig = new RoundConfig(
-                    roundConfig.RailSize + VoucherValue(VoucherOp.ExtraRail),
-                    roundConfig.MaxMixSelection,
-                    roundConfig.MixesPerCustomer + VoucherValue(VoucherOp.ExtraMix),
-                    roundConfig.RestocksPerCustomer + VoucherValue(VoucherOp.ExtraRestock));
+                // Vouchers upgrade the base rules; VIP rules then modify on top. ExtraRail
+                // and ExtraRestock died with the deck (see the audit); ExtraMix survives as
+                // one more drink the customer will accept.
+                roundConfig = roundConfig.With(
+                    drinksPerCustomer: roundConfig.DrinksPerCustomer + VoucherValue(VoucherOp.ExtraMix));
             }
             if (ConsumeTag(FavorTag.QuickHands))
-            {
-                roundConfig = new RoundConfig(roundConfig.RailSize, roundConfig.MaxMixSelection,
-                    roundConfig.MixesPerCustomer + 1, roundConfig.RestocksPerCustomer);
-            }
+                roundConfig = roundConfig.With(drinksPerCustomer: roundConfig.DrinksPerCustomer + 1);
 
             // GDD 5.5: tonight's VIP is revealed when the Night begins, before Customer A,
             // so skip and economy decisions can react to it.
@@ -704,9 +805,8 @@ namespace LastCall.Core
             }
 
             var order = BuildOrder(name, target, ruleText, ruleSet);
-            CurrentRound = new RoundController(_deck, _recipes,
-                order, roundConfig, _recipeLevels, _patrons,
-                ruleSet, _rng.GetStream("shatter"), Night);
+            CurrentRound = new RoundController(_shelf, _recipes,
+                order, roundConfig, _recipeLevels, _patrons, ruleSet, Night);
 
             ResolveInformationPatrons(order);
         }
@@ -847,11 +947,10 @@ namespace LastCall.Core
                         eachMixDifferent = true;
                         break;
                     case VipRuleKind.RailSizeDelta:
-                        roundConfig = new RoundConfig(
-                            Math.Max(1, roundConfig.RailSize + rule.IntValue),
-                            roundConfig.MaxMixSelection,
-                            roundConfig.MixesPerCustomer,
-                            roundConfig.RestocksPerCustomer);
+                        // The rail is gone; the equivalent squeeze is a smaller glass, so
+                        // The Health Inspector's -3 becomes -30% capacity.
+                        roundConfig = roundConfig.With(glassCapacity:
+                            Math.Max(0.3, roundConfig.GlassCapacity * (1 + rule.IntValue * 0.1)));
                         break;
                     case VipRuleKind.TargetScale:
                         target *= rule.DoubleValue;

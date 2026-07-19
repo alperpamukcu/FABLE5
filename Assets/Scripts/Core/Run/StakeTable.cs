@@ -37,12 +37,12 @@ namespace LastCall.Core
                 target = (night, slot) => baseTarget(night, slot) * (night <= 2 ? 1.25 : 1.0);
             }
 
-            // Silver: −1 Restock.
+            // Silver: a smaller glass. The old −1 Restock has no meaning under pouring, and
+            // less room to work in is the closest equivalent squeeze (see the pour audit).
             var round = config.RoundConfig;
             if (stake >= 4)
             {
-                round = new RoundConfig(round.RailSize, round.MaxMixSelection,
-                    round.MixesPerCustomer, Math.Max(0, round.RestocksPerCustomer - 1));
+                round = round.With(glassCapacity: Math.Max(0.3, round.GlassCapacity - 0.2));
             }
 
             return new RunConfig(config.Nights, config.StartingMoney,

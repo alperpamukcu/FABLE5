@@ -252,7 +252,7 @@ namespace LastCall.Tests
                 config: new RunConfig(startingMoney: 3000, targetProvider: (n, s) => 1),
                 toolPool: new[] { eavesdrop }, archetypes: new[] { Archetype() });
 
-            run.Mix(new[] { run.CurrentRound.Rail[0] });
+            PourTestKit.ServeSomething(run);
             var tool = AcquireTool(run, "eavesdrop");
             run.ContinueToNextCustomer();
 

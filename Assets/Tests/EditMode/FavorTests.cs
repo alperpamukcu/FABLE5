@@ -47,7 +47,7 @@ namespace LastCall.Tests
             throw new InvalidOperationException($"No seed granted {wanted} in 120 tries.");
         }
 
-        private static void Win(RunController run) => run.Mix(new[] { run.CurrentRound.Rail[0] });
+        private static void Win(RunController run) => PourTestKit.ServeSomething(run);
 
         [Test]
         public void Skip_JumpsToCustomerB_WithNoTipsAndNoShop()
@@ -59,14 +59,14 @@ namespace LastCall.Tests
             Assert.AreEqual(RunPhase.CustomerRound, run.Phase);
             Assert.IsNull(run.Shop, "no Back Room on a skip");
             Assert.IsNull(run.LastTips, "no tips on a skip");
-            Assert.AreEqual(40, run.CurrentRound.DeckDrawCount, "all 48 cards stay in the run");
+            Assert.IsTrue(run.Shelf.Bottles.All(b => !b.IsEmpty), "a skip pours nothing");
         }
 
         [Test]
         public void Skip_RequiresAnUntouchedCustomerARound()
         {
             var touched = NewRun("SKIP");
-            touched.Restock(new[] { touched.CurrentRound.Rail[0] });
+            touched.PourMeasure(PourTestKit.AnyBottle(touched), 0.2);
             Assert.IsFalse(touched.CanSkipCustomerA);
             Assert.Throws<InvalidOperationException>(() => touched.SkipCustomerA());
 
@@ -87,15 +87,15 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void QuickHands_GrantsOneExtraMix_ForTheNextCustomerOnly()
+        public void QuickHands_GrantsOneExtraDrink_ForTheNextCustomerOnly()
         {
             var run = RunWithTag(FavorTag.QuickHands);
-            Assert.AreEqual(5, run.CurrentRound.MixesRemaining, "Customer B has +1 Mix");
+            Assert.AreEqual(5, run.CurrentRound.DrinksRemaining, "Customer B has +1 drink");
             Assert.IsEmpty(run.FavorTags, "consumed on grant of the very next customer");
 
             Win(run);
             run.ContinueToNextCustomer();
-            Assert.AreEqual(4, run.CurrentRound.MixesRemaining, "one-shot");
+            Assert.AreEqual(4, run.CurrentRound.DrinksRemaining, "one-shot");
         }
 
         [Test]

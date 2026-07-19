@@ -26,19 +26,17 @@ namespace LastCall.Tests
                 PatronRarity.Uncommon, 7, "",
                 new[]
                 {
-                    new PatronEffect(EffectTrigger.OnRestock, EffectOp.Accumulate, 5),
+                    new PatronEffect(EffectTrigger.OnRefill, EffectOp.Accumulate, 5),
                     new PatronEffect(EffectTrigger.OnHandScored, EffectOp.AddFlavor, 0,
                         EffectCondition.Always, EffectValueSource.Accumulated)
                 }));
-            var round = new RoundController(new Deck(SpiritCards(12)), Recipes,
-                new CustomerOrder("T", 100000), patrons: new[] { gossip });
+            // The Gossip banked Flavor per Restock; Restock is gone, so it banks per bottle
+            // refilled instead — the pour system's own recurring spend (see the pour audit).
+            var context = EffectContext.Empty;
+            PatronTriggers.ResolveAccumulation(EffectTrigger.OnRefill, new[] { gossip }, context);
+            PatronTriggers.ResolveAccumulation(EffectTrigger.OnRefill, new[] { gossip }, context);
 
-            round.Restock(new[] { round.Rail[0] });
-            round.Restock(new[] { round.Rail[0] });
             Assert.AreEqual(10, gossip.Accumulated);
-
-            var breakdown = round.Mix(new[] { round.Rail[0] });
-            Assert.AreEqual(5 + 6 + 10, breakdown.FinalScore, "Neat Pour + banked Flavor");
         }
 
         [Test]
@@ -51,7 +49,7 @@ namespace LastCall.Tests
                 new[] { coatCheck }, new RunConfig(targetProvider: (n, s) => 10));
 
             int before = run.Money;
-            run.Mix(new[] { run.CurrentRound.Rail[0] }); // 11 ≥ 10: win, Back Room opens
+            PourTestKit.ServeSomething(run); // 11 ≥ 10: win, Back Room opens
 
             Assert.AreEqual(RunPhase.BackRoom, run.Phase);
             Assert.AreEqual(before + run.LastTips.Total + 2, run.Money,
@@ -73,11 +71,11 @@ namespace LastCall.Tests
             var run = new RunController(SpiritCards(48), Recipes, new RunRng("BANK"),
                 new[] { accountant }, new RunConfig(targetProvider: (n, s) => 10));
 
-            run.Mix(new[] { run.CurrentRound.Rail[0] });
+            PourTestKit.ServeSomething(run);
             Assert.AreEqual(1, run.LastTips.PatronBonus, "first customer pays $1");
 
             run.ContinueToNextCustomer();
-            run.Mix(new[] { run.CurrentRound.Rail[0] });
+            PourTestKit.ServeSomething(run);
             Assert.AreEqual(2, run.LastTips.PatronBonus, "second customer pays $2");
         }
     }

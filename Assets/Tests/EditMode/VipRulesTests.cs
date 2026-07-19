@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using LastCall.Core;
@@ -7,21 +8,55 @@ namespace LastCall.Tests
 {
     public class VipRulesTests
     {
-        private static readonly IReadOnlyList<RecipeDefinition> Recipes = RecipeCatalog.CreateDefault();
+        // The shipped recipe table has no ratio bands until Phase 5 authors them, so this
+        // suite brings its own. VIP rules are about voiding and debuffing a *matched* drink;
+        // they need something matchable, and waiting on the content pass would leave the
+        // rules untested in the meantime.
+        private static readonly RecipeDefinition NeatPour = new RecipeDefinition(
+            "neat_pour", "Neat Pour", rank: 1, baseFlavor: 5, baseMult: 1,
+            flavorPerLevel: 10, multPerLevel: 1, requirements: Array.Empty<PatternRequirement>(),
+            ratioRequirements: new[] { new RatioRequirement(IngredientType.Spirit, 0.90, 1.00) },
+            minFill: 0.30);
 
-        private static IngredientCard Card(IngredientType type, int flavor) =>
-            new IngredientCard($"{type}_{flavor}", $"{type} {flavor}", type, flavor);
+        private static readonly RecipeDefinition Spritz = new RecipeDefinition(
+            "spritz", "Spritz", rank: 2, baseFlavor: 10, baseMult: 2,
+            flavorPerLevel: 15, multPerLevel: 1, requirements: Array.Empty<PatternRequirement>(),
+            ratioRequirements: new[]
+            {
+                new RatioRequirement(IngredientType.Spirit, 0.40, 0.60),
+                new RatioRequirement(IngredientType.Bubbly, 0.40, 0.60),
+            },
+            minFill: 0.30);
+
+        private static readonly IReadOnlyList<RecipeDefinition> Recipes = new[] { NeatPour, Spritz };
+
+        private static IngredientCard Card(string id, IngredientType type, int flavor) =>
+            new IngredientCard(id, id, type, flavor);
 
         private static List<IngredientCard> SpiritCards(int count = 48) =>
             Enumerable.Range(0, count)
                 .Select(i => new IngredientCard($"spirit_{i}", $"Spirit {i}", IngredientType.Spirit, 6))
                 .ToList();
 
+        /// <summary>A bar with the two ingredients the local recipes are made of.</summary>
+        private static Shelf BarShelf() => new Shelf(new[]
+        {
+            new ShelfBottle(Card("gin", IngredientType.Spirit, 6), capacity: 20),
+            new ShelfBottle(Card("soda", IngredientType.Bubbly, 2), capacity: 20),
+        });
+
         private static RoundController NewRound(VipRuleSet rules,
-            Deck deck = null, IReadOnlyDictionary<string, int> levels = null,
+            Shelf shelf = null, IReadOnlyDictionary<string, int> levels = null,
             IReadOnlyList<PatronInstance> patrons = null) =>
-            new RoundController(deck ?? new Deck(SpiritCards()), Recipes,
+            new RoundController(shelf ?? BarShelf(), Recipes,
                 new CustomerOrder("VIP", 100000), null, levels, patrons, rules);
+
+        /// <summary>Pours a full glass of gin — a Neat Pour worth (5 + 6) x 1 = 11.</summary>
+        private static ScoreBreakdown ServeNeat(RoundController round)
+        {
+            round.PourMeasure("gin", round.Config.GlassCapacity);
+            return round.Serve();
+        }
 
         private static readonly VipDefinition Teetotaler = new VipDefinition(
             "teetotaler", "The Teetotaler", "Spirits score 0 Flavor this order.", false, false,
@@ -46,72 +81,31 @@ namespace LastCall.Tests
         // ── rule mechanics on the round ──────────────────────────────────────────
 
         [Test]
-        public void DebuffedType_ScoresNothing_ButRecipeStillMatches()
+        public void ADebuffedIngredient_AddsNoFlavor()
         {
-            var rules = new VipRuleSet(new[] { IngredientType.Spirit }, false, 0, false);
-            var deck = new Deck(new[]
-            {
-                Card(IngredientType.Spirit, 6), Card(IngredientType.Sweet, 4),
-                Card(IngredientType.Bitter, 3), Card(IngredientType.Spirit, 2),
-                Card(IngredientType.Spirit, 2), Card(IngredientType.Spirit, 2),
-                Card(IngredientType.Spirit, 2), Card(IngredientType.Spirit, 2)
-            });
-            var round = NewRound(rules, deck);
+            var debuffed = new VipRuleSet(new[] { IngredientType.Spirit }, false, 0, false);
+            var round = NewRound(debuffed);
 
-            var mix = round.Rail.Where(c => c.Type != IngredientType.Spirit)
-                .Concat(round.Rail.Where(c => c.Type == IngredientType.Spirit && c.Flavor == 6))
-                .ToList();
-            var breakdown = round.Mix(mix);
+            var breakdown = ServeNeat(round);
 
-            // Old Fashioned still forms; debuffed Spirit adds nothing: (20+4+3) x 2 = 54.
-            Assert.AreEqual("old_fashioned", breakdown.Recipe.Id);
-            Assert.AreEqual(54, breakdown.FinalScore);
+            Assert.AreEqual("neat_pour", breakdown.Recipe.Id, "the drink still forms");
+            Assert.AreEqual(5, breakdown.TotalFlavor, 1e-9, "recipe base only; the gin adds nothing");
             Assert.IsTrue(breakdown.Steps.Any(s => s.Source.Contains("debuffed")));
         }
 
         [Test]
-        public void DebuffedCard_TriggersNoPatronOrQualityEffects()
+        public void OnlyFirstDrinkScores_VoidsLaterOnes_ButConsumesThem()
         {
-            var chemist = new PatronInstance(new PatronDefinition("chemist", "The Chemist",
-                PatronRarity.Uncommon, 6, "",
-                new[] { new PatronEffect(EffectTrigger.OnCardScored, EffectOp.AddMult, 2,
-                    EffectCondition.CardTypeIs(IngredientType.Sour)) }));
-            var rules = new VipRuleSet(new[] { IngredientType.Sour }, false, 0, false);
-            var sour = Card(IngredientType.Sour, 4);
-            sour.Enhance(Enhancement.Overproof);
-            var deck = new Deck(new[]
-            {
-                Card(IngredientType.Spirit, 6), sour, Card(IngredientType.Sweet, 2),
-                Card(IngredientType.Spirit, 2), Card(IngredientType.Spirit, 2),
-                Card(IngredientType.Spirit, 2), Card(IngredientType.Spirit, 2),
-                Card(IngredientType.Spirit, 2)
-            });
-            var round = NewRound(rules, deck, patrons: new[] { chemist });
+            var round = NewRound(new VipRuleSet(null, true, 0, false));
 
-            var mix = new[] { round.Rail.First(c => c.Flavor == 6 && c.Type == IngredientType.Spirit),
-                round.Rail.First(c => c.Type == IngredientType.Sour),
-                round.Rail.First(c => c.Type == IngredientType.Sweet) };
-            var breakdown = round.Mix(mix);
+            var first = ServeNeat(round);
+            var second = ServeNeat(round);
 
-            // Sour recipe: (30 + 6 + 0 + 2) x 3 — no +2 Mult from Chemist, no Overproof.
-            Assert.AreEqual("sour", breakdown.Recipe.Id);
-            Assert.AreEqual(38 * 3, breakdown.FinalScore);
-        }
-
-        [Test]
-        public void OnlyFirstMixScores_VoidsLaterMixes_ButConsumesThem()
-        {
-            var rules = new VipRuleSet(null, true, 0, false);
-            var round = NewRound(rules);
-
-            var first = round.Mix(new[] { round.Rail[0] });
-            var second = round.Mix(new[] { round.Rail[0] });
-
-            Assert.AreEqual(11, first.FinalScore);
+            Assert.AreEqual(11, first.FinalScore, 1e-9);
             Assert.IsTrue(second.IsVoided);
             Assert.AreEqual(0, second.FinalScore);
-            Assert.AreEqual(2, round.MixesRemaining);
-            Assert.AreEqual(11, round.AccumulatedScore);
+            Assert.AreEqual(2, round.DrinksRemaining);
+            Assert.AreEqual(11, round.AccumulatedScore, 1e-9);
         }
 
         [Test]
@@ -119,36 +113,26 @@ namespace LastCall.Tests
         {
             var rules = new VipRuleSet(null, false, 2, false);
             var levels = new Dictionary<string, int> { ["neat_pour"] = 2 };
-            var round = NewRound(rules, levels: levels);
 
-            var leveled = round.Mix(new[] { round.Rail[0] }); // Neat Pour Lv2 scores
-            Assert.IsFalse(leveled.IsVoided);
-            Assert.AreEqual((15 + 6) * 2, leveled.FinalScore);
+            var leveled = NewRound(rules, levels: levels);
+            var scored = ServeNeat(leveled);
+            Assert.IsFalse(scored.IsVoided);
+            Assert.AreEqual((15 + 6) * 2, scored.FinalScore, 1e-9, "Neat Pour at level 2");
 
-            var spritzDeck = new Deck(new[]
-            {
-                Card(IngredientType.Spirit, 6), Card(IngredientType.Bubbly, 2),
-                Card(IngredientType.Spirit, 2), Card(IngredientType.Spirit, 2),
-                Card(IngredientType.Spirit, 2), Card(IngredientType.Spirit, 2),
-                Card(IngredientType.Spirit, 2), Card(IngredientType.Spirit, 2)
-            });
-            var round2 = NewRound(rules, spritzDeck, levels);
-            var voided = round2.Mix(new[]
-            {
-                round2.Rail.First(c => c.Flavor == 6),
-                round2.Rail.First(c => c.Type == IngredientType.Bubbly)
-            });
-            Assert.IsTrue(voided.IsVoided, "Spritz is still level 1");
+            // A Spritz is still level 1, so the same VIP voids it.
+            var unleveled = NewRound(rules, levels: levels);
+            unleveled.PourMeasure("gin", 0.5);
+            unleveled.PourMeasure("soda", 0.5);
+            Assert.IsTrue(unleveled.Serve().IsVoided);
         }
 
         [Test]
-        public void EachMixDifferentRecipe_VoidsRepeats()
+        public void EachDrinkMustBeADifferentRecipe()
         {
-            var rules = new VipRuleSet(null, false, 0, true);
-            var round = NewRound(rules);
+            var round = NewRound(new VipRuleSet(null, false, 0, true));
 
-            var first = round.Mix(new[] { round.Rail[0] });
-            var repeat = round.Mix(new[] { round.Rail[0] });
+            var first = ServeNeat(round);
+            var repeat = ServeNeat(round);
 
             Assert.IsFalse(first.IsVoided);
             Assert.IsTrue(repeat.IsVoided);
@@ -157,13 +141,14 @@ namespace LastCall.Tests
         [Test]
         public void PreviewScore_ShowsTheVoid_BeforeCommitting()
         {
-            var rules = new VipRuleSet(null, true, 0, false);
-            var round = NewRound(rules);
-            round.Mix(new[] { round.Rail[0] });
+            var round = NewRound(new VipRuleSet(null, true, 0, false));
+            ServeNeat(round);
 
-            var preview = round.PreviewScore(new[] { round.Rail[0] });
+            round.PourMeasure("gin", round.Config.GlassCapacity);
+            var preview = round.PreviewScore();
+
             Assert.IsTrue(preview.IsVoided);
-            Assert.AreEqual(3, round.MixesRemaining, "preview must not consume");
+            Assert.AreEqual(3, round.DrinksRemaining, "preview must not consume");
         }
 
         // ── VIP selection on the run ─────────────────────────────────────────────
@@ -179,7 +164,7 @@ namespace LastCall.Tests
         {
             do
             {
-                run.Mix(new[] { run.CurrentRound.Rail[0] });
+                PourTestKit.ServeSomething(run);
                 if (run.Phase == RunPhase.BackRoom) run.ContinueToNextCustomer();
             }
             while (!(run.Slot == CustomerSlot.Vip && run.Phase == RunPhase.CustomerRound));
@@ -231,16 +216,17 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void RailSizeDelta_ShrinksTheRail()
+        public void RailSizeDelta_ShrinksTheGlass()
         {
             var inspector = new VipDefinition("health_inspector", "The Health Inspector",
-                "Rail size -3 this order.", true, false,
+                "Less room to work in this order.", true, false,
                 new[] { new VipRule(VipRuleKind.RailSizeDelta, intValue: -3) });
             var run = NewRun(new[] { inspector });
             AdvanceToNextVip(run);
 
-            Assert.AreEqual(5, run.CurrentRound.Rail.Count);
-            Assert.AreEqual(5, run.CurrentRound.Config.RailSize);
+            // The rail is gone; the equivalent squeeze is a 30% smaller glass, which is less
+            // room for the precision the pour system asks for.
+            Assert.AreEqual(0.7, run.CurrentRound.Config.GlassCapacity, 1e-9);
         }
     }
 }

@@ -8,7 +8,9 @@ namespace LastCall.Core
     {
         OnCardScored,
         OnHandScored,
-        OnRestock,
+        /// <summary>A bottle was refilled in the Back Room (GDD 21 §6).</summary>
+        OnRefill,
+
         OnShopEnter,
 
         /// <summary>A customer sits down and the ID is built — the information patrons' moment.</summary>

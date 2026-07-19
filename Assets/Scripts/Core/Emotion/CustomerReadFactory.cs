@@ -53,7 +53,7 @@ namespace LastCall.Core
 
             var intent = RollIntent(truth, rng, out var direction);
             return new CustomerRead(readings, intent, direction,
-                Demands.For(night, archetypeDemand));
+                Demands.For(night, archetypeDemand), RollFillPreference(intent, rng));
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace LastCall.Core
 
             var intent = RollIntent(truth, rng, out var direction);
             return new CustomerRead(readings, intent, direction,
-                Demands.For(night, archetypeDemand));
+                Demands.For(night, archetypeDemand), RollFillPreference(intent, rng));
         }
 
         /// <summary>Exact beats Range beats Unknown.</summary>
@@ -123,7 +123,7 @@ namespace LastCall.Core
                     readings[i] = rules.ReadOverride == ReadOverride.AllExact
                         ? StatReading.Exact(truth[Emotions.All[i]])
                         : StatReading.Unknown;
-                read = new CustomerRead(readings, read.Intent, read.Direction, read.Demand);
+                read = new CustomerRead(readings, read.Intent, read.Direction, read.Demand, read.FillPreference);
             }
 
             if (rules.OneReadingFalse)
@@ -188,6 +188,23 @@ namespace LastCall.Core
                 direction = natural ? pull : Opposite(pull);
             }
             return intent;
+        }
+
+        /// <summary>
+        /// What they want to be holding (GDD 21 §5). The stat it serves is deliberately not
+        /// the intent stat wherever possible: two objectives pointing at the same number
+        /// would collapse into one, and the second axis exists to give the player something
+        /// else to aim at.
+        /// </summary>
+        private static FillPreference RollFillPreference(Emotion intent, SeededRng rng)
+        {
+            var length = (GlassLength)rng.NextInt(3);
+
+            var candidates = new List<Emotion>(Emotions.Count - 1);
+            foreach (var emotion in Emotions.All)
+                if (emotion != intent) candidates.Add(emotion);
+
+            return new FillPreference(length, candidates[rng.NextInt(candidates.Count)]);
         }
 
         /// <summary>Excitement is the one people come in wanting more of; the rest they want put down.</summary>

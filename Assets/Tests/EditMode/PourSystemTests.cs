@@ -326,8 +326,8 @@ namespace LastCall.Tests
             requirements: Array.Empty<PatternRequirement>(),
             ratioRequirements: new[]
             {
-                new RatioRequirement("gin", 0.70, 0.88),
-                new RatioRequirement("vermouth", 0.12, 0.30),
+                new RatioRequirement(IngredientType.Spirit, 0.70, 0.88),
+                new RatioRequirement(IngredientType.Sweet, 0.12, 0.30),
             },
             minFill: 0.70);
 
@@ -338,6 +338,17 @@ namespace LastCall.Tests
             return glass;
         }
 
+        // Bands are by type, so the matcher needs to know what each poured id *is*.
+        private static readonly Dictionary<string, IngredientCard> Bar = new Dictionary<string, IngredientCard>
+        {
+            ["gin"] = new IngredientCard("gin", "Gin", IngredientType.Spirit, 6),
+            ["vermouth"] = new IngredientCard("vermouth", "Vermouth", IngredientType.Sweet, 4),
+            ["bitters"] = new IngredientCard("bitters", "Bitters", IngredientType.Bitter, 3),
+            ["cola"] = new IngredientCard("cola", "Cola", IngredientType.Bubbly, 4),
+        };
+
+        private static IngredientCard Look(string id) => Bar.TryGetValue(id, out var c) ? c : null;
+
         private static IReadOnlyList<RecipeDefinition> Book => new[] { Martini() };
 
         [Test]
@@ -345,7 +356,7 @@ namespace LastCall.Tests
         {
             // 0.64 + 0.16 fills 80% of the glass at an 80/20 ratio — note the two are not
             // the same number, which is exactly the trap the UI has to keep the player out of.
-            var match = RatioRecipeMatcher.Match(Glass(("gin", 0.64), ("vermouth", 0.16)), Book);
+            var match = RatioRecipeMatcher.Match(Glass(("gin", 0.64), ("vermouth", 0.16)), Book, Look);
 
             Assert.IsNotNull(match);
             Assert.AreEqual("martini", match.Recipe.Id);
@@ -356,7 +367,7 @@ namespace LastCall.Tests
         {
             // Exactly 70/30, both ratios sitting on a band edge. A band the player can see
             // must not have invisible slivers cut off its ends.
-            var match = RatioRecipeMatcher.Match(Glass(("gin", 0.56), ("vermouth", 0.24)), Book);
+            var match = RatioRecipeMatcher.Match(Glass(("gin", 0.56), ("vermouth", 0.24)), Book, Look);
 
             Assert.IsNotNull(match);
         }
@@ -365,7 +376,7 @@ namespace LastCall.Tests
         public void TooLittleInTheGlass_IsNotTheDrink()
         {
             // Right proportions, but only a third of a glass — below the recipe's MinFill.
-            var match = RatioRecipeMatcher.Match(Glass(("gin", 0.24), ("vermouth", 0.06)), Book);
+            var match = RatioRecipeMatcher.Match(Glass(("gin", 0.24), ("vermouth", 0.06)), Book, Look);
 
             Assert.IsNull(match);
         }
@@ -374,7 +385,7 @@ namespace LastCall.Tests
         public void ASplashOfSomethingElse_IsTolerated()
         {
             var match = RatioRecipeMatcher.Match(
-                Glass(("gin", 0.68), ("vermouth", 0.18), ("bitters", 0.05)), Book);
+                Glass(("gin", 0.68), ("vermouth", 0.18), ("bitters", 0.05)), Book, Look);
 
             Assert.IsNotNull(match, "a 5% stray is a bartender's splash");
         }
@@ -385,9 +396,30 @@ namespace LastCall.Tests
             // Both named ratios sit exactly on a band edge, so only the 18% of cola can
             // reject this — which is the point: the stray tolerance is doing the work.
             var match = RatioRecipeMatcher.Match(
-                Glass(("gin", 0.70), ("vermouth", 0.12), ("cola", 0.18)), Book);
+                Glass(("gin", 0.70), ("vermouth", 0.12), ("cola", 0.18)), Book, Look);
 
             Assert.IsNull(match);
+        }
+
+        [Test]
+        public void RecipesWhoseRuleIsNotProportional_StayUnpourable()
+        {
+            // Perfect Serve and Double Perfect list one Spirit slot but really mean "five
+            // distinct types" and "…at one Flavor value". Deriving bands from that partial
+            // pattern gave them "Spirit 85-100%", so a glass of neat whisky matched Double
+            // Perfect — the highest-ranked recipe in the game — for one pour of one bottle.
+            var catalog = RecipeCatalog.CreateDefault();
+
+            foreach (var recipe in catalog)
+            {
+                bool proportional = !recipe.AllDistinctTypes && !recipe.AllEqualFlavor &&
+                                    recipe.EqualFlavorGroupSize == 0 &&
+                                    recipe.AscendingFlavorGroupSize == 0 &&
+                                    recipe.SameTypeGroupMin == 0;
+                if (!proportional)
+                    CollectionAssert.IsEmpty(recipe.RatioRequirements.ToList(),
+                        $"'{recipe.Id}' has a non-proportional rule and must not derive bands");
+            }
         }
 
         [Test]
@@ -414,7 +446,7 @@ namespace LastCall.Tests
         [Test]
         public void ASpilledGlass_MatchesNothing()
         {
-            Assert.IsNull(RatioRecipeMatcher.Match(Glass(("gin", 0.9), ("vermouth", 0.3)), Book));
+            Assert.IsNull(RatioRecipeMatcher.Match(Glass(("gin", 0.9), ("vermouth", 0.3)), Book, Look));
         }
 
         [Test]

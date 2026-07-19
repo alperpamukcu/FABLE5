@@ -96,15 +96,15 @@ namespace LastCall.Tests
             // Same wiring GameBootstrap does in play mode, minus the MonoBehaviour.
             var loaded = DataLoader.ParseDeck(ReadDataFile("decks/classic_bar.json"));
             var recipes = DataLoader.ParseRecipes(ReadDataFile("recipes/recipes.json"));
-            var deck = new Deck(loaded.Cards);
-            deck.Shuffle(new RunRng("SMOKE").GetStream("deck"));
+            var shelf = PourTestKit.NewShelf(loaded.Cards);
 
-            var round = new RoundController(deck, recipes, new CustomerOrder("Smoke", 1));
-            var breakdown = round.Mix(new[] { round.Rail[0] });
+            var round = new RoundController(shelf, recipes, new CustomerOrder("Smoke", 1));
+            round.PourMeasure(shelf.Bottles[0].Id, 0.5);
+            var breakdown = round.Serve();
 
-            Assert.AreEqual(8, round.Config.RailSize);
+            Assert.AreEqual(46, shelf.Count, "48 starter cards, 2 of them duplicates");
             Assert.GreaterOrEqual(breakdown.FinalScore, 0);
-            Assert.AreEqual(3, round.MixesRemaining);
+            Assert.AreEqual(3, round.DrinksRemaining);
         }
 
         [Test]

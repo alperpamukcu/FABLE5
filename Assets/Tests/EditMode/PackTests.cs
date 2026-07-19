@@ -42,7 +42,7 @@ namespace LastCall.Tests
             {
                 if (run.Phase != RunPhase.BackRoom)
                 {
-                    run.Mix(new[] { run.CurrentRound.Rail[0] });
+                    PourTestKit.ServeSomething(run);
                     continue;
                 }
                 var offers = run.Shop.PackOffers;
@@ -67,18 +67,20 @@ namespace LastCall.Tests
 
             Assert.AreEqual(3, run.OpenPack.Options.Count);
             Assert.IsTrue(run.OpenPack.Options.All(o => o.Kind == PackOptionKind.IngredientCard));
+            int shelfBefore = run.Shelf.Count;
             run.PickFromPack(0);
 
             Assert.IsNull(run.OpenPack);
             run.ContinueToNextCustomer();
-            Assert.AreEqual(41, run.CurrentRound.DeckDrawCount, "49 cards total, 8 dealt");
+            // A pack ingredient joins the shelf as a bottle rather than the deck as a card.
+            Assert.AreEqual(shelfBefore + 1, run.Shelf.Count, "the pick is on the shelf");
         }
 
         [Test]
         public void DeepCellar_AddsAFourthCard()
         {
             var run = NewRun(voucherPool: new[] { DeepCellar });
-            run.Mix(new[] { run.CurrentRound.Rail[0] });
+            PourTestKit.ServeSomething(run);
             run.BuyVoucher();
             BuyPackOfKind(run, PackKind.Cellar);
 
@@ -136,7 +138,7 @@ namespace LastCall.Tests
             // Legendary weight is 0 in normal card slots.
             for (int i = 0; i < 40; i++)
             {
-                if (run.Phase != RunPhase.BackRoom) { run.Mix(new[] { run.CurrentRound.Rail[0] }); continue; }
+                if (run.Phase != RunPhase.BackRoom) { PourTestKit.ServeSomething(run); continue; }
                 Assert.IsFalse(run.Shop.Offers.Any(
                         o => o.Kind == ShopOfferKind.Patron && o.Patron.Rarity == PatronRarity.Legendary),
                     "legendaries only via special means");

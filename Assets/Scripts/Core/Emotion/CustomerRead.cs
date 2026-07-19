@@ -25,8 +25,15 @@ namespace LastCall.Core
         /// </summary>
         public DemandLevel Demand { get; }
 
+        /// <summary>
+        /// What kind of drink they want to be holding (GDD 21 §5). Always visible, like the
+        /// intent — it is a second thing to aim at, not a second thing to guess.
+        /// </summary>
+        public FillPreference FillPreference { get; }
+
         public CustomerRead(IReadOnlyList<StatReading> readings, Emotion intent,
-            IntentDirection direction, DemandLevel demand = DemandLevel.Easygoing)
+            IntentDirection direction, DemandLevel demand = DemandLevel.Easygoing,
+            FillPreference fillPreference = default)
         {
             if (readings == null) throw new ArgumentNullException(nameof(readings));
             if (readings.Count != Emotions.Count)
@@ -35,6 +42,7 @@ namespace LastCall.Core
             Intent = intent;
             Direction = direction;
             Demand = demand;
+            FillPreference = fillPreference;
         }
 
         public StatReading this[Emotion emotion] => _readings[(int)emotion];
@@ -54,7 +62,7 @@ namespace LastCall.Core
             var next = new StatReading[Emotions.Count];
             Array.Copy(_readings, next, next.Length);
             next[(int)emotion] = _readings[(int)emotion].Narrowed(trueValue, halfWidth);
-            return new CustomerRead(next, Intent, Direction, Demand);
+            return new CustomerRead(next, Intent, Direction, Demand, FillPreference);
         }
 
         /// <summary>
@@ -66,7 +74,7 @@ namespace LastCall.Core
             var next = new StatReading[Emotions.Count];
             Array.Copy(_readings, next, next.Length);
             next[(int)emotion] = reading;
-            return new CustomerRead(next, Intent, Direction, Demand);
+            return new CustomerRead(next, Intent, Direction, Demand, FillPreference);
         }
 
         /// <summary>

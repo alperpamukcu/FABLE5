@@ -5,7 +5,11 @@ using NUnit.Framework;
 
 namespace LastCall.Tests
 {
-    /// <summary>The four late enhancements (GDD 3.3 rulings): Premium, Frozen, Doubled, Golden.</summary>
+    /// <summary>
+    /// The late enhancements (GDD 3.3 rulings). Premium's wildcard matching still applies to
+    /// the card-era <see cref="RecipeMatcher"/>, which survives unused until Phase 5 authors
+    /// ratio bands for the recipe table.
+    /// </summary>
     public class EnhancementsTests
     {
         private static readonly IReadOnlyList<RecipeDefinition> Recipes = RecipeCatalog.CreateDefault();
@@ -97,92 +101,10 @@ namespace LastCall.Tests
             Assert.IsTrue(breakdown.Steps.Any(s => s.Op == EffectOp.MultMult && s.Source.Contains("Frozen")));
         }
 
-        [Test]
-        public void FrozenShatter_IsSeedDeterministic_AndDestroysTheCard()
-        {
-            bool ShatterOutcome(ulong seed)
-            {
-                var round = new RoundController(new Deck(SpiritCards(9)), Recipes,
-                    new CustomerOrder("T", 100000), shatterRng: new SeededRng(seed));
-                var frozen = round.Rail[0];
-                frozen.Enhance(Enhancement.Frozen);
-                round.Mix(new[] { frozen });
-
-                bool shattered = round.LastShatteredCards.Count == 1;
-                // A shattered card leaves the run for good; otherwise it discards normally.
-                Assert.AreEqual(shattered ? 0 : 1, round.DeckDiscardCount);
-                return shattered;
-            }
-
-            int shatters = 0;
-            for (ulong seed = 1; seed <= 40; seed++)
-                if (ShatterOutcome(seed)) shatters++;
-
-            Assert.That(shatters, Is.InRange(1, 39), "roughly 1-in-4 must shatter across seeds");
-            Assert.AreEqual(ShatterOutcome(7), ShatterOutcome(7), "same seed, same outcome");
-        }
-
-        [Test]
-        public void Frozen_NeverShatters_WithoutARunRng()
-        {
-            var round = new RoundController(new Deck(SpiritCards(9)), Recipes,
-                new CustomerOrder("T", 100000));
-            round.Rail[0].Enhance(Enhancement.Frozen);
-            round.Mix(new[] { round.Rail[0] });
-
-            Assert.IsEmpty(round.LastShatteredCards);
-        }
-
-        // ── Doubled (permanent plain copy on score) ──────────────────────────────
-
-        [Test]
-        public void Doubled_MintsAPlainPermanentCopy_WhenScored()
-        {
-            var round = new RoundController(new Deck(SpiritCards(9)), Recipes,
-                new CustomerOrder("T", 100000));
-            var doubled = round.Rail[0];
-            doubled.Enhance(Enhancement.Doubled);
-            round.Mix(new[] { doubled });
-
-            Assert.AreEqual(1, round.LastDoubledCopies.Count);
-            var copy = round.LastDoubledCopies[0];
-            Assert.AreEqual(doubled.Id, copy.Id);
-            Assert.AreNotEqual(doubled.InstanceId, copy.InstanceId);
-            Assert.AreEqual(Enhancement.None, copy.Enhancement, "copies must not re-copy");
-            Assert.AreEqual(2, round.DeckDiscardCount, "original + copy both land in the deck");
-        }
-
-        [Test]
-        public void VoidedMix_TriggersNoShatterOrDouble()
-        {
-            var rules = new VipRuleSet(null, true, 0, false); // only the first Mix counts
-            var round = new RoundController(new Deck(SpiritCards(10)), Recipes,
-                new CustomerOrder("T", 100000), vipRules: rules);
-            var doubled = round.Rail[0];
-            doubled.Enhance(Enhancement.Doubled);
-
-            round.Mix(new[] { round.Rail[1] });
-            var voided = round.Mix(new[] { doubled });
-
-            Assert.IsTrue(voided.IsVoided);
-            Assert.IsEmpty(round.LastDoubledCopies);
-            Assert.AreEqual(2, round.DeckDiscardCount, "both cards discard, no copy is minted");
-        }
-
-        // ── Golden ($3 per card held on the rail at customer end) ────────────────
-
-        [Test]
-        public void Golden_PaysPerRailCard_WhenTheCustomerIsSatisfied()
-        {
-            var run = new RunController(SpiritCards(48), Recipes, new RunRng("GOLD"), null,
-                new RunConfig(targetProvider: (n, s) => 10));
-            run.CurrentRound.Rail[1].Enhance(Enhancement.Golden);
-            run.CurrentRound.Rail[2].Enhance(Enhancement.Golden);
-
-            run.Mix(new[] { run.CurrentRound.Rail[0] }); // Neat Pour 11 ≥ 10 wins
-
-            Assert.AreEqual(6, run.LastTips.GoldenBonus, "two Golden cards on the rail pay $3 each");
-            Assert.IsTrue(run.LastTips.Total >= 6);
-        }
+        // Frozen's 1-in-4 shatter, Doubled's minted copy and Golden's per-rail-card payout
+        // were all card-*instance* behaviour: they destroyed, duplicated or counted specific
+        // cards in a hand. Shelf bottles are not instances and there is no rail to hold
+        // anything at customer end, so those three are casualties of the pour pivot — see the
+        // list in Docs/PLAN_pour_pivot.md. Frozen's x2 Mult survives and is covered above.
     }
 }

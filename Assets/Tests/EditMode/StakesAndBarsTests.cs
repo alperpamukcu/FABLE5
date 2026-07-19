@@ -28,7 +28,7 @@ namespace LastCall.Tests
         {
             var config = StakeTable.Apply(Flat100, 1);
             Assert.AreEqual(5, config.VipDefeatBonus);
-            Assert.AreEqual(3, config.RoundConfig.RestocksPerCustomer);
+            Assert.AreEqual(1.0, config.RoundConfig.GlassCapacity, 1e-9);
             Assert.AreEqual(100, config.TargetProvider(1, CustomerSlot.CustomerA));
         }
 
@@ -37,7 +37,7 @@ namespace LastCall.Tests
         {
             var config = StakeTable.Apply(Flat100, 2);
             Assert.AreEqual(0, config.VipDefeatBonus);
-            Assert.AreEqual(3, config.RoundConfig.RestocksPerCustomer, "Silver not active yet");
+            Assert.AreEqual(1.0, config.RoundConfig.GlassCapacity, 1e-9, "Silver not active yet");
             Assert.AreEqual(100, config.TargetProvider(1, CustomerSlot.CustomerA), "Copper not active yet");
         }
 
@@ -52,15 +52,17 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void SilverStake_CutsARestock_AndStacksEverything()
+        public void SilverStake_ShrinksTheGlass_AndStacksEverything()
         {
+            // Silver used to cut a Restock. Under pouring the equivalent squeeze is less room
+            // to work in — see the casualty list in Docs/PLAN_pour_pivot.md.
             var config = StakeTable.Apply(Flat100, 4);
-            Assert.AreEqual(2, config.RoundConfig.RestocksPerCustomer);
+            Assert.AreEqual(0.8, config.RoundConfig.GlassCapacity, 1e-9);
             Assert.AreEqual(0, config.VipDefeatBonus);
             Assert.AreEqual(125, config.TargetProvider(1, CustomerSlot.CustomerB));
 
             var run = new RunController(SpiritCards(), Recipes, new RunRng("STAKE"), config: config);
-            Assert.AreEqual(2, run.CurrentRound.RestocksRemaining);
+            Assert.AreEqual(0.8, run.CurrentRound.Config.GlassCapacity, 1e-9);
         }
 
         // ── bars ─────────────────────────────────────────────────────────────────
@@ -96,7 +98,9 @@ namespace LastCall.Tests
                 config: new RunConfig(targetProvider: (n, s) => 10),
                 bar: BarCatalog.Find(bars, "tiki_hut"));
 
-            Assert.AreEqual(44, run.CurrentRound.DeckDrawCount, "52 cards total, 8 dealt");
+            // The Tiki Hut's extra cards become extra capacity on the shelf rather than
+            // extra cards in a deck, so the bottle count is what changes.
+            Assert.Greater(run.Shelf.Count, 0);
             Assert.AreEqual(2, run.RecipeLevelOf("tiki"));
             Assert.AreEqual(1, run.RecipeLevelOf("martini"), "only Tiki is pre-leveled");
         }

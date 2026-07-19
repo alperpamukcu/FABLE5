@@ -6,170 +6,218 @@ using NUnit.Framework;
 
 namespace LastCall.Tests
 {
+    /// <summary>
+    /// The customer round under the pour system (GDD 21): hold a bottle, watch the glass,
+    /// serve it. Rewritten wholesale from the card-era suite — the round no longer deals a
+    /// rail, selects cards or restocks, so almost nothing carried over except the win/close
+    /// conditions and the preview guarantees.
+    /// </summary>
     public class RoundControllerTests
     {
         private static readonly IReadOnlyList<RecipeDefinition> Recipes = RecipeCatalog.CreateDefault();
 
-        private static IngredientCard Card(IngredientType type, int flavor) =>
-            new IngredientCard($"{type}_{flavor}", $"{type} {flavor}", type, flavor);
+        private static IngredientCard Card(string id, IngredientType type, int flavor) =>
+            new IngredientCard(id, id, type, flavor);
 
-        /// <summary>An unshuffled deck of identical-type cards so rail contents are predictable.</summary>
-        private static Deck SpiritDeck(int count, int flavor = 6) =>
-            new Deck(Enumerable.Range(0, count).Select(_ => Card(IngredientType.Spirit, flavor)));
+        private static Shelf SpiritShelf(int bottles = 6, int flavor = 6, double capacity = 20) =>
+            new Shelf(Enumerable.Range(0, bottles)
+                .Select(i => new ShelfBottle(Card($"spirit_{i}", IngredientType.Spirit, flavor), capacity)));
 
-        private static RoundController NewRound(Deck deck, double target = 1000, RoundConfig config = null) =>
-            new RoundController(deck, Recipes, new CustomerOrder("Test", target), config);
+        private static RoundController NewRound(Shelf shelf = null, double target = 1000,
+            RoundConfig config = null) =>
+            new RoundController(shelf ?? SpiritShelf(), Recipes,
+                new CustomerOrder("Test", target), config);
+
+        // ── pouring ──────────────────────────────────────────────────────────────
 
         [Test]
-        public void Start_FillsRailToConfiguredSize()
+        public void ARoundStarts_WithAnEmptyGlassAndNothingHeld()
         {
-            var round = NewRound(SpiritDeck(48));
-            Assert.AreEqual(8, round.Rail.Count);
-            Assert.AreEqual(4, round.MixesRemaining);
-            Assert.AreEqual(3, round.RestocksRemaining);
+            var round = NewRound();
+
+            Assert.IsTrue(round.Glass.IsEmpty);
+            Assert.IsNull(round.PouringId);
+            Assert.AreEqual(4, round.DrinksRemaining);
             Assert.AreEqual(RoundPhase.InProgress, round.Phase);
         }
 
         [Test]
-        public void Mix_Scores_Consumes_AndRefills()
+        public void HoldingABottle_MovesVolumeOverTime()
         {
-            var round = NewRound(SpiritDeck(48, flavor: 6));
-            var selection = new[] { round.Rail[0] };
+            var round = NewRound();
+            var bottle = round.Shelf.Bottles[0];
 
-            var breakdown = round.Mix(selection); // Neat Pour: (5 + 6) x 1 = 11
+            round.BeginPour(bottle.Id);
+            double poured = round.PourTick(1.0);
+            round.EndPour();
 
-            Assert.AreEqual(11, breakdown.FinalScore);
-            Assert.AreEqual(11, round.AccumulatedScore);
-            Assert.AreEqual(3, round.MixesRemaining);
-            Assert.AreEqual(8, round.Rail.Count, "rail refills after a non-terminal mix");
-            CollectionAssert.DoesNotContain(round.Rail.ToList(), selection[0]);
+            Assert.AreEqual(bottle.PourRate, poured, 1e-9, "one second at the bottle's rate");
+            Assert.AreEqual(poured, round.Glass.TotalVolume, 1e-9);
+            Assert.IsNull(round.PouringId, "released");
         }
 
         [Test]
-        public void Mix_ReachingTarget_WinsImmediately()
+        public void PouringTwoBottles_BuildsARatio()
         {
-            var round = NewRound(SpiritDeck(48, flavor: 6), target: 10);
-            round.Mix(new[] { round.Rail[0] }); // 11 >= 10
+            var round = NewRound();
+            var a = round.Shelf.Bottles[0].Id;
+            var b = round.Shelf.Bottles[1].Id;
+
+            round.PourMeasure(a, 0.7);
+            round.PourMeasure(b, 0.3);
+
+            Assert.AreEqual(0.7, round.Glass.RatioOf(a), 1e-9);
+            Assert.AreEqual(0.3, round.Glass.RatioOf(b), 1e-9);
+        }
+
+        [Test]
+        public void PouringPastTheBrim_Spills_AndTheGlassCannotBeServed()
+        {
+            var round = NewRound();
+
+            round.PourMeasure(round.Shelf.Bottles[0].Id, round.Config.GlassCapacity + 0.1);
+
+            Assert.IsTrue(round.Glass.IsOverflowing);
+            Assert.Throws<InvalidOperationException>(() => round.Serve());
+        }
+
+        [Test]
+        public void BinningASpill_ClearsTheGlass_AndCountsAgainstYou()
+        {
+            var round = NewRound();
+            round.PourMeasure(round.Shelf.Bottles[0].Id, round.Config.GlassCapacity + 0.1);
+
+            round.Discard();
+
+            Assert.IsTrue(round.Glass.IsEmpty);
+            Assert.AreEqual(1, round.Spills);
+            Assert.AreEqual(4, round.DrinksRemaining, "a spill costs volume, not the customer's patience");
+        }
+
+        [Test]
+        public void AnEmptyBottle_StopsTheHeldPour()
+        {
+            var round = NewRound(SpiritShelf(bottles: 2, capacity: 0.2));
+            var bottle = round.Shelf.Bottles[0];
+
+            round.BeginPour(bottle.Id);
+            round.PourTick(10.0);
+
+            Assert.IsTrue(bottle.IsEmpty);
+            Assert.IsNull(round.PouringId, "nothing left to hold");
+            Assert.AreEqual(0.2, round.Glass.TotalVolume, 1e-9, "you get what was left");
+        }
+
+        [Test]
+        public void PouringSomethingNotOnTheShelf_Throws()
+        {
+            var round = NewRound();
+            Assert.Throws<ArgumentException>(() => round.BeginPour("absinthe"));
+        }
+
+        // ── serving ──────────────────────────────────────────────────────────────
+
+        [Test]
+        public void ServingScores_ClearsTheGlass_AndSpendsADrink()
+        {
+            var round = NewRound();
+            round.PourMeasure(round.Shelf.Bottles[0].Id, 0.6);
+
+            var breakdown = round.Serve();
+
+            Assert.GreaterOrEqual(breakdown.FinalScore, 0);
+            Assert.IsTrue(round.Glass.IsEmpty);
+            Assert.AreEqual(3, round.DrinksRemaining);
+        }
+
+        [Test]
+        public void AnEmptyGlass_CannotBeServed()
+        {
+            var round = NewRound();
+            Assert.Throws<InvalidOperationException>(() => round.Serve());
+        }
+
+        [Test]
+        public void ReachingTheTarget_WinsImmediately()
+        {
+            var round = NewRound(target: 1);
+            round.PourMeasure(round.Shelf.Bottles[0].Id, 0.6);
+
+            round.Serve();
 
             Assert.AreEqual(RoundPhase.Won, round.Phase);
         }
 
         [Test]
-        public void Mix_ExhaustingMixesBelowTarget_ClosesTheVisit()
+        public void RunningOutOfDrinksBelowTarget_ClosesTheVisit()
         {
-            var round = NewRound(SpiritDeck(48, flavor: 6), target: 100000);
-            for (int i = 0; i < 4; i++) round.Mix(new[] { round.Rail[0] });
+            var round = NewRound(target: 100000);
+            for (int i = 0; i < 4; i++)
+            {
+                round.PourMeasure(round.Shelf.Bottles[0].Id, 0.4);
+                round.Serve();
+            }
 
             Assert.AreEqual(RoundPhase.Closed, round.Phase);
-            Assert.AreEqual(0, round.MixesRemaining);
+            Assert.AreEqual(0, round.DrinksRemaining);
         }
 
         [Test]
-        public void Mix_WithNoRecipe_ScoresZero_ButConsumesTheMix()
+        public void ActingAfterTheRoundIsOver_Throws()
         {
-            var cards = Enumerable.Range(0, 16)
-                .Select(i => Card(i % 2 == 0 ? IngredientType.Sour : IngredientType.Sweet, 4));
-            var round = NewRound(new Deck(cards));
+            var round = NewRound(target: 1);
+            round.PourMeasure(round.Shelf.Bottles[0].Id, 0.6);
+            round.Serve(); // wins
 
-            var breakdown = round.Mix(new[] { round.Rail[0], round.Rail[1] });
-
-            Assert.AreEqual(0, breakdown.FinalScore);
-            Assert.IsNull(breakdown.Recipe);
-            Assert.AreEqual(3, round.MixesRemaining);
+            Assert.Throws<InvalidOperationException>(() => round.BeginPour(round.Shelf.Bottles[0].Id));
+            Assert.Throws<InvalidOperationException>(() => round.Serve());
         }
 
-        [Test]
-        public void Mix_WhenDeckRunsDry_RailShrinks()
-        {
-            var round = NewRound(SpiritDeck(8)); // rail takes all 8, draw pile empty
-            var selection = round.Rail.Take(5).ToArray();
-
-            round.Mix(selection);
-
-            Assert.AreEqual(3, round.Rail.Count);
-            Assert.AreEqual(RoundPhase.InProgress, round.Phase);
-        }
+        // ── previews ─────────────────────────────────────────────────────────────
 
         [Test]
-        public void Restock_SwapsCards_AndDecrements()
+        public void PreviewScore_MatchesTheServe_WithoutConsuming()
         {
-            var round = NewRound(SpiritDeck(48));
-            var selection = round.Rail.Take(3).ToArray();
+            var round = NewRound();
+            round.PourMeasure(round.Shelf.Bottles[0].Id, 0.6);
 
-            round.Restock(selection);
+            var preview = round.PreviewScore();
+            Assert.AreEqual(4, round.DrinksRemaining, "previewing spends nothing");
+            Assert.IsFalse(round.Glass.IsEmpty, "…and pours nothing away");
 
-            Assert.AreEqual(8, round.Rail.Count);
-            Assert.AreEqual(2, round.RestocksRemaining);
-            Assert.AreEqual(4, round.MixesRemaining, "restock must not consume a mix");
-            foreach (var card in selection)
-                CollectionAssert.DoesNotContain(round.Rail.ToList(), card);
-        }
-
-        [Test]
-        public void Restock_WithNoneRemaining_Throws()
-        {
-            var round = NewRound(SpiritDeck(48), config: new RoundConfig(restocksPerCustomer: 0));
-            Assert.Throws<InvalidOperationException>(() => round.Restock(new[] { round.Rail[0] }));
-        }
-
-        [Test]
-        public void ActingAfterRoundOver_Throws()
-        {
-            var round = NewRound(SpiritDeck(48, flavor: 6), target: 10);
-            round.Mix(new[] { round.Rail[0] }); // wins
-
-            Assert.Throws<InvalidOperationException>(() => round.Mix(new[] { round.Rail[0] }));
-            Assert.Throws<InvalidOperationException>(() => round.Restock(new[] { round.Rail[0] }));
-        }
-
-        [Test]
-        public void Selection_Validation()
-        {
-            var round = NewRound(SpiritDeck(48));
-            var stranger = Card(IngredientType.Spirit, 5);
-
-            Assert.Throws<ArgumentException>(() => round.Mix(new IngredientCard[0]), "empty selection");
-            Assert.Throws<ArgumentException>(() => round.Mix(round.Rail.Take(6).ToArray()), "more than 5 cards");
-            Assert.Throws<ArgumentException>(() => round.Mix(new[] { stranger }), "card not on the rail");
-            Assert.Throws<ArgumentException>(() => round.Mix(new[] { round.Rail[0], round.Rail[0] }), "duplicate card");
-            Assert.AreEqual(4, round.MixesRemaining, "failed validation must not consume a mix");
-        }
-
-        [Test]
-        public void PreviewMatch_DoesNotConsumeAnything()
-        {
-            var round = NewRound(SpiritDeck(48));
-            var match = round.PreviewMatch(new[] { round.Rail[0] });
-
-            Assert.AreEqual("neat_pour", match.Recipe.Id);
-            Assert.AreEqual(4, round.MixesRemaining);
-            Assert.AreEqual(8, round.Rail.Count);
-        }
-
-        [Test]
-        public void PreviewScore_MatchesActualMixScore_WithoutConsuming()
-        {
-            var round = NewRound(SpiritDeck(48, flavor: 6));
-            var selection = new[] { round.Rail[0] };
-
-            var preview = round.PreviewScore(selection);
-            Assert.AreEqual(4, round.MixesRemaining);
-
-            var actual = round.Mix(selection);
-            Assert.AreEqual(preview.FinalScore, actual.FinalScore);
+            var actual = round.Serve();
+            Assert.AreEqual(preview.FinalScore, actual.FinalScore, 1e-9);
         }
 
         [Test]
         public void RecipeLevels_AreAppliedWhenProvided()
         {
+            // A glass of nothing but Spirit is a Neat Pour, whose bands are derived from its
+            // "1 Spirit alone" pattern.
             var levels = new Dictionary<string, int> { ["neat_pour"] = 2 };
-            var deck = SpiritDeck(48, flavor: 6);
-            var round = new RoundController(deck, Recipes, new CustomerOrder("Test", 1000),
-                recipeLevels: levels);
+            var leveled = new RoundController(SpiritShelf(), Recipes,
+                new CustomerOrder("Test", 1e9), recipeLevels: levels);
+            var plain = new RoundController(SpiritShelf(), Recipes, new CustomerOrder("Test", 1e9));
 
-            // Level 2 Neat Pour: base 5+10=15 Flavor, 1+1=2 Mult => (15+6) x 2 = 42.
-            var breakdown = round.Mix(new[] { round.Rail[0] });
-            Assert.AreEqual(42, breakdown.FinalScore);
+            leveled.PourMeasure(leveled.Shelf.Bottles[0].Id, 0.6);
+            plain.PourMeasure(plain.Shelf.Bottles[0].Id, 0.6);
+
+            Assert.Greater(leveled.Serve().FinalScore, plain.Serve().FinalScore,
+                "a levelled recipe scores more for the same pour");
+        }
+
+        [Test]
+        public void GlasswareCapacity_ChangesWhatAFullPourMeans()
+        {
+            var small = NewRound(config: new RoundConfig(glassCapacity: 1.0));
+            var large = NewRound(config: new RoundConfig(glassCapacity: 2.0));
+
+            small.PourMeasure(small.Shelf.Bottles[0].Id, 1.0);
+            large.PourMeasure(large.Shelf.Bottles[0].Id, 1.0);
+
+            Assert.AreEqual(1.0, small.Glass.FillFraction, 1e-9);
+            Assert.AreEqual(0.5, large.Glass.FillFraction, 1e-9);
+            Assert.IsFalse(small.Glass.IsOverflowing, "exactly full is not a spill");
         }
     }
 }

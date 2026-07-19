@@ -20,51 +20,57 @@ namespace LastCall.Core
     }
 
     /// <summary>
-    /// One customer round (GDD 00, per-customer loop): the rail is filled to
-    /// <see cref="RoundConfig.RailSize"/>, the player Mixes (scores) or Restocks (discards)
-    /// selections of 1–5 cards, and the round ends Won when the accumulated score reaches
-    /// the order's target or Lost when the last Mix falls short.
-    /// The caller owns deck shuffling; this class never touches randomness.
+    /// One customer round under the pour system (GDD 21). The player holds bottles from the
+    /// <see cref="Shelf"/> to build a drink in the glass, then serves it. Each serve scores,
+    /// moves the customer's emotions, and counts against the drinks they will accept.
+    ///
+    /// Replaces the card-era round: there is no deck, no rail and no Restock. Scarcity comes
+    /// from bottles running dry (run-level) and from spilling (round-level).
+    /// This class never touches randomness.
     /// Patron slot order = roster list order (gameplay-relevant, GDD 08).
     /// </summary>
     public sealed class RoundController
     {
-        private readonly Deck _deck;
+        private readonly Shelf _shelf;
         private readonly IReadOnlyList<RecipeDefinition> _recipes;
         private readonly IReadOnlyDictionary<string, int> _recipeLevels;
         private readonly IReadOnlyList<PatronInstance> _patrons;
-        private readonly List<IngredientCard> _rail = new List<IngredientCard>();
-        private readonly HashSet<string> _mixedRecipeIds = new HashSet<string>();
-        private readonly SeededRng _shatterRng;
+        private readonly HashSet<string> _servedRecipeIds = new HashSet<string>();
         private readonly int _night;
         private int _chatsSpent;
-        private readonly List<IngredientCard> _lastShattered = new List<IngredientCard>();
-        private readonly List<IngredientCard> _lastDoubledCopies = new List<IngredientCard>();
 
         public CustomerOrder Customer { get; }
         public RoundConfig Config { get; }
-        public IReadOnlyList<IngredientCard> Rail => _rail;
-        public int MixesRemaining { get; private set; }
-        public int RestocksRemaining { get; private set; }
+
+        /// <summary>Everything behind the bar; always available, and it drains.</summary>
+        public Shelf Shelf => _shelf;
+
+        /// <summary>What is in the glass right now (GDD 21 §3).</summary>
+        public GlassContents Glass { get; private set; }
+
+        /// <summary>The bottle currently being poured, or null.</summary>
+        public string PouringId { get; private set; }
+
+        /// <summary>Drinks this customer will still accept.</summary>
+        public int DrinksRemaining { get; private set; }
+
         public double AccumulatedScore { get; private set; }
         public RoundPhase Phase { get; private set; }
-        public int DeckDrawCount => _deck.DrawCount;
-        public int DeckDiscardCount => _deck.DiscardCount;
-        public int MixesUsed => Config.MixesPerCustomer - MixesRemaining;
 
-        /// <summary>
-        /// Restocks actually spent churning the rail. Chats are paid for out of the same
-        /// budget but deliberately excluded: patron conditions keyed on restocks are about
-        /// burning through cards, and listening to someone is not that
-        /// (<c>Docs/PLAN_emotion_pivot.md</c> D8).
-        /// </summary>
-        public int RestocksUsed => Config.RestocksPerCustomer - RestocksRemaining - _chatsSpent;
+        public int DrinksServed => Config.DrinksPerCustomer - DrinksRemaining;
+
+        /// <summary>Kept under its old name because patron conditions read it (GDD 13).</summary>
+        public int MixesUsed => DrinksServed;
+
+        /// <summary>Glasses spilled this visit. The pour system's own mistake counter.</summary>
+        public int Spills { get; private set; }
+
         public IReadOnlyList<PatronInstance> Patrons => _patrons;
 
-        /// <summary>Chats left this visit (GDD 19 §8); each one spends a Restock charge.</summary>
+        /// <summary>Chats left this visit (GDD 19 §8); each one costs a drink slot.</summary>
         public int ChatsRemaining { get; private set; }
 
-        /// <summary>Verdict on the most recent Mix; null before the first one.</summary>
+        /// <summary>Verdict on the most recent serve; null before the first one.</summary>
         public ResonanceResult LastResonance { get; private set; }
 
         /// <summary>Satisfaction this visit has earned toward the week's quota (GDD 19 §10).</summary>
@@ -76,57 +82,109 @@ namespace LastCall.Core
         /// <summary>The active VIP rules; <see cref="VipRuleSet.Empty"/> for regular customers.</summary>
         public VipRuleSet VipRules { get; }
 
-        /// <summary>Frozen cards destroyed by the shatter roll of the most recent Mix.</summary>
-        public IReadOnlyList<IngredientCard> LastShatteredCards => _lastShattered;
-
-        /// <summary>Permanent copies minted by Doubled cards in the most recent Mix.</summary>
-        public IReadOnlyList<IngredientCard> LastDoubledCopies => _lastDoubledCopies;
-
-        public RoundController(Deck deck, IReadOnlyList<RecipeDefinition> recipes,
+        public RoundController(Shelf shelf, IReadOnlyList<RecipeDefinition> recipes,
             CustomerOrder customer, RoundConfig config = null,
             IReadOnlyDictionary<string, int> recipeLevels = null,
             IReadOnlyList<PatronInstance> patrons = null,
-            VipRuleSet vipRules = null, SeededRng shatterRng = null, int night = 1)
+            VipRuleSet vipRules = null, int night = 1)
         {
             _night = night;
-            _deck = deck ?? throw new ArgumentNullException(nameof(deck));
+            _shelf = shelf ?? throw new ArgumentNullException(nameof(shelf));
             _recipes = recipes ?? throw new ArgumentNullException(nameof(recipes));
             Customer = customer ?? throw new ArgumentNullException(nameof(customer));
             Config = config ?? RoundConfig.Default;
             _recipeLevels = recipeLevels;
             _patrons = patrons ?? Array.Empty<PatronInstance>();
             VipRules = vipRules ?? VipRuleSet.Empty;
-            _shatterRng = shatterRng; // null = Frozen cards never shatter (bench setups)
 
-            MixesRemaining = Config.MixesPerCustomer;
-            RestocksRemaining = Config.RestocksPerCustomer;
+            DrinksRemaining = Config.DrinksPerCustomer;
             ChatsRemaining = Customer.HasEmotion ? Config.ChatsPerCustomer : 0;
             Phase = RoundPhase.InProgress;
-            FillRail();
+            Glass = new GlassContents(Config.GlassCapacity);
         }
 
-        /// <summary>Non-consuming lookup for the UI's live "this would be a Martini" label.</summary>
-        public RecipeMatch PreviewMatch(IReadOnlyList<IngredientCard> selection) =>
-            selection == null || selection.Count == 0 || selection.Count > Config.MaxMixSelection
-                ? null
-                : RecipeMatcher.Match(selection, _recipes);
+        // ── pouring ──────────────────────────────────────────────────────────────
+
+        /// <summary>Starts pouring a bottle. Holding a second bottle switches to it.</summary>
+        public void BeginPour(string ingredientId)
+        {
+            EnsureRoundInProgress();
+            if (Glass.IsOverflowing)
+                throw new InvalidOperationException("The glass has spilled — bin it first.");
+            if (_shelf.Find(ingredientId) == null)
+                throw new ArgumentException($"No '{ingredientId}' on the shelf.", nameof(ingredientId));
+            PouringId = ingredientId;
+        }
 
         /// <summary>
-        /// Non-consuming full score preview. Runs the same engine path as Mix, but scaling
+        /// Advances the current pour by <paramref name="seconds"/>. Returns the volume that
+        /// actually went in — less than asked when the bottle runs dry, which is not a
+        /// failure (PLAN P7). Pouring past the brim spills; the glass keeps the overflow so
+        /// the UI can show it, and <see cref="Serve"/> refuses it.
+        /// </summary>
+        public double PourTick(double seconds)
+        {
+            EnsureRoundInProgress();
+            if (PouringId == null || seconds <= 0) return 0;
+
+            var bottle = _shelf.Find(PouringId);
+            double poured = _shelf.PourInto(Glass, PouringId, bottle.PourRate * seconds);
+            if (bottle.IsEmpty) PouringId = null;      // nothing left to hold
+            return poured;
+        }
+
+        public void EndPour() => PouringId = null;
+
+        /// <summary>
+        /// Pours an exact measure in one go. This is the tap-to-measure input mode
+        /// (GDD 21 §10) — hold-to-pour is unusable for some players, so a discrete measure is
+        /// a required alternative, not a convenience. Returns the volume that went in.
+        /// </summary>
+        public double PourMeasure(string ingredientId, double volume)
+        {
+            EnsureRoundInProgress();
+            if (Glass.IsOverflowing)
+                throw new InvalidOperationException("The glass has spilled — bin it first.");
+            if (_shelf.Find(ingredientId) == null)
+                throw new ArgumentException($"No '{ingredientId}' on the shelf.", nameof(ingredientId));
+            if (volume <= 0) return 0;
+            return _shelf.PourInto(Glass, ingredientId, volume);
+        }
+
+        /// <summary>Bins the glass. The volume is gone; a spill is cleared this way too.</summary>
+        public void Discard()
+        {
+            EnsureRoundInProgress();
+            if (Glass.IsOverflowing) Spills++;
+            PouringId = null;
+            Glass = new GlassContents(Config.GlassCapacity);
+        }
+
+        // ── previews ─────────────────────────────────────────────────────────────
+
+        /// <summary>Non-consuming lookup for the UI's live "this would be a Martini" label.</summary>
+        public RecipeMatch PreviewMatch() =>
+            RatioRecipeMatcher.Match(Glass, _recipes, IngredientOf);
+
+        /// <summary>
+        /// Non-consuming full score preview. Runs the same engine path as Serve, but scaling
         /// patrons must not grow from previews, so accumulator changes are rolled back.
         /// </summary>
-        public ScoreBreakdown PreviewScore(IReadOnlyList<IngredientCard> selection)
+        public ScoreBreakdown PreviewScore()
         {
-            var match = PreviewMatch(selection);
-            if (match == null) return ScoreBreakdown.NoRecipe;
-            if (IsVoidedByVipRule(match, out string voidReason))
+            if (Glass.IsEmpty || Glass.IsOverflowing) return ScoreBreakdown.NoRecipe;
+
+            var match = PreviewMatch();
+            if (match != null && IsVoidedByVipRule(match, out string voidReason))
                 return ScoreBreakdown.Voided(match.Recipe, LevelOf(match), voidReason);
 
             var accumulatedBefore = new double[_patrons.Count];
             for (int i = 0; i < _patrons.Count; i++) accumulatedBefore[i] = _patrons[i].Accumulated;
 
-            var breakdown = ScoringEngine.Score(match, LevelOf(match), _patrons,
-                BuildContext(selection, match), PreviewResonance(selection));
+            var breakdown = match == null
+                ? ScoreBreakdown.NoRecipeWith(PreviewResonance())
+                : ScoringEngine.Score(match, LevelOf(match), _patrons,
+                    BuildContext(match), PreviewResonance());
 
             for (int i = 0; i < _patrons.Count; i++)
             {
@@ -136,89 +194,92 @@ namespace LastCall.Core
             return breakdown;
         }
 
-        /// <summary>Plays the selection as a cocktail. Returns the breakdown (zero score if no recipe matched).</summary>
-        public ScoreBreakdown Mix(IReadOnlyList<IngredientCard> selection)
-        {
-            EnsureRoundInProgress();
-            ValidateSelection(selection);
-
-            var match = RecipeMatcher.Match(selection, _recipes);
-            ScoreBreakdown breakdown;
-            if (match != null && IsVoidedByVipRule(match, out string voidReason))
-            {
-                // Voided mixes still consume the attempt and the cards — the rule text
-                // is on the ticket; ignoring it is the player's mistake (GDD 6). The drink
-                // never reaches the customer, so it says nothing to them either.
-                breakdown = ScoreBreakdown.Voided(match.Recipe, LevelOf(match), voidReason);
-                LastResonance = null;
-            }
-            else
-            {
-                var resonance = JudgeServe(selection, match);
-                LastResonance = resonance;
-                breakdown = match == null
-                    ? ScoreBreakdown.NoRecipeWith(resonance)
-                    : ScoringEngine.Score(match, LevelOf(match), _patrons,
-                        BuildContext(selection, match), resonance);
-                CommitServe(resonance);
-            }
-            if (match != null) _mixedRecipeIds.Add(match.Recipe.Id);
-            AccumulatedScore += breakdown.FinalScore;
-
-            RemoveFromRail(selection);
-            _deck.Discard(ResolveScoredEnhancements(selection, match, breakdown.IsVoided));
-            MixesRemaining--;
-
-            if (AccumulatedScore >= Customer.TargetScore)
-            {
-                Phase = RoundPhase.Won;
-                var endContext = new EffectContext(null, null, MixesUsed, RestocksUsed);
-                PatronTriggers.ResolveAccumulation(EffectTrigger.OnCustomerEnd, _patrons, endContext);
-                PatronPayout = PatronTriggers.ResolveMoney(EffectTrigger.OnCustomerEnd, _patrons, endContext);
-            }
-            else if (MixesRemaining == 0)
-            {
-                Phase = RoundPhase.Closed;
-            }
-            else
-            {
-                FillRail();
-            }
-
-            return breakdown;
-        }
-
         /// <summary>
-        /// Non-consuming projection of what a selection would do to the customer — the
-        /// pre-commit preview on the ID card (GDD 19 §5). Returns the raw, unclamped delta:
-        /// the UI needs to be able to show an overshoot before it happens.
+        /// Projection of what the glass would do to the customer, for the pre-commit readout
+        /// (GDD 19 §5). Raw and unclamped: the UI has to be able to show an overshoot before
+        /// it happens.
         /// </summary>
-        public EmotionDelta PreviewCharges(IReadOnlyList<IngredientCard> selection)
+        public EmotionDelta PreviewCharges()
         {
-            if (!Customer.HasEmotion || selection == null || selection.Count == 0)
-                return EmotionDelta.Empty;
-            if (selection.Count > Config.MaxMixSelection) return EmotionDelta.Empty;
+            if (!Customer.HasEmotion || Glass.IsEmpty || Glass.IsOverflowing) return EmotionDelta.Empty;
 
-            var match = RecipeMatcher.Match(selection, _recipes);
+            var match = PreviewMatch();
             if (match != null && IsVoidedByVipRule(match, out _)) return EmotionDelta.Empty;
-            return EmotionResolver.Resolve(selection, match);
+            return TotalDelta(match);
         }
 
-        /// <summary>Non-consuming preview of the verdict a selection would earn.</summary>
-        public ResonanceResult PreviewResonance(IReadOnlyList<IngredientCard> selection)
+        /// <summary>Non-consuming preview of the verdict this glass would earn.</summary>
+        public ResonanceResult PreviewResonance()
         {
             if (!Customer.HasEmotion) return ResonanceResult.None;
-            var delta = PreviewCharges(selection);
+            var delta = PreviewCharges();
             return delta.IsEmpty
                 ? ResonanceResult.None
                 : ResonanceJudge.Judge(Customer.Regular.Stats, delta, Customer.Read);
         }
 
+        // ── serving ──────────────────────────────────────────────────────────────
+
         /// <summary>
-        /// Ask instead of pour (GDD 19 §8). Spends a Restock charge to tighten one reading
-        /// on the ID card. Deliberately does *not* count toward <see cref="RestocksUsed"/>:
-        /// patron conditions keyed on restocks are about churning the rail, and listening to
-        /// someone is not that (see <c>Docs/PLAN_emotion_pivot.md</c> D8).
+        /// Hands the glass over. Scores it, moves the customer, and empties the glass.
+        /// A spilled glass cannot be served — bin it and start again.
+        /// </summary>
+        public ScoreBreakdown Serve()
+        {
+            EnsureRoundInProgress();
+            if (Glass.IsEmpty) throw new InvalidOperationException("Nothing in the glass.");
+            if (Glass.IsOverflowing)
+                throw new InvalidOperationException("The glass has spilled — bin it and start again.");
+
+            PouringId = null;
+            var match = PreviewMatch();
+            ScoreBreakdown breakdown;
+
+            if (match != null && IsVoidedByVipRule(match, out string voidReason))
+            {
+                // Voided serves still cost the drink and the volume — the rule is on the
+                // ticket; ignoring it is the player's mistake (GDD 6). The drink never
+                // reaches the customer, so it says nothing to them either.
+                breakdown = ScoreBreakdown.Voided(match.Recipe, LevelOf(match), voidReason);
+                LastResonance = null;
+            }
+            else
+            {
+                var resonance = JudgeServe(match);
+                LastResonance = resonance;
+                breakdown = match == null
+                    ? ScoreBreakdown.NoRecipeWith(resonance)
+                    : ScoringEngine.Score(match, LevelOf(match), _patrons, BuildContext(match), resonance);
+                CommitServe(resonance);
+            }
+
+            if (match != null) _servedRecipeIds.Add(match.Recipe.Id);
+            AccumulatedScore += breakdown.FinalScore;
+
+            Glass = new GlassContents(Config.GlassCapacity);
+            DrinksRemaining--;
+
+            if (AccumulatedScore >= Customer.TargetScore)
+            {
+                Phase = RoundPhase.Won;
+                var endContext = new EffectContext(null, null, DrinksServed, 0,
+                    noSpills: Spills == 0);
+                PatronTriggers.ResolveAccumulation(EffectTrigger.OnCustomerEnd, _patrons, endContext);
+                PatronPayout = PatronTriggers.ResolveMoney(EffectTrigger.OnCustomerEnd, _patrons, endContext);
+            }
+            else if (DrinksRemaining == 0)
+            {
+                Phase = RoundPhase.Closed;
+            }
+
+            return breakdown;
+        }
+
+        // ── listening ────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Ask instead of pour (GDD 19 §8). Costs a drink slot: the customer only has so much
+        /// time for you, and spending it talking is the trade.
         /// </summary>
         public StatReading Chat(Emotion emotion)
         {
@@ -226,10 +287,11 @@ namespace LastCall.Core
             if (!Customer.HasEmotion)
                 throw new InvalidOperationException("This customer has no emotional read.");
             if (ChatsRemaining <= 0) throw new InvalidOperationException("No Chats remaining.");
-            if (RestocksRemaining <= 0) throw new InvalidOperationException("Chatting costs a Restock.");
+            if (DrinksRemaining <= 1)
+                throw new InvalidOperationException("No time left to talk — they want their drink.");
 
             ChatsRemaining--;
-            RestocksRemaining--;
+            DrinksRemaining--;
             _chatsSpent++;
 
             NarrowReading(emotion);
@@ -261,14 +323,41 @@ namespace LastCall.Core
             return true;
         }
 
+        // ── internals ────────────────────────────────────────────────────────────
+
+        private IngredientCard IngredientOf(string ingredientId) =>
+            _shelf.Find(ingredientId)?.Ingredient;
+
         /// <summary>
-        /// Works out what this serve does to the person on the other side of the bar. Returns
-        /// null when there is no emotional layer (bench setups), which keeps scoring unchanged.
+        /// Everything the glass does to the customer: the ingredients themselves, plus the
+        /// bonus for handing over the kind of drink they wanted to be holding (GDD 21 §5).
         /// </summary>
-        private ResonanceResult JudgeServe(IReadOnlyList<IngredientCard> selection, RecipeMatch match)
+        private EmotionDelta TotalDelta(RecipeMatch match)
+        {
+            var delta = PourResolver.Resolve(Glass, match, IngredientOf);
+            if (Customer.Read != null)
+            {
+                var preference = Customer.Read.FillPreference;
+                delta.Add(PourResolver.FillBonus(Glass, preference,
+                    DirectionFor(preference.Serves)));
+            }
+            return delta;
+        }
+
+        /// <summary>
+        /// Which way the fill bonus should push the stat it serves. It follows the customer's
+        /// stated intent when it happens to name the same stat, and otherwise settles it —
+        /// handing someone the right glass calms, it does not stir.
+        /// </summary>
+        private IntentDirection DirectionFor(Emotion emotion) =>
+            Customer.Read != null && Customer.Read.Intent == emotion
+                ? Customer.Read.Direction
+                : IntentDirection.Extinguish;
+
+        private ResonanceResult JudgeServe(RecipeMatch match)
         {
             if (!Customer.HasEmotion) return null;
-            var delta = EmotionResolver.Resolve(selection, match);
+            var delta = TotalDelta(match);
             return ResonanceJudge.Judge(Customer.Regular.Stats, delta, Customer.Read);
         }
 
@@ -283,120 +372,19 @@ namespace LastCall.Core
             SatisfactionEarned += resonance.Satisfaction;
         }
 
-        /// <summary>
-        /// Applies a single-use Tool to rail cards (GDD 7.3). Consuming the tool from the
-        /// inventory is the run layer's job. Destroyed cards leave the run for good (they
-        /// never return to the deck); copies join the rail and get discarded into the deck
-        /// with it, becoming permanent.
-        /// </summary>
-        public void ApplyTool(ToolDefinition tool, IReadOnlyList<IngredientCard> targets)
+        private EffectContext BuildContext(RecipeMatch match)
         {
-            if (tool == null) throw new ArgumentNullException(nameof(tool));
-            EnsureRoundInProgress();
-            ValidateToolTargets(tool, targets);
-
-            switch (tool.Op)
-            {
-                case ToolOp.Enhance:
-                    foreach (var card in targets) card.Enhance(tool.Enhancement);
-                    break;
-                case ToolOp.Destroy:
-                    foreach (var card in targets) _rail.Remove(card);
-                    break;
-                case ToolOp.Copy:
-                    foreach (var card in targets)
-                        _rail.Insert(_rail.IndexOf(card) + 1, card.Clone());
-                    break;
-                case ToolOp.ConvertType:
-                    foreach (var card in targets) card.ConvertType(tool.ConvertTo);
-                    break;
-                case ToolOp.SetQuality:
-                    foreach (var card in targets) card.Refine(tool.Quality);
-                    break;
-                case ToolOp.ShiftValue:
-                    foreach (var card in targets) card.ShiftFlavor(tool.ShiftAmount);
-                    break;
-                default:
-                    throw new InvalidOperationException($"{tool.Name} is a run-level Tool, not a rail Tool.");
-            }
+            var contents = match?.ScoredCards ??
+                RatioRecipeMatcher.ScoredContents(Glass, IngredientOf).cards;
+            return new EffectContext(contents, match?.Recipe, DrinksServed, 0,
+                VipRules.DebuffedTypes, noSpills: Spills == 0);
         }
-
-        private void ValidateToolTargets(ToolDefinition tool, IReadOnlyList<IngredientCard> targets)
-        {
-            if (targets == null || targets.Count == 0)
-                throw new ArgumentException("Select at least one card.", nameof(targets));
-            if (targets.Count > tool.MaxTargets)
-                throw new ArgumentException($"{tool.Name} targets at most {tool.MaxTargets} card(s).", nameof(targets));
-
-            var seen = new HashSet<IngredientCard>();
-            foreach (var card in targets)
-            {
-                if (!seen.Add(card))
-                    throw new ArgumentException($"Card '{card.Name}' selected twice.", nameof(targets));
-                if (!_rail.Contains(card))
-                    throw new ArgumentException($"Card '{card.Name}' is not on the rail.", nameof(targets));
-            }
-        }
-
-        /// <summary>Discards the selection and draws replacements.</summary>
-        public void Restock(IReadOnlyList<IngredientCard> selection)
-        {
-            EnsureRoundInProgress();
-            ValidateSelection(selection);
-            if (RestocksRemaining <= 0) throw new InvalidOperationException("No Restocks remaining.");
-
-            RemoveFromRail(selection);
-            _deck.Discard(selection);
-            RestocksRemaining--;
-            PatronTriggers.ResolveAccumulation(EffectTrigger.OnRestock, _patrons,
-                new EffectContext(selection, null, MixesUsed, RestocksUsed));
-            FillRail();
-        }
-
-        /// <summary>
-        /// Post-scoring deck mutations for scored, non-debuffed cards (GDD 3.3): a Frozen
-        /// card rolls 1-in-4 to shatter (destroyed instead of discarded); a Doubled card
-        /// mints a plain permanent copy into the deck (plain, so copies don't re-copy).
-        /// Voided and recipe-less mixes score nothing, so nothing shatters or doubles.
-        /// Returns the cards to discard.
-        /// </summary>
-        private IReadOnlyList<IngredientCard> ResolveScoredEnhancements(
-            IReadOnlyList<IngredientCard> selection, RecipeMatch match, bool voided)
-        {
-            _lastShattered.Clear();
-            _lastDoubledCopies.Clear();
-            if (match == null || voided) return selection;
-
-            var discard = new List<IngredientCard>(selection);
-            foreach (var card in match.ScoredCards)
-            {
-                if (VipRules.DebuffedTypes.Contains(card.Type)) continue;
-
-                if (card.Enhancement == Enhancement.Frozen &&
-                    _shatterRng != null && _shatterRng.NextInt(4) == 0)
-                {
-                    discard.Remove(card);
-                    _lastShattered.Add(card);
-                }
-                else if (card.Enhancement == Enhancement.Doubled)
-                {
-                    var copy = card.Clone();
-                    copy.Enhance(Enhancement.None);
-                    discard.Add(copy);
-                    _lastDoubledCopies.Add(copy);
-                }
-            }
-            return discard;
-        }
-
-        private EffectContext BuildContext(IReadOnlyList<IngredientCard> selection, RecipeMatch match) =>
-            new EffectContext(selection, match?.Recipe, MixesUsed, RestocksUsed, VipRules.DebuffedTypes);
 
         private bool IsVoidedByVipRule(RecipeMatch match, out string reason)
         {
-            if (VipRules.OnlyFirstMixScores && MixesUsed > 0)
+            if (VipRules.OnlyFirstMixScores && DrinksServed > 0)
             {
-                reason = "only the first Mix counts";
+                reason = "only the first drink counts";
                 return true;
             }
             if (VipRules.MinRecipeLevel > 0 && LevelOf(match) < VipRules.MinRecipeLevel)
@@ -404,9 +392,9 @@ namespace LastCall.Core
                 reason = $"only Recipes level {VipRules.MinRecipeLevel}+ score";
                 return true;
             }
-            if (VipRules.EachMixDifferentRecipe && _mixedRecipeIds.Contains(match.Recipe.Id))
+            if (VipRules.EachMixDifferentRecipe && _servedRecipeIds.Contains(match.Recipe.Id))
             {
-                reason = "every Mix must be a different Recipe";
+                reason = "every drink must be a different Recipe";
                 return true;
             }
             reason = string.Empty;
@@ -418,38 +406,10 @@ namespace LastCall.Core
                 ? level
                 : 1;
 
-        private void FillRail()
-        {
-            int missing = Config.RailSize - _rail.Count;
-            if (missing > 0) _rail.AddRange(_deck.Draw(missing));
-        }
-
-        private void RemoveFromRail(IReadOnlyList<IngredientCard> selection)
-        {
-            foreach (var card in selection) _rail.Remove(card);
-        }
-
         private void EnsureRoundInProgress()
         {
             if (Phase != RoundPhase.InProgress)
                 throw new InvalidOperationException($"Round is over ({Phase}).");
-        }
-
-        private void ValidateSelection(IReadOnlyList<IngredientCard> selection)
-        {
-            if (selection == null || selection.Count == 0)
-                throw new ArgumentException("Select at least one card.", nameof(selection));
-            if (selection.Count > Config.MaxMixSelection)
-                throw new ArgumentException($"Select at most {Config.MaxMixSelection} cards.", nameof(selection));
-
-            var seen = new HashSet<IngredientCard>();
-            foreach (var card in selection)
-            {
-                if (!seen.Add(card))
-                    throw new ArgumentException($"Card '{card.Name}' selected twice.", nameof(selection));
-                if (!_rail.Contains(card))
-                    throw new ArgumentException($"Card '{card.Name}' is not on the rail.", nameof(selection));
-            }
         }
     }
 }

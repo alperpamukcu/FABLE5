@@ -29,7 +29,7 @@ namespace LastCall.Tests
                 config ?? EasyConfig());
 
         private static void WinCurrentCustomer(RunController run) =>
-            run.Mix(new[] { run.CurrentRound.Rail[0] }); // Neat Pour 11 >= target 10
+            PourTestKit.ServeSomething(run); // Neat Pour 11 >= target 10
 
         [Test]
         public void TargetTable_MatchesGddTable()
@@ -121,8 +121,8 @@ namespace LastCall.Tests
             // Fork B: only the week's satisfaction quota can end a run. An order you could
             // not fill costs you the tips and nothing else.
             var run = NewRun(new RunConfig(targetProvider: (n, s) => 1e9));
-            for (int mix = 0; mix < 4; mix++)
-                run.Mix(new[] { run.CurrentRound.Rail[0] });
+            for (int drink = 0; drink < 4; drink++)
+                PourTestKit.ServeSomething(run);
 
             Assert.AreEqual(RunPhase.BackRoom, run.Phase);
             Assert.AreEqual(0, run.LastTips.Total);
@@ -130,16 +130,17 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void RailLeftovers_ReturnToTheDeck_BetweenCustomers()
+        public void TheShelfPersists_AndDrains_AcrossCustomers()
         {
+            // The deck's shuffle-and-redeal is gone: bottles stay put and keep whatever is
+            // left in them, which is the whole basis of the pour economy.
             var run = NewRun();
-            WinCurrentCustomer(run); // 1 card mixed, 7 left on the rail
+            double before = run.Shelf.Bottles[0].Remaining;
+            WinCurrentCustomer(run);
             run.ContinueToNextCustomer();
 
-            // Full 48-card cabinet reshuffled, 8 dealt to the fresh rail.
-            Assert.AreEqual(8, run.CurrentRound.Rail.Count);
-            Assert.AreEqual(40, run.CurrentRound.DeckDrawCount);
-            Assert.AreEqual(0, run.CurrentRound.DeckDiscardCount);
+            Assert.Less(run.Shelf.Bottles[0].Remaining, before, "pouring spent it");
+            Assert.AreEqual(48, run.Shelf.Count, "the same bottles are still there");
         }
 
         [Test]
@@ -164,14 +165,14 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void SameSeed_DealsIdenticalRuns()
+        public void SameSeed_BuildsIdenticalRuns()
         {
             var a = new RunController(SpiritCards(), Recipes, new RunRng("PAIR"));
             var b = new RunController(SpiritCards(), Recipes, new RunRng("PAIR"));
 
             CollectionAssert.AreEqual(
-                a.CurrentRound.Rail.Select(c => c.Id).ToList(),
-                b.CurrentRound.Rail.Select(c => c.Id).ToList());
+                a.Shelf.Bottles.Select(x => x.Id).ToList(),
+                b.Shelf.Bottles.Select(x => x.Id).ToList());
         }
     }
 }

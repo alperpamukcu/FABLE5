@@ -72,11 +72,11 @@ namespace LastCall.Tests
             // customer's hidden stats, the preview would be a readout of the answer.
             var run = NewRun();
             var round = run.CurrentRound;
-            var selection = new[] { round.Rail[0] };
+            round.PourMeasure(PourTestKit.AnyBottle(round), 0.5);
 
-            var first = round.PreviewCharges(selection);
+            var first = round.PreviewCharges();
             foreach (var emotion in Emotions.All) round.Customer.Regular.Stats.Set(emotion, 97);
-            var second = round.PreviewCharges(selection);
+            var second = round.PreviewCharges();
 
             foreach (var emotion in Emotions.All)
                 Assert.AreEqual(first[emotion], second[emotion],
@@ -89,24 +89,25 @@ namespace LastCall.Tests
             var run = NewRun();
             var round = run.CurrentRound;
             var before = round.Customer.Regular.Stats.Clone();
-            int mixes = round.MixesRemaining;
+            int drinks = round.DrinksRemaining;
+            round.PourMeasure(PourTestKit.AnyBottle(round), 0.5);
 
-            round.PreviewCharges(new[] { round.Rail[0], round.Rail[1] });
-            round.PreviewResonance(new[] { round.Rail[0], round.Rail[1] });
+            round.PreviewCharges();
+            round.PreviewResonance();
 
             Assert.AreEqual(before, round.Customer.Regular.Stats, "previewing must not move anyone");
-            Assert.AreEqual(mixes, round.MixesRemaining);
+            Assert.AreEqual(drinks, round.DrinksRemaining);
         }
 
         [Test]
-        public void Chat_NarrowsOnlyTheStatAsked_AndSpendsARestock()
+        public void Chat_NarrowsOnlyTheStatAsked_AndSpendsADrinkSlot()
         {
             var run = NewRun();
             var round = run.CurrentRound;
             var target = Emotions.All.First(e => round.Customer.Read[e].Tier == VisibilityTier.Unknown);
             var untouched = Emotions.All.First(e => e != target);
             var before = round.Customer.Read[untouched];
-            int restocks = round.RestocksRemaining;
+            int drinks = round.DrinksRemaining;
             int chats = round.ChatsRemaining;
 
             var learned = round.Chat(target);
@@ -114,23 +115,13 @@ namespace LastCall.Tests
             Assert.AreNotEqual(VisibilityTier.Unknown, learned.Tier, "asking must reveal something");
             Assert.IsTrue(learned.Contains(round.Customer.Regular.Stats[target]));
             Assert.AreEqual(before, round.Customer.Read[untouched], "only the stat asked about changes");
-            Assert.AreEqual(restocks - 1, round.RestocksRemaining);
+            Assert.AreEqual(drinks - 1, round.DrinksRemaining);
             Assert.AreEqual(chats - 1, round.ChatsRemaining);
         }
 
-        [Test]
-        public void Chat_DoesNotCountAsARestockForPatronConditions()
-        {
-            // Docs/PLAN_emotion_pivot.md D8: listening is not churning the rail. Patrons that
-            // key off restocks_used must not be fed by conversation.
-            var run = NewRun();
-            var round = run.CurrentRound;
-            int restocksUsed = round.RestocksUsed;
-
-            round.Chat(Emotion.Anger);
-
-            Assert.AreEqual(restocksUsed, round.RestocksUsed);
-        }
+        // D8 (Chat must not feed restock-keyed patron conditions) went away with Restock
+        // itself. Chat now costs a drink slot, which DrinksServed *should* reflect — talking
+        // really is time the customer gave you instead of a drink.
 
         [Test]
         public void Chat_RunsOut()
@@ -146,7 +137,7 @@ namespace LastCall.Tests
 
         /// <summary>A round whose customer is fully controlled, so the verdict is not a coin flip.</summary>
         private static RoundController RoundWith(Emotion intent, IntentDirection direction,
-            int trueValue, VisibilityTier intentTier, IReadOnlyList<IngredientCard> deckCards)
+            int trueValue, VisibilityTier intentTier, IReadOnlyList<IngredientCard> bottles)
         {
             var stats = new EmotionStats();
             stats.Set(intent, trueValue);
@@ -159,22 +150,22 @@ namespace LastCall.Tests
 
             var order = new CustomerOrder("Sam", 1e9, regular,
                 new CustomerRead(readings, intent, direction));
-            return new RoundController(new Deck(deckCards), RecipeCatalog.CreateDefault(), order);
+            return new RoundController(PourTestKit.NewShelf(bottles), RecipeCatalog.CreateDefault(), order);
         }
 
         [Test]
         public void ABust_IsNeverWrittenThroughToTheCustomer()
         {
             // Overshooting must not double as a way to probe where someone actually is.
-            // The deck draws off the end, so the card under test goes last to reach the rail.
-            var deck = Enumerable.Range(0, 12).Select(i => Card($"f{i}", Emotion.Anger, -4)).ToList();
-            deck.Add(Card("overshoot", Emotion.Sadness, -80));
+            var bottles = Enumerable.Range(0, 3).Select(i => Card($"f{i}", Emotion.Anger, -4)).ToList();
+            bottles.Add(Card("overshoot", Emotion.Sadness, -80));
 
             var round = RoundWith(Emotion.Sadness, IntentDirection.Extinguish, 30,
-                VisibilityTier.Exact, deck);
+                VisibilityTier.Exact, bottles);
             var before = round.Customer.Regular.Stats.Clone();
 
-            round.Mix(new[] { round.Rail.First(c => c.Id == "overshoot") });
+            round.PourMeasure("overshoot", round.Config.GlassCapacity);
+            round.Serve();
 
             Assert.IsTrue(round.LastResonance.IsBust, "-80 against 30 must overshoot");
             Assert.AreEqual(BustKind.Overshoot, round.LastResonance.Bust);
@@ -185,13 +176,16 @@ namespace LastCall.Tests
         [Test]
         public void ACleanServe_LandsExactly_AndIsWorthTheMost()
         {
-            var deck = Enumerable.Range(0, 12).Select(i => Card($"f{i}", Emotion.Anger, -4)).ToList();
-            deck.Add(Card("exact", Emotion.Sadness, -30));
+            // A full glass of one Spirit is a Neat Pour (charge multiplier x1), so -30 per
+            // full glass lands as exactly -30 on a customer sitting at 30.
+            var bottles = Enumerable.Range(0, 3).Select(i => Card($"f{i}", Emotion.Anger, -4)).ToList();
+            bottles.Add(Card("exact", Emotion.Sadness, -30));
 
             var round = RoundWith(Emotion.Sadness, IntentDirection.Extinguish, 30,
-                VisibilityTier.Exact, deck);
+                VisibilityTier.Exact, bottles);
 
-            round.Mix(new[] { round.Rail.First(c => c.Id == "exact") });
+            round.PourMeasure("exact", round.Config.GlassCapacity);
+            round.Serve();
 
             Assert.IsTrue(round.LastResonance.CleanServe);
             Assert.AreEqual(0, round.Customer.Regular.Stats[Emotion.Sadness]);

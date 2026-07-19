@@ -419,9 +419,22 @@ namespace LastCall.DebugUI
         /// leave per <paramref name="exitStyle"/>. A selection-only change (same rail)
         /// refreshes tints and the 4px select-rise — no wave.
         /// </summary>
-        public void SetBottles(IReadOnlyList<IngredientCard> rail, ICollection<IngredientCard> selected,
-            IEnumerable<IngredientType> debuffedTypes, UnityAction<IngredientCard> onClick, Exit exitStyle)
+        /// <summary>
+        /// Draws the shelf (GDD 21 §2). Replaces the card rail: the bottles no longer come and
+        /// go, so the composition only changes when the run gains one. Selection is gone with
+        /// the cards — clicking a bottle pours from it.
+        /// </summary>
+        public void SetShelf(Shelf shelf, IEnumerable<IngredientType> debuffedTypes,
+            UnityAction<IngredientCard> onClick, Exit exitStyle)
         {
+            var rail = new List<IngredientCard>();
+            foreach (var bottle in shelf.Bottles)
+            {
+                if (rail.Count >= Slots) break;
+                rail.Add(bottle.Ingredient);
+            }
+            var selected = new List<IngredientCard>();
+
             var debuffed = debuffedTypes != null
                 ? new HashSet<IngredientType>(debuffedTypes)
                 : new HashSet<IngredientType>();

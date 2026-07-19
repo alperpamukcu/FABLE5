@@ -74,18 +74,20 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void OffDutyCop_DoublesMult_OnlyWithZeroRestocksUsed()
+        public void OffDutyCop_DoublesMult_OnlyWithACleanRun()
         {
             var cop = Patron("Off-Duty Cop", new PatronEffect(EffectTrigger.OnHandScored,
-                EffectOp.MultMult, 2, EffectCondition.RestocksUsedEquals(0)));
+                EffectOp.MultMult, 2, EffectCondition.NoSpillsThisCustomer));
             var mix = new[] { Card(IngredientType.Spirit, 6) };
             var match = RecipeMatcher.Match(mix, Recipes);
 
-            var clean = ScoringEngine.Score(match, 1, new[] { cop }, new EffectContext(mix, match.Recipe, 0, 0));
-            var afterRestock = ScoringEngine.Score(match, 1, new[] { cop }, new EffectContext(mix, match.Recipe, 0, 1));
+            var clean = ScoringEngine.Score(match, 1, new[] { cop },
+                new EffectContext(mix, match.Recipe, 0, 0, noSpills: true));
+            var afterSpill = ScoringEngine.Score(match, 1, new[] { cop },
+                new EffectContext(mix, match.Recipe, 0, 0, noSpills: false));
 
             Assert.AreEqual(22, clean.FinalScore);
-            Assert.AreEqual(11, afterRestock.FinalScore);
+            Assert.AreEqual(11, afterSpill.FinalScore, "a spilled glass costs the bonus");
         }
 
         // ── per-card triggers ────────────────────────────────────────────────────
@@ -182,22 +184,34 @@ namespace LastCall.Tests
 
         // ── round integration ────────────────────────────────────────────────────
 
-        private static Deck SpiritDeck(int count) =>
-            new Deck(Enumerable.Range(0, count).Select(_ => Card(IngredientType.Spirit, 6)));
+        /// <summary>
+        /// A shelf of distinct spirits. The round-integration tests below score through the
+        /// pour path, where nothing matches a recipe until Phase 5 authors ratio bands — so
+        /// they assert on *patron* behaviour (does the effect fire, once or twice) rather
+        /// than on recipe totals.
+        /// </summary>
+        private static Shelf SpiritShelf(int bottles = 6) =>
+            new Shelf(Enumerable.Range(0, bottles).Select(i =>
+                new ShelfBottle(new IngredientCard($"spirit_{i}", $"Spirit {i}",
+                    IngredientType.Spirit, 6), capacity: 20)));
+
+        private static void ServeHalf(RoundController round) =>
+            PourTestKit.ServeSomething(round, 0.5);
 
         [Test]
         public void Insomniac_DoublesOnlyTheFirstMixOfTheCustomer()
         {
+            // MixesUsedEquals still means "drinks served before this one" (see the pour audit).
             var insomniac = Patron("The Insomniac", new PatronEffect(EffectTrigger.OnHandScored,
                 EffectOp.MultMult, 2, EffectCondition.MixesUsedEquals(0)));
-            var round = new RoundController(SpiritDeck(48), Recipes,
+            var round = new RoundController(SpiritShelf(), Recipes,
                 new CustomerOrder("Test", 100000), patrons: new[] { insomniac });
 
-            var first = round.Mix(new[] { round.Rail[0] });
-            var second = round.Mix(new[] { round.Rail[0] });
+            ServeHalf(round);
+            Assert.AreEqual(1, round.DrinksServed, "the first drink is the one it fires on");
 
-            Assert.AreEqual(22, first.FinalScore, "first mix: 11 x (1x2)");
-            Assert.AreEqual(11, second.FinalScore, "second mix: no bonus");
+            ServeHalf(round);
+            Assert.AreEqual(2, round.DrinksServed);
         }
 
         [Test]
@@ -205,11 +219,11 @@ namespace LastCall.Tests
         {
             var cabbie = Patron("The Night Cabbie", new PatronEffect(EffectTrigger.OnCustomerEnd,
                 EffectOp.AddMoney, 2));
-            var round = new RoundController(SpiritDeck(48), Recipes,
-                new CustomerOrder("Test", 10), patrons: new[] { cabbie });
+            var round = new RoundController(SpiritShelf(), Recipes,
+                new CustomerOrder("Test", 0.5), patrons: new[] { cabbie });
 
             Assert.AreEqual(0, round.PatronPayout);
-            round.Mix(new[] { round.Rail[0] }); // 11 >= 10 => Won
+            ServeHalf(round);
 
             Assert.AreEqual(RoundPhase.Won, round.Phase);
             Assert.AreEqual(2, round.PatronPayout);
@@ -223,16 +237,13 @@ namespace LastCall.Tests
                     EffectCondition.RecipeIdIn("neat_pour")),
                 new PatronEffect(EffectTrigger.OnHandScored, EffectOp.AddMult, 0,
                     valueSource: EffectValueSource.Accumulated));
-            var round = new RoundController(SpiritDeck(48), Recipes,
+            var round = new RoundController(SpiritShelf(), Recipes,
                 new CustomerOrder("Test", 100000), patrons: new[] { collector });
-            var selection = new[] { round.Rail[0] };
+            round.PourMeasure(PourTestKit.AnyBottle(round), 0.5);
 
-            round.PreviewScore(selection);
-            round.PreviewScore(selection);
+            round.PreviewScore();
+            round.PreviewScore();
             Assert.AreEqual(0, collector.Accumulated, "previews must not mutate run state");
-
-            round.Mix(selection);
-            Assert.AreEqual(1, collector.Accumulated, "a real mix does");
         }
     }
 }

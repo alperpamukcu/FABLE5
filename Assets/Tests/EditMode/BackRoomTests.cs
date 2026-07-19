@@ -41,8 +41,13 @@ namespace LastCall.Tests
                 patronPool, toolPool);
         }
 
+        /// <summary>
+        /// Serves until the customer is done. Deliberately the looping version: a single serve
+        /// is enough only while every bottle still scores, and the tool tests convert one to a
+        /// type that matches no recipe.
+        /// </summary>
         private static void WinCurrentCustomer(RunController run) =>
-            run.Mix(new[] { run.CurrentRound.Rail[0] });
+            PourTestKit.WinCurrentCustomer(run);
 
         // ── enhancements in scoring ──────────────────────────────────────────────
 
@@ -64,73 +69,89 @@ namespace LastCall.Tests
             Assert.AreEqual(55, result.FinalScore); // (5+6) x (1+4)
         }
 
-        // ── tool behavior on the rail ────────────────────────────────────────────
+        // ── tool behaviour on the shelf ──────────────────────────────────────────
+        //
+        // Tools used to rework individual rail cards. Under the pour system they rework the
+        // bottles themselves (GDD 21 §7.1), which makes them permanent upgrades rather than
+        // one-shot card edits. Ice Pick and Bar Spoon had no bottle equivalent and were cut —
+        // see the casualty list in Docs/PLAN_pour_pivot.md.
+
+        /// <summary>Puts a tool in the inventory the way the run layer expects it to arrive.</summary>
+        private static ToolDefinition Acquire(RunController run, ToolDefinition tool)
+        {
+            for (int i = 0; i < 200; i++)
+            {
+                var offers = run.Shop.Offers.ToList();
+                var offer = offers.FirstOrDefault(o =>
+                    o.Kind == ShopOfferKind.Tool && o.Tool.Id == tool.Id && !o.Sold);
+                if (offer != null)
+                {
+                    run.BuyOffer(offers.IndexOf(offer));
+                    return offer.Tool;
+                }
+                run.RerollShop();
+            }
+            throw new InvalidOperationException($"'{tool.Id}' never appeared in the shop.");
+        }
+
+        private static RunController RunWithTool(ToolDefinition tool, out ToolDefinition acquired)
+        {
+            var run = NewRun(startingMoney: 3000, toolPool: new[] { tool });
+            WinCurrentCustomer(run);
+            acquired = Acquire(run, tool);
+            run.ContinueToNextCustomer();
+            return run;
+        }
 
         [Test]
-        public void Muddler_InfusesUpToTwoCards()
+        public void Muddler_InfusesUpToTwoBottles()
         {
-            var run = NewRun();
-            var targets = run.CurrentRound.Rail.Take(2).ToArray();
-            run.CurrentRound.ApplyTool(Muddler, targets);
+            var run = RunWithTool(Muddler, out var muddler);
+            var targets = run.Shelf.Bottles.Take(2).Select(b => b.Ingredient).ToArray();
+
+            run.UseTool(muddler, targets);
 
             Assert.IsTrue(targets.All(c => c.Enhancement == Enhancement.Infused));
         }
 
         [Test]
-        public void IcePick_DestroysCardsForTheRestOfTheRun()
-        {
-            var run = NewRun();
-            run.CurrentRound.ApplyTool(IcePick, run.CurrentRound.Rail.Take(2).ToArray());
-            Assert.AreEqual(6, run.CurrentRound.Rail.Count);
-
-            WinCurrentCustomer(run);
-            run.ContinueToNextCustomer();
-
-            // 46 cards remain in the run: 8 on the new rail, 38 in the draw pile.
-            Assert.AreEqual(8, run.CurrentRound.Rail.Count);
-            Assert.AreEqual(38, run.CurrentRound.DeckDrawCount);
-        }
-
-        [Test]
-        public void BarSpoon_CopyBecomesAPermanentDeckCard()
-        {
-            var run = NewRun();
-            var original = run.CurrentRound.Rail[0];
-            run.CurrentRound.ApplyTool(BarSpoon, new[] { original });
-
-            Assert.AreEqual(9, run.CurrentRound.Rail.Count);
-            var copy = run.CurrentRound.Rail[1];
-            Assert.AreEqual(original.Id, copy.Id);
-            Assert.AreNotEqual(original.InstanceId, copy.InstanceId);
-
-            WinCurrentCustomer(run);
-            run.ContinueToNextCustomer();
-            Assert.AreEqual(41, run.CurrentRound.DeckDrawCount, "49 cards total, 8 dealt");
-        }
-
-        [Test]
         public void CitrusPress_RewritesTheIngredientType()
         {
-            var run = NewRun();
-            var target = run.CurrentRound.Rail[0];
-            run.CurrentRound.ApplyTool(CitrusPress, new[] { target });
+            var run = RunWithTool(CitrusPress, out var press);
+            var target = run.Shelf.Bottles[0].Ingredient;
+
+            run.UseTool(press, new[] { target });
 
             Assert.AreEqual(IngredientType.Sour, target.Type);
-            Assert.IsNull(run.CurrentRound.PreviewMatch(new[] { target }), "a lone Sour matches no recipe");
+        }
+
+        [Test]
+        public void ABottleToolPersists_AcrossCustomers()
+        {
+            // The point of moving tools onto the shelf: the change sticks, because the bottle
+            // is still there next customer instead of being shuffled away.
+            var run = RunWithTool(CitrusPress, out var press);
+            var target = run.Shelf.Bottles[0].Ingredient;
+            run.UseTool(press, new[] { target });
+
+            WinCurrentCustomer(run);
+            run.ContinueToNextCustomer();
+
+            Assert.AreEqual(IngredientType.Sour, run.Shelf.Bottles[0].Ingredient.Type);
         }
 
         [Test]
         public void Tools_ValidateTargets_AndAreSingleUse()
         {
-            var run = NewRun();
-            var round = run.CurrentRound;
+            var run = RunWithTool(Muddler, out var muddler);
+            var twoBottles = run.Shelf.Bottles.Take(2).Select(b => b.Ingredient).ToArray();
 
-            Assert.Throws<ArgumentException>(() =>
-                round.ApplyTool(Jigger, round.Rail.Take(2).ToArray()), "Jigger targets max 1");
-            Assert.Throws<ArgumentException>(() =>
-                round.ApplyTool(Muddler, new IngredientCard[0]), "empty selection");
-            Assert.Throws<InvalidOperationException>(() =>
-                run.UseTool(Muddler, round.Rail.Take(1).ToArray()), "not in inventory");
+            Assert.Throws<ArgumentException>(() => run.UseTool(muddler, new IngredientCard[0]),
+                "empty selection");
+
+            run.UseTool(muddler, twoBottles);
+            Assert.Throws<InvalidOperationException>(() => run.UseTool(muddler, twoBottles),
+                "single use");
         }
 
         // ── the shop ─────────────────────────────────────────────────────────────
@@ -271,7 +292,7 @@ namespace LastCall.Tests
 
             run.ContinueToNextCustomer();
             var tool = run.ToolInventory[0];
-            var target = run.CurrentRound.Rail[0];
+            var target = run.CurrentRound.Shelf.Bottles[0].Ingredient;
             run.UseTool(tool, new[] { target });
 
             Assert.AreEqual(Enhancement.Infused, target.Enhancement);

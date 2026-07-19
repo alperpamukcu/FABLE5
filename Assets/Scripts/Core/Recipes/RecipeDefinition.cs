@@ -99,7 +99,6 @@ namespace LastCall.Core
             IReadOnlyList<RatioRequirement> ratioRequirements = null,
             double minFill = 0)
         {
-            RatioRequirements = ratioRequirements ?? Array.Empty<RatioRequirement>();
             MinFill = minFill;
             Id = id;
             Name = name;
@@ -120,6 +119,12 @@ namespace LastCall.Core
             ChargeMultiplier = chargeMultiplier > 0
                 ? Math.Min(3.0, chargeMultiplier)
                 : ChargeMultiplierFor(baseMult);
+
+            // Explicit bands win; otherwise they are derived from the type pattern so the
+            // fourteen shipped recipes become pourable without hand-authoring each one.
+            RatioRequirements = ratioRequirements != null && ratioRequirements.Count > 0
+                ? ratioRequirements
+                : RatioRecipeMatcher.DeriveBands(this);
         }
 
         /// <summary>Level 1 = base values; Recipe Books raise the level (GDD 02 table, last column).</summary>

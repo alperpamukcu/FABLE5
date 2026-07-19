@@ -33,6 +33,9 @@ namespace LastCall.Core
 
         public RoundConfig RoundConfig { get; }
 
+        /// <summary>Price of refilling one capacity of any bottle (GDD 21 §6).</summary>
+        public int RefillPricePerCapacity { get; }
+
         public RunConfig(int nights = 8, int startingMoney = 4,
             int tipCustomerA = 3, int tipCustomerB = 4, int tipVip = 5, int vipDefeatBonus = 5,
             int interestPerDollars = 5, int interestCap = 5,
@@ -41,7 +44,8 @@ namespace LastCall.Core
             int moneyDoubleCap = 20,
             Func<int, CustomerSlot, double> targetProvider = null,
             RoundConfig roundConfig = null,
-            Func<int, int> quotaProvider = null)
+            Func<int, int> quotaProvider = null,
+            int refillPricePerCapacity = 1)
         {
             if (nights <= 0) throw new ArgumentOutOfRangeException(nameof(nights));
             Nights = nights;
@@ -61,6 +65,7 @@ namespace LastCall.Core
             MoneyDoubleCap = moneyDoubleCap;
             TargetProvider = targetProvider ?? TargetTable.GreenStake;
             QuotaProvider = quotaProvider ?? QuotaTable.Standard;
+            RefillPricePerCapacity = refillPricePerCapacity;
             RoundConfig = roundConfig ?? RoundConfig.Default;
         }
 

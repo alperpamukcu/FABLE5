@@ -105,10 +105,9 @@ namespace LastCall.EditorTools
             var round = run.CurrentRound;
             while (run.Phase == RunPhase.CustomerRound && round.Phase == RoundPhase.InProgress)
             {
-                var pick = BestMix(round);
-                if (pick == null || pick.Count == 0) break;
+                if (!BuildDrink(round)) break;
 
-                run.Mix(pick);
+                run.Serve();
                 stats.Mixes++;
 
                 var verdict = round.LastResonance;
@@ -127,59 +126,65 @@ namespace LastCall.EditorTools
         }
 
         /// <summary>
-        /// Greedy one-ply choice over every legal selection. Enough to tell a curve that is
-        /// merely hard from one that is impossible; not a claim about optimal play.
+        /// Pours a drink aimed at the customer's intent, and reports whether anything went in.
+        ///
+        /// Under the card system the bot enumerated every legal subset. Ratios are continuous,
+        /// so it now *solves* instead: pick the bottle that moves the intent stat the right
+        /// way, then compute the measure that lands on the target. That makes this a stronger
+        /// bot than the card one — its win rates are not comparable with the pre-pour numbers
+        /// and must not be presented as a continuation of them.
         /// </summary>
-        private static IReadOnlyList<IngredientCard> BestMix(RoundController round)
+        private static bool BuildDrink(RoundController round)
         {
-            var rail = round.Rail;
-            int n = Math.Min(rail.Count, 12);
-            IReadOnlyList<IngredientCard> best = null;
-            double bestValue = double.NegativeInfinity;
-
-            for (int mask = 1; mask < (1 << n); mask++)
+            var shelf = round.Shelf;
+            if (!round.Customer.HasEmotion)
             {
-                int size = CountBits(mask);
-                if (size > round.Config.MaxMixSelection) continue;
-
-                var pick = new List<IngredientCard>(size);
-                for (int i = 0; i < n; i++)
-                    if ((mask & (1 << i)) != 0) pick.Add(rail[i]);
-
-                double value = Evaluate(round, pick);
-                if (value > bestValue)
-                {
-                    bestValue = value;
-                    best = pick;
-                }
+                // No read to aim at: pour a plain half glass so the round still progresses.
+                var any = shelf.Bottles.FirstOrDefault(b => !b.IsEmpty);
+                return any != null && round.PourMeasure(any.Id, round.Config.GlassCapacity * 0.5) > 0;
             }
-            return best;
-        }
-
-        private static double Evaluate(RoundController round, IReadOnlyList<IngredientCard> pick)
-        {
-            var breakdown = round.PreviewScore(pick);
-            double points = breakdown.FinalScore;
-
-            if (!round.Customer.HasEmotion) return points;
 
             var read = round.Customer.Read;
             var intent = read.Intent;
-            int move = round.PreviewCharges(pick)[intent];
             int estimate = EstimateFromRead(read[intent]);
             int target = read.TargetValue;
-            int projected = estimate + move;
+            double needed = target - estimate;               // signed movement wanted
+            if (Math.Abs(needed) < 1e-9) return false;
 
-            bool towardZero = read.Direction == IntentDirection.Extinguish;
-            bool likelyOvershoot = towardZero ? projected < target : projected > target;
-            int progress = towardZero ? estimate - projected : projected - estimate;
+            ShelfBottle best = null;
+            double bestPerGlass = 0;
+            foreach (var bottle in shelf.Bottles)
+            {
+                if (bottle.IsEmpty) continue;
+                double perGlass = ChargeOn(bottle.Ingredient, intent);
+                if (Math.Sign(perGlass) != Math.Sign(needed)) continue;
+                if (Math.Abs(perGlass) > Math.Abs(bestPerGlass))
+                {
+                    bestPerGlass = perGlass;
+                    best = bottle;
+                }
+            }
+            if (best == null) return false;
 
-            // Points are the tiebreak, not the goal: satisfaction is what survives the week.
-            double value = points / 500.0;
-            if (likelyOvershoot) return value - 1000;          // never knowingly bust
-            if (projected == target) value += 300;             // Clean Serve is worth chasing
-            value += progress * 10;
-            return value;
+            // Nothing matches a recipe until the bands are authored, so charges land at x0.5.
+            double effective = bestPerGlass * PourResolver.NoRecipeMultiplier;
+            double volume = needed / effective;
+
+            // Never knowingly overshoot: the glass is the ceiling and so is the target.
+            volume = Math.Min(volume, round.Config.GlassCapacity);
+            volume = Math.Min(volume, best.Remaining);
+            if (volume <= 0) return false;
+
+            return round.PourMeasure(best.Id, volume) > 0;
+        }
+
+        private static double ChargeOn(IngredientCard card, Emotion emotion)
+        {
+            if (card?.Charges == null) return 0;
+            double total = 0;
+            foreach (var charge in card.Charges)
+                if (charge.Emotion == emotion) total += charge.Amount;
+            return total;
         }
 
         /// <summary>What a player can honestly believe about a stat, given only the ID.</summary>
@@ -191,13 +196,6 @@ namespace LastCall.EditorTools
                 case VisibilityTier.Range: return (reading.Low + reading.High) / 2;
                 default: return 50;
             }
-        }
-
-        private static int CountBits(int v)
-        {
-            int c = 0;
-            while (v != 0) { v &= v - 1; c++; }
-            return c;
         }
 
         private sealed class Aggregate
