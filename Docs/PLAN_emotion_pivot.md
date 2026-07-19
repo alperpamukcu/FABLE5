@@ -6,6 +6,14 @@ a single unhappy customer never ends the run.
 
 Status legend: ☐ todo · ◐ in progress · ☑ done
 
+| Phase | Status |
+|---|---|
+| 1 — Core model | ☑ `fef55fe` |
+| 2 — Playable slice | ☑ `223dca5` (card charges + archetypes pulled forward from phase 4; the slice is not playable without data) |
+| 3 — Information economy | ◐ Chat shipped early in phase 1/2; patrons, Eavesdrop, VIP rules and shop integration remain |
+| 4 — Content & balance | ☐ recipe `chargeMultiplier` authoring, VIP redesign, quota tuning with a sim harness |
+| 5 — Documentation | ☐ |
+
 ---
 
 ## 0. Decisions locked before writing code
