@@ -76,6 +76,16 @@ namespace LastCall.Core
         public static double ChargeMultiplierFor(int baseMult) =>
             Math.Min(3.0, 1.0 + 0.2 * (baseMult - 1));
 
+        /// <summary>
+        /// Proportions this recipe is made at (GDD 21 §9) — the pour system's replacement for
+        /// <see cref="Requirements"/>. Empty means the recipe has not been converted yet and
+        /// simply cannot be matched by pouring.
+        /// </summary>
+        public IReadOnlyList<RatioRequirement> RatioRequirements { get; }
+
+        /// <summary>How full the glass must be for this to count as the drink (0 = no floor).</summary>
+        public double MinFill { get; }
+
         public RecipeDefinition(
             string id, string name, int rank,
             int baseFlavor, int baseMult, int flavorPerLevel, int multPerLevel,
@@ -85,8 +95,12 @@ namespace LastCall.Core
             bool scoreAllMixCards = false,
             int equalFlavorGroupSize = 0, int ascendingFlavorGroupSize = 0,
             int sameTypeGroupMin = 0,
-            double chargeMultiplier = 0)
+            double chargeMultiplier = 0,
+            IReadOnlyList<RatioRequirement> ratioRequirements = null,
+            double minFill = 0)
         {
+            RatioRequirements = ratioRequirements ?? Array.Empty<RatioRequirement>();
+            MinFill = minFill;
             Id = id;
             Name = name;
             Rank = rank;
