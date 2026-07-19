@@ -11,11 +11,30 @@ namespace LastCall.Core
         /// <summary>Scoring cards in mix order (left to right), per the scoring formula step 2.</summary>
         public IReadOnlyList<IngredientCard> ScoredCards { get; }
 
-        public RecipeMatch(RecipeDefinition recipe, IReadOnlyList<IngredientCard> scoredCards)
+        /// <summary>
+        /// How much each scored card counts, parallel to <see cref="ScoredCards"/>.
+        ///
+        /// Under the pour system this is the ingredient's share of the glass, so a drink that
+        /// is 70% vodka scores 70% of vodka's Flavor (GDD 21 §4). Card-era matches leave it
+        /// null, which means "everything counts once" — that is what keeps Flavor values,
+        /// quality tiers and enhancements alive across the pivot instead of silently becoming
+        /// dead content.
+        /// </summary>
+        public IReadOnlyList<double> ScoredWeights { get; }
+
+        public RecipeMatch(RecipeDefinition recipe, IReadOnlyList<IngredientCard> scoredCards,
+            IReadOnlyList<double> scoredWeights = null)
         {
             Recipe = recipe;
             ScoredCards = scoredCards;
+            ScoredWeights = scoredWeights;
         }
+
+        /// <summary>The weight of the card at <paramref name="index"/>; 1 when unweighted.</summary>
+        public double WeightAt(int index) =>
+            ScoredWeights != null && index >= 0 && index < ScoredWeights.Count
+                ? ScoredWeights[index]
+                : 1.0;
     }
 
     /// <summary>

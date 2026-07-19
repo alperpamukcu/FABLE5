@@ -92,10 +92,57 @@ Discard()                →  bins the glass, volume wasted
 
 `RunController` swaps the deck for the shelf and adds refills to the Back Room.
 
-**This is where the audit lands.** Everything keyed on cards-in-hand needs a verdict:
-Enhancements (Frozen/Doubled/Golden), Tools that target rail cards, patron conditions on
-`MixContainsType` / `MixSizeEquals` / `RestocksUsed`, the `ExtraRail`/`ExtraRestock` vouchers,
-and Stakes. Expect real casualties — they will be listed honestly, not quietly deleted.
+### The audit
+
+Done before touching a line of the round layer. The headline is better than feared: **most
+things survive by reinterpretation**, because pours are *ordered* and the glass has *contents*
+— so "which card, in what position, of what type" all still have honest meanings.
+
+**The load-bearing decision:** the glass's ingredients become the scored cards, weighted by
+volume. `RecipeMatch` gains a parallel `ScoredWeights` list; `ScoringEngine` multiplies each
+card's Flavor by its weight. Without this, card Flavor values, all five quality tiers and
+every enhancement become dead content overnight — a huge, silent loss. With it, they all keep
+working, just measured by how much went in rather than by how many cards were played.
+
+| Concept | Card meaning | Pour meaning | Verdict |
+|---|---|---|---|
+| Card Flavor 1–11 | per card played | × volume poured | **survives, weighted** |
+| Quality tiers (5) | per card instance | per bottle | **survives** |
+| `Infused` / `Overproof` / `Frozen` | per card instance | per bottle | **survives** |
+| `CardTypeIs` (16 uses) | scored card's type | poured ingredient's type | **survives** |
+| `CardIndexEquals` (7) | position among scored cards | **layer index** — pours are ordered | **survives** |
+| `MixContainsType` (8) | mix holds that type | glass holds that type | **survives** |
+| `MixSizeEquals` (6) | N cards played | N distinct ingredients | **survives** |
+| `RecipeIdIn` (6) | matched recipe | matched recipe | **survives** |
+| `MixesUsedEquals` (5) | mixes spent | drinks served | **survives** |
+| Packs → `IngredientCard` | joins the deck | joins the shelf | **survives** |
+| `ExtraMix`, `PatronDiscount`, `RarePatronBoost`, `RerollVip` | — | unchanged | **survives** |
+
+**Casualties.** Listed rather than quietly dropped, because some of this is good content:
+
+| Thing | Why it cannot survive |
+|---|---|
+| `Enhancement.Premium` (wild card) | Wild means "counts as any type in a pattern". Ratios have no pattern to be wild in. |
+| `Enhancement.Doubled` | Minted a permanent copy into the deck. There is no deck. |
+| `Enhancement.Golden` | Paid per Golden card left on the rail at customer end. There is no rail. |
+| Frozen's shatter roll | Destroyed the card instance. Bottles are not instances. Frozen's ×2 Mult survives; only the 1-in-4 destruction goes. |
+| `ToolOp.Destroy` (Ice Pick) | Removed a card from the run permanently. Emptying a bottle you can refill is not the same effect. |
+| `ToolOp.Copy` (Bar Spoon) | Duplicated a card instance. Shelf bottles are unique by id. |
+| `VoucherOp.ExtraRestock` (Happy Hour) | Restock is gone. |
+| `VoucherOp.ExtraRail` (Wider Rail) | The rail is gone. |
+| Silver Stake's −1 Restock | Needs a new penalty; re-themed to a smaller glass. |
+
+**Rescued rather than deleted.** Three patrons keyed on Restock would have died. Deleting
+good content because a resource changed name is the wrong trade, so they re-theme onto the
+pour system's own scarcity — spills and refills — keeping all 64 patrons alive:
+
+| Patron | Was | Becomes |
+|---|---|---|
+| The Quiet Monk | +30 Flavor if no Restocks used | +30 Flavor if nothing was spilled this order |
+| Off-Duty Cop | ×2 Mult if no Restocks used | ×2 Mult if nothing was spilled this order |
+| The Gossip | +5 Flavor per Restock, permanently | +5 Flavor per bottle refilled, permanently |
+
+That needs one new condition (`NoSpillsThisCustomer`) and one new trigger (`OnRefill`).
 
 ---
 

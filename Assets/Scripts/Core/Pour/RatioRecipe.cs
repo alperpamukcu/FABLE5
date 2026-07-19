@@ -44,8 +44,13 @@ namespace LastCall.Core
         /// <summary>
         /// The best (highest-rank) recipe whose bands the glass satisfies, or null.
         /// A spilled glass matches nothing — it never reached anyone.
+        ///
+        /// The match carries the glass's ingredients as scored cards, weighted by their share
+        /// of the drink. That is what keeps card Flavor values, quality tiers and enhancements
+        /// meaningful under pouring: a drink that is 70% vodka scores 70% of vodka's Flavor.
         /// </summary>
-        public static RecipeMatch Match(GlassContents glass, IReadOnlyList<RecipeDefinition> recipes)
+        public static RecipeMatch Match(GlassContents glass, IReadOnlyList<RecipeDefinition> recipes,
+            Func<string, IngredientCard> lookup = null)
         {
             if (glass == null || glass.IsEmpty || glass.IsOverflowing || recipes == null) return null;
 
@@ -56,10 +61,34 @@ namespace LastCall.Core
                 if (!Satisfies(glass, recipe)) continue;
                 if (best == null || recipe.Rank > best.Rank) best = recipe;
             }
+            if (best == null) return null;
 
-            // The scored "cards" are gone with the deck; a ratio match scores off the recipe
-            // alone, so the card list is deliberately empty rather than faked.
-            return best == null ? null : new RecipeMatch(best, Array.Empty<IngredientCard>());
+            var (cards, weights) = ScoredContents(glass, lookup);
+            return new RecipeMatch(best, cards, weights);
+        }
+
+        /// <summary>
+        /// The glass's distinct ingredients in pour order, with each one's share of the drink.
+        /// Merged per ingredient, so a bottle returned to twice scores once at its total share
+        /// rather than twice at half-weight — which would double its Mult effects.
+        /// </summary>
+        public static (IReadOnlyList<IngredientCard> cards, IReadOnlyList<double> weights)
+            ScoredContents(GlassContents glass, Func<string, IngredientCard> lookup)
+        {
+            var cards = new List<IngredientCard>();
+            var weights = new List<double>();
+            if (glass == null || lookup == null || glass.IsEmpty) return (cards, weights);
+
+            var seen = new HashSet<string>();
+            foreach (var pour in glass.Pours)
+            {
+                if (!seen.Add(pour.IngredientId)) continue;
+                var card = lookup(pour.IngredientId);
+                if (card == null) continue;
+                cards.Add(card);
+                weights.Add(glass.RatioOf(pour.IngredientId));
+            }
+            return (cards, weights);
         }
 
         private static bool Satisfies(GlassContents glass, RecipeDefinition recipe)

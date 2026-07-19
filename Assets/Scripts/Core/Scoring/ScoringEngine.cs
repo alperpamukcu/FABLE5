@@ -48,11 +48,12 @@ namespace LastCall.Core
             for (int index = 0; index < match.ScoredCards.Count; index++)
             {
                 var card = match.ScoredCards[index];
-                int retriggers = ScoreCardOnce(card, index, patrons, context, steps,
+                double weight = match.WeightAt(index);
+                int retriggers = ScoreCardOnce(card, index, weight, patrons, context, steps,
                     allowRetriggerOps: true, ref flavor, ref mult);
                 for (int r = 0; r < retriggers; r++)
                 {
-                    ScoreCardOnce(card, index, patrons, context, steps,
+                    ScoreCardOnce(card, index, weight, patrons, context, steps,
                         allowRetriggerOps: false, ref flavor, ref mult);
                 }
             }
@@ -100,8 +101,22 @@ namespace LastCall.Core
             }
         }
 
-        /// <summary>Scores one pass of a card; returns how many retriggers were requested.</summary>
-        private static int ScoreCardOnce(IngredientCard card, int index,
+        /// <summary>
+        /// A Mult effect needs at least this much of the glass to count (GDD 21 §9).
+        ///
+        /// Flavor scales with volume, but Mult cannot — "×1.5" has no sensible fractional
+        /// form. Left unguarded that hands the player a free combo: pour a drop of every
+        /// Barrel-Aged and Signature bottle on the shelf and collect every multiplier for
+        /// almost no volume. An ingredient has to actually be *in* the drink.
+        /// </summary>
+        public const double MinShareForMultEffects = 0.10;
+
+        /// <summary>
+        /// Scores one pass of a card; returns how many retriggers were requested.
+        /// <paramref name="weight"/> is the ingredient's share of the glass under the pour
+        /// system, or 1 for a card-era mix.
+        /// </summary>
+        private static int ScoreCardOnce(IngredientCard card, int index, double weight,
             IReadOnlyList<PatronInstance> patrons, EffectContext context, List<ScoreStep> steps,
             bool allowRetriggerOps, ref double flavor, ref double mult)
         {
@@ -113,10 +128,16 @@ namespace LastCall.Core
                 return 0;
             }
 
+            // Flavor is a quantity — how much good stuff is in the glass — so it scales with
+            // the pour. Mult is a property of the finished drink: the barrel-aged whisky is
+            // either in it or it is not, gated by MinShareForMultEffects.
+            bool countsForMult = weight >= MinShareForMultEffects;
+
             if (card.Quality != QualityTier.Bootleg)
             {
-                flavor += card.Flavor;
-                steps.Add(new ScoreStep(card.Name, EffectOp.AddFlavor, card.Flavor, flavor, mult));
+                double contribution = card.Flavor * weight;
+                flavor += contribution;
+                steps.Add(new ScoreStep(card.Name, EffectOp.AddFlavor, contribution, flavor, mult));
             }
             else
             {
@@ -126,14 +147,16 @@ namespace LastCall.Core
             switch (card.Quality)
             {
                 case QualityTier.TopShelf:
-                    flavor += 30;
-                    steps.Add(new ScoreStep($"{card.Name} (Top Shelf)", EffectOp.AddFlavor, 30, flavor, mult));
+                    flavor += 30 * weight;
+                    steps.Add(new ScoreStep($"{card.Name} (Top Shelf)", EffectOp.AddFlavor, 30 * weight, flavor, mult));
                     break;
                 case QualityTier.BarrelAged:
+                    if (!countsForMult) break;
                     mult += 8;
                     steps.Add(new ScoreStep($"{card.Name} (Barrel-Aged)", EffectOp.AddMult, 8, flavor, mult));
                     break;
                 case QualityTier.Signature:
+                    if (!countsForMult) break;
                     mult *= 1.5;
                     steps.Add(new ScoreStep($"{card.Name} (Signature)", EffectOp.MultMult, 1.5, flavor, mult));
                     break;
@@ -142,20 +165,22 @@ namespace LastCall.Core
             switch (card.Enhancement)
             {
                 case Enhancement.Infused:
-                    flavor += 40;
-                    steps.Add(new ScoreStep($"{card.Name} (Infused)", EffectOp.AddFlavor, 40, flavor, mult));
+                    flavor += 40 * weight;
+                    steps.Add(new ScoreStep($"{card.Name} (Infused)", EffectOp.AddFlavor, 40 * weight, flavor, mult));
                     break;
                 case Enhancement.Overproof:
+                    if (!countsForMult) break;
                     mult += 4;
                     steps.Add(new ScoreStep($"{card.Name} (Overproof)", EffectOp.AddMult, 4, flavor, mult));
                     break;
                 case Enhancement.Frozen:
+                    if (!countsForMult) break;
                     mult *= 2;
                     steps.Add(new ScoreStep($"{card.Name} (Frozen)", EffectOp.MultMult, 2, flavor, mult));
                     break;
-                // Premium is a matcher concern; the Frozen shatter roll and the Doubled
-                // copy happen in the round layer (they mutate the deck); Golden pays out
-                // in the run layer at customer end.
+                // Premium is a matcher concern; Golden pays out in the run layer at customer
+                // end. Both, along with Doubled and Frozen's shatter roll, are casualties of
+                // the pour pivot — see Docs/PLAN_pour_pivot.md.
             }
 
             int retriggers = 0;
