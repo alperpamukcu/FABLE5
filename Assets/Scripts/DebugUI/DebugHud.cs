@@ -351,9 +351,11 @@ namespace LastCall.DebugUI
         {
             if (_scorePopup == null) return;
 
+            string reaction = ReactionLine(breakdown.Resonance);
+
             if (breakdown.Recipe == null)
             {
-                _scoreRecipeText.text = "NO RECIPE";
+                _scoreRecipeText.text = reaction.Length > 0 ? reaction : "NO RECIPE";
                 _scoreMathText.text = "<color=#9C8F80>0</color>";
             }
             else if (breakdown.IsVoided)
@@ -363,7 +365,9 @@ namespace LastCall.DebugUI
             }
             else
             {
-                _scoreRecipeText.text = $"{breakdown.Recipe.Name}  (Lv{breakdown.RecipeLevel})";
+                _scoreRecipeText.text = reaction.Length > 0
+                    ? $"{breakdown.Recipe.Name}  ·  {reaction}"
+                    : $"{breakdown.Recipe.Name}  (Lv{breakdown.RecipeLevel})";
                 _scoreMathText.text =
                     $"<color=#3BC8BE>{breakdown.TotalFlavor:0.#}</color>   ×   " +
                     $"<color=#E84DA6>{breakdown.TotalMult:0.#}</color>   =   {breakdown.FinalScore:0.#}";
@@ -371,6 +375,33 @@ namespace LastCall.DebugUI
 
             if (_scorePopupRoutine != null) StopCoroutine(_scorePopupRoutine);
             _scorePopupRoutine = StartCoroutine(ScorePopupRoutine());
+        }
+
+        /// <summary>
+        /// How the customer took it (GDD 19 §6). Short and stylized by design, and framed
+        /// around being *heard* — the bartender listened well or misread the room. The drink
+        /// is the gesture, never the cure; nothing here celebrates drinking.
+        /// </summary>
+        private static string ReactionLine(ResonanceResult resonance)
+        {
+            if (resonance == null || resonance == ResonanceResult.None) return string.Empty;
+
+            if (resonance.IsBust)
+                return resonance.Bust == BustKind.Overshoot
+                    ? "<color=#D9455C>TOO FAR</color>"
+                    : "<color=#D9455C>MISREAD</color>";
+
+            if (resonance.CleanServe)
+                return resonance.BlindRead
+                    ? "<color=#F5C97B>CLEAN SERVE — CALLED IT</color>"
+                    : "<color=#F5C97B>CLEAN SERVE</color>";
+
+            if (resonance.Progress >= ResonanceJudge.StrongProgress)
+                return "<color=#3BC8BE>THEY FEEL HEARD</color>";
+
+            return resonance.Progress > 0
+                ? "<color=#9C8F80>a little lighter</color>"
+                : "<color=#9C8F80>no change</color>";
         }
 
         private System.Collections.IEnumerator ScorePopupRoutine()
@@ -456,14 +487,24 @@ namespace LastCall.DebugUI
             string tagsLine = Run.FavorTags.Count > 0
                 ? $"\n<color=#8FD4A8>Tags: {string.Join(", ", Run.FavorTags)}</color>"
                 : string.Empty;
+            // The quota is the only thing that can end the run (fork B), so it sits with the
+            // other survival numbers rather than on the ID card.
+            string quotaLine = Run.HasEmotionLayer
+                ? $"\n<color=#F5C97B>Week {Run.Quota.Week} quota: " +
+                  $"{Run.Quota.Earned}/{Run.Quota.Required}</color>"
+                : string.Empty;
+            string chatLine = Run.HasEmotionLayer && Round.ChatsRemaining > 0
+                ? $"   Chats: {Round.ChatsRemaining}"
+                : string.Empty;
+
             _infoText.text =
                 $"Night {Run.Night}/{Run.Config.Nights} — {Run.Slot}\n" +
                 $"Wallet:   ${Run.Money}\n" +
                 $"Target:   {Round.Customer.TargetScore:0.#}\n" +
                 $"Score:    {Round.AccumulatedScore:0.#}\n" +
-                $"Mixes:    {Round.MixesRemaining}   Restocks: {Round.RestocksRemaining}\n" +
+                $"Mixes:    {Round.MixesRemaining}   Restocks: {Round.RestocksRemaining}{chatLine}\n" +
                 $"Cabinet:  {Round.DeckDrawCount} draw / {Round.DeckDiscardCount} discard" +
-                vipLine + tonightLine + tagsLine;
+                quotaLine + vipLine + tonightLine + tagsLine;
 
             RenderPreview();
             RenderRail();
@@ -501,12 +542,58 @@ namespace LastCall.DebugUI
                 return;
             }
             var preview = Round.PreviewScore(_selected);
+            // The line is a single row of pixel type — it wraps and collides with the ID card
+            // past ~45 characters, so the craft half stays terse whenever the read is showing.
+            string read = ReadPreview();
+            bool terse = read.Length > 0;
             if (preview.Recipe == null)
-                _previewText.text = $"{_selected.Count} selected — no recipe (scores 0)";
+                _previewText.text = terse
+                    ? $"no recipe (0){read}"
+                    : $"{_selected.Count} selected — no recipe (scores 0)";
             else if (preview.IsVoided)
                 _previewText.text = $"{preview.Recipe.Name} — VOIDED: {preview.VoidReason}";
+            else if (terse)
+                _previewText.text = $"{preview.Recipe.Name} {preview.FinalScore:0.#}{read}";
             else
                 _previewText.text = $"{preview.Recipe.Name} (Lv{preview.RecipeLevel}) — {preview.TotalFlavor:0.#} × {preview.TotalMult:0.#} = {preview.FinalScore:0.#}";
+        }
+
+        /// <summary>
+        /// The emotional half of the live preview. Scaled to what the player can actually
+        /// read: an Exact stat gets the full verdict, a Range gets the size and direction of
+        /// the push but never whether it busts, and an Unknown gets nothing at all — running
+        /// the judge against hidden truth here would quietly make every blind read a sure thing.
+        /// </summary>
+        private string ReadPreview()
+        {
+            var customer = Round.Customer;
+            if (!customer.HasEmotion || _selected.Count == 0) return string.Empty;
+
+            var intent = customer.Read.Intent;
+            var reading = customer.Read[intent];
+            if (reading.Tier == VisibilityTier.Unknown) return string.Empty;
+
+            int move = Round.PreviewCharges(_selected)[intent];
+            if (move == 0) return string.Empty;
+
+            string tag = UITheme.EmotionTag(intent);
+            bool wanted = customer.Read.Direction == IntentDirection.Extinguish ? move < 0 : move > 0;
+
+            if (reading.Tier == VisibilityTier.Range)
+                return wanted
+                    ? $"  <color=#3BC8BE>{tag} {move:+#;-#}?</color>"
+                    : $"  <color=#D9455C>{tag} {move:+#;-#} WRONG WAY</color>";
+
+            // Exact: they know precisely where the customer stands, so show the real verdict.
+            var verdict = Round.PreviewResonance(_selected);
+            if (verdict.IsBust)
+                return verdict.Bust == BustKind.Overshoot
+                    ? $"  <color=#D9455C>{tag} TOO FAR</color>"
+                    : $"  <color=#D9455C>{tag} WRONG WAY</color>";
+            if (verdict.CleanServe) return $"  <color=#F5C97B>{tag} EXACT</color>";
+            return verdict.Progress > 0
+                ? $"  <color=#3BC8BE>{tag} {move:+#;-#}</color>"
+                : $"  <color=#9C8F80>{tag} 0</color>";
         }
 
         private void RenderRail()
@@ -516,8 +603,13 @@ namespace LastCall.DebugUI
             if (stage == null) return;
             bool inRound = Run.Phase == RunPhase.CustomerRound;
             stage.SetRailVisible(inRound);
+            stage.SetCustomerRead(inRound ? Round.Customer : null);
             if (!inRound) return;
             stage.SetBottles(Round.Rail, _selected, Round.VipRules.DebuffedTypes, ToggleCard, _pendingExit);
+
+            // Pre-commit preview (GDD 19 §5): the projected movement is shown while the
+            // selection is still reversible, so a bust is a decision and not an ambush.
+            stage.SetChargePreview(Round.Customer, Round.PreviewCharges(_selected));
             _pendingExit = DiegeticStage.Exit.None; // consumed; selection re-renders don't re-wave
         }
 

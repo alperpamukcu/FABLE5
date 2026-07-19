@@ -271,6 +271,9 @@ namespace LastCall.DebugUI
                 _customerRect = cust;
             }
 
+            // Layer 7 — the read on them, pinned above their head where only we can see it.
+            BuildIdCard(root);
+
             if (!Motion.Reduced) StartCoroutine(Ambient());
         }
 
@@ -641,6 +644,230 @@ namespace LastCall.DebugUI
                 }
             }
         }
+
+        // ── customer ID card (GDD 19 §3) ─────────────────────────────────────────
+
+        /// <summary>
+        /// The read on the person at the bar. Sits on the back-bar above them like a slip
+        /// pinned where only the bartender can see it: six stat rows of varying clarity,
+        /// and the one line that is never hidden — what they want done.
+        /// </summary>
+        private sealed class StatRow
+        {
+            public Text Tag;
+            public Text Value;
+            public Image Track;    // the 0–100 rail
+            public Image Band;     // the lit portion: a point for Exact, a span for Range
+            public Image Ghost;    // where the current selection would put them
+        }
+
+        private RectTransform _idCard;
+        private Text _idName;
+        private Text _idIntent;
+        private Text _idRelationship;
+        private readonly Dictionary<Emotion, StatRow> _statRows = new Dictionary<Emotion, StatRow>();
+
+        // Measured against the HUD overlay in 640×360 space: the InfoPanel/Patrons/Tools
+        // column ends at x≈202, the Mix/Restock/Skip column starts at x≈530, the live preview
+        // line tops out at y≈237 and the seed row sits above y≈338. That leaves one real gap,
+        // x 200..528 × y 240..336 — the card is sized to live inside it, leaning right so it
+        // stays near the person it describes.
+        private const float CardX = 360f;
+        private const float CardY = 240f;
+        private const float CardW = 160f;
+        private const float CardH = 96f;
+        private const float RowH = 11f;
+        private const float TrackX = 52f;      // where the 0–100 rail starts inside the card
+        private const float TrackW = 62f;
+
+        private void BuildIdCard(RectTransform root)
+        {
+            _idCard = NewRect("CustomerIdCard", root);
+            _idCard.anchorMin = _idCard.anchorMax = new Vector2(0, 0);
+            _idCard.pivot = new Vector2(0, 0);
+            _idCard.sizeDelta = new Vector2(CardW, CardH);
+            _idCard.anchoredPosition = new Vector2(CardX, CardY);
+
+            var frame = _idCard.gameObject.AddComponent<Image>();
+            frame.color = UITheme.Amber[1];          // 1px amber frame, same language as the score card
+            frame.raycastTarget = false;
+
+            var fill = NewRect("Fill", _idCard);
+            Stretch(fill, Vector2.zero, Vector2.one, Vector2.one, -Vector2.one);
+            var fillImg = fill.gameObject.AddComponent<Image>();
+            fillImg.color = UITheme.Night[0];
+            fillImg.raycastTarget = false;
+
+            _idName = NewText("Name", fill, _display, 7, TextAnchor.UpperLeft, UITheme.TextPrimary);
+            Place((RectTransform)_idName.transform, new Vector2(0, 1), new Vector2(CardW - 44, 9), new Vector2(4, -3));
+
+            _idRelationship = NewText("Relationship", fill, _body, 7, TextAnchor.UpperRight, UITheme.TextSecondary);
+            Place((RectTransform)_idRelationship.transform, new Vector2(1, 1), new Vector2(40, 9), new Vector2(-4, -3));
+
+            _idIntent = NewText("Intent", fill, _display, 7, TextAnchor.UpperLeft, UITheme.PrimaryAction);
+            Place((RectTransform)_idIntent.transform, new Vector2(0, 1), new Vector2(CardW - 8, 9), new Vector2(4, -13));
+
+            float y = -25f;
+            foreach (var emotion in Emotions.All)
+            {
+                _statRows[emotion] = BuildStatRow(fill, emotion, y);
+                y -= RowH;
+            }
+        }
+
+        private StatRow BuildStatRow(RectTransform parent, Emotion emotion, float y)
+        {
+            var row = new StatRow();
+            var ramp = UITheme.EmotionRamp[emotion];
+
+            row.Tag = NewText($"Tag{emotion}", parent, _body, 7, TextAnchor.UpperLeft, ramp[3]);
+            Place((RectTransform)row.Tag.transform, new Vector2(0, 1), new Vector2(28, 9), new Vector2(4, y));
+
+            var track = NewRect($"Track{emotion}", parent);
+            Place(track, new Vector2(0, 1), new Vector2(TrackW, 5), new Vector2(TrackX, y - 2));
+            row.Track = track.gameObject.AddComponent<Image>();
+            row.Track.color = ramp[0];
+            row.Track.raycastTarget = false;
+
+            // Where the selection would land them — drawn under the band so a covered ghost
+            // reads as "this lands inside what you already know".
+            var ghost = NewRect($"Ghost{emotion}", track);
+            ghost.anchorMin = ghost.anchorMax = new Vector2(0, 0.5f);
+            ghost.pivot = new Vector2(0.5f, 0.5f);
+            ghost.sizeDelta = new Vector2(2, 7);
+            row.Ghost = ghost.gameObject.AddComponent<Image>();
+            row.Ghost.color = UITheme.Cream[4];
+            row.Ghost.raycastTarget = false;
+            ghost.gameObject.SetActive(false);
+
+            var band = NewRect($"Band{emotion}", track);
+            band.anchorMin = band.anchorMax = new Vector2(0, 0.5f);
+            band.pivot = new Vector2(0, 0.5f);
+            band.sizeDelta = new Vector2(2, 5);
+            row.Band = band.gameObject.AddComponent<Image>();
+            row.Band.color = ramp[3];
+            row.Band.raycastTarget = false;
+
+            row.Value = NewText($"Val{emotion}", parent, _body, 7, TextAnchor.UpperRight, ramp[4]);
+            Place((RectTransform)row.Value.transform, new Vector2(1, 1), new Vector2(40, 9), new Vector2(-4, y));
+
+            return row;
+        }
+
+        /// <summary>
+        /// Shows the current read. Pass a null customer (or one without the emotion layer)
+        /// to hide the card entirely — the pre-pivot loop must still render.
+        /// </summary>
+        public void SetCustomerRead(CustomerOrder customer)
+        {
+            if (_idCard == null) return;
+            if (customer == null || !customer.HasEmotion)
+            {
+                _idCard.gameObject.SetActive(false);
+                return;
+            }
+
+            _idCard.gameObject.SetActive(true);
+            var read = customer.Read;
+            _idName.text = customer.Regular.Name.ToUpperInvariant();
+            _idRelationship.text = customer.Regular.Visits > 0
+                ? customer.Regular.Relationship.ToString().ToLowerInvariant()
+                : "new";
+            _idIntent.text = (read.Direction == IntentDirection.Extinguish ? "SETTLE " : "LIFT ")
+                             + read.Intent.ToString().ToUpperInvariant();
+            _idIntent.color = UITheme.EmotionFill(read.Intent);
+
+            foreach (var emotion in Emotions.All)
+            {
+                var row = _statRows[emotion];
+                var reading = read[emotion];
+                bool isIntent = emotion == read.Intent;
+
+                row.Tag.text = UITheme.EmotionTag(emotion) + (isIntent ? "*" : "");
+                row.Value.text = reading.ToString();
+                row.Value.color = reading.Tier == VisibilityTier.Unknown
+                    ? UITheme.EmotionDim(emotion)
+                    : UITheme.EmotionRamp[emotion][4];
+
+                // Exact = a 2px tick at the value. Range = a span. Unknown = nothing lit.
+                var band = (RectTransform)row.Band.transform;
+                switch (reading.Tier)
+                {
+                    case VisibilityTier.Exact:
+                        band.gameObject.SetActive(true);
+                        band.sizeDelta = new Vector2(2, 5);
+                        band.anchoredPosition = new Vector2(TrackAt(reading.Low), 0);
+                        break;
+                    case VisibilityTier.Range:
+                        band.gameObject.SetActive(true);
+                        band.sizeDelta = new Vector2(
+                            Mathf.Max(2f, TrackAt(reading.High) - TrackAt(reading.Low)), 5);
+                        band.anchoredPosition = new Vector2(TrackAt(reading.Low), 0);
+                        break;
+                    default:
+                        band.gameObject.SetActive(false);
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Ghosts where the current selection would leave each stat, before committing —
+        /// the pre-commit preview (GDD 19 §5). Pass an empty delta to clear it.
+        ///
+        /// Critically, the ghost is projected from what the player can *see*, never from the
+        /// true value: a ghost drawn from the truth would hand them the answer for Unknown
+        /// stats and make the whole lucky-read bonus unearnable. So an Exact reading ghosts a
+        /// point, a Range ghosts the whole band slid along, and an Unknown ghosts nothing.
+        /// </summary>
+        public void SetChargePreview(CustomerOrder customer, EmotionDelta delta)
+        {
+            if (_idCard == null || customer == null || !customer.HasEmotion) return;
+
+            bool any = delta != null && !delta.IsEmpty;
+            foreach (var emotion in Emotions.All)
+            {
+                var row = _statRows[emotion];
+                var reading = customer.Read[emotion];
+                int move = any ? delta[emotion] : 0;
+
+                if (move == 0 || reading.Tier == VisibilityTier.Unknown)
+                {
+                    row.Ghost.gameObject.SetActive(false);
+                    continue;
+                }
+
+                var ghost = (RectTransform)row.Ghost.transform;
+                ghost.gameObject.SetActive(true);
+
+                if (reading.Tier == VisibilityTier.Exact)
+                {
+                    int projected = reading.Low + move;
+                    bool overshot = projected < EmotionStats.Min || projected > EmotionStats.Max;
+                    ghost.pivot = new Vector2(0.5f, 0.5f);
+                    ghost.sizeDelta = new Vector2(2, 7);
+                    ghost.anchoredPosition = new Vector2(TrackAt(EmotionStats.Clamp(projected)), 0);
+                    row.Ghost.color = overshot ? UITheme.ViceRed[3] : UITheme.Cream[4];
+                }
+                else
+                {
+                    // The band slides whole: they know the width of their own uncertainty,
+                    // and a band that runs off the end is the visual warning of a possible bust.
+                    int low = reading.Low + move;
+                    int high = reading.High + move;
+                    bool mayOvershoot = low < EmotionStats.Min || high > EmotionStats.Max;
+                    float x0 = TrackAt(EmotionStats.Clamp(low));
+                    float x1 = TrackAt(EmotionStats.Clamp(high));
+                    ghost.pivot = new Vector2(0, 0.5f);
+                    ghost.sizeDelta = new Vector2(Mathf.Max(2f, x1 - x0), 7);
+                    ghost.anchoredPosition = new Vector2(x0, 0);
+                    row.Ghost.color = mayOvershoot ? UITheme.ViceRed[2] : UITheme.Cream[2];
+                }
+            }
+        }
+
+        /// <summary>x offset inside the 0–100 rail for a stat value.</summary>
+        private static float TrackAt(int value) => TrackW * Mathf.Clamp01(value / 100f);
 
         // ── helpers ──────────────────────────────────────────────────────────────
 

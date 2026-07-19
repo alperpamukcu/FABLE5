@@ -16,6 +16,13 @@ namespace LastCall.Game
         [SerializeField] private TextAsset toolsJson;
         [SerializeField] private TextAsset vipsJson;
         [SerializeField] private TextAsset vouchersJson;
+
+        /// <summary>
+        /// Customer archetypes (GDD 19). Leave unassigned to run the pre-pivot loop: without
+        /// it there is no emotional layer and no weekly quota.
+        /// </summary>
+        [SerializeField] private TextAsset archetypesJson;
+
         [SerializeField] private string seed = "LASTCALL-DEV";
         [SerializeField, Range(StakeTable.Min, StakeTable.Max)] private int stake = 1;
         [SerializeField] private string barId = "classic";
@@ -42,16 +49,24 @@ namespace LastCall.Game
             var toolPool = DataLoader.ParseTools(toolsJson.text);
             var vipPool = DataLoader.ParseVips(vipsJson.text);
             var voucherPool = DataLoader.ParseVouchers(vouchersJson.text);
+            var archetypes = archetypesJson != null
+                ? DataLoader.ParseArchetypes(archetypesJson.text)
+                : null;
             var bar = BarCatalog.Find(BarCatalog.CreateDefault(), barId);
             var config = StakeTable.Apply(RunConfig.Default, stake);
 
             Run = new RunController(deck.Cards, recipes, new RunRng(CurrentSeed), config: config,
                 patronPool: patronPool, toolPool: toolPool, vipPool: vipPool,
-                voucherPool: voucherPool, bar: bar);
+                voucherPool: voucherPool, bar: bar, archetypes: archetypes);
 
+            var customer = Run.CurrentRound.Customer;
             Debug.Log($"[LastCall] Run started — seed '{CurrentSeed}', {bar.Name}, " +
                       $"Stake {stake} ({StakeTable.NameOf(stake)}), " +
-                      $"{Run.CurrentRound.Customer.Name} wants {Run.CurrentRound.Customer.TargetScore}, wallet ${Run.Money}.");
+                      $"{customer.Name} wants {customer.TargetScore}, wallet ${Run.Money}." +
+                      (customer.HasEmotion
+                          ? $" Reading: {customer.Read.Direction} {customer.Read.Intent}, " +
+                            $"week quota {Run.Quota.Required}."
+                          : " (no emotion layer)"));
             RunStarted?.Invoke();
         }
     }

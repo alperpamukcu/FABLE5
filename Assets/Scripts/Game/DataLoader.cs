@@ -39,7 +39,8 @@ namespace LastCall.Game
                     throw new FormatException("Deck file has a card with an empty id.");
                 if (card.flavor < 0)
                     throw new FormatException($"Card '{card.id}' has negative flavor.");
-                cards.Add(new IngredientCard(card.id, card.name, ParseType(card.type, card.id), card.flavor));
+                cards.Add(new IngredientCard(card.id, card.name, ParseType(card.type, card.id),
+                    card.flavor, QualityTier.HousePour, ParseCharges(card.charges, card.id)));
             }
             return new LoadedDeck(dto.deckId, dto.name, cards);
         }
@@ -79,7 +80,8 @@ namespace LastCall.Game
                     recipe.exactMixSize, recipe.minMixSize,
                     recipe.allDistinctTypes, recipe.allEqualFlavor, recipe.scoreAllMixCards,
                     recipe.equalFlavorGroupSize, recipe.ascendingFlavorGroupSize,
-                    recipe.sameTypeGroupMin));
+                    recipe.sameTypeGroupMin,
+                    recipe.chargeMultiplier)); // 0 = derive it from baseMult
             }
             return recipes;
         }
@@ -203,6 +205,69 @@ namespace LastCall.Game
             return vouchers;
         }
 
+        /// <summary>
+        /// Customer archetypes (GDD 19 §9). Bands are addressed by emotion name rather than
+        /// position so a reordered file can't silently make everyone furious.
+        /// </summary>
+        public static IReadOnlyList<ArchetypeDefinition> ParseArchetypes(string json)
+        {
+            var dto = FromJson<ArchetypesFileDto>(json, "archetypes");
+            if (dto.archetypes == null || dto.archetypes.Count == 0)
+                throw new FormatException("Archetypes file contains no archetypes.");
+
+            var archetypes = new List<ArchetypeDefinition>(dto.archetypes.Count);
+            foreach (var archetype in dto.archetypes)
+            {
+                if (string.IsNullOrWhiteSpace(archetype.id))
+                    throw new FormatException("Archetypes file has an archetype with an empty id.");
+                if (archetype.bands == null || archetype.bands.Count != Emotions.Count)
+                    throw new FormatException(
+                        $"Archetype '{archetype.id}' needs exactly {Emotions.Count} bands.");
+
+                var bands = new EmotionBand[Emotions.Count];
+                var seen = new bool[Emotions.Count];
+                foreach (var band in archetype.bands)
+                {
+                    var emotion = ParseEnum<Emotion>(band.emotion, archetype.id, "emotion");
+                    if (seen[(int)emotion])
+                        throw new FormatException(
+                            $"Archetype '{archetype.id}' lists {emotion} twice.");
+                    if (band.max < band.min)
+                        throw new FormatException(
+                            $"Archetype '{archetype.id}' has {emotion} max {band.max} below min {band.min}.");
+                    bands[(int)emotion] = new EmotionBand(band.min, band.max);
+                    seen[(int)emotion] = true;
+                }
+
+                int weight = archetype.weight > 0 ? archetype.weight : 1;
+                archetypes.Add(new ArchetypeDefinition(
+                    archetype.id, archetype.name, bands, archetype.names, weight));
+            }
+            return archetypes;
+        }
+
+        /// <summary>
+        /// Emotional charges printed on a card (GDD 19 §4). A card with no charges is inert,
+        /// which is legal — it just says nothing to anyone.
+        /// </summary>
+        private static IReadOnlyList<EmotionCharge> ParseCharges(List<ChargeDto> dtos, string context)
+        {
+            if (dtos == null || dtos.Count == 0) return Array.Empty<EmotionCharge>();
+
+            var charges = new List<EmotionCharge>(dtos.Count);
+            var seen = new HashSet<Emotion>();
+            foreach (var dto in dtos)
+            {
+                var emotion = ParseEnum<Emotion>(dto.emotion, context, "emotion");
+                if (!seen.Add(emotion))
+                    throw new FormatException($"Card '{context}' charges {emotion} twice.");
+                if (dto.amount == 0)
+                    throw new FormatException($"Card '{context}' has a zero {emotion} charge.");
+                charges.Add(new EmotionCharge(emotion, dto.amount));
+            }
+            return charges;
+        }
+
         private static EffectCondition ParseCondition(ConditionDto dto, string context)
         {
             if (dto == null || string.IsNullOrEmpty(dto.kind)) return EffectCondition.Always;
@@ -237,12 +302,45 @@ namespace LastCall.Game
 
 #pragma warning disable 0649 // fields assigned by JsonUtility via reflection
         [Serializable]
+        private sealed class ChargeDto
+        {
+            public string emotion;
+            public int amount;
+        }
+
+        [Serializable]
         private sealed class CardDto
         {
             public string id;
             public string name;
             public string type;
             public int flavor;
+            public List<ChargeDto> charges;
+        }
+
+        [Serializable]
+        private sealed class BandDto
+        {
+            public string emotion;
+            public int min;
+            public int max;
+        }
+
+        [Serializable]
+        private sealed class ArchetypeDto
+        {
+            public string id;
+            public string name;
+            public int weight;
+            public List<string> names;
+            public List<BandDto> bands;
+        }
+
+        [Serializable]
+        private sealed class ArchetypesFileDto
+        {
+            public int version;
+            public List<ArchetypeDto> archetypes;
         }
 
         [Serializable]
@@ -279,6 +377,7 @@ namespace LastCall.Game
             public int equalFlavorGroupSize;
             public int ascendingFlavorGroupSize;
             public int sameTypeGroupMin;
+            public double chargeMultiplier;
         }
 
         [Serializable]

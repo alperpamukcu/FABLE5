@@ -47,6 +47,37 @@ namespace LastCall.DebugUI
             [IngredientType.Garnish] = Cream,
         };
 
+        // ── emotion → ramp (GDD 19 §1); index by [step] ─────────────────────────
+        // Each emotion owns one ramp so a stat is identifiable by colour alone, before
+        // any text is read. Deliberately overlaps the type ramps: an ingredient's colour
+        // hints at what it moves, without promising it (charges are per-card, not per-type).
+        public static readonly Dictionary<Emotion, Color[]> EmotionRamp = new Dictionary<Emotion, Color[]>
+        {
+            [Emotion.Anger] = ViceRed,
+            [Emotion.Sadness] = ClubBlue,
+            [Emotion.Fatigue] = Amber,
+            [Emotion.Excitement] = Cyan,
+            [Emotion.Heartbreak] = Magenta,
+            [Emotion.Anxiety] = Lime,
+        };
+
+        public static Color EmotionFill(Emotion e) => EmotionRamp[e][3];
+        public static Color EmotionDim(Emotion e) => EmotionRamp[e][1];
+
+        /// <summary>Three-letter tag for the ID card's stat rows — the card is narrow.</summary>
+        public static string EmotionTag(Emotion e)
+        {
+            switch (e)
+            {
+                case Emotion.Anger: return "ANG";
+                case Emotion.Sadness: return "SAD";
+                case Emotion.Fatigue: return "TIR";
+                case Emotion.Excitement: return "EXC";
+                case Emotion.Heartbreak: return "HRT";
+                default: return "ANX";
+            }
+        }
+
         /// <summary>Body/fill colour for an ingredient type (ramp step 3).</summary>
         public static Color TypeFill(IngredientType t) => TypeRamp[t][3];
 

@@ -37,6 +37,7 @@ namespace LastCall.Core
         private readonly HashSet<string> _mixedRecipeIds = new HashSet<string>();
         private readonly SeededRng _shatterRng;
         private readonly int _night;
+        private int _chatsSpent;
         private readonly List<IngredientCard> _lastShattered = new List<IngredientCard>();
         private readonly List<IngredientCard> _lastDoubledCopies = new List<IngredientCard>();
 
@@ -50,7 +51,14 @@ namespace LastCall.Core
         public int DeckDrawCount => _deck.DrawCount;
         public int DeckDiscardCount => _deck.DiscardCount;
         public int MixesUsed => Config.MixesPerCustomer - MixesRemaining;
-        public int RestocksUsed => Config.RestocksPerCustomer - RestocksRemaining;
+
+        /// <summary>
+        /// Restocks actually spent churning the rail. Chats are paid for out of the same
+        /// budget but deliberately excluded: patron conditions keyed on restocks are about
+        /// burning through cards, and listening to someone is not that
+        /// (<c>Docs/PLAN_emotion_pivot.md</c> D8).
+        /// </summary>
+        public int RestocksUsed => Config.RestocksPerCustomer - RestocksRemaining - _chatsSpent;
         public IReadOnlyList<PatronInstance> Patrons => _patrons;
 
         /// <summary>Chats left this visit (GDD 19 §8); each one spends a Restock charge.</summary>
@@ -222,6 +230,7 @@ namespace LastCall.Core
 
             ChatsRemaining--;
             RestocksRemaining--;
+            _chatsSpent++;
 
             int truth = Customer.Regular.Stats[emotion];
             int halfWidth = CustomerReadFactory.HalfWidthFor(_night, Customer.Regular.Relationship);

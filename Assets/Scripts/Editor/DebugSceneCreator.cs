@@ -21,6 +21,7 @@ namespace LastCall.EditorTools
         private const string ToolsPath = "Assets/Data/tools/tools.json";
         private const string VipsPath = "Assets/Data/vips/vips.json";
         private const string VouchersPath = "Assets/Data/vouchers/vouchers.json";
+        private const string ArchetypesPath = "Assets/Data/customers/archetypes.json";
         // Legacy HUD overlay fonts (temporary, cozy-noir — do not polish). The diegetic
         // pixel stage uses the v2 pixel fonts below.
         private const string LegacyDisplayFontPath = "Assets/Fonts/Limelight-Regular.ttf";
@@ -65,6 +66,7 @@ namespace LastCall.EditorTools
             so.FindProperty("toolsJson").objectReferenceValue = LoadRequired<TextAsset>(ToolsPath);
             so.FindProperty("vipsJson").objectReferenceValue = LoadRequired<TextAsset>(VipsPath);
             so.FindProperty("vouchersJson").objectReferenceValue = LoadRequired<TextAsset>(VouchersPath);
+            so.FindProperty("archetypesJson").objectReferenceValue = LoadRequired<TextAsset>(ArchetypesPath);
             so.ApplyModifiedPropertiesWithoutUndo();
 
             var stage = game.AddComponent<LastCall.DebugUI.DiegeticStage>();
