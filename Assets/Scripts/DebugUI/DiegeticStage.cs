@@ -135,11 +135,6 @@ namespace LastCall.DebugUI
             if (_moneyText != null) _moneyText.text = text;
         }
 
-        /// <summary>The per-type bottle sprite, so UI (e.g. the recipe book) can show the
-        /// same art the rail uses instead of abstract colour dots.</summary>
-        public Sprite BottleIcon(IngredientType type) =>
-            _bottleSprites.TryGetValue(type, out var s) ? s : null;
-
         private void Awake()
         {
             Application.runInBackground = true; // keep the slide animations advancing unfocused
@@ -984,7 +979,6 @@ namespace LastCall.DebugUI
         private RectTransform _glassFillArea;
         private Text _glassPercent;
         private Text _glassRatios;
-        private Image _glassSpill;
 
         // Big, top-left, deliberately dominant: the glass is the primary feedback channel.
         private const float GlassX = 10f;
@@ -1046,7 +1040,6 @@ namespace LastCall.DebugUI
                 Vector2.zero, Vector2.zero);
             _glassPercent.text = "0%";
 
-            _glassSpill = null;
             var spill = NewText("Spill", _glassRoot, _display, 8, TextAnchor.UpperCenter, UITheme.ViceRed[3]);
             Place((RectTransform)spill.transform, new Vector2(0.5f, 1), new Vector2(GlassW + 20, 10), new Vector2(0, 12));
             spill.text = "SPILLED";

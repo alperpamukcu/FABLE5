@@ -12,6 +12,22 @@
   no fill bonus, still a spill for patron conditions. The hard "bin it first" block is gone.
 - The pour glass is a proper stemmed cocktail glass whose fill is clipped by a stencil mask
   baked from the sprite's own bowl — no more square fill floating on the art (21 §3.1).
+- **Garnishes go in by the pinch** (21 §3): one tap = a fixed 5% of the glass
+  (`GarnishClickFraction`); no more held-jar 1% slivers.
+- **Recipe generosity pass** (21 §9): derived bands ±15% → ±20%, unnamed-stray allowance
+  10% → 15%. Free-hand pouring should be a judgement call, not a precision test.
+- The recipe book rewritten for the pour era: pourable recipes shown as their ratio bands
+  (type-coloured, with FILL minimums), unpourable ones counted as "house secrets"; the
+  card-era dot patterns and "pick 1–5 bottles" hint are gone.
+- Fixed: HUD texts no longer swallow clicks (the win banner sat exactly on the upper shelf
+  and made its whole row unclickable); the balance sim loads `base_bar.json` (it silently
+  died on the deleted classic bar).
+- The sim bot grew up with the shelf: it refills the well (upkeep, not strategy), never
+  stalls on a drained or already-landed customer, and **seeks recipes** — staffing each
+  pourable recipe's bands with intent-aligned bottles at band midpoints. Measured effect of
+  the generosity pass with a recipe-seeking floor bot: orders filled 0.1% → **26.5%**,
+  bust rate 9.5% → 7.9%, win floor 0% → **15%** (old 25/26.7% figures were inflated by the
+  Double Perfect derive bug and are not comparable).
 
 ## v3.1 — Bottles, brands, the market & the hi-bit art pass
 

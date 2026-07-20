@@ -132,8 +132,10 @@ namespace LastCall.Core
             return 1.0 - accounted <= MaxUnnamedShare + 1e-9;
         }
 
-        /// <summary>How much of the glass may be ingredients the recipe never mentions.</summary>
-        public const double MaxUnnamedShare = 0.10;
+        /// <summary>How much of the glass may be ingredients the recipe never mentions.
+        /// Loosened 0.10 → 0.15 (2026-07-20): a garnish pinch plus a splash should not
+        /// knock a drink out of its recipe.</summary>
+        public const double MaxUnnamedShare = 0.15;
 
         /// <summary>
         /// Derives ratio bands from a card-era recipe's type pattern (GDD 21 §9).
@@ -147,8 +149,12 @@ namespace LastCall.Core
         /// Recipes with no type pattern (the value-axis and mono-type ones) get no bands and
         /// simply cannot be poured yet; they need their own design pass.
         /// </summary>
+        // Tolerance loosened 0.15 → 0.20 (2026-07-20): free-hand pouring on a held button
+        // lands within ±10% at best, so ±15 made recipes a precision test instead of a
+        // judgement call. Wider bands mean neighbouring recipes overlap more; the matcher's
+        // rank order decides those, which is what rank is for.
         public static IReadOnlyList<RatioRequirement> DeriveBands(RecipeDefinition recipe,
-            double tolerance = 0.15)
+            double tolerance = 0.20)
         {
             if (recipe?.Requirements == null || recipe.Requirements.Count == 0)
                 return Array.Empty<RatioRequirement>();

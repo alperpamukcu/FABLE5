@@ -48,6 +48,12 @@ pouring while held, so a held-too-long pour is the pour system's equivalent of o
 an emotion — the same "past it is worse than short of it" lesson, in the hand instead of
 the head; serving the mess anyway is allowed, it just says less and looks worse.
 
+**Garnishes go in by the pinch (2026-07-20).** One tap of a garnish jar drops a fixed
+**5% of the glass** (`GarnishClickFraction`), however long the button was held; taps stack.
+Trickling out 1% slivers of mint by timing a held jar was busywork with no read behind it —
+a pinch is a deliberate, countable act, and two pinches of anything stay under the 15%
+stray allowance a recipe tolerates (§9).
+
 ### 3.1 The glass readout
 
 Top-left of the screen, diegetic: a stemmed cocktail glass that fills as you pour,
@@ -156,6 +162,14 @@ Hitting a recipe's bands pays its Flavor and Mult exactly as before, and applies
 `chargeMultiplier` so a well-made drink carries its emotional charges further. Missing every
 recipe still produces a real drink that moves real emotions — at ×0.5 charge, exactly the
 existing no-recipe rule from GDD 19 §5, now generalised.
+
+**Generosity pass (2026-07-20):** derived bands widened from ±15% to **±20%**, and the
+unnamed-stray allowance from 10% to **15%** of the glass. Free-hand pouring on a held
+button lands within ~10% at best, so the old bands made recipes a precision test rather
+than a judgement call — and a garnish pinch (5%) plus a splash could knock a drink out of
+its recipe. Wider bands overlap more between neighbouring recipes; rank order arbitrates,
+which is what rank is for. The recipe book in the HUD now teaches exactly this: each
+pourable recipe as its bands, unpourable ones counted as "house secrets".
 
 **Ruling:** the emotional ratio comes first and the recipe is a bonus, not a gate. A player
 who serves the perfect emotional mix and matches no recipe should still satisfy the customer;

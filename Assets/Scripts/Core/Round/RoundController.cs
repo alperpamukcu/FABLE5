@@ -147,6 +147,17 @@ namespace LastCall.Core
             return _shelf.PourInto(Glass, ingredientId, volume);
         }
 
+        /// <summary>One garnish tap = this share of the glass (GDD 21 §3, 2026-07-20).</summary>
+        public const double GarnishClickFraction = 0.05;
+
+        /// <summary>
+        /// Garnishes go in by the pinch, not the stream: one tap drops a fixed 5% of the
+        /// glass. A pinch is deliberate — trickling out 1% slivers by timing a held jar
+        /// was busywork with no read behind it.
+        /// </summary>
+        public double PourGarnish(string ingredientId) =>
+            PourMeasure(ingredientId, GarnishClickFraction * Config.GlassCapacity);
+
         /// <summary>Bins the glass. The volume is gone; a spill is cleared this way too.</summary>
         public void Discard()
         {

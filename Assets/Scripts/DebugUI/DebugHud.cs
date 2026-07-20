@@ -90,7 +90,6 @@ namespace LastCall.DebugUI
         private Text _shopTitle;
         private RectTransform _recipePanel;
         private RectTransform _recipeRows;
-        private Text _recipeText;
         private bool _recipesVisible;
         private bool _staffVisible;
         private RectTransform _staffPanel;
@@ -187,6 +186,16 @@ namespace LastCall.DebugUI
         private void StartPour(IngredientCard card)
         {
             if (Run == null || Run.Phase != RunPhase.CustomerRound) return;
+
+            // Garnishes go in by the pinch, not the stream: one tap drops a fixed 5% of
+            // the glass. Holding a mint jar to trickle out 1% slivers was busywork.
+            if (card.Type == IngredientType.Garnish)
+            {
+                Run.PourGarnish(card.Id);
+                RenderAll();
+                return;
+            }
+
             Run.BeginPour(card.Id);
             _heldBottleId = card.Id;
         }
@@ -875,8 +884,10 @@ namespace LastCall.DebugUI
         // ─────────────────────────────── recipe book ───────────────────────────────
 
         /// <summary>
-        /// The casual-player teaching surface (GDD 10.2): every recipe as a color-coded
-        /// Type pattern — no cocktail knowledge needed, just match the dots.
+        /// The casual-player teaching surface, pour-era (GDD 21 §9): every pourable recipe
+        /// as its ratio bands — which % of the glass should be which type — because the
+        /// shelf asks for proportions now, not card patterns. Recipes without bands are
+        /// counted, not listed: showing rules no pour can satisfy teaches the wrong game.
         /// </summary>
         private void RenderRecipeBook()
         {
@@ -885,36 +896,43 @@ namespace LastCall.DebugUI
 
             ClearChildren(_recipeRows);
 
-            // Legend: the actual bottle art per ingredient type, so the patterns below read
-            // as "these bottles" rather than abstract colour dots.
-            var legend = NewRecipeRow(26);
-            foreach (var type in TypeColors.Keys)
-            {
-                AddTypeIcon(legend, type, 18, 24);
-                var label = NewText($"Legend_{type}", legend, 12, TextAnchor.MiddleLeft, Cream);
-                label.text = type.ToString();
-                label.gameObject.AddComponent<LayoutElement>().preferredWidth = 74;
-            }
-
+            int unpourable = 0;
             foreach (var recipe in Run.Recipes.OrderBy(r => r.Rank))
             {
-                int level = Run.RecipeLevelOf(recipe.Id);
-                var row = NewRecipeRow(28);
-                foreach (var req in recipe.Requirements)
-                    for (int i = 0; i < req.Count; i++)
-                        AddTypeIcon(row, req.Types.First(), 18, 26);
+                if (recipe.RatioRequirements.Count == 0) { unpourable++; continue; }
 
+                int level = Run.RecipeLevelOf(recipe.Id);
+                var row = NewRecipeRow(26);
                 var text = NewText($"Recipe_{recipe.Id}", row, 13, TextAnchor.MiddleLeft, Cream);
-                text.text = $"<b>{recipe.Name}</b> (Lv{level})   " +
-                            $"{recipe.FlavorAtLevel(level)} × {recipe.MultAtLevel(level)}{ConstraintText(recipe)}";
+                string bands = string.Join("   ", recipe.RatioRequirements.Select(BandText));
+                string fill = recipe.MinFill > 0
+                    ? $"   <color=#C9BCA8>FILL ≥{Pct(recipe.MinFill)}</color>"
+                    : string.Empty;
+                text.text = $"<b>{recipe.Name}</b> (Lv{level})  " +
+                            $"{recipe.FlavorAtLevel(level)} × {recipe.MultAtLevel(level)}   {bands}{fill}";
                 text.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            }
+
+            if (unpourable > 0)
+            {
+                var secrets = NewRecipeRow(22);
+                var secretsText = NewText("RecipeSecrets", secrets, 12, TextAnchor.MiddleLeft, UITheme.Cream[2]);
+                secretsText.text = $"…and {unpourable} house secrets no pour can reach yet.";
+                secretsText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
             }
 
             var hint = NewRecipeRow(24);
             var hintText = NewText("RecipeHint", hint, 12, TextAnchor.MiddleLeft, CandleGlow);
-            hintText.text = "Pick any 1–5 bottles — the bar auto-detects the best recipe. Extras add no Flavor.";
+            hintText.text = "Bands are % of what is IN the glass; FILL is how full the glass is. " +
+                            "Land every type inside its band — up to 15% of anything else is just a splash.";
             hintText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
         }
+
+        private string BandText(RatioRequirement band) =>
+            $"<color=#{ColorUtility.ToHtmlStringRGB(TypeColors[band.Type])}>" +
+            $"{band.Type.ToString().ToUpperInvariant()} {Pct(band.MinRatio)}–{Pct(band.MaxRatio)}</color>";
+
+        private static string Pct(double v) => v.ToString("P0").Replace(" ", "");
 
         /// <summary>One horizontal strip inside the recipe book's vertical list.</summary>
         private RectTransform NewRecipeRow(float height)
@@ -929,46 +947,6 @@ namespace LastCall.DebugUI
             layout.childAlignment = TextAnchor.MiddleLeft;
             row.gameObject.AddComponent<LayoutElement>().preferredHeight = height;
             return row;
-        }
-
-        /// <summary>An ingredient-type icon: the real bottle sprite when installed, else a
-        /// flat swatch in that type's colour.</summary>
-        private void AddTypeIcon(RectTransform parent, IngredientType type, float w, float h)
-        {
-            var rt = NewRect($"Icon_{type}", parent);
-            var image = rt.gameObject.AddComponent<Image>();
-            var sprite = stage != null ? stage.BottleIcon(type) : null;
-            if (sprite != null) { image.sprite = sprite; image.preserveAspect = true; }
-            else image.color = TypeColors[type];
-            var le = rt.gameObject.AddComponent<LayoutElement>();
-            le.preferredWidth = w; le.preferredHeight = h;
-        }
-
-        private string TypeDot(IngredientType type) =>
-            $"<color=#{ColorUtility.ToHtmlStringRGB(TypeColors[type])}>●</color>";
-
-        private string PatternDots(RecipeDefinition recipe)
-        {
-            var parts = new List<string>();
-            foreach (var req in recipe.Requirements)
-                for (int i = 0; i < req.Count; i++)
-                    parts.Add(string.Join("/", req.Types.Select(TypeDot)));
-            return string.Join(" ", parts);
-        }
-
-        private static string ConstraintText(RecipeDefinition recipe)
-        {
-            if (recipe.EqualFlavorGroupSize > 0)
-                return $"  — any {recipe.EqualFlavorGroupSize} cards with the SAME number";
-            if (recipe.AscendingFlavorGroupSize > 0)
-                return $"  — any {recipe.AscendingFlavorGroupSize} cards, all DIFFERENT numbers";
-            if (recipe.SameTypeGroupMin > 0)
-                return $"  — {recipe.SameTypeGroupMin}+ cards of one color";
-            if (recipe.AllEqualFlavor) return "  — 5 different types, all the same number";
-            if (recipe.AllDistinctTypes) return "  — exactly 5 cards, all different types";
-            if (recipe.MinMixSize >= 5) return "  + any 5th card";
-            if (recipe.ExactMixSize == 1) return "  — played alone";
-            return string.Empty;
         }
 
         private void RenderBanner()
@@ -1214,9 +1192,6 @@ namespace LastCall.DebugUI
             rowsLayout.childControlHeight = true;
             rowsLayout.childControlWidth = true;
 
-            _recipeText = NewText("RecipeText", _recipePanel, 15, TextAnchor.UpperLeft, Cream);
-            Stretch((RectTransform)_recipeText.transform, Vector2.zero, Vector2.one, new Vector2(20, 12), new Vector2(-20, -50));
-            _recipeText.gameObject.SetActive(false);   // superseded by the visual rows
             _recipePanel.gameObject.SetActive(false);
 
             // Score moment: the mix result owns the screen for a beat (16 §2 number colours —
@@ -1360,6 +1335,10 @@ namespace LastCall.DebugUI
             text.color = color;
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Overflow;
+            // Text is never a click target here (buttons hit their border Image), but a
+            // raycastable label floating over the stage swallows bottle clicks — the win
+            // banner sat exactly on the upper shelf and made its whole row unclickable.
+            text.raycastTarget = false;
         }
 
         private Text NewText(string name, Transform parent, int size, TextAnchor anchor, Color color)

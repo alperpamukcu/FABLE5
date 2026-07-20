@@ -71,6 +71,26 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void AGarnishTap_DropsAFixedPinch()
+        {
+            // Garnishes go in by the pinch, not the stream: one tap = 5% of the glass,
+            // however long the button was held. Two taps stack.
+            var shelf = new Shelf(new[]
+            {
+                new ShelfBottle(Card("spirit_0", IngredientType.Spirit, 6), 20),
+                new ShelfBottle(Card("mint", IngredientType.Garnish, 1), 20),
+            });
+            var round = NewRound(shelf);
+
+            round.PourGarnish("mint");
+            round.PourGarnish("mint");
+
+            double pinch = RoundController.GarnishClickFraction * round.Config.GlassCapacity;
+            Assert.AreEqual(2 * pinch, round.Glass.TotalVolume, 1e-9);
+            Assert.AreEqual(0.10, round.Glass.FillFraction, 1e-9, "two pinches fill 10%");
+        }
+
+        [Test]
         public void PouringPastTheBrim_Spills_ButTheGlassStillServes()
         {
             var round = NewRound();

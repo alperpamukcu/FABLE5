@@ -208,6 +208,13 @@ namespace LastCall.Core
 
         public void EndPour() => CurrentRound?.EndPour();
 
+        /// <summary>One tap of a garnish jar: a fixed 5% pinch (GDD 21 §3).</summary>
+        public double PourGarnish(string ingredientId)
+        {
+            EnsurePhase(RunPhase.CustomerRound);
+            return CurrentRound.PourGarnish(ingredientId);
+        }
+
         /// <summary>Pours an exact measure — the tap-to-measure input mode (GDD 21 §10).</summary>
         public double PourMeasure(string ingredientId, double volume)
         {
