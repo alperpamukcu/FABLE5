@@ -1,6 +1,12 @@
 # LAST CALL — GDD Module: Nightclub Scene & Bottle Rail Spec (v2)
 
-> The gameplay screen is a DIEGETIC scene: the player IS the bartender behind the counter of a nightclub. The rail is not an abstract card strip — it is bottles standing on the bar. This doc is the source of truth for scene layers, layout, and the slide choreography. Authored at 640×360.
+> ⚠️ **PARTIALLY STALE (2026-07-20).** The camera flipped to the **customer's side of the
+> bar**: bottles now live on two back-bar wall shelves (spirits up, mixers down), not on the
+> counter, and the "camera faces the club" note in §1 is dead. GDD 22 §1 and the layout
+> constants in `DiegeticStage.cs` are the source of truth for the current stage. The layer
+> stack, choreography timings and motion rules below still apply.
+
+> The gameplay screen is a DIEGETIC scene: the player IS the bartender of a nightclub. The rail is not an abstract card strip — it is bottles standing on real shelves. This doc is the source of truth for scene layers and the slide choreography. Authored at 640×360.
 
 ## 1. Layer stack (back → front, with parallax factors)
 | # | Layer | Content | Parallax | Motion |

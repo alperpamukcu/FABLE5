@@ -274,11 +274,13 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void ASpilledGlass_ReachesNobody()
+        public void ASpilledGlass_ServesWhatStayedInIt()
         {
+            // 1.4 glasses poured, but only one glass's worth crosses the counter: the
+            // overflow is on the bar, not in the customer. 20 × 1.0 × 0.5 (no recipe).
             var glass = Glass(("vodka", 1.4));
 
-            Assert.IsTrue(PourResolver.Resolve(glass, null, Lookup).IsEmpty);
+            Assert.AreEqual(10, PourResolver.Resolve(glass, null, Lookup)[Emotion.Excitement]);
         }
 
         [Test]

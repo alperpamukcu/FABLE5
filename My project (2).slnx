@@ -1,9 +1,9 @@
 ﻿<Solution>
+  <Project Path="LastCall.Core.csproj" />
   <Project Path="LastCall.Tests.csproj" />
   <Project Path="LastCall.Editor.csproj" />
-  <Project Path="LastCall.Core.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
-  <Project Path="LastCall.DebugUI.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="LastCall.DebugUI.csproj" />
   <Project Path="LastCall.Game.csproj" />
 </Solution>

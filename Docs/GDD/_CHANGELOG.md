@@ -1,6 +1,19 @@
 # GDD Changelog
 
-## v3.1 (current) — Bottles, brands, the market & the hi-bit art pass
+## v3.2 (current) — The customer POV, style identity & the merciful spill
+
+- **The stage flipped to the customer's side of the bar** (22 §1): bottles on two back-bar
+  wall shelves (spirits up, mixers down), the till beside the patron, the counter along the
+  bottom. GDD 18's layout section is banner-superseded; `DiegeticStage` holds the truth.
+- **Style identity is explicit** (22 §1): display names carry the style word ("Astra
+  Vodka"), and every style owns a signature colour (`UITheme.StyleColor`) worn by the shelf
+  tag, the ratio list and the liquid itself.
+- **A spilled glass can be served** (21 §3): charges cap at one glass's worth, no recipe,
+  no fill bonus, still a spill for patron conditions. The hard "bin it first" block is gone.
+- The pour glass is a proper stemmed cocktail glass whose fill is clipped by a stencil mask
+  baked from the sprite's own bowl — no more square fill floating on the art (21 §3.1).
+
+## v3.1 — Bottles, brands, the market & the hi-bit art pass
 
 - NEW `22_bottles_brands_market.md` — the curated 12-bottle base bar with brand identity
   papers (style/tier/origin/ABV/blurb), the end-of-night brand market, the licence-style

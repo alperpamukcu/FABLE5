@@ -78,6 +78,30 @@ namespace LastCall.DebugUI
             }
         }
 
+        // ── bottle style → signature colour (GDD 22 §1) ─────────────────────────
+        // Each drink style owns one colour so the shelf reads at a glance: the vodka tag is
+        // always ice-blue, the bourbon tag always amber, whatever the brand. Data-driven
+        // styles fall back to the ingredient-type ramp when unmapped.
+        private static readonly Dictionary<string, Color> StyleColors = new Dictionary<string, Color>
+        {
+            ["vodka"] = Ramp(0x6E93F0)[0],
+            ["gin"] = Ramp(0x6FCC4B)[0],
+            ["rum"] = Ramp(0xF27D8A)[0],
+            ["bourbon"] = Ramp(0xE8A33D)[0],
+            ["amaro"] = Ramp(0x4467CC)[0],
+            ["vermouth"] = Ramp(0xC23283)[0],
+            ["syrup"] = Ramp(0xFF7DC6)[0],
+            ["lemon"] = Ramp(0xF5C97B)[0],
+            ["ginger"] = Ramp(0xC9822B)[0],
+            ["soda"] = Ramp(0x7DF0E3)[0],
+            ["mint"] = Ramp(0xA8F077)[0],
+            ["olive"] = Ramp(0x479938)[0],
+        };
+
+        /// <summary>The style's signature colour; falls back to the type ramp.</summary>
+        public static Color StyleColor(string style, IngredientType fallbackType) =>
+            style != null && StyleColors.TryGetValue(style, out var c) ? c : TypeRamp[fallbackType][4];
+
         /// <summary>Body/fill colour for an ingredient type (ramp step 3).</summary>
         public static Color TypeFill(IngredientType t) => TypeRamp[t][3];
 

@@ -12,16 +12,16 @@ curated **base bar of 12 branded bottles** (`Assets/Data/bottles/base_bar.json`)
 
 | Bottle | Style | Type | Identity |
 |---|---|---|---|
-| Astra | vodka | Spirit | lifts, calms nerves |
-| Boothby | gin | Spirit | settles a racing mind, at a melancholy cost |
-| Cane & Coral | rum | Spirit | wakes people up, warms them |
-| Redline | bourbon | Spirit | talks anger down, opens sadness |
-| Amaro Notte | amaro | Bitter | meets anger head-on |
-| Velvet Rosso | vermouth | Sweet | softens heartbreak |
+| Astra Vodka | vodka | Spirit | lifts, calms nerves |
+| Boothby Gin | gin | Spirit | settles a racing mind, at a melancholy cost |
+| Coral Rum | rum | Spirit | wakes people up, warms them |
+| Redline Bourbon | bourbon | Spirit | talks anger down, opens sadness |
+| Notte Amaro | amaro | Bitter | meets anger head-on |
+| Velvet Vermouth | vermouth | Sweet | softens heartbreak |
 | House Syrup | syrup | Sweet | comfort by the spoonful |
 | Fresh Lemon | lemon | Sour | cuts fatigue, jangles nerves |
-| Kicker | ginger | Bubbly | sparks excitement — and tempers |
-| Klara | soda | Bubbly | waters everything down, on purpose |
+| Kicker Ginger | ginger | Bubbly | sparks excitement — and tempers |
+| Klara Soda | soda | Bubbly | waters everything down, on purpose |
 | Mint | mint | Garnish | quietly restorative |
 | Luca Olives | olive | Garnish | takes the edge off |
 
@@ -35,6 +35,22 @@ Design rules, enforced by `BaseBarContentTests`:
 **The old Flavor numbers are off the bottles.** They still feed volume-weighted scoring, but
 the at-a-glance information a player needs is *which bottle is which* — the brand name sits
 under each bottle like a shelf tag. Flavor moves into the bottle-info popup (§5).
+
+**Style identity is explicit (2026-07-20).** Brand names alone ("Astra") did not say what a
+bottle *was*, so two rules now hold everywhere:
+- **The display name carries the style word** — "Astra Vodka", "Boothby Gin", "Coral Rum".
+  Data rule in `base_bar.json`: the style word is the last word of `name`.
+- **Every style owns a signature colour** (`UITheme.StyleColor`): vodka ice-blue, gin green,
+  rum coral, bourbon amber, amaro deep blue, vermouth magenta, and so on. The shelf tag, the
+  live ratio list, and the liquid poured into the glass all wear it, so "what is vodka"
+  is answerable by colour alone before any text is read. Unmapped styles fall back to the
+  ingredient-type ramp.
+
+**The stage is seen from the customer's side (2026-07-20).** The bottles stand on two
+back-bar wall shelves — spirits on the upper plank, mixers on the lower — behind the
+counter, the way a patron sees a bar. Shelf tags are two lines (brand / style word). The
+scene layout constants live in `DiegeticStage`; GDD 18's "bottles on the counter, camera
+faces the club" note is superseded by this.
 
 ## 2. Identity papers (`IngredientInfo`)
 

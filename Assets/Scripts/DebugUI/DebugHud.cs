@@ -164,7 +164,7 @@ namespace LastCall.DebugUI
             stage.SetGlass(Round.Glass, id => Round.Shelf.Find(id)?.Ingredient);
             stage.SetChargePreview(Round.Customer, Round.PreviewCharges());
             RenderPreview();
-            _mixButton.interactable = !Round.Glass.IsEmpty && !Round.Glass.IsOverflowing;
+            _mixButton.interactable = !Round.Glass.IsEmpty;
             _restockButton.interactable = !Round.Glass.IsEmpty;
         }
 
@@ -187,7 +187,6 @@ namespace LastCall.DebugUI
         private void StartPour(IngredientCard card)
         {
             if (Run == null || Run.Phase != RunPhase.CustomerRound) return;
-            if (Round.Glass.IsOverflowing) return;
             Run.BeginPour(card.Id);
             _heldBottleId = card.Id;
         }
@@ -551,7 +550,7 @@ namespace LastCall.DebugUI
             RenderBanner();
 
             bool inRound = Run.Phase == RunPhase.CustomerRound;
-            bool servable = !Round.Glass.IsEmpty && !Round.Glass.IsOverflowing;
+            bool servable = !Round.Glass.IsEmpty;
             _mixButton.interactable = inRound && servable;
             _restockButton.interactable = inRound && !Round.Glass.IsEmpty;
             _skipButton.gameObject.SetActive(inRound && Run.CanSkipCustomerA);
@@ -1140,12 +1139,12 @@ namespace LastCall.DebugUI
             _actionBar = NewRect("ActionBar", root);
             Stretch(_actionBar, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
-            // Preview line stays up by the rail, where the eye already is while picking.
+            // Preview line rides above the back-bar cabinet, clear of the shelf tags.
             _previewText = NewText("Preview", _actionBar, 20, TextAnchor.MiddleCenter, CandleGlow);
             var previewRt = (RectTransform)_previewText.transform;
             previewRt.anchorMin = previewRt.anchorMax = previewRt.pivot = new Vector2(0.5f, 0);
             previewRt.sizeDelta = new Vector2(680, 34);
-            previewRt.anchoredPosition = new Vector2(0, 440);  // in the gap above the rail + value chips
+            previewRt.anchoredPosition = new Vector2(0, 620);  // the empty band under the top buttons
 
             _mixButton = NewButton("Serve", _actionBar, "SERVE", Amber, OnMixClicked, 20);
             PlaceInBand((RectTransform)_mixButton.transform, 828, 1046, 98, 184);

@@ -51,16 +51,24 @@ namespace LastCall.Core
 
         /// <summary>
         /// Full resolution: scale by volume, amplify by the craft layer, round once.
-        /// A spilled glass reaches nobody and says nothing.
+        ///
+        /// A spilled glass still serves (the customer gets what stayed in the glass; the
+        /// overflow ran onto the counter), so contents are normalised to the brim: pouring
+        /// 1.4 glasses of vodka delivers exactly one glass's worth. Spills never match a
+        /// recipe, so they always land on the ×0.5 no-recipe path.
         /// </summary>
         public static EmotionDelta Resolve(GlassContents glass, RecipeMatch match,
             Func<string, IngredientCard> lookup)
         {
-            if (glass == null || glass.IsEmpty || glass.IsOverflowing) return EmotionDelta.Empty;
+            if (glass == null || glass.IsEmpty) return EmotionDelta.Empty;
 
             double multiplier = match?.Recipe == null
                 ? NoRecipeMultiplier
                 : Math.Min(EmotionResolver.MaxChargeMultiplier, match.Recipe.ChargeMultiplier);
+
+            // What actually reaches the customer is capped at one glass.
+            double served = Math.Min(glass.TotalVolume, glass.Capacity);
+            double scale = glass.TotalVolume > 0 ? served / glass.TotalVolume : 0;
 
             var totals = new double[Emotions.Count];
             foreach (var pour in glass.Pours)
@@ -68,7 +76,7 @@ namespace LastCall.Core
                 var card = lookup(pour.IngredientId);
                 if (card?.Charges == null) continue;
 
-                double share = pour.Volume / glass.Capacity;
+                double share = pour.Volume * scale / glass.Capacity;
                 foreach (var charge in card.Charges)
                     totals[(int)charge.Emotion] += charge.Amount * share * multiplier;
             }

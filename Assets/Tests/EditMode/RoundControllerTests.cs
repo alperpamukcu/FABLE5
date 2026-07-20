@@ -71,14 +71,18 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void PouringPastTheBrim_Spills_AndTheGlassCannotBeServed()
+        public void PouringPastTheBrim_Spills_ButTheGlassStillServes()
         {
             var round = NewRound();
 
             round.PourMeasure(round.Shelf.Bottles[0].Id, round.Config.GlassCapacity + 0.1);
-
             Assert.IsTrue(round.Glass.IsOverflowing);
-            Assert.Throws<InvalidOperationException>(() => round.Serve());
+
+            var breakdown = round.Serve();
+
+            Assert.AreEqual(0, breakdown.FinalScore, "a spill is never a recipe");
+            Assert.AreEqual(1, round.Spills, "the counter is wet either way");
+            Assert.IsTrue(round.Glass.IsEmpty, "the drink went out, mess and all");
         }
 
         [Test]

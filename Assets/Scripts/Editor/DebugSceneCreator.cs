@@ -69,7 +69,9 @@ namespace LastCall.EditorTools
             var stage = game.AddComponent<LastCall.DebugUI.DiegeticStage>();
             var stageSo = new SerializedObject(stage);
             stageSo.FindProperty("glassSprite").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Props/pour_goblet.png");
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Props/pour_nick.png");
+            stageSo.FindProperty("glassMaskSprite").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Props/pour_nick_mask.png");
             stageSo.FindProperty("displayFont").objectReferenceValue = LoadRequired<Font>(PixelDisplayFontPath);
             stageSo.FindProperty("bodyFont").objectReferenceValue = LoadRequired<Font>(PixelBodyFontPath);
             // Installed v2 pixel bottle sprites (18 §5 first batch); types without one fall

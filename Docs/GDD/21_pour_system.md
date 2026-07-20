@@ -39,16 +39,23 @@ Fill fraction           F = V / C          (0…1)
 Ratio of ingredient i   r_i = v_i / V      (0…1, sums to 1)
 ```
 
-**Overflow is a bust of its own kind.** Pouring past `C` spills: the drink is ruined, the
-volume is wasted, and the serve scores nothing. The bottle keeps pouring while held, so a
-held-too-long pour is the pour system's equivalent of overshooting an emotion — the same
-"past it is worse than short of it" lesson, in the hand instead of the head.
+**Overflow is a mess, not a wall.** Pouring past `C` spills — but the glass can still be
+served (ruling 2026-07-20; it used to hard-block). What crosses the counter is capped at
+one glass: charges resolve on the contents normalised to `C`, a spill never matches a
+recipe (so it always takes the ×0.5 no-recipe path and scores 0), it earns no fill bonus,
+and it counts against `NoSpillsThisCustomer` whether served or binned. The bottle keeps
+pouring while held, so a held-too-long pour is the pour system's equivalent of overshooting
+an emotion — the same "past it is worse than short of it" lesson, in the hand instead of
+the head; serving the mess anyway is allowed, it just says less and looks worse.
 
 ### 3.1 The glass readout
 
-Top-left of the screen, diegetic: a cocktail glass that fills as you pour, **layered and
-coloured by what went in**, in pour order, bottom-up. A 30% gin / 20% tonic pour shows two
-bands filling half the glass. This is the primary feedback channel — the numbers are secondary.
+Top-left of the screen, diegetic: a stemmed cocktail glass that fills as you pour,
+**layered and coloured by what went in** — each band in its style's signature colour
+(GDD 22 §1) — in pour order, bottom-up. The liquid is clipped to the bowl by a stencil
+mask baked from the sprite's own interior, so the fill hugs the glass instead of floating
+on it as a square. The fill % prints inside the bowl; the live ratio list sits under the
+foot. This is the primary feedback channel — the numbers are secondary.
 
 ## 4. Emotions scale with volume
 
@@ -159,8 +166,9 @@ the craft layer back in charge of a game that is now about reading people.
 
 - **Round limiter.** "Drinks a customer will accept" is inherited from Mixes and untested
   under pouring. If a drink takes 10 seconds to build, 4 per customer may be far too many.
-- **Overflow harshness.** Spilling wastes the volume *and* scores nothing. That may be one
-  punishment too many; wasting the volume alone might carry it.
+- ~~**Overflow harshness.**~~ **Resolved 2026-07-20** (§3): a spilled glass can be served —
+  it scores 0 and caps at one glass's worth of charges, but it still says something. The
+  wasted volume and the lost recipe are the punishment; the hard block is gone.
 - **Input.** Hold-to-pour needs a controller answer and an accessibility answer (hold is bad
   for some players). A tap-to-set-measure fallback is probably required.
 - **Does precision survive a pixel glass?** At 640×360 the glass is maybe 40px tall, so a

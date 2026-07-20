@@ -10,8 +10,9 @@ namespace LastCall.DebugUI
     /// <summary>
     /// The diegetic gameplay stage (v2, module 18): a layered night-club scene authored at
     /// 640×360 that sits BEHIND the UI overlay. Layers back → front (18 §1):
-    ///   Sky/City → Club Far (crowd) → Club Mid (neon "LAST CALL") → Customer →
-    ///   Counter (amber-lit bottom 96px) → Bottle rail (8 slots ON the counter).
+    ///   Sky/City → Club Far (crowd) → Club Mid (neon "LAST CALL") → Back bar (two
+    ///   wall shelves of bottles, seen from the customer's side) → Counter (amber-lit
+    ///   bottom 96px) → Customer.
     /// The UI overlay (HUD/panels) draws on its own higher-order canvas.
     ///
     /// Everything here is placeholder: flat silhouettes drawn straight from the locked v2
@@ -24,10 +25,16 @@ namespace LastCall.DebugUI
     public sealed class DiegeticStage : MonoBehaviour
     {
         // ── layout (18 §2, converted to bottom-left origin) ─────────────────────
-        private const int Slots = 10;                      // liquid bottles on the counter (GDD 22)
+        // Customer POV (GDD 22): the camera sits where the patron does, so the liquid
+        // bottles live on two wall shelves on the back bar — spirits up top, mixers
+        // below — with the counter running along the bottom of the frame.
+        private const int Slots = 10;                      // liquid bottles on the back bar
         private static readonly Vector2 Reference = new Vector2(640, 360);
-        private const float SlotPitch = 42f;               // wider pitch: bottles read, not huddle
-        private const float FirstSlotX = 80f;              // clears the bottom-left cash register
+        private const int ShelfCols = 5;                   // bottles per shelf row
+        private const float ShelfFirstX = 166f;            // clears the pour glass, top-left
+        private const float ShelfPitch = 64f;
+        private const float ShelfRow0Y = 232f;             // upper shelf rest line
+        private const float ShelfRow1Y = 164f;             // lower shelf rest line
 
         // The garnish rack (GDD 22): mint, olives and future rim garnishes live on a shelf
         // under the counter, where a bartender actually keeps them — and where the Patrons
@@ -37,19 +44,15 @@ namespace LastCall.DebugUI
         private const float GarnishFirstX = 246f;
         private const float GarnishBaseY = 26f;
         private const float GarnishDisplayW = 30f;
-        private const float CustomerX = 556f;              // VIP centre, bottom-right on the bar
+        private const float CustomerX = 556f;              // patron centre, standing at the bar
         private const float CustomerBaseY = 126f;          // hands rest on the bar-top surface
-        private const float CustomerTilt = 0f;           // right end leans right (radial, arc)
-        private const float RegisterX = 44f;               // cash register centre, bottom-left
-        private const float RegisterTilt = 0f;            // left end leans left (radial, arc)
-        private const float BottleBaseY = 128f;            // 18 §2: y=232 top-down → 360−232
+        private const float RegisterX = 468f;              // till on the counter, beside the patron
+        private const float CounterRestY = 128f;           // counter-top rest line (till, glassware)
         private const float CounterFrontY = 96f;           // 18 §2: surface line y=264 → 360−264 (bottom 96px)
         private const float BottleW = 30f;                 // placeholder fallback size
         private const float BottleH = 52f;
         private const float BottleDisplayW = 40f;          // fixed slot width for sprite bottles
         private const float SelectRise = 4f;               // 18 §3: select rises 4px
-        private const float ArcHeight = 0f;               // curved bar: centre slots rise this much
-        private const float BottleTilt = 0f;               // max radial lean at the arc ends
         private const float OffscreenRight = 680f;
         private const float OffscreenLeft = -40f;
         private const float Overscan = 48f;         // bleed past screen edges (aspect safety)
@@ -207,15 +210,37 @@ namespace LastCall.DebugUI
                 AddCustomer(root);
             }
 
+            // Layer 3.5 — the back bar (customer POV): a dim cabinet panel and two wooden
+            // shelves on the wall behind the bartender, where the bottles now live. Drawn
+            // before the rail so bottles and their tags sit in front of the planks.
+            var cabinet = NewRect("BackBar", root);
+            Place(cabinet, new Vector2(0, 0), new Vector2(320, 170), new Vector2(140, ShelfRow1Y - 26));
+            var cabinetImg = cabinet.gameObject.AddComponent<Image>();
+            cabinetImg.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.62f);
+            cabinetImg.raycastTarget = false;
+            foreach (float rowY in new[] { ShelfRow0Y, ShelfRow1Y })
+            {
+                var plank = NewRect("ShelfPlank", root);
+                Place(plank, new Vector2(0, 0), new Vector2(320, 8), new Vector2(140, rowY - 8));
+                var plankImg = plank.gameObject.AddComponent<Image>();
+                plankImg.color = UITheme.Amber[1];
+                plankImg.raycastTarget = false;
+                var lip = NewRect("ShelfLip", root);
+                Place(lip, new Vector2(0, 0), new Vector2(320, 2), new Vector2(140, rowY - 2));
+                var lipImg = lip.gameObject.AddComponent<Image>();
+                lipImg.color = UITheme.Amber[3];
+                lipImg.raycastTarget = false;
+            }
+
             // Layer 4 — Counter. Real bar art when installed (positioned so its top surface
-            // meets the bottle rest line); else the flat procedural amber band.
+            // meets the counter rest line); else the flat procedural amber band.
             if (counterSprite != null)
             {
                 float h = counterSprite.rect.height;
                 // The bar-top surface front (the rest line) sits CounterSurfaceInset px below
-                // the sprite's top, so align that line to BottleBaseY; the deep surface then
+                // the sprite's top, so align that line to CounterRestY; the deep surface then
                 // recedes up behind the bottles.
-                float cy = BottleBaseY + CounterSurfaceInset - h;
+                float cy = CounterRestY + CounterSurfaceInset - h;
                 var c = NewRect("Counter", root);
                 c.anchorMin = new Vector2(0, 0); c.anchorMax = new Vector2(1, 0);
                 c.offsetMin = new Vector2(-Overscan, cy - Overscan); c.offsetMax = new Vector2(Overscan, cy + h);
@@ -228,13 +253,13 @@ namespace LastCall.DebugUI
                 Stretch(face, new Vector2(0, 0), new Vector2(1, 0), Vector2.zero, new Vector2(0, CounterFrontY));
                 face.gameObject.AddComponent<Image>().color = UITheme.Amber[0];      // dark wood
                 var surface = NewRect("CounterSurface", root);
-                Stretch(surface, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, CounterFrontY), new Vector2(0, BottleBaseY));
+                Stretch(surface, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, CounterFrontY), new Vector2(0, CounterRestY));
                 surface.gameObject.AddComponent<Image>().color = UITheme.Amber[1];   // lit wood surface
                 var lip = NewRect("CounterLip", root);                               // chrome front edge
                 Stretch(lip, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, CounterFrontY - 2), new Vector2(0, CounterFrontY));
                 lip.gameObject.AddComponent<Image>().color = UITheme.Cream[2];
                 var keyLine = NewRect("CounterKey", root);                           // amber key highlight (rest line)
-                Stretch(keyLine, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, BottleBaseY - 2), new Vector2(0, BottleBaseY));
+                Stretch(keyLine, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, CounterRestY - 2), new Vector2(0, CounterRestY));
                 keyLine.gameObject.AddComponent<Image>().color = UITheme.Amber[3];
             }
 
@@ -249,12 +274,11 @@ namespace LastCall.DebugUI
                 // into the same 57px slot instead of doubling on screen.
                 const float regW = 57f;
                 reg.sizeDelta = new Vector2(regW, regW * registerSprite.rect.height / registerSprite.rect.width);
-                reg.anchoredPosition = new Vector2(RegisterX, BottleBaseY);
-                reg.localRotation = Quaternion.Euler(0, 0, RegisterTilt);   // POV angle
+                reg.anchoredPosition = new Vector2(RegisterX, CounterRestY);
                 var regImg = reg.gameObject.AddComponent<Image>();
                 regImg.sprite = registerSprite; regImg.preserveAspect = true; regImg.raycastTarget = false;
 
-                float plaqueY = BottleBaseY + reg.sizeDelta.y - 18f;  // on the till's display
+                float plaqueY = CounterRestY + reg.sizeDelta.y - 18f;  // on the till's display
                 var plaque = NewRect("MoneyPlaque", root);
                 plaque.anchorMin = plaque.anchorMax = new Vector2(0, 0);   // absolute, on the till
                 plaque.pivot = new Vector2(0.5f, 0);
@@ -282,7 +306,6 @@ namespace LastCall.DebugUI
                 const float custW = 144f;   // fixed footprint; hi-bit art just gets finer
                 cust.sizeDelta = new Vector2(custW, custW * customerSprite.rect.height / customerSprite.rect.width);
                 cust.anchoredPosition = new Vector2(CustomerX, CustomerBaseY);
-                cust.localRotation = Quaternion.Euler(0, 0, CustomerTilt);   // POV angle
                 var img = cust.gameObject.AddComponent<Image>();
                 img.sprite = customerSprite; img.preserveAspect = true;
 
@@ -450,7 +473,7 @@ namespace LastCall.DebugUI
             _onPourStart = onPourStart;
             _onPourEnd = onPourEnd;
 
-            // Liquids stand on the counter; garnishes rack under it (GDD 22).
+            // Liquids stand on the back-bar wall shelves; garnishes rack on the counter (GDD 22).
             var rail = new List<IngredientCard>();
             var rack = new List<IngredientCard>();
             foreach (var bottle in shelf.Bottles)
@@ -500,12 +523,11 @@ namespace LastCall.DebugUI
             {
                 var card = rail[i];
                 bool sel = selected != null && selected.Contains(card);
-                float arcY = SlotArcY(i);
-                Vector2 target = new Vector2(SlotX(i), arcY + (sel ? SelectRise : 0f));
+                float restY = SlotY(i);
+                Vector2 target = new Vector2(SlotX(i), restY + (sel ? SelectRise : 0f));
                 if (_bottles.TryGetValue(card.InstanceId, out var view))
                 {
-                    view.RestBaseY = arcY;
-                    view.Root.localRotation = Quaternion.Euler(0, 0, SlotTilt(i));
+                    view.RestBaseY = restY;
                     if (view.Move != null) StopCoroutine(view.Move);
                     view.Move = StartCoroutine(Tweening.MoveAnchored(view.Root, target, DrawDur, Tweening.OutQuad));
                     StyleBottle(view, selected, debuffed, animateRise: false);
@@ -513,8 +535,7 @@ namespace LastCall.DebugUI
                 else
                 {
                     view = CreateBottle(card);
-                    view.RestBaseY = arcY;
-                    view.Root.localRotation = Quaternion.Euler(0, 0, SlotTilt(i));
+                    view.RestBaseY = restY;
                     _bottles[card.InstanceId] = view;
                     StyleBottle(view, selected, debuffed, animateRise: false);
                     view.Root.anchoredPosition = new Vector2(OffscreenRight, target.y);
@@ -563,7 +584,7 @@ namespace LastCall.DebugUI
             {
                 // Slide forward+up to the mixing area, then the empty slides LEFT off-screen
                 // (180 ms InQuad, 18 §3 Mix).
-                Vector2 up = new Vector2(320f, BottleBaseY + 70f); // center mixing area
+                Vector2 up = new Vector2(320f, CounterRestY + 70f); // center mixing area
                 StartCoroutine(Tweening.MoveAnchored(view.Root, up, MixPopDur, Tweening.OutBack, () =>
                     StartCoroutine(Tweening.MoveAnchored(view.Root,
                         new Vector2(OffscreenLeft, up.y), MixExitDur, Tweening.InQuad, Destroy))));
@@ -583,7 +604,7 @@ namespace LastCall.DebugUI
                 float t = 0f;
                 while (t < delay) { t += Time.unscaledDeltaTime; yield return null; }
             }
-            yield return Tweening.MoveAnchored(rt, new Vector2(OffscreenLeft, BottleBaseY), MixExitDur, Tweening.InQuad, done);
+            yield return Tweening.MoveAnchored(rt, new Vector2(OffscreenLeft, CounterRestY), MixExitDur, Tweening.InQuad, done);
         }
 
         private BottleView CreateBottle(IngredientCard card, float displayW = 0)
@@ -666,18 +687,19 @@ namespace LastCall.DebugUI
             // sits under the bottle like a shelf tag; Flavor moves to the bottle-info popup
             // (GDD 22 §2, future).
             var tag = NewRect("NameTag", root);
-            // Counter bottles stagger their tags in two rows so ten names sit side by side;
-            // rack jars (wider pitch, screen bottom) keep a single fixed row.
+            // Shelf tags are two lines — brand above, style below — because the style word
+            // is the load-bearing one ("what IS this bottle"), and the whole tag wears the
+            // style's signature colour (GDD 22 §1). Rack jars keep a one-line tag.
             bool rack = card.Type == IngredientType.Garnish;
-            float tagY = rack ? -12f : (_bottles.Count % 2 == 0 ? -12f : -22f);
-            Place(tag, new Vector2(0.5f, 0), new Vector2(rack ? 52 : 44, 10), new Vector2(0, tagY));
+            Place(tag, new Vector2(0.5f, 0), new Vector2(rack ? 52 : 60, rack ? 10 : 19),
+                new Vector2(0, rack ? -12f : -21f));
             var tagImg = tag.gameObject.AddComponent<Image>();
             tagImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.72f);
             tagImg.raycastTarget = false;
             view.Name = NewText("Name", tag, _body, 7, TextAnchor.MiddleCenter,
-                UITheme.TypeRamp[card.Type][4]);
+                UITheme.StyleColor(card.Info?.Style, card.Type));
             Stretch((RectTransform)view.Name.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            view.Name.text = card.Name.ToUpperInvariant();
+            view.Name.text = TagText(card, rack);
 
             return view;
         }
@@ -719,9 +741,8 @@ namespace LastCall.DebugUI
                     : new Color(UITheme.Magenta[3].r, UITheme.Magenta[3].g, UITheme.Magenta[3].b, 0.55f);
 
             view.Name.supportRichText = true;
-            view.Name.text = isDebuffed
-                ? $"<color=#E84DA6>{view.Card.Name.ToUpperInvariant()}</color>"
-                : view.Card.Name.ToUpperInvariant();
+            string tagText = TagText(view.Card, view.Card.Type == IngredientType.Garnish);
+            view.Name.text = isDebuffed ? $"<color=#E84DA6>{tagText}</color>" : tagText;
 
             if (view.Selected != isSelected)
             {
@@ -956,7 +977,8 @@ namespace LastCall.DebugUI
 
         // ── the pour glass (GDD 21 §3.1 / GDD 22) ────────────────────────────────
 
-        [SerializeField] private Sprite glassSprite;   // hi-bit rocks glass; fills draw beneath it
+        [SerializeField] private Sprite glassSprite;      // hi-bit cocktail glass, bowl emptied by the pipeline
+        [SerializeField] private Sprite glassMaskSprite;  // baked bowl-interior stencil the fill clips to
 
         private RectTransform _glassRoot;
         private RectTransform _glassFillArea;
@@ -967,13 +989,13 @@ namespace LastCall.DebugUI
         // Big, top-left, deliberately dominant: the glass is the primary feedback channel.
         private const float GlassX = 10f;
         private const float GlassY = 214f;
-        private const float GlassW = 84f;
-        private const float GlassH = 118f;
-        // The liquid area inside the glass sprite, relative to its rect.
-        // Tuned for the stemmed goblet: the bowl occupies the upper part of the sprite,
-        // so the fill area must too — liquid in the stem would be nonsense.
-        private const float GlassInnerL = 0.24f, GlassInnerR = 0.76f;
-        private const float GlassInnerB = 0.46f, GlassInnerT = 0.84f;
+        private const float GlassW = 96f;    // 0.75 × the 128×176 sprite: exact aspect, no letterbox
+        private const float GlassH = 132f;
+        // The bowl interior inside the glass sprite, relative to its rect — measured off
+        // the installed art by the fetch pipeline, so the fill area and its baked stencil
+        // mask land exactly on the painted bowl instead of floating as a loose square.
+        private const float GlassInnerL = 0.156f, GlassInnerR = 0.844f;
+        private const float GlassInnerB = 0.483f, GlassInnerT = 0.852f;
 
         private void BuildGlassHud(RectTransform root)
         {
@@ -1004,12 +1026,18 @@ namespace LastCall.DebugUI
                 baseR.gameObject.AddComponent<Image>().color = UITheme.Cream[3];
             }
 
-            // Liquid layers draw OVER the glass sprite: the generated glass has an opaque
-            // interior, so anything beneath it would be invisible. Slightly translucent bands
-            // over pale glass read as liquid well enough.
+            // Liquid layers draw OVER the glass sprite (the generated glass has an opaque
+            // interior, so anything beneath it would be invisible) and are clipped by a
+            // bowl-shaped stencil mask, so the fill hugs the glass instead of sitting on it
+            // as a bare rectangle.
             var area = NewRect("FillArea", _glassRoot);
             Stretch(area, new Vector2(GlassInnerL, GlassInnerB), new Vector2(GlassInnerR, GlassInnerT),
                 Vector2.zero, Vector2.zero);
+            var maskImg = area.gameObject.AddComponent<Image>();
+            maskImg.sprite = glassMaskSprite != null ? glassMaskSprite : BuildBowlMask();
+            maskImg.raycastTarget = false;
+            var mask = area.gameObject.AddComponent<Mask>();
+            mask.showMaskGraphic = false;
             _glassFillArea = area;
 
             // The % lives inside the glass (GDD 22 §1) — the number you steer by.
@@ -1025,14 +1053,15 @@ namespace LastCall.DebugUI
             spill.gameObject.SetActive(false);
             _spillLabel = spill;
 
-            // Live ratios beside the glass — fill and ratio are different numbers, and the
-            // Phase-1 finding was that hiding the ratios makes players systematically wrong.
+            // Live ratios under the glass (the back-bar shelves now own the space beside
+            // it) — fill and ratio are different numbers, and the Phase-1 finding was that
+            // hiding the ratios makes players systematically wrong.
             _glassRatios = NewText("Ratios", root, _body, 8, TextAnchor.UpperLeft, UITheme.TextSecondary);
             var ratioRt = (RectTransform)_glassRatios.transform;
             ratioRt.anchorMin = ratioRt.anchorMax = new Vector2(0, 0);
             ratioRt.pivot = new Vector2(0, 1);
-            ratioRt.sizeDelta = new Vector2(96, 92);
-            ratioRt.anchoredPosition = new Vector2(GlassX + GlassW + 6, GlassY + GlassH - 4);
+            ratioRt.sizeDelta = new Vector2(128, 60);
+            ratioRt.anchoredPosition = new Vector2(GlassX, GlassY - 4);
             _glassRatios.supportRichText = true;
         }
 
@@ -1064,8 +1093,10 @@ namespace LastCall.DebugUI
                 layer.sizeDelta = new Vector2(0, h);
                 layer.anchoredPosition = new Vector2(0, y);
                 var img = layer.gameObject.AddComponent<Image>();
-                var ramp = card != null ? UITheme.TypeRamp[card.Type] : UITheme.Cream;
-                img.color = new Color(ramp[3].r, ramp[3].g, ramp[3].b, 0.88f);
+                // The liquid pours in the style's signature colour — the same one the shelf
+                // tag and ratio list wear — so "vodka is ice-blue" holds all the way down.
+                var c = card != null ? UITheme.StyleColor(card.Info?.Style, card.Type) : UITheme.Cream[3];
+                img.color = new Color(c.r, c.g, c.b, 0.88f);
                 img.raycastTarget = false;
                 layer.SetSiblingIndex(0); // beneath earlier-created glass sprite? area holds only layers
                 _glassLayers.Add(img);
@@ -1085,8 +1116,8 @@ namespace LastCall.DebugUI
             foreach (var id in glass.Ingredients)
             {
                 var card = lookup?.Invoke(id);
-                var ramp = card != null ? UITheme.TypeRamp[card.Type] : UITheme.Cream;
-                string hex = ColorUtility.ToHtmlStringRGB(ramp[4]);
+                var c = card != null ? UITheme.StyleColor(card.Info?.Style, card.Type) : UITheme.Cream[4];
+                string hex = ColorUtility.ToHtmlStringRGB(c);
                 sb.AppendLine($"<color=#{hex}>{(card?.Name ?? id).ToUpperInvariant()} {glass.RatioOf(id):P0}</color>");
             }
             _glassRatios.text = sb.ToString().Replace(" %", "%");
@@ -1317,12 +1348,47 @@ namespace LastCall.DebugUI
 
         // ── helpers ──────────────────────────────────────────────────────────────
 
-        private static float SlotX(int i) => FirstSlotX + i * SlotPitch;
-        // Curved bar: t ∈ [-1,1] across the rail; centre slots rise (dome), ends sit low and
-        // lean outward so the row reads as an arc wrapping around the bartender.
-        private static float SlotT(int i) => Slots > 1 ? (2f * i / (Slots - 1) - 1f) : 0f;
-        private static float SlotArcY(int i) { float t = SlotT(i); return BottleBaseY + ArcHeight * (1f - t * t); }
-        private static float SlotTilt(int i) => -SlotT(i) * BottleTilt;
+        // The back-bar grid: slot i fills the upper shelf left→right, then the lower.
+        private static float SlotX(int i) => ShelfFirstX + (i % ShelfCols) * ShelfPitch;
+        private static float SlotY(int i) => i < ShelfCols ? ShelfRow0Y : ShelfRow1Y;
+
+        /// <summary>
+        /// A white U-shape used as a stencil for the glass liquid: full width at the rim,
+        /// rounded at the base, so the fill bands follow the bowl instead of poking square
+        /// corners out of it.
+        /// </summary>
+        private static Sprite BuildBowlMask()
+        {
+            const int w = 48, h = 64;
+            const float r = 16f;   // bottom-corner radius
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    bool inside = true;
+                    if (y < r)
+                    {
+                        float dx = x < r ? r - x : (x > w - 1 - r ? x - (w - 1 - r) : 0f);
+                        float dy = r - y;
+                        inside = dx * dx + dy * dy <= r * r;
+                    }
+                    tex.SetPixel(x, y, inside ? Color.white : Color.clear);
+                }
+            }
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 100f);
+        }
+
+        /// <summary>Two-line shelf tag: brand on top, the style word below it.</summary>
+        private static string TagText(IngredientCard card, bool singleLine)
+        {
+            string name = card.Name.ToUpperInvariant();
+            if (singleLine) return name;
+            int cut = name.LastIndexOf(' ');
+            return cut <= 0 ? name : name.Substring(0, cut) + "\n" + name.Substring(cut + 1);
+        }
 
         private static string Signature(IReadOnlyList<IngredientCard> rail)
         {

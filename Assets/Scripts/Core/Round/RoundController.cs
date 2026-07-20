@@ -109,8 +109,6 @@ namespace LastCall.Core
         public void BeginPour(string ingredientId)
         {
             EnsureRoundInProgress();
-            if (Glass.IsOverflowing)
-                throw new InvalidOperationException("The glass has spilled — bin it first.");
             if (_shelf.Find(ingredientId) == null)
                 throw new ArgumentException($"No '{ingredientId}' on the shelf.", nameof(ingredientId));
             PouringId = ingredientId;
@@ -143,8 +141,6 @@ namespace LastCall.Core
         public double PourMeasure(string ingredientId, double volume)
         {
             EnsureRoundInProgress();
-            if (Glass.IsOverflowing)
-                throw new InvalidOperationException("The glass has spilled — bin it first.");
             if (_shelf.Find(ingredientId) == null)
                 throw new ArgumentException($"No '{ingredientId}' on the shelf.", nameof(ingredientId));
             if (volume <= 0) return 0;
@@ -172,7 +168,7 @@ namespace LastCall.Core
         /// </summary>
         public ScoreBreakdown PreviewScore()
         {
-            if (Glass.IsEmpty || Glass.IsOverflowing) return ScoreBreakdown.NoRecipe;
+            if (Glass.IsEmpty) return ScoreBreakdown.NoRecipe;
 
             var match = PreviewMatch();
             if (match != null && IsVoidedByVipRule(match, out string voidReason))
@@ -201,7 +197,7 @@ namespace LastCall.Core
         /// </summary>
         public EmotionDelta PreviewCharges()
         {
-            if (!Customer.HasEmotion || Glass.IsEmpty || Glass.IsOverflowing) return EmotionDelta.Empty;
+            if (!Customer.HasEmotion || Glass.IsEmpty) return EmotionDelta.Empty;
 
             var match = PreviewMatch();
             if (match != null && IsVoidedByVipRule(match, out _)) return EmotionDelta.Empty;
@@ -228,8 +224,11 @@ namespace LastCall.Core
         {
             EnsureRoundInProgress();
             if (Glass.IsEmpty) throw new InvalidOperationException("Nothing in the glass.");
-            if (Glass.IsOverflowing)
-                throw new InvalidOperationException("The glass has spilled — bin it and start again.");
+
+            // A spilled glass can still be handed over — the customer gets what stayed in
+            // it, minus any dignity. It counts as a spill either way (the counter is wet),
+            // never matches a recipe, and earns no fill bonus.
+            if (Glass.IsOverflowing) Spills++;
 
             PouringId = null;
             var match = PreviewMatch();
