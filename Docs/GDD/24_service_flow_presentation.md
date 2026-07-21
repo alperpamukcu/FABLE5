@@ -13,28 +13,43 @@ the seats and makes the shelf feel like *stock*, not UI.
 
 ## 2. Building a drink: the shaker flow
 
-1. Click a bottle in the menu → the screen **dims**; a focus vignette shows the **shaker
-   and the chosen bottle**, big.
-2. **Hold to pour** into the shaker — pour animation, liquid stream, shaker fill readout
-   (the ratios UI carries over from GDD 21 §3.1).
+**The hands-on rule (2026-07-22, explicit request): the player performs the motions with
+the mouse.** Buttons select; the mouse *does*. Every step below is a physical interaction.
+
+1. Click a bottle in the menu → the screen **dims**; a focus vignette shows the **open
+   shaker** and the chosen bottle, big.
+2. **The tilt-pour:** grab the bottle with the mouse and **lift it — the higher it goes,
+   the further it tips** toward the shaker. Liquid streams from the neck only while the
+   mouth lines up over the shaker's opening; more tilt = faster pour (and a jumpier
+   stream — speed is risk). Lower the bottle to stop.
 3. Closing the focus returns to the menu, so stacking a second bottle is two clicks.
-4. Before shaking, **preparations** go in: ice, lemon, salt, sugar (GDD 22 §5 plumbing
-   finally gets its UI).
-5. **Shake:** press the shake button, then hold and *move the mouse* — the shaker follows
-   with a weighty animation; shake duration/energy is a craft input (reserved for future
-   effect hooks).
+4. **Preparations are dragged, not toggled:** the ice bucket / lemon bowl / salt cellar /
+   mint sprigs sit beside the shaker; **pick a piece up and drop it into the shaker's
+   mouth**. A miss bounces off the counter (no cost, a small clatter).
+5. **The shake is real:** grab the shaker and **shake the mouse** — the shaker follows
+   with a weighty animation. Shake *energy* (how hard, how long) is measured and recorded
+   with the `shaken` preparation as a 0–1 quality; under- and over-shaking are future
+   craft hooks. The interim P4 UI approximates all of this with hold-zones and buttons
+   until the P8 interaction pass replaces it.
 
 ## 3. Serving: the glass and the pour
 
 1. Serve stage dims the screen again: a **glass** (auto-selected by drink family, later)
    and the shaker.
-2. **Hold to pour from the shaker** — a real, physical-feeling stream: tilt animation,
-   liquid arc, and if the player pours off-target **it spills** (spilled volume is lost;
-   this is where spilling lives now — the *aiming* game, not the filling game; GDD 21 §3's
-   brim rule still holds inside the glass).
+2. **The serve pour is also hands-on:** grab the shaker and **guide/tip it toward the
+   glass** — same tilt model as the bottle: raise to tip, line the stream up over the
+   glass mouth. Off-target liquid **spills** and is lost (this is where spilling lives
+   now — the *aiming* game, not the filling game; GDD 21 §3's brim rule still holds
+   inside the glass).
 3. **[SERVE]** → click the seat/customer to deliver. `ServiceJudge` (23 §4) resolves.
 
 ## 4. The seats
+
+**Commitment (2026-07-22, explicit request): customers are physical characters in the
+scene.** The P3 seat panels are interim UI only — the P8 pass replaces them with sprites
+who visibly **walk in, sit down at the counter, order, wait, react and leave**, gauges
+attached to the person, not to a box. Seeing someone sit down at your bar is the game's
+heartbeat.
 
 Up to 6 customers visible at the bar, each an animated character with states:
 **walk in → sit → order (speech bubble with the drink's name/icon) → idle/talk → drink →
@@ -42,7 +57,14 @@ react (happy / annoyed / angry) → pay → leave**, plus **storm-off**. Two gau
 satisfaction bar and the **patience clock icon** counting down. Reactions must read at a
 glance — anger is animation first, numbers second.
 
-## 5. The ID card, v2 — SHIPPED (P6, 2026-07-22)
+## 5. The ID card — v2 shipped, v3 owed to the art pass
+
+> **Player feedback (2026-07-22):** the v2 licence works but is not liked — the rows read
+> cluttered and the proportions are wrong. **v3 (P8): a real ID-card-proportioned prop**
+> (landscape licence ratio), purpose-drawn card art, one strong reading order. Do not
+> iterate v2 further; redesign it whole with the art pass.
+
+### v2 as shipped (P6, 2026-07-22)
 
 Readability pass (explicit request): tap any seated customer to open their licence — a
 large cream card with **photo, big NAME, AGE, FROM (city), relationship + demand**, the
@@ -61,7 +83,20 @@ with an ambient playing loop. The scene is the save file, visually.
 
 - **Invoice UI**: a printed bill — income lines (drinks, tips), expense lines (refills,
   rent, purchases), net in big type, debt-strike warning stamps (1/3, 2/3, CLOSED).
+  **Readability rules (2026-07-22): short labels, big type, the bill front-and-centre.**
 - **Market**: rotating offers as shelf cards (existing market visual language).
+  **You cannot buy what you cannot pay for**: unaffordable cards are visibly disabled and
+  a click raises a "NOT ENOUGH MONEY" notice. Only rent can push the till below zero.
+
+## 10. Time and feedback on the floor (2026-07-22)
+
+- **Menus slow the world:** while the service flow or a licence is open, floor time runs
+  at **×0.3** (`TycoonConfig.MenuTimeScale`) — building a drink must not cost a storm-off
+  by itself, but the clock never fully stops: haste still matters.
+- **Money is celebrated:** every payment floats a green **+$N** up from the seat that
+  paid it. Costs land on the invoice, never as floaters.
+- **Arrival pacing** is a first-class balance knob (P9): gaps that breathe — busy pulses
+  with recovery valleys, never a metronome and never a flood.
 
 ## 8. Art direction v3 (the new bar)
 

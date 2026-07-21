@@ -93,6 +93,10 @@ or the extra order without knowing *who* you are serving.
   (refills at **$3 per capacity** — stock is a real cost of goods — market purchases,
   upgrades, and **rent = $15 + $5×Day**). Rent is what makes debt possible. *(v1 numbers;
   v0 was $8+$2×Day rent and $1 stock, which the sim showed was no pressure at all.)*
+- **Purchases require cash (2026-07-22):** refills, brands, stools and ambience cannot
+  be bought on credit — if the till cannot cover it, the buy is refused with a notice.
+  Only **rent** can push the till below zero, which keeps debt something that happens
+  *to* you, never a button you pressed.
 - **Losing:** close **3 consecutive days with the till below zero** and the bar closes —
   full run reset, roguelite style. In debt means in debt: a rich bar can eat a losing day
   without the clock starting; one close back above water wipes the strikes. *(Clarified

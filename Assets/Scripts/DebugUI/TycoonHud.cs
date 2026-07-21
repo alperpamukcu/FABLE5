@@ -70,6 +70,8 @@ namespace LastCall.DebugUI
         private TycoonServiceFlow _flow;
         private TycoonPhase _lastPhase = TycoonPhase.DayOpen;
         private double _lastShakerVol = -1;
+        private Text _toast;
+        private float _toastUntil;
 
         private void Awake()
         {
@@ -108,7 +110,14 @@ namespace LastCall.DebugUI
             var run = Run;
             if (run == null) return;
 
-            if (run.Phase == TycoonPhase.DayOpen) run.Tick(Time.deltaTime);
+            if (run.Phase == TycoonPhase.DayOpen)
+            {
+                // Menus slow the world (GDD 24 §10): mixing or reading a licence must not
+                // cost a storm-off by itself, but the clock never fully stops.
+                bool menuOpen = (_flow != null && _flow.IsOpen) ||
+                                (_idRoot != null && _idRoot.gameObject.activeSelf);
+                run.Tick(Time.deltaTime * (menuOpen ? (float)TycoonConfig.MenuTimeScale : 1f));
+            }
 
             // Mirror the shaker onto the stage's top-left glass, but only when it actually
             // changed — SetGlass rebuilds its layers, so a per-frame call would churn.
@@ -124,6 +133,9 @@ namespace LastCall.DebugUI
                 if (run.Phase == TycoonPhase.DayEnd) ShowDayEnd();
                 if (run.Phase == TycoonPhase.Closed) ShowClosed();
             }
+
+            if (_toast != null && _toast.gameObject.activeSelf && Time.unscaledTime > _toastUntil)
+                _toast.gameObject.SetActive(false);
 
             RefreshTopBar();
             RefreshSeats();
@@ -146,14 +158,50 @@ namespace LastCall.DebugUI
             bool haveDrink = !run.ServingGlass.IsEmpty || !run.Glass.IsEmpty;
             if (haveDrink)
             {
-                run.ServeTo(visit);
+                var verdict = run.ServeTo(visit);
                 CloseId();
                 RefreshGlass();
+                // Money is celebrated (GDD 24 §10): the payment floats up from the seat.
+                StartCoroutine(FloatMoney(index, verdict.Total));
             }
             else
             {
                 ShowId(visit);
             }
+        }
+
+        /// <summary>A green +$N that rises from the paying seat and fades (GDD 24 §10).</summary>
+        private System.Collections.IEnumerator FloatMoney(int seatIndex, int amount)
+        {
+            var seat = _seats[seatIndex].Root;
+            var text = NewText("Float", seat.parent, _display, 18, TextAnchor.MiddleCenter, UITheme.Lime[3]);
+            text.text = $"+${amount}";
+            var rt = text.rectTransform;
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 0);
+            rt.sizeDelta = new Vector2(120, 30);
+            var start = seat.anchoredPosition + new Vector2(seat.sizeDelta.x * 0.5f - 60f, 100f);
+
+            const float duration = 1.1f;
+            float t = 0f;
+            while (t < duration && text != null)
+            {
+                t += Time.deltaTime;
+                float k = Mathf.Clamp01(t / duration);
+                rt.anchoredPosition = start + new Vector2(0, 46f * k);
+                text.color = new Color(UITheme.Lime[3].r, UITheme.Lime[3].g, UITheme.Lime[3].b,
+                    1f - k * k);
+                yield return null;
+            }
+            if (text != null) Destroy(text.gameObject);
+        }
+
+        /// <summary>A short notice under the top bar — refusals, mostly (GDD 24 §7).</summary>
+        private void Toast(string message)
+        {
+            if (_toast == null) return;
+            _toast.text = message;
+            _toastUntil = Time.unscaledTime + 1.6f;
+            _toast.gameObject.SetActive(true);
         }
 
         private void OnBinClicked()
@@ -308,22 +356,19 @@ namespace LastCall.DebugUI
             if (run.Ledger.DebtStrikes == DayLedger.StrikesToClose - 1)
                 stamp += "\n<color=#A62B44>one more red day closes the bar</color>";
 
+            // Readability rules (GDD 24 §7): short labels, big lines, no prose.
             var sb = new StringBuilder();
-            sb.AppendLine($"<b>DAY {run.Day}</b>");
-            sb.AppendLine($"served {served}   walked out {stormed}");
-            sb.AppendLine($"satisfaction {floor.AverageSatisfaction:P0}   crowd {CrowdName(run.CrowdToday)}");
-            sb.AppendLine("<color=#9C8F80>─────────────────</color>");
-            sb.AppendLine($"drink sales{Dots(14)}${run.DaySales}");
-            sb.AppendLine($"tips{Dots(21)}${run.DayTips}");
-            sb.AppendLine($"<color=#2A5926>income{Dots(19)}+${run.DayIncome}</color>");
-            sb.AppendLine();
-            sb.AppendLine($"<color=#A62B44>rent{Dots(21)}-${run.DayRent}</color>");
-            sb.AppendLine($"<color=#A62B44>restock{Dots(18)}-${run.DayStock}</color>");
-            sb.AppendLine($"<color=#A62B44>upgrades{Dots(17)}-${run.DayUpgrades}</color>");
-            sb.AppendLine("<color=#9C8F80>─────────────────</color>");
-            sb.AppendLine($"<b><color=#{netColour}>NET{Dots(22)}{(net >= 0 ? "+" : "-")}${Math.Abs(net)}</color></b>");
-            sb.AppendLine();
-            sb.AppendLine($"<b>TILL   ${run.Money}</b>");
+            sb.AppendLine($"<b>DAY {run.Day}</b>   {served} served · {stormed} left");
+            sb.AppendLine($"mood {floor.AverageSatisfaction:P0} · {CrowdName(run.CrowdToday)}");
+            sb.AppendLine("<color=#9C8F80>──────────────</color>");
+            sb.AppendLine($"SALES{Dots(9)}${run.DaySales}");
+            sb.AppendLine($"TIPS{Dots(10)}${run.DayTips}");
+            sb.AppendLine($"<color=#A62B44>RENT{Dots(10)}-${run.DayRent}</color>");
+            sb.AppendLine($"<color=#A62B44>STOCK{Dots(9)}-${run.DayStock}</color>");
+            sb.AppendLine($"<color=#A62B44>SHOP{Dots(10)}-${run.DayUpgrades}</color>");
+            sb.AppendLine("<color=#9C8F80>──────────────</color>");
+            sb.AppendLine($"<b><color=#{netColour}>NET{Dots(9)}{(net >= 0 ? "+" : "-")}${Math.Abs(net)}</color></b>");
+            sb.AppendLine($"<b>TILL{Dots(8)}${run.Money}</b>");
             sb.Append(stamp);
             _invoiceText.text = sb.ToString();
 
@@ -603,6 +648,11 @@ namespace LastCall.DebugUI
             NewButton(top, "NEW RUN", new Vector2(1, 0.5f), new Vector2(110, 30),
                 new Vector2(-70, 0), UITheme.PrimaryAction, () => _bootstrap.StartNewRun(null));
 
+            // Refusal notices ("NOT ENOUGH MONEY") drop in just under the top bar.
+            _toast = NewText("Toast", root, _display, 14, TextAnchor.MiddleCenter, UITheme.ViceRed[3]);
+            Place(_toast.rectTransform, new Vector2(0.5f, 1), new Vector2(500, 30), new Vector2(0, -56));
+            _toast.gameObject.SetActive(false);
+
             // Seat row along the bottom: six stools, click to serve.
             for (int i = 0; i < SeatSlots; i++)
             {
@@ -664,7 +714,7 @@ namespace LastCall.DebugUI
             var bill = NewRect("Bill", _dayEndPanel);
             Place(bill, new Vector2(0, 1), new Vector2(360, 470), new Vector2(24, -56));
             bill.gameObject.AddComponent<Image>().color = UITheme.Cream[4];
-            _invoiceText = NewText("Invoice", bill, _body, 15, TextAnchor.UpperLeft, UITheme.Night[1]);
+            _invoiceText = NewText("Invoice", bill, _body, 18, TextAnchor.UpperLeft, UITheme.Night[1]);
             Stretch(_invoiceText.rectTransform, Vector2.zero, Vector2.one, new Vector2(16, 12), new Vector2(-16, -12));
             _invoiceText.supportRichText = true;
 
@@ -710,27 +760,35 @@ namespace LastCall.DebugUI
             }
         }
 
-        /// <summary>One market card: title, price, and a bought/maxed state.</summary>
+        /// <summary>One market card: title, price, and a bought/maxed/can't-afford state.
+        /// Nothing sells on credit (GDD 23 §6): an unaffordable card refuses with a notice.</summary>
         private void AddCard(string title, string sub, int price, bool available, Action onBuy)
         {
             var rt = NewRect("Card", _offerRow);
             var img = rt.gameObject.AddComponent<Image>();
             bool afford = Run.Money >= price;
-            img.color = !available ? UITheme.Night[0] : UITheme.Night[3];
+            img.color = !available ? UITheme.Night[0]
+                : afford ? UITheme.Night[3]
+                : new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.9f);
             if (available)
             {
                 var button = rt.gameObject.AddComponent<Button>();
                 button.targetGraphic = img;
-                button.onClick.AddListener(() => onBuy());
+                button.onClick.AddListener(() =>
+                {
+                    if (!afford) { Toast("NOT ENOUGH MONEY"); return; }
+                    try { onBuy(); }
+                    catch (InvalidOperationException) { Toast("NOT ENOUGH MONEY"); }
+                });
             }
             var name = NewText("Name", rt, _body, 12, TextAnchor.UpperLeft,
-                available ? UITheme.TextPrimary : UITheme.Cream[1]);
+                available ? (afford ? UITheme.TextPrimary : UITheme.Cream[1]) : UITheme.Cream[1]);
             Place(name.rectTransform, new Vector2(0, 1), new Vector2(150, 32), new Vector2(8, -6));
             name.text = title;
             var priceText = NewText("Price", rt, _body, 12, TextAnchor.LowerLeft,
                 !available ? UITheme.Cream[1] : afford ? UITheme.Money : UITheme.ViceRed[3]);
             Place(priceText.rectTransform, new Vector2(0, 0), new Vector2(150, 18), new Vector2(8, 6));
-            priceText.text = available ? (afford ? $"${price}" : $"${price} (into debt)") : sub;
+            priceText.text = available ? $"${price}" : sub;
         }
 
         // ── tiny UI helpers (mirroring the house style) ─────────────────────────

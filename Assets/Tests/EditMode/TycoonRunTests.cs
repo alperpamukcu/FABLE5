@@ -32,8 +32,9 @@ namespace LastCall.Tests
             new ShelfBottle(new IngredientCard("soda", "Soda", IngredientType.Bubbly, 1), capacity: 20),
         });
 
-        private static TycoonRun NewRun(string seed = "day-one") =>
-            new TycoonRun(NewShelf(), Book, new RunRng(seed));
+        private static TycoonRun NewRun(string seed = "day-one", int startingMoney = 20) =>
+            new TycoonRun(NewShelf(), Book, new RunRng(seed),
+                config: new TycoonConfig(startingMoney));
 
         /// <summary>Serves every seated customer an exact Spritz until the day closes.</summary>
         private static void PlayDayServingEveryone(TycoonRun run)
@@ -157,7 +158,7 @@ namespace LastCall.Tests
         [Test]
         public void AmbienceUpgrades_BookAsExpenses_AndLiftTheAmbience()
         {
-            var run = NewRun();
+            var run = NewRun(startingMoney: 200);   // purchases need cash now
             PlayDayServingEveryone(run);   // reaches DayEnd
             Assert.AreEqual(0.0, run.Ambience, 1e-9, "a plain bar pleases no one extra");
 
@@ -174,9 +175,22 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void NothingSellsOnCredit()
+        {
+            // GDD 23 §6 (2026-07-22): if the till cannot cover it, the buy is refused.
+            // Only rent may push the till below zero.
+            var run = NewRun();   // $20 start; the day leaves ~$56 in the till
+            PlayDayServingEveryone(run);
+
+            Assert.Less(run.Money, run.Config.MusicianPrice, "sanity: the musician is out of reach");
+            Assert.Throws<InvalidOperationException>(() => run.BuyMusician());
+            Assert.AreEqual(0, run.DayUpgrades, "a refused buy books nothing");
+        }
+
+        [Test]
         public void Glassware_CapsAtTheTopTier()
         {
-            var run = NewRun();
+            var run = NewRun(startingMoney: 300);
             PlayDayServingEveryone(run);
 
             run.BuyGlassware();   // 1 → 2

@@ -276,6 +276,7 @@ namespace LastCall.Core
             EnsurePhase(TycoonPhase.DayEnd);
             int cost = _shelf.RefillCost(_config.RefillPricePerCapacity);
             if (cost == 0) return 0;
+            EnsureAffordable(cost);
             Money -= cost;
             DayStock += cost;
             _shelf.RefillAll();
@@ -357,8 +358,20 @@ namespace LastCall.Core
 
         private void Spend(int price)
         {
+            EnsureAffordable(price);
             Money -= price;
             DayUpgrades += price;
+        }
+
+        /// <summary>
+        /// Purchases require cash (GDD 23 §6, 2026-07-22): nothing here is bought on
+        /// credit. Only rent can push the till below zero — debt is something that happens
+        /// *to* you, never a button you pressed.
+        /// </summary>
+        private void EnsureAffordable(int price)
+        {
+            if (Money < price)
+                throw new InvalidOperationException($"Not enough money (${Money} < ${price}).");
         }
 
         /// <summary>

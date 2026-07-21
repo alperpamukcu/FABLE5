@@ -120,17 +120,27 @@ Two stages, each green:
 Gate met: suite green, `grep` sweep clean (only doc comments mentioned old names, now fixed),
 scene boots the tycoon run; build size dropped ~5k lines of gameplay code + assemblies.
 
-## P8 — Art v3 (GDD 24 §8) — the full set, together
+## P8 — Art v3 + the hands-on interaction pass (GDD 24 §2–§5, §8)
 - ☐ New authoring reference (1280×720 logical), style guide refresh
-- ☐ Characters: 6+ customer bodies × states (walk/sit/order/talk/react/leave), bartender hands, musician
+- ☐ **Seated customers as scene characters** (explicit request): walk in → sit → order →
+  wait → react → leave, gauges attached to the person; the P3 seat panels retire
+- ☐ **The tilt-pour**: grab the bottle, lift to tip, line the stream over the shaker;
+  tilt = flow rate; the same model serves the shaker→glass pour (replaces hold-zones)
+- ☐ **Drag-preparations**: ice/lemon/salt/mint picked up and dropped into the shaker
+- ☐ **Real shake**: grab and shake the mouse; energy recorded 0–1 with the preparation
+- ☐ **ID card v3**: real licence proportions, purpose-drawn card art, one reading order
+  (v2 explicitly disliked — redesign whole, do not iterate)
+- ☐ Characters: 6+ customer bodies × states, bartender hands, musician
 - ☐ Stage: bar, wall, counter, upgrade variants; menu/shaker/glasses; liquid streams
 - ☐ Replace whole placeholder set at once; smoothness pass (easings, frame counts)
 - ☐ First SFX pass (pour, shake, till, crowd)
-Gate: zero pre-v3 sprites on screen; consistency review sheet.
+Gate: zero pre-v3 sprites on screen; a drink built start-to-finish with only mouse motions.
 
 ## P9 — Tutorial, balance, run lifecycle
 - ☐ Scripted opening shift (GDD 24 §9), skippable
 - ☐ Sim v2: tune GDD 23 §10 (day-1 net +$10…20, first red day ~4–5, storm-off <15%)
+- ☐ **Arrival pacing** (explicit request): gaps that breathe — pulses and valleys, no
+  metronome, no flood; measured via storm-off clustering in the sim
 - ☐ Save/reset on bankruptcy; endless difficulty curve verify
 Gate: new-player playtest completes tutorial and survives day 1 unaided.
 

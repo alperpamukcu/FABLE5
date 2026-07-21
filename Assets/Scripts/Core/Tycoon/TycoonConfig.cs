@@ -11,8 +11,20 @@ namespace LastCall.Core
     {
         public static readonly TycoonConfig Default = new TycoonConfig();
 
+        public TycoonConfig(int startingMoney = 20)
+        {
+            StartingMoney = startingMoney;
+        }
+
+        /// <summary>
+        /// Floor-time multiplier while a menu (service flow, licence) is open (GDD 24 §10):
+        /// building a drink must not cost a storm-off by itself, but the clock never fully
+        /// stops — haste still matters.
+        /// </summary>
+        public const double MenuTimeScale = 0.3;
+
         // ── the till ────────────────────────────────────────────────────────────
-        public int StartingMoney { get; } = 20;
+        public int StartingMoney { get; }
         public double GlassCapacity { get; } = 1.0;
 
         /// <summary>Balance v1 (2026-07-22): tripled from v0 — stock is a real cost of

@@ -139,7 +139,9 @@ namespace LastCall.Tests
                 new ShelfBottle(Bottle("vodka_a", "vodka", 1)),
                 new ShelfBottle(Bottle("gin_a", "gin", 1)),
             });
-            return new TycoonRun(shelf, Recipes, new RunRng("MKT"), brandCatalogue: catalogue);
+            // Rich enough that no-income test days can still shop (purchases need cash).
+            return new TycoonRun(shelf, Recipes, new RunRng("MKT"),
+                config: new TycoonConfig(startingMoney: 100), brandCatalogue: catalogue);
         }
 
         /// <summary>Fast-forwards an unserved day: everyone storms off and the day closes.</summary>
