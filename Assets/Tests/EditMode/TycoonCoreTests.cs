@@ -215,26 +215,38 @@ namespace LastCall.Tests
         {
             var ledger = new DayLedger();
 
-            ledger.CloseDay(1, income: 5, expenses: 10, averageSatisfaction: 0.5);
-            ledger.CloseDay(2, income: 5, expenses: 10, averageSatisfaction: 0.5);
+            ledger.CloseDay(1, income: 5, expenses: 10, averageSatisfaction: 0.5, tillAfter: -5);
+            ledger.CloseDay(2, income: 5, expenses: 10, averageSatisfaction: 0.5, tillAfter: -10);
             Assert.IsFalse(ledger.IsBankrupt, "two strikes is a warning");
 
-            ledger.CloseDay(3, income: 5, expenses: 10, averageSatisfaction: 0.5);
+            ledger.CloseDay(3, income: 5, expenses: 10, averageSatisfaction: 0.5, tillAfter: -15);
 
             Assert.IsTrue(ledger.IsBankrupt);
         }
 
         [Test]
-        public void OneGoodDay_WipesTheStrikes()
+        public void OneDayBackAboveWater_WipesTheStrikes()
         {
             var ledger = new DayLedger();
-            ledger.CloseDay(1, 5, 10, 0.5);
-            ledger.CloseDay(2, 5, 10, 0.5);
+            ledger.CloseDay(1, 5, 10, 0.5, tillAfter: -5);
+            ledger.CloseDay(2, 5, 10, 0.5, tillAfter: -10);
 
-            ledger.CloseDay(3, 20, 10, 0.5);
+            ledger.CloseDay(3, 20, 10, 0.5, tillAfter: 0);
 
             Assert.AreEqual(0, ledger.DebtStrikes, "debt is a spiral you can climb out of");
             Assert.IsFalse(ledger.IsBankrupt);
+        }
+
+        [Test]
+        public void ALosingDay_WithMoneyInTheTill_IsNotAStrike()
+        {
+            // "In debt" means in debt: a rich bar eats a bad night without the clock
+            // starting. The strike watches the till, not the day's net.
+            var ledger = new DayLedger();
+
+            ledger.CloseDay(1, income: 5, expenses: 50, averageSatisfaction: 0.5, tillAfter: 200);
+
+            Assert.AreEqual(0, ledger.DebtStrikes);
         }
 
         [Test]
@@ -242,13 +254,13 @@ namespace LastCall.Tests
         {
             var ledger = new DayLedger();
 
-            ledger.CloseDay(1, 10, 5, averageSatisfaction: 0.8);
+            ledger.CloseDay(1, 10, 5, averageSatisfaction: 0.8, tillAfter: 25);
             Assert.AreEqual(WealthTier.HighRoller, ledger.TomorrowsCrowd);
 
-            ledger.CloseDay(2, 10, 5, averageSatisfaction: 0.5);
+            ledger.CloseDay(2, 10, 5, averageSatisfaction: 0.5, tillAfter: 30);
             Assert.AreEqual(WealthTier.Regular, ledger.TomorrowsCrowd);
 
-            ledger.CloseDay(3, 10, 5, averageSatisfaction: 0.2);
+            ledger.CloseDay(3, 10, 5, averageSatisfaction: 0.2, tillAfter: 35);
             Assert.AreEqual(WealthTier.Broke, ledger.TomorrowsCrowd);
         }
 

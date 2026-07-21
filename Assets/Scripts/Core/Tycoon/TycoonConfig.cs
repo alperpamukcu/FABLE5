@@ -14,7 +14,11 @@ namespace LastCall.Core
         // ── the till ────────────────────────────────────────────────────────────
         public int StartingMoney { get; } = 20;
         public double GlassCapacity { get; } = 1.0;
-        public int RefillPricePerCapacity { get; } = 1;
+
+        /// <summary>Balance v1 (2026-07-22): tripled from v0 — stock is a real cost of
+        /// goods now (~$2.5 a drink), not a rounding error. The v0 sim banked $5k by day
+        /// 30 with zero bankruptcies; margins had to mean something.</summary>
+        public int RefillPricePerCapacity { get; } = 3;
 
         // ── the floor (GDD 23 §1) ───────────────────────────────────────────────
         public int StartingSeats { get; } = 4;
@@ -28,11 +32,11 @@ namespace LastCall.Core
             crowd == WealthTier.HighRoller ? 1.25 : crowd == WealthTier.Broke ? 0.75 : 1.0;
 
         /// <summary>Seconds between arrivals, before jitter. Busier as days pass.</summary>
-        public double ArrivalGap(int day) => Math.Max(8.0, 14.0 - 0.5 * day);
+        public double ArrivalGap(int day) => Math.Max(6.0, 12.0 - 0.5 * day);
         public const double ArrivalJitter = 0.30;
 
-        // ── patience (GDD 23 §2) ────────────────────────────────────────────────
-        public double PatienceSeconds(int day) => Math.Max(30.0, 60.0 - 2.0 * day);
+        // ── patience (GDD 23 §2, balance v1) ────────────────────────────────────
+        public double PatienceSeconds(int day) => Math.Max(22.0, 50.0 - 2.5 * day);
         public const double PatienceJitter = 0.20;
 
         /// <summary>One patience roll, jittered from the named stream.</summary>
@@ -41,7 +45,10 @@ namespace LastCall.Core
 
         // ── the day (GDD 23 §6) ─────────────────────────────────────────────────
         public int CustomersOnDay(int day) => Math.Min(14, 8 + day / 2);
-        public int Rent(int day) => 8 + 2 * day;
+
+        /// <summary>Balance v1: rent climbs hard enough to make a red day a real threat
+        /// for a bar that stops improving — $20 on day 1, $65 by day 10.</summary>
+        public int Rent(int day) => 15 + 5 * day;
 
         // ── orders (GDD 23 §3) ──────────────────────────────────────────────────
         /// <summary>The order roll pool: this many lowest-rank pourable recipes.</summary>

@@ -36,9 +36,14 @@ Play the tycoon loop before the shaker exists:
 - ☑ Day-end panel: invoice text, RESTOCK / brand offers / STOOL purchase / OPEN TOMORROW; bankruptcy banner
 - ☑ Scene boots the tycoon loop (`GameBootstrap.Tycoon`, cloned cards + own RunRng; DebugHud retired from the scene, kept in code until P7)
 - ☑ Interim input: shelf-click pouring + garnish pinches against `TycoonRun`; garnish rack moved to the counter top (seat row owns the bottom band)
-- ☐ Day-end panel visual pass (built and wired, not yet eyeballed in play)
-- ☐ Sim bot ported to tycoon metrics (earnings/day, storm-off rate, days survived)
-Gate: human-playable end-to-end verified live (order → pour → serve → payment); sim port pending.
+- ☑ Day-end panel verified in play (invoice, offers, OPEN TOMORROW)
+- ☑ `TycoonSimulator` — 200 seeded runs, 9s-per-drink floor bot, Docs/tycoon_sim_report.md
+- ☑ Balance v1 (sim-gated, two iterations): rent $15+$5×day, stock $3/capacity, patience
+  50−2.5×day (floor 22), arrivals 12−0.5×day (floor 6); bankruptcy strikes watch the
+  TILL below zero (in debt means in debt), not the day's net — v0 let a floor bot bank
+  $5k with zero bankruptcies; v1 runs the same bot at $132 income vs $125 expenses with
+  red days climbing from day 11 (35% by day 15) — upgrade or sink
+Gate met: human-playable end-to-end + sim reporting tycoon metrics.
 
 ## P4 — The service flow (GDD 24 §1–3)
 - ☐ Counter menu prop + drink menu UI (bottles leave the stage)

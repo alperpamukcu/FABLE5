@@ -32,9 +32,10 @@ namespace LastCall.Core
     }
 
     /// <summary>
-    /// The books, and with them the only way to lose (GDD 23 §6): three consecutive days
-    /// in the red close the bar. One good day wipes the strikes — debt is a spiral you can
-    /// climb out of, not a slow certainty. Also decides tomorrow's crowd (§7).
+    /// The books, and with them the only way to lose (GDD 23 §6): close **three
+    /// consecutive days with the till below zero** and the bar is gone. In debt means in
+    /// debt — a rich bar can eat a losing day; a broke one is on the clock. One day back
+    /// above water wipes the strikes. Also decides tomorrow's crowd (§7).
     /// </summary>
     public sealed class DayLedger
     {
@@ -45,15 +46,18 @@ namespace LastCall.Core
         private readonly List<DayResult> _history = new List<DayResult>();
         public IReadOnlyList<DayResult> History => _history;
 
-        /// <summary>Consecutive red days so far.</summary>
+        /// <summary>Consecutive days closed with the till below zero.</summary>
         public int DebtStrikes { get; private set; }
 
         public bool IsBankrupt => DebtStrikes >= StrikesToClose;
 
         public WealthTier TomorrowsCrowd { get; private set; } = WealthTier.Regular;
 
-        /// <summary>Closes a day: books it, advances the strike count, sets the crowd.</summary>
-        public DayResult CloseDay(int day, int income, int expenses, double averageSatisfaction)
+        /// <summary>Closes a day: books it, advances the strike count, sets the crowd.
+        /// <paramref name="tillAfter"/> is the money left once everything is paid — the
+        /// strike watches the till, not the day's net.</summary>
+        public DayResult CloseDay(int day, int income, int expenses, double averageSatisfaction,
+            int tillAfter)
         {
             if (income < 0) throw new ArgumentOutOfRangeException(nameof(income));
             if (expenses < 0) throw new ArgumentOutOfRangeException(nameof(expenses));
@@ -61,7 +65,7 @@ namespace LastCall.Core
             var result = new DayResult(day, income, expenses, averageSatisfaction);
             _history.Add(result);
 
-            DebtStrikes = result.Net < 0 ? DebtStrikes + 1 : 0;
+            DebtStrikes = tillAfter < 0 ? DebtStrikes + 1 : 0;
 
             TomorrowsCrowd = averageSatisfaction >= HighRollerBar ? WealthTier.HighRoller
                 : averageSatisfaction >= BrokeBar ? WealthTier.Regular

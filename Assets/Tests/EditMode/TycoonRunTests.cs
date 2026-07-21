@@ -62,13 +62,13 @@ namespace LastCall.Tests
 
             Assert.AreEqual(TycoonPhase.DayEnd, run.Phase);
             Assert.AreEqual(8, run.Floor.Finished.Count, "day 1 sends 8 customers");
-            // 8 exact serves at $6 (rank 2 → $4+$2) + $1 speed tip each, minus $10 rent.
-            Assert.AreEqual(20 + 8 * 7 - 10, run.Money);
+            // 8 exact serves at $6 (rank 2 → $4+$2) + $1 speed tip each, minus $20 rent.
+            Assert.AreEqual(20 + 8 * 7 - 20, run.Money);
 
             var result = run.ContinueToNextDay();
 
             Assert.AreEqual(8 * 7, result.Income);
-            Assert.AreEqual(10, result.Expenses, "rent is the only expense today");
+            Assert.AreEqual(20, result.Expenses, "rent is the only expense today");
             Assert.AreEqual(0, run.Ledger.DebtStrikes, "a green day");
             Assert.AreEqual(2, run.Day);
             Assert.AreEqual(TycoonPhase.DayOpen, run.Phase);
@@ -96,11 +96,13 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void ServingNobody_ForThreeDays_ClosesTheBar()
+        public void ServingNobody_UntilTheTillRunsDry_ClosesTheBar()
         {
+            // $20 starting money vs $20 day-1 rent: the till goes under on day 2 with no
+            // income, and three underwater closes later the doors are shut.
             var run = NewRun("bankrupt");
 
-            for (int day = 0; day < 3; day++)
+            for (int day = 0; day < 4; day++)
             {
                 int guard = 0;
                 while (run.Phase == TycoonPhase.DayOpen)
@@ -109,6 +111,7 @@ namespace LastCall.Tests
                     run.Tick(50);
                 }
                 run.ContinueToNextDay();
+                if (run.Phase == TycoonPhase.Closed) break;
             }
 
             Assert.AreEqual(TycoonPhase.Closed, run.Phase);
@@ -143,12 +146,12 @@ namespace LastCall.Tests
             var run = NewRun();
             PlayDayServingEveryone(run);
 
-            // 8 drinks × 0.7 volume from two bottles = 5.6 capacity → $6 at $1/capacity.
+            // 8 drinks × 0.7 volume from two bottles = 5.6 capacity → $17 at $3/capacity.
             int cost = run.RefillShelf();
-            Assert.AreEqual(6, cost);
+            Assert.AreEqual(17, cost);
 
             var result = run.ContinueToNextDay();
-            Assert.AreEqual(10 + 6, result.Expenses, "rent + the refill");
+            Assert.AreEqual(20 + 17, result.Expenses, "rent + the refill");
         }
 
         [Test]

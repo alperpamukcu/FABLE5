@@ -24,8 +24,9 @@
 - The bar has **`Seats` stools** (start **4**, upgrade to **6**). Each seat holds one
   `CustomerVisit`.
 - Customers **arrive over time** while the day runs: next arrival after
-  `ArrivalGap = max(8, 14 − 0.5×Day)` seconds ± 30% jitter (stream `"arrivals"`), if a
-  stool is free and the day still has customers left to send.
+  `ArrivalGap = max(6, 12 − 0.5×Day)` seconds ± 30% jitter (stream `"arrivals"`), if a
+  stool is free and the day still has customers left to send. *(v1, 2026-07-22 — v0's
+  gentler pacing let a floor bot bank $5k with zero bankruptcies.)*
 - A visit's life: **Arrive → Order → Wait → (Served → maybe order again) → Pay → Leave**,
   or **Storm off** when patience runs out.
 - Every visit shows two gauges (module 24 §5): the **satisfaction bar** and the
@@ -33,8 +34,8 @@
 
 ## 2. Patience
 
-- `Patience = max(30, 60 − 2×Day)` seconds ± 20% jitter (stream `"patience"`), ticking
-  only while the customer waits for a drink.
+- `Patience = max(22, 50 − 2.5×Day)` seconds ± 20% jitter (stream `"patience"`), ticking
+  only while the customer waits for a drink. *(v1 — tightened with the same sim pass.)*
 - Patience hitting zero = **storm-off**: no payment, satisfaction 0 for the day average,
   the stool frees up.
 - Serving resets nothing retroactively — the *wait fraction* used by tipping (§4) is
@@ -88,10 +89,14 @@ or the extra order without knowing *who* you are serving.
 - A day sends `CustomersPerDay = 8 + Day/2` customers (cap 14). The day ends when the last
   one has left.
 - **Day end** shows the invoice (module 24 §7): income (payments + tips) vs expenses
-  (refills, market purchases, upgrades, and **rent = $8 + $2×Day**). Rent is what makes
-  debt possible.
-- **Losing:** finish **3 consecutive days in the red** and the bar closes — full run
-  reset, roguelite style. One good day resets the strike counter.
+  (refills at **$3 per capacity** — stock is a real cost of goods — market purchases,
+  upgrades, and **rent = $15 + $5×Day**). Rent is what makes debt possible. *(v1 numbers;
+  v0 was $8+$2×Day rent and $1 stock, which the sim showed was no pressure at all.)*
+- **Losing:** close **3 consecutive days with the till below zero** and the bar closes —
+  full run reset, roguelite style. In debt means in debt: a rich bar can eat a losing day
+  without the clock starting; one close back above water wipes the strikes. *(Clarified
+  2026-07-22 — the first draft struck on net-negative days, which killed bars holding
+  $700 cash. The user's rule is about debt, and now so is the code.)*
 - Day end is also when the **market** opens (§7).
 
 ## 7. Reputation and the crowd
@@ -119,7 +124,8 @@ the ledger history as the score.
 
 ## 10. Balance v0 (all numbers above are starting stakes)
 
-Tuned by the sim once the loop stands (PLAN §Gates): target day-1 net ≈ +$10…20 for a
-competent player, break-even for a sloppy one; first red day realistically possible by
-day 4–5 without upgrades. Numbers live in `TycoonConfig` (code) and this table — change
-both.
+Tuned by the sim (PLAN P3, 2026-07-22, two iterations): a 9s-per-drink floor bot now runs
+$132 income against $125 expenses, day 1 always green, red days climbing from day 11 to
+35% by day 15 — an unimproved bar slowly sinks, which is the whole tycoon argument.
+Storm-offs 22% (floor bot; players triage by the clock), extra orders 14% of serves.
+Numbers live in `TycoonConfig` (code) and this module — change both.

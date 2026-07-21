@@ -252,7 +252,8 @@ namespace LastCall.Core
         public DayResult ContinueToNextDay()
         {
             EnsurePhase(TycoonPhase.DayEnd);
-            var result = Ledger.CloseDay(Day, _dayIncome, _dayExpenses, Floor.AverageSatisfaction);
+            var result = Ledger.CloseDay(Day, _dayIncome, _dayExpenses, Floor.AverageSatisfaction,
+                tillAfter: Money);
 
             if (Ledger.IsBankrupt)
             {
