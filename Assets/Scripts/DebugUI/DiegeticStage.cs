@@ -41,10 +41,12 @@ namespace LastCall.DebugUI
         // The garnish rack (GDD 22): mint, olives and future rim garnishes live on a shelf
         // under the counter, where a bartender actually keeps them — and where the Patrons
         // and Tools tables used to crowd the band before they moved into the STAFF popup.
+        // Tycoon floor (PLAN P3): the bottom band belongs to the seat row now, so the
+        // garnish jars stand on the counter top, left margin, under the pour glass.
         private const int GarnishSlots = 4;
-        private const float GarnishPitch = 52f;
-        private const float GarnishFirstX = 246f;
-        private const float GarnishBaseY = 26f;
+        private const float GarnishPitch = 56f;
+        private const float GarnishFirstX = 30f;
+        private const float GarnishBaseY = 100f;
         private const float GarnishDisplayW = 30f;
         private const float CustomerX = 556f;              // patron centre, standing at the bar
         private const float CustomerBaseY = 126f;          // hands rest on the bar-top surface
@@ -135,6 +137,19 @@ namespace LastCall.DebugUI
         public void SetMoney(string text)
         {
             if (_moneyText != null) _moneyText.text = text;
+        }
+
+        /// <summary>
+        /// Hides the single-patron props for the tycoon floor (PLAN P3): the seat row owns
+        /// the customers now; the per-seat licence returns in P6.
+        /// </summary>
+        public void SetSoloCustomerVisible(bool visible)
+        {
+            if (_customerRect != null) _customerRect.gameObject.SetActive(visible);
+            if (visible) return;
+            if (_idPrompt != null) _idPrompt.gameObject.SetActive(false);
+            if (_moodRoot != null) _moodRoot.gameObject.SetActive(false);
+            CloseId();
         }
 
         private void Awake()

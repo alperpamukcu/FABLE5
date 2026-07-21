@@ -29,13 +29,16 @@ Gate met: suite green (14 pins), rules mirror GDD 23 tables.
 - Note: market v0 = deterministic brand upgrades; the rotating random market lands in P5
 Gate met: `TycoonRunTests` plays a full seeded day headless — arrivals→serves→invoice→strikes→bankruptcy.
 
-## P3 — First playable (debug UI, old input)
+## P3 — First playable (debug UI, old input) ◐
 Play the tycoon loop before the shaker exists:
-- ☐ Seat row on stage: up to 6 patrons with order bubbles, patience clocks, satisfaction bars
-- ☐ Serve targeting: SERVE → click a seat
-- ☐ Day HUD: top reputation bar, till, day progress; day-end invoice + market panels (functional, plain)
-- ☐ Keep shelf-click pouring as interim input
-Gate: a human can play day 1→bankruptcy with only new-loop UI; sim bot ported to tycoon metrics (earnings/day, storm-off rate).
+- ☑ `TycoonHud`: seat row (6 stools — name, WANTS read line, order + price, patience bar that heats the frame as it drains, locked/empty states), click-a-seat-to-serve
+- ☑ Day HUD: top bar (day, arrivals, till, crowd tier, live TONIGHT satisfaction bar), BIN GLASS / NEW RUN
+- ☑ Day-end panel: invoice text, RESTOCK / brand offers / STOOL purchase / OPEN TOMORROW; bankruptcy banner
+- ☑ Scene boots the tycoon loop (`GameBootstrap.Tycoon`, cloned cards + own RunRng; DebugHud retired from the scene, kept in code until P7)
+- ☑ Interim input: shelf-click pouring + garnish pinches against `TycoonRun`; garnish rack moved to the counter top (seat row owns the bottom band)
+- ☐ Day-end panel visual pass (built and wired, not yet eyeballed in play)
+- ☐ Sim bot ported to tycoon metrics (earnings/day, storm-off rate, days survived)
+Gate: human-playable end-to-end verified live (order → pour → serve → payment); sim port pending.
 
 ## P4 — The service flow (GDD 24 §1–3)
 - ☐ Counter menu prop + drink menu UI (bottles leave the stage)

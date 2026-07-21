@@ -29,6 +29,10 @@ namespace LastCall.Game
         [SerializeField] private string barId = "classic";
 
         public RunController Run { get; private set; }
+
+        /// <summary>The v4 loop (GDD 23, PLAN P3) — what the scene actually plays now.</summary>
+        public TycoonRun Tycoon { get; private set; }
+
         public string CurrentSeed { get; private set; }
 
         /// <summary>Raised after a new run is dealt (including the initial one).</summary>
@@ -67,6 +71,15 @@ namespace LastCall.Game
             Run = new RunController(startingBottles, recipes, new RunRng(CurrentSeed), config: config,
                 patronPool: patronPool, toolPool: toolPool, vipPool: vipPool,
                 voucherPool: voucherPool, bar: barTheme, archetypes: archetypes,
+                brandCatalogue: brandCatalogue);
+
+            // The tycoon run gets its own cloned cards and its own RunRng: the two loops
+            // must never share mutable state or a random stream. The old run stays alive
+            // for tests and the sim until PLAN P7 demolition.
+            var tycoonBottles = new List<ShelfBottle>();
+            foreach (var card in startingBottles) tycoonBottles.Add(new ShelfBottle(card.Clone()));
+            Tycoon = new TycoonRun(new Shelf(tycoonBottles), recipes, new RunRng(CurrentSeed),
+                regulars: archetypes != null ? new RegularsRegistry(archetypes) : null,
                 brandCatalogue: brandCatalogue);
 
             var customer = Run.CurrentRound.Customer;

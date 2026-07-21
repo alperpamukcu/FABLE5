@@ -142,22 +142,12 @@ namespace LastCall.EditorTools
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Props/register2.png");
             stageSo.ApplyModifiedPropertiesWithoutUndo();
 
-            var hud = game.AddComponent<DebugHud>();
+            // P3 (PLAN_tycoon_pivot): the tycoon loop is the played loop now. DebugHud and
+            // the old RunController stay in code for tests and the sim until P7 demolition.
+            var hud = game.AddComponent<TycoonHud>();
             var hudSo = new SerializedObject(hud);
-            // v2 HUD pixel pass: the whole overlay uses the pixel fonts now (Silkscreen for
-            // body/headers, Press Start 2P for buttons/numbers via pixelFont).
-            hudSo.FindProperty("displayFont").objectReferenceValue = LoadRequired<Font>(PixelBodyFontPath);
             hudSo.FindProperty("bodyFont").objectReferenceValue = LoadRequired<Font>(PixelBodyFontPath);
-            hudSo.FindProperty("pixelFont").objectReferenceValue = LoadRequired<Font>(PixelBodyFontPath);
-            // UI kit is optional: the HUD falls back to flat colors when unwired.
-            hudSo.FindProperty("panelSprite").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/UI/panel.png");
-            hudSo.FindProperty("buttonSprite").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/UI/button.png");
-            hudSo.FindProperty("vignetteSprite").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/UI/vignette.png");
-            hudSo.FindProperty("art").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<LastCall.Game.ArtLibrary>("Assets/Art/ArtLibrary.asset");
+            hudSo.FindProperty("displayFont").objectReferenceValue = LoadRequired<Font>(PixelDisplayFontPath);
             hudSo.FindProperty("stage").objectReferenceValue = stage;
             hudSo.ApplyModifiedPropertiesWithoutUndo();
 
