@@ -17,10 +17,6 @@ namespace LastCall.EditorTools
         private const string ScenePath = "Assets/Scenes/Main.unity";
         private const string DeckPath = "Assets/Data/bottles/base_bar.json";
         private const string RecipesPath = "Assets/Data/recipes/recipes.json";
-        private const string PatronsPath = "Assets/Data/patrons/patrons.json";
-        private const string ToolsPath = "Assets/Data/tools/tools.json";
-        private const string VipsPath = "Assets/Data/vips/vips.json";
-        private const string VouchersPath = "Assets/Data/vouchers/vouchers.json";
         private const string ArchetypesPath = "Assets/Data/customers/archetypes.json";
         // v2 pixel fonts (16_ui_style_guide v2 §1: Press Start 2P headings/numbers,
         // Silkscreen body/caption — spec-sanctioned fallbacks for m6x11/m5x7). The legacy
@@ -59,10 +55,6 @@ namespace LastCall.EditorTools
             var so = new SerializedObject(bootstrap);
             so.FindProperty("deckJson").objectReferenceValue = LoadRequired<TextAsset>(DeckPath);
             so.FindProperty("recipesJson").objectReferenceValue = LoadRequired<TextAsset>(RecipesPath);
-            so.FindProperty("patronsJson").objectReferenceValue = LoadRequired<TextAsset>(PatronsPath);
-            so.FindProperty("toolsJson").objectReferenceValue = LoadRequired<TextAsset>(ToolsPath);
-            so.FindProperty("vipsJson").objectReferenceValue = LoadRequired<TextAsset>(VipsPath);
-            so.FindProperty("vouchersJson").objectReferenceValue = LoadRequired<TextAsset>(VouchersPath);
             so.FindProperty("archetypesJson").objectReferenceValue = LoadRequired<TextAsset>(ArchetypesPath);
             so.ApplyModifiedPropertiesWithoutUndo();
 

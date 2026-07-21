@@ -182,9 +182,9 @@ namespace LastCall.Core
             return _shelf.PourInto(Glass, ingredientId, volume);
         }
 
-        /// <summary>One garnish tap = a fixed pinch, same rule as the old loop (GDD 21 §3).</summary>
+        /// <summary>One garnish tap = a fixed pinch (GDD 21 §3).</summary>
         public double PourGarnish(string ingredientId) =>
-            PourMeasure(ingredientId, RoundController.GarnishClickFraction * Glass.Capacity);
+            PourMeasure(ingredientId, PourResolver.GarnishClickFraction * Glass.Capacity);
 
         /// <summary>Drops a preparation (ice, a twist, a rim) into the shaker (GDD 24 §2.4).</summary>
         public void AddPreparation(PreparationDefinition preparation)

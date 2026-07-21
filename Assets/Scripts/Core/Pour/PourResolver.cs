@@ -5,7 +5,7 @@ namespace LastCall.Core
 {
     /// <summary>
     /// Turns a poured glass into emotional movement (GDD 21 §4). The pour system's
-    /// replacement for the selection-based path in <see cref="EmotionResolver"/>.
+    /// replacement for the selection-based path retired with the card loop.
     ///
     /// Charges are printed **per full glass**, and what actually went in scales them:
     ///
@@ -19,7 +19,13 @@ namespace LastCall.Core
     public static class PourResolver
     {
         /// <summary>A drink that matches no recipe still says something, at half volume (GDD 19 §5).</summary>
-        public const double NoRecipeMultiplier = EmotionResolver.NoRecipeMultiplier;
+        public const double NoRecipeMultiplier = 0.5;
+
+        /// <summary>Ceiling on how far the craft layer can amplify charges (GDD 19 §5).</summary>
+        public const double MaxChargeMultiplier = 3.0;
+
+        /// <summary>One garnish tap = this share of the glass (GDD 21 §3, 2026-07-20).</summary>
+        public const double GarnishClickFraction = 0.05;
 
         /// <summary>
         /// Raw, unamplified movement from what is in the glass. Ingredients are looked up by
@@ -60,7 +66,7 @@ namespace LastCall.Core
 
             double multiplier = match?.Recipe == null
                 ? NoRecipeMultiplier
-                : Math.Min(EmotionResolver.MaxChargeMultiplier, match.Recipe.ChargeMultiplier);
+                : Math.Min(MaxChargeMultiplier, match.Recipe.ChargeMultiplier);
 
             var totals = new double[Emotions.Count];
             foreach (var pour in glass.Pours)
