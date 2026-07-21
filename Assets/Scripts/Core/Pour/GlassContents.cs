@@ -90,6 +90,66 @@ namespace LastCall.Core
             return accepted;
         }
 
+        /// <summary>
+        /// Removes up to <paramref name="volume"/> total, taken proportionally across every
+        /// ingredient so the drink's ratios and its layer order survive — draining half a
+        /// 70/30 glass leaves a 70/30 glass at half the volume. Returns what was removed.
+        /// The pour from the shaker into the serving glass is built on this (GDD 24 §3).
+        /// </summary>
+        public double DrainProportional(double volume)
+        {
+            if (volume <= 0 || TotalVolume <= 0) return 0;
+
+            double removed = Math.Min(volume, TotalVolume);
+            double keep = (TotalVolume - removed) / TotalVolume;
+
+            // Floating-point dregs below this read as empty: a "drained" shaker must report
+            // IsEmpty so the serve stage and the layered readout both clear cleanly.
+            if (keep <= 1e-9)
+            {
+                double all = TotalVolume;
+                _pours.Clear();
+                _byIngredient.Clear();
+                TotalVolume = 0;
+                return all;
+            }
+
+            for (int i = 0; i < _pours.Count; i++)
+                _pours[i] = new Pour(_pours[i].IngredientId, _pours[i].Volume * keep);
+            foreach (var id in new List<string>(_byIngredient.Keys))
+                _byIngredient[id] *= keep;
+            TotalVolume -= removed;
+            return removed;
+        }
+
+        /// <summary>
+        /// Pours from this vessel into <paramref name="target"/>, keeping this vessel's
+        /// ingredient ratios (GDD 24 §3). <paramref name="accuracy"/> (0…1) is the share of
+        /// what leaves that actually lands in the glass; the rest missed the rim and is
+        /// spilled — a sloppy pour delivers a thinner, under-filled drink. The full
+        /// <paramref name="volume"/> still drains from this vessel. Returns the volume that
+        /// landed in the target.
+        /// </summary>
+        public double TransferInto(GlassContents target, double volume, double accuracy)
+        {
+            if (target == null) throw new ArgumentNullException(nameof(target));
+            accuracy = accuracy < 0 ? 0 : accuracy > 1 ? 1 : accuracy;
+
+            double leaving = Math.Min(volume, TotalVolume);
+            if (leaving <= 0) return 0;
+
+            // Snapshot the shares before draining, then land each ingredient's portion into
+            // the target (Add caps at the target's brim, so an over-pour spills there too).
+            double landed = 0;
+            foreach (var pair in new List<KeyValuePair<string, double>>(_byIngredient))
+            {
+                double share = pair.Value / TotalVolume;
+                landed += target.Add(pair.Key, accuracy * leaving * share);
+            }
+            DrainProportional(leaving);
+            return landed;
+        }
+
         // ── preparations (GDD 22 §5, infrastructure only) ────────────────────────
 
         private readonly List<PreparationDefinition> _preparations = new List<PreparationDefinition>();

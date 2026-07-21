@@ -155,6 +155,40 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void Shaking_RecordsThePreparation()
+        {
+            var run = NewRun();
+            run.PourMeasure("gin", 0.4);
+
+            run.Shake();
+
+            Assert.IsTrue(run.IsShaken);
+            Assert.IsTrue(run.Glass.HasPreparation("shaken"));
+        }
+
+        [Test]
+        public void ASloppyServePour_CostsTheRecipe()
+        {
+            var run = NewRun();
+            int guard = 0;
+            while (run.Floor.Seated.Count == 0) { Assert.Less(guard++, 100); run.Tick(5); }
+            var visit = run.Floor.Seated[0];   // day 1 orders a Spritz
+
+            // An exact spritz built in the shaker, then poured badly: 60% misses the rim,
+            // so the serving glass lands under the recipe's MinFill and the drink no longer
+            // reads as a Spritz. The aim is the skill; spilling has a price.
+            run.PourMeasure("gin", 0.35);
+            run.PourMeasure("soda", 0.35);
+            run.PourIntoServingGlass(0.7, accuracy: 0.4);
+
+            Assert.Less(run.ServingGlass.FillFraction, 0.5, "a spilled pour under-fills the glass");
+            Assert.IsTrue(run.Glass.IsEmpty, "the shaker is spent either way");
+
+            var verdict = run.ServeTo(visit);
+            Assert.AreNotEqual(OrderMatch.Exact, verdict.Match, "the spill lost the recipe");
+        }
+
+        [Test]
         public void TheDayClock_AndThePourClock_AreIndependent()
         {
             // Holding a bottle while the floor runs must not double-charge time anywhere:

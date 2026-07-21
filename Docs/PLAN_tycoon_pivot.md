@@ -45,7 +45,15 @@ Play the tycoon loop before the shaker exists:
   red days climbing from day 11 (35% by day 15) — upgrade or sink
 Gate met: human-playable end-to-end + sim reporting tycoon metrics.
 
-## P4 — The service flow (GDD 24 §1–3)
+## P4 — The service flow (GDD 24 §1–3) ◐
+- ☑ Core shaker model: `Glass` is the shaker, `ServingGlass` receives the pour; `Shake`
+  + `AddPreparation` (ice/twist/rims); `PourIntoServingGlass(volume, accuracy)` transfers
+  with spill (`GlassContents.TransferInto`/`DrainProportional` — proportional, ratio-
+  preserving, brim-capped); `ServeTo` delivers the serving glass and auto-pours the shaker
+  perfectly when the aim minigame was skipped (keeps sim/tests/interim-UI on the simple path)
+- ☑ Core tests: drain keeps ratios, perfect pour moves the drink whole, a 0.5-accuracy pour
+  spills half and under-fills, a sloppy serve pour drops the drink under MinFill and loses
+  the recipe (327/327 green)
 - ☐ Counter menu prop + drink menu UI (bottles leave the stage)
 - ☐ Shaker focus stage: dim, hold-to-pour into shaker, preparations before shake, shake input (hold+move)
 - ☐ Serve stage: glass + shaker pour with aim/spill, then seat targeting

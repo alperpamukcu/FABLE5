@@ -25,6 +25,61 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void DrainingProportionally_KeepsTheRatios()
+        {
+            var glass = Glass();
+            glass.Add("gin", 0.6);
+            glass.Add("soda", 0.2);
+
+            double removed = glass.DrainProportional(0.4);   // half the 0.8 glass
+
+            Assert.AreEqual(0.4, removed, 1e-9);
+            Assert.AreEqual(0.4, glass.TotalVolume, 1e-9);
+            Assert.AreEqual(0.75, glass.RatioOf("gin"), 1e-9, "still 60/20 → 3:1");
+            Assert.AreEqual(0.25, glass.RatioOf("soda"), 1e-9);
+        }
+
+        [Test]
+        public void DrainingEverything_LeavesAnEmptyGlass()
+        {
+            var glass = Glass();
+            glass.Add("gin", 0.5);
+
+            Assert.AreEqual(0.5, glass.DrainProportional(1.0), 1e-9, "you cannot drain more than is there");
+            Assert.IsTrue(glass.IsEmpty);
+        }
+
+        [Test]
+        public void APerfectServePour_MovesTheDrinkWhole()
+        {
+            var shaker = Glass();
+            shaker.Add("gin", 0.6);
+            shaker.Add("soda", 0.2);
+            var serving = Glass();
+
+            double landed = shaker.TransferInto(serving, shaker.TotalVolume, accuracy: 1.0);
+
+            Assert.AreEqual(0.8, landed, 1e-9);
+            Assert.IsTrue(shaker.IsEmpty, "the shaker is spent");
+            Assert.AreEqual(0.8, serving.FillFraction, 1e-9);
+            Assert.AreEqual(0.75, serving.RatioOf("gin"), 1e-9, "ratios carry across");
+        }
+
+        [Test]
+        public void ASloppyServePour_SpillsHalfAndUnderfillsTheGlass()
+        {
+            var shaker = Glass();
+            shaker.Add("gin", 0.8);
+            var serving = Glass();
+
+            double landed = shaker.TransferInto(serving, 0.8, accuracy: 0.5);
+
+            Assert.AreEqual(0.4, landed, 1e-9, "half missed the rim");
+            Assert.IsTrue(shaker.IsEmpty, "the full pour still drained the shaker");
+            Assert.AreEqual(0.4, serving.FillFraction, 1e-9, "a thinner drink than you built");
+        }
+
+        [Test]
         public void RatiosAreShareOfTheDrink_NotOfTheGlass()
         {
             // Half a glass of 70/30 is still 70/30 — ratio is about the drink, fill is about

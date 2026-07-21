@@ -48,7 +48,16 @@ namespace LastCall.Core
         /// <summary>Today's crowd, decided by yesterday's satisfaction bar (GDD 23 §7).</summary>
         public WealthTier CrowdToday { get; private set; } = WealthTier.Regular;
 
+        /// <summary>The shaker: the vessel you build the drink in (GDD 24 §2).</summary>
         public GlassContents Glass { get; private set; }
+
+        /// <summary>The serving glass: what the shaker is poured into and handed over
+        /// (GDD 24 §3). Empty until the serve pour, or filled perfectly by <see cref="ServeTo"/>.</summary>
+        public GlassContents ServingGlass { get; private set; }
+
+        /// <summary>True once the shaker has been shaken this build (GDD 24 §2.5).</summary>
+        public bool IsShaken { get; private set; }
+
         public string PouringId { get; private set; }
 
         private int _dayIncome;
@@ -71,6 +80,7 @@ namespace LastCall.Core
             Money = _config.StartingMoney;
             Seats = _config.StartingSeats;
             Glass = new GlassContents(_config.GlassCapacity);
+            ServingGlass = new GlassContents(_config.GlassCapacity);
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"));
         }
 
@@ -161,19 +171,49 @@ namespace LastCall.Core
         public double PourGarnish(string ingredientId) =>
             PourMeasure(ingredientId, RoundController.GarnishClickFraction * Glass.Capacity);
 
+        /// <summary>Drops a preparation (ice, a twist, a rim) into the shaker (GDD 24 §2.4).</summary>
+        public void AddPreparation(PreparationDefinition preparation)
+        {
+            EnsurePhase(TycoonPhase.DayOpen);
+            Glass.AddPreparation(preparation);
+        }
+
+        /// <summary>Shakes the built drink (GDD 24 §2.5). Recorded on the shaker; the craft
+        /// effect of a good shake is a later balance pass, the plumbing is here now.</summary>
+        public void Shake()
+        {
+            EnsurePhase(TycoonPhase.DayOpen);
+            if (Glass.IsEmpty) throw new InvalidOperationException("Nothing in the shaker to shake.");
+            Glass.AddPreparation(Preparations.Shaken);
+            IsShaken = true;
+        }
+
+        /// <summary>
+        /// The serve pour (GDD 24 §3): moves <paramref name="volume"/> from the shaker into
+        /// the serving glass. <paramref name="accuracy"/> (0…1) is the aim — a share lands,
+        /// the rest spills and is lost. Returns the volume that landed. The UI drives this
+        /// per frame from where the pour is aimed; the sim and the quick path pour perfectly.
+        /// </summary>
+        public double PourIntoServingGlass(double volume, double accuracy)
+        {
+            EnsurePhase(TycoonPhase.DayOpen);
+            return Glass.TransferInto(ServingGlass, volume, accuracy);
+        }
+
         public void DiscardGlass()
         {
             EnsurePhase(TycoonPhase.DayOpen);
-            PouringId = null;
-            Glass = new GlassContents(_config.GlassCapacity);
+            ResetVessels();
         }
 
         // ── serving a seat (GDD 23 §4–§5) ───────────────────────────────────────
 
         /// <summary>
-        /// Hands the glass to one seated customer. Identifies the drink (recipe match),
-        /// applies its charges to who they really are, prices the serve for today's crowd,
-        /// and either settles them up or opens their next round.
+        /// Hands the drink to one seated customer. If the serve pour was never made, the
+        /// whole shaker is delivered perfectly (the quick path used by the sim, the tests
+        /// and the interim UI); the aim/spill minigame pours into the serving glass first,
+        /// so what it built is what goes out. Identifies the drink, applies its charges to
+        /// who they really are, prices it for today's crowd, and settles or reopens them.
         /// </summary>
         public ServiceVerdict ServeTo(CustomerVisit visit)
         {
@@ -181,12 +221,17 @@ namespace LastCall.Core
             if (visit == null) throw new ArgumentNullException(nameof(visit));
             if (visit.State != VisitState.Waiting || !Floor.Seated.Contains(visit))
                 throw new InvalidOperationException("That customer is not waiting at the bar.");
-            if (Glass.IsEmpty) throw new InvalidOperationException("Nothing in the glass.");
+            if (ServingGlass.IsEmpty && Glass.IsEmpty)
+                throw new InvalidOperationException("Nothing to serve.");
 
             PouringId = null;
-            var match = RatioRecipeMatcher.Match(Glass, _recipes, IngredientOf);
-            var applied = PourResolver.Resolve(Glass, match, IngredientOf);
-            var matchKind = ServiceJudge.Compare(visit.Order, match, Glass, IngredientOf);
+            if (ServingGlass.IsEmpty)
+                Glass.TransferInto(ServingGlass, Glass.TotalVolume, 1.0);
+
+            var delivered = ServingGlass;
+            var match = RatioRecipeMatcher.Match(delivered, _recipes, IngredientOf);
+            var applied = PourResolver.Resolve(delivered, match, IngredientOf);
+            var matchKind = ServiceJudge.Compare(visit.Order, match, delivered, IngredientOf);
             var verdict = ServiceJudge.Judge(visit, matchKind, applied, CrowdToday);
 
             visit.Regular?.Stats.Apply(applied);
@@ -196,8 +241,16 @@ namespace LastCall.Core
 
             Money += verdict.Total;
             _dayIncome += verdict.Total;
-            Glass = new GlassContents(_config.GlassCapacity);
+            ResetVessels();
             return verdict;
+        }
+
+        private void ResetVessels()
+        {
+            PouringId = null;
+            IsShaken = false;
+            Glass = new GlassContents(_config.GlassCapacity);
+            ServingGlass = new GlassContents(_config.GlassCapacity);
         }
 
         // ── day end: invoice, stock, market (GDD 23 §6–§8) ──────────────────────
@@ -265,7 +318,7 @@ namespace LastCall.Core
             CrowdToday = Ledger.TomorrowsCrowd;
             _dayIncome = 0;
             _dayExpenses = 0;
-            Glass = new GlassContents(_config.GlassCapacity);
+            ResetVessels();
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"));
             Phase = TycoonPhase.DayOpen;
             return result;
