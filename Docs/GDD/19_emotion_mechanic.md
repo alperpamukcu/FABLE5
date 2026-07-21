@@ -1,5 +1,9 @@
 # LAST CALL — GDD Module: Emotion Stats & "Read the Customer" (v1)
 
+> v4 NOTE (2026-07-22): the tycoon pivot (module 23) retired the quota/score loop. The
+> emotion model, reads, tone guardrail and Clean-Serve language here still define the
+> subsystem, but its OUTPUT is now tips and extra orders (23 §4–§5), not points.
+
 > **Source of truth for the core gameplay loop.** This module supersedes the parts of
 > `02_recipes_scoring.md` that make recipe patterns the sole engine of Mult. Recipes are
 > **not deleted** — they are demoted to the *craft* layer (how much you pour). Emotions are

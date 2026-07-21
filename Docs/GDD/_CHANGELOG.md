@@ -1,6 +1,22 @@
 # GDD Changelog
 
-## v3.3 (current) — No spills, the house pour & a legible shelf
+## v4.0 (current) — THE TYCOON PIVOT (in progress)
+
+- NEW `23_tycoon_loop.md` — **the loop is a business now**: up to 6 simultaneous seated
+  customers ordering named drinks, patience clocks, price+tip payments (mood tips from the
+  emotion read), extra orders on perfect serves, days of 8+ customers, a day-end invoice,
+  rent, and **3 consecutive red days = bankruptcy** as the only loss. Reputation bar sets
+  tomorrow's crowd wealth. Quota/score loop retired (demolition scheduled, PLAN P7).
+- NEW `24_service_flow_presentation.md` — bottles move off-stage into a counter **menu**;
+  drinks are built in a **shaker focus stage** (hold-pour → preparations → shake by
+  mouse), served by **aimed pour** into a glass (spilling returns as an aiming skill), and
+  delivered to a chosen seat. Art direction v3: Dave-the-Diver-level density/animation
+  floor, whole-set replacement (P8), scripted tutorial shift.
+- NEW `PLAN_tycoon_pivot.md` — P0…P9 phases with gates; old loop remains playable until
+  P3, deleted at P7.
+- v1–v3 modules stay as subsystem specs where referenced by 23/24; banners mark the rest.
+
+## v3.3 — No spills, the house pour & a legible shelf
 
 - **The glass cannot overflow** (21 §3, supersedes v3.2's "merciful spill"): pours stop at
   the brim, the bottle keeps what the glass cannot take, and the hold auto-releases. A

@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module 22: Bottles, Brands & the Market
 
+> v4 NOTE (2026-07-22): brands/market survive and gain a pricing job — bottle tier now
+> raises menu prices (23 §3). The shelf leaves the screen for the menu UI (24 §1).
+
 > The shelf itself becomes progression. Companion to `21_pour_system.md` (which owns pouring)
 > and `19/20` (which own the customer). Introduced in v3.1 together with the **hi-bit art
 > pass** (§6) and the licence-style patron ID (§3).

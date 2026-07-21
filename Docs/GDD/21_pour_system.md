@@ -1,5 +1,9 @@
 # LAST CALL — GDD Module 21: The Pour System
 
+> v4 NOTE (2026-07-22): pouring/ratio/recipe rules here remain the craft subsystem, but
+> the drink is now built in the SHAKER flow (module 24) and judged as a named ORDER
+> (module 23 §4). Score/Mult language is retired with the old loop.
+
 > **v3.0 — the pour pivot.** Replaces card-drawing with pouring. The shelf is always in front
 > of you; you hold a bottle to pour, watch the glass fill, and serve when the mix reads right.
 > This module owns the pour, the glass and the shelf economy. Module 19 still owns emotions

@@ -1,5 +1,9 @@
 # LAST CALL — GDD Module 20: Regulars & the Week
 
+> v4 NOTE (2026-07-22): the WEEK/QUOTA half of this module is retired by module 23 (days,
+> ledger, bankruptcy). Regulars, drift, relationship and demand survive — demand now
+> feeds pickiness/patience, not satisfaction thresholds.
+
 > Companion to `19_emotion_mechanic.md`. Module 19 defines how you read one person;
 > this module covers the cast that keeps coming back and the weekly gate that decides
 > whether the run survives. Balance figures here are **measured** — see

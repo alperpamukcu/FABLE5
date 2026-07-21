@@ -1,9 +1,11 @@
 # CLAUDE.md — LAST CALL
 
-Unity 6000.3.10f1 (URP) deckbuilder about reading customers, not just matching patterns.
+Unity 6000.3.10f1 (URP) bar-tycoon about reading customers and running the till.
 `Docs/GDD/` is the design source of truth — check the relevant GDD module before implementing
-or changing any game rule. **Modules 19 and 20 own the current loop** and win wherever an
-older module disagrees; modules 00–13 predate the pivot and carry banners where stale.
+or changing any game rule. **Modules 23 and 24 own the current loop** (tycoon pivot v4,
+2026-07-22, staged in `Docs/PLAN_tycoon_pivot.md`); 19–22 survive as subsystem specs where
+23/24 reference them; modules 00–13 predate the pivots and carry banners where stale.
+During the transition the old quota loop remains runnable until PLAN P7 demolition.
 
 ## Architecture (enforced by asmdefs)
 
