@@ -11,9 +11,21 @@ namespace LastCall.Core
     {
         public static readonly TycoonConfig Default = new TycoonConfig();
 
+        // ── the till ────────────────────────────────────────────────────────────
+        public int StartingMoney { get; } = 20;
+        public double GlassCapacity { get; } = 1.0;
+        public int RefillPricePerCapacity { get; } = 1;
+
         // ── the floor (GDD 23 §1) ───────────────────────────────────────────────
         public int StartingSeats { get; } = 4;
         public int MaxSeats { get; } = 6;
+
+        /// <summary>Price of the next stool (GDD 23 §8): $30, then $50.</summary>
+        public int SeatPrice(int currentSeats) => 30 + 20 * (currentSeats - StartingSeats);
+
+        // ── the crowd (GDD 23 §7) ───────────────────────────────────────────────
+        public double PriceMultiplier(WealthTier crowd) =>
+            crowd == WealthTier.HighRoller ? 1.25 : crowd == WealthTier.Broke ? 0.75 : 1.0;
 
         /// <summary>Seconds between arrivals, before jitter. Busier as days pass.</summary>
         public double ArrivalGap(int day) => Math.Max(8.0, 14.0 - 0.5 * day);

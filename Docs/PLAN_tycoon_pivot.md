@@ -10,23 +10,24 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
 - ☑ GDD 23 (tycoon loop), GDD 24 (service flow & presentation)
 - ☑ Banners on 19/20/21/22 where superseded; changelog v4.0; CLAUDE.md loop pointer
 
-## P1 — Core simulation (pure C#, no Unity) ◐
+## P1 — Core simulation (pure C#, no Unity) ☑
 The tycoon heart, built beside the old loop in `Core/Tycoon/`:
-- ◐ `DrinkOrder` — named-drink orders, menu pricing (price = 4 + rank), day-scaled roll pool
-- ◐ `CustomerVisit` — seat occupant: patience tick, wait fraction, states (Waiting/Served/StormedOff), extra-order refresh
-- ◐ `ServiceJudge` — Exact/Close/Wrong verdicts, base pay, mood/speed tips, satisfaction, orders-again rule (GDD 23 §4–5)
-- ◐ `BarDay` — arrival scheduling into limited stools, day completion
-- ◐ `DayLedger` — income/expenses/rent, 3-consecutive-red-days bankruptcy, reputation tier for tomorrow's crowd
-- ◐ `TycoonCoreTests` — every rule above pinned
-- ☐ `TycoonConfig` — all GDD 23 §10 numbers in one place
-Gate: suite green; rules match GDD 23 tables exactly.
+- ☑ `DrinkOrder` — named-drink orders, menu pricing (price = 4 + rank), day-scaled roll pool
+- ☑ `CustomerVisit` — seat occupant: patience tick, wait fraction, states (Waiting/Served/StormedOff), extra-order refresh
+- ☑ `ServiceJudge` — Exact/Close/Wrong verdicts, base pay, mood/speed tips, satisfaction, orders-again rule (GDD 23 §4–5)
+- ☑ `BarDay` — arrival scheduling into limited stools, day completion
+- ☑ `DayLedger` — income/expenses/rent, 3-consecutive-red-days bankruptcy, reputation tier for tomorrow's crowd
+- ☑ `TycoonCoreTests` — every rule above pinned
+- ☑ `TycoonConfig` — all GDD 23 §10 numbers in one place
+Gate met: suite green (14 pins), rules mirror GDD 23 tables.
 
-## P2 — Run integration
-- ☐ `TycoonRun` controller: day loop over BarDay + shelf/refills + market + ledger; RunRng streams `"arrivals" "orders" "patience" "shop"`; regulars/reads attached to visits
-- ☐ Serving path: build glass (existing pour Core) → `ServiceJudge` → visit payment; house-pour/recipe matching reused as the *identification* of what was made
-- ☐ Wealth tiers modify prices/tips (GDD 23 §7)
-- ☐ Old `RunController` untouched and still green
-Gate: a full seeded day plays headless in a test (arrivals→serves→invoice→strike logic).
+## P2 — Run integration ☑
+- ☑ `TycoonRun` controller: day loop over BarDay + shelf/refills + market + ledger; streams `"arrivals" "orders" "patience" "customer" "read"`; regulars/reads attached to visits (registry path wired, first exercised live at P3 bootstrap)
+- ☑ Serving path: pour verbs → recipe identification → `ServiceJudge` → visit payment; charges applied to the regular's true stats
+- ☑ Wealth tiers modify prices (order roll ×0.75/×1.25) and tips (high-roller mood bonus, broke crowds never speed-tip)
+- ☑ Old `RunController` untouched and still green
+- Note: market v0 = deterministic brand upgrades; the rotating random market lands in P5
+Gate met: `TycoonRunTests` plays a full seeded day headless — arrivals→serves→invoice→strikes→bankruptcy.
 
 ## P3 — First playable (debug UI, old input)
 Play the tycoon loop before the shaker exists:

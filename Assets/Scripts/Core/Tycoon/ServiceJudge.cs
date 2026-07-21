@@ -52,6 +52,9 @@ namespace LastCall.Core
         public const double SpeedTipWindow = 0.35; // served inside the first 35% of patience
         public const double ExtraOrderWindow = 0.75;
 
+        /// <summary>High rollers add this to a landed mood tip (GDD 23 §7).</summary>
+        public const int HighRollerMoodBonus = 2;
+
         /// <summary>
         /// Compares the served glass to the order. Exact needs the named recipe; Close
         /// forgives the drink but not the family — its dominant type must match the
@@ -71,9 +74,12 @@ namespace LastCall.Core
         /// <summary>
         /// Prices one serve. Wrong pays half and tips nothing; mood and speed tips stack on
         /// Exact/Close; a perfect serve — exact, mood landed, comfortably inside patience —
-        /// earns another order (GDD 23 §5), deliberately reachable.
+        /// earns another order (GDD 23 §5), deliberately reachable. The crowd's wealth tier
+        /// (GDD 23 §7) sweetens or sours the tips: high rollers tip bigger on a landed
+        /// mood, a broke crowd never tips for speed.
         /// </summary>
-        public static ServiceVerdict Judge(CustomerVisit visit, OrderMatch match, EmotionDelta applied)
+        public static ServiceVerdict Judge(CustomerVisit visit, OrderMatch match,
+            EmotionDelta applied, WealthTier crowd = WealthTier.Regular)
         {
             if (visit == null) throw new ArgumentNullException(nameof(visit));
 
@@ -91,10 +97,12 @@ namespace LastCall.Core
                 {
                     moodLanded = true;
                     moodTip = Math.Min(MoodTipMax, MoodTipMin + (toward - MoodTipThreshold) / 5);
+                    if (crowd == WealthTier.HighRoller) moodTip += HighRollerMoodBonus;
                 }
             }
 
-            int speedTip = match != OrderMatch.Wrong && visit.WaitFraction < SpeedTipWindow
+            int speedTip = crowd != WealthTier.Broke && match != OrderMatch.Wrong
+                && visit.WaitFraction < SpeedTipWindow
                 ? SpeedTip : 0;
 
             double satisfaction =
