@@ -116,9 +116,9 @@ namespace LastCall.Core
         }
 
         /// <summary>
-        /// Draws from one bottle into a glass, capped so a pour can never exceed the glass —
-        /// the round layer decides whether hitting the brim is a spill.
-        /// Returns the volume actually poured.
+        /// Draws from one bottle into a glass. Capped twice: at what the bottle has left,
+        /// and at what the glass can still take — a full glass draws nothing, so no volume
+        /// ever evaporates between bottle and glass. Returns the volume actually poured.
         /// </summary>
         public double PourInto(GlassContents glass, string ingredientId, double requested)
         {
@@ -126,7 +126,10 @@ namespace LastCall.Core
             var bottle = Find(ingredientId);
             if (bottle == null) throw new ArgumentException($"No '{ingredientId}' on the shelf.", nameof(ingredientId));
 
-            double poured = bottle.Draw(requested);
+            double headroom = glass.Capacity - glass.TotalVolume;
+            if (headroom <= 0) return 0;
+
+            double poured = bottle.Draw(Math.Min(requested, headroom));
             if (poured > 0) glass.Add(ingredientId, poured);
             return poured;
         }

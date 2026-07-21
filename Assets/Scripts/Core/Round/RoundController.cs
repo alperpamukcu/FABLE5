@@ -127,7 +127,8 @@ namespace LastCall.Core
 
             var bottle = _shelf.Find(PouringId);
             double poured = _shelf.PourInto(Glass, PouringId, bottle.PourRate * seconds);
-            if (bottle.IsEmpty) PouringId = null;      // nothing left to hold
+            // Nothing left to give (dry bottle) or to take (full glass): release the hold.
+            if (poured <= 0 || bottle.IsEmpty) PouringId = null;
             return poured;
         }
 
@@ -162,7 +163,10 @@ namespace LastCall.Core
         public void Discard()
         {
             EnsureRoundInProgress();
-            if (Glass.IsOverflowing) Spills++;
+            // The glass can no longer overflow, so "spills" now count what goes down the
+            // drain on purpose: binning anything with liquid in it is the waste that
+            // NoSpillsThisCustomer patrons care about.
+            if (!Glass.IsEmpty) Spills++;
             PouringId = null;
             Glass = new GlassContents(Config.GlassCapacity);
         }
@@ -189,7 +193,7 @@ namespace LastCall.Core
             for (int i = 0; i < _patrons.Count; i++) accumulatedBefore[i] = _patrons[i].Accumulated;
 
             var breakdown = match == null
-                ? ScoreBreakdown.NoRecipeWith(PreviewResonance())
+                ? HousePourScore(PreviewResonance())
                 : ScoringEngine.Score(match, LevelOf(match), _patrons,
                     BuildContext(match), PreviewResonance());
 
@@ -225,21 +229,35 @@ namespace LastCall.Core
                 : ResonanceJudge.Judge(Customer.Regular.Stats, delta, Customer.Read);
         }
 
+        /// <summary>
+        /// The score for a glass that matches nothing (GDD 21 §9, 2026-07-20): its
+        /// volume-weighted Flavor at ×1. Any honest pour pays a little — experimenting
+        /// should feel like practice, not punishment — while a real recipe's Flavor × Mult
+        /// pays an order of magnitude more, which is the reward ladder.
+        /// </summary>
+        private ScoreBreakdown HousePourScore(ResonanceResult resonance)
+        {
+            double flavor = 0;
+            var cards = new List<IngredientCard>();
+            foreach (var id in Glass.Ingredients)
+            {
+                var card = IngredientOf(id);
+                if (card == null) continue;
+                cards.Add(card);
+                flavor += card.Flavor * (Glass.VolumeOf(id) / Glass.Capacity);
+            }
+            return ScoreBreakdown.HousePour(Math.Round(flavor, 1), cards, resonance);
+        }
+
         // ── serving ──────────────────────────────────────────────────────────────
 
         /// <summary>
         /// Hands the glass over. Scores it, moves the customer, and empties the glass.
-        /// A spilled glass cannot be served — bin it and start again.
         /// </summary>
         public ScoreBreakdown Serve()
         {
             EnsureRoundInProgress();
             if (Glass.IsEmpty) throw new InvalidOperationException("Nothing in the glass.");
-
-            // A spilled glass can still be handed over — the customer gets what stayed in
-            // it, minus any dignity. It counts as a spill either way (the counter is wet),
-            // never matches a recipe, and earns no fill bonus.
-            if (Glass.IsOverflowing) Spills++;
 
             PouringId = null;
             var match = PreviewMatch();
@@ -258,7 +276,7 @@ namespace LastCall.Core
                 var resonance = JudgeServe(match);
                 LastResonance = resonance;
                 breakdown = match == null
-                    ? ScoreBreakdown.NoRecipeWith(resonance)
+                    ? HousePourScore(resonance)
                     : ScoringEngine.Score(match, LevelOf(match), _patrons, BuildContext(match), resonance);
                 CommitServe(resonance);
             }

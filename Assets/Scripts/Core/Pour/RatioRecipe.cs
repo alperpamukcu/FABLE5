@@ -48,7 +48,6 @@ namespace LastCall.Core
     {
         /// <summary>
         /// The best (highest-rank) recipe whose bands the glass satisfies, or null.
-        /// A spilled glass matches nothing — it never reached anyone.
         ///
         /// The match carries the glass's ingredients as scored cards, weighted by their share
         /// of the drink. That is what keeps card Flavor values, quality tiers and enhancements
@@ -57,7 +56,7 @@ namespace LastCall.Core
         public static RecipeMatch Match(GlassContents glass, IReadOnlyList<RecipeDefinition> recipes,
             Func<string, IngredientCard> lookup = null)
         {
-            if (glass == null || glass.IsEmpty || glass.IsOverflowing || recipes == null) return null;
+            if (glass == null || glass.IsEmpty || recipes == null) return null;
 
             var byType = RatiosByType(glass, lookup);
             RecipeDefinition best = null;

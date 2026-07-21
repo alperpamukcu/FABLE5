@@ -72,6 +72,17 @@ namespace LastCall.Core
             resonance == null ? NoRecipe
                 : new ScoreBreakdown(null, 1, new IngredientCard[0], new ScoreStep[0], 0, 0, resonance);
 
+        /// <summary>
+        /// The house-pour fallback (GDD 21 §9, 2026-07-20): a drink that matches no recipe
+        /// still pays a little — its volume-weighted Flavor at ×1 — so pouring *something*
+        /// always beats pouring nothing, while a real recipe pays an order of magnitude more.
+        /// </summary>
+        public static ScoreBreakdown HousePour(double flavor,
+            IReadOnlyList<IngredientCard> cards, ResonanceResult resonance) =>
+            new ScoreBreakdown(null, 1, cards ?? new IngredientCard[0],
+                new[] { new ScoreStep("House pour", EffectOp.AddFlavor, flavor, flavor, 1) },
+                flavor, 1, resonance);
+
         /// <summary>A mix cancelled by a VIP rule: the recipe is shown, the score is zero.</summary>
         public static ScoreBreakdown Voided(RecipeDefinition recipe, int recipeLevel, string reason) =>
             new ScoreBreakdown(recipe, recipeLevel, new IngredientCard[0], new ScoreStep[0], 0, 0)

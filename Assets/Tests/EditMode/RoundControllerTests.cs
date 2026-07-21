@@ -91,31 +91,50 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void PouringPastTheBrim_Spills_ButTheGlassStillServes()
+        public void PouringPastTheBrim_JustFillsTheGlass()
         {
+            // No spills (ruling 2026-07-20): the glass stops taking at the brim, so a
+            // heavy hand serves a perfectly full drink instead of a disaster.
             var round = NewRound();
 
             round.PourMeasure(round.Shelf.Bottles[0].Id, round.Config.GlassCapacity + 0.1);
-            Assert.IsTrue(round.Glass.IsOverflowing);
 
-            var breakdown = round.Serve();
-
-            Assert.AreEqual(0, breakdown.FinalScore, "a spill is never a recipe");
-            Assert.AreEqual(1, round.Spills, "the counter is wet either way");
-            Assert.IsTrue(round.Glass.IsEmpty, "the drink went out, mess and all");
+            Assert.AreEqual(1.0, round.Glass.FillFraction, 1e-9);
+            Assert.AreEqual(0, round.Spills);
+            Assert.DoesNotThrow(() => round.Serve());
         }
 
         [Test]
-        public void BinningASpill_ClearsTheGlass_AndCountsAgainstYou()
+        public void ANoRecipeServe_PaysItsVolumeWeightedFlavor()
         {
+            // The house-pour fallback (GDD 21 §9): matching nothing pays a little — half a
+            // glass of a Flavor-6 spirit is 3 points at ×1 — while recipes pay the real
+            // money. An empty recipe book guarantees nothing can match: against the real
+            // catalogue even a pure spirit legitimately lands the rank-1 neat pour.
+            var round = new RoundController(SpiritShelf(), Array.Empty<RecipeDefinition>(),
+                new CustomerOrder("Test", 1000));
+
+            round.PourMeasure(round.Shelf.Bottles[0].Id, 0.5);
+            var breakdown = round.Serve();
+
+            Assert.IsNull(breakdown.Recipe);
+            Assert.AreEqual(3, breakdown.FinalScore, 1e-9, "6 Flavor × half a glass × 1");
+            Assert.AreEqual(3, round.AccumulatedScore, 1e-9);
+        }
+
+        [Test]
+        public void BinningADrink_ClearsTheGlass_AndCountsAsWaste()
+        {
+            // With the brim cap there is nothing left to spill, so the waste patrons care
+            // about (NoSpillsThisCustomer) is what goes down the drain on purpose.
             var round = NewRound();
-            round.PourMeasure(round.Shelf.Bottles[0].Id, round.Config.GlassCapacity + 0.1);
+            round.PourMeasure(round.Shelf.Bottles[0].Id, 0.5);
 
             round.Discard();
 
             Assert.IsTrue(round.Glass.IsEmpty);
             Assert.AreEqual(1, round.Spills);
-            Assert.AreEqual(4, round.DrinksRemaining, "a spill costs volume, not the customer's patience");
+            Assert.AreEqual(4, round.DrinksRemaining, "binning costs volume, not the customer's patience");
         }
 
         [Test]
@@ -241,7 +260,6 @@ namespace LastCall.Tests
 
             Assert.AreEqual(1.0, small.Glass.FillFraction, 1e-9);
             Assert.AreEqual(0.5, large.Glass.FillFraction, 1e-9);
-            Assert.IsFalse(small.Glass.IsOverflowing, "exactly full is not a spill");
         }
     }
 }

@@ -31,7 +31,7 @@ namespace LastCall.Core
         private readonly List<Pour> _pours = new List<Pour>();
         private readonly Dictionary<string, double> _byIngredient = new Dictionary<string, double>();
 
-        /// <summary>How much this glass holds before it spills.</summary>
+        /// <summary>How much this glass holds. It never takes more (GDD 21 §3).</summary>
         public double Capacity { get; }
 
         public GlassContents(double capacity)
@@ -45,14 +45,8 @@ namespace LastCall.Core
 
         public double TotalVolume { get; private set; }
 
-        /// <summary>0…1+ — how full the glass is. Above 1 means it has spilled.</summary>
+        /// <summary>0…1 — how full the glass is. It cannot exceed 1: the glass stops taking.</summary>
         public double FillFraction => TotalVolume / Capacity;
-
-        /// <summary>
-        /// Poured past the brim (GDD 21 §3). Exactly at capacity is a perfectly full glass,
-        /// not a spill — the boundary belongs to the player.
-        /// </summary>
-        public bool IsOverflowing => TotalVolume > Capacity;
 
         public bool IsEmpty => _pours.Count == 0;
 
@@ -71,23 +65,29 @@ namespace LastCall.Core
             TotalVolume <= 0 ? 0 : VolumeOf(ingredientId) / TotalVolume;
 
         /// <summary>
-        /// Adds volume. Consecutive pours of the same ingredient merge into one layer, so
-        /// releasing and re-holding the same bottle does not stripe the glass.
+        /// Adds volume and returns how much the glass actually took. The glass never
+        /// overflows (GDD 21 §3, ruling 2026-07-20): pouring past the brim simply stops at
+        /// it, so a heavy hand costs precision, not the whole drink. Consecutive pours of
+        /// the same ingredient merge into one layer, so releasing and re-holding the same
+        /// bottle does not stripe the glass.
         /// </summary>
-        public void Add(string ingredientId, double volume)
+        public double Add(string ingredientId, double volume)
         {
             if (string.IsNullOrEmpty(ingredientId))
                 throw new ArgumentException("Ingredient id is required", nameof(ingredientId));
-            if (volume <= 0) return;
+
+            double accepted = Math.Min(volume, Capacity - TotalVolume);
+            if (accepted <= 0) return 0;
 
             if (_pours.Count > 0 && _pours[_pours.Count - 1].IngredientId == ingredientId)
-                _pours[_pours.Count - 1] = new Pour(ingredientId, _pours[_pours.Count - 1].Volume + volume);
+                _pours[_pours.Count - 1] = new Pour(ingredientId, _pours[_pours.Count - 1].Volume + accepted);
             else
-                _pours.Add(new Pour(ingredientId, volume));
+                _pours.Add(new Pour(ingredientId, accepted));
 
             _byIngredient.TryGetValue(ingredientId, out double existing);
-            _byIngredient[ingredientId] = existing + volume;
-            TotalVolume += volume;
+            _byIngredient[ingredientId] = existing + accepted;
+            TotalVolume += accepted;
+            return accepted;
         }
 
         // ── preparations (GDD 22 §5, infrastructure only) ────────────────────────
@@ -117,7 +117,7 @@ namespace LastCall.Core
             return false;
         }
 
-        /// <summary>Empties the glass — served, spilled or binned.</summary>
+        /// <summary>Empties the glass — served or binned.</summary>
         public void Clear()
         {
             _pours.Clear();

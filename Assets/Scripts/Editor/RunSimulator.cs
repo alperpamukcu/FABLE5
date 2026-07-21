@@ -263,9 +263,16 @@ namespace LastCall.EditorTools
                 return poured;
             }
 
-            // Single bottle: no recipe will match a one-ingredient glass, so charges land
-            // on the ×0.5 no-recipe path.
-            double effective = bestPerGlass * PourResolver.NoRecipeMultiplier;
+            // Single bottle. Even a pure glass can land a mono-band recipe (the rank-1
+            // neat pours), so probe the multiplier the same way the mix path does — sizing
+            // with ×0.5 when the serve will really apply ×1+ would overshoot and bust.
+            var soloProbe = new GlassContents(capacity);
+            soloProbe.Add(best.Id, capacity);
+            var soloMatch = RatioRecipeMatcher.Match(soloProbe, recipes, id => shelf.Find(id)?.Ingredient);
+            double soloMult = soloMatch == null
+                ? PourResolver.NoRecipeMultiplier
+                : Math.Min(EmotionResolver.MaxChargeMultiplier, soloMatch.Recipe.ChargeMultiplier);
+            double effective = bestPerGlass * soloMult;
             double volume = needed / effective;
 
             // Never knowingly overshoot: the glass is the ceiling and so is the target.

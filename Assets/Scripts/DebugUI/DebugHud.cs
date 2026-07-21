@@ -149,10 +149,9 @@ namespace LastCall.DebugUI
             if (_heldBottleId != null && Run != null && Run.Phase == RunPhase.CustomerRound)
             {
                 double poured = Run.PourTick(Time.deltaTime);
-                bool overflowed = Round.Glass.IsOverflowing;
-                bool ranDry = Round.PouringId == null;      // the bottle emptied mid-pour
-                if (poured > 0 || overflowed) RenderPour();
-                if (overflowed || ranDry) StopPour();
+                bool released = Round.PouringId == null;    // bottle ran dry or glass filled
+                if (poured > 0) RenderPour();
+                if (released) StopPour();
             }
         }
 
@@ -222,7 +221,8 @@ namespace LastCall.DebugUI
 
             if (breakdown.Recipe == null)
             {
-                AppendLog($"— Mix {drinkNumber}: no recipe, 0 points  [{Round.AccumulatedScore:0.#} / {Round.Customer.TargetScore:0.#}]");
+                AppendLog($"— Mix {drinkNumber}: house pour, {breakdown.FinalScore:0.#} points  " +
+                          $"[{Round.AccumulatedScore:0.#} / {Round.Customer.TargetScore:0.#}]");
             }
             else if (breakdown.IsVoided)
             {
@@ -256,9 +256,8 @@ namespace LastCall.DebugUI
         private void OnBinClicked()
         {
             _pendingExit = DiegeticStage.Exit.Restock;
-            bool spilled = Round.Glass.IsOverflowing;
             Run.DiscardGlass();
-            AppendLog(spilled ? "— spilled; the glass goes in the sink" : "— glass binned");
+            AppendLog("— glass binned; down the drain");
             RenderAll();
         }
 
@@ -546,8 +545,7 @@ namespace LastCall.DebugUI
                 $"Score:    {Round.AccumulatedScore:0.#}\n" +
                 $"Drinks:   {Round.DrinksRemaining}{chatLine}\n" +
                 $"Glass:    {Round.Glass.FillFraction:P0}" +
-                (Round.Glass.IsOverflowing ? "  <color=#D9455C>SPILLED</color>" : "") +
-                $"   Spills: {Round.Spills}" +
+                $"   Binned: {Round.Spills}" +
                 quotaLine + vipLine + tonightLine + tagsLine;
 
             RenderPreview();
@@ -593,8 +591,8 @@ namespace LastCall.DebugUI
             bool terse = read.Length > 0;
             if (preview.Recipe == null)
                 _previewText.text = terse
-                    ? $"no recipe (0){read}"
-                    : $"{Round.Glass.FillFraction:P0} poured — no recipe (scores 0)";
+                    ? $"house pour ({preview.FinalScore:0.#}){read}"
+                    : $"{Round.Glass.FillFraction:P0} poured — house pour ({preview.FinalScore:0.#} pts)";
             else if (preview.IsVoided)
                 _previewText.text = $"{preview.Recipe.Name} — VOIDED: {preview.VoidReason}";
             else if (terse)
@@ -896,6 +894,22 @@ namespace LastCall.DebugUI
 
             ClearChildren(_recipeRows);
 
+            // Which bottle IS a Spirit? The legend maps each type word the bands use to
+            // the actual bottles on tonight's shelf, each name in its own tag colour, so
+            // the recipes below are shoppable against the wall behind the bartender.
+            foreach (var group in Run.Shelf.Bottles
+                         .GroupBy(b => b.Ingredient.Type).OrderBy(g => (int)g.Key))
+            {
+                var legendRow = NewRecipeRow(16);
+                var legendText = NewText($"Legend_{group.Key}", legendRow, 12, TextAnchor.MiddleLeft, Cream);
+                string names = string.Join("  ", group.Select(b =>
+                    $"<color=#{ColorUtility.ToHtmlStringRGB(UITheme.StyleColor(b.Ingredient.Info?.Style, b.Ingredient.Type))}>" +
+                    $"{b.Ingredient.Name.ToUpperInvariant()}</color>"));
+                legendText.text =
+                    $"<color=#{ColorUtility.ToHtmlStringRGB(TypeColors[group.Key])}><b>{group.Key.ToString().ToUpperInvariant()}</b></color>  {names}";
+                legendText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            }
+
             int unpourable = 0;
             foreach (var recipe in Run.Recipes.OrderBy(r => r.Rank))
             {
@@ -1172,7 +1186,7 @@ namespace LastCall.DebugUI
 
             // Recipe Book modal (drawn above the scrim).
             _recipePanel = NewRect("RecipePanel", root);
-            Place(_recipePanel, new Vector2(0.5f, 0.5f), new Vector2(700, 520), new Vector2(0, 0));
+            Place(_recipePanel, new Vector2(0.5f, 0.5f), new Vector2(700, 560), new Vector2(0, 0));
             StylePanel(_recipePanel, PanelPlum);
             var recipeTitle = NewText("RecipeTitle", _recipePanel, 20, TextAnchor.MiddleCenter, CandleGlow);
             recipeTitle.font = _headerFont;

@@ -1,6 +1,20 @@
 # GDD Changelog
 
-## v3.2 (current) — The customer POV, style identity & the merciful spill
+## v3.3 (current) — No spills, the house pour & a legible shelf
+
+- **The glass cannot overflow** (21 §3, supersedes v3.2's "merciful spill"): pours stop at
+  the brim, the bottle keeps what the glass cannot take, and the hold auto-releases. A
+  heavy hand costs precision, not the drink. `Spills` now counts binned drinks.
+- **The house pour** (21 §9): a no-recipe drink pays its volume-weighted Flavor at ×1
+  instead of a hard zero; recipes keep paying Flavor × Mult, an order of magnitude more.
+  Charges stay at ×0.5 without a recipe — money changed, feelings didn't.
+- The recipe book gained a shelf legend: each type word the bands use (SPIRIT, SOUR…)
+  mapped to the actual bottles on tonight's shelf in their tag colours — the "which bottle
+  is a Spirit?" gap between book and back bar is closed.
+- Back-bar rows re-spaced (upper 246 / lower 158) so the lower row's bottle caps stop
+  overlapping the upper row's name tags.
+
+## v3.2 — The customer POV, style identity & the merciful spill
 
 - **The stage flipped to the customer's side of the bar** (22 §1): bottles on two back-bar
   wall shelves (spirits up, mixers down), the till beside the patron, the counter along the

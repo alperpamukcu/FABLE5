@@ -52,8 +52,11 @@ The debug scene can be rebuilt with the **LastCall → Create Debug Scene** menu
 - Legacy UGUI `Text` needs `Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf")`.
 - JSON files are parsed with `JsonUtility`: DTOs use public fields, no nullable types —
   use `0`/`false` defaults (see `DataLoader`).
-- A mix that matches no recipe scores 0 by design (no "high card" fallback) — **resolved**:
-  it still scores 0, but its emotion charges pour at ×0.5, so the drink still says something.
+- A mix that matches no recipe is a **house pour** (GDD 21 §9, 2026-07-20): it scores its
+  volume-weighted Flavor at ×1 (small but never zero), and its emotion charges land at ×0.5.
+  Recipes pay Flavor × Mult — the order-of-magnitude gap is the reward ladder.
+- The glass **cannot overflow** (GDD 21 §3): pours stop at the brim, `GlassContents.Add`
+  returns what was accepted, and `Spills` counts binned drinks, not overflows.
 - The emotion layer is **opt-in**: a `RunController` built without `archetypes` has no
   regulars and no quota gate. That is what keeps pre-pivot bench setups and older tests valid.
 - `Deck.Draw` takes from the **end** of the draw pile. A test that appends a card to the front

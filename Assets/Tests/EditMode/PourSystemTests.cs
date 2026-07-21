@@ -39,23 +39,16 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void ExactlyFull_IsNotASpill()
+        public void TheGlassStopsAtTheBrim()
         {
+            // No spills (ruling 2026-07-20): a heavy hand costs precision, not the drink.
+            // The glass takes what fits and reports what it took.
             var glass = Glass();
-            glass.Add("gin", 1.0);
+            glass.Add("gin", 0.7);
 
+            Assert.AreEqual(0.3, glass.Add("tonic", 0.6), 1e-9, "only the headroom went in");
             Assert.AreEqual(1.0, glass.FillFraction, 1e-9);
-            Assert.IsFalse(glass.IsOverflowing, "the boundary belongs to the player");
-        }
-
-        [Test]
-        public void OnePourPastTheBrim_Spills()
-        {
-            var glass = Glass();
-            glass.Add("gin", 1.0);
-            glass.Add("tonic", 0.01);
-
-            Assert.IsTrue(glass.IsOverflowing);
+            Assert.AreEqual(0.0, glass.Add("tonic", 0.2), 1e-9, "a full glass takes nothing");
         }
 
         [Test]
@@ -129,7 +122,21 @@ namespace LastCall.Tests
 
             Assert.AreEqual(0.3, poured, 1e-9, "you get what was left");
             Assert.IsTrue(shelf.Find("gin").IsEmpty);
-            Assert.IsFalse(glass.IsOverflowing);
+        }
+
+        [Test]
+        public void AFullGlass_DrawsNothingFromTheBottle()
+        {
+            // The brim cap must not evaporate stock: what the glass cannot take, the
+            // bottle keeps.
+            var shelf = new Shelf(new[] { new ShelfBottle(Card("gin"), capacity: 6.0) });
+            var glass = new GlassContents(1.0);
+
+            shelf.PourInto(glass, "gin", 0.8);
+            double second = shelf.PourInto(glass, "gin", 0.5);
+
+            Assert.AreEqual(0.2, second, 1e-9, "only the headroom was drawn");
+            Assert.AreEqual(5.0, shelf.Find("gin").Remaining, 1e-9, "the rest stays bottled");
         }
 
         [Test]
@@ -160,9 +167,11 @@ namespace LastCall.Tests
         [Test]
         public void RefillCost_ChargesOnlyForWhatWasUsed()
         {
+            // Two full glasses drain two capacity — the brim cap means one glass can never
+            // draw more than one glass's worth in a single pour.
             var shelf = NewShelf();
-            var glass = new GlassContents(1.0);
-            shelf.PourInto(glass, "gin", 2.0);
+            shelf.PourInto(new GlassContents(1.0), "gin", 2.0);
+            shelf.PourInto(new GlassContents(1.0), "gin", 2.0);
 
             Assert.AreEqual(4, shelf.RefillCost(pricePerCapacity: 2), "2 capacity used × $2");
         }
@@ -274,12 +283,13 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void ASpilledGlass_ServesWhatStayedInIt()
+        public void AHeavyHand_StillDeliversExactlyOneGlass()
         {
-            // 1.4 glasses poured, but only one glass's worth crosses the counter: the
-            // overflow is on the bar, not in the customer. 20 × 1.0 × 0.5 (no recipe).
+            // Asking for 1.4 glasses just fills the glass: the brim cap means the customer
+            // gets one glass's worth, no more. 20 × 1.0 × 0.5 (no recipe).
             var glass = Glass(("vodka", 1.4));
 
+            Assert.AreEqual(1.0, glass.FillFraction, 1e-9);
             Assert.AreEqual(10, PourResolver.Resolve(glass, null, Lookup)[Emotion.Excitement]);
         }
 
@@ -443,12 +453,6 @@ namespace LastCall.Tests
                 Assert.GreaterOrEqual(maxSum + RatioRecipeMatcher.MaxUnnamedShare, 1.0 - 1e-9,
                     $"'{recipe.Id}': maximum shares cannot fill a glass, even with a stray splash");
             }
-        }
-
-        [Test]
-        public void ASpilledGlass_MatchesNothing()
-        {
-            Assert.IsNull(RatioRecipeMatcher.Match(Glass(("gin", 0.9), ("vermouth", 0.3)), Book, Look));
         }
 
         [Test]

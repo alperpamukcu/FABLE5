@@ -39,14 +39,13 @@ Fill fraction           F = V / C          (0…1)
 Ratio of ingredient i   r_i = v_i / V      (0…1, sums to 1)
 ```
 
-**Overflow is a mess, not a wall.** Pouring past `C` spills — but the glass can still be
-served (ruling 2026-07-20; it used to hard-block). What crosses the counter is capped at
-one glass: charges resolve on the contents normalised to `C`, a spill never matches a
-recipe (so it always takes the ×0.5 no-recipe path and scores 0), it earns no fill bonus,
-and it counts against `NoSpillsThisCustomer` whether served or binned. The bottle keeps
-pouring while held, so a held-too-long pour is the pour system's equivalent of overshooting
-an emotion — the same "past it is worse than short of it" lesson, in the hand instead of
-the head; serving the mess anyway is allowed, it just says less and looks worse.
+**The glass cannot overflow (final ruling 2026-07-20).** Pouring past `C` simply stops at
+the brim: the glass takes what fits, the bottle keeps the rest, and the hold releases.
+Two earlier rulings ("a spill ruins the drink", then "a spill still serves at a penalty")
+both punished a heavy hand with drama; playtesting said the drama wasn't fun — a
+held-too-long pour now costs *precision* (your ratios and fill drift from what you wanted),
+which is punishment enough. With nothing left to spill, `Spills`/`NoSpillsThisCustomer`
+now count deliberate waste: binning a glass with anything in it.
 
 **Garnishes go in by the pinch (2026-07-20).** One tap of a garnish jar drops a fixed
 **5% of the glass** (`GarnishClickFraction`), however long the button was held; taps stack.
@@ -163,6 +162,13 @@ Hitting a recipe's bands pays its Flavor and Mult exactly as before, and applies
 recipe still produces a real drink that moves real emotions — at ×0.5 charge, exactly the
 existing no-recipe rule from GDD 19 §5, now generalised.
 
+**The house pour (2026-07-20):** a drink that matches no recipe is no longer a hard zero —
+it pays its **volume-weighted Flavor at ×1** (a full glass of a Flavor-7 bourbon ≈ 7
+points), while a recipe pays `Flavor × Mult` (a Martini ≈ 160). Pouring *something* always
+beats pouring nothing, experimenting reads as practice instead of punishment, and the
+order-of-magnitude gap to real recipes is the reward ladder. Emotion charges still land at
+×0.5 without a recipe — the house pour changes money, not feelings.
+
 **Generosity pass (2026-07-20):** derived bands widened from ±15% to **±20%**, and the
 unnamed-stray allowance from 10% to **15%** of the glass. Free-hand pouring on a held
 button lands within ~10% at best, so the old bands made recipes a precision test rather
@@ -180,9 +186,9 @@ the craft layer back in charge of a game that is now about reading people.
 
 - **Round limiter.** "Drinks a customer will accept" is inherited from Mixes and untested
   under pouring. If a drink takes 10 seconds to build, 4 per customer may be far too many.
-- ~~**Overflow harshness.**~~ **Resolved 2026-07-20** (§3): a spilled glass can be served —
-  it scores 0 and caps at one glass's worth of charges, but it still says something. The
-  wasted volume and the lost recipe are the punishment; the hard block is gone.
+- ~~**Overflow harshness.**~~ **Resolved 2026-07-20** (§3, twice in one day): first spills
+  became servable-at-a-penalty, then playtesting removed spilling entirely — the glass
+  stops at the brim and "spills" now mean binned drinks.
 - **Input.** Hold-to-pour needs a controller answer and an accessibility answer (hold is bad
   for some players). A tap-to-set-measure fallback is probably required.
 - **Does precision survive a pixel glass?** At 640×360 the glass is maybe 40px tall, so a

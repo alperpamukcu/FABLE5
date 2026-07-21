@@ -33,8 +33,10 @@ namespace LastCall.DebugUI
         private const int ShelfCols = 5;                   // bottles per shelf row
         private const float ShelfFirstX = 166f;            // clears the pour glass, top-left
         private const float ShelfPitch = 64f;
-        private const float ShelfRow0Y = 232f;             // upper shelf rest line
-        private const float ShelfRow1Y = 164f;             // lower shelf rest line
+        // Row spacing leaves the upper shelf's tag band clear of the lower row's bottle
+        // caps (bottles are 60px tall at the 40px display width; tags hang 21px deep).
+        private const float ShelfRow0Y = 246f;             // upper shelf rest line
+        private const float ShelfRow1Y = 158f;             // lower shelf rest line
 
         // The garnish rack (GDD 22): mint, olives and future rim garnishes live on a shelf
         // under the counter, where a bartender actually keeps them — and where the Patrons
@@ -209,7 +211,7 @@ namespace LastCall.DebugUI
             // shelves on the wall behind the bartender, where the bottles now live. Drawn
             // before the rail so bottles and their tags sit in front of the planks.
             var cabinet = NewRect("BackBar", root);
-            Place(cabinet, new Vector2(0, 0), new Vector2(320, 170), new Vector2(140, ShelfRow1Y - 26));
+            Place(cabinet, new Vector2(0, 0), new Vector2(320, 180), new Vector2(140, ShelfRow1Y - 26));
             var cabinetImg = cabinet.gameObject.AddComponent<Image>();
             cabinetImg.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.62f);
             cabinetImg.raycastTarget = false;
@@ -1040,12 +1042,6 @@ namespace LastCall.DebugUI
                 Vector2.zero, Vector2.zero);
             _glassPercent.text = "0%";
 
-            var spill = NewText("Spill", _glassRoot, _display, 8, TextAnchor.UpperCenter, UITheme.ViceRed[3]);
-            Place((RectTransform)spill.transform, new Vector2(0.5f, 1), new Vector2(GlassW + 20, 10), new Vector2(0, 12));
-            spill.text = "SPILLED";
-            spill.gameObject.SetActive(false);
-            _spillLabel = spill;
-
             // Live ratios under the glass (the back-bar shelves now own the space beside
             // it) — fill and ratio are different numbers, and the Phase-1 finding was that
             // hiding the ratios makes players systematically wrong.
@@ -1058,7 +1054,6 @@ namespace LastCall.DebugUI
             _glassRatios.supportRichText = true;
         }
 
-        private Text _spillLabel;
         private readonly List<Image> _glassLayers = new List<Image>();
 
         /// <summary>
@@ -1097,8 +1092,6 @@ namespace LastCall.DebugUI
             }
 
             _glassPercent.text = $"{glass.FillFraction:P0}".Replace(" ", "");
-            _glassPercent.color = glass.IsOverflowing ? UITheme.ViceRed[3] : UITheme.Night[1];
-            if (_spillLabel != null) _spillLabel.gameObject.SetActive(glass.IsOverflowing);
 
             if (glass.IsEmpty)
             {
