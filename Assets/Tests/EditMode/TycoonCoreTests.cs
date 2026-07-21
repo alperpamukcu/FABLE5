@@ -152,6 +152,17 @@ namespace LastCall.Tests
             Assert.AreEqual(1, ServiceJudge.Judge(Visit(), OrderMatch.Exact, null).Tip);
         }
 
+        [Test]
+        public void Ambience_LiftsSatisfaction()
+        {
+            var plain = ServiceJudge.Judge(Visit(), OrderMatch.Close, null);
+            var nicer = ServiceJudge.Judge(Visit(), OrderMatch.Close, null,
+                WealthTier.Regular, ambienceBonus: 0.1);
+
+            Assert.AreEqual(0.6, plain.Satisfaction, 1e-9, "Close, no wait");
+            Assert.AreEqual(0.7, nicer.Satisfaction, 1e-9, "a nicer room pleases the same serve more");
+        }
+
         // ── the extra order (GDD 23 §5) ─────────────────────────────────────────
 
         [Test]

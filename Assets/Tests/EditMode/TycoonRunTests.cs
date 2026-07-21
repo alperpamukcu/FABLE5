@@ -155,6 +155,55 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void AmbienceUpgrades_BookAsExpenses_AndLiftTheAmbience()
+        {
+            var run = NewRun();
+            PlayDayServingEveryone(run);   // reaches DayEnd
+            Assert.AreEqual(0.0, run.Ambience, 1e-9, "a plain bar pleases no one extra");
+
+            int musician = run.BuyMusician();
+            int counter = run.BuyCounter();
+
+            Assert.Greater(run.Ambience, 0.0, "the room feels better now");
+            Assert.IsTrue(run.HasMusician);
+            Assert.AreEqual(2, run.CounterTier);
+            Assert.AreEqual(musician + counter, run.DayUpgrades, "the invoice itemises them");
+
+            var result = run.ContinueToNextDay();
+            Assert.AreEqual(20 + musician + counter, result.Expenses, "rent + the upgrades");
+        }
+
+        [Test]
+        public void Glassware_CapsAtTheTopTier()
+        {
+            var run = NewRun();
+            PlayDayServingEveryone(run);
+
+            run.BuyGlassware();   // 1 → 2
+            run.BuyGlassware();   // 2 → 3
+
+            Assert.AreEqual(3, run.GlasswareTier);
+            Assert.Throws<InvalidOperationException>(() => run.BuyGlassware(), "tier 3 is the top");
+        }
+
+        [Test]
+        public void TheInvoice_ItemisesSalesTipsRentAndStock()
+        {
+            var run = NewRun();
+            PlayDayServingEveryone(run);
+
+            // 8 exact spritzes: $6 base each = $48 sales, $1 speed tip each = $8 tips.
+            Assert.AreEqual(48, run.DaySales);
+            Assert.AreEqual(8, run.DayTips);
+            Assert.AreEqual(20, run.DayRent, "day 1 rent");
+
+            run.RefillShelf();
+            Assert.AreEqual(17, run.DayStock);
+            Assert.AreEqual(48 + 8, run.DayIncome);
+            Assert.AreEqual(20 + 17, run.DayExpenses);
+        }
+
+        [Test]
         public void Shaking_RecordsThePreparation()
         {
             var run = NewRun();

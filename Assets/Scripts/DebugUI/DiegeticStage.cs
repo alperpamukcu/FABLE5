@@ -98,6 +98,13 @@ namespace LastCall.DebugUI
         [SerializeField] private Sprite registerSprite;   // cash register, bottom-left, shows the wallet
         private Text _moneyText;
 
+        // Ambience upgrades change the scene (GDD 24 §6): the counter, back bar and glass
+        // gain a sheen per tier, and a bought musician takes the corner stage.
+        private Image _counterImage;
+        private Image _cabinetImage;
+        private Image _glassImage;
+        private RectTransform _musicianRoot;
+
         private RectTransform _railRoot;
         private readonly Dictionary<int, BottleView> _bottles = new Dictionary<int, BottleView>();
         private string _railSignature = "";
@@ -150,6 +157,56 @@ namespace LastCall.DebugUI
             if (_idPrompt != null) _idPrompt.gameObject.SetActive(false);
             if (_moodRoot != null) _moodRoot.gameObject.SetActive(false);
             CloseId();
+        }
+
+        /// <summary>
+        /// Applies the bought ambience upgrades to the scene (GDD 24 §6): a warmer counter,
+        /// a richer back bar, a crystal sheen on the glass, and the musician on stage. Each
+        /// buyable has a visible counterpart — the scene is the save file.
+        /// </summary>
+        public void ApplyBarLook(int glasswareTier, int counterTier, int wallTier, bool musician)
+        {
+            if (_counterImage != null)
+                _counterImage.color = Color.Lerp(Color.white, new Color(1f, 0.9f, 0.72f),
+                    (counterTier - 1) * 0.45f);
+            if (_cabinetImage != null)
+            {
+                var rich = Color.Lerp(UITheme.Night[1], UITheme.Magenta[0], (wallTier - 1) * 0.4f);
+                _cabinetImage.color = new Color(rich.r, rich.g, rich.b, 0.62f + (wallTier - 1) * 0.08f);
+            }
+            if (_glassImage != null)
+                _glassImage.color = Color.Lerp(Color.white, UITheme.Cyan[4], (glasswareTier - 1) * 0.28f);
+            if (_musicianRoot != null) _musicianRoot.gameObject.SetActive(musician);
+        }
+
+        private void BuildMusician(RectTransform root)
+        {
+            // A small performer on a corner stage, high on the back wall so it never crowds
+            // the seats or the bottles. Placeholder silhouette; P8 animates it.
+            _musicianRoot = NewRect("Musician", root);
+            Place(_musicianRoot, new Vector2(0, 0), new Vector2(46, 78), new Vector2(96, 250));
+
+            var glow = NewRect("Glow", _musicianRoot);
+            Place(glow, new Vector2(0.5f, 0.5f), new Vector2(58, 90), Vector2.zero);
+            var glowImg = glow.gameObject.AddComponent<Image>();
+            glowImg.color = new Color(UITheme.Magenta[3].r, UITheme.Magenta[3].g, UITheme.Magenta[3].b, 0.22f);
+            glowImg.raycastTarget = false;
+
+            var body = NewRect("Body", _musicianRoot);
+            Place(body, new Vector2(0.5f, 0), new Vector2(30, 52), new Vector2(0, 0));
+            body.gameObject.AddComponent<Image>().color = UITheme.Night[3];
+            var head = NewRect("Head", _musicianRoot);
+            Place(head, new Vector2(0.5f, 1), new Vector2(20, 20), new Vector2(0, -6));
+            head.gameObject.AddComponent<Image>().color = UITheme.Cream[2];
+            var instrument = NewRect("Sax", _musicianRoot);
+            Place(instrument, new Vector2(0.5f, 0), new Vector2(12, 30), new Vector2(14, 10));
+            instrument.gameObject.AddComponent<Image>().color = UITheme.Amber[3];
+            var note = NewRect("Note", _musicianRoot);
+            Place(note, new Vector2(0.5f, 1), new Vector2(10, 12), new Vector2(20, 4));
+            note.gameObject.AddComponent<Image>().color = UITheme.Magenta[4];
+
+            foreach (var img in _musicianRoot.GetComponentsInChildren<Image>()) img.raycastTarget = false;
+            _musicianRoot.gameObject.SetActive(false);
         }
 
         private void Awake()
@@ -227,9 +284,9 @@ namespace LastCall.DebugUI
             // before the rail so bottles and their tags sit in front of the planks.
             var cabinet = NewRect("BackBar", root);
             Place(cabinet, new Vector2(0, 0), new Vector2(320, 180), new Vector2(140, ShelfRow1Y - 26));
-            var cabinetImg = cabinet.gameObject.AddComponent<Image>();
-            cabinetImg.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.62f);
-            cabinetImg.raycastTarget = false;
+            _cabinetImage = cabinet.gameObject.AddComponent<Image>();
+            _cabinetImage.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.62f);
+            _cabinetImage.raycastTarget = false;
             foreach (float rowY in new[] { ShelfRow0Y, ShelfRow1Y })
             {
                 var plank = NewRect("ShelfPlank", root);
@@ -256,8 +313,8 @@ namespace LastCall.DebugUI
                 var c = NewRect("Counter", root);
                 c.anchorMin = new Vector2(0, 0); c.anchorMax = new Vector2(1, 0);
                 c.offsetMin = new Vector2(-Overscan, cy - Overscan); c.offsetMax = new Vector2(Overscan, cy + h);
-                var cImg = c.gameObject.AddComponent<Image>();
-                cImg.sprite = counterSprite; cImg.raycastTarget = false;
+                _counterImage = c.gameObject.AddComponent<Image>();
+                _counterImage.sprite = counterSprite; _counterImage.raycastTarget = false;
             }
             else
             {
@@ -333,6 +390,7 @@ namespace LastCall.DebugUI
 
             // Layer 7 — the "see ID" nudge, the pour glass, the mood gauge, and the licence
             // on its own canvas above everything.
+            BuildMusician(root);
             BuildIdPrompt(root);
             BuildGlassHud(root);
             BuildMoodGauge(root);
@@ -1020,8 +1078,8 @@ namespace LastCall.DebugUI
             {
                 var glass = NewRect("Glass", _glassRoot);
                 Stretch(glass, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                var img = glass.gameObject.AddComponent<Image>();
-                img.sprite = glassSprite; img.preserveAspect = true; img.raycastTarget = false;
+                _glassImage = glass.gameObject.AddComponent<Image>();
+                _glassImage.sprite = glassSprite; _glassImage.preserveAspect = true; _glassImage.raycastTarget = false;
             }
             else
             {

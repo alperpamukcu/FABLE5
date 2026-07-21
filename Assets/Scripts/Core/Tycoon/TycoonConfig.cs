@@ -31,6 +31,23 @@ namespace LastCall.Core
         public double PriceMultiplier(WealthTier crowd) =>
             crowd == WealthTier.HighRoller ? 1.25 : crowd == WealthTier.Broke ? 0.75 : 1.0;
 
+        // ── ambience upgrades (GDD 23 §8): a nicer bar pleases the room ──────────
+        // Glassware, the counter, the back wall and a live musician are prestige, not
+        // throughput or margin: each lifts every visit's satisfaction a little, which
+        // draws a richer crowd tomorrow (§7). That is the third leg of the compounding
+        // loop — seats sell throughput, brands sell margin, ambience sells reputation.
+        public int MaxAmbienceTier { get; } = 3;
+        public int GlasswarePrice(int tier) => 50 * tier;   // tier = current level; the next step costs this
+        public int CounterPrice(int tier) => 40 * tier;
+        public int WallPrice(int tier) => 40 * tier;
+        public int MusicianPrice { get; } = 90;
+
+        /// <summary>Satisfaction added to every served visit by the bar's look (capped).</summary>
+        public double AmbienceBonus(int glasswareTier, int counterTier, int wallTier, bool musician) =>
+            Math.Min(0.15,
+                0.03 * ((glasswareTier - 1) + (counterTier - 1) + (wallTier - 1))
+                + (musician ? 0.06 : 0.0));
+
         /// <summary>Seconds between arrivals, before jitter. Busier as days pass.</summary>
         public double ArrivalGap(int day) => Math.Max(6.0, 12.0 - 0.5 * day);
         public const double ArrivalJitter = 0.30;

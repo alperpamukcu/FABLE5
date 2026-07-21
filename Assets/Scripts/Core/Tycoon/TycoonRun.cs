@@ -45,8 +45,26 @@ namespace LastCall.Core
         public Shelf Shelf => _shelf;
         public TycoonConfig Config => _config;
 
+        // ── ambience upgrades (GDD 23 §8) ───────────────────────────────────────
+        public int GlasswareTier { get; private set; } = 1;
+        public int CounterTier { get; private set; } = 1;
+        public int WallTier { get; private set; } = 1;
+        public bool HasMusician { get; private set; }
+
+        /// <summary>The satisfaction the bar's look adds to every served visit (GDD 23 §8).</summary>
+        public double Ambience => _config.AmbienceBonus(GlasswareTier, CounterTier, WallTier, HasMusician);
+
         /// <summary>Today's crowd, decided by yesterday's satisfaction bar (GDD 23 §7).</summary>
         public WealthTier CrowdToday { get; private set; } = WealthTier.Regular;
+
+        // ── the day's book, itemised for the invoice (GDD 24 §7) ────────────────
+        public int DaySales { get; private set; }
+        public int DayTips { get; private set; }
+        public int DayRent { get; private set; }
+        public int DayStock { get; private set; }
+        public int DayUpgrades { get; private set; }
+        public int DayIncome => DaySales + DayTips;
+        public int DayExpenses => DayRent + DayStock + DayUpgrades;
 
         /// <summary>The shaker: the vessel you build the drink in (GDD 24 §2).</summary>
         public GlassContents Glass { get; private set; }
@@ -59,9 +77,6 @@ namespace LastCall.Core
         public bool IsShaken { get; private set; }
 
         public string PouringId { get; private set; }
-
-        private int _dayIncome;
-        private int _dayExpenses;
 
         private readonly List<MarketOffer> _marketOffers = new List<MarketOffer>();
         public IReadOnlyList<MarketOffer> MarketOffers => _marketOffers;
@@ -100,7 +115,7 @@ namespace LastCall.Core
             {
                 int rent = _config.Rent(Day);
                 Money -= rent;
-                _dayExpenses += rent;
+                DayRent += rent;
                 RollMarket();
                 Phase = TycoonPhase.DayEnd;
             }
@@ -232,7 +247,7 @@ namespace LastCall.Core
             var match = RatioRecipeMatcher.Match(delivered, _recipes, IngredientOf);
             var applied = PourResolver.Resolve(delivered, match, IngredientOf);
             var matchKind = ServiceJudge.Compare(visit.Order, match, delivered, IngredientOf);
-            var verdict = ServiceJudge.Judge(visit, matchKind, applied, CrowdToday);
+            var verdict = ServiceJudge.Judge(visit, matchKind, applied, CrowdToday, Ambience);
 
             visit.Regular?.Stats.Apply(applied);
             visit.Resolve(verdict, verdict.OrdersAgain ? RollOrder() : null);
@@ -240,7 +255,8 @@ namespace LastCall.Core
                 visit.Regular?.RecordVisit((int)Math.Round(verdict.Satisfaction * 3));
 
             Money += verdict.Total;
-            _dayIncome += verdict.Total;
+            DaySales += verdict.BasePaid;
+            DayTips += verdict.Tip;
             ResetVessels();
             return verdict;
         }
@@ -262,7 +278,7 @@ namespace LastCall.Core
             int cost = _shelf.RefillCost(_config.RefillPricePerCapacity);
             if (cost == 0) return 0;
             Money -= cost;
-            _dayExpenses += cost;
+            DayStock += cost;
             _shelf.RefillAll();
             return cost;
         }
@@ -279,8 +295,7 @@ namespace LastCall.Core
             if (current == null)
                 throw new InvalidOperationException($"Nothing on the shelf pours {offer.Style}.");
 
-            Money -= offer.Price;
-            _dayExpenses += offer.Price;
+            Spend(offer.Price);
             _shelf.Replace(current, new ShelfBottle(offer.Bottle));
             offer.MarkSold();
         }
@@ -292,10 +307,59 @@ namespace LastCall.Core
             if (Seats >= _config.MaxSeats)
                 throw new InvalidOperationException("The bar has no room for another stool.");
             int price = _config.SeatPrice(Seats);
-            Money -= price;
-            _dayExpenses += price;
+            Spend(price);
             Seats++;
             return price;
+        }
+
+        // ── ambience upgrades (GDD 23 §8): every one changes the scene (GDD 24 §6) ─
+
+        public int BuyGlassware()
+        {
+            EnsurePhase(TycoonPhase.DayEnd);
+            if (GlasswareTier >= _config.MaxAmbienceTier)
+                throw new InvalidOperationException("The finest glassware is already yours.");
+            int price = _config.GlasswarePrice(GlasswareTier);
+            Spend(price);
+            GlasswareTier++;
+            return price;
+        }
+
+        public int BuyCounter()
+        {
+            EnsurePhase(TycoonPhase.DayEnd);
+            if (CounterTier >= _config.MaxAmbienceTier)
+                throw new InvalidOperationException("The counter cannot be finer.");
+            int price = _config.CounterPrice(CounterTier);
+            Spend(price);
+            CounterTier++;
+            return price;
+        }
+
+        public int BuyWall()
+        {
+            EnsurePhase(TycoonPhase.DayEnd);
+            if (WallTier >= _config.MaxAmbienceTier)
+                throw new InvalidOperationException("The back bar cannot be finer.");
+            int price = _config.WallPrice(WallTier);
+            Spend(price);
+            WallTier++;
+            return price;
+        }
+
+        public int BuyMusician()
+        {
+            EnsurePhase(TycoonPhase.DayEnd);
+            if (HasMusician) throw new InvalidOperationException("The stage is already taken.");
+            Spend(_config.MusicianPrice);
+            HasMusician = true;
+            return _config.MusicianPrice;
+        }
+
+        private void Spend(int price)
+        {
+            Money -= price;
+            DayUpgrades += price;
         }
 
         /// <summary>
@@ -305,7 +369,7 @@ namespace LastCall.Core
         public DayResult ContinueToNextDay()
         {
             EnsurePhase(TycoonPhase.DayEnd);
-            var result = Ledger.CloseDay(Day, _dayIncome, _dayExpenses, Floor.AverageSatisfaction,
+            var result = Ledger.CloseDay(Day, DayIncome, DayExpenses, Floor.AverageSatisfaction,
                 tillAfter: Money);
 
             if (Ledger.IsBankrupt)
@@ -316,8 +380,7 @@ namespace LastCall.Core
 
             Day++;
             CrowdToday = Ledger.TomorrowsCrowd;
-            _dayIncome = 0;
-            _dayExpenses = 0;
+            DaySales = DayTips = DayRent = DayStock = DayUpgrades = 0;
             ResetVessels();
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"));
             Phase = TycoonPhase.DayOpen;

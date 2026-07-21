@@ -67,10 +67,23 @@ Gate met: a full drink is built start-to-finish through the new flow only; spill
 - ◐ Polish deferred to P8: shake is a button (hold+move mouse animation), pour streams are
   bars not liquid, the "menu prop" is a button not a counter object
 
-## P5 — Day-end presentation
-- ☐ Invoice UI (bill layout, strike stamps), market as shelf cards, upgrade purchases
-- ☐ Upgrades change the scene: stools, counter, wall, glassware, musician (GDD 24 §6)
-Gate: every buyable has a visible scene counterpart.
+## P5 — Day-end presentation ☑
+- ☑ Invoice UI: an itemised receipt on cream card stock — served/walked-out, satisfaction +
+  crowd, drink sales / tips / income (green), rent / restock / upgrades (red), NET bold,
+  TILL, and a red debt-strike stamp ("one more red day closes the bar") off the run's book
+- ☑ The market as a 3-wide card grid: RESTOCK, brand offers, STOOL, GLASSWARE, COUNTER,
+  BACK BAR, MUSICIAN — price in green, "(into debt)" in red when unaffordable, greyed when
+  owned/maxed
+- ☑ Core upgrade economy: glassware/counter/wall (tiers 1–3) + musician are **ambience**
+  (each lifts every visit's satisfaction, capped at +0.15 → richer crowd); seats = throughput,
+  brands = margin, ambience = reputation. Prices in TycoonConfig; the day's book itemised
+  (DaySales/DayTips/DayRent/DayStock/DayUpgrades)
+- ☑ Every buyable has a visible scene counterpart (GDD 24 §6): stools unlock, brands land on
+  the shelf, glassware sheens the pour glass, the counter warms, the back bar richens, the
+  musician takes the corner stage (`DiegeticStage.ApplyBarLook`)
+- ☑ Verified live: served a day to $61, the invoice itemised it, bought all upgrades, and the
+  next day's scene showed the richer cabinet + the musician + the −$284 debt till
+Gate met: every buyable changes the scene.
 
 ## P6 — People polish
 - ☐ ID card v2 readability (GDD 24 §5)

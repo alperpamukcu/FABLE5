@@ -79,7 +79,7 @@ namespace LastCall.Core
         /// mood, a broke crowd never tips for speed.
         /// </summary>
         public static ServiceVerdict Judge(CustomerVisit visit, OrderMatch match,
-            EmotionDelta applied, WealthTier crowd = WealthTier.Regular)
+            EmotionDelta applied, WealthTier crowd = WealthTier.Regular, double ambienceBonus = 0)
         {
             if (visit == null) throw new ArgumentNullException(nameof(visit));
 
@@ -108,7 +108,8 @@ namespace LastCall.Core
             double satisfaction =
                 (match == OrderMatch.Exact ? 0.9 : match == OrderMatch.Close ? 0.6 : 0.2)
                 - 0.3 * visit.WaitFraction
-                + (moodLanded ? 0.1 : 0.0);
+                + (moodLanded ? 0.1 : 0.0)
+                + ambienceBonus;
             satisfaction = Math.Max(0.0, Math.Min(1.0, satisfaction));
 
             bool ordersAgain = match == OrderMatch.Exact && moodLanded

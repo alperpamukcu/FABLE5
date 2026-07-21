@@ -54,6 +54,7 @@ namespace LastCall.DebugUI
         private RectTransform _dayEndPanel;
         private Text _invoiceText;
         private RectTransform _offerRow;
+        private RectTransform _openTomorrow;
         private Text _bannerText;
 
         private TycoonServiceFlow _flow;
@@ -87,6 +88,7 @@ namespace LastCall.DebugUI
             _flow?.CloseFlow();
             if (stage != null) stage.SetSoloCustomerVisible(false);
             RefreshShelf(DiegeticStage.Exit.Refresh);
+            ApplyBarLook();
             RefreshGlass();
         }
 
@@ -149,6 +151,14 @@ namespace LastCall.DebugUI
             // The bottles are scenery now (GDD 24 §1): building goes through the menu, so
             // the shelf takes no pour callbacks.
             stage.SetShelf(Run.Shelf, null, null, null, exit);
+        }
+
+        /// <summary>Pushes the bought ambience upgrades onto the scene (GDD 24 §6).</summary>
+        private void ApplyBarLook()
+        {
+            var run = Run;
+            if (stage == null || run == null) return;
+            stage.ApplyBarLook(run.GlasswareTier, run.CounterTier, run.WallTier, run.HasMusician);
         }
 
         private void RefreshGlass()
@@ -257,33 +267,50 @@ namespace LastCall.DebugUI
             int served = 0, stormed = 0;
             foreach (var visit in floor.Finished)
                 if (visit.State == VisitState.StormedOff) stormed++; else served++;
+            var cfg = run.Config;
+
+            // The bill: income over expenses, net in bold, then the debt stamp. All the
+            // day's line items come straight off the run's itemised book (GDD 24 §7).
+            int net = run.DayIncome - run.DayExpenses;
+            string netColour = net >= 0 ? "2A5926" : "A62B44";
+            string stamp = run.Ledger.DebtStrikes == 0 ? ""
+                : $"\n\n<color=#A62B44>◆ IN THE RED — STRIKE {run.Ledger.DebtStrikes}/{DayLedger.StrikesToClose} ◆</color>";
+            if (run.Ledger.DebtStrikes == DayLedger.StrikesToClose - 1)
+                stamp += "\n<color=#A62B44>one more red day closes the bar</color>";
 
             var sb = new StringBuilder();
-            sb.AppendLine($"— DAY {run.Day} CLOSES —");
+            sb.AppendLine($"<b>DAY {run.Day}</b>");
             sb.AppendLine($"served {served}   walked out {stormed}");
-            sb.AppendLine($"satisfaction {floor.AverageSatisfaction:P0}");
+            sb.AppendLine($"satisfaction {floor.AverageSatisfaction:P0}   crowd {CrowdName(run.CrowdToday)}");
+            sb.AppendLine("<color=#9C8F80>─────────────────</color>");
+            sb.AppendLine($"drink sales{Dots(14)}${run.DaySales}");
+            sb.AppendLine($"tips{Dots(21)}${run.DayTips}");
+            sb.AppendLine($"<color=#2A5926>income{Dots(19)}+${run.DayIncome}</color>");
             sb.AppendLine();
-            sb.AppendLine($"rent due          ${run.Config.Rent(run.Day)}");
-            sb.AppendLine($"restock the well  ${run.Shelf.RefillCost(run.Config.RefillPricePerCapacity)}");
-            sb.AppendLine($"till              ${run.Money}");
-            sb.AppendLine($"debt strikes      {run.Ledger.DebtStrikes}/{DayLedger.StrikesToClose}");
+            sb.AppendLine($"<color=#A62B44>rent{Dots(21)}-${run.DayRent}</color>");
+            sb.AppendLine($"<color=#A62B44>restock{Dots(18)}-${run.DayStock}</color>");
+            sb.AppendLine($"<color=#A62B44>upgrades{Dots(17)}-${run.DayUpgrades}</color>");
+            sb.AppendLine("<color=#9C8F80>─────────────────</color>");
+            sb.AppendLine($"<b><color=#{netColour}>NET{Dots(22)}{(net >= 0 ? "+" : "-")}${Math.Abs(net)}</color></b>");
+            sb.AppendLine();
+            sb.AppendLine($"<b>TILL   ${run.Money}</b>");
+            sb.Append(stamp);
             _invoiceText.text = sb.ToString();
 
-            // Rebuild the offer buttons: refill, market brands, a stool, tomorrow.
+            // The cards.
             foreach (Transform child in _offerRow) Destroy(child.gameObject);
 
-            AddOfferButton($"RESTOCK ${run.Shelf.RefillCost(run.Config.RefillPricePerCapacity)}", () =>
+            int restock = run.Shelf.RefillCost(cfg.RefillPricePerCapacity);
+            AddCard("RESTOCK THE WELL", "well is full", restock, restock > 0, () =>
             {
-                if (run.Shelf.RefillCost(run.Config.RefillPricePerCapacity) > 0) run.RefillShelf();
-                RebuildDayEnd();
+                run.RefillShelf(); RebuildDayEnd();
             });
 
             for (int i = 0; i < run.MarketOffers.Count; i++)
             {
                 int index = i;
                 var offer = run.MarketOffers[i];
-                if (offer.Sold) continue;
-                AddOfferButton($"{offer.Bottle.Name.ToUpperInvariant()} ${offer.Price}", () =>
+                AddCard(offer.Bottle.Name.ToUpperInvariant(), "bought", offer.Price, !offer.Sold, () =>
                 {
                     run.BuyBrand(index);
                     RefreshShelf(DiegeticStage.Exit.Refresh);
@@ -291,24 +318,27 @@ namespace LastCall.DebugUI
                 });
             }
 
-            if (run.Seats < run.Config.MaxSeats)
-                AddOfferButton($"STOOL #{run.Seats + 1} ${run.Config.SeatPrice(run.Seats)}", () =>
-                {
-                    run.BuySeat();
-                    RebuildDayEnd();
-                });
+            AddCard($"STOOL #{run.Seats + 1}", "bar is full", cfg.SeatPrice(run.Seats),
+                run.Seats < cfg.MaxSeats, () => { run.BuySeat(); ApplyBarLook(); RebuildDayEnd(); });
 
-            AddOfferButton("OPEN TOMORROW →", () =>
-            {
-                run.ContinueToNextDay();
-                _dayEndPanel.gameObject.SetActive(false);
-                if (run.Phase == TycoonPhase.DayOpen)
-                {
-                    _lastPhase = TycoonPhase.DayOpen;
-                    RefreshGlass();
-                }
-            }, primary: true);
+            AddCard($"GLASSWARE ★{run.GlasswareTier}", "top tier", cfg.GlasswarePrice(run.GlasswareTier),
+                run.GlasswareTier < cfg.MaxAmbienceTier,
+                () => { run.BuyGlassware(); ApplyBarLook(); RebuildDayEnd(); });
+            AddCard($"COUNTER ★{run.CounterTier}", "top tier", cfg.CounterPrice(run.CounterTier),
+                run.CounterTier < cfg.MaxAmbienceTier,
+                () => { run.BuyCounter(); ApplyBarLook(); RebuildDayEnd(); });
+            AddCard($"BACK BAR ★{run.WallTier}", "top tier", cfg.WallPrice(run.WallTier),
+                run.WallTier < cfg.MaxAmbienceTier,
+                () => { run.BuyWall(); ApplyBarLook(); RebuildDayEnd(); });
+            AddCard("MUSICIAN", "on stage", cfg.MusicianPrice, !run.HasMusician,
+                () => { run.BuyMusician(); ApplyBarLook(); RebuildDayEnd(); });
         }
+
+        private static string CrowdName(WealthTier tier) =>
+            tier == WealthTier.HighRoller ? "HIGH ROLLERS" : tier == WealthTier.Broke ? "BROKE" : "REGULARS";
+
+        /// <summary>Leader dots so the bill columns line up in the monospace pixel font.</summary>
+        private static string Dots(int n) => "<color=#9C8F80>" + new string('.', n) + "</color>";
 
         private void ShowClosed()
         {
@@ -418,25 +448,42 @@ namespace LastCall.DebugUI
 
             // Day end: a plain invoice panel with the night's business under it.
             _dayEndPanel = NewRect("DayEnd", root);
-            Place(_dayEndPanel, new Vector2(0.5f, 0.5f), new Vector2(560, 480), new Vector2(0, 40));
+            Place(_dayEndPanel, new Vector2(0.5f, 0.5f), new Vector2(940, 600), new Vector2(0, 10));
             var panelImg = _dayEndPanel.gameObject.AddComponent<Image>();
-            panelImg.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.96f);
+            panelImg.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.97f);
 
             var title = NewText("Title", _dayEndPanel, _display, 16, TextAnchor.MiddleCenter, UITheme.PrimaryAction);
-            Stretch(title.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -44), Vector2.zero);
+            Stretch(title.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -46), new Vector2(0, -8));
             title.text = "LAST CALL — THE BOOKS";
 
-            _invoiceText = NewText("Invoice", _dayEndPanel, _body, 14, TextAnchor.UpperLeft, UITheme.TextPrimary);
-            Stretch(_invoiceText.rectTransform, new Vector2(0, 0), Vector2.one, new Vector2(28, 220), new Vector2(-28, -56));
+            // Left column: the itemised bill on cream card stock, like a printed receipt.
+            var bill = NewRect("Bill", _dayEndPanel);
+            Place(bill, new Vector2(0, 1), new Vector2(360, 470), new Vector2(24, -56));
+            bill.gameObject.AddComponent<Image>().color = UITheme.Cream[4];
+            _invoiceText = NewText("Invoice", bill, _body, 15, TextAnchor.UpperLeft, UITheme.Night[1]);
+            Stretch(_invoiceText.rectTransform, Vector2.zero, Vector2.one, new Vector2(16, 12), new Vector2(-16, -12));
+            _invoiceText.supportRichText = true;
 
+            // Right column: the market and upgrades as a card grid (GDD 24 §7).
+            var marketLabel = NewText("MarketLabel", _dayEndPanel, _body, 13, TextAnchor.UpperLeft, UITheme.TextSecondary);
+            Place(marketLabel.rectTransform, new Vector2(0, 1), new Vector2(500, 20), new Vector2(408, -58));
+            marketLabel.text = "THE MARKET — spend to earn";
             _offerRow = NewRect("Offers", _dayEndPanel);
-            Stretch(_offerRow, Vector2.zero, new Vector2(1, 0), new Vector2(20, 16), new Vector2(-20, 212));
-            var layout = _offerRow.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = 6f;
-            layout.childForceExpandHeight = false;
-            layout.childForceExpandWidth = true;
-            layout.childControlHeight = true;
-            layout.childControlWidth = true;
+            Place(_offerRow, new Vector2(0, 1), new Vector2(504, 400), new Vector2(404, -84));
+            var grid = _offerRow.gameObject.AddComponent<GridLayoutGroup>();
+            grid.cellSize = new Vector2(162, 62);
+            grid.spacing = new Vector2(8, 8);
+            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = 3;
+
+            _openTomorrow = NewRect("OpenTomorrow", _dayEndPanel);
+            Place(_openTomorrow, new Vector2(0.5f, 0), new Vector2(892, 40), new Vector2(0, 16));
+            _openTomorrow.gameObject.AddComponent<Image>().color = UITheme.PrimaryAction;
+            var otBtn = _openTomorrow.gameObject.AddComponent<Button>();
+            otBtn.onClick.AddListener(OnOpenTomorrow);
+            var otLabel = NewText("Label", _openTomorrow, _display, 14, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
+            Stretch(otLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            otLabel.text = "OPEN TOMORROW →";
             _dayEndPanel.gameObject.SetActive(false);
 
             _bannerText = NewText("Closed", root, _display, 22, TextAnchor.MiddleCenter, UITheme.ViceRed[3]);
@@ -444,19 +491,42 @@ namespace LastCall.DebugUI
             _bannerText.gameObject.SetActive(false);
         }
 
-        private void AddOfferButton(string label, Action onClick, bool primary = false)
+        private void OnOpenTomorrow()
         {
-            var rt = NewRect("Offer", _offerRow);
-            rt.gameObject.AddComponent<LayoutElement>().preferredHeight = 30;
+            var run = Run;
+            run.ContinueToNextDay();
+            _dayEndPanel.gameObject.SetActive(false);
+            if (run.Phase == TycoonPhase.DayOpen)
+            {
+                _lastPhase = TycoonPhase.DayOpen;
+                _lastShakerVol = -1;
+                RefreshShelf(DiegeticStage.Exit.Refresh);
+                ApplyBarLook();
+                RefreshGlass();
+            }
+        }
+
+        /// <summary>One market card: title, price, and a bought/maxed state.</summary>
+        private void AddCard(string title, string sub, int price, bool available, Action onBuy)
+        {
+            var rt = NewRect("Card", _offerRow);
             var img = rt.gameObject.AddComponent<Image>();
-            img.color = primary ? UITheme.PrimaryAction : UITheme.Night[3];
-            var button = rt.gameObject.AddComponent<Button>();
-            button.targetGraphic = img;
-            button.onClick.AddListener(() => onClick());
-            var text = NewText("Label", rt, _body, 13, TextAnchor.MiddleCenter,
-                primary ? UITheme.TextOnAmber : UITheme.TextPrimary);
-            Stretch(text.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            text.text = label;
+            bool afford = Run.Money >= price;
+            img.color = !available ? UITheme.Night[0] : UITheme.Night[3];
+            if (available)
+            {
+                var button = rt.gameObject.AddComponent<Button>();
+                button.targetGraphic = img;
+                button.onClick.AddListener(() => onBuy());
+            }
+            var name = NewText("Name", rt, _body, 12, TextAnchor.UpperLeft,
+                available ? UITheme.TextPrimary : UITheme.Cream[1]);
+            Place(name.rectTransform, new Vector2(0, 1), new Vector2(150, 32), new Vector2(8, -6));
+            name.text = title;
+            var priceText = NewText("Price", rt, _body, 12, TextAnchor.LowerLeft,
+                !available ? UITheme.Cream[1] : afford ? UITheme.Money : UITheme.ViceRed[3]);
+            Place(priceText.rectTransform, new Vector2(0, 0), new Vector2(150, 18), new Vector2(8, 6));
+            priceText.text = available ? (afford ? $"${price}" : $"${price} (into debt)") : sub;
         }
 
         // ── tiny UI helpers (mirroring the house style) ─────────────────────────
