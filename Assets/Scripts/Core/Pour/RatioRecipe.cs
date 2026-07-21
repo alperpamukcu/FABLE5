@@ -4,6 +4,33 @@ using System.Collections.Generic;
 namespace LastCall.Core
 {
     /// <summary>
+    /// Result of identifying a poured glass: the recipe it reads as (or null), plus the
+    /// ingredients that count and their share of the drink. The tycoon loop reads only
+    /// <see cref="Recipe"/> — the weights survive from the pour pivot so a future scoring
+    /// pass could weight Flavor by share again without a rework.
+    /// </summary>
+    public sealed class RecipeMatch
+    {
+        public RecipeDefinition Recipe { get; }
+        public IReadOnlyList<IngredientCard> ScoredCards { get; }
+        public IReadOnlyList<double> ScoredWeights { get; }
+
+        public RecipeMatch(RecipeDefinition recipe, IReadOnlyList<IngredientCard> scoredCards,
+            IReadOnlyList<double> scoredWeights = null)
+        {
+            Recipe = recipe;
+            ScoredCards = scoredCards;
+            ScoredWeights = scoredWeights;
+        }
+
+        /// <summary>The weight of the card at <paramref name="index"/>; 1 when unweighted.</summary>
+        public double WeightAt(int index) =>
+            ScoredWeights != null && index >= 0 && index < ScoredWeights.Count
+                ? ScoredWeights[index]
+                : 1.0;
+    }
+
+    /// <summary>
     /// One ingredient's allowed share of a recipe (GDD 21 §9). Bounds are inclusive: a
     /// Martini specified at 55–75% gin accepts exactly 55% and exactly 75%, because a band
     /// the player can see should not have invisible slivers cut off its ends.

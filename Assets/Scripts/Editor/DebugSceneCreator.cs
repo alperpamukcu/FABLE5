@@ -134,8 +134,8 @@ namespace LastCall.EditorTools
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Props/register2.png");
             stageSo.ApplyModifiedPropertiesWithoutUndo();
 
-            // P3/P4 (PLAN_tycoon_pivot): the tycoon loop is the played loop now. DebugHud and
-            // the old RunController stay in code for tests and the sim until P7 demolition.
+            // The tycoon loop is the only loop now (the card-era HUD and run were demolished
+            // in P7). TycoonHud renders and drives the run.
             var hud = game.AddComponent<TycoonHud>();
             var hudSo = new SerializedObject(hud);
             hudSo.FindProperty("bodyFont").objectReferenceValue = LoadRequired<Font>(PixelBodyFontPath);

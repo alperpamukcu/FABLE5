@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using LastCall.Core;
 using NUnit.Framework;
@@ -8,29 +7,13 @@ namespace LastCall.Tests
     /// <summary>
     /// The hidden information has to stay hidden. Everything the player sees is derived from
     /// <see cref="CustomerRead"/>; the moment a preview or a label reaches past it into
-    /// <see cref="RegularState.Stats"/>, blind reads stop being reads and the lucky-read
-    /// bonus becomes free money. These tests pin that boundary.
+    /// <see cref="RegularState.Stats"/>, blind reads stop being reads. These tests pin the
+    /// boundary at its source — the readings themselves and the factory that builds them.
+    /// (The Chat/preview/resonance probes retired with the card loop; the read integrity
+    /// they guarded now lives here and in <c>RegularsAndReadTests</c>.)
     /// </summary>
     public class ReadIntegrityTests
     {
-        private static ArchetypeDefinition Archetype()
-        {
-            var bands = Emotions.All.Select(_ => new EmotionBand(40, 60)).ToList();
-            return new ArchetypeDefinition("test", "Test", bands, new[] { "Sam" });
-        }
-
-        private static IngredientCard Card(string id, Emotion emotion, int amount, int flavor = 5) =>
-            new IngredientCard(id, id, IngredientType.Spirit, flavor, QualityTier.HousePour,
-                new[] { new EmotionCharge(emotion, amount) });
-
-        private static RunController NewRun(string seed = "leak")
-        {
-            var cards = new List<IngredientCard>();
-            for (int i = 0; i < 24; i++) cards.Add(Card($"c{i}", Emotions.All[i % Emotions.Count], -6));
-            return new RunController(cards, RecipeCatalog.CreateDefault(), new RunRng(seed),
-                archetypes: new[] { Archetype() });
-        }
-
         [Test]
         public void AnUnknownReading_ExposesNoBound()
         {
@@ -63,133 +46,6 @@ namespace LastCall.Tests
                 int exact = Emotions.All.Count(e => read[e].Tier == VisibilityTier.Exact);
                 Assert.AreEqual(1, exact, "exactly one stat is ever printed outright");
             }
-        }
-
-        [Test]
-        public void PreviewCharges_DescribesTheDrink_NotTheCustomer()
-        {
-            // The delta depends only on the cards played. If it ever varied with the
-            // customer's hidden stats, the preview would be a readout of the answer.
-            var run = NewRun();
-            var round = run.CurrentRound;
-            round.PourMeasure(PourTestKit.AnyBottle(round), 0.5);
-
-            var first = round.PreviewCharges();
-            foreach (var emotion in Emotions.All) round.Customer.Regular.Stats.Set(emotion, 97);
-            var second = round.PreviewCharges();
-
-            foreach (var emotion in Emotions.All)
-                Assert.AreEqual(first[emotion], second[emotion],
-                    $"{emotion} preview moved when only the hidden stats changed");
-        }
-
-        [Test]
-        public void PreviewCharges_IsNonConsuming()
-        {
-            var run = NewRun();
-            var round = run.CurrentRound;
-            var before = round.Customer.Regular.Stats.Clone();
-            int drinks = round.DrinksRemaining;
-            round.PourMeasure(PourTestKit.AnyBottle(round), 0.5);
-
-            round.PreviewCharges();
-            round.PreviewResonance();
-
-            Assert.AreEqual(before, round.Customer.Regular.Stats, "previewing must not move anyone");
-            Assert.AreEqual(drinks, round.DrinksRemaining);
-        }
-
-        [Test]
-        public void Chat_NarrowsOnlyTheStatAsked_AndSpendsADrinkSlot()
-        {
-            var run = NewRun();
-            var round = run.CurrentRound;
-            var target = Emotions.All.First(e => round.Customer.Read[e].Tier == VisibilityTier.Unknown);
-            var untouched = Emotions.All.First(e => e != target);
-            var before = round.Customer.Read[untouched];
-            int drinks = round.DrinksRemaining;
-            int chats = round.ChatsRemaining;
-
-            var learned = round.Chat(target);
-
-            Assert.AreNotEqual(VisibilityTier.Unknown, learned.Tier, "asking must reveal something");
-            Assert.IsTrue(learned.Contains(round.Customer.Regular.Stats[target]));
-            Assert.AreEqual(before, round.Customer.Read[untouched], "only the stat asked about changes");
-            Assert.AreEqual(drinks - 1, round.DrinksRemaining);
-            Assert.AreEqual(chats - 1, round.ChatsRemaining);
-        }
-
-        // D8 (Chat must not feed restock-keyed patron conditions) went away with Restock
-        // itself. Chat now costs a drink slot, which DrinksServed *should* reflect — talking
-        // really is time the customer gave you instead of a drink.
-
-        [Test]
-        public void Chat_RunsOut()
-        {
-            var run = NewRun();
-            var round = run.CurrentRound;
-
-            for (int i = 0; i < round.Config.ChatsPerCustomer; i++) round.Chat(Emotion.Anger);
-
-            Assert.AreEqual(0, round.ChatsRemaining);
-            Assert.Throws<System.InvalidOperationException>(() => round.Chat(Emotion.Anger));
-        }
-
-        /// <summary>A round whose customer is fully controlled, so the verdict is not a coin flip.</summary>
-        private static RoundController RoundWith(Emotion intent, IntentDirection direction,
-            int trueValue, VisibilityTier intentTier, IReadOnlyList<IngredientCard> bottles)
-        {
-            var stats = new EmotionStats();
-            stats.Set(intent, trueValue);
-            var regular = new RegularState("r", "Sam", "test", stats, stats.Clone());
-
-            var readings = Emotions.All.Select(e => e != intent ? StatReading.Exact(0)
-                : intentTier == VisibilityTier.Exact ? StatReading.Exact(trueValue)
-                : intentTier == VisibilityTier.Range ? StatReading.Range(trueValue, 8)
-                : StatReading.Unknown).ToList();
-
-            var order = new CustomerOrder("Sam", 1e9, regular,
-                new CustomerRead(readings, intent, direction));
-            return new RoundController(PourTestKit.NewShelf(bottles), RecipeCatalog.CreateDefault(), order);
-        }
-
-        [Test]
-        public void ABust_IsNeverWrittenThroughToTheCustomer()
-        {
-            // Overshooting must not double as a way to probe where someone actually is.
-            var bottles = Enumerable.Range(0, 3).Select(i => Card($"f{i}", Emotion.Anger, -4)).ToList();
-            bottles.Add(Card("overshoot", Emotion.Sadness, -80));
-
-            var round = RoundWith(Emotion.Sadness, IntentDirection.Extinguish, 30,
-                VisibilityTier.Exact, bottles);
-            var before = round.Customer.Regular.Stats.Clone();
-
-            round.PourMeasure("overshoot", round.Config.GlassCapacity);
-            round.Serve();
-
-            Assert.IsTrue(round.LastResonance.IsBust, "-80 against 30 must overshoot");
-            Assert.AreEqual(BustKind.Overshoot, round.LastResonance.Bust);
-            Assert.AreEqual(before, round.Customer.Regular.Stats);
-            Assert.AreEqual(0, round.SatisfactionEarned);
-        }
-
-        [Test]
-        public void ACleanServe_LandsExactly_AndIsWorthTheMost()
-        {
-            // A full glass of one Spirit is a Neat Pour (charge multiplier x1), so -30 per
-            // full glass lands as exactly -30 on a customer sitting at 30.
-            var bottles = Enumerable.Range(0, 3).Select(i => Card($"f{i}", Emotion.Anger, -4)).ToList();
-            bottles.Add(Card("exact", Emotion.Sadness, -30));
-
-            var round = RoundWith(Emotion.Sadness, IntentDirection.Extinguish, 30,
-                VisibilityTier.Exact, bottles);
-
-            round.PourMeasure("exact", round.Config.GlassCapacity);
-            round.Serve();
-
-            Assert.IsTrue(round.LastResonance.CleanServe);
-            Assert.AreEqual(0, round.Customer.Regular.Stats[Emotion.Sadness]);
-            Assert.AreEqual(3, round.SatisfactionEarned);
         }
     }
 }

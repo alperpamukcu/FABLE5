@@ -1,6 +1,6 @@
 ﻿<Solution>
-  <Project Path="LastCall.Core.csproj" />
   <Project Path="LastCall.Tests.csproj" />
+  <Project Path="LastCall.Core.csproj" />
   <Project Path="LastCall.Editor.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="Assembly-CSharp.csproj" />

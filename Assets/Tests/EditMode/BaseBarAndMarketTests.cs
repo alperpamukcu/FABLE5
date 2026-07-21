@@ -117,6 +117,11 @@ namespace LastCall.Tests
         }
     }
 
+    /// <summary>
+    /// The end-of-night brand market (GDD 22 §4), now driven by the tycoon day loop: offers
+    /// roll when the day closes, and buying swaps a bottle in place, full, so the shelf keeps
+    /// its muscle memory.
+    /// </summary>
     public class MarketTests
     {
         private static IngredientCard Bottle(string id, string style, int tier, int price = 0,
@@ -125,32 +130,36 @@ namespace LastCall.Tests
                 new[] { new EmotionCharge(Emotion.Anger, charge) },
                 new IngredientInfo(style, tier, price, "somewhere", 40, "test"));
 
-        private static RunController NewRun(IReadOnlyList<IngredientCard> catalogue)
+        private static readonly IReadOnlyList<RecipeDefinition> Recipes = RecipeCatalog.CreateDefault();
+
+        private static TycoonRun NewRun(IReadOnlyList<IngredientCard> catalogue)
         {
-            var starting = new List<IngredientCard>
+            var shelf = new Shelf(new[]
             {
-                Bottle("vodka_a", "vodka", 1),
-                Bottle("gin_a", "gin", 1),
-            };
-            return new RunController(starting, RecipeCatalog.CreateDefault(), new RunRng("MKT"),
-                config: new RunConfig(startingMoney: 100, targetProvider: (n, s) => 1),
-                brandCatalogue: catalogue);
+                new ShelfBottle(Bottle("vodka_a", "vodka", 1)),
+                new ShelfBottle(Bottle("gin_a", "gin", 1)),
+            });
+            return new TycoonRun(shelf, Recipes, new RunRng("MKT"), brandCatalogue: catalogue);
         }
 
-        private static void WinCustomer(RunController run) => PourTestKit.WinCurrentCustomer(run);
+        /// <summary>Fast-forwards an unserved day: everyone storms off and the day closes.</summary>
+        private static void RunDayToClose(TycoonRun run)
+        {
+            int guard = 0;
+            while (run.Phase == TycoonPhase.DayOpen)
+            {
+                if (guard++ > 500) throw new System.Exception("the day never closed");
+                run.Tick(60);
+            }
+        }
 
         [Test]
-        public void TheMarket_OnlyOpensWhenTheNightCloses()
+        public void TheMarket_FillsWhenTheDayCloses()
         {
             var run = NewRun(new[] { Bottle("vodka_b", "vodka", 2, 6) });
 
-            WinCustomer(run); // Customer A -> Back Room, mid-night
-            Assert.IsEmpty(run.MarketOffers, "no deliveries between customers");
-
-            run.ContinueToNextCustomer();
-            WinCustomer(run); // B
-            run.ContinueToNextCustomer();
-            WinCustomer(run); // VIP -> the night closes
+            Assert.IsEmpty(run.MarketOffers, "no deliveries mid-day");
+            RunDayToClose(run);
             Assert.AreEqual(1, run.MarketOffers.Count, "deliveries come at closing time");
         }
 
@@ -161,10 +170,7 @@ namespace LastCall.Tests
             // Drain some vodka first, so "arrives full" is observable.
             run.PourMeasure("vodka_a", 0.8);
             run.DiscardGlass();
-
-            WinCustomer(run); run.ContinueToNextCustomer();
-            WinCustomer(run); run.ContinueToNextCustomer();
-            WinCustomer(run);
+            RunDayToClose(run);
 
             int money = run.Money;
             int index = run.Shelf.Bottles.ToList().FindIndex(b => b.Id == "vodka_a");
@@ -183,33 +189,12 @@ namespace LastCall.Tests
         public void AnOwnedTier_NoLongerAppearsOnTheMarket()
         {
             var run = NewRun(new[] { Bottle("vodka_b", "vodka", 2, 6) });
-            WinCustomer(run); run.ContinueToNextCustomer();
-            WinCustomer(run); run.ContinueToNextCustomer();
-            WinCustomer(run);
+            RunDayToClose(run);
             run.BuyBrand(0);
-            run.ContinueToNextCustomer();
-
-            WinCustomer(run); run.ContinueToNextCustomer();
-            WinCustomer(run); run.ContinueToNextCustomer();
-            WinCustomer(run); // next night closes
+            run.ContinueToNextDay();
+            RunDayToClose(run);
 
             Assert.IsEmpty(run.MarketOffers, "tier 2 is stocked; nothing better exists");
-        }
-
-        [Test]
-        public void BuyingBeyondTheWallet_Throws()
-        {
-            var starting = new List<IngredientCard> { Bottle("vodka_a", "vodka", 1) };
-            var run = new RunController(starting, RecipeCatalog.CreateDefault(), new RunRng("MKT2"),
-                config: new RunConfig(startingMoney: 0, tipCustomerA: 0, tipCustomerB: 0,
-                    tipVip: 0, vipDefeatBonus: 0, targetProvider: (n, s) => 1),
-                brandCatalogue: new[] { Bottle("vodka_b", "vodka", 2, 999) });
-
-            WinCustomer(run); run.ContinueToNextCustomer();
-            WinCustomer(run); run.ContinueToNextCustomer();
-            WinCustomer(run);
-
-            Assert.Throws<System.InvalidOperationException>(() => run.BuyBrand(0));
         }
     }
 

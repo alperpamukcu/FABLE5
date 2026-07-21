@@ -102,13 +102,23 @@ Gate met: every buyable changes the scene.
   Full skill-range tuning is the P9 balance pass.
 Gate met.
 
-## P7 — Demolition
-Only after P3 makes the new loop the played loop:
-- ☐ Quota/week system, score targets, ScoringEngine consumers, score patrons/tools/packs/vouchers/favors
-- ☐ Card-era recipe pattern fields not needed by band derivation
-- ☐ Old round HUD paths, dead assets, dead tests (replaced by tycoon pins)
-- ☐ VIP rule cards parked into data cold storage (GDD 23 §0)
-Gate: suite green, no orphan references (`grep` sweep), build size drop recorded.
+## P7 — Demolition ☑
+Two stages, each green:
+- ☑ Stage 1: shared pour constants moved to PourResolver; GameBootstrap builds only the
+  tycoon run; DebugHud (~1400 lines) and the old RunSimulator deleted (−2073 lines).
+- ☑ Stage 2: the whole card-era Core cluster gone — RunController, RoundController,
+  WeekQuota/StakeTable/TargetTable/ShopState/TipsBreakdown, ScoringEngine/ScoreBreakdown,
+  EmotionResolver/ResonanceJudge/ResonanceResult, Patrons, Tools, Vips, Vouchers, Packs,
+  BarCatalog, RecipeMatcher (card). RecipeMatch relocated into Pour/RatioRecipe.cs (the
+  tycoon loop reads its Recipe). CustomerReadFactory.ApplyVipRules removed; DataLoader
+  trimmed to deck/recipes/archetypes; DiegeticStage's legacy CustomerOrder ID methods gone.
+- ☑ Tests: 17 old suites deleted; ReadIntegrity/BaseBar-Market/DataLoader/PourTestKit/
+  RegularsAndRead trimmed or rewritten against the tycoon loop. 331 → **108 green**.
+- Card-era recipe *pattern* fields stay: `RecipeDefinition` still derives its ratio bands
+  from them (they are load-bearing, not dead). VIP/patron/tool/voucher JSON stays as cold
+  storage, simply unparsed (GDD 23 §0).
+Gate met: suite green, `grep` sweep clean (only doc comments mentioned old names, now fixed),
+scene boots the tycoon run; build size dropped ~5k lines of gameplay code + assemblies.
 
 ## P8 — Art v3 (GDD 24 §8) — the full set, together
 - ☐ New authoring reference (1280×720 logical), style guide refresh

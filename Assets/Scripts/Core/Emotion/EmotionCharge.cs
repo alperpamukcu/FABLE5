@@ -26,9 +26,9 @@ namespace LastCall.Core
     }
 
     /// <summary>
-    /// The summed movement one Mix applies to a customer, already multiplied and rounded
-    /// (GDD 19 §5). Produced by <see cref="EmotionResolver"/>; consumed by
-    /// <see cref="ResonanceJudge"/> and, if the serve is not a bust, by the customer's stats.
+    /// The summed movement one drink applies to a customer, already multiplied and rounded
+    /// (GDD 19 §5). Produced by <see cref="PourResolver"/> and applied to the customer's
+    /// stats when the drink is served (GDD 23 §4).
     /// </summary>
     public sealed class EmotionDelta
     {

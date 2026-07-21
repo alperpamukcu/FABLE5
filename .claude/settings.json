@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python mcp.py execute_code '{\"action\":\"execute\",\"code\":\"UnityEngine.ScreenCapture.CaptureScreenshot\\(System.IO.Path.Combine\\(System.IO.Directory.GetCurrentDirectory\\(\\), \\\\\"stage_arc5.png\\\\\"\\), 1\\); return \\\\\"cap\\\\\";\"}')"
+    ]
+  }
+}

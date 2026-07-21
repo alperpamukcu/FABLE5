@@ -319,46 +319,4 @@ namespace LastCall.Tests
             }
         }
     }
-
-    public class WeekQuotaTests
-    {
-        [Test]
-        public void MeetingTheQuotaExactly_Passes()
-        {
-            var quota = new WeekQuota(1, 6);
-            quota.Add(6);
-
-            Assert.IsTrue(quota.Met);
-            Assert.AreEqual(0, quota.Remaining);
-        }
-
-        [Test]
-        public void OneShortOfTheQuota_Fails()
-        {
-            var quota = new WeekQuota(1, 6);
-            quota.Add(5);
-
-            Assert.IsFalse(quota.Met);
-            Assert.AreEqual(1, quota.Remaining);
-        }
-
-        [Test]
-        public void TheCurveRises_AndKeepsRisingPastTheTable()
-        {
-            Assert.Less(QuotaTable.Standard(1), QuotaTable.Standard(2));
-            Assert.Less(QuotaTable.Standard(3), QuotaTable.Standard(4));
-            Assert.Less(QuotaTable.Standard(4), QuotaTable.Standard(9), "endless keeps climbing");
-        }
-
-        [Test]
-        public void WeeksGroupNights_AndCloseOnTheLastOne()
-        {
-            Assert.AreEqual(1, QuotaTable.WeekOfNight(1));
-            Assert.AreEqual(1, QuotaTable.WeekOfNight(QuotaTable.NightsPerWeek));
-            Assert.AreEqual(2, QuotaTable.WeekOfNight(QuotaTable.NightsPerWeek + 1));
-
-            Assert.IsFalse(QuotaTable.IsWeekEnd(1));
-            Assert.IsTrue(QuotaTable.IsWeekEnd(QuotaTable.NightsPerWeek));
-        }
-    }
 }

@@ -1,6 +1,7 @@
 namespace LastCall.Core
 {
-    /// <summary>Edition system (GDD 01, section 3.1). Scoring effects live in ScoringEngine.</summary>
+    /// <summary>Edition system (GDD 01, section 3.1). A bottle's quality is carried on the
+    /// card; the card-era scoring that consumed it retired with the deck.</summary>
     public enum QualityTier
     {
         HousePour,   // default: no bonus
