@@ -77,8 +77,9 @@ Satisfaction (0–1, feeds the day bar §6): `Exact 0.9 / Close 0.6 / Wrong 0.2`
 
 ## 5. The extra order (the emotion layer's new job)
 
-A **perfect serve** — Exact match **and** mood tip landed **and** served before 75% of
-patience — makes the customer **order another drink** (patience refreshed to 80%, new roll,
+A **perfect serve** — Exact match **and** mood tip landed **and** served before 90% of
+patience (widened from 75% 2026-07-22 — the read is the skill, timing is the speed tip's
+job) — makes the customer **order another drink** (patience refreshed to 80%, new roll,
 new full payment). Capped at **2 extra orders** per visit. This is deliberately reachable
 ("düşünüldüğü kadar zor olmamalı"): reading the ID and serving the right named drink is
 the skill, not pixel-perfect ratios. The read still matters — you cannot earn the mood tip

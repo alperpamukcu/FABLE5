@@ -42,11 +42,14 @@ react (happy / annoyed / angry) → pay → leave**, plus **storm-off**. Two gau
 satisfaction bar and the **patience clock icon** counting down. Reactions must read at a
 glance — anger is animation first, numbers second.
 
-## 5. The ID card, v2
+## 5. The ID card, v2 — SHIPPED (P6, 2026-07-22)
 
-Readability pass (explicit request): bigger emotion rows, clearer tag→bar association,
-higher contrast. Must contain: **photo, name, age, country/city, and the six emotion
-stats**. The read tiers (Exact/Range/Unknown) keep their visual language but larger.
+Readability pass (explicit request): tap any seated customer to open their licence — a
+large cream card with **photo, big NAME, AGE, FROM (city), relationship + demand**, the
+**ORDER**, an amber WANTS band (intent · glass length), and the **six emotion stats as
+full-width rows** — a coloured word tag, a 0–100 track showing the reading (Exact tick /
+Range span / Unknown empty), and a big value (number / "40–60" / "??"). The intent stat
+wears a ★. Reading is the empty-handed seat click; serving is the drink-in-hand click.
 
 ## 6. Upgrades you can see
 

@@ -50,7 +50,11 @@ namespace LastCall.Core
         public const int MoodTipMax = 5;
         public const int SpeedTip = 1;
         public const double SpeedTipWindow = 0.35; // served inside the first 35% of patience
-        public const double ExtraOrderWindow = 0.75;
+        // Widened 0.75 → 0.90 (2026-07-22): the extra order should reward *reading* someone
+        // and serving their drink right, not also racing the clock. The user's ask was that
+        // it be reachable, not fiendish — the skill is the read, the timing is a bonus (the
+        // speed tip already pays that). Only a near-storm-off serve misses the extra round.
+        public const double ExtraOrderWindow = 0.90;
 
         /// <summary>High rollers add this to a landed mood tip (GDD 23 §7).</summary>
         public const int HighRollerMoodBonus = 2;

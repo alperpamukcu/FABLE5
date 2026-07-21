@@ -205,7 +205,8 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Storm-offs | {Pct(StormOffs, CustomersFinished)} |");
                 sb.AppendLine($"| Serves Exact / Close / Wrong | {Pct(Exact, Serves)} / {Pct(Close, Serves)} / {Pct(Wrong, Serves)} |");
                 sb.AppendLine($"| Mood tips landed | {Pct(MoodTips, Serves)} |");
-                sb.AppendLine($"| Extra orders earned | {Pct(ExtraOrders, Serves)} |");
+                sb.AppendLine($"| Extra orders earned (of serves) | {Pct(ExtraOrders, Serves)} |");
+                sb.AppendLine($"| Extra orders earned (of exact) | {Pct(ExtraOrders, Exact)} |");
                 sb.AppendLine();
                 sb.AppendLine("## Red days by day number");
                 sb.AppendLine();

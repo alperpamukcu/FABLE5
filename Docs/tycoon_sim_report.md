@@ -9,21 +9,22 @@ mood tips, never buys brands. Every survival figure is a floor.
 | Bankruptcies | 0 (%0,0) |
 | Reached the 30-day horizon | 200 (%100,0) |
 | Days survived p25/median/p75 | 30 / 30 / 30 |
-| Final till p25/median/p75 | $163 / $232 / $298 |
-| Avg income / expenses per day | $132,4 / $125,2 |
-| Avg daily satisfaction | %60 |
-| Storm-offs | 16626 (%21,6) |
-| Serves Exact / Close / Wrong | 70331 (%100,0) / 0 (%0,0) / 0 (%0,0) |
-| Mood tips landed | 15388 (%21,9) |
-| Extra orders earned | 10157 (%14,4) |
+| Final till p25/median/p75 | $163 / $235 / $301 |
+| Avg income / expenses per day | $132,6 / $125,5 |
+| Avg daily satisfaction | %58 |
+| Storm-offs | 19070 (%24,8) |
+| Serves Exact / Close / Wrong | 70988 (%100,0) / 0 (%0,0) / 0 (%0,0) |
+| Mood tips landed | 16530 (%23,3) |
+| Extra orders earned (of serves) | 13258 (%18,7) |
+| Extra orders earned (of exact) | 13258 (%18,7) |
 
 ## Red days by day number
 
 | Day | Closed | In the red |
 |---|---|---|
 | 1 | 200 | 0 (%0,0) |
-| 2 | 200 | 6 (%3,0) |
-| 3 | 200 | 24 (%12,0) |
+| 2 | 200 | 7 (%3,5) |
+| 3 | 200 | 25 (%12,5) |
 | 4 | 200 | 0 (%0,0) |
 | 5 | 200 | 0 (%0,0) |
 | 6 | 200 | 0 (%0,0) |
@@ -31,8 +32,8 @@ mood tips, never buys brands. Every survival figure is a floor.
 | 8 | 200 | 0 (%0,0) |
 | 9 | 200 | 0 (%0,0) |
 | 10 | 200 | 0 (%0,0) |
-| 11 | 200 | 7 (%3,5) |
-| 12 | 200 | 14 (%7,0) |
-| 13 | 200 | 38 (%19,0) |
-| 14 | 200 | 49 (%24,5) |
-| 15 | 200 | 71 (%35,5) |
+| 11 | 200 | 8 (%4,0) |
+| 12 | 200 | 21 (%10,5) |
+| 13 | 200 | 41 (%20,5) |
+| 14 | 200 | 62 (%31,0) |
+| 15 | 200 | 79 (%39,5) |

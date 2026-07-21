@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using LastCall.Core;
 using LastCall.Game;
@@ -57,6 +58,15 @@ namespace LastCall.DebugUI
         private RectTransform _openTomorrow;
         private Text _bannerText;
 
+        // ID card v2 (P6, GDD 24 §5): the licence you read a customer by.
+        private RectTransform _idRoot;
+        private Image _idPhoto;
+        private Text _idName, _idAgeFrom, _idRel, _idIntent, _idOrder, _idGreeting;
+        private sealed class StatRow { public Text Tag; public Text Value; public Image Band; public RectTransform Track; }
+        private readonly Dictionary<Emotion, StatRow> _idRows = new Dictionary<Emotion, StatRow>();
+        private CustomerVisit _idVisit;
+        private const float IdTrackW = 176f;
+
         private TycoonServiceFlow _flow;
         private TycoonPhase _lastPhase = TycoonPhase.DayOpen;
         private double _lastShakerVol = -1;
@@ -86,6 +96,7 @@ namespace LastCall.DebugUI
             _dayEndPanel.gameObject.SetActive(false);
             _bannerText.gameObject.SetActive(false);
             _flow?.CloseFlow();
+            CloseId();
             if (stage != null) stage.SetSoloCustomerVisible(false);
             RefreshShelf(DiegeticStage.Exit.Refresh);
             ApplyBarLook();
@@ -128,11 +139,21 @@ namespace LastCall.DebugUI
             if (run == null || run.Phase != TycoonPhase.DayOpen) return;
             if (_flow != null && _flow.IsOpen) return;   // finish the build first
             var visit = _seats[index].Visit;
-            bool haveDrink = !run.ServingGlass.IsEmpty || !run.Glass.IsEmpty;
-            if (visit == null || visit.State != VisitState.Waiting || !haveDrink) return;
+            if (visit == null || visit.State != VisitState.Waiting) return;
 
-            run.ServeTo(visit);
-            RefreshGlass();
+            // A drink in hand means you are here to serve; empty-handed, you are here to
+            // read them (GDD 24 §5). Reading first, serving second — the licence is the ask.
+            bool haveDrink = !run.ServingGlass.IsEmpty || !run.Glass.IsEmpty;
+            if (haveDrink)
+            {
+                run.ServeTo(visit);
+                CloseId();
+                RefreshGlass();
+            }
+            else
+            {
+                ShowId(visit);
+            }
         }
 
         private void OnBinClicked()
@@ -187,6 +208,10 @@ namespace LastCall.DebugUI
             var run = Run;
             var seated = run.Floor.Seated;
 
+            // The licence is only good while its holder is at the bar.
+            if (_idVisit != null && (_idVisit.State != VisitState.Waiting || !seated.Contains(_idVisit)))
+                CloseId();
+
             for (int i = 0; i < _seats.Count; i++)
             {
                 var view = _seats[i];
@@ -216,15 +241,20 @@ namespace LastCall.DebugUI
                 }
 
                 var visit = view.Visit;
-                view.Name.text = (visit.Regular?.Name ?? "Customer").ToUpperInvariant();
+                // A regular ordering again after a perfect serve gets a gold star and the
+                // round count (GDD 24 §4) — the reward for reading them right, made visible.
+                string star = visit.ExtraOrdersTaken > 0
+                    ? $"<color=#F5C97B>★{visit.ExtraOrdersTaken + 1} </color>" : "";
+                view.Name.supportRichText = true;
+                view.Name.text = star + (visit.Regular?.Name ?? "Customer").ToUpperInvariant();
                 view.Name.color = UITheme.TextPrimary;
                 view.Order.color = UITheme.Amber[4];
 
-                // The always-visible half of the read (GDD 19 §3) rides on the seat until
-                // the per-seat licence lands in P6.
-                view.Wants.text = visit.Read == null ? "" :
+                // The always-visible half of the read (GDD 19 §3); tap the seat for the full
+                // licence (GDD 24 §5). "TAP TO READ" nudges the newcomer.
+                view.Wants.text = visit.Read == null ? "TAP TO READ" :
                     (visit.Read.Direction == IntentDirection.Extinguish ? "settle " : "lift ")
-                    + visit.Read.Intent.ToString().ToUpperInvariant();
+                    + visit.Read.Intent.ToString().ToUpperInvariant() + "   · tap to read";
 
                 view.Order.text = $"{visit.Order.Wanted.Name.ToUpperInvariant()}  ${visit.Order.Price}";
 
@@ -343,8 +373,180 @@ namespace LastCall.DebugUI
         private void ShowClosed()
         {
             _dayEndPanel.gameObject.SetActive(false);
+            CloseId();
             _bannerText.gameObject.SetActive(true);
             _bannerText.text = "✖ THE BAR IS CLOSED\nthree days in the red — NEW RUN to try again";
+        }
+
+        // ── the licence: read the customer (GDD 24 §5) ───────────────────────────
+
+        private void ShowId(CustomerVisit visit)
+        {
+            if (visit?.Read == null || visit.Regular == null) return;
+            _idVisit = visit;
+            var reg = visit.Regular;
+            var read = visit.Read;
+
+            _idRoot.gameObject.SetActive(true);
+            _idPhoto.sprite = stage != null ? stage.PortraitSpriteFor(reg.ArchetypeId) : null;
+            _idPhoto.color = _idPhoto.sprite != null ? Color.white : UITheme.Night[3];
+
+            string demandHex = read.Demand == DemandLevel.Demanding ? "A62B44"
+                : read.Demand == DemandLevel.Particular ? "8F5A1E" : "2A5926";
+            _idName.text = reg.Name.ToUpperInvariant();
+            _idAgeFrom.text = $"AGE {reg.Age}\nFROM {reg.Hometown.ToUpperInvariant()}";
+            _idRel.text = (reg.Visits > 0
+                ? $"{reg.Relationship.ToString().ToUpperInvariant()} · {reg.Visits} VISITS"
+                : "NEW FACE")
+                + $"  ·  <color=#{demandHex}>{Demands.Label(read.Demand).ToUpperInvariant()}</color>";
+
+            _idIntent.text =
+                (read.Direction == IntentDirection.Extinguish ? "WANTS: SETTLE " : "WANTS: LIFT ")
+                + $"<b>{read.Intent.ToString().ToUpperInvariant()}</b>"
+                + $"    ·    GLASS {read.FillPreference.ShortLabel.ToUpperInvariant()}";
+
+            _idOrder.text = $"ORDER:  <b>{visit.Order.Wanted.Name.ToUpperInvariant()}</b>   ${visit.Order.Price}";
+            _idGreeting.text = reg.Visits > 0
+                ? "« a familiar face — you know some of this already »"
+                : "« a stranger — read them as best you can »";
+
+            foreach (var emotion in Emotions.All)
+            {
+                var row = _idRows[emotion];
+                var reading = read[emotion];
+                var ramp = UITheme.EmotionRamp[emotion];
+                var band = row.Track.gameObject.transform.GetChild(0) as RectTransform;
+
+                bool star = emotion == read.Intent;
+                row.Tag.text = (star ? "★ " : "") + emotion.ToString().ToUpperInvariant();
+                row.Tag.color = star ? ramp[4] : ramp[3];
+
+                switch (reading.Tier)
+                {
+                    case VisibilityTier.Exact:
+                        row.Value.text = reading.Low.ToString();
+                        row.Value.color = ramp[4];
+                        band.gameObject.SetActive(true);
+                        band.anchoredPosition = new Vector2(TrackAt(reading.Low), 0);
+                        band.sizeDelta = new Vector2(6, 0);
+                        row.Band.color = ramp[4];
+                        break;
+                    case VisibilityTier.Range:
+                        row.Value.text = $"{reading.Low}–{reading.High}";
+                        row.Value.color = ramp[3];
+                        band.gameObject.SetActive(true);
+                        band.anchoredPosition = new Vector2(TrackAt(reading.Low), 0);
+                        band.sizeDelta = new Vector2(Mathf.Max(6f, TrackAt(reading.High) - TrackAt(reading.Low)), 0);
+                        row.Band.color = new Color(ramp[3].r, ramp[3].g, ramp[3].b, 0.65f);
+                        break;
+                    default:
+                        row.Value.text = "??";
+                        row.Value.color = UITheme.Cream[1];
+                        band.gameObject.SetActive(false);
+                        break;
+                }
+            }
+        }
+
+        private void CloseId()
+        {
+            _idVisit = null;
+            if (_idRoot != null) _idRoot.gameObject.SetActive(false);
+        }
+
+        private static float TrackAt(int value) => IdTrackW * Mathf.Clamp01(value / 100f);
+
+        private void BuildIdCard(RectTransform root)
+        {
+            _idRoot = NewRect("IdCard", root);
+            Stretch(_idRoot, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var scrim = _idRoot.gameObject.AddComponent<Image>();
+            scrim.color = UITheme.Scrim;
+            var scrimBtn = _idRoot.gameObject.AddComponent<Button>();
+            scrimBtn.transition = Selectable.Transition.None;
+            scrimBtn.onClick.AddListener(CloseId);
+
+            var card = NewRect("Card", _idRoot);
+            Place(card, new Vector2(0.5f, 0.5f), new Vector2(452, 588), new Vector2(0, 6));
+            card.gameObject.AddComponent<Image>().color = UITheme.Cream[4];
+            card.gameObject.AddComponent<Button>().transition = Selectable.Transition.None; // swallow clicks
+
+            var header = NewRect("Header", card);
+            Stretch(header, new Vector2(0, 1), Vector2.one, new Vector2(0, -30), Vector2.zero);
+            header.gameObject.AddComponent<Image>().color = UITheme.ClubBlue[2];
+            var htext = NewText("H", header, _body, 13, TextAnchor.MiddleCenter, UITheme.Cream[4]);
+            Stretch(htext.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            htext.text = "CITY OF NEW ARDEN — PATRON ID";
+
+            var photoFrame = NewRect("PhotoFrame", card);
+            Place(photoFrame, new Vector2(0, 1), new Vector2(112, 138), new Vector2(16, -40));
+            photoFrame.gameObject.AddComponent<Image>().color = UITheme.Night[1];
+            var photo = NewRect("Photo", photoFrame);
+            Stretch(photo, Vector2.zero, Vector2.one, new Vector2(3, 3), new Vector2(-3, -3));
+            _idPhoto = photo.gameObject.AddComponent<Image>();
+            _idPhoto.preserveAspect = true;
+
+            _idName = NewText("Name", card, _display, 18, TextAnchor.UpperLeft, UITheme.Night[1]);
+            Place(_idName.rectTransform, new Vector2(0, 1), new Vector2(300, 26), new Vector2(140, -42));
+            _idAgeFrom = NewText("AgeFrom", card, _body, 13, TextAnchor.UpperLeft, UITheme.Night[2]);
+            Place(_idAgeFrom.rectTransform, new Vector2(0, 1), new Vector2(300, 40), new Vector2(140, -72));
+            _idRel = NewText("Rel", card, _body, 12, TextAnchor.UpperLeft, UITheme.Night[3]);
+            _idRel.supportRichText = true;
+            Place(_idRel.rectTransform, new Vector2(0, 1), new Vector2(300, 18), new Vector2(140, -118));
+
+            _idOrder = NewText("Order", card, _body, 13, TextAnchor.UpperLeft, UITheme.Night[1]);
+            _idOrder.supportRichText = true;
+            Place(_idOrder.rectTransform, new Vector2(0, 1), new Vector2(300, 22), new Vector2(140, -142));
+
+            // The one thing never hidden, in an amber endorsement band.
+            var intentBand = NewRect("IntentBand", card);
+            Place(intentBand, new Vector2(0.5f, 1), new Vector2(420, 28), new Vector2(0, -190));
+            intentBand.gameObject.AddComponent<Image>().color = UITheme.Amber[3];
+            _idIntent = NewText("Intent", intentBand, _body, 12, TextAnchor.MiddleCenter, UITheme.Night[1]);
+            _idIntent.supportRichText = true;
+            Stretch(_idIntent.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 0), new Vector2(-8, 0));
+
+            // The six readings, one big row each (GDD 24 §5 readability pass).
+            float top = -232;
+            for (int i = 0; i < Emotions.Count; i++)
+            {
+                var emotion = Emotions.All[i];
+                var ramp = UITheme.EmotionRamp[emotion];
+                var rowRect = NewRect($"Row{emotion}", card);
+                Place(rowRect, new Vector2(0.5f, 1), new Vector2(420, 44), new Vector2(0, top - i * 46));
+
+                var stat = new StatRow();
+                stat.Tag = NewText("Tag", rowRect, _body, 13, TextAnchor.MiddleLeft, ramp[3]);
+                Place(stat.Tag.rectTransform, new Vector2(0, 0.5f), new Vector2(120, 24), new Vector2(6, 0));
+
+                stat.Track = NewRect("Track", rowRect);
+                Place(stat.Track, new Vector2(0, 0.5f), new Vector2(IdTrackW, 14), new Vector2(130, 0));
+                stat.Track.gameObject.AddComponent<Image>().color = UITheme.Cream[2];
+                var band = NewRect("Band", stat.Track);
+                band.anchorMin = new Vector2(0, 0); band.anchorMax = new Vector2(0, 1);
+                band.pivot = new Vector2(0, 0.5f);
+                band.sizeDelta = new Vector2(6, 0);
+                stat.Band = band.gameObject.AddComponent<Image>();
+                stat.Band.color = ramp[4];
+
+                stat.Value = NewText("Val", rowRect, _display, 13, TextAnchor.MiddleRight, ramp[4]);
+                Place(stat.Value.rectTransform, new Vector2(1, 0.5f), new Vector2(96, 24), new Vector2(-6, 0));
+
+                _idRows[emotion] = stat;
+            }
+
+            _idGreeting = NewText("Greeting", card, _body, 12, TextAnchor.MiddleCenter, UITheme.Night[2]);
+            Place(_idGreeting.rectTransform, new Vector2(0.5f, 0), new Vector2(420, 20), new Vector2(0, 58));
+
+            var close = NewRect("Close", card);
+            Place(close, new Vector2(0.5f, 0), new Vector2(200, 34), new Vector2(0, 16));
+            close.gameObject.AddComponent<Image>().color = UITheme.ClubBlue[2];
+            close.gameObject.AddComponent<Button>().onClick.AddListener(CloseId);
+            var closeLabel = NewText("L", close, _body, 13, TextAnchor.MiddleCenter, UITheme.Cream[4]);
+            Stretch(closeLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            closeLabel.text = "CLOSE — BACK TO THE BAR";
+
+            _idRoot.gameObject.SetActive(false);
         }
 
         // ── construction ────────────────────────────────────────────────────────
@@ -445,6 +647,8 @@ namespace LastCall.DebugUI
             // the seat row, centred — the counter's "order pad".
             NewButton(root, "▸  MENU — MAKE A DRINK", new Vector2(0.5f, 0),
                 new Vector2(300, 40), new Vector2(0, 112), UITheme.PrimaryAction, OnMenuClicked);
+
+            BuildIdCard(root);
 
             // Day end: a plain invoice panel with the night's business under it.
             _dayEndPanel = NewRect("DayEnd", root);

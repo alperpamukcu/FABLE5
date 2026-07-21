@@ -85,11 +85,22 @@ Gate met: a full drink is built start-to-finish through the new flow only; spill
   next day's scene showed the richer cabinet + the musician + the −$284 debt till
 Gate met: every buyable changes the scene.
 
-## P6 — People polish
-- ☐ ID card v2 readability (GDD 24 §5)
-- ☐ Extra-order flow feel (bubble refresh, patience refill animation)
-- ☐ Regular relationships surface (greetings, remembered orders — dialogue hooks)
-Gate: blind-read tip rate and extra-order rate measured by sim; extra orders reachable (>15% of exact serves).
+## P6 — People polish ☑
+- ☑ ID card v2 (GDD 24 §5): tap a seated customer → a big cream licence with photo, NAME,
+  AGE, FROM, relationship + demand, the ORDER, an amber WANTS band, and the six readings as
+  full-width rows (tag · Exact-tick/Range-span/Unknown track · big value), intent starred.
+  Reading = empty-handed seat click, serving = drink-in-hand seat click
+- ☑ Extra-order feel: a served regular who orders again gets a gold ★ + round count on the
+  seat; the extra-order timing window widened 0.75→0.90 so the *read* is the skill (user ask:
+  "not as hard as feared")
+- ☑ Relationships surface: NEW FACE vs relationship + visit count, and a greeting line
+  ("a familiar face…" / "a stranger…") on the licence
+- ☑ Sim measured: extra orders **18.7% of exact serves** (>15% gate met; was 14.4% before
+  the window widened), mood tips 23.3% — and this is the floor bot, which does not chase tips
+- Note for P9: the extra-order income lifts the competent floor bot to 0 bankruptcies over 30
+  days (storm-offs 24.8% are its growth ceiling); the debt spiral still bites sloppy play.
+  Full skill-range tuning is the P9 balance pass.
+Gate met.
 
 ## P7 — Demolition
 Only after P3 makes the new loop the played loop:

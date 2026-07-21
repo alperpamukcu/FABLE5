@@ -1347,6 +1347,9 @@ namespace LastCall.DebugUI
         private Sprite PortraitFor(string archetypeId) =>
             !string.IsNullOrEmpty(archetypeId) && _portraits.TryGetValue(archetypeId, out var s) ? s : null;
 
+        /// <summary>The ID photo for an archetype, for the tycoon floor's licence card (P6).</summary>
+        public Sprite PortraitSpriteFor(string archetypeId) => PortraitFor(archetypeId);
+
         /// <summary>
         /// Ghosts where the current selection would leave each stat, before committing —
         /// the pre-commit preview (GDD 19 §5). Pass an empty delta to clear it.
