@@ -45,7 +45,7 @@ Play the tycoon loop before the shaker exists:
   red days climbing from day 11 (35% by day 15) — upgrade or sink
 Gate met: human-playable end-to-end + sim reporting tycoon metrics.
 
-## P4 — The service flow (GDD 24 §1–3) ◐
+## P4 — The service flow (GDD 24 §1–3) ☑
 - ☑ Core shaker model: `Glass` is the shaker, `ServingGlass` receives the pour; `Shake`
   + `AddPreparation` (ice/twist/rims); `PourIntoServingGlass(volume, accuracy)` transfers
   with spill (`GlassContents.TransferInto`/`DrainProportional` — proportional, ratio-
@@ -54,11 +54,18 @@ Gate met: human-playable end-to-end + sim reporting tycoon metrics.
 - ☑ Core tests: drain keeps ratios, perfect pour moves the drink whole, a 0.5-accuracy pour
   spills half and under-fills, a sloppy serve pour drops the drink under MinFill and loses
   the recipe (327/327 green)
-- ☐ Counter menu prop + drink menu UI (bottles leave the stage)
-- ☐ Shaker focus stage: dim, hold-to-pour into shaker, preparations before shake, shake input (hold+move)
-- ☐ Serve stage: glass + shaker pour with aim/spill, then seat targeting
-- ☐ Old direct-pour input retired
-Gate: full drink built start-to-finish through the new flow only; spill-by-aim works.
+- ☑ `TycoonServiceFlow`: a MENU button opens the drink menu (bottle list with style-colour
+  swatches + remaining %, prep toggles ICE/LEMON/SALT/SUGAR, SHAKE/POUR/EMPTY/CLOSE)
+- ☑ Shaker focus stage: dim + hold-to-pour zone into the shaker, live ratio readout, back to menu
+- ☑ Serve stage: hold-and-aim pour zone — cursor centred over the glass mouth pours clean,
+  drifting off spills; aim bar; ADD MORE / SERVE IT → pick a seat
+- ☑ Old direct-pour retired: the back-bar bottles are scenery (no pour callbacks); the seat
+  glows cyan when a drink is ready to hand over
+- ☑ Verified live: menu/shaker/serve panels render; a 0.5-accuracy serve pour landed 0.35 of
+  a 0.7 shaker (half spilled) and delivered a 35%-full glass — spill-by-aim works
+Gate met: a full drink is built start-to-finish through the new flow only; spilling is real.
+- ◐ Polish deferred to P8: shake is a button (hold+move mouse animation), pour streams are
+  bars not liquid, the "menu prop" is a button not a counter object
 
 ## P5 — Day-end presentation
 - ☐ Invoice UI (bill layout, strike stamps), market as shelf cards, upgrade purchases

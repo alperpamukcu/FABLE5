@@ -142,7 +142,7 @@ namespace LastCall.EditorTools
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Props/register2.png");
             stageSo.ApplyModifiedPropertiesWithoutUndo();
 
-            // P3 (PLAN_tycoon_pivot): the tycoon loop is the played loop now. DebugHud and
+            // P3/P4 (PLAN_tycoon_pivot): the tycoon loop is the played loop now. DebugHud and
             // the old RunController stay in code for tests and the sim until P7 demolition.
             var hud = game.AddComponent<TycoonHud>();
             var hudSo = new SerializedObject(hud);
@@ -150,6 +150,13 @@ namespace LastCall.EditorTools
             hudSo.FindProperty("displayFont").objectReferenceValue = LoadRequired<Font>(PixelDisplayFontPath);
             hudSo.FindProperty("stage").objectReferenceValue = stage;
             hudSo.ApplyModifiedPropertiesWithoutUndo();
+
+            // P4 (GDD 24 §1–3): the menu / shaker / serve flow.
+            var flow = game.AddComponent<TycoonServiceFlow>();
+            var flowSo = new SerializedObject(flow);
+            flowSo.FindProperty("bodyFont").objectReferenceValue = LoadRequired<Font>(PixelBodyFontPath);
+            flowSo.FindProperty("displayFont").objectReferenceValue = LoadRequired<Font>(PixelDisplayFontPath);
+            flowSo.ApplyModifiedPropertiesWithoutUndo();
 
             Directory.CreateDirectory("Assets/Scenes");
             EditorSceneManager.SaveScene(scene, ScenePath);

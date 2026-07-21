@@ -56,8 +56,9 @@ namespace LastCall.DebugUI
         private RectTransform _offerRow;
         private Text _bannerText;
 
-        private string _heldBottleId;
+        private TycoonServiceFlow _flow;
         private TycoonPhase _lastPhase = TycoonPhase.DayOpen;
+        private double _lastShakerVol = -1;
 
         private void Awake()
         {
@@ -67,6 +68,7 @@ namespace LastCall.DebugUI
 
             _bootstrap = GetComponent<GameBootstrap>();
             if (_bootstrap != null) _bootstrap.RunStarted += OnRunStarted;
+            _flow = GetComponent<TycoonServiceFlow>();
 
             BuildUi();
         }
@@ -78,10 +80,11 @@ namespace LastCall.DebugUI
 
         private void OnRunStarted()
         {
-            _heldBottleId = null;
             _lastPhase = TycoonPhase.DayOpen;
+            _lastShakerVol = -1;
             _dayEndPanel.gameObject.SetActive(false);
             _bannerText.gameObject.SetActive(false);
+            _flow?.CloseFlow();
             if (stage != null) stage.SetSoloCustomerVisible(false);
             RefreshShelf(DiegeticStage.Exit.Refresh);
             RefreshGlass();
@@ -92,16 +95,14 @@ namespace LastCall.DebugUI
             var run = Run;
             if (run == null) return;
 
-            if (run.Phase == TycoonPhase.DayOpen)
-            {
-                run.Tick(Time.deltaTime);
+            if (run.Phase == TycoonPhase.DayOpen) run.Tick(Time.deltaTime);
 
-                if (_heldBottleId != null)
-                {
-                    double poured = run.PourTick(Time.deltaTime);
-                    if (poured > 0) RefreshGlass();
-                    if (run.PouringId == null) _heldBottleId = null;
-                }
+            // Mirror the shaker onto the stage's top-left glass, but only when it actually
+            // changed — SetGlass rebuilds its layers, so a per-frame call would churn.
+            if (run.Glass.TotalVolume != _lastShakerVol)
+            {
+                _lastShakerVol = run.Glass.TotalVolume;
+                RefreshGlass();
             }
 
             if (run.Phase != _lastPhase)
@@ -117,39 +118,18 @@ namespace LastCall.DebugUI
 
         // ── the floor ───────────────────────────────────────────────────────────
 
-        private void StartPour(IngredientCard card)
-        {
-            var run = Run;
-            if (run == null || run.Phase != TycoonPhase.DayOpen) return;
-
-            if (card.Type == IngredientType.Garnish)
-            {
-                run.PourGarnish(card.Id);
-                RefreshGlass();
-                return;
-            }
-
-            run.BeginPour(card.Id);
-            _heldBottleId = card.Id;
-        }
-
-        private void EndPour(IngredientCard card)
-        {
-            if (_heldBottleId == null || card == null || card.Id != _heldBottleId) return;
-            _heldBottleId = null;
-            Run?.EndPour();
-            RefreshGlass();
-        }
+        private void OnMenuClicked() => _flow?.Open();
 
         private void OnSeatClicked(int index)
         {
             var run = Run;
             if (run == null || run.Phase != TycoonPhase.DayOpen) return;
+            if (_flow != null && _flow.IsOpen) return;   // finish the build first
             var visit = _seats[index].Visit;
-            if (visit == null || visit.State != VisitState.Waiting || run.Glass.IsEmpty) return;
+            bool haveDrink = !run.ServingGlass.IsEmpty || !run.Glass.IsEmpty;
+            if (visit == null || visit.State != VisitState.Waiting || !haveDrink) return;
 
             run.ServeTo(visit);
-            _heldBottleId = null;
             RefreshGlass();
         }
 
@@ -157,7 +137,6 @@ namespace LastCall.DebugUI
         {
             var run = Run;
             if (run == null || run.Phase != TycoonPhase.DayOpen) return;
-            _heldBottleId = null;
             run.DiscardGlass();
             RefreshGlass();
         }
@@ -167,7 +146,9 @@ namespace LastCall.DebugUI
         private void RefreshShelf(DiegeticStage.Exit exit)
         {
             if (stage == null || Run == null) return;
-            stage.SetShelf(Run.Shelf, null, StartPour, EndPour, exit);
+            // The bottles are scenery now (GDD 24 §1): building goes through the menu, so
+            // the shelf takes no pour callbacks.
+            stage.SetShelf(Run.Shelf, null, null, null, exit);
         }
 
         private void RefreshGlass()
@@ -242,9 +223,21 @@ namespace LastCall.DebugUI
                 view.PatienceFill.color = patience > 0.5f ? UITheme.Lime[3]
                     : patience > 0.25f ? UITheme.Amber[3] : UITheme.ViceRed[3];
 
-                // The frame heats up as patience drains — anger readable at a glance.
-                var heat = Color.Lerp(UITheme.ViceRed[1], UITheme.Night[3], patience);
-                view.Frame.color = new Color(heat.r, heat.g, heat.b, 0.94f);
+                // The frame heats up as patience drains — anger readable at a glance. When a
+                // drink is built and waiting, every seat glows cyan: "hand it over here".
+                bool drinkReady = run.Phase == TycoonPhase.DayOpen &&
+                    (!run.ServingGlass.IsEmpty || !run.Glass.IsEmpty) &&
+                    (_flow == null || !_flow.IsOpen);
+                if (drinkReady)
+                {
+                    view.Frame.color = new Color(UITheme.Selection.r, UITheme.Selection.g,
+                        UITheme.Selection.b, 0.85f);
+                }
+                else
+                {
+                    var heat = Color.Lerp(UITheme.ViceRed[1], UITheme.Night[3], patience);
+                    view.Frame.color = new Color(heat.r, heat.g, heat.b, 0.94f);
+                }
             }
         }
 
@@ -417,6 +410,11 @@ namespace LastCall.DebugUI
 
                 _seats.Add(seat);
             }
+
+            // The primary action: open the menu to build a drink (GDD 24 §1). Just above
+            // the seat row, centred — the counter's "order pad".
+            NewButton(root, "▸  MENU — MAKE A DRINK", new Vector2(0.5f, 0),
+                new Vector2(300, 40), new Vector2(0, 112), UITheme.PrimaryAction, OnMenuClicked);
 
             // Day end: a plain invoice panel with the night's business under it.
             _dayEndPanel = NewRect("DayEnd", root);
