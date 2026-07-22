@@ -124,8 +124,10 @@ scene boots the tycoon run; build size dropped ~5k lines of gameplay code + asse
 - ☐ New authoring reference (1280×720 logical), style guide refresh
 - ☐ **Seated customers as scene characters** (explicit request): walk in → sit → order →
   wait → react → leave, gauges attached to the person; the P3 seat panels retire
-- ☐ **The tilt-pour**: grab the bottle, lift to tip, line the stream over the shaker;
-  tilt = flow rate; the same model serves the shaker→glass pour (replaces hold-zones)
+- ◐ **The tilt-pour**: grab the bottle, lift to tip (it leans left), line the mouth over
+  the shaker → it streams; released on mouse-up. Built & geometry-verified in the shaker
+  focus stage (procedural placeholder bottle/shaker). Still to do: the shaker→glass serve
+  pour on the same model (currently hold-and-aim)
 - ☐ **Drag-preparations**: ice/lemon/salt/mint picked up and dropped into the shaker
 - ☐ **Real shake**: grab and shake the mouse; energy recorded 0–1 with the preparation
 - ☐ **ID card v3**: real licence proportions, purpose-drawn card art, one reading order
