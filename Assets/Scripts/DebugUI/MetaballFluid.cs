@@ -19,9 +19,9 @@ namespace LastCall.DebugUI
     public sealed class MetaballFluid
     {
         private const int MaxDrops = 64;             // must match MAX_DROPS in the shader
-        private const float Gravity = 2600f;         // px/s², down
-        private const float StreamRadius = 13f;      // px; overlapping drops fuse into a column
-        private const float StreamInterval = 0.010f; // s between stream drops (density)
+        private const float Gravity = 2300f;         // px/s², down (a touch softer, 2026-07-22)
+        private const float StreamRadius = 11f;      // px; overlapping drops fuse into a column
+        private const float StreamInterval = 0.008f; // s between stream drops (denser -> smoother)
 
         private readonly RectTransform _rt;
         private readonly RawImage _image;
@@ -44,7 +44,21 @@ namespace LastCall.DebugUI
 
         // Pool (glass interior) in surface-local px.
         private float _poolMinX, _poolMaxX, _poolTopY, _poolBottomY;
+        private float _poolCenterXUv, _poolHalfWidthUv;
         private bool _poolSet;
+
+        // Live surface (2026-07-22): the water line tilts (a damped lateral slosh) and ripples
+        // so the pool moves like water in a glass, not a flat lid.
+        private float _sloshOff, _sloshVel;      // uv tilt height at the pool edge, and its rate
+        private float _wavePhaseA, _wavePhaseB;
+        private float _waveAmp;                  // uv ripple amplitude, decays toward idle
+        private const float SloshStiffness = 85f;
+        private const float SloshDamping   = 3.0f;
+        private const float MaxSlosh       = 0.06f;
+        private const float IdleWaveAmp    = 0.0012f;
+        private const float WaveDecay      = 0.03f;
+        private const float WaveKA         = 0.16f;   // rad/px ripple wavenumbers
+        private const float WaveKB         = 0.26f;
 
         // Shader property IDs.
         private static readonly int IdSize        = Shader.PropertyToID("_Size");
@@ -57,6 +71,13 @@ namespace LastCall.DebugUI
         private static readonly int IdPoolBottomY = Shader.PropertyToID("_PoolBottomY");
         private static readonly int IdPoolEdge    = Shader.PropertyToID("_PoolEdgeSoft");
         private static readonly int IdPoolStr     = Shader.PropertyToID("_PoolStrength");
+        private static readonly int IdSurfTilt    = Shader.PropertyToID("_SurfTilt");
+        private static readonly int IdSurfCenter  = Shader.PropertyToID("_SurfCenterX");
+        private static readonly int IdWaveAmp     = Shader.PropertyToID("_WaveAmp");
+        private static readonly int IdWaveKA      = Shader.PropertyToID("_WaveKA");
+        private static readonly int IdWavePhaseA  = Shader.PropertyToID("_WavePhaseA");
+        private static readonly int IdWaveKB      = Shader.PropertyToID("_WaveKB");
+        private static readonly int IdWavePhaseB  = Shader.PropertyToID("_WavePhaseB");
 
         public MetaballFluid(RectTransform surface)
         {
@@ -84,6 +105,11 @@ namespace LastCall.DebugUI
 
             RefreshSize();
             SetColor(new Color(0.30f, 0.60f, 1.0f, 0.95f));
+            if (_material != null)
+            {
+                _material.SetFloat(IdWaveKA, WaveKA);
+                _material.SetFloat(IdWaveKB, WaveKB);
+            }
             _image.enabled = _material != null;
         }
 
@@ -130,6 +156,22 @@ namespace LastCall.DebugUI
             // Surface softness scales a touch with rect height so merging looks the same at any size.
             _material.SetFloat(IdPoolEdge, 6f / _size.y);
             _material.SetFloat(IdPoolStr, 1.4f);
+
+            _poolCenterXUv = (minUv.x + maxUv.x) * 0.5f;
+            _poolHalfWidthUv = Mathf.Max((maxUv.x - minUv.x) * 0.5f, 1e-3f);
+            _material.SetFloat(IdSurfCenter, _poolCenterXUv);
+        }
+
+        /// <summary>
+        /// Disturbs the water surface (2026-07-22): a lateral kick tips the slosh (water lags a
+        /// moving glass) and a ripple runs across it. Called on a landing pour and while the
+        /// shaker is being thrown about. <paramref name="lateralImpulse"/> is a uv/s velocity
+        /// impulse; <paramref name="rippleAmp"/> is a uv wave amplitude.
+        /// </summary>
+        public void Disturb(float lateralImpulse, float rippleAmp)
+        {
+            _sloshVel += lateralImpulse;
+            if (rippleAmp > _waveAmp) _waveAmp = rippleAmp;
         }
 
         /// <summary>Clears the pool (no liquid body, e.g. an empty glass).</summary>
@@ -206,12 +248,15 @@ namespace LastCall.DebugUI
                 d.Pos += d.Vel * dt;
                 d.Life -= dt;
 
-                // A stream drop that reaches the pool surface (within the glass) melts in and
-                // kicks up a small splash — the soft, organic landing.
+                // A stream drop that reaches the pool surface (within the glass) melts in,
+                // kicks up a small splash, and ripples the water where it lands.
                 if (d.Merges && _poolSet &&
                     d.Pos.x > _poolMinX && d.Pos.x < _poolMaxX && d.Pos.y <= _poolTopY + 4f)
                 {
                     if (Random.value < 0.5f) Splash(new Vector2(d.Pos.x, _poolTopY), 0.5f);
+                    // A drop landing off-centre tips the water toward that side, and ripples it.
+                    _sloshVel += (ToUv(new Vector2(d.Pos.x, 0f)).x - _poolCenterXUv) * 0.6f;
+                    if (_waveAmp < 0.005f) _waveAmp = 0.005f;
                     d.Active = false;
                     continue;
                 }
@@ -219,7 +264,29 @@ namespace LastCall.DebugUI
                 if (d.Life <= 0f || d.Pos.y < floor) d.Active = false;
             }
 
+            StepSurface(dt);
             Upload();
+        }
+
+        /// <summary>Advances the slosh oscillator and the travelling ripples one frame.</summary>
+        private void StepSurface(float dt)
+        {
+            // Lateral slosh: a damped spring back to level (water settling in the glass).
+            _sloshVel += -_sloshOff * SloshStiffness * dt;
+            _sloshVel *= Mathf.Exp(-SloshDamping * dt);
+            _sloshOff += _sloshVel * dt;
+            _sloshOff = Mathf.Clamp(_sloshOff, -MaxSlosh, MaxSlosh);
+
+            // Ripples travel and fade back toward a barely-there idle shimmer.
+            _wavePhaseA += dt * 9.0f;
+            _wavePhaseB -= dt * 6.3f;
+            _waveAmp = Mathf.MoveTowards(_waveAmp, IdleWaveAmp, WaveDecay * dt);
+
+            if (_material == null) return;
+            _material.SetFloat(IdSurfTilt, _sloshOff / _poolHalfWidthUv);
+            _material.SetFloat(IdWaveAmp, _waveAmp);
+            _material.SetFloat(IdWavePhaseA, _wavePhaseA);
+            _material.SetFloat(IdWavePhaseB, _wavePhaseB);
         }
 
         private void Upload()

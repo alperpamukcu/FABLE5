@@ -60,8 +60,18 @@ you hold."* Addressed on the placeholder art, ahead of the P8 re-skin:
 - **The fill is slower** (`PourTimeScale` on the shaker, a gentler serve rate): a pour is
   a held, deliberate motion. Only the drawn volume slows; the floor's patience clock is
   untouched (it runs on its own tick).
-- **The pooled surface moves**: a slow ripple at rest, a heave while shaking or pouring
-  (a vertical slosh on the metaball's surface line).
+- **The surface behaves like water in a glass** (2026-07-22 note: *"it fills like a bar,
+  not a water glass; the surface doesn't move to the vessel's shape"*): the pool's top is a
+  live water line — a **damped lateral slosh** (the water lags a moving glass and settles
+  back level) plus **travelling ripples**, with a bright band of light riding the moving
+  surface. A landing pour ripples and tips it; throwing the shaker sloshes it hard, then it
+  calms. The shader evaluates the surface height per-x, so it tilts and waves inside the
+  glass instead of being a flat lid.
+- **You grab the shaker itself and shake it** (2026-07-22 note: *"grabbing the shaker and
+  shaking it freely left–right should be fun and lively; it's stiff now"*): the hold-pad is
+  gone — grab the shaker and **throw it around**; it springs after the cursor with overshoot
+  (loose and whippy), leans into the motion, and the drink sloshes with it. Cursor travel
+  still builds the shake energy.
 - **Dragged pieces have weight and swing** (`Pendulum` + a spring grip): the grip
   **springs after the cursor with overshoot** (it lags and jiggles) and the body hangs
   and **swings from that grip** — grab a lemon by one end and the free end sways, then

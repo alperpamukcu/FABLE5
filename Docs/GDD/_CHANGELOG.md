@@ -5,9 +5,12 @@
 - `24 §3.5` **feel pass (2026-07-22):** the pour is now a **metaball fluid** (`MetaballFluid`
   + `Shaders/MetaballLiquid.shader`) — droplets melt into one connected mass and into the
   pool instead of reading as separate balls, the liquid gains volume and takes the glass
-  shape, and it lands with an organic splash; the fill is slower and more deliberate; the
-  pooled surface sloshes; and dragged preparations have weight — the grip springs after the
-  cursor with overshoot while the piece swings from it (`Pendulum`). Still procedural
+  shape, and it lands with an organic splash; the fill is slower and more deliberate. The
+  pooled **surface behaves like water in a glass** — a damped lateral slosh + travelling
+  ripples that tilt and settle, evaluated per-x in the shader. **You grab the shaker itself
+  and throw it around** to shake (the hold-pad is gone); the drink sloshes with it. Dragged
+  preparations have weight — the grip springs after the cursor with overshoot while the
+  piece swings from it (`Pendulum`). Still procedural
   placeholder art, still cosmetic-only over the deterministic pour. Also: the pre-menu stage
   dressing (top-left pour-glass HUD, on-counter bottle rail, garnish jars) is retired, and
   the cash register opens a **ledger of past days** (`24 §7`).

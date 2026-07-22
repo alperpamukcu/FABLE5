@@ -80,14 +80,19 @@ namespace LastCall.DebugUI
         private const float DragStiffness = 150f;  // how hard the grip is pulled to the cursor
         private const float DragDamping = 9f;       // < critical -> it overshoots and jiggles
 
-        // The mouse-energy shake (GDD 24 §2.5): hold the shake pad and shake the mouse; how
-        // much the cursor travels builds the energy, and the shaker jitters as you go.
+        // The shake (GDD 24 §2.5, 2026-07-22): grab the shaker itself and throw it around —
+        // it springs after the cursor with overshoot (loose and lively), the liquid sloshes,
+        // and how far the cursor travels builds the shake energy.
         private bool _shaking;
         private double _shakeEnergy;
         private Vector2 _lastShakeMouse;
+        private Vector2 _shakerVel;      // the shaker's spring velocity while thrown about
+        private Vector2 _shakerHome;     // its rest position
         private Image _shakeMeterFill;
         private Text _shakeMeterText;
         private const float ShakeFullTravel = 4000f;   // px of cursor travel for a full shake
+        private const float ShakeStiffness = 105f;      // loose follow -> it whips around
+        private const float ShakeDamping = 6f;
 
         // The serve pour uses the same tilt model (GDD 24 §3): grab the shaker, tip it over
         // the glass. How well the mouth lines up over the glass is the aim — off-centre spills.
@@ -278,9 +283,9 @@ namespace LastCall.DebugUI
             _shakerSplash.Clear();
             _shakerFluid.Clear();
             _shakerFluid.SetColor(DrinkColor(run.Glass));
-            PushShakerPool(run, 0f);
-            _shakerVessel.anchoredPosition = new Vector2(-120, -30);
+            _shakerVessel.anchoredPosition = _shakerHome;
             _shakerVessel.localRotation = Quaternion.identity;
+            PushShakerPool(run, 0f);
             _shakeMeterFill.rectTransform.sizeDelta = new Vector2(0, -4);
             _shakeMeterText.text = run.Glass.HasPreparation("shaken")
                 ? $"SHAKEN · {run.ShakeEnergy:P0}" : "";
@@ -330,7 +335,7 @@ namespace LastCall.DebugUI
                     // pool where they land (GDD 24 §3.5).
                     var colour = UITheme.StyleColor(_focusBottle.Info?.Style, _focusBottle.Type);
                     _shakerFluid.SetColor(colour);
-                    var streamVel = new Vector2((opening.x - mouth.x) * 2.0f, -260f);
+                    var streamVel = new Vector2((opening.x - mouth.x) * 1.8f, -225f);
                     _shakerFluid.EmitStream(mouth, streamVel, Time.deltaTime);
                 }
             }
@@ -362,12 +367,14 @@ namespace LastCall.DebugUI
         private void PushShakerPool(TycoonRun run, float bob)
         {
             if (run.Glass.IsEmpty) { _shakerFluid.ClearPool(); return; }
+            // Read the vessel live so the pool travels with the shaker when it is thrown about.
+            var c = _shakerVessel.anchoredPosition;
             float halfW = _shakerVessel.rect.width * 0.5f;
-            float minX = _shakerVessel.anchoredPosition.x - halfW + 8f;
-            float maxX = _shakerVessel.anchoredPosition.x + halfW - 8f;
+            float minX = c.x - halfW + 8f;
+            float maxX = c.x + halfW - 8f;
             float innerH = _shakerVessel.rect.height - 34f;
-            float bottomY = _shakerLiquidFloorY;
-            float topY = _shakerLiquidFloorY + innerH * (float)run.Glass.FillFraction + bob;
+            float bottomY = c.y - _shakerVessel.rect.height * 0.5f + 12f;
+            float topY = bottomY + innerH * (float)run.Glass.FillFraction + bob;
             _shakerFluid.SetPool(minX, maxX, bottomY, topY);
         }
 
@@ -392,20 +399,32 @@ namespace LastCall.DebugUI
                 _shaking = false;
                 _shakeEnergy = 0;
                 _shakerVessel.localRotation = Quaternion.identity;
-                _shakerVessel.anchoredPosition = new Vector2(-120, -30);
+                _shakerVessel.anchoredPosition = _shakerHome;
+                _shakerVel = Vector2.zero;
                 if (_shakeMeterText != null) _shakeMeterText.text = "";
                 return;
             }
 
+            float dt = Mathf.Max(Time.deltaTime, 1e-4f);
+            // Cursor travel builds the shake energy.
             float travel = (mouse - _lastShakeMouse).magnitude;
             _lastShakeMouse = mouse;
             _shakeEnergy = Mathf.Clamp01((float)_shakeEnergy + travel / ShakeFullTravel);
 
-            // Jitter the shaker so it reads as being worked.
-            float amp = 6f + 10f * (float)_shakeEnergy;
-            _shakerVessel.anchoredPosition = new Vector2(-120, -30) +
-                new Vector2(UnityEngine.Random.Range(-amp, amp), UnityEngine.Random.Range(-amp, amp));
-            _shakerVessel.localRotation = Quaternion.Euler(0, 0, UnityEngine.Random.Range(-8f, 8f) * (float)_shakeEnergy);
+            // The shaker springs loosely after the cursor and overshoots — throw it around.
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _pourSurface, mouse, null, out Vector2 local))
+            {
+                _shakerVel += (local - _shakerVessel.anchoredPosition) * (ShakeStiffness * dt);
+                _shakerVel *= Mathf.Exp(-ShakeDamping * dt);
+                _shakerVessel.anchoredPosition += _shakerVel * dt;
+                _shakerVessel.localRotation =
+                    Quaternion.Euler(0, 0, Mathf.Clamp(-_shakerVel.x * 0.02f, -24f, 24f));
+
+                // The liquid sloshes opposite to the throw and ripples harder the faster it goes.
+                float lateral = -_shakerVel.x / Mathf.Max(_pourSurface.rect.width, 1f) * 0.22f;
+                _shakerFluid.Disturb(lateral, 0.006f + 0.02f * (float)_shakeEnergy);
+            }
 
             _shakeMeterFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(200f * (float)_shakeEnergy), -4);
             _shakeMeterFill.color = Color.Lerp(UITheme.Amber[3], UITheme.Lime[3], (float)_shakeEnergy);
@@ -522,7 +541,7 @@ namespace LastCall.DebugUI
                     var colour = DrinkColor(run.Glass);
                     _serveFluid.SetColor(colour);
                     float landX = Mathf.Lerp(mouth.x + (mouth.x - opening.x) * 1.5f, opening.x, (float)accuracy);
-                    var streamVel = new Vector2((landX - mouth.x) * 2.0f, -260f);
+                    var streamVel = new Vector2((landX - mouth.x) * 1.8f, -225f);
                     _serveFluid.EmitStream(mouth, streamVel, Time.deltaTime);
                 }
             }
@@ -677,7 +696,7 @@ namespace LastCall.DebugUI
 
             var hint = NewText("Hint", _shakerPanel, _body, 12, TextAnchor.UpperCenter, UITheme.TextSecondary);
             Stretch(hint.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -64), new Vector2(0, -46));
-            hint.text = "GRAB THE BOTTLE · LIFT IT TO TIP · POUR INTO THE SHAKER";
+            hint.text = "GRAB THE BOTTLE TO POUR  ·  GRAB THE SHAKER TO SHAKE IT";
 
             // The play surface: bottle and shaker live in here, mouse-local.
             _pourSurface = NewRect("PourSurface", _shakerPanel);
@@ -686,9 +705,11 @@ namespace LastCall.DebugUI
             surfImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.5f);
             surfImg.raycastTarget = false;
 
-            // The shaker vessel: a tapered tin, opening at the top, left of centre.
+            // The shaker vessel: a tapered tin, opening at the top, left of centre. Grab it to
+            // shake — it becomes the toy you throw around.
+            _shakerHome = new Vector2(-120, -30);
             _shakerVessel = NewRect("Shaker", _pourSurface);
-            Place(_shakerVessel, new Vector2(0.5f, 0.5f), new Vector2(120, 190), new Vector2(-120, -30));
+            Place(_shakerVessel, new Vector2(0.5f, 0.5f), new Vector2(120, 190), _shakerHome);
             _shakerVessel.gameObject.AddComponent<Image>().color = UITheme.Cream[2];
             var tin = NewRect("Tin", _shakerVessel);   // the dark interior the fluid pools into
             Stretch(tin, Vector2.zero, Vector2.one, new Vector2(6, 6), new Vector2(-6, -22));
@@ -697,6 +718,18 @@ namespace LastCall.DebugUI
             var lip = NewRect("Lip", _shakerVessel);   // the open mouth
             Place(lip, new Vector2(0.5f, 1), new Vector2(128, 16), new Vector2(0, 0));
             lip.gameObject.AddComponent<Image>().color = UITheme.Cream[3];
+
+            // Grabbing the shaker (once it holds a drink) starts a free, loose shake.
+            var shakeGrab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            shakeGrab.callback.AddListener(_ =>
+            {
+                if (Run == null || Run.Glass.IsEmpty) { _shakerReadout.text = "pour something to shake"; return; }
+                _shaking = true;
+                _shakeEnergy = 0;
+                _shakerVel = Vector2.zero;
+                _lastShakeMouse = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
+            });
+            _shakerVessel.gameObject.AddComponent<EventTrigger>().triggers.Add(shakeGrab);
 
             // The metaball fluid draws over the vessel (pool) and above it (stream); the bottle
             // and prep pieces are created after it, so they sit in front of the liquid.
@@ -760,22 +793,13 @@ namespace LastCall.DebugUI
             _shakeMeterText = NewText("ShakeText", _shakerPanel, _body, 11, TextAnchor.UpperCenter, UITheme.TextSecondary);
             Place(_shakeMeterText.rectTransform, new Vector2(0.5f, 0), new Vector2(240, 16), new Vector2(0, 86));
 
-            // Bottom bar: the shake pad (hold and shake the mouse) and DONE.
-            var pad = NewRect("ShakePad", _shakerPanel);
+            // Bottom bar: a hint (the shaker itself is the toy now) and DONE.
+            var pad = NewRect("ShakeHint", _shakerPanel);
             Place(pad, new Vector2(0.5f, 0), new Vector2(300, 40), new Vector2(-160, 12));
-            pad.gameObject.AddComponent<Image>().color = UITheme.ClubBlue[2];
-            var padDown = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
-            padDown.callback.AddListener(_ =>
-            {
-                if (Run == null || Run.Glass.IsEmpty) { _shakerReadout.text = "pour something to shake"; return; }
-                _shaking = true;
-                _shakeEnergy = 0;
-                _lastShakeMouse = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
-            });
-            pad.gameObject.AddComponent<EventTrigger>().triggers.Add(padDown);
-            var padLabel = NewText("Label", pad, _body, 12, TextAnchor.MiddleCenter, UITheme.Cream[4]);
+            pad.gameObject.AddComponent<Image>().color = UITheme.Night[3];
+            var padLabel = NewText("Label", pad, _body, 12, TextAnchor.MiddleCenter, UITheme.Cyan[4]);
             Stretch(padLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            padLabel.text = "HOLD · SHAKE THE MOUSE";
+            padLabel.text = "↔  GRAB THE SHAKER · SHAKE IT";
 
             var back = NewRect("Back", _shakerPanel);
             Place(back, new Vector2(0.5f, 0), new Vector2(300, 40), new Vector2(160, 12));

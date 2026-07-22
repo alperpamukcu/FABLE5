@@ -98,6 +98,26 @@ Shader "LastCall/MetaballLiquid"
             float  _PoolStrength;
             float4 _Drops[MAX_DROPS];   // xy = uv position, z = radius px, w = active flag
 
+            // Live water surface (2026-07-22): the top of the pool is not a flat line but a
+            // wave that tilts side to side (slosh) and ripples, driven from MetaballFluid.cs.
+            float _SurfTilt;      // uv height gained per uv.x away from centre (the slosh)
+            float _SurfCenterX;   // uv x the tilt pivots around (pool centre)
+            float _WaveAmp;       // uv amplitude of the surface ripple
+            float _WaveKA;        // ripple wavenumber (rad/px)
+            float _WavePhaseA;
+            float _WaveKB;
+            float _WavePhaseB;
+
+            // The liquid line at a given uv.x: the resting level, tilted by the slosh and
+            // rippled by two travelling waves.
+            float surfaceY (float ux)
+            {
+                float px = ux * _Size.x;
+                float w = _WaveAmp * (0.6 * sin(_WaveKA * px + _WavePhaseA)
+                                    + 0.4 * sin(_WaveKB * px + _WavePhaseB));
+                return _PoolTopY + _SurfTilt * (ux - _SurfCenterX) + w;
+            }
+
             v2f vert (appdata_t v)
             {
                 v2f o;
@@ -128,14 +148,15 @@ Shader "LastCall/MetaballLiquid"
                 return field;
             }
 
-            // The pooled liquid: a rectangle clipped to the glass interior, soft at the top so
-            // falling drops melt into the surface as they land.
+            // The pooled liquid: clipped to the glass interior, its top a live water surface
+            // (tilted + rippled) so falling drops melt into a moving line, not a flat lid.
             float poolField (float2 uv)
             {
                 float soft = max(_PoolEdgeSoft, 0.0001);
                 float xIn = smoothstep(_PoolMinX - soft, _PoolMinX + soft, uv.x) *
                             (1.0 - smoothstep(_PoolMaxX - soft, _PoolMaxX + soft, uv.x));
-                float yBelow = 1.0 - smoothstep(_PoolTopY - soft * 1.5, _PoolTopY + soft * 1.5, uv.y);
+                float surf = surfaceY(uv.x);
+                float yBelow = 1.0 - smoothstep(surf - soft * 1.5, surf + soft * 1.5, uv.y);
                 float yAbove = smoothstep(_PoolBottomY - soft, _PoolBottomY + soft, uv.y);
                 return xIn * yBelow * yAbove * _PoolStrength;
             }
@@ -155,9 +176,12 @@ Shader "LastCall/MetaballLiquid"
                 rim = pow(rim, 1.5);
                 fixed4 col = lerp(_Color, _EdgeColor, rim * 0.85);
 
-                // A soft sheen just under the pooled surface, so the body reads as wet volume.
-                float sheen = saturate((uv.y - _PoolTopY) * 6.0 + 0.55) * _Highlight;
-                col.rgb += sheen * 0.22;
+                // A bright band riding just under the moving water line — the light on the
+                // surface — plus a soft sheen through the body so it reads as wet volume.
+                float surf = surfaceY(uv.x);
+                float band = saturate(1.0 - abs(uv.y - surf) * 26.0);
+                float sheen = saturate((uv.y - surf) * 5.0 + 0.5);
+                col.rgb += (band * 0.5 + sheen * 0.18) * _Highlight;
 
                 col.a = a * _Color.a * IN.color.a;
                 return col;
