@@ -61,13 +61,19 @@ namespace LastCall.DebugUI
         private const float MaxTilt = 118f;    // degrees the bottle leans at full lift
         private const float BottleH = 150f;
 
+        // The serve pour uses the same tilt model (GDD 24 §3): grab the shaker, tip it over
+        // the glass. How well the mouth lines up over the glass is the aim — off-centre spills.
         private Text _serveShakerText;
         private Text _serveGlassText;
-        private RectTransform _servePourZone;
-        private Image _aimFill;
+        private RectTransform _serveSurface;
+        private RectTransform _serveGlass;      // the target
+        private RectTransform _serveShaker;     // the grabbable shaker
+        private Image _serveShakerBody;
+        private Image _serveStream;
         private Text _aimText;
-        private bool _servePourHeld;
-        private const float ServePourRate = 0.6f;   // glass-fractions per second
+        private Vector2 _serveShakerRest;
+        private bool _serveGrabbed;
+        private const float ServePourRate = 0.7f;   // glass-fractions per second
 
         private void Awake()
         {
@@ -102,13 +108,7 @@ namespace LastCall.DebugUI
 
             if (_stage == Stage.Shaker) UpdateTiltPour(run);
 
-            if (_stage == Stage.Serve && _servePourHeld)
-            {
-                double before = run.ServingGlass.TotalVolume;
-                run.PourIntoServingGlass(ServePourRate * Time.deltaTime, CurrentAim());
-                if (run.Glass.IsEmpty || run.ServingGlass.FillFraction >= 1.0) _servePourHeld = false;
-                if (run.ServingGlass.TotalVolume != before || !_servePourHeld) RefreshServe();
-            }
+            if (_stage == Stage.Serve) UpdateServeTilt(run);
         }
 
         // ── stage transitions ────────────────────────────────────────────────────
@@ -118,7 +118,7 @@ namespace LastCall.DebugUI
             _stage = stage;
             _bottleGrabbed = false;
             _pouring = false;
-            _servePourHeld = false;
+            _serveGrabbed = false;
             if (Run != null && Run.PouringId != null) Run.EndPour();
 
             _root.gameObject.SetActive(stage != Stage.Closed);
@@ -277,29 +277,84 @@ namespace LastCall.DebugUI
                 ? "shaker empty"
                 : $"shaker {run.Glass.FillFraction:P0} left";
             _serveGlassText.text = run.ServingGlass.IsEmpty
-                ? "glass empty — hold to pour"
+                ? "glass empty"
                 : $"glass {run.ServingGlass.FillFraction:P0} full";
+            _serveShaker.anchoredPosition = _serveShakerRest;
+            _serveShaker.localRotation = Quaternion.identity;
+            _serveStream.gameObject.SetActive(false);
+            _aimText.text = "GRAB THE SHAKER · TIP IT OVER THE GLASS";
         }
 
         /// <summary>
-        /// Aim accuracy from the cursor's horizontal offset inside the pour zone: dead centre
-        /// over the glass is a clean pour, drifting to the edges spills (GDD 24 §3).
+        /// One frame of the serve pour (GDD 24 §3): the shaker tips the same way the bottle
+        /// did. How well the mouth lines up over the glass is the aim — dead over the glass
+        /// pours clean, drifting off spills, and a full pour still drains the shaker.
         /// </summary>
-        private double CurrentAim()
+        private void UpdateServeTilt(TycoonRun run)
         {
-            if (Mouse.current == null) return 1.0;
-            Vector2 screen = Mouse.current.position.ReadValue();
-            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    _servePourZone, screen, null, out Vector2 local))
-                return 0.0;
-            float half = _servePourZone.rect.width * 0.5f;
-            if (half <= 0) return 1.0;
-            double aim = 1.0 - Mathf.Abs(local.x) / half;
-            aim = Mathf.Clamp01((float)aim);
-            _aimFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(200f * (float)aim), -4);
-            _aimFill.color = Color.Lerp(UITheme.ViceRed[3], UITheme.Lime[3], (float)aim);
-            _aimText.text = _servePourHeld ? $"AIM {aim:P0}" : "hold & aim over the glass";
-            return aim;
+            if (Mouse.current == null) return;
+            if (_serveGrabbed && !Mouse.current.leftButton.isPressed) _serveGrabbed = false;
+
+            bool pourNow = false;
+            double accuracy = 0;
+            if (_serveGrabbed && !run.Glass.IsEmpty &&
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _serveSurface, Mouse.current.position.ReadValue(), null, out Vector2 local))
+            {
+                float halfW = _serveSurface.rect.width * 0.5f;
+                float halfH = _serveSurface.rect.height * 0.5f;
+                local.x = Mathf.Clamp(local.x, -halfW + 30f, halfW - 30f);
+                local.y = Mathf.Clamp(local.y, -halfH + 20f, halfH - 20f);
+                _serveShaker.anchoredPosition = local;
+
+                float lift = Mathf.Clamp01((local.y - _serveShakerRest.y) / LiftRange);
+                float tilt = lift * MaxTilt;
+                _serveShaker.localRotation = Quaternion.Euler(0, 0, tilt);
+
+                float rad = tilt * Mathf.Deg2Rad;
+                Vector2 mouth = local + new Vector2(-Mathf.Sin(rad), Mathf.Cos(rad)) * (BottleH * 0.78f);
+                var opening = _serveGlass.anchoredPosition + new Vector2(0, _serveGlass.rect.height * 0.5f);
+
+                if (tilt > 42f && mouth.y > opening.y - 30f)
+                {
+                    // Aim: how well the mouth is centred over the glass. Within ~half the
+                    // glass width is a clean pour; beyond that it spills more the further off.
+                    accuracy = Mathf.Clamp01(1f - Mathf.Abs(mouth.x - opening.x) / 90f);
+                    pourNow = true;
+                }
+                DrawServeStream(mouth, opening, pourNow, accuracy);
+            }
+            else
+            {
+                _serveStream.gameObject.SetActive(false);
+            }
+
+            if (pourNow)
+            {
+                double before = run.ServingGlass.TotalVolume;
+                run.PourIntoServingGlass(ServePourRate * Time.deltaTime, accuracy);
+                if (run.Glass.IsEmpty || run.ServingGlass.FillFraction >= 1.0) _serveGrabbed = false;
+                if (run.ServingGlass.TotalVolume != before) RefreshServeText(run, accuracy);
+            }
+        }
+
+        private void RefreshServeText(TycoonRun run, double accuracy)
+        {
+            _serveShakerText.text = $"shaker {run.Glass.FillFraction:P0} left";
+            _serveGlassText.text = $"glass {run.ServingGlass.FillFraction:P0} full";
+            _aimText.text = accuracy > 0.8 ? "CLEAN POUR" : accuracy > 0.4 ? "SOME SPILL" : "SPILLING!";
+            _aimText.color = Color.Lerp(UITheme.ViceRed[3], UITheme.Lime[3], (float)accuracy);
+        }
+
+        private void DrawServeStream(Vector2 mouth, Vector2 opening, bool on, double accuracy)
+        {
+            if (!on) { _serveStream.gameObject.SetActive(false); return; }
+            _serveStream.gameObject.SetActive(true);
+            var rt = _serveStream.rectTransform;
+            rt.anchoredPosition = new Vector2(mouth.x, (mouth.y + opening.y) * 0.5f);
+            rt.sizeDelta = new Vector2(5f, Mathf.Max(8f, mouth.y - opening.y));
+            var c = Color.Lerp(UITheme.ViceRed[3], UITheme.Cyan[4], (float)accuracy);
+            _serveStream.color = new Color(c.r, c.g, c.b, 0.85f);
         }
 
         // ── construction ─────────────────────────────────────────────────────────
@@ -466,7 +521,7 @@ namespace LastCall.DebugUI
         private void BuildServePanel()
         {
             _servePanel = NewRect("ServePanel", _root);
-            Place(_servePanel, new Vector2(0.5f, 0.5f), new Vector2(600, 460), Vector2.zero);
+            Place(_servePanel, new Vector2(0.5f, 0.5f), new Vector2(720, 520), Vector2.zero);
             _servePanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
             Swallow(_servePanel);
 
@@ -475,39 +530,55 @@ namespace LastCall.DebugUI
             title.text = "POUR THE GLASS";
 
             _serveShakerText = NewText("Shaker", _servePanel, _body, 13, TextAnchor.UpperLeft, UITheme.TextSecondary);
-            Place(_serveShakerText.rectTransform, new Vector2(0, 1), new Vector2(260, 24), new Vector2(20, -56));
+            Place(_serveShakerText.rectTransform, new Vector2(0, 1), new Vector2(280, 24), new Vector2(20, -46));
             _serveGlassText = NewText("Glass", _servePanel, _body, 13, TextAnchor.UpperRight, UITheme.TextPrimary);
-            Place(_serveGlassText.rectTransform, new Vector2(1, 1), new Vector2(260, 24), new Vector2(-20, -56));
+            Place(_serveGlassText.rectTransform, new Vector2(1, 1), new Vector2(280, 24), new Vector2(-20, -46));
 
-            // The pour zone: hold and keep the cursor centred over the glass. Off-centre spills.
-            _servePourZone = NewRect("PourZone", _servePanel);
-            Place(_servePourZone, new Vector2(0.5f, 0.5f), new Vector2(420, 200), new Vector2(0, 20));
-            var zoneImg = _servePourZone.gameObject.AddComponent<Image>();
-            zoneImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.6f);
-            HoldTrigger(_servePourZone, () => _servePourHeld = Run != null && !Run.Glass.IsEmpty,
-                () => _servePourHeld = false);
-            // A target band down the middle marks the glass mouth.
-            var target = NewRect("Target", _servePourZone);
-            Place(target, new Vector2(0.5f, 0.5f), new Vector2(60, 200), Vector2.zero);
-            var targetImg = target.gameObject.AddComponent<Image>();
-            targetImg.color = new Color(UITheme.Cyan[3].r, UITheme.Cyan[3].g, UITheme.Cyan[3].b, 0.28f);
-            targetImg.raycastTarget = false;
-            var zoneLabel = NewText("Label", _servePourZone, _display, 13, TextAnchor.MiddleCenter, UITheme.TextSecondary);
-            Stretch(zoneLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            zoneLabel.text = "HOLD & AIM";
-            zoneLabel.raycastTarget = false;
+            _aimText = NewText("AimText", _servePanel, _body, 13, TextAnchor.UpperCenter, UITheme.TextSecondary);
+            Stretch(_aimText.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -70), new Vector2(0, -46));
 
-            var aimBg = NewRect("AimBg", _servePanel);
-            Place(aimBg, new Vector2(0.5f, 0), new Vector2(200, 12), new Vector2(0, 96));
-            aimBg.gameObject.AddComponent<Image>().color = UITheme.Night[0];
-            var aimFill = NewRect("AimFill", aimBg);
-            aimFill.anchorMin = new Vector2(0, 0); aimFill.anchorMax = new Vector2(0, 1);
-            aimFill.pivot = new Vector2(0, 0.5f); aimFill.offsetMin = new Vector2(2, 2);
-            aimFill.offsetMax = new Vector2(2, -2); aimFill.anchoredPosition = new Vector2(2, 0);
-            _aimFill = aimFill.gameObject.AddComponent<Image>();
-            _aimFill.raycastTarget = false;
-            _aimText = NewText("AimText", _servePanel, _body, 12, TextAnchor.UpperCenter, UITheme.TextSecondary);
-            Place(_aimText.rectTransform, new Vector2(0.5f, 0), new Vector2(300, 20), new Vector2(0, 112));
+            // The play surface: the glass sits centre-left, the shaker rests lower-right.
+            _serveSurface = NewRect("ServeSurface", _servePanel);
+            Stretch(_serveSurface, Vector2.zero, Vector2.one, new Vector2(20, 84), new Vector2(-20, -82));
+            var surfImg = _serveSurface.gameObject.AddComponent<Image>();
+            surfImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.5f);
+            surfImg.raycastTarget = false;
+
+            // The serving glass (a simple tumbler outline), opening at the top.
+            _serveGlass = NewRect("Glass", _serveSurface);
+            Place(_serveGlass, new Vector2(0.5f, 0.5f), new Vector2(96, 150), new Vector2(-120, -40));
+            _serveGlass.gameObject.AddComponent<Image>().color = UITheme.Cream[2];
+            var bowl = NewRect("Bowl", _serveGlass);
+            Stretch(bowl, Vector2.zero, Vector2.one, new Vector2(5, 5), new Vector2(-5, -14));
+            bowl.gameObject.AddComponent<Image>().color = UITheme.Night[3];
+            var rim = NewRect("Rim", _serveGlass);
+            Place(rim, new Vector2(0.5f, 1), new Vector2(104, 12), new Vector2(0, 0));
+            rim.gameObject.AddComponent<Image>().color = UITheme.Cyan[3];
+
+            var stream = NewRect("Stream", _serveSurface);
+            stream.pivot = new Vector2(0.5f, 0.5f);
+            _serveStream = stream.gameObject.AddComponent<Image>();
+            _serveStream.raycastTarget = false;
+            stream.gameObject.SetActive(false);
+
+            // The grabbable shaker, resting lower-right.
+            _serveShakerRest = new Vector2(160, -70);
+            _serveShaker = NewRect("Shaker", _serveSurface);
+            _serveShaker.pivot = new Vector2(0.5f, 0.22f);
+            _serveShaker.sizeDelta = new Vector2(64, BottleH);
+            _serveShaker.anchoredPosition = _serveShakerRest;
+            _serveShakerBody = _serveShaker.gameObject.AddComponent<Image>();
+            _serveShakerBody.color = UITheme.Cream[3];
+            var cap = NewRect("Cap", _serveShaker);
+            Place(cap, new Vector2(0.5f, 1), new Vector2(40, 22), new Vector2(0, 0));
+            cap.gameObject.AddComponent<Image>().color = UITheme.Cream[4];
+            var sgrab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            sgrab.callback.AddListener(_ =>
+            {
+                if (Run != null && Run.Phase == TycoonPhase.DayOpen && !Run.Glass.IsEmpty)
+                    _serveGrabbed = true;
+            });
+            _serveShaker.gameObject.AddComponent<EventTrigger>().triggers.Add(sgrab);
 
             var back = NewRect("Back", _servePanel);
             Place(back, new Vector2(0.5f, 0), new Vector2(240, 34), new Vector2(-130, 12));
@@ -576,20 +647,6 @@ namespace LastCall.DebugUI
             Stretch(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(28, 0), new Vector2(-8, 0));
             text.text = label;
             return rt;
-        }
-
-        private static void HoldTrigger(RectTransform rt, Action onDown, Action onUp)
-        {
-            var trigger = rt.gameObject.AddComponent<EventTrigger>();
-            var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
-            down.callback.AddListener(_ => onDown());
-            trigger.triggers.Add(down);
-            var up = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
-            up.callback.AddListener(_ => onUp());
-            trigger.triggers.Add(up);
-            var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
-            exit.callback.AddListener(_ => onUp());
-            trigger.triggers.Add(exit);
         }
 
         /// <summary>Stops a panel's own clicks from falling through to the scrim's close.</summary>
