@@ -9,6 +9,9 @@
   art, still cosmetic-only over the deterministic pour. Also: the pre-menu stage dressing
   (top-left pour-glass HUD, on-counter bottle rail, garnish jars) is retired, and the cash
   register opens a **ledger of past days** (`24 §7`).
+- `24 §4` **faces at the bar (2026-07-22):** each occupied stool now shows the customer's
+  archetype portrait beside the order ticket, souring red over the last third of patience —
+  an interim step toward the P8 physical-customer characters, using art that already exists.
 - NEW `23_tycoon_loop.md` — **the loop is a business now**: up to 6 simultaneous seated
   customers ordering named drinks, patience clocks, price+tip payments (mood tips from the
   emotion read), extra orders on perfect serves, days of 8+ customers, a day-end invoice,

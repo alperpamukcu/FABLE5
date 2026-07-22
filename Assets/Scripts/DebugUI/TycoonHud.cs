@@ -43,6 +43,7 @@ namespace LastCall.DebugUI
         {
             public RectTransform Root;
             public Image Frame;
+            public Image Portrait;      // the customer's face — a person at the bar, not a text box
             public Text Name;
             public Text Wants;
             public Text Order;
@@ -251,6 +252,7 @@ namespace LastCall.DebugUI
                 if (locked)
                 {
                     view.Frame.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.85f);
+                    view.Portrait.gameObject.SetActive(false);
                     view.Name.text = "";
                     view.Wants.text = "";
                     view.Order.text = "LOCKED STOOL";
@@ -262,6 +264,7 @@ namespace LastCall.DebugUI
                 if (view.Visit == null)
                 {
                     view.Frame.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.92f);
+                    view.Portrait.gameObject.SetActive(false);
                     view.Name.text = "EMPTY STOOL";
                     view.Name.color = UITheme.Cream[2];
                     view.Wants.text = "";
@@ -280,11 +283,18 @@ namespace LastCall.DebugUI
                 view.Name.color = UITheme.TextPrimary;
                 view.Order.color = UITheme.Amber[4];
 
+                // The face at the bar. A real portrait when we have one, a neutral bust when we
+                // don't; it sours (reddens) over the last of their patience — anger you can see.
+                var sprite = stage != null && visit.Regular != null
+                    ? stage.PortraitSpriteFor(visit.Regular.ArchetypeId) : null;
+                view.Portrait.sprite = sprite;
+                view.Portrait.gameObject.SetActive(true);
+
                 // The always-visible half of the read (GDD 19 §3); tap the seat for the full
                 // licence (GDD 24 §5). "TAP TO READ" nudges the newcomer.
                 view.Wants.text = visit.Read == null ? "TAP TO READ" :
-                    (visit.Read.Direction == IntentDirection.Extinguish ? "settle " : "lift ")
-                    + visit.Read.Intent.ToString().ToUpperInvariant() + "   · tap to read";
+                    (visit.Read.Direction == IntentDirection.Extinguish ? "SETTLE " : "LIFT ")
+                    + visit.Read.Intent.ToString().ToUpperInvariant();
 
                 view.Order.text = $"{visit.Order.Wanted.Name.ToUpperInvariant()}  ${visit.Order.Price}";
 
@@ -292,6 +302,11 @@ namespace LastCall.DebugUI
                 view.PatienceFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(186f * patience), -2);
                 view.PatienceFill.color = patience > 0.5f ? UITheme.Lime[3]
                     : patience > 0.25f ? UITheme.Amber[3] : UITheme.ViceRed[3];
+
+                // Sour the face over the last third of their patience.
+                float mood = Mathf.Clamp01(patience / 0.35f);
+                var calm = sprite != null ? Color.white : new Color(0.62f, 0.55f, 0.60f, 1f);
+                view.Portrait.color = Color.Lerp(new Color(0.80f, 0.28f, 0.30f, 1f), calm, mood);
 
                 // The frame heats up as patience drains — anger readable at a glance. When a
                 // drink is built and waiting, every seat glows cyan: "hand it over here".
@@ -651,14 +666,27 @@ namespace LastCall.DebugUI
                 button.targetGraphic = seat.Frame;
                 button.onClick.AddListener(() => OnSeatClicked(index));
 
-                seat.Name = NewText("Name", seat.Root, _body, 13, TextAnchor.UpperLeft, UITheme.TextPrimary);
-                Stretch(seat.Name.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 0), new Vector2(-8, -6));
+                // The customer's face, top-left — the person sitting at the bar. The order
+                // ticket (name/read/order/patience) sits to their right.
+                var portrait = NewRect("Portrait", seat.Root);
+                Place(portrait, new Vector2(0, 1), new Vector2(56, 56), new Vector2(8, -6));
+                seat.Portrait = portrait.gameObject.AddComponent<Image>();
+                seat.Portrait.preserveAspect = true;
+                seat.Portrait.raycastTarget = false;
+                seat.Portrait.gameObject.SetActive(false);
 
-                seat.Wants = NewText("Wants", seat.Root, _body, 12, TextAnchor.UpperLeft, UITheme.Cyan[4]);
-                Stretch(seat.Wants.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 0), new Vector2(-8, -26));
+                const float textX = 70f;   // clear of the portrait
+                seat.Name = NewText("Name", seat.Root, _body, 13, TextAnchor.UpperLeft, UITheme.TextPrimary);
+                Stretch(seat.Name.rectTransform, Vector2.zero, Vector2.one, new Vector2(textX, 0), new Vector2(-6, -5));
+                seat.Name.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+                seat.Wants = NewText("Wants", seat.Root, _body, 11, TextAnchor.UpperLeft, UITheme.Cyan[4]);
+                Stretch(seat.Wants.rectTransform, Vector2.zero, Vector2.one, new Vector2(textX, 0), new Vector2(-6, -24));
+                seat.Wants.horizontalOverflow = HorizontalWrapMode.Overflow;
 
                 seat.Order = NewText("Order", seat.Root, _body, 12, TextAnchor.UpperLeft, UITheme.Amber[4]);
-                Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 0), new Vector2(-8, -46));
+                Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(textX, 0), new Vector2(-6, -42));
+                seat.Order.horizontalOverflow = HorizontalWrapMode.Overflow;
 
                 var clockBg = NewRect("ClockBg", seat.Root);
                 clockBg.anchorMin = new Vector2(0, 0); clockBg.anchorMax = new Vector2(1, 0);

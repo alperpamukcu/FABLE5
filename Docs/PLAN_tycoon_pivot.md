@@ -64,8 +64,11 @@ Gate met: human-playable end-to-end + sim reporting tycoon metrics.
 - ☑ Verified live: menu/shaker/serve panels render; a 0.5-accuracy serve pour landed 0.35 of
   a 0.7 shaker (half spilled) and delivered a 35%-full glass — spill-by-aim works
 Gate met: a full drink is built start-to-finish through the new flow only; spilling is real.
-- ◐ Polish deferred to P8: shake is a button (hold+move mouse animation), pour streams are
-  bars not liquid, the "menu prop" is a button not a counter object
+- ☑ Feel pass (2026-07-22, GDD 24 §3.5): pours are continuous `PourStream` ribbons to the
+  liquid line with a landing splash (not falling boxes), the fill is slower/deliberate, the
+  shaker liquid sloshes, and drag-preparations swing from the grip as a `Pendulum`
+- ◐ Polish still deferred to P8: the shaker/bottle/menu are procedural placeholders, not
+  drawn counter objects; the shake pad is a hold-zone, not the grabbed shaker itself
 
 ## P5 — Day-end presentation ☑
 - ☑ Invoice UI: an itemised receipt on cream card stock — served/walked-out, satisfaction +
@@ -122,8 +125,12 @@ scene boots the tycoon run; build size dropped ~5k lines of gameplay code + asse
 
 ## P8 — Art v3 + the hands-on interaction pass (GDD 24 §2–§5, §8)
 - ☐ New authoring reference (1280×720 logical), style guide refresh
-- ☐ **Seated customers as scene characters** (explicit request): walk in → sit → order →
-  wait → react → leave, gauges attached to the person; the P3 seat panels retire
+- ◐ **Seated customers as scene characters** (explicit request): walk in → sit → order →
+  wait → react → leave, gauges attached to the person; the P3 seat panels retire.
+  Interim (2026-07-22): each occupied stool now shows the customer's **archetype portrait**
+  beside the order ticket, the face souring red over the last third of their patience — the
+  bar reads as people, not text boxes. Full walk-in/react animation + per-person gauges owed
+  to the art pass.
 - ☑ **The tilt-pour**, both stages: grab the vessel, lift to tip (it leans left), line the
   mouth over the target → it streams; released on mouse-up. Bottle→shaker in the shaker
   stage; shaker→glass in the serve stage, where the mouth's alignment over the glass is the
