@@ -146,6 +146,24 @@ namespace LastCall.DebugUI
             if (_moneyText != null) _moneyText.text = text;
         }
 
+        private System.Action _onRegisterClicked;
+
+        /// <summary>Wires the till click to the ledger-history popup (GDD 24 §7).</summary>
+        public void SetRegisterHandler(System.Action onClick) => _onRegisterClicked = onClick;
+
+        /// <summary>
+        /// Retires the pre-menu stage dressing (2026-07-22): the pour glass HUD (top-left
+        /// goblet) and the on-counter bottle rail + garnish jars belonged to the old
+        /// shelf-click loop. Bottles live in the menu now, so the stage keeps only the bar
+        /// itself. Real back-bar scenery comes in the P8 art pass.
+        /// </summary>
+        public void HideBuildDressing()
+        {
+            if (_glassRoot != null) _glassRoot.gameObject.SetActive(false);
+            if (_glassRatios != null) _glassRatios.gameObject.SetActive(false);
+            if (_railRoot != null) _railRoot.gameObject.SetActive(false);
+        }
+
         /// <summary>
         /// Hides the single-patron props for the tycoon floor (PLAN P3): the seat row owns
         /// the customers now; the per-seat licence returns in P6.
@@ -345,7 +363,13 @@ namespace LastCall.DebugUI
                 reg.sizeDelta = new Vector2(regW, regW * registerSprite.rect.height / registerSprite.rect.width);
                 reg.anchoredPosition = new Vector2(RegisterX, CounterRestY);
                 var regImg = reg.gameObject.AddComponent<Image>();
-                regImg.sprite = registerSprite; regImg.preserveAspect = true; regImg.raycastTarget = false;
+                regImg.sprite = registerSprite; regImg.preserveAspect = true;
+                // The till is clickable: it opens the ledger of days gone by (GDD 24 §7).
+                regImg.raycastTarget = true;
+                var regBtn = reg.gameObject.AddComponent<Button>();
+                regBtn.targetGraphic = regImg;
+                regBtn.transition = Selectable.Transition.None;
+                regBtn.onClick.AddListener(() => _onRegisterClicked?.Invoke());
 
                 float plaqueY = CounterRestY + reg.sizeDelta.y - 18f;  // on the till's display
                 var plaque = NewRect("MoneyPlaque", root);
@@ -395,6 +419,10 @@ namespace LastCall.DebugUI
             BuildGlassHud(root);
             BuildMoodGauge(root);
             BuildIdCard();
+
+            // The old shelf-click dressing (top-left goblet, on-counter rail) is retired —
+            // building goes through the menu now. Hide it up front so it never flashes.
+            HideBuildDressing();
 
             if (!Motion.Reduced) StartCoroutine(Ambient());
         }

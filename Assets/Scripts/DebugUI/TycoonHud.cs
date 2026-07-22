@@ -58,6 +58,10 @@ namespace LastCall.DebugUI
         private RectTransform _openTomorrow;
         private Text _bannerText;
 
+        // ledger history (GDD 24 §7, 2026-07-22): the register opens the book of past days.
+        private RectTransform _ledgerPanel;
+        private RectTransform _ledgerRows;
+
         // ID card v2 (P6, GDD 24 §5): the licence you read a customer by.
         private RectTransform _idRoot;
         private Image _idPhoto;
@@ -69,7 +73,6 @@ namespace LastCall.DebugUI
 
         private TycoonServiceFlow _flow;
         private TycoonPhase _lastPhase = TycoonPhase.DayOpen;
-        private double _lastShakerVol = -1;
         private Text _toast;
         private float _toastUntil;
 
@@ -84,6 +87,7 @@ namespace LastCall.DebugUI
             _flow = GetComponent<TycoonServiceFlow>();
 
             BuildUi();
+            if (stage != null) stage.SetRegisterHandler(ToggleLedger);
         }
 
         private void OnDestroy()
@@ -94,15 +98,17 @@ namespace LastCall.DebugUI
         private void OnRunStarted()
         {
             _lastPhase = TycoonPhase.DayOpen;
-            _lastShakerVol = -1;
             _dayEndPanel.gameObject.SetActive(false);
             _bannerText.gameObject.SetActive(false);
             _flow?.CloseFlow();
             CloseId();
-            if (stage != null) stage.SetSoloCustomerVisible(false);
-            RefreshShelf(DiegeticStage.Exit.Refresh);
+            if (_ledgerPanel != null) _ledgerPanel.gameObject.SetActive(false);
+            if (stage != null)
+            {
+                stage.SetSoloCustomerVisible(false);
+                stage.HideBuildDressing();   // bottles live in the menu now (2026-07-22)
+            }
             ApplyBarLook();
-            RefreshGlass();
         }
 
         private void Update()
@@ -117,14 +123,6 @@ namespace LastCall.DebugUI
                 bool menuOpen = (_flow != null && _flow.IsOpen) ||
                                 (_idRoot != null && _idRoot.gameObject.activeSelf);
                 run.Tick(Time.deltaTime * (menuOpen ? (float)TycoonConfig.MenuTimeScale : 1f));
-            }
-
-            // Mirror the shaker onto the stage's top-left glass, but only when it actually
-            // changed — SetGlass rebuilds its layers, so a per-frame call would churn.
-            if (run.Glass.TotalVolume != _lastShakerVol)
-            {
-                _lastShakerVol = run.Glass.TotalVolume;
-                RefreshGlass();
             }
 
             if (run.Phase != _lastPhase)
@@ -160,7 +158,6 @@ namespace LastCall.DebugUI
             {
                 var verdict = run.ServeTo(visit);
                 CloseId();
-                RefreshGlass();
                 // Money is celebrated (GDD 24 §10): the payment floats up from the seat.
                 StartCoroutine(FloatMoney(index, verdict.Total));
             }
@@ -209,18 +206,9 @@ namespace LastCall.DebugUI
             var run = Run;
             if (run == null || run.Phase != TycoonPhase.DayOpen) return;
             run.DiscardGlass();
-            RefreshGlass();
         }
 
         // ── refresh ─────────────────────────────────────────────────────────────
-
-        private void RefreshShelf(DiegeticStage.Exit exit)
-        {
-            if (stage == null || Run == null) return;
-            // The bottles are scenery now (GDD 24 §1): building goes through the menu, so
-            // the shelf takes no pour callbacks.
-            stage.SetShelf(Run.Shelf, null, null, null, exit);
-        }
 
         /// <summary>Pushes the bought ambience upgrades onto the scene (GDD 24 §6).</summary>
         private void ApplyBarLook()
@@ -228,12 +216,6 @@ namespace LastCall.DebugUI
             var run = Run;
             if (stage == null || run == null) return;
             stage.ApplyBarLook(run.GlasswareTier, run.CounterTier, run.WallTier, run.HasMusician);
-        }
-
-        private void RefreshGlass()
-        {
-            if (stage == null || Run == null) return;
-            stage.SetGlass(Run.Glass, id => Run.Shelf.Find(id)?.Ingredient);
         }
 
         private void RefreshTopBar()
@@ -388,7 +370,6 @@ namespace LastCall.DebugUI
                 AddCard(offer.Bottle.Name.ToUpperInvariant(), "bought", offer.Price, !offer.Sold, () =>
                 {
                     run.BuyBrand(index);
-                    RefreshShelf(DiegeticStage.Exit.Refresh);
                     RebuildDayEnd();
                 });
             }
@@ -432,6 +413,7 @@ namespace LastCall.DebugUI
             var reg = visit.Regular;
             var read = visit.Read;
 
+            if (_ledgerPanel != null) _ledgerPanel.gameObject.SetActive(false);
             _idRoot.gameObject.SetActive(true);
             _idPhoto.sprite = stage != null ? stage.PortraitSpriteFor(reg.ArchetypeId) : null;
             _idPhoto.color = _idPhoto.sprite != null ? Color.white : UITheme.Night[3];
@@ -743,7 +725,91 @@ namespace LastCall.DebugUI
             _bannerText = NewText("Closed", root, _display, 22, TextAnchor.MiddleCenter, UITheme.ViceRed[3]);
             Place(_bannerText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(900, 120), new Vector2(0, 60));
             _bannerText.gameObject.SetActive(false);
+
+            BuildLedgerPanel(root);
         }
+
+        /// <summary>The register's book of past days (GDD 24 §7, 2026-07-22): a scrollable
+        /// list of every closed day — income, expenses, net, and the room's mood.</summary>
+        private void BuildLedgerPanel(RectTransform root)
+        {
+            _ledgerPanel = NewRect("Ledger", root);
+            Place(_ledgerPanel, new Vector2(0.5f, 0.5f), new Vector2(560, 560), new Vector2(0, 10));
+            var panelImg = _ledgerPanel.gameObject.AddComponent<Image>();
+            panelImg.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.98f);
+            // Catch clicks so the world behind the book stays untouched.
+            panelImg.raycastTarget = true;
+
+            var title = NewText("Title", _ledgerPanel, _display, 15, TextAnchor.MiddleCenter, UITheme.PrimaryAction);
+            Stretch(title.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -44), new Vector2(0, -10));
+            title.text = "THE REGISTER — DAYS PAST";
+
+            // Column header, then the rows on cream stock beneath it.
+            var header = NewText("Header", _ledgerPanel, _body, 12, TextAnchor.UpperLeft, UITheme.TextSecondary);
+            Place(header.rectTransform, new Vector2(0, 1), new Vector2(504, 20), new Vector2(28, -52));
+            header.text = "DAY      INCOME     EXPENSES     NET      MOOD";
+
+            var sheet = NewRect("Sheet", _ledgerPanel);
+            Place(sheet, new Vector2(0.5f, 1), new Vector2(508, 424), new Vector2(0, -76));
+            sheet.gameObject.AddComponent<Image>().color = UITheme.Cream[4];
+
+            _ledgerRows = NewRect("Rows", sheet);
+            Stretch(_ledgerRows, Vector2.zero, Vector2.one, new Vector2(12, 12), new Vector2(-12, -12));
+            var layout = _ledgerRows.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.spacing = 2;
+            layout.childControlHeight = false;
+            layout.childControlWidth = true;
+            layout.childForceExpandHeight = false;
+            layout.childForceExpandWidth = true;
+            layout.childAlignment = TextAnchor.UpperLeft;
+
+            NewButton(_ledgerPanel, "CLOSE", new Vector2(0.5f, 0),
+                new Vector2(200, 38), new Vector2(0, 18), UITheme.PrimaryAction, () => ToggleLedger());
+
+            _ledgerPanel.gameObject.SetActive(false);
+        }
+
+        /// <summary>Opens or closes the register's ledger; refreshes the rows on open.
+        /// The book and the licence never share the screen — opening one closes the other.</summary>
+        private void ToggleLedger()
+        {
+            if (_ledgerPanel == null || Run == null) return;
+            bool show = !_ledgerPanel.gameObject.activeSelf;
+            if (show) { CloseId(); RefreshLedger(); }
+            _ledgerPanel.gameObject.SetActive(show);
+        }
+
+        private void RefreshLedger()
+        {
+            for (int i = _ledgerRows.childCount - 1; i >= 0; i--)
+                Destroy(_ledgerRows.GetChild(i).gameObject);
+
+            var history = Run.Ledger.History;
+            if (history.Count == 0)
+            {
+                var empty = NewText("Empty", _ledgerRows, _body, 14, TextAnchor.UpperLeft, UITheme.Night[1]);
+                empty.rectTransform.sizeDelta = new Vector2(0, 28);
+                empty.text = "No days on the books yet — close a night first.";
+                return;
+            }
+
+            // Newest day on top: the last thing you did is the first thing you read.
+            for (int i = history.Count - 1; i >= 0; i--)
+            {
+                var d = history[i];
+                var row = NewText($"Day{d.Day}", _ledgerRows, _body, 14, TextAnchor.UpperLeft,
+                    d.Net < 0 ? UITheme.ViceRed[3] : UITheme.Night[1]);
+                row.rectTransform.sizeDelta = new Vector2(0, 24);
+                row.supportRichText = true;
+                string net = d.Net < 0 ? $"-${-d.Net}" : $"+${d.Net}";
+                row.text = $"Day {d.Day,-3}   ${d.Income,-6}   ${d.Expenses,-6}   {net,-6}   {MoodLabel(d.AverageSatisfaction)}";
+            }
+        }
+
+        private static string MoodLabel(double satisfaction) =>
+            satisfaction >= DayLedger.HighRollerBar ? "GREAT"
+            : satisfaction >= DayLedger.BrokeBar ? "OK"
+            : "SOUR";
 
         private void OnOpenTomorrow()
         {
@@ -753,10 +819,7 @@ namespace LastCall.DebugUI
             if (run.Phase == TycoonPhase.DayOpen)
             {
                 _lastPhase = TycoonPhase.DayOpen;
-                _lastShakerVol = -1;
-                RefreshShelf(DiegeticStage.Exit.Refresh);
                 ApplyBarLook();
-                RefreshGlass();
             }
         }
 
