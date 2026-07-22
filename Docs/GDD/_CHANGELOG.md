@@ -2,6 +2,15 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `23 §4–5` **emotion → recipe pivot (2026-07-22):** the emotion layer no longer drives play.
+  What you **read off the licence** is now the **drink recipe** (its ingredient bands) and the
+  **garnishes the customer wants** (on ice, a twist, a rim) — the ID card shows these where the
+  six moods used to be, and the seat tag hints "WANTS EXTRAS". Satisfaction keys off the drink
+  match, the garnish craft, and speed; getting every asked-for garnish on an exact, fast serve
+  earns another round. Garnishes lift satisfaction (and so reputation and the crowd's wealth)
+  rather than paying a direct tip, keeping the till predictable. The emotion data structures
+  stay dormant under the hood (customer generation still uses them); `MoodTipLanded` → `CraftLanded`.
+
 - `23 §4` **balance + fixes pass (2026-07-22):** the **wrong drink now pays nothing** (was
   half) and sours the room; the **speed tip scales** up to $4 for the right drink served
   fast, fading to nothing across a wider window (a slow serve just misses the tip). The

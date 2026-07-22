@@ -14,24 +14,25 @@ namespace LastCall.Core
         Wrong,
     }
 
-    /// <summary>The money and mood outcome of one serve (GDD 23 §4–§5).</summary>
+    /// <summary>The money and outcome of one serve (GDD 23 §4–§5).</summary>
     public sealed class ServiceVerdict
     {
         public OrderMatch Match { get; }
         public int BasePaid { get; }
         public int Tip { get; }
         public int Total => BasePaid + Tip;
-        public bool MoodTipLanded { get; }
+        /// <summary>They asked for garnishes and got every one of them (the craft read landed).</summary>
+        public bool CraftLanded { get; }
         public bool OrdersAgain { get; }
         public double Satisfaction { get; }
 
         public ServiceVerdict(OrderMatch match, int basePaid, int tip,
-            bool moodTipLanded, bool ordersAgain, double satisfaction)
+            bool craftLanded, bool ordersAgain, double satisfaction)
         {
             Match = match;
             BasePaid = basePaid;
             Tip = tip;
-            MoodTipLanded = moodTipLanded;
+            CraftLanded = craftLanded;
             OrdersAgain = ordersAgain;
             Satisfaction = satisfaction;
         }
@@ -44,23 +45,17 @@ namespace LastCall.Core
     /// </summary>
     public static class ServiceJudge
     {
-        // GDD 23 §4 — change these and the module table together.
-        public const int MoodTipThreshold = 8;     // intent movement that earns the tip
-        public const int MoodTipMin = 3;
-        public const int MoodTipMax = 5;
-        // Speed tip (2026-07-22 rebalance): the right drink served fast is what earns the big
-        // tip — up to SpeedTipMax, scaling down to nothing across the window. A slow serve
-        // simply misses the tip; it is never as bad as the wrong drink.
-        public const int SpeedTipMax = 4;
+        // GDD 23 §4. Emotion→recipe pivot (2026-07-22): the tip is the right drink served
+        // fast, nothing to do with a hidden mood. The garnish craft they asked for lifts
+        // satisfaction (and so the reputation and the crowd's wealth), and gates the extra
+        // round — but does not pay a direct tip, keeping the till predictable.
+        public const int SpeedTipMax = 4;          // biggest speed tip, at zero wait
         public const double SpeedTipWindow = 0.5;  // served inside the first half of patience
         // Widened 0.75 → 0.90 (2026-07-22): the extra order should reward *reading* someone
         // and serving their drink right, not also racing the clock. The user's ask was that
         // it be reachable, not fiendish — the skill is the read, the timing is a bonus (the
         // speed tip already pays that). Only a near-storm-off serve misses the extra round.
         public const double ExtraOrderWindow = 0.90;
-
-        /// <summary>High rollers add this to a landed mood tip (GDD 23 §7).</summary>
-        public const int HighRollerMoodBonus = 2;
 
         /// <summary>
         /// Compares the served glass to the order. Exact needs the named recipe; Close
@@ -79,14 +74,13 @@ namespace LastCall.Core
         }
 
         /// <summary>
-        /// Prices one serve. Wrong pays half and tips nothing; mood and speed tips stack on
-        /// Exact/Close; a perfect serve — exact, mood landed, comfortably inside patience —
-        /// earns another order (GDD 23 §5), deliberately reachable. The crowd's wealth tier
-        /// (GDD 23 §7) sweetens or sours the tips: high rollers tip bigger on a landed
-        /// mood, a broke crowd never tips for speed.
+        /// Prices one serve (emotion→recipe pivot, 2026-07-22). Wrong pays nothing; the right
+        /// drink pays full plus a speed tip that fades with the wait. The garnishes the
+        /// customer asked for — read off their licence — lift satisfaction when made and cost
+        /// it when missed, and getting them all (on an exact, fast serve) earns another round.
         /// </summary>
         public static ServiceVerdict Judge(CustomerVisit visit, OrderMatch match,
-            EmotionDelta applied, WealthTier crowd = WealthTier.Regular, double ambienceBonus = 0)
+            GlassContents delivered, WealthTier crowd = WealthTier.Regular, double ambienceBonus = 0)
         {
             if (visit == null) throw new ArgumentNullException(nameof(visit));
 
@@ -94,19 +88,15 @@ namespace LastCall.Core
             // drink (exact or close family) is paid in full.
             int basePaid = match == OrderMatch.Wrong ? 0 : visit.Order.Price;
 
-            bool moodLanded = false;
-            int moodTip = 0;
-            if (visit.Read != null && applied != null && match != OrderMatch.Wrong)
-            {
-                int move = applied[visit.Read.Intent];
-                int toward = visit.Read.Direction == IntentDirection.Extinguish ? -move : move;
-                if (toward >= MoodTipThreshold)
-                {
-                    moodLanded = true;
-                    moodTip = Math.Min(MoodTipMax, MoodTipMin + (toward - MoodTipThreshold) / 5);
-                    if (crowd == WealthTier.HighRoller) moodTip += HighRollerMoodBonus;
-                }
-            }
+            // The garnish craft: how many of the asked-for garnishes actually made it in.
+            var wanted = visit.Order.Garnishes;
+            int wantedCount = wanted?.Count ?? 0;
+            int matched = 0;
+            if (wantedCount > 0 && delivered != null && match != OrderMatch.Wrong)
+                foreach (var g in wanted) if (delivered.HasPreparation(g.Id)) matched++;
+            bool allMatched = matched == wantedCount;                  // plain orders qualify
+            bool craftLanded = wantedCount > 0 && allMatched;          // they wanted some, got them all
+            double garnishScore = wantedCount == 0 ? 1.0 : (double)matched / wantedCount;
 
             // The faster the right drink lands, the bigger the tip — full inside the window,
             // fading to nothing at its edge. A broke crowd never tips for speed.
@@ -119,17 +109,18 @@ namespace LastCall.Core
 
             double satisfaction =
                 (match == OrderMatch.Exact ? 0.9 : match == OrderMatch.Close ? 0.6 : 0.05)
+                + (wantedCount > 0 && match != OrderMatch.Wrong ? 0.15 * (garnishScore - 0.5) : 0.0)
                 - 0.3 * visit.WaitFraction
-                + (moodLanded ? 0.1 : 0.0)
                 + ambienceBonus;
             satisfaction = Math.Max(0.0, Math.Min(1.0, satisfaction));
 
-            bool ordersAgain = match == OrderMatch.Exact && moodLanded
+            // Another round is the reward for reading their garnish and nailing it — the
+            // exact drink, every garnish they asked for, comfortably inside patience.
+            bool ordersAgain = match == OrderMatch.Exact && craftLanded
                 && visit.WaitFraction < ExtraOrderWindow
                 && visit.ExtraOrdersTaken < CustomerVisit.MaxExtraOrders;
 
-            return new ServiceVerdict(match, basePaid, moodTip + speedTip,
-                moodLanded, ordersAgain, satisfaction);
+            return new ServiceVerdict(match, basePaid, speedTip, craftLanded, ordersAgain, satisfaction);
         }
 
         /// <summary>The type holding the biggest share of the glass.</summary>

@@ -251,7 +251,10 @@ namespace LastCall.Core
             var match = RatioRecipeMatcher.Match(delivered, _recipes, IngredientOf);
             var applied = PourResolver.Resolve(delivered, match, IngredientOf);
             var matchKind = ServiceJudge.Compare(visit.Order, match, delivered, IngredientOf);
-            var verdict = ServiceJudge.Judge(visit, matchKind, applied, CrowdToday, Ambience);
+            // Emotion→recipe pivot (2026-07-22): the verdict is priced off the drink and the
+            // garnishes they asked for, not a mood read. The emotion charge is still applied to
+            // the regular's dormant stats (harmless) so the customer model stays intact.
+            var verdict = ServiceJudge.Judge(visit, matchKind, delivered, CrowdToday, Ambience);
 
             visit.Regular?.Stats.Apply(applied);
             visit.Resolve(verdict, verdict.OrdersAgain ? RollOrder() : null);

@@ -127,19 +127,24 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void TheMoodTip_NeedsRealMovement_AndCapsAtFive()
+        public void TheGarnishCraft_LiftsSatisfaction_AndGatesTheExtraRound()
         {
-            var read = ReadOf(Emotion.Anger, IntentDirection.Extinguish);
+            var iced = new DrinkOrder(Spritz(), 6, new[] { Preparations.Ice });
 
-            var small = ServiceJudge.Judge(Visit(read: read), OrderMatch.Exact, Delta(Emotion.Anger, -5));
-            Assert.IsFalse(small.MoodTipLanded, "−5 is below the tip threshold");
+            var served = Glass(("gin", 0.5), ("soda", 0.5));
+            served.AddPreparation(Preparations.Ice);
+            var got = ServiceJudge.Judge(new CustomerVisit(iced, 60), OrderMatch.Exact, served);
+            Assert.IsTrue(got.CraftLanded, "they wanted ice and got it");
+            Assert.IsTrue(got.OrdersAgain);
 
-            var landed = ServiceJudge.Judge(Visit(read: read), OrderMatch.Exact, Delta(Emotion.Anger, -8));
-            Assert.IsTrue(landed.MoodTipLanded);
-            Assert.AreEqual(3 + 4, landed.Tip, "$3 mood + $4 speed at zero wait");
+            var plainGlass = Glass(("gin", 0.5), ("soda", 0.5));   // no ice
+            var missed = ServiceJudge.Judge(new CustomerVisit(iced, 60), OrderMatch.Exact, plainGlass);
+            Assert.IsFalse(missed.CraftLanded, "no ice — the craft was missed");
+            Assert.Less(missed.Satisfaction, got.Satisfaction, "missing the garnish sours them");
+            Assert.IsFalse(missed.OrdersAgain, "a missed garnish loses the extra round");
 
-            var big = ServiceJudge.Judge(Visit(read: read), OrderMatch.Exact, Delta(Emotion.Anger, -20));
-            Assert.AreEqual(5 + 4, big.Tip, "mood tip caps at $5");
+            // The garnish moves satisfaction, not the till: the tip is speed only.
+            Assert.AreEqual(got.Tip, missed.Tip);
         }
 
         [Test]
@@ -166,16 +171,26 @@ namespace LastCall.Tests
 
         // ── the extra order (GDD 23 §5) ─────────────────────────────────────────
 
+        /// <summary>An order with one garnish, and a glass that has it — a perfect craft serve.</summary>
+        private static DrinkOrder IcedOrder(int price = 10) =>
+            new DrinkOrder(Spritz(), price, new[] { Preparations.Ice });
+
+        private static GlassContents IcedGlass()
+        {
+            var g = Glass(("gin", 0.5), ("soda", 0.5));
+            g.AddPreparation(Preparations.Ice);
+            return g;
+        }
+
         [Test]
         public void APerfectServe_OrdersAnotherRound()
         {
-            var read = ReadOf(Emotion.Anger, IntentDirection.Extinguish);
-            var visit = Visit(price: 10, patience: 60, read: read);
+            var visit = new CustomerVisit(IcedOrder(10), 60);
 
-            var verdict = ServiceJudge.Judge(visit, OrderMatch.Exact, Delta(Emotion.Anger, -10));
+            var verdict = ServiceJudge.Judge(visit, OrderMatch.Exact, IcedGlass());
             Assert.IsTrue(verdict.OrdersAgain);
 
-            visit.Resolve(verdict, new DrinkOrder(Spritz(), 8));
+            visit.Resolve(verdict, IcedOrder(8));
 
             Assert.AreEqual(VisitState.Waiting, visit.State, "still on the stool");
             Assert.AreEqual(1, visit.ExtraOrdersTaken);
@@ -187,14 +202,12 @@ namespace LastCall.Tests
         [Test]
         public void ExtraOrders_CapAtTwo()
         {
-            var read = ReadOf(Emotion.Anger, IntentDirection.Extinguish);
-            var visit = Visit(read: read);
-            var delta = Delta(Emotion.Anger, -10);
+            var visit = new CustomerVisit(IcedOrder(), 60);
 
-            visit.Resolve(ServiceJudge.Judge(visit, OrderMatch.Exact, delta), new DrinkOrder(Spritz(), 6));
-            visit.Resolve(ServiceJudge.Judge(visit, OrderMatch.Exact, delta), new DrinkOrder(Spritz(), 6));
+            visit.Resolve(ServiceJudge.Judge(visit, OrderMatch.Exact, IcedGlass()), IcedOrder(6));
+            visit.Resolve(ServiceJudge.Judge(visit, OrderMatch.Exact, IcedGlass()), IcedOrder(6));
 
-            var third = ServiceJudge.Judge(visit, OrderMatch.Exact, delta);
+            var third = ServiceJudge.Judge(visit, OrderMatch.Exact, IcedGlass());
             Assert.IsFalse(third.OrdersAgain, "two extra rounds is the house limit");
 
             visit.Resolve(third);

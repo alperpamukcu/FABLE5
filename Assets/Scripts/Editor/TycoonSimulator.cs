@@ -154,7 +154,7 @@ namespace LastCall.EditorTools
         private sealed class Aggregate
         {
             public int Runs, Stuck, Bankruptcies, StormOffs, CustomersFinished;
-            public int Serves, Exact, Close, Wrong, MoodTips, SpeedTips, ExtraOrders;
+            public int Serves, Exact, Close, Wrong, CraftServes, SpeedTips, ExtraOrders;
             public double SatisfactionSum;
             public long IncomeSum, ExpenseSum;
             public int DaysClosed;
@@ -169,7 +169,7 @@ namespace LastCall.EditorTools
                 if (verdict.Match == OrderMatch.Exact) Exact++;
                 else if (verdict.Match == OrderMatch.Close) Close++;
                 else Wrong++;
-                if (verdict.MoodTipLanded) MoodTips++;
+                if (verdict.CraftLanded) CraftServes++;
                 if (verdict.OrdersAgain) ExtraOrders++;
             }
 
@@ -204,7 +204,7 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Avg daily satisfaction | {SatisfactionSum / Math.Max(1, DaysClosed):P0} |");
                 sb.AppendLine($"| Storm-offs | {Pct(StormOffs, CustomersFinished)} |");
                 sb.AppendLine($"| Serves Exact / Close / Wrong | {Pct(Exact, Serves)} / {Pct(Close, Serves)} / {Pct(Wrong, Serves)} |");
-                sb.AppendLine($"| Mood tips landed | {Pct(MoodTips, Serves)} |");
+                sb.AppendLine($"| Garnish craft landed | {Pct(CraftServes, Serves)} |");
                 sb.AppendLine($"| Extra orders earned (of serves) | {Pct(ExtraOrders, Serves)} |");
                 sb.AppendLine($"| Extra orders earned (of exact) | {Pct(ExtraOrders, Exact)} |");
                 sb.AppendLine();

@@ -94,12 +94,12 @@ namespace LastCall.DebugUI
         private RectTransform _ledgerPanel;
         private RectTransform _ledgerRows;
 
-        // ID card v2 (P6, GDD 24 §5): the licence you read a customer by.
+        // ID card (GDD 24 §5): the licence you read a customer by. Emotion→recipe pivot
+        // (2026-07-22): it now shows the drink's RECIPE and the garnishes they want, not moods.
         private RectTransform _idRoot;
         private Image _idPhoto;
         private Text _idName, _idAgeFrom, _idRel, _idIntent, _idOrder, _idGreeting;
-        private sealed class StatRow { public Text Tag; public Text Value; public Image Band; public RectTransform Track; }
-        private readonly Dictionary<Emotion, StatRow> _idRows = new Dictionary<Emotion, StatRow>();
+        private RectTransform _idRecipeRows;   // the ordered drink's ingredient bands
         private CustomerVisit _idVisit;
         private const float IdTrackW = 176f;
 
@@ -395,7 +395,7 @@ namespace LastCall.DebugUI
             var money = new StringBuilder();
             money.Append($"<color=#{amber}>${verdict.BasePaid}</color>");
             if (verdict.Tip > 0)
-                money.Append($"\n<color=#{lime}>+${verdict.Tip} tip{(verdict.MoodTipLanded ? " ♪" : "")}</color>");
+                money.Append($"\n<color=#{lime}>+${verdict.Tip} tip{(verdict.CraftLanded ? " ♪" : "")}</color>");
 
             var text = NewText("React", seat.parent, _display, 14, TextAnchor.LowerCenter, tone);
             text.supportRichText = true;
@@ -547,11 +547,8 @@ namespace LastCall.DebugUI
                     ? stage.PortraitSpriteFor(visit.Regular.ArchetypeId) : null;
                 view.Portrait.sprite = sprite;
 
-                // The always-visible half of the read (GDD 19 §3); tap the customer for the full
-                // licence (GDD 24 §5). "TAP TO READ" nudges the newcomer.
-                view.Wants.text = visit.Read == null ? "TAP TO READ" :
-                    (visit.Read.Direction == IntentDirection.Extinguish ? "SETTLE " : "LIFT ")
-                    + visit.Read.Intent.ToString().ToUpperInvariant();
+                // A glanceable tell that they want extras; the licence (GDD 24 §5) shows which.
+                view.Wants.text = visit.Order.Garnishes.Count > 0 ? "WANTS EXTRAS · TAP" : "TAP TO READ";
 
                 view.Order.text = $"{visit.Order.Wanted.Name.ToUpperInvariant()}  ${visit.Order.Price}";
 
@@ -719,70 +716,55 @@ namespace LastCall.DebugUI
 
         private void ShowId(CustomerVisit visit)
         {
-            if (visit?.Read == null || visit.Regular == null) return;
+            if (visit?.Regular == null) return;
             _idVisit = visit;
             var reg = visit.Regular;
-            var read = visit.Read;
 
             if (_ledgerPanel != null) _ledgerPanel.gameObject.SetActive(false);
             _idRoot.gameObject.SetActive(true);
             _idPhoto.sprite = stage != null ? stage.PortraitSpriteFor(reg.ArchetypeId) : null;
             _idPhoto.color = _idPhoto.sprite != null ? Color.white : UITheme.Night[3];
 
-            string demandHex = read.Demand == DemandLevel.Demanding ? "A62B44"
-                : read.Demand == DemandLevel.Particular ? "8F5A1E" : "2A5926";
             _idName.text = reg.Name.ToUpperInvariant();
             _idAgeFrom.text = $"AGE {reg.Age}\nFROM {reg.Hometown.ToUpperInvariant()}";
-            _idRel.text = (reg.Visits > 0
+            _idRel.text = reg.Visits > 0
                 ? $"{reg.Relationship.ToString().ToUpperInvariant()} · {reg.Visits} VISITS"
-                : "NEW FACE")
-                + $"  ·  <color=#{demandHex}>{Demands.Label(read.Demand).ToUpperInvariant()}</color>";
-
-            _idIntent.text =
-                (read.Direction == IntentDirection.Extinguish ? "WANTS: SETTLE " : "WANTS: LIFT ")
-                + $"<b>{read.Intent.ToString().ToUpperInvariant()}</b>"
-                + $"    ·    GLASS {read.FillPreference.ShortLabel.ToUpperInvariant()}";
+                : "NEW FACE";
 
             _idOrder.text = $"ORDER:  <b>{visit.Order.Wanted.Name.ToUpperInvariant()}</b>   ${visit.Order.Price}";
+
+            // The garnishes they want — the read (emotion→recipe pivot).
+            var garnishes = visit.Order.Garnishes;
+            _idIntent.text = garnishes.Count == 0
+                ? "WANTS:  NO GARNISH — SERVE IT CLEAN"
+                : "WANTS:  " + string.Join("   ·   ", garnishes.Select(g => g.Name.ToUpperInvariant()));
+
             _idGreeting.text = reg.Visits > 0
-                ? "« a familiar face — you know some of this already »"
-                : "« a stranger — read them as best you can »";
+                ? "« a familiar face — you know their usual »"
+                : "« a stranger — make what the licence says »";
 
-            foreach (var emotion in Emotions.All)
+            // The recipe: one row per ingredient band, coloured by type with its ratio range.
+            for (int i = _idRecipeRows.childCount - 1; i >= 0; i--)
+                Destroy(_idRecipeRows.GetChild(i).gameObject);
+            foreach (var band in visit.Order.Wanted.RatioRequirements)
             {
-                var row = _idRows[emotion];
-                var reading = read[emotion];
-                var ramp = UITheme.EmotionRamp[emotion];
-                var band = row.Track.gameObject.transform.GetChild(0) as RectTransform;
+                var ramp = UITheme.TypeRamp[band.Type];
+                var rowRect = NewRect("Band", _idRecipeRows);
+                rowRect.gameObject.AddComponent<LayoutElement>().preferredHeight = 30;
+                rowRect.gameObject.AddComponent<Image>().color = UITheme.Cream[2];
 
-                bool star = emotion == read.Intent;
-                row.Tag.text = (star ? "★ " : "") + emotion.ToString().ToUpperInvariant();
-                row.Tag.color = star ? ramp[4] : ramp[3];
+                var swatch = NewRect("Sw", rowRect);
+                Place(swatch, new Vector2(0, 0.5f), new Vector2(12, 18), new Vector2(12, 0));
+                swatch.gameObject.AddComponent<Image>().color = ramp[3];
 
-                switch (reading.Tier)
-                {
-                    case VisibilityTier.Exact:
-                        row.Value.text = reading.Low.ToString();
-                        row.Value.color = ramp[4];
-                        band.gameObject.SetActive(true);
-                        band.anchoredPosition = new Vector2(TrackAt(reading.Low), 0);
-                        band.sizeDelta = new Vector2(6, 0);
-                        row.Band.color = ramp[4];
-                        break;
-                    case VisibilityTier.Range:
-                        row.Value.text = $"{reading.Low}–{reading.High}";
-                        row.Value.color = ramp[3];
-                        band.gameObject.SetActive(true);
-                        band.anchoredPosition = new Vector2(TrackAt(reading.Low), 0);
-                        band.sizeDelta = new Vector2(Mathf.Max(6f, TrackAt(reading.High) - TrackAt(reading.Low)), 0);
-                        row.Band.color = new Color(ramp[3].r, ramp[3].g, ramp[3].b, 0.65f);
-                        break;
-                    default:
-                        row.Value.text = "??";
-                        row.Value.color = UITheme.Cream[1];
-                        band.gameObject.SetActive(false);
-                        break;
-                }
+                var tag = NewText("Tag", rowRect, _body, 12, TextAnchor.MiddleLeft, UITheme.Night[1]);
+                Stretch(tag.rectTransform, Vector2.zero, Vector2.one, new Vector2(34, 0), new Vector2(-96, 0));
+                tag.text = band.Type.ToString().ToUpperInvariant();
+
+                var rng = NewText("Rng", rowRect, _display, 12, TextAnchor.MiddleRight, ramp[4]);
+                Place(rng.rectTransform, new Vector2(1, 0.5f), new Vector2(120, 24), new Vector2(-8, 0));
+                rng.horizontalOverflow = HorizontalWrapMode.Overflow;
+                rng.text = $"{Mathf.RoundToInt((float)band.MinRatio * 100)}–{Mathf.RoundToInt((float)band.MaxRatio * 100)}%";
             }
         }
 
@@ -836,7 +818,7 @@ namespace LastCall.DebugUI
             _idOrder.supportRichText = true;
             Place(_idOrder.rectTransform, new Vector2(0, 1), new Vector2(300, 22), new Vector2(140, -142));
 
-            // The one thing never hidden, in an amber endorsement band.
+            // The garnishes they want, in an amber endorsement band — the thing you read.
             var intentBand = NewRect("IntentBand", card);
             Place(intentBand, new Vector2(0.5f, 1), new Vector2(420, 28), new Vector2(0, -190));
             intentBand.gameObject.AddComponent<Image>().color = UITheme.Amber[3];
@@ -844,34 +826,17 @@ namespace LastCall.DebugUI
             _idIntent.supportRichText = true;
             Stretch(_idIntent.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 0), new Vector2(-8, 0));
 
-            // The six readings, one big row each (GDD 24 §5 readability pass).
-            float top = -232;
-            for (int i = 0; i < Emotions.Count; i++)
-            {
-                var emotion = Emotions.All[i];
-                var ramp = UITheme.EmotionRamp[emotion];
-                var rowRect = NewRect($"Row{emotion}", card);
-                Place(rowRect, new Vector2(0.5f, 1), new Vector2(420, 44), new Vector2(0, top - i * 46));
+            // The recipe to pour — the ordered drink's ingredient bands, filled in per customer.
+            var recipeHeader = NewText("RecipeH", card, _body, 12, TextAnchor.UpperLeft, UITheme.Night[3]);
+            Place(recipeHeader.rectTransform, new Vector2(0, 1), new Vector2(420, 20), new Vector2(20, -228));
+            recipeHeader.text = "RECIPE — POUR TO THESE BANDS";
 
-                var stat = new StatRow();
-                stat.Tag = NewText("Tag", rowRect, _body, 13, TextAnchor.MiddleLeft, ramp[3]);
-                Place(stat.Tag.rectTransform, new Vector2(0, 0.5f), new Vector2(120, 24), new Vector2(6, 0));
-
-                stat.Track = NewRect("Track", rowRect);
-                Place(stat.Track, new Vector2(0, 0.5f), new Vector2(IdTrackW, 14), new Vector2(130, 0));
-                stat.Track.gameObject.AddComponent<Image>().color = UITheme.Cream[2];
-                var band = NewRect("Band", stat.Track);
-                band.anchorMin = new Vector2(0, 0); band.anchorMax = new Vector2(0, 1);
-                band.pivot = new Vector2(0, 0.5f);
-                band.sizeDelta = new Vector2(6, 0);
-                stat.Band = band.gameObject.AddComponent<Image>();
-                stat.Band.color = ramp[4];
-
-                stat.Value = NewText("Val", rowRect, _display, 13, TextAnchor.MiddleRight, ramp[4]);
-                Place(stat.Value.rectTransform, new Vector2(1, 0.5f), new Vector2(96, 24), new Vector2(-6, 0));
-
-                _idRows[emotion] = stat;
-            }
+            _idRecipeRows = NewRect("RecipeRows", card);
+            Place(_idRecipeRows, new Vector2(0.5f, 1), new Vector2(416, 250), new Vector2(0, -252));
+            var rlayout = _idRecipeRows.gameObject.AddComponent<VerticalLayoutGroup>();
+            rlayout.spacing = 6f; rlayout.childControlHeight = true; rlayout.childControlWidth = true;
+            rlayout.childForceExpandHeight = false; rlayout.childForceExpandWidth = true;
+            rlayout.childAlignment = TextAnchor.UpperCenter;
 
             _idGreeting = NewText("Greeting", card, _body, 12, TextAnchor.MiddleCenter, UITheme.Night[2]);
             Place(_idGreeting.rectTransform, new Vector2(0.5f, 0), new Vector2(420, 20), new Vector2(0, 58));
