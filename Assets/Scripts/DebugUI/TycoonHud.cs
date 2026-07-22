@@ -5,6 +5,8 @@ using System.Text;
 using LastCall.Core;
 using LastCall.Game;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace LastCall.DebugUI
@@ -63,6 +65,21 @@ namespace LastCall.DebugUI
         }
         private readonly List<SeatView> _seats = new List<SeatView>();
 
+        // The finished drink on the counter (GDD 24 §3, 2026-07-22): a glass you drag onto a
+        // customer to serve, carried with a heavy, springy AAA feel.
+        private RectTransform _drinkGlass;
+        private Image _drinkGlassLiquid;
+        private bool _glassGrabbed;
+        private Vector2 _glassGrabOffset;
+        private Vector2 _glassPos, _glassVel;
+        private float _glassAngle, _glassAngVel;
+        private Vector2 _glassHome;
+        private bool _glassShown;
+        private const float GlassStiffness = 130f;   // spring to the cursor
+        private const float GlassDamping = 12f;
+        private const float GlassAngStiffness = 90f;  // spring the tilt back upright
+        private const float GlassAngDamping = 9f;
+
         // day end
         private RectTransform _dayEndPanel;
         private Text _invoiceText;
@@ -115,6 +132,7 @@ namespace LastCall.DebugUI
             _flow?.CloseFlow();
             CloseId();
             if (_ledgerPanel != null) _ledgerPanel.gameObject.SetActive(false);
+            if (_drinkGlass != null) { _drinkGlass.gameObject.SetActive(false); _glassShown = false; _glassGrabbed = false; }
             if (stage != null)
             {
                 stage.SetSoloCustomerVisible(false);
@@ -149,6 +167,7 @@ namespace LastCall.DebugUI
 
             RefreshTopBar();
             RefreshSeats();
+            UpdateDrinkGlass();
         }
 
         // ── the floor ───────────────────────────────────────────────────────────
@@ -163,20 +182,171 @@ namespace LastCall.DebugUI
             var visit = _seats[index].Visit;
             if (visit == null || visit.State != VisitState.Waiting) return;
 
-            // A drink in hand means you are here to serve; empty-handed, you are here to
-            // read them (GDD 24 §5). Reading first, serving second — the licence is the ask.
-            bool haveDrink = !run.ServingGlass.IsEmpty || !run.Glass.IsEmpty;
-            if (haveDrink)
-            {
-                var verdict = run.ServeTo(visit);
-                CloseId();
-                // Money is celebrated (GDD 24 §10): the payment floats up from the seat.
-                StartCoroutine(FloatMoney(index, verdict.Total));
-            }
+            // Clicking a customer reads their licence (GDD 24 §5). Serving is a separate act:
+            // the finished drink is carried over and dropped on them (drag the glass).
+            ShowId(visit);
+        }
+
+        /// <summary>Hands the ready drink to seat <paramref name="index"/> (the glass was dragged
+        /// onto them). Returns true if it was served.</summary>
+        private bool ServeSeat(int index)
+        {
+            var run = Run;
+            if (run == null || run.Phase != TycoonPhase.DayOpen) return false;
+            var visit = _seats[index].Visit;
+            if (visit == null || visit.State != VisitState.Waiting) return false;
+            if (run.ServingGlass.IsEmpty && run.Glass.IsEmpty) return false;
+
+            var verdict = run.ServeTo(visit);
+            CloseId();
+            StartCoroutine(FloatMoney(index, verdict.Total));   // +$ floats up from the seat
+            return true;
+        }
+
+        // ── the drink you carry (GDD 24 §3, 2026-07-22) ──────────────────────────
+
+        private void BuildDrinkGlass(RectTransform root)
+        {
+            _glassHome = new Vector2(0, -200f);   // staged on the counter, above the MENU button
+            _drinkGlass = NewRect("DrinkGlass", root);
+            _drinkGlass.anchorMin = _drinkGlass.anchorMax = _drinkGlass.pivot = new Vector2(0.5f, 0.5f);
+            _drinkGlass.sizeDelta = new Vector2(78, 100);
+            _drinkGlass.anchoredPosition = _glassHome;
+
+            var body = _drinkGlass.gameObject.AddComponent<Image>();   // the glass, and the grab target
+            body.color = new Color(0.85f, 0.93f, 1f, 0.20f);
+            var grab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            grab.callback.AddListener(ev => OnGlassGrab((PointerEventData)ev));
+            _drinkGlass.gameObject.AddComponent<EventTrigger>().triggers.Add(grab);
+
+            var bowl = NewRect("Bowl", _drinkGlass);
+            Stretch(bowl, Vector2.zero, Vector2.one, new Vector2(6, 6), new Vector2(-6, -12));
+            var bowlImg = bowl.gameObject.AddComponent<Image>();
+            bowlImg.color = new Color(0f, 0f, 0f, 0.28f); bowlImg.raycastTarget = false;
+
+            var liquid = NewRect("Liquid", bowl);   // a bottom-anchored fill, ~two-thirds full
+            liquid.anchorMin = new Vector2(0, 0); liquid.anchorMax = new Vector2(1, 0);
+            liquid.pivot = new Vector2(0.5f, 0);
+            liquid.offsetMin = new Vector2(2, 2); liquid.offsetMax = new Vector2(-2, 0);
+            liquid.sizeDelta = new Vector2(-4, 62);
+            _drinkGlassLiquid = liquid.gameObject.AddComponent<Image>();
+            _drinkGlassLiquid.raycastTarget = false;
+
+            var rim = NewRect("Rim", _drinkGlass);
+            Place(rim, new Vector2(0.5f, 1), new Vector2(84, 8), new Vector2(0, 0));
+            var rimImg = rim.gameObject.AddComponent<Image>();
+            rimImg.color = UITheme.Cyan[3]; rimImg.raycastTarget = false;
+
+            var hint = NewText("Hint", _drinkGlass, _body, 10, TextAnchor.UpperCenter, UITheme.Cyan[4]);
+            Place(hint.rectTransform, new Vector2(0.5f, 1), new Vector2(170, 18), new Vector2(0, 24));
+            hint.text = "DRAG TO SERVE →";
+            hint.raycastTarget = false;
+
+            _drinkGlass.gameObject.SetActive(false);
+        }
+
+        private void OnGlassGrab(PointerEventData ev)
+        {
+            if (Run == null || Run.Phase != TycoonPhase.DayOpen) return;
+            if (_flow != null && _flow.IsOpen) return;
+            _glassGrabbed = true;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    (RectTransform)_drinkGlass.parent, ev.position, null, out Vector2 cursor))
+                _glassGrabOffset = _glassPos - cursor;   // keep the grab point under the cursor
             else
+                _glassGrabOffset = Vector2.zero;
+        }
+
+        /// <summary>The finished drink sits on the counter and is dragged onto a customer to
+        /// serve (GDD 24 §3). Heavy, springy carry with a lean into the motion (AAA feel).</summary>
+        private void UpdateDrinkGlass()
+        {
+            var run = Run;
+            bool ready = run != null && run.Phase == TycoonPhase.DayOpen
+                && (_flow == null || !_flow.IsOpen)
+                && (!run.ServingGlass.IsEmpty || !run.Glass.IsEmpty);
+
+            if (!ready)
             {
-                ShowId(visit);
+                if (_glassShown) { _drinkGlass.gameObject.SetActive(false); _glassShown = false; _glassGrabbed = false; }
+                return;
             }
+
+            if (!_glassShown)
+            {
+                _glassShown = true;
+                _drinkGlass.gameObject.SetActive(true);
+                _glassPos = _glassHome; _glassVel = Vector2.zero; _glassAngle = 0f; _glassAngVel = 0f;
+            }
+            _drinkGlassLiquid.color = DrinkColor();
+
+            float dt = Mathf.Max(Time.deltaTime, 1e-4f);
+            var mouse = Mouse.current;
+
+            if (_glassGrabbed && (mouse == null || !mouse.leftButton.isPressed))
+            {
+                _glassGrabbed = false;
+                int seat = SeatUnderCursor(mouse);
+                if (seat >= 0 && ServeSeat(seat))
+                {
+                    _drinkGlass.gameObject.SetActive(false);   // handed over; a new drink re-shows it
+                    _glassShown = false;
+                    return;
+                }
+            }
+
+            Vector2 target = _glassHome;
+            if (_glassGrabbed && mouse != null &&
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    (RectTransform)_drinkGlass.parent, mouse.position.ReadValue(), null, out Vector2 cursor))
+                target = cursor + _glassGrabOffset;
+
+            // Spring the glass to the target with a little overshoot (weight), and lean it into
+            // the horizontal motion, springing back upright — the carry has heft.
+            _glassVel += (target - _glassPos) * (GlassStiffness * dt);
+            _glassVel *= Mathf.Exp(-GlassDamping * dt);
+            _glassPos += _glassVel * dt;
+
+            float targetAngle = Mathf.Clamp(-_glassVel.x * 0.035f, -26f, 26f);
+            _glassAngVel += (targetAngle - _glassAngle) * (GlassAngStiffness * dt);
+            _glassAngVel *= Mathf.Exp(-GlassAngDamping * dt);
+            _glassAngle += _glassAngVel * dt;
+
+            _drinkGlass.anchoredPosition = _glassPos;
+            _drinkGlass.localRotation = Quaternion.Euler(0, 0, _glassAngle);
+        }
+
+        /// <summary>Which occupied stool the cursor is over, or -1.</summary>
+        private int SeatUnderCursor(Mouse mouse)
+        {
+            if (mouse == null) return -1;
+            var pos = mouse.position.ReadValue();
+            for (int i = 0; i < _seats.Count; i++)
+            {
+                var s = _seats[i];
+                if (s.Visit == null || !s.Root.gameObject.activeSelf) continue;
+                if (RectTransformUtility.RectangleContainsScreenPoint(s.Root, pos, null))
+                    return i;
+            }
+            return -1;
+        }
+
+        /// <summary>The carried drink's colour: its ingredients' style colours, blended by share.</summary>
+        private Color DrinkColor()
+        {
+            var run = Run;
+            var glass = run == null ? null
+                : (!run.ServingGlass.IsEmpty ? run.ServingGlass : run.Glass);
+            if (glass == null || glass.IsEmpty) return UITheme.Amber[3];
+            float r = 0, g = 0, b = 0;
+            foreach (var id in glass.Ingredients)
+            {
+                var card = run.Shelf.Find(id)?.Ingredient;
+                var c = card != null ? UITheme.StyleColor(card.Info?.Style, card.Type) : UITheme.Amber[3];
+                float w = (float)glass.RatioOf(id);
+                r += c.r * w; g += c.g * w; b += c.b * w;
+            }
+            return new Color(r, g, b, 0.92f);
         }
 
         /// <summary>A green +$N that rises from the paying seat and fades (GDD 24 §10).</summary>
@@ -741,6 +911,7 @@ namespace LastCall.DebugUI
             NewButton(root, "▸  MENU — MAKE A DRINK", new Vector2(0.5f, 0),
                 new Vector2(300, 40), new Vector2(0, 40), UITheme.PrimaryAction, OnMenuClicked);
 
+            BuildDrinkGlass(root);
             BuildIdCard(root);
 
             // Day end: a plain invoice panel with the night's business under it.

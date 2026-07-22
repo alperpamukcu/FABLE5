@@ -10,10 +10,12 @@
   walls and settle, with a lateral slosh over the top. **Ice and lemon float inside the
   shaker** (`ShakerSolids`), bobbing at the surface and flung about when you shake. **You
   grab the shaker itself and throw it around** to shake (the hold-pad is gone), and the
-  meter continues from what's already been shaken. The menu drops its ICE/LEMON/SALT/SUGAR
-  and SHAKE buttons (those are hands-on now), and the till moves to the counter's edge.
-  Dragged preparations have weight — the grip springs after the cursor with overshoot while
-  the piece swings from it (`Pendulum`). Still procedural
+  meter continues from what's already been shaken. The finished drink now appears as a
+  **glass on the counter that you drag onto a customer to serve** (a heavy, springy AAA-feel
+  carry; clicking a customer only reads them). The menu drops its ICE/LEMON/SALT/SUGAR and
+  SHAKE buttons (those are hands-on now), and the till moves to the counter's edge. Dragged
+  preparations have weight — the grip springs after the cursor with overshoot while the
+  piece swings from it (`Pendulum`). Still procedural
   placeholder art, still cosmetic-only over the deterministic pour. Also: the pre-menu stage
   dressing (top-left pour-glass HUD, on-counter bottle rail, garnish jars) is retired, and
   the cash register opens a **ledger of past days** (`24 §7`).

@@ -41,7 +41,11 @@ the mouse.** Buttons select; the mouse *does*. Every step below is a physical in
    glass mouth. Off-target liquid **spills** and is lost (this is where spilling lives
    now — the *aiming* game, not the filling game; GDD 21 §3's brim rule still holds
    inside the glass).
-3. **[SERVE]** → click the seat/customer to deliver. `ServiceJudge` (23 §4) resolves.
+3. **Carry it over (2026-07-22):** the finished drink appears as a **glass on the counter**
+   (staged centre-bottom). **Drag it onto a customer** to serve them — a heavy, springy
+   carry that leans into the motion (an AAA-feeling 2D drag). Dropping it on a seated
+   patron hands it over; `ServiceJudge` (23 §4) resolves and the payment floats up. Clicking
+   a customer now only **reads** their licence — serving is the drag.
 
 ### 3.5 The feel pass (2026-07-22) — interim physics, still procedural
 
