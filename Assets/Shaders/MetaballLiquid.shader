@@ -99,23 +99,31 @@ Shader "LastCall/MetaballLiquid"
             float4 _Drops[MAX_DROPS];   // xy = uv position, z = radius px, w = active flag
 
             // Live water surface (2026-07-22): the top of the pool is not a flat line but a
-            // wave that tilts side to side (slosh) and ripples, driven from MetaballFluid.cs.
-            float _SurfTilt;      // uv height gained per uv.x away from centre (the slosh)
-            float _SurfCenterX;   // uv x the tilt pivots around (pool centre)
-            float _WaveAmp;       // uv amplitude of the surface ripple
-            float _WaveKA;        // ripple wavenumber (rad/px)
-            float _WavePhaseA;
-            float _WaveKB;
-            float _WavePhaseB;
+            // real wave. A height-field of columns (a shallow-water sim in MetaballFluid.cs)
+            // carries travelling ripples that reflect off the glass walls, and a bulk lateral
+            // tilt carries the slosh of a moving glass.
+            #define HEIGHT_N 48
+            float _SurfTilt;              // uv height gained per uv.x away from centre (slosh)
+            float _SurfCenterX;           // uv x the tilt pivots around (pool centre)
+            float _Heights[HEIGHT_N];     // uv surface displacement across the pool width
+            float _HeightCount;
 
             // The liquid line at a given uv.x: the resting level, tilted by the slosh and
-            // rippled by two travelling waves.
+            // displaced by the sampled height-field wave.
             float surfaceY (float ux)
             {
-                float px = ux * _Size.x;
-                float w = _WaveAmp * (0.6 * sin(_WaveKA * px + _WavePhaseA)
-                                    + 0.4 * sin(_WaveKB * px + _WavePhaseB));
-                return _PoolTopY + _SurfTilt * (ux - _SurfCenterX) + w;
+                int n = (int)_HeightCount;
+                float wave = 0.0;
+                if (n > 1)
+                {
+                    float span = max(_PoolMaxX - _PoolMinX, 1e-4);
+                    float t = saturate((ux - _PoolMinX) / span);
+                    float f = t * (n - 1);
+                    int i0 = (int)floor(f);
+                    int i1 = min(i0 + 1, n - 1);
+                    wave = lerp(_Heights[i0], _Heights[i1], f - i0);
+                }
+                return _PoolTopY + _SurfTilt * (ux - _SurfCenterX) + wave;
             }
 
             v2f vert (appdata_t v)

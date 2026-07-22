@@ -54,7 +54,8 @@ namespace LastCall.DebugUI
         private RectTransform _pourBottle;    // the grabbable bottle
         private Image _pourBottleBody;
         private MetaballFluid _shakerFluid;   // the metaball liquid: pour stream + pooled body
-        private Splasher _shakerSplash;       // settling solids (ice / lemon) in the shaker stage
+        private Splasher _shakerSplash;       // brief splashes (dissolving salt / sugar)
+        private ShakerSolids _shakerSolids;   // ice / lemon afloat inside the shaker
         private float _shakerLiquidFloorY;    // pool bottom y (the empty liquid line)
         private float _slosh;                 // running slosh phase for the shaker surface
         private Vector2 _bottleRest;
@@ -161,6 +162,7 @@ namespace LastCall.DebugUI
             _serveSplash?.Clear();
             _shakerFluid?.Clear();
             _serveFluid?.Clear();
+            _shakerSolids?.Clear();
             if (Run != null && Run.PouringId != null) Run.EndPour();
 
             _root.gameObject.SetActive(stage != Stage.Closed);
@@ -351,13 +353,16 @@ namespace LastCall.DebugUI
                 run.EndPour();
             }
 
-            // The pooled liquid rocks: a slow ripple at rest, a heave while shaking or pouring.
+            // A gentle vertical heave on the pool top; the height-field carries the real waves.
             float energy = _shaking ? 1f + 3f * (float)_shakeEnergy : (pourNow ? 1.2f : 0.3f);
             _slosh += Time.deltaTime * (4f + 6f * energy);
-            float bob = Mathf.Sin(_slosh) * 1.8f * energy;
+            float bob = Mathf.Sin(_slosh) * 1.0f * energy;
             PushShakerPool(run, bob);
 
+            // The ice / lemon ride the drink; shaking tosses them about inside the tin.
+            if (_shaking && _shakerSolids.Any) _shakerSolids.Jostle(Mathf.Min(_shakerVel.magnitude * 0.02f, 30f));
             _shakerFluid.Step(Time.deltaTime);
+            _shakerSolids.Step(Time.deltaTime);
             _shakerSplash.Step(Time.deltaTime);
             _pouring = pourNow;
         }
@@ -376,6 +381,8 @@ namespace LastCall.DebugUI
             float bottomY = c.y - _shakerVessel.rect.height * 0.5f + 12f;
             float topY = bottomY + innerH * (float)run.Glass.FillFraction + bob;
             _shakerFluid.SetPool(minX, maxX, bottomY, topY);
+            // The solids float on this same liquid line and bounce off these same walls.
+            _shakerSolids.SetBounds(minX, maxX, bottomY, topY);
         }
 
         /// <summary>
@@ -421,9 +428,13 @@ namespace LastCall.DebugUI
                 _shakerVessel.localRotation =
                     Quaternion.Euler(0, 0, Mathf.Clamp(-_shakerVel.x * 0.02f, -24f, 24f));
 
-                // The liquid sloshes opposite to the throw and ripples harder the faster it goes.
+                // The liquid sloshes opposite to the throw and gets jostled — waves slap the walls.
                 float lateral = -_shakerVel.x / Mathf.Max(_pourSurface.rect.width, 1f) * 0.22f;
-                _shakerFluid.Disturb(lateral, 0.006f + 0.02f * (float)_shakeEnergy);
+                _shakerFluid.Disturb(lateral);
+                float speed = _shakerVel.magnitude;
+                if (speed > 200f)
+                    _shakerFluid.Ripple(_shakerVessel.anchoredPosition.x + UnityEngine.Random.Range(-36f, 36f),
+                        Mathf.Min(speed / 8000f, 0.05f));
             }
 
             _shakeMeterFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(200f * (float)_shakeEnergy), -4);
@@ -463,15 +474,23 @@ namespace LastCall.DebugUI
             {
                 run.AddPreparation(_draggingPrep);
                 _shakerReadout.text = ShakerLine(run);
-                // The piece drops in and settles on the drink (a splash of granules for a rim).
                 var c = _dragPiece.GetComponent<Image>().color;
                 bool granular = _draggingPrep.Id == "salt_rim" || _draggingPrep.Id == "sugar_rim";
-                int n = granular ? 8 : 1;
-                for (int i = 0; i < n; i++)
-                    _shakerSplash.EmitSolid(
-                        new Vector2(opening.x + UnityEngine.Random.Range(-14f, 14f), opening.y),
-                        new Vector2(UnityEngine.Random.Range(-40f, 40f), -80f), c, _shakerLiquidFloorY,
-                        granular ? 8f : 26f);
+                if (granular)
+                {
+                    // Salt / sugar dissolve: a quick scatter of granules that splash and vanish.
+                    for (int i = 0; i < 8; i++)
+                        _shakerSplash.EmitSolid(
+                            new Vector2(opening.x + UnityEngine.Random.Range(-14f, 14f), opening.y),
+                            new Vector2(UnityEngine.Random.Range(-40f, 40f), -80f), c, _shakerLiquidFloorY, 8f);
+                }
+                else
+                {
+                    // Ice / lemon drop in and float on the drink, bobbing at the surface.
+                    _shakerSolids.Add(new Vector2(opening.x + UnityEngine.Random.Range(-16f, 16f), opening.y),
+                        c, _draggingPrep.Id == "ice" ? 30f : 26f);
+                }
+                _shakerFluid.Ripple(opening.x, 0.02f);   // the piece ripples the surface as it lands
             }
             _draggingPrep = null;
             _dragPiece.gameObject.SetActive(false);
@@ -639,41 +658,28 @@ namespace LastCall.DebugUI
             title.text = "MAKE A DRINK";
 
             _bottleList = NewRect("Bottles", _menuPanel);
-            Stretch(_bottleList, new Vector2(0, 0), new Vector2(1, 1), new Vector2(16, 150), new Vector2(-16, -48));
+            Stretch(_bottleList, new Vector2(0, 0), new Vector2(1, 1), new Vector2(16, 108), new Vector2(-16, -48));
             var layout = _bottleList.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 4f; layout.childForceExpandHeight = false;
             layout.childControlHeight = true; layout.childControlWidth = true;
             layout.childForceExpandWidth = true;
 
+            // Readouts of what's in the shaker. Ice/lemon/salt/sugar and the shake are no longer
+            // menu buttons — they happen hands-on in the shaker stage (drag a piece in, grab and
+            // shake). The menu just picks bottles and moves on.
             _menuShaker = NewText("Shaker", _menuPanel, _body, 13, TextAnchor.LowerLeft, UITheme.TextPrimary);
-            Stretch(_menuShaker.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 116), new Vector2(-16, 140));
+            Stretch(_menuShaker.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 80), new Vector2(-16, 104));
             _menuPreps = NewText("Preps", _menuPanel, _body, 12, TextAnchor.LowerLeft, UITheme.Cyan[4]);
-            Stretch(_menuPreps.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 96), new Vector2(-16, 116));
+            Stretch(_menuPreps.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 58), new Vector2(-16, 80));
 
-            // Preparation toggles (GDD 24 §2.4) — plumbing, no craft effect yet.
-            var prepRow = NewRect("PrepRow", _menuPanel);
-            Stretch(prepRow, Vector2.zero, new Vector2(1, 0), new Vector2(16, 56), new Vector2(-16, 92));
-            var prepLayout = prepRow.gameObject.AddComponent<HorizontalLayoutGroup>();
-            prepLayout.spacing = 4f; prepLayout.childControlWidth = true;
-            prepLayout.childForceExpandWidth = true; prepLayout.childControlHeight = true;
-            prepLayout.childForceExpandHeight = true;
-            AddPrepButton(prepRow, "ICE", Preparations.Ice);
-            AddPrepButton(prepRow, "LEMON", Preparations.LemonTwist);
-            AddPrepButton(prepRow, "SALT", Preparations.SaltRim);
-            AddPrepButton(prepRow, "SUGAR", Preparations.SugarRim);
-
-            // Action row: shake, pour, empty, close.
+            // Action row: build → serve, empty, close.
             var actionRow = NewRect("Actions", _menuPanel);
             Stretch(actionRow, Vector2.zero, new Vector2(1, 0), new Vector2(16, 12), new Vector2(-16, 52));
             var actLayout = actionRow.gameObject.AddComponent<HorizontalLayoutGroup>();
             actLayout.spacing = 4f; actLayout.childControlWidth = true;
             actLayout.childForceExpandWidth = true; actLayout.childControlHeight = true;
             actLayout.childForceExpandHeight = true;
-            AddFlexButton(actionRow, "SHAKE", UITheme.ClubBlue[2], () =>
-            {
-                if (!Run.Glass.IsEmpty) { Run.Shake(); RefreshMenu(); }
-            });
-            AddFlexButton(actionRow, "POUR →", UITheme.PrimaryAction, () =>
+            AddFlexButton(actionRow, "POUR INTO GLASS →", UITheme.PrimaryAction, () =>
             {
                 if (!Run.Glass.IsEmpty) GoTo(Stage.Serve);
             });
@@ -725,15 +731,16 @@ namespace LastCall.DebugUI
             {
                 if (Run == null || Run.Glass.IsEmpty) { _shakerReadout.text = "pour something to shake"; return; }
                 _shaking = true;
-                _shakeEnergy = 0;
+                _shakeEnergy = Run.ShakeEnergy;   // continue from what's been shaken, don't reset
                 _shakerVel = Vector2.zero;
                 _lastShakeMouse = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
             });
             _shakerVessel.gameObject.AddComponent<EventTrigger>().triggers.Add(shakeGrab);
 
-            // The metaball fluid draws over the vessel (pool) and above it (stream); the bottle
-            // and prep pieces are created after it, so they sit in front of the liquid.
+            // The metaball fluid draws over the vessel (pool); the solids float on top of it;
+            // the bottle and prep pieces are created after, so they sit in front of the liquid.
             _shakerFluid = new MetaballFluid(_pourSurface);
+            _shakerSolids = new ShakerSolids(_pourSurface);
             _shakerSplash = new Splasher(_pourSurface);
             _shakerLiquidFloorY = _shakerVessel.anchoredPosition.y - _shakerVessel.rect.height * 0.5f + 12f;
 
@@ -922,16 +929,6 @@ namespace LastCall.DebugUI
         }
 
         // ── tiny UI helpers ──────────────────────────────────────────────────────
-
-        private void AddPrepButton(RectTransform parent, string label, PreparationDefinition prep)
-        {
-            AddFlexButton(parent, label, UITheme.Night[3], () =>
-            {
-                if (Run.Glass.IsEmpty) return;
-                Run.AddPreparation(prep);
-                RefreshMenu();
-            });
-        }
 
         private void AddFlexButton(RectTransform parent, string label, Color fill, Action onClick)
         {

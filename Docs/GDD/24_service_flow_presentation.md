@@ -60,18 +60,27 @@ you hold."* Addressed on the placeholder art, ahead of the P8 re-skin:
 - **The fill is slower** (`PourTimeScale` on the shaker, a gentler serve rate): a pour is
   a held, deliberate motion. Only the drawn volume slows; the floor's patience clock is
   untouched (it runs on its own tick).
-- **The surface behaves like water in a glass** (2026-07-22 note: *"it fills like a bar,
-  not a water glass; the surface doesn't move to the vessel's shape"*): the pool's top is a
-  live water line — a **damped lateral slosh** (the water lags a moving glass and settles
-  back level) plus **travelling ripples**, with a bright band of light riding the moving
-  surface. A landing pour ripples and tips it; throwing the shaker sloshes it hard, then it
-  calms. The shader evaluates the surface height per-x, so it tilts and waves inside the
-  glass instead of being a flat lid.
+- **The surface behaves like water in a glass** (2026-07-22): the pool's top is a live water
+  line driven by a **shallow-water height-field** — a row of columns coupled as a wave
+  equation, so a disturbance travels, **reflects off the glass walls**, and settles back
+  flat, with a bright band of light riding it. Over it sits a **damped lateral slosh** (the
+  water lags a moving glass). A landing pour punches a ripple where it hits; throwing the
+  shaker slaps waves against the walls, then it calms. The shader samples the height-field
+  per-x, so the surface tilts and waves inside the glass instead of being a flat lid.
+- **Ice and lemon float inside the shaker** (2026-07-22 note: *"the added ice/lemon don't
+  react as if they're inside the shaker while mixing"*): dropped pieces are buoyant bodies
+  (`ShakerSolids`) that **bob at the drink's surface**, bounce off the tin's inner walls,
+  and get **flung about when you shake** — the bounds move with the tin, so shaking sweeps
+  them. Salt and sugar instead scatter and dissolve.
 - **You grab the shaker itself and shake it** (2026-07-22 note: *"grabbing the shaker and
   shaking it freely left–right should be fun and lively; it's stiff now"*): the hold-pad is
   gone — grab the shaker and **throw it around**; it springs after the cursor with overshoot
-  (loose and whippy), leans into the motion, and the drink sloshes with it. Cursor travel
-  still builds the shake energy.
+  (loose and whippy), leans into the motion, and the drink (and its ice) sloshes with it.
+  Cursor travel builds the shake energy, and the meter now **continues from what's already
+  been shaken** instead of resetting to zero each time you grab it.
+- The **menu is stripped to essentials** (2026-07-22): the ICE/LEMON/SALT/SUGAR buttons and
+  the SHAKE button are gone from it — those are hands-on in the shaker stage now (drag a
+  piece in, grab and shake). The menu just picks bottles and moves on.
 - **Dragged pieces have weight and swing** (`Pendulum` + a spring grip): the grip
   **springs after the cursor with overshoot** (it lags and jiggles) and the body hangs
   and **swings from that grip** — grab a lemon by one end and the free end sways, then

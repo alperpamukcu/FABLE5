@@ -6,11 +6,14 @@
   + `Shaders/MetaballLiquid.shader`) — droplets melt into one connected mass and into the
   pool instead of reading as separate balls, the liquid gains volume and takes the glass
   shape, and it lands with an organic splash; the fill is slower and more deliberate. The
-  pooled **surface behaves like water in a glass** — a damped lateral slosh + travelling
-  ripples that tilt and settle, evaluated per-x in the shader. **You grab the shaker itself
-  and throw it around** to shake (the hold-pad is gone); the drink sloshes with it. Dragged
-  preparations have weight — the grip springs after the cursor with overshoot while the
-  piece swings from it (`Pendulum`). Still procedural
+  pooled **surface is a shallow-water height-field** — waves travel, reflect off the glass
+  walls and settle, with a lateral slosh over the top. **Ice and lemon float inside the
+  shaker** (`ShakerSolids`), bobbing at the surface and flung about when you shake. **You
+  grab the shaker itself and throw it around** to shake (the hold-pad is gone), and the
+  meter continues from what's already been shaken. The menu drops its ICE/LEMON/SALT/SUGAR
+  and SHAKE buttons (those are hands-on now), and the till moves to the counter's edge.
+  Dragged preparations have weight — the grip springs after the cursor with overshoot while
+  the piece swings from it (`Pendulum`). Still procedural
   placeholder art, still cosmetic-only over the deterministic pour. Also: the pre-menu stage
   dressing (top-left pour-glass HUD, on-counter bottle rail, garnish jars) is retired, and
   the cash register opens a **ledger of past days** (`24 §7`).

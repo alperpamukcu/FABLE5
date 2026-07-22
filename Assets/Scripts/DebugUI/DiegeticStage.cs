@@ -50,7 +50,7 @@ namespace LastCall.DebugUI
         private const float GarnishDisplayW = 30f;
         private const float CustomerX = 556f;              // patron centre, standing at the bar
         private const float CustomerBaseY = 126f;          // hands rest on the bar-top surface
-        private const float RegisterX = 468f;              // till on the counter, beside the patron
+        private const float RegisterX = 604f;              // till pushed to the counter's right edge
         private const float CounterRestY = 128f;           // counter-top rest line (till, glassware)
         private const float CounterFrontY = 96f;           // 18 §2: surface line y=264 → 360−264 (bottom 96px)
         private const float BottleW = 30f;                 // placeholder fallback size

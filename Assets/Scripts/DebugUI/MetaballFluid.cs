@@ -47,18 +47,20 @@ namespace LastCall.DebugUI
         private float _poolCenterXUv, _poolHalfWidthUv;
         private bool _poolSet;
 
-        // Live surface (2026-07-22): the water line tilts (a damped lateral slosh) and ripples
-        // so the pool moves like water in a glass, not a flat lid.
-        private float _sloshOff, _sloshVel;      // uv tilt height at the pool edge, and its rate
-        private float _wavePhaseA, _wavePhaseB;
-        private float _waveAmp;                  // uv ripple amplitude, decays toward idle
+        // Live surface (2026-07-22): a shallow-water height-field carries travelling ripples
+        // that reflect off the glass walls (so the pool moves like real water), plus a damped
+        // lateral slosh tilt for the bulk motion of a shaken glass.
+        private const int HeightN = 48;              // must match HEIGHT_N in the shader
+        private readonly float[] _heights = new float[HeightN];
+        private readonly float[] _hvels = new float[HeightN];
+        private readonly float[] _heightUpload = new float[HeightN];
+        private float _sloshOff, _sloshVel;          // uv tilt height at the pool edge, and its rate
         private const float SloshStiffness = 85f;
         private const float SloshDamping   = 3.0f;
         private const float MaxSlosh       = 0.06f;
-        private const float IdleWaveAmp    = 0.0012f;
-        private const float WaveDecay      = 0.03f;
-        private const float WaveKA         = 0.16f;   // rad/px ripple wavenumbers
-        private const float WaveKB         = 0.26f;
+        private const float WaveSpread     = 26f;    // ripple propagation speed
+        private const float WaveRestore    = 7f;     // pull back to flat (water settles)
+        private const float WaveDamp       = 1.4f;
 
         // Shader property IDs.
         private static readonly int IdSize        = Shader.PropertyToID("_Size");
@@ -73,11 +75,8 @@ namespace LastCall.DebugUI
         private static readonly int IdPoolStr     = Shader.PropertyToID("_PoolStrength");
         private static readonly int IdSurfTilt    = Shader.PropertyToID("_SurfTilt");
         private static readonly int IdSurfCenter  = Shader.PropertyToID("_SurfCenterX");
-        private static readonly int IdWaveAmp     = Shader.PropertyToID("_WaveAmp");
-        private static readonly int IdWaveKA      = Shader.PropertyToID("_WaveKA");
-        private static readonly int IdWavePhaseA  = Shader.PropertyToID("_WavePhaseA");
-        private static readonly int IdWaveKB      = Shader.PropertyToID("_WaveKB");
-        private static readonly int IdWavePhaseB  = Shader.PropertyToID("_WavePhaseB");
+        private static readonly int IdHeights     = Shader.PropertyToID("_Heights");
+        private static readonly int IdHeightCount = Shader.PropertyToID("_HeightCount");
 
         public MetaballFluid(RectTransform surface)
         {
@@ -105,11 +104,7 @@ namespace LastCall.DebugUI
 
             RefreshSize();
             SetColor(new Color(0.30f, 0.60f, 1.0f, 0.95f));
-            if (_material != null)
-            {
-                _material.SetFloat(IdWaveKA, WaveKA);
-                _material.SetFloat(IdWaveKB, WaveKB);
-            }
+            _material?.SetFloat(IdHeightCount, HeightN);
             _image.enabled = _material != null;
         }
 
@@ -163,15 +158,21 @@ namespace LastCall.DebugUI
         }
 
         /// <summary>
-        /// Disturbs the water surface (2026-07-22): a lateral kick tips the slosh (water lags a
-        /// moving glass) and a ripple runs across it. Called on a landing pour and while the
-        /// shaker is being thrown about. <paramref name="lateralImpulse"/> is a uv/s velocity
-        /// impulse; <paramref name="rippleAmp"/> is a uv wave amplitude.
+        /// Tips the bulk slosh (2026-07-22): water lags a moving glass and settles back level.
+        /// <paramref name="lateralImpulse"/> is a uv/s velocity impulse on the tilt.
         /// </summary>
-        public void Disturb(float lateralImpulse, float rippleAmp)
+        public void Disturb(float lateralImpulse) => _sloshVel += lateralImpulse;
+
+        /// <summary>Pokes the height-field at a surface-local x, punching the water down there so
+        /// a ripple runs outward — a pour landing, or the drink being thrown about.</summary>
+        public void Ripple(float localX, float velImpulse)
         {
-            _sloshVel += lateralImpulse;
-            if (rippleAmp > _waveAmp) _waveAmp = rippleAmp;
+            if (!_poolSet) return;
+            float span = Mathf.Max(_poolMaxX - _poolMinX, 1f);
+            int c = Mathf.Clamp(Mathf.RoundToInt((localX - _poolMinX) / span * (HeightN - 1)), 0, HeightN - 1);
+            _hvels[c] -= velImpulse;
+            if (c > 0) _hvels[c - 1] -= velImpulse * 0.5f;
+            if (c < HeightN - 1) _hvels[c + 1] -= velImpulse * 0.5f;
         }
 
         /// <summary>Clears the pool (no liquid body, e.g. an empty glass).</summary>
@@ -254,9 +255,10 @@ namespace LastCall.DebugUI
                     d.Pos.x > _poolMinX && d.Pos.x < _poolMaxX && d.Pos.y <= _poolTopY + 4f)
                 {
                     if (Random.value < 0.5f) Splash(new Vector2(d.Pos.x, _poolTopY), 0.5f);
-                    // A drop landing off-centre tips the water toward that side, and ripples it.
-                    _sloshVel += (ToUv(new Vector2(d.Pos.x, 0f)).x - _poolCenterXUv) * 0.6f;
-                    if (_waveAmp < 0.005f) _waveAmp = 0.005f;
+                    // The drop punches the surface down where it lands — a ripple runs out — and
+                    // nudges the bulk slosh toward that side.
+                    Ripple(d.Pos.x, 0.016f);
+                    _sloshVel += (ToUv(new Vector2(d.Pos.x, 0f)).x - _poolCenterXUv) * 0.4f;
                     d.Active = false;
                     continue;
                 }
@@ -268,7 +270,7 @@ namespace LastCall.DebugUI
             Upload();
         }
 
-        /// <summary>Advances the slosh oscillator and the travelling ripples one frame.</summary>
+        /// <summary>Advances the slosh oscillator and the shallow-water height-field one frame.</summary>
         private void StepSurface(float dt)
         {
             // Lateral slosh: a damped spring back to level (water settling in the glass).
@@ -277,16 +279,26 @@ namespace LastCall.DebugUI
             _sloshOff += _sloshVel * dt;
             _sloshOff = Mathf.Clamp(_sloshOff, -MaxSlosh, MaxSlosh);
 
-            // Ripples travel and fade back toward a barely-there idle shimmer.
-            _wavePhaseA += dt * 9.0f;
-            _wavePhaseB -= dt * 6.3f;
-            _waveAmp = Mathf.MoveTowards(_waveAmp, IdleWaveAmp, WaveDecay * dt);
+            // Shallow-water waves: each column is pulled toward its neighbours (propagation)
+            // and back to flat (gravity), damped so ripples fade — the walls reflect them.
+            float clampDt = Mathf.Min(dt, 1f / 60f);
+            for (int i = 0; i < HeightN; i++)
+            {
+                float left  = _heights[Mathf.Max(i - 1, 0)];
+                float right = _heights[Mathf.Min(i + 1, HeightN - 1)];
+                float lap = (left + right) - 2f * _heights[i];
+                _hvels[i] += (lap * WaveSpread - _heights[i] * WaveRestore) * clampDt;
+                _hvels[i] *= Mathf.Exp(-WaveDamp * clampDt);
+            }
+            for (int i = 0; i < HeightN; i++)
+            {
+                _heights[i] += _hvels[i] * clampDt;
+                _heightUpload[i] = _heights[i];
+            }
 
             if (_material == null) return;
-            _material.SetFloat(IdSurfTilt, _sloshOff / _poolHalfWidthUv);
-            _material.SetFloat(IdWaveAmp, _waveAmp);
-            _material.SetFloat(IdWavePhaseA, _wavePhaseA);
-            _material.SetFloat(IdWavePhaseB, _wavePhaseB);
+            _material.SetFloat(IdSurfTilt, _sloshOff / Mathf.Max(_poolHalfWidthUv, 1e-3f));
+            _material.SetFloatArray(IdHeights, _heightUpload);
         }
 
         private void Upload()
@@ -307,10 +319,12 @@ namespace LastCall.DebugUI
             _material.SetVectorArray(IdDrops, _dropData);
         }
 
-        /// <summary>Kills every droplet (stage change).</summary>
+        /// <summary>Kills every droplet and stills the surface (stage change).</summary>
         public void Clear()
         {
             for (int i = 0; i < MaxDrops; i++) _drops[i].Active = false;
+            for (int i = 0; i < HeightN; i++) { _heights[i] = 0f; _hvels[i] = 0f; }
+            _sloshOff = 0f; _sloshVel = 0f;
             _emitAccum = 0f;
             Upload();
         }

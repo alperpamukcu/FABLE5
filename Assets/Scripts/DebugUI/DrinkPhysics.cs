@@ -167,4 +167,136 @@ namespace LastCall.DebugUI
             else if (Angle < -MaxAngle) { Angle = -MaxAngle; _vel *= -0.3f; }
         }
     }
+
+    /// <summary>
+    /// Solids afloat inside the shaker (GDD 24 §2.4, 2026-07-22): ice cubes and lemon that
+    /// bob at the drink's surface (buoyancy), collide with the tin's inner walls, and get
+    /// flung about when you shake — so the pieces read as being <b>inside</b> the shaker,
+    /// not resting on a shelf. Hand-integrated in the shaker's local px (the bounds move and
+    /// sweep the pieces as the tin is thrown around). Pooled RectTransform bodies.
+    /// </summary>
+    public sealed class ShakerSolids
+    {
+        private const float Gravity = 1800f;      // px/s²
+        private const float Buoyancy = 250f;      // upward push per px submerged
+        private const float WaterDrag = 5.5f;     // damping while under the surface
+        private const float AirDrag = 0.7f;       // damping in air (a splash arc)
+        private const float Restitution = 0.42f;  // wall bounciness
+
+        private readonly RectTransform _parent;
+        private readonly List<Body> _bodies = new List<Body>();
+        private float _minX, _maxX, _floorY, _surfaceY;
+        private bool _bounded;
+
+        private sealed class Body
+        {
+            public RectTransform Rt;
+            public Image Img;
+            public Vector2 Pos;
+            public Vector2 Vel;
+            public float Radius;
+            public float Spin;      // deg/s
+            public bool Active;
+        }
+
+        public ShakerSolids(RectTransform parent) { _parent = parent; }
+
+        /// <summary>The tin interior and the current liquid line, in surface-local px. Moves
+        /// with the shaker each frame, so shaking sweeps the pieces around.</summary>
+        public void SetBounds(float minX, float maxX, float floorY, float surfaceY)
+        {
+            _minX = minX; _maxX = maxX; _floorY = floorY; _surfaceY = surfaceY;
+            _bounded = true;
+        }
+
+        public bool Any
+        {
+            get { foreach (var b in _bodies) if (b.Active) return true; return false; }
+        }
+
+        /// <summary>Drops a piece in with a little downward toss.</summary>
+        public void Add(Vector2 pos, Color color, float size)
+        {
+            var b = GetFree();
+            b.Pos = pos;
+            b.Vel = new Vector2(Random.Range(-40f, 40f), -60f);
+            b.Radius = size * 0.5f;
+            b.Rt.sizeDelta = new Vector2(size, size);
+            b.Img.color = color;
+            b.Rt.localRotation = Quaternion.Euler(0, 0, Random.Range(0f, 360f));
+            b.Spin = Random.Range(-120f, 120f);
+            b.Active = true;
+            b.Rt.gameObject.SetActive(true);
+        }
+
+        /// <summary>Kicks every piece — the shake tossing them about.</summary>
+        public void Jostle(float strength)
+        {
+            foreach (var b in _bodies)
+            {
+                if (!b.Active) continue;
+                b.Vel += new Vector2(Random.Range(-1f, 1f), Random.Range(-0.5f, 1f)) * strength;
+                b.Spin += Random.Range(-strength, strength) * 2f;
+            }
+        }
+
+        public void Step(float dt)
+        {
+            if (!_bounded) return;
+            dt = Mathf.Min(dt, 1f / 60f);
+            foreach (var b in _bodies)
+            {
+                if (!b.Active) continue;
+
+                b.Vel.y -= Gravity * dt;
+                float depth = _surfaceY - b.Pos.y;      // >0 means under the liquid line
+                if (depth > 0f)
+                {
+                    b.Vel.y += Buoyancy * depth * dt;   // floats it back to the surface
+                    b.Vel *= Mathf.Exp(-WaterDrag * dt);
+                }
+                else
+                {
+                    b.Vel *= Mathf.Exp(-AirDrag * dt);
+                }
+                b.Pos += b.Vel * dt;
+
+                float r = b.Radius;
+                if (b.Pos.x < _minX + r) { b.Pos.x = _minX + r; b.Vel.x = -b.Vel.x * Restitution; }
+                if (b.Pos.x > _maxX - r) { b.Pos.x = _maxX - r; b.Vel.x = -b.Vel.x * Restitution; }
+                if (b.Pos.y < _floorY + r) { b.Pos.y = _floorY + r; b.Vel.y = -b.Vel.y * Restitution; }
+                // Don't let a piece leap clean out of the tin.
+                float ceil = _surfaceY + r + 24f;
+                if (b.Pos.y > ceil) { b.Pos.y = ceil; if (b.Vel.y > 0f) b.Vel.y = -b.Vel.y * Restitution; }
+
+                b.Rt.anchoredPosition = b.Pos;
+                b.Rt.localRotation *= Quaternion.Euler(0, 0, b.Spin * dt);
+            }
+        }
+
+        public void Clear()
+        {
+            foreach (var b in _bodies)
+            {
+                b.Active = false;
+                if (b.Rt != null) b.Rt.gameObject.SetActive(false);
+            }
+        }
+
+        private Body GetFree()
+        {
+            foreach (var b in _bodies)
+                if (!b.Active) return b;
+
+            var go = new GameObject("Solid", typeof(RectTransform));
+            go.transform.SetParent(_parent, false);
+            var rt = (RectTransform)go.transform;
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            var img = go.AddComponent<Image>();
+            img.raycastTarget = false;
+            var body = new Body { Rt = rt, Img = img };
+            _bodies.Add(body);
+            return body;
+        }
+    }
 }

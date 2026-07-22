@@ -668,8 +668,8 @@ namespace LastCall.DebugUI
 
             // Six stools along the counter: each customer is a bust sitting at the bar with a
             // floating order tag above their head; click anywhere on them to read or serve.
-            const float seatGap = 200f;
-            const float seatStartX = 120f;
+            const float seatGap = 180f;
+            const float seatStartX = 118f;
             for (int i = 0; i < SeatSlots; i++)
             {
                 int index = i;
