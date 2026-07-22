@@ -175,20 +175,64 @@ namespace LastCall.DebugUI
             var run = Run;
             foreach (Transform child in _bottleList) Destroy(child.gameObject);
 
-            foreach (var bottle in run.Shelf.Bottles)
+            // Grouped like a real bar's back shelf: spirits, then bitters, sweet, sour,
+            // bubbly, garnishes — each under its own coloured heading (GDD 24 §1).
+            foreach (var type in MenuOrder)
             {
-                var card = bottle.Ingredient;
-                var colour = UITheme.StyleColor(card.Info?.Style, card.Type);
-                double fill = bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 0;
-                string label = $"{card.Name.ToUpperInvariant()}    {fill:P0} LEFT";
-                var row = AddListButton(_bottleList, label, colour, bottle.IsEmpty
-                    ? (Action)null : () => OpenBottle(card));
+                var group = new List<ShelfBottle>();
+                foreach (var bottle in run.Shelf.Bottles)
+                    if (bottle.Ingredient.Type == type) group.Add(bottle);
+                if (group.Count == 0) continue;
+
+                AddGroupHeader(GroupName(type), UITheme.TypeRamp[type][3]);
+                foreach (var bottle in group)
+                {
+                    var card = bottle.Ingredient;
+                    var colour = UITheme.StyleColor(card.Info?.Style, card.Type);
+                    double fill = bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 0;
+                    string label = $"{card.Name.ToUpperInvariant()}    {fill:P0}";
+                    AddListButton(_bottleList, label, colour, bottle.IsEmpty ? (Action)null : () => OpenBottle(card));
+                }
             }
 
             _menuShaker.text = ShakerLine(run);
             var preps = new List<string>();
             foreach (var prep in run.Glass.PreparationSteps) preps.Add(prep.Name);
             _menuPreps.text = preps.Count == 0 ? "no preparations" : "+ " + string.Join(", ", preps);
+        }
+
+        private static readonly IngredientType[] MenuOrder =
+        {
+            IngredientType.Spirit, IngredientType.Bitter, IngredientType.Sweet,
+            IngredientType.Sour, IngredientType.Bubbly, IngredientType.Garnish,
+        };
+
+        private static string GroupName(IngredientType type)
+        {
+            switch (type)
+            {
+                case IngredientType.Spirit: return "SPIRITS";
+                case IngredientType.Bitter: return "BITTERS";
+                case IngredientType.Sweet: return "SWEET";
+                case IngredientType.Sour: return "SOUR / CITRUS";
+                case IngredientType.Bubbly: return "MIXERS";
+                default: return "GARNISHES";
+            }
+        }
+
+        private void AddGroupHeader(string title, Color colour)
+        {
+            var rt = NewRect("Header", _bottleList);
+            rt.gameObject.AddComponent<LayoutElement>().preferredHeight = 22;
+            var text = NewText("L", rt, _body, 12, TextAnchor.LowerLeft, colour);
+            Stretch(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(2, 0), new Vector2(-2, 0));
+            text.text = $"— {title} —";
+            var line = NewRect("Rule", rt);
+            line.anchorMin = new Vector2(0, 0); line.anchorMax = new Vector2(1, 0);
+            line.offsetMin = new Vector2(0, 0); line.offsetMax = new Vector2(0, 2);
+            var img = line.gameObject.AddComponent<Image>();
+            img.color = new Color(colour.r, colour.g, colour.b, 0.4f);
+            img.raycastTarget = false;
         }
 
         private string ShakerLine(TycoonRun run)
