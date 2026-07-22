@@ -102,6 +102,7 @@ namespace LastCall.DebugUI
 
         private TycoonServiceFlow _flow;
         private TycoonPhase _lastPhase = TycoonPhase.DayOpen;
+        private int _lastStormedCount;   // to catch a customer storming off (GDD 24 §4)
         private Text _toast;
         private float _toastUntil;
 
@@ -127,6 +128,7 @@ namespace LastCall.DebugUI
         private void OnRunStarted()
         {
             _lastPhase = TycoonPhase.DayOpen;
+            _lastStormedCount = 0;
             _dayEndPanel.gameObject.SetActive(false);
             _bannerText.gameObject.SetActive(false);
             _flow?.CloseFlow();
@@ -199,7 +201,7 @@ namespace LastCall.DebugUI
 
             var verdict = run.ServeTo(visit);
             CloseId();
-            StartCoroutine(FloatMoney(index, verdict.Total));   // +$ floats up from the seat
+            StartCoroutine(ServeReaction(index, verdict));   // reaction + payment float up
             return true;
         }
 
@@ -349,26 +351,42 @@ namespace LastCall.DebugUI
             return new Color(r, g, b, 0.92f);
         }
 
-        /// <summary>A green +$N that rises from the paying seat and fades (GDD 24 §10).</summary>
-        private System.Collections.IEnumerator FloatMoney(int seatIndex, int amount)
+        /// <summary>How a served customer reacts (GDD 24 §4, §10): a word for the read/serve
+        /// and the payment, rising from the seat with a little pop. Green when they're pleased,
+        /// red when it's the wrong drink; a gold call when they order another round.</summary>
+        private System.Collections.IEnumerator ServeReaction(int seatIndex, ServiceVerdict verdict)
         {
             var seat = _seats[seatIndex].Root;
-            var text = NewText("Float", seat.parent, _display, 18, TextAnchor.MiddleCenter, UITheme.Lime[3]);
-            text.text = $"+${amount}";
+            bool wrong = verdict.Match == OrderMatch.Wrong;
+            Color tone = verdict.OrdersAgain ? UITheme.Amber[3]
+                : wrong ? UITheme.ViceRed[3] : UITheme.Lime[3];
+
+            string line = verdict.OrdersAgain ? "★ ANOTHER ROUND!"
+                : verdict.Match == OrderMatch.Exact ? "PERFECT!"
+                : verdict.Match == OrderMatch.Close ? "THANKS."
+                : "NOT WHAT I ASKED";
+            string tip = verdict.MoodTipLanded && verdict.Tip > 0 ? $"+${verdict.Total} ♪" : $"+${verdict.Total}";
+
+            var text = NewText("React", seat.parent, _display, 15, TextAnchor.LowerCenter, tone);
+            text.supportRichText = true;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.text = $"{line}\n<color=#{ColorUtility.ToHtmlStringRGB(UITheme.Lime[3])}>{tip}</color>";
             var rt = text.rectTransform;
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 0);
-            rt.sizeDelta = new Vector2(120, 30);
-            var start = seat.anchoredPosition + new Vector2(seat.sizeDelta.x * 0.5f - 60f, 100f);
+            rt.sizeDelta = new Vector2(178, 44);
+            var start = seat.anchoredPosition + new Vector2(-89f, 120f);   // centred over the seat
 
-            const float duration = 1.1f;
-            float t = 0f;
-            while (t < duration && text != null)
+            const float duration = 1.35f;
+            float tt = 0f;
+            while (tt < duration && text != null)
             {
-                t += Time.deltaTime;
-                float k = Mathf.Clamp01(t / duration);
-                rt.anchoredPosition = start + new Vector2(0, 46f * k);
-                text.color = new Color(UITheme.Lime[3].r, UITheme.Lime[3].g, UITheme.Lime[3].b,
-                    1f - k * k);
+                tt += Time.deltaTime;
+                float k = Mathf.Clamp01(tt / duration);
+                // A quick pop on the way in, then a slow rise and fade.
+                float pop = 1f + 0.3f * Mathf.Clamp01(1f - k * 6f) - 0.05f * k;
+                rt.localScale = new Vector3(pop, pop, 1f);
+                rt.anchoredPosition = start + new Vector2(0, 58f * k);
+                text.color = new Color(tone.r, tone.g, tone.b, 1f - k * k);
                 yield return null;
             }
             if (text != null) Destroy(text.gameObject);
@@ -419,6 +437,13 @@ namespace LastCall.DebugUI
         {
             var run = Run;
             var seated = run.Floor.Seated;
+
+            // A patron whose patience ran out storms off (GDD 24 §4) — a loud red notice, so a
+            // walk-out never passes unnoticed.
+            int stormed = 0;
+            foreach (var v in run.Floor.Finished) if (v.State == VisitState.StormedOff) stormed++;
+            if (stormed > _lastStormedCount) Toast("A CUSTOMER STORMED OFF");
+            _lastStormedCount = stormed;
 
             // The licence is only good while its holder is at the bar.
             if (_idVisit != null && (_idVisit.State != VisitState.Waiting || !seated.Contains(_idVisit)))

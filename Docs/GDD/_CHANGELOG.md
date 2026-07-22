@@ -19,6 +19,10 @@
   placeholder art, still cosmetic-only over the deterministic pour. Also: the pre-menu stage
   dressing (top-left pour-glass HUD, on-counter bottle rail, garnish jars) is retired, and
   the cash register opens a **ledger of past days** (`24 §7`).
+- `24 §4` **serve reactions & storm-off notice (2026-07-22):** serving a customer now floats
+  a reaction from their seat — green "PERFECT!/THANKS." with the payment, a gold "★ ANOTHER
+  ROUND!" when they reorder, red "NOT WHAT I ASKED" on the wrong drink — with a little pop.
+  A patron whose patience runs out raises a red "A CUSTOMER STORMED OFF" notice.
 - `24 §4` **customers at the counter (2026-07-22):** the bottom seat strip is retired —
   customers now sit at the bar as head-and-shoulders portrait busts with a floating order tag
   above the head, souring red over the last third of patience, sliding in and fading up as
