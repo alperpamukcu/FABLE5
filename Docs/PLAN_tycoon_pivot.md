@@ -131,7 +131,9 @@ scene boots the tycoon run; build size dropped ~5k lines of gameplay code + asse
 - ☑ **Drag-preparations**: a tray of ICE/LEMON/SALT/SUGAR chips down the left of the
   shaker stage; pick one up (pointer-down), it follows the mouse, drop it over the shaker's
   mouth to add it (a miss falls away). The menu keeps quick prep buttons as a fallback
-- ☐ **Real shake**: grab and shake the mouse; energy recorded 0–1 with the preparation
+- ☑ **Real shake**: a HOLD · SHAKE THE MOUSE pad in the shaker stage — press it and shake
+  the cursor; travel builds a 0–1 energy meter and the shaker jitters; release commits
+  `Run.Shake(energy)` (recorded on `ShakeEnergy`, a craft hook for later)
 - ☐ **ID card v3**: real licence proportions, purpose-drawn card art, one reading order
   (v2 explicitly disliked — redesign whole, do not iterate)
 - ☐ Characters: 6+ customer bodies × states, bartender hands, musician

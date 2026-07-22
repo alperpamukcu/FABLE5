@@ -67,6 +67,15 @@ namespace LastCall.DebugUI
         private RectTransform _dragPiece;
         private Text _dragPieceLabel;
 
+        // The mouse-energy shake (GDD 24 §2.5): hold the shake pad and shake the mouse; how
+        // much the cursor travels builds the energy, and the shaker jitters as you go.
+        private bool _shaking;
+        private double _shakeEnergy;
+        private Vector2 _lastShakeMouse;
+        private Image _shakeMeterFill;
+        private Text _shakeMeterText;
+        private const float ShakeFullTravel = 4000f;   // px of cursor travel for a full shake
+
         // The serve pour uses the same tilt model (GDD 24 §3): grab the shaker, tip it over
         // the glass. How well the mouth lines up over the glass is the aim — off-centre spills.
         private Text _serveShakerText;
@@ -112,7 +121,7 @@ namespace LastCall.DebugUI
                 return;
             }
 
-            if (_stage == Stage.Shaker) { UpdatePrepDrag(run); UpdateTiltPour(run); }
+            if (_stage == Stage.Shaker) { UpdateShake(run); UpdatePrepDrag(run); UpdateTiltPour(run); }
 
             if (_stage == Stage.Serve) UpdateServeTilt(run);
         }
@@ -126,6 +135,8 @@ namespace LastCall.DebugUI
             _pouring = false;
             _serveGrabbed = false;
             _draggingPrep = null;
+            _shaking = false;
+            _shakeEnergy = 0;
             if (_dragPiece != null) _dragPiece.gameObject.SetActive(false);
             if (Run != null && Run.PouringId != null) Run.EndPour();
 
@@ -203,6 +214,11 @@ namespace LastCall.DebugUI
             _pourBottle.anchoredPosition = _bottleRest;
             _pourBottle.localRotation = Quaternion.identity;
             _pourStream.gameObject.SetActive(false);
+            _shakerVessel.anchoredPosition = new Vector2(-120, -30);
+            _shakerVessel.localRotation = Quaternion.identity;
+            _shakeMeterFill.rectTransform.sizeDelta = new Vector2(0, -4);
+            _shakeMeterText.text = run.Glass.HasPreparation("shaken")
+                ? $"SHAKEN · {run.ShakeEnergy:P0}" : "";
         }
 
         /// <summary>
@@ -260,6 +276,47 @@ namespace LastCall.DebugUI
                 run.EndPour();
             }
             _pouring = pourNow;
+        }
+
+        /// <summary>
+        /// The mouse-energy shake (GDD 24 §2.5): while the pad is held, cursor travel builds
+        /// the shake energy and the shaker jitters; releasing applies the shake at whatever
+        /// energy was reached.
+        /// </summary>
+        private void UpdateShake(TycoonRun run)
+        {
+            if (!_shaking) return;
+            var mouse = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
+
+            if (Mouse.current == null || !Mouse.current.leftButton.isPressed)
+            {
+                // Released: commit the shake if there's a drink and any energy behind it.
+                if (!run.Glass.IsEmpty && _shakeEnergy > 0.05)
+                {
+                    run.Shake(_shakeEnergy);
+                    _shakerReadout.text = $"SHAKEN · {_shakeEnergy:P0} · {ShakerLine(run)}";
+                }
+                _shaking = false;
+                _shakeEnergy = 0;
+                _shakerVessel.localRotation = Quaternion.identity;
+                _shakerVessel.anchoredPosition = new Vector2(-120, -30);
+                if (_shakeMeterText != null) _shakeMeterText.text = "";
+                return;
+            }
+
+            float travel = (mouse - _lastShakeMouse).magnitude;
+            _lastShakeMouse = mouse;
+            _shakeEnergy = Mathf.Clamp01((float)_shakeEnergy + travel / ShakeFullTravel);
+
+            // Jitter the shaker so it reads as being worked.
+            float amp = 6f + 10f * (float)_shakeEnergy;
+            _shakerVessel.anchoredPosition = new Vector2(-120, -30) +
+                new Vector2(UnityEngine.Random.Range(-amp, amp), UnityEngine.Random.Range(-amp, amp));
+            _shakerVessel.localRotation = Quaternion.Euler(0, 0, UnityEngine.Random.Range(-8f, 8f) * (float)_shakeEnergy);
+
+            _shakeMeterFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(200f * (float)_shakeEnergy), -4);
+            _shakeMeterFill.color = Color.Lerp(UITheme.Amber[3], UITheme.Lime[3], (float)_shakeEnergy);
+            if (_shakeMeterText != null) _shakeMeterText.text = $"SHAKE! {_shakeEnergy:P0}";
         }
 
         /// <summary>
@@ -556,10 +613,40 @@ namespace LastCall.DebugUI
             _dragPiece.gameObject.SetActive(false);
 
             _shakerReadout = NewText("Readout", _shakerPanel, _body, 13, TextAnchor.LowerCenter, UITheme.TextSecondary);
-            Stretch(_shakerReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 52), new Vector2(-16, 84));
+            Stretch(_shakerReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 92), new Vector2(-16, 118));
+
+            // The shake meter, above the bottom bar.
+            var meterBg = NewRect("ShakeMeterBg", _shakerPanel);
+            Place(meterBg, new Vector2(0.5f, 0), new Vector2(220, 14), new Vector2(0, 70));
+            meterBg.gameObject.AddComponent<Image>().color = UITheme.Night[0];
+            var meterFill = NewRect("ShakeMeterFill", meterBg);
+            meterFill.anchorMin = new Vector2(0, 0); meterFill.anchorMax = new Vector2(0, 1);
+            meterFill.pivot = new Vector2(0, 0.5f); meterFill.offsetMin = new Vector2(2, 2);
+            meterFill.offsetMax = new Vector2(2, -2); meterFill.anchoredPosition = new Vector2(2, 0);
+            _shakeMeterFill = meterFill.gameObject.AddComponent<Image>();
+            _shakeMeterFill.raycastTarget = false;
+            _shakeMeterText = NewText("ShakeText", _shakerPanel, _body, 11, TextAnchor.UpperCenter, UITheme.TextSecondary);
+            Place(_shakeMeterText.rectTransform, new Vector2(0.5f, 0), new Vector2(240, 16), new Vector2(0, 86));
+
+            // Bottom bar: the shake pad (hold and shake the mouse) and DONE.
+            var pad = NewRect("ShakePad", _shakerPanel);
+            Place(pad, new Vector2(0.5f, 0), new Vector2(300, 40), new Vector2(-160, 12));
+            pad.gameObject.AddComponent<Image>().color = UITheme.ClubBlue[2];
+            var padDown = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            padDown.callback.AddListener(_ =>
+            {
+                if (Run == null || Run.Glass.IsEmpty) { _shakerReadout.text = "pour something to shake"; return; }
+                _shaking = true;
+                _shakeEnergy = 0;
+                _lastShakeMouse = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
+            });
+            pad.gameObject.AddComponent<EventTrigger>().triggers.Add(padDown);
+            var padLabel = NewText("Label", pad, _body, 12, TextAnchor.MiddleCenter, UITheme.Cream[4]);
+            Stretch(padLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            padLabel.text = "HOLD · SHAKE THE MOUSE";
 
             var back = NewRect("Back", _shakerPanel);
-            Place(back, new Vector2(0.5f, 0), new Vector2(220, 34), new Vector2(0, 12));
+            Place(back, new Vector2(0.5f, 0), new Vector2(300, 40), new Vector2(160, 12));
             back.gameObject.AddComponent<Image>().color = UITheme.PrimaryAction;
             back.gameObject.AddComponent<Button>().onClick.AddListener(() => GoTo(Stage.Menu));
             var backLabel = NewText("Label", back, _body, 13, TextAnchor.MiddleCenter, UITheme.TextOnAmber);

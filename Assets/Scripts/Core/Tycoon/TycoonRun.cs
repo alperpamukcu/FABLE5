@@ -75,6 +75,10 @@ namespace LastCall.Core
         /// <summary>True once the shaker has been shaken this build (GDD 24 §2.5).</summary>
         public bool IsShaken { get; private set; }
 
+        /// <summary>How hard the last shake was, 0–1 (GDD 24 §2.5). A craft hook for later;
+        /// recorded now so the shake motion means something the moment it earns an effect.</summary>
+        public double ShakeEnergy { get; private set; }
+
         public string PouringId { get; private set; }
 
         private readonly List<MarketOffer> _marketOffers = new List<MarketOffer>();
@@ -194,12 +198,13 @@ namespace LastCall.Core
 
         /// <summary>Shakes the built drink (GDD 24 §2.5). Recorded on the shaker; the craft
         /// effect of a good shake is a later balance pass, the plumbing is here now.</summary>
-        public void Shake()
+        public void Shake(double energy = 1.0)
         {
             EnsurePhase(TycoonPhase.DayOpen);
             if (Glass.IsEmpty) throw new InvalidOperationException("Nothing in the shaker to shake.");
             Glass.AddPreparation(Preparations.Shaken);
             IsShaken = true;
+            ShakeEnergy = energy < 0 ? 0 : energy > 1 ? 1 : energy;
         }
 
         /// <summary>
@@ -264,6 +269,7 @@ namespace LastCall.Core
         {
             PouringId = null;
             IsShaken = false;
+            ShakeEnergy = 0;
             Glass = new GlassContents(_config.GlassCapacity);
             ServingGlass = new GlassContents(_config.GlassCapacity);
         }
