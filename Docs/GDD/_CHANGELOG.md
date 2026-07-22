@@ -19,6 +19,11 @@
   placeholder art, still cosmetic-only over the deterministic pour. Also: the pre-menu stage
   dressing (top-left pour-glass HUD, on-counter bottle rail, garnish jars) is retired, and
   the cash register opens a **ledger of past days** (`24 §7`).
+- `24 §4` **stable stools & leave animation (2026-07-22):** customers now **keep their stool**
+  until they leave — busts no longer shift or morph when the queue compacts (the HUD maps
+  visits to fixed stools). When a patron leaves they play an exit: a served one **sinks off
+  the stool and fades**, a stormed-off one **shakes then slides out**. Completes the lifecycle:
+  walk in → sit → read/serve → react → leave.
 - `24 §4` **serve reactions & storm-off notice (2026-07-22):** serving a customer now floats
   a reaction from their seat — green "PERFECT!/THANKS." with the payment, a gold "★ ANOTHER
   ROUND!" when they reorder, red "NOT WHAT I ASKED" on the wrong drink — with a little pop.

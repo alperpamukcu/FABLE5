@@ -60,10 +60,13 @@ namespace LastCall.DebugUI
             public Image PatienceFill;
             public float SeatX;              // this stool's resting x
             public float WalkT;              // 0..1 walk-in progress
-            public bool Occupied;            // was this seat filled last frame (to catch arrivals)
-            public CustomerVisit Visit;
+            public bool Exiting;             // playing the leave animation
+            public float ExitT;              // 0..1 leave progress
+            public bool ExitStorm;           // stormed off (angry exit) vs served (calm)
+            public CustomerVisit Visit;      // who is assigned to this stool (stable until they leave)
         }
         private readonly List<SeatView> _seats = new List<SeatView>();
+        private const float ExitDuration = 0.55f;
 
         // The finished drink on the counter (GDD 24 §3, 2026-07-22): a glass you drag onto a
         // customer to serve, carried with a heavy, springy AAA feel.
@@ -125,10 +128,24 @@ namespace LastCall.DebugUI
             if (_bootstrap != null) _bootstrap.RunStarted -= OnRunStarted;
         }
 
+        private void ResetSeats()
+        {
+            foreach (var v in _seats)
+            {
+                v.Visit = null;
+                v.Exiting = false;
+                v.ExitT = 0f;
+                v.WalkT = 0f;
+                if (v.Group != null) v.Group.alpha = 1f;
+                if (v.Root != null) v.Root.gameObject.SetActive(false);
+            }
+        }
+
         private void OnRunStarted()
         {
             _lastPhase = TycoonPhase.DayOpen;
             _lastStormedCount = 0;
+            ResetSeats();
             _dayEndPanel.gameObject.SetActive(false);
             _bannerText.gameObject.SetActive(false);
             _flow?.CloseFlow();
@@ -326,7 +343,7 @@ namespace LastCall.DebugUI
             for (int i = 0; i < _seats.Count; i++)
             {
                 var s = _seats[i];
-                if (s.Visit == null || !s.Root.gameObject.activeSelf) continue;
+                if (s.Visit == null || s.Exiting || !s.Root.gameObject.activeSelf) continue;
                 if (RectTransformUtility.RectangleContainsScreenPoint(s.Root, pos, null))
                     return i;
             }
@@ -453,28 +470,52 @@ namespace LastCall.DebugUI
                 (!run.ServingGlass.IsEmpty || !run.Glass.IsEmpty) &&
                 (_flow == null || !_flow.IsOpen);
 
+            // Stools are stable (2026-07-22): a customer keeps their seat until they leave, so
+            // busts never shift or morph when the queue compacts. Reconcile the positional
+            // Seated list against the fixed stools each frame.
+            // 1) Departures — a stool whose patron is no longer seated starts a leave animation.
+            for (int i = 0; i < _seats.Count; i++)
+            {
+                var v = _seats[i];
+                if (v.Visit != null && !v.Exiting && !seated.Contains(v.Visit))
+                {
+                    v.Exiting = true;
+                    v.ExitT = 0f;
+                    v.ExitStorm = v.Visit.State == VisitState.StormedOff;
+                }
+            }
+            // 2) Arrivals — a seated customer with no stool takes the first free one and walks in.
+            foreach (var visit in seated)
+            {
+                bool assigned = false;
+                for (int i = 0; i < _seats.Count; i++) if (_seats[i].Visit == visit) { assigned = true; break; }
+                if (assigned) continue;
+                for (int i = 0; i < run.Seats && i < _seats.Count; i++)
+                {
+                    var v = _seats[i];
+                    if (v.Visit == null && !v.Exiting)
+                    {
+                        v.Visit = visit;
+                        v.WalkT = 0f;
+                        v.Root.gameObject.SetActive(true);
+                        break;
+                    }
+                }
+            }
+
+            // 3) Render each stool from its assigned patron.
             for (int i = 0; i < _seats.Count; i++)
             {
                 var view = _seats[i];
-                view.Visit = i < seated.Count ? seated[i] : null;
-                bool locked = i >= run.Seats;
-                bool hasCustomer = !locked && view.Visit != null;
 
-                // An empty or locked stool holds no one — the counter simply has a gap there.
-                if (!hasCustomer)
+                if (view.Exiting) { AdvanceExit(view); continue; }
+
+                if (view.Visit == null)
                 {
-                    view.Occupied = false;
                     if (view.Root.gameObject.activeSelf) view.Root.gameObject.SetActive(false);
                     continue;
                 }
 
-                // A new arrival walks up and sits: slide in from the left and fade up.
-                if (!view.Occupied)
-                {
-                    view.Occupied = true;
-                    view.WalkT = 0f;
-                    view.Root.gameObject.SetActive(true);
-                }
                 AdvanceWalkIn(view);
 
                 var visit = view.Visit;
@@ -534,6 +575,37 @@ namespace LastCall.DebugUI
             {
                 view.Root.anchoredPosition = new Vector2(view.SeatX, CounterLineY);
                 view.Group.alpha = 1f;
+            }
+        }
+
+        /// <summary>Plays a customer leaving their stool (GDD 24 §4): a served patron sinks off
+        /// the stool and fades; a stormed-off one shakes, then slides out fast.</summary>
+        private void AdvanceExit(SeatView view)
+        {
+            view.ExitT += Time.deltaTime / ExitDuration;
+            float k = Mathf.Clamp01(view.ExitT);
+
+            if (view.ExitStorm)
+            {
+                float shake = k < 0.35f ? Mathf.Sin(k * 70f) * 9f : 0f;
+                float slide = Mathf.Clamp01((k - 0.35f) / 0.65f);
+                view.Root.anchoredPosition = new Vector2(
+                    view.SeatX + shake - 320f * slide * slide, CounterLineY - 18f * slide);
+                view.Group.alpha = 1f - slide;
+            }
+            else
+            {
+                float e = k * k;   // ease-in: gets up and steps away
+                view.Root.anchoredPosition = new Vector2(view.SeatX, CounterLineY - 96f * e);
+                view.Group.alpha = 1f - e;
+            }
+
+            if (view.ExitT >= 1f)
+            {
+                view.Exiting = false;
+                view.Visit = null;
+                view.Group.alpha = 1f;
+                view.Root.gameObject.SetActive(false);
             }
         }
 
