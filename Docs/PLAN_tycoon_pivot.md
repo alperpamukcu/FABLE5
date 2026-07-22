@@ -127,10 +127,11 @@ scene boots the tycoon run; build size dropped ~5k lines of gameplay code + asse
 - ☐ New authoring reference (1280×720 logical), style guide refresh
 - ◐ **Seated customers as scene characters** (explicit request): walk in → sit → order →
   wait → react → leave, gauges attached to the person; the P3 seat panels retire.
-  Interim (2026-07-22): each occupied stool now shows the customer's **archetype portrait**
-  beside the order ticket, the face souring red over the last third of their patience — the
-  bar reads as people, not text boxes. Full walk-in/react animation + per-person gauges owed
-  to the art pass.
+  Interim (2026-07-22): the bottom strip is gone — customers **sit at the counter** as
+  head-and-shoulders portrait busts (bodies cut off by the bar top), a floating order tag
+  above each head, the face souring red over the last third of patience, and a slide-in-and-
+  fade "walk up and sit" on arrival. Full per-customer bodies + walk/react/leave animation
+  and body-attached gauges owed to the art pass.
 - ☑ **The tilt-pour**, both stages: grab the vessel, lift to tip (it leans left), line the
   mouth over the target → it streams; released on mouse-up. Bottle→shaker in the shaker
   stage; shaker→glass in the serve stage, where the mouth's alignment over the glass is the

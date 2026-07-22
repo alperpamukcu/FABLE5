@@ -84,11 +84,15 @@ who visibly **walk in, sit down at the counter, order, wait, react and leave**, 
 attached to the person, not to a box. Seeing someone sit down at your bar is the game's
 heartbeat.
 
-**Interim step (2026-07-22):** each occupied stool now carries the customer's **archetype
-portrait** beside its order ticket, and the face **sours red over the last third of their
-patience** — the room already reads as *people*, not text boxes, using portrait art that
-exists (keyed by archetype, as the licence photo is). The walk-in/sit/react/leave animation
-and per-person gauges are still the P8 art pass; this is the bridge.
+**Interim step (2026-07-22):** the bottom seat strip is gone — customers now **sit at the
+counter** as head-and-shoulders busts (their archetype portrait), bodies cut off by the bar
+top, each with a **floating order tag** above the head (name · read · order + price ·
+patience) and the face **souring red over the last third of their patience**. A new arrival
+**slides in from the left and fades up** into their stool; the tag glows cyan when a drink is
+ready to hand over; clicking the bust reads or serves. The room reads as *people at the bar*,
+using portrait art that already exists (keyed by archetype, as the licence photo is). Full
+per-customer bodies with walk-in/react/leave animation and body-attached gauges are still the
+P8 art pass; this is the bridge.
 
 Up to 6 customers visible at the bar, each an animated character with states:
 **walk in → sit → order (speech bubble with the drink's name/icon) → idle/talk → drink →

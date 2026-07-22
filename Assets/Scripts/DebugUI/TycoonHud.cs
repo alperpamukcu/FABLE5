@@ -37,17 +37,28 @@ namespace LastCall.DebugUI
         private Text _crowdText;
         private Image _satisfactionFill;
 
-        // seat row
+        // Seats at the counter (GDD 24 §4, 2026-07-22): customers sit along the bar as
+        // head-and-shoulders busts, not in a bottom strip. Each bust rises/slides into its
+        // stool when its patron arrives, wears a floating order tag, and is the click target.
         private const int SeatSlots = 6;
+        private const float CounterLineY = 262f;   // HUD-space y (from bottom) of the bar top
+        private const float BustW = 108f;
+        private const float BustH = 128f;
+        private const float WalkDuration = 0.6f;   // seconds to walk in and sit
         private sealed class SeatView
         {
-            public RectTransform Root;
-            public Image Frame;
-            public Image Portrait;      // the customer's face — a person at the bar, not a text box
+            public RectTransform Root;       // the bust, positioned at the counter (click target)
+            public CanvasGroup Group;        // fades the bust in as it walks up
+            public Image Portrait;           // the customer's face/bust
+            public RectTransform Tag;        // the floating order ticket above the head
+            public Image TagBg;
             public Text Name;
             public Text Wants;
             public Text Order;
             public Image PatienceFill;
+            public float SeatX;              // this stool's resting x
+            public float WalkT;              // 0..1 walk-in progress
+            public bool Occupied;            // was this seat filled last frame (to catch arrivals)
             public CustomerVisit Visit;
         }
         private readonly List<SeatView> _seats = new List<SeatView>();
@@ -243,35 +254,33 @@ namespace LastCall.DebugUI
             if (_idVisit != null && (_idVisit.State != VisitState.Waiting || !seated.Contains(_idVisit)))
                 CloseId();
 
+            bool drinkReady = run.Phase == TycoonPhase.DayOpen &&
+                (!run.ServingGlass.IsEmpty || !run.Glass.IsEmpty) &&
+                (_flow == null || !_flow.IsOpen);
+
             for (int i = 0; i < _seats.Count; i++)
             {
                 var view = _seats[i];
                 view.Visit = i < seated.Count ? seated[i] : null;
                 bool locked = i >= run.Seats;
+                bool hasCustomer = !locked && view.Visit != null;
 
-                if (locked)
+                // An empty or locked stool holds no one — the counter simply has a gap there.
+                if (!hasCustomer)
                 {
-                    view.Frame.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.85f);
-                    view.Portrait.gameObject.SetActive(false);
-                    view.Name.text = "";
-                    view.Wants.text = "";
-                    view.Order.text = "LOCKED STOOL";
-                    view.Order.color = UITheme.Cream[1];
-                    view.PatienceFill.rectTransform.sizeDelta = new Vector2(0, -2);
+                    view.Occupied = false;
+                    if (view.Root.gameObject.activeSelf) view.Root.gameObject.SetActive(false);
                     continue;
                 }
 
-                if (view.Visit == null)
+                // A new arrival walks up and sits: slide in from the left and fade up.
+                if (!view.Occupied)
                 {
-                    view.Frame.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.92f);
-                    view.Portrait.gameObject.SetActive(false);
-                    view.Name.text = "EMPTY STOOL";
-                    view.Name.color = UITheme.Cream[2];
-                    view.Wants.text = "";
-                    view.Order.text = "";
-                    view.PatienceFill.rectTransform.sizeDelta = new Vector2(0, -2);
-                    continue;
+                    view.Occupied = true;
+                    view.WalkT = 0f;
+                    view.Root.gameObject.SetActive(true);
                 }
+                AdvanceWalkIn(view);
 
                 var visit = view.Visit;
                 // A regular ordering again after a perfect serve gets a gold star and the
@@ -288,9 +297,8 @@ namespace LastCall.DebugUI
                 var sprite = stage != null && visit.Regular != null
                     ? stage.PortraitSpriteFor(visit.Regular.ArchetypeId) : null;
                 view.Portrait.sprite = sprite;
-                view.Portrait.gameObject.SetActive(true);
 
-                // The always-visible half of the read (GDD 19 §3); tap the seat for the full
+                // The always-visible half of the read (GDD 19 §3); tap the customer for the full
                 // licence (GDD 24 §5). "TAP TO READ" nudges the newcomer.
                 view.Wants.text = visit.Read == null ? "TAP TO READ" :
                     (visit.Read.Direction == IntentDirection.Extinguish ? "SETTLE " : "LIFT ")
@@ -299,7 +307,8 @@ namespace LastCall.DebugUI
                 view.Order.text = $"{visit.Order.Wanted.Name.ToUpperInvariant()}  ${visit.Order.Price}";
 
                 float patience = (float)(visit.PatienceLeft / visit.PatienceMax);
-                view.PatienceFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(186f * patience), -2);
+                float tagW = view.Tag.rect.width - 12f;
+                view.PatienceFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(tagW * patience), -2);
                 view.PatienceFill.color = patience > 0.5f ? UITheme.Lime[3]
                     : patience > 0.25f ? UITheme.Amber[3] : UITheme.ViceRed[3];
 
@@ -308,21 +317,28 @@ namespace LastCall.DebugUI
                 var calm = sprite != null ? Color.white : new Color(0.62f, 0.55f, 0.60f, 1f);
                 view.Portrait.color = Color.Lerp(new Color(0.80f, 0.28f, 0.30f, 1f), calm, mood);
 
-                // The frame heats up as patience drains — anger readable at a glance. When a
-                // drink is built and waiting, every seat glows cyan: "hand it over here".
-                bool drinkReady = run.Phase == TycoonPhase.DayOpen &&
-                    (!run.ServingGlass.IsEmpty || !run.Glass.IsEmpty) &&
-                    (_flow == null || !_flow.IsOpen);
-                if (drinkReady)
-                {
-                    view.Frame.color = new Color(UITheme.Selection.r, UITheme.Selection.g,
-                        UITheme.Selection.b, 0.85f);
-                }
-                else
-                {
-                    var heat = Color.Lerp(UITheme.ViceRed[1], UITheme.Night[3], patience);
-                    view.Frame.color = new Color(heat.r, heat.g, heat.b, 0.94f);
-                }
+                // The tag glows cyan when a drink is built and waiting: "hand it over here".
+                view.TagBg.color = drinkReady
+                    ? new Color(UITheme.Selection.r, UITheme.Selection.g, UITheme.Selection.b, 0.92f)
+                    : new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.86f);
+            }
+        }
+
+        /// <summary>Slides a newly-seated bust in from the left and fades it up (GDD 24 §4).</summary>
+        private void AdvanceWalkIn(SeatView view)
+        {
+            if (view.WalkT < 1f)
+            {
+                view.WalkT = Mathf.Min(1f, view.WalkT + Time.deltaTime / WalkDuration);
+                float e = 1f - (1f - view.WalkT) * (1f - view.WalkT);   // ease-out
+                float startX = view.SeatX - 200f;
+                view.Root.anchoredPosition = new Vector2(Mathf.Lerp(startX, view.SeatX, e), CounterLineY);
+                view.Group.alpha = view.WalkT;
+            }
+            else
+            {
+                view.Root.anchoredPosition = new Vector2(view.SeatX, CounterLineY);
+                view.Group.alpha = 1f;
             }
         }
 
@@ -650,47 +666,64 @@ namespace LastCall.DebugUI
             Place(_toast.rectTransform, new Vector2(0.5f, 1), new Vector2(500, 30), new Vector2(0, -56));
             _toast.gameObject.SetActive(false);
 
-            // Seat row along the bottom: six stools, click to serve.
+            // Six stools along the counter: each customer is a bust sitting at the bar with a
+            // floating order tag above their head; click anywhere on them to read or serve.
+            const float seatGap = 200f;
+            const float seatStartX = 120f;
             for (int i = 0; i < SeatSlots; i++)
             {
                 int index = i;
                 var seat = new SeatView();
+                seat.SeatX = seatStartX + i * seatGap;
+
+                // The click zone spans the bust and its tag; a clear image catches the ray.
                 seat.Root = NewRect($"Seat{i}", root);
                 seat.Root.anchorMin = seat.Root.anchorMax = new Vector2(0, 0);
-                seat.Root.pivot = new Vector2(0, 0);
-                seat.Root.sizeDelta = new Vector2(202, 96);
-                seat.Root.anchoredPosition = new Vector2(8 + i * 212, 8);
-
-                seat.Frame = seat.Root.gameObject.AddComponent<Image>();
+                seat.Root.pivot = new Vector2(0.5f, 0);
+                seat.Root.sizeDelta = new Vector2(BustW + 52f, BustH + 92f);
+                seat.Root.anchoredPosition = new Vector2(seat.SeatX, CounterLineY);
+                var hit = seat.Root.gameObject.AddComponent<Image>();
+                hit.color = new Color(0, 0, 0, 0);   // invisible, but catches clicks
                 var button = seat.Root.gameObject.AddComponent<Button>();
-                button.targetGraphic = seat.Frame;
+                button.targetGraphic = hit;
+                button.transition = Selectable.Transition.None;
                 button.onClick.AddListener(() => OnSeatClicked(index));
+                seat.Group = seat.Root.gameObject.AddComponent<CanvasGroup>();
 
-                // The customer's face, top-left — the person sitting at the bar. The order
-                // ticket (name/read/order/patience) sits to their right.
+                // The bust: head-and-shoulders sitting on the counter line (bottom-centred).
                 var portrait = NewRect("Portrait", seat.Root);
-                Place(portrait, new Vector2(0, 1), new Vector2(56, 56), new Vector2(8, -6));
+                portrait.anchorMin = portrait.anchorMax = new Vector2(0.5f, 0);
+                portrait.pivot = new Vector2(0.5f, 0);
+                portrait.sizeDelta = new Vector2(BustW, BustW);   // square portrait art
+                portrait.anchoredPosition = new Vector2(0, 0);
                 seat.Portrait = portrait.gameObject.AddComponent<Image>();
                 seat.Portrait.preserveAspect = true;
                 seat.Portrait.raycastTarget = false;
-                seat.Portrait.gameObject.SetActive(false);
 
-                const float textX = 70f;   // clear of the portrait
-                seat.Name = NewText("Name", seat.Root, _body, 13, TextAnchor.UpperLeft, UITheme.TextPrimary);
-                Stretch(seat.Name.rectTransform, Vector2.zero, Vector2.one, new Vector2(textX, 0), new Vector2(-6, -5));
+                // The order tag, floating above the head.
+                seat.Tag = NewRect("Tag", seat.Root);
+                seat.Tag.anchorMin = seat.Tag.anchorMax = new Vector2(0.5f, 0);
+                seat.Tag.pivot = new Vector2(0.5f, 0);
+                seat.Tag.sizeDelta = new Vector2(BustW + 44f, 70f);
+                seat.Tag.anchoredPosition = new Vector2(0, BustW + 8f);
+                seat.TagBg = seat.Tag.gameObject.AddComponent<Image>();
+                seat.TagBg.raycastTarget = false;
+
+                seat.Name = NewText("Name", seat.Tag, _body, 12, TextAnchor.UpperCenter, UITheme.TextPrimary);
+                Stretch(seat.Name.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -4));
                 seat.Name.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-                seat.Wants = NewText("Wants", seat.Root, _body, 11, TextAnchor.UpperLeft, UITheme.Cyan[4]);
-                Stretch(seat.Wants.rectTransform, Vector2.zero, Vector2.one, new Vector2(textX, 0), new Vector2(-6, -24));
+                seat.Wants = NewText("Wants", seat.Tag, _body, 10, TextAnchor.UpperCenter, UITheme.Cyan[4]);
+                Stretch(seat.Wants.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -20));
                 seat.Wants.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-                seat.Order = NewText("Order", seat.Root, _body, 12, TextAnchor.UpperLeft, UITheme.Amber[4]);
-                Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(textX, 0), new Vector2(-6, -42));
+                seat.Order = NewText("Order", seat.Tag, _body, 11, TextAnchor.UpperCenter, UITheme.Amber[4]);
+                Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -36));
                 seat.Order.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-                var clockBg = NewRect("ClockBg", seat.Root);
+                var clockBg = NewRect("ClockBg", seat.Tag);
                 clockBg.anchorMin = new Vector2(0, 0); clockBg.anchorMax = new Vector2(1, 0);
-                clockBg.offsetMin = new Vector2(8, 8); clockBg.offsetMax = new Vector2(-8, 18);
+                clockBg.offsetMin = new Vector2(6, 6); clockBg.offsetMax = new Vector2(-6, 14);
                 clockBg.gameObject.AddComponent<Image>().color = UITheme.Night[0];
                 var clockFill = NewRect("ClockFill", clockBg);
                 clockFill.anchorMin = new Vector2(0, 0); clockFill.anchorMax = new Vector2(0, 1);
@@ -700,13 +733,13 @@ namespace LastCall.DebugUI
                 seat.PatienceFill = clockFill.gameObject.AddComponent<Image>();
                 seat.PatienceFill.raycastTarget = false;
 
+                seat.Root.gameObject.SetActive(false);
                 _seats.Add(seat);
             }
 
-            // The primary action: open the menu to build a drink (GDD 24 §1). Just above
-            // the seat row, centred — the counter's "order pad".
+            // The primary action: open the menu to build a drink (GDD 24 §1), bottom-centred.
             NewButton(root, "▸  MENU — MAKE A DRINK", new Vector2(0.5f, 0),
-                new Vector2(300, 40), new Vector2(0, 112), UITheme.PrimaryAction, OnMenuClicked);
+                new Vector2(300, 40), new Vector2(0, 40), UITheme.PrimaryAction, OnMenuClicked);
 
             BuildIdCard(root);
 
