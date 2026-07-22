@@ -53,7 +53,9 @@ namespace LastCall.DebugUI
         private RectTransform _shakerVessel;  // the target, opening at its top
         private RectTransform _pourBottle;    // the grabbable bottle
         private Image _pourBottleBody;
-        private Image _pourStream;
+        private Image _shakerLiquid;          // the liquid rising inside the shaker
+        private Splasher _shakerSplash;       // falling droplets / solids in the shaker stage
+        private float _shakerLiquidFloorY;    // surface y at empty, for droplet catch
         private Vector2 _bottleRest;
         private bool _bottleGrabbed;
         private bool _pouring;
@@ -84,7 +86,8 @@ namespace LastCall.DebugUI
         private RectTransform _serveGlass;      // the target
         private RectTransform _serveShaker;     // the grabbable shaker
         private Image _serveShakerBody;
-        private Image _serveStream;
+        private Image _serveLiquid;             // the liquid rising inside the serving glass
+        private Splasher _serveSplash;
         private Text _aimText;
         private Vector2 _serveShakerRest;
         private bool _serveGrabbed;
@@ -138,6 +141,8 @@ namespace LastCall.DebugUI
             _shaking = false;
             _shakeEnergy = 0;
             if (_dragPiece != null) _dragPiece.gameObject.SetActive(false);
+            _shakerSplash?.Clear();
+            _serveSplash?.Clear();
             if (Run != null && Run.PouringId != null) Run.EndPour();
 
             _root.gameObject.SetActive(stage != Stage.Closed);
@@ -213,7 +218,8 @@ namespace LastCall.DebugUI
             _pourBottleBody.color = colour;
             _pourBottle.anchoredPosition = _bottleRest;
             _pourBottle.localRotation = Quaternion.identity;
-            _pourStream.gameObject.SetActive(false);
+            _shakerSplash.Clear();
+            SetLiquid(_shakerLiquid, run.Glass);
             _shakerVessel.anchoredPosition = new Vector2(-120, -30);
             _shakerVessel.localRotation = Quaternion.identity;
             _shakeMeterFill.rectTransform.sizeDelta = new Vector2(0, -4);
@@ -258,23 +264,28 @@ namespace LastCall.DebugUI
                 bool over = Mathf.Abs(mouth.x - opening.x) < 78f && mouth.y > opening.y - 30f;
                 pourNow = tilt > 42f && over;
 
-                DrawStream(mouth, opening, pourNow);
-            }
-            else
-            {
-                DrawStream(default, default, false);
+                if (pourNow)
+                {
+                    // A ribbon of droplets falls from the mouth, aimed at the opening.
+                    var colour = UITheme.StyleColor(_focusBottle.Info?.Style, _focusBottle.Type);
+                    for (int i = 0; i < 2; i++)
+                        _shakerSplash.EmitDroplet(mouth,
+                            new Vector2((opening.x - mouth.x) * 1.1f, -140f), colour, _shakerLiquidFloorY);
+                }
             }
 
             if (pourNow)
             {
                 if (run.PouringId == null) run.BeginPour(_focusBottle.Id);
                 run.PourTick(Time.deltaTime);
+                SetLiquid(_shakerLiquid, run.Glass);
                 _shakerReadout.text = ShakerLine(run);
             }
             else if (run.PouringId != null)
             {
                 run.EndPour();
             }
+            _shakerSplash.Step(Time.deltaTime);
             _pouring = pourNow;
         }
 
@@ -340,23 +351,18 @@ namespace LastCall.DebugUI
             {
                 run.AddPreparation(_draggingPrep);
                 _shakerReadout.text = ShakerLine(run);
+                // The piece drops in and settles on the drink (a splash of granules for a rim).
+                var c = _dragPiece.GetComponent<Image>().color;
+                bool granular = _draggingPrep.Id == "salt_rim" || _draggingPrep.Id == "sugar_rim";
+                int n = granular ? 8 : 1;
+                for (int i = 0; i < n; i++)
+                    _shakerSplash.EmitSolid(
+                        new Vector2(opening.x + UnityEngine.Random.Range(-14f, 14f), opening.y),
+                        new Vector2(UnityEngine.Random.Range(-40f, 40f), -80f), c, _shakerLiquidFloorY,
+                        granular ? 8f : 26f);
             }
             _draggingPrep = null;
             _dragPiece.gameObject.SetActive(false);
-        }
-
-        /// <summary>The falling stream from mouth to opening while pouring; hidden otherwise.</summary>
-        private void DrawStream(Vector2 mouth, Vector2 opening, bool on)
-        {
-            if (!on) { _pourStream.gameObject.SetActive(false); return; }
-            _pourStream.gameObject.SetActive(true);
-            var rt = _pourStream.rectTransform;
-            float top = mouth.y;
-            float bottom = opening.y;
-            rt.anchoredPosition = new Vector2(mouth.x, (top + bottom) * 0.5f);
-            rt.sizeDelta = new Vector2(5f, Mathf.Max(8f, top - bottom));
-            _pourStream.color = new Color(_pourBottleBody.color.r, _pourBottleBody.color.g,
-                _pourBottleBody.color.b, 0.85f);
         }
 
         // ── the serve stage ──────────────────────────────────────────────────────
@@ -372,7 +378,9 @@ namespace LastCall.DebugUI
                 : $"glass {run.ServingGlass.FillFraction:P0} full";
             _serveShaker.anchoredPosition = _serveShakerRest;
             _serveShaker.localRotation = Quaternion.identity;
-            _serveStream.gameObject.SetActive(false);
+            _serveSplash.Clear();
+            SetLiquid(_serveLiquid, run.ServingGlass);
+            _serveShakerBody.color = DrinkColor(run.Glass);
             _aimText.text = "GRAB THE SHAKER · TIP IT OVER THE GLASS";
         }
 
@@ -412,21 +420,27 @@ namespace LastCall.DebugUI
                     // glass width is a clean pour; beyond that it spills more the further off.
                     accuracy = Mathf.Clamp01(1f - Mathf.Abs(mouth.x - opening.x) / 90f);
                     pourNow = true;
+
+                    // Droplets aim for the glass; a poor aim throws them wide, and they
+                    // fall past the rim (the spill you can see).
+                    var colour = DrinkColor(run.Glass);
+                    float landX = Mathf.Lerp(mouth.x + (mouth.x - opening.x) * 1.5f, opening.x, (float)accuracy);
+                    float floor = accuracy > 0.35 ? opening.y - _serveGlass.rect.height * 0.4f
+                                                  : -_serveSurface.rect.height * 0.5f;
+                    for (int i = 0; i < 2; i++)
+                        _serveSplash.EmitDroplet(mouth, new Vector2((landX - mouth.x) * 1.2f, -140f), colour, floor);
                 }
-                DrawServeStream(mouth, opening, pourNow, accuracy);
-            }
-            else
-            {
-                _serveStream.gameObject.SetActive(false);
             }
 
             if (pourNow)
             {
                 double before = run.ServingGlass.TotalVolume;
                 run.PourIntoServingGlass(ServePourRate * Time.deltaTime, accuracy);
+                SetLiquid(_serveLiquid, run.ServingGlass);
                 if (run.Glass.IsEmpty || run.ServingGlass.FillFraction >= 1.0) _serveGrabbed = false;
                 if (run.ServingGlass.TotalVolume != before) RefreshServeText(run, accuracy);
             }
+            _serveSplash.Step(Time.deltaTime);
         }
 
         private void RefreshServeText(TycoonRun run, double accuracy)
@@ -437,15 +451,49 @@ namespace LastCall.DebugUI
             _aimText.color = Color.Lerp(UITheme.ViceRed[3], UITheme.Lime[3], (float)accuracy);
         }
 
-        private void DrawServeStream(Vector2 mouth, Vector2 opening, bool on, double accuracy)
+        // ── liquid & colour helpers ──────────────────────────────────────────────
+
+        /// <summary>A liquid fill anchored to a vessel's bottom, resized by <see cref="SetLiquid"/>.</summary>
+        private Image MakeLiquid(RectTransform vessel)
         {
-            if (!on) { _serveStream.gameObject.SetActive(false); return; }
-            _serveStream.gameObject.SetActive(true);
-            var rt = _serveStream.rectTransform;
-            rt.anchoredPosition = new Vector2(mouth.x, (mouth.y + opening.y) * 0.5f);
-            rt.sizeDelta = new Vector2(5f, Mathf.Max(8f, mouth.y - opening.y));
-            var c = Color.Lerp(UITheme.ViceRed[3], UITheme.Cyan[4], (float)accuracy);
-            _serveStream.color = new Color(c.r, c.g, c.b, 0.85f);
+            var rt = NewRect("Liquid", vessel);
+            rt.anchorMin = new Vector2(0, 0); rt.anchorMax = new Vector2(1, 0);
+            rt.pivot = new Vector2(0.5f, 0);
+            rt.offsetMin = new Vector2(2, 0); rt.offsetMax = new Vector2(-2, 0);
+            rt.sizeDelta = new Vector2(-4, 0);
+            rt.anchoredPosition = Vector2.zero;
+            var img = rt.gameObject.AddComponent<Image>();
+            img.raycastTarget = false;
+            rt.gameObject.SetActive(false);
+            return img;
+        }
+
+        /// <summary>Sets a vessel's liquid level from its contents (GDD 24 §2, §7).</summary>
+        private void SetLiquid(Image liquid, GlassContents glass)
+        {
+            if (liquid == null) return;
+            if (glass == null || glass.IsEmpty) { liquid.gameObject.SetActive(false); return; }
+            var parent = (RectTransform)liquid.transform.parent;
+            float h = parent.rect.height * (float)glass.FillFraction;
+            liquid.rectTransform.sizeDelta = new Vector2(-4, h);
+            liquid.color = DrinkColor(glass);
+            liquid.gameObject.SetActive(true);
+        }
+
+        /// <summary>The drink's colour: its ingredients' style colours, blended by share.</summary>
+        private Color DrinkColor(GlassContents glass)
+        {
+            if (glass == null || glass.IsEmpty) return UITheme.Cream[3];
+            var shelf = Run?.Shelf;
+            float r = 0, g = 0, b = 0;
+            foreach (var id in glass.Ingredients)
+            {
+                var card = shelf?.Find(id)?.Ingredient;
+                var c = card != null ? UITheme.StyleColor(card.Info?.Style, card.Type) : UITheme.Cream[3];
+                float w = (float)glass.RatioOf(id);
+                r += c.r * w; g += c.g * w; b += c.b * w;
+            }
+            return new Color(r, g, b, 0.9f);
         }
 
         // ── construction ─────────────────────────────────────────────────────────
@@ -562,16 +610,14 @@ namespace LastCall.DebugUI
             var tin = NewRect("Tin", _shakerVessel);
             Stretch(tin, Vector2.zero, Vector2.one, new Vector2(6, 6), new Vector2(-6, -22));
             tin.gameObject.AddComponent<Image>().color = UITheme.Night[3];
+            _shakerLiquid = MakeLiquid(tin);   // the liquid that rises as you pour
             var lip = NewRect("Lip", _shakerVessel);   // the open mouth
             Place(lip, new Vector2(0.5f, 1), new Vector2(128, 16), new Vector2(0, 0));
             lip.gameObject.AddComponent<Image>().color = UITheme.Cream[3];
 
-            // The falling liquid stream (hidden until pouring).
-            var stream = NewRect("Stream", _pourSurface);
-            stream.pivot = new Vector2(0.5f, 0.5f);
-            _pourStream = stream.gameObject.AddComponent<Image>();
-            _pourStream.raycastTarget = false;
-            stream.gameObject.SetActive(false);
+            // Droplets fall on this surface; they die (splash) at the shaker's liquid line.
+            _shakerSplash = new Splasher(_pourSurface);
+            _shakerLiquidFloorY = _shakerVessel.anchoredPosition.y - _shakerVessel.rect.height * 0.5f + 12f;
 
             // The grabbable bottle, resting lower-right. Procedural body + neck; the grip
             // pivot sits low so lifting swings the mouth in a big arc.
@@ -687,15 +733,12 @@ namespace LastCall.DebugUI
             var bowl = NewRect("Bowl", _serveGlass);
             Stretch(bowl, Vector2.zero, Vector2.one, new Vector2(5, 5), new Vector2(-5, -14));
             bowl.gameObject.AddComponent<Image>().color = UITheme.Night[3];
+            _serveLiquid = MakeLiquid(bowl);
             var rim = NewRect("Rim", _serveGlass);
             Place(rim, new Vector2(0.5f, 1), new Vector2(104, 12), new Vector2(0, 0));
             rim.gameObject.AddComponent<Image>().color = UITheme.Cyan[3];
 
-            var stream = NewRect("Stream", _serveSurface);
-            stream.pivot = new Vector2(0.5f, 0.5f);
-            _serveStream = stream.gameObject.AddComponent<Image>();
-            _serveStream.raycastTarget = false;
-            stream.gameObject.SetActive(false);
+            _serveSplash = new Splasher(_serveSurface);
 
             // The grabbable shaker, resting lower-right.
             _serveShakerRest = new Vector2(160, -70);
