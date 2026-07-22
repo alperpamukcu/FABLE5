@@ -63,12 +63,13 @@ namespace LastCall.Tests
 
             Assert.AreEqual(TycoonPhase.DayEnd, run.Phase);
             Assert.AreEqual(8, run.Floor.Finished.Count, "day 1 sends 8 customers");
-            // 8 exact serves at $6 (rank 2 → $4+$2) + $1 speed tip each, minus $20 rent.
-            Assert.AreEqual(20 + 8 * 7 - 20, run.Money);
+            // 8 exact serves at $6 (rank 2 → $4+$2) + $4 speed tip each (served instantly),
+            // minus $20 rent.
+            Assert.AreEqual(20 + 8 * 10 - 20, run.Money);
 
             var result = run.ContinueToNextDay();
 
-            Assert.AreEqual(8 * 7, result.Income);
+            Assert.AreEqual(8 * 10, result.Income);
             Assert.AreEqual(20, result.Expenses, "rent is the only expense today");
             Assert.AreEqual(0, run.Ledger.DebtStrikes, "a green day");
             Assert.AreEqual(2, run.Day);
@@ -121,7 +122,7 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void TheWrongDrink_PaysHalf_AndSoursTheRoom()
+        public void TheWrongDrink_PaysNothing_AndSoursTheRoom()
         {
             var run = NewRun();
             int guard = 0;
@@ -136,7 +137,7 @@ namespace LastCall.Tests
             var verdict = run.ServeTo(visit);
 
             Assert.AreEqual(OrderMatch.Wrong, verdict.Match);
-            Assert.AreEqual(3, verdict.BasePaid, "half of the $6 spritz");
+            Assert.AreEqual(0, verdict.BasePaid, "the wrong drink pays nothing");
             Assert.AreEqual(0, verdict.Tip);
             Assert.LessOrEqual(verdict.Satisfaction, 0.2);
         }
@@ -179,7 +180,7 @@ namespace LastCall.Tests
         {
             // GDD 23 §6 (2026-07-22): if the till cannot cover it, the buy is refused.
             // Only rent may push the till below zero.
-            var run = NewRun();   // $20 start; the day leaves ~$56 in the till
+            var run = NewRun();   // $20 start; the day leaves ~$80 in the till, under the $90 musician
             PlayDayServingEveryone(run);
 
             Assert.Less(run.Money, run.Config.MusicianPrice, "sanity: the musician is out of reach");
@@ -206,14 +207,14 @@ namespace LastCall.Tests
             var run = NewRun();
             PlayDayServingEveryone(run);
 
-            // 8 exact spritzes: $6 base each = $48 sales, $1 speed tip each = $8 tips.
+            // 8 exact spritzes: $6 base each = $48 sales, $4 speed tip each = $32 tips.
             Assert.AreEqual(48, run.DaySales);
-            Assert.AreEqual(8, run.DayTips);
+            Assert.AreEqual(32, run.DayTips);
             Assert.AreEqual(20, run.DayRent, "day 1 rent");
 
             run.RefillShelf();
             Assert.AreEqual(17, run.DayStock);
-            Assert.AreEqual(48 + 8, run.DayIncome);
+            Assert.AreEqual(48 + 32, run.DayIncome);
             Assert.AreEqual(20 + 17, run.DayExpenses);
         }
 

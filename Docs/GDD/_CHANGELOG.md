@@ -2,6 +2,18 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `23 §4` **balance + fixes pass (2026-07-22):** the **wrong drink now pays nothing** (was
+  half) and sours the room; the **speed tip scales** up to $4 for the right drink served
+  fast, fading to nothing across a wider window (a slow serve just misses the tip). The
+  **serve reaction itemises the bill** — the drink's price in amber over the tip in green.
+  The finished glass on the counter now shows the drink **as it was actually built** — its
+  real fill level and blended colour, not a fixed amount. Ice/lemon/salt/sugar dropped in
+  now **fall and dissolve the instant they touch the drink** (they no longer float inside).
+  The shaker **stays where you set it down** after a shake (no teleport home). And every
+  canvas now **matches height**, so the layout no longer drifts when the window aspect
+  changes. *(Still open from the same brief: particle fluid, emotion→recipe pivot, inventory
+  economy, real character animations — see PLAN.)*
+
 - `24 §3.5` **feel pass (2026-07-22):** the pour is now a **metaball fluid** (`MetaballFluid`
   + `Shaders/MetaballLiquid.shader`) — droplets melt into one connected mass and into the
   pool instead of reading as separate balls, the liquid gains volume and takes the glass

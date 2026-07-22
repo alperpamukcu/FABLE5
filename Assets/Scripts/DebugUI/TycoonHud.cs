@@ -297,7 +297,13 @@ namespace LastCall.DebugUI
                 _drinkGlass.gameObject.SetActive(true);
                 _glassPos = _glassHome; _glassVel = Vector2.zero; _glassAngle = 0f; _glassAngVel = 0f;
             }
+            // The glass shows the drink as it was actually built: its blended colour and its
+            // real fill level (2026-07-22) — no fixed colour or amount.
             _drinkGlassLiquid.color = DrinkColor();
+            var made = !run.ServingGlass.IsEmpty ? run.ServingGlass : run.Glass;
+            float bowlH = ((RectTransform)_drinkGlassLiquid.transform.parent).rect.height;
+            _drinkGlassLiquid.rectTransform.sizeDelta =
+                new Vector2(-4, Mathf.Round(bowlH * (float)made.FillFraction));
 
             float dt = Mathf.Max(Time.deltaTime, 1e-4f);
             var mouse = Mouse.current;
@@ -382,16 +388,23 @@ namespace LastCall.DebugUI
                 : verdict.Match == OrderMatch.Exact ? "PERFECT!"
                 : verdict.Match == OrderMatch.Close ? "THANKS."
                 : "NOT WHAT I ASKED";
-            string tip = verdict.MoodTipLanded && verdict.Tip > 0 ? $"+${verdict.Total} ♪" : $"+${verdict.Total}";
 
-            var text = NewText("React", seat.parent, _display, 15, TextAnchor.LowerCenter, tone);
+            // The bill under it, itemised: the drink's price in amber, the tip in green.
+            string amber = ColorUtility.ToHtmlStringRGB(UITheme.Amber[3]);
+            string lime = ColorUtility.ToHtmlStringRGB(UITheme.Lime[3]);
+            var money = new StringBuilder();
+            money.Append($"<color=#{amber}>${verdict.BasePaid}</color>");
+            if (verdict.Tip > 0)
+                money.Append($"\n<color=#{lime}>+${verdict.Tip} tip{(verdict.MoodTipLanded ? " ♪" : "")}</color>");
+
+            var text = NewText("React", seat.parent, _display, 14, TextAnchor.LowerCenter, tone);
             text.supportRichText = true;
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
-            text.text = $"{line}\n<color=#{ColorUtility.ToHtmlStringRGB(UITheme.Lime[3])}>{tip}</color>";
+            text.text = $"{line}\n{money}";
             var rt = text.rectTransform;
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 0);
-            rt.sizeDelta = new Vector2(178, 44);
-            var start = seat.anchoredPosition + new Vector2(-89f, 120f);   // centred over the seat
+            rt.sizeDelta = new Vector2(178, 60);
+            var start = seat.anchoredPosition + new Vector2(-89f, 118f);   // centred over the seat
 
             const float duration = 1.35f;
             float tt = 0f;
@@ -886,6 +899,10 @@ namespace LastCall.DebugUI
             var scaler = canvasGo.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1280, 720);
+            // Match height (like the stage, 2026-07-22): every canvas scales off the same axis
+            // so nothing drifts out of alignment when the window's aspect changes.
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 1f;
             var root = (RectTransform)canvasGo.transform;
 
             if (UnityEngine.EventSystems.EventSystem.current == null)

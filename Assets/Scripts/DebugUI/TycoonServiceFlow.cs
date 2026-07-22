@@ -359,8 +359,6 @@ namespace LastCall.DebugUI
             float bob = Mathf.Sin(_slosh) * 1.0f * energy;
             PushShakerPool(run, bob);
 
-            // The ice / lemon ride the drink; shaking tosses them about inside the tin.
-            if (_shaking && _shakerSolids.Any) _shakerSolids.Jostle(Mathf.Min(_shakerVel.magnitude * 0.02f, 30f));
             _shakerFluid.Step(Time.deltaTime);
             _shakerSolids.Step(Time.deltaTime);
             _shakerSplash.Step(Time.deltaTime);
@@ -406,7 +404,7 @@ namespace LastCall.DebugUI
                 _shaking = false;
                 _shakeEnergy = 0;
                 _shakerVessel.localRotation = Quaternion.identity;
-                _shakerVessel.anchoredPosition = _shakerHome;
+                // Leave the shaker wherever it was set down — no teleport home (2026-07-22).
                 _shakerVel = Vector2.zero;
                 if (_shakeMeterText != null) _shakeMeterText.text = "";
                 return;
@@ -478,15 +476,14 @@ namespace LastCall.DebugUI
                 bool granular = _draggingPrep.Id == "salt_rim" || _draggingPrep.Id == "sugar_rim";
                 if (granular)
                 {
-                    // Salt / sugar dissolve: a quick scatter of granules that splash and vanish.
+                    // Salt / sugar: a scatter of fine grains that fall and dissolve on the drink.
                     for (int i = 0; i < 8; i++)
-                        _shakerSplash.EmitSolid(
-                            new Vector2(opening.x + UnityEngine.Random.Range(-14f, 14f), opening.y),
-                            new Vector2(UnityEngine.Random.Range(-40f, 40f), -80f), c, _shakerLiquidFloorY, 8f);
+                        _shakerSolids.Add(new Vector2(opening.x + UnityEngine.Random.Range(-16f, 16f), opening.y),
+                            c, UnityEngine.Random.Range(6f, 9f));
                 }
                 else
                 {
-                    // Ice / lemon drop in and float on the drink, bobbing at the surface.
+                    // Ice / lemon: a single piece that falls and dissolves the moment it hits.
                     _shakerSolids.Add(new Vector2(opening.x + UnityEngine.Random.Range(-16f, 16f), opening.y),
                         c, _draggingPrep.Id == "ice" ? 30f : 26f);
                 }
@@ -629,6 +626,8 @@ namespace LastCall.DebugUI
             var scaler = canvasGo.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1280, 720);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 1f;   // match height, like the stage (2026-07-22)
 
             _root = NewRect("FlowRoot", (RectTransform)canvasGo.transform);
             Stretch(_root, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);

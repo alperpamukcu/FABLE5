@@ -117,13 +117,13 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void AWrongDrink_PaysHalf_AndTipsNothing()
+        public void AWrongDrink_PaysNothing_AndTipsNothing()
         {
             var verdict = ServiceJudge.Judge(Visit(price: 10), OrderMatch.Wrong, null);
 
-            Assert.AreEqual(5, verdict.BasePaid);
+            Assert.AreEqual(0, verdict.BasePaid, "the wrong drink pays nothing");
             Assert.AreEqual(0, verdict.Tip);
-            Assert.AreEqual(0.2, verdict.Satisfaction, 1e-9);
+            Assert.AreEqual(0.05, verdict.Satisfaction, 1e-9);
         }
 
         [Test]
@@ -136,20 +136,21 @@ namespace LastCall.Tests
 
             var landed = ServiceJudge.Judge(Visit(read: read), OrderMatch.Exact, Delta(Emotion.Anger, -8));
             Assert.IsTrue(landed.MoodTipLanded);
-            Assert.AreEqual(3 + 1, landed.Tip, "$3 mood + $1 speed at zero wait");
+            Assert.AreEqual(3 + 4, landed.Tip, "$3 mood + $4 speed at zero wait");
 
             var big = ServiceJudge.Judge(Visit(read: read), OrderMatch.Exact, Delta(Emotion.Anger, -20));
-            Assert.AreEqual(5 + 1, big.Tip, "mood tip caps at $5");
+            Assert.AreEqual(5 + 4, big.Tip, "mood tip caps at $5");
         }
 
         [Test]
-        public void TheSpeedTip_OnlyInsideTheWindow()
+        public void TheSpeedTip_ScalesAndFadesAcrossTheWindow()
         {
             var slow = Visit(patience: 60);
-            slow.Tick(30);   // 50% waited
+            slow.Tick(30);   // 50% waited — at the window edge, no speed tip
 
             Assert.AreEqual(0, ServiceJudge.Judge(slow, OrderMatch.Exact, null).Tip);
-            Assert.AreEqual(1, ServiceJudge.Judge(Visit(), OrderMatch.Exact, null).Tip);
+            Assert.AreEqual(4, ServiceJudge.Judge(Visit(), OrderMatch.Exact, null).Tip,
+                "a serve at zero wait earns the full speed tip");
         }
 
         [Test]

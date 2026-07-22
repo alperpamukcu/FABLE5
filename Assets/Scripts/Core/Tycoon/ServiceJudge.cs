@@ -48,8 +48,11 @@ namespace LastCall.Core
         public const int MoodTipThreshold = 8;     // intent movement that earns the tip
         public const int MoodTipMin = 3;
         public const int MoodTipMax = 5;
-        public const int SpeedTip = 1;
-        public const double SpeedTipWindow = 0.35; // served inside the first 35% of patience
+        // Speed tip (2026-07-22 rebalance): the right drink served fast is what earns the big
+        // tip — up to SpeedTipMax, scaling down to nothing across the window. A slow serve
+        // simply misses the tip; it is never as bad as the wrong drink.
+        public const int SpeedTipMax = 4;
+        public const double SpeedTipWindow = 0.5;  // served inside the first half of patience
         // Widened 0.75 → 0.90 (2026-07-22): the extra order should reward *reading* someone
         // and serving their drink right, not also racing the clock. The user's ask was that
         // it be reachable, not fiendish — the skill is the read, the timing is a bonus (the
@@ -87,9 +90,9 @@ namespace LastCall.Core
         {
             if (visit == null) throw new ArgumentNullException(nameof(visit));
 
-            int basePaid = match == OrderMatch.Wrong
-                ? visit.Order.Price / 2
-                : visit.Order.Price;
+            // The wrong drink is a wasted pour: they pay nothing and leave sore. The right
+            // drink (exact or close family) is paid in full.
+            int basePaid = match == OrderMatch.Wrong ? 0 : visit.Order.Price;
 
             bool moodLanded = false;
             int moodTip = 0;
@@ -105,12 +108,17 @@ namespace LastCall.Core
                 }
             }
 
-            int speedTip = crowd != WealthTier.Broke && match != OrderMatch.Wrong
-                && visit.WaitFraction < SpeedTipWindow
-                ? SpeedTip : 0;
+            // The faster the right drink lands, the bigger the tip — full inside the window,
+            // fading to nothing at its edge. A broke crowd never tips for speed.
+            int speedTip = 0;
+            if (crowd != WealthTier.Broke && match != OrderMatch.Wrong)
+            {
+                double earliness = 1.0 - visit.WaitFraction / SpeedTipWindow;
+                if (earliness > 0) speedTip = (int)Math.Ceiling(SpeedTipMax * earliness);
+            }
 
             double satisfaction =
-                (match == OrderMatch.Exact ? 0.9 : match == OrderMatch.Close ? 0.6 : 0.2)
+                (match == OrderMatch.Exact ? 0.9 : match == OrderMatch.Close ? 0.6 : 0.05)
                 - 0.3 * visit.WaitFraction
                 + (moodLanded ? 0.1 : 0.0)
                 + ambienceBonus;
