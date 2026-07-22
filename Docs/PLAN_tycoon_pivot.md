@@ -128,7 +128,9 @@ scene boots the tycoon run; build size dropped ~5k lines of gameplay code + asse
   mouth over the target → it streams; released on mouse-up. Bottle→shaker in the shaker
   stage; shaker→glass in the serve stage, where the mouth's alignment over the glass is the
   aim (clean pour vs spill). Procedural placeholder vessels; geometry verified live
-- ☐ **Drag-preparations**: ice/lemon/salt/mint picked up and dropped into the shaker
+- ☑ **Drag-preparations**: a tray of ICE/LEMON/SALT/SUGAR chips down the left of the
+  shaker stage; pick one up (pointer-down), it follows the mouse, drop it over the shaker's
+  mouth to add it (a miss falls away). The menu keeps quick prep buttons as a fallback
 - ☐ **Real shake**: grab and shake the mouse; energy recorded 0–1 with the preparation
 - ☐ **ID card v3**: real licence proportions, purpose-drawn card art, one reading order
   (v2 explicitly disliked — redesign whole, do not iterate)

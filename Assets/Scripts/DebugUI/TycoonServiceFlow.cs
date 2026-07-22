@@ -61,6 +61,12 @@ namespace LastCall.DebugUI
         private const float MaxTilt = 118f;    // degrees the bottle leans at full lift
         private const float BottleH = 150f;
 
+        // Drag-drop preparations (GDD 24 §2.4): pick a piece off its tray and drop it into
+        // the shaker's mouth.
+        private PreparationDefinition _draggingPrep;
+        private RectTransform _dragPiece;
+        private Text _dragPieceLabel;
+
         // The serve pour uses the same tilt model (GDD 24 §3): grab the shaker, tip it over
         // the glass. How well the mouth lines up over the glass is the aim — off-centre spills.
         private Text _serveShakerText;
@@ -106,7 +112,7 @@ namespace LastCall.DebugUI
                 return;
             }
 
-            if (_stage == Stage.Shaker) UpdateTiltPour(run);
+            if (_stage == Stage.Shaker) { UpdatePrepDrag(run); UpdateTiltPour(run); }
 
             if (_stage == Stage.Serve) UpdateServeTilt(run);
         }
@@ -119,6 +125,8 @@ namespace LastCall.DebugUI
             _bottleGrabbed = false;
             _pouring = false;
             _serveGrabbed = false;
+            _draggingPrep = null;
+            if (_dragPiece != null) _dragPiece.gameObject.SetActive(false);
             if (Run != null && Run.PouringId != null) Run.EndPour();
 
             _root.gameObject.SetActive(stage != Stage.Closed);
@@ -252,6 +260,32 @@ namespace LastCall.DebugUI
                 run.EndPour();
             }
             _pouring = pourNow;
+        }
+
+        /// <summary>
+        /// The prep drag (GDD 24 §2.4): while a piece is held it follows the mouse; dropping
+        /// it over the shaker's mouth adds the preparation, a miss just falls away.
+        /// </summary>
+        private void UpdatePrepDrag(TycoonRun run)
+        {
+            if (_draggingPrep == null || Mouse.current == null) return;
+
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                _pourSurface, Mouse.current.position.ReadValue(), null, out Vector2 local);
+            _dragPiece.anchoredPosition = local;
+
+            if (Mouse.current.leftButton.isPressed) return;
+
+            // Dropped. Over the shaker's mouth → it goes in.
+            var opening = _shakerVessel.anchoredPosition + new Vector2(0, _shakerVessel.rect.height * 0.5f);
+            bool inMouth = Mathf.Abs(local.x - opening.x) < 90f && Mathf.Abs(local.y - opening.y) < 90f;
+            if (inMouth && !run.Glass.IsEmpty)
+            {
+                run.AddPreparation(_draggingPrep);
+                _shakerReadout.text = ShakerLine(run);
+            }
+            _draggingPrep = null;
+            _dragPiece.gameObject.SetActive(false);
         }
 
         /// <summary>The falling stream from mouth to opening while pouring; hidden otherwise.</summary>
@@ -506,6 +540,21 @@ namespace LastCall.DebugUI
             });
             _pourBottle.gameObject.AddComponent<EventTrigger>().triggers.Add(grab);
 
+            // The prep tray, down the left edge: pick a piece up and drag it into the shaker.
+            AddPrepSource(0, "ICE", Preparations.Ice, UITheme.Cyan[4]);
+            AddPrepSource(1, "LEMON", Preparations.LemonTwist, UITheme.Amber[4]);
+            AddPrepSource(2, "SALT", Preparations.SaltRim, UITheme.Cream[4]);
+            AddPrepSource(3, "SUGAR", Preparations.SugarRim, UITheme.Magenta[4]);
+
+            // The single piece that follows the mouse while a prep is held.
+            _dragPiece = NewRect("DragPiece", _pourSurface);
+            _dragPiece.pivot = new Vector2(0.5f, 0.5f);
+            _dragPiece.sizeDelta = new Vector2(48, 48);
+            _dragPiece.gameObject.AddComponent<Image>().raycastTarget = false;
+            _dragPieceLabel = NewText("L", _dragPiece, _body, 10, TextAnchor.MiddleCenter, UITheme.Night[0]);
+            Stretch(_dragPieceLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _dragPiece.gameObject.SetActive(false);
+
             _shakerReadout = NewText("Readout", _shakerPanel, _body, 13, TextAnchor.LowerCenter, UITheme.TextSecondary);
             Stretch(_shakerReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 52), new Vector2(-16, 84));
 
@@ -599,6 +648,28 @@ namespace LastCall.DebugUI
             var doneLabel = NewText("Label", done, _body, 13, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
             Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             doneLabel.text = "SERVE IT → PICK A SEAT";
+        }
+
+        /// <summary>One source chip on the prep tray: pointer-down picks its piece up.</summary>
+        private void AddPrepSource(int index, string label, PreparationDefinition prep, Color colour)
+        {
+            var chip = NewRect($"Prep_{label}", _pourSurface);
+            Place(chip, new Vector2(0, 1), new Vector2(72, 44), new Vector2(14, -14 - index * 52));
+            var img = chip.gameObject.AddComponent<Image>();
+            img.color = new Color(colour.r, colour.g, colour.b, 0.85f);
+            var text = NewText("L", chip, _body, 11, TextAnchor.MiddleCenter, UITheme.Night[0]);
+            Stretch(text.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            text.text = label;
+            var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            down.callback.AddListener(_ =>
+            {
+                if (Run == null || Run.Glass.IsEmpty) { _shakerReadout.text = "pour something first"; return; }
+                _draggingPrep = prep;
+                _dragPiece.GetComponent<Image>().color = img.color;
+                _dragPieceLabel.text = label;
+                _dragPiece.gameObject.SetActive(true);
+            });
+            chip.gameObject.AddComponent<EventTrigger>().triggers.Add(down);
         }
 
         // ── tiny UI helpers ──────────────────────────────────────────────────────
