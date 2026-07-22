@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `24 §3.5` **feel pass (2026-07-22):** pouring is now a continuous `PourStream` (a wavy
+  ribbon to the liquid line + a splash where it lands) instead of falling boxes; the fill
+  is slower and more deliberate; the shaker liquid has a moving surface that sloshes; and
+  dragged preparations swing from the grip as a `Pendulum`. Still procedural placeholder
+  art, still cosmetic-only over the deterministic pour. Also: the pre-menu stage dressing
+  (top-left pour-glass HUD, on-counter bottle rail, garnish jars) is retired, and the cash
+  register opens a **ledger of past days** (`24 §7`).
 - NEW `23_tycoon_loop.md` — **the loop is a business now**: up to 6 simultaneous seated
   customers ordering named drinks, patience clocks, price+tip payments (mood tips from the
   emotion read), extra orders on perfect serves, days of 8+ customers, a day-end invoice,

@@ -43,6 +43,28 @@ the mouse.** Buttons select; the mouse *does*. Every step below is a physical in
    inside the glass).
 3. **[SERVE]** → click the seat/customer to deliver. `ServiceJudge` (23 §4) resolves.
 
+### 3.5 The feel pass (2026-07-22) — interim physics, still procedural
+
+Player note: *"the falling liquid is boxes that don't touch the vessel; the fill is too
+fast; the filled shaker needs liquid physics; a dragged lemon should swing from the end
+you hold."* Addressed on the placeholder art, ahead of the P8 re-skin:
+
+- **Pouring is a continuous stream, not a spray of boxes** (`PourStream`): a wavy ribbon
+  from the mouth down to the **current liquid line**, narrowing as it falls, and it
+  throws a small **crown/splash** where it lands — the pour now visibly *meets the drink*.
+- **The fill is slower** (`PourTimeScale` on the shaker, a gentler serve rate): a pour is
+  a held, deliberate motion. Only the drawn volume slows; the floor's patience clock is
+  untouched (it runs on its own tick).
+- **The shaker liquid has a surface that moves** (`_shakerSurface` + `UpdateSlosh`): it
+  rocks gently at rest and heaves while shaking or pouring.
+- **Dragged pieces swing as a pendulum** (`Pendulum`): the grip rides the cursor, the body
+  hangs and lags — yank the hand and the free end sways, then settles.
+- The spill still lives in the **serve** aim: off-target, the stream drifts past the rim
+  and splashes on the counter (a bigger splash the worse the aim). GDD 21 §3 brim holds.
+
+All hand-integrated in UI space (`DrinkPhysics.cs`) — Unity's Physics2D can't reach Canvas
+RectTransforms. Cosmetic only: the poured **volume** is still the deterministic tilt-pour.
+
 ## 4. The seats
 
 **Commitment (2026-07-22, explicit request): customers are physical characters in the
