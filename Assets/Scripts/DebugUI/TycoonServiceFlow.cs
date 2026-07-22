@@ -53,11 +53,9 @@ namespace LastCall.DebugUI
         private RectTransform _shakerVessel;  // the target, opening at its top
         private RectTransform _pourBottle;    // the grabbable bottle
         private Image _pourBottleBody;
-        private Image _shakerLiquid;          // the liquid rising inside the shaker
-        private RectTransform _shakerSurface; // the moving liquid line (slosh)
-        private Splasher _shakerSplash;       // falling droplets / solids in the shaker stage
-        private PourStream _shakerStream;     // the continuous pour ribbon
-        private float _shakerLiquidFloorY;    // surface y at empty, for droplet catch
+        private MetaballFluid _shakerFluid;   // the metaball liquid: pour stream + pooled body
+        private Splasher _shakerSplash;       // settling solids (ice / lemon) in the shaker stage
+        private float _shakerLiquidFloorY;    // pool bottom y (the empty liquid line)
         private float _slosh;                 // running slosh phase for the shaker surface
         private Vector2 _bottleRest;
         private bool _bottleGrabbed;
@@ -71,12 +69,16 @@ namespace LastCall.DebugUI
         private const float PourTimeScale = 0.45f;
 
         // Drag-drop preparations (GDD 24 §2.4): pick a piece off its tray and drop it into
-        // the shaker's mouth. The piece hangs from the grip and swings as a pendulum.
+        // the shaker's mouth. The grip springs after the cursor with overshoot (weighty, lively
+        // lag) and the piece hangs and swings from that grip as a pendulum.
         private PreparationDefinition _draggingPrep;
         private RectTransform _dragPiece;
         private Text _dragPieceLabel;
         private readonly Pendulum _dragSwing = new Pendulum();
-        private Vector2 _lastDragMouse;
+        private Vector2 _dragPos;    // the grip's current position (lags the cursor)
+        private Vector2 _dragVel;    // the grip's velocity (drives the spring and the swing)
+        private const float DragStiffness = 150f;  // how hard the grip is pulled to the cursor
+        private const float DragDamping = 9f;       // < critical -> it overshoots and jiggles
 
         // The mouse-energy shake (GDD 24 §2.5): hold the shake pad and shake the mouse; how
         // much the cursor travels builds the energy, and the shaker jitters as you go.
@@ -95,9 +97,8 @@ namespace LastCall.DebugUI
         private RectTransform _serveGlass;      // the target
         private RectTransform _serveShaker;     // the grabbable shaker
         private Image _serveShakerBody;
-        private Image _serveLiquid;             // the liquid rising inside the serving glass
+        private MetaballFluid _serveFluid;      // the metaball liquid in the serving glass
         private Splasher _serveSplash;
-        private PourStream _serveStream;
         private Text _aimText;
         private Vector2 _serveShakerRest;
         private bool _serveGrabbed;
@@ -153,8 +154,8 @@ namespace LastCall.DebugUI
             if (_dragPiece != null) _dragPiece.gameObject.SetActive(false);
             _shakerSplash?.Clear();
             _serveSplash?.Clear();
-            _shakerStream?.Hide();
-            _serveStream?.Hide();
+            _shakerFluid?.Clear();
+            _serveFluid?.Clear();
             if (Run != null && Run.PouringId != null) Run.EndPour();
 
             _root.gameObject.SetActive(stage != Stage.Closed);
@@ -275,7 +276,9 @@ namespace LastCall.DebugUI
             _pourBottle.anchoredPosition = _bottleRest;
             _pourBottle.localRotation = Quaternion.identity;
             _shakerSplash.Clear();
-            SetLiquid(_shakerLiquid, run.Glass);
+            _shakerFluid.Clear();
+            _shakerFluid.SetColor(DrinkColor(run.Glass));
+            PushShakerPool(run, 0f);
             _shakerVessel.anchoredPosition = new Vector2(-120, -30);
             _shakerVessel.localRotation = Quaternion.identity;
             _shakeMeterFill.rectTransform.sizeDelta = new Vector2(0, -4);
@@ -322,54 +325,50 @@ namespace LastCall.DebugUI
 
                 if (pourNow)
                 {
-                    // A continuous stream falls from the mouth to the rising liquid line, and
-                    // throws a small crown where it lands — the pour meets the drink now.
+                    // A stream of merging droplets falls from the mouth toward the opening; the
+                    // metaball field fuses them into one liquid column and melts them into the
+                    // pool where they land (GDD 24 §3.5).
                     var colour = UITheme.StyleColor(_focusBottle.Info?.Style, _focusBottle.Type);
-                    float innerH = _shakerVessel.rect.height - 34f;
-                    float surfaceY = _shakerLiquidFloorY + innerH * (float)run.Glass.FillFraction;
-                    _shakerStream.Draw(mouth, surfaceY, colour, 7f, Time.deltaTime);
-                    if (UnityEngine.Random.value < 0.55f)
-                        _shakerSplash.EmitSplash(new Vector2(opening.x, surfaceY), colour, surfaceY, 0.7f);
+                    _shakerFluid.SetColor(colour);
+                    var streamVel = new Vector2((opening.x - mouth.x) * 2.0f, -260f);
+                    _shakerFluid.EmitStream(mouth, streamVel, Time.deltaTime);
                 }
             }
-
-            if (!pourNow) _shakerStream.Hide();
 
             if (pourNow)
             {
                 if (run.PouringId == null) run.BeginPour(_focusBottle.Id);
                 run.PourTick(Time.deltaTime * PourTimeScale);   // slower, deliberate pour
-                SetLiquid(_shakerLiquid, run.Glass);
                 _shakerReadout.text = ShakerLine(run);
             }
             else if (run.PouringId != null)
             {
                 run.EndPour();
             }
+
+            // The pooled liquid rocks: a slow ripple at rest, a heave while shaking or pouring.
+            float energy = _shaking ? 1f + 3f * (float)_shakeEnergy : (pourNow ? 1.2f : 0.3f);
+            _slosh += Time.deltaTime * (4f + 6f * energy);
+            float bob = Mathf.Sin(_slosh) * 1.8f * energy;
+            PushShakerPool(run, bob);
+
+            _shakerFluid.Step(Time.deltaTime);
             _shakerSplash.Step(Time.deltaTime);
-            UpdateSlosh(run, Time.deltaTime);
             _pouring = pourNow;
         }
 
-        /// <summary>
-        /// The liquid in a filled shaker never sits perfectly still (GDD 24 §2, 2026-07-22):
-        /// its surface rocks gently at rest and heaves while you shake. Drives the thin surface
-        /// strip that sits on top of the shaker liquid.
-        /// </summary>
-        private void UpdateSlosh(TycoonRun run, float dt)
+        /// <summary>Places the shaker's pooled liquid from the glass interior and its live fill,
+        /// plus a vertical slosh <paramref name="bob"/> on the surface (all surface-local px).</summary>
+        private void PushShakerPool(TycoonRun run, float bob)
         {
-            if (_shakerSurface == null) return;
-            bool hasLiquid = run != null && !run.Glass.IsEmpty;
-            if (!hasLiquid) { _shakerSurface.gameObject.SetActive(false); return; }
-
-            _shakerSurface.gameObject.SetActive(true);
-            // Rest is a slow ripple; shaking or pouring heaves it far more.
-            float energy = _shaking ? 1f + 3f * (float)_shakeEnergy : (_pouring ? 1.4f : 0.35f);
-            _slosh += dt * (4f + 6f * energy);
-            float tilt = Mathf.Sin(_slosh) * 3.2f * energy;
-            float bob = Mathf.Cos(_slosh * 1.3f) * 1.6f * energy;
-            _shakerSurface.localRotation = Quaternion.Euler(0, 0, tilt);
-            _shakerSurface.anchoredPosition = new Vector2(0, bob);
+            if (run.Glass.IsEmpty) { _shakerFluid.ClearPool(); return; }
+            float halfW = _shakerVessel.rect.width * 0.5f;
+            float minX = _shakerVessel.anchoredPosition.x - halfW + 8f;
+            float maxX = _shakerVessel.anchoredPosition.x + halfW - 8f;
+            float innerH = _shakerVessel.rect.height - 34f;
+            float bottomY = _shakerLiquidFloorY;
+            float topY = _shakerLiquidFloorY + innerH * (float)run.Glass.FillFraction + bob;
+            _shakerFluid.SetPool(minX, maxX, bottomY, topY);
         }
 
         /// <summary>
@@ -422,20 +421,23 @@ namespace LastCall.DebugUI
             if (_draggingPrep == null || Mouse.current == null) return;
 
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                _pourSurface, Mouse.current.position.ReadValue(), null, out Vector2 local);
+                _pourSurface, Mouse.current.position.ReadValue(), null, out Vector2 cursor);
 
-            // The grip rides the cursor; the piece hangs from it and swings — grab a lemon by
-            // one end and the other end lags and sways (GDD 24 §2.4, 2026-07-22).
+            // The grip springs after the cursor with overshoot — it has weight and jiggle — and
+            // the piece hangs from that grip and swings; grab a lemon by one end and the other
+            // end lags and sways (GDD 24 §2.4, 2026-07-22).
             float dt = Mathf.Max(Time.deltaTime, 1e-4f);
-            Vector2 pivotVel = (local - _lastDragMouse) / dt;
-            _lastDragMouse = local;
-            _dragSwing.Step(dt, pivotVel);
-            _dragPiece.anchoredPosition = local;
+            _dragVel += (cursor - _dragPos) * (DragStiffness * dt);
+            _dragVel *= Mathf.Exp(-DragDamping * dt);   // frame-rate-independent damping
+            _dragPos += _dragVel * dt;
+            _dragSwing.Step(dt, _dragVel);
+            _dragPiece.anchoredPosition = _dragPos;
             _dragPiece.localRotation = Quaternion.Euler(0, 0, _dragSwing.Angle);
 
             if (Mouse.current.leftButton.isPressed) return;
 
             // Dropped. Over the shaker's mouth → it goes in.
+            var local = _dragPos;
             var opening = _shakerVessel.anchoredPosition + new Vector2(0, _shakerVessel.rect.height * 0.5f);
             bool inMouth = Mathf.Abs(local.x - opening.x) < 90f && Mathf.Abs(local.y - opening.y) < 90f;
             if (inMouth && !run.Glass.IsEmpty)
@@ -470,7 +472,9 @@ namespace LastCall.DebugUI
             _serveShaker.anchoredPosition = _serveShakerRest;
             _serveShaker.localRotation = Quaternion.identity;
             _serveSplash.Clear();
-            SetLiquid(_serveLiquid, run.ServingGlass);
+            _serveFluid.Clear();
+            _serveFluid.SetColor(DrinkColor(run.Glass));
+            PushServePool(run);
             _serveShakerBody.color = DrinkColor(run.Glass);
             _aimText.text = "GRAB THE SHAKER · TIP IT OVER THE GLASS";
         }
@@ -513,32 +517,40 @@ namespace LastCall.DebugUI
                     pourNow = true;
 
                     // The stream falls toward where the aim sends it: dead-on it drops into the
-                    // glass and lands on the drink; off-aim it drifts wide and spills past the
-                    // rim onto the counter — the spill you can see (GDD 24 §3).
+                    // glass and melts into the drink; off-aim it drifts wide and misses the rim,
+                    // falling past onto the counter — the spill you can see (GDD 24 §3).
                     var colour = DrinkColor(run.Glass);
+                    _serveFluid.SetColor(colour);
                     float landX = Mathf.Lerp(mouth.x + (mouth.x - opening.x) * 1.5f, opening.x, (float)accuracy);
-                    bool intoGlass = accuracy > 0.35;
-                    float surfaceY = intoGlass
-                        ? opening.y - _serveGlass.rect.height * (0.9f - 0.5f * (float)run.ServingGlass.FillFraction)
-                        : -_serveSurface.rect.height * 0.5f + 6f;
-                    _serveStream.Draw(new Vector2(landX, mouth.y), surfaceY, colour, 7f, Time.deltaTime);
-                    if (UnityEngine.Random.value < 0.55f)
-                        _serveSplash.EmitSplash(new Vector2(landX, surfaceY), colour, surfaceY,
-                            intoGlass ? 0.7f : 1.1f);
+                    var streamVel = new Vector2((landX - mouth.x) * 2.0f, -260f);
+                    _serveFluid.EmitStream(mouth, streamVel, Time.deltaTime);
                 }
             }
-
-            if (!pourNow) _serveStream.Hide();
 
             if (pourNow)
             {
                 double before = run.ServingGlass.TotalVolume;
                 run.PourIntoServingGlass(ServePourRate * Time.deltaTime, accuracy);
-                SetLiquid(_serveLiquid, run.ServingGlass);
                 if (run.Glass.IsEmpty || run.ServingGlass.FillFraction >= 1.0) _serveGrabbed = false;
                 if (run.ServingGlass.TotalVolume != before) RefreshServeText(run, accuracy);
             }
+
+            PushServePool(run);
+            _serveFluid.Step(Time.deltaTime);
             _serveSplash.Step(Time.deltaTime);
+        }
+
+        /// <summary>Places the serving glass's pooled liquid from its interior and live fill.</summary>
+        private void PushServePool(TycoonRun run)
+        {
+            if (run.ServingGlass.IsEmpty) { _serveFluid.ClearPool(); return; }
+            float halfW = _serveGlass.rect.width * 0.5f;
+            float minX = _serveGlass.anchoredPosition.x - halfW + 6f;
+            float maxX = _serveGlass.anchoredPosition.x + halfW - 6f;
+            float innerH = _serveGlass.rect.height - 20f;
+            float bottomY = _serveGlass.anchoredPosition.y - _serveGlass.rect.height * 0.5f + 6f;
+            float topY = bottomY + innerH * (float)run.ServingGlass.FillFraction;
+            _serveFluid.SetPool(minX, maxX, bottomY, topY);
         }
 
         private void RefreshServeText(TycoonRun run, double accuracy)
@@ -549,34 +561,7 @@ namespace LastCall.DebugUI
             _aimText.color = Color.Lerp(UITheme.ViceRed[3], UITheme.Lime[3], (float)accuracy);
         }
 
-        // ── liquid & colour helpers ──────────────────────────────────────────────
-
-        /// <summary>A liquid fill anchored to a vessel's bottom, resized by <see cref="SetLiquid"/>.</summary>
-        private Image MakeLiquid(RectTransform vessel)
-        {
-            var rt = NewRect("Liquid", vessel);
-            rt.anchorMin = new Vector2(0, 0); rt.anchorMax = new Vector2(1, 0);
-            rt.pivot = new Vector2(0.5f, 0);
-            rt.offsetMin = new Vector2(2, 0); rt.offsetMax = new Vector2(-2, 0);
-            rt.sizeDelta = new Vector2(-4, 0);
-            rt.anchoredPosition = Vector2.zero;
-            var img = rt.gameObject.AddComponent<Image>();
-            img.raycastTarget = false;
-            rt.gameObject.SetActive(false);
-            return img;
-        }
-
-        /// <summary>Sets a vessel's liquid level from its contents (GDD 24 §2, §7).</summary>
-        private void SetLiquid(Image liquid, GlassContents glass)
-        {
-            if (liquid == null) return;
-            if (glass == null || glass.IsEmpty) { liquid.gameObject.SetActive(false); return; }
-            var parent = (RectTransform)liquid.transform.parent;
-            float h = parent.rect.height * (float)glass.FillFraction;
-            liquid.rectTransform.sizeDelta = new Vector2(-4, h);
-            liquid.color = DrinkColor(glass);
-            liquid.gameObject.SetActive(true);
-        }
+        // ── colour helper ─────────────────────────────────────────────────────────
 
         /// <summary>The drink's colour: its ingredients' style colours, blended by share.</summary>
         private Color DrinkColor(GlassContents glass)
@@ -705,27 +690,18 @@ namespace LastCall.DebugUI
             _shakerVessel = NewRect("Shaker", _pourSurface);
             Place(_shakerVessel, new Vector2(0.5f, 0.5f), new Vector2(120, 190), new Vector2(-120, -30));
             _shakerVessel.gameObject.AddComponent<Image>().color = UITheme.Cream[2];
-            var tin = NewRect("Tin", _shakerVessel);
+            var tin = NewRect("Tin", _shakerVessel);   // the dark interior the fluid pools into
             Stretch(tin, Vector2.zero, Vector2.one, new Vector2(6, 6), new Vector2(-6, -22));
             tin.gameObject.AddComponent<Image>().color = UITheme.Night[3];
-            _shakerLiquid = MakeLiquid(tin);   // the liquid that rises as you pour
-            // A thin sheen riding the liquid's top edge — the surface that rocks and sloshes.
-            _shakerSurface = NewRect("Surface", (RectTransform)_shakerLiquid.transform);
-            _shakerSurface.anchorMin = new Vector2(0, 1); _shakerSurface.anchorMax = new Vector2(1, 1);
-            _shakerSurface.pivot = new Vector2(0.5f, 0.5f);
-            _shakerSurface.offsetMin = new Vector2(1, -3); _shakerSurface.offsetMax = new Vector2(-1, 3);
-            var surfImgTop = _shakerSurface.gameObject.AddComponent<Image>();
-            surfImgTop.color = new Color(1f, 1f, 1f, 0.28f);
-            surfImgTop.raycastTarget = false;
-            _shakerSurface.gameObject.SetActive(false);
 
             var lip = NewRect("Lip", _shakerVessel);   // the open mouth
             Place(lip, new Vector2(0.5f, 1), new Vector2(128, 16), new Vector2(0, 0));
             lip.gameObject.AddComponent<Image>().color = UITheme.Cream[3];
 
-            // Droplets fall on this surface; they die (splash) at the shaker's liquid line.
+            // The metaball fluid draws over the vessel (pool) and above it (stream); the bottle
+            // and prep pieces are created after it, so they sit in front of the liquid.
+            _shakerFluid = new MetaballFluid(_pourSurface);
             _shakerSplash = new Splasher(_pourSurface);
-            _shakerStream = new PourStream(_pourSurface);
             _shakerLiquidFloorY = _shakerVessel.anchoredPosition.y - _shakerVessel.rect.height * 0.5f + 12f;
 
             // The grabbable bottle, resting lower-right. Procedural body + neck; the grip
@@ -840,16 +816,15 @@ namespace LastCall.DebugUI
             _serveGlass = NewRect("Glass", _serveSurface);
             Place(_serveGlass, new Vector2(0.5f, 0.5f), new Vector2(96, 150), new Vector2(-120, -40));
             _serveGlass.gameObject.AddComponent<Image>().color = UITheme.Cream[2];
-            var bowl = NewRect("Bowl", _serveGlass);
+            var bowl = NewRect("Bowl", _serveGlass);   // the dark interior the fluid pools into
             Stretch(bowl, Vector2.zero, Vector2.one, new Vector2(5, 5), new Vector2(-5, -14));
             bowl.gameObject.AddComponent<Image>().color = UITheme.Night[3];
-            _serveLiquid = MakeLiquid(bowl);
             var rim = NewRect("Rim", _serveGlass);
             Place(rim, new Vector2(0.5f, 1), new Vector2(104, 12), new Vector2(0, 0));
             rim.gameObject.AddComponent<Image>().color = UITheme.Cyan[3];
 
+            _serveFluid = new MetaballFluid(_serveSurface);
             _serveSplash = new Splasher(_serveSurface);
-            _serveStream = new PourStream(_serveSurface);
 
             // The grabbable shaker, resting lower-right.
             _serveShakerRest = new Vector2(160, -70);
@@ -909,10 +884,13 @@ namespace LastCall.DebugUI
                 _dragPiece.GetComponent<Image>().color = img.color;
                 _dragPieceLabel.text = label;
                 _dragSwing.Reset();
+                Vector2 start = chip.anchoredPosition;   // spring in from the tray chip
                 if (Mouse.current != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
                         _pourSurface, Mouse.current.position.ReadValue(), null, out Vector2 l0))
-                    _lastDragMouse = l0;
-                _dragPiece.anchoredPosition = _lastDragMouse;
+                    start = l0;
+                _dragPos = start;
+                _dragVel = Vector2.zero;
+                _dragPiece.anchoredPosition = _dragPos;
                 _dragPiece.localRotation = Quaternion.identity;
                 _dragPiece.gameObject.SetActive(true);
             });

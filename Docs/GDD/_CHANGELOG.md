@@ -2,13 +2,15 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
-- `24 §3.5` **feel pass (2026-07-22):** pouring is now a continuous `PourStream` (a wavy
-  ribbon to the liquid line + a splash where it lands) instead of falling boxes; the fill
-  is slower and more deliberate; the shaker liquid has a moving surface that sloshes; and
-  dragged preparations swing from the grip as a `Pendulum`. Still procedural placeholder
-  art, still cosmetic-only over the deterministic pour. Also: the pre-menu stage dressing
-  (top-left pour-glass HUD, on-counter bottle rail, garnish jars) is retired, and the cash
-  register opens a **ledger of past days** (`24 §7`).
+- `24 §3.5` **feel pass (2026-07-22):** the pour is now a **metaball fluid** (`MetaballFluid`
+  + `Shaders/MetaballLiquid.shader`) — droplets melt into one connected mass and into the
+  pool instead of reading as separate balls, the liquid gains volume and takes the glass
+  shape, and it lands with an organic splash; the fill is slower and more deliberate; the
+  pooled surface sloshes; and dragged preparations have weight — the grip springs after the
+  cursor with overshoot while the piece swings from it (`Pendulum`). Still procedural
+  placeholder art, still cosmetic-only over the deterministic pour. Also: the pre-menu stage
+  dressing (top-left pour-glass HUD, on-counter bottle rail, garnish jars) is retired, and
+  the cash register opens a **ledger of past days** (`24 §7`).
 - `24 §4` **faces at the bar (2026-07-22):** each occupied stool now shows the customer's
   archetype portrait beside the order ticket, souring red over the last third of patience —
   an interim step toward the P8 physical-customer characters, using art that already exists.

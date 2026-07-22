@@ -49,21 +49,32 @@ Player note: *"the falling liquid is boxes that don't touch the vessel; the fill
 fast; the filled shaker needs liquid physics; a dragged lemon should swing from the end
 you hold."* Addressed on the placeholder art, ahead of the P8 re-skin:
 
-- **Pouring is a continuous stream, not a spray of boxes** (`PourStream`): a wavy ribbon
-  from the mouth down to the **current liquid line**, narrowing as it falls, and it
-  throws a small **crown/splash** where it lands — the pour now visibly *meets the drink*.
+- **The pour is a metaball fluid, not separate balls** (`MetaballFluid` +
+  `Shaders/MetaballLiquid.shader`): every falling droplet and the pooled liquid feed one
+  scalar field that the shader thresholds, so nearby blobs **melt into a single connected
+  mass** as they approach each other and the surface. The stream reads as one flowing
+  column; where it lands it throws an **organic soft splash** and melts into the pool.
+- **The liquid gains volume and takes the glass shape**: the pooled body is a soft-topped
+  rectangle clipped to the glass interior, its surface line set from the glass's real
+  fill fraction — pour and the level rises like water filling a vessel.
 - **The fill is slower** (`PourTimeScale` on the shaker, a gentler serve rate): a pour is
   a held, deliberate motion. Only the drawn volume slows; the floor's patience clock is
   untouched (it runs on its own tick).
-- **The shaker liquid has a surface that moves** (`_shakerSurface` + `UpdateSlosh`): it
-  rocks gently at rest and heaves while shaking or pouring.
-- **Dragged pieces swing as a pendulum** (`Pendulum`): the grip rides the cursor, the body
-  hangs and lags — yank the hand and the free end sways, then settles.
-- The spill still lives in the **serve** aim: off-target, the stream drifts past the rim
-  and splashes on the counter (a bigger splash the worse the aim). GDD 21 §3 brim holds.
+- **The pooled surface moves**: a slow ripple at rest, a heave while shaking or pouring
+  (a vertical slosh on the metaball's surface line).
+- **Dragged pieces have weight and swing** (`Pendulum` + a spring grip): the grip
+  **springs after the cursor with overshoot** (it lags and jiggles) and the body hangs
+  and **swings from that grip** — grab a lemon by one end and the free end sways, then
+  settles.
+- The spill still lives in the **serve** aim: off-target, the stream drifts wide, misses
+  the rim and falls past onto the counter. GDD 21 §3 brim holds inside the glass.
 
-All hand-integrated in UI space (`DrinkPhysics.cs`) — Unity's Physics2D can't reach Canvas
-RectTransforms. Cosmetic only: the poured **volume** is still the deterministic tilt-pour.
+The fluid is a 2D metaball drawn on a UI RawImage — a CPU droplet cloud feeding a threshold
+shader, chosen over a Shuriken/RenderTexture rig because it composites cleanly inside the
+ScreenSpace-Overlay Canvas and shares the tilt-pour's local coordinates. Solids (ice/lemon
+settling) still use the `Splasher`. All hand-integrated in UI space (`DrinkPhysics.cs`,
+`MetaballFluid.cs`) — Unity's Physics2D can't reach Canvas RectTransforms. Cosmetic only:
+the poured **volume** is still the deterministic tilt-pour.
 
 ## 4. The seats
 
