@@ -84,6 +84,11 @@ namespace LastCall.Core
         private readonly List<MarketOffer> _marketOffers = new List<MarketOffer>();
         public IReadOnlyList<MarketOffer> MarketOffers => _marketOffers;
 
+        // Bottles bought at the last close still wear a "NEW" flash on the menu today
+        // (2026-07-23 inventory economy). Cleared when the next night's market opens.
+        private readonly HashSet<string> _newStockIds = new HashSet<string>();
+        public bool IsNewStock(string ingredientId) => _newStockIds.Contains(ingredientId);
+
         public TycoonRun(Shelf shelf, IReadOnlyList<RecipeDefinition> recipes, RunRng rng,
             TycoonConfig config = null, RegularsRegistry regulars = null,
             IReadOnlyList<IngredientCard> brandCatalogue = null)
@@ -298,14 +303,22 @@ namespace LastCall.Core
             if (offerIndex < 0 || offerIndex >= _marketOffers.Count)
                 throw new ArgumentOutOfRangeException(nameof(offerIndex));
             var offer = _marketOffers[offerIndex];
-            if (offer.Sold) throw new InvalidOperationException("That brand is already yours.");
-
-            var current = Market.FindByStyle(_shelf, offer.Style);
-            if (current == null)
-                throw new InvalidOperationException($"Nothing on the shelf pours {offer.Style}.");
+            if (offer.Sold) throw new InvalidOperationException("That bottle is already yours.");
 
             Spend(offer.Price);
-            _shelf.Replace(current, new ShelfBottle(offer.Bottle));
+            if (offer.IsNewStock)
+            {
+                // A style you did not carry — it joins the shelf so its drinks become makeable.
+                _shelf.Add(new ShelfBottle(offer.Bottle.Clone()));
+            }
+            else
+            {
+                var current = Market.FindByStyle(_shelf, offer.Style);
+                if (current == null)
+                    throw new InvalidOperationException($"Nothing on the shelf pours {offer.Style}.");
+                _shelf.Replace(current, new ShelfBottle(offer.Bottle.Clone()));
+            }
+            _newStockIds.Add(offer.Bottle.Id);   // flashes NEW on the menu tomorrow
             offer.MarkSold();
         }
 
@@ -412,8 +425,8 @@ namespace LastCall.Core
 
         private void RollMarket()
         {
-            // v0: deterministic "everything strictly better than what you stock" (GDD 22
-            // §4). The rotating random market of GDD 23 §8 replaces this in P5.
+            // Deterministic: new stock (styles you lack) + upgrades (better brands you have).
+            _newStockIds.Clear();   // yesterday's "NEW" flashes have worn off
             _marketOffers.Clear();
             _marketOffers.AddRange(Market.OffersFor(_shelf, _brandCatalogue));
         }

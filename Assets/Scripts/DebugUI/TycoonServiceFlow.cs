@@ -210,7 +210,10 @@ namespace LastCall.DebugUI
                     var card = bottle.Ingredient;
                     var colour = UITheme.StyleColor(card.Info?.Style, card.Type);
                     double fill = bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 0;
-                    string label = $"{card.Name.ToUpperInvariant()}    {fill:P0}";
+                    // A depleted bottle is OUT (and unclickable); a just-bought one flashes NEW.
+                    string state = bottle.IsEmpty ? "OUT" : $"{fill:P0}";
+                    string newTag = !bottle.IsEmpty && run.IsNewStock(card.Id) ? "   ★ NEW" : "";
+                    string label = $"{card.Name.ToUpperInvariant()}    {state}{newTag}";
                     AddListButton(_bottleList, label, colour, bottle.IsEmpty ? (Action)null : () => OpenBottle(card));
                 }
             }

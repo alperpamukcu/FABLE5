@@ -675,7 +675,8 @@ namespace LastCall.DebugUI
             {
                 int index = i;
                 var offer = run.MarketOffers[i];
-                AddCard(offer.Bottle.Name.ToUpperInvariant(), "bought", offer.Price, !offer.Sold, () =>
+                string title = (offer.IsNewStock ? "+ " : "↑ ") + offer.Bottle.Name.ToUpperInvariant();
+                AddCard(title, "bought", offer.Price, !offer.Sold, () =>
                 {
                     run.BuyBrand(index);
                     RebuildDayEnd();

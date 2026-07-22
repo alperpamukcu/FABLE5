@@ -37,14 +37,24 @@ namespace LastCall.Game
             CurrentSeed = string.IsNullOrWhiteSpace(newSeed) ? seed : newSeed.Trim();
 
             var bar = DataLoader.ParseDeck(deckJson.text);
-            // Tier 1 is the well you open with; higher tiers go to the end-of-night market.
+            // You open with a bare well — a couple of spirits and the essential mixers — and
+            // grow the shelf by buying new stock at the end of each night (2026-07-23). Every
+            // other bottle goes to the market catalogue.
+            var startingStock = new HashSet<string>
+            {
+                "vodka_astra", "gin_boothby", "soda_klara", "lemon_fresh", "syrup_house",
+            };
             var startingBottles = new List<ShelfBottle>();
             var brandCatalogue = new List<IngredientCard>();
             foreach (var card in bar.Cards)
             {
-                if (card.Info != null && card.Info.Tier > 1) brandCatalogue.Add(card);
-                else startingBottles.Add(new ShelfBottle(card.Clone()));
+                if (startingStock.Contains(card.Id)) startingBottles.Add(new ShelfBottle(card.Clone()));
+                else brandCatalogue.Add(card);
             }
+            if (startingBottles.Count == 0)   // data drift safety: never open with an empty shelf
+                foreach (var card in bar.Cards)
+                    if (card.Info == null || card.Info.Tier <= 1)
+                        startingBottles.Add(new ShelfBottle(card.Clone()));
             var recipes = DataLoader.ParseRecipes(recipesJson.text);
             var archetypes = archetypesJson != null ? DataLoader.ParseArchetypes(archetypesJson.text) : null;
 

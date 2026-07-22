@@ -2,6 +2,15 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `22 §4 / 23 §8` **inventory economy (2026-07-23):** the menu is your stock now. You open
+  with a **bare well** — two spirits and the essential mixers — and **grow the shelf by
+  buying new stock** at the end of each night: the market lists both **new bottles** (styles
+  you lack, `+`, which are *added* to the shelf so their drinks become makeable) and
+  **upgrades** (`↑`, better brands of what you have). A just-bought bottle **flashes ★ NEW**
+  on the menu the next day; a depleted bottle reads **OUT** and can't be poured until the
+  restock. New-stock prices scale by type and tier (`Market.StockPrice`). *(Still owed from
+  the brief: a drink pays a premium for the pricier alcohol used — a small follow-up.)*
+
 - `23 §4–5` **emotion → recipe pivot (2026-07-22):** the emotion layer no longer drives play.
   What you **read off the licence** is now the **drink recipe** (its ingredient bands) and the
   **garnishes the customer wants** (on ice, a twist, a rim) — the ID card shows these where the
