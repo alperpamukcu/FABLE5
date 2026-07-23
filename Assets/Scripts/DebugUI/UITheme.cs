@@ -102,6 +102,51 @@ namespace LastCall.DebugUI
         public static Color StyleColor(string style, IngredientType fallbackType) =>
             style != null && StyleColors.TryGetValue(style, out var c) ? c : TypeRamp[fallbackType][4];
 
+        // ── bottle style → LIQUID colour (2026-07-23) ───────────────────────────
+        // The shelf-tag StyleColor is a vivid identity hue (vodka ice-blue, gin green) for
+        // reading the rail at a glance — but that is wrong for the drink itself: real vodka,
+        // gin and soda are near-clear, and pouring them as saturated blue/green made every
+        // mix read wrong. These are the colours the *liquid* actually is; clear spirits are
+        // barely tinted, the rest carry their true tone. Mixed gamma-correctly in BlendLiquid.
+        private static readonly Dictionary<string, Color> LiquidColors = new Dictionary<string, Color>
+        {
+            ["vodka"]    = (Color)new Color32(0xE9, 0xEE, 0xF6, 0xFF),   // clear, a whisper of blue
+            ["gin"]      = (Color)new Color32(0xEA, 0xF2, 0xE9, 0xFF),   // clear, a whisper of green
+            ["soda"]     = (Color)new Color32(0xE6, 0xF2, 0xF3, 0xFF),   // clear fizz
+            ["rum"]      = (Color)new Color32(0xC6, 0x7F, 0x35, 0xFF),   // golden amber
+            ["bourbon"]  = (Color)new Color32(0xB0, 0x6A, 0x22, 0xFF),   // amber
+            ["amaro"]    = (Color)new Color32(0x7A, 0x2C, 0x2A, 0xFF),   // dark red-brown
+            ["vermouth"] = (Color)new Color32(0xA9, 0x4E, 0x5C, 0xFF),   // rosé
+            ["syrup"]    = (Color)new Color32(0xE3, 0x6F, 0xA0, 0xFF),   // pink
+            ["lemon"]    = (Color)new Color32(0xED, 0xD8, 0x66, 0xFF),   // pale citrus
+            ["ginger"]   = (Color)new Color32(0xD3, 0x92, 0x3C, 0xFF),   // golden
+            ["mint"]     = (Color)new Color32(0xA6, 0xDE, 0x80, 0xFF),   // pale green
+            ["olive"]    = (Color)new Color32(0xB7, 0xBE, 0x6A, 0xFF),   // brine
+        };
+
+        /// <summary>The colour of the actual liquid for a style; clear spirits read pale.
+        /// Falls back to a soft body tone of the ingredient type when the style is unmapped.</summary>
+        public static Color LiquidColor(string style, IngredientType fallbackType) =>
+            style != null && LiquidColors.TryGetValue(style, out var c) ? c : TypeRamp[fallbackType][3];
+
+        /// <summary>Blends the poured ingredients into one liquid colour, weighted by share and
+        /// mixed in LINEAR space so a two-part drink reads bright and clean instead of the muddy
+        /// mid-grey a straight sRGB average produces (2026-07-23).</summary>
+        public static Color BlendLiquid(IEnumerable<(string style, IngredientType type, float weight)> parts,
+            Color empty, float alpha)
+        {
+            float r = 0, g = 0, b = 0, tot = 0;
+            foreach (var (style, type, weight) in parts)
+            {
+                if (weight <= 0) continue;
+                Color lin = LiquidColor(style, type).linear;
+                r += lin.r * weight; g += lin.g * weight; b += lin.b * weight; tot += weight;
+            }
+            if (tot <= 0) return empty;
+            var mixed = new Color(r / tot, g / tot, b / tot, 1f).gamma;
+            return new Color(mixed.r, mixed.g, mixed.b, alpha);
+        }
+
         /// <summary>Body/fill colour for an ingredient type (ramp step 3).</summary>
         public static Color TypeFill(IngredientType t) => TypeRamp[t][3];
 

@@ -378,22 +378,21 @@ namespace LastCall.DebugUI
             return -1;
         }
 
-        /// <summary>The carried drink's colour: its ingredients' style colours, blended by share.</summary>
+        /// <summary>The carried drink's colour: its ingredients' true liquid colours, blended by
+        /// share in linear space (2026-07-23) — clear spirits read pale, and a mix stays clean.</summary>
         private Color DrinkColor()
         {
             var run = Run;
             var glass = run == null ? null
                 : (!run.ServingGlass.IsEmpty ? run.ServingGlass : run.Glass);
             if (glass == null || glass.IsEmpty) return UITheme.Amber[3];
-            float r = 0, g = 0, b = 0;
+            var parts = new List<(string, IngredientType, float)>();
             foreach (var id in glass.Ingredients)
             {
                 var card = run.Shelf.Find(id)?.Ingredient;
-                var c = card != null ? UITheme.StyleColor(card.Info?.Style, card.Type) : UITheme.Amber[3];
-                float w = (float)glass.RatioOf(id);
-                r += c.r * w; g += c.g * w; b += c.b * w;
+                parts.Add((card?.Info?.Style, card?.Type ?? IngredientType.Spirit, (float)glass.RatioOf(id)));
             }
-            return new Color(r, g, b, 0.92f);
+            return UITheme.BlendLiquid(parts, UITheme.Amber[3], 0.92f);
         }
 
         /// <summary>How a served customer reacts (GDD 24 §4, §10): a word for the read/serve

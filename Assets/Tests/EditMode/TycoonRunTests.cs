@@ -101,6 +101,28 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void PremiumSpirits_RaiseTheMenuPrice()
+        {
+            // A tier-3 gin on the shelf lifts a spirit drink's price; a basic (tier-1) bar
+            // adds nothing, so the sim bot's floor is untouched (2026-07-23).
+            var premiumShelf = new Shelf(new[]
+            {
+                new ShelfBottle(new IngredientCard("gin", "Gin", IngredientType.Spirit, 6,
+                    info: new IngredientInfo("gin", tier: 3)), capacity: 20),
+                new ShelfBottle(new IngredientCard("soda", "Soda", IngredientType.Bubbly, 1), capacity: 20),
+            });
+            var run = new TycoonRun(premiumShelf, Book, new RunRng("premium"),
+                config: new TycoonConfig(20, orderDecisionSeconds: 0, savorSeconds: 0));
+
+            int guard = 0;
+            while (run.Floor.Seated.Count == 0) { Assert.Less(guard++, 100); run.Tick(5); }
+
+            // base $6 (rank 2) + premium (tier 3 spirit → +2×$2) = $10 to a regular crowd.
+            Assert.AreEqual(DrinkOrder.MenuPrice(Spritz()) + (3 - 1) * 2,
+                run.Floor.Seated[0].Order.Price);
+        }
+
+        [Test]
         public void ServingNobody_UntilTheTillRunsDry_ClosesTheBar()
         {
             // $20 starting money vs $20 day-1 rent: the till goes under on day 2 with no

@@ -104,5 +104,10 @@ namespace LastCall.Core
         // ── orders (GDD 23 §3) ──────────────────────────────────────────────────
         /// <summary>The order roll pool: this many lowest-rank pourable recipes.</summary>
         public int OrderPoolSize(int day) => 3 + day;
+
+        /// <summary>Premium stock lifts the menu price (2026-07-23): each tier a drink's spirit
+        /// is above the base adds this much to its price. Start cheap, pour top-shelf, charge
+        /// top-shelf. Zero for a bar that never upgrades — the sim bot's floor is unchanged.</summary>
+        public int StockPremiumPerTier { get; } = 2;
     }
 }

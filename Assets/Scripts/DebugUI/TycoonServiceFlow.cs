@@ -604,20 +604,19 @@ namespace LastCall.DebugUI
 
         // ── colour helper ─────────────────────────────────────────────────────────
 
-        /// <summary>The drink's colour: its ingredients' style colours, blended by share.</summary>
+        /// <summary>The drink's colour: its ingredients' true liquid colours, blended by share
+        /// in linear space (2026-07-23) — clear spirits read pale, and a mix stays clean.</summary>
         private Color DrinkColor(GlassContents glass)
         {
             if (glass == null || glass.IsEmpty) return UITheme.Cream[3];
             var shelf = Run?.Shelf;
-            float r = 0, g = 0, b = 0;
+            var parts = new List<(string, IngredientType, float)>();
             foreach (var id in glass.Ingredients)
             {
                 var card = shelf?.Find(id)?.Ingredient;
-                var c = card != null ? UITheme.StyleColor(card.Info?.Style, card.Type) : UITheme.Cream[3];
-                float w = (float)glass.RatioOf(id);
-                r += c.r * w; g += c.g * w; b += c.b * w;
+                parts.Add((card?.Info?.Style, card?.Type ?? IngredientType.Spirit, (float)glass.RatioOf(id)));
             }
-            return new Color(r, g, b, 0.9f);
+            return UITheme.BlendLiquid(parts, UITheme.Cream[3], 0.9f);
         }
 
         // ── construction ─────────────────────────────────────────────────────────

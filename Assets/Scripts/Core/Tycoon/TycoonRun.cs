@@ -154,9 +154,34 @@ namespace LastCall.Core
         private DrinkOrder RollOrder()
         {
             var order = DrinkOrder.Roll(_recipes, Day, _config, _rng.GetStream("orders"));
+            // Premium spirits on the shelf raise the price; the crowd tier then scales it.
             int price = Math.Max(1, (int)Math.Round(
-                order.Price * _config.PriceMultiplier(CrowdToday), MidpointRounding.AwayFromZero));
-            return price == order.Price ? order : new DrinkOrder(order.Wanted, price);
+                (order.Price + PremiumFor(order.Wanted)) * _config.PriceMultiplier(CrowdToday),
+                MidpointRounding.AwayFromZero));
+            return price == order.Price
+                ? order
+                : new DrinkOrder(order.Wanted, price, order.Garnishes);   // keep the garnish wants
+        }
+
+        /// <summary>The premium a drink earns from the shelf's stock (GDD 23 §3, 2026-07-23):
+        /// for each spirit/bitter the recipe needs, the best bottle above the base tier adds
+        /// <see cref="TycoonConfig.StockPremiumPerTier"/> to the price. A basic bar adds nothing.</summary>
+        private int PremiumFor(RecipeDefinition recipe)
+        {
+            if (recipe.RatioRequirements == null || recipe.RatioRequirements.Count == 0) return 0;
+            int premium = 0;
+            var counted = new HashSet<IngredientType>();
+            foreach (var band in recipe.RatioRequirements)
+            {
+                if (band.Type != IngredientType.Spirit && band.Type != IngredientType.Bitter) continue;
+                if (!counted.Add(band.Type)) continue;   // one premium per alcohol type
+                int bestTier = 1;
+                foreach (var bottle in _shelf.Bottles)
+                    if (bottle.Ingredient.Type == band.Type)
+                        bestTier = Math.Max(bestTier, bottle.Ingredient.Info?.Tier ?? 1);
+                premium += (bestTier - 1) * _config.StockPremiumPerTier;
+            }
+            return premium;
         }
 
         // ── building the drink (pour verbs, GDD 21 §3 unchanged) ────────────────
