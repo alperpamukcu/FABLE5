@@ -19,12 +19,12 @@ namespace LastCall.DebugUI
     public sealed class MetaballFluid
     {
         // Render budget — pool particles + free stream/splash drops share the shader's _Drops[].
-        private const int MaxPool = 280;
-        private const int MaxDrops = 40;
-        private const int RenderMax = 320;   // must match MAX_DROPS in the shader
+        private const int MaxPool = 340;
+        private const int MaxDrops = 44;
+        private const int RenderMax = 384;   // must match MAX_DROPS in the shader
 
         private const float Gravity = 1400f;          // px/s² down
-        private const float StreamRadius = 7.5f;
+        private const float StreamRadius = 6f;
         private const float StreamInterval = 0.006f;
 
         // Position-based fluid (PBD / position-based dynamics, the real-time SPH-family method).
@@ -33,11 +33,11 @@ namespace LastCall.DebugUI
         // and never collapses. Neighbour-velocity viscosity makes it flow. The particle COUNT is
         // derived from the fill area at Spacing, so it fills any vessel exactly.
         private const float H = 18f;                  // viscosity/neighbour radius (px)
-        private const float Spacing = 8f;           // rest spacing (min distance) → many small particles
+        private const float Spacing = 6f;           // rest spacing (min distance) → many small particles
         private const int   RelaxIters = 5;           // incompressibility relaxation passes
-        // Render radius is well above the spacing (8) so the small, tightly-packed particles
+        // Render radius is well above the spacing (6) so the small, tightly-packed particles
         // overlap into ONE smooth connected surface with no gaps between them.
-        private const float PoolRadius = 11.5f;
+        private const float PoolRadius = 8.5f;
         private const float Viscosity = 0.42f;        // 0..1 neighbour-velocity blend (more flow)
         private const float MaxSpeed = 1300f;
         private const float WallFriction = 0.72f;     // (kept for API parity)

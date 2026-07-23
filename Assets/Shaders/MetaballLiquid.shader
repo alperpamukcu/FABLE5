@@ -66,7 +66,7 @@ Shader "LastCall/MetaballLiquid"
             #pragma fragment frag
             #include "UnityCG.cginc"
 
-            #define MAX_DROPS 320
+            #define MAX_DROPS 384
 
             struct appdata_t
             {
