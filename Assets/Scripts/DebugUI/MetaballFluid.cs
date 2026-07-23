@@ -27,18 +27,18 @@ namespace LastCall.DebugUI
         private const float StreamRadius = 8f;
         private const float StreamInterval = 0.007f;
 
-        // Position-based fluid parameters. The particle COUNT is derived from the fill area at
-        // Spacing, and RestDensity is matched to that spacing, so the particles fill the vessel
-        // to the liquid line instead of collapsing into a clump at the bottom.
-        private const float H = 24f;                  // interaction radius (px)
-        private const float Spacing = 14f;            // target rest spacing → fills the volume
-        private const float RestDensity = 1.0f;       // matched to Spacing (no net attraction)
-        private const float Stiffness = 0.4f;
-        private const float NearStiffness = 0.5f;
+        // Position-based fluid (PBD / position-based dynamics, the real-time SPH-family method).
+        // Incompressibility is a hard MINIMUM-DISTANCE constraint relaxed a few passes per frame:
+        // particles can never pack closer than Spacing, so the body stacks up to the fill line
+        // and never collapses. Neighbour-velocity viscosity makes it flow. The particle COUNT is
+        // derived from the fill area at Spacing, so it fills any vessel exactly.
+        private const float H = 24f;                  // viscosity/neighbour radius (px)
+        private const float Spacing = 14f;            // rest spacing (min distance) → fills the volume
+        private const int   RelaxIters = 4;           // incompressibility relaxation passes
         private const float PoolRadius = 11f;         // small round particles that still merge
-        private const float Viscosity = 0.985f;       // per-frame velocity retention
+        private const float Viscosity = 0.18f;        // 0..1 neighbour-velocity blend (flow)
         private const float MaxSpeed = 1300f;
-        private const float WallFriction = 0.72f;     // tangential velocity kept on a wall hit
+        private const float WallFriction = 0.72f;     // (kept for API parity)
 
         private readonly RectTransform _rt;
         private readonly RawImage _image;
@@ -150,7 +150,7 @@ namespace LastCall.DebugUI
             // the line, not into a puddle at the bottom. New ones rain in near the surface.
             float fillH = _fillTopY - bottomY;
             int target = Mathf.Clamp(
-                Mathf.RoundToInt((2f * _halfW) * fillH / (Spacing * Spacing)), 0, MaxPool);
+                Mathf.RoundToInt((2f * _halfW) * fillH / (Spacing * Spacing) * 1.15f), 0, MaxPool);
             while (_pn < target && _pn < MaxPool)
             {
                 _px[_pn] = _cx + Random.Range(-_halfW * 0.7f, _halfW * 0.7f);
@@ -229,77 +229,82 @@ namespace LastCall.DebugUI
         {
             if (_pn == 0) return;
 
+            // Integrate gravity and remember where each particle started this frame.
             for (int i = 0; i < _pn; i++)
             {
-                _vy[i] -= Gravity * dt;
-                _vx[i] *= Viscosity; _vy[i] *= Viscosity;
                 _ppx[i] = _px[i]; _ppy[i] = _py[i];
+                _vy[i] -= Gravity * dt;
                 _px[i] += _vx[i] * dt; _py[i] += _vy[i] * dt;
             }
 
-            // Double-density relaxation: incompressibility + a little surface tension.
-            float h2 = H * H;
-            for (int i = 0; i < _pn; i++)
+            // Incompressibility: relax a minimum-distance constraint a few passes — no two
+            // particles closer than Spacing — so the body packs up to the fill line and never
+            // collapses. The vessel walls are re-applied between passes so the liquid stays in.
+            float minD = Spacing, minD2 = minD * minD;
+            for (int iter = 0; iter < RelaxIters; iter++)
             {
-                float rho = 0f, rhoNear = 0f;
-                for (int j = 0; j < _pn; j++)
-                {
-                    if (j == i) continue;
-                    float dx = _px[j] - _px[i], dy = _py[j] - _py[i];
-                    float r2 = dx * dx + dy * dy;
-                    if (r2 >= h2) continue;
-                    float q = 1f - Mathf.Sqrt(r2) / H;
-                    rho += q * q; rhoNear += q * q * q;
-                }
-                float pressure = Stiffness * (rho - RestDensity);
-                float pressNear = NearStiffness * rhoNear;
-
-                float ddx = 0f, ddy = 0f;
-                for (int j = 0; j < _pn; j++)
-                {
-                    if (j == i) continue;
-                    float dx = _px[j] - _px[i], dy = _py[j] - _py[i];
-                    float r2 = dx * dx + dy * dy;
-                    if (r2 >= h2 || r2 < 1e-4f) continue;
-                    float r = Mathf.Sqrt(r2);
-                    float q = 1f - r / H;
-                    float mag = dt * dt * (pressure * q + pressNear * q * q) * 0.5f;
-                    float nx = dx / r, ny = dy / r;
-                    _px[j] += nx * mag; _py[j] += ny * mag;
-                    ddx -= nx * mag; ddy -= ny * mag;
-                }
-                _px[i] += ddx; _py[i] += ddy;
+                for (int i = 0; i < _pn; i++)
+                    for (int j = i + 1; j < _pn; j++)
+                    {
+                        float dx = _px[j] - _px[i], dy = _py[j] - _py[i];
+                        float r2 = dx * dx + dy * dy;
+                        if (r2 >= minD2 || r2 < 1e-4f) continue;
+                        float r = Mathf.Sqrt(r2);
+                        float push = (minD - r) * 0.5f;
+                        float nx = dx / r, ny = dy / r;
+                        _px[i] -= nx * push; _py[i] -= ny * push;
+                        _px[j] += nx * push; _py[j] += ny * push;
+                    }
+                ClampToVessel();
             }
 
-            // Collide with the vessel walls (the rotated container) and re-derive velocity so
-            // that a moving/tilting vessel carries the liquid — the source of the slosh.
+            // Velocity from the net move (this is what carries a moving/tilting vessel into the
+            // liquid — the slosh), speed-capped.
+            for (int i = 0; i < _pn; i++)
+            {
+                _vx[i] = (_px[i] - _ppx[i]) / dt;
+                _vy[i] = (_py[i] - _ppy[i]) / dt;
+                float sp2 = _vx[i] * _vx[i] + _vy[i] * _vy[i];
+                if (sp2 > MaxSpeed * MaxSpeed) { float s = MaxSpeed / Mathf.Sqrt(sp2); _vx[i] *= s; _vy[i] *= s; }
+            }
+            ApplyViscosity();
+        }
+
+        /// <summary>Clamps every particle inside the rotated vessel interior.</summary>
+        private void ClampToVessel()
+        {
             float cos = Mathf.Cos(-_angle), sin = Mathf.Sin(-_angle);
             float cosB = Mathf.Cos(_angle), sinB = Mathf.Sin(_angle);
-            float ix = _halfW - PoolRadius * 0.5f, iy = _halfH - PoolRadius * 0.5f;
-            if (ix < 2f) ix = 2f; if (iy < 2f) iy = 2f;
+            float ix = Mathf.Max(_halfW - PoolRadius * 0.45f, 2f);
+            float iy = Mathf.Max(_halfH - PoolRadius * 0.45f, 2f);
             for (int i = 0; i < _pn; i++)
             {
                 float ox = _px[i] - _cx, oy = _py[i] - _cy;
-                float lx = ox * cos - oy * sin, ly = ox * sin + oy * cos;   // to container-local
-                bool hitX = false, hitY = false;
-                if (lx < -ix) { lx = -ix; hitX = true; } else if (lx > ix) { lx = ix; hitX = true; }
-                if (ly < -iy) { ly = -iy; hitY = true; } else if (ly > iy) { ly = iy; hitY = true; }
+                float lx = ox * cos - oy * sin, ly = ox * sin + oy * cos;
+                if (lx < -ix) lx = -ix; else if (lx > ix) lx = ix;
+                if (ly < -iy) ly = -iy; else if (ly > iy) ly = iy;
                 _px[i] = _cx + (lx * cosB - ly * sinB);
                 _py[i] = _cy + (lx * sinB + ly * cosB);
+            }
+        }
 
-                float vx = (_px[i] - _ppx[i]) / dt, vy = (_py[i] - _ppy[i]) / dt;
-                if (hitX || hitY)
+        /// <summary>Blends each particle's velocity toward its neighbours' — the liquid flows as
+        /// one body instead of rattling as loose grains.</summary>
+        private void ApplyViscosity()
+        {
+            float h2 = H * H;
+            for (int i = 0; i < _pn; i++)
+            {
+                float avx = 0f, avy = 0f; int n = 0;
+                for (int j = 0; j < _pn; j++)
                 {
-                    // Bleed the wall-normal velocity, keep some tangential (friction).
-                    float tx = vx * cos - vy * sin, ty = vx * sin + vy * cos;
-                    if (hitX) tx *= -0.02f;
-                    if (hitY) ty *= -0.02f;
-                    tx *= WallFriction; ty *= WallFriction;
-                    vx = tx * cosB - ty * sinB; vy = tx * sinB + ty * cosB;
+                    if (j == i) continue;
+                    float dx = _px[j] - _px[i], dy = _py[j] - _py[i];
+                    if (dx * dx + dy * dy < h2) { avx += _vx[j]; avy += _vy[j]; n++; }
                 }
-                float sp2 = vx * vx + vy * vy;
-                if (sp2 > MaxSpeed * MaxSpeed) { float s = MaxSpeed / Mathf.Sqrt(sp2); vx *= s; vy *= s; }
-                _vx[i] = vx; _vy[i] = vy;
+                if (n == 0) continue;
+                _vx[i] = Mathf.Lerp(_vx[i], avx / n, Viscosity);
+                _vy[i] = Mathf.Lerp(_vy[i], avy / n, Viscosity);
             }
         }
 
