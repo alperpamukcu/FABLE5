@@ -204,18 +204,25 @@ namespace LastCall.DebugUI
                     if (bottle.Ingredient.Type == type) group.Add(bottle);
                 if (group.Count == 0) continue;
 
-                AddGroupHeader(GroupName(type), UITheme.TypeRamp[type][3]);
+                // A section: a coloured heading, then a wrapping grid of item boxes.
+                var section = NewRect($"Sec_{type}", _bottleList);
+                var vl = section.gameObject.AddComponent<VerticalLayoutGroup>();
+                vl.spacing = 3f; vl.childControlHeight = true; vl.childControlWidth = true;
+                vl.childForceExpandWidth = true; vl.childForceExpandHeight = false;
+                vl.childAlignment = TextAnchor.UpperLeft;
+                section.gameObject.AddComponent<ContentSizeFitter>().verticalFit =
+                    ContentSizeFitter.FitMode.PreferredSize;
+
+                AddGroupHeader(section, GroupName(type), UITheme.TypeRamp[type][3]);
+
+                var grid = NewRect("Grid", section);
+                var g = grid.gameObject.AddComponent<GridLayoutGroup>();
+                g.cellSize = new Vector2(88, 96); g.spacing = new Vector2(6, 6);
+                g.constraint = GridLayoutGroup.Constraint.FixedColumnCount; g.constraintCount = 4;
+                grid.gameObject.AddComponent<ContentSizeFitter>().verticalFit =
+                    ContentSizeFitter.FitMode.PreferredSize;
                 foreach (var bottle in group)
-                {
-                    var card = bottle.Ingredient;
-                    var colour = UITheme.StyleColor(card.Info?.Style, card.Type);
-                    double fill = bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 0;
-                    // A depleted bottle is OUT (and unclickable); a just-bought one flashes NEW.
-                    string state = bottle.IsEmpty ? "OUT" : $"{fill:P0}";
-                    string newTag = !bottle.IsEmpty && run.IsNewStock(card.Id) ? "   ★ NEW" : "";
-                    string label = $"{card.Name.ToUpperInvariant()}    {state}{newTag}";
-                    AddListButton(_bottleList, label, colour, bottle.IsEmpty ? (Action)null : () => OpenBottle(card));
-                }
+                    AddItemBox(grid, bottle, run);
             }
 
             _menuShaker.text = ShakerLine(run);
@@ -243,10 +250,10 @@ namespace LastCall.DebugUI
             }
         }
 
-        private void AddGroupHeader(string title, Color colour)
+        private void AddGroupHeader(RectTransform parent, string title, Color colour)
         {
-            var rt = NewRect("Header", _bottleList);
-            rt.gameObject.AddComponent<LayoutElement>().preferredHeight = 22;
+            var rt = NewRect("Header", parent);
+            rt.gameObject.AddComponent<LayoutElement>().preferredHeight = 20;
             var text = NewText("L", rt, _body, 12, TextAnchor.LowerLeft, colour);
             Stretch(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(2, 0), new Vector2(-2, 0));
             text.text = $"— {title} —";
@@ -256,6 +263,48 @@ namespace LastCall.DebugUI
             var img = line.gameObject.AddComponent<Image>();
             img.color = new Color(colour.r, colour.g, colour.b, 0.4f);
             img.raycastTarget = false;
+        }
+
+        /// <summary>One item box in the menu grid: the bottle/ingredient art, its name and its
+        /// remaining fill (OUT when empty, ★NEW when just bought). Tapping it opens the pour.</summary>
+        private void AddItemBox(RectTransform parent, ShelfBottle bottle, TycoonRun run)
+        {
+            var card = bottle.Ingredient;
+            bool empty = bottle.IsEmpty;
+            var box = NewRect($"Box_{card.Id}", parent);
+            var bg = box.gameObject.AddComponent<Image>();
+            bg.color = empty
+                ? new Color(0.32f, 0.30f, 0.34f, 0.45f)
+                : new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.9f);
+
+            var icon = NewRect("Icon", box);
+            Place(icon, new Vector2(0.5f, 1), new Vector2(58, 58), new Vector2(0, -5));
+            var iconImg = icon.gameObject.AddComponent<Image>();
+            iconImg.raycastTarget = false; iconImg.preserveAspect = true;
+            iconImg.sprite = ItemArt.Bottle(card.Info?.Style);
+            iconImg.color = iconImg.sprite == null ? UITheme.StyleColor(card.Info?.Style, card.Type)
+                : (empty ? new Color(1f, 1f, 1f, 0.4f) : Color.white);
+
+            var name = NewText("Name", box, _body, 9, TextAnchor.LowerCenter,
+                empty ? UITheme.TextSecondary : UITheme.TextPrimary);
+            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(84, 24), new Vector2(0, 3));
+            name.horizontalOverflow = HorizontalWrapMode.Wrap;
+            name.text = card.Name.ToUpperInvariant();
+
+            var badge = NewText("Badge", box, _body, 8, TextAnchor.UpperRight,
+                empty ? UITheme.ViceRed[3] : run.IsNewStock(card.Id) ? UITheme.PrimaryAction : UITheme.Cyan[4]);
+            Place(badge.rectTransform, new Vector2(1, 1), new Vector2(56, 12), new Vector2(-3, -3));
+            double fill = bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 0;
+            badge.text = empty ? "OUT"
+                : run.IsNewStock(card.Id) ? "★NEW" : $"{(int)System.Math.Round(fill * 100)}%";
+
+            if (!empty)
+            {
+                var btn = box.gameObject.AddComponent<Button>();
+                btn.targetGraphic = bg; btn.transition = Selectable.Transition.ColorTint;
+                var c = card;
+                btn.onClick.AddListener(() => OpenBottle(c));
+            }
         }
 
         private string ShakerLine(TycoonRun run)
@@ -663,37 +712,61 @@ namespace LastCall.DebugUI
             Stretch(title.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -40), new Vector2(0, -8));
             title.text = "MAKE A DRINK";
 
+            // Left: the back-shelf as grouped boxes of real bottle/ingredient art (2026-07-23).
             _bottleList = NewRect("Bottles", _menuPanel);
-            Stretch(_bottleList, new Vector2(0, 0), new Vector2(1, 1), new Vector2(16, 108), new Vector2(-16, -48));
+            Place(_bottleList, new Vector2(0, 1), new Vector2(462, 500), new Vector2(14, -46));
             var layout = _bottleList.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = 4f; layout.childForceExpandHeight = false;
-            layout.childControlHeight = true; layout.childControlWidth = true;
-            layout.childForceExpandWidth = true;
+            layout.spacing = 8f; layout.padding = new RectOffset(4, 4, 4, 4);
+            layout.childForceExpandHeight = false; layout.childControlHeight = true;
+            layout.childControlWidth = true; layout.childForceExpandWidth = true;
+            layout.childAlignment = TextAnchor.UpperLeft;
 
-            // Readouts of what's in the shaker. Ice/lemon/salt/sugar and the shake are no longer
-            // menu buttons — they happen hands-on in the shaker stage (drag a piece in, grab and
-            // shake). The menu just picks bottles and moves on.
-            _menuShaker = NewText("Shaker", _menuPanel, _body, 13, TextAnchor.LowerLeft, UITheme.TextPrimary);
-            Stretch(_menuShaker.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 80), new Vector2(-16, 104));
-            _menuPreps = NewText("Preps", _menuPanel, _body, 12, TextAnchor.LowerLeft, UITheme.Cyan[4]);
-            Stretch(_menuPreps.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 58), new Vector2(-16, 80));
+            // Right: a side column beside the menu — what's in the shaker, then the actions.
+            // The mix/serve buttons live here, out of the item grid, per the redesign.
+            var side = NewRect("Side", _menuPanel);
+            Place(side, new Vector2(1, 1), new Vector2(184, 500), new Vector2(-14, -46));
+            side.gameObject.AddComponent<Image>().color =
+                new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.55f);
 
-            // Action row: build → serve, empty, close.
-            var actionRow = NewRect("Actions", _menuPanel);
-            Stretch(actionRow, Vector2.zero, new Vector2(1, 0), new Vector2(16, 12), new Vector2(-16, 52));
-            var actLayout = actionRow.gameObject.AddComponent<HorizontalLayoutGroup>();
-            actLayout.spacing = 4f; actLayout.childControlWidth = true;
+            var sideTitle = NewText("SideTitle", side, _body, 11, TextAnchor.UpperLeft, UITheme.TextSecondary);
+            Place(sideTitle.rectTransform, new Vector2(0.5f, 1), new Vector2(164, 16), new Vector2(0, -8));
+            sideTitle.text = "IN THE SHAKER";
+            _menuShaker = NewText("Shaker", side, _body, 12, TextAnchor.UpperLeft, UITheme.TextPrimary);
+            Place(_menuShaker.rectTransform, new Vector2(0.5f, 1), new Vector2(164, 70), new Vector2(0, -26));
+            _menuShaker.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _menuPreps = NewText("Preps", side, _body, 11, TextAnchor.UpperLeft, UITheme.Cyan[4]);
+            Place(_menuPreps.rectTransform, new Vector2(0.5f, 1), new Vector2(164, 40), new Vector2(0, -100));
+            _menuPreps.horizontalOverflow = HorizontalWrapMode.Wrap;
+
+            // Action buttons stacked at the bottom of the side column.
+            var actions = NewRect("Actions", side);
+            Place(actions, new Vector2(0.5f, 0), new Vector2(164, 208), new Vector2(0, 12));
+            var actLayout = actions.gameObject.AddComponent<VerticalLayoutGroup>();
+            actLayout.spacing = 8f; actLayout.childControlWidth = true;
             actLayout.childForceExpandWidth = true; actLayout.childControlHeight = true;
             actLayout.childForceExpandHeight = true;
-            AddFlexButton(actionRow, "POUR INTO GLASS →", UITheme.PrimaryAction, () =>
+            AddFlexButton(actions, "↔  MIX / SHAKE", UITheme.Cyan[3], OpenShakeStage);
+            AddFlexButton(actions, "SERVE  →", UITheme.PrimaryAction, () =>
             {
                 if (!Run.Glass.IsEmpty) GoTo(Stage.Serve);
             });
-            AddFlexButton(actionRow, "EMPTY", UITheme.Night[3], () =>
+            AddFlexButton(actions, "EMPTY", UITheme.Night[3], () =>
             {
                 Run.DiscardGlass(); RefreshMenu();
             });
-            AddFlexButton(actionRow, "CLOSE", UITheme.Night[3], CloseFlow);
+            AddFlexButton(actions, "CLOSE", UITheme.Night[3], CloseFlow);
+        }
+
+        /// <summary>The side "mix / shake" action: open the shaker stage to shake what's poured;
+        /// focuses a stocked spirit so the stage renders even when nothing new is being added.</summary>
+        private void OpenShakeStage()
+        {
+            if (Run == null) return;
+            if (_focusBottle == null)
+                foreach (var b in Run.Shelf.Bottles)
+                    if (!b.IsEmpty && b.Ingredient.Type != IngredientType.Garnish)
+                    { _focusBottle = b.Ingredient; break; }
+            if (_focusBottle != null) GoTo(Stage.Shaker);
         }
 
         private void BuildShakerPanel()
