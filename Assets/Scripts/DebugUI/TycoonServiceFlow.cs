@@ -222,7 +222,7 @@ namespace LastCall.DebugUI
                 var grid = NewRect("Grid", section);
                 var g = grid.gameObject.AddComponent<GridLayoutGroup>();
                 g.cellSize = new Vector2(88, 96); g.spacing = new Vector2(6, 6);
-                g.constraint = GridLayoutGroup.Constraint.FixedColumnCount; g.constraintCount = 4;
+                g.constraint = GridLayoutGroup.Constraint.FixedColumnCount; g.constraintCount = 6;
                 grid.gameObject.AddComponent<ContentSizeFitter>().verticalFit =
                     ContentSizeFitter.FitMode.PreferredSize;
                 foreach (var bottle in group)
@@ -743,7 +743,7 @@ namespace LastCall.DebugUI
         private void BuildMenuPanel()
         {
             _menuPanel = NewRect("MenuPanel", _root);
-            Place(_menuPanel, new Vector2(0.5f, 0.5f), new Vector2(560, 560), Vector2.zero);
+            Place(_menuPanel, new Vector2(0.5f, 0.5f), new Vector2(848, 560), Vector2.zero);
             _menuPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
             Swallow(_menuPanel);
 
@@ -754,7 +754,7 @@ namespace LastCall.DebugUI
             // Left: a SCROLLABLE back-shelf of grouped item boxes — it grows as you buy more
             // stock without overflowing the panel (2026-07-23 fix).
             var scrollGo = NewRect("BottleScroll", _menuPanel);
-            Place(scrollGo, new Vector2(0, 1), new Vector2(462, 500), new Vector2(14, -46));
+            Place(scrollGo, new Vector2(0, 1), new Vector2(612, 500), new Vector2(14, -46));
             var scroll = scrollGo.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false; scroll.vertical = true; scroll.scrollSensitivity = 26f;
             scroll.movementType = ScrollRect.MovementType.Clamped;
@@ -781,7 +781,7 @@ namespace LastCall.DebugUI
             // Right: a side column beside the menu — what's in the shaker, then the actions.
             // The mix/serve buttons live here, out of the item grid, per the redesign.
             var side = NewRect("Side", _menuPanel);
-            Place(side, new Vector2(1, 1), new Vector2(184, 500), new Vector2(-14, -46));
+            Place(side, new Vector2(1, 1), new Vector2(196, 500), new Vector2(-14, -46));
             side.gameObject.AddComponent<Image>().color =
                 new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.55f);
 
