@@ -24,7 +24,7 @@ namespace LastCall.DebugUI
         private const int RenderMax = 320;   // must match MAX_DROPS in the shader
 
         private const float Gravity = 1400f;          // px/s² down
-        private const float StreamRadius = 5f;
+        private const float StreamRadius = 7.5f;
         private const float StreamInterval = 0.006f;
 
         // Position-based fluid (PBD / position-based dynamics, the real-time SPH-family method).
@@ -35,7 +35,9 @@ namespace LastCall.DebugUI
         private const float H = 18f;                  // viscosity/neighbour radius (px)
         private const float Spacing = 8f;           // rest spacing (min distance) → many small particles
         private const int   RelaxIters = 5;           // incompressibility relaxation passes
-        private const float PoolRadius = 6.5f;        // small round particles that still merge
+        // Render radius is well above the spacing (8) so the small, tightly-packed particles
+        // overlap into ONE smooth connected surface with no gaps between them.
+        private const float PoolRadius = 11.5f;
         private const float Viscosity = 0.42f;        // 0..1 neighbour-velocity blend (more flow)
         private const float MaxSpeed = 1300f;
         private const float WallFriction = 0.72f;     // (kept for API parity)
@@ -80,6 +82,8 @@ namespace LastCall.DebugUI
         private static readonly int IdPoolBot   = Shader.PropertyToID("_PoolBottomY");
         private static readonly int IdSurfTilt  = Shader.PropertyToID("_SurfTilt");
         private static readonly int IdHeightCnt = Shader.PropertyToID("_HeightCount");
+        private static readonly int IdThreshold = Shader.PropertyToID("_Threshold");
+        private static readonly int IdEdgeWidth = Shader.PropertyToID("_EdgeWidth");
 
         public MetaballFluid(RectTransform surface)
         {
@@ -106,6 +110,10 @@ namespace LastCall.DebugUI
             // its height-field surface off (they stay in the shader for compatibility).
             _material?.SetFloat(IdHeightCnt, 0f);
             _material?.SetFloat(IdSurfTilt, 0f);
+            // With the big render radius the field is dense; this threshold keeps it one smooth
+            // connected body (no gaps between particles) with a flat surface, not separate blobs.
+            _material?.SetFloat(IdThreshold, 0.7f);
+            _material?.SetFloat(IdEdgeWidth, 0.10f);
             _image.enabled = _material != null;
         }
 
