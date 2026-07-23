@@ -40,5 +40,18 @@ namespace LastCall.DebugUI
                 default: return null;
             }
         }
+
+        /// <summary>The source bucket a preparation is dragged out of, on the shaker stage.</summary>
+        public static Sprite Bucket(string prepId)
+        {
+            switch (prepId)
+            {
+                case "ice": return Load("ice_bucket");
+                case "lemon_twist": return Load("lemon_bucket");
+                case "salt_rim": return Load("salt_bucket");
+                case "sugar_rim": return Load("sugar_bucket");
+                default: return null;
+            }
+        }
     }
 }

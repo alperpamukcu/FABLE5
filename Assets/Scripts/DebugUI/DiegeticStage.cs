@@ -297,27 +297,10 @@ namespace LastCall.DebugUI
                 AddCustomer(root);
             }
 
-            // Layer 3.5 — the back bar (customer POV): a dim cabinet panel and two wooden
-            // shelves on the wall behind the bartender, where the bottles now live. Drawn
-            // before the rail so bottles and their tags sit in front of the planks.
-            var cabinet = NewRect("BackBar", root);
-            Place(cabinet, new Vector2(0, 0), new Vector2(320, 180), new Vector2(140, ShelfRow1Y - 26));
-            _cabinetImage = cabinet.gameObject.AddComponent<Image>();
-            _cabinetImage.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.62f);
-            _cabinetImage.raycastTarget = false;
-            foreach (float rowY in new[] { ShelfRow0Y, ShelfRow1Y })
-            {
-                var plank = NewRect("ShelfPlank", root);
-                Place(plank, new Vector2(0, 0), new Vector2(320, 8), new Vector2(140, rowY - 8));
-                var plankImg = plank.gameObject.AddComponent<Image>();
-                plankImg.color = UITheme.Amber[1];
-                plankImg.raycastTarget = false;
-                var lip = NewRect("ShelfLip", root);
-                Place(lip, new Vector2(0, 0), new Vector2(320, 2), new Vector2(140, rowY - 2));
-                var lipImg = lip.gameObject.AddComponent<Image>();
-                lipImg.color = UITheme.Amber[3];
-                lipImg.raycastTarget = false;
-            }
+            // The back bar (wall shelves behind the bartender) is gone (2026-07-23): we play
+            // from behind the counter looking out, so bottles-on-a-back-wall faced the wrong way
+            // and, with the bottles living in the menu now, the shelves stood empty. The wall-tier
+            // ambience upgrade simply has no cabinet to tint until the P8 scenery pass.
 
             // Layer 4 — Counter. Real bar art when installed (positioned so its top surface
             // meets the counter rest line); else the flat procedural amber band.

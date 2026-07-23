@@ -63,7 +63,7 @@ namespace LastCall.DebugUI
         private bool _pouring;
         private const float LiftRange = 200f;  // px of lift for a full tilt
         private const float MaxTilt = 118f;    // degrees the bottle leans at full lift
-        private const float BottleH = 150f;
+        private const float BottleH = 180f;
         // The pour fills slower than the raw bottle rate so the stream reads as a real pour
         // (GDD 24 §2, 2026-07-22 — "doluş hızı çok hızlı"). Only the drawn volume slows; the
         // floor's patience clock runs on its own tick, untouched.
@@ -101,6 +101,7 @@ namespace LastCall.DebugUI
         private Text _serveGlassText;
         private RectTransform _serveSurface;
         private RectTransform _serveGlass;      // the target
+        private RectTransform _serveGarnishRow; // mint/olive garnishes are added here (2026-07-23)
         private RectTransform _serveShaker;     // the grabbable shaker
         private Image _serveShakerBody;
         private MetaballFluid _serveFluid;      // the metaball liquid in the serving glass
@@ -199,6 +200,9 @@ namespace LastCall.DebugUI
             // bubbly, garnishes — each under its own coloured heading (GDD 24 §1).
             foreach (var type in MenuOrder)
             {
+                // Garnishes are no longer mixed in with the alcohols — they're added at the
+                // serve stage now (2026-07-23), so the menu is spirits and mixers only.
+                if (type == IngredientType.Garnish) continue;
                 var group = new List<ShelfBottle>();
                 foreach (var bottle in run.Shelf.Bottles)
                     if (bottle.Ingredient.Type == type) group.Add(bottle);
@@ -278,7 +282,7 @@ namespace LastCall.DebugUI
                 : new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.9f);
 
             var icon = NewRect("Icon", box);
-            Place(icon, new Vector2(0.5f, 1), new Vector2(58, 58), new Vector2(0, -5));
+            Place(icon, new Vector2(0.5f, 0.5f), new Vector2(66, 66), new Vector2(0, 8));   // centred
             var iconImg = icon.gameObject.AddComponent<Image>();
             iconImg.raycastTarget = false; iconImg.preserveAspect = true;
             iconImg.sprite = ItemArt.Bottle(card.Info?.Style);
@@ -287,7 +291,7 @@ namespace LastCall.DebugUI
 
             var name = NewText("Name", box, _body, 9, TextAnchor.LowerCenter,
                 empty ? UITheme.TextSecondary : UITheme.TextPrimary);
-            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(84, 24), new Vector2(0, 3));
+            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(86, 16), new Vector2(0, 2));
             name.horizontalOverflow = HorizontalWrapMode.Wrap;
             name.text = card.Name.ToUpperInvariant();
 
@@ -425,12 +429,16 @@ namespace LastCall.DebugUI
         {
             if (run.Glass.IsEmpty) { _shakerFluid.ClearPool(); return; }
             // Read the vessel live so the pool travels with the shaker when it is thrown about.
+            // Fill the glass INTERIOR (inset from the walls) so the liquid pools inside the
+            // clear shaker instead of a box around it (2026-07-23).
             var c = _shakerVessel.anchoredPosition;
             float halfW = _shakerVessel.rect.width * 0.5f;
-            float minX = c.x - halfW + 8f;
-            float maxX = c.x + halfW - 8f;
-            float innerH = _shakerVessel.rect.height - 34f;
-            float bottomY = c.y - _shakerVessel.rect.height * 0.5f + 12f;
+            float iw = halfW * 0.62f;
+            float minX = c.x - iw;
+            float maxX = c.x + iw;
+            float h = _shakerVessel.rect.height;
+            float bottomY = c.y - h * 0.5f + h * 0.13f;
+            float innerH = h * 0.64f;
             float topY = bottomY + innerH * (float)run.Glass.FillFraction + bob;
             // The liquid tilts with the tin (2026-07-23) so they read as one mass while shaking.
             float deg = _shakerVessel.localEulerAngles.z;
@@ -569,6 +577,32 @@ namespace LastCall.DebugUI
             PushServePool(run);
             _serveShakerBody.color = DrinkColor(run.Glass);
             _aimText.text = "GRAB THE SHAKER · TIP IT OVER THE GLASS";
+
+            // The stocked garnishes (mint, olive), added into the drink before it is poured.
+            foreach (Transform ch in _serveGarnishRow) Destroy(ch.gameObject);
+            foreach (var bottle in run.Shelf.Bottles)
+                if (bottle.Ingredient.Type == IngredientType.Garnish && !bottle.IsEmpty)
+                    AddGarnishChip(bottle.Ingredient);
+        }
+
+        private void AddGarnishChip(IngredientCard card)
+        {
+            var chip = NewRect($"G_{card.Id}", _serveGarnishRow);
+            chip.gameObject.AddComponent<LayoutElement>().preferredHeight = 66;
+            var bg = chip.gameObject.AddComponent<Image>();
+            bg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.85f);
+            var icon = NewRect("Icon", chip);
+            Place(icon, new Vector2(0.5f, 1), new Vector2(46, 46), new Vector2(0, -3));
+            var iimg = icon.gameObject.AddComponent<Image>();
+            iimg.sprite = ItemArt.Bottle(card.Info?.Style); iimg.preserveAspect = true; iimg.raycastTarget = false;
+            if (iimg.sprite == null) iimg.color = UITheme.StyleColor(card.Info?.Style, card.Type);
+            var name = NewText("N", chip, _body, 8, TextAnchor.LowerCenter, UITheme.TextPrimary);
+            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(92, 14), new Vector2(0, 2));
+            name.text = card.Name.ToUpperInvariant();
+            var btn = chip.gameObject.AddComponent<Button>();
+            btn.targetGraphic = bg;
+            var c = card;
+            btn.onClick.AddListener(() => { if (Run != null && !Run.Glass.IsEmpty) { Run.PourGarnish(c.Id); RefreshServe(); } });
         }
 
         /// <summary>
@@ -636,11 +670,16 @@ namespace LastCall.DebugUI
         private void PushServePool(TycoonRun run)
         {
             if (run.ServingGlass.IsEmpty) { _serveFluid.ClearPool(); return; }
+            // Fill the tumbler's INTERIOR (inset from the crystal walls) so the drink pools
+            // inside the glass, not as a box behind it (2026-07-23).
+            var c = _serveGlass.anchoredPosition;
             float halfW = _serveGlass.rect.width * 0.5f;
-            float minX = _serveGlass.anchoredPosition.x - halfW + 6f;
-            float maxX = _serveGlass.anchoredPosition.x + halfW - 6f;
-            float innerH = _serveGlass.rect.height - 20f;
-            float bottomY = _serveGlass.anchoredPosition.y - _serveGlass.rect.height * 0.5f + 6f;
+            float iw = halfW * 0.66f;
+            float minX = c.x - iw;
+            float maxX = c.x + iw;
+            float h = _serveGlass.rect.height;
+            float bottomY = c.y - h * 0.5f + h * 0.14f;
+            float innerH = h * 0.6f;
             float topY = bottomY + innerH * (float)run.ServingGlass.FillFraction;
             _serveFluid.SetPool(minX, maxX, bottomY, topY);
         }
@@ -712,14 +751,32 @@ namespace LastCall.DebugUI
             Stretch(title.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -40), new Vector2(0, -8));
             title.text = "MAKE A DRINK";
 
-            // Left: the back-shelf as grouped boxes of real bottle/ingredient art (2026-07-23).
-            _bottleList = NewRect("Bottles", _menuPanel);
-            Place(_bottleList, new Vector2(0, 1), new Vector2(462, 500), new Vector2(14, -46));
+            // Left: a SCROLLABLE back-shelf of grouped item boxes — it grows as you buy more
+            // stock without overflowing the panel (2026-07-23 fix).
+            var scrollGo = NewRect("BottleScroll", _menuPanel);
+            Place(scrollGo, new Vector2(0, 1), new Vector2(462, 500), new Vector2(14, -46));
+            var scroll = scrollGo.gameObject.AddComponent<ScrollRect>();
+            scroll.horizontal = false; scroll.vertical = true; scroll.scrollSensitivity = 26f;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            var viewport = NewRect("Viewport", scrollGo);
+            Stretch(viewport, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            viewport.gameObject.AddComponent<RectMask2D>();
+            var vpImg = viewport.gameObject.AddComponent<Image>();   // a near-clear raycast target
+            vpImg.color = new Color(0, 0, 0, 0.001f);
+            scroll.viewport = viewport;
+
+            _bottleList = NewRect("Bottles", viewport);
+            _bottleList.anchorMin = new Vector2(0, 1); _bottleList.anchorMax = new Vector2(1, 1);
+            _bottleList.pivot = new Vector2(0.5f, 1); _bottleList.anchoredPosition = Vector2.zero;
+            _bottleList.sizeDelta = Vector2.zero;
             var layout = _bottleList.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 8f; layout.padding = new RectOffset(4, 4, 4, 4);
             layout.childForceExpandHeight = false; layout.childControlHeight = true;
             layout.childControlWidth = true; layout.childForceExpandWidth = true;
             layout.childAlignment = TextAnchor.UpperLeft;
+            _bottleList.gameObject.AddComponent<ContentSizeFitter>().verticalFit =
+                ContentSizeFitter.FitMode.PreferredSize;
+            scroll.content = _bottleList;
 
             // Right: a side column beside the menu — what's in the shaker, then the actions.
             // The mix/serve buttons live here, out of the item grid, per the redesign.
@@ -794,7 +851,7 @@ namespace LastCall.DebugUI
             // shake — it becomes the toy you throw around.
             _shakerHome = new Vector2(-120, -30);
             _shakerVessel = NewRect("Shaker", _pourSurface);
-            Place(_shakerVessel, new Vector2(0.5f, 0.5f), new Vector2(124, 196), _shakerHome);
+            Place(_shakerVessel, new Vector2(0.5f, 0.5f), new Vector2(158, 244), _shakerHome);
             var shakerImg = _shakerVessel.gameObject.AddComponent<Image>();
             // The real steel shaker (2026-07-23). It sits in front of the fluid so the metal
             // reads solid — the falling stream shows above the mouth then vanishes into the tin.
@@ -835,7 +892,7 @@ namespace LastCall.DebugUI
             _bottleRest = new Vector2(182, -64);
             _pourBottle = NewRect("Bottle", _pourSurface);
             _pourBottle.pivot = new Vector2(0.5f, 0.22f);
-            _pourBottle.sizeDelta = new Vector2(74, BottleH);
+            _pourBottle.sizeDelta = new Vector2(110, BottleH);
             _pourBottle.anchoredPosition = _bottleRest;
             _pourBottleBody = _pourBottle.gameObject.AddComponent<Image>();
             _pourBottleBody.preserveAspect = true;    // the real bottle art, set per focus in RefreshShaker
@@ -921,6 +978,17 @@ namespace LastCall.DebugUI
             _serveGlassText = NewText("Glass", _servePanel, _body, 13, TextAnchor.UpperRight, UITheme.TextPrimary);
             Place(_serveGlassText.rectTransform, new Vector2(1, 1), new Vector2(280, 24), new Vector2(-20, -46));
 
+            // Garnishes (mint, olive) live at the serve stage now — a small row down the left.
+            // Add one before you pour and it goes into the drink.
+            var glabel = NewText("GLabel", _servePanel, _body, 10, TextAnchor.LowerLeft, UITheme.TypeRamp[IngredientType.Garnish][3]);
+            Place(glabel.rectTransform, new Vector2(0, 0.5f), new Vector2(96, 16), new Vector2(14, 118));
+            glabel.text = "— GARNISH —";
+            _serveGarnishRow = NewRect("Garnishes", _servePanel);
+            Place(_serveGarnishRow, new Vector2(0, 0.5f), new Vector2(96, 224), new Vector2(14, 0));
+            var grow = _serveGarnishRow.gameObject.AddComponent<VerticalLayoutGroup>();
+            grow.spacing = 8f; grow.childControlWidth = true; grow.childForceExpandWidth = true;
+            grow.childControlHeight = false; grow.childAlignment = TextAnchor.UpperCenter;
+
             _aimText = NewText("AimText", _servePanel, _body, 13, TextAnchor.UpperCenter, UITheme.TextSecondary);
             Stretch(_aimText.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -70), new Vector2(0, -46));
 
@@ -934,7 +1002,7 @@ namespace LastCall.DebugUI
             // The serving glass: real clear-glass art (2026-07-23), transparent interior so the
             // poured drink pools behind it and shows through; the outline+rim draw in front.
             _serveGlass = NewRect("Glass", _serveSurface);
-            Place(_serveGlass, new Vector2(0.5f, 0.5f), new Vector2(108, 150), new Vector2(-120, -40));
+            Place(_serveGlass, new Vector2(0.5f, 0.5f), new Vector2(150, 186), new Vector2(-120, -34));
             var glassImg = _serveGlass.gameObject.AddComponent<Image>();
             glassImg.raycastTarget = false;
             if (ItemArt.Glass != null) { glassImg.sprite = ItemArt.Glass; glassImg.preserveAspect = true; glassImg.color = Color.white; }
@@ -957,7 +1025,7 @@ namespace LastCall.DebugUI
             _serveShakerRest = new Vector2(168, -64);
             _serveShaker = NewRect("Shaker", _serveSurface);
             _serveShaker.pivot = new Vector2(0.5f, 0.22f);
-            _serveShaker.sizeDelta = new Vector2(80, BottleH);
+            _serveShaker.sizeDelta = new Vector2(104, BottleH);
             _serveShaker.anchoredPosition = _serveShakerRest;
             _serveShakerBody = _serveShaker.gameObject.AddComponent<Image>();
             if (ItemArt.Shaker != null) { _serveShakerBody.sprite = ItemArt.Shaker; _serveShakerBody.preserveAspect = true; _serveShakerBody.color = Color.white; }
@@ -1000,20 +1068,22 @@ namespace LastCall.DebugUI
         /// <summary>One source chip on the prep tray: pointer-down picks its piece up.</summary>
         private void AddPrepSource(int index, string label, PreparationDefinition prep, Color colour)
         {
-            var chip = NewRect($"Prep_{label}", _pourSurface);
-            Place(chip, new Vector2(0, 1), new Vector2(80, 48), new Vector2(16, -14 - index * 54));
-            var img = chip.gameObject.AddComponent<Image>();
             var prepSprite = ItemArt.Prep(prep.Id);
-            if (prepSprite != null)
+            var bucketSprite = ItemArt.Bucket(prep.Id);
+            var chip = NewRect($"Prep_{label}", _pourSurface);
+            Place(chip, new Vector2(0, 1), new Vector2(86, 84), new Vector2(12, -8 - index * 86));
+            var img = chip.gameObject.AddComponent<Image>();
+            if (bucketSprite != null)
             {
-                // A tinted tile with the real prep piece and its name (2026-07-23).
-                img.color = new Color(colour.r, colour.g, colour.b, 0.18f);
-                var icon = NewRect("Icon", chip);
-                Place(icon, new Vector2(0, 0.5f), new Vector2(40, 40), new Vector2(26, 0));
+                // A real bucket you grab a piece out of (2026-07-23): drag the ice / lemon /
+                // salt / sugar from the bucket into the shaker.
+                img.color = new Color(1f, 1f, 1f, 0.001f);   // clear grab target over the whole cell
+                var icon = NewRect("Bucket", chip);
+                Place(icon, new Vector2(0.5f, 1), new Vector2(80, 64), new Vector2(0, -2));
                 var iconImg = icon.gameObject.AddComponent<Image>();
-                iconImg.sprite = prepSprite; iconImg.preserveAspect = true; iconImg.raycastTarget = false;
-                var text = NewText("L", chip, _body, 10, TextAnchor.MiddleLeft, UITheme.TextPrimary);
-                Place(text.rectTransform, new Vector2(0, 0.5f), new Vector2(30, 46), new Vector2(54, 0));
+                iconImg.sprite = bucketSprite; iconImg.preserveAspect = true; iconImg.raycastTarget = false;
+                var text = NewText("L", chip, _body, 9, TextAnchor.LowerCenter, UITheme.TextPrimary);
+                Place(text.rectTransform, new Vector2(0.5f, 0), new Vector2(84, 14), new Vector2(0, 0));
                 text.text = label;
             }
             else
