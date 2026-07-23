@@ -282,7 +282,9 @@ namespace LastCall.DebugUI
             var colour = UITheme.StyleColor(_focusBottle.Info?.Style, _focusBottle.Type);
             _shakerTitle.text = _focusBottle.Name.ToUpperInvariant();
             _shakerReadout.text = ShakerLine(run);
-            _pourBottleBody.color = colour;
+            var bottleSprite = ItemArt.Bottle(_focusBottle.Info?.Style);
+            _pourBottleBody.sprite = bottleSprite;
+            _pourBottleBody.color = bottleSprite != null ? Color.white : colour;   // real art, else the style tint
             _pourBottle.anchoredPosition = _bottleRest;
             _pourBottle.localRotation = Quaternion.identity;
             _shakerSplash.Clear();
@@ -719,15 +721,21 @@ namespace LastCall.DebugUI
             // shake — it becomes the toy you throw around.
             _shakerHome = new Vector2(-120, -30);
             _shakerVessel = NewRect("Shaker", _pourSurface);
-            Place(_shakerVessel, new Vector2(0.5f, 0.5f), new Vector2(120, 190), _shakerHome);
-            _shakerVessel.gameObject.AddComponent<Image>().color = UITheme.Cream[2];
-            var tin = NewRect("Tin", _shakerVessel);   // the dark interior the fluid pools into
-            Stretch(tin, Vector2.zero, Vector2.one, new Vector2(6, 6), new Vector2(-6, -22));
-            tin.gameObject.AddComponent<Image>().color = UITheme.Night[3];
-
-            var lip = NewRect("Lip", _shakerVessel);   // the open mouth
-            Place(lip, new Vector2(0.5f, 1), new Vector2(128, 16), new Vector2(0, 0));
-            lip.gameObject.AddComponent<Image>().color = UITheme.Cream[3];
+            Place(_shakerVessel, new Vector2(0.5f, 0.5f), new Vector2(124, 196), _shakerHome);
+            var shakerImg = _shakerVessel.gameObject.AddComponent<Image>();
+            // The real steel shaker (2026-07-23). It sits in front of the fluid so the metal
+            // reads solid — the falling stream shows above the mouth then vanishes into the tin.
+            if (ItemArt.Shaker != null) { shakerImg.sprite = ItemArt.Shaker; shakerImg.preserveAspect = true; shakerImg.color = Color.white; }
+            else
+            {
+                shakerImg.color = UITheme.Cream[2];
+                var tin = NewRect("Tin", _shakerVessel);
+                Stretch(tin, Vector2.zero, Vector2.one, new Vector2(6, 6), new Vector2(-6, -22));
+                tin.gameObject.AddComponent<Image>().color = UITheme.Night[3];
+                var lip = NewRect("Lip", _shakerVessel);
+                Place(lip, new Vector2(0.5f, 1), new Vector2(128, 16), new Vector2(0, 0));
+                lip.gameObject.AddComponent<Image>().color = UITheme.Cream[3];
+            }
 
             // Grabbing the shaker (once it holds a drink) starts a free, loose shake.
             var shakeGrab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
@@ -746,23 +754,25 @@ namespace LastCall.DebugUI
             _shakerFluid = new MetaballFluid(_pourSurface);
             _shakerSolids = new ShakerSolids(_pourSurface);
             _shakerSplash = new Splasher(_pourSurface);
+            _shakerVessel.SetAsLastSibling();   // draw the steel shaker over the fluid (opaque tin)
             _shakerLiquidFloorY = _shakerVessel.anchoredPosition.y - _shakerVessel.rect.height * 0.5f + 12f;
 
             // The grabbable bottle, resting lower-right. Procedural body + neck; the grip
             // pivot sits low so lifting swings the mouth in a big arc.
-            _bottleRest = new Vector2(170, -70);
+            _bottleRest = new Vector2(182, -64);
             _pourBottle = NewRect("Bottle", _pourSurface);
             _pourBottle.pivot = new Vector2(0.5f, 0.22f);
-            _pourBottle.sizeDelta = new Vector2(56, BottleH);
+            _pourBottle.sizeDelta = new Vector2(74, BottleH);
             _pourBottle.anchoredPosition = _bottleRest;
             _pourBottleBody = _pourBottle.gameObject.AddComponent<Image>();
+            _pourBottleBody.preserveAspect = true;    // the real bottle art, set per focus in RefreshShaker
             _pourBottleBody.color = UITheme.Cyan[3];
-            var neck = NewRect("Neck", _pourBottle);
-            Place(neck, new Vector2(0.5f, 1), new Vector2(20, 34), new Vector2(0, 0));
-            neck.gameObject.AddComponent<Image>().color = UITheme.Cream[3];
-            var grip = NewText("Grip", _pourBottle, _body, 10, TextAnchor.MiddleCenter, UITheme.Night[0]);
-            Stretch(grip.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            grip.text = "";
+            if (ItemArt.Bottle("vodka") == null)      // no art available → keep a procedural neck
+            {
+                var neck = NewRect("Neck", _pourBottle);
+                Place(neck, new Vector2(0.5f, 1), new Vector2(20, 34), new Vector2(0, 0));
+                neck.gameObject.AddComponent<Image>().color = UITheme.Cream[3];
+            }
             // Pointer-down anywhere on the bottle grabs it.
             var grab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
             grab.callback.AddListener(_ =>
@@ -782,8 +792,9 @@ namespace LastCall.DebugUI
             // top (the grip), so it hangs below the cursor and swings about that point.
             _dragPiece = NewRect("DragPiece", _pourSurface);
             _dragPiece.pivot = new Vector2(0.5f, 1f);
-            _dragPiece.sizeDelta = new Vector2(34, 62);
-            _dragPiece.gameObject.AddComponent<Image>().raycastTarget = false;
+            _dragPiece.sizeDelta = new Vector2(46, 52);
+            var dragImg = _dragPiece.gameObject.AddComponent<Image>();
+            dragImg.raycastTarget = false; dragImg.preserveAspect = true;   // the real prep piece
             _dragPieceLabel = NewText("L", _dragPiece, _body, 10, TextAnchor.LowerCenter, UITheme.Night[0]);
             Stretch(_dragPieceLabel.rectTransform, Vector2.zero, Vector2.one, new Vector2(0, 2), new Vector2(0, -2));
             _dragPiece.gameObject.SetActive(false);
@@ -847,31 +858,43 @@ namespace LastCall.DebugUI
             surfImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.5f);
             surfImg.raycastTarget = false;
 
-            // The serving glass (a simple tumbler outline), opening at the top.
+            // The serving glass: real clear-glass art (2026-07-23), transparent interior so the
+            // poured drink pools behind it and shows through; the outline+rim draw in front.
             _serveGlass = NewRect("Glass", _serveSurface);
-            Place(_serveGlass, new Vector2(0.5f, 0.5f), new Vector2(96, 150), new Vector2(-120, -40));
-            _serveGlass.gameObject.AddComponent<Image>().color = UITheme.Cream[2];
-            var bowl = NewRect("Bowl", _serveGlass);   // the dark interior the fluid pools into
-            Stretch(bowl, Vector2.zero, Vector2.one, new Vector2(5, 5), new Vector2(-5, -14));
-            bowl.gameObject.AddComponent<Image>().color = UITheme.Night[3];
-            var rim = NewRect("Rim", _serveGlass);
-            Place(rim, new Vector2(0.5f, 1), new Vector2(104, 12), new Vector2(0, 0));
-            rim.gameObject.AddComponent<Image>().color = UITheme.Cyan[3];
+            Place(_serveGlass, new Vector2(0.5f, 0.5f), new Vector2(108, 150), new Vector2(-120, -40));
+            var glassImg = _serveGlass.gameObject.AddComponent<Image>();
+            glassImg.raycastTarget = false;
+            if (ItemArt.Glass != null) { glassImg.sprite = ItemArt.Glass; glassImg.preserveAspect = true; glassImg.color = Color.white; }
+            else
+            {
+                glassImg.color = UITheme.Cream[2];
+                var bowl = NewRect("Bowl", _serveGlass);
+                Stretch(bowl, Vector2.zero, Vector2.one, new Vector2(5, 5), new Vector2(-5, -14));
+                bowl.gameObject.AddComponent<Image>().color = UITheme.Night[3];
+                var rim = NewRect("Rim", _serveGlass);
+                Place(rim, new Vector2(0.5f, 1), new Vector2(104, 12), new Vector2(0, 0));
+                rim.gameObject.AddComponent<Image>().color = UITheme.Cyan[3];
+            }
 
             _serveFluid = new MetaballFluid(_serveSurface);
             _serveSplash = new Splasher(_serveSurface);
+            if (ItemArt.Glass != null) _serveGlass.SetAsLastSibling();   // clear glass over the fluid
 
-            // The grabbable shaker, resting lower-right.
-            _serveShakerRest = new Vector2(160, -70);
+            // The grabbable steel shaker you pour from, resting lower-right.
+            _serveShakerRest = new Vector2(168, -64);
             _serveShaker = NewRect("Shaker", _serveSurface);
             _serveShaker.pivot = new Vector2(0.5f, 0.22f);
-            _serveShaker.sizeDelta = new Vector2(64, BottleH);
+            _serveShaker.sizeDelta = new Vector2(80, BottleH);
             _serveShaker.anchoredPosition = _serveShakerRest;
             _serveShakerBody = _serveShaker.gameObject.AddComponent<Image>();
-            _serveShakerBody.color = UITheme.Cream[3];
-            var cap = NewRect("Cap", _serveShaker);
-            Place(cap, new Vector2(0.5f, 1), new Vector2(40, 22), new Vector2(0, 0));
-            cap.gameObject.AddComponent<Image>().color = UITheme.Cream[4];
+            if (ItemArt.Shaker != null) { _serveShakerBody.sprite = ItemArt.Shaker; _serveShakerBody.preserveAspect = true; _serveShakerBody.color = Color.white; }
+            else
+            {
+                _serveShakerBody.color = UITheme.Cream[3];
+                var cap = NewRect("Cap", _serveShaker);
+                Place(cap, new Vector2(0.5f, 1), new Vector2(40, 22), new Vector2(0, 0));
+                cap.gameObject.AddComponent<Image>().color = UITheme.Cream[4];
+            }
             var sgrab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
             sgrab.callback.AddListener(_ =>
             {
@@ -905,19 +928,37 @@ namespace LastCall.DebugUI
         private void AddPrepSource(int index, string label, PreparationDefinition prep, Color colour)
         {
             var chip = NewRect($"Prep_{label}", _pourSurface);
-            Place(chip, new Vector2(0, 1), new Vector2(72, 44), new Vector2(14, -14 - index * 52));
+            Place(chip, new Vector2(0, 1), new Vector2(80, 48), new Vector2(16, -14 - index * 54));
             var img = chip.gameObject.AddComponent<Image>();
-            img.color = new Color(colour.r, colour.g, colour.b, 0.85f);
-            var text = NewText("L", chip, _body, 11, TextAnchor.MiddleCenter, UITheme.Night[0]);
-            Stretch(text.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            text.text = label;
+            var prepSprite = ItemArt.Prep(prep.Id);
+            if (prepSprite != null)
+            {
+                // A tinted tile with the real prep piece and its name (2026-07-23).
+                img.color = new Color(colour.r, colour.g, colour.b, 0.18f);
+                var icon = NewRect("Icon", chip);
+                Place(icon, new Vector2(0, 0.5f), new Vector2(40, 40), new Vector2(26, 0));
+                var iconImg = icon.gameObject.AddComponent<Image>();
+                iconImg.sprite = prepSprite; iconImg.preserveAspect = true; iconImg.raycastTarget = false;
+                var text = NewText("L", chip, _body, 10, TextAnchor.MiddleLeft, UITheme.TextPrimary);
+                Place(text.rectTransform, new Vector2(0, 0.5f), new Vector2(30, 46), new Vector2(54, 0));
+                text.text = label;
+            }
+            else
+            {
+                img.color = new Color(colour.r, colour.g, colour.b, 0.85f);
+                var text = NewText("L", chip, _body, 11, TextAnchor.MiddleCenter, UITheme.Night[0]);
+                Stretch(text.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                text.text = label;
+            }
             var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
             down.callback.AddListener(_ =>
             {
                 if (Run == null || Run.Glass.IsEmpty) { _shakerReadout.text = "pour something first"; return; }
                 _draggingPrep = prep;
-                _dragPiece.GetComponent<Image>().color = img.color;
-                _dragPieceLabel.text = label;
+                var dpImg = _dragPiece.GetComponent<Image>();
+                dpImg.sprite = prepSprite;
+                dpImg.color = prepSprite != null ? Color.white : new Color(colour.r, colour.g, colour.b, 0.85f);
+                _dragPieceLabel.text = prepSprite != null ? "" : label;
                 _dragSwing.Reset();
                 Vector2 start = chip.anchoredPosition;   // spring in from the tray chip
                 if (Mouse.current != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
