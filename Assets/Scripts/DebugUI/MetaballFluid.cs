@@ -19,24 +19,24 @@ namespace LastCall.DebugUI
     public sealed class MetaballFluid
     {
         // Render budget — pool particles + free stream/splash drops share the shader's _Drops[].
-        private const int MaxPool = 96;
-        private const int MaxDrops = 32;
-        private const int RenderMax = 128;   // must match MAX_DROPS in the shader
+        private const int MaxPool = 280;
+        private const int MaxDrops = 40;
+        private const int RenderMax = 320;   // must match MAX_DROPS in the shader
 
         private const float Gravity = 1400f;          // px/s² down
-        private const float StreamRadius = 8f;
-        private const float StreamInterval = 0.007f;
+        private const float StreamRadius = 5f;
+        private const float StreamInterval = 0.006f;
 
         // Position-based fluid (PBD / position-based dynamics, the real-time SPH-family method).
         // Incompressibility is a hard MINIMUM-DISTANCE constraint relaxed a few passes per frame:
         // particles can never pack closer than Spacing, so the body stacks up to the fill line
         // and never collapses. Neighbour-velocity viscosity makes it flow. The particle COUNT is
         // derived from the fill area at Spacing, so it fills any vessel exactly.
-        private const float H = 24f;                  // viscosity/neighbour radius (px)
-        private const float Spacing = 14f;            // rest spacing (min distance) → fills the volume
-        private const int   RelaxIters = 4;           // incompressibility relaxation passes
-        private const float PoolRadius = 11f;         // small round particles that still merge
-        private const float Viscosity = 0.18f;        // 0..1 neighbour-velocity blend (flow)
+        private const float H = 18f;                  // viscosity/neighbour radius (px)
+        private const float Spacing = 8f;           // rest spacing (min distance) → many small particles
+        private const int   RelaxIters = 5;           // incompressibility relaxation passes
+        private const float PoolRadius = 6.5f;        // small round particles that still merge
+        private const float Viscosity = 0.42f;        // 0..1 neighbour-velocity blend (more flow)
         private const float MaxSpeed = 1300f;
         private const float WallFriction = 0.72f;     // (kept for API parity)
 
