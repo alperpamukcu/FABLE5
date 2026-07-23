@@ -32,9 +32,12 @@ namespace LastCall.Tests
             new ShelfBottle(new IngredientCard("soda", "Soda", IngredientType.Bubbly, 1), capacity: 20),
         });
 
+        // The economy math here is written against an instant serve (order the moment they
+        // sit, gone the moment they are served), so these runs switch the decision beat and
+        // the savour off. The pacing itself is covered by TycoonCoreTests.
         private static TycoonRun NewRun(string seed = "day-one", int startingMoney = 20) =>
             new TycoonRun(NewShelf(), Book, new RunRng(seed),
-                config: new TycoonConfig(startingMoney));
+                config: new TycoonConfig(startingMoney, orderDecisionSeconds: 0, savorSeconds: 0));
 
         /// <summary>Serves every seated customer an exact Spritz until the day closes.</summary>
         private static void PlayDayServingEveryone(TycoonRun run)
@@ -140,6 +143,30 @@ namespace LastCall.Tests
             Assert.AreEqual(0, verdict.BasePaid, "the wrong drink pays nothing");
             Assert.AreEqual(0, verdict.Tip);
             Assert.LessOrEqual(verdict.Satisfaction, 0.2);
+        }
+
+        [Test]
+        public void AStillDecidingCustomer_CannotBeServedYet()
+        {
+            // A real decision beat: the drink is built and correct, but until they have
+            // actually ordered it cannot be handed over (2026-07-23).
+            var run = new TycoonRun(NewShelf(), Book, new RunRng("decide"),
+                config: new TycoonConfig(20, orderDecisionSeconds: 5, savorSeconds: 6));
+            int guard = 0;
+            while (run.Floor.Seated.Count == 0) { Assert.Less(guard++, 100); run.Tick(1); }
+            var visit = run.Floor.Seated[0];
+
+            Assert.IsFalse(visit.HasOrdered, "they just sat — still deciding");
+            run.PourMeasure("gin", 0.35);
+            run.PourMeasure("soda", 0.35);
+            Assert.Throws<InvalidOperationException>(() => run.ServeTo(visit),
+                "no serving a customer who has not ordered");
+
+            guard = 0;
+            while (!visit.HasOrdered) { Assert.Less(guard++, 100); run.Tick(1); }
+            var verdict = run.ServeTo(visit);   // the same built drink now goes out fine
+            Assert.AreEqual(OrderMatch.Exact, verdict.Match);
+            Assert.AreEqual(VisitState.Drinking, visit.State, "and then they nurse it");
         }
 
         [Test]

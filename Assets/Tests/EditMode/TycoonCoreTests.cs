@@ -233,6 +233,67 @@ namespace LastCall.Tests
                 "you cannot serve someone who already left");
         }
 
+        // ── deciding & savouring (GDD 23 §2, 2026-07-23) ────────────────────────
+
+        [Test]
+        public void WhileDeciding_TheyHaveNotOrdered_AndPatienceHolds_ThenTicks()
+        {
+            var visit = new CustomerVisit(new DrinkOrder(Spritz(), 6),
+                patienceSeconds: 20, decideSeconds: 5);
+
+            Assert.IsFalse(visit.HasOrdered, "just sat down — still reading the menu");
+            visit.Tick(3);
+            Assert.IsFalse(visit.HasOrdered, "still deciding after 3 of 5 seconds");
+            Assert.AreEqual(20, visit.PatienceLeft, 1e-9, "thinking does not spend patience");
+            Assert.AreEqual(0.0, visit.WaitFraction, 1e-9);
+
+            visit.Tick(4);   // crosses the 5s decision by 2s → 2s of real waiting
+
+            Assert.IsTrue(visit.HasOrdered, "mind made up, the order is on the bar");
+            Assert.AreEqual(18, visit.PatienceLeft, 1e-9, "only the overspill past deciding ticks");
+            Assert.AreEqual(0.1, visit.WaitFraction, 1e-9, "the wait clock starts at the order");
+        }
+
+        [Test]
+        public void AServedCustomer_NursesTheDrink_ThenGetsUpToLeave()
+        {
+            var visit = new CustomerVisit(IcedOrder(10), 60);
+            var verdict = ServiceJudge.Judge(visit, OrderMatch.Exact, IcedGlass());
+
+            visit.Resolve(verdict, nextOrder: null, savorSeconds: 5);
+            Assert.AreEqual(VisitState.Drinking, visit.State, "served, now nursing the drink");
+            Assert.Greater(visit.Paid, 0, "paid at the serve, not at the leaving");
+
+            visit.Tick(3);
+            Assert.AreEqual(VisitState.Drinking, visit.State, "still sipping");
+
+            visit.Tick(3);
+            Assert.AreEqual(VisitState.Served, visit.State, "drink finished — up and out next tick");
+        }
+
+        [Test]
+        public void ADrinkingCustomer_KeepsTheStool_UntilTheyFinish()
+        {
+            var rng = new RunRng("savor-floor");
+            var day = new BarDay(day: 1, seats: 2, TycoonConfig.Default, rng.GetStream("arrivals"));
+            CustomerVisit NewVisit() => Visit(patience: 1000);
+
+            day.Tick(10_000, NewVisit);   // fills both stools
+            Assert.AreEqual(2, day.Seated.Count);
+
+            var drinker = day.Seated[0];
+            drinker.Resolve(ServiceJudge.Judge(drinker, OrderMatch.Exact, null), savorSeconds: 5);
+            Assert.AreEqual(VisitState.Drinking, drinker.State);
+
+            day.Tick(2, NewVisit);
+            Assert.IsTrue(day.Seated.Contains(drinker), "still nursing it — the stool stays taken");
+            Assert.AreEqual(0, day.Finished.Count, "a drinker is not a finished visit yet");
+
+            day.Tick(5, NewVisit);   // past the savour
+            Assert.IsFalse(day.Seated.Contains(drinker), "finished the drink and left");
+            Assert.AreEqual(1, day.Finished.Count);
+        }
+
         // ── the ledger (GDD 23 §6–§7) ───────────────────────────────────────────
 
         [Test]

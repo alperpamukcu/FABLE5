@@ -68,7 +68,10 @@ namespace LastCall.Core
             foreach (var visit in _seated) visit.Tick(seconds);
             _seated.RemoveAll(visit =>
             {
-                if (visit.State == VisitState.Waiting) return false;
+                // The still-waiting and the still-drinking keep their stools; only the
+                // served-and-done and the stormed-off free up and land in the record.
+                if (visit.State == VisitState.Waiting || visit.State == VisitState.Drinking)
+                    return false;
                 _finished.Add(visit);
                 return true;
             });

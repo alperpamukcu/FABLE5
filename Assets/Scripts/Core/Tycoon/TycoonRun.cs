@@ -134,7 +134,8 @@ namespace LastCall.Core
         {
             var order = RollOrder();
             double patience = _config.RollPatience(Day, _rng.GetStream("patience"));
-            if (_regulars == null) return new CustomerVisit(order, patience);
+            double decide = _config.RollDecideDelay(_rng.GetStream("decide"));
+            if (_regulars == null) return new CustomerVisit(order, patience, decideSeconds: decide);
 
             // The same face-and-memory pipeline the old loop used (GDD 19 §3, 20 §3):
             // returning regulars are read through decayed memory, strangers roll fresh.
@@ -147,7 +148,7 @@ namespace LastCall.Core
                     regular.Relationship, regular.BaseDemand);
             regular.RememberTiers(TiersOf(read));
 
-            return new CustomerVisit(order, patience, regular, read);
+            return new CustomerVisit(order, patience, regular, read, decide);
         }
 
         private DrinkOrder RollOrder()
@@ -245,6 +246,8 @@ namespace LastCall.Core
             if (visit == null) throw new ArgumentNullException(nameof(visit));
             if (visit.State != VisitState.Waiting || !Floor.Seated.Contains(visit))
                 throw new InvalidOperationException("That customer is not waiting at the bar.");
+            if (!visit.HasOrdered)
+                throw new InvalidOperationException("That customer is still deciding — no order to serve yet.");
             if (ServingGlass.IsEmpty && Glass.IsEmpty)
                 throw new InvalidOperationException("Nothing to serve.");
 
@@ -262,7 +265,7 @@ namespace LastCall.Core
             var verdict = ServiceJudge.Judge(visit, matchKind, delivered, CrowdToday, Ambience);
 
             visit.Regular?.Stats.Apply(applied);
-            visit.Resolve(verdict, verdict.OrdersAgain ? RollOrder() : null);
+            visit.Resolve(verdict, verdict.OrdersAgain ? RollOrder() : null, _config.SavorSeconds);
             if (visit.State != VisitState.Waiting)
                 visit.Regular?.RecordVisit((int)Math.Round(verdict.Satisfaction * 3));
 

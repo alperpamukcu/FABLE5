@@ -9,11 +9,18 @@ namespace LastCall.Core
     /// </summary>
     public sealed class TycoonConfig
     {
-        public static readonly TycoonConfig Default = new TycoonConfig();
+        // The live game's tuning: a served customer nurses the drink through three sip cycles
+        // (~2.6s sip + ~1.8s hold each, matched in TycoonHud) before getting up to leave.
+        public static readonly TycoonConfig Default = new TycoonConfig(savorSeconds: 13.2);
 
-        public TycoonConfig(int startingMoney = 20)
+        public TycoonConfig(int startingMoney = 20,
+            double orderDecisionSeconds = 4.0, double savorSeconds = 6.0)
         {
+            if (orderDecisionSeconds < 0) throw new ArgumentOutOfRangeException(nameof(orderDecisionSeconds));
+            if (savorSeconds < 0) throw new ArgumentOutOfRangeException(nameof(savorSeconds));
             StartingMoney = startingMoney;
+            OrderDecisionSeconds = orderDecisionSeconds;
+            SavorSeconds = savorSeconds;
         }
 
         /// <summary>
@@ -71,6 +78,21 @@ namespace LastCall.Core
         /// <summary>One patience roll, jittered from the named stream.</summary>
         public double RollPatience(int day, SeededRng rng) =>
             PatienceSeconds(day) * (1.0 + (rng.NextDouble() * 2.0 - 1.0) * PatienceJitter);
+
+        // ── deciding & savouring (GDD 23 §2, 2026-07-23) ────────────────────────
+        /// <summary>Seconds a freshly seated customer mulls the menu before ordering. Zero
+        /// disables the beat entirely (the headless economy tests order the instant they sit).</summary>
+        public double OrderDecisionSeconds { get; }
+        public const double OrderDecisionJitter = 0.35;
+
+        /// <summary>One decision-delay roll, jittered from the named stream.</summary>
+        public double RollDecideDelay(SeededRng rng) =>
+            OrderDecisionSeconds <= 0 ? 0.0
+                : OrderDecisionSeconds * (1.0 + (rng.NextDouble() * 2.0 - 1.0) * OrderDecisionJitter);
+
+        /// <summary>Seconds a served customer nurses the drink on the stool before getting up
+        /// to leave. The seat stays taken meanwhile; zero leaves on the next tick (the sim).</summary>
+        public double SavorSeconds { get; }
 
         // ── the day (GDD 23 §6) ─────────────────────────────────────────────────
         public int CustomersOnDay(int day) => Math.Min(14, 8 + day / 2);

@@ -4,9 +4,13 @@ namespace LastCall.Core
 {
     public enum VisitState
     {
-        /// <summary>Sitting at the bar, order open, patience ticking.</summary>
+        /// <summary>Sitting at the bar. First they mull the menu (<see cref="CustomerVisit.HasOrdered"/>
+        /// false), then the order is open and patience ticks.</summary>
         Waiting,
-        /// <summary>Served and settled up; leaves on the next floor tick.</summary>
+        /// <summary>Served and paid, now nursing the drink on the stool (GDD 23 §2, 2026-07-23).
+        /// The seat stays taken until the savour timer runs out, then they get up to leave.</summary>
+        Drinking,
+        /// <summary>Finished the drink (or a served leftover) and gone; leaves on the next tick.</summary>
         Served,
         /// <summary>Patience ran out. No payment, satisfaction zero, stool frees up.</summary>
         StormedOff,
@@ -38,25 +42,67 @@ namespace LastCall.Core
         /// <summary>Final satisfaction (0–1) once resolved; storm-offs stay at 0.</summary>
         public double Satisfaction { get; private set; }
 
-        /// <summary>0 = just sat down, 1 = patience gone. Locked in by serving.</summary>
+        /// <summary>
+        /// Seconds of "thinking" left before they place the order (GDD 23 §2, 2026-07-23). A
+        /// freshly seated customer mulls the menu for a beat: while this is positive they have
+        /// not ordered yet, nothing can be served to them, and their patience does not tick —
+        /// being kept waiting only counts once they have actually asked for something.
+        /// </summary>
+        public double DecideLeft { get; private set; }
+
+        /// <summary>True once they have made up their mind and the order is on the bar.</summary>
+        public bool HasOrdered => DecideLeft <= 0;
+
+        /// <summary>Seconds left of nursing a served drink before they get up to leave
+        /// (2026-07-23). Only meaningful in <see cref="VisitState.Drinking"/>.</summary>
+        public double SavorLeft { get; private set; }
+
+        /// <summary>0 = just ordered, 1 = patience gone. Locked in by serving.</summary>
         public double WaitFraction =>
             PatienceMax <= 0 ? 1.0 : 1.0 - PatienceLeft / PatienceMax;
 
         public CustomerVisit(DrinkOrder order, double patienceSeconds,
-            RegularState regular = null, CustomerRead read = null)
+            RegularState regular = null, CustomerRead read = null, double decideSeconds = 0)
         {
             Order = order ?? throw new ArgumentNullException(nameof(order));
             if (patienceSeconds <= 0) throw new ArgumentOutOfRangeException(nameof(patienceSeconds));
+            if (decideSeconds < 0) throw new ArgumentOutOfRangeException(nameof(decideSeconds));
             PatienceMax = patienceSeconds;
             PatienceLeft = patienceSeconds;
+            DecideLeft = decideSeconds;
             Regular = regular;
             Read = read;
         }
 
-        /// <summary>Advances the clock while they wait. Zero patience is the storm-off.</summary>
+        /// <summary>
+        /// Advances the clock. A served customer nurses the drink down (then leaves); a waiting
+        /// one first thinks the order over — only after that does patience tick, and zero
+        /// patience is the storm-off.
+        /// </summary>
         public void Tick(double seconds)
         {
-            if (State != VisitState.Waiting || seconds <= 0) return;
+            if (seconds <= 0) return;
+
+            if (State == VisitState.Drinking)
+            {
+                SavorLeft -= seconds;
+                if (SavorLeft > 0) return;
+                SavorLeft = 0;
+                State = VisitState.Served;   // finished the drink — up and out on the next tick
+                return;
+            }
+
+            if (State != VisitState.Waiting) return;
+
+            // Still making up their mind: think first, and only the leftover ticks patience.
+            if (DecideLeft > 0)
+            {
+                DecideLeft -= seconds;
+                if (DecideLeft >= 0) return;
+                seconds = -DecideLeft;
+                DecideLeft = 0;
+            }
+
             PatienceLeft -= seconds;
             if (PatienceLeft > 0) return;
 
@@ -67,10 +113,13 @@ namespace LastCall.Core
 
         /// <summary>
         /// Settles a served drink. When the verdict earned an extra order and a fresh one
-        /// is offered, the visit continues with refreshed patience; otherwise they pay up
-        /// and are done.
+        /// is offered, the visit continues with refreshed patience; otherwise they take the
+        /// drink and, given a <paramref name="savorSeconds"/>, nurse it on the stool before
+        /// leaving. A zero savour keeps the old behaviour (gone on the next tick) for the sim
+        /// and the direct-construction tests.
         /// </summary>
-        public void Resolve(ServiceVerdict verdict, DrinkOrder nextOrder = null)
+        public void Resolve(ServiceVerdict verdict, DrinkOrder nextOrder = null,
+            double savorSeconds = 0)
         {
             if (verdict == null) throw new ArgumentNullException(nameof(verdict));
             if (State != VisitState.Waiting)
@@ -87,7 +136,15 @@ namespace LastCall.Core
                 return;
             }
 
-            State = VisitState.Served;
+            if (savorSeconds > 0)
+            {
+                SavorLeft = savorSeconds;
+                State = VisitState.Drinking;
+            }
+            else
+            {
+                State = VisitState.Served;
+            }
         }
     }
 }

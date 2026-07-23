@@ -43,15 +43,32 @@ namespace LastCall.DebugUI
         // head-and-shoulders busts, not in a bottom strip. Each bust rises/slides into its
         // stool when its patron arrives, wears a floating order tag, and is the click target.
         private const int SeatSlots = 6;
-        private const float CounterLineY = 262f;   // HUD-space y (from bottom) of the bar top
+        private const float CounterLineY = 279f;   // HUD-space y (from bottom) of the bar top —
+                                                    // matched to the counter sprite's top edge so
+                                                    // the body clips exactly where the bar ends
         private const float BustW = 108f;
         private const float BustH = 128f;
-        private const float WalkDuration = 0.6f;   // seconds to walk in and sit
+        private const float WalkSpeed = 405f;       // walk-in speed (ref px/s), in from the screen's right edge
+        private const float ExitSpeed = 560f;       // walk-out speed (ref px/s), back off the right edge
+        private const float OffscreenMargin = 150f; // how far past the right edge they start/finish
+        private const float OrderAnimSeconds = 2.4f;               // the one-shot "placing the order" beat
+        private const float DrinkSipSeconds = 2.6f, DrinkHoldSeconds = 1.8f;   // one sip cycle (×3 = the savour)
+
+        // The animated customer (2026-07-23): a full-body pixel sprite shown from about the waist
+        // up, with the counter clipping the legs. Frames load from Resources/Patron/<clip>.
+        private const float CharSize = 300f;       // the character image, scaled up from the 180px art
+        private const float CharWiden = 1.18f;     // stretch a touch wider — the sprite is lanky for the bar
+        private const float CharWinH = 176f;       // the masked window height (waist up, above the bar)
+        private const float CharFootDrop = 128f;   // how far below the counter the feet sit (clipped away)
+        private enum PatronClip { Idle, Order, Drink, Walk }
+        private Dictionary<PatronClip, Sprite[]> _patron;
+        private RectTransform _hudRoot;            // the canvas rect — the screen's right edge for entrances
+
         private sealed class SeatView
         {
-            public RectTransform Root;       // the bust, positioned at the counter (click target)
-            public CanvasGroup Group;        // fades the bust in as it walks up
-            public Image Portrait;           // the customer's face/bust
+            public RectTransform Root;       // the customer + tag, positioned at the counter (click target)
+            public CanvasGroup Group;        // fades them in as they walk up
+            public Image Portrait;           // the animated character image (inside the counter mask)
             public RectTransform Tag;        // the floating order ticket above the head
             public Image TagBg;
             public Text Name;
@@ -64,9 +81,12 @@ namespace LastCall.DebugUI
             public float ExitT;              // 0..1 leave progress
             public bool ExitStorm;           // stormed off (angry exit) vs served (calm)
             public CustomerVisit Visit;      // who is assigned to this stool (stable until they leave)
+            public float AnimClock;          // running time for the looping clips (idle, walk)
+            public bool WasOrdered;          // edge-detect the deciding→ordered moment
+            public float OrderAnimLeft;      // remaining "placing the order" one-shot time
+            public float DrinkT;             // time since they started drinking
         }
         private readonly List<SeatView> _seats = new List<SeatView>();
-        private const float ExitDuration = 0.55f;
 
         // The finished drink on the counter (GDD 24 §3, 2026-07-22): a glass you drag onto a
         // customer to serve, carried with a heavy, springy AAA feel.
@@ -200,6 +220,7 @@ namespace LastCall.DebugUI
             if (_flow != null && _flow.IsOpen) return;   // finish the build first
             var visit = _seats[index].Visit;
             if (visit == null || visit.State != VisitState.Waiting) return;
+            if (!visit.HasOrdered) return;   // still deciding — no order to read yet (2026-07-23)
 
             // Clicking a customer reads their licence (GDD 24 §5). Serving is a separate act:
             // the finished drink is carried over and dropped on them (drag the glass).
@@ -214,6 +235,7 @@ namespace LastCall.DebugUI
             if (run == null || run.Phase != TycoonPhase.DayOpen) return false;
             var visit = _seats[index].Visit;
             if (visit == null || visit.State != VisitState.Waiting) return false;
+            if (!visit.HasOrdered) return false;   // can't hand a drink to someone still deciding
             if (run.ServingGlass.IsEmpty && run.Glass.IsEmpty) return false;
 
             var verdict = run.ServeTo(visit);
@@ -532,6 +554,9 @@ namespace LastCall.DebugUI
                 AdvanceWalkIn(view);
 
                 var visit = view.Visit;
+                bool deciding = !visit.HasOrdered;                    // reading the menu (2026-07-23)
+                bool drinking = visit.State == VisitState.Drinking;   // served, nursing the drink
+
                 // A regular ordering again after a perfect serve gets a gold star and the
                 // round count (GDD 24 §4) — the reward for reading them right, made visible.
                 string star = visit.ExtraOrdersTaken > 0
@@ -541,45 +566,63 @@ namespace LastCall.DebugUI
                 view.Name.color = UITheme.TextPrimary;
                 view.Order.color = UITheme.Amber[4];
 
-                // The face at the bar. A real portrait when we have one, a neutral bust when we
-                // don't; it sours (reddens) over the last of their patience — anger you can see.
-                var sprite = stage != null && visit.Regular != null
-                    ? stage.PortraitSpriteFor(visit.Regular.ArchetypeId) : null;
-                view.Portrait.sprite = sprite;
+                if (deciding)
+                {
+                    // Nothing to read or serve yet — they are still making up their mind.
+                    view.Wants.text = "DECIDING...";
+                    view.Order.text = "...";
+                }
+                else if (drinking)
+                {
+                    // Served and content; the drink is theirs to finish before they go.
+                    view.Wants.text = "ENJOYING IT";
+                    view.Order.text = $"{visit.Order.Wanted.Name.ToUpperInvariant()}  ·";
+                    view.Order.color = UITheme.Lime[3];
+                }
+                else
+                {
+                    // A glanceable tell that they want extras; the licence (GDD 24 §5) shows which.
+                    view.Wants.text = visit.Order.Garnishes.Count > 0 ? "WANTS EXTRAS · TAP" : "TAP TO READ";
+                    view.Order.text = $"{visit.Order.Wanted.Name.ToUpperInvariant()}  ${visit.Order.Price}";
+                }
 
-                // A glanceable tell that they want extras; the licence (GDD 24 §5) shows which.
-                view.Wants.text = visit.Order.Garnishes.Count > 0 ? "WANTS EXTRAS · TAP" : "TAP TO READ";
-
-                view.Order.text = $"{visit.Order.Wanted.Name.ToUpperInvariant()}  ${visit.Order.Price}";
-
-                float patience = (float)(visit.PatienceLeft / visit.PatienceMax);
+                // The patience clock only bites while they wait on an order. Deciding holds it
+                // full; a drinking customer is content — both show a calm, full cyan bar.
+                float patience = (deciding || drinking) ? 1f
+                    : (float)(visit.PatienceLeft / visit.PatienceMax);
                 float tagW = view.Tag.rect.width - 12f;
                 view.PatienceFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(tagW * patience), -2);
-                view.PatienceFill.color = patience > 0.5f ? UITheme.Lime[3]
+                view.PatienceFill.color = (deciding || drinking) ? UITheme.Cyan[3]
+                    : patience > 0.5f ? UITheme.Lime[3]
                     : patience > 0.25f ? UITheme.Amber[3] : UITheme.ViceRed[3];
 
-                // Sour the face over the last third of their patience.
-                float mood = Mathf.Clamp01(patience / 0.35f);
-                var calm = sprite != null ? Color.white : new Color(0.62f, 0.55f, 0.60f, 1f);
-                view.Portrait.color = Color.Lerp(new Color(0.80f, 0.28f, 0.30f, 1f), calm, mood);
+                // Drive the animated customer (2026-07-23): walk-in, the sit-and-breathe idle,
+                // a one-shot "placing the order" beat, then nursing the drink. Facing and frame
+                // are chosen from the visit state; the body below the waist is clipped by the bar.
+                UpdateSeatAnimation(view, visit, patience);
 
-                // The tag glows cyan when a drink is built and waiting: "hand it over here".
-                view.TagBg.color = drinkReady
+                // The tag glows cyan when a drink is built and this customer can actually take it.
+                bool canTake = drinkReady && !deciding && !drinking;
+                view.TagBg.color = canTake
                     ? new Color(UITheme.Selection.r, UITheme.Selection.g, UITheme.Selection.b, 0.92f)
                     : new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.86f);
             }
         }
 
-        /// <summary>Slides a newly-seated bust in from the left and fades it up (GDD 24 §4).</summary>
+        /// <summary>Walks a newly-seated customer in from the right along the counter and fades
+        /// them up (2026-07-23): the west-facing walk cycle carries them left into their stool.</summary>
         private void AdvanceWalkIn(SeatView view)
         {
+            // In from the screen's real right edge (not a few frames off the stool) at a steady
+            // pace, so a far stool is a longer walk (2026-07-23).
+            float entryX = _hudRoot.rect.width + OffscreenMargin;
             if (view.WalkT < 1f)
             {
-                view.WalkT = Mathf.Min(1f, view.WalkT + Time.deltaTime / WalkDuration);
-                float e = 1f - (1f - view.WalkT) * (1f - view.WalkT);   // ease-out
-                float startX = view.SeatX - 200f;
-                view.Root.anchoredPosition = new Vector2(Mathf.Lerp(startX, view.SeatX, e), CounterLineY);
-                view.Group.alpha = view.WalkT;
+                float dist = Mathf.Max(1f, entryX - view.SeatX);
+                view.WalkT = Mathf.Min(1f, view.WalkT + Time.deltaTime * WalkSpeed / dist);
+                float e = 1f - (1f - view.WalkT) * (1f - view.WalkT);   // ease-out into the stool
+                view.Root.anchoredPosition = new Vector2(Mathf.Lerp(entryX, view.SeatX, e), CounterLineY);
+                view.Group.alpha = Mathf.Clamp01(view.WalkT * 4f);
             }
             else
             {
@@ -588,35 +631,116 @@ namespace LastCall.DebugUI
             }
         }
 
-        /// <summary>Plays a customer leaving their stool (GDD 24 §4): a served patron sinks off
-        /// the stool and fades; a stormed-off one shakes, then slides out fast.</summary>
+        /// <summary>Plays a customer leaving (2026-07-23): they get up and walk back out to the
+        /// right the way they came (the walk cycle, mirrored). A stormed-off patron shakes first,
+        /// then storms out faster.</summary>
         private void AdvanceExit(SeatView view)
         {
-            view.ExitT += Time.deltaTime / ExitDuration;
-            float k = Mathf.Clamp01(view.ExitT);
+            // Get up and walk all the way back off the right edge the way they came.
+            float exitX = _hudRoot.rect.width + OffscreenMargin;
+            float dist = Mathf.Max(1f, exitX - view.SeatX);
+            float speed = view.ExitStorm ? ExitSpeed * 1.5f : ExitSpeed;
+            view.ExitT = Mathf.Min(1f, view.ExitT + Time.deltaTime * speed / dist);
+            float k = view.ExitT;
 
-            if (view.ExitStorm)
-            {
-                float shake = k < 0.35f ? Mathf.Sin(k * 70f) * 9f : 0f;
-                float slide = Mathf.Clamp01((k - 0.35f) / 0.65f);
-                view.Root.anchoredPosition = new Vector2(
-                    view.SeatX + shake - 320f * slide * slide, CounterLineY - 18f * slide);
-                view.Group.alpha = 1f - slide;
-            }
-            else
-            {
-                float e = k * k;   // ease-in: gets up and steps away
-                view.Root.anchoredPosition = new Vector2(view.SeatX, CounterLineY - 96f * e);
-                view.Group.alpha = 1f - e;
-            }
+            float shake = view.ExitStorm && k < 0.25f ? Mathf.Sin(k * 90f) * 8f : 0f;
+            float e = k * k;   // ease-in: rises and steps away, gathering pace
+            view.Root.anchoredPosition = new Vector2(
+                view.SeatX + shake + (exitX - view.SeatX) * e, CounterLineY);
+            view.Group.alpha = 1f - Mathf.Clamp01((k - 0.5f) / 0.5f);
+
+            // Mirror the walk so they face the way they are leaving (to the right).
+            UpdatePatronFrame(view, PatronClip.Walk, view.AnimClock, facing: -1);
+            view.AnimClock += Time.deltaTime;
 
             if (view.ExitT >= 1f)
             {
                 view.Exiting = false;
                 view.Visit = null;
                 view.Group.alpha = 1f;
+                view.Portrait.rectTransform.localScale = new Vector3(CharWiden, 1f, 1f);   // reset the mirror
                 view.Root.gameObject.SetActive(false);
             }
+        }
+
+        // ── the animated customer (2026-07-23) ───────────────────────────────────
+
+        /// <summary>Chooses the clip and frame for a seated customer from their state and drives
+        /// the character image: the sit-and-breathe idle while they wait, a one-shot "placing the
+        /// order" beat the moment they decide, and the drink once served — plus a light impatience
+        /// flush over the last of their patience.</summary>
+        private void UpdateSeatAnimation(SeatView view, CustomerVisit visit, float patience)
+        {
+            bool ordered = visit.HasOrdered;
+            bool seated = view.WalkT >= 1f;
+            bool drinking = visit.State == VisitState.Drinking;
+
+            if (ordered && !view.WasOrdered && seated) view.OrderAnimLeft = OrderAnimSeconds;
+            view.WasOrdered = ordered;
+
+            if (drinking) view.DrinkT += Time.deltaTime; else view.DrinkT = 0f;
+
+            PatronClip clip; float t;
+            if (!seated)                      { clip = PatronClip.Walk;  t = view.AnimClock; }   // faces left, walking in
+            else if (drinking)                { clip = PatronClip.Drink; t = view.DrinkT; }
+            else if (view.OrderAnimLeft > 0f) { clip = PatronClip.Order; t = OrderAnimSeconds - view.OrderAnimLeft;
+                                                view.OrderAnimLeft -= Time.deltaTime; }
+            else                              { clip = PatronClip.Idle;  t = view.AnimClock; }
+            view.AnimClock += Time.deltaTime;
+
+            UpdatePatronFrame(view, clip, t, facing: 1);
+
+            float flush = (!ordered || drinking) ? 1f : Mathf.Clamp01(patience / 0.35f);
+            view.Portrait.color = Color.Lerp(new Color(1f, 0.72f, 0.72f, 1f), Color.white, flush);
+        }
+
+        /// <summary>Sets the character image to the right frame of <paramref name="clip"/> at time
+        /// <paramref name="t"/>, mirrored when <paramref name="facing"/> is -1 (leaving right).</summary>
+        private void UpdatePatronFrame(SeatView view, PatronClip clip, float t, int facing)
+        {
+            if (_patron == null || !_patron.TryGetValue(clip, out var frames) || frames.Length == 0) return;
+            view.Portrait.sprite = frames[PatronFrameIndex(clip, t, frames.Length)];
+            // A touch wider than tall (CharWiden), mirrored to face right on the way out.
+            view.Portrait.rectTransform.localScale = new Vector3(CharWiden * (facing < 0 ? -1f : 1f), 1f, 1f);
+        }
+
+        /// <summary>The frame index for a clip at time t. Most clips loop at a fixed rate; the
+        /// drink raises and lowers the glass over a sip window then holds it at rest, so it reads
+        /// as a real sip every few seconds instead of a gulp every frame (2026-07-23).</summary>
+        private static int PatronFrameIndex(PatronClip clip, float t, int n)
+        {
+            if (n <= 1) return 0;
+            if (clip == PatronClip.Drink)
+            {
+                float u = Mathf.Repeat(t, DrinkSipSeconds + DrinkHoldSeconds);
+                if (u >= DrinkSipSeconds) return 0;                 // holding the glass at rest
+                int span = 2 * (n - 1);                             // 0..n-1..1 (raise then lower)
+                int p = Mathf.FloorToInt(u / DrinkSipSeconds * span) % span;
+                return p < n ? p : span - p;
+            }
+            // Idle is a slow two-frame breath — a settled customer barely moves; the walk
+            // strides (matched to the slower gait), the order talks.
+            float fps = clip == PatronClip.Walk ? 9f : clip == PatronClip.Order ? 7f : 2.5f;
+            return Mathf.FloorToInt(t * fps) % n;
+        }
+
+        private void LoadPatronFrames()
+        {
+            _patron = new Dictionary<PatronClip, Sprite[]>
+            {
+                [PatronClip.Idle]  = LoadPatronClip("idle"),
+                [PatronClip.Order] = LoadPatronClip("order"),
+                [PatronClip.Drink] = LoadPatronClip("drink"),
+                [PatronClip.Walk]  = LoadPatronClip("walk"),
+            };
+        }
+
+        /// <summary>All frames of one clip from Resources/Patron/&lt;clip&gt;, ordered by name.</summary>
+        private static Sprite[] LoadPatronClip(string clip)
+        {
+            var sprites = Resources.LoadAll<Sprite>($"Patron/{clip}");
+            System.Array.Sort(sprites, (a, b) => string.CompareOrdinal(a.name, b.name));
+            return sprites;
         }
 
         // ── day end ─────────────────────────────────────────────────────────────
@@ -857,6 +981,8 @@ namespace LastCall.DebugUI
 
         private void BuildUi()
         {
+            LoadPatronFrames();   // the seated customer's animation clips (Resources/Patron/*)
+
             var canvasGo = new GameObject("TycoonHud", typeof(Canvas), typeof(CanvasScaler),
                 typeof(GraphicRaycaster));
             var canvas = canvasGo.GetComponent<Canvas>();
@@ -870,6 +996,7 @@ namespace LastCall.DebugUI
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 1f;
             var root = (RectTransform)canvasGo.transform;
+            _hudRoot = root;
 
             if (UnityEngine.EventSystems.EventSystem.current == null)
             {
@@ -930,7 +1057,7 @@ namespace LastCall.DebugUI
                 seat.Root = NewRect($"Seat{i}", root);
                 seat.Root.anchorMin = seat.Root.anchorMax = new Vector2(0, 0);
                 seat.Root.pivot = new Vector2(0.5f, 0);
-                seat.Root.sizeDelta = new Vector2(BustW + 52f, BustH + 92f);
+                seat.Root.sizeDelta = new Vector2(150f, CharWinH + 110f);
                 seat.Root.anchoredPosition = new Vector2(seat.SeatX, CounterLineY);
                 var hit = seat.Root.gameObject.AddComponent<Image>();
                 hit.color = new Color(0, 0, 0, 0);   // invisible, but catches clicks
@@ -940,13 +1067,21 @@ namespace LastCall.DebugUI
                 button.onClick.AddListener(() => OnSeatClicked(index));
                 seat.Group = seat.Root.gameObject.AddComponent<CanvasGroup>();
 
-                // The bust: head-and-shoulders sitting on the counter line (bottom-centred).
-                var portrait = NewRect("Portrait", seat.Root);
-                portrait.anchorMin = portrait.anchorMax = new Vector2(0.5f, 0);
-                portrait.pivot = new Vector2(0.5f, 0);
-                portrait.sizeDelta = new Vector2(BustW, BustW);   // square portrait art
-                portrait.anchoredPosition = new Vector2(0, 0);
-                seat.Portrait = portrait.gameObject.AddComponent<Image>();
+                // The customer stands behind the bar. A masked window shows them from about the
+                // waist up (the bar clips the legs); the animated character sprite lives inside it.
+                var win = NewRect("CharWin", seat.Root);
+                win.anchorMin = win.anchorMax = new Vector2(0.5f, 0);
+                win.pivot = new Vector2(0.5f, 0);
+                win.sizeDelta = new Vector2(CharSize, CharWinH);
+                win.anchoredPosition = new Vector2(0, 0);
+                win.gameObject.AddComponent<RectMask2D>();
+
+                var charRt = NewRect("Char", win);
+                charRt.anchorMin = charRt.anchorMax = new Vector2(0.5f, 0);
+                charRt.pivot = new Vector2(0.5f, 0);
+                charRt.sizeDelta = new Vector2(CharSize, CharSize);
+                charRt.anchoredPosition = new Vector2(0, -CharFootDrop);   // drop the legs below the window
+                seat.Portrait = charRt.gameObject.AddComponent<Image>();
                 seat.Portrait.preserveAspect = true;
                 seat.Portrait.raycastTarget = false;
 
@@ -955,7 +1090,7 @@ namespace LastCall.DebugUI
                 seat.Tag.anchorMin = seat.Tag.anchorMax = new Vector2(0.5f, 0);
                 seat.Tag.pivot = new Vector2(0.5f, 0);
                 seat.Tag.sizeDelta = new Vector2(BustW + 44f, 70f);
-                seat.Tag.anchoredPosition = new Vector2(0, BustW + 8f);
+                seat.Tag.anchoredPosition = new Vector2(0, CharWinH + 10f);
                 seat.TagBg = seat.Tag.gameObject.AddComponent<Image>();
                 seat.TagBg.raycastTarget = false;
 
