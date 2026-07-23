@@ -19,21 +19,24 @@ namespace LastCall.DebugUI
     public sealed class MetaballFluid
     {
         // Render budget — pool particles + free stream/splash drops share the shader's _Drops[].
-        private const int MaxPool = 84;
-        private const int MaxDrops = 40;
+        private const int MaxPool = 96;
+        private const int MaxDrops = 32;
         private const int RenderMax = 128;   // must match MAX_DROPS in the shader
 
-        private const float Gravity = 1500f;         // px/s² down
-        private const float StreamRadius = 11f;
-        private const float StreamInterval = 0.008f;
+        private const float Gravity = 1400f;          // px/s² down
+        private const float StreamRadius = 8f;
+        private const float StreamInterval = 0.007f;
 
-        // Position-based fluid parameters (tuned for the ~100px glasses here).
-        private const float H = 26f;                  // interaction radius (px)
-        private const float RestDensity = 4.2f;
-        private const float Stiffness = 0.34f;
-        private const float NearStiffness = 0.42f;
-        private const float PoolRadius = 15f;         // render radius per pool particle
-        private const float Viscosity = 0.986f;       // per-frame velocity retention
+        // Position-based fluid parameters. The particle COUNT is derived from the fill area at
+        // Spacing, and RestDensity is matched to that spacing, so the particles fill the vessel
+        // to the liquid line instead of collapsing into a clump at the bottom.
+        private const float H = 24f;                  // interaction radius (px)
+        private const float Spacing = 14f;            // target rest spacing → fills the volume
+        private const float RestDensity = 1.0f;       // matched to Spacing (no net attraction)
+        private const float Stiffness = 0.4f;
+        private const float NearStiffness = 0.5f;
+        private const float PoolRadius = 11f;         // small round particles that still merge
+        private const float Viscosity = 0.985f;       // per-frame velocity retention
         private const float MaxSpeed = 1300f;
         private const float WallFriction = 0.72f;     // tangential velocity kept on a wall hit
 
@@ -143,8 +146,11 @@ namespace LastCall.DebugUI
             _fillTopY = bottomY + (rimY - bottomY) * fillFrac;
             _poolSet = true;
 
-            // Track the fill with the particle count; new particles rain in near the surface.
-            int target = Mathf.RoundToInt(fillFrac * MaxPool);
+            // Enough particles to fill the liquid AREA at the rest spacing — so they pack up to
+            // the line, not into a puddle at the bottom. New ones rain in near the surface.
+            float fillH = _fillTopY - bottomY;
+            int target = Mathf.Clamp(
+                Mathf.RoundToInt((2f * _halfW) * fillH / (Spacing * Spacing)), 0, MaxPool);
             while (_pn < target && _pn < MaxPool)
             {
                 _px[_pn] = _cx + Random.Range(-_halfW * 0.7f, _halfW * 0.7f);
