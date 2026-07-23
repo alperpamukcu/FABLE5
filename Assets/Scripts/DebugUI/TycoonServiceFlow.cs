@@ -439,12 +439,14 @@ namespace LastCall.DebugUI
             float h = _shakerVessel.rect.height;
             float bottomY = c.y - h * 0.5f + h * 0.13f;
             float innerH = h * 0.64f;
-            float topY = bottomY + innerH * (float)run.Glass.FillFraction + bob;
-            // The liquid tilts with the tin (2026-07-23) so they read as one mass while shaking.
+            float fill = (float)run.Glass.FillFraction;
+            float rimY = bottomY + innerH;
+            float topY = bottomY + innerH * fill + bob;
+            // The particle fluid collides with the tin's rotated interior, so it sloshes with it.
             float deg = _shakerVessel.localEulerAngles.z;
             if (deg > 180f) deg -= 360f;
-            _shakerFluid.SetPool(minX, maxX, bottomY, topY, deg * Mathf.Deg2Rad);
-            // The solids float on this same liquid line and bounce off these same walls.
+            _shakerFluid.SetPool(minX, maxX, bottomY, rimY, fill, deg * Mathf.Deg2Rad);
+            // The solids float on the liquid line and bounce off these same walls.
             _shakerSolids.SetBounds(minX, maxX, bottomY, topY);
         }
 
@@ -680,8 +682,8 @@ namespace LastCall.DebugUI
             float h = _serveGlass.rect.height;
             float bottomY = c.y - h * 0.5f + h * 0.14f;
             float innerH = h * 0.6f;
-            float topY = bottomY + innerH * (float)run.ServingGlass.FillFraction;
-            _serveFluid.SetPool(minX, maxX, bottomY, topY);
+            float rimY = bottomY + innerH;
+            _serveFluid.SetPool(minX, maxX, bottomY, rimY, (float)run.ServingGlass.FillFraction);
         }
 
         private void RefreshServeText(TycoonRun run, double accuracy)
