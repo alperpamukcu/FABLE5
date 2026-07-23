@@ -77,6 +77,8 @@ namespace LastCall.DebugUI
         private static readonly int IdSurfCenter  = Shader.PropertyToID("_SurfCenterX");
         private static readonly int IdHeights     = Shader.PropertyToID("_Heights");
         private static readonly int IdHeightCount = Shader.PropertyToID("_HeightCount");
+        private static readonly int IdPoolAngle   = Shader.PropertyToID("_PoolAngle");
+        private static readonly int IdPoolPivotY  = Shader.PropertyToID("_PoolPivotY");
 
         public MetaballFluid(RectTransform surface)
         {
@@ -135,7 +137,7 @@ namespace LastCall.DebugUI
         /// <paramref name="bottomY"/> up to it, clipped to [<paramref name="minX"/>,
         /// <paramref name="maxX"/>].
         /// </summary>
-        public void SetPool(float minX, float maxX, float bottomY, float topY)
+        public void SetPool(float minX, float maxX, float bottomY, float topY, float angleRad = 0f)
         {
             RefreshSize();
             _poolMinX = minX; _poolMaxX = maxX; _poolBottomY = bottomY; _poolTopY = topY;
@@ -155,6 +157,10 @@ namespace LastCall.DebugUI
             _poolCenterXUv = (minUv.x + maxUv.x) * 0.5f;
             _poolHalfWidthUv = Mathf.Max((maxUv.x - minUv.x) * 0.5f, 1e-3f);
             _material.SetFloat(IdSurfCenter, _poolCenterXUv);
+            // The pool tilts with the shaker (2026-07-23) around its own centre, so the liquid
+            // and the tin move as one mass.
+            _material.SetFloat(IdPoolAngle, angleRad);
+            _material.SetFloat(IdPoolPivotY, (minUv.y + maxUv.y) * 0.5f);
         }
 
         /// <summary>

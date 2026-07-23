@@ -107,6 +107,21 @@ Shader "LastCall/MetaballLiquid"
             float _SurfCenterX;           // uv x the tilt pivots around (pool centre)
             float _Heights[HEIGHT_N];     // uv surface displacement across the pool width
             float _HeightCount;
+            // Pool rotation (2026-07-23): the pooled body tilts WITH the shaker so the liquid
+            // and the tin read as one mass while you throw it about. The falling stream stays
+            // vertical (it is not rotated).
+            float _PoolAngle;             // radians
+            float _PoolPivotY;            // uv y of the pool centre (rotation pivot with _SurfCenterX)
+
+            // Rotates a uv into the pool's own (tilted) frame, in aspect-correct pixels.
+            float2 rotUv (float2 uv)
+            {
+                float2 pivot = float2(_SurfCenterX, _PoolPivotY);
+                float2 p = (uv - pivot) * _Size.xy;
+                float c = cos(-_PoolAngle), s = sin(-_PoolAngle);
+                float2 pr = float2(p.x * c - p.y * s, p.x * s + p.y * c);
+                return pr / max(_Size.xy, float2(1, 1)) + pivot;
+            }
 
             // The liquid line at a given uv.x: the resting level, tilted by the slosh and
             // displaced by the sampled height-field wave.
@@ -171,8 +186,9 @@ Shader "LastCall/MetaballLiquid"
 
             fixed4 frag (v2f IN) : SV_Target
             {
-                float2 uv = IN.texcoord;
-                float field = poolField(uv) + dropField(uv);
+                float2 uv  = IN.texcoord;
+                float2 ruv = rotUv(uv);                     // the pool's tilted frame
+                float field = poolField(ruv) + dropField(uv);
 
                 // Antialiased threshold edge from the field's screen-space rate of change.
                 float aa = fwidth(field) + 1e-4;
@@ -186,9 +202,9 @@ Shader "LastCall/MetaballLiquid"
 
                 // A bright band riding just under the moving water line — the light on the
                 // surface — plus a soft sheen through the body so it reads as wet volume.
-                float surf = surfaceY(uv.x);
-                float band = saturate(1.0 - abs(uv.y - surf) * 26.0);
-                float sheen = saturate((uv.y - surf) * 5.0 + 0.5);
+                float surf = surfaceY(ruv.x);
+                float band = saturate(1.0 - abs(ruv.y - surf) * 26.0);
+                float sheen = saturate((ruv.y - surf) * 5.0 + 0.5);
                 col.rgb += (band * 0.5 + sheen * 0.18) * _Highlight;
 
                 col.a = a * _Color.a * IN.color.a;

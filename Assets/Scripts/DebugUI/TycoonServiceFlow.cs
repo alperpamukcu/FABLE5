@@ -381,7 +381,10 @@ namespace LastCall.DebugUI
             float innerH = _shakerVessel.rect.height - 34f;
             float bottomY = c.y - _shakerVessel.rect.height * 0.5f + 12f;
             float topY = bottomY + innerH * (float)run.Glass.FillFraction + bob;
-            _shakerFluid.SetPool(minX, maxX, bottomY, topY);
+            // The liquid tilts with the tin (2026-07-23) so they read as one mass while shaking.
+            float deg = _shakerVessel.localEulerAngles.z;
+            if (deg > 180f) deg -= 360f;
+            _shakerFluid.SetPool(minX, maxX, bottomY, topY, deg * Mathf.Deg2Rad);
             // The solids float on this same liquid line and bounce off these same walls.
             _shakerSolids.SetBounds(minX, maxX, bottomY, topY);
         }
