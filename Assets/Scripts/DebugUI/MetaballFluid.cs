@@ -5,9 +5,9 @@ namespace LastCall.DebugUI
 {
     /// <summary>
     /// A particle-based liquid for the drink stages (GDD 24 §3.5, rewrite 2026-07-23). The
-    /// body of liquid is a cloud of small particles run through a position-based fluid solver
-    /// (Clavet et al. double-density relaxation): they attract into one cohesive mass, resist
-    /// compression, and — the point of the rewrite — collide with the vessel's *moving* walls,
+    /// body of liquid is a cloud of fine particles run through a position-based fluid solver
+    /// (PBD: incompressibility as a relaxed minimum-distance constraint, neighbour-velocity
+    /// viscosity, spatial-hash neighbours) that collide with the vessel's *moving* walls,
     /// so the drink sloshes and lags when the shaker is thrown about and pours as tiny merging
     /// droplets. Everything is rendered as one metaball field by <c>LastCall/MetaballLiquid</c>,
     /// so the particles read as connected liquid, never separate balls.
@@ -19,12 +19,12 @@ namespace LastCall.DebugUI
     public sealed class MetaballFluid
     {
         // Render budget — pool particles + free stream/splash drops share the shader's _Drops[].
-        private const int MaxPool = 340;
-        private const int MaxDrops = 44;
-        private const int RenderMax = 384;   // must match MAX_DROPS in the shader
+        private const int MaxPool = 910;
+        private const int MaxDrops = 40;
+        private const int RenderMax = 960;   // must match MAX_DROPS in the shader
 
         private const float Gravity = 1400f;          // px/s² down
-        private const float StreamRadius = 6f;
+        private const float StreamRadius = 5f;
         private const float StreamInterval = 0.006f;
 
         // Position-based fluid (PBD / position-based dynamics, the real-time SPH-family method).
@@ -32,12 +32,12 @@ namespace LastCall.DebugUI
         // particles can never pack closer than Spacing, so the body stacks up to the fill line
         // and never collapses. Neighbour-velocity viscosity makes it flow. The particle COUNT is
         // derived from the fill area at Spacing, so it fills any vessel exactly.
-        private const float H = 18f;                  // viscosity/neighbour radius (px)
-        private const float Spacing = 6f;           // rest spacing (min distance) → many small particles
-        private const int   RelaxIters = 5;           // incompressibility relaxation passes
-        // Render radius is well above the spacing (6) so the small, tightly-packed particles
+        private const float H = 13f;                  // viscosity/neighbour radius (px)
+        private const float Spacing = 4.2f;           // rest spacing (min distance) → many small particles
+        private const int   RelaxIters = 6;           // incompressibility relaxation passes
+        // Render radius is well above the spacing so the fine, tightly-packed particles
         // overlap into ONE smooth connected surface with no gaps between them.
-        private const float PoolRadius = 8.5f;
+        private const float PoolRadius = 6f;
         private const float Viscosity = 0.42f;        // 0..1 neighbour-velocity blend (more flow)
         private const float MaxSpeed = 1300f;
         private const float WallFriction = 0.72f;     // (kept for API parity)
@@ -55,6 +55,14 @@ namespace LastCall.DebugUI
         private readonly float[] _ppx = new float[MaxPool];
         private readonly float[] _ppy = new float[MaxPool];
         private int _pn;                               // live pool particles
+
+        // Spatial hash grid → O(N) neighbour queries, so the particle count can go high cheaply.
+        private const int GridBuckets = 8192;          // power of two
+        private readonly int[] _cellHead = new int[GridBuckets];
+        private readonly int[] _next = new int[MaxPool];
+        // Cell size covers the widest neighbour query (the viscosity radius H, which is also
+        // larger than the Spacing constraint), so a 3×3 cell sweep finds every neighbour.
+        private const float Cell = H;
 
         // Container (vessel interior) this frame: an axis-aligned rect rotated by _angle.
         private float _cx, _cy, _halfW, _halfH, _angle;
@@ -158,7 +166,7 @@ namespace LastCall.DebugUI
             // the line, not into a puddle at the bottom. New ones rain in near the surface.
             float fillH = _fillTopY - bottomY;
             int target = Mathf.Clamp(
-                Mathf.RoundToInt((2f * _halfW) * fillH / (Spacing * Spacing) * 1.15f), 0, MaxPool);
+                Mathf.RoundToInt((2f * _halfW) * fillH / (Spacing * Spacing) * 1.32f), 0, MaxPool);
             while (_pn < target && _pn < MaxPool)
             {
                 _px[_pn] = _cx + Random.Range(-_halfW * 0.7f, _halfW * 0.7f);
@@ -251,18 +259,25 @@ namespace LastCall.DebugUI
             float minD = Spacing, minD2 = minD * minD;
             for (int iter = 0; iter < RelaxIters; iter++)
             {
+                BuildGrid();   // O(N) neighbour lookup — keeps a fine particle scale affordable
                 for (int i = 0; i < _pn; i++)
-                    for (int j = i + 1; j < _pn; j++)
-                    {
-                        float dx = _px[j] - _px[i], dy = _py[j] - _py[i];
-                        float r2 = dx * dx + dy * dy;
-                        if (r2 >= minD2 || r2 < 1e-4f) continue;
-                        float r = Mathf.Sqrt(r2);
-                        float push = (minD - r) * 0.5f;
-                        float nx = dx / r, ny = dy / r;
-                        _px[i] -= nx * push; _py[i] -= ny * push;
-                        _px[j] += nx * push; _py[j] += ny * push;
-                    }
+                {
+                    int cx = CellOf(_px[i]), cy = CellOf(_py[i]);
+                    for (int gy = cy - 1; gy <= cy + 1; gy++)
+                        for (int gx = cx - 1; gx <= cx + 1; gx++)
+                            for (int j = _cellHead[HashCell(gx, gy)]; j >= 0; j = _next[j])
+                            {
+                                if (j <= i) continue;   // each pair once
+                                float dx = _px[j] - _px[i], dy = _py[j] - _py[i];
+                                float r2 = dx * dx + dy * dy;
+                                if (r2 >= minD2 || r2 < 1e-4f) continue;
+                                float r = Mathf.Sqrt(r2);
+                                float push = (minD - r) * 0.5f;
+                                float nx = dx / r, ny = dy / r;
+                                _px[i] -= nx * push; _py[i] -= ny * push;
+                                _px[j] += nx * push; _py[j] += ny * push;
+                            }
+                }
                 ClampToVessel();
             }
 
@@ -275,6 +290,7 @@ namespace LastCall.DebugUI
                 float sp2 = _vx[i] * _vx[i] + _vy[i] * _vy[i];
                 if (sp2 > MaxSpeed * MaxSpeed) { float s = MaxSpeed / Mathf.Sqrt(sp2); _vx[i] *= s; _vy[i] *= s; }
             }
+            BuildGrid();   // positions moved during relaxation — refresh before the neighbour blend
             ApplyViscosity();
         }
 
@@ -297,22 +313,46 @@ namespace LastCall.DebugUI
         }
 
         /// <summary>Blends each particle's velocity toward its neighbours' — the liquid flows as
-        /// one body instead of rattling as loose grains.</summary>
+        /// one body instead of rattling as loose grains. Grid-accelerated.</summary>
         private void ApplyViscosity()
         {
             float h2 = H * H;
             for (int i = 0; i < _pn; i++)
             {
                 float avx = 0f, avy = 0f; int n = 0;
-                for (int j = 0; j < _pn; j++)
-                {
-                    if (j == i) continue;
-                    float dx = _px[j] - _px[i], dy = _py[j] - _py[i];
-                    if (dx * dx + dy * dy < h2) { avx += _vx[j]; avy += _vy[j]; n++; }
-                }
+                int cx = CellOf(_px[i]), cy = CellOf(_py[i]);
+                for (int gy = cy - 1; gy <= cy + 1; gy++)
+                    for (int gx = cx - 1; gx <= cx + 1; gx++)
+                        for (int j = _cellHead[HashCell(gx, gy)]; j >= 0; j = _next[j])
+                        {
+                            if (j == i) continue;
+                            float dx = _px[j] - _px[i], dy = _py[j] - _py[i];
+                            if (dx * dx + dy * dy < h2) { avx += _vx[j]; avy += _vy[j]; n++; }
+                        }
                 if (n == 0) continue;
                 _vx[i] = Mathf.Lerp(_vx[i], avx / n, Viscosity);
                 _vy[i] = Mathf.Lerp(_vy[i], avy / n, Viscosity);
+            }
+        }
+
+        // ── spatial hash grid ───────────────────────────────────────────────────
+        private static int CellOf(float v) => Mathf.FloorToInt(v / Cell);
+
+        private static int HashCell(int gx, int gy)
+        {
+            // A cheap 2D hash folded into the bucket range (power-of-two mask).
+            unchecked { return ((gx * 73856093) ^ (gy * 19349663)) & (GridBuckets - 1); }
+        }
+
+        /// <summary>Rebuilds the neighbour grid from the current positions (O(N)).</summary>
+        private void BuildGrid()
+        {
+            for (int i = 0; i < GridBuckets; i++) _cellHead[i] = -1;
+            for (int i = 0; i < _pn; i++)
+            {
+                int h = HashCell(CellOf(_px[i]), CellOf(_py[i]));
+                _next[i] = _cellHead[h];
+                _cellHead[h] = i;
             }
         }
 
