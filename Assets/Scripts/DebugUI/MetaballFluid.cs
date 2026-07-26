@@ -19,12 +19,12 @@ namespace LastCall.DebugUI
     public sealed class MetaballFluid
     {
         // Render budget — pool particles + free stream/splash drops share the shader's _Drops[].
-        private const int MaxPool = 910;
+        private const int MaxPool = 2100;
         private const int MaxDrops = 40;
-        private const int RenderMax = 960;   // must match MAX_DROPS in the shader
+        private const int RenderMax = 2176;   // must match MAX_DROPS in the shader
 
         private const float Gravity = 1400f;          // px/s² down
-        private const float StreamRadius = 5f;
+        private const float StreamRadius = 4f;
         private const float StreamInterval = 0.006f;
 
         // Position-based fluid (PBD / position-based dynamics, the real-time SPH-family method).
@@ -32,12 +32,12 @@ namespace LastCall.DebugUI
         // particles can never pack closer than Spacing, so the body stacks up to the fill line
         // and never collapses. Neighbour-velocity viscosity makes it flow. The particle COUNT is
         // derived from the fill area at Spacing, so it fills any vessel exactly.
-        private const float H = 13f;                  // viscosity/neighbour radius (px)
-        private const float Spacing = 4.2f;           // rest spacing (min distance) → many small particles
+        private const float H = 7.5f;                  // viscosity/neighbour radius (px)
+        private const float Spacing = 3f;           // rest spacing (min distance) → many small particles
         private const int   RelaxIters = 6;           // incompressibility relaxation passes
         // Render radius is well above the spacing so the fine, tightly-packed particles
         // overlap into ONE smooth connected surface with no gaps between them.
-        private const float PoolRadius = 6f;
+        private const float PoolRadius = 4.3f;
         private const float Viscosity = 0.42f;        // 0..1 neighbour-velocity blend (more flow)
         private const float MaxSpeed = 1300f;
         private const float WallFriction = 0.72f;     // (kept for API parity)
@@ -57,12 +57,14 @@ namespace LastCall.DebugUI
         private int _pn;                               // live pool particles
 
         // Spatial hash grid → O(N) neighbour queries, so the particle count can go high cheaply.
-        private const int GridBuckets = 8192;          // power of two
+        private const int GridBuckets = 32768;         // power of two
         private readonly int[] _cellHead = new int[GridBuckets];
         private readonly int[] _next = new int[MaxPool];
-        // Cell size covers the widest neighbour query (the viscosity radius H, which is also
-        // larger than the Spacing constraint), so a 3×3 cell sweep finds every neighbour.
-        private const float Cell = H;
+        // The cell is the CONSTRAINT distance, not the (larger) viscosity radius: at a fine
+        // particle scale a viscosity-sized cell would hold dozens of particles and make the
+        // relaxation sweep expensive. Relaxation scans 3×3 cells; viscosity widens its sweep.
+        private const float Cell = Spacing;
+        private static readonly int ViscCellR = Mathf.CeilToInt(H / Cell);
 
         // Container (vessel interior) this frame: an axis-aligned rect rotated by _angle.
         private float _cx, _cy, _halfW, _halfH, _angle;
@@ -166,7 +168,7 @@ namespace LastCall.DebugUI
             // the line, not into a puddle at the bottom. New ones rain in near the surface.
             float fillH = _fillTopY - bottomY;
             int target = Mathf.Clamp(
-                Mathf.RoundToInt((2f * _halfW) * fillH / (Spacing * Spacing) * 1.32f), 0, MaxPool);
+                Mathf.RoundToInt((2f * _halfW) * fillH / (Spacing * Spacing) * 1.64f), 0, MaxPool);
             while (_pn < target && _pn < MaxPool)
             {
                 _px[_pn] = _cx + Random.Range(-_halfW * 0.7f, _halfW * 0.7f);
@@ -321,8 +323,8 @@ namespace LastCall.DebugUI
             {
                 float avx = 0f, avy = 0f; int n = 0;
                 int cx = CellOf(_px[i]), cy = CellOf(_py[i]);
-                for (int gy = cy - 1; gy <= cy + 1; gy++)
-                    for (int gx = cx - 1; gx <= cx + 1; gx++)
+                for (int gy = cy - ViscCellR; gy <= cy + ViscCellR; gy++)
+                    for (int gx = cx - ViscCellR; gx <= cx + ViscCellR; gx++)
                         for (int j = _cellHead[HashCell(gx, gy)]; j >= 0; j = _next[j])
                         {
                             if (j == i) continue;
