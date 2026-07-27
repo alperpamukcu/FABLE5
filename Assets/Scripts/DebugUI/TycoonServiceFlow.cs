@@ -79,23 +79,27 @@ namespace LastCall.DebugUI
         // its centre sits, so the list lands on paper and never on the wood or the clip.
         private const float PaperW = 0.655f, PaperH = 0.660f;
         private const float PaperCX = -0.015f, PaperCY = -0.008f;
-        private const int MenuColumns = 3;
+        private const int MenuColumns = 3, MenuRows = 2;
         private const float GridGap = 6f, HeadingH = 18f;
         private IngredientType? _menuTab;   // null = the section index page
         private Text _menuTitle;
         private RectTransform _menuBack;
-        // Turning a page (2026-07-24): the sheet is taken by its bottom-right and folded over
-        // going in, and lifted back the other way coming out.
+        // Changing pages (2026-07-27): the sheet stays clamped to the board and the page of keys
+        // slides across it, out one side and in from the other. The clipboard holding still is the
+        // point — it is the paper under the clip that changes, not the board.
         private IngredientType? _flipTo;
         private float _flipT = 1f;
         private int _flipDir;
+        private Vector2 _listHome;
         // The board draws one art pixel as ~5.8 screen pixels. Halving the key's pixels-per-unit
         // puts its grain at 4, so the keys read as the same piece of pixel art as the sheet they
         // sit on rather than a finer sticker laid over it (2026-07-27).
         private const float PlatePixelScale = 0.5f;
-        private const float FlipTime = 0.34f;
+        private const float FlipTime = 0.30f;
         private Vector2 _menuHome;
-        private const float CornerSize = 52f, CornerInset = 30f;   // identical for every corner
+        // 64 units against 32px art puts one art pixel on 4 screen pixels — the same grain as the
+        // keys, so the corner controls belong to the same drawing (2026-07-27).
+        private const float CornerSize = 64f, CornerInset = 30f;   // identical for every corner
         private RectTransform _mixBar;
 
         private RectTransform _pourBottle;    // the grabbable bottle
@@ -225,7 +229,7 @@ namespace LastCall.DebugUI
             _shakerPanel.gameObject.SetActive(stage == Stage.Shaker);
             _servePanel.gameObject.SetActive(stage == Stage.Serve);
 
-            if (stage == Stage.Menu) { _menuTab = null; _flipT = 1f; RefreshMenu(); }
+            if (stage == Stage.Menu) { _menuTab = null; _flipT = 1f; ResetPageSlide(); RefreshMenu(); }
             if (stage == Stage.Shaker) RefreshShaker();
             if (stage == Stage.Serve) RefreshServe();
 
@@ -269,35 +273,46 @@ namespace LastCall.DebugUI
             _flipT = 0f;
         }
 
-        /// <summary>Drives the turn. The SHEET is what moves — the board lifts, tips and settles
-        /// back — while the tabs keep their layout untouched; animating them was what threw their
-        /// positions off. The page is swapped under the lift.</summary>
+        /// <summary>Drives the change. The board and its clip hold still; the page of keys slides
+        /// off one edge and the next slides in from the other, clipped to the paper. Opening a
+        /// section runs it leftward and coming back runs it right, so the motion says which way you
+        /// went. The page is swapped at the midpoint, while none of it is on screen.</summary>
         private void AdvancePageTurn()
         {
-            if (_flipT >= 1f || _menuPanel == null) return;
+            if (_flipT >= 1f || _bottleList == null) return;
             bool wasFirstHalf = _flipT < 0.5f;
             _flipT = Mathf.MoveTowards(_flipT, 1f, Mathf.Max(Time.deltaTime, 1e-4f) / FlipTime);
 
             if (wasFirstHalf && _flipT >= 0.5f)
             {
-                _menuTab = _flipTo;                  // the page changes while the sheet is up
+                _menuTab = _flipTo;
                 RefreshMenu();
             }
 
-            // 1 → 0 → 1: the sheet lifts away and the next one settles in.
-            float half = _flipT < 0.5f ? _flipT / 0.5f : (1f - _flipT) / 0.5f;
-            float lift = Mathf.Max(0f, 1f - (1f - half) * (1f - half));
-            float k = Mathf.Lerp(1f, 0.90f, lift);
-            _menuPanel.localScale = new Vector3(k, k, 1f);
-            _menuPanel.localRotation = Quaternion.Euler(0, 0, lift * -3.5f * _flipDir);
-            _menuPanel.anchoredPosition = _menuHome + new Vector2(26f * _flipDir, 34f) * lift;
-
-            if (_flipT >= 1f)
+            // Far enough that the outermost key is clear of the paper before the swap.
+            float travel = _bottleList.rect.width + 60f;
+            float x;
+            if (_flipT < 0.5f)
             {
-                _menuPanel.localScale = Vector3.one;
-                _menuPanel.localRotation = Quaternion.identity;
-                _menuPanel.anchoredPosition = _menuHome;
+                float u = _flipT / 0.5f;
+                x = -travel * (u * u) * _flipDir;              // accelerates away
             }
+            else
+            {
+                float u = (_flipT - 0.5f) / 0.5f;
+                float e = 1f - (1f - u) * (1f - u);            // and eases into place
+                x = travel * (1f - e) * _flipDir;
+            }
+            _bottleList.anchoredPosition = _listHome + new Vector2(x, 0f);
+
+            if (_flipT >= 1f) ResetPageSlide();
+        }
+
+        /// <summary>Puts the page back on its mark — on landing, and whenever the menu opens, so a
+        /// flow closed mid-slide never comes back with its page off the paper.</summary>
+        private void ResetPageSlide()
+        {
+            if (_bottleList != null) _bottleList.anchoredPosition = _listHome;
         }
 
         private static int CountStockedGroups(TycoonRun run)
@@ -335,7 +350,7 @@ namespace LastCall.DebugUI
                 btn.spriteState = st;
             }
             var sink = rt.gameObject.AddComponent<PressSink>();
-            sink.Face = rt; sink.Depth = 3f; sink.Squash = 0.02f;
+            sink.Face = rt; sink.Depth = 6f; sink.Squash = 0.02f;
         }
 
         /// <summary>Rings a label in black so it stays legible on any coloured key. The ring is one
@@ -594,12 +609,13 @@ namespace LastCall.DebugUI
             grid.sizeDelta = Vector2.zero;
             scroll.content = grid;
             var g = grid.gameObject.AddComponent<GridLayoutGroup>();
-            int rows = Mathf.Max(1, Mathf.CeilToInt(items.Count / (float)MenuColumns));
             g.spacing = new Vector2(GridGap, GridGap);
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             g.constraintCount = MenuColumns;
+            // A page holds two rows of three. A seventh bottle starts a third row below the fold,
+            // which is what the scroll is for — the keys keep their size either way.
             g.cellSize = new Vector2((areaW - (MenuColumns - 1) * GridGap) / MenuColumns,
-                Mathf.Clamp((areaH - (rows - 1) * GridGap) / rows, 140f, 300f));
+                (areaH - (MenuRows - 1) * GridGap) / MenuRows);
             grid.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             foreach (var bottle in items) AddItemBox(grid, bottle, run);
@@ -695,7 +711,7 @@ namespace LastCall.DebugUI
 
             // The bottle is the thing you are choosing, so it gets most of the key.
             var icon = NewRect("Icon", content);
-            Place(icon, new Vector2(0.5f, 1), new Vector2(cw - 42f, chh - 100f), new Vector2(0, -4));
+            Place(icon, new Vector2(0.5f, 1), new Vector2(cw - 42f, chh - 88f), new Vector2(0, -4));
             var iconImg = icon.gameObject.AddComponent<Image>();
             iconImg.raycastTarget = false; iconImg.preserveAspect = true;
             iconImg.sprite = ItemArt.Bottle(card.Info?.Style);
@@ -707,7 +723,7 @@ namespace LastCall.DebugUI
             // the labels are pinned to 16 and best-fit is off — it used to pick sizes like 11,
             // which lands the stems on half pixels and makes the letters look chewed (2026-07-27).
             var name = Outlined(Handwritten(NewText("Name", content, _body, 16, TextAnchor.LowerCenter, Color.white)));
-            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(cw + 6f, 36), new Vector2(0, 54));
+            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(cw + 6f, 34), new Vector2(0, 46));
             name.horizontalOverflow = HorizontalWrapMode.Wrap;
             name.verticalOverflow = VerticalWrapMode.Truncate;
             name.text = card.Name.ToUpperInvariant();
@@ -716,12 +732,12 @@ namespace LastCall.DebugUI
             double fill = bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 0;
             var pct = Outlined(Handwritten(NewText("Fill", content, _body, 16, TextAnchor.UpperLeft,
                 empty ? new Color(1f, 0.42f, 0.42f) : new Color(1f, 0.80f, 0.32f))));
-            Place(pct.rectTransform, new Vector2(0, 0), new Vector2(cw * 0.55f, 20), new Vector2(16, 30));
+            Place(pct.rectTransform, new Vector2(0, 0), new Vector2(cw * 0.55f, 20), new Vector2(16, 26));
             pct.text = empty ? "OUT" : $"{(int)System.Math.Round(fill * 100)}%";
 
             var price = Outlined(Handwritten(NewText("Price", content, _body, 16, TextAnchor.UpperRight,
                 new Color(0.45f, 0.95f, 0.45f))));
-            Place(price.rectTransform, new Vector2(1, 0), new Vector2(cw * 0.55f, 20), new Vector2(-16, 30));
+            Place(price.rectTransform, new Vector2(1, 0), new Vector2(cw * 0.55f, 20), new Vector2(-16, 26));
             price.text = $"${Market.StockPrice(card)}";
 
             if (!empty && run.IsNewStock(card.Id))
@@ -1320,10 +1336,18 @@ namespace LastCall.DebugUI
             // stock without overflowing the panel (2026-07-23 fix).
             // One grid on the paper, never a scrollbar: the cell size is recomputed from the
             // stock count in RefreshMenu, so a growing bar packs tighter instead of scrolling.
-            _bottleList = NewRect("Bottles", _menuPanel);
-            Place(_bottleList, new Vector2(0.5f, 0.5f),
+            // The page slides off the paper on a change, so it runs inside a frame that stays put
+            // and clips it. The mask has to be on the frame, not on the page: put it on the thing
+            // that moves and it travels with the keys and clips nothing at all.
+            var pageClip = NewRect("PageClip", _menuPanel);
+            Place(pageClip, new Vector2(0.5f, 0.5f),
                 new Vector2(BoardW * PaperW - 44f, BoardH * PaperH - 112f),
                 new Vector2(BoardW * PaperCX, BoardH * PaperCY - 20f));
+            pageClip.gameObject.AddComponent<RectMask2D>();
+
+            _bottleList = NewRect("Bottles", pageClip);
+            Stretch(_bottleList, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _listHome = _bottleList.anchoredPosition;
             var listLayout = _bottleList.gameObject.AddComponent<VerticalLayoutGroup>();
             listLayout.spacing = GridGap; listLayout.childControlHeight = true;
             listLayout.childControlWidth = true; listLayout.childForceExpandWidth = true;
@@ -1701,7 +1725,7 @@ namespace LastCall.DebugUI
         {
             // Just the bin — you click the object, not a button plate around it.
             var rt = NewRect("Bin", parent);
-            Place(rt, new Vector2(0.5f, 0.5f), new Vector2(52, 60), PaperCorner(1, -1) + new Vector2(-22f, 10f));
+            Place(rt, new Vector2(0.5f, 0.5f), new Vector2(CornerSize, CornerSize), PaperCorner(1, -1) + new Vector2(-22f, 10f));
             var img = rt.gameObject.AddComponent<Image>();
             img.preserveAspect = true;
             img.sprite = ItemArt.Load("btn_bin");
