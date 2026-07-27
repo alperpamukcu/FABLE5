@@ -35,6 +35,13 @@ namespace LastCall.DebugUI
 
         private RectTransform _root;        // the whole modal (scrim + panels)
         private RectTransform _menuPanel;
+        private RectTransform _menuSide;   // readouts + buttons, off the board
+        // Windows open rather than snap (2026-07-24): tapping a bottle on the clipboard plays
+        // the menu out and the pour window in, so the two stages are visibly linked.
+        private CanvasGroup _stageGroup;   // the window currently easing in
+        private RectTransform _stageRect;
+        private float _stageT;
+        private const float StageOpen = 0.22f;
         private RectTransform _shakerPanel;
         private RectTransform _servePanel;
 
@@ -63,6 +70,9 @@ namespace LastCall.DebugUI
         private const float CapCentreX = 0f;
         private const float CapGrowth = 1.3f;
         private const float CapArtOffset = 0.245f;   // the lid art sits this far above its rect centre
+        // The clipboard, and the share of it its paper covers (measured off the art).
+        private const float BoardW = 940f, BoardH = 589f;
+        private const float PaperW = 0.856f, PaperH = 0.766f;
         private RectTransform _pourBottle;    // the grabbable bottle
         private Image _pourBottleBody;
         private MetaballFluid _shakerFluid;   // the metaball liquid: pour stream + pooled body
@@ -145,6 +155,8 @@ namespace LastCall.DebugUI
 
         private void Update()
         {
+            AdvanceStageOpen();
+
             var run = Run;
             if (run == null) return;
 
@@ -182,12 +194,28 @@ namespace LastCall.DebugUI
 
             _root.gameObject.SetActive(stage != Stage.Closed);
             _menuPanel.gameObject.SetActive(stage == Stage.Menu);
+            if (_menuSide != null) _menuSide.gameObject.SetActive(stage == Stage.Menu);
             _shakerPanel.gameObject.SetActive(stage == Stage.Shaker);
             _servePanel.gameObject.SetActive(stage == Stage.Serve);
 
             if (stage == Stage.Menu) RefreshMenu();
             if (stage == Stage.Shaker) RefreshShaker();
             if (stage == Stage.Serve) RefreshServe();
+
+            // Play the window that just opened.
+            _stageRect = stage == Stage.Menu ? _menuPanel
+                       : stage == Stage.Shaker ? _shakerPanel
+                       : stage == Stage.Serve ? _servePanel : null;
+            if (_stageRect != null)
+            {
+                // Unity's GetComponent returns a fake-null, which ?? happily hands back — check it.
+                var grp = _stageRect.GetComponent<CanvasGroup>();
+                if (grp == null) grp = _stageRect.gameObject.AddComponent<CanvasGroup>();
+                _stageGroup = grp;
+                _stageT = 0f;
+                _stageGroup.alpha = 0f;
+            }
+            else _stageGroup = null;
         }
 
         private void OpenBottle(IngredientCard card)
@@ -272,7 +300,8 @@ namespace LastCall.DebugUI
         {
             var rt = NewRect("Header", parent);
             rt.gameObject.AddComponent<LayoutElement>().preferredHeight = 20;
-            var text = NewText("L", rt, _body, 12, TextAnchor.LowerLeft, colour);
+            var text = NewText("L", rt, _body, 12, TextAnchor.LowerLeft,
+                Color.Lerp(colour, new Color(0.24f, 0.16f, 0.09f), 0.62f));
             Stretch(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(2, 0), new Vector2(-2, 0));
             text.text = $"— {title} —";
             var line = NewRect("Rule", rt);
@@ -291,9 +320,9 @@ namespace LastCall.DebugUI
             bool empty = bottle.IsEmpty;
             var box = NewRect($"Box_{card.Id}", parent);
             var bg = box.gameObject.AddComponent<Image>();
-            bg.color = empty
-                ? new Color(0.32f, 0.30f, 0.34f, 0.45f)
-                : new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.9f);
+            // Written on paper: a faint tint rather than a dark chip, so the sheet shows through.
+            bg.color = empty ? new Color(0.42f, 0.34f, 0.26f, 0.16f)
+                             : new Color(0.36f, 0.26f, 0.16f, 0.10f);
 
             var icon = NewRect("Icon", box);
             Place(icon, new Vector2(0.5f, 0.5f), new Vector2(66, 66), new Vector2(0, 8));   // centred
@@ -304,13 +333,15 @@ namespace LastCall.DebugUI
                 : (empty ? new Color(1f, 1f, 1f, 0.4f) : Color.white);
 
             var name = NewText("Name", box, _body, 9, TextAnchor.LowerCenter,
-                empty ? UITheme.TextSecondary : UITheme.TextPrimary);
+                empty ? new Color(0.55f, 0.47f, 0.38f) : new Color(0.26f, 0.18f, 0.10f));
             Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(86, 16), new Vector2(0, 2));
             name.horizontalOverflow = HorizontalWrapMode.Wrap;
             name.text = card.Name.ToUpperInvariant();
 
             var badge = NewText("Badge", box, _body, 8, TextAnchor.UpperRight,
-                empty ? UITheme.ViceRed[3] : run.IsNewStock(card.Id) ? UITheme.PrimaryAction : UITheme.Cyan[4]);
+                empty ? new Color(0.62f, 0.20f, 0.22f)
+                      : run.IsNewStock(card.Id) ? new Color(0.72f, 0.44f, 0.06f)
+                                                : new Color(0.34f, 0.30f, 0.22f));
             Place(badge.rectTransform, new Vector2(1, 1), new Vector2(56, 12), new Vector2(-3, -3));
             double fill = bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 0;
             badge.text = empty ? "OUT"
@@ -469,6 +500,24 @@ namespace LastCall.DebugUI
             // you drop it on the tin, so it must not be glued to the vessel here.
             // The solids float on the liquid line and bounce off these same walls.
             _shakerSolids.SetBounds(minX, maxX, bottomY, topY);
+        }
+
+        /// <summary>Eases the window that just opened up to full size and opacity — the menu
+        /// hands over to the pour window instead of cutting to it.</summary>
+        private void AdvanceStageOpen()
+        {
+            if (_stageGroup == null || _stageRect == null) return;
+            _stageT = Mathf.MoveTowards(_stageT, 1f, Mathf.Max(Time.deltaTime, 1e-4f) / StageOpen);
+            float e = 1f - (1f - _stageT) * (1f - _stageT);          // ease-out
+            _stageGroup.alpha = e;
+            float k = Mathf.Lerp(0.94f, 1f, e);
+            _stageRect.localScale = new Vector3(k, k, 1f);
+            if (_stageT >= 1f)
+            {
+                _stageRect.localScale = Vector3.one;
+                _stageGroup.alpha = 1f;
+                _stageGroup = null;
+            }
         }
 
         /// <summary>
@@ -829,19 +878,25 @@ namespace LastCall.DebugUI
 
         private void BuildMenuPanel()
         {
+            // The menu is a wooden clipboard with the drink list written on its paper.
             _menuPanel = NewRect("MenuPanel", _root);
-            Place(_menuPanel, new Vector2(0.5f, 0.5f), new Vector2(848, 560), Vector2.zero);
-            _menuPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
+            Place(_menuPanel, new Vector2(0.5f, 0.5f), new Vector2(BoardW, BoardH), new Vector2(0, 26));
+            var boardImg = _menuPanel.gameObject.AddComponent<Image>();
+            var board = ItemArt.Load("menu_board");
+            if (board != null) { boardImg.sprite = board; boardImg.preserveAspect = true; boardImg.color = Color.white; }
+            else boardImg.color = UITheme.Night[1];
             Swallow(_menuPanel);
 
-            var title = NewText("Title", _menuPanel, _display, 16, TextAnchor.UpperCenter, UITheme.PrimaryAction);
-            Stretch(title.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -40), new Vector2(0, -8));
+            var title = NewText("Title", _menuPanel, _display, 15, TextAnchor.UpperCenter, new Color(0.34f, 0.22f, 0.12f));
+            Place(title.rectTransform, new Vector2(0.5f, 1), new Vector2(BoardW * 0.6f, 24),
+                new Vector2(0, -BoardH * (1f - PaperH) * 0.5f - 12f));
             title.text = "MAKE A DRINK";
 
             // Left: a SCROLLABLE back-shelf of grouped item boxes — it grows as you buy more
             // stock without overflowing the panel (2026-07-23 fix).
             var scrollGo = NewRect("BottleScroll", _menuPanel);
-            Place(scrollGo, new Vector2(0, 1), new Vector2(612, 500), new Vector2(14, -46));
+            Place(scrollGo, new Vector2(0.5f, 0.5f),
+                new Vector2(BoardW * PaperW - 24f, BoardH * PaperH - 54f), new Vector2(0, -14));
             var scroll = scrollGo.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false; scroll.vertical = true; scroll.scrollSensitivity = 26f;
             scroll.movementType = ScrollRect.MovementType.Clamped;
@@ -867,25 +922,25 @@ namespace LastCall.DebugUI
 
             // Right: a side column beside the menu — what's in the shaker, then the actions.
             // The mix/serve buttons live here, out of the item grid, per the redesign.
-            var side = NewRect("Side", _menuPanel);
-            Place(side, new Vector2(1, 1), new Vector2(196, 500), new Vector2(-14, -46));
-            side.gameObject.AddComponent<Image>().color =
-                new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.55f);
+            // Nothing but the drink list belongs on the paper — the readouts and the buttons
+            // sit off the board, under it.
+            var side = _menuSide = NewRect("Side", _root);
+            Place(side, new Vector2(0.5f, 0.5f), new Vector2(BoardW, 96),
+                new Vector2(0, 26 - BoardH * 0.5f - 56f));
 
             var sideTitle = NewText("SideTitle", side, _body, 11, TextAnchor.UpperLeft, UITheme.TextSecondary);
-            Place(sideTitle.rectTransform, new Vector2(0.5f, 1), new Vector2(164, 16), new Vector2(0, -8));
+            Place(sideTitle.rectTransform, new Vector2(0, 1), new Vector2(300, 16), new Vector2(160, -4));
             sideTitle.text = "IN THE SHAKER";
             _menuShaker = NewText("Shaker", side, _body, 12, TextAnchor.UpperLeft, UITheme.TextPrimary);
-            Place(_menuShaker.rectTransform, new Vector2(0.5f, 1), new Vector2(164, 70), new Vector2(0, -26));
+            Place(_menuShaker.rectTransform, new Vector2(0, 1), new Vector2(300, 22), new Vector2(160, -22));
             _menuShaker.horizontalOverflow = HorizontalWrapMode.Wrap;
             _menuPreps = NewText("Preps", side, _body, 11, TextAnchor.UpperLeft, UITheme.Cyan[4]);
-            Place(_menuPreps.rectTransform, new Vector2(0.5f, 1), new Vector2(164, 40), new Vector2(0, -100));
+            Place(_menuPreps.rectTransform, new Vector2(0, 1), new Vector2(300, 20), new Vector2(160, -44));
             _menuPreps.horizontalOverflow = HorizontalWrapMode.Wrap;
 
-            // Action buttons stacked at the bottom of the side column.
             var actions = NewRect("Actions", side);
-            Place(actions, new Vector2(0.5f, 0), new Vector2(164, 208), new Vector2(0, 12));
-            var actLayout = actions.gameObject.AddComponent<VerticalLayoutGroup>();
+            Place(actions, new Vector2(0.5f, 0.5f), new Vector2(560, 40), new Vector2(150, 0));
+            var actLayout = actions.gameObject.AddComponent<HorizontalLayoutGroup>();
             actLayout.spacing = 8f; actLayout.childControlWidth = true;
             actLayout.childForceExpandWidth = true; actLayout.childControlHeight = true;
             actLayout.childForceExpandHeight = true;

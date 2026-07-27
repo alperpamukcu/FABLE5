@@ -142,6 +142,19 @@ scene boots the tycoon run; build size dropped ~5k lines of gameplay code + asse
 - ☑ **Real shake**: a HOLD · SHAKE THE MOUSE pad in the shaker stage — press it and shake
   the cursor; travel builds a 0–1 energy meter and the shaker jitters; release commits
   `Run.Shake(energy)` (recorded on `ShakeEnergy`, a craft hook for later)
+- ☑ **The drink itself is a fluid** (2026-07-23/24): the liquid is a position-based particle
+  solver (spatial-hash neighbours, simulated in the vessel's own frame, inertia taken from
+  the vessel's real acceleration) rendered as one metaball body. It fills the vessel's
+  measured silhouette, settles still, sloshes when thrown about, and holds ~90% of its area
+  through 16s of violent shaking.
+- ☑ **The shaker is a real object** (2026-07-24): an open tin you pour into, whose grey
+  interior you can read the level in, plus a cap you drag onto it. Capping clears the bench
+  (bottle + ice/lemon/salt/sugar buckets fade) and eases the tin to centre — the stage hands
+  itself over to shaking.
+- ☐ **The menu as a clipboard** (explicit request, 2026-07-24): the drink menu's panel
+  becomes a wooden clipboard holding a sheet of paper, and the stocked alcohols are listed
+  on that paper with their bottle art. Tapping one closes the clipboard and opens the pour
+  window — with a **transition animation between the two windows**, not a hard cut.
 - ☐ **ID card v3**: real licence proportions, purpose-drawn card art, one reading order
   (v2 explicitly disliked — redesign whole, do not iterate)
 - ☐ Characters: 6+ customer bodies × states, bartender hands, musician
