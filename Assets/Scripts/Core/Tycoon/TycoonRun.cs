@@ -289,7 +289,10 @@ namespace LastCall.Core
         public void SettleHead(double seconds)
         {
             if (seconds <= 0 || ServingGlass.Head <= 0) return;
-            ServingGlass.CollapseHead(TapPour.Settled(ServingGlass.Head, seconds), TapPour.FoamLiquidShare);
+            // A head the pint should have keeps standing; only what is over that is froth.
+            double keep = TapPour.GoodHeadMin * ServingGlass.Capacity;
+            ServingGlass.CollapseHead(TapPour.Settled(ServingGlass.Head, seconds, keep),
+                TapPour.FoamLiquidShare);
         }
 
         /// <summary>Drops a preparation (ice, a twist, a rim) into the shaker (GDD 24 §2.4).</summary>

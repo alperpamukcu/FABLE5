@@ -57,10 +57,9 @@ namespace LastCall.Core
 
         /// <summary>Share of the head that collapses back into beer each second. Standing still
         /// rescues a botched pour — at the price of the customer's patience.</summary>
-        // Half the head is gone in about nine seconds. Measured at 0.18 first, which cleared
-        // a good pint before it could reach the customer — the rescue has to be slow enough
-        // to be a decision, not so fast that standing still is the only outcome.
-        public const double SettlePerSecond = 0.08;
+        // Froth above the keeper halves in about four seconds — brisk, because it is only ever
+        // the excess that is falling now and the rescue should feel like it is working.
+        public const double SettlePerSecond = 0.16;
 
         /// <summary>How much liquid a collapsing head leaves behind — the rest was air. This is
         /// why a settled pint needs topping up, and why froth cannot simply be waited out into
@@ -109,13 +108,17 @@ namespace LastCall.Core
 
         /// <summary>
         /// How much of <paramref name="head"/> has collapsed into beer after
-        /// <paramref name="seconds"/> of standing. Exponential, so foam falls away quickly at
-        /// first and the last skim lingers — which is what a real pint does.
+        /// <paramref name="seconds"/> of standing.
+        ///
+        /// Only the froth ABOVE <paramref name="keep"/> falls: a head that belongs on the pint
+        /// stays on it, the way a real one does, and it is the wild froth of a bad pour that
+        /// drops away and gives some beer back. Settling everything to nothing made a good pint
+        /// go flat while it was carried to the customer (2026-07-27).
         /// </summary>
-        public static double Settled(double head, double seconds)
+        public static double Settled(double head, double seconds, double keep = 0)
         {
-            if (head <= 0 || seconds <= 0) return 0;
-            return head * (1.0 - Math.Exp(-SettlePerSecond * seconds));
+            if (head <= keep || seconds <= 0) return 0;
+            return (head - keep) * (1.0 - Math.Exp(-SettlePerSecond * seconds));
         }
 
         /// <summary>

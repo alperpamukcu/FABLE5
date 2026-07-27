@@ -119,6 +119,23 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void AHeadThatBelongsOnThePintStaysOnIt()
+        {
+            // Only froth above the keeper falls, so a pint poured right is still a good pint by
+            // the time it reaches the seat — settling everything to nothing went flat on the way.
+            double left = TapPour.IdealHead - TapPour.Settled(TapPour.IdealHead, 30.0, TapPour.GoodHeadMin);
+            Assert.AreEqual(1.0, TapPour.HeadScore(left), 1e-9, "a good head is still good later");
+            Assert.GreaterOrEqual(left, TapPour.GoodHeadMin - 1e-9, "and never falls out of the band");
+
+            // Wild froth still drops away, and stops once what is left is a head.
+            double froth = 0.6;
+            double fallen = TapPour.Settled(froth, 30.0, TapPour.GoodHeadMin);
+            Assert.Greater(fallen, 0.3);
+            // Asymptotic, so it closes on the keeper rather than landing exactly on it.
+            Assert.LessOrEqual(froth - fallen, TapPour.GoodHeadMin + 0.01);
+        }
+
+        [Test]
         public void HeadSettlesFastAtFirstAndLingersAtTheEnd()
         {
             double firstSecond = TapPour.Settled(1.0, 1.0);

@@ -225,9 +225,10 @@ throughout and you serve a flat one. Neither is a failure state — both are sim
 and the glass shows which you are making while you make it.
 
 Foam is **volume**: head and beer share the glass, so froth genuinely gives the customer less
-beer. Head also **settles** — wait and it collapses, most of it into air, so a botched pour can
-be rescued by standing still and topping up. That is the cost: time, in a game where patience
-is the currency.
+beer. Head also **settles** — but only the froth **above a proper head** falls, most of it into
+air. A pint poured right keeps its head all the way to the seat; a glass of froth collapses and
+gives some beer back, so a botched pour can be rescued by standing still and topping up. That is
+the cost: time, in a game where patience is the currency.
 
 Spilled beer comes out of the keg and reaches nobody. It is not scored or punished beyond
 that — the loss is the punishment, and the keg is a cost of goods like any bottle.

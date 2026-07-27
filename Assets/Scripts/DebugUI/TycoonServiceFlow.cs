@@ -161,6 +161,11 @@ namespace LastCall.DebugUI
         // The tap (GDD 21 §10): a font you pull the handle on, over the pint it fills. There is
         // no shaker in this stage and no aiming — the whole skill is how far the handle is held.
         private RectTransform _tapPanel, _tapSurface, _tapHandle, _tapGlass, _tapHeadBand, _tapBandMark, _tapBandMarkHigh;
+        private RectTransform _tapHeadCrown;
+        /// <summary>Foam drawn at the keys' grain, so it belongs to the same picture.</summary>
+        private const float FoamPixelScale = 0.5f;
+        private const float FoamCrownHeight = 20f;
+        private bool _pouringNow;
         private MetaballFluid _tapFluid;
         private Image _tapKeg;
         private Text _tapTitle, _tapReadout, _tapVerdict;
@@ -177,6 +182,18 @@ namespace LastCall.DebugUI
         private const float SpoutReach = 118f;
         /// <summary>Where the glass turns: low, where the hand is.</summary>
         private const float GlassPivotY = 0.16f;
+        /// <summary>
+        /// The pint, sized to what the liquid solver can actually fill. At 148x240 its cavity
+        /// wanted ~2170 particles and the pool is capped below that, so asking for a full glass
+        /// drew a 58% one — measured, not guessed. This size needs ~1500 and fills.
+        /// </summary>
+        private const float PintW = 124f, PintH = 200f;
+        /// <summary>The faucet's lip, measured off the font art, relative to the tower's centre.</summary>
+        private static readonly Vector2 SpoutOffset = new Vector2(-30f, 44f);
+        /// <summary>How far under the faucet the rim is carried — close enough to catch, far
+        /// enough that the stream is visibly falling into the glass.</summary>
+        private const float MouthBelowSpout = 34f;
+        private Vector2 _tapTowerPos;
         private Text _aimText;
         private Vector2 _serveShakerRest;
         private bool _serveGrabbed;
@@ -1745,7 +1762,7 @@ namespace LastCall.DebugUI
             // The font, and the pint under its spout. Everything here hangs off the tower, so
             // moving the tower moves the whole rig and the spout stays over the glass.
             var tower = NewRect("Tower", _tapSurface);
-            var towerPos = new Vector2(20, -30);
+            var towerPos = _tapTowerPos = new Vector2(20, -30);
             var towerSize = new Vector2(150, 262);
             Place(tower, new Vector2(0.5f, 0.5f), towerSize, towerPos);
             var towerImg = tower.gameObject.AddComponent<Image>();
@@ -1758,7 +1775,7 @@ namespace LastCall.DebugUI
             _tapGlassPour = towerPos + new Vector2(-SpoutReach, -46);
             _tapGlassRest = towerPos + new Vector2(-SpoutReach - 40f, -150);
             _tapGlass = NewRect("Pint", _tapSurface);
-            Place(_tapGlass, new Vector2(0.5f, 0.5f), new Vector2(148, 240), _tapGlassRest);
+            Place(_tapGlass, new Vector2(0.5f, 0.5f), new Vector2(PintW, PintH), _tapGlassRest);
             // Pivoted low, near where a hand holds it: a glass leans off its base, it does not
             // swing about its middle (2026-07-27).
             _tapGlass.pivot = new Vector2(0.5f, GlassPivotY);
@@ -1766,8 +1783,9 @@ namespace LastCall.DebugUI
             pint.sprite = ItemArt.Load("pint");
             pint.preserveAspect = true;
             if (pint.sprite == null) pint.color = UITheme.Cream[2];
-            // Hit-test the glass itself rather than its box, so the grab lands where it looks.
-            if (pint.sprite != null) pint.alphaHitTestMinimumThreshold = 0.2f;
+            // No alpha hit-test here: the sprite was hollowed out so the beer shows through it,
+            // which left only the thin walls clickable and the grab feeling crooked. The whole
+            // rect is the glass as far as the hand is concerned (2026-07-27).
             var glassGrab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
             glassGrab.callback.AddListener(_ =>
             {
@@ -1780,11 +1798,34 @@ namespace LastCall.DebugUI
             _tapFluid = new MetaballFluid(_tapSurface);
             // A pint glass: narrow foot opening steadily out to the mouth.
             _tapFluid.SetProfile(new[] { 0.82f, 0.88f, 0.93f, 0.97f, 1.00f, 1.00f });
+            // Measured: this cavity packs tighter than the solver's estimate and stopped at 73%
+            // of the line it was given, so it is told to ask for the difference.
+            _tapFluid.SetDensity(1f / 0.73f);
 
             // The head, drawn as its own band on top of the beer rather than as more fluid —
             // foam is a different material and reading it has to be instant.
+            // The head is foam, not a lid: a body that tiles in both directions with a bubbled
+            // crest tiled along its top. Tiled rather than stretched so the bubbles keep their
+            // size however deep the head is.
             _tapHeadBand = NewRect("Head", _tapSurface);
-            _tapHeadBand.gameObject.AddComponent<Image>().raycastTarget = false;
+            var headImg0 = _tapHeadBand.gameObject.AddComponent<Image>();
+            headImg0.raycastTarget = false;
+            headImg0.sprite = ItemArt.Load("foam_body");
+            if (headImg0.sprite != null)
+            {
+                headImg0.type = Image.Type.Tiled;
+                headImg0.pixelsPerUnitMultiplier = FoamPixelScale;
+            }
+            _tapHeadCrown = NewRect("Crown", _tapHeadBand);
+            var crownImg = _tapHeadCrown.gameObject.AddComponent<Image>();
+            crownImg.raycastTarget = false;
+            crownImg.sprite = ItemArt.Load("foam_crown");
+            if (crownImg.sprite != null)
+            {
+                crownImg.type = Image.Type.Tiled;
+                crownImg.pixelsPerUnitMultiplier = FoamPixelScale;
+            }
+            else crownImg.enabled = false;
             _tapHeadBand.gameObject.SetActive(false);
 
             // Where a good head sits, marked on the glass so the target is visible while pouring
@@ -1882,24 +1923,34 @@ namespace LastCall.DebugUI
             }
             else _glassTilt = Mathf.MoveTowards(_glassTilt, 0f, dt * 220f);
 
-            // In hand it sits under the spout; let go and it goes back on the counter.
-            var want = _glassHeld ? _tapGlassPour : _tapGlassRest;
+            // In hand the glass is held so its MOUTH stays under the faucet, whatever the lean —
+            // the hand slides to keep it there, which is what a bartender's does. Docking the
+            // base instead swung the mouth a hundred units clear of the tap at the very angle
+            // the pour is supposed to happen at (2026-07-27).
+            var want = _glassHeld ? GripHoldingMouthUnderSpout() : _tapGlassRest;
             _tapGlass.anchoredPosition =
                 Vector2.Lerp(_tapGlass.anchoredPosition, want, 1f - Mathf.Exp(-14f * dt));
             _tapGlass.localRotation = Quaternion.Euler(0, 0, -_glassTilt);
 
-            bool docked = Vector2.Distance(_tapGlass.anchoredPosition, _tapGlassPour) < 26f;
-            bool pouring = _glassHeld && docked && run.PullingId != null;
+            // Beer only goes in through the mouth: the glass has to be held so its rim is under
+            // the faucet. Leaning it swings the mouth toward the tap, which is what makes the
+            // lean a place you have to find rather than a slider (2026-07-27).
+            var spout = SpoutPoint();
+            var mouth = MouthPoint();
+            bool underSpout = Mathf.Abs(mouth.x - spout.x) < 78f
+                              && mouth.y < spout.y + 24f && mouth.y > spout.y - 190f;
+            bool pouring = _glassHeld && underSpout && run.PullingId != null;
             _tapHandle.localRotation = Quaternion.Euler(0, 0, pouring ? HandleTilt : 0f);
 
+            _pouringNow = pouring;
             if (pouring)
             {
                 double before = run.ServingGlass.TotalVolume + run.ServingGlass.Head;
                 run.PourTilted(dt, _glassTilt);
 
-                // The stream falls from the spout into the glass's mouth.
-                var spout = new Vector2(_tapGlassPour.x + 6f, PintRimY() + 54f);
-                _tapFluid.EmitStream(spout, new Vector2(0f, -260f), dt);
+                // A stream from the faucet's lip, falling into the mouth wherever it now is.
+                var toMouth = mouth - spout;
+                _tapFluid.EmitStream(spout, new Vector2(toMouth.x * 2.2f, -300f), dt);
                 if (run.ServingGlass.TotalVolume + run.ServingGlass.Head != before) RefreshTapText(run);
             }
 
@@ -1954,6 +2005,17 @@ namespace LastCall.DebugUI
                 _tapHeadBand.anchorMin = _tapHeadBand.anchorMax = _tapHeadBand.pivot = new Vector2(0.5f, 0.5f);
                 _tapHeadBand.sizeDelta = new Vector2((maxX - minX) * Mathf.Max(lean, 0.35f), bandH);
                 _tapHeadBand.anchoredPosition = new Vector2((minX + maxX) * 0.5f, beerTop + bandH * 0.5f);
+                if (_tapHeadCrown != null)
+                {
+                    // Sits on the head's top edge and never inside the beer, so a thin head is
+                    // all crest and a deep one grows underneath it.
+                    float crownH = Mathf.Min(FoamCrownHeight, bandH);
+                    _tapHeadCrown.anchorMin = new Vector2(0, 1);
+                    _tapHeadCrown.anchorMax = new Vector2(1, 1);
+                    _tapHeadCrown.pivot = new Vector2(0.5f, 1f);
+                    _tapHeadCrown.sizeDelta = new Vector2(0, crownH);
+                    _tapHeadCrown.anchoredPosition = Vector2.zero;
+                }
             }
         }
 
@@ -2010,6 +2072,33 @@ namespace LastCall.DebugUI
             return (c.x - iw, c.x + iw, bottomY, h * 0.82f);
         }
 
+        /// <summary>The faucet's lip, where the beer leaves the font.</summary>
+        private Vector2 SpoutPoint() => _tapTowerPos + SpoutOffset;
+
+        /// <summary>How far the rim stands above the grip on an upright glass.</summary>
+        private float RimAboveGrip() => _tapGlass.rect.height * (0.07f + 0.82f - GlassPivotY);
+
+        /// <summary>
+        /// Where the hand has to be for the glass's mouth to sit under the faucet at the lean it
+        /// is currently held at. The rim swings a long way round the grip on a glass this tall,
+        /// so the hand moves with it.
+        /// </summary>
+        private Vector2 GripHoldingMouthUnderSpout()
+        {
+            float rad = -_glassTilt * Mathf.Deg2Rad;
+            float up = RimAboveGrip();
+            var rim = new Vector2(-Mathf.Sin(rad) * up, Mathf.Cos(rad) * up);
+            return SpoutPoint() + new Vector2(0f, -MouthBelowSpout) - rim;
+        }
+
+        /// <summary>The centre of the glass's rim, carried round by however far it is leaning.</summary>
+        private Vector2 MouthPoint()
+        {
+            var (minX, maxX, bottomY, innerH) = PintInterior();
+            var rim = new Vector2((minX + maxX) * 0.5f, bottomY + innerH);
+            return RotateAboutGrip(rim, -_glassTilt * Mathf.Deg2Rad);
+        }
+
         /// <summary>Carries a point round the glass's grip, which is where it actually turns.</summary>
         private Vector2 RotateAboutGrip(Vector2 point, float rad)
         {
@@ -2041,7 +2130,9 @@ namespace LastCall.DebugUI
 
             // While it is running, the glass's angle is the live thing to say; once it is down,
             // the pint is what there is to judge.
-            if (_glassHeld && _glassTilt > TapPour.SpillTilt)
+            if (_glassHeld && !_pouringNow && Run != null && !Run.ServingGlass.IsEmpty)
+            { _tapVerdict.text = "HOLD IT UNDER THE TAP"; _tapVerdict.color = UITheme.Amber[3]; }
+            else if (_glassHeld && _glassTilt > TapPour.SpillTilt)
             { _tapVerdict.text = "SPILLING — STAND IT UP"; _tapVerdict.color = UITheme.ViceRed[3]; }
             else if (glass.IsEmpty) { _tapVerdict.text = "TAKE THE GLASS TO THE TAP"; _tapVerdict.color = UITheme.TextSecondary; }
             else if (glass.FillFraction < 0.75) { _tapVerdict.text = "SHORT POUR"; _tapVerdict.color = UITheme.Amber[3]; }

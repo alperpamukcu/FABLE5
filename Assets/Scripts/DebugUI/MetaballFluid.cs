@@ -250,7 +250,7 @@ namespace LastCall.DebugUI
             float widthScale = AverageProfile(fillFrac);
             int target = Mathf.Clamp(
                 Mathf.RoundToInt((2f * Mathf.Max(_halfW - PoolRadius * SideOffset, 1f) * widthScale)
-                                 * fillH / (Spacing * Spacing) * 1.155f),
+                                 * fillH / (Spacing * Spacing) * 1.155f * _density),
                 0, MaxPool);
             _fillTopLocal = -_halfH + fillH;
             bool seeding = _pn == 0 && target > 0;   // a fresh body, not a top-up
@@ -293,7 +293,7 @@ namespace LastCall.DebugUI
             // Not the highest particle: one droplet still falling through the neck sits well
             // above the body and dragged the reported surface up with it. Bin the particles by
             // height and walk down until a bin holds enough of them to be the drink itself.
-            const int Bins = 64;
+            const int Bins = 48;
             for (int i = 0; i < Bins; i++) _surfaceBins[i] = 0;
             float span = _halfH * 2f;
             for (int i = 0; i < _pn; i++)
@@ -303,7 +303,9 @@ namespace LastCall.DebugUI
                 _surfaceBins[b]++;
             }
 
-            int need = Mathf.Max(2, _pn / 50);          // 2% of the body — a stray never reaches it
+            // A bin is about one particle row deep, so 2% of the body was more than a full row
+            // could hold and the surface was reported a row or two low every time.
+            int need = Mathf.Max(3, _pn / 90);
             for (int b = Bins - 1; b >= 0; b--)
             {
                 if (_surfaceBins[b] < need) continue;
@@ -314,7 +316,7 @@ namespace LastCall.DebugUI
             return fallback;
         }
 
-        private readonly int[] _surfaceBins = new int[64];
+        private readonly int[] _surfaceBins = new int[48];
 
         /// <summary>A sideways nudge to the whole body — a shove of the glass (uv-ish impulse).</summary>
         public void Disturb(float lateralImpulse)
@@ -483,6 +485,16 @@ namespace LastCall.DebugUI
         /// <summary>Sets the vessel silhouette: half-width multipliers sampled bottom → rim.
         /// Pass null for a plain rectangular interior.</summary>
         public void SetProfile(float[] halfWidths) => _profile = halfWidths;
+
+        /// <summary>
+        /// Per-vessel correction on how many particles a given fill asks for. The rest-spacing
+        /// estimate is not exact for every silhouette — the pint packs tighter than it assumes
+        /// and settled at 73% of the line it was aimed at, measured across four fills — so the
+        /// vessel that knows better says so. 1 leaves the estimate alone, which is what the
+        /// shaker and the tumbler still do.
+        /// </summary>
+        public void SetDensity(float multiplier) => _density = Mathf.Clamp(multiplier, 0.25f, 4f);
+        private float _density = 1f;
 
         /// <summary>Clamps every particle inside the rotated vessel interior (profile-shaped).</summary>
         private void ClampToVessel()
