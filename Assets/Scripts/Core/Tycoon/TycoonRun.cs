@@ -242,32 +242,39 @@ namespace LastCall.Core
             PullingId = kegId;
         }
 
+        /// <summary>How much beer has run past the rim this build. Waste, nothing more — it
+        /// came out of the keg and reached nobody (GDD 21 §10.2).</summary>
+        public double SpilledBeer { get; private set; }
+
         /// <summary>
-        /// One moment of holding the handle at <paramref name="pull"/> (0…1). Returns the beer
-        /// that landed — the foam that came with it is on the glass's head, and both came out
-        /// of the keg. Running the keg dry closes the tap.
+        /// One moment under the open tap with the glass held at <paramref name="tiltDegrees"/>
+        /// from upright. Returns the beer that landed; the foam that came with it is on the
+        /// glass's head, what missed the rim is spilled, and all three came out of the keg.
+        /// Running the keg dry closes the tap.
         /// </summary>
-        public double PullTick(double seconds, double pull)
+        public double PourTilted(double seconds, double tiltDegrees)
         {
             EnsurePhase(TycoonPhase.DayOpen);
             if (PullingId == null || seconds <= 0) return 0;
 
             var keg = _shelf.Find(PullingId);
-            var flow = TapPour.Flow(pull, seconds);
+            var flow = TapPour.Flow(tiltDegrees, seconds);
             if (flow.Total <= 0) return 0;
 
-            // The keg gives up beer and foam alike; the glass decides how much it can take.
-            double available = keg.Draw(Math.Min(flow.Total, ServingGlass.Headroom));
+            // The keg gives up beer, foam and spill alike; the glass only limits what it catches.
+            double wanted = Math.Min(flow.Caught, ServingGlass.Headroom) + flow.Spill;
+            double available = keg.Draw(wanted);
             if (available <= 0)
             {
                 if (keg.IsEmpty) PullingId = null;
                 return 0;
             }
 
-            double share = available / flow.Total;
+            double share = wanted > 0 ? available / wanted : 0;
             double landed = ServingGlass.Add(PullingId, flow.Beer * share);
             ServingGlass.AddHead(flow.Head * share);
-            ServingGlass.AddPreparation(Preparations.Draught);
+            SpilledBeer += flow.Spill * share;
+            if (landed > 0 || flow.Head * share > 0) ServingGlass.AddPreparation(Preparations.Draught);
             if (keg.IsEmpty) PullingId = null;
             return landed;
         }
@@ -370,6 +377,7 @@ namespace LastCall.Core
         {
             PouringId = null;
             PullingId = null;
+            SpilledBeer = 0;
             IsShaken = false;
             ShakeEnergy = 0;
             Glass = new GlassContents(_config.GlassCapacity);

@@ -25,39 +25,58 @@ namespace LastCall.Tests
             return new TycoonRun(shelf, RecipeCatalog.CreateDefault(), new RunRng("beer-seed"));
         }
 
-        // ── the pull ────────────────────────────────────────────────────────────
+        // ── the angle of the glass (GDD 21 §10.2) ───────────────────────────────
 
         [Test]
-        public void EasingTheHandleOpenPoursAlmostCleanBeer()
+        public void AGlassHeldUprightCatchesMostlyFroth()
         {
-            var gentle = TapPour.Flow(0.25, 1.0);
-            Assert.Less(gentle.Head / gentle.Total, 0.15,
-                "a tap eased open should pour beer, not foam");
+            var upright = TapPour.Flow(0.0, 1.0);
+            Assert.Greater(upright.Head / upright.Caught, 0.5,
+                "the stream drops the height of the glass and breaks — this is the mistake");
+            Assert.AreEqual(0, upright.Spill, 1e-9, "nothing misses a glass that is straight up");
         }
 
         [Test]
-        public void ThrowingTheHandleOpenPoursMostlyFoam()
+        public void AGlassLeanedOverCatchesAlmostCleanBeer()
         {
-            var wide = TapPour.Flow(1.0, 1.0);
-            Assert.Greater(wide.Head / wide.Total, 0.5,
-                "wide open is the mistake the mechanic is built on — it must froth");
+            var tilted = TapPour.Flow(TapPour.IdealTilt, 1.0);
+            Assert.Less(tilted.Head / tilted.Caught, 0.12,
+                "run down the wall, beer keeps its gas");
+            Assert.AreEqual(0, tilted.Spill, 1e-9);
         }
 
         [Test]
-        public void FasterPullMovesMoreTotalVolumeButLessBeer()
+        public void TippingItPastTheSpillAngleThrowsBeerOnTheFloor()
         {
-            var gentle = TapPour.Flow(0.25, 1.0);
-            var wide = TapPour.Flow(1.0, 1.0);
-            Assert.Greater(wide.Total, gentle.Total, "a wider tap moves more liquid");
-            Assert.Greater(gentle.Beer / gentle.Total, wide.Beer / wide.Total,
-                "but a smaller share of it is beer");
+            Assert.AreEqual(0, TapPour.Flow(TapPour.SpillTilt, 1.0).Spill, 1e-9,
+                "the spill starts past the angle, not at it");
+            Assert.Greater(TapPour.Flow(TapPour.SpillTilt + 12, 1.0).Spill, 0);
+            Assert.Greater(TapPour.Flow(85, 1.0).Spill, TapPour.Flow(70, 1.0).Spill,
+                "the further it goes over, the more runs by the rim");
         }
 
         [Test]
-        public void AShutTapPoursNothing()
+        public void TheTapRunsAtOneRateWhateverTheAngle()
         {
-            Assert.AreEqual(0, TapPour.Flow(0, 1.0).Total, 1e-9);
-            Assert.AreEqual(0, TapPour.Flow(1.0, 0).Total, 1e-9);
+            Assert.AreEqual(TapPour.Flow(0, 1.0).Total, TapPour.Flow(45, 1.0).Total, 1e-9);
+            Assert.AreEqual(TapPour.Flow(45, 1.0).Total, TapPour.Flow(75, 1.0).Total, 1e-9,
+                "the angle decides where it lands, never how much comes out");
+        }
+
+        [Test]
+        public void MostOfTheFoamControlIsNearUpright()
+        {
+            // Squared falloff: standing the glass up at the end is what raises a head, and
+            // the last few degrees are where it arrives.
+            double nearUpright = TapPour.Flow(10, 1.0).Head - TapPour.Flow(20, 1.0).Head;
+            double nearIdeal = TapPour.Flow(30, 1.0).Head - TapPour.Flow(40, 1.0).Head;
+            Assert.Greater(nearUpright, nearIdeal);
+        }
+
+        [Test]
+        public void NoTimeMeansNoBeer()
+        {
+            Assert.AreEqual(0, TapPour.Flow(45, 0).Total, 1e-9);
         }
 
         // ── the head in the glass ───────────────────────────────────────────────
@@ -144,7 +163,7 @@ namespace LastCall.Tests
         {
             var run = RunWithKeg(out string kegId);
             run.BeginPull(kegId);
-            run.PullTick(1.0, 0.4);
+            run.PourTilted(1.0, 20.0);
 
             Assert.IsTrue(run.Glass.IsEmpty, "beer must not pass through the shaker");
             Assert.IsFalse(run.ServingGlass.IsEmpty);
@@ -174,7 +193,7 @@ namespace LastCall.Tests
             var shelf = new Shelf(new[] { new ShelfBottle(Keg(), capacity: 0.2) });
             var run = new TycoonRun(shelf, RecipeCatalog.CreateDefault(), new RunRng("dry"));
             run.BeginPull("beer_test");
-            for (int i = 0; i < 20; i++) run.PullTick(0.5, 1.0);
+            for (int i = 0; i < 20; i++) run.PourTilted(0.5, 45.0);
 
             Assert.IsTrue(shelf.Find("beer_test").IsEmpty, "the keg empties like any bottle");
             Assert.IsNull(run.PullingId, "a dry keg closes its own tap");
@@ -185,7 +204,7 @@ namespace LastCall.Tests
         {
             var run = RunWithKeg(out string kegId);
             run.BeginPull(kegId);
-            for (int i = 0; i < 40; i++) run.PullTick(0.5, 1.0);
+            for (int i = 0; i < 40; i++) run.PourTilted(0.5, 45.0);
 
             Assert.LessOrEqual(run.ServingGlass.FillFraction, 1.0 + 1e-9);
         }
@@ -195,7 +214,7 @@ namespace LastCall.Tests
         {
             var run = RunWithKeg(out string kegId);
             run.BeginPull(kegId);
-            run.PullTick(1.0, 1.0);            // a froth-heavy pull
+            run.PourTilted(1.0, 0.0);          // held dead upright: all froth
             run.EndPull();
             double headBefore = run.ServingGlass.Head;
             double beerBefore = run.ServingGlass.TotalVolume;
@@ -204,6 +223,61 @@ namespace LastCall.Tests
 
             Assert.Less(run.ServingGlass.Head, headBefore, "foam falls while you stand there");
             Assert.Greater(run.ServingGlass.TotalVolume, beerBefore, "some of it comes back as beer");
+        }
+
+        [Test]
+        public void SpilledBeerLeavesTheKegAndReachesNobody()
+        {
+            var run = RunWithKeg(out string kegId);
+            var keg = run.Shelf.Find(kegId);
+            double before = keg.Remaining;
+
+            run.BeginPull(kegId);
+            for (int i = 0; i < 10; i++) run.PourTilted(0.1, 80.0);   // held nearly on its side
+
+            Assert.Greater(run.SpilledBeer, 0, "beer poured past the rim is gone");
+            Assert.Less(keg.Remaining, before, "and it came out of the keg all the same");
+            Assert.Less(run.ServingGlass.FillFraction, 0.5, "very little of it reached the glass");
+        }
+
+        [Test]
+        public void TheTwoMovementPourIsWhatMakesAGoodPint()
+        {
+            // Tilted to fill, straightened at the end to raise the head — the pint the mechanic
+            // is built around (GDD 21 §10.2).
+            var run = RunWithKeg(out string kegId);
+            run.BeginPull(kegId);
+            for (int i = 0; i < 34; i++) run.PourTilted(0.05, 45.0);   // fill it leaning over
+            for (int i = 0; i < 10; i++) run.PourTilted(0.05, 6.0);    // stand it up at the end
+
+            var g = run.ServingGlass;
+            Assert.AreEqual(1.0, TapPour.HeadScore(g.Head / g.Capacity), 1e-9,
+                "that is a good pint");
+            Assert.Greater(g.FillFraction, 0.85, "and a full one");
+        }
+
+        [Test]
+        public void PouringItUprightThroughoutServesAGlassOfFroth()
+        {
+            var run = RunWithKeg(out string kegId);
+            run.BeginPull(kegId);
+            for (int i = 0; i < 44; i++) run.PourTilted(0.05, 0.0);
+
+            var g = run.ServingGlass;
+            Assert.Greater(g.Head / g.Capacity, TapPour.GoodHeadMax, "far too much head");
+            Assert.AreEqual(0.0, TapPour.HeadScore(g.Head / g.Capacity), 1e-9);
+        }
+
+        [Test]
+        public void PouringItLeaningOverThroughoutServesAFlatOne()
+        {
+            var run = RunWithKeg(out string kegId);
+            run.BeginPull(kegId);
+            for (int i = 0; i < 44; i++) run.PourTilted(0.05, 50.0);
+
+            var g = run.ServingGlass;
+            Assert.Less(g.Head / g.Capacity, TapPour.GoodHeadMin, "barely a head on it");
+            Assert.Less(TapPour.HeadScore(g.Head / g.Capacity), 1.0);
         }
 
         // ── it reads as a drink ─────────────────────────────────────────────────

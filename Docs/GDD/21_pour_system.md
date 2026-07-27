@@ -206,21 +206,31 @@ Each keg carries its own emotional charges like any other ingredient — which i
 reason to stock more than one. The recipe does not distinguish a stout from a lager; **who you
 pour it for** does.
 
-### 10.2 The pull
+### 10.2 The angle of the glass (revised 2026-07-27)
 
-The tap handle is **held and pulled**. How far it is pulled sets the flow, and the flow decides
-what you get:
+The tap runs at one rate. **What you control is the glass**: you take it in your hand, hold it
+under the spout, and the angle you hold it at decides what lands in it — the same thing a real
+bartender is doing, and the same lift-to-tilt grip the bottle already uses in the shaker stage
+(module 24 §2).
 
-| Pull | Flow | What lands in the glass |
-| --- | --- | --- |
-| eased open | slow | almost all beer, a thin head |
-| half | moderate | the finger of head you want |
-| wide open | fast | froth — the glass fills with foam, not beer |
+| How you hold it | What lands |
+| --- | --- |
+| upright | the stream hits the bottom and breaks — froth, not beer |
+| tilted about 45° | it runs down the inside wall — almost all beer, barely any head |
+| tipped past 60° | it runs straight past the rim — spilled, and gone from the keg |
 
-Foam is **volume**: head and beer share the glass, so a frothy pull genuinely gives the
-customer less beer. Head also **settles** — wait and foam collapses back into liquid, so a
-botched pull can be rescued by standing still and topping up. That is the cost: time, in a
-game where patience is the currency.
+So a pint is **two movements, not one**: tilted while it fills, then straightened at the end to
+raise the head. Pour it upright throughout and you serve a glass of froth; pour it tilted
+throughout and you serve a flat one. Neither is a failure state — both are simply a worse pint,
+and the glass shows which you are making while you make it.
+
+Foam is **volume**: head and beer share the glass, so froth genuinely gives the customer less
+beer. Head also **settles** — wait and it collapses, most of it into air, so a botched pour can
+be rescued by standing still and topping up. That is the cost: time, in a game where patience
+is the currency.
+
+Spilled beer comes out of the keg and reaches nobody. It is not scored or punished beyond
+that — the loss is the punishment, and the keg is a cost of goods like any bottle.
 
 ### 10.3 What a good pint is
 
@@ -233,8 +243,8 @@ round. It pays **no direct tip**: the till stays predictable, and the reward for
 the same shape it has everywhere else in the game.
 
 **Ruling:** the head is the beer's craft axis, and it is the only one. A pint has no ratio to
-judge, no garnish to remember and no recipe to match — the whole skill is the pull. Loading it
-with anything more would make the simple order the fiddly one.
+judge, no garnish to remember and no recipe to match — the whole skill is the angle of the
+glass. Loading it with anything more would make the simple order the fiddly one.
 
 ## 11. Open questions
 

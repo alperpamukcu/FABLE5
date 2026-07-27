@@ -3,8 +3,9 @@ using System;
 namespace LastCall.Core
 {
     /// <summary>
-    /// What one moment of holding a tap open produces (GDD 21 §10.2). Beer and its head share
-    /// the glass, so a frothy pull genuinely serves less beer — the head is not decoration.
+    /// What one moment under an open tap produces (GDD 21 §10.2). Beer and its head share the
+    /// glass, so froth genuinely serves less beer — the head is not decoration. Anything that
+    /// ran past the rim is spilled: it left the keg and reached nobody.
     /// </summary>
     public readonly struct DraughtFlow
     {
@@ -12,33 +13,50 @@ namespace LastCall.Core
         public double Beer { get; }
         /// <summary>Volume of foam, in glass-fractions.</summary>
         public double Head { get; }
+        /// <summary>Volume that missed the glass, in glass-fractions.</summary>
+        public double Spill { get; }
 
-        public double Total => Beer + Head;
+        /// <summary>Everything that left the keg this moment.</summary>
+        public double Total => Beer + Head + Spill;
+        /// <summary>What the glass actually caught.</summary>
+        public double Caught => Beer + Head;
 
-        public DraughtFlow(double beer, double head)
+        public DraughtFlow(double beer, double head, double spill)
         {
             Beer = beer;
             Head = head;
+            Spill = spill;
         }
     }
 
     /// <summary>
-    /// The pull-to-pour rules for a keg (GDD 21 §10). Pure and stateless: the caller owns the
-    /// handle, the glass and the clock, this only says what a given pull produces and what a
-    /// finished pint is worth.
+    /// The pour rules for a keg (GDD 21 §10). The tap runs at one rate; what the player controls
+    /// is the angle they hold the glass at. Pure and stateless: the caller owns the glass, the
+    /// hand and the clock, this only says what a given angle catches and what a finished pint is
+    /// worth.
     /// </summary>
     public static class TapPour
     {
-        /// <summary>Glass-fractions a second with the handle wide open.</summary>
-        public const double FlowPerSecond = 0.62;
+        /// <summary>Glass-fractions a second out of an open tap.</summary>
+        public const double FlowPerSecond = 0.42;
 
-        /// <summary>Foam share of the stream at a hair's opening, and at wide open. A tap eased
-        /// open pours almost clean; thrown open it froths (GDD 21 §10.2).</summary>
-        public const double HeadShareAtCrack = 0.06;
-        public const double HeadShareAtFull = 0.72;
+        // ── the angle (GDD 21 §10.2) ────────────────────────────────────────────
+
+        /// <summary>Degrees from upright. 0 = straight up, 90 = on its side.</summary>
+        public const double IdealTilt = 45.0;
+        /// <summary>Past this the stream starts running by the rim instead of into the glass.</summary>
+        public const double SpillTilt = 60.0;
+        /// <summary>Everything misses at this angle — the glass is essentially lying down.</summary>
+        public const double LostTilt = 88.0;
+
+        /// <summary>Foam share of what is caught, held dead upright and held at the ideal lean.
+        /// Upright the stream drops the height of the glass and breaks; leaned over it runs down
+        /// the wall and keeps its gas.</summary>
+        public const double HeadShareUpright = 0.78;
+        public const double HeadShareTilted = 0.04;
 
         /// <summary>Share of the head that collapses back into beer each second. Standing still
-        /// rescues a botched pull — at the price of the customer's patience.</summary>
+        /// rescues a botched pour — at the price of the customer's patience.</summary>
         // Half the head is gone in about nine seconds. Measured at 0.18 first, which cleared
         // a good pint before it could reach the customer — the rescue has to be slow enough
         // to be a decision, not so fast that standing still is the only outcome.
@@ -57,20 +75,36 @@ namespace LastCall.Core
         public const double HeadTolerance = 0.26;
 
         /// <summary>
-        /// What flows while the handle is held at <paramref name="pull"/> (0 = shut,
-        /// 1 = wide open) for <paramref name="seconds"/>. Foam rises with the square of the
-        /// pull, so the bottom half of the handle's travel is the controllable part — which is
-        /// what makes easing it open a skill rather than a setting.
+        /// What lands while the glass is held at <paramref name="tiltDegrees"/> from upright for
+        /// <paramref name="seconds"/> under an open tap.
+        ///
+        /// Foam falls off quickly as the glass leans — most of the useful control is in the first
+        /// half of the lean, which is why the pour is a movement and not a setting. Past
+        /// <see cref="SpillTilt"/> the stream begins to run by the rim, and what misses is gone.
         /// </summary>
-        public static DraughtFlow Flow(double pull, double seconds)
+        public static DraughtFlow Flow(double tiltDegrees, double seconds)
         {
-            if (seconds <= 0) return new DraughtFlow(0, 0);
-            pull = Clamp01(pull);
-            if (pull <= 0) return new DraughtFlow(0, 0);
+            if (seconds <= 0) return default;
 
-            double total = FlowPerSecond * pull * seconds;
-            double headShare = HeadShareAtCrack + (HeadShareAtFull - HeadShareAtCrack) * pull * pull;
-            return new DraughtFlow(total * (1.0 - headShare), total * headShare);
+            double tilt = tiltDegrees < 0 ? 0 : tiltDegrees > 90 ? 90 : tiltDegrees;
+            double total = FlowPerSecond * seconds;
+
+            double spillShare = tilt <= SpillTilt
+                ? 0.0
+                : Clamp01((tilt - SpillTilt) / (LostTilt - SpillTilt));
+            double spill = total * spillShare;
+            double caught = total - spill;
+
+            // The foam curve is steep near upright and flat around the ideal lean, so the fine
+            // control sits where the player needs it: a wobble while filling costs nothing, and
+            // standing the glass up at the end dials the head in. Squaring it the other way put
+            // the precision in the wrong place — flat where the head is built and twitchy where
+            // it is only being filled (caught by MostOfTheFoamControlIsNearUpright).
+            double lean = Clamp01(tilt / IdealTilt);
+            double shaped = 2.0 * lean - lean * lean;
+            double headShare = HeadShareUpright + (HeadShareTilted - HeadShareUpright) * shaped;
+
+            return new DraughtFlow(caught * (1.0 - headShare), caught * headShare, spill);
         }
 
         /// <summary>
