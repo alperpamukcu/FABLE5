@@ -330,8 +330,8 @@ namespace LastCall.DebugUI
         {
             _mixBar = NewRect("MixBar", _menuPanel);
             var barHost = NewRect("MixBarFrame", _menuPanel);
-            Place(barHost, new Vector2(0.5f, 0.5f), new Vector2(BoardW * PaperW - 30f, 46f),
-                new Vector2(BoardW * PaperCX, BoardH * (PaperCY + PaperH * 0.5f) - 84f));
+            Place(barHost, new Vector2(0.5f, 0.5f), new Vector2(BoardW * PaperW - 30f, 74f),
+                new Vector2(BoardW * PaperCX, BoardH * (PaperCY + PaperH * 0.5f) - 96f));
             var frame = barHost.gameObject.AddComponent<Image>();
             var barSprite = ItemArt.Load("plate");
             if (barSprite != null)
@@ -346,12 +346,12 @@ namespace LastCall.DebugUI
             // Say what the gauge is, so a row of coloured chips is not a mystery.
             var caption = Handwritten(NewText("Caption", barHost, _body, 11, TextAnchor.MiddleLeft,
                 new Color(0.30f, 0.21f, 0.12f)));
-            Place(caption.rectTransform, new Vector2(0, 0.5f), new Vector2(150, 18), new Vector2(6, 24));
+            Place(caption.rectTransform, new Vector2(0, 0.5f), new Vector2(180, 18), new Vector2(6, 46));
             caption.text = "WHAT'S IN THE TIN";
 
             // The segments live in the frame's recessed channel.
             _mixBar = NewRect("MixBar", barHost);
-            Stretch(_mixBar, Vector2.zero, Vector2.one, new Vector2(12, 9), new Vector2(-12, -9));
+            Stretch(_mixBar, Vector2.zero, Vector2.one, new Vector2(14, 10), new Vector2(-14, -10));
 
 
         }
@@ -431,11 +431,11 @@ namespace LastCall.DebugUI
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             // Flows for however many groups the bar ends up carrying: three across, and the
             // rows follow from the count.
-            int cols = 3;
+            int cols = 2;
             int gRows = Mathf.Max(1, Mathf.CeilToInt(CountStockedGroups(run) / (float)cols));
             grid.constraintCount = cols;
             grid.cellSize = new Vector2((areaW - (cols - 1) * 14f) / cols,
-                Mathf.Min(126f, (areaH - (gRows - 1) * 14f) / gRows));
+                Mathf.Min(96f, (areaH - (gRows - 1) * 14f) / gRows));
             grid.childAlignment = TextAnchor.MiddleCenter;
 
             foreach (var type in MenuOrder)
@@ -474,31 +474,25 @@ namespace LastCall.DebugUI
                 // swapping only the background left the label and bottles floating.
                 var content = NewRect("Content", card);
                 Stretch(content, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                var press = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
-                press.callback.AddListener(_ => content.anchoredPosition = new Vector2(0, -5f));
-                var release = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
-                release.callback.AddListener(_ => content.anchoredPosition = Vector2.zero);
-                var leave = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
-                leave.callback.AddListener(_ => content.anchoredPosition = Vector2.zero);
-                var trig = card.gameObject.AddComponent<EventTrigger>();
-                trig.triggers.Add(press); trig.triggers.Add(release); trig.triggers.Add(leave);
+                var sink = card.gameObject.AddComponent<PressSink>();
+                sink.Face = content;
 
-                var name = Handwritten(NewText("N", content, _display, 17, TextAnchor.MiddleCenter, Color.black));
-                Place(name.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(grid.cellSize.x - 20, 26), new Vector2(0, 8));
+                var name = Handwritten(NewText("N", content, _display, 15, TextAnchor.MiddleCenter, Color.black));
+                Place(name.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 24, 22), new Vector2(0, -10));
                 name.text = GroupName(t);
 
                 var count = Handwritten(NewText("C", content, _body, 11, TextAnchor.UpperCenter, new Color(0.12f, 0.12f, 0.12f)));
-                Place(count.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 20, 16),
-                    new Vector2(0, -46));
+                Place(count.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 24, 14),
+                    new Vector2(0, -32));
                 count.text = empty > 0 ? $"{have} bottles · {empty} out" : $"{have} bottles";
 
                 // The bottles themselves, just their art, under the heading.
                 var icons = NewRect("Icons", content);
-                Place(icons, new Vector2(0.5f, 0), new Vector2(grid.cellSize.x - 16, grid.cellSize.y - 74),
-                    new Vector2(0, 8));
+                Place(icons, new Vector2(0.5f, 0), new Vector2(grid.cellSize.x - 20, grid.cellSize.y - 52),
+                    new Vector2(0, 6));
                 var ig = icons.gameObject.AddComponent<GridLayoutGroup>();
                 int iconCols = Mathf.Clamp(have, 1, 4);
-                float cell = Mathf.Min(46f, (grid.cellSize.x - 24f) / iconCols);
+                float cell = Mathf.Min(34f, (grid.cellSize.x - 28f) / iconCols);
                 ig.cellSize = new Vector2(cell, cell);
                 ig.spacing = new Vector2(4, 4);
                 ig.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
