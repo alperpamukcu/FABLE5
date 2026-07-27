@@ -38,6 +38,8 @@ namespace LastCall.DebugUI
         // Render radius is well above the spacing so the fine, tightly-packed particles
         // overlap into ONE smooth connected surface with no gaps between them.
         private const float PoolRadius = 4.3f;
+        private const float SideOffset = 0.27f;   // iso-surface reach past a side wall particle
+        private const float FaceOffset = 0.53f;   // iso-surface reach past a floor/surface particle
         private const float Viscosity = 0.42f;        // 0..1 neighbour-velocity blend (more flow)
         private const float MaxSpeed = 1300f;
         private const float WallFriction = 0.72f;     // (kept for API parity)
@@ -228,12 +230,11 @@ namespace LastCall.DebugUI
             // (a narrow tin holds less), so a profiled vessel is not overfilled.
             // The usable area is the interior minus the render-radius inset on each wall, so the
             // count matches the space the particles are actually allowed to occupy.
-            const float inset = PoolRadius * 0.75f;
-            float fillH = Mathf.Max(_fillTopY - bottomY - inset, 0f);
+            float fillH = Mathf.Max(_fillTopY - bottomY - PoolRadius * FaceOffset, 0f);
             float widthScale = AverageProfile(fillFrac);
             int target = Mathf.Clamp(
-                Mathf.RoundToInt((2f * Mathf.Max(_halfW - inset, 1f) * widthScale) * fillH
-                                 / (Spacing * Spacing) * 1.155f),
+                Mathf.RoundToInt((2f * Mathf.Max(_halfW - PoolRadius * SideOffset, 1f) * widthScale)
+                                 * fillH / (Spacing * Spacing) * 1.155f),
                 0, MaxPool);
             _fillTopLocal = -_halfH + fillH;
             while (_pn < target && _pn < MaxPool)
@@ -420,12 +421,13 @@ namespace LastCall.DebugUI
         {
             // Local frame: the walls are axis-aligned here, so this is a straight compare —
             // no rotation per particle per iteration (the old hot path).
-            // Inset by the render radius: the metaball iso-surface reaches ~0.75r past a
-            // particle's centre, so holding the centres this far in lands the DRAWN edge of the
-            // liquid exactly on the wall, instead of bleeding through the floor and the rim.
-            const float edge = PoolRadius * 0.75f;
-            float ix = Mathf.Max(_halfW - edge, 2f);
-            float iy = Mathf.Max(_halfH - edge, 2f);
+            // Inset by however far the drawn iso-surface actually reaches past a particle centre
+            // — measured against this kernel and threshold, not guessed: 0.27r out to the side
+            // (where the wall cuts a packed column) and 0.53r above a free surface. Holding the
+            // centres exactly that far in makes the DRAWN liquid meet the vessel wall, so it
+            // covers the whole interior without bleeding out of it.
+            float ix = Mathf.Max(_halfW - PoolRadius * SideOffset, 2f);
+            float iy = Mathf.Max(_halfH - PoolRadius * FaceOffset, 2f);
             for (int i = 0; i < _pn; i++)
             {
                 float ly = _py[i];
