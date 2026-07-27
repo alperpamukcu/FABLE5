@@ -321,11 +321,18 @@ namespace LastCall.DebugUI
         private void BuildMixBar()
         {
             _mixBar = NewRect("MixBar", _menuPanel);
-            Place(_mixBar, new Vector2(0.5f, 0.5f), new Vector2(BoardW * PaperW - 40f, 30f),
-                new Vector2(BoardW * PaperCX, BoardH * (PaperCY + PaperH * 0.5f) - 62f));
-            var frame = _mixBar.gameObject.AddComponent<Image>();
-            frame.color = new Color(0.30f, 0.24f, 0.16f, 0.16f);
+            var barHost = NewRect("MixBarFrame", _menuPanel);
+            Place(barHost, new Vector2(0.5f, 0.5f), new Vector2(BoardW * PaperW - 30f, 46f),
+                new Vector2(BoardW * PaperCX, BoardH * (PaperCY + PaperH * 0.5f) - 84f));
+            var frame = barHost.gameObject.AddComponent<Image>();
+            var barSprite = ItemArt.Load("bar_frame");
+            if (barSprite != null) { frame.sprite = barSprite; frame.type = Image.Type.Sliced; frame.color = Color.white; }
+            else frame.color = new Color(0.30f, 0.24f, 0.16f, 0.16f);
             frame.raycastTarget = false;
+
+            // The segments live in the frame's recessed channel.
+            _mixBar = NewRect("MixBar", barHost);
+            Stretch(_mixBar, Vector2.zero, Vector2.one, new Vector2(12, 9), new Vector2(-12, -9));
 
 
         }
@@ -395,7 +402,7 @@ namespace LastCall.DebugUI
         /// <summary>Page one: one card per stocked section.</summary>
         private void BuildGroupPage(TycoonRun run)
         {
-            _menuTitle.text = "MAKE A DRINK";
+            _menuTitle.text = "DRINKS";
             var row = NewRect("Groups", _bottleList);
             var grid = row.gameObject.AddComponent<GridLayoutGroup>();
             float areaW = _bottleList.rect.width, areaH = _bottleList.rect.height;
@@ -442,24 +449,37 @@ namespace LastCall.DebugUI
                 var t = type;
                 btn.onClick.AddListener(() => OpenTab(t));
 
-                var stripe = NewRect("Stripe", card);
+                // Everything printed on the plate lives here, so it sinks WITH the press —
+                // swapping only the background left the label and bottles floating.
+                var content = NewRect("Content", card);
+                Stretch(content, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var press = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+                press.callback.AddListener(_ => content.anchoredPosition = new Vector2(0, -3f));
+                var release = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
+                release.callback.AddListener(_ => content.anchoredPosition = Vector2.zero);
+                var leave = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+                leave.callback.AddListener(_ => content.anchoredPosition = Vector2.zero);
+                var trig = card.gameObject.AddComponent<EventTrigger>();
+                trig.triggers.Add(press); trig.triggers.Add(release); trig.triggers.Add(leave);
+
+                var stripe = NewRect("Stripe", content);
                 stripe.anchorMin = new Vector2(0, 1); stripe.anchorMax = new Vector2(1, 1);
                 stripe.pivot = new Vector2(0.5f, 1);
                 stripe.offsetMin = new Vector2(18, -20); stripe.offsetMax = new Vector2(-18, -14);
                 var si = stripe.gameObject.AddComponent<Image>();
                 si.color = new Color(col.r, col.g, col.b, 0.92f); si.raycastTarget = false;
 
-                var name = NewText("N", card, _display, 17, TextAnchor.MiddleCenter, new Color(0.24f, 0.16f, 0.09f));
+                var name = NewText("N", content, _display, 17, TextAnchor.MiddleCenter, new Color(0.24f, 0.16f, 0.09f));
                 Place(name.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(grid.cellSize.x - 20, 26), new Vector2(0, 8));
                 name.text = GroupName(t);
 
-                var count = NewText("C", card, _body, 11, TextAnchor.UpperCenter, new Color(0.44f, 0.36f, 0.26f));
+                var count = NewText("C", content, _body, 11, TextAnchor.UpperCenter, new Color(0.44f, 0.36f, 0.26f));
                 Place(count.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 20, 16),
                     new Vector2(0, -46));
                 count.text = empty > 0 ? $"{have} bottles · {empty} out" : $"{have} bottles";
 
                 // The bottles themselves, just their art, under the heading.
-                var icons = NewRect("Icons", card);
+                var icons = NewRect("Icons", content);
                 Place(icons, new Vector2(0.5f, 0), new Vector2(grid.cellSize.x - 16, grid.cellSize.y - 74),
                     new Vector2(0, 8));
                 var ig = icons.gameObject.AddComponent<GridLayoutGroup>();
@@ -1174,8 +1194,13 @@ namespace LastCall.DebugUI
             var outline = title.gameObject.AddComponent<UnityEngine.UI.Outline>();
             outline.effectColor = new Color(0.10f, 0.06f, 0.03f, 1f);
             outline.effectDistance = new Vector2(2.5f, 2.5f);
-            Place(title.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BoardW * 0.6f, 34),
-                new Vector2(BoardW * PaperCX, BoardH * (PaperCY + PaperH * 0.5f) - 4f));
+            // Kept inside the clip: it wraps and shrinks to fit rather than running past the metal.
+            Place(title.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(232, 44),
+                new Vector2(BoardW * PaperCX, BoardH * (PaperCY + PaperH * 0.5f) + 2f));
+            title.horizontalOverflow = HorizontalWrapMode.Wrap;
+            title.verticalOverflow = VerticalWrapMode.Truncate;
+            title.resizeTextForBestFit = true;
+            title.resizeTextMinSize = 9; title.resizeTextMaxSize = 19;
             title.text = "MAKE A DRINK";
 
             // Left: a SCROLLABLE back-shelf of grouped item boxes — it grows as you buy more
@@ -1200,18 +1225,18 @@ namespace LastCall.DebugUI
             Place(side, new Vector2(0.5f, 0.5f), new Vector2(BoardW * PaperW, 54),
                 new Vector2(BoardW * PaperCX, BoardH * (PaperCY - PaperH * 0.5f) + 34f));
 
-            var actions = NewRect("Actions", side);
-            Place(actions, new Vector2(0.5f, 0.5f), new Vector2(240, 44), new Vector2(-70, 0));
+            // On the sheet itself and centred, so the page animation carries it too.
+            var actions = NewRect("Actions", _menuPanel);
+            Place(actions, new Vector2(0.5f, 0.5f), new Vector2(300, 52),
+                new Vector2(BoardW * PaperCX, BoardH * (PaperCY - PaperH * 0.5f) + 54f));
             var actLayout = actions.gameObject.AddComponent<HorizontalLayoutGroup>();
-            actLayout.spacing = 10f; actLayout.childControlWidth = true;
-            actLayout.childForceExpandWidth = true; actLayout.childControlHeight = true;
-            actLayout.childForceExpandHeight = true;
+            actLayout.childControlWidth = true; actLayout.childForceExpandWidth = true;
+            actLayout.childControlHeight = true; actLayout.childForceExpandHeight = true;
             AddFlexButton(actions, "SERVE  →", UITheme.PrimaryAction, () =>
             {
                 if (!Run.Glass.IsEmpty) GoTo(Stage.Serve);
             });
 
-            // The bin lines up under the close button, hard into the sheet's bottom-right.
             AddBinButton(_menuPanel);
         }
 
