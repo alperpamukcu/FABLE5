@@ -884,6 +884,9 @@ namespace LastCall.DebugUI
             // The metaball fluid draws over the vessel (pool); the solids float on top of it;
             // the bottle and prep pieces are created after, so they sit in front of the liquid.
             _shakerFluid = new MetaballFluid(_pourSurface);
+            // The tin's silhouette (bottom → rim): a full body that draws in to the neck, so the
+            // drink takes the shaker's shape instead of filling an invisible box (2026-07-24).
+            _shakerFluid.SetProfile(new[] { 0.85f, 0.89f, 0.93f, 0.96f, 0.99f, 1.00f, 0.78f, 0.55f });
             _shakerSolids = new ShakerSolids(_pourSurface);
             _shakerSplash = new Splasher(_pourSurface);
             // The metal shaker is opaque, so the fluid draws OVER it (2026-07-24): you see the
@@ -1023,6 +1026,8 @@ namespace LastCall.DebugUI
             }
 
             _serveFluid = new MetaballFluid(_serveSurface);
+            // The tumbler: a slightly narrower base opening out to the mouth.
+            _serveFluid.SetProfile(new[] { 0.88f, 0.93f, 0.96f, 0.98f, 1.00f, 1.00f });
             _serveSplash = new Splasher(_serveSurface);
             if (ItemArt.Glass != null) _serveGlass.SetAsLastSibling();   // clear glass over the fluid
 

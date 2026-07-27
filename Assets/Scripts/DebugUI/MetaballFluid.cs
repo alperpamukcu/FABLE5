@@ -72,8 +72,11 @@ namespace LastCall.DebugUI
         private const float Cell = Spacing;
         private static readonly int ViscCellR = Mathf.CeilToInt(H / Cell);
 
-        // Container (vessel interior) this frame: an axis-aligned rect rotated by _angle.
+        // Container (vessel interior) this frame: a rect rotated by _angle, narrowed at each
+        // height by an optional silhouette profile so the liquid takes the VESSEL's shape
+        // (a tapered tin, a tumbler) instead of filling an invisible box (2026-07-24).
         private float _cx, _cy, _halfW, _halfH, _angle;
+        private float[] _profile;   // half-width multipliers, bottom → rim; null = plain rect
         private float _fillTopY;                       // current liquid line (for spawns)
         private bool _poolSet;
 
@@ -201,18 +204,32 @@ namespace LastCall.DebugUI
             FitViewport();   // draw only over the vessel + its stream/splash margin
 
             // Enough particles to fill the liquid AREA at the rest spacing — so they pack up to
-            // the line, not into a puddle at the bottom. New ones rain in near the surface.
+            // the line, not into a puddle at the bottom. The area follows the vessel silhouette
+            // (a narrow tin holds less), so a profiled vessel is not overfilled.
             float fillH = _fillTopY - bottomY;
+            float widthScale = AverageProfile(fillFrac);
             int target = Mathf.Clamp(
-                Mathf.RoundToInt((2f * _halfW) * fillH / (Spacing * Spacing) * 1.64f), 0, MaxPool);
+                Mathf.RoundToInt((2f * _halfW * widthScale) * fillH / (Spacing * Spacing) * 1.64f),
+                0, MaxPool);
             while (_pn < target && _pn < MaxPool)
             {
-                _px[_pn] = _cx + Random.Range(-_halfW * 0.7f, _halfW * 0.7f);
+                _px[_pn] = _cx + Random.Range(-_halfW * 0.6f, _halfW * 0.6f);
                 _py[_pn] = _fillTopY + Random.Range(-6f, 10f);
                 _vx[_pn] = 0f; _vy[_pn] = -40f;
                 _pn++;
             }
             if (_pn > target) _pn = Mathf.Max(target, 0);   // served/emptied: drop the top ones
+        }
+
+        /// <summary>Mean silhouette width over the filled part of the vessel (0..fillFrac).</summary>
+        private float AverageProfile(float fillFrac)
+        {
+            if (_profile == null || _profile.Length == 0 || fillFrac <= 0f) return 1f;
+            const int steps = 8;
+            float sum = 0f;
+            for (int i = 0; i < steps; i++)
+                sum += HalfWidthAt(fillFrac * (i + 0.5f) / steps, 1f);
+            return sum / steps;
         }
 
         public void ClearPool() { _poolSet = false; _pn = 0; }
@@ -332,7 +349,25 @@ namespace LastCall.DebugUI
             ApplyViscosity();
         }
 
-        /// <summary>Clamps every particle inside the rotated vessel interior.</summary>
+        /// <summary>
+        /// The vessel's half-width at a height, <paramref name="t"/> running 0 (floor) → 1 (rim).
+        /// Without a profile the vessel is a plain box; with one, the liquid follows the real
+        /// silhouette — narrow at a shaker's neck, flared at a tumbler's mouth.
+        /// </summary>
+        private float HalfWidthAt(float t, float ix)
+        {
+            if (_profile == null || _profile.Length == 0) return ix;
+            float f = Mathf.Clamp01(t) * (_profile.Length - 1);
+            int i0 = Mathf.FloorToInt(f);
+            int i1 = Mathf.Min(i0 + 1, _profile.Length - 1);
+            return ix * Mathf.Lerp(_profile[i0], _profile[i1], f - i0);
+        }
+
+        /// <summary>Sets the vessel silhouette: half-width multipliers sampled bottom → rim.
+        /// Pass null for a plain rectangular interior.</summary>
+        public void SetProfile(float[] halfWidths) => _profile = halfWidths;
+
+        /// <summary>Clamps every particle inside the rotated vessel interior (profile-shaped).</summary>
         private void ClampToVessel()
         {
             float cos = Mathf.Cos(-_angle), sin = Mathf.Sin(-_angle);
@@ -343,8 +378,9 @@ namespace LastCall.DebugUI
             {
                 float ox = _px[i] - _cx, oy = _py[i] - _cy;
                 float lx = ox * cos - oy * sin, ly = ox * sin + oy * cos;
-                if (lx < -ix) lx = -ix; else if (lx > ix) lx = ix;
                 if (ly < -iy) ly = -iy; else if (ly > iy) ly = iy;
+                float w = HalfWidthAt((ly + iy) / (2f * iy), ix);   // the wall at this height
+                if (lx < -w) lx = -w; else if (lx > w) lx = w;
                 _px[i] = _cx + (lx * cosB - ly * sinB);
                 _py[i] = _cy + (lx * sinB + ly * cosB);
             }
