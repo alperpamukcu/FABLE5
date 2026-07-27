@@ -33,7 +33,8 @@ namespace LastCall.EditorTools
             // Frames and plates are stretched to fit their UI rect, so give them 9-slice
             // borders — otherwise the brass caps and rivets smear as the rect grows.
             string file = System.IO.Path.GetFileNameWithoutExtension(p);
-            if (file == "bar_frame") ti.spriteBorder = new Vector4(26, 10, 26, 10);
+            if (file == "plate") ti.spriteBorder = new Vector4(14, 12, 14, 8);
+            else if (file == "bar_frame") ti.spriteBorder = new Vector4(26, 10, 26, 10);
             else if (file == "tab_btn" || file == "tab_btn_down") ti.spriteBorder = new Vector4(18, 16, 18, 16);
         }
     }

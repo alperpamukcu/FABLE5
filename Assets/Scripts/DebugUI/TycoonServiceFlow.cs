@@ -333,8 +333,13 @@ namespace LastCall.DebugUI
             Place(barHost, new Vector2(0.5f, 0.5f), new Vector2(BoardW * PaperW - 30f, 46f),
                 new Vector2(BoardW * PaperCX, BoardH * (PaperCY + PaperH * 0.5f) - 84f));
             var frame = barHost.gameObject.AddComponent<Image>();
-            var barSprite = ItemArt.Load("bar_frame");
-            if (barSprite != null) { frame.sprite = barSprite; frame.type = Image.Type.Sliced; frame.color = Color.white; }
+            var barSprite = ItemArt.Load("plate");
+            if (barSprite != null)
+            {
+                // The same plate, tinted dark and sunk — a track the mix sits in.
+                frame.sprite = barSprite; frame.type = Image.Type.Sliced;
+                frame.color = new Color(0.26f, 0.22f, 0.19f);
+            }
             else frame.color = new Color(0.30f, 0.24f, 0.16f, 0.16f);
             frame.raycastTarget = false;
 
@@ -382,6 +387,8 @@ namespace LastCall.DebugUI
             seg.sizeDelta = new Vector2(width, -4);
             seg.anchoredPosition = new Vector2(x, 0);
             var img = seg.gameObject.AddComponent<Image>();
+            var chip = ItemArt.Load("plate");
+            if (chip != null) { img.sprite = chip; img.type = Image.Type.Sliced; }
             img.color = fill; img.raycastTarget = false;
 
             var text = NewText("Pct", seg, _body, 11, TextAnchor.MiddleCenter, ink);
@@ -436,22 +443,22 @@ namespace LastCall.DebugUI
                 var card = NewRect($"Grp_{type}", row);
                 var bg = card.gameObject.AddComponent<Image>();
                 var col = UITheme.TypeRamp[type][3];
-                var plate = ItemArt.Load("tab_btn");
-                var plateDown = ItemArt.Load("tab_btn_down");
+                var plate = ItemArt.Load("plate");
                 var btn = card.gameObject.AddComponent<Button>();
                 btn.targetGraphic = bg;
                 if (plate != null)
                 {
-                    // A raised panel that visibly sinks when you press it.
-                    bg.sprite = plate; bg.type = Image.Type.Sliced; bg.color = Color.white;
-                    if (plateDown != null)
-                    {
-                        btn.transition = Selectable.Transition.SpriteSwap;
-                        var sprites = btn.spriteState;
-                        sprites.pressedSprite = plateDown;
-                        sprites.selectedSprite = plate;
-                        btn.spriteState = sprites;
-                    }
+                    // One white 3D plate, tinted with the group's colour — so a new group is
+                    // just a new colour, never a new sprite.
+                    bg.sprite = plate; bg.type = Image.Type.Sliced;
+                    bg.color = col;
+                    btn.transition = Selectable.Transition.ColorTint;
+                    var cb = btn.colors;
+                    cb.normalColor = Color.white;
+                    cb.highlightedColor = new Color(1.08f, 1.08f, 1.08f, 1f);
+                    cb.pressedColor = new Color(0.78f, 0.78f, 0.78f, 1f);
+                    cb.fadeDuration = 0.06f;
+                    btn.colors = cb;
                 }
                 else bg.color = new Color(col.r, col.g, col.b, 0.20f);
                 var t = type;
@@ -470,18 +477,11 @@ namespace LastCall.DebugUI
                 var trig = card.gameObject.AddComponent<EventTrigger>();
                 trig.triggers.Add(press); trig.triggers.Add(release); trig.triggers.Add(leave);
 
-                var stripe = NewRect("Stripe", content);
-                stripe.anchorMin = new Vector2(0, 1); stripe.anchorMax = new Vector2(1, 1);
-                stripe.pivot = new Vector2(0.5f, 1);
-                stripe.offsetMin = new Vector2(18, -20); stripe.offsetMax = new Vector2(-18, -14);
-                var si = stripe.gameObject.AddComponent<Image>();
-                si.color = new Color(col.r, col.g, col.b, 0.92f); si.raycastTarget = false;
-
-                var name = Handwritten(NewText("N", content, _display, 17, TextAnchor.MiddleCenter, new Color(0.24f, 0.16f, 0.09f)));
+                var name = Handwritten(NewText("N", content, _display, 17, TextAnchor.MiddleCenter, Color.black));
                 Place(name.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(grid.cellSize.x - 20, 26), new Vector2(0, 8));
                 name.text = GroupName(t);
 
-                var count = Handwritten(NewText("C", content, _body, 11, TextAnchor.UpperCenter, new Color(0.44f, 0.36f, 0.26f)));
+                var count = Handwritten(NewText("C", content, _body, 11, TextAnchor.UpperCenter, new Color(0.12f, 0.12f, 0.12f)));
                 Place(count.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 20, 16),
                     new Vector2(0, -46));
                 count.text = empty > 0 ? $"{have} bottles · {empty} out" : $"{have} bottles";
@@ -1235,8 +1235,8 @@ namespace LastCall.DebugUI
 
             // On the sheet itself and centred, so the page animation carries it too.
             var actions = NewRect("Actions", _menuPanel);
-            Place(actions, new Vector2(0.5f, 0.5f), new Vector2(300, 52),
-                new Vector2(BoardW * PaperCX, BoardH * (PaperCY - PaperH * 0.5f) + 54f));
+            Place(actions, new Vector2(0.5f, 0.5f), new Vector2(212, 40),
+                new Vector2(BoardW * PaperCX, BoardH * (PaperCY - PaperH * 0.5f) + 30f));
             var actLayout = actions.gameObject.AddComponent<HorizontalLayoutGroup>();
             actLayout.childControlWidth = true; actLayout.childForceExpandWidth = true;
             actLayout.childControlHeight = true; actLayout.childForceExpandHeight = true;
