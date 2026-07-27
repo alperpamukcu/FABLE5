@@ -84,6 +84,13 @@ namespace LastCall.DebugUI
         private IngredientType? _menuTab;   // null = the section index page
         private Text _menuTitle;
         private RectTransform _menuBack;
+        // Turning a page (2026-07-24): the sheet is taken by its bottom-right and folded over
+        // going in, and lifted back the other way coming out.
+        private IngredientType? _flipTo;
+        private float _flipT = 1f;
+        private int _flipDir;
+        private const float FlipTime = 0.34f;
+        private const float CornerSize = 52f, CornerInset = 30f;   // identical for every corner
         private RectTransform _mixBar;
 
         private RectTransform _pourBottle;    // the grabbable bottle
@@ -169,6 +176,7 @@ namespace LastCall.DebugUI
         private void Update()
         {
             AdvanceStageOpen();
+            AdvancePageTurn();
 
             var run = Run;
             if (run == null) return;
@@ -212,7 +220,7 @@ namespace LastCall.DebugUI
             _shakerPanel.gameObject.SetActive(stage == Stage.Shaker);
             _servePanel.gameObject.SetActive(stage == Stage.Serve);
 
-            if (stage == Stage.Menu) { _menuTab = null; RefreshMenu(); }
+            if (stage == Stage.Menu) { _menuTab = null; _flipT = 1f; RefreshMenu(); }
             if (stage == Stage.Shaker) RefreshShaker();
             if (stage == Stage.Serve) RefreshServe();
 
@@ -246,6 +254,61 @@ namespace LastCall.DebugUI
         }
 
         // ── the menu ─────────────────────────────────────────────────────────────
+
+        /// <summary>Starts a page turn to <paramref name="tab"/> (null = back to the index).</summary>
+        private void OpenTab(IngredientType? tab)
+        {
+            if (_flipT < 1f) return;                 // already turning
+            _flipTo = tab;
+            _flipDir = tab != null ? 1 : -1;         // in = folded away, out = lifted back
+            _flipT = 0f;
+        }
+
+        /// <summary>Drives the turn: the sheet folds around its bottom-right corner, the page
+        /// is swapped at the halfway point, and it unfolds into the new one.</summary>
+        private void AdvancePageTurn()
+        {
+            if (_flipT >= 1f || _bottleList == null) return;
+            bool wasFirstHalf = _flipT < 0.5f;
+            _flipT = Mathf.MoveTowards(_flipT, 1f, Mathf.Max(Time.deltaTime, 1e-4f) / FlipTime);
+
+            if (wasFirstHalf && _flipT >= 0.5f)
+            {
+                _menuTab = _flipTo;                  // the page changes under the fold
+                RefreshMenu();
+            }
+
+            // 1 → 0 → 1 across the turn, pivoting on the corner the page is taken by.
+            float half = _flipT < 0.5f ? _flipT / 0.5f : (1f - _flipT) / 0.5f;
+            float fold = Mathf.Max(0.02f, 1f - (1f - half) * (1f - half));
+            _bottleList.pivot = _flipDir > 0 ? new Vector2(1f, 0f) : new Vector2(0f, 1f);
+            _bottleList.localScale = new Vector3(fold, Mathf.Lerp(0.94f, 1f, fold), 1f);
+            _bottleList.localRotation = Quaternion.Euler(0, 0, (1f - fold) * -6f * _flipDir);
+
+            if (_flipT >= 1f)
+            {
+                _bottleList.localScale = Vector3.one;
+                _bottleList.localRotation = Quaternion.identity;
+            }
+        }
+
+        private static int CountStockedGroups(TycoonRun run)
+        {
+            int n = 0;
+            foreach (var type in MenuOrder)
+            {
+                if (type == IngredientType.Garnish) continue;
+                foreach (var b in run.Shelf.Bottles)
+                    if (b.Ingredient.Type == type) { n++; break; }
+            }
+            return n;
+        }
+
+        /// <summary>A point inset from one of the paper's corners — every corner control uses
+        /// this, so they are geometrically symmetric rather than eyeballed.</summary>
+        private static Vector2 PaperCorner(int sx, int sy) => new Vector2(
+            BoardW * (PaperCX + sx * PaperW * 0.5f) - sx * CornerInset,
+            BoardH * (PaperCY + sy * PaperH * 0.5f) - sy * CornerInset);
 
         /// <summary>
         /// What is in the tin, as a single bar across the top of the sheet: one segment per
@@ -328,14 +391,19 @@ namespace LastCall.DebugUI
         /// <summary>Page one: one card per stocked section.</summary>
         private void BuildGroupPage(TycoonRun run)
         {
-            _menuTitle.text = "MAKE A DRINK";
+            _menuTitle.text = "★  MAKE A DRINK  ★";
             var row = NewRect("Groups", _bottleList);
             var grid = row.gameObject.AddComponent<GridLayoutGroup>();
             float areaW = _bottleList.rect.width, areaH = _bottleList.rect.height;
             grid.spacing = new Vector2(14, 14);
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = 3;
-            grid.cellSize = new Vector2((areaW - 28f) / 3f, (areaH - 14f) / 2f);
+            // Flows for however many groups the bar ends up carrying: three across, and the
+            // rows follow from the count.
+            int cols = 3;
+            int gRows = Mathf.Max(1, Mathf.CeilToInt(CountStockedGroups(run) / (float)cols));
+            grid.constraintCount = cols;
+            grid.cellSize = new Vector2((areaW - (cols - 1) * 14f) / cols,
+                Mathf.Min(210f, (areaH - (gRows - 1) * 14f) / gRows));
             grid.childAlignment = TextAnchor.MiddleCenter;
 
             foreach (var type in MenuOrder)
@@ -353,7 +421,7 @@ namespace LastCall.DebugUI
                 var btn = card.gameObject.AddComponent<Button>();
                 btn.targetGraphic = bg;
                 var t = type;
-                btn.onClick.AddListener(() => { _menuTab = t; RefreshMenu(); });
+                btn.onClick.AddListener(() => OpenTab(t));
 
                 var stripe = NewRect("Stripe", card);
                 stripe.anchorMin = new Vector2(0, 1); stripe.anchorMax = new Vector2(1, 1);
@@ -366,16 +434,41 @@ namespace LastCall.DebugUI
                 Place(name.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(grid.cellSize.x - 20, 26), new Vector2(0, 8));
                 name.text = GroupName(t);
 
-                var count = NewText("C", card, _body, 11, TextAnchor.MiddleCenter, new Color(0.44f, 0.36f, 0.26f));
-                Place(count.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(grid.cellSize.x - 20, 18), new Vector2(0, -14));
+                var count = NewText("C", card, _body, 11, TextAnchor.UpperCenter, new Color(0.44f, 0.36f, 0.26f));
+                Place(count.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 20, 16),
+                    new Vector2(0, -46));
                 count.text = empty > 0 ? $"{have} bottles · {empty} out" : $"{have} bottles";
+
+                // The bottles themselves, just their art, under the heading.
+                var icons = NewRect("Icons", card);
+                Place(icons, new Vector2(0.5f, 0), new Vector2(grid.cellSize.x - 16, grid.cellSize.y - 74),
+                    new Vector2(0, 8));
+                var ig = icons.gameObject.AddComponent<GridLayoutGroup>();
+                int iconCols = Mathf.Clamp(have, 1, 4);
+                float cell = Mathf.Min(46f, (grid.cellSize.x - 24f) / iconCols);
+                ig.cellSize = new Vector2(cell, cell);
+                ig.spacing = new Vector2(4, 4);
+                ig.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+                ig.constraintCount = iconCols;
+                ig.childAlignment = TextAnchor.MiddleCenter;
+                foreach (var b in run.Shelf.Bottles)
+                {
+                    if (b.Ingredient.Type != t) continue;
+                    var slot = NewRect($"I_{b.Ingredient.Id}", icons);
+                    var si2 = slot.gameObject.AddComponent<Image>();
+                    si2.sprite = ItemArt.Bottle(b.Ingredient.Info?.Style);
+                    si2.preserveAspect = true; si2.raycastTarget = false;
+                    si2.color = si2.sprite == null
+                        ? UITheme.StyleColor(b.Ingredient.Info?.Style, b.Ingredient.Type)
+                        : (b.IsEmpty ? new Color(1f, 1f, 1f, 0.35f) : Color.white);
+                }
             }
         }
 
         /// <summary>A section's page: its bottles, with prices, and a way back.</summary>
         private void BuildTabPage(TycoonRun run, IngredientType type)
         {
-            _menuTitle.text = GroupName(type);
+            _menuTitle.text = $"★  {GroupName(type)}  ★";
 
             var items = new List<ShelfBottle>();
             foreach (var b in run.Shelf.Bottles) if (b.Ingredient.Type == type) items.Add(b);
@@ -1023,9 +1116,8 @@ namespace LastCall.DebugUI
 
             // A red X in the board's top-right corner closes the whole flow.
             var close = NewRect("Close", _menuPanel);
-            Place(close, new Vector2(0.5f, 0.5f), new Vector2(44, 44),
-                new Vector2(BoardW * (PaperCX + PaperW * 0.5f) - 30f,
-                            BoardH * (PaperCY + PaperH * 0.5f) - 28f));
+            Place(close, new Vector2(0.5f, 0.5f), new Vector2(CornerSize, CornerSize),
+                PaperCorner(1, 1));
             var closeImg = close.gameObject.AddComponent<Image>();
             var closeSprite = ItemArt.Load("close_x");
             if (closeSprite != null) { closeImg.sprite = closeSprite; closeImg.preserveAspect = true; closeImg.color = Color.white; }
@@ -1042,26 +1134,28 @@ namespace LastCall.DebugUI
 
             // Its mirror on the paper's top-left: step back out of a section.
             _menuBack = NewRect("Back", _menuPanel);
-            Place(_menuBack, new Vector2(0.5f, 0.5f), new Vector2(44, 44),
-                new Vector2(BoardW * (PaperCX - PaperW * 0.5f) + 30f,
-                            BoardH * (PaperCY + PaperH * 0.5f) - 28f));
+            Place(_menuBack, new Vector2(0.5f, 0.5f), new Vector2(CornerSize, CornerSize),
+                PaperCorner(-1, 1));
             var backImg = _menuBack.gameObject.AddComponent<Image>();
-            backImg.color = new Color(0.30f, 0.24f, 0.15f, 0.85f);
+            var backSprite = ItemArt.Load("back_arrow");
+            if (backSprite != null) { backImg.sprite = backSprite; backImg.preserveAspect = true; backImg.color = Color.white; }
+            else backImg.color = new Color(0.62f, 0.15f, 0.17f);
             var backBtn = _menuBack.gameObject.AddComponent<Button>();
             backBtn.targetGraphic = backImg;
-            backBtn.onClick.AddListener(() => { _menuTab = null; RefreshMenu(); });
-            var backArrow = NewText("A", _menuBack, _display, 20, TextAnchor.MiddleCenter, new Color(0.97f, 0.93f, 0.86f));
-            Stretch(backArrow.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            backArrow.text = "←";
+            backBtn.onClick.AddListener(() => OpenTab(null));
+            if (backSprite == null)
+            {
+                var backArrow = NewText("A", _menuBack, _display, 20, TextAnchor.MiddleCenter, new Color(0.97f, 0.93f, 0.86f));
+                Stretch(backArrow.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                backArrow.text = "←";
+            }
 
-            var title = _menuTitle = NewText("Title", _menuPanel, _display, 17, TextAnchor.UpperCenter, new Color(0.34f, 0.22f, 0.12f));
-            Place(title.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BoardW * 0.5f, 30),
-                new Vector2(BoardW * PaperCX, BoardH * (PaperCY + PaperH * 0.5f) - 30f));
-            var rule = NewRect("TitleRule", _menuPanel);
-            Place(rule, new Vector2(0.5f, 0.5f), new Vector2(190, 2),
-                new Vector2(BoardW * PaperCX, BoardH * (PaperCY + PaperH * 0.5f) - 48f));
-            var ruleImg = rule.gameObject.AddComponent<Image>();
-            ruleImg.color = new Color(0.34f, 0.22f, 0.12f, 0.5f); ruleImg.raycastTarget = false;
+            var title = _menuTitle = NewText("Title", _menuPanel, _display, 19, TextAnchor.MiddleCenter, Color.white);
+            var outline = title.gameObject.AddComponent<UnityEngine.UI.Outline>();
+            outline.effectColor = new Color(0.10f, 0.06f, 0.03f, 1f);
+            outline.effectDistance = new Vector2(2.5f, 2.5f);
+            Place(title.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BoardW * 0.6f, 34),
+                new Vector2(BoardW * PaperCX, BoardH * (PaperCY + PaperH * 0.5f) + 16f));
             title.text = "MAKE A DRINK";
 
             // Left: a SCROLLABLE back-shelf of grouped item boxes — it grows as you buy more
@@ -1449,9 +1543,7 @@ namespace LastCall.DebugUI
         {
             // Just the bin — you click the object, not a button plate around it.
             var rt = NewRect("Bin", parent);
-            Place(rt, new Vector2(0.5f, 0.5f), new Vector2(74, 84),
-                new Vector2(BoardW * (PaperCX + PaperW * 0.5f) - 34f,
-                            BoardH * (PaperCY - PaperH * 0.5f) + 50f));
+            Place(rt, new Vector2(0.5f, 0.5f), new Vector2(52, 60), PaperCorner(1, -1) + new Vector2(0, 10f));
             var img = rt.gameObject.AddComponent<Image>();
             img.preserveAspect = true;
             img.sprite = ItemArt.Load("bin");
