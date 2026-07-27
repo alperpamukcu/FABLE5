@@ -372,8 +372,10 @@ namespace LastCall.DebugUI
         {
             float cos = Mathf.Cos(-_angle), sin = Mathf.Sin(-_angle);
             float cosB = Mathf.Cos(_angle), sinB = Mathf.Sin(_angle);
+            // Only a hair of inset vertically, so the liquid sits flush on the vessel floor
+            // rather than floating a rounded blob above it.
             float ix = Mathf.Max(_halfW - PoolRadius * 0.45f, 2f);
-            float iy = Mathf.Max(_halfH - PoolRadius * 0.45f, 2f);
+            float iy = Mathf.Max(_halfH - PoolRadius * 0.15f, 2f);
             for (int i = 0; i < _pn; i++)
             {
                 float ox = _px[i] - _cx, oy = _py[i] - _cy;

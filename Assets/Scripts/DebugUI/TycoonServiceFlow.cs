@@ -51,6 +51,7 @@ namespace LastCall.DebugUI
         // shaker's opening. Purely procedural placeholder art — P8 re-skins it.
         private RectTransform _pourSurface;   // the interaction area inside the shaker panel
         private RectTransform _shakerVessel;  // the target, opening at its top
+        private RectTransform _shakerTop;     // rim/dome/cap drawn over the liquid
         private RectTransform _pourBottle;    // the grabbable bottle
         private Image _pourBottleBody;
         private MetaballFluid _shakerFluid;   // the metaball liquid: pour stream + pooled body
@@ -437,8 +438,8 @@ namespace LastCall.DebugUI
             float minX = c.x - iw;
             float maxX = c.x + iw;
             float h = _shakerVessel.rect.height;
-            float bottomY = c.y - h * 0.5f + h * 0.072f;   // measured: cavity floor
-            float innerH = h * 0.539f;                      // measured: cavity floor → rim
+            float bottomY = c.y - h * 0.5f + h * 0.082f;   // measured: cavity floor
+            float innerH = h * 0.529f;                      // measured: cavity floor → rim
             float fill = (float)run.Glass.FillFraction;
             float rimY = bottomY + innerH;
             float topY = bottomY + innerH * fill + bob;
@@ -446,6 +447,12 @@ namespace LastCall.DebugUI
             float deg = _shakerVessel.localEulerAngles.z;
             if (deg > 180f) deg -= 360f;
             _shakerFluid.SetPool(minX, maxX, bottomY, rimY, fill, deg * Mathf.Deg2Rad);
+            if (_shakerTop != null)
+            {
+                _shakerTop.anchoredPosition = _shakerVessel.anchoredPosition;
+                _shakerTop.localRotation = _shakerVessel.localRotation;
+                _shakerTop.SetAsLastSibling();   // always above the fluid
+            }
             // The solids float on the liquid line and bounce off these same walls.
             _shakerSolids.SetBounds(minX, maxX, bottomY, topY);
         }
@@ -886,7 +893,18 @@ namespace LastCall.DebugUI
             _shakerFluid = new MetaballFluid(_pourSurface);
             // The tin's silhouette (bottom → rim): a full body that draws in to the neck, so the
             // drink takes the shaker's shape instead of filling an invisible box (2026-07-24).
-            _shakerFluid.SetProfile(new[] { 0.28f, 0.74f, 0.81f, 0.86f, 0.91f, 0.95f, 0.98f, 1.00f });
+            _shakerFluid.SetProfile(new[] { 0.66f, 0.74f, 0.83f, 0.86f, 0.91f, 0.95f, 0.98f, 1.00f });
+            // The tin's rim, dome and cap ride ABOVE the liquid (2026-07-24): the fluid draws
+            // over the open body to show the level, but it must never cover the cap.
+            _shakerTop = NewRect("ShakerTop", _pourSurface);
+            _shakerTop.anchorMin = _shakerTop.anchorMax = _shakerTop.pivot = new Vector2(0.5f, 0.5f);
+            _shakerTop.sizeDelta = _shakerVessel.sizeDelta;
+            _shakerTop.anchoredPosition = _shakerVessel.anchoredPosition;
+            var topImg = _shakerTop.gameObject.AddComponent<Image>();
+            topImg.sprite = ItemArt.Load("shaker_top");
+            topImg.preserveAspect = true; topImg.raycastTarget = false;
+            _shakerTop.gameObject.SetActive(topImg.sprite != null);
+
             _shakerSolids = new ShakerSolids(_pourSurface);
             _shakerSplash = new Splasher(_pourSurface);
             // The metal shaker is opaque, so the fluid draws OVER it (2026-07-24): you see the
