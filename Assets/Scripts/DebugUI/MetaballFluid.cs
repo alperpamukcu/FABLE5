@@ -44,7 +44,7 @@ namespace LastCall.DebugUI
         private const float MaxSpeed = 1300f;
         private const float RestDamping = 0.94f;
         private const float ShakeDamping = 0.995f;   // barely damped while the tin is moving
-        private const float ShakeViscosity = 0.10f;  // and much freer to move against itself         // bleeds off the energy the solver adds
+        private const float ShakeViscosity = 0.22f;  // freer to move, but still one body         // bleeds off the energy the solver adds
         private const float SleepSpeed = 30f;
         private const int MaxNeighbours = 24;   // hard cap per particle per pass — bounds the frame
         private const float MinProfile = 0f;      // the interior is shaped by the profile alone now             // below this a particle is simply at rest
@@ -565,11 +565,15 @@ namespace LastCall.DebugUI
         {
             if (_material == null) return;
             int count = 0;
+            // A shaken drink spreads out, and spread particles thin the metaball field between
+            // them — which reads as the drink losing volume. Give each one a little more reach
+            // while the tin is moving so the body stays as solid as it is when it is still.
+            float r = _vesselSpeed > 40f ? PoolRadius * 1.18f : PoolRadius;
             for (int i = 0; i < _pn && count < RenderMax; i++)
             {
                 ToSurface(_px[i], _py[i], out float sx, out float sy);
                 var uv = ToUv(sx, sy);
-                _dropData[count++] = new Vector4(uv.x, uv.y, PoolRadius, 1f);
+                _dropData[count++] = new Vector4(uv.x, uv.y, r, 1f);
             }
             for (int i = 0; i < MaxDrops && count < RenderMax; i++)
             {
