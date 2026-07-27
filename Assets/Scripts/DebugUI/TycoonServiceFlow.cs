@@ -358,7 +358,7 @@ namespace LastCall.DebugUI
 
         private void RefreshMixBar()
         {
-            if (_mixBar == null) return;
+            if (_mixBar == null) return;   // the gauge is shelved for now
             foreach (Transform child in _mixBar) Destroy(child.gameObject);
 
             var run = Run;
@@ -417,7 +417,6 @@ namespace LastCall.DebugUI
             if (_menuBack != null) _menuBack.gameObject.SetActive(_menuTab != null);
             if (_menuTab == null) BuildGroupPage(run); else BuildTabPage(run, _menuTab.Value);
 
-            RefreshMixBar();
         }
 
         /// <summary>Page one: one card per stocked section.</summary>
@@ -431,11 +430,13 @@ namespace LastCall.DebugUI
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             // Flows for however many groups the bar ends up carrying: three across, and the
             // rows follow from the count.
-            int cols = 2;
-            int gRows = Mathf.Max(1, Mathf.CeilToInt(CountStockedGroups(run) / (float)cols));
+            int cols = 3;
+            // A 3x3 board: five groups today (spirits, bitters, sweet, sour, mixers) with room
+            // for whatever the bar grows into, and the cells stay the same size either way.
+            const int gRows = 3;
             grid.constraintCount = cols;
             grid.cellSize = new Vector2((areaW - (cols - 1) * 14f) / cols,
-                Mathf.Min(96f, (areaH - (gRows - 1) * 14f) / gRows));
+                Mathf.Min(150f, (areaH - (gRows - 1) * 14f) / gRows));
             grid.childAlignment = TextAnchor.MiddleCenter;
 
             foreach (var type in MenuOrder)
@@ -450,6 +451,7 @@ namespace LastCall.DebugUI
                 var bg = card.gameObject.AddComponent<Image>();
                 var col = UITheme.TypeRamp[type][3];
                 var plate = ItemArt.Load("plate");
+                var plateDown = ItemArt.Load("plate_down");
                 var btn = card.gameObject.AddComponent<Button>();
                 btn.targetGraphic = bg;
                 if (plate != null)
@@ -458,13 +460,22 @@ namespace LastCall.DebugUI
                     // just a new colour, never a new sprite.
                     bg.sprite = plate; bg.type = Image.Type.Sliced;
                     bg.color = col;
-                    btn.transition = Selectable.Transition.ColorTint;
-                    var cb = btn.colors;
-                    cb.normalColor = Color.white;
-                    cb.highlightedColor = new Color(1.08f, 1.08f, 1.08f, 1f);
-                    cb.pressedColor = new Color(0.60f, 0.60f, 0.60f, 1f);
-                    cb.fadeDuration = 0.06f;
-                    btn.colors = cb;
+                    if (plateDown != null)
+                    {
+                        btn.transition = Selectable.Transition.SpriteSwap;
+                        var st = btn.spriteState;
+                        st.pressedSprite = plateDown; st.selectedSprite = plate;
+                        btn.spriteState = st;
+                    }
+                    else
+                    {
+                        btn.transition = Selectable.Transition.ColorTint;
+                        var cb = btn.colors;
+                        cb.normalColor = Color.white;
+                        cb.pressedColor = new Color(0.62f, 0.62f, 0.62f, 1f);
+                        cb.fadeDuration = 0.05f;
+                        btn.colors = cb;
+                    }
                 }
                 else bg.color = new Color(col.r, col.g, col.b, 0.20f);
                 var t = type;
@@ -476,23 +487,24 @@ namespace LastCall.DebugUI
                 Stretch(content, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 var sink = card.gameObject.AddComponent<PressSink>();
                 sink.Face = content;
+                sink.Depth = 4f; sink.Squash = 0.015f;
 
                 var name = Handwritten(NewText("N", content, _display, 15, TextAnchor.MiddleCenter, Color.black));
-                Place(name.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 24, 22), new Vector2(0, -10));
+                Place(name.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 24, 24), new Vector2(0, -14));
                 name.text = GroupName(t);
 
                 var count = Handwritten(NewText("C", content, _body, 11, TextAnchor.UpperCenter, new Color(0.12f, 0.12f, 0.12f)));
                 Place(count.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 24, 14),
-                    new Vector2(0, -32));
+                    new Vector2(0, -38));
                 count.text = empty > 0 ? $"{have} bottles · {empty} out" : $"{have} bottles";
 
                 // The bottles themselves, just their art, under the heading.
                 var icons = NewRect("Icons", content);
-                Place(icons, new Vector2(0.5f, 0), new Vector2(grid.cellSize.x - 20, grid.cellSize.y - 52),
-                    new Vector2(0, 6));
+                Place(icons, new Vector2(0.5f, 0), new Vector2(grid.cellSize.x - 20, grid.cellSize.y - 62),
+                    new Vector2(0, 10));
                 var ig = icons.gameObject.AddComponent<GridLayoutGroup>();
                 int iconCols = Mathf.Clamp(have, 1, 4);
-                float cell = Mathf.Min(34f, (grid.cellSize.x - 28f) / iconCols);
+                float cell = Mathf.Min(40f, (grid.cellSize.x - 28f) / iconCols);
                 ig.cellSize = new Vector2(cell, cell);
                 ig.spacing = new Vector2(4, 4);
                 ig.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
@@ -1160,7 +1172,6 @@ namespace LastCall.DebugUI
             if (board != null) { boardImg.sprite = board; boardImg.preserveAspect = true; boardImg.color = Color.white; }
             else boardImg.color = UITheme.Night[1];
             Swallow(_menuPanel);
-            BuildMixBar();
 
             // A red X in the board's top-right corner closes the whole flow.
             var close = NewRect("Close", _menuPanel);
@@ -1217,8 +1228,8 @@ namespace LastCall.DebugUI
             // stock count in RefreshMenu, so a growing bar packs tighter instead of scrolling.
             _bottleList = NewRect("Bottles", _menuPanel);
             Place(_bottleList, new Vector2(0.5f, 0.5f),
-                new Vector2(BoardW * PaperW - 44f, BoardH * PaperH - 148f),
-                new Vector2(BoardW * PaperCX, BoardH * PaperCY - 34f));
+                new Vector2(BoardW * PaperW - 44f, BoardH * PaperH - 112f),
+                new Vector2(BoardW * PaperCX, BoardH * PaperCY - 20f));
             var listLayout = _bottleList.gameObject.AddComponent<VerticalLayoutGroup>();
             listLayout.spacing = GridGap; listLayout.childControlHeight = true;
             listLayout.childControlWidth = true; listLayout.childForceExpandWidth = true;
