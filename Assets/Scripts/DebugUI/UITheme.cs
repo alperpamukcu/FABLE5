@@ -21,6 +21,9 @@ namespace LastCall.DebugUI
         public static readonly Color[] ClubBlue = Ramp(0x131B3D, 0x1F2E66, 0x2E4699, 0x4467CC, 0x6E93F0);
         public static readonly Color[] Lime = Ramp(0x16331B, 0x2A5926, 0x479938, 0x6FCC4B, 0xA8F077);
         public static readonly Color[] Cream = Ramp(0x453E38, 0x6E6459, 0x9C8F80, 0xC9BCA8, 0xF2E8D5);
+        // Beer's own ramp (GDD 21 §10): darker and browner than the spirits' amber, so a tap
+        // key is never mistaken for a bottle key at a glance.
+        public static readonly Color[] Malt = Ramp(0x3A2410, 0x6B4416, 0x9E6A1D, 0xC98F2B, 0xE6B959);
 
         // ── semantic roles ──────────────────────────────────────────────────────
         public static Color TextPrimary => Cream[4];      // Cream 5 on dark
@@ -45,6 +48,7 @@ namespace LastCall.DebugUI
             [IngredientType.Bitter] = ViceRed,
             [IngredientType.Bubbly] = Cyan,
             [IngredientType.Garnish] = Cream,
+            [IngredientType.Beer] = Malt,
         };
 
         // ── emotion → ramp (GDD 19 §1); index by [step] ─────────────────────────
@@ -96,6 +100,9 @@ namespace LastCall.DebugUI
             ["soda"] = Ramp(0x7DF0E3)[0],
             ["mint"] = Ramp(0xA8F077)[0],
             ["olive"] = Ramp(0x479938)[0],
+            ["lager"] = Ramp(0xE6B959)[0],
+            ["stout"] = Ramp(0x4A2E1C)[0],
+            ["pale_ale"] = Ramp(0xD98A2B)[0],
         };
 
         /// <summary>The style's signature colour; falls back to the type ramp.</summary>
@@ -122,7 +129,16 @@ namespace LastCall.DebugUI
             ["ginger"]   = (Color)new Color32(0xD3, 0x92, 0x3C, 0xFF),   // golden
             ["mint"]     = (Color)new Color32(0xA6, 0xDE, 0x80, 0xFF),   // pale green
             ["olive"]    = (Color)new Color32(0xB7, 0xBE, 0x6A, 0xFF),   // brine
+            ["lager"]    = (Color)new Color32(0xE8, 0xB0, 0x3E, 0xFF),   // pale gold
+            ["stout"]    = (Color)new Color32(0x2A, 0x18, 0x10, 0xFF),   // near black
+            ["pale_ale"] = (Color)new Color32(0xD4, 0x82, 0x24, 0xFF),   // deep copper
         };
+
+        /// <summary>The head on a draught (GDD 21 §10). Off-white, and creamier on the dark
+        /// beers, so the foam reads as part of the same pint rather than a white bar on top.</summary>
+        public static Color HeadColor(string style) =>
+            style == "stout" ? (Color)new Color32(0xE4, 0xD2, 0xB4, 0xFF)
+                             : (Color)new Color32(0xF7, 0xF0, 0xDE, 0xFF);
 
         /// <summary>The colour of the actual liquid for a style; clear spirits read pale.
         /// Falls back to a soft body tone of the ingredient type when the style is unmapped.</summary>

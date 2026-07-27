@@ -39,7 +39,10 @@ namespace LastCall.Core
 
         /// <summary>Share of the head that collapses back into beer each second. Standing still
         /// rescues a botched pull — at the price of the customer's patience.</summary>
-        public const double SettlePerSecond = 0.18;
+        // Half the head is gone in about nine seconds. Measured at 0.18 first, which cleared
+        // a good pint before it could reach the customer — the rescue has to be slow enough
+        // to be a decision, not so fast that standing still is the only outcome.
+        public const double SettlePerSecond = 0.08;
 
         /// <summary>How much liquid a collapsing head leaves behind — the rest was air. This is
         /// why a settled pint needs topping up, and why froth cannot simply be waited out into

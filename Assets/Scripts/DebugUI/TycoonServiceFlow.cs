@@ -30,7 +30,7 @@ namespace LastCall.DebugUI
         private Font _body;
         private Font _display;
 
-        private enum Stage { Closed, Menu, Shaker, Serve }
+        private enum Stage { Closed, Menu, Shaker, Serve, Tap }
         private Stage _stage = Stage.Closed;
 
         private RectTransform _root;        // the whole modal (scrim + panels)
@@ -157,6 +157,23 @@ namespace LastCall.DebugUI
         private Image _serveShakerBody;
         private MetaballFluid _serveFluid;      // the metaball liquid in the serving glass
         private Splasher _serveSplash;
+
+        // The tap (GDD 21 §10): a font you pull the handle on, over the pint it fills. There is
+        // no shaker in this stage and no aiming — the whole skill is how far the handle is held.
+        private RectTransform _tapPanel, _tapSurface, _tapHandle, _tapGlass, _tapHeadBand, _tapBandMark, _tapBandMarkHigh;
+        private MetaballFluid _tapFluid;
+        private Image _tapKeg;
+        private Text _tapTitle, _tapReadout, _tapVerdict;
+        private IngredientCard _tapKegCard;
+        private bool _handleHeld;
+        private float _pull;             // 0 = shut, 1 = wide open
+        private float _handleGrabY;      // pointer y when the handle was taken
+        /// <summary>Screen units of drag that opens the tap fully. Long enough that the bottom
+        /// of the travel — the part that pours clean — is a real place, not one pixel.</summary>
+        private const float PullTravel = 150f;
+        private const float HandleTilt = 62f;   // degrees at a full pull
+        /// <summary>How far left of the font's centre the spout hangs — the glass goes under it.</summary>
+        private const float SpoutReach = 118f;
         private Text _aimText;
         private Vector2 _serveShakerRest;
         private bool _serveGrabbed;
@@ -201,6 +218,8 @@ namespace LastCall.DebugUI
             if (_stage == Stage.Shaker) { UpdateShake(run); UpdatePrepDrag(run); UpdateTiltPour(run); UpdateCap(run); }
 
             if (_stage == Stage.Serve) UpdateServeTilt(run);
+
+            if (_stage == Stage.Tap) UpdateTap(run);
         }
 
         // ── stage transitions ────────────────────────────────────────────────────
@@ -228,15 +247,22 @@ namespace LastCall.DebugUI
 
             _shakerPanel.gameObject.SetActive(stage == Stage.Shaker);
             _servePanel.gameObject.SetActive(stage == Stage.Serve);
+            _tapPanel.gameObject.SetActive(stage == Stage.Tap);
+            _handleHeld = false;
+            _pull = 0f;
+            _tapFluid?.Clear();
+            if (Run != null && Run.PullingId != null) Run.EndPull();
 
             if (stage == Stage.Menu) { _menuTab = null; _flipT = 1f; ResetPageSlide(); RefreshMenu(); }
             if (stage == Stage.Shaker) RefreshShaker();
             if (stage == Stage.Serve) RefreshServe();
+            if (stage == Stage.Tap) RefreshTap();
 
             // Play the window that just opened.
             _stageRect = stage == Stage.Menu ? _menuPanel
                        : stage == Stage.Shaker ? _shakerPanel
-                       : stage == Stage.Serve ? _servePanel : null;
+                       : stage == Stage.Serve ? _servePanel
+                       : stage == Stage.Tap ? _tapPanel : null;
             if (_stageRect != null)
             {
                 // Unity's GetComponent returns a fake-null, which ?? happily hands back — check it.
@@ -259,6 +285,9 @@ namespace LastCall.DebugUI
                 RefreshMenu();
                 return;
             }
+            // Beer never enters the shaker (GDD 21 §10): the keg opens the tap instead, and the
+            // glass it fills is the one that goes out.
+            if (card.Type == IngredientType.Beer) { GoTo(Stage.Tap); return; }
             GoTo(Stage.Shaker);
         }
 
@@ -623,6 +652,9 @@ namespace LastCall.DebugUI
 
         private static readonly IngredientType[] MenuOrder =
         {
+            // Beer leads: it is the order you answer without thinking (GDD 21 §10), so it sits
+            // where the hand already is rather than at the end of the cocktail sections.
+            IngredientType.Beer,
             IngredientType.Spirit, IngredientType.Bitter, IngredientType.Sweet,
             IngredientType.Sour, IngredientType.Bubbly, IngredientType.Garnish,
         };
@@ -636,6 +668,7 @@ namespace LastCall.DebugUI
                 case IngredientType.Sweet: return "SWEET";
                 case IngredientType.Sour: return "SOUR / CITRUS";
                 case IngredientType.Bubbly: return "MIXERS";
+                case IngredientType.Beer: return "ON TAP";
                 default: return "GARNISHES";
             }
         }
@@ -643,7 +676,9 @@ namespace LastCall.DebugUI
         /// <summary>The name as it fits on a key — one word, so the heading never wraps onto the
         /// bottle count underneath it. The section page still uses the full name.</summary>
         private static string GroupKeyName(IngredientType type)
-            => type == IngredientType.Sour ? "CITRUS" : GroupName(type);
+            => type == IngredientType.Sour ? "CITRUS"
+             : type == IngredientType.Beer ? "BEER"
+             : GroupName(type);
 
         private void AddGroupHeader(RectTransform parent, string title, Color colour)
         {
@@ -1267,6 +1302,7 @@ namespace LastCall.DebugUI
             BuildMenuPanel();
             BuildShakerPanel();
             BuildServePanel();
+            BuildTapPanel();
 
             _root.gameObject.SetActive(false);
         }
@@ -1668,6 +1704,285 @@ namespace LastCall.DebugUI
             var doneLabel = NewText("Label", done, _body, 13, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
             Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             doneLabel.text = "SERVE IT → PICK A SEAT";
+        }
+
+        // ── the tap (GDD 21 §10) ─────────────────────────────────────────────────
+
+        private void BuildTapPanel()
+        {
+            _tapPanel = NewRect("TapPanel", _root);
+            Place(_tapPanel, new Vector2(0.5f, 0.5f), new Vector2(1120, 640), Vector2.zero);
+            _tapPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
+            Swallow(_tapPanel);
+
+            _tapTitle = NewText("Title", _tapPanel, _display, 16, TextAnchor.UpperCenter, UITheme.TextPrimary);
+            Stretch(_tapTitle.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -46), new Vector2(0, -18));
+
+            var hint = NewText("Hint", _tapPanel, _body, 8, TextAnchor.UpperCenter, UITheme.TextSecondary);
+            Stretch(hint.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -68), new Vector2(0, -44));
+            hint.text = "HOLD THE HANDLE AND PULL DOWN · EASE IT OPEN FOR A CLEAN POUR";
+
+            _tapSurface = NewRect("TapSurface", _tapPanel);
+            Stretch(_tapSurface, Vector2.zero, Vector2.one, new Vector2(20, 84), new Vector2(-20, -82));
+            var surf = _tapSurface.gameObject.AddComponent<Image>();
+            surf.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.5f);
+            surf.raycastTarget = false;
+
+            // The keg stands off to the right, plainly the thing the beer is coming out of.
+            var keg = NewRect("Keg", _tapSurface);
+            Place(keg, new Vector2(0.5f, 0.5f), new Vector2(224, 296), new Vector2(300, -40));
+            _tapKeg = keg.gameObject.AddComponent<Image>();
+            _tapKeg.preserveAspect = true; _tapKeg.raycastTarget = false;
+
+            // The font, and the pint under its spout. Everything here hangs off the tower, so
+            // moving the tower moves the whole rig and the spout stays over the glass.
+            var tower = NewRect("Tower", _tapSurface);
+            var towerPos = new Vector2(20, -30);
+            var towerSize = new Vector2(150, 262);
+            Place(tower, new Vector2(0.5f, 0.5f), towerSize, towerPos);
+            var towerImg = tower.gameObject.AddComponent<Image>();
+            towerImg.sprite = ItemArt.Load("tap");
+            towerImg.preserveAspect = true; towerImg.raycastTarget = false;
+            if (towerImg.sprite == null) towerImg.color = UITheme.Amber[2];
+
+            _tapGlass = NewRect("Pint", _tapSurface);
+            Place(_tapGlass, new Vector2(0.5f, 0.5f), new Vector2(148, 240),
+                towerPos + new Vector2(-SpoutReach, -54));
+            var pint = _tapGlass.gameObject.AddComponent<Image>();
+            pint.sprite = ItemArt.Load("pint");
+            pint.preserveAspect = true; pint.raycastTarget = false;
+            if (pint.sprite == null) pint.color = UITheme.Cream[2];
+
+            _tapFluid = new MetaballFluid(_tapSurface);
+            // A pint glass: narrow foot opening steadily out to the mouth.
+            _tapFluid.SetProfile(new[] { 0.82f, 0.88f, 0.93f, 0.97f, 1.00f, 1.00f });
+
+            // The head, drawn as its own band on top of the beer rather than as more fluid —
+            // foam is a different material and reading it has to be instant.
+            _tapHeadBand = NewRect("Head", _tapSurface);
+            _tapHeadBand.gameObject.AddComponent<Image>().raycastTarget = false;
+            _tapHeadBand.gameObject.SetActive(false);
+
+            // Where a good head sits, marked on the glass so the target is visible while pouring
+            // and not a number to be memorised (GDD 21 §10.3).
+            _tapBandMark = NewRect("GoodBand", _tapSurface);
+            _tapBandMark.gameObject.AddComponent<Image>().raycastTarget = false;
+
+            if (pint.sprite != null) _tapGlass.SetAsLastSibling();   // the glass draws over its contents
+
+            // The handle: pivots at its brass collar, so pulling swings it toward you.
+            _tapHandle = NewRect("Handle", _tapSurface);
+            _tapHandle.pivot = new Vector2(0.5f, 0.06f);
+            _tapHandle.sizeDelta = new Vector2(60, 140);
+            _tapHandle.anchorMin = _tapHandle.anchorMax = new Vector2(0.5f, 0.5f);
+            // Seated on the font's cap: the handle is the thing you grab, so it has to look
+            // bolted to the tower rather than hovering over it.
+            _tapHandle.anchoredPosition = towerPos + new Vector2(0, towerSize.y * 0.5f - 42f);
+            var handleImg = _tapHandle.gameObject.AddComponent<Image>();
+            handleImg.sprite = ItemArt.Load("tap_handle");
+            handleImg.preserveAspect = true;
+            if (handleImg.sprite == null) handleImg.color = UITheme.Amber[1];
+            var grab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            grab.callback.AddListener(e =>
+            {
+                if (Run == null || Run.Phase != TycoonPhase.DayOpen) return;
+                _handleHeld = true;
+                _handleGrabY = ((PointerEventData)e).position.y;
+            });
+            _tapHandle.gameObject.AddComponent<EventTrigger>().triggers.Add(grab);
+
+            _tapReadout = NewText("Readout", _tapPanel, _body, 8, TextAnchor.LowerCenter, UITheme.TextSecondary);
+            Stretch(_tapReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(0, 52), new Vector2(0, 74));
+
+            _tapVerdict = Outlined(NewText("Verdict", _tapPanel, _display, 16, TextAnchor.LowerCenter, UITheme.TextPrimary));
+            Stretch(_tapVerdict.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(0, 74), new Vector2(0, 100));
+
+            var back = NewRect("Back", _tapPanel);
+            Place(back, new Vector2(0.5f, 0), new Vector2(240, 34), new Vector2(-130, 12));
+            back.gameObject.AddComponent<Image>().color = UITheme.Night[3];
+            back.gameObject.AddComponent<Button>().onClick.AddListener(() => GoTo(Stage.Menu));
+            var backLabel = NewText("Label", back, _body, 8, TextAnchor.MiddleCenter, UITheme.TextPrimary);
+            Stretch(backLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            backLabel.text = "← BACK TO THE MENU";
+
+            var done = NewRect("Done", _tapPanel);
+            Place(done, new Vector2(0.5f, 0), new Vector2(240, 34), new Vector2(130, 12));
+            done.gameObject.AddComponent<Image>().color = UITheme.PrimaryAction;
+            done.gameObject.AddComponent<Button>().onClick.AddListener(() =>
+            {
+                if (!Run.ServingGlass.IsEmpty) GoTo(Stage.Closed);
+            });
+            var doneLabel = NewText("Label", done, _body, 8, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
+            Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            doneLabel.text = "SERVE IT → PICK A SEAT";
+        }
+
+        private void RefreshTap()
+        {
+            var run = Run;
+            if (run == null) return;
+
+            _tapKegCard = _focusBottle;
+            _tapTitle.text = (_tapKegCard?.Name ?? "DRAUGHT").ToUpperInvariant();
+            var kegSprite = ItemArt.Bottle(_tapKegCard?.Info?.Style);
+            _tapKeg.sprite = kegSprite;
+            _tapKeg.color = kegSprite != null ? Color.white
+                : UITheme.StyleColor(_tapKegCard?.Info?.Style, IngredientType.Beer);
+
+            _tapFluid.SetColor(UITheme.LiquidColor(_tapKegCard?.Info?.Style, IngredientType.Beer));
+            var headImg = _tapHeadBand.GetComponent<Image>();
+            headImg.color = UITheme.HeadColor(_tapKegCard?.Info?.Style);
+
+            if (_tapKegCard != null && run.PullingId == null && run.Glass.IsEmpty)
+                run.BeginPull(_tapKegCard.Id);
+
+            PlaceGoodBandMark();
+            PushTapPool(run);
+            RefreshTapText(run);
+        }
+
+        /// <summary>
+        /// One frame at the tap. Holding the handle and dragging down opens it; the further it is
+        /// pulled the faster it pours and the more of what arrives is foam. Let go and the handle
+        /// springs shut. The head settles the whole time, whether or not you are pouring — which
+        /// is what makes standing still a real, and costly, way to fix a bad pull.
+        /// </summary>
+        private void UpdateTap(TycoonRun run)
+        {
+            float dt = Time.deltaTime;
+
+            if (_handleHeld)
+            {
+                if (!Input.GetMouseButton(0)) _handleHeld = false;
+                else
+                {
+                    float dragged = _handleGrabY - Input.mousePosition.y;
+                    _pull = Mathf.Clamp01(dragged / PullTravel);
+                }
+            }
+            if (!_handleHeld) _pull = Mathf.MoveTowards(_pull, 0f, dt * 6f);
+
+            _tapHandle.localRotation = Quaternion.Euler(0, 0, HandleTilt * _pull);
+
+            bool pouring = _pull > 0.02f && run.PullingId != null && run.ServingGlass.Headroom > 1e-4;
+            if (pouring)
+            {
+                double before = run.ServingGlass.TotalVolume + run.ServingGlass.Head;
+                run.PullTick(dt, _pull);
+
+                // The stream, from the spout down into the glass.
+                var (sx, _, _, sInnerTop) = PintInterior();
+                var spout = new Vector2(_tapGlass.anchoredPosition.x, sInnerTop + 40f);
+                _tapFluid.EmitStream(spout, new Vector2(0f, -260f), dt);
+                if (run.ServingGlass.TotalVolume + run.ServingGlass.Head != before) RefreshTapText(run);
+            }
+
+            run.SettleHead(dt);
+            PushTapPool(run);
+            _tapFluid.Step(dt);
+            if (!pouring) RefreshTapText(run);
+        }
+
+        /// <summary>Beer pools in the pint's interior; the head sits on it as its own band.</summary>
+        private void PushTapPool(TycoonRun run)
+        {
+            var glass = run.ServingGlass;
+            var (minX, maxX, bottomY, innerH) = PintInterior();
+
+            if (glass.IsEmpty) _tapFluid.ClearPool();
+            else
+            {
+                // The beer fills only up to where the foam starts, so the head really does take
+                // the top of the glass rather than being painted over the top of a full pint.
+                float beerFrac = (float)(glass.TotalVolume / glass.Capacity);
+                _tapFluid.SetPool(minX, maxX, bottomY, bottomY + innerH, beerFrac);
+            }
+
+            float head = (float)(glass.Head / glass.Capacity);
+            _tapHeadBand.gameObject.SetActive(head > 1e-4f);
+            if (head > 1e-4f)
+            {
+                // On the surface the player can see, not the fill line the pool was aimed at —
+                // the two differ enough to leave the foam floating over a gap.
+                float nominal = bottomY + innerH * (float)(glass.TotalVolume / glass.Capacity);
+                float beerTop = glass.TotalVolume > 0 ? _tapFluid.SurfaceY(nominal) : bottomY;
+                float bandH = innerH * head;
+                float top = Mathf.Min(beerTop + bandH, bottomY + innerH);
+                bandH = Mathf.Max(top - beerTop, 2f);
+                _tapHeadBand.anchorMin = _tapHeadBand.anchorMax = _tapHeadBand.pivot = new Vector2(0.5f, 0.5f);
+                _tapHeadBand.sizeDelta = new Vector2(maxX - minX, bandH);
+                _tapHeadBand.anchoredPosition = new Vector2((minX + maxX) * 0.5f, beerTop + bandH * 0.5f);
+            }
+        }
+
+        /// <summary>
+        /// Where the beer should stop and the head begin, marked on the glass (GDD 21 §10.3).
+        /// Two thin ticks against the inside wall rather than a filled band: a slab of colour
+        /// across the glass read as another layer of the drink, which is the one thing this
+        /// marker must never look like.
+        /// </summary>
+        private void PlaceGoodBandMark()
+        {
+            var (minX, maxX, bottomY, innerH) = PintInterior();
+            float span = (maxX - minX) * 0.34f;
+            var tint = new Color(UITheme.Lime[4].r, UITheme.Lime[4].g, UITheme.Lime[4].b, 0.85f);
+
+            PlaceTick(_tapBandMark, minX, span, bottomY + innerH * (float)(1.0 - TapPour.GoodHeadMax), tint);
+            if (_tapBandMarkHigh == null)
+            {
+                _tapBandMarkHigh = NewRect("GoodBandHigh", _tapSurface);
+                var img = _tapBandMarkHigh.gameObject.AddComponent<Image>();
+                img.raycastTarget = false;
+                _tapBandMarkHigh.SetSiblingIndex(_tapBandMark.GetSiblingIndex() + 1);
+            }
+            PlaceTick(_tapBandMarkHigh, minX, span, bottomY + innerH * (float)(1.0 - TapPour.GoodHeadMin), tint);
+        }
+
+        private static void PlaceTick(RectTransform rt, float leftX, float span, float y, Color tint)
+        {
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(span, 3f);
+            rt.anchoredPosition = new Vector2(leftX + span * 0.5f + 4f, y);
+            rt.GetComponent<Image>().color = tint;
+        }
+
+        /// <summary>The pint's drinkable interior, measured off the glass art.</summary>
+        private (float minX, float maxX, float bottomY, float innerH) PintInterior()
+        {
+            // Measured off the hollowed sprite rather than guessed: the drinkable cavity is
+            // 64 of its 108 px across and runs from 0.07 to 0.94 of its height. Guessing 0.72
+            // put the beer through the walls (2026-07-27).
+            var c = _tapGlass.anchoredPosition;
+            float halfW = _tapGlass.rect.width * 0.5f;
+            float h = _tapGlass.rect.height;
+            float iw = halfW * 0.58f;
+            float bottomY = c.y - h * 0.5f + h * 0.07f;
+            return (c.x - iw, c.x + iw, bottomY, h * 0.82f);
+        }
+
+        /// <summary>The pint's rim, in the surface's own space.</summary>
+        private float PintRimY()
+        {
+            var (_, _, bottomY, innerH) = PintInterior();
+            return bottomY + innerH;
+        }
+
+        private void RefreshTapText(TycoonRun run)
+        {
+            var glass = run.ServingGlass;
+            double head = glass.Head / glass.Capacity;
+            double score = TapPour.HeadScore(head);
+
+            int fillPct = (int)System.Math.Round(glass.FillFraction * 100);
+            int headPct = (int)System.Math.Round(head * 100);
+            double left = run.Shelf.Find(_tapKegCard?.Id ?? "")?.Remaining ?? 0;
+            _tapReadout.text = $"pint {fillPct}% full · head {headPct}% · {left:0.#} glasses left in the keg";
+
+            if (glass.IsEmpty) { _tapVerdict.text = "PULL THE HANDLE"; _tapVerdict.color = UITheme.TextSecondary; }
+            else if (glass.FillFraction < 0.75) { _tapVerdict.text = "SHORT POUR"; _tapVerdict.color = UITheme.Amber[3]; }
+            else if (score >= 1.0) { _tapVerdict.text = "GOOD PINT"; _tapVerdict.color = UITheme.Lime[3]; }
+            else if (head > TapPour.GoodHeadMax) { _tapVerdict.text = "TOO MUCH HEAD"; _tapVerdict.color = UITheme.ViceRed[3]; }
+            else { _tapVerdict.text = "FLAT — NEEDS A HEAD"; _tapVerdict.color = UITheme.ViceRed[3]; }
         }
 
         /// <summary>One source chip on the prep tray: pointer-down picks its piece up.</summary>

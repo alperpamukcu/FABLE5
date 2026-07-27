@@ -279,6 +279,43 @@ namespace LastCall.DebugUI
 
         public void ClearPool() { _poolSet = false; _pn = 0; }
 
+        /// <summary>
+        /// Where the drawn liquid actually ends, in surface space — taken from the particles
+        /// rather than from the fill line they were aimed at. Anything that has to sit ON the
+        /// drink (the head on a pint, GDD 21 §10) needs the surface it can see, not the one the
+        /// pool was asked for: the two differ by the packing and the metaball iso-offset, and
+        /// trusting the nominal line left a visible gap between the beer and its foam.
+        /// </summary>
+        public float SurfaceY(float fallback)
+        {
+            if (!_poolSet || _pn < 8) return fallback;
+
+            // Not the highest particle: one droplet still falling through the neck sits well
+            // above the body and dragged the reported surface up with it. Bin the particles by
+            // height and walk down until a bin holds enough of them to be the drink itself.
+            const int Bins = 64;
+            for (int i = 0; i < Bins; i++) _surfaceBins[i] = 0;
+            float span = _halfH * 2f;
+            for (int i = 0; i < _pn; i++)
+            {
+                int b = (int)((_py[i] + _halfH) / span * Bins);
+                if (b < 0) b = 0; else if (b >= Bins) b = Bins - 1;
+                _surfaceBins[b]++;
+            }
+
+            int need = Mathf.Max(2, _pn / 50);          // 2% of the body — a stray never reaches it
+            for (int b = Bins - 1; b >= 0; b--)
+            {
+                if (_surfaceBins[b] < need) continue;
+                float local = (b + 1f) / Bins * span - _halfH;
+                ToSurface(0f, local, out _, out float sy);
+                return sy;
+            }
+            return fallback;
+        }
+
+        private readonly int[] _surfaceBins = new int[64];
+
         /// <summary>A sideways nudge to the whole body — a shove of the glass (uv-ish impulse).</summary>
         public void Disturb(float lateralImpulse)
         {
