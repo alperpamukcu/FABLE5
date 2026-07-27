@@ -578,13 +578,13 @@ namespace LastCall.DebugUI
                 _shakerVessel.localRotation =
                     Quaternion.Euler(0, 0, Mathf.Clamp(-_shakerVel.x * 0.02f, -24f, 24f));
 
-                // The liquid sloshes opposite to the throw and gets jostled — waves slap the walls.
-                float lateral = -_shakerVel.x / Mathf.Max(_pourSurface.rect.width, 1f) * 0.22f;
-                _shakerFluid.Disturb(lateral);
-                float speed = _shakerVel.magnitude;
-                if (speed > 200f)
-                    _shakerFluid.Ripple(_shakerVessel.anchoredPosition.x + UnityEngine.Random.Range(-36f, 36f),
-                        Mathf.Min(speed / 8000f, 0.05f));
+                // The slosh comes from the fluid feeling the tin's acceleration (MetaballFluid
+                // reads the vessel's motion itself). The old Disturb/Ripple pokes that used to
+                // fake it are gone: they injected a one-way velocity into every particle on
+                // every frame, on top of the real inertia, and that compounded — the drink was
+                // driven into the wall and packed tighter and tighter until a full tin read as
+                // a puddle (measured: 100% -> 35% of its area over 16s of shaking). Ripple was
+                // also being handed a surface-space x while it now expects the tin's own frame.
             }
 
             _shakeMeterFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(200f * (float)_shakeEnergy), -4);

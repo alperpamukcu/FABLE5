@@ -46,7 +46,7 @@ namespace LastCall.DebugUI
         private const float ShakeDamping = 0.995f;   // barely damped while the tin is moving
         private const float ShakeViscosity = 0.22f;  // freer to move, but still one body         // bleeds off the energy the solver adds
         private const float SleepSpeed = 30f;
-        private const int MaxNeighbours = 24;   // hard cap per particle per pass — bounds the frame
+        private const int MaxNeighbours = 96;   // generous: a weak constraint is what let the clump form
         private const float MinProfile = 0f;      // the interior is shaped by the profile alone now             // below this a particle is simply at rest
         private const float WallFriction = 0.72f;     // (kept for API parity)
 
@@ -92,7 +92,7 @@ namespace LastCall.DebugUI
         private float _fillTopLocal;
         private float _shakeAx, _shakeAy;      // inertial acceleration from the vessel's motion
         private float _vcx, _vcy, _vesselSpeed;      // the vessel's own velocity, for inertia
-        private const float MaxShakeAccel = 11000f;  // ~8g: a real snap, still inside what the solver holds
+        private const float MaxShakeAccel = 5200f;   // ~4g: hard enough to slosh, soft enough to stay incompressible
         private float[] _profile;   // half-width multipliers, bottom → rim; null = plain rect
         private float _fillTopY;                       // current liquid line (for spawns)
         private bool _poolSet;
@@ -391,7 +391,7 @@ namespace LastCall.DebugUI
             // stuffs the grid cells so the neighbour sweep — and the frame — blows up.
             bool moving = _vesselSpeed > 40f;
             float damp = moving ? ShakeDamping : RestDamping;
-            float maxCorr = Spacing * 2.5f, maxCorr2 = maxCorr * maxCorr;
+            float maxCorr = Spacing * 4f, maxCorr2 = maxCorr * maxCorr;
             for (int i = 0; i < _pn; i++)
             {
                 float cxd = _px[i] - _qx[i], cyd = _py[i] - _qy[i];
