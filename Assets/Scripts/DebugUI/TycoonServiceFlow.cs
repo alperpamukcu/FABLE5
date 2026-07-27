@@ -559,10 +559,16 @@ namespace LastCall.DebugUI
 
             var items = new List<ShelfBottle>();
             foreach (var b in run.Shelf.Bottles) if (b.Ingredient.Type == type) items.Add(b);
+            float areaW = _bottleList.rect.width, areaH = _bottleList.rect.height;
 
             // Once the bottles need a second row the page scrolls, with inertia so it glides
             // rather than snapping.
             var scroller = NewRect("Scroll", _bottleList);
+            // The list lays its children out vertically and a ScrollRect reports no preferred
+            // size, so without this it collapses to 100x100 and the shelf vanishes.
+            var scrollFill = scroller.gameObject.AddComponent<LayoutElement>();
+            scrollFill.preferredWidth = areaW; scrollFill.preferredHeight = areaH;
+            scrollFill.flexibleHeight = 1f;
             var scroll = scroller.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false; scroll.vertical = true;
             scroll.scrollSensitivity = 34f; scroll.inertia = true;
@@ -582,7 +588,6 @@ namespace LastCall.DebugUI
             grid.sizeDelta = Vector2.zero;
             scroll.content = grid;
             var g = grid.gameObject.AddComponent<GridLayoutGroup>();
-            float areaW = _bottleList.rect.width, areaH = _bottleList.rect.height;
             int rows = Mathf.Max(1, Mathf.CeilToInt(items.Count / (float)MenuColumns));
             g.spacing = new Vector2(GridGap, GridGap);
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
