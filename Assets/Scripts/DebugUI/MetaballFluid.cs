@@ -34,7 +34,7 @@ namespace LastCall.DebugUI
         // derived from the fill area at Spacing, so it fills any vessel exactly.
         private const float H = 7.5f;                  // viscosity/neighbour radius (px)
         private const float Spacing = 3f;           // rest spacing (min distance) → many small particles
-        private const int   RelaxIters = 8;           // incompressibility relaxation passes
+        private const int   RelaxIters = 12;           // incompressibility relaxation passes
         // Render radius is well above the spacing so the fine, tightly-packed particles
         // overlap into ONE smooth connected surface with no gaps between them.
         private const float PoolRadius = 4.3f;
@@ -226,10 +226,14 @@ namespace LastCall.DebugUI
             // Enough particles to fill the liquid AREA at the rest spacing — so they pack up to
             // the line, not into a puddle at the bottom. The area follows the vessel silhouette
             // (a narrow tin holds less), so a profiled vessel is not overfilled.
-            float fillH = _fillTopY - bottomY;
+            // The usable area is the interior minus the render-radius inset on each wall, so the
+            // count matches the space the particles are actually allowed to occupy.
+            const float inset = PoolRadius * 0.75f;
+            float fillH = Mathf.Max(_fillTopY - bottomY - inset, 0f);
             float widthScale = AverageProfile(fillFrac);
             int target = Mathf.Clamp(
-                Mathf.RoundToInt((2f * _halfW * widthScale) * fillH / (Spacing * Spacing) * 1.155f),
+                Mathf.RoundToInt((2f * Mathf.Max(_halfW - inset, 1f) * widthScale) * fillH
+                                 / (Spacing * Spacing) * 1.155f),
                 0, MaxPool);
             _fillTopLocal = -_halfH + fillH;
             while (_pn < target && _pn < MaxPool)
@@ -416,8 +420,12 @@ namespace LastCall.DebugUI
         {
             // Local frame: the walls are axis-aligned here, so this is a straight compare —
             // no rotation per particle per iteration (the old hot path).
-            float ix = Mathf.Max(_halfW - PoolRadius * 0.45f, 2f);
-            float iy = Mathf.Max(_halfH - PoolRadius * 0.15f, 2f);
+            // Inset by the render radius: the metaball iso-surface reaches ~0.75r past a
+            // particle's centre, so holding the centres this far in lands the DRAWN edge of the
+            // liquid exactly on the wall, instead of bleeding through the floor and the rim.
+            const float edge = PoolRadius * 0.75f;
+            float ix = Mathf.Max(_halfW - edge, 2f);
+            float iy = Mathf.Max(_halfH - edge, 2f);
             for (int i = 0; i < _pn; i++)
             {
                 float ly = _py[i];
