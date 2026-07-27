@@ -42,9 +42,9 @@ namespace LastCall.DebugUI
         private const float FaceOffset = 0.53f;   // iso-surface reach past a floor/surface particle
         private const float Viscosity = 0.42f;        // 0..1 neighbour-velocity blend (more flow)
         private const float MaxSpeed = 1300f;
-        private const float RestDamping = 0.90f;         // bleeds off the energy the solver adds
+        private const float RestDamping = 0.94f;         // bleeds off the energy the solver adds
         private const float SleepSpeed = 30f;
-        private const float MinProfile = 0.62f;   // floor on the silhouette, in half-widths             // below this a particle is simply at rest
+        private const float MinProfile = 0f;      // the interior is shaped by the profile alone now             // below this a particle is simply at rest
         private const float WallFriction = 0.72f;     // (kept for API parity)
 
         // Viewport margins: room around the vessel for splashes and the falling stream column.
@@ -88,7 +88,7 @@ namespace LastCall.DebugUI
         // teleport into the liquid and crush it; the shaking arrives as an inertial force.
         private float _fillTopLocal;
         private float _shakeAx, _shakeAy;      // inertial acceleration from the vessel's motion
-        private const float ShakeGain = 170f;  // how hard the vessel's motion throws the drink
+        private const float ShakeGain = 300f;  // how hard the vessel's motion throws the drink
         private float[] _profile;   // half-width multipliers, bottom → rim; null = plain rect
         private float _fillTopY;                       // current liquid line (for spawns)
         private bool _poolSet;

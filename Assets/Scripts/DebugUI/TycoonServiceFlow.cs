@@ -438,8 +438,8 @@ namespace LastCall.DebugUI
             float minX = c.x - iw;
             float maxX = c.x + iw;
             float h = _shakerVessel.rect.height;
-            float bottomY = c.y - h * 0.5f + h * 0.0721f;  // measured: cavity floor
-            float innerH = h * 0.5385f;                     // measured: cavity floor → rim
+            float bottomY = c.y - h * 0.5f + h * 0.0913f;  // measured: above the rounded base
+            float innerH = h * 0.5192f;                     // measured: that floor → rim
             float fill = (float)run.Glass.FillFraction * (8f / 9f);   // shows a ninth less
             float rimY = bottomY + innerH;
             float topY = bottomY + innerH * fill + bob;
@@ -838,7 +838,7 @@ namespace LastCall.DebugUI
         private void BuildShakerPanel()
         {
             _shakerPanel = NewRect("ShakerPanel", _root);
-            Place(_shakerPanel, new Vector2(0.5f, 0.5f), new Vector2(720, 520), Vector2.zero);
+            Place(_shakerPanel, new Vector2(0.5f, 0.5f), new Vector2(1120, 640), Vector2.zero);
             _shakerPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
             Swallow(_shakerPanel);
 
@@ -858,7 +858,7 @@ namespace LastCall.DebugUI
 
             // The shaker vessel: a tapered tin, opening at the top, left of centre. Grab it to
             // shake — it becomes the toy you throw around.
-            _shakerHome = new Vector2(-120, -30);
+            _shakerHome = new Vector2(-210, -34);
             _shakerVessel = NewRect("Shaker", _pourSurface);
             Place(_shakerVessel, new Vector2(0.5f, 0.5f), new Vector2(168, 301), _shakerHome);
             var shakerImg = _shakerVessel.gameObject.AddComponent<Image>();
@@ -894,12 +894,13 @@ namespace LastCall.DebugUI
             // The tin's silhouette (bottom → rim): a full body that draws in to the neck, so the
             // drink takes the shaker's shape instead of filling an invisible box (2026-07-24).
             _shakerFluid.SetProfile(new[] {
-                // Sampled densely off the tin's cavity so the rounded base — which widens from
-                // 28% to 69% within the bottom 4% of the height — is followed exactly, instead
-                // of a slow ramp that left dark wedges in the bottom corners.
-                0.276f, 0.690f, 0.707f, 0.724f, 0.741f, 0.771f, 0.776f, 0.793f, 0.828f, 0.828f,
-                0.828f, 0.838f, 0.862f, 0.879f, 0.881f, 0.897f, 0.914f, 0.931f, 0.931f, 0.948f,
-                0.966f, 0.966f, 0.966f, 0.973f, 0.983f, 0.995f, 1.000f, 1.000f });
+                // The tin's cavity from just above its rounded base up to the rim. The pinched
+                // base rows are deliberately left out of the simulated interior — they are a
+                // slot barely wider than a particle, which only squeezed the drink and fired it
+                // back out; the floor sits above them instead.
+                0.690f, 0.707f, 0.724f, 0.741f, 0.759f, 0.776f, 0.793f, 0.810f, 0.828f, 0.828f,
+                0.828f, 0.862f, 0.862f, 0.879f, 0.897f, 0.914f, 0.914f, 0.931f, 0.931f, 0.948f,
+                0.966f, 0.966f, 0.966f, 0.983f, 0.983f, 1.000f, 1.000f, 1.000f });
             // The tin's rim, dome and cap ride ABOVE the liquid (2026-07-24): the fluid draws
             // over the open body to show the level, but it must never cover the cap.
             _shakerTop = NewRect("ShakerTop", _pourSurface);
@@ -921,7 +922,7 @@ namespace LastCall.DebugUI
 
             // The grabbable bottle, resting lower-right. Procedural body + neck; the grip
             // pivot sits low so lifting swings the mouth in a big arc.
-            _bottleRest = new Vector2(182, -64);
+            _bottleRest = new Vector2(300, -70);
             _pourBottle = NewRect("Bottle", _pourSurface);
             _pourBottle.pivot = new Vector2(0.5f, 0.22f);
             _pourBottle.sizeDelta = new Vector2(110, BottleH);
@@ -997,7 +998,7 @@ namespace LastCall.DebugUI
         private void BuildServePanel()
         {
             _servePanel = NewRect("ServePanel", _root);
-            Place(_servePanel, new Vector2(0.5f, 0.5f), new Vector2(720, 520), Vector2.zero);
+            Place(_servePanel, new Vector2(0.5f, 0.5f), new Vector2(1120, 640), Vector2.zero);
             _servePanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
             Swallow(_servePanel);
 
@@ -1034,7 +1035,7 @@ namespace LastCall.DebugUI
             // The serving glass: real clear-glass art (2026-07-23), transparent interior so the
             // poured drink pools behind it and shows through; the outline+rim draw in front.
             _serveGlass = NewRect("Glass", _serveSurface);
-            Place(_serveGlass, new Vector2(0.5f, 0.5f), new Vector2(150, 186), new Vector2(-120, -34));
+            Place(_serveGlass, new Vector2(0.5f, 0.5f), new Vector2(150, 186), new Vector2(-210, -34));
             var glassImg = _serveGlass.gameObject.AddComponent<Image>();
             glassImg.raycastTarget = false;
             if (ItemArt.Glass != null) { glassImg.sprite = ItemArt.Glass; glassImg.preserveAspect = true; glassImg.color = Color.white; }
@@ -1056,7 +1057,7 @@ namespace LastCall.DebugUI
             if (ItemArt.Glass != null) _serveGlass.SetAsLastSibling();   // clear glass over the fluid
 
             // The grabbable steel shaker you pour from, resting lower-right.
-            _serveShakerRest = new Vector2(168, -64);
+            _serveShakerRest = new Vector2(280, -70);
             _serveShaker = NewRect("Shaker", _serveSurface);
             _serveShaker.pivot = new Vector2(0.5f, 0.22f);
             _serveShaker.sizeDelta = new Vector2(104, BottleH);
