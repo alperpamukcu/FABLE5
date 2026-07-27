@@ -34,7 +34,7 @@ namespace LastCall.DebugUI
         // derived from the fill area at Spacing, so it fills any vessel exactly.
         private const float H = 7.5f;                  // viscosity/neighbour radius (px)
         private const float Spacing = 3f;           // rest spacing (min distance) → many small particles
-        private const int   RelaxIters = 12;           // incompressibility relaxation passes
+        private const int   RelaxIters = 14;           // incompressibility relaxation passes
         // Render radius is well above the spacing so the fine, tightly-packed particles
         // overlap into ONE smooth connected surface with no gaps between them.
         private const float PoolRadius = 4.3f;
@@ -42,6 +42,9 @@ namespace LastCall.DebugUI
         private const float FaceOffset = 0.53f;   // iso-surface reach past a floor/surface particle
         private const float Viscosity = 0.42f;        // 0..1 neighbour-velocity blend (more flow)
         private const float MaxSpeed = 1300f;
+        private const float RestDamping = 0.90f;         // bleeds off the energy the solver adds
+        private const float SleepSpeed = 30f;
+        private const float MinProfile = 0.62f;   // floor on the silhouette, in half-widths             // below this a particle is simply at rest
         private const float WallFriction = 0.72f;     // (kept for API parity)
 
         // Viewport margins: room around the vessel for splashes and the falling stream column.
@@ -85,7 +88,7 @@ namespace LastCall.DebugUI
         // teleport into the liquid and crush it; the shaking arrives as an inertial force.
         private float _fillTopLocal;
         private float _shakeAx, _shakeAy;      // inertial acceleration from the vessel's motion
-        private const float ShakeGain = 110f;  // how hard the vessel's motion throws the drink
+        private const float ShakeGain = 170f;  // how hard the vessel's motion throws the drink
         private float[] _profile;   // half-width multipliers, bottom → rim; null = plain rect
         private float _fillTopY;                       // current liquid line (for spawns)
         private bool _poolSet;
@@ -359,7 +362,7 @@ namespace LastCall.DebugUI
                                 float r2 = dx * dx + dy * dy;
                                 if (r2 >= minD2 || r2 < 1e-4f) continue;
                                 float r = Mathf.Sqrt(r2);
-                                float push = (minD - r) * 0.5f * 1.6f;   // over-relaxed
+                                float push = (minD - r) * 0.5f;   // no over-relaxation: >1 pumped energy into the fluid
                                 float nx = dx / r, ny = dy / r;
                                 _px[i] -= nx * push; _py[i] -= ny * push;
                                 _px[j] += nx * push; _py[j] += ny * push;
@@ -389,10 +392,15 @@ namespace LastCall.DebugUI
             // liquid — the slosh), speed-capped.
             for (int i = 0; i < _pn; i++)
             {
+                // Velocity is the net move over the frame. This is the property that lets the
+                // drink come to rest at all: a particle held by the floor or its neighbours
+                // barely moves, so its velocity falls to zero instead of being re-integrated.
                 _vx[i] = (_px[i] - _ppx[i]) / dt;
                 _vy[i] = (_py[i] - _ppy[i]) / dt;
+                _vx[i] *= RestDamping; _vy[i] *= RestDamping;
                 float sp2 = _vx[i] * _vx[i] + _vy[i] * _vy[i];
-                if (sp2 > MaxSpeed * MaxSpeed) { float s = MaxSpeed / Mathf.Sqrt(sp2); _vx[i] *= s; _vy[i] *= s; }
+                if (sp2 < SleepSpeed * SleepSpeed) { _vx[i] = 0f; _vy[i] = 0f; }
+                else if (sp2 > MaxSpeed * MaxSpeed) { float s = MaxSpeed / Mathf.Sqrt(sp2); _vx[i] *= s; _vy[i] *= s; }
             }
             BuildGrid();   // positions moved during relaxation — refresh before the neighbour blend
             ApplyViscosity();
@@ -409,7 +417,11 @@ namespace LastCall.DebugUI
             float f = Mathf.Clamp01(t) * (_profile.Length - 1);
             int i0 = Mathf.FloorToInt(f);
             int i1 = Mathf.Min(i0 + 1, _profile.Length - 1);
-            return ix * Mathf.Lerp(_profile[i0], _profile[i1], f - i0);
+            // Never squeeze below MinProfile: the art's rounded base pinches to a slot barely
+            // wider than a particle, which both walled the drink out of the bottom corners and
+            // fired particles back out of the gap — a permanent source of the jitter.
+            float w = Mathf.Max(Mathf.Lerp(_profile[i0], _profile[i1], f - i0), MinProfile);
+            return ix * w;
         }
 
         /// <summary>Sets the vessel silhouette: half-width multipliers sampled bottom → rim.
