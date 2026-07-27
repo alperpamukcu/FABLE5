@@ -62,6 +62,7 @@ namespace LastCall.DebugUI
         private readonly List<CanvasGroup> _benchProps = new List<CanvasGroup>();
         private const float CapCentreX = 0f;
         private const float CapGrowth = 1.3f;
+        private const float CapArtOffset = 0.245f;   // the lid art sits this far above its rect centre
         private RectTransform _pourBottle;    // the grabbable bottle
         private Image _pourBottleBody;
         private MetaballFluid _shakerFluid;   // the metaball liquid: pour stream + pooled body
@@ -482,15 +483,21 @@ namespace LastCall.DebugUI
 
             if (_capGrabbed)
             {
+                // The cap's art lives in the top of its canvas, so centre THAT on the cursor —
+                // grabbing it used to pin the mouse to the empty space beneath the lid.
+                float lift = _shakerTop.rect.height * CapArtOffset;
                 if (mouse != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
                         _pourSurface, mouse.position.ReadValue(), null, out Vector2 local))
-                    _capPos = Vector2.Lerp(_capPos, local, 1f - Mathf.Exp(-26f * dt));
+                    _capPos = Vector2.Lerp(_capPos, local - new Vector2(0, lift), 1f - Mathf.Exp(-30f * dt));
                 if (mouse == null || !mouse.leftButton.isPressed)
                 {
                     _capGrabbed = false;
-                    var mouth = _shakerVessel.anchoredPosition
-                                + new Vector2(0, _shakerVessel.rect.height * 0.5f);
-                    if (Vector2.Distance(_capPos, mouth) < 120f && !run.Glass.IsEmpty) _capped = true;
+                    // Anywhere over the tin will do — you should not have to thread the mouth.
+                    var tin = _shakerVessel;
+                    var d = _capPos + new Vector2(0, lift) - tin.anchoredPosition;
+                    bool onTin = Mathf.Abs(d.x) < tin.rect.width * 0.75f
+                              && Mathf.Abs(d.y) < tin.rect.height * 0.75f;
+                    if (onTin && !run.Glass.IsEmpty) _capped = true;
                     else _capPos = _capRest;
                 }
             }
@@ -519,6 +526,8 @@ namespace LastCall.DebugUI
                 _shakerTop.anchoredPosition = _capPos;
             }
             _shakerTop.SetAsLastSibling();
+            var capImg = _shakerTop.GetComponent<Image>();
+            if (capImg != null) capImg.raycastTarget = !_capped;   // capped: grab the tin, not the lid
 
             if (!_capped && !run.Glass.IsEmpty && !_capGrabbed)
                 _shakerReadout.text = "drag the lid onto the tin to close it";

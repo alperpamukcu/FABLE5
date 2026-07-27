@@ -19,8 +19,8 @@ namespace LastCall.DebugUI
     public sealed class MetaballFluid
     {
         // Render budget — pool particles + free stream/splash drops share the shader's _Drops[].
-        private const int MaxPool = 2100;
-        private const int MaxDrops = 40;
+        private const int MaxPool = 2040;
+        private const int MaxDrops = 110;
         private const int RenderMax = 2176;   // must match MAX_DROPS in the shader
 
         private const float Gravity = 1400f;          // px/s² down
@@ -240,11 +240,14 @@ namespace LastCall.DebugUI
                                  * fillH / (Spacing * Spacing) * 1.155f),
                 0, MaxPool);
             _fillTopLocal = -_halfH + fillH;
+            bool seeding = _pn == 0 && target > 0;   // a fresh body, not a top-up
             while (_pn < target && _pn < MaxPool)
             {
                 _px[_pn] = Random.Range(-_halfW * 0.6f, _halfW * 0.6f);   // local frame
-                _py[_pn] = _fillTopLocal + Random.Range(-6f, 10f);
-                _vx[_pn] = 0f; _vy[_pn] = -40f;
+                _py[_pn] = seeding
+                    ? Random.Range(-_halfH, _fillTopLocal)     // spread through the volume
+                    : _fillTopLocal + Random.Range(-6f, 10f);  // a top-up rains in at the surface
+                _vx[_pn] = 0f; _vy[_pn] = seeding ? 0f : -40f;
                 _pn++;
             }
             if (_pn > target) _pn = Mathf.Max(target, 0);   // served/emptied: drop the top ones
@@ -306,11 +309,7 @@ namespace LastCall.DebugUI
         {
             int slot = -1;
             for (int i = 0; i < MaxDrops; i++) if (!_drops[i].Active) { slot = i; break; }
-            if (slot < 0)
-            {
-                float min = float.MaxValue;
-                for (int i = 0; i < MaxDrops; i++) if (_drops[i].Life < min) { min = _drops[i].Life; slot = i; }
-            }
+            if (slot < 0) return;   // full: let the new drop go, never cull one mid-fall
             _drops[slot] = new Drop { Pos = pos, Vel = vel, Radius = radius, Life = life, Merges = merges, Active = true };
         }
 
