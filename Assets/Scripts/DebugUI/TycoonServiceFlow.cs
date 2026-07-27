@@ -79,7 +79,7 @@ namespace LastCall.DebugUI
         // its centre sits, so the list lands on paper and never on the wood or the clip.
         private const float PaperW = 0.655f, PaperH = 0.660f;
         private const float PaperCX = -0.015f, PaperCY = -0.008f;
-        private const int MenuColumns = 4;
+        private const int MenuColumns = 3;
         private const float GridGap = 6f, HeadingH = 18f;
         private IngredientType? _menuTab;   // null = the section index page
         private Text _menuTitle;
@@ -89,6 +89,10 @@ namespace LastCall.DebugUI
         private IngredientType? _flipTo;
         private float _flipT = 1f;
         private int _flipDir;
+        // The board draws one art pixel as ~5.8 screen pixels. Halving the key's pixels-per-unit
+        // puts its grain at 4, so the keys read as the same piece of pixel art as the sheet they
+        // sit on rather than a finer sticker laid over it (2026-07-27).
+        private const float PlatePixelScale = 0.5f;
         private const float FlipTime = 0.34f;
         private Vector2 _menuHome;
         private const float CornerSize = 52f, CornerInset = 30f;   // identical for every corner
@@ -334,13 +338,13 @@ namespace LastCall.DebugUI
             sink.Face = rt; sink.Depth = 3f; sink.Squash = 0.02f;
         }
 
-        /// <summary>Rings a label in black so it stays legible on any coloured key.</summary>
+        /// <summary>Rings a label in black so it stays legible on any coloured key. The ring is one
+        /// font-pixel wide and closes on all eight sides — see <see cref="PixelOutline"/>.</summary>
         private static Text Outlined(Text t, float thickness = 2f)
         {
-            var o = t.gameObject.AddComponent<UnityEngine.UI.Outline>();
-            o.effectColor = new Color(0f, 0f, 0f, 1f);
-            o.effectDistance = new Vector2(thickness, thickness);
-            o.useGraphicAlpha = false;
+            var o = t.gameObject.AddComponent<PixelOutline>();
+            o.EffectColor = new Color(0f, 0f, 0f, 1f);
+            o.Distance = thickness;
             return t;
         }
 
@@ -487,6 +491,7 @@ namespace LastCall.DebugUI
                     // One white 3D plate, tinted with the group's colour — so a new group is
                     // just a new colour, never a new sprite.
                     bg.sprite = plate; bg.type = Image.Type.Sliced;
+                    bg.pixelsPerUnitMultiplier = PlatePixelScale;
                     bg.color = col;
                     if (plateDown != null)
                     {
@@ -517,22 +522,23 @@ namespace LastCall.DebugUI
                 sink.Face = content;
                 sink.Depth = 4f; sink.Squash = 0.015f;
 
-                var name = Handwritten(NewText("N", content, _display, 15, TextAnchor.MiddleCenter, Color.black));
-                Place(name.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 24, 24), new Vector2(0, -14));
-                name.text = GroupName(t);
+                var name = Handwritten(NewText("N", content, _display, 16, TextAnchor.MiddleCenter, Color.black));
+                Place(name.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 24, 22), new Vector2(0, -10));
+                name.text = GroupKeyName(t);
 
-                var count = Handwritten(NewText("C", content, _body, 11, TextAnchor.UpperCenter, new Color(0.12f, 0.12f, 0.12f)));
+                var count = Handwritten(NewText("C", content, _body, 8, TextAnchor.UpperCenter, new Color(0.12f, 0.12f, 0.12f)));
                 Place(count.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 24, 14),
-                    new Vector2(0, -38));
-                count.text = empty > 0 ? $"{have} bottles · {empty} out" : $"{have} bottles";
+                    new Vector2(0, -34));
+                string unit = have == 1 ? "bottle" : "bottles";
+                count.text = empty > 0 ? $"{have} {unit} · {empty} out" : $"{have} {unit}";
 
                 // The bottles themselves, just their art, under the heading.
                 var icons = NewRect("Icons", content);
-                Place(icons, new Vector2(0.5f, 0), new Vector2(grid.cellSize.x - 20, grid.cellSize.y - 62),
-                    new Vector2(0, 10));
+                Place(icons, new Vector2(0.5f, 0), new Vector2(grid.cellSize.x - 20, grid.cellSize.y - 76),
+                    new Vector2(0, 26));
                 var ig = icons.gameObject.AddComponent<GridLayoutGroup>();
                 int iconCols = Mathf.Clamp(have, 1, 4);
-                float cell = Mathf.Min(40f, (grid.cellSize.x - 28f) / iconCols);
+                float cell = Mathf.Min(grid.cellSize.y - 78f, (grid.cellSize.x - 28f) / iconCols);
                 ig.cellSize = new Vector2(cell, cell);
                 ig.spacing = new Vector2(4, 4);
                 ig.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
@@ -561,8 +567,8 @@ namespace LastCall.DebugUI
             foreach (var b in run.Shelf.Bottles) if (b.Ingredient.Type == type) items.Add(b);
             float areaW = _bottleList.rect.width, areaH = _bottleList.rect.height;
 
-            // Once the bottles need a second row the page scrolls, with inertia so it glides
-            // rather than snapping.
+            // Once the bottles need a second row the page scrolls. Kept deliberately damped:
+            // the shelf tracks the wheel and stops with it, rather than sliding on afterwards.
             var scroller = NewRect("Scroll", _bottleList);
             // The list lays its children out vertically and a ScrollRect reports no preferred
             // size, so without this it collapses to 100x100 and the shelf vanishes.
@@ -571,10 +577,10 @@ namespace LastCall.DebugUI
             scrollFill.flexibleHeight = 1f;
             var scroll = scroller.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false; scroll.vertical = true;
-            scroll.scrollSensitivity = 34f; scroll.inertia = true;
-            scroll.decelerationRate = 0.12f;
+            scroll.scrollSensitivity = 12f; scroll.inertia = true;
+            scroll.decelerationRate = 0.02f;   // barely coasts — the shelf follows the wheel, no glide
             scroll.movementType = ScrollRect.MovementType.Elastic;
-            scroll.elasticity = 0.08f;
+            scroll.elasticity = 0.02f;
             var viewport = NewRect("Viewport", scroller);
             Stretch(viewport, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             viewport.gameObject.AddComponent<RectMask2D>();
@@ -593,7 +599,7 @@ namespace LastCall.DebugUI
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             g.constraintCount = MenuColumns;
             g.cellSize = new Vector2((areaW - (MenuColumns - 1) * GridGap) / MenuColumns,
-                Mathf.Clamp((areaH - (rows - 1) * GridGap) / rows, 140f, 226f));
+                Mathf.Clamp((areaH - (rows - 1) * GridGap) / rows, 140f, 300f));
             grid.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             foreach (var bottle in items) AddItemBox(grid, bottle, run);
@@ -617,6 +623,11 @@ namespace LastCall.DebugUI
                 default: return "GARNISHES";
             }
         }
+
+        /// <summary>The name as it fits on a key — one word, so the heading never wraps onto the
+        /// bottle count underneath it. The section page still uses the full name.</summary>
+        private static string GroupKeyName(IngredientType type)
+            => type == IngredientType.Sour ? "CITRUS" : GroupName(type);
 
         private void AddGroupHeader(RectTransform parent, string title, Color colour)
         {
@@ -651,6 +662,7 @@ namespace LastCall.DebugUI
             if (plate != null)
             {
                 bg.sprite = plate; bg.type = Image.Type.Sliced;
+                bg.pixelsPerUnitMultiplier = PlatePixelScale;
                 bg.color = empty ? Color.Lerp(col, new Color(0.45f, 0.43f, 0.42f), 0.7f) : col;
             }
             else bg.color = new Color(col.r, col.g, col.b, empty ? 0.25f : 0.5f);
@@ -675,9 +687,15 @@ namespace LastCall.DebugUI
                 btn.onClick.AddListener(() => OpenBottle(c));
             }
 
+            // The key's contents follow the grid cell, so changing the column count moves the
+            // bottle, the name and the price together instead of leaving them at an old width.
+            var g = parent.GetComponent<GridLayoutGroup>();
+            float cw = g != null ? g.cellSize.x : 172f;
+            float chh = g != null ? g.cellSize.y : 226f;
+
             // The bottle is the thing you are choosing, so it gets most of the key.
             var icon = NewRect("Icon", content);
-            Place(icon, new Vector2(0.5f, 1), new Vector2(150, 158), new Vector2(0, -6));
+            Place(icon, new Vector2(0.5f, 1), new Vector2(cw - 42f, chh - 100f), new Vector2(0, -4));
             var iconImg = icon.gameObject.AddComponent<Image>();
             iconImg.raycastTarget = false; iconImg.preserveAspect = true;
             iconImg.sprite = ItemArt.Bottle(card.Info?.Style);
@@ -685,28 +703,30 @@ namespace LastCall.DebugUI
                 : (empty ? new Color(1f, 1f, 1f, 0.4f) : Color.white);
 
             // Name, then how full it is and what it costs — the three things the key is sized for.
-            var name = Outlined(Handwritten(NewText("Name", content, _body, 12, TextAnchor.LowerCenter, Color.white)));
-            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(178, 20), new Vector2(0, 22));
+            // Pixel faces only rasterise cleanly at whole multiples of their 8px design size, so
+            // the labels are pinned to 16 and best-fit is off — it used to pick sizes like 11,
+            // which lands the stems on half pixels and makes the letters look chewed (2026-07-27).
+            var name = Outlined(Handwritten(NewText("Name", content, _body, 16, TextAnchor.LowerCenter, Color.white)));
+            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(cw + 6f, 36), new Vector2(0, 54));
             name.horizontalOverflow = HorizontalWrapMode.Wrap;
             name.verticalOverflow = VerticalWrapMode.Truncate;
-            name.resizeTextForBestFit = true; name.resizeTextMinSize = 8; name.resizeTextMaxSize = 12;
             name.text = card.Name.ToUpperInvariant();
 
             // How full it is, and what it costs — each in its own colour, both ringed in black.
             double fill = bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 0;
-            var pct = Outlined(Handwritten(NewText("Fill", content, _body, 11, TextAnchor.UpperLeft,
+            var pct = Outlined(Handwritten(NewText("Fill", content, _body, 16, TextAnchor.UpperLeft,
                 empty ? new Color(1f, 0.42f, 0.42f) : new Color(1f, 0.80f, 0.32f))));
-            Place(pct.rectTransform, new Vector2(0, 0), new Vector2(96, 18), new Vector2(14, 6));
+            Place(pct.rectTransform, new Vector2(0, 0), new Vector2(cw * 0.55f, 20), new Vector2(16, 30));
             pct.text = empty ? "OUT" : $"{(int)System.Math.Round(fill * 100)}%";
 
-            var price = Outlined(Handwritten(NewText("Price", content, _body, 11, TextAnchor.UpperRight,
+            var price = Outlined(Handwritten(NewText("Price", content, _body, 16, TextAnchor.UpperRight,
                 new Color(0.45f, 0.95f, 0.45f))));
-            Place(price.rectTransform, new Vector2(1, 0), new Vector2(96, 18), new Vector2(-14, 6));
+            Place(price.rectTransform, new Vector2(1, 0), new Vector2(cw * 0.55f, 20), new Vector2(-16, 30));
             price.text = $"${Market.StockPrice(card)}";
 
             if (!empty && run.IsNewStock(card.Id))
             {
-                var badge = Handwritten(NewText("New", content, _body, 9, TextAnchor.UpperRight,
+                var badge = Handwritten(NewText("New", content, _body, 8, TextAnchor.UpperRight,
                     new Color(0.62f, 0.36f, 0.04f)));
                 Place(badge.rectTransform, new Vector2(1, 1), new Vector2(46, 14), new Vector2(-8, -6));
                 badge.text = "NEW";
@@ -1707,9 +1727,29 @@ namespace LastCall.DebugUI
             var button = rt.gameObject.AddComponent<Button>();
             button.targetGraphic = img;
             button.onClick.AddListener(() => onClick());
-            var text = NewText("Label", rt, _body, 12, TextAnchor.MiddleCenter,
-                fill == UITheme.PrimaryAction ? UITheme.TextOnAmber : UITheme.TextPrimary);
-            Stretch(text.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+            // Same key as the shelf, so the sheet carries one set of buttons rather than two.
+            var plate = ItemArt.Load("plate");
+            var plateDown = ItemArt.Load("plate_down");
+            if (plate != null)
+            {
+                img.sprite = plate; img.type = Image.Type.Sliced;
+                img.pixelsPerUnitMultiplier = PlatePixelScale;
+                if (plateDown != null)
+                {
+                    button.transition = Selectable.Transition.SpriteSwap;
+                    var st = button.spriteState;
+                    st.pressedSprite = plateDown; st.selectedSprite = plate;
+                    button.spriteState = st;
+                }
+            }
+            var face = NewRect("Content", rt);
+            Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var sink = rt.gameObject.AddComponent<PressSink>();
+            sink.Face = face; sink.Depth = 4f; sink.Squash = 0.015f;
+
+            var text = NewText("Label", face, _body, 16, TextAnchor.MiddleCenter, Color.black);
+            Stretch(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(0, 10), new Vector2(0, -4));
             text.text = label;
         }
 

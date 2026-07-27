@@ -33,7 +33,9 @@ namespace LastCall.EditorTools
             // Frames and plates are stretched to fit their UI rect, so give them 9-slice
             // borders — otherwise the brass caps and rivets smear as the rect grows.
             string file = System.IO.Path.GetFileNameWithoutExtension(p);
-            if (file == "plate" || file == "plate_down") ti.spriteBorder = new Vector4(15, 13, 15, 15);
+            // The key's corner arc is 14px and its standing lip 11px, so a 16px ring keeps both
+            // out of the stretched centre (2026-07-27, art regenerated at 128x80).
+            if (file == "plate" || file == "plate_down") ti.spriteBorder = new Vector4(16, 16, 16, 16);
             else if (file == "bar_frame") ti.spriteBorder = new Vector4(26, 10, 26, 10);
             else if (file == "tab_btn" || file == "tab_btn_down") ti.spriteBorder = new Vector4(18, 16, 18, 16);
         }
