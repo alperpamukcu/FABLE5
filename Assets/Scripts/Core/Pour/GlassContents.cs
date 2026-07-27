@@ -43,10 +43,23 @@ namespace LastCall.Core
         /// <summary>Pours in order, for the layered readout.</summary>
         public IReadOnlyList<Pour> Pours => _pours;
 
+        /// <summary>Liquid only. Foam is tracked separately by <see cref="Head"/>, so ratios
+        /// stay ratios of the drink and never of the froth on top of it.</summary>
         public double TotalVolume { get; private set; }
 
-        /// <summary>0…1 — how full the glass is. It cannot exceed 1: the glass stops taking.</summary>
-        public double FillFraction => TotalVolume / Capacity;
+        /// <summary>
+        /// Foam standing on the drink, in the same glass-fractions as everything else
+        /// (GDD 21 §10.2). It takes up room in the glass — a frothy pull really does serve
+        /// less beer — but it is nobody's ingredient. Zero for everything but a draught.
+        /// </summary>
+        public double Head { get; private set; }
+
+        /// <summary>How much of the glass is used, liquid and foam together. It cannot exceed
+        /// 1: the glass stops taking.</summary>
+        public double FillFraction => (TotalVolume + Head) / Capacity;
+
+        /// <summary>What is left to pour into, foam included.</summary>
+        public double Headroom => Math.Max(0, Capacity - TotalVolume - Head);
 
         public bool IsEmpty => _pours.Count == 0;
 
@@ -76,7 +89,7 @@ namespace LastCall.Core
             if (string.IsNullOrEmpty(ingredientId))
                 throw new ArgumentException("Ingredient id is required", nameof(ingredientId));
 
-            double accepted = Math.Min(volume, Capacity - TotalVolume);
+            double accepted = Math.Min(volume, Headroom);
             if (accepted <= 0) return 0;
 
             if (_pours.Count > 0 && _pours[_pours.Count - 1].IngredientId == ingredientId)
@@ -111,6 +124,7 @@ namespace LastCall.Core
                 _pours.Clear();
                 _byIngredient.Clear();
                 TotalVolume = 0;
+                Head = 0;              // nothing left to stand on
                 return all;
             }
 
@@ -150,6 +164,42 @@ namespace LastCall.Core
             return landed;
         }
 
+        // ── the head on a draught (GDD 21 §10) ───────────────────────────────────
+
+        /// <summary>
+        /// Puts foam on the drink and returns how much the glass took. Foam competes with beer
+        /// for the same room, which is the whole point: pull the handle wide and the glass
+        /// fills, but not with beer.
+        /// </summary>
+        public double AddHead(double volume)
+        {
+            double accepted = Math.Min(volume, Headroom);
+            if (accepted <= 0) return 0;
+            Head += accepted;
+            return accepted;
+        }
+
+        /// <summary>
+        /// Collapses <paramref name="volume"/> of foam. <paramref name="liquidShare"/> of it
+        /// comes back as beer — spread across what is already in the glass, which for a pint is
+        /// the one keg it was pulled from — and the rest was air and is simply gone. That loss
+        /// is why a settled pint has room to top up (GDD 21 §10.2).
+        /// </summary>
+        public void CollapseHead(double volume, double liquidShare)
+        {
+            double collapsing = Math.Min(volume, Head);
+            if (collapsing <= 0) return;
+
+            Head -= collapsing;
+            double liquid = collapsing * (liquidShare < 0 ? 0 : liquidShare > 1 ? 1 : liquidShare);
+            if (liquid <= 0 || TotalVolume <= 0) return;
+
+            // Proportional, so a glass that somehow holds more than one thing keeps its ratios.
+            double scale = TotalVolume;
+            foreach (var pair in new List<KeyValuePair<string, double>>(_byIngredient))
+                Add(pair.Key, liquid * (pair.Value / scale));
+        }
+
         // ── preparations (GDD 22 §5, infrastructure only) ────────────────────────
 
         private readonly List<PreparationDefinition> _preparations = new List<PreparationDefinition>();
@@ -184,6 +234,7 @@ namespace LastCall.Core
             _byIngredient.Clear();
             _preparations.Clear();
             TotalVolume = 0;
+            Head = 0;
         }
 
         public override string ToString() =>

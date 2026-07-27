@@ -93,7 +93,9 @@ namespace LastCall.Game
                     recipe.allDistinctTypes, recipe.allEqualFlavor, recipe.scoreAllMixCards,
                     recipe.equalFlavorGroupSize, recipe.ascendingFlavorGroupSize,
                     recipe.sameTypeGroupMin,
-                    recipe.chargeMultiplier)); // 0 = derive it from baseMult
+                    recipe.chargeMultiplier,   // 0 = derive it from baseMult
+                    ratioRequirements: null,   // derived from the type pattern
+                    minFill: recipe.minFill));
             }
             return recipes;
         }
@@ -274,6 +276,7 @@ namespace LastCall.Game
             public int ascendingFlavorGroupSize;
             public int sameTypeGroupMin;
             public double chargeMultiplier;
+            public double minFill;
         }
 
         [Serializable]

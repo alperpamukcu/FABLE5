@@ -43,6 +43,10 @@ namespace LastCall.Game
             var startingStock = new HashSet<string>
             {
                 "vodka_astra", "gin_boothby", "soda_klara", "lemon_fresh", "syrup_house",
+                // One keg on from day one (GDD 21 §10): beer is the order you can always
+                // answer, and a bar with no tap would make the simple customer unservable.
+                // The other two kegs are stock to buy, like any other brand.
+                "beer_kestrel",
             };
             var startingBottles = new List<ShelfBottle>();
             var brandCatalogue = new List<IngredientCard>();

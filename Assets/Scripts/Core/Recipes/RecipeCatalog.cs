@@ -18,9 +18,18 @@ namespace LastCall.Core
             var bi = IngredientType.Bitter;
             var bu = IngredientType.Bubbly;
             var g = IngredientType.Garnish;
+            var be = IngredientType.Beer;
 
             return new List<RecipeDefinition>
             {
+                // Beer is the bar's simple order (GDD 21 §10): one thing, pulled, no shaker.
+                // It shares Neat Pour's rank because it is the same kind of drink — the one
+                // you can put in front of someone in four seconds — and so it is on the menu
+                // from day one and priced at the bottom of it.
+                new RecipeDefinition("draught", "Draught", 1, 5, 1, 10, 1,
+                    new[] { new PatternRequirement(1, be) },
+                    exactMixSize: 1, minFill: 0.75),
+
                 new RecipeDefinition("neat_pour", "Neat Pour", 1, 5, 1, 10, 1,
                     new[] { new PatternRequirement(1, s) },
                     exactMixSize: 1),

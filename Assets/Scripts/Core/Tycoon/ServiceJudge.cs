@@ -107,20 +107,30 @@ namespace LastCall.Core
                 if (earliness > 0) speedTip = (int)Math.Ceiling(SpeedTipMax * earliness);
             }
 
+            // A pint's craft is its head (GDD 21 §10.3) — the same weight the garnish read
+            // carries, because it is the same kind of thing: the part of the drink you had to
+            // get right by hand. A cocktail has no head and is never graded on one.
+            bool draught = delivered != null && delivered.HasPreparation(Preparations.Draught.Id);
+            double headScore = draught ? TapPour.HeadScore(delivered.Head / delivered.Capacity) : 1.0;
+
             double satisfaction =
                 (match == OrderMatch.Exact ? 0.9 : match == OrderMatch.Close ? 0.6 : 0.05)
                 + (wantedCount > 0 && match != OrderMatch.Wrong ? 0.15 * (garnishScore - 0.5) : 0.0)
+                + (draught && match != OrderMatch.Wrong ? 0.15 * (headScore - 0.5) : 0.0)
                 - 0.3 * visit.WaitFraction
                 + ambienceBonus;
             satisfaction = Math.Max(0.0, Math.Min(1.0, satisfaction));
 
             // Another round is the reward for reading their garnish and nailing it — the
             // exact drink, every garnish they asked for, comfortably inside patience.
-            bool ordersAgain = match == OrderMatch.Exact && craftLanded
+            // A pint asks for no garnish, so its craft gate is the head instead: a good pull
+            // earns the extra round the way a remembered twist does.
+            bool craftForExtra = draught ? headScore >= 1.0 : craftLanded;
+            bool ordersAgain = match == OrderMatch.Exact && craftForExtra
                 && visit.WaitFraction < ExtraOrderWindow
                 && visit.ExtraOrdersTaken < CustomerVisit.MaxExtraOrders;
 
-            return new ServiceVerdict(match, basePaid, speedTip, craftLanded, ordersAgain, satisfaction);
+            return new ServiceVerdict(match, basePaid, speedTip, craftForExtra, ordersAgain, satisfaction);
         }
 
         /// <summary>The type holding the biggest share of the glass.</summary>

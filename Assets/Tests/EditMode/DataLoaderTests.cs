@@ -21,10 +21,12 @@ namespace LastCall.Tests
         [Test]
         public void RecipesJson_MatchesRecipeCatalog()
         {
+            // By id, not by rank: Draught and Neat Pour deliberately share rank 1, and a
+            // non-unique sort key would pair the wrong rows against each other.
             var fromJson = DataLoader.ParseRecipes(ReadDataFile("recipes/recipes.json"))
-                .OrderBy(r => r.Rank).ToList();
+                .OrderBy(r => r.Id, System.StringComparer.Ordinal).ToList();
             var fromCatalog = RecipeCatalog.CreateDefault()
-                .OrderBy(r => r.Rank).ToList();
+                .OrderBy(r => r.Id, System.StringComparer.Ordinal).ToList();
 
             Assert.AreEqual(fromCatalog.Count, fromJson.Count);
             for (int i = 0; i < fromCatalog.Count; i++)
@@ -46,6 +48,7 @@ namespace LastCall.Tests
                 Assert.AreEqual(expected.EqualFlavorGroupSize, actual.EqualFlavorGroupSize, expected.Id);
                 Assert.AreEqual(expected.AscendingFlavorGroupSize, actual.AscendingFlavorGroupSize, expected.Id);
                 Assert.AreEqual(expected.SameTypeGroupMin, actual.SameTypeGroupMin, expected.Id);
+                Assert.AreEqual(expected.MinFill, actual.MinFill, 1e-9, expected.Id);
 
                 Assert.AreEqual(expected.Requirements.Count, actual.Requirements.Count, expected.Id);
                 for (int r = 0; r < expected.Requirements.Count; r++)

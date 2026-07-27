@@ -220,6 +220,71 @@ namespace LastCall.Core
         public double PourGarnish(string ingredientId) =>
             PourMeasure(ingredientId, PourResolver.GarnishClickFraction * Glass.Capacity);
 
+        // ── the tap (GDD 21 §10) ────────────────────────────────────────────────
+
+        /// <summary>The keg being pulled, or null. Beer never enters the shaker.</summary>
+        public string PullingId { get; private set; }
+
+        /// <summary>
+        /// Opens a keg's tap. Beer skips the shaker entirely — it is pulled straight into the
+        /// glass the customer drinks from, which is what makes it the four-second order.
+        /// </summary>
+        public void BeginPull(string kegId)
+        {
+            EnsurePhase(TycoonPhase.DayOpen);
+            var keg = _shelf.Find(kegId);
+            if (keg == null)
+                throw new ArgumentException($"No '{kegId}' on the shelf.", nameof(kegId));
+            if (keg.Ingredient.Type != IngredientType.Beer)
+                throw new ArgumentException($"'{kegId}' is not a keg — it cannot be pulled.", nameof(kegId));
+            if (!Glass.IsEmpty)
+                throw new InvalidOperationException("There is a cocktail on the go — bin it before pulling a pint.");
+            PullingId = kegId;
+        }
+
+        /// <summary>
+        /// One moment of holding the handle at <paramref name="pull"/> (0…1). Returns the beer
+        /// that landed — the foam that came with it is on the glass's head, and both came out
+        /// of the keg. Running the keg dry closes the tap.
+        /// </summary>
+        public double PullTick(double seconds, double pull)
+        {
+            EnsurePhase(TycoonPhase.DayOpen);
+            if (PullingId == null || seconds <= 0) return 0;
+
+            var keg = _shelf.Find(PullingId);
+            var flow = TapPour.Flow(pull, seconds);
+            if (flow.Total <= 0) return 0;
+
+            // The keg gives up beer and foam alike; the glass decides how much it can take.
+            double available = keg.Draw(Math.Min(flow.Total, ServingGlass.Headroom));
+            if (available <= 0)
+            {
+                if (keg.IsEmpty) PullingId = null;
+                return 0;
+            }
+
+            double share = available / flow.Total;
+            double landed = ServingGlass.Add(PullingId, flow.Beer * share);
+            ServingGlass.AddHead(flow.Head * share);
+            ServingGlass.AddPreparation(Preparations.Draught);
+            if (keg.IsEmpty) PullingId = null;
+            return landed;
+        }
+
+        public void EndPull() => PullingId = null;
+
+        /// <summary>
+        /// Lets the head stand. Foam collapses, most of it into air, so the glass drops and
+        /// leaves room to top up (GDD 21 §10.2). Driven off the same clock as the floor, so
+        /// waiting for a pint to settle costs exactly what it should: the customer's patience.
+        /// </summary>
+        public void SettleHead(double seconds)
+        {
+            if (seconds <= 0 || ServingGlass.Head <= 0) return;
+            ServingGlass.CollapseHead(TapPour.Settled(ServingGlass.Head, seconds), TapPour.FoamLiquidShare);
+        }
+
         /// <summary>Drops a preparation (ice, a twist, a rim) into the shaker (GDD 24 §2.4).</summary>
         public void AddPreparation(PreparationDefinition preparation)
         {
@@ -304,6 +369,7 @@ namespace LastCall.Core
         private void ResetVessels()
         {
             PouringId = null;
+            PullingId = null;
             IsShaken = false;
             ShakeEnergy = 0;
             Glass = new GlassContents(_config.GlassCapacity);

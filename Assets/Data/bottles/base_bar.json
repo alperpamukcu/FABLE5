@@ -260,6 +260,72 @@
       "art_prompt": "a small jar of green olives in brine with a rustic olive-branch label"
     },
     {
+      "id": "beer_kestrel",
+      "name": "Kestrel Lager",
+      "type": "Beer",
+      "flavor": 3,
+      "style": "lager",
+      "tier": 1,
+      "origin": "Local, on the coast road",
+      "abv": 4,
+      "blurb": "Cold, plain and honest. The drink people order when they want to stop deciding.",
+      "charges": [
+        {
+          "emotion": "Fatigue",
+          "amount": -8
+        },
+        {
+          "emotion": "Anxiety",
+          "amount": -6
+        }
+      ],
+      "art_prompt": "a squat steel beer keg with a pale gold band and a plain enamel label, condensation on the shoulder"
+    },
+    {
+      "id": "beer_collier",
+      "name": "Collier Stout",
+      "type": "Beer",
+      "flavor": 6,
+      "style": "stout",
+      "tier": 1,
+      "origin": "Two valleys over",
+      "abv": 5,
+      "blurb": "Black, sweet and filling. Drinks like a meal and settles people down.",
+      "charges": [
+        {
+          "emotion": "Sadness",
+          "amount": 10
+        },
+        {
+          "emotion": "Fatigue",
+          "amount": -5
+        }
+      ],
+      "art_prompt": "a dark iron beer keg with a deep charcoal band and a cream oval label, worn at the rim"
+    },
+    {
+      "id": "beer_marigold",
+      "name": "Marigold Pale",
+      "type": "Beer",
+      "flavor": 5,
+      "style": "pale_ale",
+      "tier": 1,
+      "origin": "The brewery behind the market",
+      "abv": 5,
+      "blurb": "Bitter and bright. The one the regulars argue about.",
+      "charges": [
+        {
+          "emotion": "Excitement",
+          "amount": 11
+        },
+        {
+          "emotion": "Sadness",
+          "amount": -6
+        }
+      ],
+      "art_prompt": "a copper beer keg with a warm amber band and a marigold-yellow label, brass fittings"
+    },
+    {
       "id": "vodka_vor",
       "name": "Vor Vodka",
       "type": "Spirit",

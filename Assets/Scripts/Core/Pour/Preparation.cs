@@ -42,10 +42,14 @@ namespace LastCall.Core
             new PreparationDefinition("salt_rim", "Salt Rim", "The rim run through salt.");
         public static readonly PreparationDefinition SugarRim =
             new PreparationDefinition("sugar_rim", "Sugar Rim", "The rim run through sugar.");
+        /// <summary>Pulled from a keg (GDD 21 §10). Not a step the player chooses — it is how
+        /// the drink got into the glass, and it is what tells the judge to grade the head.</summary>
+        public static readonly PreparationDefinition Draught =
+            new PreparationDefinition("draught", "Draught", "Pulled from the tap.");
 
         public static readonly IReadOnlyList<PreparationDefinition> All = new[]
         {
-            Shaken, Stirred, Ice, LemonTwist, SaltRim, SugarRim
+            Shaken, Stirred, Ice, LemonTwist, SaltRim, SugarRim, Draught
         };
 
         public static PreparationDefinition Find(string id)

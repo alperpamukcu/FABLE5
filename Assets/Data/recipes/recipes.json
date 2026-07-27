@@ -2,6 +2,13 @@
   "version": 1,
   "recipes": [
     {
+      "id": "draught", "name": "Draught", "rank": 1,
+      "baseFlavor": 5, "baseMult": 1, "flavorPerLevel": 10, "multPerLevel": 1,
+      "requirements": [ { "types": ["Beer"], "count": 1 } ],
+      "exactMixSize": 1, "minMixSize": 0, "minFill": 0.75,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false
+    },
+    {
       "id": "neat_pour", "name": "Neat Pour", "rank": 1,
       "baseFlavor": 5, "baseMult": 1, "flavorPerLevel": 10, "multPerLevel": 1,
       "requirements": [ { "types": ["Spirit"], "count": 1 } ],

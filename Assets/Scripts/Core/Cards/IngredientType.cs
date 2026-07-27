@@ -1,6 +1,11 @@
 namespace LastCall.Core
 {
-    /// <summary>The six ingredient "suits" (GDD 01, section 3).</summary>
+    /// <summary>
+    /// The ingredient "suits" (GDD 01 §3) — the original six, plus Beer (GDD 21 §10).
+    /// Beer is appended rather than slotted in with the others: it is not a cocktail
+    /// ingredient. Nothing mixes with it, it comes from a keg instead of a bottle, and it
+    /// reaches the glass without passing through the shaker.
+    /// </summary>
     public enum IngredientType
     {
         Spirit,
@@ -8,6 +13,7 @@ namespace LastCall.Core
         Sweet,
         Bitter,
         Bubbly,
-        Garnish
+        Garnish,
+        Beer
     }
 }

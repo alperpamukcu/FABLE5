@@ -26,15 +26,23 @@ namespace LastCall.Core
         public string Id => Ingredient.Id;
         public bool IsEmpty => Remaining <= 0;
 
-        public ShelfBottle(IngredientCard ingredient, double capacity = 6.0, double pourRate = 0.55)
+        /// <summary>A bottle holds six glasses and pours at a bottle's pace. Pass 0 for either
+        /// to take the default for the ingredient's type — which is how a keg gets to be a keg
+        /// (GDD 21 §10.1) without every call site having to know it is holding one.</summary>
+        public ShelfBottle(IngredientCard ingredient, double capacity = 0, double pourRate = 0)
         {
             Ingredient = ingredient ?? throw new ArgumentNullException(nameof(ingredient));
-            if (capacity <= 0) throw new ArgumentOutOfRangeException(nameof(capacity));
-            if (pourRate <= 0) throw new ArgumentOutOfRangeException(nameof(pourRate));
-            Capacity = capacity;
-            Remaining = capacity;
-            PourRate = pourRate;
+            if (capacity < 0) throw new ArgumentOutOfRangeException(nameof(capacity));
+            if (pourRate < 0) throw new ArgumentOutOfRangeException(nameof(pourRate));
+            bool keg = ingredient.Type == IngredientType.Beer;
+            Capacity = capacity > 0 ? capacity : (keg ? KegCapacity : BottleCapacity);
+            Remaining = Capacity;
+            PourRate = pourRate > 0 ? pourRate : (keg ? KegPourRate : BottlePourRate);
         }
+
+        public const double BottleCapacity = 6.0, BottlePourRate = 0.55;
+        /// <summary>A keg is four bottles deep and moves twice as fast (GDD 21 §10.1).</summary>
+        public const double KegCapacity = 24.0, KegPourRate = 1.1;
 
         /// <summary>
         /// Takes up to <paramref name="requested"/> and returns what was actually available.

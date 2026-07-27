@@ -28,9 +28,19 @@ namespace LastCall.Tests
         public void TheStartingShelf_IsSmallEnoughToKnowByHeart()
         {
             // The whole point of the base bar: the 46-bottle wall was unreadable.
+            //
+            // Counted per axis since draught arrived (GDD 21 §10, 2026-07-27). The rule is
+            // about what you have to hold in your head at once, and the taps are not part of
+            // the bottle wall — they are their own short row with their own menu section. A
+            // twelfth bottle still costs readability; a third keg does not.
             var starting = Starting();
-            Assert.LessOrEqual(starting.Count, 12);
-            Assert.GreaterOrEqual(starting.Count, 8);
+            var bottles = starting.Where(c => c.Type != IngredientType.Beer).ToList();
+            var kegs = starting.Where(c => c.Type == IngredientType.Beer).ToList();
+
+            Assert.LessOrEqual(bottles.Count, 12);
+            Assert.GreaterOrEqual(bottles.Count, 8);
+            Assert.LessOrEqual(kegs.Count, 3, "more taps than that and beer stops being the simple order");
+            Assert.GreaterOrEqual(kegs.Count, 1, "a bar with no tap cannot answer the simplest order there is");
         }
 
         [Test]

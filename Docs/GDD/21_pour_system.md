@@ -186,7 +186,57 @@ who serves the perfect emotional mix and matches no recipe should still satisfy 
 they just earn fewer points doing it. Inverting that — forcing recipe compliance — would put
 the craft layer back in charge of a game that is now about reading people.
 
-## 10. Open questions
+## 10. Draught beer (2026-07-27)
+
+Not every order is a cocktail. **Beer is pulled, not built**: it comes from a keg, it never
+sees the shaker, and it goes straight into the glass the customer drinks from. It is the bar's
+simple order — the one you can serve in four seconds while a cocktail is still being shaken.
+
+### 10.1 The kegs
+
+Kegs sit on the shelf beside the bottles as ingredients of the new type **Beer**, so the
+existing shelf, market, restock and dry-bottle rules apply to them unchanged. Two differences
+from a bottle, both because a keg is a keg:
+
+- **Capacity ×4** (24 glasses against a bottle's 6). Beer is the cheap volume order; a keg
+  that ran dry every eight pints would be an errand, not a decision.
+- **Pour rate ×2.** A tap moves faster than a bottle neck.
+
+Each keg carries its own emotional charges like any other ingredient — which is the whole
+reason to stock more than one. The recipe does not distinguish a stout from a lager; **who you
+pour it for** does.
+
+### 10.2 The pull
+
+The tap handle is **held and pulled**. How far it is pulled sets the flow, and the flow decides
+what you get:
+
+| Pull | Flow | What lands in the glass |
+| --- | --- | --- |
+| eased open | slow | almost all beer, a thin head |
+| half | moderate | the finger of head you want |
+| wide open | fast | froth — the glass fills with foam, not beer |
+
+Foam is **volume**: head and beer share the glass, so a frothy pull genuinely gives the
+customer less beer. Head also **settles** — wait and foam collapses back into liquid, so a
+botched pull can be rescued by standing still and topping up. That is the cost: time, in a
+game where patience is the currency.
+
+### 10.3 What a good pint is
+
+A good pint is **8–20% head**, best at 14%. Outside that the pour reads as flat (no head) or
+short (all froth), and satisfaction falls off to nothing by 0% and 40%.
+
+The head score enters satisfaction exactly where the garnish craft score does (module 23 §4) —
+it moves how happy they are and therefore reputation and the crowd, and it gates the extra
+round. It pays **no direct tip**: the till stays predictable, and the reward for craft stays
+the same shape it has everywhere else in the game.
+
+**Ruling:** the head is the beer's craft axis, and it is the only one. A pint has no ratio to
+judge, no garnish to remember and no recipe to match — the whole skill is the pull. Loading it
+with anything more would make the simple order the fiddly one.
+
+## 11. Open questions
 
 - **Round limiter.** "Drinks a customer will accept" is inherited from Mixes and untested
   under pouring. If a drink takes 10 seconds to build, 4 per customer may be far too many.
