@@ -25,6 +25,9 @@ namespace LastCall.EditorTools
             ti.mipmapEnabled = false;
             ti.alphaIsTransparency = true;
             ti.wrapMode = TextureWrapMode.Clamp;
+            // Readable, so a UI Image can hit-test against the sprite's alpha — that is what
+            // lets an icon like the waste bin be clickable on the object itself, not on a box.
+            ti.isReadable = true;
             ti.spritePixelsPerUnit = 100;
         }
     }

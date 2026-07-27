@@ -71,13 +71,18 @@ namespace LastCall.DebugUI
         private const float CapGrowth = 1.3f;
         private const float CapArtOffset = 0.245f;   // the lid art sits this far above its rect centre
         // The clipboard, and the share of it its paper covers (measured off the art).
-        private const float BoardW = 940f, BoardH = 589f;
+        private const float BoardW = 980f, BoardH = 614f;
+        private const float BoardX = -150f;   // shifted left; the mix preview sits to the right
+        private const float TinW = 168f, TinAspect = 116f / 208f;
+        private const float CavityFloor = 0.0913f, CavityRim = 0.6106f;
         // Measured off the dark-walnut board art: the sheet's share of the canvas and where
         // its centre sits, so the list lands on paper and never on the wood or the clip.
         private const float PaperW = 0.655f, PaperH = 0.660f;
         private const float PaperCX = -0.015f, PaperCY = -0.008f;
         private const int MenuColumns = 6;
-        private GridLayoutGroup _menuGrid;
+        private const float GridGap = 6f, HeadingH = 18f;
+        private RectTransform _mixPreview, _mixCavity;   // the tin's interior in the preview
+        private Text _mixEmpty;
         private RectTransform _pourBottle;    // the grabbable bottle
         private Image _pourBottleBody;
         private MetaballFluid _shakerFluid;   // the metaball liquid: pour stream + pooled body
@@ -200,6 +205,7 @@ namespace LastCall.DebugUI
             _root.gameObject.SetActive(stage != Stage.Closed);
             _menuPanel.gameObject.SetActive(stage == Stage.Menu);
             if (_menuSide != null) _menuSide.gameObject.SetActive(stage == Stage.Menu);
+            if (_mixPreview != null) _mixPreview.gameObject.SetActive(stage == Stage.Menu);
             _shakerPanel.gameObject.SetActive(stage == Stage.Shaker);
             _servePanel.gameObject.SetActive(stage == Stage.Serve);
 
@@ -238,30 +244,133 @@ namespace LastCall.DebugUI
 
         // ── the menu ─────────────────────────────────────────────────────────────
 
+        /// <summary>
+        /// The tin, beside the menu, showing what is actually in it: the poured drink stacked
+        /// as bands inside the cavity, each band labelled with its alcohol and its share, so
+        /// you can read the mix at a glance while you build it.
+        /// </summary>
+        private void BuildMixPreview()
+        {
+            var host = NewRect("MixPreview", _root);
+            Place(host, new Vector2(0.5f, 0.5f), new Vector2(240, 420), new Vector2(BoardX + BoardW * 0.5f + 148f, 26));
+            _mixPreview = host;
+
+            var label = NewText("Cap", host, _body, 11, TextAnchor.UpperCenter, UITheme.TextSecondary);
+            Place(label.rectTransform, new Vector2(0.5f, 1), new Vector2(220, 18), new Vector2(0, -4));
+            label.text = "IN THE SHAKER";
+
+            var tin = NewRect("Tin", host);
+            Place(tin, new Vector2(0.5f, 0.5f), new Vector2(TinW, TinW / TinAspect), new Vector2(0, -12));
+            var tinImg = tin.gameObject.AddComponent<Image>();
+            var sprite = ItemArt.Load("tin_open");
+            if (sprite != null) { tinImg.sprite = sprite; tinImg.preserveAspect = true; tinImg.color = Color.white; }
+            else tinImg.color = UITheme.Night[3];
+            tinImg.raycastTarget = false;
+
+            // The cavity, from the same measurements the fluid uses.
+            float th = TinW / TinAspect;
+            _mixCavity = NewRect("Cavity", tin);
+            _mixCavity.anchorMin = _mixCavity.anchorMax = _mixCavity.pivot = new Vector2(0.5f, 0);
+            _mixCavity.sizeDelta = new Vector2(TinW * 0.50f, th * (CavityRim - CavityFloor));
+            _mixCavity.anchoredPosition = new Vector2(0, th * CavityFloor);
+
+            _mixEmpty = NewText("Empty", tin, _body, 11, TextAnchor.MiddleCenter, new Color(0.72f, 0.70f, 0.66f));
+            Place(_mixEmpty.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(TinW, 20), Vector2.zero);
+            _mixEmpty.text = "empty";
+        }
+
+        /// <summary>Redraws the bands: one per poured ingredient, sized by its share.</summary>
+        private void RefreshMixPreview()
+        {
+            if (_mixCavity == null) return;
+            foreach (Transform child in _mixCavity) Destroy(child.gameObject);
+
+            var run = Run;
+            var glass = run.Glass;
+            _mixEmpty.enabled = glass.IsEmpty;
+            if (glass.IsEmpty) return;
+
+            float h = _mixCavity.rect.height * (float)glass.FillFraction;
+            float y = 0f;
+            foreach (var id in glass.Ingredients)
+            {
+                var card = run.Shelf.Find(id)?.Ingredient;
+                float share = (float)glass.RatioOf(id);
+                float bandH = h * share;
+
+                var band = NewRect($"Band_{id}", _mixCavity);
+                band.anchorMin = new Vector2(0, 0); band.anchorMax = new Vector2(1, 0);
+                band.pivot = new Vector2(0.5f, 0);
+                band.offsetMin = new Vector2(0, 0); band.offsetMax = new Vector2(0, 0);
+                band.sizeDelta = new Vector2(0, bandH);
+                band.anchoredPosition = new Vector2(0, y);
+                var img = band.gameObject.AddComponent<Image>();
+                img.color = UITheme.LiquidColor(card?.Info?.Style, card?.Type ?? IngredientType.Spirit);
+                img.raycastTarget = false;
+
+                // The share, written over the liquid itself.
+                var text = NewText("Pct", band, _body, bandH >= 22 ? 11 : 9, TextAnchor.MiddleCenter,
+                    new Color(0.10f, 0.09f, 0.08f));
+                Stretch(text.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                text.horizontalOverflow = HorizontalWrapMode.Overflow;
+                text.text = bandH >= 20
+                    ? $"{(card?.Name ?? id).ToUpperInvariant()}  {share:P0}".Replace(" %", "%")
+                    : $"{share:P0}".Replace(" %", "%");
+
+                y += bandH;
+            }
+        }
+
         private void RefreshMenu()
         {
             var run = Run;
             foreach (Transform child in _bottleList) Destroy(child.gameObject);
 
-            // Grouped by type but laid out as ONE grid, in menu order, each box carrying its
-            // group's colour as a stripe — the shelf still reads grouped without a scrollbar.
-            var stock = new List<ShelfBottle>();
+            // Grouped by type, and sized to fit however big the bar gets: the number of rows
+            // each group needs is worked out first, then one cell height is solved for all of
+            // them, so buying more stock tightens the sheet instead of overflowing it.
+            var groups = new List<(IngredientType type, List<ShelfBottle> items)>();
+            int totalRows = 0;
             foreach (var type in MenuOrder)
             {
-                if (type == IngredientType.Garnish) continue;   // garnishes live at the serve stage
+                if (type == IngredientType.Garnish) continue;   // garnishes belong to the serve stage
+                var items = new List<ShelfBottle>();
                 foreach (var bottle in run.Shelf.Bottles)
-                    if (bottle.Ingredient.Type == type) stock.Add(bottle);
+                    if (bottle.Ingredient.Type == type) items.Add(bottle);
+                if (items.Count == 0) continue;
+                groups.Add((type, items));
+                totalRows += Mathf.CeilToInt(items.Count / (float)MenuColumns);
             }
 
-            // Size the cells so the whole bar fits the paper, however much of it you own.
-            int rows = Mathf.Max(1, Mathf.CeilToInt(stock.Count / (float)MenuColumns));
             float areaW = _bottleList.rect.width, areaH = _bottleList.rect.height;
-            float cw = (areaW - (MenuColumns - 1) * 8f) / MenuColumns;
-            float ch = Mathf.Min(112f, (areaH - (rows - 1) * 8f) / rows);
-            _menuGrid.cellSize = new Vector2(cw, ch);
+            float cw = (areaW - (MenuColumns - 1) * GridGap) / MenuColumns;
+            float used = groups.Count * (HeadingH + GridGap) + Mathf.Max(0, totalRows - 1) * GridGap;
+            float ch = totalRows == 0 ? cw : Mathf.Clamp((areaH - used) / totalRows, 44f, 118f);
 
-            foreach (var bottle in stock) AddItemBox(_bottleList, bottle, run);
+            foreach (var (type, items) in groups)
+            {
+                var section = NewRect($"Sec_{type}", _bottleList);
+                var vl = section.gameObject.AddComponent<VerticalLayoutGroup>();
+                vl.spacing = 2f; vl.childControlHeight = true; vl.childControlWidth = true;
+                vl.childForceExpandWidth = true; vl.childForceExpandHeight = false;
+                vl.childAlignment = TextAnchor.UpperLeft;
+                section.gameObject.AddComponent<ContentSizeFitter>().verticalFit =
+                    ContentSizeFitter.FitMode.PreferredSize;
 
+                AddGroupHeader(section, GroupName(type), UITheme.TypeRamp[type][3]);
+
+                var grid = NewRect("Grid", section);
+                var g = grid.gameObject.AddComponent<GridLayoutGroup>();
+                g.cellSize = new Vector2(cw, ch);
+                g.spacing = new Vector2(GridGap, GridGap);
+                g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+                g.constraintCount = MenuColumns;
+                grid.gameObject.AddComponent<ContentSizeFitter>().verticalFit =
+                    ContentSizeFitter.FitMode.PreferredSize;
+                foreach (var bottle in items) AddItemBox(grid, bottle, run);
+            }
+
+            RefreshMixPreview();
             _menuShaker.text = ShakerLine(run);
             var preps = new List<string>();
             foreach (var prep in run.Glass.PreparationSteps) preps.Add(prep.Name);
@@ -290,7 +399,7 @@ namespace LastCall.DebugUI
         private void AddGroupHeader(RectTransform parent, string title, Color colour)
         {
             var rt = NewRect("Header", parent);
-            rt.gameObject.AddComponent<LayoutElement>().preferredHeight = 20;
+            rt.gameObject.AddComponent<LayoutElement>().preferredHeight = HeadingH;
             var text = NewText("L", rt, _body, 12, TextAnchor.LowerLeft,
                 Color.Lerp(colour, new Color(0.24f, 0.16f, 0.09f), 0.62f));
             Stretch(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(2, 0), new Vector2(-2, 0));
@@ -881,7 +990,7 @@ namespace LastCall.DebugUI
         {
             // The menu is a wooden clipboard with the drink list written on its paper.
             _menuPanel = NewRect("MenuPanel", _root);
-            Place(_menuPanel, new Vector2(0.5f, 0.5f), new Vector2(BoardW, BoardH), new Vector2(0, 26));
+            Place(_menuPanel, new Vector2(0.5f, 0.5f), new Vector2(BoardW, BoardH), new Vector2(BoardX, 26));
             var boardImg = _menuPanel.gameObject.AddComponent<Image>();
             var board = ItemArt.Load("menu_board");
             if (board != null) { boardImg.sprite = board; boardImg.preserveAspect = true; boardImg.color = Color.white; }
@@ -890,16 +999,22 @@ namespace LastCall.DebugUI
 
             // A red X in the board's top-right corner closes the whole flow.
             var close = NewRect("Close", _menuPanel);
-            Place(close, new Vector2(1, 1), new Vector2(38, 38),
-                new Vector2(-BoardW * (1f - PaperW) * 0.5f - 12f, -BoardH * (1f - PaperH) * 0.5f - 10f));
+            Place(close, new Vector2(0.5f, 0.5f), new Vector2(44, 44),
+                new Vector2(BoardW * (PaperCX + PaperW * 0.5f) - 30f,
+                            BoardH * (PaperCY + PaperH * 0.5f) - 28f));
             var closeImg = close.gameObject.AddComponent<Image>();
-            closeImg.color = new Color(0.62f, 0.15f, 0.17f);
+            var closeSprite = ItemArt.Load("close_x");
+            if (closeSprite != null) { closeImg.sprite = closeSprite; closeImg.preserveAspect = true; closeImg.color = Color.white; }
+            else closeImg.color = new Color(0.62f, 0.15f, 0.17f);
             var closeBtn = close.gameObject.AddComponent<Button>();
             closeBtn.targetGraphic = closeImg;
             closeBtn.onClick.AddListener(CloseFlow);
-            var closeX = NewText("X", close, _display, 18, TextAnchor.MiddleCenter, new Color(1f, 0.92f, 0.90f));
-            Stretch(closeX.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            closeX.text = "X";
+            if (closeSprite == null)
+            {
+                var closeX = NewText("X", close, _display, 18, TextAnchor.MiddleCenter, new Color(1f, 0.92f, 0.90f));
+                Stretch(closeX.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                closeX.text = "X";
+            }
 
             var title = NewText("Title", _menuPanel, _display, 15, TextAnchor.UpperCenter, new Color(0.34f, 0.22f, 0.12f));
             Place(title.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BoardW * 0.5f, 22),
@@ -914,12 +1029,11 @@ namespace LastCall.DebugUI
             Place(_bottleList, new Vector2(0.5f, 0.5f),
                 new Vector2(BoardW * PaperW - 22f, BoardH * PaperH - 60f),
                 new Vector2(BoardW * PaperCX, BoardH * PaperCY - 18f));
-            _menuGrid = _bottleList.gameObject.AddComponent<GridLayoutGroup>();
-            _menuGrid.cellSize = new Vector2(118, 100);
-            _menuGrid.spacing = new Vector2(8, 8);
-            _menuGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            _menuGrid.constraintCount = MenuColumns;
-            _menuGrid.childAlignment = TextAnchor.UpperCenter;
+            var listLayout = _bottleList.gameObject.AddComponent<VerticalLayoutGroup>();
+            listLayout.spacing = GridGap; listLayout.childControlHeight = true;
+            listLayout.childControlWidth = true; listLayout.childForceExpandWidth = true;
+            listLayout.childForceExpandHeight = false;
+            listLayout.childAlignment = TextAnchor.UpperLeft;
 
             // Right: a side column beside the menu — what's in the shaker, then the actions.
             // The mix/serve buttons live here, out of the item grid, per the redesign.
@@ -927,7 +1041,7 @@ namespace LastCall.DebugUI
             // sit off the board, under it.
             var side = _menuSide = NewRect("Side", _root);
             Place(side, new Vector2(0.5f, 0.5f), new Vector2(BoardW, 96),
-                new Vector2(0, 26 - BoardH * 0.5f - 56f));
+                new Vector2(BoardX, 26 - BoardH * 0.5f - 56f));
 
             var sideTitle = NewText("SideTitle", side, _body, 11, TextAnchor.UpperLeft, UITheme.TextSecondary);
             Place(sideTitle.rectTransform, new Vector2(0, 1), new Vector2(300, 16), new Vector2(160, -4));
@@ -938,6 +1052,8 @@ namespace LastCall.DebugUI
             _menuPreps = NewText("Preps", side, _body, 11, TextAnchor.UpperLeft, UITheme.Cyan[4]);
             Place(_menuPreps.rectTransform, new Vector2(0, 1), new Vector2(300, 20), new Vector2(160, -44));
             _menuPreps.horizontalOverflow = HorizontalWrapMode.Wrap;
+
+            BuildMixPreview();
 
             var actions = NewRect("Actions", side);
             Place(actions, new Vector2(1, 0.5f), new Vector2(300, 44), new Vector2(-8, 0));
@@ -1299,21 +1415,19 @@ namespace LastCall.DebugUI
         /// <summary>EMPTY, drawn as a waste bin rather than a word.</summary>
         private void AddBinButton(RectTransform parent)
         {
+            // Just the bin — you click the object, not a button plate around it.
             var rt = NewRect("Bin", parent);
+            rt.gameObject.AddComponent<LayoutElement>().preferredWidth = 96;
             var img = rt.gameObject.AddComponent<Image>();
-            img.color = UITheme.Night[3];
+            img.preserveAspect = true;
+            img.sprite = ItemArt.Load("bin");
+            img.color = img.sprite != null ? Color.white : UITheme.Night[3];
+            img.alphaHitTestMinimumThreshold = img.sprite != null ? 0.35f : 0f;
             var btn = rt.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => { Run.DiscardGlass(); RefreshMenu(); });
-
-            var icon = NewRect("Icon", rt);
-            Place(icon, new Vector2(0.5f, 0.5f), new Vector2(30, 32), Vector2.zero);
-            var iconImg = icon.gameObject.AddComponent<Image>();
-            iconImg.raycastTarget = false; iconImg.preserveAspect = true;
-            iconImg.sprite = ItemArt.Load("bin");
-            if (iconImg.sprite == null)
+            if (img.sprite == null)
             {
-                iconImg.enabled = false;
                 var fallback = NewText("L", rt, _body, 12, TextAnchor.MiddleCenter, UITheme.TextPrimary);
                 Stretch(fallback.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 fallback.text = "EMPTY";
