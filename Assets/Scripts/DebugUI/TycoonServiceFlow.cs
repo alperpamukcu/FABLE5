@@ -79,7 +79,7 @@ namespace LastCall.DebugUI
         // its centre sits, so the list lands on paper and never on the wood or the clip.
         private const float PaperW = 0.655f, PaperH = 0.660f;
         private const float PaperCX = -0.015f, PaperCY = -0.008f;
-        private const int MenuColumns = 6;
+        private const int MenuColumns = 3;
         private const float GridGap = 6f, HeadingH = 18f;
         private IngredientType? _menuTab;   // null = the section index page
         private Text _menuTitle;
@@ -540,7 +540,7 @@ namespace LastCall.DebugUI
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             g.constraintCount = MenuColumns;
             g.cellSize = new Vector2((areaW - (MenuColumns - 1) * GridGap) / MenuColumns,
-                Mathf.Clamp((areaH - (rows - 1) * GridGap) / rows, 60f, 168f));
+                Mathf.Clamp((areaH - (rows - 1) * GridGap) / rows, 120f, 190f));
             grid.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             foreach (var bottle in items) AddItemBox(grid, bottle, run);
@@ -581,63 +581,78 @@ namespace LastCall.DebugUI
             img.raycastTarget = false;
         }
 
-        /// <summary>One item box in the menu grid: the bottle/ingredient art, its name and its
-        /// remaining fill (OUT when empty, ★NEW when just bought). Tapping it opens the pour.</summary>
+        /// <summary>
+        /// One bottle on a section page — the same key as the section tabs, tinted by its group
+        /// and only as big as its name, how full it is and what it costs.
+        /// </summary>
         private void AddItemBox(RectTransform parent, ShelfBottle bottle, TycoonRun run)
         {
             var card = bottle.Ingredient;
             bool empty = bottle.IsEmpty;
+            var col = UITheme.TypeRamp[card.Type][3];
+
             var box = NewRect($"Box_{card.Id}", parent);
             var bg = box.gameObject.AddComponent<Image>();
-            // Written on paper: a faint tint rather than a dark chip, so the sheet shows through.
-            bg.color = empty ? new Color(0.42f, 0.34f, 0.26f, 0.16f)
-                             : new Color(0.36f, 0.26f, 0.16f, 0.10f);
+            var plate = ItemArt.Load("plate");
+            var plateDown = ItemArt.Load("plate_down");
+            if (plate != null)
+            {
+                bg.sprite = plate; bg.type = Image.Type.Sliced;
+                bg.color = empty ? Color.Lerp(col, new Color(0.45f, 0.43f, 0.42f), 0.7f) : col;
+            }
+            else bg.color = new Color(col.r, col.g, col.b, empty ? 0.25f : 0.5f);
 
-            // Its group's colour along the top edge — the shelf reads grouped without headings.
-            var stripe = NewRect("Stripe", box);
-            stripe.anchorMin = new Vector2(0, 1); stripe.anchorMax = new Vector2(1, 1);
-            stripe.pivot = new Vector2(0.5f, 1);
-            stripe.offsetMin = new Vector2(4, -4); stripe.offsetMax = new Vector2(-4, 0);
-            var stripeImg = stripe.gameObject.AddComponent<Image>();
-            var grp = UITheme.TypeRamp[card.Type][3];
-            stripeImg.color = new Color(grp.r, grp.g, grp.b, empty ? 0.28f : 0.85f);
-            stripeImg.raycastTarget = false;
+            var content = NewRect("Content", box);
+            Stretch(content, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
-            var icon = NewRect("Icon", box);
-            Place(icon, new Vector2(0.5f, 0.5f), new Vector2(60, 60), new Vector2(0, 6));   // centred
+            if (!empty)
+            {
+                var btn = box.gameObject.AddComponent<Button>();
+                btn.targetGraphic = bg;
+                if (plateDown != null)
+                {
+                    btn.transition = Selectable.Transition.SpriteSwap;
+                    var st = btn.spriteState;
+                    st.pressedSprite = plateDown; st.selectedSprite = plate;
+                    btn.spriteState = st;
+                }
+                var sink = box.gameObject.AddComponent<PressSink>();
+                sink.Face = content; sink.Depth = 4f; sink.Squash = 0.015f;
+                var c = card;
+                btn.onClick.AddListener(() => OpenBottle(c));
+            }
+
+            // The bottle is the thing you are choosing, so it gets most of the key.
+            var icon = NewRect("Icon", content);
+            Place(icon, new Vector2(0.5f, 1), new Vector2(96, 108), new Vector2(0, -12));
             var iconImg = icon.gameObject.AddComponent<Image>();
             iconImg.raycastTarget = false; iconImg.preserveAspect = true;
             iconImg.sprite = ItemArt.Bottle(card.Info?.Style);
             iconImg.color = iconImg.sprite == null ? UITheme.StyleColor(card.Info?.Style, card.Type)
                 : (empty ? new Color(1f, 1f, 1f, 0.4f) : Color.white);
 
-            var name = Handwritten(NewText("Name", box, _body, 9, TextAnchor.LowerCenter,
-                empty ? new Color(0.55f, 0.47f, 0.38f) : new Color(0.26f, 0.18f, 0.10f)));
-            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(86, 16), new Vector2(0, 2));
+            // Name, then how full it is and what it costs — the three things the key is sized for.
+            var name = Handwritten(NewText("Name", content, _body, 12, TextAnchor.LowerCenter, Color.black));
+            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(196, 22), new Vector2(0, 30));
             name.horizontalOverflow = HorizontalWrapMode.Wrap;
+            name.verticalOverflow = VerticalWrapMode.Truncate;
+            name.resizeTextForBestFit = true; name.resizeTextMinSize = 8; name.resizeTextMaxSize = 12;
             name.text = card.Name.ToUpperInvariant();
 
-            // What the bottle is worth — the tab is where prices live, ready for the pricing
-            // pass where a dearer spirit sells for more.
-            var price = Handwritten(NewText("Price", box, _body, 10, TextAnchor.UpperLeft, new Color(0.20f, 0.36f, 0.18f)));
-            Place(price.rectTransform, new Vector2(0, 1), new Vector2(52, 14), new Vector2(4, -3));
-            price.text = $"${Market.StockPrice(card)}";
-
-            var badge = NewText("Badge", box, _body, 8, TextAnchor.UpperRight,
-                empty ? new Color(0.62f, 0.20f, 0.22f)
-                      : run.IsNewStock(card.Id) ? new Color(0.72f, 0.44f, 0.06f)
-                                                : new Color(0.34f, 0.30f, 0.22f));
-            Place(badge.rectTransform, new Vector2(1, 1), new Vector2(56, 12), new Vector2(-3, -3));
             double fill = bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 0;
-            badge.text = empty ? "OUT"
-                : run.IsNewStock(card.Id) ? "★NEW" : $"{(int)System.Math.Round(fill * 100)}%";
+            var stats = Handwritten(NewText("Stats", content, _body, 11, TextAnchor.UpperCenter,
+                empty ? new Color(0.48f, 0.10f, 0.12f) : new Color(0.12f, 0.12f, 0.12f)));
+            Place(stats.rectTransform, new Vector2(0.5f, 0), new Vector2(196, 18), new Vector2(0, 10));
+            stats.text = empty
+                ? $"OUT  ·  ${Market.StockPrice(card)}"
+                : $"{(int)System.Math.Round(fill * 100)}%  ·  ${Market.StockPrice(card)}";
 
-            if (!empty)
+            if (!empty && run.IsNewStock(card.Id))
             {
-                var btn = box.gameObject.AddComponent<Button>();
-                btn.targetGraphic = bg; btn.transition = Selectable.Transition.ColorTint;
-                var c = card;
-                btn.onClick.AddListener(() => OpenBottle(c));
+                var badge = Handwritten(NewText("New", content, _body, 9, TextAnchor.UpperRight,
+                    new Color(0.62f, 0.36f, 0.04f)));
+                Place(badge.rectTransform, new Vector2(1, 1), new Vector2(46, 14), new Vector2(-8, -6));
+                badge.text = "NEW";
             }
         }
 
