@@ -90,6 +90,7 @@ namespace LastCall.DebugUI
         private float _flipT = 1f;
         private int _flipDir;
         private const float FlipTime = 0.34f;
+        private Vector2 _menuHome;
         private const float CornerSize = 52f, CornerInset = 30f;   // identical for every corner
         private RectTransform _mixBar;
 
@@ -264,31 +265,34 @@ namespace LastCall.DebugUI
             _flipT = 0f;
         }
 
-        /// <summary>Drives the turn: the sheet folds around its bottom-right corner, the page
-        /// is swapped at the halfway point, and it unfolds into the new one.</summary>
+        /// <summary>Drives the turn. The SHEET is what moves — the board lifts, tips and settles
+        /// back — while the tabs keep their layout untouched; animating them was what threw their
+        /// positions off. The page is swapped under the lift.</summary>
         private void AdvancePageTurn()
         {
-            if (_flipT >= 1f || _bottleList == null) return;
+            if (_flipT >= 1f || _menuPanel == null) return;
             bool wasFirstHalf = _flipT < 0.5f;
             _flipT = Mathf.MoveTowards(_flipT, 1f, Mathf.Max(Time.deltaTime, 1e-4f) / FlipTime);
 
             if (wasFirstHalf && _flipT >= 0.5f)
             {
-                _menuTab = _flipTo;                  // the page changes under the fold
+                _menuTab = _flipTo;                  // the page changes while the sheet is up
                 RefreshMenu();
             }
 
-            // 1 → 0 → 1 across the turn, pivoting on the corner the page is taken by.
+            // 1 → 0 → 1: the sheet lifts away and the next one settles in.
             float half = _flipT < 0.5f ? _flipT / 0.5f : (1f - _flipT) / 0.5f;
-            float fold = Mathf.Max(0.02f, 1f - (1f - half) * (1f - half));
-            _bottleList.pivot = _flipDir > 0 ? new Vector2(1f, 0f) : new Vector2(0f, 1f);
-            _bottleList.localScale = new Vector3(fold, Mathf.Lerp(0.94f, 1f, fold), 1f);
-            _bottleList.localRotation = Quaternion.Euler(0, 0, (1f - fold) * -6f * _flipDir);
+            float lift = Mathf.Max(0f, 1f - (1f - half) * (1f - half));
+            float k = Mathf.Lerp(1f, 0.90f, lift);
+            _menuPanel.localScale = new Vector3(k, k, 1f);
+            _menuPanel.localRotation = Quaternion.Euler(0, 0, lift * -3.5f * _flipDir);
+            _menuPanel.anchoredPosition = _menuHome + new Vector2(26f * _flipDir, 34f) * lift;
 
             if (_flipT >= 1f)
             {
-                _bottleList.localScale = Vector3.one;
-                _bottleList.localRotation = Quaternion.identity;
+                _menuPanel.localScale = Vector3.one;
+                _menuPanel.localRotation = Quaternion.identity;
+                _menuPanel.anchoredPosition = _menuHome;
             }
         }
 
@@ -391,7 +395,7 @@ namespace LastCall.DebugUI
         /// <summary>Page one: one card per stocked section.</summary>
         private void BuildGroupPage(TycoonRun run)
         {
-            _menuTitle.text = "★  MAKE A DRINK  ★";
+            _menuTitle.text = "MAKE A DRINK";
             var row = NewRect("Groups", _bottleList);
             var grid = row.gameObject.AddComponent<GridLayoutGroup>();
             float areaW = _bottleList.rect.width, areaH = _bottleList.rect.height;
@@ -417,18 +421,33 @@ namespace LastCall.DebugUI
                 var card = NewRect($"Grp_{type}", row);
                 var bg = card.gameObject.AddComponent<Image>();
                 var col = UITheme.TypeRamp[type][3];
-                bg.color = new Color(col.r, col.g, col.b, 0.20f);
+                var plate = ItemArt.Load("tab_btn");
+                var plateDown = ItemArt.Load("tab_btn_down");
                 var btn = card.gameObject.AddComponent<Button>();
                 btn.targetGraphic = bg;
+                if (plate != null)
+                {
+                    // A raised panel that visibly sinks when you press it.
+                    bg.sprite = plate; bg.type = Image.Type.Sliced; bg.color = Color.white;
+                    if (plateDown != null)
+                    {
+                        btn.transition = Selectable.Transition.SpriteSwap;
+                        var sprites = btn.spriteState;
+                        sprites.pressedSprite = plateDown;
+                        sprites.selectedSprite = plate;
+                        btn.spriteState = sprites;
+                    }
+                }
+                else bg.color = new Color(col.r, col.g, col.b, 0.20f);
                 var t = type;
                 btn.onClick.AddListener(() => OpenTab(t));
 
                 var stripe = NewRect("Stripe", card);
                 stripe.anchorMin = new Vector2(0, 1); stripe.anchorMax = new Vector2(1, 1);
                 stripe.pivot = new Vector2(0.5f, 1);
-                stripe.offsetMin = new Vector2(6, -6); stripe.offsetMax = new Vector2(-6, 0);
+                stripe.offsetMin = new Vector2(18, -20); stripe.offsetMax = new Vector2(-18, -14);
                 var si = stripe.gameObject.AddComponent<Image>();
-                si.color = new Color(col.r, col.g, col.b, 0.9f); si.raycastTarget = false;
+                si.color = new Color(col.r, col.g, col.b, 0.92f); si.raycastTarget = false;
 
                 var name = NewText("N", card, _display, 17, TextAnchor.MiddleCenter, new Color(0.24f, 0.16f, 0.09f));
                 Place(name.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(grid.cellSize.x - 20, 26), new Vector2(0, 8));
@@ -468,7 +487,7 @@ namespace LastCall.DebugUI
         /// <summary>A section's page: its bottles, with prices, and a way back.</summary>
         private void BuildTabPage(TycoonRun run, IngredientType type)
         {
-            _menuTitle.text = $"★  {GroupName(type)}  ★";
+            _menuTitle.text = GroupName(type);
 
             var items = new List<ShelfBottle>();
             foreach (var b in run.Shelf.Bottles) if (b.Ingredient.Type == type) items.Add(b);
@@ -1107,6 +1126,7 @@ namespace LastCall.DebugUI
             // The menu is a wooden clipboard with the drink list written on its paper.
             _menuPanel = NewRect("MenuPanel", _root);
             Place(_menuPanel, new Vector2(0.5f, 0.5f), new Vector2(BoardW, BoardH), new Vector2(BoardX, 0));
+            _menuHome = _menuPanel.anchoredPosition;
             var boardImg = _menuPanel.gameObject.AddComponent<Image>();
             var board = ItemArt.Load("menu_board");
             if (board != null) { boardImg.sprite = board; boardImg.preserveAspect = true; boardImg.color = Color.white; }
@@ -1117,7 +1137,7 @@ namespace LastCall.DebugUI
             // A red X in the board's top-right corner closes the whole flow.
             var close = NewRect("Close", _menuPanel);
             Place(close, new Vector2(0.5f, 0.5f), new Vector2(CornerSize, CornerSize),
-                PaperCorner(1, 1));
+                PaperCorner(1, 1) + new Vector2(-22f, 0f));
             var closeImg = close.gameObject.AddComponent<Image>();
             var closeSprite = ItemArt.Load("close_x");
             if (closeSprite != null) { closeImg.sprite = closeSprite; closeImg.preserveAspect = true; closeImg.color = Color.white; }
@@ -1135,7 +1155,7 @@ namespace LastCall.DebugUI
             // Its mirror on the paper's top-left: step back out of a section.
             _menuBack = NewRect("Back", _menuPanel);
             Place(_menuBack, new Vector2(0.5f, 0.5f), new Vector2(CornerSize, CornerSize),
-                PaperCorner(-1, 1));
+                PaperCorner(-1, 1) + new Vector2(22f, 0f));
             var backImg = _menuBack.gameObject.AddComponent<Image>();
             var backSprite = ItemArt.Load("back_arrow");
             if (backSprite != null) { backImg.sprite = backSprite; backImg.preserveAspect = true; backImg.color = Color.white; }
@@ -1155,7 +1175,7 @@ namespace LastCall.DebugUI
             outline.effectColor = new Color(0.10f, 0.06f, 0.03f, 1f);
             outline.effectDistance = new Vector2(2.5f, 2.5f);
             Place(title.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BoardW * 0.6f, 34),
-                new Vector2(BoardW * PaperCX, BoardH * (PaperCY + PaperH * 0.5f) + 16f));
+                new Vector2(BoardW * PaperCX, BoardH * (PaperCY + PaperH * 0.5f) - 4f));
             title.text = "MAKE A DRINK";
 
             // Left: a SCROLLABLE back-shelf of grouped item boxes — it grows as you buy more
@@ -1543,7 +1563,7 @@ namespace LastCall.DebugUI
         {
             // Just the bin — you click the object, not a button plate around it.
             var rt = NewRect("Bin", parent);
-            Place(rt, new Vector2(0.5f, 0.5f), new Vector2(52, 60), PaperCorner(1, -1) + new Vector2(0, 10f));
+            Place(rt, new Vector2(0.5f, 0.5f), new Vector2(52, 60), PaperCorner(1, -1) + new Vector2(-22f, 10f));
             var img = rt.gameObject.AddComponent<Image>();
             img.preserveAspect = true;
             img.sprite = ItemArt.Load("bin");
