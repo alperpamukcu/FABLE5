@@ -79,7 +79,7 @@ namespace LastCall.DebugUI
         // its centre sits, so the list lands on paper and never on the wood or the clip.
         private const float PaperW = 0.655f, PaperH = 0.660f;
         private const float PaperCX = -0.015f, PaperCY = -0.008f;
-        private const int MenuColumns = 3;
+        private const int MenuColumns = 4;
         private const float GridGap = 6f, HeadingH = 18f;
         private IngredientType? _menuTab;   // null = the section index page
         private Text _menuTitle;
@@ -316,6 +316,16 @@ namespace LastCall.DebugUI
             return t;
         }
 
+        /// <summary>Rings a label in black so it stays legible on any coloured key.</summary>
+        private static Text Outlined(Text t, float thickness = 2f)
+        {
+            var o = t.gameObject.AddComponent<UnityEngine.UI.Outline>();
+            o.effectColor = new Color(0f, 0f, 0f, 1f);
+            o.effectDistance = new Vector2(thickness, thickness);
+            o.useGraphicAlpha = false;
+            return t;
+        }
+
         /// <summary>A point inset from one of the paper's corners — every corner control uses
         /// this, so they are geometrically symmetric rather than eyeballed.</summary>
         private static Vector2 PaperCorner(int sx, int sy) => new Vector2(
@@ -540,7 +550,7 @@ namespace LastCall.DebugUI
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             g.constraintCount = MenuColumns;
             g.cellSize = new Vector2((areaW - (MenuColumns - 1) * GridGap) / MenuColumns,
-                Mathf.Clamp((areaH - (rows - 1) * GridGap) / rows, 120f, 190f));
+                Mathf.Clamp((areaH - (rows - 1) * GridGap) / rows, 130f, 210f));
             grid.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             foreach (var bottle in items) AddItemBox(grid, bottle, run);
@@ -624,7 +634,7 @@ namespace LastCall.DebugUI
 
             // The bottle is the thing you are choosing, so it gets most of the key.
             var icon = NewRect("Icon", content);
-            Place(icon, new Vector2(0.5f, 1), new Vector2(96, 108), new Vector2(0, -12));
+            Place(icon, new Vector2(0.5f, 1), new Vector2(126, 138), new Vector2(0, -8));
             var iconImg = icon.gameObject.AddComponent<Image>();
             iconImg.raycastTarget = false; iconImg.preserveAspect = true;
             iconImg.sprite = ItemArt.Bottle(card.Info?.Style);
@@ -632,20 +642,24 @@ namespace LastCall.DebugUI
                 : (empty ? new Color(1f, 1f, 1f, 0.4f) : Color.white);
 
             // Name, then how full it is and what it costs — the three things the key is sized for.
-            var name = Handwritten(NewText("Name", content, _body, 12, TextAnchor.LowerCenter, Color.black));
-            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(196, 22), new Vector2(0, 30));
+            var name = Outlined(Handwritten(NewText("Name", content, _body, 12, TextAnchor.LowerCenter, Color.white)));
+            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(178, 22), new Vector2(0, 26));
             name.horizontalOverflow = HorizontalWrapMode.Wrap;
             name.verticalOverflow = VerticalWrapMode.Truncate;
             name.resizeTextForBestFit = true; name.resizeTextMinSize = 8; name.resizeTextMaxSize = 12;
             name.text = card.Name.ToUpperInvariant();
 
+            // How full it is, and what it costs — each in its own colour, both ringed in black.
             double fill = bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 0;
-            var stats = Handwritten(NewText("Stats", content, _body, 11, TextAnchor.UpperCenter,
-                empty ? new Color(0.48f, 0.10f, 0.12f) : new Color(0.12f, 0.12f, 0.12f)));
-            Place(stats.rectTransform, new Vector2(0.5f, 0), new Vector2(196, 18), new Vector2(0, 10));
-            stats.text = empty
-                ? $"OUT  ·  ${Market.StockPrice(card)}"
-                : $"{(int)System.Math.Round(fill * 100)}%  ·  ${Market.StockPrice(card)}";
+            var pct = Outlined(Handwritten(NewText("Fill", content, _body, 11, TextAnchor.UpperLeft,
+                empty ? new Color(1f, 0.42f, 0.42f) : new Color(1f, 0.80f, 0.32f))));
+            Place(pct.rectTransform, new Vector2(0, 0), new Vector2(96, 18), new Vector2(14, 6));
+            pct.text = empty ? "OUT" : $"{(int)System.Math.Round(fill * 100)}%";
+
+            var price = Outlined(Handwritten(NewText("Price", content, _body, 11, TextAnchor.UpperRight,
+                new Color(0.45f, 0.95f, 0.45f))));
+            Place(price.rectTransform, new Vector2(1, 0), new Vector2(96, 18), new Vector2(-14, 6));
+            price.text = $"${Market.StockPrice(card)}";
 
             if (!empty && run.IsNewStock(card.Id))
             {
