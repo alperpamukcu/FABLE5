@@ -432,7 +432,9 @@ namespace LastCall.DebugUI
 
         private void StepDrops(float dt)
         {
-            float floor = -_size.y * 0.5f - 30f;
+            // The viewport is offset from the surface origin now, so the kill line has to be
+            // measured from its centre — otherwise drops die (and vanish) at the wrong height.
+            float floor = _originY - _size.y * 0.5f - 30f;
             for (int i = 0; i < MaxDrops; i++)
             {
                 if (!_drops[i].Active) continue;

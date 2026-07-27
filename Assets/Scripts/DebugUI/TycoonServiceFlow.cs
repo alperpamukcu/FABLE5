@@ -433,12 +433,12 @@ namespace LastCall.DebugUI
             // clear shaker instead of a box around it (2026-07-23).
             var c = _shakerVessel.anchoredPosition;
             float halfW = _shakerVessel.rect.width * 0.5f;
-            float iw = halfW * 0.62f;
+            float iw = halfW * 0.50f;   // measured: the tin's cavity is 50% of the sprite width
             float minX = c.x - iw;
             float maxX = c.x + iw;
             float h = _shakerVessel.rect.height;
-            float bottomY = c.y - h * 0.5f + h * 0.13f;
-            float innerH = h * 0.64f;
+            float bottomY = c.y - h * 0.5f + h * 0.072f;   // measured: cavity floor
+            float innerH = h * 0.539f;                      // measured: cavity floor → rim
             float fill = (float)run.Glass.FillFraction;
             float rimY = bottomY + innerH;
             float topY = bottomY + innerH * fill + bob;
@@ -853,7 +853,7 @@ namespace LastCall.DebugUI
             // shake — it becomes the toy you throw around.
             _shakerHome = new Vector2(-120, -30);
             _shakerVessel = NewRect("Shaker", _pourSurface);
-            Place(_shakerVessel, new Vector2(0.5f, 0.5f), new Vector2(158, 244), _shakerHome);
+            Place(_shakerVessel, new Vector2(0.5f, 0.5f), new Vector2(168, 301), _shakerHome);
             var shakerImg = _shakerVessel.gameObject.AddComponent<Image>();
             // The real steel shaker (2026-07-23). It sits in front of the fluid so the metal
             // reads solid — the falling stream shows above the mouth then vanishes into the tin.
@@ -886,7 +886,7 @@ namespace LastCall.DebugUI
             _shakerFluid = new MetaballFluid(_pourSurface);
             // The tin's silhouette (bottom → rim): a full body that draws in to the neck, so the
             // drink takes the shaker's shape instead of filling an invisible box (2026-07-24).
-            _shakerFluid.SetProfile(new[] { 0.85f, 0.89f, 0.93f, 0.96f, 0.99f, 1.00f, 0.78f, 0.55f });
+            _shakerFluid.SetProfile(new[] { 0.28f, 0.74f, 0.81f, 0.86f, 0.91f, 0.95f, 0.98f, 1.00f });
             _shakerSolids = new ShakerSolids(_pourSurface);
             _shakerSplash = new Splasher(_pourSurface);
             // The metal shaker is opaque, so the fluid draws OVER it (2026-07-24): you see the
