@@ -34,7 +34,7 @@ namespace LastCall.DebugUI
         // derived from the fill area at Spacing, so it fills any vessel exactly.
         private const float H = 7.5f;                  // viscosity/neighbour radius (px)
         private const float Spacing = 3f;           // rest spacing (min distance) → many small particles
-        private const int   RelaxIters = 6;           // incompressibility relaxation passes
+        private const int   RelaxIters = 8;           // incompressibility relaxation passes
         // Render radius is well above the spacing so the fine, tightly-packed particles
         // overlap into ONE smooth connected surface with no gaps between them.
         private const float PoolRadius = 4.3f;
@@ -60,6 +60,8 @@ namespace LastCall.DebugUI
         private readonly float[] _vy = new float[MaxPool];
         private readonly float[] _ppx = new float[MaxPool];
         private readonly float[] _ppy = new float[MaxPool];
+        private readonly float[] _qx = new float[MaxPool];   // predicted (pre-constraint) position
+        private readonly float[] _qy = new float[MaxPool];
         private int _pn;                               // live pool particles
 
         // Spatial hash grid → O(N) neighbour queries, so the particle count can go high cheaply.
@@ -76,6 +78,12 @@ namespace LastCall.DebugUI
         // height by an optional silhouette profile so the liquid takes the VESSEL's shape
         // (a tapered tin, a tumbler) instead of filling an invisible box (2026-07-24).
         private float _cx, _cy, _halfW, _halfH, _angle;
+        // Particle positions are stored in the CONTAINER'S LOCAL frame (origin at its centre,
+        // unrotated). The walls are therefore static in the sim, so a shaken vessel can never
+        // teleport into the liquid and crush it; the shaking arrives as an inertial force.
+        private float _fillTopLocal;
+        private float _shakeAx, _shakeAy;      // inertial acceleration from the vessel's motion
+        private const float ShakeGain = 110f;  // how hard the vessel's motion throws the drink
         private float[] _profile;   // half-width multipliers, bottom → rim; null = plain rect
         private float _fillTopY;                       // current liquid line (for spawns)
         private bool _poolSet;
@@ -193,6 +201,8 @@ namespace LastCall.DebugUI
         public void SetPool(float minX, float maxX, float bottomY, float rimY,
             float fillFrac, float angleRad = 0f)
         {
+            float pcx = _cx, pcy = _cy;
+            bool had = _poolSet;
             _cx = (minX + maxX) * 0.5f;
             _cy = (bottomY + rimY) * 0.5f;
             _halfW = Mathf.Max((maxX - minX) * 0.5f, 4f);
@@ -203,18 +213,29 @@ namespace LastCall.DebugUI
             _poolSet = true;
             FitViewport();   // draw only over the vessel + its stream/splash margin
 
+            // The vessel's motion enters the sim as an inertial force, not as walls teleporting
+            // into the particles (which crushed the drink and shrank its volume while shaking).
+            if (had)
+            {
+                float dx = _cx - pcx, dy = _cy - pcy;
+                _shakeAx = Mathf.Lerp(_shakeAx, -dx * ShakeGain, 0.5f);
+                _shakeAy = Mathf.Lerp(_shakeAy, -dy * ShakeGain, 0.5f);
+            }
+            else { _shakeAx = _shakeAy = 0f; }
+
             // Enough particles to fill the liquid AREA at the rest spacing — so they pack up to
             // the line, not into a puddle at the bottom. The area follows the vessel silhouette
             // (a narrow tin holds less), so a profiled vessel is not overfilled.
             float fillH = _fillTopY - bottomY;
             float widthScale = AverageProfile(fillFrac);
             int target = Mathf.Clamp(
-                Mathf.RoundToInt((2f * _halfW * widthScale) * fillH / (Spacing * Spacing) * 1.64f),
+                Mathf.RoundToInt((2f * _halfW * widthScale) * fillH / (Spacing * Spacing) * 1.155f),
                 0, MaxPool);
+            _fillTopLocal = -_halfH + fillH;
             while (_pn < target && _pn < MaxPool)
             {
-                _px[_pn] = _cx + Random.Range(-_halfW * 0.6f, _halfW * 0.6f);
-                _py[_pn] = _fillTopY + Random.Range(-6f, 10f);
+                _px[_pn] = Random.Range(-_halfW * 0.6f, _halfW * 0.6f);   // local frame
+                _py[_pn] = _fillTopLocal + Random.Range(-6f, 10f);
                 _vx[_pn] = 0f; _vy[_pn] = -40f;
                 _pn++;
             }
@@ -246,7 +267,7 @@ namespace LastCall.DebugUI
         {
             float v = velImpulse * _size.y;
             for (int i = 0; i < _pn; i++)
-                if (Mathf.Abs(_px[i] - localX) < H && _py[i] > _fillTopY - H)
+                if (Mathf.Abs(_px[i] - localX) < H && _py[i] > _fillTopLocal - H)
                     _vy[i] -= v;
         }
 
@@ -300,12 +321,18 @@ namespace LastCall.DebugUI
         {
             if (_pn == 0) return;
 
-            // Integrate gravity and remember where each particle started this frame.
+            // World acceleration (gravity + the vessel's motion) rotated into the container's
+            // frame: tilting the tin swings gravity across it, shaking throws the drink about.
+            float c = Mathf.Cos(-_angle), sn = Mathf.Sin(-_angle);
+            float wax = _shakeAx, way = -Gravity + _shakeAy;
+            float accX = wax * c - way * sn;
+            float accY = wax * sn + way * c;
             for (int i = 0; i < _pn; i++)
             {
                 _ppx[i] = _px[i]; _ppy[i] = _py[i];
-                _vy[i] -= Gravity * dt;
+                _vx[i] += accX * dt; _vy[i] += accY * dt;
                 _px[i] += _vx[i] * dt; _py[i] += _vy[i] * dt;
+                _qx[i] = _px[i]; _qy[i] = _py[i];   // predicted, before the constraints
             }
 
             // Incompressibility: relax a minimum-distance constraint a few passes — no two
@@ -327,7 +354,7 @@ namespace LastCall.DebugUI
                                 float r2 = dx * dx + dy * dy;
                                 if (r2 >= minD2 || r2 < 1e-4f) continue;
                                 float r = Mathf.Sqrt(r2);
-                                float push = (minD - r) * 0.5f;
+                                float push = (minD - r) * 0.5f * 1.6f;   // over-relaxed
                                 float nx = dx / r, ny = dy / r;
                                 _px[i] -= nx * push; _py[i] -= ny * push;
                                 _px[j] += nx * push; _py[j] += ny * push;
@@ -335,6 +362,23 @@ namespace LastCall.DebugUI
                 }
                 ClampToVessel();
             }
+
+            // Cap how far the constraints may move a particle in one frame. Without this the
+            // correction feeds straight back into velocity, which throws particles into the
+            // walls, packs them on top of each other (the drink visibly loses volume) and
+            // stuffs the grid cells so the neighbour sweep — and the frame — blows up.
+            float maxCorr = Spacing * 2.5f, maxCorr2 = maxCorr * maxCorr;
+            for (int i = 0; i < _pn; i++)
+            {
+                float cxd = _px[i] - _qx[i], cyd = _py[i] - _qy[i];
+                float m2 = cxd * cxd + cyd * cyd;
+                if (m2 > maxCorr2)
+                {
+                    float sc = maxCorr / Mathf.Sqrt(m2);
+                    _px[i] = _qx[i] + cxd * sc; _py[i] = _qy[i] + cyd * sc;
+                }
+            }
+            ClampToVessel();
 
             // Velocity from the net move (this is what carries a moving/tilting vessel into the
             // liquid — the slosh), speed-capped.
@@ -370,22 +414,27 @@ namespace LastCall.DebugUI
         /// <summary>Clamps every particle inside the rotated vessel interior (profile-shaped).</summary>
         private void ClampToVessel()
         {
-            float cos = Mathf.Cos(-_angle), sin = Mathf.Sin(-_angle);
-            float cosB = Mathf.Cos(_angle), sinB = Mathf.Sin(_angle);
-            // Only a hair of inset vertically, so the liquid sits flush on the vessel floor
-            // rather than floating a rounded blob above it.
+            // Local frame: the walls are axis-aligned here, so this is a straight compare —
+            // no rotation per particle per iteration (the old hot path).
             float ix = Mathf.Max(_halfW - PoolRadius * 0.45f, 2f);
             float iy = Mathf.Max(_halfH - PoolRadius * 0.15f, 2f);
             for (int i = 0; i < _pn; i++)
             {
-                float ox = _px[i] - _cx, oy = _py[i] - _cy;
-                float lx = ox * cos - oy * sin, ly = ox * sin + oy * cos;
+                float ly = _py[i];
                 if (ly < -iy) ly = -iy; else if (ly > iy) ly = iy;
                 float w = HalfWidthAt((ly + iy) / (2f * iy), ix);   // the wall at this height
+                float lx = _px[i];
                 if (lx < -w) lx = -w; else if (lx > w) lx = w;
-                _px[i] = _cx + (lx * cosB - ly * sinB);
-                _py[i] = _cy + (lx * sinB + ly * cosB);
+                _px[i] = lx; _py[i] = ly;
             }
+        }
+
+        /// <summary>Container-local → surface-local px (for rendering and drop tests).</summary>
+        private void ToSurface(float lx, float ly, out float sx, out float sy)
+        {
+            float c = Mathf.Cos(_angle), s2 = Mathf.Sin(_angle);
+            sx = _cx + lx * c - ly * s2;
+            sy = _cy + lx * s2 + ly * c;
         }
 
         /// <summary>Blends each particle's velocity toward its neighbours' — the liquid flows as
@@ -446,13 +495,23 @@ namespace LastCall.DebugUI
                 d.Life -= dt;
 
                 // A stream drop that reaches the liquid surface inside the vessel melts in.
-                if (d.Merges && _poolSet && d.Pos.y <= _fillTopY + 6f &&
-                    Mathf.Abs(d.Pos.x - _cx) < _halfW)
+                if (d.Merges && _poolSet)
                 {
-                    if (Random.value < 0.5f) Splash(new Vector2(d.Pos.x, _fillTopY), 0.4f);
-                    Ripple(d.Pos.x, 0.012f);
-                    d.Active = false;
-                    continue;
+                    // Into the container's frame: has it reached the liquid line inside the tin?
+                    float c = Mathf.Cos(-_angle), s2 = Mathf.Sin(-_angle);
+                    float ox = d.Pos.x - _cx, oy = d.Pos.y - _cy;
+                    float lx = ox * c - oy * s2, ly = ox * s2 + oy * c;
+                    if (ly <= _fillTopLocal + 6f && Mathf.Abs(lx) < _halfW)
+                    {
+                        if (Random.value < 0.5f)
+                        {
+                            ToSurface(lx, _fillTopLocal, out float hx, out float hy);
+                            Splash(new Vector2(hx, hy), 0.4f);
+                        }
+                        Ripple(lx, 0.012f);
+                        d.Active = false;
+                        continue;
+                    }
                 }
                 if (d.Life <= 0f || d.Pos.y < floor) d.Active = false;
             }
@@ -464,7 +523,8 @@ namespace LastCall.DebugUI
             int count = 0;
             for (int i = 0; i < _pn && count < RenderMax; i++)
             {
-                var uv = ToUv(_px[i], _py[i]);
+                ToSurface(_px[i], _py[i], out float sx, out float sy);
+                var uv = ToUv(sx, sy);
                 _dropData[count++] = new Vector4(uv.x, uv.y, PoolRadius, 1f);
             }
             for (int i = 0; i < MaxDrops && count < RenderMax; i++)
