@@ -308,6 +308,14 @@ namespace LastCall.DebugUI
             return n;
         }
 
+        /// <summary>Everything written on the sheet is slanted — the closest a pixel face gets
+        /// to a hand that scrawled the list out behind the bar.</summary>
+        private static Text Handwritten(Text t)
+        {
+            t.fontStyle = FontStyle.Italic;
+            return t;
+        }
+
         /// <summary>A point inset from one of the paper's corners — every corner control uses
         /// this, so they are geometrically symmetric rather than eyeballed.</summary>
         private static Vector2 PaperCorner(int sx, int sy) => new Vector2(
@@ -469,11 +477,11 @@ namespace LastCall.DebugUI
                 var si = stripe.gameObject.AddComponent<Image>();
                 si.color = new Color(col.r, col.g, col.b, 0.92f); si.raycastTarget = false;
 
-                var name = NewText("N", content, _display, 17, TextAnchor.MiddleCenter, new Color(0.24f, 0.16f, 0.09f));
+                var name = Handwritten(NewText("N", content, _display, 17, TextAnchor.MiddleCenter, new Color(1f, 0.96f, 0.99f)));
                 Place(name.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(grid.cellSize.x - 20, 26), new Vector2(0, 8));
                 name.text = GroupName(t);
 
-                var count = NewText("C", content, _body, 11, TextAnchor.UpperCenter, new Color(0.44f, 0.36f, 0.26f));
+                var count = Handwritten(NewText("C", content, _body, 11, TextAnchor.UpperCenter, new Color(0.78f, 0.70f, 0.86f)));
                 Place(count.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 20, 16),
                     new Vector2(0, -46));
                 count.text = empty > 0 ? $"{have} bottles · {empty} out" : $"{have} bottles";
@@ -591,15 +599,15 @@ namespace LastCall.DebugUI
             iconImg.color = iconImg.sprite == null ? UITheme.StyleColor(card.Info?.Style, card.Type)
                 : (empty ? new Color(1f, 1f, 1f, 0.4f) : Color.white);
 
-            var name = NewText("Name", box, _body, 9, TextAnchor.LowerCenter,
-                empty ? new Color(0.55f, 0.47f, 0.38f) : new Color(0.26f, 0.18f, 0.10f));
+            var name = Handwritten(NewText("Name", box, _body, 9, TextAnchor.LowerCenter,
+                empty ? new Color(0.55f, 0.47f, 0.38f) : new Color(0.26f, 0.18f, 0.10f)));
             Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(86, 16), new Vector2(0, 2));
             name.horizontalOverflow = HorizontalWrapMode.Wrap;
             name.text = card.Name.ToUpperInvariant();
 
             // What the bottle is worth — the tab is where prices live, ready for the pricing
             // pass where a dearer spirit sells for more.
-            var price = NewText("Price", box, _body, 10, TextAnchor.UpperLeft, new Color(0.20f, 0.36f, 0.18f));
+            var price = Handwritten(NewText("Price", box, _body, 10, TextAnchor.UpperLeft, new Color(0.20f, 0.36f, 0.18f)));
             Place(price.rectTransform, new Vector2(0, 1), new Vector2(52, 14), new Vector2(4, -3));
             price.text = $"${Market.StockPrice(card)}";
 
@@ -1190,7 +1198,7 @@ namespace LastCall.DebugUI
                 backArrow.text = "←";
             }
 
-            var title = _menuTitle = NewText("Title", _menuPanel, _display, 19, TextAnchor.MiddleCenter, Color.white);
+            var title = _menuTitle = Handwritten(NewText("Title", _menuPanel, _display, 19, TextAnchor.MiddleCenter, Color.white));
             var outline = title.gameObject.AddComponent<UnityEngine.UI.Outline>();
             outline.effectColor = new Color(0.10f, 0.06f, 0.03f, 1f);
             outline.effectDistance = new Vector2(2.5f, 2.5f);
