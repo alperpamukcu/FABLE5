@@ -51,7 +51,17 @@ namespace LastCall.DebugUI
         // shaker's opening. Purely procedural placeholder art — P8 re-skins it.
         private RectTransform _pourSurface;   // the interaction area inside the shaker panel
         private RectTransform _shakerVessel;  // the target, opening at its top
-        private RectTransform _shakerTop;     // rim/dome/cap drawn over the liquid
+        private RectTransform _shakerTop;     // the cap: drag it onto the tin to close it
+        // Capping the tin (2026-07-24): the shaker is open while you build the drink, so the
+        // liquid can go in. Drop the cap on its mouth and the bench clears — the props fade
+        // out and the tin slides to the middle and grows — so the focus moves to shaking it.
+        private bool _capped, _capGrabbed;
+        private float _capT;                  // 0 = open on the bench, 1 = capped and centred
+        private Vector2 _capRest, _capPos;
+        private Vector2 _shakerOpenSize;
+        private readonly List<CanvasGroup> _benchProps = new List<CanvasGroup>();
+        private const float CapCentreX = 0f;
+        private const float CapGrowth = 1.3f;
         private RectTransform _pourBottle;    // the grabbable bottle
         private Image _pourBottleBody;
         private MetaballFluid _shakerFluid;   // the metaball liquid: pour stream + pooled body
@@ -143,7 +153,7 @@ namespace LastCall.DebugUI
                 return;
             }
 
-            if (_stage == Stage.Shaker) { UpdateShake(run); UpdatePrepDrag(run); UpdateTiltPour(run); }
+            if (_stage == Stage.Shaker) { UpdateCap(run); UpdateShake(run); UpdatePrepDrag(run); UpdateTiltPour(run); }
 
             if (_stage == Stage.Serve) UpdateServeTilt(run);
         }
@@ -346,6 +356,11 @@ namespace LastCall.DebugUI
             _shakerFluid.SetColor(DrinkColor(run.Glass));
             _shakerVessel.anchoredPosition = _shakerHome;
             _shakerVessel.localRotation = Quaternion.identity;
+            _capped = false; _capGrabbed = false; _capT = 0f;
+            if (_shakerOpenSize != Vector2.zero) _shakerVessel.sizeDelta = _shakerOpenSize;
+            _capPos = _capRest;
+            if (_shakerTop != null) { _shakerTop.anchoredPosition = _capRest; _shakerTop.localRotation = Quaternion.identity; }
+            foreach (var g in _benchProps) if (g != null) g.alpha = 1f;
             PushShakerPool(run, 0f);
             _shakeMeterFill.rectTransform.sizeDelta = new Vector2(0, -4);
             _shakeMeterText.text = run.Glass.HasPreparation("shaken")
@@ -447,14 +462,66 @@ namespace LastCall.DebugUI
             float deg = _shakerVessel.localEulerAngles.z;
             if (deg > 180f) deg -= 360f;
             _shakerFluid.SetPool(minX, maxX, bottomY, rimY, fill, deg * Mathf.Deg2Rad);
-            if (_shakerTop != null)
-            {
-                _shakerTop.anchoredPosition = _shakerVessel.anchoredPosition;
-                _shakerTop.localRotation = _shakerVessel.localRotation;
-                _shakerTop.SetAsLastSibling();   // always above the fluid
-            }
+            // The cap's placement belongs to UpdateCap now — it rests on the bench until
+            // you drop it on the tin, so it must not be glued to the vessel here.
             // The solids float on the liquid line and bounce off these same walls.
             _shakerSolids.SetBounds(minX, maxX, bottomY, topY);
+        }
+
+        /// <summary>
+        /// The cap (2026-07-24). While the tin is open you build the drink in it; drag the lid
+        /// over its mouth and it snaps on. Capping hands the stage over to shaking: the bottle
+        /// and the buckets fade away and the tin eases into the middle and grows, so nothing is
+        /// left on the bench but the thing you are about to shake.
+        /// </summary>
+        private void UpdateCap(TycoonRun run)
+        {
+            if (_shakerTop == null) return;
+            float dt = Mathf.Max(Time.deltaTime, 1e-4f);
+            var mouse = Mouse.current;
+
+            if (_capGrabbed)
+            {
+                if (mouse != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                        _pourSurface, mouse.position.ReadValue(), null, out Vector2 local))
+                    _capPos = Vector2.Lerp(_capPos, local, 1f - Mathf.Exp(-26f * dt));
+                if (mouse == null || !mouse.leftButton.isPressed)
+                {
+                    _capGrabbed = false;
+                    var mouth = _shakerVessel.anchoredPosition
+                                + new Vector2(0, _shakerVessel.rect.height * 0.5f);
+                    if (Vector2.Distance(_capPos, mouth) < 120f && !run.Glass.IsEmpty) _capped = true;
+                    else _capPos = _capRest;
+                }
+            }
+
+            _capT = Mathf.MoveTowards(_capT, _capped ? 1f : 0f, dt / 0.45f);
+            float e = _capT * _capT * (3f - 2f * _capT);   // smoothstep
+
+            if (!_shaking)
+                _shakerVessel.anchoredPosition = Vector2.Lerp(
+                    _shakerVessel.anchoredPosition,
+                    Vector2.Lerp(_shakerHome, new Vector2(CapCentreX, _shakerHome.y), e),
+                    1f - Mathf.Exp(-9f * dt));
+            _shakerVessel.sizeDelta = Vector2.Lerp(_shakerOpenSize, _shakerOpenSize * CapGrowth, e);
+
+            foreach (var g in _benchProps) if (g != null) g.alpha = 1f - e;
+
+            if (_capT > 0f)
+            {
+                _shakerTop.sizeDelta = _shakerVessel.sizeDelta;
+                _shakerTop.anchoredPosition = Vector2.Lerp(_capPos, _shakerVessel.anchoredPosition, e);
+                _shakerTop.localRotation = _shakerVessel.localRotation;
+            }
+            else
+            {
+                _shakerTop.sizeDelta = _shakerOpenSize;
+                _shakerTop.anchoredPosition = _capPos;
+            }
+            _shakerTop.SetAsLastSibling();
+
+            if (!_capped && !run.Glass.IsEmpty && !_capGrabbed)
+                _shakerReadout.text = "drag the lid onto the tin to close it";
         }
 
         /// <summary>
@@ -864,7 +931,8 @@ namespace LastCall.DebugUI
             var shakerImg = _shakerVessel.gameObject.AddComponent<Image>();
             // The real steel shaker (2026-07-23). It sits in front of the fluid so the metal
             // reads solid — the falling stream shows above the mouth then vanishes into the tin.
-            if (ItemArt.Shaker != null) { shakerImg.sprite = ItemArt.Shaker; shakerImg.preserveAspect = true; shakerImg.color = Color.white; }
+            var tinSprite = ItemArt.Load("tin_open") ?? ItemArt.Shaker;
+            if (tinSprite != null) { shakerImg.sprite = tinSprite; shakerImg.preserveAspect = true; shakerImg.color = Color.white; }
             else
             {
                 shakerImg.color = UITheme.Cream[2];
@@ -881,6 +949,7 @@ namespace LastCall.DebugUI
             shakeGrab.callback.AddListener(_ =>
             {
                 if (Run == null || Run.Glass.IsEmpty) { _shakerReadout.text = "pour something to shake"; return; }
+                if (!_capped) { _shakerReadout.text = "cap it first — drag the lid onto the tin"; return; }
                 _shaking = true;
                 _shakeEnergy = Run.ShakeEnergy;   // continue from what's been shaken, don't reset
                 _shakerVel = Vector2.zero;
@@ -903,13 +972,21 @@ namespace LastCall.DebugUI
                 0.966f, 0.966f, 0.966f, 0.983f, 0.983f, 1.000f, 1.000f, 1.000f });
             // The tin's rim, dome and cap ride ABOVE the liquid (2026-07-24): the fluid draws
             // over the open body to show the level, but it must never cover the cap.
-            _shakerTop = NewRect("ShakerTop", _pourSurface);
+            _shakerOpenSize = _shakerVessel.sizeDelta;
+            _capRest = new Vector2(60, 150);
+            _shakerTop = NewRect("ShakerCap", _pourSurface);
             _shakerTop.anchorMin = _shakerTop.anchorMax = _shakerTop.pivot = new Vector2(0.5f, 0.5f);
-            _shakerTop.sizeDelta = _shakerVessel.sizeDelta;
-            _shakerTop.anchoredPosition = _shakerVessel.anchoredPosition;
+            _shakerTop.sizeDelta = _shakerOpenSize;
+            _capPos = _capRest;
+            _shakerTop.anchoredPosition = _capRest;
             var topImg = _shakerTop.gameObject.AddComponent<Image>();
-            topImg.sprite = ItemArt.Load("shaker_top");
-            topImg.preserveAspect = true; topImg.raycastTarget = false;
+            topImg.sprite = ItemArt.Load("shaker_cap") ?? ItemArt.Load("shaker_top");
+            topImg.preserveAspect = true; topImg.raycastTarget = true;
+            _benchProps.Clear();
+
+            var capGrab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            capGrab.callback.AddListener(_ => { if (!_capped) _capGrabbed = true; });
+            _shakerTop.gameObject.AddComponent<EventTrigger>().triggers.Add(capGrab);
             _shakerTop.gameObject.SetActive(topImg.sprite != null);
 
             _shakerSolids = new ShakerSolids(_pourSurface);
@@ -944,6 +1021,7 @@ namespace LastCall.DebugUI
                     _bottleGrabbed = true;
             });
             _pourBottle.gameObject.AddComponent<EventTrigger>().triggers.Add(grab);
+            _benchProps.Add(_pourBottle.gameObject.AddComponent<CanvasGroup>());
 
             // The prep tray, down the left edge: pick a piece up and drag it into the shaker.
             AddPrepSource(0, "ICE", Preparations.Ice, UITheme.Cyan[4]);
@@ -1128,9 +1206,11 @@ namespace LastCall.DebugUI
                 Stretch(text.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 text.text = label;
             }
+            _benchProps.Add(chip.gameObject.AddComponent<CanvasGroup>());
             var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
             down.callback.AddListener(_ =>
             {
+                if (_capped) return;   // the tin is closed — the bench is put away
                 if (Run == null || Run.Glass.IsEmpty) { _shakerReadout.text = "pour something first"; return; }
                 _draggingPrep = prep;
                 var dpImg = _dragPiece.GetComponent<Image>();
