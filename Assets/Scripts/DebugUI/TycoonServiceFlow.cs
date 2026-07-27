@@ -440,7 +440,7 @@ namespace LastCall.DebugUI
             float h = _shakerVessel.rect.height;
             float bottomY = c.y - h * 0.5f + h * 0.0721f;  // measured: cavity floor
             float innerH = h * 0.5385f;                     // measured: cavity floor → rim
-            float fill = (float)run.Glass.FillFraction;
+            float fill = (float)run.Glass.FillFraction * (8f / 9f);   // shows a ninth less
             float rimY = bottomY + innerH;
             float topY = bottomY + innerH * fill + bob;
             // The particle fluid collides with the tin's rotated interior, so it sloshes with it.
@@ -893,8 +893,13 @@ namespace LastCall.DebugUI
             _shakerFluid = new MetaballFluid(_pourSurface);
             // The tin's silhouette (bottom → rim): a full body that draws in to the neck, so the
             // drink takes the shaker's shape instead of filling an invisible box (2026-07-24).
-            _shakerFluid.SetProfile(new[] { 0.276f, 0.707f, 0.741f, 0.793f, 0.828f, 0.828f, 0.862f,
-                0.897f, 0.931f, 0.948f, 0.966f, 0.966f, 0.983f, 1.000f });
+            _shakerFluid.SetProfile(new[] {
+                // Sampled densely off the tin's cavity so the rounded base — which widens from
+                // 28% to 69% within the bottom 4% of the height — is followed exactly, instead
+                // of a slow ramp that left dark wedges in the bottom corners.
+                0.276f, 0.690f, 0.707f, 0.724f, 0.741f, 0.771f, 0.776f, 0.793f, 0.828f, 0.828f,
+                0.828f, 0.838f, 0.862f, 0.879f, 0.881f, 0.897f, 0.914f, 0.931f, 0.931f, 0.948f,
+                0.966f, 0.966f, 0.966f, 0.973f, 0.983f, 0.995f, 1.000f, 1.000f });
             // The tin's rim, dome and cap ride ABOVE the liquid (2026-07-24): the fluid draws
             // over the open body to show the level, but it must never cover the cap.
             _shakerTop = NewRect("ShakerTop", _pourSurface);
