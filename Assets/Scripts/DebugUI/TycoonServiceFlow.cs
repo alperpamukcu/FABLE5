@@ -79,7 +79,7 @@ namespace LastCall.DebugUI
         // its centre sits, so the list lands on paper and never on the wood or the clip.
         private const float PaperW = 0.655f, PaperH = 0.660f;
         private const float PaperCX = -0.015f, PaperCY = -0.008f;
-        private const int MenuColumns = 3, MenuRows = 2;
+        private const int MenuColumns = 4, MenuRows = 2;
         private const float GridGap = 6f, HeadingH = 18f;
         private IngredientType? _menuTab;   // null = the section index page
         private Text _menuTitle;
@@ -592,8 +592,8 @@ namespace LastCall.DebugUI
             scrollFill.flexibleHeight = 1f;
             var scroll = scroller.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false; scroll.vertical = true;
-            scroll.scrollSensitivity = 12f; scroll.inertia = true;
-            scroll.decelerationRate = 0.02f;   // barely coasts — the shelf follows the wheel, no glide
+            scroll.scrollSensitivity = 5f; scroll.inertia = true;
+            scroll.decelerationRate = 0.01f;   // barely coasts — the shelf follows the wheel, no glide
             scroll.movementType = ScrollRect.MovementType.Elastic;
             scroll.elasticity = 0.02f;
             var viewport = NewRect("Viewport", scroller);
@@ -711,7 +711,7 @@ namespace LastCall.DebugUI
 
             // The bottle is the thing you are choosing, so it gets most of the key.
             var icon = NewRect("Icon", content);
-            Place(icon, new Vector2(0.5f, 1), new Vector2(cw - 42f, chh - 88f), new Vector2(0, -4));
+            Place(icon, new Vector2(0.5f, 1), new Vector2(cw - 30f, chh - 68f), new Vector2(0, -8));
             var iconImg = icon.gameObject.AddComponent<Image>();
             iconImg.raycastTarget = false; iconImg.preserveAspect = true;
             iconImg.sprite = ItemArt.Bottle(card.Info?.Style);
@@ -723,21 +723,23 @@ namespace LastCall.DebugUI
             // the labels are pinned to 16 and best-fit is off — it used to pick sizes like 11,
             // which lands the stems on half pixels and makes the letters look chewed (2026-07-27).
             var name = Outlined(Handwritten(NewText("Name", content, _body, 16, TextAnchor.LowerCenter, Color.white)));
-            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(cw + 6f, 34), new Vector2(0, 46));
+            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(cw + 6f, 34), new Vector2(0, 26));
             name.horizontalOverflow = HorizontalWrapMode.Wrap;
             name.verticalOverflow = VerticalWrapMode.Truncate;
             name.text = card.Name.ToUpperInvariant();
 
             // How full it is, and what it costs — each in its own colour, both ringed in black.
             double fill = bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 0;
-            var pct = Outlined(Handwritten(NewText("Fill", content, _body, 16, TextAnchor.UpperLeft,
-                empty ? new Color(1f, 0.42f, 0.42f) : new Color(1f, 0.80f, 0.32f))));
-            Place(pct.rectTransform, new Vector2(0, 0), new Vector2(cw * 0.55f, 20), new Vector2(16, 26));
+            // Small: on a 172-wide key the fill and the price cannot both be 16 without running
+            // into each other, and the price is the number you are deciding on.
+            var pct = Outlined(Handwritten(NewText("Fill", content, _body, 8, TextAnchor.UpperLeft,
+                empty ? new Color(1f, 0.42f, 0.42f) : new Color(1f, 0.80f, 0.32f))), 1f);
+            Place(pct.rectTransform, new Vector2(0, 1), new Vector2(cw * 0.5f, 14), new Vector2(12, -12));
             pct.text = empty ? "OUT" : $"{(int)System.Math.Round(fill * 100)}%";
 
             var price = Outlined(Handwritten(NewText("Price", content, _body, 16, TextAnchor.UpperRight,
                 new Color(0.45f, 0.95f, 0.45f))));
-            Place(price.rectTransform, new Vector2(1, 0), new Vector2(cw * 0.55f, 20), new Vector2(-16, 26));
+            Place(price.rectTransform, new Vector2(1, 1), new Vector2(cw * 0.6f, 20), new Vector2(-12, -10));
             price.text = $"${Market.StockPrice(card)}";
 
             if (!empty && run.IsNewStock(card.Id))
@@ -1284,7 +1286,7 @@ namespace LastCall.DebugUI
             // A red X in the board's top-right corner closes the whole flow.
             var close = NewRect("Close", _menuPanel);
             Place(close, new Vector2(0.5f, 0.5f), new Vector2(CornerSize, CornerSize),
-                PaperCorner(1, 1) + new Vector2(-22f, 0f));
+                PaperCorner(1, 1) + new Vector2(-22f, -12f));
             var closeImg = close.gameObject.AddComponent<Image>();
             var closeSprite = ItemArt.Load("btn_close");
             if (closeSprite != null) { closeImg.sprite = closeSprite; closeImg.preserveAspect = true; closeImg.color = Color.white; }
@@ -1303,7 +1305,7 @@ namespace LastCall.DebugUI
             // Its mirror on the paper's top-left: step back out of a section.
             _menuBack = NewRect("Back", _menuPanel);
             Place(_menuBack, new Vector2(0.5f, 0.5f), new Vector2(CornerSize, CornerSize),
-                PaperCorner(-1, 1) + new Vector2(22f, 0f));
+                PaperCorner(-1, 1) + new Vector2(22f, -12f));
             var backImg = _menuBack.gameObject.AddComponent<Image>();
             var backSprite = ItemArt.Load("btn_back");
             if (backSprite != null) { backImg.sprite = backSprite; backImg.preserveAspect = true; backImg.color = Color.white; }
@@ -1339,10 +1341,13 @@ namespace LastCall.DebugUI
             // The page slides off the paper on a change, so it runs inside a frame that stays put
             // and clips it. The mask has to be on the frame, not on the page: put it on the thing
             // that moves and it travels with the keys and clips nothing at all.
+            // Short enough to leave the bottom strip to SERVE and the bin: with four columns the
+            // grid reaches the paper's right edge, and a full-height page put its last key under
+            // the bin (2026-07-27).
             var pageClip = NewRect("PageClip", _menuPanel);
             Place(pageClip, new Vector2(0.5f, 0.5f),
-                new Vector2(BoardW * PaperW - 44f, BoardH * PaperH - 112f),
-                new Vector2(BoardW * PaperCX, BoardH * PaperCY - 20f));
+                new Vector2(BoardW * PaperW - 44f, BoardH * PaperH - 156f),
+                new Vector2(BoardW * PaperCX, BoardH * PaperCY + 2f));
             pageClip.gameObject.AddComponent<RectMask2D>();
 
             _bottleList = NewRect("Bottles", pageClip);
