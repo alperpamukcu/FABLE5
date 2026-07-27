@@ -477,11 +477,11 @@ namespace LastCall.DebugUI
                 var si = stripe.gameObject.AddComponent<Image>();
                 si.color = new Color(col.r, col.g, col.b, 0.92f); si.raycastTarget = false;
 
-                var name = Handwritten(NewText("N", content, _display, 17, TextAnchor.MiddleCenter, new Color(1f, 0.96f, 0.99f)));
+                var name = Handwritten(NewText("N", content, _display, 17, TextAnchor.MiddleCenter, new Color(0.24f, 0.16f, 0.09f)));
                 Place(name.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(grid.cellSize.x - 20, 26), new Vector2(0, 8));
                 name.text = GroupName(t);
 
-                var count = Handwritten(NewText("C", content, _body, 11, TextAnchor.UpperCenter, new Color(0.78f, 0.70f, 0.86f)));
+                var count = Handwritten(NewText("C", content, _body, 11, TextAnchor.UpperCenter, new Color(0.44f, 0.36f, 0.26f)));
                 Place(count.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 20, 16),
                     new Vector2(0, -46));
                 count.text = empty > 0 ? $"{have} bottles · {empty} out" : $"{have} bottles";
@@ -1200,8 +1200,8 @@ namespace LastCall.DebugUI
 
             var title = _menuTitle = Handwritten(NewText("Title", _menuPanel, _display, 19, TextAnchor.MiddleCenter, Color.white));
             var outline = title.gameObject.AddComponent<UnityEngine.UI.Outline>();
-            outline.effectColor = new Color(0.10f, 0.06f, 0.03f, 1f);
-            outline.effectDistance = new Vector2(2.5f, 2.5f);
+            outline.effectColor = new Color(0.16f, 0.09f, 0.04f, 1f);
+            outline.effectDistance = new Vector2(2f, 2f);
             // Kept inside the clip: it wraps and shrinks to fit rather than running past the metal.
             Place(title.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(232, 44),
                 new Vector2(BoardW * PaperCX, BoardH * (PaperCY + PaperH * 0.5f) + 2f));
