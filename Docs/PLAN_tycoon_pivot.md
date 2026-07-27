@@ -151,10 +151,13 @@ scene boots the tycoon run; build size dropped ~5k lines of gameplay code + asse
   interior you can read the level in, plus a cap you drag onto it. Capping clears the bench
   (bottle + ice/lemon/salt/sugar buckets fade) and eases the tin to centre — the stage hands
   itself over to shaking.
-- ☐ **The menu as a clipboard** (explicit request, 2026-07-24): the drink menu's panel
-  becomes a wooden clipboard holding a sheet of paper, and the stocked alcohols are listed
-  on that paper with their bottle art. Tapping one closes the clipboard and opens the pour
-  window — with a **transition animation between the two windows**, not a hard cut.
+- ☑ **The menu as a clipboard** (explicit request, 2026-07-24; finished 2026-07-27): a dark
+  walnut clipboard holding a sheet, the stocked alcohols listed on the paper with their
+  bottle art. Page one is the sections; a section page holds eight bottles (4×2) with the
+  price and fill on each key, the rest below a damped scroll. Changing pages slides the
+  sheet's contents across a fixed clip while the board holds still. Keys, back, close and
+  bin are one drawn family at the board's own pixel grain; labels are pinned to whole
+  multiples of the 8px faces and ringed by an eight-way outline.
 - ☐ **ID card v3**: real licence proportions, purpose-drawn card art, one reading order
   (v2 explicitly disliked — redesign whole, do not iterate)
 - ☐ Characters: 6+ customer bodies × states, bartender hands, musician
