@@ -343,6 +343,12 @@ namespace LastCall.DebugUI
             else frame.color = new Color(0.30f, 0.24f, 0.16f, 0.16f);
             frame.raycastTarget = false;
 
+            // Say what the gauge is, so a row of coloured chips is not a mystery.
+            var caption = Handwritten(NewText("Caption", barHost, _body, 11, TextAnchor.MiddleLeft,
+                new Color(0.30f, 0.21f, 0.12f)));
+            Place(caption.rectTransform, new Vector2(0, 0.5f), new Vector2(150, 18), new Vector2(6, 24));
+            caption.text = "WHAT'S IN THE TIN";
+
             // The segments live in the frame's recessed channel.
             _mixBar = NewRect("MixBar", barHost);
             Stretch(_mixBar, Vector2.zero, Vector2.one, new Vector2(12, 9), new Vector2(-12, -9));
@@ -429,7 +435,7 @@ namespace LastCall.DebugUI
             int gRows = Mathf.Max(1, Mathf.CeilToInt(CountStockedGroups(run) / (float)cols));
             grid.constraintCount = cols;
             grid.cellSize = new Vector2((areaW - (cols - 1) * 14f) / cols,
-                Mathf.Min(210f, (areaH - (gRows - 1) * 14f) / gRows));
+                Mathf.Min(126f, (areaH - (gRows - 1) * 14f) / gRows));
             grid.childAlignment = TextAnchor.MiddleCenter;
 
             foreach (var type in MenuOrder)
@@ -456,7 +462,7 @@ namespace LastCall.DebugUI
                     var cb = btn.colors;
                     cb.normalColor = Color.white;
                     cb.highlightedColor = new Color(1.08f, 1.08f, 1.08f, 1f);
-                    cb.pressedColor = new Color(0.78f, 0.78f, 0.78f, 1f);
+                    cb.pressedColor = new Color(0.60f, 0.60f, 0.60f, 1f);
                     cb.fadeDuration = 0.06f;
                     btn.colors = cb;
                 }
@@ -469,7 +475,7 @@ namespace LastCall.DebugUI
                 var content = NewRect("Content", card);
                 Stretch(content, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 var press = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
-                press.callback.AddListener(_ => content.anchoredPosition = new Vector2(0, -3f));
+                press.callback.AddListener(_ => content.anchoredPosition = new Vector2(0, -5f));
                 var release = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
                 release.callback.AddListener(_ => content.anchoredPosition = Vector2.zero);
                 var leave = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
