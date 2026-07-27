@@ -973,7 +973,7 @@ namespace LastCall.DebugUI
             // The tin's rim, dome and cap ride ABOVE the liquid (2026-07-24): the fluid draws
             // over the open body to show the level, but it must never cover the cap.
             _shakerOpenSize = _shakerVessel.sizeDelta;
-            _capRest = new Vector2(60, 150);
+            _capRest = new Vector2(-350, -150);   // bottom-left of the tin
             _shakerTop = NewRect("ShakerCap", _pourSurface);
             _shakerTop.anchorMin = _shakerTop.anchorMax = _shakerTop.pivot = new Vector2(0.5f, 0.5f);
             _shakerTop.sizeDelta = _shakerOpenSize;
@@ -1184,7 +1184,7 @@ namespace LastCall.DebugUI
             var prepSprite = ItemArt.Prep(prep.Id);
             var bucketSprite = ItemArt.Bucket(prep.Id);
             var chip = NewRect($"Prep_{label}", _pourSurface);
-            Place(chip, new Vector2(0, 1), new Vector2(86, 84), new Vector2(12, -8 - index * 86));
+            Place(chip, new Vector2(0.5f, 0), new Vector2(92, 88), new Vector2(-70 + index * 112, 58));
             var img = chip.gameObject.AddComponent<Image>();
             if (bucketSprite != null)
             {
