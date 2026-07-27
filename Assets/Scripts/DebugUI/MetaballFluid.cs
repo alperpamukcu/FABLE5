@@ -42,10 +42,16 @@ namespace LastCall.DebugUI
         private const float MaxSpeed = 1300f;
         private const float WallFriction = 0.72f;     // (kept for API parity)
 
+        // Viewport margins: room around the vessel for splashes and the falling stream column.
+        private const float StreamMargin = 110f;
+        private const float SplashMargin = 40f;
+
         private readonly RectTransform _rt;
+        private readonly RectTransform _surface;
         private readonly RawImage _image;
         private readonly Material _material;
         private Vector2 _size;
+        private float _originX, _originY;   // the viewport's centre in surface-local px
 
         // ── the pooled liquid: particles ────────────────────────────────────────
         private readonly float[] _px = new float[MaxPool];
@@ -97,11 +103,16 @@ namespace LastCall.DebugUI
 
         public MetaballFluid(RectTransform surface)
         {
+            _surface = surface;
             var go = new GameObject("MetaballFluid", typeof(RectTransform));
             go.transform.SetParent(surface, false);
             _rt = (RectTransform)go.transform;
-            _rt.anchorMin = Vector2.zero; _rt.anchorMax = Vector2.one;
-            _rt.offsetMin = Vector2.zero; _rt.offsetMax = Vector2.zero;
+            // A centre-anchored viewport, sized to the vessel each frame (FitViewport) rather
+            // than stretched over the whole pour surface: the metaball shader loops every blob
+            // per pixel, so painting only the pixels the liquid can occupy is the big GPU win.
+            _rt.anchorMin = _rt.anchorMax = _rt.pivot = new Vector2(0.5f, 0.5f);
+            _rt.sizeDelta = surface.rect.size;
+            _rt.anchoredPosition = Vector2.zero;
 
             _image = go.AddComponent<RawImage>();
             _image.raycastTarget = false;
@@ -135,8 +146,33 @@ namespace LastCall.DebugUI
             _material?.SetVector(IdSize, new Vector4(_size.x, _size.y, 0, 0));
         }
 
+        /// <summary>
+        /// Shrinks the drawn rect to just the region the liquid can occupy: the vessel, plus a
+        /// margin for splashes and the column of falling stream above it. Cuts the shaded pixel
+        /// count by roughly an order of magnitude versus covering the whole pour surface.
+        /// </summary>
+        private void FitViewport()
+        {
+            var surf = _surface.rect;
+            float halfW = Mathf.Min(_halfW + StreamMargin, surf.width * 0.5f);
+            float bottom = Mathf.Max(_cy - _halfH - SplashMargin, surf.yMin);
+            float top = surf.yMax;                       // the stream falls in from above
+            float cx = Mathf.Clamp(_cx, surf.xMin + halfW, surf.xMax - halfW);
+            float cy = (bottom + top) * 0.5f;
+            float h = Mathf.Max(top - bottom, 8f);
+
+            var want = new Vector2(halfW * 2f, h);
+            if ((_rt.sizeDelta - want).sqrMagnitude > 1f) _rt.sizeDelta = want;
+            var pos = new Vector2(cx, cy);
+            if ((_rt.anchoredPosition - pos).sqrMagnitude > 1f) _rt.anchoredPosition = pos;
+
+            _originX = cx; _originY = cy;
+            RefreshSize();
+        }
+
+        /// <summary>Surface-local px → the viewport's 0..1 uv (the viewport is offset now).</summary>
         private Vector2 ToUv(float x, float y) =>
-            new Vector2(x / _size.x + 0.5f, y / _size.y + 0.5f);
+            new Vector2((x - _originX) / _size.x + 0.5f, (y - _originY) / _size.y + 0.5f);
 
         public void SetColor(Color c)
         {
@@ -154,7 +190,6 @@ namespace LastCall.DebugUI
         public void SetPool(float minX, float maxX, float bottomY, float rimY,
             float fillFrac, float angleRad = 0f)
         {
-            RefreshSize();
             _cx = (minX + maxX) * 0.5f;
             _cy = (bottomY + rimY) * 0.5f;
             _halfW = Mathf.Max((maxX - minX) * 0.5f, 4f);
@@ -163,6 +198,7 @@ namespace LastCall.DebugUI
             fillFrac = Mathf.Clamp01(fillFrac);
             _fillTopY = bottomY + (rimY - bottomY) * fillFrac;
             _poolSet = true;
+            FitViewport();   // draw only over the vessel + its stream/splash margin
 
             // Enough particles to fill the liquid AREA at the rest spacing — so they pack up to
             // the line, not into a puddle at the bottom. New ones rain in near the surface.

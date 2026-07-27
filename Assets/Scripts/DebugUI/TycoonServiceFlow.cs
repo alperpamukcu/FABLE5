@@ -886,7 +886,10 @@ namespace LastCall.DebugUI
             _shakerFluid = new MetaballFluid(_pourSurface);
             _shakerSolids = new ShakerSolids(_pourSurface);
             _shakerSplash = new Splasher(_pourSurface);
-            _shakerVessel.SetAsLastSibling();   // draw the steel shaker over the fluid (opaque tin)
+            // The metal shaker is opaque, so the fluid draws OVER it (2026-07-24): you see the
+            // drink inside the tin as a cutaway, which is the point — a metal shaker you can
+            // still read the level in. (A clear vessel would sit in front instead.)
+            _shakerVessel.SetAsFirstSibling();
             _shakerLiquidFloorY = _shakerVessel.anchoredPosition.y - _shakerVessel.rect.height * 0.5f + 12f;
 
             // The grabbable bottle, resting lower-right. Procedural body + neck; the grip
