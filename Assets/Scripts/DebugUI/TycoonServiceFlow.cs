@@ -154,7 +154,9 @@ namespace LastCall.DebugUI
                 return;
             }
 
-            if (_stage == Stage.Shaker) { UpdateCap(run); UpdateShake(run); UpdatePrepDrag(run); UpdateTiltPour(run); }
+            // The shake moves the tin, so the lid is placed AFTER it — placing it first left the
+            // cap a frame behind the body, which is why they did not read as one object.
+            if (_stage == Stage.Shaker) { UpdateShake(run); UpdatePrepDrag(run); UpdateTiltPour(run); UpdateCap(run); }
 
             if (_stage == Stage.Serve) UpdateServeTilt(run);
         }

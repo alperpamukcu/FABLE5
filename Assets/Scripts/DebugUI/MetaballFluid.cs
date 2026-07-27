@@ -42,8 +42,11 @@ namespace LastCall.DebugUI
         private const float FaceOffset = 0.53f;   // iso-surface reach past a floor/surface particle
         private const float Viscosity = 0.42f;        // 0..1 neighbour-velocity blend (more flow)
         private const float MaxSpeed = 1300f;
-        private const float RestDamping = 0.94f;         // bleeds off the energy the solver adds
+        private const float RestDamping = 0.94f;
+        private const float ShakeDamping = 0.995f;   // barely damped while the tin is moving
+        private const float ShakeViscosity = 0.10f;  // and much freer to move against itself         // bleeds off the energy the solver adds
         private const float SleepSpeed = 30f;
+        private const int MaxNeighbours = 24;   // hard cap per particle per pass — bounds the frame
         private const float MinProfile = 0f;      // the interior is shaped by the profile alone now             // below this a particle is simply at rest
         private const float WallFriction = 0.72f;     // (kept for API parity)
 
@@ -88,7 +91,8 @@ namespace LastCall.DebugUI
         // teleport into the liquid and crush it; the shaking arrives as an inertial force.
         private float _fillTopLocal;
         private float _shakeAx, _shakeAy;      // inertial acceleration from the vessel's motion
-        private const float ShakeGain = 300f;  // how hard the vessel's motion throws the drink
+        private float _vcx, _vcy, _vesselSpeed;      // the vessel's own velocity, for inertia
+        private const float MaxShakeAccel = 11000f;  // ~8g: a real snap, still inside what the solver holds
         private float[] _profile;   // half-width multipliers, bottom → rim; null = plain rect
         private float _fillTopY;                       // current liquid line (for spawns)
         private bool _poolSet;
@@ -222,11 +226,20 @@ namespace LastCall.DebugUI
             // into the particles (which crushed the drink and shrank its volume while shaking).
             if (had)
             {
-                float dx = _cx - pcx, dy = _cy - pcy;
-                _shakeAx = Mathf.Lerp(_shakeAx, -dx * ShakeGain, 0.5f);
-                _shakeAy = Mathf.Lerp(_shakeAy, -dy * ShakeGain, 0.5f);
+                // Shaking is felt as the vessel's ACCELERATION pushing back on the drink — the
+                // same reason it climbs the wall when you snap the tin. Taken from real motion
+                // in both axes, and clamped: a hand-shake is many g, and letting all of that
+                // through simply crushed the particles together and stalled the frame.
+                float h = Mathf.Max(Time.deltaTime, 1e-3f);
+                float vxc = (_cx - pcx) / h, vyc = (_cy - pcy) / h;
+                float ax = (vxc - _vcx) / h, ay = (vyc - _vcy) / h;
+                _vcx = vxc; _vcy = vyc;
+                float k = 1f - Mathf.Exp(-18f * h);   // smooth, so one jittery frame is not a kick
+                _shakeAx = Mathf.Lerp(_shakeAx, Mathf.Clamp(-ax, -MaxShakeAccel, MaxShakeAccel), k);
+                _shakeAy = Mathf.Lerp(_shakeAy, Mathf.Clamp(-ay, -MaxShakeAccel, MaxShakeAccel), k);
+                _vesselSpeed = Mathf.Sqrt(vxc * vxc + vyc * vyc);
             }
-            else { _shakeAx = _shakeAy = 0f; }
+            else { _shakeAx = _shakeAy = 0f; _vcx = _vcy = 0f; _vesselSpeed = 0f; }
 
             // Enough particles to fill the liquid AREA at the rest spacing — so they pack up to
             // the line, not into a puddle at the bottom. The area follows the vessel silhouette
@@ -352,10 +365,12 @@ namespace LastCall.DebugUI
                 for (int i = 0; i < _pn; i++)
                 {
                     int cx = CellOf(_px[i]), cy = CellOf(_py[i]);
+                    int seen = 0;
                     for (int gy = cy - 1; gy <= cy + 1; gy++)
                         for (int gx = cx - 1; gx <= cx + 1; gx++)
-                            for (int j = _cellHead[HashCell(gx, gy)]; j >= 0; j = _next[j])
+                            for (int j = _cellHead[HashCell(gx, gy)]; j >= 0 && seen < MaxNeighbours; j = _next[j])
                             {
+                                seen++;
                                 if (j <= i) continue;   // each pair once
                                 float dx = _px[j] - _px[i], dy = _py[j] - _py[i];
                                 float r2 = dx * dx + dy * dy;
@@ -374,6 +389,8 @@ namespace LastCall.DebugUI
             // correction feeds straight back into velocity, which throws particles into the
             // walls, packs them on top of each other (the drink visibly loses volume) and
             // stuffs the grid cells so the neighbour sweep — and the frame — blows up.
+            bool moving = _vesselSpeed > 40f;
+            float damp = moving ? ShakeDamping : RestDamping;
             float maxCorr = Spacing * 2.5f, maxCorr2 = maxCorr * maxCorr;
             for (int i = 0; i < _pn; i++)
             {
@@ -396,9 +413,12 @@ namespace LastCall.DebugUI
                 // barely moves, so its velocity falls to zero instead of being re-integrated.
                 _vx[i] = (_px[i] - _ppx[i]) / dt;
                 _vy[i] = (_py[i] - _ppy[i]) / dt;
-                _vx[i] *= RestDamping; _vy[i] *= RestDamping;
+                // Damping is what lets the drink go still — but applied while you are shaking it
+                // it just swallows the slosh. So it is light in a moving tin, strong in a still one.
+                _vx[i] *= damp; _vy[i] *= damp;
                 float sp2 = _vx[i] * _vx[i] + _vy[i] * _vy[i];
-                if (sp2 < SleepSpeed * SleepSpeed) { _vx[i] = 0f; _vy[i] = 0f; }
+                float sleep = _vesselSpeed > 40f ? 0f : SleepSpeed;   // a moving tin never sleeps
+                if (sp2 < sleep * sleep) { _vx[i] = 0f; _vy[i] = 0f; }
                 else if (sp2 > MaxSpeed * MaxSpeed) { float s = MaxSpeed / Mathf.Sqrt(sp2); _vx[i] *= s; _vy[i] *= s; }
             }
             BuildGrid();   // positions moved during relaxation — refresh before the neighbour blend
@@ -476,8 +496,11 @@ namespace LastCall.DebugUI
                             if (dx * dx + dy * dy < h2) { avx += _vx[j]; avy += _vy[j]; n++; }
                         }
                 if (n == 0) continue;
-                _vx[i] = Mathf.Lerp(_vx[i], avx / n, Viscosity);
-                _vy[i] = Mathf.Lerp(_vy[i], avy / n, Viscosity);
+                // Averaging neighbour velocities is what holds the drink together — but it is
+                // also what erases the slosh, so a moving tin gets much less of it.
+                float visc = _vesselSpeed > 40f ? ShakeViscosity : Viscosity;
+                _vx[i] = Mathf.Lerp(_vx[i], avx / n, visc);
+                _vy[i] = Mathf.Lerp(_vy[i], avy / n, visc);
             }
         }
 
