@@ -312,8 +312,26 @@ namespace LastCall.DebugUI
         /// to a hand that scrawled the list out behind the bar.</summary>
         private static Text Handwritten(Text t)
         {
-            t.fontStyle = FontStyle.Italic;
+            // The pixel faces have no true italic, so Unity fakes it by shearing the glyphs —
+            // which read as broken rather than hand-written. Upright it is.
+            t.fontStyle = FontStyle.Normal;
             return t;
+        }
+
+        /// <summary>Gives a corner control the same press as the section keys: it swaps to its
+        /// pressed art and dips as it goes down.</summary>
+        private static void GiveKeyPress(RectTransform rt, Button btn, Image img, string pressedName)
+        {
+            var down = ItemArt.Load(pressedName);
+            if (down != null && img.sprite != null)
+            {
+                btn.transition = Selectable.Transition.SpriteSwap;
+                var st = btn.spriteState;
+                st.pressedSprite = down; st.selectedSprite = img.sprite;
+                btn.spriteState = st;
+            }
+            var sink = rt.gameObject.AddComponent<PressSink>();
+            sink.Face = rt; sink.Depth = 3f; sink.Squash = 0.02f;
         }
 
         /// <summary>Rings a label in black so it stays legible on any coloured key.</summary>
@@ -542,7 +560,27 @@ namespace LastCall.DebugUI
             var items = new List<ShelfBottle>();
             foreach (var b in run.Shelf.Bottles) if (b.Ingredient.Type == type) items.Add(b);
 
-            var grid = NewRect("Grid", _bottleList);
+            // Once the bottles need a second row the page scrolls, with inertia so it glides
+            // rather than snapping.
+            var scroller = NewRect("Scroll", _bottleList);
+            var scroll = scroller.gameObject.AddComponent<ScrollRect>();
+            scroll.horizontal = false; scroll.vertical = true;
+            scroll.scrollSensitivity = 34f; scroll.inertia = true;
+            scroll.decelerationRate = 0.12f;
+            scroll.movementType = ScrollRect.MovementType.Elastic;
+            scroll.elasticity = 0.08f;
+            var viewport = NewRect("Viewport", scroller);
+            Stretch(viewport, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            viewport.gameObject.AddComponent<RectMask2D>();
+            var vpHit = viewport.gameObject.AddComponent<Image>();
+            vpHit.color = new Color(0, 0, 0, 0.001f);
+            scroll.viewport = viewport;
+
+            var grid = NewRect("Grid", viewport);
+            grid.anchorMin = new Vector2(0, 1); grid.anchorMax = new Vector2(1, 1);
+            grid.pivot = new Vector2(0.5f, 1); grid.anchoredPosition = Vector2.zero;
+            grid.sizeDelta = Vector2.zero;
+            scroll.content = grid;
             var g = grid.gameObject.AddComponent<GridLayoutGroup>();
             float areaW = _bottleList.rect.width, areaH = _bottleList.rect.height;
             int rows = Mathf.Max(1, Mathf.CeilToInt(items.Count / (float)MenuColumns));
@@ -550,7 +588,7 @@ namespace LastCall.DebugUI
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             g.constraintCount = MenuColumns;
             g.cellSize = new Vector2((areaW - (MenuColumns - 1) * GridGap) / MenuColumns,
-                Mathf.Clamp((areaH - (rows - 1) * GridGap) / rows, 130f, 210f));
+                Mathf.Clamp((areaH - (rows - 1) * GridGap) / rows, 140f, 226f));
             grid.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             foreach (var bottle in items) AddItemBox(grid, bottle, run);
@@ -634,7 +672,7 @@ namespace LastCall.DebugUI
 
             // The bottle is the thing you are choosing, so it gets most of the key.
             var icon = NewRect("Icon", content);
-            Place(icon, new Vector2(0.5f, 1), new Vector2(126, 138), new Vector2(0, -8));
+            Place(icon, new Vector2(0.5f, 1), new Vector2(150, 158), new Vector2(0, -6));
             var iconImg = icon.gameObject.AddComponent<Image>();
             iconImg.raycastTarget = false; iconImg.preserveAspect = true;
             iconImg.sprite = ItemArt.Bottle(card.Info?.Style);
@@ -643,7 +681,7 @@ namespace LastCall.DebugUI
 
             // Name, then how full it is and what it costs — the three things the key is sized for.
             var name = Outlined(Handwritten(NewText("Name", content, _body, 12, TextAnchor.LowerCenter, Color.white)));
-            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(178, 22), new Vector2(0, 26));
+            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(178, 20), new Vector2(0, 22));
             name.horizontalOverflow = HorizontalWrapMode.Wrap;
             name.verticalOverflow = VerticalWrapMode.Truncate;
             name.resizeTextForBestFit = true; name.resizeTextMinSize = 8; name.resizeTextMaxSize = 12;
@@ -1207,12 +1245,13 @@ namespace LastCall.DebugUI
             Place(close, new Vector2(0.5f, 0.5f), new Vector2(CornerSize, CornerSize),
                 PaperCorner(1, 1) + new Vector2(-22f, 0f));
             var closeImg = close.gameObject.AddComponent<Image>();
-            var closeSprite = ItemArt.Load("close_x");
+            var closeSprite = ItemArt.Load("btn_close");
             if (closeSprite != null) { closeImg.sprite = closeSprite; closeImg.preserveAspect = true; closeImg.color = Color.white; }
             else closeImg.color = new Color(0.62f, 0.15f, 0.17f);
             var closeBtn = close.gameObject.AddComponent<Button>();
             closeBtn.targetGraphic = closeImg;
             closeBtn.onClick.AddListener(CloseFlow);
+            GiveKeyPress(close, closeBtn, closeImg, "btn_close_down");
             if (closeSprite == null)
             {
                 var closeX = NewText("X", close, _display, 18, TextAnchor.MiddleCenter, new Color(1f, 0.92f, 0.90f));
@@ -1225,12 +1264,13 @@ namespace LastCall.DebugUI
             Place(_menuBack, new Vector2(0.5f, 0.5f), new Vector2(CornerSize, CornerSize),
                 PaperCorner(-1, 1) + new Vector2(22f, 0f));
             var backImg = _menuBack.gameObject.AddComponent<Image>();
-            var backSprite = ItemArt.Load("back_arrow");
+            var backSprite = ItemArt.Load("btn_back");
             if (backSprite != null) { backImg.sprite = backSprite; backImg.preserveAspect = true; backImg.color = Color.white; }
             else backImg.color = new Color(0.62f, 0.15f, 0.17f);
             var backBtn = _menuBack.gameObject.AddComponent<Button>();
             backBtn.targetGraphic = backImg;
             backBtn.onClick.AddListener(() => OpenTab(null));
+            GiveKeyPress(_menuBack, backBtn, backImg, "btn_back_down");
             if (backSprite == null)
             {
                 var backArrow = NewText("A", _menuBack, _display, 20, TextAnchor.MiddleCenter, new Color(0.97f, 0.93f, 0.86f));
@@ -1639,12 +1679,13 @@ namespace LastCall.DebugUI
             Place(rt, new Vector2(0.5f, 0.5f), new Vector2(52, 60), PaperCorner(1, -1) + new Vector2(-22f, 10f));
             var img = rt.gameObject.AddComponent<Image>();
             img.preserveAspect = true;
-            img.sprite = ItemArt.Load("bin");
+            img.sprite = ItemArt.Load("btn_bin");
             img.color = img.sprite != null ? Color.white : UITheme.Night[3];
             img.alphaHitTestMinimumThreshold = img.sprite != null ? 0.35f : 0f;
             var btn = rt.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => { Run.DiscardGlass(); RefreshMenu(); });
+            GiveKeyPress(rt, btn, img, "btn_bin_down");
             if (img.sprite == null)
             {
                 var fallback = NewText("L", rt, _body, 12, TextAnchor.MiddleCenter, UITheme.TextPrimary);
