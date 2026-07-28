@@ -32,22 +32,28 @@ namespace LastCall.UI
         // particles can never pack closer than Spacing, so the body stacks up to the fill line
         // and never collapses. Neighbour-velocity viscosity makes it flow. The particle COUNT is
         // derived from the fill area at Spacing, so it fills any vessel exactly.
-        // Recalibrated 2026-07-28, because a vessel the rules called FULL drew about three
-        // quarters full — the one number the player checks against the glass. Two faults, both
-        // measured rather than reasoned about:
-        //   · the estimate assumed an ideal packing. A settled particle really occupies about
-        //     0.71·Spacing² — gravity plus a fixed number of relaxation passes leave the body
-        //     tighter than its rest spacing implies.
-        //   · the body was genuinely compressed, and worst in the TALL vessels: at 14 passes the
-        //     pressure never reached the top of a 45-row column, so the tin and the pint stopped
-        //     ~10% short while the stubby tumbler was fine. That is a convergence failure, so
-        //     more passes is the fix, not a fudge on the fill.
-        // Both together would have cost 40% more CPU, so the particle scale is coarser to pay
-        // for it: 1007 particles at 22 passes costs 10.2 ms/frame against the old 1414 at 14
-        // passes for 10.3 ms — the same frame, drawn honestly (full tin: 77% before, 100% now).
-        private const float H = 9.7f;                  // viscosity/neighbour radius (px)
-        private const float Spacing = 3.9f;        // rest spacing (min distance) → many small particles
-        private const int   RelaxIters = 22;           // incompressibility relaxation passes
+        // Recalibrated 2026-07-28, twice: first because a vessel the rules called FULL drew
+        // about three quarters full, then because the fix for that cost 10 ms a frame.
+        //
+        // On the fill: the estimate assumed an ideal packing (a settled particle really takes
+        // about 0.71·Spacing²), and the body was compressed worst in the TALL vessels, where
+        // the pressure never reached the top of a 40-row column.
+        //
+        // On the cost: this solver is O(particles × passes) and nothing else came close — with
+        // a full tin the frame went 1.8 ms → 12.5 ms, and turning the metaball SHADER off
+        // changed nothing at all, which is where the blame would naturally have fallen. So the
+        // particle scale is as coarse as the look allows. Measured on a full tin:
+        //   1007 particles, 22 passes, both-way pair sweep   10.1 ms   (12.5 ms frame)
+        //   556 particles, 14 passes, forward-only sweep      3.2 ms   (~5 ms frame)
+        // and 2.1 ms while it is being shaken, which is the case that was reported. The blob
+        // radius scales with the spacing, so the drink looks the same — there are simply fewer,
+        // larger units inside a surface that is drawn at the same smoothness.
+        private const float H = 12.9f;                  // viscosity/neighbour radius (px)
+        private const float Spacing = 5.2f;        // rest spacing (min distance) → many small particles
+        private const int   RelaxIters = 14;           // incompressibility relaxation passes
+        /// <summary>The cap while the vessel is being thrown about, where the body never settles
+        /// and the level is not being read anyway.</summary>
+        private const int   ShakeRelaxIters = 8;
         /// <summary>
         /// Area one settled particle really takes, as a share of Spacing² — measured, not
         /// derived. It is well under the √3/2 of an ideal hexagonal packing because a body that
@@ -60,7 +66,7 @@ namespace LastCall.UI
         private const float PackedArea = 0.71f;
         // Render radius is well above the spacing so the fine, tightly-packed particles
         // overlap into ONE smooth connected surface with no gaps between them.
-        private const float PoolRadius = 5.6f;
+        private const float PoolRadius = 7.5f;
         private const float SideOffset = 0.27f;   // iso-surface reach past a side wall particle
         private const float FaceOffset = 0.53f;   // iso-surface reach past a floor/surface particle
         private const float Viscosity = 0.42f;        // 0..1 neighbour-velocity blend (more flow)
@@ -95,8 +101,17 @@ namespace LastCall.UI
         private readonly float[] _qy = new float[MaxPool];
         private int _pn;                               // live pool particles
 
+        // The forward half of a 3×3 neighbourhood: this cell, then the four that come after it
+        // in scan order. Every neighbouring pair is met exactly once across the whole sweep.
+        private static readonly int[] StencilX = { 0, 1, -1, 0, 1 };
+        private static readonly int[] StencilY = { 0, 0, 1, 1, 1 };
+
         // Spatial hash grid → O(N) neighbour queries, so the particle count can go high cheaply.
-        private const int GridBuckets = 32768;         // power of two
+        // 8192 buckets against the few hundred cells a vessel actually occupies: collisions are
+        // rare, and harmless when they happen — a false neighbour just fails the distance test.
+        // It was 32768, which is a 128 KB table blanked once per relaxation pass to hold ~550
+        // entries.
+        private const int GridBuckets = 8192;          // power of two
         private readonly int[] _cellHead = new int[GridBuckets];
         private readonly int[] _next = new int[MaxPool];
         // The cell is the CONSTRAINT distance, not the (larger) viscosity radius: at a fine
@@ -269,7 +284,12 @@ namespace LastCall.UI
             // (a narrow tin holds less), so a profiled vessel is not overfilled.
             // The usable area is the interior minus the render-radius inset on each wall, so the
             // count matches the space the particles are actually allowed to occupy.
-            float fillH = Mathf.Max(_fillTopY - bottomY - PoolRadius * FaceOffset, 0f);
+            // BOTH insets, not one (2026-07-28): the particle centres stop that far short of the
+            // floor AND of the surface, but the drawn iso-surface reaches back out past them at
+            // each end. Counting it once left every vessel drawing a constant sliver high, which
+            // is a constant no per-vessel multiplier can cancel — it flattered a half-full glass
+            // and could not be told apart from a full one running short.
+            float fillH = Mathf.Max(_fillTopY - bottomY - 2f * PoolRadius * FaceOffset, 0f);
             float widthScale = AverageProfile(fillFrac);
             int target = Mathf.Clamp(
                 Mathf.RoundToInt((2f * Mathf.Max(_halfW - PoolRadius * SideOffset, 1f) * widthScale)
@@ -420,29 +440,46 @@ namespace LastCall.UI
             // Incompressibility: relax a minimum-distance constraint a few passes — no two
             // particles closer than Spacing — so the body packs up to the fill line and never
             // collapses. The vessel walls are re-applied between passes so the liquid stays in.
+            // A vessel being thrown about relaxes fewer times (2026-07-28). The passes buy an
+            // accurate settled LEVEL, and mid-slosh nobody is reading the level — so the case
+            // that used to cost the most now costs the least, which is the way round it should
+            // have been. (An early-out on convergence was tried and removed: a full vessel never
+            // converges, because the wall clamp re-introduces overlap after every pass, so it
+            // never once fired.)
+            int maxIters = _vesselSpeed > 40f ? ShakeRelaxIters : RelaxIters;
             float minD = Spacing, minD2 = minD * minD;
-            for (int iter = 0; iter < RelaxIters; iter++)
+            for (int iter = 0; iter < maxIters; iter++)
             {
                 BuildGrid();   // O(N) neighbour lookup — keeps a fine particle scale affordable
+                // Only the FORWARD half of the neighbourhood (2026-07-28). Scanning all nine
+                // cells and throwing away half the pairs with `j <= i` walked every pair twice
+                // to use it once, and this loop is ~80% of the fluid's frame. These four cells
+                // plus this one still meet every neighbouring pair exactly once: a pair that
+                // straddles two cells is found from the backward one, a pair inside a cell by
+                // taking only j > i.
                 for (int i = 0; i < _pn; i++)
                 {
                     int cx = CellOf(_px[i]), cy = CellOf(_py[i]);
                     int seen = 0;
-                    for (int gy = cy - 1; gy <= cy + 1; gy++)
-                        for (int gx = cx - 1; gx <= cx + 1; gx++)
-                            for (int j = _cellHead[HashCell(gx, gy)]; j >= 0 && seen < MaxNeighbours; j = _next[j])
-                            {
-                                seen++;
-                                if (j <= i) continue;   // each pair once
-                                float dx = _px[j] - _px[i], dy = _py[j] - _py[i];
-                                float r2 = dx * dx + dy * dy;
-                                if (r2 >= minD2 || r2 < 1e-4f) continue;
-                                float r = Mathf.Sqrt(r2);
-                                float push = (minD - r) * 0.5f;   // no over-relaxation: >1 pumped energy into the fluid
-                                float nx = dx / r, ny = dy / r;
-                                _px[i] -= nx * push; _py[i] -= ny * push;
-                                _px[j] += nx * push; _py[j] += ny * push;
-                            }
+                    float pxi = _px[i], pyi = _py[i];
+                    for (int s = 0; s < 5; s++)
+                    {
+                        int j = _cellHead[HashCell(cx + StencilX[s], cy + StencilY[s])];
+                        for (; j >= 0 && seen < MaxNeighbours; j = _next[j])
+                        {
+                            seen++;
+                            if (s == 0 && j <= i) continue;   // own cell: each pair once
+                            float dx = _px[j] - pxi, dy = _py[j] - pyi;
+                            float r2 = dx * dx + dy * dy;
+                            if (r2 >= minD2 || r2 < 1e-4f) continue;
+                            float r = Mathf.Sqrt(r2);
+                            float push = (minD - r) * 0.5f;   // no over-relaxation: >1 pumped energy into the fluid
+                            float nx = dx / r * push, ny = dy / r * push;
+                            pxi -= nx; pyi -= ny;
+                            _px[j] += nx; _py[j] += ny;
+                        }
+                    }
+                    _px[i] = pxi; _py[i] = pyi;
                 }
                 ClampToVessel();
             }
@@ -510,13 +547,11 @@ namespace LastCall.UI
         public void SetProfile(float[] halfWidths) => _profile = halfWidths;
 
         /// <summary>
-        /// Per-vessel correction on how many particles a given fill asks for. The estimate is
-        /// honest for a poured, settled body, so what is left here is each vessel's own
-        /// departure from that: the tin is filled and immediately capped and leaves it alone at
-        /// 1; the tumbler is the shortest cavity, where the floor and surface insets are a
-        /// bigger share of it, and wants 0.90; the pint is filled and then STANDS while its head
-        /// settles, which leaves the body a touch loose, and wants 0.88. All measured
-        /// 2026-07-28, live in their own stages, across the fill range.
+        /// Per-vessel correction on how many particles a given fill asks for. The estimate draws
+        /// the tin and the pint at their own level across the whole range, so both leave this at
+        /// 1; only the tumbler still runs generous in the middle of its range — it is much the
+        /// shortest cavity, so what is left of the inset error is a bigger share of it — and it
+        /// asks for a tenth fewer. Measured 2026-07-28 at four fills, live in each stage.
         /// </summary>
         public void SetDensity(float multiplier) => _density = Mathf.Clamp(multiplier, 0.25f, 4f);
         private float _density = 1f;

@@ -114,6 +114,20 @@ coarser particle scale to pay for them — **1007 particles at 22 passes costs 1
 against the old 1414 at 14 for 10.3 ms**, the same frame drawn truthfully. A full vessel now
 stands at its rim, and every fill in between is within a few percent of the number beside it.
 
+**And it has to hold the frame rate (2026-07-28).** Player note: *"shaking with a lot of
+liquid drops the FPS a lot — this is a 2D game, it should never fall below the average."*
+Correct, and it was the fluid: with a full tin the frame went **1.8 ms → 12.5 ms (80 fps)**.
+Not the metaball shader, which is where the blame would naturally fall — turning the drawing
+off entirely changed nothing. The solver is O(particles × relaxation passes), so all three
+levers were pulled: the pair sweep now walks the **forward half** of each neighbourhood
+(every pair was being visited twice to be used once), the particle scale is **coarser**
+(556 instead of 1007 — the blob radius scales with it, so the drink looks the same), and a
+vessel **being shaken relaxes fewer times**, since the passes buy an accurate settled level
+and nobody reads the level mid-slosh. Result: **5.7 ms (175 fps)** in the shaker, **4.6 ms
+(215 fps)** at the tap, and the shake case — the one reported — is now the *cheapest* state
+rather than the most expensive. The fill accuracy above was re-measured live in all three
+stages afterwards and holds.
+
 The fluid is a 2D metaball drawn on a UI RawImage — a CPU droplet cloud feeding a threshold
 shader, chosen over a Shuriken/RenderTexture rig because it composites cleanly inside the
 ScreenSpace-Overlay Canvas and shares the tilt-pour's local coordinates. Solids (ice/lemon

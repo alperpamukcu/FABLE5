@@ -121,14 +121,14 @@ namespace LastCall.UI
             _tapFluid = new MetaballFluid(_tapSurface);
             // A pint glass: narrow foot opening steadily out to the mouth.
             _tapFluid.SetProfile(new[] { 0.82f, 0.88f, 0.93f, 0.97f, 1.00f, 1.00f });
-            // The old 1/0.73 correction is gone — that shortfall was the solver's and has been
-            // fixed where it belongs (MetaballFluid, 2026-07-28). What is left is the opposite
-            // and specific to this stage: a pint is filled and then STANDS while its head
-            // settles, and a body that is topped up rather than poured settles a little loose,
-            // so the beer drew ~10 points above what the glass held. On a pint that matters more
-            // than anywhere else — the foam band starts at the beer's surface, so beer drawn
-            // high is foam drawn thin, and the head is the whole skill here (GDD 21 §10).
-            _tapFluid.SetDensity(0.88f);
+            // A pint is the one vessel that is filled and then STANDS, its beer creeping up a
+            // sliver at a time as the head collapses into it. A body topped up that gently never
+            // packs the way a poured one does and drew ~10 points high — measured on the settled
+            // pint, not on the bench, where a straight pour into this same cavity needs no
+            // correction at all. It matters more here than anywhere else: the foam band starts
+            // at the beer's surface, so beer drawn high is foam drawn thin, and the head is the
+            // whole skill of a pint (GDD 21 §10).
+            _tapFluid.SetDensity(0.90f);
 
             // The head, drawn as its own band on top of the beer rather than as more fluid —
             // foam is a different material and reading it has to be instant.
