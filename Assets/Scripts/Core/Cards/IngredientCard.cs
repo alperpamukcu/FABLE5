@@ -4,10 +4,12 @@ using System.Collections.Generic;
 namespace LastCall.Core
 {
     /// <summary>
-    /// One ingredient card instance. Two cards may share a definition id (duplicates in the
-    /// starter deck) but every instance gets its own InstanceId so effects can target it.
-    /// Type and Enhancement are mutable because Tools rework cards mid-run (GDD 7.3) —
-    /// all mutation goes through the explicit methods below.
+    /// One ingredient — a bottle or a keg on the shelf. Two may share a definition id, but every
+    /// instance gets its own InstanceId so effects can target it.
+    ///
+    /// Immutable since 2026-07-27: the mutators (Enhance / ConvertType / Refine / ShiftFlavor)
+    /// existed for the Tools that reworked cards mid-run, and Tools went with the deck in the
+    /// tycoon demolition (PLAN P7). Nothing has called them since.
     /// </summary>
     public sealed class IngredientCard
     {
@@ -15,16 +17,14 @@ namespace LastCall.Core
 
         public string Id { get; }
         public string Name { get; }
-        public IngredientType Type { get; private set; }
-        public int Flavor { get; private set; }
-        public QualityTier Quality { get; private set; }
-        public Enhancement Enhancement { get; private set; }
+        public IngredientType Type { get; }
+        public int Flavor { get; }
+        public QualityTier Quality { get; }
         public int InstanceId { get; }
 
         /// <summary>
         /// What this ingredient does to a person (GDD 19 §4). Always printed on the card —
-        /// the charges are never the hidden information; the customer is. Immutable and tied
-        /// to the ingredient's identity, so a Tool that rewrites Type leaves them alone.
+        /// the charges are never the hidden information; the customer is.
         /// </summary>
         public IReadOnlyList<EmotionCharge> Charges { get; }
 
@@ -47,30 +47,13 @@ namespace LastCall.Core
             Type = type;
             Flavor = flavor;
             Quality = quality;
-            Enhancement = Enhancement.None;
             Charges = charges ?? Array.Empty<EmotionCharge>();
             InstanceId = _nextInstanceId++;
         }
 
-        /// <summary>Applies (or replaces) an enhancement — Tools like Muddler/Jigger.</summary>
-        public void Enhance(Enhancement enhancement) => Enhancement = enhancement;
-
-        /// <summary>Rewrites the ingredient type — Tools like Citrus Press.</summary>
-        public void ConvertType(IngredientType type) => Type = type;
-
-        /// <summary>Rewrites the quality tier — Tools like Cocktail Umbrella.</summary>
-        public void Refine(QualityTier quality) => Quality = quality;
-
-        /// <summary>Shifts the Flavor value, floored at 1 — Tools like Muddling Stick (GDD 02 v1.1).</summary>
-        public void ShiftFlavor(int delta) => Flavor = Math.Max(1, Flavor + delta);
-
-        /// <summary>A fresh instance with identical stats (Bar Spoon); gets its own InstanceId.</summary>
-        public IngredientCard Clone()
-        {
-            var copy = new IngredientCard(Id, Name, Type, Flavor, Quality, Charges, Info);
-            copy.Enhancement = Enhancement;
-            return copy;
-        }
+        /// <summary>A fresh instance with identical stats; gets its own InstanceId.</summary>
+        public IngredientCard Clone() =>
+            new IngredientCard(Id, Name, Type, Flavor, Quality, Charges, Info);
 
         public override string ToString() => $"{Name} [{Type} {Flavor}]";
     }
