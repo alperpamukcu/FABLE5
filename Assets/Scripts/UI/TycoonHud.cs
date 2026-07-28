@@ -204,10 +204,20 @@ namespace LastCall.UI
             if (_toast != null && _toast.gameObject.activeSelf && Time.unscaledTime > _toastUntil)
                 _toast.gameObject.SetActive(false);
 
+            // Backing out of the flow with a drink still in the shaker leaves the counter empty,
+            // because an unpoured drink is not a drink yet (2026-07-28). Say so, or the player
+            // is left looking for a glass that was never filled.
+            bool flowOpen = _flow != null && _flow.IsOpen;
+            if (_flowWasOpen && !flowOpen && run.DrinkWaitingInShaker)
+                Toast("STILL IN THE SHAKER — POUR IT INTO A GLASS");
+            _flowWasOpen = flowOpen;
+
             RefreshTopBar();
             RefreshSeats();
             UpdateDrinkGlass();
         }
+
+        private bool _flowWasOpen;
 
         // ── the floor ───────────────────────────────────────────────────────────
 
@@ -236,7 +246,7 @@ namespace LastCall.UI
             var visit = _seats[index].Visit;
             if (visit == null || visit.State != VisitState.Waiting) return false;
             if (!visit.HasOrdered) return false;   // can't hand a drink to someone still deciding
-            if (run.ServingGlass.IsEmpty && run.Glass.IsEmpty) return false;
+            if (!run.DrinkReady) return false;     // only what is in the glass goes out
 
             var verdict = run.ServeTo(visit);
             CloseId();
@@ -303,9 +313,12 @@ namespace LastCall.UI
         private void UpdateDrinkGlass()
         {
             var run = Run;
+            // The glass on the counter is the SERVING glass and nothing else. A drink still in
+            // the shaker is a half-finished build, not something you can pick up and carry — it
+            // used to appear here, which is how an unpoured drink reached a customer (2026-07-28).
             bool ready = run != null && run.Phase == TycoonPhase.DayOpen
                 && (_flow == null || !_flow.IsOpen)
-                && (!run.ServingGlass.IsEmpty || !run.Glass.IsEmpty);
+                && run.DrinkReady;
 
             if (!ready)
             {
@@ -322,7 +335,7 @@ namespace LastCall.UI
             // The glass shows the drink as it was actually built: its blended colour and its
             // real fill level (2026-07-22) — no fixed colour or amount.
             _drinkGlassLiquid.color = DrinkColor();
-            var made = !run.ServingGlass.IsEmpty ? run.ServingGlass : run.Glass;
+            var made = run.ServingGlass;
             float bowlH = ((RectTransform)_drinkGlassLiquid.transform.parent).rect.height;
             _drinkGlassLiquid.rectTransform.sizeDelta =
                 new Vector2(-4, Mathf.Round(bowlH * (float)made.FillFraction));
@@ -383,8 +396,7 @@ namespace LastCall.UI
         private Color DrinkColor()
         {
             var run = Run;
-            var glass = run == null ? null
-                : (!run.ServingGlass.IsEmpty ? run.ServingGlass : run.Glass);
+            var glass = run?.ServingGlass;
             if (glass == null || glass.IsEmpty) return UITheme.Amber[3];
             var parts = new List<(string, IngredientType, float)>();
             foreach (var id in glass.Ingredients)
@@ -500,8 +512,7 @@ namespace LastCall.UI
             if (_idVisit != null && (_idVisit.State != VisitState.Waiting || !seated.Contains(_idVisit)))
                 CloseId();
 
-            bool drinkReady = run.Phase == TycoonPhase.DayOpen &&
-                (!run.ServingGlass.IsEmpty || !run.Glass.IsEmpty) &&
+            bool drinkReady = run.Phase == TycoonPhase.DayOpen && run.DrinkReady &&
                 (_flow == null || !_flow.IsOpen);
 
             // Stools are stable (2026-07-22): a customer keeps their seat until they leave, so

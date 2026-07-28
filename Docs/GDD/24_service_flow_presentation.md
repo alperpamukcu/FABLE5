@@ -49,6 +49,13 @@ the mouse.** Buttons select; the mouse *does*. Every step below is a physical in
    carry that leans into the motion (an AAA-feeling 2D drag). Dropping it on a seated
    patron hands it over; `ServiceJudge` (23 §4) resolves and the payment floats up. Clicking
    a customer now only **reads** their licence — serving is the drag.
+4. **The glass is the drink (ruling 2026-07-28).** Only what has been poured into the
+   serving glass can be carried or handed over. `ServeTo` used to tip an unpoured shaker in
+   for you, which meant backing out of the flow served a customer a drink that had skipped
+   the aim-and-spill pour entirely — the shaker is a step, not a drink. Now the counter
+   stays empty until the pour is made, and closing the flow mid-build says so. The sim and
+   the tests pour like everyone else; they simply pour perfectly, which was always their
+   standing (they never had to aim).
 
 ### 3.5 The feel pass (2026-07-22) — interim physics, still procedural
 
@@ -94,6 +101,18 @@ you hold."* Addressed on the placeholder art, ahead of the P8 re-skin:
   settles.
 - The spill still lives in the **serve** aim: off-target, the stream drifts wide, misses
   the rim and falls past onto the counter. GDD 21 §3 brim holds inside the glass.
+
+**The drawn level has to equal the stated one (2026-07-28).** Player note: *"the poured
+amount doesn't show the vessel as full."* It didn't: a tin the rules called 100% drew to
+about **72%** of its cavity. Two separate faults, both measured. The solver's particle-count
+estimate assumed an ideal packing (a settled particle really takes ~0.71·spacing² of area),
+and the body was genuinely **compressed** — at 14 relaxation passes the pressure never
+reached the top of a tall column, so the tin and the pint stopped ~10% short while the
+stubby tumbler was fine. On top of that the shaker stage was *deliberately* drawing a ninth
+low to hide it. Fixed at the source: an honest estimate, more relaxation passes, and a
+coarser particle scale to pay for them — **1007 particles at 22 passes costs 10.2 ms/frame
+against the old 1414 at 14 for 10.3 ms**, the same frame drawn truthfully. A full vessel now
+stands at its rim, and every fill in between is within a few percent of the number beside it.
 
 The fluid is a 2D metaball drawn on a UI RawImage — a CPU droplet cloud feeding a threshold
 shader, chosen over a Shuriken/RenderTexture rig because it composites cleanly inside the

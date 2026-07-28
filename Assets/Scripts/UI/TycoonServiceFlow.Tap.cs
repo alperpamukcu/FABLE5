@@ -121,9 +121,14 @@ namespace LastCall.UI
             _tapFluid = new MetaballFluid(_tapSurface);
             // A pint glass: narrow foot opening steadily out to the mouth.
             _tapFluid.SetProfile(new[] { 0.82f, 0.88f, 0.93f, 0.97f, 1.00f, 1.00f });
-            // Measured: this cavity packs tighter than the solver's estimate and stopped at 73%
-            // of the line it was given, so it is told to ask for the difference.
-            _tapFluid.SetDensity(1f / 0.73f);
+            // The old 1/0.73 correction is gone — that shortfall was the solver's and has been
+            // fixed where it belongs (MetaballFluid, 2026-07-28). What is left is the opposite
+            // and specific to this stage: a pint is filled and then STANDS while its head
+            // settles, and a body that is topped up rather than poured settles a little loose,
+            // so the beer drew ~10 points above what the glass held. On a pint that matters more
+            // than anywhere else — the foam band starts at the beer's surface, so beer drawn
+            // high is foam drawn thin, and the head is the whole skill here (GDD 21 §10).
+            _tapFluid.SetDensity(0.88f);
 
             // The head, drawn as its own band on top of the beer rather than as more fluid —
             // foam is a different material and reading it has to be instant.
@@ -213,7 +218,7 @@ namespace LastCall.UI
             var headImg = _tapHeadBand.GetComponent<Image>();
             headImg.color = UITheme.HeadColor(_tapKegCard?.Info?.Style);
 
-            if (_tapKegCard != null && run.PullingId == null && run.Glass.IsEmpty)
+            if (_tapKegCard != null && run.PullingId == null && run.CanPull(_tapKegCard.Id))
                 run.BeginPull(_tapKegCard.Id);
 
             PlaceGoodBandMark();
@@ -458,6 +463,10 @@ namespace LastCall.UI
             else if (_glassHeld && _glassTilt > TapPour.SpillTilt)
             { _tapVerdict.text = "SPILLING — STAND IT UP"; _tapVerdict.color = UITheme.ViceRed[3]; }
             else if (glass.IsEmpty) { _tapVerdict.text = "TAKE THE GLASS TO THE TAP"; _tapVerdict.color = UITheme.TextSecondary; }
+            // Beer and foam share the same room, so a glass at the brim takes neither — say it,
+            // because otherwise holding it under a running tap looks like the tap has died.
+            else if (glass.IsFull && score < 1.0)
+            { _tapVerdict.text = "THE GLASS IS FULL — LET IT SETTLE"; _tapVerdict.color = UITheme.Amber[3]; }
             else if (glass.FillFraction < 0.75) { _tapVerdict.text = "SHORT POUR"; _tapVerdict.color = UITheme.Amber[3]; }
             else if (score >= 1.0) { _tapVerdict.text = "GOOD PINT"; _tapVerdict.color = UITheme.Lime[3]; }
             else if (head > TapPour.GoodHeadMax) { _tapVerdict.text = "TOO MUCH HEAD"; _tapVerdict.color = UITheme.ViceRed[3]; }

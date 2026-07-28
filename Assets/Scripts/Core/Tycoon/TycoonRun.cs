@@ -72,6 +72,14 @@ namespace LastCall.Core
         /// (GDD 24 §3). Empty until the serve pour, or filled perfectly by <see cref="ServeTo"/>.</summary>
         public GlassContents ServingGlass { get; private set; }
 
+        /// <summary>Is there a drink that can actually be carried to a seat? Only what has been
+        /// poured into the glass counts — the shaker is a step, not a drink.</summary>
+        public bool DrinkReady => !ServingGlass.IsEmpty;
+
+        /// <summary>A built drink that has not been poured out yet, so the UI can say so instead
+        /// of quietly showing nothing when the player backs out of the flow.</summary>
+        public bool DrinkWaitingInShaker => ServingGlass.IsEmpty && !Glass.IsEmpty;
+
         /// <summary>True once the shaker has been shaken this build (GDD 24 §2.5).</summary>
         public bool IsShaken { get; private set; }
 
@@ -256,8 +264,22 @@ namespace LastCall.Core
                 throw new ArgumentException($"'{kegId}' is not a keg — it cannot be pulled.", nameof(kegId));
             if (!Glass.IsEmpty)
                 throw new InvalidOperationException("There is a cocktail on the go — bin it before pulling a pint.");
+            // A pint goes into a clean glass. Topping up the same pint is fine — that is what a
+            // second pull IS — but anything else already standing in it is a different drink, and
+            // beer poured on top of it would go out as one (2026-07-28). This became reachable
+            // the moment the serve pour stopped being optional: the finished cocktail now waits
+            // in the serving glass rather than in the shaker, where !Glass.IsEmpty caught it.
+            if (!ServingGlass.IsEmpty && ServingGlass.VolumeOf(kegId) <= 0)
+                throw new InvalidOperationException(
+                    "There is already a drink in that glass — serve it or bin it before pulling a pint.");
             PullingId = kegId;
         }
+
+        /// <summary>Whether that keg could be opened right now, so the menu can grey the key
+        /// instead of offering a tap that would refuse the glass in front of it.</summary>
+        public bool CanPull(string kegId) =>
+            Phase == TycoonPhase.DayOpen && Glass.IsEmpty && !ServingGlass.IsFull &&
+            (ServingGlass.IsEmpty || ServingGlass.VolumeOf(kegId) > 0);
 
         /// <summary>How much beer has run past the rim this build. Waste, nothing more — it
         /// came out of the keg and reached nobody (GDD 21 §10.2).</summary>
@@ -312,12 +334,25 @@ namespace LastCall.Core
                 TapPour.FoamLiquidShare);
         }
 
-        /// <summary>Drops a preparation (ice, a twist, a rim) into the shaker (GDD 24 §2.4).</summary>
+        /// <summary>
+        /// Drops a preparation (ice, a twist, a rim) into the shaker (GDD 24 §2.4). A full tin
+        /// takes none of them: a cube of ice needs somewhere to go, and pouring to the brim and
+        /// then icing it anyway was the one way to get a garnished drink for free (2026-07-28).
+        /// Refusing here rather than in the menu is the point — the sim and the tests drop ice
+        /// through this same verb.
+        /// </summary>
         public void AddPreparation(PreparationDefinition preparation)
         {
             EnsurePhase(TycoonPhase.DayOpen);
+            if (Glass.IsFull)
+                throw new InvalidOperationException(
+                    "The shaker is full to the brim — there is no room for anything else.");
             Glass.AddPreparation(preparation);
         }
+
+        /// <summary>Whether that preparation would be taken, so the UI can say "full" instead of
+        /// offering a drop that will be refused.</summary>
+        public bool CanAddPreparation => Phase == TycoonPhase.DayOpen && !Glass.IsFull;
 
         /// <summary>Shakes the built drink (GDD 24 §2.5). Recorded on the shaker; the craft
         /// effect of a good shake is a later balance pass, the plumbing is here now.</summary>
@@ -351,11 +386,14 @@ namespace LastCall.Core
         // ── serving a seat (GDD 23 §4–§5) ───────────────────────────────────────
 
         /// <summary>
-        /// Hands the drink to one seated customer. If the serve pour was never made, the
-        /// whole shaker is delivered perfectly (the quick path used by the sim, the tests
-        /// and the interim UI); the aim/spill minigame pours into the serving glass first,
-        /// so what it built is what goes out. Identifies the drink, applies its charges to
-        /// who they really are, prices it for today's crowd, and settles or reopens them.
+        /// Hands the drink to one seated customer. What goes out is the SERVING GLASS and
+        /// nothing else: a drink still sitting in the shaker has not been poured yet, and no
+        /// amount of backing out of the menu turns it into a served drink (ruling 2026-07-28).
+        /// The quick path that used to tip the shaker in here made the aim-and-spill pour
+        /// optional — closing the flow mid-build served a perfect drink the player never
+        /// poured — so the sim and the tests make the serve pour like everyone else.
+        /// Identifies the drink, applies its charges to who they really are, prices it for
+        /// today's crowd, and settles or reopens them.
         /// </summary>
         public ServiceVerdict ServeTo(CustomerVisit visit)
         {
@@ -365,13 +403,12 @@ namespace LastCall.Core
                 throw new InvalidOperationException("That customer is not waiting at the bar.");
             if (!visit.HasOrdered)
                 throw new InvalidOperationException("That customer is still deciding — no order to serve yet.");
-            if (ServingGlass.IsEmpty && Glass.IsEmpty)
-                throw new InvalidOperationException("Nothing to serve.");
+            if (ServingGlass.IsEmpty)
+                throw new InvalidOperationException(Glass.IsEmpty
+                    ? "Nothing to serve."
+                    : "That drink is still in the shaker — pour it into a glass first.");
 
             PouringId = null;
-            if (ServingGlass.IsEmpty)
-                Glass.TransferInto(ServingGlass, Glass.TotalVolume, 1.0);
-
             var delivered = ServingGlass;
             var match = RatioRecipeMatcher.Match(delivered, _recipes, IngredientOf);
             var applied = PourResolver.Resolve(delivered, match, IngredientOf);

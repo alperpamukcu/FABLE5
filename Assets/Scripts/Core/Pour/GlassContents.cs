@@ -61,6 +61,17 @@ namespace LastCall.Core
         /// <summary>What is left to pour into, foam included.</summary>
         public double Headroom => Math.Max(0, Capacity - TotalVolume - Head);
 
+        /// <summary>
+        /// The glass is up to the brim and takes nothing more — not another measure, not a
+        /// cube of ice (GDD 21 §3, ruling 2026-07-28). The tolerance is floating-point dregs:
+        /// a glass a millionth short of full is full, and a pour that reports headroom must
+        /// actually have somewhere to go.
+        /// </summary>
+        public bool IsFull => Headroom <= FullTolerance;
+
+        /// <summary>Below this, the room left in the glass is rounding, not room.</summary>
+        public const double FullTolerance = 1e-6;
+
         public bool IsEmpty => _pours.Count == 0;
 
         /// <summary>Distinct ingredients in the glass.</summary>
@@ -89,7 +100,7 @@ namespace LastCall.Core
             if (string.IsNullOrEmpty(ingredientId))
                 throw new ArgumentException("Ingredient id is required", nameof(ingredientId));
 
-            double accepted = Math.Min(volume, Headroom);
+            double accepted = IsFull ? 0 : Math.Min(volume, Headroom);
             if (accepted <= 0) return 0;
 
             if (_pours.Count > 0 && _pours[_pours.Count - 1].IngredientId == ingredientId)
@@ -173,7 +184,7 @@ namespace LastCall.Core
         /// </summary>
         public double AddHead(double volume)
         {
-            double accepted = Math.Min(volume, Headroom);
+            double accepted = IsFull ? 0 : Math.Min(volume, Headroom);
             if (accepted <= 0) return 0;
             Head += accepted;
             return accepted;

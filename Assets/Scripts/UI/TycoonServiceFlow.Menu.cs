@@ -430,6 +430,15 @@ namespace LastCall.UI
         {
             var card = bottle.Ingredient;
             bool empty = bottle.IsEmpty;
+            // Why this key cannot be pressed, if it cannot — printed where the fill level goes,
+            // because "there is no room for it" is the same kind of fact as "there is none left"
+            // (2026-07-28). A key that opens a stage which would refuse you is a key that lies.
+            string blocked =
+                empty ? "OUT"
+                : card.Type == IngredientType.Beer
+                    ? (run.CanPull(card.Id) ? null : run.ServingGlass.IsFull ? "FULL" : "BUSY")
+                    : (run.Glass.IsFull ? "FULL" : null);
+            bool shut = blocked != null;
             var col = UITheme.TypeRamp[card.Type][3];
 
             var box = NewRect($"Box_{card.Id}", parent);
@@ -440,14 +449,14 @@ namespace LastCall.UI
             {
                 bg.sprite = plate; bg.type = Image.Type.Sliced;
                 bg.pixelsPerUnitMultiplier = PlatePixelScale;
-                bg.color = empty ? Color.Lerp(col, new Color(0.45f, 0.43f, 0.42f), 0.7f) : col;
+                bg.color = shut ? Color.Lerp(col, new Color(0.45f, 0.43f, 0.42f), 0.7f) : col;
             }
-            else bg.color = new Color(col.r, col.g, col.b, empty ? 0.25f : 0.5f);
+            else bg.color = new Color(col.r, col.g, col.b, shut ? 0.25f : 0.5f);
 
             var content = NewRect("Content", box);
             Stretch(content, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
-            if (!empty)
+            if (!shut)
             {
                 var btn = box.gameObject.AddComponent<Button>();
                 btn.targetGraphic = bg;
@@ -477,7 +486,7 @@ namespace LastCall.UI
             iconImg.raycastTarget = false; iconImg.preserveAspect = true;
             iconImg.sprite = ItemArt.Bottle(card.Info?.Style);
             iconImg.color = iconImg.sprite == null ? UITheme.StyleColor(card.Info?.Style, card.Type)
-                : (empty ? new Color(1f, 1f, 1f, 0.4f) : Color.white);
+                : (shut ? new Color(1f, 1f, 1f, 0.4f) : Color.white);
 
             // Name, then how full it is and what it costs — the three things the key is sized for.
             // Pixel faces only rasterise cleanly at whole multiples of their 8px design size, so
@@ -494,16 +503,16 @@ namespace LastCall.UI
             // Small: on a 172-wide key the fill and the price cannot both be 16 without running
             // into each other, and the price is the number you are deciding on.
             var pct = Outlined(Handwritten(NewText("Fill", content, _body, 8, TextAnchor.UpperLeft,
-                empty ? new Color(1f, 0.42f, 0.42f) : new Color(1f, 0.80f, 0.32f))), 1f);
+                shut ? new Color(1f, 0.42f, 0.42f) : new Color(1f, 0.80f, 0.32f))), 1f);
             Place(pct.rectTransform, new Vector2(0, 1), new Vector2(cw * 0.5f, 14), new Vector2(12, -12));
-            pct.text = empty ? "OUT" : $"{(int)System.Math.Round(fill * 100)}%";
+            pct.text = blocked ?? $"{(int)System.Math.Round(fill * 100)}%";
 
             var price = Outlined(Handwritten(NewText("Price", content, _body, 16, TextAnchor.UpperRight,
                 new Color(0.45f, 0.95f, 0.45f))));
             Place(price.rectTransform, new Vector2(1, 1), new Vector2(cw * 0.6f, 20), new Vector2(-12, -10));
             price.text = $"${Market.StockPrice(card)}";
 
-            if (!empty && run.IsNewStock(card.Id))
+            if (!shut && run.IsNewStock(card.Id))
             {
                 var badge = Handwritten(NewText("New", content, _body, 8, TextAnchor.UpperRight,
                     new Color(0.62f, 0.36f, 0.04f)));

@@ -32,12 +32,35 @@ namespace LastCall.UI
         // particles can never pack closer than Spacing, so the body stacks up to the fill line
         // and never collapses. Neighbour-velocity viscosity makes it flow. The particle COUNT is
         // derived from the fill area at Spacing, so it fills any vessel exactly.
-        private const float H = 7.5f;                  // viscosity/neighbour radius (px)
-        private const float Spacing = 3f;           // rest spacing (min distance) → many small particles
-        private const int   RelaxIters = 14;           // incompressibility relaxation passes
+        // Recalibrated 2026-07-28, because a vessel the rules called FULL drew about three
+        // quarters full — the one number the player checks against the glass. Two faults, both
+        // measured rather than reasoned about:
+        //   · the estimate assumed an ideal packing. A settled particle really occupies about
+        //     0.71·Spacing² — gravity plus a fixed number of relaxation passes leave the body
+        //     tighter than its rest spacing implies.
+        //   · the body was genuinely compressed, and worst in the TALL vessels: at 14 passes the
+        //     pressure never reached the top of a 45-row column, so the tin and the pint stopped
+        //     ~10% short while the stubby tumbler was fine. That is a convergence failure, so
+        //     more passes is the fix, not a fudge on the fill.
+        // Both together would have cost 40% more CPU, so the particle scale is coarser to pay
+        // for it: 1007 particles at 22 passes costs 10.2 ms/frame against the old 1414 at 14
+        // passes for 10.3 ms — the same frame, drawn honestly (full tin: 77% before, 100% now).
+        private const float H = 9.7f;                  // viscosity/neighbour radius (px)
+        private const float Spacing = 3.9f;        // rest spacing (min distance) → many small particles
+        private const int   RelaxIters = 22;           // incompressibility relaxation passes
+        /// <summary>
+        /// Area one settled particle really takes, as a share of Spacing² — measured, not
+        /// derived. It is well under the √3/2 of an ideal hexagonal packing because a body that
+        /// was POURED settles compressed: gravity is re-applied every frame and the relaxation
+        /// only pushes back so far, so the pile finds an equilibrium tighter than its rest
+        /// spacing. Every vessel in the game is filled by pouring, so that is the state to
+        /// calibrate against — a body assembled in one frame instead sits at rest spacing, which
+        /// is a different (and unreachable in play) density.
+        /// </summary>
+        private const float PackedArea = 0.71f;
         // Render radius is well above the spacing so the fine, tightly-packed particles
         // overlap into ONE smooth connected surface with no gaps between them.
-        private const float PoolRadius = 4.3f;
+        private const float PoolRadius = 5.6f;
         private const float SideOffset = 0.27f;   // iso-surface reach past a side wall particle
         private const float FaceOffset = 0.53f;   // iso-surface reach past a floor/surface particle
         private const float Viscosity = 0.42f;        // 0..1 neighbour-velocity blend (more flow)
@@ -250,7 +273,7 @@ namespace LastCall.UI
             float widthScale = AverageProfile(fillFrac);
             int target = Mathf.Clamp(
                 Mathf.RoundToInt((2f * Mathf.Max(_halfW - PoolRadius * SideOffset, 1f) * widthScale)
-                                 * fillH / (Spacing * Spacing) * 1.155f * _density),
+                                 * fillH / (Spacing * Spacing * PackedArea) * _density),
                 0, MaxPool);
             _fillTopLocal = -_halfH + fillH;
             bool seeding = _pn == 0 && target > 0;   // a fresh body, not a top-up
@@ -487,11 +510,13 @@ namespace LastCall.UI
         public void SetProfile(float[] halfWidths) => _profile = halfWidths;
 
         /// <summary>
-        /// Per-vessel correction on how many particles a given fill asks for. The rest-spacing
-        /// estimate is not exact for every silhouette — the pint packs tighter than it assumes
-        /// and settled at 73% of the line it was aimed at, measured across four fills — so the
-        /// vessel that knows better says so. 1 leaves the estimate alone, which is what the
-        /// shaker and the tumbler still do.
+        /// Per-vessel correction on how many particles a given fill asks for. The estimate is
+        /// honest for a poured, settled body, so what is left here is each vessel's own
+        /// departure from that: the tin is filled and immediately capped and leaves it alone at
+        /// 1; the tumbler is the shortest cavity, where the floor and surface insets are a
+        /// bigger share of it, and wants 0.90; the pint is filled and then STANDS while its head
+        /// settles, which leaves the body a touch loose, and wants 0.88. All measured
+        /// 2026-07-28, live in their own stages, across the fill range.
         /// </summary>
         public void SetDensity(float multiplier) => _density = Mathf.Clamp(multiplier, 0.25f, 4f);
         private float _density = 1f;

@@ -78,7 +78,19 @@ namespace LastCall.UI
             var btn = chip.gameObject.AddComponent<Button>();
             btn.targetGraphic = bg;
             var c = card;
-            btn.onClick.AddListener(() => { if (Run != null && !Run.Glass.IsEmpty) { Run.PourGarnish(c.Id); RefreshServe(); } });
+            // The garnish goes into the shaker, before the pour — so a shaker filled to the brim
+            // has nowhere to put it, and says so rather than swallowing the click (2026-07-28).
+            btn.onClick.AddListener(() =>
+            {
+                if (Run == null || Run.Glass.IsEmpty) return;
+                if (Run.PourGarnish(c.Id) <= 0)
+                {
+                    _aimText.text = "THE SHAKER IS FULL — NO ROOM FOR A GARNISH";
+                    _aimText.color = UITheme.Amber[3];
+                    return;
+                }
+                RefreshServe();
+            });
         }
 
         /// <summary>
@@ -111,7 +123,14 @@ namespace LastCall.UI
                 Vector2 mouth = local + new Vector2(-Mathf.Sin(rad), Mathf.Cos(rad)) * (BottleH * 0.78f);
                 var opening = _serveGlass.anchoredPosition + new Vector2(0, _serveGlass.rect.height * 0.5f);
 
-                if (tilt > 42f && mouth.y > opening.y - 30f)
+                // The glass is full: the pour stops there rather than running a stream into a
+                // vessel that cannot take it (GDD 21 §3, 2026-07-28).
+                if (run.ServingGlass.IsFull && tilt > 42f && mouth.y > opening.y - 30f)
+                {
+                    _serveGrabbed = false;
+                    ShowGlassFull();
+                }
+                else if (tilt > 42f && mouth.y > opening.y - 30f)
                 {
                     // Aim: how well the mouth is centred over the glass. Within ~half the
                     // glass width is a clean pour; beyond that it spills more the further off.
@@ -133,8 +152,9 @@ namespace LastCall.UI
             {
                 double before = run.ServingGlass.TotalVolume;
                 run.PourIntoServingGlass(ServePourRate * Time.deltaTime, accuracy);
-                if (run.Glass.IsEmpty || run.ServingGlass.FillFraction >= 1.0) _serveGrabbed = false;
-                if (run.ServingGlass.TotalVolume != before) RefreshServeText(run, accuracy);
+                if (run.ServingGlass.IsFull) { _serveGrabbed = false; ShowGlassFull(); }
+                else if (run.Glass.IsEmpty) _serveGrabbed = false;
+                else if (run.ServingGlass.TotalVolume != before) RefreshServeText(run, accuracy);
             }
 
             PushServePool(run);
@@ -158,6 +178,21 @@ namespace LastCall.UI
             float innerH = h * 0.6f;
             float rimY = bottomY + innerH;
             _serveFluid.SetPool(minX, maxX, bottomY, rimY, (float)run.ServingGlass.FillFraction);
+        }
+
+        /// <summary>The glass is at the brim and is refusing what comes next — the drink stops
+        /// there, and so does the garnish (2026-07-28).</summary>
+        private void ShowGlassFull()
+        {
+            var run = Run;
+            if (run != null)
+            {
+                _serveShakerText.text = run.Glass.IsEmpty
+                    ? "shaker empty" : $"shaker {run.Glass.FillFraction:P0} left";
+                _serveGlassText.text = "glass FULL";
+            }
+            _aimText.text = "THE GLASS IS FULL — SERVE IT";
+            _aimText.color = UITheme.Amber[3];
         }
 
         private void RefreshServeText(TycoonRun run, double accuracy)
@@ -226,6 +261,10 @@ namespace LastCall.UI
             _serveFluid = new MetaballFluid(_serveSurface);
             // The tumbler: a slightly narrower base opening out to the mouth.
             _serveFluid.SetProfile(new[] { 0.88f, 0.93f, 0.96f, 0.98f, 1.00f, 1.00f });
+            // The tumbler's cavity is the shortest of the three, so the floor and surface insets
+            // are a bigger share of it and the estimate runs generous — measured at four fills,
+            // it wants a tenth fewer particles to draw the level it was actually given.
+            _serveFluid.SetDensity(0.90f);
             _serveSplash = new Splasher(_serveSurface);
             if (ItemArt.Glass != null) _serveGlass.SetAsLastSibling();   // clear glass over the fluid
 

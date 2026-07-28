@@ -39,6 +39,12 @@ namespace LastCall.Tests
             new TycoonRun(NewShelf(), Book, new RunRng(seed),
                 config: new TycoonConfig(startingMoney, orderDecisionSeconds: 0, savorSeconds: 0));
 
+        /// <summary>Tips the whole shaker into the serving glass, dead on the rim. Nothing is
+        /// served straight out of the shaker any more (2026-07-28), so every test that hands a
+        /// drink over pours it first — the same two verbs the player uses.</summary>
+        private static void PourOut(TycoonRun run) =>
+            run.PourIntoServingGlass(run.Glass.TotalVolume, accuracy: 1.0);
+
         /// <summary>Serves every seated customer an exact Spritz until the day closes.</summary>
         private static void PlayDayServingEveryone(TycoonRun run)
         {
@@ -52,6 +58,7 @@ namespace LastCall.Tests
                     if (visit.State != VisitState.Waiting) continue;
                     run.PourMeasure("gin", 0.35);
                     run.PourMeasure("soda", 0.35);
+                    PourOut(run);
                     run.ServeTo(visit);
                 }
             }
@@ -159,6 +166,7 @@ namespace LastCall.Tests
             var visit = run.Floor.Seated[0];
 
             run.PourMeasure("soda", 0.7);   // pure soda against a spritz order
+            PourOut(run);
             var verdict = run.ServeTo(visit);
 
             Assert.AreEqual(OrderMatch.Wrong, verdict.Match);
@@ -181,6 +189,7 @@ namespace LastCall.Tests
             Assert.IsFalse(visit.HasOrdered, "they just sat — still deciding");
             run.PourMeasure("gin", 0.35);
             run.PourMeasure("soda", 0.35);
+            PourOut(run);
             Assert.Throws<InvalidOperationException>(() => run.ServeTo(visit),
                 "no serving a customer who has not ordered");
 
@@ -302,6 +311,83 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void ADrinkStillInTheShaker_CannotBeServed()
+        {
+            // Backing out of the build (closing the flow) used to hand the shaker over whole,
+            // which skipped the aim-and-spill pour entirely — the drink was served without ever
+            // being in a glass. The glass is the drink now (ruling 2026-07-28).
+            var run = NewRun();
+            int guard = 0;
+            while (run.Floor.Seated.Count == 0) { Assert.Less(guard++, 100); run.Tick(5); }
+            var visit = run.Floor.Seated[0];
+
+            run.PourMeasure("gin", 0.35);
+            run.PourMeasure("soda", 0.35);
+
+            Assert.IsFalse(run.DrinkReady, "nothing has reached a glass yet");
+            Assert.IsTrue(run.DrinkWaitingInShaker);
+            Assert.Throws<InvalidOperationException>(() => run.ServeTo(visit),
+                "a full shaker is not a served drink");
+
+            PourOut(run);
+
+            Assert.IsTrue(run.DrinkReady);
+            Assert.AreEqual(OrderMatch.Exact, run.ServeTo(visit).Match,
+                "poured into the glass, the same drink goes out fine");
+        }
+
+        [Test]
+        public void APintIsNotPulledOnTopOfSomeoneElsesDrink()
+        {
+            // Once the serve pour became mandatory the finished cocktail waits in the SERVING
+            // glass, so the old "is the shaker busy" guard no longer caught this: opening a keg
+            // would have run beer straight into the drink standing there (2026-07-28).
+            var shelf = new Shelf(new[]
+            {
+                new ShelfBottle(new IngredientCard("gin", "Gin", IngredientType.Spirit, 6), capacity: 20),
+                new ShelfBottle(new IngredientCard("soda", "Soda", IngredientType.Bubbly, 1), capacity: 20),
+                new ShelfBottle(new IngredientCard("stout", "Stout", IngredientType.Beer, 3), capacity: 20),
+            });
+            var run = new TycoonRun(shelf, Book, new RunRng("pint"),
+                config: new TycoonConfig(20, orderDecisionSeconds: 0, savorSeconds: 0));
+
+            run.PourMeasure("gin", 0.35);
+            PourOut(run);
+
+            Assert.IsFalse(run.CanPull("stout"));
+            Assert.Throws<InvalidOperationException>(() => run.BeginPull("stout"),
+                "there is already a drink in that glass");
+
+            run.DiscardGlass();
+
+            Assert.IsTrue(run.CanPull("stout"));
+            run.BeginPull("stout");
+            run.PourTilted(1.0, TapPour.IdealTilt);
+            Assert.IsTrue(run.CanPull("stout"), "topping up the same pint is what a second pull is");
+        }
+
+        [Test]
+        public void AFullGlassTakesNothingMore_NotEvenIce()
+        {
+            // Pouring past the brim stops at it (GDD 21 §3) — and once it is there, the ice and
+            // the twist are refused too, because they need room the glass no longer has.
+            var run = NewRun();
+            run.PourMeasure("gin", 0.6);
+            double taken = run.PourMeasure("soda", 0.9);   // only 0.4 of it can fit
+
+            Assert.AreEqual(0.4, taken, 1e-9, "the pour stops at the brim, it does not overflow");
+            Assert.IsTrue(run.Glass.IsFull);
+            Assert.AreEqual(1.0, run.Glass.FillFraction, 1e-9);
+            Assert.IsFalse(run.CanAddPreparation);
+
+            Assert.AreEqual(0, run.PourMeasure("gin", 0.3), "a full glass takes no more liquid");
+            Assert.AreEqual(0, run.PourGarnish("gin"), "nor a pinch of garnish");
+            Assert.Throws<InvalidOperationException>(() => run.AddPreparation(Preparations.Ice),
+                "nor a cube of ice");
+            Assert.AreEqual(1.0, run.Glass.FillFraction, 1e-9, "and it is still exactly full");
+        }
+
+        [Test]
         public void TheDayClock_AndThePourClock_AreIndependent()
         {
             // Holding a bottle while the floor runs must not double-charge time anywhere:
@@ -323,6 +409,7 @@ namespace LastCall.Tests
             run.PourTick(1.0);
             run.EndPour();
             run.PourMeasure("soda", run.Glass.VolumeOf("gin"));
+            PourOut(run);
             run.ServeTo(first);
 
             Assert.AreEqual(VisitState.Waiting, second.State);

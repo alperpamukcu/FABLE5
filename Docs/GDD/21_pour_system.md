@@ -54,6 +54,17 @@ held-too-long pour now costs *precision* (your ratios and fill drift from what y
 which is punishment enough. With nothing left to spill, `Spills`/`NoSpillsThisCustomer`
 now count deliberate waste: binning a glass with anything in it.
 
+**A full vessel takes nothing more (2026-07-28).** Stopping at the brim was only ever
+enforced against *liquid*, so a glass poured to `F = 1` still accepted a cube of ice, a
+twist and a pinch of garnish — the one way to get a garnished drink for nothing. `IsFull`
+is now the single test every verb asks: pours return 0, `AddPreparation` refuses outright,
+and the UI says so rather than swallowing the input. What the glass says it holds and what
+it will accept are the same fact.
+
+The vessel on screen has to agree with that number, so the drawn liquid is measured against
+it: at `F = 1` the fluid stands at its rim, and the stages no longer shave a fraction off
+the fill to flatter the solver (see 24 §3.5).
+
 **Garnishes go in by the pinch (2026-07-20).** One tap of a garnish jar drops a fixed
 **5% of the glass** (`GarnishClickFraction`), however long the button was held; taps stack.
 Trickling out 1% slivers of mint by timing a held jar was busywork with no read behind it —

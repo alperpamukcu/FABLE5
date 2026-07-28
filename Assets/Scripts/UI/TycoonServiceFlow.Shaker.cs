@@ -76,6 +76,21 @@ namespace LastCall.UI
             return sb.ToString();
         }
 
+        /// <summary>The readout's ordinary voice — and it clears any warning colour left on it.</summary>
+        private void SayShaker(string line)
+        {
+            _shakerReadout.text = line;
+            _shakerReadout.color = UITheme.TextSecondary;
+        }
+
+        /// <summary>The tin is at the brim and is refusing things. Said in red, because it is the
+        /// reason nothing is happening (2026-07-28).</summary>
+        private void ShowShakerFull()
+        {
+            _shakerReadout.text = "THE TIN IS FULL — CAP IT AND SHAKE, OR EMPTY IT";
+            _shakerReadout.color = UITheme.ViceRed[3];
+        }
+
         // ── the shaker focus stage: the tilt-pour ────────────────────────────────
 
         private void RefreshShaker()
@@ -84,7 +99,7 @@ namespace LastCall.UI
             if (_focusBottle == null) return;
             var colour = UITheme.StyleColor(_focusBottle.Info?.Style, _focusBottle.Type);
             _shakerTitle.text = _focusBottle.Name.ToUpperInvariant();
-            _shakerReadout.text = ShakerLine(run);
+            SayShaker(ShakerLine(run));
             var bottleSprite = ItemArt.Bottle(_focusBottle.Info?.Style);
             _pourBottleBody.sprite = bottleSprite;
             _pourBottleBody.color = bottleSprite != null ? Color.white : colour;   // real art, else the style tint
@@ -141,7 +156,12 @@ namespace LastCall.UI
 
                 var opening = _shakerVessel.anchoredPosition + new Vector2(0, _shakerVessel.rect.height * 0.5f);
                 bool over = Mathf.Abs(mouth.x - opening.x) < 78f && mouth.y > opening.y - 30f;
-                pourNow = tilt > 42f && over;
+                // A full tin takes nothing more, so the stream stops with it: liquid pouring into
+                // a glass that cannot accept it read as an overflow the rules do not have
+                // (GDD 21 §3, 2026-07-28). The bottle stays in hand — only the pour ends.
+                bool full = run.Glass.IsFull;
+                pourNow = tilt > 42f && over && !full;
+                if (full && tilt > 42f && over) ShowShakerFull();
 
                 if (pourNow)
                 {
@@ -159,7 +179,7 @@ namespace LastCall.UI
             {
                 if (run.PouringId == null) run.BeginPour(_focusBottle.Id);
                 run.PourTick(Time.deltaTime * PourTimeScale);   // slower, deliberate pour
-                _shakerReadout.text = ShakerLine(run);
+                SayShaker(ShakerLine(run));
             }
             else if (run.PouringId != null)
             {
@@ -192,9 +212,14 @@ namespace LastCall.UI
             float minX = c.x - iw;
             float maxX = c.x + iw;
             float h = _shakerVessel.rect.height;
-            float bottomY = c.y - h * 0.5f + h * 0.0913f;  // measured: above the rounded base
-            float innerH = h * 0.5192f;                     // measured: that floor → rim
-            float fill = (float)run.Glass.FillFraction * (8f / 9f);   // shows a ninth less
+            float bottomY = c.y - h * 0.5f + h * CavityFloor;   // measured: above the rounded base
+            float innerH = h * (CavityRim - CavityFloor);   // measured: that floor → rim
+            // A full tin draws full. The ninth this used to shave off was a fudge for the
+            // solver's particle-count estimate, and it made a glass the rules called 100% read
+            // as nine-tenths — the one number the player checks against the vessel (2026-07-28).
+            // The estimate is fixed where it belongs now, in the solver itself; measured after:
+            // a tin the rules call 100% draws to 100% of its cavity.
+            float fill = (float)run.Glass.FillFraction;
             float rimY = bottomY + innerH;
             float topY = bottomY + innerH * fill + bob;
             // The particle fluid collides with the tin's rotated interior, so it sloshes with it.
@@ -286,7 +311,7 @@ namespace LastCall.UI
             if (capImg != null) capImg.raycastTarget = !_capped;   // capped: grab the tin, not the lid
 
             if (!_capped && !run.Glass.IsEmpty && !_capGrabbed)
-                _shakerReadout.text = "drag the lid onto the tin to close it";
+                SayShaker("drag the lid onto the tin to close it");
         }
 
         /// <summary>
@@ -305,7 +330,7 @@ namespace LastCall.UI
                 if (!run.Glass.IsEmpty && _shakeEnergy > 0.05)
                 {
                     run.Shake(_shakeEnergy);
-                    _shakerReadout.text = $"SHAKEN · {_shakeEnergy:P0} · {ShakerLine(run)}";
+                    SayShaker($"SHAKEN · {_shakeEnergy:P0} · {ShakerLine(run)}");
                 }
                 _shaking = false;
                 _shakeEnergy = 0;
@@ -374,10 +399,14 @@ namespace LastCall.UI
             var local = _dragPos;
             var opening = _shakerVessel.anchoredPosition + new Vector2(0, _shakerVessel.rect.height * 0.5f);
             bool inMouth = Mathf.Abs(local.x - opening.x) < 90f && Mathf.Abs(local.y - opening.y) < 90f;
-            if (inMouth && !run.Glass.IsEmpty)
+            // A tin filled to the brim has no room for a cube of ice or a twist of lemon, so the
+            // piece falls away instead of going in — the rules refuse it either way, and dropping
+            // it in silently would just look broken (2026-07-28).
+            if (inMouth && !run.Glass.IsEmpty && run.Glass.IsFull) ShowShakerFull();
+            else if (inMouth && !run.Glass.IsEmpty)
             {
                 run.AddPreparation(_draggingPrep);
-                _shakerReadout.text = ShakerLine(run);
+                SayShaker(ShakerLine(run));
                 var c = _dragPiece.GetComponent<Image>().color;
                 bool granular = _draggingPrep.Id == "salt_rim" || _draggingPrep.Id == "sugar_rim";
                 if (granular)
@@ -457,8 +486,8 @@ namespace LastCall.UI
             var shakeGrab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
             shakeGrab.callback.AddListener(_ =>
             {
-                if (Run == null || Run.Glass.IsEmpty) { _shakerReadout.text = "pour something to shake"; return; }
-                if (!_capped) { _shakerReadout.text = "cap it first — drag the lid onto the tin"; return; }
+                if (Run == null || Run.Glass.IsEmpty) { SayShaker("pour something to shake"); return; }
+                if (!_capped) { SayShaker("cap it first — drag the lid onto the tin"); return; }
                 _shaking = true;
                 _shakeEnergy = Run.ShakeEnergy;   // continue from what's been shaken, don't reset
                 _shakerVel = Vector2.zero;
@@ -615,7 +644,8 @@ namespace LastCall.UI
             down.callback.AddListener(_ =>
             {
                 if (_capped) return;   // the tin is closed — the bench is put away
-                if (Run == null || Run.Glass.IsEmpty) { _shakerReadout.text = "pour something first"; return; }
+                if (Run == null || Run.Glass.IsEmpty) { SayShaker("pour something first"); return; }
+                if (!Run.CanAddPreparation) { ShowShakerFull(); return; }   // no room for it
                 _draggingPrep = prep;
                 var dpImg = _dragPiece.GetComponent<Image>();
                 dpImg.sprite = prepSprite;

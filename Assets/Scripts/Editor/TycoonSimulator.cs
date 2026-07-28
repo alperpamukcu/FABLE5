@@ -126,7 +126,13 @@ namespace LastCall.EditorTools
                 double share = (band.MinRatio + band.MaxRatio) / 2.0;
                 run.PourMeasure(bottle.Id, Math.Min(volume * share, bottle.Remaining));
             }
-            return !run.Glass.IsEmpty;
+            if (run.Glass.IsEmpty) return false;
+
+            // Into the glass, dead on the rim. The bot used to hand the shaker over whole, which
+            // the rules now refuse (2026-07-28); pouring perfectly keeps its standing unchanged —
+            // it never had to aim, and the aim is the player's skill, not the floor's.
+            run.PourIntoServingGlass(run.Glass.TotalVolume, accuracy: 1.0);
+            return run.DrinkReady;
         }
 
         private static bool WantsBeer(RecipeDefinition recipe)
