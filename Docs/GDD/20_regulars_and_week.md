@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module 20: Regulars & the Week
 
+> **STATUS 2026-07-27 — CURRENT.**
+> Regulars, memory decay and relationships, as the tycoon loop uses them.
+
 > v4 NOTE (2026-07-22): the WEEK/QUOTA half of this module is retired by module 23 (days,
 > ledger, bankruptcy). Regulars, drift, relationship and demand survive — demand now
 > feeds pickiness/patience, not satisfaction thresholds.

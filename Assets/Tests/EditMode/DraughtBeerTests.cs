@@ -197,6 +197,18 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void TheShakerRefusesBeerOutright()
+        {
+            // The rules layer does not trust the UI to route beer to the tap. A keg poured into
+            // the shaker still identifies as a draught by ratio, so it would have scored as a
+            // perfect pint carrying no head at all — the whole mechanic skipped (2026-07-27).
+            var run = RunWithKeg(out string kegId);
+            Assert.Throws<System.ArgumentException>(() => run.PourMeasure(kegId, 0.9));
+            Assert.Throws<System.ArgumentException>(() => run.BeginPour(kegId));
+            Assert.IsTrue(run.Glass.IsEmpty, "and nothing of it reached the shaker");
+        }
+
+        [Test]
         public void ACocktailOnTheGoBlocksTheTap()
         {
             var run = RunWithKeg(out string kegId);

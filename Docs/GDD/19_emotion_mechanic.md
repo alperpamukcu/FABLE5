@@ -1,5 +1,9 @@
 # LAST CALL — GDD Module: Emotion Stats & "Read the Customer" (v1)
 
+> **STATUS 2026-07-27 — CURRENT.**
+> The emotion model, the reads and the tone guardrail. Its output is tips and extra orders
+> (23 §4-5), not points.
+
 > v4 NOTE (2026-07-22): the tycoon pivot (module 23) retired the quota/score loop. The
 > emotion model, reads, tone guardrail and Clean-Serve language here still define the
 > subsystem, but its OUTPUT is now tips and extra orders (23 §4–§5), not points.

@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module: Patrons (Jokers)
 
+> **STATUS 2026-07-27 — HISTORICAL, not the live design.**
+> Patrons were deleted in the tycoon demolition (PLAN P7). A design archive.
+
 > **v2.0 emotion pivot:** every patron here is unchanged — an audit found none broken by the
 > pivot, since recipes survive as the craft layer. Four were added (Loose Lips, The Empath,
 > Regular's Memory, The Confidant) which sharpen ID readings and never touch the score.

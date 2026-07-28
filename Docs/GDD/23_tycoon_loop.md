@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module 23: The Tycoon Loop (v4 pivot, 2026-07-22)
 
+> **STATUS 2026-07-27 — CURRENT.**
+> Owns the loop: the day, the till, the orders, rent and bankruptcy.
+
 > **This module owns the game loop.** It supersedes the quota/score loop of modules 19–21
 > wherever they disagree; module 24 owns the service flow and presentation. The player runs
 > a bar like a business now — *Dealer's Life* pacing, *Dave the Diver* energy: customers

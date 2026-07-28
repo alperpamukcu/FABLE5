@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module: Automated Asset Production Pipeline (v2 — pixel)
 
+> **STATUS 2026-07-27 — CURRENT.**
+> The asset pipeline still governs how art enters the project.
+
 > Canonical production method for all shipped 2D art. Complements `14_art_bible.md` v2
 > (which owns the look); this module owns the process. **v2 pixel pivot** — the v1
 > painterly/FLUX+LoRA path is deprecated (see §6). All banks tagged `legacy-cozy-noir`

@@ -88,6 +88,6 @@ two design bugs and two reporting bugs. The bot reads only the ID and never shop
 survival rate is a **floor**, not a prediction; trust the shape comparisons, not the absolute
 number.
 
-**The bot cannot pull a tap yet**, so every beer figure it reports is wrong (it builds every
-order in the shaker). Teach `TycoonSimulator` the tap before trusting a balance pass that
-includes draught.
+The bot pulls pints the way the mechanic asks (leaned over, then straightened), so draught is
+measured rather than faked. It reports the draught share of serves, how many pints landed in
+the good head band, and the average head poured.

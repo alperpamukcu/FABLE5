@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module: UI Style Guide v2 — PIXEL SYSTEM (supersedes v1)
 
+> **STATUS 2026-07-27 — CURRENT.**
+> The UI style guide still governs type, colour and spacing.
+
 > LAW for all UI. Authored at 640×360; all values in 1× pixels. Palette/ramps from 14_art_bible v2. Engine-drawn primitives are BANNED for visible UI — every panel, button, tab, bar is a hand-authored (or AI-generated+cleaned) pixel sprite, 9-sliced where stretchable.
 
 ## 1. Design tokens

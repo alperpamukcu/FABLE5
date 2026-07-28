@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module: Stats, Run History, Daily Challenge & Achievements
 
+> **STATUS 2026-07-27 — PARTLY SUPERSEDED.**
+> Daily stats and achievements are unbuilt. Treat as a wish list.
+
 > Implementation milestone: M5 core (stats, achievements), daily challenge may ship in first post-launch patch.
 
 ## 1. Profile stats (persistent, local JSON)

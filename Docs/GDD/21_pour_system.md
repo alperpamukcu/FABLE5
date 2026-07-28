@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module 21: The Pour System
 
+> **STATUS 2026-07-27 — CURRENT.**
+> The pour, the glass and the shelf economy, and §10 owns draught beer.
+
 > v4 NOTE (2026-07-22): pouring/ratio/recipe rules here remain the craft subsystem, but
 > the drink is now built in the SHAKER flow (module 24) and judged as a named ORDER
 > (module 23 §4). Score/Mult language is retired with the old loop.

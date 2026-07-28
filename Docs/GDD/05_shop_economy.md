@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module: Back Room Shop & Economy
 
+> **STATUS 2026-07-27 — HISTORICAL, not the live design.**
+> The shop economy is module 23 §6-§8; the bottle market it grew into is module 22.
+
 > **v2.0 emotion pivot:** the shop gains a third purchase axis — **information**. Reading
 > patrons and the Eavesdrop tool buy clarity about the customer instead of points. They are
 > ordinary patron/tool entries, so the offer roll below needed no changes.

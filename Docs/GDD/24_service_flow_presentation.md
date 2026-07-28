@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module 24: Service Flow & Presentation (v4, 2026-07-22)
 
+> **STATUS 2026-07-27 — CURRENT.**
+> Owns the service flow and the presentation the player touches.
+
 > Companion to module 23 (which owns the rules). This module owns **how making a drink
 > feels**: the menu, the shaker, the pour, the seats, and the art bar the whole game is
 > being raised to. Animation quality is a design pillar now, not a polish item.

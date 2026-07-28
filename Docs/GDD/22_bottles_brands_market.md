@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module 22: Bottles, Brands & the Market
 
+> **STATUS 2026-07-27 — CURRENT.**
+> Bottles, brands and the end-of-night market.
+
 > v4 NOTE (2026-07-22): brands/market survive and gain a pricing job — bottle tier now
 > raises menu prices (23 §3). The shelf leaves the screen for the menu UI (24 §1).
 

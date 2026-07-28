@@ -1,5 +1,9 @@
 # LAST CALL — GDD Module: Art, Audio & Asset Production List
 
+> **STATUS 2026-07-27 — PARTLY SUPERSEDED.**
+> The art and audio ambitions still stand as direction. The asset lists name systems that no
+> longer exist.
+
 ## 12. GAME FEEL, ART & AUDIO DIRECTION
 
 ### 12.1 Art

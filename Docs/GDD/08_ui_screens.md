@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module: Screens, Menus & UI Flow
 
+> **STATUS 2026-07-27 — HISTORICAL, not the live design.**
+> The screens described here are the card game. The live UI is module 24.
+
 > **v2.0 emotion pivot:** the gameplay screen described here has been substantially rebuilt.
 > The customer's stats are not displayed — clicking the customer opens an ID popup (photo +
 > 3x2 stat grid). The HUD moved into the bottom band over the counter front, leaving the

@@ -72,9 +72,16 @@ namespace LastCall.EditorTools
                     foreach (var visit in run.Floor.Seated)
                     {
                         if (visit.State != VisitState.Waiting) continue;
+                        // A seated customer spends a few seconds deciding before they order
+                        // (TycoonConfig.OrderDecisionSeconds). Serving one mid-thought throws,
+                        // which is what the sim had been doing since decisions were added — it
+                        // has evidently not been run since (2026-07-27).
+                        if (!visit.HasOrdered) continue;
                         if (!BuildOrderedDrink(run, visit)) continue;
+                        bool pint = run.ServingGlass.HasPreparation(Preparations.Draught.Id);
+                        double head = pint ? run.ServingGlass.Head / run.ServingGlass.Capacity : 0;
                         var verdict = run.ServeTo(visit);
-                        stats.RecordServe(verdict);
+                        stats.RecordServe(verdict, pint, head);
                         buildTimer = 0;
                         break;
                     }
@@ -109,8 +116,9 @@ namespace LastCall.EditorTools
         {
             run.DiscardGlass();
             var recipe = visit.Order.Wanted;
-            double volume = Math.Max(recipe.MinFill, 0.85) * run.Glass.Capacity;
+            if (WantsBeer(recipe)) return PullPint(run, visit);
 
+            double volume = Math.Max(recipe.MinFill, 0.85) * run.Glass.Capacity;
             foreach (var band in recipe.RatioRequirements)
             {
                 var bottle = PickBottle(run.Shelf, band.Type, visit);
@@ -119,6 +127,38 @@ namespace LastCall.EditorTools
                 run.PourMeasure(bottle.Id, Math.Min(volume * share, bottle.Remaining));
             }
             return !run.Glass.IsEmpty;
+        }
+
+        private static bool WantsBeer(RecipeDefinition recipe)
+        {
+            foreach (var band in recipe.RatioRequirements)
+                if (band.Type == IngredientType.Beer) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// A pint, poured the way the mechanic asks for it (GDD 21 §10.2): leaned over while it
+        /// fills, then straightened at the end to raise the head. Before this the bot answered
+        /// draught orders by building beer in the shaker, which the rules now refuse and which
+        /// scored a headless glass as a perfect pint — every beer figure it reported was fiction.
+        ///
+        /// It pours competently, not perfectly, which is the same standing the band-midpoint
+        /// cocktail has: this bot is a floor, not a ceiling.
+        /// </summary>
+        private static bool PullPint(TycoonRun run, CustomerVisit visit)
+        {
+            var keg = PickBottle(run.Shelf, IngredientType.Beer, visit);
+            if (keg == null) return false;
+
+            run.BeginPull(keg.Id);
+            const double step = 0.05;
+            // Leaned over until the glass is nearly there, then upright to build the head.
+            for (int i = 0; i < 40 && run.ServingGlass.FillFraction < 0.78 && run.PullingId != null; i++)
+                run.PourTilted(step, TapPour.IdealTilt);
+            for (int i = 0; i < 20 && run.ServingGlass.FillFraction < 0.97 && run.PullingId != null; i++)
+                run.PourTilted(step, 6.0);
+            run.EndPull();
+            return !run.ServingGlass.IsEmpty;
         }
 
         private static ShelfBottle PickBottle(Shelf shelf, IngredientType type, CustomerVisit visit)
@@ -155,6 +195,8 @@ namespace LastCall.EditorTools
         {
             public int Runs, Stuck, Bankruptcies, StormOffs, CustomersFinished;
             public int Serves, Exact, Close, Wrong, CraftServes, SpeedTips, ExtraOrders;
+            public int Pints, GoodPints;
+            public double HeadSum;
             public double SatisfactionSum;
             public long IncomeSum, ExpenseSum;
             public int DaysClosed;
@@ -163,9 +205,15 @@ namespace LastCall.EditorTools
             public readonly Dictionary<int, (int reds, int closes)> ByDay =
                 new Dictionary<int, (int, int)>();
 
-            public void RecordServe(ServiceVerdict verdict)
+            public void RecordServe(ServiceVerdict verdict, bool pint = false, double head = 0)
             {
                 Serves++;
+                if (pint)
+                {
+                    Pints++;
+                    HeadSum += head;
+                    if (TapPour.HeadScore(head) >= 1.0) GoodPints++;
+                }
                 if (verdict.Match == OrderMatch.Exact) Exact++;
                 else if (verdict.Match == OrderMatch.Close) Close++;
                 else Wrong++;
@@ -191,8 +239,9 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"Runs: **{Runs}** of {requested}" +
                               (Stuck > 0 ? $" ({Stuck} abandoned as stuck)" : "") +
                               $", horizon {DayCap} days, one drink per {DrinkBuildSeconds:0}s of bar time.");
-                sb.AppendLine("Floor bot: serves the named order at band midpoints, never chases");
-                sb.AppendLine("mood tips, never buys brands. Every survival figure is a floor.");
+                sb.AppendLine("Floor bot: serves the named order at band midpoints, pulls a pint");
+                sb.AppendLine("leaned over then straightened, never chases mood tips, never buys");
+                sb.AppendLine("brands. Every survival figure is a floor.");
                 sb.AppendLine();
                 sb.AppendLine("| Metric | Value |");
                 sb.AppendLine("|---|---|");
@@ -207,6 +256,9 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Garnish craft landed | {Pct(CraftServes, Serves)} |");
                 sb.AppendLine($"| Extra orders earned (of serves) | {Pct(ExtraOrders, Serves)} |");
                 sb.AppendLine($"| Extra orders earned (of exact) | {Pct(ExtraOrders, Exact)} |");
+                sb.AppendLine($"| Draught share of serves | {Pct(Pints, Serves)} |");
+                sb.AppendLine($"| Pints in the good head band | {Pct(GoodPints, Pints)} |");
+                sb.AppendLine($"| Average head poured | {HeadSum / Math.Max(1, Pints):P0} |");
                 sb.AppendLine();
                 sb.AppendLine("## Red days by day number");
                 sb.AppendLine();

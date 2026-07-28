@@ -1,5 +1,9 @@
 # LAST CALL — GDD Module: Recipes & Scoring Engine Rules
 
+> **STATUS 2026-07-27 — PARTLY SUPERSEDED.**
+> The recipe table is live and mirrored by RecipeCatalog, but recipes are matched by POURED
+> RATIO now (21 §9) and pay through orders, not Score/Mult.
+
 > Source of truth for the scoring formula. The scoring engine must be a pure, unit-testable function.
 >
 > **v2.0 emotion pivot — recipes are demoted, not deleted.** They still supply base Flavor and

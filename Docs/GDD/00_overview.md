@@ -1,5 +1,9 @@
 # LAST CALL — Game Design Document (v2.0)
 
+> **STATUS 2026-07-27 — HISTORICAL, not the live design.**
+> The pitch and the loop it describes are the card game. The bar, the tone and the cast
+> survive; the loop is module 23.
+
 > **v2.0 — the emotion pivot.** The core loop is no longer "recognise a pattern, score points".
 > It is **read the person in front of you and serve what they actually need**. Recipes were not
 > deleted; they were demoted to the craft layer. `19_emotion_mechanic.md` and

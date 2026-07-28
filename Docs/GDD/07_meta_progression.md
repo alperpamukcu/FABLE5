@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module: Bar Themes & Meta Progression
 
+> **STATUS 2026-07-27 — HISTORICAL, not the live design.**
+> Meta progression predates the tycoon loop; upgrades are 23 §8.
+
 ## 9. BAR THEMES (STARTING DECKS) & META PROGRESSION
 
 Unlockable starting configurations, like Balatro decks:

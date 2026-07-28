@@ -1,5 +1,9 @@
 # LAST CALL — GDD Module: Ingredient Cards (Deck)
 
+> **STATUS 2026-07-27 — PARTLY SUPERSEDED.**
+> Ingredient types, Flavor and the charge model still hold, and Beer joined them (21 §10).
+> Card-era draw and deck language does not.
+
 ## 3. INGREDIENT CARDS (THE DECK)
 
 The starting Cabinet contains **48 cards** across **6 Ingredient Types** (the "suits"):

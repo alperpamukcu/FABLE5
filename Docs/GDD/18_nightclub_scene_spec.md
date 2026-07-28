@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module: Nightclub Scene & Bottle Rail Spec (v2)
 
+> **STATUS 2026-07-27 — PARTLY SUPERSEDED.**
+> The club scene direction still holds; the specific HUD it describes is module 24.
+
 > ⚠️ **PARTIALLY STALE (2026-07-20).** The camera flipped to the **customer's side of the
 > bar**: bottles now live on two back-bar wall shelves (spirits up, mixers down), not on the
 > counter, and the "camera faces the club" note in §1 is dead. GDD 22 §1 and the layout

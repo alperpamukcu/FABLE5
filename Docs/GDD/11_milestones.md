@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module: Scope & Milestones
 
+> **STATUS 2026-07-27 — HISTORICAL, not the live design.**
+> Milestones are tracked in Docs/PLAN_tycoon_pivot.md.
+
 > **v2.0 emotion pivot:** M3's launch counts are superseded — 64 patrons, 17 tools and 23
 > VIPs now ship, the extras being the information axis. `PLAN_emotion_pivot.md` tracks the
 > pivot's own phases.

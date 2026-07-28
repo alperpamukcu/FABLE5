@@ -1,5 +1,9 @@
 # LAST CALL — GDD Module: Run Structure, Difficulty Curve & Balance
 
+> **STATUS 2026-07-27 — HISTORICAL, not the live design.**
+> Run structure, difficulty and the loss condition are module 23. Nothing here drives the
+> game.
+
 > **SUPERSEDED IN PART (v2.0 emotion pivot).** The loss condition described in this module —
 > "fail one order and the run ends" — no longer exists. The run's only loss condition is the
 > **weekly satisfaction quota**; a customer whose score target you miss simply leaves unpaid.

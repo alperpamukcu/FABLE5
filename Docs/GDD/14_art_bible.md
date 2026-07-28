@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module: Art Bible v2 — "VICE PIXEL" (supersedes v1 cozy-noir painterly)
 
+> **STATUS 2026-07-27 — CURRENT.**
+> The art bible still governs how everything is drawn.
+
 > v2 REPLACES the painterly direction entirely. Any asset, shader tint, or UI color not complying with this document is `legacy` (see 17_ui_inventory.md) and must be migrated. This doc owns the look; 16 owns UI systems; 18 owns the nightclub scene.
 
 ## 1. Identity in one line

@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module: Tutorial & First-Time User Experience
 
+> **STATUS 2026-07-27 — HISTORICAL, not the live design.**
+> The tutorial is unbuilt; when it lands it follows 24 §9, not this.
+
 > Implementation milestone: M4. Rewritten in v2.0 for the emotion pivot — the pre-pivot
 > version taught pattern-matching and score targets, which are no longer what a new player
 > struggles with. Modules 19 and 20 own the rules this teaches.

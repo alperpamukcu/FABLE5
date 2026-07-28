@@ -189,9 +189,27 @@ namespace LastCall.Core
         public void BeginPour(string ingredientId)
         {
             EnsurePhase(TycoonPhase.DayOpen);
-            if (_shelf.Find(ingredientId) == null)
-                throw new ArgumentException($"No '{ingredientId}' on the shelf.", nameof(ingredientId));
+            ShakerIngredient(ingredientId, nameof(ingredientId));
             PouringId = ingredientId;
+        }
+
+        /// <summary>
+        /// The shelf item behind an id, refusing anything the shaker must never hold. Beer is the
+        /// one such thing (GDD 21 §10): it belongs to the tap, and a glass of it built in the
+        /// shaker would still read as a draught to the matcher while carrying no head at all —
+        /// a perfect pint with the whole mechanic skipped. The rule lives here rather than in the
+        /// menu because the sim and the tests use these verbs too (2026-07-27).
+        /// </summary>
+        private ShelfBottle ShakerIngredient(string ingredientId, string argName)
+        {
+            var bottle = _shelf.Find(ingredientId);
+            if (bottle == null)
+                throw new ArgumentException($"No '{ingredientId}' on the shelf.", argName);
+            if (bottle.Ingredient.Type == IngredientType.Beer)
+                throw new ArgumentException(
+                    $"'{ingredientId}' is a keg — beer is pulled into the glass, never built in the shaker.",
+                    argName);
+            return bottle;
         }
 
         public double PourTick(double seconds)
@@ -210,8 +228,7 @@ namespace LastCall.Core
         public double PourMeasure(string ingredientId, double volume)
         {
             EnsurePhase(TycoonPhase.DayOpen);
-            if (_shelf.Find(ingredientId) == null)
-                throw new ArgumentException($"No '{ingredientId}' on the shelf.", nameof(ingredientId));
+            ShakerIngredient(ingredientId, nameof(ingredientId));
             if (volume <= 0) return 0;
             return _shelf.PourInto(Glass, ingredientId, volume);
         }

@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module: VIP / Critic Customers (Bosses)
 
+> **STATUS 2026-07-27 — HISTORICAL, not the live design.**
+> VIPs were deleted in the tycoon demolition (PLAN P7). A design archive.
+
 > **v2.0 emotion pivot:** all 20 VIPs here survive unchanged. Three more were added on the
 > information axis — Poker Face, Open Book and The Liar rewrite what the customer's ID shows
 > rather than how the mix scores. See `19_emotion_mechanic.md` §8.4.

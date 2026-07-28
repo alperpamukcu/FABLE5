@@ -1,5 +1,8 @@
 # LAST CALL — GDD Module 17: UI & Screen Inventory (migration tracker)
 
+> **STATUS 2026-07-27 — HISTORICAL, not the live design.**
+> A screen-by-screen inventory of the card-game UI.
+
 > Living index of **every** screen and UI component in the game and its migration
 > status against the v2 "Vice Pixel" art direction (see `14_art_bible.md` v2).
 > Update the status column as each item is migrated. This is the source of truth

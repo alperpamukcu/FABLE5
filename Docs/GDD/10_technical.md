@@ -1,5 +1,9 @@
 # LAST CALL — GDD Module: Systems & Technical Design
 
+> **STATUS 2026-07-27 — PARTLY SUPERSEDED.**
+> Determinism, the assembly split and data-driven content still hold. Class names from the
+> card loop do not.
+
 > NOTE: The engine for this project is Unity (C#), not Godot. Apply the same data-driven principles using ScriptableObjects or JSON + a pure C# scoring core.
 
 ## 13. SYSTEMS & TECHNICAL DESIGN
