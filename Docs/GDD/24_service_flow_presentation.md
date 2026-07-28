@@ -128,6 +128,17 @@ and nobody reads the level mid-slosh. Result: **5.7 ms (175 fps)** in the shaker
 rather than the most expensive. The fill accuracy above was re-measured live in all three
 stages afterwards and holds.
 
+**A vessel and its contents are one object (2026-07-28).** Player note: *"the glass and
+shaker art can come apart from the invisible vessel the liquid is in, while shaking."* They
+could: a vessel's drinkable cavity is not centred on the sprite's pivot — the tin's runs from
+0.09 to 0.61 of its height — and the sprite turned about its pivot while the liquid turned
+about the cavity's own centre. At the 24° a shake reaches, that put the drink **~19 px** out
+of an 84 px-wide tin. Wherever a leaning vessel's interior is measured it is now swung about
+the pivot the art actually turns on, and the drink is placed **after** every vessel has
+finished moving for the frame (it used to be placed before the cap animation slid and grew
+the tin, so it trailed a frame behind). Verified against the RectTransform itself rather than
+against the same maths: 0.00 px apart at every angle, in both stages, and while moving.
+
 The fluid is a 2D metaball drawn on a UI RawImage — a CPU droplet cloud feeding a threshold
 shader, chosen over a Shuriken/RenderTexture rig because it composites cleanly inside the
 ScreenSpace-Overlay Canvas and shares the tilt-pour's local coordinates. Solids (ice/lemon

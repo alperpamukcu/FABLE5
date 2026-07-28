@@ -186,16 +186,26 @@ namespace LastCall.UI
                 run.EndPour();
             }
 
+            _pouring = pourNow;
+        }
+
+        /// <summary>
+        /// Places the drink and steps it, once every vessel has finished moving for the frame.
+        /// It used to run inside the tilt-pour, which is BEFORE the cap animation eases the tin
+        /// across the bench and grows it — so the liquid was placed against last frame's tin and
+        /// trailed it visibly wherever it moved (2026-07-28). It also sat behind that method's
+        /// early return, which meant a stage with no mouse present simply froze the drink.
+        /// </summary>
+        private void StepShakerFluid(TycoonRun run)
+        {
             // A gentle vertical heave on the pool top; the height-field carries the real waves.
-            float energy = _shaking ? 1f + 3f * (float)_shakeEnergy : (pourNow ? 1.2f : 0.3f);
+            float energy = _shaking ? 1f + 3f * (float)_shakeEnergy : (_pouring ? 1.2f : 0.3f);
             _slosh += Time.deltaTime * (4f + 6f * energy);
-            float bob = Mathf.Sin(_slosh) * 1.0f * energy;
-            PushShakerPool(run, bob);
+            PushShakerPool(run, Mathf.Sin(_slosh) * 1.0f * energy);
 
             _shakerFluid.Step(Time.deltaTime);
             _shakerSolids.Step(Time.deltaTime);
             _shakerSplash.Step(Time.deltaTime);
-            _pouring = pourNow;
         }
 
         /// <summary>Places the shaker's pooled liquid from the glass interior and its live fill,
@@ -209,11 +219,22 @@ namespace LastCall.UI
             var c = _shakerVessel.anchoredPosition;
             float halfW = _shakerVessel.rect.width * 0.5f;
             float iw = halfW * 0.50f;   // measured: the tin's cavity is 50% of the sprite width
-            float minX = c.x - iw;
-            float maxX = c.x + iw;
             float h = _shakerVessel.rect.height;
-            float bottomY = c.y - h * 0.5f + h * CavityFloor;   // measured: above the rounded base
             float innerH = h * (CavityRim - CavityFloor);   // measured: that floor → rim
+
+            // The cavity's centre sits well BELOW the tin's own pivot — the drinkable part runs
+            // from 0.09 to 0.61 of the sprite, so its middle is about a seventh of the height
+            // down from the middle of the art. The sprite turns about its pivot and the pool
+            // turns about its own centre, so unless that centre is carried round the pivot by
+            // hand the two swing apart the moment the tin leans: at the 24° a shake reaches,
+            // by nearly twenty pixels — the liquid visibly leaving the steel (2026-07-28).
+            // The tap already does this for the leaning pint; the shaker never did.
+            float rad = _shakerVessel.localEulerAngles.z * Mathf.Deg2Rad;
+            if (rad > Mathf.PI) rad -= 2f * Mathf.PI;
+            var centre = RotateAbout(new Vector2(c.x, c.y - h * 0.5f + h * CavityFloor + innerH * 0.5f), c, rad);
+            float minX = centre.x - iw;
+            float maxX = centre.x + iw;
+            float bottomY = centre.y - innerH * 0.5f;   // measured: above the rounded base
             // A full tin draws full. The ninth this used to shave off was a fudge for the
             // solver's particle-count estimate, and it made a glass the rules called 100% read
             // as nine-tenths — the one number the player checks against the vessel (2026-07-28).
@@ -223,9 +244,7 @@ namespace LastCall.UI
             float rimY = bottomY + innerH;
             float topY = bottomY + innerH * fill + bob;
             // The particle fluid collides with the tin's rotated interior, so it sloshes with it.
-            float deg = _shakerVessel.localEulerAngles.z;
-            if (deg > 180f) deg -= 360f;
-            _shakerFluid.SetPool(minX, maxX, bottomY, rimY, fill, deg * Mathf.Deg2Rad);
+            _shakerFluid.SetPool(minX, maxX, bottomY, rimY, fill, rad);
             // The cap's placement belongs to UpdateCap now — it rests on the bench until
             // you drop it on the tin, so it must not be glued to the vessel here.
             // The solids float on the liquid line and bounce off these same walls.

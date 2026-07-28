@@ -428,13 +428,8 @@ namespace LastCall.UI
         }
 
         /// <summary>Carries a point round the glass's grip, which is where it actually turns.</summary>
-        private Vector2 RotateAboutGrip(Vector2 point, float rad)
-        {
-            var grip = _tapGlass.anchoredPosition;
-            var d = point - grip;
-            float c = Mathf.Cos(rad), s = Mathf.Sin(rad);
-            return grip + new Vector2(d.x * c - d.y * s, d.x * s + d.y * c);
-        }
+        private Vector2 RotateAboutGrip(Vector2 point, float rad) =>
+            RotateAbout(point, _tapGlass.anchoredPosition, rad);
 
         /// <summary>The pint's rim, in the surface's own space.</summary>
         private float PintRimY()

@@ -138,8 +138,14 @@ namespace LastCall.UI
             }
 
             // The shake moves the tin, so the lid is placed AFTER it — placing it first left the
-            // cap a frame behind the body, which is why they did not read as one object.
-            if (_stage == Stage.Shaker) { UpdateShake(run); UpdatePrepDrag(run); UpdateTiltPour(run); UpdateCap(run); }
+            // cap a frame behind the body, which is why they did not read as one object. The
+            // drink is placed last for the same reason: it belongs inside the tin, so it can
+            // only be positioned once the tin has finished moving (2026-07-28).
+            if (_stage == Stage.Shaker)
+            {
+                UpdateShake(run); UpdatePrepDrag(run); UpdateTiltPour(run); UpdateCap(run);
+                StepShakerFluid(run);
+            }
 
             if (_stage == Stage.Serve) UpdateServeTilt(run);
 
@@ -377,6 +383,19 @@ namespace LastCall.UI
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Overflow;
             return text;
+        }
+
+        /// <summary>
+        /// Carries a point round a pivot. Every vessel here holds its liquid in a cavity whose
+        /// centre is NOT the vessel's pivot, and the two rotate as one object — so wherever a
+        /// leaning vessel's interior is measured, it has to be swung about the pivot the sprite
+        /// actually turns on, or the drink slides out of the glass as it tips (2026-07-28).
+        /// </summary>
+        private static Vector2 RotateAbout(Vector2 point, Vector2 pivot, float rad)
+        {
+            var d = point - pivot;
+            float c = Mathf.Cos(rad), s = Mathf.Sin(rad);
+            return pivot + new Vector2(d.x * c - d.y * s, d.x * s + d.y * c);
         }
 
         private static void Place(RectTransform rt, Vector2 anchor, Vector2 size, Vector2 pos)
