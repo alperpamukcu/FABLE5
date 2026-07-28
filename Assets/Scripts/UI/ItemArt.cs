@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace LastCall.DebugUI
+namespace LastCall.UI
 {
     /// <summary>
     /// The drink item sprites (2026-07-23): bottles by style, the shaker, the serving glass,

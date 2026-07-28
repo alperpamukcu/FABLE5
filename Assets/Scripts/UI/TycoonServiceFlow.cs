@@ -8,7 +8,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-namespace LastCall.DebugUI
+namespace LastCall.UI
 {
     /// <summary>
     /// The service flow (PLAN_tycoon_pivot P4, GDD 24 §1–3): the bottles leave the stage

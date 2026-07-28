@@ -150,7 +150,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e91b775134e43864890ff60d462d208c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: LastCall.DebugUI::LastCall.DebugUI.TycoonServiceFlow
+  m_EditorClassIdentifier: LastCall.UI::LastCall.UI.TycoonServiceFlow
   bodyFont: {fileID: 12800000, guid: a893aa4bf7c146844a0852a5b793cfe7, type: 3}
   displayFont: {fileID: 12800000, guid: dff9897f49bf420488d3b02734457084, type: 3}
 --- !u!114 &698249735
@@ -164,7 +164,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9f2cedba504025c4dbcb4e6bd49768d9, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: LastCall.DebugUI::LastCall.DebugUI.TycoonHud
+  m_EditorClassIdentifier: LastCall.UI::LastCall.UI.TycoonHud
   bodyFont: {fileID: 12800000, guid: a893aa4bf7c146844a0852a5b793cfe7, type: 3}
   displayFont: {fileID: 12800000, guid: dff9897f49bf420488d3b02734457084, type: 3}
   stage: {fileID: 698249736}
@@ -179,7 +179,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 653d485306ced894daca17d15fcc9b75, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: LastCall.DebugUI::LastCall.DebugUI.DiegeticStage
+  m_EditorClassIdentifier: LastCall.UI::LastCall.UI.DiegeticStage
   bodyFont: {fileID: 12800000, guid: a893aa4bf7c146844a0852a5b793cfe7, type: 3}
   displayFont: {fileID: 12800000, guid: dff9897f49bf420488d3b02734457084, type: 3}
   bottleSprites:

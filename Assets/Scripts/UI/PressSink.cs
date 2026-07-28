@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace LastCall.DebugUI
+namespace LastCall.UI
 {
     /// <summary>
     /// Gives a UI button a real press: while it is held, its face slides down into the plate

@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace LastCall.DebugUI
+namespace LastCall.UI
 {
     /// <summary>
     /// The diegetic gameplay stage (v2, module 18): a layered night-club scene authored at

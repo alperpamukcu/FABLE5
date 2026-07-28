@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace LastCall.DebugUI
+namespace LastCall.UI
 {
     /// <summary>
     /// A particle-based liquid for the drink stages (GDD 24 §3.5, rewrite 2026-07-23). The

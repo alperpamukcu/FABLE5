@@ -1,6 +1,6 @@
 {
-    "name": "LastCall.DebugUI",
-    "rootNamespace": "LastCall.DebugUI",
+    "name": "LastCall.UI",
+    "rootNamespace": "LastCall.UI",
     "references": [
         "LastCall.Core",
         "LastCall.Game",

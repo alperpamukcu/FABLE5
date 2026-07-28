@@ -1,5 +1,5 @@
 using System.IO;
-using LastCall.DebugUI;
+using LastCall.UI;
 using LastCall.Game;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -58,7 +58,7 @@ namespace LastCall.EditorTools
             so.FindProperty("archetypesJson").objectReferenceValue = LoadRequired<TextAsset>(ArchetypesPath);
             so.ApplyModifiedPropertiesWithoutUndo();
 
-            var stage = game.AddComponent<LastCall.DebugUI.DiegeticStage>();
+            var stage = game.AddComponent<LastCall.UI.DiegeticStage>();
             var stageSo = new SerializedObject(stage);
             stageSo.FindProperty("glassSprite").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Props/pour_nick.png");

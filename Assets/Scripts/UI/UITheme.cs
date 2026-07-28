@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using LastCall.Core;
 using UnityEngine;
 
-namespace LastCall.DebugUI
+namespace LastCall.UI
 {
     /// <summary>
     /// v2 design tokens (14_art_bible v2 §3, 16_ui_style_guide v2 §1). The locked 40-colour

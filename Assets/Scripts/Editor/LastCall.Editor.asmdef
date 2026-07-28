@@ -4,7 +4,7 @@
     "references": [
         "LastCall.Core",
         "LastCall.Game",
-        "LastCall.DebugUI",
+        "LastCall.UI",
         "Unity.2D.PixelPerfect"
     ],
     "includePlatforms": [
