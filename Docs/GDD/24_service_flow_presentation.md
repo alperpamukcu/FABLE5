@@ -238,11 +238,15 @@ to cover: at 16:9 that factor is exactly 1, so one art pixel is one canvas unit 
 a whole number of screen pixels (measured ×4 at 1440p). Import settings were already right —
 point filter, no compression — which is why the loss was purely geometric.
 
-The room is an **art-deco lounge**: arched windows across the back onto a lit city skyline and
-palms, fluted teal panelling and gold trim, globe lamps, and a room full of people. Walls,
-depth and life were the brief — a first pass of quieter rooms (booths, a dance floor, a rain
-window) was rejected for being flat and deserted. It shares the counter's teal and gold, so the
-bar and the room read as one place.
+The room is a **brick bar over a rainy neon street**: a wide window across the back onto wet
+tarmac, neon signs down both sides of the road and a city skyline behind them, with a cocktail
+neon on the side wall. Depth comes through the glass.
+
+**Six people, and all of them silhouettes.** This took three passes to land. A quiet room of
+booths was rejected as dead; an opulent art-deco lounge packed with fully-drawn patrons was
+rejected as too lavish and too busy. The rule that came out of it: *few figures, flat dark
+shapes, no faces and no clothing detail.* The background is where the eye is not — a crowd
+drawn as carefully as the customers competes with them, and the customers are the game.
 
 **The counter was the wrong THING.** The asset was a back-bar shelf unit — glass racks and
 bottle shelves, furniture for the wall *behind* a bartender — installed as the bar we stand at.
@@ -268,6 +272,14 @@ filled in post from each column's first opaque row down.)
 the sprite's top down to the bar's far edge — the line a glass is set on, pinned to
 `CounterRestY`. The two bars drawn for this put that edge 2px and 54px down, so it is a property
 of the picture: read it off the art whenever the art changes, or the glassware floats.
+
+**Replacing stage art means keeping its GUID.** Unity binds the scene's sprite fields by GUID,
+not by path, so re-adding `counter.png` under a fresh one left `counterSprite` null and the bar
+simply did not draw — with no error, because the procedural fallback had been removed in the
+same pass. Keep the original GUID in the `.meta` when swapping a file in place, and note that
+an already-open scene caches the broken reference: it has to be reloaded before the fix shows.
+`DiegeticStage` now logs a warning when the sprite is missing, so the next time this happens it
+says so instead of drawing nothing.
 
 ## 9. Tutorial (the opening shift)
 

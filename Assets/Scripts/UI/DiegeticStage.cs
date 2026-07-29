@@ -317,6 +317,13 @@ namespace LastCall.UI
             // art is CounterSurfaceInset below its top, and that line is pinned to CounterRestY,
             // so everything on the counter still stands on a constant. Scaled by one factor, not
             // stretched: the old counter was pulled 15% wider than it was drawn.
+            // Say so rather than drawing nothing. There is no procedural counter to fall back on
+            // any more, so a lost reference is an invisible bar and no other symptom — which is
+            // exactly what happened when this asset was re-imported under a fresh GUID while the
+            // scene still pointed at the old one (2026-07-29).
+            if (counterSprite == null)
+                Debug.LogWarning("DiegeticStage: no counterSprite — the bar will not be drawn. " +
+                                 "Check the reference in the scene, or re-run LastCall > Create Debug Scene.");
             if (counterSprite != null)
             {
                 var c = NewRect("Counter", root);
