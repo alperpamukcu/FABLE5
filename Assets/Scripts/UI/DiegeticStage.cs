@@ -69,6 +69,12 @@ namespace LastCall.UI
         /// surface, where something on the bartender's side of the bar actually stands.</summary>
         private const float RegisterBaseY = 104f;
 
+        // The till's display window, as fractions of the sprite — measured off club_till.png
+        // (x 8..42 of 49, y 5..12 of 43, y from the TOP). Read them again if the till is
+        // redrawn; the money is placed from these so it lands in the window rather than near it.
+        private const float DisplayLeft = 8f / 49f, DisplayRight = 43f / 49f;
+        private const float DisplayTop = 5f / 43f, DisplayBottom = 12f / 43f;
+
         private const float CounterRestY = 128f;           // counter-top rest line (till, glassware)
         // Measured off the art: the bar's far edge — where a glass is set down — is this far
         // below the sprite's top. The two candidates drawn for this put it 2px and 54px down,
@@ -472,15 +478,26 @@ namespace LastCall.UI
                 shImg.color = new Color(0f, 0f, 0f, 0.42f); shImg.raycastTarget = false;
                 shadow.SetSiblingIndex(reg.GetSiblingIndex());
 
-                float plaqueY = RegisterBaseY + reg.sizeDelta.y - 18f;  // on the till's display
+                // The money sits IN the till's display window, and the window's place is read
+                // off the art rather than guessed at: it is x 8..42 of 49 and y 5..12 of 43 in
+                // club_till.png. The old plaque was a hand-written 46x14 at a hand-written
+                // offset, so it overhung the till on both sides and sat low (2026-07-29).
+                float regH = reg.sizeDelta.y;
                 var plaque = NewRect("MoneyPlaque", root);
                 plaque.anchorMin = plaque.anchorMax = new Vector2(0, 0);   // absolute, on the till
                 plaque.pivot = new Vector2(0.5f, 0);
-                plaque.sizeDelta = new Vector2(46, 14);
-                plaque.anchoredPosition = new Vector2(RegisterX, plaqueY);
+                plaque.sizeDelta = new Vector2(regW * (DisplayRight - DisplayLeft),
+                                               regH * (DisplayBottom - DisplayTop));
+                // The window's fractions run from the sprite's TOP; the rect measures from its
+                // base, so the bottom of the window is 1 - DisplayBottom up from it.
+                plaque.anchoredPosition = new Vector2(
+                    RegisterX + regW * ((DisplayLeft + DisplayRight) * 0.5f - 0.5f),
+                    RegisterBaseY + regH * (1f - DisplayBottom));
                 var pImg = plaque.gameObject.AddComponent<Image>();
                 pImg.color = UITheme.Night[0]; pImg.raycastTarget = false;
-                _moneyText = NewText("Money", plaque, _display, 10, TextAnchor.MiddleCenter, UITheme.Money);
+                // 8, not 10: the window is about eight units deep, and the pixel face only
+                // rasterises cleanly at whole multiples of its 8px design size anyway.
+                _moneyText = NewText("Money", plaque, _display, 8, TextAnchor.MiddleCenter, UITheme.Money);
                 Stretch((RectTransform)_moneyText.transform, Vector2.zero, Vector2.one, new Vector2(2, 0), new Vector2(-2, 0));
                 _moneyText.text = "$0";
             }
