@@ -64,9 +64,10 @@ namespace LastCall.UI
         /// </summary>
         public const float CounterTopY = CounterRestY;
 
-        /// <summary>Where the till's base sits: forward of the bar's far edge, on the surface
-        /// itself. The surface runs from CounterFrontY up to CounterRestY, so this is inside it.</summary>
-        private const float RegisterBaseY = 118f;
+        /// <summary>Where the till's base sits. The bar top runs from CounterFrontY (96) up to
+        /// CounterRestY (128), and this sits well forward inside that — near the front of the
+        /// surface, where something on the bartender's side of the bar actually stands.</summary>
+        private const float RegisterBaseY = 104f;
 
         private const float CounterRestY = 128f;           // counter-top rest line (till, glassware)
         // Measured off the art: the bar's far edge — where a glass is set down — is this far
