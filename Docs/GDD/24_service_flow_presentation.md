@@ -238,15 +238,48 @@ to cover: at 16:9 that factor is exactly 1, so one art pixel is one canvas unit 
 a whole number of screen pixels (measured ×4 at 1440p). Import settings were already right —
 point filter, no compression — which is why the loss was purely geometric.
 
-The room is a **brick bar over a rainy neon street**: a wide window across the back onto wet
-tarmac, neon signs down both sides of the road and a city skyline behind them, with a cocktail
-neon on the side wall. Depth comes through the glass.
+The room is a **new boutique bar**: green velvet panelling with gold beading, pendant globes
+receding down the centre, palms in the corners, and a window on **each side wall**.
 
-**Six people, and all of them silhouettes.** This took three passes to land. A quiet room of
-booths was rejected as dead; an opulent art-deco lounge packed with fully-drawn patrons was
-rejected as too lavish and too busy. The rule that came out of it: *few figures, flat dark
-shapes, no faces and no clothing detail.* The background is where the eye is not — a crowd
-drawn as carefully as the customers competes with them, and the customers are the game.
+Three things had to be true, and each took a pass to learn:
+
+- **Symmetric, one-point perspective, vanishing point dead centre.** The bartender stands in the
+  middle of a square room. Earlier rooms put the window behind the customers and the counter
+  read as jammed into a corner.
+- **The windows are beside the customers, not behind them** — one per side wall, which is what
+  keeps the room symmetric while still giving depth.
+- **Few people, and all of them flat dark silhouettes** — no faces, no clothing detail. A quiet
+  room of booths read as dead; an art-deco lounge packed with fully-drawn patrons was too lavish
+  and too busy. The background is where the eye is not: a crowd drawn as carefully as the
+  customers competes with them, and the customers are the game.
+
+Not stone. An earlier brick room read as a medieval cellar rather than somewhere that opened
+last year.
+
+### The backdrop moves (2026-07-29)
+
+It is a **stack of layers**, not a painting, because everything in it has to animate:
+`StageBackdrop` owns sky, city, street, lamp, rain and signs as separate objects.
+
+- **sky** drifts and wraps. It is drawn twice with the second copy **mirrored**, so the join is
+  seamless by construction — no seamless-tiling art required.
+- **rain** is 90 streaks that fall, lean, and are re-thrown when they land or blow out of frame.
+- **wind** is one shared value wandering slowly between −1 and 1. It leans the rain *and* hurries
+  the clouds, so the weather reads as one thing happening rather than two effects running.
+- **neon** signs blink on their own clocks — long lit, dark for an instant, easing rather than
+  snapping. Two signs pulsing in step is what gives a fake away.
+- **the street lamp** breathes, with a faint tremor and a rare hard flicker.
+
+Everything outdoors is clipped by a **mask sprite**, not a rectangle: the windows are on side
+walls and therefore drawn in perspective, and one mask holds *both* panes, so a single clip
+serves them. The mask is the glass cut out of the room art itself, which is why the two agree
+exactly. The whole thing is cosmetic, never touches the run, and stops dead under
+`Motion.Reduced`.
+
+**Sign lettering is drawn in-engine, never generated.** The art supplies an empty tube frame;
+the word is set in the pixel display face with a soft copy behind it for glow, and both blink
+with the frame. The generator cannot spell — asked for a bar it produced one called THE REEF —
+so any sign that has to *say* something is built, not painted.
 
 **The counter was the wrong THING.** The asset was a back-bar shelf unit — glass racks and
 bottle shelves, furniture for the wall *behind* a bartender — installed as the bar we stand at.

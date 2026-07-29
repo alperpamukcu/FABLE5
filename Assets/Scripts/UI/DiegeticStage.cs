@@ -56,6 +56,14 @@ namespace LastCall.UI
         // below the sprite's top. The two candidates drawn for this put it 2px and 54px down,
         // so it is a property of the picture, never a constant to assume (2026-07-29).
         private const float CounterSurfaceInset = 2f;
+        // The glass openings in the room art, measured off club_window_mask.png and converted to
+        // the stage's bottom-left origin. The room is symmetric with a window on EACH side wall,
+        // so this is the box that spans BOTH — the mask cuts the two real, perspective-drawn
+        // panes out of whatever is laid out inside it, which is why one clip serves two windows
+        // (2026-07-29).
+        private static readonly Rect WindowRect = new Rect(68f, 134f, 502f, 173f);
+        /// <summary>How much of the road the window shows, from its bottom edge up.</summary>
+        private const float StreetHeight = 74f;
         private const float CounterFrontY = 96f;           // 18 §2: surface line y=264 → 360−264 (bottom 96px)
         private const float BottleW = 30f;                 // placeholder fallback size
         private const float BottleH = 52f;
@@ -97,6 +105,15 @@ namespace LastCall.UI
         /// background and the bar counter replace their flat procedural placeholders.</summary>
         [SerializeField] private Sprite backgroundSprite;
         [SerializeField] private Sprite counterSprite;
+        // The backdrop's moving parts (2026-07-29). Each is its own layer because each has to
+        // move on its own: the clouds drift, the rain falls, the lamp and the signs blink.
+        [SerializeField] private Sprite windowMaskSprite;   // the glass opening, for clipping
+        [SerializeField] private Sprite skySprite;          // scrolls, drawn twice and mirrored
+        [SerializeField] private Sprite citySprite;
+        [SerializeField] private Sprite streetSprite;
+        [SerializeField] private Sprite lampSprite;
+        [SerializeField] private Sprite neonFrameSprite;    // an empty tube; the text is drawn
+        [SerializeField] private Sprite neonGlassSprite;
         [SerializeField] private Sprite customerSprite;   // VIP/patron leaning on the bar (18 §6)
         [SerializeField] private Sprite registerSprite;   // cash register, bottom-left, shows the wallet
         private Text _moneyText;
@@ -104,6 +121,7 @@ namespace LastCall.UI
         // Ambience upgrades change the scene (GDD 24 §6): the counter, back bar and glass
         // gain a sheen per tier, and a bought musician takes the corner stage.
         private Image _counterImage;
+        private StageBackdrop _backdrop;
         private Image _cabinetImage;
         private Image _glassImage;
         private RectTransform _musicianRoot;
@@ -202,6 +220,78 @@ namespace LastCall.UI
             if (_musicianRoot != null) _musicianRoot.gameObject.SetActive(musician);
         }
 
+        /// <summary>
+        /// The animated backdrop (GDD 24 §8): sky, city, street, lamp, rain and neon, each its
+        /// own layer inside the window the room art leaves open. The window's shape comes from a
+        /// mask sprite rather than a rectangle, because the window is on a side wall and so is
+        /// drawn in perspective — a rectangular clip would cut the corners off.
+        /// </summary>
+        private void BuildBackdrop(RectTransform under)
+        {
+            if (windowMaskSprite == null) return;
+
+            var host = NewRect("Backdrop", under);
+            Stretch(host, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            host.SetAsFirstSibling();
+
+            _backdrop = new StageBackdrop(host, windowMaskSprite, WindowRect);
+            _backdrop.AddSky(skySprite);
+            _backdrop.AddStill(citySprite, "City", StreetHeight - 40f);
+            _backdrop.AddStill(streetSprite, "Street", StreetHeight - streetSprite.rect.height);
+            _backdrop.AddLamp(lampSprite, 0.62f, StreetHeight - 34f, 0.66f);
+            _backdrop.AddRain(UITheme.Cyan[4]);
+
+            // Signs. The one on the bar's own wall carries lettering, drawn here with the pixel
+            // font: the generator cannot spell, so a sign that has to say something is built
+            // rather than painted (2026-07-29).
+            // One sign across the street in each window, so the pair reads as symmetric as the
+            // room is; they blink on their own clocks, never together.
+            _backdrop.AddNeon(neonGlassSprite, new Vector2(WindowRect.xMin + 42f,
+                WindowRect.yMin + StreetHeight + 44f), outside: true, scale: 0.5f,
+                minOn: 1.6f, maxOn: 5f);
+            _backdrop.AddNeon(neonFrameSprite, new Vector2(WindowRect.xMax - 42f,
+                WindowRect.yMin + StreetHeight + 48f), outside: true, scale: 0.4f,
+                minOn: 2.2f, maxOn: 6.5f);
+
+            // The bar's own sign, on the far wall and centred like everything else in the room.
+            BuildLetteredNeon(host, new Vector2(320f, 196f), "LAST CALL");
+        }
+
+        /// <summary>
+        /// A neon sign whose word is real text: the empty tube frame from the art, the word set
+        /// in the display face on top of it, and a soft copy behind for the glow. Both blink
+        /// together, so the sign reads as one object.
+        /// </summary>
+        private void BuildLetteredNeon(RectTransform host, Vector2 centre, string word)
+        {
+            var sign = NewRect("NeonSign", host);
+            sign.anchorMin = sign.anchorMax = sign.pivot = new Vector2(0f, 0f);
+            // Half scale: the frame is drawn at 160x64 but a sign on a wall thirty feet back is
+            // not that big, and the pixel face only stays crisp at whole multiples of 8.
+            sign.sizeDelta = (neonFrameSprite != null ? neonFrameSprite.rect.size : new Vector2(120, 44)) * 0.5f;
+            sign.anchoredPosition = centre;
+
+            if (neonFrameSprite != null)
+            {
+                var frame = sign.gameObject.AddComponent<Image>();
+                frame.sprite = neonFrameSprite; frame.raycastTarget = false;
+                _backdrop.RegisterNeon(frame, 3f, 9f, 0.20f);
+            }
+
+            // The glow first, larger and dim, then the word itself over it.
+            var glow = NewText("Glow", sign, _display, 8, TextAnchor.MiddleCenter,
+                new Color(UITheme.Magenta[4].r, UITheme.Magenta[4].g, UITheme.Magenta[4].b, 0.35f));
+            Stretch(glow.rectTransform, Vector2.zero, Vector2.one, new Vector2(-2, -2), new Vector2(2, 2));
+            glow.text = word;
+
+            var label = NewText("Word", sign, _display, 8, TextAnchor.MiddleCenter, UITheme.Magenta[4]);
+            Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            label.text = word;
+
+            _backdrop.RegisterNeon(glow, 3f, 9f, 0.10f);
+            _backdrop.RegisterNeon(label, 3f, 9f, 0.25f);
+        }
+
         private void BuildMusician(RectTransform root)
         {
             // A small performer on a corner stage, high on the back wall so it never crowds
@@ -252,6 +342,11 @@ namespace LastCall.UI
 
         // ── scene construction ──────────────────────────────────────────────────
 
+        private void Update()
+        {
+            _backdrop?.Step(Time.deltaTime);
+        }
+
         private void BuildScene()
         {
             var canvasGo = new GameObject("SceneCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
@@ -285,6 +380,12 @@ namespace LastCall.UI
                 var fit = bg.gameObject.AddComponent<StageArtFit>();
                 fit.Native = backgroundSprite.rect.size;
                 _backgroundImage = bgImg;
+
+                // The weather goes BEHIND the room art, showing through the window it has cut
+                // out of itself. Built after the room so it can be parented under the same
+                // fitter and share its scale, then pushed behind it.
+                BuildBackdrop(bg);
+                bg.SetAsLastSibling();
             }
             else
             {
