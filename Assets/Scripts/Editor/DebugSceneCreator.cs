@@ -122,12 +122,11 @@ namespace LastCall.EditorTools
                 el.FindPropertyRelative("sprite").objectReferenceValue =
                     AssetDatabase.LoadAssetAtPath<Sprite>(portraitPaths[i].path);
             }
-            // Environment art (18 §5): club background + bar counter. Optional — the stage
-            // falls back to flat procedural layers when either is missing.
+            // Environment art (18 §5): the club background. Optional — the stage falls back to
+            // flat procedural layers without it. The counter is no longer an image at all: it
+            // is built from the palette in DiegeticStage (2026-07-29).
             stageSo.FindProperty("backgroundSprite").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/club_bg.png");
-            stageSo.FindProperty("counterSprite").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/counter.png");
             stageSo.FindProperty("customerSprite").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Characters/vip_patron.png");
             stageSo.FindProperty("registerSprite").objectReferenceValue =

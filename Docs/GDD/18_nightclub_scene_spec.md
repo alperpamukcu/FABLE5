@@ -3,11 +3,15 @@
 > **STATUS 2026-07-27 — PARTLY SUPERSEDED.**
 > The club scene direction still holds; the specific HUD it describes is module 24.
 
-> ⚠️ **PARTIALLY STALE (2026-07-20).** The camera flipped to the **customer's side of the
-> bar**: bottles now live on two back-bar wall shelves (spirits up, mixers down), not on the
-> counter, and the "camera faces the club" note in §1 is dead. GDD 22 §1 and the layout
-> constants in `DiegeticStage.cs` are the source of truth for the current stage. The layer
-> stack, choreography timings and motion rules below still apply.
+> ⚠️ **PARTIALLY STALE.** The 2026-07-20 note that the camera had flipped to the customer's
+> side is itself dead: it flipped back on 2026-07-23 and §1's "camera faces the CLUB" is right
+> again — the player stands BEHIND the bar looking out, customers face them across it, and
+> there is no back-bar shelf. Bottles live in the menu, not on any shelf. The layout constants
+> in `DiegeticStage.cs` remain the source of truth; the layer stack, choreography timings and
+> motion rules below still apply.
+>
+> **The counter is not art (2026-07-29).** Layer 4 is built in code from the palette, not
+> loaded from a PNG — see 24 §8.
 
 > The gameplay screen is a DIEGETIC scene: the player IS the bartender of a nightclub. The rail is not an abstract card strip — it is bottles standing on real shelves. This doc is the source of truth for scene layers and the slide choreography. Authored at 640×360.
 

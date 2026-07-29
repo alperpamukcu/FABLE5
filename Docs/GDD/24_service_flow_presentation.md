@@ -227,6 +227,39 @@ with an ambient playing loop. The scene is the save file, visually.
 - Background: animated and alive (crowd, neon, musician when bought) but low-contrast and
   slow — attention belongs to the seats and the counter.
 
+### The stage's two big surfaces (2026-07-29)
+
+Both were remade, and they turned out to be wrong in two different ways.
+
+**The backdrop was the wrong SIZE.** A 592×336 image was being stretched across a 736×456
+rect — 1.24× wide, 1.36× tall. Non-uniform, so no pixel of it was square, and the room stood
+9% too tall. Redrawn at **640×360**, the stage's own reference, and scaled by a single factor
+to cover: at 16:9 that factor is exactly 1, so one art pixel is one canvas unit and lands on
+a whole number of screen pixels (measured ×4 at 1440p). Import settings were already right —
+point filter, no compression — which is why the loss was purely geometric.
+
+The room chosen is the **quiet bar**: banquettes, candle-lit tables, a neon wall, amber pools
+on the floor. It is the lowest-contrast of the three drawn, which is the point — the seated
+customers read cleanly against it. (A dance floor and a rain-window version were drawn too;
+the dance floor put high-contrast crowd silhouettes at exactly customer-head height.)
+
+**The counter was the wrong THING.** The asset was a back-bar shelf unit — glass racks and
+bottle shelves, furniture for the wall *behind* a bartender — installed as the bar we stand
+at. It is now **built from the palette in code**, not drawn: front panel, panelled stiles,
+overhang shadow, the lit top in two values, wood grain, and a brass edge along the rest line.
+
+That is a deliberate choice, not a fallback. A flat orthographic band that runs off both
+screen edges is geometry, not illustration: three rounds of generation produced one usable
+image and five failures, because the model answers with a piece of furniture in perspective
+that ends inside the frame. Built, it is exactly on-palette, crisp at any resolution, spans
+any width without stretching, and `CounterRestY` — the line the glassware, the till and the
+seats all stand on — is a constant rather than a row of pixels to find inside a PNG. The
+counter-tier upgrade tints every part from its own base colour.
+
+Values were the thing to get right: the first build used the amber ramp straight and the bar
+came out a bright orange slab that took the whole screen. The wood is amber pushed a long way
+into the night ramp, and the one bright element is the brass line the drink is set behind.
+
 ## 9. Tutorial (the opening shift)
 
 Scripted first shift with **fixed teaching customers**: one per starting drink — each
