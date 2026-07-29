@@ -129,15 +129,9 @@ namespace LastCall.EditorTools
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/club_room.png");
             stageSo.FindProperty("counterSprite").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/counter.png");
-            // The backdrop's moving layers (24 §8). Each is separate because each animates.
-            foreach (var layer in new (string prop, string file)[]
-            {
-                ("windowMaskSprite", "club_window_mask"), ("skySprite", "club_sky"),
-                ("citySprite", "club_city"), ("streetSprite", "club_street"),
-                ("lampSprite", "club_lamp"), ("neonGlassSprite", "club_neon_glass"),
-            })
-                stageSo.FindProperty(layer.prop).objectReferenceValue =
-                    AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/" + layer.file + ".png");
+            // The backdrop used to wire six separate moving layers here (24 §8). The painted room
+            // is its own sky and skyline and the rain was cut, so nothing drew them — layers,
+            // fields and art all removed on 2026-07-30. The sign blinks from code (NeonBlink).
             stageSo.FindProperty("customerSprite").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Characters/vip_patron.png");
             stageSo.FindProperty("registerSprite").objectReferenceValue =

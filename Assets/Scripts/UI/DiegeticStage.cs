@@ -80,13 +80,6 @@ namespace LastCall.UI
         // below the sprite's top. The two candidates drawn for this put it 2px and 54px down,
         // so it is a property of the picture, never a constant to assume (2026-07-29).
         private const float CounterSurfaceInset = 2f;
-        // The room is an open-air terrace, so the weather is not seen through anything: the
-        // whole stage IS the sky, and there is no mask (2026-07-29). The band it matters in is
-        // still the top one — the counter owns y 0-140 and the seated customers roughly y
-        // 130-260, so everything the eye can afford to notice belongs above that.
-        private static readonly Rect WindowRect = new Rect(0f, 0f, 640f, 360f);
-        /// <summary>How much of the road the window shows, from its bottom edge up.</summary>
-        private const float StreetHeight = 74f;
         private const float CounterFrontY = 96f;           // 18 §2: surface line y=264 → 360−264 (bottom 96px)
         private const float BottleW = 30f;                 // placeholder fallback size
         private const float BottleH = 52f;
@@ -128,14 +121,6 @@ namespace LastCall.UI
         /// background and the bar counter replace their flat procedural placeholders.</summary>
         [SerializeField] private Sprite backgroundSprite;
         [SerializeField] private Sprite counterSprite;
-        // The backdrop's moving parts (2026-07-29). Each is its own layer because each has to
-        // move on its own: the clouds drift, the rain falls, the lamp and the signs blink.
-        [SerializeField] private Sprite windowMaskSprite;   // the glass opening, for clipping
-        [SerializeField] private Sprite skySprite;          // scrolls, drawn twice and mirrored
-        [SerializeField] private Sprite citySprite;
-        [SerializeField] private Sprite streetSprite;
-        [SerializeField] private Sprite lampSprite;
-        [SerializeField] private Sprite neonGlassSprite;
         [SerializeField] private Sprite customerSprite;   // VIP/patron leaning on the bar (18 §6)
         [SerializeField] private Sprite registerSprite;   // cash register, bottom-left, shows the wallet
         private Text _moneyText;
@@ -143,7 +128,7 @@ namespace LastCall.UI
         // Ambience upgrades change the scene (GDD 24 §6): the counter, back bar and glass
         // gain a sheen per tier, and a bought musician takes the corner stage.
         private Image _counterImage;
-        private StageBackdrop _backdrop;
+        private NeonBlink _neon;
         private Image _cabinetImage;
         private Image _glassImage;
         private RectTransform _musicianRoot;
@@ -243,31 +228,24 @@ namespace LastCall.UI
         }
 
         /// <summary>
-        /// The animated backdrop (GDD 24 §8): sky, city, street, lamp, rain and neon, each its
-        /// own layer inside the window the room art leaves open. The window's shape comes from a
-        /// mask sprite rather than a rectangle, because the window is on a side wall and so is
-        /// drawn in perspective — a rectangular clip would cut the corners off.
+        /// What the painted room cannot do for itself: blink (GDD 24 §8). The room art is its own
+        /// sky and its own skyline, so the drifting/raining layers this used to build all lost
+        /// their callers and were removed on 2026-07-30 — the sign is what is left.
         /// </summary>
         private void BuildBackdrop(RectTransform root, Vector2 native)
         {
-            // Sized and scaled exactly like the room art, so a drop that falls past the railing
-            // falls past it on screen too.
+            // Sized and scaled exactly like the room art, so the sign hangs on the wall the
+            // picture actually draws rather than on the screen edge.
             var host = NewRect("Backdrop", root);
             var hostFit = host.gameObject.AddComponent<StageArtFit>();
             hostFit.Native = native;
 
-            _backdrop = new StageBackdrop(host, windowMaskSprite, WindowRect);
-            // The room is indoors now, so there is no weather to add — no sky, no skyline, no
-            // rain. What the painted room still cannot do for itself is blink, so that is all
-            // this layer is left holding (2026-07-29).
+            _neon = new NeonBlink();
 
-            // Signs. The one on the bar's own wall carries lettering, drawn here with the pixel
-            // font: the generator cannot spell, so a sign that has to say something is built
-            // rather than painted (2026-07-29).
-            // The bar's own sign, high on the wallpaper between the lamps, and the EXIT over the
-            // door. Both are lettered, so both are drawn here rather than generated.
             // The bar's own sign, high and off to one side — the one deliberate touch of colour
-            // in a scene that is otherwise all shadow.
+            // in a scene that is otherwise all shadow. Its word is real text drawn in the pixel
+            // font: the art generator cannot spell, so a sign that has to say something is built
+            // here rather than painted (2026-07-29).
             BuildLetteredNeon(host, new Vector2(470f, 300f), "LAST CALL", UITheme.Magenta[4]);
         }
 
@@ -295,8 +273,8 @@ namespace LastCall.UI
             Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             label.text = word;
 
-            _backdrop.RegisterNeon(glow, 3f, 9f, 0.10f);
-            _backdrop.RegisterNeon(label, 3f, 9f, 0.25f);
+            _neon.Register(glow, 3f, 9f, 0.10f);
+            _neon.Register(label, 3f, 9f, 0.25f);
         }
 
         private void BuildMusician(RectTransform root)
@@ -351,7 +329,7 @@ namespace LastCall.UI
 
         private void Update()
         {
-            _backdrop?.Step(Time.deltaTime);
+            _neon?.Step(Time.deltaTime);
         }
 
         private void BuildScene()

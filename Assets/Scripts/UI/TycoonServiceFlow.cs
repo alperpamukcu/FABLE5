@@ -46,8 +46,6 @@ namespace LastCall.UI
         private RectTransform _servePanel;
 
         private RectTransform _bottleList;
-        private Text _menuShaker;           // "what's in the shaker" readout
-        private Text _menuPreps;
 
         private IngredientCard _focusBottle;
         private Text _shakerTitle;
