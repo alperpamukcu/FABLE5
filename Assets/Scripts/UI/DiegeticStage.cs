@@ -224,16 +224,19 @@ namespace LastCall.UI
         /// mask sprite rather than a rectangle, because the window is on a side wall and so is
         /// drawn in perspective — a rectangular clip would cut the corners off.
         /// </summary>
-        private void BuildBackdrop(RectTransform under)
+        private void BuildBackdrop(RectTransform root, Vector2 native)
         {
-            var host = NewRect("Backdrop", under);
-            Stretch(host, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            host.SetAsFirstSibling();
+            // Sized and scaled exactly like the room art, so a drop that falls past the railing
+            // falls past it on screen too.
+            var host = NewRect("Backdrop", root);
+            var hostFit = host.gameObject.AddComponent<StageArtFit>();
+            hostFit.Native = native;
 
             _backdrop = new StageBackdrop(host, windowMaskSprite, WindowRect);
-            _backdrop.AddSky(skySprite);
-            // The terrace art carries its own railing and city, so the extra skyline layer is
-            // not needed; the sky above it is, and so is the rain.
+            // An open-air rooftop needs no sky or skyline layer: the art already IS the sky and
+            // the city, and adding another of each simply hid them. What the scene cannot draw
+            // for itself is weather that moves, so that is all this adds — rain in front of the
+            // view, where rain actually falls, and a sign that blinks.
             _backdrop.AddRain(UITheme.Cyan[4]);
 
             // Signs. The one on the bar's own wall carries lettering, drawn here with the pixel
@@ -363,11 +366,10 @@ namespace LastCall.UI
                 fit.Native = backgroundSprite.rect.size;
                 _backgroundImage = bgImg;
 
-                // The weather goes BEHIND the room art, showing through the window it has cut
-                // out of itself. Built after the room so it can be parented under the same
-                // fitter and share its scale, then pushed behind it.
-                BuildBackdrop(bg);
-                bg.SetAsLastSibling();
+                // The weather is a SIBLING of the room, not a child of it. Parented under the
+                // room it drew on TOP of it — a UI child always does — which is how an extra sky
+                // layer came to cover the very skyline it was meant to sit behind (2026-07-29).
+                BuildBackdrop(root, backgroundSprite.rect.size);
             }
             else
             {

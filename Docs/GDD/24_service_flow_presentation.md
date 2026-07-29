@@ -254,7 +254,19 @@ brick room as a medieval cellar. Standing figures in the backdrop always looked 
 customers are the people in this game, and a second set of them competes.
 
 Being outdoors is also what makes the weather simple: there is no window to see it through, so
-the sky and the rain simply *are* the scene, and the mask is skipped entirely.
+the mask is skipped entirely, and the scene needs **no sky or skyline layer at all** — the art
+already is both. Adding them hid the very skyline they were meant to sit behind. What the
+picture cannot do for itself is move, so that is all the layer adds: rain in front of the view,
+where rain actually falls, and a sign that blinks.
+
+**A UI child draws on top of its parent.** The weather was parented under the room art and so
+drew over it. It is a *sibling* now, sharing the room's fitter so it scales identically, placed
+in front. Worth remembering for anything else layered onto the stage.
+
+**The backdrop is composed for the furniture, not as a picture.** The bands are fixed by the
+stage: the bottom 40% is under the counter (railing and floor go there and are never seen), the
+40–60% band sits behind the customers (so the city lives there, low and dim), and the top 40% is
+the only part never covered (sky, clouds, string lights, the sign).
 
 ### The backdrop moves (2026-07-29)
 
