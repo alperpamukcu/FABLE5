@@ -238,60 +238,33 @@ to cover: at 16:9 that factor is exactly 1, so one art pixel is one canvas unit 
 a whole number of screen pixels (measured ×4 at 1440p). Import settings were already right —
 point filter, no compression — which is why the loss was purely geometric.
 
-The room is an **open-air rooftop terrace**: a railing, a distant night city below it, strings
-of small warm bulbs overhead, potted plants. It is deliberately the darkest thing on screen.
+The room is an **ordinary bar, drawn wide**: dark wood panelling running off both edges, a
+continuous shelf of plants along it, four hanging lamps in an even row, a couple of tables and
+chairs, and a small neon. Nothing exotic — the width is the point, and repetition across the
+full frame is what gives it.
 
-**The design rule came out of the layout, not out of taste.** The counter owns y 0–140 of the
-360-unit stage and the seated customers roughly y 130–260, so the only band the frame never
-covers is the top one. Everything the eye is allowed to notice — the lights, the sky, the sign —
-lives up there, above every face the player has to read. Below that the scene is quiet: no
-people, no pattern at eye level, nothing that competes.
+**The bands are fixed by the furniture, not by taste.** The counter covers the bottom 40% of
+the 360-unit stage, the seated customers sit across 40–60%, and the top 40% is the only part
+never covered. So the lamps and the sign go up there, the panelling and the plant shelf sit in
+the customers' band where they stay dark and quiet, and the tables go low where the counter
+hides them. A backdrop that ignores this puts its good parts where nothing can see them, which
+is what happened to every earlier attempt.
 
-Six rooms were drawn before this one, and each was rejected for a reason worth keeping:
-a booth lounge read as dead; an art-deco ballroom as too lavish and too crowded; a symmetric
-velvet room as a *corridor*, because a centred vanishing point turns a bar into a tunnel; a
-brick room as a medieval cellar. Standing figures in the backdrop always looked wrong — the
-customers are the people in this game, and a second set of them competes.
+Seven other rooms were drawn getting here and each failure is worth keeping: a booth lounge read
+as dead; an art-deco ballroom as too lavish and too crowded; a symmetric velvet room as a
+*corridor*, because a centred vanishing point turns a bar into a tunnel; a brick room as a
+medieval cellar; a rooftop terrace was liked as an idea but its first draft put the railing under
+the counter and the city where the customers' heads are. Standing figures in the backdrop always
+looked wrong — the customers are the people in this game, and a second set competes with them.
 
-Being outdoors is also what makes the weather simple: there is no window to see it through, so
-the mask is skipped entirely, and the scene needs **no sky or skyline layer at all** — the art
-already is both. Adding them hid the very skyline they were meant to sit behind. What the
-picture cannot do for itself is move, so that is all the layer adds: rain in front of the view,
-where rain actually falls, and a sign that blinks.
+Two structural lessons, both worth more than the art:
 
-**A UI child draws on top of its parent.** The weather was parented under the room art and so
-drew over it. It is a *sibling* now, sharing the room's fitter so it scales identically, placed
-in front. Worth remembering for anything else layered onto the stage.
-
-**The backdrop is composed for the furniture, not as a picture.** The bands are fixed by the
-stage: the bottom 40% is under the counter (railing and floor go there and are never seen), the
-40–60% band sits behind the customers (so the city lives there, low and dim), and the top 40% is
-the only part never covered (sky, clouds, string lights, the sign).
-
-### The backdrop moves (2026-07-29)
-
-It is a **stack of layers**, not a painting, because everything in it has to animate:
-`StageBackdrop` owns sky, city, street, lamp, rain and signs as separate objects.
-
-- **sky** drifts and wraps. It is drawn twice with the second copy **mirrored**, so the join is
-  seamless by construction — no seamless-tiling art required.
-- **rain** is 90 streaks that fall, lean, and are re-thrown when they land or blow out of frame.
-- **wind** is one shared value wandering slowly between −1 and 1. It leans the rain *and* hurries
-  the clouds, so the weather reads as one thing happening rather than two effects running.
-- **neon** signs blink on their own clocks — long lit, dark for an instant, easing rather than
-  snapping. Two signs pulsing in step is what gives a fake away.
-- **the street lamp** breathes, with a faint tremor and a rare hard flicker.
-
-Everything outdoors is clipped by a **mask sprite**, not a rectangle: the windows are on side
-walls and therefore drawn in perspective, and one mask holds *both* panes, so a single clip
-serves them. The mask is the glass cut out of the room art itself, which is why the two agree
-exactly. The whole thing is cosmetic, never touches the run, and stops dead under
-`Motion.Reduced`.
-
-**Sign lettering is drawn in-engine, never generated.** The art supplies an empty tube frame;
-the word is set in the pixel display face with a soft copy behind it for glow, and both blink
-with the frame. The generator cannot spell — asked for a bar it produced one called THE REEF —
-so any sign that has to *say* something is built, not painted.
+- **A UI child draws on top of its parent.** The weather layer was parented under the room art
+  and so drew over it — which is how an extra sky layer came to hide the very skyline it was
+  meant to sit behind. It is a sibling now, sharing the room's fitter so it scales identically.
+- **Add only what the picture cannot do itself.** A painted room already has its own sky, walls
+  and lights; layering another set over them hides them. The animation adds rain in front of the
+  view and signs that blink, and nothing else.
 
 **The counter was the wrong THING.** The asset was a back-bar shelf unit — glass racks and
 bottle shelves, furniture for the wall *behind* a bartender — installed as the bar we stand at.
