@@ -10,8 +10,8 @@
 > in `DiegeticStage.cs` remain the source of truth; the layer stack, choreography timings and
 > motion rules below still apply.
 >
-> **The counter is not art (2026-07-29).** Layer 4 is built in code from the palette, not
-> loaded from a PNG — see 24 §8.
+> **The counter carries empty shelves (2026-07-29).** Layer 4's art has two rows of empty
+> compartments under the bar top: bought glassware gets drawn into them (23 §8). See 24 §8.
 
 > The gameplay screen is a DIEGETIC scene: the player IS the bartender of a nightclub. The rail is not an abstract card strip — it is bottles standing on real shelves. This doc is the source of truth for scene layers and the slide choreography. Authored at 640×360.
 

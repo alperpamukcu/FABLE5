@@ -238,27 +238,36 @@ to cover: at 16:9 that factor is exactly 1, so one art pixel is one canvas unit 
 a whole number of screen pixels (measured ×4 at 1440p). Import settings were already right —
 point filter, no compression — which is why the loss was purely geometric.
 
-The room chosen is the **quiet bar**: banquettes, candle-lit tables, a neon wall, amber pools
-on the floor. It is the lowest-contrast of the three drawn, which is the point — the seated
-customers read cleanly against it. (A dance floor and a rain-window version were drawn too;
-the dance floor put high-contrast crowd silhouettes at exactly customer-head height.)
+The room is an **art-deco lounge**: arched windows across the back onto a lit city skyline and
+palms, fluted teal panelling and gold trim, globe lamps, and a room full of people. Walls,
+depth and life were the brief — a first pass of quieter rooms (booths, a dance floor, a rain
+window) was rejected for being flat and deserted. It shares the counter's teal and gold, so the
+bar and the room read as one place.
 
 **The counter was the wrong THING.** The asset was a back-bar shelf unit — glass racks and
-bottle shelves, furniture for the wall *behind* a bartender — installed as the bar we stand
-at. It is now **built from the palette in code**, not drawn: front panel, panelled stiles,
-overhang shadow, the lit top in two values, wood grain, and a brass edge along the rest line.
+bottle shelves, furniture for the wall *behind* a bartender — installed as the bar we stand at.
 
-That is a deliberate choice, not a fallback. A flat orthographic band that runs off both
-screen edges is geometry, not illustration: three rounds of generation produced one usable
-image and five failures, because the model answers with a piece of furniture in perspective
-that ends inside the frame. Built, it is exactly on-palette, crisp at any resolution, spans
-any width without stretching, and `CounterRestY` — the line the glassware, the till and the
-seats all stand on — is a constant rather than a row of pixels to find inside a PNG. The
-counter-tier upgrade tints every part from its own base colour.
+It carries **empty shelves**, and that is structure rather than decoration: glassware is a
+buyable upgrade (23 §8), so those evenly divided, deliberately empty compartments are where the
+bought glasses get drawn. Two brass-railed rows of them under a teal bar top with a brass edge,
+sharing the room's own teal and gold.
 
-Values were the thing to get right: the first build used the amber ramp straight and the bar
-came out a bright orange slab that took the whole screen. The wood is amber pushed a long way
-into the night ramp, and the one bright element is the brass line the drink is set behind.
+Measured off the art, in its own 640×150 pixels, for whoever fills them: the **upper row** has
+8 compartments about 68px wide centred at x = 37, 113, 193, 280, 357, 444, 524, 601 (row ~70);
+the **lower row** has 7, one of them double-width where a divider is missing (row ~125). Read
+them again if the bar is ever redrawn — they are a property of the picture, like the surface
+line above.
+
+(It was briefly built from the palette in code instead. That version is gone: it answered the
+shape problem but not the brief, because a built band has nowhere to put a glass. The generator
+does need watching — across four rounds it produced perspective views that ended inside the
+frame, near-empty canvases, and shelves with holes of pure transparency in them, which are
+filled in post from each column's first opaque row down.)
+
+**Where a glass stands is measured, never assumed.** `CounterSurfaceInset` is the distance from
+the sprite's top down to the bar's far edge — the line a glass is set on, pinned to
+`CounterRestY`. The two bars drawn for this put that edge 2px and 54px down, so it is a property
+of the picture: read it off the art whenever the art changes, or the glassware floats.
 
 ## 9. Tutorial (the opening shift)
 

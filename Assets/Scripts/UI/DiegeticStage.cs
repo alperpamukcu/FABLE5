@@ -52,6 +52,10 @@ namespace LastCall.UI
         private const float CustomerBaseY = 126f;          // hands rest on the bar-top surface
         private const float RegisterX = 604f;              // till pushed to the counter's right edge
         private const float CounterRestY = 128f;           // counter-top rest line (till, glassware)
+        // Measured off the art: the bar's far edge — where a glass is set down — is this far
+        // below the sprite's top. The two candidates drawn for this put it 2px and 54px down,
+        // so it is a property of the picture, never a constant to assume (2026-07-29).
+        private const float CounterSurfaceInset = 2f;
         private const float CounterFrontY = 96f;           // 18 §2: surface line y=264 → 360−264 (bottom 96px)
         private const float BottleW = 30f;                 // placeholder fallback size
         private const float BottleH = 52f;
@@ -92,16 +96,14 @@ namespace LastCall.UI
         /// <summary>Installed environment art (18 §5). When set, the full-screen club
         /// background and the bar counter replace their flat procedural placeholders.</summary>
         [SerializeField] private Sprite backgroundSprite;
+        [SerializeField] private Sprite counterSprite;
         [SerializeField] private Sprite customerSprite;   // VIP/patron leaning on the bar (18 §6)
         [SerializeField] private Sprite registerSprite;   // cash register, bottom-left, shows the wallet
         private Text _moneyText;
 
         // Ambience upgrades change the scene (GDD 24 §6): the counter, back bar and glass
         // gain a sheen per tier, and a bought musician takes the corner stage.
-        // The counter is built from palette bands now, so the tier tint touches all of them
-        // and each keeps the colour it was born with to be tinted FROM (2026-07-29).
-        private readonly List<Image> _counterParts = new List<Image>();
-        private readonly List<Color> _counterBase = new List<Color>();
+        private Image _counterImage;
         private Image _cabinetImage;
         private Image _glassImage;
         private RectTransform _musicianRoot;
@@ -187,15 +189,9 @@ namespace LastCall.UI
         {
             // A finer counter warms and lifts the whole bar. The parts carry their own palette
             // colours, so the tier multiplies them rather than replacing them (2026-07-29).
-            // Always from the part's ORIGINAL colour, never from whatever it is now: this is
-            // called again on every upgrade, and tinting a tint compounds.
-            var warm = Color.Lerp(Color.white, new Color(1.18f, 1.06f, 0.86f), (counterTier - 1) * 0.5f);
-            for (int i = 0; i < _counterParts.Count; i++)
-            {
-                if (_counterParts[i] == null) continue;
-                var b = _counterBase[i];
-                _counterParts[i].color = new Color(b.r * warm.r, b.g * warm.g, b.b * warm.b, b.a);
-            }
+            if (_counterImage != null)
+                _counterImage.color = Color.Lerp(Color.white, new Color(1f, 0.9f, 0.72f),
+                    (counterTier - 1) * 0.45f);
             if (_cabinetImage != null)
             {
                 var rich = Color.Lerp(UITheme.Night[1], UITheme.Magenta[0], (wallTier - 1) * 0.4f);
@@ -204,93 +200,6 @@ namespace LastCall.UI
             if (_glassImage != null)
                 _glassImage.color = Color.Lerp(Color.white, UITheme.Cyan[4], (glasswareTier - 1) * 0.28f);
             if (_musicianRoot != null) _musicianRoot.gameObject.SetActive(musician);
-        }
-
-        /// <summary>
-        /// The bar, built out of the palette instead of painted (choice of 2026-07-29). Three
-        /// rounds of generated counters produced one usable image and two failures: a flat
-        /// orthographic band that runs off both edges is geometry, not illustration, and the
-        /// model kept answering with a piece of furniture in perspective that ended inside the
-        /// frame. Built here it is exactly on-palette, crisp at any resolution, spans any width
-        /// with no stretching, and the surface line the whole stage measures against is a
-        /// constant rather than a row of pixels someone has to find in a PNG.
-        ///
-        /// Bottom to top: the front panel with its stiles, a shadow under the overhang, the
-        /// front lip, the lit bar top, and the far edge the customers lean on.
-        /// </summary>
-        private void BuildCounter(RectTransform root)
-        {
-            // The rect's bottom sits on the screen's, so every band below is measured from a
-            // line that does not move; the front panel simply runs off the bottom edge.
-            var counter = NewRect("Counter", root);
-            Stretch(counter, Vector2.zero, new Vector2(1, 0),
-                new Vector2(-Overscan, 0f), new Vector2(Overscan, CounterRestY));
-            _counterParts.Clear(); _counterBase.Clear();
-
-            // Values matter more than hue here. The first build used the amber ramp straight
-            // and the bar came out a bright orange slab that took the whole screen — the exact
-            // opposite of 24 §8, where the room stays quiet and the drink is what glows. So the
-            // wood is amber pushed a long way into the night ramp, and the ONE bright thing is
-            // the brass line the drink is set behind (2026-07-29).
-            var wood = Color.Lerp(UITheme.Amber[0], UITheme.Night[0], 0.42f);   // front panel
-            var topNear = Color.Lerp(UITheme.Amber[0], UITheme.Night[1], 0.22f);
-            var topFar = UITheme.Amber[0];
-
-            Band(counter, "Front", -Overscan, CounterFrontY - 3f, wood);
-
-            // Recessed panels along the front, so it reads as joinery rather than a painted
-            // strip: a shadowed groove with a lit edge beside it, the way a real stile catches
-            // the room. Laid out well past any screen width, so a wide window is still panelled.
-            const float StilePitch = 74f;
-            for (float x = StilePitch * 0.5f; x < 1400f; x += StilePitch)
-            {
-                Stile(counter, x, 4f, new Color(0f, 0f, 0f, 0.30f));            // the groove
-                Stile(counter, x + 4f, 1f, new Color(1f, 0.86f, 0.62f, 0.05f)); // its lit edge
-            }
-
-            // A dark line where the top overhangs the front — the shadow that gives the bar its
-            // thickness, and what stops the two bands reading as one flat strip.
-            Band(counter, "Shadow", CounterFrontY - 3f, CounterFrontY, UITheme.Night[0]);
-
-            // The bar top, lit from the room: a little lighter at the far edge where the light
-            // falls, settling into darker wood nearer the viewer.
-            Band(counter, "TopNear", CounterFrontY, CounterFrontY + 16f, topNear);
-            Band(counter, "TopFar", CounterFrontY + 16f, CounterRestY - 3f, topFar);
-
-            // Grain: a few long, barely-there streaks along the top. Without them the surface
-            // is a single flat fill, which is what makes a built counter look built rather than
-            // drawn — and they cost four quads.
-            Band(counter, "Grain1", CounterFrontY + 5f, CounterFrontY + 6f, new Color(0f, 0f, 0f, 0.16f));
-            Band(counter, "Grain2", CounterFrontY + 21f, CounterFrontY + 22f, new Color(0f, 0f, 0f, 0.12f));
-            Band(counter, "Grain3", CounterFrontY + 25f, CounterFrontY + 26f, new Color(1f, 0.85f, 0.6f, 0.05f));
-
-            // The brass edge the customers lean on, with a hot highlight along its top — this
-            // line IS CounterRestY, the one everything on the counter stands on.
-            Band(counter, "Brass", CounterRestY - 3f, CounterRestY - 1f, UITheme.Amber[2]);
-            Band(counter, "BrassLit", CounterRestY - 1f, CounterRestY, UITheme.Amber[3]);
-        }
-
-        /// <summary>A vertical stripe down the counter's front — one edge of a panel groove.</summary>
-        private void Stile(RectTransform counter, float x, float width, Color colour)
-        {
-            var rt = NewRect("Stile", counter);
-            rt.anchorMin = rt.anchorMax = new Vector2(0, 0);
-            rt.pivot = new Vector2(0f, 0f);
-            rt.sizeDelta = new Vector2(width, CounterFrontY - 24f);
-            rt.anchoredPosition = new Vector2(x, 9f);
-            var img = rt.gameObject.AddComponent<Image>();
-            img.color = colour; img.raycastTarget = false;
-            _counterParts.Add(img); _counterBase.Add(colour);
-        }
-
-        /// <summary>One horizontal band of the counter, spanning its full width.</summary>
-        private void Band(RectTransform counter, string name, float fromY, float toY, Color colour)
-        {
-            var rt = NewRect(name, counter);
-            Stretch(rt, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, fromY), new Vector2(0, toY));
-            var img = rt.gameObject.AddComponent<Image>();
-            img.color = colour; img.raycastTarget = false;
-            _counterParts.Add(img); _counterBase.Add(colour);
         }
 
         private void BuildMusician(RectTransform root)
@@ -402,8 +311,23 @@ namespace LastCall.UI
             // and, with the bottles living in the menu now, the shelves stood empty. The wall-tier
             // ambience upgrade simply has no cabinet to tint until the P8 scenery pass.
 
-            // Layer 4 — the counter, built from the palette rather than drawn (2026-07-29).
-            BuildCounter(root);
+            // Layer 4 — the bar. A drawn asset again (2026-07-29): it carries EMPTY shelves,
+            // which is not decoration but structure — glassware is a buyable upgrade (23 §8) and
+            // those shelves are where the bought glasses get drawn. The surface line inside the
+            // art is CounterSurfaceInset below its top, and that line is pinned to CounterRestY,
+            // so everything on the counter still stands on a constant. Scaled by one factor, not
+            // stretched: the old counter was pulled 15% wider than it was drawn.
+            if (counterSprite != null)
+            {
+                var c = NewRect("Counter", root);
+                _counterImage = c.gameObject.AddComponent<Image>();
+                _counterImage.sprite = counterSprite; _counterImage.raycastTarget = false;
+                var cfit = c.gameObject.AddComponent<StageArtFit>();
+                cfit.Fit = StageArtFit.Mode.WidthAligned;
+                cfit.Native = counterSprite.rect.size;
+                cfit.RestLineY = CounterRestY;
+                cfit.RestFromTop = CounterSurfaceInset;
+            }
 
             // Cash register on the bar top, bottom-left, with the wallet on a plaque above it
             // (18 §2 — the player reads their money diegetically from the till).
