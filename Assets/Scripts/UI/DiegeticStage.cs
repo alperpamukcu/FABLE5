@@ -51,6 +51,23 @@ namespace LastCall.UI
         private const float CustomerX = 556f;              // patron centre, standing at the bar
         private const float CustomerBaseY = 126f;          // hands rest on the bar-top surface
         private const float RegisterX = 604f;              // till pushed to the counter's right edge
+        /// <summary>
+        /// The bar's FRONT EDGE in stage units — the brass line a customer leans on, and the
+        /// line their body is cut off at. Public because TycoonHud draws the seats and has to
+        /// agree with it exactly; it used to keep its own copy of the number and the two drifted
+        /// apart when the art changed.
+        ///
+        /// This is the rest line, NOT the sprite's top: the counter art carries two transparent
+        /// rows above its brass edge, so cutting the bodies at the sprite's top left a two-unit
+        /// sliver of backdrop showing under every customer — measured at 8 screen pixels on a
+        /// 1440p frame (2026-07-29).
+        /// </summary>
+        public const float CounterTopY = CounterRestY;
+
+        /// <summary>Where the till's base sits: forward of the bar's far edge, on the surface
+        /// itself. The surface runs from CounterFrontY up to CounterRestY, so this is inside it.</summary>
+        private const float RegisterBaseY = 118f;
+
         private const float CounterRestY = 128f;           // counter-top rest line (till, glassware)
         // Measured off the art: the bar's far edge — where a glass is set down — is this far
         // below the sprite's top. The two candidates drawn for this put it 2px and 54px down,
@@ -233,11 +250,9 @@ namespace LastCall.UI
             hostFit.Native = native;
 
             _backdrop = new StageBackdrop(host, windowMaskSprite, WindowRect);
-            // An open-air rooftop needs no sky or skyline layer: the art already IS the sky and
-            // the city, and adding another of each simply hid them. What the scene cannot draw
-            // for itself is weather that moves, so that is all this adds — rain in front of the
-            // view, where rain actually falls, and a sign that blinks.
-            _backdrop.AddRain(UITheme.Cyan[4]);
+            // The room is indoors now, so there is no weather to add — no sky, no skyline, no
+            // rain. What the painted room still cannot do for itself is blink, so that is all
+            // this layer is left holding (2026-07-29).
 
             // Signs. The one on the bar's own wall carries lettering, drawn here with the pixel
             // font: the generator cannot spell, so a sign that has to say something is built
@@ -432,7 +447,10 @@ namespace LastCall.UI
                 // into the same 57px slot instead of doubling on screen.
                 const float regW = 57f;
                 reg.sizeDelta = new Vector2(regW, regW * registerSprite.rect.height / registerSprite.rect.width);
-                reg.anchoredPosition = new Vector2(RegisterX, CounterRestY);
+                // Down onto the surface, not balanced on the far edge: the rest line IS that
+                // edge, so an object placed exactly on it reads as standing behind the bar
+                // rather than on it (2026-07-29).
+                reg.anchoredPosition = new Vector2(RegisterX, RegisterBaseY);
                 var regImg = reg.gameObject.AddComponent<Image>();
                 regImg.sprite = registerSprite; regImg.preserveAspect = true;
                 // The till is clickable: it opens the ledger of days gone by (GDD 24 §7).
@@ -442,7 +460,18 @@ namespace LastCall.UI
                 regBtn.transition = Selectable.Transition.None;
                 regBtn.onClick.AddListener(() => _onRegisterClicked?.Invoke());
 
-                float plaqueY = CounterRestY + reg.sizeDelta.y - 18f;  // on the till's display
+                // A soft contact shadow under it — the thing that actually sells "resting on"
+                // rather than "floating near".
+                var shadow = NewRect("TillShadow", root);
+                shadow.anchorMin = shadow.anchorMax = new Vector2(0, 0);
+                shadow.pivot = new Vector2(0.5f, 0.5f);
+                shadow.sizeDelta = new Vector2(regW * 0.92f, 5f);
+                shadow.anchoredPosition = new Vector2(RegisterX, RegisterBaseY + 1f);
+                var shImg = shadow.gameObject.AddComponent<Image>();
+                shImg.color = new Color(0f, 0f, 0f, 0.42f); shImg.raycastTarget = false;
+                shadow.SetSiblingIndex(reg.GetSiblingIndex());
+
+                float plaqueY = RegisterBaseY + reg.sizeDelta.y - 18f;  // on the till's display
                 var plaque = NewRect("MoneyPlaque", root);
                 plaque.anchorMin = plaque.anchorMax = new Vector2(0, 0);   // absolute, on the till
                 plaque.pivot = new Vector2(0.5f, 0);

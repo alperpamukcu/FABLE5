@@ -43,9 +43,13 @@ namespace LastCall.UI
         // head-and-shoulders busts, not in a bottom strip. Each bust rises/slides into its
         // stool when its patron arrives, wears a floating order tag, and is the click target.
         private const int SeatSlots = 6;
-        private const float CounterLineY = 279f;   // HUD-space y (from bottom) of the bar top —
-                                                    // matched to the counter sprite's top edge so
-                                                    // the body clips exactly where the bar ends
+        // HUD-space y (from bottom) of the bar top, where a customer's body is cut off. DERIVED
+        // from the stage rather than copied: the HUD is 1280x720 against the stage's 640x360, so
+        // it is exactly twice the stage's own line. It used to be a hand-written 279, which was
+        // right for the old counter art and 19 units too high for the new one — every customer
+        // floated that far above the bar (2026-07-29).
+        private const float StageToHud = 720f / 360f;
+        private const float CounterLineY = DiegeticStage.CounterTopY * StageToHud;
         private const float BustW = 108f;
         private const float BustH = 128f;
         private const float WalkSpeed = 405f;       // walk-in speed (ref px/s), in from the screen's right edge

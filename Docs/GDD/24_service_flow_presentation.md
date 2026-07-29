@@ -257,6 +257,23 @@ medieval cellar; a rooftop terrace was liked as an idea but its first draft put 
 the counter and the city where the customers' heads are. Standing figures in the backdrop always
 looked wrong — the customers are the people in this game, and a second set competes with them.
 
+**Things standing on the bar are measured, not eyeballed (2026-07-29).** Three separate
+alignment faults, all of them arithmetic once looked at:
+
+- The till floated because its sprite carried **6 transparent rows** under the art on a 58px
+  canvas. The stage seats a prop by putting its sprite's bottom on the bar, so any margin under
+  the drawing is a gap. Props are trimmed to their own content now.
+- The customers floated because `TycoonHud` kept its **own hand-written copy** of the bar's
+  line (279) which was right for the previous counter art and 19 units too high for this one.
+  It is derived from `DiegeticStage.CounterTopY` now — the HUD is 1280×720 against the stage's
+  640×360, so exactly twice — and cannot drift again.
+- Cutting the bodies at the counter sprite's **top** still left a sliver, because the art has two
+  transparent rows above its brass edge. `CounterTopY` is the brass line itself, which is also
+  what it means: the edge a customer leans on.
+
+And a prop resting **on** the bar sits forward of that line, on the surface, not balanced on the
+far edge — with a contact shadow, which is what actually sells the contact.
+
 Two structural lessons, both worth more than the art:
 
 - **A UI child draws on top of its parent.** The weather layer was parented under the room art
