@@ -73,16 +73,37 @@ namespace LastCall.UI
 
             _clip = NewRect("Window", host);
             Stretch(_clip);
-            // Mask by the glass's own silhouette. showMaskGraphic off, so the white shape only
-            // ever cuts — it is never seen.
-            var maskImg = _clip.gameObject.AddComponent<Image>();
-            maskImg.sprite = windowMask;
-            maskImg.raycastTarget = false;
-            var mask = _clip.gameObject.AddComponent<Mask>();
-            mask.showMaskGraphic = false;
+            // A mask only when the weather is seen THROUGH something. On an open-air terrace it
+            // is not: the sky and the rain are the scene, so there is nothing to cut them to,
+            // and the clip is left as a plain container (2026-07-29).
+            if (windowMask != null)
+            {
+                var maskImg = _clip.gameObject.AddComponent<Image>();
+                maskImg.sprite = windowMask;
+                maskImg.raycastTarget = false;
+                var mask = _clip.gameObject.AddComponent<Mask>();
+                mask.showMaskGraphic = false;
+            }
         }
 
         // ── layers ──────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// An opaque night fill behind everything outdoors. Without it, any gap the art layers
+        /// happen to leave — between a skyline's roofline and a street's rooftops, say — is a
+        /// hole straight through the wall, and the layers are cropped by the window so those
+        /// gaps move as the pane changes shape. A backing makes the window always show *sky*,
+        /// whatever else is or is not covering it (2026-07-29).
+        /// </summary>
+        public void AddBacking(Color night)
+        {
+            var rt = NewRect("NightBacking", _clip);
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 0f);
+            rt.sizeDelta = _window.size + new Vector2(8f, 8f);   // a little proud of the pane
+            rt.anchoredPosition = _window.min - new Vector2(4f, 4f);
+            var img = rt.gameObject.AddComponent<Image>();
+            img.color = night; img.raycastTarget = false;
+        }
 
         /// <summary>The sky, laid out twice — the second copy mirrored, so the wrap has no seam
         /// whatever the art does at its edges.</summary>

@@ -134,8 +134,7 @@ namespace LastCall.EditorTools
             {
                 ("windowMaskSprite", "club_window_mask"), ("skySprite", "club_sky"),
                 ("citySprite", "club_city"), ("streetSprite", "club_street"),
-                ("lampSprite", "club_lamp"), ("neonFrameSprite", "club_neon_frame"),
-                ("neonGlassSprite", "club_neon_glass"),
+                ("lampSprite", "club_lamp"), ("neonGlassSprite", "club_neon_glass"),
             })
                 stageSo.FindProperty(layer.prop).objectReferenceValue =
                     AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/" + layer.file + ".png");

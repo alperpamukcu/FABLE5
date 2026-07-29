@@ -56,12 +56,11 @@ namespace LastCall.UI
         // below the sprite's top. The two candidates drawn for this put it 2px and 54px down,
         // so it is a property of the picture, never a constant to assume (2026-07-29).
         private const float CounterSurfaceInset = 2f;
-        // The glass openings in the room art, measured off club_window_mask.png and converted to
-        // the stage's bottom-left origin. The room is symmetric with a window on EACH side wall,
-        // so this is the box that spans BOTH — the mask cuts the two real, perspective-drawn
-        // panes out of whatever is laid out inside it, which is why one clip serves two windows
-        // (2026-07-29).
-        private static readonly Rect WindowRect = new Rect(68f, 134f, 502f, 173f);
+        // The room is an open-air terrace, so the weather is not seen through anything: the
+        // whole stage IS the sky, and there is no mask (2026-07-29). The band it matters in is
+        // still the top one — the counter owns y 0-140 and the seated customers roughly y
+        // 130-260, so everything the eye can afford to notice belongs above that.
+        private static readonly Rect WindowRect = new Rect(0f, 0f, 640f, 360f);
         /// <summary>How much of the road the window shows, from its bottom edge up.</summary>
         private const float StreetHeight = 74f;
         private const float CounterFrontY = 96f;           // 18 §2: surface line y=264 → 360−264 (bottom 96px)
@@ -112,7 +111,6 @@ namespace LastCall.UI
         [SerializeField] private Sprite citySprite;
         [SerializeField] private Sprite streetSprite;
         [SerializeField] private Sprite lampSprite;
-        [SerializeField] private Sprite neonFrameSprite;    // an empty tube; the text is drawn
         [SerializeField] private Sprite neonGlassSprite;
         [SerializeField] private Sprite customerSprite;   // VIP/patron leaning on the bar (18 §6)
         [SerializeField] private Sprite registerSprite;   // cash register, bottom-left, shows the wallet
@@ -228,33 +226,24 @@ namespace LastCall.UI
         /// </summary>
         private void BuildBackdrop(RectTransform under)
         {
-            if (windowMaskSprite == null) return;
-
             var host = NewRect("Backdrop", under);
             Stretch(host, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             host.SetAsFirstSibling();
 
             _backdrop = new StageBackdrop(host, windowMaskSprite, WindowRect);
             _backdrop.AddSky(skySprite);
-            _backdrop.AddStill(citySprite, "City", StreetHeight - 40f);
-            _backdrop.AddStill(streetSprite, "Street", StreetHeight - streetSprite.rect.height);
-            _backdrop.AddLamp(lampSprite, 0.62f, StreetHeight - 34f, 0.66f);
+            // The terrace art carries its own railing and city, so the extra skyline layer is
+            // not needed; the sky above it is, and so is the rain.
             _backdrop.AddRain(UITheme.Cyan[4]);
 
             // Signs. The one on the bar's own wall carries lettering, drawn here with the pixel
             // font: the generator cannot spell, so a sign that has to say something is built
             // rather than painted (2026-07-29).
-            // One sign across the street in each window, so the pair reads as symmetric as the
-            // room is; they blink on their own clocks, never together.
-            _backdrop.AddNeon(neonGlassSprite, new Vector2(WindowRect.xMin + 42f,
-                WindowRect.yMin + StreetHeight + 44f), outside: true, scale: 0.5f,
-                minOn: 1.6f, maxOn: 5f);
-            _backdrop.AddNeon(neonFrameSprite, new Vector2(WindowRect.xMax - 42f,
-                WindowRect.yMin + StreetHeight + 48f), outside: true, scale: 0.4f,
-                minOn: 2.2f, maxOn: 6.5f);
-
-            // The bar's own sign, on the far wall and centred like everything else in the room.
-            BuildLetteredNeon(host, new Vector2(320f, 196f), "LAST CALL");
+            // The bar's own sign, high on the wallpaper between the lamps, and the EXIT over the
+            // door. Both are lettered, so both are drawn here rather than generated.
+            // The bar's own sign, high and off to one side — the one deliberate touch of colour
+            // in a scene that is otherwise all shadow.
+            BuildLetteredNeon(host, new Vector2(470f, 300f), "LAST CALL", UITheme.Magenta[4]);
         }
 
         /// <summary>
@@ -262,29 +251,22 @@ namespace LastCall.UI
         /// in the display face on top of it, and a soft copy behind for the glow. Both blink
         /// together, so the sign reads as one object.
         /// </summary>
-        private void BuildLetteredNeon(RectTransform host, Vector2 centre, string word)
+        private void BuildLetteredNeon(RectTransform host, Vector2 centre, string word, Color tint)
         {
             var sign = NewRect("NeonSign", host);
             sign.anchorMin = sign.anchorMax = sign.pivot = new Vector2(0f, 0f);
-            // Half scale: the frame is drawn at 160x64 but a sign on a wall thirty feet back is
-            // not that big, and the pixel face only stays crisp at whole multiples of 8.
-            sign.sizeDelta = (neonFrameSprite != null ? neonFrameSprite.rect.size : new Vector2(120, 44)) * 0.5f;
+            // Sized to the word: a lettered sign IS its lettering, so there is no frame art to
+            // match. The pixel face only stays crisp at whole multiples of 8.
+            sign.sizeDelta = new Vector2(word.Length * 9f + 12f, 20f);
             sign.anchoredPosition = centre;
-
-            if (neonFrameSprite != null)
-            {
-                var frame = sign.gameObject.AddComponent<Image>();
-                frame.sprite = neonFrameSprite; frame.raycastTarget = false;
-                _backdrop.RegisterNeon(frame, 3f, 9f, 0.20f);
-            }
 
             // The glow first, larger and dim, then the word itself over it.
             var glow = NewText("Glow", sign, _display, 8, TextAnchor.MiddleCenter,
-                new Color(UITheme.Magenta[4].r, UITheme.Magenta[4].g, UITheme.Magenta[4].b, 0.35f));
+                new Color(tint.r, tint.g, tint.b, 0.35f));
             Stretch(glow.rectTransform, Vector2.zero, Vector2.one, new Vector2(-2, -2), new Vector2(2, 2));
             glow.text = word;
 
-            var label = NewText("Word", sign, _display, 8, TextAnchor.MiddleCenter, UITheme.Magenta[4]);
+            var label = NewText("Word", sign, _display, 8, TextAnchor.MiddleCenter, tint);
             Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             label.text = word;
 

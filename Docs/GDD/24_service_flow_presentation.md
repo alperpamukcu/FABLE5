@@ -238,23 +238,23 @@ to cover: at 16:9 that factor is exactly 1, so one art pixel is one canvas unit 
 a whole number of screen pixels (measured ×4 at 1440p). Import settings were already right —
 point filter, no compression — which is why the loss was purely geometric.
 
-The room is a **new boutique bar**: green velvet panelling with gold beading, pendant globes
-receding down the centre, palms in the corners, and a window on **each side wall**.
+The room is an **open-air rooftop terrace**: a railing, a distant night city below it, strings
+of small warm bulbs overhead, potted plants. It is deliberately the darkest thing on screen.
 
-Three things had to be true, and each took a pass to learn:
+**The design rule came out of the layout, not out of taste.** The counter owns y 0–140 of the
+360-unit stage and the seated customers roughly y 130–260, so the only band the frame never
+covers is the top one. Everything the eye is allowed to notice — the lights, the sky, the sign —
+lives up there, above every face the player has to read. Below that the scene is quiet: no
+people, no pattern at eye level, nothing that competes.
 
-- **Symmetric, one-point perspective, vanishing point dead centre.** The bartender stands in the
-  middle of a square room. Earlier rooms put the window behind the customers and the counter
-  read as jammed into a corner.
-- **The windows are beside the customers, not behind them** — one per side wall, which is what
-  keeps the room symmetric while still giving depth.
-- **Few people, and all of them flat dark silhouettes** — no faces, no clothing detail. A quiet
-  room of booths read as dead; an art-deco lounge packed with fully-drawn patrons was too lavish
-  and too busy. The background is where the eye is not: a crowd drawn as carefully as the
-  customers competes with them, and the customers are the game.
+Six rooms were drawn before this one, and each was rejected for a reason worth keeping:
+a booth lounge read as dead; an art-deco ballroom as too lavish and too crowded; a symmetric
+velvet room as a *corridor*, because a centred vanishing point turns a bar into a tunnel; a
+brick room as a medieval cellar. Standing figures in the backdrop always looked wrong — the
+customers are the people in this game, and a second set of them competes.
 
-Not stone. An earlier brick room read as a medieval cellar rather than somewhere that opened
-last year.
+Being outdoors is also what makes the weather simple: there is no window to see it through, so
+the sky and the rain simply *are* the scene, and the mask is skipped entirely.
 
 ### The backdrop moves (2026-07-29)
 
