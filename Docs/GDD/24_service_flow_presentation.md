@@ -264,6 +264,33 @@ with an ambient playing loop. The scene is the save file, visually.
 - Background: animated and alive (crowd, neon, musician when bought) but low-contrast and
   slow — attention belongs to the seats and the counter.
 
+### The tap is a station, not three props (2026-07-30)
+
+Player note: *"the keg and tap assets are low quality and do not fit the scene."* They were:
+the tower was a flat yellow post, and the "keg" was the beer **menu icon** (`lager.png`) blown
+up to prop size — the stage had no keg art at all. The three objects floated in an empty box
+with no surface under them and nothing connecting them.
+
+The stage is now a working bar station, built back to front: the counter with the room's own
+brass edge, the under-bar recess divided into bays, the keg standing in one with its line
+running up into the foot of the font, the drip tray, the tower bolted to the bar top, and the
+pint standing on it. Everything rests on the counter line rather than hovering at a hand-picked
+y, and the beer line is what makes the keg and the tap read as one plumbed-in rig.
+
+New art (`keg`, `drip_tray`, and replacements for `tap` and `tap_handle`) was generated against
+the **shaker sprite as the style reference**, which is what puts it in the same world as the
+rest of the props rather than beside it — 31–47 colours each, against the shaker's 81 and the
+old tap's 170, and no semi-transparent edge pixels. Every sprite is trimmed to its content
+bounds; padding is what makes a prop float (the same fault as the till, 2026-07-29).
+
+The keg's label is **blank in the art and lettered in engine**, tinted by the beer's style —
+the generator cannot spell, so every word in this game is drawn with the pixel font. The same
+rule the neon sign follows.
+
+Anchors are measured off the art, never guessed: the faucet lip is the leftmost opaque pixel of
+`tap.png` at (−39, +34.5) from its centre, and the handle mounts on the brass fitting at
+(−29, +87.5), both scaled by the size the tower is drawn at.
+
 ### The stage's two big surfaces (2026-07-29)
 
 Both were remade, and they turned out to be wrong in two different ways.
