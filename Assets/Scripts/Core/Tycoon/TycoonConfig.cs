@@ -83,7 +83,10 @@ namespace LastCall.Core
         /// <summary>Seconds a freshly seated customer mulls the menu before ordering. Zero
         /// disables the beat entirely (the headless economy tests order the instant they sit).</summary>
         public double OrderDecisionSeconds { get; }
-        public const double OrderDecisionJitter = 0.35;
+        /// <summary>Widened 0.35 → 0.55 (v5 P11): the notes ask for people who decide in two
+        /// seconds and people who take five or more. At ±35% every customer mulled for much
+        /// the same beat; at ±55% the range is ~1.8–6.2s and the floor stops feeling metered.</summary>
+        public const double OrderDecisionJitter = 0.55;
 
         /// <summary>One decision-delay roll, jittered from the named stream.</summary>
         public double RollDecideDelay(SeededRng rng) =>
@@ -97,9 +100,15 @@ namespace LastCall.Core
         // ── the day (GDD 23 §6) ─────────────────────────────────────────────────
         public int CustomersOnDay(int day) => Math.Min(14, 8 + day / 2);
 
-        /// <summary>Balance v1: rent climbs hard enough to make a red day a real threat
-        /// for a bar that stops improving — $20 on day 1, $65 by day 10.</summary>
-        public int Rent(int day) => 15 + 5 * day;
+        /// <summary>
+        /// Balance v1: rent climbs hard enough to make a red day a real threat for a bar that
+        /// stops improving. Eased in v5 P11 (2026-07-31) from <c>15 + 5×day</c>: that phase
+        /// halved the menu's base-price ladder, and halving one side of a ledger without the
+        /// other is not "leaving tuning to P18" — it is shipping a broken half. The floor bot
+        /// went bankrupt in 43.5% of runs against 1.5% before. Rent comes down by roughly the
+        /// same share the take did; the real curve work is still P18's.
+        /// </summary>
+        public int Rent(int day) => 14 + (9 * day) / 2;
 
         // ── orders (GDD 23 §3) ──────────────────────────────────────────────────
         /// <summary>The order roll pool: this many lowest-rank pourable recipes.</summary>

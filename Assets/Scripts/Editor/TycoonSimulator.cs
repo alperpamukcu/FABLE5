@@ -80,8 +80,9 @@ namespace LastCall.EditorTools
                         if (!BuildOrderedDrink(run, visit)) continue;
                         bool pint = run.ServingGlass.HasPreparation(Preparations.Draught.Id);
                         double head = pint ? run.ServingGlass.Head / run.ServingGlass.Capacity : 0;
+                        int specRequests = visit.Order.Spec.RequestCount;
                         var verdict = run.ServeTo(visit);
-                        stats.RecordServe(verdict, pint, head);
+                        stats.RecordServe(verdict, pint, head, specRequests);
                         buildTimer = 0;
                         break;
                     }
@@ -118,15 +119,27 @@ namespace LastCall.EditorTools
             var recipe = visit.Order.Wanted;
             if (WantsBeer(recipe)) return PullPint(run, visit);
 
-            double volume = Math.Max(recipe.MinFill, 0.85) * run.Glass.Capacity;
+            // v5 P11: the serving spec is printed on the licence, so a competent player reads
+            // it and does what it says. A bot that ignored it would understate the floor by the
+            // whole spec share of the tip -- it measured 56% spec score and 2.7% fully-met
+            // orders, which is a strawman, not a floor.
+            var spec = visit.Order.Spec;
+            double volume = Math.Max(recipe.MinFill, spec.FilledToTheTop ? 0.97 : 0.85)
+                            * run.Glass.Capacity;
             foreach (var band in recipe.RatioRequirements)
             {
-                var bottle = PickBottle(run.Shelf, band.Type, visit);
+                var bottle = band.IsStyleBand
+                    ? PickByStyle(run.Shelf, band.Style)
+                    : PickBottle(run.Shelf, band.Type, visit);
                 if (bottle == null) return false;
                 double share = (band.MinRatio + band.MaxRatio) / 2.0;
                 run.PourMeasure(bottle.Id, Math.Min(volume * share, bottle.Remaining));
             }
             if (run.Glass.IsEmpty) return false;
+
+            foreach (var garnish in spec.Garnishes)
+                if (!run.Glass.IsFull) run.AddPreparation(garnish);
+            if (spec.ExtraShaken) run.Shake(1.0);
 
             // Into the glass, dead on the rim. The bot used to hand the shaker over whole, which
             // the rules now refuse (2026-07-28); pouring perfectly keeps its standing unchanged —
@@ -138,8 +151,22 @@ namespace LastCall.EditorTools
         private static bool WantsBeer(RecipeDefinition recipe)
         {
             foreach (var band in recipe.RatioRequirements)
-                if (band.Type == IngredientType.Beer) return true;
+                if (!band.IsStyleBand && band.Type == IngredientType.Beer) return true;
             return false;
+        }
+
+        /// <summary>The fullest bottle of a named style (v5 P10 style bands). Locked recipes
+        /// mean nothing reaches this yet — it is here so the day they unlock, the bot answers
+        /// them instead of quietly reading every style band as Spirit and building nonsense.</summary>
+        private static ShelfBottle PickByStyle(Shelf shelf, string style)
+        {
+            ShelfBottle best = null;
+            foreach (var bottle in shelf.Bottles)
+            {
+                if (bottle.IsEmpty || bottle.Ingredient.Info?.Style != style) continue;
+                if (best == null || bottle.Remaining > best.Remaining) best = bottle;
+            }
+            return best;
         }
 
         /// <summary>
@@ -159,7 +186,8 @@ namespace LastCall.EditorTools
             run.BeginPull(keg.Id);
             const double step = 0.05;
             // Leaned over until the glass is nearly there, then upright to build the head.
-            for (int i = 0; i < 40 && run.ServingGlass.FillFraction < 0.78 && run.PullingId != null; i++)
+            double leanTo = visit.Order.Spec.FilledToTheTop ? 0.82 : 0.78;
+            for (int i = 0; i < 40 && run.ServingGlass.FillFraction < leanTo && run.PullingId != null; i++)
                 run.PourTilted(step, TapPour.IdealTilt);
             for (int i = 0; i < 20 && run.ServingGlass.FillFraction < 0.97 && run.PullingId != null; i++)
                 run.PourTilted(step, 6.0);
@@ -201,6 +229,11 @@ namespace LastCall.EditorTools
         {
             public int Runs, Stuck, Bankruptcies, StormOffs, CustomersFinished;
             public int Serves, Exact, Close, Wrong, CraftServes, SpeedTips, ExtraOrders;
+            // v5 P11: the base/tip split is the phase's whole point, and refusals/declines are
+            // the two new ways a serve can end.
+            public int Refused, Declined, SpecOrders, SpecFull;
+            public long BaseSum, TipSum;
+            public double SpecScoreSum, FillScoreSum;
             public int Pints, GoodPints;
             public double HeadSum;
             public double SatisfactionSum;
@@ -211,7 +244,8 @@ namespace LastCall.EditorTools
             public readonly Dictionary<int, (int reds, int closes)> ByDay =
                 new Dictionary<int, (int, int)>();
 
-            public void RecordServe(ServiceVerdict verdict, bool pint = false, double head = 0)
+            public void RecordServe(ServiceVerdict verdict, bool pint = false, double head = 0,
+                int specRequests = 0)
             {
                 Serves++;
                 if (pint)
@@ -222,9 +256,20 @@ namespace LastCall.EditorTools
                 }
                 if (verdict.Match == OrderMatch.Exact) Exact++;
                 else if (verdict.Match == OrderMatch.Close) Close++;
+                else if (verdict.Match == OrderMatch.Refused) Refused++;
+                else if (verdict.Match == OrderMatch.Declined) Declined++;
                 else Wrong++;
                 if (verdict.CraftLanded) CraftServes++;
                 if (verdict.OrdersAgain) ExtraOrders++;
+                BaseSum += verdict.BasePaid;
+                TipSum += verdict.Tip;
+                SpecScoreSum += verdict.SpecScore;
+                FillScoreSum += verdict.FillScore;
+                if (specRequests > 0)
+                {
+                    SpecOrders++;
+                    if (verdict.SpecScore >= 1.0) SpecFull++;
+                }
             }
 
             public void RecordDay(DayResult result)
@@ -259,6 +304,11 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Avg daily satisfaction | {SatisfactionSum / Math.Max(1, DaysClosed):P0} |");
                 sb.AppendLine($"| Storm-offs | {Pct(StormOffs, CustomersFinished)} |");
                 sb.AppendLine($"| Serves Exact / Close / Wrong | {Pct(Exact, Serves)} / {Pct(Close, Serves)} / {Pct(Wrong, Serves)} |");
+                sb.AppendLine($"| Refused (too little in the glass) / declined | {Pct(Refused, Serves)} / {Declined} |");
+                sb.AppendLine($"| Take: base / tip | ${BaseSum} / ${TipSum} ({Pct((int)TipSum, (int)Math.Max(1, BaseSum + TipSum))} of it tip) |");
+                sb.AppendLine($"| Avg base / tip per serve | ${(double)BaseSum / Math.Max(1, Serves):0.00} / ${(double)TipSum / Math.Max(1, Serves):0.00} |");
+                sb.AppendLine($"| Avg spec score / fill score | {SpecScoreSum / Math.Max(1, Serves):P0} / {FillScoreSum / Math.Max(1, Serves):P0} |");
+                sb.AppendLine($"| Orders with a serving spec, fully met | {Pct(SpecFull, SpecOrders)} of {SpecOrders} |");
                 sb.AppendLine($"| Garnish craft landed | {Pct(CraftServes, Serves)} |");
                 sb.AppendLine($"| Extra orders earned (of serves) | {Pct(ExtraOrders, Serves)} |");
                 sb.AppendLine($"| Extra orders earned (of exact) | {Pct(ExtraOrders, Exact)} |");

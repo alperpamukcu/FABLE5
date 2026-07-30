@@ -184,7 +184,7 @@ namespace LastCall.Core
                 MidpointRounding.AwayFromZero));
             return price == order.Price
                 ? order
-                : new DrinkOrder(order.Wanted, price, order.Garnishes);   // keep the garnish wants
+                : new DrinkOrder(order.Wanted, price, order.Spec);   // keep how they want it served
         }
 
         /// <summary>The premium a drink earns from the shelf's stock (GDD 23 §3, 2026-07-23):
@@ -468,7 +468,8 @@ namespace LastCall.Core
             // Emotion→recipe pivot (2026-07-22): the verdict is priced off the drink and the
             // garnishes they asked for, not a mood read. The emotion charge is still applied to
             // the regular's dormant stats (harmless) so the customer model stays intact.
-            var verdict = ServiceJudge.Judge(visit, matchKind, delivered, CrowdToday, Ambience);
+            var verdict = ServiceJudge.Judge(visit, matchKind, delivered, CrowdToday, Ambience,
+                served: match, shakeEnergy: ShakeEnergy);
 
             visit.Regular?.Stats.Apply(applied);
             visit.Resolve(verdict, verdict.OrdersAgain ? RollOrder() : null, _config.SavorSeconds);
@@ -480,6 +481,55 @@ namespace LastCall.Core
             DayTips += verdict.Tip;
             ResetVessels();
             return verdict;
+        }
+
+        /// <summary>
+        /// Tells a waiting customer the bar cannot make what they asked for (v5 P11, C2). They
+        /// leave without paying and the night takes a mark for it — but being told is not the
+        /// same as being ignored, so it scores above a storm-off and the stool frees up now
+        /// instead of in thirty seconds. The honest answer to a dry bottle.
+        /// </summary>
+        public ServiceVerdict DeclineOrder(CustomerVisit visit)
+        {
+            EnsurePhase(TycoonPhase.DayOpen);
+            if (visit == null) throw new ArgumentNullException(nameof(visit));
+            if (visit.State != VisitState.Waiting || !Floor.Seated.Contains(visit))
+                throw new InvalidOperationException("That customer is not waiting at the bar.");
+            if (!visit.HasOrdered)
+                throw new InvalidOperationException("That customer has not asked for anything yet.");
+
+            var verdict = ServiceJudge.Declined();
+            visit.Resolve(verdict);   // no savour: there is no drink to nurse
+            visit.Regular?.RecordVisit((int)Math.Round(verdict.Satisfaction * 3));
+            DeclinedOrders++;
+            return verdict;
+        }
+
+        /// <summary>Orders turned away this run because the bar could not make them.</summary>
+        public int DeclinedOrders { get; private set; }
+
+        /// <summary>
+        /// Whether the shelf can currently answer an order — every band it names has a bottle
+        /// with something in it. What the UI greys out, and what tells the player when saying
+        /// "we're out" is the only honest move.
+        /// </summary>
+        public bool CanMake(DrinkOrder order)
+        {
+            if (order == null) return false;
+            foreach (var band in order.Wanted.RatioRequirements)
+            {
+                bool found = false;
+                foreach (var bottle in _shelf.Bottles)
+                {
+                    if (bottle.IsEmpty) continue;
+                    bool hit = band.IsStyleBand
+                        ? bottle.Ingredient.Info?.Style == band.Style
+                        : bottle.Ingredient.Type == band.Type;
+                    if (hit) { found = true; break; }
+                }
+                if (!found) return false;
+            }
+            return true;
         }
 
         private void ResetVessels()

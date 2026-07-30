@@ -58,25 +58,63 @@
   `3 + Day` lowest-rank pourable recipes, so day 1 asks for Neat Pours and Spritzes,
   day 10 asks for Negronis and Tikis.
 
+### 3.1 How they want it served (v5 P11, 2026-07-31)
+
+An order is a drink **and a serving spec**: a subset of ice, a lemon twist, a salted or
+sugared rim, extra shaken, and filled to the top. It is **stated** — printed on the licence
+for the player to read — where the emotion layer's `FillPreference` is *inferred* from a
+hidden read. Two different questions, deliberately not merged.
+
+The spec is rolled from what the recipe can actually honour: a pint takes no garnish and
+cannot be shaken, and a *built* drink never sees a shaker (21 §12). Asking for something the
+recipe forbids would be an order nobody could fill — the one thing an order must never be.
+
+Missing any part of the spec costs **tip, never the payment**: a Gin Fizz served without the
+ice is still a Gin Fizz, and it is still paid for.
+
+**Out of stock is not out of the question (C2).** Orders roll from the bar's *unlocked menu*,
+not from its stock, so an unlocked drink whose bottle has run dry can still be asked for.
+`TycoonRun.CanMake` says whether the shelf can answer; `DeclineOrder` is the honest reply. A
+declined order pays nothing and marks the night — but being told straight is not the same as
+being ignored, and it scores above a storm-off.
+
 ## 4. The service verdict
 
 When a glass is served to a seat, `ServiceJudge` compares it to the order:
 
-| Verdict | Condition | Base pay | Anger |
-|---|---|---|---|
-| **Exact** | served recipe == ordered recipe | full price | none |
-| **Close** | wrong drink, but its dominant type matches the order's dominant band type | full price | mild ("not what I asked, but fine") |
-| **Wrong** | anything else | **half price** | real |
+**Rewritten v5 P11 (2026-07-31).** The base price is deliberately low and is what a *correct*
+drink earns; the tip is the whole reward for doing the job well. Menu price is now
+`3 + (rank+1)/2` — about half the old `4 + rank` — because at the old ladder a
+correct-but-careless serve earned nearly as much as a perfect one.
 
-Tips stack on top of base pay:
-
-| Tip | Amount | Condition |
+| Verdict | Condition | Base pay |
 |---|---|---|
-| Mood tip | **+$3…5** | the drink's charges moved the customer's intent stat the right way by ≥ 8 (scales with movement) |
-| Speed tip | **+$1** | served within the first 35% of their patience |
+| **Exact** | served recipe == ordered recipe | menu price |
+| **Close** | wrong drink, but its dominant type matches the order's dominant band type | menu price |
+| **Wrong** | anything else | **the delivered drink's own menu price** (C1) — $0 if the glass is no recipe at all |
+| **Refused** | the glass is under 35% full | **nothing**, whatever is in it |
+| **Declined** | the bar said it could not make it (§3.1) | nothing |
 
-Satisfaction (0–1, feeds the day bar §6): `Exact 0.9 / Close 0.6 / Wrong 0.2`, minus
-`0.3 × waitFraction`, plus `0.1` if the mood tip landed. Storm-off = 0.
+A style-banded recipe (21 §12) names no ingredient *type*, so it has no "family" and there is
+no Close for it: a drink specified down to its bottles is either right or wrong.
+
+**The tip** is a share of the base price, at most equal to it — a perfect serve doubles the
+drink. It is composed of three continuous scores, none of them a cliff:
+
+```
+tip     = basePrice x quality
+quality = 0.45 x speed + 0.35 x craft + 0.20 x fill
+speed   = 1 - waitFraction          (the whole patience, not a half-time window)
+craft   = share of the serving spec delivered   (a pint: its head score, 21 s10.3)
+fill    = 1 - shortfall/expected    (expected 0.80, or 0.95 if they asked for it full)
+```
+
+Patience now scales the tip **continuously**. It used to hit zero at half patience and stop
+mattering there, which made the back half of every customer's wait free.
+
+Satisfaction (0-1, feeds the day bar §6):
+`Exact 0.75 / Close 0.5 / Wrong 0.05`, plus `0.20 x (craft - 0.5)`, plus
+`0.12 x (fill - 0.5)`, minus `0.3 x waitFraction`, plus ambience. Storm-off = 0.
 
 ## 5. The extra order (the emotion layer's new job)
 
@@ -87,6 +125,14 @@ new full payment). Capped at **2 extra orders** per visit. This is deliberately 
 ("düşünüldüğü kadar zor olmamalı"): reading the ID and serving the right named drink is
 the skill, not pixel-perfect ratios. The read still matters — you cannot earn the mood tip
 or the extra order without knowing *who* you are serving.
+
+**Who gets to order twice (v5 P11).** A **first-timer orders once** — the extra round is
+what a returning face earns. The gate is otherwise unchanged: the exact drink, every part of
+the serving spec they asked for, comfortably inside patience. A *plain* order still earns no
+extra round: asking for nothing cannot be got right, and scoring the gate off the raw spec
+score handed every plain drink a free round (the sim's refill bill went up half again). An
+anonymous crowd — a run built with no archetypes — keeps the old behaviour, since "returning"
+has no meaning when nobody is remembered.
 
 ## 6. Days, the ledger, and losing
 

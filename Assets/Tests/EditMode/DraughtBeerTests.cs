@@ -455,7 +455,10 @@ namespace LastCall.Tests
             var visit = new CustomerVisit(new DrinkOrder(martini, 5), patienceSeconds: 60, decideSeconds: 0);
             var verdict = ServiceJudge.Judge(visit, OrderMatch.Exact, glass);
 
-            Assert.AreEqual(0.9, verdict.Satisfaction, 1e-9,
+            // v5 P11 recomposed satisfaction (exact 0.75 + craft 0.20 + fill 0.12). What this
+            // test is really pinning is that the HEAD term is absent for a cocktail: a full
+            // glass of spirit scores its craft and fill in full and nothing else.
+            Assert.AreEqual(0.75 + 0.20 * 0.5 + 0.12 * 0.5, verdict.Satisfaction, 1e-9,
                 "no draught mark means no head term at all");
         }
 

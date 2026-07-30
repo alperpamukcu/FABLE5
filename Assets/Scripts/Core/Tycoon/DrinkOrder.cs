@@ -5,43 +5,46 @@ using System.Linq;
 namespace LastCall.Core
 {
     /// <summary>
-    /// One named drink a customer asks for, with its menu price (GDD 23 §3). Orders come
-    /// from what the bar can actually make — the pourable recipes — so a request is always
-    /// answerable, and the only questions are craft and speed.
+    /// One named drink a customer asks for, with its menu price (GDD 23 §3) and how they want
+    /// it served (§3.1). Orders come from the bar's UNLOCKED menu — a drink nobody has bought
+    /// the recipe for is never asked for — but not from its stock: an unlocked drink whose
+    /// bottle has run dry can still be ordered, and answering "we're out" is part of the job
+    /// (v5 P11, C2).
     /// </summary>
     public sealed class DrinkOrder
     {
         public RecipeDefinition Wanted { get; }
         public int Price { get; }
 
-        /// <summary>The garnishes this customer wants on it (2026-07-22, emotion→recipe pivot):
-        /// some want it on ice, some with a twist. Reading the licence (GDD 24 §5) reveals
-        /// them; adding what they asked lifts satisfaction and the tip.</summary>
-        public IReadOnlyList<PreparationDefinition> Garnishes { get; }
+        /// <summary>How they want it served (v5 P11). Reading the licence reveals it; missing
+        /// any part of it costs tip, never the payment.</summary>
+        public ServingSpec Spec { get; }
 
-        public DrinkOrder(RecipeDefinition wanted, int price,
-            IReadOnlyList<PreparationDefinition> garnishes = null)
+        /// <summary>The garnishes on the spec — kept for the UI and the older read paths.</summary>
+        public IReadOnlyList<PreparationDefinition> Garnishes => Spec.Garnishes;
+
+        public DrinkOrder(RecipeDefinition wanted, int price, ServingSpec spec = null)
         {
             Wanted = wanted ?? throw new ArgumentNullException(nameof(wanted));
             if (price <= 0) throw new ArgumentOutOfRangeException(nameof(price));
             Price = price;
-            Garnishes = garnishes ?? Array.Empty<PreparationDefinition>();
+            Spec = spec ?? ServingSpec.Plain;
         }
 
-        /// <summary>Menu price v0 (GDD 23 §3): $4 + $1 × rank. Wealth tiers and brand
-        /// tiers modify this at the till, not on the menu.</summary>
-        public static int MenuPrice(RecipeDefinition recipe) => 4 + recipe.Rank;
+        /// <summary>
+        /// Menu price (v5 P11, GDD 23 §3): deliberately LOW. Serving the right drink pays this
+        /// and little more; the money is in serving it well, which is what the tip is for. It
+        /// was <c>4 + rank</c> — about twice this — back when the tip was a $4 rounding error
+        /// and a correct-but-careless serve earned nearly as much as a perfect one.
+        /// </summary>
+        public static int MenuPrice(RecipeDefinition recipe) => 3 + (recipe.Rank + 1) / 2;
 
-        /// <summary>The garnishes a customer can ask for (the four droppable preparations).</summary>
-        public static readonly IReadOnlyList<PreparationDefinition> GarnishPool = new[]
-        {
-            Preparations.Ice, Preparations.LemonTwist, Preparations.SaltRim, Preparations.SugarRim,
-        };
+        /// <summary>The garnishes a customer can ask for. Kept as the old name for callers.</summary>
+        public static IReadOnlyList<PreparationDefinition> GarnishPool => ServingSpec.GarnishPool;
 
         /// <summary>
-        /// Rolls an order from the day-scaled pool (stream "orders"): the lowest-rank
-        /// pourable recipes, pool growing by one each day — day 1 asks for simple things,
-        /// day 10 asks for the top of the card. Also rolls 0–2 garnish wants.
+        /// Rolls an order from the day-scaled pool (stream "orders"): the lowest-rank pourable
+        /// recipes on the bar's menu, the pool growing by one each day.
         /// </summary>
         public static DrinkOrder Roll(IReadOnlyList<RecipeDefinition> recipes, int day,
             TycoonConfig config, SeededRng rng)
@@ -55,24 +58,7 @@ namespace LastCall.Core
                 throw new InvalidOperationException("No pourable recipes to order from.");
 
             var pick = pool[rng.NextInt(pool.Count)];
-            return new DrinkOrder(pick, MenuPrice(pick), RollGarnishes(rng));
-        }
-
-        /// <summary>Half the time plain; otherwise one or two garnishes off the pool.</summary>
-        private static IReadOnlyList<PreparationDefinition> RollGarnishes(SeededRng rng)
-        {
-            int count = rng.NextInt(100) < 50 ? 0 : (rng.NextInt(100) < 65 ? 1 : 2);
-            if (count == 0) return Array.Empty<PreparationDefinition>();
-
-            var chosen = new List<PreparationDefinition>(count);
-            var bag = new List<PreparationDefinition>(GarnishPool);
-            for (int i = 0; i < count && bag.Count > 0; i++)
-            {
-                int k = rng.NextInt(bag.Count);
-                chosen.Add(bag[k]);
-                bag.RemoveAt(k);
-            }
-            return chosen;
+            return new DrinkOrder(pick, MenuPrice(pick), ServingSpec.Roll(pick, rng));
         }
     }
 }

@@ -64,9 +64,13 @@ namespace LastCall.Tests
         // ── orders & menu (GDD 23 §3) ───────────────────────────────────────────
 
         [Test]
-        public void MenuPrice_IsFourDollarsPlusRank()
+        public void MenuPrice_IsDeliberatelyLow_SoTheTipIsTheEarner()
         {
-            Assert.AreEqual(11, DrinkOrder.MenuPrice(Spritz(rank: 7)));
+            // v5 P11: was 4 + rank. Halving the ladder is the point -- a correct-but-careless
+            // serve used to earn nearly as much as a perfect one.
+            Assert.AreEqual(7, DrinkOrder.MenuPrice(Spritz(rank: 7)));
+            Assert.AreEqual(4, DrinkOrder.MenuPrice(Spritz(rank: 1)));
+            Assert.Less(DrinkOrder.MenuPrice(Spritz(rank: 7)), 4 + 7, "lower than the old shape");
         }
 
         [Test]
@@ -117,19 +121,64 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void AWrongDrink_PaysNothing_AndTipsNothing()
+        public void AWrongDrink_PaysForWhatIsActuallyInTheGlass()
         {
-            var verdict = ServiceJudge.Judge(Visit(price: 10), OrderMatch.Wrong, null);
+            // v5 P11 / C1 -- this REPLACES AWrongDrink_PaysNothing_AndTipsNothing. The notes:
+            // "Only the Base Price of the delivered drink is earned." A poured drink handed to
+            // the wrong person is still a drink; the service failed, not the pour.
+            var delivered = new RecipeMatch(Spritz(rank: 4), null);
+            var full = Glass(("gin", 0.5), ("soda", 0.4));
 
-            Assert.AreEqual(0, verdict.BasePaid, "the wrong drink pays nothing");
-            Assert.AreEqual(0, verdict.Tip);
-            Assert.AreEqual(0.05, verdict.Satisfaction, 1e-9);
+            var verdict = ServiceJudge.Judge(Visit(price: 10), OrderMatch.Wrong, full,
+                served: delivered);
+
+            Assert.AreEqual(DrinkOrder.MenuPrice(Spritz(rank: 4)), verdict.BasePaid,
+                "they pay for the thing they were handed, not the thing they asked for");
+            Assert.AreEqual(0, verdict.Tip, "nobody tips for the wrong drink");
+            Assert.LessOrEqual(verdict.Satisfaction, 0.1, "and it sours them all the same");
+        }
+
+        [Test]
+        public void AGlassThatIsNoDrinkAtAll_PaysNothing()
+        {
+            var full = Glass(("gin", 0.5), ("soda", 0.4));
+            var verdict = ServiceJudge.Judge(Visit(price: 10), OrderMatch.Wrong, full, served: null);
+
+            Assert.AreEqual(0, verdict.BasePaid, "an unidentifiable glass is worth nothing");
+        }
+
+        [Test]
+        public void ASeverelyUnderfilledGlass_IsRefused()
+        {
+            // v5 P11: the notes' "if the drink is severely underfilled, the customer may refuse
+            // to pay". Below the floor nothing else is even weighed.
+            var dribble = Glass(("gin", 0.15), ("soda", 0.10));   // a quarter of a glass
+            var verdict = ServiceJudge.Judge(Visit(price: 10), OrderMatch.Exact, dribble);
+
+            Assert.AreEqual(OrderMatch.Refused, verdict.Match);
+            Assert.AreEqual(0, verdict.Total, "they will not pay for a quarter of a drink");
+            Assert.IsFalse(verdict.OrdersAgain);
+        }
+
+        [Test]
+        public void FillCloseness_ScalesTheReward()
+        {
+            var brim = Glass(("gin", 0.5), ("soda", 0.45));
+            var thin = Glass(("gin", 0.3), ("soda", 0.25));
+
+            var good = ServiceJudge.Judge(Visit(price: 10), OrderMatch.Exact, brim);
+            var poor = ServiceJudge.Judge(Visit(price: 10), OrderMatch.Exact, thin);
+
+            Assert.AreEqual(1.0, good.FillScore, 1e-9, "a full glass meets the expectation");
+            Assert.Less(poor.FillScore, good.FillScore);
+            Assert.Less(poor.Tip, good.Tip, "a thin pour is paid for but tipped less");
+            Assert.AreEqual(good.BasePaid, poor.BasePaid, "the base price is not at stake");
         }
 
         [Test]
         public void TheGarnishCraft_LiftsSatisfaction_AndGatesTheExtraRound()
         {
-            var iced = new DrinkOrder(Spritz(), 6, new[] { Preparations.Ice });
+            var iced = new DrinkOrder(Spritz(), 6, new ServingSpec(new[] { Preparations.Ice }));
 
             var served = Glass(("gin", 0.5), ("soda", 0.5));
             served.AddPreparation(Preparations.Ice);
@@ -143,37 +192,49 @@ namespace LastCall.Tests
             Assert.Less(missed.Satisfaction, got.Satisfaction, "missing the garnish sours them");
             Assert.IsFalse(missed.OrdersAgain, "a missed garnish loses the extra round");
 
-            // The garnish moves satisfaction, not the till: the tip is speed only.
-            Assert.AreEqual(got.Tip, missed.Tip);
+            // v5 P11: the spec now moves the TILL too. Missing what they asked for costs tip
+            // -- it used to cost nothing at all, which made the craft read worth no money.
+            Assert.Less(missed.Tip, got.Tip, "the missed garnish costs tip, not payment");
+            Assert.AreEqual(got.BasePaid, missed.BasePaid, "but the drink is still paid for");
         }
 
         [Test]
-        public void TheSpeedTip_ScalesAndFadesAcrossTheWindow()
+        public void PatienceScalesTheTip_Continuously_NotAtACliff()
         {
-            var slow = Visit(patience: 60);
-            slow.Tick(30);   // 50% waited — at the window edge, no speed tip
+            // v5 P11: the tip used to hit zero at half patience and stop mattering there. It
+            // now fades the whole way down, so every second of someone's wait is worth money.
+            var brim = Glass(("gin", 0.5), ("soda", 0.45));
+            int TipAfter(double waited)
+            {
+                var v = Visit(price: 10, patience: 60);
+                if (waited > 0) v.Tick(waited);
+                return ServiceJudge.Judge(v, OrderMatch.Exact, brim).Tip;
+            }
 
-            Assert.AreEqual(0, ServiceJudge.Judge(slow, OrderMatch.Exact, null).Tip);
-            Assert.AreEqual(4, ServiceJudge.Judge(Visit(), OrderMatch.Exact, null).Tip,
-                "a serve at zero wait earns the full speed tip");
+            int fresh = TipAfter(0), half = TipAfter(30), late = TipAfter(54);
+            Assert.AreEqual(10, fresh, "a perfect serve doubles a $10 drink");
+            Assert.Greater(fresh, half, "waiting costs tip");
+            Assert.Greater(half, 0, "and half-patience still earns something -- no cliff");
+            Assert.Greater(half, late, "and it keeps fading past the old window");
         }
 
         [Test]
         public void Ambience_LiftsSatisfaction()
         {
-            var plain = ServiceJudge.Judge(Visit(), OrderMatch.Close, null);
-            var nicer = ServiceJudge.Judge(Visit(), OrderMatch.Close, null,
+            var brim = Glass(("gin", 0.5), ("soda", 0.45));
+            var plain = ServiceJudge.Judge(Visit(), OrderMatch.Close, brim);
+            var nicer = ServiceJudge.Judge(Visit(), OrderMatch.Close, brim,
                 WealthTier.Regular, ambienceBonus: 0.1);
 
-            Assert.AreEqual(0.6, plain.Satisfaction, 1e-9, "Close, no wait");
-            Assert.AreEqual(0.7, nicer.Satisfaction, 1e-9, "a nicer room pleases the same serve more");
+            Assert.AreEqual(0.1, nicer.Satisfaction - plain.Satisfaction, 1e-9,
+                "a nicer room pleases the same serve exactly that much more");
         }
 
         // ── the extra order (GDD 23 §5) ─────────────────────────────────────────
 
         /// <summary>An order with one garnish, and a glass that has it — a perfect craft serve.</summary>
         private static DrinkOrder IcedOrder(int price = 10) =>
-            new DrinkOrder(Spritz(), price, new[] { Preparations.Ice });
+            new DrinkOrder(Spritz(), price, new ServingSpec(new[] { Preparations.Ice }));
 
         private static GlassContents IcedGlass()
         {

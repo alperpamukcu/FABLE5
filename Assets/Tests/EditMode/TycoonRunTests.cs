@@ -73,14 +73,17 @@ namespace LastCall.Tests
 
             Assert.AreEqual(TycoonPhase.DayEnd, run.Phase);
             Assert.AreEqual(8, run.Floor.Finished.Count, "day 1 sends 8 customers");
-            // 8 exact serves at $6 (rank 2 → $4+$2) + $4 speed tip each (served instantly),
-            // minus $20 rent.
-            Assert.AreEqual(20 + 8 * 10 - 20, run.Money);
+            // v5 P11: 8 exact spritzes at the new $4 base, plus a tip that is a share of that
+            // base rather than a flat $4. Stated as the day's own book so the shape is pinned
+            // without re-deriving the tip formula here -- OrderSpecTests owns that.
+            Assert.AreEqual(8 * DrinkOrder.MenuPrice(run.Floor.Finished[0].Order.Wanted),
+                run.DaySales, "eight exact serves at the menu price");
+            Assert.AreEqual(20 + run.DaySales + run.DayTips - run.Config.Rent(1), run.Money);
 
             var result = run.ContinueToNextDay();
 
-            Assert.AreEqual(8 * 10, result.Income);
-            Assert.AreEqual(20, result.Expenses, "rent is the only expense today");
+            Assert.AreEqual(run.Ledger.History[0].Income, result.Income);
+            Assert.AreEqual(run.Config.Rent(1), result.Expenses, "rent is the only expense today");
             Assert.AreEqual(0, run.Ledger.DebtStrikes, "a green day");
             Assert.AreEqual(2, run.Day);
             Assert.AreEqual(TycoonPhase.DayOpen, run.Phase);
@@ -103,8 +106,9 @@ namespace LastCall.Tests
                 run.Tick(5);
             }
 
-            Assert.AreEqual(8, run.Floor.Seated[0].Order.Price,
-                "the $6 spritz sells for $8 to high rollers (×1.25)");
+            // v5 P11 halved the base ladder: a rank-2 spritz is $4 on the menu, not $6.
+            Assert.AreEqual(5, run.Floor.Seated[0].Order.Price,
+                "the $4 spritz sells for $5 to high rollers (×1.25)");
         }
 
         [Test]
@@ -154,7 +158,7 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void TheWrongDrink_PaysNothing_AndSoursTheRoom()
+        public void AGlassOfNothing_PaysNothing_AndSoursTheRoom()
         {
             var run = NewRun();
             int guard = 0;
@@ -169,8 +173,11 @@ namespace LastCall.Tests
             PourOut(run);
             var verdict = run.ServeTo(visit);
 
+            // v5 P11 / C1: pure soda is no recipe at all, so there is nothing to pay for --
+            // but a wrong drink that IS a drink now pays its own base price (see
+            // TycoonCoreTests.AWrongDrink_PaysForWhatIsActuallyInTheGlass).
             Assert.AreEqual(OrderMatch.Wrong, verdict.Match);
-            Assert.AreEqual(0, verdict.BasePaid, "the wrong drink pays nothing");
+            Assert.AreEqual(0, verdict.BasePaid, "a glass of soda is not a drink anyone sells");
             Assert.AreEqual(0, verdict.Tip);
             Assert.LessOrEqual(verdict.Satisfaction, 0.2);
         }
@@ -211,7 +218,7 @@ namespace LastCall.Tests
             Assert.AreEqual(17, cost);
 
             var result = run.ContinueToNextDay();
-            Assert.AreEqual(20 + 17, result.Expenses, "rent + the refill");
+            Assert.AreEqual(run.Config.Rent(1) + 17, result.Expenses, "rent + the refill");
         }
 
         [Test]
@@ -230,7 +237,8 @@ namespace LastCall.Tests
             Assert.AreEqual(musician + counter, run.DayUpgrades, "the invoice itemises them");
 
             var result = run.ContinueToNextDay();
-            Assert.AreEqual(20 + musician + counter, result.Expenses, "rent + the upgrades");
+            Assert.AreEqual(run.Config.Rent(1) + musician + counter, result.Expenses,
+                "rent + the upgrades");
         }
 
         [Test]
@@ -265,15 +273,19 @@ namespace LastCall.Tests
             var run = NewRun();
             PlayDayServingEveryone(run);
 
-            // 8 exact spritzes: $6 base each = $48 sales, $4 speed tip each = $32 tips.
-            Assert.AreEqual(48, run.DaySales);
-            Assert.AreEqual(32, run.DayTips);
-            Assert.AreEqual(20, run.DayRent, "day 1 rent");
+            // v5 P11: 8 exact spritzes at the new $4 base = $32 sales. The tip is no longer a
+            // flat speed bonus but a share of the base scaled by speed/spec/fill, so it now
+            // tracks the drink's price instead of standing beside it.
+            Assert.AreEqual(32, run.DaySales);
+            Assert.Greater(run.DayTips, 0, "served fast and exact, so they tip");
+            Assert.LessOrEqual(run.DayTips, run.DaySales,
+                "and the tip ceiling is the base price itself");
+            Assert.AreEqual(run.Config.Rent(1), run.DayRent, "day 1 rent");
 
             run.RefillShelf();
             Assert.AreEqual(17, run.DayStock);
-            Assert.AreEqual(48 + 32, run.DayIncome);
-            Assert.AreEqual(20 + 17, run.DayExpenses);
+            Assert.AreEqual(run.DaySales + run.DayTips, run.DayIncome);
+            Assert.AreEqual(run.Config.Rent(1) + 17, run.DayExpenses);
         }
 
         [Test]

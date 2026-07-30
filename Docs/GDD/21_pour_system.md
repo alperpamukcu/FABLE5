@@ -321,3 +321,14 @@ proportions matches nothing. A recipe uses one kind of band or the other, never 
 (mixing them double-counts shares; refused at construction). The twelve starter cocktails
 are style-banded and **locked**: present in the catalogue, invisible to the order roll and
 the matcher until unlocked, which is what kept the sim byte-identical the day they landed.
+
+## 13. A drink carries its preparation (bug fix, 2026-07-31)
+
+`GlassContents.TransferInto` moved the liquid and nothing else, so ice dropped in the tin, a
+twist, a rim — and the fact the drink was shaken at all — never reached the customer. The
+judge grades the **serving glass**, so every one of those was silently lost the moment the
+serve pour became compulsory (2026-07-28) and `ServeTo` stopped handing the shaker over whole.
+
+The tell was in the sim all along: "garnish craft landed" read **11.9%**, exactly the draught
+share, because a pint is the one drink whose preparation is stamped on the glass it is pulled
+into. Every cocktail garnish in the game was ungettable. With the transfer fixed it reads 54.7%.

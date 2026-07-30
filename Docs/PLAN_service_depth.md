@@ -103,25 +103,58 @@ covers all 27 recipes, tests 165/165, and the 200-run sim diffed **byte-identica
 against a fresh same-day baseline. Boot verified live: shelf 6, menu 15, catalogue 27,
 glassware 5, snacks 4, locked stock 7.
 
-## P11 — Orders & grading v2 (Core)
+## P11 — Orders & grading v2 (Core) ☑ 2026-07-31
 
 The judge learns the notes' payment matrix. This is the phase that rewrites pinned tests.
 
-- ☐ An order = **drink + serving spec** (subset of: ice, salt rim, sugar rim, lemon, extra
-  shaken, filled to the top) rolled from the recipe's own sensible options
-- ☐ **Low base price** per drink (economy shape: base pay small, tips are the game)
-- ☐ Verdict matrix: perfect (right drink + spec + fast) → tips high, stars high;
-  correct-but-spec-missed → paid, tip cut per miss; **wrong drink → the delivered drink's
-  base price + poor rating** (C1); severe underfill → refusal to pay (extends `MinFill`
-  into a gradient); fill closeness scales reward
-- ☐ **Patience scales tips and stars** continuously (not only the storm-off cliff)
-- ☐ **Out-of-stock requests** (C2): unlocked-but-dry drinks can roll; unfulfillable order →
-  disappointed leave + poor rating; **locked drinks never roll**
-- ☐ Multi-order sessions: beer-then-beer; drink+snack; never two alcoholic drinks at once;
-  first-timers order once (all from the notes, extending the extra-order rule)
-- ☐ Decide-time spread widened
-Gate: suite green with the rewritten pins; sim runs the new judge; report shows base/tip
-split and refusal/disappointment rates.
+- ☑ An order = **drink + serving spec** (ice, salt/sugar rim, lemon, extra shaken, filled to
+  the top) rolled from the recipe's own sensible options — a pint takes no garnish, a built
+  drink is never shaken
+- ☑ **Low base price** per drink: `3 + (rank+1)/2`, about half the old `4 + rank`
+- ☑ Verdict matrix: perfect doubles the drink; correct-but-spec-missed is paid with the tip
+  cut; **wrong drink pays the delivered drink's own base price** (C1) and $0 if the glass is
+  no recipe at all; **under 35% full is refused outright**; fill closeness scales the reward
+- ☑ **Patience scales the tip continuously** — it used to hit zero at half patience
+- ☑ **Out-of-stock requests** (C2): `CanMake` reads the shelf, `DeclineOrder` is the honest
+  reply (pays nothing, scores above a storm-off); locked drinks still never roll
+- ☑ First-timers order once; the craft gate for an extra round is unchanged otherwise
+- ☑ Decide-time spread widened (±35% → ±55%, ≈1.8–6.2s)
+
+**Gate met.** Tests **180/180** (165 → 180; five old pins rewritten, four rent pins re-derived
+from `Config.Rent` so P18's tuning cannot break them again). Sim, 200 runs against the
+pre-P11 baseline:
+
+| | baseline | P11 |
+|---|---|---|
+| Bankruptcies | 1.5% | **5.0%** |
+| Income / expenses per day | $126.8 / $125.3 | $120.6 / $118.0 |
+| Tip share of the take | ~24% | **40.6%** |
+| Garnish craft landed | 11.9% | **54.7%** |
+| Extra orders (of exact) | 10.7% | 26.2% |
+| Storm-offs | 18.5% | **29.1%** |
+| Final till median | $56 | $87 |
+
+Three findings worth carrying forward:
+
+1. **A real bug, found by the phase and fixed in it.** `TransferInto` moved liquid and not
+   preparations, so every cocktail garnish was ungettable from the day the serve pour became
+   compulsory (2026-07-28). The sim had been reporting it all along — "craft landed" was
+   *exactly* the draught share, because a pint is the one drink whose preparation is stamped
+   on the glass it is pulled into. Documented as GDD 21 §13.
+2. **The bot was a strawman, not a floor.** It ignored the serving spec, which the licence
+   prints and a player reads, so it forfeited the whole 35% spec weight of the tip: 56% spec
+   score, 2.7% of spec'd orders met. Teaching it to read the spec is what makes the floor
+   mean anything again — and it is why extra orders more than doubled.
+3. **Rent had to move with the price ladder.** Halving base prices and leaving expenses alone
+   is not "deferring tuning to P18", it is shipping half a change: the floor bot went bankrupt
+   in **43.5%** of runs. Rent came down by roughly the share the take did
+   (`15 + 5×day` → `14 + 4.5×day`), restoring a playable shape. **P18 still owns the curve.**
+
+**Flagged for P12:** storm-offs are up from 18.5% to 29.1%, driven by the extra-order rate
+more than doubling now that the craft is actually gettable. Not tuned here on purpose — P12
+removes the customer cap and puts the night on a clock, which replaces the arrival model that
+number comes from. Tuning it against a model about to be deleted would be wasted work. P18's
+target is <15%.
 
 ## P12 — Rating, clock & open flow (Core + HUD)
 

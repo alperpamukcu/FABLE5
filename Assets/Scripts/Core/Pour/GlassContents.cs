@@ -171,6 +171,16 @@ namespace LastCall.Core
                 double share = pair.Value / TotalVolume;
                 landed += target.Add(pair.Key, accuracy * leaving * share);
             }
+
+            // The drink carries its preparation with it (fixed 2026-07-31). Ice dropped in the
+            // tin, a twist, a rim, the fact that it was shaken at all — none of it reached the
+            // customer, because the judge grades the SERVING glass and only the pour crossed
+            // over. The garnish craft has been quietly ungettable on every cocktail since the
+            // serve pour became compulsory: the sim's "craft landed" figure was exactly the
+            // draught share, because a pint is the one drink whose preparation is stamped on
+            // the glass it is pulled into.
+            foreach (var step in _preparations) target.AddPreparation(step);
+
             DrainProportional(leaving);
             return landed;
         }
