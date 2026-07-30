@@ -72,12 +72,17 @@ namespace LastCall.Tests
             PlayDayServingEveryone(run);
 
             Assert.AreEqual(TycoonPhase.DayEnd, run.Phase);
-            Assert.AreEqual(8, run.Floor.Finished.Count, "day 1 sends 8 customers");
+            // v5 P12 / C4: no quota any more. How many come through the door is set by the
+            // clock and by how fast the stools turn over, so the count is stated as a shape,
+            // not a magic number -- this helper serves everyone the instant they order.
+            int served = run.Floor.Finished.Count;
+            Assert.Greater(served, 0, "an open night still sends people in");
+            Assert.IsTrue(run.Floor.IsClosingTime, "and it ends at closing time");
             // v5 P11: 8 exact spritzes at the new $4 base, plus a tip that is a share of that
             // base rather than a flat $4. Stated as the day's own book so the shape is pinned
             // without re-deriving the tip formula here -- OrderSpecTests owns that.
-            Assert.AreEqual(8 * DrinkOrder.MenuPrice(run.Floor.Finished[0].Order.Wanted),
-                run.DaySales, "eight exact serves at the menu price");
+            Assert.AreEqual(served * DrinkOrder.MenuPrice(run.Floor.Finished[0].Order.Wanted),
+                run.DaySales, "every serve was exact, at the menu price");
             Assert.AreEqual(20 + run.DaySales + run.DayTips - run.Config.Rent(1), run.Money);
 
             var result = run.ContinueToNextDay();
@@ -213,12 +218,16 @@ namespace LastCall.Tests
             var run = NewRun();
             PlayDayServingEveryone(run);
 
-            // 8 drinks × 0.7 volume from two bottles = 5.6 capacity → $17 at $3/capacity.
+            // Every drink is 0.7 of capacity out of two bottles, refilled at $3 a capacity.
+            // Stated from the night that actually happened: an open night's customer count is
+            // no longer a constant (v5 P12).
+            double poured = 0.7 * run.Floor.Finished.Count;
             int cost = run.RefillShelf();
-            Assert.AreEqual(17, cost);
+            Assert.AreEqual((int)System.Math.Ceiling(poured * run.Config.RefillPricePerCapacity),
+                cost, 1);
 
             var result = run.ContinueToNextDay();
-            Assert.AreEqual(run.Config.Rent(1) + 17, result.Expenses, "rent + the refill");
+            Assert.AreEqual(run.Config.Rent(1) + cost, result.Expenses, "rent + the refill");
         }
 
         [Test]
@@ -273,19 +282,22 @@ namespace LastCall.Tests
             var run = NewRun();
             PlayDayServingEveryone(run);
 
-            // v5 P11: 8 exact spritzes at the new $4 base = $32 sales. The tip is no longer a
-            // flat speed bonus but a share of the base scaled by speed/spec/fill, so it now
-            // tracks the drink's price instead of standing beside it.
-            Assert.AreEqual(32, run.DaySales);
+            // v5 P11: exact spritzes at the new $4 base. The tip is no longer a flat speed
+            // bonus but a share of the base scaled by speed/spec/fill, so it tracks the
+            // drink's price instead of standing beside it. v5 P12: how many spritzes is the
+            // night's business, not a constant.
+            Assert.AreEqual(
+                run.Floor.Finished.Count * DrinkOrder.MenuPrice(run.Floor.Finished[0].Order.Wanted),
+                run.DaySales);
             Assert.Greater(run.DayTips, 0, "served fast and exact, so they tip");
             Assert.LessOrEqual(run.DayTips, run.DaySales,
                 "and the tip ceiling is the base price itself");
             Assert.AreEqual(run.Config.Rent(1), run.DayRent, "day 1 rent");
 
-            run.RefillShelf();
-            Assert.AreEqual(17, run.DayStock);
+            int stock = run.RefillShelf();
+            Assert.AreEqual(stock, run.DayStock);
             Assert.AreEqual(run.DaySales + run.DayTips, run.DayIncome);
-            Assert.AreEqual(run.Config.Rent(1) + 17, run.DayExpenses);
+            Assert.AreEqual(run.Config.Rent(1) + stock, run.DayExpenses);
         }
 
         [Test]

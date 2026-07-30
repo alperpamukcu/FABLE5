@@ -414,33 +414,59 @@ namespace LastCall.Tests
         // ── the floor (GDD 23 §1) ───────────────────────────────────────────────
 
         [Test]
-        public void TheFloor_SeatsArrivals_UpToTheStools_AndFinishesTheDay()
+        public void TheFloor_SeatsArrivals_UpToTheStools_AndClosesAtClosingTime()
         {
             var rng = new RunRng("floor-test");
             var day = new BarDay(day: 1, seats: 2, TycoonConfig.Default, rng.GetStream("arrivals"));
-            Assert.AreEqual(8, day.CustomersPlanned, "day 1 sends 8 customers");
 
             CustomerVisit NewVisit() => Visit(patience: 1000);
 
             // A huge first tick can only fill the two stools — the rest wait at the door.
+            // (v5 P12: it also runs the clock straight past closing, so nobody else arrives.)
             day.Tick(10_000, NewVisit);
             Assert.AreEqual(2, day.Seated.Count);
             Assert.AreEqual(2, day.Arrived);
+            Assert.IsTrue(day.IsClosingTime, "the shift is over — the door is shut");
+            Assert.IsFalse(day.IsComplete, "but two people are still sitting there");
 
-            // Serve everyone as they sit until the day is spent.
-            int guard = 0;
-            while (!day.IsComplete)
-            {
-                Assert.Less(guard++, 100, "the day must terminate");
-                foreach (var visit in day.Seated)
-                    visit.Resolve(ServiceJudge.Judge(visit, OrderMatch.Exact, null));
-                day.Tick(60, NewVisit);
-            }
+            // Closing time does not throw anyone out mid-drink: the night ends when the last
+            // stool empties.
+            foreach (var visit in day.Seated)
+                visit.Resolve(ServiceJudge.Judge(visit, OrderMatch.Exact, null));
+            day.Tick(1, NewVisit);
 
-            Assert.AreEqual(8, day.Arrived);
-            Assert.AreEqual(8, day.Finished.Count);
+            Assert.IsTrue(day.IsComplete);
+            Assert.AreEqual(2, day.Finished.Count);
             Assert.AreEqual(0, day.Seated.Count);
             Assert.Greater(day.AverageSatisfaction, 0.5, "everyone got their drink");
+        }
+
+        [Test]
+        public void AnOpenNight_SeatsAsManyAsTheStoolsCanTurnOver()
+        {
+            // v5 P12 / C4: there is no quota. Serving fast frees stools, and a free stool is
+            // someone new through the door — so throughput is the player's, not the design's.
+            IReadOnlyList<CustomerVisit> None = null;
+            int ServedIn(double serviceSeconds)
+            {
+                var rng = new RunRng("open-night");
+                var day = new BarDay(day: 1, seats: 2, TycoonConfig.Default, rng.GetStream("arrivals"));
+                double sinceServe = 0;
+                while (!day.IsComplete)
+                {
+                    day.Tick(1.0, () => Visit(patience: 1000));
+                    sinceServe += 1.0;
+                    if (sinceServe < serviceSeconds) continue;
+                    sinceServe = 0;
+                    if (day.Seated.Count > 0)
+                        day.Seated[0].Resolve(ServiceJudge.Judge(day.Seated[0], OrderMatch.Exact, null));
+                }
+                return day.Finished.Count;
+            }
+
+            int brisk = ServedIn(4.0), slow = ServedIn(20.0);
+            Assert.Greater(brisk, slow,
+                "the faster the bar turns a stool over, the more people it gets through");
         }
     }
 }

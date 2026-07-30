@@ -134,6 +134,34 @@ score handed every plain drink a free round (the sim's refill bill went up half 
 anonymous crowd — a run built with no archetypes — keeps the old behaviour, since "returning"
 has no meaning when nobody is remembered.
 
+## 5b. The night is open (v5 P12, C4/C5, 2026-07-31)
+
+There is **no quota of customers**. The shift runs on a clock — 18:00 to 02:00, 95 seconds of
+bar time — and people keep arriving until closing. How many get through the door is decided by
+how fast the stools turn over, which is to say by how fast the player works. Closing time stops
+new arrivals; it does not throw anyone out mid-drink, so the night ends when the last stool
+empties.
+
+The machinery was always here: a full row made the next arrival wait at the door rather than
+queueing a backlog. The quota was what hid it. Measured across three service speeds (40 runs,
+10 nights each):
+
+| Seconds per drink | Served per night | Storm-offs |
+|---|---|---|
+| 5 | 11.6 | 0.2% |
+| 9 | 9.3 | 7.9% |
+| 15 | 7.8 | 26.5% |
+
+**People balk.** Someone who walks in and counts three others still waiting on a drink thinks
+better of it and keeps walking. Without that rule an open night hands a struggling bar an
+unbounded queue of people to disappoint — the door admitted anyone the instant a stool freed,
+however far behind the bar was, and a third of the night stormed off (31.4%, against 18.5%
+under the quota). With it, storm-offs sit at 19.0% and the speed spread above roughly doubles:
+serving faster does not only earn more, it *keeps the room willing to sit down*.
+
+The day number survives underneath — rent, the ledger and the strike count all still count
+days — it simply stops being what the player reads the night by.
+
 ## 6. Days, the ledger, and losing
 
 - A day sends `CustomersPerDay = 8 + Day/2` customers (cap 14). The day ends when the last
@@ -160,6 +188,22 @@ has no meaning when nobody is remembered.
 - It decides tomorrow's crowd: avg ≥ 0.75 → **High rollers** (prices ×1.25, mood tips
   +$2); 0.4–0.75 → **Regulars**; < 0.4 → **Broke crowd** (prices ×0.75, no speed tips).
   A good bar attracts customers worth serving well — reputation compounds like the shelf.
+
+**The stars are the reputation (v5 P12 / D3, 2026-07-31).** Every customer leaves **1–5 stars**
+on the way out — storm-offs included, because a storm-off is a review too. Satisfaction 0 is one
+star, not zero: the scale starts at one. The bar's **running average** across the whole run is
+what the top corner shows and what the crowd reads, replacing the TONIGHT satisfaction bar. The
+two old bars translate straight across: 0.75 satisfaction is 4.0 stars, 0.40 is 2.6.
+
+Two things now key off the standing rather than off last night's mood:
+
+- **The crowd** (§7 above). A single bad night no longer empties the room of money, and one
+  good one no longer buys a rich crowd outright — which is what a reputation should mean.
+- **The arrival rate.** A well-reviewed bar is busier: five stars closes the gaps between
+  arrivals to 75% of neutral, one star stretches them to 130%. Three stars is exactly 1.0, so
+  an unrated bar behaves as it always did.
+
+Still to come (P18): the standing gating shop unlocks, and feeding tip and extra-order odds.
 
 ## 8. The market and upgrades (day-end shop)
 

@@ -37,7 +37,11 @@ namespace LastCall.UI
         private Text _dayText;
         private Text _moneyText;
         private Text _crowdText;
-        private Image _satisfactionFill;
+        /// <summary>The bar's standing (v5 P12): the average, then five filled/empty stars.
+        /// Replaces the TONIGHT satisfaction bar (D3) — reputation is what the player steers
+        /// by now, and it carries between nights instead of resetting every morning.</summary>
+        private Text _ratingText;
+        private readonly Image[] _ratingStars = new Image[BarRating.MaxStars];
 
         // Seats at the counter (GDD 24 §4, 2026-07-22): customers sit along the bar as
         // head-and-shoulders busts, not in a bottom strip. Each bust rises/slides into its
@@ -488,16 +492,32 @@ namespace LastCall.UI
         private void RefreshTopBar()
         {
             var run = Run;
-            _dayText.text = $"DAY {run.Day}  ·  {run.Floor.Arrived}/{run.Floor.CustomersPlanned} IN";
+            // The clock, not a quota (v5 P12 / C5): a shift from 18:00 to 02:00. The day
+            // number survives underneath — rent, the ledger and the strike count all still
+            // count days — it simply stops being what the player reads the night by.
+            double hour = run.Floor.ClockHour;
+            int hh = (int)hour % 24, mm = (int)((hour - (int)hour) * 60);
+            // Kept short on purpose: the clock string is longer than the old "DAY 1" and ran
+            // straight into the till at the money's fixed x. Who is in is on the seat row.
+            _dayText.text = run.Floor.IsClosingTime
+                ? $"{hh:00}:{mm / 5 * 5:00}  ·  LAST CALL"
+                : $"{hh:00}:{mm / 5 * 5:00}  ·  NIGHT {run.Day}";
             _moneyText.text = $"${run.Money}";
             _moneyText.color = run.Money < 0 ? UITheme.ViceRed[3] : UITheme.Money;
             if (stage != null) stage.SetMoney($"${run.Money}");
             _crowdText.text = run.CrowdToday == WealthTier.HighRoller ? "HIGH ROLLERS"
                 : run.CrowdToday == WealthTier.Broke ? "BROKE CROWD" : "REGULARS";
 
-            float t = (float)run.Floor.AverageSatisfaction;
-            _satisfactionFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(236f * t), -4);
-            _satisfactionFill.color = Color.Lerp(UITheme.ViceRed[3], UITheme.Lime[3], t);
+            // The standing, as a number and as a row of stars. A half-lit star is a real
+            // half: the average is continuous, and rounding it to whole stars would hide
+            // exactly the movement the player is trying to cause.
+            double stars = run.Rating.Average;
+            _ratingText.text = stars.ToString("0.0");
+            for (int i = 0; i < _ratingStars.Length; i++)
+            {
+                double fill = System.Math.Max(0.0, System.Math.Min(1.0, stars - i));
+                _ratingStars[i].color = Color.Lerp(UITheme.Night[3], UITheme.Amber[3], (float)fill);
+            }
         }
 
         private void RefreshSeats()
@@ -787,7 +807,8 @@ namespace LastCall.UI
             // Readability rules (GDD 24 §7): short labels, big lines, no prose.
             var sb = new StringBuilder();
             sb.AppendLine($"<b>DAY {run.Day}</b>   {served} served · {stormed} left");
-            sb.AppendLine($"mood {floor.AverageSatisfaction:P0} · {CrowdName(run.CrowdToday)}");
+            sb.AppendLine($"tonight {BarRating.ExactStarsFor(floor.AverageSatisfaction):0.0}★ · " +
+                          $"bar {run.Rating.Average:0.0}★ · {CrowdName(run.CrowdToday)}");
             sb.AppendLine("<color=#9C8F80>──────────────</color>");
             sb.AppendLine($"SALES{Dots(9)}${run.DaySales}");
             sb.AppendLine($"TIPS{Dots(10)}${run.DayTips}");
@@ -1033,19 +1054,20 @@ namespace LastCall.UI
             _crowdText = NewText("Crowd", top, _body, 13, TextAnchor.MiddleLeft, UITheme.TextSecondary);
             Place(_crowdText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(180, 30), new Vector2(-90, 0));
 
-            var satLabel = NewText("SatLabel", top, _body, 12, TextAnchor.MiddleRight, UITheme.TextSecondary);
-            Place(satLabel.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(80, 30), new Vector2(120, 0));
-            satLabel.text = "TONIGHT";
-            var satBg = NewRect("SatBg", top);
-            Place(satBg, new Vector2(0.5f, 0.5f), new Vector2(240, 14), new Vector2(290, 0));
-            satBg.gameObject.AddComponent<Image>().color = UITheme.Night[1];
-            var satFill = NewRect("SatFill", satBg);
-            satFill.anchorMin = new Vector2(0, 0); satFill.anchorMax = new Vector2(0, 1);
-            satFill.pivot = new Vector2(0, 0.5f);
-            satFill.offsetMin = new Vector2(2, 2); satFill.offsetMax = new Vector2(2, -2);
-            satFill.anchoredPosition = new Vector2(2, 0);
-            _satisfactionFill = satFill.gameObject.AddComponent<Image>();
-            _satisfactionFill.raycastTarget = false;
+            // The standing: the number, then five stars. Drawn procedurally at the pixel grain
+            // -- bar chrome is never generated art.
+            _ratingText = NewText("Rating", top, _display, 14, TextAnchor.MiddleRight, UITheme.Amber[3]);
+            Place(_ratingText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(60, 30), new Vector2(150, 0));
+            for (int i = 0; i < _ratingStars.Length; i++)
+            {
+                var star = NewRect($"Star{i}", top);
+                Place(star, new Vector2(0.5f, 0.5f), new Vector2(16, 16), new Vector2(196 + i * 20, 0));
+                var img = star.gameObject.AddComponent<Image>();
+                img.sprite = ItemArt.Load("star");
+                img.preserveAspect = true;
+                img.raycastTarget = false;
+                _ratingStars[i] = img;
+            }
 
             NewButton(top, "BIN GLASS", new Vector2(1, 0.5f), new Vector2(110, 30),
                 new Vector2(-190, 0), UITheme.Night[3], OnBinClicked);

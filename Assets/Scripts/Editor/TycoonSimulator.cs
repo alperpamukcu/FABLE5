@@ -26,6 +26,39 @@ namespace LastCall.EditorTools
         [MenuItem("LastCall/Simulate Tycoon 200 Runs")]
         public static void Simulate200() => Simulate(200);
 
+        /// <summary>
+        /// The v5 P12 gate: an open night must pay a faster bar in customers. Runs the same
+        /// seeds at three service speeds and prints what each got through the door — if the
+        /// three come out level, the night is not open, it is just quiet.
+        /// </summary>
+        [MenuItem("LastCall/Measure Service Speed Response")]
+        public static void MeasureSpeedResponse()
+        {
+            var deck = DataLoader.ParseDeck(Read("bottles/base_bar.json"));
+            var recipes = DataLoader.ParseRecipes(Read("recipes/recipes.json"));
+            var archetypes = DataLoader.ParseArchetypes(Read("customers/archetypes.json"));
+
+            var sb = new StringBuilder();
+            sb.AppendLine("Service speed -> customers served (40 runs, 10-day horizon)");
+            double baseline = 0;
+            foreach (double seconds in new[] { 5.0, 9.0, 15.0 })
+            {
+                var stats = new Aggregate();
+                for (int i = 0; i < 40; i++)
+                    PlayRun($"SPD-{i:0000}", deck, recipes, archetypes, stats, seconds, 10);
+                double perNight = (double)stats.CustomersFinished / Math.Max(1, stats.NightsClosed);
+                if (baseline == 0) baseline = perNight;
+                sb.AppendLine($"  {seconds,5:0.0}s per drink : {perNight,5:0.0} served/night" +
+                              $"  ({perNight / baseline:P0} of the fastest)" +
+                              $"  storm-offs {100.0 * stats.StormOffs / Math.Max(1, stats.CustomersFinished):0.0}%");
+            }
+            Debug.Log(sb.ToString());
+            var path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Docs",
+                "tycoon_speed_response.md"));
+            File.WriteAllText(path, sb.ToString());
+            Debug.Log($"[TycoonSim] wrote {path}");
+        }
+
         public static void Simulate(int runs)
         {
             var deck = DataLoader.ParseDeck(Read("bottles/base_bar.json"));
@@ -34,7 +67,8 @@ namespace LastCall.EditorTools
 
             var stats = new Aggregate();
             for (int i = 0; i < runs; i++)
-                PlayRun($"TYC-{i:0000}", deck, recipes, archetypes, stats);
+                PlayRun($"TYC-{i:0000}", deck, recipes, archetypes, stats,
+                    DrinkBuildSeconds, DayCap);
 
             string report = stats.Report(runs);
             Debug.Log(report);
@@ -48,7 +82,7 @@ namespace LastCall.EditorTools
 
         private static void PlayRun(string seed, LoadedDeck deck,
             IReadOnlyList<RecipeDefinition> recipes, IReadOnlyList<ArchetypeDefinition> archetypes,
-            Aggregate stats)
+            Aggregate stats, double buildSeconds = DrinkBuildSeconds, int dayCap = DayCap)
         {
             var starting = deck.Cards
                 .Where(c => c.Info == null || c.Info.Tier <= 1)
@@ -57,9 +91,9 @@ namespace LastCall.EditorTools
             var run = new TycoonRun(shelf, recipes, new RunRng(seed),
                 regulars: new RegularsRegistry(archetypes));
 
-            double buildTimer = DrinkBuildSeconds;
+            double buildTimer = buildSeconds;
             int guard = 0;
-            while (run.Phase != TycoonPhase.Closed && run.Ledger.History.Count < DayCap)
+            while (run.Phase != TycoonPhase.Closed && run.Ledger.History.Count < dayCap)
             {
                 if (guard++ > 300_000) { stats.Stuck++; return; }
 
@@ -67,7 +101,7 @@ namespace LastCall.EditorTools
                 {
                     run.Tick(1.0);
                     buildTimer += 1.0;
-                    if (buildTimer < DrinkBuildSeconds) continue;
+                    if (buildTimer < buildSeconds) continue;
 
                     foreach (var visit in run.Floor.Seated)
                     {
@@ -98,6 +132,7 @@ namespace LastCall.EditorTools
                     if (run.Seats < run.Config.MaxSeats &&
                         run.Money >= run.Config.SeatPrice(run.Seats) + 40) run.BuySeat();
 
+                    stats.RecordNight(run.Floor.Elapsed, run.Rating.LastNight);
                     stats.RecordDay(run.ContinueToNextDay());
                 }
             }
@@ -234,6 +269,9 @@ namespace LastCall.EditorTools
             public int Refused, Declined, SpecOrders, SpecFull;
             public long BaseSum, TipSum;
             public double SpecScoreSum, FillScoreSum;
+            // v5 P12: the night is open, so throughput is a result rather than a setting.
+            public double NightSecondsSum, StarsSum;
+            public int NightsClosed;
             public int Pints, GoodPints;
             public double HeadSum;
             public double SatisfactionSum;
@@ -272,6 +310,13 @@ namespace LastCall.EditorTools
                 }
             }
 
+            public void RecordNight(double seconds, double stars)
+            {
+                NightSecondsSum += seconds;
+                StarsSum += stars;
+                NightsClosed++;
+            }
+
             public void RecordDay(DayResult result)
             {
                 DaysClosed++;
@@ -303,6 +348,9 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Avg income / expenses per day | ${(double)IncomeSum / Math.Max(1, DaysClosed):0.0} / ${(double)ExpenseSum / Math.Max(1, DaysClosed):0.0} |");
                 sb.AppendLine($"| Avg daily satisfaction | {SatisfactionSum / Math.Max(1, DaysClosed):P0} |");
                 sb.AppendLine($"| Storm-offs | {Pct(StormOffs, CustomersFinished)} |");
+                sb.AppendLine($"| Customers per night | {(double)CustomersFinished / Math.Max(1, NightsClosed):0.0} |");
+                sb.AppendLine($"| Served per bar-minute | {CustomersFinished * 60.0 / Math.Max(1.0, NightSecondsSum):0.00} |");
+                sb.AppendLine($"| Bar standing (avg night) | {StarsSum / Math.Max(1, NightsClosed):0.00} stars |");
                 sb.AppendLine($"| Serves Exact / Close / Wrong | {Pct(Exact, Serves)} / {Pct(Close, Serves)} / {Pct(Wrong, Serves)} |");
                 sb.AppendLine($"| Refused (too little in the glass) / declined | {Pct(Refused, Serves)} / {Declined} |");
                 sb.AppendLine($"| Take: base / tip | ${BaseSum} / ${TipSum} ({Pct((int)TipSum, (int)Math.Max(1, BaseSum + TipSum))} of it tip) |");

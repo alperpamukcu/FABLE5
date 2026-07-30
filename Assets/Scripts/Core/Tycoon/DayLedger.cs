@@ -40,6 +40,11 @@ namespace LastCall.Core
     public sealed class DayLedger
     {
         public const int StrikesToClose = 3;
+
+        /// <summary>Superseded by <see cref="BarRating.HighRollerStars"/> and
+        /// <see cref="BarRating.BrokeStars"/> (v5 P12 / D3), which are the same two lines read
+        /// on the scale the player can see. Kept because they are the satisfaction the star
+        /// bars were derived from, and the derivation is the point.</summary>
         public const double HighRollerBar = 0.75;
         public const double BrokeBar = 0.40;
 
@@ -56,6 +61,9 @@ namespace LastCall.Core
         /// <summary>Closes a day: books it, advances the strike count, sets the crowd.
         /// <paramref name="tillAfter"/> is the money left once everything is paid — the
         /// strike watches the till, not the day's net.</summary>
+        /// <param name="averageSatisfaction">Whatever the crowd is to be judged on. The run
+        /// passes the bar's RUNNING star average converted back to satisfaction (v5 P12), so
+        /// reputation carries between nights instead of resetting every morning.</param>
         public DayResult CloseDay(int day, int income, int expenses, double averageSatisfaction,
             int tillAfter)
         {
@@ -67,9 +75,10 @@ namespace LastCall.Core
 
             DebtStrikes = tillAfter < 0 ? DebtStrikes + 1 : 0;
 
-            TomorrowsCrowd = averageSatisfaction >= HighRollerBar ? WealthTier.HighRoller
-                : averageSatisfaction >= BrokeBar ? WealthTier.Regular
-                : WealthTier.Broke;
+            // v5 P12 / D3: the crowd is drawn by the bar's STANDING, not by one night's mood.
+            // A single bad night no longer empties the room of money -- and one good one no
+            // longer buys a rich crowd outright, which is what a reputation should mean.
+            TomorrowsCrowd = BarRating.CrowdFor(BarRating.ExactStarsFor(averageSatisfaction));
 
             return result;
         }

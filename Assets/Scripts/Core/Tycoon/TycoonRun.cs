@@ -508,6 +508,11 @@ namespace LastCall.Core
         /// <summary>Orders turned away this run because the bar could not make them.</summary>
         public int DeclinedOrders { get; private set; }
 
+        /// <summary>What the bar is worth to the people who drink in it (v5 P12, GDD 23 §7).
+        /// Every finished visit leaves stars; the standing sets the crowd and the arrival
+        /// rate.</summary>
+        public BarRating Rating { get; } = new BarRating();
+
         /// <summary>
         /// Whether the shelf can currently answer an order — every band it names has a bottle
         /// with something in it. What the UI greys out, and what tells the player when saying
@@ -664,7 +669,16 @@ namespace LastCall.Core
         public DayResult ContinueToNextDay()
         {
             EnsurePhase(TycoonPhase.DayEnd);
-            var result = Ledger.CloseDay(Day, DayIncome, DayExpenses, Floor.AverageSatisfaction,
+            // Every one of tonight's leavers files a rating on the way out -- storm-offs
+            // included, because a storm-off is a review too.
+            foreach (var visit in Floor.Finished) Rating.Record(visit.Satisfaction);
+            Rating.CloseNight(Floor.AverageSatisfaction);
+
+            // The crowd is drawn by the STANDING, not by tonight alone (v5 P12 / D3). The
+            // ledger still speaks satisfaction, so the running star average is handed back on
+            // its scale -- one conversion, in one place.
+            double standing = (Rating.Average - 1.0) / 4.0;
+            var result = Ledger.CloseDay(Day, DayIncome, DayExpenses, standing,
                 tillAfter: Money);
 
             if (Ledger.IsBankrupt)
@@ -677,7 +691,7 @@ namespace LastCall.Core
             CrowdToday = Ledger.TomorrowsCrowd;
             DaySales = DayTips = DayRent = DayStock = DayUpgrades = 0;
             ResetVessels();
-            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"));
+            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average);
             Phase = TycoonPhase.DayOpen;
             return result;
         }

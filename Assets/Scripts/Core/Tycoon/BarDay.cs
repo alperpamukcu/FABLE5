@@ -4,9 +4,14 @@ using System.Collections.Generic;
 namespace LastCall.Core
 {
     /// <summary>
-    /// One day on the floor (GDD 23 §1, §6): customers arrive over time into a limited
-    /// row of stools, wait with ticking patience, and leave served or fuming. The day is
-    /// over when the last planned customer has come and gone.
+    /// One night on the floor (GDD 23 §1, §6): customers arrive over time into a limited row
+    /// of stools, wait with ticking patience, and leave served or fuming.
+    ///
+    /// **The night is open (v5 P12, C4).** There is no quota of customers: the shift runs on a
+    /// clock, people keep coming until closing, and how many get through the door is decided by
+    /// how fast the stools empty — which is to say by how fast the player works. That machinery
+    /// was always here (a full row makes the next arrival wait at the door rather than queueing
+    /// a backlog); the quota was what hid it.
     ///
     /// Deliberately decoupled: BarDay owns seats and timing only. Who arrives — their
     /// order, patience roll, face and read — comes from the factory the caller passes to
@@ -16,8 +21,26 @@ namespace LastCall.Core
     {
         public int Day { get; }
         public int Seats { get; }
-        public int CustomersPlanned { get; }
         public int Arrived { get; private set; }
+
+        /// <summary>Seconds of the shift gone by.</summary>
+        public double Elapsed { get; private set; }
+
+        /// <summary>How long the shift runs.</summary>
+        public double NightSeconds { get; }
+
+        /// <summary>0 at opening, 1 at closing time.</summary>
+        public double NightFraction =>
+            NightSeconds <= 0 ? 1.0 : Math.Min(1.0, Elapsed / NightSeconds);
+
+        /// <summary>Past closing: the door is shut and nobody else comes in.</summary>
+        public bool IsClosingTime => Elapsed >= NightSeconds;
+
+        /// <summary>The wall clock the shift is shown on (GDD 23 §6), e.g. 21.5 = 21:30.
+        /// Presentation only — the floor runs on <see cref="Elapsed"/>.</summary>
+        public double ClockHour =>
+            TycoonConfig.OpeningHour
+            + (TycoonConfig.ClosingHour - TycoonConfig.OpeningHour) * NightFraction;
 
         private readonly List<CustomerVisit> _seated = new List<CustomerVisit>();
         public IReadOnlyList<CustomerVisit> Seated => _seated;
@@ -28,9 +51,11 @@ namespace LastCall.Core
 
         private readonly TycoonConfig _config;
         private readonly SeededRng _arrivals;
+        private readonly double _stars;
         private double _untilNextArrival;
 
-        public BarDay(int day, int seats, TycoonConfig config, SeededRng arrivalStream)
+        public BarDay(int day, int seats, TycoonConfig config, SeededRng arrivalStream,
+            double stars = BarRating.NeutralStars)
         {
             if (day < 1) throw new ArgumentOutOfRangeException(nameof(day));
             if (seats < 1) throw new ArgumentOutOfRangeException(nameof(seats));
@@ -38,11 +63,34 @@ namespace LastCall.Core
             Seats = seats;
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _arrivals = arrivalStream ?? throw new ArgumentNullException(nameof(arrivalStream));
-            CustomersPlanned = config.CustomersOnDay(day);
+            _stars = stars;
+            NightSeconds = config.NightSeconds;
             _untilNextArrival = NextGap();
         }
 
-        public bool IsComplete => Arrived >= CustomersPlanned && _seated.Count == 0;
+        /// <summary>The shift is over when the door has shut AND the last stool is empty:
+        /// closing time stops new arrivals, it does not throw anyone out mid-drink.</summary>
+        public bool IsComplete => IsClosingTime && _seated.Count == 0;
+
+        /// <summary>People at the bar who still have not been served.</summary>
+        public int Waiting
+        {
+            get
+            {
+                int n = 0;
+                foreach (var visit in _seated) if (visit.State == VisitState.Waiting) n++;
+                return n;
+            }
+        }
+
+        /// <summary>Whether the room looks too far behind to be worth sitting down in
+        /// (v5 P12). Someone who walks in, counts the people still waiting on a drink and
+        /// thinks better of it never becomes a storm-off — they were never a customer.</summary>
+        public bool IsTooBusyToSit => Waiting >= _config.BalkAtWaiting;
+
+        /// <summary>How many turned round at the door tonight. Not a failure in itself — a
+        /// busy bar turns people away — but a bar that turns away everyone is losing money.</summary>
+        public int Balked { get; private set; }
 
         /// <summary>Mean of every finished visit's satisfaction, storm-offs counting as 0.</summary>
         public double AverageSatisfaction
@@ -76,11 +124,19 @@ namespace LastCall.Core
                 return true;
             });
 
+            // How much of this tick falls before closing. Taken BEFORE the clock advances, and
+            // clamped: a single tick big enough to cover the whole shift must still let the
+            // night's arrivals happen inside it. Adding the time first and then asking whether
+            // the door was shut meant one 10,000-second step opened and closed the bar without
+            // a soul walking in — invisible at a 60th of a second, plain in the sim.
+            double open = Math.Max(0.0, Math.Min(seconds, NightSeconds - Elapsed));
+            Elapsed += seconds;
+
             var newlySeated = new List<CustomerVisit>();
-            if (Arrived < CustomersPlanned)
+            if (open > 0)
             {
-                _untilNextArrival -= seconds;
-                while (_untilNextArrival <= 0 && Arrived < CustomersPlanned && _seated.Count < Seats)
+                _untilNextArrival -= open;
+                while (_untilNextArrival <= 0 && _seated.Count < Seats && !IsTooBusyToSit)
                 {
                     var visit = arrivalFactory();
                     _seated.Add(visit);
@@ -88,14 +144,27 @@ namespace LastCall.Core
                     Arrived++;
                     _untilNextArrival += NextGap();
                 }
-                // A full row does not queue a backlog: the next arrival waits at the door.
-                if (_untilNextArrival <= 0) _untilNextArrival = 0;
+                // A full row does not queue a backlog: the next arrival waits at the door, and
+                // walks in the moment a stool frees. This is what makes speed pay -- it is also
+                // why nobody storms off for being kept OUTSIDE, only for being kept waiting once
+                // they are sitting down.
+                if (_untilNextArrival <= 0)
+                {
+                    // Held at the door by a room that is too far behind rather than by a full
+                    // one: that is somebody deciding against the place, and the gap restarts.
+                    if (IsTooBusyToSit && _seated.Count < Seats)
+                    {
+                        Balked++;
+                        _untilNextArrival = NextGap();
+                    }
+                    else _untilNextArrival = 0;
+                }
             }
             return newlySeated;
         }
 
         private double NextGap() =>
-            _config.ArrivalGap(Day) *
+            _config.ArrivalGap(Day, _stars) *
             (1.0 + (_arrivals.NextDouble() * 2.0 - 1.0) * TycoonConfig.ArrivalJitter);
     }
 }

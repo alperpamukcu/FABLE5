@@ -156,23 +156,47 @@ removes the customer cap and puts the night on a clock, which replaces the arriv
 number comes from. Tuning it against a model about to be deleted would be wasted work. P18's
 target is <15%.
 
-## P12 — Rating, clock & open flow (Core + HUD)
+## P12 — Rating, clock & open flow (Core + HUD) ☑ 2026-07-31
 
-- ☐ **Star rating**: each serve leaves 1–5 stars (from the same satisfaction the judge
-  already computes); floating star feedback beside the money float; nightly average;
-  running bar average with history
-- ☐ Top-right display: average (e.g. **4.3**) + filled/empty star row (procedural chrome).
-  The TONIGHT bar retires (D3); `DayLedger` wealth tiers key off the average
-- ☐ Rating drives: arrival rate, crowd wealth odds, tip odds, extra-order odds, **unlock
-  gates** for shop content
-- ☐ **Open night** (C4): `CustomersOnDay` cap removed; the night runs on a clock
-  (18:00–02:00 over the day's real seconds); arrivals keep coming while there is time and
-  room, rate set by rating + day; the day ends at closing, not at a quota
-- ☐ **Clock HUD** replaces the day counter (C5); day identity stays internal
-- ☐ Bussing beat (D2): finished customers leave a glass; click to clear
-- ☐ Sim v2: bot plays the open night; report gains served/hour, average stars, clearing
-Gate: sim shape comparison — served count now responds to bot speed (faster bot serves
-measurably more); no economy explosion (net within ±30% of v1 baseline day 1–5).
+- ☑ **Star rating**: every finished visit leaves 1–5 stars (storm-offs included); nightly
+  average, running average, per-night history (`BarRating`)
+- ☑ Top-right display: the average and five fill-lerped stars, drawn procedurally at the
+  pixel grain. The TONIGHT bar retires (D3); the crowd keys off the **running** standing
+- ☑ Rating drives the **arrival rate** (5★ → 75% of neutral gaps, 1★ → 130%) and the crowd
+  wealth tier. *Deferred to P18: tip odds, extra-order odds, shop unlock gates.*
+- ☑ **Open night** (C4): the quota is gone; the shift is 95s of bar time, arrivals keep
+  coming until closing, and closing does not evict anyone mid-drink
+- ☑ **Clock HUD** replaces the day counter (C5) — 18:00–02:00, LAST CALL at closing; the day
+  number survives underneath for rent, the ledger and the strikes
+- ☑ Sim v2: served per night, served per bar-minute, bar standing; plus a new
+  **`LastCall → Measure Service Speed Response`** that runs the same seeds at three service
+  speeds — the gate, made measurable rather than asserted
+- ☐ **Bussing beat (D2) deferred to P14.** It holds a stool until the player clears a glass,
+  which is a throughput change, and P14 is the phase that owns the serve-stage interaction.
+  Adding seat-blocking friction in the same phase that opened the night would have made both
+  unmeasurable.
+
+**Gate met.** Tests **181/181**. Throughput now answers to speed — 11.6 / 9.3 / 7.8 served per
+night at 5s / 9s / 15s per drink, a 32% spread where the quota allowed none. No economy
+explosion: income $133.8/day against the pre-P11 baseline's $126.8 (+5.5%).
+
+Two findings:
+
+1. **A tick-order bug, caught by a test.** `BarDay` advanced the clock and *then* asked whether
+   the door was shut, so a single tick spanning the whole shift opened and closed the bar with
+   nobody walking in. Invisible at a 60th of a second, plain in the sim and in any test that
+   ticks in one big step. Arrivals now run on the part of the tick that falls before closing.
+2. **An open night needs people to be able to say no.** Uncapped arrivals plus a door that
+   admits anyone the moment a stool frees is a machine for generating disappointed customers:
+   storm-offs went to 31.4%. Balking at three waiting fixed it (19.0%, against 18.5% under the
+   quota), lifted satisfaction 60% → 69%, and roughly doubled how much service speed matters.
+
+**Flagged for P18 — the economy is now too generous.** Bankruptcies are at **0%** and the floor
+bot banks a median **$469** by day 30, against $56 at the pre-P11 baseline. Two phases have each
+moved one lever for a defensible local reason (P11 eased rent to match the halved price ladder;
+P12 opened the night), and the compound result is a bar that cannot fail. P18's rebalance is no
+longer optional — but it now has a far better instrument to tune with: an open night, a balk
+threshold, a star-driven arrival rate, and a speed-response harness.
 
 ## P13 — Menu, shelf & shop presentation
 

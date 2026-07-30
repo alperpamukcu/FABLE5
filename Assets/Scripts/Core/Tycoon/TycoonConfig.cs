@@ -67,9 +67,42 @@ namespace LastCall.Core
                 0.03 * ((glasswareTier - 1) + (counterTier - 1) + (wallTier - 1))
                 + (musician ? 0.06 : 0.0));
 
-        /// <summary>Seconds between arrivals, before jitter. Busier as days pass.</summary>
-        public double ArrivalGap(int day) => Math.Max(6.0, 12.0 - 0.5 * day);
+        /// <summary>Seconds between arrivals, before jitter. Busier as days pass, and busier
+        /// again for a well-reviewed bar (v5 P12): the standing bends the gap by up to a
+        /// quarter either way, and a neutral three stars leaves it exactly as it was.</summary>
+        public double ArrivalGap(int day, double stars = BarRating.NeutralStars) =>
+            Math.Max(6.0, 12.0 - 0.5 * day) * BarRating.ArrivalRateFactor(stars);
         public const double ArrivalJitter = 0.30;
+
+        // ── the night (v5 P12, GDD 23 §6) ───────────────────────────────────────
+        /// <summary>
+        /// How long a shift runs, in seconds of bar time. The night is **open**: there is no
+        /// quota of customers any more (C4). People keep arriving until closing, and how many
+        /// of them get through the door is set by how fast the stools empty — which is to say,
+        /// by how fast the player works. That was already the machinery (a full bar makes the
+        /// next arrival wait at the door); the quota was what hid it.
+        ///
+        /// Set so the OPEN night lands on the curve the quota used to draw, rather than above
+        /// it: at 95s a day-1 shift (11.5s gaps) admits about eight, and a day-12 shift (the
+        /// 6s floor) about fifteen — against the old fixed 8 and its cap of 14. At 120s it was
+        /// 17.5 a night and the floor bot banked $992 by day 30 against $87; removing a cap is
+        /// meant to make throughput the player's business, not to hand it to them.
+        /// </summary>
+        public double NightSeconds { get; } = 95.0;
+
+        /// <summary>The clock the night is shown on (GDD 23 §6): a shift from 18:00 to 02:00.
+        /// Presentation only — the run's own time is <see cref="NightSeconds"/>.</summary>
+        public const int OpeningHour = 18, ClosingHour = 26;   // 26 = 02:00 next day
+
+        /// <summary>
+        /// How many people can already be waiting on a drink before the next one through the
+        /// door takes one look and keeps walking (v5 P12). Without it an open night hands a
+        /// struggling bar an unbounded queue of people to disappoint: the door admitted anyone
+        /// the instant a stool freed, however far behind the bar was, and a third of the night
+        /// stormed off. Real rooms balk. It also tightens the loop the notes actually asked
+        /// for — serve faster, fewer people waiting, more of them willing to sit.
+        /// </summary>
+        public int BalkAtWaiting { get; } = 3;
 
         // ── patience (GDD 23 §2, balance v1) ────────────────────────────────────
         public double PatienceSeconds(int day) => Math.Max(22.0, 50.0 - 2.5 * day);
@@ -98,7 +131,6 @@ namespace LastCall.Core
         public double SavorSeconds { get; }
 
         // ── the day (GDD 23 §6) ─────────────────────────────────────────────────
-        public int CustomersOnDay(int day) => Math.Min(14, 8 + day / 2);
 
         /// <summary>
         /// Balance v1: rent climbs hard enough to make a red day a real threat for a bar that
