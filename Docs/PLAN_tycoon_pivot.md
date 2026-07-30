@@ -1,5 +1,10 @@
 # PLAN — The Tycoon Pivot (v4)
 
+> **STATUS 2026-07-31 — SHIPPED (P0–P7); REMAINING ITEMS ABSORBED.** This plan is a record.
+> The open P8/P9 items (customer bodies and gauges, ID card v3, stage art, SFX, tutorial,
+> sim tuning, arrival pacing, save/reset) moved into `Docs/PLAN_service_depth.md` (v5),
+> which is the live staging document — see its absorption table.
+
 Source of truth for the v4 transformation (GDD 23/24). Work happens directly on `main`;
 every phase lands green (all tests) and playable. The old quota loop stays runnable until
 P7 demolition — the same parallel-build/late-delete strategy that carried the pour pivot.

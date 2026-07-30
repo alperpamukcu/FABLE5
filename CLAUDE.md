@@ -3,9 +3,13 @@
 Unity 6000.3.10f1 (URP) bar-tycoon about reading customers and running the till.
 `Docs/GDD/` is the design source of truth — check the relevant GDD module before implementing
 or changing any game rule. **Modules 23 and 24 own the current loop** (tycoon pivot v4,
-2026-07-22, staged in `Docs/PLAN_tycoon_pivot.md`); 19–22 survive as subsystem specs where
-23/24 reference them, and 21 §10 owns draught beer. Modules 00–13 predate the pivots: treat
-anything there as historical unless 23/24 repeat it.
+shipped). **The live staging document is `Docs/PLAN_service_depth.md` (v5)** — it carries the
+conflict ledger for the 2026-07-31 revision notes and the phase order; consult it before
+starting new feature work. 19–22 survive as subsystem specs where 23/24 reference them, and
+21 §10 owns draught beer. Modules 00–13 predate the pivots: treat them as historical **except
+the sections live code still cites** — 01 §3 (ingredient types), 02 §4 (the recipe table,
+parity-tested), 12 (reduced motion), 13 (determinism & seeding); 14 §5 / 15 §4 / 16 §1 / 18
+likewise carry the palette, camera, font and stage specs the UI is built on.
 
 ## Architecture (enforced by asmdefs)
 
