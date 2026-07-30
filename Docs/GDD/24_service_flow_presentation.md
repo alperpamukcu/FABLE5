@@ -139,6 +139,28 @@ finished moving for the frame (it used to be placed before the cap animation sli
 the tin, so it trailed a frame behind). Verified against the RectTransform itself rather than
 against the same maths: 0.00 px apart at every angle, in both stages, and while moving.
 
+**The head is fluid too (2026-07-30).** Player note: *"the foam still looks like a rectangle,
+it doesn't look like liquid."* It was one: a tiled `Image` laid over the beer, with straight
+sides, square corners, and a rule that it *"never rotates — it only narrows"*. Foam is now made
+of the **same particles as the beer** in the same solver (`MetaballFluid`), so beer and head
+share one thresholded surface and there is no second object to have edges. What separates them:
+
+- **Foam is light** — it feels about a third of gravity, so a glass of pure froth still fills
+  from the bottom rather than clinging to the rim.
+- **Beer and foam sort** — a symmetric minimum-distance constraint cannot separate by density,
+  so an overlapping unlike pair is pushed apart *along gravity*, foam up. Self-limiting: once
+  the layers part they stop being neighbours. Measured at a half pint: foam sits 75 px above the
+  beer standing, 23 px at a 55° lean, and never goes under.
+- **Froth is not a lattice** — foam relaxes only part way against foam and gets its own
+  per-particle ceiling, because a single shared ceiling is a hard clamp that drew a **ruler**
+  across the head. That one line was most of the flat top edge (crest relief 1.6 px → 3.9 px).
+- **Bubbles are coarse** — the head draws with half the particles at 1.5× the radius, so its
+  relief is at a size the eye can see rather than smaller than one particle.
+
+The head therefore leans, wobbles, crowns over the rim and melts into the beer along an
+irregular line, because it is liquid. Cost went **down**: 2.3 ms for a full pint against the
+4.6 ms the tap measured before, since foam needs fewer particles than the beer it displaces.
+
 The fluid is a 2D metaball drawn on a UI RawImage — a CPU droplet cloud feeding a threshold
 shader, chosen over a Shuriken/RenderTexture rig because it composites cleanly inside the
 ScreenSpace-Overlay Canvas and shares the tilt-pour's local coordinates. Solids (ice/lemon

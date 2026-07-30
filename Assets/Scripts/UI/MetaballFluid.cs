@@ -79,6 +79,48 @@ namespace LastCall.UI
         private const float MinProfile = 0f;      // the interior is shaped by the profile alone now             // below this a particle is simply at rest
         private const float WallFriction = 0.72f;     // (kept for API parity)
 
+        // ── foam (GDD 21 §10, 2026-07-30) ───────────────────────────────────────
+        // The head on a pint used to be a separate rectangular Image laid over the beer, which
+        // is why it read as a rectangle and not as a liquid: it had straight sides, square
+        // corners, and it refused to rotate with the glass. Foam is now made of the SAME
+        // particles as the beer, so the two share one metaball surface and the head is a
+        // wobbling, bubbled crown that leans when the glass leans — because it is the same
+        // body of fluid, differing only in what it is made of.
+        private const byte KindBeer = 0, KindFoam = 1;
+        /// <summary>Foam is mostly air, so it barely falls — but it does fall, which is what lets
+        /// a glass of pure froth fill from the bottom instead of sticking to the rim.</summary>
+        private const float FoamGravity = 0.34f;
+        /// <summary>How hard beer and foam separate when they overlap. This, not buoyancy, is what
+        /// puts the head on top: a symmetric minimum-distance constraint cannot sort by density,
+        /// so overlapping unlike particles are pushed apart ALONG GRAVITY — foam up, beer down.
+        /// It is self-limiting, costing nothing once the two have separated.</summary>
+        private const float FoamSort = 0.55f;
+        /// <summary>Bubbles are coarser than beer, so foam draws with a bigger, varied blob: the
+        /// crest breaks into rounds instead of running as a smooth line.</summary>
+        private const float FoamRadius = PoolRadius * 1.5f;
+        /// <summary>
+        /// Foam is drawn with FEWER, BIGGER blobs than the same volume of beer. Given the beer's
+        /// particle count the head tiles the glass densely and its top row comes out flat however
+        /// it is packed — the bumps are smaller than one particle. Coarser bubbles put the relief
+        /// at a size the eye can see. The volume is unchanged: the drawn surface is set by the
+        /// blob radius, and radius² rises to cover the count that was dropped.
+        /// </summary>
+        private const float FoamCountScale = 0.5f;
+        /// <summary>
+        /// How far the head may stand PROUD of the vessel's rim. A real head crowns over the
+        /// glass; clamped to the same ceiling as the beer it was planed dead flat instead, which
+        /// measured 1.6 px of relief across the whole crest — a rectangle by another name.
+        /// </summary>
+        private const float FoamCrown = 9f;
+        /// <summary>
+        /// Foam relaxes only part way. The full-strength minimum-distance constraint settles
+        /// particles into a near-crystalline lattice, which is right for a liquid — its surface
+        /// really is flat — and wrong for froth, which is a heap of unlike bubbles. Under-relaxing
+        /// leaves the packing irregular, so the head is lumpy where the beer is smooth. Free: it
+        /// is a multiply inside a branch the sorting already needs.
+        /// </summary>
+        private const float FoamSlack = 0.45f;
+
         // Viewport margins: room around the vessel for splashes and the falling stream column.
         private const float StreamMargin = 110f;
         private const float SplashMargin = 40f;
@@ -99,7 +141,11 @@ namespace LastCall.UI
         private readonly float[] _ppy = new float[MaxPool];
         private readonly float[] _qx = new float[MaxPool];   // predicted (pre-constraint) position
         private readonly float[] _qy = new float[MaxPool];
+        /// <summary>Beer or foam. Both live in the same arrays and the same solver — the head is
+        /// not a separate system, it is the same fluid made of lighter stuff.</summary>
+        private readonly byte[] _kind = new byte[MaxPool];
         private int _pn;                               // live pool particles
+        private int _foamN;                            // how many of them are foam
 
         // The forward half of a 3×3 neighbourhood: this cell, then the four that come after it
         // in scan order. Every neighbouring pair is met exactly once across the whole sweep.
@@ -158,6 +204,7 @@ namespace LastCall.UI
         private static readonly int IdHeightCnt = Shader.PropertyToID("_HeightCount");
         private static readonly int IdThreshold = Shader.PropertyToID("_Threshold");
         private static readonly int IdEdgeWidth = Shader.PropertyToID("_EdgeWidth");
+        private static readonly int IdFoamColor = Shader.PropertyToID("_FoamColor");
 
         public MetaballFluid(RectTransform surface)
         {
@@ -239,14 +286,25 @@ namespace LastCall.UI
             _material.SetColor(IdColor, c);
         }
 
+        /// <summary>The colour of the foam particles (GDD 21 §10). Beer and its head are one
+        /// surface; only what they are made of differs, and this is that difference.</summary>
+        public void SetFoamColor(Color c)
+        {
+            if (_material == null) return;
+            _material.SetColor(IdFoamColor, c);
+        }
+
         /// <summary>
         /// Sets the vessel interior the liquid lives in (surface-local px) and how full it is.
         /// The container is [minX,maxX]×[bottomY,rimY] rotated by <paramref name="angleRad"/>
         /// around its centre; the particle count tracks <paramref name="fillFrac"/>. Called
         /// every frame so the container follows the vessel and the liquid collides with it.
         /// </summary>
+        /// <param name="headFrac">Foam riding on top of the beer, in the same glass-fractions as
+        /// <paramref name="fillFrac"/> (GDD 21 §10 — head and beer share the glass). It is drawn
+        /// as buoyant particles in this same body, never as a lid laid over it.</param>
         public void SetPool(float minX, float maxX, float bottomY, float rimY,
-            float fillFrac, float angleRad = 0f)
+            float fillFrac, float angleRad = 0f, float headFrac = 0f)
         {
             float pcx = _cx, pcy = _cy;
             bool had = _poolSet;
@@ -256,7 +314,10 @@ namespace LastCall.UI
             _halfH = Mathf.Max((rimY - bottomY) * 0.5f, 4f);
             _angle = angleRad;
             fillFrac = Mathf.Clamp01(fillFrac);
-            _fillTopY = bottomY + (rimY - bottomY) * fillFrac;
+            headFrac = Mathf.Clamp(headFrac, 0f, 1f - fillFrac);
+            // The stream lands on whatever is on top — foam, if there is any — so the surface the
+            // drops merge into is the top of the WHOLE body, not the beer line inside it.
+            _fillTopY = bottomY + (rimY - bottomY) * (fillFrac + headFrac);
             _poolSet = true;
             FitViewport();   // draw only over the vessel + its stream/splash margin
 
@@ -289,24 +350,76 @@ namespace LastCall.UI
             // each end. Counting it once left every vessel drawing a constant sliver high, which
             // is a constant no per-vessel multiplier can cancel — it flattered a half-full glass
             // and could not be told apart from a full one running short.
-            float fillH = Mathf.Max(_fillTopY - bottomY - 2f * PoolRadius * FaceOffset, 0f);
-            float widthScale = AverageProfile(fillFrac);
-            int target = Mathf.Clamp(
-                Mathf.RoundToInt((2f * Mathf.Max(_halfW - PoolRadius * SideOffset, 1f) * widthScale)
-                                 * fillH / (Spacing * Spacing * PackedArea) * _density),
+            // Beer fills to its own line; beer and foam together fill to the top of the body. Each
+            // kind is given the particles its own slice of the vessel holds, so the head genuinely
+            // takes the top of the glass instead of being painted over a full pint.
+            int beerTarget = CountUpTo(fillFrac, bottomY, rimY, out float beerLineLocal);
+            int totalTarget = CountUpTo(fillFrac + headFrac, bottomY, rimY, out _fillTopLocal);
+            int foamTarget = Mathf.Clamp(
+                Mathf.RoundToInt((totalTarget - beerTarget) * FoamCountScale), 0, MaxPool - beerTarget);
+
+            bool seeding = _pn == 0 && totalTarget > 0;   // a fresh body, not a top-up
+            Reconcile(KindBeer, beerTarget, beerLineLocal, seeding);
+            Reconcile(KindFoam, foamTarget, _fillTopLocal, seeding);
+        }
+
+        /// <summary>Particles the vessel holds up to <paramref name="frac"/> of its interior
+        /// height, and the container-local y that line sits at.</summary>
+        private int CountUpTo(float frac, float bottomY, float rimY, out float topLocal)
+        {
+            frac = Mathf.Clamp01(frac);
+            float h = Mathf.Max((rimY - bottomY) * frac - 2f * PoolRadius * FaceOffset, 0f);
+            topLocal = -_halfH + h;
+            return Mathf.Clamp(
+                Mathf.RoundToInt((2f * Mathf.Max(_halfW - PoolRadius * SideOffset, 1f) * AverageProfile(frac))
+                                 * h / (Spacing * Spacing * PackedArea) * _density),
                 0, MaxPool);
-            _fillTopLocal = -_halfH + fillH;
-            bool seeding = _pn == 0 && target > 0;   // a fresh body, not a top-up
-            while (_pn < target && _pn < MaxPool)
+        }
+
+        /// <summary>
+        /// Brings one kind's particle count to its target. Growth rains in at that kind's own
+        /// surface line; shrinkage takes the HIGHEST particle of the kind, so a settling head
+        /// comes off the top of the glass rather than tearing a hole through the middle of it.
+        /// </summary>
+        private void Reconcile(byte kind, int target, float lineLocal, bool seeding)
+        {
+            int have = kind == KindFoam ? _foamN : _pn - _foamN;
+            while (have < target && _pn < MaxPool)
             {
                 _px[_pn] = Random.Range(-_halfW * 0.6f, _halfW * 0.6f);   // local frame
                 _py[_pn] = seeding
-                    ? Random.Range(-_halfH, _fillTopLocal)     // spread through the volume
-                    : _fillTopLocal + Random.Range(-6f, 10f);  // a top-up rains in at the surface
+                    ? Random.Range(-_halfH, Mathf.Max(lineLocal, -_halfH + 1f))
+                    : lineLocal + Random.Range(-6f, 10f);
                 _vx[_pn] = 0f; _vy[_pn] = seeding ? 0f : -40f;
-                _pn++;
+                _kind[_pn] = kind;
+                if (kind == KindFoam) _foamN++;
+                _pn++; have++;
             }
-            if (_pn > target) _pn = Mathf.Max(target, 0);   // served/emptied: drop the top ones
+            while (have > target)
+            {
+                int top = -1;
+                for (int i = 0; i < _pn; i++)
+                    if (_kind[i] == kind && (top < 0 || _py[i] > _py[top])) top = i;
+                if (top < 0) break;
+                RemoveAt(top);
+                have--;
+            }
+        }
+
+        /// <summary>Drops one particle, filling its slot with the last live one.</summary>
+        private void RemoveAt(int i)
+        {
+            int last = _pn - 1;
+            if (_kind[i] == KindFoam) _foamN--;
+            if (i != last)
+            {
+                _px[i] = _px[last]; _py[i] = _py[last];
+                _vx[i] = _vx[last]; _vy[i] = _vy[last];
+                _ppx[i] = _ppx[last]; _ppy[i] = _ppy[last];
+                _qx[i] = _qx[last]; _qy[i] = _qy[last];
+                _kind[i] = _kind[last];
+            }
+            _pn = last;
         }
 
         /// <summary>Mean silhouette width over the filled part of the vessel (0..fillFrac).</summary>
@@ -320,7 +433,7 @@ namespace LastCall.UI
             return sum / steps;
         }
 
-        public void ClearPool() { _poolSet = false; _pn = 0; }
+        public void ClearPool() { _poolSet = false; _pn = 0; _foamN = 0; }
 
         /// <summary>
         /// Where the drawn liquid actually ends, in surface space — taken from the particles
@@ -432,10 +545,17 @@ namespace LastCall.UI
             for (int i = 0; i < _pn; i++)
             {
                 _ppx[i] = _px[i]; _ppy[i] = _py[i];
-                _vx[i] += accX * dt; _vy[i] += accY * dt;
+                // Foam is mostly air: it feels a fraction of the weight beer does.
+                float g = _kind[i] == KindFoam ? FoamGravity : 1f;
+                _vx[i] += accX * g * dt; _vy[i] += accY * g * dt;
                 _px[i] += _vx[i] * dt; _py[i] += _vy[i] * dt;
                 _qx[i] = _px[i]; _qy[i] = _py[i];   // predicted, before the constraints
             }
+
+            // Gravity's own direction in the container's frame — the axis foam rises along and
+            // beer sinks along. Taken from gravity alone, not from accX/accY, so a knock to the
+            // glass shakes the head about without turning the stack upside down.
+            float downX = sn, downY = -c;
 
             // Incompressibility: relax a minimum-distance constraint a few passes — no two
             // particles closer than Spacing — so the body packs up to the fill line and never
@@ -474,9 +594,27 @@ namespace LastCall.UI
                             if (r2 >= minD2 || r2 < 1e-4f) continue;
                             float r = Mathf.Sqrt(r2);
                             float push = (minD - r) * 0.5f;   // no over-relaxation: >1 pumped energy into the fluid
+                            // Froth is a heap of unlike bubbles, not a lattice: relaxing foam
+                            // against foam only part way leaves the packing irregular, which is
+                            // what gives the head a lumpy crest instead of a planed one.
+                            if (_kind[i] == KindFoam && _kind[j] == KindFoam) push *= FoamSlack;
                             float nx = dx / r * push, ny = dy / r * push;
                             pxi -= nx; pyi -= ny;
                             _px[j] += nx; _py[j] += ny;
+
+                            // Beer and foam do not merely avoid each other, they SORT: an
+                            // overlapping unlike pair is separated along gravity, foam toward the
+                            // top. The plain minimum-distance constraint above is symmetric and
+                            // cannot do this on its own — it would leave the head stirred through
+                            // the beer forever. Self-limiting: once the two layers part they stop
+                            // being neighbours and this costs nothing.
+                            if (_kind[i] != _kind[j])
+                            {
+                                float ex = push * FoamSort;
+                                float si = _kind[i] == KindFoam ? -1f : 1f;
+                                pxi += downX * ex * si; pyi += downY * ex * si;
+                                _px[j] -= downX * ex * si; _py[j] -= downY * ex * si;
+                            }
                         }
                     }
                     _px[i] = pxi; _py[i] = pyi;
@@ -570,8 +708,18 @@ namespace LastCall.UI
             float iy = Mathf.Max(_halfH - PoolRadius * FaceOffset, 2f);
             for (int i = 0; i < _pn; i++)
             {
+                // Foam is allowed to stand proud of the rim — a head crowns over the glass, and
+                // holding it under the same ceiling as the beer is what flattened it into a lid.
+                //
+                // Each bubble gets its OWN ceiling. A single shared one is a hard clamp applied
+                // after every relaxation pass, so every particle that tried to rise was slammed
+                // to exactly the same y: the flat top edge was not the packing settling, it was
+                // this line drawing a ruler across the head (measured 2026-07-30).
+                float ceil = _kind[i] == KindFoam
+                    ? iy + FoamCrown * (0.30f + 0.70f * (i * 0.6180339f % 1f))
+                    : iy;
                 float ly = _py[i];
-                if (ly < -iy) ly = -iy; else if (ly > iy) ly = iy;
+                if (ly < -iy) ly = -iy; else if (ly > ceil) ly = ceil;
                 float w = HalfWidthAt((ly + iy) / (2f * iy), ix);   // the wall at this height
                 float lx = _px[i];
                 if (lx < -w) lx = -w; else if (lx > w) lx = w;
@@ -682,7 +830,12 @@ namespace LastCall.UI
             {
                 ToSurface(_px[i], _py[i], out float sx, out float sy);
                 var uv = ToUv(sx, sy);
-                _dropData[count++] = new Vector4(uv.x, uv.y, r, 1f);
+                // Foam draws bigger and unevenly, and flags itself in w so the shader can colour
+                // it: the golden ratio gives each bubble a stable size that does not march in
+                // step with its neighbours, so the crest breaks into rounds.
+                bool foam = _kind[i] == KindFoam;
+                float rr = foam ? FoamRadius * (0.80f + 0.40f * (i * 0.7548777f % 1f)) : r;
+                _dropData[count++] = new Vector4(uv.x, uv.y, rr, foam ? 2f : 1f);
             }
             for (int i = 0; i < MaxDrops && count < RenderMax; i++)
             {
@@ -703,7 +856,7 @@ namespace LastCall.UI
         public void Clear()
         {
             for (int i = 0; i < MaxDrops; i++) _drops[i].Active = false;
-            _pn = 0; _emitAccum = 0f;
+            _pn = 0; _foamN = 0; _emitAccum = 0f;
             Upload();
         }
 

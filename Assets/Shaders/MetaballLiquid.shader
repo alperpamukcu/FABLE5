@@ -10,6 +10,7 @@ Shader "LastCall/MetaballLiquid"
     {
         [PerRendererData] _MainTex ("Sprite", 2D) = "white" {}
         _Color        ("Liquid Color", Color) = (0.30, 0.60, 1.0, 0.95)
+        _FoamColor    ("Foam Color",   Color) = (0.97, 0.94, 0.87, 1.0)
         _EdgeColor    ("Edge Color",   Color) = (1.0, 1.0, 1.0, 1.0)
         _Threshold    ("Threshold",    Range(0.01, 4)) = 0.60
         _EdgeWidth    ("Edge Width",   Range(0.001, 1.0)) = 0.18
@@ -84,6 +85,7 @@ Shader "LastCall/MetaballLiquid"
 
             sampler2D _MainTex;
             fixed4 _Color;
+            fixed4 _FoamColor;
             fixed4 _EdgeColor;
             float  _Threshold;
             float  _EdgeWidth;
@@ -152,9 +154,16 @@ Shader "LastCall/MetaballLiquid"
 
             // Sum of all droplet contributions at a uv, using a compact smooth kernel so the
             // blobs have finite reach and merge cleanly instead of leaving long metaball tails.
-            float dropField (float2 uv)
+            //
+            // Foam (w >= 1.5) is summed a SECOND time into its own accumulator (2026-07-30).
+            // Both kinds feed the one field that gets thresholded, so beer and its head share a
+            // single continuous surface — there is no seam between them and no rectangle, because
+            // there is no second object. The foam accumulator only decides the COLOUR at each
+            // pixel, which is the only way the two actually differ.
+            void dropFields (float2 uv, out float total, out float foam)
             {
-                float field = 0.0;
+                total = 0.0;
+                foam  = 0.0;
                 int n = (int)_DropCount;
                 for (int i = 0; i < MAX_DROPS; i++)
                 {
@@ -166,9 +175,10 @@ Shader "LastCall/MetaballLiquid"
                     float  dist2 = dot(dpx, dpx);
                     float  r = max(d.z, 0.001);
                     float  t = saturate(1.0 - dist2 / (r * r));
-                    field += t * t;   // squared -> soft shoulders that fuse when overlapping
+                    float  c = t * t;   // squared -> soft shoulders that fuse when overlapping
+                    total += c;
+                    if (d.w > 1.5) foam += c;
                 }
-                return field;
             }
 
             // The pooled liquid: clipped to the glass interior, its top a live water surface
@@ -188,26 +198,35 @@ Shader "LastCall/MetaballLiquid"
             {
                 float2 uv  = IN.texcoord;
                 float2 ruv = rotUv(uv);                     // the pool's tilted frame
-                float field = poolField(ruv) + dropField(uv);
+                float dropTotal, dropFoam;
+                dropFields(uv, dropTotal, dropFoam);
+                float field = poolField(ruv) + dropTotal;
 
                 // Antialiased threshold edge from the field's screen-space rate of change.
                 float aa = fwidth(field) + 1e-4;
                 float a  = smoothstep(_Threshold - aa, _Threshold + aa, field);
                 if (a <= 0.001) discard;
 
+                // How much of this pixel is foam rather than beer. Scaled past 1 so the boundary
+                // is a short blend and not a long muddy gradient: a head has a definite underside.
+                float fm = saturate(dropFoam / max(dropTotal, 1e-4) * 1.6);
+
                 // A bright rim right at the surface tension line.
                 float rim = 1.0 - saturate((field - _Threshold) / max(_EdgeWidth, 1e-4));
                 rim = pow(rim, 1.5);
-                fixed4 col = lerp(_Color, _EdgeColor, rim * 0.85);
+                fixed4 body = lerp(_Color, _FoamColor, fm);
+                fixed4 col = lerp(body, _EdgeColor, rim * 0.85);
 
                 // A bright band riding just under the moving water line — the light on the
                 // surface — plus a soft sheen through the body so it reads as wet volume.
+                // Foam is matte and full of air: it takes almost none of that wet sheen, which is
+                // most of what stops it reading as pale beer.
                 float surf = surfaceY(ruv.x);
                 float band = saturate(1.0 - abs(ruv.y - surf) * 26.0);
                 float sheen = saturate((ruv.y - surf) * 5.0 + 0.5);
-                col.rgb += (band * 0.5 + sheen * 0.18) * _Highlight;
+                col.rgb += (band * 0.5 + sheen * 0.18) * _Highlight * (1.0 - fm * 0.85);
 
-                col.a = a * _Color.a * IN.color.a;
+                col.a = a * lerp(_Color.a, _FoamColor.a, fm) * IN.color.a;
                 return col;
             }
             ENDCG

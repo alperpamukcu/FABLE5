@@ -19,11 +19,7 @@ namespace LastCall.UI
 
         // The tap (GDD 21 §10): a font you pull the handle on, over the pint it fills. There is
         // no shaker in this stage and no aiming — the whole skill is how far the handle is held.
-        private RectTransform _tapPanel, _tapSurface, _tapHandle, _tapGlass, _tapHeadBand, _tapBandMark, _tapBandMarkHigh;
-        private RectTransform _tapHeadCrown;
-        /// <summary>Foam drawn at the keys' grain, so it belongs to the same picture.</summary>
-        private const float FoamPixelScale = 0.5f;
-        private const float FoamCrownHeight = 20f;
+        private RectTransform _tapPanel, _tapSurface, _tapHandle, _tapGlass, _tapBandMark, _tapBandMarkHigh;
         private bool _pouringNow;
         private MetaballFluid _tapFluid;
         private Image _tapKeg;
@@ -31,11 +27,19 @@ namespace LastCall.UI
         private IngredientCard _tapKegCard;
         private bool _glassHeld;
         private float _glassTilt;        // degrees from upright
-        private float _glassGrabY;       // pointer y when the glass was taken
         private Vector2 _tapGlassRest, _tapGlassPour;
-        /// <summary>Screen units of upward drag that lays the glass right over. The same grip the
-        /// bottle uses in the shaker stage: lift and it leans (GDD 21 §10.2).</summary>
-        private const float TiltDrag = 190f;
+        /// <summary>
+        /// How fast the glass follows the hand. High enough to feel direct, low enough that a
+        /// pixel of pointer jitter is not a degree of lean — the head is decided in the last few
+        /// degrees of the pour, so the last few degrees have to be holdable (2026-07-30).
+        /// </summary>
+        private const float TiltFollow = 22f;
+        /// <summary>The lean that fills cleanly, marked for the player (GDD 21 §10.2 — the stream
+        /// runs down the wall around 45°). The band, not the point: the foam curve is flat here,
+        /// which is the whole reason this is where the glass should sit while it fills.</summary>
+        private const float GoodLeanMin = 36f, GoodLeanMax = 56f;
+        private RectTransform _tapGuide;
+        private const int GuideDots = 11;
         private const float HandleTilt = 62f;   // degrees the handle swings while it runs
         /// <summary>How far left of the font's centre the spout hangs — the glass goes under it.</summary>
         private const float SpoutReach = 118f;
@@ -68,7 +72,7 @@ namespace LastCall.UI
 
             var hint = NewText("Hint", _tapPanel, _body, 8, TextAnchor.UpperCenter, UITheme.TextSecondary);
             Stretch(hint.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -68), new Vector2(0, -44));
-            hint.text = "HOLD THE GLASS AND LIFT TO LEAN IT · TILTED FILLS, UPRIGHT BUILDS THE HEAD";
+            hint.text = "HOLD THE GLASS AND POINT WHERE ITS BASE GOES · LEANED FILLS, UPRIGHT BUILDS THE HEAD";
 
             _tapSurface = NewRect("TapSurface", _tapPanel);
             Stretch(_tapSurface, Vector2.zero, Vector2.one, new Vector2(20, 84), new Vector2(-20, -82));
@@ -114,9 +118,22 @@ namespace LastCall.UI
             {
                 if (Run == null || Run.Phase != TycoonPhase.DayOpen || Mouse.current == null) return;
                 _glassHeld = true;
-                _glassGrabY = Mouse.current.position.ReadValue().y;
             });
             _tapGlass.gameObject.AddComponent<EventTrigger>().triggers.Add(glassGrab);
+
+            // The lean guide: where to swing the glass's base to. It lives in the same space the
+            // hand moves in — an arc about the spout — because that is what the pointer is now
+            // steering. Only drawn while the glass is in hand (2026-07-30).
+            _tapGuide = NewRect("LeanGuide", _tapSurface);
+            Place(_tapGuide, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+            for (int i = 0; i <= GuideDots; i++)
+            {
+                var dot = NewRect(i < GuideDots ? "Dot" : "SpillTick", _tapGuide);
+                dot.anchorMin = dot.anchorMax = dot.pivot = new Vector2(0.5f, 0.5f);
+                dot.sizeDelta = i < GuideDots ? new Vector2(3f, 3f) : new Vector2(14f, 3f);
+                dot.gameObject.AddComponent<Image>().raycastTarget = false;
+            }
+            _tapGuide.gameObject.SetActive(false);
 
             _tapFluid = new MetaballFluid(_tapSurface);
             // A pint glass: narrow foot opening steadily out to the mouth.
@@ -130,31 +147,11 @@ namespace LastCall.UI
             // whole skill of a pint (GDD 21 §10).
             _tapFluid.SetDensity(0.90f);
 
-            // The head, drawn as its own band on top of the beer rather than as more fluid —
-            // foam is a different material and reading it has to be instant.
-            // The head is foam, not a lid: a body that tiles in both directions with a bubbled
-            // crest tiled along its top. Tiled rather than stretched so the bubbles keep their
-            // size however deep the head is.
-            _tapHeadBand = NewRect("Head", _tapSurface);
-            var headImg0 = _tapHeadBand.gameObject.AddComponent<Image>();
-            headImg0.raycastTarget = false;
-            headImg0.sprite = ItemArt.Load("foam_body");
-            if (headImg0.sprite != null)
-            {
-                headImg0.type = Image.Type.Tiled;
-                headImg0.pixelsPerUnitMultiplier = FoamPixelScale;
-            }
-            _tapHeadCrown = NewRect("Crown", _tapHeadBand);
-            var crownImg = _tapHeadCrown.gameObject.AddComponent<Image>();
-            crownImg.raycastTarget = false;
-            crownImg.sprite = ItemArt.Load("foam_crown");
-            if (crownImg.sprite != null)
-            {
-                crownImg.type = Image.Type.Tiled;
-                crownImg.pixelsPerUnitMultiplier = FoamPixelScale;
-            }
-            else crownImg.enabled = false;
-            _tapHeadBand.gameObject.SetActive(false);
+            // The head is not drawn here at all any more (2026-07-30). It used to be a tiled
+            // Image laid over the beer, which is exactly why it read as a rectangle: straight
+            // sides, square corners, and it could not rotate with the glass. Foam is now part of
+            // the fluid body itself — see MetaballFluid's foam particles — so the head is a
+            // wobbling, bubbled crown that leans when the glass leans.
 
             // Where a good head sits, marked on the glass so the target is visible while pouring
             // and not a number to be memorised (GDD 21 §10.3).
@@ -215,8 +212,7 @@ namespace LastCall.UI
                 : UITheme.StyleColor(_tapKegCard?.Info?.Style, IngredientType.Beer);
 
             _tapFluid.SetColor(UITheme.LiquidColor(_tapKegCard?.Info?.Style, IngredientType.Beer));
-            var headImg = _tapHeadBand.GetComponent<Image>();
-            headImg.color = UITheme.HeadColor(_tapKegCard?.Info?.Style);
+            _tapFluid.SetFoamColor(UITheme.HeadColor(_tapKegCard?.Info?.Style));
 
             if (_tapKegCard != null && run.PullingId == null && run.CanPull(_tapKegCard.Id))
                 run.BeginPull(_tapKegCard.Id);
@@ -243,13 +239,30 @@ namespace LastCall.UI
 
             if (_glassHeld && (mouse == null || !mouse.leftButton.isPressed)) _glassHeld = false;
 
-            if (_glassHeld && mouse != null)
+            if (_glassHeld && mouse != null &&
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _tapSurface, mouse.position.ReadValue(), null, out Vector2 local))
             {
-                // Lift to lean it over; bring it back down to stand it up again.
-                float lifted = mouse.position.ReadValue().y - _glassGrabY;
-                _glassTilt = Mathf.Clamp01(lifted / TiltDrag) * 90f;
+                // The glass POINTS AT THE HAND (2026-07-30). The mouth stays under the spout, so
+                // what is left to steer is where the base swings to — and that is what the pointer
+                // now is: aim below the tap and the glass stands up, swing out to the left and it
+                // lays over. The angle is measured about the SPOUT, which never moves. Measuring
+                // it about the glass's own grip ran away instead: leaning slides the grip left to
+                // keep the mouth under the tap, which increases the angle, which leans it further.
+                //
+                // The old control was a vertical drag from wherever the glass was clicked. It
+                // never felt attached to anything, because it was not — the glass flew off to its
+                // own docking position while the hand dragged in empty space.
+                var fromPivot = local - TiltPivot();
+                if (fromPivot.sqrMagnitude > 64f)
+                {
+                    float aim = Mathf.Clamp(Mathf.Atan2(-fromPivot.x, -fromPivot.y) * Mathf.Rad2Deg, 0f, 90f);
+                    _glassTilt = Mathf.Lerp(_glassTilt, aim, 1f - Mathf.Exp(-TiltFollow * dt));
+                }
             }
             else _glassTilt = Mathf.MoveTowards(_glassTilt, 0f, dt * 220f);
+
+            DrawLeanGuide();
 
             // In hand the glass is held so its MOUTH stays under the faucet, whatever the lean —
             // the hand slides to keep it there, which is what a bartender's does. Docking the
@@ -305,45 +318,51 @@ namespace LastCall.UI
             if (glass.IsEmpty) _tapFluid.ClearPool();
             else
             {
-                // The beer fills only up to where the foam starts, so the head really does take
-                // the top of the glass rather than being painted over the top of a full pint.
+                // Beer and its head are one body of fluid in one solver (GDD 21 §10 — they share
+                // the glass). The beer fills to its own line and the foam rides on top of it as
+                // lighter particles, so the head takes the top of the glass rather than being
+                // painted over a full pint, and it leans, wobbles and settles because it is
+                // liquid rather than a band drawn across the rect (2026-07-30).
                 // The pool leans with the glass — the solver rotates gravity into the vessel's
-                // frame, so the beer stays level in the world while the glass goes over.
+                // frame, so the drink stays level in the world while the glass goes over.
                 float beerFrac = (float)(glass.TotalVolume / glass.Capacity);
+                float headFrac = (float)(glass.Head / glass.Capacity);
                 _tapFluid.SetPool(centre.x - iw, centre.x + iw,
-                    centre.y - innerH * 0.5f, centre.y + innerH * 0.5f, beerFrac, rad);
+                    centre.y - innerH * 0.5f, centre.y + innerH * 0.5f, beerFrac, rad, headFrac);
             }
-            minX = centre.x - iw; maxX = centre.x + iw;
-            bottomY = centre.y - innerH * 0.5f;
+        }
 
-            float head = (float)(glass.Head / glass.Capacity);
-            _tapHeadBand.gameObject.SetActive(head > 1e-4f);
-            if (head > 1e-4f)
+        /// <summary>
+        /// The arc the glass's base swings along, with the clean-filling lean marked on it and a
+        /// tick where the pour starts running past the rim. Drawn where the HAND goes rather than
+        /// on the glass, because the hand is what the player is aiming (GDD 21 §10.2).
+        /// </summary>
+        private void DrawLeanGuide()
+        {
+            if (_tapGuide == null) return;
+            _tapGuide.gameObject.SetActive(_glassHeld);
+            if (!_glassHeld) return;
+
+            var pivot = TiltPivot();
+            // Just BEYOND where the base sits, not on it: the glass is drawn over its contents
+            // and so over anything at its own radius, which hid the guide entirely. The angle a
+            // dot marks does not depend on how far out it is drawn, so pushing the arc clear of
+            // the glass costs the guide nothing in truthfulness.
+            float r = RimAboveGrip() + 52f;
+            for (int i = 0; i < _tapGuide.childCount; i++)
             {
-                // On the surface the player can see, not the fill line the pool was aimed at —
-                // the two differ enough to leave the foam floating over a gap.
-                float nominal = bottomY + innerH * (float)(glass.TotalVolume / glass.Capacity);
-                float beerTop = glass.TotalVolume > 0 ? _tapFluid.SurfaceY(nominal) : bottomY;
-                float bandH = innerH * head;
-                float top = Mathf.Min(beerTop + bandH, bottomY + innerH);
-                bandH = Mathf.Max(top - beerTop, 2f);
-                // Foam floats level however the glass is held, so the band never rotates — it
-                // only narrows, to stay inside the leaning glass's silhouette.
-                float lean = Mathf.Cos(_glassTilt * Mathf.Deg2Rad);
-                _tapHeadBand.anchorMin = _tapHeadBand.anchorMax = _tapHeadBand.pivot = new Vector2(0.5f, 0.5f);
-                _tapHeadBand.sizeDelta = new Vector2((maxX - minX) * Mathf.Max(lean, 0.35f), bandH);
-                _tapHeadBand.anchoredPosition = new Vector2((minX + maxX) * 0.5f, beerTop + bandH * 0.5f);
-                if (_tapHeadCrown != null)
-                {
-                    // Sits on the head's top edge and never inside the beer, so a thin head is
-                    // all crest and a deep one grows underneath it.
-                    float crownH = Mathf.Min(FoamCrownHeight, bandH);
-                    _tapHeadCrown.anchorMin = new Vector2(0, 1);
-                    _tapHeadCrown.anchorMax = new Vector2(1, 1);
-                    _tapHeadCrown.pivot = new Vector2(0.5f, 1f);
-                    _tapHeadCrown.sizeDelta = new Vector2(0, crownH);
-                    _tapHeadCrown.anchoredPosition = Vector2.zero;
-                }
+                var dot = (RectTransform)_tapGuide.GetChild(i);
+                bool spill = i == GuideDots;
+                float deg = spill
+                    ? (float)TapPour.SpillTilt
+                    : Mathf.Lerp(GoodLeanMin, GoodLeanMax, i / (GuideDots - 1f));
+                float rad = deg * Mathf.Deg2Rad;
+                dot.anchoredPosition = pivot + new Vector2(-Mathf.Sin(rad), -Mathf.Cos(rad)) * r;
+                dot.localRotation = Quaternion.Euler(0, 0, -deg);
+                var col = spill
+                    ? new Color(UITheme.ViceRed[3].r, UITheme.ViceRed[3].g, UITheme.ViceRed[3].b, 0.75f)
+                    : new Color(UITheme.Lime[4].r, UITheme.Lime[4].g, UITheme.Lime[4].b, 0.55f);
+                dot.GetComponent<Image>().color = col;
             }
         }
 
@@ -402,6 +421,15 @@ namespace LastCall.UI
 
         /// <summary>The faucet's lip, where the beer leaves the font.</summary>
         private Vector2 SpoutPoint() => _tapTowerPos + SpoutOffset;
+
+        /// <summary>
+        /// The point the glass turns about while it is being held: its mouth, parked under the
+        /// faucet. Both the steering and the guide arc measure from HERE rather than from the
+        /// spout itself, so pointing at a guide dot asks for exactly the lean that dot marks —
+        /// they are the same object, and a 34 px disagreement between them is not something the
+        /// player should have to feel their way around (2026-07-30).
+        /// </summary>
+        private Vector2 TiltPivot() => SpoutPoint() + new Vector2(0f, -MouthBelowSpout);
 
         /// <summary>How far the rim stands above the grip on an upright glass.</summary>
         private float RimAboveGrip() => _tapGlass.rect.height * (0.07f + 0.82f - GlassPivotY);

@@ -220,12 +220,25 @@ Each keg carries its own emotional charges like any other ingredient — which i
 reason to stock more than one. The recipe does not distinguish a stout from a lager; **who you
 pour it for** does.
 
-### 10.2 The angle of the glass (revised 2026-07-27)
+### 10.2 The angle of the glass (revised 2026-07-30)
 
 The tap runs at one rate. **What you control is the glass**: you take it in your hand, hold it
 under the spout, and the angle you hold it at decides what lands in it — the same thing a real
-bartender is doing, and the same lift-to-tilt grip the bottle already uses in the shaker stage
-(module 24 §2).
+bartender is doing.
+
+**How the glass is steered (2026-07-30):** the mouth stays parked under the faucet, so the only
+thing left to aim is where the *base* swings to — and that is exactly what the pointer is. The
+glass points at the hand: hold below the tap and it stands up, swing out to the left and it lays
+over. The lean is read as the angle from the mouth to the pointer, so the control has no drag
+constant to tune and no scale to learn, and holding the cursor further out buys finer control
+of the angle for free.
+
+This replaces a vertical drag (lift to lean, the grip the bottle uses in the shaker stage,
+module 24 §2). That grip is right for the bottle, which the hand carries; it was wrong here,
+because the glass does *not* follow the hand — it docks itself under the spout — so the drag was
+happening in empty space while the glass flew somewhere else. The arc the base sweeps is drawn
+while the glass is held, with the clean-filling lean marked along it and a tick where the pour
+starts running past the rim.
 
 | How you hold it | What lands |
 | --- | --- |
