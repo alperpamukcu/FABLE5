@@ -265,6 +265,13 @@ the cost: time, in a game where patience is the currency.
 Spilled beer comes out of the keg and reaches nobody. It is not scored or punished beyond
 that — the loss is the punishment, and the keg is a cost of goods like any bottle.
 
+**A full glass ends the pour (2026-07-30).** At the brim the tap stops: nothing more lands, the
+handle springs back, the stream cuts out, and — this is the part that was wrong — the keg stops
+giving beer up. It used to keep running into a glass that could not take it, which is a strange
+thing to watch and, held past the spill angle, a strange thing to pay for: the keg went on
+draining onto the floor. The rescue still works, because the head still settles: a pint that was
+full a moment ago makes room, and topping it up is what a second pull is for.
+
 ### 10.3 What a good pint is
 
 A good pint is **8–20% head**, best at 14%. Outside that the pour reads as flat (no head) or

@@ -255,6 +255,50 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void AFullGlassEndsThePour_AndTheKegStopsGivingBeerUp()
+        {
+            var run = RunWithKeg(out string kegId);
+            var keg = run.Shelf.Find(kegId);
+
+            run.BeginPull(kegId);
+            for (int i = 0; i < 200 && !run.ServingGlass.IsFull; i++) run.PourTilted(0.05, 40.0);
+            Assert.IsTrue(run.ServingGlass.IsFull, "the pint should reach the brim");
+
+            double kegAtBrim = keg.Remaining;
+            double spiltAtBrim = run.SpilledBeer;
+
+            // Held under the running tap, upright and then tipped right over: neither should take
+            // another drop out of the keg once the glass is full.
+            for (int i = 0; i < 20; i++)
+                Assert.AreEqual(0, run.PourTilted(0.1, 5.0), 1e-12, "a full glass takes nothing");
+            for (int i = 0; i < 20; i++)
+                Assert.AreEqual(0, run.PourTilted(0.1, 80.0), 1e-12, "and nothing at any angle");
+
+            Assert.AreEqual(kegAtBrim, keg.Remaining, 1e-12,
+                "the pour is over, so the keg stops giving beer up");
+            Assert.AreEqual(spiltAtBrim, run.SpilledBeer, 1e-12,
+                "and a full glass under an open tap wastes nothing");
+        }
+
+        [Test]
+        public void AFullPintThatSettlesCanStillBeToppedUp()
+        {
+            var run = RunWithKeg(out string kegId);
+            run.BeginPull(kegId);
+            // A frothy pour fills the glass fast and mostly with head.
+            for (int i = 0; i < 200 && !run.ServingGlass.IsFull; i++) run.PourTilted(0.05, 3.0);
+            Assert.IsTrue(run.ServingGlass.IsFull);
+
+            run.SettleHead(6.0);
+            Assert.IsFalse(run.ServingGlass.IsFull, "the head falls and leaves room");
+
+            double before = run.ServingGlass.TotalVolume;
+            run.PourTilted(0.2, 40.0);
+            Assert.Greater(run.ServingGlass.TotalVolume, before,
+                "so the rescue -- stand still, then top up -- still works");
+        }
+
+        [Test]
         public void SpilledBeerLeavesTheKegAndReachesNobody()
         {
             var run = RunWithKeg(out string kegId);

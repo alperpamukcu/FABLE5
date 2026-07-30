@@ -58,17 +58,31 @@ namespace LastCall.UI
         // station — a counter the tower is bolted to and the glass stands on, a drip tray under
         // the faucet, and the keg behind the bar with its line running to the font.
         /// <summary>The counter's top surface, in the pour surface's local space.</summary>
-        private const float CounterY = -40f;
+        private const float CounterY = -140f;
         private const float CounterLip = 6f;      // the brass edge along its front, as in the bar
-        private const float TowerW = 94f, TowerH = 200f;
-        private const float TowerX = 0f;
+        /// <summary>
+        /// The font stands well over the glass, because it does: a bar tower is around 450 mm
+        /// against a pint glass's 160. Drawn the same height as the glass it read as a toy, so the
+        /// counter dropped and the panel grew to make room for a tower that dominates the station
+        /// the way the real thing does — 1.55× the glass, with its handle standing above that
+        /// again (2026-07-30). The glass itself cannot be shrunk to buy the ratio: its size is
+        /// calibrated to what the fluid solver fills, so the tower and the panel had to grow
+        /// instead. What caps it is the keg: the under-bar recess has to stay deep enough to
+        /// show the keg's label, and every millimetre the counter drops for the tower is a
+        /// millimetre off the recess.
+        /// </summary>
+        private const float TowerW = 145f, TowerH = 310f;
+        private const float TowerX = -50f;
         /// <summary>The open recess under the bar, where the kegs live in a real one. Putting the
         /// keg BEHIND the counter hid its label under the counter line, and putting it beside the
         /// counter left it standing in the room; under the bar it is both in its right place and
         /// fully readable (2026-07-30).</summary>
-        private const float RecessLeft = -470f, RecessRight = 470f;
-        private const float KegW = 105f, KegH = 180f;
-        private const float KegX = 285f, KegBaseY = -224f;
+        private const float RecessLeft = -545f, RecessRight = 545f;
+        /// <summary>The keg stands under the bar and runs off the bottom of the frame — this is a
+        /// close-up of the bar top, not a view of the whole room, so its foot is simply not in
+        /// shot. Its base is set so the label band lands inside the recess and stays readable.</summary>
+        private const float KegW = 96f, KegH = 165f;
+        private const float KegX = 300f, KegBaseY = -315f;
         /// <summary>Where the blank label sits on keg.png, as fractions of the sprite: the pale
         /// band runs from 0.516 to 0.676 of its height, 95% of its width. Measured, so the brand
         /// lands on the label instead of near it.</summary>
@@ -84,7 +98,9 @@ namespace LastCall.UI
         private void BuildTapPanel()
         {
             _tapPanel = NewRect("TapPanel", _root);
-            Place(_tapPanel, new Vector2(0.5f, 0.5f), new Vector2(1120, 640), Vector2.zero);
+            // Near the full canvas. The station needs the height: a font drawn at its real
+            // proportion to the glass simply does not fit a 640-tall box (2026-07-30).
+            Place(_tapPanel, new Vector2(0.5f, 0.5f), new Vector2(1210, 700), Vector2.zero);
             _tapPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
             Swallow(_tapPanel);
 
@@ -102,13 +118,20 @@ namespace LastCall.UI
             // rather than being one flat field.
             surf.color = UITheme.Night[0];
             surf.raycastTarget = false;
+            // NOT masked. A Mask here clips the keg beautifully and empties the glass: Unity gives
+            // a masked Graphic a stencil-modified COPY of its material, while MetaballFluid goes
+            // on writing its particle array to the original, so the drink never reaches the screen.
+            // The mask belongs on the under-bar alone (2026-07-30).
 
             // Order matters here, back to front: the counter's timber, then the recess cut into
             // it, then the keg standing in the recess, then its line, then everything on the bar
             // top. Building the counter after the keg simply painted over both of them.
             BuildTapCounter();
 
-            // The recess under the bar the kegs stand in, cut into the counter front.
+            // The recess under the bar the kegs stand in, cut into the counter front — and the
+            // viewport for everything under there. A keg is taller than the hatch it stands in, so
+            // it has to be cropped by the hatch; masking HERE and not on the whole surface is what
+            // lets it be, without the fluid's material being swapped out from under it.
             var recess = NewRect("Recess", _tapSurface);
             recess.anchorMin = new Vector2(0.5f, 0f);
             recess.anchorMax = new Vector2(0.5f, 0.5f);
@@ -120,6 +143,7 @@ namespace LastCall.UI
             // cabinet rather than as shelving standing in its own shade.
             recessImg.color = new Color(0.115f, 0.075f, 0.065f, 1f);
             recessImg.raycastTarget = false;
+            recess.gameObject.AddComponent<Mask>().showMaskGraphic = true;
 
             // The lit underside of the bar top, right along the back of the counter. One line, and
             // the recess stops looking painted on and starts looking like a space under something.
@@ -136,30 +160,37 @@ namespace LastCall.UI
             // Timber posts dividing the under-bar into bays. Without them the whole lower half is
             // one flat slab; a working bar is shelving, and the bays give the eye something true
             // to read there instead of dead space.
+            // Everything under the bar is parented to the recess, so the hatch crops it. Each is
+            // hung from the recess's TOP edge, which is a known line (CounterY − 10) — measuring
+            // from there needs no rect height and so is right on the frame it is built.
             foreach (float x in new[] { -300f, -110f, 130f })
             {
-                var post = NewRect("Bay", _tapSurface);
+                var post = NewRect("Bay", recess);
                 post.anchorMin = new Vector2(0.5f, 0f);
-                post.anchorMax = new Vector2(0.5f, 0.5f);
+                post.anchorMax = new Vector2(0.5f, 1f);
                 post.pivot = new Vector2(0.5f, 0.5f);
                 post.offsetMin = new Vector2(x - 7f, 0f);
-                post.offsetMax = new Vector2(x + 7f, CounterY - 10f);
+                post.offsetMax = new Vector2(x + 7f, 0f);
                 var pimg = post.gameObject.AddComponent<Image>();
                 pimg.color = new Color(0.13f, 0.08f, 0.07f, 1f);
                 pimg.raycastTarget = false;
             }
 
-            var keg = NewRect("Keg", _tapSurface);
-            Place(keg, new Vector2(0.5f, 0.5f), new Vector2(KegW, KegH),
-                  new Vector2(KegX, KegBaseY + KegH * 0.5f));
+            var keg = NewRect("Keg", recess);
+            keg.anchorMin = keg.anchorMax = new Vector2(0.5f, 1f);
+            keg.pivot = new Vector2(0.5f, 0.5f);
+            keg.sizeDelta = new Vector2(KegW, KegH);
+            keg.anchoredPosition = new Vector2(KegX, -KegH * 0.5f + 26f);   // cropped by the hatch lintel
             _tapKeg = keg.gameObject.AddComponent<Image>();
             _tapKeg.preserveAspect = true; _tapKeg.raycastTarget = false;
 
             // The bar's spare stock, standing in another bay and knocked well back so it never
             // competes with the keg actually on tap. Same sprite: it is the same keg.
-            var spare = NewRect("SpareKeg", _tapSurface);
-            Place(spare, new Vector2(0.5f, 0.5f), new Vector2(KegW * 0.88f, KegH * 0.88f),
-                  new Vector2(-215f, KegBaseY + KegH * 0.88f * 0.5f));
+            var spare = NewRect("SpareKeg", recess);
+            spare.anchorMin = spare.anchorMax = new Vector2(0.5f, 1f);
+            spare.pivot = new Vector2(0.5f, 0.5f);
+            spare.sizeDelta = new Vector2(KegW * 0.88f, KegH * 0.88f);
+            spare.anchoredPosition = new Vector2(-215f, -KegH * 0.88f * 0.5f + 16f);
             var spareImg = spare.gameObject.AddComponent<Image>();
             spareImg.sprite = ItemArt.Load("keg");
             spareImg.preserveAspect = true; spareImg.raycastTarget = false;
@@ -254,7 +285,7 @@ namespace LastCall.UI
             _tapHandle.pivot = new Vector2(0.5f, 0.06f);
             // Near its own native size. Blown up to 60×140 it read as a separate wooden object
             // parked beside the tap rather than the handle bolted to it.
-            _tapHandle.sizeDelta = new Vector2(29, 92);
+            _tapHandle.sizeDelta = new Vector2(36, 112);
             _tapHandle.anchorMin = _tapHandle.anchorMax = new Vector2(0.5f, 0.5f);
             // Onto the brass fitting on top of the faucet — measured off the art at (-29, +87.5)
             // in the sprite's own pixels, scaled to the size the tower is drawn at.
@@ -271,18 +302,18 @@ namespace LastCall.UI
             statusPlate.anchorMin = new Vector2(0f, 0f);
             statusPlate.anchorMax = new Vector2(1f, 0f);
             statusPlate.pivot = new Vector2(0.5f, 0f);
-            statusPlate.offsetMin = new Vector2(20f, 46f);
+            statusPlate.offsetMin = new Vector2(20f, 44f);
             statusPlate.offsetMax = new Vector2(-20f, 0f);
-            statusPlate.sizeDelta = new Vector2(-40f, 58f);
+            statusPlate.sizeDelta = new Vector2(-40f, 42f);
             var plateImg = statusPlate.gameObject.AddComponent<Image>();
             plateImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.94f);
             plateImg.raycastTarget = false;
 
             _tapReadout = NewText("Readout", _tapPanel, _body, 8, TextAnchor.LowerCenter, UITheme.TextSecondary);
-            Stretch(_tapReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(0, 52), new Vector2(0, 74));
+            Stretch(_tapReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(0, 46), new Vector2(0, 64));
 
             _tapVerdict = Outlined(NewText("Verdict", _tapPanel, _display, 16, TextAnchor.LowerCenter, UITheme.TextPrimary));
-            Stretch(_tapVerdict.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(0, 74), new Vector2(0, 100));
+            Stretch(_tapVerdict.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(0, 64), new Vector2(0, 86));
 
             var back = NewRect("Back", _tapPanel);
             Place(back, new Vector2(0.5f, 0), new Vector2(240, 34), new Vector2(-130, 12));
@@ -394,7 +425,11 @@ namespace LastCall.UI
             var mouth = MouthPoint();
             bool underSpout = Mathf.Abs(mouth.x - spout.x) < 78f
                               && mouth.y < spout.y + 24f && mouth.y > spout.y - 190f;
-            bool pouring = _glassHeld && underSpout && run.PullingId != null;
+            // A brim-full glass stops the pour, so the handle springs back and the stream cuts out
+            // rather than running into a glass that cannot take it (2026-07-30). Core refuses it
+            // too — this is what makes the refusal visible.
+            bool pouring = _glassHeld && underSpout && run.PullingId != null
+                           && !run.ServingGlass.IsFull;
             _tapHandle.localRotation = Quaternion.Euler(0, 0, pouring ? HandleTilt : 0f);
 
             _pouringNow = pouring;

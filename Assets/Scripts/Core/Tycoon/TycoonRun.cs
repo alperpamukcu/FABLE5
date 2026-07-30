@@ -296,6 +296,13 @@ namespace LastCall.Core
             EnsurePhase(TycoonPhase.DayOpen);
             if (PullingId == null || seconds <= 0) return 0;
 
+            // A full glass ends the pour (2026-07-30). It used to take nothing while the tap went
+            // on running, which is a strange thing to watch and, held past the spill angle, a
+            // strange thing to pay for: the keg kept giving up beer for the floor. The head still
+            // settles, so a pint that was full a moment ago makes room and can be topped up —
+            // that is what a second pull is for.
+            if (ServingGlass.IsFull) return 0;
+
             var keg = _shelf.Find(PullingId);
             var flow = TapPour.Flow(tiltDegrees, seconds);
             if (flow.Total <= 0) return 0;

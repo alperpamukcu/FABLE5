@@ -291,6 +291,21 @@ Anchors are measured off the art, never guessed: the faucet lip is the leftmost 
 `tap.png` at (−39, +34.5) from its centre, and the handle mounts on the brass fitting at
 (−29, +87.5), both scaled by the size the tower is drawn at.
 
+**The font has to tower (2026-07-30).** Player note: *"the tap is far too small next to the
+glass."* It was drawn the same height as the pint, and a bar font is around 450 mm against a
+glass's 160 — at 1:1 it reads as a toy. The panel grew to near the full canvas and the counter
+dropped so the tower could stand **1.55×** the glass with its handle above that again. The glass
+cannot be shrunk to buy the ratio: its size is calibrated to what the fluid solver fills. What
+caps the ratio is the keg — every unit the counter drops for the tower comes off the under-bar
+recess, which has to stay deep enough to show the keg's label.
+
+The under-bar is a **viewport**: a keg is taller than the hatch it stands in, so the hatch crops
+it, and it runs off the bottom of the frame because this is a close-up of the bar top and its
+foot is simply not in shot. The mask goes on the recess and *not* on the whole surface — a Mask
+over the surface clips the keg beautifully and empties the glass, because Unity hands a masked
+Graphic a stencil-modified **copy** of its material while `MetaballFluid` goes on writing its
+particle array to the original.
+
 ### The stage's two big surfaces (2026-07-29)
 
 Both were remade, and they turned out to be wrong in two different ways.
