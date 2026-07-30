@@ -33,19 +33,33 @@ namespace LastCall.Core
         /// <summary>One line of character for the info popup and, later, dialogue.</summary>
         public string Blurb { get; }
 
+        /// <summary>Which menu aisle this belongs to (v5 P10) — one of
+        /// <see cref="IngredientCategories.All"/>, or empty on legacy unbranded cards.</summary>
+        public string Category { get; }
+
+        /// <summary>Fizzy in the bottle (v5 P10). Carbonated things are built at the serving
+        /// glass and never shaken — shaking one is a mess, not a technique — and the rule is
+        /// enforced by the run's shaker verbs, the same way beer is kept out of the tin.</summary>
+        public bool Carbonated { get; }
+
         public IngredientInfo(string style, int tier = 1, int price = 0,
-            string origin = null, double abv = 0, string blurb = null)
+            string origin = null, double abv = 0, string blurb = null,
+            string category = null, bool carbonated = false)
         {
             if (string.IsNullOrWhiteSpace(style))
                 throw new ArgumentException("A bottle must say what it is a brand of.", nameof(style));
             if (tier < 1) throw new ArgumentOutOfRangeException(nameof(tier));
             if (abv < 0 || abv > 100) throw new ArgumentOutOfRangeException(nameof(abv));
+            if (!string.IsNullOrEmpty(category) && !IngredientCategories.IsKnown(category))
+                throw new ArgumentException($"Unknown category '{category}' for style '{style}'.", nameof(category));
             Style = style;
             Tier = tier;
             Price = price;
             Origin = origin ?? string.Empty;
             Abv = abv;
             Blurb = blurb ?? string.Empty;
+            Category = category ?? string.Empty;
+            Carbonated = carbonated;
         }
 
         public override string ToString() => $"{Style} T{Tier} ({Origin}, {Abv:0.#}%)";

@@ -74,8 +74,61 @@ namespace LastCall.Core
 
                 new RecipeDefinition("double_perfect", "Double Perfect", 14, 160, 14, 50, 5,
                     new[] { new PatternRequirement(1, s) },
-                    exactMixSize: 5, allDistinctTypes: true, allEqualFlavor: true, scoreAllMixCards: true)
+                    exactMixSize: 5, allDistinctTypes: true, allEqualFlavor: true, scoreAllMixCards: true),
+
+                // ── the starter cocktails (v5 P10) — LOCKED until the shop sells them ────
+                // Style-banded, so a Gin & Tonic is gin and tonic rather than "some spirit
+                // with some fizz". All quarantined by Locked: they neither roll as orders nor
+                // match a pour until unlocked, which is what keeps the sim identical the day
+                // the content lands. Ranks 15+ so a real one outranks its abstract cousin
+                // (a true G&T must not read as a mere Spritz) once it is live.
+                Cocktail("gin_tonic", "Gin & Tonic", 15, 15, 2, 15, 1, PrepMethod.Built, "highball",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, bu) },
+                    Band("gin", .30, .50), Band("tonic", .50, .70)),
+                Cocktail("vodka_soda", "Vodka Soda", 16, 15, 2, 15, 1, PrepMethod.Built, "highball",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, bu) },
+                    Band("vodka", .30, .50), Band("soda", .50, .70)),
+                Cocktail("whiskey_cola", "Whiskey & Cola", 17, 15, 2, 15, 1, PrepMethod.Built, "highball",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, bu) },
+                    Band("bourbon", .30, .50), Band("cola", .50, .70)),
+                Cocktail("cuba_libre", "Cuba Libre", 18, 20, 2, 15, 1, PrepMethod.Built, "highball",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, bu), new PatternRequirement(1, so) },
+                    Band("rum", .25, .45), Band("cola", .45, .70), Band("lime", .02, .15)),
+                Cocktail("screwdriver", "Screwdriver", 19, 15, 2, 15, 1, PrepMethod.Built, "highball",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so) },
+                    Band("vodka", .30, .50), Band("orange", .50, .70)),
+                Cocktail("vodka_bull", "Vodka Bull", 20, 15, 2, 15, 1, PrepMethod.Built, "highball",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, bu) },
+                    Band("vodka", .30, .55), Band("energy", .45, .70)),
+                Cocktail("whiskey_sour", "Whiskey Sour", 21, 25, 2, 20, 1, PrepMethod.Shaken, "rocks",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
+                    Band("bourbon", .45, .65), Band("lemon", .20, .40), Band("syrup", .10, .30)),
+                Cocktail("gin_fizz", "Gin Fizz", 22, 25, 2, 20, 1, PrepMethod.Shaken, "highball",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw), new PatternRequirement(1, bu) },
+                    Band("gin", .35, .55), Band("lemon", .15, .35), Band("syrup", .05, .25), Band("soda", .15, .35)),
+                Cocktail("daiquiri", "Daiquiri", 23, 25, 2, 20, 1, PrepMethod.Shaken, "coupe",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
+                    Band("rum", .45, .65), Band("lime", .15, .35), Band("syrup", .10, .30)),
+                Cocktail("margarita", "Margarita", 24, 30, 3, 20, 1, PrepMethod.Shaken, "coupe",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(1, so) },
+                    Band("tequila", .40, .60), Band("triple_sec", .15, .35), Band("lime", .15, .35)),
+                Cocktail("dry_martini", "Dry Martini", 25, 30, 3, 20, 1, PrepMethod.Stirred, "martini",
+                    new[] { new PatternRequirement(2, s), new PatternRequirement(1, sw) },
+                    Band("gin", .70, .90), Band("vermouth", .10, .30)),
+                Cocktail("dirty_martini", "Dirty Martini", 26, 30, 3, 20, 1, PrepMethod.Stirred, "martini",
+                    new[] { new PatternRequirement(2, s), new PatternRequirement(1, sw), new PatternRequirement(1, g) },
+                    Band("gin", .60, .85), Band("vermouth", .08, .28), Band("olive", .05, .20)),
             };
         }
+
+        private static RatioRequirement Band(string style, double min, double max) =>
+            new RatioRequirement(style, min, max);
+
+        private static RecipeDefinition Cocktail(string id, string name, int rank,
+            int baseFlavor, int baseMult, int flavorPerLevel, int multPerLevel,
+            PrepMethod prep, string glassId,
+            PatternRequirement[] requirements, params RatioRequirement[] ratios) =>
+            new RecipeDefinition(id, name, rank, baseFlavor, baseMult, flavorPerLevel, multPerLevel,
+                requirements, ratioRequirements: ratios, locked: true, prep: prep, glassId: glassId);
     }
 }

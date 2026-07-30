@@ -41,25 +41,50 @@ namespace LastCall.Core
         /// The ingredient type this band constrains. Bands are by *type*, not by a specific
         /// bottle: "a Spritz is 40–60% Spirit and 40–60% Bubbly" generalises across the shelf
         /// exactly the way the card-era pattern did, and it means adding a new gin does not
-        /// mean editing every recipe. A named-bottle band (a true Martini insisting on gin) is
-        /// a later refinement, not something the table needs yet.
+        /// mean editing every recipe.
         /// </summary>
         public IngredientType Type { get; }
+
+        /// <summary>
+        /// The named-bottle refinement the type comment always promised (v5 P10): a band that
+        /// constrains one STYLE's share instead of a whole type's. A Gin &amp; Tonic is gin and
+        /// tonic — a vodka-and-tonic at the same proportions is a different drink, and only a
+        /// style band can say so. Null/empty = an ordinary type band; a recipe uses one kind or
+        /// the other, never both (mixing them double-counts shares — refused at construction).
+        /// </summary>
+        public string Style { get; }
+
         public double MinRatio { get; }
         public double MaxRatio { get; }
+
+        public bool IsStyleBand => !string.IsNullOrEmpty(Style);
 
         public RatioRequirement(IngredientType type, double minRatio, double maxRatio)
         {
             if (minRatio < 0 || maxRatio > 1 || maxRatio < minRatio)
                 throw new ArgumentException($"Bad ratio band {minRatio}–{maxRatio} for {type}.");
             Type = type;
+            Style = null;
+            MinRatio = minRatio;
+            MaxRatio = maxRatio;
+        }
+
+        public RatioRequirement(string style, double minRatio, double maxRatio)
+        {
+            if (string.IsNullOrWhiteSpace(style))
+                throw new ArgumentException("A style band must name a style.", nameof(style));
+            if (minRatio < 0 || maxRatio > 1 || maxRatio < minRatio)
+                throw new ArgumentException($"Bad ratio band {minRatio}–{maxRatio} for {style}.");
+            Type = default;
+            Style = style;
             MinRatio = minRatio;
             MaxRatio = maxRatio;
         }
 
         public bool Accepts(double ratio) => ratio >= MinRatio && ratio <= MaxRatio;
 
-        public override string ToString() => $"{Type} {MinRatio:P0}–{MaxRatio:P0}";
+        public override string ToString() =>
+            $"{(IsStyleBand ? Style : Type.ToString())} {MinRatio:P0}–{MaxRatio:P0}";
     }
 
     /// <summary>
@@ -86,11 +111,12 @@ namespace LastCall.Core
             if (glass == null || glass.IsEmpty || recipes == null) return null;
 
             var byType = RatiosByType(glass, lookup);
+            var byStyle = RatiosByStyle(glass, lookup);
             RecipeDefinition best = null;
             foreach (var recipe in recipes)
             {
                 if (recipe.RatioRequirements == null || recipe.RatioRequirements.Count == 0) continue;
-                if (!Satisfies(glass, byType, recipe)) continue;
+                if (!Satisfies(glass, byType, byStyle, recipe)) continue;
                 if (best == null || recipe.Rank > best.Rank) best = recipe;
             }
             if (best == null) return null;
@@ -140,15 +166,36 @@ namespace LastCall.Core
             return byType;
         }
 
+        /// <summary>Share of the drink contributed by each ingredient STYLE (v5 P10). What the
+        /// style bands check — "40% of this glass is gin", whatever bottle poured it.</summary>
+        public static Dictionary<string, double> RatiosByStyle(
+            GlassContents glass, Func<string, IngredientCard> lookup)
+        {
+            var byStyle = new Dictionary<string, double>(StringComparer.Ordinal);
+            if (glass == null || lookup == null || glass.TotalVolume <= 0) return byStyle;
+
+            foreach (var pour in glass.Pours)
+            {
+                var style = lookup(pour.IngredientId)?.Info?.Style;
+                if (string.IsNullOrEmpty(style)) continue;
+                byStyle.TryGetValue(style, out double share);
+                byStyle[style] = share + pour.Volume / glass.TotalVolume;
+            }
+            return byStyle;
+        }
+
         private static bool Satisfies(GlassContents glass,
-            IReadOnlyDictionary<IngredientType, double> byType, RecipeDefinition recipe)
+            IReadOnlyDictionary<IngredientType, double> byType,
+            IReadOnlyDictionary<string, double> byStyle, RecipeDefinition recipe)
         {
             if (glass.FillFraction < recipe.MinFill) return false;
 
             double accounted = 0;
             foreach (var requirement in recipe.RatioRequirements)
             {
-                byType.TryGetValue(requirement.Type, out double ratio);
+                double ratio;
+                if (requirement.IsStyleBand) byStyle.TryGetValue(requirement.Style, out ratio);
+                else byType.TryGetValue(requirement.Type, out ratio);
                 if (!requirement.Accepts(ratio)) return false;
                 accounted += ratio;
             }

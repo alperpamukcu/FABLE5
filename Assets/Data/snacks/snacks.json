@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "_comment": "v5 P10 (PLAN_service_depth): the snack bowls. Dragged straight from the menu to a seat (P16), never ordered alone, always alongside an alcoholic drink -- the pairing rules are Core refusals, staged for P11/P16. Small money on purpose.",
+  "snacks": [
+    { "id": "peanuts", "name": "Peanuts", "price": 2, "stock": 20 },
+    { "id": "popcorn", "name": "Popcorn", "price": 2, "stock": 20 },
+    { "id": "chips", "name": "Potato Chips", "price": 3, "stock": 16 },
+    { "id": "mixed_nuts", "name": "Mixed Nuts", "price": 4, "stock": 12 }
+  ]
+}

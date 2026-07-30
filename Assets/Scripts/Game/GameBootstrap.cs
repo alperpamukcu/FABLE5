@@ -16,10 +16,24 @@ namespace LastCall.Game
         /// <summary>Customer archetypes (GDD 19). Leave unassigned for an anonymous crowd.</summary>
         [SerializeField] private TextAsset archetypesJson;
 
+        /// <summary>The serving glasses and the snack bowls (v5 P10). Parsed and validated at
+        /// boot so a bad file fails loudly today, even though the run consumes them in P14/P16.</summary>
+        [SerializeField] private TextAsset glasswareJson;
+        [SerializeField] private TextAsset snacksJson;
+
         [SerializeField] private string seed = "LASTCALL-DEV";
 
         /// <summary>The v4 loop (GDD 23) — what the scene plays.</summary>
         public TycoonRun Tycoon { get; private set; }
+
+        /// <summary>The glass set (v5 P10); empty until the scene wires glasswareJson.</summary>
+        public IReadOnlyList<GlasswareDefinition> Glassware { get; private set; }
+
+        /// <summary>The snack shelf (v5 P10); empty until the scene wires snacksJson.</summary>
+        public IReadOnlyList<SnackDefinition> Snacks { get; private set; }
+
+        /// <summary>Future stock (v5 P10): locked bottles the shop can sell later.</summary>
+        public IReadOnlyList<IngredientCard> LockedStock { get; private set; }
 
         public string CurrentSeed { get; private set; }
 
@@ -61,6 +75,26 @@ namespace LastCall.Game
                         startingBottles.Add(new ShelfBottle(card.Clone()));
             var recipes = DataLoader.ParseRecipes(recipesJson.text);
             var archetypes = archetypesJson != null ? DataLoader.ParseArchetypes(archetypesJson.text) : null;
+
+            // v5 P10: parse the new content files loudly even though nothing consumes them
+            // yet — a typo must fail at boot, not in P14. Recipe glass ids are checked
+            // against the glass set here, the one place both files are in hand.
+            Glassware = glasswareJson != null
+                ? DataLoader.ParseGlassware(glasswareJson.text)
+                : System.Array.Empty<GlasswareDefinition>();
+            Snacks = snacksJson != null
+                ? DataLoader.ParseSnacks(snacksJson.text)
+                : System.Array.Empty<SnackDefinition>();
+            LockedStock = bar.LockedCards;
+            if (Glassware.Count > 0)
+            {
+                var glassIds = new HashSet<string>();
+                foreach (var glass in Glassware) glassIds.Add(glass.Id);
+                foreach (var recipe in recipes)
+                    if (!string.IsNullOrEmpty(recipe.GlassId) && !glassIds.Contains(recipe.GlassId))
+                        throw new System.FormatException(
+                            $"Recipe '{recipe.Id}' names unknown glass '{recipe.GlassId}'.");
+            }
 
             Tycoon = new TycoonRun(new Shelf(startingBottles), recipes, new RunRng(CurrentSeed),
                 regulars: archetypes != null ? new RegularsRegistry(archetypes) : null,

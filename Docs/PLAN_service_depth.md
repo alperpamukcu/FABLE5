@@ -80,26 +80,28 @@ Constraints the notes bend but the project does not:
 
 ---
 
-## P10 — Content model v2 (Core + data)
+## P10 — Content model v2 (Core + data) ☑ 2026-07-31
 
 The vocabulary every later phase speaks. No visible change yet.
 
-- ☐ Ingredient **categories** in data (vodka, gin, rum, whiskey, tequila, liqueurs, juices,
+- ☑ Ingredient **categories** in data (vodka, gin, rum, whiskey, tequila, liqueurs, juices,
   mixers, garnishes) — a `category` field, loud validation, menu grouping keyed to it
-- ☐ **Non-alcoholic ingredients** (juices, sodas, Red Bull, tonic, cola) with a
+- ☑ **Non-alcoholic ingredients** (juices, sodas, Red Bull, tonic, cola) with a
   `carbonated` flag; **Core refusal**: carbonated never enters the shaker — it is added at
   the serving glass (`BuildAtGlass` verb), same shape as the draught rule
-- ☐ **Per-recipe prep method** (shaken / stirred / built) and **per-recipe glass id**;
+- ☑ **Per-recipe prep method** (shaken / stirred / built) and **per-recipe glass id**;
   recipes that are built skip the shaker entirely
-- ☐ **Glassware definitions** in data: id, display name, fluid profile, capacity, sprite
+- ☑ **Glassware definitions** in data: id, display name, fluid profile, capacity, sprite
   key, 3 upgrade tiers with prices
-- ☐ **Starter cocktail list** as data + `RecipeCatalog` (parity test updated in the same
+- ☑ **Starter cocktail list** as data + `RecipeCatalog` (parity test updated in the same
   commit): Vodka Red Bull, Gin & Tonic, Whiskey & Cola, Cuba Libre, Screwdriver, Vodka
   Soda, Whiskey Sour, Gin Fizz, Martini, Dirty Martini, Margarita, Daiquiri
-- ☐ **Snack items** (peanuts, popcorn, chips, mixed nuts): price, stock, no recipe, no glass
-- ☐ Icon **slots** per style/recipe (art lands P13; data carries the key now)
-Gate: DataLoader validates the expanded set loudly; parity test green; sim byte-identical
-(nothing rolls the new content yet).
+- ☑ **Snack items** (peanuts, popcorn, chips, mixed nuts): price, stock, no recipe, no glass
+- ☑ Icon **slots** per style/recipe (art lands P13; data carries the key now)
+Gate met 2026-07-31: loader validates loudly (category/bands/profile/prices), parity
+covers all 27 recipes, tests 165/165, and the 200-run sim diffed **byte-identical**
+against a fresh same-day baseline. Boot verified live: shelf 6, menu 15, catalogue 27,
+glassware 5, snacks 4, locked stock 7.
 
 ## P11 — Orders & grading v2 (Core)
 

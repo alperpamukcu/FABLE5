@@ -109,3 +109,22 @@ fill % inside the glass with live per-ingredient ratios beside it.
 
 Backgrounds, the counter and the customer sprite are still v2-density; they get the same
 treatment in a later pass.
+
+## Categories & the locked catalogue (v5 P10, 2026-07-31)
+
+Every branded bottle now names its **aisle** — one of vodka / gin / rum / whiskey / tequila /
+liqueur / juice / mixer / garnish / beer — validated loudly at load. Categories are the menu's
+browsing axis (P13 builds a shelf view per aisle); `IngredientType` remains the mixing axis.
+The two are deliberately different questions: bourbon and tequila are both Spirit to a
+recipe, but nobody looks for tequila on the whiskey shelf.
+
+**Locked stock**: a card marked `locked` in the deck file is quarantined at the parse
+(`LoadedDeck.LockedCards`). It never reaches the shelf, the market catalogue, or the
+simulator's tier-1 sweep — unlocking is a purchase (P12/P18), not a load. Seven starter-
+cocktail ingredients ship locked: tequila, orange liqueur, cola, tonic, energy drink,
+orange juice, lime. The fizzy ones carry `carbonated: true` (21 §12).
+
+Two new data files join the content surface, parsed and validated at boot even though the
+run consumes them later: `glassware/glassware.json` (five glasses; the silhouette profile
+that defines each glass is the same array the fluid solver fills it with) and
+`snacks/snacks.json` (four bowls; pairing rules are P11/P16 Core work).

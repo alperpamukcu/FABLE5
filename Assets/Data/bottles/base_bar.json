@@ -9,6 +9,7 @@
       "type": "Spirit",
       "flavor": 4,
       "style": "vodka",
+      "category": "vodka",
       "tier": 1,
       "origin": "Gdansk, Poland",
       "abv": 40,
@@ -31,6 +32,7 @@
       "type": "Spirit",
       "flavor": 6,
       "style": "gin",
+      "category": "gin",
       "tier": 1,
       "origin": "London",
       "abv": 43,
@@ -53,6 +55,7 @@
       "type": "Spirit",
       "flavor": 5,
       "style": "rum",
+      "category": "rum",
       "tier": 1,
       "origin": "Bridgetown, Barbados",
       "abv": 37.5,
@@ -75,6 +78,7 @@
       "type": "Spirit",
       "flavor": 7,
       "style": "bourbon",
+      "category": "whiskey",
       "tier": 1,
       "origin": "Bardstown, Kentucky",
       "abv": 45,
@@ -97,6 +101,7 @@
       "type": "Bitter",
       "flavor": 6,
       "style": "amaro",
+      "category": "liqueur",
       "tier": 1,
       "origin": "Torino, Italy",
       "abv": 30,
@@ -119,6 +124,7 @@
       "type": "Sweet",
       "flavor": 5,
       "style": "vermouth",
+      "category": "liqueur",
       "tier": 1,
       "origin": "Torino, Italy",
       "abv": 16,
@@ -141,6 +147,7 @@
       "type": "Sweet",
       "flavor": 2,
       "style": "syrup",
+      "category": "mixer",
       "tier": 1,
       "origin": "made in the back",
       "abv": 0,
@@ -163,6 +170,7 @@
       "type": "Sour",
       "flavor": 3,
       "style": "lemon",
+      "category": "juice",
       "tier": 1,
       "origin": "the market crate",
       "abv": 0,
@@ -185,6 +193,7 @@
       "type": "Bubbly",
       "flavor": 3,
       "style": "ginger",
+      "category": "mixer",
       "tier": 1,
       "origin": "bottled next door",
       "abv": 0,
@@ -207,6 +216,7 @@
       "type": "Bubbly",
       "flavor": 1,
       "style": "soda",
+      "category": "mixer",
       "tier": 1,
       "origin": "Bergen, Norway",
       "abv": 0,
@@ -229,6 +239,7 @@
       "type": "Garnish",
       "flavor": 1,
       "style": "mint",
+      "category": "garnish",
       "tier": 1,
       "origin": "the window box",
       "abv": 0,
@@ -247,6 +258,7 @@
       "type": "Garnish",
       "flavor": 2,
       "style": "olive",
+      "category": "garnish",
       "tier": 1,
       "origin": "Puglia, Italy",
       "abv": 0,
@@ -265,6 +277,7 @@
       "type": "Beer",
       "flavor": 3,
       "style": "lager",
+      "category": "beer",
       "tier": 1,
       "origin": "Local, on the coast road",
       "abv": 4,
@@ -287,6 +300,7 @@
       "type": "Beer",
       "flavor": 6,
       "style": "stout",
+      "category": "beer",
       "tier": 1,
       "origin": "Two valleys over",
       "abv": 5,
@@ -309,6 +323,7 @@
       "type": "Beer",
       "flavor": 5,
       "style": "pale_ale",
+      "category": "beer",
       "tier": 1,
       "origin": "The brewery behind the market",
       "abv": 5,
@@ -331,6 +346,7 @@
       "type": "Spirit",
       "flavor": 6,
       "style": "vodka",
+      "category": "vodka",
       "tier": 2,
       "price": 6,
       "origin": "Reykjavik, Iceland",
@@ -354,6 +370,7 @@
       "type": "Spirit",
       "flavor": 8,
       "style": "gin",
+      "category": "gin",
       "tier": 2,
       "price": 6,
       "origin": "Plymouth",
@@ -377,6 +394,7 @@
       "type": "Spirit",
       "flavor": 9,
       "style": "bourbon",
+      "category": "whiskey",
       "tier": 2,
       "price": 7,
       "origin": "Frankfort, Kentucky",
@@ -393,6 +411,180 @@
         }
       ],
       "art_prompt": "a heavy-bottomed aged bourbon bottle with a black wax seal and parchment label"
+    },
+    {
+      "id": "tequila_sonora",
+      "name": "Sonora Tequila",
+      "type": "Spirit",
+      "flavor": 6,
+      "style": "tequila",
+      "category": "tequila",
+      "tier": 1,
+      "price": 14,
+      "origin": "Jalisco, Mexico",
+      "abv": 40,
+      "locked": true,
+      "blurb": "Blue agave, sun-cured. Turns a quiet table loud.",
+      "charges": [
+        {
+          "emotion": "Excitement",
+          "amount": 12
+        },
+        {
+          "emotion": "Anxiety",
+          "amount": 4
+        }
+      ],
+      "art_prompt": "a tall clear tequila bottle with a woven agave-green label and a rope neck tie"
+    },
+    {
+      "id": "liqueur_delia",
+      "name": "Delia Orange",
+      "type": "Sweet",
+      "flavor": 5,
+      "style": "triple_sec",
+      "category": "liqueur",
+      "tier": 1,
+      "price": 10,
+      "origin": "Saumur, France",
+      "abv": 30,
+      "locked": true,
+      "blurb": "Bitter orange peel in silk. The bridge in half the classics.",
+      "charges": [
+        {
+          "emotion": "Heartbreak",
+          "amount": -6
+        },
+        {
+          "emotion": "Excitement",
+          "amount": 4
+        }
+      ],
+      "art_prompt": "a squarish orange liqueur bottle with a deep orange label and gold filigree"
+    },
+    {
+      "id": "cola_marlow",
+      "name": "Marlow Cola",
+      "type": "Bubbly",
+      "flavor": 2,
+      "style": "cola",
+      "category": "mixer",
+      "tier": 1,
+      "price": 6,
+      "origin": "bottled in the city",
+      "abv": 0,
+      "carbonated": true,
+      "locked": true,
+      "blurb": "Sweet, dark and everywhere. Makes hard liquor easy company.",
+      "charges": [
+        {
+          "emotion": "Fatigue",
+          "amount": -5
+        },
+        {
+          "emotion": "Excitement",
+          "amount": 3
+        }
+      ],
+      "art_prompt": "a classic glass cola bottle with a dark caramel liquid and a ruby-red label"
+    },
+    {
+      "id": "tonic_quinbury",
+      "name": "Quinbury Tonic",
+      "type": "Bubbly",
+      "flavor": 2,
+      "style": "tonic",
+      "category": "mixer",
+      "tier": 1,
+      "price": 6,
+      "origin": "Somerset",
+      "abv": 0,
+      "carbonated": true,
+      "locked": true,
+      "blurb": "Quinine and restraint. Exists to make gin presentable.",
+      "charges": [
+        {
+          "emotion": "Anxiety",
+          "amount": -5
+        }
+      ],
+      "art_prompt": "a slender tonic water bottle in pale glass with a duck-egg blue label"
+    },
+    {
+      "id": "energy_volt",
+      "name": "Volt Energy",
+      "type": "Bubbly",
+      "flavor": 3,
+      "style": "energy",
+      "category": "mixer",
+      "tier": 1,
+      "price": 8,
+      "origin": "a warehouse, allegedly",
+      "abv": 0,
+      "carbonated": true,
+      "locked": true,
+      "blurb": "Taurine and bad decisions. Keeps the night going past its bedtime.",
+      "charges": [
+        {
+          "emotion": "Fatigue",
+          "amount": -12
+        },
+        {
+          "emotion": "Anxiety",
+          "amount": 8
+        }
+      ],
+      "art_prompt": "a slim energy drink can in electric teal and black with a lightning motif, no text"
+    },
+    {
+      "id": "orange_grove",
+      "name": "Grove Orange",
+      "type": "Sour",
+      "flavor": 2,
+      "style": "orange",
+      "category": "juice",
+      "tier": 1,
+      "price": 6,
+      "origin": "pressed this morning",
+      "abv": 0,
+      "locked": true,
+      "blurb": "Fresh-squeezed sunshine. The soft landing for hard spirits.",
+      "charges": [
+        {
+          "emotion": "Fatigue",
+          "amount": -6
+        },
+        {
+          "emotion": "Sadness",
+          "amount": -3
+        }
+      ],
+      "art_prompt": "a glass carafe of fresh orange juice with a halved orange beside it"
+    },
+    {
+      "id": "lime_fresh",
+      "name": "Fresh Lime",
+      "type": "Sour",
+      "flavor": 3,
+      "style": "lime",
+      "category": "juice",
+      "tier": 1,
+      "price": 5,
+      "origin": "the market crate",
+      "abv": 0,
+      "locked": true,
+      "blurb": "Sharper than lemon, greener too. The spine of the rum classics.",
+      "charges": [
+        {
+          "emotion": "Fatigue",
+          "amount": -6
+        },
+        {
+          "emotion": "Anxiety",
+          "amount": 3
+        }
+      ],
+      "art_prompt": "a small glass carafe of lime juice with cut limes beside it"
     }
   ]
 }

@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "_comment": "v5 P10 (PLAN_service_depth): the serving glasses. 'profile' is the half-width-per-height silhouette the fluid solver takes (floor to rim), so the data that defines a glass is the data that fills it. Each glass owns three tiers; tier 1 is owned from day one and 'tierPrices' are the two upgrade steps. Sprites land in P14 as spriteKey / spriteKey_t2 / spriteKey_t3.",
+  "glasses": [
+    {
+      "id": "pint",
+      "name": "Pint",
+      "spriteKey": "pint",
+      "profile": [0.82, 0.88, 0.93, 0.97, 1.0, 1.0],
+      "tierPrices": [40, 80]
+    },
+    {
+      "id": "highball",
+      "name": "Highball",
+      "spriteKey": "glass_highball",
+      "profile": [0.94, 0.96, 0.98, 1.0, 1.0, 1.0],
+      "tierPrices": [35, 70]
+    },
+    {
+      "id": "rocks",
+      "name": "Rocks",
+      "spriteKey": "glass_rocks",
+      "profile": [0.9, 0.95, 1.0, 1.0, 1.0, 1.0],
+      "tierPrices": [35, 70]
+    },
+    {
+      "id": "martini",
+      "name": "Martini",
+      "spriteKey": "glass_martini",
+      "profile": [0.12, 0.35, 0.58, 0.8, 1.0, 1.0],
+      "tierPrices": [45, 90]
+    },
+    {
+      "id": "coupe",
+      "name": "Coupe",
+      "spriteKey": "glass_coupe",
+      "profile": [0.3, 0.62, 0.85, 1.0, 1.0, 0.92],
+      "tierPrices": [45, 90]
+    }
+  ]
+}

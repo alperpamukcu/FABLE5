@@ -297,3 +297,27 @@ glass. Loading it with anything more would make the simple order the fiddly one.
   for some players). A tap-to-set-measure fallback is probably required.
 - **Does precision survive a pixel glass?** At 640×360 the glass is maybe 40px tall, so a
   band is ~2px per 5%. The readout may need numeric support after all.
+
+## 12. Carbonated is built, not shaken (v5 P10, 2026-07-31)
+
+Not everything mixable belongs in the tin. **Carbonated ingredients — soda, tonic, cola,
+energy drink — never enter the shaker**: shaking fizz is a mess, not a technique, and the
+whole point of a Gin & Tonic is the bubbles arriving intact. They are added straight to the
+serving glass at the serve stage, through the run's `PourAtGlass` verb.
+
+The refusal lives in Core (`ShakerIngredient`), exactly like the keg rule in §10: routing
+around it in a menu is not enough, because the sim and the tests use the same verbs the
+player does. The legacy bubbly bottles (Klara Soda, Kicker Ginger) keep their `carbonated`
+flag OFF until the serve stage grows its mixer rail (P14) — flipping them before there is a
+door for them would make every Spritz and Highball unbuildable overnight.
+
+Recipes now carry a **prep method** (shaken / stirred / built): built drinks skip the shaker
+entirely and are assembled in the glass. They also carry a **glass id** (glassware.json) —
+auto-selection is P14's job; the data is authored now.
+
+**Style bands** (the refinement §9 always promised): a recipe may state its ratios per
+*style* instead of per type — "a Gin & Tonic is 30–50% gin", and a vodka-tonic at the same
+proportions matches nothing. A recipe uses one kind of band or the other, never both
+(mixing them double-counts shares; refused at construction). The twelve starter cocktails
+are style-banded and **locked**: present in the catalogue, invisible to the order roll and
+the matcher until unlocked, which is what kept the sim byte-identical the day they landed.

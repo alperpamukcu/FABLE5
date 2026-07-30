@@ -21,6 +21,15 @@ namespace LastCall.Core
         }
     }
 
+    /// <summary>How a drink is put together (v5 P10). Built drinks never see the shaker:
+    /// everything goes straight into the serving glass.</summary>
+    public enum PrepMethod
+    {
+        Shaken,
+        Stirred,
+        Built,
+    }
+
     /// <summary>
     /// A recipe (hand ranking) from GDD 02, section 4. Higher <see cref="Rank"/> wins when
     /// several recipes match the same mix.
@@ -86,6 +95,27 @@ namespace LastCall.Core
         /// <summary>How full the glass must be for this to count as the drink (0 = no floor).</summary>
         public double MinFill { get; }
 
+        // ── v5 P10 content model ────────────────────────────────────────────────
+
+        /// <summary>
+        /// Not on the menu yet. A locked recipe exists in the catalogue — the shop can sell it,
+        /// the parity test covers it — but the run ignores it whole: it is never rolled as an
+        /// order and never matched against a pour. Both matter: several starter cocktails
+        /// (Vodka Soda, Gin Fizz) are makeable from the opening shelf, and unlockable content
+        /// that quietly outranked live recipes in the matcher would change the sim the day it
+        /// was added instead of the day it was earned.
+        /// </summary>
+        public bool Locked { get; }
+
+        /// <summary>Shaken, stirred, or built straight in the serving glass.</summary>
+        public PrepMethod Prep { get; }
+
+        /// <summary>The glass this drink is served in (glassware.json id); "" = the default.</summary>
+        public string GlassId { get; }
+
+        /// <summary>Icon sprite key; defaults to the recipe id (P13 draws the set).</summary>
+        public string Icon { get; }
+
         public RecipeDefinition(
             string id, string name, int rank,
             int baseFlavor, int baseMult, int flavorPerLevel, int multPerLevel,
@@ -97,8 +127,30 @@ namespace LastCall.Core
             int sameTypeGroupMin = 0,
             double chargeMultiplier = 0,
             IReadOnlyList<RatioRequirement> ratioRequirements = null,
-            double minFill = 0)
+            double minFill = 0,
+            bool locked = false,
+            PrepMethod prep = PrepMethod.Shaken,
+            string glassId = null,
+            string icon = null)
         {
+            // One kind of band per recipe. A style band and a type band can cover the same
+            // pour (the gin is also a Spirit), so mixing kinds double-counts shares and lets
+            // the stray-ingredient check pass drinks it should refuse.
+            if (ratioRequirements != null && ratioRequirements.Count > 0)
+            {
+                bool anyStyle = false, anyType = false;
+                foreach (var band in ratioRequirements)
+                    if (band.IsStyleBand) anyStyle = true; else anyType = true;
+                if (anyStyle && anyType)
+                    throw new ArgumentException(
+                        $"Recipe '{id}' mixes style bands and type bands; use one kind.",
+                        nameof(ratioRequirements));
+            }
+
+            Locked = locked;
+            Prep = prep;
+            GlassId = glassId ?? string.Empty;
+            Icon = string.IsNullOrEmpty(icon) ? id : icon;
             MinFill = minFill;
             Id = id;
             Name = name;

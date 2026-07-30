@@ -12,11 +12,21 @@ namespace LastCall.Game
         public string Name { get; }
         public IReadOnlyList<IngredientCard> Cards { get; }
 
-        public LoadedDeck(string deckId, string name, IReadOnlyList<IngredientCard> cards)
+        /// <summary>
+        /// Cards marked locked in the file (v5 P10): future stock, quarantined at the parse.
+        /// They never reach <see cref="Cards"/>, so the shelf, the market catalogue and the
+        /// simulator's tier-1 sweep all stay exactly as they were the day before the content
+        /// existed — unlocking is a purchase, not a load.
+        /// </summary>
+        public IReadOnlyList<IngredientCard> LockedCards { get; }
+
+        public LoadedDeck(string deckId, string name, IReadOnlyList<IngredientCard> cards,
+            IReadOnlyList<IngredientCard> lockedCards = null)
         {
             DeckId = deckId;
             Name = name;
             Cards = cards;
+            LockedCards = lockedCards ?? System.Array.Empty<IngredientCard>();
         }
     }
 
@@ -33,6 +43,7 @@ namespace LastCall.Game
                 throw new FormatException("Deck file contains no cards.");
 
             var cards = new List<IngredientCard>(dto.cards.Count);
+            var locked = new List<IngredientCard>();
             foreach (var card in dto.cards)
             {
                 if (string.IsNullOrWhiteSpace(card.id))
@@ -48,13 +59,19 @@ namespace LastCall.Game
                         throw new FormatException($"Bottle '{card.id}' has tier {card.tier}; brands start at 1.");
                     if (card.tier > 1 && card.price <= 0)
                         throw new FormatException($"Bottle '{card.id}' is a market brand but has no price.");
+                    // Every branded bottle says which aisle it lives on (v5 P10).
+                    if (!IngredientCategories.IsKnown(card.category))
+                        throw new FormatException(
+                            $"Bottle '{card.id}' has unknown category '{card.category}'.");
                     info = new IngredientInfo(card.style, card.tier, card.price,
-                        card.origin, card.abv, card.blurb);
+                        card.origin, card.abv, card.blurb, card.category, card.carbonated);
                 }
-                cards.Add(new IngredientCard(card.id, card.name, ParseType(card.type, card.id),
-                    card.flavor, QualityTier.HousePour, ParseCharges(card.charges, card.id), info));
+                var parsed = new IngredientCard(card.id, card.name, ParseType(card.type, card.id),
+                    card.flavor, QualityTier.HousePour, ParseCharges(card.charges, card.id), info);
+                if (card.locked) locked.Add(parsed);
+                else cards.Add(parsed);
             }
-            return new LoadedDeck(dto.deckId, dto.name, cards);
+            return new LoadedDeck(dto.deckId, dto.name, cards, locked);
         }
 
         public static IReadOnlyList<RecipeDefinition> ParseRecipes(string json)
@@ -85,6 +102,23 @@ namespace LastCall.Game
                     requirements.Add(new PatternRequirement(req.count, types));
                 }
 
+                // Hand-authored style bands (v5 P10): "a Gin & Tonic is 30–50% gin". When the
+                // file gives none, bands derive from the type pattern as before.
+                List<RatioRequirement> ratios = null;
+                if (recipe.ratios != null && recipe.ratios.Count > 0)
+                {
+                    ratios = new List<RatioRequirement>(recipe.ratios.Count);
+                    foreach (var band in recipe.ratios)
+                    {
+                        if (string.IsNullOrWhiteSpace(band.style))
+                            throw new FormatException($"Recipe '{recipe.id}' has a ratio band with no style.");
+                        if (band.max < band.min || band.min < 0 || band.max > 1)
+                            throw new FormatException(
+                                $"Recipe '{recipe.id}' has a bad {band.style} band {band.min}–{band.max}.");
+                        ratios.Add(new RatioRequirement(band.style, band.min, band.max));
+                    }
+                }
+
                 recipes.Add(new RecipeDefinition(
                     recipe.id, recipe.name, recipe.rank,
                     recipe.baseFlavor, recipe.baseMult, recipe.flavorPerLevel, recipe.multPerLevel,
@@ -94,10 +128,71 @@ namespace LastCall.Game
                     recipe.equalFlavorGroupSize, recipe.ascendingFlavorGroupSize,
                     recipe.sameTypeGroupMin,
                     recipe.chargeMultiplier,   // 0 = derive it from baseMult
-                    ratioRequirements: null,   // derived from the type pattern
-                    minFill: recipe.minFill));
+                    ratioRequirements: ratios, // null = derive from the type pattern
+                    minFill: recipe.minFill,
+                    locked: recipe.locked,
+                    prep: ParsePrep(recipe.prepMethod, recipe.id),
+                    glassId: recipe.glassId,
+                    icon: recipe.icon));
             }
             return recipes;
+        }
+
+        /// <summary>The serving glasses (v5 P10): silhouette, sprite, upgrade prices.</summary>
+        public static IReadOnlyList<GlasswareDefinition> ParseGlassware(string json)
+        {
+            var dto = FromJson<GlasswareFileDto>(json, "glassware");
+            if (dto.glasses == null || dto.glasses.Count == 0)
+                throw new FormatException("Glassware file contains no glasses.");
+
+            var seen = new HashSet<string>();
+            var glasses = new List<GlasswareDefinition>(dto.glasses.Count);
+            foreach (var glass in dto.glasses)
+            {
+                if (!seen.Add(glass.id ?? ""))
+                    throw new FormatException($"Glassware file lists '{glass.id}' twice.");
+                try
+                {
+                    glasses.Add(new GlasswareDefinition(glass.id, glass.name, glass.spriteKey,
+                        glass.profile?.ToArray(), glass.tierPrices?.ToArray()));
+                }
+                catch (ArgumentException e)
+                {
+                    throw new FormatException($"Glassware '{glass.id}': {e.Message}");
+                }
+            }
+            return glasses;
+        }
+
+        /// <summary>The snack bowls (v5 P10).</summary>
+        public static IReadOnlyList<SnackDefinition> ParseSnacks(string json)
+        {
+            var dto = FromJson<SnacksFileDto>(json, "snacks");
+            if (dto.snacks == null || dto.snacks.Count == 0)
+                throw new FormatException("Snacks file contains no snacks.");
+
+            var seen = new HashSet<string>();
+            var snacks = new List<SnackDefinition>(dto.snacks.Count);
+            foreach (var snack in dto.snacks)
+            {
+                if (!seen.Add(snack.id ?? ""))
+                    throw new FormatException($"Snacks file lists '{snack.id}' twice.");
+                try
+                {
+                    snacks.Add(new SnackDefinition(snack.id, snack.name, snack.price, snack.stock));
+                }
+                catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
+                {
+                    throw new FormatException($"Snack '{snack.id}': {e.Message}");
+                }
+            }
+            return snacks;
+        }
+
+        private static PrepMethod ParsePrep(string raw, string context)
+        {
+            if (string.IsNullOrEmpty(raw)) return PrepMethod.Shaken;
+            return ParseEnum<PrepMethod>(raw, context, "prepMethod");
         }
 
         /// <summary>
@@ -212,6 +307,10 @@ namespace LastCall.Game
             public string origin;
             public double abv;
             public string blurb;
+            // v5 P10 content model.
+            public string category;
+            public bool carbonated;
+            public bool locked;
         }
 
         [Serializable]
@@ -277,6 +376,20 @@ namespace LastCall.Game
             public int sameTypeGroupMin;
             public double chargeMultiplier;
             public double minFill;
+            // v5 P10 content model.
+            public bool locked;
+            public string prepMethod;
+            public string glassId;
+            public string icon;
+            public List<RatioDto> ratios;
+        }
+
+        [Serializable]
+        private sealed class RatioDto
+        {
+            public string style;
+            public double min;
+            public double max;
         }
 
         [Serializable]
@@ -284,6 +397,39 @@ namespace LastCall.Game
         {
             public int version;
             public List<RecipeDto> recipes;
+        }
+
+        [Serializable]
+        private sealed class GlassDto
+        {
+            public string id;
+            public string name;
+            public string spriteKey;
+            public List<double> profile;
+            public List<int> tierPrices;
+        }
+
+        [Serializable]
+        private sealed class GlasswareFileDto
+        {
+            public int version;
+            public List<GlassDto> glasses;
+        }
+
+        [Serializable]
+        private sealed class SnackDto
+        {
+            public string id;
+            public string name;
+            public int price;
+            public int stock;
+        }
+
+        [Serializable]
+        private sealed class SnacksFileDto
+        {
+            public int version;
+            public List<SnackDto> snacks;
         }
 
 #pragma warning restore 0649

@@ -50,6 +50,24 @@ namespace LastCall.Tests
                 Assert.AreEqual(expected.SameTypeGroupMin, actual.SameTypeGroupMin, expected.Id);
                 Assert.AreEqual(expected.MinFill, actual.MinFill, 1e-9, expected.Id);
 
+                // v5 P10 content model: the lock, the prep method, the glass, the icon and the
+                // hand-authored style bands are as much the recipe as its ratios are.
+                Assert.AreEqual(expected.Locked, actual.Locked, expected.Id);
+                Assert.AreEqual(expected.Prep, actual.Prep, expected.Id);
+                Assert.AreEqual(expected.GlassId, actual.GlassId, expected.Id);
+                Assert.AreEqual(expected.Icon, actual.Icon, expected.Id);
+                Assert.AreEqual(expected.RatioRequirements.Count, actual.RatioRequirements.Count, expected.Id);
+                for (int b = 0; b < expected.RatioRequirements.Count; b++)
+                {
+                    var eb = expected.RatioRequirements[b];
+                    var ab = actual.RatioRequirements[b];
+                    Assert.AreEqual(eb.IsStyleBand, ab.IsStyleBand, expected.Id);
+                    Assert.AreEqual(eb.Style, ab.Style, expected.Id);
+                    Assert.AreEqual(eb.Type, ab.Type, expected.Id);
+                    Assert.AreEqual(eb.MinRatio, ab.MinRatio, 1e-9, expected.Id);
+                    Assert.AreEqual(eb.MaxRatio, ab.MaxRatio, 1e-9, expected.Id);
+                }
+
                 Assert.AreEqual(expected.Requirements.Count, actual.Requirements.Count, expected.Id);
                 for (int r = 0; r < expected.Requirements.Count; r++)
                 {

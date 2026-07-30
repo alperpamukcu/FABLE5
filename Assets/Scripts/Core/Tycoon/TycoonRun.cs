@@ -27,7 +27,14 @@ namespace LastCall.Core
     {
         private readonly RunRng _rng;
         private readonly Shelf _shelf;
-        private readonly IReadOnlyList<RecipeDefinition> _recipes;
+        private readonly IReadOnlyList<RecipeDefinition> _recipes;   // unlocked only
+
+        /// <summary>The whole catalogue, locked recipes included — what the shop can sell.</summary>
+        public IReadOnlyList<RecipeDefinition> AllRecipes { get; private set; }
+
+        /// <summary>What the bar can offer tonight: the unlocked recipes — the list orders
+        /// roll from and pours are matched against. The menu renders exactly this.</summary>
+        public IReadOnlyList<RecipeDefinition> MenuRecipes => _recipes;
         private readonly IReadOnlyList<IngredientCard> _brandCatalogue;
         private readonly RegularsRegistry _regulars;
         private readonly TycoonConfig _config;
@@ -102,7 +109,16 @@ namespace LastCall.Core
             IReadOnlyList<IngredientCard> brandCatalogue = null)
         {
             _shelf = shelf ?? throw new ArgumentNullException(nameof(shelf));
-            _recipes = recipes ?? throw new ArgumentNullException(nameof(recipes));
+            if (recipes == null) throw new ArgumentNullException(nameof(recipes));
+            // Locked recipes (v5 P10) exist in the catalogue but not in the bar: they are
+            // neither rolled as orders nor matched against a pour until something unlocks
+            // them. Filtered once here so every consumer — the order roll, the matcher, the
+            // sim, the menu — sees the same world.
+            var active = new List<RecipeDefinition>(recipes.Count);
+            foreach (var recipe in recipes)
+                if (!recipe.Locked) active.Add(recipe);
+            _recipes = active;
+            AllRecipes = recipes;
             _rng = rng ?? throw new ArgumentNullException(nameof(rng));
             _config = config ?? TycoonConfig.Default;
             _regulars = regulars;
@@ -217,7 +233,36 @@ namespace LastCall.Core
                 throw new ArgumentException(
                     $"'{ingredientId}' is a keg — beer is pulled into the glass, never built in the shaker.",
                     argName);
+            // Carbonated is built, not shaken (v5 P10, GDD 21 §12): fizz goes straight into
+            // the serving glass. Same reasoning as the keg rule above — the refusal lives
+            // here because the sim and the tests use these verbs too.
+            if (bottle.Ingredient.Info != null && bottle.Ingredient.Info.Carbonated)
+                throw new ArgumentException(
+                    $"'{ingredientId}' is carbonated — it goes straight into the serving glass, never the shaker.",
+                    argName);
             return bottle;
+        }
+
+        /// <summary>
+        /// Pours straight from the shelf into the serving glass (v5 P10) — how a drink is
+        /// BUILT rather than shaken, and the only door carbonated ingredients have. Draws real
+        /// stock, lands brim-capped like every pour. Beer stays the tap's business.
+        /// </summary>
+        public double PourAtGlass(string ingredientId, double volume)
+        {
+            EnsurePhase(TycoonPhase.DayOpen);
+            var bottle = _shelf.Find(ingredientId);
+            if (bottle == null)
+                throw new ArgumentException($"No '{ingredientId}' on the shelf.", nameof(ingredientId));
+            if (bottle.Ingredient.Type == IngredientType.Beer)
+                throw new ArgumentException(
+                    $"'{ingredientId}' is a keg — beer is pulled at the tap, not poured by hand.",
+                    nameof(ingredientId));
+            if (volume <= 0) return 0;
+            // Capped by true headroom BEFORE the shelf draws: the shelf's own cap ignores the
+            // head on a pint, and stock drawn for room the foam already owns would evaporate.
+            volume = Math.Min(volume, ServingGlass.Headroom);
+            return _shelf.PourInto(ServingGlass, ingredientId, volume);
         }
 
         public double PourTick(double seconds)
