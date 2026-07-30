@@ -98,6 +98,11 @@ namespace LastCall.UI
 
         // The finished drink on the counter (GDD 24 §3, 2026-07-22): a glass you drag onto a
         // customer to serve, carried with a heavy, springy AAA feel.
+        /// <summary>The bin on the counter (v5 P13 / C7). A drink is thrown away by carrying it
+        /// there, the same verb that serves it — the BIN GLASS button is gone.</summary>
+        private RectTransform _binProp;
+        private Image _binImage;
+
         private RectTransform _drinkGlass;
         private Image _drinkGlassLiquid;
         private bool _glassGrabbed;
@@ -267,6 +272,19 @@ namespace LastCall.UI
         private void BuildDrinkGlass(RectTransform root)
         {
             _glassHome = new Vector2(0, -200f);   // staged on the counter, above the MENU button
+            // The bin, standing on the counter at the right-hand end, in front of the bar. Built
+            // before the glass so the carried drink passes over it rather than under it.
+            _binProp = NewRect("Bin", root);
+            _binProp.anchorMin = _binProp.anchorMax = _binProp.pivot = new Vector2(1f, 0f);
+            _binProp.sizeDelta = new Vector2(78, 93);
+            _binProp.anchoredPosition = new Vector2(-70, 96);
+            _binImage = _binProp.gameObject.AddComponent<Image>();
+            _binImage.sprite = ItemArt.Load("bin_prop");
+            _binImage.preserveAspect = true;
+            _binImage.raycastTarget = false;
+            _binImage.color = new Color(0.72f, 0.72f, 0.74f, 1f);
+            if (_binImage.sprite == null) _binImage.enabled = false;
+
             _drinkGlass = NewRect("DrinkGlass", root);
             _drinkGlass.anchorMin = _drinkGlass.anchorMax = _drinkGlass.pivot = new Vector2(0.5f, 0.5f);
             _drinkGlass.sizeDelta = new Vector2(78, 100);
@@ -354,6 +372,17 @@ namespace LastCall.UI
             if (_glassGrabbed && (mouse == null || !mouse.leftButton.isPressed))
             {
                 _glassGrabbed = false;
+                // Dropped in the bin: the drink is thrown away (v5 P13 / C7). Checked before
+                // the seats, because the bin sits on the counter among them and a drink let go
+                // over it was plainly meant for it.
+                if (IsOverBin(mouse))
+                {
+                    run.DiscardGlass();
+                    Toast("BINNED");
+                    _drinkGlass.gameObject.SetActive(false);
+                    _glassShown = false;
+                    return;
+                }
                 int seat = SeatUnderCursor(mouse);
                 if (seat >= 0 && ServeSeat(seat))
                 {
@@ -362,6 +391,13 @@ namespace LastCall.UI
                     return;
                 }
             }
+
+            // The bin only lifts its lid -- brightens -- while there is something to throw in it
+            // and the hand is over it, so it never nags at an empty counter.
+            if (_binImage != null)
+                _binImage.color = _glassGrabbed && IsOverBin(mouse)
+                    ? Color.white
+                    : new Color(0.72f, 0.72f, 0.74f, 1f);
 
             Vector2 target = _glassHome;
             if (_glassGrabbed && mouse != null &&
@@ -472,11 +508,12 @@ namespace LastCall.UI
             _toast.gameObject.SetActive(true);
         }
 
-        private void OnBinClicked()
+        /// <summary>Whether the cursor is over the bin's mouth (v5 P13 / C7).</summary>
+        private bool IsOverBin(UnityEngine.InputSystem.Mouse mouse)
         {
-            var run = Run;
-            if (run == null || run.Phase != TycoonPhase.DayOpen) return;
-            run.DiscardGlass();
+            if (_binProp == null || mouse == null) return false;
+            return RectTransformUtility.RectangleContainsScreenPoint(
+                _binProp, mouse.position.ReadValue(), null);
         }
 
         // ── refresh ─────────────────────────────────────────────────────────────
@@ -1069,8 +1106,8 @@ namespace LastCall.UI
                 _ratingStars[i] = img;
             }
 
-            NewButton(top, "BIN GLASS", new Vector2(1, 0.5f), new Vector2(110, 30),
-                new Vector2(-190, 0), UITheme.Night[3], OnBinClicked);
+            // BIN GLASS retired (v5 P13 / C7): a drink is thrown away by carrying it to the bin
+            // on the counter, which is the same verb that serves it.
             NewButton(top, "NEW RUN", new Vector2(1, 0.5f), new Vector2(110, 30),
                 new Vector2(-70, 0), UITheme.PrimaryAction, () => _bootstrap.StartNewRun(null));
 
