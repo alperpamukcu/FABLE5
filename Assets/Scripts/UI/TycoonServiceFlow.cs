@@ -79,13 +79,13 @@ namespace LastCall.UI
         private const float PaperCX = -0.015f, PaperCY = -0.008f;
         private const int MenuColumns = 4, MenuRows = 2;
         private const float GridGap = 6f, HeadingH = 18f;
-        private IngredientType? _menuTab;   // null = the section index page
+        private string _menuTab;   // null = the aisle index page (v5 P13: a category id)
         private Text _menuTitle;
         private RectTransform _menuBack;
         // Changing pages (2026-07-27): the sheet stays clamped to the board and the page of keys
         // slides across it, out one side and in from the other. The clipboard holding still is the
         // point — it is the paper under the clip that changes, not the board.
-        private IngredientType? _flipTo;
+        private string _flipTo;
         private float _flipT = 1f;
         private int _flipDir;
         private Vector2 _listHome;

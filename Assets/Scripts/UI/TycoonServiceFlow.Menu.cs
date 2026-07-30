@@ -20,7 +20,7 @@ namespace LastCall.UI
         // ── the menu ─────────────────────────────────────────────────────────────
 
         /// <summary>Starts a page turn to <paramref name="tab"/> (null = back to the index).</summary>
-        private void OpenTab(IngredientType? tab)
+        private void OpenTab(string tab)
         {
             if (_flipT < 1f) return;                 // already turning
             _flipTo = tab;
@@ -217,163 +217,326 @@ namespace LastCall.UI
             var run = Run;
             foreach (Transform child in _bottleList) Destroy(child.gameObject);
             if (_menuBack != null) _menuBack.gameObject.SetActive(_menuTab != null);
-            if (_menuTab == null) BuildGroupPage(run); else BuildTabPage(run, _menuTab.Value);
+            if (_menuTab == null) BuildGroupPage(run); else BuildShelfPage(run, _menuTab);
 
         }
 
         /// <summary>Page one: one card per stocked section.</summary>
+        /// <summary>
+        /// The index: the bar's AISLES (v5 P10 categories, not ingredient types) as flat keys
+        /// on the sheet. The notes asked for cream paper rather than the coloured plastic
+        /// plates this used to carry -- a bar menu is a printed list, and the colour was
+        /// spending the eye's attention on navigation instead of on the drink.
+        /// </summary>
         private void BuildGroupPage(TycoonRun run)
         {
             _menuTitle.text = "DRINKS";
             var row = NewRect("Groups", _bottleList);
             var grid = row.gameObject.AddComponent<GridLayoutGroup>();
             float areaW = _bottleList.rect.width, areaH = _bottleList.rect.height;
-            grid.spacing = new Vector2(14, 14);
+            grid.spacing = new Vector2(12, 12);
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            // Flows for however many groups the bar ends up carrying: three across, and the
-            // rows follow from the count.
-            int cols = 3;
-            // A 3x3 board: five groups today (spirits, bitters, sweet, sour, mixers) with room
-            // for whatever the bar grows into, and the cells stay the same size either way.
-            const int gRows = 3;
+            const int cols = 3, gRows = 3;
             grid.constraintCount = cols;
-            grid.cellSize = new Vector2((areaW - (cols - 1) * 14f) / cols,
-                Mathf.Min(150f, (areaH - (gRows - 1) * 14f) / gRows));
-            grid.childAlignment = TextAnchor.MiddleCenter;
+            grid.cellSize = new Vector2((areaW - (cols - 1) * 12f) / cols,
+                Mathf.Min(132f, (areaH - (gRows - 1) * 12f) / gRows));
+            grid.childAlignment = TextAnchor.UpperCenter;
 
-            foreach (var type in MenuOrder)
+            foreach (var category in IngredientCategories.All)
             {
-                if (type == IngredientType.Garnish) continue;
                 int have = 0, empty = 0;
                 foreach (var b in run.Shelf.Bottles)
-                    if (b.Ingredient.Type == type) { have++; if (b.IsEmpty) empty++; }
+                    if (b.Ingredient.Info?.Category == category)
+                    { have++; if (b.IsEmpty) empty++; }
                 if (have == 0) continue;
 
-                var card = NewRect($"Grp_{type}", row);
-                var bg = card.gameObject.AddComponent<Image>();
-                var col = UITheme.TypeRamp[type][3];
-                var plate = ItemArt.Load("plate");
-                var plateDown = ItemArt.Load("plate_down");
-                var btn = card.gameObject.AddComponent<Button>();
+                var key = NewRect($"Aisle_{category}", row);
+                var bg = key.gameObject.AddComponent<Image>();
+                bg.color = PaperKey;
+                var btn = key.gameObject.AddComponent<Button>();
                 btn.targetGraphic = bg;
-                if (plate != null)
-                {
-                    // One white 3D plate, tinted with the group's colour — so a new group is
-                    // just a new colour, never a new sprite.
-                    bg.sprite = plate; bg.type = Image.Type.Sliced;
-                    bg.pixelsPerUnitMultiplier = PlatePixelScale;
-                    bg.color = col;
-                    if (plateDown != null)
-                    {
-                        btn.transition = Selectable.Transition.SpriteSwap;
-                        var st = btn.spriteState;
-                        st.pressedSprite = plateDown; st.selectedSprite = plate;
-                        btn.spriteState = st;
-                    }
-                    else
-                    {
-                        btn.transition = Selectable.Transition.ColorTint;
-                        var cb = btn.colors;
-                        cb.normalColor = Color.white;
-                        cb.pressedColor = new Color(0.62f, 0.62f, 0.62f, 1f);
-                        cb.fadeDuration = 0.05f;
-                        btn.colors = cb;
-                    }
-                }
-                else bg.color = new Color(col.r, col.g, col.b, 0.20f);
-                var t = type;
-                btn.onClick.AddListener(() => OpenTab(t));
+                btn.transition = Selectable.Transition.ColorTint;
+                var cb = btn.colors;
+                cb.normalColor = Color.white;
+                cb.highlightedColor = new Color(1.03f, 1.02f, 0.98f, 1f);
+                cb.pressedColor = new Color(0.90f, 0.88f, 0.83f, 1f);
+                cb.fadeDuration = 0.05f;
+                btn.colors = cb;
+                var cat = category;
+                btn.onClick.AddListener(() => OpenTab(cat));
 
-                // Everything printed on the plate lives here, so it sinks WITH the press —
-                // swapping only the background left the label and bottles floating.
-                var content = NewRect("Content", card);
+                var content = NewRect("Content", key);
                 Stretch(content, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                var sink = card.gameObject.AddComponent<PressSink>();
-                sink.Face = content;
-                sink.Depth = 4f; sink.Squash = 0.015f;
+                var sink = key.gameObject.AddComponent<PressSink>();
+                sink.Face = content; sink.Depth = 3f; sink.Squash = 0.012f;
 
-                var name = Handwritten(NewText("N", content, _display, 16, TextAnchor.MiddleCenter, Color.black));
-                Place(name.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 24, 22), new Vector2(0, -10));
-                name.text = GroupKeyName(t);
+                // A hairline rule under the heading, the way a printed list is set. Ink, not
+                // plastic: the only colour on the key is the drink it is pointing at.
+                var name = Handwritten(NewText("N", content, _display, 16, TextAnchor.MiddleCenter, InkDark));
+                Place(name.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 20, 22),
+                    new Vector2(0, -9));
+                name.text = AisleName(category);
 
-                var count = Handwritten(NewText("C", content, _body, 8, TextAnchor.UpperCenter, new Color(0.12f, 0.12f, 0.12f)));
-                Place(count.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 24, 14),
-                    new Vector2(0, -34));
+                var rule = NewRect("Rule", content);
+                Place(rule, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 34, 1), new Vector2(0, -25));
+                rule.gameObject.AddComponent<Image>().color = new Color(InkDark.r, InkDark.g, InkDark.b, 0.35f);
+
+                var count = Handwritten(NewText("C", content, _body, 8, TextAnchor.UpperCenter, InkSoft));
+                Place(count.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 20, 12),
+                    new Vector2(0, -30));
                 string unit = have == 1 ? "bottle" : "bottles";
                 count.text = empty > 0 ? $"{have} {unit} · {empty} out" : $"{have} {unit}";
 
-                // The bottles themselves, just their art, under the heading.
                 var icons = NewRect("Icons", content);
-                Place(icons, new Vector2(0.5f, 0), new Vector2(grid.cellSize.x - 20, grid.cellSize.y - 76),
-                    new Vector2(0, 26));
+                Place(icons, new Vector2(0.5f, 0), new Vector2(grid.cellSize.x - 16, grid.cellSize.y - 58),
+                    new Vector2(0, 12));
                 var ig = icons.gameObject.AddComponent<GridLayoutGroup>();
                 int iconCols = Mathf.Clamp(have, 1, 4);
-                float cell = Mathf.Min(grid.cellSize.y - 78f, (grid.cellSize.x - 28f) / iconCols);
+                float cell = Mathf.Min(grid.cellSize.y - 60f, (grid.cellSize.x - 24f) / iconCols);
                 ig.cellSize = new Vector2(cell, cell);
-                ig.spacing = new Vector2(4, 4);
+                ig.spacing = new Vector2(3, 3);
                 ig.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
                 ig.constraintCount = iconCols;
-                ig.childAlignment = TextAnchor.MiddleCenter;
+                ig.childAlignment = TextAnchor.LowerCenter;
                 foreach (var b in run.Shelf.Bottles)
                 {
-                    if (b.Ingredient.Type != t) continue;
+                    if (b.Ingredient.Info?.Category != cat) continue;
                     var slot = NewRect($"I_{b.Ingredient.Id}", icons);
-                    var si2 = slot.gameObject.AddComponent<Image>();
-                    si2.sprite = ItemArt.Bottle(b.Ingredient.Info?.Style);
-                    si2.preserveAspect = true; si2.raycastTarget = false;
-                    si2.color = si2.sprite == null
+                    var si = slot.gameObject.AddComponent<Image>();
+                    si.sprite = ItemArt.Bottle(b.Ingredient.Info?.Style);
+                    si.preserveAspect = true; si.raycastTarget = false;
+                    si.color = si.sprite == null
                         ? UITheme.StyleColor(b.Ingredient.Info?.Style, b.Ingredient.Type)
-                        : (b.IsEmpty ? new Color(1f, 1f, 1f, 0.35f) : Color.white);
+                        : (b.IsEmpty ? new Color(1f, 1f, 1f, 0.30f) : Color.white);
                 }
             }
         }
 
-        /// <summary>A section's page: its bottles, with prices, and a way back.</summary>
-        private void BuildTabPage(TycoonRun run, IngredientType type)
+        /// <summary>
+        /// An aisle's page: the bottles STANDING ON A SHELF rather than listed as keys (v5 P13,
+        /// the notes' shelf view). Hovering one raises an info panel with what is left in it and
+        /// what it costs; clicking takes it to the prep stage as the keys used to.
+        /// </summary>
+        private void BuildShelfPage(TycoonRun run, string category)
         {
-            _menuTitle.text = GroupName(type);
+            _menuTitle.text = AisleName(category).ToUpperInvariant();
 
             var items = new List<ShelfBottle>();
-            foreach (var b in run.Shelf.Bottles) if (b.Ingredient.Type == type) items.Add(b);
+            foreach (var b in run.Shelf.Bottles)
+                if (b.Ingredient.Info?.Category == category) items.Add(b);
             float areaW = _bottleList.rect.width, areaH = _bottleList.rect.height;
 
-            // Once the bottles need a second row the page scrolls. Kept deliberately damped:
-            // the shelf tracks the wheel and stops with it, rather than sliding on afterwards.
-            var scroller = NewRect("Scroll", _bottleList);
-            // The list lays its children out vertically and a ScrollRect reports no preferred
-            // size, so without this it collapses to 100x100 and the shelf vanishes.
-            var scrollFill = scroller.gameObject.AddComponent<LayoutElement>();
-            scrollFill.preferredWidth = areaW; scrollFill.preferredHeight = areaH;
-            scrollFill.flexibleHeight = 1f;
-            var scroll = scroller.gameObject.AddComponent<ScrollRect>();
-            scroll.horizontal = false; scroll.vertical = true;
-            scroll.scrollSensitivity = 5f; scroll.inertia = true;
-            scroll.decelerationRate = 0.01f;   // barely coasts — the shelf follows the wheel, no glide
-            scroll.movementType = ScrollRect.MovementType.Elastic;
-            scroll.elasticity = 0.02f;
-            var viewport = NewRect("Viewport", scroller);
-            Stretch(viewport, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            viewport.gameObject.AddComponent<RectMask2D>();
-            var vpHit = viewport.gameObject.AddComponent<Image>();
-            vpHit.color = new Color(0, 0, 0, 0.001f);
-            scroll.viewport = viewport;
+            // The aisle is a SHELF, not a list of keys (v5 P13). Two planks, bottles standing on
+            // them at their own proportions, and nothing under a bottle but the wood -- the
+            // price and the stock come up on hover instead of being printed on every key, so
+            // the eye reads bottles first and numbers only when it asks for them.
+            const int shelves = 2;
+            float shelfH = (areaH - GridGap) / shelves;
 
-            var grid = NewRect("Grid", viewport);
-            grid.anchorMin = new Vector2(0, 1); grid.anchorMax = new Vector2(1, 1);
-            grid.pivot = new Vector2(0.5f, 1); grid.anchoredPosition = Vector2.zero;
-            grid.sizeDelta = Vector2.zero;
-            scroll.content = grid;
-            var g = grid.gameObject.AddComponent<GridLayoutGroup>();
-            g.spacing = new Vector2(GridGap, GridGap);
-            g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            g.constraintCount = MenuColumns;
-            // A page holds two rows of three. A seventh bottle starts a third row below the fold,
-            // which is what the scroll is for — the keys keep their size either way.
-            g.cellSize = new Vector2((areaW - (MenuColumns - 1) * GridGap) / MenuColumns,
-                (areaH - (MenuRows - 1) * GridGap) / MenuRows);
-            grid.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            for (int row = 0; row < shelves; row++)
+            {
+                int from = row * ShelfColumns, count = Mathf.Min(ShelfColumns, items.Count - from);
+                if (count <= 0) break;
 
-            foreach (var bottle in items) AddItemBox(grid, bottle, run);
+                // The sheet lays its children out vertically, so the shelves are STACKED by the
+                // layout rather than anchored by hand -- hand-anchored bands were simply
+                // overridden and the page came up blank.
+                var band = NewRect($"Shelf{row}", _bottleList);
+                var fill = band.gameObject.AddComponent<LayoutElement>();
+                fill.preferredHeight = shelfH; fill.preferredWidth = areaW; fill.flexibleWidth = 1f;
+
+                // The plank: a board with a lit front edge, drawn at the sheet's own grain.
+                var plank = NewRect("Plank", band);
+                plank.anchorMin = new Vector2(0.02f, 0); plank.anchorMax = new Vector2(0.98f, 0);
+                plank.pivot = new Vector2(0.5f, 0);
+                plank.offsetMin = new Vector2(0, 6); plank.offsetMax = new Vector2(0, 16);
+                plank.gameObject.AddComponent<Image>().color = ShelfWood;
+                var lip = NewRect("Lip", plank);
+                lip.anchorMin = new Vector2(0, 1); lip.anchorMax = new Vector2(1, 1);
+                lip.pivot = new Vector2(0.5f, 1);
+                lip.sizeDelta = new Vector2(0, 2);
+                lip.anchoredPosition = Vector2.zero;
+                lip.gameObject.AddComponent<Image>().color = ShelfLip;
+
+                // Centred on the plank rather than packed to the left: a shelf with two bottles
+                // on it is a shelf with two bottles on it, not a row that ran out.
+                float slotW = (areaW * 0.96f) / ShelfColumns;
+                float startX = -slotW * count * 0.5f;
+                for (int i = 0; i < count; i++)
+                    AddShelfBottle(band, items[from + i], run,
+                        startX + slotW * (i + 0.5f), slotW, shelfH);
+            }
+
+            if (items.Count == 0)
+            {
+                var none = Handwritten(NewText("Empty", _bottleList, _body, 8,
+                    TextAnchor.MiddleCenter, InkSoft));
+                Stretch(none.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                none.text = "nothing on this shelf";
+            }
+        }
+
+        /// <summary>
+        /// One bottle standing on the shelf. The whole slot is the hit target -- a bottle is a
+        /// narrow silhouette and asking the player to hit the glass itself would be a precision
+        /// test nobody signed up for. Hover raises the info panel; a bottle that cannot be used
+        /// says why on itself instead of opening a stage that would refuse it.
+        /// </summary>
+        private void AddShelfBottle(RectTransform band, ShelfBottle bottle, TycoonRun run,
+            float centreX, float slotW, float shelfH)
+        {
+            var card = bottle.Ingredient;
+            bool empty = bottle.IsEmpty;
+            string blocked =
+                empty ? "OUT"
+                : card.Type == IngredientType.Beer
+                    ? (run.CanPull(card.Id) ? null : run.ServingGlass.IsFull ? "FULL" : "BUSY")
+                    : (run.Glass.IsFull ? "FULL" : null);
+            bool shut = blocked != null;
+
+            var slot = NewRect($"Slot_{card.Id}", band);
+            Place(slot, new Vector2(0.5f, 0), new Vector2(slotW - 6f, shelfH - 18f),
+                new Vector2(centreX, 16f));
+            var hit = slot.gameObject.AddComponent<Image>();
+            hit.color = new Color(0, 0, 0, 0.001f);          // invisible, but catches the pointer
+
+            var art = NewRect("Art", slot);
+            Stretch(art, Vector2.zero, Vector2.one, new Vector2(6, 4), new Vector2(-6, -18));
+            var img = art.gameObject.AddComponent<Image>();
+            img.sprite = ItemArt.Bottle(card.Info?.Style);
+            img.preserveAspect = true; img.raycastTarget = false;
+            img.color = img.sprite == null
+                ? UITheme.StyleColor(card.Info?.Style, card.Type)
+                : (shut ? new Color(1f, 1f, 1f, 0.38f) : Color.white);
+
+            // The brand, lettered in engine under the bottle -- the art carries a blank label
+            // because the generator cannot spell (the keg precedent).
+            var name = Handwritten(NewText("N", slot, _body, 8, TextAnchor.UpperCenter,
+                shut ? InkSoft : InkDark));
+            Place(name.rectTransform, new Vector2(0.5f, 1), new Vector2(slotW - 8f, 12f), Vector2.zero);
+            name.text = shut ? $"{card.Name}  ·  {blocked}" : card.Name;
+
+            var trigger = slot.gameObject.AddComponent<EventTrigger>();
+            var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            enter.callback.AddListener(_ => ShowBottleInfo(bottle, run, slot));
+            trigger.triggers.Add(enter);
+            var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+            exit.callback.AddListener(_ => HideBottleInfo());
+            trigger.triggers.Add(exit);
+
+            if (shut) return;
+
+            var press = new EventTrigger.Entry { eventID = EventTriggerType.PointerClick };
+            press.callback.AddListener(_ => { HideBottleInfo(); OpenBottle(card); });
+            trigger.triggers.Add(press);
+
+            var sink = slot.gameObject.AddComponent<PressSink>();
+            sink.Face = art; sink.Depth = 3f; sink.Squash = 0.01f;
+        }
+
+        /// <summary>What is left in the bottle and what it costs, raised beside it on hover
+        /// (v5 P13). Built once and moved, so hovering along a shelf does not churn objects.</summary>
+        private void ShowBottleInfo(ShelfBottle bottle, TycoonRun run, RectTransform near)
+        {
+            if (_bottleInfo == null) BuildBottleInfo();
+            var card = bottle.Ingredient;
+
+            _bottleInfoName.text = card.Name.ToUpperInvariant();
+            double left = bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 0;
+            _bottleInfoStock.text = bottle.IsEmpty
+                ? "EMPTY"
+                : $"{left:P0} left  ·  {bottle.Remaining:0.#} of {bottle.Capacity:0.#}";
+            int price = card.Info?.Price ?? 0;
+            _bottleInfoPrice.text = price > 0 ? $"restock ${price}" : "house pour";
+            _bottleInfoFill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01((float)left), 1f);
+            _bottleInfoFill.color = bottle.IsEmpty ? UITheme.ViceRed[3]
+                : left < 0.25 ? UITheme.Amber[3] : UITheme.Lime[3];
+
+            // Pinned above the bottle, and kept inside the board at either end. Positioned in
+            // the PANEL's space, not the sheet's: the sheet lays its children out vertically,
+            // so a panel parented there is treated as another row -- it lost its size, its
+            // backing plate and its place above the bottle all at once.
+            var panel = _bottleInfo;
+            panel.gameObject.SetActive(true);
+            panel.SetAsLastSibling();
+            var world = near.TransformPoint(new Vector3(0, near.rect.height * 0.5f + 14f, 0));
+            var local = (Vector2)_menuPanel.InverseTransformPoint(world);
+            float halfBoard = _menuPanel.rect.width * 0.5f;
+            float x = Mathf.Clamp(local.x, -halfBoard + panel.rect.width * 0.5f + 8f,
+                halfBoard - panel.rect.width * 0.5f - 8f);
+            panel.anchoredPosition = new Vector2(x, local.y + 8f);
+        }
+
+        private void HideBottleInfo()
+        {
+            if (_bottleInfo != null) _bottleInfo.gameObject.SetActive(false);
+        }
+
+        private void BuildBottleInfo()
+        {
+            _bottleInfo = NewRect("BottleInfo", _menuPanel);
+            _bottleInfo.anchorMin = _bottleInfo.anchorMax = new Vector2(0.5f, 0.5f);
+            _bottleInfo.pivot = new Vector2(0.5f, 0f);
+            _bottleInfo.sizeDelta = new Vector2(184, 58);
+            var bg = _bottleInfo.gameObject.AddComponent<Image>();
+            bg.color = InkDark;
+            bg.raycastTarget = false;
+
+            _bottleInfoName = NewText("N", _bottleInfo, _display, 8, TextAnchor.UpperCenter,
+                UITheme.Cream[4]);
+            Place(_bottleInfoName.rectTransform, new Vector2(0.5f, 1), new Vector2(176, 12),
+                new Vector2(0, -6));
+            _bottleInfoStock = NewText("S", _bottleInfo, _body, 8, TextAnchor.UpperCenter,
+                UITheme.Cream[3]);
+            Place(_bottleInfoStock.rectTransform, new Vector2(0.5f, 1), new Vector2(176, 12),
+                new Vector2(0, -21));
+            _bottleInfoPrice = NewText("P", _bottleInfo, _body, 8, TextAnchor.UpperCenter,
+                UITheme.Money);
+            Place(_bottleInfoPrice.rectTransform, new Vector2(0.5f, 1), new Vector2(176, 12),
+                new Vector2(0, -44));
+
+            var track = NewRect("Track", _bottleInfo);
+            Place(track, new Vector2(0.5f, 1), new Vector2(160, 4), new Vector2(0, -36));
+            track.gameObject.AddComponent<Image>().color = UITheme.Night[3];
+            var fill = NewRect("Fill", track);
+            fill.anchorMin = Vector2.zero; fill.anchorMax = new Vector2(1, 1);
+            fill.offsetMin = Vector2.zero; fill.offsetMax = Vector2.zero;
+            _bottleInfoFill = fill.gameObject.AddComponent<Image>();
+            _bottleInfoFill.raycastTarget = false;
+
+            _bottleInfo.gameObject.SetActive(false);
+        }
+
+        // The menu is printed, not moulded (v5 P13): cream stock, two weights of ink, and no
+        // colour of its own -- the only colour on the page is the drink.
+        private const int ShelfColumns = 4;
+        private static readonly Color ShelfWood = new Color(0.30f, 0.19f, 0.12f, 1f);
+        private static readonly Color ShelfLip = new Color(0.46f, 0.31f, 0.19f, 1f);
+        private RectTransform _bottleInfo;
+        private Text _bottleInfoName, _bottleInfoStock, _bottleInfoPrice;
+        private Image _bottleInfoFill;
+
+        private static readonly Color PaperKey = new Color(0.96f, 0.94f, 0.86f, 1f);
+        private static readonly Color InkDark = new Color(0.12f, 0.10f, 0.09f, 1f);
+        private static readonly Color InkSoft = new Color(0.34f, 0.30f, 0.26f, 1f);
+
+        /// <summary>An aisle's name as it is printed on the menu (v5 P10 categories).</summary>
+        private static string AisleName(string category)
+        {
+            switch (category)
+            {
+                case IngredientCategories.Vodka: return "VODKA";
+                case IngredientCategories.Gin: return "GIN";
+                case IngredientCategories.Rum: return "RUM";
+                case IngredientCategories.Whiskey: return "WHISKEY";
+                case IngredientCategories.Tequila: return "TEQUILA";
+                case IngredientCategories.Liqueur: return "LIQUEURS";
+                case IngredientCategories.Juice: return "JUICES";
+                case IngredientCategories.Mixer: return "MIXERS";
+                case IngredientCategories.Garnish: return "GARNISHES";
+                case IngredientCategories.Beer: return "ON TAP";
+                default: return category.ToUpperInvariant();
+            }
         }
 
         private static readonly IngredientType[] MenuOrder =

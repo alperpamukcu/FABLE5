@@ -198,23 +198,35 @@ P12 opened the night), and the compound result is a bar that cannot fail. P18's 
 longer optional — but it now has a far better instrument to tune with: an open night, a balk
 threshold, a star-driven arrival rate, and a speed-response harness.
 
-## P13 — Menu, shelf & shop presentation
+## P13 — Menu, shelf & shop presentation ◐ (art half blocked)
 
-- ☐ **Menu v2**: cream paper / sticky-note flat style (procedural kit); category page →
-  **full shelf view** (bottles standing on a drawn shelf, most of the screen); hover → info
-  panel (remaining stock, price); click → prep stage; smooth menu↔shelf transition
-- ☐ **Icons** for every bottle style and cocktail (generated per style-reference, quantized,
-  point-imported); shown beside names everywhere a drink is named
-- ☐ **Bottle redesign**: every style re-generated with black outline + blank label; brand
-  lettered in engine; one texel density across the set
-- ☐ **Trash bin** (C7): drawn bin, bottom-right on the counter; drag the build/glass onto it
-  to discard; BIN GLASS button retires
-- ☐ **Top bar v2**: procedural chrome redesign carrying day/clock, till, rating stars
-- ☐ **Tablet shop**: the market/upgrade flow presented as a tablet — grid of purchases,
-  each with preview image + icon + price; restock, brands, glass tiers, recipes
-- ☐ **End-of-night receipt v2**: expenses, earnings, customers served, average stars
-Gate: measured in play (rects, grain, hover panels); flow regressions checked by playing a
-full night through the new menu only.
+- ☑ **Menu v2**: the index is the bar's **aisles** (v5 P10 categories — VODKA, GIN, JUICES,
+  MIXERS, ON TAP — not ingredient types), printed as flat **cream paper keys** with a hairline
+  rule and two weights of ink. The coloured plastic plates are gone: the only colour on the
+  page is the drink.
+- ☑ **Shelf view**: an aisle opens onto a **shelf** — bottles standing on a plank at their own
+  proportions, centred on it, names lettered underneath in engine. Not a grid of keys.
+- ☑ **Hover info panel**: what is left in the bottle (with a fill bar that reddens as it
+  drains) and what a restock costs, raised beside the bottle and clamped inside the board.
+- ☐ **Icons** for every bottle style and cocktail — **blocked, see below**
+- ☐ **Bottle redesign** (black outline, blank label) — **blocked, see below**
+- ☐ **Trash bin** (C7), **top bar v2**, **tablet shop**, **end-of-night receipt v2** — not
+  started; all four are procedural chrome and need no generation.
+
+**BLOCKED: the PixelLab account is out of generations.** `get_balance` reports
+**0 remaining** (2050 of 2000 used, $0.07 credit) on the Tier 1 subscription, so every one of
+the nineteen bottle regenerations was refused. The two art items above cannot proceed until
+the account is topped up. Worth noting how little this blocks: by the project's own
+art-direction rule, **UI chrome is never generated art** — the menu, the shelf, the info
+panel, the top bar, the tablet shell and the receipt are all procedural by design, so only
+the illustrative work (bottles, drink icons) is actually waiting.
+
+Two layout traps found and fixed, both the same shape: `_bottleList` carries a
+`VerticalLayoutGroup`, so anything parented to it has its size and position taken over.
+Hand-anchored shelf bands came up **blank**, and the hover panel was laid out as another list
+row — losing its size, its backing plate and its place above the bottle at once. The shelves
+are now stacked *by* the layout (which is what they wanted anyway) and the panel is parented
+to the board instead.
 
 ## P14 — Prep & serve v2 + glassware (the big interaction phase)
 
