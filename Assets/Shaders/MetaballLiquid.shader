@@ -207,15 +207,25 @@ Shader "LastCall/MetaballLiquid"
                 float a  = smoothstep(_Threshold - aa, _Threshold + aa, field);
                 if (a <= 0.001) discard;
 
-                // How much of this pixel is foam rather than beer. Scaled past 1 so the boundary
-                // is a short blend and not a long muddy gradient: a head has a definite underside.
-                float fm = saturate(dropFoam / max(dropTotal, 1e-4) * 1.6);
+                // How much of this pixel is foam rather than beer. Scaled well past 1 so the
+                // boundary is a short blend and not a long muddy gradient: a head has a definite
+                // underside, and a soft fade across it was most of why the foam read as a smudge.
+                float fm = saturate(dropFoam / max(dropTotal, 1e-4) * 2.2);
 
-                // A bright rim right at the surface tension line.
+                fixed4 body = lerp(_Color, _FoamColor, fm);
+
+                // Foam is a mass of BUBBLES, so it is shaded by its own field strength: the
+                // hollows between bubbles sit back and the crowns catch the light. Without this
+                // the head is one flat wash of cream with no form in it at all.
+                float bub = saturate(dropFoam / max(_Threshold, 1e-4) - 0.55);
+                body.rgb *= lerp(1.0, 0.82 + 0.30 * saturate(bub * 1.4), fm);
+
+                // A bright rim right at the surface tension line — but barely any of it on foam.
+                // The rim blends toward white, and white on a cream head erases its edge, which
+                // is the other half of why it looked washed out (2026-07-30).
                 float rim = 1.0 - saturate((field - _Threshold) / max(_EdgeWidth, 1e-4));
                 rim = pow(rim, 1.5);
-                fixed4 body = lerp(_Color, _FoamColor, fm);
-                fixed4 col = lerp(body, _EdgeColor, rim * 0.85);
+                fixed4 col = lerp(body, _EdgeColor, rim * 0.85 * (1.0 - fm * 0.75));
 
                 // A bright band riding just under the moving water line — the light on the
                 // surface — plus a soft sheen through the body so it reads as wet volume.

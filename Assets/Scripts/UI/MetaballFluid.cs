@@ -89,23 +89,64 @@ namespace LastCall.UI
         private const byte KindBeer = 0, KindFoam = 1;
         /// <summary>Foam is mostly air, so it barely falls — but it does fall, which is what lets
         /// a glass of pure froth fill from the bottom instead of sticking to the rim.</summary>
-        private const float FoamGravity = 0.34f;
-        /// <summary>How hard beer and foam separate when they overlap. This, not buoyancy, is what
-        /// puts the head on top: a symmetric minimum-distance constraint cannot sort by density,
-        /// so overlapping unlike particles are pushed apart ALONG GRAVITY — foam up, beer down.
-        /// It is self-limiting, costing nothing once the two have separated.</summary>
-        private const float FoamSort = 0.55f;
+        private const float FoamGravity = 0.46f;
+        /// <summary>
+        /// The share of beer neighbours at which buoyancy is already at full strength. Below it
+        /// the lift tapers off, so a bubble merely *resting* on the beer — the whole underside of
+        /// the head — is not fired upward, and the head stays a layer instead of a diffuse cloud
+        /// (a 13% head drew 3.4× too thick before this tapered off at all).
+        ///
+        /// It is a RAMP and not a dead zone, though: a dead zone traps bubbles. One pressed
+        /// against the glass wall could be too buried to sink and too lightly buried to be lifted,
+        /// so it sat there — and the head grew a streak of foam clinging down one side, which is
+        /// exactly what "the foam has to stay on top of the beer" rules out (2026-07-30).
+        /// </summary>
+        private const float FoamFullLiftAt = 0.35f;
+        /// <summary>
+        /// A light nudge along gravity between an overlapping beer/foam pair — foam up, beer down.
+        /// Only a nudge: buoyancy below is what actually stratifies the drink, and this was doing
+        /// the job twice. At its old strength it kept pushing after the layers had already parted
+        /// and opened a gap between them wide enough for the metaball field to fall under its
+        /// threshold — the head and the beer were separated by a ragged black hole (2026-07-30).
+        /// </summary>
+        private const float FoamSort = 0.5f;
+        /// <summary>
+        /// Real buoyancy, and the reason the head can be relied on to stay on top of the beer
+        /// (2026-07-30): a foam particle surrounded by beer is pushed UP, hard, in proportion to
+        /// how much beer is around it. The pairwise sorting above is a local nudge and a bubble
+        /// that got buried could have its nudges cancel from all sides; this cannot cancel,
+        /// because it is a body force that only points one way. It is also self-cancelling in
+        /// the right way — the moment a bubble reaches the surface it has no beer above it, the
+        /// force fades out, and it settles instead of being fired out of the glass.
+        /// </summary>
+        private const float FoamBuoyancy = 0.9f;
+        /// <summary>Froth is viscous. It slumps and wobbles where beer sloshes, so it is damped
+        /// harder and blended toward its neighbours more — the head moves as one soft mass rather
+        /// than a cloud of jittering specks.</summary>
+        private const float FoamDamping = 0.86f;
+        private const float FoamViscosity = 0.72f;
         /// <summary>Bubbles are coarser than beer, so foam draws with a bigger, varied blob: the
         /// crest breaks into rounds instead of running as a smooth line.</summary>
-        private const float FoamRadius = PoolRadius * 1.5f;
+        private const float FoamRadius = PoolRadius * 1.26f;
         /// <summary>
-        /// Foam is drawn with FEWER, BIGGER blobs than the same volume of beer. Given the beer's
+        /// Foam is drawn with fewer, bigger blobs than the same volume of beer. Given the beer's
         /// particle count the head tiles the glass densely and its top row comes out flat however
         /// it is packed — the bumps are smaller than one particle. Coarser bubbles put the relief
         /// at a size the eye can see. The volume is unchanged: the drawn surface is set by the
         /// blob radius, and radius² rises to cover the count that was dropped.
+        ///
+        /// Only *slightly* coarser, though. At half the count and 1.5× the radius a thin head had
+        /// barely three bubbles to a column, so it clumped instead of covering: the layer opened
+        /// 12–21 px gaps that the field could not bridge (measured 2026-07-30). Continuity first
+        /// — the relief comes from the per-bubble ceiling and the slack packing, not from being
+        /// so sparse the head stops being a layer.
         /// </summary>
-        private const float FoamCountScale = 0.5f;
+        /// Deliberately ABOVE the 0.63 at which count × radius² would come to exactly 1. At that
+        /// figure the head draws its true depth (1.07× on a 26% head) but is too sparse to stay
+        /// continuous — a partly-full glass opened 22 px holes in two of nine columns. Generous
+        /// coverage costs a head drawn about a quarter deep and buys a head with no holes in it,
+        /// and of the two only one of them looks like a bug. Measured both ways, 2026-07-30.
+        private const float FoamCountScale = 0.8f;
         /// <summary>
         /// How far the head may stand PROUD of the vessel's rim. A real head crowns over the
         /// glass; clamped to the same ceiling as the beer it was planed dead flat instead, which
@@ -119,7 +160,7 @@ namespace LastCall.UI
         /// leaves the packing irregular, so the head is lumpy where the beer is smooth. Free: it
         /// is a multiply inside a branch the sorting already needs.
         /// </summary>
-        private const float FoamSlack = 0.45f;
+        private const float FoamSlack = 0.7f;
 
         // Viewport margins: room around the vessel for splashes and the falling stream column.
         private const float StreamMargin = 110f;
@@ -144,6 +185,16 @@ namespace LastCall.UI
         /// <summary>Beer or foam. Both live in the same arrays and the same solver — the head is
         /// not a separate system, it is the same fluid made of lighter stuff.</summary>
         private readonly byte[] _kind = new byte[MaxPool];
+        /// <summary>
+        /// 0..1, how much beer is sitting ON TOP of this particle — measured from the neighbours
+        /// the viscosity pass already gathers, so buoyancy costs no extra neighbour search.
+        ///
+        /// Above, not merely around (2026-07-30). "Around" cannot tell a buried bubble from one
+        /// resting on the beer's surface, and lifting the resting ones pushed the whole underside
+        /// of the head up off the beer — leaving a gap between the layers that the metaball field
+        /// could not bridge, which drew as black holes through the drink.
+        /// </summary>
+        private readonly float[] _submerged = new float[MaxPool];
         private int _pn;                               // live pool particles
         private int _foamN;                            // how many of them are foam
 
@@ -545,8 +596,14 @@ namespace LastCall.UI
             for (int i = 0; i < _pn; i++)
             {
                 _ppx[i] = _px[i]; _ppy[i] = _py[i];
-                // Foam is mostly air: it feels a fraction of the weight beer does.
-                float g = _kind[i] == KindFoam ? FoamGravity : 1f;
+                // Foam is mostly air: it feels a fraction of the weight beer does, and a bubble
+                // with beer around it is pushed the other way entirely.
+                float g = 1f;
+                if (_kind[i] == KindFoam)
+                {
+                    float buried = Mathf.Clamp01(_submerged[i] / FoamFullLiftAt);
+                    g = FoamGravity - FoamBuoyancy * buried;
+                }
                 _vx[i] += accX * g * dt; _vy[i] += accY * g * dt;
                 _px[i] += _vx[i] * dt; _py[i] += _vy[i] * dt;
                 _qx[i] = _px[i]; _qy[i] = _py[i];   // predicted, before the constraints
@@ -555,7 +612,7 @@ namespace LastCall.UI
             // Gravity's own direction in the container's frame — the axis foam rises along and
             // beer sinks along. Taken from gravity alone, not from accX/accY, so a knock to the
             // glass shakes the head about without turning the stack upside down.
-            float downX = sn, downY = -c;
+            float upX = -sn, upY = c;
 
             // Incompressibility: relax a minimum-distance constraint a few passes — no two
             // particles closer than Spacing — so the body packs up to the fill line and never
@@ -602,18 +659,29 @@ namespace LastCall.UI
                             pxi -= nx; pyi -= ny;
                             _px[j] += nx; _py[j] += ny;
 
-                            // Beer and foam do not merely avoid each other, they SORT: an
-                            // overlapping unlike pair is separated along gravity, foam toward the
-                            // top. The plain minimum-distance constraint above is symmetric and
-                            // cannot do this on its own — it would leave the head stirred through
-                            // the beer forever. Self-limiting: once the two layers part they stop
-                            // being neighbours and this costs nothing.
+                            // Beer and foam do not merely avoid each other, they SORT. The plain
+                            // minimum-distance constraint above is symmetric and cannot tell them
+                            // apart, so an overlapping unlike pair also EXCHANGES along gravity
+                            // until the foam is the one on top.
+                            //
+                            // The exchange is driven by how badly the pair is out of order, not by
+                            // how much it overlaps, and that distinction is the whole thing. Driven
+                            // by overlap it kept pushing after the two had sorted themselves and
+                            // levered the layers apart — leaving a gap the metaball field could not
+                            // bridge, which drew as black holes through the drink. Driven by the
+                            // mis-ordering it falls to nothing the instant the foam is above the
+                            // beer, so the layers sort and then stay in contact (2026-07-30).
                             if (_kind[i] != _kind[j])
                             {
-                                float ex = push * FoamSort;
-                                float si = _kind[i] == KindFoam ? -1f : 1f;
-                                pxi += downX * ex * si; pyi += downY * ex * si;
-                                _px[j] -= downX * ex * si; _py[j] -= downY * ex * si;
+                                float along = dx * upX + dy * upY;      // >0: j sits above i
+                                float si = _kind[i] == KindFoam ? 1f : -1f;
+                                float mis = along * si;                 // >0: the beer is on top
+                                if (mis > 0f)
+                                {
+                                    float ex = mis * 0.5f * FoamSort;
+                                    pxi += upX * ex * si; pyi += upY * ex * si;
+                                    _px[j] -= upX * ex * si; _py[j] -= upY * ex * si;
+                                }
                             }
                         }
                     }
@@ -651,8 +719,10 @@ namespace LastCall.UI
                 _vx[i] = (_px[i] - _ppx[i]) / dt;
                 _vy[i] = (_py[i] - _ppy[i]) / dt;
                 // Damping is what lets the drink go still — but applied while you are shaking it
-                // it just swallows the slosh. So it is light in a moving tin, strong in a still one.
-                _vx[i] *= damp; _vy[i] *= damp;
+                // it just swallows the slosh. So it is light in a moving tin, strong in a still
+                // one, and strongest of all on foam, which is thick and does not ring.
+                float d = moving ? damp : (_kind[i] == KindFoam ? FoamDamping : damp);
+                _vx[i] *= d; _vy[i] *= d;
                 float sp2 = _vx[i] * _vx[i] + _vy[i] * _vy[i];
                 float sleep = _vesselSpeed > 40f ? 0f : SleepSpeed;   // a moving tin never sleeps
                 if (sp2 < sleep * sleep) { _vx[i] = 0f; _vy[i] = 0f; }
@@ -708,13 +778,15 @@ namespace LastCall.UI
             float iy = Mathf.Max(_halfH - PoolRadius * FaceOffset, 2f);
             for (int i = 0; i < _pn; i++)
             {
-                // Foam is allowed to stand proud of the rim — a head crowns over the glass, and
-                // holding it under the same ceiling as the beer is what flattened it into a lid.
+                // Foam may stand proud of the rim — a head crowns over the glass — and each bubble
+                // gets its OWN ceiling. A single shared one is a hard clamp applied after every
+                // relaxation pass, so every particle that tried to rise was slammed to exactly the
+                // same y: the flat top edge was not the packing settling, it was this line drawing
+                // a ruler across the head (measured 2026-07-30).
                 //
-                // Each bubble gets its OWN ceiling. A single shared one is a hard clamp applied
-                // after every relaxation pass, so every particle that tried to rise was slammed
-                // to exactly the same y: the flat top edge was not the packing settling, it was
-                // this line drawing a ruler across the head (measured 2026-07-30).
+                // Capping foam at the DRINK's surface instead was tried and reverted: it gave beer
+                // a higher ceiling than foam, so beer thrown above that line by a hard swing could
+                // never be displaced back down — the pint inverted and stayed inverted.
                 float ceil = _kind[i] == KindFoam
                     ? iy + FoamCrown * (0.30f + 0.70f * (i * 0.6180339f % 1f))
                     : iy;
@@ -740,9 +812,14 @@ namespace LastCall.UI
         private void ApplyViscosity()
         {
             float h2 = H * H;
+            // Gravity's direction in the container's frame, so "above" means above in the world
+            // even when the glass is laid over.
+            float gc = Mathf.Cos(-_angle), gs = Mathf.Sin(-_angle);
+            float upX = -gs, upY = gc;
             for (int i = 0; i < _pn; i++)
             {
-                float avx = 0f, avy = 0f; int n = 0;
+                float avx = 0f, avy = 0f; int n = 0, same = 0, beerN = 0;
+                byte ki = _kind[i];
                 int cx = CellOf(_px[i]), cy = CellOf(_py[i]);
                 for (int gy = cy - ViscCellR; gy <= cy + ViscCellR; gy++)
                     for (int gx = cx - ViscCellR; gx <= cx + ViscCellR; gx++)
@@ -750,14 +827,31 @@ namespace LastCall.UI
                         {
                             if (j == i) continue;
                             float dx = _px[j] - _px[i], dy = _py[j] - _py[i];
-                            if (dx * dx + dy * dy < h2) { avx += _vx[j]; avy += _vy[j]; n++; }
+                            if (dx * dx + dy * dy < h2)
+                            {
+                                n++;
+                                // Beer, and above me: the only neighbour that has to be escaped.
+                                if (_kind[j] == KindBeer && dx * upX + dy * upY > 0f) beerN++;
+                                // Only LIKE sticks to like. Blending a bubble's velocity toward
+                                // the beer around it erased the very rise buoyancy had just given
+                                // it, so a head stirred into the beer could never climb back out
+                                // — 22 of 32 bubbles stayed buried after a thrashing (measured
+                                // 2026-07-30). Foam coheres with foam and slides past beer, which
+                                // is both what froth does and what the head needs to do.
+                                if (_kind[j] == ki) { avx += _vx[j]; avy += _vy[j]; same++; }
+                            }
                         }
-                if (n == 0) continue;
+                // How buried this particle is, for next frame's buoyancy. Free: the neighbours
+                // were already gathered for the viscosity blend.
+                _submerged[i] = ki == KindFoam && n > 0 ? (float)beerN / n : 0f;
+                if (same == 0) continue;
                 // Averaging neighbour velocities is what holds the drink together — but it is
-                // also what erases the slosh, so a moving tin gets much less of it.
-                float visc = _vesselSpeed > 40f ? ShakeViscosity : Viscosity;
-                _vx[i] = Mathf.Lerp(_vx[i], avx / n, visc);
-                _vy[i] = Mathf.Lerp(_vy[i], avy / n, visc);
+                // also what erases the slosh, so a moving tin gets much less of it. Foam is
+                // stickier than beer: it slumps as one mass instead of scattering.
+                float visc = _vesselSpeed > 40f ? ShakeViscosity
+                           : ki == KindFoam ? FoamViscosity : Viscosity;
+                _vx[i] = Mathf.Lerp(_vx[i], avx / same, visc);
+                _vy[i] = Mathf.Lerp(_vy[i], avy / same, visc);
             }
         }
 

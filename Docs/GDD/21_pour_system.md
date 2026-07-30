@@ -236,9 +236,14 @@ of the angle for free.
 This replaces a vertical drag (lift to lean, the grip the bottle uses in the shaker stage,
 module 24 §2). That grip is right for the bottle, which the hand carries; it was wrong here,
 because the glass does *not* follow the hand — it docks itself under the spout — so the drag was
-happening in empty space while the glass flew somewhere else. The arc the base sweeps is drawn
-while the glass is held, with the clean-filling lean marked along it and a tick where the pour
-starts running past the rim.
+happening in empty space while the glass flew somewhere else.
+
+**Nothing is drawn to aim at (2026-07-30).** A guide arc marking the good lean, and the ticks on
+the glass marking where a good head sits (§10.3), were both built and then both removed at the
+player's call: *"there are green and red boxes drawn beside and above the glass for the limits,
+these are not needed."* They turned a drink you look at into a gauge you line up against. The
+pint says what it is without them — the head is right there, on top, against the glass it fills
+— and the readout still gives the numbers for anyone who wants them.
 
 | How you hold it | What lands |
 | --- | --- |

@@ -19,7 +19,7 @@ namespace LastCall.UI
 
         // The tap (GDD 21 §10): a font you pull the handle on, over the pint it fills. There is
         // no shaker in this stage and no aiming — the whole skill is how far the handle is held.
-        private RectTransform _tapPanel, _tapSurface, _tapHandle, _tapGlass, _tapBandMark, _tapBandMarkHigh;
+        private RectTransform _tapPanel, _tapSurface, _tapHandle, _tapGlass;
         private bool _pouringNow;
         private MetaballFluid _tapFluid;
         private Image _tapKeg;
@@ -34,12 +34,6 @@ namespace LastCall.UI
         /// degrees of the pour, so the last few degrees have to be holdable (2026-07-30).
         /// </summary>
         private const float TiltFollow = 22f;
-        /// <summary>The lean that fills cleanly, marked for the player (GDD 21 §10.2 — the stream
-        /// runs down the wall around 45°). The band, not the point: the foam curve is flat here,
-        /// which is the whole reason this is where the glass should sit while it fills.</summary>
-        private const float GoodLeanMin = 36f, GoodLeanMax = 56f;
-        private RectTransform _tapGuide;
-        private const int GuideDots = 11;
         private const float HandleTilt = 62f;   // degrees the handle swings while it runs
         /// <summary>How far left of the font's centre the spout hangs — the glass goes under it.</summary>
         private const float SpoutReach = 118f;
@@ -121,20 +115,6 @@ namespace LastCall.UI
             });
             _tapGlass.gameObject.AddComponent<EventTrigger>().triggers.Add(glassGrab);
 
-            // The lean guide: where to swing the glass's base to. It lives in the same space the
-            // hand moves in — an arc about the spout — because that is what the pointer is now
-            // steering. Only drawn while the glass is in hand (2026-07-30).
-            _tapGuide = NewRect("LeanGuide", _tapSurface);
-            Place(_tapGuide, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
-            for (int i = 0; i <= GuideDots; i++)
-            {
-                var dot = NewRect(i < GuideDots ? "Dot" : "SpillTick", _tapGuide);
-                dot.anchorMin = dot.anchorMax = dot.pivot = new Vector2(0.5f, 0.5f);
-                dot.sizeDelta = i < GuideDots ? new Vector2(3f, 3f) : new Vector2(14f, 3f);
-                dot.gameObject.AddComponent<Image>().raycastTarget = false;
-            }
-            _tapGuide.gameObject.SetActive(false);
-
             _tapFluid = new MetaballFluid(_tapSurface);
             // A pint glass: narrow foot opening steadily out to the mouth.
             _tapFluid.SetProfile(new[] { 0.82f, 0.88f, 0.93f, 0.97f, 1.00f, 1.00f });
@@ -153,10 +133,10 @@ namespace LastCall.UI
             // the fluid body itself — see MetaballFluid's foam particles — so the head is a
             // wobbling, bubbled crown that leans when the glass leans.
 
-            // Where a good head sits, marked on the glass so the target is visible while pouring
-            // and not a number to be memorised (GDD 21 §10.3).
-            _tapBandMark = NewRect("GoodBand", _tapSurface);
-            _tapBandMark.gameObject.AddComponent<Image>().raycastTarget = false;
+            // Nothing is drawn on or beside the glass to mark a target (2026-07-30). The good-head
+            // ticks and the lean-guide arc both came out: they turned a drink you look at into a
+            // gauge you line up against, and the pint already says what it is — the head is right
+            // there, on top, against the glass it fills. The readout still names the numbers.
 
             if (pint.sprite != null) _tapGlass.SetAsLastSibling();   // the glass draws over its contents
 
@@ -217,7 +197,6 @@ namespace LastCall.UI
             if (_tapKegCard != null && run.PullingId == null && run.CanPull(_tapKegCard.Id))
                 run.BeginPull(_tapKegCard.Id);
 
-            PlaceGoodBandMark();
             PushTapPool(run);
             RefreshTapText(run);
         }
@@ -262,8 +241,6 @@ namespace LastCall.UI
             }
             else _glassTilt = Mathf.MoveTowards(_glassTilt, 0f, dt * 220f);
 
-            DrawLeanGuide();
-
             // In hand the glass is held so its MOUTH stays under the faucet, whatever the lean —
             // the hand slides to keep it there, which is what a bartender's does. Docking the
             // base instead swung the mouth a hundred units clear of the tap at the very angle
@@ -297,7 +274,6 @@ namespace LastCall.UI
 
             run.SettleHead(dt);
             PushTapPool(run);
-            PlaceGoodBandMark();
             _tapFluid.Step(dt);
             if (!pouring) RefreshTapText(run);
         }
@@ -330,77 +306,6 @@ namespace LastCall.UI
                 _tapFluid.SetPool(centre.x - iw, centre.x + iw,
                     centre.y - innerH * 0.5f, centre.y + innerH * 0.5f, beerFrac, rad, headFrac);
             }
-        }
-
-        /// <summary>
-        /// The arc the glass's base swings along, with the clean-filling lean marked on it and a
-        /// tick where the pour starts running past the rim. Drawn where the HAND goes rather than
-        /// on the glass, because the hand is what the player is aiming (GDD 21 §10.2).
-        /// </summary>
-        private void DrawLeanGuide()
-        {
-            if (_tapGuide == null) return;
-            _tapGuide.gameObject.SetActive(_glassHeld);
-            if (!_glassHeld) return;
-
-            var pivot = TiltPivot();
-            // Just BEYOND where the base sits, not on it: the glass is drawn over its contents
-            // and so over anything at its own radius, which hid the guide entirely. The angle a
-            // dot marks does not depend on how far out it is drawn, so pushing the arc clear of
-            // the glass costs the guide nothing in truthfulness.
-            float r = RimAboveGrip() + 52f;
-            for (int i = 0; i < _tapGuide.childCount; i++)
-            {
-                var dot = (RectTransform)_tapGuide.GetChild(i);
-                bool spill = i == GuideDots;
-                float deg = spill
-                    ? (float)TapPour.SpillTilt
-                    : Mathf.Lerp(GoodLeanMin, GoodLeanMax, i / (GuideDots - 1f));
-                float rad = deg * Mathf.Deg2Rad;
-                dot.anchoredPosition = pivot + new Vector2(-Mathf.Sin(rad), -Mathf.Cos(rad)) * r;
-                dot.localRotation = Quaternion.Euler(0, 0, -deg);
-                var col = spill
-                    ? new Color(UITheme.ViceRed[3].r, UITheme.ViceRed[3].g, UITheme.ViceRed[3].b, 0.75f)
-                    : new Color(UITheme.Lime[4].r, UITheme.Lime[4].g, UITheme.Lime[4].b, 0.55f);
-                dot.GetComponent<Image>().color = col;
-            }
-        }
-
-        /// <summary>
-        /// Where the beer should stop and the head begin, marked on the glass (GDD 21 §10.3).
-        /// Two thin ticks against the inside wall rather than a filled band: a slab of colour
-        /// across the glass read as another layer of the drink, which is the one thing this
-        /// marker must never look like.
-        /// </summary>
-        private void PlaceGoodBandMark()
-        {
-            var (minX, maxX, bottomY, innerH) = PintInterior();
-            float span = (maxX - minX) * 0.34f;
-            var tint = new Color(UITheme.Lime[4].r, UITheme.Lime[4].g, UITheme.Lime[4].b, 0.85f);
-
-            // Only worth showing on a glass that is standing: they mark where a finished pint's
-            // head belongs, and rotating them with a leaning glass would say nothing.
-            bool standing = _glassTilt < 12f;
-            _tapBandMark.gameObject.SetActive(standing);
-
-            PlaceTick(_tapBandMark, minX, span, bottomY + innerH * (float)(1.0 - TapPour.GoodHeadMax), tint);
-            if (_tapBandMarkHigh == null)
-            {
-                _tapBandMarkHigh = NewRect("GoodBandHigh", _tapSurface);
-                var img = _tapBandMarkHigh.gameObject.AddComponent<Image>();
-                img.raycastTarget = false;
-                _tapBandMarkHigh.SetSiblingIndex(_tapBandMark.GetSiblingIndex() + 1);
-            }
-            _tapBandMarkHigh.gameObject.SetActive(standing);
-            PlaceTick(_tapBandMarkHigh, minX, span, bottomY + innerH * (float)(1.0 - TapPour.GoodHeadMin), tint);
-        }
-
-        private static void PlaceTick(RectTransform rt, float leftX, float span, float y, Color tint)
-        {
-            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = new Vector2(span, 3f);
-            rt.anchoredPosition = new Vector2(leftX + span * 0.5f + 4f, y);
-            rt.GetComponent<Image>().color = tint;
         }
 
         /// <summary>The pint's drinkable interior, measured off the glass art.</summary>
