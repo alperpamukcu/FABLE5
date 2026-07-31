@@ -531,7 +531,15 @@ namespace LastCall.Core
             EnsurePhase(TycoonPhase.DayOpen);
             ShakerIngredient(ingredientId, nameof(ingredientId));
             if (volume <= 0) return 0;
-            return _shelf.PourInto(Glass, ingredientId, volume);
+            double poured = _shelf.PourInto(Glass, ingredientId, volume);
+            // The right glass stands ready WHILE the drink is built (2026-07-31): the counter
+            // retargets as the tin's contents start naming a recipe, so the serve stage opens
+            // with the vessel already correct instead of swapping it in front of the player.
+            // SelectGlassFor refuses once the serving glass holds liquid, so nothing is ever
+            // swapped under a drink — the pinned rule stands.
+            if (poured > 0 && ServingGlass.IsEmpty)
+                SelectGlassFor(RatioRecipeMatcher.Match(Glass, _recipes, IngredientOf)?.Recipe);
+            return poured;
         }
 
         /// <summary>One garnish tap = a fixed pinch (GDD 21 §3).</summary>

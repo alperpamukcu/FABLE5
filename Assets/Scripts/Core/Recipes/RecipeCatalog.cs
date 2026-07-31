@@ -170,7 +170,7 @@ namespace LastCall.Core
                     Band("rum", .28, .48), Band("lime", .10, .28), Band("syrup", .06, .22),
                     Band("soda", .20, .45), Band("mint", .03, .15)),
                 // Seven bands, five of them spirits at a ten-point window each: the capstone.
-                Cocktail("long_island", "Long Island", 28, 40, 4, 25, 2, PrepMethod.Built, "highball",
+                Cocktail("long_island", "Long Island", 28, 40, 4, 25, 2, PrepMethod.Shaken, "highball",
                     new[] { new PatternRequirement(5, s), new PatternRequirement(1, so), new PatternRequirement(1, bu) },
                     locked: true,
                     Band("vodka", .08, .18), Band("gin", .08, .18), Band("rum", .08, .18),

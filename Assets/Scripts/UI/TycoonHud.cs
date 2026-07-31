@@ -146,6 +146,22 @@ namespace LastCall.UI
         private RectTransform _idRoot;
         private Image _idPhoto;
         private Text _idName, _idAgeFrom, _idRel, _idIntent, _idOrder, _idOrderParts, _idRates, _idRatesLabel;
+        private RectTransform _idRecipeTip;
+        private Text _idRecipeTipText;
+
+        /// <summary>The book's line for the ordered drink, shown at the card (hover).</summary>
+        private void ShowOrderRecipeTip()
+        {
+            var visit = _idVisit;
+            if (visit == null || _idRecipeTip == null) return;
+            var r = visit.Order.Wanted;
+            string prep = r.Id == "draught" ? "ON TAP" : r.Id == "neat_pour" ? "NEAT"
+                : r.Prep == PrepMethod.Shaken ? "SHAKEN"
+                : r.Prep == PrepMethod.Stirred ? "STIRRED" : "BUILT";
+            _idRecipeTipText.text = $"{prep}  ·  {BandLine(r)}  ·  {r.GlassId?.ToUpperInvariant()}";
+            _idRecipeTip.gameObject.SetActive(true);
+            _idRecipeTip.SetAsLastSibling();
+        }
         private Image _idOrderIcon;
 
         // The shop tablet (v5 P13). Two errands, not one wall of cards: what goes behind the
@@ -329,7 +345,10 @@ namespace LastCall.UI
                     prop.anchorMin = prop.anchorMax = new Vector2(0, 0);
                     prop.pivot = new Vector2(0.5f, 0);
                     prop.sizeDelta = new Vector2(34, 52);
-                    prop.anchoredPosition = new Vector2(v.SeatX, CounterLineY + 2f);
+                    // ON the counter's drawn surface, not floating at the waist-clip line
+                    // (the author's report): the clip line is the counter's BACK edge; the
+                    // top surface the glass stands on reads ~36px lower in the scene.
+                    prop.anchoredPosition = new Vector2(v.SeatX, CounterLineY - 36f);
                     var img = prop.gameObject.AddComponent<Image>();
                     img.sprite = ItemArt.Glass;
                     img.preserveAspect = true;
@@ -1662,6 +1681,31 @@ namespace LastCall.UI
                 Vector2.zero);
             _idOrderParts.rectTransform.pivot = new Vector2(0, 1);
             _idOrderParts.rectTransform.anchoredPosition = new Vector2(LicFieldsX + 54f, -LicLines[3] - 4f);
+
+            // Hovering the order shows the RECIPE (2026-07-31): the drink they asked for,
+            // said the way the book says it — prep, pour shares, glass — without leaving
+            // the card. The hit rect covers the order line, icon included.
+            var orderHit = NewRect("OrderHit", card);
+            Place(orderHit, new Vector2(0, 1), new Vector2(LicFieldsW, 52), Vector2.zero);
+            orderHit.pivot = new Vector2(0, 0);
+            orderHit.anchoredPosition = new Vector2(LicFieldsX, -LicLines[3] - 6f);
+            var orderHitImg = orderHit.gameObject.AddComponent<Image>();
+            orderHitImg.color = new Color(0, 0, 0, 0.001f);
+            _idRecipeTip = NewRect("RecipeTip", card);
+            Place(_idRecipeTip, new Vector2(0, 1), new Vector2(LicFieldsW + 40f, 44), Vector2.zero);
+            _idRecipeTip.pivot = new Vector2(0, 1);
+            _idRecipeTip.anchoredPosition = new Vector2(LicFieldsX - 20f, -LicLines[3] - 22f);
+            _idRecipeTip.gameObject.AddComponent<Image>().color = UITheme.Night[1];
+            _idRecipeTipText = NewText("T", _idRecipeTip, _body, 8, TextAnchor.MiddleLeft, UITheme.TextPrimary);
+            Stretch(_idRecipeTipText.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 2), new Vector2(-8, -2));
+            _idRecipeTip.gameObject.SetActive(false);
+            var trig = orderHit.gameObject.AddComponent<EventTrigger>();
+            var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            enter.callback.AddListener(_ => ShowOrderRecipeTip());
+            trig.triggers.Add(enter);
+            var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+            exit.callback.AddListener(_ => _idRecipeTip.gameObject.SetActive(false));
+            trig.triggers.Add(exit);
 
             // Serving preferences — the endorsements line. What the licence permits.
             _idIntent = LicenceField(card, "SERVING PREFERENCES", LicFieldsX, LicLines[4],

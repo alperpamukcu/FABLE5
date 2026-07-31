@@ -66,6 +66,50 @@ namespace LastCall.UI
         private const float ShakeStiffness = 105f;      // loose follow -> it whips around
         private const float ShakeDamping = 6f;
 
+        // The pour gauge (2026-07-31, the author's note): WHILE pouring, a bar shows each
+        // ingredient's share in its own liquid colour with the percentage inked on it — the
+        // number the recipe bands grade, live, where the pouring happens.
+        private RectTransform _shakerMixBar;
+        private string _mixBarSig = "";
+
+        private void RefreshShakerMixBar(TycoonRun run)
+        {
+            if (_shakerMixBar == null) return;
+            var glass = run.Glass;
+            var sig = new StringBuilder();
+            foreach (var id in glass.Ingredients)
+                sig.Append(id).Append((int)(glass.RatioOf(id) * 100)).Append(';');
+            sig.Append((int)(glass.FillFraction * 100));
+            string signature = sig.ToString();
+            if (signature == _mixBarSig) return;
+            _mixBarSig = signature;
+
+            foreach (Transform child in _shakerMixBar) Destroy(child.gameObject);
+            float w = _shakerMixBar.rect.width, x = 0f;
+            foreach (var id in glass.Ingredients)
+            {
+                var card = run.Shelf.Find(id)?.Ingredient;
+                float ratio = (float)glass.RatioOf(id);
+                float segW = ratio * (float)glass.FillFraction * w;
+                var seg = NewRect($"S_{id}", _shakerMixBar);
+                seg.anchorMin = new Vector2(0, 0); seg.anchorMax = new Vector2(0, 1);
+                seg.pivot = new Vector2(0, 0.5f);
+                seg.offsetMin = new Vector2(0, 2); seg.offsetMax = new Vector2(0, -2);
+                seg.sizeDelta = new Vector2(segW, -4);
+                seg.anchoredPosition = new Vector2(x, 0);
+                var img = seg.gameObject.AddComponent<Image>();
+                img.color = UITheme.LiquidColor(card?.Info?.Style, card?.Type ?? IngredientType.Spirit);
+                img.raycastTarget = false;
+                if (segW > 34f)
+                {
+                    var label = NewText("P", seg, _body, 8, TextAnchor.MiddleCenter, UITheme.Night[0]);
+                    Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                    label.text = $"{(card?.Name ?? id).ToUpperInvariant().Split(' ')[0]} {ratio:P0}";
+                }
+                x += segW;
+            }
+        }
+
         private string ShakerLine(TycoonRun run)
         {
             if (run.Glass.IsEmpty) return "shaker empty — tap a bottle";
@@ -122,6 +166,8 @@ namespace LastCall.UI
             if (_shakerTop != null) { _shakerTop.anchoredPosition = _capRest; _shakerTop.localRotation = Quaternion.identity; }
             foreach (var g in _benchProps) if (g != null) g.alpha = 1f;
             PushShakerPool(run, 0f);
+            _mixBarSig = "!";                 // force a redraw on stage entry
+            RefreshShakerMixBar(run);
             _shakeMeterFill.rectTransform.sizeDelta = new Vector2(0, -4);
             _shakeMeterText.text = run.Glass.HasPreparation("shaken")
                 ? $"SHAKEN · {run.ShakeEnergy:P0}" : "";
@@ -218,6 +264,7 @@ namespace LastCall.UI
             }
 
             if (pourNow) _shakerLoopWanted = "pour_loop";   // the stage frame drives the source
+            if (pourNow) RefreshShakerMixBar(run);          // the gauge follows the stream
             _pouring = pourNow;
         }
 
@@ -645,6 +692,13 @@ namespace LastCall.UI
 
             _shakerReadout = NewText("Readout", _shakerPanel, _body, 13, TextAnchor.LowerCenter, UITheme.TextSecondary);
             Stretch(_shakerReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 92), new Vector2(-16, 118));
+
+            // The pour gauge: a recessed track under the readout, filled live per ingredient.
+            var mixTrack = NewRect("MixTrack", _shakerPanel);
+            Place(mixTrack, new Vector2(0.5f, 0), new Vector2(560, 26), new Vector2(0, 122));
+            mixTrack.gameObject.AddComponent<Image>().color = UITheme.Night[0];
+            _shakerMixBar = NewRect("MixSegs", mixTrack);
+            Stretch(_shakerMixBar, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
 
             // The shake meter, above the bottom bar.
             var meterBg = NewRect("ShakeMeterBg", _shakerPanel);

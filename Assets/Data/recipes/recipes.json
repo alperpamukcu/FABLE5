@@ -374,7 +374,7 @@
       "requirements": [ { "types": ["Spirit"], "count": 5 }, { "types": ["Sour"], "count": 1 }, { "types": ["Bubbly"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
       "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
-      "locked": true, "prepMethod": "Built", "glassId": "highball",
+      "locked": true, "prepMethod": "Shaken", "glassId": "highball",
       "ratios": [
         { "style": "vodka", "min": 0.08, "max": 0.18 },
         { "style": "gin", "min": 0.08, "max": 0.18 },
