@@ -379,6 +379,32 @@ staging is not. In the author's words:
   which only calls `RefreshServeText`. So the tin is left standing mid-air, tilted, at
   wherever the cursor dropped it — visible, dead to the pointer on the next stage refresh,
   and never returned to its rest. It has to be put down deliberately when it empties.
+- ☐ **The serve stage in first person** — the author's direction, 2026-07-31, after playing
+  the re-layout: *"I want this scene to be a real place more than a set of buttons. Think of
+  the perspective as a VR headset POV. On the left an angled table with the ice and so on
+  standing on it; on the right an angled fridge asset with the mixers inside."*
+
+  This is the next pass and it is art-led. What the re-layout already got right is the
+  **scale** of the props and the left-to-right order; what it still gets wrong is that both
+  columns are flat lists seen straight on, so the props stand in a grid rather than on
+  anything. The change is to give them furniture to stand on and a viewpoint to be seen from.
+
+  Two new props, generating as `furn_prep_table` and `furn_mixer_fridge`: a steel prep table
+  receding to the upper left, and an upright glass-door fridge angled front-down-left. **Both
+  are shot EMPTY** — bare top, bare shelves. This is the same rule the bottles just had to be
+  reshot for: anything painted into the furniture is a picture, and the props standing on it
+  have to be separate sprites because their positions are hit targets and their levels are
+  drawn by the game.
+
+  What has to follow the perspective once the furniture lands:
+  1. Props sit on the table's surface line, not in a vertical layout group — so their
+     positions come from the art, measured off it the way every anchor in this project is.
+  2. Things further back are drawn smaller. That is the whole reason the viewpoint reads as
+     depth rather than as a tilted picture.
+  3. The scroll shelves survive in spirit, not in form: more finishing touches mean more room
+     along the table, and the fridge has three shelves in the art to fill before it needs to
+     scroll.
+
 - ☑ **Room to grow.** *Done 2026-07-31.* Both columns are masked scroll shelves
   (`ScrollShelf`), so anything past the visible run scrolls instead of drawing over the
   buttons under it. Sized so the four basic finishing touches fit without scrolling at all
