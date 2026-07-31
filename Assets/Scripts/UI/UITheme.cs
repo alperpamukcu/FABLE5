@@ -159,10 +159,37 @@ namespace LastCall.UI
             style == "stout" ? (Color)new Color32(0xE4, 0xD2, 0xB4, 0xFF)
                              : (Color)new Color32(0xF7, 0xF0, 0xDE, 0xFF);
 
-        /// <summary>The colour of the actual liquid for a style; clear spirits read pale.
+        /// <summary>
+        /// The palest a liquid may be drawn before it stops being visible, and what it is pulled
+        /// toward. Vodka, gin, soda and tonic are near-white in <see cref="LiquidColors"/> because
+        /// that is what they are — but a near-white drink behind pale glass, or in a glass over a
+        /// lit bar, is nothing at all: the player could not tell a half-full bottle of vodka from
+        /// an empty one. They are given the least colour that separates them, and it is blue
+        /// because that is what water already reads as under bar light, and because it is the one
+        /// cast that cannot be mistaken for a juice, a beer or a foam head.
+        /// </summary>
+        private const float ClearAbove = 0.80f, ClearFull = 0.96f, ClearCast = 0.55f;
+        private static readonly Color ClearTint = (Color)new Color32(0x86, 0xC2, 0xE4, 0xFF);
+
+        /// <summary>
+        /// A liquid you can see. Anything with real colour of its own is returned untouched;
+        /// only the near-clear ones are tinted, and the paler they are the more they take.
+        /// </summary>
+        public static Color VisibleLiquid(Color c)
+        {
+            float luma = 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
+            if (luma <= ClearAbove) return c;
+            float t = Mathf.InverseLerp(ClearAbove, ClearFull, luma);
+            var cast = Color.Lerp(c, ClearTint, t * t * (3f - 2f * t) * ClearCast);
+            return new Color(cast.r, cast.g, cast.b, c.a);
+        }
+
+        /// <summary>The colour of the actual liquid for a style; clear spirits read pale — but
+        /// never so pale they vanish (see <see cref="VisibleLiquid"/>).
         /// Falls back to a soft body tone of the ingredient type when the style is unmapped.</summary>
         public static Color LiquidColor(string style, IngredientType fallbackType) =>
-            style != null && LiquidColors.TryGetValue(style, out var c) ? c : TypeRamp[fallbackType][3];
+            VisibleLiquid(style != null && LiquidColors.TryGetValue(style, out var c)
+                ? c : TypeRamp[fallbackType][3]);
 
         /// <summary>Blends the poured ingredients into one liquid colour, weighted by share and
         /// mixed in LINEAR space so a two-part drink reads bright and clean instead of the muddy
