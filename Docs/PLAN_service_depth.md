@@ -176,7 +176,13 @@ target is <15%.
 - ☑ Sim v2: served per night, served per bar-minute, bar standing; plus a new
   **`LastCall → Measure Service Speed Response`** that runs the same seeds at three service
   speeds — the gate, made measurable rather than asserted
-- ☐ **Bussing beat (D2) deferred to P14.** It holds a stool until the player clears a glass,
+- ☑ **Bussing beat (D2)** *(2026-07-31)*: a drinker leaves the empty glass on the stool
+  (`DirtyGlass` in Core), and the stool is blocked until it is cleared — the click does it
+  now, the bar's own clock in 7s. Storm-offs leave nothing. The HUD stands the glass where
+  the customer sat, clickable with the full press. The floor bot busses on its round, so the
+  floor measures a bar that busses (~70k glasses/200 runs) and the ≤1s residual block cost
+  moved the shape by noise (16.0%→17.0% bankruptcies, storm-offs byte-level 18.4%): the
+  seven-second cost belongs to inattention, not to the floor. It holds a stool until the player clears a glass,
   which is a throughput change, and P14 is the phase that owns the serve-stage interaction.
   Adding seat-blocking friction in the same phase that opened the night would have made both
   unmeasurable.

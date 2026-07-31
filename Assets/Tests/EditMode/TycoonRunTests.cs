@@ -191,6 +191,33 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void AnEmptyGlass_BlocksTheStool_UntilItIsBussed()
+        {
+            // D2, the bussing beat: a drinker leaves the glass on the stool, and the stool is
+            // not sat on again until it is cleared — the click does it now, the bar's own
+            // clock does it in BarDay.BusSeconds. A storm-off leaves nothing.
+            var run = new TycoonRun(NewShelf(), Book, new RunRng("bussing"),
+                config: new TycoonConfig(20, orderDecisionSeconds: 0, savorSeconds: 1));
+            int guard = 0;
+            while (run.Floor.Seated.Count == 0) { Assert.Less(guard++, 100); run.Tick(5); }
+            var visit = run.Floor.Seated[0];
+
+            run.PourMeasure("gin", 0.35);
+            run.PourMeasure("soda", 0.35);
+            PourOut(run);
+            run.ServeTo(visit);
+            run.Tick(1.5);   // the savour ends; they get up and leave the glass
+
+            Assert.AreEqual(1, run.Floor.Dirty.Count, "the empty glass stands on the stool");
+            var glass = run.Floor.Dirty[0];
+            Assert.IsFalse(glass.Cleared);
+
+            glass.Bus();
+            run.Tick(0.1);
+            Assert.AreEqual(0, run.Floor.Dirty.Count, "bussed — the stool is free now");
+        }
+
+        [Test]
         public void ARecipe_IsBoughtOntoTheMenu_AndTheGateHolds()
         {
             // v5 P16: P10's locked cocktails were dead content — nothing ever unlocked them.

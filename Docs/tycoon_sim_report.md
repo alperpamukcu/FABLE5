@@ -7,37 +7,38 @@ brands. Every survival figure is a floor.
 
 | Metric | Value |
 |---|---|
-| Bankruptcies | 32 (16.0%) |
-| Reached the 30-day horizon | 168 (84.0%) |
+| Bankruptcies | 34 (17.0%) |
+| Reached the 30-day horizon | 166 (83.0%) |
 | Days survived p25/median/p75 | 30 / 30 / 30 |
-| Final till p25/median/p75 | $-196 / $-145 / $-96 |
-| Avg income / expenses per day | $144.6 / $150.0 |
+| Final till p25/median/p75 | $-196 / $-145 / $-97 |
+| Avg income / expenses per day | $144.5 / $150.0 |
 | Avg daily satisfaction | 68% |
-| Storm-offs | 11995 (18.4%) |
+| Storm-offs | 11989 (18.4%) |
 | Customers per night | 10.9 |
 | Served per bar-minute | 5.13 |
 | Bar standing (avg night) | 3.46 stars |
-| Serves Exact / Close / Wrong | 71073 (96.8%) / 2367 (3.2%) / 3 (0.0%) |
+| Serves Exact / Close / Wrong | 71054 (96.8%) / 2371 (3.2%) / 4 (0.0%) |
 | Refused (too little in the glass) / declined | 1 (0.0%) / 0 |
-| Take: base / tip | $448477 / $351387 (351387 (43.9%) of it tip) |
-| Avg base / tip per serve | $6.11 / $4.78 |
+| Take: base / tip | $448273 / $351142 (351142 (43.9%) of it tip) |
+| Avg base / tip per serve | $6.10 / $4.78 |
 | Avg spec score / fill score | 99% / 100% |
-| Orders with a serving spec, fully met | 32076 (97.3%) of 32961 |
-| Garnish craft landed | 41001 (55.8%) |
-| Extra orders earned (of serves) | 20197 (27.5%) |
-| Extra orders earned (of exact) | 20197 (28.4%) |
-| Draught share of serves | 8925 (12.2%) |
-| Pints in the good head band | 8925 (100.0%) |
+| Orders with a serving spec, fully met | 32047 (97.3%) of 32938 |
+| Garnish craft landed | 40994 (55.8%) |
+| Extra orders earned (of serves) | 20167 (27.5%) |
+| Extra orders earned (of exact) | 20167 (28.4%) |
+| Draught share of serves | 8947 (12.2%) |
+| Pints in the good head band | 8947 (100.0%) |
 | Average head poured | 18% |
-| Snack serves (of serves) | 24482 (33.3%) · $67324 |
+| Snack serves (of serves) | 24477 (33.3%) · $67311 |
+| Glasses bussed | 51519 |
 
 ## Red days by day number
 
 | Day | Closed | In the red |
 |---|---|---|
 | 1 | 200 | 0 (0.0%) |
-| 2 | 200 | 3 (1.5%) |
-| 3 | 200 | 3 (1.5%) |
+| 2 | 200 | 2 (1.0%) |
+| 3 | 200 | 4 (2.0%) |
 | 4 | 200 | 0 (0.0%) |
 | 5 | 200 | 0 (0.0%) |
 | 6 | 200 | 0 (0.0%) |
@@ -46,7 +47,7 @@ brands. Every survival figure is a floor.
 | 9 | 200 | 0 (0.0%) |
 | 10 | 200 | 0 (0.0%) |
 | 11 | 200 | 2 (1.0%) |
-| 12 | 200 | 3 (1.5%) |
+| 12 | 200 | 4 (2.0%) |
 | 13 | 200 | 10 (5.0%) |
-| 14 | 200 | 29 (14.5%) |
-| 15 | 200 | 58 (29.0%) |
+| 14 | 200 | 31 (15.5%) |
+| 15 | 200 | 56 (28.0%) |

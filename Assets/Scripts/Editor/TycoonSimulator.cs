@@ -114,6 +114,12 @@ namespace LastCall.EditorTools
                 if (run.Phase == TycoonPhase.DayOpen)
                 {
                     run.Tick(1.0);
+                    // The bussing beat (D2): the bot clears empty glasses as part of its
+                    // round, so the floor measures a bar that busses -- an ignored glass
+                    // blocks its stool for BarDay.BusSeconds, and that cost belongs to
+                    // inattention, not to the floor.
+                    foreach (var g in run.Floor.Dirty)
+                        if (!g.Cleared) { g.Bus(); stats.GlassesBussed++; }
                     buildTimer += 1.0;
                     if (buildTimer < buildSeconds) continue;
 
@@ -296,6 +302,7 @@ namespace LastCall.EditorTools
             public int Runs, Stuck, Bankruptcies, StormOffs, CustomersFinished;
             public int Serves, Exact, Close, Wrong, CraftServes, SpeedTips, ExtraOrders;
             public int SnackServes, SnackIncome;
+            public int GlassesBussed;
             // v5 P11: the base/tip split is the phase's whole point, and refusals/declines are
             // the two new ways a serve can end.
             public int Refused, Declined, SpecOrders, SpecFull;
@@ -396,6 +403,7 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Pints in the good head band | {Pct(GoodPints, Pints)} |");
                 sb.AppendLine($"| Average head poured | {HeadSum / Math.Max(1, Pints):P0} |");
                 sb.AppendLine($"| Snack serves (of serves) | {Pct(SnackServes, Serves)} · ${SnackIncome} |");
+                sb.AppendLine($"| Glasses bussed | {GlassesBussed} |");
                 sb.AppendLine();
                 sb.AppendLine("## Red days by day number");
                 sb.AppendLine();

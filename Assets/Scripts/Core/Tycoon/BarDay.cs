@@ -17,10 +17,41 @@ namespace LastCall.Core
     /// order, patience roll, face and read — comes from the factory the caller passes to
     /// <see cref="Tick"/>, so the floor is testable without regulars or menus.
     /// </summary>
+    /// <summary>
+    /// An empty glass left on a stool (D2, v5 P14). It blocks the stool until it is bussed:
+    /// the player's click clears it now, and the bar's own slow clock clears it eventually —
+    /// so ignoring the bussing costs seats-seconds, and clearing it is worth the click.
+    /// </summary>
+    public sealed class DirtyGlass
+    {
+        public double Left { get; private set; }
+        public bool Cleared { get; private set; }
+
+        internal DirtyGlass(double seconds) { Left = seconds; }
+
+        internal void Tick(double seconds)
+        {
+            if (Cleared) return;
+            Left -= seconds;
+            if (Left <= 0) Cleared = true;
+        }
+
+        /// <summary>The player clears it by hand — the stool frees this instant.</summary>
+        public void Bus() => Cleared = true;
+    }
+
     public sealed class BarDay
     {
         public int Day { get; }
         public int Seats { get; }
+
+        /// <summary>Seconds an unbussed glass blocks its stool before the bar gets to it.</summary>
+        public const double BusSeconds = 7.0;
+
+        private readonly List<DirtyGlass> _dirty = new List<DirtyGlass>();
+
+        /// <summary>The empty glasses standing on stools right now.</summary>
+        public IReadOnlyList<DirtyGlass> Dirty => _dirty;
         public int Arrived { get; private set; }
 
         /// <summary>Seconds of the shift gone by.</summary>
@@ -121,8 +152,21 @@ namespace LastCall.Core
                 if (visit.State == VisitState.Waiting || visit.State == VisitState.Drinking)
                     return false;
                 _finished.Add(visit);
+                // The bussing beat (D2, v5 P14): someone who drank leaves their empty glass
+                // on the stool, and the stool is not sat on again until it is cleared — by
+                // the player's click, or by the bar getting to it in its own time. A
+                // storm-off leaves nothing: there was no glass.
+                if (visit.Served != null)
+                    _dirty.Add(new DirtyGlass(BusSeconds));
                 return true;
             });
+
+            // The dirty glasses age out on the bar's own slow clock.
+            for (int i = _dirty.Count - 1; i >= 0; i--)
+            {
+                _dirty[i].Tick(seconds);
+                if (_dirty[i].Cleared) _dirty.RemoveAt(i);
+            }
 
             // How much of this tick falls before closing. Taken BEFORE the clock advances, and
             // clamped: a single tick big enough to cover the whole shift must still let the
@@ -136,7 +180,7 @@ namespace LastCall.Core
             if (open > 0)
             {
                 _untilNextArrival -= open;
-                while (_untilNextArrival <= 0 && _seated.Count < Seats && !IsTooBusyToSit)
+                while (_untilNextArrival <= 0 && _seated.Count + _dirty.Count < Seats && !IsTooBusyToSit)
                 {
                     var visit = arrivalFactory();
                     _seated.Add(visit);
@@ -152,7 +196,7 @@ namespace LastCall.Core
                 {
                     // Held at the door by a room that is too far behind rather than by a full
                     // one: that is somebody deciding against the place, and the gap restarts.
-                    if (IsTooBusyToSit && _seated.Count < Seats)
+                    if (IsTooBusyToSit && _seated.Count + _dirty.Count < Seats)
                     {
                         Balked++;
                         _untilNextArrival = NextGap();

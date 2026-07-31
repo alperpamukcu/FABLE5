@@ -86,6 +86,8 @@ namespace LastCall.UI
             public Image Icon;               // the ordered drink, drawn by DrinkIcon (v5 P13)
             public Image PatienceFill;
             public float SeatX;              // this stool's resting x
+            public DirtyGlass Dirty;         // the empty glass left on this stool (D2)
+            public RectTransform DirtyProp;  // its clickable prop on the counter
             public float WalkT;              // 0..1 walk-in progress
             public bool Exiting;             // playing the leave animation
             public float ExitT;              // 0..1 leave progress
@@ -304,6 +306,52 @@ namespace LastCall.UI
             Sfx.Play("serve_clink");                          // the glass lands in front of them
             StartCoroutine(ServeReaction(index, verdict));   // reaction + payment float up
             return true;
+        }
+
+        // ── the bussing beat (D2, v5 P14) ────────────────────────────────────────
+        // A drinker leaves the empty glass on the stool, and the stool stays blocked until it
+        // is cleared: the player's click does it now, the bar's slow clock does it in seven
+        // seconds. The prop appears where the customer sat; clicking it is the bussing.
+
+        private void RefreshDirtyGlasses(TycoonRun run)
+        {
+            foreach (var v in _seats)
+            {
+                bool show = v.Dirty != null && !v.Dirty.Cleared;
+                if (show && v.DirtyProp == null)
+                {
+                    var prop = NewRect("DirtyGlass", _hudRoot);
+                    prop.anchorMin = prop.anchorMax = new Vector2(0, 0);
+                    prop.pivot = new Vector2(0.5f, 0);
+                    prop.sizeDelta = new Vector2(34, 52);
+                    prop.anchoredPosition = new Vector2(v.SeatX, CounterLineY + 2f);
+                    var img = prop.gameObject.AddComponent<Image>();
+                    img.sprite = ItemArt.Glass;
+                    img.preserveAspect = true;
+                    img.color = new Color(1f, 1f, 1f, 0.85f);
+                    if (img.sprite == null) img.color = new Color(0.8f, 0.9f, 0.95f, 0.5f);
+                    var view = v;
+                    var btn = prop.gameObject.AddComponent<Button>();
+                    btn.targetGraphic = img;
+                    btn.transition = Selectable.Transition.None;
+                    btn.onClick.AddListener(() =>
+                    {
+                        if (view.Dirty == null) return;
+                        view.Dirty.Bus();
+                        Sfx.Play("glass_down", 0.9f);
+                        Toast("GLASS CLEARED — STOOL FREE");
+                    });
+                    var sink = prop.gameObject.AddComponent<PressSink>();
+                    sink.Face = prop; sink.Depth = 3f; sink.Lift = 3f; sink.Tint = img;
+                    v.DirtyProp = prop;
+                }
+                else if (!show && v.DirtyProp != null)
+                {
+                    Destroy(v.DirtyProp.gameObject);
+                    v.DirtyProp = null;
+                    v.Dirty = null;
+                }
+            }
         }
 
         // ── the snack bowls (v5 P16) ─────────────────────────────────────────────
@@ -750,6 +798,16 @@ namespace LastCall.UI
                     v.Exiting = true;
                     v.ExitT = 0f;
                     v.ExitStorm = v.Visit.State == VisitState.StormedOff;
+                    // The bussing beat (D2): a drinker leaves the empty glass on this stool.
+                    // Core created the DirtyGlass in the same tick that freed the seat; this
+                    // view claims the first one no other stool has claimed.
+                    if (v.Visit.Served != null)
+                        foreach (var g in run.Floor.Dirty)
+                        {
+                            bool claimed = false;
+                            foreach (var other in _seats) if (other.Dirty == g) { claimed = true; break; }
+                            if (!claimed) { v.Dirty = g; break; }
+                        }
                     // The tab settles as they go: what they paid and the stars they leave
                     // behind float over the emptying stool. The serve only earned the face.
                     if (v.Visit.Paid > 0) StartCoroutine(TabFloat(i, v.Visit));
@@ -785,6 +843,7 @@ namespace LastCall.UI
             }
 
             RefreshSnackRow(run);
+            RefreshDirtyGlasses(run);
             // The bar bed (P17): always on, muffled while a stage or the licence is open.
             Sfx.Ambience(ducked: (_flow != null && _flow.IsOpen) ||
                                  (_idRoot != null && _idRoot.gameObject.activeSelf));
