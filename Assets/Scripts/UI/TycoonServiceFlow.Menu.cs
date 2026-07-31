@@ -453,12 +453,21 @@ namespace LastCall.UI
                 if (shut) liquid.color = new Color(liquid.color.r, liquid.color.g, liquid.color.b, 0.38f);
             }
 
-            // The brand, lettered in engine under the bottle -- the art carries a blank label
-            // because the generator cannot spell (the keg precedent).
-            var name = Handwritten(NewText("N", slot, _body, 8, TextAnchor.UpperCenter,
-                shut ? InkSoft : InkDark));
-            Place(name.rectTransform, new Vector2(0.5f, 1), new Vector2(slotW - 8f, 12f), Vector2.zero);
-            name.text = shut ? $"{card.Name}  ·  {blocked}" : card.Name;
+            // The brand on a little brass plaque under the bottle (2026-08-01): the old
+            // paper-ink name vanished on the dark wall -- the author could not read the shelf.
+            var plaque = NewRect("Plaque", slot);
+            Place(plaque, new Vector2(0.5f, 1), new Vector2(Mathf.Min(slotW - 10f, 118f), 15f),
+                new Vector2(0, 1f));
+            var plaqueImg = plaque.gameObject.AddComponent<Image>();
+            plaqueImg.color = shut
+                ? new Color(0.24f, 0.17f, 0.10f, 0.9f)
+                : new Color(0.42f, 0.30f, 0.16f, 0.95f);
+            plaqueImg.raycastTarget = false;
+            var name = Outlined(NewText("N", plaque, _body, 8, TextAnchor.MiddleCenter,
+                shut ? UITheme.Cream[2] : UITheme.Cream[4]), 1f);
+            Stretch(name.rectTransform, Vector2.zero, Vector2.one, new Vector2(2, 0), new Vector2(-2, 0));
+            name.horizontalOverflow = HorizontalWrapMode.Overflow;
+            name.text = shut ? $"{card.Name} · {blocked}" : card.Name;
 
             // The bottle answers the pointer whether or not it can be taken: a bottle that is OUT
             // still lifts, because "you found the thing" and "the thing will do something" are two

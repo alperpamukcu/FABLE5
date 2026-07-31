@@ -44,6 +44,15 @@ namespace LastCall.UI
                     if (!seam && (hash >> 9) % 37 == 0) c = Seam;               // a grain fleck
                     if (!seam && (hash >> 7) % 53 == 0)
                         c = new Color32((byte)(c.r + 8), (byte)(c.g + 5), c.b, 255);
+                    // The cornice lamps pool warm light down the boards: brighter toward the
+                    // top of each tile, so the tiled wall reads lit rather than flat.
+                    if (!seam)
+                    {
+                        float warm = y / (float)(H - 1);
+                        c = new Color32((byte)Mathf.Min(255, c.r + (int)(16 * warm) + 6),
+                                        (byte)Mathf.Min(255, c.g + (int)(10 * warm) + 3),
+                                        c.b, 255);
+                    }
                     px[y * W + x] = c;
                 }
             }

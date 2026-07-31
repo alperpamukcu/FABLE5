@@ -1378,13 +1378,18 @@ namespace LastCall.UI
 
             // Promoted to THE menu (2026-08-01): recipes, search and filters live here now
             // that the clipboard is gone — so it takes the room a menu deserves.
+            // Restyled to the licence's language (2026-08-01): a cream page under a navy
+            // header band, so the book reads as a printed thing rather than a dark panel.
             var sheet = NewRect("Sheet", _bookPanel);
             Place(sheet, new Vector2(0.5f, 0.5f), new Vector2(960, 660), Vector2.zero);
-            sheet.gameObject.AddComponent<Image>().color = UITheme.Night[1];
+            sheet.gameObject.AddComponent<Image>().color = UITheme.Cream[4];
             sheet.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;   // swallow
 
-            var title = NewText("T", sheet, _display, 16, TextAnchor.MiddleCenter, UITheme.PrimaryAction);
-            Place(title.rectTransform, new Vector2(0.5f, 1), new Vector2(400, 30), new Vector2(0, -8));
+            var headBand = NewRect("Head", sheet);
+            Stretch(headBand, new Vector2(0, 1), Vector2.one, new Vector2(0, -34), Vector2.zero);
+            headBand.gameObject.AddComponent<Image>().color = UITheme.ClubBlue[1];
+            var title = NewText("T", headBand, _body, 14, TextAnchor.MiddleCenter, UITheme.Cream[4]);
+            Stretch(title.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             title.text = "THE HOUSE BOOK";
 
             // The filter chips: click to cycle. Three axes the author named — the star tier,
@@ -1524,7 +1529,7 @@ namespace LastCall.UI
         {
             var h = NewRect("H", _bookList);
             h.gameObject.AddComponent<LayoutElement>().preferredHeight = 22;
-            var t = NewText("T", h, _body, 10, TextAnchor.MiddleLeft, UITheme.Cyan[4]);
+            var t = NewText("T", h, _body, 10, TextAnchor.MiddleLeft, UITheme.ClubBlue[2]);
             Stretch(t.rectTransform, Vector2.zero, Vector2.one, new Vector2(6, 0), Vector2.zero);
             t.text = text;
         }
@@ -1536,8 +1541,8 @@ namespace LastCall.UI
             var row = NewRect($"R_{r.Id}", _bookList);
             row.gameObject.AddComponent<LayoutElement>().preferredHeight = 46;
             row.gameObject.AddComponent<Image>().color = lockedRow
-                ? new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.55f)
-                : UITheme.Night[2];
+                ? new Color(UITheme.Cream[3].r, UITheme.Cream[3].g, UITheme.Cream[3].b, 0.5f)
+                : UITheme.Cream[3];
 
             var icon = NewRect("I", row);
             Place(icon, new Vector2(0, 0.5f), new Vector2(34, 34), new Vector2(8, 0));
@@ -1548,7 +1553,7 @@ namespace LastCall.UI
             if (lockedRow) img.color = new Color(1, 1, 1, 0.4f);
 
             var name = NewText("N", row, _body, 12, TextAnchor.UpperLeft,
-                lockedRow ? UITheme.TextSecondary : UITheme.TextPrimary);
+                lockedRow ? UITheme.Night[3] : UITheme.Night[1]);
             Place(name.rectTransform, new Vector2(0, 1), new Vector2(360, 16), new Vector2(50, -5));
             // The two brand-agnostic specials never touch the tin; everything else says how
             // it is worked. (Prep defaults to Shaken in the ctor, which fits neither a pint
@@ -1557,10 +1562,10 @@ namespace LastCall.UI
                 : r.Id == "neat_pour" ? "NEAT"
                 : r.Prep == PrepMethod.Shaken ? "SHAKEN"
                 : r.Prep == PrepMethod.Stirred ? "STIRRED" : "BUILT";
-            name.text = $"{r.Name.ToUpperInvariant()}   <color=#7FD4C1>{prep}</color>";
+            name.text = $"{r.Name.ToUpperInvariant()}   <color=#1B5F66>{prep}</color>";
             name.supportRichText = true;
 
-            var line = NewText("L", row, _body, 8, TextAnchor.LowerLeft, UITheme.TextSecondary);
+            var line = NewText("L", row, _body, 8, TextAnchor.LowerLeft, UITheme.Night[2]);
             Place(line.rectTransform, new Vector2(0, 0), new Vector2(560, 14), new Vector2(50, 5));
             line.horizontalOverflow = HorizontalWrapMode.Overflow;
             if (lockedRow)
