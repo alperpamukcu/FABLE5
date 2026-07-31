@@ -43,7 +43,28 @@ namespace LastCall.UI
         // something you reach into, which was the whole complaint. They scroll, so the finishing
         // touches and the mixers still coming have somewhere to go.
         private const float ShelfW = 244f, CabinetW = 244f;
-        private const float RailGap = 8f, RailKeyHeight = 130f, CabinetSlotHeight = 152f;
+        private const float RailGap = 8f, RailKeyHeight = 130f;
+
+        /// <summary>A fridge shelf: two bottles side by side, each as tall as it is in your hand.</summary>
+        private const int CabinetColumns = 2;
+        private const float CabinetSlotHeight = ServeVesselH + 20f;
+
+        /// <summary>
+        /// How big each thing on the finishing shelf actually is. An ice bucket is not a salt
+        /// cellar, and forcing all four into one row height made them read as four of the same
+        /// button wearing different pictures — which is the opposite of a shelf of real things.
+        /// Width and height in stage px, before the label.
+        /// </summary>
+        private static readonly Dictionary<string, Vector2> FinishProps = new Dictionary<string, Vector2>
+        {
+            ["ice"] = new Vector2(208, 156),          // a bucket you reach into with both hands
+            ["lemon_twist"] = new Vector2(172, 128),  // a tub of wedges
+            ["salt_rim"] = new Vector2(116, 82),      // a cellar
+            ["sugar_rim"] = new Vector2(116, 82),
+        };
+
+        private static Vector2 FinishPropSize(string prepId) =>
+            FinishProps.TryGetValue(prepId, out var s) ? s : new Vector2(140, 104);
 
         /// <summary>Margin from the screen edge to a column, and from a column to the play surface.</summary>
         private const float StageInset = 16f;
@@ -83,6 +104,21 @@ namespace LastCall.UI
         private Image _serveShakerBody;
         private MetaballFluid _serveFluid;      // the metaball liquid in the serving glass
         private Splasher _serveSplash;
+
+        /// <summary>The shelf slot standing empty while its bottle is in your hand.</summary>
+        private RectTransform _serveCabinetGap;
+        private Image _serveHandLiquid;
+        private string _serveHandStyle;
+
+        /// <summary>How much has gone into the glass since this bottle was picked up.</summary>
+        private double _servePourTotal;
+
+        /// <summary>
+        /// A poured volume said the way a bar says it. A measure is <see cref="MixerMeasure"/> of
+        /// the glass, which is the same unit the mixer keys used to pour in one press — so the
+        /// number on screen and the recipe the judge grades against are counted in the same thing.
+        /// </summary>
+        private static string Measures(double volume) => $"{volume / MixerMeasure:0.0}";
 
         private Text _aimText;
         private Vector2 _serveShakerRest;
@@ -134,6 +170,8 @@ namespace LastCall.UI
             _serveBottleGrabbed = false;
             _serveFocusBottle = null;
             _serveBottle.gameObject.SetActive(false);
+            _serveCabinetGap = null;      // the shelf is about to be rebuilt; the old slot is gone
+            _servePourTotal = 0;
             foreach (Transform ch in _serveCabinetShelf) Destroy(ch.gameObject);
             foreach (var bottle in run.Shelf.Bottles)
                 if (IsGlassSide(bottle.Ingredient) && !bottle.IsEmpty)
@@ -151,14 +189,14 @@ namespace LastCall.UI
             var run = Run;
             bool already = run != null && run.ServingGlass.HasPreparation(prep.Id);
 
+            var size = FinishPropSize(prepId);
             var tub = NewRect($"F_{prepId}", _serveGarnishRow);
-            tub.gameObject.AddComponent<LayoutElement>().preferredHeight = RailKeyHeight;
+            tub.gameObject.AddComponent<LayoutElement>().preferredHeight = size.y + 18f;
             var hit = tub.gameObject.AddComponent<Image>();
             hit.color = new Color(1f, 1f, 1f, 0.001f);   // the whole tub is the grab target
 
             var icon = NewRect("Tub", tub);
-            Place(icon, new Vector2(0.5f, 1), new Vector2(ShelfW - 24f, RailKeyHeight - 26f),
-                new Vector2(0, -4));
+            Place(icon, new Vector2(0.5f, 1), size, new Vector2(0, -2));
             var iimg = icon.gameObject.AddComponent<Image>();
             iimg.sprite = ItemArt.Bucket(prepId) ?? ItemArt.Prep(prepId);
             iimg.preserveAspect = true; iimg.raycastTarget = false;
@@ -318,7 +356,7 @@ namespace LastCall.UI
             hit.color = new Color(1f, 1f, 1f, 0.001f);   // the whole slot takes the press
 
             var art = NewRect("Bottle", slot);
-            Place(art, new Vector2(0.5f, 1), new Vector2(CabinetW - 60f, CabinetSlotHeight - 22f),
+            Place(art, new Vector2(0.5f, 1), new Vector2(100f, CabinetSlotHeight - 32f),
                 new Vector2(0, -4));
             var img = art.gameObject.AddComponent<Image>();
             img.sprite = ItemArt.Bottle(card.Info?.Style);
@@ -354,9 +392,15 @@ namespace LastCall.UI
                 if (run == null) return;
                 _serveFocusBottle = c;
                 _serveBottleGrabbed = true;
+                // The bottle leaves the shelf. It used to stay standing there while a copy of it
+                // appeared in your hand, so the same bottle was in two places at once.
+                _serveCabinetGap = art;
+                art.gameObject.SetActive(false);
                 _serveBottleImage.sprite = ItemArt.Bottle(c.Info?.Style);
                 _serveBottleImage.color = _serveBottleImage.sprite != null
                     ? Color.white : UITheme.StyleColor(c.Info?.Style, c.Type);
+                SetHandBottleLevel(run, c);
+                _servePourTotal = 0;
                 _serveBottle.anchoredPosition = _serveBottleRest;
                 _serveBottle.localRotation = Quaternion.identity;
                 _serveBottle.gameObject.SetActive(true);
@@ -364,6 +408,41 @@ namespace LastCall.UI
                 _aimText.color = UITheme.TextSecondary;
             });
             slot.gameObject.AddComponent<EventTrigger>().triggers.Add(down);
+        }
+
+        /// <summary>
+        /// Stands the bottle back where it came from. Nothing else may clear
+        /// <see cref="_serveFocusBottle"/> — the shelf has a hole in it while a bottle is out, and
+        /// forgetting to fill it is how you end up with a cabinet missing a bottle that is not in
+        /// anyone's hand either.
+        /// </summary>
+        private void PutTheBottleBack(TycoonRun run)
+        {
+            _serveBottleGrabbed = false;
+            _serveFocusBottle = null;
+            _serveBottle.gameObject.SetActive(false);
+            _serveBottle.localRotation = Quaternion.identity;
+            _serveBottle.anchoredPosition = _serveBottleRest;
+            if (_serveCabinetGap != null) _serveCabinetGap.gameObject.SetActive(true);
+            _serveCabinetGap = null;
+            if (run != null) RefreshServeText(run, 1.0);
+        }
+
+        /// <summary>Draws the level in the bottle you are holding, the same way the shelf does.</summary>
+        private void SetHandBottleLevel(TycoonRun run, IngredientCard card)
+        {
+            string style = card?.Info?.Style;
+            if (style != _serveHandStyle)
+            {
+                if (_serveHandLiquid != null) Destroy(_serveHandLiquid.gameObject);
+                _serveHandLiquid = card == null ? null : BottleArt.AddLiquid(_serveBottle, style, card.Type);
+                _serveHandStyle = style;
+            }
+            if (_serveHandLiquid == null) return;
+            var shelf = card == null ? null : run.Shelf.Find(card.Id);
+            float level = shelf != null && shelf.Capacity > 0
+                ? (float)(shelf.Remaining / shelf.Capacity) : 0f;
+            _serveHandLiquid.fillAmount = BottleArt.For(style).FillAmount(level);
         }
 
         /// <summary>Swings the cabinet door, and pours whatever bottle is in hand. The tilt and
@@ -379,7 +458,14 @@ namespace LastCall.UI
                 Mathf.Lerp(0.22f, 0.06f, _serveDoorT));
 
             if (_serveFocusBottle == null || Mouse.current == null) return;
-            if (_serveBottleGrabbed && !Mouse.current.leftButton.isPressed) _serveBottleGrabbed = false;
+            // Letting go puts the bottle back on the shelf. It used to only drop the grab, which
+            // left the bottle floating where the cursor happened to be while its twin stood in
+            // the cabinet — you could never put one down, only abandon it mid-air.
+            if (_serveBottleGrabbed && !Mouse.current.leftButton.isPressed)
+            {
+                PutTheBottleBack(run);
+                return;
+            }
 
             bool pourNow = false;
             if (_serveBottleGrabbed &&
@@ -421,16 +507,19 @@ namespace LastCall.UI
             if (pourNow)
             {
                 double landed = run.PourAtGlass(_serveFocusBottle.Id, GlassPourRate * Time.deltaTime);
+                _servePourTotal += landed;
                 _serveFluid.SetColor(DrinkColor(run.ServingGlass));
+                SetHandBottleLevel(run, _serveFocusBottle);
                 RefreshServeText(run, 1.0);
-                _aimText.text = $"{_serveFocusBottle.Name.ToUpperInvariant()} IN THE GLASS";
+                // How much has gone in. Without it the pour was a held button with no number on
+                // it, and the only way to learn a measure was to serve the drink and be told.
+                _aimText.text = $"{_serveFocusBottle.Name.ToUpperInvariant()}  ·  " +
+                                $"POURED {Measures(_servePourTotal)}  ·  GLASS {run.ServingGlass.FillFraction:P0}";
                 _aimText.color = UITheme.Cyan[3];
                 if (landed <= 0)
                 {
                     // The bottle ran dry mid-pour: put it down and rebuild the shelf without it.
-                    _serveBottleGrabbed = false;
-                    _serveFocusBottle = null;
-                    _serveBottle.gameObject.SetActive(false);
+                    PutTheBottleBack(run);
                     RefreshServe();
                 }
             }
@@ -602,7 +691,7 @@ namespace LastCall.UI
         /// The viewport is masked, so a tub half off the bottom is clipped by the shelf edge
         /// instead of drawing over the buttons under it.
         /// </summary>
-        private RectTransform ScrollShelf(RectTransform column, string name)
+        private RectTransform ScrollShelf(RectTransform column, string name, int columns = 1)
         {
             var viewport = NewRect(name + "View", column);
             Stretch(viewport, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -20));
@@ -617,11 +706,24 @@ namespace LastCall.UI
             content.offsetMin = new Vector2(0, 0);
             content.offsetMax = new Vector2(0, 0);
 
-            var layout = content.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = RailGap;
-            layout.childControlWidth = true; layout.childForceExpandWidth = true;
-            layout.childControlHeight = true; layout.childForceExpandHeight = false;
-            layout.childAlignment = TextAnchor.UpperCenter;
+            if (columns > 1)
+            {
+                var grid = content.gameObject.AddComponent<GridLayoutGroup>();
+                float cell = (column.rect.width - 4f - RailGap * (columns - 1)) / columns;
+                grid.cellSize = new Vector2(cell, CabinetSlotHeight);
+                grid.spacing = new Vector2(RailGap, RailGap);
+                grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+                grid.constraintCount = columns;
+                grid.childAlignment = TextAnchor.UpperCenter;
+            }
+            else
+            {
+                var layout = content.gameObject.AddComponent<VerticalLayoutGroup>();
+                layout.spacing = RailGap;
+                layout.childControlWidth = true; layout.childForceExpandWidth = true;
+                layout.childControlHeight = true; layout.childForceExpandHeight = false;
+                layout.childAlignment = TextAnchor.UpperCenter;
+            }
             var fitter = content.gameObject.AddComponent<ContentSizeFitter>();
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
@@ -687,7 +789,11 @@ namespace LastCall.UI
             Stretch(inside, Vector2.zero, Vector2.one, new Vector2(7, 7), new Vector2(-7, -7));
             inside.gameObject.AddComponent<Image>().color = CabinetInside;
 
-            _serveCabinetShelf = ScrollShelf(inside, "Shelf");
+            // Two bottles to a shelf, each drawn at the height it will be when it is in your hand.
+            // A bottle that shrinks when you pick it up is a list pretending to be a cabinet; at
+            // one to a row they would not fit, and standing them side by side is what a fridge
+            // shelf actually looks like.
+            _serveCabinetShelf = ScrollShelf(inside, "Shelf", CabinetColumns);
             _serveMixerRow = _serveCabinetShelf;
 
             // The door, hinged on its left edge: it narrows as it swings out, and the pane over
