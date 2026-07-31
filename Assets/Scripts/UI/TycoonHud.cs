@@ -1357,14 +1357,59 @@ namespace LastCall.UI
             return seen;
         }
 
+        private bool _bookOpen;
+        private Coroutine _bookAnim;
+
         private void ToggleRecipeBook()
         {
             if (_bookPanel == null) return;
-            bool open = !_bookPanel.gameObject.activeSelf;
-            _bookPanel.gameObject.SetActive(open);
-            if (open) _bookPanel.SetAsLastSibling();   // over the service log and everything else
+            bool open = !_bookOpen;
+            _bookOpen = open;
             Sfx.Play("click", 0.6f);
-            if (open) RebuildRecipeBook();
+            var sheet = _bookPanel.Find("Sheet") as RectTransform;
+            if (open)
+            {
+                if (!_bookPanel.gameObject.activeSelf)
+                {
+                    // First frame of the drop: board parked above the screen, scrim clear.
+                    sheet.anchoredPosition = new Vector2(0, BkH);
+                    var c = UITheme.Scrim;
+                    _bookPanel.GetComponent<Image>().color = new Color(c.r, c.g, c.b, 0);
+                }
+                _bookPanel.gameObject.SetActive(true);
+                _bookPanel.SetAsLastSibling();   // over the service log and everything else
+                RebuildRecipeBook();
+            }
+            else CloseBookPopup();
+            if (_bookAnim != null) StopCoroutine(_bookAnim);
+            _bookAnim = StartCoroutine(BookSlide(open));
+        }
+
+        /// <summary>The board drops down from above and lifts back away (the author asked
+        /// for a smooth open and close). Reduced motion snaps, as everywhere.</summary>
+        private System.Collections.IEnumerator BookSlide(bool open)
+        {
+            var sheet = _bookPanel.Find("Sheet") as RectTransform;
+            var scrim = _bookPanel.GetComponent<Image>();
+            var c = UITheme.Scrim;
+            float fromY = sheet.anchoredPosition.y, toY = open ? 0f : BkH;
+            float fromA = scrim.color.a, toA = open ? c.a : 0f;
+            if (!Motion.Reduced)
+            {
+                float dur = open ? 0.28f : 0.2f;
+                for (float t = 0; t < dur; t += Time.unscaledDeltaTime)
+                {
+                    float k = t / dur;
+                    k = open ? 1f - (1f - k) * (1f - k) * (1f - k) : k * k * k;
+                    sheet.anchoredPosition = new Vector2(0, Mathf.Lerp(fromY, toY, k));
+                    scrim.color = new Color(c.r, c.g, c.b, Mathf.Lerp(fromA, toA, k));
+                    yield return null;
+                }
+            }
+            sheet.anchoredPosition = new Vector2(0, toY);
+            scrim.color = new Color(c.r, c.g, c.b, toA);
+            if (!open) _bookPanel.gameObject.SetActive(false);
+            _bookAnim = null;
         }
 
         private void BuildRecipeBook(RectTransform root)
@@ -1389,17 +1434,9 @@ namespace LastCall.UI
             var boardSprite = ItemArt.Load("menu_board");
             if (boardSprite != null) { boardImg.sprite = boardSprite; boardImg.preserveAspect = true; }
             else boardImg.color = UITheme.Cream[4];
-            // The board fills nearly the whole screen, so it must NOT swallow clicks itself
-            // (2026-08-01, the author: clicking off the table has to close it): the wood
-            // passes clicks through to the closing scrim, and only the PAPER swallows.
-            boardImg.raycastTarget = false;
-            var paperCatch = NewRect("PaperCatch", sheet);
-            Place(paperCatch, new Vector2(0.5f, 0.5f),
-                new Vector2(BkW * BkPaperW + 16f, BkH * BkPaperH + 16f),
-                new Vector2(BkW * BkPaperCX, BkH * BkPaperCY));
-            var pcImg = paperCatch.gameObject.AddComponent<Image>();
-            pcImg.color = new Color(0, 0, 0, 0.001f);
-            paperCatch.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
+            // The whole board swallows its clicks (the author, second ruling): tapping the
+            // asset must NOT close the book; only truly outside it, on the scrim, does.
+            sheet.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
 
             // No title text and no X (2026-08-01, the author): the board's own metal clip
             // IS the header, the words were hiding under it, and the scrim click closes.
@@ -1443,14 +1480,14 @@ namespace LastCall.UI
 
             // The search box: type a name, the list narrows as you do.
             var searchRt = NewRect("Search", sheet);
-            Place(searchRt, new Vector2(0.5f, 0.5f), new Vector2(184, 26),
+            Place(searchRt, new Vector2(0.5f, 0.5f), new Vector2(184, 30),
                 new Vector2(BookChipX(3) + 4f, chipY));
             var searchBg = searchRt.gameObject.AddComponent<Image>();
             searchBg.color = new Color(0.94f, 0.90f, 0.80f);
-            var searchText = NewText("T", searchRt, _body, 10, TextAnchor.MiddleLeft, new Color(0.16f, 0.10f, 0.06f));
+            var searchText = NewText("T", searchRt, _body, 16, TextAnchor.MiddleLeft, new Color(0.16f, 0.10f, 0.06f));
             Stretch(searchText.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 2), new Vector2(-8, -2));
             searchText.supportRichText = false;
-            var placeholder = NewText("P", searchRt, _body, 10, TextAnchor.MiddleLeft, new Color(0.5f, 0.42f, 0.32f));
+            var placeholder = NewText("P", searchRt, _body, 16, TextAnchor.MiddleLeft, new Color(0.5f, 0.42f, 0.32f));
             Stretch(placeholder.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 2), new Vector2(-8, -2));
             placeholder.text = "SEARCH…";
             _bookSearch = searchRt.gameObject.AddComponent<InputField>();
@@ -1470,13 +1507,13 @@ namespace LastCall.UI
             _bookList.anchorMin = new Vector2(0, 1); _bookList.anchorMax = new Vector2(1, 1);
             _bookList.pivot = new Vector2(0.5f, 1);
             _bookList.offsetMin = Vector2.zero; _bookList.offsetMax = Vector2.zero;
-            // Two columns (2026-08-01): the page is wide and the entries are short, so one
-            // column wasted half the paper and put the tail behind a scroll.
-            var layout = _bookList.gameObject.AddComponent<GridLayoutGroup>();
-            layout.cellSize = new Vector2((BkW * BkPaperW - 44f) / 2f - 6f, 56f);
-            layout.spacing = new Vector2(8, 4);
-            layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            layout.constraintCount = 2;
+            // Sections (2026-08-01, the author: the groupings must read clearly): the list
+            // is a stack of tier sections, each a full-width header over its own grid, so a
+            // header can never land inside a column and the columns always align.
+            var layout = _bookList.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.spacing = 8;
+            layout.childControlWidth = true; layout.childForceExpandWidth = true;
+            layout.childControlHeight = true; layout.childForceExpandHeight = false;
             var fitter = _bookList.gameObject.AddComponent<ContentSizeFitter>();
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
@@ -1508,7 +1545,7 @@ namespace LastCall.UI
             var btn = chip.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => { Sfx.Play("click", 0.5f); onClick(); });
-            var t = NewText("T", chip, _body, 10, TextAnchor.MiddleCenter, new Color(0.30f, 0.20f, 0.10f));
+            var t = NewText("T", chip, _body, 16, TextAnchor.MiddleCenter, new Color(0.30f, 0.20f, 0.10f));
             var rule = NewRect("Rule", chip);
             rule.anchorMin = new Vector2(0.08f, 0); rule.anchorMax = new Vector2(0.92f, 0);
             rule.pivot = new Vector2(0.5f, 0);
@@ -1539,7 +1576,7 @@ namespace LastCall.UI
 
             int cols = options.Count > 8 ? 2 : 1;
             int rows = Mathf.CeilToInt(options.Count / (float)cols);
-            float w = cols * 168f + 8f, h = rows * 24f + 10f;
+            float w = cols * 190f + 8f, h = rows * 28f + 10f;
             var win = NewRect("Win", _bookPopup);
             Place(win, new Vector2(0.5f, 0.5f), new Vector2(w, h),
                 new Vector2(BookChipX(chipIndex), chipY - 18f - h * 0.5f));
@@ -1553,12 +1590,12 @@ namespace LastCall.UI
             {
                 int pick = i;
                 var opt = NewRect($"O{i}", win);
-                Place(opt, new Vector2(0, 1), new Vector2(168, 24),
-                    new Vector2(5 + (i / rows) * 168f, -5f - (i % rows) * 24f));
+                Place(opt, new Vector2(0, 1), new Vector2(190, 28),
+                    new Vector2(5 + (i / rows) * 190f, -5f - (i % rows) * 28f));
                 opt.pivot = new Vector2(0, 1);
                 var oImg = opt.gameObject.AddComponent<Image>();
                 oImg.color = new Color(0, 0, 0, 0.001f);
-                var ot = NewText("T", opt, _body, 9, TextAnchor.MiddleLeft, new Color(0.2f, 0.12f, 0.06f));
+                var ot = NewText("T", opt, _body, 16, TextAnchor.MiddleLeft, new Color(0.2f, 0.12f, 0.06f));
                 Stretch(ot.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 0), new Vector2(-4, 0));
                 ot.text = options[i];
                 var ob = opt.gameObject.AddComponent<Button>();
@@ -1609,9 +1646,11 @@ namespace LastCall.UI
             for (int i = _bookList.childCount - 1; i >= 0; i--)
                 Destroy(_bookList.GetChild(i).gameObject);
 
-            _bookTierChip.text = "TIER: " + (_bookTier < 0 ? "ALL" : BookTiers[_bookTier]);
-            _bookPrepChip.text = "PREP: " + (_bookPrep < 0 ? "ALL" : ((PrepMethod)_bookPrep).ToString().ToUpperInvariant());
-            _bookStyleChip.text = "BOTTLE: " + (_bookStyle == null ? "ALL" : _bookStyle.Replace('_', ' ').ToUpperInvariant());
+            // A set filter reads as its value alone: at 16px the prefixed form no longer
+            // fits the chip, and "SHAKEN" says more than "PREP: SHAKEN" anyway.
+            _bookTierChip.text = _bookTier < 0 ? "TIER: ALL" : BookTiers[_bookTier];
+            _bookPrepChip.text = _bookPrep < 0 ? "PREP: ALL" : ((PrepMethod)_bookPrep).ToString().ToUpperInvariant();
+            _bookStyleChip.text = _bookStyle == null ? "BOTTLE: ALL" : _bookStyle.Replace('_', ' ').ToUpperInvariant();
 
             var known = new List<RecipeDefinition>();
             foreach (var r in run.MenuRecipes) if (BookAdmits(r)) known.Add(r);
@@ -1620,34 +1659,58 @@ namespace LastCall.UI
             known.Sort((a, b) => a.Rank.CompareTo(b.Rank));
             locked.Sort((a, b) => a.Rank.CompareTo(b.Rank));
 
-            string tier = null;
+            var groups = new List<List<RecipeDefinition>>();
             foreach (var r in known)
             {
-                if (TierName(r.Rank) != tier) { tier = TierName(r.Rank); BookHeader(tier); }
-                BookRow(r, lockedRow: false, run);
+                if (groups.Count == 0 || TierName(groups[groups.Count - 1][0].Rank) != TierName(r.Rank))
+                    groups.Add(new List<RecipeDefinition>());
+                groups[groups.Count - 1].Add(r);
             }
-            if (locked.Count > 0)
-            {
-                BookHeader("— STILL IN THE BOOK —");
-                foreach (var r in locked) BookRow(r, lockedRow: true, run);
-            }
+            foreach (var g in groups) BookSection(TierName(g[0].Rank), g, lockedRows: false, run);
+            if (locked.Count > 0) BookSection("STILL IN THE BOOK", locked, lockedRows: true, run);
+            _bookList.anchoredPosition = Vector2.zero;   // a fresh filter reads from the top
         }
 
         private void BookHeader(string text)
         {
             var h = NewRect("H", _bookList);
-            h.gameObject.AddComponent<LayoutElement>().preferredHeight = 22;
-            var t = NewText("T", h, _body, 10, TextAnchor.MiddleLeft, new Color(0.42f, 0.24f, 0.10f));
-            Stretch(t.rectTransform, Vector2.zero, Vector2.one, new Vector2(6, 0), Vector2.zero);
+            h.gameObject.AddComponent<LayoutElement>().preferredHeight = 34;
+            var t = NewText("T", h, _body, 16, TextAnchor.MiddleLeft, new Color(0.36f, 0.20f, 0.08f));
+            Stretch(t.rectTransform, Vector2.zero, Vector2.one, new Vector2(6, 4), Vector2.zero);
             t.text = text;
+            var rule = NewRect("Rule", h);
+            rule.anchorMin = Vector2.zero; rule.anchorMax = new Vector2(1, 0);
+            rule.pivot = new Vector2(0.5f, 0);
+            rule.sizeDelta = new Vector2(0, 2);
+            rule.anchoredPosition = Vector2.zero;
+            var ruleImg = rule.gameObject.AddComponent<Image>();
+            ruleImg.color = new Color(0.36f, 0.20f, 0.08f, 0.5f);
+            ruleImg.raycastTarget = false;
+        }
+
+        /// <summary>A tier's worth of the book: its header, then its own grid — two columns
+        /// while the pours fit a half page, one full-width column when they run long.</summary>
+        private void BookSection(string title, List<RecipeDefinition> rs, bool lockedRows, TycoonRun run)
+        {
+            BookHeader(title);
+            int maxBands = 0;
+            foreach (var r in rs) if (r.RatioRequirements.Count > maxBands) maxBands = r.RatioRequirements.Count;
+            int cols = maxBands >= 4 ? 1 : 2;
+            var sec = NewRect("Sec", _bookList);
+            var g = sec.gameObject.AddComponent<GridLayoutGroup>();
+            float fullW = BkW * BkPaperW - 44f;
+            g.cellSize = new Vector2(cols == 1 ? fullW : fullW / 2f - 6f, cols == 1 ? 72f : 88f);
+            g.spacing = new Vector2(12, 8);
+            g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            g.constraintCount = cols;
+            foreach (var r in rs) BookRow(sec, r, lockedRows, run);
         }
 
         /// <summary>One recipe: the glass drawn from its own bands, the name, how it is
         /// worked, and the pour — or, for a locked one, what it is waiting behind.</summary>
-        private void BookRow(RecipeDefinition r, bool lockedRow, TycoonRun run)
+        private void BookRow(RectTransform parent, RecipeDefinition r, bool lockedRow, TycoonRun run)
         {
-            var row = NewRect($"R_{r.Id}", _bookList);
-            row.gameObject.AddComponent<LayoutElement>().preferredHeight = 56;
+            var row = NewRect($"R_{r.Id}", parent);
             // A printed line, not a key (2026-08-01): transparent row, thin ink rule under
             // it, the way the licence's own fields sit on their rules.
             var rowImg = row.gameObject.AddComponent<Image>();
@@ -1662,16 +1725,16 @@ namespace LastCall.UI
             rowRuleImg.raycastTarget = false;
 
             var icon = NewRect("I", row);
-            Place(icon, new Vector2(0, 0.5f), new Vector2(34, 34), new Vector2(8, 0));
+            Place(icon, new Vector2(0, 0.5f), new Vector2(40, 40), new Vector2(6, 0));
             var img = icon.gameObject.AddComponent<Image>();
             img.sprite = DrinkIcon.For(r, _bootstrap.Glassware);
             img.preserveAspect = true; img.raycastTarget = false;
             img.enabled = img.sprite != null;
             if (lockedRow) img.color = new Color(1, 1, 1, 0.4f);
 
-            var name = NewText("N", row, _body, 12, TextAnchor.UpperLeft,
+            var name = NewText("N", row, _body, 16, TextAnchor.UpperLeft,
                 lockedRow ? new Color(0.45f, 0.36f, 0.28f) : new Color(0.13f, 0.08f, 0.05f));
-            Place(name.rectTransform, new Vector2(0, 1), new Vector2(280, 16), new Vector2(46, -4));
+            Stretch(name.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(52, -24), new Vector2(-4, -4));
             // The two brand-agnostic specials never touch the tin; everything else says how
             // it is worked. (Prep defaults to Shaken in the ctor, which fits neither a pint
             // nor a neat pour.)
@@ -1679,21 +1742,22 @@ namespace LastCall.UI
                 : r.Id == "neat_pour" ? "NEAT"
                 : r.Prep == PrepMethod.Shaken ? "SHAKEN"
                 : r.Prep == PrepMethod.Stirred ? "STIRRED" : "BUILT";
-            name.text = $"{r.Name.ToUpperInvariant()}   <color=#1B5F66>{prep}</color>";
-            name.supportRichText = true;
+            name.text = r.Name.ToUpperInvariant();
 
-            var line = NewText("L", row, _body, 8, TextAnchor.UpperLeft, new Color(0.42f, 0.32f, 0.22f));
-            Place(line.rectTransform, new Vector2(0, 1), new Vector2(292, 30), new Vector2(46, -22));
-            line.horizontalOverflow = HorizontalWrapMode.Wrap;      // half-width cells: wrap...
-            line.verticalOverflow = VerticalWrapMode.Truncate;      // ...but never lap the next row
+            var line = NewText("L", row, _body, 16, TextAnchor.UpperLeft, new Color(0.45f, 0.35f, 0.24f));
+            Stretch(line.rectTransform, Vector2.zero, Vector2.one, new Vector2(52, 4), new Vector2(-4, -26));
+            line.horizontalOverflow = HorizontalWrapMode.Wrap;
+            line.verticalOverflow = VerticalWrapMode.Truncate;   // never lap the row beneath
             line.supportRichText = true;
+            // The prep leads the detail line — at 16px it no longer fits beside the name —
+            // and the price is gone (the author: the shop can do its own selling).
+            string lead = $"<color=#1B5F66>{prep}</color>";
             if (lockedRow)
             {
                 double gate = run.RecipeStarGate(r);
-                line.text = (gate > 0 ? $"{gate:0.0}★ · " : "") +
-                            $"${run.RecipePrice(r)} AT THE SHOP · " + BandLine(r);
+                line.text = lead + (gate > 0 ? $" · {gate:0.0}★" : "") + " · " + BandLine(r);
             }
-            else line.text = BandLine(r);
+            else line.text = lead + " · " + BandLine(r);
         }
 
         /// <summary>"GIN 45–65 · LEMON 20–40 · SYRUP 10–30" — the pour, said in shares.</summary>
@@ -1705,7 +1769,7 @@ namespace LastCall.UI
                 parts.Add(string.Format("{0} <color=#1A0E06>{1:0}–{2:0}</color>",
                     (b.IsStyleBand ? b.Style.Replace('_', ' ') : b.Type.ToString()).ToUpperInvariant(),
                     b.MinRatio * 100, b.MaxRatio * 100));
-            return string.Join("  ·  ", parts);
+            return string.Join(" · ", parts);
         }
 
         // ── settings (P17): the smallest sheet that holds sound and motion ───────
