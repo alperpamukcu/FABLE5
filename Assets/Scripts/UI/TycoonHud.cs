@@ -703,6 +703,12 @@ namespace LastCall.UI
                     view.Order.text = visit.Order.Wanted.Name.ToUpperInvariant();
                 }
 
+                // The icon docks against the text's measured width, so the centred line reads
+                // as one piece: [glass] DRAUGHT, the pair centred together.
+                if (view.Icon != null && view.Icon.enabled)
+                    view.Icon.rectTransform.anchoredPosition =
+                        new Vector2(-view.Order.preferredWidth * 0.5f - 4f, -42f);
+
                 // The patience clock only bites while they wait on an order. Deciding holds it
                 // full; a drinking customer is content — both show a calm, full cyan bar.
                 float patience = (deciding || drinking) ? 1f
@@ -1315,15 +1321,20 @@ namespace LastCall.UI
                 Stretch(seat.Wants.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -20));
                 seat.Wants.horizontalOverflow = HorizontalWrapMode.Overflow;
 
+                // Centred for real (2026-07-31): the row used to keep a 32px left inset so the
+                // corner-pinned icon had room, which centred the text in a right-shifted box —
+                // visibly off-centre on every seat. Now the TEXT owns the middle and the icon
+                // rides just left of its measured width, per refresh, like a bullet point.
                 seat.Order = NewText("Order", seat.Tag, _body, 11, TextAnchor.UpperCenter, UITheme.Amber[4]);
-                Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(32, 0), new Vector2(-4, -36));
+                Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -36));
                 seat.Order.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-                // The drink itself, on the order row (v5 P13). The name still carries the price
-                // and the exact recipe, but the shape and colour of the glass is what a busy
-                // player actually reads across five stools. 24px, so it clears the patience bar.
+                // The drink itself, on the order row (v5 P13). The shape and colour of the
+                // glass is what a busy player actually reads across five stools. 24px, so it
+                // clears the patience bar; its position follows the text every refresh.
                 var iconRt = NewRect("OrderIcon", seat.Tag);
-                Place(iconRt, new Vector2(0, 1), new Vector2(24, 24), new Vector2(6, -30));
+                Place(iconRt, new Vector2(0.5f, 1), new Vector2(24, 24), new Vector2(0, -42));
+                iconRt.pivot = new Vector2(1f, 0.5f);   // placed by its right edge, beside the text
                 seat.Icon = iconRt.gameObject.AddComponent<Image>();
                 seat.Icon.preserveAspect = true;
                 seat.Icon.raycastTarget = false;
