@@ -371,10 +371,18 @@ staging is not. In the author's words:
 - ☐ **Hover, not just press.** Everything selectable should read as pressable when the
   cursor is over it. Darkening on press is not enough and is the wrong half of it — the
   affordance has to arrive *before* the click.
-- ☐ **BUG — spirit bottles are drawn with their caps off** on the pour stage.
-- ☐ **BUG — a bottle's contents are drawn at a fixed level.** The art shows the same amount
-  of liquid however much is really left, so bottles do not visibly empty as they are poured.
-  The level should follow `Remaining / Capacity` off the shelf bottle.
+- ☐ **BUG — spirit bottles are drawn with their caps off** on the pour stage. Confirmed in
+  the art: the caps read as loose objects resting on the neck rather than seated on it.
+- ☐ **BUG — a bottle's contents are drawn at a fixed level**, so bottles never visibly empty.
+  **This one is not a code fix, and that is worth recording before anyone tries.** Looked at
+  the art: `soda.png` is clear glass with its liquid *painted in* at a fixed band, and
+  `gin.png` is opaque, showing no liquid at all. Nothing in code can lower a level that is
+  part of the picture. The bottles have to be reshot **empty** — clear glass, no contents —
+  so the game can draw the level itself against `Remaining / Capacity`. That is exactly the
+  arrangement the serving glasses already use: `GlassArt` leaves the interior as a hole and
+  reports it, and the drink is rendered into that hole. So the fix is a generation pass plus
+  a `BottleArt` that reports an interior, not a one-line change — and it should be scheduled
+  as such, with the cap fix folded into the same pass since it is the same nineteen bottles.
 
 - ☐ **Glass upgrades**: 3 tiers each, bought individually in the tablet shop, standing
   visibly on the under-counter shelf (the tap station's bays extend across the bar);
