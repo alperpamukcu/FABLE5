@@ -615,8 +615,14 @@ checked in play.
   snack share 33.3% of serves, zero solo snacks possible (pinned by test), and the rent
   divisor tightened 6→5.5 in the same commit because the first, free-refill pass wiped
   the P18 squeeze (19.5%→0% bankruptcies) — restored to 16.0% on the same seeds
-- ☐ Drink variety wave 2: more brands per category, more cocktails on the P10 model —
-  **new content = new data**, code only if a genuinely new verb appears
+- ☑ Drink variety wave 2 *(2026-07-31)*. The genuinely new verb appeared, twice over:
+  nothing ever unlocked P10's twelve locked cocktails, and nothing ever consumed the
+  `LockedStock` their styles needed — both were dead content. `UnlockRecipe` buys a recipe
+  at day end (rank-priced, star-gated per C6: 15–18 open / 19–22 at 3.5★ / 23+ at 4★) and
+  releases the recipe's waiting bottles into the market, re-rolling tonight's offers so the
+  drink is never unstockable. Tablet shop sells the book on THE WELL tab. Content: Mojito
+  (five bands) + Tequila Sunrise, tier-2 rum and tequila brands. Parity test green; the
+  orphan-upgrade test loosened to "reachable via tier-1", with the reasoning in place
 Gate: sim shows snack share and pairing legality (zero solo snacks possible); parity test
 still green.
 

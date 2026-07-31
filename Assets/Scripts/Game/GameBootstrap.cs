@@ -105,7 +105,8 @@ namespace LastCall.Game
                 regulars: archetypes != null ? new RegularsRegistry(archetypes) : null,
                 brandCatalogue: brandCatalogue,
                 glassware: Glassware,
-                snacks: Snacks);
+                snacks: Snacks,
+                lockedStock: LockedStock);
 
             Debug.Log($"[LastCall] Tycoon run started — seed '{CurrentSeed}', " +
                       $"{startingBottles.Count} bottles, wallet ${Tycoon.Money}, " +

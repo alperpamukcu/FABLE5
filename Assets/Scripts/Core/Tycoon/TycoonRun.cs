@@ -27,7 +27,7 @@ namespace LastCall.Core
     {
         private readonly RunRng _rng;
         private readonly Shelf _shelf;
-        private readonly IReadOnlyList<RecipeDefinition> _recipes;   // unlocked only
+        private readonly List<RecipeDefinition> _recipes;   // unlocked only; grows as recipes are bought
 
         /// <summary>The whole catalogue, locked recipes included — what the shop can sell.</summary>
         public IReadOnlyList<RecipeDefinition> AllRecipes { get; private set; }
@@ -35,7 +35,8 @@ namespace LastCall.Core
         /// <summary>What the bar can offer tonight: the unlocked recipes — the list orders
         /// roll from and pours are matched against. The menu renders exactly this.</summary>
         public IReadOnlyList<RecipeDefinition> MenuRecipes => _recipes;
-        private readonly IReadOnlyList<IngredientCard> _brandCatalogue;
+        private readonly List<IngredientCard> _brandCatalogue;
+        private readonly List<IngredientCard> _lockedStock;   // bottles waiting on their recipes (v5 P16)
         private readonly RegularsRegistry _regulars;
         private readonly TycoonConfig _config;
 
@@ -108,7 +109,8 @@ namespace LastCall.Core
             TycoonConfig config = null, RegularsRegistry regulars = null,
             IReadOnlyList<IngredientCard> brandCatalogue = null,
             IReadOnlyList<GlasswareDefinition> glassware = null,
-            IReadOnlyList<SnackDefinition> snacks = null)
+            IReadOnlyList<SnackDefinition> snacks = null,
+            IReadOnlyList<IngredientCard> lockedStock = null)
         {
             _shelf = shelf ?? throw new ArgumentNullException(nameof(shelf));
             if (recipes == null) throw new ArgumentNullException(nameof(recipes));
@@ -124,7 +126,10 @@ namespace LastCall.Core
             _rng = rng ?? throw new ArgumentNullException(nameof(rng));
             _config = config ?? TycoonConfig.Default;
             _regulars = regulars;
-            _brandCatalogue = brandCatalogue ?? Array.Empty<IngredientCard>();
+            _brandCatalogue = brandCatalogue != null
+                ? new List<IngredientCard>(brandCatalogue) : new List<IngredientCard>();
+            _lockedStock = lockedStock != null
+                ? new List<IngredientCard>(lockedStock) : new List<IngredientCard>();
 
             _glassware = glassware ?? Array.Empty<GlasswareDefinition>();
             _snacks = snacks ?? Array.Empty<SnackDefinition>();
@@ -135,6 +140,82 @@ namespace LastCall.Core
             Glass = new GlassContents(_config.GlassCapacity);
             ServingGlass = NewServingGlass(DefaultGlassware);
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"));
+        }
+
+        // ── the recipe book (v5 P16): buying the menu ───────────────────────────
+        // P10 shipped twelve cocktails LOCKED and nothing ever unlocked them — dead content
+        // behind a comment that said "until something unlocks them". This is the something:
+        // recipes are bought at day end like stock, and the better ones are gated on the
+        // bar's standing (C6/D3 — the rating drives unlocks; the P18 note staged it here
+        // because variety without a door is not variety).
+
+        private readonly HashSet<string> _boughtRecipes = new HashSet<string>();
+
+        /// <summary>What the book still holds: locked recipes not yet bought.</summary>
+        public IEnumerable<RecipeDefinition> LockedRecipes
+        {
+            get
+            {
+                foreach (var r in AllRecipes)
+                    if (r.Locked && !_boughtRecipes.Contains(r.Id)) yield return r;
+            }
+        }
+
+        /// <summary>What a recipe costs to put on the menu: $20 at rank 15, +$5 a rank.</summary>
+        public int RecipePrice(RecipeDefinition recipe) =>
+            15 + 5 * Math.Max(1, recipe.Rank - 14);
+
+        /// <summary>Stars the room must say about this bar before the recipe sells (C6):
+        /// the plain builds are open, the shaken ones want 3.5, the house pride wants 4.</summary>
+        public double RecipeStarGate(RecipeDefinition recipe) =>
+            recipe.Rank <= 18 ? 0.0 : recipe.Rank <= 22 ? 3.5 : 4.0;
+
+        /// <summary>
+        /// Buys a locked recipe onto the menu (v5 P16). A day-end act, like every purchase:
+        /// deliveries come when the doors are shut. Core refuses shortfalls of money and of
+        /// reputation — from tomorrow the drink can be ordered, rolled and matched.
+        /// </summary>
+        public RecipeDefinition UnlockRecipe(string recipeId)
+        {
+            EnsurePhase(TycoonPhase.DayEnd);
+            RecipeDefinition recipe = null;
+            foreach (var r in AllRecipes)
+                if (r.Id == recipeId) { recipe = r; break; }
+            if (recipe == null || !recipe.Locked || _boughtRecipes.Contains(recipeId))
+                throw new InvalidOperationException($"'{recipeId}' is not in the book to buy.");
+            double gate = RecipeStarGate(recipe);
+            if (Rating.Average < gate)
+                throw new InvalidOperationException(
+                    $"The room is not talking about this bar enough yet — {recipe.Name} wants {gate:0.0} stars.");
+            int price = RecipePrice(recipe);
+            if (Money < price)
+                throw new InvalidOperationException($"Not enough money — {recipe.Name} costs ${price}.");
+
+            Money -= price;
+            DayUpgrades += price;
+            _boughtRecipes.Add(recipeId);
+            _recipes.Add(recipe);
+
+            // The recipe brings its bottles with it (v5 P16). P10 quarantined the stock its
+            // locked drinks needed, and nothing ever consumed the quarantine — a bought
+            // margarita would have rolled orders no shelf could answer and no market could
+            // fix. Buying the recipe releases every waiting bottle of its styles into the
+            // catalogue, and the market re-rolls (deterministic, rng-free) so they are on
+            // TONIGHT'S shop, not tomorrow's.
+            var styles = new HashSet<string>();
+            foreach (var band in recipe.RatioRequirements)
+                if (!string.IsNullOrEmpty(band.Style)) styles.Add(band.Style);
+            for (int i = _lockedStock.Count - 1; i >= 0; i--)
+            {
+                var card = _lockedStock[i];
+                if (card.Info?.Style != null && styles.Contains(card.Info.Style))
+                {
+                    _brandCatalogue.Add(card);
+                    _lockedStock.RemoveAt(i);
+                }
+            }
+            RollMarket();
+            return recipe;
         }
 
         // ── snacks (v5 P16) ─────────────────────────────────────────────────────

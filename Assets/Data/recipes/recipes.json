@@ -274,6 +274,34 @@
         { "style": "vermouth", "min": 0.08, "max": 0.28 },
         { "style": "olive", "min": 0.05, "max": 0.2 }
       ]
+    },
+    {
+      "id": "mojito", "name": "Mojito", "rank": 27,
+      "baseFlavor": 30, "baseMult": 3, "flavorPerLevel": 20, "multPerLevel": 1,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 1 }, { "types": ["Sweet"], "count": 1 }, { "types": ["Bubbly"], "count": 1 }, { "types": ["Garnish"], "count": 1 } ],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": true, "prepMethod": "Built", "glassId": "highball",
+      "ratios": [
+        { "style": "rum", "min": 0.28, "max": 0.48 },
+        { "style": "lime", "min": 0.1, "max": 0.28 },
+        { "style": "syrup", "min": 0.06, "max": 0.22 },
+        { "style": "soda", "min": 0.2, "max": 0.45 },
+        { "style": "mint", "min": 0.03, "max": 0.15 }
+      ]
+    },
+    {
+      "id": "tequila_sunrise", "name": "Tequila Sunrise", "rank": 28,
+      "baseFlavor": 25, "baseMult": 2, "flavorPerLevel": 20, "multPerLevel": 1,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 1 }, { "types": ["Sweet"], "count": 1 } ],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": true, "prepMethod": "Built", "glassId": "highball",
+      "ratios": [
+        { "style": "tequila", "min": 0.3, "max": 0.5 },
+        { "style": "orange", "min": 0.38, "max": 0.62 },
+        { "style": "syrup", "min": 0.05, "max": 0.2 }
+      ]
     }
   ]
 }

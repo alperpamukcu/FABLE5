@@ -239,6 +239,18 @@ Still to come (P18): the standing gating shop unlocks, and feeding tip and extra
 
 ## 8. The market and upgrades (day-end shop)
 
+**The recipe book (v5 P16).** P10 shipped twelve cocktails locked and quarantined the seven
+bottles their styles needed — and nothing ever consumed either quarantine: dead content
+behind a comment that said "until something unlocks them". Both open through one purchase
+now. A locked recipe is **bought at day end** like stock ($20 at rank 15, +$5 a rank), and
+the better ones are gated on the bar's standing (C6: the rating drives unlocks — ranks
+15–18 open, 19–22 want 3.5★, 23+ want 4.0★). **Buying the recipe releases its waiting
+bottles into the market catalogue and re-rolls tonight's offers** (deterministic, rng-free),
+so the drink just bought is never a drink the bar cannot learn to stock. From the next
+morning it rolls as orders and matches as a pour. Wave 2 added the Mojito (rank 27, five
+bands, built) and the Tequila Sunrise (rank 28), plus tier-2 rum and tequila brands — new
+content as new data, on the P10 model.
+
 Rotating random offers (stream `"shop"`), a few per night:
 - **Better bottles** (tier 2/3 brands — existing Market, §3 price effect makes them earn).
 - **Bar upgrades with visual counterparts** (module 24 §6): stools 4→5→6, glassware

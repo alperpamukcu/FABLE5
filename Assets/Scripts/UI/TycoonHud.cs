@@ -1132,6 +1132,25 @@ namespace LastCall.UI
                         RebuildDayEnd();
                     }, ItemArt.Bottle(offer.Bottle.Info?.Style));
                 }
+
+                // The recipe book (v5 P16): the locked cocktails, bought onto the menu the way
+                // stock is bought onto the shelf. The better ones want the room talking first
+                // (the star gate) — a card that is gated says so instead of hiding.
+                foreach (var recipe in run.LockedRecipes)
+                {
+                    var r = recipe;
+                    double gate = run.RecipeStarGate(r);
+                    bool gated = run.Rating.Average < gate;
+                    string title = gated
+                        ? $"✦ {r.Name.ToUpperInvariant()} · NEEDS {gate:0.0}★"
+                        : $"✦ {r.Name.ToUpperInvariant()}";
+                    AddCard(title, "gated", run.RecipePrice(r), !gated, () =>
+                    {
+                        try { run.UnlockRecipe(r.Id); Toast($"{r.Name.ToUpperInvariant()} — ON THE MENU TOMORROW"); }
+                        catch (InvalidOperationException e) { Toast(e.Message.ToUpperInvariant()); }
+                        RebuildDayEnd();
+                    }, DrinkIcon.For(r, _bootstrap.Glassware));
+                }
             }
             else
             {

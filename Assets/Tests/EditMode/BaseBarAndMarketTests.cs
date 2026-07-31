@@ -106,13 +106,20 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void EveryMarketBrand_UpgradesAStyleTheShelfStocks()
+        public void EveryMarketBrand_UpgradesAStyleTheBarCanCarry()
         {
-            var startingStyles = new HashSet<string>(Starting().Select(c => c.Info.Style));
+            // No orphan upgrades: a tier-2+ brand must upgrade a style the bar either opens
+            // with or can BUY as tier-1 new stock (v5 P16 — tequila's tier 2 arrived while
+            // its tier 1 is itself a market bottle; the market only offers upgrades for
+            // carried styles, so the chain is sonora first, alta luna after).
+            var deck = DataLoader.ParseDeck(ReadDataFile("bottles/base_bar.json"));
+            var reachable = new HashSet<string>(deck.Cards.Concat(deck.LockedCards)
+                .Where(c => c.Info != null && c.Info.Tier <= 1)
+                .Select(c => c.Info.Style));
             foreach (var brand in All().Where(c => c.Info.Tier > 1))
             {
-                Assert.IsTrue(startingStyles.Contains(brand.Info.Style),
-                    $"{brand.Id} upgrades '{brand.Info.Style}', which nothing stocks");
+                Assert.IsTrue(reachable.Contains(brand.Info.Style),
+                    $"{brand.Id} upgrades '{brand.Info.Style}', which no tier-1 bottle carries");
                 Assert.Greater(brand.Info.Price, 0, brand.Id);
             }
         }

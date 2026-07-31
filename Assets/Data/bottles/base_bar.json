@@ -585,6 +585,54 @@
         }
       ],
       "art_prompt": "a small glass carafe of lime juice with cut limes beside it"
+    },
+    {
+      "id": "rum_tidewater",
+      "name": "Tidewater Reserve",
+      "type": "Spirit",
+      "flavor": 7,
+      "style": "rum",
+      "category": "rum",
+      "tier": 2,
+      "price": 7,
+      "origin": "Port of Spain, Trinidad",
+      "abv": 43,
+      "blurb": "Barrel-aged in sea air. The warmth stays longer than the glass does.",
+      "charges": [
+        {
+          "emotion": "Excitement",
+          "amount": 14
+        },
+        {
+          "emotion": "Fatigue",
+          "amount": -8
+        }
+      ],
+      "art_prompt": "a squat dark-amber rum bottle with a rope-wrapped neck and a ship motif"
+    },
+    {
+      "id": "tequila_alta_luna",
+      "name": "Alta Luna",
+      "type": "Spirit",
+      "flavor": 8,
+      "style": "tequila",
+      "category": "tequila",
+      "tier": 2,
+      "price": 9,
+      "origin": "Jalisco Highlands, Mexico",
+      "abv": 42,
+      "blurb": "Slow-roasted highland agave. Softer going down, louder after.",
+      "charges": [
+        {
+          "emotion": "Excitement",
+          "amount": 16
+        },
+        {
+          "emotion": "Anxiety",
+          "amount": -6
+        }
+      ],
+      "art_prompt": "a tall clear tequila bottle with a deep green agave label and a crescent moon"
     }
   ]
 }

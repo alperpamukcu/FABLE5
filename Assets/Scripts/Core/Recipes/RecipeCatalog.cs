@@ -125,6 +125,18 @@ namespace LastCall.Core
                 Cocktail("dirty_martini", "Dirty Martini", 26, 30, 3, 20, 1, PrepMethod.Stirred, "martini",
                     new[] { new PatternRequirement(2, s), new PatternRequirement(1, sw), new PatternRequirement(1, g) },
                     Band("gin", .60, .85), Band("vermouth", .08, .28), Band("olive", .05, .20)),
+
+                // Wave 2 (v5 P16): two more on the same model — new content is new data.
+                // Both BUILT, because their fizz and juice go in at the glass (C8).
+                Cocktail("mojito", "Mojito", 27, 30, 3, 20, 1, PrepMethod.Built, "highball",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so),
+                            new PatternRequirement(1, sw), new PatternRequirement(1, bu),
+                            new PatternRequirement(1, g) },
+                    Band("rum", .28, .48), Band("lime", .10, .28), Band("syrup", .06, .22),
+                    Band("soda", .20, .45), Band("mint", .03, .15)),
+                Cocktail("tequila_sunrise", "Tequila Sunrise", 28, 25, 2, 20, 1, PrepMethod.Built, "highball",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
+                    Band("tequila", .30, .50), Band("orange", .38, .62), Band("syrup", .05, .20)),
             };
         }
 

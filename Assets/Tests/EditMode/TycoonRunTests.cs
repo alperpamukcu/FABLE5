@@ -191,6 +191,42 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void ARecipe_IsBoughtOntoTheMenu_AndTheGateHolds()
+        {
+            // v5 P16: P10's locked cocktails were dead content — nothing ever unlocked them.
+            // They are bought at day end now, and the better ones are gated on the standing.
+            var recipes = RecipeCatalog.CreateDefault();
+            var tonic = new IngredientCard("tonic_q", "Quinbury Tonic", IngredientType.Bubbly, 2,
+                info: new IngredientInfo("tonic", tier: 1, price: 6));
+            var run = new TycoonRun(NewShelf(), recipes, new RunRng("book"),
+                config: new TycoonConfig(200, orderDecisionSeconds: 0, savorSeconds: 0),
+                lockedStock: new[] { tonic });
+
+            Assert.IsFalse(run.MenuRecipes.Any(r => r.Id == "gin_tonic"), "locked = off the menu");
+            Assert.Throws<InvalidOperationException>(() => run.UnlockRecipe("gin_tonic"),
+                "a recipe is bought at day end, not mid-shift");
+
+            int guard = 0;
+            while (run.Phase != TycoonPhase.DayEnd) { Assert.Less(guard++, 3000); run.Tick(5); }
+
+            int before = run.Money;
+            var bought = run.UnlockRecipe("gin_tonic");
+            Assert.AreEqual(before - run.RecipePrice(bought), run.Money);
+            Assert.IsTrue(run.MenuRecipes.Any(r => r.Id == "gin_tonic"), "on the menu");
+            Assert.Throws<InvalidOperationException>(() => run.UnlockRecipe("gin_tonic"),
+                "no buying it twice");
+
+            // The recipe brings its bottles: the quarantined tonic is on TONIGHT'S market,
+            // so the drink just bought is never a drink the bar cannot learn to stock.
+            Assert.IsTrue(run.MarketOffers.Any(o => o.Bottle.Info?.Style == "tonic"),
+                "buying the recipe releases its stock to the shop");
+
+            // The house pride wants stars a fresh bar does not have (neutral is 3.0 < 4.0).
+            Assert.Throws<InvalidOperationException>(() => run.UnlockRecipe("dirty_martini"),
+                "the star gate holds until the room talks");
+        }
+
+        [Test]
         public void ASnack_RidesTheTab_AndTheBowlRunsDown()
         {
             // v5 P16: a bowl is a line on the bill, not its own transaction — it settles on
