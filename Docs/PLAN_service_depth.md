@@ -432,15 +432,29 @@ staging is not. In the author's words:
   The fridge generated on 2026-07-31 is angled front-down-left and already fits the blue
   region; the table was symmetric and is being reshot to run away to the upper right.
 
-  **Open question the diagram does not settle — bottle size in the fridge.** The author asked
-  for fridge bottles at the size they are when poured. Measured against the fridge art: its
-  interior is 110 of 198 px wide with shelves about 62 px apart, so at any scale that keeps
-  the whole fridge on screen the shelf gap tops out around 125 px against a 250 px bottle in
-  hand. A fridge showing three shelves and a full-size bottle cannot both be true. The
-  defensible reading is that a bottle across the room IS smaller than one held up to your
-  face, and in a perspective scene that reads as depth rather than as a shrunken icon — which
-  was the actual complaint about the flat list. Worth confirming with the author before the
-  layout is built on it.
+  **Bottle size in the fridge — settled by the author, 2026-07-31.** The question was real:
+  the fridge art's interior is 110 of 198 px wide with shelves ~62 px apart, so a fridge kept
+  whole on screen tops out around a 125 px shelf gap against a 250 px bottle in hand. The
+  ruling is that **the fridge wins and the screen loses**: it fills the right region and its
+  back simply runs off the edge. Bottles stay at realistic size. In the author's words —
+  *"it's fine if the back of the fridge doesn't fit on screen, let some of it overflow … it
+  should feel like there really are bottles in a fridge."*
+
+  What that commits the layout to:
+  1. **Bottles at true size**, not shrunk to fit a shelf. The fridge is scaled so its shelf
+     gap takes them, and whatever falls outside the panel is clipped.
+  2. **Depth on the shelf, not just a row.** Bottles may stand side by side, and at the
+     fridge's angle they may also stand one behind another — a shelf with two ranks reads as
+     a stocked fridge; a single row reads as a menu.
+  3. **Hover pulls a bottle to the front** of anything it is standing behind, and focuses it.
+     Without this, rank two is unreachable and the depth becomes a trap. This is the
+     `PressSink` hover doing a fourth thing (lift, bloom, warm, and now raise); the sort order
+     is what makes the depth playable rather than decorative.
+  4. **An info button appears on hover** — what it is and what is left in it, at the bottle,
+     rather than on a panel somewhere else.
+  5. **Dragging a bottle back into the fridge puts it away.** `PutTheBottleBack` already
+     restores the shelf gap on release; this makes the fridge itself a drop target, so putting
+     a bottle away is the same gesture as taking it out, run backwards.
 
 - ☑ **Room to grow.** *Done 2026-07-31.* Both columns are masked scroll shelves
   (`ScrollShelf`), so anything past the visible run scrolls instead of drawing over the
