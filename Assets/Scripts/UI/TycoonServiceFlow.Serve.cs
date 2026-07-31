@@ -23,6 +23,13 @@ namespace LastCall.UI
         private Text _serveGlassText;
         private RectTransform _serveSurface;
         private RectTransform _serveGlass;      // the target
+
+        /// <summary>How tall the serving glass is drawn; the width follows the drawing, so the
+        /// five vessels differ by silhouette rather than all being stretched into one box.</summary>
+        private const float ServeGlassHeight = 200f;
+        private Image _serveGlassImage;
+        private LastCall.Core.GlasswareDefinition _serveGlassware;
+        private GlassArt.Piece _serveGlassPiece;
         private RectTransform _serveGarnishRow; // mint/olive garnishes are added here (2026-07-23)
         private RectTransform _serveShaker;     // the grabbable shaker
         private Image _serveShakerBody;
@@ -50,6 +57,7 @@ namespace LastCall.UI
             _serveSplash.Clear();
             _serveFluid.Clear();
             _serveFluid.SetColor(DrinkColor(run.Glass));
+            ShowServingGlassware(run);
             PushServePool(run);
             _serveShakerBody.color = DrinkColor(run.Glass);
             _aimText.text = "GRAB THE SHAKER · TIP IT OVER THE GLASS";
@@ -157,27 +165,52 @@ namespace LastCall.UI
                 else if (run.ServingGlass.TotalVolume != before) RefreshServeText(run, accuracy);
             }
 
+            // The vessel is chosen by the first drop out of the shaker, so the glass on the
+            // counter can change in the middle of this stage. Checked every frame; it costs a
+            // reference compare until the day it actually changes.
+            ShowServingGlassware(run);
             PushServePool(run);
             _serveFluid.Step(Time.deltaTime);
             _serveSplash.Step(Time.deltaTime);
         }
 
-        /// <summary>Places the serving glass's pooled liquid from its interior and live fill.</summary>
+        /// <summary>
+        /// Puts the glass the drink actually chose on the counter (v5 P14 / C9). Rebuilt only
+        /// when the vessel changes, because the sprite is drawn once and kept.
+        /// </summary>
+        private void ShowServingGlassware(TycoonRun run)
+        {
+            var glassware = run.ServingGlassware;
+            if (ReferenceEquals(glassware, _serveGlassware) && _serveGlassImage.sprite != null) return;
+            _serveGlassware = glassware;
+
+            var piece = GlassArt.For(glassware);
+            _serveGlassPiece = piece;
+            _serveGlassImage.sprite = piece.Sprite;
+            _serveGlassImage.preserveAspect = true;
+            _serveGlassImage.color = Color.white;
+            // Height is fixed and width follows the drawing, so a coupe is wide and a highball
+            // narrow at the same place on the counter instead of all five being stretched into
+            // one box.
+            _serveGlass.sizeDelta = new Vector2(ServeGlassHeight * piece.Aspect, ServeGlassHeight);
+            _serveFluid.SetProfile(piece.Profile);
+            _serveFluid.SetDensity(piece.Density);   // measured per vessel, not one number for all
+        }
+
+        /// <summary>Places the serving glass's pooled liquid from its interior and live fill.
+        /// The interior is <b>reported by the drawing</b> (v5 P14) rather than tuned by hand:
+        /// three magic fractions used to say where the drink went in one particular tumbler,
+        /// and five glasses would have been fifteen of them.</summary>
         private void PushServePool(TycoonRun run)
         {
             if (run.ServingGlass.IsEmpty) { _serveFluid.ClearPool(); return; }
-            // Fill the tumbler's INTERIOR (inset from the crystal walls) so the drink pools
-            // inside the glass, not as a box behind it (2026-07-23).
+            var piece = _serveGlassPiece;
             var c = _serveGlass.anchoredPosition;
-            float halfW = _serveGlass.rect.width * 0.5f;
-            float iw = halfW * 0.66f;
-            float minX = c.x - iw;
-            float maxX = c.x + iw;
-            float h = _serveGlass.rect.height;
-            float bottomY = c.y - h * 0.5f + h * 0.14f;
-            float innerH = h * 0.6f;
-            float rimY = bottomY + innerH;
-            _serveFluid.SetPool(minX, maxX, bottomY, rimY, (float)run.ServingGlass.FillFraction);
+            float w = _serveGlass.rect.width, h = _serveGlass.rect.height;
+            float iw = w * 0.5f * piece.InteriorHalf;
+            float floor = c.y - h * 0.5f + h * piece.FloorY;
+            float rim = c.y - h * 0.5f + h * piece.RimY;
+            _serveFluid.SetPool(c.x - iw, c.x + iw, floor, rim, (float)run.ServingGlass.FillFraction);
         }
 
         /// <summary>The glass is at the brim and is refusing what comes next — the drink stops
@@ -243,30 +276,21 @@ namespace LastCall.UI
             // The serving glass: real clear-glass art (2026-07-23), transparent interior so the
             // poured drink pools behind it and shows through; the outline+rim draw in front.
             _serveGlass = NewRect("Glass", _serveSurface);
-            Place(_serveGlass, new Vector2(0.5f, 0.5f), new Vector2(150, 186), new Vector2(-210, -34));
-            var glassImg = _serveGlass.gameObject.AddComponent<Image>();
-            glassImg.raycastTarget = false;
-            if (ItemArt.Glass != null) { glassImg.sprite = ItemArt.Glass; glassImg.preserveAspect = true; glassImg.color = Color.white; }
-            else
-            {
-                glassImg.color = UITheme.Cream[2];
-                var bowl = NewRect("Bowl", _serveGlass);
-                Stretch(bowl, Vector2.zero, Vector2.one, new Vector2(5, 5), new Vector2(-5, -14));
-                bowl.gameObject.AddComponent<Image>().color = UITheme.Night[3];
-                var rim = NewRect("Rim", _serveGlass);
-                Place(rim, new Vector2(0.5f, 1), new Vector2(104, 12), new Vector2(0, 0));
-                rim.gameObject.AddComponent<Image>().color = UITheme.Cyan[3];
-            }
+            Place(_serveGlass, new Vector2(0.5f, 0.5f), new Vector2(150, ServeGlassHeight),
+                new Vector2(-210, -34));
+            _serveGlassImage = _serveGlass.gameObject.AddComponent<Image>();
+            _serveGlassImage.raycastTarget = false;
 
             _serveFluid = new MetaballFluid(_serveSurface);
-            // The tumbler: a slightly narrower base opening out to the mouth.
-            _serveFluid.SetProfile(new[] { 0.88f, 0.93f, 0.96f, 0.98f, 1.00f, 1.00f });
-            // The tumbler's cavity is the shortest of the three, so the floor and surface insets
+            // The vessel's silhouette and its interior now come from GlassArt, which draws the
+            // glass from the same profile the solver fills — set on first refresh, because the
+            // glass that stands here depends on what the drink turns out to be.
+            // The cavity is the shortest of the three vessels, so the floor and surface insets
             // are a bigger share of it and the estimate runs generous — measured at four fills,
             // it wants a tenth fewer particles to draw the level it was actually given.
             _serveFluid.SetDensity(0.90f);
             _serveSplash = new Splasher(_serveSurface);
-            if (ItemArt.Glass != null) _serveGlass.SetAsLastSibling();   // clear glass over the fluid
+            _serveGlass.SetAsLastSibling();   // the hollow glass draws over the fluid
 
             // The grabbable steel shaker you pour from, resting lower-right.
             _serveShakerRest = new Vector2(280, -70);

@@ -281,8 +281,24 @@ to the board instead.
     capacity moved.
   - ☑ The **simulator plays the glass set** too. It was building runs without one, so it
     was measuring a bar nobody plays.
-  - ☐ The glass set **drawn** (incl. a dedicated beer glass); per-glass fluid profile
-    calibrated by the measured procedure; drag-to-serve shows the true glass
+  - ☑ The glass set **drawn**, and drawn *procedurally*, for a harder reason than the drink
+    icons: a serving glass is **hollow** — the drink pools behind it and shows through — so
+    with a picture the interior has to be measured off the image by hand. That is what the
+    old single tumbler did, which is why the serve stage carried three tuned constants (0.66
+    of the half-width, 0.14 up from the floor, 0.6 of the height) that meant nothing except
+    "this is where the drink goes in THAT drawing". Five glasses would have been fifteen of
+    them. `GlassArt` draws from the same profile the solver fills and **reports** its
+    interior, so the fudge factors are gone.
+  - ☑ **Per-glass fluid calibration**, by the measured procedure: each vessel filled to a
+    quarter / half / three quarters / brim, settled, and read back with `SurfaceY`. Every
+    glass drew short, because the one global density was calibrated against the old tumbler.
+    The three tumblers now land within 1–2% at a quarter, a half and three quarters, and a
+    brimful glass reads 0.94–0.98 of its rim instead of 0.90.
+    **Known and left**: the two stemmed glasses stay ~8% out at mid-fills (martini reads
+    0.83 at 0.75, coupe 0.19 at 0.25). A cone's area varies quadratically with height and the
+    solver's count estimate does not, so the error is non-monotonic and no single scalar
+    fixes it — that needs a response curve in `MetaballFluid`, not another tuned number.
+  - ☐ Drag-to-serve shows the true glass (the carried drink is still the old tumbler)
 - ☐ **Decorations persist** on the served drink: salt/sugar visibly on the rim, wedge on
   the glass wall, ice floating in the liquid, garnish on top — the delivered glass shows
   everything that went in
