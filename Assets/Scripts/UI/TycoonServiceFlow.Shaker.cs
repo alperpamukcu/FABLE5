@@ -31,7 +31,7 @@ namespace LastCall.UI
         private bool _pouring;
         private const float LiftRange = 200f;  // px of lift for a full tilt
         private const float MaxTilt = 118f;    // degrees the bottle leans at full lift
-        private const float BottleH = 180f;
+        private const float BottleH = 230f;   // scaled up with the stage (P14 v2)
         // The pour fills slower than the raw bottle rate so the stream reads as a real pour
         // (GDD 24 §2, 2026-07-22 — "doluş hızı çok hızlı"). Only the drawn volume slows; the
         // floor's patience clock runs on its own tick, untouched.
@@ -494,8 +494,10 @@ namespace LastCall.UI
 
         private void BuildShakerPanel()
         {
+            // The whole screen (P14 v2, the serve stage's recipe): the stage is the counter
+            // you are standing at, not a dialog floating on it.
             _shakerPanel = NewRect("ShakerPanel", _root);
-            Place(_shakerPanel, new Vector2(0.5f, 0.5f), new Vector2(1120, 640), Vector2.zero);
+            Stretch(_shakerPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _shakerPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
             Swallow(_shakerPanel);
 
@@ -508,16 +510,26 @@ namespace LastCall.UI
 
             // The play surface: bottle and shaker live in here, mouse-local.
             _pourSurface = NewRect("PourSurface", _shakerPanel);
-            Stretch(_pourSurface, Vector2.zero, Vector2.one, new Vector2(20, 84), new Vector2(-20, -76));
+            Stretch(_pourSurface, Vector2.zero, Vector2.one, new Vector2(16, StageBottom), new Vector2(-16, -StageTop));
             var surfImg = _pourSurface.gameObject.AddComponent<Image>();
             surfImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.5f);
             surfImg.raycastTarget = false;
 
+            // The bar mat the tin stands on (the author's note, generated with transparent
+            // drainage channels so the counter shows through the ribs). Drawn at exactly 2×
+            // its 400×195 pixels — integer, the prep table's lesson.
+            var matRt = NewRect("Mat", _pourSurface);
+            Place(matRt, new Vector2(0.5f, 0), new Vector2(800, 390), new Vector2(-120, -8));
+            var matImg = matRt.gameObject.AddComponent<Image>();
+            matImg.sprite = ItemArt.Load("bar_mat");
+            matImg.raycastTarget = false;
+            if (matImg.sprite == null) matImg.enabled = false;
+
             // The shaker vessel: a tapered tin, opening at the top, left of centre. Grab it to
             // shake — it becomes the toy you throw around.
-            _shakerHome = new Vector2(-210, -34);
+            _shakerHome = new Vector2(-210, -44);
             _shakerVessel = NewRect("Shaker", _pourSurface);
-            Place(_shakerVessel, new Vector2(0.5f, 0.5f), new Vector2(168, 301), _shakerHome);
+            Place(_shakerVessel, new Vector2(0.5f, 0.5f), new Vector2(200, 358), _shakerHome);
             var shakerImg = _shakerVessel.gameObject.AddComponent<Image>();
             // The real steel shaker (2026-07-23). It sits in front of the fluid so the metal
             // reads solid — the falling stream shows above the mouth then vanishes into the tin.
@@ -585,14 +597,15 @@ namespace LastCall.UI
             // drink inside the tin as a cutaway, which is the point — a metal shaker you can
             // still read the level in. (A clear vessel would sit in front instead.)
             _shakerVessel.SetAsFirstSibling();
+            matRt.SetAsFirstSibling();   // the mat lies UNDER the tin, not over it
             _shakerLiquidFloorY = _shakerVessel.anchoredPosition.y - _shakerVessel.rect.height * 0.5f + 12f;
 
             // The grabbable bottle, resting lower-right. Procedural body + neck; the grip
             // pivot sits low so lifting swings the mouth in a big arc.
-            _bottleRest = new Vector2(300, -70);
+            _bottleRest = new Vector2(330, -70);
             _pourBottle = NewRect("Bottle", _pourSurface);
             _pourBottle.pivot = new Vector2(0.5f, 0.22f);
-            _pourBottle.sizeDelta = new Vector2(110, BottleH);
+            _pourBottle.sizeDelta = new Vector2(140, BottleH);
             _pourBottle.anchoredPosition = _bottleRest;
             _pourBottleBody = _pourBottle.gameObject.AddComponent<Image>();
             _pourBottleBody.preserveAspect = true;    // the real bottle art, set per focus in RefreshShaker
@@ -623,7 +636,7 @@ namespace LastCall.UI
             // top (the grip), so it hangs below the cursor and swings about that point.
             _dragPiece = NewRect("DragPiece", _pourSurface);
             _dragPiece.pivot = new Vector2(0.5f, 1f);
-            _dragPiece.sizeDelta = new Vector2(46, 52);
+            _dragPiece.sizeDelta = new Vector2(64, 72);   // in scale with the buckets it leaves
             var dragImg = _dragPiece.gameObject.AddComponent<Image>();
             dragImg.raycastTarget = false; dragImg.preserveAspect = true;   // the real prep piece
             _dragPieceLabel = NewText("L", _dragPiece, _body, 10, TextAnchor.LowerCenter, UITheme.Night[0]);
@@ -654,13 +667,12 @@ namespace LastCall.UI
             Stretch(padLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             padLabel.text = "↔  GRAB THE SHAKER · SHAKE IT";
 
-            var back = NewRect("Back", _shakerPanel);
-            Place(back, new Vector2(0.5f, 0), new Vector2(300, 40), new Vector2(160, 12));
-            back.gameObject.AddComponent<Image>().color = UITheme.PrimaryAction;
-            back.gameObject.AddComponent<Button>().onClick.AddListener(() => GoTo(Stage.Menu));
-            var backLabel = NewText("Label", back, _body, 13, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
-            Stretch(backLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            backLabel.text = "← DONE — BACK TO MENU";
+            // The DONE key on the drawn plate with the full press (the P14 note): the same
+            // sprite-and-sink the menu's own keys carry, so the two stages share one hand.
+            AddFlexButton(_shakerPanel, "← DONE — BACK TO MENU", UITheme.PrimaryAction,
+                () => GoTo(Stage.Menu));
+            var done = (RectTransform)_shakerPanel.Find("← DONE — BACK TO MENU");
+            Place(done, new Vector2(0.5f, 0), new Vector2(300, 44), new Vector2(160, 10));
         }
 
         /// <summary>One source chip on the prep tray: pointer-down picks its piece up.</summary>
@@ -668,8 +680,13 @@ namespace LastCall.UI
         {
             var prepSprite = ItemArt.Prep(prep.Id);
             var bucketSprite = ItemArt.Bucket(prep.Id);
+            // Up the LEFT edge as a tilted tray (P14 v2): the column leans right as it climbs,
+            // so the four buckets read as standing on a surface seen at an angle rather than
+            // as a toolbar. Bigger, because a bucket is a thing, not a key.
             var chip = NewRect($"Prep_{label}", _pourSurface);
-            Place(chip, new Vector2(0.5f, 0), new Vector2(92, 88), new Vector2(-70 + index * 112, 58));
+            chip.anchorMin = chip.anchorMax = chip.pivot = new Vector2(0f, 0.5f);
+            chip.sizeDelta = new Vector2(124, 112);
+            chip.anchoredPosition = new Vector2(66 + index * 34, 210 - index * 124);
             var img = chip.gameObject.AddComponent<Image>();
             if (bucketSprite != null)
             {
@@ -677,7 +694,7 @@ namespace LastCall.UI
                 // salt / sugar from the bucket into the shaker.
                 img.color = new Color(1f, 1f, 1f, 0.001f);   // clear grab target over the whole cell
                 var icon = NewRect("Bucket", chip);
-                Place(icon, new Vector2(0.5f, 1), new Vector2(80, 64), new Vector2(0, -2));
+                Place(icon, new Vector2(0.5f, 1), new Vector2(112, 88), new Vector2(0, -2));
                 var iconImg = icon.gameObject.AddComponent<Image>();
                 iconImg.sprite = bucketSprite; iconImg.preserveAspect = true; iconImg.raycastTarget = false;
                 var text = NewText("L", chip, _body, 9, TextAnchor.LowerCenter, UITheme.TextPrimary);

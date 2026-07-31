@@ -269,9 +269,13 @@ to the board instead.
 
 ## P14 — Prep & serve v2 + glassware (the big interaction phase)
 
-- ☐ **Prep stage**: bar-mat backdrop; shaker and bottles scaled up; free drag within screen
-  bounds (the confining panel goes); prep tray up the left edge at ~60°, pieces sized to
-  match the bottles; drawn SERVE button on `PressSink`
+- ☑ **Prep stage v2** *(2026-07-31, the serve stage's recipe)*: the panel is the whole
+  screen; the bar mat lies under the tin at exactly 2× its pixels (transparent drainage
+  channels, so the counter shows through the ribs); tin 200×358, bottle 140×230, drag
+  piece 64×72; the four buckets climb the left edge as a tilted column (124×112 each);
+  DONE on the drawn plate with the full `PressSink`. Measured in play, sibling order pinned
+  (mat under tin). Worth an eye pass: the mat's x-offset and the tray's lean are first
+  guesses
 - ◐ **Serve stage in the shaker's interaction style**. Right rail done:
   - ☑ **Mixers added at the glass** (the P10 `PourAtGlass` verb). P10 put the rule in Core —
     carbonated never enters the shaker — and then there was no door in the UI to do it
