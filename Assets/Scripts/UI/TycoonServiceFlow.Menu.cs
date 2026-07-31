@@ -217,7 +217,7 @@ namespace LastCall.UI
             var run = Run;
             foreach (Transform child in _bottleList) Destroy(child.gameObject);
             if (_menuBack != null) _menuBack.gameObject.SetActive(_menuTab != null);
-            if (_menuTab == null) BuildGroupPage(run); else BuildShelfPage(run, _menuTab);
+            BuildShelfPage(run, null);   // the whole wall, every bottle — no aisles (2026-07-31)
 
         }
 
@@ -323,24 +323,27 @@ namespace LastCall.UI
         /// </summary>
         private void BuildShelfPage(TycoonRun run, string category)
         {
-            _menuTitle.text = AisleName(category).ToUpperInvariant();
+            // null category = THE WHOLE WALL (2026-07-31): every bottle the bar owns on one
+            // back-bar, no aisles. The hover panel still answers what each one is.
+            _menuTitle.text = category == null ? "THE BACK BAR" : AisleName(category).ToUpperInvariant();
 
             var items = new List<ShelfBottle>();
             foreach (var b in run.Shelf.Bottles)
-                if (b.Ingredient.Info?.Category == category) items.Add(b);
+                if (category == null || b.Ingredient.Info?.Category == category) items.Add(b);
             float areaW = _bottleList.rect.width, areaH = _bottleList.rect.height;
 
-            // The aisle is a SHELF, not a list of keys (v5 P13). Two planks, bottles standing on
-            // them at their own proportions, and nothing under a bottle but the wood -- the
-            // price and the stock come up on hover instead of being printed on every key, so
-            // the eye reads bottles first and numbers only when it asks for them.
-            const int shelves = 2;
+            int perRow = category == null ? 7 : ShelfColumns;
+            int shelves = category == null
+                ? Mathf.Max(3, Mathf.CeilToInt(items.Count / (float)perRow))
+                : 2;
             float shelfH = (areaH - GridGap) / shelves;
 
             for (int row = 0; row < shelves; row++)
             {
-                int from = row * ShelfColumns, count = Mathf.Min(ShelfColumns, items.Count - from);
-                if (count <= 0) break;
+                int from = row * perRow, count = Mathf.Max(0, Mathf.Min(perRow, items.Count - from));
+                // An empty plank still hangs on the wall (2026-08-01): a young bar faces a
+                // sparsely stocked back-bar, not a wall with one shelf on it.
+                if (count <= 0 && category != null) break;
 
                 // The sheet lays its children out vertically, so the shelves are STACKED by the
                 // layout rather than anchored by hand -- hand-anchored bands were simply
@@ -353,8 +356,19 @@ namespace LastCall.UI
                 var plank = NewRect("Plank", band);
                 plank.anchorMin = new Vector2(0.02f, 0); plank.anchorMax = new Vector2(0.98f, 0);
                 plank.pivot = new Vector2(0.5f, 0);
-                plank.offsetMin = new Vector2(0, 6); plank.offsetMax = new Vector2(0, 16);
-                plank.gameObject.AddComponent<Image>().color = ShelfWood;
+                var plankSprite = ItemArt.Load("backwall_shelf");
+                var plankImg = plank.gameObject.AddComponent<Image>();
+                if (plankSprite != null)
+                {
+                    // The generated corbelled plank, standing under the bottles.
+                    plank.offsetMin = new Vector2(0, -8); plank.offsetMax = new Vector2(0, 28);
+                    plankImg.sprite = plankSprite;
+                }
+                else
+                {
+                    plank.offsetMin = new Vector2(0, 6); plank.offsetMax = new Vector2(0, 16);
+                    plankImg.color = ShelfWood;
+                }
                 var lip = NewRect("Lip", plank);
                 lip.anchorMin = new Vector2(0, 1); lip.anchorMax = new Vector2(1, 1);
                 lip.pivot = new Vector2(0.5f, 1);
@@ -364,7 +378,7 @@ namespace LastCall.UI
 
                 // Centred on the plank rather than packed to the left: a shelf with two bottles
                 // on it is a shelf with two bottles on it, not a row that ran out.
-                float slotW = (areaW * 0.96f) / ShelfColumns;
+                float slotW = (areaW * 0.96f) / perRow;
                 float startX = -slotW * count * 0.5f;
                 for (int i = 0; i < count; i++)
                     AddShelfBottle(band, items[from + i], run,
@@ -707,15 +721,29 @@ namespace LastCall.UI
 
         private void BuildMenuPanel()
         {
-            // The menu is a wooden clipboard with the drink list written on its paper.
+            // THE BACK BAR (the author's direction, 2026-07-31): the clipboard retires. The
+            // player turns around to face the wall of bottles — a full-screen back-bar, every
+            // bottle on one wall, no aisles. The wall is the generated kit at native grain:
+            // tiled wood behind, the lit art-deco cornice across the top.
             _menuPanel = NewRect("MenuPanel", _root);
-            Place(_menuPanel, new Vector2(0.5f, 0.5f), new Vector2(BoardW, BoardH), new Vector2(BoardX, 0));
+            Stretch(_menuPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _menuHome = _menuPanel.anchoredPosition;
             var boardImg = _menuPanel.gameObject.AddComponent<Image>();
-            var board = ItemArt.Load("menu_board");
-            if (board != null) { boardImg.sprite = board; boardImg.preserveAspect = true; boardImg.color = Color.white; }
+            var wallTile = ItemArt.Load("backwall_tile");
+            if (wallTile != null) { boardImg.sprite = wallTile; boardImg.type = Image.Type.Tiled; boardImg.color = Color.white; }
             else boardImg.color = UITheme.Night[1];
             Swallow(_menuPanel);
+
+            var cornice = NewRect("Cornice", _menuPanel);
+            cornice.anchorMin = new Vector2(0, 1); cornice.anchorMax = new Vector2(1, 1);
+            cornice.pivot = new Vector2(0.5f, 1);
+            cornice.sizeDelta = new Vector2(0, 110);
+            cornice.anchoredPosition = Vector2.zero;
+            var corniceImg = cornice.gameObject.AddComponent<Image>();
+            var corniceSprite = ItemArt.Load("backwall_header");
+            if (corniceSprite != null) { corniceImg.sprite = corniceSprite; corniceImg.type = Image.Type.Tiled; }
+            else corniceImg.enabled = false;
+            corniceImg.raycastTarget = false;
 
             // A red X in the board's top-right corner closes the whole flow.
             var close = NewRect("Close", _menuPanel);
@@ -778,10 +806,9 @@ namespace LastCall.UI
             // Short enough to leave the bottom strip to SERVE and the bin: with four columns the
             // grid reaches the paper's right edge, and a full-height page put its last key under
             // the bin (2026-07-27).
+            // The wall's working area: full width under the cornice, above the SERVE strip.
             var pageClip = NewRect("PageClip", _menuPanel);
-            Place(pageClip, new Vector2(0.5f, 0.5f),
-                new Vector2(BoardW * PaperW - 44f, BoardH * PaperH - 156f),
-                new Vector2(BoardW * PaperCX, BoardH * PaperCY + 2f));
+            Stretch(pageClip, Vector2.zero, Vector2.one, new Vector2(40, 96), new Vector2(-40, -124));
             pageClip.gameObject.AddComponent<RectMask2D>();
 
             _bottleList = NewRect("Bottles", pageClip);
