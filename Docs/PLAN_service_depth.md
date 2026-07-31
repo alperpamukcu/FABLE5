@@ -384,6 +384,23 @@ staging is not. In the author's words:
   a `BottleArt` that reports an interior, not a one-line change — and it should be scheduled
   as such, with the cap fix folded into the same pass since it is the same nineteen bottles.
 
+  **The bottle pass, in full — one job, three requirements:**
+  1. **Empty bottles.** Clear glass, no contents drawn, so the level is the game's to render.
+  2. **Caps seated** on the neck, not resting loose on top of it.
+  3. **A heavier black outline.** The current one-pixel line lets a dark bottle dissolve into
+     a dark bar — the author's report: *"they can disappear along with the background."*
+     Thicker, and all the way round, so a bottle reads as an object standing in front of the
+     room rather than a shape cut out of it. Worth checking the same line weight against the
+     keg and the shaker, which were the style reference the bottles were generated from.
+
+  Note for whoever runs it: the previous pass was driven by a `genbottles.py` in the session
+  scratchpad, which does not survive the session. The prompt that matters is its `COMMON`
+  suffix — "Crisp BLACK OUTLINE all the way round… label area COMPLETELY BLANK" — plus a
+  `style_image_base64` of `Assets/Resources/Items/shaker.png` with
+  `style_copy: ["shading", "outline", "detail"]`, at 96×160 and `no_background: true`. The
+  API caps concurrency at 10 jobs, so it wants a drain loop, and every result must be trimmed
+  to its content bounds before install.
+
 - ☐ **Glass upgrades**: 3 tiers each, bought individually in the tablet shop, standing
   visibly on the under-counter shelf (the tap station's bays extend across the bar);
   upgrade swaps the shelf art
