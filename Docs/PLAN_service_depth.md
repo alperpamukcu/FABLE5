@@ -221,8 +221,20 @@ threshold, a star-driven arrival rate, and a speed-response harness.
   composed from those two can never drift from the drink and a recipe added to JSON gets its
   icon the same day. It also keeps the project's own rule — chrome is procedural, generation
   is for illustration — and it costs nothing per recipe, where 27 drawings would have.
-- ☐ **Top bar v2**, **tablet shop**, **end-of-night receipt v2** — not started; all three are
-  procedural chrome and need no generation.
+- ☑ **Top bar v2**: three groups anchored to their own edges — clock left, till centre,
+  standing right — instead of hand-tuned offsets from the middle, and **opaque**, because at
+  0.82 alpha the neon sign behind it showed through the star rating.
+- ☐ **Tablet shop**, **end-of-night receipt v2** — not started; both are procedural chrome
+  and need no generation.
+
+The top bar turned up a real bug rather than a layout one. The rating read **"3,0"**, because
+every number in the project was formatted in the machine's own culture; the editor here is
+`tr-TR`, which also writes a percent as `%75`, which is why four call sites were patching
+`:P0` with a string replace that only ever worked under a culture none of them were running
+in. The same setting decides how `0.75` is *read*, so a glass profile or a ratio band could
+have come out of a data file meaning seventy-five instead of three quarters on someone else's
+desktop. The game now pins one culture at boot — invariant, with the percent pattern amended
+to `n%` — and the four hand-patches are gone.
 
 Proportion turned out to be presentation, not content: the profile says a martini is a cone
 and a highball is a tube, but not that the highball is the *tall* one, and at 32px the glasses

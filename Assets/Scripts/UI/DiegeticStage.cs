@@ -1288,7 +1288,7 @@ namespace LastCall.UI
                 y += h;
             }
 
-            _glassPercent.text = $"{glass.FillFraction:P0}".Replace(" ", "");
+            _glassPercent.text = $"{glass.FillFraction:P0}";
 
             if (glass.IsEmpty)
             {

@@ -40,6 +40,34 @@ namespace LastCall.Game
         /// <summary>Raised after a new run is dealt (including the initial one).</summary>
         public event System.Action RunStarted;
 
+        /// <summary>
+        /// Pins the whole game to one culture, before anything formats or parses a number.
+        ///
+        /// The rating printed as "3,0" is the visible half of this. The dangerous half is that
+        /// the same setting decides how "0.75" is READ, so a glass profile or a ratio band
+        /// could come out of a data file meaning seventy-five instead of three quarters on
+        /// someone else's desktop. The UI is English throughout, so there is nothing to
+        /// localise and one culture everywhere is the whole fix.
+        ///
+        /// Invariant with one amendment: it writes a percent as "75 %", and Turkish writes it
+        /// "%75", so `:P0` was being patched at four call sites with a string replace that
+        /// only ever worked under one of them. Setting the pattern here means every `:P0` in
+        /// the project reads "75%" and no call site has to know about it.
+        /// </summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void PinCulture()
+        {
+            var culture = (System.Globalization.CultureInfo)
+                System.Globalization.CultureInfo.InvariantCulture.Clone();
+            culture.NumberFormat.PercentPositivePattern = 1;   // "n%"
+            culture.NumberFormat.PercentNegativePattern = 1;   // "-n%"
+
+            System.Globalization.CultureInfo.DefaultThreadCurrentCulture = culture;
+            System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
+            System.Threading.Thread.CurrentThread.CurrentCulture = culture;
+            System.Threading.Thread.CurrentThread.CurrentUICulture = culture;
+        }
+
         private void Start()
         {
             StartNewRun(seed);

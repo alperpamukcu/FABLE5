@@ -1103,27 +1103,39 @@ namespace LastCall.UI
                 es.transform.SetParent(transform, false);
             }
 
-            // Top bar: day, the till, the crowd, the live satisfaction bar, actions.
+            // Top bar v2 (v5 P13). Three groups, each anchored to its own edge instead of the
+            // hand-tuned offsets from the centre that the first pass used: the clock at the
+            // left, the till in the middle, the standing at the right. It is also OPAQUE now,
+            // with a lit bottom rule — at 0.82 the neon sign behind it showed straight through
+            // the rating, which is the one number the whole loop is about.
             var top = Panel(root, "TopBar", new Vector2(0, 1), new Vector2(1, 1),
-                new Vector2(0, -40), Vector2.zero, new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.82f));
+                new Vector2(0, -44), Vector2.zero, UITheme.Night[0]);
+            var rule = NewRect("Rule", top);
+            rule.anchorMin = new Vector2(0, 0); rule.anchorMax = new Vector2(1, 0);
+            rule.pivot = new Vector2(0.5f, 0);
+            rule.sizeDelta = new Vector2(0, 2);
+            rule.anchoredPosition = Vector2.zero;
+            rule.gameObject.AddComponent<Image>().color = UITheme.Amber[2];
 
             _dayText = NewText("Day", top, _display, 14, TextAnchor.MiddleLeft, UITheme.TextPrimary);
-            Stretch(_dayText.rectTransform, Vector2.zero, Vector2.one, new Vector2(12, 0), new Vector2(-800, 0));
+            Place(_dayText.rectTransform, new Vector2(0, 0.5f), new Vector2(300, 30), new Vector2(16, 0));
 
-            _moneyText = NewText("Money", top, _display, 16, TextAnchor.MiddleLeft, UITheme.Money);
-            Place(_moneyText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(140, 30), new Vector2(-240, 0));
+            _moneyText = NewText("Money", top, _display, 16, TextAnchor.MiddleCenter, UITheme.Money);
+            Place(_moneyText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(200, 30), Vector2.zero);
 
-            _crowdText = NewText("Crowd", top, _body, 13, TextAnchor.MiddleLeft, UITheme.TextSecondary);
-            Place(_crowdText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(180, 30), new Vector2(-90, 0));
+            // The standing: five stars, the number, and who is in tonight — read right to left
+            // from the NEW RUN button, so the group keeps its shape at any window width.
+            NewButton(top, "NEW RUN", new Vector2(1, 0.5f), new Vector2(110, 30),
+                new Vector2(-68, 0), UITheme.PrimaryAction, () => _bootstrap.StartNewRun(null));
 
-            // The standing: the number, then five stars. Drawn procedurally at the pixel grain
-            // -- bar chrome is never generated art.
-            _ratingText = NewText("Rating", top, _display, 14, TextAnchor.MiddleRight, UITheme.Amber[3]);
-            Place(_ratingText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(60, 30), new Vector2(150, 0));
+            // Place() pivots on the anchor, so these offsets are RIGHT edges: the button's own
+            // right edge sits at -68 and it is 110 wide, so the stars have to clear -178.
+            const float StarSize = 16f, StarGap = 20f, StarsRight = -196f;
             for (int i = 0; i < _ratingStars.Length; i++)
             {
                 var star = NewRect($"Star{i}", top);
-                Place(star, new Vector2(0.5f, 0.5f), new Vector2(16, 16), new Vector2(196 + i * 20, 0));
+                Place(star, new Vector2(1, 0.5f), new Vector2(StarSize, StarSize),
+                    new Vector2(StarsRight - (_ratingStars.Length - 1 - i) * StarGap, 0));
                 var img = star.gameObject.AddComponent<Image>();
                 img.sprite = ItemArt.Load("star");
                 img.preserveAspect = true;
@@ -1131,10 +1143,16 @@ namespace LastCall.UI
                 _ratingStars[i] = img;
             }
 
+            _ratingText = NewText("Rating", top, _display, 14, TextAnchor.MiddleRight, UITheme.Amber[3]);
+            Place(_ratingText.rectTransform, new Vector2(1, 0.5f), new Vector2(60, 30),
+                new Vector2(StarsRight - _ratingStars.Length * StarGap - 6f, 0));
+
+            _crowdText = NewText("Crowd", top, _body, 13, TextAnchor.MiddleRight, UITheme.TextSecondary);
+            Place(_crowdText.rectTransform, new Vector2(1, 0.5f), new Vector2(200, 30),
+                new Vector2(StarsRight - _ratingStars.Length * StarGap - 74f, 0));
+
             // BIN GLASS retired (v5 P13 / C7): a drink is thrown away by carrying it to the bin
             // on the counter, which is the same verb that serves it.
-            NewButton(top, "NEW RUN", new Vector2(1, 0.5f), new Vector2(110, 30),
-                new Vector2(-70, 0), UITheme.PrimaryAction, () => _bootstrap.StartNewRun(null));
 
             // Refusal notices ("NOT ENOUGH MONEY") drop in just under the top bar.
             _toast = NewText("Toast", root, _display, 14, TextAnchor.MiddleCenter, UITheme.ViceRed[3]);

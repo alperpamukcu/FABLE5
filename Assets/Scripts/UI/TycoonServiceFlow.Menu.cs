@@ -176,13 +176,13 @@ namespace LastCall.UI
                 float share = (float)glass.RatioOf(id) * (float)glass.FillFraction;
                 var col = UITheme.TypeRamp[card?.Type ?? IngredientType.Spirit][3];
                 x += AddMixSegment(id, share * w, new Color(col.r, col.g, col.b, 0.92f),
-                    $"{share:P0}".Replace(" %", "%"), new Color(0.12f, 0.10f, 0.08f), x);
+                    $"{share:P0}", new Color(0.12f, 0.10f, 0.08f), x);
             }
 
             float free = Mathf.Max(0f, 1f - (float)glass.FillFraction);
             if (free > 0.001f)
                 AddMixSegment("empty", free * w, new Color(0.42f, 0.35f, 0.26f, 0.16f),
-                    glass.IsEmpty ? "EMPTY" : $"{free:P0} EMPTY".Replace(" %", "%"),
+                    glass.IsEmpty ? "EMPTY" : $"{free:P0} EMPTY",
                     new Color(0.44f, 0.37f, 0.28f), x);
         }
 
