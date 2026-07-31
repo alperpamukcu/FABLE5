@@ -106,6 +106,9 @@ namespace LastCall.UI
 
         private RectTransform _drinkGlass;
         private Image _drinkGlassLiquid;
+        private Image _drinkGlassArt;
+        private GlasswareDefinition _drinkGlassware;
+        private const float CarriedGlassHeight = 116f;
         private bool _glassGrabbed;
         private Vector2 _glassGrabOffset;
         private Vector2 _glassPos, _glassVel;
@@ -298,34 +301,38 @@ namespace LastCall.UI
             _binImage.color = new Color(0.72f, 0.72f, 0.74f, 1f);
             if (_binImage.sprite == null) _binImage.enabled = false;
 
+            // The drink you carry to a seat is the real glass now (v5 P14 / C9): the same
+            // drawing the serve stage stands on the counter, with its interior filled to the
+            // level the drink is actually at. It used to be a translucent box with a cyan bar
+            // for a rim, which said "a drink" and nothing about WHICH drink.
             _drinkGlass = NewRect("DrinkGlass", root);
             _drinkGlass.anchorMin = _drinkGlass.anchorMax = _drinkGlass.pivot = new Vector2(0.5f, 0.5f);
-            _drinkGlass.sizeDelta = new Vector2(78, 100);
+            _drinkGlass.sizeDelta = new Vector2(78, CarriedGlassHeight);
             _drinkGlass.anchoredPosition = _glassHome;
 
-            var body = _drinkGlass.gameObject.AddComponent<Image>();   // the glass, and the grab target
-            body.color = new Color(0.85f, 0.93f, 1f, 0.20f);
+            var body = _drinkGlass.gameObject.AddComponent<Image>();   // invisible, but the grab target
+            body.color = new Color(0f, 0f, 0f, 0.004f);
             var grab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
             grab.callback.AddListener(ev => OnGlassGrab((PointerEventData)ev));
             _drinkGlass.gameObject.AddComponent<EventTrigger>().triggers.Add(grab);
 
-            var bowl = NewRect("Bowl", _drinkGlass);
-            Stretch(bowl, Vector2.zero, Vector2.one, new Vector2(6, 6), new Vector2(-6, -12));
-            var bowlImg = bowl.gameObject.AddComponent<Image>();
-            bowlImg.color = new Color(0f, 0f, 0f, 0.28f); bowlImg.raycastTarget = false;
-
-            var liquid = NewRect("Liquid", bowl);   // a bottom-anchored fill, ~two-thirds full
-            liquid.anchorMin = new Vector2(0, 0); liquid.anchorMax = new Vector2(1, 0);
-            liquid.pivot = new Vector2(0.5f, 0);
-            liquid.offsetMin = new Vector2(2, 2); liquid.offsetMax = new Vector2(-2, 0);
-            liquid.sizeDelta = new Vector2(-4, 62);
+            // The liquid goes in first so the hollow glass draws over it, and it is clipped to
+            // the interior silhouette — a martini's drink narrows into the cone rather than
+            // being a rectangle poking through the walls.
+            var liquid = NewRect("Liquid", _drinkGlass);
+            Stretch(liquid, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _drinkGlassLiquid = liquid.gameObject.AddComponent<Image>();
             _drinkGlassLiquid.raycastTarget = false;
+            _drinkGlassLiquid.type = Image.Type.Filled;
+            _drinkGlassLiquid.fillMethod = Image.FillMethod.Vertical;
+            _drinkGlassLiquid.fillOrigin = (int)Image.OriginVertical.Bottom;
+            _drinkGlassLiquid.preserveAspect = true;
 
-            var rim = NewRect("Rim", _drinkGlass);
-            Place(rim, new Vector2(0.5f, 1), new Vector2(84, 8), new Vector2(0, 0));
-            var rimImg = rim.gameObject.AddComponent<Image>();
-            rimImg.color = UITheme.Cyan[3]; rimImg.raycastTarget = false;
+            var art = NewRect("Art", _drinkGlass);
+            Stretch(art, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _drinkGlassArt = art.gameObject.AddComponent<Image>();
+            _drinkGlassArt.raycastTarget = false;
+            _drinkGlassArt.preserveAspect = true;
 
             var hint = NewText("Hint", _drinkGlass, _body, 10, TextAnchor.UpperCenter, UITheme.Cyan[4]);
             Place(hint.rectTransform, new Vector2(0.5f, 1), new Vector2(170, 18), new Vector2(0, 24));
@@ -371,13 +378,18 @@ namespace LastCall.UI
                 _drinkGlass.gameObject.SetActive(true);
                 _glassPos = _glassHome; _glassVel = Vector2.zero; _glassAngle = 0f; _glassAngVel = 0f;
             }
-            // The glass shows the drink as it was actually built: its blended colour and its
-            // real fill level (2026-07-22) — no fixed colour or amount.
+            // The glass shows the drink as it was actually built: the vessel it chose, its
+            // blended colour and its real fill level — no fixed glass, colour or amount.
+            var piece = GlassArt.For(run.ServingGlassware);
+            if (!ReferenceEquals(_drinkGlassware, run.ServingGlassware) || _drinkGlassArt.sprite == null)
+            {
+                _drinkGlassware = run.ServingGlassware;
+                _drinkGlassArt.sprite = piece.Sprite;
+                _drinkGlassLiquid.sprite = piece.Fill;
+                _drinkGlass.sizeDelta = new Vector2(CarriedGlassHeight * piece.Aspect, CarriedGlassHeight);
+            }
             _drinkGlassLiquid.color = DrinkColor();
-            var made = run.ServingGlass;
-            float bowlH = ((RectTransform)_drinkGlassLiquid.transform.parent).rect.height;
-            _drinkGlassLiquid.rectTransform.sizeDelta =
-                new Vector2(-4, Mathf.Round(bowlH * (float)made.FillFraction));
+            _drinkGlassLiquid.fillAmount = piece.FillAmount((float)run.ServingGlass.FillFraction);
 
             float dt = Mathf.Max(Time.deltaTime, 1e-4f);
             var mouse = Mouse.current;

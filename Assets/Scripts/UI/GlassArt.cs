@@ -36,6 +36,15 @@ namespace LastCall.UI
         public readonly struct Piece
         {
             public readonly Sprite Sprite;
+            /// <summary>
+            /// The interior as a solid silhouette, pixel-aligned with <see cref="Sprite"/>.
+            /// Drawn behind the glass and clipped with a vertical <see cref="Image.fillAmount"/>,
+            /// it gives a filled glass anywhere the full fluid solver would be overkill — the
+            /// drink carried across the counter, a shop listing — and it is clipped to the real
+            /// silhouette, so a martini's liquid narrows into the cone instead of being a
+            /// rectangle poking through the walls.
+            /// </summary>
+            public readonly Sprite Fill;
             /// <summary>Half-width of the interior at its widest, as a fraction of the rect's
             /// half-width.</summary>
             public readonly float InteriorHalf;
@@ -49,13 +58,19 @@ namespace LastCall.UI
             /// measured per vessel — see <see cref="Densities"/>.</summary>
             public readonly float Density;
 
-            public Piece(Sprite sprite, float interiorHalf, float floorY, float rimY,
+            public Piece(Sprite sprite, Sprite fill, float interiorHalf, float floorY, float rimY,
                 float[] profile, float aspect, float density)
             {
-                Sprite = sprite; InteriorHalf = interiorHalf;
+                Sprite = sprite; Fill = fill; InteriorHalf = interiorHalf;
                 FloorY = floorY; RimY = rimY; Profile = profile; Aspect = aspect;
                 Density = density;
             }
+
+            /// <summary>The <see cref="Image.fillAmount"/> that draws the interior filled to
+            /// <paramref name="fraction"/>. The mask is transparent below the floor, so this is
+            /// simply where that level sits up the whole sprite.</summary>
+            public float FillAmount(float fraction) =>
+                FloorY + (RimY - FloorY) * Mathf.Clamp01(fraction);
         }
 
         private readonly struct Shape
@@ -119,6 +134,7 @@ namespace LastCall.UI
             IReadOnlyList<double> profile = glass?.Profile;
 
             var px = new Color[W * H];
+            var hole = new Color[W * H];      // the interior, drawn alongside so the two agree
             int span = Mathf.Max(1, shape.Rim - shape.Floor);
 
             // The stalk and the foot, for a glass that stands on one. Both are solid: they are
@@ -147,7 +163,9 @@ namespace LastCall.UI
                 }
 
                 // At and above the floor only the WALLS are drawn. The middle is left
-                // transparent on purpose: that hole is where the drink is rendered.
+                // transparent on purpose: that hole is where the drink is rendered — and it is
+                // recorded into the fill mask on the same pass, so the two cannot disagree.
+                Span(hole, y, -half + Wall, half - Wall - 1, Color.white);
                 Span(px, y, -half, -half + Wall - 1, Body);
                 Span(px, y, half - Wall, half - 1, Body);
                 Put(px, -half, y, Shade);
@@ -178,6 +196,19 @@ namespace LastCall.UI
             sprite.hideFlags = HideFlags.DontSave;
             sprite.name = tex.name;
 
+            var fillTex = new Texture2D(W, H, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.DontSave,
+                name = $"fill_{glass?.Id ?? "default"}",
+            };
+            fillTex.SetPixels(hole);
+            fillTex.Apply();
+            var fill = Sprite.Create(fillTex, new Rect(0, 0, W, H), new Vector2(0.5f, 0.5f), 1f);
+            fill.hideFlags = HideFlags.DontSave;
+            fill.name = fillTex.name;
+
             // What the fluid needs, measured off what was just drawn rather than guessed:
             // the widest interior, and the floor and rim it sits between.
             float interiorHalf = (rimHalf - Wall) / (W * 0.5f);
@@ -187,7 +218,7 @@ namespace LastCall.UI
             else { solverProfile = new[] { 1f, 1f }; }
 
             float density = glass != null && Densities.TryGetValue(glass.Id, out var d) ? d : 0.95f;
-            return new Piece(sprite, interiorHalf,
+            return new Piece(sprite, fill, interiorHalf,
                 shape.Floor / (float)H, shape.Rim / (float)H, solverProfile, W / (float)H, density);
         }
 

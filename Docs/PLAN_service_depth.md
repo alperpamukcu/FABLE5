@@ -298,7 +298,12 @@ to the board instead.
     0.83 at 0.75, coupe 0.19 at 0.25). A cone's area varies quadratically with height and the
     solver's count estimate does not, so the error is non-monotonic and no single scalar
     fixes it — that needs a response curve in `MetaballFluid`, not another tuned number.
-  - ☐ Drag-to-serve shows the true glass (the carried drink is still the old tumbler)
+  - ☑ **Drag-to-serve shows the true glass**: the drink carried to a seat is the same
+    drawing, filled to the level it is really at. `GlassArt` emits a second sprite alongside
+    the glass — the interior as a solid silhouette, drawn on the same pass so the two cannot
+    disagree — and a vertical `fillAmount` clips the liquid to it. That keeps a martini's
+    drink inside the cone instead of a rectangle poking through the walls, and it costs one
+    Image where the full solver would have been overkill.
 - ☐ **Decorations persist** on the served drink: salt/sugar visibly on the rim, wedge on
   the glass wall, ice floating in the liquid, garnish on top — the delivered glass shows
   everything that went in
