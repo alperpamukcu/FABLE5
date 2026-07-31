@@ -56,7 +56,7 @@ namespace LastCall.UI
         private const float CounterLineY = DiegeticStage.CounterTopY * StageToHud;
         private const float BustW = 108f;
         private const float BustH = 128f;
-        private const float WalkSpeed = 405f;       // walk-in speed (ref px/s), in from the screen's right edge
+        private const float WalkSpeed = 340f;       // walk-in speed (ref px/s) — slightly slower, per the notes (P15)
         private const float ExitSpeed = 560f;       // walk-out speed (ref px/s), back off the right edge
         private const float OffscreenMargin = 150f; // how far past the right edge they start/finish
         private const float OrderAnimSeconds = 2.4f;               // the one-shot "placing the order" beat
@@ -64,10 +64,10 @@ namespace LastCall.UI
 
         // The animated customer (2026-07-23): a full-body pixel sprite shown from about the waist
         // up, with the counter clipping the legs. Frames load from Resources/Patron/<clip>.
-        private const float CharSize = 300f;       // the character image, scaled up from the 180px art
+        private const float CharSize = 330f;       // the character image — scaled up to match the room (P15)
         private const float CharWiden = 1.18f;     // stretch a touch wider — the sprite is lanky for the bar
-        private const float CharWinH = 176f;       // the masked window height (waist up, above the bar)
-        private const float CharFootDrop = 128f;   // how far below the counter the feet sit (clipped away)
+        private const float CharWinH = 192f;       // the masked window height (waist up, above the bar)
+        private const float CharFootDrop = 141f;   // how far below the counter the feet sit (same waist crop at 330)
         private enum PatronClip { Idle, Order, Drink, Walk, Cheer, Upset }
         private const float ReactSeconds = 1.15f;   // the one-shot reaction beat before they go
         private Dictionary<PatronClip, Sprite[]> _patron;
@@ -761,8 +761,8 @@ namespace LastCall.UI
                 // full; a drinking customer is content — both show a calm, full cyan bar.
                 float patience = (deciding || drinking) ? 1f
                     : (float)(visit.PatienceLeft / visit.PatienceMax);
-                float tagW = view.Tag.rect.width - 12f;
-                view.PatienceFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(tagW * patience), -2);
+                float gaugeW = BustW * 0.72f - 2f;
+                view.PatienceFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(gaugeW * patience), -2);
                 view.PatienceFill.color = (deciding || drinking) ? UITheme.Cyan[3]
                     : patience > 0.5f ? UITheme.Lime[3]
                     : patience > 0.25f ? UITheme.Amber[3] : UITheme.ViceRed[3];
@@ -791,8 +791,11 @@ namespace LastCall.UI
             {
                 float dist = Mathf.Max(1f, entryX - view.SeatX);
                 view.WalkT = Mathf.Min(1f, view.WalkT + Time.deltaTime * WalkSpeed / dist);
-                float e = 1f - (1f - view.WalkT) * (1f - view.WalkT);   // ease-out into the stool
-                view.Root.anchoredPosition = new Vector2(Mathf.Lerp(entryX, view.SeatX, e), CounterLineY);
+                // CONSTANT speed, no ease (P15, the notes): the old ease-out meant the ground
+                // slid fast under slow feet at the door and slow under fast feet at the stool —
+                // the walk cycle only reads as walking when the floor moves at one rate.
+                view.Root.anchoredPosition =
+                    new Vector2(Mathf.Lerp(entryX, view.SeatX, view.WalkT), CounterLineY);
                 view.Group.alpha = Mathf.Clamp01(view.WalkT * 4f);
             }
             else
@@ -1403,9 +1406,14 @@ namespace LastCall.UI
                 seat.Icon.preserveAspect = true;
                 seat.Icon.raycastTarget = false;
 
-                var clockBg = NewRect("ClockBg", seat.Tag);
-                clockBg.anchorMin = new Vector2(0, 0); clockBg.anchorMax = new Vector2(1, 0);
-                clockBg.offsetMin = new Vector2(6, 6); clockBg.offsetMax = new Vector2(-6, 14);
+                // The patience gauge rides the BODY, not the ticket (P15, absorbs the P8
+                // gauge item): a slim bar floating just over the head, so reading who is
+                // about to walk means looking at the people, not at their paperwork.
+                var clockBg = NewRect("ClockBg", seat.Root);
+                clockBg.anchorMin = clockBg.anchorMax = new Vector2(0.5f, 0);
+                clockBg.pivot = new Vector2(0.5f, 0);
+                clockBg.sizeDelta = new Vector2(BustW * 0.72f, 8f);
+                clockBg.anchoredPosition = new Vector2(0, CharWinH + 1f);
                 clockBg.gameObject.AddComponent<Image>().color = UITheme.Night[0];
                 var clockFill = NewRect("ClockFill", clockBg);
                 clockFill.anchorMin = new Vector2(0, 0); clockFill.anchorMax = new Vector2(0, 1);
