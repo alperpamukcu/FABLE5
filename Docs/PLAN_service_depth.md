@@ -571,9 +571,15 @@ measured (`SurfaceY`) inside every silhouette; tap stage unchanged (beer glass j
 
 ## P15 — Customers alive + ID card v3
 
-- ☐ **Animation set** (D5, on the current body first): constant-speed entrance, slightly
-  slower; scale up to match the room; idle-at-table (arms on the bar); positive reaction;
-  negative reaction — then the same set across all bodies as variety lands
+- ◐ **Animation set** (D5, on the current body first). *Reactions landed 2026-07-31*: two
+  custom 7-frame south clips on Bar Patron v7 (`cheer` — fist up, head tips back; `upset` —
+  shoulders slump, hand drops to the counter), played one-shot on the stool at the departure
+  beat, right where the tab settles — the emotional tell D1 moved off the card lives here.
+  Chosen by satisfaction (≥0.55 cheers), storm-offs always upset; skipped cleanly on a body
+  with no reaction frames, so variety can land body by body. Frame URLs 403 without a
+  browser User-Agent now — recorded because the 07-23 fetch worked bare. Still open:
+  entrance pacing (constant-speed, slightly slower), scale-up to match the room, and the
+  same set across the other bodies as variety lands
 - ☐ **Visible patience bar** attached to the body (absorbs the P8 gauge item)
 - ☑ **ID card v3** *(2026-07-31)*: landscape licence on generated shell art (guilloche,
   navy band, portrait window, stamp), drawn at 3× = the pixel faces' own 24px scale, so no

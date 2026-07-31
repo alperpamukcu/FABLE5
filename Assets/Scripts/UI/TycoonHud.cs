@@ -68,7 +68,8 @@ namespace LastCall.UI
         private const float CharWiden = 1.18f;     // stretch a touch wider — the sprite is lanky for the bar
         private const float CharWinH = 176f;       // the masked window height (waist up, above the bar)
         private const float CharFootDrop = 128f;   // how far below the counter the feet sit (clipped away)
-        private enum PatronClip { Idle, Order, Drink, Walk }
+        private enum PatronClip { Idle, Order, Drink, Walk, Cheer, Upset }
+        private const float ReactSeconds = 1.15f;   // the one-shot reaction beat before they go
         private Dictionary<PatronClip, Sprite[]> _patron;
         private RectTransform _hudRoot;            // the canvas rect — the screen's right edge for entrances
 
@@ -94,6 +95,8 @@ namespace LastCall.UI
             public bool WasOrdered;          // edge-detect the deciding→ordered moment
             public float OrderAnimLeft;      // remaining "placing the order" one-shot time
             public float DrinkT;             // time since they started drinking
+            public float ReactLeft;          // remaining departure-reaction one-shot time
+            public PatronClip ReactClip;     // Cheer or Upset, chosen from their satisfaction
         }
         private readonly List<SeatView> _seats = new List<SeatView>();
 
@@ -651,6 +654,13 @@ namespace LastCall.UI
                     // The tab settles as they go: what they paid and the stars they leave
                     // behind float over the emptying stool. The serve only earned the face.
                     if (v.Visit.Paid > 0) StartCoroutine(TabFloat(i, v.Visit));
+                    // And the body answers before it leaves (P15/D5): a cheer or a slump on
+                    // the stool. This is where the emotional tell lives now the stat rows
+                    // left the card — skipped cleanly while the clips have no frames yet.
+                    v.ReactClip = !v.ExitStorm && v.Visit.Satisfaction >= 0.55
+                        ? PatronClip.Cheer : PatronClip.Upset;
+                    v.ReactLeft = _patron.TryGetValue(v.ReactClip, out var rf) && rf.Length > 0
+                        ? ReactSeconds : 0f;
                 }
             }
             // 2) Arrivals — a seated customer with no stool takes the first free one and walks in.
@@ -797,6 +807,15 @@ namespace LastCall.UI
         /// then storms out faster.</summary>
         private void AdvanceExit(SeatView view)
         {
+            // The reaction beat first: they stay on the stool and the drink answers — a fist
+            // up or a slow head-shake — before they get up. One shot, then the walk.
+            if (view.ReactLeft > 0f)
+            {
+                view.ReactLeft -= Time.deltaTime;
+                UpdatePatronFrame(view, view.ReactClip, ReactSeconds - view.ReactLeft, facing: 1);
+                return;
+            }
+
             // Get up and walk all the way back off the right edge the way they came.
             float exitX = _hudRoot.rect.width + OffscreenMargin;
             float dist = Mathf.Max(1f, exitX - view.SeatX);
@@ -871,6 +890,9 @@ namespace LastCall.UI
         private static int PatronFrameIndex(PatronClip clip, float t, int n)
         {
             if (n <= 1) return 0;
+            // The reactions play once, spread over the beat, and hold their last frame.
+            if (clip == PatronClip.Cheer || clip == PatronClip.Upset)
+                return Mathf.Min(n - 1, Mathf.FloorToInt(t / ReactSeconds * n));
             if (clip == PatronClip.Drink)
             {
                 float u = Mathf.Repeat(t, DrinkSipSeconds + DrinkHoldSeconds);
@@ -893,6 +915,8 @@ namespace LastCall.UI
                 [PatronClip.Order] = LoadPatronClip("order"),
                 [PatronClip.Drink] = LoadPatronClip("drink"),
                 [PatronClip.Walk]  = LoadPatronClip("walk"),
+                [PatronClip.Cheer] = LoadPatronClip("cheer"),
+                [PatronClip.Upset] = LoadPatronClip("upset"),
             };
         }
 
