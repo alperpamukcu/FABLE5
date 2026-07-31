@@ -34,10 +34,15 @@ pins the old rule, the phase that changes the rule rewrites the test in the same
 
 Constraints the notes bend but the project does not:
 
-- **UI chrome is never AI-generated** (art-direction rule). "Custom top bar asset", the serve
-  button, the tablet shell, the menu paper: all built as drawn-in-engine procedural kit or
-  hand-placed pixel art — generation is only for illustrative content (bottles, glasses,
-  props, portraits).
+- ~~**UI chrome is never AI-generated**~~ — **lifted by the author, 2026-07-31: "UI can be
+  generated with PixelLab."** The rule came from the first AI UI set in 2026-07-12, and the
+  complaint behind it was *inconsistency*, not generation: every piece invented its own
+  texture and the result read as a collage. That is what `style_image_base64` + `style_copy`
+  fixed — a generation now takes the project's own art as its style reference instead of
+  inventing one. So the ban outlived the problem. What still holds: reference every request
+  against existing project art, keep the palette tokens, verify every batch by eye, and leave
+  label areas blank because **the generator cannot spell** — text is set in engine with the
+  pixel font (the keg precedent).
 - **The generator cannot spell.** "Product names written on the bottles" = blank label areas
   in the art, lettered in engine with the pixel font (the keg precedent).
 - **Determinism, Core purity, hidden information, data-driven content** — unchanged. Every
