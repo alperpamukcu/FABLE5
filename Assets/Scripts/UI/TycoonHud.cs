@@ -325,6 +325,7 @@ namespace LastCall.UI
             var verdict = run.ServeTo(visit);
             CloseId();
             Sfx.Play("serve_clink");                          // the glass lands in front of them
+            LogVerdict(visit, verdict);
             StartCoroutine(ServeReaction(index, verdict));   // reaction + payment float up
             return true;
         }
@@ -822,6 +823,14 @@ namespace LastCall.UI
                     v.Exiting = true;
                     v.ExitT = 0f;
                     v.ExitStorm = v.Visit.State == VisitState.StormedOff;
+                    if (v.ExitStorm)
+                        LogService($"<color=#F27D8A>STORM-OFF</color> " +
+                            (v.Visit.IdInspected ? v.Visit.Order.Wanted.Name.ToUpperInvariant() : "?") +
+                            " · patience ran out · $0 · " + LogStars(0));
+                    else if (v.Visit.Paid > 0)
+                        LogService($"<color=#F5C97B>TAB</color> settled ${v.Visit.Paid}" +
+                            (v.Visit.SnacksTaken > 0 ? $" (+{v.Visit.SnacksTaken} snack)" : "") +
+                            $" · leaves {LogStars(v.Visit.Satisfaction)}");
                     // The bussing beat (D2): a drinker leaves the empty glass on this stool.
                     // Core created the DirtyGlass in the same tick that freed the seat; this
                     // view claims the first one no other stool has claimed.
@@ -1263,6 +1272,58 @@ namespace LastCall.UI
                 AddCard("MUSICIAN", "on stage", cfg.MusicianPrice, !run.HasMusician,
                     () => { run.BuyMusician(); ApplyBarLook(); RebuildDayEnd(); });
             }
+        }
+
+        // ── the service log (dev tooling, 2026-07-31) ────────────────────────────
+        // Top-left, always on for now: one line per service event — what was ordered, what
+        // the judge said and WHY it scored the way it did (match, spec, fill, craft), what
+        // it paid, and the stars it left. The author's in-play instrument for the balance
+        // work: the sim report says what 200 runs did; this says what THIS serve just did.
+
+        private Text _serviceLog;
+        private readonly List<string> _serviceLogLines = new List<string>();
+        private const int ServiceLogMax = 9;
+
+        private void BuildServiceLog(RectTransform root)
+        {
+            var panel = NewRect("ServiceLog", root);
+            Place(panel, new Vector2(0, 1), new Vector2(430, 150), new Vector2(10, -66));
+            panel.pivot = new Vector2(0, 1);
+            var bg = panel.gameObject.AddComponent<Image>();
+            bg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.55f);
+            bg.raycastTarget = false;
+            _serviceLog = NewText("Lines", panel, _body, 8, TextAnchor.UpperLeft, UITheme.TextSecondary);
+            _serviceLog.supportRichText = true;
+            Stretch(_serviceLog.rectTransform, Vector2.zero, Vector2.one, new Vector2(6, 4), new Vector2(-6, -4));
+        }
+
+        private void LogService(string line)
+        {
+            if (_serviceLog == null) return;
+            _serviceLogLines.Insert(0, line);
+            while (_serviceLogLines.Count > ServiceLogMax)
+                _serviceLogLines.RemoveAt(_serviceLogLines.Count - 1);
+            _serviceLog.text = string.Join("\n", _serviceLogLines);
+        }
+
+        private static string LogStars(double satisfaction) =>
+            new string('★', Mathf.Clamp(Mathf.RoundToInt((float)satisfaction * 5f), 0, 5));
+
+        /// <summary>The judge's verdict, said as one log line with its reasons.</summary>
+        private void LogVerdict(CustomerVisit visit, ServiceVerdict verdict)
+        {
+            string ordered = visit.IdInspected ? visit.Order.Wanted.Name.ToUpperInvariant() : "?";
+            string made = visit.Served != null ? visit.Served.Name.ToUpperInvariant() : "NOTHING NAMED";
+            string col = verdict.Match == OrderMatch.Exact ? "8CE28C"
+                : verdict.Match == OrderMatch.Close ? "F5C97B" : "F27D8A";
+            var why = new List<string>();
+            if (verdict.Match == OrderMatch.Wrong) why.Add($"made {made}");
+            if (verdict.SpecScore < 0.999) why.Add($"spec {verdict.SpecScore:P0}");
+            if (verdict.FillScore < 0.999) why.Add($"fill {verdict.FillScore:P0}");
+            if (!verdict.CraftLanded && visit.Order != null) { }
+            string reasons = why.Count > 0 ? "  <color=#9C8F80>(" + string.Join(", ", why) + ")</color>" : "";
+            LogService($"<color=#{col}>{verdict.Match.ToString().ToUpperInvariant()}</color> {ordered}" +
+                       $" · ${verdict.BasePaid}+${verdict.Tip} · {LogStars(verdict.Satisfaction)}{reasons}");
         }
 
         // ── the recipe book (v5 P16) ─────────────────────────────────────────────
@@ -1999,6 +2060,7 @@ namespace LastCall.UI
 
             BuildDrinkGlass(root);
             BuildSnackRow(root);
+            BuildServiceLog(root);
             BuildIdCard(root);
 
             // Day end: a plain invoice panel with the night's business under it.
