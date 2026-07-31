@@ -1362,6 +1362,7 @@ namespace LastCall.UI
             if (_bookPanel == null) return;
             bool open = !_bookPanel.gameObject.activeSelf;
             _bookPanel.gameObject.SetActive(open);
+            if (open) _bookPanel.SetAsLastSibling();   // over the service log and everything else
             Sfx.Play("click", 0.6f);
             if (open) RebuildRecipeBook();
         }
@@ -1390,35 +1391,12 @@ namespace LastCall.UI
             else boardImg.color = UITheme.Cream[4];
             sheet.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;   // swallow
 
-            var title = NewText("T", sheet, _display, 16, TextAnchor.MiddleCenter,
-                new Color(0.22f, 0.14f, 0.08f));
-            Place(title.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(320, 30),
-                new Vector2(BkW * BkPaperCX, BkH * (BkPaperCY + BkPaperH * 0.5f) + 2f));
-            title.text = "THE HOUSE BOOK";
-
-            // The drawn X, in the paper's corner exactly where the old menu wore it.
-            var closeRt = NewRect("Close", sheet);
-            Place(closeRt, new Vector2(0.5f, 0.5f), new Vector2(64, 64), new Vector2(307f, 190f));
-            var closeImg = closeRt.gameObject.AddComponent<Image>();
-            var closeSprite = ItemArt.Load("btn_close");
-            if (closeSprite != null) { closeImg.sprite = closeSprite; closeImg.preserveAspect = true; }
-            else closeImg.color = new Color(0.62f, 0.15f, 0.17f);
-            var closeBtn = closeRt.gameObject.AddComponent<Button>();
-            closeBtn.targetGraphic = closeImg;
-            var closeDown = ItemArt.Load("btn_close_down");
-            if (closeSprite != null && closeDown != null)
-            {
-                closeBtn.transition = Selectable.Transition.SpriteSwap;
-                var st = closeBtn.spriteState; st.pressedSprite = closeDown; st.selectedSprite = closeSprite;
-                closeBtn.spriteState = st;
-            }
-            closeBtn.onClick.AddListener(ToggleRecipeBook);
-            var closeSink = closeRt.gameObject.AddComponent<PressSink>();
-            closeSink.Face = closeRt; closeSink.Depth = 6f; closeSink.Lift = 3f;
+            // No title text and no X (2026-08-01, the author): the board's own metal clip
+            // IS the header, the words were hiding under it, and the scrim click closes.
 
             // The filter chips: click to cycle. Three axes the author named — the star tier,
             // how it is worked, and what bottle it contains.
-            float chipY = BkH * (BkPaperCY + BkPaperH * 0.5f) - 40f;   // paper top row
+            float chipY = 128f;   // below the board's metal clip, measured off the art
             _bookTierChip = BookChip(sheet, 0, chipY, () =>
             {
                 _bookTier = _bookTier >= 3 ? -1 : _bookTier + 1;
@@ -1457,8 +1435,8 @@ namespace LastCall.UI
 
             var viewport = NewRect("View", sheet);
             Place(viewport, new Vector2(0.5f, 0.5f),
-                new Vector2(BkW * BkPaperW - 44f, BkH * BkPaperH - 100f),
-                new Vector2(BkW * BkPaperCX, BkH * BkPaperCY - 28f));
+                new Vector2(BkW * BkPaperW - 44f, 340f),
+                new Vector2(BkW * BkPaperCX, -68f));
             viewport.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, 0.004f);
             viewport.gameObject.AddComponent<RectMask2D>();
 
@@ -1466,10 +1444,13 @@ namespace LastCall.UI
             _bookList.anchorMin = new Vector2(0, 1); _bookList.anchorMax = new Vector2(1, 1);
             _bookList.pivot = new Vector2(0.5f, 1);
             _bookList.offsetMin = Vector2.zero; _bookList.offsetMax = Vector2.zero;
-            var layout = _bookList.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = 4;
-            layout.childControlWidth = true; layout.childForceExpandWidth = true;
-            layout.childControlHeight = true; layout.childForceExpandHeight = false;
+            // Two columns (2026-08-01): the page is wide and the entries are short, so one
+            // column wasted half the paper and put the tail behind a scroll.
+            var layout = _bookList.gameObject.AddComponent<GridLayoutGroup>();
+            layout.cellSize = new Vector2((BkW * BkPaperW - 44f) / 2f - 6f, 46f);
+            layout.spacing = new Vector2(8, 4);
+            layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            layout.constraintCount = 2;
             var fitter = _bookList.gameObject.AddComponent<ContentSizeFitter>();
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
@@ -1605,8 +1586,8 @@ namespace LastCall.UI
             if (lockedRow) img.color = new Color(1, 1, 1, 0.4f);
 
             var name = NewText("N", row, _body, 12, TextAnchor.UpperLeft,
-                lockedRow ? new Color(0.45f, 0.36f, 0.28f) : new Color(0.16f, 0.10f, 0.06f));
-            Place(name.rectTransform, new Vector2(0, 1), new Vector2(360, 16), new Vector2(50, -5));
+                lockedRow ? new Color(0.45f, 0.36f, 0.28f) : new Color(0.13f, 0.08f, 0.05f));
+            Place(name.rectTransform, new Vector2(0, 1), new Vector2(280, 16), new Vector2(46, -4));
             // The two brand-agnostic specials never touch the tin; everything else says how
             // it is worked. (Prep defaults to Shaken in the ctor, which fits neither a pint
             // nor a neat pour.)
@@ -1617,9 +1598,9 @@ namespace LastCall.UI
             name.text = $"{r.Name.ToUpperInvariant()}   <color=#1B5F66>{prep}</color>";
             name.supportRichText = true;
 
-            var line = NewText("L", row, _body, 8, TextAnchor.LowerLeft, new Color(0.38f, 0.28f, 0.18f));
-            Place(line.rectTransform, new Vector2(0, 0), new Vector2(560, 14), new Vector2(50, 5));
-            line.horizontalOverflow = HorizontalWrapMode.Overflow;
+            var line = NewText("L", row, _body, 8, TextAnchor.LowerLeft, new Color(0.34f, 0.24f, 0.15f));
+            Place(line.rectTransform, new Vector2(0, 0), new Vector2(292, 22), new Vector2(46, 3));
+            line.horizontalOverflow = HorizontalWrapMode.Wrap;   // half-width cells: wrap, never bleed
             if (lockedRow)
             {
                 double gate = run.RecipeStarGate(r);
