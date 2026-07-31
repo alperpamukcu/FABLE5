@@ -64,10 +64,15 @@ namespace LastCall.UI
 
         // The animated customer (2026-07-23): a full-body pixel sprite shown from about the waist
         // up, with the counter clipping the legs. Frames load from Resources/Patron/<clip>.
-        private const float CharSize = 330f;       // the character image — scaled up to match the room (P15)
+        // Re-aligned off the ART's own bbox (2026-07-31, the author's note): the figure spans
+        // y 13–171 of the 180px canvas, so at 350 the head tops out at -FootDrop+324.7 and the
+        // feet reach -FootDrop+17.5. FootDrop 150 crops ~43% of the figure below the counter
+        // (the same waist as before), and the window ends 5px over the head — the gauge and
+        // the tag now HUG the head instead of floating 28px above it.
+        private const float CharSize = 350f;       // the character image, a touch bigger again
         private const float CharWiden = 1.18f;     // stretch a touch wider — the sprite is lanky for the bar
-        private const float CharWinH = 192f;       // the masked window height (waist up, above the bar)
-        private const float CharFootDrop = 141f;   // how far below the counter the feet sit (same waist crop at 330)
+        private const float CharWinH = 180f;       // ends just over the head (art-measured)
+        private const float CharFootDrop = 150f;   // same waist crop at 350 (art-measured)
         private enum PatronClip { Idle, Order, Drink, Walk, Cheer, Upset }
         private const float ReactSeconds = 1.15f;   // the one-shot reaction beat before they go
         private Dictionary<PatronClip, Sprite[]> _patron;
