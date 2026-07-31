@@ -165,7 +165,7 @@ namespace LastCall.Core
         /// kept cheap enough that the menu can GROW at the pace the rent climbs, because the
         /// ladder of bought recipes is the income curve now (P16).</summary>
         public int RecipePrice(RecipeDefinition recipe) =>
-            Math.Max(10, 6 + 3 * (recipe.Rank - 2));
+            Math.Max(9, 5 + (5 * (recipe.Rank - 2)) / 2);
 
         /// <summary>Stars the room must say about this bar before the recipe sells (C6), on
         /// the menu's four tiers (v5 P16 redesign): starter buys are open, mid wants a bar

@@ -738,7 +738,11 @@ the gate needs ears — the author's playthrough.*
   chases mood tips — so the tip system is carrying nearly half the economy without being
   played at all.
 
-- ☐ **FIRST for the economy pass (2026-07-31 close-of-day):** wave 3's five buyable
+- ☑ **Wave-3 floor bill settled (2026-08-01):** knob 1 measured at both ends — RecipePrice
+  5+2(r−2) landed 2.5% bankruptcies (too soft), the midpoint 5+2.5(r−2) landed **14.0%**
+  with the till median at −$27: the rent-v2 target band, threat without a cliff. The
+  original diagnosis below kept for the record.
+- ~~**FIRST for the economy pass (2026-07-31 close-of-day):**~~ wave 3's five buyable
   recipes moved the floor 7.5% → 43.5% bankruptcies (income flat $167, expenses +$4/day of
   purchases). NOT the bin fee — measured twice, fee 3→2 changed nothing (the bot barely
   bins; it is a player-mistake tax, floor-neutral by design). Nor late buying — a day≤23
