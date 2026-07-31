@@ -353,28 +353,33 @@ namespace LastCall.UI
                 fill.preferredHeight = shelfH; fill.preferredWidth = areaW; fill.flexibleWidth = 1f;
 
                 // The plank: a board with a lit front edge, drawn at the sheet's own grain.
+                // The niche (2026-08-01, drawn in code): the shelf above throws a shadow into
+                // the top of the cell, the floor is a perspective trapezoid lighter at its
+                // front edge, and a lit lip hangs under it — depth from geometry, not a picture.
+                var nicheShadow = NewRect("NicheShadow", band);
+                nicheShadow.anchorMin = new Vector2(0.02f, 1); nicheShadow.anchorMax = new Vector2(0.98f, 1);
+                nicheShadow.pivot = new Vector2(0.5f, 1);
+                nicheShadow.sizeDelta = new Vector2(0, 34);
+                nicheShadow.anchoredPosition = Vector2.zero;
+                var ns = nicheShadow.gameObject.AddComponent<Image>();
+                ns.sprite = BackBarArt.NicheTop(); ns.raycastTarget = false;
+
                 var plank = NewRect("Plank", band);
                 plank.anchorMin = new Vector2(0.02f, 0); plank.anchorMax = new Vector2(0.98f, 0);
                 plank.pivot = new Vector2(0.5f, 0);
-                var plankSprite = ItemArt.Load("backwall_shelf");
+                plank.offsetMin = new Vector2(0, 2); plank.offsetMax = new Vector2(0, 30);
                 var plankImg = plank.gameObject.AddComponent<Image>();
-                if (plankSprite != null)
-                {
-                    // The generated corbelled plank, standing under the bottles.
-                    plank.offsetMin = new Vector2(0, -8); plank.offsetMax = new Vector2(0, 28);
-                    plankImg.sprite = plankSprite;
-                }
-                else
-                {
-                    plank.offsetMin = new Vector2(0, 6); plank.offsetMax = new Vector2(0, 16);
-                    plankImg.color = ShelfWood;
-                }
-                var lip = NewRect("Lip", plank);
-                lip.anchorMin = new Vector2(0, 1); lip.anchorMax = new Vector2(1, 1);
+                plankImg.sprite = BackBarArt.ShelfFloor();
+                plankImg.raycastTarget = false;
+
+                var lip = NewRect("PlankLip", band);
+                lip.anchorMin = new Vector2(0.02f, 0); lip.anchorMax = new Vector2(0.98f, 0);
                 lip.pivot = new Vector2(0.5f, 1);
-                lip.sizeDelta = new Vector2(0, 2);
-                lip.anchoredPosition = Vector2.zero;
-                lip.gameObject.AddComponent<Image>().color = ShelfLip;
+                lip.offsetMin = new Vector2(6, -8); lip.offsetMax = new Vector2(-6, 2);
+                var lipImg = lip.gameObject.AddComponent<Image>();
+                lipImg.sprite = BackBarArt.Lip();
+                lipImg.raycastTarget = false;
+
 
                 // Centred on the plank rather than packed to the left: a shelf with two bottles
                 // on it is a shelf with two bottles on it, not a row that ran out.
@@ -417,6 +422,15 @@ namespace LastCall.UI
                 new Vector2(centreX, 16f));
             var hit = slot.gameObject.AddComponent<Image>();
             hit.color = new Color(0, 0, 0, 0.001f);          // invisible, but catches the pointer
+
+            // The ellipse that pins the bottle to the shelf's floor plane (2026-08-01).
+            var shadow = NewRect("Shadow", slot);
+            shadow.anchorMin = shadow.anchorMax = new Vector2(0.5f, 0);
+            shadow.pivot = new Vector2(0.5f, 0.5f);
+            shadow.sizeDelta = new Vector2(slotW * 0.62f, 12);
+            shadow.anchoredPosition = new Vector2(0, 14);
+            var shImg = shadow.gameObject.AddComponent<Image>();
+            shImg.sprite = BackBarArt.BottleShadow(); shImg.raycastTarget = false;
 
             var art = NewRect("Art", slot);
             Stretch(art, Vector2.zero, Vector2.one, new Vector2(6, 4), new Vector2(-6, -18));
@@ -729,9 +743,12 @@ namespace LastCall.UI
             Stretch(_menuPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _menuHome = _menuPanel.anchoredPosition;
             var boardImg = _menuPanel.gameObject.AddComponent<Image>();
-            var wallTile = ItemArt.Load("backwall_tile");
-            if (wallTile != null) { boardImg.sprite = wallTile; boardImg.type = Image.Type.Tiled; boardImg.color = Color.white; }
-            else boardImg.color = UITheme.Night[1];
+            // Drawn in code (2026-08-01): the generated tile carried a baked frame that
+            // repeated as a white grid across the wall. BackBarArt's boards seam at their
+            // own edges, so the tiling is invisible by construction.
+            boardImg.sprite = BackBarArt.Boards();
+            boardImg.type = Image.Type.Tiled;
+            boardImg.pixelsPerUnitMultiplier = 0.5f;   // one art pixel = 2 screen px, the scene's grain
             Swallow(_menuPanel);
 
             var cornice = NewRect("Cornice", _menuPanel);
@@ -745,10 +762,9 @@ namespace LastCall.UI
             else corniceImg.enabled = false;
             corniceImg.raycastTarget = false;
 
-            // A red X in the board's top-right corner closes the whole flow.
+            // A red X at the cornice's right end closes the whole flow.
             var close = NewRect("Close", _menuPanel);
-            Place(close, new Vector2(0.5f, 0.5f), new Vector2(CornerSize, CornerSize),
-                PaperCorner(1, 1) + new Vector2(-22f, -12f));
+            Place(close, new Vector2(1, 1), new Vector2(52, 52), new Vector2(-16, -30));
             var closeImg = close.gameObject.AddComponent<Image>();
             var closeSprite = ItemArt.Load("btn_close");
             if (closeSprite != null) { closeImg.sprite = closeSprite; closeImg.preserveAspect = true; closeImg.color = Color.white; }
@@ -783,18 +799,14 @@ namespace LastCall.UI
                 backArrow.text = "←";
             }
 
-            var title = _menuTitle = Handwritten(NewText("Title", _menuPanel, _display, 19, TextAnchor.MiddleCenter, Color.white));
+            // The title sits ON the cornice, part of the architecture rather than floating
+            // over the bottles.
+            var title = _menuTitle = Handwritten(NewText("Title", _menuPanel, _display, 16, TextAnchor.MiddleCenter, Color.white));
             var outline = title.gameObject.AddComponent<UnityEngine.UI.Outline>();
             outline.effectColor = new Color(0.16f, 0.09f, 0.04f, 1f);
             outline.effectDistance = new Vector2(2f, 2f);
-            // Kept inside the clip: it wraps and shrinks to fit rather than running past the metal.
-            Place(title.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(232, 44),
-                new Vector2(BoardW * PaperCX, BoardH * (PaperCY + PaperH * 0.5f) + 2f));
-            title.horizontalOverflow = HorizontalWrapMode.Wrap;
-            title.verticalOverflow = VerticalWrapMode.Truncate;
-            title.resizeTextForBestFit = true;
-            title.resizeTextMinSize = 9; title.resizeTextMaxSize = 19;
-            title.text = "MAKE A DRINK";
+            Place(title.rectTransform, new Vector2(0.5f, 1), new Vector2(360, 30), new Vector2(0, -40));
+            title.text = "THE BACK BAR";
 
             // Left: a SCROLLABLE back-shelf of grouped item boxes — it grows as you buy more
             // stock without overflowing the panel (2026-07-23 fix).
@@ -806,9 +818,20 @@ namespace LastCall.UI
             // Short enough to leave the bottom strip to SERVE and the bin: with four columns the
             // grid reaches the paper's right edge, and a full-height page put its last key under
             // the bin (2026-07-27).
-            // The wall's working area: full width under the cornice, above the SERVE strip.
+            // The counter ledge along the bottom: the same floor plane as the shelves,
+            // taller — SERVE and the bin STAND on it instead of floating on the wall.
+            var ledge = NewRect("Ledge", _menuPanel);
+            ledge.anchorMin = new Vector2(0, 0); ledge.anchorMax = new Vector2(1, 0);
+            ledge.pivot = new Vector2(0.5f, 0);
+            ledge.sizeDelta = new Vector2(0, 88);
+            ledge.anchoredPosition = Vector2.zero;
+            var ledgeImg = ledge.gameObject.AddComponent<Image>();
+            ledgeImg.sprite = BackBarArt.Ledge();
+            ledgeImg.raycastTarget = false;
+
+            // The wall's working area: full width under the cornice, above the ledge.
             var pageClip = NewRect("PageClip", _menuPanel);
-            Stretch(pageClip, Vector2.zero, Vector2.one, new Vector2(40, 96), new Vector2(-40, -124));
+            Stretch(pageClip, Vector2.zero, Vector2.one, new Vector2(40, 92), new Vector2(-40, -118));
             pageClip.gameObject.AddComponent<RectMask2D>();
 
             _bottleList = NewRect("Bottles", pageClip);
@@ -820,18 +843,12 @@ namespace LastCall.UI
             listLayout.childForceExpandHeight = false;
             listLayout.childAlignment = TextAnchor.UpperLeft;
 
-            // Right: a side column beside the menu — what's in the shaker, then the actions.
-            // The mix/serve buttons live here, out of the item grid, per the redesign.
-            // Nothing but the drink list belongs on the paper — the readouts and the buttons
-            // sit off the board, under it.
             var side = _menuSide = NewRect("Side", _root);
-            Place(side, new Vector2(0.5f, 0.5f), new Vector2(BoardW * PaperW, 54),
-                new Vector2(BoardW * PaperCX, BoardH * (PaperCY - PaperH * 0.5f) + 34f));
+            side.gameObject.SetActive(false);   // the clipboard's side column retired with it
 
-            // On the sheet itself and centred, so the page animation carries it too.
+            // SERVE stands on the ledge, centred.
             var actions = NewRect("Actions", _menuPanel);
-            Place(actions, new Vector2(0.5f, 0.5f), new Vector2(212, 40),
-                new Vector2(BoardW * PaperCX, BoardH * (PaperCY - PaperH * 0.5f) + 30f));
+            Place(actions, new Vector2(0.5f, 0), new Vector2(212, 40), new Vector2(0, 28));
             var actLayout = actions.gameObject.AddComponent<HorizontalLayoutGroup>();
             actLayout.childControlWidth = true; actLayout.childForceExpandWidth = true;
             actLayout.childControlHeight = true; actLayout.childForceExpandHeight = true;

@@ -302,7 +302,8 @@ namespace LastCall.UI
         {
             // Just the bin — you click the object, not a button plate around it.
             var rt = NewRect("Bin", parent);
-            Place(rt, new Vector2(0.5f, 0.5f), new Vector2(CornerSize, CornerSize), PaperCorner(1, -1) + new Vector2(-22f, 10f));
+            // On the ledge, right of SERVE (2026-08-01) — it STANDS somewhere now.
+            Place(rt, new Vector2(1, 0), new Vector2(CornerSize, CornerSize), new Vector2(-140f, 22f));
             var img = rt.gameObject.AddComponent<Image>();
             img.preserveAspect = true;
             img.sprite = ItemArt.Load("btn_bin");
