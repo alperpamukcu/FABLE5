@@ -31,6 +31,11 @@ namespace LastCall.UI
         private LastCall.Core.GlasswareDefinition _serveGlassware;
         private GlassArt.Piece _serveGlassPiece;
         private RectTransform _serveGarnishRow; // mint/olive garnishes are added here (2026-07-23)
+        private RectTransform _serveMixerRow;   // mixers and juices go in AT THE GLASS (v5 P14)
+
+        /// <summary>One press of a mixer key, as a share of whatever glass is on the counter —
+        /// so a splash into a coupe is a splash, not most of the drink.</summary>
+        private const double MixerMeasure = 0.15;
         private RectTransform _serveShaker;     // the grabbable shaker
         private Image _serveShakerBody;
         private MetaballFluid _serveFluid;      // the metaball liquid in the serving glass
@@ -60,13 +65,23 @@ namespace LastCall.UI
             ShowServingGlassware(run);
             PushServePool(run);
             _serveShakerBody.color = DrinkColor(run.Glass);
-            _aimText.text = "GRAB THE SHAKER · TIP IT OVER THE GLASS";
+            _serveShaker.gameObject.SetActive(!run.Glass.IsEmpty);
+            _aimText.text = run.Glass.IsEmpty
+                ? "BUILD IT IN THE GLASS · MIXERS ON THE RIGHT"
+                : "GRAB THE SHAKER · TIP IT OVER THE GLASS";
+            _aimText.color = UITheme.TextSecondary;
 
             // The stocked garnishes (mint, olive), added into the drink before it is poured.
             foreach (Transform ch in _serveGarnishRow) Destroy(ch.gameObject);
             foreach (var bottle in run.Shelf.Bottles)
                 if (bottle.Ingredient.Type == IngredientType.Garnish && !bottle.IsEmpty)
                     AddGarnishChip(bottle.Ingredient);
+
+            // The mixers and juices, added at the glass rather than in the shaker.
+            foreach (Transform ch in _serveMixerRow) Destroy(ch.gameObject);
+            foreach (var bottle in run.Shelf.Bottles)
+                if (IsGlassSide(bottle.Ingredient) && !bottle.IsEmpty)
+                    AddMixerChip(bottle.Ingredient);
         }
 
         private void AddGarnishChip(IngredientCard card)
@@ -98,6 +113,70 @@ namespace LastCall.UI
                     return;
                 }
                 RefreshServe();
+            });
+        }
+
+        /// <summary>
+        /// Whether this belongs on the right rail — the things a drink is finished with at the
+        /// glass rather than built with in the shaker. Carbonated ingredients are here because
+        /// Core refuses them anywhere else; juices and the rest of the mixers are here because
+        /// that is where a built drink is made, and they can still go in the shaker for a
+        /// shaken one. Beer is never here: it comes off the tap.
+        /// </summary>
+        private static bool IsGlassSide(IngredientCard card)
+        {
+            if (card.Type == IngredientType.Beer) return false;
+            if (card.Info != null && card.Info.Carbonated) return true;
+            string category = card.Info?.Category;
+            return category == IngredientCategories.Mixer || category == IngredientCategories.Juice;
+        }
+
+        /// <summary>One mixer key on the right rail: a measure straight into the serving glass
+        /// (v5 P14 / the P10 `PourAtGlass` verb).</summary>
+        private void AddMixerChip(IngredientCard card)
+        {
+            var chip = NewRect($"M_{card.Id}", _serveMixerRow);
+            chip.gameObject.AddComponent<LayoutElement>().preferredHeight = 66;
+            var bg = chip.gameObject.AddComponent<Image>();
+            bg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.85f);
+            var icon = NewRect("Icon", chip);
+            Place(icon, new Vector2(0.5f, 1), new Vector2(46, 46), new Vector2(0, -3));
+            var iimg = icon.gameObject.AddComponent<Image>();
+            iimg.sprite = ItemArt.Bottle(card.Info?.Style);
+            iimg.preserveAspect = true; iimg.raycastTarget = false;
+            if (iimg.sprite == null) iimg.color = UITheme.StyleColor(card.Info?.Style, card.Type);
+            var name = NewText("N", chip, _body, 8, TextAnchor.LowerCenter, UITheme.TextPrimary);
+            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(92, 14), new Vector2(0, 2));
+            name.text = card.Name.ToUpperInvariant();
+            var btn = chip.gameObject.AddComponent<Button>();
+            btn.targetGraphic = bg;
+            var c = card;
+            btn.onClick.AddListener(() =>
+            {
+                var run = Run;
+                if (run == null) return;
+                // A full glass takes nothing, and says so rather than swallowing the press —
+                // the same answer the shaker gives a garnish it has no room for.
+                if (run.PourAtGlass(c.Id, run.ServingGlass.Capacity * MixerMeasure) <= 0)
+                {
+                    _aimText.text = run.ServingGlass.IsFull
+                        ? "THE GLASS IS FULL"
+                        : $"{c.Name.ToUpperInvariant()} IS OUT";
+                    _aimText.color = UITheme.Amber[3];
+                    return;
+                }
+                // Deliberately NOT a full RefreshServe: that tears both rails down and rebuilds
+                // them, which destroys the very button under the player's finger — a bottle you
+                // are pouring from should not vanish and reappear between clicks. The rails are
+                // only rebuilt when this press actually emptied the bottle and its key has to go.
+                var emptied = run.Shelf.Find(c.Id);
+                if (emptied != null && emptied.IsEmpty) { RefreshServe(); return; }
+                _serveFluid.SetColor(DrinkColor(run.ServingGlass));
+                RefreshServeText(run, 1.0);
+                _aimText.text = $"{c.Name.ToUpperInvariant()} IN THE GLASS";
+                _aimText.color = UITheme.Cyan[3];
+                ShowServingGlassware(run);
+                PushServePool(run);
             });
         }
 
@@ -262,6 +341,16 @@ namespace LastCall.UI
             var grow = _serveGarnishRow.gameObject.AddComponent<VerticalLayoutGroup>();
             grow.spacing = 8f; grow.childControlWidth = true; grow.childForceExpandWidth = true;
             grow.childControlHeight = false; grow.childAlignment = TextAnchor.UpperCenter;
+
+            // The right rail: what goes in AT THE GLASS (v5 P14, the notes' second rail). P10
+            // put the rule in Core — carbonated never enters the shaker, it is added to the
+            // serving glass — and then there was no door in the UI to do it through, so the six
+            // built cocktails could not be made by playing at all. This is that door.
+            _serveMixerRow = NewRect("Mixers", _servePanel);
+            Place(_serveMixerRow, new Vector2(1, 0.5f), new Vector2(96, 224), new Vector2(-14, 0));
+            var mrow = _serveMixerRow.gameObject.AddComponent<VerticalLayoutGroup>();
+            mrow.spacing = 8f; mrow.childControlWidth = true; mrow.childForceExpandWidth = true;
+            mrow.childControlHeight = false; mrow.childAlignment = TextAnchor.UpperCenter;
 
             _aimText = NewText("AimText", _servePanel, _body, 13, TextAnchor.UpperCenter, UITheme.TextSecondary);
             Stretch(_aimText.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -70), new Vector2(0, -46));

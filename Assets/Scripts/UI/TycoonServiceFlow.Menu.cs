@@ -787,10 +787,11 @@ namespace LastCall.UI
             var actLayout = actions.gameObject.AddComponent<HorizontalLayoutGroup>();
             actLayout.childControlWidth = true; actLayout.childForceExpandWidth = true;
             actLayout.childControlHeight = true; actLayout.childForceExpandHeight = true;
-            AddFlexButton(actions, "SERVE  →", UITheme.PrimaryAction, () =>
-            {
-                if (!Run.Glass.IsEmpty) GoTo(Stage.Serve);
-            });
+            // Always opens (v5 P14). It used to require something in the shaker, which was true
+            // when every drink was shaken — but a BUILT drink never sees the shaker, so that
+            // guard was the reason the six built cocktails could not be made by playing at all.
+            // The stage is the glass; you can always walk over to the glass.
+            AddFlexButton(actions, "SERVE  →", UITheme.PrimaryAction, () => GoTo(Stage.Serve));
 
             AddBinButton(_menuPanel);
         }

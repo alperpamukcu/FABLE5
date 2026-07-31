@@ -267,8 +267,17 @@ to the board instead.
 - ☐ **Prep stage**: bar-mat backdrop; shaker and bottles scaled up; free drag within screen
   bounds (the confining panel goes); prep tray up the left edge at ~60°, pieces sized to
   match the bottles; drawn SERVE button on `PressSink`
-- ☐ **Serve stage in the shaker's interaction style**: left rail garnishes/finishing (ice,
-  lemon, rims), right rail **carbonated/mixers added at the glass** (the P10 Core verb)
+- ◐ **Serve stage in the shaker's interaction style**. Right rail done:
+  - ☑ **Mixers added at the glass** (the P10 `PourAtGlass` verb). P10 put the rule in Core —
+    carbonated never enters the shaker — and then there was no door in the UI to do it
+    through, so **the six built cocktails could not be made by playing at all**. The rail
+    carries every carbonated ingredient (which has no other way in) plus the juices and
+    mixers; a press is 15% of *whatever glass is on the counter*, so a splash into a coupe
+    stays a splash.
+  - ☑ The SERVE button no longer requires something in the shaker, which was the other half
+    of the same bug: a built drink never sees the shaker. The stage is the glass, and you can
+    always walk over to the glass. With an empty shaker it hides the shaker and says so.
+  - ☐ Left rail finishing: ice, rims (garnishes are already there)
 - ◐ **Glassware system** (C9). Core half done:
   - ☑ **Capacity per glass** — P10 specced it and shipped without it, so every glass held
     1.0 and the set was cosmetic. A coupe is 0.55 and a pint 1.6, scaled against the old
