@@ -613,6 +613,27 @@ Gate: every listed event audibly fires in play; nothing clips at overlap.
   base price and tip odds; per-run until save exists, then meta
 - ☐ **Upgrade-driven base price**: premium glasses / better alcohol / equipment raise base
   prices; furniture does not (the notes' rule, wired through the existing upgrade economy)
+  **Diagnosed from the sim, 2026-07-31 — the threat exists and never lands.** Re-ran 200 seeded
+  runs against the current build. Rent *does* climb (`Rent(day) = 14 + 4.5*day`, so day 30
+  costs $149 against day 1's $18), and red days climb with it: 0.0% on day 1, 6.0% on day 13,
+  **16.5% by day 15**. And still **0 bankruptcies in 200 runs**, every one reaching the
+  horizon. So the problem is not that nothing goes wrong — something goes wrong more and more
+  often. It is that a red day never compounds: by the time they arrive the till has grown
+  enough to absorb them, and one bad night costs nothing that the next good one does not
+  return. Average day: $133.2 in against $119.7 out.
+
+  That points the rebalance at the *shape* rather than the numbers. Making rent steeper was
+  already tried and recorded in `TycoonConfig` — it took bankruptcies from 1.5% to 43.5%, a
+  cliff rather than a difficulty. What is missing is a way for a bad night to cost the NEXT
+  night: the till absorbing everything is what makes the curve flat. Worth trying before any
+  price is touched.
+
+  Two caveats on the numbers, both structural. The bot serves at band midpoints and never
+  shops, so 96.8% exact / 0.0% wrong is a perfect player's floor, not a prediction. And tips
+  are **43.9% of the whole take** ($4.78 tip against $6.10 base per serve) while the bot never
+  chases mood tips — so the tip system is carrying nearly half the economy without being
+  played at all.
+
 - ☐ **Economy rebalance** (the notes: wealth comes too fast): lower early profits, real
   upgrade costs, longer arc — tuned against sim v3 targets (day-1 net small-positive,
   first red day ~4–5, storm-off <15%, no floor-bot fortune by day 30)
