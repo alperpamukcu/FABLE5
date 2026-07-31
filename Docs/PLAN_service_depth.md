@@ -358,6 +358,17 @@ staging is not. In the author's words:
 - ☐ **Use the whole screen.** The serve stage is still a 1120×640 panel floating on the
   scene. The tubs and the cabinet should be placed across the full screen at real size, not
   packed into two 96px columns at its edges.
+
+  *Measured before starting, 2026-07-31, because the obvious reading of this is wrong:* the
+  canvas reference is **1280×720**, so that panel already covers 87% × 89% of the screen.
+  Stretching it to the edges buys 160×80 px and would change nothing about the complaint.
+  What is actually small is the **props**: a 96px rail forces an ice bucket down to 88×74,
+  which is why it reads as a button with a picture on it rather than a tub you reach into.
+  So this is a re-layout at prop scale, not a panel resize, and it should be done as one
+  pass together with the three items below — the shaker size, the room to grow, and the
+  cabinet — because they all move the same four columns. The author's sketch gives the
+  order, left to right: **finishing shelf · the glass being filled · the shaker · the
+  fizzy-drinks cabinet**.
 - ☐ **The shaker is too small** on this stage next to the glass.
 - ☐ **BUG — the shaker freezes.** It becomes unmovable "when the drink is poured, or when
   what is inside it runs out". Diagnosed: `RefreshServe` hides the shaker the moment the tin
@@ -368,11 +379,19 @@ staging is not. In the author's words:
 - ☐ **Room to grow.** More finishing touches and more mixers are coming; both rails need a
   layout that takes them — a scrollable shelf, or shelves that wrap — rather than one that
   silently runs off the panel at eight.
-- ☐ **Hover, not just press.** Everything selectable should read as pressable when the
-  cursor is over it. Darkening on press is not enough and is the wrong half of it — the
-  affordance has to arrive *before* the click.
-- ☐ **BUG — spirit bottles are drawn with their caps off** on the pour stage. Confirmed in
-  the art: the caps read as loose objects resting on the neck rather than seated on it.
+- ☑ **Hover, not just press.** *Done 2026-07-31.* `PressSink` now answers the hover as well
+  as the press: the face lifts, grows a hair and warms, deliberately the inverse of the
+  press so the two read as one gesture — hover brings the object toward you, press pushes it
+  away. The hover eases slower than the press, because a press has to feel instant while a
+  hover that snaps flickers as the pointer crosses a shelf. One helper, `Pressable()`, puts
+  it on every clickable thing, so a button, a bottle and a tub of ice all answer the same
+  way. A bottle that is OUT still lifts but does not sink: *finding* the thing and the thing
+  *being usable* are different answers, and withholding the first is what made the shelf feel
+  dead. Not yet wired to the seated customers — their root is positioned every frame and
+  `PressSink` caches a home position, so those two would fight; a static child has to be the
+  face there.
+- ☑ **BUG — spirit bottles are drawn with their caps off** on the pour stage. *Done
+  2026-07-31*, in the same generation pass as the empty bottles below — same nineteen files.
 - ☑ **BUG — a bottle's contents are drawn at a fixed level**, so bottles never visibly empty.
   *Done 2026-07-31.* All nineteen reshot empty with the caps seated and a heavier outline, and
   `BottleArt` now measures each bottle's cavity off its own pixels rather than carrying nineteen
