@@ -360,7 +360,8 @@ cabinet** — a glass-fronted fridge, bottles at their true size, door opens, bo
 **Second pass on the same brief (2026-07-31, after playing it).** The verbs are right; the
 staging is not. In the author's words:
 
-- ☐ **Use the whole screen.** The serve stage is still a 1120×640 panel floating on the
+- ☑ **Use the whole screen.** *Done 2026-07-31 at prop scale (the measured re-layout); the
+  first-person re-staging that followed it is the separate, PAUSED item below.* The serve stage is still a 1120×640 panel floating on the
   scene. The tubs and the cabinet should be placed across the full screen at real size, not
   packed into two 96px columns at its edges.
 
@@ -378,7 +379,7 @@ staging is not. In the author's words:
   re-layout: the serve stage keeps its own vessel height (`ServeVesselH = 250`) rather than
   borrowing the shaker bench's 180, which left the tin looking like a thimble beside a
   260-tall glass. Measured in play: shaker 146×250, glass 189×260.
-- ☐ **BUG — the shaker freezes.** It becomes unmovable "when the drink is poured, or when
+- ☑ **BUG — the shaker freezes.** *Fixed 2026-07-31 (`PutTheShakerDown`), verified in play.* It becomes unmovable "when the drink is poured, or when
   what is inside it runs out". Diagnosed: `RefreshServe` hides the shaker the moment the tin
   empties (`SetActive(!run.Glass.IsEmpty)`), but the drain happens inside `UpdateServeTilt`,
   which only calls `RefreshServeText`. So the tin is left standing mid-air, tilted, at
