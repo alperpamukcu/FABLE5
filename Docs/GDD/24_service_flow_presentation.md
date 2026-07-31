@@ -207,12 +207,27 @@ react (happy / annoyed / angry) → pay → leave**, plus **storm-off**. Two gau
 satisfaction bar and the **patience clock icon** counting down. Reactions must read at a
 glance — anger is animation first, numbers second.
 
-## 5. The ID card — v2 shipped, v3 owed to the art pass
+## 5. The ID card — v3 shipped (P15, 2026-07-31)
 
-> **Player feedback (2026-07-22):** the v2 licence works but is not liked — the rows read
-> cluttered and the proportions are wrong. **v3 (P8): a real ID-card-proportioned prop**
-> (landscape licence ratio), purpose-drawn card art, one strong reading order. Do not
-> iterate v2 further; redesign it whole with the art pass.
+A **landscape licence** on generated card art (the first UI piece after the no-AI-UI rule
+was lifted): guilloche shell, navy header band, portrait window left, stamp watermark —
+generated blank at 266×176 and drawn at exactly **3×**, matching the pixel faces' 8px→24px
+scale so shell pixels and glyph pixels come out the same size. All lettering is set in
+engine (the generator cannot spell). Anchors are measured off the art: window frame
+x 15–89 / y 37–132, header rows 3–21.
+
+Reading order, top to bottom: **NAME** big · AGE·CITY / STANDING · RATES THIS BAR (their
+own satisfied-visit share as stars — what THEY make of US) / reserved slots (favourite ·
+last visit · spent, blank until save arrives, P18) · the **ORDER band** with the drink's
+icon · **SERVING PREFERENCES** (garnishes + shaken hard + filled to the top — everything
+the tip grades, in one line). **No price anywhere** (C3), and **opening the card is the
+`InspectId()` that unlocks the order** — before it, Core refuses and the seat bubble shows
+only READY · TAP THE ID. Emotion stat rows left the card per D1; the tell moves to the
+reaction animations. The scrim click hands the card back.
+
+> **Player feedback (2026-07-22)** that drove this: v2's rows read cluttered and the
+> proportions were wrong; the ask was a real ID-card-proportioned prop with one strong
+> reading order, redesigned whole. v2's description kept below for the record.
 
 ### v2 as shipped (P6, 2026-07-22)
 

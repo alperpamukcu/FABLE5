@@ -575,11 +575,13 @@ measured (`SurfaceY`) inside every silhouette; tap stage unchanged (beer glass j
   slower; scale up to match the room; idle-at-table (arms on the bar); positive reaction;
   negative reaction — then the same set across all bodies as variety lands
 - ☐ **Visible patience bar** attached to the body (absorbs the P8 gauge item)
-- ☐ **ID card v3** (C3; absorbs the P8 item; v2 explicitly disliked — full redesign):
-  US-licence-inspired card with portrait, first/last name, age, city, previous visits,
-  requested drink **with its icon**, serving preferences, customer's bar rating. Later
-  slots reserved: favourite drink, last visit, last rating, total spent. **No price,
-  anywhere on it**
+- ☑ **ID card v3** *(2026-07-31)*: landscape licence on generated shell art (guilloche,
+  navy band, portrait window, stamp), drawn at 3× = the pixel faces' own 24px scale, so no
+  coarseness mismatch; anchors measured off the art. Portrait, name, age·city, standing +
+  visits, RATES THIS BAR (their satisfied share as stars), order band with the drink icon,
+  serving preferences line (garnishes · shaken hard · filled to the top). Reserved slots
+  print as blanks until save lands (P18). No price anywhere; the emotion rows left the
+  card (D1) and the v2 recipe-band block left with them — GDD 24 §5 rewritten
 - ☑ **The order hides** (C3). *Done 2026-07-31.* `CustomerVisit.Order` throws until
   `InspectId()`; the judge and the run read `OrderTruth` internally, so serving blind stays
   a legal gamble. The bubble shows "READY · TAP THE ID" until the card is opened, then the

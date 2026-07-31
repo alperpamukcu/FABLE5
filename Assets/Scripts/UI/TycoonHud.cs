@@ -135,7 +135,7 @@ namespace LastCall.UI
         // (2026-07-22): it now shows the drink's RECIPE and the garnishes they want, not moods.
         private RectTransform _idRoot;
         private Image _idPhoto;
-        private Text _idName, _idAgeFrom, _idRel, _idIntent, _idOrder, _idGreeting;
+        private Text _idName, _idAgeFrom, _idRel, _idIntent, _idOrder, _idRates, _idReserved;
         private Image _idOrderIcon;
 
         // The shop tablet (v5 P13). Two errands, not one wall of cards: what goes behind the
@@ -148,7 +148,6 @@ namespace LastCall.UI
         private static readonly Color TabletShell = new Color(0.13f, 0.12f, 0.15f, 1f);
         private static readonly Color TabletScreen = new Color(0.09f, 0.10f, 0.13f, 1f);
         private static readonly Color TabletLens = new Color(0.30f, 0.30f, 0.34f, 1f);
-        private RectTransform _idRecipeRows;   // the ordered drink's ingredient bands
         private CustomerVisit _idVisit;
         private const float IdTrackW = 176f;
 
@@ -1038,51 +1037,37 @@ namespace LastCall.UI
             _idPhoto.color = _idPhoto.sprite != null ? Color.white : UITheme.Night[3];
 
             _idName.text = reg.Name.ToUpperInvariant();
-            _idAgeFrom.text = $"AGE {reg.Age}\nFROM {reg.Hometown.ToUpperInvariant()}";
+            _idAgeFrom.text = $"{reg.Age}  ·  {reg.Hometown.ToUpperInvariant()}";
             _idRel.text = reg.Visits > 0
                 ? $"{reg.Relationship.ToString().ToUpperInvariant()} · {reg.Visits} VISITS"
                 : "NEW FACE";
 
+            // What THEY make of US — their own nights here, said in stars. A licence field,
+            // not the bar's rating: a regular who has been let down knows it, and says so.
+            _idRates.text = reg.Visits == 0
+                ? "—"
+                : Stars(Mathf.RoundToInt(5f * reg.SatisfiedCount / reg.Visits));
+
             // No price, anywhere on the card (C3): the licence says who they are and what they
             // want, and what a drink costs is the menu's business.
-            _idOrder.text = $"ORDER:  <b>{visit.Order.Wanted.Name.ToUpperInvariant()}</b>";
+            _idOrder.text = $"ORDER   <b>{visit.Order.Wanted.Name.ToUpperInvariant()}</b>";
             _idOrderIcon.sprite = DrinkIcon.For(visit.Order.Wanted, _bootstrap.Glassware);
             _idOrderIcon.enabled = _idOrderIcon.sprite != null;
 
-            // The garnishes they want — the read (emotion→recipe pivot).
-            var garnishes = visit.Order.Garnishes;
-            _idIntent.text = garnishes.Count == 0
-                ? "WANTS:  NO GARNISH — SERVE IT CLEAN"
-                : "WANTS:  " + string.Join("   ·   ", garnishes.Select(g => g.Name.ToUpperInvariant()));
-
-            _idGreeting.text = reg.Visits > 0
-                ? "« a familiar face — you know their usual »"
-                : "« a stranger — make what the licence says »";
-
-            // The recipe: one row per ingredient band, coloured by type with its ratio range.
-            for (int i = _idRecipeRows.childCount - 1; i >= 0; i--)
-                Destroy(_idRecipeRows.GetChild(i).gameObject);
-            foreach (var band in visit.Order.Wanted.RatioRequirements)
-            {
-                var ramp = UITheme.TypeRamp[band.Type];
-                var rowRect = NewRect("Band", _idRecipeRows);
-                rowRect.gameObject.AddComponent<LayoutElement>().preferredHeight = 30;
-                rowRect.gameObject.AddComponent<Image>().color = UITheme.Cream[2];
-
-                var swatch = NewRect("Sw", rowRect);
-                Place(swatch, new Vector2(0, 0.5f), new Vector2(12, 18), new Vector2(12, 0));
-                swatch.gameObject.AddComponent<Image>().color = ramp[3];
-
-                var tag = NewText("Tag", rowRect, _body, 12, TextAnchor.MiddleLeft, UITheme.Night[1]);
-                Stretch(tag.rectTransform, Vector2.zero, Vector2.one, new Vector2(34, 0), new Vector2(-96, 0));
-                tag.text = band.Type.ToString().ToUpperInvariant();
-
-                var rng = NewText("Rng", rowRect, _display, 12, TextAnchor.MiddleRight, ramp[4]);
-                Place(rng.rectTransform, new Vector2(1, 0.5f), new Vector2(120, 24), new Vector2(-8, 0));
-                rng.horizontalOverflow = HorizontalWrapMode.Overflow;
-                rng.text = $"{Mathf.RoundToInt((float)band.MinRatio * 100)}–{Mathf.RoundToInt((float)band.MaxRatio * 100)}%";
-            }
+            // The endorsements line: everything the spec asks of the serve, in one place —
+            // garnishes, worked hard, filled to the top. This is the read the tip grades.
+            var spec = visit.Order.Spec;
+            var wants = visit.Order.Garnishes.Select(g => g.Name.ToUpperInvariant()).ToList();
+            if (spec.ExtraShaken) wants.Add("SHAKEN HARD");
+            if (spec.FilledToTheTop) wants.Add("FILLED TO THE TOP");
+            _idIntent.text = wants.Count == 0
+                ? "NONE — SERVE IT CLEAN"
+                : string.Join("   ·   ", wants);
         }
+
+        /// <summary>0–5 stars as glyphs, the empty ones kept so the width never jumps.</summary>
+        private static string Stars(int n) =>
+            new string('★', Mathf.Clamp(n, 0, 5)) + new string('☆', 5 - Mathf.Clamp(n, 0, 5));
 
         private void CloseId()
         {
@@ -1091,6 +1076,41 @@ namespace LastCall.UI
         }
 
         private static float TrackAt(int value) => IdTrackW * Mathf.Clamp01(value / 100f);
+
+        // ── the licence, v3 (P15 / C3) ──────────────────────────────────────────
+        // A landscape US-licence, not a dossier: the v2 portrait card was explicitly disliked.
+        // The shell is generated art (the first UI piece since the author lifted the no-AI-UI
+        // rule, 2026-07-31) drawn at exactly 2× its 400×250 pixels — an integer scale, because
+        // the prep table taught what a fractional upscale next to native-size text looks like.
+        // Every field is lettered in engine over the blank shell: the generator cannot spell.
+        // The shell trimmed to 266×176 and is drawn at exactly 3×. Integer, and matched to the
+        // lettering: the pixel faces are designed at 8px, so 24px type is ALSO 3× — shell
+        // pixels and glyph pixels come out the same size, which is the coarseness mismatch the
+        // prep table failed on, avoided by construction.
+        private const float LicW = 266f * 3f, LicH = 176f * 3f;
+
+        // Anchors measured off licence_shell.png at install, ×3: the portrait window's frame
+        // sits at x 15–89, y 37–132 in the art, the navy header band at rows 3–21.
+        private static readonly Rect LicPortrait = new Rect(45, -111, 225, 288);  // x, top-y, w, h
+        private const float LicHeaderH = 54f;
+        private const float LicHeaderY = -9f;
+        private const float LicFieldsX = 296f;   // left edge of the data column
+        private const float LicFieldsW = 460f;
+
+        /// <summary>One licence line: a small navy label over a dark value, the way a licence
+        /// prints DOB over the date. Returns the value text; the label is fixed at birth.</summary>
+        private Text LicenceField(RectTransform card, string label, float x, float topY,
+            float w, int valueSize = 16)
+        {
+            var lab = NewText("L_" + label, card, _body, 8, TextAnchor.UpperLeft, UITheme.ClubBlue[2]);
+            Place(lab.rectTransform, new Vector2(0, 1), new Vector2(w, 12), new Vector2(x, topY));
+            lab.text = label;
+            var val = NewText("V_" + label, card, _body, valueSize, TextAnchor.UpperLeft, UITheme.Night[1]);
+            val.supportRichText = true;
+            Place(val.rectTransform, new Vector2(0, 1), new Vector2(w, valueSize + 8),
+                new Vector2(x, topY - 13f));
+            return val;
+        }
 
         private void BuildIdCard(RectTransform root)
         {
@@ -1103,76 +1123,57 @@ namespace LastCall.UI
             scrimBtn.onClick.AddListener(CloseId);
 
             var card = NewRect("Card", _idRoot);
-            Place(card, new Vector2(0.5f, 0.5f), new Vector2(452, 588), new Vector2(0, 6));
-            card.gameObject.AddComponent<Image>().color = UITheme.Cream[4];
+            Place(card, new Vector2(0.5f, 0.5f), new Vector2(LicW, LicH), new Vector2(0, 10));
+            var shell = card.gameObject.AddComponent<Image>();
+            shell.sprite = ItemArt.Load("licence_shell");
+            if (shell.sprite == null) shell.color = UITheme.Cream[4];   // no art: a plain card
             card.gameObject.AddComponent<Button>().transition = Selectable.Transition.None; // swallow clicks
 
-            var header = NewRect("Header", card);
-            Stretch(header, new Vector2(0, 1), Vector2.one, new Vector2(0, -30), Vector2.zero);
-            header.gameObject.AddComponent<Image>().color = UITheme.ClubBlue[2];
-            var htext = NewText("H", header, _body, 13, TextAnchor.MiddleCenter, UITheme.Cream[4]);
-            Stretch(htext.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            htext.text = "CITY OF NEW ARDEN — PATRON ID";
+            var htext = NewText("H", card, _body, 16, TextAnchor.MiddleCenter, UITheme.Cream[4]);
+            Place(htext.rectTransform, new Vector2(0.5f, 1), new Vector2(LicW - 40, LicHeaderH),
+                new Vector2(0, LicHeaderY));
+            htext.text = "NEW ARDEN  ·  PATRON LICENCE";
 
-            var photoFrame = NewRect("PhotoFrame", card);
-            Place(photoFrame, new Vector2(0, 1), new Vector2(112, 138), new Vector2(16, -40));
-            photoFrame.gameObject.AddComponent<Image>().color = UITheme.Night[1];
-            var photo = NewRect("Photo", photoFrame);
-            Stretch(photo, Vector2.zero, Vector2.one, new Vector2(3, 3), new Vector2(-3, -3));
+            var photo = NewRect("Photo", card);
+            Place(photo, new Vector2(0, 1), new Vector2(LicPortrait.width, LicPortrait.height),
+                new Vector2(LicPortrait.x, LicPortrait.y));
             _idPhoto = photo.gameObject.AddComponent<Image>();
             _idPhoto.preserveAspect = true;
 
-            _idName = NewText("Name", card, _display, 18, TextAnchor.UpperLeft, UITheme.Night[1]);
-            Place(_idName.rectTransform, new Vector2(0, 1), new Vector2(300, 26), new Vector2(140, -42));
-            _idAgeFrom = NewText("AgeFrom", card, _body, 13, TextAnchor.UpperLeft, UITheme.Night[2]);
-            Place(_idAgeFrom.rectTransform, new Vector2(0, 1), new Vector2(300, 40), new Vector2(140, -72));
-            _idRel = NewText("Rel", card, _body, 12, TextAnchor.UpperLeft, UITheme.Night[3]);
-            _idRel.supportRichText = true;
-            Place(_idRel.rectTransform, new Vector2(0, 1), new Vector2(300, 18), new Vector2(140, -118));
+            // The data column, licence-style: NAME big, then the small facts in two columns,
+            // the way DOB and CLASS share a row. Reserved slots print as blanks — a licence
+            // has fields before it has answers (favourite drink, last visit, total spent all
+            // arrive with save/reset, P18).
+            float colW = LicFieldsW * 0.5f - 8f;
+            _idName = LicenceField(card, "NAME", LicFieldsX, -84f, LicFieldsW, 24);
+            _idAgeFrom = LicenceField(card, "AGE  ·  CITY", LicFieldsX, -150f, colW);
+            _idRel = LicenceField(card, "STANDING", LicFieldsX + colW + 16f, -150f, colW);
+            _idRates = LicenceField(card, "RATES THIS BAR", LicFieldsX, -212f, colW);
+            _idReserved = LicenceField(card, "FAVOURITE  ·  LAST VISIT  ·  SPENT",
+                LicFieldsX + colW + 16f, -212f, colW);
+            _idReserved.text = "—  ·  —  ·  —";
 
-            _idOrder = NewText("Order", card, _body, 13, TextAnchor.UpperLeft, UITheme.Night[1]);
+            // The order: the one thing on the card the night turns on, so it gets the band.
+            var orderBand = NewRect("OrderBand", card);
+            Place(orderBand, new Vector2(0, 1), new Vector2(LicFieldsW, 64), new Vector2(LicFieldsX, -274f));
+            orderBand.gameObject.AddComponent<Image>().color =
+                new Color(UITheme.ClubBlue[2].r, UITheme.ClubBlue[2].g, UITheme.ClubBlue[2].b, 0.14f);
+            _idOrder = NewText("Order", orderBand, _body, 16, TextAnchor.MiddleLeft, UITheme.Night[1]);
             _idOrder.supportRichText = true;
-            Place(_idOrder.rectTransform, new Vector2(0, 1), new Vector2(250, 22), new Vector2(140, -142));
-
-            // The ordered drink, drawn large at the end of its own line (v5 P13). On the card
-            // there is room to show it properly, so this is the one place the player can check
-            // the shape of the glass against what is on the counter.
-            var idIcon = NewRect("OrderIcon", card);
-            Place(idIcon, new Vector2(0, 1), new Vector2(40, 40), new Vector2(396, -134));
+            Stretch(_idOrder.rectTransform, Vector2.zero, Vector2.one, new Vector2(64, 0), new Vector2(-8, 0));
+            var idIcon = NewRect("OrderIcon", orderBand);
+            Place(idIcon, new Vector2(0, 0.5f), new Vector2(48, 48), new Vector2(8, 0));
             _idOrderIcon = idIcon.gameObject.AddComponent<Image>();
             _idOrderIcon.preserveAspect = true;
             _idOrderIcon.raycastTarget = false;
 
-            // The garnishes they want, in an amber endorsement band — the thing you read.
-            var intentBand = NewRect("IntentBand", card);
-            Place(intentBand, new Vector2(0.5f, 1), new Vector2(420, 28), new Vector2(0, -190));
-            intentBand.gameObject.AddComponent<Image>().color = UITheme.Amber[3];
-            _idIntent = NewText("Intent", intentBand, _body, 12, TextAnchor.MiddleCenter, UITheme.Night[1]);
-            _idIntent.supportRichText = true;
-            Stretch(_idIntent.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 0), new Vector2(-8, 0));
+            // Serving preferences — the endorsements line. What the licence permits.
+            _idIntent = LicenceField(card, "SERVING PREFERENCES", LicFieldsX, -366f, LicFieldsW, 12);
 
-            // The recipe to pour — the ordered drink's ingredient bands, filled in per customer.
-            var recipeHeader = NewText("RecipeH", card, _body, 12, TextAnchor.UpperLeft, UITheme.Night[3]);
-            Place(recipeHeader.rectTransform, new Vector2(0, 1), new Vector2(420, 20), new Vector2(20, -228));
-            recipeHeader.text = "RECIPE — POUR TO THESE BANDS";
-
-            _idRecipeRows = NewRect("RecipeRows", card);
-            Place(_idRecipeRows, new Vector2(0.5f, 1), new Vector2(416, 250), new Vector2(0, -252));
-            var rlayout = _idRecipeRows.gameObject.AddComponent<VerticalLayoutGroup>();
-            rlayout.spacing = 6f; rlayout.childControlHeight = true; rlayout.childControlWidth = true;
-            rlayout.childForceExpandHeight = false; rlayout.childForceExpandWidth = true;
-            rlayout.childAlignment = TextAnchor.UpperCenter;
-
-            _idGreeting = NewText("Greeting", card, _body, 12, TextAnchor.MiddleCenter, UITheme.Night[2]);
-            Place(_idGreeting.rectTransform, new Vector2(0.5f, 0), new Vector2(420, 20), new Vector2(0, 58));
-
-            var close = NewRect("Close", card);
-            Place(close, new Vector2(0.5f, 0), new Vector2(200, 34), new Vector2(0, 16));
-            close.gameObject.AddComponent<Image>().color = UITheme.ClubBlue[2];
-            close.gameObject.AddComponent<Button>().onClick.AddListener(CloseId);
-            var closeLabel = NewText("L", close, _body, 13, TextAnchor.MiddleCenter, UITheme.Cream[4]);
-            Stretch(closeLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            closeLabel.text = "CLOSE — BACK TO THE BAR";
+            var hint = NewText("Hint", _idRoot, _body, 12, TextAnchor.MiddleCenter, UITheme.TextSecondary);
+            Place(hint.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(400, 20),
+                new Vector2(0, -(LicH * 0.5f) - 16f));
+            hint.text = "TAP OUTSIDE THE CARD TO HAND IT BACK";
 
             _idRoot.gameObject.SetActive(false);
         }
