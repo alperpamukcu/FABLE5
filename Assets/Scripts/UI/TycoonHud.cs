@@ -134,6 +134,17 @@ namespace LastCall.UI
         private Image _idPhoto;
         private Text _idName, _idAgeFrom, _idRel, _idIntent, _idOrder, _idGreeting;
         private Image _idOrderIcon;
+
+        // The shop tablet (v5 P13). Two errands, not one wall of cards: what goes behind the
+        // bar, and what the room itself is made of.
+        private static readonly string[] ShopTabs = { "THE WELL", "THE ROOM" };
+        private readonly Image[] _shopTabKeys = new Image[ShopTabs.Length];
+        private readonly Text[] _shopTabLabels = new Text[ShopTabs.Length];
+        private int _shopTab;
+        private Text _tabletTill;
+        private static readonly Color TabletShell = new Color(0.13f, 0.12f, 0.15f, 1f);
+        private static readonly Color TabletScreen = new Color(0.09f, 0.10f, 0.13f, 1f);
+        private static readonly Color TabletLens = new Color(0.30f, 0.30f, 0.34f, 1f);
         private RectTransform _idRecipeRows;   // the ordered drink's ingredient bands
         private CustomerVisit _idVisit;
         private const float IdTrackW = 176f;
@@ -855,58 +866,102 @@ namespace LastCall.UI
             if (run.Ledger.DebtStrikes == DayLedger.StrikesToClose - 1)
                 stamp += "\n<color=#A62B44>one more red day closes the bar</color>";
 
-            // Readability rules (GDD 24 §7): short labels, big lines, no prose.
+            // Receipt v2 (v5 P13): a till slip, not a summary panel. Header, then the drinks
+            // that actually crossed the bar as line items, then the totals block. The lines are
+            // taken from what was POURED (`visit.Served`) and priced at `PaidBase`, so a night
+            // where the player misread somebody still adds up — a wrong drink is paid at its
+            // own price, and listing menu prices instead would leave the bill short.
             var sb = new StringBuilder();
-            sb.AppendLine($"<b>DAY {run.Day}</b>   {served} served · {stormed} left");
-            sb.AppendLine($"tonight {BarRating.ExactStarsFor(floor.AverageSatisfaction):0.0}★ · " +
-                          $"bar {run.Rating.Average:0.0}★ · {CrowdName(run.CrowdToday)}");
-            sb.AppendLine("<color=#9C8F80>──────────────</color>");
-            sb.AppendLine($"SALES{Dots(9)}${run.DaySales}");
-            sb.AppendLine($"TIPS{Dots(10)}${run.DayTips}");
-            sb.AppendLine($"<color=#A62B44>RENT{Dots(10)}-${run.DayRent}</color>");
-            sb.AppendLine($"<color=#A62B44>STOCK{Dots(9)}-${run.DayStock}</color>");
-            sb.AppendLine($"<color=#A62B44>SHOP{Dots(10)}-${run.DayUpgrades}</color>");
-            sb.AppendLine("<color=#9C8F80>──────────────</color>");
-            sb.AppendLine($"<b><color=#{netColour}>NET{Dots(9)}{(net >= 0 ? "+" : "-")}${Math.Abs(net)}</color></b>");
-            sb.AppendLine($"<b>TILL{Dots(8)}${run.Money}</b>");
+            sb.AppendLine($"<b>{Rule}</b>");
+            sb.AppendLine($"<b>   LAST CALL   </b>");
+            sb.AppendLine($"   NIGHT {run.Day} · {CrowdName(run.CrowdToday)}");
+            sb.AppendLine($"<b>{Rule}</b>");
+
+            var lines = new List<string>();
+            var counts = new Dictionary<string, int>();
+            var totals = new Dictionary<string, int>();
+            var order = new List<string>();
+            foreach (var visit in floor.Finished)
+            {
+                if (visit.Served == null || visit.PaidBase <= 0) continue;
+                string name = visit.Served.Name.ToUpperInvariant();
+                if (!counts.ContainsKey(name)) { counts[name] = 0; totals[name] = 0; order.Add(name); }
+                counts[name]++;
+                totals[name] += visit.PaidBase;
+            }
+            foreach (var name in order)
+                lines.Add(Line($"{counts[name]}x {name}", $"${totals[name]}", null));
+            if (lines.Count == 0)
+                sb.AppendLine("<color=#9C8F80>   nothing sold</color>");
+            else
+                foreach (var line in lines) sb.AppendLine(line);
+
+            sb.AppendLine($"<color=#9C8F80>{Rule}</color>");
+            sb.AppendLine(Line("SALES", $"${run.DaySales}", null));
+            sb.AppendLine(Line("TIPS", $"${run.DayTips}", null));
+            sb.AppendLine(Line("RENT", $"-${run.DayRent}", "A62B44"));
+            sb.AppendLine(Line("STOCK", $"-${run.DayStock}", "A62B44"));
+            sb.AppendLine(Line("SHOP", $"-${run.DayUpgrades}", "A62B44"));
+            sb.AppendLine($"<color=#9C8F80>{Rule}</color>");
+            sb.AppendLine("<b>" + Line("NET", $"{(net >= 0 ? "+" : "-")}${Math.Abs(net)}", netColour) + "</b>");
+            sb.AppendLine("<b>" + Line("TILL", $"${run.Money}", null) + "</b>");
+            sb.AppendLine($"<color=#9C8F80>{Rule}</color>");
+
+            // The footer a real slip carries: who came, how they left, and the standing they
+            // left behind — the number tomorrow's crowd is actually drawn from.
+            sb.AppendLine($"<color=#9C8F80>   {served} served · {stormed} walked</color>");
+            sb.AppendLine($"<color=#9C8F80>   tonight {BarRating.ExactStarsFor(floor.AverageSatisfaction):0.0}* " +
+                          $"· bar {run.Rating.Average:0.0}*</color>");
             sb.Append(stamp);
             _invoiceText.text = sb.ToString();
 
-            // The cards.
+            // The tablet.
             foreach (Transform child in _offerRow) Destroy(child.gameObject);
-
-            int restock = run.Shelf.RefillCost(cfg.RefillPricePerCapacity);
-            AddCard("RESTOCK THE WELL", "well is full", restock, restock > 0, () =>
+            _tabletTill.text = $"${run.Money}";
+            for (int i = 0; i < _shopTabKeys.Length; i++)
             {
-                run.RefillShelf(); RebuildDayEnd();
-            });
-
-            for (int i = 0; i < run.MarketOffers.Count; i++)
-            {
-                int index = i;
-                var offer = run.MarketOffers[i];
-                string title = (offer.IsNewStock ? "+ " : "↑ ") + offer.Bottle.Name.ToUpperInvariant();
-                AddCard(title, "bought", offer.Price, !offer.Sold, () =>
-                {
-                    run.BuyBrand(index);
-                    RebuildDayEnd();
-                });
+                bool on = i == _shopTab;
+                _shopTabKeys[i].color = on ? UITheme.PrimaryAction : UITheme.Night[2];
+                _shopTabLabels[i].color = on ? UITheme.TextOnAmber : UITheme.TextSecondary;
             }
 
-            AddCard($"STOOL #{run.Seats + 1}", "bar is full", cfg.SeatPrice(run.Seats),
-                run.Seats < cfg.MaxSeats, () => { run.BuySeat(); ApplyBarLook(); RebuildDayEnd(); });
+            if (_shopTab == 0)
+            {
+                int restock = run.Shelf.RefillCost(cfg.RefillPricePerCapacity);
+                AddCard("RESTOCK THE WELL", "well is full", restock, restock > 0, () =>
+                {
+                    run.RefillShelf(); RebuildDayEnd();
+                });
 
-            AddCard($"GLASSWARE ★{run.GlasswareTier}", "top tier", cfg.GlasswarePrice(run.GlasswareTier),
-                run.GlasswareTier < cfg.MaxAmbienceTier,
-                () => { run.BuyGlassware(); ApplyBarLook(); RebuildDayEnd(); });
-            AddCard($"COUNTER ★{run.CounterTier}", "top tier", cfg.CounterPrice(run.CounterTier),
-                run.CounterTier < cfg.MaxAmbienceTier,
-                () => { run.BuyCounter(); ApplyBarLook(); RebuildDayEnd(); });
-            AddCard($"BACK BAR ★{run.WallTier}", "top tier", cfg.WallPrice(run.WallTier),
-                run.WallTier < cfg.MaxAmbienceTier,
-                () => { run.BuyWall(); ApplyBarLook(); RebuildDayEnd(); });
-            AddCard("MUSICIAN", "on stage", cfg.MusicianPrice, !run.HasMusician,
-                () => { run.BuyMusician(); ApplyBarLook(); RebuildDayEnd(); });
+                for (int i = 0; i < run.MarketOffers.Count; i++)
+                {
+                    int index = i;
+                    var offer = run.MarketOffers[i];
+                    string title = (offer.IsNewStock ? "+ " : "↑ ") + offer.Bottle.Name.ToUpperInvariant();
+                    AddCard(title, "bought", offer.Price, !offer.Sold, () =>
+                    {
+                        run.BuyBrand(index);
+                        RebuildDayEnd();
+                    }, ItemArt.Bottle(offer.Bottle.Info?.Style));
+                }
+            }
+            else
+            {
+                AddCard($"STOOL #{run.Seats + 1}", "bar is full", cfg.SeatPrice(run.Seats),
+                    run.Seats < cfg.MaxSeats, () => { run.BuySeat(); ApplyBarLook(); RebuildDayEnd(); });
+
+                AddCard($"GLASSWARE ★{run.GlasswareTier}", "top tier", cfg.GlasswarePrice(run.GlasswareTier),
+                    run.GlasswareTier < cfg.MaxAmbienceTier,
+                    () => { run.BuyGlassware(); ApplyBarLook(); RebuildDayEnd(); }, ItemArt.Glass);
+                AddCard($"COUNTER ★{run.CounterTier}", "top tier", cfg.CounterPrice(run.CounterTier),
+                    run.CounterTier < cfg.MaxAmbienceTier,
+                    () => { run.BuyCounter(); ApplyBarLook(); RebuildDayEnd(); });
+                AddCard($"BACK BAR ★{run.WallTier}", "top tier", cfg.WallPrice(run.WallTier),
+                    run.WallTier < cfg.MaxAmbienceTier,
+                    () => { run.BuyWall(); ApplyBarLook(); RebuildDayEnd(); });
+                AddCard("MUSICIAN", "on stage", cfg.MusicianPrice, !run.HasMusician,
+                    () => { run.BuyMusician(); ApplyBarLook(); RebuildDayEnd(); });
+            }
         }
 
         private static string CrowdName(WealthTier tier) =>
@@ -914,6 +969,21 @@ namespace LastCall.UI
 
         /// <summary>Leader dots so the bill columns line up in the monospace pixel font.</summary>
         private static string Dots(int n) => "<color=#9C8F80>" + new string('.', n) + "</color>";
+
+        /// <summary>The slip is <see cref="Columns"/> characters wide. The pixel font is
+        /// monospace, so a receipt line can be set the way a till sets one: label at the left,
+        /// amount flush right, leader dots filling whatever is between them.</summary>
+        private const int Columns = 26;
+
+        private static readonly string Rule = new string('=', Columns);
+
+        /// <summary>One receipt line, right-aligned to the slip's width.</summary>
+        private static string Line(string label, string amount, string hex)
+        {
+            int gap = Math.Max(1, Columns - label.Length - amount.Length);
+            string body = label + Dots(gap) + amount;
+            return hex == null ? body : $"<color=#{hex}>{body}</color>";
+        }
 
         private void ShowClosed()
         {
@@ -1264,22 +1334,70 @@ namespace LastCall.UI
             Stretch(title.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -46), new Vector2(0, -8));
             title.text = "LAST CALL — THE BOOKS";
 
-            // Left column: the itemised bill on cream card stock, like a printed receipt.
+            // Left column: the till slip (v5 P13). Cream stock, and pinned to 16pt — a whole
+            // multiple of the face's 8px design size, so the monospace columns the receipt is
+            // set in actually land on the pixel grid instead of blurring between it.
             var bill = NewRect("Bill", _dayEndPanel);
             Place(bill, new Vector2(0, 1), new Vector2(360, 470), new Vector2(24, -56));
             bill.gameObject.AddComponent<Image>().color = UITheme.Cream[4];
-            _invoiceText = NewText("Invoice", bill, _body, 18, TextAnchor.UpperLeft, UITheme.Night[1]);
-            Stretch(_invoiceText.rectTransform, Vector2.zero, Vector2.one, new Vector2(16, 12), new Vector2(-16, -12));
+            _invoiceText = NewText("Invoice", bill, _body, 16, TextAnchor.UpperLeft, UITheme.Night[1]);
+            Stretch(_invoiceText.rectTransform, Vector2.zero, Vector2.one, new Vector2(14, 12), new Vector2(-14, -12));
             _invoiceText.supportRichText = true;
 
-            // Right column: the market and upgrades as a card grid (GDD 24 §7).
-            var marketLabel = NewText("MarketLabel", _dayEndPanel, _body, 13, TextAnchor.UpperLeft, UITheme.TextSecondary);
-            Place(marketLabel.rectTransform, new Vector2(0, 1), new Vector2(500, 20), new Vector2(408, -58));
-            marketLabel.text = "THE MARKET — spend to earn";
-            _offerRow = NewRect("Offers", _dayEndPanel);
-            Place(_offerRow, new Vector2(0, 1), new Vector2(504, 400), new Vector2(404, -84));
+            // Right column: the shop, as the tablet the bar orders from (v5 P13). It was a flat
+            // grid of thirteen identical cards — a bottle, a stool and a musician all reading the
+            // same. The shell is the cheap half of the fix; the tabs are the real one, because
+            // restocking the well and buying a musician are different errands and the player is
+            // only ever doing one of them.
+            var tablet = NewRect("Tablet", _dayEndPanel);
+            Place(tablet, new Vector2(0, 1), new Vector2(524, 468), new Vector2(396, -56));
+            tablet.gameObject.AddComponent<Image>().color = TabletShell;
+
+            var lens = NewRect("Lens", tablet);
+            Place(lens, new Vector2(0.5f, 1), new Vector2(5, 5), new Vector2(0, -6));
+            lens.gameObject.AddComponent<Image>().color = TabletLens;
+
+            var homeBar = NewRect("Home", tablet);
+            Place(homeBar, new Vector2(0.5f, 0), new Vector2(84, 4), new Vector2(0, 6));
+            homeBar.gameObject.AddComponent<Image>().color = TabletLens;
+
+            var screen = NewRect("Screen", tablet);
+            Stretch(screen, Vector2.zero, Vector2.one, new Vector2(14, 16), new Vector2(-14, -16));
+            screen.gameObject.AddComponent<Image>().color = TabletScreen;
+
+            // The status strip: what this is, and what there is to spend.
+            var strip = NewRect("Strip", screen);
+            strip.anchorMin = new Vector2(0, 1); strip.anchorMax = new Vector2(1, 1);
+            strip.pivot = new Vector2(0.5f, 1);
+            strip.sizeDelta = new Vector2(0, 22);
+            strip.anchoredPosition = Vector2.zero;
+            strip.gameObject.AddComponent<Image>().color = UITheme.Night[0];
+            var stripName = NewText("N", strip, _body, 12, TextAnchor.MiddleLeft, UITheme.TextSecondary);
+            Stretch(stripName.rectTransform, Vector2.zero, Vector2.one, new Vector2(10, 0), new Vector2(-120, 0));
+            stripName.text = "SUPPLY — ORDER IN";
+            _tabletTill = NewText("Till", strip, _body, 12, TextAnchor.MiddleRight, UITheme.Money);
+            Stretch(_tabletTill.rectTransform, Vector2.zero, Vector2.one, new Vector2(120, 0), new Vector2(-10, 0));
+
+            for (int i = 0; i < ShopTabs.Length; i++)
+            {
+                int tab = i;
+                var key = NewRect($"Tab{i}", screen);
+                Place(key, new Vector2(0, 1), new Vector2(120, 24), new Vector2(10 + i * 128, -28));
+                var bg = key.gameObject.AddComponent<Image>();
+                var btn = key.gameObject.AddComponent<Button>();
+                btn.targetGraphic = bg;
+                btn.onClick.AddListener(() => { _shopTab = tab; RebuildDayEnd(); });
+                var label = NewText("L", key, _body, 12, TextAnchor.MiddleCenter, UITheme.TextPrimary);
+                Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                label.text = ShopTabs[i];
+                _shopTabKeys[i] = bg;
+                _shopTabLabels[i] = label;
+            }
+
+            _offerRow = NewRect("Offers", screen);
+            Place(_offerRow, new Vector2(0, 1), new Vector2(476, 372), new Vector2(10, -58));
             var grid = _offerRow.gameObject.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(162, 62);
+            grid.cellSize = new Vector2(153, 70);
             grid.spacing = new Vector2(8, 8);
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             grid.constraintCount = 3;
@@ -1395,9 +1513,10 @@ namespace LastCall.UI
             }
         }
 
-        /// <summary>One market card: title, price, and a bought/maxed/can't-afford state.
+        /// <summary>One shop listing: art, title, price, and a bought/maxed/can't-afford state.
         /// Nothing sells on credit (GDD 23 §6): an unaffordable card refuses with a notice.</summary>
-        private void AddCard(string title, string sub, int price, bool available, Action onBuy)
+        private void AddCard(string title, string sub, int price, bool available, Action onBuy,
+            Sprite art = null)
         {
             var rt = NewRect("Card", _offerRow);
             var img = rt.gameObject.AddComponent<Image>();
@@ -1416,13 +1535,29 @@ namespace LastCall.UI
                     catch (InvalidOperationException) { Toast("NOT ENOUGH MONEY"); }
                 });
             }
+
+            // The thing itself, at the right-hand end of the listing — a shop where every row
+            // is the same block of text is a spreadsheet, and the bottles are already drawn.
+            float textRight = -8f;
+            if (art != null)
+            {
+                var thumb = NewRect("Art", rt);
+                Place(thumb, new Vector2(1, 0.5f), new Vector2(44, 58), new Vector2(-6, 0));
+                var ti = thumb.gameObject.AddComponent<Image>();
+                ti.sprite = art;
+                ti.preserveAspect = true;
+                ti.raycastTarget = false;
+                ti.color = available && afford ? Color.white : new Color(1f, 1f, 1f, 0.35f);
+                textRight = -54f;
+            }
+
             var name = NewText("Name", rt, _body, 12, TextAnchor.UpperLeft,
                 available ? (afford ? UITheme.TextPrimary : UITheme.Cream[1]) : UITheme.Cream[1]);
-            Place(name.rectTransform, new Vector2(0, 1), new Vector2(150, 32), new Vector2(8, -6));
+            Stretch(name.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 22), new Vector2(textRight, -6));
             name.text = title;
             var priceText = NewText("Price", rt, _body, 12, TextAnchor.LowerLeft,
                 !available ? UITheme.Cream[1] : afford ? UITheme.Money : UITheme.ViceRed[3]);
-            Place(priceText.rectTransform, new Vector2(0, 0), new Vector2(150, 18), new Vector2(8, 6));
+            Stretch(priceText.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 6), new Vector2(textRight, -50));
             priceText.text = available ? $"${price}" : sub;
         }
 

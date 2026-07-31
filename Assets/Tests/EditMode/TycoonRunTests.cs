@@ -301,6 +301,41 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void EveryVisit_RemembersWhatItWasPouredAndWhatThatEarned()
+        {
+            // The night's receipt itemises the drinks off the visits themselves (v5 P13), so
+            // the base halves have to add up to the day's sales exactly. They would not if the
+            // slip listed menu prices instead: a wrong drink is paid at the price of the thing
+            // in the glass, which is the case this pins.
+            var run = NewRun();
+            PlayDayServingEveryone(run);
+
+            int itemised = 0;
+            foreach (var visit in run.Floor.Finished)
+            {
+                Assert.NotNull(visit.Served, "a served customer knows what they were poured");
+                Assert.AreEqual("spritz", visit.Served.Id);
+                Assert.Greater(visit.PaidBase, 0);
+                Assert.LessOrEqual(visit.PaidBase, visit.Paid, "the base cannot exceed base+tip");
+                itemised += visit.PaidBase;
+            }
+            Assert.AreEqual(run.DaySales, itemised, "the itemised lines are the day's sales");
+        }
+
+        [Test]
+        public void AStormedOffCustomer_LeavesNoLineOnTheReceipt()
+        {
+            var run = NewRun();
+            run.Tick(20);
+            var visit = run.Floor.Seated[0];
+            run.Tick(visit.PatienceMax + 1);   // nobody pours; they give up and walk
+
+            Assert.AreEqual(VisitState.StormedOff, visit.State);
+            Assert.IsNull(visit.Served, "nothing was sold, so there is nothing to itemise");
+            Assert.AreEqual(0, visit.PaidBase);
+        }
+
+        [Test]
         public void Shaking_RecordsThePreparation()
         {
             var run = NewRun();

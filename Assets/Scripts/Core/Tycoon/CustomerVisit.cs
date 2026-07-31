@@ -37,6 +37,20 @@ namespace LastCall.Core
         public double PatienceLeft { get; private set; }
         public VisitState State { get; private set; } = VisitState.Waiting;
         public int Paid { get; private set; }
+
+        /// <summary>
+        /// The drink half of <see cref="Paid"/>, without the tip. Kept apart so the night's
+        /// receipt can itemise what was sold and still add up: a wrong drink is paid at the
+        /// delivered drink's price, not the ordered one, so listing menu prices against the
+        /// day's sales total would leave the bill off by however often the player misread
+        /// somebody.
+        /// </summary>
+        public int PaidBase { get; private set; }
+
+        /// <summary>What they were poured, once served — the receipt's line item. Null while
+        /// waiting, and after a storm-off, because nothing was sold.</summary>
+        public RecipeDefinition Served { get; private set; }
+
         public int ExtraOrdersTaken { get; private set; }
 
         /// <summary>Final satisfaction (0–1) once resolved; storm-offs stay at 0.</summary>
@@ -119,13 +133,15 @@ namespace LastCall.Core
         /// and the direct-construction tests.
         /// </summary>
         public void Resolve(ServiceVerdict verdict, DrinkOrder nextOrder = null,
-            double savorSeconds = 0)
+            double savorSeconds = 0, RecipeDefinition served = null)
         {
             if (verdict == null) throw new ArgumentNullException(nameof(verdict));
             if (State != VisitState.Waiting)
                 throw new InvalidOperationException("This customer is no longer waiting.");
 
             Paid += verdict.Total;
+            PaidBase += verdict.BasePaid;
+            if (served != null) Served = served;
             Satisfaction = verdict.Satisfaction;
 
             if (verdict.OrdersAgain && nextOrder != null && ExtraOrdersTaken < MaxExtraOrders)

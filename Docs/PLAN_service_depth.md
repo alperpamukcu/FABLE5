@@ -198,7 +198,7 @@ P12 opened the night), and the compound result is a bar that cannot fail. P18's 
 longer optional — but it now has a far better instrument to tune with: an open night, a balk
 threshold, a star-driven arrival rate, and a speed-response harness.
 
-## P13 — Menu, shelf & shop presentation ◐
+## P13 — Menu, shelf & shop presentation ☑
 
 - ☑ **Menu v2**: the index is the bar's **aisles** (v5 P10 categories — VODKA, GIN, JUICES,
   MIXERS, ON TAP — not ingredient types), printed as flat **cream paper keys** with a hairline
@@ -224,8 +224,19 @@ threshold, a star-driven arrival rate, and a speed-response harness.
 - ☑ **Top bar v2**: three groups anchored to their own edges — clock left, till centre,
   standing right — instead of hand-tuned offsets from the middle, and **opaque**, because at
   0.82 alpha the neon sign behind it showed through the star rating.
-- ☐ **Tablet shop**, **end-of-night receipt v2** — not started; both are procedural chrome
-  and need no generation.
+- ☑ **Tablet shop**: the market moved into a tablet — bezel, lens, home bar, a status strip
+  carrying the till, and the bottle art on the listing that sells it. The shell is the cheap
+  half; the **tabs** are the real fix, because restocking the well and buying a musician are
+  different errands and thirteen identical cards made the player read all of them to do one.
+- ☑ **End-of-night receipt v2**: a till slip, not a summary panel. It **itemises what was
+  poured** — `2x GIN FIZZ ... $8` — above the totals, set in monospace columns at 16pt so
+  the leader dots land on the pixel grid.
+
+The receipt needed one thing Core did not keep. Lines are taken from what was *poured*
+(`CustomerVisit.Served`) and priced at the new `PaidBase`, not from menu prices, because a
+wrong drink is paid at the price of the thing in the glass — listing menu prices would leave
+a night where the player misread somebody quietly short. Two tests pin it: the itemised bases
+sum to `DaySales`, and a storm-off leaves no line at all.
 
 The top bar turned up a real bug rather than a layout one. The rating read **"3,0"**, because
 every number in the project was formatted in the machine's own culture; the editor here is

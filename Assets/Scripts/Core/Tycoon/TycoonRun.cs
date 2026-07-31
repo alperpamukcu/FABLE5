@@ -472,7 +472,10 @@ namespace LastCall.Core
                 served: match, shakeEnergy: ShakeEnergy);
 
             visit.Regular?.Stats.Apply(applied);
-            visit.Resolve(verdict, verdict.OrdersAgain ? RollOrder() : null, _config.SavorSeconds);
+            // What actually went across the bar, not what was asked for — the receipt lists the
+            // drink that was poured, and a wrong one is paid at its own price.
+            visit.Resolve(verdict, verdict.OrdersAgain ? RollOrder() : null, _config.SavorSeconds,
+                served: match?.Recipe);
             if (visit.State != VisitState.Waiting)
                 visit.Regular?.RecordVisit((int)Math.Round(verdict.Satisfaction * 3));
 
