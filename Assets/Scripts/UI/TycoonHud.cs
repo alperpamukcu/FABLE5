@@ -1378,23 +1378,47 @@ namespace LastCall.UI
 
             // Promoted to THE menu (2026-08-01): recipes, search and filters live here now
             // that the clipboard is gone — so it takes the room a menu deserves.
-            // Restyled to the licence's language (2026-08-01): a cream page under a navy
-            // header band, so the book reads as a printed thing rather than a dark panel.
+            // The clipboard lives on in the book (2026-08-01, the author's ask): the wooden
+            // board art, the paper region measured off it, the plate keys and the drawn X --
+            // the old menu's whole visual language, now carrying the recipes instead of the
+            // bottles. Paper constants are the flow's own measurements of menu_board.
             var sheet = NewRect("Sheet", _bookPanel);
-            Place(sheet, new Vector2(0.5f, 0.5f), new Vector2(960, 660), Vector2.zero);
-            sheet.gameObject.AddComponent<Image>().color = UITheme.Cream[4];
+            Place(sheet, new Vector2(0.5f, 0.5f), new Vector2(BkW, BkH), Vector2.zero);
+            var boardImg = sheet.gameObject.AddComponent<Image>();
+            var boardSprite = ItemArt.Load("menu_board");
+            if (boardSprite != null) { boardImg.sprite = boardSprite; boardImg.preserveAspect = true; }
+            else boardImg.color = UITheme.Cream[4];
             sheet.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;   // swallow
 
-            var headBand = NewRect("Head", sheet);
-            Stretch(headBand, new Vector2(0, 1), Vector2.one, new Vector2(0, -34), Vector2.zero);
-            headBand.gameObject.AddComponent<Image>().color = UITheme.ClubBlue[1];
-            var title = NewText("T", headBand, _body, 14, TextAnchor.MiddleCenter, UITheme.Cream[4]);
-            Stretch(title.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var title = NewText("T", sheet, _display, 16, TextAnchor.MiddleCenter,
+                new Color(0.22f, 0.14f, 0.08f));
+            Place(title.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(320, 30),
+                new Vector2(BkW * BkPaperCX, BkH * (BkPaperCY + BkPaperH * 0.5f) + 2f));
             title.text = "THE HOUSE BOOK";
+
+            // The drawn X, in the paper's corner exactly where the old menu wore it.
+            var closeRt = NewRect("Close", sheet);
+            Place(closeRt, new Vector2(0.5f, 0.5f), new Vector2(64, 64), new Vector2(307f, 190f));
+            var closeImg = closeRt.gameObject.AddComponent<Image>();
+            var closeSprite = ItemArt.Load("btn_close");
+            if (closeSprite != null) { closeImg.sprite = closeSprite; closeImg.preserveAspect = true; }
+            else closeImg.color = new Color(0.62f, 0.15f, 0.17f);
+            var closeBtn = closeRt.gameObject.AddComponent<Button>();
+            closeBtn.targetGraphic = closeImg;
+            var closeDown = ItemArt.Load("btn_close_down");
+            if (closeSprite != null && closeDown != null)
+            {
+                closeBtn.transition = Selectable.Transition.SpriteSwap;
+                var st = closeBtn.spriteState; st.pressedSprite = closeDown; st.selectedSprite = closeSprite;
+                closeBtn.spriteState = st;
+            }
+            closeBtn.onClick.AddListener(ToggleRecipeBook);
+            var closeSink = closeRt.gameObject.AddComponent<PressSink>();
+            closeSink.Face = closeRt; closeSink.Depth = 6f; closeSink.Lift = 3f;
 
             // The filter chips: click to cycle. Three axes the author named — the star tier,
             // how it is worked, and what bottle it contains.
-            float chipY = -36f;
+            float chipY = BkH * (BkPaperCY + BkPaperH * 0.5f) - 40f;   // paper top row
             _bookTierChip = BookChip(sheet, 0, chipY, () =>
             {
                 _bookTier = _bookTier >= 3 ? -1 : _bookTier + 1;
@@ -1415,14 +1439,14 @@ namespace LastCall.UI
 
             // The search box: type a name, the list narrows as you do.
             var searchRt = NewRect("Search", sheet);
-            Place(searchRt, new Vector2(0, 1), new Vector2(292, 24), new Vector2(14 + 3 * 212, chipY));
-            searchRt.pivot = new Vector2(0, 1);
+            Place(searchRt, new Vector2(0.5f, 0.5f), new Vector2(184, 26),
+                new Vector2(BookChipX(3) + 4f, chipY));
             var searchBg = searchRt.gameObject.AddComponent<Image>();
-            searchBg.color = UITheme.Night[0];
-            var searchText = NewText("T", searchRt, _body, 10, TextAnchor.MiddleLeft, UITheme.TextPrimary);
+            searchBg.color = new Color(0.94f, 0.90f, 0.80f);
+            var searchText = NewText("T", searchRt, _body, 10, TextAnchor.MiddleLeft, new Color(0.16f, 0.10f, 0.06f));
             Stretch(searchText.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 2), new Vector2(-8, -2));
             searchText.supportRichText = false;
-            var placeholder = NewText("P", searchRt, _body, 10, TextAnchor.MiddleLeft, UITheme.TextSecondary);
+            var placeholder = NewText("P", searchRt, _body, 10, TextAnchor.MiddleLeft, new Color(0.5f, 0.42f, 0.32f));
             Stretch(placeholder.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 2), new Vector2(-8, -2));
             placeholder.text = "SEARCH…";
             _bookSearch = searchRt.gameObject.AddComponent<InputField>();
@@ -1432,7 +1456,9 @@ namespace LastCall.UI
             _bookSearch.onValueChanged.AddListener(_ => RebuildRecipeBook());
 
             var viewport = NewRect("View", sheet);
-            Stretch(viewport, Vector2.zero, Vector2.one, new Vector2(14, 14), new Vector2(-14, -66));
+            Place(viewport, new Vector2(0.5f, 0.5f),
+                new Vector2(BkW * BkPaperW - 44f, BkH * BkPaperH - 100f),
+                new Vector2(BkW * BkPaperCX, BkH * BkPaperCY - 28f));
             viewport.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, 0.004f);
             viewport.gameObject.AddComponent<RectMask2D>();
 
@@ -1456,17 +1482,31 @@ namespace LastCall.UI
             _bookPanel.gameObject.SetActive(false);
         }
 
+        // The board and its paper, as the flow measured them off menu_board.
+        private const float BkW = 1148f, BkH = 719f;
+        private const float BkPaperW = 0.655f, BkPaperH = 0.660f;
+        private const float BkPaperCX = -0.015f, BkPaperCY = -0.008f;
+
+        private static float BookChipX(int index) =>
+            BkW * BkPaperCX - BkW * BkPaperW * 0.5f + 92f + index * 186f;
+
         private Text BookChip(RectTransform sheet, int index, float y, Action onClick)
         {
+            // The old menu's plate key, carrying a filter now.
             var chip = NewRect($"Chip{index}", sheet);
-            Place(chip, new Vector2(0, 1), new Vector2(202, 24), new Vector2(14 + index * 212, y));
-            chip.pivot = new Vector2(0, 1);
+            Place(chip, new Vector2(0.5f, 0.5f), new Vector2(178, 30), new Vector2(BookChipX(index), y));
             var img = chip.gameObject.AddComponent<Image>();
-            img.color = UITheme.Night[3];
+            var plate = ItemArt.Load("plate");
+            if (plate != null)
+            {
+                img.sprite = plate; img.type = Image.Type.Sliced;
+                img.pixelsPerUnitMultiplier = 0.5f;
+            }
+            else img.color = UITheme.Cream[3];
             var btn = chip.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => { Sfx.Play("click", 0.5f); onClick(); });
-            var t = NewText("T", chip, _body, 10, TextAnchor.MiddleCenter, UITheme.TextPrimary);
+            var t = NewText("T", chip, _body, 10, TextAnchor.MiddleCenter, new Color(0.16f, 0.10f, 0.06f));
             Stretch(t.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             return t;
         }
@@ -1540,7 +1580,15 @@ namespace LastCall.UI
         {
             var row = NewRect($"R_{r.Id}", _bookList);
             row.gameObject.AddComponent<LayoutElement>().preferredHeight = 46;
-            row.gameObject.AddComponent<Image>().color = lockedRow
+            var rowImg = row.gameObject.AddComponent<Image>();
+            var rowPlate = ItemArt.Load("plate");
+            if (rowPlate != null)
+            {
+                rowImg.sprite = rowPlate; rowImg.type = Image.Type.Sliced;
+                rowImg.pixelsPerUnitMultiplier = 0.5f;
+                rowImg.color = lockedRow ? new Color(1f, 1f, 1f, 0.55f) : Color.white;
+            }
+            else rowImg.color = lockedRow
                 ? new Color(UITheme.Cream[3].r, UITheme.Cream[3].g, UITheme.Cream[3].b, 0.5f)
                 : UITheme.Cream[3];
 
