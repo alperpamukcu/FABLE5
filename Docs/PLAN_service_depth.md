@@ -633,6 +633,20 @@ checked in play.
   snack share 33.3% of serves, zero solo snacks possible (pinned by test), and the rent
   divisor tightened 6→5.5 in the same commit because the first, free-refill pass wiped
   the P18 squeeze (19.5%→0% bankruptcies) — restored to 16.0% on the same seeds
+- ☑ **Menu redesign — style bands whole** *(2026-07-31, the author's direction)*: the 13
+  abstract type recipes retired; 26 named cocktails in four rank tiers (see GDD 23 §3), only
+  Draught and Neat Pour type-based on purpose. **What the sim gate caught, in order:** the
+  brim-truncation bug in `TransferInto` (pouring a big shaker into a 0.7 rocks glass ruined
+  the ratio through no fault of aim — every Gin Sour served Wrong); the bot crashing the
+  whole batch on its first carbonated style band (C8: fizz never enters the shaker — it now
+  builds two-stage like the player); the sim never wiring `lockedStock` (bought menus were
+  undrinkable, half of every night silently declined); and two price-ladder overshoots
+  measured and walked back — the ORIGINAL MenuPrice curve was never the problem, the
+  unplayable menu was. Floor redefined and recorded: the bot buys the menu and its bottles
+  (the growth that used to be free-by-day), never brand upgrades/ambience. Landed: 1.5%
+  bankruptcies, till median $40 (p25 −$18), 98% exact, 15 recipes bought/run. Residual: 2%
+  Wrong at the floor unexplained (worth one diagnostic), knife-edge margins are P18's
+  economy pass to finish.
 - ☑ Drink variety wave 2 *(2026-07-31)*. The genuinely new verb appeared, twice over:
   nothing ever unlocked P10's twelve locked cocktails, and nothing ever consumed the
   `LockedStock` their styles needed — both were dead content. `UnlockRecipe` buys a recipe

@@ -145,7 +145,7 @@ namespace LastCall.UI
         // (2026-07-22): it now shows the drink's RECIPE and the garnishes they want, not moods.
         private RectTransform _idRoot;
         private Image _idPhoto;
-        private Text _idName, _idAgeFrom, _idRel, _idIntent, _idOrder, _idRates, _idRatesLabel;
+        private Text _idName, _idAgeFrom, _idRel, _idIntent, _idOrder, _idOrderParts, _idRates, _idRatesLabel;
         private Image _idOrderIcon;
 
         // The shop tablet (v5 P13). Two errands, not one wall of cards: what goes behind the
@@ -1375,6 +1375,11 @@ namespace LastCall.UI
             // No price, anywhere on the card (C3): the licence says who they are and what they
             // want, and what a drink costs is the menu's business.
             _idOrder.text = $"<b>{visit.Order.Wanted.Name.ToUpperInvariant()}</b>";
+            var parts = new List<string>();
+            foreach (var band in visit.Order.Wanted.RatioRequirements)
+                parts.Add((band.IsStyleBand ? band.Style.Replace('_', ' ') : band.Type.ToString())
+                    .ToUpperInvariant());
+            _idOrderParts.text = string.Join("  ·  ", parts);
             _idOrderIcon.sprite = DrinkIcon.For(visit.Order.Wanted, _bootstrap.Glassware);
             _idOrderIcon.enabled = _idOrderIcon.sprite != null;
 
@@ -1497,6 +1502,14 @@ namespace LastCall.UI
             _idOrderIcon.raycastTarget = false;
             _idOrder = LicenceField(card, "ORDER", LicFieldsX + 54f, LicLines[3],
                 LicFieldsW - 54f, out _, 16);
+            // What is IN it, under the name (v5 P16): the menu speaks styles now, so the
+            // licence has to say gin-and-tonic, not just "Gin & Tonic" — this line is the
+            // player's recipe knowledge since the band rows left with v2.
+            _idOrderParts = NewText("OrderParts", card, _body, 8, TextAnchor.UpperLeft, UITheme.Night[3]);
+            Place(_idOrderParts.rectTransform, new Vector2(0, 1), new Vector2(LicFieldsW - 54f, 12),
+                Vector2.zero);
+            _idOrderParts.rectTransform.pivot = new Vector2(0, 1);
+            _idOrderParts.rectTransform.anchoredPosition = new Vector2(LicFieldsX + 54f, -LicLines[3] - 4f);
 
             // Serving preferences — the endorsements line. What the licence permits.
             _idIntent = LicenceField(card, "SERVING PREFERENCES", LicFieldsX, LicLines[4],

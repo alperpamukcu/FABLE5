@@ -161,10 +161,18 @@ namespace LastCall.Core
             accuracy = accuracy < 0 ? 0 : accuracy > 1 ? 1 : accuracy;
 
             double leaving = Math.Min(volume, TotalVolume);
+            // The pour STOPS at the brim (GDD 21 §3) — and stopping means the source stops
+            // draining too. Without this cap the loop below landed each ingredient in turn
+            // until the glass filled mid-list: the first pours took their full share and the
+            // last got none, so tipping a big shaker into a small glass RUINED the ratio
+            // through no fault of aim. A mixed drink leaves the spout mixed; found when the
+            // menu redesign put a shaken drink in a 0.7 rocks glass and every one served
+            // Wrong (2026-07-31).
+            if (accuracy > 0) leaving = Math.Min(leaving, target.Headroom / accuracy);
             if (leaving <= 0) return 0;
 
             // Snapshot the shares before draining, then land each ingredient's portion into
-            // the target (Add caps at the target's brim, so an over-pour spills there too).
+            // the target.
             double landed = 0;
             foreach (var pair in new List<KeyValuePair<string, double>>(_byIngredient))
             {

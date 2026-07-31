@@ -1,131 +1,51 @@
 {
-  "version": 1,
+  "version": 3,
+  "_comment": "v5 P16 menu redesign (2026-07-31): every cocktail is style-banded — vodka or gin IS the drink. Draught and Neat Pour stay type-based on purpose (brand-agnostic in the fiction). Four tiers by rank: starter 1-8, mid 9-14 (3.0 stars), hard 15-21 (3.5), very hard 22+ (4.0). Mirrors RecipeCatalog.CreateDefault; the parity test holds them together.",
   "recipes": [
     {
-      "id": "draught",
-      "glassId": "pint", "name": "Draught", "rank": 1,
+      "id": "draught", "name": "Draught", "rank": 1,
       "baseFlavor": 5, "baseMult": 1, "flavorPerLevel": 10, "multPerLevel": 1,
       "requirements": [ { "types": ["Beer"], "count": 1 } ],
-      "exactMixSize": 1, "minMixSize": 0, "minFill": 0.75,
-      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false
+      "exactMixSize": 1, "minMixSize": 0,
+      "minFill": 0.75,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": false, "glassId": "pint"
     },
     {
-      "id": "neat_pour",
-      "glassId": "rocks", "name": "Neat Pour", "rank": 1,
+      "id": "neat_pour", "name": "Neat Pour", "rank": 1,
       "baseFlavor": 5, "baseMult": 1, "flavorPerLevel": 10, "multPerLevel": 1,
       "requirements": [ { "types": ["Spirit"], "count": 1 } ],
       "exactMixSize": 1, "minMixSize": 0,
-      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": false, "glassId": "rocks"
     },
     {
-      "id": "spritz",
-      "glassId": "highball", "name": "Spritz", "rank": 2,
-      "baseFlavor": 10, "baseMult": 2, "flavorPerLevel": 15, "multPerLevel": 1,
+      "id": "vodka_soda", "name": "Vodka Soda", "rank": 2,
+      "baseFlavor": 15, "baseMult": 2, "flavorPerLevel": 15, "multPerLevel": 1,
       "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Bubbly"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
-      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false
-    },
-    {
-      "id": "old_fashioned",
-      "glassId": "rocks", "name": "Old Fashioned", "rank": 3,
-      "baseFlavor": 20, "baseMult": 2, "flavorPerLevel": 20, "multPerLevel": 1,
-      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sweet"], "count": 1 }, { "types": ["Bitter"], "count": 1 } ],
-      "exactMixSize": 0, "minMixSize": 0,
-      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false
-    },
-    {
-      "id": "highball",
-      "glassId": "highball", "name": "Highball", "rank": 4,
-      "baseFlavor": 25, "baseMult": 3, "flavorPerLevel": 20, "multPerLevel": 1,
-      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Bubbly"], "count": 1 }, { "types": ["Garnish"], "count": 1 } ],
-      "exactMixSize": 0, "minMixSize": 0,
-      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false
-    },
-    {
-      "id": "house_special",
-      "glassId": "coupe", "name": "House Special", "rank": 5,
-      "baseFlavor": 30, "baseMult": 3, "flavorPerLevel": 25, "multPerLevel": 2,
-      "requirements": [],
-      "exactMixSize": 0, "minMixSize": 0,
       "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
-      "equalFlavorGroupSize": 3
+      "locked": false, "prepMethod": "Built", "glassId": "highball",
+      "ratios": [
+        { "style": "vodka", "min": 0.3, "max": 0.5 },
+        { "style": "soda", "min": 0.5, "max": 0.7 }
+      ]
     },
     {
-      "id": "sour",
-      "glassId": "rocks", "name": "Sour", "rank": 6,
-      "baseFlavor": 30, "baseMult": 3, "flavorPerLevel": 25, "multPerLevel": 2,
+      "id": "gin_sour", "name": "Gin Sour", "rank": 3,
+      "baseFlavor": 20, "baseMult": 2, "flavorPerLevel": 15, "multPerLevel": 1,
       "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 1 }, { "types": ["Sweet"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
-      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false
-    },
-    {
-      "id": "martini",
-      "glassId": "martini", "name": "Martini", "rank": 7,
-      "baseFlavor": 35, "baseMult": 4, "flavorPerLevel": 25, "multPerLevel": 2,
-      "requirements": [ { "types": ["Spirit"], "count": 2 }, { "types": ["Bitter", "Garnish"], "count": 1 } ],
-      "exactMixSize": 0, "minMixSize": 0,
-      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false
-    },
-    {
-      "id": "layered_pour",
-      "glassId": "highball", "name": "Layered Pour", "rank": 8,
-      "baseFlavor": 40, "baseMult": 4, "flavorPerLevel": 30, "multPerLevel": 2,
-      "requirements": [],
-      "exactMixSize": 0, "minMixSize": 0,
       "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
-      "ascendingFlavorGroupSize": 4
+      "locked": false, "prepMethod": "Shaken", "glassId": "rocks",
+      "ratios": [
+        { "style": "gin", "min": 0.45, "max": 0.65 },
+        { "style": "lemon", "min": 0.2, "max": 0.4 },
+        { "style": "syrup", "min": 0.1, "max": 0.3 }
+      ]
     },
     {
-      "id": "fizz",
-      "glassId": "highball", "name": "Fizz", "rank": 9,
-      "baseFlavor": 45, "baseMult": 4, "flavorPerLevel": 30, "multPerLevel": 2,
-      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 1 }, { "types": ["Sweet"], "count": 1 }, { "types": ["Bubbly"], "count": 1 } ],
-      "exactMixSize": 0, "minMixSize": 0,
-      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false
-    },
-    {
-      "id": "straight_booze",
-      "glassId": "rocks", "name": "Straight Booze", "rank": 10,
-      "baseFlavor": 50, "baseMult": 5, "flavorPerLevel": 30, "multPerLevel": 3,
-      "requirements": [],
-      "exactMixSize": 0, "minMixSize": 0,
-      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
-      "sameTypeGroupMin": 4
-    },
-    {
-      "id": "negroni",
-      "glassId": "rocks", "name": "Negroni", "rank": 11,
-      "baseFlavor": 55, "baseMult": 5, "flavorPerLevel": 30, "multPerLevel": 3,
-      "requirements": [ { "types": ["Spirit"], "count": 2 }, { "types": ["Bitter"], "count": 1 }, { "types": ["Garnish"], "count": 1 } ],
-      "exactMixSize": 0, "minMixSize": 0,
-      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false
-    },
-    {
-      "id": "tiki",
-      "glassId": "highball", "name": "Tiki", "rank": 12,
-      "baseFlavor": 70, "baseMult": 6, "flavorPerLevel": 35, "multPerLevel": 3,
-      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 1 }, { "types": ["Sweet"], "count": 1 }, { "types": ["Garnish"], "count": 1 } ],
-      "exactMixSize": 0, "minMixSize": 5,
-      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": true
-    },
-    {
-      "id": "perfect_serve",
-      "glassId": "coupe", "name": "Perfect Serve", "rank": 13,
-      "baseFlavor": 100, "baseMult": 8, "flavorPerLevel": 40, "multPerLevel": 4,
-      "requirements": [ { "types": ["Spirit"], "count": 1 } ],
-      "exactMixSize": 5, "minMixSize": 0,
-      "allDistinctTypes": true, "allEqualFlavor": false, "scoreAllMixCards": true
-    },
-    {
-      "id": "double_perfect",
-      "glassId": "martini", "name": "Double Perfect", "rank": 14,
-      "baseFlavor": 160, "baseMult": 14, "flavorPerLevel": 50, "multPerLevel": 5,
-      "requirements": [ { "types": ["Spirit"], "count": 1 } ],
-      "exactMixSize": 5, "minMixSize": 0,
-      "allDistinctTypes": true, "allEqualFlavor": true, "scoreAllMixCards": true
-    },
-    {
-      "id": "gin_tonic", "name": "Gin & Tonic", "rank": 15,
+      "id": "gin_tonic", "name": "Gin & Tonic", "rank": 4,
       "baseFlavor": 15, "baseMult": 2, "flavorPerLevel": 15, "multPerLevel": 1,
       "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Bubbly"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
@@ -137,19 +57,7 @@
       ]
     },
     {
-      "id": "vodka_soda", "name": "Vodka Soda", "rank": 16,
-      "baseFlavor": 15, "baseMult": 2, "flavorPerLevel": 15, "multPerLevel": 1,
-      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Bubbly"], "count": 1 } ],
-      "exactMixSize": 0, "minMixSize": 0,
-      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
-      "locked": true, "prepMethod": "Built", "glassId": "highball",
-      "ratios": [
-        { "style": "vodka", "min": 0.3, "max": 0.5 },
-        { "style": "soda", "min": 0.5, "max": 0.7 }
-      ]
-    },
-    {
-      "id": "whiskey_cola", "name": "Whiskey & Cola", "rank": 17,
+      "id": "whiskey_cola", "name": "Whiskey & Cola", "rank": 5,
       "baseFlavor": 15, "baseMult": 2, "flavorPerLevel": 15, "multPerLevel": 1,
       "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Bubbly"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
@@ -161,7 +69,31 @@
       ]
     },
     {
-      "id": "cuba_libre", "name": "Cuba Libre", "rank": 18,
+      "id": "screwdriver", "name": "Screwdriver", "rank": 6,
+      "baseFlavor": 15, "baseMult": 2, "flavorPerLevel": 15, "multPerLevel": 1,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 1 } ],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": true, "prepMethod": "Built", "glassId": "highball",
+      "ratios": [
+        { "style": "vodka", "min": 0.3, "max": 0.5 },
+        { "style": "orange", "min": 0.5, "max": 0.7 }
+      ]
+    },
+    {
+      "id": "vodka_bull", "name": "Vodka Bull", "rank": 7,
+      "baseFlavor": 15, "baseMult": 2, "flavorPerLevel": 15, "multPerLevel": 1,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Bubbly"], "count": 1 } ],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": true, "prepMethod": "Built", "glassId": "highball",
+      "ratios": [
+        { "style": "vodka", "min": 0.3, "max": 0.55 },
+        { "style": "energy", "min": 0.45, "max": 0.7 }
+      ]
+    },
+    {
+      "id": "cuba_libre", "name": "Cuba Libre", "rank": 9,
       "baseFlavor": 20, "baseMult": 2, "flavorPerLevel": 15, "multPerLevel": 1,
       "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Bubbly"], "count": 1 }, { "types": ["Sour"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
@@ -174,31 +106,58 @@
       ]
     },
     {
-      "id": "screwdriver", "name": "Screwdriver", "rank": 19,
-      "baseFlavor": 15, "baseMult": 2, "flavorPerLevel": 15, "multPerLevel": 1,
-      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 1 } ],
-      "exactMixSize": 0, "minMixSize": 0,
-      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
-      "locked": true, "prepMethod": "Built", "glassId": "highball",
-      "ratios": [
-        { "style": "vodka", "min": 0.3, "max": 0.5 },
-        { "style": "orange", "min": 0.5, "max": 0.7 }
-      ]
-    },
-    {
-      "id": "vodka_bull", "name": "Vodka Bull", "rank": 20,
-      "baseFlavor": 15, "baseMult": 2, "flavorPerLevel": 15, "multPerLevel": 1,
+      "id": "whiskey_ginger", "name": "Whiskey Ginger", "rank": 10,
+      "baseFlavor": 20, "baseMult": 2, "flavorPerLevel": 15, "multPerLevel": 1,
       "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Bubbly"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
       "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
       "locked": true, "prepMethod": "Built", "glassId": "highball",
       "ratios": [
-        { "style": "vodka", "min": 0.3, "max": 0.55 },
-        { "style": "energy", "min": 0.45, "max": 0.7 }
+        { "style": "bourbon", "min": 0.3, "max": 0.5 },
+        { "style": "ginger", "min": 0.5, "max": 0.7 }
       ]
     },
     {
-      "id": "whiskey_sour", "name": "Whiskey Sour", "rank": 21,
+      "id": "moscow_mule", "name": "Moscow Mule", "rank": 11,
+      "baseFlavor": 20, "baseMult": 2, "flavorPerLevel": 15, "multPerLevel": 1,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Bubbly"], "count": 1 }, { "types": ["Sour"], "count": 1 } ],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": true, "prepMethod": "Built", "glassId": "highball",
+      "ratios": [
+        { "style": "vodka", "min": 0.3, "max": 0.5 },
+        { "style": "ginger", "min": 0.4, "max": 0.6 },
+        { "style": "lime", "min": 0.05, "max": 0.2 }
+      ]
+    },
+    {
+      "id": "gimlet", "name": "Gimlet", "rank": 12,
+      "baseFlavor": 25, "baseMult": 2, "flavorPerLevel": 20, "multPerLevel": 1,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 1 }, { "types": ["Sweet"], "count": 1 } ],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": true, "prepMethod": "Shaken", "glassId": "coupe",
+      "ratios": [
+        { "style": "gin", "min": 0.55, "max": 0.75 },
+        { "style": "lime", "min": 0.15, "max": 0.35 },
+        { "style": "syrup", "min": 0.08, "max": 0.25 }
+      ]
+    },
+    {
+      "id": "tequila_sunrise", "name": "Tequila Sunrise", "rank": 13,
+      "baseFlavor": 25, "baseMult": 2, "flavorPerLevel": 20, "multPerLevel": 1,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 1 }, { "types": ["Sweet"], "count": 1 } ],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": true, "prepMethod": "Built", "glassId": "highball",
+      "ratios": [
+        { "style": "tequila", "min": 0.3, "max": 0.5 },
+        { "style": "orange", "min": 0.38, "max": 0.62 },
+        { "style": "syrup", "min": 0.05, "max": 0.2 }
+      ]
+    },
+    {
+      "id": "whiskey_sour", "name": "Whiskey Sour", "rank": 15,
       "baseFlavor": 25, "baseMult": 2, "flavorPerLevel": 20, "multPerLevel": 1,
       "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 1 }, { "types": ["Sweet"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
@@ -211,7 +170,20 @@
       ]
     },
     {
-      "id": "gin_fizz", "name": "Gin Fizz", "rank": 22,
+      "id": "daiquiri", "name": "Daiquiri", "rank": 16,
+      "baseFlavor": 25, "baseMult": 2, "flavorPerLevel": 20, "multPerLevel": 1,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 1 }, { "types": ["Sweet"], "count": 1 } ],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": true, "prepMethod": "Shaken", "glassId": "coupe",
+      "ratios": [
+        { "style": "rum", "min": 0.45, "max": 0.65 },
+        { "style": "lime", "min": 0.15, "max": 0.35 },
+        { "style": "syrup", "min": 0.1, "max": 0.3 }
+      ]
+    },
+    {
+      "id": "gin_fizz", "name": "Gin Fizz", "rank": 17,
       "baseFlavor": 25, "baseMult": 2, "flavorPerLevel": 20, "multPerLevel": 1,
       "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 1 }, { "types": ["Sweet"], "count": 1 }, { "types": ["Bubbly"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
@@ -225,20 +197,20 @@
       ]
     },
     {
-      "id": "daiquiri", "name": "Daiquiri", "rank": 23,
-      "baseFlavor": 25, "baseMult": 2, "flavorPerLevel": 20, "multPerLevel": 1,
-      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 1 }, { "types": ["Sweet"], "count": 1 } ],
+      "id": "kamikaze", "name": "Kamikaze", "rank": 18,
+      "baseFlavor": 30, "baseMult": 3, "flavorPerLevel": 20, "multPerLevel": 1,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sweet"], "count": 1 }, { "types": ["Sour"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
       "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
-      "locked": true, "prepMethod": "Shaken", "glassId": "coupe",
+      "locked": true, "prepMethod": "Shaken", "glassId": "rocks",
       "ratios": [
-        { "style": "rum", "min": 0.45, "max": 0.65 },
-        { "style": "lime", "min": 0.15, "max": 0.35 },
-        { "style": "syrup", "min": 0.1, "max": 0.3 }
+        { "style": "vodka", "min": 0.4, "max": 0.6 },
+        { "style": "triple_sec", "min": 0.15, "max": 0.35 },
+        { "style": "lime", "min": 0.15, "max": 0.35 }
       ]
     },
     {
-      "id": "margarita", "name": "Margarita", "rank": 24,
+      "id": "margarita", "name": "Margarita", "rank": 19,
       "baseFlavor": 30, "baseMult": 3, "flavorPerLevel": 20, "multPerLevel": 1,
       "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sweet"], "count": 1 }, { "types": ["Sour"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
@@ -251,7 +223,20 @@
       ]
     },
     {
-      "id": "dry_martini", "name": "Dry Martini", "rank": 25,
+      "id": "sidecar", "name": "Bourbon Sidecar", "rank": 20,
+      "baseFlavor": 30, "baseMult": 3, "flavorPerLevel": 20, "multPerLevel": 1,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sweet"], "count": 1 }, { "types": ["Sour"], "count": 1 } ],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": true, "prepMethod": "Shaken", "glassId": "coupe",
+      "ratios": [
+        { "style": "bourbon", "min": 0.4, "max": 0.6 },
+        { "style": "triple_sec", "min": 0.2, "max": 0.4 },
+        { "style": "lemon", "min": 0.15, "max": 0.35 }
+      ]
+    },
+    {
+      "id": "dry_martini", "name": "Dry Martini", "rank": 22,
       "baseFlavor": 30, "baseMult": 3, "flavorPerLevel": 20, "multPerLevel": 1,
       "requirements": [ { "types": ["Spirit"], "count": 2 }, { "types": ["Sweet"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
@@ -263,7 +248,7 @@
       ]
     },
     {
-      "id": "dirty_martini", "name": "Dirty Martini", "rank": 26,
+      "id": "dirty_martini", "name": "Dirty Martini", "rank": 23,
       "baseFlavor": 30, "baseMult": 3, "flavorPerLevel": 20, "multPerLevel": 1,
       "requirements": [ { "types": ["Spirit"], "count": 2 }, { "types": ["Sweet"], "count": 1 }, { "types": ["Garnish"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
@@ -273,6 +258,45 @@
         { "style": "gin", "min": 0.6, "max": 0.85 },
         { "style": "vermouth", "min": 0.08, "max": 0.28 },
         { "style": "olive", "min": 0.05, "max": 0.2 }
+      ]
+    },
+    {
+      "id": "manhattan", "name": "Manhattan", "rank": 24,
+      "baseFlavor": 35, "baseMult": 3, "flavorPerLevel": 25, "multPerLevel": 2,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sweet"], "count": 1 }, { "types": ["Bitter"], "count": 1 } ],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": true, "prepMethod": "Stirred", "glassId": "coupe",
+      "ratios": [
+        { "style": "bourbon", "min": 0.55, "max": 0.75 },
+        { "style": "vermouth", "min": 0.2, "max": 0.4 },
+        { "style": "amaro", "min": 0.03, "max": 0.12 }
+      ]
+    },
+    {
+      "id": "negroni", "name": "Negroni", "rank": 25,
+      "baseFlavor": 35, "baseMult": 3, "flavorPerLevel": 25, "multPerLevel": 2,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sweet"], "count": 1 }, { "types": ["Bitter"], "count": 1 } ],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": true, "prepMethod": "Stirred", "glassId": "rocks",
+      "ratios": [
+        { "style": "gin", "min": 0.28, "max": 0.42 },
+        { "style": "vermouth", "min": 0.28, "max": 0.42 },
+        { "style": "amaro", "min": 0.28, "max": 0.42 }
+      ]
+    },
+    {
+      "id": "old_fashioned", "name": "Old Fashioned", "rank": 26,
+      "baseFlavor": 35, "baseMult": 3, "flavorPerLevel": 25, "multPerLevel": 2,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sweet"], "count": 1 }, { "types": ["Bitter"], "count": 1 } ],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": true, "prepMethod": "Stirred", "glassId": "rocks",
+      "ratios": [
+        { "style": "bourbon", "min": 0.7, "max": 0.88 },
+        { "style": "syrup", "min": 0.06, "max": 0.2 },
+        { "style": "amaro", "min": 0.03, "max": 0.12 }
       ]
     },
     {
@@ -291,16 +315,20 @@
       ]
     },
     {
-      "id": "tequila_sunrise", "name": "Tequila Sunrise", "rank": 28,
-      "baseFlavor": 25, "baseMult": 2, "flavorPerLevel": 20, "multPerLevel": 1,
-      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 1 }, { "types": ["Sweet"], "count": 1 } ],
+      "id": "long_island", "name": "Long Island", "rank": 28,
+      "baseFlavor": 40, "baseMult": 4, "flavorPerLevel": 25, "multPerLevel": 2,
+      "requirements": [ { "types": ["Spirit"], "count": 5 }, { "types": ["Sour"], "count": 1 }, { "types": ["Bubbly"], "count": 1 } ],
       "exactMixSize": 0, "minMixSize": 0,
       "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
       "locked": true, "prepMethod": "Built", "glassId": "highball",
       "ratios": [
-        { "style": "tequila", "min": 0.3, "max": 0.5 },
-        { "style": "orange", "min": 0.38, "max": 0.62 },
-        { "style": "syrup", "min": 0.05, "max": 0.2 }
+        { "style": "vodka", "min": 0.08, "max": 0.18 },
+        { "style": "gin", "min": 0.08, "max": 0.18 },
+        { "style": "rum", "min": 0.08, "max": 0.18 },
+        { "style": "tequila", "min": 0.08, "max": 0.18 },
+        { "style": "triple_sec", "min": 0.08, "max": 0.18 },
+        { "style": "lemon", "min": 0.08, "max": 0.2 },
+        { "style": "cola", "min": 0.15, "max": 0.3 }
       ]
     }
   ]

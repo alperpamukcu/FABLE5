@@ -88,31 +88,33 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void APourThatIsAVodkaSoda_StillReadsAsASpritz_WhileLocked()
+        public void TheDayOneMenu_NamesAVodkaSoda_AndRefusesAGinSoda()
         {
-            // Vodka Soda is makeable from the OPENING shelf — this is exactly the recipe that
-            // would have leaked into the live game the day the data landed.
+            // The v5 P16 redesign: the abstract cousins (Spritz et al.) are gone, so a
+            // vodka-and-soda IS a Vodka Soda from day one — and pouring gin at the same
+            // proportions is NOT one, which is the whole point of style bands.
             var vodka = Still("vodka_t", "vodka", IngredientType.Spirit);
+            var gin = Still("gin_t", "gin", IngredientType.Spirit);
             var soda = new IngredientCard("soda_t", "Soda", IngredientType.Bubbly, 1,
                 QualityTier.HousePour, null,
                 new IngredientInfo("soda", category: IngredientCategories.Mixer));
             var lookup = new System.Collections.Generic.Dictionary<string, IngredientCard>
-                { ["vodka_t"] = vodka, ["soda_t"] = soda };
+                { ["vodka_t"] = vodka, ["gin_t"] = gin, ["soda_t"] = soda };
+
+            var active = RecipeCatalog.CreateDefault().Where(r => !r.Locked).ToList();
 
             var glass = new GlassContents(1.0);
             glass.Add("vodka_t", 0.40);
             glass.Add("soda_t", 0.55);
+            Assert.AreEqual("vodka_soda",
+                RatioRecipeMatcher.Match(glass, active, id => lookup[id])?.Recipe.Id,
+                "vodka and soda on the open menu is a Vodka Soda, by name");
 
-            var all = RecipeCatalog.CreateDefault();
-            var active = all.Where(r => !r.Locked).ToList();
-
-            var unlockedWorld = RatioRecipeMatcher.Match(glass, all, id => lookup[id]);
-            Assert.AreEqual("vodka_soda", unlockedWorld.Recipe.Id,
-                "sanity: once unlocked, the specific drink outranks the abstract one");
-
-            var lockedWorld = RatioRecipeMatcher.Match(glass, active, id => lookup[id]);
-            Assert.AreEqual("spritz", lockedWorld.Recipe.Id,
-                "while locked, the same pour reads exactly as it did before the content existed");
+            var wrongSpirit = new GlassContents(1.0);
+            wrongSpirit.Add("gin_t", 0.40);
+            wrongSpirit.Add("soda_t", 0.55);
+            Assert.IsNull(RatioRecipeMatcher.Match(wrongSpirit, active, id => lookup[id]),
+                "gin at the same proportions is a different drink — no abstract cousin catches it");
         }
 
         // ── style bands ─────────────────────────────────────────────────────────

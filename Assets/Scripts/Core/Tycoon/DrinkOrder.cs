@@ -37,6 +37,9 @@ namespace LastCall.Core
         /// was <c>4 + rank</c> — about twice this — back when the tip was a $4 rounding error
         /// and a correct-but-careless serve earned nearly as much as a perfect one.
         /// </summary>
+        /// <summary>The P16 redesign tried steeper ladders here (3+r, 3+0.75r) and measured
+        /// both too rich once the floor bot could actually GROW the menu — the original curve
+        /// was never the problem, the unplayable menu was. Rank 1 = $4, 7 = $7, 28 = $17.</summary>
         public static int MenuPrice(RecipeDefinition recipe) => 3 + (recipe.Rank + 1) / 2;
 
         /// <summary>The garnishes a customer can ask for. Kept as the old name for callers.</summary>

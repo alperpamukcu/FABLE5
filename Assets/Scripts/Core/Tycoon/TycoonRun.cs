@@ -161,14 +161,21 @@ namespace LastCall.Core
             }
         }
 
-        /// <summary>What a recipe costs to put on the menu: $20 at rank 15, +$5 a rank.</summary>
+        /// <summary>What a recipe costs to put on the menu, priced off its tier's rank —
+        /// kept cheap enough that the menu can GROW at the pace the rent climbs, because the
+        /// ladder of bought recipes is the income curve now (P16).</summary>
         public int RecipePrice(RecipeDefinition recipe) =>
-            15 + 5 * Math.Max(1, recipe.Rank - 14);
+            Math.Max(10, 6 + 3 * (recipe.Rank - 2));
 
-        /// <summary>Stars the room must say about this bar before the recipe sells (C6):
-        /// the plain builds are open, the shaken ones want 3.5, the house pride wants 4.</summary>
+        /// <summary>Stars the room must say about this bar before the recipe sells (C6), on
+        /// the menu's four tiers (v5 P16 redesign): starter buys are open, mid wants a bar
+        /// that is not underwater (neutral 3.0), the shaken sours want 3.5, and the stirred
+        /// precision drinks want 4.</summary>
         public double RecipeStarGate(RecipeDefinition recipe) =>
-            recipe.Rank <= 18 ? 0.0 : recipe.Rank <= 22 ? 3.5 : 4.0;
+            recipe.Rank <= 8 ? 0.0
+            : recipe.Rank <= 14 ? 3.0
+            : recipe.Rank <= 21 ? 3.5
+            : 4.0;
 
         /// <summary>
         /// Buys a locked recipe onto the menu (v5 P16). A day-end act, like every purchase:

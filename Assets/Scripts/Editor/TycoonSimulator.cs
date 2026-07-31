@@ -102,8 +102,12 @@ namespace LastCall.EditorTools
                 .Where(c => c.Info == null || c.Info.Tier <= 1)
                 .Select(c => c.Clone()).ToList();
             var shelf = new Shelf(starting.Select(c => new ShelfBottle(c)));
+            // The quarantined bottles ride along (P16): buying a recipe releases its styles
+            // into the market, and without this the sim's bought menu was undrinkable — half
+            // of every night silently declined for want of a tonic that existed nowhere.
             var run = new TycoonRun(shelf, recipes, new RunRng(seed),
-                regulars: new RegularsRegistry(archetypes), glassware: glassware, snacks: snacks);
+                regulars: new RegularsRegistry(archetypes), glassware: glassware, snacks: snacks,
+                lockedStock: deck.LockedCards);
 
             double buildTimer = buildSeconds;
             int guard = 0;
@@ -135,6 +139,15 @@ namespace LastCall.EditorTools
                         // ID. Since v5 C3 that is also the only way Core will hand the order
                         // over — an uninspected visit refuses to name its drink.
                         visit.InspectId();
+                        // An order the bar cannot make is DECLINED, not left to storm off
+                        // (P11's honest verb): scored above a storm-off, and the stool frees
+                        // now. A competent bartender says "we can't make that".
+                        if (!run.CanMake(visit.Order))
+                        {
+                            run.DeclineOrder(visit);
+                            stats.Declined++;
+                            continue;
+                        }
                         // Every third serve gets a bowl alongside (v5 P16): enough traffic to
                         // measure the snack share without pretending everyone eats. Cycling
                         // the bowls spreads the stock; a drained bowl just skips.
@@ -166,6 +179,32 @@ namespace LastCall.EditorTools
 
                     int refill = run.Shelf.RefillCost(run.Config.RefillPricePerCapacity);
                     if (refill > 0 && run.Money >= refill) run.RefillShelf();
+
+                    // The menu is bought now (v5 P16). It used to be the FREE progression --
+                    // the order pool grew into ranks 1-14 on its own -- so the floor buys the
+                    // cheapest gate-passing recipe a night, and the new stock its menu names,
+                    // or it would measure a bar frozen at four drinks. Brand UPGRADES, extra
+                    // ambience and mood tips stay off the floor as before.
+                    RecipeDefinition cheapest = null;
+                    foreach (var r in run.LockedRecipes)
+                        if (run.Rating.Average >= run.RecipeStarGate(r) &&
+                            (cheapest == null || r.Rank < cheapest.Rank))
+                            cheapest = r;
+                    if (cheapest != null && run.Money >= run.RecipePrice(cheapest) + 40)
+                    {
+                        run.UnlockRecipe(cheapest.Id);
+                        stats.RecipesBought++;
+                    }
+                    var neededStyles = new HashSet<string>();
+                    foreach (var r in run.MenuRecipes)
+                        foreach (var band in r.RatioRequirements)
+                            if (band.IsStyleBand) neededStyles.Add(band.Style);
+                    for (int oi = 0; oi < run.MarketOffers.Count; oi++)
+                    {
+                        var offer = run.MarketOffers[oi];
+                        if (offer.Sold || !offer.IsNewStock || !neededStyles.Contains(offer.Style)) continue;
+                        if (run.Money >= offer.Price + 40) run.BuyBrand(oi);
+                    }
                     if (run.Seats < run.Config.MaxSeats &&
                         run.Money >= run.Config.SeatPrice(run.Seats) + 40) run.BuySeat();
 
@@ -196,8 +235,20 @@ namespace LastCall.EditorTools
             // whole spec share of the tip -- it measured 56% spec score and 2.7% fully-met
             // orders, which is a strawman, not a floor.
             var spec = visit.Order.Spec;
+            // Sized for the glass the drink will LAND in, not for the shaker (2026-07-31):
+            // a gin sour lives in a 0.7 rocks glass, and building 0.85 of a 1.0 shaker for
+            // it wasted an eighth of the stock every serve.
+            double glassCap = run.Config.GlassCapacity;
+            if (run.Glassware != null)
+                foreach (var gw in run.Glassware)
+                    if (gw.Id == recipe.GlassId) { glassCap = gw.Capacity; break; }
             double volume = Math.Max(recipe.MinFill, spec.FilledToTheTop ? 0.97 : 0.85)
-                            * run.Glass.Capacity;
+                            * Math.Min(glassCap, run.Glass.Capacity);
+            // Carbonated bands go in AT THE GLASS (C8): Core refuses them in the shaker, so
+            // the bot builds the way the player does — still parts into the tin, fizz after
+            // the pour-out. The old menu had no carbonated style bands, so the first Gin &
+            // Tonic the bot ever built CRASHED the whole batch here (2026-07-31).
+            var atGlass = new List<(string id, double vol)>();
             foreach (var band in recipe.RatioRequirements)
             {
                 var bottle = band.IsStyleBand
@@ -205,9 +256,13 @@ namespace LastCall.EditorTools
                     : PickBottle(run.Shelf, band.Type, visit);
                 if (bottle == null) return false;
                 double share = (band.MinRatio + band.MaxRatio) / 2.0;
-                run.PourMeasure(bottle.Id, Math.Min(volume * share, bottle.Remaining));
+                double amount = Math.Min(volume * share, bottle.Remaining);
+                if (bottle.Ingredient.Info?.Carbonated == true)
+                    atGlass.Add((bottle.Id, amount));
+                else
+                    run.PourMeasure(bottle.Id, amount);
             }
-            if (run.Glass.IsEmpty) return false;
+            if (run.Glass.IsEmpty && atGlass.Count == 0) return false;
 
             foreach (var garnish in spec.Garnishes)
                 if (!run.Glass.IsFull) run.AddPreparation(garnish);
@@ -216,7 +271,10 @@ namespace LastCall.EditorTools
             // Into the glass, dead on the rim. The bot used to hand the shaker over whole, which
             // the rules now refuse (2026-07-28); pouring perfectly keeps its standing unchanged —
             // it never had to aim, and the aim is the player's skill, not the floor's.
-            run.PourIntoServingGlass(run.Glass.TotalVolume, accuracy: 1.0);
+            if (!run.Glass.IsEmpty)
+                run.PourIntoServingGlass(run.Glass.TotalVolume, accuracy: 1.0);
+            foreach (var (id, vol) in atGlass)
+                run.PourAtGlass(id, vol);
             return run.DrinkReady;
         }
 
@@ -303,6 +361,7 @@ namespace LastCall.EditorTools
             public int Serves, Exact, Close, Wrong, CraftServes, SpeedTips, ExtraOrders;
             public int SnackServes, SnackIncome;
             public int GlassesBussed;
+            public int RecipesBought;
             // v5 P11: the base/tip split is the phase's whole point, and refusals/declines are
             // the two new ways a serve can end.
             public int Refused, Declined, SpecOrders, SpecFull;
@@ -404,6 +463,7 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Average head poured | {HeadSum / Math.Max(1, Pints):P0} |");
                 sb.AppendLine($"| Snack serves (of serves) | {Pct(SnackServes, Serves)} · ${SnackIncome} |");
                 sb.AppendLine($"| Glasses bussed | {GlassesBussed} |");
+                sb.AppendLine($"| Recipes bought (of 200 runs) | {RecipesBought} |");
                 sb.AppendLine();
                 sb.AppendLine("## Red days by day number");
                 sb.AppendLine();

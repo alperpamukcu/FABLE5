@@ -112,10 +112,10 @@ namespace LastCall.Tests
                 run.Tick(5);
             }
 
-            // v5 P11 halved the base ladder: a rank-2 spritz is $4 on the menu, not $6.
+            // A rank-2 drink is $4 on the menu.
             run.Floor.Seated[0].InspectId();     // the price is read off the card (C3)
             Assert.AreEqual(5, run.Floor.Seated[0].Order.Price,
-                "the $4 spritz sells for $5 to high rollers (×1.25)");
+                "the $4 rank-2 drink sells for $5 to high rollers (×1.25)");
         }
 
         [Test]
