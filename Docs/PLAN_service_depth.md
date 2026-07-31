@@ -633,6 +633,21 @@ checked in play.
   snack share 33.3% of serves, zero solo snacks possible (pinned by test), and the rent
   divisor tightened 6→5.5 in the same commit because the first, free-refill pass wiped
   the P18 squeeze (19.5%→0% bankruptcies) — restored to 16.0% on the same seeds
+- ◐ **The back-bar wall + the Book as THE menu** *(the author's direction, 2026-07-31)*:
+  the aisle menu retires. Two surfaces replace it: (1) the HOUSE BOOK becomes the recipe
+  browser — filter chips shipped (tier · prep · bottle, cycling), scroll shipped; (2) the
+  bottle picker becomes a full-screen BAR BACK WALL — the player "turns around" to face
+  shelves of every bottle, no category grouping; click a bottle → the prep stage. Assets
+  are a KIT at native 1× grain (the prep-table resolution lesson): `backwall_shelf`
+  (corbelled plank, 400×72, ends + repeatable middle — installed), `backwall_header`
+  (art-deco lit cornice, 400×110 — installed), `backwall_tile` (wall texture — FIRST TAKE
+  CAME BACK EMPTY: `no_background: true` deleted a texture that IS background; regenerate
+  with `no_background: false`, job may still be pending server-side). Scene build next:
+  full-screen wall in the Menu stage, planks tiled/sliced at 1×, `AddShelfBottle` reused
+  (hover info + click→prep already work), SERVE→/bin kept. New content shipped with it:
+  4 bottles (cranberry, coffee liqueur, pineapple, grenadine — installed, quarantined) and
+  5 cocktails (Black Russian 8, Sex on the Beach 13, Cosmopolitan 19, Espresso Martini 23,
+  Mai Tai 24) — 35 recipes, 16 shaken.
 - ☑ **Menu redesign — style bands whole** *(2026-07-31, the author's direction)*: the 13
   abstract type recipes retired; 26 named cocktails in four rank tiers (see GDD 23 §3), only
   Draught and Neat Pour type-based on purpose. **What the sim gate caught, in order:** the

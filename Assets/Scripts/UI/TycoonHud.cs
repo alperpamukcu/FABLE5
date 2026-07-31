@@ -1272,6 +1272,26 @@ namespace LastCall.UI
         // they are waiting behind, so the book doubles as the progression map.
 
         private RectTransform _bookPanel, _bookList;
+        // The filters (the author's spec): tier, prep and bottle, each a cycling chip.
+        private int _bookTier = -1;              // -1 all, else 0..3
+        private int _bookPrep = -1;              // -1 all, else (int)PrepMethod
+        private string _bookStyle;               // null = all
+        private Text _bookTierChip, _bookPrepChip, _bookStyleChip;
+        private static readonly string[] BookTiers = { "STARTER", "MID SHELF", "TOP SHELF", "HOUSE PRIDE" };
+
+        private static int TierIndex(int rank) => rank <= 8 ? 0 : rank <= 14 ? 1 : rank <= 21 ? 2 : 3;
+
+        private List<string> BookStyles()
+        {
+            var run = Run;
+            var seen = new List<string>();
+            if (run == null) return seen;
+            foreach (var r in run.AllRecipes)
+                foreach (var b in r.RatioRequirements)
+                    if (b.IsStyleBand && !seen.Contains(b.Style)) seen.Add(b.Style);
+            seen.Sort(System.StringComparer.Ordinal);
+            return seen;
+        }
 
         private void ToggleRecipeBook()
         {
@@ -1301,8 +1321,29 @@ namespace LastCall.UI
             Place(title.rectTransform, new Vector2(0.5f, 1), new Vector2(400, 30), new Vector2(0, -8));
             title.text = "THE HOUSE BOOK";
 
+            // The filter chips: click to cycle. Three axes the author named — the star tier,
+            // how it is worked, and what bottle it contains.
+            float chipY = -36f;
+            _bookTierChip = BookChip(sheet, 0, chipY, () =>
+            {
+                _bookTier = _bookTier >= 3 ? -1 : _bookTier + 1;
+                RebuildRecipeBook();
+            });
+            _bookPrepChip = BookChip(sheet, 1, chipY, () =>
+            {
+                _bookPrep = _bookPrep >= (int)PrepMethod.Stirred ? -1 : _bookPrep + 1;
+                RebuildRecipeBook();
+            });
+            _bookStyleChip = BookChip(sheet, 2, chipY, () =>
+            {
+                var styles = BookStyles();
+                int i = _bookStyle == null ? -1 : styles.IndexOf(_bookStyle);
+                _bookStyle = i + 1 >= styles.Count ? null : styles[i + 1];
+                RebuildRecipeBook();
+            });
+
             var viewport = NewRect("View", sheet);
-            Stretch(viewport, Vector2.zero, Vector2.one, new Vector2(14, 14), new Vector2(-14, -44));
+            Stretch(viewport, Vector2.zero, Vector2.one, new Vector2(14, 14), new Vector2(-14, -66));
             viewport.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, 0.004f);
             viewport.gameObject.AddComponent<RectMask2D>();
 
@@ -1326,6 +1367,37 @@ namespace LastCall.UI
             _bookPanel.gameObject.SetActive(false);
         }
 
+        private Text BookChip(RectTransform sheet, int index, float y, Action onClick)
+        {
+            var chip = NewRect($"Chip{index}", sheet);
+            Place(chip, new Vector2(0, 1), new Vector2(202, 24), new Vector2(14 + index * 212, y));
+            chip.pivot = new Vector2(0, 1);
+            var img = chip.gameObject.AddComponent<Image>();
+            img.color = UITheme.Night[3];
+            var btn = chip.gameObject.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(() => { Sfx.Play("click", 0.5f); onClick(); });
+            var t = NewText("T", chip, _body, 10, TextAnchor.MiddleCenter, UITheme.TextPrimary);
+            Stretch(t.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            return t;
+        }
+
+        private bool BookAdmits(RecipeDefinition r)
+        {
+            if (_bookTier >= 0 && TierIndex(r.Rank) != _bookTier) return false;
+            if (_bookPrep >= 0 && (int)r.Prep != _bookPrep) return false;
+            if (r.Id == "draught" || r.Id == "neat_pour")
+                if (_bookPrep >= 0 || _bookStyle != null) return false;   // the two specials filter out
+            if (_bookStyle != null)
+            {
+                bool has = false;
+                foreach (var b in r.RatioRequirements)
+                    if (b.IsStyleBand && b.Style == _bookStyle) { has = true; break; }
+                if (!has) return false;
+            }
+            return true;
+        }
+
         private static string TierName(int rank) =>
             rank <= 8 ? "STARTER" : rank <= 14 ? "MID SHELF" : rank <= 21 ? "TOP SHELF" : "HOUSE PRIDE";
 
@@ -1336,8 +1408,14 @@ namespace LastCall.UI
             for (int i = _bookList.childCount - 1; i >= 0; i--)
                 Destroy(_bookList.GetChild(i).gameObject);
 
-            var known = new List<RecipeDefinition>(run.MenuRecipes);
-            var locked = new List<RecipeDefinition>(run.LockedRecipes);
+            _bookTierChip.text = "TIER: " + (_bookTier < 0 ? "ALL" : BookTiers[_bookTier]);
+            _bookPrepChip.text = "PREP: " + (_bookPrep < 0 ? "ALL" : ((PrepMethod)_bookPrep).ToString().ToUpperInvariant());
+            _bookStyleChip.text = "BOTTLE: " + (_bookStyle == null ? "ALL" : _bookStyle.Replace('_', ' ').ToUpperInvariant());
+
+            var known = new List<RecipeDefinition>();
+            foreach (var r in run.MenuRecipes) if (BookAdmits(r)) known.Add(r);
+            var locked = new List<RecipeDefinition>();
+            foreach (var r in run.LockedRecipes) if (BookAdmits(r)) locked.Add(r);
             known.Sort((a, b) => a.Rank.CompareTo(b.Rank));
             locked.Sort((a, b) => a.Rank.CompareTo(b.Rank));
 

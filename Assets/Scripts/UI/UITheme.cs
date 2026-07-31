@@ -113,6 +113,10 @@ namespace LastCall.UI
             ["energy"] = Ramp(0xD84FE0)[0],
             ["orange"] = Ramp(0xFF9A3C)[0],
             ["lime"] = Ramp(0x8FD44A)[0],
+            ["cranberry"]      = (Color)new Color32(0xC8, 0x50, 0x66, 0xFF),
+            ["coffee_liqueur"] = (Color)new Color32(0x6E, 0x4A, 0x36, 0xFF),
+            ["pineapple"]      = (Color)new Color32(0xE2, 0xC8, 0x5A, 0xFF),
+            ["grenadine"]      = (Color)new Color32(0xD4, 0x4A, 0x5E, 0xFF),
         };
 
         /// <summary>The style's signature colour; falls back to the type ramp.</summary>
@@ -151,6 +155,11 @@ namespace LastCall.UI
             ["energy"]     = (Color)new Color32(0xE7, 0xD8, 0x4A, 0xFF), // acid yellow
             ["orange"]     = (Color)new Color32(0xF2, 0x8E, 0x22, 0xFF), // juice, pulp and all
             ["lime"]       = (Color)new Color32(0xCD, 0xE0, 0x72, 0xFF), // pale green-yellow
+            // The P16 wave (2026-07-31): the four bottles the new classics need.
+            ["cranberry"]      = (Color)new Color32(0xB4, 0x2C, 0x48, 0xFF), // deep tart red
+            ["coffee_liqueur"] = (Color)new Color32(0x38, 0x22, 0x18, 0xFF), // near-black coffee
+            ["pineapple"]      = (Color)new Color32(0xEF, 0xD4, 0x52, 0xFF), // pressed sunshine
+            ["grenadine"]      = (Color)new Color32(0xC8, 0x1E, 0x3C, 0xFF), // pomegranate ruby
         };
 
         /// <summary>The head on a draught (GDD 21 §10). Off-white, and creamier on the dark

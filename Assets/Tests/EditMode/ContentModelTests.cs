@@ -181,7 +181,9 @@ namespace LastCall.Tests
         {
             var deck = DataLoader.ParseDeck(ReadDataFile("bottles/base_bar.json"));
 
-            Assert.AreEqual(7, deck.LockedCards.Count, "the seven starter-cocktail ingredients");
+            // P10's seven, plus the P16 wave's four (cranberry, coffee liqueur, pineapple,
+            // grenadine) — every one released by the recipe that needs it.
+            Assert.AreEqual(11, deck.LockedCards.Count, "the quarantined cocktail ingredients");
             Assert.IsFalse(deck.Cards.Any(c => deck.LockedCards.Any(l => l.Id == c.Id)),
                 "no locked card leaks into the live deck");
             foreach (var card in deck.Cards.Concat(deck.LockedCards))

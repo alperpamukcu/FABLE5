@@ -81,6 +81,18 @@
       ]
     },
     {
+      "id": "black_russian", "name": "Black Russian", "rank": 8,
+      "baseFlavor": 20, "baseMult": 2, "flavorPerLevel": 15, "multPerLevel": 1,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sweet"], "count": 1 } ],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": true, "prepMethod": "Built", "glassId": "rocks",
+      "ratios": [
+        { "style": "vodka", "min": 0.55, "max": 0.75 },
+        { "style": "coffee_liqueur", "min": 0.25, "max": 0.45 }
+      ]
+    },
+    {
       "id": "vodka_bull", "name": "Vodka Bull", "rank": 7,
       "baseFlavor": 15, "baseMult": 2, "flavorPerLevel": 15, "multPerLevel": 1,
       "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Bubbly"], "count": 1 } ],
@@ -141,6 +153,19 @@
         { "style": "gin", "min": 0.55, "max": 0.75 },
         { "style": "lime", "min": 0.15, "max": 0.35 },
         { "style": "syrup", "min": 0.08, "max": 0.25 }
+      ]
+    },
+    {
+      "id": "sex_on_beach", "name": "Sex on the Beach", "rank": 13,
+      "baseFlavor": 25, "baseMult": 2, "flavorPerLevel": 20, "multPerLevel": 1,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sour"], "count": 2 } ],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": true, "prepMethod": "Built", "glassId": "highball",
+      "ratios": [
+        { "style": "vodka", "min": 0.25, "max": 0.45 },
+        { "style": "orange", "min": 0.25, "max": 0.45 },
+        { "style": "cranberry", "min": 0.25, "max": 0.45 }
       ]
     },
     {
@@ -233,6 +258,20 @@
         { "style": "tequila", "min": 0.4, "max": 0.6 },
         { "style": "triple_sec", "min": 0.15, "max": 0.35 },
         { "style": "lime", "min": 0.15, "max": 0.35 }
+      ]
+    },
+    {
+      "id": "cosmopolitan", "name": "Cosmopolitan", "rank": 19,
+      "baseFlavor": 30, "baseMult": 3, "flavorPerLevel": 20, "multPerLevel": 1,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sweet"], "count": 1 }, { "types": ["Sour"], "count": 2 } ],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": true, "prepMethod": "Shaken", "glassId": "martini",
+      "ratios": [
+        { "style": "vodka", "min": 0.35, "max": 0.55 },
+        { "style": "triple_sec", "min": 0.12, "max": 0.28 },
+        { "style": "lime", "min": 0.08, "max": 0.22 },
+        { "style": "cranberry", "min": 0.15, "max": 0.35 }
       ]
     },
     {
@@ -351,6 +390,34 @@
         { "style": "bourbon", "min": 0.7, "max": 0.88 },
         { "style": "syrup", "min": 0.06, "max": 0.2 },
         { "style": "amaro", "min": 0.03, "max": 0.12 }
+      ]
+    },
+    {
+      "id": "espresso_martini", "name": "Espresso Martini", "rank": 23,
+      "baseFlavor": 35, "baseMult": 3, "flavorPerLevel": 25, "multPerLevel": 2,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sweet"], "count": 2 } ],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": true, "prepMethod": "Shaken", "glassId": "martini",
+      "ratios": [
+        { "style": "vodka", "min": 0.4, "max": 0.6 },
+        { "style": "coffee_liqueur", "min": 0.22, "max": 0.42 },
+        { "style": "syrup", "min": 0.05, "max": 0.18 }
+      ]
+    },
+    {
+      "id": "mai_tai", "name": "Mai Tai", "rank": 24,
+      "baseFlavor": 35, "baseMult": 3, "flavorPerLevel": 25, "multPerLevel": 2,
+      "requirements": [ { "types": ["Spirit"], "count": 1 }, { "types": ["Sweet"], "count": 1 }, { "types": ["Sour"], "count": 2 } ],
+      "exactMixSize": 0, "minMixSize": 0,
+      "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
+      "locked": true, "prepMethod": "Shaken", "glassId": "highball",
+      "ratios": [
+        { "style": "rum", "min": 0.3, "max": 0.5 },
+        { "style": "triple_sec", "min": 0.08, "max": 0.22 },
+        { "style": "lime", "min": 0.08, "max": 0.22 },
+        { "style": "pineapple", "min": 0.15, "max": 0.35 },
+        { "style": "syrup", "min": 0.04, "max": 0.14 }
       ]
     },
     {

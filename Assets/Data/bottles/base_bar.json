@@ -633,6 +633,82 @@
         }
       ],
       "art_prompt": "a tall clear tequila bottle with a deep green agave label and a crescent moon"
+    },
+    {
+      "id": "cranberry_north",
+      "name": "North Bog Cranberry",
+      "type": "Sour",
+      "flavor": 3,
+      "style": "cranberry",
+      "category": "juice",
+      "tier": 1,
+      "price": 6,
+      "locked": true,
+      "origin": "Bergen Marshes",
+      "abv": 0,
+      "blurb": "Tart enough to wake a cocktail up. The pink half of half the classics.",
+      "charges": [
+        { "emotion": "Excitement", "amount": 6 },
+        { "emotion": "Fatigue", "amount": -4 }
+      ],
+      "art_prompt": "a clear carafe with a crimson blank label and a cork stopper"
+    },
+    {
+      "id": "liqueur_kafa",
+      "name": "Kafa Coffee Liqueur",
+      "type": "Sweet",
+      "flavor": 7,
+      "style": "coffee_liqueur",
+      "category": "liqueur",
+      "tier": 1,
+      "price": 11,
+      "locked": true,
+      "origin": "Addis Ababa, Ethiopia",
+      "abv": 20,
+      "blurb": "Espresso with a passport. Keeps the night going in both directions.",
+      "charges": [
+        { "emotion": "Fatigue", "amount": -12 },
+        { "emotion": "Excitement", "amount": 8 }
+      ],
+      "art_prompt": "a squat clear bottle with a coffee-brown blank label and a black cap"
+    },
+    {
+      "id": "pineapple_isla",
+      "name": "Isla Pineapple",
+      "type": "Sour",
+      "flavor": 4,
+      "style": "pineapple",
+      "category": "juice",
+      "tier": 1,
+      "price": 7,
+      "locked": true,
+      "origin": "Puerto Plata",
+      "abv": 0,
+      "blurb": "Sunshine, pressed. The tiki shelf starts here.",
+      "charges": [
+        { "emotion": "Excitement", "amount": 10 },
+        { "emotion": "Anxiety", "amount": -5 }
+      ],
+      "art_prompt": "a clear carafe with a sunny-yellow blank label and a pineapple leaf motif"
+    },
+    {
+      "id": "grenadine_rubis",
+      "name": "Rubis Grenadine",
+      "type": "Sweet",
+      "flavor": 3,
+      "style": "grenadine",
+      "category": "mixer",
+      "tier": 1,
+      "price": 5,
+      "locked": true,
+      "origin": "Marseille, France",
+      "abv": 0,
+      "blurb": "Pomegranate red that sinks to the bottom and stays there.",
+      "charges": [
+        { "emotion": "Excitement", "amount": 6 },
+        { "emotion": "Anxiety", "amount": -3 }
+      ],
+      "art_prompt": "a small clear cruet with a ruby blank label band and a silver cap"
     }
   ]
 }
