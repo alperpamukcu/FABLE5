@@ -1337,6 +1337,7 @@ namespace LastCall.UI
         private RectTransform _bookPanel, _bookList;
         // The filters (the author's spec): tier, prep and bottle, each a cycling chip.
         private int _bookTier = -1;              // -1 all, else 0..3
+        private InputField _bookSearch;          // name substring, the author's "arama"
         private int _bookPrep = -1;              // -1 all, else (int)PrepMethod
         private string _bookStyle;               // null = all
         private Text _bookTierChip, _bookPrepChip, _bookStyleChip;
@@ -1375,8 +1376,10 @@ namespace LastCall.UI
             scrimBtn.transition = Selectable.Transition.None;
             scrimBtn.onClick.AddListener(ToggleRecipeBook);
 
+            // Promoted to THE menu (2026-08-01): recipes, search and filters live here now
+            // that the clipboard is gone — so it takes the room a menu deserves.
             var sheet = NewRect("Sheet", _bookPanel);
-            Place(sheet, new Vector2(0.5f, 0.5f), new Vector2(660, 600), Vector2.zero);
+            Place(sheet, new Vector2(0.5f, 0.5f), new Vector2(960, 660), Vector2.zero);
             sheet.gameObject.AddComponent<Image>().color = UITheme.Night[1];
             sheet.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;   // swallow
 
@@ -1404,6 +1407,24 @@ namespace LastCall.UI
                 _bookStyle = i + 1 >= styles.Count ? null : styles[i + 1];
                 RebuildRecipeBook();
             });
+
+            // The search box: type a name, the list narrows as you do.
+            var searchRt = NewRect("Search", sheet);
+            Place(searchRt, new Vector2(0, 1), new Vector2(292, 24), new Vector2(14 + 3 * 212, chipY));
+            searchRt.pivot = new Vector2(0, 1);
+            var searchBg = searchRt.gameObject.AddComponent<Image>();
+            searchBg.color = UITheme.Night[0];
+            var searchText = NewText("T", searchRt, _body, 10, TextAnchor.MiddleLeft, UITheme.TextPrimary);
+            Stretch(searchText.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 2), new Vector2(-8, -2));
+            searchText.supportRichText = false;
+            var placeholder = NewText("P", searchRt, _body, 10, TextAnchor.MiddleLeft, UITheme.TextSecondary);
+            Stretch(placeholder.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 2), new Vector2(-8, -2));
+            placeholder.text = "SEARCH…";
+            _bookSearch = searchRt.gameObject.AddComponent<InputField>();
+            _bookSearch.targetGraphic = searchBg;
+            _bookSearch.textComponent = searchText;
+            _bookSearch.placeholder = placeholder;
+            _bookSearch.onValueChanged.AddListener(_ => RebuildRecipeBook());
 
             var viewport = NewRect("View", sheet);
             Stretch(viewport, Vector2.zero, Vector2.one, new Vector2(14, 14), new Vector2(-14, -66));
@@ -1458,6 +1479,10 @@ namespace LastCall.UI
                     if (b.IsStyleBand && b.Style == _bookStyle) { has = true; break; }
                 if (!has) return false;
             }
+            string q = _bookSearch != null ? _bookSearch.text : null;
+            if (!string.IsNullOrWhiteSpace(q) &&
+                r.Name.IndexOf(q.Trim(), StringComparison.OrdinalIgnoreCase) < 0)
+                return false;
             return true;
         }
 
