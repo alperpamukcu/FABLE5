@@ -203,6 +203,7 @@ namespace LastCall.Core
         {
             EnsurePhase(TycoonPhase.DayOpen);
             var seated = Floor.Tick(seconds, NextArrival);
+            SettleDepartures();
 
             if (Floor.IsComplete)
             {
@@ -213,6 +214,24 @@ namespace LastCall.Core
                 Phase = TycoonPhase.DayEnd;
             }
             return seated;
+        }
+
+        /// <summary>
+        /// Collects the tab of everyone who has left since the last tick. One pass over the
+        /// night's leavers, idempotent by <see cref="CustomerVisit.TabSettled"/>; runs before
+        /// the day can close, so the last leaver's money is in the till the rent lands on.
+        /// </summary>
+        private void SettleDepartures()
+        {
+            foreach (var visit in Floor.Finished)
+            {
+                if (visit.TabSettled) continue;
+                visit.SettleTab();
+                if (visit.Paid <= 0) continue;
+                Money += visit.Paid;
+                DaySales += visit.PaidBase;
+                DayTips += visit.Paid - visit.PaidBase;
+            }
         }
 
         private CustomerVisit NextArrival()
@@ -573,9 +592,10 @@ namespace LastCall.Core
             if (visit.State != VisitState.Waiting)
                 visit.Regular?.RecordVisit((int)Math.Round(verdict.Satisfaction * 3));
 
-            Money += verdict.Total;
-            DaySales += verdict.BasePaid;
-            DayTips += verdict.Tip;
+            // No money moves here. The verdict is settled onto the VISIT (its Paid/PaidBase),
+            // and the till collects when they get up — see SettleDepartures. The author's note
+            // (2026-07-31): the money and the stars show when the drink is finished, not when
+            // it is served — and the till ticking up at the serve was itself a spoiler.
             ResetVessels();
             return verdict;
         }

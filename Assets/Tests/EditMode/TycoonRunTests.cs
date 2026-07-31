@@ -191,6 +191,36 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void TheTab_IsPaidOnTheWayOut_NotAtTheServe()
+        {
+            // 2026-07-31: a customer pays and rates when they finish the drink and get up.
+            // The till moving at the serve was a spoiler — it announced the verdict before
+            // the reaction did — so Core holds the money on the visit until they leave.
+            var run = new TycoonRun(NewShelf(), Book, new RunRng("tab"),
+                config: new TycoonConfig(20, orderDecisionSeconds: 0, savorSeconds: 6));
+            int guard = 0;
+            while (run.Floor.Seated.Count == 0) { Assert.Less(guard++, 100); run.Tick(5); }
+            var visit = run.Floor.Seated[0];
+
+            run.PourMeasure("gin", 0.35);
+            run.PourMeasure("soda", 0.35);
+            PourOut(run);
+            int before = run.Money;
+            var verdict = run.ServeTo(visit);
+
+            Assert.Greater(verdict.Total, 0, "a real drink went out; something is owed");
+            Assert.AreEqual(before, run.Money, "the drink is on the table — the money is not in the till yet");
+            Assert.AreEqual(0, run.DaySales, "and the day's books show no sale yet");
+            Assert.IsFalse(visit.TabSettled);
+
+            guard = 0;
+            while (!visit.TabSettled) { Assert.Less(guard++, 100); run.Tick(2); }
+
+            Assert.AreEqual(before + visit.Paid, run.Money, "paid in full as they got up");
+            Assert.AreEqual(visit.PaidBase, run.DaySales, "the sale books when the tab settles");
+        }
+
+        [Test]
         public void AStillDecidingCustomer_CannotBeServedYet()
         {
             // A real decision beat: the drink is built and correct, but until they have

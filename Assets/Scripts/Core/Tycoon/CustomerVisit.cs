@@ -60,6 +60,16 @@ namespace LastCall.Core
 
         /// <summary>The truth, for the judge and the run. Core-only by assembly.</summary>
         internal DrinkOrder OrderTruth => _order;
+
+        /// <summary>
+        /// True once the tab has gone into the till. Money changes hands on the way OUT
+        /// (2026-07-31): a customer pays and rates when they finish the drink and get up, not
+        /// the moment the glass lands — so the till cannot spoil a verdict the reaction has
+        /// not delivered yet, and every round of an extra-order visit settles as one tab.
+        /// </summary>
+        public bool TabSettled { get; private set; }
+
+        internal void SettleTab() => TabSettled = true;
         public double PatienceMax { get; }
         public double PatienceLeft { get; private set; }
         public VisitState State { get; private set; } = VisitState.Waiting;

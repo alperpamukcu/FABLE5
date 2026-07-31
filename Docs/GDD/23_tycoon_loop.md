@@ -44,6 +44,13 @@
 - Serving resets nothing retroactively — the *wait fraction* used by tipping (§4) is
   locked at the moment of serving.
 - An extra order (§5) refills patience to **80%** of the original roll.
+- **The tab is paid on the way out** (2026-07-31): the verdict is judged and recorded on the
+  visit at the serve, but the money enters the till — and the paid/stars feedback shows —
+  only when the customer finishes the drink and gets up. Every round of an extra-order
+  visit settles as one tab. The serve earns only the face ("PERFECT!" / "NOT WHAT I
+  ASKED"); a till that ticked up at the serve announced the verdict before the reaction
+  did. Day-end books are unchanged — everyone has left by close — pinned by
+  `TheTab_IsPaidOnTheWayOut_NotAtTheServe`, and the sim report is byte-identical.
 
 ## 3. Orders and the menu
 

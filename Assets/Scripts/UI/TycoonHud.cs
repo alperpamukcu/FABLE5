@@ -485,23 +485,19 @@ namespace LastCall.UI
             Color tone = verdict.OrdersAgain ? UITheme.Amber[3]
                 : wrong ? UITheme.ViceRed[3] : UITheme.Lime[3];
 
+            // Only the FACE answers at the serve (2026-07-31): they can see the drink, so the
+            // reaction line is honest — but the bill is not on the table yet. The money and
+            // the stars float up when they finish and get up (TabFloat), which is when a
+            // customer actually pays.
             string line = verdict.OrdersAgain ? "★ ANOTHER ROUND!"
                 : verdict.Match == OrderMatch.Exact ? "PERFECT!"
                 : verdict.Match == OrderMatch.Close ? "THANKS."
                 : "NOT WHAT I ASKED";
 
-            // The bill under it, itemised: the drink's price in amber, the tip in green.
-            string amber = ColorUtility.ToHtmlStringRGB(UITheme.Amber[3]);
-            string lime = ColorUtility.ToHtmlStringRGB(UITheme.Lime[3]);
-            var money = new StringBuilder();
-            money.Append($"<color=#{amber}>${verdict.BasePaid}</color>");
-            if (verdict.Tip > 0)
-                money.Append($"\n<color=#{lime}>+${verdict.Tip} tip{(verdict.CraftLanded ? " ♪" : "")}</color>");
-
             var text = NewText("React", seat.parent, _display, 14, TextAnchor.LowerCenter, tone);
             text.supportRichText = true;
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
-            text.text = $"{line}\n{money}";
+            text.text = line;
             var rt = text.rectTransform;
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 0);
             rt.sizeDelta = new Vector2(178, 60);
@@ -517,6 +513,46 @@ namespace LastCall.UI
                 float pop = 1f + 0.3f * Mathf.Clamp01(1f - k * 6f) - 0.05f * k;
                 rt.localScale = new Vector3(pop, pop, 1f);
                 rt.anchoredPosition = start + new Vector2(0, 58f * k);
+                text.color = new Color(tone.r, tone.g, tone.b, 1f - k * k);
+                yield return null;
+            }
+            if (text != null) Destroy(text.gameObject);
+        }
+
+        /// <summary>
+        /// The bill, paid on the way out (2026-07-31): what the whole visit came to — every
+        /// round of it — and the stars this customer leaves behind. Fired by the departure
+        /// hook, which is the same moment Core settles the tab into the till.
+        /// </summary>
+        private System.Collections.IEnumerator TabFloat(int seatIndex, CustomerVisit visit)
+        {
+            var seat = _seats[seatIndex].Root;
+            string amber = ColorUtility.ToHtmlStringRGB(UITheme.Amber[3]);
+            string lime = ColorUtility.ToHtmlStringRGB(UITheme.Lime[3]);
+            int tip = visit.Paid - visit.PaidBase;
+            var body = new StringBuilder();
+            body.Append($"<color=#{amber}>+${visit.PaidBase}</color>");
+            if (tip > 0) body.Append($"  <color=#{lime}>+${tip} tip</color>");
+            int stars = Mathf.Clamp(Mathf.RoundToInt((float)visit.Satisfaction * 5f), 1, 5);
+            body.Append($"\n{Stars(stars)}");
+
+            var text = NewText("Tab", seat.parent, _display, 14, TextAnchor.LowerCenter, UITheme.Amber[4]);
+            text.supportRichText = true;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.text = body.ToString();
+            var rt = text.rectTransform;
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 0);
+            rt.sizeDelta = new Vector2(178, 48);
+            var start = seat.anchoredPosition + new Vector2(-89f, 96f);
+
+            const float duration = 1.6f;
+            float tt = 0f;
+            var tone = UITheme.Amber[4];
+            while (tt < duration && text != null)
+            {
+                tt += Time.deltaTime;
+                float k = Mathf.Clamp01(tt / duration);
+                rt.anchoredPosition = start + new Vector2(0, 64f * k);
                 text.color = new Color(tone.r, tone.g, tone.b, 1f - k * k);
                 yield return null;
             }
@@ -612,6 +648,9 @@ namespace LastCall.UI
                     v.Exiting = true;
                     v.ExitT = 0f;
                     v.ExitStorm = v.Visit.State == VisitState.StormedOff;
+                    // The tab settles as they go: what they paid and the stars they leave
+                    // behind float over the emptying stool. The serve only earned the face.
+                    if (v.Visit.Paid > 0) StartCoroutine(TabFloat(i, v.Visit));
                 }
             }
             // 2) Arrivals — a seated customer with no stool takes the first free one and walks in.
