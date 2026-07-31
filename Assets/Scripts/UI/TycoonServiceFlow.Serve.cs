@@ -66,34 +66,6 @@ namespace LastCall.UI
         private static Vector2 FinishPropSize(string prepId) =>
             FinishProps.TryGetValue(prepId, out var s) ? s : new Vector2(140, 104);
 
-        /// <summary>
-        /// Where each prop stands along the table: 0 is the far end, 1 the near end. Ice is
-        /// nearest because it is the one reached for most, and biggest, so it belongs where the
-        /// perspective is largest; the two small cellars go up the table where a small thing
-        /// being small is what the depth is saying.
-        /// </summary>
-        private static readonly Dictionary<string, float> FinishDepths = new Dictionary<string, float>
-        {
-            ["ice"] = 0.72f,
-            ["lemon_twist"] = 0.50f,
-            ["sugar_rim"] = 0.28f,
-            ["salt_rim"] = 0.06f,
-        };
-
-        private static float FinishDepth(string prepId) =>
-            FinishDepths.TryGetValue(prepId, out var d) ? d : 0.5f;
-
-        // The prep table's surface, measured off prep_table.png (298x356) at install: the steel
-        // centreline runs from (246, 20) at the far end to (102, 160) at the near end, and the
-        // band is 2.4x wider near than far — so a prop on it takes 1/2.4 of its size at the back.
-        private const float TableFarX = 246f / 298f, TableFarY = 20f / 356f;
-        private const float TableNearX = 102f / 298f, TableNearY = 160f / 356f;
-        private const float TableFarScale = 1f / 2.4f;
-        private const float TableAspect = 298f / 356f;
-
-        /// <summary>How far across the panel the table's region reaches (the diagram's brown).</summary>
-        private const float TableRegionRight = 0.26f;
-
         /// <summary>Margin from the screen edge to a column, and from a column to the play surface.</summary>
         private const float StageInset = 16f;
 
@@ -217,26 +189,11 @@ namespace LastCall.UI
             var run = Run;
             bool already = run != null && run.ServingGlass.HasPreparation(prep.Id);
 
-            // Where on the table this one stands. Depth 0 is the far end, 1 the near end; the
-            // table's surface centreline and its 2.4x near/far spread were measured off the
-            // sprite, so a prop lands ON the steel rather than beside it.
-            float depth = FinishDepth(prepId);
-            var rect = _serveGarnishRow.rect;
-            float ux = Mathf.Lerp(TableFarX, TableNearX, depth);
-            float uy = Mathf.Lerp(TableFarY, TableNearY, depth);
-            float scale = Mathf.Lerp(TableFarScale, 1f, depth);
-            var size = FinishPropSize(prepId) * scale;
-
+            var size = FinishPropSize(prepId);
             var tub = NewRect($"F_{prepId}", _serveGarnishRow);
-            tub.anchorMin = tub.anchorMax = new Vector2(0, 1);
-            tub.pivot = new Vector2(0.5f, 0f);            // the BASE sits on the surface point
-            tub.sizeDelta = new Vector2(size.x, size.y + 16f);
-            tub.anchoredPosition = new Vector2(ux * rect.width, -uy * rect.height);
+            tub.gameObject.AddComponent<LayoutElement>().preferredHeight = size.y + 18f;
             var hit = tub.gameObject.AddComponent<Image>();
             hit.color = new Color(1f, 1f, 1f, 0.001f);   // the whole tub is the grab target
-            // Nearer things stand in front of further ones, so a big bucket overlapping a small
-            // bowl behind it reads as depth instead of as two sprites fighting.
-            tub.SetAsLastSibling();
 
             var icon = NewRect("Tub", tub);
             Place(icon, new Vector2(0.5f, 1), size, new Vector2(0, -2));
@@ -802,46 +759,14 @@ namespace LastCall.UI
             // The finishing shelf: a full-height column down the left edge, holding the tubs at a
             // size you would actually reach into. It scrolls, so the finishing touches still to
             // come do not silently run off the bottom the way eight keys used to run off the rail.
-            // The brown region of the author's diagram: the prep table on the left wall, running
-            // away from the viewer toward the upper right, with the finishing props STANDING ON
-            // IT. Their places come from the table's own pixels (the surface centreline measured
-            // at install), not from a layout group — a layout group is what made them read as
-            // four keys in a column.
             var shelfCol = NewRect("FinishShelf", _servePanel);
-            Stretch(shelfCol, new Vector2(0, 0), new Vector2(TableRegionRight, 1),
-                new Vector2(0, 0), new Vector2(0, 0));
-            // The table's rect must BE the drawing, not a box the drawing is letterboxed inside:
-            // the prop positions are fractions of this rect, so any gap between the two would put
-            // the ice bucket in mid-air. The width comes from the region and an AspectRatioFitter
-            // takes the height from the sprite's own proportions.
-            var table = NewRect("Table", shelfCol);
-            // Driven by HEIGHT, with its right edge on the region's edge, so the table runs off the
-            // left of the screen the way the diagram draws it. Sized by width instead, the surface
-            // ran only 157px from far end to near — shorter than the ice bucket is tall, so all
-            // four props piled up on each other. The table has to be big for the run to be long.
-            table.anchorMin = new Vector2(1, 0);
-            table.anchorMax = new Vector2(1, 1);
-            table.pivot = new Vector2(1, 0.5f);
-            table.offsetMin = new Vector2(0, StageBottom);
-            table.offsetMax = new Vector2(0, -StageTop);
-            var fit = table.gameObject.AddComponent<AspectRatioFitter>();
-            fit.aspectMode = AspectRatioFitter.AspectMode.HeightControlsWidth;
-            fit.aspectRatio = TableAspect;
-            var timg = table.gameObject.AddComponent<Image>();
-            timg.sprite = ItemArt.Load("prep_table");
-            timg.preserveAspect = false;      // the rect already carries the aspect
-            timg.raycastTarget = false;
-            if (timg.sprite == null) timg.color = UITheme.Night[2];
-
-            var glabel = NewText("GLabel", shelfCol, _body, 10, TextAnchor.UpperLeft,
+            Stretch(shelfCol, new Vector2(0, 0), new Vector2(0, 1),
+                new Vector2(StageInset, StageBottom), new Vector2(StageInset + ShelfW, -StageTop));
+            var glabel = NewText("GLabel", shelfCol, _body, 10, TextAnchor.UpperCenter,
                 UITheme.TypeRamp[IngredientType.Garnish][3]);
-            Place(glabel.rectTransform, new Vector2(0, 1), new Vector2(120, 16), new Vector2(12, -6));
+            Stretch(glabel.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -18), Vector2.zero);
             glabel.text = "— FINISH —";
-
-            // The props are parented to the table itself, so they travel with it whatever the
-            // canvas does to it.
-            _serveGarnishRow = NewRect("Garnishes", table);
-            Stretch(_serveGarnishRow, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _serveGarnishRow = ScrollShelf(shelfCol, "Garnishes");
 
             // The right column: what goes in AT THE GLASS (v5 P14, the notes' second rail). P10
             // put the rule in Core — carbonated never enters the shaker, it is added to the

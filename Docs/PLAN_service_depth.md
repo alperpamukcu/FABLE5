@@ -456,6 +456,24 @@ staging is not. In the author's words:
      restores the shelf gap on release; this makes the fridge itself a drop target, so putting
      a bottle away is the same gesture as taking it out, run backwards.
 
+  **Paused by the author, 2026-07-31, and reverted to the flat columns** — with a diagnosis
+  worth keeping, because it is the thing that has to be fixed BEFORE this is picked up again:
+
+  > *"the generated table's resolution is far too low, look at the mismatch in the image — it
+  > should be wider and higher resolution."*
+
+  They are right and the number says so. `prep_table.png` is **298×356** and the staging drew
+  it around **915×1100** — roughly a 3× upscale. The props standing on it (`ice_bucket` and the
+  rest) are drawn at or near their native size, so the table is visibly three times coarser
+  than everything on it. Point filtering makes that worse, not better: it turns the upscale
+  into hard 3×3 blocks right next to crisp 1×1 pixels. Nothing about the layout can hide it.
+
+  So the furniture has to be **generated at the size it will be drawn**, not scaled up to fit.
+  For a piece that spans half a 1280-wide stage that means roughly 900×1100 — well past the
+  400px cap a single `create_image_pro` call takes, so it needs either a different generation
+  route or the piece assembled from several tiles. That is the first job when this resumes;
+  the layout code that stood props on the surface worked and is in the history at `5d9bef9`.
+
   **Anchors measured off the installed art, 2026-07-31** — so the layout places props on the
   furniture rather than guessing where its surfaces are. Sprite-local pixels, y down from the
   top of the sprite.
