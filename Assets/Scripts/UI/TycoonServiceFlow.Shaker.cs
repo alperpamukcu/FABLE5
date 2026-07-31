@@ -53,6 +53,9 @@ namespace LastCall.UI
         // it springs after the cursor with overshoot (loose and lively), the liquid sloshes,
         // and how far the cursor travels builds the shake energy.
         private bool _shaking;
+        /// <summary>Which held-action sound this frame wants; the stage frame plays it once,
+        /// so the pour and the shake cannot silence each other (P17).</summary>
+        private string _shakerLoopWanted;
         private double _shakeEnergy;
         private Vector2 _lastShakeMouse;
         private Vector2 _shakerVel;      // the shaker's spring velocity while thrown about
@@ -214,6 +217,7 @@ namespace LastCall.UI
                 run.EndPour();
             }
 
+            if (pourNow) _shakerLoopWanted = "pour_loop";   // the stage frame drives the source
             _pouring = pourNow;
         }
 
@@ -325,7 +329,7 @@ namespace LastCall.UI
                     var d = _capPos + new Vector2(0, lift) - tin.anchoredPosition;
                     bool onTin = Mathf.Abs(d.x) < tin.rect.width * 0.75f
                               && Mathf.Abs(d.y) < tin.rect.height * 0.75f;
-                    if (onTin && !run.Glass.IsEmpty) _capped = true;
+                    if (onTin && !run.Glass.IsEmpty) { _capped = true; Sfx.Play("glass_down"); }
                     else _capPos = _capRest;
                 }
             }
@@ -368,6 +372,7 @@ namespace LastCall.UI
         /// </summary>
         private void UpdateShake(TycoonRun run)
         {
+            if (_shaking) _shakerLoopWanted = "shake_loop";
             if (!_shaking) return;
             var mouse = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
 

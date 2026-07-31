@@ -301,6 +301,7 @@ namespace LastCall.UI
 
             var verdict = run.ServeTo(visit);
             CloseId();
+            Sfx.Play("serve_clink");                          // the glass lands in front of them
             StartCoroutine(ServeReaction(index, verdict));   // reaction + payment float up
             return true;
         }
@@ -351,6 +352,7 @@ namespace LastCall.UI
                     if (r == null || r.Phase != TycoonPhase.DayOpen) return;
                     if (r.SnackLeft(s.Id) <= 0) { Toast($"THE {s.Name.ToUpperInvariant()} BOWL IS EMPTY TODAY"); return; }
                     _snackInHand = _snackInHand == s ? null : s;   // click again to put it back
+                    Sfx.Play(_snackInHand != null ? "garnish" : "glass_down", 0.8f);
                     Toast(_snackInHand != null
                         ? $"{s.Name.ToUpperInvariant()} IN HAND — CLICK A CUSTOMER"
                         : "PUT IT BACK");
@@ -748,6 +750,8 @@ namespace LastCall.UI
                     // The tab settles as they go: what they paid and the stars they leave
                     // behind float over the emptying stool. The serve only earned the face.
                     if (v.Visit.Paid > 0) StartCoroutine(TabFloat(i, v.Visit));
+                    if (v.Visit.Paid > 0) Sfx.Play("cash");
+                    Sfx.Play(!v.ExitStorm && v.Visit.Satisfaction >= 0.55 ? "cheer_sfx" : "upset_sfx", 0.6f);
                     // And the body answers before it leaves (P15/D5): a cheer or a slump on
                     // the stool. This is where the emotional tell lives now the stat rows
                     // left the card — skipped cleanly while the clips have no frames yet.
@@ -771,12 +775,16 @@ namespace LastCall.UI
                         v.Visit = visit;
                         v.WalkT = 0f;
                         v.Root.gameObject.SetActive(true);
+                        Sfx.Play("door", 0.5f);   // someone through the door (P17)
                         break;
                     }
                 }
             }
 
             RefreshSnackRow(run);
+            // The bar bed (P17): always on, muffled while a stage or the licence is open.
+            Sfx.Ambience(ducked: (_flow != null && _flow.IsOpen) ||
+                                 (_idRoot != null && _idRoot.gameObject.activeSelf));
 
             // 3) Render each stool from its assigned patron.
             for (int i = 0; i < _seats.Count; i++)
@@ -1171,6 +1179,73 @@ namespace LastCall.UI
             }
         }
 
+        // ── settings (P17): the smallest sheet that holds sound and motion ───────
+
+        private RectTransform _settingsPanel;
+        private Text _settingsVolume, _settingsMute, _settingsMotion;
+
+        private void ToggleSettings()
+        {
+            if (_settingsPanel == null) return;
+            _settingsPanel.gameObject.SetActive(!_settingsPanel.gameObject.activeSelf);
+            RefreshSettings();
+        }
+
+        private void BuildSettings(RectTransform root)
+        {
+            _settingsPanel = NewRect("Settings", root);
+            Place(_settingsPanel, new Vector2(1, 1), new Vector2(240, 128), new Vector2(-16, -48));
+            _settingsPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
+
+            var title = NewText("T", _settingsPanel, _body, 10, TextAnchor.UpperCenter, UITheme.TextSecondary);
+            Stretch(title.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -18), Vector2.zero);
+            title.text = "— SETTINGS —";
+
+            _settingsVolume = SettingsRow(0, "VOLUME", () =>
+            {
+                Sound.Volume = Sound.Volume <= 0.05f ? 0.2f : Sound.Volume >= 0.95f ? 0.2f
+                    : Sound.Volume + 0.2f;      // cycles 0.2 → 1.0 and wraps
+                Sfx.Play("click");
+                RefreshSettings();
+            });
+            _settingsMute = SettingsRow(1, "SOUND", () =>
+            {
+                Sound.Muted = !Sound.Muted;
+                Sfx.Play("click");              // audible iff it just came back on — itself the test
+                RefreshSettings();
+            });
+            _settingsMotion = SettingsRow(2, "MOTION", () =>
+            {
+                Motion.Reduced = !Motion.Reduced;
+                Sfx.Play("click");
+                RefreshSettings();
+            });
+
+            _settingsPanel.gameObject.SetActive(false);
+        }
+
+        private Text SettingsRow(int index, string label, Action onClick)
+        {
+            var row = NewRect($"Row{index}", _settingsPanel);
+            Place(row, new Vector2(0.5f, 1), new Vector2(220, 28), new Vector2(0, -24f - index * 32f));
+            var img = row.gameObject.AddComponent<Image>();
+            img.color = UITheme.Night[3];
+            var btn = row.gameObject.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(() => onClick());
+            var text = NewText("L", row, _body, 12, TextAnchor.MiddleCenter, UITheme.TextPrimary);
+            Stretch(text.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            return text;
+        }
+
+        private void RefreshSettings()
+        {
+            if (_settingsVolume == null) return;
+            _settingsVolume.text = $"VOLUME  {Mathf.RoundToInt(Sound.Volume * 100)}%";
+            _settingsMute.text = Sound.Muted ? "SOUND  OFF" : "SOUND  ON";
+            _settingsMotion.text = Motion.Reduced ? "MOTION  REDUCED" : "MOTION  FULL";
+        }
+
         private static string CrowdName(WealthTier tier) =>
             tier == WealthTier.HighRoller ? "HIGH ROLLERS" : tier == WealthTier.Broke ? "BROKE" : "REGULARS";
 
@@ -1412,6 +1487,13 @@ namespace LastCall.UI
             // from the NEW RUN button, so the group keeps its shape at any window width.
             NewButton(top, "NEW RUN", new Vector2(1, 0.5f), new Vector2(110, 30),
                 new Vector2(-68, 0), UITheme.PrimaryAction, () => _bootstrap.StartNewRun(null));
+
+            // Settings (P17): sound and reduced motion in one small sheet under a gear. The
+            // audio items the phase asks for live BESIDE the motion toggle — this is the
+            // settings surface module 16 deferred, at its minimum useful size.
+            NewButton(top, "⚙", new Vector2(1, 0.5f), new Vector2(30, 30),
+                new Vector2(-32, 0), UITheme.Night[3], ToggleSettings);
+            BuildSettings(root);
 
             // Place() pivots on the anchor, so these offsets are RIGHT edges: the button's own
             // right edge sits at -68 and it is 110 wide, so the stars have to clear -178.

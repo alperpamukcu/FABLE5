@@ -630,11 +630,22 @@ still green.
 
 The project has **zero** audio files; this phase creates the pipeline and the first set.
 
-- ☐ SFX: bottle open, pour, ice drop, shake loop, garnish placement, serve, glass on
-  counter, cash/tip, satisfied/disappointed reactions, door
-- ☐ Ambient bar bed (low, loopable), volume ducking while stages are open
-- ☐ Audio settings (volume, mute) beside the reduced-motion toggle
-Gate: every listed event audibly fires in play; nothing clips at overlap.
+- ☑ SFX *(2026-07-31)*: all thirteen SYNTHESIZED — square blips, damped sines, filtered
+  noise — because no generator on hand makes audio, and lo-fi synthesis lands in the same
+  world as the pixel art rather than beside it. Wired: bottle open (menu + cabinet), pour
+  (a held LOOP, driven once per stage frame so the tin and the hand bottle cannot silence
+  each other), ice drop, garnish, shake loop (while shaking), serve clink, glass down
+  (capping the tin, putting a bowl back), cash + cheer/upset at the tab settle, door on
+  arrival, stage-change click. Peak held to 0.7 at synthesis and one-shots round-robin six
+  voices, so overlap headroom is by construction
+- ☑ Ambient bar bed: 5.75s seamless loop, eased toward loud/ducked while a stage or the
+  licence is open — menus muffle the room instead of gating it
+- ☑ Audio settings (volume cycle, mute) beside the reduced-motion toggle, in a small gear
+  sheet on the top bar — the settings surface module 16 deferred, at minimum useful size.
+  The mute row clicks on un-mute, which is itself the test
+Gate: every listed event audibly fires in play; nothing clips at overlap. *Wiring and
+clip-loading verified by measure (13/13 clips load, 8 sources build); the AUDIBLE half of
+the gate needs ears — the author's playthrough.*
 
 ## P18 — Mastery, economy & run lifecycle
 

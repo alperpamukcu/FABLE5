@@ -120,6 +120,10 @@ namespace LastCall.UI
         /// </summary>
         private static string Measures(double volume) => $"{volume / MixerMeasure:0.0}";
 
+        /// <summary>Set by whichever pour path ran this frame; the stage frame drives the
+        /// one loop source from it, so the tin and the bottle cannot stop each other's sound.</summary>
+        private bool _servePouringNow;
+
         private Text _aimText;
         private Vector2 _serveShakerRest;
         private bool _serveGrabbed;
@@ -275,6 +279,7 @@ namespace LastCall.UI
             else if (inMouth)
             {
                 run.AddPreparationAtGlass(_servePrep);
+                Sfx.Play(_servePrep != null && _servePrep.Id == "ice" ? "ice_drop" : "garnish");
                 // The drink takes the hit. The shaker floats the piece afterwards with its own
                 // solids layer; this stage has no such layer yet, so the ripple is the whole
                 // acknowledgement until the P14 item that draws decorations ON the glass lands.
@@ -404,6 +409,7 @@ namespace LastCall.UI
                 _serveBottle.anchoredPosition = _serveBottleRest;
                 _serveBottle.localRotation = Quaternion.identity;
                 _serveBottle.gameObject.SetActive(true);
+                Sfx.Play("bottle_open", 0.8f);
                 _aimText.text = $"{c.Name.ToUpperInvariant()} — TIP IT OVER THE GLASS";
                 _aimText.color = UITheme.TextSecondary;
             });
@@ -504,6 +510,7 @@ namespace LastCall.UI
                 }
             }
 
+            if (pourNow) _servePouringNow = true;
             if (pourNow)
             {
                 double landed = run.PourAtGlass(_serveFocusBottle.Id, GlassPourRate * Time.deltaTime);
@@ -582,6 +589,7 @@ namespace LastCall.UI
 
             if (pourNow)
             {
+                _servePouringNow = true;
                 double before = run.ServingGlass.TotalVolume;
                 run.PourIntoServingGlass(ServePourRate * Time.deltaTime, accuracy);
                 if (run.ServingGlass.IsFull) { PutTheShakerDown(run); ShowGlassFull(); }

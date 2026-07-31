@@ -121,6 +121,10 @@ namespace LastCall.UI
 
         public void CloseFlow() => GoTo(Stage.Closed);
 
+        /// <summary>Every stage change kills the held-action sound: a loop belongs to the
+        /// stage that started it, and a closed stage must not keep pouring in the dark.</summary>
+        private void StopHeldSounds() => Sfx.HoldLoop(null);
+
         private void Update()
         {
             AdvanceStageOpen();
@@ -141,13 +145,19 @@ namespace LastCall.UI
             // only be positioned once the tin has finished moving (2026-07-28).
             if (_stage == Stage.Shaker)
             {
+                _shakerLoopWanted = null;
                 UpdateShake(run); UpdatePrepDrag(run); UpdateTiltPour(run); UpdateCap(run);
                 StepShakerFluid(run);
+                Sfx.HoldLoop(_shakerLoopWanted, _shakerLoopWanted == "shake_loop" ? 0.9f : 0.8f);
             }
 
             if (_stage == Stage.Serve)
             {
+                _servePouringNow = false;
                 UpdateServeTilt(run); UpdateServePrepDrag(run); UpdateServeCabinet(run);
+                // One loop source, driven once per frame from whatever poured (P17): the tin
+                // and the hand bottle set the flag, and neither can stop the other's sound.
+                Sfx.HoldLoop(_servePouringNow ? "pour_loop" : null, 0.7f);
             }
 
             if (_stage == Stage.Tap) UpdateTap(run);
@@ -158,6 +168,8 @@ namespace LastCall.UI
         private void GoTo(Stage stage)
         {
             _stage = stage;
+            StopHeldSounds();
+            Sfx.Play("click", 0.6f);
             _bottleGrabbed = false;
             _pouring = false;
             _serveGrabbed = false;
@@ -218,6 +230,7 @@ namespace LastCall.UI
         private void OpenBottle(IngredientCard card)
         {
             _focusBottle = card;
+            Sfx.Play("bottle_open", 0.8f);
             // Garnishes are a pinch, not a stream — no focus stage needed.
             if (card.Type == IngredientType.Garnish)
             {
