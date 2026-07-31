@@ -40,7 +40,12 @@ namespace LastCall.UI
         // The rails carry up to eight keys each now (four finishing touches plus the stocked
         // garnishes on the left, every mixer on the right), so they run the height of the play
         // surface and the keys are sized to fit it rather than spilling off the panel.
-        private const float RailHeight = 452f, RailGap = 5f, RailKeyHeight = 51f;
+        private const float RailHeight = 452f, RailGap = 5f, RailKeyHeight = 92f;
+
+        /// <summary>The piece being carried from the finishing shelf to the glass.</summary>
+        private PreparationDefinition _servePrep;
+        private string _servePrepLabel;
+        private RectTransform _serveDragPiece;
         private RectTransform _serveShaker;     // the grabbable shaker
         private Image _serveShakerBody;
         private MetaballFluid _serveFluid;      // the metaball liquid in the serving glass
@@ -84,10 +89,10 @@ namespace LastCall.UI
             // drink can have them at all, then the stocked garnishes (mint, olive) which still
             // go into the shaker before the pour.
             foreach (Transform ch in _serveGarnishRow) Destroy(ch.gameObject);
-            AddFinishChip("ice", "ICE", Preparations.Ice);
-            AddFinishChip("salt_rim", "SALT RIM", Preparations.SaltRim);
-            AddFinishChip("sugar_rim", "SUGAR RIM", Preparations.SugarRim);
-            AddFinishChip("lemon_twist", "TWIST", Preparations.LemonTwist);
+            AddFinishTub("ice", "ICE", Preparations.Ice);
+            AddFinishTub("salt_rim", "SALT", Preparations.SaltRim);
+            AddFinishTub("sugar_rim", "SUGAR", Preparations.SugarRim);
+            AddFinishTub("lemon_twist", "LEMON", Preparations.LemonTwist);
             foreach (var bottle in run.Shelf.Bottles)
                 if (bottle.Ingredient.Type == IngredientType.Garnish && !bottle.IsEmpty)
                     AddGarnishChip(bottle.Ingredient);
@@ -99,35 +104,38 @@ namespace LastCall.UI
                     AddMixerChip(bottle.Ingredient);
         }
 
-        /// <summary>One finishing key on the left rail: ice or a rim, applied to the serving
-        /// glass (v5 P14). Already on the drink reads as done rather than offering it twice.</summary>
-        private void AddFinishChip(string prepId, string label, PreparationDefinition prep)
+        /// <summary>
+        /// One container on the finishing shelf. NOT a button (the author's brief, 2026-07-31):
+        /// you reach into an open tub and drag a piece out, and it only goes in if you drop it
+        /// in the glass. The shaker bench has worked this way since 2026-07-23; this is the same
+        /// verb aimed at the serving glass, so the two stages read as one bar.
+        /// </summary>
+        private void AddFinishTub(string prepId, string label, PreparationDefinition prep)
         {
             var run = Run;
             bool already = run != null && run.ServingGlass.HasPreparation(prep.Id);
 
-            var chip = NewRect($"F_{prepId}", _serveGarnishRow);
-            chip.gameObject.AddComponent<LayoutElement>().preferredHeight = RailKeyHeight;
-            var bg = chip.gameObject.AddComponent<Image>();
-            bg.color = already
-                ? new Color(UITheme.Lime[1].r, UITheme.Lime[1].g, UITheme.Lime[1].b, 0.85f)
-                : new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.85f);
-            var icon = NewRect("Icon", chip);
-            Place(icon, new Vector2(0.5f, 1), new Vector2(36, 36), new Vector2(0, -2));
+            var tub = NewRect($"F_{prepId}", _serveGarnishRow);
+            tub.gameObject.AddComponent<LayoutElement>().preferredHeight = RailKeyHeight;
+            var hit = tub.gameObject.AddComponent<Image>();
+            hit.color = new Color(1f, 1f, 1f, 0.001f);   // the whole tub is the grab target
+
+            var icon = NewRect("Tub", tub);
+            Place(icon, new Vector2(0.5f, 1), new Vector2(88, 74), new Vector2(0, -2));
             var iimg = icon.gameObject.AddComponent<Image>();
             iimg.sprite = ItemArt.Bucket(prepId) ?? ItemArt.Prep(prepId);
             iimg.preserveAspect = true; iimg.raycastTarget = false;
             if (iimg.sprite == null) iimg.color = UITheme.Cyan[3];
             else if (already) iimg.color = new Color(1f, 1f, 1f, 0.55f);
-            var name = NewText("N", chip, _body, 8, TextAnchor.LowerCenter,
-                already ? UITheme.Lime[4] : UITheme.TextPrimary);
-            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(92, 14), new Vector2(0, 2));
-            name.text = already ? "✓ " + label : label;
-            if (already) return;
 
-            var btn = chip.gameObject.AddComponent<Button>();
-            btn.targetGraphic = bg;
-            btn.onClick.AddListener(() =>
+            var name = NewText("N", tub, _body, 8, TextAnchor.LowerCenter,
+                already ? UITheme.Lime[4] : UITheme.TextPrimary);
+            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(96, 14), new Vector2(0, 0));
+            name.text = already ? "✓ " + label : label;
+            if (already) return;   // it is on the drink; the tub stops offering it
+
+            var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            down.callback.AddListener(_ =>
             {
                 var r = Run;
                 if (r == null) return;
@@ -137,11 +145,74 @@ namespace LastCall.UI
                     _aimText.color = UITheme.Amber[3];
                     return;
                 }
-                r.AddPreparationAtGlass(prep);
-                RefreshServe();   // the key becomes a tick, so the rail does have to rebuild
-                _aimText.text = $"{label} ON THE GLASS";
-                _aimText.color = UITheme.Cyan[3];
+                _servePrep = prep;
+                _servePrepLabel = label;
+                var dpImg = _serveDragPiece.GetComponent<Image>();
+                dpImg.sprite = ItemArt.Prep(prepId);
+                dpImg.color = dpImg.sprite != null ? Color.white : UITheme.Cyan[3];
+                _dragSwing.Reset();
+                Vector2 start = _serveDragPiece.anchoredPosition;
+                if (Mouse.current != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                        _serveSurface, Mouse.current.position.ReadValue(), null, out Vector2 l0))
+                    start = l0;
+                _dragPos = start;
+                _dragVel = Vector2.zero;
+                _serveDragPiece.anchoredPosition = _dragPos;
+                _serveDragPiece.localRotation = Quaternion.identity;
+                _serveDragPiece.gameObject.SetActive(true);
             });
+            tub.gameObject.AddComponent<EventTrigger>().triggers.Add(down);
+        }
+
+        /// <summary>
+        /// Carries a piece from the shelf to the glass. The grip springs after the cursor with
+        /// overshoot and the piece swings from it, the same weight the shaker bench has — and
+        /// the drop only counts over the glass's mouth, so finishing a drink is an act of
+        /// aiming rather than a click that could not miss.
+        /// </summary>
+        private void UpdateServePrepDrag(TycoonRun run)
+        {
+            if (_servePrep == null || Mouse.current == null) return;
+
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                _serveSurface, Mouse.current.position.ReadValue(), null, out Vector2 cursor);
+
+            float dt = Mathf.Max(Time.deltaTime, 1e-4f);
+            _dragVel += (cursor - _dragPos) * (DragStiffness * dt);
+            _dragVel *= Mathf.Exp(-DragDamping * dt);
+            _dragPos += _dragVel * dt;
+            _dragSwing.Step(dt, _dragVel);
+            _serveDragPiece.anchoredPosition = _dragPos;
+            _serveDragPiece.localRotation = Quaternion.Euler(0, 0, _dragSwing.Angle);
+
+            if (Mouse.current.leftButton.isPressed) return;
+
+            var opening = _serveGlass.anchoredPosition
+                        + new Vector2(0, _serveGlass.rect.height * (_serveGlassPiece.RimY - 0.5f));
+            bool inMouth = Mathf.Abs(_dragPos.x - opening.x) < 80f
+                        && Mathf.Abs(_dragPos.y - opening.y) < 80f;
+            if (inMouth && !run.CanFinishAtGlass)
+            {
+                _aimText.text = "THE GLASS IS FULL — NO ROOM TO FINISH IT";
+                _aimText.color = UITheme.Amber[3];
+            }
+            else if (inMouth)
+            {
+                run.AddPreparationAtGlass(_servePrep);
+                // The drink takes the hit. The shaker floats the piece afterwards with its own
+                // solids layer; this stage has no such layer yet, so the ripple is the whole
+                // acknowledgement until the P14 item that draws decorations ON the glass lands.
+                _serveFluid.Ripple(opening.x, 0.03f);
+                string label = _servePrepLabel;
+                _servePrep = null;
+                _serveDragPiece.gameObject.SetActive(false);
+                RefreshServe();   // the tub becomes a tick, so the shelf does have to rebuild
+                _aimText.text = $"{label} IN THE GLASS";
+                _aimText.color = UITheme.Cyan[3];
+                return;
+            }
+            _servePrep = null;
+            _serveDragPiece.gameObject.SetActive(false);
         }
 
         private void AddGarnishChip(IngredientCard card)
@@ -450,6 +521,14 @@ namespace LastCall.UI
             // it wants a tenth fewer particles to draw the level it was actually given.
             _serveFluid.SetDensity(0.90f);
             _serveSplash = new Splasher(_serveSurface);
+
+            // The piece in hand between the shelf and the glass.
+            _serveDragPiece = NewRect("DragPiece", _serveSurface);
+            _serveDragPiece.pivot = new Vector2(0.5f, 1f);
+            _serveDragPiece.sizeDelta = new Vector2(52, 58);
+            var sdp = _serveDragPiece.gameObject.AddComponent<Image>();
+            sdp.preserveAspect = true; sdp.raycastTarget = false;
+            _serveDragPiece.gameObject.SetActive(false);
             _serveGlass.SetAsLastSibling();   // the hollow glass draws over the fluid
 
             // The grabbable steel shaker you pour from, resting lower-right.

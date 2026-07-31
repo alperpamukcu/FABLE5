@@ -328,6 +328,29 @@ caption stranded in the middle of the keys.
 - ☐ **Decorations persist** on the served drink: salt/sugar visibly on the rim, wedge on
   the glass wall, ice floating in the liquid, garnish on top — the delivered glass shows
   everything that went in
+### The serve stage as a bar, not a form (2026-07-31, from the author's sketch)
+
+The rails shipped as **button chips** and that is the wrong verb. The brief, with a layout
+sketch: *"garnishes must not stay as small buttons on screen — you interact with large props;
+it must feel like taking ice out of an ice bucket. The fizzy drinks likewise, on the other
+side, at realistic sizes, as if standing in a glass-fronted cabinet whose door you open and
+drag from. We want to offer the player the experience of making a drink, not the feeling of
+pressing boxes."*
+
+Layout, left to right: **the finishing shelf** (salt, lemon, sugar, ice — open containers you
+reach into), **the serving glass** being filled, **the shaker**, and **the fizzy-drinks
+cabinet** — a glass-fronted fridge, bottles at their true size, door opens, bottles drag out.
+
+- ☑ **Left: the finishing shelf.** The four chips are gone. Ice, salt, sugar and the twist
+  are open containers you drag a piece out of and drop into the glass — the same verb the
+  shaker bench already used, aimed at the serving glass. The dropped piece has to land *in*
+  the glass or it is not taken.
+- ☐ **Right: the fizzy-drinks cabinet.** Bottles standing at their own proportions behind a
+  glass door; the door opens, a bottle is dragged out and tipped over the glass with the same
+  tilt-pour the shaker and the bottle stage use, so a mixer is *poured* rather than clicked.
+  The measure comes from how long it is held, not from a fixed 15% per press.
+- ☐ The confining panel goes; props are free-dragged within the screen.
+
 - ☐ **Glass upgrades**: 3 tiers each, bought individually in the tablet shop, standing
   visibly on the under-counter shelf (the tap station's bays extend across the bar);
   upgrade swaps the shelf art
