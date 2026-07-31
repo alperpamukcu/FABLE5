@@ -308,6 +308,10 @@ namespace LastCall.UI
                     si.color = si.sprite == null
                         ? UITheme.StyleColor(b.Ingredient.Info?.Style, b.Ingredient.Type)
                         : (b.IsEmpty ? new Color(1f, 1f, 1f, 0.30f) : Color.white);
+                    var sl = BottleArt.AddLiquid(slot, b.Ingredient.Info?.Style, b.Ingredient.Type);
+                    if (sl != null)
+                        sl.fillAmount = BottleArt.For(b.Ingredient.Info?.Style).FillAmount(
+                            b.Capacity > 0 ? (float)(b.Remaining / b.Capacity) : 0f);
                 }
             }
         }
@@ -408,6 +412,18 @@ namespace LastCall.UI
             img.color = img.sprite == null
                 ? UITheme.StyleColor(card.Info?.Style, card.Type)
                 : (shut ? new Color(1f, 1f, 1f, 0.38f) : Color.white);
+
+            // What is left in it, drawn rather than printed. The bottles are shot empty, so this is
+            // the only thing that says a bottle is running down -- and it says it where the player
+            // is already looking instead of in a hover panel.
+            var liquid = BottleArt.AddLiquid(art, card.Info?.Style, card.Type);
+            if (liquid != null)
+            {
+                var piece = BottleArt.For(card.Info?.Style);
+                float level = bottle.Capacity > 0 ? (float)(bottle.Remaining / bottle.Capacity) : 0f;
+                liquid.fillAmount = piece.FillAmount(level);
+                if (shut) liquid.color = new Color(liquid.color.r, liquid.color.g, liquid.color.b, 0.38f);
+            }
 
             // The brand, lettered in engine under the bottle -- the art carries a blank label
             // because the generator cannot spell (the keg precedent).

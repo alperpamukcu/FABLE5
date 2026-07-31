@@ -19,6 +19,8 @@ namespace LastCall.UI
 
         private RectTransform _pourBottle;    // the grabbable bottle
         private Image _pourBottleBody;
+        private Image _pourBottleLiquid;
+        private string _pourBottleStyle;
         private MetaballFluid _shakerFluid;   // the metaball liquid: pour stream + pooled body
         private Splasher _shakerSplash;       // brief splashes (dissolving salt / sugar)
         private ShakerSolids _shakerSolids;   // ice / lemon afloat inside the shaker
@@ -103,6 +105,7 @@ namespace LastCall.UI
             var bottleSprite = ItemArt.Bottle(_focusBottle.Info?.Style);
             _pourBottleBody.sprite = bottleSprite;
             _pourBottleBody.color = bottleSprite != null ? Color.white : colour;   // real art, else the style tint
+            SetPourBottleLevel(run);
             _pourBottle.anchoredPosition = _bottleRest;
             _pourBottle.localRotation = Quaternion.identity;
             _shakerSplash.Clear();
@@ -119,6 +122,30 @@ namespace LastCall.UI
             _shakeMeterFill.rectTransform.sizeDelta = new Vector2(0, -4);
             _shakeMeterText.text = run.Glass.HasPreparation("shaken")
                 ? $"SHAKEN · {run.ShakeEnergy:P0}" : "";
+        }
+
+        /// <summary>
+        /// Shows what is left in the bottle the player is holding. The bottles are drawn empty, so
+        /// without this a bottle that is nearly dry looks exactly like a fresh one — which is what
+        /// the notes meant by the levels being random. Rebuilt when the focus changes because each
+        /// bottle has its own cavity mask (<see cref="BottleArt"/>).
+        /// </summary>
+        private void SetPourBottleLevel(TycoonRun run)
+        {
+            string style = _focusBottle?.Info?.Style;
+            if (style != _pourBottleStyle)
+            {
+                if (_pourBottleLiquid != null) Destroy(_pourBottleLiquid.gameObject);
+                _pourBottleLiquid = _focusBottle == null
+                    ? null
+                    : BottleArt.AddLiquid(_pourBottle, style, _focusBottle.Type);
+                _pourBottleStyle = style;
+            }
+            if (_pourBottleLiquid == null) return;
+            var shelf = _focusBottle == null ? null : run.Shelf.Find(_focusBottle.Id);
+            float level = shelf != null && shelf.Capacity > 0
+                ? (float)(shelf.Remaining / shelf.Capacity) : 0f;
+            _pourBottleLiquid.fillAmount = BottleArt.For(style).FillAmount(level);
         }
 
         /// <summary>
@@ -180,6 +207,7 @@ namespace LastCall.UI
                 if (run.PouringId == null) run.BeginPour(_focusBottle.Id);
                 run.PourTick(Time.deltaTime * PourTimeScale);   // slower, deliberate pour
                 SayShaker(ShakerLine(run));
+                SetPourBottleLevel(run);        // the bottle empties in the hand, as it is poured
             }
             else if (run.PouringId != null)
             {

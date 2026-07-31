@@ -373,7 +373,25 @@ staging is not. In the author's words:
   affordance has to arrive *before* the click.
 - ☐ **BUG — spirit bottles are drawn with their caps off** on the pour stage. Confirmed in
   the art: the caps read as loose objects resting on the neck rather than seated on it.
-- ☐ **BUG — a bottle's contents are drawn at a fixed level**, so bottles never visibly empty.
+- ☑ **BUG — a bottle's contents are drawn at a fixed level**, so bottles never visibly empty.
+  *Done 2026-07-31.* All nineteen reshot empty with the caps seated and a heavier outline, and
+  `BottleArt` now measures each bottle's cavity off its own pixels rather than carrying nineteen
+  hand-tuned rectangles that would go stale on the next reshoot. Three tests decide what is
+  cavity: eroded from the silhouette (drops the wall and the outline), inside the body band
+  (drops the neck and the cap, so a full bottle does not fill its own cork), and *not* saturated
+  in company (drops labels and crests, which are on the outside of the glass and stay in front
+  of the drink). The company clause is the one that took a measurement to find — testing each
+  pixel's colour alone speckled the drink where a label's colour reflects through the glass;
+  testing its neighbourhood does not, because a label is a block and a reflection is not.
+  Two bottles needed a second take for a reason worth keeping: **a can is opaque by definition**
+  (energy was specified as a can) and the first syrup came back as smoked glass — neither can
+  ever show a level, whatever the code does. The drink is drawn at 70% alpha so the glass's own
+  highlights carry through it; at full opacity it read as paint on the outside of the bottle.
+  Verified numerically (all nineteen masks build, floors 0.02–0.09, shoulders 0.41–0.76) — but
+  **not yet looked at in play**: Unity does not advance frames while the editor is unfocused, so
+  a screenshot taken over the MCP link is a stale frame. Worth a look next time the game is up.
+
+- ☐ *(original note, kept for the reasoning)*
   **This one is not a code fix, and that is worth recording before anyone tries.** Looked at
   the art: `soda.png` is clear glass with its liquid *painted in* at a fixed band, and
   `gin.png` is opaque, showing no liquid at all. Nothing in code can lower a level that is
