@@ -718,10 +718,33 @@ namespace LastCall.Core
             return Glass.TransferInto(ServingGlass, volume, accuracy);
         }
 
-        public void DiscardGlass()
+        /// <summary>Dollars per glass-unit of drink deliberately binned (2026-07-31, the
+        /// author: a mistake must cost). Small on purpose — a full shaker is ~$2. First cut
+        /// was 3.0 and the sim put the floor from 7.5% to 42.5% bankruptcies on it: on
+        /// knife-edge margins even the small fine wants measuring, not guessing.</summary>
+        public const double BinFeePerVolume = 2.0;
+
+        /// <summary>
+        /// Tips whatever is built down the drain and pays for the waste: the fee scales with
+        /// what was actually in the vessels, so binning a splash stings less than binning a
+        /// finished drink. Clamped to the till — only rent may take a bar below zero (GDD 23).
+        /// Post-serve leftovers stay free: the fee is for the DECISION, not for residue.
+        /// Returns what it cost, so the UI can say so.
+        /// </summary>
+        public int DiscardGlass()
         {
             EnsurePhase(TycoonPhase.DayOpen);
+            double binned = Glass.TotalVolume + ServingGlass.TotalVolume;
+            int fee = 0;
+            if (binned > 0.01)
+            {
+                fee = (int)Math.Ceiling(binned * BinFeePerVolume);
+                fee = Math.Min(fee, Math.Max(0, Money));
+                Money -= fee;
+                DayStock += fee;   // written off with the goods
+            }
             ResetVessels();
+            return fee;
         }
 
         // ── serving a seat (GDD 23 §4–§5) ───────────────────────────────────────

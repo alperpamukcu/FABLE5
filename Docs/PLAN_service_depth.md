@@ -738,6 +738,12 @@ the gate needs ears — the author's playthrough.*
   chases mood tips — so the tip system is carrying nearly half the economy without being
   played at all.
 
+- ☐ **FIRST for the economy pass (2026-07-31 close-of-day):** wave 3's five buyable
+  recipes moved the floor 7.5% → 43.5% bankruptcies (income flat $167, expenses +$4/day of
+  purchases). NOT the bin fee — measured twice, fee 3→2 changed nothing (the bot barely
+  bins; it is a player-mistake tax, floor-neutral by design). Nor late buying — a day≤23
+  guard moved it 1%. Candidate knobs, in order: RecipePrice 6+3(r−2) back to 5+2(r−2);
+  or MenuPrice nudged. The knife edge itself is this pass's subject.
 - ☐ **Economy rebalance** (the notes: wealth comes too fast): lower early profits, real
   upgrade costs, longer arc — tuned against sim v3 targets (day-1 net small-positive,
   first red day ~4–5, storm-off <15%, no floor-bot fortune by day 30)

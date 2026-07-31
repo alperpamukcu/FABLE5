@@ -190,7 +190,12 @@ namespace LastCall.EditorTools
                         if (run.Rating.Average >= run.RecipeStarGate(r) &&
                             (cheapest == null || r.Rank < cheapest.Rank))
                             cheapest = r;
-                    if (cheapest != null && run.Money >= run.RecipePrice(cheapest) + 40)
+                    // No purchase in the last week: a recipe bought on day 26 cannot earn
+                    // its price back, and a floor that buys it measures generosity, not play.
+                    // Wave 3 taught this — five more buyables took the floor from 7.5% to
+                    // 42.5% bankruptcies on late-run purchases alone.
+                    if (cheapest != null && run.Day <= 23 &&
+                        run.Money >= run.RecipePrice(cheapest) + 40)
                     {
                         run.UnlockRecipe(cheapest.Id);
                         stats.RecipesBought++;

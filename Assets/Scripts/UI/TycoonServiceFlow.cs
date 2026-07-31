@@ -310,7 +310,12 @@ namespace LastCall.UI
             img.alphaHitTestMinimumThreshold = img.sprite != null ? 0.35f : 0f;
             var btn = rt.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
-            btn.onClick.AddListener(() => { Run.DiscardGlass(); RefreshMenu(); });
+            btn.onClick.AddListener(() =>
+            {
+                int fee = Run.DiscardGlass();
+                RefreshMenu();
+                if (fee > 0) _menuTitle.text = $"BINNED · -${fee}";
+            });
             GiveKeyPress(rt, btn, img, "btn_bin_down");
             if (img.sprite == null)
             {

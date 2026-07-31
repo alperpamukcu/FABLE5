@@ -191,6 +191,27 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void BinningADrink_CostsALittle_AndAnEmptyBinIsFree()
+        {
+            // 2026-07-31, the author: a mistake must cost. The fee scales with what was
+            // actually poured away, clamps to the till, and an empty discard — the UI's
+            // routine reset — stays free, or every menu-close would be a fine.
+            var run = NewRun(startingMoney: 50);
+            int before = run.Money;
+
+            Assert.AreEqual(0, run.DiscardGlass(), "nothing binned, nothing owed");
+            Assert.AreEqual(before, run.Money);
+
+            run.PourMeasure("gin", 0.5);
+            run.PourMeasure("soda", 0.5);
+            int fee = run.DiscardGlass();
+            Assert.AreEqual((int)Math.Ceiling(1.0 * TycoonRun.BinFeePerVolume), fee,
+                "a full shaker binned costs its volume's fee");
+            Assert.AreEqual(before - fee, run.Money);
+            Assert.IsTrue(run.Glass.IsEmpty, "and the drink is gone either way");
+        }
+
+        [Test]
         public void AnEmptyGlass_BlocksTheStool_UntilItIsBussed()
         {
             // D2, the bussing beat: a drinker leaves the glass on the stool, and the stool is

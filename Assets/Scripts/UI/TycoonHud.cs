@@ -576,8 +576,10 @@ namespace LastCall.UI
                 // over it was plainly meant for it.
                 if (IsOverBin(mouse))
                 {
-                    run.DiscardGlass();
-                    Toast("BINNED");
+                    int fee = run.DiscardGlass();
+                    Toast(fee > 0 ? $"BINNED · -${fee}" : "BINNED");
+                    if (fee > 0)
+                        LogService($"<color=#F27D8A>BINNED</color> a built drink · -${fee}");
                     _drinkGlass.gameObject.SetActive(false);
                     _glassShown = false;
                     return;
