@@ -410,6 +410,38 @@ staging is not. In the author's words:
      along the table, and the fridge has three shelves in the art to fill before it needs to
      scroll.
 
+  **The perspective, given as a diagram by the author 2026-07-31** (the second pass on this
+  — the first furniture was generated before it arrived and only the fridge survived). It is
+  ONE-POINT perspective, a room seen from where the bartender stands, and it fixes three
+  regions. Read off the diagram, normalised to the panel (0,0 = top left, 1,1 = bottom right),
+  so they scale with the canvas instead of being pinned to 1280x720:
+
+  | region | what lives there | shape |
+  |---|---|---|
+  | red, upper | back wall — the shaker, the glass, and where they are combined | x 0.26–0.71, y 0.02–0.51 |
+  | red, lower | the counter, opening toward the viewer | top edge y 0.51 x 0.26–0.71; bottom edge y 0.93 x 0.05–0.95 |
+  | brown | the prep table and everything standing on it | left wall; right edge x≈0.26, bottom slanting (0.26, 0.51) → (0.05, 0.93) |
+  | blue | the drinks fridge | right wall; left edge x≈0.71, bottom slanting (0.71, 0.51) → (0.95, 0.93) |
+
+  The horizon sits at y ≈ 0.51, the middle of the screen. That is what makes the counter read
+  as coming toward you: its far edge is 45% of the panel wide and its near edge is 90%.
+
+  Consequences for the art, and they are why the first table had to be reshot: a piece on the
+  LEFT wall must recede toward the upper RIGHT, and a piece on the RIGHT wall toward the upper
+  LEFT. A symmetric prop that recedes straight back belongs in the centre and nowhere else.
+  The fridge generated on 2026-07-31 is angled front-down-left and already fits the blue
+  region; the table was symmetric and is being reshot to run away to the upper right.
+
+  **Open question the diagram does not settle — bottle size in the fridge.** The author asked
+  for fridge bottles at the size they are when poured. Measured against the fridge art: its
+  interior is 110 of 198 px wide with shelves about 62 px apart, so at any scale that keeps
+  the whole fridge on screen the shelf gap tops out around 125 px against a 250 px bottle in
+  hand. A fridge showing three shelves and a full-size bottle cannot both be true. The
+  defensible reading is that a bottle across the room IS smaller than one held up to your
+  face, and in a perspective scene that reads as depth rather than as a shrunken icon — which
+  was the actual complaint about the flat list. Worth confirming with the author before the
+  layout is built on it.
+
 - ☑ **Room to grow.** *Done 2026-07-31.* Both columns are masked scroll shelves
   (`ScrollShelf`), so anything past the visible run scrolls instead of drawing over the
   buttons under it. Sized so the four basic finishing touches fit without scrolling at all
