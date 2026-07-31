@@ -82,6 +82,7 @@ namespace LastCall.UI
             public Text Name;
             public Text Wants;
             public Text Order;
+            public Image Icon;               // the ordered drink, drawn by DrinkIcon (v5 P13)
             public Image PatienceFill;
             public float SeatX;              // this stool's resting x
             public float WalkT;              // 0..1 walk-in progress
@@ -132,6 +133,7 @@ namespace LastCall.UI
         private RectTransform _idRoot;
         private Image _idPhoto;
         private Text _idName, _idAgeFrom, _idRel, _idIntent, _idOrder, _idGreeting;
+        private Image _idOrderIcon;
         private RectTransform _idRecipeRows;   // the ordered drink's ingredient bands
         private CustomerVisit _idVisit;
         private const float IdTrackW = 176f;
@@ -637,6 +639,18 @@ namespace LastCall.UI
                 view.Name.color = UITheme.TextPrimary;
                 view.Order.color = UITheme.Amber[4];
 
+                // The glass they asked for, drawn from the recipe (v5 P13). Hidden while they
+                // are still deciding: showing it then would hand over an order nobody has
+                // placed, which is the same leak the read rules forbid everywhere else.
+                if (view.Icon != null)
+                {
+                    view.Icon.sprite = deciding
+                        ? null
+                        : DrinkIcon.For(visit.Order.Wanted, _bootstrap.Glassware);
+                    view.Icon.enabled = view.Icon.sprite != null;
+                    view.Icon.color = drinking ? new Color(1f, 1f, 1f, 0.5f) : Color.white;
+                }
+
                 if (deciding)
                 {
                     // Nothing to read or serve yet — they are still making up their mind.
@@ -929,6 +943,8 @@ namespace LastCall.UI
                 : "NEW FACE";
 
             _idOrder.text = $"ORDER:  <b>{visit.Order.Wanted.Name.ToUpperInvariant()}</b>   ${visit.Order.Price}";
+            _idOrderIcon.sprite = DrinkIcon.For(visit.Order.Wanted, _bootstrap.Glassware);
+            _idOrderIcon.enabled = _idOrderIcon.sprite != null;
 
             // The garnishes they want — the read (emotion→recipe pivot).
             var garnishes = visit.Order.Garnishes;
@@ -1013,7 +1029,16 @@ namespace LastCall.UI
 
             _idOrder = NewText("Order", card, _body, 13, TextAnchor.UpperLeft, UITheme.Night[1]);
             _idOrder.supportRichText = true;
-            Place(_idOrder.rectTransform, new Vector2(0, 1), new Vector2(300, 22), new Vector2(140, -142));
+            Place(_idOrder.rectTransform, new Vector2(0, 1), new Vector2(250, 22), new Vector2(140, -142));
+
+            // The ordered drink, drawn large at the end of its own line (v5 P13). On the card
+            // there is room to show it properly, so this is the one place the player can check
+            // the shape of the glass against what is on the counter.
+            var idIcon = NewRect("OrderIcon", card);
+            Place(idIcon, new Vector2(0, 1), new Vector2(40, 40), new Vector2(396, -134));
+            _idOrderIcon = idIcon.gameObject.AddComponent<Image>();
+            _idOrderIcon.preserveAspect = true;
+            _idOrderIcon.raycastTarget = false;
 
             // The garnishes they want, in an amber endorsement band — the thing you read.
             var intentBand = NewRect("IntentBand", card);
@@ -1176,8 +1201,17 @@ namespace LastCall.UI
                 seat.Wants.horizontalOverflow = HorizontalWrapMode.Overflow;
 
                 seat.Order = NewText("Order", seat.Tag, _body, 11, TextAnchor.UpperCenter, UITheme.Amber[4]);
-                Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -36));
+                Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(32, 0), new Vector2(-4, -36));
                 seat.Order.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+                // The drink itself, on the order row (v5 P13). The name still carries the price
+                // and the exact recipe, but the shape and colour of the glass is what a busy
+                // player actually reads across five stools. 24px, so it clears the patience bar.
+                var iconRt = NewRect("OrderIcon", seat.Tag);
+                Place(iconRt, new Vector2(0, 1), new Vector2(24, 24), new Vector2(6, -30));
+                seat.Icon = iconRt.gameObject.AddComponent<Image>();
+                seat.Icon.preserveAspect = true;
+                seat.Icon.raycastTarget = false;
 
                 var clockBg = NewRect("ClockBg", seat.Tag);
                 clockBg.anchorMin = new Vector2(0, 0); clockBg.anchorMax = new Vector2(1, 0);

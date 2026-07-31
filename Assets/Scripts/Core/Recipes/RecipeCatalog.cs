@@ -28,53 +28,60 @@ namespace LastCall.Core
                 // from day one and priced at the bottom of it.
                 new RecipeDefinition("draught", "Draught", 1, 5, 1, 10, 1,
                     new[] { new PatternRequirement(1, be) },
-                    exactMixSize: 1, minFill: 0.75),
+                    exactMixSize: 1, minFill: 0.75, glassId: "pint"),
 
                 new RecipeDefinition("neat_pour", "Neat Pour", 1, 5, 1, 10, 1,
                     new[] { new PatternRequirement(1, s) },
-                    exactMixSize: 1),
+                    exactMixSize: 1, glassId: "rocks"),
 
                 new RecipeDefinition("spritz", "Spritz", 2, 10, 2, 15, 1,
-                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, bu) }),
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, bu) },
+                    glassId: "highball"),
 
                 new RecipeDefinition("old_fashioned", "Old Fashioned", 3, 20, 2, 20, 1,
-                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(1, bi) }),
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(1, bi) },
+                    glassId: "rocks"),
 
                 new RecipeDefinition("highball", "Highball", 4, 25, 3, 20, 1,
-                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, bu), new PatternRequirement(1, g) }),
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, bu), new PatternRequirement(1, g) },
+                    glassId: "highball"),
 
                 new RecipeDefinition("house_special", "House Special", 5, 30, 3, 25, 2,
-                    null, equalFlavorGroupSize: 3),
+                    null, equalFlavorGroupSize: 3, glassId: "coupe"),
 
                 new RecipeDefinition("sour", "Sour", 6, 30, 3, 25, 2,
-                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) }),
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
+                    glassId: "rocks"),
 
                 new RecipeDefinition("martini", "Martini", 7, 35, 4, 25, 2,
-                    new[] { new PatternRequirement(2, s), new PatternRequirement(1, bi, g) }),
+                    new[] { new PatternRequirement(2, s), new PatternRequirement(1, bi, g) },
+                    glassId: "martini"),
 
                 new RecipeDefinition("layered_pour", "Layered Pour", 8, 40, 4, 30, 2,
-                    null, ascendingFlavorGroupSize: 4),
+                    null, ascendingFlavorGroupSize: 4, glassId: "highball"),
 
                 new RecipeDefinition("fizz", "Fizz", 9, 45, 4, 30, 2,
-                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw), new PatternRequirement(1, bu) }),
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw), new PatternRequirement(1, bu) },
+                    glassId: "highball"),
 
                 new RecipeDefinition("straight_booze", "Straight Booze", 10, 50, 5, 30, 3,
-                    null, sameTypeGroupMin: 4),
+                    null, sameTypeGroupMin: 4, glassId: "rocks"),
 
                 new RecipeDefinition("negroni", "Negroni", 11, 55, 5, 30, 3,
-                    new[] { new PatternRequirement(2, s), new PatternRequirement(1, bi), new PatternRequirement(1, g) }),
+                    new[] { new PatternRequirement(2, s), new PatternRequirement(1, bi), new PatternRequirement(1, g) },
+                    glassId: "rocks"),
 
                 new RecipeDefinition("tiki", "Tiki", 12, 70, 6, 35, 3,
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw), new PatternRequirement(1, g) },
-                    minMixSize: 5, scoreAllMixCards: true),
+                    minMixSize: 5, scoreAllMixCards: true, glassId: "highball"),
 
                 new RecipeDefinition("perfect_serve", "Perfect Serve", 13, 100, 8, 40, 4,
                     new[] { new PatternRequirement(1, s) },
-                    exactMixSize: 5, allDistinctTypes: true, scoreAllMixCards: true),
+                    exactMixSize: 5, allDistinctTypes: true, scoreAllMixCards: true, glassId: "coupe"),
 
                 new RecipeDefinition("double_perfect", "Double Perfect", 14, 160, 14, 50, 5,
                     new[] { new PatternRequirement(1, s) },
-                    exactMixSize: 5, allDistinctTypes: true, allEqualFlavor: true, scoreAllMixCards: true),
+                    exactMixSize: 5, allDistinctTypes: true, allEqualFlavor: true, scoreAllMixCards: true, glassId: "martini"),
 
                 // ── the starter cocktails (v5 P10) — LOCKED until the shop sells them ────
                 // Style-banded, so a Gin & Tonic is gin and tonic rather than "some spirit

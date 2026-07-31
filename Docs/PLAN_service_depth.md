@@ -198,7 +198,7 @@ P12 opened the night), and the compound result is a bar that cannot fail. P18's 
 longer optional — but it now has a far better instrument to tune with: an open night, a balk
 threshold, a star-driven arrival rate, and a speed-response harness.
 
-## P13 — Menu, shelf & shop presentation ◐ (art half blocked)
+## P13 — Menu, shelf & shop presentation ◐
 
 - ☑ **Menu v2**: the index is the bar's **aisles** (v5 P10 categories — VODKA, GIN, JUICES,
   MIXERS, ON TAP — not ingredient types), printed as flat **cream paper keys** with a hairline
@@ -208,18 +208,29 @@ threshold, a star-driven arrival rate, and a speed-response harness.
   proportions, centred on it, names lettered underneath in engine. Not a grid of keys.
 - ☑ **Hover info panel**: what is left in the bottle (with a fill bar that reddens as it
   drains) and what a restock costs, raised beside the bottle and clamped inside the board.
-- ☐ **Icons** for every bottle style and cocktail — **blocked, see below**
-- ☐ **Bottle redesign** (black outline, blank label) — **blocked, see below**
-- ☐ **Trash bin** (C7), **top bar v2**, **tablet shop**, **end-of-night receipt v2** — not
-  started; all four are procedural chrome and need no generation.
+- ☑ **Bottle redesign**: all nineteen reshot against the sheet's own palette, outline and
+  shading — the twelve already on the shelf plus the seven v5 P10 added and nobody had drawn.
+  Labels are left blank and the brand is lettered in engine, the arrangement the keg settled
+  on, and each is trimmed to its content bounds so proportions are true on the plank.
+- ☑ **Trash bin** (C7): the `BIN GLASS` button is gone. A drink is thrown away by carrying it
+  to the bin on the counter — the same verb that serves it. Tested before the seats, because
+  the bin stands among them.
+- ☑ **Drink icons**, for every recipe. **Drawn from the recipe rather than generated**, which
+  is the decision worth recording: `glassware.json`'s silhouette profile is already the shape
+  the fluid solver fills, and a recipe's ratio bands are already what goes in it, so an icon
+  composed from those two can never drift from the drink and a recipe added to JSON gets its
+  icon the same day. It also keeps the project's own rule — chrome is procedural, generation
+  is for illustration — and it costs nothing per recipe, where 27 drawings would have.
+- ☐ **Top bar v2**, **tablet shop**, **end-of-night receipt v2** — not started; all three are
+  procedural chrome and need no generation.
 
-**BLOCKED: the PixelLab account is out of generations.** `get_balance` reports
-**0 remaining** (2050 of 2000 used, $0.07 credit) on the Tier 1 subscription, so every one of
-the nineteen bottle regenerations was refused. The two art items above cannot proceed until
-the account is topped up. Worth noting how little this blocks: by the project's own
-art-direction rule, **UI chrome is never generated art** — the menu, the shelf, the info
-panel, the top bar, the tablet shell and the receipt are all procedural by design, so only
-the illustrative work (bottles, drink icons) is actually waiting.
+Proportion turned out to be presentation, not content: the profile says a martini is a cone
+and a highball is a tube, but not that the highball is the *tall* one, and at 32px the glasses
+have to be told apart by silhouette alone. So `DrinkIcon` keys width and height off the glass
+id and takes only the taper from the data. The reverse also surfaced — the fifteen pre-pour
+shapes had **no glass at all**, so every one of them drew as the same default tube. They now
+name one in `recipes.json` *and* `RecipeCatalog`, which the parity test compares, and P14 gets
+the serving side of that for free.
 
 Two layout traps found and fixed, both the same shape: `_bottleList` carries a
 `VerticalLayoutGroup`, so anything parented to it has its size and position taken over.

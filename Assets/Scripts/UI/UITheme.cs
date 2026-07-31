@@ -103,6 +103,16 @@ namespace LastCall.UI
             ["lager"] = Ramp(0xE6B959)[0],
             ["stout"] = Ramp(0x4A2E1C)[0],
             ["pale_ale"] = Ramp(0xD98A2B)[0],
+            // v5 P10's seven new styles. Each is pushed away from the hue its aisle-mates
+            // already own — tequila off bourbon's amber, lime off gin's green, orange off
+            // lemon's yellow — because these are read side by side on one shelf.
+            ["tequila"] = Ramp(0xC7D64A)[0],
+            ["triple_sec"] = Ramp(0xF0913D)[0],
+            ["cola"] = Ramp(0x8A4A2E)[0],
+            ["tonic"] = Ramp(0xBFE7F0)[0],
+            ["energy"] = Ramp(0xD84FE0)[0],
+            ["orange"] = Ramp(0xFF9A3C)[0],
+            ["lime"] = Ramp(0x8FD44A)[0],
         };
 
         /// <summary>The style's signature colour; falls back to the type ramp.</summary>
@@ -132,6 +142,15 @@ namespace LastCall.UI
             ["lager"]    = (Color)new Color32(0xE8, 0xB0, 0x3E, 0xFF),   // pale gold
             ["stout"]    = (Color)new Color32(0x2A, 0x18, 0x10, 0xFF),   // near black
             ["pale_ale"] = (Color)new Color32(0xD4, 0x82, 0x24, 0xFF),   // deep copper
+            // v5 P10's seven. Tequila and triple sec are clear in the glass whatever their
+            // shelf tag says; the mixers carry the colour that actually survives a pour.
+            ["tequila"]    = (Color)new Color32(0xEC, 0xF0, 0xDE, 0xFF), // clear, faintly green
+            ["triple_sec"] = (Color)new Color32(0xF2, 0xEE, 0xE2, 0xFF), // clear
+            ["cola"]       = (Color)new Color32(0x4A, 0x24, 0x14, 0xFF), // dark caramel
+            ["tonic"]      = (Color)new Color32(0xE4, 0xF1, 0xF6, 0xFF), // clear, a whisper of blue
+            ["energy"]     = (Color)new Color32(0xE7, 0xD8, 0x4A, 0xFF), // acid yellow
+            ["orange"]     = (Color)new Color32(0xF2, 0x8E, 0x22, 0xFF), // juice, pulp and all
+            ["lime"]       = (Color)new Color32(0xCD, 0xE0, 0x72, 0xFF), // pale green-yellow
         };
 
         /// <summary>The head on a draught (GDD 21 §10). Off-white, and creamier on the dark
