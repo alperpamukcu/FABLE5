@@ -42,10 +42,33 @@ namespace LastCall.UI
         // surface and the keys are sized to fit it rather than spilling off the panel.
         private const float RailHeight = 452f, RailGap = 5f, RailKeyHeight = 92f;
 
+        // The cabinet is wider than a key column: the bottles inside stand at their own
+        // proportions, which is the whole point of it being a cabinet and not a list.
+        private const float CabinetW = 118f, CabinetSlotHeight = 104f;
+        private static readonly Color CabinetFrame = new Color(0.20f, 0.17f, 0.22f, 1f);
+        private static readonly Color CabinetInside = new Color(0.11f, 0.14f, 0.17f, 1f);
+
         /// <summary>The piece being carried from the finishing shelf to the glass.</summary>
         private PreparationDefinition _servePrep;
         private string _servePrepLabel;
         private RectTransform _serveDragPiece;
+
+        // The fizzy-drinks cabinet (the author's sketch, 2026-07-31): bottles standing at their
+        // own proportions behind a glass door. The door opens, a bottle comes out in your hand,
+        // and you tip it over the glass — the same verb the shaker's bottles use, so a mixer is
+        // POURED rather than clicked, and the measure is how long you hold it.
+        private RectTransform _serveCabinet, _serveCabinetDoor, _serveCabinetShelf;
+        private Image _serveCabinetDoorGlass;
+        private bool _serveCabinetOpen;
+        private float _serveDoorT;                 // 0 = shut, 1 = wide open
+        private const float DoorSpeed = 5.5f;
+        private RectTransform _serveBottle;        // the bottle in hand
+        private Image _serveBottleImage;
+        private IngredientCard _serveFocusBottle;
+        private bool _serveBottleGrabbed;
+        private Vector2 _serveBottleRest;
+        /// <summary>Glass-fractions a second while a bottle is held over the glass.</summary>
+        private const float GlassPourRate = 0.30f;
         private RectTransform _serveShaker;     // the grabbable shaker
         private Image _serveShakerBody;
         private MetaballFluid _serveFluid;      // the metaball liquid in the serving glass
@@ -97,11 +120,14 @@ namespace LastCall.UI
                 if (bottle.Ingredient.Type == IngredientType.Garnish && !bottle.IsEmpty)
                     AddGarnishChip(bottle.Ingredient);
 
-            // The mixers and juices, added at the glass rather than in the shaker.
-            foreach (Transform ch in _serveMixerRow) Destroy(ch.gameObject);
+            // The cabinet: the mixers and juices, standing behind its door.
+            _serveBottleGrabbed = false;
+            _serveFocusBottle = null;
+            _serveBottle.gameObject.SetActive(false);
+            foreach (Transform ch in _serveCabinetShelf) Destroy(ch.gameObject);
             foreach (var bottle in run.Shelf.Bottles)
                 if (IsGlassSide(bottle.Ingredient) && !bottle.IsEmpty)
-                    AddMixerChip(bottle.Ingredient);
+                    AddCabinetBottle(bottle.Ingredient);
         }
 
         /// <summary>
@@ -264,51 +290,126 @@ namespace LastCall.UI
 
         /// <summary>One mixer key on the right rail: a measure straight into the serving glass
         /// (v5 P14 / the P10 `PourAtGlass` verb).</summary>
-        private void AddMixerChip(IngredientCard card)
+        /// <summary>
+        /// One bottle standing in the cabinet. Not a key: press it and the bottle comes out in
+        /// your hand, and it is poured by being tipped over the glass, so the measure is how
+        /// long you hold it there. Sized off its own art, so a squat cola bottle and a tall
+        /// siphon stand at their true proportions behind the door.
+        /// </summary>
+        private void AddCabinetBottle(IngredientCard card)
         {
-            var chip = NewRect($"M_{card.Id}", _serveMixerRow);
-            chip.gameObject.AddComponent<LayoutElement>().preferredHeight = RailKeyHeight;
-            var bg = chip.gameObject.AddComponent<Image>();
-            bg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.85f);
-            var icon = NewRect("Icon", chip);
-            Place(icon, new Vector2(0.5f, 1), new Vector2(36, 36), new Vector2(0, -2));
-            var iimg = icon.gameObject.AddComponent<Image>();
-            iimg.sprite = ItemArt.Bottle(card.Info?.Style);
-            iimg.preserveAspect = true; iimg.raycastTarget = false;
-            if (iimg.sprite == null) iimg.color = UITheme.StyleColor(card.Info?.Style, card.Type);
-            var name = NewText("N", chip, _body, 8, TextAnchor.LowerCenter, UITheme.TextPrimary);
-            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(92, 14), new Vector2(0, 2));
+            var slot = NewRect($"M_{card.Id}", _serveCabinetShelf);
+            slot.gameObject.AddComponent<LayoutElement>().preferredHeight = CabinetSlotHeight;
+            var hit = slot.gameObject.AddComponent<Image>();
+            hit.color = new Color(1f, 1f, 1f, 0.001f);   // the whole slot takes the press
+
+            var art = NewRect("Bottle", slot);
+            Place(art, new Vector2(0.5f, 1), new Vector2(58, CabinetSlotHeight - 16f), new Vector2(0, -2));
+            var img = art.gameObject.AddComponent<Image>();
+            img.sprite = ItemArt.Bottle(card.Info?.Style);
+            img.preserveAspect = true; img.raycastTarget = false;
+            if (img.sprite == null) img.color = UITheme.StyleColor(card.Info?.Style, card.Type);
+
+            var name = NewText("N", slot, _body, 8, TextAnchor.LowerCenter, UITheme.TextPrimary);
+            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(96, 12), new Vector2(0, 0));
             name.text = card.Name.ToUpperInvariant();
-            var btn = chip.gameObject.AddComponent<Button>();
-            btn.targetGraphic = bg;
+
             var c = card;
-            btn.onClick.AddListener(() =>
+            var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            down.callback.AddListener(_ =>
             {
-                var run = Run;
-                if (run == null) return;
-                // A full glass takes nothing, and says so rather than swallowing the press —
-                // the same answer the shaker gives a garnish it has no room for.
-                if (run.PourAtGlass(c.Id, run.ServingGlass.Capacity * MixerMeasure) <= 0)
+                // A shut cabinet is a shut cabinet: open the door first, the way you would.
+                if (!_serveCabinetOpen)
                 {
-                    _aimText.text = run.ServingGlass.IsFull
-                        ? "THE GLASS IS FULL"
-                        : $"{c.Name.ToUpperInvariant()} IS OUT";
-                    _aimText.color = UITheme.Amber[3];
+                    _serveCabinetOpen = true;
+                    _aimText.text = "CABINET OPEN — TAKE A BOTTLE";
+                    _aimText.color = UITheme.Cyan[3];
                     return;
                 }
-                // Deliberately NOT a full RefreshServe: that tears both rails down and rebuilds
-                // them, which destroys the very button under the player's finger — a bottle you
-                // are pouring from should not vanish and reappear between clicks. The rails are
-                // only rebuilt when this press actually emptied the bottle and its key has to go.
-                var emptied = run.Shelf.Find(c.Id);
-                if (emptied != null && emptied.IsEmpty) { RefreshServe(); return; }
+                var run = Run;
+                if (run == null) return;
+                _serveFocusBottle = c;
+                _serveBottleGrabbed = true;
+                _serveBottleImage.sprite = ItemArt.Bottle(c.Info?.Style);
+                _serveBottleImage.color = _serveBottleImage.sprite != null
+                    ? Color.white : UITheme.StyleColor(c.Info?.Style, c.Type);
+                _serveBottle.anchoredPosition = _serveBottleRest;
+                _serveBottle.localRotation = Quaternion.identity;
+                _serveBottle.gameObject.SetActive(true);
+                _aimText.text = $"{c.Name.ToUpperInvariant()} — TIP IT OVER THE GLASS";
+                _aimText.color = UITheme.TextSecondary;
+            });
+            slot.gameObject.AddComponent<EventTrigger>().triggers.Add(down);
+        }
+
+        /// <summary>Swings the cabinet door, and pours whatever bottle is in hand. The tilt and
+        /// the aim are the shaker's, to the letter — one bar, one way of pouring.</summary>
+        private void UpdateServeCabinet(TycoonRun run)
+        {
+            float dt = Mathf.Max(Time.deltaTime, 1e-4f);
+            _serveDoorT = Mathf.MoveTowards(_serveDoorT, _serveCabinetOpen ? 1f : 0f, DoorSpeed * dt);
+            // A hinged pane: it swings out on its left edge, so it narrows as it opens and the
+            // shelf behind it comes into the light.
+            _serveCabinetDoor.localScale = new Vector3(Mathf.Lerp(1f, 0.12f, _serveDoorT), 1f, 1f);
+            _serveCabinetDoorGlass.color = new Color(0.62f, 0.80f, 0.86f,
+                Mathf.Lerp(0.22f, 0.06f, _serveDoorT));
+
+            if (_serveFocusBottle == null || Mouse.current == null) return;
+            if (_serveBottleGrabbed && !Mouse.current.leftButton.isPressed) _serveBottleGrabbed = false;
+
+            bool pourNow = false;
+            if (_serveBottleGrabbed &&
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _serveSurface, Mouse.current.position.ReadValue(), null, out Vector2 local))
+            {
+                float halfW = _serveSurface.rect.width * 0.5f;
+                float halfH = _serveSurface.rect.height * 0.5f;
+                local.x = Mathf.Clamp(local.x, -halfW + 30f, halfW - 30f);
+                local.y = Mathf.Clamp(local.y, -halfH + 20f, halfH - 20f);
+                _serveBottle.anchoredPosition = local;
+
+                float lift = Mathf.Clamp01((local.y - _serveBottleRest.y) / LiftRange);
+                float tilt = lift * MaxTilt;
+                _serveBottle.localRotation = Quaternion.Euler(0, 0, tilt);
+
+                float rad = tilt * Mathf.Deg2Rad;
+                Vector2 mouth = local + new Vector2(-Mathf.Sin(rad), Mathf.Cos(rad)) * (BottleH * 0.78f);
+                var opening = _serveGlass.anchoredPosition
+                            + new Vector2(0, _serveGlass.rect.height * (_serveGlassPiece.RimY - 0.5f));
+                bool over = Mathf.Abs(mouth.x - opening.x) < 78f && mouth.y > opening.y - 30f;
+                bool full = run.ServingGlass.IsFull;
+                pourNow = tilt > 42f && over && !full;
+                if (full && tilt > 42f && over)
+                {
+                    _aimText.text = "THE GLASS IS FULL";
+                    _aimText.color = UITheme.Amber[3];
+                }
+
+                if (pourNow)
+                {
+                    var colour = UITheme.StyleColor(_serveFocusBottle.Info?.Style, _serveFocusBottle.Type);
+                    _serveFluid.SetColor(colour);
+                    var streamVel = new Vector2((opening.x - mouth.x) * 1.8f, -225f);
+                    _serveFluid.EmitStream(mouth, streamVel, Time.deltaTime);
+                }
+            }
+
+            if (pourNow)
+            {
+                double landed = run.PourAtGlass(_serveFocusBottle.Id, GlassPourRate * Time.deltaTime);
                 _serveFluid.SetColor(DrinkColor(run.ServingGlass));
                 RefreshServeText(run, 1.0);
-                _aimText.text = $"{c.Name.ToUpperInvariant()} IN THE GLASS";
+                _aimText.text = $"{_serveFocusBottle.Name.ToUpperInvariant()} IN THE GLASS";
                 _aimText.color = UITheme.Cyan[3];
-                ShowServingGlassware(run);
-                PushServePool(run);
-            });
+                if (landed <= 0)
+                {
+                    // The bottle ran dry mid-pour: put it down and rebuild the shelf without it.
+                    _serveBottleGrabbed = false;
+                    _serveFocusBottle = null;
+                    _serveBottle.gameObject.SetActive(false);
+                    RefreshServe();
+                }
+            }
         }
 
         /// <summary>
@@ -473,8 +574,8 @@ namespace LastCall.UI
             glabel.text = "— FINISH —";
             var mlabel = NewText("MLabel", _servePanel, _body, 10, TextAnchor.LowerCenter,
                 UITheme.TypeRamp[IngredientType.Bubbly][3]);
-            Place(mlabel.rectTransform, new Vector2(1, 0.5f), new Vector2(96, 16),
-                new Vector2(-14, railTop));
+            Place(mlabel.rectTransform, new Vector2(1, 0.5f), new Vector2(CabinetW, 16),
+                new Vector2(-10, railTop + 14f));
             mlabel.text = "— MIXERS —";
             _serveGarnishRow = NewRect("Garnishes", _servePanel);
             Place(_serveGarnishRow, new Vector2(0, 0.5f), new Vector2(96, RailHeight), new Vector2(14, 0));
@@ -487,12 +588,35 @@ namespace LastCall.UI
             // put the rule in Core — carbonated never enters the shaker, it is added to the
             // serving glass — and then there was no door in the UI to do it through, so the six
             // built cocktails could not be made by playing at all. This is that door.
-            _serveMixerRow = NewRect("Mixers", _servePanel);
-            Place(_serveMixerRow, new Vector2(1, 0.5f), new Vector2(96, RailHeight), new Vector2(-14, 0));
-            var mrow = _serveMixerRow.gameObject.AddComponent<VerticalLayoutGroup>();
+            // The cabinet: a lit case with a glass door, the bottles standing on its shelf.
+            _serveCabinet = NewRect("Cabinet", _servePanel);
+            Place(_serveCabinet, new Vector2(1, 0.5f), new Vector2(CabinetW, RailHeight + 24f),
+                new Vector2(-10, 0));
+            _serveCabinet.gameObject.AddComponent<Image>().color = CabinetFrame;
+
+            var inside = NewRect("Inside", _serveCabinet);
+            Stretch(inside, Vector2.zero, Vector2.one, new Vector2(7, 7), new Vector2(-7, -7));
+            inside.gameObject.AddComponent<Image>().color = CabinetInside;
+
+            _serveCabinetShelf = NewRect("Shelf", inside);
+            Stretch(_serveCabinetShelf, Vector2.zero, Vector2.one, new Vector2(4, 4), new Vector2(-4, -4));
+            _serveMixerRow = _serveCabinetShelf;
+            var mrow = _serveCabinetShelf.gameObject.AddComponent<VerticalLayoutGroup>();
             mrow.spacing = RailGap; mrow.childControlWidth = true; mrow.childForceExpandWidth = true;
             mrow.childControlHeight = true; mrow.childForceExpandHeight = false;
             mrow.childAlignment = TextAnchor.UpperCenter;
+
+            // The door, hinged on its left edge: it narrows as it swings out, and the pane over
+            // the bottles clears with it.
+            _serveCabinetDoor = NewRect("Door", _serveCabinet);
+            Stretch(_serveCabinetDoor, Vector2.zero, Vector2.one, new Vector2(5, 5), new Vector2(-5, -5));
+            _serveCabinetDoor.pivot = new Vector2(0f, 0.5f);
+            _serveCabinetDoorGlass = _serveCabinetDoor.gameObject.AddComponent<Image>();
+            _serveCabinetDoorGlass.color = new Color(0.62f, 0.80f, 0.86f, 0.22f);
+            _serveCabinetDoorGlass.raycastTarget = false;
+            var handle = NewRect("Handle", _serveCabinetDoor);
+            Place(handle, new Vector2(1, 0.5f), new Vector2(4, 46), new Vector2(-6, 0));
+            handle.gameObject.AddComponent<Image>().color = CabinetFrame;
 
             _aimText = NewText("AimText", _servePanel, _body, 13, TextAnchor.UpperCenter, UITheme.TextSecondary);
             Stretch(_aimText.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -70), new Vector2(0, -46));
@@ -529,6 +653,17 @@ namespace LastCall.UI
             var sdp = _serveDragPiece.gameObject.AddComponent<Image>();
             sdp.preserveAspect = true; sdp.raycastTarget = false;
             _serveDragPiece.gameObject.SetActive(false);
+
+            // The bottle in hand, once one is taken out of the cabinet.
+            _serveBottleRest = new Vector2(300, -60);
+            _serveBottle = NewRect("HandBottle", _serveSurface);
+            _serveBottle.pivot = new Vector2(0.5f, 0.22f);
+            _serveBottle.sizeDelta = new Vector2(84, BottleH);
+            _serveBottle.anchoredPosition = _serveBottleRest;
+            _serveBottleImage = _serveBottle.gameObject.AddComponent<Image>();
+            _serveBottleImage.preserveAspect = true;
+            _serveBottleImage.raycastTarget = false;
+            _serveBottle.gameObject.SetActive(false);
             _serveGlass.SetAsLastSibling();   // the hollow glass draws over the fluid
 
             // The grabbable steel shaker you pour from, resting lower-right.

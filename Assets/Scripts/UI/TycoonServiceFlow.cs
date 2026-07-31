@@ -145,7 +145,10 @@ namespace LastCall.UI
                 StepShakerFluid(run);
             }
 
-            if (_stage == Stage.Serve) { UpdateServeTilt(run); UpdateServePrepDrag(run); }
+            if (_stage == Stage.Serve)
+            {
+                UpdateServeTilt(run); UpdateServePrepDrag(run); UpdateServeCabinet(run);
+            }
 
             if (_stage == Stage.Tap) UpdateTap(run);
         }
@@ -160,6 +163,9 @@ namespace LastCall.UI
             _serveGrabbed = false;
             _draggingPrep = null;
             _servePrep = null;
+            _serveBottleGrabbed = false;
+            _serveFocusBottle = null;
+            _serveCabinetOpen = false;
             _shaking = false;
             _shakeEnergy = 0;
             if (_dragPiece != null) _dragPiece.gameObject.SetActive(false);

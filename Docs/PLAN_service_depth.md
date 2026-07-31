@@ -345,10 +345,11 @@ cabinet** — a glass-fronted fridge, bottles at their true size, door opens, bo
   are open containers you drag a piece out of and drop into the glass — the same verb the
   shaker bench already used, aimed at the serving glass. The dropped piece has to land *in*
   the glass or it is not taken.
-- ☐ **Right: the fizzy-drinks cabinet.** Bottles standing at their own proportions behind a
-  glass door; the door opens, a bottle is dragged out and tipped over the glass with the same
-  tilt-pour the shaker and the bottle stage use, so a mixer is *poured* rather than clicked.
-  The measure comes from how long it is held, not from a fixed 15% per press.
+- ☑ **Right: the fizzy-drinks cabinet.** A lit case with a hinged glass pane; the bottles
+  stand inside at their own proportions. The first press opens the door, the next takes a
+  bottle out into your hand, and it is poured by being tipped over the glass with the shaker's
+  own tilt model and constants — so the measure is **how long you hold it**, not a fixed 15%
+  per press, and running a bottle dry mid-pour puts it down and takes it off the shelf.
 - ☐ The confining panel goes; props are free-dragged within the screen.
 
 - ☐ **Glass upgrades**: 3 tiers each, bought individually in the tablet shop, standing
