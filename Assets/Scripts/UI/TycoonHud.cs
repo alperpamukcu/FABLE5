@@ -488,6 +488,9 @@ namespace LastCall.UI
             }
             _drinkGlassLiquid.color = DrinkColor();
             _drinkGlassLiquid.fillAmount = piece.FillAmount((float)run.ServingGlass.FillFraction);
+            // The finishing touches ride the carried glass too (P14): the customer is handed
+            // the drink that was actually finished, salt and wedge and all.
+            GlassDecor.Sync(_drinkGlass, piece, run.ServingGlass);
 
             float dt = Mathf.Max(Time.deltaTime, 1e-4f);
             var mouse = Mouse.current;

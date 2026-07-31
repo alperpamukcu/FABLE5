@@ -330,7 +330,14 @@ caption stranded in the middle of the keys.
     disagree — and a vertical `fillAmount` clips the liquid to it. That keeps a martini's
     drink inside the cone instead of a rectangle poking through the walls, and it costs one
     Image where the full solver would have been overkill.
-- ☐ **Decorations persist** on the served drink: salt/sugar visibly on the rim, wedge on
+- ☑ **Decorations persist** *(2026-07-31, `GlassDecor`)*: salt/sugar as a deterministic
+  speckle crust along the measured rim, the wedge perched on the rim's edge, ice floating
+  AT the liquid line and riding the fill as the drink pours — on the serve-stage glass and
+  on the carried glass both, anchored off `GlassArt.Piece`. Verified in play: all four
+  build at the measured rim (crust y=120 on a 260 glass, wedge at the interior edge).
+  Mint/olive floats deliberately excluded — their only art is the shelf JARS, and a jar in
+  a drink is worse than nothing; they need sprig/spear pieces first.
+- ☐ **(superseded note)** on the served drink: salt/sugar visibly on the rim, wedge on
   the glass wall, ice floating in the liquid, garnish on top — the delivered glass shows
   everything that went in
 ### The serve stage as a bar, not a form (2026-07-31, from the author's sketch)

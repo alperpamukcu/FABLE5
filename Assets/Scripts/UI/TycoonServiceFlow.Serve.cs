@@ -151,6 +151,7 @@ namespace LastCall.UI
             _serveFluid.SetColor(DrinkColor(run.ServingGlass.IsEmpty ? run.Glass : run.ServingGlass));
             ShowServingGlassware(run);
             PushServePool(run);
+            GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass);
             _serveShakerBody.color = DrinkColor(run.Glass);
             _serveShaker.gameObject.SetActive(!run.Glass.IsEmpty);
             _aimText.text = run.Glass.IsEmpty
@@ -280,10 +281,10 @@ namespace LastCall.UI
             {
                 run.AddPreparationAtGlass(_servePrep);
                 Sfx.Play(_servePrep != null && _servePrep.Id == "ice" ? "ice_drop" : "garnish");
-                // The drink takes the hit. The shaker floats the piece afterwards with its own
-                // solids layer; this stage has no such layer yet, so the ripple is the whole
-                // acknowledgement until the P14 item that draws decorations ON the glass lands.
+                // The drink takes the hit, and the touch appears ON the glass (GlassDecor):
+                // the crust on the rim, the wedge on the edge, the ice at the liquid line.
                 _serveFluid.Ripple(opening.x, 0.03f);
+                GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass);
                 string label = _servePrepLabel;
                 _servePrep = null;
                 _serveDragPiece.gameObject.SetActive(false);
@@ -689,6 +690,7 @@ namespace LastCall.UI
         {
             _serveShakerText.text = $"shaker {run.Glass.FillFraction:P0} left";
             _serveGlassText.text = $"glass {run.ServingGlass.FillFraction:P0} full";
+            GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass);
             _aimText.text = accuracy > 0.8 ? "CLEAN POUR" : accuracy > 0.4 ? "SOME SPILL" : "SPILLING!";
             _aimText.color = Color.Lerp(UITheme.ViceRed[3], UITheme.Lime[3], (float)accuracy);
         }
