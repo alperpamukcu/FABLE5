@@ -1246,6 +1246,158 @@ namespace LastCall.UI
             }
         }
 
+        // ── the recipe book (v5 P16) ─────────────────────────────────────────────
+        // The menu speaks styles now, so what is IN a drink has to be readable mid-shift:
+        // an order for a Gimlet is unanswerable by a player who cannot look a Gimlet up.
+        // Unlocked recipes print their full bands; locked ones show what tier and stars
+        // they are waiting behind, so the book doubles as the progression map.
+
+        private RectTransform _bookPanel, _bookList;
+
+        private void ToggleRecipeBook()
+        {
+            if (_bookPanel == null) return;
+            bool open = !_bookPanel.gameObject.activeSelf;
+            _bookPanel.gameObject.SetActive(open);
+            Sfx.Play("click", 0.6f);
+            if (open) RebuildRecipeBook();
+        }
+
+        private void BuildRecipeBook(RectTransform root)
+        {
+            _bookPanel = NewRect("RecipeBook", root);
+            Stretch(_bookPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var scrim = _bookPanel.gameObject.AddComponent<Image>();
+            scrim.color = UITheme.Scrim;
+            var scrimBtn = _bookPanel.gameObject.AddComponent<Button>();
+            scrimBtn.transition = Selectable.Transition.None;
+            scrimBtn.onClick.AddListener(ToggleRecipeBook);
+
+            var sheet = NewRect("Sheet", _bookPanel);
+            Place(sheet, new Vector2(0.5f, 0.5f), new Vector2(660, 600), Vector2.zero);
+            sheet.gameObject.AddComponent<Image>().color = UITheme.Night[1];
+            sheet.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;   // swallow
+
+            var title = NewText("T", sheet, _display, 16, TextAnchor.MiddleCenter, UITheme.PrimaryAction);
+            Place(title.rectTransform, new Vector2(0.5f, 1), new Vector2(400, 30), new Vector2(0, -8));
+            title.text = "THE HOUSE BOOK";
+
+            var viewport = NewRect("View", sheet);
+            Stretch(viewport, Vector2.zero, Vector2.one, new Vector2(14, 14), new Vector2(-14, -44));
+            viewport.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, 0.004f);
+            viewport.gameObject.AddComponent<RectMask2D>();
+
+            _bookList = NewRect("List", viewport);
+            _bookList.anchorMin = new Vector2(0, 1); _bookList.anchorMax = new Vector2(1, 1);
+            _bookList.pivot = new Vector2(0.5f, 1);
+            _bookList.offsetMin = Vector2.zero; _bookList.offsetMax = Vector2.zero;
+            var layout = _bookList.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.spacing = 4;
+            layout.childControlWidth = true; layout.childForceExpandWidth = true;
+            layout.childControlHeight = true; layout.childForceExpandHeight = false;
+            var fitter = _bookList.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var scroll = viewport.gameObject.AddComponent<ScrollRect>();
+            scroll.viewport = viewport; scroll.content = _bookList;
+            scroll.horizontal = false;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 30f;
+
+            _bookPanel.gameObject.SetActive(false);
+        }
+
+        private static string TierName(int rank) =>
+            rank <= 8 ? "STARTER" : rank <= 14 ? "MID SHELF" : rank <= 21 ? "TOP SHELF" : "HOUSE PRIDE";
+
+        private void RebuildRecipeBook()
+        {
+            var run = Run;
+            if (run == null || _bookList == null) return;
+            for (int i = _bookList.childCount - 1; i >= 0; i--)
+                Destroy(_bookList.GetChild(i).gameObject);
+
+            var known = new List<RecipeDefinition>(run.MenuRecipes);
+            var locked = new List<RecipeDefinition>(run.LockedRecipes);
+            known.Sort((a, b) => a.Rank.CompareTo(b.Rank));
+            locked.Sort((a, b) => a.Rank.CompareTo(b.Rank));
+
+            string tier = null;
+            foreach (var r in known)
+            {
+                if (TierName(r.Rank) != tier) { tier = TierName(r.Rank); BookHeader(tier); }
+                BookRow(r, lockedRow: false, run);
+            }
+            if (locked.Count > 0)
+            {
+                BookHeader("— STILL IN THE BOOK —");
+                foreach (var r in locked) BookRow(r, lockedRow: true, run);
+            }
+        }
+
+        private void BookHeader(string text)
+        {
+            var h = NewRect("H", _bookList);
+            h.gameObject.AddComponent<LayoutElement>().preferredHeight = 22;
+            var t = NewText("T", h, _body, 10, TextAnchor.MiddleLeft, UITheme.Cyan[4]);
+            Stretch(t.rectTransform, Vector2.zero, Vector2.one, new Vector2(6, 0), Vector2.zero);
+            t.text = text;
+        }
+
+        /// <summary>One recipe: the glass drawn from its own bands, the name, how it is
+        /// worked, and the pour — or, for a locked one, what it is waiting behind.</summary>
+        private void BookRow(RecipeDefinition r, bool lockedRow, TycoonRun run)
+        {
+            var row = NewRect($"R_{r.Id}", _bookList);
+            row.gameObject.AddComponent<LayoutElement>().preferredHeight = 46;
+            row.gameObject.AddComponent<Image>().color = lockedRow
+                ? new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.55f)
+                : UITheme.Night[2];
+
+            var icon = NewRect("I", row);
+            Place(icon, new Vector2(0, 0.5f), new Vector2(34, 34), new Vector2(8, 0));
+            var img = icon.gameObject.AddComponent<Image>();
+            img.sprite = DrinkIcon.For(r, _bootstrap.Glassware);
+            img.preserveAspect = true; img.raycastTarget = false;
+            img.enabled = img.sprite != null;
+            if (lockedRow) img.color = new Color(1, 1, 1, 0.4f);
+
+            var name = NewText("N", row, _body, 12, TextAnchor.UpperLeft,
+                lockedRow ? UITheme.TextSecondary : UITheme.TextPrimary);
+            Place(name.rectTransform, new Vector2(0, 1), new Vector2(360, 16), new Vector2(50, -5));
+            // The two brand-agnostic specials never touch the tin; everything else says how
+            // it is worked. (Prep defaults to Shaken in the ctor, which fits neither a pint
+            // nor a neat pour.)
+            string prep = r.Id == "draught" ? "ON TAP"
+                : r.Id == "neat_pour" ? "NEAT"
+                : r.Prep == PrepMethod.Shaken ? "SHAKEN"
+                : r.Prep == PrepMethod.Stirred ? "STIRRED" : "BUILT";
+            name.text = $"{r.Name.ToUpperInvariant()}   <color=#7FD4C1>{prep}</color>";
+            name.supportRichText = true;
+
+            var line = NewText("L", row, _body, 8, TextAnchor.LowerLeft, UITheme.TextSecondary);
+            Place(line.rectTransform, new Vector2(0, 0), new Vector2(560, 14), new Vector2(50, 5));
+            line.horizontalOverflow = HorizontalWrapMode.Overflow;
+            if (lockedRow)
+            {
+                double gate = run.RecipeStarGate(r);
+                line.text = (gate > 0 ? $"{gate:0.0}★ · " : "") +
+                            $"${run.RecipePrice(r)} AT THE SHOP · " + BandLine(r);
+            }
+            else line.text = BandLine(r);
+        }
+
+        /// <summary>"GIN 45–65 · LEMON 20–40 · SYRUP 10–30" — the pour, said in shares.</summary>
+        private static string BandLine(RecipeDefinition r)
+        {
+            var parts = new List<string>();
+            foreach (var b in r.RatioRequirements)
+                parts.Add(string.Format("{0} {1:0}–{2:0}",
+                    (b.IsStyleBand ? b.Style.Replace('_', ' ') : b.Type.ToString()).ToUpperInvariant(),
+                    b.MinRatio * 100, b.MaxRatio * 100));
+            return string.Join("  ·  ", parts);
+        }
+
         // ── settings (P17): the smallest sheet that holds sound and motion ───────
 
         private RectTransform _settingsPanel;
@@ -1716,6 +1868,12 @@ namespace LastCall.UI
             // The primary action: open the menu to build a drink (GDD 24 §1), bottom-centred.
             NewButton(root, "▸  MENU — MAKE A DRINK", new Vector2(0.5f, 0),
                 new Vector2(300, 40), new Vector2(0, 40), UITheme.PrimaryAction, OnMenuClicked);
+
+            // The recipe book, beside the making verb (v5 P16): the menu speaks styles now,
+            // so how a drink is MADE has to live somewhere the player can read mid-shift.
+            NewButton(root, "❧ BOOK", new Vector2(0.5f, 0),
+                new Vector2(84, 40), new Vector2(-196, 40), UITheme.Night[3], ToggleRecipeBook);
+            BuildRecipeBook(root);
 
             BuildDrinkGlass(root);
             BuildSnackRow(root);

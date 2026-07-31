@@ -90,6 +90,10 @@ namespace LastCall.Core
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
                     locked: true,
                     Band("gin", .55, .75), Band("lime", .15, .35), Band("syrup", .08, .25)),
+                Cocktail("vodka_sour", "Vodka Sour", 14, 25, 2, 20, 1, PrepMethod.Shaken, "rocks",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
+                    locked: true,
+                    Band("vodka", .45, .65), Band("lemon", .20, .40), Band("syrup", .10, .30)),
                 Cocktail("tequila_sunrise", "Tequila Sunrise", 13, 25, 2, 20, 1, PrepMethod.Built, "highball",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
                     locked: true,
@@ -120,6 +124,21 @@ namespace LastCall.Core
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(1, so) },
                     locked: true,
                     Band("bourbon", .40, .60), Band("triple_sec", .20, .40), Band("lemon", .15, .35)),
+                // The shaken wave (2026-07-31, the author: the shaker must be USED): four more
+                // worked drinks, so the tin is most of the mid and hard tiers rather than a
+                // corner of them.
+                Cocktail("rum_punch", "Rum Punch", 15, 25, 2, 20, 1, PrepMethod.Shaken, "highball",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
+                    locked: true,
+                    Band("rum", .35, .55), Band("orange", .20, .40), Band("lime", .08, .25), Band("syrup", .05, .20)),
+                Cocktail("white_lady", "White Lady", 20, 30, 3, 20, 1, PrepMethod.Shaken, "coupe",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(1, so) },
+                    locked: true,
+                    Band("gin", .40, .60), Band("triple_sec", .20, .40), Band("lemon", .15, .35)),
+                Cocktail("southside", "Southside", 21, 30, 3, 20, 1, PrepMethod.Shaken, "coupe",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw), new PatternRequirement(1, g) },
+                    locked: true,
+                    Band("gin", .45, .65), Band("lime", .15, .35), Band("syrup", .08, .25), Band("mint", .03, .15)),
 
                 // ── very hard (ranks 22+): stirred precision, thirds, the long build ─
                 Cocktail("dry_martini", "Dry Martini", 22, 30, 3, 20, 1, PrepMethod.Stirred, "martini",

@@ -7,31 +7,31 @@ brands. Every survival figure is a floor.
 
 | Metric | Value |
 |---|---|
-| Bankruptcies | 3 (1.5%) |
-| Reached the 30-day horizon | 197 (98.5%) |
+| Bankruptcies | 15 (7.5%) |
+| Reached the 30-day horizon | 185 (92.5%) |
 | Days survived p25/median/p75 | 30 / 30 / 30 |
-| Final till p25/median/p75 | $-18 / $40 / $131 |
-| Avg income / expenses per day | $168.2 / $166.6 |
+| Final till p25/median/p75 | $-53 / $11 / $101 |
+| Avg income / expenses per day | $172.2 / $171.7 |
 | Avg daily satisfaction | 67% |
-| Storm-offs | 11602 (17.7%) |
+| Storm-offs | 11638 (17.8%) |
 | Customers per night | 10.9 |
 | Served per bar-minute | 5.16 |
 | Bar standing (avg night) | 3.44 stars |
-| Serves Exact / Close / Wrong | 71912 (98.0%) / 0 (0.0%) / 1475 (2.0%) |
-| Refused (too little in the glass) / declined | 0 (0.0%) / 1 |
-| Take: base / tip | $530525 / $411441 (411441 (43.7%) of it tip) |
-| Avg base / tip per serve | $7.23 / $5.61 |
+| Serves Exact / Close / Wrong | 72005 (98.2%) / 0 (0.0%) / 1355 (1.8%) |
+| Refused (too little in the glass) / declined | 0 (0.0%) / 15 |
+| Take: base / tip | $543971 / $421262 (421262 (43.6%) of it tip) |
+| Avg base / tip per serve | $7.42 / $5.74 |
 | Avg spec score / fill score | 99% / 99% |
-| Orders with a serving spec, fully met | 32632 (95.8%) of 34072 |
-| Garnish craft landed | 38613 (52.6%) |
-| Extra orders earned (of serves) | 19408 (26.4%) |
-| Extra orders earned (of exact) | 19408 (27.0%) |
-| Draught share of serves | 5981 (8.1%) |
-| Pints in the good head band | 5981 (100.0%) |
+| Orders with a serving spec, fully met | 32633 (95.5%) of 34172 |
+| Garnish craft landed | 38368 (52.3%) |
+| Extra orders earned (of serves) | 19454 (26.5%) |
+| Extra orders earned (of exact) | 19454 (27.0%) |
+| Draught share of serves | 5735 (7.8%) |
+| Pints in the good head band | 5735 (100.0%) |
 | Average head poured | 18% |
-| Snack serves (of serves) | 24463 (33.3%) · $67272 |
-| Glasses bussed | 52863 |
-| Recipes bought (of 200 runs) | 2991 |
+| Snack serves (of serves) | 24454 (33.3%) · $67247 |
+| Glasses bussed | 52911 |
+| Recipes bought (of 200 runs) | 3648 |
 
 ## Red days by day number
 
@@ -39,16 +39,16 @@ brands. Every survival figure is a floor.
 |---|---|---|
 | 1 | 200 | 0 (0.0%) |
 | 2 | 200 | 7 (3.5%) |
-| 3 | 200 | 64 (32.0%) |
-| 4 | 200 | 2 (1.0%) |
-| 5 | 200 | 2 (1.0%) |
+| 3 | 200 | 61 (30.5%) |
+| 4 | 200 | 3 (1.5%) |
+| 5 | 200 | 3 (1.5%) |
 | 6 | 200 | 2 (1.0%) |
 | 7 | 200 | 5 (2.5%) |
-| 8 | 200 | 6 (3.0%) |
-| 9 | 200 | 61 (30.5%) |
-| 10 | 200 | 42 (21.0%) |
-| 11 | 200 | 62 (31.0%) |
-| 12 | 200 | 84 (42.0%) |
-| 13 | 200 | 125 (62.5%) |
-| 14 | 200 | 111 (55.5%) |
-| 15 | 200 | 109 (54.5%) |
+| 8 | 200 | 7 (3.5%) |
+| 9 | 200 | 60 (30.0%) |
+| 10 | 200 | 35 (17.5%) |
+| 11 | 200 | 51 (25.5%) |
+| 12 | 200 | 68 (34.0%) |
+| 13 | 200 | 85 (42.5%) |
+| 14 | 200 | 100 (50.0%) |
+| 15 | 200 | 150 (75.0%) |

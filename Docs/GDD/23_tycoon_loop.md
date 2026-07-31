@@ -62,13 +62,20 @@
   Twenty-six recipes across four tiers: **starter** (ranks 1–8: Draught, Neat Pour, Vodka
   Soda, Gin Sour open from day one; G&T, Whiskey&Cola, Screwdriver, Vodka Bull bought
   ungated), **mid** (9–14, 3.0★: Cuba Libre, Whiskey Ginger, Moscow Mule, Gimlet, Tequila
-  Sunrise), **hard** (15–21, 3.5★: Whiskey Sour, Daiquiri, Gin Fizz, Kamikaze, Margarita,
-  Bourbon Sidecar), **very hard** (22+, 4.0★: Dry/Dirty Martini, Manhattan, Negroni at
+  Sunrise, Vodka Sour), **hard** (15–21, 3.5★: Whiskey Sour, Rum Punch, Daiquiri, Gin
+  Fizz, Kamikaze, Margarita, Bourbon Sidecar, White Lady, Southside), **very hard** (22+,
+  4.0★: Dry/Dirty Martini, Manhattan, Negroni at
   equal thirds, Old Fashioned, Mojito, Long Island at seven bands). Only Draught and Neat
   Pour stay type-based, because they are brand-agnostic in the fiction too. The type system
   survives as the shelf's taxonomy — aisles, icons, the judge's vocabulary — not as recipe
   language. The licence carries an ingredients line under the order, since the band rows
   left with card v2 and a named cocktail is otherwise unlearnable.
+- **The house book (2026-07-31):** a BOOK panel beside the menu button, readable mid-shift —
+  every unlocked recipe with its full pour ("GIN 45–65 · LEMON 20–40 · SYRUP 10–30"), how it
+  is worked (ON TAP / NEAT / BUILT / SHAKEN / STIRRED) and its glass icon; the still-locked
+  ones listed under their tier with the star gate and shop price, so the book doubles as the
+  progression map. Thirty recipes, twelve of them shaken — the author's note that the tin
+  must be USED drove the second shaken wave (Vodka Sour, Rum Punch, White Lady, Southside).
 - **The order is hidden until the ID card is read** (v5 C3, 2026-07-31). The seat signals
   readiness ("READY · TAP THE ID"); the drink's name, icon and wanted extras appear only
   after the player opens the licence, and **no price appears anywhere on the card or the
