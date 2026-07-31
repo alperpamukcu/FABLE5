@@ -140,7 +140,7 @@ namespace LastCall.UI
         // (2026-07-22): it now shows the drink's RECIPE and the garnishes they want, not moods.
         private RectTransform _idRoot;
         private Image _idPhoto;
-        private Text _idName, _idAgeFrom, _idRel, _idIntent, _idOrder, _idRates, _idReserved;
+        private Text _idName, _idAgeFrom, _idRel, _idIntent, _idOrder, _idRates, _idRatesLabel;
         private Image _idOrderIcon;
 
         // The shop tablet (v5 P13). Two errands, not one wall of cards: what goes behind the
@@ -1360,15 +1360,16 @@ namespace LastCall.UI
                 ? $"{reg.Relationship.ToString().ToUpperInvariant()} · {reg.Visits} VISITS"
                 : "NEW FACE";
 
-            // What THEY make of US — their own nights here, said in stars. A licence field,
-            // not the bar's rating: a regular who has been let down knows it, and says so.
-            _idRates.text = reg.Visits == 0
-                ? "—"
+            // What THEY make of US — their own nights here, said in stars. A stranger has no
+            // row at all (the author's note: empty fields were noise, not a licence).
+            bool stranger = reg.Visits == 0;
+            _idRatesLabel.text = stranger ? "" : "RATES THIS BAR";
+            _idRates.text = stranger ? ""
                 : Stars(Mathf.RoundToInt(5f * reg.SatisfiedCount / reg.Visits));
 
             // No price, anywhere on the card (C3): the licence says who they are and what they
             // want, and what a drink costs is the menu's business.
-            _idOrder.text = $"ORDER   <b>{visit.Order.Wanted.Name.ToUpperInvariant()}</b>";
+            _idOrder.text = $"<b>{visit.Order.Wanted.Name.ToUpperInvariant()}</b>";
             _idOrderIcon.sprite = DrinkIcon.For(visit.Order.Wanted, _bootstrap.Glassware);
             _idOrderIcon.enabled = _idOrderIcon.sprite != null;
 
@@ -1379,7 +1380,7 @@ namespace LastCall.UI
             if (spec.ExtraShaken) wants.Add("SHAKEN HARD");
             if (spec.FilledToTheTop) wants.Add("FILLED TO THE TOP");
             _idIntent.text = wants.Count == 0
-                ? "NONE — SERVE IT CLEAN"
+                ? "SERVE IT CLEAN"
                 : string.Join("   ·   ", wants);
         }
 
@@ -1401,32 +1402,45 @@ namespace LastCall.UI
         // rule, 2026-07-31) drawn at exactly 2× its 400×250 pixels — an integer scale, because
         // the prep table taught what a fractional upscale next to native-size text looks like.
         // Every field is lettered in engine over the blank shell: the generator cannot spell.
-        // The shell trimmed to 266×176 and is drawn at exactly 3×. Integer, and matched to the
-        // lettering: the pixel faces are designed at 8px, so 24px type is ALSO 3× — shell
-        // pixels and glyph pixels come out the same size, which is the coarseness mismatch the
-        // prep table failed on, avoided by construction.
-        private const float LicW = 266f * 3f, LicH = 176f * 3f;
+        // Sized down to 2.5× on the author's note ("kimlik boyutunu biraz küçült"), and the
+        // lettering SITS ON THE SHELL'S OWN RULE LINES now — the art carries six faint field
+        // rules at y 58/76/94/113/132/150 (measured), and every value's baseline lands on one,
+        // so the text belongs to the printed card instead of floating over it.
+        private const float LicScale = 2.5f;
+        private const float LicW = 266f * LicScale, LicH = 176f * LicScale;
 
-        // Anchors measured off licence_shell.png at install, ×3: the portrait window's frame
-        // sits at x 15–89, y 37–132 in the art, the navy header band at rows 3–21.
-        private static readonly Rect LicPortrait = new Rect(45, -111, 225, 288);  // x, top-y, w, h
-        private const float LicHeaderH = 54f;
-        private const float LicHeaderY = -9f;
-        private const float LicFieldsX = 296f;   // left edge of the data column
-        private const float LicFieldsW = 460f;
+        // Anchors measured off licence_shell.png at install, ×2.5: portrait frame x 15–89,
+        // y 37–132; navy header rows 3–21; the six rule lines above.
+        private static readonly Rect LicPortrait = new Rect(37.5f, -92.5f, 187.5f, 240f);
+        private const float LicHeaderH = 45f;
+        private const float LicHeaderY = -7.5f;
+        private const float LicFieldsX = 250f;   // the rules span art x 100–250 → card 250–625
+        private const float LicFieldsW = 375f;
+        private static readonly float[] LicLines =   // card-local y (down from the top), ×2.5
+            { 58f * LicScale, 76f * LicScale, 94f * LicScale, 113f * LicScale,
+              132f * LicScale, 150f * LicScale };
 
-        /// <summary>One licence line: a small navy label over a dark value, the way a licence
-        /// prints DOB over the date. Returns the value text; the label is fixed at birth.</summary>
-        private Text LicenceField(RectTransform card, string label, float x, float topY,
-            float w, int valueSize = 16)
+        /// <summary>
+        /// One licence line, SEATED on a rule: the value's bottom edge lands on the shell's own
+        /// printed line (the way a form is filled in), with the small navy label just above it.
+        /// Returns the value; the label comes back through <paramref name="labelText"/> so a
+        /// row that is sometimes empty (a stranger has no rating yet) can hide whole.
+        /// </summary>
+        private Text LicenceField(RectTransform card, string label, float x, float lineY,
+            float w, out Text labelText, int valueSize = 16)
         {
-            var lab = NewText("L_" + label, card, _body, 8, TextAnchor.UpperLeft, UITheme.ClubBlue[2]);
-            Place(lab.rectTransform, new Vector2(0, 1), new Vector2(w, 12), new Vector2(x, topY));
-            lab.text = label;
-            var val = NewText("V_" + label, card, _body, valueSize, TextAnchor.UpperLeft, UITheme.Night[1]);
+            float vh = valueSize + 6f;
+            labelText = NewText("L_" + label, card, _body, 8, TextAnchor.LowerLeft, UITheme.ClubBlue[2]);
+            Place(labelText.rectTransform, new Vector2(0, 1), new Vector2(w, 12), Vector2.zero);
+            labelText.rectTransform.pivot = new Vector2(0, 0);
+            labelText.rectTransform.anchoredPosition = new Vector2(x, -lineY + vh + 2f);
+            labelText.text = label;
+            var val = NewText("V_" + label, card, _body, valueSize, TextAnchor.LowerLeft, UITheme.Night[1]);
             val.supportRichText = true;
-            Place(val.rectTransform, new Vector2(0, 1), new Vector2(w, valueSize + 8),
-                new Vector2(x, topY - 13f));
+            val.horizontalOverflow = HorizontalWrapMode.Overflow;   // a licence never wraps; it runs
+            Place(val.rectTransform, new Vector2(0, 1), new Vector2(w, vh), Vector2.zero);
+            val.rectTransform.pivot = new Vector2(0, 0);
+            val.rectTransform.anchoredPosition = new Vector2(x, -lineY + 2f);
             return val;
         }
 
@@ -1458,35 +1472,30 @@ namespace LastCall.UI
             _idPhoto = photo.gameObject.AddComponent<Image>();
             _idPhoto.preserveAspect = true;
 
-            // The data column, licence-style: NAME big, then the small facts in two columns,
-            // the way DOB and CLASS share a row. Reserved slots print as blanks — a licence
-            // has fields before it has answers (favourite drink, last visit, total spent all
-            // arrive with save/reset, P18).
+            // The data column, one field to a printed rule (the author's note: the text and
+            // the art disagreed — now the art's own lines decide where the text sits). The
+            // reserved-slots row is GONE: a row of blanks was noise, not a licence.
             float colW = LicFieldsW * 0.5f - 8f;
-            _idName = LicenceField(card, "NAME", LicFieldsX, -84f, LicFieldsW, 24);
-            _idAgeFrom = LicenceField(card, "AGE  ·  CITY", LicFieldsX, -150f, colW);
-            _idRel = LicenceField(card, "STANDING", LicFieldsX + colW + 16f, -150f, colW);
-            _idRates = LicenceField(card, "RATES THIS BAR", LicFieldsX, -212f, colW);
-            _idReserved = LicenceField(card, "FAVOURITE  ·  LAST VISIT  ·  SPENT",
-                LicFieldsX + colW + 16f, -212f, colW);
-            _idReserved.text = "—  ·  —  ·  —";
+            _idName = LicenceField(card, "NAME", LicFieldsX, LicLines[0], LicFieldsW, out _, 24);
+            _idAgeFrom = LicenceField(card, "AGE  ·  CITY", LicFieldsX, LicLines[1], LicFieldsW, out _);
+            _idRel = LicenceField(card, "STANDING", LicFieldsX, LicLines[2], colW, out _);
+            _idRates = LicenceField(card, "RATES THIS BAR", LicFieldsX + colW + 16f, LicLines[2],
+                colW, out _idRatesLabel);
 
-            // The order: the one thing on the card the night turns on, so it gets the band.
-            var orderBand = NewRect("OrderBand", card);
-            Place(orderBand, new Vector2(0, 1), new Vector2(LicFieldsW, 64), new Vector2(LicFieldsX, -274f));
-            orderBand.gameObject.AddComponent<Image>().color =
-                new Color(UITheme.ClubBlue[2].r, UITheme.ClubBlue[2].g, UITheme.ClubBlue[2].b, 0.14f);
-            _idOrder = NewText("Order", orderBand, _body, 16, TextAnchor.MiddleLeft, UITheme.Night[1]);
-            _idOrder.supportRichText = true;
-            Stretch(_idOrder.rectTransform, Vector2.zero, Vector2.one, new Vector2(64, 0), new Vector2(-8, 0));
-            var idIcon = NewRect("OrderIcon", orderBand);
-            Place(idIcon, new Vector2(0, 0.5f), new Vector2(48, 48), new Vector2(8, 0));
+            // The order, seated on its own rule with the glass drawn beside it.
+            var idIcon = NewRect("OrderIcon", card);
+            Place(idIcon, new Vector2(0, 1), new Vector2(44, 44), Vector2.zero);
+            idIcon.pivot = new Vector2(0, 0);
+            idIcon.anchoredPosition = new Vector2(LicFieldsX, -LicLines[3] + 2f);
             _idOrderIcon = idIcon.gameObject.AddComponent<Image>();
             _idOrderIcon.preserveAspect = true;
             _idOrderIcon.raycastTarget = false;
+            _idOrder = LicenceField(card, "ORDER", LicFieldsX + 54f, LicLines[3],
+                LicFieldsW - 54f, out _, 16);
 
             // Serving preferences — the endorsements line. What the licence permits.
-            _idIntent = LicenceField(card, "SERVING PREFERENCES", LicFieldsX, -366f, LicFieldsW, 12);
+            _idIntent = LicenceField(card, "SERVING PREFERENCES", LicFieldsX, LicLines[4],
+                LicFieldsW, out _, 12);
 
             var hint = NewText("Hint", _idRoot, _body, 12, TextAnchor.MiddleCenter, UITheme.TextSecondary);
             Place(hint.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(400, 20),
