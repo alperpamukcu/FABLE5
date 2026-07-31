@@ -456,6 +456,30 @@ staging is not. In the author's words:
      restores the shelf gap on release; this makes the fridge itself a drop target, so putting
      a bottle away is the same gesture as taking it out, run backwards.
 
+  **Anchors measured off the installed art, 2026-07-31** — so the layout places props on the
+  furniture rather than guessing where its surfaces are. Sprite-local pixels, y down from the
+  top of the sprite.
+
+  `prep_table.png`, 298×356 — the steel top is a diagonal band running from the far end at the
+  top right to the near end at the bottom left. Sampled every 20 px:
+
+  | y | surface x span | width |
+  |---|---|---|
+  | 20 | 211–282 | 71 (far end) |
+  | 100 | 98–227 | 129 |
+  | 160 | 17–188 | 171 (near end) |
+
+  So the surface centreline runs (246, 20) → (102, 160), and depth `t` from 0 (far) to 1
+  (near) gives `x = 246 - 144t`, `y = 20 + 140t`. The band is 2.4× wider at the near end than
+  the far end, which is the perspective scale a prop standing on it must take: roughly
+  `scale = 0.42 + 0.58t`. Props are placed with their BASE on that point, not their centre.
+
+  `mixer_fridge.png`, 198×334 — lit interior spans x 78–188; the wire shelves' standing
+  surfaces are at y ≈ 108, 170 and 250, with the floor at ≈ 275, so the shelf gap is ~62 px.
+  With the author's ruling that bottles stay at true size (~250 px), the fridge is scaled
+  about 3.5× and only two shelves are on screen at once — which is the overflow that was
+  agreed to, not an accident to be fixed.
+
 - ☑ **Room to grow.** *Done 2026-07-31.* Both columns are masked scroll shelves
   (`ScrollShelf`), so anything past the visible run scrolls instead of drawing over the
   buttons under it. Sized so the four basic finishing touches fit without scrolling at all
