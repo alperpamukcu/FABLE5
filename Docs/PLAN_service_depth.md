@@ -369,16 +369,21 @@ staging is not. In the author's words:
   cabinet — because they all move the same four columns. The author's sketch gives the
   order, left to right: **finishing shelf · the glass being filled · the shaker · the
   fizzy-drinks cabinet**.
-- ☐ **The shaker is too small** on this stage next to the glass.
+- ☑ **The shaker is too small** on this stage next to the glass. *Done 2026-07-31* in the
+  re-layout: the serve stage keeps its own vessel height (`ServeVesselH = 250`) rather than
+  borrowing the shaker bench's 180, which left the tin looking like a thimble beside a
+  260-tall glass. Measured in play: shaker 146×250, glass 189×260.
 - ☐ **BUG — the shaker freezes.** It becomes unmovable "when the drink is poured, or when
   what is inside it runs out". Diagnosed: `RefreshServe` hides the shaker the moment the tin
   empties (`SetActive(!run.Glass.IsEmpty)`), but the drain happens inside `UpdateServeTilt`,
   which only calls `RefreshServeText`. So the tin is left standing mid-air, tilted, at
   wherever the cursor dropped it — visible, dead to the pointer on the next stage refresh,
   and never returned to its rest. It has to be put down deliberately when it empties.
-- ☐ **Room to grow.** More finishing touches and more mixers are coming; both rails need a
-  layout that takes them — a scrollable shelf, or shelves that wrap — rather than one that
-  silently runs off the panel at eight.
+- ☑ **Room to grow.** *Done 2026-07-31.* Both columns are masked scroll shelves
+  (`ScrollShelf`), so anything past the visible run scrolls instead of drawing over the
+  buttons under it. Sized so the four basic finishing touches fit without scrolling at all
+  — content 544 in a 550 viewport, measured — because making the player scroll to reach ice
+  would be a worse answer than the rail that overflowed.
 - ☑ **Hover, not just press.** *Done 2026-07-31.* `PressSink` now answers the hover as well
   as the press: the face lifts, grows a hair and warms, deliberately the inverse of the
   press so the two read as one gesture — hover brings the object toward you, press pushes it
