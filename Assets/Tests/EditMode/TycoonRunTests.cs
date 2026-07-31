@@ -335,6 +335,89 @@ namespace LastCall.Tests
             Assert.AreEqual(0, visit.PaidBase);
         }
 
+        // ── glassware (v5 P14 / C9) ─────────────────────────────────────────────
+
+        private static GlasswareDefinition Glass(string id, double capacity) =>
+            new GlasswareDefinition(id, id, id, new[] { 1.0, 1.0 }, new[] { 10, 20 }, capacity);
+
+        private static readonly IReadOnlyList<GlasswareDefinition> GlassSet = new[]
+        {
+            Glass("highball", 1.0), Glass("coupe", 0.55), Glass("pint", 1.6),
+        };
+
+        /// <summary>A run whose book is one coupe-served Spritz, so the glass the bar reaches
+        /// for is unambiguous.</summary>
+        private static TycoonRun RunWithGlassware(string glassId)
+        {
+            var recipe = new RecipeDefinition(
+                "spritz", "Spritz", rank: 2, baseFlavor: 10, baseMult: 2,
+                flavorPerLevel: 0, multPerLevel: 0,
+                requirements: Array.Empty<PatternRequirement>(),
+                ratioRequirements: new[]
+                {
+                    new RatioRequirement(IngredientType.Spirit, 0.3, 0.7),
+                    new RatioRequirement(IngredientType.Bubbly, 0.3, 0.7),
+                },
+                minFill: 0.5, glassId: glassId);
+            return new TycoonRun(NewShelf(), new[] { recipe }, new RunRng("glassware"),
+                config: new TycoonConfig(20, orderDecisionSeconds: 0, savorSeconds: 0),
+                glassware: GlassSet);
+        }
+
+        [Test]
+        public void ThePourOut_ReachesForTheDrinksOwnGlass()
+        {
+            var run = RunWithGlassware("coupe");
+            Assert.AreEqual("highball", run.ServingGlassware.Id, "an empty counter holds the default");
+
+            run.PourMeasure("gin", 0.35);
+            run.PourMeasure("soda", 0.35);
+            PourOut(run);
+
+            Assert.AreEqual("coupe", run.ServingGlassware.Id, "the shaker said Spritz, so a coupe");
+            Assert.AreEqual(0.55, run.ServingGlass.Capacity, 1e-9, "and a coupe is a small drink");
+        }
+
+        [Test]
+        public void AMixTheBarCannotName_LandsInTheDefaultGlass()
+        {
+            var run = RunWithGlassware("coupe");
+            run.PourMeasure("gin", 0.7);   // all spirit: no recipe matches this
+            PourOut(run);
+
+            Assert.AreEqual("highball", run.ServingGlassware.Id);
+        }
+
+        [Test]
+        public void TheGlassIsNeverSwappedUnderLiquid()
+        {
+            var run = RunWithGlassware("coupe");
+            run.PourMeasure("gin", 0.2);
+            run.PourMeasure("soda", 0.2);
+            PourOut(run);
+            var chosen = run.ServingGlassware;
+
+            // A second build tipped into the same glass must not change the vessel: the drink
+            // standing in it would either spill or be silently topped up.
+            run.PourMeasure("gin", 0.6);
+            PourOut(run);
+
+            Assert.AreSame(chosen, run.ServingGlassware);
+        }
+
+        [Test]
+        public void ABarWithNoGlassSet_KeepsTheSingleGlass()
+        {
+            var run = NewRun();   // built without glassware, like the bench runs and the sim
+            Assert.IsNull(run.ServingGlassware);
+            run.PourMeasure("gin", 0.35);
+            run.PourMeasure("soda", 0.35);
+            PourOut(run);
+
+            Assert.IsNull(run.ServingGlassware);
+            Assert.AreEqual(run.Config.GlassCapacity, run.ServingGlass.Capacity, 1e-9);
+        }
+
         [Test]
         public void Shaking_RecordsThePreparation()
         {

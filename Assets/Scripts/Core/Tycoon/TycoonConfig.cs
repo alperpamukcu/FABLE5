@@ -32,7 +32,13 @@ namespace LastCall.Core
 
         // ── the till ────────────────────────────────────────────────────────────
         public int StartingMoney { get; }
+
+        /// <summary>The single glass, for a bar with no glass set (v5 P14). The glassware
+        /// capacities are scaled against this, so a highball is 1.0 and the rest read off it.</summary>
         public double GlassCapacity { get; } = 1.0;
+
+        /// <summary>The glass a drink lands in when its recipe names none (v5 P14 / C9).</summary>
+        public string DefaultGlassId { get; } = "highball";
 
         /// <summary>Balance v1 (2026-07-22): tripled from v0 — stock is a real cost of
         /// goods now (~$2.5 a drink), not a rounding error. The v0 sim banked $5k by day

@@ -4,6 +4,7 @@
   "glasses": [
     {
       "id": "pint",
+      "capacity": 1.6,
       "name": "Pint",
       "spriteKey": "pint",
       "profile": [0.82, 0.88, 0.93, 0.97, 1.0, 1.0],
@@ -11,6 +12,7 @@
     },
     {
       "id": "highball",
+      "capacity": 1.0,
       "name": "Highball",
       "spriteKey": "glass_highball",
       "profile": [0.94, 0.96, 0.98, 1.0, 1.0, 1.0],
@@ -18,6 +20,7 @@
     },
     {
       "id": "rocks",
+      "capacity": 0.7,
       "name": "Rocks",
       "spriteKey": "glass_rocks",
       "profile": [0.9, 0.95, 1.0, 1.0, 1.0, 1.0],
@@ -25,6 +28,7 @@
     },
     {
       "id": "martini",
+      "capacity": 0.6,
       "name": "Martini",
       "spriteKey": "glass_martini",
       "profile": [0.12, 0.35, 0.58, 0.8, 1.0, 1.0],
@@ -32,6 +36,7 @@
     },
     {
       "id": "coupe",
+      "capacity": 0.55,
       "name": "Coupe",
       "spriteKey": "glass_coupe",
       "profile": [0.3, 0.62, 0.85, 1.0, 1.0, 0.92],

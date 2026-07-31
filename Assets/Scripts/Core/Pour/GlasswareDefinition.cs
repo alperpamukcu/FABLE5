@@ -21,11 +21,19 @@ namespace LastCall.Core
         /// <summary>Half-width multipliers, floor → rim, for the fluid solver's SetProfile.</summary>
         public IReadOnlyList<double> Profile { get; }
 
+        /// <summary>
+        /// How much the glass holds, in the run's pour units (the old single glass was 1.0, so
+        /// a highball is 1.0 and everything else is scaled against it). This is what makes the
+        /// glass set matter rather than just look different: a coupe is a small drink and a
+        /// pint is a large one, and `minFill` and the ratio bands are shares of *this*.
+        /// </summary>
+        public double Capacity { get; }
+
         /// <summary>Price of each upgrade step: [tier2, tier3]. Tier 1 is owned from day one.</summary>
         public IReadOnlyList<int> TierPrices { get; }
 
         public GlasswareDefinition(string id, string name, string spriteKey,
-            IReadOnlyList<double> profile, IReadOnlyList<int> tierPrices)
+            IReadOnlyList<double> profile, IReadOnlyList<int> tierPrices, double capacity)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Glass needs an id.", nameof(id));
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException($"Glass '{id}' needs a name.", nameof(name));
@@ -39,12 +47,16 @@ namespace LastCall.Core
                 throw new ArgumentException($"Glass '{id}' needs exactly 2 upgrade prices (tiers 2 and 3).", nameof(tierPrices));
             foreach (var p in tierPrices)
                 if (p <= 0) throw new ArgumentException($"Glass '{id}' has a non-positive upgrade price.", nameof(tierPrices));
+            if (capacity <= 0 || capacity > 4)
+                throw new ArgumentException(
+                    $"Glass '{id}' holds {capacity}; must be in (0, 4] pour units.", nameof(capacity));
 
             Id = id;
             Name = name;
             SpriteKey = spriteKey;
             Profile = profile;
             TierPrices = tierPrices;
+            Capacity = capacity;
         }
 
         public override string ToString() => $"{Name} ({Id})";

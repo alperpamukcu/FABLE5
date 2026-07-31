@@ -154,7 +154,7 @@ namespace LastCall.Game
                 try
                 {
                     glasses.Add(new GlasswareDefinition(glass.id, glass.name, glass.spriteKey,
-                        glass.profile?.ToArray(), glass.tierPrices?.ToArray()));
+                        glass.profile?.ToArray(), glass.tierPrices?.ToArray(), glass.capacity));
                 }
                 catch (ArgumentException e)
                 {
@@ -407,6 +407,7 @@ namespace LastCall.Game
             public string spriteKey;
             public List<double> profile;
             public List<int> tierPrices;
+            public double capacity;
         }
 
         [Serializable]

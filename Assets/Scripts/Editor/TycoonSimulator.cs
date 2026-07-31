@@ -59,16 +59,27 @@ namespace LastCall.EditorTools
             Debug.Log($"[TycoonSim] wrote {path}");
         }
 
+        /// <summary>Pins the editor's number culture too. The report below is a checked-in
+        /// document; without this it reads "$133,2" on one desktop and "$133.2" on another,
+        /// and every regeneration shows up as a diff nobody made.</summary>
+        [InitializeOnLoadMethod]
+        private static void PinCulture() => RunCulture.Pin();
+
         public static void Simulate(int runs)
         {
             var deck = DataLoader.ParseDeck(Read("bottles/base_bar.json"));
             var recipes = DataLoader.ParseRecipes(Read("recipes/recipes.json"));
             var archetypes = DataLoader.ParseArchetypes(Read("customers/archetypes.json"));
 
+            // The glass set is part of the bar now (v5 P14): a pint holds more than a coupe,
+            // so the vessel decides how much liquid a drink costs. Leaving it out here would
+            // measure a bar nobody plays.
+            var glassware = DataLoader.ParseGlassware(Read("glassware/glassware.json"));
+
             var stats = new Aggregate();
             for (int i = 0; i < runs; i++)
                 PlayRun($"TYC-{i:0000}", deck, recipes, archetypes, stats,
-                    DrinkBuildSeconds, DayCap);
+                    DrinkBuildSeconds, DayCap, glassware);
 
             string report = stats.Report(runs);
             Debug.Log(report);
@@ -82,14 +93,15 @@ namespace LastCall.EditorTools
 
         private static void PlayRun(string seed, LoadedDeck deck,
             IReadOnlyList<RecipeDefinition> recipes, IReadOnlyList<ArchetypeDefinition> archetypes,
-            Aggregate stats, double buildSeconds = DrinkBuildSeconds, int dayCap = DayCap)
+            Aggregate stats, double buildSeconds = DrinkBuildSeconds, int dayCap = DayCap,
+            IReadOnlyList<GlasswareDefinition> glassware = null)
         {
             var starting = deck.Cards
                 .Where(c => c.Info == null || c.Info.Tier <= 1)
                 .Select(c => c.Clone()).ToList();
             var shelf = new Shelf(starting.Select(c => new ShelfBottle(c)));
             var run = new TycoonRun(shelf, recipes, new RunRng(seed),
-                regulars: new RegularsRegistry(archetypes));
+                regulars: new RegularsRegistry(archetypes), glassware: glassware);
 
             double buildTimer = buildSeconds;
             int guard = 0;

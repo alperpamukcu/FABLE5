@@ -106,7 +106,8 @@ namespace LastCall.Core
 
         public TycoonRun(Shelf shelf, IReadOnlyList<RecipeDefinition> recipes, RunRng rng,
             TycoonConfig config = null, RegularsRegistry regulars = null,
-            IReadOnlyList<IngredientCard> brandCatalogue = null)
+            IReadOnlyList<IngredientCard> brandCatalogue = null,
+            IReadOnlyList<GlasswareDefinition> glassware = null)
         {
             _shelf = shelf ?? throw new ArgumentNullException(nameof(shelf));
             if (recipes == null) throw new ArgumentNullException(nameof(recipes));
@@ -124,11 +125,71 @@ namespace LastCall.Core
             _regulars = regulars;
             _brandCatalogue = brandCatalogue ?? Array.Empty<IngredientCard>();
 
+            _glassware = glassware ?? Array.Empty<GlasswareDefinition>();
+
             Money = _config.StartingMoney;
             Seats = _config.StartingSeats;
             Glass = new GlassContents(_config.GlassCapacity);
-            ServingGlass = new GlassContents(_config.GlassCapacity);
+            ServingGlass = NewServingGlass(DefaultGlassware);
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"));
+        }
+
+        // ── glassware (v5 P14 / C9) ─────────────────────────────────────────────
+
+        private readonly IReadOnlyList<GlasswareDefinition> _glassware;
+
+        /// <summary>The glass set this bar owns. Empty for a run built without one, which is
+        /// what keeps the bench setups and the older tests on the single 1.0 glass.</summary>
+        public IReadOnlyList<GlasswareDefinition> Glassware => _glassware;
+
+        /// <summary>Which glass is on the counter right now; null when the bar has no set.</summary>
+        public GlasswareDefinition ServingGlassware { get; private set; }
+
+        private GlasswareDefinition GlassNamed(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            foreach (var g in _glassware)
+                if (g.Id == id) return g;
+            return null;
+        }
+
+        /// <summary>What stands on the counter with nothing in it.</summary>
+        private GlasswareDefinition DefaultGlassware => GlassNamed(_config.DefaultGlassId);
+
+        /// <summary>Beer's recipe, so the tap can ask for its glass by name rather than by
+        /// hardcoding "pint" in two places.</summary>
+        private RecipeDefinition DraughtRecipe
+        {
+            get
+            {
+                foreach (var recipe in _recipes)
+                    foreach (var req in recipe.Requirements)
+                        foreach (var type in req.Types)
+                            if (type == IngredientType.Beer) return recipe;
+                return null;
+            }
+        }
+
+        private GlassContents NewServingGlass(GlasswareDefinition glass)
+        {
+            ServingGlassware = glass;
+            return new GlassContents(glass?.Capacity ?? _config.GlassCapacity);
+        }
+
+        /// <summary>
+        /// Puts the drink's own glass on the counter (C9, the notes' auto-selection). Called
+        /// the moment a drink commits to a glass — the pour out of the shaker, the first pull
+        /// on the tap — and refused once there is anything in the glass, because swapping a
+        /// vessel under liquid is either a spill or a free top-up depending on which way the
+        /// capacity moved. A bar with no glass set keeps the single 1.0 glass and this is a
+        /// no-op, which is what keeps the emotion-free bench runs valid.
+        /// </summary>
+        private void SelectGlassFor(RecipeDefinition recipe)
+        {
+            if (_glassware.Count == 0 || !ServingGlass.IsEmpty) return;
+            var glass = GlassNamed(recipe?.GlassId) ?? GlassNamed(_config.DefaultGlassId);
+            if (glass == null || ReferenceEquals(glass, ServingGlassware)) return;
+            ServingGlass = NewServingGlass(glass);
         }
 
         // ── the floor clock ─────────────────────────────────────────────────────
@@ -317,6 +378,9 @@ namespace LastCall.Core
             if (!ServingGlass.IsEmpty && ServingGlass.VolumeOf(kegId) <= 0)
                 throw new InvalidOperationException(
                     "There is already a drink in that glass — serve it or bin it before pulling a pint.");
+            // Beer goes in a pint (v5 P14 / C9) — the one glass the bar reaches for without
+            // being told, and the reason draught is the drink you can put down in four seconds.
+            SelectGlassFor(DraughtRecipe);
             PullingId = kegId;
         }
 
@@ -426,6 +490,13 @@ namespace LastCall.Core
         public double PourIntoServingGlass(double volume, double accuracy)
         {
             EnsurePhase(TycoonPhase.DayOpen);
+            // The glass is chosen here, on the first pour out (v5 P14 / C9): the shaker is what
+            // knows the drink, so this is the last moment the bar can reach for the right vessel
+            // and the first moment it has anything to reach for it WITH. Whatever the shaker
+            // identifies as, that glass comes down — including nothing, which lands in the
+            // default the way an unrecognisable mix always has.
+            if (ServingGlass.IsEmpty && !Glass.IsEmpty)
+                SelectGlassFor(RatioRecipeMatcher.Match(Glass, _recipes, IngredientOf)?.Recipe);
             return Glass.TransferInto(ServingGlass, volume, accuracy);
         }
 
@@ -548,7 +619,7 @@ namespace LastCall.Core
             IsShaken = false;
             ShakeEnergy = 0;
             Glass = new GlassContents(_config.GlassCapacity);
-            ServingGlass = new GlassContents(_config.GlassCapacity);
+            ServingGlass = NewServingGlass(DefaultGlassware);   // back to the default until a drink asks
         }
 
         // ── day end: invoice, stock, market (GDD 23 §6–§8) ──────────────────────

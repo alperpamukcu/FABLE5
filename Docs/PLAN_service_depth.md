@@ -269,9 +269,20 @@ to the board instead.
   match the bottles; drawn SERVE button on `PressSink`
 - ☐ **Serve stage in the shaker's interaction style**: left rail garnishes/finishing (ice,
   lemon, rims), right rail **carbonated/mixers added at the glass** (the P10 Core verb)
-- ☐ **Glassware system** (C9): the P10 glass set drawn (incl. a dedicated beer glass);
-  **auto-selection** — SERVE pours into the recipe's glass; per-glass fluid profile
-  calibrated by the measured procedure; drag-to-serve shows the true glass
+- ◐ **Glassware system** (C9). Core half done:
+  - ☑ **Capacity per glass** — P10 specced it and shipped without it, so every glass held
+    1.0 and the set was cosmetic. A coupe is 0.55 and a pint 1.6, scaled against the old
+    single glass, and `minFill` and the ratio bands are shares of *that*.
+  - ☑ **Auto-selection**: the glass comes down at the pour out of the shaker — the last
+    moment the bar can reach for the right vessel and the first moment it has anything to
+    reach for it with — and at the first pull on the tap, which is always a pint. An
+    unrecognisable mix lands in the default. Refused once there is liquid in the glass:
+    swapping the vessel under a drink is a spill or a free top-up depending on which way the
+    capacity moved.
+  - ☑ The **simulator plays the glass set** too. It was building runs without one, so it
+    was measuring a bar nobody plays.
+  - ☐ The glass set **drawn** (incl. a dedicated beer glass); per-glass fluid profile
+    calibrated by the measured procedure; drag-to-serve shows the true glass
 - ☐ **Decorations persist** on the served drink: salt/sugar visibly on the rim, wedge on
   the glass wall, ice floating in the liquid, garnish on top — the delivered glass shows
   everything that went in
