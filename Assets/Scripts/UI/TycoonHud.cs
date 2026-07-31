@@ -1492,21 +1492,24 @@ namespace LastCall.UI
 
         private Text BookChip(RectTransform sheet, int index, float y, Action onClick)
         {
-            // The old menu's plate key, carrying a filter now.
+            // No button chrome (2026-08-01, the author): a printed menu filters with ink,
+            // not with keys. The whole line is still clickable; only the text shows.
             var chip = NewRect($"Chip{index}", sheet);
             Place(chip, new Vector2(0.5f, 0.5f), new Vector2(178, 30), new Vector2(BookChipX(index), y));
             var img = chip.gameObject.AddComponent<Image>();
-            var plate = ItemArt.Load("plate");
-            if (plate != null)
-            {
-                img.sprite = plate; img.type = Image.Type.Sliced;
-                img.pixelsPerUnitMultiplier = 0.5f;
-            }
-            else img.color = UITheme.Cream[3];
+            img.color = new Color(0, 0, 0, 0.001f);   // invisible, but catches the click
             var btn = chip.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => { Sfx.Play("click", 0.5f); onClick(); });
-            var t = NewText("T", chip, _body, 10, TextAnchor.MiddleCenter, new Color(0.16f, 0.10f, 0.06f));
+            var t = NewText("T", chip, _body, 10, TextAnchor.MiddleCenter, new Color(0.30f, 0.20f, 0.10f));
+            var rule = NewRect("Rule", chip);
+            rule.anchorMin = new Vector2(0.08f, 0); rule.anchorMax = new Vector2(0.92f, 0);
+            rule.pivot = new Vector2(0.5f, 0);
+            rule.sizeDelta = new Vector2(0, 1);
+            rule.anchoredPosition = new Vector2(0, 4);
+            var ruleImg = rule.gameObject.AddComponent<Image>();
+            ruleImg.color = new Color(0.30f, 0.20f, 0.10f, 0.45f);
+            ruleImg.raycastTarget = false;
             Stretch(t.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             return t;
         }
@@ -1569,7 +1572,7 @@ namespace LastCall.UI
         {
             var h = NewRect("H", _bookList);
             h.gameObject.AddComponent<LayoutElement>().preferredHeight = 22;
-            var t = NewText("T", h, _body, 10, TextAnchor.MiddleLeft, UITheme.ClubBlue[2]);
+            var t = NewText("T", h, _body, 10, TextAnchor.MiddleLeft, new Color(0.42f, 0.24f, 0.10f));
             Stretch(t.rectTransform, Vector2.zero, Vector2.one, new Vector2(6, 0), Vector2.zero);
             t.text = text;
         }
@@ -1580,17 +1583,18 @@ namespace LastCall.UI
         {
             var row = NewRect($"R_{r.Id}", _bookList);
             row.gameObject.AddComponent<LayoutElement>().preferredHeight = 46;
+            // A printed line, not a key (2026-08-01): transparent row, thin ink rule under
+            // it, the way the licence's own fields sit on their rules.
             var rowImg = row.gameObject.AddComponent<Image>();
-            var rowPlate = ItemArt.Load("plate");
-            if (rowPlate != null)
-            {
-                rowImg.sprite = rowPlate; rowImg.type = Image.Type.Sliced;
-                rowImg.pixelsPerUnitMultiplier = 0.5f;
-                rowImg.color = lockedRow ? new Color(1f, 1f, 1f, 0.55f) : Color.white;
-            }
-            else rowImg.color = lockedRow
-                ? new Color(UITheme.Cream[3].r, UITheme.Cream[3].g, UITheme.Cream[3].b, 0.5f)
-                : UITheme.Cream[3];
+            rowImg.color = new Color(0, 0, 0, 0.001f);
+            var rowRule = NewRect("Rule", row);
+            rowRule.anchorMin = new Vector2(0.01f, 0); rowRule.anchorMax = new Vector2(0.99f, 0);
+            rowRule.pivot = new Vector2(0.5f, 0);
+            rowRule.sizeDelta = new Vector2(0, 1);
+            rowRule.anchoredPosition = new Vector2(0, 1);
+            var rowRuleImg = rowRule.gameObject.AddComponent<Image>();
+            rowRuleImg.color = new Color(0.30f, 0.20f, 0.10f, lockedRow ? 0.20f : 0.35f);
+            rowRuleImg.raycastTarget = false;
 
             var icon = NewRect("I", row);
             Place(icon, new Vector2(0, 0.5f), new Vector2(34, 34), new Vector2(8, 0));
@@ -1601,7 +1605,7 @@ namespace LastCall.UI
             if (lockedRow) img.color = new Color(1, 1, 1, 0.4f);
 
             var name = NewText("N", row, _body, 12, TextAnchor.UpperLeft,
-                lockedRow ? UITheme.Night[3] : UITheme.Night[1]);
+                lockedRow ? new Color(0.45f, 0.36f, 0.28f) : new Color(0.16f, 0.10f, 0.06f));
             Place(name.rectTransform, new Vector2(0, 1), new Vector2(360, 16), new Vector2(50, -5));
             // The two brand-agnostic specials never touch the tin; everything else says how
             // it is worked. (Prep defaults to Shaken in the ctor, which fits neither a pint
@@ -1613,7 +1617,7 @@ namespace LastCall.UI
             name.text = $"{r.Name.ToUpperInvariant()}   <color=#1B5F66>{prep}</color>";
             name.supportRichText = true;
 
-            var line = NewText("L", row, _body, 8, TextAnchor.LowerLeft, UITheme.Night[2]);
+            var line = NewText("L", row, _body, 8, TextAnchor.LowerLeft, new Color(0.38f, 0.28f, 0.18f));
             Place(line.rectTransform, new Vector2(0, 0), new Vector2(560, 14), new Vector2(50, 5));
             line.horizontalOverflow = HorizontalWrapMode.Overflow;
             if (lockedRow)
