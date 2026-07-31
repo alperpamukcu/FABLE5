@@ -48,8 +48,15 @@
 ## 3. Orders and the menu
 
 - A customer orders a **named drink** from what the bar can actually make: the pourable
-  recipes (ratio bands) plus the straight pours. The order is visible on the seat
-  (speech bubble, module 24).
+  recipes (ratio bands) plus the straight pours.
+- **The order is hidden until the ID card is read** (v5 C3, 2026-07-31). The seat signals
+  readiness ("READY · TAP THE ID"); the drink's name, icon and wanted extras appear only
+  after the player opens the licence, and **no price appears anywhere on the card or the
+  bubble** — prices are the menu's business. Enforced in Core, not the HUD:
+  `CustomerVisit.Order` throws until `InspectId()` has been called, the judge reads the
+  truth internally (serving blind stays a legal gamble), and `ReadIntegrityTests` pins the
+  refusal the way the emotion reads are pinned. An extra order does not re-hide — it is
+  spoken across the bar by someone whose card was already read.
 - **Menu price** (v0): `price = $4 + $1×rank` for recipes; straight pours `$3 + Flavor/2`.
   Quality/tier-2 brands raise the price of drinks that use them (**+$1 per tier step** of
   the most expensive bottle involved) — buying better bottles is buying higher menu prices.

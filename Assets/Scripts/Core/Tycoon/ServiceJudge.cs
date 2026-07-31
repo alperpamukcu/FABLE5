@@ -121,7 +121,7 @@ namespace LastCall.Core
         {
             if (visit == null) throw new ArgumentNullException(nameof(visit));
 
-            var spec = visit.Order.Spec;
+            var spec = visit.OrderTruth.Spec;
             double fill = delivered?.FillFraction ?? 0;
 
             // A glass with barely anything in it is refused before anything else is weighed.
@@ -135,7 +135,7 @@ namespace LastCall.Core
             if (match == OrderMatch.Wrong)
                 basePaid = served?.Recipe != null ? DrinkOrder.MenuPrice(served.Recipe) : 0;
             else
-                basePaid = visit.Order.Price;
+                basePaid = visit.OrderTruth.Price;
 
             // How much of the job was done. Each part is a continuous 0–1: nothing here is a
             // cliff, which is the point of the rewrite — patience used to stop mattering at

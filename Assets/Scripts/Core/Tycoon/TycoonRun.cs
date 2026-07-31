@@ -558,7 +558,7 @@ namespace LastCall.Core
             var delivered = ServingGlass;
             var match = RatioRecipeMatcher.Match(delivered, _recipes, IngredientOf);
             var applied = PourResolver.Resolve(delivered, match, IngredientOf);
-            var matchKind = ServiceJudge.Compare(visit.Order, match, delivered, IngredientOf);
+            var matchKind = ServiceJudge.Compare(visit.OrderTruth, match, delivered, IngredientOf);
             // Emotion→recipe pivot (2026-07-22): the verdict is priced off the drink and the
             // garnishes they asked for, not a mood read. The emotion charge is still applied to
             // the regular's dormant stats (harmless) so the customer model stays intact.

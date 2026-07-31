@@ -255,6 +255,7 @@ namespace LastCall.Tests
 
             Assert.AreEqual(VisitState.Waiting, visit.State, "still on the stool");
             Assert.AreEqual(1, visit.ExtraOrdersTaken);
+            visit.InspectId();
             Assert.AreEqual(8, visit.Order.Price, "a fresh order is open");
             Assert.AreEqual(60 * CustomerVisit.ExtraOrderPatienceRefill, visit.PatienceLeft, 1e-9);
             Assert.Greater(visit.Paid, 0, "the first round is already paid");

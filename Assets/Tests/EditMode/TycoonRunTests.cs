@@ -81,6 +81,7 @@ namespace LastCall.Tests
             // v5 P11: 8 exact spritzes at the new $4 base, plus a tip that is a share of that
             // base rather than a flat $4. Stated as the day's own book so the shape is pinned
             // without re-deriving the tip formula here -- OrderSpecTests owns that.
+            run.Floor.Finished[0].InspectId();   // the books are read off the card (C3)
             Assert.AreEqual(served * DrinkOrder.MenuPrice(run.Floor.Finished[0].Order.Wanted),
                 run.DaySales, "every serve was exact, at the menu price");
             Assert.AreEqual(20 + run.DaySales + run.DayTips - run.Config.Rent(1), run.Money);
@@ -112,6 +113,7 @@ namespace LastCall.Tests
             }
 
             // v5 P11 halved the base ladder: a rank-2 spritz is $4 on the menu, not $6.
+            run.Floor.Seated[0].InspectId();     // the price is read off the card (C3)
             Assert.AreEqual(5, run.Floor.Seated[0].Order.Price,
                 "the $4 spritz sells for $5 to high rollers (×1.25)");
         }
@@ -134,6 +136,7 @@ namespace LastCall.Tests
             while (run.Floor.Seated.Count == 0) { Assert.Less(guard++, 100); run.Tick(5); }
 
             // base $6 (rank 2) + premium (tier 3 spirit → +2×$2) = $10 to a regular crowd.
+            run.Floor.Seated[0].InspectId();
             Assert.AreEqual(DrinkOrder.MenuPrice(Spritz()) + (3 - 1) * 2,
                 run.Floor.Seated[0].Order.Price);
         }
@@ -286,6 +289,7 @@ namespace LastCall.Tests
             // bonus but a share of the base scaled by speed/spec/fill, so it tracks the
             // drink's price instead of standing beside it. v5 P12: how many spritzes is the
             // night's business, not a constant.
+            run.Floor.Finished[0].InspectId();
             Assert.AreEqual(
                 run.Floor.Finished.Count * DrinkOrder.MenuPrice(run.Floor.Finished[0].Order.Wanted),
                 run.DaySales);

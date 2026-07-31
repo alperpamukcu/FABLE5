@@ -123,6 +123,10 @@ namespace LastCall.EditorTools
                         // which is what the sim had been doing since decisions were added — it
                         // has evidently not been run since (2026-07-27).
                         if (!visit.HasOrdered) continue;
+                        // The bot does what the fiction has always said it does: it reads the
+                        // ID. Since v5 C3 that is also the only way Core will hand the order
+                        // over — an uninspected visit refuses to name its drink.
+                        visit.InspectId();
                         if (!BuildOrderedDrink(run, visit)) continue;
                         bool pint = run.ServingGlass.HasPreparation(Preparations.Draught.Id);
                         double head = pint ? run.ServingGlass.Head / run.ServingGlass.Capacity : 0;

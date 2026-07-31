@@ -32,7 +32,34 @@ namespace LastCall.Core
 
         public RegularState Regular { get; }
         public CustomerRead Read { get; }
-        public DrinkOrder Order { get; private set; }
+
+        private DrinkOrder _order;
+
+        /// <summary>
+        /// True once the player has looked at this customer's ID card. Until then the order is
+        /// theirs, not yours — see <see cref="Order"/>.
+        /// </summary>
+        public bool IdInspected { get; private set; }
+
+        /// <summary>Reads the ID card. There is no undo: what has been seen stays seen, and an
+        /// extra order does not re-hide it — it is spoken across the bar by someone whose card
+        /// you already read.</summary>
+        public void InspectId() => IdInspected = true;
+
+        /// <summary>
+        /// What they asked for — IF you have read the card (v5 C3). The bubble naming the order
+        /// made the ID card decorative: everything it told you was already floating over the
+        /// seat, price included. Core refuses here rather than trusting the HUD to look away,
+        /// the same bargain the emotion reads struck: serving blind stays legal (the judge
+        /// compares against the truth internally), but *knowing* costs the inspection.
+        /// </summary>
+        public DrinkOrder Order => IdInspected
+            ? _order
+            : throw new InvalidOperationException(
+                "The order is on the ID card — inspect it before reading it (C3).");
+
+        /// <summary>The truth, for the judge and the run. Core-only by assembly.</summary>
+        internal DrinkOrder OrderTruth => _order;
         public double PatienceMax { get; }
         public double PatienceLeft { get; private set; }
         public VisitState State { get; private set; } = VisitState.Waiting;
@@ -78,7 +105,7 @@ namespace LastCall.Core
         public CustomerVisit(DrinkOrder order, double patienceSeconds,
             RegularState regular = null, CustomerRead read = null, double decideSeconds = 0)
         {
-            Order = order ?? throw new ArgumentNullException(nameof(order));
+            _order = order ?? throw new ArgumentNullException(nameof(order));
             if (patienceSeconds <= 0) throw new ArgumentOutOfRangeException(nameof(patienceSeconds));
             if (decideSeconds < 0) throw new ArgumentOutOfRangeException(nameof(decideSeconds));
             PatienceMax = patienceSeconds;
@@ -147,7 +174,7 @@ namespace LastCall.Core
             if (verdict.OrdersAgain && nextOrder != null && ExtraOrdersTaken < MaxExtraOrders)
             {
                 ExtraOrdersTaken++;
-                Order = nextOrder;
+                _order = nextOrder;
                 PatienceLeft = PatienceMax * ExtraOrderPatienceRefill;
                 return;
             }

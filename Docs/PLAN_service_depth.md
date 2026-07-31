@@ -580,9 +580,13 @@ measured (`SurfaceY`) inside every silhouette; tap stage unchanged (beer glass j
   requested drink **with its icon**, serving preferences, customer's bar rating. Later
   slots reserved: favourite drink, last visit, last rating, total spent. **No price,
   anywhere on it**
-- ☐ **The order hides** (C3): the bubble stops naming the order; ready-to-order customers
-  signal it, the player clicks and reads the card. Enforced in Core (what the HUD can see
-  of an uninspected visit), pinned by a hidden-info test the way reads already are
+- ☑ **The order hides** (C3). *Done 2026-07-31.* `CustomerVisit.Order` throws until
+  `InspectId()`; the judge and the run read `OrderTruth` internally, so serving blind stays
+  a legal gamble. The bubble shows "READY · TAP THE ID" until the card is opened, then the
+  name without a price; opening the card IS the inspection, and the card lost its price too
+  (C3: no price anywhere). An extra order does not re-hide — spoken across the bar by
+  someone whose card was already read. Pinned by two `ReadIntegrityTests`; the sim bot now
+  formally inspects (it always read the ID in fiction) and the report is byte-identical
 - ☐ Emotion reads leave the card per D1; reactions carry the tell
 Gate: hidden-info test green; a full night played by card-reading alone; animation timing
 checked in play.

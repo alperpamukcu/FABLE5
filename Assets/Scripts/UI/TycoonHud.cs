@@ -662,12 +662,15 @@ namespace LastCall.UI
                 view.Name.color = UITheme.TextPrimary;
                 view.Order.color = UITheme.Amber[4];
 
-                // The glass they asked for, drawn from the recipe (v5 P13). Hidden while they
-                // are still deciding: showing it then would hand over an order nobody has
-                // placed, which is the same leak the read rules forbid everywhere else.
+                // The bubble only knows what the PLAYER knows (v5 C3): until the ID card has
+                // been read, Core refuses to hand the order over at all, so an unread customer
+                // shows a signal, not a drink. This is what makes reading the card a verb — the
+                // bubble used to print the order and its price over every head, and the card was
+                // decoration. No price appears even after reading: prices live on the menu.
+                bool known = visit.IdInspected;
                 if (view.Icon != null)
                 {
-                    view.Icon.sprite = deciding
+                    view.Icon.sprite = deciding || !known
                         ? null
                         : DrinkIcon.For(visit.Order.Wanted, _bootstrap.Glassware);
                     view.Icon.enabled = view.Icon.sprite != null;
@@ -684,14 +687,20 @@ namespace LastCall.UI
                 {
                     // Served and content; the drink is theirs to finish before they go.
                     view.Wants.text = "ENJOYING IT";
-                    view.Order.text = $"{visit.Order.Wanted.Name.ToUpperInvariant()}  ·";
+                    view.Order.text = known ? $"{visit.Order.Wanted.Name.ToUpperInvariant()}  ·" : "·";
                     view.Order.color = UITheme.Lime[3];
+                }
+                else if (!known)
+                {
+                    // They have ordered and you have not looked: the card is the only way in.
+                    view.Wants.text = "READY · TAP THE ID";
+                    view.Order.text = "?";
                 }
                 else
                 {
                     // A glanceable tell that they want extras; the licence (GDD 24 §5) shows which.
-                    view.Wants.text = visit.Order.Garnishes.Count > 0 ? "WANTS EXTRAS · TAP" : "TAP TO READ";
-                    view.Order.text = $"{visit.Order.Wanted.Name.ToUpperInvariant()}  ${visit.Order.Price}";
+                    view.Wants.text = visit.Order.Garnishes.Count > 0 ? "WANTS EXTRAS" : "WAITING";
+                    view.Order.text = visit.Order.Wanted.Name.ToUpperInvariant();
                 }
 
                 // The patience clock only bites while they wait on an order. Deciding holds it
@@ -1013,6 +1022,10 @@ namespace LastCall.UI
             _idVisit = visit;
             var reg = visit.Regular;
 
+            // Opening the card IS the inspection (v5 C3): this is the one gate Core opens the
+            // order through, so everything below may read it — and the bubble may from now on.
+            visit.InspectId();
+
             if (_ledgerPanel != null) _ledgerPanel.gameObject.SetActive(false);
             _idRoot.gameObject.SetActive(true);
             _idPhoto.sprite = stage != null ? stage.PortraitSpriteFor(reg.ArchetypeId) : null;
@@ -1024,7 +1037,9 @@ namespace LastCall.UI
                 ? $"{reg.Relationship.ToString().ToUpperInvariant()} · {reg.Visits} VISITS"
                 : "NEW FACE";
 
-            _idOrder.text = $"ORDER:  <b>{visit.Order.Wanted.Name.ToUpperInvariant()}</b>   ${visit.Order.Price}";
+            // No price, anywhere on the card (C3): the licence says who they are and what they
+            // want, and what a drink costs is the menu's business.
+            _idOrder.text = $"ORDER:  <b>{visit.Order.Wanted.Name.ToUpperInvariant()}</b>";
             _idOrderIcon.sprite = DrinkIcon.For(visit.Order.Wanted, _bootstrap.Glassware);
             _idOrderIcon.enabled = _idOrderIcon.sprite != null;
 
