@@ -260,7 +260,27 @@ namespace LastCall.UI
             if (run == null || run.Phase != TycoonPhase.DayOpen) return;
             if (_flow != null && _flow.IsOpen) return;   // finish the build first
             var visit = _seats[index].Visit;
-            if (visit == null || visit.State != VisitState.Waiting) return;
+            if (visit == null) return;
+
+            // A bowl in hand goes down in front of them (v5 P16). Before the waiting check,
+            // because a customer nursing a drink is exactly who takes a bowl of nuts — and
+            // Core's own refusals do the talking when the snack cannot land (never alone,
+            // bowl empty), so the toast is the rule speaking, not the menu's guess at it.
+            if (_snackInHand != null)
+            {
+                var snack = _snackInHand;
+                _snackInHand = null;
+                try
+                {
+                    run.ServeSnack(snack.Id, visit);
+                    Toast($"{snack.Name.ToUpperInvariant()} — ON THE TAB");
+                }
+                catch (InvalidOperationException e) { Toast(e.Message.ToUpperInvariant()); }
+                RefreshSnackRow(run);
+                return;
+            }
+
+            if (visit.State != VisitState.Waiting) return;
             if (!visit.HasOrdered) return;   // still deciding — no order to read yet (2026-07-23)
 
             // Clicking a customer reads their licence (GDD 24 §5). Serving is a separate act:
@@ -283,6 +303,80 @@ namespace LastCall.UI
             CloseId();
             StartCoroutine(ServeReaction(index, verdict));   // reaction + payment float up
             return true;
+        }
+
+        // ── the snack bowls (v5 P16) ─────────────────────────────────────────────
+        // On the counter, left end, opposite the bin: click a bowl to take it in hand, click
+        // a customer to put it down. The plan said "from the menu"; the bowls stand on the
+        // counter instead because a snack has no prep — sending the player through the drink
+        // menu for a bowl of nuts would be a stage with nothing on it.
+
+        private SnackDefinition _snackInHand;
+        private readonly List<(SnackDefinition snack, Image art, Text stock)> _snackBowls =
+            new List<(SnackDefinition, Image, Text)>();
+
+        private void BuildSnackRow(RectTransform root)
+        {
+            var run = Run;
+            if (run == null || run.Snacks.Count == 0) return;
+            float x = 24f;
+            foreach (var snack in run.Snacks)
+            {
+                var s = snack;
+                var bowl = NewRect($"Snack_{s.Id}", root);
+                bowl.anchorMin = bowl.anchorMax = bowl.pivot = new Vector2(0f, 0f);
+                bowl.sizeDelta = new Vector2(76, 84);
+                bowl.anchoredPosition = new Vector2(x, 96);
+                x += 82f;
+                var hit = bowl.gameObject.AddComponent<Image>();
+                hit.color = new Color(0, 0, 0, 0.001f);
+
+                var art = NewRect("Art", bowl);
+                Place(art, new Vector2(0.5f, 1), new Vector2(72, 54), new Vector2(0, 0));
+                var img = art.gameObject.AddComponent<Image>();
+                img.sprite = ItemArt.Load($"snack_{s.Id}");
+                img.preserveAspect = true; img.raycastTarget = false;
+                if (img.sprite == null) img.color = UITheme.Amber[2];   // no art yet: a warm chip
+
+                var label = NewText("N", bowl, _body, 8, TextAnchor.LowerCenter, UITheme.TextSecondary);
+                Place(label.rectTransform, new Vector2(0.5f, 0), new Vector2(96, 24), Vector2.zero);
+                label.text = s.Name.ToUpperInvariant();
+
+                var btn = bowl.gameObject.AddComponent<Button>();
+                btn.targetGraphic = hit;
+                btn.transition = Selectable.Transition.None;
+                btn.onClick.AddListener(() =>
+                {
+                    var r = Run;
+                    if (r == null || r.Phase != TycoonPhase.DayOpen) return;
+                    if (r.SnackLeft(s.Id) <= 0) { Toast($"THE {s.Name.ToUpperInvariant()} BOWL IS EMPTY TODAY"); return; }
+                    _snackInHand = _snackInHand == s ? null : s;   // click again to put it back
+                    Toast(_snackInHand != null
+                        ? $"{s.Name.ToUpperInvariant()} IN HAND — CLICK A CUSTOMER"
+                        : "PUT IT BACK");
+                    RefreshSnackRow(r);
+                });
+                var sink = bowl.gameObject.AddComponent<PressSink>();
+                sink.Face = art; sink.Depth = 4f; sink.Lift = 3f; sink.Tint = img;
+
+                _snackBowls.Add((s, img, label));
+            }
+        }
+
+        /// <summary>Stock counts and the in-hand highlight, redrawn after anything changes.</summary>
+        private void RefreshSnackRow(TycoonRun run)
+        {
+            foreach (var (snack, art, stock) in _snackBowls)
+            {
+                int left = run.SnackLeft(snack.Id);
+                stock.text = left > 0
+                    ? $"{snack.Name.ToUpperInvariant()} · {left}"
+                    : $"{snack.Name.ToUpperInvariant()} · OUT";
+                var baseCol = art.sprite != null ? Color.white : UITheme.Amber[2];
+                art.color = left <= 0 ? new Color(baseCol.r, baseCol.g, baseCol.b, 0.35f)
+                    : _snackInHand == snack ? new Color(1f, 1f, 0.82f, 1f)
+                    : baseCol;
+            }
         }
 
         // ── the drink you carry (GDD 24 §3, 2026-07-22) ──────────────────────────
@@ -681,6 +775,8 @@ namespace LastCall.UI
                     }
                 }
             }
+
+            RefreshSnackRow(run);
 
             // 3) Render each stool from its assigned patron.
             for (int i = 0; i < _seats.Count; i++)
@@ -1432,6 +1528,7 @@ namespace LastCall.UI
                 new Vector2(300, 40), new Vector2(0, 40), UITheme.PrimaryAction, OnMenuClicked);
 
             BuildDrinkGlass(root);
+            BuildSnackRow(root);
             BuildIdCard(root);
 
             // Day end: a plain invoice panel with the night's business under it.

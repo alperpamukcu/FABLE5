@@ -182,13 +182,26 @@ days — it simply stops being what the player reads the night by.
   one has left.
 - **Day end** shows the invoice (module 24 §7): income (payments + tips) vs expenses
   (refills at **$3 per capacity** — stock is a real cost of goods — market purchases,
-  upgrades, and **rent = $14 + $2.5×Day + Day²/6**). Rent is what makes debt possible.
+  upgrades, and **rent = $14 + $2.5×Day + 2·Day²/11**). Rent is what makes debt possible.
   *(v2 curve, 2026-07-31. v0 was $8+$2×Day and $1 stock — the sim showed no pressure at
   all. v1 was linear $14+$4.5×Day — the sim showed red days climbing to 16.5% by day 15
   and still zero bankruptcies in 200 runs, because the till banked early absorbed every
   one: linear rent squeezes day 3 as hard as day 25, so any line steep enough to bite late
   was a cliff early. The quadratic term is gentler than v1 through day 10 and outruns a
-  flat income late — the bar must grow to keep the doors open, which is the game.)*
+  flat income late — the bar must grow to keep the doors open, which is the game. The
+  divisor tightened 6 → 5.5 the same day, when P16's snack margin — measured +$4/night at
+  the floor — softened the squeeze from 19.5% to 2.0% bankruptcies; at 2·Day²/11 the same
+  seeds land 16.0%, the shape restored.)*
+
+- **Snacks (v5 P16):** four bowls (peanuts $2, popcorn $2, chips $3, mixed nuts $4),
+  clicked into hand at the counter and put down in front of a seated customer. **Never
+  alone** — Core refuses a bowl for anyone without an open drink order, so no menu wiring
+  can create a solo snack. The price rides the customer's tab and settles on the way out;
+  no tip on a bowl. Every unit eaten is **bought back the next morning at $1 under menu**
+  (the bowls net exactly $1 a serve — "small income" made literal), and the delivery only
+  fills as far as the till reaches: a bar under water opens with thin bowls. The first
+  pass filled bowls free, and the sim caught ~$11/night of costless money erasing the
+  rent squeeze whole — the buy-back is what keeps snacks flavour, not economy.
 - **Purchases require cash (2026-07-22):** refills, brands, stools and ambience cannot
   be bought on credit — if the till cannot cover it, the buy is refused with a notice.
   Only **rent** can push the till below zero, which keeps debt something that happens

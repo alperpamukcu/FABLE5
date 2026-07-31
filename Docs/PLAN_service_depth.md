@@ -607,9 +607,14 @@ checked in play.
 
 ## P16 — Snacks & drink variety
 
-- ☐ **Snack loop**: dragged straight from the menu to a seat (no prep); small income;
-  Core refusals — never alone, only alongside an alcoholic order (the P11 pairing rules
-  get their content)
+- ☑ **Snack loop** *(2026-07-31)*: bowls stand ON THE COUNTER rather than in the menu —
+  a snack has no prep, so routing it through the drink flow would be a stage with nothing
+  on it. Click a bowl into hand, click a customer. Core refuses solo snacks (no drink
+  order = no bowl) and empty bowls; the price rides the tab; each unit eaten is bought
+  back next morning at $1 under menu, filling only as far as the till reaches. Gate run:
+  snack share 33.3% of serves, zero solo snacks possible (pinned by test), and the rent
+  divisor tightened 6→5.5 in the same commit because the first, free-refill pass wiped
+  the P18 squeeze (19.5%→0% bankruptcies) — restored to 16.0% on the same seeds
 - ☐ Drink variety wave 2: more brands per category, more cocktails on the P10 model —
   **new content = new data**, code only if a genuinely new verb appears
 Gate: sim shows snack share and pairing legality (zero solo snacks possible); parity test

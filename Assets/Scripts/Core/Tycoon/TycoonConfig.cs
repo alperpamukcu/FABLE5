@@ -151,7 +151,11 @@ namespace LastCall.Core
         /// The floor bot cannot grow, so its late collapse is the point, not a bug: its
         /// bankruptcy share is the measure that this threat finally lands.
         /// </summary>
-        public int Rent(int day) => 14 + (5 * day) / 2 + (day * day) / 6;
+        /// <remarks>The quadratic divisor tightened 6 → 5.5 when P16's snack margin landed
+        /// (+$4/night at the floor, measured): the bowls softened the squeeze from 19.5% to
+        /// 2.0% bankruptcies on the same seeds, and the divisor is the recorded knob. Day 30
+        /// goes $239 → $252; days 1–10 move by a dollar or two.</remarks>
+        public int Rent(int day) => 14 + (5 * day) / 2 + (day * day * 2) / 11;
 
         // ── orders (GDD 23 §3) ──────────────────────────────────────────────────
         /// <summary>The order roll pool: this many lowest-rank pourable recipes.</summary>

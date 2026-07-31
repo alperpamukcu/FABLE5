@@ -75,11 +75,12 @@ namespace LastCall.EditorTools
             // so the vessel decides how much liquid a drink costs. Leaving it out here would
             // measure a bar nobody plays.
             var glassware = DataLoader.ParseGlassware(Read("glassware/glassware.json"));
+            var snacks = DataLoader.ParseSnacks(Read("snacks/snacks.json"));
 
             var stats = new Aggregate();
             for (int i = 0; i < runs; i++)
                 PlayRun($"TYC-{i:0000}", deck, recipes, archetypes, stats,
-                    DrinkBuildSeconds, DayCap, glassware);
+                    DrinkBuildSeconds, DayCap, glassware, snacks);
 
             string report = stats.Report(runs);
             Debug.Log(report);
@@ -94,14 +95,15 @@ namespace LastCall.EditorTools
         private static void PlayRun(string seed, LoadedDeck deck,
             IReadOnlyList<RecipeDefinition> recipes, IReadOnlyList<ArchetypeDefinition> archetypes,
             Aggregate stats, double buildSeconds = DrinkBuildSeconds, int dayCap = DayCap,
-            IReadOnlyList<GlasswareDefinition> glassware = null)
+            IReadOnlyList<GlasswareDefinition> glassware = null,
+            IReadOnlyList<SnackDefinition> snacks = null)
         {
             var starting = deck.Cards
                 .Where(c => c.Info == null || c.Info.Tier <= 1)
                 .Select(c => c.Clone()).ToList();
             var shelf = new Shelf(starting.Select(c => new ShelfBottle(c)));
             var run = new TycoonRun(shelf, recipes, new RunRng(seed),
-                regulars: new RegularsRegistry(archetypes), glassware: glassware);
+                regulars: new RegularsRegistry(archetypes), glassware: glassware, snacks: snacks);
 
             double buildTimer = buildSeconds;
             int guard = 0;
@@ -127,6 +129,19 @@ namespace LastCall.EditorTools
                         // ID. Since v5 C3 that is also the only way Core will hand the order
                         // over — an uninspected visit refuses to name its drink.
                         visit.InspectId();
+                        // Every third serve gets a bowl alongside (v5 P16): enough traffic to
+                        // measure the snack share without pretending everyone eats. Cycling
+                        // the bowls spreads the stock; a drained bowl just skips.
+                        if (stats.Serves % 3 == 0 && run.Snacks.Count > 0)
+                        {
+                            var snack = run.Snacks[(stats.Serves / 3) % run.Snacks.Count];
+                            if (run.SnackLeft(snack.Id) > 0)
+                            {
+                                run.ServeSnack(snack.Id, visit);
+                                stats.SnackServes++;
+                                stats.SnackIncome += snack.Price;
+                            }
+                        }
                         if (!BuildOrderedDrink(run, visit)) continue;
                         bool pint = run.ServingGlass.HasPreparation(Preparations.Draught.Id);
                         double head = pint ? run.ServingGlass.Head / run.ServingGlass.Capacity : 0;
@@ -280,6 +295,7 @@ namespace LastCall.EditorTools
         {
             public int Runs, Stuck, Bankruptcies, StormOffs, CustomersFinished;
             public int Serves, Exact, Close, Wrong, CraftServes, SpeedTips, ExtraOrders;
+            public int SnackServes, SnackIncome;
             // v5 P11: the base/tip split is the phase's whole point, and refusals/declines are
             // the two new ways a serve can end.
             public int Refused, Declined, SpecOrders, SpecFull;
@@ -379,6 +395,7 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Draught share of serves | {Pct(Pints, Serves)} |");
                 sb.AppendLine($"| Pints in the good head band | {Pct(GoodPints, Pints)} |");
                 sb.AppendLine($"| Average head poured | {HeadSum / Math.Max(1, Pints):P0} |");
+                sb.AppendLine($"| Snack serves (of serves) | {Pct(SnackServes, Serves)} · ${SnackIncome} |");
                 sb.AppendLine();
                 sb.AppendLine("## Red days by day number");
                 sb.AppendLine();

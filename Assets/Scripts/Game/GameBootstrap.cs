@@ -104,7 +104,8 @@ namespace LastCall.Game
             Tycoon = new TycoonRun(new Shelf(startingBottles), recipes, new RunRng(CurrentSeed),
                 regulars: archetypes != null ? new RegularsRegistry(archetypes) : null,
                 brandCatalogue: brandCatalogue,
-                glassware: Glassware);
+                glassware: Glassware,
+                snacks: Snacks);
 
             Debug.Log($"[LastCall] Tycoon run started — seed '{CurrentSeed}', " +
                       $"{startingBottles.Count} bottles, wallet ${Tycoon.Money}, " +

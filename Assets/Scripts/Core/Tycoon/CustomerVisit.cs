@@ -70,6 +70,17 @@ namespace LastCall.Core
         public bool TabSettled { get; private set; }
 
         internal void SettleTab() => TabSettled = true;
+
+        /// <summary>Bowls taken this visit (v5 P16). The money rides the same tab the drinks
+        /// do — a snack is a line on the bill, not its own transaction.</summary>
+        public int SnacksTaken { get; private set; }
+
+        internal void AddSnack(int price)
+        {
+            SnacksTaken++;
+            Paid += price;
+            PaidBase += price;   // no tip on a bowl of nuts
+        }
         public double PatienceMax { get; }
         public double PatienceLeft { get; private set; }
         public VisitState State { get; private set; } = VisitState.Waiting;

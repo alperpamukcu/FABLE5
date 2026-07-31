@@ -191,6 +191,45 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void ASnack_RidesTheTab_AndTheBowlRunsDown()
+        {
+            // v5 P16: a bowl is a line on the bill, not its own transaction — it settles on
+            // the way out with everything else, and the bowl empties as it is served.
+            var run = new TycoonRun(NewShelf(), Book, new RunRng("snack"),
+                config: new TycoonConfig(20, orderDecisionSeconds: 0, savorSeconds: 0),
+                snacks: new[] { new SnackDefinition("peanuts", "Peanuts", 2, 1) });
+            int guard = 0;
+            while (run.Floor.Seated.Count == 0) { Assert.Less(guard++, 100); run.Tick(5); }
+            var visit = run.Floor.Seated[0];
+
+            int before = run.Money;
+            run.ServeSnack("peanuts", visit);
+            Assert.AreEqual(1, visit.SnacksTaken);
+            Assert.AreEqual(2, visit.Paid, "the bowl went on the tab");
+            Assert.AreEqual(before, run.Money, "and the tab is not paid at the counter");
+            Assert.AreEqual(0, run.SnackLeft("peanuts"), "the bowl ran down");
+            Assert.Throws<InvalidOperationException>(() => run.ServeSnack("peanuts", visit),
+                "an empty bowl refuses");
+        }
+
+        [Test]
+        public void ASnackAlone_IsRefused()
+        {
+            // Never alone (the pairing rule): a customer still reading the menu has no drink
+            // order, so the bowl waits. Core refuses — no menu wiring can create a solo snack.
+            var run = new TycoonRun(NewShelf(), Book, new RunRng("solo"),
+                config: new TycoonConfig(20, orderDecisionSeconds: 30, savorSeconds: 0),
+                snacks: new[] { new SnackDefinition("peanuts", "Peanuts", 2, 5) });
+            int guard = 0;
+            while (run.Floor.Seated.Count == 0) { Assert.Less(guard++, 100); run.Tick(1); }
+            var visit = run.Floor.Seated[0];
+
+            Assert.IsFalse(visit.HasOrdered, "still deciding — no drink order open");
+            Assert.Throws<InvalidOperationException>(() => run.ServeSnack("peanuts", visit));
+            Assert.AreEqual(5, run.SnackLeft("peanuts"), "and the bowl is untouched");
+        }
+
+        [Test]
         public void TheTab_IsPaidOnTheWayOut_NotAtTheServe()
         {
             // 2026-07-31: a customer pays and rates when they finish the drink and get up.
