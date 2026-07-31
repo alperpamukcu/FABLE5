@@ -471,8 +471,8 @@ namespace LastCall.UI
             {
                 double before = run.ServingGlass.TotalVolume;
                 run.PourIntoServingGlass(ServePourRate * Time.deltaTime, accuracy);
-                if (run.ServingGlass.IsFull) { _serveGrabbed = false; ShowGlassFull(); }
-                else if (run.Glass.IsEmpty) _serveGrabbed = false;
+                if (run.ServingGlass.IsFull) { PutTheShakerDown(run); ShowGlassFull(); }
+                else if (run.Glass.IsEmpty) PutTheShakerDown(run);
                 else if (run.ServingGlass.TotalVolume != before) RefreshServeText(run, accuracy);
             }
 
@@ -522,6 +522,31 @@ namespace LastCall.UI
             float floor = c.y - h * 0.5f + h * piece.FloorY;
             float rim = c.y - h * 0.5f + h * piece.RimY;
             _serveFluid.SetPool(c.x - iw, c.x + iw, floor, rim, (float)run.ServingGlass.FillFraction);
+        }
+
+        /// <summary>
+        /// Ends a pour by PUTTING THE SHAKER DOWN, rather than letting go of it wherever the
+        /// cursor happened to be (2026-07-31 bug report: "the shaker freezes and cannot be
+        /// moved when the drink is poured, or when what is inside runs out").
+        ///
+        /// Dropping the grab was all this used to do, which left the tin hanging in mid-air at
+        /// whatever angle it was tipped to — and if it had just run dry, the next refresh
+        /// deactivated it exactly where it hung. What the player saw was a shaker frozen at an
+        /// angle that no longer answered the pointer. A tin you have finished with goes back on
+        /// the bench, upright, and is only taken off the stage once it is standing there.
+        /// </summary>
+        private void PutTheShakerDown(TycoonRun run)
+        {
+            _serveGrabbed = false;
+            _serveShaker.anchoredPosition = _serveShakerRest;
+            _serveShaker.localRotation = Quaternion.identity;
+            _serveShaker.gameObject.SetActive(!run.Glass.IsEmpty);
+            RefreshServeText(run, 1.0);
+            if (run.Glass.IsEmpty)
+            {
+                _aimText.text = "SHAKER EMPTY — FINISH IT AND SERVE";
+                _aimText.color = UITheme.TextSecondary;
+            }
         }
 
         /// <summary>The glass is at the brim and is refusing what comes next — the drink stops

@@ -352,6 +352,30 @@ cabinet** — a glass-fronted fridge, bottles at their true size, door opens, bo
   per press, and running a bottle dry mid-pour puts it down and takes it off the shelf.
 - ☐ The confining panel goes; props are free-dragged within the screen.
 
+**Second pass on the same brief (2026-07-31, after playing it).** The verbs are right; the
+staging is not. In the author's words:
+
+- ☐ **Use the whole screen.** The serve stage is still a 1120×640 panel floating on the
+  scene. The tubs and the cabinet should be placed across the full screen at real size, not
+  packed into two 96px columns at its edges.
+- ☐ **The shaker is too small** on this stage next to the glass.
+- ☐ **BUG — the shaker freezes.** It becomes unmovable "when the drink is poured, or when
+  what is inside it runs out". Diagnosed: `RefreshServe` hides the shaker the moment the tin
+  empties (`SetActive(!run.Glass.IsEmpty)`), but the drain happens inside `UpdateServeTilt`,
+  which only calls `RefreshServeText`. So the tin is left standing mid-air, tilted, at
+  wherever the cursor dropped it — visible, dead to the pointer on the next stage refresh,
+  and never returned to its rest. It has to be put down deliberately when it empties.
+- ☐ **Room to grow.** More finishing touches and more mixers are coming; both rails need a
+  layout that takes them — a scrollable shelf, or shelves that wrap — rather than one that
+  silently runs off the panel at eight.
+- ☐ **Hover, not just press.** Everything selectable should read as pressable when the
+  cursor is over it. Darkening on press is not enough and is the wrong half of it — the
+  affordance has to arrive *before* the click.
+- ☐ **BUG — spirit bottles are drawn with their caps off** on the pour stage.
+- ☐ **BUG — a bottle's contents are drawn at a fixed level.** The art shows the same amount
+  of liquid however much is really left, so bottles do not visibly empty as they are poured.
+  The level should follow `Remaining / Capacity` off the shelf bottle.
+
 - ☐ **Glass upgrades**: 3 tiers each, bought individually in the tablet shop, standing
   visibly on the under-counter shelf (the tap station's bays extend across the bar);
   upgrade swaps the shelf art
