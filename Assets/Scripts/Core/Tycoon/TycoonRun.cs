@@ -470,6 +470,29 @@ namespace LastCall.Core
         /// offering a drop that will be refused.</summary>
         public bool CanAddPreparation => Phase == TycoonPhase.DayOpen && !Glass.IsFull;
 
+        /// <summary>
+        /// Finishes the drink in the SERVING GLASS rather than in the shaker (v5 P14) — ice,
+        /// a rim, a twist, added where a built drink is actually made. The shaker verb above
+        /// cannot serve them: a built drink never sees the shaker, so before this the six
+        /// built cocktails could be poured but never finished, and every serving spec asking
+        /// for ice on one was unmeetable.
+        ///
+        /// Same refusal as its shaker twin, against the glass it is actually going in: a cube
+        /// of ice needs somewhere to go, and a brimful glass that takes ice anyway is a
+        /// garnished drink for free.
+        /// </summary>
+        public void AddPreparationAtGlass(PreparationDefinition preparation)
+        {
+            EnsurePhase(TycoonPhase.DayOpen);
+            if (ServingGlass.IsFull)
+                throw new InvalidOperationException(
+                    "The glass is full to the brim — there is no room for anything else.");
+            ServingGlass.AddPreparation(preparation);
+        }
+
+        /// <summary>Whether the serving glass would take a finishing touch right now.</summary>
+        public bool CanFinishAtGlass => Phase == TycoonPhase.DayOpen && !ServingGlass.IsFull;
+
         /// <summary>Shakes the built drink (GDD 24 §2.5). Recorded on the shaker; the craft
         /// effect of a good shake is a later balance pass, the plumbing is here now.</summary>
         public void Shake(double energy = 1.0)

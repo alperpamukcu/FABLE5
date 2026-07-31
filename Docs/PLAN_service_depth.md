@@ -277,7 +277,19 @@ to the board instead.
   - ☑ The SERVE button no longer requires something in the shaker, which was the other half
     of the same bug: a built drink never sees the shaker. The stage is the glass, and you can
     always walk over to the glass. With an empty shaker it hides the shaker and says so.
-  - ☐ Left rail finishing: ice, rims (garnishes are already there)
+  - ☑ **Left rail finishing**: ice, salt and sugar rims and a twist, applied to the SERVING
+    GLASS through a new Core verb (`AddPreparationAtGlass`). The shaker's verb could not
+    reach a built drink at all, so every serving spec asking for ice on one was unmeetable.
+    Same refusal as its shaker twin, against the glass it is actually going in: a brimful
+    glass takes nothing, because ice needs somewhere to go. Already-applied reads as a tick
+    rather than offering itself twice.
+
+Two things surfaced while wiring the rails. The pool on the serve stage was coloured from the
+**shaker**, which is the same drink while you are tipping one into the other — which is why it
+went unnoticed — but a built drink leaves the shaker empty and a soda was drawing as pale tan.
+And both rails were sized for two keys; they carry up to eight now, so they run the height of
+the play surface and are labelled above themselves (FINISH / MIXERS) instead of a garnish
+caption stranded in the middle of the keys.
 - ◐ **Glassware system** (C9). Core half done:
   - ☑ **Capacity per glass** — P10 specced it and shipped without it, so every glass held
     1.0 and the set was cosmetic. A coupe is 0.55 and a pint 1.6, scaled against the old

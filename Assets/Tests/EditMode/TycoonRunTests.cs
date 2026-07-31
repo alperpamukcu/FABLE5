@@ -419,6 +419,35 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void ABuiltDrink_CanBeFinishedAtTheGlass()
+        {
+            // A built drink never sees the shaker, so the shaker's AddPreparation cannot reach
+            // it (v5 P14). Without the glass-side verb every serving spec asking for ice on one
+            // was unmeetable.
+            var run = NewRun();
+            run.PourAtGlass("soda", 0.4);
+            run.AddPreparationAtGlass(Preparations.Ice);
+
+            Assert.IsTrue(run.ServingGlass.HasPreparation(Preparations.Ice.Id));
+            Assert.IsFalse(run.Glass.HasPreparation(Preparations.Ice.Id),
+                "the shaker was never involved");
+        }
+
+        [Test]
+        public void ABrimfulGlass_TakesNoFinishingTouch()
+        {
+            // The shaker's rule, against the glass it is actually going in: ice needs somewhere
+            // to go, and a full glass that takes it anyway is a garnished drink for free.
+            var run = NewRun();
+            run.PourAtGlass("soda", run.ServingGlass.Capacity);
+
+            Assert.IsTrue(run.ServingGlass.IsFull);
+            Assert.IsFalse(run.CanFinishAtGlass);
+            Assert.Throws<InvalidOperationException>(
+                () => run.AddPreparationAtGlass(Preparations.Ice));
+        }
+
+        [Test]
         public void Shaking_RecordsThePreparation()
         {
             var run = NewRun();

@@ -36,6 +36,11 @@ namespace LastCall.UI
         /// <summary>One press of a mixer key, as a share of whatever glass is on the counter —
         /// so a splash into a coupe is a splash, not most of the drink.</summary>
         private const double MixerMeasure = 0.15;
+
+        // The rails carry up to eight keys each now (four finishing touches plus the stocked
+        // garnishes on the left, every mixer on the right), so they run the height of the play
+        // surface and the keys are sized to fit it rather than spilling off the panel.
+        private const float RailHeight = 452f, RailGap = 5f, RailKeyHeight = 51f;
         private RectTransform _serveShaker;     // the grabbable shaker
         private Image _serveShakerBody;
         private MetaballFluid _serveFluid;      // the metaball liquid in the serving glass
@@ -61,7 +66,11 @@ namespace LastCall.UI
             _serveShaker.localRotation = Quaternion.identity;
             _serveSplash.Clear();
             _serveFluid.Clear();
-            _serveFluid.SetColor(DrinkColor(run.Glass));
+            // The pool is the drink IN THE GLASS, not the one in the shaker. Those are the same
+            // thing while you are tipping one into the other, which is why nobody noticed — but
+            // a built drink leaves the shaker empty, and the pool was taking the colour of
+            // nothing and drawing a soda as pale tan.
+            _serveFluid.SetColor(DrinkColor(run.ServingGlass.IsEmpty ? run.Glass : run.ServingGlass));
             ShowServingGlassware(run);
             PushServePool(run);
             _serveShakerBody.color = DrinkColor(run.Glass);
@@ -71,8 +80,14 @@ namespace LastCall.UI
                 : "GRAB THE SHAKER · TIP IT OVER THE GLASS";
             _aimText.color = UITheme.TextSecondary;
 
-            // The stocked garnishes (mint, olive), added into the drink before it is poured.
+            // The left rail finishes the drink: ice and the rims go on at the GLASS, so a built
+            // drink can have them at all, then the stocked garnishes (mint, olive) which still
+            // go into the shaker before the pour.
             foreach (Transform ch in _serveGarnishRow) Destroy(ch.gameObject);
+            AddFinishChip("ice", "ICE", Preparations.Ice);
+            AddFinishChip("salt_rim", "SALT RIM", Preparations.SaltRim);
+            AddFinishChip("sugar_rim", "SUGAR RIM", Preparations.SugarRim);
+            AddFinishChip("lemon_twist", "TWIST", Preparations.LemonTwist);
             foreach (var bottle in run.Shelf.Bottles)
                 if (bottle.Ingredient.Type == IngredientType.Garnish && !bottle.IsEmpty)
                     AddGarnishChip(bottle.Ingredient);
@@ -84,14 +99,59 @@ namespace LastCall.UI
                     AddMixerChip(bottle.Ingredient);
         }
 
+        /// <summary>One finishing key on the left rail: ice or a rim, applied to the serving
+        /// glass (v5 P14). Already on the drink reads as done rather than offering it twice.</summary>
+        private void AddFinishChip(string prepId, string label, PreparationDefinition prep)
+        {
+            var run = Run;
+            bool already = run != null && run.ServingGlass.HasPreparation(prep.Id);
+
+            var chip = NewRect($"F_{prepId}", _serveGarnishRow);
+            chip.gameObject.AddComponent<LayoutElement>().preferredHeight = RailKeyHeight;
+            var bg = chip.gameObject.AddComponent<Image>();
+            bg.color = already
+                ? new Color(UITheme.Lime[1].r, UITheme.Lime[1].g, UITheme.Lime[1].b, 0.85f)
+                : new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.85f);
+            var icon = NewRect("Icon", chip);
+            Place(icon, new Vector2(0.5f, 1), new Vector2(36, 36), new Vector2(0, -2));
+            var iimg = icon.gameObject.AddComponent<Image>();
+            iimg.sprite = ItemArt.Bucket(prepId) ?? ItemArt.Prep(prepId);
+            iimg.preserveAspect = true; iimg.raycastTarget = false;
+            if (iimg.sprite == null) iimg.color = UITheme.Cyan[3];
+            else if (already) iimg.color = new Color(1f, 1f, 1f, 0.55f);
+            var name = NewText("N", chip, _body, 8, TextAnchor.LowerCenter,
+                already ? UITheme.Lime[4] : UITheme.TextPrimary);
+            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(92, 14), new Vector2(0, 2));
+            name.text = already ? "✓ " + label : label;
+            if (already) return;
+
+            var btn = chip.gameObject.AddComponent<Button>();
+            btn.targetGraphic = bg;
+            btn.onClick.AddListener(() =>
+            {
+                var r = Run;
+                if (r == null) return;
+                if (!r.CanFinishAtGlass)
+                {
+                    _aimText.text = "THE GLASS IS FULL — NO ROOM TO FINISH IT";
+                    _aimText.color = UITheme.Amber[3];
+                    return;
+                }
+                r.AddPreparationAtGlass(prep);
+                RefreshServe();   // the key becomes a tick, so the rail does have to rebuild
+                _aimText.text = $"{label} ON THE GLASS";
+                _aimText.color = UITheme.Cyan[3];
+            });
+        }
+
         private void AddGarnishChip(IngredientCard card)
         {
             var chip = NewRect($"G_{card.Id}", _serveGarnishRow);
-            chip.gameObject.AddComponent<LayoutElement>().preferredHeight = 66;
+            chip.gameObject.AddComponent<LayoutElement>().preferredHeight = RailKeyHeight;
             var bg = chip.gameObject.AddComponent<Image>();
             bg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.85f);
             var icon = NewRect("Icon", chip);
-            Place(icon, new Vector2(0.5f, 1), new Vector2(46, 46), new Vector2(0, -3));
+            Place(icon, new Vector2(0.5f, 1), new Vector2(36, 36), new Vector2(0, -2));
             var iimg = icon.gameObject.AddComponent<Image>();
             iimg.sprite = ItemArt.Bottle(card.Info?.Style); iimg.preserveAspect = true; iimg.raycastTarget = false;
             if (iimg.sprite == null) iimg.color = UITheme.StyleColor(card.Info?.Style, card.Type);
@@ -136,11 +196,11 @@ namespace LastCall.UI
         private void AddMixerChip(IngredientCard card)
         {
             var chip = NewRect($"M_{card.Id}", _serveMixerRow);
-            chip.gameObject.AddComponent<LayoutElement>().preferredHeight = 66;
+            chip.gameObject.AddComponent<LayoutElement>().preferredHeight = RailKeyHeight;
             var bg = chip.gameObject.AddComponent<Image>();
             bg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.85f);
             var icon = NewRect("Icon", chip);
-            Place(icon, new Vector2(0.5f, 1), new Vector2(46, 46), new Vector2(0, -3));
+            Place(icon, new Vector2(0.5f, 1), new Vector2(36, 36), new Vector2(0, -2));
             var iimg = icon.gameObject.AddComponent<Image>();
             iimg.sprite = ItemArt.Bottle(card.Info?.Style);
             iimg.preserveAspect = true; iimg.raycastTarget = false;
@@ -331,26 +391,37 @@ namespace LastCall.UI
             _serveGlassText = NewText("Glass", _servePanel, _body, 13, TextAnchor.UpperRight, UITheme.TextPrimary);
             Place(_serveGlassText.rectTransform, new Vector2(1, 1), new Vector2(280, 24), new Vector2(-20, -46));
 
-            // Garnishes (mint, olive) live at the serve stage now — a small row down the left.
-            // Add one before you pour and it goes into the drink.
-            var glabel = NewText("GLabel", _servePanel, _body, 10, TextAnchor.LowerLeft, UITheme.TypeRamp[IngredientType.Garnish][3]);
-            Place(glabel.rectTransform, new Vector2(0, 0.5f), new Vector2(96, 16), new Vector2(14, 118));
-            glabel.text = "— GARNISH —";
+            // The rails are labelled above themselves, at the top of the play surface — the
+            // garnish label used to sit at a fixed 118 up from the middle, which was above a
+            // 224-tall rail and is in the middle of a 452-tall one.
+            float railTop = RailHeight * 0.5f + 10f;
+            var glabel = NewText("GLabel", _servePanel, _body, 10, TextAnchor.LowerCenter,
+                UITheme.TypeRamp[IngredientType.Garnish][3]);
+            Place(glabel.rectTransform, new Vector2(0, 0.5f), new Vector2(96, 16),
+                new Vector2(14, railTop));
+            glabel.text = "— FINISH —";
+            var mlabel = NewText("MLabel", _servePanel, _body, 10, TextAnchor.LowerCenter,
+                UITheme.TypeRamp[IngredientType.Bubbly][3]);
+            Place(mlabel.rectTransform, new Vector2(1, 0.5f), new Vector2(96, 16),
+                new Vector2(-14, railTop));
+            mlabel.text = "— MIXERS —";
             _serveGarnishRow = NewRect("Garnishes", _servePanel);
-            Place(_serveGarnishRow, new Vector2(0, 0.5f), new Vector2(96, 224), new Vector2(14, 0));
+            Place(_serveGarnishRow, new Vector2(0, 0.5f), new Vector2(96, RailHeight), new Vector2(14, 0));
             var grow = _serveGarnishRow.gameObject.AddComponent<VerticalLayoutGroup>();
-            grow.spacing = 8f; grow.childControlWidth = true; grow.childForceExpandWidth = true;
-            grow.childControlHeight = false; grow.childAlignment = TextAnchor.UpperCenter;
+            grow.spacing = RailGap; grow.childControlWidth = true; grow.childForceExpandWidth = true;
+            grow.childControlHeight = true; grow.childForceExpandHeight = false;
+            grow.childAlignment = TextAnchor.UpperCenter;
 
             // The right rail: what goes in AT THE GLASS (v5 P14, the notes' second rail). P10
             // put the rule in Core — carbonated never enters the shaker, it is added to the
             // serving glass — and then there was no door in the UI to do it through, so the six
             // built cocktails could not be made by playing at all. This is that door.
             _serveMixerRow = NewRect("Mixers", _servePanel);
-            Place(_serveMixerRow, new Vector2(1, 0.5f), new Vector2(96, 224), new Vector2(-14, 0));
+            Place(_serveMixerRow, new Vector2(1, 0.5f), new Vector2(96, RailHeight), new Vector2(-14, 0));
             var mrow = _serveMixerRow.gameObject.AddComponent<VerticalLayoutGroup>();
-            mrow.spacing = 8f; mrow.childControlWidth = true; mrow.childForceExpandWidth = true;
-            mrow.childControlHeight = false; mrow.childAlignment = TextAnchor.UpperCenter;
+            mrow.spacing = RailGap; mrow.childControlWidth = true; mrow.childForceExpandWidth = true;
+            mrow.childControlHeight = true; mrow.childForceExpandHeight = false;
+            mrow.childAlignment = TextAnchor.UpperCenter;
 
             _aimText = NewText("AimText", _servePanel, _body, 13, TextAnchor.UpperCenter, UITheme.TextSecondary);
             Stretch(_aimText.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -70), new Vector2(0, -46));
