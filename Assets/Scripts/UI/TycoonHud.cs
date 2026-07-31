@@ -1389,30 +1389,56 @@ namespace LastCall.UI
             var boardSprite = ItemArt.Load("menu_board");
             if (boardSprite != null) { boardImg.sprite = boardSprite; boardImg.preserveAspect = true; }
             else boardImg.color = UITheme.Cream[4];
-            sheet.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;   // swallow
+            // The board fills nearly the whole screen, so it must NOT swallow clicks itself
+            // (2026-08-01, the author: clicking off the table has to close it): the wood
+            // passes clicks through to the closing scrim, and only the PAPER swallows.
+            boardImg.raycastTarget = false;
+            var paperCatch = NewRect("PaperCatch", sheet);
+            Place(paperCatch, new Vector2(0.5f, 0.5f),
+                new Vector2(BkW * BkPaperW + 16f, BkH * BkPaperH + 16f),
+                new Vector2(BkW * BkPaperCX, BkH * BkPaperCY));
+            var pcImg = paperCatch.gameObject.AddComponent<Image>();
+            pcImg.color = new Color(0, 0, 0, 0.001f);
+            paperCatch.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
 
             // No title text and no X (2026-08-01, the author): the board's own metal clip
             // IS the header, the words were hiding under it, and the scrim click closes.
 
             // The filter chips: click to cycle. Three axes the author named — the star tier,
             // how it is worked, and what bottle it contains.
-            float chipY = 128f;   // below the board's metal clip, measured off the art
+            float chipY = 142f;   // just under the board's metal clip
+            // Dropdowns, not cycles (2026-08-01, the author): a chip opens a little paper
+            // window of its options under itself; a click anywhere else puts it away.
             _bookTierChip = BookChip(sheet, 0, chipY, () =>
             {
-                _bookTier = _bookTier >= 3 ? -1 : _bookTier + 1;
-                RebuildRecipeBook();
+                var opts = new List<string> { "ALL", BookTiers[0], BookTiers[1], BookTiers[2], BookTiers[3] };
+                OpenBookPopup(0, chipY, opts, pick =>
+                {
+                    _bookTier = pick - 1;
+                    RebuildRecipeBook();
+                });
             });
             _bookPrepChip = BookChip(sheet, 1, chipY, () =>
             {
-                _bookPrep = _bookPrep >= (int)PrepMethod.Stirred ? -1 : _bookPrep + 1;
-                RebuildRecipeBook();
+                var opts = new List<string> { "ALL", "BUILT", "SHAKEN", "STIRRED" };
+                OpenBookPopup(1, chipY, opts, pick =>
+                {
+                    _bookPrep = pick == 0 ? -1
+                        : pick == 1 ? (int)PrepMethod.Built
+                        : pick == 2 ? (int)PrepMethod.Shaken : (int)PrepMethod.Stirred;
+                    RebuildRecipeBook();
+                });
             });
             _bookStyleChip = BookChip(sheet, 2, chipY, () =>
             {
                 var styles = BookStyles();
-                int i = _bookStyle == null ? -1 : styles.IndexOf(_bookStyle);
-                _bookStyle = i + 1 >= styles.Count ? null : styles[i + 1];
-                RebuildRecipeBook();
+                var opts = new List<string> { "ALL" };
+                foreach (var st in styles) opts.Add(st.Replace('_', ' ').ToUpperInvariant());
+                OpenBookPopup(2, chipY, opts, pick =>
+                {
+                    _bookStyle = pick == 0 ? null : styles[pick - 1];
+                    RebuildRecipeBook();
+                });
             });
 
             // The search box: type a name, the list narrows as you do.
@@ -1435,8 +1461,8 @@ namespace LastCall.UI
 
             var viewport = NewRect("View", sheet);
             Place(viewport, new Vector2(0.5f, 0.5f),
-                new Vector2(BkW * BkPaperW - 44f, 340f),
-                new Vector2(BkW * BkPaperCX, -68f));
+                new Vector2(BkW * BkPaperW - 44f, 358f),
+                new Vector2(BkW * BkPaperCX, -56f));
             viewport.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, 0.004f);
             viewport.gameObject.AddComponent<RectMask2D>();
 
@@ -1447,7 +1473,7 @@ namespace LastCall.UI
             // Two columns (2026-08-01): the page is wide and the entries are short, so one
             // column wasted half the paper and put the tail behind a scroll.
             var layout = _bookList.gameObject.AddComponent<GridLayoutGroup>();
-            layout.cellSize = new Vector2((BkW * BkPaperW - 44f) / 2f - 6f, 46f);
+            layout.cellSize = new Vector2((BkW * BkPaperW - 44f) / 2f - 6f, 56f);
             layout.spacing = new Vector2(8, 4);
             layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             layout.constraintCount = 2;
@@ -1493,6 +1519,64 @@ namespace LastCall.UI
             ruleImg.raycastTarget = false;
             Stretch(t.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             return t;
+        }
+
+        private RectTransform _bookPopup;
+
+        /// <summary>A little paper window of options under a chip. A full-screen invisible
+        /// catcher behind it closes it on any other click.</summary>
+        private void OpenBookPopup(int chipIndex, float chipY, List<string> options, Action<int> onPick)
+        {
+            CloseBookPopup();
+            var sheet = _bookPanel.Find("Sheet") as RectTransform;
+            _bookPopup = NewRect("Popup", sheet);
+            var catcher = _bookPopup.gameObject.AddComponent<Image>();
+            catcher.color = new Color(0, 0, 0, 0.001f);
+            Stretch(_bookPopup, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var catchBtn = _bookPopup.gameObject.AddComponent<Button>();
+            catchBtn.transition = Selectable.Transition.None;
+            catchBtn.onClick.AddListener(CloseBookPopup);
+
+            int cols = options.Count > 8 ? 2 : 1;
+            int rows = Mathf.CeilToInt(options.Count / (float)cols);
+            float w = cols * 168f + 8f, h = rows * 24f + 10f;
+            var win = NewRect("Win", _bookPopup);
+            Place(win, new Vector2(0.5f, 0.5f), new Vector2(w, h),
+                new Vector2(BookChipX(chipIndex), chipY - 18f - h * 0.5f));
+            var winImg = win.gameObject.AddComponent<Image>();
+            winImg.color = new Color(0.97f, 0.94f, 0.84f);
+            var winShadow = win.gameObject.AddComponent<Shadow>();
+            winShadow.effectColor = new Color(0.2f, 0.12f, 0.06f, 0.5f);
+            winShadow.effectDistance = new Vector2(3, -3);
+
+            for (int i = 0; i < options.Count; i++)
+            {
+                int pick = i;
+                var opt = NewRect($"O{i}", win);
+                Place(opt, new Vector2(0, 1), new Vector2(168, 24),
+                    new Vector2(5 + (i / rows) * 168f, -5f - (i % rows) * 24f));
+                opt.pivot = new Vector2(0, 1);
+                var oImg = opt.gameObject.AddComponent<Image>();
+                oImg.color = new Color(0, 0, 0, 0.001f);
+                var ot = NewText("T", opt, _body, 9, TextAnchor.MiddleLeft, new Color(0.2f, 0.12f, 0.06f));
+                Stretch(ot.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 0), new Vector2(-4, 0));
+                ot.text = options[i];
+                var ob = opt.gameObject.AddComponent<Button>();
+                ob.targetGraphic = oImg;
+                ob.onClick.AddListener(() =>
+                {
+                    Sfx.Play("click", 0.5f);
+                    CloseBookPopup();
+                    onPick(pick);
+                });
+                var sink = opt.gameObject.AddComponent<PressSink>();
+                sink.Face = opt; sink.Depth = 2f; sink.Lift = 1f; sink.Tint = ot;
+            }
+        }
+
+        private void CloseBookPopup()
+        {
+            if (_bookPopup != null) { Destroy(_bookPopup.gameObject); _bookPopup = null; }
         }
 
         private bool BookAdmits(RecipeDefinition r)
@@ -1563,7 +1647,7 @@ namespace LastCall.UI
         private void BookRow(RecipeDefinition r, bool lockedRow, TycoonRun run)
         {
             var row = NewRect($"R_{r.Id}", _bookList);
-            row.gameObject.AddComponent<LayoutElement>().preferredHeight = 46;
+            row.gameObject.AddComponent<LayoutElement>().preferredHeight = 56;
             // A printed line, not a key (2026-08-01): transparent row, thin ink rule under
             // it, the way the licence's own fields sit on their rules.
             var rowImg = row.gameObject.AddComponent<Image>();
@@ -1598,9 +1682,11 @@ namespace LastCall.UI
             name.text = $"{r.Name.ToUpperInvariant()}   <color=#1B5F66>{prep}</color>";
             name.supportRichText = true;
 
-            var line = NewText("L", row, _body, 8, TextAnchor.LowerLeft, new Color(0.34f, 0.24f, 0.15f));
-            Place(line.rectTransform, new Vector2(0, 0), new Vector2(292, 22), new Vector2(46, 3));
-            line.horizontalOverflow = HorizontalWrapMode.Wrap;   // half-width cells: wrap, never bleed
+            var line = NewText("L", row, _body, 8, TextAnchor.UpperLeft, new Color(0.42f, 0.32f, 0.22f));
+            Place(line.rectTransform, new Vector2(0, 1), new Vector2(292, 30), new Vector2(46, -22));
+            line.horizontalOverflow = HorizontalWrapMode.Wrap;      // half-width cells: wrap...
+            line.verticalOverflow = VerticalWrapMode.Truncate;      // ...but never lap the next row
+            line.supportRichText = true;
             if (lockedRow)
             {
                 double gate = run.RecipeStarGate(r);
@@ -1613,9 +1699,10 @@ namespace LastCall.UI
         /// <summary>"GIN 45–65 · LEMON 20–40 · SYRUP 10–30" — the pour, said in shares.</summary>
         private static string BandLine(RecipeDefinition r)
         {
+            // The numbers carry the craft, so they print in heavier ink than the names.
             var parts = new List<string>();
             foreach (var b in r.RatioRequirements)
-                parts.Add(string.Format("{0} {1:0}–{2:0}",
+                parts.Add(string.Format("{0} <color=#1A0E06>{1:0}–{2:0}</color>",
                     (b.IsStyleBand ? b.Style.Replace('_', ' ') : b.Type.ToString()).ToUpperInvariant(),
                     b.MinRatio * 100, b.MaxRatio * 100));
             return string.Join("  ·  ", parts);
