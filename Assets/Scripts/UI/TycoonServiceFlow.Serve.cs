@@ -188,6 +188,7 @@ namespace LastCall.UI
                 _serveDragPiece.gameObject.SetActive(true);
             });
             tub.gameObject.AddComponent<EventTrigger>().triggers.Add(down);
+            Pressable(tub, icon, iimg, lift: 5f, depth: 5f);   // the tub tips toward you before you reach in
         }
 
         /// <summary>
@@ -271,6 +272,7 @@ namespace LastCall.UI
                 }
                 RefreshServe();
             });
+            Pressable(chip, icon, iimg, lift: 4f, depth: 4f);
         }
 
         /// <summary>
@@ -310,9 +312,18 @@ namespace LastCall.UI
             img.preserveAspect = true; img.raycastTarget = false;
             if (img.sprite == null) img.color = UITheme.StyleColor(card.Info?.Style, card.Type);
 
+            // What is left in it, so a mixer that is running out says so behind the glass door.
+            var shelfBottle = Run?.Shelf.Find(card.Id);
+            var liquid = BottleArt.AddLiquid(art, card.Info?.Style, card.Type);
+            if (liquid != null && shelfBottle != null && shelfBottle.Capacity > 0)
+                liquid.fillAmount = BottleArt.For(card.Info?.Style)
+                    .FillAmount((float)(shelfBottle.Remaining / shelfBottle.Capacity));
+
             var name = NewText("N", slot, _body, 8, TextAnchor.LowerCenter, UITheme.TextPrimary);
             Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(96, 12), new Vector2(0, 0));
             name.text = card.Name.ToUpperInvariant();
+
+            Pressable(slot, art, img, lift: 5f, depth: 5f);
 
             var c = card;
             var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };

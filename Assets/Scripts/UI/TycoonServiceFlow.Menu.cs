@@ -432,6 +432,11 @@ namespace LastCall.UI
             Place(name.rectTransform, new Vector2(0.5f, 1), new Vector2(slotW - 8f, 12f), Vector2.zero);
             name.text = shut ? $"{card.Name}  ·  {blocked}" : card.Name;
 
+            // The bottle answers the pointer whether or not it can be taken: a bottle that is OUT
+            // still lifts, because "you found the thing" and "the thing will do something" are two
+            // different answers and the player needs the first one to trust the shelf at all.
+            Pressable(slot, art, img, lift: shut ? 2f : 5f, depth: shut ? 0f : 5f);
+
             var trigger = slot.gameObject.AddComponent<EventTrigger>();
             var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
             enter.callback.AddListener(_ => ShowBottleInfo(bottle, run, slot));

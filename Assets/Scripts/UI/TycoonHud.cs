@@ -1603,7 +1603,14 @@ namespace LastCall.UI
             var button = rt.gameObject.AddComponent<Button>();
             button.targetGraphic = img;
             button.onClick.AddListener(() => onClick());
-            var text = NewText("Label", rt, _body, 12, TextAnchor.MiddleCenter,
+            // A face of its own, so the hover lift moves the label with the plate rather than
+            // sliding the plate out from under it (PressSink moves one transform).
+            var face = NewRect("Face", rt);
+            Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var sink = rt.gameObject.AddComponent<PressSink>();
+            sink.Face = face; sink.Depth = 3f; sink.Squash = 0.015f; sink.Lift = 2f; sink.Tint = img;
+
+            var text = NewText("Label", face, _body, 12, TextAnchor.MiddleCenter,
                 fill == UITheme.PrimaryAction ? UITheme.TextOnAmber : UITheme.TextPrimary);
             Stretch(text.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             text.text = label;

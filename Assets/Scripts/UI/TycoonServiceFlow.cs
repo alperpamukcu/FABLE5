@@ -307,6 +307,26 @@ namespace LastCall.UI
             }
         }
 
+        /// <summary>
+        /// Makes a thing answer the pointer before it is clicked: it lifts and warms on hover and
+        /// sinks on press (<see cref="PressSink"/>). Every clickable object goes through here, so
+        /// "can I click this?" is answered the same way by a button, a bottle and a tub of ice —
+        /// the notes' complaint was that the screen only responded once it was too late to ask.
+        /// <paramref name="hit"/> catches the pointer; <paramref name="face"/> is what moves, and
+        /// defaults to the same object when the whole thing should move.
+        /// </summary>
+        private static PressSink Pressable(RectTransform hit, RectTransform face = null,
+            Graphic tint = null, float lift = 3f, float depth = 4f)
+        {
+            var sink = hit.gameObject.GetComponent<PressSink>() ?? hit.gameObject.AddComponent<PressSink>();
+            sink.Face = face != null ? face : hit;
+            sink.Lift = lift;
+            sink.Depth = depth;
+            sink.Squash = 0.015f;
+            sink.Tint = tint;
+            return sink;
+        }
+
         private void AddFlexButton(RectTransform parent, string label, Color fill, Action onClick)
         {
             var rt = NewRect(label, parent);
@@ -352,6 +372,7 @@ namespace LastCall.UI
                 var button = rt.gameObject.AddComponent<Button>();
                 button.targetGraphic = img;
                 button.onClick.AddListener(() => onClick());
+                Pressable(rt, tint: img, lift: 2f, depth: 3f);   // a row is thin: a small lift
             }
             var swatch = NewRect("Swatch", rt);
             Place(swatch, new Vector2(0, 0.5f), new Vector2(10, 20), new Vector2(10, 0));
