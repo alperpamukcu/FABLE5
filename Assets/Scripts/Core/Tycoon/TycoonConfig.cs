@@ -139,14 +139,19 @@ namespace LastCall.Core
         // ── the day (GDD 23 §6) ─────────────────────────────────────────────────
 
         /// <summary>
-        /// Balance v1: rent climbs hard enough to make a red day a real threat for a bar that
-        /// stops improving. Eased in v5 P11 (2026-07-31) from <c>15 + 5×day</c>: that phase
-        /// halved the menu's base-price ladder, and halving one side of a ledger without the
-        /// other is not "leaving tuning to P18" — it is shipping a broken half. The floor bot
-        /// went bankrupt in 43.5% of runs against 1.5% before. Rent comes down by roughly the
-        /// same share the take did; the real curve work is still P18's.
+        /// Balance v2 (P18, 2026-07-31): the late game squeezes a bar that never grows. The v1
+        /// line (<c>14 + 4.5×day</c>) produced red days that climbed — 16.5% of runs in the red
+        /// by day 15 — and **zero** bankruptcies in 200, because the till banked in the easy
+        /// early days absorbed every one of them: the threat existed and never landed. Steeper
+        /// LINEAR rent was already tried and recorded above as a cliff (1.5%→43.5%), because it
+        /// squeezes day 3 exactly as hard as day 25. The quadratic term instead leaves the first
+        /// ten days a shade *gentler* than v1 (day 5: $26 vs $36) and outruns a flat income late
+        /// (day 30: $239 against the floor bot's ~$133/night take) — so the pressure is aimed
+        /// where the sim showed the slack, and the answer to it is the tycoon's own verb: grow.
+        /// The floor bot cannot grow, so its late collapse is the point, not a bug: its
+        /// bankruptcy share is the measure that this threat finally lands.
         /// </summary>
-        public int Rent(int day) => 14 + (9 * day) / 2;
+        public int Rent(int day) => 14 + (5 * day) / 2 + (day * day) / 6;
 
         // ── orders (GDD 23 §3) ──────────────────────────────────────────────────
         /// <summary>The order roll pool: this many lowest-rank pourable recipes.</summary>

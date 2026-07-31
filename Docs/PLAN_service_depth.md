@@ -613,6 +613,23 @@ Gate: every listed event audibly fires in play; nothing clips at overlap.
   base price and tip odds; per-run until save exists, then meta
 - ☐ **Upgrade-driven base price**: premium glasses / better alcohol / equipment raise base
   prices; furniture does not (the notes' rule, wired through the existing upgrade economy)
+  **Rent curve v2 shipped on the diagnosis, same day.** The compounding-mechanic route was
+  considered and rejected with reasons: reputation already compounds (stars → crowd → prices
+  and tips — the config's "third leg"), and a money → crowd link has no fiction — customers
+  cannot see the books. The measured problem was that red days cluster late and the early-game
+  till absorbs them, so the fix is aimed exactly there: rent gains a quadratic term
+  (`14 + 2.5d + d²/6`), a shade GENTLER than v1 through day 10, and $239 by day 30 against
+  the floor bot's flat ~$133/night.
+
+  Sim, 200 runs, same seeds: bankruptcies **0% → 19.5%**, survivor till median **$419 →
+  −$151** — at the floor, month-end now means debt, and the runs that reach the horizon are
+  mostly two strikes from the door. Days 1–10 red days unchanged (0–2.5%); day 15 doubles
+  (16.5% → 32%). Everything not money is byte-stable across the reports (storm-offs 18.4%,
+  satisfaction 68%, exact 96.8%), so the change is isolated. The floor bot cannot buy seats,
+  brands or crowds — a player who grows has every tool to outrun the curve, and that demand
+  IS the tycoon. If playtest says too harsh, the knob is the quadratic divisor (6 → 8), not
+  the linear term.
+
   **Diagnosed from the sim, 2026-07-31 — the threat exists and never lands.** Re-ran 200 seeded
   runs against the current build. Rent *does* climb (`Rent(day) = 14 + 4.5*day`, so day 30
   costs $149 against day 1's $18), and red days climb with it: 0.0% on day 1, 6.0% on day 13,

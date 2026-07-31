@@ -168,8 +168,13 @@ days — it simply stops being what the player reads the night by.
   one has left.
 - **Day end** shows the invoice (module 24 §7): income (payments + tips) vs expenses
   (refills at **$3 per capacity** — stock is a real cost of goods — market purchases,
-  upgrades, and **rent = $15 + $5×Day**). Rent is what makes debt possible. *(v1 numbers;
-  v0 was $8+$2×Day rent and $1 stock, which the sim showed was no pressure at all.)*
+  upgrades, and **rent = $14 + $2.5×Day + Day²/6**). Rent is what makes debt possible.
+  *(v2 curve, 2026-07-31. v0 was $8+$2×Day and $1 stock — the sim showed no pressure at
+  all. v1 was linear $14+$4.5×Day — the sim showed red days climbing to 16.5% by day 15
+  and still zero bankruptcies in 200 runs, because the till banked early absorbed every
+  one: linear rent squeezes day 3 as hard as day 25, so any line steep enough to bite late
+  was a cliff early. The quadratic term is gentler than v1 through day 10 and outruns a
+  flat income late — the bar must grow to keep the doors open, which is the game.)*
 - **Purchases require cash (2026-07-22):** refills, brands, stools and ambience cannot
   be bought on credit — if the till cannot cover it, the buy is refused with a notice.
   Only **rent** can push the till below zero, which keeps debt something that happens
