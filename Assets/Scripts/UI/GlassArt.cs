@@ -155,13 +155,16 @@ namespace LastCall.UI
             { FloorY = floorY; RimY = rimY; InteriorHalf = interiorHalf; Density = density; }
         }
 
+        // Quarter-res pass (the author, 2026-08-02: the glasses out-resolved the
+        // customers): the hi-res masters were dropped to the patron grain with NEAREST
+        // and re-measured. Masters live in the scratchpad as glass3d_*_hi.png.
         private static readonly Dictionary<string, Gen3D> Gen3DTable = new Dictionary<string, Gen3D>
         {
-            ["pint"] = new Gen3D(0.087f, 0.979f, 0.952f, 0.97f),       // 166x288
-            ["highball"] = new Gen3D(0.079f, 0.976f, 0.937f, 0.97f),   // 126x252
-            ["rocks"] = new Gen3D(0.220f, 0.973f, 0.957f, 0.94f),      // 185x223, floor on the ledge
-            ["martini"] = new Gen3D(0.589f, 0.977f, 0.958f, 0.95f),    // 192x263
-            ["coupe"] = new Gen3D(0.562f, 0.977f, 0.957f, 0.94f),      // 184x265
+            ["pint"] = new Gen3D(0.083f, 0.972f, 0.905f, 0.97f),       // 42x72
+            ["highball"] = new Gen3D(0.079f, 0.968f, 0.875f, 0.97f),   // 32x63
+            ["rocks"] = new Gen3D(0.214f, 0.964f, 0.913f, 0.94f),      // 46x56, floor on the ledge
+            ["martini"] = new Gen3D(0.576f, 0.970f, 0.917f, 0.95f),    // 48x66
+            ["coupe"] = new Gen3D(0.552f, 0.970f, 0.913f, 0.94f),      // 46x67
         };
 
         private static Piece FromGenerated(GlasswareDefinition glass, Sprite sprite)
