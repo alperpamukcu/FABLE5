@@ -85,49 +85,72 @@ namespace LastCall.UI
             _mixBarSig = signature;
 
             foreach (Transform child in _shakerMixBar) Destroy(child.gameObject);
-            float w = _shakerMixBar.rect.width, x = 0f;
+            float h = _shakerMixBar.rect.height, y = 0f;
             foreach (var id in glass.Ingredients)
             {
                 var card = run.Shelf.Find(id)?.Ingredient;
-                float ratio = (float)glass.RatioOf(id);
-                float segW = ratio * (float)glass.FillFraction * w;
+                float share = (float)(glass.RatioOf(id) * glass.FillFraction);   // of the VESSEL
+                float segH = share * h;
                 var seg = NewRect($"S_{id}", _shakerMixBar);
-                seg.anchorMin = new Vector2(0, 0); seg.anchorMax = new Vector2(0, 1);
-                seg.pivot = new Vector2(0, 0.5f);
-                seg.offsetMin = new Vector2(0, 2); seg.offsetMax = new Vector2(0, -2);
-                seg.sizeDelta = new Vector2(segW, -4);
-                seg.anchoredPosition = new Vector2(x, 0);
+                seg.anchorMin = new Vector2(0, 0); seg.anchorMax = new Vector2(1, 0);
+                seg.pivot = new Vector2(0.5f, 0);
+                seg.sizeDelta = new Vector2(-2, segH);
+                seg.anchoredPosition = new Vector2(0, y);
                 var img = seg.gameObject.AddComponent<Image>();
                 img.color = UITheme.LiquidColor(card?.Info?.Style, card?.Type ?? IngredientType.Spirit);
                 img.raycastTarget = false;
-                if (segW > 34f)
+                if (segH > 13f)
                 {
                     var label = NewText("P", seg, _body, 8, TextAnchor.MiddleCenter, UITheme.Night[0]);
                     Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                    label.text = $"{(card?.Name ?? id).ToUpperInvariant().Split(' ')[0]} {ratio:P0}";
+                    label.horizontalOverflow = HorizontalWrapMode.Overflow;
+                    label.text = $"{share:P0} {(card?.Name ?? id).ToUpperInvariant().Split(' ')[0]}";
                 }
-                x += segW;
+                y += segH;
             }
-            // The headroom, drawn as a real segment (the author: the emptiness is part of
-            // the read) — the tin is the whole bar, not just what is already in it.
             float free = Mathf.Max(0f, 1f - (float)glass.FillFraction);
             if (free > 0.001f)
             {
                 var seg = NewRect("S_empty", _shakerMixBar);
-                seg.anchorMin = new Vector2(0, 0); seg.anchorMax = new Vector2(0, 1);
-                seg.pivot = new Vector2(0, 0.5f);
-                seg.offsetMin = new Vector2(0, 2); seg.offsetMax = new Vector2(0, -2);
-                seg.sizeDelta = new Vector2(free * w, -4);
-                seg.anchoredPosition = new Vector2(x, 0);
+                seg.anchorMin = new Vector2(0, 0); seg.anchorMax = new Vector2(1, 0);
+                seg.pivot = new Vector2(0.5f, 0);
+                seg.sizeDelta = new Vector2(-2, free * h);
+                seg.anchoredPosition = new Vector2(0, y);
                 var img = seg.gameObject.AddComponent<Image>();
-                img.color = new Color(1f, 1f, 1f, 0.07f);
+                img.color = new Color(1f, 1f, 1f, 0.05f);
                 img.raycastTarget = false;
-                if (free * w > 46f)
+                if (free * h > 15f)
                 {
                     var label = NewText("P", seg, _body, 8, TextAnchor.MiddleCenter, UITheme.TextSecondary);
                     Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                    label.horizontalOverflow = HorizontalWrapMode.Overflow;
                     label.text = $"{free:P0} EMPTY";
                 }
+            }
+        }
+
+        /// <summary>The 1px neon frame both pour gauges wear.</summary>
+        private void GaugeEdge(RectTransform host, Color c)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                var r = NewRect("E" + i, host);
+                if (i < 2)
+                {
+                    r.anchorMin = new Vector2(0, i); r.anchorMax = new Vector2(1, i);
+                    r.pivot = new Vector2(0.5f, i);
+                    r.sizeDelta = new Vector2(0, 1);
+                }
+                else
+                {
+                    float ax = i == 2 ? 0f : 1f;
+                    r.anchorMin = new Vector2(ax, 0); r.anchorMax = new Vector2(ax, 1);
+                    r.pivot = new Vector2(ax, 0.5f);
+                    r.sizeDelta = new Vector2(1, 0);
+                }
+                r.anchoredPosition = Vector2.zero;
+                var img = r.gameObject.AddComponent<Image>();
+                img.color = c; img.raycastTarget = false;
             }
         }
 
@@ -720,19 +743,18 @@ namespace LastCall.UI
             Stretch(_shakerReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 92), new Vector2(-16, 118));
 
             // The pour gauge: a recessed track under the readout, filled live per ingredient.
-            // The gauge got a body (the author): the generated brass-capped glass tube,
-            // the segments living inside its bore — a measuring instrument, not a strip.
+            // VERTICAL and engine-drawn (the author, 2026-08-02: the generated tube read
+            // as the wrong decade): a slim standing column, cyan-edged, filled bottom-up
+            // with the TIN's contents as shares of the whole vessel — 5% of vodka reads
+            // 5% VODKA and the room above it reads EMPTY.
             var mixTrack = NewRect("MixTrack", _shakerPanel);
-            Place(mixTrack, new Vector2(0.5f, 0), new Vector2(560, 98), new Vector2(0, 96));
-            var tubeSprite = ItemArt.Load("gauge_frame");
-            var tube = mixTrack.gameObject.AddComponent<Image>();
-            if (tubeSprite != null) { tube.sprite = tubeSprite; tube.preserveAspect = true; }
-            else tube.color = UITheme.Night[0];
-            tube.raycastTarget = false;
+            Place(mixTrack, new Vector2(0.5f, 0.5f), new Vector2(44, 330), new Vector2(-340, -10));
+            var trackBg = mixTrack.gameObject.AddComponent<Image>();
+            trackBg.color = new Color(0.05f, 0.05f, 0.09f, 0.88f);
+            trackBg.raycastTarget = false;
+            GaugeEdge(mixTrack, new Color(UITheme.Cyan[3].r, UITheme.Cyan[3].g, UITheme.Cyan[3].b, 0.7f));
             _shakerMixBar = NewRect("MixSegs", mixTrack);
-            // The bore, measured off the art: caps take ~7% each end, the glass wall ~22%
-            // top and bottom of the trimmed 493x86 sprite at this width.
-            Stretch(_shakerMixBar, Vector2.zero, Vector2.one, new Vector2(46, 36), new Vector2(-46, -36));
+            Stretch(_shakerMixBar, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
 
             // The shake meter, above the bottom bar.
             var meterBg = NewRect("ShakeMeterBg", _shakerPanel);

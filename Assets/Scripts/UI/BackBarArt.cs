@@ -18,10 +18,12 @@ namespace LastCall.UI
         // The luxe ramp (the author, 2026-08-01: "daha lüks bir back bar" — less timber,
         // more lounge): deep aubergine-charcoal panels off the stage's Night palette, with
         // brass only where an edge catches the cornice light.
-        private static readonly Color32 PanelSeam = new Color32(0x0B, 0x09, 0x11, 0xFF);
-        private static readonly Color32 PanelA = new Color32(0x1D, 0x18, 0x27, 0xFF);
-        private static readonly Color32 PanelB = new Color32(0x19, 0x14, 0x22, 0xFF);
-        private static readonly Color32 PanelEdge = new Color32(0x2E, 0x26, 0x3C, 0xFF);
+        // Vice, not velvet (the author, 2026-08-02): teal-navy panels, cool light, and
+        // the accents are NEON tubes, not brass edges.
+        private static readonly Color32 PanelSeam = new Color32(0x07, 0x0B, 0x12, 0xFF);
+        private static readonly Color32 PanelA = new Color32(0x11, 0x1C, 0x26, 0xFF);
+        private static readonly Color32 PanelB = new Color32(0x0E, 0x18, 0x21, 0xFF);
+        private static readonly Color32 PanelEdge = new Color32(0x1C, 0x33, 0x3E, 0xFF);
         private static readonly Color32 Brass = new Color32(0xB8, 0x8A, 0x3C, 0xFF);
         private static readonly Color32 BrassLit = new Color32(0xE6, 0xBE, 0x66, 0xFF);
         private static readonly Color32 FaceWood = new Color32(0x30, 0x1E, 0x12, 0xFF);
@@ -31,11 +33,11 @@ namespace LastCall.UI
         private static readonly Color32 Seam = new Color32(0x12, 0x0A, 0x08, 0xFF);
         private static readonly Color32 BoardA = new Color32(0x2A, 0x1A, 0x10, 0xFF);
         private static readonly Color32 BoardB = new Color32(0x24, 0x16, 0x0E, 0xFF);
-        private static readonly Color32 FloorFront = new Color32(0x8E, 0x5C, 0x30, 0xFF);
-        private static readonly Color32 FloorMid = new Color32(0x6A, 0x42, 0x22, 0xFF);
-        private static readonly Color32 FloorBack = new Color32(0x46, 0x2A, 0x16, 0xFF);
-        private static readonly Color32 LipFace = new Color32(0x38, 0x20, 0x10, 0xFF);
-        private static readonly Color32 LipShine = new Color32(0xB8, 0x84, 0x48, 0xFF);
+        private static readonly Color32 FloorFront = new Color32(0x4A, 0x5E, 0x6E, 0xFF);
+        private static readonly Color32 FloorMid = new Color32(0x33, 0x44, 0x52, 0xFF);
+        private static readonly Color32 FloorBack = new Color32(0x1E, 0x2A, 0x35, 0xFF);
+        private static readonly Color32 LipFace = new Color32(0x14, 0x1E, 0x28, 0xFF);
+        private static readonly Color32 LipShine = new Color32(0x6E, 0xE0, 0xD6, 0xFF);
 
         /// <summary>The wall: vertical walnut boards, tiling cleanly because the seams are
         /// drawn at the sprite's own edges — no baked frame, which is what broke the kit.</summary>
@@ -181,11 +183,11 @@ namespace LastCall.UI
                     else if (lx == 30 || lx == 33) c = PanelSeam;     // the deco double groove
                     else if (lx == 31 || lx == 34) c = PanelEdge;
                     else if ((hash >> 8) % 61 == 0) c = PanelSeam;    // a fleck of wear
-                    float warm = y / (float)(H - 1);
+                    float cool = y / (float)(H - 1);
                     px[y * W + x] = new Color32(
-                        (byte)Mathf.Min(255, c.r + (int)(14 * warm) + 4),
-                        (byte)Mathf.Min(255, c.g + (int)(8 * warm) + 2),
-                        (byte)Mathf.Min(255, c.b + (int)(4 * warm)), 255);
+                        (byte)Mathf.Min(255, c.r + (int)(3 * cool)),
+                        (byte)Mathf.Min(255, c.g + (int)(9 * cool) + 2),
+                        (byte)Mathf.Min(255, c.b + (int)(13 * cool) + 4), 255);
                 }
             }
             return _luxe = Make(px, W, H);
@@ -207,14 +209,15 @@ namespace LastCall.UI
                 {
                     hash = (hash ^ (uint)(x * 47 + y * 29)) * 16777619;
                     Color32 c;
-                    if (y == H - 1) c = BrassLit;
-                    else if (y == H - 2) c = Brass;
-                    else if (y == H - 3) c = PanelSeam;
+                    if (y == H - 1) c = new Color32(0x9F, 0xF2, 0xEA, 0xFF);       // the neon core
+                    else if (y == H - 2) c = new Color32(0x35, 0xC8, 0xBE, 0xFF);  // its tube
+                    else if (y == H - 3) c = new Color32(0x14, 0x4A, 0x46, 0xFF);  // the falloff
                     else if (y <= 1) c = PanelSeam;
                     else
                     {
-                        c = (hash >> 6) % 7 == 0 ? FaceWoodDim : FaceWood;
-                        if ((hash >> 9) % 43 == 0) c = new Color32(0x3A, 0x26, 0x16, 0xFF);
+                        c = (hash >> 6) % 7 == 0 ? new Color32(0x0D, 0x14, 0x1D, 0xFF)
+                            : new Color32(0x10, 0x18, 0x22, 0xFF);                 // dark gloss
+                        if ((hash >> 9) % 61 == 0) c = new Color32(0x18, 0x24, 0x30, 0xFF);
                     }
                     px[y * W + x] = c;
                 }
@@ -233,13 +236,12 @@ namespace LastCall.UI
             for (int y = 0; y < H; y++)
                 for (int x = 0; x < W; x++)
                 {
-                    Color32 c = FaceWoodDim;
+                    Color32 c = new Color32(0x0B, 0x10, 0x18, 0xE8);
                     if (x == 0 || y == 0 || x == W - 1 || y == H - 1) c = PanelSeam;
-                    else if (x == 1 || y == 1 || x == W - 2 || y == H - 2) c = Brass;
+                    else if (x == 1 || y == 1 || x == W - 2 || y == H - 2)
+                        c = new Color32(0x2F, 0xA8, 0xA0, 0xFF);
                     px[y * W + x] = c;
                 }
-            px[2 * W + 2] = BrassLit; px[2 * W + W - 3] = BrassLit;
-            px[(H - 3) * W + 2] = BrassLit; px[(H - 3) * W + W - 3] = BrassLit;
             var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
             { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
             tex.SetPixels32(px);

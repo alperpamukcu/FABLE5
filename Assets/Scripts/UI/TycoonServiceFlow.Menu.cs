@@ -875,21 +875,15 @@ namespace LastCall.UI
             boardImg.pixelsPerUnitMultiplier = 0.5f;   // one art pixel = 2 screen px, the scene's grain
             Swallow(_menuPanel);
 
-            // The cornice retired (the author: the lamps read as noise and fought the
-            // title). In its place the bar's own SIGN hangs top-centre — the generated
-            // blank board, LAST CALL lettered in engine — and the wall wears half-seen
-            // decor at its edges instead of a beam across the top.
-            BuildWallDecor();
-            var sign = NewRect("Sign", _menuPanel);
-            sign.anchorMin = sign.anchorMax = new Vector2(0.5f, 1);
-            sign.pivot = new Vector2(0.5f, 1);
-            sign.sizeDelta = new Vector2(300, 218);   // the art's own 493x358, scaled
-            sign.anchoredPosition = new Vector2(0, 2);
-            var signImg = sign.gameObject.AddComponent<Image>();
-            var signSprite = ItemArt.Load("sign_lastcall");
-            if (signSprite != null) { signImg.sprite = signSprite; signImg.preserveAspect = true; }
-            else signImg.enabled = false;
-            signImg.raycastTarget = false;
+            // NEON, not timber (the author, 2026-08-02: the board sign, the ivy and the
+            // framed paintings all read as the wrong decade for a vice bar). The name is
+            // a magenta neon word with a soft halo — the stage sign's own voice.
+            var glow = Handwritten(NewText("SignGlow", _menuPanel, _display, 24, TextAnchor.MiddleCenter,
+                new Color(UITheme.Magenta[3].r, UITheme.Magenta[3].g, UITheme.Magenta[3].b, 0.35f)));
+            Place(glow.rectTransform, new Vector2(0.5f, 1), new Vector2(420, 44), new Vector2(0, -46f));
+            glow.rectTransform.localScale = new Vector3(1.06f, 1.2f, 1f);
+            glow.text = "LAST CALL";
+            glow.raycastTarget = false;
 
             // A red X at the cornice's right end closes the whole flow.
             var close = NewRect("Close", _menuPanel);
@@ -930,12 +924,11 @@ namespace LastCall.UI
 
             // The title sits ON the cornice, part of the architecture rather than floating
             // over the bottles.
-            var title = _menuTitle = Handwritten(NewText("Title", _menuPanel, _display, 16, TextAnchor.MiddleCenter, Color.white));
+            var title = _menuTitle = Handwritten(NewText("Title", _menuPanel, _display, 24, TextAnchor.MiddleCenter, UITheme.Magenta[4]));
             var outline = title.gameObject.AddComponent<UnityEngine.UI.Outline>();
             outline.effectColor = new Color(0.16f, 0.09f, 0.04f, 1f);
             outline.effectDistance = new Vector2(2f, 2f);
-            // Lettered ON the sign's board face (its lamps take the upper half of the art).
-            Place(title.rectTransform, new Vector2(0.5f, 1), new Vector2(280, 26), new Vector2(0, -138f));
+            Place(title.rectTransform, new Vector2(0.5f, 1), new Vector2(420, 40), new Vector2(0, -46f));
             title.text = "LAST CALL";
 
             // Left: a SCROLLABLE back-shelf of grouped item boxes — it grows as you buy more
@@ -1013,26 +1006,5 @@ namespace LastCall.UI
             bookSink.Face = bookRt; bookSink.Depth = 4f; bookSink.Lift = 2f;
         }
 
-        /// <summary>Half-seen things at the edges (the author): vine along the top,
-        /// paintings and records cut by the frame — dressed, without stealing focus.
-        /// Every piece is optional art; a missing sprite simply does not hang.</summary>
-        private void BuildWallDecor()
-        {
-            void Hang(string art, Vector2 anchor, Vector2 size, Vector2 pos, float tilt = 0f)
-            {
-                var s = ItemArt.Load(art);
-                if (s == null) return;
-                var rt = NewRect(art, _menuPanel);
-                Place(rt, anchor, size, pos);
-                var img = rt.gameObject.AddComponent<Image>();
-                img.sprite = s; img.preserveAspect = true; img.raycastTarget = false;
-                if (tilt != 0f) rt.localRotation = Quaternion.Euler(0, 0, tilt);
-            }
-            Hang("ivy_strip", new Vector2(0, 1), new Vector2(520, 130), new Vector2(200, 10f));
-            Hang("ivy_strip", new Vector2(1, 1), new Vector2(520, 130), new Vector2(-200, 4f));
-            Hang("painting_a", new Vector2(0, 0.5f), new Vector2(150, 200), new Vector2(-40, 130));
-            Hang("painting_b", new Vector2(1, 0.5f), new Vector2(150, 200), new Vector2(40, 60), 3f);
-            Hang("vinyl_records", new Vector2(1, 1), new Vector2(150, 150), new Vector2(-64, -170));
-        }
     }
 }

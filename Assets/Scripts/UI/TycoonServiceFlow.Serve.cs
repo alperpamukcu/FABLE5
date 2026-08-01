@@ -708,45 +708,45 @@ namespace LastCall.UI
             _serveMixSig = signature;
 
             foreach (Transform child in _serveMixBar) Destroy(child.gameObject);
-            float w = _serveMixBar.rect.width, x = 0f;
+            float h = _serveMixBar.rect.height, y = 0f;
             foreach (var id in glass.Ingredients)
             {
                 var card = Run.Shelf.Find(id)?.Ingredient;
-                float ratio = (float)glass.RatioOf(id);
-                float segW = ratio * (float)glass.FillFraction * w;
+                float share = (float)(glass.RatioOf(id) * glass.FillFraction);   // of the VESSEL
+                float segH = share * h;
                 var seg = NewRect($"S_{id}", _serveMixBar);
-                seg.anchorMin = new Vector2(0, 0); seg.anchorMax = new Vector2(0, 1);
-                seg.pivot = new Vector2(0, 0.5f);
-                seg.offsetMin = new Vector2(0, 2); seg.offsetMax = new Vector2(0, -2);
-                seg.sizeDelta = new Vector2(segW, -4);
-                seg.anchoredPosition = new Vector2(x, 0);
+                seg.anchorMin = new Vector2(0, 0); seg.anchorMax = new Vector2(1, 0);
+                seg.pivot = new Vector2(0.5f, 0);
+                seg.sizeDelta = new Vector2(-2, segH);
+                seg.anchoredPosition = new Vector2(0, y);
                 var img = seg.gameObject.AddComponent<Image>();
                 img.color = UITheme.LiquidColor(card?.Info?.Style, card?.Type ?? IngredientType.Spirit);
                 img.raycastTarget = false;
-                if (segW > 34f)
+                if (segH > 13f)
                 {
                     var label = NewText("P", seg, _body, 8, TextAnchor.MiddleCenter, UITheme.Night[0]);
                     Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                    label.text = $"{(card?.Name ?? id).ToUpperInvariant().Split(' ')[0]} {ratio:P0}";
+                    label.horizontalOverflow = HorizontalWrapMode.Overflow;
+                    label.text = $"{share:P0} {(card?.Name ?? id).ToUpperInvariant().Split(' ')[0]}";
                 }
-                x += segW;
+                y += segH;
             }
             float free = Mathf.Max(0f, 1f - (float)glass.FillFraction);
             if (free > 0.001f)
             {
                 var seg = NewRect("S_empty", _serveMixBar);
-                seg.anchorMin = new Vector2(0, 0); seg.anchorMax = new Vector2(0, 1);
-                seg.pivot = new Vector2(0, 0.5f);
-                seg.offsetMin = new Vector2(0, 2); seg.offsetMax = new Vector2(0, -2);
-                seg.sizeDelta = new Vector2(free * w, -4);
-                seg.anchoredPosition = new Vector2(x, 0);
+                seg.anchorMin = new Vector2(0, 0); seg.anchorMax = new Vector2(1, 0);
+                seg.pivot = new Vector2(0.5f, 0);
+                seg.sizeDelta = new Vector2(-2, free * h);
+                seg.anchoredPosition = new Vector2(0, y);
                 var img = seg.gameObject.AddComponent<Image>();
-                img.color = new Color(1f, 1f, 1f, 0.07f);
+                img.color = new Color(1f, 1f, 1f, 0.05f);
                 img.raycastTarget = false;
-                if (free * w > 46f)
+                if (free * h > 15f)
                 {
                     var label = NewText("P", seg, _body, 8, TextAnchor.MiddleCenter, UITheme.TextSecondary);
                     Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                    label.horizontalOverflow = HorizontalWrapMode.Overflow;
                     label.text = $"{free:P0} EMPTY";
                 }
             }
@@ -830,17 +830,17 @@ namespace LastCall.UI
 
             _serveShakerText = NewText("Shaker", _servePanel, _body, 13, TextAnchor.UpperLeft, UITheme.TextSecondary);
             Place(_serveShakerText.rectTransform, new Vector2(0, 1), new Vector2(280, 24), new Vector2(20, -46));
-            // The pour gauge (the author): the same brass-capped tube the shaker wears,
-            // reading the GLASS — every share in its colour, the headroom as a pale tail.
+            // VERTICAL and engine-drawn (2026-08-02): the GLASS's contents as shares of
+            // the vessel, magenta-edged where the shaker's column is cyan.
             var serveTrack = NewRect("MixTrack", _servePanel);
-            Place(serveTrack, new Vector2(0.5f, 1), new Vector2(500, 88), new Vector2(0, -30));
-            var serveTube = ItemArt.Load("gauge_frame");
-            var serveTubeImg = serveTrack.gameObject.AddComponent<Image>();
-            if (serveTube != null) { serveTubeImg.sprite = serveTube; serveTubeImg.preserveAspect = true; }
-            else serveTubeImg.color = UITheme.Night[0];
-            serveTubeImg.raycastTarget = false;
+            Place(serveTrack, new Vector2(0.5f, 0.5f), new Vector2(44, 300), new Vector2(348, -8));
+            var serveBg = serveTrack.gameObject.AddComponent<Image>();
+            serveBg.color = new Color(0.05f, 0.05f, 0.09f, 0.88f);
+            serveBg.raycastTarget = false;
+            GaugeEdge(serveTrack,
+                new Color(UITheme.Magenta[3].r, UITheme.Magenta[3].g, UITheme.Magenta[3].b, 0.7f));
             _serveMixBar = NewRect("MixSegs", serveTrack);
-            Stretch(_serveMixBar, Vector2.zero, Vector2.one, new Vector2(42, 32), new Vector2(-42, -32));
+            Stretch(_serveMixBar, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
 
             _serveGlassText = NewText("Glass", _servePanel, _body, 13, TextAnchor.UpperRight, UITheme.TextPrimary);
             Place(_serveGlassText.rectTransform, new Vector2(1, 1), new Vector2(280, 24), new Vector2(-20, -46));

@@ -208,6 +208,40 @@ namespace LastCall.UI
 
             Trace(px);
 
+            // The 3D read (the author: the outlines drew flat): an open MOUTH you look
+            // into, and soft light down the interior walls. All translucent, all laid
+            // over pixels that are still empty — the drink behind shows through, and the
+            // outline pass has already run so nothing re-traces these.
+            int innerHalf = rimHalf - Wall;
+            if (innerHalf > 4)
+                for (int dy = -3; dy <= 3; dy++)
+                    for (int dx = -innerHalf; dx < innerHalf; dx++)
+                    {
+                        float e = (dx + 0.5f) * (dx + 0.5f) / (float)(innerHalf * innerHalf)
+                                + dy * dy / 9f;
+                        int y = shape.Rim + dy;
+                        if (e > 1f || y < 0 || y >= H) continue;
+                        int xI = W / 2 + dx;
+                        if (px[y * W + xI].a > 0f) continue;
+                        px[y * W + xI] = e > 0.62f
+                            ? new Color(0.08f, 0.10f, 0.16f, 0.42f)
+                            : new Color(0.05f, 0.06f, 0.10f, 0.20f);
+                    }
+            for (int y = shape.Floor + 1; y < shape.Rim - 3; y++)
+            {
+                float t = Mathf.Clamp01((y - shape.Floor) / (float)span);
+                int half = HalfWidth(profile, t, shape.Half) - Wall;
+                for (int i2 = 0; i2 < 5 && i2 < half; i2++)
+                {
+                    int xL = W / 2 - half + i2;
+                    if (xL < 0 || xL >= W || px[y * W + xL].a > 0f) continue;
+                    px[y * W + xL] = new Color(1f, 1f, 1f, 0.12f - 0.02f * i2);
+                }
+                int xR = W / 2 + half - 1;
+                if (xR >= 0 && xR < W && px[y * W + xR].a <= 0f)
+                    px[y * W + xR] = new Color(0.04f, 0.07f, 0.11f, 0.12f);
+            }
+
             var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
             {
                 filterMode = FilterMode.Point,

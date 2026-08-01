@@ -168,8 +168,17 @@ namespace LastCall.UI
             string prep = r.Id == "draught" ? "ON TAP" : r.Id == "neat_pour" ? "NEAT"
                 : r.Prep == PrepMethod.Shaken ? "SHAKEN"
                 : r.Prep == PrepMethod.Stirred ? "STIRRED" : "BUILT";
-            _idRecipeTipText.text =
-                $"<color=#1B5F66>{prep}</color> · {BandLine(r)} · {r.GlassId?.ToUpperInvariant()}";
+            // One pour to a line, the numbers in bright cyan — vertical, like a spec card.
+            var lines = new List<string> { $"<color=#FF6EC7>{prep}</color>" };
+            foreach (var band in r.RatioRequirements)
+                lines.Add((band.IsStyleBand ? band.Style.Replace('_', ' ') : band.Type.ToString())
+                    .ToUpperInvariant()
+                    + $"  <color=#8FE8DC>{band.MinRatio * 100:0}–{band.MaxRatio * 100:0}%</color>");
+            if (r.MinFill > 0) lines.Add($"FILL  <color=#8FE8DC>{r.MinFill * 100:0}%+</color>");
+            if (!string.IsNullOrEmpty(r.GlassId))
+                lines.Add($"<color=#9C93A8>{r.GlassId.ToUpperInvariant()}</color>");
+            _idRecipeTipText.text = string.Join("\n", lines);
+            _idRecipeTip.sizeDelta = new Vector2(252, 18 + lines.Count * 20);
             _idRecipeTip.gameObject.SetActive(true);
             _idRecipeTip.SetAsLastSibling();
         }
@@ -483,12 +492,12 @@ namespace LastCall.UI
             // before the glass so the carried drink passes over it rather than under it.
             _binProp = NewRect("Bin", root);
             _binProp.anchorMin = _binProp.anchorMax = _binProp.pivot = new Vector2(1f, 0f);
-            // The new can (the author): three times the old prop, bagged and stuffed,
-            // parked in the very corner. The old grey tint would fight the painted art.
-            _binProp.sizeDelta = new Vector2(190, 250);
-            _binProp.anchoredPosition = new Vector2(-14, 4);
+            // The clean can (the author, 2026-08-02: the bagged one read as filth): a
+            // chrome pedal bin with a magenta neon edge, standing HALF out of frame.
+            _binProp.sizeDelta = new Vector2(150, 270);
+            _binProp.anchoredPosition = new Vector2(72, 2);
             _binImage = _binProp.gameObject.AddComponent<Image>();
-            _binImage.sprite = ItemArt.Load("bin_bag");
+            _binImage.sprite = ItemArt.Load("bin_clean");
             if (_binImage.sprite == null) _binImage.sprite = ItemArt.Load("bin_prop");
             _binImage.preserveAspect = true;
             _binImage.raycastTarget = false;
@@ -795,48 +804,54 @@ namespace LastCall.UI
         /// <summary>The under-counter glass rack (the author, 2026-08-02): every glass line
         /// the bar owns, standing on a walnut strip at its CURRENT tier — buy a step and
         /// the glass on the shelf is the finer one. Sits left of the bin, clear of MENU.</summary>
+        // Where the glasses stand: the bar-front's own COMPARTMENTS (the author): five
+        // cells across the painted front, three left of the MENU key, two right of it,
+        // clear of the bin in the corner.
+        private static readonly float[] GlassRackSlots = { -600f, -480f, -360f, 360f, 480f };
+
         private void RefreshGlassRack(TycoonRun run)
         {
             if (_hudRoot == null || run.Glassware.Count == 0) return;
             if (_glassRack == null)
             {
                 _glassRack = NewRect("GlassRack", _hudRoot);
-                _glassRack.anchorMin = _glassRack.anchorMax = new Vector2(1, 0);
-                _glassRack.pivot = new Vector2(1, 0);
-                _glassRack.sizeDelta = new Vector2(46f * run.Glassware.Count + 16f, 70);
-                _glassRack.anchoredPosition = new Vector2(-216f, 8f);
+                _glassRack.anchorMin = _glassRack.anchorMax = new Vector2(0.5f, 0);
+                _glassRack.pivot = new Vector2(0.5f, 0);
+                _glassRack.sizeDelta = new Vector2(1280, 110);
+                _glassRack.anchoredPosition = new Vector2(0, 4);
             }
             foreach (Transform c in _glassRack) Destroy(c.gameObject);
-
-            var strip = NewRect("Strip", _glassRack);
-            strip.anchorMin = new Vector2(0, 0); strip.anchorMax = new Vector2(1, 0);
-            strip.pivot = new Vector2(0.5f, 0);
-            strip.sizeDelta = new Vector2(0, 6);
-            strip.anchoredPosition = Vector2.zero;
-            var stripImg = strip.gameObject.AddComponent<Image>();
-            stripImg.sprite = BackBarArt.ShelfFace();
-            stripImg.type = Image.Type.Tiled;
-            stripImg.raycastTarget = false;
 
             int i = 0;
             foreach (var g in run.Glassware)
             {
                 int tier = run.GlassTier(g.Id);
                 var piece = GlassArt.For(g, tier);
+                float x = GlassRackSlots[Mathf.Min(i, GlassRackSlots.Length - 1)];
+
+                var shadow = NewRect($"S_{g.Id}", _glassRack);
+                shadow.anchorMin = shadow.anchorMax = new Vector2(0.5f, 0);
+                shadow.pivot = new Vector2(0.5f, 0.5f);
+                shadow.sizeDelta = new Vector2(64, 12);
+                shadow.anchoredPosition = new Vector2(x, 8);
+                var shImg = shadow.gameObject.AddComponent<Image>();
+                shImg.sprite = BackBarArt.BottleShadow();
+                shImg.raycastTarget = false;
+
                 var rt = NewRect($"G_{g.Id}", _glassRack);
-                rt.anchorMin = rt.anchorMax = new Vector2(0, 0);
+                rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0);
                 rt.pivot = new Vector2(0.5f, 0);
-                float h = 44f;
+                float h = 92f;
                 rt.sizeDelta = new Vector2(h * piece.Aspect, h);
-                rt.anchoredPosition = new Vector2(28f + i * 46f, 6f);
+                rt.anchoredPosition = new Vector2(x, 8);
                 var img = rt.gameObject.AddComponent<Image>();
                 img.sprite = piece.Sprite;
                 img.preserveAspect = true;
                 img.raycastTarget = false;
                 if (tier > 1)
                 {
-                    var stars = NewText("T", rt, _body, 8, TextAnchor.LowerCenter, UITheme.Amber[3]);
-                    Place(stars.rectTransform, new Vector2(0.5f, 0), new Vector2(40, 10), new Vector2(0, -10));
+                    var stars = NewText("T", rt, _body, 8, TextAnchor.LowerCenter, UITheme.Cyan[4]);
+                    Place(stars.rectTransform, new Vector2(0.5f, 0), new Vector2(40, 10), new Vector2(0, -2));
                     stars.text = new string('★', tier - 1);
                 }
                 i++;
@@ -1052,9 +1067,9 @@ namespace LastCall.UI
 
                 // The tag glows cyan when a drink is built and this customer can actually take it.
                 bool canTake = drinkReady && !deciding && !drinking;
-                // Tinting the cream bubble, not recolouring a box: white at rest, washed
-                // cyan when this customer can take the drink in hand.
-                view.TagBg.color = canTake ? new Color(0.72f, 0.98f, 0.92f, 1f) : Color.white;
+                view.TagBg.color = canTake
+                    ? new Color(UITheme.Selection.r, UITheme.Selection.g, UITheme.Selection.b, 0.92f)
+                    : new Color(0.07f, 0.07f, 0.11f, 0.90f);
             }
         }
 
@@ -1968,11 +1983,11 @@ namespace LastCall.UI
             // The numbers carry the craft, so they print in heavier ink than the names.
             var parts = new List<string>();
             foreach (var b in r.RatioRequirements)
-                parts.Add(string.Format("{0} <color=#1A0E06>{1:0}–{2:0}</color>",
+                parts.Add(string.Format("{0} <color=#1A0E06>{1:0}–{2:0}%</color>",
                     (b.IsStyleBand ? b.Style.Replace('_', ' ') : b.Type.ToString()).ToUpperInvariant(),
                     b.MinRatio * 100, b.MaxRatio * 100));
             if (r.MinFill > 0)
-                parts.Add(string.Format("<color=#1A0E06>FILL {0:0}+</color>", r.MinFill * 100));
+                parts.Add(string.Format("<color=#1A0E06>FILL {0:0}%+</color>", r.MinFill * 100));
             return string.Join(" · ", parts);
         }
 
@@ -2268,14 +2283,14 @@ namespace LastCall.UI
 
             // The order, seated on its own rule with the glass drawn beside it.
             var idIcon = NewRect("OrderIcon", card);
-            Place(idIcon, new Vector2(0, 1), new Vector2(44, 44), Vector2.zero);
+            Place(idIcon, new Vector2(0, 1), new Vector2(30, 30), Vector2.zero);
             idIcon.pivot = new Vector2(0, 0);
             idIcon.anchoredPosition = new Vector2(LicFieldsX, -LicLines[3] + 2f);
             _idOrderIcon = idIcon.gameObject.AddComponent<Image>();
             _idOrderIcon.preserveAspect = true;
             _idOrderIcon.raycastTarget = false;
-            _idOrder = LicenceField(card, "ORDER", LicFieldsX + 54f, LicLines[3],
-                LicFieldsW - 54f, out _, 16);
+            _idOrder = LicenceField(card, "ORDER", LicFieldsX + 40f, LicLines[3],
+                LicFieldsW - 40f, out _, 16);
             // What is IN it, under the name (v5 P16): the menu speaks styles now, so the
             // licence has to say gin-and-tonic, not just "Gin & Tonic" — this line is the
             // player's recipe knowledge since the band rows left with v2.
@@ -2294,22 +2309,25 @@ namespace LastCall.UI
             orderHit.anchoredPosition = new Vector2(LicFieldsX, -LicLines[3] - 6f);
             var orderHitImg = orderHit.gameObject.AddComponent<Image>();
             orderHitImg.color = new Color(0, 0, 0, 0.001f);
-            // Dressed as a page OF the book (the author): cream stock, 16px ink, the pour
-            // numbers in the heaviest ink — the same line the book prints for this drink.
+            // VERTICAL and vice (the author, 2026-08-02): the cream chip vanished into the
+            // cream card. A dark glass panel, cyan-edged, one pour to a line, the numbers
+            // bright — parked over the seal corner where nothing else lives.
             _idRecipeTip = NewRect("RecipeTip", card);
-            Place(_idRecipeTip, new Vector2(0, 1), new Vector2(LicFieldsW + 40f, 78), Vector2.zero);
-            _idRecipeTip.pivot = new Vector2(0, 1);
-            _idRecipeTip.anchoredPosition = new Vector2(LicFieldsX - 20f, -LicLines[3] - 22f);
+            Place(_idRecipeTip, new Vector2(1, 1), new Vector2(252, 120), Vector2.zero);
+            _idRecipeTip.pivot = new Vector2(1, 1);
+            _idRecipeTip.anchoredPosition = new Vector2(-18f, -LicLines[2] + 6f);
             var tipBg = _idRecipeTip.gameObject.AddComponent<Image>();
-            tipBg.color = new Color(0.97f, 0.94f, 0.84f);
-            var tipShadow = _idRecipeTip.gameObject.AddComponent<Shadow>();
-            tipShadow.effectColor = new Color(0.2f, 0.12f, 0.06f, 0.5f);
-            tipShadow.effectDistance = new Vector2(3, -3);
-            _idRecipeTipText = NewText("T", _idRecipeTip, _body, 16, TextAnchor.MiddleLeft,
-                new Color(0.45f, 0.35f, 0.24f));
-            Stretch(_idRecipeTipText.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 4), new Vector2(-8, -4));
-            _idRecipeTipText.horizontalOverflow = HorizontalWrapMode.Wrap;
-            _idRecipeTipText.verticalOverflow = VerticalWrapMode.Truncate;
+            tipBg.color = new Color(0.07f, 0.07f, 0.11f, 0.96f);
+            var tipEdge = new Color(UITheme.Cyan[3].r, UITheme.Cyan[3].g, UITheme.Cyan[3].b, 0.8f);
+            Hairline(_idRecipeTip, new Vector2(0, 0), new Vector2(1, 0), tipEdge);
+            Hairline(_idRecipeTip, new Vector2(0, 1), new Vector2(1, 1), tipEdge);
+            HairlineV(_idRecipeTip, 0f, tipEdge);
+            HairlineV(_idRecipeTip, 1f, tipEdge);
+            _idRecipeTipText = NewText("T", _idRecipeTip, _body, 16, TextAnchor.UpperLeft,
+                UITheme.TextSecondary);
+            Stretch(_idRecipeTipText.rectTransform, Vector2.zero, Vector2.one, new Vector2(10, 6), new Vector2(-10, -6));
+            _idRecipeTipText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _idRecipeTipText.verticalOverflow = VerticalWrapMode.Overflow;
             _idRecipeTip.gameObject.SetActive(false);
             var trig = orderHit.gameObject.AddComponent<EventTrigger>();
             var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
@@ -2507,18 +2525,24 @@ namespace LastCall.UI
                 seat.Tag.anchoredPosition = new Vector2(0, CharWinH + 10f);
                 seat.TagBg = seat.Tag.gameObject.AddComponent<Image>();
                 seat.TagBg.raycastTarget = false;
-                // The generated bubble (the author: the old boxes tired the eye): soft
-                // cream, a tail down to the head. Text switches to ink to match.
-                var bubbleSprite = ItemArt.Load("order_bubble");
-                if (bubbleSprite != null) seat.TagBg.sprite = bubbleSprite;
+                // Vice, not parchment (the author, 2026-08-02: too much yellow): a dark
+                // glassy card with one neon rule under it — the room's own palette.
+                var tagRule = NewRect("Rule", seat.Tag);
+                tagRule.anchorMin = new Vector2(0.06f, 0); tagRule.anchorMax = new Vector2(0.94f, 0);
+                tagRule.pivot = new Vector2(0.5f, 0);
+                tagRule.sizeDelta = new Vector2(0, 2);
+                tagRule.anchoredPosition = new Vector2(0, 2);
+                var tagRuleImg = tagRule.gameObject.AddComponent<Image>();
+                tagRuleImg.color = UITheme.Cyan[3];
+                tagRuleImg.raycastTarget = false;
 
                 seat.Name = NewText("Name", seat.Tag, _body, 12, TextAnchor.UpperCenter,
-                    new Color(0.16f, 0.11f, 0.07f));
+                    UITheme.TextPrimary);
                 Stretch(seat.Name.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -10));
                 seat.Name.horizontalOverflow = HorizontalWrapMode.Overflow;
 
                 seat.Wants = NewText("Wants", seat.Tag, _body, 10, TextAnchor.UpperCenter,
-                    new Color(0.11f, 0.40f, 0.44f));
+                    UITheme.Cyan[4]);
                 Stretch(seat.Wants.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -26));
                 seat.Wants.horizontalOverflow = HorizontalWrapMode.Overflow;
 
@@ -2527,7 +2551,7 @@ namespace LastCall.UI
                 // visibly off-centre on every seat. Now the TEXT owns the middle and the icon
                 // rides just left of its measured width, per refresh, like a bullet point.
                 seat.Order = NewText("Order", seat.Tag, _body, 11, TextAnchor.UpperCenter,
-                    new Color(0.55f, 0.33f, 0.05f));
+                    UITheme.Magenta[4]);
                 Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -42));
                 seat.Order.horizontalOverflow = HorizontalWrapMode.Overflow;
 
