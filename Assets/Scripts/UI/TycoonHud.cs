@@ -120,7 +120,7 @@ namespace LastCall.UI
         private Image _drinkGlassArt;
         private GlasswareDefinition _drinkGlassware;
         private int _drinkGlassTier = 1;
-        private Image _drinkGlassSurface;
+        private Image _drinkGlassBack;
         private RectTransform _glassRack;
         private const float CarriedGlassHeight = 116f;
         private bool _glassGrabbed;
@@ -520,9 +520,15 @@ namespace LastCall.UI
             grab.callback.AddListener(ev => OnGlassGrab((PointerEventData)ev));
             _drinkGlass.gameObject.AddComponent<EventTrigger>().triggers.Add(grab);
 
-            // The liquid goes in first so the hollow glass draws over it, and it is clipped to
-            // the interior silhouette — a martini's drink narrows into the cone rather than
-            // being a rectangle poking through the walls.
+            // The layer architecture (the author, 2026-08-02): BACK face and base first,
+            // the liquid over it, the FRONT face — interior fully clear — on top.
+            var backRt = NewRect("Back", _drinkGlass);
+            Stretch(backRt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _drinkGlassBack = backRt.gameObject.AddComponent<Image>();
+            _drinkGlassBack.preserveAspect = true;
+            _drinkGlassBack.raycastTarget = false;
+            _drinkGlassBack.enabled = false;
+
             var liquid = NewRect("Liquid", _drinkGlass);
             Stretch(liquid, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _drinkGlassLiquid = liquid.gameObject.AddComponent<Image>();
@@ -531,9 +537,6 @@ namespace LastCall.UI
             _drinkGlassLiquid.fillMethod = Image.FillMethod.Vertical;
             _drinkGlassLiquid.fillOrigin = (int)Image.OriginVertical.Bottom;
             _drinkGlassLiquid.preserveAspect = true;
-            // The meniscus rides between the liquid and the glass walls (2026-08-02):
-            // the fill's own look-down ellipse, so the pour reads as a volume.
-            _drinkGlassSurface = GlassArt.MakeSurface(_drinkGlass);
 
             var art = NewRect("Art", _drinkGlass);
             Stretch(art, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
@@ -594,14 +597,16 @@ namespace LastCall.UI
             {
                 _drinkGlassware = run.ServingGlassware;
                 _drinkGlassTier = drinkTier;
-                _drinkGlassArt.sprite = piece.Sprite;
+                // Front face over the liquid when the set is modular; the composite
+                // sprite carries a run without the generated art.
+                _drinkGlassArt.sprite = piece.Front != null ? piece.Front : piece.Sprite;
+                _drinkGlassBack.sprite = piece.Back;
+                _drinkGlassBack.enabled = piece.Back != null;
                 _drinkGlassLiquid.sprite = piece.Fill;
                 _drinkGlass.sizeDelta = new Vector2(CarriedGlassHeight * piece.Aspect, CarriedGlassHeight);
             }
             _drinkGlassLiquid.color = DrinkColor();
             _drinkGlassLiquid.fillAmount = piece.FillAmount((float)run.ServingGlass.FillFraction);
-            GlassArt.PlaceSurface(_drinkGlassSurface, piece, (float)run.ServingGlass.FillFraction,
-                _drinkGlass, _drinkGlassLiquid.color);
             // The finishing touches ride the carried glass too (P14): the customer is handed
             // the drink that was actually finished, salt and wedge and all.
             GlassDecor.Sync(_drinkGlass, piece, run.ServingGlass);

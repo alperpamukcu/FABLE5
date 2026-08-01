@@ -347,7 +347,10 @@ namespace LastCall.UI
                 foreach (var g in runNow.Glassware)
                     if (g.Id == "pint")
                     {
-                        _tapPintImage.sprite = GlassArt.For(g, runNow.GlassTier(g.Id)).Sprite;
+                        // The FRONT face alone: its interior is clear, so the pulled beer
+                        // and its head show through untinted (the author's layering).
+                        var tapPiece = GlassArt.For(g, runNow.GlassTier(g.Id));
+                        _tapPintImage.sprite = tapPiece.Front != null ? tapPiece.Front : tapPiece.Sprite;
                         _tapPintImage.color = Color.white;
                         break;
                     }

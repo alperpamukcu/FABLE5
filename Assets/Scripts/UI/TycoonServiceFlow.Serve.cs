@@ -30,7 +30,8 @@ namespace LastCall.UI
         private Image _serveGlassImage;
         private LastCall.Core.GlasswareDefinition _serveGlassware;
         private int _serveGlassTier = 1;
-        private Image _serveGlassSurface;
+        private RectTransform _serveGlassBackRt;
+        private Image _serveGlassBack;
         private RectTransform _serveMixBar;
         private string _serveMixSig = "";
         private GlassArt.Piece _serveGlassPiece;
@@ -627,13 +628,26 @@ namespace LastCall.UI
 
             var piece = GlassArt.For(glassware, tier);
             _serveGlassPiece = piece;
-            _serveGlassImage.sprite = piece.Sprite;
+            // Modular when the art is: the glass image is the clear FRONT face, and the
+            // back face mirrors it under the pooled drink.
+            _serveGlassImage.sprite = piece.Front != null ? piece.Front : piece.Sprite;
             _serveGlassImage.preserveAspect = true;
             _serveGlassImage.color = Color.white;
+            if (_serveGlassBack != null)
+            {
+                _serveGlassBack.sprite = piece.Back;
+                _serveGlassBack.enabled = piece.Back != null;
+                _serveGlassBack.preserveAspect = true;
+            }
             // Height is fixed and width follows the drawing, so a coupe is wide and a highball
             // narrow at the same place on the counter instead of all five being stretched into
             // one box.
             _serveGlass.sizeDelta = new Vector2(ServeGlassHeight * piece.Aspect, ServeGlassHeight);
+            if (_serveGlassBackRt != null)
+            {
+                _serveGlassBackRt.sizeDelta = _serveGlass.sizeDelta;
+                _serveGlassBackRt.anchoredPosition = _serveGlass.anchoredPosition;
+            }
             _serveFluid.SetProfile(piece.Profile);
             _serveFluid.SetDensity(piece.Density);   // measured per vessel, not one number for all
         }
@@ -644,12 +658,7 @@ namespace LastCall.UI
         /// and five glasses would have been fifteen of them.</summary>
         private void PushServePool(TycoonRun run)
         {
-            if (run.ServingGlass.IsEmpty)
-            {
-                _serveFluid.ClearPool();
-                if (_serveGlassSurface != null) _serveGlassSurface.gameObject.SetActive(false);
-                return;
-            }
+            if (run.ServingGlass.IsEmpty) { _serveFluid.ClearPool(); return; }
             var piece = _serveGlassPiece;
             var c = _serveGlass.anchoredPosition;
             float w = _serveGlass.rect.width, h = _serveGlass.rect.height;
@@ -657,10 +666,6 @@ namespace LastCall.UI
             float floor = c.y - h * 0.5f + h * piece.FloorY;
             float rim = c.y - h * 0.5f + h * piece.RimY;
             _serveFluid.SetPool(c.x - iw, c.x + iw, floor, rim, (float)run.ServingGlass.FillFraction);
-            // The meniscus over the pool (2026-08-02): the 3D read of the fill line.
-            if (_serveGlassSurface == null) _serveGlassSurface = GlassArt.MakeSurface(_serveGlass);
-            GlassArt.PlaceSurface(_serveGlassSurface, piece, (float)run.ServingGlass.FillFraction,
-                _serveGlass, DrinkColor(run.ServingGlass));
         }
 
         /// <summary>
@@ -924,6 +929,15 @@ namespace LastCall.UI
 
             // The serving glass: real clear-glass art (2026-07-23), transparent interior so the
             // poured drink pools behind it and shows through; the outline+rim draw in front.
+            // The layer architecture (the author, 2026-08-02): the BACK face sits under
+            // the pooled drink; the glass image itself becomes the clear FRONT face.
+            _serveGlassBackRt = NewRect("GlassBack", _serveSurface);
+            Place(_serveGlassBackRt, new Vector2(0.5f, 0.5f), new Vector2(190, ServeGlassHeight),
+                new Vector2(-150, -30));
+            _serveGlassBack = _serveGlassBackRt.gameObject.AddComponent<Image>();
+            _serveGlassBack.raycastTarget = false;
+            _serveGlassBack.enabled = false;
+
             _serveGlass = NewRect("Glass", _serveSurface);
             Place(_serveGlass, new Vector2(0.5f, 0.5f), new Vector2(190, ServeGlassHeight),
                 new Vector2(-150, -30));
