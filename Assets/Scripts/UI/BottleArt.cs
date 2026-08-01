@@ -47,8 +47,20 @@ namespace LastCall.UI
         /// How solid the drink is drawn. A flat opaque block reads as paint, not liquid — the
         /// bottle's own highlights and the shading down its shoulders have to carry through it for
         /// the eye to put the drink BEHIND the glass rather than on it.
+        /// Raised 0.70 → 0.85 when the glass-front pass arrived (below), which halves what the
+        /// eye receives; together they land near the old strength with the labels back on top.
         /// </summary>
-        private const float LiquidAlpha = 0.70f;
+        private const float LiquidAlpha = 0.85f;
+
+        /// <summary>
+        /// The bottle drawn AGAIN over the drink, at this strength (the author, 2026-08-01:
+        /// the liquid was landing on top of the labels). The cavity mask's label test only
+        /// catches printed colour, so a cream tag or a white band read as glass and were
+        /// painted over; re-asserting the whole sprite puts every label, tag and highlight
+        /// back in front of the drink without needing to detect any of them. Chosen by eye
+        /// from composited candidates (0.35 / 0.5 / 0.65) — 0.5 keeps both readable.
+        /// </summary>
+        private const float GlassFrontAlpha = 0.5f;
 
         /// <summary>A bottle's sprite together with the cavity the drink is drawn into.</summary>
         public readonly struct Piece
@@ -129,6 +141,22 @@ namespace LastCall.UI
             img.fillAmount = 0f;
             var c = UITheme.LiquidColor(style, type);
             img.color = new Color(c.r, c.g, c.b, LiquidAlpha);
+
+            // A child of the LIQUID, not of the bottle: the pour stage swaps bottles by
+            // destroying the liquid alone, and an orphaned glass-front would wear the old
+            // bottle's face over the new one.
+            var front = new GameObject("GlassFront", typeof(RectTransform));
+            var frt = (RectTransform)front.transform;
+            frt.SetParent(rt, false);
+            frt.anchorMin = Vector2.zero;
+            frt.anchorMax = Vector2.one;
+            frt.offsetMin = Vector2.zero;
+            frt.offsetMax = Vector2.zero;
+            var fimg = front.AddComponent<Image>();
+            fimg.sprite = piece.Sprite;
+            fimg.preserveAspect = true;
+            fimg.raycastTarget = false;
+            fimg.color = new Color(1f, 1f, 1f, GlassFrontAlpha);
             return img;
         }
 

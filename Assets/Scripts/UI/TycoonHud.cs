@@ -130,12 +130,17 @@ namespace LastCall.UI
         private const float GlassAngStiffness = 90f;  // spring the tilt back upright
         private const float GlassAngDamping = 9f;
 
-        // day end
+        // day end — two steps now (the author, 2026-08-01): first the bill alone, then
+        // the market, each with its own verb on the same button.
         private RectTransform _dayEndPanel;
         private Text _invoiceText;
         private RectTransform _offerRow;
         private RectTransform _openTomorrow;
         private Text _bannerText;
+        private RectTransform _dayEndBill, _dayEndTablet;
+        private Text _openTomorrowLabel, _dayEndTitle;
+        private int _dayEndStep;
+        private RectTransform _cardTarget;
 
         // ledger history (GDD 24 §7, 2026-07-22): the register opens the book of past days.
         private RectTransform _ledgerPanel;
@@ -148,6 +153,7 @@ namespace LastCall.UI
         private Text _idName, _idAgeFrom, _idRel, _idIntent, _idOrder, _idOrderParts, _idRates, _idRatesLabel;
         private RectTransform _idRecipeTip;
         private Text _idRecipeTipText;
+        private RectTransform _idPrefRow;
 
         /// <summary>The book's line for the ordered drink, shown at the card (hover).</summary>
         private void ShowOrderRecipeTip()
@@ -158,7 +164,8 @@ namespace LastCall.UI
             string prep = r.Id == "draught" ? "ON TAP" : r.Id == "neat_pour" ? "NEAT"
                 : r.Prep == PrepMethod.Shaken ? "SHAKEN"
                 : r.Prep == PrepMethod.Stirred ? "STIRRED" : "BUILT";
-            _idRecipeTipText.text = $"{prep}  ·  {BandLine(r)}  ·  {r.GlassId?.ToUpperInvariant()}";
+            _idRecipeTipText.text =
+                $"<color=#1B5F66>{prep}</color> · {BandLine(r)} · {r.GlassId?.ToUpperInvariant()}";
             _idRecipeTip.gameObject.SetActive(true);
             _idRecipeTip.SetAsLastSibling();
         }
@@ -1137,13 +1144,24 @@ namespace LastCall.UI
         private void ShowDayEnd()
         {
             var run = Run;
+            _dayEndStep = 0;   // the bill first; the market only after CONTINUE
             _dayEndPanel.gameObject.SetActive(true);
             RebuildDayEnd();
+        }
+
+        private void OnDayEndAdvance()
+        {
+            if (_dayEndStep == 0) { _dayEndStep = 1; Sfx.Play("click", 0.6f); RebuildDayEnd(); }
+            else OnOpenTomorrow();
         }
 
         private void RebuildDayEnd()
         {
             var run = Run;
+            _dayEndBill.gameObject.SetActive(_dayEndStep == 0);
+            _dayEndTablet.gameObject.SetActive(_dayEndStep == 1);
+            _dayEndTitle.text = _dayEndStep == 0 ? "LAST CALL — THE BOOKS" : "LAST CALL — THE MARKET";
+            _openTomorrowLabel.text = _dayEndStep == 0 ? "CONTINUE  →  THE MARKET" : "START THE DAY  →";
             var floor = run.Floor;
             int served = 0, stormed = 0;
             foreach (var visit in floor.Finished)
@@ -1218,14 +1236,17 @@ namespace LastCall.UI
                 _shopTabLabels[i].color = on ? UITheme.TextOnAmber : UITheme.TextSecondary;
             }
 
+            if (_dayEndStep == 0) return;   // the bill step shows no shop at all
             if (_shopTab == 0)
             {
+                _cardTarget = ShopSection("RESTOCK");
                 int restock = run.Shelf.RefillCost(cfg.RefillPricePerCapacity);
                 AddCard("RESTOCK THE WELL", "well is full", restock, restock > 0, () =>
                 {
                     run.RefillShelf(); RebuildDayEnd();
                 });
 
+                if (run.MarketOffers.Count > 0) _cardTarget = ShopSection("TONIGHT'S MARKET");
                 for (int i = 0; i < run.MarketOffers.Count; i++)
                 {
                     int index = i;
@@ -1241,6 +1262,7 @@ namespace LastCall.UI
                 // The recipe book (v5 P16): the locked cocktails, bought onto the menu the way
                 // stock is bought onto the shelf. The better ones want the room talking first
                 // (the star gate) — a card that is gated says so instead of hiding.
+                _cardTarget = ShopSection("THE RECIPE BOOK");
                 foreach (var recipe in run.LockedRecipes)
                 {
                     var r = recipe;
@@ -1259,9 +1281,11 @@ namespace LastCall.UI
             }
             else
             {
+                _cardTarget = ShopSection("THE FLOOR");
                 AddCard($"STOOL #{run.Seats + 1}", "bar is full", cfg.SeatPrice(run.Seats),
                     run.Seats < cfg.MaxSeats, () => { run.BuySeat(); ApplyBarLook(); RebuildDayEnd(); });
 
+                _cardTarget = ShopSection("THE LOOK");
                 AddCard($"GLASSWARE ★{run.GlasswareTier}", "top tier", cfg.GlasswarePrice(run.GlasswareTier),
                     run.GlasswareTier < cfg.MaxAmbienceTier,
                     () => { run.BuyGlassware(); ApplyBarLook(); RebuildDayEnd(); }, ItemArt.Glass);
@@ -1271,9 +1295,28 @@ namespace LastCall.UI
                 AddCard($"BACK BAR ★{run.WallTier}", "top tier", cfg.WallPrice(run.WallTier),
                     run.WallTier < cfg.MaxAmbienceTier,
                     () => { run.BuyWall(); ApplyBarLook(); RebuildDayEnd(); });
+                _cardTarget = ShopSection("THE STAGE");
                 AddCard("MUSICIAN", "on stage", cfg.MusicianPrice, !run.HasMusician,
                     () => { run.BuyMusician(); ApplyBarLook(); RebuildDayEnd(); });
             }
+            _offerRow.anchoredPosition = Vector2.zero;   // a rebuilt shop reads from the top
+        }
+
+        /// <summary>A titled section of the market: its header row, then its own grid.</summary>
+        private RectTransform ShopSection(string title)
+        {
+            var h = NewRect("SH", _offerRow);
+            h.gameObject.AddComponent<LayoutElement>().preferredHeight = 22;
+            var t = NewText("T", h, _body, 12, TextAnchor.LowerLeft, UITheme.TextSecondary);
+            Stretch(t.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 2), Vector2.zero);
+            t.text = $"— {title} —";
+            var sec = NewRect("Sec", _offerRow);
+            var g = sec.gameObject.AddComponent<GridLayoutGroup>();
+            g.cellSize = new Vector2(162, 74);
+            g.spacing = new Vector2(8, 8);
+            g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            g.constraintCount = 5;
+            return sec;
         }
 
         // ── the service log (dev tooling, 2026-07-31) ────────────────────────────
@@ -1434,9 +1477,16 @@ namespace LastCall.UI
             var boardSprite = ItemArt.Load("menu_board");
             if (boardSprite != null) { boardImg.sprite = boardSprite; boardImg.preserveAspect = true; }
             else boardImg.color = UITheme.Cream[4];
-            // The whole board swallows its clicks (the author, second ruling): tapping the
-            // asset must NOT close the book; only truly outside it, on the scrim, does.
-            sheet.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
+            // The whole VISIBLE board swallows its clicks (the author, third ruling): the
+            // sprite carries wide transparent margins, so a full-rect swallow ate the very
+            // "outside" clicks meant to close the book. The catcher is sized to the board's
+            // opaque pixels (measured off menu_board.png: 823x632 centred at -6,+6).
+            boardImg.raycastTarget = false;
+            var boardCatch = NewRect("BoardCatch", sheet);
+            Place(boardCatch, new Vector2(0.5f, 0.5f), new Vector2(824, 634), new Vector2(-6, 6));
+            var bcImg = boardCatch.gameObject.AddComponent<Image>();
+            bcImg.color = new Color(0, 0, 0, 0.001f);
+            boardCatch.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
 
             // No title text and no X (2026-08-01, the author): the board's own metal clip
             // IS the header, the words were hiding under it, and the scrim click closes.
@@ -1769,6 +1819,8 @@ namespace LastCall.UI
                 parts.Add(string.Format("{0} <color=#1A0E06>{1:0}–{2:0}</color>",
                     (b.IsStyleBand ? b.Style.Replace('_', ' ') : b.Type.ToString()).ToUpperInvariant(),
                     b.MinRatio * 100, b.MaxRatio * 100));
+            if (r.MinFill > 0)
+                parts.Add(string.Format("<color=#1A0E06>FILL {0:0}+</color>", r.MinFill * 100));
             return string.Join(" · ", parts);
         }
 
@@ -1909,15 +1961,44 @@ namespace LastCall.UI
             _idOrderIcon.sprite = DrinkIcon.For(visit.Order.Wanted, _bootstrap.Glassware);
             _idOrderIcon.enabled = _idOrderIcon.sprite != null;
 
-            // The endorsements line: everything the spec asks of the serve, in one place —
-            // garnishes, worked hard, filled to the top. This is the read the tip grades.
+            // The endorsements, drawn rather than listed (the author): each ask is a
+            // pictogram with its word under it, and the read's fill preference joins them
+            // as a glass marked with the band it wants — the empty space counted in the
+            // numbers, which is the honest way to say how full a glass should be.
             var spec = visit.Order.Spec;
-            var wants = visit.Order.Garnishes.Select(g => g.Name.ToUpperInvariant()).ToList();
-            if (spec.ExtraShaken) wants.Add("SHAKEN HARD");
-            if (spec.FilledToTheTop) wants.Add("FILLED TO THE TOP");
-            _idIntent.text = wants.Count == 0
-                ? "SERVE IT CLEAN"
-                : string.Join("   ·   ", wants);
+            foreach (Transform old in _idPrefRow) Destroy(old.gameObject);
+            int chips = 0;
+            foreach (var g in visit.Order.Garnishes)
+                chips += PrefChip(PrefArt.ForPreparation(g.Id), g.Name.ToUpperInvariant());
+            if (spec.ExtraShaken) chips += PrefChip(PrefArt.Shaker(), "SHAKEN HARD");
+            if (spec.FilledToTheTop) chips += PrefChip(PrefArt.FilledGlass(), "TO THE TOP");
+            if (visit.Read != null && !spec.FilledToTheTop)
+            {
+                var fp = visit.Read.FillPreference;
+                chips += PrefChip(PrefArt.FillGauge((float)fp.MinFill, (float)fp.MaxFill),
+                    $"{fp.ShortLabel} {fp.MinFill * 100:0}–{fp.MaxFill * 100:0}%");
+            }
+            _idIntent.text = chips == 0 ? "SERVE IT CLEAN" : "";
+        }
+
+        /// <summary>One pictogram with its word under it. Returns 1 so the caller can count.</summary>
+        private int PrefChip(Sprite icon, string label)
+        {
+            var chip = NewRect("Pref", _idPrefRow);
+            var iconRt = NewRect("I", chip);
+            Place(iconRt, new Vector2(0.5f, 1), new Vector2(26, 26), Vector2.zero);
+            iconRt.pivot = new Vector2(0.5f, 1);
+            var img = iconRt.gameObject.AddComponent<Image>();
+            img.sprite = icon; img.preserveAspect = true; img.raycastTarget = false;
+            img.enabled = icon != null;
+            var t = NewText("L", chip, _body, 8, TextAnchor.UpperCenter, UITheme.Night[1]);
+            Place(t.rectTransform, new Vector2(0.5f, 1), new Vector2(96, 10), new Vector2(0, -28));
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.text = label;
+            var le = chip.gameObject.AddComponent<LayoutElement>();
+            le.preferredWidth = Mathf.Max(44f, label.Length * 7f);
+            le.preferredHeight = 40f;
+            return 1;
         }
 
         /// <summary>0–5 stars as glyphs, the empty ones kept so the width never jumps.</summary>
@@ -2046,13 +2127,22 @@ namespace LastCall.UI
             orderHit.anchoredPosition = new Vector2(LicFieldsX, -LicLines[3] - 6f);
             var orderHitImg = orderHit.gameObject.AddComponent<Image>();
             orderHitImg.color = new Color(0, 0, 0, 0.001f);
+            // Dressed as a page OF the book (the author): cream stock, 16px ink, the pour
+            // numbers in the heaviest ink — the same line the book prints for this drink.
             _idRecipeTip = NewRect("RecipeTip", card);
-            Place(_idRecipeTip, new Vector2(0, 1), new Vector2(LicFieldsW + 40f, 44), Vector2.zero);
+            Place(_idRecipeTip, new Vector2(0, 1), new Vector2(LicFieldsW + 40f, 78), Vector2.zero);
             _idRecipeTip.pivot = new Vector2(0, 1);
             _idRecipeTip.anchoredPosition = new Vector2(LicFieldsX - 20f, -LicLines[3] - 22f);
-            _idRecipeTip.gameObject.AddComponent<Image>().color = UITheme.Night[1];
-            _idRecipeTipText = NewText("T", _idRecipeTip, _body, 8, TextAnchor.MiddleLeft, UITheme.TextPrimary);
-            Stretch(_idRecipeTipText.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 2), new Vector2(-8, -2));
+            var tipBg = _idRecipeTip.gameObject.AddComponent<Image>();
+            tipBg.color = new Color(0.97f, 0.94f, 0.84f);
+            var tipShadow = _idRecipeTip.gameObject.AddComponent<Shadow>();
+            tipShadow.effectColor = new Color(0.2f, 0.12f, 0.06f, 0.5f);
+            tipShadow.effectDistance = new Vector2(3, -3);
+            _idRecipeTipText = NewText("T", _idRecipeTip, _body, 16, TextAnchor.MiddleLeft,
+                new Color(0.45f, 0.35f, 0.24f));
+            Stretch(_idRecipeTipText.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 4), new Vector2(-8, -4));
+            _idRecipeTipText.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _idRecipeTipText.verticalOverflow = VerticalWrapMode.Truncate;
             _idRecipeTip.gameObject.SetActive(false);
             var trig = orderHit.gameObject.AddComponent<EventTrigger>();
             var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
@@ -2062,9 +2152,20 @@ namespace LastCall.UI
             exit.callback.AddListener(_ => _idRecipeTip.gameObject.SetActive(false));
             trig.triggers.Add(exit);
 
-            // Serving preferences — the endorsements line. What the licence permits.
+            // Serving preferences — the endorsements, drawn as pictograms (the author,
+            // 2026-08-01) in the free band under the rule; the field text only survives to
+            // say SERVE IT CLEAN when there is nothing to draw.
             _idIntent = LicenceField(card, "SERVING PREFERENCES", LicFieldsX, LicLines[4],
                 LicFieldsW, out _, 12);
+            _idPrefRow = NewRect("PrefRow", card);
+            Place(_idPrefRow, new Vector2(0, 1), new Vector2(LicFieldsW, 42), Vector2.zero);
+            _idPrefRow.pivot = new Vector2(0, 1);
+            _idPrefRow.anchoredPosition = new Vector2(LicFieldsX, -LicLines[4] - 2f);
+            var prefLayout = _idPrefRow.gameObject.AddComponent<HorizontalLayoutGroup>();
+            prefLayout.spacing = 8;
+            prefLayout.childControlWidth = true; prefLayout.childForceExpandWidth = false;
+            prefLayout.childControlHeight = true; prefLayout.childForceExpandHeight = false;
+            prefLayout.childAlignment = TextAnchor.UpperLeft;
 
             var hint = NewText("Hint", _idRoot, _body, 12, TextAnchor.MiddleCenter, UITheme.TextSecondary);
             Place(hint.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(400, 20),
@@ -2285,15 +2386,15 @@ namespace LastCall.UI
             var panelImg = _dayEndPanel.gameObject.AddComponent<Image>();
             panelImg.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.97f);
 
-            var title = NewText("Title", _dayEndPanel, _display, 16, TextAnchor.MiddleCenter, UITheme.PrimaryAction);
+            var title = _dayEndTitle = NewText("Title", _dayEndPanel, _display, 16, TextAnchor.MiddleCenter, UITheme.PrimaryAction);
             Stretch(title.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -46), new Vector2(0, -8));
             title.text = "LAST CALL — THE BOOKS";
 
             // Left column: the till slip (v5 P13). Cream stock, and pinned to 16pt — a whole
             // multiple of the face's 8px design size, so the monospace columns the receipt is
             // set in actually land on the pixel grid instead of blurring between it.
-            var bill = NewRect("Bill", _dayEndPanel);
-            Place(bill, new Vector2(0, 1), new Vector2(360, 470), new Vector2(24, -56));
+            var bill = _dayEndBill = NewRect("Bill", _dayEndPanel);
+            Place(bill, new Vector2(0.5f, 1), new Vector2(400, 470), new Vector2(0, -56));
             bill.gameObject.AddComponent<Image>().color = UITheme.Cream[4];
             _invoiceText = NewText("Invoice", bill, _body, 16, TextAnchor.UpperLeft, UITheme.Night[1]);
             Stretch(_invoiceText.rectTransform, Vector2.zero, Vector2.one, new Vector2(14, 12), new Vector2(-14, -12));
@@ -2304,8 +2405,8 @@ namespace LastCall.UI
             // same. The shell is the cheap half of the fix; the tabs are the real one, because
             // restocking the well and buying a musician are different errands and the player is
             // only ever doing one of them.
-            var tablet = NewRect("Tablet", _dayEndPanel);
-            Place(tablet, new Vector2(0, 1), new Vector2(524, 468), new Vector2(396, -56));
+            var tablet = _dayEndTablet = NewRect("Tablet", _dayEndPanel);
+            Place(tablet, new Vector2(0.5f, 1), new Vector2(892, 468), new Vector2(0, -56));
             tablet.gameObject.AddComponent<Image>().color = TabletShell;
 
             var lens = NewRect("Lens", tablet);
@@ -2349,20 +2450,34 @@ namespace LastCall.UI
                 _shopTabLabels[i] = label;
             }
 
-            _offerRow = NewRect("Offers", screen);
-            Place(_offerRow, new Vector2(0, 1), new Vector2(476, 372), new Vector2(10, -58));
-            var grid = _offerRow.gameObject.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(153, 70);
-            grid.spacing = new Vector2(8, 8);
-            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = 3;
+            // The market is grouped now (the author): a stack of titled sections, each its
+            // own grid, the whole thing scrolling — the shop outgrew a single flat grid.
+            var offerView = NewRect("OfferView", screen);
+            Stretch(offerView, Vector2.zero, Vector2.one, new Vector2(10, 10), new Vector2(-10, -58));
+            offerView.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, 0.003f);
+            offerView.gameObject.AddComponent<RectMask2D>();
+            _offerRow = NewRect("Offers", offerView);
+            _offerRow.anchorMin = new Vector2(0, 1); _offerRow.anchorMax = Vector2.one;
+            _offerRow.pivot = new Vector2(0.5f, 1);
+            _offerRow.offsetMin = Vector2.zero; _offerRow.offsetMax = Vector2.zero;
+            var shopLayout = _offerRow.gameObject.AddComponent<VerticalLayoutGroup>();
+            shopLayout.spacing = 8;
+            shopLayout.childControlWidth = true; shopLayout.childForceExpandWidth = true;
+            shopLayout.childControlHeight = true; shopLayout.childForceExpandHeight = false;
+            var shopFit = _offerRow.gameObject.AddComponent<ContentSizeFitter>();
+            shopFit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            var shopScroll = offerView.gameObject.AddComponent<ScrollRect>();
+            shopScroll.viewport = offerView; shopScroll.content = _offerRow;
+            shopScroll.horizontal = false;
+            shopScroll.movementType = ScrollRect.MovementType.Clamped;
+            shopScroll.scrollSensitivity = 30f;
 
             _openTomorrow = NewRect("OpenTomorrow", _dayEndPanel);
             Place(_openTomorrow, new Vector2(0.5f, 0), new Vector2(892, 40), new Vector2(0, 16));
             _openTomorrow.gameObject.AddComponent<Image>().color = UITheme.PrimaryAction;
             var otBtn = _openTomorrow.gameObject.AddComponent<Button>();
-            otBtn.onClick.AddListener(OnOpenTomorrow);
-            var otLabel = NewText("Label", _openTomorrow, _display, 14, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
+            otBtn.onClick.AddListener(OnDayEndAdvance);
+            var otLabel = _openTomorrowLabel = NewText("Label", _openTomorrow, _display, 14, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
             Stretch(otLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             otLabel.text = "OPEN TOMORROW →";
             _dayEndPanel.gameObject.SetActive(false);
@@ -2473,7 +2588,7 @@ namespace LastCall.UI
         private void AddCard(string title, string sub, int price, bool available, Action onBuy,
             Sprite art = null)
         {
-            var rt = NewRect("Card", _offerRow);
+            var rt = NewRect("Card", _cardTarget != null ? _cardTarget : _offerRow);
             var img = rt.gameObject.AddComponent<Image>();
             bool afford = Run.Money >= price;
             img.color = !available ? UITheme.Night[0]

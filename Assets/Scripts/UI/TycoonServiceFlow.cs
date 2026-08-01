@@ -346,7 +346,7 @@ namespace LastCall.UI
             return sink;
         }
 
-        private void AddFlexButton(RectTransform parent, string label, Color fill, Action onClick)
+        private Button AddFlexButton(RectTransform parent, string label, Color fill, Action onClick)
         {
             var rt = NewRect(label, parent);
             var img = rt.gameObject.AddComponent<Image>();
@@ -378,6 +378,7 @@ namespace LastCall.UI
             var text = NewText("Label", face, _body, 16, TextAnchor.MiddleCenter, Color.black);
             Stretch(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(0, 10), new Vector2(0, -4));
             text.text = label;
+            return button;
         }
 
         private RectTransform AddListButton(RectTransform parent, string label, Color colour, Action onClick)

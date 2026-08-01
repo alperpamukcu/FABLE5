@@ -219,6 +219,16 @@ namespace LastCall.UI
             if (_menuBack != null) _menuBack.gameObject.SetActive(_menuTab != null);
             BuildShelfPage(run, null);   // the whole wall, every bottle — no aisles (2026-07-31)
 
+            bool loaded = !run.Glass.IsEmpty || !run.ServingGlass.IsEmpty;
+            if (_serveButton != null)
+            {
+                _serveButton.interactable = loaded;
+                if (_serveLabel != null)
+                {
+                    _serveLabel.text = loaded ? "SERVE  →" : "POUR FIRST";
+                    _serveLabel.color = loaded ? Color.black : new Color(0.1f, 0.08f, 0.06f, 0.45f);
+                }
+            }
         }
 
         /// <summary>Page one: one card per stocked section.</summary>
@@ -327,15 +337,22 @@ namespace LastCall.UI
             // back-bar, no aisles. The hover panel still answers what each one is.
             _menuTitle.text = category == null ? "THE BACK BAR" : AisleName(category).ToUpperInvariant();
 
+            // Beer leaves the shelves (the author, 2026-08-01): it lives in KEGS on the
+            // floor, drawn at keg scale with only their crowns in frame. Everything else
+            // stands on the wall in rows that widen as the cellar grows, so the endgame
+            // bar still fits on three shelves.
             var items = new List<ShelfBottle>();
+            var kegs = new List<ShelfBottle>();
             foreach (var b in run.Shelf.Bottles)
-                if (category == null || b.Ingredient.Info?.Category == category) items.Add(b);
+            {
+                if (category != null && b.Ingredient.Info?.Category != category) continue;
+                if (b.Ingredient.Type == IngredientType.Beer) kegs.Add(b);
+                else items.Add(b);
+            }
             float areaW = _bottleList.rect.width, areaH = _bottleList.rect.height;
 
-            int perRow = category == null ? 7 : ShelfColumns;
-            int shelves = category == null
-                ? Mathf.Max(3, Mathf.CeilToInt(items.Count / (float)perRow))
-                : 2;
+            int perRow = Mathf.Max(7, Mathf.CeilToInt(items.Count / 3f));
+            int shelves = Mathf.Max(3, Mathf.CeilToInt(items.Count / (float)perRow));
             float shelfH = (areaH - GridGap) / shelves;
 
             for (int row = 0; row < shelves; row++)
@@ -364,21 +381,25 @@ namespace LastCall.UI
                 var ns = nicheShadow.gameObject.AddComponent<Image>();
                 ns.sprite = BackBarArt.NicheTop(); ns.raycastTarget = false;
 
+                // The plank grew a FACE (the author): a thick front board with a brass
+                // edge, tall enough to carry the bottle names — the label is furniture now.
+                var face = NewRect("Face", band);
+                face.anchorMin = new Vector2(0.02f, 0); face.anchorMax = new Vector2(0.98f, 0);
+                face.pivot = new Vector2(0.5f, 0);
+                face.offsetMin = Vector2.zero; face.offsetMax = new Vector2(0, ShelfFaceH);
+                var faceImg = face.gameObject.AddComponent<Image>();
+                faceImg.sprite = BackBarArt.ShelfFace();
+                faceImg.type = Image.Type.Tiled;
+                faceImg.raycastTarget = false;
+
                 var plank = NewRect("Plank", band);
                 plank.anchorMin = new Vector2(0.02f, 0); plank.anchorMax = new Vector2(0.98f, 0);
                 plank.pivot = new Vector2(0.5f, 0);
-                plank.offsetMin = new Vector2(0, 2); plank.offsetMax = new Vector2(0, 30);
+                plank.offsetMin = new Vector2(0, ShelfFaceH - 2f);
+                plank.offsetMax = new Vector2(0, ShelfFaceH + 26f);
                 var plankImg = plank.gameObject.AddComponent<Image>();
                 plankImg.sprite = BackBarArt.ShelfFloor();
                 plankImg.raycastTarget = false;
-
-                var lip = NewRect("PlankLip", band);
-                lip.anchorMin = new Vector2(0.02f, 0); lip.anchorMax = new Vector2(0.98f, 0);
-                lip.pivot = new Vector2(0.5f, 1);
-                lip.offsetMin = new Vector2(6, -8); lip.offsetMax = new Vector2(-6, 2);
-                var lipImg = lip.gameObject.AddComponent<Image>();
-                lipImg.sprite = BackBarArt.Lip();
-                lipImg.raycastTarget = false;
 
 
                 // Centred on the plank rather than packed to the left: a shelf with two bottles
@@ -390,12 +411,80 @@ namespace LastCall.UI
                         startX + slotW * (i + 0.5f), slotW, shelfH);
             }
 
-            if (items.Count == 0)
+            BuildKegRow(run, kegs);
+
+            if (items.Count == 0 && kegs.Count == 0)
             {
                 var none = Handwritten(NewText("Empty", _bottleList, _body, 8,
                     TextAnchor.MiddleCenter, InkSoft));
                 Stretch(none.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 none.text = "nothing on this shelf";
+            }
+        }
+
+        /// <summary>
+        /// The kegs, at keg scale (the author): real barrels standing on the cellar floor,
+        /// only about a fifth of each in frame at the bottom edge — the new top-perspective
+        /// keg art, since the straight-on keg could not sit on a floor the eye looks down
+        /// at. Clicking a crown opens the tap exactly as the old shelf bottle did.
+        /// </summary>
+        private void BuildKegRow(TycoonRun run, List<ShelfBottle> kegs)
+        {
+            if (_kegRow == null) return;
+            foreach (Transform child in _kegRow) Destroy(child.gameObject);
+            var art = ItemArt.Load("keg_persp");
+            if (art == null) art = BackBarArt.KegCrown();   // no generated keg yet: the drawn one
+            const float KegW = 210f, KegH = 180f, Visible = 0.22f;
+            float xL = -_menuPanel.rect.width * 0.5f + 150f, xR = -190f;
+            float step = kegs.Count > 1 ? Mathf.Min(240f, (xR - xL) / (kegs.Count - 1)) : 0f;
+            for (int i = 0; i < kegs.Count; i++)
+            {
+                var keg = kegs[i];
+                var card = keg.Ingredient;
+                bool empty = keg.IsEmpty;
+                string blocked = empty ? "OUT"
+                    : (run.CanPull(card.Id) ? null : run.ServingGlass.IsFull ? "FULL" : "BUSY");
+                bool shut = blocked != null;
+
+                var slot = NewRect($"Keg_{card.Id}", _kegRow);
+                Place(slot, new Vector2(0.5f, 0), new Vector2(KegW, KegH * Visible + 26f),
+                    new Vector2(xL + step * i, 0f));
+                slot.pivot = new Vector2(0.5f, 0);
+                var hit = slot.gameObject.AddComponent<Image>();
+                hit.color = new Color(0, 0, 0, 0.001f);
+
+                var kegArt = NewRect("Art", slot);
+                Place(kegArt, new Vector2(0.5f, 0), new Vector2(KegW, KegH),
+                    new Vector2(0, -KegH * (1f - Visible)));
+                kegArt.pivot = new Vector2(0.5f, 0);
+                var img = kegArt.gameObject.AddComponent<Image>();
+                if (art != null) { img.sprite = art; img.preserveAspect = true; }
+                else img.color = new Color(0.55f, 0.57f, 0.60f);
+                img.raycastTarget = false;
+                if (shut) img.color = new Color(1f, 1f, 1f, 0.45f);
+
+                // the brand, lettered across the crown
+                var name = Outlined(NewText("N", slot, _body, 8, TextAnchor.MiddleCenter,
+                    shut ? UITheme.Cream[2] : UITheme.Cream[4]), 1f);
+                Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(KegW - 20f, 14f),
+                    new Vector2(0, KegH * Visible + 8f));
+                name.horizontalOverflow = HorizontalWrapMode.Overflow;
+                name.text = shut ? $"{card.Name} · {blocked}" : card.Name;
+
+                Pressable(slot, kegArt, img, lift: shut ? 2f : 5f, depth: shut ? 0f : 5f);
+                var trigger = slot.gameObject.AddComponent<EventTrigger>();
+                var kb = keg;
+                var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+                enter.callback.AddListener(_ => ShowBottleInfo(kb, run, slot));
+                trigger.triggers.Add(enter);
+                var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+                exit.callback.AddListener(_ => HideBottleInfo());
+                trigger.triggers.Add(exit);
+                if (shut) continue;
+                var c = card;
+                var press = new EventTrigger.Entry { eventID = EventTriggerType.PointerClick };
+                press.callback.AddListener(_ => { HideBottleInfo(); OpenBottle(c); });
+                trigger.triggers.Add(press);
             }
         }
 
@@ -418,8 +507,8 @@ namespace LastCall.UI
             bool shut = blocked != null;
 
             var slot = NewRect($"Slot_{card.Id}", band);
-            Place(slot, new Vector2(0.5f, 0), new Vector2(slotW - 6f, shelfH - 18f),
-                new Vector2(centreX, 16f));
+            Place(slot, new Vector2(0.5f, 0), new Vector2(slotW - 6f, shelfH - ShelfFaceH - 20f),
+                new Vector2(centreX, ShelfFaceH + 14f));
             var hit = slot.gameObject.AddComponent<Image>();
             hit.color = new Color(0, 0, 0, 0.001f);          // invisible, but catches the pointer
 
@@ -433,7 +522,7 @@ namespace LastCall.UI
             shImg.sprite = BackBarArt.BottleShadow(); shImg.raycastTarget = false;
 
             var art = NewRect("Art", slot);
-            Stretch(art, Vector2.zero, Vector2.one, new Vector2(6, 4), new Vector2(-6, -18));
+            Stretch(art, Vector2.zero, Vector2.one, new Vector2(6, 4), new Vector2(-6, -4));
             var img = art.gameObject.AddComponent<Image>();
             img.sprite = ItemArt.Bottle(card.Info?.Style);
             img.preserveAspect = true; img.raycastTarget = false;
@@ -450,23 +539,23 @@ namespace LastCall.UI
                 var piece = BottleArt.For(card.Info?.Style);
                 float level = bottle.Capacity > 0 ? (float)(bottle.Remaining / bottle.Capacity) : 0f;
                 liquid.fillAmount = piece.FillAmount(level);
-                if (shut) liquid.color = new Color(liquid.color.r, liquid.color.g, liquid.color.b, 0.38f);
+                if (shut)
+                {
+                    liquid.color = new Color(liquid.color.r, liquid.color.g, liquid.color.b, 0.38f);
+                    var frontRt = liquid.transform.Find("GlassFront");   // dims with its bottle
+                    if (frontRt != null) frontRt.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.19f);
+                }
             }
 
-            // The brand on a little brass plaque under the bottle (2026-08-01): the old
-            // paper-ink name vanished on the dark wall -- the author could not read the shelf.
-            var plaque = NewRect("Plaque", slot);
-            Place(plaque, new Vector2(0.5f, 1), new Vector2(Mathf.Min(slotW - 10f, 118f), 15f),
-                new Vector2(0, 1f));
-            var plaqueImg = plaque.gameObject.AddComponent<Image>();
-            plaqueImg.color = shut
-                ? new Color(0.24f, 0.17f, 0.10f, 0.9f)
-                : new Color(0.42f, 0.30f, 0.16f, 0.95f);
-            plaqueImg.raycastTarget = false;
-            var name = Outlined(NewText("N", plaque, _body, 8, TextAnchor.MiddleCenter,
+            // The brand, lettered straight onto the shelf's face under the bottle (the
+            // author, 2026-08-01): the plaque retires — the shelf is thick enough to be
+            // the label now, and the brass edge above the name lights it.
+            var name = Outlined(NewText("N", band, _body, 8, TextAnchor.MiddleCenter,
                 shut ? UITheme.Cream[2] : UITheme.Cream[4]), 1f);
-            Stretch(name.rectTransform, Vector2.zero, Vector2.one, new Vector2(2, 0), new Vector2(-2, 0));
+            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(slotW - 4f, 16f),
+                new Vector2(centreX, ShelfFaceH * 0.5f - 3f));
             name.horizontalOverflow = HorizontalWrapMode.Overflow;
+            name.raycastTarget = false;
             name.text = shut ? $"{card.Name} · {blocked}" : card.Name;
 
             // The bottle answers the pointer whether or not it can be taken: a bottle that is OUT
@@ -568,9 +657,13 @@ namespace LastCall.UI
         // The menu is printed, not moulded (v5 P13): cream stock, two weights of ink, and no
         // colour of its own -- the only colour on the page is the drink.
         private const int ShelfColumns = 4;
+        private const float ShelfFaceH = 34f;
+        private RectTransform _kegRow;
         private static readonly Color ShelfWood = new Color(0.30f, 0.19f, 0.12f, 1f);
         private static readonly Color ShelfLip = new Color(0.46f, 0.31f, 0.19f, 1f);
         private RectTransform _bottleInfo;
+        private Button _serveButton;
+        private Text _serveLabel;
         private Text _bottleInfoName, _bottleInfoStock, _bottleInfoPrice;
         private Image _bottleInfoFill;
 
@@ -755,7 +848,7 @@ namespace LastCall.UI
             // Drawn in code (2026-08-01): the generated tile carried a baked frame that
             // repeated as a white grid across the wall. BackBarArt's boards seam at their
             // own edges, so the tiling is invisible by construction.
-            boardImg.sprite = BackBarArt.Boards();
+            boardImg.sprite = BackBarArt.LuxeWall();
             boardImg.type = Image.Type.Tiled;
             boardImg.pixelsPerUnitMultiplier = 0.5f;   // one art pixel = 2 screen px, the scene's grain
             Swallow(_menuPanel);
@@ -838,6 +931,14 @@ namespace LastCall.UI
             ledgeImg.sprite = BackBarArt.Ledge();
             ledgeImg.raycastTarget = false;
 
+            // The keg strip lives between the ledge and the buttons: kegs poke up from the
+            // bottom edge, SERVE and the bin keep the top of the pile.
+            _kegRow = NewRect("Kegs", _menuPanel);
+            _kegRow.anchorMin = new Vector2(0, 0); _kegRow.anchorMax = new Vector2(1, 0);
+            _kegRow.pivot = new Vector2(0.5f, 0);
+            _kegRow.sizeDelta = new Vector2(0, 110);
+            _kegRow.anchoredPosition = Vector2.zero;
+
             // The wall's working area: full width under the cornice, above the ledge.
             var pageClip = NewRect("PageClip", _menuPanel);
             Stretch(pageClip, Vector2.zero, Vector2.one, new Vector2(40, 92), new Vector2(-40, -118));
@@ -861,11 +962,12 @@ namespace LastCall.UI
             var actLayout = actions.gameObject.AddComponent<HorizontalLayoutGroup>();
             actLayout.childControlWidth = true; actLayout.childForceExpandWidth = true;
             actLayout.childControlHeight = true; actLayout.childForceExpandHeight = true;
-            // Always opens (v5 P14). It used to require something in the shaker, which was true
-            // when every drink was shaken — but a BUILT drink never sees the shaker, so that
-            // guard was the reason the six built cocktails could not be made by playing at all.
-            // The stage is the glass; you can always walk over to the glass.
-            AddFlexButton(actions, "SERVE  →", UITheme.PrimaryAction, () => GoTo(Stage.Serve));
+            // Gated again, on the RIGHT condition this time (the author, 2026-08-01): the
+            // old guard asked for something in the shaker and starved the six built drinks;
+            // this one asks for something poured ANYWHERE — tin or glass — because the pass
+            // stage with two empty vessels is a dead end dressed as a button.
+            _serveButton = AddFlexButton(actions, "SERVE  →", UITheme.PrimaryAction, () => GoTo(Stage.Serve));
+            _serveLabel = _serveButton.GetComponentInChildren<Text>();
 
             AddBinButton(_menuPanel);
         }

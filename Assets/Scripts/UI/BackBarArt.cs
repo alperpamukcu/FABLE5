@@ -13,7 +13,19 @@ namespace LastCall.UI
     /// </summary>
     public static class BackBarArt
     {
-        private static Sprite _boards, _floor, _lip, _shadow, _nicheTop, _ledge;
+        private static Sprite _boards, _floor, _lip, _shadow, _nicheTop, _ledge, _luxe, _face;
+
+        // The luxe ramp (the author, 2026-08-01: "daha lüks bir back bar" — less timber,
+        // more lounge): deep aubergine-charcoal panels off the stage's Night palette, with
+        // brass only where an edge catches the cornice light.
+        private static readonly Color32 PanelSeam = new Color32(0x0B, 0x09, 0x11, 0xFF);
+        private static readonly Color32 PanelA = new Color32(0x1D, 0x18, 0x27, 0xFF);
+        private static readonly Color32 PanelB = new Color32(0x19, 0x14, 0x22, 0xFF);
+        private static readonly Color32 PanelEdge = new Color32(0x2E, 0x26, 0x3C, 0xFF);
+        private static readonly Color32 Brass = new Color32(0xB8, 0x8A, 0x3C, 0xFF);
+        private static readonly Color32 BrassLit = new Color32(0xE6, 0xBE, 0x66, 0xFF);
+        private static readonly Color32 FaceWood = new Color32(0x30, 0x1E, 0x12, 0xFF);
+        private static readonly Color32 FaceWoodDim = new Color32(0x28, 0x18, 0x0E, 0xFF);
 
         // The walnut ramp the whole wall is built from.
         private static readonly Color32 Seam = new Color32(0x12, 0x0A, 0x08, 0xFF);
@@ -142,6 +154,145 @@ namespace LastCall.UI
                     px[y * W + x] = (x == side || x == W - side - 1) ? Seam : tone;
             }
             return _ledge = Make(px, W, H);
+        }
+
+        /// <summary>
+        /// The luxe wall (replaces the walnut boards on the back bar): tall aubergine
+        /// panels with a bevelled inner edge and a slim double groove down the middle,
+        /// warmed toward the top where the cornice lamps pool. Seams sit at the sprite's
+        /// own edges so the tiling is invisible by construction, like <see cref="Boards"/>.
+        /// </summary>
+        public static Sprite LuxeWall()
+        {
+            if (_luxe != null) return _luxe;
+            const int W = 128, H = 128, panel = 64;
+            var px = new Color32[W * H];
+            uint hash = 1583;
+            for (int x = 0; x < W; x++)
+            {
+                int p = x / panel, lx = x % panel;
+                for (int y = 0; y < H; y++)
+                {
+                    hash = (hash ^ (uint)(x * 61 + y * 23 + p * 211)) * 16777619;
+                    Color32 c = p % 2 == 0 ? PanelA : PanelB;
+                    if (lx == 0) c = PanelSeam;                       // panel joint
+                    else if (lx == 1) c = PanelEdge;                  // its lit bevel
+                    else if (lx == panel - 1) c = PanelSeam;          // and the far shadow
+                    else if (lx == 30 || lx == 33) c = PanelSeam;     // the deco double groove
+                    else if (lx == 31 || lx == 34) c = PanelEdge;
+                    else if ((hash >> 8) % 61 == 0) c = PanelSeam;    // a fleck of wear
+                    float warm = y / (float)(H - 1);
+                    px[y * W + x] = new Color32(
+                        (byte)Mathf.Min(255, c.r + (int)(14 * warm) + 4),
+                        (byte)Mathf.Min(255, c.g + (int)(8 * warm) + 2),
+                        (byte)Mathf.Min(255, c.b + (int)(4 * warm)), 255);
+                }
+            }
+            return _luxe = Make(px, W, H);
+        }
+
+        /// <summary>
+        /// The shelf's FRONT FACE (the author: shelves thick enough to carry the bottle
+        /// names): dark walnut with a brass edge along the top where the light lands, a
+        /// near-black shadow along the bottom. The names are lettered over it in engine.
+        /// </summary>
+        public static Sprite ShelfFace()
+        {
+            if (_face != null) return _face;
+            const int W = 64, H = 36;
+            var px = new Color32[W * H];
+            uint hash = 733;
+            for (int y = 0; y < H; y++)                       // y 0 = bottom
+                for (int x = 0; x < W; x++)
+                {
+                    hash = (hash ^ (uint)(x * 47 + y * 29)) * 16777619;
+                    Color32 c;
+                    if (y == H - 1) c = BrassLit;
+                    else if (y == H - 2) c = Brass;
+                    else if (y == H - 3) c = PanelSeam;
+                    else if (y <= 1) c = PanelSeam;
+                    else
+                    {
+                        c = (hash >> 6) % 7 == 0 ? FaceWoodDim : FaceWood;
+                        if ((hash >> 9) % 43 == 0) c = new Color32(0x3A, 0x26, 0x16, 0xFF);
+                    }
+                    px[y * W + x] = c;
+                }
+            return _face = Make(px, W, H);
+        }
+
+        private static Sprite _keg;
+
+        /// <summary>
+        /// A steel keg seen from slightly above (the author's perspective sketch: a wide
+        /// top ellipse, straight sides) — drawn here because the generator's credits ran
+        /// out the night it was ordered. Only the crown shows in frame, so the sprite is
+        /// the crown done properly: top ellipse with a rolled rim, recessed well, centre
+        /// spear valve, and a strip of ribbed side wall with one handling band.
+        /// </summary>
+        public static Sprite KegCrown()
+        {
+            if (_keg != null) return _keg;
+            const int W = 200, H = 170;
+            var px = new Color32[W * H];   // all clear
+            var steelLit = new Color32(0xC2, 0xC6, 0xCE, 0xFF);
+            var steel = new Color32(0x93, 0x98, 0xA2, 0xFF);
+            var steelDim = new Color32(0x6A, 0x70, 0x7A, 0xFF);
+            var steelDark = new Color32(0x44, 0x49, 0x54, 0xFF);
+            var outline = new Color32(0x10, 0x0E, 0x14, 0xFF);
+            const float cx = 99.5f, topCy = 136f, rx = 92f, ry = 26f;
+
+            // side wall: a cylinder shaded off its curvature, warmed near the top light
+            for (int y = 0; y < (int)topCy; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    float t = Mathf.Abs(x - cx) / rx;
+                    if (t > 1f) continue;
+                    // inside the silhouette only below the top ellipse's front edge
+                    float edgeY = topCy - ry * Mathf.Sqrt(Mathf.Max(0f, 1f - t * t));
+                    if (y > edgeY) continue;
+                    Color32 c = Color32.Lerp(steel, steelDark, t * t);
+                    if (t < 0.22f) c = Color32.Lerp(steelLit, steel, t / 0.22f);
+                    bool band = y >= 96 && y <= 108;
+                    if (band) c = (y == 96 || y == 108) ? steelDark : Color32.Lerp(c, steelLit, 0.35f);
+                    if ((x & 15) == 0) c = Color32.Lerp(c, steelDark, 0.4f);   // a rib
+                    px[y * W + x] = c;
+                }
+
+            // top ellipse: rim, then the recessed well, then the spear valve
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    float dx = (x - cx) / rx, dy = (y - topCy) / ry;
+                    float d = dx * dx + dy * dy;
+                    if (d > 1f) continue;
+                    Color32 c = d > 0.90f ? steelLit                                  // rolled rim
+                        : d > 0.72f ? steel
+                        : Color32.Lerp(steelDim, steelDark, 1f - d);                  // the well
+                    px[y * W + x] = c;
+                }
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    float dx = (x - cx) / 16f, dy = (y - topCy) / 5f;
+                    float d = dx * dx + dy * dy;
+                    if (d > 1f) continue;
+                    px[y * W + x] = d > 0.55f ? steelLit : steelDark;                 // the valve
+                }
+
+            // silhouette outline
+            var src = (Color32[])px.Clone();
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    if (src[y * W + x].a != 0) continue;
+                    bool edge = (x > 0 && src[y * W + x - 1].a != 0) ||
+                                (x < W - 1 && src[y * W + x + 1].a != 0) ||
+                                (y > 0 && src[(y - 1) * W + x].a != 0) ||
+                                (y < H - 1 && src[(y + 1) * W + x].a != 0);
+                    if (edge) px[y * W + x] = outline;
+                }
+            return _keg = Make(px, W, H);
         }
 
         private static Sprite Make(Color32[] px, int w, int h)
