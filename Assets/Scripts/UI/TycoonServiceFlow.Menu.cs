@@ -335,7 +335,7 @@ namespace LastCall.UI
         {
             // null category = THE WHOLE WALL (2026-07-31): every bottle the bar owns on one
             // back-bar, no aisles. The hover panel still answers what each one is.
-            _menuTitle.text = category == null ? "THE BACK BAR" : AisleName(category).ToUpperInvariant();
+            _menuTitle.text = category == null ? "LAST CALL" : AisleName(category).ToUpperInvariant();
 
             // Beer leaves the shelves (the author, 2026-08-01): it lives in KEGS on the
             // floor, drawn at keg scale with only their crowns in frame. Everything else
@@ -434,7 +434,7 @@ namespace LastCall.UI
             foreach (Transform child in _kegRow) Destroy(child.gameObject);
             var art = ItemArt.Load("keg_persp");
             if (art == null) art = BackBarArt.KegCrown();   // no generated keg yet: the drawn one
-            const float KegW = 210f, KegH = 180f, Visible = 0.22f;
+            const float KegW = 160f, KegH = 250f, Visible = 0.5f;
             float xL = -_menuPanel.rect.width * 0.5f + 150f, xR = -190f;
             float step = kegs.Count > 1 ? Mathf.Min(240f, (xR - xL) / (kegs.Count - 1)) : 0f;
             for (int i = 0; i < kegs.Count; i++)
@@ -521,8 +521,22 @@ namespace LastCall.UI
             var shImg = shadow.gameObject.AddComponent<Image>();
             shImg.sprite = BackBarArt.BottleShadow(); shImg.raycastTarget = false;
 
+            // Feet ON the plank (the author: bottles must centre on the shelf's depth):
+            // preserveAspect centres vertically inside its rect, which floated short
+            // bottles above the wood — so the rect is cut to the art's own aspect and
+            // pinned by its base to the plank's mid-depth.
+            var piece0 = BottleArt.For(card.Info?.Style);
+            float artH = shelfH - ShelfFaceH - 24f, artW = slotW - 12f;
+            if (piece0.Exists && piece0.Aspect > 0f)
+            {
+                if (artH * piece0.Aspect <= artW) artW = artH * piece0.Aspect;
+                else artH = artW / piece0.Aspect;
+            }
             var art = NewRect("Art", slot);
-            Stretch(art, Vector2.zero, Vector2.one, new Vector2(6, 4), new Vector2(-6, -4));
+            art.anchorMin = art.anchorMax = new Vector2(0.5f, 0);
+            art.pivot = new Vector2(0.5f, 0);
+            art.sizeDelta = new Vector2(artW, artH);
+            art.anchoredPosition = new Vector2(0, 2f);
             var img = art.gameObject.AddComponent<Image>();
             img.sprite = ItemArt.Bottle(card.Info?.Style);
             img.preserveAspect = true; img.raycastTarget = false;
@@ -547,16 +561,24 @@ namespace LastCall.UI
                 }
             }
 
-            // The brand, lettered straight onto the shelf's face under the bottle (the
-            // author, 2026-08-01): the plaque retires — the shelf is thick enough to be
-            // the label now, and the brass edge above the name lights it.
-            var name = Outlined(NewText("N", band, _body, 8, TextAnchor.MiddleCenter,
+            // A little SIGN under each bottle (the author): a brass-framed plate sized to
+            // its own name, pinned to the shelf face — a tabela, not floating text.
+            string label = shut ? $"{card.Name} · {blocked}" : card.Name;
+            float plateW = label.Length * 7f + 18f;
+            var plate = NewRect("Plate", band);
+            Place(plate, new Vector2(0.5f, 0), new Vector2(plateW, 20f),
+                new Vector2(centreX, ShelfFaceH * 0.5f - 2f));
+            var plateImg = plate.gameObject.AddComponent<Image>();
+            plateImg.sprite = BackBarArt.NamePlate();
+            plateImg.type = Image.Type.Sliced;
+            plateImg.raycastTarget = false;
+            if (shut) plateImg.color = new Color(1f, 1f, 1f, 0.7f);
+            var name = Outlined(NewText("N", plate, _body, 8, TextAnchor.MiddleCenter,
                 shut ? UITheme.Cream[2] : UITheme.Cream[4]), 1f);
-            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(slotW - 4f, 16f),
-                new Vector2(centreX, ShelfFaceH * 0.5f - 3f));
+            Stretch(name.rectTransform, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
             name.horizontalOverflow = HorizontalWrapMode.Overflow;
             name.raycastTarget = false;
-            name.text = shut ? $"{card.Name} · {blocked}" : card.Name;
+            name.text = label;
 
             // The bottle answers the pointer whether or not it can be taken: a bottle that is OUT
             // still lifts, because "you found the thing" and "the thing will do something" are two
@@ -853,16 +875,21 @@ namespace LastCall.UI
             boardImg.pixelsPerUnitMultiplier = 0.5f;   // one art pixel = 2 screen px, the scene's grain
             Swallow(_menuPanel);
 
-            var cornice = NewRect("Cornice", _menuPanel);
-            cornice.anchorMin = new Vector2(0, 1); cornice.anchorMax = new Vector2(1, 1);
-            cornice.pivot = new Vector2(0.5f, 1);
-            cornice.sizeDelta = new Vector2(0, 110);
-            cornice.anchoredPosition = Vector2.zero;
-            var corniceImg = cornice.gameObject.AddComponent<Image>();
-            var corniceSprite = ItemArt.Load("backwall_header");
-            if (corniceSprite != null) { corniceImg.sprite = corniceSprite; corniceImg.type = Image.Type.Tiled; }
-            else corniceImg.enabled = false;
-            corniceImg.raycastTarget = false;
+            // The cornice retired (the author: the lamps read as noise and fought the
+            // title). In its place the bar's own SIGN hangs top-centre — the generated
+            // blank board, LAST CALL lettered in engine — and the wall wears half-seen
+            // decor at its edges instead of a beam across the top.
+            BuildWallDecor();
+            var sign = NewRect("Sign", _menuPanel);
+            sign.anchorMin = sign.anchorMax = new Vector2(0.5f, 1);
+            sign.pivot = new Vector2(0.5f, 1);
+            sign.sizeDelta = new Vector2(300, 218);   // the art's own 493x358, scaled
+            sign.anchoredPosition = new Vector2(0, 2);
+            var signImg = sign.gameObject.AddComponent<Image>();
+            var signSprite = ItemArt.Load("sign_lastcall");
+            if (signSprite != null) { signImg.sprite = signSprite; signImg.preserveAspect = true; }
+            else signImg.enabled = false;
+            signImg.raycastTarget = false;
 
             // A red X at the cornice's right end closes the whole flow.
             var close = NewRect("Close", _menuPanel);
@@ -907,8 +934,9 @@ namespace LastCall.UI
             var outline = title.gameObject.AddComponent<UnityEngine.UI.Outline>();
             outline.effectColor = new Color(0.16f, 0.09f, 0.04f, 1f);
             outline.effectDistance = new Vector2(2f, 2f);
-            Place(title.rectTransform, new Vector2(0.5f, 1), new Vector2(360, 30), new Vector2(0, -40));
-            title.text = "THE BACK BAR";
+            // Lettered ON the sign's board face (its lamps take the upper half of the art).
+            Place(title.rectTransform, new Vector2(0.5f, 1), new Vector2(280, 26), new Vector2(0, -138f));
+            title.text = "LAST CALL";
 
             // Left: a SCROLLABLE back-shelf of grouped item boxes — it grows as you buy more
             // stock without overflowing the panel (2026-07-23 fix).
@@ -936,7 +964,7 @@ namespace LastCall.UI
             _kegRow = NewRect("Kegs", _menuPanel);
             _kegRow.anchorMin = new Vector2(0, 0); _kegRow.anchorMax = new Vector2(1, 0);
             _kegRow.pivot = new Vector2(0.5f, 0);
-            _kegRow.sizeDelta = new Vector2(0, 110);
+            _kegRow.sizeDelta = new Vector2(0, 130);
             _kegRow.anchoredPosition = Vector2.zero;
 
             // The wall's working area: full width under the cornice, above the ledge.
@@ -970,6 +998,41 @@ namespace LastCall.UI
             _serveLabel = _serveButton.GetComponentInChildren<Text>();
 
             AddBinButton(_menuPanel);
+
+            // The BOOK beside the bin (the author): the recipes are needed most mid-build.
+            var bookRt = NewRect("BookBtn", _menuPanel);
+            Place(bookRt, new Vector2(1, 0), new Vector2(56, 56), new Vector2(-214f, 26f));
+            var bookImg = bookRt.gameObject.AddComponent<Image>();
+            var bookSprite = ItemArt.Load("menu_board");
+            if (bookSprite != null) { bookImg.sprite = bookSprite; bookImg.preserveAspect = true; }
+            else bookImg.color = UITheme.Night[3];
+            var bookBtn = bookRt.gameObject.AddComponent<Button>();
+            bookBtn.targetGraphic = bookImg;
+            bookBtn.onClick.AddListener(() => GetComponent<TycoonHud>()?.ToggleRecipeBook());
+            var bookSink = bookRt.gameObject.AddComponent<PressSink>();
+            bookSink.Face = bookRt; bookSink.Depth = 4f; bookSink.Lift = 2f;
+        }
+
+        /// <summary>Half-seen things at the edges (the author): vine along the top,
+        /// paintings and records cut by the frame — dressed, without stealing focus.
+        /// Every piece is optional art; a missing sprite simply does not hang.</summary>
+        private void BuildWallDecor()
+        {
+            void Hang(string art, Vector2 anchor, Vector2 size, Vector2 pos, float tilt = 0f)
+            {
+                var s = ItemArt.Load(art);
+                if (s == null) return;
+                var rt = NewRect(art, _menuPanel);
+                Place(rt, anchor, size, pos);
+                var img = rt.gameObject.AddComponent<Image>();
+                img.sprite = s; img.preserveAspect = true; img.raycastTarget = false;
+                if (tilt != 0f) rt.localRotation = Quaternion.Euler(0, 0, tilt);
+            }
+            Hang("ivy_strip", new Vector2(0, 1), new Vector2(520, 130), new Vector2(200, 10f));
+            Hang("ivy_strip", new Vector2(1, 1), new Vector2(520, 130), new Vector2(-200, 4f));
+            Hang("painting_a", new Vector2(0, 0.5f), new Vector2(150, 200), new Vector2(-40, 130));
+            Hang("painting_b", new Vector2(1, 0.5f), new Vector2(150, 200), new Vector2(40, 60), 3f);
+            Hang("vinyl_records", new Vector2(1, 1), new Vector2(150, 150), new Vector2(-64, -170));
         }
     }
 }

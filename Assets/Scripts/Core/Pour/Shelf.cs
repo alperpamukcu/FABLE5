@@ -114,6 +114,15 @@ namespace LastCall.Core
             _byId[newBottle.Id] = newBottle;
         }
 
+        /// <summary>Takes a bottle back off the shelf (same-day refunds, 2026-08-02).</summary>
+        public void Remove(ShelfBottle bottle)
+        {
+            if (bottle == null) throw new ArgumentNullException(nameof(bottle));
+            if (!_bottles.Remove(bottle))
+                throw new ArgumentException("Bottle is not on the shelf.", nameof(bottle));
+            _byId.Remove(bottle.Id);
+        }
+
         public void Add(ShelfBottle bottle)
         {
             if (bottle == null) throw new ArgumentNullException(nameof(bottle));

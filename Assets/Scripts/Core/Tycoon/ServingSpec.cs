@@ -100,11 +100,12 @@ namespace LastCall.Core
             }
 
             bool extraShaken = !draught && recipe.Prep == PrepMethod.Shaken && rng.NextInt(100) < 25;
-            bool toTheTop = rng.NextInt(100) < 20;
 
-            // A "plain" roll for a pint (no garnish, not shakeable, no top-up) is still plain.
-            if (garnishes.Count == 0 && !extraShaken && !toTheTop) return Plain;
-            return new ServingSpec(garnishes, extraShaken, toTheTop);
+            // "Filled to the top" retired (the author, 2026-08-02): nobody DEMANDS a fill
+            // any more. The only fill rule left is the house one — ExpectedFill's normal
+            // pour — and it only ever punishes shorting the glass, never rewards topping.
+            if (garnishes.Count == 0 && !extraShaken) return Plain;
+            return new ServingSpec(garnishes, extraShaken);
         }
 
         /// <summary>The garnishes a customer can ask for (the four droppable preparations).</summary>

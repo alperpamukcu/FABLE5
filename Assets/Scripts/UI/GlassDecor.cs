@@ -107,7 +107,10 @@ namespace LastCall.UI
         {
             var cube = NewChild(name, new Vector2(size, size), Vector2.zero);
             var img = cube.gameObject.AddComponent<Image>();
-            img.sprite = ItemArt.Prep("ice");
+            // The licence's own cube (the author picked it): the same PrefArt sprite, so
+            // the ask on the card and the cube in the glass wear one face.
+            img.sprite = PrefArt.Ice();
+            if (img.sprite == null) img.sprite = ItemArt.Prep("ice");
             img.preserveAspect = true; img.raycastTarget = false;
             if (img.sprite == null) img.color = new Color(0.75f, 0.9f, 1f, 0.9f);
             img.color = new Color(img.color.r, img.color.g, img.color.b, 0.92f);

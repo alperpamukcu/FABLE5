@@ -777,3 +777,37 @@ Gate: sim v3 targets met; a new player finishes the tutorial and survives night 
 - Tone guardrail (GDD 19): serving people, never curing them; ABV never feeds pricing.
 - Art: chrome procedural, illustration generated against a style reference and quantized,
   every word lettered in engine, anchors measured off the art — never guessed.
+
+
+---
+
+## 2026-08-02 — the star loop v2 (author-directed, shipped)
+
+The author's big ruling: **the stars are the spine now.** Shipped and sim-gated in one
+pass; every number below was measured, not guessed.
+
+- **Standing starts at 0 and is inertial** (`BarRating`): a night drags it one step
+  (gain 0.10/step, loss 0.20, max +0.25/night). Five stars is the endgame/sandbox line.
+- **Nightly stars are capped twice** (`TycoonRun.UpgradeStarCap` / `MenuStarCap`):
+  fittings (glassware line + stools) and the best EXACT rank served that night. The recipe
+  star gates moved under the caps they unlock (2.0/3.0/4.0) — the first sim found the old
+  3.0 mid-gate sat above the 2.5 starter cap and deadlocked all 200 runs at 2.5 stars.
+- **Crowd**: tomorrow reacts to TONIGHT (broke below 1.5 night-stars); the high rollers
+  come only when the STANDING clears 4.2. Arrival pivot moved 3.0 → 2.5.
+- **Rent retuned for the slower climb**: `12 + 2d + d²/9` (old curve = 100% bankruptcies
+  at day ~24; soft pass = +$420 median. This one: 0% floor bankruptcies, median till +$69,
+  income $133 vs expenses $131 — knife-edge for a PERFECT server, hard for a human).
+- **Fill demands retired**: nobody asks SHORT/LONG/to-the-top any more; the only fill rule
+  is the judge's house floor (under-pour costs, brim never rewards).
+- **Upgrades pruned** to stools + glassware (musician/counter/wall verbs remain in Core,
+  off the shop). Upgrades now gate the star ceiling, which is what makes them mandatory.
+- **Market v2**: four tabs (restock / bottles / recipes / upgrades), per-bottle refills
+  (`RefillBottle`), star-gated recipes are SEALED (identity hidden), buyable recipes show
+  their pour on hover, and everything bought at a close is refundable until dawn
+  (`TodaysPurchases` / `RefundToday`).
+- **Calendar**: six open days (TUE–SUN), Mondays dark, week counter in the top bar.
+- **Dev presets** (`TycoonRun.DevPreset`): fresh / midgame / endgame under the gear menu.
+
+Still open from the author's same note: per-glass upgrade tiers with the under-counter
+glass shelf (the big one), the serve-stage pour gauge in the new tube frame, and swapping
+the generated keg/licence art in for their procedural stand-ins if they read better.

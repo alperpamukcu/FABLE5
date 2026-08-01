@@ -408,7 +408,9 @@ namespace LastCall.Tests
             ledger.CloseDay(2, 10, 5, averageSatisfaction: 0.5, tillAfter: 30);
             Assert.AreEqual(WealthTier.Regular, ledger.TomorrowsCrowd);
 
-            ledger.CloseDay(3, 10, 5, averageSatisfaction: 0.2, tillAfter: 35);
+            // Broke sank with the zero-start standing rework (2026-08-02): only a bar the
+            // room scores under 1.5 stars (satisfaction 0.125) draws the broke crowd.
+            ledger.CloseDay(3, 10, 5, averageSatisfaction: 0.1, tillAfter: 35);
             Assert.AreEqual(WealthTier.Broke, ledger.TomorrowsCrowd);
         }
 

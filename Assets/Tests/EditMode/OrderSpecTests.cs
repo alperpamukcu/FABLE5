@@ -51,16 +51,15 @@ namespace LastCall.Tests
         {
             var rng = new RunRng("pint-spec").GetStream("orders");
             var draught = Draught();
-            bool sawSomething = false;
 
             for (int i = 0; i < 400; i++)
             {
                 var spec = ServingSpec.Roll(draught, rng);
                 Assert.IsEmpty(spec.Garnishes, "a pint takes no garnish");
                 Assert.IsFalse(spec.ExtraShaken, "and a pint is never shaken");
-                if (!spec.IsPlain) sawSomething = true;
+                Assert.IsTrue(spec.IsPlain,
+                    "and with the fill demand retired (2026-08-02) a pint's spec is always plain");
             }
-            Assert.IsTrue(sawSomething, "but it can still be asked for a full glass");
         }
 
         [Test]

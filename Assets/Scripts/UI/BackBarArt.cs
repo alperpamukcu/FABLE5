@@ -221,6 +221,33 @@ namespace LastCall.UI
             return _face = Make(px, W, H);
         }
 
+        private static Sprite _plate;
+
+        /// <summary>A small brass-framed walnut plate, 9-sliced so it stretches to any
+        /// name's width (the author: each bottle's sign fits its own name).</summary>
+        public static Sprite NamePlate()
+        {
+            if (_plate != null) return _plate;
+            const int W = 24, H = 20;
+            var px = new Color32[W * H];
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    Color32 c = FaceWoodDim;
+                    if (x == 0 || y == 0 || x == W - 1 || y == H - 1) c = PanelSeam;
+                    else if (x == 1 || y == 1 || x == W - 2 || y == H - 2) c = Brass;
+                    px[y * W + x] = c;
+                }
+            px[2 * W + 2] = BrassLit; px[2 * W + W - 3] = BrassLit;
+            px[(H - 3) * W + 2] = BrassLit; px[(H - 3) * W + W - 3] = BrassLit;
+            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            tex.SetPixels32(px);
+            tex.Apply();
+            return _plate = Sprite.Create(tex, new Rect(0, 0, W, H), new Vector2(0.5f, 0.5f),
+                100f, 0, SpriteMeshType.FullRect, new Vector4(6, 6, 6, 6));
+        }
+
         private static Sprite _keg;
 
         /// <summary>

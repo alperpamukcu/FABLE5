@@ -58,8 +58,26 @@ namespace LastCall.Core
         public int WallTier { get; private set; } = 1;
         public bool HasMusician { get; private set; }
 
-        /// <summary>The satisfaction the bar's look adds to every served visit (GDD 23 §8).</summary>
-        public double Ambience => _config.AmbienceBonus(GlasswareTier, CounterTier, WallTier, HasMusician);
+        /// <summary>The satisfaction the bar's look adds to every served visit (GDD 23 §8).
+        /// Musician, counter and wall retired (the author, 2026-08-02): the upgrade line is
+        /// glassware and stools until each new fitting can prove it works.</summary>
+        public double Ambience => _config.AmbienceBonus(GlasswareTier, 1, 1, false);
+
+        /// <summary>The most stars the bar's fittings allow a night to bank (the author's
+        /// loop, 2026-08-02): happy customers alone cannot carry a dive past two stars —
+        /// the glassware line and the extra stools raise the ceiling toward five.</summary>
+        public double UpgradeStarCap =>
+            2.0 + 0.75 * (GlasswareTier - 1) + 0.25 * Math.Max(0, Seats - 3);
+
+        /// <summary>The most stars tonight's MENU allows: a night that never served past
+        /// the starter list caps low; only the stirred precision drinks open five.</summary>
+        public double MenuStarCap =>
+            _bestRankServedTonight <= 0 ? 2.0
+            : _bestRankServedTonight <= 8 ? 2.5
+            : _bestRankServedTonight <= 14 ? 3.5
+            : _bestRankServedTonight <= 21 ? 4.5 : 5.0;
+
+        private int _bestRankServedTonight;
 
         /// <summary>Today's crowd, decided by yesterday's satisfaction bar (GDD 23 §7).</summary>
         public WealthTier CrowdToday { get; private set; } = WealthTier.Regular;
@@ -167,14 +185,15 @@ namespace LastCall.Core
         public int RecipePrice(RecipeDefinition recipe) =>
             Math.Max(9, 5 + (5 * (recipe.Rank - 2)) / 2);
 
-        /// <summary>Stars the room must say about this bar before the recipe sells (C6), on
-        /// the menu's four tiers (v5 P16 redesign): starter buys are open, mid wants a bar
-        /// that is not underwater (neutral 3.0), the shaken sours want 3.5, and the stirred
-        /// precision drinks want 4.</summary>
+        /// <summary>Stars the room must say about this bar before the recipe sells (C6).
+        /// Lowered under the caps they unlock (2026-08-02): with the menu cap in play, a
+        /// starter-only bar tops out at 2.5 stars — the old 3.0 gate on the mid tier was
+        /// therefore UNREACHABLE and the sim deadlocked every run at 2.5. Each gate now
+        /// sits inside the band the previous tier can actually earn.</summary>
         public double RecipeStarGate(RecipeDefinition recipe) =>
             recipe.Rank <= 8 ? 0.0
-            : recipe.Rank <= 14 ? 3.0
-            : recipe.Rank <= 21 ? 3.5
+            : recipe.Rank <= 14 ? 2.0
+            : recipe.Rank <= 21 ? 3.0
             : 4.0;
 
         /// <summary>
@@ -222,7 +241,126 @@ namespace LastCall.Core
                 }
             }
             RollMarket();
+            _todayPurchases.Add(new DayPurchase(DayPurchase.Kind.Recipe, recipeId,
+                recipe.Name, price));
             return recipe;
+        }
+
+        // ── today's purchases: same-day refunds (the author, 2026-08-02) ─────────
+        // A slip of everything bought at THIS close. Refunding reverses the purchase in
+        // place; at the next dawn the slip is torn up — yesterday's buys are final.
+
+        public sealed class DayPurchase
+        {
+            public enum Kind { Brand, Recipe, Seat, Glassware }
+            public Kind What { get; }
+            public string Id { get; }
+            public string Name { get; }
+            public int Price { get; }
+            internal ShelfBottle Added;      // Brand: the bottle that came in
+            internal ShelfBottle Replaced;   // Brand upgrade: the one it displaced
+            internal MarketOffer Offer;
+            internal DayPurchase(Kind what, string id, string name, int price)
+            { What = what; Id = id; Name = name; Price = price; }
+        }
+
+        private readonly List<DayPurchase> _todayPurchases = new List<DayPurchase>();
+        public IReadOnlyList<DayPurchase> TodaysPurchases => _todayPurchases;
+
+        public void RefundToday(int index)
+        {
+            EnsurePhase(TycoonPhase.DayEnd);
+            if (index < 0 || index >= _todayPurchases.Count)
+                throw new ArgumentOutOfRangeException(nameof(index));
+            var p = _todayPurchases[index];
+            switch (p.What)
+            {
+                case DayPurchase.Kind.Brand:
+                    if (p.Added != null)
+                    {
+                        if (p.Replaced != null) _shelf.Replace(p.Added, p.Replaced);
+                        else _shelf.Remove(p.Added);
+                    }
+                    _newStockIds.Remove(p.Id);
+                    p.Offer?.MarkUnsold();
+                    break;
+                case DayPurchase.Kind.Recipe:
+                    // Relocks the drink. The bottles it released stay in the catalogue —
+                    // they are only offer candidates, and unwinding a market re-roll would
+                    // cost more honesty than it buys.
+                    _boughtRecipes.Remove(p.Id);
+                    for (int i = _recipes.Count - 1; i >= 0; i--)
+                        if (_recipes[i].Id == p.Id) { _recipes.RemoveAt(i); break; }
+                    break;
+                case DayPurchase.Kind.Seat: Seats--; break;
+                case DayPurchase.Kind.Glassware: GlasswareTier--; break;
+            }
+            Money += p.Price;
+            DayUpgrades -= p.Price;
+            _todayPurchases.RemoveAt(index);
+        }
+
+        /// <summary>One bottle refilled alone (the author: stock renews per-bottle now).</summary>
+        public int RefillBottle(string ingredientId)
+        {
+            EnsurePhase(TycoonPhase.DayEnd);
+            var bottle = _shelf.Find(ingredientId);
+            if (bottle == null)
+                throw new InvalidOperationException($"No '{ingredientId}' on the shelf.");
+            int cost = (int)Math.Ceiling((bottle.Capacity - bottle.Remaining) * _config.RefillPricePerCapacity);
+            if (cost == 0) return 0;
+            EnsureAffordable(cost);
+            Money -= cost;
+            DayStock += cost;
+            bottle.Refill();
+            return cost;
+        }
+
+        /// <summary>
+        /// Developer presets (the author's three game modes, 2026-08-02): jump a fresh run
+        /// to the start (0, a no-op), the middle (1) or the endgame (2). Dev tooling only —
+        /// it moves state directly and asks no one for money.
+        /// </summary>
+        public void DevPreset(int stage)
+        {
+            if (stage <= 0) return;
+            bool late = stage >= 2;
+            Money = late ? 600 : 160;
+            Rating.DevSet(late ? 5.0 : 2.6);
+            while (GlasswareTier < (late ? _config.MaxAmbienceTier : 2)) GlasswareTier++;
+            while (Seats < (late ? _config.MaxSeats : 4)) Seats++;
+
+            int rankCap = late ? int.MaxValue : 14;
+            var toUnlock = new List<RecipeDefinition>();
+            foreach (var r in AllRecipes)
+                if (r.Locked && !_boughtRecipes.Contains(r.Id) && r.Rank <= rankCap)
+                    toUnlock.Add(r);
+            foreach (var r in toUnlock)
+            {
+                _boughtRecipes.Add(r.Id);
+                _recipes.Add(r);
+                var styles = new HashSet<string>();
+                foreach (var band in r.RatioRequirements)
+                    if (!string.IsNullOrEmpty(band.Style)) styles.Add(band.Style);
+                for (int i = _lockedStock.Count - 1; i >= 0; i--)
+                {
+                    var card = _lockedStock[i];
+                    if (card.Info?.Style != null && styles.Contains(card.Info.Style))
+                    { _brandCatalogue.Add(card); _lockedStock.RemoveAt(i); }
+                }
+            }
+            // The unlocked menu must be POURABLE for the playtest: any catalogue style the
+            // shelf lacks walks straight onto it.
+            foreach (var card in _brandCatalogue)
+            {
+                if (card.Info?.Style == null) continue;
+                if (Market.FindByStyle(_shelf, card.Info.Style) == null)
+                    _shelf.Add(new ShelfBottle(card.Clone()));
+            }
+            RollMarket();
+            Day = late ? 30 : 12;
+            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average);
+            Phase = TycoonPhase.DayOpen;
         }
 
         // ── snacks (v5 P16) ─────────────────────────────────────────────────────
@@ -783,6 +921,11 @@ namespace LastCall.Core
             var verdict = ServiceJudge.Judge(visit, matchKind, delivered, CrowdToday, Ambience,
                 served: match, shakeEnergy: ShakeEnergy);
 
+            // The night remembers its best EXACT serve (2026-08-02): the menu cap reads it.
+            if (matchKind == OrderMatch.Exact && match?.Recipe != null
+                && match.Recipe.Rank > _bestRankServedTonight)
+                _bestRankServedTonight = match.Recipe.Rank;
+
             visit.Regular?.Stats.Apply(applied);
             // What actually went across the bar, not what was asked for — the receipt lists the
             // drink that was poured, and a wrong one is paid at its own price.
@@ -888,20 +1031,26 @@ namespace LastCall.Core
             if (offer.Sold) throw new InvalidOperationException("That bottle is already yours.");
 
             Spend(offer.Price);
+            var incoming = new ShelfBottle(offer.Bottle.Clone());
+            ShelfBottle displaced = null;
             if (offer.IsNewStock)
             {
                 // A style you did not carry — it joins the shelf so its drinks become makeable.
-                _shelf.Add(new ShelfBottle(offer.Bottle.Clone()));
+                _shelf.Add(incoming);
             }
             else
             {
                 var current = Market.FindByStyle(_shelf, offer.Style);
                 if (current == null)
                     throw new InvalidOperationException($"Nothing on the shelf pours {offer.Style}.");
-                _shelf.Replace(current, new ShelfBottle(offer.Bottle.Clone()));
+                displaced = current;
+                _shelf.Replace(current, incoming);
             }
             _newStockIds.Add(offer.Bottle.Id);   // flashes NEW on the menu tomorrow
             offer.MarkSold();
+            _todayPurchases.Add(new DayPurchase(DayPurchase.Kind.Brand, offer.Bottle.Id,
+                offer.Bottle.Name, offer.Price)
+            { Added = incoming, Replaced = displaced, Offer = offer });
         }
 
         /// <summary>One more stool, up to the room's limit (GDD 23 §8).</summary>
@@ -913,6 +1062,8 @@ namespace LastCall.Core
             int price = _config.SeatPrice(Seats);
             Spend(price);
             Seats++;
+            _todayPurchases.Add(new DayPurchase(DayPurchase.Kind.Seat, "seat",
+                $"Stool #{Seats}", price));
             return price;
         }
 
@@ -926,6 +1077,8 @@ namespace LastCall.Core
             int price = _config.GlasswarePrice(GlasswareTier);
             Spend(price);
             GlasswareTier++;
+            _todayPurchases.Add(new DayPurchase(DayPurchase.Kind.Glassware, "glassware",
+                $"Glassware ★{GlasswareTier}", price));
             return price;
         }
 
@@ -988,12 +1141,18 @@ namespace LastCall.Core
             // Every one of tonight's leavers files a rating on the way out -- storm-offs
             // included, because a storm-off is a review too.
             foreach (var visit in Floor.Finished) Rating.Record(visit.Satisfaction);
-            Rating.CloseNight(Floor.AverageSatisfaction);
+            // The night's stars are CAPPED before they touch the standing (the author's
+            // loop): the room can only say what the fittings and the menu let it say.
+            Rating.CloseNight(Floor.AverageSatisfaction, Math.Min(UpgradeStarCap, MenuStarCap));
 
-            // The crowd is drawn by the STANDING, not by tonight alone (v5 P12 / D3). The
-            // ledger still speaks satisfaction, so the running star average is handed back on
-            // its scale -- one conversion, in one place.
-            double standing = (Rating.Average - 1.0) / 4.0;
+            // Tomorrow's crowd reacts to TONIGHT (2026-08-02) — a dreadful night drives
+            // the paying crowd off — while fame alone brings the rollers: once the
+            // STANDING clears the high-roller line, it overrides the night. Keying broke
+            // off the zero-start standing either starved the opening week or never fired.
+            double crowdStars = Rating.Average >= BarRating.HighRollerStars
+                ? BarRating.HighRollerStars
+                : Rating.LastNight;
+            double standing = (crowdStars - 1.0) / 4.0;
             var result = Ledger.CloseDay(Day, DayIncome, DayExpenses, standing,
                 tillAfter: Money);
 
@@ -1006,6 +1165,8 @@ namespace LastCall.Core
             Day++;
             CrowdToday = Ledger.TomorrowsCrowd;
             DaySales = DayTips = DayRent = DayStock = DayUpgrades = 0;
+            _bestRankServedTonight = 0;
+            _todayPurchases.Clear();   // yesterday's buys are kept; refunds are same-day only
             BuyBackTheBowls();
             ResetVessels();
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average);

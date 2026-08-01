@@ -155,7 +155,12 @@ namespace LastCall.Core
         /// (+$4/night at the floor, measured): the bowls softened the squeeze from 19.5% to
         /// 2.0% bankruptcies on the same seeds, and the divisor is the recorded knob. Day 30
         /// goes $239 → $252; days 1–10 move by a dollar or two.</remarks>
-        public int Rent(int day) => 14 + (5 * day) / 2 + (day * day * 2) / 11;
+        /// <remarks>Retuned for the inertial standing (2026-08-02), measured at both ends:
+        /// the old curve ($178 on day 24 against a $122 floor income) closed every sim run
+        /// at week four; the first soft pass (d²/10, +$420 median till) closed none and
+        /// lost the squeeze. This middle curve — $136 on day 24, $184 on day 30 — puts the
+        /// floor at 11.5% bankruptcies, back in the old regime's healthy band.</remarks>
+        public int Rent(int day) => 12 + 2 * day + (day * day) / 9;
 
         // ── orders (GDD 23 §3) ──────────────────────────────────────────────────
         /// <summary>The order roll pool: this many lowest-rank pourable recipes.</summary>

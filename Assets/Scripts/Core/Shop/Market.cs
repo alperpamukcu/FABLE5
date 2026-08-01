@@ -27,6 +27,9 @@ namespace LastCall.Core
         }
 
         public void MarkSold() => Sold = true;
+
+        /// <summary>Puts a refunded offer back on the board (same-day refunds).</summary>
+        public void MarkUnsold() => Sold = false;
     }
 
     /// <summary>

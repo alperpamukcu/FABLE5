@@ -41,6 +41,7 @@ namespace LastCall.UI
         /// Replaces the TONIGHT satisfaction bar (D3) — reputation is what the player steers
         /// by now, and it carries between nights instead of resetting every morning.</summary>
         private Text _ratingText;
+        private RectTransform _starsFill;
         private readonly Image[] _ratingStars = new Image[BarRating.MaxStars];
 
         // Seats at the counter (GDD 24 §4, 2026-07-22): customers sit along the bar as
@@ -141,6 +142,7 @@ namespace LastCall.UI
         private Text _openTomorrowLabel, _dayEndTitle;
         private int _dayEndStep;
         private RectTransform _cardTarget;
+        private Text _marketTip;
 
         // ledger history (GDD 24 §7, 2026-07-22): the register opens the book of past days.
         private RectTransform _ledgerPanel;
@@ -173,7 +175,7 @@ namespace LastCall.UI
 
         // The shop tablet (v5 P13). Two errands, not one wall of cards: what goes behind the
         // bar, and what the room itself is made of.
-        private static readonly string[] ShopTabs = { "THE WELL", "THE ROOM" };
+        private static readonly string[] ShopTabs = { "RESTOCK", "BOTTLES", "RECIPES", "UPGRADES" };
         private readonly Image[] _shopTabKeys = new Image[ShopTabs.Length];
         private readonly Text[] _shopTabLabels = new Text[ShopTabs.Length];
         private int _shopTab;
@@ -470,13 +472,16 @@ namespace LastCall.UI
             // before the glass so the carried drink passes over it rather than under it.
             _binProp = NewRect("Bin", root);
             _binProp.anchorMin = _binProp.anchorMax = _binProp.pivot = new Vector2(1f, 0f);
-            _binProp.sizeDelta = new Vector2(78, 93);
-            _binProp.anchoredPosition = new Vector2(-70, 96);
+            // The new can (the author): three times the old prop, bagged and stuffed,
+            // parked in the very corner. The old grey tint would fight the painted art.
+            _binProp.sizeDelta = new Vector2(190, 250);
+            _binProp.anchoredPosition = new Vector2(-14, 4);
             _binImage = _binProp.gameObject.AddComponent<Image>();
-            _binImage.sprite = ItemArt.Load("bin_prop");
+            _binImage.sprite = ItemArt.Load("bin_bag");
+            if (_binImage.sprite == null) _binImage.sprite = ItemArt.Load("bin_prop");
             _binImage.preserveAspect = true;
             _binImage.raycastTarget = false;
-            _binImage.color = new Color(0.72f, 0.72f, 0.74f, 1f);
+            _binImage.color = Color.white;
             if (_binImage.sprite == null) _binImage.enabled = false;
 
             // The drink you carry to a seat is the real glass now (v5 P14 / C9): the same
@@ -782,7 +787,7 @@ namespace LastCall.UI
             // straight into the till at the money's fixed x. Who is in is on the seat row.
             _dayText.text = run.Floor.IsClosingTime
                 ? $"{hh:00}:{mm / 5 * 5:00}  ·  LAST CALL"
-                : $"{hh:00}:{mm / 5 * 5:00}  ·  NIGHT {run.Day}";
+                : $"{hh:00}:{mm / 5 * 5:00}  ·  {CalendarFor(run.Day)}";
             _moneyText.text = $"${run.Money}";
             _moneyText.color = run.Money < 0 ? UITheme.ViceRed[3] : UITheme.Money;
             if (stage != null) stage.SetMoney($"${run.Money}");
@@ -794,11 +799,8 @@ namespace LastCall.UI
             // exactly the movement the player is trying to cause.
             double stars = run.Rating.Average;
             _ratingText.text = stars.ToString("0.0");
-            for (int i = 0; i < _ratingStars.Length; i++)
-            {
-                double fill = System.Math.Max(0.0, System.Math.Min(1.0, stars - i));
-                _ratingStars[i].color = Color.Lerp(UITheme.Night[3], UITheme.Amber[3], (float)fill);
-            }
+            // A 1.3 is 1.3 stars of amber: the mask's width IS the rating (the author).
+            _starsFill.sizeDelta = new Vector2((float)(stars / 5.0) * _ratingStars.Length * 20f, 0);
         }
 
         private void RefreshSeats()
@@ -963,7 +965,7 @@ namespace LastCall.UI
                 // as one piece: [glass] DRAUGHT, the pair centred together.
                 if (view.Icon != null && view.Icon.enabled)
                     view.Icon.rectTransform.anchoredPosition =
-                        new Vector2(-view.Order.preferredWidth * 0.5f - 4f, -42f);
+                        new Vector2(-view.Order.preferredWidth * 0.5f - 4f, -48f);
 
                 // The patience clock only bites while they wait on an order. Deciding holds it
                 // full; a drinking customer is content — both show a calm, full cyan bar.
@@ -982,9 +984,9 @@ namespace LastCall.UI
 
                 // The tag glows cyan when a drink is built and this customer can actually take it.
                 bool canTake = drinkReady && !deciding && !drinking;
-                view.TagBg.color = canTake
-                    ? new Color(UITheme.Selection.r, UITheme.Selection.g, UITheme.Selection.b, 0.92f)
-                    : new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.86f);
+                // Tinting the cream bubble, not recolouring a box: white at rest, washed
+                // cyan when this customer can take the drink in hand.
+                view.TagBg.color = canTake ? new Color(0.72f, 0.98f, 0.92f, 1f) : Color.white;
             }
         }
 
@@ -1161,7 +1163,9 @@ namespace LastCall.UI
             _dayEndBill.gameObject.SetActive(_dayEndStep == 0);
             _dayEndTablet.gameObject.SetActive(_dayEndStep == 1);
             _dayEndTitle.text = _dayEndStep == 0 ? "LAST CALL — THE BOOKS" : "LAST CALL — THE MARKET";
-            _openTomorrowLabel.text = _dayEndStep == 0 ? "CONTINUE  →  THE MARKET" : "START THE DAY  →";
+            _openTomorrowLabel.text = _dayEndStep == 0 ? "CONTINUE  →  THE MARKET"
+                : run.Day % 6 == 0 ? "START TUESDAY  →   (MONDAY IS DARK)"
+                : "START THE DAY  →";
             var floor = run.Floor;
             int served = 0, stormed = 0;
             foreach (var visit in floor.Finished)
@@ -1185,7 +1189,7 @@ namespace LastCall.UI
             var sb = new StringBuilder();
             sb.AppendLine($"<b>{Rule}</b>");
             sb.AppendLine($"<b>   LAST CALL   </b>");
-            sb.AppendLine($"   NIGHT {run.Day} · {CrowdName(run.CrowdToday)}");
+            sb.AppendLine($"   {CalendarFor(run.Day)} · {CrowdName(run.CrowdToday)}");
             sb.AppendLine($"<b>{Rule}</b>");
 
             var lines = new List<string>();
@@ -1237,16 +1241,30 @@ namespace LastCall.UI
             }
 
             if (_dayEndStep == 0) return;   // the bill step shows no shop at all
+            if (_marketTip != null) _marketTip.text = "";
             if (_shopTab == 0)
             {
-                _cardTarget = ShopSection("RESTOCK");
+                // RESTOCK (the author): the whole well at once, or bottle by bottle.
+                _cardTarget = ShopSection("EVERYTHING AT ONCE");
                 int restock = run.Shelf.RefillCost(cfg.RefillPricePerCapacity);
                 AddCard("RESTOCK THE WELL", "well is full", restock, restock > 0, () =>
                 {
                     run.RefillShelf(); RebuildDayEnd();
                 });
-
-                if (run.MarketOffers.Count > 0) _cardTarget = ShopSection("TONIGHT'S MARKET");
+                _cardTarget = ShopSection("BOTTLE BY BOTTLE");
+                foreach (var b in run.Shelf.Bottles)
+                {
+                    var bottle = b;
+                    int cost = (int)Math.Ceiling((bottle.Capacity - bottle.Remaining)
+                        * cfg.RefillPricePerCapacity);
+                    AddCard(bottle.Ingredient.Name.ToUpperInvariant(), "full", cost, cost > 0,
+                        () => { run.RefillBottle(bottle.Ingredient.Id); RebuildDayEnd(); },
+                        ItemArt.Bottle(bottle.Ingredient.Info?.Style));
+                }
+            }
+            else if (_shopTab == 1)
+            {
+                _cardTarget = ShopSection("TONIGHT'S MARKET");
                 for (int i = 0; i < run.MarketOffers.Count; i++)
                 {
                     int index = i;
@@ -1258,48 +1276,75 @@ namespace LastCall.UI
                         RebuildDayEnd();
                     }, ItemArt.Bottle(offer.Bottle.Info?.Style));
                 }
-
-                // The recipe book (v5 P16): the locked cocktails, bought onto the menu the way
-                // stock is bought onto the shelf. The better ones want the room talking first
-                // (the star gate) — a card that is gated says so instead of hiding.
+            }
+            else if (_shopTab == 2)
+            {
+                // RECIPES on their own tab (the author). A recipe the stars cannot buy yet
+                // is SEALED — the player is not told what waits behind the wax — and an
+                // affordable one answers a hover with how it is actually made.
                 _cardTarget = ShopSection("THE RECIPE BOOK");
                 foreach (var recipe in run.LockedRecipes)
                 {
                     var r = recipe;
                     double gate = run.RecipeStarGate(r);
-                    bool gated = run.Rating.Average < gate;
-                    string title = gated
-                        ? $"✦ {r.Name.ToUpperInvariant()} · NEEDS {gate:0.0}★"
-                        : $"✦ {r.Name.ToUpperInvariant()}";
-                    AddCard(title, "gated", run.RecipePrice(r), !gated, () =>
+                    if (run.Rating.Average < gate)
+                    {
+                        AddCard($"✦ SEALED · NEEDS {gate:0.0}★", "sealed", 0, false, null);
+                        continue;
+                    }
+                    var card = AddCard($"✦ {r.Name.ToUpperInvariant()}", "gated",
+                        run.RecipePrice(r), true, () =>
                     {
                         try { run.UnlockRecipe(r.Id); Toast($"{r.Name.ToUpperInvariant()} — ON THE MENU TOMORROW"); }
                         catch (InvalidOperationException e) { Toast(e.Message.ToUpperInvariant()); }
                         RebuildDayEnd();
                     }, DrinkIcon.For(r, _bootstrap.Glassware));
+                    HoverRecipe(card, r);
                 }
             }
             else
             {
+                // UPGRADES, pruned to the two that provably work (the author, 2026-08-02):
+                // stools and the glassware line. Musician, counter and back bar retired.
                 _cardTarget = ShopSection("THE FLOOR");
                 AddCard($"STOOL #{run.Seats + 1}", "bar is full", cfg.SeatPrice(run.Seats),
                     run.Seats < cfg.MaxSeats, () => { run.BuySeat(); ApplyBarLook(); RebuildDayEnd(); });
-
-                _cardTarget = ShopSection("THE LOOK");
+                _cardTarget = ShopSection("GLASSWARE");
                 AddCard($"GLASSWARE ★{run.GlasswareTier}", "top tier", cfg.GlasswarePrice(run.GlasswareTier),
                     run.GlasswareTier < cfg.MaxAmbienceTier,
                     () => { run.BuyGlassware(); ApplyBarLook(); RebuildDayEnd(); }, ItemArt.Glass);
-                AddCard($"COUNTER ★{run.CounterTier}", "top tier", cfg.CounterPrice(run.CounterTier),
-                    run.CounterTier < cfg.MaxAmbienceTier,
-                    () => { run.BuyCounter(); ApplyBarLook(); RebuildDayEnd(); });
-                AddCard($"BACK BAR ★{run.WallTier}", "top tier", cfg.WallPrice(run.WallTier),
-                    run.WallTier < cfg.MaxAmbienceTier,
-                    () => { run.BuyWall(); ApplyBarLook(); RebuildDayEnd(); });
-                _cardTarget = ShopSection("THE STAGE");
-                AddCard("MUSICIAN", "on stage", cfg.MusicianPrice, !run.HasMusician,
-                    () => { run.BuyMusician(); ApplyBarLook(); RebuildDayEnd(); });
+            }
+
+            // The refund slip rides every tab: anything bought at THIS close can go back.
+            if (run.TodaysPurchases.Count > 0)
+            {
+                _cardTarget = ShopSection("BOUGHT TONIGHT — CLICK TO REFUND");
+                for (int i = 0; i < run.TodaysPurchases.Count; i++)
+                {
+                    int idx = i;
+                    var pch = run.TodaysPurchases[i];
+                    AddCard($"⟲ {pch.Name.ToUpperInvariant()}", "", pch.Price, true,
+                        () => { run.RefundToday(idx); Toast("REFUNDED"); ApplyBarLook(); RebuildDayEnd(); });
+                }
             }
             _offerRow.anchoredPosition = Vector2.zero;   // a rebuilt shop reads from the top
+        }
+
+        /// <summary>Points the market's hover line at a recipe: prep and pour, the book's way.</summary>
+        private void HoverRecipe(RectTransform card, RecipeDefinition r)
+        {
+            if (card == null || _marketTip == null) return;
+            string prep = r.Id == "draught" ? "ON TAP" : r.Id == "neat_pour" ? "NEAT"
+                : r.Prep == PrepMethod.Shaken ? "SHAKEN"
+                : r.Prep == PrepMethod.Stirred ? "STIRRED" : "BUILT";
+            var trig = card.gameObject.AddComponent<EventTrigger>();
+            var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            enter.callback.AddListener(_ =>
+                _marketTip.text = $"<color=#7FD4C9>{prep}</color>  ·  {BandLine(r)}");
+            trig.triggers.Add(enter);
+            var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+            exit.callback.AddListener(_ => _marketTip.text = "");
+            trig.triggers.Add(exit);
         }
 
         /// <summary>A titled section of the market: its header row, then its own grid.</summary>
@@ -1403,7 +1448,7 @@ namespace LastCall.UI
         private bool _bookOpen;
         private Coroutine _bookAnim;
 
-        private void ToggleRecipeBook()
+        internal void ToggleRecipeBook()
         {
             if (_bookPanel == null) return;
             bool open = !_bookOpen;
@@ -1461,9 +1506,13 @@ namespace LastCall.UI
             Stretch(_bookPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var scrim = _bookPanel.gameObject.AddComponent<Image>();
             scrim.color = UITheme.Scrim;
-            var scrimBtn = _bookPanel.gameObject.AddComponent<Button>();
-            scrimBtn.transition = Selectable.Transition.None;
-            scrimBtn.onClick.AddListener(ToggleRecipeBook);
+            // Only the X closes now (the author's ruling): the scrim blocks the bar behind
+            // it but closes nothing. The book also outranks the back-bar flow (canvas 12):
+            // its own canvas at 15 lets the BOOK key on the flow's ledge show the thing.
+            var bookCanvas = _bookPanel.gameObject.AddComponent<Canvas>();
+            bookCanvas.overrideSorting = true;
+            bookCanvas.sortingOrder = 15;
+            _bookPanel.gameObject.AddComponent<GraphicRaycaster>();
 
             // Promoted to THE menu (2026-08-01): recipes, search and filters live here now
             // that the clipboard is gone — so it takes the room a menu deserves.
@@ -1488,27 +1537,42 @@ namespace LastCall.UI
             bcImg.color = new Color(0, 0, 0, 0.001f);
             boardCatch.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
 
-            // No title text and no X (2026-08-01, the author): the board's own metal clip
-            // IS the header, the words were hiding under it, and the scrim click closes.
+            // The X returns (the author): top-right of the board, and it is the ONLY way
+            // out — outside clicks no longer close, so a stray click cannot eat the page.
+            var closeRt = NewRect("Close", sheet);
+            Place(closeRt, new Vector2(0.5f, 0.5f), new Vector2(56, 56), new Vector2(378f, 288f));
+            var closeImg = closeRt.gameObject.AddComponent<Image>();
+            var closeSprite = ItemArt.Load("btn_close");
+            if (closeSprite != null) { closeImg.sprite = closeSprite; closeImg.preserveAspect = true; }
+            else closeImg.color = new Color(0.62f, 0.15f, 0.17f);
+            var closeBtn = closeRt.gameObject.AddComponent<Button>();
+            closeBtn.targetGraphic = closeImg;
+            var closeDown = ItemArt.Load("btn_close_down");
+            if (closeSprite != null && closeDown != null)
+            {
+                closeBtn.transition = Selectable.Transition.SpriteSwap;
+                var st = closeBtn.spriteState; st.pressedSprite = closeDown; st.selectedSprite = closeSprite;
+                closeBtn.spriteState = st;
+            }
+            closeBtn.onClick.AddListener(ToggleRecipeBook);
 
             // The filter chips: click to cycle. Three axes the author named — the star tier,
             // how it is worked, and what bottle it contains.
             float chipY = 142f;   // just under the board's metal clip
-            // Dropdowns, not cycles (2026-08-01, the author): a chip opens a little paper
-            // window of its options under itself; a click anywhere else puts it away.
-            _bookTierChip = BookChip(sheet, 0, chipY, () =>
+            // One slim toolbar (the author: the filters should look professional and take
+            // less room): search at the left, three compact value-pills at the right, all
+            // inside the paper. A pill drops its option window under itself.
+            float paperR = BkW * BkPaperCX + BkW * BkPaperW * 0.5f;
+            float tierX = paperR - 282f, prepX = paperR - 184f, styleX = paperR - 76f;
+            _bookTierChip = BookChip(sheet, tierX, chipY, 92f, () =>
             {
                 var opts = new List<string> { "ALL", BookTiers[0], BookTiers[1], BookTiers[2], BookTiers[3] };
-                OpenBookPopup(0, chipY, opts, pick =>
-                {
-                    _bookTier = pick - 1;
-                    RebuildRecipeBook();
-                });
+                OpenBookPopup(tierX, chipY, opts, pick => { _bookTier = pick - 1; RebuildRecipeBook(); });
             });
-            _bookPrepChip = BookChip(sheet, 1, chipY, () =>
+            _bookPrepChip = BookChip(sheet, prepX, chipY, 92f, () =>
             {
                 var opts = new List<string> { "ALL", "BUILT", "SHAKEN", "STIRRED" };
-                OpenBookPopup(1, chipY, opts, pick =>
+                OpenBookPopup(prepX, chipY, opts, pick =>
                 {
                     _bookPrep = pick == 0 ? -1
                         : pick == 1 ? (int)PrepMethod.Built
@@ -1516,12 +1580,12 @@ namespace LastCall.UI
                     RebuildRecipeBook();
                 });
             });
-            _bookStyleChip = BookChip(sheet, 2, chipY, () =>
+            _bookStyleChip = BookChip(sheet, styleX, chipY, 112f, () =>
             {
                 var styles = BookStyles();
                 var opts = new List<string> { "ALL" };
                 foreach (var st in styles) opts.Add(st.Replace('_', ' ').ToUpperInvariant());
-                OpenBookPopup(2, chipY, opts, pick =>
+                OpenBookPopup(styleX, chipY, opts, pick =>
                 {
                     _bookStyle = pick == 0 ? null : styles[pick - 1];
                     RebuildRecipeBook();
@@ -1530,8 +1594,8 @@ namespace LastCall.UI
 
             // The search box: type a name, the list narrows as you do.
             var searchRt = NewRect("Search", sheet);
-            Place(searchRt, new Vector2(0.5f, 0.5f), new Vector2(184, 30),
-                new Vector2(BookChipX(3) + 4f, chipY));
+            Place(searchRt, new Vector2(0.5f, 0.5f), new Vector2(220, 26),
+                new Vector2(BkW * BkPaperCX - BkW * BkPaperW * 0.5f + 130f, chipY));
             var searchBg = searchRt.gameObject.AddComponent<Image>();
             searchBg.color = new Color(0.94f, 0.90f, 0.80f);
             var searchText = NewText("T", searchRt, _body, 16, TextAnchor.MiddleLeft, new Color(0.16f, 0.10f, 0.06f));
@@ -1581,38 +1645,51 @@ namespace LastCall.UI
         private const float BkPaperW = 0.655f, BkPaperH = 0.660f;
         private const float BkPaperCX = -0.015f, BkPaperCY = -0.008f;
 
-        private static float BookChipX(int index) =>
-            BkW * BkPaperCX - BkW * BkPaperW * 0.5f + 92f + index * 186f;
-
-        private Text BookChip(RectTransform sheet, int index, float y, Action onClick)
+        private Text BookChip(RectTransform sheet, float x, float y, float w, Action onClick)
         {
-            // No button chrome (2026-08-01, the author): a printed menu filters with ink,
-            // not with keys. The whole line is still clickable; only the text shows.
-            var chip = NewRect($"Chip{index}", sheet);
-            Place(chip, new Vector2(0.5f, 0.5f), new Vector2(178, 30), new Vector2(BookChipX(index), y));
+            // A compact value-pill: cream face, hairline ink frame, the value in small ink.
+            var chip = NewRect("Chip", sheet);
+            Place(chip, new Vector2(0.5f, 0.5f), new Vector2(w, 24), new Vector2(x, y));
             var img = chip.gameObject.AddComponent<Image>();
-            img.color = new Color(0, 0, 0, 0.001f);   // invisible, but catches the click
+            img.color = new Color(0.95f, 0.92f, 0.82f, 0.95f);
             var btn = chip.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => { Sfx.Play("click", 0.5f); onClick(); });
-            var t = NewText("T", chip, _body, 16, TextAnchor.MiddleCenter, new Color(0.30f, 0.20f, 0.10f));
-            var rule = NewRect("Rule", chip);
-            rule.anchorMin = new Vector2(0.08f, 0); rule.anchorMax = new Vector2(0.92f, 0);
-            rule.pivot = new Vector2(0.5f, 0);
-            rule.sizeDelta = new Vector2(0, 1);
-            rule.anchoredPosition = new Vector2(0, 4);
-            var ruleImg = rule.gameObject.AddComponent<Image>();
-            ruleImg.color = new Color(0.30f, 0.20f, 0.10f, 0.45f);
-            ruleImg.raycastTarget = false;
+            var frame = new Color(0.30f, 0.20f, 0.10f, 0.5f);
+            Hairline(chip, new Vector2(0, 0), new Vector2(1, 0), frame);
+            Hairline(chip, new Vector2(0, 1), new Vector2(1, 1), frame);
+            HairlineV(chip, 0f, frame);
+            HairlineV(chip, 1f, frame);
+            var t = NewText("T", chip, _body, 8, TextAnchor.MiddleCenter, new Color(0.30f, 0.20f, 0.10f));
             Stretch(t.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             return t;
+        }
+
+        private void Hairline(RectTransform parent, Vector2 aMin, Vector2 aMax, Color c)
+        {
+            var r = NewRect("HL", parent);
+            r.anchorMin = aMin; r.anchorMax = aMax;
+            r.pivot = new Vector2(0.5f, aMin.y);
+            r.sizeDelta = new Vector2(0, 1);
+            r.anchoredPosition = Vector2.zero;
+            var i = r.gameObject.AddComponent<Image>(); i.color = c; i.raycastTarget = false;
+        }
+
+        private void HairlineV(RectTransform parent, float ax, Color c)
+        {
+            var r = NewRect("VL", parent);
+            r.anchorMin = new Vector2(ax, 0); r.anchorMax = new Vector2(ax, 1);
+            r.pivot = new Vector2(ax, 0.5f);
+            r.sizeDelta = new Vector2(1, 0);
+            r.anchoredPosition = Vector2.zero;
+            var i = r.gameObject.AddComponent<Image>(); i.color = c; i.raycastTarget = false;
         }
 
         private RectTransform _bookPopup;
 
         /// <summary>A little paper window of options under a chip. A full-screen invisible
         /// catcher behind it closes it on any other click.</summary>
-        private void OpenBookPopup(int chipIndex, float chipY, List<string> options, Action<int> onPick)
+        private void OpenBookPopup(float anchorX, float chipY, List<string> options, Action<int> onPick)
         {
             CloseBookPopup();
             var sheet = _bookPanel.Find("Sheet") as RectTransform;
@@ -1629,7 +1706,7 @@ namespace LastCall.UI
             float w = cols * 190f + 8f, h = rows * 28f + 10f;
             var win = NewRect("Win", _bookPopup);
             Place(win, new Vector2(0.5f, 0.5f), new Vector2(w, h),
-                new Vector2(BookChipX(chipIndex), chipY - 18f - h * 0.5f));
+                new Vector2(anchorX, chipY - 16f - h * 0.5f));
             var winImg = win.gameObject.AddComponent<Image>();
             winImg.color = new Color(0.97f, 0.94f, 0.84f);
             var winShadow = win.gameObject.AddComponent<Shadow>();
@@ -1839,7 +1916,7 @@ namespace LastCall.UI
         private void BuildSettings(RectTransform root)
         {
             _settingsPanel = NewRect("Settings", root);
-            Place(_settingsPanel, new Vector2(1, 1), new Vector2(240, 128), new Vector2(-16, -48));
+            Place(_settingsPanel, new Vector2(1, 1), new Vector2(240, 214), new Vector2(-16, -48));
             _settingsPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
 
             var title = NewText("T", _settingsPanel, _body, 10, TextAnchor.UpperCenter, UITheme.TextSecondary);
@@ -1859,6 +1936,15 @@ namespace LastCall.UI
                 Sfx.Play("click");              // audible iff it just came back on — itself the test
                 RefreshSettings();
             });
+            // The three game modes (the author's dev tool): a fresh bar, a mid-run bar,
+            // and the endgame sandbox — playtest any act without earning your way to it.
+            SettingsRow(3, "DEV · FRESH START", () =>
+            { _bootstrap.StartNewRun(null); ToggleSettings(); });
+            SettingsRow(4, "DEV · MIDGAME", () =>
+            { _bootstrap.StartNewRun(null); Run.DevPreset(1); ApplyBarLook(); ToggleSettings(); });
+            SettingsRow(5, "DEV · ENDGAME", () =>
+            { _bootstrap.StartNewRun(null); Run.DevPreset(2); ApplyBarLook(); ToggleSettings(); });
+
             _settingsMotion = SettingsRow(2, "MOTION", () =>
             {
                 Motion.Reduced = !Motion.Reduced;
@@ -1972,12 +2058,8 @@ namespace LastCall.UI
                 chips += PrefChip(PrefArt.ForPreparation(g.Id), g.Name.ToUpperInvariant());
             if (spec.ExtraShaken) chips += PrefChip(PrefArt.Shaker(), "SHAKEN HARD");
             if (spec.FilledToTheTop) chips += PrefChip(PrefArt.FilledGlass(), "TO THE TOP");
-            if (visit.Read != null && !spec.FilledToTheTop)
-            {
-                var fp = visit.Read.FillPreference;
-                chips += PrefChip(PrefArt.FillGauge((float)fp.MinFill, (float)fp.MaxFill),
-                    $"{fp.ShortLabel} {fp.MinFill * 100:0}–{fp.MaxFill * 100:0}%");
-            }
+            // No fill chip (the author, 2026-08-02): nobody demands a fill any more — the
+            // only fill rule is the house floor, and it lives in the judge, not the licence.
             _idIntent.text = chips == 0 ? "SERVE IT CLEAN" : "";
         }
 
@@ -2001,6 +2083,14 @@ namespace LastCall.UI
             return 1;
         }
 
+        // The week (the author's calendar): six open days, Tuesday through Sunday —
+        // Mondays the bar is dark and the calendar simply skips them.
+        private static readonly string[] OpenDayNames =
+            { "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY" };
+
+        private static string CalendarFor(int day) =>
+            $"WEEK {(day - 1) / 6 + 1} · {OpenDayNames[(day - 1) % 6]}";
+
         /// <summary>0–5 stars as glyphs, the empty ones kept so the width never jumps.</summary>
         private static string Stars(int n) =>
             new string('★', Mathf.Clamp(n, 0, 5)) + new string('☆', 5 - Mathf.Clamp(n, 0, 5));
@@ -2023,19 +2113,20 @@ namespace LastCall.UI
         // lettering SITS ON THE SHELL'S OWN RULE LINES now — the art carries six faint field
         // rules at y 58/76/94/113/132/150 (measured), and every value's baseline lands on one,
         // so the text belongs to the printed card instead of floating over it.
-        private const float LicScale = 2.5f;
-        private const float LicW = 266f * LicScale, LicH = 176f * LicScale;
-
-        // Anchors measured off licence_shell.png at install, ×2.5: portrait frame x 15–89,
-        // y 37–132; navy header rows 3–21; the six rule lines above.
-        private static readonly Rect LicPortrait = new Rect(37.5f, -92.5f, 187.5f, 240f);
-        private const float LicHeaderH = 45f;
-        private const float LicHeaderY = -7.5f;
-        private const float LicFieldsX = 250f;   // the rules span art x 100–250 → card 250–625
-        private const float LicFieldsW = 375f;
-        private static readonly float[] LicLines =   // card-local y (down from the top), ×2.5
-            { 58f * LicScale, 76f * LicScale, 94f * LicScale, 113f * LicScale,
-              132f * LicScale, 150f * LicScale };
+        // The v4 shell (2026-08-02): a denser generated card — five rules, tight bottom —
+        // measured off licence_shell2.png (510×315: navy band rows 23–51, portrait x 26–168
+        // y 81–286, rules y 96/127/159/190/219) and drawn at 1.4×. The old shell ran long
+        // and its lettering was hard to read; the values sit on the display face now.
+        private const float LicScale = 1.4f;
+        private const float LicW = 510f * LicScale, LicH = 315f * LicScale;
+        private static readonly Rect LicPortrait = new Rect(26f * LicScale, -81f * LicScale,
+            143f * LicScale, 206f * LicScale);
+        private const float LicHeaderH = 29f * LicScale;
+        private const float LicHeaderY = -23f * LicScale;
+        private const float LicFieldsX = 200f * LicScale;
+        private const float LicFieldsW = 280f * LicScale;
+        private static readonly float[] LicLines =   // the art's five rules, ×1.4
+            { 96f * LicScale, 127f * LicScale, 159f * LicScale, 190f * LicScale, 219f * LicScale };
 
         /// <summary>
         /// One licence line, SEATED on a rule: the value's bottom edge lands on the shell's own
@@ -2052,7 +2143,7 @@ namespace LastCall.UI
             labelText.rectTransform.pivot = new Vector2(0, 0);
             labelText.rectTransform.anchoredPosition = new Vector2(x, -lineY + vh + 2f);
             labelText.text = label;
-            var val = NewText("V_" + label, card, _body, valueSize, TextAnchor.LowerLeft, UITheme.Night[1]);
+            var val = NewText("V_" + label, card, _display, valueSize, TextAnchor.LowerLeft, UITheme.Night[1]);
             val.supportRichText = true;
             val.horizontalOverflow = HorizontalWrapMode.Overflow;   // a licence never wraps; it runs
             Place(val.rectTransform, new Vector2(0, 1), new Vector2(w, vh), Vector2.zero);
@@ -2074,7 +2165,8 @@ namespace LastCall.UI
             var card = NewRect("Card", _idRoot);
             Place(card, new Vector2(0.5f, 0.5f), new Vector2(LicW, LicH), new Vector2(0, 10));
             var shell = card.gameObject.AddComponent<Image>();
-            shell.sprite = ItemArt.Load("licence_shell");
+            shell.sprite = ItemArt.Load("licence_shell2");
+            if (shell.sprite == null) shell.sprite = ItemArt.Load("licence_shell");
             if (shell.sprite == null) shell.color = UITheme.Cream[4];   // no art: a plain card
             card.gameObject.AddComponent<Button>().transition = Selectable.Transition.None; // swallow clicks
 
@@ -2236,28 +2328,51 @@ namespace LastCall.UI
                 new Vector2(-32, 0), UITheme.Night[3], ToggleSettings);
             BuildSettings(root);
 
-            // Place() pivots on the anchor, so these offsets are RIGHT edges: the button's own
-            // right edge sits at -68 and it is 110 wide, so the stars have to clear -178.
-            const float StarSize = 16f, StarGap = 20f, StarsRight = -196f;
+            // The standing, front and centre (the author: the stars are becoming the
+            // game's spine) — a row of five just right of the till, PARTIALLY filled:
+            // 1.3 shows 1.3 stars' worth of amber under a mask, not a dimmed second star.
+            const float StarSize = 16f, StarGap = 20f;
+            float starsW = _ratingStars.Length * StarGap;
+            var starsRow = NewRect("Stars", top);
+            Place(starsRow, new Vector2(0.5f, 0.5f), new Vector2(starsW, StarSize), new Vector2(196f, 0));
             for (int i = 0; i < _ratingStars.Length; i++)
             {
-                var star = NewRect($"Star{i}", top);
-                Place(star, new Vector2(1, 0.5f), new Vector2(StarSize, StarSize),
-                    new Vector2(StarsRight - (_ratingStars.Length - 1 - i) * StarGap, 0));
+                var star = NewRect($"B{i}", starsRow);
+                star.anchorMin = star.anchorMax = new Vector2(0, 0.5f);
+                star.pivot = new Vector2(0.5f, 0.5f);
+                star.sizeDelta = new Vector2(StarSize, StarSize);
+                star.anchoredPosition = new Vector2(i * StarGap + StarGap * 0.5f, 0);
                 var img = star.gameObject.AddComponent<Image>();
                 img.sprite = ItemArt.Load("star");
-                img.preserveAspect = true;
-                img.raycastTarget = false;
+                img.preserveAspect = true; img.raycastTarget = false;
+                img.color = UITheme.Night[3];
+            }
+            _starsFill = NewRect("Fill", starsRow);
+            _starsFill.anchorMin = new Vector2(0, 0); _starsFill.anchorMax = new Vector2(0, 1);
+            _starsFill.pivot = new Vector2(0, 0.5f);
+            _starsFill.sizeDelta = Vector2.zero;
+            _starsFill.anchoredPosition = Vector2.zero;
+            _starsFill.gameObject.AddComponent<RectMask2D>();
+            for (int i = 0; i < _ratingStars.Length; i++)
+            {
+                var star = NewRect($"F{i}", _starsFill);
+                star.anchorMin = star.anchorMax = new Vector2(0, 0.5f);   // fixed x: the mask slides over it
+                star.pivot = new Vector2(0.5f, 0.5f);
+                star.sizeDelta = new Vector2(StarSize, StarSize);
+                star.anchoredPosition = new Vector2(i * StarGap + StarGap * 0.5f, 0);
+                var img = star.gameObject.AddComponent<Image>();
+                img.sprite = ItemArt.Load("star");
+                img.preserveAspect = true; img.raycastTarget = false;
+                img.color = UITheme.Amber[3];
                 _ratingStars[i] = img;
             }
-
-            _ratingText = NewText("Rating", top, _display, 14, TextAnchor.MiddleRight, UITheme.Amber[3]);
-            Place(_ratingText.rectTransform, new Vector2(1, 0.5f), new Vector2(60, 30),
-                new Vector2(StarsRight - _ratingStars.Length * StarGap - 6f, 0));
+            _ratingText = NewText("Rating", top, _display, 14, TextAnchor.MiddleLeft, UITheme.Amber[3]);
+            Place(_ratingText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(60, 30),
+                new Vector2(196f + starsW * 0.5f + 36f, 0));
 
             _crowdText = NewText("Crowd", top, _body, 13, TextAnchor.MiddleRight, UITheme.TextSecondary);
             Place(_crowdText.rectTransform, new Vector2(1, 0.5f), new Vector2(200, 30),
-                new Vector2(StarsRight - _ratingStars.Length * StarGap - 74f, 0));
+                new Vector2(-196f, 0));
 
             // BIN GLASS retired (v5 P13 / C7): a drink is thrown away by carrying it to the bin
             // on the counter, which is the same verb that serves it.
@@ -2313,25 +2428,32 @@ namespace LastCall.UI
                 seat.Tag = NewRect("Tag", seat.Root);
                 seat.Tag.anchorMin = seat.Tag.anchorMax = new Vector2(0.5f, 0);
                 seat.Tag.pivot = new Vector2(0.5f, 0);
-                seat.Tag.sizeDelta = new Vector2(BustW + 44f, 70f);
+                seat.Tag.sizeDelta = new Vector2(BustW + 48f, 84f);
                 seat.Tag.anchoredPosition = new Vector2(0, CharWinH + 10f);
                 seat.TagBg = seat.Tag.gameObject.AddComponent<Image>();
                 seat.TagBg.raycastTarget = false;
+                // The generated bubble (the author: the old boxes tired the eye): soft
+                // cream, a tail down to the head. Text switches to ink to match.
+                var bubbleSprite = ItemArt.Load("order_bubble");
+                if (bubbleSprite != null) seat.TagBg.sprite = bubbleSprite;
 
-                seat.Name = NewText("Name", seat.Tag, _body, 12, TextAnchor.UpperCenter, UITheme.TextPrimary);
-                Stretch(seat.Name.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -4));
+                seat.Name = NewText("Name", seat.Tag, _body, 12, TextAnchor.UpperCenter,
+                    new Color(0.16f, 0.11f, 0.07f));
+                Stretch(seat.Name.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -10));
                 seat.Name.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-                seat.Wants = NewText("Wants", seat.Tag, _body, 10, TextAnchor.UpperCenter, UITheme.Cyan[4]);
-                Stretch(seat.Wants.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -20));
+                seat.Wants = NewText("Wants", seat.Tag, _body, 10, TextAnchor.UpperCenter,
+                    new Color(0.11f, 0.40f, 0.44f));
+                Stretch(seat.Wants.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -26));
                 seat.Wants.horizontalOverflow = HorizontalWrapMode.Overflow;
 
                 // Centred for real (2026-07-31): the row used to keep a 32px left inset so the
                 // corner-pinned icon had room, which centred the text in a right-shifted box —
                 // visibly off-centre on every seat. Now the TEXT owns the middle and the icon
                 // rides just left of its measured width, per refresh, like a bullet point.
-                seat.Order = NewText("Order", seat.Tag, _body, 11, TextAnchor.UpperCenter, UITheme.Amber[4]);
-                Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -36));
+                seat.Order = NewText("Order", seat.Tag, _body, 11, TextAnchor.UpperCenter,
+                    new Color(0.55f, 0.33f, 0.05f));
+                Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -42));
                 seat.Order.horizontalOverflow = HorizontalWrapMode.Overflow;
 
                 // The drink itself, on the order row (v5 P13). The shape and colour of the
@@ -2438,7 +2560,7 @@ namespace LastCall.UI
             {
                 int tab = i;
                 var key = NewRect($"Tab{i}", screen);
-                Place(key, new Vector2(0, 1), new Vector2(120, 24), new Vector2(10 + i * 128, -28));
+                Place(key, new Vector2(0, 1), new Vector2(120, 24), new Vector2(10 + i * 126, -28));
                 var bg = key.gameObject.AddComponent<Image>();
                 var btn = key.gameObject.AddComponent<Button>();
                 btn.targetGraphic = bg;
@@ -2453,7 +2575,7 @@ namespace LastCall.UI
             // The market is grouped now (the author): a stack of titled sections, each its
             // own grid, the whole thing scrolling — the shop outgrew a single flat grid.
             var offerView = NewRect("OfferView", screen);
-            Stretch(offerView, Vector2.zero, Vector2.one, new Vector2(10, 10), new Vector2(-10, -58));
+            Stretch(offerView, Vector2.zero, Vector2.one, new Vector2(10, 30), new Vector2(-10, -58));
             offerView.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, 0.003f);
             offerView.gameObject.AddComponent<RectMask2D>();
             _offerRow = NewRect("Offers", offerView);
@@ -2471,6 +2593,17 @@ namespace LastCall.UI
             shopScroll.horizontal = false;
             shopScroll.movementType = ScrollRect.MovementType.Clamped;
             shopScroll.scrollSensitivity = 30f;
+
+            // The hover line: an unbought recipe says how it is made when pointed at.
+            _marketTip = NewText("MarketTip", screen, _body, 12, TextAnchor.MiddleLeft,
+                new Color(0.85f, 0.78f, 0.62f));
+            _marketTip.rectTransform.anchorMin = new Vector2(0, 0);
+            _marketTip.rectTransform.anchorMax = new Vector2(1, 0);
+            _marketTip.rectTransform.pivot = new Vector2(0.5f, 0);
+            _marketTip.rectTransform.sizeDelta = new Vector2(-24, 24);
+            _marketTip.rectTransform.anchoredPosition = new Vector2(0, 4);
+            _marketTip.supportRichText = true;
+            _marketTip.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             _openTomorrow = NewRect("OpenTomorrow", _dayEndPanel);
             Place(_openTomorrow, new Vector2(0.5f, 0), new Vector2(892, 40), new Vector2(0, 16));
@@ -2585,7 +2718,7 @@ namespace LastCall.UI
 
         /// <summary>One shop listing: art, title, price, and a bought/maxed/can't-afford state.
         /// Nothing sells on credit (GDD 23 §6): an unaffordable card refuses with a notice.</summary>
-        private void AddCard(string title, string sub, int price, bool available, Action onBuy,
+        private RectTransform AddCard(string title, string sub, int price, bool available, Action onBuy,
             Sprite art = null)
         {
             var rt = NewRect("Card", _cardTarget != null ? _cardTarget : _offerRow);
@@ -2629,6 +2762,7 @@ namespace LastCall.UI
                 !available ? UITheme.Cream[1] : afford ? UITheme.Money : UITheme.ViceRed[3]);
             Stretch(priceText.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 6), new Vector2(textRight, -50));
             priceText.text = available ? $"${price}" : sub;
+            return rt;
         }
 
         // ── tiny UI helpers (mirroring the house style) ─────────────────────────

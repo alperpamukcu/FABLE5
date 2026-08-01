@@ -108,6 +108,27 @@ namespace LastCall.UI
                 }
                 x += segW;
             }
+            // The headroom, drawn as a real segment (the author: the emptiness is part of
+            // the read) — the tin is the whole bar, not just what is already in it.
+            float free = Mathf.Max(0f, 1f - (float)glass.FillFraction);
+            if (free > 0.001f)
+            {
+                var seg = NewRect("S_empty", _shakerMixBar);
+                seg.anchorMin = new Vector2(0, 0); seg.anchorMax = new Vector2(0, 1);
+                seg.pivot = new Vector2(0, 0.5f);
+                seg.offsetMin = new Vector2(0, 2); seg.offsetMax = new Vector2(0, -2);
+                seg.sizeDelta = new Vector2(free * w, -4);
+                seg.anchoredPosition = new Vector2(x, 0);
+                var img = seg.gameObject.AddComponent<Image>();
+                img.color = new Color(1f, 1f, 1f, 0.07f);
+                img.raycastTarget = false;
+                if (free * w > 46f)
+                {
+                    var label = NewText("P", seg, _body, 8, TextAnchor.MiddleCenter, UITheme.TextSecondary);
+                    Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                    label.text = $"{free:P0} EMPTY";
+                }
+            }
         }
 
         private string ShakerLine(TycoonRun run)
@@ -699,11 +720,19 @@ namespace LastCall.UI
             Stretch(_shakerReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 92), new Vector2(-16, 118));
 
             // The pour gauge: a recessed track under the readout, filled live per ingredient.
+            // The gauge got a body (the author): the generated brass-capped glass tube,
+            // the segments living inside its bore — a measuring instrument, not a strip.
             var mixTrack = NewRect("MixTrack", _shakerPanel);
-            Place(mixTrack, new Vector2(0.5f, 0), new Vector2(560, 26), new Vector2(0, 122));
-            mixTrack.gameObject.AddComponent<Image>().color = UITheme.Night[0];
+            Place(mixTrack, new Vector2(0.5f, 0), new Vector2(560, 98), new Vector2(0, 96));
+            var tubeSprite = ItemArt.Load("gauge_frame");
+            var tube = mixTrack.gameObject.AddComponent<Image>();
+            if (tubeSprite != null) { tube.sprite = tubeSprite; tube.preserveAspect = true; }
+            else tube.color = UITheme.Night[0];
+            tube.raycastTarget = false;
             _shakerMixBar = NewRect("MixSegs", mixTrack);
-            Stretch(_shakerMixBar, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
+            // The bore, measured off the art: caps take ~7% each end, the glass wall ~22%
+            // top and bottom of the trimmed 493x86 sprite at this width.
+            Stretch(_shakerMixBar, Vector2.zero, Vector2.one, new Vector2(46, 36), new Vector2(-46, -36));
 
             // The shake meter, above the bottom bar.
             var meterBg = NewRect("ShakeMeterBg", _shakerPanel);

@@ -98,23 +98,37 @@ namespace LastCall.Tests
         [Test]
         public void AGoodDay_DrawsAWealthierCrowd_WhoPayMore()
         {
+            // Rewritten for the zero-start standing (2026-08-02): one good night no
+            // longer vaults a no-name bar to the rich crowd — the standing is inertial
+            // and capped by the fittings and the menu tier.
             var run = NewRun();
             PlayDayServingEveryone(run);
             run.ContinueToNextDay();
+            Assert.AreEqual(WealthTier.Regular, run.CrowdToday,
+                "a good night draws a normal crowd — the rollers need fame, not one story");
+            Assert.Greater(run.Rating.Average, 0.0, "and the standing moved a step");
+            Assert.Less(run.Rating.Average, 1.0, "but only a step — the climb is the game");
 
-            Assert.AreEqual(WealthTier.HighRoller, run.CrowdToday,
-                "everyone served fast and exact — word gets around");
+            // A bar whose standing is already made draws the high rollers, who pay
+            // the same premium as before. (4.9, not 4.2: a night of rank-2 pours is
+            // CAPPED low and drags a made bar's standing down — by design.)
+            var made = NewRun();
+            made.Rating.DevSet(4.9);
+            PlayDayServingEveryone(made);
+            made.ContinueToNextDay();
+            Assert.AreEqual(WealthTier.HighRoller, made.CrowdToday,
+                "a made bar's crowd follows its standing");
 
             int guard = 0;
-            while (run.Floor.Seated.Count == 0)
+            while (made.Floor.Seated.Count == 0)
             {
                 Assert.Less(guard++, 100);
-                run.Tick(5);
+                made.Tick(5);
             }
 
             // A rank-2 drink is $4 on the menu.
-            run.Floor.Seated[0].InspectId();     // the price is read off the card (C3)
-            Assert.AreEqual(5, run.Floor.Seated[0].Order.Price,
+            made.Floor.Seated[0].InspectId();     // the price is read off the card (C3)
+            Assert.AreEqual(5, made.Floor.Seated[0].Order.Price,
                 "the $4 rank-2 drink sells for $5 to high rollers (×1.25)");
         }
 
@@ -389,21 +403,73 @@ namespace LastCall.Tests
         [Test]
         public void AmbienceUpgrades_BookAsExpenses_AndLiftTheAmbience()
         {
+            // Musician, counter and wall retired (2026-08-02): glassware is the ambience
+            // line now, and the two retired verbs are off the shop entirely.
             var run = NewRun(startingMoney: 200);   // purchases need cash now
             PlayDayServingEveryone(run);   // reaches DayEnd
             Assert.AreEqual(0.0, run.Ambience, 1e-9, "a plain bar pleases no one extra");
 
-            int musician = run.BuyMusician();
-            int counter = run.BuyCounter();
+            int glassware = run.BuyGlassware();
 
-            Assert.Greater(run.Ambience, 0.0, "the room feels better now");
-            Assert.IsTrue(run.HasMusician);
-            Assert.AreEqual(2, run.CounterTier);
-            Assert.AreEqual(musician + counter, run.DayUpgrades, "the invoice itemises them");
+            Assert.Greater(run.Ambience, 0.0, "finer glasses please the room");
+            Assert.AreEqual(2, run.GlasswareTier);
+            Assert.AreEqual(glassware, run.DayUpgrades, "the invoice itemises it");
 
             var result = run.ContinueToNextDay();
-            Assert.AreEqual(run.Config.Rent(1) + musician + counter, result.Expenses,
-                "rent + the upgrades");
+            Assert.AreEqual(run.Config.Rent(1) + glassware, result.Expenses,
+                "rent + the upgrade");
+        }
+
+        [Test]
+        public void TheStanding_StartsAtZero_AndOneNightMovesItAStep()
+        {
+            var run = NewRun();
+            Assert.AreEqual(0.0, run.Rating.Average, 1e-9,
+                "a new bar has no reputation at all (2026-08-02)");
+            PlayDayServingEveryone(run);
+            run.ContinueToNextDay();
+            Assert.Greater(run.Rating.Average, 0.0, "a good night moves the standing");
+            Assert.LessOrEqual(run.Rating.Average, BarRating.MaxNightlyGain + 1e-9,
+                "but only a step, never a leap");
+        }
+
+        [Test]
+        public void SameDayPurchases_CanBeRefunded_AtDawnTheyAreFinal()
+        {
+            var run = NewRun(startingMoney: 200);
+            PlayDayServingEveryone(run);
+
+            int before = run.Money;
+            int seatsBefore = run.Seats;
+            run.BuySeat();
+            Assert.AreEqual(1, run.TodaysPurchases.Count, "the slip lists tonight's buy");
+            run.RefundToday(0);
+            Assert.AreEqual(before, run.Money, "the till is made whole");
+            Assert.AreEqual(seatsBefore, run.Seats, "and the stool goes back");
+            Assert.AreEqual(0, run.TodaysPurchases.Count);
+
+            run.BuySeat();
+            run.ContinueToNextDay();
+            Assert.AreEqual(0, run.TodaysPurchases.Count, "at dawn the slip is torn up");
+            Assert.AreEqual(seatsBefore + 1, run.Seats, "yesterday's buy is final");
+        }
+
+        [Test]
+        public void OneBottle_CanBeRefilledAlone()
+        {
+            var run = NewRun(startingMoney: 200);
+            PlayDayServingEveryone(run);   // the night drank from the well
+
+            ShelfBottle drained = null;
+            foreach (var b in run.Shelf.Bottles)
+                if (b.Remaining < b.Capacity) { drained = b; break; }
+            Assert.IsNotNull(drained, "sanity: the night emptied something");
+
+            int stockBefore = run.DayStock;
+            int cost = run.RefillBottle(drained.Ingredient.Id);
+            Assert.Greater(cost, 0);
+            Assert.AreEqual(drained.Capacity, drained.Remaining, 1e-9, "that bottle is full");
+            Assert.AreEqual(stockBefore + cost, run.DayStock, "and only that bottle was billed");
         }
 
         [Test]
