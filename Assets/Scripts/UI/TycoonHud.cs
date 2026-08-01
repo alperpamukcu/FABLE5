@@ -1392,14 +1392,18 @@ namespace LastCall.UI
                 _cardTarget = ShopSection("THE FLOOR");
                 AddCard($"STOOL #{run.Seats + 1}", "bar is full", cfg.SeatPrice(run.Seats),
                     run.Seats < cfg.MaxSeats, () => { run.BuySeat(); ApplyBarLook(); RebuildDayEnd(); });
-                _cardTarget = ShopSection("GLASSWARE — EVERY LINE ITS OWN");
+                _cardTarget = ShopSection("GLASSWARE — EVERY LINE ITS OWN, TO LEGENDARY");
                 foreach (var g in run.Glassware)
                 {
                     var glass = g;
                     int tier = run.GlassTier(glass.Id);
                     bool maxed = tier >= TycoonRun.MaxGlassTier;
                     int stepPrice = maxed ? 0 : glass.TierPrices[tier - 1];
-                    AddCard($"{glass.Name.ToUpperInvariant()} ★{tier}", "finest", stepPrice, !maxed,
+                    // Tier is 1-based; the label speaks STARS (0★ base … 5★ legendary).
+                    string label = maxed
+                        ? $"{glass.Name.ToUpperInvariant()} — LEGENDARY"
+                        : $"{glass.Name.ToUpperInvariant()} {tier - 1}★ → {tier}★";
+                    AddCard(label, "legendary", stepPrice, !maxed,
                         () => { run.BuyGlassTier(glass.Id); ApplyBarLook(); RebuildDayEnd(); },
                         GlassArt.For(glass, tier).Sprite);
                 }

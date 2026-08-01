@@ -216,16 +216,23 @@ namespace LastCall.EditorTools
                     // The star loop (2026-08-02): the standing is CAPPED by the fittings,
                     // and glassware went per-LINE — so the bot buys the cheapest next step
                     // across the lines, the way a player working the cap would.
+                    // The six-step ladder is front-loaded (TycoonRun.GlassStepCap): the
+                    // first two steps of a line carry most of its ceiling, the rest are
+                    // endgame prestige. The bot plays that shape — early steps on a small
+                    // cushion, deep steps only when genuinely flush — because a bot that
+                    // chases legendary sets while the rent climbs measures its own greed
+                    // (50% bankruptcies), not the design.
                     GlasswareDefinition bestGlass = null;
-                    int bestPrice = int.MaxValue;
+                    int bestPrice = int.MaxValue, bestStep = 0;
                     foreach (var g in run.Glassware)
                     {
                         int t = run.GlassTier(g.Id);
                         if (t >= TycoonRun.MaxGlassTier) continue;
                         int price = g.TierPrices[t - 1];
-                        if (price < bestPrice) { bestPrice = price; bestGlass = g; }
+                        if (price < bestPrice) { bestPrice = price; bestGlass = g; bestStep = t - 1; }
                     }
-                    if (bestGlass != null && run.Money >= bestPrice + 40)
+                    int cushion = bestStep < 2 ? 70 : 250;
+                    if (bestGlass != null && run.Money >= bestPrice + cushion)
                         run.BuyGlassTier(bestGlass.Id);
 
                     stats.RecordNight(run.Floor.Elapsed, run.Rating.LastNight);

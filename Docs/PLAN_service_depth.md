@@ -833,3 +833,21 @@ The last big item from the same note: **every glass type is its own upgrade ladd
 
 Open: the tap-stage pint's fluid density (0.90) was measured against the OLD pint.png
 cavity — re-measure `SurfaceY` against the GlassArt pint next time play is at hand.
+
+
+## 2026-08-02 (later) — the generated 3D glass set + the six-step ladder
+
+- The five vessels are GENERATED art now (`glass3d_*` + `_fill` masks): volumetric,
+  open-mouth, vice-lit. Install pipeline in `install_glasses.py` — hard alpha, trim,
+  interior baked to 0.40 translucency (the drink renders behind and shows through),
+  geometric fill mask, floors/rims measured and baked into `GlassArt.Gen3DTable`
+  (rocks' floor capped onto its inner ledge by eye). The procedural set remains the
+  fallback for anything without art.
+- **Six visual tiers per line** (the author): 0★ base + 1★–4★ + the 5★ legendary set.
+  `MaxGlassTier = 6`, five priced steps per line in glassware.json. The cap is
+  FRONT-LOADED per step (0.20/0.15/0.12/0.08/0.05 — measured: a flat 0.12 quadrupled
+  the cost of a cap-star and sent the sim 13% → 83% bankrupt; front-loading plus a
+  prudent bot lands 4.5% / median till $0). Late steps are prestige, not survival.
+- Tier ART for the five upgrade sets is the NEXT session's work, with the author
+  reviewing the base set first. Fluid density (`Gen3D.Density`) still carries the
+  procedural vessels' measured values — re-read SurfaceY once the art is settled.

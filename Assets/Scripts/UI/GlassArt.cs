@@ -134,9 +134,47 @@ namespace LastCall.UI
             if (tier > 3) tier = 3;
             string key = (glass?.Id ?? "") + "_t" + tier;
             if (Cache.TryGetValue(key, out var cached)) return cached;
-            var piece = Draw(glass, tier);
+            // The generated 3D set wins when installed (the author, 2026-08-02: the
+            // procedural glasses read flat). Tier dress for the generated set is its own
+            // upcoming art pass, so for now every tier wears the same base sprite.
+            var gen = ItemArt.Load($"glass3d_{glass?.Id}");
+            var piece = gen != null ? FromGenerated(glass, gen) : Draw(glass, tier);
             Cache[key] = piece;
             return piece;
+        }
+
+        /// <summary>Interior geometry of each generated sprite, measured at install by
+        /// install_glasses.py (the BottleArt bargain, offline: the script erodes the
+        /// silhouette, bakes the cavity to translucency, writes the companion fill mask,
+        /// and prints this table). Fractions of the sprite rect; density starts at the
+        /// procedural vessel's measured value until SurfaceY is re-read in play.</summary>
+        private readonly struct Gen3D
+        {
+            public readonly float FloorY, RimY, InteriorHalf, Density;
+            public Gen3D(float floorY, float rimY, float interiorHalf, float density)
+            { FloorY = floorY; RimY = rimY; InteriorHalf = interiorHalf; Density = density; }
+        }
+
+        private static readonly Dictionary<string, Gen3D> Gen3DTable = new Dictionary<string, Gen3D>
+        {
+            ["pint"] = new Gen3D(0.087f, 0.979f, 0.952f, 0.97f),       // 166x288
+            ["highball"] = new Gen3D(0.079f, 0.976f, 0.937f, 0.97f),   // 126x252
+            ["rocks"] = new Gen3D(0.220f, 0.973f, 0.957f, 0.94f),      // 185x223, floor on the ledge
+            ["martini"] = new Gen3D(0.589f, 0.977f, 0.958f, 0.95f),    // 192x263
+            ["coupe"] = new Gen3D(0.562f, 0.977f, 0.957f, 0.94f),      // 184x265
+        };
+
+        private static Piece FromGenerated(GlasswareDefinition glass, Sprite sprite)
+        {
+            var fill = ItemArt.Load($"glass3d_{glass.Id}_fill");
+            Gen3D g = Gen3DTable.TryGetValue(glass.Id, out var t)
+                ? t : new Gen3D(0.08f, 0.94f, 0.8f, 0.95f);
+            var solverProfile = new float[glass.Profile?.Count ?? 2];
+            if (glass.Profile != null && glass.Profile.Count > 0)
+                for (int i = 0; i < glass.Profile.Count; i++) solverProfile[i] = (float)glass.Profile[i];
+            else solverProfile = new[] { 1f, 1f };
+            return new Piece(sprite, fill, g.InteriorHalf, g.FloorY, g.RimY, solverProfile,
+                sprite.rect.width / sprite.rect.height, g.Density);
         }
 
         private static Piece Draw(GlasswareDefinition glass, int tier)

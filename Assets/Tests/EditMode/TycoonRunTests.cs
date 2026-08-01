@@ -406,7 +406,7 @@ namespace LastCall.Tests
             // Glassware went per-LINE (2026-08-02): each glass type is its own ladder,
             // priced by its definition, and it is the only ambience source left.
             var rocks = new GlasswareDefinition("rocks", "Rocks", "glass_rocks",
-                new[] { 1.0, 1.0 }, new[] { 30, 45 }, 1.0);
+                new[] { 1.0, 1.0 }, new[] { 30, 45, 60, 80, 110 }, 1.0);
             var run = new TycoonRun(NewShelf(), Book, new RunRng("glass-lines"),
                 config: new TycoonConfig(200, orderDecisionSeconds: 0, savorSeconds: 0),
                 glassware: new[] { rocks });
@@ -502,19 +502,18 @@ namespace LastCall.Tests
             // Per-line ladders (2026-08-02): a LINE tops out at tier 3, priced by its own
             // definition, and asking for a line the bar does not stock refuses loudly.
             var rocks = new GlasswareDefinition("rocks", "Rocks", "glass_rocks",
-                new[] { 1.0, 1.0 }, new[] { 30, 45 }, 1.0);
+                new[] { 1.0, 1.0 }, new[] { 30, 45, 60, 80, 110 }, 1.0);
             var run = new TycoonRun(NewShelf(), Book, new RunRng("glass-cap"),
                 config: new TycoonConfig(300, orderDecisionSeconds: 0, savorSeconds: 0),
                 glassware: new[] { rocks });
             PlayDayServingEveryone(run);
 
-            run.BuyGlassTier("rocks");   // 1 → 2
-            run.BuyGlassTier("rocks");   // 2 → 3
+            for (int step = 0; step < 5; step++) run.BuyGlassTier("rocks");   // 0★ → legendary
 
-            Assert.AreEqual(3, run.GlassTier("rocks"));
-            Assert.AreEqual(2, run.GlassUpgradeSteps);
+            Assert.AreEqual(6, run.GlassTier("rocks"), "five paid steps sit on the base set");
+            Assert.AreEqual(5, run.GlassUpgradeSteps);
             Assert.Throws<InvalidOperationException>(() => run.BuyGlassTier("rocks"),
-                "tier 3 is the top of a line");
+                "the legendary set is the top of a line");
             Assert.Throws<InvalidOperationException>(() => run.BuyGlassTier("chalice"),
                 "no such line behind this bar");
         }
@@ -582,7 +581,8 @@ namespace LastCall.Tests
         // ── glassware (v5 P14 / C9) ─────────────────────────────────────────────
 
         private static GlasswareDefinition Glass(string id, double capacity) =>
-            new GlasswareDefinition(id, id, id, new[] { 1.0, 1.0 }, new[] { 10, 20 }, capacity);
+            new GlasswareDefinition(id, id, id, new[] { 1.0, 1.0 },
+                new[] { 10, 20, 30, 45, 65 }, capacity);   // the six-step ladder (2026-08-02)
 
         private static readonly IReadOnlyList<GlasswareDefinition> GlassSet = new[]
         {

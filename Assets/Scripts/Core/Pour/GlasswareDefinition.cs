@@ -29,7 +29,8 @@ namespace LastCall.Core
         /// </summary>
         public double Capacity { get; }
 
-        /// <summary>Price of each upgrade step: [tier2, tier3]. Tier 1 is owned from day one.</summary>
+        /// <summary>Price of each upgrade step: [1★, 2★, 3★, 4★, 5★-legendary]. The 0★
+        /// base set is owned from day one (the author's six-step ladder, 2026-08-02).</summary>
         public IReadOnlyList<int> TierPrices { get; }
 
         public GlasswareDefinition(string id, string name, string spriteKey,
@@ -43,8 +44,10 @@ namespace LastCall.Core
             foreach (var w in profile)
                 if (w <= 0 || w > 1)
                     throw new ArgumentException($"Glass '{id}' has profile value {w}; must be in (0, 1].", nameof(profile));
-            if (tierPrices == null || tierPrices.Count != 2)
-                throw new ArgumentException($"Glass '{id}' needs exactly 2 upgrade prices (tiers 2 and 3).", nameof(tierPrices));
+            if (tierPrices == null || tierPrices.Count != 5)
+                throw new ArgumentException(
+                    $"Glass '{id}' needs exactly 5 upgrade prices (1★ through the 5★ legendary set).",
+                    nameof(tierPrices));
             foreach (var p in tierPrices)
                 if (p <= 0) throw new ArgumentException($"Glass '{id}' has a non-positive upgrade price.", nameof(tierPrices));
             if (capacity <= 0 || capacity > 4)

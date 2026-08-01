@@ -54,11 +54,12 @@ namespace LastCall.Core
 
         // ── ambience upgrades (GDD 23 §8) ───────────────────────────────────────
         // Per-glass upgrade lines (the author, 2026-08-02): every glass TYPE is its own
-        // ladder — glassware.json prices each line's steps 2 and 3, everything starts at 1.
-        public const int MaxGlassTier = 3;
+        // SIX-step ladder — the 0★ base set, then 1★ through 4★, then the 5★ legendary
+        // set. Tier here is 1-based: tier 1 = 0★, tier 6 = legendary.
+        public const int MaxGlassTier = 6;
         private readonly Dictionary<string, int> _glassTiers = new Dictionary<string, int>();
 
-        /// <summary>The upgrade tier of one glass line (1–3).</summary>
+        /// <summary>The upgrade tier of one glass line (1–6; the shown stars are tier−1).</summary>
         public int GlassTier(string glassId) =>
             glassId != null && _glassTiers.TryGetValue(glassId, out var t) ? t : 1;
 
@@ -74,17 +75,33 @@ namespace LastCall.Core
         /// <summary>The satisfaction the bar's look adds to every served visit (GDD 23 §8).
         /// Musician, counter and wall retired (the author, 2026-08-02); the glassware LINES
         /// carry it now — same ceiling the old single ladder had (0.03×2 = 0.006×10).</summary>
-        public double Ambience => Math.Min(0.15, 0.006 * GlassUpgradeSteps);
+        public double Ambience => Math.Min(0.15, 0.006 * GlassUpgradeSteps);   // full at 25 steps
 
         /// <summary>The most stars the bar's fittings allow a night to bank (the author's
         /// loop, 2026-08-02): happy customers alone cannot carry a dive past two stars —
         /// the glassware line and the extra stools raise the ceiling toward five.</summary>
-        /// <remarks>0.30/step, measured (2026-08-02): at 0.25 the per-line ladder asked
-        /// four times the old money for less ceiling per dollar, and the sim's floor went
-        /// 0% → 85% bankruptcies on that arithmetic alone. Ten steps now buy the whole
-        /// +3.0, and the json's step prices were halved in the same pass.</remarks>
-        public double UpgradeStarCap =>
-            2.0 + 0.30 * GlassUpgradeSteps + 0.25 * Math.Max(0, Seats - 3);
+        /// <remarks>FRONT-LOADED per step (measured, 2026-08-02): a flat 0.12/step made a
+        /// cap-star cost ~$383 against the ~$100 the healthy three-step economy paid, and
+        /// the sim went 13% → 83% bankruptcies on that arithmetic. The early steps of a
+        /// line now carry most of its ceiling (0.20/0.15/0.12/0.08/0.05 — 0.60 a line,
+        /// +3.0 across five); the late, expensive steps are the endgame's prestige, not
+        /// its survival math.</remarks>
+        public double UpgradeStarCap
+        {
+            get
+            {
+                double glassCap = 0;
+                foreach (var g in _glassware)
+                {
+                    int steps = GlassTier(g.Id) - 1;
+                    for (int s = 0; s < steps && s < GlassStepCap.Length; s++)
+                        glassCap += GlassStepCap[s];
+                }
+                return 2.0 + glassCap + 0.25 * Math.Max(0, Seats - 3);
+            }
+        }
+
+        private static readonly double[] GlassStepCap = { 0.20, 0.15, 0.12, 0.08, 0.05 };
 
         /// <summary>The most stars tonight's MENU allows: a night that never served past
         /// the starter list caps low; only the stirred precision drinks open five.</summary>
@@ -348,7 +365,7 @@ namespace LastCall.Core
             Rating.DevSet(late ? 5.0 : 2.6);
             foreach (var g in _glassware)
                 _glassTiers[g.Id] = late ? MaxGlassTier
-                    : (g.Id == "rocks" || g.Id == "highball" ? 2 : 1);
+                    : (g.Id == "rocks" || g.Id == "highball" ? 3 : 2);   // mid: 1–2★ lines
             while (Seats < (late ? _config.MaxSeats : 4)) Seats++;
 
             int rankCap = late ? int.MaxValue : 14;
@@ -1104,7 +1121,8 @@ namespace LastCall.Core
             Spend(price);
             _glassTiers[glassId] = tier + 1;
             _todayPurchases.Add(new DayPurchase(DayPurchase.Kind.Glassware, glassId,
-                $"{def.Name} ★{tier + 1}", price));
+                tier + 1 >= MaxGlassTier ? $"{def.Name} — Legendary" : $"{def.Name} {tier}★",
+                price));
             return price;
         }
 
