@@ -684,19 +684,7 @@ namespace LastCall.UI
 
         /// <summary>The carried drink's colour: its ingredients' true liquid colours, blended by
         /// share in linear space (2026-07-23) — clear spirits read pale, and a mix stays clean.</summary>
-        private Color DrinkColor()
-        {
-            var run = Run;
-            var glass = run?.ServingGlass;
-            if (glass == null || glass.IsEmpty) return UITheme.Amber[3];
-            var parts = new List<(string, IngredientType, float)>();
-            foreach (var id in glass.Ingredients)
-            {
-                var card = run.Shelf.Find(id)?.Ingredient;
-                parts.Add((card?.Info?.Style, card?.Type ?? IngredientType.Spirit, (float)glass.RatioOf(id)));
-            }
-            return UITheme.BlendLiquid(parts, UITheme.Amber[3], 0.92f);
-        }
+        private Color DrinkColor() => UITheme.DrinkColor(Run?.Shelf, Run?.ServingGlass);
 
         /// <summary>How a served customer reacts (GDD 24 §4, §10): a word for the read/serve
         /// and the payment, rising from the seat with a little pop. Green when they're pleased,
@@ -1414,9 +1402,11 @@ namespace LastCall.UI
                     string label = maxed
                         ? $"{glass.Name.ToUpperInvariant()} — LEGENDARY"
                         : $"{glass.Name.ToUpperInvariant()} {tier - 1}★ → {tier}★";
+                    // The card previews the glass being SOLD — the next tier's dress —
+                    // not the one already on the rack.
                     AddCard(label, "legendary", stepPrice, !maxed,
                         () => { run.BuyGlassTier(glass.Id); ApplyBarLook(); RebuildDayEnd(); },
-                        GlassArt.For(glass, tier).Sprite);
+                        GlassArt.For(glass, Mathf.Min(tier + 1, TycoonRun.MaxGlassTier)).Sprite);
                 }
             }
 

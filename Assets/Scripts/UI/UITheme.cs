@@ -184,6 +184,22 @@ namespace LastCall.UI
         /// A liquid you can see. Anything with real colour of its own is returned untouched;
         /// only the near-clear ones are tinted, and the paler they are the more they take.
         /// </summary>
+        /// <summary>THE drink's colour — one function for every scene (the author,
+        /// 2026-08-02: the liquid on the counter and the liquid being poured must read
+        /// as the same liquid). Ingredients' true liquid colours, blended by share.</summary>
+        public static Color DrinkColor(Shelf shelf, GlassContents glass)
+        {
+            if (glass == null || glass.IsEmpty) return Cream[3];
+            var parts = new System.Collections.Generic.List<(string, IngredientType, float)>();
+            foreach (var id in glass.Ingredients)
+            {
+                var card = shelf != null ? shelf.Find(id)?.Ingredient : null;
+                parts.Add((card?.Info?.Style, card?.Type ?? IngredientType.Spirit,
+                    (float)glass.RatioOf(id)));
+            }
+            return BlendLiquid(parts, Cream[3], 0.9f);
+        }
+
         public static Color VisibleLiquid(Color c)
         {
             float luma = 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;

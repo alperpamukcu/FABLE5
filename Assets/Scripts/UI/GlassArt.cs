@@ -135,27 +135,31 @@ namespace LastCall.UI
         /// <summary>The drawn glass for a glassware definition, built once and kept.</summary>
         public static Piece For(GlasswareDefinition glass) => For(glass, 1);
 
-        /// <summary>The same glass at an upgrade tier (1–3): richer dress, same geometry.</summary>
+        /// <summary>The same glass at an upgrade tier (1–6, Core's ladder: tier 1 is the
+        /// 0★ base set, tier 6 the 5★ legendary): richer dress, same geometry.</summary>
         public static Piece For(GlasswareDefinition glass, int tier)
         {
             if (tier < 1) tier = 1;
-            if (tier > 3) tier = 3;
+            if (tier > TycoonRun.MaxGlassTier) tier = TycoonRun.MaxGlassTier;
             string key = (glass?.Id ?? "") + "_t" + tier;
             if (Cache.TryGetValue(key, out var cached)) return cached;
             // The generated 3D set wins when installed (the author, 2026-08-02: the
-            // procedural glasses read flat). Tier dress for the generated set is its own
-            // upcoming art pass, so for now every tier wears the same base sprite.
+            // procedural glasses read flat). Each tier wears its own dressed sprites
+            // (tier_glasses.py — same glass, richer metal); the geometry table applies
+            // to all of them because dress never moves the cavity.
             var gen = ItemArt.Load($"glass3d_{glass?.Id}");
-            var piece = gen != null ? FromGenerated(glass, gen) : Draw(glass, tier);
+            var piece = gen != null ? FromGenerated(glass, gen, tier)
+                : Draw(glass, Mathf.Min(tier, 3));   // the procedural dress only knows 1–3
             Cache[key] = piece;
             return piece;
         }
 
         /// <summary>Interior geometry of each generated sprite, measured at install by
-        /// install_glasses.py (the BottleArt bargain, offline: the script erodes the
-        /// silhouette, bakes the cavity to translucency, writes the companion fill mask,
-        /// and prints this table). Fractions of the sprite rect; density starts at the
-        /// procedural vessel's measured value until SurfaceY is re-read in play.</summary>
+        /// install_glasses.py and finished by finish_glasses.py (the author, 2026-08-02:
+        /// keep the approved design — but mirror it pixel-true at the FINAL resolution,
+        /// and round the flat bottoms into the ellipse a cylinder actually shows).
+        /// Fractions of the sprite rect; density starts at the procedural vessel's
+        /// measured value until SurfaceY is re-read in play.</summary>
         private readonly struct Gen3D
         {
             public readonly float FloorY, RimY, InteriorHalf, Density;
@@ -163,20 +167,35 @@ namespace LastCall.UI
             { FloorY = floorY; RimY = rimY; InteriorHalf = interiorHalf; Density = density; }
         }
 
-        // Quarter-res pass (the author, 2026-08-02: the glasses out-resolved the
-        // customers): the hi-res masters were dropped to the patron grain with NEAREST
-        // and re-measured. Masters live in the scratchpad as glass3d_*_hi.png.
+        // Interiors are the widest wall-to-wall gap measured off the FINAL sprites —
+        // the TRUE cavity, which is what the decor (rim crusts, wedges, ice) wants.
+        // The liquid pools deliberately do NOT use this for their width: a metaball
+        // surface stops a pixel or two short of its box, so the pools overshoot to
+        // the full drawn width at their call sites and let the wall band cover the
+        // margin (the author: boundary = contact point + a few px, so no seams).
         private static readonly Dictionary<string, Gen3D> Gen3DTable = new Dictionary<string, Gen3D>
         {
-            ["pint"] = new Gen3D(0.083f, 0.972f, 0.905f, 0.97f),       // 42x72
-            ["highball"] = new Gen3D(0.079f, 0.968f, 0.875f, 0.97f),   // 32x63
-            ["rocks"] = new Gen3D(0.214f, 0.964f, 0.913f, 0.94f),      // 46x56, floor on the ledge
-            ["martini"] = new Gen3D(0.576f, 0.970f, 0.917f, 0.95f),    // 48x66
-            ["coupe"] = new Gen3D(0.552f, 0.970f, 0.913f, 0.94f),      // 46x67
+            // RimY is the CAVITY's top row (the fill mask's first row), not the mouth
+            // band above it — a rim up in the mouth let a full glass draw its surface
+            // over the lip (the author, 2026-08-02: "şimdi de taşıyor").
+            ["pint"] = new Gen3D(0.083f, 0.958f, 0.905f, 0.97f),       // 42x72, gap 38px @ row 8
+            ["highball"] = new Gen3D(0.079f, 0.952f, 0.875f, 0.97f),   // 32x63, gap 28px @ row 7
+            ["rocks"] = new Gen3D(0.214f, 0.946f, 0.913f, 0.94f),      // 46x56, gap 42px, floor on the ledge
+            ["martini"] = new Gen3D(0.576f, 0.955f, 0.917f, 0.95f),    // 48x66, gap 44px @ row 8
+            ["coupe"] = new Gen3D(0.552f, 0.955f, 0.913f, 0.94f),      // 46x67, gap 42px @ row 8
         };
 
-        private static Piece FromGenerated(GlasswareDefinition glass, Sprite sprite)
+        private static Piece FromGenerated(GlasswareDefinition glass, Sprite sprite, int tier)
         {
+            // Tier 1 is the undecorated base set; higher tiers load their dressed
+            // sprites and fall back to the base if a dress file is missing, so a
+            // half-installed set degrades to plain glass instead of a white square.
+            string dress = tier > 1 ? $"_t{tier}" : "";
+            if (dress.Length > 0)
+            {
+                var dressed = ItemArt.Load($"glass3d_{glass.Id}{dress}");
+                if (dressed != null) sprite = dressed; else dress = "";
+            }
             var fill = ItemArt.Load($"glass3d_{glass.Id}_fill");
             Gen3D g = Gen3DTable.TryGetValue(glass.Id, out var t)
                 ? t : new Gen3D(0.08f, 0.94f, 0.8f, 0.95f);
@@ -186,8 +205,8 @@ namespace LastCall.UI
             else solverProfile = new[] { 1f, 1f };
             return new Piece(sprite, fill, g.InteriorHalf, g.FloorY, g.RimY, solverProfile,
                 sprite.rect.width / sprite.rect.height, g.Density,
-                ItemArt.Load($"glass3d_{glass.Id}_front"),
-                ItemArt.Load($"glass3d_{glass.Id}_back"));
+                ItemArt.Load($"glass3d_{glass.Id}{dress}_front"),
+                ItemArt.Load($"glass3d_{glass.Id}{dress}_back"));
         }
 
         private static Piece Draw(GlasswareDefinition glass, int tier)

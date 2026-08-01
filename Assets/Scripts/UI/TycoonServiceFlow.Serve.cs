@@ -662,9 +662,17 @@ namespace LastCall.UI
             var piece = _serveGlassPiece;
             var c = _serveGlass.anchoredPosition;
             float w = _serveGlass.rect.width, h = _serveGlass.rect.height;
-            float iw = w * 0.5f * piece.InteriorHalf;
+            // The box is FLUSH with the measured cavity — the metaball surface is built
+            // to touch its box, so contact needs no overshoot (the seam of 2026-08-02
+            // came from an INSET box; the spills came from overshooting). The ceiling
+            // sits 3 art px BELOW the cavity top: the surface is a bumpy band, not a
+            // line, and those bumps must crest inside the mouth, not over the lip.
+            // ...less HALF an art pixel a side: the field's edge smoothing bleeds that
+            // far past the box (the author, 2026-08-02: "çok çok az taşma kaldı").
+            float artPx = piece.Sprite != null ? w / piece.Sprite.rect.width : 1.5f;
+            float iw = w * 0.5f * piece.InteriorHalf - 0.5f * artPx;
             float floor = c.y - h * 0.5f + h * piece.FloorY;
-            float rim = c.y - h * 0.5f + h * piece.RimY;
+            float rim = c.y - h * 0.5f + h * piece.RimY - 3f * artPx;
             _serveFluid.SetPool(c.x - iw, c.x + iw, floor, rim, (float)run.ServingGlass.FillFraction);
         }
 

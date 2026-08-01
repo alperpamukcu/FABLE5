@@ -249,18 +249,7 @@ namespace LastCall.UI
 
         /// <summary>The drink's colour: its ingredients' true liquid colours, blended by share
         /// in linear space (2026-07-23) — clear spirits read pale, and a mix stays clean.</summary>
-        private Color DrinkColor(GlassContents glass)
-        {
-            if (glass == null || glass.IsEmpty) return UITheme.Cream[3];
-            var shelf = Run?.Shelf;
-            var parts = new List<(string, IngredientType, float)>();
-            foreach (var id in glass.Ingredients)
-            {
-                var card = shelf?.Find(id)?.Ingredient;
-                parts.Add((card?.Info?.Style, card?.Type ?? IngredientType.Spirit, (float)glass.RatioOf(id)));
-            }
-            return UITheme.BlendLiquid(parts, UITheme.Cream[3], 0.9f);
-        }
+        private Color DrinkColor(GlassContents glass) => UITheme.DrinkColor(Run?.Shelf, glass);
 
         // ── construction ─────────────────────────────────────────────────────────
 

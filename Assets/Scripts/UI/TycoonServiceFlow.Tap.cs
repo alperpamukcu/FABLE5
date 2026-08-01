@@ -21,6 +21,7 @@ namespace LastCall.UI
         // no shaker in this stage and no aiming — the whole skill is how far the handle is held.
         private RectTransform _tapPanel, _tapSurface, _tapHandle, _tapGlass;
         private Image _tapPintImage;
+        private GlassArt.Piece _tapPiece;
         private bool _pouringNow;
         private MetaballFluid _tapFluid;
         private Image _tapKeg;
@@ -347,11 +348,16 @@ namespace LastCall.UI
                 foreach (var g in runNow.Glassware)
                     if (g.Id == "pint")
                     {
-                        // The FRONT face alone: its interior is clear, so the pulled beer
-                        // and its head show through untinted (the author's layering).
+                        // BOTH faces here (the author: the pint's top pixels went missing —
+                        // the far lip lives on the back face): the tap draws the composite
+                        // glass over the beer, and the pool takes the PIECE's own numbers
+                        // instead of constants measured off the retired sprite.
                         var tapPiece = GlassArt.For(g, runNow.GlassTier(g.Id));
-                        _tapPintImage.sprite = tapPiece.Front != null ? tapPiece.Front : tapPiece.Sprite;
+                        _tapPiece = tapPiece;
+                        _tapPintImage.sprite = tapPiece.Sprite;
                         _tapPintImage.color = Color.white;
+                        _tapFluid.SetProfile(tapPiece.Profile);
+                        _tapFluid.SetDensity(tapPiece.Density);
                         break;
                     }
             var run = Run;
@@ -561,17 +567,29 @@ namespace LastCall.UI
         /// <summary>The pint's drinkable interior, measured off the glass art.</summary>
         private (float minX, float maxX, float bottomY, float innerH) PintInterior()
         {
-            // Measured off the hollowed sprite rather than guessed: the drinkable cavity is
-            // 64 of its 108 px across and runs from 0.07 to 0.94 of its height. Guessing 0.72
-            // put the beer through the walls (2026-07-27).
             var c = _tapGlass.anchoredPosition;
-            float halfW = _tapGlass.rect.width * 0.5f;
-            float h = _tapGlass.rect.height;
-            float iw = halfW * 0.58f;
-            // The rect turns about its low pivot, so the base is measured from there, not from
-            // a centre the glass no longer rotates around.
-            float bottomY = c.y - h * _tapGlass.pivot.y + h * 0.07f;
-            return (c.x - iw, c.x + iw, bottomY, h * 0.82f);
+            float w = _tapGlass.rect.width, h = _tapGlass.rect.height;
+            // The rect turns about its low pivot, so the base is measured from there.
+            float baseY = c.y - h * _tapGlass.pivot.y;
+            if (_tapPiece.Sprite != null)
+            {
+                // The generated pint: heights are REPORTED by the piece, and widths
+                // measure against the aspect-fit drawn glass, not the letterboxed rect.
+                // Same law as the serve pool (2026-08-02): the box is FLUSH with the
+                // cavity, and the ceiling drops 3 art px so the bumpy surface — and the
+                // head riding it — crests inside the mouth instead of over the lip.
+                float drawnW = Mathf.Min(w, h * _tapPiece.Aspect);
+                float artPx = drawnW / _tapPiece.Sprite.rect.width;
+                // Half an art pixel in, matching the serve pool: the field's edge
+                // smoothing bleeds about that far past the box.
+                float iwp = drawnW * 0.5f * _tapPiece.InteriorHalf - 0.5f * artPx;
+                return (c.x - iwp, c.x + iwp,
+                    baseY + h * _tapPiece.FloorY,
+                    h * (_tapPiece.RimY - _tapPiece.FloorY) - 3f * artPx);
+            }
+            // The retired sprite's hand-measured cavity, kept for a run without glassware.
+            float iw = w * 0.5f * 0.58f;
+            return (c.x - iw, c.x + iw, baseY + h * 0.07f, h * 0.82f);
         }
 
         /// <summary>The faucet's lip, where the beer leaves the font.</summary>
