@@ -178,11 +178,18 @@ namespace LastCall.UI
             // RimY is the CAVITY's top row (the fill mask's first row), not the mouth
             // band above it — a rim up in the mouth let a full glass draw its surface
             // over the lip (the author, 2026-08-02: "şimdi de taşıyor").
+            // Densities re-benched 2026-08-02 under the flush-box pool law: each glass
+            // forced onto the counter, settled, SurfaceY read against the expected line
+            // at half, three-quarter and near-full fills. The estimate's bias moves
+            // with the fill (high at a half, short near the brim), so one multiplier
+            // cannot zero every level — these sit at the balance point, biased toward
+            // the full glass a player is aiming for, worst case a few percent.
+            // The pint's number is the tap's, kept where the pulled pint reads true.
             ["pint"] = new Gen3D(0.083f, 0.958f, 0.905f, 0.97f),       // 42x72, gap 38px @ row 8
-            ["highball"] = new Gen3D(0.079f, 0.952f, 0.875f, 0.97f),   // 32x63, gap 28px @ row 7
-            ["rocks"] = new Gen3D(0.214f, 0.946f, 0.913f, 0.94f),      // 46x56, gap 42px, floor on the ledge
-            ["martini"] = new Gen3D(0.576f, 0.955f, 0.917f, 0.95f),    // 48x66, gap 44px @ row 8
-            ["coupe"] = new Gen3D(0.552f, 0.955f, 0.913f, 0.94f),      // 46x67, gap 42px @ row 8
+            ["highball"] = new Gen3D(0.079f, 0.952f, 0.875f, 0.88f),   // 32x63, gap 28px @ row 7
+            ["rocks"] = new Gen3D(0.214f, 0.946f, 0.913f, 0.87f),      // 46x56, gap 42px, floor on the ledge
+            ["martini"] = new Gen3D(0.576f, 0.955f, 0.917f, 0.78f),    // 48x66, gap 44px @ row 8
+            ["coupe"] = new Gen3D(0.552f, 0.955f, 0.913f, 0.78f),      // 46x67, gap 42px @ row 8
         };
 
         private static Piece FromGenerated(GlasswareDefinition glass, Sprite sprite, int tier)
