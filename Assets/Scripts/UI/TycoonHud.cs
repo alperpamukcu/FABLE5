@@ -120,6 +120,7 @@ namespace LastCall.UI
         private Image _drinkGlassArt;
         private GlasswareDefinition _drinkGlassware;
         private int _drinkGlassTier = 1;
+        private Image _drinkGlassSurface;
         private RectTransform _glassRack;
         private const float CarriedGlassHeight = 116f;
         private bool _glassGrabbed;
@@ -530,6 +531,9 @@ namespace LastCall.UI
             _drinkGlassLiquid.fillMethod = Image.FillMethod.Vertical;
             _drinkGlassLiquid.fillOrigin = (int)Image.OriginVertical.Bottom;
             _drinkGlassLiquid.preserveAspect = true;
+            // The meniscus rides between the liquid and the glass walls (2026-08-02):
+            // the fill's own look-down ellipse, so the pour reads as a volume.
+            _drinkGlassSurface = GlassArt.MakeSurface(_drinkGlass);
 
             var art = NewRect("Art", _drinkGlass);
             Stretch(art, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
@@ -596,6 +600,8 @@ namespace LastCall.UI
             }
             _drinkGlassLiquid.color = DrinkColor();
             _drinkGlassLiquid.fillAmount = piece.FillAmount((float)run.ServingGlass.FillFraction);
+            GlassArt.PlaceSurface(_drinkGlassSurface, piece, (float)run.ServingGlass.FillFraction,
+                _drinkGlass, _drinkGlassLiquid.color);
             // The finishing touches ride the carried glass too (P14): the customer is handed
             // the drink that was actually finished, salt and wedge and all.
             GlassDecor.Sync(_drinkGlass, piece, run.ServingGlass);

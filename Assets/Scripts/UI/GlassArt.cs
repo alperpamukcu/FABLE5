@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using LastCall.Core;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace LastCall.UI
 {
@@ -320,6 +321,81 @@ namespace LastCall.UI
             float density = glass != null && Densities.TryGetValue(glass.Id, out var d) ? d : 0.95f;
             return new Piece(sprite, fill, interiorHalf,
                 shape.Floor / (float)H, shape.Rim / (float)H, solverProfile, W / (float)H, density);
+        }
+
+        // ── the liquid's SURFACE (the author, 2026-08-02: the pour must read 3D) ──
+        // The glasses look down into their mouths now, so a flat liquid line breaks the
+        // illusion: the fill wears a meniscus ELLIPSE, as wide as the interior at that
+        // height, tinted a shade lighter than the drink.
+
+        private static Sprite _surfaceSprite;
+
+        public static Sprite SurfaceEllipse()
+        {
+            if (_surfaceSprite != null) return _surfaceSprite;
+            const int EW = 64, EH = 16;
+            var px = new Color[EW * EH];
+            float ecx = (EW - 1) / 2f, ecy = (EH - 1) / 2f;
+            for (int y = 0; y < EH; y++)
+                for (int x = 0; x < EW; x++)
+                {
+                    float dx = (x - ecx) / ecx, dy = (y - ecy) / ecy;
+                    float d = dx * dx + dy * dy;
+                    if (d > 1f) continue;
+                    px[y * EW + x] = new Color(1f, 1f, 1f, d > 0.70f ? 0.95f : 0.78f);
+                }
+            var tex = new Texture2D(EW, EH, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, hideFlags = HideFlags.DontSave };
+            tex.SetPixels(px);
+            tex.Apply();
+            _surfaceSprite = Sprite.Create(tex, new Rect(0, 0, EW, EH), new Vector2(0.5f, 0.5f), 1f);
+            _surfaceSprite.hideFlags = HideFlags.DontSave;
+            return _surfaceSprite;
+        }
+
+        public static float ProfileAt(float[] profile, float t)
+        {
+            if (profile == null || profile.Length == 0) return 1f;
+            if (profile.Length == 1) return profile[0];
+            float at = Mathf.Clamp01(t) * (profile.Length - 1);
+            int i = Mathf.Min((int)at, profile.Length - 2);
+            return Mathf.Lerp(profile[i], profile[i + 1], at - i);
+        }
+
+        /// <summary>Builds the meniscus as a child of the glass rect. Callers order it over
+        /// the liquid; a glass drawn as the parent's own Image stays under its walls' paint
+        /// only where the ellipse is narrower than the mouth — which it is, by measure.</summary>
+        public static Image MakeSurface(RectTransform glassRect)
+        {
+            var go = new GameObject("Surface", typeof(RectTransform));
+            var srt = (RectTransform)go.transform;
+            srt.SetParent(glassRect, false);
+            srt.anchorMin = srt.anchorMax = new Vector2(0.5f, 0);
+            srt.pivot = new Vector2(0.5f, 0.5f);
+            var img = go.AddComponent<Image>();
+            img.sprite = SurfaceEllipse();
+            img.raycastTarget = false;
+            go.SetActive(false);
+            return img;
+        }
+
+        /// <summary>Seats the meniscus at the live fill and colours it off the drink.</summary>
+        public static void PlaceSurface(Image surface, Piece piece, float fill,
+            RectTransform glassRect, Color liquid)
+        {
+            if (surface == null) return;
+            bool show = fill > 0.02f;
+            if (surface.gameObject.activeSelf != show) surface.gameObject.SetActive(show);
+            if (!show) return;
+            float t = Mathf.Clamp01(fill);
+            var rect = glassRect.rect;
+            float w = rect.width * piece.InteriorHalf * ProfileAt(piece.Profile, t);
+            surface.rectTransform.sizeDelta = new Vector2(w, Mathf.Max(3f, w * 0.18f));
+            surface.rectTransform.anchoredPosition = new Vector2(0, piece.FillAmount(t) * rect.height);
+            surface.color = new Color(
+                Mathf.Lerp(liquid.r, 1f, 0.35f),
+                Mathf.Lerp(liquid.g, 1f, 0.35f),
+                Mathf.Lerp(liquid.b, 1f, 0.35f), 0.95f);
         }
 
         private static int HalfWidth(IReadOnlyList<double> profile, float t, int maxHalf)

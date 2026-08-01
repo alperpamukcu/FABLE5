@@ -30,6 +30,7 @@ namespace LastCall.UI
         private Image _serveGlassImage;
         private LastCall.Core.GlasswareDefinition _serveGlassware;
         private int _serveGlassTier = 1;
+        private Image _serveGlassSurface;
         private RectTransform _serveMixBar;
         private string _serveMixSig = "";
         private GlassArt.Piece _serveGlassPiece;
@@ -643,7 +644,12 @@ namespace LastCall.UI
         /// and five glasses would have been fifteen of them.</summary>
         private void PushServePool(TycoonRun run)
         {
-            if (run.ServingGlass.IsEmpty) { _serveFluid.ClearPool(); return; }
+            if (run.ServingGlass.IsEmpty)
+            {
+                _serveFluid.ClearPool();
+                if (_serveGlassSurface != null) _serveGlassSurface.gameObject.SetActive(false);
+                return;
+            }
             var piece = _serveGlassPiece;
             var c = _serveGlass.anchoredPosition;
             float w = _serveGlass.rect.width, h = _serveGlass.rect.height;
@@ -651,6 +657,10 @@ namespace LastCall.UI
             float floor = c.y - h * 0.5f + h * piece.FloorY;
             float rim = c.y - h * 0.5f + h * piece.RimY;
             _serveFluid.SetPool(c.x - iw, c.x + iw, floor, rim, (float)run.ServingGlass.FillFraction);
+            // The meniscus over the pool (2026-08-02): the 3D read of the fill line.
+            if (_serveGlassSurface == null) _serveGlassSurface = GlassArt.MakeSurface(_serveGlass);
+            GlassArt.PlaceSurface(_serveGlassSurface, piece, (float)run.ServingGlass.FillFraction,
+                _serveGlass, DrinkColor(run.ServingGlass));
         }
 
         /// <summary>
