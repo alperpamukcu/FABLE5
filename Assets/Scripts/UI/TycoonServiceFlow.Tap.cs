@@ -20,6 +20,7 @@ namespace LastCall.UI
         // The tap (GDD 21 §10): a font you pull the handle on, over the pint it fills. There is
         // no shaker in this stage and no aiming — the whole skill is how far the handle is held.
         private RectTransform _tapPanel, _tapSurface, _tapHandle, _tapGlass;
+        private Image _tapPintImage;
         private bool _pouringNow;
         private MetaballFluid _tapFluid;
         private Image _tapKeg;
@@ -240,7 +241,10 @@ namespace LastCall.UI
             // Pivoted low, near where a hand holds it: a glass leans off its base, it does not
             // swing about its middle (2026-07-27).
             _tapGlass.pivot = new Vector2(0.5f, GlassPivotY);
-            var pint = _tapGlass.gameObject.AddComponent<Image>();
+            var pint = _tapPintImage = _tapGlass.gameObject.AddComponent<Image>();
+            // The SAME glass everywhere (the author, 2026-08-02): the pint under the tap is
+            // the drawn glassware pint at its line's tier, refreshed on stage entry. The
+            // generated pint.png stays as the fallback for a run built without glassware.
             pint.sprite = ItemArt.Load("pint");
             pint.preserveAspect = true;
             if (pint.sprite == null) pint.color = UITheme.Cream[2];
@@ -337,6 +341,16 @@ namespace LastCall.UI
 
         private void RefreshTap()
         {
+            // The pint wears its line's tier (per-glass upgrades, 2026-08-02).
+            var runNow = Run;
+            if (runNow != null && _tapPintImage != null)
+                foreach (var g in runNow.Glassware)
+                    if (g.Id == "pint")
+                    {
+                        _tapPintImage.sprite = GlassArt.For(g, runNow.GlassTier(g.Id)).Sprite;
+                        _tapPintImage.color = Color.white;
+                        break;
+                    }
             var run = Run;
             if (run == null) return;
 

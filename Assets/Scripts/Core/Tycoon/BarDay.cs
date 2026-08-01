@@ -27,7 +27,12 @@ namespace LastCall.Core
         public double Left { get; private set; }
         public bool Cleared { get; private set; }
 
-        internal DirtyGlass(double seconds) { Left = seconds; }
+        /// <summary>Which glass line the drink was served in, so the empty on the counter
+        /// is drawn as THE glass, not a stand-in (the author, 2026-08-02).</summary>
+        public string GlasswareId { get; }
+
+        internal DirtyGlass(double seconds, string glasswareId = null)
+        { Left = seconds; GlasswareId = glasswareId; }
 
         internal void Tick(double seconds)
         {
@@ -157,7 +162,7 @@ namespace LastCall.Core
                 // the player's click, or by the bar getting to it in its own time. A
                 // storm-off leaves nothing: there was no glass.
                 if (visit.Served != null)
-                    _dirty.Add(new DirtyGlass(BusSeconds));
+                    _dirty.Add(new DirtyGlass(BusSeconds, visit.Served.GlassId));
                 return true;
             });
 

@@ -53,21 +53,38 @@ namespace LastCall.Core
         public TycoonConfig Config => _config;
 
         // ── ambience upgrades (GDD 23 §8) ───────────────────────────────────────
-        public int GlasswareTier { get; private set; } = 1;
+        // Per-glass upgrade lines (the author, 2026-08-02): every glass TYPE is its own
+        // ladder — glassware.json prices each line's steps 2 and 3, everything starts at 1.
+        public const int MaxGlassTier = 3;
+        private readonly Dictionary<string, int> _glassTiers = new Dictionary<string, int>();
+
+        /// <summary>The upgrade tier of one glass line (1–3).</summary>
+        public int GlassTier(string glassId) =>
+            glassId != null && _glassTiers.TryGetValue(glassId, out var t) ? t : 1;
+
+        /// <summary>Paid steps across every line — what the star cap and ambience read.</summary>
+        public int GlassUpgradeSteps
+        {
+            get { int s = 0; foreach (var g in _glassware) s += GlassTier(g.Id) - 1; return s; }
+        }
         public int CounterTier { get; private set; } = 1;
         public int WallTier { get; private set; } = 1;
         public bool HasMusician { get; private set; }
 
         /// <summary>The satisfaction the bar's look adds to every served visit (GDD 23 §8).
-        /// Musician, counter and wall retired (the author, 2026-08-02): the upgrade line is
-        /// glassware and stools until each new fitting can prove it works.</summary>
-        public double Ambience => _config.AmbienceBonus(GlasswareTier, 1, 1, false);
+        /// Musician, counter and wall retired (the author, 2026-08-02); the glassware LINES
+        /// carry it now — same ceiling the old single ladder had (0.03×2 = 0.006×10).</summary>
+        public double Ambience => Math.Min(0.15, 0.006 * GlassUpgradeSteps);
 
         /// <summary>The most stars the bar's fittings allow a night to bank (the author's
         /// loop, 2026-08-02): happy customers alone cannot carry a dive past two stars —
         /// the glassware line and the extra stools raise the ceiling toward five.</summary>
+        /// <remarks>0.30/step, measured (2026-08-02): at 0.25 the per-line ladder asked
+        /// four times the old money for less ceiling per dollar, and the sim's floor went
+        /// 0% → 85% bankruptcies on that arithmetic alone. Ten steps now buy the whole
+        /// +3.0, and the json's step prices were halved in the same pass.</remarks>
         public double UpgradeStarCap =>
-            2.0 + 0.75 * (GlasswareTier - 1) + 0.25 * Math.Max(0, Seats - 3);
+            2.0 + 0.30 * GlassUpgradeSteps + 0.25 * Math.Max(0, Seats - 3);
 
         /// <summary>The most stars tonight's MENU allows: a night that never served past
         /// the starter list caps low; only the stirred precision drinks open five.</summary>
@@ -293,7 +310,9 @@ namespace LastCall.Core
                         if (_recipes[i].Id == p.Id) { _recipes.RemoveAt(i); break; }
                     break;
                 case DayPurchase.Kind.Seat: Seats--; break;
-                case DayPurchase.Kind.Glassware: GlasswareTier--; break;
+                case DayPurchase.Kind.Glassware:
+                    if (_glassTiers.TryGetValue(p.Id, out var gt) && gt > 1) _glassTiers[p.Id] = gt - 1;
+                    break;
             }
             Money += p.Price;
             DayUpgrades -= p.Price;
@@ -327,7 +346,9 @@ namespace LastCall.Core
             bool late = stage >= 2;
             Money = late ? 600 : 160;
             Rating.DevSet(late ? 5.0 : 2.6);
-            while (GlasswareTier < (late ? _config.MaxAmbienceTier : 2)) GlasswareTier++;
+            foreach (var g in _glassware)
+                _glassTiers[g.Id] = late ? MaxGlassTier
+                    : (g.Id == "rocks" || g.Id == "highball" ? 2 : 1);
             while (Seats < (late ? _config.MaxSeats : 4)) Seats++;
 
             int rankCap = late ? int.MaxValue : 14;
@@ -1069,16 +1090,21 @@ namespace LastCall.Core
 
         // ── ambience upgrades (GDD 23 §8): every one changes the scene (GDD 24 §6) ─
 
-        public int BuyGlassware()
+        /// <summary>One step up ONE glass line (the author: per-type upgrades).</summary>
+        public int BuyGlassTier(string glassId)
         {
             EnsurePhase(TycoonPhase.DayEnd);
-            if (GlasswareTier >= _config.MaxAmbienceTier)
-                throw new InvalidOperationException("The finest glassware is already yours.");
-            int price = _config.GlasswarePrice(GlasswareTier);
+            var def = GlassNamed(glassId);
+            if (def == null)
+                throw new InvalidOperationException($"No glass line called '{glassId}'.");
+            int tier = GlassTier(glassId);
+            if (tier >= MaxGlassTier)
+                throw new InvalidOperationException($"The {def.Name} line is already the finest.");
+            int price = def.TierPrices[tier - 1];
             Spend(price);
-            GlasswareTier++;
-            _todayPurchases.Add(new DayPurchase(DayPurchase.Kind.Glassware, "glassware",
-                $"Glassware ★{GlasswareTier}", price));
+            _glassTiers[glassId] = tier + 1;
+            _todayPurchases.Add(new DayPurchase(DayPurchase.Kind.Glassware, glassId,
+                $"{def.Name} ★{tier + 1}", price));
             return price;
         }
 

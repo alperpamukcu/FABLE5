@@ -811,3 +811,25 @@ pass; every number below was measured, not guessed.
 Still open from the author's same note: per-glass upgrade tiers with the under-counter
 glass shelf (the big one), the serve-stage pour gauge in the new tube frame, and swapping
 the generated keg/licence art in for their procedural stand-ins if they read better.
+
+
+## 2026-08-02 — per-glass upgrade lines (author-directed, shipped)
+
+The last big item from the same note: **every glass type is its own upgrade ladder.**
+
+- Core: `GlassTier(id)` / `BuyGlassTier(id)` / `GlassUpgradeSteps` replace the single
+  glassware ladder; refundable same-day like everything else. glassware.json's per-line
+  `tierPrices` finally consumed (P14's own IOU). The star cap reads total steps
+  (0.30/step — measured: 0.25 with the original prices went 0% → 85% bankruptcies, so the
+  json prices were halved and the step raised; the floor now lands at 13.0%, till −$10).
+- One glass everywhere: the tap's pint, the serve stage, the carried drink, the dirty
+  empty on the counter (DirtyGlass now records its `GlasswareId`) and the shop cards all
+  draw the same `GlassArt` at the line's tier — tier 2 wears etched rings, tier 3 a gold
+  rim and foot, geometry untouched so every measured interior survives.
+- The under-counter rack: the owned lines stand on a walnut strip left of the bin in the
+  main scene, redrawn on every purchase (`RefreshGlassRack`).
+- The serve stage gets the brass-capped tube gauge (twin of the shaker's), reading the
+  serving glass with its headroom as a pale tail.
+
+Open: the tap-stage pint's fluid density (0.90) was measured against the OLD pint.png
+cavity — re-measure `SurfaceY` against the GlassArt pint next time play is at hand.

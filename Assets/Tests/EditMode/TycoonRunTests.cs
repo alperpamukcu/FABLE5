@@ -403,20 +403,31 @@ namespace LastCall.Tests
         [Test]
         public void AmbienceUpgrades_BookAsExpenses_AndLiftTheAmbience()
         {
-            // Musician, counter and wall retired (2026-08-02): glassware is the ambience
-            // line now, and the two retired verbs are off the shop entirely.
-            var run = NewRun(startingMoney: 200);   // purchases need cash now
+            // Glassware went per-LINE (2026-08-02): each glass type is its own ladder,
+            // priced by its definition, and it is the only ambience source left.
+            var rocks = new GlasswareDefinition("rocks", "Rocks", "glass_rocks",
+                new[] { 1.0, 1.0 }, new[] { 30, 45 }, 1.0);
+            var run = new TycoonRun(NewShelf(), Book, new RunRng("glass-lines"),
+                config: new TycoonConfig(200, orderDecisionSeconds: 0, savorSeconds: 0),
+                glassware: new[] { rocks });
             PlayDayServingEveryone(run);   // reaches DayEnd
             Assert.AreEqual(0.0, run.Ambience, 1e-9, "a plain bar pleases no one extra");
 
-            int glassware = run.BuyGlassware();
+            int step = run.BuyGlassTier("rocks");
 
+            Assert.AreEqual(30, step, "the definition prices the step");
             Assert.Greater(run.Ambience, 0.0, "finer glasses please the room");
-            Assert.AreEqual(2, run.GlasswareTier);
-            Assert.AreEqual(glassware, run.DayUpgrades, "the invoice itemises it");
+            Assert.AreEqual(2, run.GlassTier("rocks"));
+            Assert.AreEqual(1, run.GlassUpgradeSteps);
+            Assert.AreEqual(step, run.DayUpgrades, "the invoice itemises it");
+
+            // ...and the same-day refund puts the line back where it was.
+            run.RefundToday(run.TodaysPurchases.Count - 1);
+            Assert.AreEqual(1, run.GlassTier("rocks"), "the step is taken back");
+            run.BuyGlassTier("rocks");
 
             var result = run.ContinueToNextDay();
-            Assert.AreEqual(run.Config.Rent(1) + glassware, result.Expenses,
+            Assert.AreEqual(run.Config.Rent(1) + step, result.Expenses,
                 "rent + the upgrade");
         }
 
@@ -488,14 +499,24 @@ namespace LastCall.Tests
         [Test]
         public void Glassware_CapsAtTheTopTier()
         {
-            var run = NewRun(startingMoney: 300);
+            // Per-line ladders (2026-08-02): a LINE tops out at tier 3, priced by its own
+            // definition, and asking for a line the bar does not stock refuses loudly.
+            var rocks = new GlasswareDefinition("rocks", "Rocks", "glass_rocks",
+                new[] { 1.0, 1.0 }, new[] { 30, 45 }, 1.0);
+            var run = new TycoonRun(NewShelf(), Book, new RunRng("glass-cap"),
+                config: new TycoonConfig(300, orderDecisionSeconds: 0, savorSeconds: 0),
+                glassware: new[] { rocks });
             PlayDayServingEveryone(run);
 
-            run.BuyGlassware();   // 1 → 2
-            run.BuyGlassware();   // 2 → 3
+            run.BuyGlassTier("rocks");   // 1 → 2
+            run.BuyGlassTier("rocks");   // 2 → 3
 
-            Assert.AreEqual(3, run.GlasswareTier);
-            Assert.Throws<InvalidOperationException>(() => run.BuyGlassware(), "tier 3 is the top");
+            Assert.AreEqual(3, run.GlassTier("rocks"));
+            Assert.AreEqual(2, run.GlassUpgradeSteps);
+            Assert.Throws<InvalidOperationException>(() => run.BuyGlassTier("rocks"),
+                "tier 3 is the top of a line");
+            Assert.Throws<InvalidOperationException>(() => run.BuyGlassTier("chalice"),
+                "no such line behind this bar");
         }
 
         [Test]

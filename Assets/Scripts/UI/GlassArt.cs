@@ -30,6 +30,12 @@ namespace LastCall.UI
         private static readonly Color Body = new Color32(0xBF, 0xD6, 0xE4, 0xFF);
         private static readonly Color Shade = new Color32(0x8D, 0xA5, 0xB6, 0xFF);
         private static readonly Color Shine = new Color32(0xFF, 0xFF, 0xFF, 0xE6);
+        // The upgrade dress (per-glass tiers, 2026-08-02): tier 2 wears etched rings,
+        // tier 3 a gold rim and foot — geometry untouched, so every measured interior
+        // and fluid profile survives the promotion.
+        private static readonly Color Etch = new Color32(0xE4, 0xF1, 0xF9, 0xFF);
+        private static readonly Color Gold = new Color32(0xE6, 0xBE, 0x66, 0xFF);
+        private static readonly Color GoldDim = new Color32(0xB8, 0x8A, 0x3C, 0xFF);
 
         /// <summary>A drawn glass and the hole in it: where the drink actually goes, as
         /// fractions of the sprite's rect so it survives whatever size the UI draws it at.</summary>
@@ -119,16 +125,21 @@ namespace LastCall.UI
         private static readonly Dictionary<string, Piece> Cache = new Dictionary<string, Piece>();
 
         /// <summary>The drawn glass for a glassware definition, built once and kept.</summary>
-        public static Piece For(GlasswareDefinition glass)
+        public static Piece For(GlasswareDefinition glass) => For(glass, 1);
+
+        /// <summary>The same glass at an upgrade tier (1–3): richer dress, same geometry.</summary>
+        public static Piece For(GlasswareDefinition glass, int tier)
         {
-            string key = glass?.Id ?? "";
+            if (tier < 1) tier = 1;
+            if (tier > 3) tier = 3;
+            string key = (glass?.Id ?? "") + "_t" + tier;
             if (Cache.TryGetValue(key, out var cached)) return cached;
-            var piece = Draw(glass);
+            var piece = Draw(glass, tier);
             Cache[key] = piece;
             return piece;
         }
 
-        private static Piece Draw(GlasswareDefinition glass)
+        private static Piece Draw(GlasswareDefinition glass, int tier)
         {
             var shape = glass != null && Shapes.TryGetValue(glass.Id, out var s) ? s : DefaultShape;
             IReadOnlyList<double> profile = glass?.Profile;
@@ -166,8 +177,10 @@ namespace LastCall.UI
                 // transparent on purpose: that hole is where the drink is rendered — and it is
                 // recorded into the fill mask on the same pass, so the two cannot disagree.
                 Span(hole, y, -half + Wall, half - Wall - 1, Color.white);
-                Span(px, y, -half, -half + Wall - 1, Body);
-                Span(px, y, half - Wall, half - 1, Body);
+                bool etched = tier >= 2 &&
+                    (y == shape.Floor + span * 38 / 100 || y == shape.Floor + span * 52 / 100);
+                Span(px, y, -half, -half + Wall - 1, etched ? Etch : Body);
+                Span(px, y, half - Wall, half - 1, etched ? Etch : Body);
                 Put(px, -half, y, Shade);
                 Put(px, half - 1, y, Shade);
 
@@ -179,7 +192,19 @@ namespace LastCall.UI
             // eye it is looking into an open vessel rather than at a flat cut-out.
             int rimHalf = HalfWidth(profile, 1f, shape.Half);
             for (int y = shape.Rim; y < shape.Rim + Wall && y < H; y++)
-                Span(px, y, -rimHalf, rimHalf - 1, y == shape.Rim + Wall - 1 ? Shade : Body);
+                Span(px, y, -rimHalf, rimHalf - 1,
+                    tier >= 3 ? (y == shape.Rim + Wall - 1 ? GoldDim : Gold)
+                    : y == shape.Rim + Wall - 1 ? Shade : Body);
+            // ...and a gold foot for the finest line: the base band of a tumbler, the
+            // bottom of a stem's foot.
+            if (tier >= 3)
+            {
+                int footY = shape.Stem ? 0 : shape.Floor - Base;
+                int footHalf = shape.Stem
+                    ? Mathf.RoundToInt(shape.Half * 0.52f)
+                    : HalfWidth(profile, 0f, shape.Half);
+                Span(px, footY, -footHalf, footHalf - 1, GoldDim);
+            }
 
             Trace(px);
 
@@ -188,7 +213,7 @@ namespace LastCall.UI
                 filterMode = FilterMode.Point,
                 wrapMode = TextureWrapMode.Clamp,
                 hideFlags = HideFlags.DontSave,
-                name = $"glass_{glass?.Id ?? "default"}",
+                name = $"glass_{glass?.Id ?? "default"}_t{tier}",
             };
             tex.SetPixels(px);
             tex.Apply();

@@ -119,6 +119,8 @@ namespace LastCall.UI
         private Image _drinkGlassLiquid;
         private Image _drinkGlassArt;
         private GlasswareDefinition _drinkGlassware;
+        private int _drinkGlassTier = 1;
+        private RectTransform _glassRack;
         private const float CarriedGlassHeight = 116f;
         private bool _glassGrabbed;
         private Vector2 _glassGrabOffset;
@@ -360,7 +362,16 @@ namespace LastCall.UI
                     // top surface the glass stands on reads ~36px lower in the scene.
                     prop.anchoredPosition = new Vector2(v.SeatX, CounterLineY - 36f);
                     var img = prop.gameObject.AddComponent<Image>();
-                    img.sprite = ItemArt.Glass;
+                    // The SAME glass everywhere (the author, 2026-08-02): the empty on the
+                    // counter is the drawn vessel the drink was served in, at its line's
+                    // tier — not a stock photo of some other glass.
+                    GlasswareDefinition dirtyDef = null;
+                    if (run != null && v.Dirty.GlasswareId != null)
+                        foreach (var g in run.Glassware)
+                            if (g.Id == v.Dirty.GlasswareId) { dirtyDef = g; break; }
+                    if (dirtyDef != null)
+                        img.sprite = GlassArt.For(dirtyDef, run.GlassTier(dirtyDef.Id)).Sprite;
+                    else img.sprite = ItemArt.Glass;
                     img.preserveAspect = true;
                     img.color = new Color(1f, 1f, 1f, 0.85f);
                     if (img.sprite == null) img.color = new Color(0.8f, 0.9f, 0.95f, 0.5f);
@@ -563,10 +574,13 @@ namespace LastCall.UI
             }
             // The glass shows the drink as it was actually built: the vessel it chose, its
             // blended colour and its real fill level — no fixed glass, colour or amount.
-            var piece = GlassArt.For(run.ServingGlassware);
-            if (!ReferenceEquals(_drinkGlassware, run.ServingGlassware) || _drinkGlassArt.sprite == null)
+            int drinkTier = run.GlassTier(run.ServingGlassware?.Id);
+            var piece = GlassArt.For(run.ServingGlassware, drinkTier);
+            if (!ReferenceEquals(_drinkGlassware, run.ServingGlassware) || drinkTier != _drinkGlassTier
+                || _drinkGlassArt.sprite == null)
             {
                 _drinkGlassware = run.ServingGlassware;
+                _drinkGlassTier = drinkTier;
                 _drinkGlassArt.sprite = piece.Sprite;
                 _drinkGlassLiquid.sprite = piece.Fill;
                 _drinkGlass.sizeDelta = new Vector2(CarriedGlassHeight * piece.Aspect, CarriedGlassHeight);
@@ -771,8 +785,62 @@ namespace LastCall.UI
         private void ApplyBarLook()
         {
             var run = Run;
-            if (stage == null || run == null) return;
-            stage.ApplyBarLook(run.GlasswareTier, run.CounterTier, run.WallTier, run.HasMusician);
+            if (run == null) return;
+            if (stage != null)
+                stage.ApplyBarLook(1 + Mathf.Min(2, run.GlassUpgradeSteps / 4),
+                    run.CounterTier, run.WallTier, run.HasMusician);
+            RefreshGlassRack(run);
+        }
+
+        /// <summary>The under-counter glass rack (the author, 2026-08-02): every glass line
+        /// the bar owns, standing on a walnut strip at its CURRENT tier — buy a step and
+        /// the glass on the shelf is the finer one. Sits left of the bin, clear of MENU.</summary>
+        private void RefreshGlassRack(TycoonRun run)
+        {
+            if (_hudRoot == null || run.Glassware.Count == 0) return;
+            if (_glassRack == null)
+            {
+                _glassRack = NewRect("GlassRack", _hudRoot);
+                _glassRack.anchorMin = _glassRack.anchorMax = new Vector2(1, 0);
+                _glassRack.pivot = new Vector2(1, 0);
+                _glassRack.sizeDelta = new Vector2(46f * run.Glassware.Count + 16f, 70);
+                _glassRack.anchoredPosition = new Vector2(-216f, 8f);
+            }
+            foreach (Transform c in _glassRack) Destroy(c.gameObject);
+
+            var strip = NewRect("Strip", _glassRack);
+            strip.anchorMin = new Vector2(0, 0); strip.anchorMax = new Vector2(1, 0);
+            strip.pivot = new Vector2(0.5f, 0);
+            strip.sizeDelta = new Vector2(0, 6);
+            strip.anchoredPosition = Vector2.zero;
+            var stripImg = strip.gameObject.AddComponent<Image>();
+            stripImg.sprite = BackBarArt.ShelfFace();
+            stripImg.type = Image.Type.Tiled;
+            stripImg.raycastTarget = false;
+
+            int i = 0;
+            foreach (var g in run.Glassware)
+            {
+                int tier = run.GlassTier(g.Id);
+                var piece = GlassArt.For(g, tier);
+                var rt = NewRect($"G_{g.Id}", _glassRack);
+                rt.anchorMin = rt.anchorMax = new Vector2(0, 0);
+                rt.pivot = new Vector2(0.5f, 0);
+                float h = 44f;
+                rt.sizeDelta = new Vector2(h * piece.Aspect, h);
+                rt.anchoredPosition = new Vector2(28f + i * 46f, 6f);
+                var img = rt.gameObject.AddComponent<Image>();
+                img.sprite = piece.Sprite;
+                img.preserveAspect = true;
+                img.raycastTarget = false;
+                if (tier > 1)
+                {
+                    var stars = NewText("T", rt, _body, 8, TextAnchor.LowerCenter, UITheme.Amber[3]);
+                    Place(stars.rectTransform, new Vector2(0.5f, 0), new Vector2(40, 10), new Vector2(0, -10));
+                    stars.text = new string('★', tier - 1);
+                }
+                i++;
+            }
         }
 
         private void RefreshTopBar()
@@ -1309,10 +1377,17 @@ namespace LastCall.UI
                 _cardTarget = ShopSection("THE FLOOR");
                 AddCard($"STOOL #{run.Seats + 1}", "bar is full", cfg.SeatPrice(run.Seats),
                     run.Seats < cfg.MaxSeats, () => { run.BuySeat(); ApplyBarLook(); RebuildDayEnd(); });
-                _cardTarget = ShopSection("GLASSWARE");
-                AddCard($"GLASSWARE ★{run.GlasswareTier}", "top tier", cfg.GlasswarePrice(run.GlasswareTier),
-                    run.GlasswareTier < cfg.MaxAmbienceTier,
-                    () => { run.BuyGlassware(); ApplyBarLook(); RebuildDayEnd(); }, ItemArt.Glass);
+                _cardTarget = ShopSection("GLASSWARE — EVERY LINE ITS OWN");
+                foreach (var g in run.Glassware)
+                {
+                    var glass = g;
+                    int tier = run.GlassTier(glass.Id);
+                    bool maxed = tier >= TycoonRun.MaxGlassTier;
+                    int stepPrice = maxed ? 0 : glass.TierPrices[tier - 1];
+                    AddCard($"{glass.Name.ToUpperInvariant()} ★{tier}", "finest", stepPrice, !maxed,
+                        () => { run.BuyGlassTier(glass.Id); ApplyBarLook(); RebuildDayEnd(); },
+                        GlassArt.For(glass, tier).Sprite);
+                }
             }
 
             // The refund slip rides every tab: anything bought at THIS close can go back.

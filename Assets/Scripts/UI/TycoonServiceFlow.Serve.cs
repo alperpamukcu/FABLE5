@@ -29,6 +29,9 @@ namespace LastCall.UI
         private const float ServeGlassHeight = 260f;
         private Image _serveGlassImage;
         private LastCall.Core.GlasswareDefinition _serveGlassware;
+        private int _serveGlassTier = 1;
+        private RectTransform _serveMixBar;
+        private string _serveMixSig = "";
         private GlassArt.Piece _serveGlassPiece;
         private RectTransform _serveGarnishRow; // mint/olive garnishes are added here (2026-07-23)
         private RectTransform _serveMixerRow;   // mixers and juices go in AT THE GLASS (v5 P14)
@@ -150,6 +153,7 @@ namespace LastCall.UI
             // nothing and drawing a soda as pale tan.
             _serveFluid.SetColor(DrinkColor(run.ServingGlass.IsEmpty ? run.Glass : run.ServingGlass));
             ShowServingGlassware(run);
+            RefreshServeMixBar(run);
             PushServePool(run);
             GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass);
             _serveShakerBody.color = DrinkColor(run.Glass);
@@ -614,10 +618,13 @@ namespace LastCall.UI
         private void ShowServingGlassware(TycoonRun run)
         {
             var glassware = run.ServingGlassware;
-            if (ReferenceEquals(glassware, _serveGlassware) && _serveGlassImage.sprite != null) return;
+            int tier = run.GlassTier(glassware?.Id);
+            if (ReferenceEquals(glassware, _serveGlassware) && tier == _serveGlassTier
+                && _serveGlassImage.sprite != null) return;
             _serveGlassware = glassware;
+            _serveGlassTier = tier;
 
-            var piece = GlassArt.For(glassware);
+            var piece = GlassArt.For(glassware, tier);
             _serveGlassPiece = piece;
             _serveGlassImage.sprite = piece.Sprite;
             _serveGlassImage.preserveAspect = true;
@@ -686,11 +693,71 @@ namespace LastCall.UI
             _aimText.color = UITheme.Amber[3];
         }
 
+        /// <summary>The glass's shares in their liquid colours, the headroom as a pale
+        /// tail — the serve-side twin of the shaker's tube.</summary>
+        private void RefreshServeMixBar(TycoonRun run)
+        {
+            if (_serveMixBar == null) return;
+            var glass = run.ServingGlass;
+            var sig = new StringBuilder();
+            foreach (var id in glass.Ingredients)
+                sig.Append(id).Append((int)(glass.RatioOf(id) * 100)).Append(';');
+            sig.Append((int)(glass.FillFraction * 100));
+            string signature = sig.ToString();
+            if (signature == _serveMixSig) return;
+            _serveMixSig = signature;
+
+            foreach (Transform child in _serveMixBar) Destroy(child.gameObject);
+            float w = _serveMixBar.rect.width, x = 0f;
+            foreach (var id in glass.Ingredients)
+            {
+                var card = Run.Shelf.Find(id)?.Ingredient;
+                float ratio = (float)glass.RatioOf(id);
+                float segW = ratio * (float)glass.FillFraction * w;
+                var seg = NewRect($"S_{id}", _serveMixBar);
+                seg.anchorMin = new Vector2(0, 0); seg.anchorMax = new Vector2(0, 1);
+                seg.pivot = new Vector2(0, 0.5f);
+                seg.offsetMin = new Vector2(0, 2); seg.offsetMax = new Vector2(0, -2);
+                seg.sizeDelta = new Vector2(segW, -4);
+                seg.anchoredPosition = new Vector2(x, 0);
+                var img = seg.gameObject.AddComponent<Image>();
+                img.color = UITheme.LiquidColor(card?.Info?.Style, card?.Type ?? IngredientType.Spirit);
+                img.raycastTarget = false;
+                if (segW > 34f)
+                {
+                    var label = NewText("P", seg, _body, 8, TextAnchor.MiddleCenter, UITheme.Night[0]);
+                    Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                    label.text = $"{(card?.Name ?? id).ToUpperInvariant().Split(' ')[0]} {ratio:P0}";
+                }
+                x += segW;
+            }
+            float free = Mathf.Max(0f, 1f - (float)glass.FillFraction);
+            if (free > 0.001f)
+            {
+                var seg = NewRect("S_empty", _serveMixBar);
+                seg.anchorMin = new Vector2(0, 0); seg.anchorMax = new Vector2(0, 1);
+                seg.pivot = new Vector2(0, 0.5f);
+                seg.offsetMin = new Vector2(0, 2); seg.offsetMax = new Vector2(0, -2);
+                seg.sizeDelta = new Vector2(free * w, -4);
+                seg.anchoredPosition = new Vector2(x, 0);
+                var img = seg.gameObject.AddComponent<Image>();
+                img.color = new Color(1f, 1f, 1f, 0.07f);
+                img.raycastTarget = false;
+                if (free * w > 46f)
+                {
+                    var label = NewText("P", seg, _body, 8, TextAnchor.MiddleCenter, UITheme.TextSecondary);
+                    Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                    label.text = $"{free:P0} EMPTY";
+                }
+            }
+        }
+
         private void RefreshServeText(TycoonRun run, double accuracy)
         {
             _serveShakerText.text = $"shaker {run.Glass.FillFraction:P0} left";
             _serveGlassText.text = $"glass {run.ServingGlass.FillFraction:P0} full";
             GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass);
+            RefreshServeMixBar(run);
             _aimText.text = accuracy > 0.8 ? "CLEAN POUR" : accuracy > 0.4 ? "SOME SPILL" : "SPILLING!";
             _aimText.color = Color.Lerp(UITheme.ViceRed[3], UITheme.Lime[3], (float)accuracy);
         }
@@ -763,6 +830,18 @@ namespace LastCall.UI
 
             _serveShakerText = NewText("Shaker", _servePanel, _body, 13, TextAnchor.UpperLeft, UITheme.TextSecondary);
             Place(_serveShakerText.rectTransform, new Vector2(0, 1), new Vector2(280, 24), new Vector2(20, -46));
+            // The pour gauge (the author): the same brass-capped tube the shaker wears,
+            // reading the GLASS — every share in its colour, the headroom as a pale tail.
+            var serveTrack = NewRect("MixTrack", _servePanel);
+            Place(serveTrack, new Vector2(0.5f, 1), new Vector2(500, 88), new Vector2(0, -30));
+            var serveTube = ItemArt.Load("gauge_frame");
+            var serveTubeImg = serveTrack.gameObject.AddComponent<Image>();
+            if (serveTube != null) { serveTubeImg.sprite = serveTube; serveTubeImg.preserveAspect = true; }
+            else serveTubeImg.color = UITheme.Night[0];
+            serveTubeImg.raycastTarget = false;
+            _serveMixBar = NewRect("MixSegs", serveTrack);
+            Stretch(_serveMixBar, Vector2.zero, Vector2.one, new Vector2(42, 32), new Vector2(-42, -32));
+
             _serveGlassText = NewText("Glass", _servePanel, _body, 13, TextAnchor.UpperRight, UITheme.TextPrimary);
             Place(_serveGlassText.rectTransform, new Vector2(1, 1), new Vector2(280, 24), new Vector2(-20, -46));
 

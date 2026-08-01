@@ -213,13 +213,20 @@ namespace LastCall.EditorTools
                     if (run.Seats < run.Config.MaxSeats &&
                         run.Money >= run.Config.SeatPrice(run.Seats) + 40) run.BuySeat();
 
-                    // The star loop (2026-08-02): the standing is CAPPED by the fittings
-                    // now, and a bot that never buys glassware is a bar frozen at two
-                    // stars — starved arrivals, broke crowds, and a floor that measures
-                    // the cap instead of the play. It invests the way the loop demands.
-                    if (run.GlasswareTier < run.Config.MaxAmbienceTier &&
-                        run.Money >= run.Config.GlasswarePrice(run.GlasswareTier) + 40)
-                        run.BuyGlassware();
+                    // The star loop (2026-08-02): the standing is CAPPED by the fittings,
+                    // and glassware went per-LINE — so the bot buys the cheapest next step
+                    // across the lines, the way a player working the cap would.
+                    GlasswareDefinition bestGlass = null;
+                    int bestPrice = int.MaxValue;
+                    foreach (var g in run.Glassware)
+                    {
+                        int t = run.GlassTier(g.Id);
+                        if (t >= TycoonRun.MaxGlassTier) continue;
+                        int price = g.TierPrices[t - 1];
+                        if (price < bestPrice) { bestPrice = price; bestGlass = g; }
+                    }
+                    if (bestGlass != null && run.Money >= bestPrice + 40)
+                        run.BuyGlassTier(bestGlass.Id);
 
                     stats.RecordNight(run.Floor.Elapsed, run.Rating.LastNight);
                     stats.RecordDay(run.ContinueToNextDay());
