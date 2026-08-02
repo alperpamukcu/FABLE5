@@ -41,10 +41,30 @@ namespace LastCall.Core
         /// </summary>
         public bool IdInspected { get; private set; }
 
-        /// <summary>Reads the ID card. There is no undo: what has been seen stays seen, and an
-        /// extra order does not re-hide it — it is spoken across the bar by someone whose card
-        /// you already read.</summary>
-        public void InspectId() => IdInspected = true;
+        /// <summary>Reads the ID card — which IS taking the order. There is no undo: what has
+        /// been seen stays seen, and an extra order does not re-hide it, being spoken across
+        /// the bar by someone whose card you already read.
+        ///
+        /// Taking the order also ENDS one wait and starts another (the author, 2026-08-02):
+        /// the clock that was running was their patience for being asked, and the wait for
+        /// the drink itself begins here, at full. Two waits, never one budget spent on both —
+        /// a bar that took the order instantly used to buy itself the whole build.</summary>
+        public void InspectId()
+        {
+            if (IdInspected) return;
+            IdInspected = true;
+            // Only the FIRST order starts the drink clock. Serving blind and reading the
+            // card afterwards must not hand a customer who is already on their second
+            // round a fresh full wait — that round's clock is the refill Resolve set.
+            if (_drinkClockRunning) return;
+            _drinkClockRunning = true;
+            PatienceLeft = PatienceMax;
+        }
+
+        /// <summary>True once the wait for a DRINK has begun — set by taking the order, and
+        /// by an extra round, which starts its own. While it is false the customer is
+        /// waiting to be asked, and that is the clock that is running.</summary>
+        private bool _drinkClockRunning;
 
         /// <summary>
         /// What they asked for — IF you have read the card (v5 C3). The bubble naming the order
@@ -81,8 +101,28 @@ namespace LastCall.Core
             Paid += price;
             PaidBase += price;   // no tip on a bowl of nuts
         }
+        /// <summary>The wait for the DRINK: starts when the order is taken, not when they
+        /// sit. Rolled on a different curve from <see cref="OrderPatienceMax"/>.</summary>
         public double PatienceMax { get; }
         public double PatienceLeft { get; private set; }
+
+        /// <summary>The wait to BE ASKED: runs from the moment they have made up their mind
+        /// until the ID card is read. Running it out is a storm-off exactly as the drink
+        /// wait is — being ignored counts, even when nothing was ever poured.</summary>
+        public double OrderPatienceMax { get; }
+        public double OrderPatienceLeft { get; private set; }
+
+        /// <summary>Which clock is actually running: true while they are waiting to be
+        /// asked, false once the order is taken (or while they are still deciding).</summary>
+        public bool AwaitingOrderTaking => State == VisitState.Waiting && HasOrdered && !IdInspected;
+
+        /// <summary>The running clock as a 0–1 fullness, whichever wait is live. One number
+        /// for the gauge, so the HUD never has to know which phase it is drawing.</summary>
+        public double PatienceFraction =>
+            AwaitingOrderTaking
+                ? (OrderPatienceMax <= 0 ? 1.0 : OrderPatienceLeft / OrderPatienceMax)
+                : (PatienceMax <= 0 ? 1.0 : PatienceLeft / PatienceMax);
+
         public VisitState State { get; private set; } = VisitState.Waiting;
         public int Paid { get; private set; }
 
@@ -124,13 +164,20 @@ namespace LastCall.Core
             PatienceMax <= 0 ? 1.0 : 1.0 - PatienceLeft / PatienceMax;
 
         public CustomerVisit(DrinkOrder order, double patienceSeconds,
-            RegularState regular = null, CustomerRead read = null, double decideSeconds = 0)
+            RegularState regular = null, CustomerRead read = null, double decideSeconds = 0,
+            double orderPatienceSeconds = 0)
         {
             _order = order ?? throw new ArgumentNullException(nameof(order));
             if (patienceSeconds <= 0) throw new ArgumentOutOfRangeException(nameof(patienceSeconds));
             if (decideSeconds < 0) throw new ArgumentOutOfRangeException(nameof(decideSeconds));
+            if (orderPatienceSeconds < 0) throw new ArgumentOutOfRangeException(nameof(orderPatienceSeconds));
             PatienceMax = patienceSeconds;
             PatienceLeft = patienceSeconds;
+            // Zero means the caller does not model the asking wait at all — the headless
+            // economy tests and the direct-construction suites — and those visits behave
+            // exactly as they did before the split: one clock, running from the order.
+            OrderPatienceMax = orderPatienceSeconds;
+            OrderPatienceLeft = orderPatienceSeconds;
             DecideLeft = decideSeconds;
             Regular = regular;
             Read = read;
@@ -165,6 +212,20 @@ namespace LastCall.Core
                 DecideLeft = 0;
             }
 
+            // Waiting to be ASKED. Its own clock, and running it out is its own storm-off:
+            // a customer nobody comes to does not sit there forever waiting to be ignored.
+            // The leftover does NOT spill into the drink wait — that one starts when the
+            // order is taken, which by definition did not happen here.
+            if (OrderPatienceMax > 0 && !_drinkClockRunning)
+            {
+                OrderPatienceLeft -= seconds;
+                if (OrderPatienceLeft > 0) return;
+                OrderPatienceLeft = 0;
+                State = VisitState.StormedOff;
+                Satisfaction = 0;
+                return;
+            }
+
             PatienceLeft -= seconds;
             if (PatienceLeft > 0) return;
 
@@ -196,6 +257,9 @@ namespace LastCall.Core
             {
                 ExtraOrdersTaken++;
                 _order = nextOrder;
+                // A round they asked for across the bar: no waiting to be asked, straight
+                // onto its own drink clock.
+                _drinkClockRunning = true;
                 PatienceLeft = PatienceMax * ExtraOrderPatienceRefill;
                 return;
             }

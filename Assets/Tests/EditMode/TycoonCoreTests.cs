@@ -243,6 +243,73 @@ namespace LastCall.Tests
             return g;
         }
 
+        // ── two waits, not one (2026-08-02) ──────────────────────────────────────
+        // The author's rule: being kept waiting to ORDER and being kept waiting for the
+        // DRINK are different insults, on different clocks, and taking the order starts
+        // the second one from full.
+
+        [Test]
+        public void BeingIgnoredWhileReadyToOrder_RunsItsOwnClockOut()
+        {
+            var visit = new CustomerVisit(IcedOrder(), patienceSeconds: 60,
+                orderPatienceSeconds: 20);
+
+            visit.Tick(19);
+            Assert.AreEqual(VisitState.Waiting, visit.State, "still there at 19 of 20");
+            Assert.AreEqual(60, visit.PatienceLeft, 1e-9, "the drink clock has not started");
+
+            visit.Tick(2);
+            Assert.AreEqual(VisitState.StormedOff, visit.State,
+                "nobody came to ask — that is a walk-out even with nothing poured");
+        }
+
+        [Test]
+        public void TakingTheOrder_StartsTheDrinkWaitFromFull()
+        {
+            var visit = new CustomerVisit(IcedOrder(), patienceSeconds: 60,
+                orderPatienceSeconds: 20);
+
+            visit.Tick(15);                       // fifteen seconds of being ignored
+            visit.InspectId();                    // …then somebody finally asks
+
+            Assert.AreEqual(60, visit.PatienceLeft, 1e-9,
+                "the wait for the drink begins here, at full — not with what the asking left");
+            Assert.IsFalse(visit.AwaitingOrderTaking);
+
+            visit.Tick(59);
+            Assert.AreEqual(VisitState.Waiting, visit.State);
+            visit.Tick(2);
+            Assert.AreEqual(VisitState.StormedOff, visit.State, "and it runs out on its own");
+        }
+
+        [Test]
+        public void TheTwoWaits_AreDifferentLengths()
+        {
+            // Config, not a visit: the two curves must never collapse into one number, or
+            // splitting them changes nothing a player can feel.
+            var config = new TycoonConfig();
+            for (int day = 1; day <= 30; day++)
+                Assert.AreNotEqual(config.PatienceSeconds(day), config.OrderPatienceSeconds(day),
+                    $"day {day}");
+        }
+
+        [Test]
+        public void AnExtraRound_DoesNotWaitToBeAsked()
+        {
+            // Served blind, earns another round, and only then is the card read. The refill
+            // Resolve set is that round's clock; reading the card must not replace it, and
+            // the asking clock must not storm off a customer who is already drinking with you.
+            var visit = new CustomerVisit(IcedOrder(10), patienceSeconds: 60,
+                orderPatienceSeconds: 20);
+            visit.Resolve(ServiceJudge.Judge(visit, OrderMatch.Exact, IcedGlass()), IcedOrder(8));
+
+            visit.InspectId();
+            Assert.AreEqual(60 * CustomerVisit.ExtraOrderPatienceRefill, visit.PatienceLeft, 1e-9);
+
+            visit.Tick(21);
+            Assert.AreEqual(VisitState.Waiting, visit.State, "the asking clock is spent, not live");
+        }
+
         [Test]
         public void APerfectServe_OrdersAnotherRound()
         {

@@ -581,9 +581,15 @@ namespace LastCall.Core
         private CustomerVisit NextArrival()
         {
             var order = RollOrder();
-            double patience = _config.RollPatience(Day, _rng.GetStream("patience"));
+            var patienceRng = _rng.GetStream("patience");
+            double patience = _config.RollPatience(Day, patienceRng);
+            // The asking wait rides the same stream, drawn right after the drink wait, so a
+            // seed still reproduces a night exactly (2026-08-02).
+            double askPatience = _config.RollOrderPatience(Day, patienceRng);
             double decide = _config.RollDecideDelay(_rng.GetStream("decide"));
-            if (_regulars == null) return new CustomerVisit(order, patience, decideSeconds: decide);
+            if (_regulars == null)
+                return new CustomerVisit(order, patience, decideSeconds: decide,
+                    orderPatienceSeconds: askPatience);
 
             // The same face-and-memory pipeline the old loop used (GDD 19 §3, 20 §3):
             // returning regulars are read through decayed memory, strangers roll fresh.
@@ -596,7 +602,7 @@ namespace LastCall.Core
                     regular.Relationship, regular.BaseDemand);
             regular.RememberTiers(TiersOf(read));
 
-            return new CustomerVisit(order, patience, regular, read, decide);
+            return new CustomerVisit(order, patience, regular, read, decide, askPatience);
         }
 
         private DrinkOrder RollOrder()

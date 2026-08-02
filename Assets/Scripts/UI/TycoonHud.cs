@@ -56,6 +56,11 @@ namespace LastCall.UI
         private const float StageToHud = 720f / 360f;
         private const float CounterLineY = DiegeticStage.CounterTopY * StageToHud;
         private const float BustW = 108f;
+
+        /// <summary>How wide an order ticket may grow before its order line wraps instead
+        /// (2026-08-02). Wide enough for most drink names, narrow enough that five tickets
+        /// across the counter do not overlap each other.</summary>
+        private const float TagMaxW = 236f;
         private const float BustH = 128f;
         private const float WalkSpeed = 340f;       // walk-in speed (ref px/s) — slightly slower, per the notes (P15)
         private const float ExitSpeed = 560f;       // walk-out speed (ref px/s), back off the right edge
@@ -1046,17 +1051,33 @@ namespace LastCall.UI
                         view.Order.text = visit.Order.Wanted.Name.ToUpperInvariant();
                     }
 
-                    // The ticket FITS its lines (the author, 2026-08-02: one line in the old
-                    // three-line card floated in a big empty box). Empty rows give their
-                    // space back, the card takes the height of what it actually says.
+                    // The ticket FITS its lines and its WIDEST line (the author, 2026-08-02:
+                    // "yazı hiçbir zaman taşmamalı"). SEX ON THE BEACH ran off both ends of
+                    // a fixed card. The card takes the width of the longest thing it says,
+                    // up to a cap; past the cap the order wraps to a second row and the card
+                    // grows downward instead. Nothing is ever clipped, and nothing floats in
+                    // an empty box.
+                    float iconRoom = view.Icon != null && view.Icon.enabled ? 28f : 0f;
+                    float widest = Mathf.Max(view.Name.preferredWidth,
+                        Mathf.Max(view.Wants.preferredWidth, view.Order.preferredWidth + iconRoom));
+                    float cardW = Mathf.Clamp(widest + 24f, BustW + 48f, TagMaxW);
+                    float textW = cardW - 8f;
+
+                    // The order is the line that runs long, so it is the one allowed to wrap.
+                    int orderLines = view.Order.text.Length == 0 ? 0
+                        : Mathf.Max(1, Mathf.CeilToInt(
+                            (view.Order.preferredWidth + iconRoom) / Mathf.Max(1f, textW)));
+                    view.Order.horizontalOverflow = orderLines > 1
+                        ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
+
                     float rowTop = -8f;
                     view.Name.rectTransform.offsetMax = new Vector2(-4, rowTop);
                     if (view.Name.text.Length > 0) rowTop -= 16f;
                     view.Wants.rectTransform.offsetMax = new Vector2(-4, rowTop);
                     if (view.Wants.text.Length > 0) rowTop -= 16f;
                     view.Order.rectTransform.offsetMax = new Vector2(-4, rowTop);
-                    if (view.Order.text.Length > 0) rowTop -= 17f;
-                    view.Tag.sizeDelta = new Vector2(BustW + 48f, -rowTop + 8f);
+                    rowTop -= 17f * orderLines;
+                    view.Tag.sizeDelta = new Vector2(cardW, -rowTop + 8f);
                 }
 
                 // The icon docks against the text's measured width, so the centred line reads
@@ -1067,13 +1088,18 @@ namespace LastCall.UI
                         -view.Order.preferredWidth * 0.5f - 4f,
                         view.Order.rectTransform.offsetMax.y - 6f);
 
-                // The patience clock only bites while they wait on an order. Deciding holds it
-                // full; a drinking customer is content — both show a calm, full cyan bar.
-                float patience = (deciding || drinking) ? 1f
-                    : (float)(visit.PatienceLeft / visit.PatienceMax);
+                // TWO clocks now (the author, 2026-08-02): the wait to be ASKED, then a fresh
+                // wait for the drink. The gauge draws whichever is live — Core says which —
+                // and the asking wait draws in magenta so a bar that is emptying is visibly
+                // a different failure from a bar that is slow. Deciding holds it full; a
+                // drinking customer is content.
+                bool beingIgnored = visit.AwaitingOrderTaking;
+                float patience = (deciding || drinking) ? 1f : (float)visit.PatienceFraction;
                 float gaugeW = BustW * 0.72f - 2f;
                 view.PatienceFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(gaugeW * patience), -2);
                 view.PatienceFill.color = (deciding || drinking) ? UITheme.Cyan[3]
+                    : beingIgnored
+                        ? (patience > 0.35f ? UITheme.Magenta[3] : UITheme.ViceRed[3])
                     : patience > 0.5f ? UITheme.Lime[3]
                     : patience > 0.25f ? UITheme.Amber[3] : UITheme.ViceRed[3];
 

@@ -118,6 +118,20 @@ namespace LastCall.Core
         public double RollPatience(int day, SeededRng rng) =>
             PatienceSeconds(day) * (1.0 + (rng.NextDouble() * 2.0 - 1.0) * PatienceJitter);
 
+        /// <summary>
+        /// Seconds a customer will sit with their order ready before giving up on being
+        /// ASKED for it (the author, 2026-08-02: ordering and waiting are two different
+        /// waits). Deliberately a different, shorter curve than
+        /// <see cref="PatienceSeconds"/>: being ignored while you are trying to order is
+        /// a sharper insult than waiting on a drink somebody is visibly making, and one
+        /// clock reused for both would have made the split invisible.
+        /// </summary>
+        public double OrderPatienceSeconds(int day) => Math.Max(14.0, 30.0 - 1.6 * day);
+
+        /// <summary>One order-patience roll, jittered from the named stream.</summary>
+        public double RollOrderPatience(int day, SeededRng rng) =>
+            OrderPatienceSeconds(day) * (1.0 + (rng.NextDouble() * 2.0 - 1.0) * PatienceJitter);
+
         // ── deciding & savouring (GDD 23 §2, 2026-07-23) ────────────────────────
         /// <summary>Seconds a freshly seated customer mulls the menu before ordering. Zero
         /// disables the beat entirely (the headless economy tests order the instant they sit).</summary>

@@ -70,6 +70,20 @@ namespace LastCall.UI
             if (_bottleList != null) _bottleList.anchoredPosition = _listHome;
         }
 
+        /// <summary>
+        /// Whether a bottle belongs on the BACK BAR at all (the author, 2026-08-02: there is
+        /// no sense keeping bottles behind the bar that can never go in the shaker). The wall
+        /// holds what a drink is BUILT from at the tin; the fizz that Core refuses in the
+        /// shaker, and the garnishes that go on at the glass, live in the serve stage where
+        /// they are actually used. Beer stays: its kegs are drawn on the floor below the wall.
+        /// </summary>
+        private static bool OnTheBackBar(IngredientCard card)
+        {
+            if (card.Type == IngredientType.Beer) return true;
+            if (card.Type == IngredientType.Garnish) return false;
+            return card.Info == null || !card.Info.Carbonated;
+        }
+
         private static int CountStockedGroups(TycoonRun run)
         {
             int n = 0;
@@ -77,7 +91,7 @@ namespace LastCall.UI
             {
                 if (type == IngredientType.Garnish) continue;
                 foreach (var b in run.Shelf.Bottles)
-                    if (b.Ingredient.Type == type) { n++; break; }
+                    if (b.Ingredient.Type == type && OnTheBackBar(b.Ingredient)) { n++; break; }
             }
             return n;
         }
@@ -256,7 +270,7 @@ namespace LastCall.UI
             {
                 int have = 0, empty = 0;
                 foreach (var b in run.Shelf.Bottles)
-                    if (b.Ingredient.Info?.Category == category)
+                    if (b.Ingredient.Info?.Category == category && OnTheBackBar(b.Ingredient))
                     { have++; if (b.IsEmpty) empty++; }
                 if (have == 0) continue;
 
@@ -310,7 +324,7 @@ namespace LastCall.UI
                 ig.childAlignment = TextAnchor.LowerCenter;
                 foreach (var b in run.Shelf.Bottles)
                 {
-                    if (b.Ingredient.Info?.Category != cat) continue;
+                    if (b.Ingredient.Info?.Category != cat || !OnTheBackBar(b.Ingredient)) continue;
                     var slot = NewRect($"I_{b.Ingredient.Id}", icons);
                     var si = slot.gameObject.AddComponent<Image>();
                     si.sprite = ItemArt.Bottle(b.Ingredient.Info?.Style);
@@ -346,6 +360,7 @@ namespace LastCall.UI
             foreach (var b in run.Shelf.Bottles)
             {
                 if (category != null && b.Ingredient.Info?.Category != category) continue;
+                if (!OnTheBackBar(b.Ingredient)) continue;
                 if (b.Ingredient.Type == IngredientType.Beer) kegs.Add(b);
                 else items.Add(b);
             }

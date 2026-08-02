@@ -50,9 +50,28 @@ namespace LastCall.UI
         private const float ShelfW = 244f, CabinetW = 244f;
         private const float RailGap = 8f, RailKeyHeight = 130f;
 
-        /// <summary>A fridge shelf: two bottles side by side, each as tall as it is in your hand.</summary>
-        private const int CabinetColumns = 2;
-        private const float CabinetSlotHeight = ServeVesselH + 20f;
+        /// <summary>
+        /// The finishing rail: TWO props across (2026-08-02). It holds six things now — ice,
+        /// salt, sugar, lemon, and the mint and olives the author wants in THIS scene — and
+        /// stacked one to a row they ran off the bottom of the stage. Two across fits all six
+        /// in frame, and each prop is still DRAWN at its own size inside its cell, so an ice
+        /// bucket is still not a salt cellar.
+        /// </summary>
+        private const int FinishColumns = 2;
+        private const float FinishRowHeight = 136f;
+        private const float GarnishChipHeight = 92f;
+
+        /// <summary>
+        /// The speed rail: THREE bottles across, at a height that fits the whole rail on
+        /// screen at once (the author, 2026-08-02: the cabinet was unusable and hard to
+        /// manage). It held twelve bottles two-across in slots as tall as a bottle in your
+        /// hand — six rows, two of them visible, behind a door you had to open first. So
+        /// reaching for the tonic meant a click, a scroll and a hunt. Now every bottle the
+        /// glass can take is in frame and one click away; the scroll survives only as an
+        /// overflow for a cellar that outgrows the case.
+        /// </summary>
+        private const int CabinetColumns = 3;
+        private const float CabinetSlotHeight = 120f;
 
         /// <summary>
         /// How big each thing on the finishing shelf actually is. An ice bucket is not a salt
@@ -62,14 +81,14 @@ namespace LastCall.UI
         /// </summary>
         private static readonly Dictionary<string, Vector2> FinishProps = new Dictionary<string, Vector2>
         {
-            ["ice"] = new Vector2(208, 156),          // a bucket you reach into with both hands
-            ["lemon_twist"] = new Vector2(172, 128),  // a tub of wedges
-            ["salt_rim"] = new Vector2(116, 82),      // a cellar
-            ["sugar_rim"] = new Vector2(116, 82),
+            ["ice"] = new Vector2(112, 84),           // a bucket you reach into with both hands
+            ["lemon_twist"] = new Vector2(100, 74),   // a tub of wedges
+            ["salt_rim"] = new Vector2(76, 54),       // a cellar
+            ["sugar_rim"] = new Vector2(76, 54),
         };
 
         private static Vector2 FinishPropSize(string prepId) =>
-            FinishProps.TryGetValue(prepId, out var s) ? s : new Vector2(140, 104);
+            FinishProps.TryGetValue(prepId, out var s) ? s : new Vector2(100, 74);
 
         /// <summary>Margin from the screen edge to a column, and from a column to the play surface.</summary>
         private const float StageInset = 16f;
@@ -93,11 +112,7 @@ namespace LastCall.UI
         // own proportions behind a glass door. The door opens, a bottle comes out in your hand,
         // and you tip it over the glass — the same verb the shaker's bottles use, so a mixer is
         // POURED rather than clicked, and the measure is how long you hold it.
-        private RectTransform _serveCabinet, _serveCabinetDoor, _serveCabinetShelf;
-        private Image _serveCabinetDoorGlass;
-        private bool _serveCabinetOpen;
-        private float _serveDoorT;                 // 0 = shut, 1 = wide open
-        private const float DoorSpeed = 5.5f;
+        private RectTransform _serveCabinet, _serveCabinetShelf;
         private RectTransform _serveBottle;        // the bottle in hand
         private Image _serveBottleImage;
         private IngredientCard _serveFocusBottle;
@@ -306,7 +321,7 @@ namespace LastCall.UI
         private void AddGarnishChip(IngredientCard card)
         {
             var chip = NewRect($"G_{card.Id}", _serveGarnishRow);
-            chip.gameObject.AddComponent<LayoutElement>().preferredHeight = RailKeyHeight;
+            chip.gameObject.AddComponent<LayoutElement>().preferredHeight = GarnishChipHeight;
             var bg = chip.gameObject.AddComponent<Image>();
             bg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.85f);
             var icon = NewRect("Icon", chip);
@@ -352,6 +367,18 @@ namespace LastCall.UI
             return category == IngredientCategories.Mixer || category == IngredientCategories.Juice;
         }
 
+        /// <summary>
+        /// What a rail bottle is called at rail scale: the STYLE, not the brand. You reach for
+        /// tonic, not for Quinbury — and "Quinbury Tonic" does not fit under a 62px bottle
+        /// anyway. Falls back to the brand for anything with no style to speak of.
+        /// </summary>
+        private static string RailLabel(IngredientCard card)
+        {
+            string style = card.Info?.Style;
+            if (string.IsNullOrEmpty(style)) return card.Name.ToUpperInvariant();
+            return style.Replace('_', ' ').ToUpperInvariant();
+        }
+
         /// <summary>One mixer key on the right rail: a measure straight into the serving glass
         /// (v5 P14 / the P10 `PourAtGlass` verb).</summary>
         /// <summary>
@@ -368,8 +395,8 @@ namespace LastCall.UI
             hit.color = new Color(1f, 1f, 1f, 0.001f);   // the whole slot takes the press
 
             var art = NewRect("Bottle", slot);
-            Place(art, new Vector2(0.5f, 1), new Vector2(100f, CabinetSlotHeight - 32f),
-                new Vector2(0, -4));
+            Place(art, new Vector2(0.5f, 1), new Vector2(62f, CabinetSlotHeight - 26f),
+                new Vector2(0, -3));
             var img = art.gameObject.AddComponent<Image>();
             img.sprite = ItemArt.Bottle(card.Info?.Style);
             img.preserveAspect = true; img.raycastTarget = false;
@@ -382,9 +409,12 @@ namespace LastCall.UI
                 liquid.fillAmount = BottleArt.For(card.Info?.Style)
                     .FillAmount((float)(shelfBottle.Remaining / shelfBottle.Capacity));
 
+            // The label is the STYLE, not the brand: at rail scale "TONIC" is what you are
+            // reaching for, and "Quinbury Tonic" would not fit anyway.
             var name = NewText("N", slot, _body, 8, TextAnchor.LowerCenter, UITheme.TextPrimary);
-            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(96, 12), new Vector2(0, 0));
-            name.text = card.Name.ToUpperInvariant();
+            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(74, 11), new Vector2(0, 1));
+            name.horizontalOverflow = HorizontalWrapMode.Overflow;
+            name.text = RailLabel(card);
 
             Pressable(slot, art, img, lift: 5f, depth: 5f);
 
@@ -392,14 +422,6 @@ namespace LastCall.UI
             var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
             down.callback.AddListener(_ =>
             {
-                // A shut cabinet is a shut cabinet: open the door first, the way you would.
-                if (!_serveCabinetOpen)
-                {
-                    _serveCabinetOpen = true;
-                    _aimText.text = "CABINET OPEN — TAKE A BOTTLE";
-                    _aimText.color = UITheme.Cyan[3];
-                    return;
-                }
                 var run = Run;
                 if (run == null) return;
                 TakeCabinetBottle(run, c, art);
@@ -444,7 +466,6 @@ namespace LastCall.UI
             var art = slot != null ? slot.Find("Bottle") as RectTransform : null;
             var card = run.Shelf.Find(ingredientId)?.Ingredient;
             if (art == null || card == null) return;
-            _serveCabinetOpen = true;             // the door swings with the reach
             TakeCabinetBottle(run, card, art);
         }
 
@@ -483,18 +504,10 @@ namespace LastCall.UI
             _serveHandLiquid.fillAmount = BottleArt.For(style).FillAmount(level);
         }
 
-        /// <summary>Swings the cabinet door, and pours whatever bottle is in hand. The tilt and
-        /// the aim are the shaker's, to the letter — one bar, one way of pouring.</summary>
+        /// <summary>Pours whatever bottle is in hand. The tilt and the aim are the shaker's,
+        /// to the letter — one bar, one way of pouring.</summary>
         private void UpdateServeCabinet(TycoonRun run)
         {
-            float dt = Mathf.Max(Time.deltaTime, 1e-4f);
-            _serveDoorT = Mathf.MoveTowards(_serveDoorT, _serveCabinetOpen ? 1f : 0f, DoorSpeed * dt);
-            // A hinged pane: it swings out on its left edge, so it narrows as it opens and the
-            // shelf behind it comes into the light.
-            _serveCabinetDoor.localScale = new Vector3(Mathf.Lerp(1f, 0.12f, _serveDoorT), 1f, 1f);
-            _serveCabinetDoorGlass.color = new Color(0.62f, 0.80f, 0.86f,
-                Mathf.Lerp(0.22f, 0.06f, _serveDoorT));
-
             if (_serveFocusBottle == null || Mouse.current == null) return;
             // Letting go puts the bottle back on the shelf. It used to only drop the grab, which
             // left the bottle floating where the cursor happened to be while its twin stood in
@@ -816,10 +829,12 @@ namespace LastCall.UI
         /// The viewport is masked, so a tub half off the bottom is clipped by the shelf edge
         /// instead of drawing over the buttons under it.
         /// </summary>
-        private RectTransform ScrollShelf(RectTransform column, string name, int columns = 1)
+        private RectTransform ScrollShelf(RectTransform column, string name, int columns = 1,
+            float rowHeight = CabinetSlotHeight)
         {
             var viewport = NewRect(name + "View", column);
             Stretch(viewport, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -20));
+            // (rowHeight only matters to the grid path; a single column measures its own rows)
             var mask = viewport.gameObject.AddComponent<Image>();
             mask.color = new Color(1f, 1f, 1f, 0.004f);   // a mask needs something to cut
             viewport.gameObject.AddComponent<RectMask2D>();
@@ -835,7 +850,7 @@ namespace LastCall.UI
             {
                 var grid = content.gameObject.AddComponent<GridLayoutGroup>();
                 float cell = (column.rect.width - 4f - RailGap * (columns - 1)) / columns;
-                grid.cellSize = new Vector2(cell, CabinetSlotHeight);
+                grid.cellSize = new Vector2(cell, rowHeight);
                 grid.spacing = new Vector2(RailGap, RailGap);
                 grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
                 grid.constraintCount = columns;
@@ -903,7 +918,7 @@ namespace LastCall.UI
                 UITheme.TypeRamp[IngredientType.Garnish][3]);
             Stretch(glabel.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -18), Vector2.zero);
             glabel.text = "— FINISH —";
-            _serveGarnishRow = ScrollShelf(shelfCol, "Garnishes");
+            _serveGarnishRow = ScrollShelf(shelfCol, "Garnishes", FinishColumns, FinishRowHeight);
 
             // The right column: what goes in AT THE GLASS (v5 P14, the notes' second rail). P10
             // put the rule in Core — carbonated never enters the shaker, it is added to the
@@ -916,7 +931,7 @@ namespace LastCall.UI
             var mlabel = NewText("MLabel", cabinetCol, _body, 10, TextAnchor.UpperCenter,
                 UITheme.TypeRamp[IngredientType.Bubbly][3]);
             Stretch(mlabel.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -18), Vector2.zero);
-            mlabel.text = "— MIXERS —";
+            mlabel.text = "— AT THE GLASS —";
 
             _serveCabinet = NewRect("Cabinet", cabinetCol);
             Stretch(_serveCabinet, Vector2.zero, Vector2.one, Vector2.zero, new Vector2(0, -20));
@@ -926,24 +941,11 @@ namespace LastCall.UI
             Stretch(inside, Vector2.zero, Vector2.one, new Vector2(7, 7), new Vector2(-7, -7));
             inside.gameObject.AddComponent<Image>().color = CabinetInside;
 
-            // Two bottles to a shelf, each drawn at the height it will be when it is in your hand.
-            // A bottle that shrinks when you pick it up is a list pretending to be a cabinet; at
-            // one to a row they would not fit, and standing them side by side is what a fridge
-            // shelf actually looks like.
-            _serveCabinetShelf = ScrollShelf(inside, "Shelf", CabinetColumns);
+            // An open speed rail: three across, the whole thing in frame, no door between the
+            // hand and the bottle.
+            _serveCabinetShelf = ScrollShelf(inside, "Shelf", CabinetColumns, CabinetSlotHeight);
             _serveMixerRow = _serveCabinetShelf;
 
-            // The door, hinged on its left edge: it narrows as it swings out, and the pane over
-            // the bottles clears with it.
-            _serveCabinetDoor = NewRect("Door", _serveCabinet);
-            Stretch(_serveCabinetDoor, Vector2.zero, Vector2.one, new Vector2(5, 5), new Vector2(-5, -5));
-            _serveCabinetDoor.pivot = new Vector2(0f, 0.5f);
-            _serveCabinetDoorGlass = _serveCabinetDoor.gameObject.AddComponent<Image>();
-            _serveCabinetDoorGlass.color = new Color(0.62f, 0.80f, 0.86f, 0.22f);
-            _serveCabinetDoorGlass.raycastTarget = false;
-            var handle = NewRect("Handle", _serveCabinetDoor);
-            Place(handle, new Vector2(1, 0.5f), new Vector2(4, 46), new Vector2(-6, 0));
-            handle.gameObject.AddComponent<Image>().color = CabinetFrame;
 
             _aimText = NewText("AimText", _servePanel, _body, 13, TextAnchor.UpperCenter, UITheme.TextSecondary);
             Stretch(_aimText.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -70), new Vector2(0, -46));

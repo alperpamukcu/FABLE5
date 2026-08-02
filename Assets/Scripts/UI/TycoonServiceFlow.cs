@@ -177,7 +177,6 @@ namespace LastCall.UI
             _servePrep = null;
             _serveBottleGrabbed = false;
             _serveFocusBottle = null;
-            _serveCabinetOpen = false;
             _shaking = false;
             _shakeEnergy = 0;
             if (_dragPiece != null) _dragPiece.gameObject.SetActive(false);

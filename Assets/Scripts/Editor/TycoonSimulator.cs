@@ -124,6 +124,18 @@ namespace LastCall.EditorTools
                     // inattention, not to the floor.
                     foreach (var g in run.Floor.Dirty)
                         if (!g.Cleared) { g.Bus(); stats.GlassesBussed++; }
+
+                    // TAKING ORDERS is not building drinks (2026-08-02, the two-clock split).
+                    // A customer with their mind made up is now on a clock of their own until
+                    // somebody asks, and asking costs a glance — the player taps the card the
+                    // moment it lights up, whatever else is on the bar. Reading it inside the
+                    // build gate would have measured a bartender who refuses to look at the
+                    // second customer until the first drink is poured, and blamed the walk-out
+                    // on the patience curve.
+                    foreach (var visit in run.Floor.Seated)
+                        if (visit.State == VisitState.Waiting && visit.HasOrdered && !visit.IdInspected)
+                            visit.InspectId();
+
                     buildTimer += 1.0;
                     if (buildTimer < buildSeconds) continue;
 
