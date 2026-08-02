@@ -29,6 +29,16 @@ INK = (12, 10, 16, 255)
 OUTLINE = 2                 # pixels of ink around every vessel on the shelf
 DARK = 70                   # luminance at or below this is ink rather than art
 
+# Every vessel is fitted to the same height on the shelf - 110 points - so a sprite's
+# ink reads at 110/height of what it measures. Two pixels on a 162-tall bottle came out
+# at 1.38 points and the same two pixels on a 119-tall carton at 1.85: uniform in the
+# file, a third heavier on the wall. Equal ink needs equal pixels per point, so every
+# vessel is padded to ONE canvas height and stands on its floor. The art is not
+# stretched to fill it - a short carton simply reads shorter than a tall bottle, which
+# is what it is.
+CANVAS_H = 162
+KEGS = {'lager', 'pale_ale', 'stout'}   # drawn at keg scale on the floor, not the wall
+
 
 def lum(c):
     return 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]
@@ -102,6 +112,18 @@ def ring(im, thickness=OUTLINE):
     return out
 
 
+def stand_on_floor(im, height=CANVAS_H):
+    """Put the vessel on a canvas of the shared height, standing on its floor. The
+    padding goes above it, so the base still lands on the shelf when the sprite is
+    fitted to the slot; what changes is how many pixels the slot has to squeeze."""
+    W, H = im.size
+    if H >= height:
+        return im
+    out = Image.new('RGBA', (W, height), (0, 0, 0, 0))
+    out.alpha_composite(im, (0, height - H))
+    return out
+
+
 def run(write):
     changed = 0
     for style in styles():
@@ -121,6 +143,8 @@ def run(write):
             for i, have in enumerate(margins(im)):
                 need[i] = max(need[i], max(0, OUTLINE - have))
         done = [ring(pad_to(im, need)) if im is not None else None for im in peeled]
+        if style not in KEGS:
+            done = [stand_on_floor(im) if im is not None else None for im in done]
 
         for path, im in zip(paths, done):
             if im is None:
