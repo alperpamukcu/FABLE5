@@ -52,11 +52,23 @@ namespace LastCall.Core
         }
 
         /// <summary>
-        /// The offers against the current shelf: for each style you carry, the next brand up
-        /// (an upgrade); for each style in the catalogue you do <b>not</b> carry, the cheapest
-        /// bottle of it (new stock to add).
+        /// The bar standing a brand rung asks for before the distributor will talk to you
+        /// (the author, 2026-08-02: the brand ladder climbs the same stars the menu does —
+        /// starter, mid at 2.0, good at 3.0, great at 4.0). Rung 1 sells to anyone.
         /// </summary>
-        public static List<MarketOffer> OffersFor(Shelf shelf, IReadOnlyList<IngredientCard> catalogue)
+        public static double RequiredStars(int tier) => tier <= 1 ? 0.0 : Math.Min(4.0, tier);
+
+        /// <summary>
+        /// The offers against the current shelf: for each style in the catalogue you do
+        /// <b>not</b> carry, the cheapest bottle of it (new stock); and every unowned brand
+        /// of a style you do carry (a BETTER BOTTLE — which stands beside the old one, never
+        /// in its place: the author, 2026-08-02, "mevcut alkol upgrade edilmeyecek, yeni bir
+        /// alkol eklenecek". The well vodka keeps pouring the cheap drinks; the reserve
+        /// exists for the cocktails that name it). Rungs above the bar's standing stay off
+        /// the board — the ladder climbs the stars.
+        /// </summary>
+        public static List<MarketOffer> OffersFor(Shelf shelf, IReadOnlyList<IngredientCard> catalogue,
+            double stars = double.MaxValue)
         {
             var offers = new List<MarketOffer>();
             if (shelf == null || catalogue == null) return offers;
@@ -72,15 +84,17 @@ namespace LastCall.Core
                     newByStyle[style] = candidate;
             }
             foreach (var card in newByStyle.Values)
-                offers.Add(new MarketOffer(card, isNewStock: true, StockPrice(card)));
+                if (stars >= RequiredStars(card.Info.Tier))
+                    offers.Add(new MarketOffer(card, isNewStock: true, StockPrice(card)));
 
-            // Upgrades: catalogue brands of a stocked style with a higher tier.
+            // Better bottles: unowned brands of a stocked style, gated by the stars.
             foreach (var candidate in catalogue)
             {
                 if (candidate.Info == null) continue;
+                if (shelf.Find(candidate.Id) != null) continue;    // that exact brand is owned
                 var current = FindByStyle(shelf, candidate.Info.Style);
                 if (current?.Ingredient.Info == null) continue;
-                if (candidate.Info.Tier > current.Ingredient.Info.Tier)
+                if (stars >= RequiredStars(candidate.Info.Tier))
                     offers.Add(new MarketOffer(candidate, isNewStock: false, StockPrice(candidate)));
             }
             return offers;

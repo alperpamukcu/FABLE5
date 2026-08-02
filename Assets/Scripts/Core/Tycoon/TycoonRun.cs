@@ -292,7 +292,6 @@ namespace LastCall.Core
             public string Name { get; }
             public int Price { get; }
             internal ShelfBottle Added;      // Brand: the bottle that came in
-            internal ShelfBottle Replaced;   // Brand upgrade: the one it displaced
             internal MarketOffer Offer;
             internal DayPurchase(Kind what, string id, string name, int price)
             { What = what; Id = id; Name = name; Price = price; }
@@ -310,11 +309,9 @@ namespace LastCall.Core
             switch (p.What)
             {
                 case DayPurchase.Kind.Brand:
-                    if (p.Added != null)
-                    {
-                        if (p.Replaced != null) _shelf.Replace(p.Added, p.Replaced);
-                        else _shelf.Remove(p.Added);
-                    }
+                    // Brands only ever JOIN the shelf now (2026-08-02), so a refund is
+                    // simply the bottle going back on the truck.
+                    if (p.Added != null) _shelf.Remove(p.Added);
                     _newStockIds.Remove(p.Id);
                     p.Offer?.MarkUnsold();
                     break;
@@ -1076,25 +1073,17 @@ namespace LastCall.Core
 
             Spend(offer.Price);
             var incoming = new ShelfBottle(offer.Bottle.Clone());
-            ShelfBottle displaced = null;
-            if (offer.IsNewStock)
-            {
-                // A style you did not carry — it joins the shelf so its drinks become makeable.
-                _shelf.Add(incoming);
-            }
-            else
-            {
-                var current = Market.FindByStyle(_shelf, offer.Style);
-                if (current == null)
-                    throw new InvalidOperationException($"Nothing on the shelf pours {offer.Style}.");
-                displaced = current;
-                _shelf.Replace(current, incoming);
-            }
+            // Every bottle JOINS the shelf (the author, 2026-08-02). A better brand used to
+            // take the old one's place; now the well bottle stays and pours the cheap
+            // drinks while the reserve stands beside it for the cocktails that name a rung
+            // (RatioRequirement.MinTier) — the choice of which vodka to reach for only
+            // exists if both are actually on the bar.
+            _shelf.Add(incoming);
             _newStockIds.Add(offer.Bottle.Id);   // flashes NEW on the menu tomorrow
             offer.MarkSold();
             _todayPurchases.Add(new DayPurchase(DayPurchase.Kind.Brand, offer.Bottle.Id,
                 offer.Bottle.Name, offer.Price)
-            { Added = incoming, Replaced = displaced, Offer = offer });
+            { Added = incoming, Offer = offer });
         }
 
         /// <summary>One more stool, up to the room's limit (GDD 23 §8).</summary>
@@ -1228,10 +1217,11 @@ namespace LastCall.Core
 
         private void RollMarket()
         {
-            // Deterministic: new stock (styles you lack) + upgrades (better brands you have).
+            // Deterministic: new stock (styles you lack) + better bottles (brands you do
+            // not own yet), the higher rungs gated by the bar's standing.
             _newStockIds.Clear();   // yesterday's "NEW" flashes have worn off
             _marketOffers.Clear();
-            _marketOffers.AddRange(Market.OffersFor(_shelf, _brandCatalogue));
+            _marketOffers.AddRange(Market.OffersFor(_shelf, _brandCatalogue, Rating.Average));
         }
 
         private IngredientCard IngredientOf(string id) => _shelf.Find(id)?.Ingredient;

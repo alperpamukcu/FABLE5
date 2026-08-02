@@ -176,6 +176,7 @@ namespace LastCall.Tests
         public void TheMarket_FillsWhenTheDayCloses()
         {
             var run = NewRun(new[] { Bottle("vodka_b", "vodka", 2, 6) });
+            run.Rating.DevSet(2.0);   // the tier-2 offer is star-gated (2026-08-02)
 
             Assert.IsEmpty(run.MarketOffers, "no deliveries mid-day");
             RunDayToClose(run);
@@ -183,37 +184,63 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void BuyingABrand_SwapsTheBottleInPlace_Full()
+        public void BuyingABrand_StandsBesideTheOldOne()
         {
+            // The author's model (2026-08-02): a better bottle is a NEW bottle. The well
+            // vodka stays for the cheap drinks; the reserve arrives full beside it for the
+            // cocktails that name a rung. Different brands, never the same bottle upgraded.
             var run = NewRun(new[] { Bottle("vodka_b", "vodka", 2, 6, charge: -14) });
-            // Drain some vodka first, so "arrives full" is observable.
-            run.PourMeasure("vodka_a", 0.8);
-            run.DiscardGlass();
+            run.Rating.DevSet(2.0);   // the mid rung asks for a bar worth talking about
             RunDayToClose(run);
 
             int money = run.Money;
-            int index = run.Shelf.Bottles.ToList().FindIndex(b => b.Id == "vodka_a");
             run.BuyBrand(0);
 
             Assert.AreEqual(money - 6, run.Money);
-            Assert.IsNull(run.Shelf.Find("vodka_a"), "the old brand went back to the distributor");
-            var upgraded = run.Shelf.Find("vodka_b");
-            Assert.IsNotNull(upgraded);
-            Assert.AreEqual(upgraded.Capacity, upgraded.Remaining, 1e-9, "the new brand arrives full");
-            Assert.AreEqual(index, run.Shelf.Bottles.ToList().FindIndex(b => b.Id == "vodka_b"),
-                "muscle memory: the vodka lives where the vodka lived");
+            Assert.IsNotNull(run.Shelf.Find("vodka_a"), "the well brand STAYS on the shelf");
+            var reserve = run.Shelf.Find("vodka_b");
+            Assert.IsNotNull(reserve, "the better brand stands beside it");
+            Assert.AreEqual(reserve.Capacity, reserve.Remaining, 1e-9, "and it arrives full");
         }
 
         [Test]
-        public void AnOwnedTier_NoLongerAppearsOnTheMarket()
+        public void AnOwnedBrand_NoLongerAppearsOnTheMarket()
         {
             var run = NewRun(new[] { Bottle("vodka_b", "vodka", 2, 6) });
+            run.Rating.DevSet(2.0);
             RunDayToClose(run);
             run.BuyBrand(0);
             run.ContinueToNextDay();
             RunDayToClose(run);
 
-            Assert.IsEmpty(run.MarketOffers, "tier 2 is stocked; nothing better exists");
+            Assert.IsEmpty(run.MarketOffers, "both vodkas are owned; the catalogue is spent");
+        }
+
+        [Test]
+        public void TheBrandLadder_ClimbsTheStars()
+        {
+            // Tier 2 wants 2.0 stars, tier 3 wants 3.0 (Market.RequiredStars) — a young bar
+            // sees neither, a mid bar sees the mid rung only.
+            var run = NewRun(new[]
+            {
+                Bottle("vodka_b", "vodka", 2, 6),
+                Bottle("vodka_c", "vodka", 3, 20),
+            });
+            RunDayToClose(run);
+            Assert.IsEmpty(run.MarketOffers, "no standing, no reserve bottles");
+
+            // DevSet AFTER the night settles: CloseNight drags the standing toward the
+            // empty test-night's zero, and the market reads the standing at the close.
+            run.ContinueToNextDay();
+            run.Rating.DevSet(2.0);
+            RunDayToClose(run);
+            Assert.AreEqual(1, run.MarketOffers.Count, "the mid rung only");
+            Assert.AreEqual("vodka_b", run.MarketOffers[0].Bottle.Id);
+
+            run.ContinueToNextDay();
+            run.Rating.DevSet(3.0);
+            RunDayToClose(run);
+            Assert.AreEqual(2, run.MarketOffers.Count, "three stars opens the good rung");
         }
     }
 

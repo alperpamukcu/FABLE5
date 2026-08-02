@@ -853,6 +853,126 @@
           "amount": -8
         }
       ]
+    },
+    {
+      "id": "vodka_okhta",
+      "name": "Okhta Palace Vodka",
+      "style": "vodka",
+      "category": "vodka",
+      "type": "Spirit",
+      "tier": 4,
+      "price": 48,
+      "abv": 40,
+      "flavor": 9,
+      "origin": "Saint Petersburg, Russia",
+      "blurb": "Poured at courts that no longer exist. The bottle remembers.",
+      "art_prompt": "an ornate crystal vodka bottle with a gilded double-headed crest and frosted facets",
+      "charges": [
+        {
+          "emotion": "Excitement",
+          "amount": 20
+        },
+        {
+          "emotion": "Anxiety",
+          "amount": -10
+        }
+      ]
+    },
+    {
+      "id": "gin_veilcrest",
+      "name": "Veilcrest Cathedral Gin",
+      "style": "gin",
+      "category": "gin",
+      "type": "Spirit",
+      "tier": 4,
+      "price": 52,
+      "abv": 46,
+      "flavor": 10,
+      "origin": "Oxfordshire, England",
+      "blurb": "Distilled once a year, on the longest night. Waiting lists have waiting lists.",
+      "art_prompt": "a tall stained-glass-green gin bottle with a silver cathedral window label",
+      "charges": [
+        {
+          "emotion": "Anxiety",
+          "amount": -20
+        },
+        {
+          "emotion": "Sadness",
+          "amount": 7
+        }
+      ]
+    },
+    {
+      "id": "bourbon_hollow_oak",
+      "name": "Hollow Oak 30 Whiskey",
+      "style": "bourbon",
+      "category": "whiskey",
+      "type": "Spirit",
+      "tier": 4,
+      "price": 58,
+      "abv": 50,
+      "flavor": 11,
+      "origin": "Frankfort, Kentucky",
+      "blurb": "Thirty years in one barrel. The distiller who filled it never tasted it.",
+      "art_prompt": "a heavy antique whiskey bottle with a cracked oak-brown wax seal and a deep amber glow",
+      "charges": [
+        {
+          "emotion": "Sadness",
+          "amount": 22
+        },
+        {
+          "emotion": "Fatigue",
+          "amount": -12
+        }
+      ]
+    },
+    {
+      "id": "rum_reina_del_mar",
+      "name": "Reina del Mar Rum",
+      "style": "rum",
+      "category": "rum",
+      "type": "Spirit",
+      "tier": 4,
+      "price": 55,
+      "abv": 48,
+      "flavor": 10,
+      "origin": "Havana, Cuba",
+      "blurb": "Blended from casks that crossed the ocean twice. Tastes of both shores.",
+      "art_prompt": "a dark green rum bottle with a gold queen-of-the-sea figurehead label and rope filigree",
+      "charges": [
+        {
+          "emotion": "Excitement",
+          "amount": 21
+        },
+        {
+          "emotion": "Heartbreak",
+          "amount": -9
+        }
+      ]
+    },
+    {
+      "id": "tequila_cielo_roto",
+      "name": "Cielo Roto Tequila",
+      "style": "tequila",
+      "category": "tequila",
+      "type": "Spirit",
+      "tier": 4,
+      "price": 60,
+      "abv": 45,
+      "flavor": 11,
+      "origin": "Los Altos, Jalisco",
+      "blurb": "Ten years under a broken sky. The last barrels of a closed distillery.",
+      "art_prompt": "a hand-blown blue-glass tequila bottle with a shattered-sky label and a pewter agave stopper",
+      "charges": [
+        {
+          "emotion": "Excitement",
+          "amount": 24
+        },
+        {
+          "emotion": "Anxiety",
+          "amount": -10
+        }
+      ]
     }
   ]
 }
