@@ -222,13 +222,26 @@ namespace LastCall.UI
             }
             if (widest == 0) return new Piece(bottle, null, null, (float)w / h, 0f, 1f);
 
-            int shoulder = -1, bottom = -1;
+            // Texture rows run UPWARD from the bottom of the sprite, which is the opposite of
+            // the way a bottle is described. Reading them as if row 0 were the top put the
+            // shoulder on the base and ran the cavity from the body up THROUGH the closure:
+            // the drink filled the cap, and its fill line sliced the top off the bottle.
+            int bodyLow = -1;                          // the floor of the vessel
             for (int y = 0; y < h; y++)
             {
-                if (shoulder < 0 && rowWidth[y] >= widest * BodyWidth) shoulder = y;
-                if (rowWidth[y] > 0) bottom = y;
+                if (rowWidth[y] <= 0) continue;
+                bodyLow = y;
+                break;
             }
-            if (shoulder < 0 || bottom < shoulder) return new Piece(bottle, null, null, (float)w / h, 0f, 1f);
+            int bodyHigh = -1;                         // the shoulder: above it lie neck and closure
+            for (int y = h - 1; y >= 0; y--)
+            {
+                if (rowWidth[y] < widest * BodyWidth) continue;
+                bodyHigh = y;
+                break;
+            }
+            if (bodyLow < 0 || bodyHigh < bodyLow)
+                return new Piece(bottle, null, null, (float)w / h, 0f, 1f);
 
             // The cavity is the whole body below the shoulder, walls inset, down to the FLOOR of
             // the vessel. It used to stop at the last row wide enough to count as body, which left
@@ -239,7 +252,7 @@ namespace LastCall.UI
             int wallArea = (Wall * 2 + 1) * (Wall * 2 + 1);
             var cavity = new bool[w * h];
             int lowest = h, highest = -1, cavityCount = 0;
-            for (int y = shoulder; y <= bottom; y++)
+            for (int y = bodyLow; y <= bodyHigh; y++)
             {
                 for (int x = 0; x < w; x++)
                 {
@@ -253,7 +266,7 @@ namespace LastCall.UI
             }
             if (highest < 0) return new Piece(bottle, null, null, (float)w / h, 0f, 1f);
 
-            var print = FindPrint(px, cavity, w, h, shoulder, bottom, cavityCount);
+            var print = FindPrint(px, cavity, w, h, bodyLow, bodyHigh, cavityCount);
 
             var fill = new Color[w * h];
             var face = new Color[w * h];
@@ -279,10 +292,10 @@ namespace LastCall.UI
         /// by how far up and down the sprite each colour reaches. See <see cref="PrintTall"/>.
         /// </summary>
         private static bool[] FindPrint(Color[] px, bool[] cavity, int w, int h,
-                                        int shoulder, int bottom, int cavityCount)
+                                        int bodyLow, int bodyHigh, int cavityCount)
         {
             var print = new bool[w * h];
-            int bodyHeight = bottom - shoulder + 1;
+            int bodyHeight = bodyHigh - bodyLow + 1;
             var low = new Dictionary<int, int>();
             var high = new Dictionary<int, int>();
             var left = new Dictionary<int, int>();
@@ -290,7 +303,7 @@ namespace LastCall.UI
             var seen = new Dictionary<int, int>();
             int widestCavity = 0;
 
-            for (int y = shoulder; y <= bottom; y++)
+            for (int y = bodyLow; y <= bodyHigh; y++)
             {
                 int rowRun = 0;
                 for (int x = 0; x < w; x++)
