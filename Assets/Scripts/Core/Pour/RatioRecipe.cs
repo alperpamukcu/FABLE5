@@ -57,6 +57,16 @@ namespace LastCall.Core
         public double MinRatio { get; }
         public double MaxRatio { get; }
 
+        /// <summary>
+        /// The lowest brand rung that may fill this band (the author, 2026-08-02: "kaliteli
+        /// kokteyli ucuz alkolle yapamasın"). 1 — the default — means any bottle of the style
+        /// counts, which is every band the menu had before. Above 1, only pours from a bottle
+        /// at that tier or better count toward the share, so the well gin in a Vesper simply
+        /// leaves the band unfilled and the drink reads as something lesser. It is not an
+        /// error the player is told about; it is a drink that did not come out right.
+        /// </summary>
+        public int MinTier { get; }
+
         public bool IsStyleBand => !string.IsNullOrEmpty(Style);
 
         public RatioRequirement(IngredientType type, double minRatio, double maxRatio)
@@ -67,24 +77,29 @@ namespace LastCall.Core
             Style = null;
             MinRatio = minRatio;
             MaxRatio = maxRatio;
+            MinTier = 1;
         }
 
-        public RatioRequirement(string style, double minRatio, double maxRatio)
+        public RatioRequirement(string style, double minRatio, double maxRatio, int minTier = 1)
         {
             if (string.IsNullOrWhiteSpace(style))
                 throw new ArgumentException("A style band must name a style.", nameof(style));
             if (minRatio < 0 || maxRatio > 1 || maxRatio < minRatio)
                 throw new ArgumentException($"Bad ratio band {minRatio}–{maxRatio} for {style}.");
+            if (minTier < 1)
+                throw new ArgumentOutOfRangeException(nameof(minTier));
             Type = default;
             Style = style;
             MinRatio = minRatio;
             MaxRatio = maxRatio;
+            MinTier = minTier;
         }
 
         public bool Accepts(double ratio) => ratio >= MinRatio && ratio <= MaxRatio;
 
         public override string ToString() =>
-            $"{(IsStyleBand ? Style : Type.ToString())} {MinRatio:P0}–{MaxRatio:P0}";
+            $"{(IsStyleBand ? Style : Type.ToString())} {MinRatio:P0}–{MaxRatio:P0}"
+            + (MinTier > 1 ? $" T{MinTier}+" : "");
     }
 
     /// <summary>
@@ -116,7 +131,7 @@ namespace LastCall.Core
             foreach (var recipe in recipes)
             {
                 if (recipe.RatioRequirements == null || recipe.RatioRequirements.Count == 0) continue;
-                if (!Satisfies(glass, byType, byStyle, recipe)) continue;
+                if (!Satisfies(glass, byType, byStyle, recipe, lookup)) continue;
                 if (best == null || recipe.Rank > best.Rank) best = recipe;
             }
             if (best == null) return null;
@@ -186,7 +201,8 @@ namespace LastCall.Core
 
         private static bool Satisfies(GlassContents glass,
             IReadOnlyDictionary<IngredientType, double> byType,
-            IReadOnlyDictionary<string, double> byStyle, RecipeDefinition recipe)
+            IReadOnlyDictionary<string, double> byStyle, RecipeDefinition recipe,
+            Func<string, IngredientCard> lookup)
         {
             if (glass.FillFraction < recipe.MinFill) return false;
 
@@ -194,7 +210,9 @@ namespace LastCall.Core
             foreach (var requirement in recipe.RatioRequirements)
             {
                 double ratio;
-                if (requirement.IsStyleBand) byStyle.TryGetValue(requirement.Style, out ratio);
+                if (requirement.MinTier > 1)
+                    ratio = TopShelfShare(glass, lookup, requirement.Style, requirement.MinTier);
+                else if (requirement.IsStyleBand) byStyle.TryGetValue(requirement.Style, out ratio);
                 else byType.TryGetValue(requirement.Type, out ratio);
                 if (!requirement.Accepts(ratio)) return false;
                 accounted += ratio;
@@ -203,6 +221,26 @@ namespace LastCall.Core
             // Anything the recipe does not name is a stray. A splash is fine; a third of the
             // glass means this is a different drink wearing the recipe's proportions.
             return 1.0 - accounted <= MaxUnnamedShare + 1e-9;
+        }
+
+        /// <summary>
+        /// The share of the glass poured from bottles of one style at <paramref name="minTier"/>
+        /// or better. Walked per band rather than pre-binned by tier: only the handful of
+        /// top-shelf recipes ask, and a dictionary keyed by style AND rung would cost every
+        /// match to serve those few.
+        /// </summary>
+        private static double TopShelfShare(GlassContents glass,
+            Func<string, IngredientCard> lookup, string style, int minTier)
+        {
+            if (lookup == null || string.IsNullOrEmpty(style) || glass.TotalVolume <= 0) return 0;
+            double share = 0;
+            foreach (var pour in glass.Pours)
+            {
+                var info = lookup(pour.IngredientId)?.Info;
+                if (info == null || info.Style != style || info.Tier < minTier) continue;
+                share += pour.Volume / glass.TotalVolume;
+            }
+            return share;
         }
 
         /// <summary>How much of the glass may be ingredients the recipe never mentions.

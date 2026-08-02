@@ -115,7 +115,13 @@ namespace LastCall.Game
                         if (band.max < band.min || band.min < 0 || band.max > 1)
                             throw new FormatException(
                                 $"Recipe '{recipe.id}' has a bad {band.style} band {band.min}–{band.max}.");
-                        ratios.Add(new RatioRequirement(band.style, band.min, band.max));
+                        if (band.minTier < 0)
+                            throw new FormatException(
+                                $"Recipe '{recipe.id}' has a negative minTier on its {band.style} band.");
+                        // 0 and 1 both mean "any bottle of the style": JsonUtility cannot express
+                        // an absent int, so the file leaves the field off for ordinary bands.
+                        ratios.Add(new RatioRequirement(band.style, band.min, band.max,
+                            Math.Max(1, band.minTier)));
                     }
                 }
 
@@ -390,6 +396,8 @@ namespace LastCall.Game
             public string style;
             public double min;
             public double max;
+            /// <summary>Lowest brand rung that fills this band; absent/0 = any bottle.</summary>
+            public int minTier;
         }
 
         [Serializable]

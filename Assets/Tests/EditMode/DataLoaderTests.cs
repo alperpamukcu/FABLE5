@@ -66,6 +66,7 @@ namespace LastCall.Tests
                     Assert.AreEqual(eb.Type, ab.Type, expected.Id);
                     Assert.AreEqual(eb.MinRatio, ab.MinRatio, 1e-9, expected.Id);
                     Assert.AreEqual(eb.MaxRatio, ab.MaxRatio, 1e-9, expected.Id);
+                    Assert.AreEqual(eb.MinTier, ab.MinTier, expected.Id);
                 }
 
                 Assert.AreEqual(expected.Requirements.Count, actual.Requirements.Count, expected.Id);

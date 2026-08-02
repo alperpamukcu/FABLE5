@@ -102,10 +102,12 @@ namespace LastCall.Core
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
                     locked: true,
                     Band("vodka", .45, .65), Band("lemon", .20, .40), Band("syrup", .10, .30)),
+                // Grenadine, not syrup: the red sinking through the orange IS the sunrise,
+                // and it was the only job the bar's grenadine had (2026-08-02).
                 Cocktail("tequila_sunrise", "Tequila Sunrise", 13, 25, 2, 20, 1, PrepMethod.Built, "highball",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
                     locked: true,
-                    Band("tequila", .30, .50), Band("orange", .38, .62), Band("syrup", .05, .20)),
+                    Band("tequila", .30, .50), Band("orange", .38, .62), Band("grenadine", .05, .20)),
 
                 // ── hard (ranks 15–21): the shaken sours, tighter bands ─────────────
                 Cocktail("whiskey_sour", "Whiskey Sour", 15, 25, 2, 20, 1, PrepMethod.Shaken, "rocks",
@@ -198,11 +200,113 @@ namespace LastCall.Core
                     Band("vodka", .08, .18), Band("gin", .08, .18), Band("rum", .08, .18),
                     Band("tequila", .08, .18), Band("triple_sec", .08, .18),
                     Band("lemon", .08, .20), Band("cola", .15, .30)),
+
+                // ── the 2026-08-02 expansion ────────────────────────────────────────
+                // Written against the shelf that already exists: no drink here asks for a
+                // bottle the bar would buy to serve it alone, and every one of them puts
+                // its base spirit in the lead. It rescues the quiet stock — grenadine had
+                // no recipe at all, pineapple and tonic had one each — and it fills the
+                // hole under tequila, which carried three drinks while vodka carried
+                // eleven despite being the priciest line on the shelf.
+
+                // Starter: two parts, no gate. The tonic and the cranberry finally have
+                // somewhere to go on day one.
+                Cocktail("vodka_tonic", "Vodka Tonic", 8, 15, 2, 15, 1, PrepMethod.Built, "highball",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, bu) },
+                    locked: true,
+                    Band("vodka", .30, .50), Band("tonic", .50, .70)),
+                Cocktail("cape_codder", "Cape Codder", 8, 15, 2, 15, 1, PrepMethod.Built, "highball",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so) },
+                    locked: true,
+                    Band("vodka", .30, .50), Band("cranberry", .50, .70)),
+
+                // Mid: the mule family completed, and tequila's first drinks of its own.
+                Cocktail("tequila_mule", "Tequila Mule", 14, 20, 2, 15, 1, PrepMethod.Built, "highball",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, bu), new PatternRequirement(1, so) },
+                    locked: true,
+                    Band("tequila", .30, .50), Band("ginger", .40, .60), Band("lime", .05, .20)),
+                Cocktail("paloma", "Paloma", 14, 20, 2, 15, 1, PrepMethod.Built, "highball",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, bu) },
+                    locked: true,
+                    Band("tequila", .28, .45), Band("lime", .06, .20), Band("soda", .40, .62)),
+                Cocktail("dark_stormy", "Dark 'n' Stormy", 14, 20, 2, 15, 1, PrepMethod.Built, "highball",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, bu), new PatternRequirement(1, so) },
+                    locked: true,
+                    Band("rum", .30, .50), Band("ginger", .40, .60), Band("lime", .05, .20)),
+                Cocktail("sea_breeze", "Sea Breeze", 14, 25, 2, 20, 1, PrepMethod.Built, "highball",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(2, so) },
+                    locked: true,
+                    Band("vodka", .25, .45), Band("cranberry", .25, .45), Band("pineapple", .25, .45)),
+                Cocktail("tequila_sour", "Tequila Sour", 14, 25, 2, 20, 1, PrepMethod.Shaken, "rocks",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
+                    locked: true,
+                    Band("tequila", .45, .65), Band("lemon", .20, .40), Band("syrup", .10, .30)),
+
+                // Hard: the mint and the pineapple earn their shelf space here.
+                Cocktail("matador", "Matador", 21, 25, 2, 20, 1, PrepMethod.Shaken, "coupe",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(2, so) },
+                    locked: true,
+                    Band("tequila", .35, .55), Band("pineapple", .30, .50), Band("lime", .08, .22)),
+                Cocktail("mint_julep", "Mint Julep", 21, 30, 3, 20, 1, PrepMethod.Built, "rocks",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(1, g) },
+                    locked: true,
+                    Band("bourbon", .68, .88), Band("syrup", .08, .24), Band("mint", .03, .15)),
+                Cocktail("whiskey_smash", "Whiskey Smash", 21, 30, 3, 20, 1, PrepMethod.Shaken, "rocks",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw), new PatternRequirement(1, g) },
+                    locked: true,
+                    Band("bourbon", .45, .65), Band("lemon", .15, .35), Band("syrup", .08, .25), Band("mint", .03, .15)),
+                Cocktail("lemon_drop", "Lemon Drop", 21, 30, 3, 20, 1, PrepMethod.Shaken, "martini",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(2, sw) },
+                    locked: true,
+                    Band("vodka", .40, .60), Band("lemon", .18, .35), Band("triple_sec", .10, .25),
+                    Band("syrup", .05, .18)),
+                Cocktail("pink_lady", "Pink Lady", 21, 30, 3, 20, 1, PrepMethod.Shaken, "coupe",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
+                    locked: true,
+                    Band("gin", .50, .70), Band("lemon", .15, .32), Band("grenadine", .08, .25)),
+                Cocktail("bahama_mama", "Bahama Mama", 21, 30, 3, 20, 1, PrepMethod.Shaken, "highball",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(2, so), new PatternRequirement(1, sw) },
+                    locked: true,
+                    Band("rum", .30, .50), Band("pineapple", .25, .45), Band("coffee_liqueur", .10, .25),
+                    Band("lemon", .05, .18)),
+
+                // Very hard — and the first drinks that ask for a BRAND rather than a
+                // style. A Martinez poured from the well gin is a gin drink that missed:
+                // the band counts only what came out of a good bottle, so it never fills
+                // and the glass reads as nothing in particular. The author's rule
+                // (2026-08-02): you cannot make a quality cocktail with cheap spirits.
+                Cocktail("martinez", "Martinez", 28, 35, 3, 25, 2, PrepMethod.Stirred, "martini",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(2, sw) },
+                    locked: true,
+                    TopShelf("gin", .50, .70, 2), Band("vermouth", .22, .42), Band("triple_sec", .05, .18)),
+                Cocktail("boulevardier", "Boulevardier", 28, 35, 3, 25, 2, PrepMethod.Stirred, "rocks",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(1, bi) },
+                    locked: true,
+                    TopShelf("bourbon", .28, .42, 2), Band("vermouth", .28, .42), Band("amaro", .28, .42)),
+                Cocktail("rosita", "Rosita", 28, 35, 3, 25, 2, PrepMethod.Stirred, "rocks",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(1, bi) },
+                    locked: true,
+                    TopShelf("tequila", .28, .42, 2), Band("vermouth", .28, .42), Band("amaro", .28, .42)),
+                Cocktail("el_presidente", "El Presidente", 28, 35, 3, 25, 2, PrepMethod.Stirred, "coupe",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(3, sw) },
+                    locked: true,
+                    TopShelf("rum", .45, .65, 2), Band("vermouth", .20, .38), Band("triple_sec", .06, .18),
+                    Band("grenadine", .03, .12)),
+                // The capstone: the only drink that wants the TOP shelf, and it wants two.
+                Cocktail("vesper", "Vesper", 29, 40, 4, 25, 2, PrepMethod.Stirred, "martini",
+                    new[] { new PatternRequirement(2, s), new PatternRequirement(1, sw) },
+                    locked: true,
+                    TopShelf("gin", .50, .70, 3), TopShelf("vodka", .15, .32, 2),
+                    Band("vermouth", .06, .18)),
             };
         }
 
         private static RatioRequirement Band(string style, double min, double max) =>
             new RatioRequirement(style, min, max);
+
+        /// <summary>A band only a bottle at <paramref name="minTier"/> or better can fill.</summary>
+        private static RatioRequirement TopShelf(string style, double min, double max, int minTier) =>
+            new RatioRequirement(style, min, max, minTier);
 
         private static RecipeDefinition Cocktail(string id, string name, int rank,
             int baseFlavor, int baseMult, int flavorPerLevel, int multPerLevel,

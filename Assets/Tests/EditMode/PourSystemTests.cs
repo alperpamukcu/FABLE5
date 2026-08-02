@@ -520,5 +520,89 @@ namespace LastCall.Tests
 
             Assert.IsNull(RatioRecipeMatcher.Match(Glass(("gin", 1.0)), cardEra));
         }
+
+        // ── top-shelf bands (2026-08-02) ────────────────────────────────────────
+        // The author's rule: a quality cocktail cannot be made with cheap spirits.
+        // A band may name the lowest brand rung that fills it, and pours from below
+        // that rung do not count — the drink is not refused, it simply is not the
+        // drink. Tested here rather than through the menu because Core owns it: the
+        // sim bot and the tests pour with the same verbs the player does.
+
+        private static IngredientCard Brand(string id, string style, int tier) =>
+            new IngredientCard(id, id, IngredientType.Spirit, 6,
+                info: new IngredientInfo(style, tier));
+
+        private static readonly Dictionary<string, IngredientCard> TieredBar =
+            new Dictionary<string, IngredientCard>
+            {
+                ["well_gin"] = Brand("well_gin", "gin", 1),
+                ["top_gin"] = Brand("top_gin", "gin", 3),
+                ["vermouth"] = new IngredientCard("vermouth", "Vermouth", IngredientType.Sweet, 4,
+                    info: new IngredientInfo("vermouth")),
+            };
+
+        private static IngredientCard LookTiered(string id) =>
+            TieredBar.TryGetValue(id, out var c) ? c : null;
+
+        private static IReadOnlyList<RecipeDefinition> TopShelfBook => new[]
+        {
+            new RecipeDefinition("reserve_martini", "Reserve Martini", 10, 40, 4, 0, 0,
+                Array.Empty<PatternRequirement>(),
+                ratioRequirements: new[]
+                {
+                    new RatioRequirement("gin", 0.70, 0.90, minTier: 3),
+                    new RatioRequirement("vermouth", 0.10, 0.30),
+                }),
+        };
+
+        [Test]
+        public void ATopShelfBand_IsFilledByTheGoodBottle()
+        {
+            var match = RatioRecipeMatcher.Match(
+                Glass(("top_gin", 0.80), ("vermouth", 0.20)), TopShelfBook, LookTiered);
+
+            Assert.IsNotNull(match);
+            Assert.AreEqual("reserve_martini", match.Recipe.Id);
+        }
+
+        [Test]
+        public void ATopShelfBand_IsNotFilledByTheWellBottle()
+        {
+            // Same style, same proportions, cheaper bottle: the gin band sees nothing it
+            // may count, so the glass is a martini-shaped drink and no recipe at all.
+            Assert.IsNull(RatioRecipeMatcher.Match(
+                Glass(("well_gin", 0.80), ("vermouth", 0.20)), TopShelfBook, LookTiered));
+        }
+
+        [Test]
+        public void CuttingTheGoodBottleWithTheWellOne_BreaksTheDrink()
+        {
+            // Half and half: only the top-shelf half counts toward the band, which drops
+            // it under its minimum — and the well gin becomes a stray the recipe never
+            // named. Topping up a Reserve Martini from the cheap bottle is not a shortcut.
+            Assert.IsNull(RatioRecipeMatcher.Match(
+                Glass(("top_gin", 0.40), ("well_gin", 0.40), ("vermouth", 0.20)),
+                TopShelfBook, LookTiered));
+        }
+
+        [Test]
+        public void OrdinaryBands_StillTakeAnyBottle()
+        {
+            // The rung is opt-in: a band without one counts every brand of its style,
+            // which is every recipe the menu had before this existed.
+            var anyGin = new[]
+            {
+                new RecipeDefinition("house_martini", "House Martini", 9, 20, 2, 0, 0,
+                    Array.Empty<PatternRequirement>(),
+                    ratioRequirements: new[]
+                    {
+                        new RatioRequirement("gin", 0.70, 0.90),
+                        new RatioRequirement("vermouth", 0.10, 0.30),
+                    }),
+            };
+
+            Assert.IsNotNull(RatioRecipeMatcher.Match(
+                Glass(("well_gin", 0.80), ("vermouth", 0.20)), anyGin, LookTiered));
+        }
     }
 }

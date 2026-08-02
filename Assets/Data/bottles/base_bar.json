@@ -74,7 +74,7 @@
     },
     {
       "id": "bourbon_redline",
-      "name": "Redline Bourbon",
+      "name": "Redline Bourbon Whiskey",
       "type": "Spirit",
       "flavor": 7,
       "style": "bourbon",
@@ -166,7 +166,7 @@
     },
     {
       "id": "lemon_fresh",
-      "name": "Fresh Lemon",
+      "name": "Fresh Lemon Juice",
       "type": "Sour",
       "flavor": 3,
       "style": "lemon",
@@ -189,7 +189,7 @@
     },
     {
       "id": "ginger_kicker",
-      "name": "Kicker Ginger",
+      "name": "Kicker Ginger Beer",
       "type": "Bubbly",
       "flavor": 3,
       "style": "ginger",
@@ -212,7 +212,7 @@
     },
     {
       "id": "soda_klara",
-      "name": "Klara Soda",
+      "name": "Klara Soda Water",
       "type": "Bubbly",
       "flavor": 1,
       "style": "soda",
@@ -235,7 +235,7 @@
     },
     {
       "id": "mint_fresh",
-      "name": "Mint",
+      "name": "Fresh Mint",
       "type": "Garnish",
       "flavor": 1,
       "style": "mint",
@@ -319,7 +319,7 @@
     },
     {
       "id": "beer_marigold",
-      "name": "Marigold Pale",
+      "name": "Marigold Pale Ale",
       "type": "Beer",
       "flavor": 5,
       "style": "pale_ale",
@@ -390,7 +390,7 @@
     },
     {
       "id": "bourbon_old_harrow",
-      "name": "Harrow Bourbon",
+      "name": "Harrow Bourbon Whiskey",
       "type": "Spirit",
       "flavor": 9,
       "style": "bourbon",
@@ -420,7 +420,7 @@
       "style": "tequila",
       "category": "tequila",
       "tier": 1,
-      "price": 14,
+      "price": 8,
       "origin": "Jalisco, Mexico",
       "abv": 40,
       "locked": true,
@@ -439,7 +439,7 @@
     },
     {
       "id": "liqueur_delia",
-      "name": "Delia Orange",
+      "name": "Delia Triple Sec",
       "type": "Sweet",
       "flavor": 5,
       "style": "triple_sec",
@@ -512,7 +512,7 @@
     },
     {
       "id": "energy_volt",
-      "name": "Volt Energy",
+      "name": "Volt Energy Drink",
       "type": "Bubbly",
       "flavor": 3,
       "style": "energy",
@@ -538,7 +538,7 @@
     },
     {
       "id": "orange_grove",
-      "name": "Grove Orange",
+      "name": "Grove Orange Juice",
       "type": "Sour",
       "flavor": 2,
       "style": "orange",
@@ -563,7 +563,7 @@
     },
     {
       "id": "lime_fresh",
-      "name": "Fresh Lime",
+      "name": "Fresh Lime Juice",
       "type": "Sour",
       "flavor": 3,
       "style": "lime",
@@ -588,7 +588,7 @@
     },
     {
       "id": "rum_tidewater",
-      "name": "Tidewater Reserve",
+      "name": "Tidewater Rum",
       "type": "Spirit",
       "flavor": 7,
       "style": "rum",
@@ -612,13 +612,13 @@
     },
     {
       "id": "tequila_alta_luna",
-      "name": "Alta Luna",
+      "name": "Alta Luna Tequila",
       "type": "Spirit",
       "flavor": 8,
       "style": "tequila",
       "category": "tequila",
       "tier": 2,
-      "price": 9,
+      "price": 15,
       "origin": "Jalisco Highlands, Mexico",
       "abv": 42,
       "blurb": "Slow-roasted highland agave. Softer going down, louder after.",
@@ -636,7 +636,7 @@
     },
     {
       "id": "cranberry_north",
-      "name": "North Bog Cranberry",
+      "name": "North Bog Cranberry Juice",
       "type": "Sour",
       "flavor": 3,
       "style": "cranberry",
@@ -648,8 +648,14 @@
       "abv": 0,
       "blurb": "Tart enough to wake a cocktail up. The pink half of half the classics.",
       "charges": [
-        { "emotion": "Excitement", "amount": 6 },
-        { "emotion": "Fatigue", "amount": -4 }
+        {
+          "emotion": "Excitement",
+          "amount": 6
+        },
+        {
+          "emotion": "Fatigue",
+          "amount": -4
+        }
       ],
       "art_prompt": "a clear carafe with a crimson blank label and a cork stopper"
     },
@@ -667,14 +673,20 @@
       "abv": 20,
       "blurb": "Espresso with a passport. Keeps the night going in both directions.",
       "charges": [
-        { "emotion": "Fatigue", "amount": -12 },
-        { "emotion": "Excitement", "amount": 8 }
+        {
+          "emotion": "Fatigue",
+          "amount": -12
+        },
+        {
+          "emotion": "Excitement",
+          "amount": 8
+        }
       ],
       "art_prompt": "a squat clear bottle with a coffee-brown blank label and a black cap"
     },
     {
       "id": "pineapple_isla",
-      "name": "Isla Pineapple",
+      "name": "Isla Pineapple Juice",
       "type": "Sour",
       "flavor": 4,
       "style": "pineapple",
@@ -686,14 +698,20 @@
       "abv": 0,
       "blurb": "Sunshine, pressed. The tiki shelf starts here.",
       "charges": [
-        { "emotion": "Excitement", "amount": 10 },
-        { "emotion": "Anxiety", "amount": -5 }
+        {
+          "emotion": "Excitement",
+          "amount": 10
+        },
+        {
+          "emotion": "Anxiety",
+          "amount": -5
+        }
       ],
       "art_prompt": "a clear carafe with a sunny-yellow blank label and a pineapple leaf motif"
     },
     {
       "id": "grenadine_rubis",
-      "name": "Rubis Grenadine",
+      "name": "Rubis Grenadine Syrup",
       "type": "Sweet",
       "flavor": 3,
       "style": "grenadine",
@@ -705,10 +723,136 @@
       "abv": 0,
       "blurb": "Pomegranate red that sinks to the bottom and stays there.",
       "charges": [
-        { "emotion": "Excitement", "amount": 6 },
-        { "emotion": "Anxiety", "amount": -3 }
+        {
+          "emotion": "Excitement",
+          "amount": 6
+        },
+        {
+          "emotion": "Anxiety",
+          "amount": -3
+        }
       ],
       "art_prompt": "a small clear cruet with a ruby blank label band and a silver cap"
+    },
+    {
+      "id": "vodka_leonid",
+      "name": "Leonid Reserve Vodka",
+      "style": "vodka",
+      "category": "vodka",
+      "type": "Spirit",
+      "tier": 3,
+      "price": 22,
+      "abv": 42,
+      "flavor": 8,
+      "origin": "Saint Petersburg, Russia",
+      "blurb": "Distilled nine times, then left alone. Nothing to hide behind.",
+      "art_prompt": "an elegant tall crystal vodka bottle with a platinum label and a long neck",
+      "charges": [
+        {
+          "emotion": "Excitement",
+          "amount": 18
+        },
+        {
+          "emotion": "Anxiety",
+          "amount": -9
+        }
+      ]
+    },
+    {
+      "id": "gin_thornwood",
+      "name": "Thornwood Botanical Gin",
+      "style": "gin",
+      "category": "gin",
+      "type": "Spirit",
+      "tier": 3,
+      "price": 24,
+      "abv": 45,
+      "flavor": 9,
+      "origin": "Islay, Scotland",
+      "blurb": "Seventeen botanicals, counted. You can taste the argument between them.",
+      "art_prompt": "a tall dark green gin bottle with a copper botanical engraving and wax seal",
+      "charges": [
+        {
+          "emotion": "Anxiety",
+          "amount": -16
+        },
+        {
+          "emotion": "Sadness",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "id": "bourbon_ashfall",
+      "name": "Ashfall Single Barrel Whiskey",
+      "style": "bourbon",
+      "category": "whiskey",
+      "type": "Spirit",
+      "tier": 3,
+      "price": 28,
+      "abv": 47,
+      "flavor": 10,
+      "origin": "Bardstown, Kentucky",
+      "blurb": "One barrel, hand-picked. Twelve years of somebody waiting.",
+      "art_prompt": "a heavy squat whiskey bottle with a charred oak label and a brass cap",
+      "charges": [
+        {
+          "emotion": "Fatigue",
+          "amount": -18
+        },
+        {
+          "emotion": "Sadness",
+          "amount": 8
+        }
+      ]
+    },
+    {
+      "id": "rum_windward",
+      "name": "Windward XO Rum",
+      "style": "rum",
+      "category": "rum",
+      "type": "Spirit",
+      "tier": 3,
+      "price": 25,
+      "abv": 45,
+      "flavor": 9,
+      "origin": "Bridgetown, Barbados",
+      "blurb": "Twenty years in the heat. It came out slower than it went in.",
+      "art_prompt": "a dark rounded rum bottle with a gold XO crest and a rope-bound neck",
+      "charges": [
+        {
+          "emotion": "Excitement",
+          "amount": 17
+        },
+        {
+          "emotion": "Fatigue",
+          "amount": -11
+        }
+      ]
+    },
+    {
+      "id": "tequila_sol_viejo",
+      "name": "Sol Viejo Añejo Tequila",
+      "style": "tequila",
+      "category": "tequila",
+      "type": "Spirit",
+      "tier": 3,
+      "price": 30,
+      "abv": 44,
+      "flavor": 10,
+      "origin": "Tequila, Jalisco",
+      "blurb": "Three years under oak. The agave stops shouting and starts talking.",
+      "art_prompt": "a rounded amber tequila bottle with a hand-painted sun and a cork stopper",
+      "charges": [
+        {
+          "emotion": "Excitement",
+          "amount": 20
+        },
+        {
+          "emotion": "Anxiety",
+          "amount": -8
+        }
+      ]
     }
   ]
 }
