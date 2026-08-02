@@ -426,6 +426,70 @@ namespace LastCall.Tests
                 }),
         };
 
+        // ── the exact pour (2026-08-02) ─────────────────────────────────────────
+        // The player is shown a number, not a range, so that number has to be real:
+        // inside every band, and a full glass.
+
+        [Test]
+        public void EveryShippedRecipe_HasAnExactPour_ThatIsLegalAndFillsTheGlass()
+        {
+            foreach (var recipe in RecipeCatalog.CreateDefault())
+            {
+                var bands = recipe.RatioRequirements;
+                if (bands.Count == 0) continue;
+
+                var pour = RatioRecipeMatcher.IdealPour(recipe);
+                Assert.AreEqual(bands.Count, pour.Length, recipe.Id);
+
+                double sum = 0;
+                for (int i = 0; i < bands.Count; i++)
+                {
+                    Assert.GreaterOrEqual(pour[i], bands[i].MinRatio - 1e-9,
+                        $"{recipe.Id}: {bands[i]} poured {pour[i]:P0}");
+                    Assert.LessOrEqual(pour[i], bands[i].MaxRatio + 1e-9,
+                        $"{recipe.Id}: {bands[i]} poured {pour[i]:P0}");
+                    sum += pour[i];
+                }
+
+                // A full glass, unless the bands between them cannot reach one — then the
+                // shortfall must be small enough to pass as the splash the matcher allows.
+                double reach = 0;
+                foreach (var b in bands) reach += b.MaxRatio;
+                if (reach >= 1.0) Assert.AreEqual(1.0, sum, 1e-6, recipe.Id);
+                else Assert.GreaterOrEqual(sum, 1.0 - RatioRecipeMatcher.MaxUnnamedShare, recipe.Id);
+            }
+        }
+
+        [Test]
+        public void TheExactPour_IsWhatTheMatcherReadsBack()
+        {
+            // The number on the card must make the drink it names. Poured at the printed
+            // shares, every recipe identifies as itself.
+            var book = RecipeCatalog.CreateDefault();
+            foreach (var recipe in book)
+            {
+                var bands = recipe.RatioRequirements;
+                if (bands.Count == 0 || !bands[0].IsStyleBand) continue;
+
+                var cards = new Dictionary<string, IngredientCard>();
+                var glass = new GlassContents(1.0);
+                var pour = RatioRecipeMatcher.IdealPour(recipe);
+                for (int i = 0; i < bands.Count; i++)
+                {
+                    string id = "b_" + bands[i].Style;
+                    cards[id] = new IngredientCard(id, id, IngredientType.Spirit, 5,
+                        info: new IngredientInfo(bands[i].Style, Math.Max(1, bands[i].MinTier)));
+                    glass.Add(id, pour[i]);
+                }
+
+                var match = RatioRecipeMatcher.Match(glass, book,
+                    id => cards.TryGetValue(id, out var c) ? c : null);
+                Assert.IsNotNull(match, recipe.Id);
+                Assert.GreaterOrEqual(match.Recipe.Rank, recipe.Rank,
+                    $"{recipe.Id} poured exactly read as {match.Recipe.Id}");
+            }
+        }
+
         [Test]
         public void ATopShelfBand_IsFilledByTheGoodBottle()
         {

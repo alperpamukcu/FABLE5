@@ -162,7 +162,7 @@ namespace LastCall.UI
         private Image _idPhoto;
         private Text _idName, _idAgeFrom, _idRel, _idIntent, _idOrder, _idOrderParts, _idRates, _idRatesLabel;
         private RectTransform _idRecipeTip;
-        private Text _idRecipeTipText;
+        private RectTransform _idRecipeTipBody;
         private RectTransform _idPrefRow;
 
         /// <summary>How a drink is worked, in one word.</summary>
@@ -171,29 +171,199 @@ namespace LastCall.UI
             : r.Prep == PrepMethod.Shaken ? "SHAKEN"
             : r.Prep == PrepMethod.Stirred ? "STIRRED" : "BUILT";
 
+        /// <summary>One line of a recipe's spec card: an ingredient with its exact share,
+        /// or a plain note (the prep, the fill, the glass).</summary>
+        private readonly struct SpecRow
+        {
+            public readonly string Style;    // null on a note row
+            public readonly string Label;
+            public readonly string Amount;   // "" on a note row
+            public readonly int MinTier;
+
+            public SpecRow(string style, string label, string amount = "", int minTier = 1)
+            { Style = style; Label = label; Amount = amount; MinTier = minTier; }
+        }
+
         /// <summary>
         /// A recipe as a SPEC CARD: the prep, then one pour to a line, then the fill and the
-        /// glass. The vertical form is the readable one (the author, 2026-08-02: use the ID
-        /// card's recipe display in the menu too) — a run-on "GIN 45–65 · LEMON 20–40 ·
-        /// SYRUP 10–30" wraps mid-number and has to be parsed; a column is read.
+        /// glass. The vertical form is the readable one (the author, 2026-08-02) — a run-on
+        /// "GIN 45–65% · LEMON 20–40% · SYRUP 10–30%" wraps mid-number and has to be parsed;
+        /// a column is read.
         ///
-        /// Built once and shared, so the licence and the book cannot drift apart. Only the
-        /// ink differs: cyan on the card's dark panel, brown on the book's paper.
+        /// Each pour shows the EXACT share to build at, not its tolerance band: the bands are
+        /// how forgiving the matcher is, which is the game's business and not an instruction.
+        /// A player told "45–65% gin" has to pick a number anyway, so the card picks it —
+        /// <see cref="RatioRecipeMatcher.IdealPour"/>, which is inside every band and fills
+        /// the glass. Built once and shared, so the licence and the book cannot drift.
         /// </summary>
-        private static List<string> RecipeSpecLines(RecipeDefinition r,
-            string prepInk, string numberInk, string quietInk)
+        private static List<SpecRow> RecipeSpecRows(RecipeDefinition r)
         {
-            var lines = new List<string> { $"<color={prepInk}>{PrepWord(r)}</color>" };
-            foreach (var band in r.RatioRequirements)
-                lines.Add((band.IsStyleBand ? band.Style.Replace('_', ' ') : band.Type.ToString())
-                    .ToUpperInvariant()
-                    + $"  <color={numberInk}>{band.MinRatio * 100:0}–{band.MaxRatio * 100:0}%</color>"
-                    + (band.MinTier > 1 ? $"  <color={quietInk}>T{band.MinTier}+</color>" : ""));
-            if (r.MinFill > 0) lines.Add($"FILL  <color={numberInk}>{r.MinFill * 100:0}%+</color>");
+            var rows = new List<SpecRow> { new SpecRow(null, PrepWord(r)) };
+            var bands = r.RatioRequirements;
+            var shown = WholePercents(RatioRecipeMatcher.IdealPour(r));
+            for (int i = 0; i < bands.Count; i++)
+            {
+                var b = bands[i];
+                rows.Add(new SpecRow(
+                    b.IsStyleBand ? b.Style : null,
+                    (b.IsStyleBand ? b.Style.Replace('_', ' ') : b.Type.ToString()).ToUpperInvariant(),
+                    $"{shown[i]}%",
+                    b.MinTier));
+            }
+            if (r.MinFill > 0) rows.Add(new SpecRow(null, "FILL", $"{r.MinFill * 100:0}%+"));
             if (!string.IsNullOrEmpty(r.GlassId))
-                lines.Add($"<color={quietInk}>{r.GlassId.ToUpperInvariant()}</color>");
-            return lines;
+                rows.Add(new SpecRow(null, r.GlassId.ToUpperInvariant()));
+            return rows;
         }
+
+        /// <summary>
+        /// Shares as whole percents that still add up to what they came from. Rounding each
+        /// one on its own prints a Gin Sour as 53 + 28 + 18 = 99, and a card that shows exact
+        /// numbers cannot show numbers that do not total (the author's whole point in asking
+        /// for the perfect pour). Largest remainder: everyone floors, and the pennies go to
+        /// whoever was cut closest to rounding up.
+        /// </summary>
+        private static int[] WholePercents(double[] shares)
+        {
+            int n = shares.Length;
+            var whole = new int[n];
+            double total = 0;
+            for (int i = 0; i < n; i++) total += shares[i];
+            int target = (int)System.Math.Round(total * 100);
+
+            int given = 0;
+            var remainder = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                double exact = shares[i] * 100;
+                whole[i] = (int)System.Math.Floor(exact);
+                remainder[i] = exact - whole[i];
+                given += whole[i];
+            }
+            for (int spare = target - given; spare > 0; spare--)
+            {
+                int best = -1;
+                for (int i = 0; i < n; i++)
+                    if (remainder[i] >= 0 && (best < 0 || remainder[i] > remainder[best])) best = i;
+                if (best < 0) break;
+                whole[best]++;
+                remainder[best] = -1;   // one pip each, so the biggest share cannot take them all
+            }
+            return whole;
+        }
+
+        /// <summary>Whether the bar can actually pour this band right now — the style, at the
+        /// rung the recipe asks for, with something left in the bottle.</summary>
+        private bool InStock(string style, int minTier)
+        {
+            var run = Run;
+            if (run == null || string.IsNullOrEmpty(style)) return false;
+            foreach (var b in run.Shelf.Bottles)
+                if (!b.IsEmpty && b.Ingredient.Info != null && b.Ingredient.Info.Style == style
+                    && b.Ingredient.Info.Tier >= minTier) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Draws a recipe's spec into <paramref name="host"/>, one row a line: the bottle's
+        /// own art, its name, its exact share. A bottle the bar HAS is framed and printed in
+        /// full ink; one it lacks is dimmed and unframed, so "can I make this" is answered by
+        /// looking rather than by remembering (the author, 2026-08-02). The icons are the
+        /// same silhouettes that stand on the back bar — seeing them here is how the shapes
+        /// become readable there.
+        /// </summary>
+        private float DrawRecipeSpec(RectTransform host, RecipeDefinition r, bool dark,
+            float width, string note = null)
+        {
+            for (int i = host.childCount - 1; i >= 0; i--) Destroy(host.GetChild(i).gameObject);
+
+            Color ink = dark ? UITheme.Cream[4] : new Color(0.20f, 0.13f, 0.07f);
+            Color quiet = dark ? new Color(0.61f, 0.58f, 0.66f) : new Color(0.52f, 0.44f, 0.36f);
+            Color figure = dark ? UITheme.Cyan[3] : new Color(0.10f, 0.06f, 0.02f);
+            Color prepInk = dark ? UITheme.Magenta[3] : new Color(0.11f, 0.37f, 0.40f);
+            Color have = dark ? new Color(1f, 1f, 1f, 0.07f) : new Color(0.36f, 0.22f, 0.08f, 0.09f);
+            Color miss = dark ? new Color(0.61f, 0.58f, 0.66f, 0.55f) : new Color(0.52f, 0.44f, 0.36f, 0.6f);
+
+            var rows = RecipeSpecRows(r);
+            float y = 0f;
+            for (int i = 0; i < rows.Count; i++)
+            {
+                var spec = rows[i];
+                bool ingredient = spec.Style != null;
+                bool stocked = ingredient && InStock(spec.Style, spec.MinTier);
+
+                var line = NewRect($"S{i}", host);
+                Place(line, new Vector2(0, 1), new Vector2(width, SpecRowH), Vector2.zero);
+                line.pivot = new Vector2(0, 1);
+                line.anchoredPosition = new Vector2(0, -y);
+                y += SpecRowH;
+
+                // The frame is the "you have this" tell: a lit slab behind the row.
+                if (stocked)
+                {
+                    var slab = line.gameObject.AddComponent<Image>();
+                    slab.color = have;
+                    slab.raycastTarget = false;
+                }
+
+                float textX = 2f;
+                if (ingredient)
+                {
+                    var art = ItemArt.Bottle(spec.Style);
+                    if (art != null)
+                    {
+                        var icon = NewRect("B", line);
+                        Place(icon, new Vector2(0, 0.5f), new Vector2(SpecRowH - 3f, SpecRowH - 3f),
+                            new Vector2(3f, 0));
+                        var img = icon.gameObject.AddComponent<Image>();
+                        img.sprite = art;
+                        img.preserveAspect = true;
+                        img.raycastTarget = false;
+                        img.color = stocked ? Color.white : new Color(1f, 1f, 1f, 0.35f);
+                    }
+                    textX = SpecRowH + 4f;
+                }
+
+                var label = NewText("L", line, _body, 16, TextAnchor.MiddleLeft,
+                    ingredient ? (stocked ? ink : miss) : (i == 0 ? prepInk : quiet));
+                Place(label.rectTransform, new Vector2(0, 0.5f), new Vector2(width - textX - 46f, SpecRowH),
+                    Vector2.zero);
+                label.rectTransform.pivot = new Vector2(0, 0.5f);
+                label.rectTransform.anchoredPosition = new Vector2(textX, 0);
+                label.horizontalOverflow = HorizontalWrapMode.Overflow;
+                label.raycastTarget = false;
+                label.text = spec.Label + (spec.MinTier > 1 ? $"  T{spec.MinTier}+" : "");
+
+                if (spec.Amount.Length > 0)
+                {
+                    var amount = NewText("A", line, _body, 16, TextAnchor.MiddleRight,
+                        ingredient && !stocked ? miss : figure);
+                    Place(amount.rectTransform, new Vector2(1, 0.5f), new Vector2(52, SpecRowH),
+                        new Vector2(-2, 0));
+                    amount.horizontalOverflow = HorizontalWrapMode.Overflow;
+                    amount.raycastTarget = false;
+                    amount.text = spec.Amount;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(note))
+            {
+                var n = NewText("Note", host, _body, 16, TextAnchor.MiddleLeft, quiet);
+                Place(n.rectTransform, new Vector2(0, 1), new Vector2(width, SpecRowH), Vector2.zero);
+                n.rectTransform.pivot = new Vector2(0, 1);
+                n.rectTransform.anchoredPosition = new Vector2(2f, -y);
+                n.raycastTarget = false;
+                n.text = note;
+                y += SpecRowH;
+            }
+            return y;
+        }
+
+        /// <summary>How tall one line of a spec card is — the bottle icons are square to it.</summary>
+        private const float SpecRowH = 20f;
+
+        /// <summary>How many lines a recipe's spec will take, for sizing a cell before it is drawn.</summary>
+        private static int SpecRowCount(RecipeDefinition r) => RecipeSpecRows(r).Count;
 
         /// <summary>How wide the hover spec is, beside the card.</summary>
         private const float TipW = 252f;
@@ -202,10 +372,9 @@ namespace LastCall.UI
         private void ShowOrderRecipeTip()
         {
             var visit = _idVisit;
-            if (visit == null || _idRecipeTip == null) return;
-            var lines = RecipeSpecLines(visit.Order.Wanted, "#FF6EC7", "#8FE8DC", "#9C93A8");
-            _idRecipeTipText.text = string.Join("\n", lines);
-            _idRecipeTip.sizeDelta = new Vector2(TipW, 18 + lines.Count * 20);
+            if (visit == null || _idRecipeTip == null || _idRecipeTipBody == null) return;
+            float h = DrawRecipeSpec(_idRecipeTipBody, visit.Order.Wanted, dark: true, width: TipW - 20f);
+            _idRecipeTip.sizeDelta = new Vector2(TipW, h + 16f);
             _idRecipeTip.gameObject.SetActive(true);
             _idRecipeTip.SetAsLastSibling();
         }
@@ -1984,14 +2153,15 @@ namespace LastCall.UI
             int maxLines = 0;
             foreach (var r in rs)
             {
-                int n = RecipeSpecLines(r, "#000", "#000", "#000").Count;
+                int n = SpecRowCount(r);
                 if (n > maxLines) maxLines = n;
             }
+            if (lockedRows) maxLines++;   // the star gate takes its own line
             int cols = 2;
             var sec = NewRect("Sec", _bookList);
             var g = sec.gameObject.AddComponent<GridLayoutGroup>();
             float fullW = BkW * BkPaperW - 44f;
-            g.cellSize = new Vector2(fullW / 2f - 6f, 32f + maxLines * 19f);
+            g.cellSize = new Vector2(fullW / 2f - 6f, 30f + maxLines * SpecRowH);
             g.spacing = new Vector2(12, 8);
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             g.constraintCount = cols;
@@ -2029,20 +2199,16 @@ namespace LastCall.UI
             Stretch(name.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(52, -24), new Vector2(-4, -4));
             name.text = r.Name.ToUpperInvariant();
 
-            var line = NewText("L", row, _body, 16, TextAnchor.UpperLeft, new Color(0.45f, 0.35f, 0.24f));
-            Stretch(line.rectTransform, Vector2.zero, Vector2.one, new Vector2(52, 4), new Vector2(-4, -26));
-            line.horizontalOverflow = HorizontalWrapMode.Overflow;   // a column, not a paragraph
-            line.verticalOverflow = VerticalWrapMode.Overflow;
-            line.supportRichText = true;
-            line.lineSpacing = 0.86f;
-            // The same spec card the licence draws, in the book's own ink (2026-08-02).
-            var spec = RecipeSpecLines(r, "#1B5F66", "#1A0E06", "#7A6450");
-            if (lockedRow)
-            {
-                double gate = run.RecipeStarGate(r);
-                if (gate > 0) spec[0] += $"   <color=#7A6450>{gate:0.0}★</color>";
-            }
-            line.text = string.Join("\n", spec);
+            // The same spec card the licence draws, in the book's own ink (2026-08-02):
+            // exact shares, the bottles' own art, and the stocked ones lit.
+            var body = NewRect("Spec", row);
+            float bodyW = parent.GetComponent<GridLayoutGroup>().cellSize.x - 56f;
+            Place(body, new Vector2(0, 1), new Vector2(bodyW, 10), Vector2.zero);
+            body.pivot = new Vector2(0, 1);
+            body.anchoredPosition = new Vector2(52, -24);
+            double gate = lockedRow ? run.RecipeStarGate(r) : 0;
+            DrawRecipeSpec(body, r, dark: false, width: bodyW,
+                note: gate > 0 ? $"OPENS AT {gate:0.0}★" : null);
         }
 
         /// <summary>"GIN 45–65 · LEMON 20–40 · SYRUP 10–30" — the pour, said in shares.</summary>
@@ -2399,12 +2565,8 @@ namespace LastCall.UI
             Hairline(_idRecipeTip, new Vector2(0, 1), new Vector2(1, 1), tipEdge);
             HairlineV(_idRecipeTip, 0f, tipEdge);
             HairlineV(_idRecipeTip, 1f, tipEdge);
-            _idRecipeTipText = NewText("T", _idRecipeTip, _body, 16, TextAnchor.UpperLeft,
-                UITheme.TextSecondary);
-            _idRecipeTipText.raycastTarget = false;
-            Stretch(_idRecipeTipText.rectTransform, Vector2.zero, Vector2.one, new Vector2(10, 6), new Vector2(-10, -6));
-            _idRecipeTipText.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _idRecipeTipText.verticalOverflow = VerticalWrapMode.Overflow;
+            _idRecipeTipBody = NewRect("Body", _idRecipeTip);
+            Stretch(_idRecipeTipBody, Vector2.zero, Vector2.one, new Vector2(10, 6), new Vector2(-10, -6));
             _idRecipeTip.gameObject.SetActive(false);
             var trig = orderHit.gameObject.AddComponent<EventTrigger>();
             var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };

@@ -288,13 +288,19 @@ namespace LastCall.EditorTools
             // the pour-out. The old menu had no carbonated style bands, so the first Gin &
             // Tonic the bot ever built CRASHED the whole batch here (2026-07-31).
             var atGlass = new List<(string id, double vol)>();
-            foreach (var band in recipe.RatioRequirements)
+            // The EXACT pour the book prints (2026-08-02), not the bands' raw midpoints:
+            // those total 103% on a Gin Sour and 94% on an Espresso Martini, so the bot was
+            // measuring a bartender who cannot add up. IdealPour is inside every band and
+            // fills the glass, which is what the card now tells the player to do.
+            var ideal = RatioRecipeMatcher.IdealPour(recipe);
+            for (int bi = 0; bi < recipe.RatioRequirements.Count; bi++)
             {
+                var band = recipe.RatioRequirements[bi];
                 var bottle = band.IsStyleBand
                     ? PickByStyle(run.Shelf, band.Style)
                     : PickBottle(run.Shelf, band.Type, visit);
                 if (bottle == null) return false;
-                double share = (band.MinRatio + band.MaxRatio) / 2.0;
+                double share = ideal[bi];
                 double amount = Math.Min(volume * share, bottle.Remaining);
                 if (bottle.Ingredient.Info?.Carbonated == true)
                     atGlass.Add((bottle.Id, amount));

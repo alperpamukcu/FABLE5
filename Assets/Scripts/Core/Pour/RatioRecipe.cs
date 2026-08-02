@@ -243,6 +243,56 @@ namespace LastCall.Core
             return share;
         }
 
+        /// <summary>
+        /// The one pour this recipe is BUILT at: the share of the glass each band wants,
+        /// summing to a full glass, aligned with <see cref="RecipeDefinition.RatioRequirements"/>.
+        ///
+        /// A band is a tolerance, not an instruction (the author, 2026-08-02: show the player
+        /// the perfect number, not the range) — and the ranges' own midpoints are no answer,
+        /// because 32 of the 53 shipped recipes have midpoints that total 103% or 94%. This
+        /// starts from those midpoints and settles the difference across whatever slack each
+        /// band still has, so the result lands inside every band AND fills the glass. Where
+        /// the bands cannot reach a full glass between them the pour stops at their maxima;
+        /// what is left is the splash <see cref="MaxUnnamedShare"/> already allows.
+        /// </summary>
+        public static double[] IdealPour(RecipeDefinition recipe)
+        {
+            var bands = recipe?.RatioRequirements;
+            if (bands == null || bands.Count == 0) return Array.Empty<double>();
+
+            int n = bands.Count;
+            var pour = new double[n];
+            for (int i = 0; i < n; i++) pour[i] = (bands[i].MinRatio + bands[i].MaxRatio) * 0.5;
+
+            // Settle toward a full glass, moving each band in proportion to the room it has
+            // left in the direction needed. Bands that are already at their limit stop
+            // taking any of the correction, which is what keeps the answer legal.
+            for (int pass = 0; pass < 24; pass++)
+            {
+                double sum = 0;
+                for (int i = 0; i < n; i++) sum += pour[i];
+                double need = 1.0 - sum;
+                if (Math.Abs(need) < 1e-9) break;
+
+                double slack = 0;
+                var room = new double[n];
+                for (int i = 0; i < n; i++)
+                {
+                    room[i] = need > 0 ? bands[i].MaxRatio - pour[i] : pour[i] - bands[i].MinRatio;
+                    if (room[i] < 0) room[i] = 0;
+                    slack += room[i];
+                }
+                if (slack <= 1e-12) break;   // the bands simply cannot reach a full glass
+
+                double step = Math.Min(Math.Abs(need), slack) * Math.Sign(need);
+                for (int i = 0; i < n; i++) pour[i] += step * (room[i] / slack);
+            }
+
+            for (int i = 0; i < n; i++)
+                pour[i] = Math.Min(bands[i].MaxRatio, Math.Max(bands[i].MinRatio, pour[i]));
+            return pour;
+        }
+
         /// <summary>How much of the glass may be ingredients the recipe never mentions.
         /// Loosened 0.10 → 0.15 (2026-07-20): a garnish pinch plus a splash should not
         /// knock a drink out of its recipe.</summary>
