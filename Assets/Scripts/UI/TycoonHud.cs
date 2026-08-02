@@ -42,6 +42,8 @@ namespace LastCall.UI
         /// by now, and it carries between nights instead of resetting every morning.</summary>
         private Text _ratingText;
         private RectTransform _starsFill;
+        private Text _clockText;          // the hour, the board's biggest reading
+        private Image _clockRule, _tillRule, _standingRule;   // each plaque's lit base
         private readonly Image[] _ratingStars = new Image[BarRating.MaxStars];
 
         // Seats at the counter (GDD 24 §4, 2026-07-22): customers sit along the bar as
@@ -1062,14 +1064,24 @@ namespace LastCall.UI
             int hh = (int)hour % 24, mm = (int)((hour - (int)hour) * 60);
             // Kept short on purpose: the clock string is longer than the old "DAY 1" and ran
             // straight into the till at the money's fixed x. Who is in is on the seat row.
-            _dayText.text = run.Floor.IsClosingTime
-                ? $"{hh:00}:{mm / 5 * 5:00}  ·  LAST CALL"
-                : $"{hh:00}:{mm / 5 * 5:00}  ·  {CalendarFor(run.Day)}";
+            _clockText.text = $"{hh:00}:{mm / 5 * 5:00}";
+            // The plaque's rule is the state light: cyan through the shift, magenta once the
+            // room is being called — visible from across the screen without reading a word.
+            bool last = run.Floor.IsClosingTime;
+            _dayText.text = last ? "LAST CALL" : CalendarFor(run.Day);
+            _dayText.color = last ? UITheme.Magenta[4] : UITheme.Cyan[3];
+            _clockText.color = last ? UITheme.Magenta[4] : UITheme.TextPrimary;
+            if (_clockRule != null) _clockRule.color = last ? UITheme.Magenta[3] : UITheme.Cyan[2];
+
+            bool red = run.Money < 0;
             _moneyText.text = $"${run.Money}";
-            _moneyText.color = run.Money < 0 ? UITheme.ViceRed[3] : UITheme.Money;
+            _moneyText.color = red ? UITheme.ViceRed[3] : UITheme.Money;
+            if (_tillRule != null) _tillRule.color = red ? UITheme.ViceRed[3] : UITheme.Amber[2];
             if (stage != null) stage.SetMoney($"${run.Money}");
-            _crowdText.text = run.CrowdToday == WealthTier.HighRoller ? "HIGH ROLLERS"
-                : run.CrowdToday == WealthTier.Broke ? "BROKE CROWD" : "REGULARS";
+            _crowdText.text = run.CrowdToday == WealthTier.HighRoller ? "TONIGHT · HIGH ROLLERS"
+                : run.CrowdToday == WealthTier.Broke ? "TONIGHT · BROKE CROWD" : "TONIGHT · REGULARS";
+            _crowdText.color = run.CrowdToday == WealthTier.HighRoller ? UITheme.Magenta[4]
+                : run.CrowdToday == WealthTier.Broke ? UITheme.ViceRed[3] : UITheme.Cream[2];
 
             // The standing, as a number and as a row of stars. A half-lit star is a real
             // half: the average is continuous, and rounding it to whole stars would hide
@@ -1077,7 +1089,7 @@ namespace LastCall.UI
             double stars = run.Rating.Average;
             _ratingText.text = stars.ToString("0.0");
             // A 1.3 is 1.3 stars of amber: the mask's width IS the rating (the author).
-            _starsFill.sizeDelta = new Vector2((float)(stars / 5.0) * _ratingStars.Length * 20f, 0);
+            _starsFill.sizeDelta = new Vector2((float)(stars / 5.0) * _ratingStars.Length * StarGap, 0);
         }
 
         private void RefreshSeats()
@@ -1992,6 +2004,39 @@ namespace LastCall.UI
             return t;
         }
 
+        /// <summary>How tall the board is, and where a plaque sits on it.</summary>
+        private const float TopBarH = 54f, PlaqueH = 40f, PlaqueY = 3f;
+        private const float StarSize = 14f, StarGap = 17f;
+
+        /// <summary>
+        /// One reading on the board: a recessed slab, lit along its top edge and seated on a
+        /// rule in its own accent — the licence card's field, in neon rather than ink. The
+        /// rule is handed back because it is also the state light: the clock's turns magenta
+        /// at last call, the till's turns red in the red.
+        /// </summary>
+        private RectTransform TopPlaque(RectTransform parent, string name, Vector2 anchor,
+            Vector2 size, Vector2 pos, Color accent, out Image rule)
+        {
+            var rt = NewRect(name, parent);
+            rt.anchorMin = rt.anchorMax = rt.pivot = anchor;
+            rt.sizeDelta = size;
+            rt.anchoredPosition = pos;
+            var slab = rt.gameObject.AddComponent<Image>();
+            slab.color = UITheme.Night[0];
+            slab.raycastTarget = false;
+            Hairline(rt, new Vector2(0, 1), new Vector2(1, 1), UITheme.Night[2]);
+
+            var r = NewRect("Rule", rt);
+            r.anchorMin = new Vector2(0, 0); r.anchorMax = new Vector2(1, 0);
+            r.pivot = new Vector2(0.5f, 0);
+            r.sizeDelta = new Vector2(0, 2);
+            r.anchoredPosition = Vector2.zero;
+            rule = r.gameObject.AddComponent<Image>();
+            rule.color = accent;
+            rule.raycastTarget = false;
+            return rt;
+        }
+
         private void Hairline(RectTransform parent, Vector2 aMin, Vector2 aMax, Color c)
         {
             var r = NewRect("HL", parent);
@@ -2240,7 +2285,7 @@ namespace LastCall.UI
         private void BuildSettings(RectTransform root)
         {
             _settingsPanel = NewRect("Settings", root);
-            Place(_settingsPanel, new Vector2(1, 1), new Vector2(240, 214), new Vector2(-16, -48));
+            Place(_settingsPanel, new Vector2(1, 1), new Vector2(240, 214), new Vector2(-16, -58));
             _settingsPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
 
             var title = NewText("T", _settingsPanel, _body, 10, TextAnchor.UpperCenter, UITheme.TextSecondary);
@@ -2628,45 +2673,70 @@ namespace LastCall.UI
                 es.transform.SetParent(transform, false);
             }
 
-            // Top bar v2 (v5 P13). Three groups, each anchored to its own edge instead of the
-            // hand-tuned offsets from the centre that the first pass used: the clock at the
-            // left, the till in the middle, the standing at the right. It is also OPAQUE now,
-            // with a lit bottom rule — at 0.82 the neon sign behind it showed straight through
-            // the rating, which is the one number the whole loop is about.
+            // The board over the back counter (the author, 2026-08-02: a top bar that
+            // belongs to this bar). A dark fascia, lit along its top edge where the room
+            // catches it and burning along its bottom in neon; the three readings sit on
+            // it as PLAQUES, each seated on its own coloured rule — the licence card's
+            // language, so the game's two instrument surfaces read as one hand.
             var top = Panel(root, "TopBar", new Vector2(0, 1), new Vector2(1, 1),
-                new Vector2(0, -44), Vector2.zero, UITheme.Night[0]);
-            var rule = NewRect("Rule", top);
-            rule.anchorMin = new Vector2(0, 0); rule.anchorMax = new Vector2(1, 0);
-            rule.pivot = new Vector2(0.5f, 0);
-            rule.sizeDelta = new Vector2(0, 2);
-            rule.anchoredPosition = Vector2.zero;
-            rule.gameObject.AddComponent<Image>().color = UITheme.Amber[2];
+                new Vector2(0, -TopBarH), Vector2.zero, UITheme.Night[1]);
+            Hairline(top, new Vector2(0, 1), new Vector2(1, 1), UITheme.Night[3]);
 
-            _dayText = NewText("Day", top, _display, 14, TextAnchor.MiddleLeft, UITheme.TextPrimary);
-            Place(_dayText.rectTransform, new Vector2(0, 0.5f), new Vector2(300, 30), new Vector2(16, 0));
+            // The tube: a bright core over a wider glow, bleeding below the panel. One flat
+            // line was the only themed thing up here and it read as a divider; neon reads
+            // as a room.
+            var tube = NewRect("Neon", top);
+            tube.anchorMin = new Vector2(0, 0); tube.anchorMax = new Vector2(1, 0);
+            tube.pivot = new Vector2(0.5f, 0);
+            tube.sizeDelta = new Vector2(0, 2);
+            tube.anchoredPosition = Vector2.zero;
+            var tubeImg = tube.gameObject.AddComponent<Image>();
+            tubeImg.color = UITheme.Amber[4]; tubeImg.raycastTarget = false;
+            var bloom = NewRect("NeonBloom", top);
+            bloom.anchorMin = new Vector2(0, 0); bloom.anchorMax = new Vector2(1, 0);
+            bloom.pivot = new Vector2(0.5f, 1);
+            bloom.sizeDelta = new Vector2(0, 5);
+            bloom.anchoredPosition = Vector2.zero;
+            var bloomImg = bloom.gameObject.AddComponent<Image>();
+            bloomImg.color = new Color(UITheme.Amber[2].r, UITheme.Amber[2].g, UITheme.Amber[2].b, 0.30f);
+            bloomImg.raycastTarget = false;
 
-            _moneyText = NewText("Money", top, _display, 16, TextAnchor.MiddleCenter, UITheme.Money);
-            Place(_moneyText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(200, 30), Vector2.zero);
+            // ── the hour, left: what the night is measured in ──────────────────
+            var clock = TopPlaque(top, "Clock", new Vector2(0, 0.5f), new Vector2(214, PlaqueH),
+                new Vector2(14, PlaqueY), UITheme.Cyan[2], out _clockRule);
+            _dayText = NewText("Day", clock, _body, 8, TextAnchor.UpperLeft, UITheme.Cyan[3]);
+            Place(_dayText.rectTransform, new Vector2(0, 1), new Vector2(196, 12), new Vector2(9, -5));
+            _dayText.rectTransform.pivot = new Vector2(0, 1);
+            _dayText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _clockText = NewText("Clock", clock, _display, 20, TextAnchor.LowerLeft, UITheme.TextPrimary);
+            Place(_clockText.rectTransform, new Vector2(0, 0), new Vector2(196, 24), new Vector2(9, 4));
+            _clockText.rectTransform.pivot = new Vector2(0, 0);
 
-            // The standing: five stars, the number, and who is in tonight — read right to left
-            // from the NEW RUN button, so the group keeps its shape at any window width.
-            NewButton(top, "NEW RUN", new Vector2(1, 0.5f), new Vector2(110, 30),
-                new Vector2(-68, 0), UITheme.PrimaryAction, () => _bootstrap.StartNewRun(null));
+            // ── the till, centre: the number the whole loop is about ───────────
+            var till = TopPlaque(top, "Till", new Vector2(0.5f, 0.5f), new Vector2(214, PlaqueH),
+                new Vector2(0, PlaqueY), UITheme.Amber[2], out _tillRule);
+            var tillLabel = NewText("L", till, _body, 8, TextAnchor.UpperLeft, UITheme.Amber[2]);
+            Place(tillLabel.rectTransform, new Vector2(0, 1), new Vector2(196, 12), new Vector2(9, -5));
+            tillLabel.rectTransform.pivot = new Vector2(0, 1);
+            tillLabel.text = "TILL";
+            _moneyText = NewText("Money", till, _display, 20, TextAnchor.LowerRight, UITheme.Money);
+            Place(_moneyText.rectTransform, new Vector2(1, 0), new Vector2(196, 24), new Vector2(-9, 4));
+            _moneyText.rectTransform.pivot = new Vector2(1, 0);
 
-            // Settings (P17): sound and reduced motion in one small sheet under a gear. The
-            // audio items the phase asks for live BESIDE the motion toggle — this is the
-            // settings surface module 16 deferred, at its minimum useful size.
-            NewButton(top, "⚙", new Vector2(1, 0.5f), new Vector2(30, 30),
-                new Vector2(-32, 0), UITheme.Night[3], ToggleSettings);
-            BuildSettings(root);
+            // ── the standing, right: the stars and who they brought in ─────────
+            var standing = TopPlaque(top, "Standing", new Vector2(1, 0.5f), new Vector2(236, PlaqueH),
+                new Vector2(-158, PlaqueY), UITheme.Amber[3], out _standingRule);
+            _crowdText = NewText("Crowd", standing, _body, 8, TextAnchor.UpperLeft, UITheme.Cream[2]);
+            Place(_crowdText.rectTransform, new Vector2(0, 1), new Vector2(218, 12), new Vector2(9, -5));
+            _crowdText.rectTransform.pivot = new Vector2(0, 1);
+            _crowdText.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-            // The standing, front and centre (the author: the stars are becoming the
-            // game's spine) — a row of five just right of the till, PARTIALLY filled:
-            // 1.3 shows 1.3 stars' worth of amber under a mask, not a dimmed second star.
-            const float StarSize = 16f, StarGap = 20f;
+            // A 1.3 is 1.3 stars of amber: the mask's width IS the rating. Whole stars would
+            // hide exactly the movement the player is trying to cause.
             float starsW = _ratingStars.Length * StarGap;
-            var starsRow = NewRect("Stars", top);
-            Place(starsRow, new Vector2(0.5f, 0.5f), new Vector2(starsW, StarSize), new Vector2(196f, 0));
+            var starsRow = NewRect("Stars", standing);
+            Place(starsRow, new Vector2(0, 0), new Vector2(starsW, StarSize), new Vector2(8, 5));
+            starsRow.pivot = new Vector2(0, 0);
             for (int i = 0; i < _ratingStars.Length; i++)
             {
                 var star = NewRect($"B{i}", starsRow);
@@ -2698,20 +2768,23 @@ namespace LastCall.UI
                 img.color = UITheme.Amber[3];
                 _ratingStars[i] = img;
             }
-            _ratingText = NewText("Rating", top, _display, 14, TextAnchor.MiddleLeft, UITheme.Amber[3]);
-            Place(_ratingText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(60, 30),
-                new Vector2(196f + starsW * 0.5f + 36f, 0));
+            _ratingText = NewText("Rating", standing, _display, 18, TextAnchor.LowerRight, UITheme.Amber[3]);
+            Place(_ratingText.rectTransform, new Vector2(1, 0), new Vector2(60, 22), new Vector2(-9, 3));
+            _ratingText.rectTransform.pivot = new Vector2(1, 0);
 
-            _crowdText = NewText("Crowd", top, _body, 13, TextAnchor.MiddleRight, UITheme.TextSecondary);
-            Place(_crowdText.rectTransform, new Vector2(1, 0.5f), new Vector2(200, 30),
-                new Vector2(-196f, 0));
+            // ── the quiet end: nothing here is part of the night ───────────────
+            NewButton(top, "NEW RUN", new Vector2(1, 0.5f), new Vector2(86, 26),
+                new Vector2(-46, PlaqueY), UITheme.Night[3], () => _bootstrap.StartNewRun(null));
+            NewButton(top, "⚙", new Vector2(1, 0.5f), new Vector2(26, 26),
+                new Vector2(-14, PlaqueY), UITheme.Night[2], ToggleSettings);
+            BuildSettings(root);
 
             // BIN GLASS retired (v5 P13 / C7): a drink is thrown away by carrying it to the bin
             // on the counter, which is the same verb that serves it.
 
             // Refusal notices ("NOT ENOUGH MONEY") drop in just under the top bar.
             _toast = NewText("Toast", root, _display, 14, TextAnchor.MiddleCenter, UITheme.ViceRed[3]);
-            Place(_toast.rectTransform, new Vector2(0.5f, 1), new Vector2(500, 30), new Vector2(0, -56));
+            Place(_toast.rectTransform, new Vector2(0.5f, 1), new Vector2(500, 30), new Vector2(0, -66));
             _toast.gameObject.SetActive(false);
 
             // Six stools along the counter: each customer is a bust sitting at the bar with a
