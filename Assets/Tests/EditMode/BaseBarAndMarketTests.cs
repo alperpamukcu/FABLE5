@@ -68,35 +68,6 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void EveryEmotion_CanBeMovedBothWays_OnTheStartingShelf()
-        {
-            var charges = Starting().SelectMany(c => c.Charges).ToList();
-            foreach (var emotion in Emotions.All)
-            {
-                Assert.IsTrue(charges.Any(c => c.Emotion == emotion && c.Amount < 0),
-                    $"nothing extinguishes {emotion}");
-                Assert.IsTrue(charges.Any(c => c.Emotion == emotion && c.Amount > 0),
-                    $"nothing fuels {emotion}");
-            }
-        }
-
-        [Test]
-        public void PrimaryCharges_SitInTheirFlavorBand()
-        {
-            // GDD 19 s4: Flavor 1-3 light (4-8), 4-7 standard (9-15), 8-11 heavy (16-24).
-            // Ported from the retired classic-bar suite; the rule outlives the deck.
-            foreach (var card in All())
-            {
-                int primary = card.Charges.Max(c => System.Math.Abs(c.Amount));
-                var (low, high) = card.Flavor <= 3 ? (4, 8)
-                    : card.Flavor <= 7 ? (9, 15)
-                    : (16, 24);
-                Assert.GreaterOrEqual(primary, low, $"{card.Id} (Flavor {card.Flavor})");
-                Assert.LessOrEqual(primary, high, $"{card.Id} (Flavor {card.Flavor})");
-            }
-        }
-
-        [Test]
         public void StartingStyles_AreUnique()
         {
             // One bottle per style on the opening shelf, or the market's "replace your vodka"
@@ -141,10 +112,8 @@ namespace LastCall.Tests
     /// </summary>
     public class MarketTests
     {
-        private static IngredientCard Bottle(string id, string style, int tier, int price = 0,
-            int charge = -10) =>
+        private static IngredientCard Bottle(string id, string style, int tier, int price = 0) =>
             new IngredientCard(id, id, IngredientType.Spirit, 5, QualityTier.HousePour,
-                new[] { new EmotionCharge(Emotion.Anger, charge) },
                 new IngredientInfo(style, tier, price, "somewhere", 40, "test"));
 
         private static readonly IReadOnlyList<RecipeDefinition> Recipes = RecipeCatalog.CreateDefault();
@@ -189,7 +158,7 @@ namespace LastCall.Tests
             // The author's model (2026-08-02): a better bottle is a NEW bottle. The well
             // vodka stays for the cheap drinks; the reserve arrives full beside it for the
             // cocktails that name a rung. Different brands, never the same bottle upgraded.
-            var run = NewRun(new[] { Bottle("vodka_b", "vodka", 2, 6, charge: -14) });
+            var run = NewRun(new[] { Bottle("vodka_b", "vodka", 2, 6) });
             run.Rating.DevSet(2.0);   // the mid rung asks for a bar worth talking about
             RunDayToClose(run);
 
@@ -284,12 +253,9 @@ namespace LastCall.Tests
 
     public class LicenceDataTests
     {
-        private static ArchetypeDefinition Archetype(params string[] hometowns)
-        {
-            var bands = Emotions.All.Select(_ => new EmotionBand(40, 60)).ToList();
-            return new ArchetypeDefinition("test", "Test", bands, new[] { "Sam" },
+        private static ArchetypeDefinition Archetype(params string[] hometowns) =>
+            new ArchetypeDefinition("test", "Test", new[] { "Sam" },
                 hometowns: hometowns.Length > 0 ? hometowns : null);
-        }
 
         [Test]
         public void EveryRegular_GetsAnAdultAge_AndAHometownFromThePool()

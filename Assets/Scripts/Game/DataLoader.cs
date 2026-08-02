@@ -67,7 +67,7 @@ namespace LastCall.Game
                         card.origin, card.abv, card.blurb, card.category, card.carbonated);
                 }
                 var parsed = new IngredientCard(card.id, card.name, ParseType(card.type, card.id),
-                    card.flavor, QualityTier.HousePour, ParseCharges(card.charges, card.id), info);
+                    card.flavor, QualityTier.HousePour, info);
                 if (card.locked) locked.Add(parsed);
                 else cards.Add(parsed);
             }
@@ -133,7 +133,6 @@ namespace LastCall.Game
                     recipe.allDistinctTypes, recipe.allEqualFlavor, recipe.scoreAllMixCards,
                     recipe.equalFlavorGroupSize, recipe.ascendingFlavorGroupSize,
                     recipe.sameTypeGroupMin,
-                    recipe.chargeMultiplier,   // 0 = derive it from baseMult
                     ratioRequirements: ratios, // null = derive from the type pattern
                     minFill: recipe.minFill,
                     locked: recipe.locked,
@@ -216,56 +215,15 @@ namespace LastCall.Game
             {
                 if (string.IsNullOrWhiteSpace(archetype.id))
                     throw new FormatException("Archetypes file has an archetype with an empty id.");
-                if (archetype.bands == null || archetype.bands.Count != Emotions.Count)
-                    throw new FormatException(
-                        $"Archetype '{archetype.id}' needs exactly {Emotions.Count} bands.");
-
-                var bands = new EmotionBand[Emotions.Count];
-                var seen = new bool[Emotions.Count];
-                foreach (var band in archetype.bands)
-                {
-                    var emotion = ParseEnum<Emotion>(band.emotion, archetype.id, "emotion");
-                    if (seen[(int)emotion])
-                        throw new FormatException(
-                            $"Archetype '{archetype.id}' lists {emotion} twice.");
-                    if (band.max < band.min)
-                        throw new FormatException(
-                            $"Archetype '{archetype.id}' has {emotion} max {band.max} below min {band.min}.");
-                    bands[(int)emotion] = new EmotionBand(band.min, band.max);
-                    seen[(int)emotion] = true;
-                }
-
                 int weight = archetype.weight > 0 ? archetype.weight : 1;
                 var hometowns = archetype.hometowns;
                 var demand = string.IsNullOrEmpty(archetype.demand)
                     ? DemandLevel.Easygoing
                     : ParseEnum<DemandLevel>(archetype.demand, archetype.id, "demand");
                 archetypes.Add(new ArchetypeDefinition(
-                    archetype.id, archetype.name, bands, archetype.names, weight, demand, hometowns));
+                    archetype.id, archetype.name, archetype.names, weight, demand, hometowns));
             }
             return archetypes;
-        }
-
-        /// <summary>
-        /// Emotional charges printed on a card (GDD 19 §4). A card with no charges is inert,
-        /// which is legal — it just says nothing to anyone.
-        /// </summary>
-        private static IReadOnlyList<EmotionCharge> ParseCharges(List<ChargeDto> dtos, string context)
-        {
-            if (dtos == null || dtos.Count == 0) return Array.Empty<EmotionCharge>();
-
-            var charges = new List<EmotionCharge>(dtos.Count);
-            var seen = new HashSet<Emotion>();
-            foreach (var dto in dtos)
-            {
-                var emotion = ParseEnum<Emotion>(dto.emotion, context, "emotion");
-                if (!seen.Add(emotion))
-                    throw new FormatException($"Card '{context}' charges {emotion} twice.");
-                if (dto.amount == 0)
-                    throw new FormatException($"Card '{context}' has a zero {emotion} charge.");
-                charges.Add(new EmotionCharge(emotion, dto.amount));
-            }
-            return charges;
         }
 
         private static T ParseEnum<T>(string raw, string context, string field) where T : struct

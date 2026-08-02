@@ -16,7 +16,7 @@ namespace LastCall.EditorTools
     /// seat, its recipe bands, and the always-visible half of the read. It builds each
     /// ordered drink at band midpoints with intent-aligned bottles, takes nine seconds of
     /// bar-time per drink, restocks at day end, and buys stools when flush. A floor, not
-    /// a prediction — it never chases mood tips deliberately and never buys brands.
+    /// a prediction — it never buys brands.
     /// </summary>
     public static class TycoonSimulator
     {
@@ -367,29 +367,12 @@ namespace LastCall.EditorTools
         private static ShelfBottle PickBottle(Shelf shelf, IngredientType type, CustomerVisit visit)
         {
             ShelfBottle best = null;
-            double bestScore = double.MinValue;
             foreach (var bottle in shelf.Bottles)
             {
                 if (bottle.IsEmpty || bottle.Ingredient.Type != type) continue;
-
-                double score = 0;
-                if (visit.Read != null)
-                {
-                    double charge = ChargeOn(bottle.Ingredient, visit.Read.Intent);
-                    score = visit.Read.Direction == IntentDirection.Extinguish ? -charge : charge;
-                }
-                if (best == null || score > bestScore) { best = bottle; bestScore = score; }
+                if (best == null) best = bottle;
             }
             return best;
-        }
-
-        private static double ChargeOn(IngredientCard card, Emotion emotion)
-        {
-            if (card?.Charges == null) return 0;
-            double total = 0;
-            foreach (var charge in card.Charges)
-                if (charge.Emotion == emotion) total += charge.Amount;
-            return total;
         }
 
         // ── bookkeeping ─────────────────────────────────────────────────────────
@@ -473,8 +456,8 @@ namespace LastCall.EditorTools
                               (Stuck > 0 ? $" ({Stuck} abandoned as stuck)" : "") +
                               $", horizon {DayCap} days, one drink per {DrinkBuildSeconds:0}s of bar time.");
                 sb.AppendLine("Floor bot: serves the named order at band midpoints, pulls a pint");
-                sb.AppendLine("leaned over then straightened, never chases mood tips, never buys");
-                sb.AppendLine("brands. Every survival figure is a floor.");
+                sb.AppendLine("leaned over then straightened, and never buys brands.");
+                sb.AppendLine("Every survival figure is a floor.");
                 sb.AppendLine();
                 sb.AppendLine("| Metric | Value |");
                 sb.AppendLine("|---|---|");

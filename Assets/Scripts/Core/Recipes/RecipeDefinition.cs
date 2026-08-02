@@ -74,18 +74,6 @@ namespace LastCall.Core
         public int SameTypeGroupMin { get; }
 
         /// <summary>
-        /// How far this recipe carries an ingredient's emotional charges (GDD 19 §5). The
-        /// craft layer's whole job after the pivot: the same bottles say more in a drink that
-        /// was actually made well. Derived from <see cref="BaseMult"/> unless overridden, so
-        /// there is only ever one number to balance.
-        /// </summary>
-        public double ChargeMultiplier { get; }
-
-        /// <summary>Charge multiplier implied by a recipe's base Mult (GDD 19 §5).</summary>
-        public static double ChargeMultiplierFor(int baseMult) =>
-            Math.Min(3.0, 1.0 + 0.2 * (baseMult - 1));
-
-        /// <summary>
         /// Proportions this recipe is made at (GDD 21 §9) — the pour system's replacement for
         /// <see cref="Requirements"/>. Empty means the recipe has not been converted yet and
         /// simply cannot be matched by pouring.
@@ -125,7 +113,6 @@ namespace LastCall.Core
             bool scoreAllMixCards = false,
             int equalFlavorGroupSize = 0, int ascendingFlavorGroupSize = 0,
             int sameTypeGroupMin = 0,
-            double chargeMultiplier = 0,
             IReadOnlyList<RatioRequirement> ratioRequirements = null,
             double minFill = 0,
             bool locked = false,
@@ -168,9 +155,6 @@ namespace LastCall.Core
             EqualFlavorGroupSize = equalFlavorGroupSize;
             AscendingFlavorGroupSize = ascendingFlavorGroupSize;
             SameTypeGroupMin = sameTypeGroupMin;
-            ChargeMultiplier = chargeMultiplier > 0
-                ? Math.Min(3.0, chargeMultiplier)
-                : ChargeMultiplierFor(baseMult);
 
             // Explicit bands win; otherwise they are derived from the type pattern so the
             // fourteen shipped recipes become pourable without hand-authoring each one.

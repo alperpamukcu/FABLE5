@@ -145,8 +145,8 @@ namespace LastCall.Tests
 
     public class ShelfTests
     {
-        private static IngredientCard Card(string id, params EmotionCharge[] charges) =>
-            new IngredientCard(id, id, IngredientType.Spirit, 5, QualityTier.HousePour, charges);
+        private static IngredientCard Card(string id) =>
+            new IngredientCard(id, id, IngredientType.Spirit, 5);
 
         private static Shelf NewShelf(double capacity = 6.0) =>
             new Shelf(new[]
@@ -251,135 +251,6 @@ namespace LastCall.Tests
                 new ShelfBottle(Card("gin")),
                 new ShelfBottle(Card("gin"))
             }));
-        }
-    }
-
-    public class PourResolverTests
-    {
-        private static readonly Dictionary<string, IngredientCard> Cards = new Dictionary<string, IngredientCard>
-        {
-            ["vodka"] = new IngredientCard("vodka", "Vodka", IngredientType.Spirit, 5, QualityTier.HousePour,
-                new[] { new EmotionCharge(Emotion.Excitement, 20), new EmotionCharge(Emotion.Fatigue, -10) }),
-            ["lemon"] = new IngredientCard("lemon", "Lemon", IngredientType.Sour, 3, QualityTier.HousePour,
-                new[] { new EmotionCharge(Emotion.Anxiety, -20) }),
-            ["soda"] = new IngredientCard("soda", "Soda", IngredientType.Bubbly, 1, QualityTier.HousePour,
-                new EmotionCharge[0]),
-        };
-
-        private static IngredientCard Lookup(string id) => Cards.TryGetValue(id, out var c) ? c : null;
-
-        private static GlassContents Glass(params (string id, double volume)[] pours)
-        {
-            var glass = new GlassContents(1.0);
-            foreach (var (id, volume) in pours) glass.Add(id, volume);
-            return glass;
-        }
-
-        [Test]
-        public void AFullGlassOfOneThing_DeliversItsPrintedCharges()
-        {
-            var delta = PourResolver.RawCharges(Glass(("vodka", 1.0)), Lookup);
-
-            Assert.AreEqual(20, delta[Emotion.Excitement]);
-            Assert.AreEqual(-10, delta[Emotion.Fatigue]);
-        }
-
-        [Test]
-        public void HalfAGlass_DeliversHalf()
-        {
-            var delta = PourResolver.RawCharges(Glass(("vodka", 0.5)), Lookup);
-
-            Assert.AreEqual(10, delta[Emotion.Excitement]);
-            Assert.AreEqual(-5, delta[Emotion.Fatigue]);
-        }
-
-        [Test]
-        public void TheDesignExample_SeventyThirty()
-        {
-            // The mix that drove this whole system: energy without the edge.
-            var delta = PourResolver.RawCharges(Glass(("vodka", 0.7), ("lemon", 0.3)), Lookup);
-
-            Assert.AreEqual(14, delta[Emotion.Excitement], "0.7 × 20");
-            Assert.AreEqual(-7, delta[Emotion.Fatigue], "0.7 × −10");
-            Assert.AreEqual(-6, delta[Emotion.Anxiety], "0.3 × −20");
-        }
-
-        [Test]
-        public void RoundingHappensOnce_SoExactLandingsStayReachable()
-        {
-            // Two pours that each round to 3 but together make 7: per-pour rounding would
-            // give 6 and put a landing on zero out of reach from 7.
-            var cards = new Dictionary<string, IngredientCard>
-            {
-                ["a"] = new IngredientCard("a", "A", IngredientType.Spirit, 5, QualityTier.HousePour,
-                    new[] { new EmotionCharge(Emotion.Sadness, -7) }),
-                ["b"] = new IngredientCard("b", "B", IngredientType.Sweet, 5, QualityTier.HousePour,
-                    new[] { new EmotionCharge(Emotion.Sadness, -7) }),
-            };
-            var glass = new GlassContents(1.0);
-            glass.Add("a", 0.5);
-            glass.Add("b", 0.5);
-
-            var delta = PourResolver.RawCharges(glass, id => cards.TryGetValue(id, out var c) ? c : null);
-
-            Assert.AreEqual(-7, delta[Emotion.Sadness]);
-        }
-
-        [Test]
-        public void AMixerAddsVolumeWithoutEmotion()
-        {
-            // The tone ruling made mechanical: a tall glass can be mostly soda, and the
-            // length axis is reachable without pouring more spirit.
-            var glass = Glass(("vodka", 0.2), ("soda", 0.7));
-            var delta = PourResolver.RawCharges(glass, Lookup);
-
-            Assert.AreEqual(0.9, glass.FillFraction, 1e-9, "a long drink");
-            Assert.AreEqual(4, delta[Emotion.Excitement], "…carrying only 0.2 of a spirit");
-        }
-
-        [Test]
-        public void AHeavyHand_StillDeliversExactlyOneGlass()
-        {
-            // Asking for 1.4 glasses just fills the glass: the brim cap means the customer
-            // gets one glass's worth, no more. 20 × 1.0 × 0.5 (no recipe).
-            var glass = Glass(("vodka", 1.4));
-
-            Assert.AreEqual(1.0, glass.FillFraction, 1e-9);
-            Assert.AreEqual(10, PourResolver.Resolve(glass, null, Lookup)[Emotion.Excitement]);
-        }
-
-        [Test]
-        public void NoRecipe_StillPours_AtHalfStrength()
-        {
-            var delta = PourResolver.Resolve(Glass(("vodka", 1.0)), null, Lookup);
-
-            Assert.AreEqual(10, delta[Emotion.Excitement], "20 × 0.5");
-        }
-
-        [Test]
-        public void FillBonus_OnlyPaysInsideTheBand()
-        {
-            var preference = new FillPreference(GlassLength.Long, Emotion.Anxiety, reward: 8);
-
-            var hit = PourResolver.FillBonus(Glass(("soda", 0.8)), preference, IntentDirection.Extinguish);
-            var miss = PourResolver.FillBonus(Glass(("soda", 0.5)), preference, IntentDirection.Extinguish);
-
-            Assert.AreEqual(-8, hit[Emotion.Anxiety]);
-            Assert.IsTrue(miss.IsEmpty, "missing the length is never a penalty");
-        }
-
-        [Test]
-        public void FillBands_CoverTheWholeGlassWithoutGaps()
-        {
-            var shortDrink = new FillPreference(GlassLength.Short, Emotion.Anger);
-            var regular = new FillPreference(GlassLength.Regular, Emotion.Anger);
-            var longDrink = new FillPreference(GlassLength.Long, Emotion.Anger);
-
-            Assert.IsTrue(shortDrink.IsSatisfiedBy(0.45));
-            Assert.IsTrue(regular.IsSatisfiedBy(0.45), "bands touch rather than leaving a dead zone");
-            Assert.IsTrue(regular.IsSatisfiedBy(0.75));
-            Assert.IsTrue(longDrink.IsSatisfiedBy(0.75));
-            Assert.IsTrue(longDrink.IsSatisfiedBy(1.0));
         }
     }
 

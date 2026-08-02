@@ -52,36 +52,6 @@ namespace LastCall.UI
         };
 
         // ── emotion → ramp (GDD 19 §1); index by [step] ─────────────────────────
-        // Each emotion owns one ramp so a stat is identifiable by colour alone, before
-        // any text is read. Deliberately overlaps the type ramps: an ingredient's colour
-        // hints at what it moves, without promising it (charges are per-card, not per-type).
-        public static readonly Dictionary<Emotion, Color[]> EmotionRamp = new Dictionary<Emotion, Color[]>
-        {
-            [Emotion.Anger] = ViceRed,
-            [Emotion.Sadness] = ClubBlue,
-            [Emotion.Fatigue] = Amber,
-            [Emotion.Excitement] = Cyan,
-            [Emotion.Heartbreak] = Magenta,
-            [Emotion.Anxiety] = Lime,
-        };
-
-        public static Color EmotionFill(Emotion e) => EmotionRamp[e][3];
-        public static Color EmotionDim(Emotion e) => EmotionRamp[e][1];
-
-        /// <summary>Three-letter tag for the ID card's stat rows — the card is narrow.</summary>
-        public static string EmotionTag(Emotion e)
-        {
-            switch (e)
-            {
-                case Emotion.Anger: return "ANG";
-                case Emotion.Sadness: return "SAD";
-                case Emotion.Fatigue: return "TIR";
-                case Emotion.Excitement: return "EXC";
-                case Emotion.Heartbreak: return "HRT";
-                default: return "ANX";
-            }
-        }
-
         // ── bottle style → signature colour (GDD 22 §1) ─────────────────────────
         // Each drink style owns one colour so the shelf reads at a glance: the vodka tag is
         // always ice-blue, the bourbon tag always amber, whatever the brand. Data-driven

@@ -57,26 +57,19 @@ namespace LastCall.Core
         public RegularState CreateNew(SeededRng rng)
         {
             var archetype = PickArchetype(rng);
-            var baseline = archetype.RollBaseline(rng);
             string id = $"{archetype.Id}_{_nextSerial++}";
             string name = archetype.NamePool[rng.NextInt(archetype.NamePool.Count)];
 
             // Licence details roll on the same stream, so a seed reproduces the whole person.
             int age = rng.NextInt(21, 68);
             string hometown = archetype.Hometowns[rng.NextInt(archetype.Hometowns.Count)];
-            var state = new RegularState(id, name, archetype.Id, baseline.Clone(), baseline,
+            var state = new RegularState(id, name, archetype.Id,
                 archetype.BaseDemand, age, hometown);
             _byId[id] = state;
             _order.Add(state);
             return state;
         }
 
-        /// <summary>End-of-week movement for everyone, present or not (GDD 19 §10).</summary>
-        public void DriftAll(SeededRng rng)
-        {
-            if (rng == null) throw new ArgumentNullException(nameof(rng));
-            foreach (var state in _order) state.Drift(rng);
-        }
 
         private ArchetypeDefinition PickArchetype(SeededRng rng)
         {

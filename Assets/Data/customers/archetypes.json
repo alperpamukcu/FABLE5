@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_comment": "GDD 19 section 9 / GDD 20. An archetype is the shape of a person, not a person: every regular is one roll inside these bands, so two of the same archetype are recognisably alike and still different. Bands are baselines - who they are when nothing has happened lately. Drift pulls them back here between visits.",
+  "_comment": "GDD 19 section 9 / GDD 20. An archetype is the shape of a person: a name pool, a disposition, hometowns. The emotion bands left with the emotion layer (2026-08-02).",
   "archetypes": [
     {
       "id": "after_shift",
@@ -13,38 +13,6 @@
         "Ola",
         "Benedek",
         "Yusra"
-      ],
-      "bands": [
-        {
-          "emotion": "Anger",
-          "min": 10,
-          "max": 30
-        },
-        {
-          "emotion": "Sadness",
-          "min": 25,
-          "max": 45
-        },
-        {
-          "emotion": "Fatigue",
-          "min": 60,
-          "max": 85
-        },
-        {
-          "emotion": "Excitement",
-          "min": 5,
-          "max": 20
-        },
-        {
-          "emotion": "Heartbreak",
-          "min": 5,
-          "max": 25
-        },
-        {
-          "emotion": "Anxiety",
-          "min": 20,
-          "max": 40
-        }
       ],
       "hometowns": [
         "Chicago",
@@ -64,38 +32,6 @@
         "Gil",
         "Prisha"
       ],
-      "bands": [
-        {
-          "emotion": "Anger",
-          "min": 20,
-          "max": 45
-        },
-        {
-          "emotion": "Sadness",
-          "min": 45,
-          "max": 70
-        },
-        {
-          "emotion": "Fatigue",
-          "min": 30,
-          "max": 50
-        },
-        {
-          "emotion": "Excitement",
-          "min": 5,
-          "max": 15
-        },
-        {
-          "emotion": "Heartbreak",
-          "min": 60,
-          "max": 90
-        },
-        {
-          "emotion": "Anxiety",
-          "min": 25,
-          "max": 50
-        }
-      ],
       "hometowns": [
         "Miami",
         "Austin",
@@ -113,38 +49,6 @@
         "Junia",
         "Cato",
         "Ade"
-      ],
-      "bands": [
-        {
-          "emotion": "Anger",
-          "min": 0,
-          "max": 15
-        },
-        {
-          "emotion": "Sadness",
-          "min": 5,
-          "max": 20
-        },
-        {
-          "emotion": "Fatigue",
-          "min": 10,
-          "max": 30
-        },
-        {
-          "emotion": "Excitement",
-          "min": 55,
-          "max": 80
-        },
-        {
-          "emotion": "Heartbreak",
-          "min": 0,
-          "max": 15
-        },
-        {
-          "emotion": "Anxiety",
-          "min": 10,
-          "max": 30
-        }
       ],
       "hometowns": [
         "Seattle",
@@ -164,38 +68,6 @@
         "Krister",
         "Mira"
       ],
-      "bands": [
-        {
-          "emotion": "Anger",
-          "min": 25,
-          "max": 45
-        },
-        {
-          "emotion": "Sadness",
-          "min": 15,
-          "max": 35
-        },
-        {
-          "emotion": "Fatigue",
-          "min": 35,
-          "max": 60
-        },
-        {
-          "emotion": "Excitement",
-          "min": 10,
-          "max": 30
-        },
-        {
-          "emotion": "Heartbreak",
-          "min": 5,
-          "max": 20
-        },
-        {
-          "emotion": "Anxiety",
-          "min": 60,
-          "max": 85
-        }
-      ],
       "hometowns": [
         "London",
         "Berlin",
@@ -213,38 +85,6 @@
         "Odette",
         "Bram",
         "Idris"
-      ],
-      "bands": [
-        {
-          "emotion": "Anger",
-          "min": 60,
-          "max": 85
-        },
-        {
-          "emotion": "Sadness",
-          "min": 20,
-          "max": 40
-        },
-        {
-          "emotion": "Fatigue",
-          "min": 25,
-          "max": 45
-        },
-        {
-          "emotion": "Excitement",
-          "min": 10,
-          "max": 30
-        },
-        {
-          "emotion": "Heartbreak",
-          "min": 10,
-          "max": 35
-        },
-        {
-          "emotion": "Anxiety",
-          "min": 25,
-          "max": 45
-        }
       ],
       "hometowns": [
         "Hamburg",
@@ -264,38 +104,6 @@
         "Kwabena",
         "Runa"
       ],
-      "bands": [
-        {
-          "emotion": "Anger",
-          "min": 5,
-          "max": 20
-        },
-        {
-          "emotion": "Sadness",
-          "min": 55,
-          "max": 75
-        },
-        {
-          "emotion": "Fatigue",
-          "min": 30,
-          "max": 55
-        },
-        {
-          "emotion": "Excitement",
-          "min": 10,
-          "max": 30
-        },
-        {
-          "emotion": "Heartbreak",
-          "min": 40,
-          "max": 65
-        },
-        {
-          "emotion": "Anxiety",
-          "min": 20,
-          "max": 40
-        }
-      ],
       "hometowns": [
         "Izmir",
         "Oslo",
@@ -314,38 +122,6 @@
         "Marek",
         "Chiaki"
       ],
-      "bands": [
-        {
-          "emotion": "Anger",
-          "min": 15,
-          "max": 35
-        },
-        {
-          "emotion": "Sadness",
-          "min": 20,
-          "max": 40
-        },
-        {
-          "emotion": "Fatigue",
-          "min": 25,
-          "max": 45
-        },
-        {
-          "emotion": "Excitement",
-          "min": 20,
-          "max": 40
-        },
-        {
-          "emotion": "Heartbreak",
-          "min": 10,
-          "max": 30
-        },
-        {
-          "emotion": "Anxiety",
-          "min": 15,
-          "max": 35
-        }
-      ],
       "hometowns": [
         "Naples",
         "Milan",
@@ -363,38 +139,6 @@
         "Nikoleta",
         "Baptiste",
         "Hana"
-      ],
-      "bands": [
-        {
-          "emotion": "Anger",
-          "min": 20,
-          "max": 40
-        },
-        {
-          "emotion": "Sadness",
-          "min": 10,
-          "max": 30
-        },
-        {
-          "emotion": "Fatigue",
-          "min": 55,
-          "max": 80
-        },
-        {
-          "emotion": "Excitement",
-          "min": 15,
-          "max": 35
-        },
-        {
-          "emotion": "Heartbreak",
-          "min": 0,
-          "max": 15
-        },
-        {
-          "emotion": "Anxiety",
-          "min": 55,
-          "max": 80
-        }
       ],
       "hometowns": [
         "Lisbon",

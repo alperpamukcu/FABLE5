@@ -31,7 +31,6 @@ namespace LastCall.Core
         public const double ExtraOrderPatienceRefill = 0.8;
 
         public RegularState Regular { get; }
-        public CustomerRead Read { get; }
 
         private DrinkOrder _order;
 
@@ -164,7 +163,7 @@ namespace LastCall.Core
             PatienceMax <= 0 ? 1.0 : 1.0 - PatienceLeft / PatienceMax;
 
         public CustomerVisit(DrinkOrder order, double patienceSeconds,
-            RegularState regular = null, CustomerRead read = null, double decideSeconds = 0,
+            RegularState regular = null, double decideSeconds = 0,
             double orderPatienceSeconds = 0)
         {
             _order = order ?? throw new ArgumentNullException(nameof(order));
@@ -180,7 +179,6 @@ namespace LastCall.Core
             OrderPatienceLeft = orderPatienceSeconds;
             DecideLeft = decideSeconds;
             Regular = regular;
-            Read = read;
         }
 
         /// <summary>

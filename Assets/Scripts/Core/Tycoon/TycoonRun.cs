@@ -588,18 +588,13 @@ namespace LastCall.Core
                 return new CustomerVisit(order, patience, decideSeconds: decide,
                     orderPatienceSeconds: askPatience);
 
-            // The same face-and-memory pipeline the old loop used (GDD 19 §3, 20 §3):
-            // returning regulars are read through decayed memory, strangers roll fresh.
+            // A returning face or a fresh roll — the person persists; what is left of them
+            // after the emotion demolition (2026-08-02) is who they ARE: name, visits,
+            // relationship. The "read" stream still burns a draw so old seeds stay close.
             var regular = _regulars.RollNext(_rng.GetStream("customer"));
-            var readRng = _rng.GetStream("read");
-            var read = regular.Visits > 0
-                ? CustomerReadFactory.FromTiers(regular.Stats, regular.KnownTiers, Day, readRng,
-                    regular.Relationship, regular.BaseDemand)
-                : CustomerReadFactory.Build(regular.Stats, Day, readRng,
-                    regular.Relationship, regular.BaseDemand);
-            regular.RememberTiers(TiersOf(read));
+            _rng.GetStream("read").NextInt(100);
 
-            return new CustomerVisit(order, patience, regular, read, decide, askPatience);
+            return new CustomerVisit(order, patience, regular, decide, askPatience);
         }
 
         private DrinkOrder RollOrder()
@@ -723,7 +718,7 @@ namespace LastCall.Core
 
         /// <summary>One garnish tap = a fixed pinch (GDD 21 §3).</summary>
         public double PourGarnish(string ingredientId) =>
-            PourMeasure(ingredientId, PourResolver.GarnishClickFraction * Glass.Capacity);
+            PourMeasure(ingredientId, GarnishClickFraction * Glass.Capacity);
 
         // ── the tap (GDD 21 §10) ────────────────────────────────────────────────
 
@@ -954,11 +949,10 @@ namespace LastCall.Core
             PouringId = null;
             var delivered = ServingGlass;
             var match = RatioRecipeMatcher.Match(delivered, _recipes, IngredientOf);
-            var applied = PourResolver.Resolve(delivered, match, IngredientOf);
             var matchKind = ServiceJudge.Compare(visit.OrderTruth, match, delivered, IngredientOf);
-            // Emotion→recipe pivot (2026-07-22): the verdict is priced off the drink and the
-            // garnishes they asked for, not a mood read. The emotion charge is still applied to
-            // the regular's dormant stats (harmless) so the customer model stays intact.
+            // The verdict is priced off the DRINK — the recipe matched, the garnishes asked
+            // for, the fill (the 2026-07-22 pivot, made total 2026-08-02: the emotion layer
+            // is gone; what a customer gives you back is their reaction to the cocktail).
             var verdict = ServiceJudge.Judge(visit, matchKind, delivered, CrowdToday, Ambience,
                 served: match, shakeEnergy: ShakeEnergy);
 
@@ -967,7 +961,6 @@ namespace LastCall.Core
                 && match.Recipe.Rank > _bestRankServedTonight)
                 _bestRankServedTonight = match.Recipe.Rank;
 
-            visit.Regular?.Stats.Apply(applied);
             // What actually went across the bar, not what was asked for — the receipt lists the
             // drink that was poured, and a wrong one is paid at its own price.
             visit.Resolve(verdict, verdict.OrdersAgain ? RollOrder() : null, _config.SavorSeconds,
@@ -1224,14 +1217,10 @@ namespace LastCall.Core
             _marketOffers.AddRange(Market.OffersFor(_shelf, _brandCatalogue, Rating.Average));
         }
 
-        private IngredientCard IngredientOf(string id) => _shelf.Find(id)?.Ingredient;
+        /// <summary>A garnish press, as a share of the shaker (survives PourResolver).</summary>
+        private const double GarnishClickFraction = 0.05;
 
-        private static VisibilityTier[] TiersOf(CustomerRead read)
-        {
-            var tiers = new VisibilityTier[Emotions.Count];
-            for (int i = 0; i < tiers.Length; i++) tiers[i] = read[Emotions.All[i]].Tier;
-            return tiers;
-        }
+        private IngredientCard IngredientOf(string id) => _shelf.Find(id)?.Ingredient;
 
         private void EnsurePhase(TycoonPhase expected)
         {

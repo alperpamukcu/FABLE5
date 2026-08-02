@@ -38,10 +38,11 @@ Hard rules:
 - **Determinism.** All randomness flows through `RunRng` named streams ("arrivals", "orders",
   "patience", "customer", "read", "decide"). Never use `System.Random`/`UnityEngine.Random`
   in game logic; string seeds must reproduce identical runs across platforms (custom PCG32).
-- **Hidden information stays hidden.** Anything the player sees is derived from
-  `CustomerRead` — never from `RegularState.Stats`. Reaching past the read to draw a preview
-  or a label makes blind reads a sure thing and quietly kills the mechanic. This has already
-  happened twice; `ReadIntegrityTests` exists to catch the third time.
+- **Hidden information stays hidden.** The order lives behind the ID card: `CustomerVisit.Order`
+  throws until `InspectId()`, and only Core's `OrderTruth` sees past it. Drawing the drink, its
+  name or its price before the card is read makes the card decorative and quietly kills the
+  mechanic — it has already happened twice. (The emotion layer this rule was written for was
+  demolished 2026-08-02; what a customer gives back is their reaction to the cocktail.)
 
 ## Verifying changes
 
@@ -78,8 +79,11 @@ compiles.
 - **Beer is not a cocktail** (GDD 21 §10). It comes from a keg, never enters the shaker, and
   is poured by the angle of the glass; its craft is the head, and `Preparations.Draught` on
   the delivered glass is what tells `ServiceJudge` to grade it.
-- The emotion layer is **opt-in**: a `TycoonRun` built without `archetypes` has no regulars,
-  so bench setups and older tests stay valid.
+- Regulars are **opt-in**: a `TycoonRun` built without `archetypes` has no named customers,
+  so bench setups and older tests stay valid. They carry a name, an age, a hometown, visits
+  and a relationship — the emotion stats, charges and reads were demolished on 2026-08-02
+  ("sadece verilen kokteyle verdiği tepkiler kaldı"), so GDD 19/20's mood machinery is
+  historical: nothing reads it and nothing writes it.
 - `MetaballFluid` fills a vessel from a particle-count estimate that is not exact for every
   silhouette. If a vessel draws short, measure it (`SurfaceY`) and correct that vessel with
   `SetDensity` — do not scale the fill fraction, which just clamps.

@@ -952,19 +952,6 @@ namespace LastCall.UI
 
         // ── customer ID (GDD 19 §3) ──────────────────────────────────────────────
 
-        /// <summary>
-        /// One cell of the 3×2 stat grid on the ID: a tag, a reading of whatever clarity the
-        /// bartender has earned, and a 0–100 bar under it.
-        /// </summary>
-        private sealed class StatCell
-        {
-            public Text Tag;
-            public Text Value;
-            public Image Track;    // the 0–100 rail
-            public Image Band;     // the lit portion: a point for Exact, a span for Range
-            public Image Ghost;    // where the current selection would put them
-        }
-
         private Canvas _idCanvas;
         private RectTransform _idRoot;      // scrim + card; the whole popup
         private RectTransform _idCard;
@@ -976,7 +963,6 @@ namespace LastCall.UI
         private Image _idMoodFill;
         private Image _idPortrait;
         private RectTransform _idPrompt;    // "click for ID" nudge over the customer
-        private readonly Dictionary<Emotion, StatCell> _statCells = new Dictionary<Emotion, StatCell>();
         private bool _idOpen;
 
         /// <summary>Per-archetype ID photos (18 §5). Falls back to a flat silhouette.</summary>
@@ -1078,17 +1064,6 @@ namespace LastCall.UI
                 new Vector2(fieldsX, -HeaderH - 50));
             _idArchetype.supportRichText = true;
 
-            // The six readings as a 3×2 grid of record fields, full width below the photo row.
-            float gridTop = -(HeaderH + PhotoH + 14);
-            for (int i = 0; i < Emotions.Count; i++)
-            {
-                int col = i % 3, rowIndex = i / 3;
-                var pos = new Vector2(
-                    7 + col * (CellW + CellGapX),
-                    gridTop - rowIndex * (CellH + CellGapY));
-                _statCells[Emotions.All[i]] = BuildStatCell(fill, Emotions.All[i], pos);
-            }
-
             // The one thing never hidden, printed like a licence endorsement.
             var intentBand = NewRect("IntentBand", fill);
             Stretch(intentBand, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 14));
@@ -1120,53 +1095,6 @@ namespace LastCall.UI
             _idMoodFill.raycastTarget = false;
 
             _idRoot.gameObject.SetActive(false);
-        }
-
-        private StatCell BuildStatCell(RectTransform parent, Emotion emotion, Vector2 pos)
-        {
-            var cell = new StatCell();
-            var ramp = UITheme.EmotionRamp[emotion];
-
-            var box = NewRect($"Cell{emotion}", parent);
-            Place(box, new Vector2(0, 1), new Vector2(CellW, CellH), pos);
-            // Printed record fields on light card stock: a pale slab, a ramp-coloured tag,
-            // dark ink for the value.
-            var boxBg = box.gameObject.AddComponent<Image>();
-            boxBg.color = UITheme.Cream[3];
-            boxBg.raycastTarget = false;
-
-            cell.Tag = NewText("Tag", box, _body, 7, TextAnchor.UpperLeft, ramp[2]);
-            Place((RectTransform)cell.Tag.transform, new Vector2(0, 1), new Vector2(30, 9), new Vector2(3, -3));
-
-            cell.Value = NewText("Val", box, _body, 8, TextAnchor.UpperRight, UITheme.Night[1]);
-            Place((RectTransform)cell.Value.transform, new Vector2(1, 1), new Vector2(52, 9), new Vector2(-3, -3));
-
-            var track = NewRect("Track", box);
-            Place(track, new Vector2(0, 1), new Vector2(TrackW, 5), new Vector2(3, -16));
-            cell.Track = track.gameObject.AddComponent<Image>();
-            cell.Track.color = UITheme.Cream[2];
-            cell.Track.raycastTarget = false;
-
-            // Drawn under the band, so a ghost that disappears behind it reads as
-            // "this lands inside what you already know".
-            var ghost = NewRect("Ghost", track);
-            ghost.anchorMin = ghost.anchorMax = new Vector2(0, 0.5f);
-            ghost.pivot = new Vector2(0.5f, 0.5f);
-            ghost.sizeDelta = new Vector2(2, 7);
-            cell.Ghost = ghost.gameObject.AddComponent<Image>();
-            cell.Ghost.color = UITheme.Night[1];
-            cell.Ghost.raycastTarget = false;
-            ghost.gameObject.SetActive(false);
-
-            var band = NewRect("Band", track);
-            band.anchorMin = band.anchorMax = new Vector2(0, 0.5f);
-            band.pivot = new Vector2(0, 0.5f);
-            band.sizeDelta = new Vector2(2, 5);
-            cell.Band = band.gameObject.AddComponent<Image>();
-            cell.Band.color = ramp[2];
-            cell.Band.raycastTarget = false;
-
-            return cell;
         }
 
         // ── the pour glass (GDD 21 §3.1 / GDD 22) ────────────────────────────────

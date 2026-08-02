@@ -14,16 +14,6 @@
       "origin": "Gdansk, Poland",
       "abv": 40,
       "blurb": "Filters clean. Lifts the evening without asking questions.",
-      "charges": [
-        {
-          "emotion": "Excitement",
-          "amount": 10
-        },
-        {
-          "emotion": "Anxiety",
-          "amount": -5
-        }
-      ],
       "art_prompt": "a slim clear vodka bottle with a pale blue-grey label band, minimal and cold"
     },
     {
@@ -37,16 +27,6 @@
       "origin": "London",
       "abv": 43,
       "blurb": "Juniper-forward. Settles a racing mind, at the cost of a quiet one.",
-      "charges": [
-        {
-          "emotion": "Anxiety",
-          "amount": -12
-        },
-        {
-          "emotion": "Sadness",
-          "amount": 5
-        }
-      ],
       "art_prompt": "a squat dark green gin bottle with a cream label and a small crest, London dry style"
     },
     {
@@ -60,16 +40,6 @@
       "origin": "Bridgetown, Barbados",
       "abv": 37.5,
       "blurb": "Sunlight in a bottle. Wakes people up and warms them through.",
-      "charges": [
-        {
-          "emotion": "Excitement",
-          "amount": 12
-        },
-        {
-          "emotion": "Fatigue",
-          "amount": -6
-        }
-      ],
       "art_prompt": "a rounded white rum bottle with a coral-pink label and a palm motif"
     },
     {
@@ -83,16 +53,6 @@
       "origin": "Bardstown, Kentucky",
       "abv": 45,
       "blurb": "Charred oak and patience. Talks people down off the ledge of a bad day.",
-      "charges": [
-        {
-          "emotion": "Anger",
-          "amount": -14
-        },
-        {
-          "emotion": "Sadness",
-          "amount": 6
-        }
-      ],
       "art_prompt": "a stout amber bourbon bottle with a deep red wax top and a cream label"
     },
     {
@@ -106,16 +66,6 @@
       "origin": "Torino, Italy",
       "abv": 30,
       "blurb": "Bitter herbs for bitter moods. Meets anger head-on and wins.",
-      "charges": [
-        {
-          "emotion": "Anger",
-          "amount": -12
-        },
-        {
-          "emotion": "Heartbreak",
-          "amount": 5
-        }
-      ],
       "art_prompt": "a dark brooding Italian amaro bottle with a midnight blue label, gold accents"
     },
     {
@@ -129,16 +79,6 @@
       "origin": "Torino, Italy",
       "abv": 16,
       "blurb": "Sweet red vermouth. Softens what ended badly.",
-      "charges": [
-        {
-          "emotion": "Heartbreak",
-          "amount": -12
-        },
-        {
-          "emotion": "Excitement",
-          "amount": 4
-        }
-      ],
       "art_prompt": "an elegant red vermouth bottle with a burgundy label and ornate serif frame"
     },
     {
@@ -152,16 +92,6 @@
       "origin": "made in the back",
       "abv": 0,
       "blurb": "Plain sugar, dissolved slow. Comfort by the spoonful.",
-      "charges": [
-        {
-          "emotion": "Sadness",
-          "amount": -6
-        },
-        {
-          "emotion": "Fatigue",
-          "amount": 4
-        }
-      ],
       "art_prompt": "a small clear glass cruet of simple syrup with a hand-written cream tag"
     },
     {
@@ -175,16 +105,6 @@
       "origin": "the market crate",
       "abv": 0,
       "blurb": "Cuts through the fog. Sharp enough to make some people flinch.",
-      "charges": [
-        {
-          "emotion": "Fatigue",
-          "amount": -8
-        },
-        {
-          "emotion": "Anxiety",
-          "amount": 4
-        }
-      ],
       "art_prompt": "a small glass carafe of fresh lemon juice with a cut lemon beside it"
     },
     {
@@ -198,16 +118,6 @@
       "origin": "bottled next door",
       "abv": 0,
       "blurb": "Spiced ginger brew. Puts a spark back in - or a fire, if there was one already.",
-      "charges": [
-        {
-          "emotion": "Anger",
-          "amount": 5
-        },
-        {
-          "emotion": "Excitement",
-          "amount": 5
-        }
-      ],
       "art_prompt": "a cloudy amber ginger beer bottle with a rust-orange label and a ceramic swing top"
     },
     {
@@ -221,16 +131,6 @@
       "origin": "Bergen, Norway",
       "abv": 0,
       "blurb": "Cold, clear, and calming. Waters everything down, on purpose.",
-      "charges": [
-        {
-          "emotion": "Anxiety",
-          "amount": -4
-        },
-        {
-          "emotion": "Excitement",
-          "amount": -4
-        }
-      ],
       "art_prompt": "a tall clear soda siphon bottle with a pale teal label and rising bubbles"
     },
     {
@@ -244,12 +144,6 @@
       "origin": "the window box",
       "abv": 0,
       "blurb": "A sprig on top. Small, green, and quietly restorative.",
-      "charges": [
-        {
-          "emotion": "Fatigue",
-          "amount": -4
-        }
-      ],
       "art_prompt": "a small glass jar of fresh mint sprigs, bright green"
     },
     {
@@ -263,12 +157,6 @@
       "origin": "Puglia, Italy",
       "abv": 0,
       "blurb": "Brined and patient. Takes the edge off an argument.",
-      "charges": [
-        {
-          "emotion": "Anger",
-          "amount": -5
-        }
-      ],
       "art_prompt": "a small jar of green olives in brine with a rustic olive-branch label"
     },
     {
@@ -282,16 +170,6 @@
       "origin": "Local, on the coast road",
       "abv": 4,
       "blurb": "Cold, plain and honest. The drink people order when they want to stop deciding.",
-      "charges": [
-        {
-          "emotion": "Fatigue",
-          "amount": -8
-        },
-        {
-          "emotion": "Anxiety",
-          "amount": -6
-        }
-      ],
       "art_prompt": "a squat steel beer keg with a pale gold band and a plain enamel label, condensation on the shoulder"
     },
     {
@@ -305,16 +183,6 @@
       "origin": "Two valleys over",
       "abv": 5,
       "blurb": "Black, sweet and filling. Drinks like a meal and settles people down.",
-      "charges": [
-        {
-          "emotion": "Sadness",
-          "amount": 10
-        },
-        {
-          "emotion": "Fatigue",
-          "amount": -5
-        }
-      ],
       "art_prompt": "a dark iron beer keg with a deep charcoal band and a cream oval label, worn at the rim"
     },
     {
@@ -328,16 +196,6 @@
       "origin": "The brewery behind the market",
       "abv": 5,
       "blurb": "Bitter and bright. The one the regulars argue about.",
-      "charges": [
-        {
-          "emotion": "Excitement",
-          "amount": 11
-        },
-        {
-          "emotion": "Sadness",
-          "amount": -6
-        }
-      ],
       "art_prompt": "a copper beer keg with a warm amber band and a marigold-yellow label, brass fittings"
     },
     {
@@ -352,16 +210,6 @@
       "origin": "Reykjavik, Iceland",
       "abv": 40,
       "blurb": "Glacier-filtered. The same lift, cleaner and further.",
-      "charges": [
-        {
-          "emotion": "Excitement",
-          "amount": 14
-        },
-        {
-          "emotion": "Anxiety",
-          "amount": -7
-        }
-      ],
       "art_prompt": "a premium frosted-glass vodka bottle with an ice-white label and silver cap"
     },
     {
@@ -376,16 +224,6 @@
       "origin": "Plymouth",
       "abv": 47,
       "blurb": "Navy strength calm. Settles nerves that Boothby cannot reach.",
-      "charges": [
-        {
-          "emotion": "Anxiety",
-          "amount": -16
-        },
-        {
-          "emotion": "Sadness",
-          "amount": 6
-        }
-      ],
       "art_prompt": "a tall regal gin bottle in deep navy glass with a gold crown on the label"
     },
     {
@@ -400,16 +238,6 @@
       "origin": "Frankfort, Kentucky",
       "abv": 50.5,
       "blurb": "Twelve years in the barrel. Anger does not argue with it.",
-      "charges": [
-        {
-          "emotion": "Anger",
-          "amount": -18
-        },
-        {
-          "emotion": "Sadness",
-          "amount": 8
-        }
-      ],
       "art_prompt": "a heavy-bottomed aged bourbon bottle with a black wax seal and parchment label"
     },
     {
@@ -425,16 +253,6 @@
       "abv": 40,
       "locked": true,
       "blurb": "Blue agave, sun-cured. Turns a quiet table loud.",
-      "charges": [
-        {
-          "emotion": "Excitement",
-          "amount": 12
-        },
-        {
-          "emotion": "Anxiety",
-          "amount": 4
-        }
-      ],
       "art_prompt": "a tall clear tequila bottle with a woven agave-green label and a rope neck tie"
     },
     {
@@ -450,16 +268,6 @@
       "abv": 30,
       "locked": true,
       "blurb": "Bitter orange peel in silk. The bridge in half the classics.",
-      "charges": [
-        {
-          "emotion": "Heartbreak",
-          "amount": -6
-        },
-        {
-          "emotion": "Excitement",
-          "amount": 4
-        }
-      ],
       "art_prompt": "a squarish orange liqueur bottle with a deep orange label and gold filigree"
     },
     {
@@ -476,16 +284,6 @@
       "carbonated": true,
       "locked": true,
       "blurb": "Sweet, dark and everywhere. Makes hard liquor easy company.",
-      "charges": [
-        {
-          "emotion": "Fatigue",
-          "amount": -5
-        },
-        {
-          "emotion": "Excitement",
-          "amount": 3
-        }
-      ],
       "art_prompt": "a classic glass cola bottle with a dark caramel liquid and a ruby-red label"
     },
     {
@@ -502,12 +300,6 @@
       "carbonated": true,
       "locked": true,
       "blurb": "Quinine and restraint. Exists to make gin presentable.",
-      "charges": [
-        {
-          "emotion": "Anxiety",
-          "amount": -5
-        }
-      ],
       "art_prompt": "a slender tonic water bottle in pale glass with a duck-egg blue label"
     },
     {
@@ -524,16 +316,6 @@
       "carbonated": true,
       "locked": true,
       "blurb": "Taurine and bad decisions. Keeps the night going past its bedtime.",
-      "charges": [
-        {
-          "emotion": "Fatigue",
-          "amount": -12
-        },
-        {
-          "emotion": "Anxiety",
-          "amount": 8
-        }
-      ],
       "art_prompt": "a slim energy drink can in electric teal and black with a lightning motif, no text"
     },
     {
@@ -549,16 +331,6 @@
       "abv": 0,
       "locked": true,
       "blurb": "Fresh-squeezed sunshine. The soft landing for hard spirits.",
-      "charges": [
-        {
-          "emotion": "Fatigue",
-          "amount": -6
-        },
-        {
-          "emotion": "Sadness",
-          "amount": -3
-        }
-      ],
       "art_prompt": "a glass carafe of fresh orange juice with a halved orange beside it"
     },
     {
@@ -574,16 +346,6 @@
       "abv": 0,
       "locked": true,
       "blurb": "Sharper than lemon, greener too. The spine of the rum classics.",
-      "charges": [
-        {
-          "emotion": "Fatigue",
-          "amount": -6
-        },
-        {
-          "emotion": "Anxiety",
-          "amount": 3
-        }
-      ],
       "art_prompt": "a small glass carafe of lime juice with cut limes beside it"
     },
     {
@@ -598,16 +360,6 @@
       "origin": "Port of Spain, Trinidad",
       "abv": 43,
       "blurb": "Barrel-aged in sea air. The warmth stays longer than the glass does.",
-      "charges": [
-        {
-          "emotion": "Excitement",
-          "amount": 14
-        },
-        {
-          "emotion": "Fatigue",
-          "amount": -8
-        }
-      ],
       "art_prompt": "a squat dark-amber rum bottle with a rope-wrapped neck and a ship motif"
     },
     {
@@ -622,16 +374,6 @@
       "origin": "Jalisco Highlands, Mexico",
       "abv": 42,
       "blurb": "Slow-roasted highland agave. Softer going down, louder after.",
-      "charges": [
-        {
-          "emotion": "Excitement",
-          "amount": 16
-        },
-        {
-          "emotion": "Anxiety",
-          "amount": -6
-        }
-      ],
       "art_prompt": "a tall clear tequila bottle with a deep green agave label and a crescent moon"
     },
     {
@@ -647,16 +389,6 @@
       "origin": "Bergen Marshes",
       "abv": 0,
       "blurb": "Tart enough to wake a cocktail up. The pink half of half the classics.",
-      "charges": [
-        {
-          "emotion": "Excitement",
-          "amount": 6
-        },
-        {
-          "emotion": "Fatigue",
-          "amount": -4
-        }
-      ],
       "art_prompt": "a clear carafe with a crimson blank label and a cork stopper"
     },
     {
@@ -672,16 +404,6 @@
       "origin": "Addis Ababa, Ethiopia",
       "abv": 20,
       "blurb": "Espresso with a passport. Keeps the night going in both directions.",
-      "charges": [
-        {
-          "emotion": "Fatigue",
-          "amount": -12
-        },
-        {
-          "emotion": "Excitement",
-          "amount": 8
-        }
-      ],
       "art_prompt": "a squat clear bottle with a coffee-brown blank label and a black cap"
     },
     {
@@ -697,16 +419,6 @@
       "origin": "Puerto Plata",
       "abv": 0,
       "blurb": "Sunshine, pressed. The tiki shelf starts here.",
-      "charges": [
-        {
-          "emotion": "Excitement",
-          "amount": 10
-        },
-        {
-          "emotion": "Anxiety",
-          "amount": -5
-        }
-      ],
       "art_prompt": "a clear carafe with a sunny-yellow blank label and a pineapple leaf motif"
     },
     {
@@ -722,16 +434,6 @@
       "origin": "Marseille, France",
       "abv": 0,
       "blurb": "Pomegranate red that sinks to the bottom and stays there.",
-      "charges": [
-        {
-          "emotion": "Excitement",
-          "amount": 6
-        },
-        {
-          "emotion": "Anxiety",
-          "amount": -3
-        }
-      ],
       "art_prompt": "a small clear cruet with a ruby blank label band and a silver cap"
     },
     {
@@ -746,17 +448,7 @@
       "flavor": 8,
       "origin": "Saint Petersburg, Russia",
       "blurb": "Distilled nine times, then left alone. Nothing to hide behind.",
-      "art_prompt": "an elegant tall crystal vodka bottle with a platinum label and a long neck",
-      "charges": [
-        {
-          "emotion": "Excitement",
-          "amount": 18
-        },
-        {
-          "emotion": "Anxiety",
-          "amount": -9
-        }
-      ]
+      "art_prompt": "an elegant tall crystal vodka bottle with a platinum label and a long neck"
     },
     {
       "id": "gin_thornwood",
@@ -770,17 +462,7 @@
       "flavor": 9,
       "origin": "Islay, Scotland",
       "blurb": "Seventeen botanicals, counted. You can taste the argument between them.",
-      "art_prompt": "a tall dark green gin bottle with a copper botanical engraving and wax seal",
-      "charges": [
-        {
-          "emotion": "Anxiety",
-          "amount": -16
-        },
-        {
-          "emotion": "Sadness",
-          "amount": 6
-        }
-      ]
+      "art_prompt": "a tall dark green gin bottle with a copper botanical engraving and wax seal"
     },
     {
       "id": "bourbon_ashfall",
@@ -794,17 +476,7 @@
       "flavor": 10,
       "origin": "Bardstown, Kentucky",
       "blurb": "One barrel, hand-picked. Twelve years of somebody waiting.",
-      "art_prompt": "a heavy squat whiskey bottle with a charred oak label and a brass cap",
-      "charges": [
-        {
-          "emotion": "Fatigue",
-          "amount": -18
-        },
-        {
-          "emotion": "Sadness",
-          "amount": 8
-        }
-      ]
+      "art_prompt": "a heavy squat whiskey bottle with a charred oak label and a brass cap"
     },
     {
       "id": "rum_windward",
@@ -818,17 +490,7 @@
       "flavor": 9,
       "origin": "Bridgetown, Barbados",
       "blurb": "Twenty years in the heat. It came out slower than it went in.",
-      "art_prompt": "a dark rounded rum bottle with a gold XO crest and a rope-bound neck",
-      "charges": [
-        {
-          "emotion": "Excitement",
-          "amount": 17
-        },
-        {
-          "emotion": "Fatigue",
-          "amount": -11
-        }
-      ]
+      "art_prompt": "a dark rounded rum bottle with a gold XO crest and a rope-bound neck"
     },
     {
       "id": "tequila_sol_viejo",
@@ -842,17 +504,7 @@
       "flavor": 10,
       "origin": "Tequila, Jalisco",
       "blurb": "Three years under oak. The agave stops shouting and starts talking.",
-      "art_prompt": "a rounded amber tequila bottle with a hand-painted sun and a cork stopper",
-      "charges": [
-        {
-          "emotion": "Excitement",
-          "amount": 20
-        },
-        {
-          "emotion": "Anxiety",
-          "amount": -8
-        }
-      ]
+      "art_prompt": "a rounded amber tequila bottle with a hand-painted sun and a cork stopper"
     },
     {
       "id": "vodka_okhta",
@@ -866,17 +518,7 @@
       "flavor": 9,
       "origin": "Saint Petersburg, Russia",
       "blurb": "Poured at courts that no longer exist. The bottle remembers.",
-      "art_prompt": "an ornate crystal vodka bottle with a gilded double-headed crest and frosted facets",
-      "charges": [
-        {
-          "emotion": "Excitement",
-          "amount": 20
-        },
-        {
-          "emotion": "Anxiety",
-          "amount": -10
-        }
-      ]
+      "art_prompt": "an ornate crystal vodka bottle with a gilded double-headed crest and frosted facets"
     },
     {
       "id": "gin_veilcrest",
@@ -890,17 +532,7 @@
       "flavor": 10,
       "origin": "Oxfordshire, England",
       "blurb": "Distilled once a year, on the longest night. Waiting lists have waiting lists.",
-      "art_prompt": "a tall stained-glass-green gin bottle with a silver cathedral window label",
-      "charges": [
-        {
-          "emotion": "Anxiety",
-          "amount": -20
-        },
-        {
-          "emotion": "Sadness",
-          "amount": 7
-        }
-      ]
+      "art_prompt": "a tall stained-glass-green gin bottle with a silver cathedral window label"
     },
     {
       "id": "bourbon_hollow_oak",
@@ -914,17 +546,7 @@
       "flavor": 11,
       "origin": "Frankfort, Kentucky",
       "blurb": "Thirty years in one barrel. The distiller who filled it never tasted it.",
-      "art_prompt": "a heavy antique whiskey bottle with a cracked oak-brown wax seal and a deep amber glow",
-      "charges": [
-        {
-          "emotion": "Sadness",
-          "amount": 22
-        },
-        {
-          "emotion": "Fatigue",
-          "amount": -12
-        }
-      ]
+      "art_prompt": "a heavy antique whiskey bottle with a cracked oak-brown wax seal and a deep amber glow"
     },
     {
       "id": "rum_reina_del_mar",
@@ -938,17 +560,7 @@
       "flavor": 10,
       "origin": "Havana, Cuba",
       "blurb": "Blended from casks that crossed the ocean twice. Tastes of both shores.",
-      "art_prompt": "a dark green rum bottle with a gold queen-of-the-sea figurehead label and rope filigree",
-      "charges": [
-        {
-          "emotion": "Excitement",
-          "amount": 21
-        },
-        {
-          "emotion": "Heartbreak",
-          "amount": -9
-        }
-      ]
+      "art_prompt": "a dark green rum bottle with a gold queen-of-the-sea figurehead label and rope filigree"
     },
     {
       "id": "tequila_cielo_roto",
@@ -962,17 +574,7 @@
       "flavor": 11,
       "origin": "Los Altos, Jalisco",
       "blurb": "Ten years under a broken sky. The last barrels of a closed distillery.",
-      "art_prompt": "a hand-blown blue-glass tequila bottle with a shattered-sky label and a pewter agave stopper",
-      "charges": [
-        {
-          "emotion": "Excitement",
-          "amount": 24
-        },
-        {
-          "emotion": "Anxiety",
-          "amount": -10
-        }
-      ]
+      "art_prompt": "a hand-blown blue-glass tequila bottle with a shattered-sky label and a pewter agave stopper"
     }
   ]
 }

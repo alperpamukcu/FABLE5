@@ -43,23 +43,8 @@ namespace LastCall.Tests
             return glass;
         }
 
-        private static CustomerRead ReadOf(Emotion intent, IntentDirection direction)
-        {
-            var readings = new List<StatReading>();
-            for (int i = 0; i < Emotions.Count; i++) readings.Add(StatReading.Unknown);
-            return new CustomerRead(readings, intent, direction);
-        }
-
-        private static EmotionDelta Delta(Emotion emotion, int amount)
-        {
-            var delta = new EmotionDelta();
-            delta.Add(emotion, amount);
-            return delta;
-        }
-
-        private static CustomerVisit Visit(int price = 10, double patience = 60,
-            CustomerRead read = null) =>
-            new CustomerVisit(new DrinkOrder(Spritz(), price), patience, read: read);
+        private static CustomerVisit Visit(int price = 10, double patience = 60) =>
+            new CustomerVisit(new DrinkOrder(Spritz(), price), patience);
 
         // ── orders & menu (GDD 23 §3) ───────────────────────────────────────────
 

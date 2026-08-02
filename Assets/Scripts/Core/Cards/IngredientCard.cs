@@ -26,7 +26,6 @@ namespace LastCall.Core
         /// What this ingredient does to a person (GDD 19 §4). Always printed on the card —
         /// the charges are never the hidden information; the customer is.
         /// </summary>
-        public IReadOnlyList<EmotionCharge> Charges { get; }
 
         /// <summary>
         /// The bottle's identity papers (GDD 22): brand style, tier, origin, ABV, blurb.
@@ -36,7 +35,6 @@ namespace LastCall.Core
 
         public IngredientCard(string id, string name, IngredientType type, int flavor,
             QualityTier quality = QualityTier.HousePour,
-            IReadOnlyList<EmotionCharge> charges = null,
             IngredientInfo info = null)
         {
             Info = info;
@@ -47,13 +45,12 @@ namespace LastCall.Core
             Type = type;
             Flavor = flavor;
             Quality = quality;
-            Charges = charges ?? Array.Empty<EmotionCharge>();
             InstanceId = _nextInstanceId++;
         }
 
         /// <summary>A fresh instance with identical stats; gets its own InstanceId.</summary>
         public IngredientCard Clone() =>
-            new IngredientCard(Id, Name, Type, Flavor, Quality, Charges, Info);
+            new IngredientCard(Id, Name, Type, Flavor, Quality, Info);
 
         public override string ToString() => $"{Name} [{Type} {Flavor}]";
     }

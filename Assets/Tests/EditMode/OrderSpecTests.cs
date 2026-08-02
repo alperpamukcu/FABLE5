@@ -182,8 +182,8 @@ namespace LastCall.Tests
             var glass = Full();
             glass.AddPreparation(Preparations.Ice);
 
-            var newcomer = new RegularState("r1", "Newcomer", "arch", new EmotionStats(), new EmotionStats());
-            var known = new RegularState("r2", "Known", "arch", new EmotionStats(), new EmotionStats());
+            var newcomer = new RegularState("r1", "Newcomer", "arch");
+            var known = new RegularState("r2", "Known", "arch");
             known.RecordVisit(3);   // been in before
 
             Assert.AreEqual(0, newcomer.Visits);
@@ -243,7 +243,7 @@ namespace LastCall.Tests
         public void AStyleBandedOrder_HasNoFamily_SoOnlyTheExactDrinkWillDo()
         {
             var gin = new IngredientCard("gin", "Gin", IngredientType.Spirit, 6,
-                QualityTier.HousePour, null, new IngredientInfo("gin", category: IngredientCategories.Gin));
+                QualityTier.HousePour, new IngredientInfo("gin", category: IngredientCategories.Gin));
             var lookup = new Dictionary<string, IngredientCard> { ["gin"] = gin };
 
             var neatGin = new GlassContents(1.0);
