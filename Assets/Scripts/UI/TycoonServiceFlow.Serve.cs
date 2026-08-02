@@ -402,25 +402,50 @@ namespace LastCall.UI
                 }
                 var run = Run;
                 if (run == null) return;
-                _serveFocusBottle = c;
-                _serveBottleGrabbed = true;
-                // The bottle leaves the shelf. It used to stay standing there while a copy of it
-                // appeared in your hand, so the same bottle was in two places at once.
-                _serveCabinetGap = art;
-                art.gameObject.SetActive(false);
-                _serveBottleImage.sprite = ItemArt.Bottle(c.Info?.Style);
-                _serveBottleImage.color = _serveBottleImage.sprite != null
-                    ? Color.white : UITheme.StyleColor(c.Info?.Style, c.Type);
-                SetHandBottleLevel(run, c);
-                _servePourTotal = 0;
-                _serveBottle.anchoredPosition = _serveBottleRest;
-                _serveBottle.localRotation = Quaternion.identity;
-                _serveBottle.gameObject.SetActive(true);
-                Sfx.Play("bottle_open", 0.8f);
-                _aimText.text = $"{c.Name.ToUpperInvariant()} — TIP IT OVER THE GLASS";
-                _aimText.color = UITheme.TextSecondary;
+                TakeCabinetBottle(run, c, art);
             });
             slot.gameObject.AddComponent<EventTrigger>().triggers.Add(down);
+        }
+
+        /// <summary>Takes a cabinet bottle into the hand — the slot press and the menu's
+        /// carbonated routing both come through here, so there is exactly one way a bottle
+        /// leaves that shelf.</summary>
+        private void TakeCabinetBottle(TycoonRun run, IngredientCard c, RectTransform art)
+        {
+            _serveFocusBottle = c;
+            _serveBottleGrabbed = true;
+            // The bottle leaves the shelf. It used to stay standing there while a copy of it
+            // appeared in your hand, so the same bottle was in two places at once.
+            _serveCabinetGap = art;
+            art.gameObject.SetActive(false);
+            _serveBottleImage.sprite = ItemArt.Bottle(c.Info?.Style);
+            _serveBottleImage.color = _serveBottleImage.sprite != null
+                ? Color.white : UITheme.StyleColor(c.Info?.Style, c.Type);
+            SetHandBottleLevel(run, c);
+            _servePourTotal = 0;
+            _serveBottle.anchoredPosition = _serveBottleRest;
+            _serveBottle.localRotation = Quaternion.identity;
+            _serveBottle.gameObject.SetActive(true);
+            Sfx.Play("bottle_open", 0.8f);
+            _aimText.text = $"{c.Name.ToUpperInvariant()} — TIP IT OVER THE GLASS";
+            _aimText.color = UITheme.TextSecondary;
+        }
+
+        /// <summary>Finds a bottle's cabinet slot and takes it straight into the hand, door
+        /// and all — how the menu hands a carbonated bottle over (the author, 2026-08-02:
+        /// opened from the menu, cola landed on the SHAKER bench, where Core refuses fizz
+        /// every frame — the bottle simply would not pour). Runs after GoTo(Serve) has
+        /// rebuilt the shelf; a bottle not standing there (empty, missing) is a no-op.</summary>
+        private void TakeFromCabinet(string ingredientId)
+        {
+            var run = Run;
+            if (run == null || _serveCabinetShelf == null) return;
+            var slot = _serveCabinetShelf.Find($"M_{ingredientId}") as RectTransform;
+            var art = slot != null ? slot.Find("Bottle") as RectTransform : null;
+            var card = run.Shelf.Find(ingredientId)?.Ingredient;
+            if (art == null || card == null) return;
+            _serveCabinetOpen = true;             // the door swings with the reach
+            TakeCabinetBottle(run, card, art);
         }
 
         /// <summary>

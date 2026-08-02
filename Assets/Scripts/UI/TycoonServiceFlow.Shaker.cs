@@ -285,8 +285,14 @@ namespace LastCall.UI
                 // a glass that cannot accept it read as an overflow the rules do not have
                 // (GDD 21 §3, 2026-07-28). The bottle stays in hand — only the pour ends.
                 bool full = run.Glass.IsFull;
-                pourNow = tilt > 42f && over && !full;
+                // Core refuses fizz in the tin (GDD 21 §12). The refusal must SPEAK here:
+                // routed wrong, a carbonated bottle used to tip mutely while BeginPour threw
+                // every frame — the pour looked simply broken (the author, 2026-08-02).
+                bool fizzy = _focusBottle.Info != null && _focusBottle.Info.Carbonated;
+                pourNow = tilt > 42f && over && !full && !fizzy;
                 if (full && tilt > 42f && over) ShowShakerFull();
+                else if (fizzy && tilt > 42f && over)
+                    SayShaker("FIZZ DIES IN THE TIN — BUILD IT AT THE GLASS");
 
                 if (pourNow)
                 {
@@ -583,7 +589,9 @@ namespace LastCall.UI
             if (Run == null) return;
             if (_focusBottle == null)
                 foreach (var b in Run.Shelf.Bottles)
-                    if (!b.IsEmpty && b.Ingredient.Type != IngredientType.Garnish)
+                    if (!b.IsEmpty && b.Ingredient.Type != IngredientType.Garnish
+                        && b.Ingredient.Type != IngredientType.Beer
+                        && (b.Ingredient.Info == null || !b.Ingredient.Info.Carbonated))
                     { _focusBottle = b.Ingredient; break; }
             if (_focusBottle != null) GoTo(Stage.Shaker);
         }

@@ -241,6 +241,16 @@ namespace LastCall.UI
             // Beer never enters the shaker (GDD 21 §10): the keg opens the tap instead, and the
             // glass it fills is the one that goes out.
             if (card.Type == IngredientType.Beer) { GoTo(Stage.Tap); return; }
+            // Fizz never enters it either (GDD 21 §12): its only door is the serving glass.
+            // Routing it to the shaker anyway put a bottle in the hand that Core refuses
+            // every frame — the author's bug report: "cola, volt enerji dökülmüyor". It goes
+            // to the counter instead, already in hand, ready to tip over the glass.
+            if (card.Info != null && card.Info.Carbonated)
+            {
+                GoTo(Stage.Serve);
+                TakeFromCabinet(card.Id);
+                return;
+            }
             GoTo(Stage.Shaker);
         }
 

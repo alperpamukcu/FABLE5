@@ -993,61 +993,79 @@ namespace LastCall.UI
                 bool deciding = !visit.HasOrdered;                    // reading the menu (2026-07-23)
                 bool drinking = visit.State == VisitState.Drinking;   // served, nursing the drink
 
-                // A regular ordering again after a perfect serve gets a gold star and the
-                // round count (GDD 24 §4) — the reward for reading them right, made visible.
-                string star = visit.ExtraOrdersTaken > 0
-                    ? $"<color=#F5C97B>★{visit.ExtraOrdersTaken + 1} </color>" : "";
-                view.Name.supportRichText = true;
-                view.Name.text = star + (visit.Regular?.Name ?? "Customer").ToUpperInvariant();
-                view.Name.color = UITheme.TextPrimary;
-                view.Order.color = UITheme.Amber[4];
-
                 // The bubble only knows what the PLAYER knows (v5 C3): until the ID card has
-                // been read, Core refuses to hand the order over at all, so an unread customer
-                // shows a signal, not a drink. This is what makes reading the card a verb — the
-                // bubble used to print the order and its price over every head, and the card was
-                // decoration. No price appears even after reading: prices live on the menu.
+                // been read, Core refuses to hand the order over at all. Stripped to three
+                // beats (the author, 2026-08-02): it does not exist until they SIT and have
+                // an order to give; unread it says only that they are ready — not who they
+                // are, not what they want; read, it says only the name and the order.
                 bool known = visit.IdInspected;
-                if (view.Icon != null)
-                {
-                    view.Icon.sprite = deciding || !known
-                        ? null
-                        : DrinkIcon.For(visit.Order.Wanted, _bootstrap.Glassware);
-                    view.Icon.enabled = view.Icon.sprite != null;
-                    view.Icon.color = drinking ? new Color(1f, 1f, 1f, 0.5f) : Color.white;
-                }
+                bool atTheStool = view.WalkT >= 1f;
+                bool showBubble = atTheStool && (!deciding || drinking);
+                if (view.Tag.gameObject.activeSelf != showBubble)
+                    view.Tag.gameObject.SetActive(showBubble);
 
-                if (deciding)
+                if (showBubble)
                 {
-                    // Nothing to read or serve yet — they are still making up their mind.
-                    view.Wants.text = "DECIDING...";
-                    view.Order.text = "...";
-                }
-                else if (drinking)
-                {
-                    // Served and content; the drink is theirs to finish before they go.
-                    view.Wants.text = "ENJOYING IT";
-                    view.Order.text = known ? $"{visit.Order.Wanted.Name.ToUpperInvariant()}  ·" : "·";
-                    view.Order.color = UITheme.Lime[3];
-                }
-                else if (!known)
-                {
-                    // They have ordered and you have not looked: the card is the only way in.
-                    view.Wants.text = "READY · TAP THE ID";
-                    view.Order.text = "?";
-                }
-                else
-                {
-                    // A glanceable tell that they want extras; the licence (GDD 24 §5) shows which.
-                    view.Wants.text = visit.Order.Garnishes.Count > 0 ? "WANTS EXTRAS" : "WAITING";
-                    view.Order.text = visit.Order.Wanted.Name.ToUpperInvariant();
+                    // A regular ordering again after a perfect serve gets a gold star and the
+                    // round count (GDD 24 §4) — the reward for reading them right, made
+                    // visible. The name is part of what the card teaches: it waits for the read.
+                    string star = visit.ExtraOrdersTaken > 0
+                        ? $"<color=#F5C97B>★{visit.ExtraOrdersTaken + 1} </color>" : "";
+                    view.Name.supportRichText = true;
+                    view.Name.text = known
+                        ? star + (visit.Regular?.Name ?? "Customer").ToUpperInvariant() : "";
+                    view.Name.color = UITheme.TextPrimary;
+                    view.Order.color = UITheme.Amber[4];
+
+                    if (view.Icon != null)
+                    {
+                        view.Icon.sprite = !known ? null
+                            : DrinkIcon.For(visit.Order.Wanted, _bootstrap.Glassware);
+                        view.Icon.enabled = view.Icon.sprite != null;
+                        view.Icon.color = drinking ? new Color(1f, 1f, 1f, 0.5f) : Color.white;
+                    }
+
+                    if (drinking)
+                    {
+                        // Served and content; the drink is theirs to finish before they go.
+                        view.Wants.text = "ENJOYING IT";
+                        view.Order.text = known
+                            ? $"{visit.Order.Wanted.Name.ToUpperInvariant()}  ·" : "·";
+                        view.Order.color = UITheme.Lime[3];
+                    }
+                    else if (!known)
+                    {
+                        // Ready, unread: the one line the author asked for, and nothing else.
+                        view.Wants.text = "READY TO ORDER";
+                        view.Order.text = "";
+                    }
+                    else
+                    {
+                        // Read: the name above, the order below — the card said the rest.
+                        view.Wants.text = "";
+                        view.Order.text = visit.Order.Wanted.Name.ToUpperInvariant();
+                    }
+
+                    // The ticket FITS its lines (the author, 2026-08-02: one line in the old
+                    // three-line card floated in a big empty box). Empty rows give their
+                    // space back, the card takes the height of what it actually says.
+                    float rowTop = -8f;
+                    view.Name.rectTransform.offsetMax = new Vector2(-4, rowTop);
+                    if (view.Name.text.Length > 0) rowTop -= 16f;
+                    view.Wants.rectTransform.offsetMax = new Vector2(-4, rowTop);
+                    if (view.Wants.text.Length > 0) rowTop -= 16f;
+                    view.Order.rectTransform.offsetMax = new Vector2(-4, rowTop);
+                    if (view.Order.text.Length > 0) rowTop -= 17f;
+                    view.Tag.sizeDelta = new Vector2(BustW + 48f, -rowTop + 8f);
                 }
 
                 // The icon docks against the text's measured width, so the centred line reads
-                // as one piece: [glass] DRAUGHT, the pair centred together.
+                // as one piece: [glass] DRAUGHT, the pair centred together — on whatever row
+                // the order landed on now that the ticket packs its lines.
                 if (view.Icon != null && view.Icon.enabled)
-                    view.Icon.rectTransform.anchoredPosition =
-                        new Vector2(-view.Order.preferredWidth * 0.5f - 4f, -48f);
+                    view.Icon.rectTransform.anchoredPosition = new Vector2(
+                        -view.Order.preferredWidth * 0.5f - 4f,
+                        view.Order.rectTransform.offsetMax.y - 6f);
 
                 // The patience clock only bites while they wait on an order. Deciding holds it
                 // full; a drinking customer is content — both show a calm, full cyan bar.
