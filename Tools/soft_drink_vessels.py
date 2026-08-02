@@ -25,7 +25,9 @@ the back bar's dark panelling.
 from PIL import Image
 import os, sys
 
-RAW = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'vessels_raw')
+HERE = os.path.dirname(os.path.abspath(__file__))
+RAW = os.path.join(HERE, 'vessels_raw')
+CARTON_RAW = os.path.join(HERE, 'cartons_raw')
 DEST = 'Assets/Resources/Items'
 INK = (12, 10, 16, 255)
 
@@ -33,14 +35,11 @@ INK = (12, 10, 16, 255)
 # fruit PixelLab reaches for is not always the fruit that was asked for, so the lemon
 # was picked out of the lime's pack.
 PICKS = {
-    'orange': 'orange_0',
-    'lemon': 'lime_1',
-    'lime': 'lime_0',
-    'pineapple': 'pineapple_0',
-    'cranberry': 'cranberry_0',
     'cola': 'cola_2',
     'energy': 'energy_0',
-    'soda': 'soda_0',
+    # the first soda had the transparency chequerboard painted into its glass; this
+    # take carries far less of it (0.7% of the sprite against 2.4%)
+    'soda': 'soda2_0',
     # The house syrup is the odd one out: it is asked for EMPTY, because it stands on
     # the back bar among spirits that all show their level, and a sealed one would be
     # the only bottle up there that never went down. It comes fitted with a pour spout,
@@ -107,9 +106,54 @@ def ring(im, thickness=1):
     return out
 
 
-def build(style):
-    src = Image.open(os.path.join(RAW, PICKS[style] + '.png')).convert('RGBA')
-    im = largest_blob(src)
+# The cartons were generated a second time (carton_prompts.py). The first set put the
+# screw cap wherever it felt like - one hard right, one dead centre - and had no cap-off
+# state at all; a carton's roof is flat and the cap is painted onto it, so no amount of
+# measuring finds the cap across five different drawings. Both were asked for instead.
+# The fruit a pack returns is still not always the fruit it was asked for: the lemon
+# carton with its cap on the left came out of the lime's pack.
+CARTONS = {
+    # every take in the orange pack came back half again as wide as the rest of the
+    # shelf, so the orange carton is the one from the lime's pack instead
+    'orange': ('lime_shut_2', 'orange_open_0'),
+    'lemon': ('lime_shut_1', 'lemon_open_0'),
+    'lime': ('lime_shut_0', 'lime_open_0'),
+    'pineapple': ('pineapple_shut_0', 'pineapple_open_2'),
+    'cranberry': ('cranberry_shut_0', 'cranberry_open_2'),
+}
+
+
+def drop_shadow_bar(im):
+    """PixelLab sometimes draws the vessel's ground shadow TOUCHING its base, where the
+    largest-blob pass cannot tell the two apart. It gives itself away by its width: a
+    carton does not suddenly get half again as wide in its last few rows."""
+    W, H = im.size
+    p = im.load()
+    rows = [sum(1 for x in range(W) if p[x, y][3] > 40) for y in range(H)]
+    body = [w for w in rows if w > 0]
+    if not body:
+        return im
+    body.sort()
+    typical = body[len(body) // 2]
+    cut = H
+    for y in range(H - 1, -1, -1):
+        if rows[y] == 0:
+            continue
+        if rows[y] > typical * 1.35:
+            cut = y
+        else:
+            break
+    if cut >= H:
+        return im
+    for y in range(cut, H):
+        for x in range(W):
+            p[x, y] = (0, 0, 0, 0)
+    return im
+
+
+def build(style, raw=RAW, pick=None):
+    src = Image.open(os.path.join(raw, (pick or PICKS[style]) + '.png')).convert('RGBA')
+    im = drop_shadow_bar(largest_blob(src))
     bb = im.getbbox()
     if bb:
         im = im.crop(bb)
@@ -122,7 +166,14 @@ def run(write):
         if write:
             im.save(os.path.join(DEST, style + '.png'))
         print('%-10s %s' % (style, im.size))
-    print('%d vessels %s' % (len(PICKS), 'written' if write else '(dry run)'))
+    for style, (shut, opened) in CARTONS.items():
+        a = build(style, CARTON_RAW, shut)
+        b = build(style, CARTON_RAW, opened)
+        if write:
+            a.save(os.path.join(DEST, style + '.png'))
+            b.save(os.path.join(DEST, style + '_open.png'))
+        print('%-10s %s  open %s' % (style, a.size, b.size))
+    print('%d vessels %s' % (len(PICKS) + len(CARTONS), 'written' if write else '(dry run)'))
 
 
 if __name__ == '__main__':
