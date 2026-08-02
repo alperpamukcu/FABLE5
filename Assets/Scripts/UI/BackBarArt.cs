@@ -250,6 +250,77 @@ namespace LastCall.UI
                 100f, 0, SpriteMeshType.FullRect, new Vector4(6, 6, 6, 6));
         }
 
+        private static Sprite _infoPlate, _infoTail;
+
+        /// <summary>
+        /// The bubble that answers what is in a bottle, hung UNDER it (the author,
+        /// 2026-08-02: the old panel was a bare dark rectangle sitting on top of the
+        /// bottle, hiding the very thing it described). Cut corners and a lit top edge,
+        /// so it reads as a card raised off the wall rather than a hole in it; 9-sliced,
+        /// because a bottle's name decides its width.
+        /// </summary>
+        public static Sprite InfoPlate()
+        {
+            if (_infoPlate != null) return _infoPlate;
+            const int W = 24, H = 24, Cut = 3;
+            var px = new Color32[W * H];
+            var fill = new Color32(0x0B, 0x10, 0x18, 0xF4);
+            var neon = new Color32(0x2F, 0xA8, 0xA0, 0xFF);
+            var neonLit = new Color32(0x6E, 0xE0, 0xD6, 0xFF);
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    // the four corners are chamfered away, which is what stops a panel this
+                    // small from reading as a plain box
+                    int cx = System.Math.Min(x, W - 1 - x), cy = System.Math.Min(y, H - 1 - y);
+                    if (cx + cy < Cut) { px[y * W + x] = new Color32(0, 0, 0, 0); continue; }
+                    Color32 c = fill;
+                    if (cx + cy == Cut || x == 0 || y == 0 || x == W - 1 || y == H - 1) c = PanelSeam;
+                    else if (cx + cy == Cut + 1 || x == 1 || y == 1 || x == W - 2 || y == H - 2)
+                        c = y >= H - 2 ? neonLit : neon;      // the tube catches along the top
+                    px[y * W + x] = c;
+                }
+            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            tex.SetPixels32(px);
+            tex.Apply();
+            return _infoPlate = Sprite.Create(tex, new Rect(0, 0, W, H), new Vector2(0.5f, 0.5f),
+                100f, 0, SpriteMeshType.FullRect, new Vector4(8, 8, 8, 8));
+        }
+
+        /// <summary>The bubble's spout, pointing up at the bottle it belongs to. Its lowest
+        /// rows are plain fill so they cover the plate's own top edge and the two become one
+        /// shape.</summary>
+        public static Sprite InfoTail()
+        {
+            if (_infoTail != null) return _infoTail;
+            const int W = 13, H = 9;
+            var px = new Color32[W * H];
+            var fill = new Color32(0x0B, 0x10, 0x18, 0xF4);
+            var neonLit = new Color32(0x6E, 0xE0, 0xD6, 0xFF);
+            for (int y = 0; y < H; y++)
+            {
+                // a spout one pixel narrower per row, so its slopes land on whole pixels
+                int half = (H - 1 - y);
+                int mid = W / 2;
+                for (int x = mid - half; x <= mid + half; x++)
+                {
+                    if (x < 0 || x >= W) continue;
+                    bool slope = x == mid - half || x == mid + half;
+                    bool skirt = y <= 1;                       // sits over the plate's edge
+                    // The slopes carry the same tube as the card's border, so the spout
+                    // belongs to the card instead of being a dark wedge stuck to it.
+                    px[y * W + x] = skirt ? fill : slope ? neonLit : fill;
+                }
+            }
+            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            tex.SetPixels32(px);
+            tex.Apply();
+            return _infoTail = Sprite.Create(tex, new Rect(0, 0, W, H), new Vector2(0.5f, 0f),
+                100f, 0, SpriteMeshType.FullRect);
+        }
+
         private static Sprite _keg;
 
         /// <summary>

@@ -637,19 +637,35 @@ namespace LastCall.UI
             _bottleInfoFill.color = bottle.IsEmpty ? UITheme.ViceRed[3]
                 : left < 0.25 ? UITheme.Amber[3] : UITheme.Lime[3];
 
-            // Pinned above the bottle, and kept inside the board at either end. Positioned in
-            // the PANEL's space, not the sheet's: the sheet lays its children out vertically,
-            // so a panel parented there is treated as another row -- it lost its size, its
-            // backing plate and its place above the bottle all at once.
+            // Hung UNDER the bottle (the author, 2026-08-02): above it, the card covered the
+            // top of the very bottle it was describing. Positioned in the PANEL's space, not
+            // the sheet's: the sheet lays its children out vertically, so a panel parented
+            // there is treated as another row -- it lost its size, its backing plate and its
+            // place by the bottle all at once.
             var panel = _bottleInfo;
             panel.gameObject.SetActive(true);
             panel.SetAsLastSibling();
-            var world = near.TransformPoint(new Vector3(0, near.rect.height * 0.5f + 14f, 0));
-            var local = (Vector2)_menuPanel.InverseTransformPoint(world);
+            float half = near.rect.height * 0.5f;
+            var below = (Vector2)_menuPanel.InverseTransformPoint(
+                near.TransformPoint(new Vector3(0, -half - 10f, 0)));
+            var above = (Vector2)_menuPanel.InverseTransformPoint(
+                near.TransformPoint(new Vector3(0, half + 10f, 0)));
+
             float halfBoard = _menuPanel.rect.width * 0.5f;
-            float x = Mathf.Clamp(local.x, -halfBoard + panel.rect.width * 0.5f + 8f,
+            float x = Mathf.Clamp(below.x, -halfBoard + panel.rect.width * 0.5f + 8f,
                 halfBoard - panel.rect.width * 0.5f - 8f);
-            panel.anchoredPosition = new Vector2(x, local.y + 8f);
+
+            // The bottom shelf has no room underneath, so the card goes back over the bottle
+            // there and its spout turns to follow.
+            bool room = below.y - panel.rect.height > -_menuPanel.rect.height * 0.5f + 8f;
+            panel.anchoredPosition = new Vector2(x, room ? below.y : above.y + panel.rect.height);
+            if (_bottleInfoTail != null)
+            {
+                _bottleInfoTail.anchorMin = _bottleInfoTail.anchorMax =
+                    new Vector2(0.5f, room ? 1f : 0f);
+                _bottleInfoTail.anchoredPosition = new Vector2(0, room ? -2f : 2f);
+                _bottleInfoTail.localScale = new Vector3(1f, room ? 1f : -1f, 1f);
+            }
         }
 
         private void HideBottleInfo()
@@ -661,27 +677,43 @@ namespace LastCall.UI
         {
             _bottleInfo = NewRect("BottleInfo", _menuPanel);
             _bottleInfo.anchorMin = _bottleInfo.anchorMax = new Vector2(0.5f, 0.5f);
-            _bottleInfo.pivot = new Vector2(0.5f, 0f);
-            _bottleInfo.sizeDelta = new Vector2(184, 58);
+            // Hangs DOWNWARD from its anchor, because the anchor is now the foot of the
+            // bottle rather than its shoulder.
+            _bottleInfo.pivot = new Vector2(0.5f, 1f);
+            _bottleInfo.sizeDelta = new Vector2(184, 68);
             var bg = _bottleInfo.gameObject.AddComponent<Image>();
-            bg.color = InkDark;
+            bg.sprite = BackBarArt.InfoPlate();
+            bg.type = Image.Type.Sliced;
             bg.raycastTarget = false;
 
+            // The spout, pointing back up at the bottle the card is talking about.
+            var tail = NewRect("Tail", _bottleInfo);
+            tail.anchorMin = tail.anchorMax = new Vector2(0.5f, 1f);
+            tail.pivot = new Vector2(0.5f, 0f);
+            tail.sizeDelta = new Vector2(13, 9);
+            tail.anchoredPosition = new Vector2(0, -2);
+            var tailImg = tail.gameObject.AddComponent<Image>();
+            tailImg.sprite = BackBarArt.InfoTail();
+            tailImg.raycastTarget = false;
+            _bottleInfoTail = tail;
+
+            // Two lines' worth: a name like REDLINE BOURBON WHISKEY wraps, and the second
+            // line used to land on the stock figure.
             _bottleInfoName = NewText("N", _bottleInfo, _display, 8, TextAnchor.UpperCenter,
                 UITheme.Cream[4]);
-            Place(_bottleInfoName.rectTransform, new Vector2(0.5f, 1), new Vector2(176, 12),
-                new Vector2(0, -6));
+            Place(_bottleInfoName.rectTransform, new Vector2(0.5f, 1), new Vector2(176, 22),
+                new Vector2(0, -7));
             _bottleInfoStock = NewText("S", _bottleInfo, _body, 8, TextAnchor.UpperCenter,
                 UITheme.Cream[3]);
             Place(_bottleInfoStock.rectTransform, new Vector2(0.5f, 1), new Vector2(176, 12),
-                new Vector2(0, -21));
+                new Vector2(0, -31));
             _bottleInfoPrice = NewText("P", _bottleInfo, _body, 8, TextAnchor.UpperCenter,
                 UITheme.Money);
             Place(_bottleInfoPrice.rectTransform, new Vector2(0.5f, 1), new Vector2(176, 12),
-                new Vector2(0, -44));
+                new Vector2(0, -54));
 
             var track = NewRect("Track", _bottleInfo);
-            Place(track, new Vector2(0.5f, 1), new Vector2(160, 4), new Vector2(0, -36));
+            Place(track, new Vector2(0.5f, 1), new Vector2(160, 4), new Vector2(0, -46));
             track.gameObject.AddComponent<Image>().color = UITheme.Night[3];
             var fill = NewRect("Fill", track);
             fill.anchorMin = Vector2.zero; fill.anchorMax = new Vector2(1, 1);
@@ -703,6 +735,7 @@ namespace LastCall.UI
         private Button _serveButton;
         private Text _serveLabel;
         private Text _bottleInfoName, _bottleInfoStock, _bottleInfoPrice;
+        private RectTransform _bottleInfoTail;
         private Image _bottleInfoFill;
 
         private static readonly Color PaperKey = new Color(0.96f, 0.94f, 0.86f, 1f);
