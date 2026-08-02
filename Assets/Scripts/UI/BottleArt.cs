@@ -43,6 +43,14 @@ namespace LastCall.UI
         /// </summary>
         private const float PrintTall = 0.72f;
 
+        /// <summary>
+        /// Or this much shorter than the TALLEST tone on the bottle, whatever share of the
+        /// body that is. The house syrup's label covers 78% of its body and the fixed share
+        /// above could not see it; against the glass around it, which runs the whole cavity,
+        /// it is plainly the shorter thing.
+        /// </summary>
+        private const float PrintShort = 0.65f;
+
         /// <summary>Colours rarer than this are highlights and dithering, not print.</summary>
         private const int PrintMin = 20;
 
@@ -57,9 +65,10 @@ namespace LastCall.UI
         /// <summary>
         /// If "print" claims more than this much of the cavity, the test has failed to find any
         /// glass — a barrel, say, which is wood all the way round. Better to show the drink
-        /// everywhere than to hide it behind a bottle-shaped label.
+        /// everywhere than to hide it behind a bottle-shaped label. Measured across the shelf,
+        /// a real label tops out around 62% of the cavity and a wooden barrel runs past 78%.
         /// </summary>
-        private const float PrintCap = 0.60f;
+        private const float PrintCap = 0.72f;
 
         /// <summary>
         /// How solid the drink is drawn. A flat opaque block reads as paint, not liquid — the
@@ -333,12 +342,21 @@ namespace LastCall.UI
                 if (rowRun > widestCavity) widestCavity = rowRun;
             }
 
+            int tallest = 0;
+            foreach (var pair in seen)
+            {
+                if (pair.Value < PrintMin) continue;
+                int span = high[pair.Key] - low[pair.Key] + 1;
+                if (span > tallest) tallest = span;
+            }
+
             var ink = new HashSet<int>();
             foreach (var pair in seen)
             {
                 if (pair.Value < PrintMin) continue;
                 int key = pair.Key;
-                if (high[key] - low[key] + 1 > bodyHeight * PrintTall) continue;
+                int span = high[key] - low[key] + 1;
+                if (span > bodyHeight * PrintTall && span > tallest * PrintShort) continue;
                 if (right[key] - left[key] + 1 < widestCavity * PrintWide) continue;
                 ink.Add(key);
             }

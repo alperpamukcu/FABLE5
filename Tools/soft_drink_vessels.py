@@ -9,9 +9,10 @@ printed on the front, the cola in a big ribbed PET bottle, the energy drink in a
 slim can, and the soda in a clear bottle.
 
 The cartons and the can are opaque, and the cola and the soda came back drawn full,
-so none of the eight has a drink painted into it by the game - which is the point of
-putting a juice in a box. BottleArt lists all eight as sealed and the hover card
-carries what is left in one.
+so none of those has a drink painted into it by the game - which is the point of
+putting a juice in a box. BottleArt lists those eight as sealed and the hover card
+carries what is left in one. The house syrup went the other way: it was asked for as
+EMPTY glass, so the game still draws the syrup inside it.
 
 This file is the quantize chain, not the generator: the prompts are in
 vessels_prompts.py, the four-candidate packs they returned are in vessels_raw, and
@@ -40,6 +41,11 @@ PICKS = {
     'cola': 'cola_2',
     'energy': 'energy_0',
     'soda': 'soda_0',
+    # The house syrup is the odd one out: it is asked for EMPTY, because it stands on
+    # the back bar among spirits that all show their level, and a sealed one would be
+    # the only bottle up there that never went down. It comes fitted with a pour spout,
+    # so it needs no capless variant either.
+    'syrup': 'syrup_1',
 }
 
 

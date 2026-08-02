@@ -17,9 +17,11 @@ import json, io, os, sys
 
 D = 'Assets/Resources/Items'
 KEGS = {'lager', 'pale_ale', 'stout'}          # a keg has no cap to take off
-# A carton and a can have no mouth worth drawing either, and they are opaque, so the
-# pour stage has nothing to show that the closed art does not already say.
-SEALED = {'orange', 'lemon', 'lime', 'pineapple', 'cranberry', 'energy', 'cola', 'soda'}
+# Nothing here has a closure worth taking off: a carton and a can have no mouth to
+# draw, and the house syrup already stands with a pour spout in its neck. The pour
+# stage falls back to the closed shot, which for these IS the open one.
+SEALED = {'orange', 'lemon', 'lime', 'pineapple', 'cranberry', 'energy', 'cola',
+          'soda', 'syrup'}
 
 
 def styles():
