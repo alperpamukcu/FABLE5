@@ -165,26 +165,47 @@ namespace LastCall.UI
         private Text _idRecipeTipText;
         private RectTransform _idPrefRow;
 
-        /// <summary>The book's line for the ordered drink, shown at the card (hover).</summary>
+        /// <summary>How a drink is worked, in one word.</summary>
+        private static string PrepWord(RecipeDefinition r) =>
+            r.Id == "draught" ? "ON TAP" : r.Id == "neat_pour" ? "NEAT"
+            : r.Prep == PrepMethod.Shaken ? "SHAKEN"
+            : r.Prep == PrepMethod.Stirred ? "STIRRED" : "BUILT";
+
+        /// <summary>
+        /// A recipe as a SPEC CARD: the prep, then one pour to a line, then the fill and the
+        /// glass. The vertical form is the readable one (the author, 2026-08-02: use the ID
+        /// card's recipe display in the menu too) — a run-on "GIN 45–65 · LEMON 20–40 ·
+        /// SYRUP 10–30" wraps mid-number and has to be parsed; a column is read.
+        ///
+        /// Built once and shared, so the licence and the book cannot drift apart. Only the
+        /// ink differs: cyan on the card's dark panel, brown on the book's paper.
+        /// </summary>
+        private static List<string> RecipeSpecLines(RecipeDefinition r,
+            string prepInk, string numberInk, string quietInk)
+        {
+            var lines = new List<string> { $"<color={prepInk}>{PrepWord(r)}</color>" };
+            foreach (var band in r.RatioRequirements)
+                lines.Add((band.IsStyleBand ? band.Style.Replace('_', ' ') : band.Type.ToString())
+                    .ToUpperInvariant()
+                    + $"  <color={numberInk}>{band.MinRatio * 100:0}–{band.MaxRatio * 100:0}%</color>"
+                    + (band.MinTier > 1 ? $"  <color={quietInk}>T{band.MinTier}+</color>" : ""));
+            if (r.MinFill > 0) lines.Add($"FILL  <color={numberInk}>{r.MinFill * 100:0}%+</color>");
+            if (!string.IsNullOrEmpty(r.GlassId))
+                lines.Add($"<color={quietInk}>{r.GlassId.ToUpperInvariant()}</color>");
+            return lines;
+        }
+
+        /// <summary>How wide the hover spec is, beside the card.</summary>
+        private const float TipW = 252f;
+
+        /// <summary>The spec for the ordered drink, shown BESIDE the card (hover).</summary>
         private void ShowOrderRecipeTip()
         {
             var visit = _idVisit;
             if (visit == null || _idRecipeTip == null) return;
-            var r = visit.Order.Wanted;
-            string prep = r.Id == "draught" ? "ON TAP" : r.Id == "neat_pour" ? "NEAT"
-                : r.Prep == PrepMethod.Shaken ? "SHAKEN"
-                : r.Prep == PrepMethod.Stirred ? "STIRRED" : "BUILT";
-            // One pour to a line, the numbers in bright cyan — vertical, like a spec card.
-            var lines = new List<string> { $"<color=#FF6EC7>{prep}</color>" };
-            foreach (var band in r.RatioRequirements)
-                lines.Add((band.IsStyleBand ? band.Style.Replace('_', ' ') : band.Type.ToString())
-                    .ToUpperInvariant()
-                    + $"  <color=#8FE8DC>{band.MinRatio * 100:0}–{band.MaxRatio * 100:0}%</color>");
-            if (r.MinFill > 0) lines.Add($"FILL  <color=#8FE8DC>{r.MinFill * 100:0}%+</color>");
-            if (!string.IsNullOrEmpty(r.GlassId))
-                lines.Add($"<color=#9C93A8>{r.GlassId.ToUpperInvariant()}</color>");
+            var lines = RecipeSpecLines(visit.Order.Wanted, "#FF6EC7", "#8FE8DC", "#9C93A8");
             _idRecipeTipText.text = string.Join("\n", lines);
-            _idRecipeTip.sizeDelta = new Vector2(252, 18 + lines.Count * 20);
+            _idRecipeTip.sizeDelta = new Vector2(TipW, 18 + lines.Count * 20);
             _idRecipeTip.gameObject.SetActive(true);
             _idRecipeTip.SetAsLastSibling();
         }
@@ -1473,9 +1494,7 @@ namespace LastCall.UI
         private void HoverRecipe(RectTransform card, RecipeDefinition r)
         {
             if (card == null || _marketTip == null) return;
-            string prep = r.Id == "draught" ? "ON TAP" : r.Id == "neat_pour" ? "NEAT"
-                : r.Prep == PrepMethod.Shaken ? "SHAKEN"
-                : r.Prep == PrepMethod.Stirred ? "STIRRED" : "BUILT";
+            string prep = PrepWord(r);
             var trig = card.gameObject.AddComponent<EventTrigger>();
             var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
             enter.callback.AddListener(_ =>
@@ -1959,13 +1978,20 @@ namespace LastCall.UI
         private void BookSection(string title, List<RecipeDefinition> rs, bool lockedRows, TycoonRun run)
         {
             BookHeader(title);
-            int maxBands = 0;
-            foreach (var r in rs) if (r.RatioRequirements.Count > maxBands) maxBands = r.RatioRequirements.Count;
-            int cols = maxBands >= 4 ? 1 : 2;
+            // The rows are SPEC CARDS now, so a cell is as tall as its longest spec: the
+            // prep line, a line per pour, then the fill and the glass. Two columns hold
+            // throughout — stacking the pours is exactly what buys the width back.
+            int maxLines = 0;
+            foreach (var r in rs)
+            {
+                int n = RecipeSpecLines(r, "#000", "#000", "#000").Count;
+                if (n > maxLines) maxLines = n;
+            }
+            int cols = 2;
             var sec = NewRect("Sec", _bookList);
             var g = sec.gameObject.AddComponent<GridLayoutGroup>();
             float fullW = BkW * BkPaperW - 44f;
-            g.cellSize = new Vector2(cols == 1 ? fullW : fullW / 2f - 6f, cols == 1 ? 72f : 88f);
+            g.cellSize = new Vector2(fullW / 2f - 6f, 32f + maxLines * 19f);
             g.spacing = new Vector2(12, 8);
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             g.constraintCount = cols;
@@ -2001,29 +2027,22 @@ namespace LastCall.UI
             var name = NewText("N", row, _body, 16, TextAnchor.UpperLeft,
                 lockedRow ? new Color(0.45f, 0.36f, 0.28f) : new Color(0.13f, 0.08f, 0.05f));
             Stretch(name.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(52, -24), new Vector2(-4, -4));
-            // The two brand-agnostic specials never touch the tin; everything else says how
-            // it is worked. (Prep defaults to Shaken in the ctor, which fits neither a pint
-            // nor a neat pour.)
-            string prep = r.Id == "draught" ? "ON TAP"
-                : r.Id == "neat_pour" ? "NEAT"
-                : r.Prep == PrepMethod.Shaken ? "SHAKEN"
-                : r.Prep == PrepMethod.Stirred ? "STIRRED" : "BUILT";
             name.text = r.Name.ToUpperInvariant();
 
             var line = NewText("L", row, _body, 16, TextAnchor.UpperLeft, new Color(0.45f, 0.35f, 0.24f));
             Stretch(line.rectTransform, Vector2.zero, Vector2.one, new Vector2(52, 4), new Vector2(-4, -26));
-            line.horizontalOverflow = HorizontalWrapMode.Wrap;
-            line.verticalOverflow = VerticalWrapMode.Truncate;   // never lap the row beneath
+            line.horizontalOverflow = HorizontalWrapMode.Overflow;   // a column, not a paragraph
+            line.verticalOverflow = VerticalWrapMode.Overflow;
             line.supportRichText = true;
-            // The prep leads the detail line — at 16px it no longer fits beside the name —
-            // and the price is gone (the author: the shop can do its own selling).
-            string lead = $"<color=#1B5F66>{prep}</color>";
+            line.lineSpacing = 0.86f;
+            // The same spec card the licence draws, in the book's own ink (2026-08-02).
+            var spec = RecipeSpecLines(r, "#1B5F66", "#1A0E06", "#7A6450");
             if (lockedRow)
             {
                 double gate = run.RecipeStarGate(r);
-                line.text = lead + (gate > 0 ? $" · {gate:0.0}★" : "") + " · " + BandLine(r);
+                if (gate > 0) spec[0] += $"   <color=#7A6450>{gate:0.0}★</color>";
             }
-            else line.text = lead + " · " + BandLine(r);
+            line.text = string.Join("\n", spec);
         }
 
         /// <summary>"GIN 45–65 · LEMON 20–40 · SYRUP 10–30" — the pour, said in shares.</summary>
@@ -2361,12 +2380,20 @@ namespace LastCall.UI
             // VERTICAL and vice (the author, 2026-08-02): the cream chip vanished into the
             // cream card. A dark glass panel, cyan-edged, one pour to a line, the numbers
             // bright — parked over the seal corner where nothing else lives.
-            _idRecipeTip = NewRect("RecipeTip", card);
-            Place(_idRecipeTip, new Vector2(1, 1), new Vector2(252, 120), Vector2.zero);
-            _idRecipeTip.pivot = new Vector2(1, 1);
-            _idRecipeTip.anchoredPosition = new Vector2(-18f, -LicLines[2] + 6f);
+            // BESIDE the card, in the scrim's own margin (the author, 2026-08-02). Parked
+            // over the fields it flickered: the panel took the pointer, which fired the
+            // order line's PointerExit, which hid the panel, which handed the pointer back
+            // — many times a second. A tip that covers the line you hovered cannot help you
+            // read it anyway. The card is 714 wide on a 1280 canvas, so 252 clears it.
+            _idRecipeTip = NewRect("RecipeTip", _idRoot);
+            Place(_idRecipeTip, new Vector2(0.5f, 0.5f), new Vector2(TipW, 120), Vector2.zero);
+            _idRecipeTip.pivot = new Vector2(0, 1);
+            _idRecipeTip.anchoredPosition = new Vector2(LicW * 0.5f + 12f, LicH * 0.5f - LicLines[2] + 16f);
             var tipBg = _idRecipeTip.gameObject.AddComponent<Image>();
             tipBg.color = new Color(0.07f, 0.07f, 0.11f, 0.96f);
+            // Nothing in the panel may take a raycast, or hovering it reads as leaving the
+            // order line and the whole thing blinks.
+            tipBg.raycastTarget = false;
             var tipEdge = new Color(UITheme.Cyan[3].r, UITheme.Cyan[3].g, UITheme.Cyan[3].b, 0.8f);
             Hairline(_idRecipeTip, new Vector2(0, 0), new Vector2(1, 0), tipEdge);
             Hairline(_idRecipeTip, new Vector2(0, 1), new Vector2(1, 1), tipEdge);
@@ -2374,6 +2401,7 @@ namespace LastCall.UI
             HairlineV(_idRecipeTip, 1f, tipEdge);
             _idRecipeTipText = NewText("T", _idRecipeTip, _body, 16, TextAnchor.UpperLeft,
                 UITheme.TextSecondary);
+            _idRecipeTipText.raycastTarget = false;
             Stretch(_idRecipeTipText.rectTransform, Vector2.zero, Vector2.one, new Vector2(10, 6), new Vector2(-10, -6));
             _idRecipeTipText.horizontalOverflow = HorizontalWrapMode.Overflow;
             _idRecipeTipText.verticalOverflow = VerticalWrapMode.Overflow;
