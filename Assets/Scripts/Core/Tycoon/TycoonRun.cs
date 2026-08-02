@@ -384,14 +384,30 @@ namespace LastCall.Core
                     { _brandCatalogue.Add(card); _lockedStock.RemoveAt(i); }
                 }
             }
-            // The unlocked menu must be POURABLE for the playtest: any catalogue style the
-            // shelf lacks walks straight onto it.
+            // The unlocked menu must be POURABLE for the playtest. The late preset is
+            // "everything is bought" (the author, 2026-08-02), and since a better brand now
+            // JOINS the shelf rather than replacing the well bottle, that has to mean every
+            // rung of every line — otherwise the top-shelf cocktails the preset just
+            // unlocked cannot be poured at all, because their bands name a brand tier. The
+            // mid preset still carries one bottle a style, which is what a mid bar looks like.
             foreach (var card in _brandCatalogue)
             {
                 if (card.Info?.Style == null) continue;
-                if (Market.FindByStyle(_shelf, card.Info.Style) == null)
-                    _shelf.Add(new ShelfBottle(card.Clone()));
+                bool missing = late
+                    ? _shelf.Find(card.Id) == null
+                    : Market.FindByStyle(_shelf, card.Info.Style) == null;
+                if (missing) _shelf.Add(new ShelfBottle(card.Clone()));
             }
+            // Same for the stock still waiting on its recipe: at the endgame there is no
+            // recipe left locked, so nothing should still be in the back room.
+            if (late)
+                for (int i = _lockedStock.Count - 1; i >= 0; i--)
+                {
+                    var card = _lockedStock[i];
+                    if (_shelf.Find(card.Id) == null) _shelf.Add(new ShelfBottle(card.Clone()));
+                    _brandCatalogue.Add(card);
+                    _lockedStock.RemoveAt(i);
+                }
             RollMarket();
             Day = late ? 30 : 12;
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average);

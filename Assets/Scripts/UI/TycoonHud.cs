@@ -1092,12 +1092,9 @@ namespace LastCall.UI
                 img.sprite = piece.Sprite;
                 img.preserveAspect = true;
                 img.raycastTarget = false;
-                if (tier > 1)
-                {
-                    var stars = NewText("T", rt, _body, 8, TextAnchor.LowerCenter, UITheme.Cyan[4]);
-                    Place(stars.rectTransform, new Vector2(0.5f, 0), new Vector2(40, 10), new Vector2(0, -2));
-                    stars.text = new string('★', tier - 1);
-                }
+                // No tier stars under the rack (the author, 2026-08-02): the glass's own
+                // dress already says which rung it is, and a row of stars under every one
+                // read as a scoreboard bolted to the counter.
                 i++;
             }
         }
@@ -1646,11 +1643,11 @@ namespace LastCall.UI
                     int index = i;
                     var offer = run.MarketOffers[i];
                     string title = (offer.IsNewStock ? "+ " : "↑ ") + offer.Bottle.Name.ToUpperInvariant();
-                    AddCard(title, "bought", offer.Price, !offer.Sold, () =>
+                    AddCard(title, "BOUGHT TONIGHT", offer.Price, !offer.Sold, () =>
                     {
                         run.BuyBrand(index);
                         RebuildDayEnd();
-                    }, ItemArt.Bottle(offer.Bottle.Info?.Style));
+                    }, ItemArt.Bottle(offer.Bottle.Info?.Style), owned: offer.Sold);
                 }
             }
             else if (_shopTab == 2)
@@ -1683,8 +1680,9 @@ namespace LastCall.UI
                 // UPGRADES, pruned to the two that provably work (the author, 2026-08-02):
                 // stools and the glassware line. Musician, counter and back bar retired.
                 _cardTarget = ShopSection("THE FLOOR");
-                AddCard($"STOOL #{run.Seats + 1}", "bar is full", cfg.SeatPrice(run.Seats),
-                    run.Seats < cfg.MaxSeats, () => { run.BuySeat(); ApplyBarLook(); RebuildDayEnd(); });
+                AddCard($"STOOL #{run.Seats + 1}", "EVERY STOOL BOUGHT", cfg.SeatPrice(run.Seats),
+                    run.Seats < cfg.MaxSeats, () => { run.BuySeat(); ApplyBarLook(); RebuildDayEnd(); },
+                    owned: run.Seats >= cfg.MaxSeats);
                 _cardTarget = ShopSection("GLASSWARE — EVERY LINE ITS OWN, TO LEGENDARY");
                 foreach (var g in run.Glassware)
                 {
@@ -1698,9 +1696,10 @@ namespace LastCall.UI
                         : $"{glass.Name.ToUpperInvariant()} {tier - 1}★ → {tier}★";
                     // The card previews the glass being SOLD — the next tier's dress —
                     // not the one already on the rack.
-                    AddCard(label, "legendary", stepPrice, !maxed,
+                    AddCard(label, "LEGENDARY — THE WHOLE LINE", stepPrice, !maxed,
                         () => { run.BuyGlassTier(glass.Id); ApplyBarLook(); RebuildDayEnd(); },
-                        GlassArt.For(glass, Mathf.Min(tier + 1, TycoonRun.MaxGlassTier)).Sprite);
+                        GlassArt.For(glass, Mathf.Min(tier + 1, TycoonRun.MaxGlassTier)).Sprite,
+                        owned: maxed);
                 }
             }
 
@@ -3182,15 +3181,21 @@ namespace LastCall.UI
 
         /// <summary>One shop listing: art, title, price, and a bought/maxed/can't-afford state.
         /// Nothing sells on credit (GDD 23 §6): an unaffordable card refuses with a notice.</summary>
+        /// <param name="owned">Already yours. A sold row is not a dead row — it is the
+        /// receipt (the author, 2026-08-02: what has been bought should look bought), so it
+        /// keeps its art at full brightness and says so in lime instead of greying out
+        /// exactly like something you cannot afford.</param>
         private RectTransform AddCard(string title, string sub, int price, bool available, Action onBuy,
-            Sprite art = null)
+            Sprite art = null, bool owned = false)
         {
             var rt = NewRect("Card", _cardTarget != null ? _cardTarget : _offerRow);
             var img = rt.gameObject.AddComponent<Image>();
             bool afford = Run.Money >= price;
-            img.color = !available ? UITheme.Night[0]
+            img.color = owned ? new Color(UITheme.Lime[0].r, UITheme.Lime[0].g, UITheme.Lime[0].b, 0.85f)
+                : !available ? UITheme.Night[0]
                 : afford ? UITheme.Night[3]
                 : new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.9f);
+            if (owned) Hairline(rt, new Vector2(0, 0), new Vector2(1, 0), UITheme.Lime[2]);
             if (available)
             {
                 var button = rt.gameObject.AddComponent<Button>();
@@ -3214,18 +3219,20 @@ namespace LastCall.UI
                 ti.sprite = art;
                 ti.preserveAspect = true;
                 ti.raycastTarget = false;
-                ti.color = available && afford ? Color.white : new Color(1f, 1f, 1f, 0.35f);
+                ti.color = owned || (available && afford) ? Color.white : new Color(1f, 1f, 1f, 0.35f);
                 textRight = -54f;
             }
 
             var name = NewText("Name", rt, _body, 12, TextAnchor.UpperLeft,
-                available ? (afford ? UITheme.TextPrimary : UITheme.Cream[1]) : UITheme.Cream[1]);
+                owned ? UITheme.TextPrimary
+                : available ? (afford ? UITheme.TextPrimary : UITheme.Cream[1]) : UITheme.Cream[1]);
             Stretch(name.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 22), new Vector2(textRight, -6));
             name.text = title;
             var priceText = NewText("Price", rt, _body, 12, TextAnchor.LowerLeft,
-                !available ? UITheme.Cream[1] : afford ? UITheme.Money : UITheme.ViceRed[3]);
+                owned ? UITheme.Lime[3]
+                : !available ? UITheme.Cream[1] : afford ? UITheme.Money : UITheme.ViceRed[3]);
             Stretch(priceText.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 6), new Vector2(textRight, -50));
-            priceText.text = available ? $"${price}" : sub;
+            priceText.text = owned ? $"✓ {sub}" : available ? $"${price}" : sub;
             return rt;
         }
 
