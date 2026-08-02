@@ -80,23 +80,13 @@ namespace LastCall.UI
             /// <summary>Top of the cavity, as a fraction of the rect.</summary>
             public readonly float RimY;
 
-            /// <summary>
-            /// The blank label plate, drawn IN FRONT of the drink (the author, 2026-08-02:
-            /// the liquid was landing on top of the labels and tinting them). Null on the
-            /// old style-keyed art, which has no separate plate and still needs the
-            /// glass-front trick below.
-            /// </summary>
-            public readonly Sprite Label;
-
-            public Piece(Sprite sprite, Sprite fill, float aspect, float floorY, float rimY,
-                Sprite label = null)
+            public Piece(Sprite sprite, Sprite fill, float aspect, float floorY, float rimY)
             {
                 Sprite = sprite;
                 Fill = fill;
                 Aspect = aspect;
                 FloorY = floorY;
                 RimY = rimY;
-                Label = label;
             }
 
             public bool Exists => Sprite != null;
@@ -123,73 +113,14 @@ namespace LastCall.UI
         }
 
         /// <summary>
-        /// A BRAND's bottle. Where the generated set ships its own layers — the cavity and
-        /// the blank label plate beside the body — they are used AS DRAWN rather than
-        /// sniffed back out of the picture. <see cref="Measure"/> had to erode the
-        /// silhouette and guess which blocks of colour were a label, and it got the pale
-        /// ones wrong; a drawn mask cannot be wrong about itself.
-        /// </summary>
-        public static Piece For(IngredientCard card, bool open = false)
-        {
-            if (card == null) return default;
-            string key = (open ? "o:" : "c:") + card.Id;
-            if (Cache.TryGetValue(key, out var piece)) return piece;
-
-            string stem = "bot_" + card.Id + (open ? "_open" : "");
-            var body = ItemArt.Load(stem);
-            var mask = ItemArt.Load(stem + "_fill");
-            if (body != null && mask != null)
-            {
-                var span = SpanOf(mask);
-                piece = new Piece(body, mask, body.rect.width / body.rect.height,
-                    span.floorY, span.rimY, ItemArt.Load(stem + "_label"));
-            }
-            else piece = For(card.Info?.Style);
-            Cache[key] = piece;
-            return piece;
-        }
-
-        /// <summary>Where the drawn cavity sits up the sprite, so "half a bottle" is half
-        /// the CAVITY and not half the picture.</summary>
-        private static (float floorY, float rimY) SpanOf(Sprite mask)
-        {
-            var tex = mask.texture;
-            if (tex == null || !tex.isReadable) return (0f, 1f);
-            var r = mask.rect;
-            int w = (int)r.width, h = (int)r.height;
-            if (w <= 0 || h <= 0) return (0f, 1f);
-            var px = tex.GetPixels((int)r.x, (int)r.y, w, h);
-            int lo = h, hi = -1;
-            for (int y = 0; y < h; y++)
-                for (int x = 0; x < w; x++)
-                    if (px[y * w + x].a > 0.4f)
-                    {
-                        if (y < lo) lo = y;
-                        if (y > hi) hi = y;
-                        break;
-                    }
-            if (hi < 0) return (0f, 1f);
-            return (lo / (float)h, (hi + 1) / (float)h);
-        }
-
-        /// <summary>
         /// Hangs the drink inside a bottle image. The liquid goes IN FRONT of the glass because the
         /// glass is painted opaque — but the cavity mask has holes where the labels are, so the
         /// label still reads as being on the outside, which is where it is.
         /// Returns null when the style has no art; the caller then has nothing to fill.
         /// </summary>
-        /// <summary>The drink inside a BRAND's bottle, with its blank label plate laid over
-        /// the top — so the drink can never tint the label (the author, 2026-08-02).</summary>
-        public static Image AddLiquid(RectTransform bottleArt, IngredientCard card, bool open = false)
-            => AddLiquid(bottleArt, For(card, open), card?.Info?.Style,
-                card?.Type ?? IngredientType.Spirit);
-
         public static Image AddLiquid(RectTransform bottleArt, string style, IngredientType type)
-            => AddLiquid(bottleArt, For(style), style, type);
-
-        private static Image AddLiquid(RectTransform bottleArt, Piece piece,
-            string style, IngredientType type)
         {
+            var piece = For(style);
             if (!piece.Exists || piece.Fill == null) return null;
 
             var go = new GameObject("Liquid", typeof(RectTransform));
@@ -211,11 +142,10 @@ namespace LastCall.UI
             var c = UITheme.LiquidColor(style, type);
             img.color = new Color(c.r, c.g, c.b, LiquidAlpha);
 
-            // Whatever goes over the drink is a child of the LIQUID, not of the bottle: the
-            // pour stage swaps bottles by destroying the liquid alone, and an orphan would
-            // wear the old bottle's face over the new one.
-            var front = new GameObject(piece.Label != null ? "Label" : "GlassFront",
-                typeof(RectTransform));
+            // A child of the LIQUID, not of the bottle: the pour stage swaps bottles by
+            // destroying the liquid alone, and an orphaned glass-front would wear the old
+            // bottle's face over the new one.
+            var front = new GameObject("GlassFront", typeof(RectTransform));
             var frt = (RectTransform)front.transform;
             frt.SetParent(rt, false);
             frt.anchorMin = Vector2.zero;
@@ -223,22 +153,10 @@ namespace LastCall.UI
             frt.offsetMin = Vector2.zero;
             frt.offsetMax = Vector2.zero;
             var fimg = front.AddComponent<Image>();
+            fimg.sprite = piece.Sprite;
             fimg.preserveAspect = true;
             fimg.raycastTarget = false;
-            if (piece.Label != null)
-            {
-                // The plate itself, at full strength: a label is OUTSIDE the glass, so it
-                // is opaque and the drink simply stops behind it.
-                fimg.sprite = piece.Label;
-                fimg.color = Color.white;
-            }
-            else
-            {
-                // The old style-keyed art has no plate; re-asserting the whole bottle at
-                // half strength is the best that art can do.
-                fimg.sprite = piece.Sprite;
-                fimg.color = new Color(1f, 1f, 1f, GlassFrontAlpha);
-            }
+            fimg.color = new Color(1f, 1f, 1f, GlassFrontAlpha);
             return img;
         }
 
