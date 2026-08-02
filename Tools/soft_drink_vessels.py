@@ -112,11 +112,13 @@ def ring(im, thickness=1):
 # measuring finds the cap across five different drawings. Both were asked for instead.
 # The fruit a pack returns is still not always the fruit it was asked for: the lemon
 # carton with its cap on the left came out of the lime's pack.
+NEEDS_CAP = {'lemon'}
+
 CARTONS = {
     # every take in the orange pack came back half again as wide as the rest of the
     # shelf, so the orange carton is the one from the lime's pack instead
     'orange': ('lime_shut_2', 'orange_open_0'),
-    'lemon': ('lime_shut_1', 'lemon_open_0'),
+    'lemon': ('lemon_shut_0', 'lemon_open_0'),
     'lime': ('lime_shut_0', 'lime_open_0'),
     'pineapple': ('pineapple_shut_0', 'pineapple_open_2'),
     'cranberry': ('cranberry_shut_0', 'cranberry_open_2'),
@@ -151,9 +153,65 @@ def drop_shadow_bar(im):
     return im
 
 
-def build(style, raw=RAW, pick=None):
+def add_cap(im, at=0.32, cw=13, chh=8):
+    """
+    Stand a screw cap on a carton's roof, in the carton's own colours.
+
+    Only the lemon needs this. Its pack held one clean upright carton with no cap at
+    all and one wearing a cap on the left but creased right across its label, and at
+    shelf size the crease reads as damage. The clean one is kept and the cap drawn: the
+    roof is a flat field of one tone, so a cap is a few rows of that tone shaded top and
+    bottom, sunk two rows in so no seam shows, with ink round what stands proud.
+    """
+    from collections import Counter
+    bb = im.getbbox()
+    im = im.crop(bb)
+    W, H = im.size
+    p = im.load()
+    top = [None] * W
+    for x in range(W):
+        ys = [y for y in range(H) if p[x, y][3] >= 128]
+        if ys:
+            top[x] = ys[0]
+    live = [x for x in range(W) if top[x] is not None]
+    lo, hi = min(live), max(live)
+    row = min(top[x] for x in live) + 3
+    face = Counter(p[x, row][:3] for x in live if p[x, row][3] >= 128).most_common(1)[0][0]
+    lit = tuple(min(255, int(v * 1.08)) for v in face)
+    dim = tuple(int(v * 0.74) for v in face)
+
+    cx = int(lo + (hi - lo) * at)
+    span = [x for x in range(max(lo, cx - cw // 2), min(hi, cx + cw // 2) + 1)
+            if top[x] is not None]
+    roof = min(top[x] for x in span)
+    pad = max(0, chh - roof + 2)
+    out = Image.new('RGBA', (W, H + pad), (0, 0, 0, 0))
+    out.alpha_composite(im, (0, pad))
+    op = out.load()
+    base = pad + roof + 2
+    cap = set()
+    for dy in range(chh):
+        y = base - dy - 1
+        inset = 1 if dy in (0, chh - 1) else 0
+        for x in range(cx - cw // 2 + inset, cx + cw // 2 - inset + 1):
+            if not (0 <= x < W and 0 <= y < H + pad):
+                continue
+            op[x, y] = (dim if dy <= 1 else lit if dy >= chh - 2 else face) + (255,)
+            cap.add((x, y))
+    for x in range(W):
+        for y in range(min(H + pad, base)):
+            if op[x, y][3] > 40:
+                continue
+            if any((x + dx, y + dy) in cap for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
+                op[x, y] = INK
+    return out
+
+
+def build(style, raw=RAW, pick=None, cap=False):
     src = Image.open(os.path.join(raw, (pick or PICKS[style]) + '.png')).convert('RGBA')
     im = drop_shadow_bar(largest_blob(src))
+    if cap:
+        im = add_cap(im)
     bb = im.getbbox()
     if bb:
         im = im.crop(bb)
@@ -167,7 +225,7 @@ def run(write):
             im.save(os.path.join(DEST, style + '.png'))
         print('%-10s %s' % (style, im.size))
     for style, (shut, opened) in CARTONS.items():
-        a = build(style, CARTON_RAW, shut)
+        a = build(style, CARTON_RAW, shut, cap=(style in NEEDS_CAP))
         b = build(style, CARTON_RAW, opened)
         if write:
             a.save(os.path.join(DEST, style + '.png'))
