@@ -117,6 +117,18 @@ namespace LastCall.UI
         /// <summary>What marks the capless art of a style.</summary>
         private const string OpenSuffix = "_open";
 
+        /// <summary>
+        /// Vessels the game draws no drink into (the author, 2026-08-02). The juices come
+        /// in board cartons and the energy drink in a can — a matte box owes nobody a view
+        /// of its contents, which is the point of putting a juice in one — and the cola and
+        /// the soda came back from the generator already drawn full. The hover card carries
+        /// what is left in all eight.
+        /// </summary>
+        private static readonly HashSet<string> Sealed = new HashSet<string>
+        {
+            "orange", "lemon", "lime", "pineapple", "cranberry", "energy", "cola", "soda"
+        };
+
         /// <summary>The bottle for a shelf style ("vodka", "gin", …), measured once and kept.</summary>
         public static Piece For(string style)
         {
@@ -152,6 +164,7 @@ namespace LastCall.UI
         /// </summary>
         public static Image AddLiquid(RectTransform bottleArt, string style, IngredientType type)
         {
+            if (Sealed.Contains(StyleOf(style))) return null;
             var piece = For(style);
             if (!piece.Exists || piece.Fill == null) return null;
 

@@ -17,11 +17,14 @@ import json, io, os, sys
 
 D = 'Assets/Resources/Items'
 KEGS = {'lager', 'pale_ale', 'stout'}          # a keg has no cap to take off
+# A carton and a can have no mouth worth drawing either, and they are opaque, so the
+# pour stage has nothing to show that the closed art does not already say.
+SEALED = {'orange', 'lemon', 'lime', 'pineapple', 'cranberry', 'energy', 'cola', 'soda'}
 
 
 def styles():
     d = json.load(io.open('Assets/Data/bottles/base_bar.json', encoding='utf-8'))
-    return sorted({c.get('style') for c in d['cards'] if c.get('style')} - KEGS)
+    return sorted({c.get('style') for c in d['cards'] if c.get('style')} - KEGS - SEALED)
 
 
 def vessel_mask(im):
