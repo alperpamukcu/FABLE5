@@ -196,9 +196,7 @@ namespace LastCall.UI
             // In the hand it stands OPEN (the author, 2026-08-01): the pour scene uses the
             // capless variant when one exists. Same canvas as the closed art, so the liquid
             // mask and the mouth line all stay put; styles missing an open shot fall back.
-            var bottleSprite = _focusBottle.Info?.Style == null ? null
-                : ItemArt.Bottle(_focusBottle.Info.Style + "_open");
-            if (bottleSprite == null) bottleSprite = ItemArt.Bottle(_focusBottle.Info?.Style);
+            var bottleSprite = ItemArt.Bottle(BottleArt.OpenKey(_focusBottle.Info?.Style));
             _pourBottleBody.sprite = bottleSprite;
             _pourBottleBody.color = bottleSprite != null ? Color.white : colour;   // real art, else the style tint
             SetPourBottleLevel(run);
@@ -230,7 +228,9 @@ namespace LastCall.UI
         /// </summary>
         private void SetPourBottleLevel(TycoonRun run)
         {
-            string style = _focusBottle?.Info?.Style;
+            // The capless art, so the cavity and the front layer describe the bottle that is
+            // actually on screen rather than the corked one it was cut from.
+            string style = BottleArt.OpenKey(_focusBottle?.Info?.Style);
             if (style != _pourBottleStyle)
             {
                 if (_pourBottleLiquid != null) Destroy(_pourBottleLiquid.gameObject);
