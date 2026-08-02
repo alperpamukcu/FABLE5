@@ -185,10 +185,10 @@ namespace LastCall.UI
             {
                 case IngredientType.Spirit: return "ANY SPIRIT";
                 case IngredientType.Beer: return "ANY BEER";
-                case IngredientType.Sweet: return "ANYTHING SWEET";
-                case IngredientType.Sour: return "ANYTHING SOUR";
-                case IngredientType.Bitter: return "ANYTHING BITTER";
-                case IngredientType.Bubbly: return "ANYTHING FIZZY";
+                case IngredientType.Sweet: return "ANY SWEET";
+                case IngredientType.Sour: return "ANY SOUR";
+                case IngredientType.Bitter: return "ANY BITTER";
+                case IngredientType.Bubbly: return "ANY FIZZ";
                 default: return "ANY GARNISH";
             }
         }
@@ -199,8 +199,8 @@ namespace LastCall.UI
             switch (type)
             {
                 case IngredientType.Spirit:
-                    return "SPIRIT = VODKA · GIN · RUM · WHISKEY · TEQUILA";
-                case IngredientType.Beer: return "BEER = LAGER · STOUT · PALE ALE";
+                    return "SPIRIT = VODKA·GIN·RUM·WHISKEY·TEQUILA";
+                case IngredientType.Beer: return "BEER = LAGER·STOUT·PALE ALE";
                 default: return null;
             }
         }
@@ -367,11 +367,13 @@ namespace LastCall.UI
                     textX = SpecRowH + 4f;
                 }
 
+                // The CONTENTS are the text face: lighter and narrower than the name above
+                // them, so the card has a title and a body rather than one wall of capitals —
+                // and so COFFEE LIQUEUR fits beside its share instead of running into it.
                 var label = NewText("L", line, _body, spec.Hint ? 8 : 16, TextAnchor.MiddleLeft,
                     ingredient ? (stocked ? ink : miss) : (i == 0 ? prepInk : quiet));
-                if (ingredient && stocked) Bold(label);
-                Place(label.rectTransform, new Vector2(0, 0.5f), new Vector2(width - textX - 46f, rowH),
-                    Vector2.zero);
+                Place(label.rectTransform, new Vector2(0, 0.5f),
+                    new Vector2(width - textX - SpecAmountW - 6f, rowH), Vector2.zero);
                 label.rectTransform.pivot = new Vector2(0, 0.5f);
                 label.rectTransform.anchoredPosition = new Vector2(textX, 0);
                 label.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -380,9 +382,9 @@ namespace LastCall.UI
 
                 if (spec.Amount.Length > 0)
                 {
-                    var amount = Bold(NewText("A", line, _body, 16, TextAnchor.MiddleRight,
-                        ingredient && !stocked ? miss : figure));
-                    Place(amount.rectTransform, new Vector2(1, 0.5f), new Vector2(52, rowH),
+                    var amount = NewText("A", line, _display, 16, TextAnchor.MiddleRight,
+                        ingredient && !stocked ? miss : figure);
+                    Place(amount.rectTransform, new Vector2(1, 0.5f), new Vector2(SpecAmountW, rowH),
                         new Vector2(-2, 0));
                     amount.horizontalOverflow = HorizontalWrapMode.Overflow;
                     amount.raycastTarget = false;
@@ -408,6 +410,10 @@ namespace LastCall.UI
 
         /// <summary>A footnote row — the line that spells out a word like SPIRIT.</summary>
         private const float SpecHintH = 13f;
+
+        /// <summary>The share column. Wide enough for "100%" in the display face, which is
+        /// four whole 16px cells — the old 52 clipped it and pushed COFFEE LIQUEUR into it.</summary>
+        private const float SpecAmountW = 70f;
 
         /// <summary>How wide the hover spec is, beside the card.</summary>
         private const float TipW = 252f;
@@ -2079,15 +2085,6 @@ namespace LastCall.UI
             return rt;
         }
 
-        /// <summary>Thickens a label by one font-pixel — the pixel-art bold. See
-        /// <see cref="PixelBold"/> for why Unity's own bold is no use on these faces.</summary>
-        private static Text Bold(Text t, float distance = 2f)
-        {
-            var b = t.gameObject.AddComponent<PixelBold>();
-            b.Distance = distance;
-            return t;
-        }
-
         private void Hairline(RectTransform parent, Vector2 aMin, Vector2 aMax, Color c)
         {
             var r = NewRect("HL", parent);
@@ -2225,8 +2222,11 @@ namespace LastCall.UI
         {
             var h = NewRect("H", _bookList);
             h.gameObject.AddComponent<LayoutElement>().preferredHeight = 34;
-            var t = Bold(NewText("T", h, _body, 16, TextAnchor.MiddleLeft,
-                new Color(0.30f, 0.16f, 0.05f)));
+            // The heavy face, not a faked weight (the author, 2026-08-02: the fake bold
+            // read broken). PressStart2P is the game's display type and carries the
+            // heading on its own.
+            var t = NewText("T", h, _display, 16, TextAnchor.MiddleLeft,
+                new Color(0.30f, 0.16f, 0.05f));
             Stretch(t.rectTransform, Vector2.zero, Vector2.one, new Vector2(6, 4), Vector2.zero);
             t.text = text;
             var rule = NewRect("Rule", h);
@@ -2292,8 +2292,8 @@ namespace LastCall.UI
             img.enabled = img.sprite != null;
             if (lockedRow) img.color = new Color(1, 1, 1, 0.4f);
 
-            var name = Bold(NewText("N", row, _body, 16, TextAnchor.UpperLeft,
-                lockedRow ? new Color(0.45f, 0.36f, 0.28f) : new Color(0.13f, 0.08f, 0.05f)));
+            var name = NewText("N", row, _display, 16, TextAnchor.UpperLeft,
+                lockedRow ? new Color(0.45f, 0.36f, 0.28f) : new Color(0.13f, 0.08f, 0.05f));
             Stretch(name.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(52, -24), new Vector2(-4, -4));
             name.text = r.Name.ToUpperInvariant();
 

@@ -585,7 +585,7 @@ namespace LastCall.UI
                 float iwp = drawnW * 0.5f * _tapPiece.InteriorHalf - 0.5f * artPx;
                 return (c.x - iwp, c.x + iwp,
                     baseY + h * _tapPiece.FloorY,
-                    h * (_tapPiece.RimY - _tapPiece.FloorY) - 3f * artPx);
+                    h * (_tapPiece.RimY - _tapPiece.FloorY) - GlassArt.PoolCeilingArtPx * artPx);
             }
             // The retired sprite's hand-measured cavity, kept for a run without glassware.
             float iw = w * 0.5f * 0.58f;

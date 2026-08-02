@@ -710,7 +710,7 @@ namespace LastCall.UI
             float artPx = piece.Sprite != null ? w / piece.Sprite.rect.width : 1.5f;
             float iw = w * 0.5f * piece.InteriorHalf - 0.5f * artPx;
             float floor = c.y - h * 0.5f + h * piece.FloorY;
-            float rim = c.y - h * 0.5f + h * piece.RimY - 3f * artPx;
+            float rim = c.y - h * 0.5f + h * piece.RimY - GlassArt.PoolCeilingArtPx * artPx;
             _serveFluid.SetPool(c.x - iw, c.x + iw, floor, rim, (float)run.ServingGlass.FillFraction);
         }
 

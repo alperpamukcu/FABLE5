@@ -80,12 +80,31 @@ namespace LastCall.UI
                 Density = density; Front = front; Back = back;
             }
 
-            /// <summary>The <see cref="Image.fillAmount"/> that draws the interior filled to
+            /// <summary>
+            /// The <see cref="Image.fillAmount"/> that draws the interior filled to
             /// <paramref name="fraction"/>. The mask is transparent below the floor, so this is
-            /// simply where that level sits up the whole sprite.</summary>
-            public float FillAmount(float fraction) =>
-                FloorY + (RimY - FloorY) * Mathf.Clamp01(fraction);
+            /// where that level sits up the whole sprite.
+            ///
+            /// It stops at the SAME ceiling the poured pool does — three art pixels under the
+            /// cavity's top, where the serve stage parks its surface so the fluid's bumps crest
+            /// inside the mouth. Without that the identical drink sat higher in the carried
+            /// glass than in the glass it had just been poured into (the author, 2026-08-02:
+            /// the glass you drag must be the glass you filled).
+            /// </summary>
+            public float FillAmount(float fraction)
+            {
+                float ceiling = RimY - (Sprite != null && Sprite.rect.height > 0
+                    ? PoolCeilingArtPx / Sprite.rect.height : 0f);
+                return FloorY + (ceiling - FloorY) * Mathf.Clamp01(fraction);
+            }
         }
+
+        /// <summary>
+        /// How far under the cavity's top every drawn drink stops, in ART pixels. The poured
+        /// pool needs it because a metaball surface is a bumpy band, not a line; the carried
+        /// glass and the rack props take it too so one drink is one height everywhere.
+        /// </summary>
+        public const float PoolCeilingArtPx = 3f;
 
         private readonly struct Shape
         {
