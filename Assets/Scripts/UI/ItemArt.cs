@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using LastCall.Core;
 using UnityEngine;
 
 namespace LastCall.UI
@@ -24,6 +25,29 @@ namespace LastCall.UI
 
         /// <summary>The bottle for a shelf style ("vodka", "gin", …); the asset names match.</summary>
         public static Sprite Bottle(string style) => Load(style);
+
+        /// <summary>
+        /// A BRAND's own bottle (the author, 2026-08-02: four vodkas were four cards wearing
+        /// one drawing, because the art was keyed by STYLE). Each card has its own vessel
+        /// under <c>bot_{id}</c>; the style sprite stays the fallback, both for a card with
+        /// no art of its own and for the places that only know a style — a recipe's
+        /// ingredient row names gin, not a gin.
+        /// </summary>
+        public static Sprite Bottle(IngredientCard card)
+        {
+            if (card == null) return null;
+            var own = Load("bot_" + card.Id);
+            return own != null ? own : Load(card.Info?.Style);
+        }
+
+        /// <summary>The same brand with its closure off — what a build stage shows, because
+        /// a bottle you are pouring from is open. Drawn open, never cropped.</summary>
+        public static Sprite BottleOpen(IngredientCard card)
+        {
+            if (card == null) return null;
+            var open = Load("bot_" + card.Id + "_open");
+            return open != null ? open : Bottle(card);
+        }
 
         public static Sprite Shaker => Load("shaker");
         public static Sprite Glass => Load("glass");
