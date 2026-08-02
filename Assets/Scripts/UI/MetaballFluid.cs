@@ -793,6 +793,16 @@ namespace LastCall.UI
                 float ly = _py[i];
                 if (ly < -iy) ly = -iy; else if (ly > ceil) ly = ceil;
                 float w = HalfWidthAt((ly + iy) / (2f * iy), ix);   // the wall at this height
+                if (ly > iy)
+                {
+                    // The crown DOMES (the author, 2026-08-02: the head poked past the
+                    // mouth's corners — "bira bardağı taşıyor"). Above the rim there is
+                    // no wall to hold a cylinder of foam: it narrows as it rises, and it
+                    // gives back the extra iso reach its fatter render radius has over
+                    // the pool particles the wall insets were measured for.
+                    w = w * (0.92f - 0.35f * (ly - iy) / FoamCrown)
+                        - (FoamRadius - PoolRadius) * SideOffset;
+                }
                 float lx = _px[i];
                 if (lx < -w) lx = -w; else if (lx > w) lx = w;
                 _px[i] = lx; _py[i] = ly;
