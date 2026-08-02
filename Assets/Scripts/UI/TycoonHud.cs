@@ -173,6 +173,38 @@ namespace LastCall.UI
             : r.Prep == PrepMethod.Shaken ? "SHAKEN"
             : r.Prep == PrepMethod.Stirred ? "STIRRED" : "BUILT";
 
+        /// <summary>
+        /// What a TYPE band asks for, said to somebody who has never worked a bar (the
+        /// author, 2026-08-02: not everyone knows what a spirit is). The two brand-agnostic
+        /// orders are the only recipes that speak in types — "pour me something" and
+        /// "whatever is on tap" — so this is where the word has to teach itself.
+        /// </summary>
+        private static string TypeWord(IngredientType type)
+        {
+            switch (type)
+            {
+                case IngredientType.Spirit: return "ANY SPIRIT";
+                case IngredientType.Beer: return "ANY BEER";
+                case IngredientType.Sweet: return "ANYTHING SWEET";
+                case IngredientType.Sour: return "ANYTHING SOUR";
+                case IngredientType.Bitter: return "ANYTHING BITTER";
+                case IngredientType.Bubbly: return "ANYTHING FIZZY";
+                default: return "ANY GARNISH";
+            }
+        }
+
+        /// <summary>The line that spells the word out, or null where it needs no help.</summary>
+        private static string TypeHint(IngredientType type)
+        {
+            switch (type)
+            {
+                case IngredientType.Spirit:
+                    return "SPIRIT = VODKA · GIN · RUM · WHISKEY · TEQUILA";
+                case IngredientType.Beer: return "BEER = LAGER · STOUT · PALE ALE";
+                default: return null;
+            }
+        }
+
         /// <summary>One line of a recipe's spec card: an ingredient with its exact share,
         /// or a plain note (the prep, the fill, the glass).</summary>
         private readonly struct SpecRow
@@ -181,9 +213,11 @@ namespace LastCall.UI
             public readonly string Label;
             public readonly string Amount;   // "" on a note row
             public readonly int MinTier;
+            public readonly bool Hint;       // a footnote: half height, half size
 
-            public SpecRow(string style, string label, string amount = "", int minTier = 1)
-            { Style = style; Label = label; Amount = amount; MinTier = minTier; }
+            public SpecRow(string style, string label, string amount = "", int minTier = 1,
+                bool hint = false)
+            { Style = style; Label = label; Amount = amount; MinTier = minTier; Hint = hint; }
         }
 
         /// <summary>
@@ -208,9 +242,15 @@ namespace LastCall.UI
                 var b = bands[i];
                 rows.Add(new SpecRow(
                     b.IsStyleBand ? b.Style : null,
-                    (b.IsStyleBand ? b.Style.Replace('_', ' ') : b.Type.ToString()).ToUpperInvariant(),
+                    b.IsStyleBand ? b.Style.Replace('_', ' ').ToUpperInvariant() : TypeWord(b.Type),
                     $"{shown[i]}%",
                     b.MinTier));
+            }
+            foreach (var b in bands)
+            {
+                if (b.IsStyleBand) continue;
+                string hint = TypeHint(b.Type);
+                if (hint != null) rows.Add(new SpecRow(null, hint, hint: true));
             }
             if (r.MinFill > 0) rows.Add(new SpecRow(null, "FILL", $"{r.MinFill * 100:0}%+"));
             if (!string.IsNullOrEmpty(r.GlassId))
@@ -294,11 +334,12 @@ namespace LastCall.UI
                 bool ingredient = spec.Style != null;
                 bool stocked = ingredient && InStock(spec.Style, spec.MinTier);
 
+                float rowH = spec.Hint ? SpecHintH : SpecRowH;
                 var line = NewRect($"S{i}", host);
-                Place(line, new Vector2(0, 1), new Vector2(width, SpecRowH), Vector2.zero);
+                Place(line, new Vector2(0, 1), new Vector2(width, rowH), Vector2.zero);
                 line.pivot = new Vector2(0, 1);
                 line.anchoredPosition = new Vector2(0, -y);
-                y += SpecRowH;
+                y += rowH;
 
                 // The frame is the "you have this" tell: a lit slab behind the row.
                 if (stocked)
@@ -326,9 +367,10 @@ namespace LastCall.UI
                     textX = SpecRowH + 4f;
                 }
 
-                var label = NewText("L", line, _body, 16, TextAnchor.MiddleLeft,
+                var label = NewText("L", line, _body, spec.Hint ? 8 : 16, TextAnchor.MiddleLeft,
                     ingredient ? (stocked ? ink : miss) : (i == 0 ? prepInk : quiet));
-                Place(label.rectTransform, new Vector2(0, 0.5f), new Vector2(width - textX - 46f, SpecRowH),
+                if (ingredient && stocked) Bold(label);
+                Place(label.rectTransform, new Vector2(0, 0.5f), new Vector2(width - textX - 46f, rowH),
                     Vector2.zero);
                 label.rectTransform.pivot = new Vector2(0, 0.5f);
                 label.rectTransform.anchoredPosition = new Vector2(textX, 0);
@@ -338,9 +380,9 @@ namespace LastCall.UI
 
                 if (spec.Amount.Length > 0)
                 {
-                    var amount = NewText("A", line, _body, 16, TextAnchor.MiddleRight,
-                        ingredient && !stocked ? miss : figure);
-                    Place(amount.rectTransform, new Vector2(1, 0.5f), new Vector2(52, SpecRowH),
+                    var amount = Bold(NewText("A", line, _body, 16, TextAnchor.MiddleRight,
+                        ingredient && !stocked ? miss : figure));
+                    Place(amount.rectTransform, new Vector2(1, 0.5f), new Vector2(52, rowH),
                         new Vector2(-2, 0));
                     amount.horizontalOverflow = HorizontalWrapMode.Overflow;
                     amount.raycastTarget = false;
@@ -364,8 +406,8 @@ namespace LastCall.UI
         /// <summary>How tall one line of a spec card is — the bottle icons are square to it.</summary>
         private const float SpecRowH = 20f;
 
-        /// <summary>How many lines a recipe's spec will take, for sizing a cell before it is drawn.</summary>
-        private static int SpecRowCount(RecipeDefinition r) => RecipeSpecRows(r).Count;
+        /// <summary>A footnote row — the line that spells out a word like SPIRIT.</summary>
+        private const float SpecHintH = 13f;
 
         /// <summary>How wide the hover spec is, beside the card.</summary>
         private const float TipW = 252f;
@@ -2037,6 +2079,15 @@ namespace LastCall.UI
             return rt;
         }
 
+        /// <summary>Thickens a label by one font-pixel — the pixel-art bold. See
+        /// <see cref="PixelBold"/> for why Unity's own bold is no use on these faces.</summary>
+        private static Text Bold(Text t, float distance = 2f)
+        {
+            var b = t.gameObject.AddComponent<PixelBold>();
+            b.Distance = distance;
+            return t;
+        }
+
         private void Hairline(RectTransform parent, Vector2 aMin, Vector2 aMax, Color c)
         {
             var r = NewRect("HL", parent);
@@ -2174,7 +2225,8 @@ namespace LastCall.UI
         {
             var h = NewRect("H", _bookList);
             h.gameObject.AddComponent<LayoutElement>().preferredHeight = 34;
-            var t = NewText("T", h, _body, 16, TextAnchor.MiddleLeft, new Color(0.36f, 0.20f, 0.08f));
+            var t = Bold(NewText("T", h, _body, 16, TextAnchor.MiddleLeft,
+                new Color(0.30f, 0.16f, 0.05f)));
             Stretch(t.rectTransform, Vector2.zero, Vector2.one, new Vector2(6, 4), Vector2.zero);
             t.text = text;
             var rule = NewRect("Rule", h);
@@ -2195,18 +2247,19 @@ namespace LastCall.UI
             // The rows are SPEC CARDS now, so a cell is as tall as its longest spec: the
             // prep line, a line per pour, then the fill and the glass. Two columns hold
             // throughout — stacking the pours is exactly what buys the width back.
-            int maxLines = 0;
+            float tallest = 0;
             foreach (var r in rs)
             {
-                int n = SpecRowCount(r);
-                if (n > maxLines) maxLines = n;
+                float h = 0;
+                foreach (var row in RecipeSpecRows(r)) h += row.Hint ? SpecHintH : SpecRowH;
+                if (h > tallest) tallest = h;
             }
-            if (lockedRows) maxLines++;   // the star gate takes its own line
+            if (lockedRows) tallest += SpecRowH;   // the star gate takes its own line
             int cols = 2;
             var sec = NewRect("Sec", _bookList);
             var g = sec.gameObject.AddComponent<GridLayoutGroup>();
             float fullW = BkW * BkPaperW - 44f;
-            g.cellSize = new Vector2(fullW / 2f - 6f, 30f + maxLines * SpecRowH);
+            g.cellSize = new Vector2(fullW / 2f - 6f, 30f + tallest);
             g.spacing = new Vector2(12, 8);
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             g.constraintCount = cols;
@@ -2239,8 +2292,8 @@ namespace LastCall.UI
             img.enabled = img.sprite != null;
             if (lockedRow) img.color = new Color(1, 1, 1, 0.4f);
 
-            var name = NewText("N", row, _body, 16, TextAnchor.UpperLeft,
-                lockedRow ? new Color(0.45f, 0.36f, 0.28f) : new Color(0.13f, 0.08f, 0.05f));
+            var name = Bold(NewText("N", row, _body, 16, TextAnchor.UpperLeft,
+                lockedRow ? new Color(0.45f, 0.36f, 0.28f) : new Color(0.13f, 0.08f, 0.05f)));
             Stretch(name.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(52, -24), new Vector2(-4, -4));
             name.text = r.Name.ToUpperInvariant();
 
@@ -2263,7 +2316,7 @@ namespace LastCall.UI
             var parts = new List<string>();
             foreach (var b in r.RatioRequirements)
                 parts.Add(string.Format("{0} <color=#1A0E06>{1:0}–{2:0}%</color>",
-                    (b.IsStyleBand ? b.Style.Replace('_', ' ') : b.Type.ToString()).ToUpperInvariant(),
+                    b.IsStyleBand ? b.Style.Replace('_', ' ').ToUpperInvariant() : TypeWord(b.Type),
                     b.MinRatio * 100, b.MaxRatio * 100));
             if (r.MinFill > 0)
                 parts.Add(string.Format("<color=#1A0E06>FILL {0:0}%+</color>", r.MinFill * 100));

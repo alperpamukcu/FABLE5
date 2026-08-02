@@ -96,6 +96,15 @@ namespace LastCall.UI
             return n;
         }
 
+        /// <summary>Thickens a label by one font-pixel — the pixel-art bold (2026-08-02).
+        /// See <see cref="PixelBold"/> for why Unity's own bold is no use on these faces.</summary>
+        private static Text Bold(Text t, float distance = 2f)
+        {
+            var b = t.gameObject.AddComponent<PixelBold>();
+            b.Distance = distance;
+            return t;
+        }
+
         /// <summary>Everything written on the sheet is slanted — the closest a pixel face gets
         /// to a hand that scrawled the list out behind the bar.</summary>
         private static Text Handwritten(Text t)
@@ -296,7 +305,8 @@ namespace LastCall.UI
 
                 // A hairline rule under the heading, the way a printed list is set. Ink, not
                 // plastic: the only colour on the key is the drink it is pointing at.
-                var name = Handwritten(NewText("N", content, _display, 16, TextAnchor.MiddleCenter, InkDark));
+                var name = Bold(Handwritten(NewText("N", content, _display, 16,
+                    TextAnchor.MiddleCenter, InkDark)));
                 Place(name.rectTransform, new Vector2(0.5f, 1), new Vector2(grid.cellSize.x - 20, 22),
                     new Vector2(0, -9));
                 name.text = AisleName(category);
