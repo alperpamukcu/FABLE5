@@ -197,20 +197,32 @@ def tones(im, mask, y, xl, xr):
     return dark, face, light, bore
 
 
-def open_variant(im):
+def open_variant(im, force=False):
     W, H = im.size
     mask = vessel_mask(im)
     glass, shoulder, _ = glass_colours(im, mask)
     seam = neck_seam(im, mask, glass, shoulder)
-    if seam is None:
-        return None
-    y0, xl, xr = seam
     top = min(y for y in range(H) if any(mask[x][y] for x in range(W)))
-    if y0 <= top + 3:
-        # Nothing was found to take off: the olive jar's lid is drawn in the same greys
-        # as its glass, so the "seam" landed on the jar's own crown. Better to leave the
-        # vessel shut than to hang a mouth in the air above a lid that is still on.
-        return None
+    if seam is not None and seam[0] <= top + 3:
+        seam = None
+    if seam is None:
+        # Nothing was found to take off. On a jar whose lid is drawn in the same greys
+        # as its glass it is better to leave the vessel shut than to hang a mouth in
+        # the air above a lid that is still on — that is the styles-mode answer. A tier
+        # bottle, though, ALWAYS has a closure, and the one that defeats every test is
+        # the cap drawn in the bottle's own colour with no waist under it (Thornwood's
+        # green-on-green cylinder, 2026-08-03, found via the author's screenshots). A
+        # same-colour cap already reads as the neck, so the mouth is drawn IN PLACE:
+        # the top rows become the open ellipse and the silhouette stays the shelf's.
+        if not force:
+            return None
+        y0 = top + 2
+        row = [x for x in range(W) if mask[x][y0]]
+        if len(row) < 6:
+            return None
+        xl, xr = min(row), max(row)
+    else:
+        y0, xl, xr = seam
     t = tones(im, mask, min(y0 + 3, H - 1), xl, xr)
     if t is None:
         return None
@@ -312,7 +324,8 @@ if __name__ == '__main__':
     made, failed = [], []
     for s in targets:
         im = Image.open(f'{D}/{s}.png').convert('RGBA')
-        o = open_variant(im)
+        # a tier bottle always has a closure, so its derivation may not give up
+        o = open_variant(im, force=which == 'bots')
         if o is None:
             failed.append(s)
             continue

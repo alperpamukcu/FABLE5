@@ -74,13 +74,18 @@ namespace LastCall.UI
         private const float PrintCap = 0.88f;
 
         /// <summary>
-        /// How much of its own bounding box a print colour must actually cover. A label plate
-        /// is a solid block — its colours fill most of the box they span — but the cut glass
-        /// and dither shading on the tier bottles put a colour into a few dozen scattered chips
-        /// whose box spans half the bottle. Those chips passed both span tests, were promoted
-        /// to "print", and floated at full strength over the drink.
+        /// The smallest connected patch of candidate print that is believed. The cut glass
+        /// and dither shading on the tier bottles put a colour into a few dozen scattered
+        /// chips that passed both span tests and floated at full strength over the drink.
+        /// The first cure tested each COLOUR's density in its own bounding box, and it broke
+        /// the labels it existed to protect: a mottled plate is many close tones sharing one
+        /// box, every one of them sparse on its own, so the whole plate was thrown out and
+        /// the drink painted over it (the author, 2026-08-03, with screenshots — Sonora's
+        /// label reading green, Alta Luna's washed away). A plate is one BLOCK of pixels
+        /// whatever its tones, and a chip is a small island: connectedness is the thing that
+        /// tells them apart, so the test is on the patch, not the colour.
         /// </summary>
-        private const float PrintDense = 0.40f;
+        private const int PlateMin = 40;
 
         /// <summary>
         /// Glass with more chroma than this is COLOURED glass, and the drink is not drawn in
@@ -124,8 +129,15 @@ namespace LastCall.UI
             /// <summary>Top of the cavity, as a fraction of the rect.</summary>
             public readonly float RimY;
 
-            /// <summary>The average tone of the glass itself — the cavity with the print left
-            /// out. White where the sprite could not be read.</summary>
+            /// <summary>The BODY tone of the glass — the cavity with the print left out, read
+            /// at the 40th percentile of luminance rather than averaged. The mean let the
+            /// highlight streak down a dark green bottle drag the measurement into a pale grey
+            /// that failed both tinted-glass gates, and the shelf poured pale gin-coloured
+            /// liquid into a bottle that is plainly dark green (the author, 2026-08-03, with a
+            /// screenshot of Thornwood reading sky-blue on the wall). A slightly-darker-than-
+            /// median pixel is what the eye calls "the colour of the glass": the highlights
+            /// and the shadow line are both excluded by construction. White where the sprite
+            /// could not be read.</summary>
             public readonly Color GlassColor;
 
             public Piece(Sprite sprite, Sprite fill, Sprite front, float aspect, float floorY,
@@ -276,6 +288,13 @@ namespace LastCall.UI
         /// What colour the drink is drawn. Clear glass shows the drink's own colour; coloured
         /// or dark glass shows a deeper shade of ITSELF — the level stays readable as a value
         /// step, and no foreign hue fights the glass (see <see cref="TintedChroma"/>).
+        ///
+        /// On clear glass the alpha follows the CONTRAST between drink and glass. A clear
+        /// spirit drawn at full liquid strength is a coat of milk: it hid the cut-crystal
+        /// facets of the decanter and washed four bottles into flat white blobs (the author,
+        /// 2026-08-03, with screenshots). In a real bottle vodka is nearly invisible — the
+        /// level is a glint, not a wall — so the nearer the drink's tone is to the glass,
+        /// the thinner it is painted. An amber whiskey keeps full strength.
         /// </summary>
         private static Color LiquidTint(Piece piece, string style, IngredientType type)
         {
@@ -288,7 +307,11 @@ namespace LastCall.UI
                 return new Color(deep.r, deep.g, deep.b, LiquidAlpha);
             }
             var c = UITheme.LiquidColor(style, type);
-            return new Color(c.r, c.g, c.b, LiquidAlpha);
+            float drinkLum = 0.299f * c.r + 0.587f * c.g + 0.114f * c.b;
+            float drinkChroma = Mathf.Max(c.r, Mathf.Max(c.g, c.b)) - Mathf.Min(c.r, Mathf.Min(c.g, c.b));
+            float contrast = Mathf.Abs(drinkLum - lum) + Mathf.Abs(drinkChroma - chroma) * 0.5f;
+            float presence = Mathf.Clamp01(0.30f + contrast * 2.2f);
+            return new Color(c.r, c.g, c.b, LiquidAlpha * presence);
         }
 
         private static Piece Measure(Sprite bottle)
@@ -369,21 +392,16 @@ namespace LastCall.UI
             var fill = new Color[w * h];
             var face = new Color[w * h];
             var clear = new Color(1f, 1f, 1f, 0f);
-            float glassR = 0f, glassG = 0f, glassB = 0f;
-            int glassN = 0;
+            var glassPx = new List<Color>();
             for (int i = 0; i < fill.Length; i++)
             {
                 bool inside = cavity[i] && !print[i];
                 fill[i] = cavity[i] ? Color.white : clear;
                 // Everything the drink must not touch, at the strength the artist drew it.
                 face[i] = opaque[i] && !inside ? px[i] : clear;
-                if (!inside) continue;
-                glassR += px[i].r; glassG += px[i].g; glassB += px[i].b;
-                glassN++;
+                if (inside) glassPx.Add(px[i]);
             }
-            var glass = glassN > 0
-                ? new Color(glassR / glassN, glassG / glassN, glassB / glassN)
-                : Color.white;
+            var glass = BodyTone(glassPx);
 
             var fillSprite = Bake(fill, w, h);
             var frontSprite = Bake(face, w, h);
@@ -443,18 +461,41 @@ namespace LastCall.UI
                 int reach = right[key] - left[key] + 1;
                 if (span > bodyHeight * PrintTall && span > tallest * PrintShort) continue;
                 if (reach < widestCavity * PrintWide) continue;
-                // a plate is a block; a shading tone is a scatter in a plate-sized box
-                if (pair.Value < span * reach * PrintDense) continue;
                 ink.Add(key);
             }
 
-            int painted = 0;
             for (int i = 0; i < print.Length; i++)
+                print[i] = cavity[i] && ink.Contains(Key(px[i]));
+
+            // A plate survives as a block, a chip does not — see PlateMin. Thin borders
+            // (the shield outlines) survive too: a border is small in area but it is ONE
+            // connected loop, where the chips are each their own island.
+            var keep = new bool[w * h];
+            var visited = new bool[w * h];
+            var stack = new Stack<int>();
+            var component = new List<int>();
+            for (int start = 0; start < print.Length; start++)
             {
-                if (!cavity[i] || !ink.Contains(Key(px[i]))) continue;
-                print[i] = true;
-                painted++;
+                if (!print[start] || visited[start]) continue;
+                component.Clear();
+                stack.Push(start);
+                visited[start] = true;
+                while (stack.Count > 0)
+                {
+                    int i = stack.Pop();
+                    component.Add(i);
+                    int x = i % w, y = i / w;
+                    if (x > 0 && print[i - 1] && !visited[i - 1]) { visited[i - 1] = true; stack.Push(i - 1); }
+                    if (x < w - 1 && print[i + 1] && !visited[i + 1]) { visited[i + 1] = true; stack.Push(i + 1); }
+                    if (y > 0 && print[i - w] && !visited[i - w]) { visited[i - w] = true; stack.Push(i - w); }
+                    if (y < h - 1 && print[i + w] && !visited[i + w]) { visited[i + w] = true; stack.Push(i + w); }
+                }
+                if (component.Count < PlateMin) continue;
+                foreach (int i in component) keep[i] = true;
             }
+            print = keep;
+            int painted = 0;
+            for (int i = 0; i < print.Length; i++) if (print[i]) painted++;
 
             // A plate has no glass holes in it. Where a bottle shares its colour with its own
             // label — the green tequila in its green glass — only the label's border came back,
@@ -486,6 +527,19 @@ namespace LastCall.UI
 
             if (cavityCount > 0 && painted > cavityCount * PrintCap) return new bool[w * h];
             return print;
+        }
+
+        /// <summary>See <see cref="Piece.GlassColor"/>: the glass pixel at the 40th percentile
+        /// of luminance, so neither the highlight streak nor the shadow line speaks for the
+        /// bottle. Sorting a copy is fine — this runs once per sprite and is cached.</summary>
+        private static Color BodyTone(List<Color> glassPx)
+        {
+            if (glassPx.Count == 0) return Color.white;
+            glassPx.Sort((a, b) =>
+                (0.299f * a.r + 0.587f * a.g + 0.114f * a.b)
+                .CompareTo(0.299f * b.r + 0.587f * b.g + 0.114f * b.b));
+            var c = glassPx[Mathf.Clamp((int)(glassPx.Count * 0.40f), 0, glassPx.Count - 1)];
+            return new Color(c.r, c.g, c.b);
         }
 
         /// <summary>A colour as one integer, so it can key a table. Alpha is not part of it.</summary>

@@ -8,16 +8,22 @@ exactly like the house pour. Each of the fifteen now has its own vessel, and the
 silhouettes climb with the price the way they do on a real back bar - a screw-capped
 bottle at the bottom, a cut-crystal decanter with a gold stopper at the top.
 
-Every one was asked for twice, shut and with its closure off, because the pour stage
-shows the open shot and cropping the top off a bottle is not an open bottle.
+Every one was asked for twice, shut and with its closure off — and the open shots are
+NOT installed. The packs drew a different bottle open than shut often enough that the
+pour stage stopped matching the shelf (the author, 2026-08-03, with screenshots:
+Thornwood was a shaker-shaped bottle on the wall and a slim wine bottle in the hand;
+a width check had passed the pair at -6% because width cannot see shape). The open
+states are DERIVED from the installed shut art by bottle_open_states.py, which makes
+the two the same bottle by construction; the pack opens stay in tiers_raw as reference.
 
 The prompts are in tier_prompts.py, the four-candidate packs they returned are in
-tiers_raw, and PICKS records which take was kept. This file is only the quantize
+tiers_raw, and PICKS records which shut take was kept. This file is only the quantize
 chain: it drops the ground shadow and the stopper PixelLab likes to leave lying beside
-a bottle, and trims. The ink and the shared canvas come afterwards, from
-uniform_outline.py, so a tier bottle carries exactly the edge every other vessel does.
+a bottle, and trims. The chain order matters:
 
-    python Tools/tier_bottles.py write
+    python Tools/tier_bottles.py write              the shut bottles, from the raws
+    python Tools/bottle_open_states.py write bots   their opens, derived from those
+    python Tools/uniform_outline.py write           one ink and one canvas for all
 """
 from PIL import Image
 import os, sys
@@ -44,24 +50,24 @@ DEST = 'Assets/Resources/Items'
 #
 # Takes 0-3 are the pack a brand came back with; 4-7 are the round asked for again on
 # 2026-08-03, for the four brands where all four of the originals failed the proportion
-# test below and for Sol Viejo, whose open pack drew a different bottle from its shut
-# one. The number says which round it came from, which is why they share a namespace.
+# test below. The number says which round it came from, which is why they share a
+# namespace. Only the SHUT take is recorded: the open art is derived, not picked.
 PICKS = {
-    'bourbon_ashfall': (4, 4),
-    'bourbon_hollow_oak': (4, 4),
-    'bourbon_old_harrow': (2, 0),
-    'gin_juniper_crown': (1, 1),
-    'gin_thornwood': (0, 0),
-    'gin_veilcrest': (0, 3),
-    'rum_reina_del_mar': (1, 3),
-    'rum_tidewater': (4, 7),
-    'rum_windward': (1, 0),
-    'tequila_alta_luna': (1, 1),
-    'tequila_cielo_roto': (0, 0),
-    'tequila_sol_viejo': (3, 4),
-    'vodka_leonid': (5, 4),
-    'vodka_okhta': (1, 0),
-    'vodka_vor': (3, 1),
+    'bourbon_ashfall': 4,
+    'bourbon_hollow_oak': 4,
+    'bourbon_old_harrow': 2,
+    'gin_juniper_crown': 1,
+    'gin_thornwood': 0,
+    'gin_veilcrest': 0,
+    'rum_reina_del_mar': 1,
+    'rum_tidewater': 4,
+    'rum_windward': 1,
+    'tequila_alta_luna': 1,
+    'tequila_cielo_roto': 0,
+    'tequila_sol_viejo': 3,
+    'vodka_leonid': 5,
+    'vodka_okhta': 1,
+    'vodka_vor': 3,
 }
 
 
@@ -140,12 +146,6 @@ STAND = 158
 # little, not a round number chosen to be tidy.
 SLIM, STOUT = 3.1, 1.75
 
-# The shut bottle and its capless twin are the same bottle. If their widths disagree the
-# vessel changes shape the moment the player uncorks it, which the height pass cannot
-# catch because both are 158 tall by then.
-TWIN = 0.22
-
-
 def build(brand, index, state):
     path = os.path.join(RAW, '%s_%s_%d.png' % (brand, state, index))
     im = drop_shadow_bar(largest_blob(Image.open(path).convert('RGBA')))
@@ -159,21 +159,17 @@ def build(brand, index, state):
 
 def run(write):
     off = 0
-    for brand, (shut, opened) in sorted(PICKS.items()):
+    for brand, shut in sorted(PICKS.items()):
         a = build(brand, shut, 'shut')
-        b = build(brand, opened, 'open')
         if write:
             a.save(os.path.join(DEST, 'bot_%s.png' % brand))
-            b.save(os.path.join(DEST, 'bot_%s_open.png' % brand))
         ratio = a.size[1] / float(a.size[0])
         bad = ratio > SLIM or ratio < STOUT
-        drift = abs(b.size[0] - a.size[0]) / float(a.size[0])
         off += bad
-        print('%-22s %-9s %.1f:1%s  open %-9s %+3d%%%s'
-              % (brand, '%dx%d' % a.size, ratio, ' proportion' if bad else '',
-                 '%dx%d' % b.size, round(100 * (b.size[0] - a.size[0]) / float(a.size[0])),
-                 '  twin' if drift > TWIN else ''))
-    print('%d brands %s, %d outside %.2f-%.2f tall-to-wide'
+        print('%-22s %-9s %.1f:1%s' % (brand, '%dx%d' % a.size, ratio,
+                                       '  proportion' if bad else ''))
+    print('%d brands %s, %d outside %.2f-%.2f tall-to-wide; opens are derived, '
+          'run bottle_open_states next'
           % (len(PICKS), 'written' if write else '(dry run)', off, STOUT, SLIM))
 
 

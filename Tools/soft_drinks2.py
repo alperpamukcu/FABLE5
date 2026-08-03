@@ -51,11 +51,11 @@ PICKS = {
     'tonic': (1, None),
     'cola': (0, None),
     'energy': (0, 0),
-    'orange': (0, 0),
-    'lemon': (0, 0),
-    'lime': (0, 0),
-    'pineapple': (0, 0),
-    'cranberry': (0, 1),
+    'orange': (0, None),
+    'lemon': (0, None),
+    'lime': (0, None),
+    'pineapple': (0, None),
+    'cranberry': (0, None),
     'mint': (0, 0),
     'olive': (1, 0),
     'ice': (0, None),
@@ -67,13 +67,16 @@ PICKS = {
 TWO_STATE = {'soda', 'tonic', 'cola', 'energy', 'mint', 'olive',
              'orange', 'lemon', 'lime', 'pineapple', 'cranberry'}
 
-# Bottles whose open state is DERIVED from the shut art (bottle_open_states.py, mode
-# "named") instead of generated: a separately generated open is a different bottle
-# often enough that the pour stage stopped matching the shelf, and these three are
-# plain bottles whose closure the seam finder handles. The can, the jars and the
-# gable-top cartons keep their generated opens - a pulled tab, leaves poking out of
-# a jar mouth and an open spout are things the deriver cannot draw.
-DERIVED = {'soda', 'tonic', 'cola'}
+# Vessels whose open state is DERIVED from the shut art instead of generated: a
+# separately generated open is a different vessel often enough that the pour stage
+# stopped matching the shelf. The bottles go through bottle_open_states.py (mode
+# "named"); the cartons through carton_open_states.py, which takes the screw cap off
+# the gable and leaves its collar round a pour hole - the generated carton opens all
+# came back as washed-out strangers and are superseded. The can and the jars keep
+# generated opens: a pulled tab and leaves poking out of a jar mouth are things no
+# deriver here can draw, and those pairs actually matched.
+DERIVED = {'soda', 'tonic', 'cola',
+           'orange', 'lemon', 'lime', 'pineapple', 'cranberry'}
 
 
 def largest_blob(im):
