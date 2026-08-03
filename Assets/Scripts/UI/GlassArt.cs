@@ -197,16 +197,43 @@ namespace LastCall.UI
             // RimY is the CAVITY's top row (the fill mask's first row), not the mouth
             // band above it — a rim up in the mouth let a full glass draw its surface
             // over the lip (the author, 2026-08-02: "şimdi de taşıyor").
-            // Densities re-benched 2026-08-02 under the flush-box pool law: each glass
-            // forced onto the counter, settled, SurfaceY read against the expected line
-            // at half, three-quarter and near-full fills. The estimate's bias moves
-            // with the fill (high at a half, short near the brim), so one multiplier
-            // cannot zero every level — these sit at the balance point, biased toward
-            // the full glass a player is aiming for, worst case a few percent.
-            // The pint's number is the tap's, kept where the pulled pint reads true.
-            ["pint"] = new Gen3D(0.083f, 0.958f, 0.905f, 0.97f),       // 42x72, gap 38px @ row 8
-            ["highball"] = new Gen3D(0.079f, 0.952f, 0.875f, 0.88f),   // 32x63, gap 28px @ row 7
-            ["rocks"] = new Gen3D(0.214f, 0.946f, 0.913f, 0.87f),      // 46x56, gap 42px, floor on the ledge
+            // Densities re-benched 2026-08-03, and this time against the GENERATED art —
+            // the IOU P14 wrote down twice and deferred twice ("re-read SurfaceY once the
+            // art is settled"). It was a real debt: every vessel drew SHORT at the brim,
+            // the rocks and the highball by 12.5%, which is a glass the player filled to
+            // the top standing an eighth of an inch below its own rim.
+            //
+            // Each value is the one that minimises the WORST error over quarter, half,
+            // three-quarter and brimful fills, benched by replicating the serve stage's
+            // pool law exactly and settling the solver for four seconds a reading.
+            //
+            // What this instrument can and cannot see: SurfaceY bins the body 48 ways, so
+            // readings land on multiples of 2.1%, and the seeding is random, so repeating
+            // a reading moves it by up to one bin. Anything inside ±2.1% is therefore a
+            // tie, and only the changes below are large enough to mean something.
+            //
+            //             was    now    brimful error: was -> now
+            //   pint      0.97   1.02      -6.2% -> -2.1%
+            //   highball  0.88   1.02     -12.5% -> -2.1%
+            //   rocks     0.87   0.95     -12.5% -> -2.1%   (every level within one bin)
+            //   martini   0.78   0.78     unchanged, and deliberately
+            //   coupe     0.78   0.78     unchanged, and deliberately
+            //
+            // The two stemmed glasses stay pinned at -4.2% at the brim NO MATTER the
+            // density — 0.62 through 1.10 all read the same there, and raising it only
+            // spoils their middle fills. Their cavity is short and wide (87px of span
+            // against 170 of width), so the last of their error is geometry, not count,
+            // exactly as the plan predicted. Swapping 0.78 for 0.74 moved them inside the
+            // noise floor and was reverted: a number with no measurement behind it is
+            // worse than the one it replaced, because it looks like it was measured.
+            // That one is still open and it needs the solver, not another number here.
+            //
+            // The pint's number is also the tap's; a pulled pint rises with it, and its
+            // head rides SurfaceY rather than a nominal line, so the foam still sits on
+            // the beer. Checked in play after the change.
+            ["pint"] = new Gen3D(0.083f, 0.958f, 0.905f, 1.02f),       // 42x72, gap 38px @ row 8
+            ["highball"] = new Gen3D(0.079f, 0.952f, 0.875f, 1.02f),   // 32x63, gap 28px @ row 7
+            ["rocks"] = new Gen3D(0.214f, 0.946f, 0.913f, 0.95f),      // 46x56, gap 42px, floor on the ledge
             ["martini"] = new Gen3D(0.576f, 0.955f, 0.917f, 0.78f),    // 48x66, gap 44px @ row 8
             ["coupe"] = new Gen3D(0.552f, 0.955f, 0.913f, 0.78f),      // 46x67, gap 42px @ row 8
         };

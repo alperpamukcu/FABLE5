@@ -330,10 +330,19 @@ caption stranded in the middle of the keys.
     glass drew short, because the one global density was calibrated against the old tumbler.
     The three tumblers now land within 1–2% at a quarter, a half and three quarters, and a
     brimful glass reads 0.94–0.98 of its rim instead of 0.90.
-    **Known and left**: the two stemmed glasses stay ~8% out at mid-fills (martini reads
-    0.83 at 0.75, coupe 0.19 at 0.25). A cone's area varies quadratically with height and the
-    solver's count estimate does not, so the error is non-monotonic and no single scalar
-    fixes it — that needs a response curve in `MetaballFluid`, not another tuned number.
+    **Re-benched against the GENERATED art, 2026-08-03** — the IOU below, twice deferred,
+    paid. It was real: every vessel drew SHORT at the brim, the rocks and the highball by
+    12.5%, a glass filled to the top standing an eighth of an inch under its own rim.
+    Densities now pint 1.02, highball 1.02, rocks 0.95 (was 0.97 / 0.88 / 0.87); brimful
+    error −12.5% → −2.1%, and the rocks lands every level inside one bin. The instrument's
+    floor is ±2.1% (SurfaceY bins the body 48 ways) with about one bin of run-to-run noise
+    from the seeding, so that is as measured as it gets.
+    **Known and left**: the two stemmed glasses stay pinned at −4.2% at the brim *no matter
+    the density* — 0.62 through 1.10 all read the same there, and raising it only spoils
+    their middle fills. Their cavity is short and wide (87px of span against 170 of width),
+    so the remainder is geometry, not count. That still needs a response curve in
+    `MetaballFluid`, not another tuned number. A 0.78 → 0.74 swap on the martini moved it
+    inside the noise floor and was reverted.
   - ☑ **Drag-to-serve shows the true glass**: the drink carried to a seat is the same
     drawing, filled to the level it is really at. `GlassArt` emits a second sprite alongside
     the glass — the interior as a solid silhouette, drawn on the same pass so the two cannot
@@ -345,8 +354,12 @@ caption stranded in the middle of the keys.
   AT the liquid line and riding the fill as the drink pours — on the serve-stage glass and
   on the carried glass both, anchored off `GlassArt.Piece`. Verified in play: all four
   build at the measured rim (crust y=120 on a 260 glass, wedge at the interior edge).
-  Mint/olive floats deliberately excluded — their only art is the shelf JARS, and a jar in
-  a drink is worse than nothing; they need sprig/spear pieces first.
+  ~~Mint/olive floats deliberately excluded — their only art is the shelf JARS, and a jar in
+  a drink is worse than nothing; they need sprig/spear pieces first.~~ **Landed 2026-08-03**:
+  `garnish_mint` (a sprig) and `garnish_olive` (a spear on a pick) were generated, and both
+  float at the liquid line exactly as the ice does, on the serve glass and the carried glass
+  both. They are INGREDIENTS rather than preparations, so `GlassDecor.Sync` takes the run and
+  reads the styles off the shelf cards behind the glass's ingredient ids.
 - ☐ **(superseded note)** on the served drink: salt/sugar visibly on the rim, wedge on
   the glass wall, ice floating in the liquid, garnish on top — the delivered glass shows
   everything that went in
@@ -372,7 +385,11 @@ cabinet** — a glass-fronted fridge, bottles at their true size, door opens, bo
   bottle out into your hand, and it is poured by being tipped over the glass with the shaker's
   own tilt model and constants — so the measure is **how long you hold it**, not a fixed 15%
   per press, and running a bottle dry mid-pour puts it down and takes it off the shelf.
-- ☐ The confining panel goes; props are free-dragged within the screen.
+  *Superseded 2026-08-02 (the door and the scroll came out — every bottle in frame, one
+  press away) and again 2026-08-03, when the case became the drawn fridge below.*
+- ☐ The confining panel goes; props are free-dragged within the screen. *Half done
+  2026-08-03: the panel is the whole screen and the props stand on furniture rather than in
+  rails, but a drag is still clamped to the counter region between the table and the fridge.*
 
 **Second pass on the same brief (2026-07-31, after playing it).** The verbs are right; the
 staging is not. In the author's words:
@@ -402,10 +419,26 @@ staging is not. In the author's words:
   which only calls `RefreshServeText`. So the tin is left standing mid-air, tilted, at
   wherever the cursor dropped it — visible, dead to the pointer on the next stage refresh,
   and never returned to its rest. It has to be put down deliberately when it empties.
-- ☐ **The serve stage in first person** — the author's direction, 2026-07-31, after playing
-  the re-layout: *"I want this scene to be a real place more than a set of buttons. Think of
-  the perspective as a VR headset POV. On the left an angled table with the ice and so on
-  standing on it; on the right an angled fridge asset with the mixers inside."*
+- ☑ **The serve stage in first person** *(shipped 2026-08-03)* — the author's direction,
+  2026-07-31, after playing the re-layout: *"I want this scene to be a real place more than
+  a set of buttons. Think of the perspective as a VR headset POV. On the left an angled
+  table with the ice and so on standing on it; on the right an angled fridge asset with the
+  mixers inside."*
+
+  **What shipped.** The prep table was reshot to recede toward the upper right (the first
+  one was symmetric, which the diagram rules out for a left-wall piece) and the six
+  finishing props stand ALONG its top on a line measured off the art, shrinking as they
+  recede — ice nearest and largest, the olive jar at the far end. The mixers stand on the
+  fridge's own stand lines: its three wire shelves **and its floor**, each followed as it
+  falls toward the near end. The scroll columns, the layout groups and the FINISH /
+  AT THE GLASS captions are gone.
+
+  Where the two rulings on bottle size conflict, the later one won: 07-31 wanted hand-size
+  bottles with the fridge overflowing the screen, but 08-02 tore out exactly that cabinet
+  for being unusable, so the fridge keeps every shelf in frame and every bottle one press
+  away. The diagram's depth survives as the OVERFLOW rule — stock past twelve stands in a
+  second rank, and hovering pulls a bottle in front of whatever it hides behind. Names show
+  on hover; twelve captions under twelve bottles is a spreadsheet.
 
   This is the next pass and it is art-led. What the re-layout already got right is the
   **scale** of the props and the left-to-right order; what it still gets wrong is that both
@@ -831,8 +864,13 @@ The last big item from the same note: **every glass type is its own upgrade ladd
 - The serve stage gets the brass-capped tube gauge (twin of the shaker's), reading the
   serving glass with its headroom as a pale tail.
 
-Open: the tap-stage pint's fluid density (0.90) was measured against the OLD pint.png
-cavity — re-measure `SurfaceY` against the GlassArt pint next time play is at hand.
+~~Open: the tap-stage pint's fluid density (0.90) was measured against the OLD pint.png
+cavity — re-measure `SurfaceY` against the GlassArt pint next time play is at hand.~~
+**Closed 2026-08-03.** The tap stops using its build-time 0.90 the moment the pint art is
+set (`SetDensity(tapPiece.Density)`), so it already reads GlassArt's number; that number
+was re-benched the same day (P14 above) and the pulled pint checked in play — it fills to
+its rim with the head sitting on the beer, because the head rides `SurfaceY` rather than
+the nominal line.
 
 
 ## 2026-08-02 (later) — the generated 3D glass set + the six-step ladder
@@ -849,5 +887,8 @@ cavity — re-measure `SurfaceY` against the GlassArt pint next time play is at 
   the cost of a cap-star and sent the sim 13% → 83% bankrupt; front-loading plus a
   prudent bot lands 4.5% / median till $0). Late steps are prestige, not survival.
 - Tier ART for the five upgrade sets is the NEXT session's work, with the author
-  reviewing the base set first. Fluid density (`Gen3D.Density`) still carries the
-  procedural vessels' measured values — re-read SurfaceY once the art is settled.
+  reviewing the base set first. ~~Fluid density (`Gen3D.Density`) still carries the
+  procedural vessels' measured values — re-read SurfaceY once the art is settled.~~
+  **Done 2026-08-03** — see the re-bench under P14. The procedural `Densities` table is
+  deliberately untouched: it belongs to the fallback silhouettes and was measured against
+  them, so it is right for the glasses it actually draws.

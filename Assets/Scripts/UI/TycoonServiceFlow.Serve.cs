@@ -78,10 +78,12 @@ namespace LastCall.UI
         private const float FridgeScale = 1.9f;
         private static readonly Vector2 FridgeFoot = new Vector2(6f, 18f);
 
-        /// <summary>The wire shelves' front edges, measured off the fridge art (y from the
-        /// top of its 198×334 canvas), and the glass interior's x span. A shelf's edge falls
-        /// toward the near (left) end because the case is angled — bottles follow it.</summary>
-        private static readonly float[] FridgeShelfY = { 120f, 188f, 249f, 296f };
+        /// <summary>The stand lines inside the fridge, measured off its art (y from the top
+        /// of the 198×334 canvas): three wire shelves and the floor of the case. A line falls
+        /// toward the near (left) end because the cabinet is angled — bottles follow it. The
+        /// floor counts: leaving it out left a shelf's worth of empty case under the stock and
+        /// pushed bottles into the second rank that had a front-row place to stand in.</summary>
+        private static readonly float[] FridgeShelfY = { 120f, 188f, 249f, 300f };
         private const float FridgeShelfDrop = 14f;   // how much lower a shelf sits at its left end
         private const float FridgeInteriorL = 72f, FridgeInteriorR = 184f;
         private const int FridgePerShelf = 3;
@@ -433,7 +435,7 @@ namespace LastCall.UI
             // three shelves first; what will not fit stands BEHIND the front rank — a shelf
             // with two ranks reads as a stocked fridge, and the depth stays playable because
             // hovering a bottle pulls it in front of whatever it stands behind.
-            int perRank = FridgePerShelf * (FridgeShelfY.Length - 1);
+            int perRank = FridgePerShelf * FridgeShelfY.Length;
             int rank = index / perRank;
             int inRank = index % perRank;
             int shelfRow = inRank / FridgePerShelf;
