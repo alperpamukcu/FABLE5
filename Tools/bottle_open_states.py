@@ -298,12 +298,19 @@ def open_variant(im):
 
 
 if __name__ == '__main__':
-    # python Tools/bottle_open_states.py write          the shelf styles
-    # python Tools/bottle_open_states.py write bots     the tier bottles
+    # python Tools/bottle_open_states.py write                    the shelf styles
+    # python Tools/bottle_open_states.py write bots               the tier bottles
+    # python Tools/bottle_open_states.py write named soda cola    exactly these, SEALED
+    #   or not - soda and cola moved to generated-full art (2026-08-03), and a full
+    #   bottle derives an open state as readily as an empty one: the closure comes
+    #   off, the mouth is drawn, the water stays where the artist painted it.
     write = len(sys.argv) > 1 and sys.argv[1] == 'write'
     which = sys.argv[2] if len(sys.argv) > 2 else 'styles'
+    targets = (brands() if which == 'bots'
+               else sys.argv[3:] if which == 'named'
+               else styles())
     made, failed = [], []
-    for s in (brands() if which == 'bots' else styles()):
+    for s in targets:
         im = Image.open(f'{D}/{s}.png').convert('RGBA')
         o = open_variant(im)
         if o is None:
