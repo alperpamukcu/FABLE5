@@ -30,21 +30,21 @@ DEST = 'Assets/Resources/Items'
 # in the glass or laid the stopper on the ground beside the bottle, a cleaner take was
 # chosen instead; the loose stopper is dropped by the blob pass anyway.
 PICKS = {
-    'vodka_vor': (2, 0),
-    'vodka_leonid': (0, 0),
-    'vodka_okhta': (0, 0),
-    'gin_juniper_crown': (0, 0),
-    'gin_thornwood': (0, 0),
-    'gin_veilcrest': (0, 0),
+    'bourbon_ashfall': (0, 3),
+    'bourbon_hollow_oak': (1, 2),
+    'bourbon_old_harrow': (2, 2),
+    'gin_juniper_crown': (1, 1),
+    'gin_thornwood': (2, 2),
+    'gin_veilcrest': (2, 1),
+    'rum_reina_del_mar': (3, 3),
     'rum_tidewater': (0, 0),
-    'rum_windward': (2, 0),
-    'rum_reina_del_mar': (0, 0),
-    'bourbon_old_harrow': (0, 0),
-    'bourbon_ashfall': (0, 0),
-    'bourbon_hollow_oak': (0, 1),
-    'tequila_alta_luna': (0, 3),
-    'tequila_sol_viejo': (0, 0),
-    'tequila_cielo_roto': (2, 0),
+    'rum_windward': (2, 2),
+    'tequila_alta_luna': (0, 0),
+    'tequila_cielo_roto': (0, 0),
+    'tequila_sol_viejo': (0, 3),
+    'vodka_leonid': (2, 1),
+    'vodka_okhta': (1, 3),
+    'vodka_vor': (3, 1),
 }
 
 
@@ -104,11 +104,26 @@ def drop_shadow_bar(im):
     return im
 
 
+# The height every spirit bottle is brought to. On the wall a sprite renders at
+# 110 x art/canvas, so two bottles are the same height on screen only if their ART is
+# the same height in pixels - and the generator will not fill its frame to order. Asked
+# to touch the top and bottom edges it came back between 0.79 and 0.99 of the frame,
+# which put the tall ones 25% over the short ones. The approved tier-one bottles all
+# sit at 156-164, so the generated ones are brought to the same place. It is a resample
+# and the shelf resamples again on top of it, which is why it survives: at the size the
+# player sees, a bottle scaled from 130 is indistinguishable from one drawn at 158.
+STAND = 158
+
+
 def build(brand, index, state):
     path = os.path.join(RAW, '%s_%s_%d.png' % (brand, state, index))
     im = drop_shadow_bar(largest_blob(Image.open(path).convert('RGBA')))
     bb = im.getbbox()
-    return im.crop(bb) if bb else im
+    if not bb:
+        return im
+    im = im.crop(bb)
+    k = STAND / float(im.size[1])
+    return im.resize((max(1, int(round(im.size[0] * k))), STAND), Image.NEAREST)
 
 
 def run(write):
