@@ -155,8 +155,15 @@ namespace LastCall.UI
             /// could not be read.</summary>
             public readonly Color GlassColor;
 
+            /// <summary>
+            /// Fill fraction → the rect fraction to cut the drink at, in <see cref="LevelSteps"/>
+            /// even steps. VOLUME, not height: the cavity's area is accumulated row by row off
+            /// the sprite, so a level is where that much of the drink actually reaches.
+            /// </summary>
+            private readonly float[] _level;
+
             public Piece(Sprite sprite, Sprite fill, Sprite front, float aspect, float floorY,
-                         float rimY, Color glassColor)
+                         float rimY, Color glassColor, float[] level = null)
             {
                 Sprite = sprite;
                 Fill = fill;
@@ -165,6 +172,7 @@ namespace LastCall.UI
                 FloorY = floorY;
                 RimY = rimY;
                 GlassColor = glassColor;
+                _level = level;
             }
 
             public bool Exists => Sprite != null;
@@ -173,10 +181,57 @@ namespace LastCall.UI
             /// The <see cref="Image.fillAmount"/> that leaves the bottle <paramref name="fraction"/>
             /// full. A vertical fill measures the whole rect, so the cavity's own span is mapped
             /// into it — otherwise "half a bottle" would mean half the picture, cap included.
+            ///
+            /// Read off the CAVITY'S OWN AREA rather than off its height. Mapping a fraction
+            /// linearly up the cavity is only true for a straight-sided tube, and almost
+            /// nothing on this shelf is one: a round-bellied decanter holds most of its drink
+            /// in the bottom third, and the neck — which the cavity now runs all the way up to,
+            /// so a full bottle reads full to its mouth — holds almost none. Straight-line
+            /// mapping would have made every partial level read high, worst on exactly the
+            /// bottles whose silhouette is the most interesting.
             /// </summary>
-            public float FillAmount(float fraction) =>
-                FloorY + (RimY - FloorY) * Mathf.Clamp01(fraction);
+            public float FillAmount(float fraction)
+            {
+                float f = Mathf.Clamp01(fraction);
+                if (_level == null || _level.Length < 2)
+                    return FloorY + (RimY - FloorY) * f;
+                float t = f * (_level.Length - 1);
+                int i = Mathf.Clamp((int)t, 0, _level.Length - 2);
+                return Mathf.Lerp(_level[i], _level[i + 1], t - i);
+            }
         }
+
+        /// <summary>How finely the volume→height curve is sampled. A bottle is ~160px tall, so
+        /// 64 steps put every sample inside three pixels of the truth.</summary>
+        private const int LevelSteps = 64;
+
+        /// <summary>How far up the neck the cavity may reach, as a share of the sprite — a
+        /// backstop so a bottle whose closure happens to share the glass's tones cannot let the
+        /// drink run into its cap, which is a fault this file has already had once.</summary>
+        private const float NeckReach = 0.34f;
+
+        /// <summary>A tone has to appear this often in the body before it counts as "what this
+        /// glass is made of"; below it, a stray dithered pixel would vouch for a cap.</summary>
+        private const int NeckToneMin = 12;
+
+        /// <summary>How much of a row must be body-coloured for the row to still be neck.</summary>
+        private const float NeckGlassy = 0.55f;
+
+        /// <summary>At or below this luminance a tone is ink — an outline or a closure's
+        /// seating seam — and cannot stand as evidence that a row is glass. Set low enough
+        /// that the genuinely dark glasses (coffee liqueur, stout) keep their own tones.</summary>
+        private const float NeckInkLum = 0.08f;
+
+        /// <summary>Necks thinner than this are past the point where a drink reads at all.</summary>
+        private const int NeckMinPx = 5;
+
+        /// <summary>How much a row may widen against the narrowest so far before it is read as
+        /// the closure flaring out. Two pixels of slack, because a drawn neck is not perfectly
+        /// straight and one stray edge pixel should not end the neck.</summary>
+        private const int NeckFlare = 2;
+
+        /// <summary>The neck's wall inset, as a share of its own width.</summary>
+        private const float NeckWall = 0.22f;
 
         private static readonly Dictionary<string, Piece> Cache = new Dictionary<string, Piece>();
 
@@ -421,6 +476,97 @@ namespace LastCall.UI
             }
             if (highest < 0) return new Piece(bottle, null, null, (float)w / h, 0f, 1f, Color.white);
 
+            // ── up the NECK, to the mouth ──────────────────────────────────────────
+            // The cavity used to stop dead at the shoulder, so a bottle the shelf called full
+            // was drawn full to its shoulder with an empty neck above it — every vessel on the
+            // wall reading as if someone had already had a glass (the author, 2026-08-04:
+            // align the liquid to each bottle's mouth). A real full bottle is filled into the
+            // neck, up to the underside of its closure.
+            //
+            // Where the closure starts is read off the GLASS, not guessed at a height: the
+            // body's own tones are what glass is made of, and a cap, a cork, a wax seal or a
+            // foil is made of tones that appear nowhere in the body. So walk up while the row
+            // is still mostly body-coloured, and stop at the first row that is not. That is
+            // the same rule bottle_open_states.py uses to take a closure off, which is why the
+            // two agree about where a bottle ends.
+            var bodyTones = new HashSet<int>();
+            var toneCount = new Dictionary<int, int>();
+            for (int i = 0; i < cavity.Length; i++)
+            {
+                if (!cavity[i]) continue;
+                int key = Key(px[i]);
+                toneCount[key] = toneCount.TryGetValue(key, out var n) ? n + 1 : 1;
+            }
+            foreach (var pair in toneCount)
+            {
+                if (pair.Value < NeckToneMin) continue;
+                // INK is not evidence of glass. A closure seats on a dark seam, and Thornwood
+                // — a bottle that tapers all the way up, so the flare test cannot see its cap
+                // either — carries a dark medallion on its shoulder whose tones then vouched
+                // for that seam and let the drink run into the cap. Glass can be dark; it is
+                // never this dark, and the outline and the seam both are.
+                int key = pair.Key;
+                float lum = (0.299f * ((key >> 16) & 255) + 0.587f * ((key >> 8) & 255)
+                           + 0.114f * (key & 255)) / 255f;
+                if (lum <= NeckInkLum) continue;
+                bodyTones.Add(key);
+            }
+
+            // Colour alone is not enough. Thornwood's cap is the same green as its glass — it
+            // is the bottle that defeated the seam finder on the tooling side too — so the
+            // walk needs a second, independent signal, and the silhouette is it: going up from
+            // the shoulder a bottle NARROWS into its neck, and a closure FLARES back out. Any
+            // row wider than the narrowest so far is the lip, the capsule or the lid.
+            int neckTop = bodyHigh;
+            int narrowest = rowWidth[bodyHigh];
+            int neckLimit = Mathf.Min(h - 1, bodyHigh + Mathf.CeilToInt(h * NeckReach));
+            for (int y = bodyHigh + 1; y <= neckLimit; y++)
+            {
+                if (rowWidth[y] < NeckMinPx) break;
+                if (rowWidth[y] > narrowest + NeckFlare) break;
+                narrowest = Mathf.Min(narrowest, rowWidth[y]);
+                int inside = 0, glassy = 0;
+                int x0 = -1, x1 = -1;
+                for (int x = 0; x < w; x++)
+                {
+                    if (!vessel[y * w + x]) continue;
+                    if (x0 < 0) x0 = x;
+                    x1 = x;
+                }
+                // The artist's outline runs down both walls; a neck judged with its own edges
+                // in the sample never looks like glass.
+                for (int x = x0 + 1; x <= x1 - 1; x++)
+                {
+                    if (!vessel[y * w + x]) continue;
+                    inside++;
+                    if (bodyTones.Contains(Key(px[y * w + x]))) glassy++;
+                }
+                if (inside < 2 || glassy < inside * NeckGlassy) break;
+                neckTop = y;
+            }
+
+            for (int y = bodyHigh + 1; y <= neckTop; y++)
+            {
+                int x0 = -1, x1 = -1;
+                for (int x = 0; x < w; x++)
+                {
+                    if (!vessel[y * w + x]) continue;
+                    if (x0 < 0) x0 = x;
+                    x1 = x;
+                }
+                if (x0 < 0) continue;
+                // A neck is too narrow for the body's square wall test — it would erase the
+                // column entirely — so the inset scales with the run instead.
+                int inset = Mathf.Clamp(Mathf.RoundToInt((x1 - x0 + 1) * NeckWall), 1, Wall);
+                for (int x = x0 + inset; x <= x1 - inset; x++)
+                {
+                    if (!vessel[y * w + x]) continue;
+                    cavity[y * w + x] = true;
+                    cavityCount++;
+                    if (y > highest) highest = y;
+                }
+            }
+
             var print = FindPrint(px, cavity, w, h, bodyLow, bodyHigh, cavityCount);
 
             var fill = new Color[w * h];
@@ -442,7 +588,49 @@ namespace LastCall.UI
 
             // A pixel's span is [y, y+1), so the cavity reaches the top of its highest row.
             return new Piece(bottle, fillSprite, frontSprite, (float)w / h,
-                             lowest / (float)h, (highest + 1) / (float)h, glass);
+                             lowest / (float)h, (highest + 1) / (float)h, glass,
+                             LevelCurve(cavity, w, h, lowest, highest));
+        }
+
+        /// <summary>
+        /// Fill fraction → the height that much drink actually reaches, sampled off the cavity's
+        /// own area. See <see cref="Piece.FillAmount"/>: a bottle is not a tube, so the share of
+        /// the drink and the share of the height are two different numbers, and the second is
+        /// the one that has to be drawn.
+        /// </summary>
+        private static float[] LevelCurve(bool[] cavity, int w, int h, int lowest, int highest)
+        {
+            var below = new float[h + 1];        // cavity area up to and including each row
+            float total = 0f;
+            for (int y = 0; y < h; y++)
+            {
+                int n = 0;
+                for (int x = 0; x < w; x++) if (cavity[y * w + x]) n++;
+                total += n;
+                below[y + 1] = total;
+            }
+            var curve = new float[LevelSteps];
+            if (total <= 0f)
+            {
+                for (int k = 0; k < LevelSteps; k++)
+                    curve[k] = Mathf.Lerp(lowest / (float)h, (highest + 1) / (float)h,
+                                          k / (float)(LevelSteps - 1));
+                return curve;
+            }
+            int row = lowest;
+            for (int k = 0; k < LevelSteps; k++)
+            {
+                float want = total * (k / (float)(LevelSteps - 1));
+                while (row <= highest && below[row + 1] < want) row++;
+                // Inside the row that crosses, split it by how much of it is needed, so the
+                // curve is smooth rather than a staircase of whole pixels.
+                float under = below[row];
+                float inRow = below[row + 1] - under;
+                float frac = inRow > 0f ? Mathf.Clamp01((want - under) / inRow) : 0f;
+                curve[k] = (row + frac) / h;
+            }
+            curve[LevelSteps - 1] = (highest + 1) / (float)h;
+            return curve;
         }
 
         /// <summary>
