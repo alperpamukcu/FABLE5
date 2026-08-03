@@ -55,6 +55,21 @@ namespace LastCall.UI
         private const int PrintMin = 20;
 
         /// <summary>
+        /// The pale-plate-on-dark-glass bypass. The span tests assume a label is SHORTER
+        /// than the glass around it, and the cathedral decanter's arch is not — it runs 80%
+        /// of the body, was excluded as glass, and wore the drink at full strength. A label
+        /// can be told from glass a second way: glass can shadow itself but it cannot GLOW —
+        /// a tone with real chroma, a hue far from the glass body's, and luminance well
+        /// above it is printed on the bottle no matter how tall it stands. All three gates
+        /// are needed: dropping the luminance one promoted Coral Rum's cool shadow tones —
+        /// far in hue, darker in value — to print, 632 pixels of grey glass floating over
+        /// the drink. Measured across the shelf, exactly one vessel gains anything.
+        /// </summary>
+        private const float BypassChroma = 0.10f;
+        private const float BypassHue = 0.13f;
+        private const float BypassLum = 0.25f;
+
+        /// <summary>
         /// How far across the vessel a colour must reach to be print. A label spans the
         /// bottle; a specular highlight is a short bright block trapped in its own band,
         /// which passes the height test exactly as a label does. Left in, it was drawn at
@@ -425,6 +440,7 @@ namespace LastCall.UI
             var left = new Dictionary<int, int>();
             var right = new Dictionary<int, int>();
             var seen = new Dictionary<int, int>();
+            var cavityPx = new List<Color>();
             int widestCavity = 0;
 
             for (int y = bodyLow; y <= bodyHigh; y++)
@@ -434,6 +450,7 @@ namespace LastCall.UI
                 {
                     if (!cavity[y * w + x]) continue;
                     rowRun++;
+                    cavityPx.Add(px[y * w + x]);
                     int key = Key(px[y * w + x]);
                     seen[key] = seen.TryGetValue(key, out var n) ? n + 1 : 1;
                     if (!low.TryGetValue(key, out var lo) || y < lo) low[key] = y;
@@ -443,6 +460,12 @@ namespace LastCall.UI
                 }
                 if (rowRun > widestCavity) widestCavity = rowRun;
             }
+
+            // For the bypass below: the tone of the cavity at large, print included — the
+            // print is the minority, so the 40th percentile still lands in the glass.
+            var cavityTone = BodyTone(cavityPx);
+            Color.RGBToHSV(cavityTone, out float bodyHue, out _, out _);
+            float bodyLum = 0.299f * cavityTone.r + 0.587f * cavityTone.g + 0.114f * cavityTone.b;
 
             int tallest = 0;
             foreach (var pair in seen)
@@ -459,7 +482,22 @@ namespace LastCall.UI
                 int key = pair.Key;
                 int span = high[key] - low[key] + 1;
                 int reach = right[key] - left[key] + 1;
-                if (span > bodyHeight * PrintTall && span > tallest * PrintShort) continue;
+                if (span > bodyHeight * PrintTall && span > tallest * PrintShort)
+                {
+                    // tall as the glass — but a pale plate of another hue on dark glass
+                    // is print however tall it stands (see BypassChroma)
+                    var kc = new Color(((key >> 16) & 255) / 255f,
+                                       ((key >> 8) & 255) / 255f,
+                                       (key & 255) / 255f);
+                    float kChroma = Mathf.Max(kc.r, Mathf.Max(kc.g, kc.b))
+                                  - Mathf.Min(kc.r, Mathf.Min(kc.g, kc.b));
+                    if (kChroma < BypassChroma) continue;
+                    Color.RGBToHSV(kc, out float kHue, out _, out _);
+                    float hd = Mathf.Abs(kHue - bodyHue);
+                    if (Mathf.Min(hd, 1f - hd) <= BypassHue) continue;
+                    float kLum = 0.299f * kc.r + 0.587f * kc.g + 0.114f * kc.b;
+                    if (kLum - bodyLum < BypassLum) continue;
+                }
                 if (reach < widestCavity * PrintWide) continue;
                 ink.Add(key);
             }
