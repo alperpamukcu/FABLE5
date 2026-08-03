@@ -362,7 +362,11 @@ namespace LastCall.UI
         public void SetColor(Color c)
         {
             if (_material == null) return;
-            c.a = Mathf.Clamp(c.a, AlphaFloor, AlphaCeiling);
+            // The floor lifts a DRINK so a near-clear spirit cannot vanish. It must not lift
+            // NOTHING: UITheme.Nothing asks for zero, and clamping that to 0.42 was silently
+            // drawing an empty vessel as a pale cream film while the doc comment beside it
+            // promised the opposite. Zero means zero; every other value is a drink.
+            c.a = c.a <= 0f ? 0f : Mathf.Clamp(c.a, AlphaFloor, AlphaCeiling);
             _bodyAlpha = c.a;
             _material.SetColor(IdColor, c);
             // A stream nobody has named is the drink itself — a splash struck off a settled

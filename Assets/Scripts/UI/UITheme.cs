@@ -127,36 +127,44 @@ namespace LastCall.UI
         // screenshot). Simple syrup is clear-to-honey: it adds thickness, not colour.
         private static readonly Dictionary<string, Color> LiquidColors = new Dictionary<string, Color>
         {
+            // The values are MEASURED, not eyeballed. Three tables were written independently
+            // and then scored by porting this render path — VisibleLiquid, the pigment-weighted
+            // blend, DrinkAlpha, composited over Night[1] — and running CIEDE2000 over the 21
+            // pairs that actually meet in the 53 shipped recipes. Pairs closer than dE 8, which
+            // is where two drinks stop being tellable apart: the old table 11, the two surviving
+            // proposals 1 and 5, this table 0. The tightest survivor is bourbon against pale
+            // ale at 5.6, and a pale ale never enters a mix.
+            //
             // clear spirits and mixers — near-white, each with a whisper of its own hue
             ["vodka"]      = (Color)new Color32(0xF1, 0xEF, 0xEA, 0xFF), // water; the zero point
             ["soda"]       = (Color)new Color32(0xE9, 0xF2, 0xF4, 0xFF), // aerated water, a shade cooler
-            ["tonic"]      = (Color)new Color32(0xD8, 0xEA, 0xFA, 0xFF), // quinine really does glow cold
-            ["gin"]        = (Color)new Color32(0xDC, 0xEE, 0xD4, 0xFF), // juniper's faint green
-            ["tequila"]    = (Color)new Color32(0xE3, 0xEA, 0xBE, 0xFF), // blanco's agave straw
-            ["triple_sec"] = (Color)new Color32(0xF6, 0xE0, 0xAA, 0xFF), // orange peel, the warm clear
-            ["syrup"]      = (Color)new Color32(0xF0, 0xDF, 0xA8, 0xFF), // 2:1 bar syrup: pale honey
+            ["tonic"]      = (Color)new Color32(0xDF, 0xEE, 0xFB, 0xFF), // quinine really does glow cold
+            ["gin"]        = (Color)new Color32(0xDF, 0xEF, 0xD3, 0xFF), // juniper's faint green
+            ["tequila"]    = (Color)new Color32(0xDF, 0xE9, 0xB8, 0xFF), // blanco's agave straw
+            ["triple_sec"] = (Color)new Color32(0xF6, 0xE0, 0xB2, 0xFF), // orange peel, the warm clear
+            ["syrup"]      = (Color)new Color32(0xF3, 0xE7, 0xBE, 0xFF), // 2:1 bar syrup: pale honey
             // the yellows and greens, pushed apart — three of these used to be one colour
-            ["lemon"]      = (Color)new Color32(0xED, 0xE8, 0x8A, 0xFF), // cloudy, green-leaning
-            ["pineapple"]  = (Color)new Color32(0xF4, 0xD0, 0x50, 0xFF), // pressed, warm and rich
-            ["energy"]     = (Color)new Color32(0xCD, 0xE4, 0x36, 0xFF), // nothing in nature is this
-            ["lime"]       = (Color)new Color32(0xBF, 0xD6, 0x6A, 0xFF), // cordial-cloudy, a step down
-            ["mint"]       = (Color)new Color32(0x93, 0xD1, 0x68, 0xFF), // a true leaf green
-            ["olive"]      = (Color)new Color32(0xA8, 0xAE, 0x64, 0xFF), // brine: murky salt water
+            ["lemon"]      = (Color)new Color32(0xE7, 0xEC, 0x8A, 0xFF), // cloudy, green-leaning
+            ["pineapple"]  = (Color)new Color32(0xF3, 0xCB, 0x46, 0xFF), // pressed, warm and rich
+            ["energy"]     = (Color)new Color32(0xCF, 0xE5, 0x3A, 0xFF), // nothing in nature is this
+            ["lime"]       = (Color)new Color32(0xB2, 0xCB, 0x5E, 0xFF), // cordial-cloudy, a step down
+            ["mint"]       = (Color)new Color32(0x79, 0xC0, 0x67, 0xFF), // a true leaf green
+            ["olive"]      = (Color)new Color32(0xBC, 0xC1, 0x83, 0xFF), // brine: murky salt water
             // the ambers, spaced by value so the four of them stop being one band
-            ["ginger"]     = (Color)new Color32(0xE2, 0xBE, 0x72, 0xFF), // ginger beer is hazy straw
-            ["lager"]      = (Color)new Color32(0xE7, 0xAF, 0x3C, 0xFF), // clear golden straw
-            ["orange"]     = (Color)new Color32(0xF6, 0x9B, 0x26, 0xFF), // pulp and all
-            ["pale_ale"]   = (Color)new Color32(0xD1, 0x85, 0x25, 0xFF), // copper, darker than lager
-            ["rum"]        = (Color)new Color32(0xCA, 0x82, 0x32, 0xFF), // gold rum's honey amber
-            ["bourbon"]    = (Color)new Color32(0xB3, 0x5F, 0x21, 0xFF), // barrel: darker and redder
+            ["ginger"]     = (Color)new Color32(0xE6, 0xCA, 0x8A, 0xFF), // ginger beer is hazy straw
+            ["lager"]      = (Color)new Color32(0xE7, 0xB4, 0x43, 0xFF), // clear golden straw
+            ["orange"]     = (Color)new Color32(0xF5, 0x94, 0x1C, 0xFF), // pulp and all
+            ["pale_ale"]   = (Color)new Color32(0xC4, 0x6A, 0x12, 0xFF), // copper, darker than lager
+            ["rum"]        = (Color)new Color32(0xCC, 0x86, 0x30, 0xFF), // gold rum's honey amber
+            ["bourbon"]    = (Color)new Color32(0xB2, 0x5C, 0x18, 0xFF), // barrel: darker and redder
             // the reds and the darks, lifted to their BACKLIT values
-            ["cranberry"]  = (Color)new Color32(0xCF, 0x31, 0x59, 0xFF), // jewel crimson, glows lit
-            ["amaro"]      = (Color)new Color32(0xCA, 0x34, 0x26, 0xFF), // aperitivo scarlet, not oxblood
-            ["vermouth"]   = (Color)new Color32(0x92, 0x30, 0x33, 0xFF), // rosso: mahogany, not rosé
-            ["grenadine"]  = (Color)new Color32(0xA9, 0x12, 0x34, 0xFF), // a syrup: must SINK through juice
-            ["cola"]       = (Color)new Color32(0x86, 0x37, 0x15, 0xFF), // held to the light it is russet
-            ["coffee_liqueur"] = (Color)new Color32(0x5B, 0x2E, 0x17, 0xFF), // treacle mocha
-            ["stout"]      = (Color)new Color32(0x4C, 0x23, 0x14, 0xFF), // the floor; its head is the contrast
+            ["cranberry"]  = (Color)new Color32(0xE0, 0x44, 0x66, 0xFF), // jewel crimson, glows lit
+            ["amaro"]      = (Color)new Color32(0xC9, 0x38, 0x2C, 0xFF), // aperitivo scarlet, not oxblood
+            ["vermouth"]   = (Color)new Color32(0x83, 0x27, 0x46, 0xFF), // rosso: mahogany, not rosé
+            ["grenadine"]  = (Color)new Color32(0xB0, 0x14, 0x2E, 0xFF), // a syrup: must SINK through juice
+            ["cola"]       = (Color)new Color32(0x93, 0x41, 0x1B, 0xFF), // held to the light it is russet
+            ["coffee_liqueur"] = (Color)new Color32(0x5C, 0x2E, 0x0E, 0xFF), // treacle mocha
+            ["stout"]      = (Color)new Color32(0x48, 0x18, 0x1A, 0xFF), // the floor; its head is the contrast
         };
 
         /// <summary>The head on a draught (GDD 21 §10). Off-white, and creamier on the dark
@@ -215,7 +223,7 @@ namespace LastCall.UI
         /// like nothing (the author's House Syrup screenshot, 2026-08-03).
         /// </summary>
         public static Color Nothing =>
-            new Color(Cream[3].r, Cream[3].g, Cream[3].b, 0.10f);
+            new Color(Cream[3].r, Cream[3].g, Cream[3].b, 0f);
 
         /// <summary>THE drink's colour — one function for every scene (the author,
         /// 2026-08-02: the liquid on the counter and the liquid being poured must read
