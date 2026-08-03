@@ -387,7 +387,7 @@ namespace LastCall.UI
             // and was the most opaque liquid in the game, on the one drink whose craft the
             // player is being graded on.
             var beer = UITheme.LiquidColor(_tapKegCard?.Info?.Style, IngredientType.Beer);
-            beer.a = UITheme.DrinkAlpha(run.ServingGlass.FillFraction);
+            beer.a = UITheme.DrinkAlpha(run.ServingGlass.FillFraction, beer);
             _tapFluid.SetColor(beer);
             // Beer falling from the faucet is the same beer; the stream colour is set anyway so
             // the tap never inherits whichever drink the material was last handed.
@@ -514,7 +514,7 @@ namespace LastCall.UI
                 // reads its thinnest — so without this a pulled pint would stay as pale as an
                 // empty one all the way to the brim.
                 var beer = UITheme.LiquidColor(_tapKegCard?.Info?.Style, IngredientType.Beer);
-                beer.a = UITheme.DrinkAlpha(glass.FillFraction);
+                beer.a = UITheme.DrinkAlpha(glass.FillFraction, beer);
                 _tapFluid.SetColor(beer);
             }
         }

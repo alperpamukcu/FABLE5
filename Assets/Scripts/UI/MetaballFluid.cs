@@ -399,7 +399,11 @@ namespace LastCall.UI
         /// belong to the drink rather than to the next bottle picked up.</summary>
         public void ClearStreamColor() => _streamNamed = false;
 
-        private const float AlphaFloor = 0.42f, AlphaCeiling = 0.97f;
+        // The floor lets a near-clear spirit stay near-clear. It was 0.42, chosen when every
+        // drink shared one alpha range; the range is per-drink now (UITheme.DrinkAlpha reads
+        // the drink's own pigment), so a vodka deliberately asks for 0.30 and the old floor
+        // would have quietly made it as solid as a juice.
+        private const float AlphaFloor = 0.26f, AlphaCeiling = 0.97f;
         private float _bodyAlpha = AlphaCeiling;
         private bool _streamNamed;
 

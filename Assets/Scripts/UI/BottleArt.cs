@@ -272,7 +272,7 @@ namespace LastCall.UI
             var piece = For(card, open);
             liquid.fillAmount = piece.FillAmount(level);
             var c = LiquidTint(piece, card.Info?.Style, card.Type);
-            liquid.color = new Color(c.r, c.g, c.b, c.a * UITheme.DrinkAlpha(level));
+            liquid.color = new Color(c.r, c.g, c.b, c.a * UITheme.DrinkAlpha(level, c));
         }
 
         private static Image AddLiquid(RectTransform bottleArt, Piece piece, string style,

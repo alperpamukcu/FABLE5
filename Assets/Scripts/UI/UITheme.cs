@@ -208,10 +208,29 @@ namespace LastCall.UI
         /// drink's does — the MIX moves with each ingredient's share, and the DEPTH moves with
         /// the level.
         /// </summary>
-        private const float ThinDrink = 0.52f, DeepDrink = 0.86f;
+        /// <remarks>
+        /// Depth is only half of it. The other half is WHAT the drink is: orange juice with
+        /// pulp in it, cranberry, cola and stout are opaque liquids, and vodka, gin, soda and
+        /// tonic are transparent ones. Giving all of them one range meant the vivid drinks
+        /// were drawn at the same thinness as water, and a saturated colour laid at half
+        /// strength over a dark bar composites toward the bar — an orange juice came out a
+        /// muddy brown (the author, 2026-08-04: "canlı renkli içecekler soluk olmasın").
+        ///
+        /// So the range follows the drink's own <see cref="Pigment"/>: a clear spirit is
+        /// genuinely see-through and a juice is genuinely not. That is the physically true
+        /// answer as well as the one that looks right, and it costs the clears nothing —
+        /// being thin is what makes them read as clear in the first place.
+        /// </remarks>
+        private const float ClearThin = 0.30f, ClearDeep = 0.56f;
+        private const float BodyThin = 0.74f, BodyDeep = 0.95f;
 
-        public static float DrinkAlpha(double fillFraction) =>
-            Mathf.Lerp(ThinDrink, DeepDrink, Mathf.Sqrt(Mathf.Clamp01((float)fillFraction)));
+        public static float DrinkAlpha(double fillFraction, Color drink)
+        {
+            float depth = Mathf.Sqrt(Mathf.Clamp01((float)fillFraction));
+            return Mathf.Lerp(Mathf.Lerp(ClearThin, ClearDeep, depth),
+                              Mathf.Lerp(BodyThin, BodyDeep, depth),
+                              Mathf.SmoothStep(0f, 1f, Pigment(drink)));
+        }
 
         /// <summary>
         /// What an EMPTY vessel's liquid is. It has to be something — callers tint sprites and
@@ -238,7 +257,11 @@ namespace LastCall.UI
                 parts.Add((card?.Info?.Style, card?.Type ?? IngredientType.Spirit,
                     (float)glass.RatioOf(id)));
             }
-            return BlendLiquid(parts, Nothing, DrinkAlpha(glass.FillFraction));
+            // Blend first, then let the MIX decide how opaque it is: a vodka-cranberry is
+            // half as pigmented as neat cranberry and should read that way.
+            var mixed = BlendLiquid(parts, Nothing, 1f);
+            return new Color(mixed.r, mixed.g, mixed.b,
+                             mixed.a <= 0f ? 0f : DrinkAlpha(glass.FillFraction, mixed));
         }
 
         public static Color VisibleLiquid(Color c)
