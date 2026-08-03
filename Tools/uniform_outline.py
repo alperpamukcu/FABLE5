@@ -24,6 +24,7 @@ DEST = 'Assets/Resources/Items'
 DATA = 'Assets/Data/bottles/base_bar.json'
 INK = (12, 10, 16, 255)
 OUTLINE = 1                 # pixels of ink laid around every vessel on the shelf
+DARK = 70                   # luminance at or below this is ink rather than art
 
 # Every vessel is fitted to the same height on the shelf - 110 points - so a sprite's
 # ink reads at 110/height of what it measures. Two pixels on a 162-tall bottle came out
@@ -119,6 +120,75 @@ def round_crown(im):
     return out
 
 
+def cap_region(im):
+    """The closure: from the top of the sprite down to where the vessel pinches into its
+    neck. Anything that goes on for a quarter of the sprite is a carton or a jar, not a
+    cap, and is left alone."""
+    W, H = im.size
+    p = im.load()
+    rows = [[x for x in range(W) if p[x, y][3] >= 128] for y in range(H)]
+    live = [y for y in range(H) if rows[y]]
+    if not live:
+        return None
+    top = live[0]
+    widths = [len(rows[y]) for y in range(top, min(top + 40, H))]
+    if len(widths) < 8:
+        return None
+    broad = max(widths[:8])
+    bottom = top
+    for i, w in enumerate(widths):
+        if i > 2 and w < broad * 0.82:
+            break
+        bottom = top + i
+    if bottom - top < 3 or bottom - top > (live[-1] - top) * 0.25:
+        return None
+    return top, bottom, broad, rows
+
+
+def lit_crown(im, lift=1.26, seam=0.72):
+    """
+    The closure's top FACE: the disc you see when you look down on a cap.
+
+    The shelf is drawn from slightly above, so a cap should show its lid and not just
+    its side, and the author asked for exactly that. The pixels are LIT rather than
+    repainted: filling the ellipse with a flat lighter tone did read as a lid, but it
+    wiped the vodka's knurling and the tonic's crown teeth off the sprite. Lifting what
+    is already there keeps every one of those marks and only changes which way the light
+    falls on them. The darkened arc along the ellipse's lower edge is what sells it -
+    that seam is where the face turns into the wall.
+    """
+    info = cap_region(im)
+    if info is None:
+        return im
+    top, _, broad, rows = info
+    W, H = im.size
+    p = im.load()
+    depth = max(2, int(round(broad * 0.16)))
+    out = im.copy()
+    op = out.load()
+    cy = top + depth
+    for y in range(top, min(top + 2 * depth + 1, H)):
+        if not rows[y]:
+            continue
+        xs = rows[y]
+        cx = (xs[0] + xs[-1]) / 2.0
+        rx = (xs[-1] - xs[0] + 1) / 2.0
+        dy = (y - cy) / float(depth)
+        if abs(dy) > 1.0:
+            continue
+        half = rx * (1.0 - dy * dy) ** 0.5
+        for x in xs:
+            c = p[x, y][:3]
+            if lum(c) <= DARK:
+                continue                      # never paint over the artist's outline
+            d = abs(x - cx)
+            if d <= half - 1.0:
+                op[x, y] = tuple(min(255, int(v * lift)) for v in c) + (255,)
+            elif d <= half + 0.4 and y > cy:
+                op[x, y] = tuple(int(v * seam) for v in c) + (255,)
+    return out
+
+
 def stand_on_floor(im, height=CANVAS_H):
     """Put the vessel on a canvas of the shared height, standing on its floor. The
     padding goes above it, so the base still lands on the shelf when the sprite is
@@ -139,7 +209,7 @@ def run(write):
         loaded = [Image.open(p).convert('RGBA') if os.path.exists(p) else None for p in paths]
         if loaded[0] is None:
             continue
-        peeled = [round_crown(im) if im is not None else None for im in loaded]
+        peeled = [lit_crown(round_crown(im)) if im is not None else None for im in loaded]
 
         # A shut bottle and its capless twin are padded by the SAME amount, so the
         # bottle does not jump when it is opened.
