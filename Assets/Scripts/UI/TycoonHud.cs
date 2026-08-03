@@ -122,9 +122,12 @@ namespace LastCall.UI
         private RectTransform _binProp;
         private Image _binImage;
 
-        /// <summary>How big the bin is drawn. The art is 166×190, so this is 1.9× on both axes
-        /// — one scale, because a bin squeezed on one axis stops being a cylinder.</summary>
-        private const float BinW = 316f, BinH = 361f;
+        /// <summary>How big the bin is drawn. The art is 166×190, so this is 1.3× on both axes
+        /// — one scale, because a bin squeezed on one axis stops being a cylinder. It was 1.9×
+        /// and read as furniture rather than as a bin standing in the corner (the author,
+        /// 2026-08-04); the mouth is still wider than the carried glass, which is the only size
+        /// it actually has to beat.</summary>
+        private const float BinW = 216f, BinH = 247f;
 
         private RectTransform _drinkGlass;
         private Image _drinkGlassLiquid;
