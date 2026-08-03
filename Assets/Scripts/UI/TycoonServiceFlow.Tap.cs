@@ -382,7 +382,11 @@ namespace LastCall.UI
                 _kegLabel.color = new Color(ink.r * 0.35f, ink.g * 0.35f, ink.b * 0.35f, 1f);
             }
 
-            _tapFluid.SetColor(UITheme.LiquidColor(_tapKegCard?.Info?.Style, IngredientType.Beer));
+            var beer = UITheme.LiquidColor(_tapKegCard?.Info?.Style, IngredientType.Beer);
+            _tapFluid.SetColor(beer);
+            // Beer falling from the faucet is the same beer; the stream colour is set anyway so
+            // the tap never inherits whichever drink the material was last handed.
+            _tapFluid.SetStreamColor(beer);
             _tapFluid.SetFoamColor(UITheme.HeadColor(_tapKegCard?.Info?.Style));
 
             if (_tapKegCard != null && run.PullingId == null && run.CanPull(_tapKegCard.Id))

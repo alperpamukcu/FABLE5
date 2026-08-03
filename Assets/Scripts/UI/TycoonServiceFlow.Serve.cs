@@ -629,8 +629,14 @@ namespace LastCall.UI
 
                 if (pourNow)
                 {
-                    var colour = UITheme.StyleColor(_serveFocusBottle.Info?.Style, _serveFocusBottle.Type);
-                    _serveFluid.SetColor(colour);
+                    // The LIQUID's colour, not the shelf tag's. StyleColor is the vivid identity
+                    // hue the rail is read by — amaro's is navy — and pouring with it painted the
+                    // drink a colour it never is, then snapped to the real one the next time the
+                    // stage refreshed (the author, 2026-08-03: navy while pouring, pale blue after
+                    // a trip through the menu). It goes on the STREAM, so the falling drink keeps
+                    // its own colour until it lands.
+                    _serveFluid.SetStreamColor(
+                        UITheme.LiquidColor(_serveFocusBottle.Info?.Style, _serveFocusBottle.Type));
                     var streamVel = new Vector2((opening.x - mouth.x) * 1.8f, -225f);
                     _serveFluid.EmitStream(mouth, streamVel, Time.deltaTime);
                 }
@@ -705,8 +711,9 @@ namespace LastCall.UI
                     // The stream falls toward where the aim sends it: dead-on it drops into the
                     // glass and melts into the drink; off-aim it drifts wide and misses the rim,
                     // falling past onto the counter — the spill you can see (GDD 24 §3).
-                    var colour = DrinkColor(run.Glass);
-                    _serveFluid.SetColor(colour);
+                    // What comes out of the TIN is the shaker's own drink, which is a different
+                    // liquid from what is already standing in the glass; it goes on the stream.
+                    _serveFluid.SetStreamColor(DrinkColor(run.Glass));
                     float landX = Mathf.Lerp(mouth.x + (mouth.x - opening.x) * 1.5f, opening.x, (float)accuracy);
                     var streamVel = new Vector2((landX - mouth.x) * 1.8f, -225f);
                     _serveFluid.EmitStream(mouth, streamVel, Time.deltaTime);

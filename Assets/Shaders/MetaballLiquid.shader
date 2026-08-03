@@ -11,6 +11,11 @@ Shader "LastCall/MetaballLiquid"
         [PerRendererData] _MainTex ("Sprite", 2D) = "white" {}
         _Color        ("Liquid Color", Color) = (0.30, 0.60, 1.0, 0.95)
         _FoamColor    ("Foam Color",   Color) = (0.97, 0.94, 0.87, 1.0)
+        // What is being poured RIGHT NOW, which is not what is in the glass. One colour for
+        // the whole body meant a cola falling into a vodka was drawn in the average of the
+        // two before it had touched the surface, and the average jumped as the ratio moved —
+        // the mixing happened in the palette instead of in the glass.
+        _StreamColor  ("Stream Color", Color) = (0.30, 0.60, 1.0, 0.95)
         _EdgeColor    ("Edge Color",   Color) = (1.0, 1.0, 1.0, 1.0)
         _Threshold    ("Threshold",    Range(0.01, 4)) = 0.60
         _EdgeWidth    ("Edge Width",   Range(0.001, 1.0)) = 0.18
@@ -98,6 +103,7 @@ Shader "LastCall/MetaballLiquid"
             sampler2D _MainTex;
             fixed4 _Color;
             fixed4 _FoamColor;
+            fixed4 _StreamColor;
             fixed4 _EdgeColor;
             float  _Threshold;
             float  _EdgeWidth;
@@ -232,7 +238,14 @@ Shader "LastCall/MetaballLiquid"
                 // underside, and a soft fade across it was most of why the foam read as a smudge.
                 float fm = saturate(dropFoam / max(dropTotal, 1e-4) * 2.2);
 
+                // How much of this pixel is liquid still IN THE AIR. Where the stream owns the
+                // field it wears its own colour; where the settled body owns it, the glass's
+                // colour wins. The crossover is the field itself, so a pour mixes on the way in
+                // — no frame where the whole drink changes colour at once.
+                float st = saturate(dropStream / max(dropTotal, 1e-4));
+
                 fixed4 body = lerp(_Color, _FoamColor, fm);
+                body = lerp(body, _StreamColor, st * (1.0 - fm));
 
                 // Foam is a mass of BUBBLES, so it is shaded by its own field strength: the
                 // hollows between bubbles sit back and the crowns catch the light. Without this
@@ -263,11 +276,11 @@ Shader "LastCall/MetaballLiquid"
                 col.rgb += (band * 0.5 + sheen * 0.18) * _Highlight * (1.0 - fm * 0.85);
 
                 // Liquid in the air is thinner than liquid at rest. A pixel owned entirely by
-                // free-falling drops draws at _StreamAlpha of the body's alpha; as the stream
-                // lands, the settled particles take over the field and it fills in to solid on
-                // its own, so there is no moment where the pour changes into something else.
-                float st = saturate(dropStream / max(dropTotal, 1e-4));
-                col.a = a * lerp(_Color.a, _FoamColor.a, fm) * lerp(1.0, _StreamAlpha, st) * IN.color.a;
+                // free-falling drops draws at _StreamAlpha of its own alpha; as the stream
+                // lands, the settled particles take over the field and it fills in on its own,
+                // so there is no moment where the pour changes into something else.
+                float bodyA = lerp(lerp(_Color.a, _StreamColor.a, st), _FoamColor.a, fm);
+                col.a = a * bodyA * lerp(1.0, _StreamAlpha, st) * IN.color.a;
                 return col;
             }
             ENDCG

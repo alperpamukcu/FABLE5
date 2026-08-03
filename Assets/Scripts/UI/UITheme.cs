@@ -147,13 +147,37 @@ namespace LastCall.UI
         /// because that is what water already reads as under bar light, and because it is the one
         /// cast that cannot be mistaken for a juice, a beer or a foam head.
         /// </summary>
-        private const float ClearAbove = 0.80f, ClearFull = 0.96f, ClearCast = 0.55f;
+        /// <remarks>
+        /// The cast was 0.55 until 2026-08-03, and at that strength a vodka read as a light
+        /// BLUE drink rather than a clear one — the author's report, and fairly: the tint was
+        /// carrying the whole job of making a clear spirit visible. It does not have to any
+        /// more. The drink is genuinely translucent now (see <see cref="DrinkAlpha"/>), which
+        /// is what "clear" actually looks like, and its edge catches the light in its own
+        /// colour, so a glass of vodka reads as a glass with something in it without being
+        /// painted blue. The cast stays, at a third of the strength, for the case it was
+        /// written for: a pale drink against a pale glass on a lit bar.
+        /// </remarks>
+        private const float ClearAbove = 0.80f, ClearFull = 0.96f, ClearCast = 0.20f;
         private static readonly Color ClearTint = (Color)new Color32(0x86, 0xC2, 0xE4, 0xFF);
 
         /// <summary>
         /// A liquid you can see. Anything with real colour of its own is returned untouched;
         /// only the near-clear ones are tinted, and the paler they are the more they take.
         /// </summary>
+        /// <summary>
+        /// How solid a drink is drawn, against how much of it there is. A splash in the bottom
+        /// of a glass is a thin film you see the far wall through; a full glass is depth, and
+        /// depth is what absorbs light. Drawing both at one alpha is what made every liquid
+        /// read as matte paint (the author, 2026-08-03), and it is also the honest answer to
+        /// "the colour should change with how much went in": it does, in the two ways a real
+        /// drink's does — the MIX moves with each ingredient's share, and the DEPTH moves with
+        /// the level.
+        /// </summary>
+        private const float ThinDrink = 0.52f, DeepDrink = 0.86f;
+
+        public static float DrinkAlpha(double fillFraction) =>
+            Mathf.Lerp(ThinDrink, DeepDrink, Mathf.Sqrt(Mathf.Clamp01((float)fillFraction)));
+
         /// <summary>THE drink's colour — one function for every scene (the author,
         /// 2026-08-02: the liquid on the counter and the liquid being poured must read
         /// as the same liquid). Ingredients' true liquid colours, blended by share.</summary>
@@ -167,7 +191,7 @@ namespace LastCall.UI
                 parts.Add((card?.Info?.Style, card?.Type ?? IngredientType.Spirit,
                     (float)glass.RatioOf(id)));
             }
-            return BlendLiquid(parts, Cream[3], 0.9f);
+            return BlendLiquid(parts, Cream[3], DrinkAlpha(glass.FillFraction));
         }
 
         public static Color VisibleLiquid(Color c)

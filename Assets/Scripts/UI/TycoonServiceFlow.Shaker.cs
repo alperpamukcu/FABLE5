@@ -301,8 +301,11 @@ namespace LastCall.UI
                     // A stream of merging droplets falls from the mouth toward the opening; the
                     // metaball field fuses them into one liquid column and melts them into the
                     // pool where they land (GDD 24 §3.5).
-                    var colour = UITheme.StyleColor(_focusBottle.Info?.Style, _focusBottle.Type);
-                    _shakerFluid.SetColor(colour);
+                    // The LIQUID's colour, on the STREAM: StyleColor is the shelf tag's identity
+                    // hue (amaro navy, gin green) and pouring with it drew a drink no bottle
+                    // contains, which then snapped to the true colour on the next refresh.
+                    _shakerFluid.SetStreamColor(
+                        UITheme.LiquidColor(_focusBottle.Info?.Style, _focusBottle.Type));
                     var streamVel = new Vector2((opening.x - mouth.x) * 1.8f, -225f);
                     _shakerFluid.EmitStream(mouth, streamVel, Time.deltaTime);
                 }

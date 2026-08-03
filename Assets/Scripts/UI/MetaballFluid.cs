@@ -259,6 +259,7 @@ namespace LastCall.UI
         private static readonly int IdEdgeStrength = Shader.PropertyToID("_EdgeStrength");
         private static readonly int IdStreamAlpha  = Shader.PropertyToID("_StreamAlpha");
         private static readonly int IdFoamColor = Shader.PropertyToID("_FoamColor");
+        private static readonly int IdStreamColor = Shader.PropertyToID("_StreamColor");
 
         public MetaballFluid(RectTransform surface)
         {
@@ -286,6 +287,7 @@ namespace LastCall.UI
 
             RefreshSize();
             SetColor(new Color(0.30f, 0.60f, 1.0f, 0.95f));
+            SetStreamColor(new Color(0.30f, 0.60f, 1.0f, 0.95f));
             // The particles carry the whole body now — turn the shader's rectangular pool and
             // its height-field surface off (they stay in the shader for compatibility).
             _material?.SetFloat(IdHeightCnt, 0f);
@@ -350,12 +352,32 @@ namespace LastCall.UI
         private Vector2 ToUv(float x, float y) =>
             new Vector2((x - _originX) / _size.x + 0.5f, (y - _originY) / _size.y + 0.5f);
 
+        /// <summary>
+        /// The colour of the SETTLED drink. Alpha is honoured down to <see cref="AlphaFloor"/>:
+        /// the clamp used to start at 0.82, which made every liquid in the game read as matte
+        /// paint (the author, 2026-08-03: "sıvı renkleri mat olmamalı hiçbiri, saydam olmalı").
+        /// The floor is what stops a near-clear spirit from disappearing altogether, so it is
+        /// as low as it can be while a vodka in a lit glass still reads as something.
+        /// </summary>
         public void SetColor(Color c)
         {
             if (_material == null) return;
-            c.a = Mathf.Clamp(c.a, 0.82f, 0.97f);
+            c.a = Mathf.Clamp(c.a, AlphaFloor, AlphaCeiling);
             _material.SetColor(IdColor, c);
         }
+
+        /// <summary>The colour of what is being POURED — the stream in the air, before it
+        /// joins the drink. Where the stream owns the metaball field the shader draws this
+        /// instead of the body colour, so a cola falling into a vodka is cola all the way
+        /// down and becomes the mix where it lands.</summary>
+        public void SetStreamColor(Color c)
+        {
+            if (_material == null) return;
+            c.a = Mathf.Clamp(c.a, AlphaFloor, AlphaCeiling);
+            _material.SetColor(IdStreamColor, c);
+        }
+
+        private const float AlphaFloor = 0.42f, AlphaCeiling = 0.97f;
 
         /// <summary>The colour of the foam particles (GDD 21 §10). Beer and its head are one
         /// surface; only what they are made of differs, and this is that difference.</summary>
