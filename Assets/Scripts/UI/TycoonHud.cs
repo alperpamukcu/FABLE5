@@ -163,6 +163,7 @@ namespace LastCall.UI
         private RectTransform _idRoot;
         private Image _idPhoto;
         private Text _idName, _idAgeFrom, _idRel, _idIntent, _idOrder, _idOrderParts, _idRates, _idRatesLabel;
+        private Text _idRelLabel, _idIntentLabel;
         private RectTransform _idRecipeTip;
         private RectTransform _idRecipeTipBody;
         private RectTransform _idPrefRow;
@@ -2446,9 +2447,17 @@ namespace LastCall.UI
 
             _idName.text = reg.Name.ToUpperInvariant();
             _idAgeFrom.text = $"{reg.Age}  ·  {reg.Hometown.ToUpperInvariant()}";
+            // The count rides on the LABEL, not the value (the author, 2026-08-03: the
+            // stars were printing over it). The display face is a fixed-width 16px cell, so
+            // "FAMILIAR · 12 VISITS" runs 300 points through a 188-point column and straight
+            // into the rating beside it; the relationship alone fits, and the small navy
+            // label has room to spare.
             _idRel.text = reg.Visits > 0
-                ? $"{reg.Relationship.ToString().ToUpperInvariant()} · {reg.Visits} VISITS"
+                ? reg.Relationship.ToString().ToUpperInvariant()
                 : "NEW FACE";
+            _idRelLabel.text = reg.Visits > 0
+                ? $"STANDING  ·  {reg.Visits} VISIT{(reg.Visits == 1 ? "" : "S")}"
+                : "STANDING";
 
             // What THEY make of US — their own nights here, said in stars. A stranger has no
             // row at all (the author's note: empty fields were noise, not a licence).
@@ -2608,7 +2617,7 @@ namespace LastCall.UI
             float colW = LicFieldsW * 0.5f - 8f;
             _idName = LicenceField(card, "NAME", LicFieldsX, LicLines[0], LicFieldsW, out _, 24);
             _idAgeFrom = LicenceField(card, "AGE  ·  CITY", LicFieldsX, LicLines[1], LicFieldsW, out _);
-            _idRel = LicenceField(card, "STANDING", LicFieldsX, LicLines[2], colW, out _);
+            _idRel = LicenceField(card, "STANDING", LicFieldsX, LicLines[2], colW, out _idRelLabel);
             _idRates = LicenceField(card, "RATES THIS BAR", LicFieldsX + colW + 16f, LicLines[2],
                 colW, out _idRatesLabel);
 
@@ -2625,11 +2634,18 @@ namespace LastCall.UI
             // What is IN it, under the name (v5 P16): the menu speaks styles now, so the
             // licence has to say gin-and-tonic, not just "Gin & Tonic" — this line is the
             // player's recipe knowledge since the band rows left with v2.
-            _idOrderParts = NewText("OrderParts", card, _body, 8, TextAnchor.UpperLeft, UITheme.Night[3]);
-            Place(_idOrderParts.rectTransform, new Vector2(0, 1), new Vector2(LicFieldsW - 54f, 12),
+            // It SHARES the serving-preferences caption row (the author, 2026-08-03). Under
+            // the order's own rule there are eight points before that caption starts and this
+            // line needs twelve, so it printed straight through it; beside the drink's name
+            // there is no room either — measured in play, the longest name and the longest
+            // list of parts come to 429 points in a 352-point field. The caption row is 392
+            // wide and its own text is barely a quarter of that, so the two sit on it
+            // together, the parts to the left and the caption pushed to the right.
+            _idOrderParts = NewText("OrderParts", card, _body, 8, TextAnchor.LowerLeft, UITheme.Night[3]);
+            Place(_idOrderParts.rectTransform, new Vector2(0, 1), new Vector2(LicFieldsW, 12),
                 Vector2.zero);
-            _idOrderParts.rectTransform.pivot = new Vector2(0, 1);
-            _idOrderParts.rectTransform.anchoredPosition = new Vector2(LicFieldsX + 54f, -LicLines[3] - 4f);
+            _idOrderParts.rectTransform.pivot = new Vector2(0, 0);
+            _idOrderParts.rectTransform.anchoredPosition = new Vector2(LicFieldsX, -LicLines[4] + 20f);
 
             // Hovering the order shows the RECIPE (2026-07-31): the drink they asked for,
             // said the way the book says it — prep, pour shares, glass — without leaving
@@ -2677,7 +2693,8 @@ namespace LastCall.UI
             // 2026-08-01) in the free band under the rule; the field text only survives to
             // say SERVE IT CLEAN when there is nothing to draw.
             _idIntent = LicenceField(card, "SERVING PREFERENCES", LicFieldsX, LicLines[4],
-                LicFieldsW, out _, 12);
+                LicFieldsW, out _idIntentLabel, 12);
+            _idIntentLabel.alignment = TextAnchor.LowerRight;   // the parts share this row
             _idPrefRow = NewRect("PrefRow", card);
             Place(_idPrefRow, new Vector2(0, 1), new Vector2(LicFieldsW, 42), Vector2.zero);
             _idPrefRow.pivot = new Vector2(0, 1);

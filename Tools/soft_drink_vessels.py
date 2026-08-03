@@ -215,7 +215,9 @@ def build(style, raw=RAW, pick=None, cap=False):
     bb = im.getbbox()
     if bb:
         im = im.crop(bb)
-    return ring(im)
+    # No ink here: uniform_outline.py is the one place ink is laid, so a generated
+    # vessel and a drawn one end up with the same edge rather than one on top of another.
+    return im
 
 
 def run(write):
