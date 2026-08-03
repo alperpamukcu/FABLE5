@@ -578,9 +578,18 @@ namespace LastCall.UI
             }
 
             // A little SIGN under each bottle (the author): a brass-framed plate sized to
-            // its own name, pinned to the shelf face — a tabela, not floating text.
+            // its own name, pinned to the shelf face — a tabela, not floating text. Sized to
+            // the name but CAPPED at the slot, because a plate that outgrows its slot lies
+            // across its neighbour's and the two names print through each other (the author,
+            // 2026-08-03: "yazılar birbiriyle giriyor"). A name that will not fit is cut with
+            // a visible ".." — the hover card carries it whole, so nothing is lost, and two
+            // plates can no longer meet by construction.
             string label = shut ? $"{card.Name} · {blocked}" : card.Name;
-            float plateW = label.Length * 7f + 18f;
+            float maxPlateW = slotW - 4f;
+            int fits = Mathf.FloorToInt((maxPlateW - 18f) / 7f);
+            if (label.Length > fits && fits > 4)
+                label = label.Substring(0, fits - 2).TrimEnd() + "..";
+            float plateW = Mathf.Min(label.Length * 7f + 18f, maxPlateW);
             var plate = NewRect("Plate", band);
             Place(plate, new Vector2(0.5f, 0), new Vector2(plateW, 20f),
                 new Vector2(centreX, ShelfFaceH * 0.5f - 2f));

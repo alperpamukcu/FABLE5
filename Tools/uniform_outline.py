@@ -10,14 +10,27 @@ bottle's wall it is; on a screw cap it is the crown, and on a wide flat cap it i
 top two rows of the cap itself. Every version of the peel took art with it, and the
 author watched the caps lose first their curve and then their height.
 
-So nothing is removed. Exactly OUTLINE pixels of ink are laid AROUND each vessel and
-whatever the artist drew stays untouched. Uniformity comes from the ring being the
-same everywhere and from every vessel sharing one canvas height, which is what makes
-a pixel of ink read as the same width of line on the wall.
+So nothing of the ARTIST'S is removed. Exactly OUTLINE pixels of ink are laid AROUND
+each vessel and whatever the artist drew stays untouched. Uniformity comes from the
+ring being the same everywhere and from every vessel sharing one canvas height, which
+is what makes a pixel of ink read as the same width of line on the wall.
+
+The third wrong version is also recorded here (2026-08-03): the pass was not
+idempotent. ring() laid one more pixel of ink every time it ran and lit_crown lifted
+the same crown by 1.26 every time it ran, and the pass had by then run on every
+commit that touched the shelf - the style bottles were carrying four to six rings and
+their canvases had swollen from 162 to 172, which is why their outlines read heavier
+than the tier bottles rebuilt fresh from their raw takes. Two rules fix it:
+
+  - our own ink is peeled before the ring is laid. Safe where peeling art was not,
+    because OUR ink is one exact RGBA value the palettes never contain - what is
+    peeled is provably what ring() put there, however many times it ran.
+  - the crown steps run once. The sprite records that they have run in a PNG text
+    chunk, and a marked sprite keeps the crown it has.
 
     python Tools/uniform_outline.py write
 """
-from PIL import Image
+from PIL import Image, PngImagePlugin
 import json, io, os, sys
 
 DEST = 'Assets/Resources/Items'
@@ -25,6 +38,7 @@ DATA = 'Assets/Data/bottles/base_bar.json'
 INK = (12, 10, 16, 255)
 OUTLINE = 1                 # pixels of ink laid around every vessel on the shelf
 DARK = 70                   # luminance at or below this is ink rather than art
+MARK = 'lastcall-crowned'   # PNG text chunk: the crown steps have run on this sprite
 
 # Every vessel is fitted to the same height on the shelf - 110 points - so a sprite's
 # ink reads at 110/height of what it measures. Two pixels on a 162-tall bottle came out
@@ -67,17 +81,64 @@ def pad_to(im, need):
     return out
 
 
+def peel_own_ink(im, layers=None):
+    """Strip OUR ink - every accumulated layer of it, or exactly `layers` of them.
+
+    What ring() writes is a complete hull: after it runs, EVERY boundary pixel of the
+    silhouette is exactly INK. So a layer is peeled only when the whole boundary
+    matches - matching pixel by pixel is not enough, because near-black art quantizes
+    to INK's exact value now and then (the stout keg's own rim does), and a per-pixel
+    peel ate nineteen columns of that keg before this rule replaced it.
+
+    The mark is the second guard. The olive jar's sprig is DRAWN in ink's exact
+    value, so its hull is complete right down into the art and the peel nibbled
+    leaf pixels on every run, in any variant tried - capped, uncapped, it cannot be
+    told apart from a ring by looking at pixels. So a sprite that carries the pass's
+    mark is never peeled at all: the ring it wears is known to be one layer, ring()
+    itself is a no-op on it, and the peel exists only as the one-time migration for
+    unmarked legacy sprites, where the rings had stacked up. The canvas is not
+    cropped here - the kegs carry deliberate padding that keeps the three of them
+    at one scale."""
+    out = im.copy()
+    op = out.load()
+    W, H = out.size
+    taken = 0
+    while layers is None or taken < layers:
+        boundary = []
+        for x in range(W):
+            for y in range(H):
+                if op[x, y][3] <= 40:
+                    continue
+                if any(not (0 <= x + dx < W and 0 <= y + dy < H)
+                       or op[x + dx, y + dy][3] <= 40
+                       for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
+                    boundary.append((x, y))
+        if not boundary or any(op[x, y] != INK for x, y in boundary):
+            break
+        for x, y in boundary:
+            op[x, y] = (0, 0, 0, 0)
+        taken += 1
+    return out
+
+
 def ring(im, thickness=OUTLINE):
-    """Lay exactly this many pixels of ink around whatever is left, in place."""
+    """Lay exactly this many pixels of ink around the ART, in place.
+
+    The ink grows from pixels that are not already our ink, which is what makes a
+    second run a no-op: the hull the first run laid is neither transparent (so it is
+    never re-stamped) nor a source to grow from (so nothing lands beyond it). The old
+    version grew from everything solid and fattened the outline by one pixel every
+    time it was called."""
     out = im.copy()
     op = out.load()
     WO, HO = out.size
     for _ in range(thickness):
-        solid = [[op[x, y][3] > 40 for y in range(HO)] for x in range(WO)]
+        solid = [[op[x, y][3] > 40 and op[x, y] != INK for y in range(HO)]
+                 for x in range(WO)]
         grew = []
         for x in range(WO):
             for y in range(HO):
-                if solid[x][y]:
+                if op[x, y][3] > 40:
                     continue
                 if any(0 <= x + dx < WO and 0 <= y + dy < HO and solid[x + dx][y + dy]
                        for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
@@ -217,20 +278,46 @@ def run(write):
     for style in vessels():
         paths = [os.path.join(DEST, style + '.png'),
                  os.path.join(DEST, style + '_open.png')]
-        loaded = [Image.open(p).convert('RGBA') if os.path.exists(p) else None for p in paths]
+        loaded, crowned = [], []
+        for p in paths:
+            if not os.path.exists(p):
+                loaded.append(None)
+                crowned.append(False)
+                continue
+            im = Image.open(p)
+            crowned.append(MARK in (im.text if hasattr(im, 'text') else {}))
+            loaded.append(im.convert('RGBA'))
         if loaded[0] is None:
             continue
-        peeled = [lit_crown(round_crown(im)) if im is not None else None for im in loaded]
+
+        # A marked sprite is already exactly what this pass produces - peeling or
+        # crowning it again is where every non-idempotence bug in this file's history
+        # has lived, so it goes through untouched and only the no-op ring/stand steps
+        # see it. An unmarked one is either legacy (accumulated rings come off) or
+        # fresh from a build chain (nothing to peel), and gets the full treatment.
+        prepped = []
+        for im, has in zip(loaded, crowned):
+            if im is None:
+                prepped.append(None)
+                continue
+            if not has:
+                im = peel_own_ink(im)
+                if style not in KEGS:
+                    bb = im.getbbox()
+                    if bb:
+                        im = im.crop(bb)
+                im = lit_crown(round_crown(im))
+            prepped.append(im)
 
         # A shut bottle and its capless twin are padded by the SAME amount, so the
         # bottle does not jump when it is opened.
         need = [0, 0, 0, 0]
-        for im in peeled:
+        for im in prepped:
             if im is None:
                 continue
             for i, have in enumerate(margins(im)):
                 need[i] = max(need[i], max(0, OUTLINE - have))
-        done = [ring(pad_to(im, need)) if im is not None else None for im in peeled]
+        done = [ring(pad_to(im, need)) if im is not None else None for im in prepped]
         if style not in KEGS:
             done = [stand_on_floor(im) if im is not None else None for im in done]
 
@@ -238,11 +325,13 @@ def run(write):
             if im is None:
                 continue
             if write:
-                im.save(path)
+                meta = PngImagePlugin.PngInfo()
+                meta.add_text(MARK, '1')
+                im.save(path, pnginfo=meta)
             changed += 1
         print('%-16s %-10s%s' % (style, '%dx%d' % done[0].size,
                                  '  open %dx%d' % done[1].size if done[1] else ''))
-    print('%d sprites %s, %dpx of ink added and nothing taken away'
+    print('%d sprites %s, ink peeled back to %dpx and the crowns kept'
           % (changed, 'written' if write else '(dry run)', OUTLINE))
 
 

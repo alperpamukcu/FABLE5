@@ -29,6 +29,17 @@ def styles():
     return sorted({c.get('style') for c in d['cards'] if c.get('style')} - KEGS - SEALED)
 
 
+def brands():
+    """The tier bottles, bot_{brand}.png. Their open shots were generated separately at
+    first, and the packs drew a DIFFERENT bottle open than shut often enough that the
+    pour stage did not match the shelf (the author, 2026-08-03: 'raftaki versiyonları
+    ile içki koyma sahnesindeki görseller bir değil'). Deriving the open state from the
+    shut art is what makes them the same bottle by construction."""
+    return sorted(f[:-4] for f in os.listdir(D)
+                  if f.startswith('bot_') and f.endswith('.png')
+                  and not f.endswith('_open.png'))
+
+
 def vessel_mask(im):
     W, H = im.size
     px = im.load()
@@ -287,10 +298,12 @@ def open_variant(im):
 
 
 if __name__ == '__main__':
-    # python Tools/bottle_open_states.py write   (from the project root)
+    # python Tools/bottle_open_states.py write          the shelf styles
+    # python Tools/bottle_open_states.py write bots     the tier bottles
     write = len(sys.argv) > 1 and sys.argv[1] == 'write'
+    which = sys.argv[2] if len(sys.argv) > 2 else 'styles'
     made, failed = [], []
-    for s in styles():
+    for s in (brands() if which == 'bots' else styles()):
         im = Image.open(f'{D}/{s}.png').convert('RGBA')
         o = open_variant(im)
         if o is None:

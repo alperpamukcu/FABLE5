@@ -26,24 +26,41 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 RAW = os.path.join(HERE, 'tiers_raw')
 DEST = 'Assets/Resources/Items'
 
-# brand -> (which shut take was kept, which open take). Where a pack put a chequerboard
-# in the glass or laid the stopper on the ground beside the bottle, a cleaner take was
-# chosen instead; the loose stopper is dropped by the blob pass anyway.
+# brand -> (which shut take was kept, which open take).
+#
+# The first pass picked on how much of the frame a take filled and whether a stray
+# stopper lay beside it. That got the heights and the strays right and said nothing
+# about the thing the user actually complained about, which is whether a bottle reads
+# as round or as a cut-out. Two attempts at scoring that automatically are not in this
+# file, and should not be: counting tones per row ranked the cut-crystal decanter the
+# roundest object on the shelf (facets are not form), and correlating each row against
+# the mean column profile ranked the APPROVED gin as flat. The four takes are already
+# paid for, so they were laid out side by side with the shipped bottle and picked by
+# eye - which is how every art call in this project has actually been made.
+#
+# What the eye threw out: a chequerboard where the glass should be (alta_luna wore one
+# on the shelf), a body so dark and mottled it had no form left (hollow_oak, windward),
+# a wax capsule rendered as a black blob with drips, and a bottle with no label at all.
+#
+# Takes 0-3 are the pack a brand came back with; 4-7 are the round asked for again on
+# 2026-08-03, for the four brands where all four of the originals failed the proportion
+# test below and for Sol Viejo, whose open pack drew a different bottle from its shut
+# one. The number says which round it came from, which is why they share a namespace.
 PICKS = {
-    'bourbon_ashfall': (0, 3),
-    'bourbon_hollow_oak': (1, 2),
-    'bourbon_old_harrow': (2, 2),
+    'bourbon_ashfall': (4, 4),
+    'bourbon_hollow_oak': (4, 4),
+    'bourbon_old_harrow': (2, 0),
     'gin_juniper_crown': (1, 1),
-    'gin_thornwood': (2, 2),
-    'gin_veilcrest': (2, 1),
-    'rum_reina_del_mar': (3, 3),
-    'rum_tidewater': (0, 0),
-    'rum_windward': (2, 2),
-    'tequila_alta_luna': (0, 0),
+    'gin_thornwood': (0, 0),
+    'gin_veilcrest': (0, 3),
+    'rum_reina_del_mar': (1, 3),
+    'rum_tidewater': (4, 7),
+    'rum_windward': (1, 0),
+    'tequila_alta_luna': (1, 1),
     'tequila_cielo_roto': (0, 0),
-    'tequila_sol_viejo': (0, 3),
-    'vodka_leonid': (2, 1),
-    'vodka_okhta': (1, 3),
+    'tequila_sol_viejo': (3, 4),
+    'vodka_leonid': (5, 4),
+    'vodka_okhta': (1, 0),
     'vodka_vor': (3, 1),
 }
 
@@ -114,6 +131,20 @@ def drop_shadow_bar(im):
 # player sees, a bottle scaled from 130 is indistinguishable from one drawn at 158.
 STAND = 158
 
+# Pinning the height leaves the WIDTH free, and that is the next thing the eye catches:
+# a squat take stretched to the shared height arrives on the shelf as a jug standing
+# next to a stick. The approved five run 1.8:1 to 2.6:1 tall-to-wide, so a take outside
+# that band is reported - four brands came back with all four takes outside it and had
+# to be asked for again with the proportion written into the brief. The band is the
+# approved range (gin is the widest at 1.82, tequila the narrowest at 2.59) opened a
+# little, not a round number chosen to be tidy.
+SLIM, STOUT = 3.1, 1.75
+
+# The shut bottle and its capless twin are the same bottle. If their widths disagree the
+# vessel changes shape the moment the player uncorks it, which the height pass cannot
+# catch because both are 158 tall by then.
+TWIN = 0.22
+
 
 def build(brand, index, state):
     path = os.path.join(RAW, '%s_%s_%d.png' % (brand, state, index))
@@ -127,14 +158,23 @@ def build(brand, index, state):
 
 
 def run(write):
-    for brand, (shut, opened) in PICKS.items():
+    off = 0
+    for brand, (shut, opened) in sorted(PICKS.items()):
         a = build(brand, shut, 'shut')
         b = build(brand, opened, 'open')
         if write:
             a.save(os.path.join(DEST, 'bot_%s.png' % brand))
             b.save(os.path.join(DEST, 'bot_%s_open.png' % brand))
-        print('%-22s %-10s open %s' % (brand, '%dx%d' % a.size, '%dx%d' % b.size))
-    print('%d brands %s' % (len(PICKS), 'written' if write else '(dry run)'))
+        ratio = a.size[1] / float(a.size[0])
+        bad = ratio > SLIM or ratio < STOUT
+        drift = abs(b.size[0] - a.size[0]) / float(a.size[0])
+        off += bad
+        print('%-22s %-9s %.1f:1%s  open %-9s %+3d%%%s'
+              % (brand, '%dx%d' % a.size, ratio, ' proportion' if bad else '',
+                 '%dx%d' % b.size, round(100 * (b.size[0] - a.size[0]) / float(a.size[0])),
+                 '  twin' if drift > TWIN else ''))
+    print('%d brands %s, %d outside %.2f-%.2f tall-to-wide'
+          % (len(PICKS), 'written' if write else '(dry run)', off, STOUT, SLIM))
 
 
 if __name__ == '__main__':

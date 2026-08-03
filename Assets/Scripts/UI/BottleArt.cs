@@ -65,10 +65,34 @@ namespace LastCall.UI
         /// <summary>
         /// If "print" claims more than this much of the cavity, the test has failed to find any
         /// glass — a barrel, say, which is wood all the way round. Better to show the drink
-        /// everywhere than to hide it behind a bottle-shaped label. Measured across the shelf,
-        /// a real label tops out around 62% of the cavity and a wooden barrel runs past 78%.
+        /// everywhere than to hide it behind a bottle-shaped label. This sat at 0.72 when the
+        /// shelf's labels topped out around 62% of the cavity; the tier bottles drawn 2026-08-03
+        /// carry tall panels that reach 80% of a slim body, and at 0.72 the whole label was
+        /// thrown out and tinted by the drink. The kegs, which the cap existed to protect, are
+        /// in <see cref="Sealed"/> now.
         /// </summary>
-        private const float PrintCap = 0.72f;
+        private const float PrintCap = 0.88f;
+
+        /// <summary>
+        /// How much of its own bounding box a print colour must actually cover. A label plate
+        /// is a solid block — its colours fill most of the box they span — but the cut glass
+        /// and dither shading on the tier bottles put a colour into a few dozen scattered chips
+        /// whose box spans half the bottle. Those chips passed both span tests, were promoted
+        /// to "print", and floated at full strength over the drink.
+        /// </summary>
+        private const float PrintDense = 0.40f;
+
+        /// <summary>
+        /// Glass with more chroma than this is COLOURED glass, and the drink is not drawn in
+        /// its own colour inside it — an amber bottle with red liquid in it reads as a mistake,
+        /// not a menu. The liquid becomes a darker shade of the glass itself: enough to say how
+        /// much is left, nothing foreign about the hue (the author, 2026-08-03: "renkli
+        /// şişelerde renkli sıvı olmamalı").
+        /// </summary>
+        private const float TintedChroma = 0.24f;
+
+        /// <summary>Or darker than this — smoked and near-black glass shows no colour either.</summary>
+        private const float TintedLum = 0.28f;
 
         /// <summary>
         /// How solid the drink is drawn. A flat opaque block reads as paint, not liquid — the
@@ -100,7 +124,12 @@ namespace LastCall.UI
             /// <summary>Top of the cavity, as a fraction of the rect.</summary>
             public readonly float RimY;
 
-            public Piece(Sprite sprite, Sprite fill, Sprite front, float aspect, float floorY, float rimY)
+            /// <summary>The average tone of the glass itself — the cavity with the print left
+            /// out. White where the sprite could not be read.</summary>
+            public readonly Color GlassColor;
+
+            public Piece(Sprite sprite, Sprite fill, Sprite front, float aspect, float floorY,
+                         float rimY, Color glassColor)
             {
                 Sprite = sprite;
                 Fill = fill;
@@ -108,6 +137,7 @@ namespace LastCall.UI
                 Aspect = aspect;
                 FloorY = floorY;
                 RimY = rimY;
+                GlassColor = glassColor;
             }
 
             public bool Exists => Sprite != null;
@@ -130,12 +160,14 @@ namespace LastCall.UI
         /// Vessels the game draws no drink into (the author, 2026-08-02). The juices come
         /// in board cartons and the energy drink in a can — a matte box owes nobody a view
         /// of its contents, which is the point of putting a juice in one — and the cola and
-        /// the soda came back from the generator already drawn full. The hover card carries
-        /// what is left in all eight.
+        /// the soda came back from the generator already drawn full. The kegs joined them
+        /// 2026-08-03: steel is as opaque as board, and the drink that used to be painted on
+        /// them sat on the metal like a decal. The hover card carries what is left in each.
         /// </summary>
         private static readonly HashSet<string> Sealed = new HashSet<string>
         {
-            "orange", "lemon", "lime", "pineapple", "cranberry", "energy", "cola", "soda"
+            "orange", "lemon", "lime", "pineapple", "cranberry", "energy", "cola", "soda",
+            "lager", "pale_ale", "stout"
         };
 
         /// <summary>The bottle for a shelf style ("vodka", "gin", …), measured once and kept.</summary>
@@ -219,8 +251,7 @@ namespace LastCall.UI
             img.fillMethod = Image.FillMethod.Vertical;
             img.fillOrigin = (int)Image.OriginVertical.Bottom;
             img.fillAmount = 0f;
-            var c = UITheme.LiquidColor(StyleOf(style), type);
-            img.color = new Color(c.r, c.g, c.b, LiquidAlpha);
+            img.color = LiquidTint(piece, StyleOf(style), type);
 
             if (piece.Front == null) return img;
 
@@ -241,15 +272,34 @@ namespace LastCall.UI
             return img;
         }
 
+        /// <summary>
+        /// What colour the drink is drawn. Clear glass shows the drink's own colour; coloured
+        /// or dark glass shows a deeper shade of ITSELF — the level stays readable as a value
+        /// step, and no foreign hue fights the glass (see <see cref="TintedChroma"/>).
+        /// </summary>
+        private static Color LiquidTint(Piece piece, string style, IngredientType type)
+        {
+            var g = piece.GlassColor;
+            float chroma = Mathf.Max(g.r, Mathf.Max(g.g, g.b)) - Mathf.Min(g.r, Mathf.Min(g.g, g.b));
+            float lum = 0.299f * g.r + 0.587f * g.g + 0.114f * g.b;
+            if (chroma > TintedChroma || lum < TintedLum)
+            {
+                var deep = Color.Lerp(g, Color.black, 0.38f);
+                return new Color(deep.r, deep.g, deep.b, LiquidAlpha);
+            }
+            var c = UITheme.LiquidColor(style, type);
+            return new Color(c.r, c.g, c.b, LiquidAlpha);
+        }
+
         private static Piece Measure(Sprite bottle)
         {
             if (bottle == null) return default;
             var tex = bottle.texture;
-            if (tex == null || !tex.isReadable) return new Piece(bottle, null, null, 1f, 0f, 1f);
+            if (tex == null || !tex.isReadable) return new Piece(bottle, null, null, 1f, 0f, 1f, Color.white);
 
             var rect = bottle.rect;
             int w = (int)rect.width, h = (int)rect.height;
-            if (w <= 0 || h <= 0) return new Piece(bottle, null, null, 1f, 0f, 1f);
+            if (w <= 0 || h <= 0) return new Piece(bottle, null, null, 1f, 0f, 1f, Color.white);
 
             var px = tex.GetPixels((int)rect.x, (int)rect.y, w, h);
             var opaque = new bool[w * h];
@@ -268,7 +318,7 @@ namespace LastCall.UI
                 rowWidth[y] = n;
                 if (n > widest) widest = n;
             }
-            if (widest == 0) return new Piece(bottle, null, null, (float)w / h, 0f, 1f);
+            if (widest == 0) return new Piece(bottle, null, null, (float)w / h, 0f, 1f, Color.white);
 
             // Texture rows run UPWARD from the bottom of the sprite, which is the opposite of
             // the way a bottle is described. Reading them as if row 0 were the top put the
@@ -289,7 +339,7 @@ namespace LastCall.UI
                 break;
             }
             if (bodyLow < 0 || bodyHigh < bodyLow)
-                return new Piece(bottle, null, null, (float)w / h, 0f, 1f);
+                return new Piece(bottle, null, null, (float)w / h, 0f, 1f, Color.white);
 
             // The cavity is the whole body below the shoulder, walls inset, down to the FLOOR of
             // the vessel. It used to stop at the last row wide enough to count as body, which left
@@ -312,27 +362,35 @@ namespace LastCall.UI
                     if (y > highest) highest = y;
                 }
             }
-            if (highest < 0) return new Piece(bottle, null, null, (float)w / h, 0f, 1f);
+            if (highest < 0) return new Piece(bottle, null, null, (float)w / h, 0f, 1f, Color.white);
 
             var print = FindPrint(px, cavity, w, h, bodyLow, bodyHigh, cavityCount);
 
             var fill = new Color[w * h];
             var face = new Color[w * h];
             var clear = new Color(1f, 1f, 1f, 0f);
+            float glassR = 0f, glassG = 0f, glassB = 0f;
+            int glassN = 0;
             for (int i = 0; i < fill.Length; i++)
             {
                 bool inside = cavity[i] && !print[i];
                 fill[i] = cavity[i] ? Color.white : clear;
                 // Everything the drink must not touch, at the strength the artist drew it.
                 face[i] = opaque[i] && !inside ? px[i] : clear;
+                if (!inside) continue;
+                glassR += px[i].r; glassG += px[i].g; glassB += px[i].b;
+                glassN++;
             }
+            var glass = glassN > 0
+                ? new Color(glassR / glassN, glassG / glassN, glassB / glassN)
+                : Color.white;
 
             var fillSprite = Bake(fill, w, h);
             var frontSprite = Bake(face, w, h);
 
             // A pixel's span is [y, y+1), so the cavity reaches the top of its highest row.
             return new Piece(bottle, fillSprite, frontSprite, (float)w / h,
-                             lowest / (float)h, (highest + 1) / (float)h);
+                             lowest / (float)h, (highest + 1) / (float)h, glass);
         }
 
         /// <summary>
@@ -382,8 +440,11 @@ namespace LastCall.UI
                 if (pair.Value < PrintMin) continue;
                 int key = pair.Key;
                 int span = high[key] - low[key] + 1;
+                int reach = right[key] - left[key] + 1;
                 if (span > bodyHeight * PrintTall && span > tallest * PrintShort) continue;
-                if (right[key] - left[key] + 1 < widestCavity * PrintWide) continue;
+                if (reach < widestCavity * PrintWide) continue;
+                // a plate is a block; a shading tone is a scatter in a plate-sized box
+                if (pair.Value < span * reach * PrintDense) continue;
                 ink.Add(key);
             }
 
