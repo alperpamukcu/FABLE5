@@ -42,36 +42,53 @@ namespace LastCall.UI
         /// so a splash into a coupe is a splash, not most of the drink.</summary>
         private const double MixerMeasure = 0.15;
 
-        // The two columns run the height of the stage and are wide enough to hold a real tub and
-        // a real bottle (2026-07-31). They used to be 96 and 118 wide, which forced an ice bucket
-        // down to 88x74 — at that size it reads as a button with a picture on it rather than
-        // something you reach into, which was the whole complaint. They scroll, so the finishing
-        // touches and the mixers still coming have somewhere to go.
-        private const float ShelfW = 244f, CabinetW = 244f;
-        private const float RailGap = 8f, RailKeyHeight = 130f;
+        // ── the first-person staging (v5 P14, the author's diagram of 2026-07-31) ──
+        //
+        // One-point perspective, the room seen from where the bartender stands: the prep
+        // table runs along the LEFT wall and recedes to the upper right, the drinks fridge
+        // stands against the RIGHT wall angled front-down-left, and the counter with the
+        // glass and the shaker opens toward the viewer between them. The horizon sits at
+        // y ≈ 0.51 of the panel. Everything the player touches STANDS ON the furniture —
+        // positions come from the art, measured off it the way every anchor here is.
+        //
+        // The furniture is shot EMPTY (bare top, bare shelves), because anything painted
+        // into it would be a picture: the props standing on it are separate sprites whose
+        // positions are hit targets and whose levels the game draws.
+
+        /// <summary>The prep table's scale on screen, and where its bottom-left corner sits
+        /// (from the panel's bottom-left). The art is 298×356.</summary>
+        private const float TableScale = 1.5f;
+        private static readonly Vector2 TableFoot = new Vector2(-16f, 26f);
 
         /// <summary>
-        /// The finishing rail: TWO props across (2026-08-02). It holds six things now — ice,
-        /// salt, sugar, lemon, and the mint and olives the author wants in THIS scene — and
-        /// stacked one to a row they ran off the bottom of the stage. Two across fits all six
-        /// in frame, and each prop is still DRAWN at its own size inside its cell, so an ice
-        /// bucket is still not a salt cellar.
+        /// The stand line along the tabletop, measured off the art: the top face's midline
+        /// runs from (45,160) at the near end to (250,45) at the far end (art px, y from the
+        /// top). Props are placed along it and scale down as they recede — that shrink is
+        /// what makes the viewpoint read as depth rather than as a tilted picture.
         /// </summary>
-        private const int FinishColumns = 2;
-        private const float FinishRowHeight = 136f;
-        private const float GarnishChipHeight = 92f;
+        private static readonly Vector2 TableNear = new Vector2(45f, 160f);
+        private static readonly Vector2 TableFar = new Vector2(250f, 45f);
+        private const float TableFarScale = 0.74f;
 
-        /// <summary>
-        /// The speed rail: THREE bottles across, at a height that fits the whole rail on
-        /// screen at once (the author, 2026-08-02: the cabinet was unusable and hard to
-        /// manage). It held twelve bottles two-across in slots as tall as a bottle in your
-        /// hand — six rows, two of them visible, behind a door you had to open first. So
-        /// reaching for the tonic meant a click, a scroll and a hunt. Now every bottle the
-        /// glass can take is in frame and one click away; the scroll survives only as an
-        /// overflow for a cellar that outgrows the case.
-        /// </summary>
-        private const int CabinetColumns = 3;
-        private const float CabinetSlotHeight = 120f;
+        /// <summary>The fridge's scale, and its bottom-RIGHT corner from the panel's
+        /// bottom-right. At 1.9 the art's three shelves all stay on screen — the 07-31 note
+        /// wanted bottles at hand size with the fridge overflowing the screen, but the
+        /// 08-02 ruling on the same cabinet (every bottle in frame, one press away) is later
+        /// and it won: a fridge you scroll blind is the thing that was just torn out.</summary>
+        private const float FridgeScale = 1.9f;
+        private static readonly Vector2 FridgeFoot = new Vector2(6f, 18f);
+
+        /// <summary>The wire shelves' front edges, measured off the fridge art (y from the
+        /// top of its 198×334 canvas), and the glass interior's x span. A shelf's edge falls
+        /// toward the near (left) end because the case is angled — bottles follow it.</summary>
+        private static readonly float[] FridgeShelfY = { 120f, 188f, 249f, 296f };
+        private const float FridgeShelfDrop = 14f;   // how much lower a shelf sits at its left end
+        private const float FridgeInteriorL = 72f, FridgeInteriorR = 184f;
+        private const int FridgePerShelf = 3;
+
+        /// <summary>How tall a bottle stands INSIDE the fridge. Taking one out grows it to
+        /// <see cref="ServeVesselH"/> — the pick-up toward the camera.</summary>
+        private const float FridgeBottleH = 112f;
 
         /// <summary>
         /// How big each thing on the finishing shelf actually is. An ice bucket is not a salt
@@ -90,9 +107,6 @@ namespace LastCall.UI
         private static Vector2 FinishPropSize(string prepId) =>
             FinishProps.TryGetValue(prepId, out var s) ? s : new Vector2(100, 74);
 
-        /// <summary>Margin from the screen edge to a column, and from a column to the play surface.</summary>
-        private const float StageInset = 16f;
-
         /// <summary>Room kept clear at the top for the title and the aim line, and at the bottom
         /// for the two buttons.</summary>
         private const float StageTop = 86f, StageBottom = 62f;
@@ -100,8 +114,9 @@ namespace LastCall.UI
         /// <summary>How tall the shaker and the bottle in hand are drawn on THIS stage. The shaker
         /// bench's 180 left the tin looking like a thimble beside a 260-tall glass.</summary>
         private const float ServeVesselH = 250f;
+
+        /// <summary>What stands in for the fridge if its art ever fails to load.</summary>
         private static readonly Color CabinetFrame = new Color(0.20f, 0.17f, 0.22f, 1f);
-        private static readonly Color CabinetInside = new Color(0.11f, 0.14f, 0.17f, 1f);
 
         /// <summary>The piece being carried from the finishing shelf to the glass.</summary>
         private PreparationDefinition _servePrep;
@@ -172,7 +187,7 @@ namespace LastCall.UI
             ShowServingGlassware(run);
             RefreshServeMixBar(run);
             PushServePool(run);
-            GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass);
+            GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run);
             _serveShakerBody.color = DrinkColor(run.Glass);
             _serveShaker.gameObject.SetActive(!run.Glass.IsEmpty);
             _aimText.text = run.Glass.IsEmpty
@@ -180,28 +195,46 @@ namespace LastCall.UI
                 : "GRAB THE SHAKER · TIP IT OVER THE GLASS";
             _aimText.color = UITheme.TextSecondary;
 
-            // The left rail finishes the drink: ice and the rims go on at the GLASS, so a built
-            // drink can have them at all, then the stocked garnishes (mint, olive) which still
-            // go into the shaker before the pour.
+            // The prep table finishes the drink: ice and the rims go on at the GLASS, so a
+            // built drink can have them at all, then the stocked garnishes (mint, olive).
+            // Everything stands ALONG THE TABLETOP, nearest thing biggest — the ice bucket
+            // takes the near end because it is the thing you reach for most.
             foreach (Transform ch in _serveGarnishRow) Destroy(ch.gameObject);
-            AddFinishTub("ice", "ICE", Preparations.Ice);
-            AddFinishTub("salt_rim", "SALT", Preparations.SaltRim);
-            AddFinishTub("sugar_rim", "SUGAR", Preparations.SugarRim);
-            AddFinishTub("lemon_twist", "LEMON", Preparations.LemonTwist);
+            int standCount = 4;
             foreach (var bottle in run.Shelf.Bottles)
                 if (bottle.Ingredient.Type == IngredientType.Garnish && !bottle.IsEmpty)
-                    AddGarnishChip(bottle.Ingredient);
+                    standCount++;
+            int stand = 0;
+            AddFinishTub("ice", "ICE", Preparations.Ice, TableStand(stand++, standCount));
+            AddFinishTub("lemon_twist", "LEMON", Preparations.LemonTwist, TableStand(stand++, standCount));
+            AddFinishTub("salt_rim", "SALT", Preparations.SaltRim, TableStand(stand++, standCount));
+            AddFinishTub("sugar_rim", "SUGAR", Preparations.SugarRim, TableStand(stand++, standCount));
+            foreach (var bottle in run.Shelf.Bottles)
+                if (bottle.Ingredient.Type == IngredientType.Garnish && !bottle.IsEmpty)
+                    AddGarnishChip(bottle.Ingredient, TableStand(stand++, standCount));
 
-            // The cabinet: the mixers and juices, standing behind its door.
+            // The fridge: the mixers and juices, standing on its wire shelves.
             _serveBottleGrabbed = false;
             _serveFocusBottle = null;
             _serveBottle.gameObject.SetActive(false);
             _serveCabinetGap = null;      // the shelf is about to be rebuilt; the old slot is gone
             _servePourTotal = 0;
             foreach (Transform ch in _serveCabinetShelf) Destroy(ch.gameObject);
+            int slot = 0;
             foreach (var bottle in run.Shelf.Bottles)
                 if (IsGlassSide(bottle.Ingredient) && !bottle.IsEmpty)
-                    AddCabinetBottle(bottle.Ingredient);
+                    AddCabinetBottle(bottle.Ingredient, slot++);
+        }
+
+        /// <summary>Where the n-th thing on the prep table stands, and how big it is drawn:
+        /// a position along the measured tabletop line (panel space, from the bottom-left)
+        /// and a depth scale that shrinks toward the far end.</summary>
+        private (Vector2 pos, float depth) TableStand(int index, int count)
+        {
+            float t = count <= 1 ? 0f : index / (float)(count - 1);
+            float x = TableFoot.x + Mathf.Lerp(TableNear.x, TableFar.x, t) * TableScale;
+            float y = TableFoot.y + (356f - Mathf.Lerp(TableNear.y, TableFar.y, t)) * TableScale;
+            return (new Vector2(x, y), Mathf.Lerp(1f, TableFarScale, t));
         }
 
         /// <summary>
@@ -210,19 +243,23 @@ namespace LastCall.UI
         /// in the glass. The shaker bench has worked this way since 2026-07-23; this is the same
         /// verb aimed at the serving glass, so the two stages read as one bar.
         /// </summary>
-        private void AddFinishTub(string prepId, string label, PreparationDefinition prep)
+        private void AddFinishTub(string prepId, string label, PreparationDefinition prep,
+                                  (Vector2 pos, float depth) stand)
         {
             var run = Run;
             bool already = run != null && run.ServingGlass.HasPreparation(prep.Id);
 
-            var size = FinishPropSize(prepId);
+            var size = FinishPropSize(prepId) * stand.depth;
             var tub = NewRect($"F_{prepId}", _serveGarnishRow);
-            tub.gameObject.AddComponent<LayoutElement>().preferredHeight = size.y + 18f;
+            tub.anchorMin = tub.anchorMax = Vector2.zero;      // panel space, from the bottom-left
+            tub.pivot = new Vector2(0.5f, 0f);                 // standing on the tabletop line
+            tub.sizeDelta = size + new Vector2(24f, 20f);      // grab margin round the prop
+            tub.anchoredPosition = stand.pos;
             var hit = tub.gameObject.AddComponent<Image>();
             hit.color = new Color(1f, 1f, 1f, 0.001f);   // the whole tub is the grab target
 
             var icon = NewRect("Tub", tub);
-            Place(icon, new Vector2(0.5f, 1), size, new Vector2(0, -2));
+            Place(icon, new Vector2(0.5f, 0), size, new Vector2(0, 14f));
             var iimg = icon.gameObject.AddComponent<Image>();
             iimg.sprite = ItemArt.Bucket(prepId) ?? ItemArt.Prep(prepId);
             iimg.preserveAspect = true; iimg.raycastTarget = false;
@@ -305,7 +342,7 @@ namespace LastCall.UI
                 // The drink takes the hit, and the touch appears ON the glass (GlassDecor):
                 // the crust on the rim, the wedge on the edge, the ice at the liquid line.
                 _serveFluid.Ripple(opening.x, 0.03f);
-                GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass);
+                GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run);
                 string label = _servePrepLabel;
                 _servePrep = null;
                 _serveDragPiece.gameObject.SetActive(false);
@@ -318,21 +355,24 @@ namespace LastCall.UI
             _serveDragPiece.gameObject.SetActive(false);
         }
 
-        private void AddGarnishChip(IngredientCard card)
+        private void AddGarnishChip(IngredientCard card, (Vector2 pos, float depth) stand)
         {
+            var size = new Vector2(72f, 84f) * stand.depth;    // a jar on the table, not a key
             var chip = NewRect($"G_{card.Id}", _serveGarnishRow);
-            chip.gameObject.AddComponent<LayoutElement>().preferredHeight = GarnishChipHeight;
+            chip.anchorMin = chip.anchorMax = Vector2.zero;
+            chip.pivot = new Vector2(0.5f, 0f);
+            chip.sizeDelta = size + new Vector2(20f, 18f);
+            chip.anchoredPosition = stand.pos;
             var bg = chip.gameObject.AddComponent<Image>();
-            bg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.85f);
+            bg.color = new Color(1f, 1f, 1f, 0.001f);          // the jar is the button; no plate
             var icon = NewRect("Icon", chip);
-            Place(icon, new Vector2(0.5f, 1), new Vector2(ShelfW - 40f, RailKeyHeight - 26f),
-                new Vector2(0, -4));
+            Place(icon, new Vector2(0.5f, 0), size, new Vector2(0, 14f));
             var iimg = icon.gameObject.AddComponent<Image>();
             iimg.sprite = ItemArt.Bottle(card); iimg.preserveAspect = true; iimg.raycastTarget = false;
             if (iimg.sprite == null) iimg.color = UITheme.StyleColor(card.Info?.Style, card.Type);
             var name = NewText("N", chip, _body, 8, TextAnchor.LowerCenter, UITheme.TextPrimary);
             Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(92, 14), new Vector2(0, 2));
-            name.text = card.Name.ToUpperInvariant();
+            name.text = RailLabel(card);
             var btn = chip.gameObject.AddComponent<Button>();
             btn.targetGraphic = bg;
             var c = card;
@@ -387,16 +427,39 @@ namespace LastCall.UI
         /// long you hold it there. Sized off its own art, so a squat cola bottle and a tall
         /// siphon stand at their true proportions behind the door.
         /// </summary>
-        private void AddCabinetBottle(IngredientCard card)
+        private void AddCabinetBottle(IngredientCard card, int index)
         {
+            // Which wire shelf, which place on it, which rank. The front rank fills all
+            // three shelves first; what will not fit stands BEHIND the front rank — a shelf
+            // with two ranks reads as a stocked fridge, and the depth stays playable because
+            // hovering a bottle pulls it in front of whatever it stands behind.
+            int perRank = FridgePerShelf * (FridgeShelfY.Length - 1);
+            int rank = index / perRank;
+            int inRank = index % perRank;
+            int shelfRow = inRank / FridgePerShelf;
+            int col = inRank % FridgePerShelf;
+
+            // The stand point, from the fridge art: x across the interior, y on the shelf's
+            // front edge, which falls toward the near (left) end because the case is angled.
+            float tx = (col + 0.5f) / FridgePerShelf;
+            float artX = Mathf.Lerp(FridgeInteriorL + 8f, FridgeInteriorR - 8f, tx);
+            float artY = FridgeShelfY[shelfRow] - FridgeShelfDrop * (1f - tx);
+            if (rank > 0) { artX += 7f; artY -= 6f; }          // the back rank, up and right
+            float x = -FridgeFoot.x - (198f - artX) * FridgeScale;   // from the panel's RIGHT
+            float y = FridgeFoot.y + (334f - artY) * FridgeScale;
+            float h = FridgeBottleH * (rank > 0 ? 0.88f : 1f);
+
             var slot = NewRect($"M_{card.Id}", _serveCabinetShelf);
-            slot.gameObject.AddComponent<LayoutElement>().preferredHeight = CabinetSlotHeight;
+            slot.anchorMin = slot.anchorMax = new Vector2(1f, 0f);   // panel space, bottom-right
+            slot.pivot = new Vector2(0.5f, 0f);
+            slot.sizeDelta = new Vector2(h * 0.62f, h);
+            slot.anchoredPosition = new Vector2(x, y);
+            if (rank > 0) slot.SetAsFirstSibling();            // behind the front rank
             var hit = slot.gameObject.AddComponent<Image>();
             hit.color = new Color(1f, 1f, 1f, 0.001f);   // the whole slot takes the press
 
             var art = NewRect("Bottle", slot);
-            Place(art, new Vector2(0.5f, 1), new Vector2(62f, CabinetSlotHeight - 26f),
-                new Vector2(0, -3));
+            Stretch(art, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var img = art.gameObject.AddComponent<Image>();
             img.sprite = ItemArt.Bottle(card);
             img.preserveAspect = true; img.raycastTarget = false;
@@ -409,16 +472,19 @@ namespace LastCall.UI
                 liquid.fillAmount = BottleArt.For(card)
                     .FillAmount((float)(shelfBottle.Remaining / shelfBottle.Capacity));
 
-            // The label is the STYLE, not the brand: at rail scale "TONIC" is what you are
-            // reaching for, and "Quinbury Tonic" would not fit anyway.
+            // The label is the STYLE, not the brand: at fridge scale "TONIC" is what you are
+            // reaching for, and "Quinbury Tonic" would not fit anyway. Hover only — nine
+            // names under nine bottles is a spreadsheet, not a fridge.
             var name = NewText("N", slot, _body, 8, TextAnchor.LowerCenter, UITheme.TextPrimary);
-            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(74, 11), new Vector2(0, 1));
+            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(74, 11), new Vector2(0, -12));
             name.horizontalOverflow = HorizontalWrapMode.Overflow;
             name.text = RailLabel(card);
+            name.gameObject.SetActive(false);
 
             Pressable(slot, art, img, lift: 5f, depth: 5f);
 
             var c = card;
+            var trig = slot.gameObject.AddComponent<EventTrigger>();
             var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
             down.callback.AddListener(_ =>
             {
@@ -426,7 +492,17 @@ namespace LastCall.UI
                 if (run == null) return;
                 TakeCabinetBottle(run, c, art);
             });
-            slot.gameObject.AddComponent<EventTrigger>().triggers.Add(down);
+            trig.triggers.Add(down);
+            // Hover pulls the bottle to the front of anything it stands behind (the rank-2
+            // reach), and names it. It stays in front until the shelf next rebuilds, which
+            // is the cheap version of putting it back where it stood — nothing else needs
+            // the exact sibling order once the pointer has left.
+            var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            enter.callback.AddListener(_ => { slot.SetAsLastSibling(); name.gameObject.SetActive(true); });
+            trig.triggers.Add(enter);
+            var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+            exit.callback.AddListener(_ => name.gameObject.SetActive(false));
+            trig.triggers.Add(exit);
         }
 
         /// <summary>Takes a cabinet bottle into the hand — the slot press and the menu's
@@ -820,63 +896,10 @@ namespace LastCall.UI
         {
             _serveShakerText.text = $"shaker {run.Glass.FillFraction:P0} left";
             _serveGlassText.text = $"glass {run.ServingGlass.FillFraction:P0} full";
-            GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass);
+            GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run);
             RefreshServeMixBar(run);
             _aimText.text = accuracy > 0.8 ? "CLEAN POUR" : accuracy > 0.4 ? "SOME SPILL" : "SPILLING!";
             _aimText.color = Color.Lerp(UITheme.ViceRed[3], UITheme.Lime[3], (float)accuracy);
-        }
-
-        /// <summary>
-        /// A column of props that scrolls when there are more of them than there is room for.
-        /// Returns the content the props go into — callers add children and forget about it.
-        /// The viewport is masked, so a tub half off the bottom is clipped by the shelf edge
-        /// instead of drawing over the buttons under it.
-        /// </summary>
-        private RectTransform ScrollShelf(RectTransform column, string name, int columns = 1,
-            float rowHeight = CabinetSlotHeight)
-        {
-            var viewport = NewRect(name + "View", column);
-            Stretch(viewport, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -20));
-            // (rowHeight only matters to the grid path; a single column measures its own rows)
-            var mask = viewport.gameObject.AddComponent<Image>();
-            mask.color = new Color(1f, 1f, 1f, 0.004f);   // a mask needs something to cut
-            viewport.gameObject.AddComponent<RectMask2D>();
-
-            var content = NewRect(name, viewport);
-            content.anchorMin = new Vector2(0, 1);
-            content.anchorMax = new Vector2(1, 1);
-            content.pivot = new Vector2(0.5f, 1);
-            content.offsetMin = new Vector2(0, 0);
-            content.offsetMax = new Vector2(0, 0);
-
-            if (columns > 1)
-            {
-                var grid = content.gameObject.AddComponent<GridLayoutGroup>();
-                float cell = (column.rect.width - 4f - RailGap * (columns - 1)) / columns;
-                grid.cellSize = new Vector2(cell, rowHeight);
-                grid.spacing = new Vector2(RailGap, RailGap);
-                grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-                grid.constraintCount = columns;
-                grid.childAlignment = TextAnchor.UpperCenter;
-            }
-            else
-            {
-                var layout = content.gameObject.AddComponent<VerticalLayoutGroup>();
-                layout.spacing = RailGap;
-                layout.childControlWidth = true; layout.childForceExpandWidth = true;
-                layout.childControlHeight = true; layout.childForceExpandHeight = false;
-                layout.childAlignment = TextAnchor.UpperCenter;
-            }
-            var fitter = content.gameObject.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            var scroll = viewport.gameObject.AddComponent<ScrollRect>();
-            scroll.viewport = viewport;
-            scroll.content = content;
-            scroll.horizontal = false;
-            scroll.movementType = ScrollRect.MovementType.Clamped;
-            scroll.scrollSensitivity = 28f;
-            return content;
         }
 
         private void BuildServePanel()
@@ -911,74 +934,73 @@ namespace LastCall.UI
             _serveGlassText = NewText("Glass", _servePanel, _body, 13, TextAnchor.UpperRight, UITheme.TextPrimary);
             Place(_serveGlassText.rectTransform, new Vector2(1, 1), new Vector2(280, 24), new Vector2(-20, -46));
 
-            // The finishing shelf: a full-height column down the left edge, holding the tubs at a
-            // size you would actually reach into. It scrolls, so the finishing touches still to
-            // come do not silently run off the bottom the way eight keys used to run off the rail.
-            var shelfCol = NewRect("FinishShelf", _servePanel);
-            Stretch(shelfCol, new Vector2(0, 0), new Vector2(0, 1),
-                new Vector2(StageInset, StageBottom), new Vector2(StageInset + ShelfW, -StageTop));
-            var glabel = NewText("GLabel", shelfCol, _body, 10, TextAnchor.UpperCenter,
-                UITheme.TypeRamp[IngredientType.Garnish][3]);
-            Stretch(glabel.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -18), Vector2.zero);
-            glabel.text = "— FINISH —";
-            _serveGarnishRow = ScrollShelf(shelfCol, "Garnishes", FinishColumns, FinishRowHeight);
+            // The room (the author's diagram, 2026-07-31): the prep table along the left
+            // wall receding to the upper right, the fridge against the right wall, and the
+            // counter opening toward the viewer between them. The furniture is ART, and the
+            // props standing on it are the interface.
+            var table = NewRect("PrepTable", _servePanel);
+            table.anchorMin = table.anchorMax = Vector2.zero;
+            table.pivot = Vector2.zero;
+            table.sizeDelta = new Vector2(298f, 356f) * TableScale;
+            table.anchoredPosition = TableFoot;
+            var tImg = table.gameObject.AddComponent<Image>();
+            tImg.sprite = ItemArt.Load("prep_table");
+            tImg.preserveAspect = true;
+            tImg.raycastTarget = false;
+            if (tImg.sprite == null) tImg.color = new Color(0.35f, 0.36f, 0.40f, 1f);
 
-            // The right column: what goes in AT THE GLASS (v5 P14, the notes' second rail). P10
-            // put the rule in Core — carbonated never enters the shaker, it is added to the
-            // serving glass — and then there was no door in the UI to do it through, so the six
-            // built cocktails could not be made by playing at all. This is that door.
-            // The cabinet: a lit case with a glass door, the bottles standing on its shelf.
-            var cabinetCol = NewRect("MixerColumn", _servePanel);
-            Stretch(cabinetCol, new Vector2(1, 0), new Vector2(1, 1),
-                new Vector2(-(StageInset + CabinetW), StageBottom), new Vector2(-StageInset, -StageTop));
-            var mlabel = NewText("MLabel", cabinetCol, _body, 10, TextAnchor.UpperCenter,
-                UITheme.TypeRamp[IngredientType.Bubbly][3]);
-            Stretch(mlabel.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -18), Vector2.zero);
-            mlabel.text = "— AT THE GLASS —";
+            var fridge = NewRect("MixerFridge", _servePanel);
+            fridge.anchorMin = fridge.anchorMax = new Vector2(1f, 0f);
+            fridge.pivot = new Vector2(1f, 0f);
+            fridge.sizeDelta = new Vector2(198f, 334f) * FridgeScale;
+            fridge.anchoredPosition = new Vector2(FridgeFoot.x, FridgeFoot.y);
+            var fImg = fridge.gameObject.AddComponent<Image>();
+            fImg.sprite = ItemArt.Load("mixer_fridge");
+            fImg.preserveAspect = true;
+            fImg.raycastTarget = false;
+            if (fImg.sprite == null) fImg.color = CabinetFrame;
+            _serveCabinet = fridge;
 
-            _serveCabinet = NewRect("Cabinet", cabinetCol);
-            Stretch(_serveCabinet, Vector2.zero, Vector2.one, Vector2.zero, new Vector2(0, -20));
-            _serveCabinet.gameObject.AddComponent<Image>().color = CabinetFrame;
-
-            var inside = NewRect("Inside", _serveCabinet);
-            Stretch(inside, Vector2.zero, Vector2.one, new Vector2(7, 7), new Vector2(-7, -7));
-            inside.gameObject.AddComponent<Image>().color = CabinetInside;
-
-            // An open speed rail: three across, the whole thing in frame, no door between the
-            // hand and the bottle.
-            _serveCabinetShelf = ScrollShelf(inside, "Shelf", CabinetColumns, CabinetSlotHeight);
+            // The props' containers span the whole panel: everything in them is placed in
+            // panel space, on a stand point measured off the furniture art. No layout
+            // groups — a room is not a list.
+            _serveGarnishRow = NewRect("TableTop", _servePanel);
+            Stretch(_serveGarnishRow, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _serveCabinetShelf = NewRect("FridgeShelves", _servePanel);
+            Stretch(_serveCabinetShelf, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _serveMixerRow = _serveCabinetShelf;
-
 
             _aimText = NewText("AimText", _servePanel, _body, 13, TextAnchor.UpperCenter, UITheme.TextSecondary);
             Stretch(_aimText.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -70), new Vector2(0, -46));
 
-            // The play surface: the counter between the two columns. The author's sketch reads
-            // left to right — finishing shelf, the glass being filled, the shaker, the cabinet —
-            // so the surface is what is left after the two columns take their edges, and the
-            // glass and the shaker split it.
+            // The play surface: the counter between the table and the fridge (the red region
+            // of the diagram — x 0.26..0.71 of the panel). The glass and the shaker split it.
             _serveSurface = NewRect("ServeSurface", _servePanel);
-            Stretch(_serveSurface, Vector2.zero, Vector2.one,
-                new Vector2(StageInset * 2 + ShelfW, StageBottom),
-                new Vector2(-(StageInset * 2 + CabinetW), -StageTop));
+            Stretch(_serveSurface, new Vector2(0.26f, 0f), new Vector2(0.71f, 1f),
+                new Vector2(0, StageBottom), new Vector2(0, -StageTop));
             var surfImg = _serveSurface.gameObject.AddComponent<Image>();
-            surfImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.5f);
+            // Barely there: the furniture carries the room now, and the old half-strength
+            // slab read as a dialog floating between the table and the fridge.
+            surfImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.18f);
             surfImg.raycastTarget = false;
 
             // The serving glass: real clear-glass art (2026-07-23), transparent interior so the
             // poured drink pools behind it and shows through; the outline+rim draw in front.
             // The layer architecture (the author, 2026-08-02): the BACK face sits under
             // the pooled drink; the glass image itself becomes the clear FRONT face.
+            // Down where the counter is, not floating at mid-air: the room has a horizon
+            // now, and a glass hanging above it read as pinned to the wall.
+            var glassRest = new Vector2(-110, -88);
             _serveGlassBackRt = NewRect("GlassBack", _serveSurface);
             Place(_serveGlassBackRt, new Vector2(0.5f, 0.5f), new Vector2(190, ServeGlassHeight),
-                new Vector2(-150, -30));
+                glassRest);
             _serveGlassBack = _serveGlassBackRt.gameObject.AddComponent<Image>();
             _serveGlassBack.raycastTarget = false;
             _serveGlassBack.enabled = false;
 
             _serveGlass = NewRect("Glass", _serveSurface);
             Place(_serveGlass, new Vector2(0.5f, 0.5f), new Vector2(190, ServeGlassHeight),
-                new Vector2(-150, -30));
+                glassRest);
             _serveGlassImage = _serveGlass.gameObject.AddComponent<Image>();
             _serveGlassImage.raycastTarget = false;
 
@@ -1001,7 +1023,7 @@ namespace LastCall.UI
             _serveDragPiece.gameObject.SetActive(false);
 
             // The bottle in hand, once one is taken out of the cabinet.
-            _serveBottleRest = new Vector2(252, -50);
+            _serveBottleRest = new Vector2(226, -96);
             _serveBottle = NewRect("HandBottle", _serveSurface);
             _serveBottle.pivot = new Vector2(0.5f, 0.22f);
             _serveBottle.sizeDelta = new Vector2(118, ServeVesselH);
@@ -1013,7 +1035,7 @@ namespace LastCall.UI
             _serveGlass.SetAsLastSibling();   // the hollow glass draws over the fluid
 
             // The grabbable steel shaker you pour from, resting lower-right.
-            _serveShakerRest = new Vector2(170, -56);
+            _serveShakerRest = new Vector2(96, -96);
             _serveShaker = NewRect("Shaker", _serveSurface);
             _serveShaker.pivot = new Vector2(0.5f, 0.22f);
             _serveShaker.sizeDelta = new Vector2(146, ServeVesselH);

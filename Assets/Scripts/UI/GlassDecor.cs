@@ -18,19 +18,23 @@ namespace LastCall.UI
     /// rebuilds only when the preparation set changes, and otherwise just keeps the ice on
     /// the (moving) surface.
     ///
-    /// Mint and olive floats are NOT here yet, on purpose: their only art is the shelf jars,
-    /// and a jar in a drink is worse than nothing. They need their own sprig/spear pieces.
+    /// Mint and olive float too (2026-08-03): they finally have their own pieces —
+    /// <c>garnish_mint</c>, a sprig, and <c>garnish_olive</c>, a spear — so a drink with a
+    /// garnish poured into it stops looking identical to one without. They are INGREDIENTS,
+    /// not preparations, so the caller hands over the run and the styles are read off the
+    /// shelf cards behind the glass's ingredient ids.
     /// </summary>
     public sealed class GlassDecor : MonoBehaviour
     {
         private GlassArt.Piece _piece;
         private string _signature = "";
-        private RectTransform _ice1, _ice2;
+        private RectTransform _ice1, _ice2, _mint, _olive;
         private static Sprite _saltBand, _sugarBand;
 
         /// <summary>Finds or adds the decor layer on <paramref name="glassRect"/> and brings it
         /// up to date with what is actually on <paramref name="glass"/>.</summary>
-        public static void Sync(RectTransform glassRect, GlassArt.Piece piece, GlassContents glass)
+        public static void Sync(RectTransform glassRect, GlassArt.Piece piece, GlassContents glass,
+                                TycoonRun run = null)
         {
             var t = glassRect.Find("Decor");
             GlassDecor decor;
@@ -45,29 +49,41 @@ namespace LastCall.UI
             }
             else decor = t.GetComponent<GlassDecor>();
             decor.transform.SetAsLastSibling();   // crust and wedge draw over the glass walls
-            decor.Refresh(piece, glass);
+            decor.Refresh(piece, glass, run);
         }
 
-        private void Refresh(GlassArt.Piece piece, GlassContents glass)
+        private void Refresh(GlassArt.Piece piece, GlassContents glass, TycoonRun run)
         {
             _piece = piece;
+            bool mint = false, olive = false;
+            if (glass != null && run != null)
+            {
+                foreach (var id in glass.Ingredients)
+                {
+                    string style = run.Shelf.Find(id)?.Ingredient?.Info?.Style;
+                    mint |= style == "mint";
+                    olive |= style == "olive";
+                }
+            }
             var sig = new StringBuilder();
             if (glass != null)
                 foreach (var prep in glass.PreparationSteps) sig.Append(prep.Id).Append(';');
+            if (mint) sig.Append("m;");
+            if (olive) sig.Append("o;");
             string signature = sig.ToString();
             if (signature != _signature)
             {
                 _signature = signature;
-                Rebuild(glass);
+                Rebuild(glass, mint, olive);
             }
-            PlaceIce(glass);
+            PlaceFloats(glass);
         }
 
-        private void Rebuild(GlassContents glass)
+        private void Rebuild(GlassContents glass, bool mint, bool olive)
         {
             for (int i = transform.childCount - 1; i >= 0; i--)
                 Destroy(transform.GetChild(i).gameObject);
-            _ice1 = _ice2 = null;
+            _ice1 = _ice2 = _mint = _olive = null;
             if (glass == null) return;
 
             var rect = ((RectTransform)transform).rect;
@@ -101,6 +117,22 @@ namespace LastCall.UI
                 _ice1 = IceCube("Ice1", 20f, -10f);
                 _ice2 = IceCube("Ice2", 16f, 12f);
             }
+
+            // The garnish floats. The sprig stands proud of the surface; the spear leans,
+            // olives half under. Both ride the fill in PlaceFloats, exactly as the ice does.
+            if (mint) _mint = Float("Mint", "garnish_mint", new Vector2(26f, 27f), -14f, -8f);
+            if (olive) _olive = Float("Olive", "garnish_olive", new Vector2(30f, 31f), 10f, 34f);
+        }
+
+        private RectTransform Float(string name, string art, Vector2 size, float x, float lean)
+        {
+            var piece = NewChild(name, size, new Vector2(x, 0));
+            var img = piece.gameObject.AddComponent<Image>();
+            img.sprite = ItemArt.Load(art);
+            img.preserveAspect = true; img.raycastTarget = false;
+            if (img.sprite == null) img.color = UITheme.Lime[3];
+            piece.localRotation = Quaternion.Euler(0, 0, lean);
+            return piece;
         }
 
         private RectTransform IceCube(string name, float size, float x)
@@ -119,15 +151,21 @@ namespace LastCall.UI
             return cube;
         }
 
-        /// <summary>Ice floats AT the liquid line, so it rides the fill as the drink pours.</summary>
-        private void PlaceIce(GlassContents glass)
+        /// <summary>Everything that floats sits AT the liquid line and rides the fill as the
+        /// drink pours — the ice cubes, the sprig, the spear.</summary>
+        private void PlaceFloats(GlassContents glass)
         {
-            if (_ice1 == null || glass == null) return;
+            if (glass == null) return;
             var rect = ((RectTransform)transform).rect;
             float surface = _piece.FillAmount((float)glass.FillFraction);
             float y = (surface - 0.5f) * rect.height;
-            _ice1.anchoredPosition = new Vector2(_ice1.anchoredPosition.x, y - 6f);
-            _ice2.anchoredPosition = new Vector2(_ice2.anchoredPosition.x, y - 11f);
+            if (_ice1 != null)
+            {
+                _ice1.anchoredPosition = new Vector2(_ice1.anchoredPosition.x, y - 6f);
+                _ice2.anchoredPosition = new Vector2(_ice2.anchoredPosition.x, y - 11f);
+            }
+            if (_mint != null) _mint.anchoredPosition = new Vector2(_mint.anchoredPosition.x, y + 4f);
+            if (_olive != null) _olive.anchoredPosition = new Vector2(_olive.anchoredPosition.x, y - 8f);
         }
 
         private RectTransform NewChild(string name, Vector2 size, Vector2 pos)
