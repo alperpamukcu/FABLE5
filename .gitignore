@@ -114,3 +114,5 @@ Tools/AssetPipeline/staging/
 Tools/AssetPipeline/generation_log.jsonl
 /[Aa]ssets/_Recovery*
 dev/
+
+__pycache__/
