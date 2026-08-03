@@ -1201,8 +1201,21 @@ namespace LastCall.Core
                 ? BarRating.HighRollerStars
                 : Rating.LastNight;
             double standing = (crowdStars - 1.0) / 4.0;
+            // Everything the night was made of, written down with it. The run has always known
+            // all of this at this exact moment and the book kept none of it, so a closed day
+            // could only say that it made or lost money — never which half of the bar did it.
+            int served = 0, walked = 0;
+            foreach (var visit in Floor.Finished)
+                if (visit.State == VisitState.StormedOff) walked++; else served++;
             var result = Ledger.CloseDay(Day, DayIncome, DayExpenses, standing,
-                tillAfter: Money);
+                tillAfter: Money,
+                detail: new DayDetail
+                {
+                    Sales = DaySales, Tips = DayTips,
+                    Rent = DayRent, Stock = DayStock, Upgrades = DayUpgrades,
+                    Served = served, WalkedOut = walked,
+                    NightStars = Rating.LastNight,
+                });
 
             if (Ledger.IsBankrupt)
             {

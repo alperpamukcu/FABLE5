@@ -122,6 +122,10 @@ namespace LastCall.UI
         private RectTransform _binProp;
         private Image _binImage;
 
+        /// <summary>How big the bin is drawn. The art is 166×190, so this is 1.9× on both axes
+        /// — one scale, because a bin squeezed on one axis stops being a cylinder.</summary>
+        private const float BinW = 316f, BinH = 361f;
+
         private RectTransform _drinkGlass;
         private Image _drinkGlassLiquid;
         private Image _drinkGlassArt;
@@ -739,12 +743,23 @@ namespace LastCall.UI
             // before the glass so the carried drink passes over it rather than under it.
             _binProp = NewRect("Bin", root);
             _binProp.anchorMin = _binProp.anchorMax = _binProp.pivot = new Vector2(1f, 0f);
-            // The clean can (the author, 2026-08-02: the bagged one read as filth): a
-            // chrome pedal bin with a magenta neon edge, standing HALF out of frame.
-            _binProp.sizeDelta = new Vector2(150, 270);
-            _binProp.anchoredPosition = new Vector2(72, 2);
+            // An OPEN bin, cut in half by the bottom edge (the author, 2026-08-04).
+            //
+            // The bagged sack read as filth and was replaced 2026-08-02 by a chrome pedal bin;
+            // the pedal bin's problem is what it shows once it is cropped. Standing half out of
+            // frame, the half that survived was the domed LID — a closed shape, and the one part
+            // of a bin a glass cannot be aimed at. The new one is an open stainless well, so the
+            // half above the cut is its MOUTH: the dark oval you carry the glass to, which is
+            // the whole verb of the prop.
+            //
+            // Half BELOW the screen, not half past the right edge: the bottom of the rect sits
+            // one half-height under the frame, so the cut runs horizontally through the bin's
+            // waist and its two banding hoops read as the last thing before the floor.
+            _binProp.sizeDelta = new Vector2(BinW, BinH);
+            _binProp.anchoredPosition = new Vector2(-8f, -BinH * 0.5f);
             _binImage = _binProp.gameObject.AddComponent<Image>();
-            _binImage.sprite = ItemArt.Load("bin_clean");
+            _binImage.sprite = ItemArt.Load("bin_well");
+            if (_binImage.sprite == null) _binImage.sprite = ItemArt.Load("bin_clean");
             if (_binImage.sprite == null) _binImage.sprite = ItemArt.Load("bin_prop");
             _binImage.preserveAspect = true;
             _binImage.raycastTarget = false;
@@ -1049,10 +1064,17 @@ namespace LastCall.UI
         /// <summary>The under-counter glass rack (the author, 2026-08-02): every glass line
         /// the bar owns, standing on a walnut strip at its CURRENT tier — buy a step and
         /// the glass on the shelf is the finer one. Sits left of the bin, clear of MENU.</summary>
-        // Where the glasses stand: the bar-front's own COMPARTMENTS (the author): five
-        // cells across the painted front, three left of the MENU key, two right of it,
-        // clear of the bin in the corner.
-        private static readonly float[] GlassRackSlots = { -600f, -480f, -360f, 360f, 480f };
+        // Where the glasses stand: the bar-front's own COMPARTMENTS (the author). It used to
+        // be three cells left of the MENU key and two right of it — but the right-hand pair
+        // stood exactly where the bin now sits (2026-08-04), and a rack you cannot see is not
+        // a rack. All five moved to the run of cells left of the key, spaced 80 apart, which
+        // is wider than the broadest glass the set has (the rocks tumbler at 69). The corner
+        // belongs to the bin.
+        private static readonly float[] GlassRackSlots = { -600f, -520f, -440f, -360f, -280f };
+
+        /// <summary>How tall a glass on the rack is drawn. Down from 92 with the move: five in
+        /// a row need to be narrow enough that 80 apart is clear air, not a near-miss.</summary>
+        private const float RackGlassH = 84f;
 
         private void RefreshGlassRack(TycoonRun run)
         {
@@ -1086,7 +1108,7 @@ namespace LastCall.UI
                 var rt = NewRect($"G_{g.Id}", _glassRack);
                 rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0);
                 rt.pivot = new Vector2(0.5f, 0);
-                float h = 92f;
+                float h = RackGlassH;
                 rt.sizeDelta = new Vector2(h * piece.Aspect, h);
                 rt.anchoredPosition = new Vector2(x, 8);
                 var img = rt.gameObject.AddComponent<Image>();
@@ -3113,14 +3135,16 @@ namespace LastCall.UI
             // Catch clicks so the world behind the book stays untouched.
             panelImg.raycastTarget = true;
 
-            var title = NewText("Title", _ledgerPanel, _display, 15, TextAnchor.MiddleCenter, UITheme.PrimaryAction);
+            var title = NewText("Title", _ledgerPanel, _display, 16, TextAnchor.MiddleCenter, UITheme.PrimaryAction);
             Stretch(title.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -44), new Vector2(0, -10));
             title.text = "THE REGISTER — DAYS PAST";
 
-            // Column header, then the rows on cream stock beneath it.
-            var header = NewText("Header", _ledgerPanel, _body, 12, TextAnchor.UpperLeft, UITheme.TextSecondary);
+            // Column header, then the rows on cream stock beneath it. The header names the
+            // TOP line of each entry; every entry now carries a second and third line under
+            // it, which no fixed column head could describe.
+            var header = NewText("Header", _ledgerPanel, _body, 8, TextAnchor.UpperLeft, UITheme.TextSecondary);
             Place(header.rectTransform, new Vector2(0, 1), new Vector2(504, 20), new Vector2(28, -52));
-            header.text = "DAY      INCOME     EXPENSES     NET      MOOD";
+            header.text = "DAY        TOOK        PAID OUT         NET        TILL";
 
             var sheet = NewRect("Sheet", _ledgerPanel);
             Place(sheet, new Vector2(0.5f, 1), new Vector2(508, 424), new Vector2(0, -76));
@@ -3167,16 +3191,69 @@ namespace LastCall.UI
             }
 
             // Newest day on top: the last thing you did is the first thing you read.
+            //
+            // Three lines a night, not one. The top line is the money as it was — what came in,
+            // what went out, the net and the till it left behind. Under it the income is split
+            // into what was CHARGED and what was TIPPED, and the outgoings into rent, stock and
+            // fittings, because "you lost $180" and "the rent was fine, you spent $210 stocking
+            // the shelf" are different nights and only the second one can be played differently.
+            // The last line is the room: who drank, who left without a drink, and what the night
+            // itself was worth in stars before the standing averaged it away.
             for (int i = history.Count - 1; i >= 0; i--)
             {
                 var d = history[i];
-                var row = NewText($"Day{d.Day}", _ledgerRows, _body, 14, TextAnchor.UpperLeft,
-                    d.Net < 0 ? UITheme.ViceRed[3] : UITheme.Night[1]);
-                row.rectTransform.sizeDelta = new Vector2(0, 24);
-                row.supportRichText = true;
-                string net = d.Net < 0 ? $"-${-d.Net}" : $"+${d.Net}";
-                row.text = $"Day {d.Day,-3}   ${d.Income,-6}   ${d.Expenses,-6}   {net,-6}   {MoodLabel(d.AverageSatisfaction)}";
+                bool red = d.Net < 0;
+                var head = NewText($"Day{d.Day}", _ledgerRows, _body, 12, TextAnchor.UpperLeft,
+                    red ? UITheme.ViceRed[3] : UITheme.Night[1]);
+                head.rectTransform.sizeDelta = new Vector2(0, 20);
+                head.supportRichText = true;
+                string net = red ? $"-${-d.Net}" : $"+${d.Net}";
+                string till = d.HasDetail
+                    ? (d.TillAfter < 0 ? $"-${-d.TillAfter}" : $"${d.TillAfter}") : "";
+                head.text = $"DAY {d.Day,-3}   ${d.Income,-7} ${d.Expenses,-8} {net,-8} {till}";
+
+                if (!d.HasDetail)
+                {
+                    // A day booked before the book kept its detail. Say so rather than
+                    // printing zeroes that would read as a night where nothing happened.
+                    var bare = NewText($"Day{d.Day}Bare", _ledgerRows, _body, 8, TextAnchor.UpperLeft,
+                        UITheme.Cream[1]);
+                    bare.rectTransform.sizeDelta = new Vector2(0, 16);
+                    bare.text = $"        {MoodLabel(d.AverageSatisfaction)} night · no breakdown kept";
+                    Spacer(12);
+                    continue;
+                }
+
+                var money = NewText($"Day{d.Day}Money", _ledgerRows, _body, 8, TextAnchor.UpperLeft,
+                    UITheme.Cream[1]);
+                money.rectTransform.sizeDelta = new Vector2(0, 16);
+                money.supportRichText = true;
+                var outgoings = new List<string>();
+                if (d.Rent > 0) outgoings.Add($"rent ${d.Rent}");
+                if (d.Stock > 0) outgoings.Add($"stock ${d.Stock}");
+                if (d.Upgrades > 0) outgoings.Add($"fittings ${d.Upgrades}");
+                money.text = $"        drinks ${d.Sales} · tips ${d.Tips}"
+                           + (outgoings.Count > 0 ? "   —   " + string.Join(" · ", outgoings) : "");
+
+                var room = NewText($"Day{d.Day}Room", _ledgerRows, _body, 8, TextAnchor.UpperLeft,
+                    d.WalkedOut > 0 ? UITheme.ViceRed[2] : UITheme.Cream[1]);
+                room.rectTransform.sizeDelta = new Vector2(0, 16);
+                room.supportRichText = true;
+                string walked = d.WalkedOut > 0
+                    ? $" · {d.WalkedOut} left without one" : " · nobody left thirsty";
+                room.text = $"        {d.Served} served{walked} · {d.NightStars:0.0}★ on the night"
+                          + $" · {MoodLabel(d.AverageSatisfaction)}";
+
+                Spacer(12);
             }
+        }
+
+        /// <summary>A blank row between ledger entries — three lines a night need the air, or
+        /// the book reads as one wall of numbers.</summary>
+        private void Spacer(float height)
+        {
+            var gap = NewRect("Gap", _ledgerRows);
+            gap.sizeDelta = new Vector2(0, height);
         }
 
         private static string MoodLabel(double satisfaction) =>
