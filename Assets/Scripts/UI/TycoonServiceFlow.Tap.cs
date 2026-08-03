@@ -382,7 +382,12 @@ namespace LastCall.UI
                 _kegLabel.color = new Color(ink.r * 0.35f, ink.g * 0.35f, ink.b * 0.35f, 1f);
             }
 
+            // Beer obeys the same depth law as every other drink. It used to come straight out
+            // of the colour table, whose entries carry alpha 1 — so a pint was clamped to 0.97
+            // and was the most opaque liquid in the game, on the one drink whose craft the
+            // player is being graded on.
             var beer = UITheme.LiquidColor(_tapKegCard?.Info?.Style, IngredientType.Beer);
+            beer.a = UITheme.DrinkAlpha(run.ServingGlass.FillFraction);
             _tapFluid.SetColor(beer);
             // Beer falling from the faucet is the same beer; the stream colour is set anyway so
             // the tap never inherits whichever drink the material was last handed.
@@ -504,6 +509,13 @@ namespace LastCall.UI
                 float headFrac = (float)(glass.Head / glass.Capacity);
                 _tapFluid.SetPool(centre.x - iw, centre.x + iw,
                     centre.y - innerH * 0.5f, centre.y + innerH * 0.5f, beerFrac, rad, headFrac);
+                // The beer deepens as the pint fills, like every other drink. RefreshTap sets
+                // the colour once on the way in, when the glass is empty and the depth law
+                // reads its thinnest — so without this a pulled pint would stay as pale as an
+                // empty one all the way to the brim.
+                var beer = UITheme.LiquidColor(_tapKegCard?.Info?.Style, IngredientType.Beer);
+                beer.a = UITheme.DrinkAlpha(glass.FillFraction);
+                _tapFluid.SetColor(beer);
             }
         }
 

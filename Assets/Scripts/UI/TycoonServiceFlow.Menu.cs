@@ -335,7 +335,7 @@ namespace LastCall.UI
                         : (b.IsEmpty ? new Color(1f, 1f, 1f, 0.30f) : Color.white);
                     var sl = BottleArt.AddLiquid(slot, b.Ingredient);
                     if (sl != null)
-                        sl.fillAmount = BottleArt.For(b.Ingredient).FillAmount(
+                        BottleArt.SetLevel(sl, b.Ingredient, open: false,
                             b.Capacity > 0 ? (float)(b.Remaining / b.Capacity) : 0f);
                 }
             }

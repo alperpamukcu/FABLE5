@@ -212,8 +212,17 @@ namespace LastCall.UI
             get { foreach (var b in _bodies) if (b.Active) return true; return false; }
         }
 
-        /// <summary>Drops a piece in above the drink with a little sideways toss.</summary>
-        public void Add(Vector2 pos, Color color, float size)
+        /// <summary>
+        /// Drops a piece in above the drink with a little sideways toss.
+        ///
+        /// <paramref name="sprite"/> is what the piece IS — a cube of ice, a twist of lemon.
+        /// Without it every piece landed as an untextured square, and since the drag layer
+        /// tints its image white whenever the real art loaded, the colour argument carried no
+        /// information either: ice, lemon, salt and sugar all fell into the tin as identical
+        /// white blocks differing only in size. The colour stays for the sprite-less fallback,
+        /// which is the only case it was ever right for.
+        /// </summary>
+        public void Add(Vector2 pos, Color color, float size, Sprite sprite = null)
         {
             var b = GetFree();
             b.Pos = pos;
@@ -221,6 +230,9 @@ namespace LastCall.UI
             b.Size = size;
             b.Color = color;
             b.Rt.sizeDelta = new Vector2(size, size);
+            // Bodies are pooled, so the sprite must be cleared as deliberately as it is set.
+            b.Img.sprite = sprite;
+            b.Img.preserveAspect = sprite != null;
             b.Img.color = color;
             b.Rt.localRotation = Quaternion.Euler(0, 0, Random.Range(0f, 360f));
             b.Spin = Random.Range(-140f, 140f);

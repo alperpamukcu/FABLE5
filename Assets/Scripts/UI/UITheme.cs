@@ -99,37 +99,64 @@ namespace LastCall.UI
         // gin and soda are near-clear, and pouring them as saturated blue/green made every
         // mix read wrong. These are the colours the *liquid* actually is; clear spirits are
         // barely tinted, the rest carry their true tone. Mixed gamma-correctly in BlendLiquid.
+        // ── the table, rewritten 2026-08-04 ────────────────────────────────────────
+        //
+        // These are TRANSMISSION colours, not reflection colours. They are drawn at 0.52-0.86
+        // alpha over a dark bar with light behind them, so what each one has to be is the
+        // colour that gets THROUGH the drink — not the colour a bottle shows on a shelf. That
+        // single shift is what fixes the dark end: cola, coffee liqueur and amaro were painted
+        // as they look on a shelf, so at a splash they composited to within a few units of the
+        // background and read as holes in the glass rather than as drinks.
+        //
+        // Separation is by VALUE first and hue second, because at 40px through semi-
+        // transparency hue collapses and value survives. The warm family is an explicit ladder
+        // — ginger, lager, orange, pale ale, rum, bourbon, cranberry, amaro, cola, vermouth,
+        // grenadine, coffee, stout — and hue only splits same-value pairs (vermouth's plum
+        // against cola's russet, pineapple's gold against energy's chartreuse). Where the old
+        // table had four bottles inside one narrow amber band and two identical reds, no two
+        // neighbours now share both axes.
+        //
+        // The near-clears stay near-clear and are allowed to converge, because they genuinely
+        // do — a vodka and a soda in a glass ARE the same picture, and the gauge names them in
+        // words. They start faintly WARM so VisibleLiquid's cool cast lands them neutral
+        // instead of blue, which is what made a vodka read as a blue drink.
+        //
+        // What was most wrong, and why it mattered: syrup was #E36FA0, the shelf tag's
+        // bubblegum pink leaking into the liquid table, and since syrup is in most of the
+        // sours it was dragging a third of the menu pink (it is the bottle in the author's
+        // screenshot). Simple syrup is clear-to-honey: it adds thickness, not colour.
         private static readonly Dictionary<string, Color> LiquidColors = new Dictionary<string, Color>
         {
-            ["vodka"]    = (Color)new Color32(0xE9, 0xEE, 0xF6, 0xFF),   // clear, a whisper of blue
-            ["gin"]      = (Color)new Color32(0xEA, 0xF2, 0xE9, 0xFF),   // clear, a whisper of green
-            ["soda"]     = (Color)new Color32(0xE6, 0xF2, 0xF3, 0xFF),   // clear fizz
-            ["rum"]      = (Color)new Color32(0xC6, 0x7F, 0x35, 0xFF),   // golden amber
-            ["bourbon"]  = (Color)new Color32(0xB0, 0x6A, 0x22, 0xFF),   // amber
-            ["amaro"]    = (Color)new Color32(0x7A, 0x2C, 0x2A, 0xFF),   // dark red-brown
-            ["vermouth"] = (Color)new Color32(0xA9, 0x4E, 0x5C, 0xFF),   // rosé
-            ["syrup"]    = (Color)new Color32(0xE3, 0x6F, 0xA0, 0xFF),   // pink
-            ["lemon"]    = (Color)new Color32(0xED, 0xD8, 0x66, 0xFF),   // pale citrus
-            ["ginger"]   = (Color)new Color32(0xD3, 0x92, 0x3C, 0xFF),   // golden
-            ["mint"]     = (Color)new Color32(0xA6, 0xDE, 0x80, 0xFF),   // pale green
-            ["olive"]    = (Color)new Color32(0xB7, 0xBE, 0x6A, 0xFF),   // brine
-            ["lager"]    = (Color)new Color32(0xE8, 0xB0, 0x3E, 0xFF),   // pale gold
-            ["stout"]    = (Color)new Color32(0x2A, 0x18, 0x10, 0xFF),   // near black
-            ["pale_ale"] = (Color)new Color32(0xD4, 0x82, 0x24, 0xFF),   // deep copper
-            // v5 P10's seven. Tequila and triple sec are clear in the glass whatever their
-            // shelf tag says; the mixers carry the colour that actually survives a pour.
-            ["tequila"]    = (Color)new Color32(0xEC, 0xF0, 0xDE, 0xFF), // clear, faintly green
-            ["triple_sec"] = (Color)new Color32(0xF2, 0xEE, 0xE2, 0xFF), // clear
-            ["cola"]       = (Color)new Color32(0x4A, 0x24, 0x14, 0xFF), // dark caramel
-            ["tonic"]      = (Color)new Color32(0xE4, 0xF1, 0xF6, 0xFF), // clear, a whisper of blue
-            ["energy"]     = (Color)new Color32(0xE7, 0xD8, 0x4A, 0xFF), // acid yellow
-            ["orange"]     = (Color)new Color32(0xF2, 0x8E, 0x22, 0xFF), // juice, pulp and all
-            ["lime"]       = (Color)new Color32(0xCD, 0xE0, 0x72, 0xFF), // pale green-yellow
-            // The P16 wave (2026-07-31): the four bottles the new classics need.
-            ["cranberry"]      = (Color)new Color32(0xB4, 0x2C, 0x48, 0xFF), // deep tart red
-            ["coffee_liqueur"] = (Color)new Color32(0x38, 0x22, 0x18, 0xFF), // near-black coffee
-            ["pineapple"]      = (Color)new Color32(0xEF, 0xD4, 0x52, 0xFF), // pressed sunshine
-            ["grenadine"]      = (Color)new Color32(0xC8, 0x1E, 0x3C, 0xFF), // pomegranate ruby
+            // clear spirits and mixers — near-white, each with a whisper of its own hue
+            ["vodka"]      = (Color)new Color32(0xF1, 0xEF, 0xEA, 0xFF), // water; the zero point
+            ["soda"]       = (Color)new Color32(0xE9, 0xF2, 0xF4, 0xFF), // aerated water, a shade cooler
+            ["tonic"]      = (Color)new Color32(0xD8, 0xEA, 0xFA, 0xFF), // quinine really does glow cold
+            ["gin"]        = (Color)new Color32(0xDC, 0xEE, 0xD4, 0xFF), // juniper's faint green
+            ["tequila"]    = (Color)new Color32(0xE3, 0xEA, 0xBE, 0xFF), // blanco's agave straw
+            ["triple_sec"] = (Color)new Color32(0xF6, 0xE0, 0xAA, 0xFF), // orange peel, the warm clear
+            ["syrup"]      = (Color)new Color32(0xF0, 0xDF, 0xA8, 0xFF), // 2:1 bar syrup: pale honey
+            // the yellows and greens, pushed apart — three of these used to be one colour
+            ["lemon"]      = (Color)new Color32(0xED, 0xE8, 0x8A, 0xFF), // cloudy, green-leaning
+            ["pineapple"]  = (Color)new Color32(0xF4, 0xD0, 0x50, 0xFF), // pressed, warm and rich
+            ["energy"]     = (Color)new Color32(0xCD, 0xE4, 0x36, 0xFF), // nothing in nature is this
+            ["lime"]       = (Color)new Color32(0xBF, 0xD6, 0x6A, 0xFF), // cordial-cloudy, a step down
+            ["mint"]       = (Color)new Color32(0x93, 0xD1, 0x68, 0xFF), // a true leaf green
+            ["olive"]      = (Color)new Color32(0xA8, 0xAE, 0x64, 0xFF), // brine: murky salt water
+            // the ambers, spaced by value so the four of them stop being one band
+            ["ginger"]     = (Color)new Color32(0xE2, 0xBE, 0x72, 0xFF), // ginger beer is hazy straw
+            ["lager"]      = (Color)new Color32(0xE7, 0xAF, 0x3C, 0xFF), // clear golden straw
+            ["orange"]     = (Color)new Color32(0xF6, 0x9B, 0x26, 0xFF), // pulp and all
+            ["pale_ale"]   = (Color)new Color32(0xD1, 0x85, 0x25, 0xFF), // copper, darker than lager
+            ["rum"]        = (Color)new Color32(0xCA, 0x82, 0x32, 0xFF), // gold rum's honey amber
+            ["bourbon"]    = (Color)new Color32(0xB3, 0x5F, 0x21, 0xFF), // barrel: darker and redder
+            // the reds and the darks, lifted to their BACKLIT values
+            ["cranberry"]  = (Color)new Color32(0xCF, 0x31, 0x59, 0xFF), // jewel crimson, glows lit
+            ["amaro"]      = (Color)new Color32(0xCA, 0x34, 0x26, 0xFF), // aperitivo scarlet, not oxblood
+            ["vermouth"]   = (Color)new Color32(0x92, 0x30, 0x33, 0xFF), // rosso: mahogany, not rosé
+            ["grenadine"]  = (Color)new Color32(0xA9, 0x12, 0x34, 0xFF), // a syrup: must SINK through juice
+            ["cola"]       = (Color)new Color32(0x86, 0x37, 0x15, 0xFF), // held to the light it is russet
+            ["coffee_liqueur"] = (Color)new Color32(0x5B, 0x2E, 0x17, 0xFF), // treacle mocha
+            ["stout"]      = (Color)new Color32(0x4C, 0x23, 0x14, 0xFF), // the floor; its head is the contrast
         };
 
         /// <summary>The head on a draught (GDD 21 §10). Off-white, and creamier on the dark
@@ -178,12 +205,24 @@ namespace LastCall.UI
         public static float DrinkAlpha(double fillFraction) =>
             Mathf.Lerp(ThinDrink, DeepDrink, Mathf.Sqrt(Mathf.Clamp01((float)fillFraction)));
 
+        /// <summary>
+        /// What an EMPTY vessel's liquid is. It has to be something — callers tint sprites and
+        /// materials with it unconditionally — but it must not be the most solid value in the
+        /// game, which is exactly what it was: Cream[3] came straight out of the palette with
+        /// alpha 1, skipping <see cref="DrinkAlpha"/> entirely and landing at the fluid's 0.97
+        /// ceiling. A tin that read empty was drawn more opaque than a brimful real drink, so
+        /// the one frame where a stale colour survived looked like a slab of paint rather than
+        /// like nothing (the author's House Syrup screenshot, 2026-08-03).
+        /// </summary>
+        public static Color Nothing =>
+            new Color(Cream[3].r, Cream[3].g, Cream[3].b, 0.10f);
+
         /// <summary>THE drink's colour — one function for every scene (the author,
         /// 2026-08-02: the liquid on the counter and the liquid being poured must read
         /// as the same liquid). Ingredients' true liquid colours, blended by share.</summary>
         public static Color DrinkColor(Shelf shelf, GlassContents glass)
         {
-            if (glass == null || glass.IsEmpty) return Cream[3];
+            if (glass == null || glass.IsEmpty) return Nothing;
             var parts = new System.Collections.Generic.List<(string, IngredientType, float)>();
             foreach (var id in glass.Ingredients)
             {
@@ -191,7 +230,7 @@ namespace LastCall.UI
                 parts.Add((card?.Info?.Style, card?.Type ?? IngredientType.Spirit,
                     (float)glass.RatioOf(id)));
             }
-            return BlendLiquid(parts, Cream[3], DrinkAlpha(glass.FillFraction));
+            return BlendLiquid(parts, Nothing, DrinkAlpha(glass.FillFraction));
         }
 
         public static Color VisibleLiquid(Color c)
@@ -210,23 +249,68 @@ namespace LastCall.UI
             VisibleLiquid(style != null && LiquidColors.TryGetValue(style, out var c)
                 ? c : TypeRamp[fallbackType][3]);
 
-        /// <summary>Blends the poured ingredients into one liquid colour, weighted by share and
-        /// mixed in LINEAR space so a two-part drink reads bright and clean instead of the muddy
-        /// mid-grey a straight sRGB average produces (2026-07-23).</summary>
+        /// <summary>
+        /// How much COLOUR a liquid actually carries — its pigment, as opposed to its share.
+        ///
+        /// A clear spirit is not white paint; it is a filter that passes nearly everything
+        /// through. Averaging it into a mix as if it were pigment is what made a Black Russian
+        /// compute to a pale blue-grey and a rum-and-coke to a mid grey: the vodka's near-white
+        /// was outvoting the coffee liqueur's brown, when physically it should only have
+        /// diluted it. Distance from white, taken as the larger of "how dark" and "how
+        /// chromatic", so a bright orange juice counts as fully pigmented while a bright vodka
+        /// counts as almost nothing.
+        /// </summary>
+        private static float Pigment(Color c)
+        {
+            float luma = 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
+            float chroma = Mathf.Max(c.r, Mathf.Max(c.g, c.b)) - Mathf.Min(c.r, Mathf.Min(c.g, c.b));
+            return Mathf.Clamp01(Mathf.Max(1f - luma, chroma));
+        }
+
+        /// <summary>Blends the poured ingredients into one liquid colour, weighted by share AND
+        /// by pigment (see <see cref="Pigment"/>), and mixed in LINEAR space so a two-part drink
+        /// reads bright and clean instead of the muddy mid-grey a straight sRGB average
+        /// produces (2026-07-23).</summary>
         public static Color BlendLiquid(IEnumerable<(string style, IngredientType type, float weight)> parts,
             Color empty, float alpha)
         {
             float r = 0, g = 0, b = 0, tot = 0;
+            // A first pass in plain shares, kept as the answer for a glass holding nothing but
+            // clear spirits — there the pigment weights all collapse toward zero and the ratio
+            // between them stops meaning anything, so the honest answer is the plain average,
+            // which for a glass of clear drinks is correctly near-clear.
+            float pr = 0, pg = 0, pb = 0, ptot = 0;
             foreach (var (style, type, weight) in parts)
             {
                 if (weight <= 0) continue;
-                Color lin = LiquidColor(style, type).linear;
-                r += lin.r * weight; g += lin.g * weight; b += lin.b * weight; tot += weight;
+                Color srgb = LiquidColor(style, type);
+                Color lin = srgb.linear;
+                float w = weight * Pigment(srgb);
+                r += lin.r * w; g += lin.g * w; b += lin.b * w; tot += w;
+                pr += lin.r * weight; pg += lin.g * weight; pb += lin.b * weight; ptot += weight;
             }
-            if (tot <= 0) return empty;
+            if (tot <= 0.004f && ptot > 0)
+            {
+                var clear = new Color(pr / ptot, pg / ptot, pb / ptot, 1f).gamma;
+                return new Color(clear.r, clear.g, clear.b, alpha);
+            }
+            // The empty path honours the caller's alpha too. It used to return the sentinel
+            // untouched, which meant this one exit opted out of the transparency law every
+            // other exit obeys — and since the sentinel came from the palette at alpha 1, the
+            // "no drink" case was drawn more solidly than any drink.
+            if (tot <= 0) return new Color(empty.r, empty.g, empty.b, Mathf.Min(empty.a, alpha));
             var mixed = new Color(r / tot, g / tot, b / tot, 1f).gamma;
             return new Color(mixed.r, mixed.g, mixed.b, alpha);
         }
+
+        /// <summary>
+        /// Ink that can be read on a given fill. Both pour gauges printed their percentages in
+        /// Night[0] on a segment filled with the drink's own colour, which is right for the
+        /// pale drinks and invisible on stout, coffee liqueur, cola and amaro — and the gauge
+        /// is the stage's load-bearing readout, the number the recipe bands are graded on.
+        /// </summary>
+        public static Color InkOn(Color fill) =>
+            0.2126f * fill.r + 0.7152f * fill.g + 0.0722f * fill.b > 0.45f ? Night[0] : Cream[4];
 
         /// <summary>Body/fill colour for an ingredient type (ramp step 3).</summary>
         public static Color TypeFill(IngredientType t) => TypeRamp[t][3];

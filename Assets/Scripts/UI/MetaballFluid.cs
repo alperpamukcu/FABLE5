@@ -363,7 +363,13 @@ namespace LastCall.UI
         {
             if (_material == null) return;
             c.a = Mathf.Clamp(c.a, AlphaFloor, AlphaCeiling);
+            _bodyAlpha = c.a;
             _material.SetColor(IdColor, c);
+            // A stream nobody has named is the drink itself — a splash struck off a settled
+            // pool, or the tail of a pour that has stopped. Without this the last thing poured
+            // kept the slot, so vodka drops still in the air turned amaro-red the instant a
+            // different bottle was tipped, and a splash wore whichever drink was poured last.
+            if (!_streamNamed) _material.SetColor(IdStreamColor, c);
         }
 
         /// <summary>The colour of what is being POURED — the stream in the air, before it
@@ -373,14 +379,34 @@ namespace LastCall.UI
         public void SetStreamColor(Color c)
         {
             if (_material == null) return;
-            c.a = Mathf.Clamp(c.a, AlphaFloor, AlphaCeiling);
+            // The stream takes the BODY's alpha, never its own source table's. The callers
+            // reach for two different tables — LiquidColor carries 1.0 from a Color32, while
+            // DrinkColor carries the fill-derived alpha — so a bottle stream was landing at
+            // 0.53 against a body that could be as thin as 0.52, and _StreamAlpha's whole
+            // promise ("liquid in the air is thinner than liquid at rest") held only by
+            // accident. With the alpha shared, _StreamAlpha is the one thing that thins it.
+            c.a = _bodyAlpha;
+            _streamNamed = true;
             _material.SetColor(IdStreamColor, c);
         }
 
-        private const float AlphaFloor = 0.42f, AlphaCeiling = 0.97f;
+        /// <summary>Forgets who was pouring: the stream slot goes back to following the body
+        /// (see <see cref="SetColor"/>). Called when a pour ends, so drops still in the air
+        /// belong to the drink rather than to the next bottle picked up.</summary>
+        public void ClearStreamColor() => _streamNamed = false;
 
-        /// <summary>The colour of the foam particles (GDD 21 §10). Beer and its head are one
-        /// surface; only what they are made of differs, and this is that difference.</summary>
+        private const float AlphaFloor = 0.42f, AlphaCeiling = 0.97f;
+        private float _bodyAlpha = AlphaCeiling;
+        private bool _streamNamed;
+
+        /// <summary>
+        /// The colour of the foam particles (GDD 21 §10). Beer and its head are one surface;
+        /// only what they are made of differs, and this is that difference.
+        ///
+        /// This is the ONE colour setter with no alpha clamp, and that is deliberate: a head
+        /// is a mass of bubbles with air in it, not a liquid you see through. It is the only
+        /// thing in the game the 2026-08-03 "nothing should be matte" pass is meant to skip.
+        /// </summary>
         public void SetFoamColor(Color c)
         {
             if (_material == null) return;
@@ -998,10 +1024,26 @@ namespace LastCall.UI
 
             _material.SetFloat(IdDropCount, count);
             _material.SetVectorArray(IdDrops, _dropData);
-            // Ensure the shader's rectangular pool contributes nothing (particles are the body),
-            // and push its surface line off the top so the old sheen band leaves no stray mark.
+            // The rectangular pool contributes NOTHING to the field — the particles are the
+            // body — so its width and floor stay collapsed.
             _material.SetFloat(IdPoolMinX, 0f); _material.SetFloat(IdPoolMaxX, 0f);
-            _material.SetFloat(IdPoolTopY, 2f); _material.SetFloat(IdPoolBot, 2f);
+            _material.SetFloat(IdPoolBot, 2f);
+
+            // _PoolTopY is a second thing: the shader reads it as the LIQUID LINE for the
+            // surface band and the sheen through the body. It was pinned at 2.0 — off the top
+            // of a 0..1 uv — which silently killed both terms, so the drink had no light on
+            // its surface and no wet gradient at all, while the shader's own comment promised
+            // "it reads as wet volume". That deadness is a real part of why a drink read as a
+            // flat wash. Fed from the particles' own measured surface, so the band rides the
+            // drink rather than a nominal line, and it goes off-screen again only when there
+            // is no body to light.
+            if (_poolSet && _pn >= 8)
+            {
+                float surfaceLocal = SurfaceY(float.NaN);
+                _material.SetFloat(IdPoolTopY, float.IsNaN(surfaceLocal)
+                    ? 2f : ToUv(0f, surfaceLocal).y);
+            }
+            else _material.SetFloat(IdPoolTopY, 2f);
         }
 
         public void Clear()

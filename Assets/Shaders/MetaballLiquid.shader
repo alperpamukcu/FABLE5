@@ -16,16 +16,14 @@ Shader "LastCall/MetaballLiquid"
         // two before it had touched the surface, and the average jumped as the ratio moved —
         // the mixing happened in the palette instead of in the glass.
         _StreamColor  ("Stream Color", Color) = (0.30, 0.60, 1.0, 0.95)
-        _EdgeColor    ("Edge Color",   Color) = (1.0, 1.0, 1.0, 1.0)
         _Threshold    ("Threshold",    Range(0.01, 4)) = 0.60
         _EdgeWidth    ("Edge Width",   Range(0.001, 1.0)) = 0.18
-        // How far the meniscus lifts toward _EdgeColor, and how strongly it is applied.
-        // Until 2026-08-03 the edge blended 85% of the way to PURE WHITE, which at this
-        // scale drew a one-pixel white frame around the pool, the falling stream and every
-        // single droplet (the author: "sıvıların etrafında çok küçük pixele sahip beyaz
-        // çerçeve var"). A meniscus is the drink catching the light, so it now lifts the
-        // drink's OWN colour: a rum rims amber, a curacao rims pale blue.
-        _EdgeTint     ("Edge Tint",    Range(0, 1)) = 0.30
+        // How strongly the meniscus lands. Until 2026-08-03 the edge blended 85% of the way
+        // to PURE WHITE, which at this scale drew a one-pixel white frame around the pool,
+        // the falling stream and every single droplet (the author: "sıvıların etrafında çok
+        // küçük pixele sahip beyaz çerçeve var"). A meniscus is the drink catching the
+        // light, so the rim now LIFTS the drink's own channels — a rum rims amber, a
+        // curacao rims pale blue — and there is no white to blend toward any more.
         _EdgeStrength ("Edge Strength",Range(0, 1)) = 0.55
         // How solid a FREE-FALLING drop is against the settled body. A stream in mid-air
         // has nothing behind it, where the drink in a glass is read through a translucent
@@ -104,10 +102,8 @@ Shader "LastCall/MetaballLiquid"
             fixed4 _Color;
             fixed4 _FoamColor;
             fixed4 _StreamColor;
-            fixed4 _EdgeColor;
             float  _Threshold;
             float  _EdgeWidth;
-            float  _EdgeTint;
             float  _EdgeStrength;
             float  _StreamAlpha;
             float  _Highlight;
@@ -236,13 +232,19 @@ Shader "LastCall/MetaballLiquid"
                 // How much of this pixel is foam rather than beer. Scaled well past 1 so the
                 // boundary is a short blend and not a long muddy gradient: a head has a definite
                 // underside, and a soft fade across it was most of why the foam read as a smudge.
-                float fm = saturate(dropFoam / max(dropTotal, 1e-4) * 2.2);
+                // Both shares are taken against the SAME denominator the coverage is
+                // thresholded against. They used to divide by dropTotal while `a` thresholded
+                // poolField + dropTotal; those agree only because MetaballFluid disables the
+                // rectangular pool every frame, and the day anyone revives it the stream and
+                // the foam would over-claim the pixel they land on.
+                float denom = max(field, 1e-4);
+                float fm = saturate(dropFoam / denom * 2.2);
 
                 // How much of this pixel is liquid still IN THE AIR. Where the stream owns the
                 // field it wears its own colour; where the settled body owns it, the glass's
                 // colour wins. The crossover is the field itself, so a pour mixes on the way in
                 // — no frame where the whole drink changes colour at once.
-                float st = saturate(dropStream / max(dropTotal, 1e-4));
+                float st = saturate(dropStream / denom);
 
                 fixed4 body = lerp(_Color, _FoamColor, fm);
                 body = lerp(body, _StreamColor, st * (1.0 - fm));
@@ -262,25 +264,48 @@ Shader "LastCall/MetaballLiquid"
                 // the screenshots was.
                 float rim = 1.0 - saturate((field - _Threshold) / max(_EdgeWidth, 1e-4));
                 rim = pow(rim, 1.5);
-                fixed3 lift = lerp(body.rgb, _EdgeColor.rgb, _EdgeTint);
+                // The lift is computed FROM the body, not blended toward a fixed _EdgeColor.
+                // The 2026-08-03 pass said it did this and did not: it lerped toward
+                // _EdgeColor, whose default is pure white, and nothing in C# ever set that
+                // property — so the pale one-pixel frame survived at a fifth of its strength
+                // and the comment claiming otherwise was simply wrong. Multiplying the drink's
+                // own channels cannot produce white out of a dark drink no matter the tuning.
+                fixed3 lift = saturate(body.rgb * 1.34 + 0.045);
                 fixed4 col = body;
                 col.rgb = lerp(body.rgb, lift, rim * _EdgeStrength * (1.0 - fm * 0.75));
 
-                // A bright band riding just under the moving water line — the light on the
-                // surface — plus a soft sheen through the body so it reads as wet volume.
-                // Foam is matte and full of air: it takes almost none of that wet sheen, which is
+                // A glint riding the water line — the light on the surface — plus a soft sheen
+                // down through the body so it reads as wet volume rather than a flat wash.
+                // Foam is matte and full of air: it takes almost none of that sheen, which is
                 // most of what stops it reading as pale beer.
+                //
+                // This whole term was DEAD until 2026-08-04. Upload() pinned _PoolTopY at 2.0
+                // — off the top of a 0..1 uv — to stop the disabled rectangular pool leaving a
+                // mark, and that also parked the liquid line out of frame, so band and sheen
+                // were identically zero for every pixel of every drink ever drawn. It is fed
+                // from the particles' own measured surface now. The band is deliberately tight
+                // (one part in 64 rather than 26) and the lift is a MULTIPLY of the drink's own
+                // channels, not an add toward white: the last thing this shader needs is
+                // another pale line drawn across the top of a drink.
                 float surf = surfaceY(ruv.x);
-                float band = saturate(1.0 - abs(ruv.y - surf) * 26.0);
+                float band = saturate(1.0 - abs(ruv.y - surf) * 64.0);
                 float sheen = saturate((ruv.y - surf) * 5.0 + 0.5);
-                col.rgb += (band * 0.5 + sheen * 0.18) * _Highlight * (1.0 - fm * 0.85);
+                float wet = (band * 0.55 + sheen * 0.30) * _Highlight * (1.0 - fm * 0.85);
+                col.rgb = lerp(col.rgb, saturate(col.rgb * 1.5 + 0.03), wet);
 
                 // Liquid in the air is thinner than liquid at rest. A pixel owned entirely by
                 // free-falling drops draws at _StreamAlpha of its own alpha; as the stream
                 // lands, the settled particles take over the field and it fills in on its own,
                 // so there is no moment where the pour changes into something else.
-                float bodyA = lerp(lerp(_Color.a, _StreamColor.a, st), _FoamColor.a, fm);
-                col.a = a * bodyA * lerp(1.0, _StreamAlpha, st) * IN.color.a;
+                //
+                // The stream's share is guarded by (1 - fm) in BOTH the colour and the alpha,
+                // and the two lerps are composed in the same order. They were not: at the tap
+                // a pull sends stream drops falling THROUGH the head, so a pixel can be foam
+                // and stream at once, and the unguarded alpha cut a see-through channel down a
+                // head that is meant to be the most opaque thing on screen.
+                float sa = st * (1.0 - fm);
+                float bodyA = lerp(lerp(_Color.a, _FoamColor.a, fm), _StreamColor.a, sa);
+                col.a = a * bodyA * lerp(1.0, _StreamAlpha, sa) * IN.color.a;
                 return col;
             }
             ENDCG

@@ -60,6 +60,10 @@ namespace LastCall.UI
         private Vector2 _lastShakeMouse;
         private Vector2 _shakerVel;      // the shaker's spring velocity while thrown about
         private Vector2 _shakerHome;     // its rest position
+
+        /// <summary>The shake meter's track width; the fill derives from it, so the bar can
+        /// actually reach its own end at 100%.</summary>
+        private const float ShakeMeterW = 220f;
         private Image _shakeMeterFill;
         private Text _shakeMeterText;
         private const float ShakeFullTravel = 4000f;   // px of cursor travel for a full shake
@@ -101,7 +105,7 @@ namespace LastCall.UI
                 img.raycastTarget = false;
                 if (segH > 13f)
                 {
-                    var label = NewText("P", seg, _body, 8, TextAnchor.MiddleCenter, UITheme.Night[0]);
+                    var label = NewText("P", seg, _body, 8, TextAnchor.MiddleCenter, UITheme.InkOn(img.color));
                     Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                     label.horizontalOverflow = HorizontalWrapMode.Overflow;
                     label.text = $"{share:P0} {(card?.Name ?? id).ToUpperInvariant().Split(' ')[0]}";
@@ -174,6 +178,7 @@ namespace LastCall.UI
         {
             _shakerReadout.text = line;
             _shakerReadout.color = UITheme.TextSecondary;
+            _saidThisFrame = true;
         }
 
         /// <summary>The tin is at the brim and is refusing things. Said in red, because it is the
@@ -182,6 +187,27 @@ namespace LastCall.UI
         {
             _shakerReadout.text = "THE TIN IS FULL — CAP IT AND SHAKE, OR EMPTY IT";
             _shakerReadout.color = UITheme.ViceRed[3];
+            _saidThisFrame = true;
+        }
+
+        /// <summary>
+        /// Whether the readout has already been given something to say this frame.
+        ///
+        /// The stage methods run in one order every frame and the LAST one wins the readout —
+        /// which was UpdateCap, whose closing nudge fires whenever the tin holds anything and
+        /// is not yet capped. That is most of the stage's life, so it silently stomped the
+        /// live mix line, the red "THE TIN IS FULL" refusal and the fizz refusal, every frame,
+        /// before any of them could be seen. A nudge is the thing you say when there is
+        /// nothing else to say; this is what lets it be that.
+        /// </summary>
+        private bool _saidThisFrame;
+
+        /// <summary>Said only if nothing louder was said this frame.</summary>
+        private void NudgeShaker(string line)
+        {
+            if (_saidThisFrame) return;
+            _shakerReadout.text = line;
+            _shakerReadout.color = UITheme.TextSecondary;
         }
 
         // ── the shaker focus stage: the tilt-pour ────────────────────────────────
@@ -204,6 +230,7 @@ namespace LastCall.UI
             _pourBottle.localRotation = Quaternion.identity;
             _shakerSplash.Clear();
             _shakerFluid.Clear();
+            _shakerFluid.ClearStreamColor();      // a new visit pours nothing yet
             _shakerFluid.SetColor(DrinkColor(run.Glass));
             _shakerVessel.anchoredPosition = _shakerHome;
             _shakerVessel.localRotation = Quaternion.identity;
@@ -245,7 +272,7 @@ namespace LastCall.UI
             var shelf = _focusBottle == null ? null : run.Shelf.Find(_focusBottle.Id);
             float level = shelf != null && shelf.Capacity > 0
                 ? (float)(shelf.Remaining / shelf.Capacity) : 0f;
-            _pourBottleLiquid.fillAmount = BottleArt.For(_focusBottle, open: true).FillAmount(level);
+            BottleArt.SetLevel(_pourBottleLiquid, _focusBottle, open: true, level);
         }
 
         /// <summary>
@@ -256,6 +283,9 @@ namespace LastCall.UI
         private void UpdateTiltPour(TycoonRun run)
         {
             if (Mouse.current == null || _focusBottle == null) return;
+
+            // A grab already in flight must not survive the lid going on either.
+            if (_capped) { _bottleGrabbed = false; return; }
 
             // Release when the button comes up, wherever the cursor is.
             if (_bottleGrabbed && !Mouse.current.leftButton.isPressed)
@@ -315,12 +345,21 @@ namespace LastCall.UI
             {
                 if (run.PouringId == null) run.BeginPour(_focusBottle.Id);
                 run.PourTick(Time.deltaTime * PourTimeScale);   // slower, deliberate pour
+                // The tin's own colour, every frame it changes. RefreshShaker sets this once on
+                // the way in, and on the way in the tin is EMPTY — so without this the body kept
+                // DrinkColor's empty-glass cream while the stream poured pink into it (the
+                // author's screenshot, 2026-08-03: a tin the gauge called 80% House Syrup drawn
+                // the colour of nothing). The serve stage has always had the twin of this line.
+                _shakerFluid.SetColor(DrinkColor(run.Glass));
                 SayShaker(ShakerLine(run));
                 SetPourBottleLevel(run);        // the bottle empties in the hand, as it is poured
             }
             else if (run.PouringId != null)
             {
                 run.EndPour();
+                // Whatever is still falling belongs to the tin now, not to the next bottle
+                // the player picks up.
+                _shakerFluid.ClearStreamColor();
             }
 
             if (pourNow) _shakerLoopWanted = "pour_loop";   // the stage frame drives the source
@@ -469,7 +508,7 @@ namespace LastCall.UI
             if (capImg != null) capImg.raycastTarget = !_capped;   // capped: grab the tin, not the lid
 
             if (!_capped && !run.Glass.IsEmpty && !_capGrabbed)
-                SayShaker("drag the lid onto the tin to close it");
+                NudgeShaker("drag the lid onto the tin to close it");
         }
 
         /// <summary>
@@ -525,7 +564,8 @@ namespace LastCall.UI
                 // also being handed a surface-space x while it now expects the tin's own frame.
             }
 
-            _shakeMeterFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(200f * (float)_shakeEnergy), -4);
+            _shakeMeterFill.rectTransform.sizeDelta =
+                new Vector2(Mathf.Round((ShakeMeterW - 4f) * (float)_shakeEnergy), -4);
             _shakeMeterFill.color = Color.Lerp(UITheme.Amber[3], UITheme.Lime[3], (float)_shakeEnergy);
             if (_shakeMeterText != null) _shakeMeterText.text = $"SHAKE! {_shakeEnergy:P0}";
         }
@@ -566,20 +606,29 @@ namespace LastCall.UI
             {
                 run.AddPreparation(_draggingPrep);
                 SayShaker(ShakerLine(run));
-                var c = _dragPiece.GetComponent<Image>().color;
+                // The piece keeps its own face on the way down. It used to fall as a bare
+                // colour, and the drag layer tints itself WHITE whenever the real art loaded —
+                // which it always does — so ice, lemon, salt and sugar all landed in the tin as
+                // identical white squares that differed only in size.
+                var dragImg = _dragPiece.GetComponent<Image>();
+                var c = dragImg.color;
+                var face = dragImg.sprite;
                 bool granular = _draggingPrep.Id == "salt_rim" || _draggingPrep.Id == "sugar_rim";
                 if (granular)
                 {
                     // Salt / sugar: a scatter of fine grains that fall and dissolve on the drink.
+                    // Grains are too small to read a sprite, so they stay as tinted specks — and
+                    // the tint has to come from the STYLE, since the drag image is white.
+                    var grain = _draggingPrep.Id == "salt_rim" ? UITheme.Cream[4] : UITheme.Cream[3];
                     for (int i = 0; i < 8; i++)
                         _shakerSolids.Add(new Vector2(opening.x + UnityEngine.Random.Range(-16f, 16f), opening.y),
-                            c, UnityEngine.Random.Range(6f, 9f));
+                            grain, UnityEngine.Random.Range(6f, 9f));
                 }
                 else
                 {
                     // Ice / lemon: a single piece that falls and dissolves the moment it hits.
                     _shakerSolids.Add(new Vector2(opening.x + UnityEngine.Random.Range(-16f, 16f), opening.y),
-                        c, _draggingPrep.Id == "ice" ? 30f : 26f);
+                        c, _draggingPrep.Id == "ice" ? 30f : 26f, face);
                 }
                 _shakerFluid.Ripple(opening.x, 0.02f);   // the piece ripples the surface as it lands
             }
@@ -610,25 +659,51 @@ namespace LastCall.UI
             _shakerPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
             Swallow(_shakerPanel);
 
-            _shakerTitle = NewText("Title", _shakerPanel, _display, 18, TextAnchor.UpperCenter, UITheme.TextPrimary);
+            // 16, not 18: the pixel faces only rasterise cleanly at whole multiples of their
+            // 8px design size (CLAUDE.md), and the serve stage's twin title is 16 in
+            // PrimaryAction. Two adjacent stages of one class had two different display sizes.
+            _shakerTitle = NewText("Title", _shakerPanel, _display, 16, TextAnchor.UpperCenter, UITheme.PrimaryAction);
             Stretch(_shakerTitle.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -44), new Vector2(0, -10));
 
             var hint = NewText("Hint", _shakerPanel, _body, 12, TextAnchor.UpperCenter, UITheme.TextSecondary);
             Stretch(hint.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -64), new Vector2(0, -46));
             hint.text = "GRAB THE BOTTLE TO POUR  ·  GRAB THE SHAKER TO SHAKE IT";
 
-            // The play surface: bottle and shaker live in here, mouse-local.
+            // The room, the same room the serve stage stands in (2026-08-04). The two halves of
+            // building one drink were being shot on different sets: serve had one-point
+            // perspective with a prep table receding to the upper right and a fridge on the
+            // right wall, and the shaker had a black box with a mat on the floor. Same table,
+            // same wall, same horizon — so the bench and the counter read as one bar seen
+            // twice rather than as two screens.
+            var table = NewRect("PrepTable", _shakerPanel);
+            table.anchorMin = table.anchorMax = Vector2.zero;
+            table.pivot = Vector2.zero;
+            table.sizeDelta = new Vector2(298f, 356f) * TableScale;
+            table.anchoredPosition = TableFoot;
+            var tImg = table.gameObject.AddComponent<Image>();
+            tImg.sprite = ItemArt.Load("prep_table");
+            tImg.preserveAspect = true;
+            tImg.raycastTarget = false;
+            if (tImg.sprite == null) tImg.color = new Color(0.35f, 0.36f, 0.40f, 1f);
+
+            // The play surface: bottle and shaker live in here, mouse-local. Barely tinted —
+            // the furniture carries the room, and the old half-strength slab read as a dialog
+            // floating on top of it (the serve stage's lesson, applied here).
             _pourSurface = NewRect("PourSurface", _shakerPanel);
             Stretch(_pourSurface, Vector2.zero, Vector2.one, new Vector2(16, StageBottom), new Vector2(-16, -StageTop));
             var surfImg = _pourSurface.gameObject.AddComponent<Image>();
-            surfImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.5f);
+            surfImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.18f);
             surfImg.raycastTarget = false;
 
             // The bar mat the tin stands on (the author's note, generated with transparent
             // drainage channels so the counter shows through the ribs). Drawn at exactly 2×
             // its 400×195 pixels — integer, the prep table's lesson.
+            // Centred on the two things that stand on it. It used to sit at x=-120, which put
+            // its right edge at 280 while the bottle rests at 330 — so the bottle stood on
+            // nothing and the mat read as a floor off to one side rather than as the counter
+            // under the work.
             var matRt = NewRect("Mat", _pourSurface);
-            Place(matRt, new Vector2(0.5f, 0), new Vector2(800, 390), new Vector2(-120, -8));
+            Place(matRt, new Vector2(0.5f, 0), new Vector2(800, 390), new Vector2(60, -8));
             var matImg = matRt.gameObject.AddComponent<Image>();
             matImg.sprite = ItemArt.Load("bar_mat");
             matImg.raycastTarget = false;
@@ -729,17 +804,25 @@ namespace LastCall.UI
             var grab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
             grab.callback.AddListener(_ =>
             {
+                // Capping puts the bench away by fading the props — but a CanvasGroup's alpha
+                // does not stop raycasts, so the faded bottle stayed fully clickable and a
+                // sealed, shaken tin could be topped up from a bottle nobody could see. The
+                // prep chips have always guarded this; the bottle never did.
+                if (_capped) return;
                 if (_focusBottle != null && Run != null && Run.Phase == TycoonPhase.DayOpen)
                     _bottleGrabbed = true;
             });
             _pourBottle.gameObject.AddComponent<EventTrigger>().triggers.Add(grab);
             _benchProps.Add(_pourBottle.gameObject.AddComponent<CanvasGroup>());
 
-            // The prep tray, down the left edge: pick a piece up and drag it into the shaker.
-            AddPrepSource(0, "ICE", Preparations.Ice, UITheme.Cyan[4]);
-            AddPrepSource(1, "LEMON", Preparations.LemonTwist, UITheme.Amber[4]);
-            AddPrepSource(2, "SALT", Preparations.SaltRim, UITheme.Cream[4]);
-            AddPrepSource(3, "SUGAR", Preparations.SugarRim, UITheme.Magenta[4]);
+            // The prep sources STAND ON the table, on the line measured off its art, nearest
+            // first and shrinking as they recede — the serve stage's own placement, called
+            // through the same two helpers, so the ice bucket on this bench is the same ice
+            // bucket in the same place as the one on that counter.
+            AddPrepSource(0, "ICE", Preparations.Ice, "ice", UITheme.Cyan[4]);
+            AddPrepSource(1, "LEMON", Preparations.LemonTwist, "lemon_twist", UITheme.Amber[4]);
+            AddPrepSource(2, "SALT", Preparations.SaltRim, "salt_rim", UITheme.Cream[4]);
+            AddPrepSource(3, "SUGAR", Preparations.SugarRim, "sugar_rim", UITheme.Magenta[4]);
 
             // The single piece that follows the mouse while a prep is held. Its pivot is at the
             // top (the grip), so it hangs below the cursor and swings about that point.
@@ -760,8 +843,11 @@ namespace LastCall.UI
             // as the wrong decade): a slim standing column, cyan-edged, filled bottom-up
             // with the TIN's contents as shares of the whole vessel — 5% of vodka reads
             // 5% VODKA and the room above it reads EMPTY.
+            // Off the bench and against the right wall, the way the serve stage's twin stands.
+            // At x=-340 it hung in the middle of the room, over the prep table's far end and
+            // through the shaker's cap — a gauge drawn across the props it is reporting on.
             var mixTrack = NewRect("MixTrack", _shakerPanel);
-            Place(mixTrack, new Vector2(0.5f, 0.5f), new Vector2(44, 330), new Vector2(-340, -10));
+            Place(mixTrack, new Vector2(0.5f, 0.5f), new Vector2(44, 330), new Vector2(520, -10));
             var trackBg = mixTrack.gameObject.AddComponent<Image>();
             trackBg.color = new Color(0.05f, 0.05f, 0.09f, 0.88f);
             trackBg.raycastTarget = false;
@@ -769,9 +855,11 @@ namespace LastCall.UI
             _shakerMixBar = NewRect("MixSegs", mixTrack);
             Stretch(_shakerMixBar, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
 
-            // The shake meter, above the bottom bar.
+            // The shake meter, above the bottom bar. Its usable width is derived, not typed:
+            // the fill was hardcoded to 200px inside a 216px track, so a shake the caption
+            // called 100% left the bar visibly short of its own end.
             var meterBg = NewRect("ShakeMeterBg", _shakerPanel);
-            Place(meterBg, new Vector2(0.5f, 0), new Vector2(220, 14), new Vector2(0, 70));
+            Place(meterBg, new Vector2(0.5f, 0), new Vector2(ShakeMeterW, 14), new Vector2(0, 70));
             meterBg.gameObject.AddComponent<Image>().color = UITheme.Night[0];
             var meterFill = NewRect("ShakeMeterFill", meterBg);
             meterFill.anchorMin = new Vector2(0, 0); meterFill.anchorMax = new Vector2(0, 1);
@@ -782,13 +870,11 @@ namespace LastCall.UI
             _shakeMeterText = NewText("ShakeText", _shakerPanel, _body, 11, TextAnchor.UpperCenter, UITheme.TextSecondary);
             Place(_shakeMeterText.rectTransform, new Vector2(0.5f, 0), new Vector2(240, 16), new Vector2(0, 86));
 
-            // Bottom bar: a hint (the shaker itself is the toy now) and DONE.
-            var pad = NewRect("ShakeHint", _shakerPanel);
-            Place(pad, new Vector2(0.5f, 0), new Vector2(300, 40), new Vector2(-160, 12));
-            pad.gameObject.AddComponent<Image>().color = UITheme.Night[3];
-            var padLabel = NewText("Label", pad, _body, 12, TextAnchor.MiddleCenter, UITheme.Cyan[4]);
-            Stretch(padLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            padLabel.text = "↔  GRAB THE SHAKER · SHAKE IT";
+            // (The bottom-left plate that read "↔ GRAB THE SHAKER · SHAKE IT" is gone. It was
+            // a caption wearing a button's clothes — same dark plate, same size, sitting beside
+            // the real DONE key with no handler on it — and it was the third surface telling
+            // the player the same thing the header hint already says. The tin says "grab me" by
+            // answering the pointer now.)
 
             // The DONE key on the drawn plate with the full press (the P14 note): the same
             // sprite-and-sink the menu's own keys carry, so the two stages share one hand.
@@ -798,18 +884,24 @@ namespace LastCall.UI
             Place(done, new Vector2(0.5f, 0), new Vector2(300, 44), new Vector2(160, 10));
         }
 
-        /// <summary>One source chip on the prep tray: pointer-down picks its piece up.</summary>
-        private void AddPrepSource(int index, string label, PreparationDefinition prep, Color colour)
+        /// <summary>One source standing on the prep table: pointer-down picks its piece up.</summary>
+        private void AddPrepSource(int index, string label, PreparationDefinition prep,
+                                   string propId, Color colour)
         {
             var prepSprite = ItemArt.Prep(prep.Id);
             var bucketSprite = ItemArt.Bucket(prep.Id);
-            // Up the LEFT edge as a tilted tray (P14 v2): the column leans right as it climbs,
-            // so the four buckets read as standing on a surface seen at an angle rather than
-            // as a toolbar. Bigger, because a bucket is a thing, not a key.
-            var chip = NewRect($"Prep_{label}", _pourSurface);
-            chip.anchorMin = chip.anchorMax = chip.pivot = new Vector2(0f, 0.5f);
-            chip.sizeDelta = new Vector2(124, 112);
-            chip.anchoredPosition = new Vector2(66 + index * 34, 210 - index * 124);
+            // On the TABLE, at the prop's own size, shrinking as it recedes. It used to be a
+            // 124x112 cell at a hand-rolled `66 + index*34, 210 - index*124` with the art
+            // squeezed into one 112x88 box — a staircase of identical buttons with nothing
+            // under it, and a salt cellar drawn at an ice bucket's footprint. The serve stage
+            // solved this and wrote down why; these are its two helpers.
+            var stand = TableStand(index, 4);
+            var size = FinishPropSize(propId) * stand.depth;
+            var chip = NewRect($"Prep_{label}", _shakerPanel);
+            chip.anchorMin = chip.anchorMax = Vector2.zero;
+            chip.pivot = new Vector2(0.5f, 0f);          // standing on the tabletop line
+            chip.sizeDelta = size + new Vector2(24f, 20f);
+            chip.anchoredPosition = stand.pos;
             var img = chip.gameObject.AddComponent<Image>();
             if (bucketSprite != null)
             {
@@ -817,17 +909,20 @@ namespace LastCall.UI
                 // salt / sugar from the bucket into the shaker.
                 img.color = new Color(1f, 1f, 1f, 0.001f);   // clear grab target over the whole cell
                 var icon = NewRect("Bucket", chip);
-                Place(icon, new Vector2(0.5f, 1), new Vector2(112, 88), new Vector2(0, -2));
+                Place(icon, new Vector2(0.5f, 0), size, new Vector2(0, 14f));
                 var iconImg = icon.gameObject.AddComponent<Image>();
                 iconImg.sprite = bucketSprite; iconImg.preserveAspect = true; iconImg.raycastTarget = false;
-                var text = NewText("L", chip, _body, 9, TextAnchor.LowerCenter, UITheme.TextPrimary);
+                var text = NewText("L", chip, _body, 8, TextAnchor.LowerCenter, UITheme.TextPrimary);
                 Place(text.rectTransform, new Vector2(0.5f, 0), new Vector2(84, 14), new Vector2(0, 0));
                 text.text = label;
+                // It tips toward you before you reach in — the rule every clickable thing in
+                // this project follows, and which nothing on this bench followed.
+                Pressable(chip, icon, iconImg, lift: 5f, depth: 5f);
             }
             else
             {
                 img.color = new Color(colour.r, colour.g, colour.b, 0.85f);
-                var text = NewText("L", chip, _body, 11, TextAnchor.MiddleCenter, UITheme.Night[0]);
+                var text = NewText("L", chip, _body, 8, TextAnchor.MiddleCenter, UITheme.Night[0]);
                 Stretch(text.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 text.text = label;
             }
@@ -844,7 +939,11 @@ namespace LastCall.UI
                 dpImg.color = prepSprite != null ? Color.white : new Color(colour.r, colour.g, colour.b, 0.85f);
                 _dragPieceLabel.text = prepSprite != null ? "" : label;
                 _dragSwing.Reset();
-                Vector2 start = chip.anchoredPosition;   // spring in from the tray chip
+                // The piece springs in from wherever the cursor is. The prop now stands in the
+                // PANEL's space while the drag lives in the surface's, so the chip's own
+                // position is no longer a valid seed — with no mouse the piece simply starts
+                // at the surface's centre rather than at a point in the wrong coordinate frame.
+                Vector2 start = Vector2.zero;
                 if (Mouse.current != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
                         _pourSurface, Mouse.current.position.ReadValue(), null, out Vector2 l0))
                     start = l0;

@@ -181,6 +181,7 @@ namespace LastCall.UI
             _serveShaker.localRotation = Quaternion.identity;
             _serveSplash.Clear();
             _serveFluid.Clear();
+            _serveFluid.ClearStreamColor();       // nothing is in the air on the way in
             // The pool is the drink IN THE GLASS, not the one in the shaker. Those are the same
             // thing while you are tipping one into the other, which is why nobody noticed — but
             // a built drink leaves the shaker empty, and the pool was taking the colour of
@@ -190,7 +191,13 @@ namespace LastCall.UI
             RefreshServeMixBar(run);
             PushServePool(run);
             GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run);
-            _serveShakerBody.color = DrinkColor(run.Glass);
+            // Steel is steel whatever is in it. This used to multiply the tin sprite by the
+            // drink's colour AND by its alpha — harmless while that alpha was a fixed 0.9, and
+            // not harmless at all once it became the fill-derived 0.52-0.86: the serve stage's
+            // shaker turned into a see-through, drink-tinted tin. The hand bottle three methods
+            // away and the tap's keg both guard this the same way.
+            _serveShakerBody.color = _serveShakerBody.sprite != null
+                ? Color.white : DrinkColor(run.Glass);
             _serveShaker.gameObject.SetActive(!run.Glass.IsEmpty);
             _aimText.text = run.Glass.IsEmpty
                 ? "BUILD IT IN THE GLASS · MIXERS ON THE RIGHT"
@@ -471,8 +478,8 @@ namespace LastCall.UI
             var shelfBottle = Run?.Shelf.Find(card.Id);
             var liquid = BottleArt.AddLiquid(art, card);
             if (liquid != null && shelfBottle != null && shelfBottle.Capacity > 0)
-                liquid.fillAmount = BottleArt.For(card)
-                    .FillAmount((float)(shelfBottle.Remaining / shelfBottle.Capacity));
+                BottleArt.SetLevel(liquid, card, open: false,
+                    (float)(shelfBottle.Remaining / shelfBottle.Capacity));
 
             // The label is the STYLE, not the brand: at fridge scale "TONIC" is what you are
             // reaching for, and "Quinbury Tonic" would not fit anyway. Hover only — nine
@@ -557,6 +564,9 @@ namespace LastCall.UI
         {
             _serveBottleGrabbed = false;
             _serveFocusBottle = null;
+            // Drops still falling are the glass's drink now — the next bottle out of the
+            // fridge must not reach back and recolour them.
+            _serveFluid.ClearStreamColor();
             _serveBottle.gameObject.SetActive(false);
             _serveBottle.localRotation = Quaternion.identity;
             _serveBottle.anchoredPosition = _serveBottleRest;
@@ -582,7 +592,7 @@ namespace LastCall.UI
             var shelf = card == null ? null : run.Shelf.Find(card.Id);
             float level = shelf != null && shelf.Capacity > 0
                 ? (float)(shelf.Remaining / shelf.Capacity) : 0f;
-            _serveHandLiquid.fillAmount = BottleArt.For(card).FillAmount(level);
+            BottleArt.SetLevel(_serveHandLiquid, card, open: false, level);
         }
 
         /// <summary>Pours whatever bottle is in hand. The tilt and the aim are the shaker's,
@@ -725,6 +735,11 @@ namespace LastCall.UI
                 _servePouringNow = true;
                 double before = run.ServingGlass.TotalVolume;
                 run.PourIntoServingGlass(ServePourRate * Time.deltaTime, accuracy);
+                // The GLASS's colour as the tin goes into it. Only the refresh set this, and the
+                // refresh reads the tin when the glass is empty — so tipping a shaken drink into
+                // a glass that already held something left the pool at the old drink's colour
+                // for the whole pour. The twin of the shaker bench's line.
+                _serveFluid.SetColor(DrinkColor(run.ServingGlass));
                 if (run.ServingGlass.IsFull) { PutTheShakerDown(run); ShowGlassFull(); }
                 else if (run.Glass.IsEmpty) PutTheShakerDown(run);
                 else if (run.ServingGlass.TotalVolume != before) RefreshServeText(run, accuracy);
@@ -816,6 +831,7 @@ namespace LastCall.UI
         private void PutTheShakerDown(TycoonRun run)
         {
             _serveGrabbed = false;
+            _serveFluid.ClearStreamColor();   // the tin has stopped; the air belongs to the glass
             _serveShaker.anchoredPosition = _serveShakerRest;
             _serveShaker.localRotation = Quaternion.identity;
             _serveShaker.gameObject.SetActive(!run.Glass.IsEmpty);
@@ -873,7 +889,7 @@ namespace LastCall.UI
                 img.raycastTarget = false;
                 if (segH > 13f)
                 {
-                    var label = NewText("P", seg, _body, 8, TextAnchor.MiddleCenter, UITheme.Night[0]);
+                    var label = NewText("P", seg, _body, 8, TextAnchor.MiddleCenter, UITheme.InkOn(img.color));
                     Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                     label.horizontalOverflow = HorizontalWrapMode.Overflow;
                     label.text = $"{share:P0} {(card?.Name ?? id).ToUpperInvariant().Split(' ')[0]}";

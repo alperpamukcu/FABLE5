@@ -146,6 +146,7 @@ namespace LastCall.UI
             if (_stage == Stage.Shaker)
             {
                 _shakerLoopWanted = null;
+                _saidThisFrame = false;   // the readout is unclaimed until something claims it
                 UpdateShake(run); UpdatePrepDrag(run); UpdateTiltPour(run); UpdateCap(run);
                 StepShakerFluid(run);
                 Sfx.HoldLoop(_shakerLoopWanted, _shakerLoopWanted == "shake_loop" ? 0.9f : 0.8f);

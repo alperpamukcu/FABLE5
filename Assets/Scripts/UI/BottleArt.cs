@@ -256,6 +256,25 @@ namespace LastCall.UI
         public static Image AddLiquid(RectTransform bottleArt, string style, IngredientType type)
             => AddLiquid(bottleArt, For(style), style, type);
 
+        /// <summary>
+        /// Sets how full a bottle reads — the fill line AND the depth of its colour.
+        ///
+        /// A column of drink is darker the taller it is, and until 2026-08-04 the bottle path
+        /// ignored that: the tint was chosen once when the liquid layer was built and never
+        /// touched again, so a bottle with a finger of rum in it was painted exactly as solid
+        /// as a full one. The glass has expressed this since the depth law landed
+        /// (<see cref="UITheme.DrinkAlpha"/>); this is the same law, applied to the vessel the
+        /// player is holding, so one drink does not read as two materials.
+        /// </summary>
+        public static void SetLevel(Image liquid, IngredientCard card, bool open, float level)
+        {
+            if (liquid == null || card == null) return;
+            var piece = For(card, open);
+            liquid.fillAmount = piece.FillAmount(level);
+            var c = LiquidTint(piece, card.Info?.Style, card.Type);
+            liquid.color = new Color(c.r, c.g, c.b, c.a * UITheme.DrinkAlpha(level));
+        }
+
         private static Image AddLiquid(RectTransform bottleArt, Piece piece, string style,
                                        IngredientType type)
         {
