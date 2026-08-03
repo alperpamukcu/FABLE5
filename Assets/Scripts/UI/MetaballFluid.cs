@@ -255,6 +255,9 @@ namespace LastCall.UI
         private static readonly int IdHeightCnt = Shader.PropertyToID("_HeightCount");
         private static readonly int IdThreshold = Shader.PropertyToID("_Threshold");
         private static readonly int IdEdgeWidth = Shader.PropertyToID("_EdgeWidth");
+        private static readonly int IdEdgeTint  = Shader.PropertyToID("_EdgeTint");
+        private static readonly int IdEdgeStrength = Shader.PropertyToID("_EdgeStrength");
+        private static readonly int IdStreamAlpha  = Shader.PropertyToID("_StreamAlpha");
         private static readonly int IdFoamColor = Shader.PropertyToID("_FoamColor");
 
         public MetaballFluid(RectTransform surface)
@@ -292,6 +295,23 @@ namespace LastCall.UI
             _material?.SetFloat(IdThreshold, 0.7f);
             _material?.SetFloat(IdEdgeWidth, 0.10f);
             _image.enabled = _material != null;
+        }
+
+        /// <summary>
+        /// How solid a free-falling drop draws against the settled body, 0.1–1 (see the
+        /// shader's <c>_StreamAlpha</c>). Every stage takes the default; it is exposed so a
+        /// pour that wants to read heavier — a syrup, say — can say so.
+        /// </summary>
+        public void SetStreamAlpha(float share) =>
+            _material?.SetFloat(IdStreamAlpha, Mathf.Clamp(share, 0.1f, 1f));
+
+        /// <summary>The meniscus at the liquid's edge: how far it lifts toward
+        /// <c>_EdgeColor</c> and how hard that lift lands. Kept as one call because the two
+        /// only mean anything together.</summary>
+        public void SetEdge(float tint, float strength)
+        {
+            _material?.SetFloat(IdEdgeTint, Mathf.Clamp01(tint));
+            _material?.SetFloat(IdEdgeStrength, Mathf.Clamp01(strength));
         }
 
         private void RefreshSize()
@@ -945,7 +965,12 @@ namespace LastCall.UI
             {
                 if (!_drops[i].Active) continue;
                 var uv = ToUv(_drops[i].Pos.x, _drops[i].Pos.y);
-                _dropData[count++] = new Vector4(uv.x, uv.y, _drops[i].Radius, 1f);
+                // Flagged 3: a drop still in the AIR. The shader draws it thinner than the
+                // settled body — a stream has nothing behind it, where the drink in a glass is
+                // read through a translucent wall, and drawing both at one alpha made the pour
+                // read as paint (the author, 2026-08-03). It fills in to solid by itself as
+                // the pool's own particles take over the field where it lands.
+                _dropData[count++] = new Vector4(uv.x, uv.y, _drops[i].Radius, 3f);
             }
             for (int i = count; i < RenderMax; i++) _dropData[i] = Vector4.zero;
 

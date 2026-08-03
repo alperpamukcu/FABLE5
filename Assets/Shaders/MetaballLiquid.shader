@@ -14,6 +14,18 @@ Shader "LastCall/MetaballLiquid"
         _EdgeColor    ("Edge Color",   Color) = (1.0, 1.0, 1.0, 1.0)
         _Threshold    ("Threshold",    Range(0.01, 4)) = 0.60
         _EdgeWidth    ("Edge Width",   Range(0.001, 1.0)) = 0.18
+        // How far the meniscus lifts toward _EdgeColor, and how strongly it is applied.
+        // Until 2026-08-03 the edge blended 85% of the way to PURE WHITE, which at this
+        // scale drew a one-pixel white frame around the pool, the falling stream and every
+        // single droplet (the author: "sıvıların etrafında çok küçük pixele sahip beyaz
+        // çerçeve var"). A meniscus is the drink catching the light, so it now lifts the
+        // drink's OWN colour: a rum rims amber, a curacao rims pale blue.
+        _EdgeTint     ("Edge Tint",    Range(0, 1)) = 0.30
+        _EdgeStrength ("Edge Strength",Range(0, 1)) = 0.55
+        // How solid a FREE-FALLING drop is against the settled body. A stream in mid-air
+        // has nothing behind it, where the drink in a glass is read through a translucent
+        // wall — so drawing both at the body's alpha made the pour look like paint.
+        _StreamAlpha  ("Stream Alpha", Range(0.1, 1)) = 0.55
         _Highlight    ("Top Highlight",Range(0, 1)) = 0.35
         _Size         ("Rect Size px", Vector) = (600, 400, 0, 0)
         _DropCount    ("Drop Count",   Float) = 0
@@ -89,6 +101,9 @@ Shader "LastCall/MetaballLiquid"
             fixed4 _EdgeColor;
             float  _Threshold;
             float  _EdgeWidth;
+            float  _EdgeTint;
+            float  _EdgeStrength;
+            float  _StreamAlpha;
             float  _Highlight;
             float4 _Size;          // xy = rect size in px
             float  _DropCount;
@@ -155,15 +170,17 @@ Shader "LastCall/MetaballLiquid"
             // Sum of all droplet contributions at a uv, using a compact smooth kernel so the
             // blobs have finite reach and merge cleanly instead of leaving long metaball tails.
             //
-            // Foam (w >= 1.5) is summed a SECOND time into its own accumulator (2026-07-30).
-            // Both kinds feed the one field that gets thresholded, so beer and its head share a
-            // single continuous surface — there is no seam between them and no rectangle, because
-            // there is no second object. The foam accumulator only decides the COLOUR at each
-            // pixel, which is the only way the two actually differ.
-            void dropFields (float2 uv, out float total, out float foam)
+            // The w flag says what a blob IS, and each kind is summed a SECOND time into its
+            // own accumulator: foam (w≈2) since 2026-07-30, free-falling drops (w≈3) since
+            // 2026-08-03. Every kind still feeds the one field that gets thresholded, so beer
+            // and its head and the stream landing in it share a single continuous surface —
+            // there is no seam and no second object. The accumulators only decide the COLOUR
+            // and the ALPHA at each pixel, which is the only way the kinds actually differ.
+            void dropFields (float2 uv, out float total, out float foam, out float stream)
             {
-                total = 0.0;
-                foam  = 0.0;
+                total  = 0.0;
+                foam   = 0.0;
+                stream = 0.0;
                 int n = (int)_DropCount;
                 for (int i = 0; i < MAX_DROPS; i++)
                 {
@@ -177,7 +194,10 @@ Shader "LastCall/MetaballLiquid"
                     float  t = saturate(1.0 - dist2 / (r * r));
                     float  c = t * t;   // squared -> soft shoulders that fuse when overlapping
                     total += c;
-                    if (d.w > 1.5) foam += c;
+                    // a RANGE, not a floor: with the stream flagged 3, "w > 1.5" would have
+                    // coloured every falling drop as foam
+                    if (d.w > 1.5 && d.w < 2.5) foam += c;
+                    else if (d.w >= 2.5) stream += c;
                 }
             }
 
@@ -198,8 +218,8 @@ Shader "LastCall/MetaballLiquid"
             {
                 float2 uv  = IN.texcoord;
                 float2 ruv = rotUv(uv);                     // the pool's tilted frame
-                float dropTotal, dropFoam;
-                dropFields(uv, dropTotal, dropFoam);
+                float dropTotal, dropFoam, dropStream;
+                dropFields(uv, dropTotal, dropFoam, dropStream);
                 float field = poolField(ruv) + dropTotal;
 
                 // Antialiased threshold edge from the field's screen-space rate of change.
@@ -220,12 +240,18 @@ Shader "LastCall/MetaballLiquid"
                 float bub = saturate(dropFoam / max(_Threshold, 1e-4) - 0.55);
                 body.rgb *= lerp(1.0, 0.82 + 0.30 * saturate(bub * 1.4), fm);
 
-                // A bright rim right at the surface tension line — but barely any of it on foam.
-                // The rim blends toward white, and white on a cream head erases its edge, which
-                // is the other half of why it looked washed out (2026-07-30).
+                // A bright rim right at the surface tension line — but barely any of it on foam,
+                // because white on a cream head erases its edge (2026-07-30).
+                //
+                // The rim lifts the body's OWN colour toward _EdgeColor rather than replacing it
+                // with white. See _EdgeTint: a hard blend to white drew a one-pixel pale frame
+                // around the pool, the stream and every droplet, which is what the outline in
+                // the screenshots was.
                 float rim = 1.0 - saturate((field - _Threshold) / max(_EdgeWidth, 1e-4));
                 rim = pow(rim, 1.5);
-                fixed4 col = lerp(body, _EdgeColor, rim * 0.85 * (1.0 - fm * 0.75));
+                fixed3 lift = lerp(body.rgb, _EdgeColor.rgb, _EdgeTint);
+                fixed4 col = body;
+                col.rgb = lerp(body.rgb, lift, rim * _EdgeStrength * (1.0 - fm * 0.75));
 
                 // A bright band riding just under the moving water line — the light on the
                 // surface — plus a soft sheen through the body so it reads as wet volume.
@@ -236,7 +262,12 @@ Shader "LastCall/MetaballLiquid"
                 float sheen = saturate((ruv.y - surf) * 5.0 + 0.5);
                 col.rgb += (band * 0.5 + sheen * 0.18) * _Highlight * (1.0 - fm * 0.85);
 
-                col.a = a * lerp(_Color.a, _FoamColor.a, fm) * IN.color.a;
+                // Liquid in the air is thinner than liquid at rest. A pixel owned entirely by
+                // free-falling drops draws at _StreamAlpha of the body's alpha; as the stream
+                // lands, the settled particles take over the field and it fills in to solid on
+                // its own, so there is no moment where the pour changes into something else.
+                float st = saturate(dropStream / max(dropTotal, 1e-4));
+                col.a = a * lerp(_Color.a, _FoamColor.a, fm) * lerp(1.0, _StreamAlpha, st) * IN.color.a;
                 return col;
             }
             ENDCG
