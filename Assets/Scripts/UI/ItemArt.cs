@@ -25,6 +25,32 @@ namespace LastCall.UI
         /// <summary>The bottle for a shelf style ("vodka", "gin", …); the asset names match.</summary>
         public static Sprite Bottle(string style) => Load(style);
 
+        /// <summary>
+        /// A BRAND's own bottle where one was drawn for it (the author, 2026-08-03: the
+        /// 48-dollar vodka wore the house pour's bottle). The upper tiers of each spirit
+        /// have their own vessel under <c>bot_{id}</c>; the tier that opens the bar keeps
+        /// the style art, which is its art, so the fallback is the rule and not a mercy.
+        /// </summary>
+        public static Sprite Bottle(LastCall.Core.IngredientCard card)
+        {
+            if (card == null) return null;
+            var own = Load("bot_" + card.Id);
+            return own != null ? own : Load(card.Info?.Style);
+        }
+
+        /// <summary>The same brand with its closure off — what the pour stage shows, because
+        /// a bottle you are pouring from is open.</summary>
+        public static Sprite BottleOpen(LastCall.Core.IngredientCard card)
+        {
+            if (card == null) return null;
+            // The brand's own capless shot, then its STYLE's — a tier-one brand has no art
+            // of its own but its style does, and falling straight through to the shut
+            // bottle would have put the cap back on the one in your hand.
+            return Load("bot_" + card.Id + "_open")
+                ?? Load(card.Info?.Style + "_open")
+                ?? Bottle(card);
+        }
+
         public static Sprite Shaker => Load("shaker");
         public static Sprite Glass => Load("glass");
 

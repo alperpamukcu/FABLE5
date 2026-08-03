@@ -1633,7 +1633,7 @@ namespace LastCall.UI
                         * cfg.RefillPricePerCapacity);
                     AddCard(bottle.Ingredient.Name.ToUpperInvariant(), "full", cost, cost > 0,
                         () => { run.RefillBottle(bottle.Ingredient.Id); RebuildDayEnd(); },
-                        ItemArt.Bottle(bottle.Ingredient.Info?.Style));
+                        ItemArt.Bottle(bottle.Ingredient));
                 }
             }
             else if (_shopTab == 1)
@@ -1648,7 +1648,7 @@ namespace LastCall.UI
                     {
                         run.BuyBrand(index);
                         RebuildDayEnd();
-                    }, ItemArt.Bottle(offer.Bottle.Info?.Style), owned: offer.Sold);
+                    }, ItemArt.Bottle(offer.Bottle), owned: offer.Sold);
                 }
             }
             else if (_shopTab == 2)

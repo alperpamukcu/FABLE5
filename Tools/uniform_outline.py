@@ -201,9 +201,20 @@ def stand_on_floor(im, height=CANVAS_H):
     return out
 
 
+def vessels():
+    """Every vessel on the wall: the shelf styles, and the brands that were drawn their
+    own bottle. A tier bottle has to carry exactly the edge the rest of the shelf does,
+    or the expensive vodka arrives outlined differently from the cheap one."""
+    for style in styles():
+        yield style
+    for f in sorted(os.listdir(DEST)):
+        if f.startswith('bot_') and f.endswith('.png') and not f.endswith('_open.png'):
+            yield f[:-4]
+
+
 def run(write):
     changed = 0
-    for style in styles():
+    for style in vessels():
         paths = [os.path.join(DEST, style + '.png'),
                  os.path.join(DEST, style + '_open.png')]
         loaded = [Image.open(p).convert('RGBA') if os.path.exists(p) else None for p in paths]

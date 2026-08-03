@@ -328,7 +328,7 @@ namespace LastCall.UI
             Place(icon, new Vector2(0.5f, 1), new Vector2(ShelfW - 40f, RailKeyHeight - 26f),
                 new Vector2(0, -4));
             var iimg = icon.gameObject.AddComponent<Image>();
-            iimg.sprite = ItemArt.Bottle(card.Info?.Style); iimg.preserveAspect = true; iimg.raycastTarget = false;
+            iimg.sprite = ItemArt.Bottle(card); iimg.preserveAspect = true; iimg.raycastTarget = false;
             if (iimg.sprite == null) iimg.color = UITheme.StyleColor(card.Info?.Style, card.Type);
             var name = NewText("N", chip, _body, 8, TextAnchor.LowerCenter, UITheme.TextPrimary);
             Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(92, 14), new Vector2(0, 2));
@@ -398,15 +398,15 @@ namespace LastCall.UI
             Place(art, new Vector2(0.5f, 1), new Vector2(62f, CabinetSlotHeight - 26f),
                 new Vector2(0, -3));
             var img = art.gameObject.AddComponent<Image>();
-            img.sprite = ItemArt.Bottle(card.Info?.Style);
+            img.sprite = ItemArt.Bottle(card);
             img.preserveAspect = true; img.raycastTarget = false;
             if (img.sprite == null) img.color = UITheme.StyleColor(card.Info?.Style, card.Type);
 
             // What is left in it, so a mixer that is running out says so behind the glass door.
             var shelfBottle = Run?.Shelf.Find(card.Id);
-            var liquid = BottleArt.AddLiquid(art, card.Info?.Style, card.Type);
+            var liquid = BottleArt.AddLiquid(art, card);
             if (liquid != null && shelfBottle != null && shelfBottle.Capacity > 0)
-                liquid.fillAmount = BottleArt.For(card.Info?.Style)
+                liquid.fillAmount = BottleArt.For(card)
                     .FillAmount((float)(shelfBottle.Remaining / shelfBottle.Capacity));
 
             // The label is the STYLE, not the brand: at rail scale "TONIC" is what you are
@@ -440,7 +440,7 @@ namespace LastCall.UI
             // appeared in your hand, so the same bottle was in two places at once.
             _serveCabinetGap = art;
             art.gameObject.SetActive(false);
-            _serveBottleImage.sprite = ItemArt.Bottle(c.Info?.Style);
+            _serveBottleImage.sprite = ItemArt.Bottle(c);
             _serveBottleImage.color = _serveBottleImage.sprite != null
                 ? Color.white : UITheme.StyleColor(c.Info?.Style, c.Type);
             SetHandBottleLevel(run, c);
@@ -490,18 +490,21 @@ namespace LastCall.UI
         /// <summary>Draws the level in the bottle you are holding, the same way the shelf does.</summary>
         private void SetHandBottleLevel(TycoonRun run, IngredientCard card)
         {
-            string style = card?.Info?.Style;
+            // Keyed on the BRAND, not the style: two vodkas share a style and no longer
+            // share a bottle, so a cached cavity cut for one would be the wrong shape in
+            // the other's glass.
+            string style = card?.Id;
             if (style != _serveHandStyle)
             {
                 if (_serveHandLiquid != null) Destroy(_serveHandLiquid.gameObject);
-                _serveHandLiquid = card == null ? null : BottleArt.AddLiquid(_serveBottle, style, card.Type);
+                _serveHandLiquid = card == null ? null : BottleArt.AddLiquid(_serveBottle, card);
                 _serveHandStyle = style;
             }
             if (_serveHandLiquid == null) return;
             var shelf = card == null ? null : run.Shelf.Find(card.Id);
             float level = shelf != null && shelf.Capacity > 0
                 ? (float)(shelf.Remaining / shelf.Capacity) : 0f;
-            _serveHandLiquid.fillAmount = BottleArt.For(style).FillAmount(level);
+            _serveHandLiquid.fillAmount = BottleArt.For(card).FillAmount(level);
         }
 
         /// <summary>Pours whatever bottle is in hand. The tilt and the aim are the shaker's,

@@ -328,14 +328,14 @@ namespace LastCall.UI
                     if (b.Ingredient.Info?.Category != cat || !OnTheBackBar(b.Ingredient)) continue;
                     var slot = NewRect($"I_{b.Ingredient.Id}", icons);
                     var si = slot.gameObject.AddComponent<Image>();
-                    si.sprite = ItemArt.Bottle(b.Ingredient.Info?.Style);
+                    si.sprite = ItemArt.Bottle(b.Ingredient);
                     si.preserveAspect = true; si.raycastTarget = false;
                     si.color = si.sprite == null
                         ? UITheme.StyleColor(b.Ingredient.Info?.Style, b.Ingredient.Type)
                         : (b.IsEmpty ? new Color(1f, 1f, 1f, 0.30f) : Color.white);
-                    var sl = BottleArt.AddLiquid(slot, b.Ingredient.Info?.Style, b.Ingredient.Type);
+                    var sl = BottleArt.AddLiquid(slot, b.Ingredient);
                     if (sl != null)
-                        sl.fillAmount = BottleArt.For(b.Ingredient.Info?.Style).FillAmount(
+                        sl.fillAmount = BottleArt.For(b.Ingredient).FillAmount(
                             b.Capacity > 0 ? (float)(b.Remaining / b.Capacity) : 0f);
                 }
             }
@@ -541,7 +541,7 @@ namespace LastCall.UI
             // preserveAspect centres vertically inside its rect, which floated short
             // bottles above the wood — so the rect is cut to the art's own aspect and
             // pinned by its base to the plank's mid-depth.
-            var piece0 = BottleArt.For(card.Info?.Style);
+            var piece0 = BottleArt.For(card);
             float artH = shelfH - ShelfFaceH - 24f, artW = slotW - 12f;
             if (piece0.Exists && piece0.Aspect > 0f)
             {
@@ -554,7 +554,7 @@ namespace LastCall.UI
             art.sizeDelta = new Vector2(artW, artH);
             art.anchoredPosition = new Vector2(0, 2f);
             var img = art.gameObject.AddComponent<Image>();
-            img.sprite = ItemArt.Bottle(card.Info?.Style);
+            img.sprite = ItemArt.Bottle(card);
             img.preserveAspect = true; img.raycastTarget = false;
             img.color = img.sprite == null
                 ? UITheme.StyleColor(card.Info?.Style, card.Type)
@@ -563,10 +563,10 @@ namespace LastCall.UI
             // What is left in it, drawn rather than printed. The bottles are shot empty, so this is
             // the only thing that says a bottle is running down -- and it says it where the player
             // is already looking instead of in a hover panel.
-            var liquid = BottleArt.AddLiquid(art, card.Info?.Style, card.Type);
+            var liquid = BottleArt.AddLiquid(art, card);
             if (liquid != null)
             {
-                var piece = BottleArt.For(card.Info?.Style);
+                var piece = BottleArt.For(card);
                 float level = bottle.Capacity > 0 ? (float)(bottle.Remaining / bottle.Capacity) : 0f;
                 liquid.fillAmount = piece.FillAmount(level);
                 if (shut)
@@ -869,7 +869,7 @@ namespace LastCall.UI
             Place(icon, new Vector2(0.5f, 1), new Vector2(cw - 30f, chh - 68f), new Vector2(0, -8));
             var iconImg = icon.gameObject.AddComponent<Image>();
             iconImg.raycastTarget = false; iconImg.preserveAspect = true;
-            iconImg.sprite = ItemArt.Bottle(card.Info?.Style);
+            iconImg.sprite = ItemArt.Bottle(card);
             iconImg.color = iconImg.sprite == null ? UITheme.StyleColor(card.Info?.Style, card.Type)
                 : (shut ? new Color(1f, 1f, 1f, 0.4f) : Color.white);
 

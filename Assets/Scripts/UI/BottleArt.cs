@@ -149,6 +149,25 @@ namespace LastCall.UI
         }
 
         /// <summary>
+        /// A BRAND's bottle, measured from its own art where it has any. The upper tiers of
+        /// each spirit were drawn their own vessels (2026-08-03) and their cavities are their
+        /// own too — a decanter's belly is nowhere near where a straight bottle's is, and
+        /// measuring the tier-one sprite for all four would have poured the drink into thin
+        /// air. A brand with no art of its own falls back to its style, which is correct: the
+        /// tier that opens the bar IS the style art.
+        /// </summary>
+        public static Piece For(IngredientCard card, bool open = false)
+        {
+            if (card == null) return default;
+            string key = (open ? "o:" : "c:") + card.Id;
+            if (Cache.TryGetValue(key, out var piece)) return piece;
+            var sprite = open ? ItemArt.BottleOpen(card) : ItemArt.Bottle(card);
+            piece = Measure(sprite);
+            Cache[key] = piece;
+            return piece;
+        }
+
+        /// <summary>
         /// The art key for a bottle in the hand: the capless shot where the style has one.
         /// The pour stage used to draw the open art but take its layers from the closed
         /// bottle, which under a full-strength front layer would seat the cap back on top
@@ -171,10 +190,17 @@ namespace LastCall.UI
         /// Hangs the drink inside a bottle image, between the bottle and its front layer.
         /// Returns null when the style has no art; the caller then has nothing to fill.
         /// </summary>
+        /// <summary>The drink inside a BRAND's bottle, measured from that brand's own art.</summary>
+        public static Image AddLiquid(RectTransform bottleArt, IngredientCard card, bool open = false)
+            => AddLiquid(bottleArt, For(card, open), card?.Info?.Style, card?.Type ?? IngredientType.Spirit);
+
         public static Image AddLiquid(RectTransform bottleArt, string style, IngredientType type)
+            => AddLiquid(bottleArt, For(style), style, type);
+
+        private static Image AddLiquid(RectTransform bottleArt, Piece piece, string style,
+                                       IngredientType type)
         {
             if (Sealed.Contains(StyleOf(style))) return null;
-            var piece = For(style);
             if (!piece.Exists || piece.Fill == null) return null;
 
             var go = new GameObject("Liquid", typeof(RectTransform));

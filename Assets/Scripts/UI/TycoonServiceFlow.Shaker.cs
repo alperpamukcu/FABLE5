@@ -196,7 +196,7 @@ namespace LastCall.UI
             // In the hand it stands OPEN (the author, 2026-08-01): the pour scene uses the
             // capless variant when one exists. Same canvas as the closed art, so the liquid
             // mask and the mouth line all stay put; styles missing an open shot fall back.
-            var bottleSprite = ItemArt.Bottle(BottleArt.OpenKey(_focusBottle.Info?.Style));
+            var bottleSprite = ItemArt.BottleOpen(_focusBottle);
             _pourBottleBody.sprite = bottleSprite;
             _pourBottleBody.color = bottleSprite != null ? Color.white : colour;   // real art, else the style tint
             SetPourBottleLevel(run);
@@ -230,20 +230,22 @@ namespace LastCall.UI
         {
             // The capless art, so the cavity and the front layer describe the bottle that is
             // actually on screen rather than the corked one it was cut from.
-            string style = BottleArt.OpenKey(_focusBottle?.Info?.Style);
+            // Keyed on the BRAND, and measured from the capless art, so the cavity and the
+            // front layer describe the bottle that is actually on screen.
+            string style = _focusBottle?.Id;
             if (style != _pourBottleStyle)
             {
                 if (_pourBottleLiquid != null) Destroy(_pourBottleLiquid.gameObject);
                 _pourBottleLiquid = _focusBottle == null
                     ? null
-                    : BottleArt.AddLiquid(_pourBottle, style, _focusBottle.Type);
+                    : BottleArt.AddLiquid(_pourBottle, _focusBottle, open: true);
                 _pourBottleStyle = style;
             }
             if (_pourBottleLiquid == null) return;
             var shelf = _focusBottle == null ? null : run.Shelf.Find(_focusBottle.Id);
             float level = shelf != null && shelf.Capacity > 0
                 ? (float)(shelf.Remaining / shelf.Capacity) : 0f;
-            _pourBottleLiquid.fillAmount = BottleArt.For(style).FillAmount(level);
+            _pourBottleLiquid.fillAmount = BottleArt.For(_focusBottle, open: true).FillAmount(level);
         }
 
         /// <summary>
