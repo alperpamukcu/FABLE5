@@ -124,6 +124,18 @@ medallion is a different wingshape; Goodness gets a device that is pointedly not
 harp. The stamped wordmark is always the parody name from `base_bar.json`, never the
 real one.
 
+## 5a. The fixed brief (2026-08-05)
+
+Hand-written briefs reopened solved failures three rounds running — liquid pooled
+back in, labels went blank, the pitch went flat. The brief is therefore FROZEN in
+**`Tools/v3_brief.py`**, and a bottle is generated only through its `build()`: the
+per-bottle LOOK sentence and its ratio are the only variables; the EMPTY, CHECKER,
+BUILD and NO_TEXT blocks and the tool knobs (`create_map_object`, "high top-down",
+120×280, single-colour outline, medium shading, medium detail — the exact settings
+the approved take was made with) never change. Every block traces to a real failure
+and is commented with it. Editing a frozen block is a spec change and goes through
+this document.
+
 ## 5. Process — one bottle at a time
 
 1. **Pilot = Smirkoff Vodka** (simplest glass, the shelf's zero point). It sets the
