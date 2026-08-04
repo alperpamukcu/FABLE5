@@ -118,8 +118,14 @@ namespace LastCall.UI
         //
         // The near-clears stay near-clear and are allowed to converge, because they genuinely
         // do — a vodka and a soda in a glass ARE the same picture, and the gauge names them in
-        // words. They start faintly WARM so VisibleLiquid's cool cast lands them neutral
-        // instead of blue, which is what made a vodka read as a blue drink.
+        // words. They are BLUE, and the blue is in the base rather than in a cast over it (the
+        // author, 2026-08-04: "sıvıların rengi şu an gri gözüküyor, mavi tonlarında olmasını
+        // istiyorum"). They used to start faintly warm so the cool cast would land them
+        // neutral, and neutral is exactly what grey is: measured through this render path at
+        // half fill they drew #7B7A85, #777C89, #777D8F — three greys with 11, 18 and 25 units
+        // of chroma between them and none. A drink drawn at half alpha over a bar this dark
+        // keeps only half the chroma it started with, so a whisper of hue at the base survives
+        // as nothing at all; carrying it in the base at 45-78 units is what makes it arrive.
         //
         // What was most wrong, and why it mattered: syrup was #E36FA0, the shelf tag's
         // bubblegum pink leaking into the liquid table, and since syrup is in most of the
@@ -135,11 +141,11 @@ namespace LastCall.UI
             // proposals 1 and 5, this table 0. The tightest survivor is bourbon against pale
             // ale at 5.6, and a pale ale never enters a mix.
             //
-            // clear spirits and mixers — near-white, each with a whisper of its own hue
-            ["vodka"]      = (Color)new Color32(0xF1, 0xEF, 0xEA, 0xFF), // water; the zero point
-            ["soda"]       = (Color)new Color32(0xE9, 0xF2, 0xF4, 0xFF), // aerated water, a shade cooler
-            ["tonic"]      = (Color)new Color32(0xDF, 0xEE, 0xFB, 0xFF), // quinine really does glow cold
-            ["gin"]        = (Color)new Color32(0xDF, 0xEF, 0xD3, 0xFF), // juniper's faint green
+            // the clear spirits and mixers — cold water tones, ordered by how blue they get
+            ["vodka"]      = (Color)new Color32(0xAB, 0xD7, 0xF4, 0xFF), // water; the zero point
+            ["soda"]       = (Color)new Color32(0x99, 0xCE, 0xF4, 0xFF), // aerated water, a shade deeper
+            ["tonic"]      = (Color)new Color32(0x85, 0xC5, 0xF7, 0xFF), // quinine really does glow cold
+            ["gin"]        = (Color)new Color32(0xA4, 0xDE, 0xCE, 0xFF), // juniper, on the green side of the cold
             ["tequila"]    = (Color)new Color32(0xDF, 0xE9, 0xB8, 0xFF), // blanco's agave straw
             ["triple_sec"] = (Color)new Color32(0xF6, 0xE0, 0xB2, 0xFF), // orange peel, the warm clear
             ["syrup"]      = (Color)new Color32(0xF3, 0xE7, 0xBE, 0xFF), // 2:1 bar syrup: pale honey
@@ -175,24 +181,26 @@ namespace LastCall.UI
 
         /// <summary>
         /// The palest a liquid may be drawn before it stops being visible, and what it is pulled
-        /// toward. Vodka, gin, soda and tonic are near-white in <see cref="LiquidColors"/> because
-        /// that is what they are — but a near-white drink behind pale glass, or in a glass over a
-        /// lit bar, is nothing at all: the player could not tell a half-full bottle of vodka from
-        /// an empty one. They are given the least colour that separates them, and it is blue
-        /// because that is what water already reads as under bar light, and because it is the one
-        /// cast that cannot be mistaken for a juice, a beer or a foam head.
+        /// toward — blue, because that is what water reads as under bar light, and because it is
+        /// the one cast that cannot be mistaken for a juice, a beer or a foam head. A near-white
+        /// drink behind pale glass, or in a glass over a lit bar, is nothing at all: the player
+        /// could not tell a half-full bottle from an empty one.
         /// </summary>
         /// <remarks>
-        /// The cast was 0.55 until 2026-08-03, and at that strength a vodka read as a light
-        /// BLUE drink rather than a clear one — the author's report, and fairly: the tint was
-        /// carrying the whole job of making a clear spirit visible. It does not have to any
-        /// more. The drink is genuinely translucent now (see <see cref="DrinkAlpha"/>), which
-        /// is what "clear" actually looks like, and its edge catches the light in its own
-        /// colour, so a glass of vodka reads as a glass with something in it without being
-        /// painted blue. The cast stays, at a third of the strength, for the case it was
-        /// written for: a pale drink against a pale glass on a lit bar.
+        /// The cast is a SAFETY NET, not the paint. It was 0.55 and doing the whole job, which
+        /// made a vodka read as a blue drink; it was cut to 0.20 over a warm base, which is how
+        /// the clears ended up grey — a cool cast at a fifth strength over a warm near-white
+        /// cancels the warmth and adds nothing, which is the definition of neutral. The blue is
+        /// in the base now, so the cast only has to catch what the table does not name.
+        ///
+        /// It fires above 0.90 rather than 0.80 for a reason worth keeping: at 0.80 it was
+        /// reaching the HONEY clears, dragging syrup and triple sec toward blue and taking a
+        /// third of syrup's chroma with it (53 units down to 32, measured). A bar syrup is not
+        /// a cold liquid and must not be tinted like one. Above 0.90 there is nothing but
+        /// genuine near-white left — an unmapped style falling back to a pale ramp step — and
+        /// that is the only thing the cast now touches.
         /// </remarks>
-        private const float ClearAbove = 0.80f, ClearFull = 0.96f, ClearCast = 0.20f;
+        private const float ClearAbove = 0.90f, ClearFull = 0.96f, ClearCast = 0.30f;
         private static readonly Color ClearTint = (Color)new Color32(0x86, 0xC2, 0xE4, 0xFF);
 
         /// <summary>
