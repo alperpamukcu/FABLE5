@@ -116,3 +116,6 @@ Tools/AssetPipeline/generation_log.jsonl
 dev/
 
 __pycache__/
+
+# pilot art working files - approved masters ship via Assets/Resources/Items
+Art/pilot/

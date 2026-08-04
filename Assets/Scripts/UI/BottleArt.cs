@@ -275,10 +275,82 @@ namespace LastCall.UI
             if (card == null) return default;
             string key = (open ? "o:" : "c:") + card.Id;
             if (Cache.TryGetValue(key, out var piece)) return piece;
-            var sprite = open ? ItemArt.BottleOpen(card) : ItemArt.Bottle(card);
-            piece = Measure(sprite);
+            piece = MeasureV3(card.Id, open);
+            if (!piece.Exists)
+            {
+                var sprite = open ? ItemArt.BottleOpen(card) : ItemArt.Bottle(card);
+                piece = Measure(sprite);
+            }
             Cache[key] = piece;
             return piece;
+        }
+
+        /// <summary>
+        /// A v3 sandwich bottle (GDD 25 §3), where nothing is guessed: the pipeline that
+        /// baked the layers also baked the cavity as the fill plate, so the measurement
+        /// here is READING the plate's alpha, not divining tones — the whole class of
+        /// cavity-misread bugs (Thornwood, twice) cannot occur on this path. The piece's
+        /// Sprite is the interior back plate; the walls, closure and label all live on the
+        /// front plate, which is why the open state swaps only the front.
+        /// </summary>
+        private static Piece MeasureV3(string id, bool open)
+        {
+            var back = ItemArt.Load("v3_" + id + "_back");
+            if (back == null) return default;
+            var fill = ItemArt.Load("v3_" + id + "_fill");
+            var front = open ? ItemArt.Load("v3_" + id + "_front_open") : null;
+            if (front == null) front = ItemArt.Load("v3_" + id + "_front");
+            if (fill == null || front == null) return default;   // half a sandwich is no sandwich
+            var tex = fill.texture;
+            if (tex == null || !tex.isReadable) return default;
+
+            var rect = fill.rect;
+            int w = (int)rect.width, h = (int)rect.height;
+            var px = tex.GetPixels((int)rect.x, (int)rect.y, w, h);
+            var rows = new int[h];        // GetPixels row 0 is the BOTTOM row
+            long total = 0;
+            int lo = -1, hi = -1;
+            for (int y = 0; y < h; y++)
+            {
+                int n = 0;
+                for (int x = 0; x < w; x++)
+                    if (px[y * w + x].a >= 0.5f) n++;
+                rows[y] = n;
+                if (n > 0) { if (lo < 0) lo = y; hi = y; }
+                total += n;
+            }
+            if (total == 0) return default;
+
+            // volume → height, accumulated off the plate (the FillAmount law)
+            var level = new float[LevelSteps];
+            double acc = 0;
+            int yy = lo;
+            for (int i = 0; i < LevelSteps; i++)
+            {
+                double want = total * (i / (double)(LevelSteps - 1));
+                while (yy < hi && acc + rows[yy] < want) { acc += rows[yy]; yy++; }
+                level[i] = (yy + 1) / (float)h;
+            }
+            level[0] = lo / (float)h;
+
+            // the glass tone: the back plate's bright quartile — its inner-light wall
+            var glass = Color.white;
+            var btex = back.texture;
+            if (btex != null && btex.isReadable)
+            {
+                var brect = back.rect;
+                var bpx = btex.GetPixels((int)brect.x, (int)brect.y,
+                                         (int)brect.width, (int)brect.height);
+                var lit = new List<Color>();
+                foreach (var c in bpx)
+                    if (c.a >= 0.5f) lit.Add(c);
+                lit.Sort((a, b) => (0.299f * a.r + 0.587f * a.g + 0.114f * a.b)
+                    .CompareTo(0.299f * b.r + 0.587f * b.g + 0.114f * b.b));
+                if (lit.Count > 0) glass = lit[(int)(lit.Count * 0.75f)];
+            }
+
+            return new Piece(back, fill, front, back.rect.width / back.rect.height,
+                             lo / (float)h, (hi + 1) / (float)h, glass, level);
         }
 
         /// <summary>

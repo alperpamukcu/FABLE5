@@ -24,15 +24,23 @@ The author supplied a box and a cylinder as the law. What they encode:
   no convergence; the top face shows as a shallow band; the RIGHT side shows as a
   narrow band about **12% of the front width**. Same pitch as the cylinders.
 - **Sizes vary, the angle never does.** A taller bottle is more rows, not a new camera.
-- In generation briefs this is spelled out per the proven recipe (memory
-  `pixellab-mcp-constraints`): "2.5D seen from SLIGHTLY ABOVE, cap top and shoulder
-  read as shallow ELLIPSES, visible roundness, never a flat front-on cut-out."
+- **The camera comes from the TOOL, not the prompt** (settled 2026-08-04, three
+  rounds deep): prompt-begged pitch on `create_1_direction_object` produced flat
+  cut-outs twice. Bottles generate on **`create_map_object`, view "high top-down",
+  canvas 120×280** — the author judged that view against "low top-down" and both
+  sidescroller rounds and picked it. The ellipse and bow numbers above stay as the
+  ACCEPTANCE test (base bow ≈ 15% of body width; cap-top ellipse visible), measured
+  per take, since the tool's pitch still varies a little between takes.
+- At this size the API returns ONE take per call — queue 2–3 calls per bottle for
+  choice (~$0.25–0.35 a bottle).
 
 ## 2. Pixel language
 
-- **Canvas:** height **162px** exactly (the shipped shelf band); width free per
-  silhouette, observed range 44–92px. Body proportion 1.8–2.6 : 1 tall:wide, asked
-  for **as a number** in the brief ("about 2.2 times as tall as it is wide").
+- **Canvas:** masters generate on a **120×280** canvas and trim to roughly 70×260;
+  they draw in the SAME shelf slot the old 162-band art used (~130 units tall), so
+  the change is density, not size — about 2 art pixels per screen unit, the hi-bit
+  register precedent. The 162 band survives only as the legacy sprites' grain.
+  Body proportion is still asked for as a number in the brief.
 - **Density:** hi-bit pixel art, PPU 1, point filtering; on the 1280-unit UI canvas a
   shelf bottle draws at ~120–135 units, so one art pixel ≈ 1.5–2 screen pixels.
   Whole-pixel snapping; no runtime rotation or non-uniform scale, ever.
@@ -53,6 +61,12 @@ The author supplied a box and a cylinder as the law. What they encode:
   3×5 pixel capitals, so every letter is ours and always crisp. Where the plate is too
   small for the full wordmark, the logo alone is the brand and the shelf tag says the
   name, as it already does.
+- **A label never ships blank** (the author, 2026-08-04: "etikette yazı veya amblem
+  olacak"). The map-object view tends to leave the plate empty however hard the brief
+  pushes, so the pipeline finishes the dress deterministically when it must: the
+  band, the medallion disc, the emblem and the wordmark are all drawable in code on
+  the detected plate, in the brand's ink. Generated dress is a bonus, never a
+  dependency.
 
 ## 3. The sandwich — how the liquid gets inside the glass
 

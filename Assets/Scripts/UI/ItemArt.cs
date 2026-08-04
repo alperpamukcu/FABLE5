@@ -34,6 +34,12 @@ namespace LastCall.UI
         public static Sprite Bottle(LastCall.Core.IngredientCard card)
         {
             if (card == null) return null;
+            // v3 sandwich bottles (GDD 25 §3): the base image is the vessel's INTERIOR —
+            // the back plate — and the walls, cap and label arrive on the front plate that
+            // BottleArt.AddLiquid hangs over the drink. The back is the same shut or open,
+            // because the closure lives entirely in the front layer.
+            var v3 = Load("v3_" + card.Id + "_back");
+            if (v3 != null) return v3;
             var own = Load("bot_" + card.Id);
             return own != null ? own : Load(card.Info?.Style);
         }
@@ -43,6 +49,8 @@ namespace LastCall.UI
         public static Sprite BottleOpen(LastCall.Core.IngredientCard card)
         {
             if (card == null) return null;
+            var v3 = Load("v3_" + card.Id + "_back");   // stateless: the cap is front-plate
+            if (v3 != null) return v3;
             // The brand's own capless shot, then its STYLE's — a tier-one brand has no art
             // of its own but its style does, and falling straight through to the shut
             // bottle would have put the cap back on the one in your hand.
