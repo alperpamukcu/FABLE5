@@ -45,9 +45,14 @@ The author supplied a box and a cylinder as the law. What they encode:
 - **Light:** one key light, upper-left. One vertical specular streak on the left glass
   wall per bottle; caps and shoulders catch a 1px top rim.
 - **No dither, no texture noise:** flat fills and ramp steps. The label is a clean plate.
-- **No text anywhere** (the generator cannot write — it produces mangled glyphs).
-  Label plates are blank geometry: bands, crests, medallions, monogram SHAPES. The
-  name lives on the shelf tag in the pixel font, as it already does.
+- **The bottle wears its brand** (the author, 2026-08-04): the label carries the
+  parody identity — a LOGO and the parody wordmark — never the real mark. Division of
+  labour, because the generator cannot write (it produces mangled glyphs): the **logo
+  is generated** as pure geometry (an emblem, a crest, a silhouette — asked for with
+  "no text, no letters"), and the **wordmark is stamped by the pipeline** in our own
+  3×5 pixel capitals, so every letter is ours and always crisp. Where the plate is too
+  small for the full wordmark, the logo alone is the brand and the shelf tag says the
+  name, as it already does.
 
 ## 3. The sandwich — how the liquid gets inside the glass
 
@@ -57,6 +62,11 @@ build the image as two layers and combine them?" — with one correction: the la
 **derived from one master, never generated twice**. Generation cannot repeat itself
 pixel-perfectly (the open-states lesson, three times over — memory
 `open-states-derive`); derivation is the only thing that aligns 1:1.
+
+**The master is always an EMPTY bottle** (the author, 2026-08-04, explicit): no liquid
+is ever painted into the art — the brief demands "EMPTY, see clean through the glass",
+and a take with liquid in it is rejected at the pick. The drink belongs to the game,
+which is the only way one sprite can be full, half and dry.
 
 Per bottle, the pipeline bakes from one generated master (capped, EMPTY glass):
 
@@ -93,6 +103,12 @@ change), Bass's red triangle (different shape), Bacardí's bat (a different wing
 mark), Absolut's no-label printed glass (keep the idea, change the geometry), Clase
 Azul's fluted ceramic (fluting yes, different proportions and colourway). One line of
 intent per bottle is written into its generation brief and noted in `_CHANGELOG.md`.
+
+Each label's LOGO is part of this parody (§2): a mark that rhymes with the famous
+emblem without copying it — Smirkoff's crest is a smirk, not an eagle; the White Bat
+medallion is a different wingshape; Goodness gets a device that is pointedly not a
+harp. The stamped wordmark is always the parody name from `base_bar.json`, never the
+real one.
 
 ## 5. Process — one bottle at a time
 
