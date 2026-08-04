@@ -364,6 +364,14 @@ namespace LastCall.Core
                 _glassTiers[g.Id] = late ? MaxGlassTier
                     : (g.Id == "rocks" || g.Id == "highball" ? 3 : 2);   // mid: 1–2★ lines
             while (Seats < (late ? _config.MaxSeats : 4)) Seats++;
+            // The ambience upgrades, which the preset used to leave at 1 (2026-08-04). Every
+            // one of them changes the scene (GDD 24 §6), so an endgame bar that still had the
+            // starting counter, the starting back bar and no musician was the one part of the
+            // preset the player could SEE was not the endgame. The bottles and the glassware
+            // were already complete; this is the rest of "everything is bought".
+            CounterTier = late ? _config.MaxAmbienceTier : 2;
+            WallTier = late ? _config.MaxAmbienceTier : 2;
+            HasMusician = late;
 
             int rankCap = late ? int.MaxValue : 14;
             var toUnlock = new List<RecipeDefinition>();
