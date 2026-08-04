@@ -31,7 +31,11 @@ namespace LastCall.UI
         private bool _pouring;
         private const float LiftRange = 200f;  // px of lift for a full tilt
         private const float MaxTilt = 118f;    // degrees the bottle leans at full lift
-        private const float BottleH = 230f;   // scaled up with the stage (P14 v2)
+        // 230 → 300 (the author, 2026-08-05: "shakera dökme sahnesinde tüm alkol
+        // şişelerinin boyutunu büyüt") — the v3 masters are slimmer than the old art,
+        // and at 230 a 3.7:1 bottle read as a wand. The mouth offset and the tilt
+        // maths all derive from this, so the pour arc scales with it.
+        private const float BottleH = 300f;
         // The pour fills slower than the raw bottle rate so the stream reads as a real pour
         // (GDD 24 §2, 2026-07-22 — "doluş hızı çok hızlı"). Only the drawn volume slows; the
         // floor's patience clock runs on its own tick, untouched.
@@ -789,7 +793,7 @@ namespace LastCall.UI
             _bottleRest = new Vector2(330, -70);
             _pourBottle = NewRect("Bottle", _pourSurface);
             _pourBottle.pivot = new Vector2(0.5f, 0.22f);
-            _pourBottle.sizeDelta = new Vector2(140, BottleH);
+            _pourBottle.sizeDelta = new Vector2(180, BottleH);
             _pourBottle.anchoredPosition = _bottleRest;
             _pourBottleBody = _pourBottle.gameObject.AddComponent<Image>();
             _pourBottleBody.preserveAspect = true;    // the real bottle art, set per focus in RefreshShaker

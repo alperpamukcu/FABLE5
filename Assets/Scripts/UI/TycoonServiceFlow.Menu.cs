@@ -542,7 +542,10 @@ namespace LastCall.UI
             // bottles above the wood — so the rect is cut to the art's own aspect and
             // pinned by its base to the plank's mid-depth.
             var piece0 = BottleArt.For(card);
-            float artH = shelfH - ShelfFaceH - 24f, artW = slotW - 12f;
+            // 24 → 6 of headroom (the author, 2026-08-05: "oyun içi şişenin boyutunu
+            // büyüt") — the v3 masters are slim, and the height is the only axis a
+            // slim bottle can grow on.
+            float artH = shelfH - ShelfFaceH - 6f, artW = slotW - 12f;
             if (piece0.Exists && piece0.Aspect > 0f)
             {
                 if (artH * piece0.Aspect <= artW) artW = artH * piece0.Aspect;
