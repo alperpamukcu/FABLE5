@@ -5,7 +5,7 @@
   "cards": [
     {
       "id": "vodka_astra",
-      "name": "Astra Vodka",
+      "name": "Smirkoff Vodka",
       "type": "Spirit",
       "flavor": 4,
       "style": "vodka",
@@ -18,7 +18,7 @@
     },
     {
       "id": "gin_boothby",
-      "name": "Boothby Gin",
+      "name": "Garden's Gin",
       "type": "Spirit",
       "flavor": 6,
       "style": "gin",
@@ -31,7 +31,7 @@
     },
     {
       "id": "rum_cane_coral",
-      "name": "Coral Rum",
+      "name": "White Bat Rum",
       "type": "Spirit",
       "flavor": 5,
       "style": "rum",
@@ -44,7 +44,7 @@
     },
     {
       "id": "bourbon_redline",
-      "name": "Redline Bourbon Whiskey",
+      "name": "Jim Bean Whiskey",
       "type": "Spirit",
       "flavor": 7,
       "style": "bourbon",
@@ -57,7 +57,7 @@
     },
     {
       "id": "amaro_notte",
-      "name": "Notte Amaro",
+      "name": "Cumpari Amaro",
       "type": "Bitter",
       "flavor": 6,
       "style": "amaro",
@@ -70,7 +70,7 @@
     },
     {
       "id": "vermouth_velvet",
-      "name": "Velvet Vermouth",
+      "name": "Canzone Vermouth",
       "type": "Sweet",
       "flavor": 5,
       "style": "vermouth",
@@ -161,7 +161,7 @@
     },
     {
       "id": "beer_kestrel",
-      "name": "Kestrel Lager",
+      "name": "Krona Lager",
       "type": "Beer",
       "flavor": 3,
       "style": "lager",
@@ -174,7 +174,7 @@
     },
     {
       "id": "beer_collier",
-      "name": "Collier Stout",
+      "name": "Goodness Stout",
       "type": "Beer",
       "flavor": 6,
       "style": "stout",
@@ -187,7 +187,7 @@
     },
     {
       "id": "beer_marigold",
-      "name": "Marigold Pale Ale",
+      "name": "Brass Pale Ale",
       "type": "Beer",
       "flavor": 5,
       "style": "pale_ale",
@@ -200,7 +200,7 @@
     },
     {
       "id": "vodka_vor",
-      "name": "Vor Vodka",
+      "name": "Absolve Vodka",
       "type": "Spirit",
       "flavor": 6,
       "style": "vodka",
@@ -214,7 +214,7 @@
     },
     {
       "id": "gin_juniper_crown",
-      "name": "Crown Gin",
+      "name": "Leafeater Gin",
       "type": "Spirit",
       "flavor": 8,
       "style": "gin",
@@ -228,7 +228,7 @@
     },
     {
       "id": "bourbon_old_harrow",
-      "name": "Harrow Bourbon Whiskey",
+      "name": "Jack Spaniel's Whiskey",
       "type": "Spirit",
       "flavor": 9,
       "style": "bourbon",
@@ -242,7 +242,7 @@
     },
     {
       "id": "tequila_sonora",
-      "name": "Sonora Tequila",
+      "name": "Jose Cuerdo Tequila",
       "type": "Spirit",
       "flavor": 6,
       "style": "tequila",
@@ -257,7 +257,7 @@
     },
     {
       "id": "liqueur_delia",
-      "name": "Delia Triple Sec",
+      "name": "Grand Mariner Triple Sec",
       "type": "Sweet",
       "flavor": 5,
       "style": "triple_sec",
@@ -350,7 +350,7 @@
     },
     {
       "id": "rum_tidewater",
-      "name": "Tidewater Rum",
+      "name": "Admiral Morgan Rum",
       "type": "Spirit",
       "flavor": 7,
       "style": "rum",
@@ -364,7 +364,7 @@
     },
     {
       "id": "tequila_alta_luna",
-      "name": "Alta Luna Tequila",
+      "name": "1810 Tequila",
       "type": "Spirit",
       "flavor": 8,
       "style": "tequila",
@@ -393,7 +393,7 @@
     },
     {
       "id": "liqueur_kafa",
-      "name": "Kafa Coffee Liqueur",
+      "name": "Koala Coffee Liqueur",
       "type": "Sweet",
       "flavor": 7,
       "style": "coffee_liqueur",
@@ -438,7 +438,7 @@
     },
     {
       "id": "vodka_leonid",
-      "name": "Leonid Reserve Vodka",
+      "name": "Grey Gander Vodka",
       "style": "vodka",
       "category": "vodka",
       "type": "Spirit",
@@ -452,7 +452,7 @@
     },
     {
       "id": "gin_thornwood",
-      "name": "Thornwood Botanical Gin",
+      "name": "Hendrake's Gin",
       "style": "gin",
       "category": "gin",
       "type": "Spirit",
@@ -466,7 +466,7 @@
     },
     {
       "id": "bourbon_ashfall",
-      "name": "Ashfall Single Barrel Whiskey",
+      "name": "Mason's Mark Whiskey",
       "style": "bourbon",
       "category": "whiskey",
       "type": "Spirit",
@@ -480,7 +480,7 @@
     },
     {
       "id": "rum_windward",
-      "name": "Windward XO Rum",
+      "name": "Krakatoa Rum",
       "style": "rum",
       "category": "rum",
       "type": "Spirit",
@@ -494,7 +494,7 @@
     },
     {
       "id": "tequila_sol_viejo",
-      "name": "Sol Viejo Añejo Tequila",
+      "name": "Don Julep Añejo Tequila",
       "style": "tequila",
       "category": "tequila",
       "type": "Spirit",
@@ -508,7 +508,7 @@
     },
     {
       "id": "vodka_okhta",
-      "name": "Okhta Palace Vodka",
+      "name": "White Whale Vodka",
       "style": "vodka",
       "category": "vodka",
       "type": "Spirit",
@@ -522,7 +522,7 @@
     },
     {
       "id": "gin_veilcrest",
-      "name": "Veilcrest Cathedral Gin",
+      "name": "Gibbon 48 Gin",
       "style": "gin",
       "category": "gin",
       "type": "Spirit",
@@ -536,7 +536,7 @@
     },
     {
       "id": "bourbon_hollow_oak",
-      "name": "Hollow Oak 30 Whiskey",
+      "name": "Van Wrinkle 23 Whiskey",
       "style": "bourbon",
       "category": "whiskey",
       "type": "Spirit",
@@ -550,7 +550,7 @@
     },
     {
       "id": "rum_reina_del_mar",
-      "name": "Reina del Mar Rum",
+      "name": "Emissary Rum",
       "style": "rum",
       "category": "rum",
       "type": "Spirit",
@@ -564,7 +564,7 @@
     },
     {
       "id": "tequila_cielo_roto",
-      "name": "Cielo Roto Tequila",
+      "name": "Azulejo Tequila",
       "style": "tequila",
       "category": "tequila",
       "type": "Spirit",
