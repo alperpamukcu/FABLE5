@@ -131,6 +131,16 @@ namespace LastCall.UI
         // bubblegum pink leaking into the liquid table, and since syrup is in most of the
         // sours it was dragging a third of the menu pink (it is the bottle in the author's
         // screenshot). Simple syrup is clear-to-honey: it adds thickness, not colour.
+        //
+        // The PALE coloured drinks were raised on 2026-08-04 for the same arithmetic reason as
+        // the clears, and on the same complaint ("renkli içeceklerde soluk renklerde daha canlı
+        // renkler kullanılsın, örneğin limonata"). A lemonade was #E7EC8A and drew #999863 —
+        // khaki, not lemonade. Half the chroma goes to the composite, so a drink painted at the
+        // colour it "is" arrives at half of it, and the pale ones have the least to spare. In
+        // drawn Lab chroma: lemon 29 → 62, triple sec 12 → 54, lime 36 → 55, mint 31 → 42,
+        // ginger 20 → 33, tequila 10 → 29, olive 15 → 23, syrup 9 → 20. The ORDER is the
+        // design: the loud ones (orange 68, energy 65) stay loudest and the two that must not
+        // be drinks — a bar syrup and an olive brine — stay the dullest things with a hue.
         private static readonly Dictionary<string, Color> LiquidColors = new Dictionary<string, Color>
         {
             // The values are MEASURED, not eyeballed. Three tables were written independently
@@ -141,23 +151,26 @@ namespace LastCall.UI
             // proposals 1 and 5, this table 0. The tightest survivor is bourbon against pale
             // ale at 5.6, and a pale ale never enters a mix.
             //
+            // Re-scored over all 26 after the pale lift: 2 pairs under dE 8, and both are inside
+            // the water family, which is allowed to converge because it genuinely does.
+            //
             // the clear spirits and mixers — cold water tones, ordered by how blue they get
             ["vodka"]      = (Color)new Color32(0xAB, 0xD7, 0xF4, 0xFF), // water; the zero point
             ["soda"]       = (Color)new Color32(0x99, 0xCE, 0xF4, 0xFF), // aerated water, a shade deeper
             ["tonic"]      = (Color)new Color32(0x85, 0xC5, 0xF7, 0xFF), // quinine really does glow cold
             ["gin"]        = (Color)new Color32(0xA4, 0xDE, 0xCE, 0xFF), // juniper, on the green side of the cold
-            ["tequila"]    = (Color)new Color32(0xDF, 0xE9, 0xB8, 0xFF), // blanco's agave straw
-            ["triple_sec"] = (Color)new Color32(0xF6, 0xE0, 0xB2, 0xFF), // orange peel, the warm clear
-            ["syrup"]      = (Color)new Color32(0xF3, 0xE7, 0xBE, 0xFF), // 2:1 bar syrup: pale honey
+            ["tequila"]    = (Color)new Color32(0xE0, 0xEE, 0x8E, 0xFF), // blanco's agave straw
+            ["triple_sec"] = (Color)new Color32(0xFF, 0xB2, 0x48, 0xFF), // orange peel, the warm clear
+            ["syrup"]      = (Color)new Color32(0xF9, 0xE7, 0xA2, 0xFF), // 2:1 bar syrup: pale honey
             // the yellows and greens, pushed apart — three of these used to be one colour
-            ["lemon"]      = (Color)new Color32(0xE7, 0xEC, 0x8A, 0xFF), // cloudy, green-leaning
+            ["lemon"]      = (Color)new Color32(0xEF, 0xEC, 0x48, 0xFF), // lemonade, and it should look it
             ["pineapple"]  = (Color)new Color32(0xF3, 0xCB, 0x46, 0xFF), // pressed, warm and rich
             ["energy"]     = (Color)new Color32(0xCF, 0xE5, 0x3A, 0xFF), // nothing in nature is this
-            ["lime"]       = (Color)new Color32(0xB2, 0xCB, 0x5E, 0xFF), // cordial-cloudy, a step down
-            ["mint"]       = (Color)new Color32(0x79, 0xC0, 0x67, 0xFF), // a true leaf green
-            ["olive"]      = (Color)new Color32(0xBC, 0xC1, 0x83, 0xFF), // brine: murky salt water
+            ["lime"]       = (Color)new Color32(0xA2, 0xCE, 0x3C, 0xFF), // cordial-cloudy, a step down
+            ["mint"]       = (Color)new Color32(0x6F, 0xC8, 0x5C, 0xFF), // a true leaf green
+            ["olive"]      = (Color)new Color32(0xB4, 0xBC, 0x6B, 0xFF), // brine: murky salt water
             // the ambers, spaced by value so the four of them stop being one band
-            ["ginger"]     = (Color)new Color32(0xE6, 0xCA, 0x8A, 0xFF), // ginger beer is hazy straw
+            ["ginger"]     = (Color)new Color32(0xE3, 0xC0, 0x66, 0xFF), // ginger beer is hazy straw
             ["lager"]      = (Color)new Color32(0xE7, 0xB4, 0x43, 0xFF), // clear golden straw
             ["orange"]     = (Color)new Color32(0xF5, 0x94, 0x1C, 0xFF), // pulp and all
             ["pale_ale"]   = (Color)new Color32(0xC4, 0x6A, 0x12, 0xFF), // copper, darker than lager
