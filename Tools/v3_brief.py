@@ -82,9 +82,12 @@ BOTTLES = {
     'bourbon_redline': (
         'a square clear glass bourbon whiskey bottle with a white label and red '
         'accents, a black cap', 'JIM BEAN', 2.2),
+    # "şişenin şekli biraz daha benzetilsin orijinaline" (2026-08-05): the square is
+    # the whole identity — flat front, hard bevelled shoulders, fluted short neck.
     'bourbon_old_harrow': (
-        'a square dark glass whiskey bottle with a black label with white frame, '
-        'a black cap', "JACK SPANIEL'S", 2.2),
+        'a SQUARE dark glass whiskey bottle with a flat front, hard bevelled square '
+        'shoulders and a short fluted neck, a black label with a thin white frame, '
+        'a black cap', "JACK SPANIEL'S", 2.1),
     'bourbon_ashfall': (
         'a squat round clear glass whiskey bottle with a cream label, its neck '
         'sealed in dripping amber wax', "MASON'S MARK", 2.0),
@@ -92,15 +95,21 @@ BOTTLES = {
         'a rounded clear glass whiskey bottle with an aged paper label, a gold '
         'foil cap', 'VAN WRINKLE', 2.3),
     # ── tequila: Jose Cuervo / 1800 / Don Julio / Clase Azul ────────────────────
+    # "şişe orijinal markanın şişesine daha çok benzesin" (2026-08-05): Cuervo
+    # Especial reads as the amber-gold squared bottle with the dark band label.
     'tequila_sonora': (
-        'a clear glass tequila bottle with a cream label with green and red '
-        'accents, a black cap', 'JOSE CUERDO', 2.2),
+        'an amber-gold tinted glass tequila bottle with a squared body and rounded '
+        'shoulders, a cream label with a wide black band and small red crest, '
+        'a black cap', 'JOSE CUERDO', 2.2),
     'tequila_alta_luna': (
         'a trapezoid glass tequila bottle with sloped shoulders and a wide flat '
         'stopper top, a small brown label', '1810', 2.0),
+    # "orijinal markanın orijinal şişesine daha çok benzesin" (2026-08-05): Don
+    # Julio's shape IS the short round body with the tall thin neck.
     'tequila_sol_viejo': (
-        'a squat clear glass tequila bottle with a simple white label with blue '
-        'agave emblem, a brown cap', 'DON JULEP', 1.9),
+        'a SHORT round-bodied clear glass tequila bottle with soft round shoulders '
+        'and a TALL THIN NECK, a simple cream label with a small blue agave plant '
+        'emblem, a small brown cap', 'DON JULEP', 1.8),
     'tequila_cielo_roto': (
         'a white ceramic tequila bottle with cobalt blue vertical fluting and a '
         'rounded ceramic stopper', 'AZULEJO', 2.6),
@@ -114,7 +123,10 @@ BOTTLES = {
     'liqueur_delia': (
         'a round-bellied brown glass orange liqueur bottle with a narrow neck, a '
         'cream label with a thin red ribbon emblem, a gold cap', 'GRAND MARINER', 2.2),
+    # "tasarımı kötü, kesin değiş" (2026-08-05): rebuilt on Kahlua's real dress —
+    # sloped shoulders, the big warm yellow label, the red ribbon wave.
     'liqueur_kafa': (
-        'a dark brown glass coffee liqueur bottle with a yellow label with red '
-        'wave accents, a yellow cap', 'KOALA', 2.3),
+        'a dark brown glass coffee liqueur bottle with smoothly sloping shoulders, '
+        'a large warm yellow label with a red wavy ribbon band across its middle, '
+        'a red cap', 'KOALA', 2.2),
 }

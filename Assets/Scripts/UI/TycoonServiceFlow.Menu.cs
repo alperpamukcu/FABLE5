@@ -369,7 +369,9 @@ namespace LastCall.UI
 
             int perRow = Mathf.Max(7, Mathf.CeilToInt(items.Count / 3f));
             int shelves = Mathf.Max(3, Mathf.CeilToInt(items.Count / (float)perRow));
-            float shelfH = (areaH - GridGap) / shelves;
+            // The top padding is headroom for the first shelf's overhanging bottles and
+            // must come out of the bands' budget, or the bottom band spills off the page.
+            float shelfH = (areaH - GridGap - ListTopPad) / shelves;
 
             for (int row = 0; row < shelves; row++)
             {
@@ -740,6 +742,10 @@ namespace LastCall.UI
         // colour of its own -- the only colour on the page is the drink.
         private const int ShelfColumns = 4;
         private const float ShelfFaceH = 34f;
+
+        /// <summary>Mask headroom above the first shelf band, so the top row's bottles —
+        /// which overhang their band by ~10px like every row's do — keep their heads.</summary>
+        private const float ListTopPad = 16f;
         private RectTransform _kegRow;
         private static readonly Color ShelfWood = new Color(0.30f, 0.19f, 0.12f, 1f);
         private static readonly Color ShelfLip = new Color(0.46f, 0.31f, 0.19f, 1f);
@@ -1022,14 +1028,22 @@ namespace LastCall.UI
             _kegRow.anchoredPosition = Vector2.zero;
 
             // The wall's working area: full width under the cornice, above the ledge.
+            // The mask's top edge reaches HIGHER than the first shelf band does, because a
+            // bottle rises ABOVE its band by construction — the slot stands at 48 and the art
+            // is shelfH−40 tall, so the top of the glass overhangs the band by ~10px. On the
+            // middle shelves that overhang leans in front of the niche above, which reads as
+            // depth; on the TOP shelf it used to hit the mask and the author saw beheaded
+            // bottles (2026-08-05). The list gets the same amount as top padding, so the
+            // bands themselves stand exactly where they always did.
             var pageClip = NewRect("PageClip", _menuPanel);
-            Stretch(pageClip, Vector2.zero, Vector2.one, new Vector2(40, 92), new Vector2(-40, -118));
+            Stretch(pageClip, Vector2.zero, Vector2.one, new Vector2(40, 92), new Vector2(-40, -102));
             pageClip.gameObject.AddComponent<RectMask2D>();
 
             _bottleList = NewRect("Bottles", pageClip);
             Stretch(_bottleList, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _listHome = _bottleList.anchoredPosition;
             var listLayout = _bottleList.gameObject.AddComponent<VerticalLayoutGroup>();
+            listLayout.padding = new RectOffset(0, 0, (int)ListTopPad, 0);
             listLayout.spacing = GridGap; listLayout.childControlHeight = true;
             listLayout.childControlWidth = true; listLayout.childForceExpandWidth = true;
             listLayout.childForceExpandHeight = false;
