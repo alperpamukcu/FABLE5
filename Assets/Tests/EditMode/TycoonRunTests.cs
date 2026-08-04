@@ -488,12 +488,24 @@ namespace LastCall.Tests
         {
             // GDD 23 §6 (2026-07-22): if the till cannot cover it, the buy is refused.
             // Only rent may push the till below zero.
-            var run = NewRun();   // $20 start; the day leaves ~$80 in the till, under the $90 musician
+            // This was written against the musician, which was deleted on 2026-08-04. The
+            // counter is the fitting that survived and makes the same point in two steps —
+            // $40 then $80 — against a till one night leaves around $80: buy while the money
+            // is there, and the step after that has to be refused.
+            var run = NewRun();
             PlayDayServingEveryone(run);
 
-            Assert.Less(run.Money, run.Config.MusicianPrice, "sanity: the musician is out of reach");
-            Assert.Throws<InvalidOperationException>(() => run.BuyMusician());
-            Assert.AreEqual(0, run.DayUpgrades, "a refused buy books nothing");
+            while (run.CounterTier < run.Config.MaxAmbienceTier
+                   && run.Money >= run.Config.CounterPrice(run.CounterTier))
+                run.BuyCounter();
+            int booked = run.DayUpgrades;
+
+            Assert.Less(run.CounterTier, run.Config.MaxAmbienceTier,
+                "sanity: the till ran out before the counter did");
+            Assert.Less(run.Money, run.Config.CounterPrice(run.CounterTier),
+                "sanity: the next step up the counter is out of reach");
+            Assert.Throws<InvalidOperationException>(() => run.BuyCounter());
+            Assert.AreEqual(booked, run.DayUpgrades, "a refused buy books nothing");
         }
 
         [Test]

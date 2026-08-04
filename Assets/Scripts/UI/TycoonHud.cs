@@ -1053,14 +1053,15 @@ namespace LastCall.UI
 
         // ── refresh ─────────────────────────────────────────────────────────────
 
-        /// <summary>Pushes the bought ambience upgrades onto the scene (GDD 24 §6).</summary>
+        /// <summary>Pushes the bought glassware onto the scene. It is the only fitting the
+        /// scene still shows: the back bar and the musician are gone and the counter was made
+        /// a stat (the author, 2026-08-04).</summary>
         private void ApplyBarLook()
         {
             var run = Run;
             if (run == null) return;
             if (stage != null)
-                stage.ApplyBarLook(1 + Mathf.Min(2, run.GlassUpgradeSteps / 4),
-                    run.CounterTier, run.WallTier, run.HasMusician);
+                stage.ApplyBarLook(1 + Mathf.Min(2, run.GlassUpgradeSteps / 4));
             RefreshGlassRack(run);
         }
 

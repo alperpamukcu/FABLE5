@@ -57,21 +57,19 @@ namespace LastCall.Core
             crowd == WealthTier.HighRoller ? 1.25 : crowd == WealthTier.Broke ? 0.75 : 1.0;
 
         // ── ambience upgrades (GDD 23 §8): a nicer bar pleases the room ──────────
-        // Glassware, the counter, the back wall and a live musician are prestige, not
-        // throughput or margin: each lifts every visit's satisfaction a little, which
-        // draws a richer crowd tomorrow (§7). That is the third leg of the compounding
-        // loop — seats sell throughput, brands sell margin, ambience sells reputation.
+        // Glassware and the counter are prestige, not throughput or margin: each lifts every
+        // visit's satisfaction a little, which draws a richer crowd tomorrow (§7). That is the
+        // third leg of the compounding loop — seats sell throughput, brands sell margin,
+        // ambience sells reputation. The back wall and the live musician were deleted on
+        // 2026-08-04 (the author): both were prices attached to a tint and a placeholder
+        // silhouette, so what they actually sold was neither reputation nor a picture.
         public int MaxAmbienceTier { get; } = 3;
         public int GlasswarePrice(int tier) => 50 * tier;   // tier = current level; the next step costs this
         public int CounterPrice(int tier) => 40 * tier;
-        public int WallPrice(int tier) => 40 * tier;
-        public int MusicianPrice { get; } = 90;
 
-        /// <summary>Satisfaction added to every served visit by the bar's look (capped).</summary>
-        public double AmbienceBonus(int glasswareTier, int counterTier, int wallTier, bool musician) =>
-            Math.Min(0.15,
-                0.03 * ((glasswareTier - 1) + (counterTier - 1) + (wallTier - 1))
-                + (musician ? 0.06 : 0.0));
+        // The old AmbienceBonus(glassware, counter, wall, musician) went with them. It had been
+        // dead for a while regardless — TycoonRun.Ambience is what the judge reads, and has
+        // been since the glassware became per-line ladders.
 
         /// <summary>Seconds between arrivals, before jitter. Busier as days pass, and busier
         /// again for a well-reviewed bar (v5 P12): the standing bends the gap by up to a

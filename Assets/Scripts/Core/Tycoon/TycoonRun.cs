@@ -68,14 +68,26 @@ namespace LastCall.Core
         {
             get { int s = 0; foreach (var g in _glassware) s += GlassTier(g.Id) - 1; return s; }
         }
+        /// <summary>The counter's tier (1–3). It is the ONE fitting left: the back bar and the
+        /// musician were deleted outright on 2026-08-04, and the counter was kept on the
+        /// condition that it stops touching the scene and pays in a number instead (the
+        /// author). Nothing reads it but <see cref="Ambience"/>.</summary>
         public int CounterTier { get; private set; } = 1;
-        public int WallTier { get; private set; } = 1;
-        public bool HasMusician { get; private set; }
 
-        /// <summary>The satisfaction the bar's look adds to every served visit (GDD 23 §8).
-        /// Musician, counter and wall retired (the author, 2026-08-02); the glassware LINES
-        /// carry it now — same ceiling the old single ladder had (0.03×2 = 0.006×10).</summary>
-        public double Ambience => Math.Min(0.15, 0.006 * GlassUpgradeSteps);   // full at 25 steps
+        /// <summary>The satisfaction the bar adds to every served visit (GDD 23 §4's "plus
+        /// ambience"). Two ladders with their own ceilings, so a finished glass cabinet cannot
+        /// swallow the counter: the glassware LINES carry 0.15 (the same ceiling the old single
+        /// ladder had, 0.03×2 = 0.006×10), and the counter carries 0.03 a step to 0.06.</summary>
+        /// <remarks>
+        /// The counter used to be worth nothing at all. It was cut out of this sum on
+        /// 2026-08-02 along with the wall and the musician, and what it kept instead was a tint
+        /// on the scene — so the fitting a player paid for changed the picture and not the
+        /// night. That is now exactly inverted, on the author's instruction: it is a stat and
+        /// only a stat. Pooling it into the 0.15 would have been the same as deleting it, since
+        /// five lines of five steps reach 25 on their own.
+        /// </remarks>
+        public double Ambience => Math.Min(0.15, 0.006 * GlassUpgradeSteps)    // full at 25 steps
+                                + Math.Min(0.06, 0.03 * (CounterTier - 1));
 
         /// <summary>The most stars the bar's fittings allow a night to bank (the author's
         /// loop, 2026-08-02): happy customers alone cannot carry a dive past two stars —
@@ -364,14 +376,9 @@ namespace LastCall.Core
                 _glassTiers[g.Id] = late ? MaxGlassTier
                     : (g.Id == "rocks" || g.Id == "highball" ? 3 : 2);   // mid: 1–2★ lines
             while (Seats < (late ? _config.MaxSeats : 4)) Seats++;
-            // The ambience upgrades, which the preset used to leave at 1 (2026-08-04). Every
-            // one of them changes the scene (GDD 24 §6), so an endgame bar that still had the
-            // starting counter, the starting back bar and no musician was the one part of the
-            // preset the player could SEE was not the endgame. The bottles and the glassware
-            // were already complete; this is the rest of "everything is bought".
+            // The counter, which the preset used to leave at 1 (2026-08-04) — the last of the
+            // fittings, and the only one it still has to buy.
             CounterTier = late ? _config.MaxAmbienceTier : 2;
-            WallTier = late ? _config.MaxAmbienceTier : 2;
-            HasMusician = late;
 
             int rankCap = late ? int.MaxValue : 14;
             var toUnlock = new List<RecipeDefinition>();
@@ -1117,7 +1124,11 @@ namespace LastCall.Core
             return price;
         }
 
-        // ── ambience upgrades (GDD 23 §8): every one changes the scene (GDD 24 §6) ─
+        // ── the fittings (GDD 23 §8) ────────────────────────────────────────────
+        // GDD 23 §8 wanted every buyable to change the main scene. Two of the three that did
+        // are gone (2026-08-04) and the third deliberately does not any more, so that line of
+        // the design is historical: the glassware carries the visible progress now, because a
+        // finer glass is a thing the drink is actually served in rather than a tint.
 
         /// <summary>One step up ONE glass line (the author: per-type upgrades).</summary>
         public int BuyGlassTier(string glassId)
@@ -1138,6 +1149,8 @@ namespace LastCall.Core
             return price;
         }
 
+        /// <summary>One step up the counter. It buys satisfaction and nothing you can see —
+        /// see <see cref="Ambience"/>.</summary>
         public int BuyCounter()
         {
             EnsurePhase(TycoonPhase.DayEnd);
@@ -1147,26 +1160,6 @@ namespace LastCall.Core
             Spend(price);
             CounterTier++;
             return price;
-        }
-
-        public int BuyWall()
-        {
-            EnsurePhase(TycoonPhase.DayEnd);
-            if (WallTier >= _config.MaxAmbienceTier)
-                throw new InvalidOperationException("The back bar cannot be finer.");
-            int price = _config.WallPrice(WallTier);
-            Spend(price);
-            WallTier++;
-            return price;
-        }
-
-        public int BuyMusician()
-        {
-            EnsurePhase(TycoonPhase.DayEnd);
-            if (HasMusician) throw new InvalidOperationException("The stage is already taken.");
-            Spend(_config.MusicianPrice);
-            HasMusician = true;
-            return _config.MusicianPrice;
         }
 
         private void Spend(int price)
