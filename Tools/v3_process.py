@@ -194,9 +194,26 @@ def sandwich(master, mouth):
     glass = tones[len(tones) // 2]
     gl, gc = luma(glass), max(glass) - min(glass)
 
+    # ADAPTIVE print threshold. On dark or strongly tinted glass a fixed distance
+    # calls the whole body "print" and the film never lands — six bottles shipped
+    # with 2-8% film against a correct ~85% (the other session's scan_fronts
+    # measurement), and a level behind an opaque wall can never read. If the film
+    # share comes out under the floor, the fence widens and the sandwich re-runs.
+    cavN = sum(1 for x in range(W) for y in range(H)
+               if mask[x][y] and px[x, y][3] > 200)
+    fence = 26
+    for _round in range(4):
+        pn = sum(1 for x in range(W) for y in range(H)
+                 if mask[x][y] and px[x, y][3] > 200
+                 and (abs(luma(px[x, y][:3]) - gl) > fence
+                      or abs((max(px[x, y][:3]) - min(px[x, y][:3])) - gc) > fence))
+        if cavN == 0 or (cavN - pn) / cavN >= 0.35:
+            break
+        fence *= 2
+
     def printed(x, y):
         c = px[x, y][:3]
-        return abs(luma(c) - gl) > 26 or abs((max(c) - min(c)) - gc) > 26
+        return abs(luma(c) - gl) > fence or abs((max(c) - min(c)) - gc) > fence
 
     cool = tuple(int(c * 0.75 + t * 0.25) for c, t in zip(glass, (150, 200, 235)))
     inner_light = tuple(min(255, int(c * 0.92)) for c in cool)
@@ -231,7 +248,7 @@ def sandwich(master, mouth):
     return back, front, fill, n, film, glass
 
 
-def open_front(front, master, seam):
+def open_front(front, master, seam, strip_wax=False):
     W, H = front.size
     out = front.copy()
     op = out.load()
@@ -240,6 +257,25 @@ def open_front(front, master, seam):
     for y in range(seam):
         for x in range(W):
             op[x, y] = (0, 0, 0, 0)
+    if strip_wax:
+        # A wax seal DRIPS below its seam, and the drips belong to the cap (the
+        # author, 2026-08-05: "o uzantı kapağa dahil"). Everything under the seam
+        # that wears the cap's own colours goes with it; the holes show the back
+        # plate, which is the glass the wax was covering.
+        caps = [px[x, y][:3] for y in range(top, seam)
+                for x in range(W) if solid[x][y]]
+        step = max(1, len(caps) // 400)
+        caps = caps[::step]
+        stripped = 0
+        for y in range(seam, min(H, seam + int(H * 0.22))):
+            for x in range(W):
+                if not solid[x][y]:
+                    continue
+                c = px[x, y][:3]
+                if any(sum(abs(c[i] - k[i]) for i in range(3)) < 60 for k in caps):
+                    op[x, y] = (0, 0, 0, 0)
+                    stripped += 1
+        print('  wax stripped below the seam: %d px' % stripped)
     xs = [x for x in range(W) if solid[x][min(H - 1, seam + 1)]]
     if not xs:
         return None
@@ -302,6 +338,9 @@ SEAM_AT = {
     'vermouth_velvet': 20,       # gold cap on green glass defeats all three signals
 }
 
+# Wax-sealed closures whose drips must leave WITH the cap in the open state.
+WAX_STRIP = {'bourbon_ashfall'}
+
 
 def run(only=None):
     picks = json.load(io.open(os.path.join(HERE, 'v3_picks.json'), encoding='utf-8'))
@@ -320,7 +359,8 @@ def run(only=None):
             report.append('%-22s SKIPPED: no cavity' % bid)
             continue
         back, front, fill, cav, film, glass = sw
-        fopen = open_front(front, im, seam) if seam else None
+        fopen = (open_front(front, im, seam, strip_wax=bid in WAX_STRIP)
+                 if seam else None)
         back.save(os.path.join(DEST, 'v3_%s_back.png' % bid))
         fill.save(os.path.join(DEST, 'v3_%s_fill.png' % bid))
         front.save(os.path.join(DEST, 'v3_%s_front.png' % bid))
