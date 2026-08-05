@@ -41,6 +41,29 @@ def call_args(bottle_id):
     return args
 
 
+def build2(dress, brand, ratio):
+    """The FILL-FIRST brief (the author, 2026-08-05): the game draws the liquid level
+    inside these bottles, so the design is asked to serve the level — a large clear
+    unobstructed glass body below a COMPACT label, nothing inside, cap on. The brand
+    parody stays in the dress clause; what changes is what the bottle is FOR."""
+    return ('%s, the bottle is DESIGNED AROUND ITS GLASS: the body below the label '
+            'is large plain see-through glass with no decoration on it, the label '
+            'sits compact on the UPPER HALF of the body and never covers the lower '
+            'half, the bottle is about %.1f times as TALL as it is WIDE, '
+            'the bottle is COMPLETELY EMPTY - no liquid, no fill level, no coloured '
+            'contents, plain pale empty glass all the way down to the base, '
+            'with the word "%s" written in clear letters on the label'
+            % (dress, ratio, brand))
+
+
+def call_args2(bottle_id):
+    dress, brand, ratio = BOTTLES[bottle_id]
+    args = {'description': build2(dress, brand, ratio), 'view': VIEW}
+    args.update(CANVAS)
+    args.update(KNOBS)
+    return args
+
+
 # id -> (dress: the real bottle's design, echoed and shifted; brand; ratio).
 # One clause per bottle. The cap is part of the dress, because it generates on.
 BOTTLES = {
@@ -87,14 +110,22 @@ BOTTLES = {
         'and a black label with a sea-monster emblem, a black cap', 'KRAKATOA', 2.0),
     # "gerçek orijinal şişeye benzesin" + low-res complaint (2026-08-05): the mark
     # is the stout dark bottle with the parchment label; asked with more precision.
+    # Emissary retired (2026-08-05): the parody is MALIBU - the smooth opaque
+    # white bottle with the palm.
+    # Round two (2026-08-05): the author wants the REAL Malibu silhouette and
+    # nothing like the previous attempt - the domed cylinder with no shoulders.
     'rum_reina_del_mar': (
-        'a stout CLEAR COLOURLESS glass rum bottle with a SHORT round body, softly '
-        'rounded shoulders and a short neck, a large aged parchment cream label '
-        'with fine ornate details, a dark wooden cap', 'EMISSARY', 2.0),
+        'a pure white glossy cylindrical bottle whose rounded DOME top slopes '
+        'directly into a very short neck with no shoulders, a round printed '
+        'emblem of a green palm tree against an orange sunset on its front, '
+        'a flat white cap', 'MALIBOO', 2.4),
     # ── bourbon: Jim Beam / Jack Daniel's / Maker's Mark / Pappy Van Winkle ─────
+    # Jim Beam retired (2026-08-05): the parody is JOHNNIE WALKER - the square
+    # bottle with the SLANTED label and the striding man.
     'bourbon_redline': (
-        'a square clear glass bourbon whiskey bottle with a white label and red '
-        'accents, a black cap', 'JIM BEAN', 2.2),
+        'a square clear glass whiskey bottle with a SLANTED rectangular gold-framed '
+        'label and a small striding walking man emblem, a black cap',
+        'WANDERER', 2.2),
     # "şişenin şekli biraz daha benzetilsin orijinaline" (2026-08-05): the square is
     # the whole identity — flat front, hard bevelled shoulders, fluted short neck.
     'bourbon_old_harrow': (
@@ -130,9 +161,10 @@ BOTTLES = {
         'a white ceramic tequila bottle with cobalt blue vertical fluting and a '
         'rounded ceramic stopper', 'AZULEJO', 2.6),
     # ── the singles: Campari / Cinzano / Grand Marnier / Kahlua ─────────────────
+    # The red was the DRINK (the author, 2026-08-05): the empty bottle is clear.
     'amaro_notte': (
-        'a squat red glass amaro bottle with conical shoulders and a white label '
-        'with blue band, a white cap', 'CUMPARI', 2.0),
+        'a squat CLEAR COLOURLESS glass amaro bottle with conical shoulders and a '
+        'white label with a blue band, a white cap', 'CUMPARI', 2.0),
     'vermouth_velvet': (
         'a dark green glass vermouth bottle with a large label of red and blue '
         'halves, a gold cap', 'CANZONE', 2.4),

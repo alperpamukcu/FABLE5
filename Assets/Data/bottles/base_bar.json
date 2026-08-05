@@ -44,7 +44,7 @@
     },
     {
       "id": "bourbon_redline",
-      "name": "Jim Bean Whiskey",
+      "name": "Jonny Wanderer Whiskey",
       "type": "Spirit",
       "flavor": 7,
       "style": "bourbon",
@@ -550,7 +550,7 @@
     },
     {
       "id": "rum_reina_del_mar",
-      "name": "Emissary Rum",
+      "name": "Maliboo Rum",
       "style": "rum",
       "category": "rum",
       "type": "Spirit",

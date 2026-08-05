@@ -499,6 +499,13 @@ namespace LastCall.UI
 
         private void OnRunStarted()
         {
+            // A new run re-resolves the ART, not just the state: sprite and piece
+            // caches survive play sessions when domain reload is off, and plates
+            // shipped mid-session were being ignored — worst case a front plate
+            // remembered as missing left the drink floating OVER its bottle
+            // (the author, 2026-08-05).
+            ItemArt.ClearCache();
+            BottleArt.ClearCache();
             _lastPhase = TycoonPhase.DayOpen;
             _lastStormedCount = 0;
             ResetSeats();

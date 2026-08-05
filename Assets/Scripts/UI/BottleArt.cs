@@ -244,6 +244,10 @@ namespace LastCall.UI
 
         private static readonly Dictionary<string, Piece> Cache = new Dictionary<string, Piece>();
 
+        /// <summary>Forget every measured piece — a new run re-measures against the
+        /// art that exists NOW, not the art that existed when the session began.</summary>
+        public static void ClearCache() => Cache.Clear();
+
         /// <summary>What marks the capless art of a style.</summary>
         private const string OpenSuffix = "_open";
 
@@ -353,7 +357,9 @@ namespace LastCall.UI
             int yShoulder = lo;
             for (int y = hi; y >= lo; y--)
                 if (rows[y] >= widest * 0.8f) { yShoulder = y; break; }
-            float capY = (yShoulder + 0.15f * (hi - yShoulder) + 1) / h;
+            // 0.15 → 0.45 (the author, 2026-08-05: "doluluk göstergesini arttır"):
+            // a full bottle stands nearly half-way up its neck, still under the mouth.
+            float capY = (yShoulder + 0.45f * (hi - yShoulder) + 1) / h;
             for (int i = 0; i < LevelSteps; i++)
                 level[i] = Mathf.Min(level[i], capY);
 

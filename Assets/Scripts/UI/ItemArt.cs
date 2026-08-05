@@ -16,11 +16,20 @@ namespace LastCall.UI
         public static Sprite Load(string name)
         {
             if (string.IsNullOrEmpty(name)) return null;
-            if (Cache.TryGetValue(name, out var s)) return s;
+            // A MISS is never cached, and a destroyed sprite does not count as a hit
+            // (Unity's fake-null). Both bit at once on 2026-08-05: plates shipped
+            // while the editor sat in play, and a front plate asked for before its
+            // import was remembered as "does not exist" for the whole session — the
+            // sandwich then had no front, and the drink floated OVER the bottle.
+            if (Cache.TryGetValue(name, out var s) && s != null) return s;
             s = Resources.Load<Sprite>($"Items/{name}");
-            Cache[name] = s;
+            if (s != null) Cache[name] = s;
+            else Cache.Remove(name);
             return s;
         }
+
+        /// <summary>Forget every cached sprite — a new run re-resolves the art.</summary>
+        public static void ClearCache() => Cache.Clear();
 
         /// <summary>The bottle for a shelf style ("vodka", "gin", …); the asset names match.</summary>
         public static Sprite Bottle(string style) => Load(style);
