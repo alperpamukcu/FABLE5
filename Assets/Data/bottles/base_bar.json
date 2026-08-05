@@ -96,7 +96,7 @@
     },
     {
       "id": "lemon_fresh",
-      "name": "Fresh Lemon Juice",
+      "name": "Lemonade",
       "type": "Sour",
       "flavor": 3,
       "style": "lemon",
@@ -109,7 +109,7 @@
     },
     {
       "id": "ginger_kicker",
-      "name": "Kicker Ginger Beer",
+      "name": "Kicker Ginger",
       "type": "Bubbly",
       "flavor": 3,
       "style": "ginger",
@@ -122,7 +122,7 @@
     },
     {
       "id": "soda_klara",
-      "name": "Klara Soda Water",
+      "name": "Klara Soda",
       "type": "Bubbly",
       "flavor": 1,
       "style": "soda",
@@ -272,7 +272,7 @@
     },
     {
       "id": "cola_marlow",
-      "name": "Marlow Cola",
+      "name": "Loca Cola",
       "type": "Bubbly",
       "flavor": 2,
       "style": "cola",
@@ -288,7 +288,7 @@
     },
     {
       "id": "tonic_quinbury",
-      "name": "Quinbury Tonic",
+      "name": "Quinn's Tonic",
       "type": "Bubbly",
       "flavor": 2,
       "style": "tonic",
@@ -304,7 +304,7 @@
     },
     {
       "id": "energy_volt",
-      "name": "Volt Energy Drink",
+      "name": "Blue Ox",
       "type": "Bubbly",
       "flavor": 3,
       "style": "energy",
@@ -320,7 +320,7 @@
     },
     {
       "id": "orange_grove",
-      "name": "Grove Orange Juice",
+      "name": "Orange Juice",
       "type": "Sour",
       "flavor": 2,
       "style": "orange",
@@ -335,7 +335,7 @@
     },
     {
       "id": "lime_fresh",
-      "name": "Fresh Lime Juice",
+      "name": "Limeade",
       "type": "Sour",
       "flavor": 3,
       "style": "lime",
@@ -378,7 +378,7 @@
     },
     {
       "id": "cranberry_north",
-      "name": "North Bog Cranberry Juice",
+      "name": "Cranberry",
       "type": "Sour",
       "flavor": 3,
       "style": "cranberry",
@@ -408,7 +408,7 @@
     },
     {
       "id": "pineapple_isla",
-      "name": "Isla Pineapple Juice",
+      "name": "Isla Piña",
       "type": "Sour",
       "flavor": 4,
       "style": "pineapple",
@@ -423,7 +423,7 @@
     },
     {
       "id": "grenadine_rubis",
-      "name": "Rubis Grenadine Syrup",
+      "name": "Rubis Grenadine",
       "type": "Sweet",
       "flavor": 3,
       "style": "grenadine",

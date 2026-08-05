@@ -82,11 +82,31 @@ def clean_liquid(im):
     if not rows:
         return im, 0
     lo, hi = min(rows), max(rows)
+    # A POOL lives low. A flagged band that starts in the upper half of the body is
+    # not a pool — it is tinted glass outvoted by a clear neck, and "repairing" it
+    # would tile base-glass over the body, dress included (the round-three tell:
+    # five liq-0-gated bottles suddenly "repaired" 55-87 rows).
+    body_h = (H - 4) - shoulder
+    if body_h > 0 and (lo - shoulder) / body_h < 0.40:
+        print('  liquid-like band %d-%d starts high: tinted glass, left alone' % (lo, hi))
+        return im, 0
+    # and the dress is never repainted: print pixels (far from the glass tone in
+    # luma or chroma against their own row) stay.
     src = min(H - 1, hi + 2)
+    glass_rows = [row_avg(y) for y in range(shoulder + 1, lo - 1)]
+    glass_rows = [g for g in glass_rows if g]
+    fixed = 0
     for y in range(lo, hi + 1):
+        a = row_avg(y)
         for x in range(W):
-            if px[x, y][3] > 200 and px[x, src][3] > 200:
-                px[x, y] = px[x, src + ((y - lo) % 3) - 1]
+            if px[x, y][3] <= 200 or px[x, src][3] <= 200:
+                continue
+            c = px[x, y][:3]
+            if a and (abs(luma(c) - luma(a)) > 46
+                      or abs((max(c) - min(c)) - (max(a) - min(a))) > 46):
+                continue                      # print on the glass: not the pool's
+            px[x, y] = px[x, src + ((y - lo) % 3) - 1]
+            fixed += 1
     return im, hi - lo + 1
 
 

@@ -240,15 +240,17 @@ namespace LastCall.UI
 
         /// <summary>
         /// Vessels the game draws no drink into (the author, 2026-08-02). The juices come
-        /// in board cartons and the energy drink in a can — a matte box owes nobody a view
-        /// of its contents, which is the point of putting a juice in one — and the cola and
-        /// the soda came back from the generator already drawn full. The kegs joined them
-        /// 2026-08-03: steel is as opaque as board, and the drink that used to be painted on
-        /// them sat on the metal like a decal. The hover card carries what is left in each.
+        /// in board cartons and the energy and cola in metal cans — a matte box owes nobody
+        /// a view of its contents, which is the point of putting a juice in one. The kegs
+        /// joined them 2026-08-03: steel is as opaque as board, and the drink that used to
+        /// be painted on them sat on the metal like a decal. The hover card carries what is
+        /// left in each. SODA LEFT the set on 2026-08-05: it sealed only because its old art
+        /// came back drawn full, and its v3 art is an empty clear bottle with the full
+        /// sandwich — a clear bottle that hid its level would be the one wrong vessel left.
         /// </summary>
         private static readonly HashSet<string> Sealed = new HashSet<string>
         {
-            "orange", "lemon", "lime", "pineapple", "cranberry", "energy", "cola", "soda",
+            "orange", "lemon", "lime", "pineapple", "cranberry", "energy", "cola",
             "lager", "pale_ale", "stout"
         };
 

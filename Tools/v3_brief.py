@@ -22,8 +22,13 @@ KNOBS = {'outline': 'single color outline',
 
 
 def build(dress, brand, ratio):
+    # The EMPTY block at full strength (the author, 2026-08-05, third telling:
+    # "içerisinde sıvı olmadan boş şişe olarak üreteceksin") — softer wordings kept
+    # letting pooled liquid through, and the gate then had to reject the take.
     return ('%s, the bottle is about %.1f times as TALL as it is WIDE, '
-            'the bottle is EMPTY - nothing inside, '
+            'the bottle is COMPLETELY EMPTY with absolutely no liquid inside - '
+            'no fill level, no coloured contents, no pool at the bottom, the '
+            'inside shows only pale empty glass all the way down to the base, '
             'with the word "%s" written in large clear letters on the label'
             % (dress, ratio, brand))
 
@@ -40,9 +45,14 @@ def call_args(bottle_id):
 # One clause per bottle. The cap is part of the dress, because it generates on.
 BOTTLES = {
     # ── vodka: Smirnoff / Absolut / Grey Goose / Beluga ─────────────────────────
+    # The author's reference photo, measured band by band (2026-08-05): RED cap on
+    # top, grey neck, the RED banner across the LABEL'S TOP at ~40% height, white
+    # plate below with a small red seal. The cap is red, not silver.
     'vodka_astra': (
-        'a clear glass vodka bottle with a white label and a bold red horizontal '
-        'band, a silver metal cap', 'SMIRKOFF', 2.6),
+        'a WIDE-BODIED clear colourless glass vodka bottle with a shiny RED metal '
+        'cap, a large PURE WHITE paper label with one bold SIGNAL RED banner band '
+        'across its TOP and a small red circular seal emblem below it, thin '
+        'silver-grey accents', 'SMIRKOFF', 2.2),
     'vodka_vor': (
         'a clear glass vodka bottle with a short neck and no shoulders, the label '
         'printed directly on the glass in blue, a small silver cap', 'ABSOLVE', 2.2),
@@ -70,14 +80,17 @@ BOTTLES = {
         'a clear glass white rum bottle with a white label and a small black '
         'winged bat-like emblem, a red cap', 'WHITE BAT', 2.4),
     'rum_tidewater': (
-        'an amber glass rum bottle with a dark label showing a small standing '
-        'sea-captain figure, a gold cap', 'ADMIRAL MORGAN', 2.3),
+        'a CLEAR COLOURLESS glass rum bottle with a dark label showing a small '
+        'standing sea-captain figure, a gold cap', 'ADMIRAL MORGAN', 2.3),
     'rum_windward': (
         'a squat black glass rum bottle with two small glass handles at the neck '
         'and a black label with a sea-monster emblem, a black cap', 'KRAKATOA', 2.0),
+    # "gerçek orijinal şişeye benzesin" + low-res complaint (2026-08-05): the mark
+    # is the stout dark bottle with the parchment label; asked with more precision.
     'rum_reina_del_mar': (
-        'a dark round-shouldered glass rum bottle with a cream label and a thin '
-        'blue ribbon band, a wooden cap', 'EMISSARY', 2.1),
+        'a stout CLEAR COLOURLESS glass rum bottle with a SHORT round body, softly '
+        'rounded shoulders and a short neck, a large aged parchment cream label '
+        'with fine ornate details, a dark wooden cap', 'EMISSARY', 2.0),
     # ── bourbon: Jim Beam / Jack Daniel's / Maker's Mark / Pappy Van Winkle ─────
     'bourbon_redline': (
         'a square clear glass bourbon whiskey bottle with a white label and red '
@@ -85,15 +98,18 @@ BOTTLES = {
     # "şişenin şekli biraz daha benzetilsin orijinaline" (2026-08-05): the square is
     # the whole identity — flat front, hard bevelled shoulders, fluted short neck.
     'bourbon_old_harrow': (
-        'a SQUARE dark glass whiskey bottle with a flat front, hard bevelled square '
+        'a SQUARE CLEAR COLOURLESS glass whiskey bottle with a flat front, hard bevelled square '
         'shoulders and a short fluted neck, a black label with a thin white frame, '
         'a black cap', "JACK SPANIEL'S", 2.1),
     'bourbon_ashfall': (
-        'a squat round clear glass whiskey bottle with a cream label, its neck '
+        'a squat round CLEAR COLOURLESS glass whiskey bottle with a cream label, its neck '
         'sealed in dripping amber wax', "MASON'S MARK", 2.0),
+    # "etiketin üstünde sigara içen adam portresi" (2026-08-05): the real label's
+    # identity is the smoking gentleman, so the parody carries its own.
     'bourbon_hollow_oak': (
-        'a rounded clear glass whiskey bottle with an aged paper label, a gold '
-        'foil cap', 'VAN WRINKLE', 2.3),
+        'a rounded clear glass whiskey bottle with an aged cream paper label '
+        'carrying a small pixel art portrait of an old gentleman smoking a cigar, '
+        'a gold foil cap', 'VAN WRINKLE', 2.3),
     # ── tequila: Jose Cuervo / 1800 / Don Julio / Clase Azul ────────────────────
     # "şişe orijinal markanın şişesine daha çok benzesin" (2026-08-05): Cuervo
     # Especial reads as the amber-gold squared bottle with the dark band label.
@@ -126,7 +142,51 @@ BOTTLES = {
     # "tasarımı kötü, kesin değiş" (2026-08-05): rebuilt on Kahlua's real dress —
     # sloped shoulders, the big warm yellow label, the red ribbon wave.
     'liqueur_kafa': (
-        'a dark brown glass coffee liqueur bottle with smoothly sloping shoulders, '
+        'a CLEAR COLOURLESS glass coffee liqueur bottle with smoothly sloping shoulders, '
         'a large warm yellow label with a red wavy ribbon band across its middle, '
         'a red cap', 'KOALA', 2.2),
+}
+
+
+# ── the soft-drink vessels (2026-08-05: "şimdi görsel üretilecekler") ────────────
+# kind decides the chain: 'can' and 'carton' are SEALED vessels (BottleArt draws no
+# drink into them) and ship as one sprite; 'bottle' takes the full sandwich.
+# The empty-bottle law applies to the bottles here too.
+MIXERS = {
+    'syrup_house': ('bottle',
+        'a small CLEAR COLOURLESS glass syrup bottle with a metal pour spout and a '
+        'plain white label', 'SYRUP', 2.4),
+    'lemon_fresh': ('carton',
+        'a small bright yellow juice carton with a lemon illustration on its front',
+        'LEMONADE', 1.6),
+    'lime_fresh': ('carton',
+        'a small bright green juice carton with a lime illustration on its front',
+        'LIMEADE', 1.6),
+    'orange_grove': ('carton',
+        'a small orange juice carton with an orange fruit illustration on its front',
+        'ORANGE', 1.6),
+    'soda_klara': ('bottle',
+        'a CLEAR COLOURLESS glass soda water bottle with fluted sides and a '
+        'swing-top wire cap, a small blue label', 'KLARA', 2.6),
+    'ginger_kicker': ('bottle',
+        'a squat brown glass ginger beer bottle with a wide body and a yellow '
+        'label', 'KICKER', 2.0),
+    'tonic_quinbury': ('bottle',
+        'a CLEAR COLOURLESS glass tonic water bottle with a bright yellow label, '
+        'a silver cap', 'QUINNS', 2.5),
+    'grenadine_rubis': ('bottle',
+        'a slim CLEAR COLOURLESS glass syrup bottle with a deep red label and a '
+        'red cap', 'RUBIS', 2.6),
+    'pineapple_isla': ('carton',
+        'a small juice carton with a pineapple illustration on its front',
+        'PINA', 1.6),
+    'cranberry_north': ('carton',
+        'a small dark red juice carton with a cranberry illustration on its front',
+        'CRANBERRY', 1.6),
+    'energy_volt': ('can',
+        'a slim silver and blue aluminium energy drink can with a bold bull-ox '
+        'emblem', 'BLUE OX', 2.1),
+    'cola_marlow': ('can',
+        'a red aluminium cola drink can with a white wavy stripe across it',
+        'LOCA COLA', 1.7),
 }
