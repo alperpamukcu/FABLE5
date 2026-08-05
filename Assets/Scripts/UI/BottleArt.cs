@@ -126,7 +126,11 @@ namespace LastCall.UI
         /// its cut — by the time the drink reached the eye it read as barely-tinted water
         /// (the author, 2026-08-05: "çok şeffaf kalıyorlar"). Raised so the colour survives
         /// the stack; the glass film above it is what keeps it reading as liquid.</remarks>
-        private const float LiquidAlpha = 0.88f;
+        /// <remarks>Third raise (2026-08-05): at 0.88 the whisky still read as pale skin
+        /// over the interior plate. The bottle's level is now effectively OPAQUE paint —
+        /// matte, saturated, certain — and the glass film above it carries all the
+        /// glassiness on its own.</remarks>
+        private const float LiquidAlpha = 0.96f;
 
         /// <summary>A bottle's sprite together with the cavity the drink is drawn into.</summary>
         public readonly struct Piece
@@ -340,6 +344,19 @@ namespace LastCall.UI
             }
             level[0] = lo / (float)h;
 
+            // A real bottle is never filled to its mouth (the author, 2026-08-05: "boyun
+            // kısmına kadar dolu olsunlar"): the drawn level tops out a short way into the
+            // neck, at the shoulder plus a sliver, however full the bottle really is. The
+            // shoulder is the highest row still carrying most of the body's width.
+            int widest = 0;
+            for (int y = lo; y <= hi; y++) widest = Mathf.Max(widest, rows[y]);
+            int yShoulder = lo;
+            for (int y = hi; y >= lo; y--)
+                if (rows[y] >= widest * 0.8f) { yShoulder = y; break; }
+            float capY = (yShoulder + 0.15f * (hi - yShoulder) + 1) / h;
+            for (int i = 0; i < LevelSteps; i++)
+                level[i] = Mathf.Min(level[i], capY);
+
             // the glass tone: the back plate's bright quartile — its inner-light wall
             var glass = Color.white;
             var btex = back.texture;
@@ -484,7 +501,7 @@ namespace LastCall.UI
             float contrast = Mathf.Abs(drinkLum - lum) + Mathf.Abs(drinkChroma - chroma) * 0.5f;
             // The floor rose with LiquidAlpha (2026-08-05): a drink close to its glass in
             // tone still has to READ, and 0.30 of 0.62 left it a rumour.
-            float presence = Mathf.Clamp01(0.48f + contrast * 2.0f);
+            float presence = Mathf.Clamp01(0.85f + contrast * 0.6f);
             return new Color(c.r, c.g, c.b, LiquidAlpha * presence);
         }
 

@@ -177,8 +177,8 @@ namespace LastCall.UI
             // Deepened toward the real pour on the author's call (2026-08-05: "viski
             // turuncu olur — gerçek rengine yakın, doygun"): more chroma, a shade darker,
             // so a bottle's level reads as WHISKY and not as weak tea.
-            ["rum"]        = (Color)new Color32(0xC8, 0x78, 0x1E, 0xFF), // gold rum's honey amber
-            ["bourbon"]    = (Color)new Color32(0xB5, 0x54, 0x0C, 0xFF), // barrel: orange, saturated
+            ["rum"]        = (Color)new Color32(0xAE, 0x5F, 0x16, 0xFF), // stepped DOWN to hold the gap to bourbon
+            ["bourbon"]    = (Color)new Color32(0xCF, 0x7F, 0x1D, 0xFF), // the author's own number (2026-08-05)
             // the reds and the darks, lifted to their BACKLIT values
             ["cranberry"]  = (Color)new Color32(0xE0, 0x44, 0x66, 0xFF), // jewel crimson, glows lit
             ["amaro"]      = (Color)new Color32(0xC9, 0x38, 0x2C, 0xFF), // aperitivo scarlet, not oxblood
