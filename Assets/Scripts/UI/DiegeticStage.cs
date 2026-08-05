@@ -784,8 +784,12 @@ namespace LastCall.UI
             // first now: a v3 bottle is its back plate under its front plate — the same
             // sandwich the menu draws, minus the drink, which a distant rail does not need —
             // and the scene tables survive only as the fallback they should have been.
-            var v3front = ItemArt.Load("v3_" + card.Id + "_front");
-            Sprite sprite = v3front != null ? ItemArt.Load("v3_" + card.Id + "_back") : null;
+            // the flat era: one composed sprite when it exists; the two-plate stack
+            // only for legacy sandwich sets without a flat
+            var v3flat = ItemArt.Load("v3_" + card.Id + "_flat");
+            var v3front = v3flat == null ? ItemArt.Load("v3_" + card.Id + "_front") : null;
+            Sprite sprite = v3flat != null ? v3flat
+                : (v3front != null ? ItemArt.Load("v3_" + card.Id + "_back") : null);
             bool hasSprite = sprite != null
                              || (sprite = ItemArt.Bottle(card)) != null
                              || _bottleById.TryGetValue(card.Id, out sprite)

@@ -366,8 +366,7 @@ namespace LastCall.UI
                     var live = Run != null
                         ? LastCall.Core.Market.FindByStyle(Run.Shelf, spec.Style) : null;
                     var art = live != null
-                        ? (ItemArt.Load("v3_" + live.Ingredient.Id + "_front")
-                           ?? ItemArt.Bottle(live.Ingredient))
+                        ? ItemArt.Bottle(live.Ingredient)   // the composed flat, label and all
                         : ItemArt.Bottle(spec.Style);
                     if (art != null)
                     {

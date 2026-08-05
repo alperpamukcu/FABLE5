@@ -315,6 +315,17 @@ namespace LastCall.UI
         /// </summary>
         private static Piece MeasureV3(string id, bool open)
         {
+            // The flat era: a composed single sprite means NO runtime liquid — the
+            // piece carries no Fill, so AddLiquid declines and SetLevel no-ops. The
+            // bottle simply looks like itself (the author retired the level liquid
+            // after three methods of drawing it each read as paint, 2026-08-05).
+            var flat = ItemArt.Load("v3_" + id + (open ? "_flat_open" : "_flat"));
+            if (flat == null && open) flat = ItemArt.Load("v3_" + id + "_flat");
+            if (flat != null)
+                return new Piece(flat, null, null,
+                                 flat.rect.width / flat.rect.height, 0f, 1f,
+                                 Color.white, null, v3: true);
+
             var back = ItemArt.Load("v3_" + id + "_back");
             if (back == null) return default;
             var fill = ItemArt.Load("v3_" + id + "_fill");
