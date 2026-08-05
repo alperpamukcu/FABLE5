@@ -178,7 +178,9 @@ namespace LastCall.UI
             // turuncu olur — gerçek rengine yakın, doygun"): more chroma, a shade darker,
             // so a bottle's level reads as WHISKY and not as weak tea.
             ["rum"]        = (Color)new Color32(0xAE, 0x5F, 0x16, 0xFF), // stepped DOWN to hold the gap to bourbon
-            ["bourbon"]    = (Color)new Color32(0xCF, 0x7F, 0x1D, 0xFF), // the author's own number (2026-08-05)
+            // TEST VALUE (the author, 2026-08-05): a deliberately garish matte orange to
+            // judge the bottle-level pipeline in play. The keeper was CF7F1D.
+            ["bourbon"]    = (Color)new Color32(0xFF, 0x6F, 0x00, 0xFF),
             // the reds and the darks, lifted to their BACKLIT values
             ["cranberry"]  = (Color)new Color32(0xE0, 0x44, 0x66, 0xFF), // jewel crimson, glows lit
             ["amaro"]      = (Color)new Color32(0xC9, 0x38, 0x2C, 0xFF), // aperitivo scarlet, not oxblood

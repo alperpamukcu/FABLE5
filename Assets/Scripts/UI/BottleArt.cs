@@ -343,19 +343,9 @@ namespace LastCall.UI
                 level[i] = (yy + 1) / (float)h;
             }
             level[0] = lo / (float)h;
-
-            // A real bottle is never filled to its mouth (the author, 2026-08-05: "boyun
-            // kısmına kadar dolu olsunlar"): the drawn level tops out a short way into the
-            // neck, at the shoulder plus a sliver, however full the bottle really is. The
-            // shoulder is the highest row still carrying most of the body's width.
-            int widest = 0;
-            for (int y = lo; y <= hi; y++) widest = Mathf.Max(widest, rows[y]);
-            int yShoulder = lo;
-            for (int y = hi; y >= lo; y--)
-                if (rows[y] >= widest * 0.8f) { yShoulder = y; break; }
-            float capY = (yShoulder + 0.15f * (hi - yShoulder) + 1) / h;
-            for (int i = 0; i < LevelSteps; i++)
-                level[i] = Mathf.Min(level[i], capY);
+            // The neck-cap experiment (shoulder + a fraction) is REVERTED in full (the
+            // author, 2026-08-05: "ilk baştaki gibi") — the curve is the plate's honest
+            // volume again, top to bottom.
 
             // the glass tone: the back plate's bright quartile — its inner-light wall
             var glass = Color.white;
@@ -502,6 +492,15 @@ namespace LastCall.UI
             // The floor rose with LiquidAlpha (2026-08-05): a drink close to its glass in
             // tone still has to READ, and 0.30 of 0.62 left it a rumour.
             float presence = Mathf.Clamp01(0.85f + contrast * 0.6f);
+            // The last of the paleness (the author, 2026-08-05, screenshot): the liquid
+            // was opaque but the FRONT FILM still lays ~27% of pale glass over it, and
+            // that wash is what kept turning whisky into skin. The tint pre-compensates —
+            // painted so that AFTER the film the eye receives the table's colour exactly.
+            const float Film = 0.17f;   // matches the re-baked 44-alpha glass (2026-08-05)
+            c = new Color(
+                Mathf.Clamp01((c.r - g.r * Film) / (1f - Film)),
+                Mathf.Clamp01((c.g - g.g * Film) / (1f - Film)),
+                Mathf.Clamp01((c.b - g.b * Film) / (1f - Film)));
             return new Color(c.r, c.g, c.b, LiquidAlpha * presence);
         }
 

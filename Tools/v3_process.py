@@ -197,13 +197,32 @@ def sandwich(master, mouth):
     # Through real holes the back plate shows anyway, which is exactly right.
     mask = [[False] * H for _ in range(W)]
     n = 0
-    for y in range(mouth + 2, H - 4):
+    for y in range(mouth + 2, H - 2):
         xs = [x for x in range(W) if solid[x][y]]
         if len(xs) < 2 * WALL + 3:
             continue
-        for x in range(min(xs) + WALL, max(xs) - WALL + 1):
-            mask[x][y] = True
-            n += 1
+        l, r = min(xs) + WALL, max(xs) - WALL
+        for x in range(l, r + 1):
+            if solid[x][y]:
+                mask[x][y] = True
+                n += 1
+        # Transparent gaps inside the span: BELOW the shoulder they are see-through
+        # glass windows and the drink lives behind them (the 1810 fix); at the NECK
+        # they are handle openings and nothing may be drawn across them (Krakatoa's
+        # ears wore liquid, the author's screenshot 2026-08-05) — unless the gap is
+        # a few pixels of glass thinness.
+        x = l
+        while x <= r:
+            if solid[x][y]:
+                x += 1
+                continue
+            g0 = x
+            while x <= r and not solid[x][y]:
+                x += 1
+            if y >= shoulder or (x - g0) <= 4:
+                for gx in range(g0, x):
+                    mask[gx][y] = True
+                    n += 1
     if n == 0:
         return None
 
@@ -214,26 +233,94 @@ def sandwich(master, mouth):
     glass = tones[len(tones) // 2]
     gl, gc = luma(glass), max(glass) - min(glass)
 
-    # ADAPTIVE print threshold. On dark or strongly tinted glass a fixed distance
-    # calls the whole body "print" and the film never lands — six bottles shipped
-    # with 2-8% film against a correct ~85% (the other session's scan_fronts
-    # measurement), and a level behind an opaque wall can never read. If the film
-    # share comes out under the floor, the fence widens and the sandwich re-runs.
-    cavN = sum(1 for x in range(W) for y in range(H)
-               if mask[x][y] and px[x, y][3] > 200)
-    fence = 26
-    for _round in range(4):
-        pn = sum(1 for x in range(W) for y in range(H)
-                 if mask[x][y] and px[x, y][3] > 200
-                 and (abs(luma(px[x, y][:3]) - gl) > fence
-                      or abs((max(px[x, y][:3]) - min(px[x, y][:3])) - gc) > fence))
-        if cavN == 0 or (cavN - pn) / cavN >= 0.35:
-            break
-        fence *= 2
+    # PRINT IS A REGION, not a pixel (the author, 2026-08-05: liquid colour was
+    # bleeding through the LABELS). Per-pixel distance failed both ways — a white
+    # plate on pale glass sits ~25 luma from it and went translucent; letter strokes
+    # are narrow runs and were killed as streaks. So the label is found the way the
+    # pilot found it: rows whose MARKED pixels form a long run qualify, contiguous
+    # qualifying rows form a band, and each band's bounding box is opaque WHOLESALE —
+    # letters, background, emblem and all. A label is printed matter; it does not
+    # come in translucent parts.
+    def marky_vs(c, bl, bc):
+        lum = luma(c)
+        ch = max(c) - min(c)
+        return ((lum > bl + 18 and ch < 60)          # a plate brighter than the glass
+                or abs(ch - bc) > 30                 # chromatic print (bands, seals)
+                or lum < bl - 35)                    # dark print (letters, black labels)
+
+    def row_base(y):
+        """The row's OWN glass, read at its wall margins — a tinted bottle shades
+        darker down its body, and against one global median those shading rows all
+        read as 'print' (seven bottles went 2-16% film on the second proof pass).
+        The margins move with the shading; a full-width label defeats them, and
+        such a row falls back to the global tone, where a plate still reads."""
+        xs = [x for x in range(W) if mask[x][y] and px[x, y][3] > 200]
+        if len(xs) < 8:
+            return gl, gc
+        edge = xs[:3] + xs[-3:]
+        cs = [px[x, y][:3] for x in edge]
+        m = tuple(sorted(c[i] for c in cs)[len(cs) // 2] for i in range(3))
+        if marky_vs(m, gl, gc):
+            return gl, gc          # the margins are print themselves: full-width label
+        return luma(m), max(m) - min(m)
+
+    def marky(c):
+        return marky_vs(c, gl, gc)
+
+    # Each row contributes only its LONGEST marked run — a wall shadow or a lone
+    # bright pixel can no longer stretch a box to the silhouette (that greed opaqued
+    # seven bottles wall-to-wall on the first proof pass). And the bottom 6 rows are
+    # BASE, never label: dark base glass kept dragging boxes to the floor, which is
+    # exactly the "taban sıvının önünde" fault.
+    runs = {}
+    for y in range(mouth, H - 6):
+        bl, bc = row_base(y)
+        best_len, best_l, cur_l, run = 0, 0, 0, 0
+        for x in range(W + 1):
+            ok = (x < W and mask[x][y] and px[x, y][3] > 200
+                  and marky_vs(px[x, y][:3], bl, bc))
+            if ok:
+                if run == 0:
+                    cur_l = x
+                run += 1
+            else:
+                if run > best_len:
+                    best_len, best_l = run, cur_l
+                run = 0
+        if best_len >= 12:
+            runs[y] = (best_l, best_l + best_len - 1)
+    qualifying = sorted(runs)
+    boxes = []
+    if qualifying:
+        band = [qualifying[0]]
+        for y in qualifying[1:]:
+            if y <= band[-1] + 3:
+                band.append(y)
+            else:
+                boxes.append(band)
+                band = [y]
+        boxes.append(band)
+        # a band under 4 rows is a shading artefact, not a label
+        boxes = [b for b in boxes if b[-1] - b[0] + 1 >= 4]
+    rects = []
+    for b in boxes:
+        bl_, br_ = (min(runs[y][0] for y in b), max(runs[y][1] for y in b))
+        # A label must leave glass at the SIDES or the level has nowhere to read
+        # (the pilot's 76% law, now the chain's): the box keeps its centre 78%.
+        spans = [(min(xs), max(xs)) for xs in
+                 ([x for x in range(W) if mask[x][y]] for y in b) if xs]
+        if spans:
+            sl = sum(s[0] for s in spans) / len(spans)
+            sr = sum(s[1] for s in spans) / len(spans)
+            margin = (sr - sl + 1) * 0.11
+            bl_ = max(bl_, int(sl + margin))
+            br_ = min(br_, int(sr - margin))
+        if br_ > bl_:
+            rects.append((bl_, b[0], br_, b[-1]))
+    print('  label boxes:', rects)
 
     def printed(x, y):
-        c = px[x, y][:3]
-        return abs(luma(c) - gl) > fence or abs((max(c) - min(c)) - gc) > fence
+        return any(l <= x <= r and t <= y <= bb for l, t, r, bb in rects)
 
     cool = tuple(int(c * 0.75 + t * 0.25) for c, t in zip(glass, (150, 200, 235)))
     inner_light = tuple(min(255, int(c * 0.92)) for c in cool)
@@ -261,9 +348,13 @@ def sandwich(master, mouth):
             if px[x, y][3] <= 200:
                 continue          # a real hole in the glass: the back shows through it
             if printed(x, y):
-                continue
+                continue          # inside a label box: printed matter stays whole
             c = px[x, y][:3]
-            fp[x, y] = c + ((166,) if luma(c) > gl + 20 else (70,))
+            # film 70 -> 44 (the author, 2026-08-05: "cam bu kadar buğu yapmamalı") —
+            # the glass keeps its speculars but stops frosting the drink behind it.
+            # Bright STREAKS outside the label boxes are reflections by construction
+            # and ride at 150 in their own colour.
+            fp[x, y] = c + ((150,) if luma(c) > gl + 20 else (44,))
             film += 1
     return back, front, fill, n, film, glass
 
