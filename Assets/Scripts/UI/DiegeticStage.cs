@@ -778,7 +778,17 @@ namespace LastCall.UI
             root.anchorMin = root.anchorMax = new Vector2(0, 0);
             root.pivot = new Vector2(0.5f, 0);
 
-            bool hasSprite = _bottleById.TryGetValue(card.Id, out var sprite)
+            // The rail dressed itself from scene-serialized sprite tables, which is how it
+            // kept showing the RETIRED art after every shelf regeneration (the author,
+            // 2026-08-05: "backbar sahnesinde bazı eski şişeler"). The live loader comes
+            // first now: a v3 bottle is its back plate under its front plate — the same
+            // sandwich the menu draws, minus the drink, which a distant rail does not need —
+            // and the scene tables survive only as the fallback they should have been.
+            var v3front = ItemArt.Load("v3_" + card.Id + "_front");
+            Sprite sprite = v3front != null ? ItemArt.Load("v3_" + card.Id + "_back") : null;
+            bool hasSprite = sprite != null
+                             || (sprite = ItemArt.Bottle(card)) != null
+                             || _bottleById.TryGetValue(card.Id, out sprite)
                              || _bottleSprites.TryGetValue(card.Type, out sprite);
             // The slot box is fixed; art authored at 2x texel density (v2.5 hi-bit) simply
             // renders finer pixels into the same slot instead of growing.
@@ -799,6 +809,15 @@ namespace LastCall.UI
                 view.SpriteImg.sprite = sprite;
                 view.SpriteImg.preserveAspect = true;
                 view.SpriteImg.raycastTarget = false;
+                if (v3front != null)
+                {
+                    var front = NewRect("Front", img);
+                    Place(front, new Vector2(0.5f, 0), size, Vector2.zero);
+                    var fimg = front.gameObject.AddComponent<Image>();
+                    fimg.sprite = v3front;
+                    fimg.preserveAspect = true;
+                    fimg.raycastTarget = false;
+                }
             }
             else
             {

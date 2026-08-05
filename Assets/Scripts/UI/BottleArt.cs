@@ -121,7 +121,12 @@ namespace LastCall.UI
         /// a half-strength sprite laid over the top, which landed near 0.42 of pure colour; the
         /// front layer no longer covers the cavity, so the number says what it means again.
         /// </summary>
-        private const float LiquidAlpha = 0.62f;
+        /// <remarks>0.62 was set against the OLD art. The v3 sandwich stacks this liquid
+        /// between an interior back plate and a translucent glass film, and each layer takes
+        /// its cut — by the time the drink reached the eye it read as barely-tinted water
+        /// (the author, 2026-08-05: "çok şeffaf kalıyorlar"). Raised so the colour survives
+        /// the stack; the glass film above it is what keeps it reading as liquid.</remarks>
+        private const float LiquidAlpha = 0.88f;
 
         /// <summary>A bottle's sprite together with the cavity the drink is drawn into.</summary>
         public readonly struct Piece
@@ -401,7 +406,11 @@ namespace LastCall.UI
             var piece = For(card, open);
             liquid.fillAmount = piece.FillAmount(level);
             var c = LiquidTint(piece, card.Info?.Style, card.Type);
-            liquid.color = new Color(c.r, c.g, c.b, c.a * UITheme.DrinkAlpha(level, c));
+            // The depth law still thins a low bottle, but on a FLOOR (the author,
+            // 2026-08-05: the spirit should read matte and saturated, its real colour
+            // certain at a glance) — below it the level line went ghostly.
+            liquid.color = new Color(c.r, c.g, c.b,
+                c.a * Mathf.Max(0.75f, UITheme.DrinkAlpha(level, c)));
         }
 
         private static Image AddLiquid(RectTransform bottleArt, Piece piece, string style,
@@ -473,7 +482,9 @@ namespace LastCall.UI
             float drinkLum = 0.299f * c.r + 0.587f * c.g + 0.114f * c.b;
             float drinkChroma = Mathf.Max(c.r, Mathf.Max(c.g, c.b)) - Mathf.Min(c.r, Mathf.Min(c.g, c.b));
             float contrast = Mathf.Abs(drinkLum - lum) + Mathf.Abs(drinkChroma - chroma) * 0.5f;
-            float presence = Mathf.Clamp01(0.30f + contrast * 2.2f);
+            // The floor rose with LiquidAlpha (2026-08-05): a drink close to its glass in
+            // tone still has to READ, and 0.30 of 0.62 left it a rumour.
+            float presence = Mathf.Clamp01(0.48f + contrast * 2.0f);
             return new Color(c.r, c.g, c.b, LiquidAlpha * presence);
         }
 

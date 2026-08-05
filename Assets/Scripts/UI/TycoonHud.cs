@@ -360,7 +360,15 @@ namespace LastCall.UI
                 float textX = 2f;
                 if (ingredient)
                 {
-                    var art = ItemArt.Bottle(spec.Style);
+                    // Style-keyed art is the RETIRED shelf; the live bottle for this style
+                    // hangs on the run's own shelf, and a v3 bottle's icon is its FRONT
+                    // plate — the one with the label — never the interior back.
+                    var live = Run != null
+                        ? LastCall.Core.Market.FindByStyle(Run.Shelf, spec.Style) : null;
+                    var art = live != null
+                        ? (ItemArt.Load("v3_" + live.Ingredient.Id + "_front")
+                           ?? ItemArt.Bottle(live.Ingredient))
+                        : ItemArt.Bottle(spec.Style);
                     if (art != null)
                     {
                         var icon = NewRect("B", line);

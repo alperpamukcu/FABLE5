@@ -174,8 +174,11 @@ namespace LastCall.UI
             ["lager"]      = (Color)new Color32(0xE7, 0xB4, 0x43, 0xFF), // clear golden straw
             ["orange"]     = (Color)new Color32(0xF5, 0x94, 0x1C, 0xFF), // pulp and all
             ["pale_ale"]   = (Color)new Color32(0xC4, 0x6A, 0x12, 0xFF), // copper, darker than lager
-            ["rum"]        = (Color)new Color32(0xCC, 0x86, 0x30, 0xFF), // gold rum's honey amber
-            ["bourbon"]    = (Color)new Color32(0xB2, 0x5C, 0x18, 0xFF), // barrel: darker and redder
+            // Deepened toward the real pour on the author's call (2026-08-05: "viski
+            // turuncu olur — gerçek rengine yakın, doygun"): more chroma, a shade darker,
+            // so a bottle's level reads as WHISKY and not as weak tea.
+            ["rum"]        = (Color)new Color32(0xC8, 0x78, 0x1E, 0xFF), // gold rum's honey amber
+            ["bourbon"]    = (Color)new Color32(0xB5, 0x54, 0x0C, 0xFF), // barrel: orange, saturated
             // the reds and the darks, lifted to their BACKLIT values
             ["cranberry"]  = (Color)new Color32(0xE0, 0x44, 0x66, 0xFF), // jewel crimson, glows lit
             ["amaro"]      = (Color)new Color32(0xC9, 0x38, 0x2C, 0xFF), // aperitivo scarlet, not oxblood
