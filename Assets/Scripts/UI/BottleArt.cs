@@ -171,8 +171,12 @@ namespace LastCall.UI
             /// </summary>
             private readonly float[] _level;
 
+            /// <summary>A v3 sandwich piece: its Sprite is the interior back plate,
+            /// which doubles as the drink's own canvas (see AddLiquid).</summary>
+            public readonly bool V3;
+
             public Piece(Sprite sprite, Sprite fill, Sprite front, float aspect, float floorY,
-                         float rimY, Color glassColor, float[] level = null)
+                         float rimY, Color glassColor, float[] level = null, bool v3 = false)
             {
                 Sprite = sprite;
                 Fill = fill;
@@ -182,6 +186,7 @@ namespace LastCall.UI
                 RimY = rimY;
                 GlassColor = glassColor;
                 _level = level;
+                V3 = v3;
             }
 
             public bool Exists => Sprite != null;
@@ -380,7 +385,7 @@ namespace LastCall.UI
             }
 
             return new Piece(back, fill, front, back.rect.width / back.rect.height,
-                             lo / (float)h, (hi + 1) / (float)h, glass, level);
+                             lo / (float)h, (hi + 1) / (float)h, glass, level, v3: true);
         }
 
         /// <summary>
@@ -451,7 +456,14 @@ namespace LastCall.UI
             rt.offsetMax = Vector2.zero;
 
             var img = go.AddComponent<Image>();
-            img.sprite = piece.Fill;
+            // THE DIFFERENT METHOD (the author, 2026-08-05, after three rounds of the
+            // flat mask reading as paint pasted OVER the bottle): on a v3 piece the
+            // drink is not a flat white mask tinted — it is the INTERIOR BACK PLATE
+            // ITSELF, re-tinted by the drink and cut at the level. The liquid then
+            // carries the bottle's own shading — the wall-dark gradient, the
+            // roundness — so it can only ever read as the inside of this bottle,
+            // never as a slab in front of it.
+            img.sprite = piece.V3 && piece.Sprite != null ? piece.Sprite : piece.Fill;
             img.preserveAspect = true;          // lands exactly where the bottle does: same rect, same aspect
             img.raycastTarget = false;
             img.type = Image.Type.Filled;
