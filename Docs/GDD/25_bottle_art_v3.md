@@ -1,6 +1,15 @@
 # 25 — Bottle Art v3: one hand, one camera, liquid inside
 
-**Status: LIVE spec (2026-08-04).** Owns the full rebuild of the 27 alcohol bottles that
+**Status: PARTLY SUPERSEDED by events (2026-08-07).** What the game actually ships is the
+FLAT ERA: each bottle is ONE composed sprite (`v3_{id}_flat` / `_flat_open`, the author's
+picked raw takes), the runtime liquid layer was removed whole in the 2026-08-07 sweep, and
+a properly layered set is an **external artist's brief** (the author, 2026-08-07: "onu
+ücretli olarak birisine yaptırtabilirim"). Deviations from the text below that are already
+law: canvas is **80×160** (not 120×280); the no-text rule is **cancelled** (labels carry
+their parody wordmarks); the three-plate sandwich is not on the load path. The camera,
+palette, parody-dress and identity sections remain the binding brief for that artist.
+
+**Original status: LIVE spec (2026-08-04).** Owns the full rebuild of the 27 alcohol bottles that
 followed the brand-parody renaming (`base_bar.json`, commit `8fb13e7`). Supersedes the
 bottle sections of 15 §2 and 22 §1 where they conflict; the liquid *colour* tables stay
 in `UITheme` (see module 14 §3 and the measured `LiquidColors` rewrite of 2026-08-04).

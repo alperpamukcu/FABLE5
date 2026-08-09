@@ -95,44 +95,6 @@ namespace LastCall.UI
             Px(p, 21, 8, mark); Px(p, 20, 10, mark); Px(p, 21, 12, mark);
         });
 
-        public static Sprite FilledGlass() => Cached("filled", p =>
-        {
-            Highball(p, 1f, tick: false, 0f, 0f);
-        });
-
-        /// <summary>A highball marked with the band the read asks for — the pour drawn at the
-        /// band's middle, ticks at its edges, the empty headroom left visible.</summary>
-        public static Sprite FillGauge(float min, float max) =>
-            Cached($"gauge_{min:0.00}_{max:0.00}", p =>
-            {
-                Highball(p, (min + max) * 0.5f, tick: true, min, max);
-            });
-
-        // ── the shared vessels ───────────────────────────────────────────────────
-
-        private static void Highball(Color[] p, float fill, bool tick, float min, float max)
-        {
-            var drink = new Color(0.95f, 0.63f, 0.25f);   // the amber the bar pours
-            const int left = 7, right = 16, floor = 3, brim = 20;
-            for (int y = floor; y <= brim; y++)
-            {
-                Px(p, left, y, GlassDim); Px(p, right, y, GlassDim);
-            }
-            for (int x = left; x <= right; x++) Px(p, x, floor, GlassDim);
-            int inner = brim - 1 - (floor + 1);
-            int level = floor + 1 + Mathf.RoundToInt(inner * Mathf.Clamp01(fill));
-            for (int y = floor + 1; y <= level; y++)
-                for (int x = left + 1; x <= right - 1; x++)
-                    Px(p, x, y, drink);
-            if (tick)
-            {
-                int lo = floor + 1 + Mathf.RoundToInt(inner * Mathf.Clamp01(min));
-                int hi = floor + 1 + Mathf.RoundToInt(inner * Mathf.Clamp01(max));
-                var ink = new Color(0.20f, 0.33f, 0.52f);
-                for (int x = right + 2; x <= right + 4; x++) { Px(p, x, lo, ink); Px(p, x, hi, ink); }
-            }
-        }
-
         private static void CoupeWithRim(Color[] p, Color grains)
         {
             // bowl

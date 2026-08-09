@@ -83,12 +83,9 @@ namespace LastCall.Tests
         [Test]
         public void EveryPartOfTheSpec_IsGradedIndependently()
         {
-            var spec = new ServingSpec(new[] { Preparations.Ice }, extraShaken: true,
-                filledToTheTop: true);
-            Assert.AreEqual(3, spec.RequestCount);
+            var spec = new ServingSpec(new[] { Preparations.Ice }, extraShaken: true);
+            Assert.AreEqual(2, spec.RequestCount);
 
-            // Short of the brim, so "filled to the top" is genuinely unmet -- Full() sits
-            // exactly ON BrimFill and would satisfy it by itself.
             GlassContents Short()
             {
                 var g = new GlassContents(1.0);
@@ -102,22 +99,15 @@ namespace LastCall.Tests
 
             var iced = Short();
             iced.AddPreparation(Preparations.Ice);
-            Assert.AreEqual(1.0 / 3.0, spec.Delivered(iced, 0), 1e-9);
+            Assert.AreEqual(1.0 / 2.0, spec.Delivered(iced, 0), 1e-9);
 
             var icedAndShaken = Short();
             icedAndShaken.AddPreparation(Preparations.Ice);
             icedAndShaken.AddPreparation(Preparations.Shaken);
-            Assert.AreEqual(1.0 / 3.0, spec.Delivered(icedAndShaken, 0.2), 1e-9,
+            Assert.AreEqual(1.0 / 2.0, spec.Delivered(icedAndShaken, 0.2), 1e-9,
                 "shaken, but not hard enough to count as worked");
-            Assert.AreEqual(2.0 / 3.0, spec.Delivered(icedAndShaken, 0.9), 1e-9,
+            Assert.AreEqual(1.0, spec.Delivered(icedAndShaken, 0.9), 1e-9,
                 "shaken hard does count");
-
-            var everything = new GlassContents(1.0);
-            everything.Add("gin", 0.5);
-            everything.Add("lemon", 0.48);
-            everything.AddPreparation(Preparations.Ice);
-            everything.AddPreparation(Preparations.Shaken);
-            Assert.AreEqual(1.0, spec.Delivered(everything, 0.9), 1e-9, "all three landed");
         }
 
         [Test]

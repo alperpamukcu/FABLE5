@@ -456,7 +456,6 @@ namespace LastCall.UI
         private static readonly Color TabletScreen = new Color(0.09f, 0.10f, 0.13f, 1f);
         private static readonly Color TabletLens = new Color(0.30f, 0.30f, 0.34f, 1f);
         private CustomerVisit _idVisit;
-        private const float IdTrackW = 176f;
 
         private TycoonServiceFlow _flow;
         private TycoonPhase _lastPhase = TycoonPhase.DayOpen;
@@ -514,11 +513,6 @@ namespace LastCall.UI
             CloseId();
             if (_ledgerPanel != null) _ledgerPanel.gameObject.SetActive(false);
             if (_drinkGlass != null) { _drinkGlass.gameObject.SetActive(false); _glassShown = false; _glassGrabbed = false; }
-            if (stage != null)
-            {
-                stage.SetSoloCustomerVisible(false);
-                stage.HideBuildDressing();   // bottles live in the menu now (2026-07-22)
-            }
             ApplyBarLook();
         }
 
@@ -1067,15 +1061,13 @@ namespace LastCall.UI
 
         // ── refresh ─────────────────────────────────────────────────────────────
 
-        /// <summary>Pushes the bought glassware onto the scene. It is the only fitting the
-        /// scene still shows: the back bar and the musician are gone and the counter was made
-        /// a stat (the author, 2026-08-04).</summary>
+        /// <summary>Pushes the bought glassware onto the bar — the under-counter rack is the
+        /// one fitting the picture still shows (the stage's own tier tint retired with the
+        /// pour-glass HUD in the 2026-08-07 sweep).</summary>
         private void ApplyBarLook()
         {
             var run = Run;
             if (run == null) return;
-            if (stage != null)
-                stage.ApplyBarLook(1 + Mathf.Min(2, run.GlassUpgradeSteps / 4));
             RefreshGlassRack(run);
         }
 
@@ -1837,7 +1829,6 @@ namespace LastCall.UI
             if (verdict.Match == OrderMatch.Wrong) why.Add($"made {made}");
             if (verdict.SpecScore < 0.999) why.Add($"spec {verdict.SpecScore:P0}");
             if (verdict.FillScore < 0.999) why.Add($"fill {verdict.FillScore:P0}");
-            if (!verdict.CraftLanded && visit.Order != null) { }
             string reasons = why.Count > 0 ? "  <color=#9C8F80>(" + string.Join(", ", why) + ")</color>" : "";
             LogService($"<color=#{col}>{verdict.Match.ToString().ToUpperInvariant()}</color> {ordered}" +
                        $" · ${verdict.BasePaid}+${verdict.Tip} · {LogStars(verdict.Satisfaction)}{reasons}");
@@ -2527,7 +2518,6 @@ namespace LastCall.UI
             foreach (var g in visit.Order.Garnishes)
                 chips += PrefChip(PrefArt.ForPreparation(g.Id), g.Name.ToUpperInvariant());
             if (spec.ExtraShaken) chips += PrefChip(PrefArt.Shaker(), "SHAKEN HARD");
-            if (spec.FilledToTheTop) chips += PrefChip(PrefArt.FilledGlass(), "TO THE TOP");
             // No fill chip (the author, 2026-08-02): nobody demands a fill any more — the
             // only fill rule is the house floor, and it lives in the judge, not the licence.
             _idIntent.text = chips == 0 ? "SERVE IT CLEAN" : "";
@@ -2570,8 +2560,6 @@ namespace LastCall.UI
             _idVisit = null;
             if (_idRoot != null) _idRoot.gameObject.SetActive(false);
         }
-
-        private static float TrackAt(int value) => IdTrackW * Mathf.Clamp01(value / 100f);
 
         // ── the licence, v3 (P15 / C3) ──────────────────────────────────────────
         // A landscape US-licence, not a dossier: the v2 portrait card was explicitly disliked.

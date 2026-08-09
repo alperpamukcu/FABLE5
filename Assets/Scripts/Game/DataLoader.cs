@@ -217,11 +217,8 @@ namespace LastCall.Game
                     throw new FormatException("Archetypes file has an archetype with an empty id.");
                 int weight = archetype.weight > 0 ? archetype.weight : 1;
                 var hometowns = archetype.hometowns;
-                var demand = string.IsNullOrEmpty(archetype.demand)
-                    ? DemandLevel.Easygoing
-                    : ParseEnum<DemandLevel>(archetype.demand, archetype.id, "demand");
                 archetypes.Add(new ArchetypeDefinition(
-                    archetype.id, archetype.name, archetype.names, weight, demand, hometowns));
+                    archetype.id, archetype.name, archetype.names, weight, hometowns));
             }
             return archetypes;
         }
@@ -250,20 +247,12 @@ namespace LastCall.Game
 
 #pragma warning disable 0649 // fields assigned by JsonUtility via reflection
         [Serializable]
-        private sealed class ChargeDto
-        {
-            public string emotion;
-            public int amount;
-        }
-
-        [Serializable]
         private sealed class CardDto
         {
             public string id;
             public string name;
             public string type;
             public int flavor;
-            public List<ChargeDto> charges;
             // Brand papers (GDD 22); style empty = plain unbranded card.
             public string style;
             public int tier;
@@ -278,23 +267,13 @@ namespace LastCall.Game
         }
 
         [Serializable]
-        private sealed class BandDto
-        {
-            public string emotion;
-            public int min;
-            public int max;
-        }
-
-        [Serializable]
         private sealed class ArchetypeDto
         {
             public string id;
             public string name;
             public int weight;
-            public string demand;
             public List<string> names;
             public List<string> hometowns;
-            public List<BandDto> bands;
         }
 
         [Serializable]
@@ -338,7 +317,6 @@ namespace LastCall.Game
             public int equalFlavorGroupSize;
             public int ascendingFlavorGroupSize;
             public int sameTypeGroupMin;
-            public double chargeMultiplier;
             public double minFill;
             // v5 P10 content model.
             public bool locked;

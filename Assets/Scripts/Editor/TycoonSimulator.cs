@@ -196,7 +196,7 @@ namespace LastCall.EditorTools
                     // the order pool grew into ranks 1-14 on its own -- so the floor buys the
                     // cheapest gate-passing recipe a night, and the new stock its menu names,
                     // or it would measure a bar frozen at four drinks. Brand UPGRADES, extra
-                    // ambience and mood tips stay off the floor as before.
+                    // ambience upgrades stay off the floor as before.
                     RecipeDefinition cheapest = null;
                     foreach (var r in run.LockedRecipes)
                         if (run.Rating.Average >= run.RecipeStarGate(r) &&
@@ -281,7 +281,7 @@ namespace LastCall.EditorTools
             if (run.Glassware != null)
                 foreach (var gw in run.Glassware)
                     if (gw.Id == recipe.GlassId) { glassCap = gw.Capacity; break; }
-            double volume = Math.Max(recipe.MinFill, spec.FilledToTheTop ? 0.97 : 0.85)
+            double volume = Math.Max(recipe.MinFill, 0.85)
                             * Math.Min(glassCap, run.Glass.Capacity);
             // Carbonated bands go in AT THE GLASS (C8): Core refuses them in the shaker, so
             // the bot builds the way the player does — still parts into the tin, fizz after
@@ -361,7 +361,7 @@ namespace LastCall.EditorTools
             run.BeginPull(keg.Id);
             const double step = 0.05;
             // Leaned over until the glass is nearly there, then upright to build the head.
-            double leanTo = visit.Order.Spec.FilledToTheTop ? 0.82 : 0.78;
+            const double leanTo = 0.78;
             for (int i = 0; i < 40 && run.ServingGlass.FillFraction < leanTo && run.PullingId != null; i++)
                 run.PourTilted(step, TapPour.IdealTilt);
             for (int i = 0; i < 20 && run.ServingGlass.FillFraction < 0.97 && run.PullingId != null; i++)

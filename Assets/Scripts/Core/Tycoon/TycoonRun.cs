@@ -20,8 +20,8 @@ namespace LastCall.Core
     /// chosen seat; everything else — arrivals, patience, prices, tips, rent, bankruptcy —
     /// flows through the Tycoon core classes.
     ///
-    /// The emotion layer is opt-in: built without a regulars registry, visits carry no read
-    /// and the mood tip simply never lands.
+    /// Regulars are opt-in: built without a regulars registry, the crowd stays anonymous
+    /// and nothing else changes.
     /// </summary>
     public sealed class TycoonRun
     {

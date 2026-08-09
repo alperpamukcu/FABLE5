@@ -59,7 +59,9 @@
 - **The menu is style-banded whole (v5 P16 redesign, 2026-07-31).** The abstract table
   (Spritz = "some spirit with some fizz") was the card game's language; it stopped being
   true the day bottles became brands — whether the glass holds vodka or gin IS the drink.
-  Twenty-six recipes across four tiers: **starter** (ranks 1–8: Draught, Neat Pour, Vodka
+  Fifty-three recipes across four tiers (`recipes.json` ↔ `RecipeCatalog`, parity-tested —
+  the counts and names below are the original wave and are ILLUSTRATIVE; the data is the
+  truth): **starter** (ranks 1–8: Draught, Neat Pour, Vodka
   Soda, Gin Sour open from day one; G&T, Whiskey&Cola, Screwdriver, Vodka Bull bought
   ungated), **mid** (9–14, 3.0★: Cuba Libre, Whiskey Ginger, Moscow Mule, Gimlet, Tequila
   Sunrise, Vodka Sour), **hard** (15–21, 3.5★: Whiskey Sour, Rum Punch, Daiquiri, Gin
@@ -95,9 +97,9 @@
 ### 3.1 How they want it served (v5 P11, 2026-07-31)
 
 An order is a drink **and a serving spec**: a subset of ice, a lemon twist, a salted or
-sugared rim, extra shaken, and filled to the top. It is **stated** — printed on the licence
-for the player to read — where the emotion layer's `FillPreference` is *inferred* from a
-hidden read. Two different questions, deliberately not merged.
+sugared rim, and extra shaken. It is **stated** — printed on the licence for the player to
+read. ("Filled to the top" retired 2026-08-02; the inferred-preference layer went with the
+emotion machinery — the 2026-08-07 sweep removed both from the code.)
 
 The spec is rolled from what the recipe can actually honour: a pint takes no garnish and
 cannot be shaken, and a *built* drink never sees a shaker (21 §12). Asking for something the
@@ -140,7 +142,7 @@ tip     = basePrice x quality
 quality = 0.45 x speed + 0.35 x craft + 0.20 x fill
 speed   = 1 - waitFraction          (the whole patience, not a half-time window)
 craft   = share of the serving spec delivered   (a pint: its head score, 21 s10.3)
-fill    = 1 - shortfall/expected    (expected 0.80, or 0.95 if they asked for it full)
+fill    = 1 - shortfall/expected    (expected 0.80 — nobody demands a fill any more)
 ```
 
 Patience now scales the tip **continuously**. It used to hit zero at half patience and stop
@@ -152,13 +154,12 @@ Satisfaction (0-1, feeds the day bar §6):
 
 ## 5. The extra order (the emotion layer's new job)
 
-A **perfect serve** — Exact match **and** mood tip landed **and** served before 90% of
-patience (widened from 75% 2026-07-22 — the read is the skill, timing is the speed tip's
-job) — makes the customer **order another drink** (patience refreshed to 80%, new roll,
-new full payment). Capped at **2 extra orders** per visit. This is deliberately reachable
-("düşünüldüğü kadar zor olmamalı"): reading the ID and serving the right named drink is
-the skill, not pixel-perfect ratios. The read still matters — you cannot earn the mood tip
-or the extra order without knowing *who* you are serving.
+A **perfect serve** — Exact match **and** the craft landed whole (a non-plain spec 100%
+met, or a draught pulled with a perfect head) **and** served before 90% of patience
+(widened from 75% 2026-07-22) — makes the customer **order another drink** (patience
+refreshed to 80%, new roll, new full payment). Capped at **2 extra orders** per visit.
+This is deliberately reachable ("düşünüldüğü kadar zor olmamalı"): reading the ID and
+serving the right named drink well is the skill, not pixel-perfect ratios.
 
 **Who gets to order twice (v5 P11).** A **first-timer orders once** — the extra round is
 what a returning face earns. The gate is otherwise unchanged: the exact drink, every part of
@@ -237,8 +238,8 @@ days — it simply stops being what the player reads the night by.
 
 - The **daily satisfaction bar** (average of every visit's satisfaction, storm-offs
   included) lives at the top of the screen all day.
-- It decides tomorrow's crowd: avg ≥ 0.75 → **High rollers** (prices ×1.25, mood tips
-  +$2); 0.4–0.75 → **Regulars**; < 0.4 → **Broke crowd** (prices ×0.75, no speed tips).
+- It decides tomorrow's crowd: avg ≥ 0.75 → **High rollers** (prices ×1.25);
+  0.4–0.75 → **Regulars**; < 0.4 → **Broke crowd** (prices ×0.75, no tips).
   A good bar attracts customers worth serving well — reputation compounds like the shelf.
 
 **The stars are the reputation (v5 P12 / D3, 2026-07-31).** Every customer leaves **1–5 stars**

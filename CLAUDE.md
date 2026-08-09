@@ -1,15 +1,17 @@
 # CLAUDE.md — LAST CALL
 
 Unity 6000.3.10f1 (URP) bar-tycoon about reading customers and running the till.
-`Docs/GDD/` is the design source of truth — check the relevant GDD module before implementing
-or changing any game rule. **Modules 23 and 24 own the current loop** (tycoon pivot v4,
-shipped). **The live staging document is `Docs/PLAN_service_depth.md` (v5)** — it carries the
-conflict ledger for the 2026-07-31 revision notes and the phase order; consult it before
-starting new feature work. 19–22 survive as subsystem specs where 23/24 reference them, and
-21 §10 owns draught beer. Modules 00–13 predate the pivots: treat them as historical **except
-the sections live code still cites** — 01 §3 (ingredient types), 02 §4 (the recipe table,
-parity-tested), 12 (reduced motion), 13 (determinism & seeding); 14 §5 / 15 §4 / 16 §1 / 18
-likewise carry the palette, camera, font and stage specs the UI is built on.
+**`Docs/GDD_MEVCUT.md` is the as-built rulebook** — the game as it actually runs, extracted
+from code 2026-08-07; read it first for any live rule. `Docs/GDD/` carries the design specs:
+**modules 23 and 24 own the loop**, 21 owns the pour system (21 §10 draught beer), 22 owns
+bottles/brands/market, 14 §5 / 15 §4 / 16 §1 / 18 carry the palette, camera, font and stage
+specs the UI is built on, and 25 is the (partly superseded) bottle-art brief now aimed at an
+external artist. The historical modules (00–13, 17, 19, 20 — card era and the demolished
+emotion layer) were DELETED in the 2026-08-07 sweep; recipe truth is `recipes.json` ↔
+`RecipeCatalog` under the parity test, ingredient types are the `IngredientType` enum.
+**The staging document is `Docs/PLAN_service_depth.md` (v5)** — phase order and conflict
+ledger; where it disagrees with GDD_MEVCUT, GDD_MEVCUT wins (its header lists the known
+overtaken lines). `Docs/GELISTIRME_RAPORU.md` is the standing audit + prioritized backlog.
 
 ## Architecture (enforced by asmdefs)
 
@@ -51,10 +53,10 @@ Unity is normally open alongside the IDE; drive it via the UnityMCP HTTP server
 `run_tests` with `assembly_names: "LastCall.Tests"`. All tests must pass before a push.
 The scene can be rebuilt with the **LastCall → Create Debug Scene** menu item.
 
-The UI has no automated coverage: it is ~6k lines driven entirely by pointer input, and every
-UI regression so far was caught by entering play mode and looking. Measure the thing you
-changed in play (`execute_code` reads live rects and fields) rather than trusting that it
-compiles.
+The UI has no automated coverage: it is ~11k lines driven entirely by pointer input (and the
+tests asmdef cannot even reference it), and every UI regression so far was caught by entering
+play mode and looking. Measure the thing you changed in play (`execute_code` reads live rects
+and fields) rather than trusting that it compiles.
 
 ## Workflow
 
@@ -81,9 +83,13 @@ compiles.
   the delivered glass is what tells `ServiceJudge` to grade it.
 - Regulars are **opt-in**: a `TycoonRun` built without `archetypes` has no named customers,
   so bench setups and older tests stay valid. They carry a name, an age, a hometown, visits
-  and a relationship — the emotion stats, charges and reads were demolished on 2026-08-02
-  ("sadece verilen kokteyle verdiği tepkiler kaldı"), so GDD 19/20's mood machinery is
-  historical: nothing reads it and nothing writes it.
+  and a relationship — the emotion machinery (stats, charges, reads, `DemandLevel`, mood
+  tips, "filled to the top") was demolished 2026-08-02 and its last remnants removed in the
+  2026-08-07 sweep ("sadece verilen kokteyle verdiği tepkiler kaldı").
+- Bottles are **single flat sprites** (`v3_{id}_flat`) since the 2026-08-05 flat era; the
+  runtime liquid-in-bottle layer was removed whole in the 2026-08-07 sweep. What is left in
+  a bottle lives on the hover card. A layered bottle set is an external artist's brief
+  (GDD 25's header) — rebuild the layer against that art when it lands, don't resurrect it.
 - `MetaballFluid` fills a vessel from a particle-count estimate that is not exact for every
   silhouette. If a vessel draws short, measure it (`SurfaceY`) and correct that vessel with
   `SetDensity` — do not scale the fill fraction, which just clamps.

@@ -36,8 +36,6 @@ namespace LastCall.EditorTools
             // The key's corner arc is 14px and its standing lip 11px, so a 16px ring keeps both
             // out of the stretched centre (2026-07-27, art regenerated at 128x80).
             if (file == "plate" || file == "plate_down") ti.spriteBorder = new Vector4(16, 16, 16, 16);
-            else if (file == "bar_frame") ti.spriteBorder = new Vector4(26, 10, 26, 10);
-            else if (file == "tab_btn" || file == "tab_btn_down") ti.spriteBorder = new Vector4(18, 16, 18, 16);
         }
     }
 }

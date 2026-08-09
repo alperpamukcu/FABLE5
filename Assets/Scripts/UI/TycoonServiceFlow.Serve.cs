@@ -36,7 +36,6 @@ namespace LastCall.UI
         private string _serveMixSig = "";
         private GlassArt.Piece _serveGlassPiece;
         private RectTransform _serveGarnishRow; // mint/olive garnishes are added here (2026-07-23)
-        private RectTransform _serveMixerRow;   // mixers and juices go in AT THE GLASS (v5 P14)
 
         /// <summary>One press of a mixer key, as a share of whatever glass is on the counter —
         /// so a splash into a coupe is a splash, not most of the drink.</summary>
@@ -144,8 +143,6 @@ namespace LastCall.UI
 
         /// <summary>The shelf slot standing empty while its bottle is in your hand.</summary>
         private RectTransform _serveCabinetGap;
-        private Image _serveHandLiquid;
-        private string _serveHandStyle;
 
         /// <summary>How much has gone into the glass since this bottle was picked up.</summary>
         private double _servePourTotal;
@@ -474,13 +471,6 @@ namespace LastCall.UI
             img.preserveAspect = true; img.raycastTarget = false;
             if (img.sprite == null) img.color = UITheme.StyleColor(card.Info?.Style, card.Type);
 
-            // What is left in it, so a mixer that is running out says so behind the glass door.
-            var shelfBottle = Run?.Shelf.Find(card.Id);
-            var liquid = BottleArt.AddLiquid(art, card);
-            if (liquid != null && shelfBottle != null && shelfBottle.Capacity > 0)
-                BottleArt.SetLevel(liquid, card, open: false,
-                    (float)(shelfBottle.Remaining / shelfBottle.Capacity));
-
             // The label is the STYLE, not the brand: at fridge scale "TONIC" is what you are
             // reaching for, and "Quinbury Tonic" would not fit anyway. Hover only — nine
             // names under nine bottles is a spreadsheet, not a fridge.
@@ -528,7 +518,6 @@ namespace LastCall.UI
             _serveBottleImage.sprite = ItemArt.Bottle(c);
             _serveBottleImage.color = _serveBottleImage.sprite != null
                 ? Color.white : UITheme.StyleColor(c.Info?.Style, c.Type);
-            SetHandBottleLevel(run, c);
             _servePourTotal = 0;
             _serveBottle.anchoredPosition = _serveBottleRest;
             _serveBottle.localRotation = Quaternion.identity;
@@ -573,26 +562,6 @@ namespace LastCall.UI
             if (_serveCabinetGap != null) _serveCabinetGap.gameObject.SetActive(true);
             _serveCabinetGap = null;
             if (run != null) RefreshServeText(run, 1.0);
-        }
-
-        /// <summary>Draws the level in the bottle you are holding, the same way the shelf does.</summary>
-        private void SetHandBottleLevel(TycoonRun run, IngredientCard card)
-        {
-            // Keyed on the BRAND, not the style: two vodkas share a style and no longer
-            // share a bottle, so a cached cavity cut for one would be the wrong shape in
-            // the other's glass.
-            string style = card?.Id;
-            if (style != _serveHandStyle)
-            {
-                if (_serveHandLiquid != null) Destroy(_serveHandLiquid.gameObject);
-                _serveHandLiquid = card == null ? null : BottleArt.AddLiquid(_serveBottle, card);
-                _serveHandStyle = style;
-            }
-            if (_serveHandLiquid == null) return;
-            var shelf = card == null ? null : run.Shelf.Find(card.Id);
-            float level = shelf != null && shelf.Capacity > 0
-                ? (float)(shelf.Remaining / shelf.Capacity) : 0f;
-            BottleArt.SetLevel(_serveHandLiquid, card, open: false, level);
         }
 
         /// <summary>Pours whatever bottle is in hand. The tilt and the aim are the shaker's,
@@ -658,7 +627,6 @@ namespace LastCall.UI
                 double landed = run.PourAtGlass(_serveFocusBottle.Id, GlassPourRate * Time.deltaTime);
                 _servePourTotal += landed;
                 _serveFluid.SetColor(DrinkColor(run.ServingGlass));
-                SetHandBottleLevel(run, _serveFocusBottle);
                 RefreshServeText(run, 1.0);
                 // How much has gone in. Without it the pour was a held button with no number on
                 // it, and the only way to learn a measure was to serve the drink and be told.
@@ -993,7 +961,6 @@ namespace LastCall.UI
             Stretch(_serveGarnishRow, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _serveCabinetShelf = NewRect("FridgeShelves", _servePanel);
             Stretch(_serveCabinetShelf, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            _serveMixerRow = _serveCabinetShelf;
 
             _aimText = NewText("AimText", _servePanel, _body, 13, TextAnchor.UpperCenter, UITheme.TextSecondary);
             Stretch(_aimText.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -70), new Vector2(0, -46));

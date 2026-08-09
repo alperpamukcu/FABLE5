@@ -9,7 +9,7 @@ namespace LastCall.Core
         /// <summary>Prices ×0.75, no speed tips. A bar with a bad night draws a broke crowd.</summary>
         Broke,
         Regular,
-        /// <summary>Prices ×1.25, mood tips +$2. Reputation compounds.</summary>
+        /// <summary>Prices ×1.25. Reputation compounds.</summary>
         HighRoller,
     }
 

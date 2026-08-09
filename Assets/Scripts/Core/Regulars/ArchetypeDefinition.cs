@@ -20,19 +20,11 @@ namespace LastCall.Core
         /// <summary>Name pool for regulars rolled from this archetype.</summary>
         public IReadOnlyList<string> NamePool { get; }
 
-        /// <summary>
-        /// This kind of person's disposition before the night is taken into account
-        /// (GDD 20 §2.1). Someone carrying something heavy is harder to please than someone
-        /// out celebrating.
-        /// </summary>
-        public DemandLevel BaseDemand { get; }
-
         /// <summary>Places this kind of person tends to be from (licence + future dialogue).</summary>
         public IReadOnlyList<string> Hometowns { get; }
 
         public ArchetypeDefinition(string id, string name,
             IReadOnlyList<string> namePool = null, int weight = 1,
-            DemandLevel baseDemand = DemandLevel.Easygoing,
             IReadOnlyList<string> hometowns = null)
         {
             Hometowns = hometowns != null && hometowns.Count > 0
@@ -45,7 +37,6 @@ namespace LastCall.Core
             Name = string.IsNullOrWhiteSpace(name) ? id : name;
             NamePool = namePool != null && namePool.Count > 0 ? namePool : new[] { Name };
             Weight = weight;
-            BaseDemand = baseDemand;
         }
     }
 }

@@ -13,9 +13,6 @@ namespace LastCall.Core
         public string Name { get; }
         public string ArchetypeId { get; }
 
-        /// <summary>Their archetype's disposition, carried so the run layer need not re-look it up.</summary>
-        public DemandLevel BaseDemand { get; }
-
         /// <summary>Printed on the licence (GDD 22 §3); dialogue will use both later.</summary>
         public int Age { get; }
         public string Hometown { get; }
@@ -28,7 +25,6 @@ namespace LastCall.Core
         public int SatisfactionEarned { get; private set; }
 
         public RegularState(string id, string name, string archetypeId,
-            DemandLevel baseDemand = DemandLevel.Easygoing,
             int age = 30, string hometown = null)
         {
             Age = age;
@@ -37,7 +33,6 @@ namespace LastCall.Core
             Id = id;
             Name = string.IsNullOrWhiteSpace(name) ? id : name;
             ArchetypeId = archetypeId ?? string.Empty;
-            BaseDemand = baseDemand;
         }
 
         /// <summary>Closes out a visit. Satisfaction is what the serve earned (GDD 19 §10).</summary>

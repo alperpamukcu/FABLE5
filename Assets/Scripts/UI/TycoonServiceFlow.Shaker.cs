@@ -19,12 +19,9 @@ namespace LastCall.UI
 
         private RectTransform _pourBottle;    // the grabbable bottle
         private Image _pourBottleBody;
-        private Image _pourBottleLiquid;
-        private string _pourBottleStyle;
         private MetaballFluid _shakerFluid;   // the metaball liquid: pour stream + pooled body
         private Splasher _shakerSplash;       // brief splashes (dissolving salt / sugar)
         private ShakerSolids _shakerSolids;   // ice / lemon afloat inside the shaker
-        private float _shakerLiquidFloorY;    // pool bottom y (the empty liquid line)
         private float _slosh;                 // running slosh phase for the shaker surface
         private Vector2 _bottleRest;
         private bool _bottleGrabbed;
@@ -229,7 +226,6 @@ namespace LastCall.UI
             var bottleSprite = ItemArt.BottleOpen(_focusBottle);
             _pourBottleBody.sprite = bottleSprite;
             _pourBottleBody.color = bottleSprite != null ? Color.white : colour;   // real art, else the style tint
-            SetPourBottleLevel(run);
             _pourBottle.anchoredPosition = _bottleRest;
             _pourBottle.localRotation = Quaternion.identity;
             _shakerSplash.Clear();
@@ -249,34 +245,6 @@ namespace LastCall.UI
             _shakeMeterFill.rectTransform.sizeDelta = new Vector2(0, -4);
             _shakeMeterText.text = run.Glass.HasPreparation("shaken")
                 ? $"SHAKEN · {run.ShakeEnergy:P0}" : "";
-        }
-
-        /// <summary>
-        /// Shows what is left in the bottle the player is holding. The bottles are drawn empty, so
-        /// without this a bottle that is nearly dry looks exactly like a fresh one — which is what
-        /// the notes meant by the levels being random. Rebuilt when the focus changes because each
-        /// bottle has its own cavity mask (<see cref="BottleArt"/>).
-        /// </summary>
-        private void SetPourBottleLevel(TycoonRun run)
-        {
-            // The capless art, so the cavity and the front layer describe the bottle that is
-            // actually on screen rather than the corked one it was cut from.
-            // Keyed on the BRAND, and measured from the capless art, so the cavity and the
-            // front layer describe the bottle that is actually on screen.
-            string style = _focusBottle?.Id;
-            if (style != _pourBottleStyle)
-            {
-                if (_pourBottleLiquid != null) Destroy(_pourBottleLiquid.gameObject);
-                _pourBottleLiquid = _focusBottle == null
-                    ? null
-                    : BottleArt.AddLiquid(_pourBottle, _focusBottle, open: true);
-                _pourBottleStyle = style;
-            }
-            if (_pourBottleLiquid == null) return;
-            var shelf = _focusBottle == null ? null : run.Shelf.Find(_focusBottle.Id);
-            float level = shelf != null && shelf.Capacity > 0
-                ? (float)(shelf.Remaining / shelf.Capacity) : 0f;
-            BottleArt.SetLevel(_pourBottleLiquid, _focusBottle, open: true, level);
         }
 
         /// <summary>
@@ -356,7 +324,6 @@ namespace LastCall.UI
                 // the colour of nothing). The serve stage has always had the twin of this line.
                 _shakerFluid.SetColor(DrinkColor(run.Glass));
                 SayShaker(ShakerLine(run));
-                SetPourBottleLevel(run);        // the bottle empties in the hand, as it is poured
             }
             else if (run.PouringId != null)
             {
@@ -640,20 +607,6 @@ namespace LastCall.UI
             _dragPiece.gameObject.SetActive(false);
         }
 
-        /// <summary>The side "mix / shake" action: open the shaker stage to shake what's poured;
-        /// focuses a stocked spirit so the stage renders even when nothing new is being added.</summary>
-        private void OpenShakeStage()
-        {
-            if (Run == null) return;
-            if (_focusBottle == null)
-                foreach (var b in Run.Shelf.Bottles)
-                    if (!b.IsEmpty && b.Ingredient.Type != IngredientType.Garnish
-                        && b.Ingredient.Type != IngredientType.Beer
-                        && (b.Ingredient.Info == null || !b.Ingredient.Info.Carbonated))
-                    { _focusBottle = b.Ingredient; break; }
-            if (_focusBottle != null) GoTo(Stage.Shaker);
-        }
-
         private void BuildShakerPanel()
         {
             // The whole screen (P14 v2, the serve stage's recipe): the stage is the counter
@@ -786,7 +739,6 @@ namespace LastCall.UI
             // still read the level in. (A clear vessel would sit in front instead.)
             _shakerVessel.SetAsFirstSibling();
             matRt.SetAsFirstSibling();   // the mat lies UNDER the tin, not over it
-            _shakerLiquidFloorY = _shakerVessel.anchoredPosition.y - _shakerVessel.rect.height * 0.5f + 12f;
 
             // The grabbable bottle, resting lower-right. Procedural body + neck; the grip
             // pivot sits low so lifting swings the mouth in a big arc.

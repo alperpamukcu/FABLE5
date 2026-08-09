@@ -1,12 +1,11 @@
 {
   "version": 1,
-  "_comment": "GDD 19 section 9 / GDD 20. An archetype is the shape of a person: a name pool, a disposition, hometowns. The emotion bands left with the emotion layer (2026-08-02).",
+  "_comment": "GDD 19 section 9 / GDD 20. An archetype is the shape of a person: a name pool and hometowns. The disposition (demand) left with the emotion layer in the 2026-08-07 sweep.",
   "archetypes": [
     {
       "id": "after_shift",
       "name": "Off the Late Shift",
       "weight": 4,
-      "demand": "Easygoing",
       "names": [
         "Marguerite",
         "Dev",
@@ -24,7 +23,6 @@
       "id": "recently_ended",
       "name": "Something Recently Ended",
       "weight": 3,
-      "demand": "Particular",
       "names": [
         "Ilse",
         "Tomasz",
@@ -42,7 +40,6 @@
       "id": "celebrating",
       "name": "Celebrating Something",
       "weight": 3,
-      "demand": "Easygoing",
       "names": [
         "Fikri",
         "Roos",
@@ -60,7 +57,6 @@
       "id": "wound_tight",
       "name": "Wound Tight",
       "weight": 4,
-      "demand": "Particular",
       "names": [
         "Sanne",
         "Emeka",
@@ -78,7 +74,6 @@
       "id": "slow_burn",
       "name": "Still Chewing On It",
       "weight": 3,
-      "demand": "Particular",
       "names": [
         "Halvard",
         "Ceren",
@@ -96,7 +91,6 @@
       "id": "long_way_from_home",
       "name": "A Long Way From Home",
       "weight": 2,
-      "demand": "Easygoing",
       "names": [
         "Anaya",
         "Teodor",
@@ -114,7 +108,6 @@
       "id": "nothing_much",
       "name": "Nothing Much, Honestly",
       "weight": 3,
-      "demand": "Easygoing",
       "names": [
         "Pim",
         "Leyla",
@@ -132,7 +125,6 @@
       "id": "deadline",
       "name": "Something Due Tomorrow",
       "weight": 2,
-      "demand": "Particular",
       "names": [
         "Solvej",
         "Arun",

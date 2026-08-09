@@ -648,13 +648,6 @@ namespace LastCall.UI
         private Vector2 RotateAboutGrip(Vector2 point, float rad) =>
             RotateAbout(point, _tapGlass.anchoredPosition, rad);
 
-        /// <summary>The pint's rim, in the surface's own space.</summary>
-        private float PintRimY()
-        {
-            var (_, _, bottomY, innerH) = PintInterior();
-            return bottomY + innerH;
-        }
-
         private void RefreshTapText(TycoonRun run)
         {
             var glass = run.ServingGlass;

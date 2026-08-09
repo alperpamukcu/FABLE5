@@ -62,55 +62,14 @@ namespace LastCall.EditorTools
             so.FindProperty("snacksJson").objectReferenceValue = LoadRequired<TextAsset>(SnacksPath);
             so.ApplyModifiedPropertiesWithoutUndo();
 
+            // The stage carries only what the player still sees (2026-08-07 sweep): the room,
+            // the counter, the till and the licence portraits. The old rail bottles, the
+            // pour-glass pair and the solo customer left with their stage code.
             var stage = game.AddComponent<LastCall.UI.DiegeticStage>();
             var stageSo = new SerializedObject(stage);
-            stageSo.FindProperty("glassSprite").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Props/pour_nick.png");
-            stageSo.FindProperty("glassMaskSprite").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Props/pour_nick_mask.png");
             stageSo.FindProperty("displayFont").objectReferenceValue = LoadRequired<Font>(PixelDisplayFontPath);
-            stageSo.FindProperty("bodyFont").objectReferenceValue = LoadRequired<Font>(PixelBodyFontPath);
-            // Installed v2 pixel bottle sprites (18 §5 first batch); types without one fall
-            // back to the flat placeholder silhouette.
-            var bottles = new (LastCall.Core.IngredientType type, string path)[]
-            {
-                (LastCall.Core.IngredientType.Spirit,  "Assets/Art/Bottles/bottle_spirit.png"),
-                (LastCall.Core.IngredientType.Bubbly,  "Assets/Art/Bottles/bottle_bubbly.png"),
-                (LastCall.Core.IngredientType.Sweet,   "Assets/Art/Bottles/bottle_sweet.png"),
-                (LastCall.Core.IngredientType.Sour,    "Assets/Art/Bottles/bottle_sour.png"),
-                (LastCall.Core.IngredientType.Bitter,  "Assets/Art/Bottles/bottle_bitter.png"),
-                (LastCall.Core.IngredientType.Garnish, "Assets/Art/Bottles/bottle_garnish.png"),
-            };
-            var spritesProp = stageSo.FindProperty("bottleSprites");
-            spritesProp.arraySize = bottles.Length;
-            for (int i = 0; i < bottles.Length; i++)
-            {
-                var el = spritesProp.GetArrayElementAtIndex(i);
-                el.FindPropertyRelative("type").intValue = (int)bottles[i].type;
-                el.FindPropertyRelative("sprite").objectReferenceValue =
-                    AssetDatabase.LoadAssetAtPath<Sprite>(bottles[i].path);
-            }
-            // Per-ingredient bottles: every Assets/Art/Bottles/<id>.png that is not a
-            // per-type fallback (bottle_*) is wired by its ingredient id.
-            var byIdProp = stageSo.FindProperty("bottleById");
-            var idPaths = new System.Collections.Generic.List<(string id, string path)>();
-            foreach (var g in AssetDatabase.FindAssets("t:Sprite", new[] { "Assets/Art/Bottles" }))
-            {
-                var path = AssetDatabase.GUIDToAssetPath(g);
-                var fn = Path.GetFileNameWithoutExtension(path);
-                if (fn.StartsWith("bottle_")) continue;   // skip the per-type fallbacks
-                idPaths.Add((fn, path));
-            }
-            byIdProp.arraySize = idPaths.Count;
-            for (int i = 0; i < idPaths.Count; i++)
-            {
-                var el = byIdProp.GetArrayElementAtIndex(i);
-                el.FindPropertyRelative("id").stringValue = idPaths[i].id;
-                el.FindPropertyRelative("sprite").objectReferenceValue =
-                    AssetDatabase.LoadAssetAtPath<Sprite>(idPaths[i].path);
-            }
 
-            // ID photos, keyed by archetype id — the file name is the key (GDD 19 §9).
+            // ID photos, keyed by archetype id — the file name is the key.
             var portraitProp = stageSo.FindProperty("portraits");
             var portraitPaths = new System.Collections.Generic.List<(string id, string path)>();
             foreach (var g in AssetDatabase.FindAssets("t:Sprite", new[] { "Assets/Art/Portraits/Archetypes" }))
@@ -133,11 +92,6 @@ namespace LastCall.EditorTools
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/club_room.png");
             stageSo.FindProperty("counterSprite").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/counter.png");
-            // The backdrop used to wire six separate moving layers here (24 §8). The painted room
-            // is its own sky and skyline and the rain was cut, so nothing drew them — layers,
-            // fields and art all removed on 2026-07-30. The sign blinks from code (NeonBlink).
-            stageSo.FindProperty("customerSprite").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Characters/vip_patron.png");
             stageSo.FindProperty("registerSprite").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Props/register2.png");
             stageSo.ApplyModifiedPropertiesWithoutUndo();

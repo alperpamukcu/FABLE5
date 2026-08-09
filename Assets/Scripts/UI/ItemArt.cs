@@ -50,8 +50,6 @@ namespace LastCall.UI
             // is left in each bottle, as it always has.
             var flat = Load("v3_" + card.Id + "_flat");
             if (flat != null) return flat;
-            var v3 = Load("v3_" + card.Id + "_back");
-            if (v3 != null) return v3;
             var own = Load("bot_" + card.Id);
             return own != null ? own : Load(card.Info?.Style);
         }
@@ -63,8 +61,6 @@ namespace LastCall.UI
             if (card == null) return null;
             var flatOpen = Load("v3_" + card.Id + "_flat_open");
             if (flatOpen != null) return flatOpen;
-            var v3 = Load("v3_" + card.Id + "_back");   // legacy sandwich fallback
-            if (v3 != null) return v3;
             // The brand's own capless shot, then its STYLE's — a tier-one brand has no art
             // of its own but its style does, and falling straight through to the shut
             // bottle would have put the cap back on the one in your hand.

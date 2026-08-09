@@ -35,7 +35,6 @@ namespace LastCall.UI
 
         private RectTransform _root;        // the whole modal (scrim + panels)
         private RectTransform _menuPanel;
-        private RectTransform _menuSide;   // readouts + buttons, off the board
         // Windows open rather than snap (2026-07-24): tapping a bottle on the clipboard plays
         // the menu out and the pour window in, so the two stages are visibly linked.
         private CanvasGroup _stageGroup;   // the window currently easing in
@@ -68,37 +67,19 @@ namespace LastCall.UI
         private const float CapCentreX = 0f;
         private const float CapGrowth = 1.3f;
         private const float CapArtOffset = 0.245f;   // the lid art sits this far above its rect centre
-        // The clipboard, and the share of it its paper covers (measured off the art).
-        private const float BoardW = 1148f, BoardH = 719f;
-        private const float BoardX = 0f;   // the board fills the screen, centred
         private const float TinW = 168f, TinAspect = 116f / 208f;
         private const float CavityFloor = 0.0913f, CavityRim = 0.6106f;
-        // Measured off the dark-walnut board art: the sheet's share of the canvas and where
-        // its centre sits, so the list lands on paper and never on the wood or the clip.
-        private const float PaperW = 0.655f, PaperH = 0.660f;
-        private const float PaperCX = -0.015f, PaperCY = -0.008f;
-        private const int MenuColumns = 4, MenuRows = 2;
-        private const float GridGap = 6f, HeadingH = 18f;
-        private string _menuTab;   // null = the aisle index page (v5 P13: a category id)
+        private const float GridGap = 6f;
         private Text _menuTitle;
-        private RectTransform _menuBack;
-        // Changing pages (2026-07-27): the sheet stays clamped to the board and the page of keys
-        // slides across it, out one side and in from the other. The clipboard holding still is the
-        // point — it is the paper under the clip that changes, not the board.
-        private string _flipTo;
-        private float _flipT = 1f;
-        private int _flipDir;
         private Vector2 _listHome;
         // The board draws one art pixel as ~5.8 screen pixels. Halving the key's pixels-per-unit
         // puts its grain at 4, so the keys read as the same piece of pixel art as the sheet they
         // sit on rather than a finer sticker laid over it (2026-07-27).
         private const float PlatePixelScale = 0.5f;
-        private const float FlipTime = 0.30f;
         private Vector2 _menuHome;
         // 64 units against 32px art puts one art pixel on 4 screen pixels — the same grain as the
         // keys, so the corner controls belong to the same drawing (2026-07-27).
-        private const float CornerSize = 64f, CornerInset = 30f;   // identical for every corner
-        private RectTransform _mixBar;
+        private const float CornerSize = 64f;
 
 
         private void Awake()
@@ -128,7 +109,6 @@ namespace LastCall.UI
         private void Update()
         {
             AdvanceStageOpen();
-            AdvancePageTurn();
 
             var run = Run;
             if (run == null) return;
@@ -190,7 +170,6 @@ namespace LastCall.UI
 
             _root.gameObject.SetActive(stage != Stage.Closed);
             _menuPanel.gameObject.SetActive(stage == Stage.Menu);
-            if (_menuSide != null) _menuSide.gameObject.SetActive(stage == Stage.Menu);
 
             _shakerPanel.gameObject.SetActive(stage == Stage.Shaker);
             _servePanel.gameObject.SetActive(stage == Stage.Serve);
@@ -205,7 +184,7 @@ namespace LastCall.UI
             _tapFluid?.Clear();
             if (Run != null && Run.PullingId != null) Run.EndPull();
 
-            if (stage == Stage.Menu) { _menuTab = null; _flipT = 1f; ResetPageSlide(); RefreshMenu(); }
+            if (stage == Stage.Menu) { ResetPageSlide(); RefreshMenu(); }
             if (stage == Stage.Shaker) RefreshShaker();
             if (stage == Stage.Serve) RefreshServe();
             if (stage == Stage.Tap) RefreshTap();

@@ -11,6 +11,16 @@ GDD module(s) in the same commit that changes the rule.
 
 Status legend: ☐ todo · ◐ in progress · ☑ done
 
+> **2026-08-07 — the sweep + the as-built extraction.** The game as it actually runs is
+> documented in `Docs/GDD_MEVCUT.md` (single source for live rules) and audited in
+> `Docs/GELISTIRME_RAPORU.md`. Where a line below disagrees with those, THEY win. Known
+> overtaken lines in this file: D1 (the emotion engine is NOT a hidden driver — demolished
+> 2026-08-02, remnants removed 2026-08-07); P14's "glass upgrades: 3 tiers" (shipped as 6,
+> see the 08-02 addenda); P16's back-bar "scene build next" (built); the P11/P18 rent
+> curves (only the 08-02 addendum's `12 + 2d + d²/9` is live); "filled to the top"
+> (retired 2026-08-02, machinery removed 2026-08-07). Historical GDD modules 00–13, 17,
+> 19, 20 were deleted in the sweep; 14–16, 18, 21–25 remain the live subsystem specs.
+
 ---
 
 ## 0. Conflict ledger — the notes vs the live game

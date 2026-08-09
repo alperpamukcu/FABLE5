@@ -273,9 +273,8 @@ with an ambient playing loop. The scene is the save file, visually.
   pours are animated streams, not rectangles; UI transitions ease, never snap
   (Motion.Reduced still collapses everything to instant).
 - **Consistency rule**: every object on screen shares one style and one texel density —
-  nothing may "sırıtmak". All current sprites (bottles, patron, register, glass, bg) are
-  **placeholders from today**; they stay until the v3 pass (PLAN §P8) replaces the whole
-  set together, not piecemeal.
+  nothing may "sırıtmak". The whole-set replacement rule was RETIRED (PLAN §0 C10,
+  2026-07-31): art lands per stage, and the consistency rule holds within each stage.
 - Background: animated and alive (crowd, neon, musician when bought) but low-contrast and
   slow — attention belongs to the seats and the counter.
 
