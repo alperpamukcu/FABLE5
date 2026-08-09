@@ -335,9 +335,15 @@ namespace LastCall.Core
                     for (int i = _recipes.Count - 1; i >= 0; i--)
                         if (_recipes[i].Id == p.Id) { _recipes.RemoveAt(i); break; }
                     break;
-                case DayPurchase.Kind.Seat: Seats--; break;
+                // Taking a fitting back gives tonight its fitting back too — otherwise a
+                // misclick would cost the whole night's one decision (2026-08-07).
+                case DayPurchase.Kind.Seat:
+                    Seats--;
+                    if (UpgradesToday > 0) UpgradesToday--;
+                    break;
                 case DayPurchase.Kind.Glassware:
                     if (_glassTiers.TryGetValue(p.Id, out var gt) && gt > 1) _glassTiers[p.Id] = gt - 1;
+                    if (UpgradesToday > 0) UpgradesToday--;
                     break;
             }
             Money += p.Price;
@@ -1132,8 +1138,10 @@ namespace LastCall.Core
             EnsurePhase(TycoonPhase.DayEnd);
             if (Seats >= _config.MaxSeats)
                 throw new InvalidOperationException("The bar has no room for another stool.");
+            EnsureUpgradeRoom();
             int price = _config.SeatPrice(Seats);
             Spend(price);
+            UpgradesToday++;
             Seats++;
             _todayPurchases.Add(new DayPurchase(DayPurchase.Kind.Seat, "seat",
                 $"Stool #{Seats}", price));
@@ -1156,8 +1164,10 @@ namespace LastCall.Core
             int tier = GlassTier(glassId);
             if (tier >= MaxGlassTier)
                 throw new InvalidOperationException($"The {def.Name} line is already the finest.");
+            EnsureUpgradeRoom();
             int price = def.TierPrices[tier - 1];
             Spend(price);
+            UpgradesToday++;
             _glassTiers[glassId] = tier + 1;
             _todayPurchases.Add(new DayPurchase(DayPurchase.Kind.Glassware, glassId,
                 tier + 1 >= MaxGlassTier ? $"{def.Name} — Legendary" : $"{def.Name} {tier}★",
@@ -1172,10 +1182,31 @@ namespace LastCall.Core
             EnsurePhase(TycoonPhase.DayEnd);
             if (CounterTier >= _config.MaxAmbienceTier)
                 throw new InvalidOperationException("The counter cannot be finer.");
+            EnsureUpgradeRoom();
             int price = _config.CounterPrice(CounterTier);
             Spend(price);
+            UpgradesToday++;
             CounterTier++;
             return price;
+        }
+
+        /// <summary>
+        /// ONE fitting a night (the author, 2026-08-07: "1 gecede maksimum 1 upgrade
+        /// yapılabilir"). A bar is rebuilt over weeks, not in an evening: a glass line can
+        /// climb a single step and then it waits for tomorrow. Stock is not a fitting —
+        /// bottles, recipes and restocking are as free as the till allows; this counts
+        /// only the things that change what the bar IS: stools, glassware, the counter.
+        /// </summary>
+        public int UpgradesToday { get; private set; }
+
+        /// <summary>Whether tonight still has its fitting to spend (the shop greys out on it).</summary>
+        public bool CanFitTonight => UpgradesToday < _config.MaxUpgradesPerNight;
+
+        private void EnsureUpgradeRoom()
+        {
+            if (!CanFitTonight)
+                throw new InvalidOperationException(
+                    "One fitting a night — the rest keeps until tomorrow.");
         }
 
         private void Spend(int price)
@@ -1243,6 +1274,7 @@ namespace LastCall.Core
             Day++;
             CrowdToday = Ledger.TomorrowsCrowd;
             DaySales = DayTips = DayRent = DayStock = DayUpgrades = 0;
+            UpgradesToday = 0;         // tonight's fitting is spent; tomorrow gets its own
             _bestRankServedTonight = 0;
             _todayPurchases.Clear();   // yesterday's buys are kept; refunds are same-day only
             BuyBackTheBowls();

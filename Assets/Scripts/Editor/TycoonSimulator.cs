@@ -222,8 +222,14 @@ namespace LastCall.EditorTools
                         if (offer.Sold || !offer.IsNewStock || !neededStyles.Contains(offer.Style)) continue;
                         if (run.Money >= offer.Price + 40) run.BuyBrand(oi);
                     }
-                    if (run.Seats < run.Config.MaxSeats &&
-                        run.Money >= run.Config.SeatPrice(run.Seats) + 40) run.BuySeat();
+                    // ONE fitting a night (2026-08-07). The bot spends it the way a player
+                    // working the cap would: a stool first while the room is small — seats
+                    // are throughput and throughput is money — and the glass ladder with
+                    // whatever night is left over.
+                    bool fittingSpent = false;
+                    if (run.CanFitTonight && run.Seats < run.Config.MaxSeats &&
+                        run.Money >= run.Config.SeatPrice(run.Seats) + 40)
+                    { run.BuySeat(); fittingSpent = true; }
 
                     // The star loop (2026-08-02): the standing is CAPPED by the fittings,
                     // and glassware went per-LINE — so the bot buys the cheapest next step
@@ -244,7 +250,8 @@ namespace LastCall.EditorTools
                         if (price < bestPrice) { bestPrice = price; bestGlass = g; bestStep = t - 1; }
                     }
                     int cushion = bestStep < 2 ? 70 : 250;
-                    if (bestGlass != null && run.Money >= bestPrice + cushion)
+                    if (!fittingSpent && run.CanFitTonight && bestGlass != null
+                        && run.Money >= bestPrice + cushion)
                         run.BuyGlassTier(bestGlass.Id);
 
                     stats.RecordNight(run.Floor.Elapsed, run.Rating.LastNight);

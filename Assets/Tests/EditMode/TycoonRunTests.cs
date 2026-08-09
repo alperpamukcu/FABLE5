@@ -495,9 +495,15 @@ namespace LastCall.Tests
             var run = NewRun();
             PlayDayServingEveryone(run);
 
+            // One fitting a night (2026-08-07), so the till is emptied a night at a time:
+            // buy the step that is affordable, sleep, buy the next, until one is not.
             while (run.CounterTier < run.Config.MaxAmbienceTier
                    && run.Money >= run.Config.CounterPrice(run.CounterTier))
+            {
                 run.BuyCounter();
+                run.ContinueToNextDay();
+                PlayDayServingEveryone(run);
+            }
             int booked = run.DayUpgrades;
 
             Assert.Less(run.CounterTier, run.Config.MaxAmbienceTier,
@@ -506,6 +512,29 @@ namespace LastCall.Tests
                 "sanity: the next step up the counter is out of reach");
             Assert.Throws<InvalidOperationException>(() => run.BuyCounter());
             Assert.AreEqual(booked, run.DayUpgrades, "a refused buy books nothing");
+        }
+
+        [Test]
+        public void OneFittingANight_AndTomorrowGetsItsOwn()
+        {
+            // The author, 2026-08-07: a bar is rebuilt over weeks. A night buys ONE
+            // fitting — and taking it back hands the night's decision back with it.
+            var run = NewRun(startingMoney: 400);
+            PlayDayServingEveryone(run);
+
+            Assert.IsTrue(run.CanFitTonight, "the night opens with its fitting unspent");
+            run.BuySeat();
+            Assert.IsFalse(run.CanFitTonight, "and spends it on the first one bought");
+            Assert.Throws<InvalidOperationException>(() => run.BuyCounter(),
+                "a second fitting the same night is refused");
+
+            run.RefundToday(run.TodaysPurchases.Count - 1);
+            Assert.IsTrue(run.CanFitTonight, "a refund gives the night back its decision");
+
+            run.BuyCounter();
+            run.ContinueToNextDay();
+            Assert.IsTrue(run.CanFitTonight, "dawn brings a fresh one");
+            Assert.AreEqual(0, run.UpgradesToday);
         }
 
         [Test]
@@ -520,7 +549,13 @@ namespace LastCall.Tests
                 glassware: new[] { rocks });
             PlayDayServingEveryone(run);
 
-            for (int step = 0; step < 5; step++) run.BuyGlassTier("rocks");   // 0★ → legendary
+            // Five steps, five nights — one fitting a night (2026-08-07).
+            for (int step = 0; step < 5; step++)
+            {
+                run.BuyGlassTier("rocks");
+                run.ContinueToNextDay();
+                PlayDayServingEveryone(run);
+            }
 
             Assert.AreEqual(6, run.GlassTier("rocks"), "five paid steps sit on the base set");
             Assert.AreEqual(5, run.GlassUpgradeSteps);

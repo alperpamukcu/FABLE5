@@ -13,7 +13,9 @@ from PIL import Image
 
 ITEMS = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                      '..', 'Assets', 'Resources', 'Items')
-FRAMES = ['mk_tablet', 'mk_tab_on', 'mk_tab_off', 'mk_card', 'mk_appbar']
+FRAMES = ['sh_tablet', 'sh_card', 'sh_bar', 'sh_tab_on', 'sh_tab_off',
+          'sh_btn', 'sh_balance', 'sh_panel',
+          'mk_tablet', 'mk_tab_on', 'mk_tab_off', 'mk_card', 'mk_appbar']
 
 
 def luma(c):

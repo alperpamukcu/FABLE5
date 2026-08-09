@@ -64,6 +64,14 @@ namespace LastCall.Core
         // 2026-08-04 (the author): both were prices attached to a tint and a placeholder
         // silhouette, so what they actually sold was neither reputation nor a picture.
         public int MaxAmbienceTier { get; } = 3;
+
+        /// <summary>
+        /// How many FITTINGS one night may buy (the author, 2026-08-07): a stool, a step up
+        /// a glass line, a better counter. One. A bar is rebuilt over weeks, and a night
+        /// where the whole shop is bought at once is a night with no decision in it. Stock
+        /// — bottles, recipes, restocking — is not a fitting and is not capped.
+        /// </summary>
+        public int MaxUpgradesPerNight { get; } = 1;
         public int GlasswarePrice(int tier) => 50 * tier;   // tier = current level; the next step costs this
         public int CounterPrice(int tier) => 40 * tier;
 

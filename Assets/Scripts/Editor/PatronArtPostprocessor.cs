@@ -40,6 +40,15 @@ namespace LastCall.EditorTools
             // art by Tools/market_borders.py and pasted here — a 9-slice whose border is
             // guessed either eats the corner detail or stretches it. The tablet's frame
             // probed at exactly 20px on all four sides.
+            // The distributor's white/green kit (2026-08-07), each border probed off its
+            // own art: the tablet's bezel measured at 40px on every side.
+            else if (file == "sh_tablet") ti.spriteBorder = new Vector4(40, 40, 40, 40);
+            else if (file == "sh_card") ti.spriteBorder = new Vector4(10, 8, 10, 8);
+            else if (file == "sh_bar") ti.spriteBorder = new Vector4(10, 8, 10, 8);
+            else if (file == "sh_tab_on" || file == "sh_tab_off") ti.spriteBorder = new Vector4(8, 6, 8, 6);
+            else if (file == "sh_btn") ti.spriteBorder = new Vector4(6, 6, 6, 6);
+            else if (file == "sh_balance") ti.spriteBorder = new Vector4(10, 5, 10, 5);
+            else if (file == "sh_panel") ti.spriteBorder = new Vector4(12, 9, 12, 9);
             else if (file == "mk_tablet") ti.spriteBorder = new Vector4(20, 20, 20, 20);
             else if (file == "mk_tab_on" || file == "mk_tab_off") ti.spriteBorder = new Vector4(10, 6, 10, 6);
             else if (file == "mk_card") ti.spriteBorder = new Vector4(10, 9, 10, 9);
