@@ -44,6 +44,13 @@ namespace LastCall.EditorTools
             // own art: the tablet's bezel measured at 40px on every side.
             // The iPad's bezel probed at 62px on every side (Tools/market_borders.py and
             // the ipad_dark recolour agree) — a device you can see, not a white line.
+            // The 2026-08-09 kit, DRAWN rather than generated, so these borders are the
+            // drawing's own construction lines instead of a measurement off somebody's
+            // guess: sh_ipad2 is 274x175 (exactly the 1096x700 it renders at) with a 28px
+            // ring, so a sliced Image draws the bezel at 1:1 and it stays even.
+            else if (file == "sh_ipad2") ti.spriteBorder = new Vector4(28, 28, 28, 28);
+            else if (file == "sh_tile") ti.spriteBorder = new Vector4(12, 12, 12, 12);
+            else if (file == "sh_pill") ti.spriteBorder = new Vector4(10, 6, 10, 6);
             else if (file == "sh_ipad") ti.spriteBorder = new Vector4(62, 62, 62, 62);
             else if (file == "sh_add") ti.spriteBorder = new Vector4(14, 8, 14, 8);
             else if (file == "sh_tablet" || file == "sh_tablet2") ti.spriteBorder = new Vector4(40, 40, 40, 40);
