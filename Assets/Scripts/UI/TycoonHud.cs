@@ -1905,8 +1905,8 @@ namespace LastCall.UI
                 _fittingNote.color = room ? ShopGreenDark : ShopCost;
             }
             if (_fittingLamp != null) _fittingLamp.color = room ? ShopGreenLit : ShopCost;
-            var tabOn = ItemArt.Load("sh_tab2_on") ?? ItemArt.Load("sh_tab_on");
-            var tabOff = ItemArt.Load("sh_tab2_off") ?? ItemArt.Load("sh_tab_off");
+            var tabOn = ItemArt.Load("sh_k_tab_on") ?? ItemArt.Load("sh_tab_on");
+            var tabOff = ItemArt.Load("sh_k_tab_off") ?? ItemArt.Load("sh_tab_off");
             for (int i = 0; i < _shopTabKeys.Length; i++)
             {
                 bool on = i == _shopTab;
@@ -3866,8 +3866,8 @@ namespace LastCall.UI
             var balance = NewRect("Balance", strip);
             Place(balance, new Vector2(1, 0.5f), new Vector2(150, 32), new Vector2(-12, 0));
             var balanceImg = balance.gameObject.AddComponent<Image>();
-            var balArt = ItemArt.Load("sh_balance");
-            if (balArt != null) { balanceImg.sprite = balArt; balanceImg.type = Image.Type.Sliced; }
+            var accArt = ItemArt.Load("sh_k_account");   // 150x32, a recessed readout
+            if (accArt != null) balanceImg.sprite = accArt;
             else balanceImg.color = ShopGreenDark;
             var balanceLabel = NewText("BalanceL", balance, _body, 8, TextAnchor.MiddleLeft,
                 new Color(0.63f, 0.85f, 0.70f, 1f));   // lit green on the dark field was 2.4:1
@@ -3878,6 +3878,20 @@ namespace LastCall.UI
             _tabletTill.horizontalOverflow = HorizontalWrapMode.Wrap;
             _tabletTill.verticalOverflow = VerticalWrapMode.Truncate;
 
+            // THE SHEET THE DEPARTMENT OPENS (the author: give it a filing feel, and let
+            // the frame go round the products too). The aisle sits on a framed page whose
+            // top edge runs UNDER the tabs: the lit tab is drawn with no bottom rim and
+            // overlaps that edge by two units, so it does not sit beside the page, it is
+            // attached to it. Four flat Images make the frame, which cannot distort at any
+            // size — the thing the stretched sprites kept getting wrong.
+            var page = NewRect("Page", screen);
+            page.anchorMin = new Vector2(0, 1); page.anchorMax = new Vector2(1, 1);
+            page.pivot = new Vector2(0.5f, 1);
+            page.sizeDelta = new Vector2(-8f, 416f);        // 1040 - 8 = 1032 wide
+            page.anchoredPosition = new Vector2(0, -(OsBarH + AppBarH + TabBarH - 4f));
+            page.gameObject.AddComponent<Image>().color = Color.white;
+            Frame(page, 2f, ShopGreenDark);
+
             // THE DEPARTMENT BAR, across the top. It used to be a 230-wide rail down the
             // left; demolishing it hands 274 units back to the aisle, which is the
             // difference between eight products on screen and twelve.
@@ -3886,7 +3900,11 @@ namespace LastCall.UI
             tabBar.pivot = new Vector2(0.5f, 1);
             tabBar.sizeDelta = new Vector2(0, TabBarH);
             tabBar.anchoredPosition = new Vector2(0, -(OsBarH + AppBarH));
-            tabBar.gameObject.AddComponent<Image>().color = ShopAisle;
+            // No fill: the tabs stand on the page's own shoulder, and a band behind them
+            // would draw a second horizontal line right where the seam should be.
+            var tabBarImg = tabBar.gameObject.AddComponent<Image>();
+            tabBarImg.color = new Color(1f, 1f, 1f, 0f);
+            tabBarImg.raycastTarget = false;
 
             for (int i = 0; i < ShopTabs.Length; i++)
             {
@@ -3895,7 +3913,9 @@ namespace LastCall.UI
                 Place(key, new Vector2(0, 0.5f), new Vector2(TabKeyW, 28f),
                     new Vector2(8f + i * (TabKeyW + 8f), 0));
                 var bg = key.gameObject.AddComponent<Image>();
-                if (ItemArt.Load("sh_tab2_off") != null) bg.type = Image.Type.Sliced;
+                // Drawn AT 160x28, so it goes in 1:1 — no slicing, no middle band to
+                // smear. Every control below follows the same rule.
+                bg.type = Image.Type.Simple;
                 var btn = key.gameObject.AddComponent<Button>();
                 btn.targetGraphic = bg;
                 btn.onClick.AddListener(() =>
@@ -4066,8 +4086,8 @@ namespace LastCall.UI
             _checkout = NewRect("Checkout", order);
             Place(_checkout, new Vector2(0, 0), new Vector2(OrderW - 20, 26), new Vector2(10, 8));
             var checkoutImg = _checkout.gameObject.AddComponent<Image>();
-            var btnArt = ItemArt.Load("sh_btn");
-            if (btnArt != null) { checkoutImg.sprite = btnArt; checkoutImg.type = Image.Type.Sliced; }
+            var orderArt = ItemArt.Load("sh_k_order");
+            if (orderArt != null) checkoutImg.sprite = orderArt;   // 212x26, drawn to fit
             else checkoutImg.color = ShopGreen;
             var checkoutBtn = _checkout.gameObject.AddComponent<Button>();
             checkoutBtn.targetGraphic = checkoutImg;
@@ -4083,8 +4103,9 @@ namespace LastCall.UI
             _openTomorrow = NewRect("OpenTomorrow", foot);
             Place(_openTomorrow, new Vector2(0, 0.5f), new Vector2(ExitW, FootH), new Vector2(896, 0));
             var otImg = _openTomorrow.gameObject.AddComponent<Image>();
-            if (btnArt != null) { otImg.sprite = btnArt; otImg.type = Image.Type.Sliced; }
-            otImg.color = UITheme.PrimaryAction;
+            var exitArt = ItemArt.Load("sh_k_exit");   // 136x128, its own heavy bevel
+            if (exitArt != null) otImg.sprite = exitArt;
+            else otImg.color = UITheme.PrimaryAction;
             var otBtn2 = _openTomorrow.gameObject.AddComponent<Button>();
             otBtn2.targetGraphic = otImg;
             otBtn2.onClick.AddListener(OnDayEndAdvance);
@@ -4474,8 +4495,8 @@ namespace LastCall.UI
                 var pill = NewRect("Pill", rt);
                 Place(pill, new Vector2(1, 0), new Vector2(70, 20), new Vector2(-8, 6));
                 var pillImg = pill.gameObject.AddComponent<Image>();
-                var pillArt = ItemArt.Load("sh_pill");
-                if (pillArt != null) { pillImg.sprite = pillArt; pillImg.type = Image.Type.Sliced; }
+                var pillArt = ItemArt.Load("sh_k_add") ?? ItemArt.Load("sh_pill");
+                if (pillArt != null) pillImg.sprite = pillArt;   // 70x20, drawn to fit
                 pillImg.color = PillOf(state);
                 pillImg.raycastTarget = false;
                 var label = NewText("L", pill, _shop, 8, TextAnchor.MiddleCenter, PillInk(state));
