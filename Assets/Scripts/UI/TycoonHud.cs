@@ -3960,44 +3960,58 @@ namespace LastCall.UI
             if (shell.sprite == null) shell.color = UITheme.Cream[4];   // no art: a plain card
             card.gameObject.AddComponent<Button>().transition = Selectable.Transition.None; // swallow clicks
 
-            var htext = NewText("H", card, _body, 16, TextAnchor.MiddleCenter, UITheme.Cream[4]);
-            Place(htext.rectTransform, new Vector2(0.5f, 1), new Vector2(LicW - 40, LicHeaderH),
-                new Vector2(0, LicHeaderY));
-            htext.text = "NEW ARDEN  ·  PATRON LICENCE";
+            // THE NAVY BAND CARRIES THE PERSON, not the bureau. It used to print
+            // "NEW ARDEN · PATRON LICENCE" — 320 units of ink identical on all thirty-one
+            // cards, every night of every run, across 9% of the card. The shell art already
+            // says what this document is; the band's job is to say WHO it is about. The name
+            // and the age move up onto it, and the flag rides the same baseline.
+            _idName = NewText("Name", card, _display, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
+            Place(_idName.rectTransform, new Vector2(0, 1), new Vector2(430, 20),
+                new Vector2(20, LicHeaderY - LicHeaderH * 0.5f + 10f));
+            _idName.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _idName.verticalOverflow = VerticalWrapMode.Truncate;
+
+            var idFlag = NewRect("Flag", card);
+            Place(idFlag, new Vector2(1, 1), new Vector2(16, 11),
+                new Vector2(-24, LicHeaderY - LicHeaderH * 0.5f + 5.5f));
+            _idFlag = idFlag.gameObject.AddComponent<Image>();
+            _idFlag.raycastTarget = false;
+            _idFlag.enabled = false;
 
             var photo = NewRect("Photo", card);
             Place(photo, new Vector2(0, 1), new Vector2(LicPortrait.width, LicPortrait.height),
                 new Vector2(LicPortrait.x, LicPortrait.y));
             _idPhoto = photo.gameObject.AddComponent<Image>();
             _idPhoto.preserveAspect = true;
+            // A WHOLE STEP, TOP-ALIGNED. The faces are 96x96 and the window is 200x288, so
+            // preserveAspect was drawing them at 2.0854x — a fractional magnification of
+            // pixel art, which is the one thing it cannot survive, and it left 88 units of
+            // dead white under every face. Two flat 2x is 192, sits inside the window, and
+            // every pixel lands on a whole pixel.
+            photo.sizeDelta = new Vector2(192, 192);
+            photo.anchoredPosition = new Vector2(
+                LicPortrait.x + (LicPortrait.width - 192f) * 0.5f, LicPortrait.y - 4f);
 
             // The data column, one field to a printed rule (the author's note: the text and
             // the art disagreed — now the art's own lines decide where the text sits). The
             // reserved-slots row is GONE: a row of blanks was noise, not a licence.
             float colW = LicFieldsW * 0.5f - 8f;
-            _idName = LicenceField(card, "NAME", LicFieldsX, LicLines[0], LicFieldsW, out _, 24);
-            _idAgeFrom = LicenceField(card, "AGE  ·  CITIZEN OF", LicFieldsX, LicLines[1], LicFieldsW, out _);
-            // The flag rides the citizenship line, at the right of its field. 16x11 is the
-            // size the flags are drawn at, so it goes in 1:1 and never resamples.
-            var idFlag = NewRect("Flag", card);
-            Place(idFlag, new Vector2(0, 1), new Vector2(16, 11),
-                new Vector2(LicFieldsX + LicFieldsW - 20f, LicLines[1] - 2f));
-            _idFlag = idFlag.gameObject.AddComponent<Image>();
-            _idFlag.raycastTarget = false;
-            _idFlag.enabled = false;
-            _idRel = LicenceField(card, "STANDING", LicFieldsX, LicLines[2], colW, out _idRelLabel);
-            _idRates = LicenceField(card, "RATES THIS BAR", LicFieldsX + colW + 16f, LicLines[2],
+            // The name left this column for the band, so everything below moves up a rule
+            // and the last one is free for the order to breathe into.
+            _idAgeFrom = LicenceField(card, "AGE  ·  CITIZEN OF", LicFieldsX, LicLines[0], LicFieldsW, out _);
+            _idRel = LicenceField(card, "STANDING", LicFieldsX, LicLines[1], colW, out _idRelLabel);
+            _idRates = LicenceField(card, "RATES THIS BAR", LicFieldsX + colW + 16f, LicLines[1],
                 colW, out _idRatesLabel);
 
             // The order, seated on its own rule with the glass drawn beside it.
             var idIcon = NewRect("OrderIcon", card);
             Place(idIcon, new Vector2(0, 1), new Vector2(30, 30), Vector2.zero);
             idIcon.pivot = new Vector2(0, 0);
-            idIcon.anchoredPosition = new Vector2(LicFieldsX, -LicLines[3] + 2f);
+            idIcon.anchoredPosition = new Vector2(LicFieldsX, -LicLines[2] + 2f);
             _idOrderIcon = idIcon.gameObject.AddComponent<Image>();
             _idOrderIcon.preserveAspect = true;
             _idOrderIcon.raycastTarget = false;
-            _idOrder = LicenceField(card, "ORDER", LicFieldsX + 40f, LicLines[3],
+            _idOrder = LicenceField(card, "ORDER", LicFieldsX + 40f, LicLines[2],
                 LicFieldsW - 40f, out _, 16);
             // What is IN it, under the name (v5 P16): the menu speaks styles now, so the
             // licence has to say gin-and-tonic, not just "Gin & Tonic" — this line is the
@@ -4013,7 +4027,7 @@ namespace LastCall.UI
             Place(_idOrderParts.rectTransform, new Vector2(0, 1), new Vector2(LicFieldsW, 12),
                 Vector2.zero);
             _idOrderParts.rectTransform.pivot = new Vector2(0, 0);
-            _idOrderParts.rectTransform.anchoredPosition = new Vector2(LicFieldsX, -LicLines[4] + 20f);
+            _idOrderParts.rectTransform.anchoredPosition = new Vector2(LicFieldsX, -LicLines[3] + 20f);
 
             // Hovering the order shows the RECIPE (2026-07-31): the drink they asked for,
             // said the way the book says it — prep, pour shares, glass — without leaving
@@ -4021,7 +4035,7 @@ namespace LastCall.UI
             var orderHit = NewRect("OrderHit", card);
             Place(orderHit, new Vector2(0, 1), new Vector2(LicFieldsW, 52), Vector2.zero);
             orderHit.pivot = new Vector2(0, 0);
-            orderHit.anchoredPosition = new Vector2(LicFieldsX, -LicLines[3] - 6f);
+            orderHit.anchoredPosition = new Vector2(LicFieldsX, -LicLines[2] - 6f);
             var orderHitImg = orderHit.gameObject.AddComponent<Image>();
             orderHitImg.color = new Color(0, 0, 0, 0.001f);
             // VERTICAL and vice (the author, 2026-08-02): the cream chip vanished into the
@@ -4035,7 +4049,7 @@ namespace LastCall.UI
             _idRecipeTip = NewRect("RecipeTip", _idRoot);
             Place(_idRecipeTip, new Vector2(0.5f, 0.5f), new Vector2(TipW, 120), Vector2.zero);
             _idRecipeTip.pivot = new Vector2(0, 1);
-            _idRecipeTip.anchoredPosition = new Vector2(LicW * 0.5f + 12f, LicH * 0.5f - LicLines[2] + 16f);
+            _idRecipeTip.anchoredPosition = new Vector2(LicW * 0.5f + 12f, LicH * 0.5f - LicLines[1] + 16f);
             var tipBg = _idRecipeTip.gameObject.AddComponent<Image>();
             tipBg.color = new Color(0.07f, 0.07f, 0.11f, 0.96f);
             // Nothing in the panel may take a raycast, or hovering it reads as leaving the
