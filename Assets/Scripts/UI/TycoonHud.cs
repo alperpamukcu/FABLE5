@@ -176,6 +176,8 @@ namespace LastCall.UI
         private int _drinkGlassTier = 1;
         private Image _drinkGlassBack;
         private RectTransform _glassRack;
+        /// <summary>The room, asked where its shelf compartments are.</summary>
+        private DiegeticStage _stage;
         private const float CarriedGlassHeight = 116f;
         private bool _glassGrabbed;
         private Vector2 _glassGrabOffset;
@@ -487,8 +489,11 @@ namespace LastCall.UI
         // The shop tablet (v5 P13). Two errands, not one wall of cards: what goes behind the
         // bar, and what the room itself is made of.
         private static readonly string[] ShopTabs = { "RESTOCK", "BOTTLES", "RECIPES", "UPGRADES" };
+        // Recut on ONE 24x24 canvas (2026-08-09). The old four were 16x26, 24x26,
+        // 25x24 and 20x19, so in a single 20x20 preserveAspect rect they drew between
+        // 12.3 and 20 units wide: the rects lined up and the pictures did not.
         private static readonly string[] ShopTabIcons =
-            { "sh_i_restock", "sh_i_bottles", "sh_i_recipes", "sh_i_upgrades" };
+            { "sh_i2_restock", "sh_i2_bottles", "sh_i2_recipes", "sh_i2_upgrades" };
         private readonly Image[] _shopTabKeys = new Image[ShopTabs.Length];
         private readonly Text[] _shopTabLabels = new Text[ShopTabs.Length];
         private readonly Image[] _shopTabIcons = new Image[ShopTabs.Length];
@@ -550,7 +555,12 @@ namespace LastCall.UI
         // screen a 1096x700 device leaves inside a 28 bezel. Every one of these is load
         // bearing; the old set carried a hardcoded 436 that overshot its own rail by 34.
         private const float OsBarH = 20f, AppBarH = 40f, TabBarH = 32f, TabKeyW = 160f;
-        private const float FootH = 128f, InspectorW = 640f, OrderW = 232f, ExitW = 136f;
+        // The foot, re-balanced (the author: bring the basket forward). It reads as a
+        // sum and has to: 8 + 560 + 8 + 312 + 8 + 136 + 8 = 1040, the screen's width.
+        // The inspector gives up 80 units and the order takes them: the order is the
+        // control the whole market exists to reach and it was the quietest thing on
+        // the page, against a 640-wide dark slab shouting beside it.
+        private const float FootH = 128f, InspectorW = 560f, OrderW = 312f, ExitW = 136f;
         private const float BarW = 10f;
         // The tile, and the three product classes that share one shelf line.
         private const float TileW = 160f, TileH = 208f, ContentW = 140f;
@@ -561,7 +571,7 @@ namespace LastCall.UI
         private Text _fittingNote, _cartLine, _checkoutLabel, _cartHeadLabel, _osClock;
         private Text _cartTotal;
         private Text _inspIdentity, _inspMeta, _inspBody, _inspBuffA, _inspBuffB;
-        private Image _inspBuffAIcon, _inspBuffBIcon, _fittingLamp;
+        private Image _inspBuffAIcon, _inspBuffBIcon, _fittingLamp, _inspMarkImg;
         private Text _billNextLabel;
         private RectTransform _checkout, _billNext;
         private ScrollRect _shopScroll;
@@ -722,6 +732,7 @@ namespace LastCall.UI
         {
             var run = Run;
             if (run == null) return;
+            WatchGlassRack();
 
             if (run.Phase == TycoonPhase.DayOpen)
             {
@@ -1273,6 +1284,29 @@ namespace LastCall.UI
             RefreshGlassRack(run);
         }
 
+        /// <summary>
+        /// The rack is placed FROM the bar, and the bar re-fits itself whenever the window
+        /// changes shape — including once on the first frames, before its parent's rect is
+        /// trustworthy. Building the glasses against that first reading put them four times
+        /// too far out and below the floor, which is the sort of bug that only ever shows up
+        /// as "the glasses are somewhere else". So watch the geometry and rebuild when it
+        /// moves: two float compares a frame against a rack that is silently wrong.
+        /// </summary>
+        private float _rackCellX = float.NaN, _rackCellY = float.NaN;
+
+        private void WatchGlassRack()
+        {
+            var run = Run;
+            if (run == null || _glassRack == null) return;
+            var stage = _stage != null ? _stage : FindFirstObjectByType<DiegeticStage>();
+            _stage = stage;
+            if (stage == null) return;
+            if (!stage.ShelfCell(0, out float cx, out float fy, out _)) return;
+            if (Mathf.Approximately(cx, _rackCellX) && Mathf.Approximately(fy, _rackCellY)) return;
+            _rackCellX = cx; _rackCellY = fy;
+            RefreshGlassRack(run);
+        }
+
         /// <summary>The under-counter glass rack (the author, 2026-08-02): every glass line
         /// the bar owns, standing on a walnut strip at its CURRENT tier — buy a step and
         /// the glass on the shelf is the finer one. Sits left of the bin, clear of MENU.</summary>
@@ -1282,7 +1316,17 @@ namespace LastCall.UI
         // a rack. All five moved to the run of cells left of the key, spaced 80 apart, which
         // is wider than the broadest glass the set has (the rocks tumbler at 69). The corner
         // belongs to the bin.
-        private static readonly float[] GlassRackSlots = { -600f, -520f, -440f, -360f, -280f };
+        /// <summary>
+        /// WHICH of the bar front's eight compartments the glassware stands in.
+        ///
+        /// The slots used to be five hand-picked x values 80 apart, which put every glass
+        /// on a divider rather than in a cell — the counter art carries the compartments
+        /// and nothing was reading them. DiegeticStage measures them off the drawing now,
+        /// so this is only the choice of WHICH five, and the choice is about what else is
+        /// on the bar front: cells 7 and 8 (HUD x +400 and +560 at the reference aspect)
+        /// stand behind the bin, which reaches up into the same band.
+        /// </summary>
+        private static readonly int[] GlassRackCells = { 0, 1, 2, 3, 4 };
 
         /// <summary>How tall a glass on the rack is drawn. Down from 92 with the move: five in
         /// a row need to be narrow enough that 80 apart is clear air, not a near-miss.</summary>
@@ -1296,23 +1340,52 @@ namespace LastCall.UI
                 _glassRack = NewRect("GlassRack", _hudRoot);
                 _glassRack.anchorMin = _glassRack.anchorMax = new Vector2(0.5f, 0);
                 _glassRack.pivot = new Vector2(0.5f, 0);
-                _glassRack.sizeDelta = new Vector2(1280, 110);
-                _glassRack.anchoredPosition = new Vector2(0, 4);
+                // The whole lower half: the compartments sit at HUD y 76..154 at the
+                // reference aspect, well above the 110-unit strip this used to be.
+                _glassRack.sizeDelta = new Vector2(1280, 360);
+                _glassRack.anchoredPosition = Vector2.zero;
             }
             foreach (Transform c in _glassRack) Destroy(c.gameObject);
+
+            // The compartments, asked of the bar itself. A missing stage (a bench, a test
+            // scene) falls back to the old fixed spacing rather than stacking every glass
+            // on top of the next.
+            var stage = _stage != null ? _stage : FindFirstObjectByType<DiegeticStage>();
+            _stage = stage;
 
             int i = 0;
             foreach (var g in run.Glassware)
             {
                 int tier = run.GlassTier(g.Id);
                 var piece = GlassArt.For(g, tier);
-                float x = GlassRackSlots[Mathf.Min(i, GlassRackSlots.Length - 1)];
+                int cell = GlassRackCells[Mathf.Min(i, GlassRackCells.Length - 1)];
+
+                // Stage units, then doubled: the stage draws at 640x360 and the HUD at
+                // 1280x720, so one is exactly two of the other.
+                float x, floorY, cellH;
+                if (stage != null && stage.ShelfCell(cell, out float sx, out float sy, out float sh))
+                {
+                    x = sx * StageToHud;
+                    floorY = sy * StageToHud;
+                    cellH = sh * StageToHud;
+                }
+                else
+                {
+                    x = -600f + i * 80f;
+                    floorY = 8f;
+                    cellH = RackGlassH;
+                }
+                // Stand IN the compartment: as tall as the opening allows, never taller
+                // than the glass is drawn, and never so wide it touches a divider.
+                float h = Mathf.Min(RackGlassH, cellH - 6f);
+                float maxW = 74f;                       // the 80-unit cell, less its walls
+                if (h * piece.Aspect > maxW) h = maxW / Mathf.Max(0.01f, piece.Aspect);
 
                 var shadow = NewRect($"S_{g.Id}", _glassRack);
                 shadow.anchorMin = shadow.anchorMax = new Vector2(0.5f, 0);
                 shadow.pivot = new Vector2(0.5f, 0.5f);
-                shadow.sizeDelta = new Vector2(64, 12);
-                shadow.anchoredPosition = new Vector2(x, 8);
+                shadow.sizeDelta = new Vector2(Mathf.Min(64f, h * piece.Aspect + 10f), 10);
+                shadow.anchoredPosition = new Vector2(x, floorY + 2f);
                 var shImg = shadow.gameObject.AddComponent<Image>();
                 shImg.sprite = BackBarArt.BottleShadow();
                 shImg.raycastTarget = false;
@@ -1320,9 +1393,8 @@ namespace LastCall.UI
                 var rt = NewRect($"G_{g.Id}", _glassRack);
                 rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0);
                 rt.pivot = new Vector2(0.5f, 0);
-                float h = RackGlassH;
                 rt.sizeDelta = new Vector2(h * piece.Aspect, h);
-                rt.anchoredPosition = new Vector2(x, 8);
+                rt.anchoredPosition = new Vector2(x, floorY);
                 var img = rt.gameObject.AddComponent<Image>();
                 img.sprite = piece.Sprite;
                 img.preserveAspect = true;
@@ -1958,7 +2030,9 @@ namespace LastCall.UI
                 {
                     Name = "Restock the Whole Well",
                     Meta = "Every bottle to the brim",
-                    Art = ItemArt.Load("sh_i_restock"),
+                    // A CRATE, not the department icon it was borrowing — the errand
+                    // and the tab it lives under were drawing the same thing.
+                    Art = ItemArt.Load("sh_p_crate") ?? ItemArt.Load("sh_i_restock"),
                     Identity = "RESTOCK THE WHOLE WELL",
                     MetaLine = "Delivered before you open",
                     Body = "Tops up every bottle behind the bar in one line, at $"
@@ -2070,7 +2144,7 @@ namespace LastCall.UI
                         Identity = r.Name.ToUpperInvariant(),
                         MetaLine = PrepWord(r) + " · served in a " + GlassNameFor(r),
                         Body = BandLine(r),
-                        BuffA = new Buff(BuffKind.Gain, "Goes on the menu tomorrow — one more drink the room can order"),
+                        BuffA = new Buff(BuffKind.Gain, "On the menu tomorrow — one more drink to sell"),
                     };
                     DressBuyable(spec, run.RecipePrice(r), "recipe:" + r.Id, false,
                         () => run.UnlockRecipe(r.Id));
@@ -2220,7 +2294,7 @@ namespace LastCall.UI
                 : new Buff(BuffKind.Bad, "Nothing on tonight's menu calls for it");
             if (tier > 1)
                 spec.BuffB = new Buff(BuffKind.Gain,
-                    "A better rung joins the shelf — it does not replace the well bottle");
+                    "Joins the shelf; the well bottle stays");
         }
 
         /// <summary>
@@ -2411,6 +2485,11 @@ namespace LastCall.UI
         private void ShowInspector(TileSpec spec)
         {
             if (_inspIdentity == null) return;
+            if (_inspMarkImg != null)
+            {
+                _inspMarkImg.enabled = spec != null && spec.Art != null;
+                if (spec != null) _inspMarkImg.sprite = spec.Art;
+            }
             if (spec == null)
             {
                 _inspIdentity.text = "";
@@ -4020,33 +4099,63 @@ namespace LastCall.UI
             Hairline(inspector, new Vector2(0, 0), new Vector2(1, 0), ShopGreenDark);
             Hairline(inspector, new Vector2(0, 1), new Vector2(1, 1), ShopGreenDark);
 
+            // ONE TEXT COLUMN AND ONE ICON GUTTER (the author: align it, and use the
+            // space). Everything used to start at x 12 except the two buff lines, which
+            // started at 30 because their icons sat where the other rows' text did — four
+            // rows on one edge and two on another. The icons keep a 14-unit gutter at
+            // x 12..26 of their own now, and EVERY text starts at x 36.
+            const float InspGutter = 12f, InspText = 36f;
+            const float InspCol = InspectorW - InspText - 12f;   // 560 - 36 - 12 = 512
+
             _inspIdentity = NewText("Identity", inspector, _shop, 16, TextAnchor.UpperLeft, InspectorInk);
-            Place(_inspIdentity.rectTransform, new Vector2(0, 1), new Vector2(616, 20), new Vector2(12, -6));
+            Place(_inspIdentity.rectTransform, new Vector2(0, 1), new Vector2(InspCol, 20),
+                new Vector2(InspText, -6));
             _inspIdentity.horizontalOverflow = HorizontalWrapMode.Wrap;
             _inspIdentity.verticalOverflow = VerticalWrapMode.Truncate;
 
             _inspMeta = NewText("InspMeta", inspector, _body, 8, TextAnchor.UpperLeft, InspectorDim);
-            Place(_inspMeta.rectTransform, new Vector2(0, 1), new Vector2(616, 12), new Vector2(12, -28));
+            Place(_inspMeta.rectTransform, new Vector2(0, 1), new Vector2(InspCol, 12),
+                new Vector2(InspText, -28));
             _inspMeta.horizontalOverflow = HorizontalWrapMode.Wrap;
             _inspMeta.verticalOverflow = VerticalWrapMode.Truncate;
+
+            // A rule under the head, so the identity block and the description read as two
+            // things rather than five loose lines on a slate.
+            var inspRule = NewRect("Rule", inspector);
+            Place(inspRule, new Vector2(0, 1), new Vector2(InspectorW - 24f, 1),
+                new Vector2(InspGutter, -44));
+            var ruleImg = inspRule.gameObject.AddComponent<Image>();
+            ruleImg.color = new Color(0.24f, 0.31f, 0.26f, 1f);
+            ruleImg.raycastTarget = false;
+
+            // The product's own mark, in the gutter beside the identity — the gutter is
+            // there for the buff icons and would otherwise be a 24-unit empty strip down
+            // the whole panel.
+            var inspMark = NewRect("Mark", inspector);
+            Place(inspMark, new Vector2(0, 1), new Vector2(16, 16), new Vector2(InspGutter, -8));
+            _inspMarkImg = inspMark.gameObject.AddComponent<Image>();
+            _inspMarkImg.preserveAspect = true;
+            _inspMarkImg.raycastTarget = false;
 
             // The body: the lightest face at the smallest legal size, in SENTENCE CASE.
             // 115 characters a line against the old 43, and no shouting.
             _inspBody = NewText("InspBody", inspector, _body, 8, TextAnchor.UpperLeft, InspectorInk);
-            Place(_inspBody.rectTransform, new Vector2(0, 1), new Vector2(616, 40), new Vector2(12, -44));
+            Place(_inspBody.rectTransform, new Vector2(0, 1), new Vector2(InspCol, 30),
+                new Vector2(InspText, -48));
             _inspBody.supportRichText = true;
             _inspBody.horizontalOverflow = HorizontalWrapMode.Wrap;
             _inspBody.verticalOverflow = VerticalWrapMode.Truncate;
 
             for (int i = 0; i < 2; i++)
             {
-                float y = i == 0 ? -88f : -106f;
+                float y = i == 0 ? -83f : -101f;
                 var icon = NewRect("BuffI" + i, inspector);
-                Place(icon, new Vector2(0, 1), new Vector2(14, 14), new Vector2(12, y - 1f));
+                Place(icon, new Vector2(0, 1), new Vector2(14, 14), new Vector2(InspGutter, y - 1f));
                 var ii = icon.gameObject.AddComponent<Image>();
                 ii.preserveAspect = true; ii.raycastTarget = false;
                 var line = NewText("Buff" + i, inspector, _body, 8, TextAnchor.MiddleLeft, InspectorInk);
-                Place(line.rectTransform, new Vector2(0, 1), new Vector2(586, 16), new Vector2(30, y));
+                Place(line.rectTransform, new Vector2(0, 1), new Vector2(InspCol, 14),
+                    new Vector2(InspText, y));
                 line.horizontalOverflow = HorizontalWrapMode.Wrap;
                 line.verticalOverflow = VerticalWrapMode.Truncate;
                 if (i == 0) { _inspBuffAIcon = ii; _inspBuffA = line; }
@@ -4055,36 +4164,51 @@ namespace LastCall.UI
 
             // THE ORDER, and it lists what is in it.
             var order = NewRect("Order", foot);
-            Place(order, new Vector2(0, 0.5f), new Vector2(OrderW, FootH), new Vector2(656, 0));
+            Place(order, new Vector2(0, 0.5f), new Vector2(OrderW, FootH), new Vector2(576, 0));
             order.gameObject.AddComponent<Image>().color = Color.white;
             Hairline(order, new Vector2(0, 0), new Vector2(1, 0), ShopAisle);
+            // A HEAVIER HEAD. 26 units and the bold face at 16: the order is the control
+            // the market exists to reach, and it was whispering beside a 640-wide slab.
             var orderHead = NewRect("OrderHead", order);
-            Place(orderHead, new Vector2(0, 1), new Vector2(OrderW, 22), Vector2.zero);
+            Place(orderHead, new Vector2(0, 1), new Vector2(OrderW, 26), Vector2.zero);
             orderHead.gameObject.AddComponent<Image>().color = ShopGreenDark;
             var orderIcon = NewRect("OrderI", orderHead);
-            Place(orderIcon, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(8, 0));
+            Place(orderIcon, new Vector2(0, 0.5f), new Vector2(18, 18), new Vector2(10, 0));
             var orderIconImg = orderIcon.gameObject.AddComponent<Image>();
             orderIconImg.sprite = ItemArt.Load("sh_i_cart");
             orderIconImg.preserveAspect = true; orderIconImg.raycastTarget = false;
-            _cartHeadLabel = NewText("OrderHL", orderHead, _shop, 8, TextAnchor.MiddleLeft, Color.white);
-            Place(_cartHeadLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(OrderW - 40, 12),
-                new Vector2(30, 0));
+            _cartHeadLabel = NewText("OrderHL", orderHead, _shop, 16, TextAnchor.MiddleLeft, Color.white);
+            Place(_cartHeadLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(OrderW - 46, 20),
+                new Vector2(36, 0));
+            _cartHeadLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _cartHeadLabel.verticalOverflow = VerticalWrapMode.Truncate;
             _cartHeadLabel.text = "ORDER";
 
             _cartLine = NewText("OrderLines", order, _body, 8, TextAnchor.UpperLeft, ShopInk);
-            Place(_cartLine.rectTransform, new Vector2(0, 1), new Vector2(OrderW - 20, 46),
-                new Vector2(10, -26));
+            Place(_cartLine.rectTransform, new Vector2(0, 1), new Vector2(OrderW - 20, 40),
+                new Vector2(10, -32));
             _cartLine.horizontalOverflow = HorizontalWrapMode.Wrap;
             _cartLine.verticalOverflow = VerticalWrapMode.Truncate;
 
-            _cartTotal = NewText("OrderTotal", order, _display, 8, TextAnchor.MiddleRight, ShopGreenDark);
-            Place(_cartTotal.rectTransform, new Vector2(1, 0), new Vector2(OrderW - 20, 12),
-                new Vector2(-10, 40));
+            // THE TOTAL, on its own banded row and at a size worth reading — it is the
+            // number the player decides on, and it was set at 8 in the corner.
+            var totalRow = NewRect("TotalRow", order);
+            Place(totalRow, new Vector2(0, 1), new Vector2(OrderW - 20, 22), new Vector2(10, -76));
+            var totalBg = totalRow.gameObject.AddComponent<Image>();
+            totalBg.color = new Color(0.898f, 0.937f, 0.902f, 1f);
+            totalBg.raycastTarget = false;
+            var totalLabel = NewText("TotalL", totalRow, _shop, 8, TextAnchor.MiddleLeft, ShopInkSoft);
+            Place(totalLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(80, 12), new Vector2(8, 0));
+            totalLabel.text = "TOTAL";
+            _cartTotal = NewText("OrderTotal", totalRow, _display, 16, TextAnchor.MiddleRight,
+                ShopGreenDark);
+            Place(_cartTotal.rectTransform, new Vector2(1, 0.5f), new Vector2(180, 18),
+                new Vector2(-8, 0));
             _cartTotal.horizontalOverflow = HorizontalWrapMode.Wrap;
             _cartTotal.verticalOverflow = VerticalWrapMode.Truncate;
 
             _checkout = NewRect("Checkout", order);
-            Place(_checkout, new Vector2(0, 0), new Vector2(OrderW - 20, 26), new Vector2(10, 8));
+            Place(_checkout, new Vector2(0, 0), new Vector2(OrderW - 20, 26), new Vector2(10, 6));
             var checkoutImg = _checkout.gameObject.AddComponent<Image>();
             var orderArt = ItemArt.Load("sh_k_order");
             if (orderArt != null) checkoutImg.sprite = orderArt;   // 212x26, drawn to fit
@@ -4426,7 +4550,13 @@ namespace LastCall.UI
             }
             else
             {
-                var name = NewText("Name", rt, _body, 8, TextAnchor.UpperLeft,
+                // The BOLD face at 8 (the author: a little bigger, a little heavier).
+                // 16 is the next legal size — the pixel faces only rasterise cleanly at
+                // whole multiples of 8 — and "Grand Mariner Triple Sec" at 16 is 300
+                // units against a 140 column, which is three lines in a two-line box.
+                // Silkscreen Bold at 8 is the whole of the available move: 6.25/char
+                // mixed, so the same 24 characters take 150 and wrap to two lines of 22.
+                var name = NewText("Name", rt, _shop, 8, TextAnchor.UpperLeft,
                     state == TileState.Unaffordable || state == TileState.Held
                         ? ShopInkSoft : ShopInk);
                 Place(name.rectTransform, new Vector2(0, 1), new Vector2(ContentW, 22),

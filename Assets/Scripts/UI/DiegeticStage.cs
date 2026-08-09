@@ -37,6 +37,46 @@ namespace LastCall.UI
         /// </summary>
         public const float CounterTopY = CounterRestY;
 
+        // ── the bar front's shelf compartments ───────────────────────────────────
+        // The counter art is not decoration: it carries EIGHT empty cells across its
+        // front, and those cells are where the bought glassware belongs. Measured off
+        // Assets/Art/Backgrounds/counter.png (640x150) by sampling the luminance profile,
+        // not estimated — the dividers land at x 77-82, 157-162, 237-242, 317-322,
+        // 397-402, 477-482 and 557-562, so the cells are 80 wide on 80 centres; the upper
+        // cell's interior runs y 53..92 with its floor at y 93.
+        //
+        // The numbers below are in the ART's own pixels. They only equal stage units at
+        // the reference aspect: StageArtFit scales the counter by parentWidth/640 and
+        // hangs it from the rest line, so at 16:10 the cells sit narrower AND higher.
+        // ShelfCell resolves that from the live transform rather than assuming 16:9,
+        // which is what the old hardcoded rack slots did.
+        private const float ShelfCellPx = 80f;      // cell pitch, art px
+        private const float ShelfFloorPx = 93f;     // the cell floor, art px from the art's top
+        private const float ShelfCeilPx = 53f;      // the shelf board above it
+        public const int ShelfCells = 8;
+
+        private RectTransform _counter;
+        private Vector2 _counterNative;
+
+        /// <summary>
+        /// Where shelf compartment <paramref name="index"/> is standing right now, in STAGE
+        /// units: the centre of its opening, the floor a glass stands on, and how much
+        /// headroom there is under the shelf board. False when the bar was never drawn.
+        /// </summary>
+        public bool ShelfCell(int index, out float centerX, out float floorY, out float height)
+        {
+            centerX = 0f; floorY = 0f; height = 0f;
+            if (_counter == null || _counterNative.x <= 0f) return false;
+            float scale = _counter.rect.width / _counterNative.x;
+            // The art's own top edge, in stage units: the rest line is CounterSurfaceInset
+            // art-pixels below it, and that line is pinned to CounterRestY.
+            float artTopY = CounterRestY + CounterSurfaceInset * scale;
+            centerX = ((index + 0.5f) * ShelfCellPx - _counterNative.x * 0.5f) * scale;
+            floorY = artTopY - ShelfFloorPx * scale;
+            height = (ShelfFloorPx - ShelfCeilPx) * scale;
+            return true;
+        }
+
         /// <summary>Where the till's base sits. The bar top runs from CounterFrontY (96) up to
         /// CounterRestY (128), and this sits well forward inside that — near the front of the
         /// surface, where something on the bartender's side of the bar actually stands.</summary>
@@ -236,6 +276,8 @@ namespace LastCall.UI
                 cfit.Native = counterSprite.rect.size;
                 cfit.RestLineY = CounterRestY;
                 cfit.RestFromTop = CounterSurfaceInset;
+                _counter = c;
+                _counterNative = counterSprite.rect.size;
             }
 
             // Cash register on the bar top, with the wallet in its display window (the player
