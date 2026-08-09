@@ -51,6 +51,10 @@ namespace LastCall.EditorTools
             else if (file == "sh_ipad2") ti.spriteBorder = new Vector4(28, 28, 28, 28);
             else if (file == "sh_tile") ti.spriteBorder = new Vector4(12, 12, 12, 12);
             else if (file == "sh_niche") ti.spriteBorder = new Vector4(16, 16, 16, 16);
+            // The tab's bottom band is only 6 so the seam where a lit tab runs into the
+            // page stays a seam instead of being stretched into a gradient.
+            else if (file == "sh_tab2_on" || file == "sh_tab2_off")
+                ti.spriteBorder = new Vector4(14, 6, 14, 10);
             else if (file == "sh_pill") ti.spriteBorder = new Vector4(10, 6, 10, 6);
             else if (file == "sh_ipad") ti.spriteBorder = new Vector4(62, 62, 62, 62);
             else if (file == "sh_add") ti.spriteBorder = new Vector4(14, 8, 14, 8);

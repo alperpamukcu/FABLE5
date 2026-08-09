@@ -1905,8 +1905,8 @@ namespace LastCall.UI
                 _fittingNote.color = room ? ShopGreenDark : ShopCost;
             }
             if (_fittingLamp != null) _fittingLamp.color = room ? ShopGreenLit : ShopCost;
-            var tabOn = ItemArt.Load("sh_tab_on");
-            var tabOff = ItemArt.Load("sh_tab_off");
+            var tabOn = ItemArt.Load("sh_tab2_on") ?? ItemArt.Load("sh_tab_on");
+            var tabOff = ItemArt.Load("sh_tab2_off") ?? ItemArt.Load("sh_tab_off");
             for (int i = 0; i < _shopTabKeys.Length; i++)
             {
                 bool on = i == _shopTab;
@@ -1978,7 +1978,18 @@ namespace LastCall.UI
                 }
                 AddTile(all);
 
-                foreach (var b in run.Shelf.Bottles)
+                // WHAT NEEDS POURING COMES FIRST (the author). A restock page whose top row
+                // is six full bottles makes the player scroll to find the errand they came
+                // for; sorting by what is missing puts the emptiest bottle where the eye
+                // already is. Ties keep the shelf's own order, so the page does not
+                // reshuffle under the pointer as levels change.
+                var shelf = new List<ShelfBottle>(run.Shelf.Bottles);
+                shelf.Sort((x, y) =>
+                {
+                    double mx = x.Capacity - x.Remaining, my = y.Capacity - y.Remaining;
+                    return my.CompareTo(mx);
+                });
+                foreach (var b in shelf)
                 {
                     var bottle = b;
                     int cost = (int)Math.Ceiling((bottle.Capacity - bottle.Remaining)
@@ -3884,7 +3895,7 @@ namespace LastCall.UI
                 Place(key, new Vector2(0, 0.5f), new Vector2(TabKeyW, 28f),
                     new Vector2(8f + i * (TabKeyW + 8f), 0));
                 var bg = key.gameObject.AddComponent<Image>();
-                if (ItemArt.Load("sh_tab_off") != null) bg.type = Image.Type.Sliced;
+                if (ItemArt.Load("sh_tab2_off") != null) bg.type = Image.Type.Sliced;
                 var btn = key.gameObject.AddComponent<Button>();
                 btn.targetGraphic = bg;
                 btn.onClick.AddListener(() =>
@@ -3900,7 +3911,7 @@ namespace LastCall.UI
                 iconImg.preserveAspect = true; iconImg.raycastTarget = false;
                 if (iconImg.sprite == null) iconImg.color = new Color(1, 1, 1, 0);
                 _shopTabIcons[i] = iconImg;
-                var label = NewText("L", key, _shop, 8, TextAnchor.MiddleLeft, ShopInk);
+                var label = NewText("L", key, _shop, 16, TextAnchor.MiddleLeft, ShopInk);
                 Stretch(label.rectTransform, Vector2.zero, Vector2.one,
                     new Vector2(36, 0), new Vector2(-6, 0));
                 label.horizontalOverflow = HorizontalWrapMode.Wrap;
@@ -4061,7 +4072,7 @@ namespace LastCall.UI
             var checkoutBtn = _checkout.gameObject.AddComponent<Button>();
             checkoutBtn.targetGraphic = checkoutImg;
             checkoutBtn.onClick.AddListener(Checkout);
-            _checkoutLabel = NewText("L", _checkout, _shop, 8, TextAnchor.MiddleCenter, Color.white);
+            _checkoutLabel = NewText("L", _checkout, _shop, 16, TextAnchor.MiddleCenter, Color.white);
             Stretch(_checkoutLabel.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(6, 0), new Vector2(-6, 0));
             _checkoutLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
@@ -4077,7 +4088,7 @@ namespace LastCall.UI
             var otBtn2 = _openTomorrow.gameObject.AddComponent<Button>();
             otBtn2.targetGraphic = otImg;
             otBtn2.onClick.AddListener(OnDayEndAdvance);
-            _openTomorrowLabel = NewText("Label", _openTomorrow, _shop, 8, TextAnchor.MiddleCenter,
+            _openTomorrowLabel = NewText("Label", _openTomorrow, _shop, 16, TextAnchor.MiddleCenter,
                 UITheme.TextOnAmber);
             Stretch(_openTomorrowLabel.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(6, 0), new Vector2(-6, 0));
@@ -4314,8 +4325,11 @@ namespace LastCall.UI
                 var niche = NewRect("Niche", rt);
                 Place(niche, new Vector2(0.5f, 0), new Vector2(116, 112), new Vector2(0, 64));
                 var ni = niche.gameObject.AddComponent<Image>();
-                var nicheArt = ItemArt.Load("sh_niche");
-                if (nicheArt != null) { ni.sprite = nicheArt; ni.type = Image.Type.Sliced; }
+                // sh_niche2 is DRAWN AT 116x112 — the exact rect — so it goes in 1:1: no
+                // slicing, no stretch, no smear. A back-bar alcove is a thing in the bar
+                // rather than a piece of chrome, which is why this one is generated.
+                var nicheArt = ItemArt.Load("sh_niche2") ?? ItemArt.Load("sh_niche");
+                if (nicheArt != null) ni.sprite = nicheArt;
                 else ni.color = ShopAisle;
                 ni.raycastTarget = false;
                 // A dead listing dims the recess with the glass in it rather than going
@@ -4358,14 +4372,48 @@ namespace LastCall.UI
 
             // 3 — THE NAME, title case straight from the JSON. Two lines of 26 characters;
             // the longest string in the game is 24 and lands on one.
-            var name = NewText("Name", rt, _body, 8, TextAnchor.UpperLeft,
-                state == TileState.Unaffordable || state == TileState.Held
-                    ? ShopInkSoft : ShopInk);
-            Place(name.rectTransform, new Vector2(0, 1), new Vector2(ContentW, 22),
-                new Vector2(12, -144));
-            name.horizontalOverflow = HorizontalWrapMode.Wrap;
-            name.verticalOverflow = VerticalWrapMode.Truncate;
-            name.text = spec.Name;
+            //
+            // A SEALED crate is laid out differently, and it has to be: the chains cross
+            // the whole tile now, so a star gate sitting in the bottom-left action row
+            // printed straight through them. The gate belongs directly under the padlock,
+            // centred, where the eye already is — and with the chains and the lock saying
+            // "sealed" three ways over, the crate needs no left-aligned name beside them.
+            if (state == TileState.Sealed)
+            {
+                // A TAG HUNG ON THE LOCK. The chains cross the whole tile, so a star gate
+                // set straight onto the plate lands on the links whatever row it sits in —
+                // it needs its own ground, not a better y. A dark tag under the padlock is
+                // that ground, and it is the thing a chained crate would actually carry.
+                var tag = NewRect("Tag", rt);
+                Place(tag, new Vector2(0.5f, 1), new Vector2(104, 44), new Vector2(0, -132));
+                var tagImg = tag.gameObject.AddComponent<Image>();
+                tagImg.color = new Color(ShopInk.r, ShopInk.g, ShopInk.b, 0.92f);
+                tagImg.raycastTarget = false;
+                var gate = NewText("Gate", tag, _display, 16, TextAnchor.MiddleCenter, Color.white);
+                Place(gate.rectTransform, new Vector2(0.5f, 1), new Vector2(96, 20),
+                    new Vector2(0, -5));
+                gate.horizontalOverflow = HorizontalWrapMode.Wrap;
+                gate.verticalOverflow = VerticalWrapMode.Truncate;
+                gate.text = spec.Money;
+                var what = NewText("Sealed", tag, _body, 8, TextAnchor.MiddleCenter,
+                    new Color(0.63f, 0.68f, 0.64f, 1f));
+                Place(what.rectTransform, new Vector2(0.5f, 1), new Vector2(96, 12),
+                    new Vector2(0, -27));
+                what.horizontalOverflow = HorizontalWrapMode.Wrap;
+                what.verticalOverflow = VerticalWrapMode.Truncate;
+                what.text = "TO UNSEAL";
+            }
+            else
+            {
+                var name = NewText("Name", rt, _body, 8, TextAnchor.UpperLeft,
+                    state == TileState.Unaffordable || state == TileState.Held
+                        ? ShopInkSoft : ShopInk);
+                Place(name.rectTransform, new Vector2(0, 1), new Vector2(ContentW, 22),
+                    new Vector2(12, -144));
+                name.horizontalOverflow = HorizontalWrapMode.Wrap;
+                name.verticalOverflow = VerticalWrapMode.Truncate;
+                name.text = spec.Name;
+            }
 
             // 4 — ONE contextual token, or the stock meter where stock IS the fact.
             if (spec.StockFrac >= 0f)
@@ -4386,7 +4434,7 @@ namespace LastCall.UI
                 Place(pct.rectTransform, new Vector2(1, 1), new Vector2(34, 12), new Vector2(-8, -168));
                 pct.text = Mathf.RoundToInt(frac * 100f) + "%";
             }
-            else if (!string.IsNullOrEmpty(spec.Meta))
+            else if (!string.IsNullOrEmpty(spec.Meta) && state != TileState.Sealed)
             {
                 var meta = NewText("Meta", rt, _body, 8, TextAnchor.MiddleLeft, TileMetaInk);
                 Place(meta.rectTransform, new Vector2(0, 1), new Vector2(ContentW, 12),
@@ -4399,8 +4447,9 @@ namespace LastCall.UI
             // 5 — THE ACTION ROW: one money token, and at most one control. Both texts
             // TRUNCATE rather than overflow — Overflow is exactly how the old badge walked
             // 165 units onto its neighbour.
-            if (!string.IsNullOrEmpty(spec.Money))
+            if (!string.IsNullOrEmpty(spec.Money) && state != TileState.Sealed)
             {
+                // Sealed puts its price — the star gate — under the padlock instead.
                 var money = NewText("Money", rt, MoneyFace(spec.Money), 16, TextAnchor.LowerLeft,
                     MoneyInk(state));
                 Place(money.rectTransform, new Vector2(0, 0), new Vector2(66, 20), new Vector2(12, 6));
