@@ -61,7 +61,13 @@ namespace LastCall.UI
         //
         // A glass belongs a little way INTO that band, so some floor shows in front of it
         // the way it would on a real shelf. Two thirds back reads correctly at every size.
-        private const float ShelfFloorPx = 101f;    // into the turquoise surface, art px from the top
+        // The NEAR edge of that surface — where a glass at the front of the shelf stands.
+        // The band runs 93..105, so 104 is the front row's feet and the far row's feet are
+        // ShelfDepthPx above it, still inside the band. Standing the far row 13 px up put
+        // it at row 88, which is off the surface entirely and above the shelf.
+        private const float ShelfFloorPx = 104f;    // the near edge, art px from the art's top
+        /// <summary>How deep the drawn shelf surface is, front edge to back, in art px.</summary>
+        public const float ShelfDepthPx = 9f;
         private const float ShelfCeilPx = 53f;      // the shelf board above it
         public const int ShelfCells = 8;
 

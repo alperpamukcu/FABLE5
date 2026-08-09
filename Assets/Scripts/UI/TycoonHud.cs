@@ -1510,7 +1510,11 @@ namespace LastCall.UI
                 // rows are (13/53) of the opening apart on screen.
                 const int BackRow = 3, FrontRow = 2;
                 const float Overlap = 0.60f;                    // step within a row
-                const float SurfaceDepth = 13f / 53f;           // the drawn floor, as a share
+                // The surface is 93..105 in the art and the cell opening is 53 tall, so the
+                // far edge is nine art pixels behind the near one — NOT thirteen. Thirteen
+                // was the whole band including its own front lip, and it stood the back row
+                // clean off the shelf.
+                const float SurfaceDepth = DiegeticStage.ShelfDepthPx / 53f;
                 float bay = cellH * (75f / 53f);                // the interior, in HUD units
                 // PROPORTION ACROSS THE WHOLE RACK, not within one bay. Sizing each line to
                 // fill its own bay made a rocks tumbler and a highball the same height,
@@ -1534,7 +1538,9 @@ namespace LastCall.UI
                 // The back row is the wider one, so it sets the size; the front row then
                 // has room to sit between its gaps.
                 float wForBay = (bay - 4f) / (1f + Overlap * (BackRow - 1));
-                float unitsPerPixel = Mathf.Min(wForBay / widestPx, (cellH - 10f) / tallestPx);
+                // A shade smaller (the author): five vessels and two rows want a little air
+                // between them and the shelf above.
+                float unitsPerPixel = Mathf.Min(wForBay / widestPx, (cellH - 10f) / tallestPx) * 0.88f;
                 float h = piece.Sprite.rect.height * unitsPerPixel;
                 float gw = h * piece.Aspect;
                 float step = gw * Overlap;
