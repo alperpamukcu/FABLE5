@@ -88,6 +88,35 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void NothingTheShopCanSayNamesASealedDrink()
+        {
+            // The market describes a bottle by what it is poured into and a glass line by
+            // what it serves. Both walked the whole CATALOGUE until 2026-08-09, so hovering
+            // a bottle printed the names of drinks the SEALED crate two tabs away hides
+            // behind a star gate. The rule is Core's now, not the text builder's — these
+            // three queries are the only lists the shop can reach.
+            var run = RunWith(Still("vodka_t", "vodka", IngredientType.Spirit));
+            var sealedNames = run.AllRecipes.Where(r => r.Locked).Select(r => r.Name).ToArray();
+            Assert.IsNotEmpty(sealedNames, "there is something to leak in the first place");
+
+            var said = run.MenuStyles()
+                .SelectMany(style => run.MenuDrinksUsingStyle(style))
+                .Concat(new[] { "rocks", "highball", "martini", "coupe", "pint" }
+                    .SelectMany(glass => run.MenuDrinksInGlass(glass)))
+                .Select(r => r.Name)
+                .ToArray();
+
+            Assert.IsNotEmpty(said, "the shop still has something to say about a bottle");
+            CollectionAssert.IsEmpty(said.Intersect(sealedNames).ToArray(),
+                "no sealed drink is named by anything the shop can print");
+            CollectionAssert.IsEmpty(
+                run.MenuStyles().Except(run.MenuRecipes
+                    .SelectMany(r => r.RatioRequirements)
+                    .Where(b => b.IsStyleBand).Select(b => b.Style)).ToArray(),
+                "and the filter offers no style the visible menu never calls for");
+        }
+
+        [Test]
         public void TheDayOneMenu_NamesAVodkaSoda_AndRefusesAGinSoda()
         {
             // The v5 P16 redesign: the abstract cousins (Spritz et al.) are gone, so a

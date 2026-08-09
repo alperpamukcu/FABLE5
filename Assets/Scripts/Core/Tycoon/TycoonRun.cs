@@ -225,6 +225,44 @@ namespace LastCall.Core
             }
         }
 
+        /// <summary>
+        /// The drinks ON THE MENU that call for this bottle style — what a shop listing is
+        /// allowed to say a bottle is for.
+        ///
+        /// This lives in Core, not in the shop's text builder, because the shop got it wrong
+        /// (2026-08-09): it walked <see cref="AllRecipes"/>, which carries the sealed book,
+        /// and printed the names of the very drinks the SEALED crate hides behind its star
+        /// gate. Hidden information stays hidden, and a rule the UI has to remember is a rule
+        /// the UI will forget — so the only list the UI can reach is already filtered.
+        /// </summary>
+        public IEnumerable<RecipeDefinition> MenuDrinksUsingStyle(string style)
+        {
+            if (string.IsNullOrEmpty(style)) yield break;
+            foreach (var r in _recipes)
+                foreach (var band in r.RatioRequirements)
+                    if (band.IsStyleBand && band.Style == style) { yield return r; break; }
+        }
+
+        /// <summary>The drinks ON THE MENU poured into this glass line — what a glassware
+        /// listing is allowed to say the set serves. Sealed for the same reason.</summary>
+        public IEnumerable<RecipeDefinition> MenuDrinksInGlass(string glassId)
+        {
+            if (string.IsNullOrEmpty(glassId)) yield break;
+            foreach (var r in _recipes)
+                if (r.GlassId == glassId) yield return r;
+        }
+
+        /// <summary>Every bottle style the MENU actually calls for — the only styles a
+        /// filter may offer, since a chip for a style no visible drink uses is both a dead
+        /// filter and a hint that something is waiting behind it.</summary>
+        public IEnumerable<string> MenuStyles()
+        {
+            var seen = new HashSet<string>();
+            foreach (var r in _recipes)
+                foreach (var band in r.RatioRequirements)
+                    if (band.IsStyleBand && seen.Add(band.Style)) yield return band.Style;
+        }
+
         /// <summary>What a recipe costs to put on the menu, priced off its tier's rank —
         /// kept cheap enough that the menu can GROW at the pace the rent climbs, because the
         /// ladder of bought recipes is the income curve now (P16).</summary>

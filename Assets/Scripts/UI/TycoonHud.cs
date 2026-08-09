@@ -1904,17 +1904,17 @@ namespace LastCall.UI
             if (card.Info != null && card.Info.Abv > 0) sb.Append("  ·  ").Append(card.Info.Abv).Append("% ABV");
             sb.Append('\n');
 
-            // What it is FOR: the drinks whose bands name this style.
+            // What it is FOR: the drinks whose bands name this style — and only the drinks
+            // the bar can actually pour. MenuRecipes, never AllRecipes (2026-08-09): the
+            // catalogue carries the SEALED book too, so hovering a bottle in the market was
+            // printing the names of the very recipes the crate two tabs over hides behind a
+            // padlock. A bottle whose only uses are still sealed says so instead, which is
+            // the truth about tonight's menu and gives nothing away.
             var uses = new List<string>();
-            if (!string.IsNullOrEmpty(style) && Run != null)
-                foreach (var r in Run.AllRecipes)
+            if (Run != null)
+                foreach (var r in Run.MenuDrinksUsingStyle(style))
                 {
-                    foreach (var band in r.RatioRequirements)
-                        if (band.IsStyleBand && band.Style == style)
-                        {
-                            if (!uses.Contains(r.Name)) uses.Add(r.Name);
-                            break;
-                        }
+                    if (!uses.Contains(r.Name)) uses.Add(r.Name);
                     if (uses.Count >= 5) break;
                 }
             if (uses.Count > 0) sb.Append("POURED INTO: ").Append(string.Join(", ", uses).ToUpperInvariant());
@@ -1929,13 +1929,15 @@ namespace LastCall.UI
             return sb.ToString();
         }
 
-        /// <summary>The drinks a glass line actually serves, for its upgrade card.</summary>
+        /// <summary>The drinks a glass line actually serves, for its upgrade card. On the
+        /// MENU only — a glassware card that listed sealed drinks leaked them exactly as the
+        /// bottle card did (2026-08-09).</summary>
         private string DrinksServedIn(string glassId)
         {
             var names = new List<string>();
             if (Run != null)
-                foreach (var r in Run.AllRecipes)
-                    if (r.GlassId == glassId && !names.Contains(r.Name))
+                foreach (var r in Run.MenuDrinksInGlass(glassId))
+                    if (!names.Contains(r.Name))
                     {
                         names.Add(r.Name);
                         if (names.Count >= 4) break;
@@ -2153,9 +2155,9 @@ namespace LastCall.UI
             var run = Run;
             var seen = new List<string>();
             if (run == null) return seen;
-            foreach (var r in run.AllRecipes)
-                foreach (var b in r.RatioRequirements)
-                    if (b.IsStyleBand && !seen.Contains(b.Style)) seen.Add(b.Style);
+            // The book LISTS MenuRecipes (BookAdmits, below), so its filter is cut from the
+            // same cloth. Core decides which styles are sayable; this only sorts them.
+            seen.AddRange(run.MenuStyles());
             seen.Sort(System.StringComparer.Ordinal);
             return seen;
         }
