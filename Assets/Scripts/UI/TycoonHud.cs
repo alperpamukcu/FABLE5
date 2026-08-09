@@ -145,6 +145,16 @@ namespace LastCall.UI
             ("bikerold", 26f, 2.5f),
             // The room people dress up for.
             ("glam", 9f, 3.5f), ("execwoman", 5f, 3.5f), ("execman", 23f, 3.5f),
+
+            // ── the 2026-08-10 casting ──────────────────────────────────────────
+            // Moustaches and beards, three bald men, four women in platinum, violet,
+            // teal and copper, and the goths redrawn.
+            ("walrus", 22f, 0f), ("barber", 19f, 0f), ("bouncer", 37f, 0f),
+            ("ember", 8f, 0f),
+            ("lumber", 16f, 1.5f), ("cueball", 31f, 1.5f), ("violet", 15f, 1.5f),
+            ("teal", 22f, 1.5f), ("gothpunk", 0f, 1.5f),
+            ("profess", 23f, 2.5f), ("chrome", 40f, 2.5f), ("platina", 26f, 2.5f),
+            ("gothqueen", 5f, 2.5f),
         };
         private readonly List<PatronLook> _looks = new List<PatronLook>();
         private RectTransform _hudRoot;            // the canvas rect — the screen's right edge for entrances
@@ -1449,8 +1459,8 @@ namespace LastCall.UI
                     tallestPx = Mathf.Max(tallestPx, op.Sprite.rect.height);
                 }
                 float wForBay = (bay - 10f) / (1f + Overlap * (Stacked - 1));
-                float k = Mathf.Min(wForBay / widestPx, (cellH - 6f) / tallestPx);
-                float h = piece.Sprite.rect.height * k;
+                float unitsPerPixel = Mathf.Min(wForBay / widestPx, (cellH - 6f) / tallestPx);
+                float h = piece.Sprite.rect.height * unitsPerPixel;
                 float gw = h * piece.Aspect;
                 float step = gw * Overlap;
                 // The shadow is cast by the RUN, not by one glass, so it is laid down
