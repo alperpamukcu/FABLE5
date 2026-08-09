@@ -492,12 +492,18 @@ namespace LastCall.UI
 
         // The shop tablet (v5 P13). Two errands, not one wall of cards: what goes behind the
         // bar, and what the room itself is made of.
-        private static readonly string[] ShopTabs = { "RESTOCK", "BOTTLES", "RECIPES", "UPGRADES" };
+        // FIVE (the author, 2026-08-09: booze and the mixer/garnish sort of thing must
+        // not share a department). The split is keyed on IngredientCategories.IsAlcoholic,
+        // which reads the CATEGORY rather than the ABV — strength is display-only and an
+        // aisle must not make it load-bearing. Beer stays on the liquor side under its own
+        // section: a keg is booze, and the split being asked for is booze against soft.
+        private static readonly string[] ShopTabs =
+            { "RESTOCK", "LIQUOR", "MIXERS", "RECIPES", "UPGRADES" };
         // Recut on ONE 24x24 canvas (2026-08-09). The old four were 16x26, 24x26,
         // 25x24 and 20x19, so in a single 20x20 preserveAspect rect they drew between
         // 12.3 and 20 units wide: the rects lined up and the pictures did not.
         private static readonly string[] ShopTabIcons =
-            { "sh_i2_restock", "sh_i2_bottles", "sh_i2_recipes", "sh_i2_upgrades" };
+            { "sh_i2_restock", "sh_i2_bottles", "sh_i2_mixers", "sh_i2_recipes", "sh_i2_upgrades" };
         private readonly Image[] _shopTabKeys = new Image[ShopTabs.Length];
         private readonly Text[] _shopTabLabels = new Text[ShopTabs.Length];
         private readonly Image[] _shopTabIcons = new Image[ShopTabs.Length];
@@ -908,7 +914,10 @@ namespace LastCall.UI
                 var bowl = NewRect($"Snack_{s.Id}", root);
                 bowl.anchorMin = bowl.anchorMax = bowl.pivot = new Vector2(0f, 0f);
                 bowl.sizeDelta = new Vector2(76, 84);
-                bowl.anchoredPosition = new Vector2(x, 96);
+                // ON the counter, which is what the comment above has always claimed:
+                // at 96 they stood on the bar's FRONT panel, across the shelf bays,
+                // and the glassware that belongs in those bays had nowhere to go.
+                bowl.anchoredPosition = new Vector2(x, 190f);
                 x += 82f;
                 var hit = bowl.gameObject.AddComponent<Image>();
                 hit.color = new Color(0, 0, 0, 0.001f);
@@ -2118,13 +2127,32 @@ namespace LastCall.UI
                     AddTile(spec);
                 }
             }
-            else if (_shopTab == 1)
+            else if (_shopTab == 1 || _shopTab == 2)
             {
-                _cardTarget = ShopSection("TONIGHT'S BOARD");
+                // ONE LOOP, TWO AISLES. The board is rolled whole by Core; which half of it
+                // a bottle belongs to is a question about the bottle, not about the roll.
+                bool booze = _shopTab == 1;
+                _cardTarget = ShopSection(booze ? "TONIGHT'S BOARD" : "THE MIXER BOARD");
+                bool anyKeg = false, anyGarnish = false;
+                for (int pass = 0; pass < 2; pass++)
                 for (int i = 0; i < run.MarketOffers.Count; i++)
                 {
                     int index = i;
                     var offer = run.MarketOffers[i];
+                    var card = offer.Bottle;
+                    if (IngredientCategories.IsAlcoholic(card.Info?.Category, card.Type) != booze)
+                        continue;
+                    // A keg is not a bottle — 24 measures against 6, and the only beer drink
+                    // on the book takes no ratio bands at all — so it gets its own aisle sign
+                    // rather than standing unlabelled in a row of spirits. Same for the two
+                    // garnishes, which are not mixers.
+                    bool second = booze ? card.Type == IngredientType.Beer
+                                        : card.Type == IngredientType.Garnish;
+                    if ((pass == 1) != second) continue;
+                    if (pass == 1 && booze && !anyKeg)
+                    { anyKeg = true; _cardTarget = ShopSection("ON TAP — THE KEGS"); }
+                    if (pass == 1 && !booze && !anyGarnish)
+                    { anyGarnish = true; _cardTarget = ShopSection("THE GARNISH TRAY"); }
                     var spec = new TileSpec
                     {
                         Name = offer.Bottle.Name,
@@ -2142,7 +2170,7 @@ namespace LastCall.UI
                     AddTile(spec);
                 }
             }
-            else if (_shopTab == 2)
+            else if (_shopTab == 3)
             {
                 _cardTarget = ShopSection("THE RECIPE BOOK");
                 // LOWEST GATE FIRST (the author). The book is a ladder — what opens next
@@ -2210,6 +2238,31 @@ namespace LastCall.UI
                 else DressBuyable(stool, cfg.SeatPrice(run.Seats), "seat", true, () => run.BuySeat());
                 AddTile(stool);
 
+                // THE COUNTER. It has been a real, priced, guarded fitting in Core the whole
+                // time — BuyCounter, CounterPrice, two steps at $40 and $80, worth up to 0.06
+                // satisfaction on EVERY served visit — and it had no tile in any department,
+                // so CounterTier was permanently 1 in every run that was not a dev preset and
+                // a third of the ambience ceiling was dead weight. Found by counting what the
+                // data offers against what the shop can show (2026-08-09).
+                var bar = new TileSpec
+                {
+                    Name = "Resurface the Bar",
+                    Meta = "Rung " + run.CounterTier + " of " + cfg.MaxAmbienceTier,
+                    Art = ItemArt.Load("sh_p_bar") ?? ItemArt.Load("sh_i2_upgrades"),
+                    ArtH = IconH,
+                    Identity = "RESURFACE THE BAR",
+                    MetaLine = "The room · rung " + run.CounterTier + " of " + cfg.MaxAmbienceTier,
+                    Body = "A better bar top is the first thing anyone leans on. "
+                           + "It lifts the mood of every visit, not just the ones you get right.",
+                    BuffA = new Buff(BuffKind.Gain, "+0.03 on every served visit, up to +0.06"),
+                    BuffB = new Buff(BuffKind.Bad, "Counts as tonight's one fitting"),
+                };
+                if (run.CounterTier >= cfg.MaxAmbienceTier)
+                { bar.State = TileState.Held; bar.Word = "MAX"; }
+                else DressBuyable(bar, cfg.CounterPrice(run.CounterTier), "counter", true,
+                    () => run.BuyCounter());
+                AddTile(bar);
+
                 foreach (var g in run.Glassware)
                 {
                     var glass = g;
@@ -2237,6 +2290,22 @@ namespace LastCall.UI
                     AddTile(spec);
                 }
             }
+
+            // A DEPARTMENT WITH NOTHING IN IT SAYS SO. Splitting the board in two means
+            // either half can legitimately be empty on a given night — the van simply did
+            // not bring any mixers — and a bare aisle sign with nothing under it reads as
+            // a bug rather than as an answer.
+            if (_cardTarget != null && _cardTarget.childCount == 0)
+                AddTile(new TileSpec
+                {
+                    Name = "Nothing tonight",
+                    Meta = "Try again tomorrow",
+                    State = TileState.Held,
+                    Identity = "NOTHING ON THIS BOARD TONIGHT",
+                    MetaLine = "The van brings a different list every night",
+                    Body = "What the market offers is rolled at each close, against what is "
+                           + "already behind your bar and what the room thinks of it.",
+                });
 
             // The refund slip rides every tab: anything bought at THIS close can go back.
             // It buys immediately — a return is not something you put in a basket.
@@ -3841,13 +3910,18 @@ namespace LastCall.UI
             }
 
             // The primary action: open the menu to build a drink (GDD 24 §1), bottom-centred.
+            // THE KEYS SIT ON THE BAR'S FACE, not across its shelves. At y 40 they lay
+            // over the compartments the glassware stands in — the bar front is the shelf,
+            // and the two most-pressed controls in the game were parked on it. The face
+            // band (art rows 9..45) is empty drawn panelling and puts them nearer the
+            // counter, which is where the hand already is.
             NewButton(root, "▸  MENU — MAKE A DRINK", new Vector2(0.5f, 0),
-                new Vector2(300, 40), new Vector2(0, 40), UITheme.PrimaryAction, OnMenuClicked);
+                new Vector2(300, 40), new Vector2(0, 180), UITheme.PrimaryAction, OnMenuClicked);
 
             // The recipe book, beside the making verb (v5 P16): the menu speaks styles now,
             // so how a drink is MADE has to live somewhere the player can read mid-shift.
             NewButton(root, "❧ BOOK", new Vector2(0.5f, 0),
-                new Vector2(84, 40), new Vector2(-196, 40), UITheme.Night[3], ToggleRecipeBook);
+                new Vector2(84, 40), new Vector2(-196, 180), UITheme.Night[3], ToggleRecipeBook);
             BuildRecipeBook(root);
 
             BuildDrinkGlass(root);

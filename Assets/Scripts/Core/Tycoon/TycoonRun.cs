@@ -336,7 +336,7 @@ namespace LastCall.Core
 
         public sealed class DayPurchase
         {
-            public enum Kind { Brand, Recipe, Seat, Glassware }
+            public enum Kind { Brand, Recipe, Seat, Glassware, Counter }
             public Kind What { get; }
             public string Id { get; }
             public string Name { get; }
@@ -381,6 +381,10 @@ namespace LastCall.Core
                     break;
                 case DayPurchase.Kind.Glassware:
                     if (_glassTiers.TryGetValue(p.Id, out var gt) && gt > 1) _glassTiers[p.Id] = gt - 1;
+                    if (UpgradesToday > 0) UpgradesToday--;
+                    break;
+                case DayPurchase.Kind.Counter:
+                    if (CounterTier > 1) CounterTier--;
                     if (UpgradesToday > 0) UpgradesToday--;
                     break;
             }
@@ -1225,6 +1229,12 @@ namespace LastCall.Core
             Spend(price);
             UpgradesToday++;
             CounterTier++;
+            // It books like the other two fittings. It did not, which meant the ONE
+            // fitting a night that could not be taken back was the one nothing on screen
+            // had told the player about — the counter had no tile at all until 2026-08-09,
+            // so the omission was invisible in both directions at once.
+            _todayPurchases.Add(new DayPurchase(
+                DayPurchase.Kind.Counter, "counter", $"Bar Top {CounterTier}", price));
             return price;
         }
 

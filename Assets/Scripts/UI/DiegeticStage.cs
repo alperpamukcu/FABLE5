@@ -51,12 +51,31 @@ namespace LastCall.UI
         // ShelfCell resolves that from the live transform rather than assuming 16:9,
         // which is what the old hardcoded rack slots did.
         private const float ShelfCellPx = 80f;      // cell pitch, art px
-        private const float ShelfFloorPx = 93f;     // the cell floor, art px from the art's top
+        // THE FLOOR IS THE BOARD, NOT THE COLOUR STEP. 93 is where the bay interior lifts
+        // from (16,9,22) to (13,30,40) — a luminance change, which is what the first pass
+        // sampled, and it is thirteen rows above anything an object can stand on. Row 106
+        // is the warm lip (141,82,30) of the wooden board, and it runs unbroken THROUGH the
+        // divider columns, which is what proves it is a shelf rather than a shadow. Off by
+        // 13 art px the glasses hung 26 HUD units in the air with the whole lit band showing
+        // under their feet.
+        private const float ShelfFloorPx = 106f;    // the board's lip, art px from the art's top
         private const float ShelfCeilPx = 53f;      // the shelf board above it
         public const int ShelfCells = 8;
 
         private RectTransform _counter;
         private Vector2 _counterNative;
+
+        /// <summary>How many stage units one pixel of the counter art is worth right now.</summary>
+        public float CounterArtScale => (_counter != null && _counterNative.x > 0f)
+            ? _counter.rect.width / _counterNative.x : 0f;
+
+        /// <summary>Where a given ROW of the counter art is, in stage units. The rest line is
+        /// CounterSurfaceInset art-pixels below the art's top, and that line is pinned to
+        /// CounterRestY — so anything that has to sit against the drawing (a key on the bar's
+        /// front face, a glass in a bay) can ask for its row instead of guessing a constant
+        /// that only holds at 16:9.</summary>
+        public float CounterArtRowY(float row) =>
+            CounterRestY + (CounterSurfaceInset - row) * CounterArtScale;
 
         /// <summary>
         /// Where shelf compartment <paramref name="index"/> is standing right now, in STAGE
