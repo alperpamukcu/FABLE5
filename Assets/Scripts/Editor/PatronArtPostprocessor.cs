@@ -36,6 +36,14 @@ namespace LastCall.EditorTools
             // The key's corner arc is 14px and its standing lip 11px, so a 16px ring keeps both
             // out of the stretched centre (2026-07-27, art regenerated at 128x80).
             if (file == "plate" || file == "plate_down") ti.spriteBorder = new Vector4(16, 16, 16, 16);
+            // The market app's furniture (2026-08-07). Every border is MEASURED off its own
+            // art by Tools/market_borders.py and pasted here — a 9-slice whose border is
+            // guessed either eats the corner detail or stretches it. The tablet's frame
+            // probed at exactly 20px on all four sides.
+            else if (file == "mk_tablet") ti.spriteBorder = new Vector4(20, 20, 20, 20);
+            else if (file == "mk_tab_on" || file == "mk_tab_off") ti.spriteBorder = new Vector4(10, 6, 10, 6);
+            else if (file == "mk_card") ti.spriteBorder = new Vector4(10, 9, 10, 9);
+            else if (file == "mk_appbar") ti.spriteBorder = new Vector4(10, 5, 10, 5);
         }
     }
 }

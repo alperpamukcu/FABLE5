@@ -429,6 +429,22 @@ namespace LastCall.Core
             Phase = TycoonPhase.DayOpen;
         }
 
+        /// <summary>
+        /// Dev tooling (the author, 2026-08-07): closes the night on the spot so the books
+        /// and the shop can be looked at without playing a whole day. It runs the REAL
+        /// clock — Tick, the same verb the floor uses — so everyone still seated drinks up
+        /// or storms off exactly as they would have, the rent still lands, the market still
+        /// rolls. The only thing skipped is the waiting. No-op outside an open day.
+        /// </summary>
+        public void DevSkipToDayEnd()
+        {
+            if (Phase != TycoonPhase.DayOpen) return;
+            // A generous cap: a night is 95 seconds and the longest patience is under a
+            // minute, so this lands long before it. It exists so a bug can never spin here.
+            for (int guard = 0; guard < 20000 && Phase == TycoonPhase.DayOpen; guard++)
+                Tick(0.25);
+        }
+
         // ── snacks (v5 P16) ─────────────────────────────────────────────────────
 
         private readonly IReadOnlyList<SnackDefinition> _snacks;

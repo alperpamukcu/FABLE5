@@ -448,10 +448,22 @@ namespace LastCall.UI
         // The shop tablet (v5 P13). Two errands, not one wall of cards: what goes behind the
         // bar, and what the room itself is made of.
         private static readonly string[] ShopTabs = { "RESTOCK", "BOTTLES", "RECIPES", "UPGRADES" };
+        private static readonly string[] ShopTabIcons =
+            { "mk_tab_restock", "mk_tab_bottles", "mk_tab_recipes", "mk_tab_upgrades" };
         private readonly Image[] _shopTabKeys = new Image[ShopTabs.Length];
         private readonly Text[] _shopTabLabels = new Text[ShopTabs.Length];
+        private readonly Image[] _shopTabIcons = new Image[ShopTabs.Length];
         private int _shopTab;
         private Text _tabletTill;
+
+        /// <summary>The trade name the bar orders from — a parody storefront, in the same
+        /// spirit as the shelf's parody brands. One constant: rename it and the app bar,
+        /// its spacing and the receipt language all follow.</summary>
+        private const string ShopBrand = "BARZON";
+        private const string ShopTagline = "NEXT-NIGHT DELIVERY  ·  FREE OVER $40";
+        private const float AppBarH = 34f, TabW = 168f, TabH = 32f;
+        /// <summary>The drawn tablet's bezel, in screen units — the screen is inset by it.</summary>
+        private const float BezelX = 20f, BezelY = 20f;
         private static readonly Color TabletShell = new Color(0.13f, 0.12f, 0.15f, 1f);
         private static readonly Color TabletScreen = new Color(0.09f, 0.10f, 0.13f, 1f);
         private static readonly Color TabletLens = new Color(0.30f, 0.30f, 0.34f, 1f);
@@ -1568,8 +1580,9 @@ namespace LastCall.UI
             var run = Run;
             _dayEndBill.gameObject.SetActive(_dayEndStep == 0);
             _dayEndTablet.gameObject.SetActive(_dayEndStep == 1);
-            _dayEndTitle.text = _dayEndStep == 0 ? "LAST CALL — THE BOOKS" : "LAST CALL — THE MARKET";
-            _openTomorrowLabel.text = _dayEndStep == 0 ? "CONTINUE  →  THE MARKET"
+            _dayEndTitle.text = _dayEndStep == 0
+                ? "LAST CALL — THE BOOKS" : "LAST CALL — ORDERING IN";
+            _openTomorrowLabel.text = _dayEndStep == 0 ? $"CONTINUE  →  {ShopBrand}"
                 : run.Day % 6 == 0 ? "START TUESDAY  →   (MONDAY IS DARK)"
                 : "START THE DAY  →";
             var floor = run.Floor;
@@ -1639,11 +1652,22 @@ namespace LastCall.UI
             // The tablet.
             foreach (Transform child in _offerRow) Destroy(child.gameObject);
             _tabletTill.text = $"${run.Money}";
+            var tabOn = ItemArt.Load("mk_tab_on");
+            var tabOff = ItemArt.Load("mk_tab_off");
             for (int i = 0; i < _shopTabKeys.Length; i++)
             {
                 bool on = i == _shopTab;
-                _shopTabKeys[i].color = on ? UITheme.PrimaryAction : UITheme.Night[2];
+                if (tabOn != null && tabOff != null)
+                {
+                    _shopTabKeys[i].sprite = on ? tabOn : tabOff;
+                    _shopTabKeys[i].color = Color.white;
+                }
+                else _shopTabKeys[i].color = on ? UITheme.PrimaryAction : UITheme.Night[2];
                 _shopTabLabels[i].color = on ? UITheme.TextOnAmber : UITheme.TextSecondary;
+                // The icon dims with its tab, and goes ink-dark on the lit one so it
+                // reads against the amber the way the label does.
+                if (_shopTabIcons[i] != null && _shopTabIcons[i].sprite != null)
+                    _shopTabIcons[i].color = on ? Color.white : new Color(1f, 1f, 1f, 0.55f);
             }
 
             if (_dayEndStep == 0) return;   // the bill step shows no shop at all
@@ -1670,7 +1694,7 @@ namespace LastCall.UI
             }
             else if (_shopTab == 1)
             {
-                _cardTarget = ShopSection("TONIGHT'S MARKET");
+                _cardTarget = ShopSection("IN STOCK TONIGHT");
                 for (int i = 0; i < run.MarketOffers.Count; i++)
                 {
                     int index = i;
@@ -1776,10 +1800,13 @@ namespace LastCall.UI
             t.text = $"— {title} —";
             var sec = NewRect("Sec", _offerRow);
             var g = sec.gameObject.AddComponent<GridLayoutGroup>();
-            g.cellSize = new Vector2(162, 74);
+            // Six across, sized to fill the wider device (2026-08-07): 6*172 + 5*8 = 1072
+            // against the 1080 the tablet's screen leaves, so the shelf reaches both edges
+            // instead of stranding a column of empty screen on the right.
+            g.cellSize = new Vector2(172, 78);
             g.spacing = new Vector2(8, 8);
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            g.constraintCount = 5;
+            g.constraintCount = 6;
             return sec;
         }
 
@@ -2369,7 +2396,7 @@ namespace LastCall.UI
         private void BuildSettings(RectTransform root)
         {
             _settingsPanel = NewRect("Settings", root);
-            Place(_settingsPanel, new Vector2(1, 1), new Vector2(240, 214), new Vector2(-16, -58));
+            Place(_settingsPanel, new Vector2(1, 1), new Vector2(240, 246), new Vector2(-16, -58));
             _settingsPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
 
             var title = NewText("T", _settingsPanel, _body, 10, TextAnchor.UpperCenter, UITheme.TextSecondary);
@@ -2397,6 +2424,17 @@ namespace LastCall.UI
             { _bootstrap.StartNewRun(null); Run.DevPreset(1); ApplyBarLook(); ToggleSettings(); });
             SettingsRow(5, "DEV · ENDGAME", () =>
             { _bootstrap.StartNewRun(null); Run.DevPreset(2); ApplyBarLook(); ToggleSettings(); });
+            // Straight to the books and the shop (the author, 2026-08-07). It runs the real
+            // clock rather than forcing the phase, so the night closes honestly — anyone
+            // still sitting drinks up or walks, and the rent lands as it always would.
+            SettingsRow(6, "DEV · SKIP TO DAY END", () =>
+            {
+                if (Run == null || Run.Phase != TycoonPhase.DayOpen) { Toast("NOT MID-DAY"); return; }
+                _flow?.CloseFlow();
+                CloseId();
+                Run.DevSkipToDayEnd();
+                ToggleSettings();
+            });
 
             _settingsMotion = SettingsRow(2, "MOTION", () =>
             {
@@ -3010,21 +3048,24 @@ namespace LastCall.UI
             BuildServiceLog(root);
             BuildIdCard(root);
 
-            // Day end: a plain invoice panel with the night's business under it.
+            // Day end. The panel is a SCRIM over the whole room, not a slab (the author,
+            // 2026-08-07: "hala mor bir çerçeve var"). The old 940x600 plate showed a
+            // purple margin all round the tablet, which read as a window frame nobody
+            // asked for — now the night dims and the device is the only lit thing.
             _dayEndPanel = NewRect("DayEnd", root);
-            Place(_dayEndPanel, new Vector2(0.5f, 0.5f), new Vector2(940, 600), new Vector2(0, 10));
+            Stretch(_dayEndPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var panelImg = _dayEndPanel.gameObject.AddComponent<Image>();
-            panelImg.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.97f);
+            panelImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.88f);
 
             var title = _dayEndTitle = NewText("Title", _dayEndPanel, _display, 16, TextAnchor.MiddleCenter, UITheme.PrimaryAction);
-            Stretch(title.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -46), new Vector2(0, -8));
+            Place(title.rectTransform, new Vector2(0.5f, 1), new Vector2(900, 24), new Vector2(0, -22));
             title.text = "LAST CALL — THE BOOKS";
 
             // Left column: the till slip (v5 P13). Cream stock, and pinned to 16pt — a whole
             // multiple of the face's 8px design size, so the monospace columns the receipt is
             // set in actually land on the pixel grid instead of blurring between it.
             var bill = _dayEndBill = NewRect("Bill", _dayEndPanel);
-            Place(bill, new Vector2(0.5f, 1), new Vector2(400, 470), new Vector2(0, -56));
+            Place(bill, new Vector2(0.5f, 1), new Vector2(400, 500), new Vector2(0, -50));
             bill.gameObject.AddComponent<Image>().color = UITheme.Cream[4];
             _invoiceText = NewText("Invoice", bill, _body, 16, TextAnchor.UpperLeft, UITheme.Night[1]);
             Stretch(_invoiceText.rectTransform, Vector2.zero, Vector2.one, new Vector2(14, 12), new Vector2(-14, -12));
@@ -3036,45 +3077,101 @@ namespace LastCall.UI
             // restocking the well and buying a musician are different errands and the player is
             // only ever doing one of them.
             var tablet = _dayEndTablet = NewRect("Tablet", _dayEndPanel);
-            Place(tablet, new Vector2(0.5f, 1), new Vector2(892, 468), new Vector2(0, -56));
-            tablet.gameObject.AddComponent<Image>().color = TabletShell;
+            Place(tablet, new Vector2(0.5f, 1), new Vector2(1140, 552), new Vector2(0, -50));
+            var tabletImg = tablet.gameObject.AddComponent<Image>();
+            // A real device since 2026-08-07: a drawn tablet, 9-sliced so only the flat
+            // runs of its bezel stretch and the corners stay at their own pixel size. The
+            // procedural slab (with its hand-drawn lens and home bar) is the fallback.
+            var shellArt = ItemArt.Load("mk_tablet");
+            if (shellArt != null)
+            {
+                tabletImg.sprite = shellArt;
+                tabletImg.type = Image.Type.Sliced;
+            }
+            else
+            {
+                tabletImg.color = TabletShell;
+                var lens = NewRect("Lens", tablet);
+                Place(lens, new Vector2(0.5f, 1), new Vector2(5, 5), new Vector2(0, -6));
+                lens.gameObject.AddComponent<Image>().color = TabletLens;
+                var homeBar = NewRect("Home", tablet);
+                Place(homeBar, new Vector2(0.5f, 0), new Vector2(84, 4), new Vector2(0, 6));
+                homeBar.gameObject.AddComponent<Image>().color = TabletLens;
+            }
 
-            var lens = NewRect("Lens", tablet);
-            Place(lens, new Vector2(0.5f, 1), new Vector2(5, 5), new Vector2(0, -6));
-            lens.gameObject.AddComponent<Image>().color = TabletLens;
-
-            var homeBar = NewRect("Home", tablet);
-            Place(homeBar, new Vector2(0.5f, 0), new Vector2(84, 4), new Vector2(0, 6));
-            homeBar.gameObject.AddComponent<Image>().color = TabletLens;
-
+            // The screen sits inside the bezel; the inset matches the drawn frame's own
+            // border so the app never laps onto the device.
             var screen = NewRect("Screen", tablet);
-            Stretch(screen, Vector2.zero, Vector2.one, new Vector2(14, 16), new Vector2(-14, -16));
+            Stretch(screen, Vector2.zero, Vector2.one,
+                new Vector2(BezelX, BezelY), new Vector2(-BezelX, -BezelY));
             screen.gameObject.AddComponent<Image>().color = TabletScreen;
 
-            // The status strip: what this is, and what there is to spend.
+            // THE APP BAR (the author, 2026-08-07: the shop should read as an e-commerce
+            // app the bar orders from). Brand mark, wordmark, the delivery promise every
+            // such app makes, and the money — which is the basket total, in this shop.
             var strip = NewRect("Strip", screen);
             strip.anchorMin = new Vector2(0, 1); strip.anchorMax = new Vector2(1, 1);
             strip.pivot = new Vector2(0.5f, 1);
-            strip.sizeDelta = new Vector2(0, 22);
+            strip.sizeDelta = new Vector2(0, AppBarH);
             strip.anchoredPosition = Vector2.zero;
-            strip.gameObject.AddComponent<Image>().color = UITheme.Night[0];
-            var stripName = NewText("N", strip, _body, 12, TextAnchor.MiddleLeft, UITheme.TextSecondary);
-            Stretch(stripName.rectTransform, Vector2.zero, Vector2.one, new Vector2(10, 0), new Vector2(-120, 0));
-            stripName.text = "SUPPLY — ORDER IN";
-            _tabletTill = NewText("Till", strip, _body, 12, TextAnchor.MiddleRight, UITheme.Money);
-            Stretch(_tabletTill.rectTransform, Vector2.zero, Vector2.one, new Vector2(120, 0), new Vector2(-10, 0));
+            var stripImg = strip.gameObject.AddComponent<Image>();
+            var barArt = ItemArt.Load("mk_appbar");
+            if (barArt != null) { stripImg.sprite = barArt; stripImg.type = Image.Type.Sliced; }
+            else stripImg.color = UITheme.Night[0];
+
+            var mark = NewRect("Mark", strip);
+            Place(mark, new Vector2(0, 0.5f), new Vector2(24, 24), new Vector2(18, 0));
+            var markImg = mark.gameObject.AddComponent<Image>();
+            markImg.sprite = ItemArt.Load("mk_logo");
+            markImg.preserveAspect = true; markImg.raycastTarget = false;
+            if (markImg.sprite == null) markImg.color = UITheme.Cyan[3];
+
+            var brand = NewText("Brand", strip, _display, 16, TextAnchor.MiddleLeft, UITheme.Cyan[4]);
+            Place(brand.rectTransform, new Vector2(0, 0.5f), new Vector2(200, 20), new Vector2(34, 0));
+            brand.horizontalOverflow = HorizontalWrapMode.Overflow;
+            brand.text = ShopBrand;
+
+            var van = NewRect("Van", strip);
+            Place(van, new Vector2(0, 0.5f), new Vector2(24, 16), new Vector2(34 + ShopBrand.Length * 16f + 14f, -1));
+            var vanImg = van.gameObject.AddComponent<Image>();
+            vanImg.sprite = ItemArt.Load("mk_van");
+            vanImg.preserveAspect = true; vanImg.raycastTarget = false;
+            if (vanImg.sprite == null) vanImg.color = new Color(1, 1, 1, 0);
+
+            var tagline = NewText("Tag", strip, _body, 8, TextAnchor.MiddleLeft, UITheme.TextSecondary);
+            Place(tagline.rectTransform, new Vector2(0, 0.5f), new Vector2(320, 12),
+                new Vector2(34 + ShopBrand.Length * 16f + 32f, 0));
+            tagline.horizontalOverflow = HorizontalWrapMode.Overflow;
+            tagline.text = ShopTagline;
+
+            _tabletTill = NewText("Till", strip, _body, 16, TextAnchor.MiddleRight, UITheme.Money);
+            Stretch(_tabletTill.rectTransform, Vector2.zero, Vector2.one, new Vector2(120, 0), new Vector2(-12, 0));
 
             for (int i = 0; i < ShopTabs.Length; i++)
             {
                 int tab = i;
                 var key = NewRect($"Tab{i}", screen);
-                Place(key, new Vector2(0, 1), new Vector2(120, 24), new Vector2(10 + i * 126, -28));
+                Place(key, new Vector2(0, 1), new Vector2(TabW, TabH),
+                    new Vector2(10 + i * (TabW + 6f), -(AppBarH + 6f)));
                 var bg = key.gameObject.AddComponent<Image>();
+                // Drawn keys, 9-sliced: the lit and resting states are two pieces of art,
+                // swapped in RebuildDayEnd, so a selected tab is a different OBJECT rather
+                // than the same rectangle in another colour.
+                if (ItemArt.Load("mk_tab_off") != null) bg.type = Image.Type.Sliced;
                 var btn = key.gameObject.AddComponent<Button>();
                 btn.targetGraphic = bg;
                 btn.onClick.AddListener(() => { _shopTab = tab; RebuildDayEnd(); });
-                var label = NewText("L", key, _body, 12, TextAnchor.MiddleCenter, UITheme.TextPrimary);
-                Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+                var icon = NewRect("I", key);
+                Place(icon, new Vector2(0, 0.5f), new Vector2(18, 18), new Vector2(12, 0));
+                var iconImg = icon.gameObject.AddComponent<Image>();
+                iconImg.sprite = ItemArt.Load(ShopTabIcons[i]);
+                iconImg.preserveAspect = true; iconImg.raycastTarget = false;
+                if (iconImg.sprite == null) iconImg.color = new Color(1, 1, 1, 0);
+                _shopTabIcons[i] = iconImg;
+
+                var label = NewText("L", key, _body, 8, TextAnchor.MiddleLeft, UITheme.TextPrimary);
+                Stretch(label.rectTransform, Vector2.zero, Vector2.one, new Vector2(26, 0), new Vector2(-6, 0));
                 label.text = ShopTabs[i];
                 _shopTabKeys[i] = bg;
                 _shopTabLabels[i] = label;
@@ -3083,7 +3180,8 @@ namespace LastCall.UI
             // The market is grouped now (the author): a stack of titled sections, each its
             // own grid, the whole thing scrolling — the shop outgrew a single flat grid.
             var offerView = NewRect("OfferView", screen);
-            Stretch(offerView, Vector2.zero, Vector2.one, new Vector2(10, 30), new Vector2(-10, -58));
+            Stretch(offerView, Vector2.zero, Vector2.one, new Vector2(10, 30),
+                new Vector2(-10, -(AppBarH + TabH + 12f)));
             offerView.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, 0.003f);
             offerView.gameObject.AddComponent<RectMask2D>();
             _offerRow = NewRect("Offers", offerView);
@@ -3114,7 +3212,7 @@ namespace LastCall.UI
             _marketTip.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             _openTomorrow = NewRect("OpenTomorrow", _dayEndPanel);
-            Place(_openTomorrow, new Vector2(0.5f, 0), new Vector2(892, 40), new Vector2(0, 16));
+            Place(_openTomorrow, new Vector2(0.5f, 0), new Vector2(600, 40), new Vector2(0, 44));
             _openTomorrow.gameObject.AddComponent<Image>().color = UITheme.PrimaryAction;
             var otBtn = _openTomorrow.gameObject.AddComponent<Button>();
             otBtn.onClick.AddListener(OnDayEndAdvance);
@@ -3291,7 +3389,20 @@ namespace LastCall.UI
             var rt = NewRect("Card", _cardTarget != null ? _cardTarget : _offerRow);
             var img = rt.gameObject.AddComponent<Image>();
             bool afford = Run.Money >= price;
-            img.color = owned ? new Color(UITheme.Lime[0].r, UITheme.Lime[0].g, UITheme.Lime[0].b, 0.85f)
+            // A drawn product card since 2026-08-07 (the author: the flat code-coloured
+            // slabs "ai slop duruyor"). 9-sliced, so its border and top strip keep their
+            // own pixels at any cell size; the state still speaks through the tint.
+            var cardArt = ItemArt.Load("mk_card");
+            if (cardArt != null)
+            {
+                img.sprite = cardArt;
+                img.type = Image.Type.Sliced;
+                img.color = owned ? new Color(0.72f, 1f, 0.72f)
+                    : !available ? new Color(0.55f, 0.55f, 0.60f)
+                    : afford ? Color.white
+                    : new Color(0.70f, 0.70f, 0.74f);
+            }
+            else img.color = owned ? new Color(UITheme.Lime[0].r, UITheme.Lime[0].g, UITheme.Lime[0].b, 0.85f)
                 : !available ? UITheme.Night[0]
                 : afford ? UITheme.Night[3]
                 : new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.9f);
