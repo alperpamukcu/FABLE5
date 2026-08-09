@@ -1436,11 +1436,18 @@ namespace LastCall.UI
                 // interior, so they would land on top of one another; asking instead what
                 // width lets five stand across the bay with a clean overlap, and taking the
                 // height from THAT, is the only ordering that fills the shelf.
-                const int Stacked = 5;
-                // A tighter step packs the same five into less width, which leaves each
-                // glass more of the bay to be drawn at (the author: bigger again). 0.62 ->
-                // 0.52 buys about 18% on every vessel without any of them leaving the cell.
-                const float Overlap = 0.52f;                    // step, as a share of a glass
+                // TWO ROWS IN DEPTH, NOT FIVE ACROSS (the author: the glasses should follow
+                // the table's perspective, and cover more of it). Five in one line is a
+                // frieze; a shelf holds a row at the back and a row in front of it, and
+                // that is where a real front-to-back height difference comes from.
+                //
+                // THREE BACK, TWO FRONT. The back row stands on the far edge of the
+                // surface, the front row on the near edge, and the depth between them is
+                // MEASURED: the turquoise band is 13 art px of the cell's 53, so the two
+                // rows are (13/53) of the opening apart on screen.
+                const int BackRow = 3, FrontRow = 2;
+                const float Overlap = 0.60f;                    // step within a row
+                const float SurfaceDepth = 13f / 53f;           // the drawn floor, as a share
                 float bay = cellH * (75f / 53f);                // the interior, in HUD units
                 // PROPORTION ACROSS THE WHOLE RACK, not within one bay. Sizing each line to
                 // fill its own bay made a rocks tumbler and a highball the same height,
@@ -1461,35 +1468,42 @@ namespace LastCall.UI
                     widestPx = Mathf.Max(widestPx, op.Sprite.rect.width);
                     tallestPx = Mathf.Max(tallestPx, op.Sprite.rect.height);
                 }
-                float wForBay = (bay - 6f) / (1f + Overlap * (Stacked - 1));
-                float unitsPerPixel = Mathf.Min(wForBay / widestPx, (cellH - 6f) / tallestPx);
+                // The back row is the wider one, so it sets the size; the front row then
+                // has room to sit between its gaps.
+                float wForBay = (bay - 4f) / (1f + Overlap * (BackRow - 1));
+                float unitsPerPixel = Mathf.Min(wForBay / widestPx, (cellH - 10f) / tallestPx);
                 float h = piece.Sprite.rect.height * unitsPerPixel;
                 float gw = h * piece.Aspect;
                 float step = gw * Overlap;
+                float rise = cellH * SurfaceDepth;              // the far edge, in HUD units
                 // The shadow is cast by the RUN, not by one glass, so it is laid down
                 // once the run's width is known.
                 var shadow = NewRect($"S_{g.Id}", _glassRack);
                 shadow.anchorMin = shadow.anchorMax = new Vector2(0.5f, 0);
                 shadow.pivot = new Vector2(0.5f, 0.5f);
-                shadow.sizeDelta = new Vector2(gw + step * (Stacked - 1) + 8f, 10);
+                shadow.sizeDelta = new Vector2(gw + step * (BackRow - 1) + 12f, 10);
                 shadow.anchoredPosition = new Vector2(x, floorY + 3f);
                 var shImg = shadow.gameObject.AddComponent<Image>();
                 shImg.sprite = BackBarArt.BottleShadow();
                 shImg.raycastTarget = false;
 
-                for (int k = 0; k < Stacked; k++)
+                for (int k = 0; k < BackRow + FrontRow; k++)
                 {
-                    // 0 at the front (the middle of the run), 2 at the back (the ends)
-                    int depth = Mathf.Abs(k - (Stacked / 2));
-                    float dx = (k - (Stacked - 1) * 0.5f) * step;
+                    // 0..2 are the back row, 3..4 the front row standing in its gaps.
+                    bool back = k < BackRow;
+                    int inRow = back ? k : k - BackRow;
+                    int rowCount = back ? BackRow : FrontRow;
+                    int depth = back ? 1 : 0;
+                    float dx = (inRow - (rowCount - 1) * 0.5f) * step * (back ? 1f : 1.6f);
                     var rt = NewRect($"G_{g.Id}_{k}", _glassRack);
                     rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0);
                     rt.pivot = new Vector2(0.5f, 0);
-                    float kh = h * (1f - 0.045f * depth);
+                    // The far row is smaller AND higher by the surface's own depth — the
+                    // two together are what perspective is. 3 units of rise, which is what
+                    // this was, is a nudge; the drawn floor is thirteen art pixels deep.
+                    float kh = h * (back ? 0.84f : 1f);
                     rt.sizeDelta = new Vector2(kh * piece.Aspect, kh);
-                    // Further back stands higher on the surface — that is what depth looks
-                    // like on a shelf drawn from slightly above.
-                    rt.anchoredPosition = new Vector2(x + dx, floorY + depth * 3f);
+                    rt.anchoredPosition = new Vector2(x + dx, floorY + (back ? rise : 0f));
                     var img = rt.gameObject.AddComponent<Image>();
                     img.sprite = piece.Sprite;
                     img.preserveAspect = true;
@@ -1498,7 +1512,7 @@ namespace LastCall.UI
                     // and above, so the further in a glass stands the less light reaches it
                     // AND the bluer what does reach it becomes — a flat brightness ramp
                     // read as five copies at five opacities rather than as depth.
-                    float lit = 1f - 0.21f * depth;
+                    float lit = 1f - 0.24f * depth;
                     img.color = new Color(lit * 0.98f, lit * 1.0f, lit * 1.06f, 1f);
                     for (int d = 0; d < depth; d++) rt.SetAsFirstSibling();
                 }
@@ -2182,6 +2196,8 @@ namespace LastCall.UI
                 {
                     all.BuffA = new Buff(BuffKind.Cost, "$" + cfg.RefillPricePerCapacity
                         + " a measure · " + restock + " to fill the shelf");
+                    all.BuffB = new Buff(BuffKind.Gain,
+                        "Covers every bottle below — you cannot need both");
                     DressBuyable(all, restock, "restock:all", false, () => run.RefillShelf());
                 }
                 else
@@ -2203,6 +2219,18 @@ namespace LastCall.UI
                     double mx = x.Capacity - x.Remaining, my = y.Capacity - y.Remaining;
                     return my.CompareTo(mx);
                 });
+                // THE WHOLE WELL COVERS EVERY BOTTLE IN IT (the author). Both could sit in
+                // the same order, and the player paid twice for the same measure: the
+                // restock-all tops up every bottle, so a per-bottle refill picked beside it
+                // buys nothing. The tile says so instead of taking the money — and picking
+                // the whole well throws the singles back out of the order, because the
+                // basket is the place where "you already have this" has to be true.
+                bool wellOrdered = InCart("restock:all") || _justOrdered.Contains("restock:all");
+                if (InCart("restock:all"))
+                    for (int i = _cart.Count - 1; i >= 0; i--)
+                        if (_cart[i].Key != null && _cart[i].Key.StartsWith("refill:"))
+                            _cart.RemoveAt(i);
+
                 foreach (var b in shelf)
                 {
                     var bottle = b;
@@ -2218,9 +2246,16 @@ namespace LastCall.UI
                             ? (float)(bottle.Remaining / bottle.Capacity) : 0f,
                     };
                     DescribeBottle(spec, bottle.Ingredient, bottle);
-                    if (cost > 0)
+                    if (cost > 0 && !wellOrdered)
                         DressBuyable(spec, cost, "refill:" + bottle.Ingredient.Id, false,
                             () => run.RefillBottle(bottle.Ingredient.Id));
+                    else if (cost > 0)
+                    {
+                        spec.State = TileState.Held;
+                        spec.Word = "IN";                       // 2 CAPS, 26.5 in a 66 slot
+                        spec.BuffA = new Buff(BuffKind.Gain,
+                            "Covered by the whole-well order — no need to buy it twice");
+                    }
                     else { spec.State = TileState.Held; spec.Word = "FULL"; }
                     AddTile(spec);
                 }
