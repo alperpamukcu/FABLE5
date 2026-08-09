@@ -1437,7 +1437,10 @@ namespace LastCall.UI
                 // width lets five stand across the bay with a clean overlap, and taking the
                 // height from THAT, is the only ordering that fills the shelf.
                 const int Stacked = 5;
-                const float Overlap = 0.62f;                    // step, as a share of a glass
+                // A tighter step packs the same five into less width, which leaves each
+                // glass more of the bay to be drawn at (the author: bigger again). 0.62 ->
+                // 0.52 buys about 18% on every vessel without any of them leaving the cell.
+                const float Overlap = 0.52f;                    // step, as a share of a glass
                 float bay = cellH * (75f / 53f);                // the interior, in HUD units
                 // PROPORTION ACROSS THE WHOLE RACK, not within one bay. Sizing each line to
                 // fill its own bay made a rocks tumbler and a highball the same height,
@@ -1458,7 +1461,7 @@ namespace LastCall.UI
                     widestPx = Mathf.Max(widestPx, op.Sprite.rect.width);
                     tallestPx = Mathf.Max(tallestPx, op.Sprite.rect.height);
                 }
-                float wForBay = (bay - 10f) / (1f + Overlap * (Stacked - 1));
+                float wForBay = (bay - 6f) / (1f + Overlap * (Stacked - 1));
                 float unitsPerPixel = Mathf.Min(wForBay / widestPx, (cellH - 6f) / tallestPx);
                 float h = piece.Sprite.rect.height * unitsPerPixel;
                 float gw = h * piece.Aspect;
@@ -3662,7 +3665,17 @@ namespace LastCall.UI
 
         private void BuildIdCard(RectTransform root)
         {
+            // ITS OWN LAYER, ABOVE THE BAR. The till was lifted to a canvas at 6 so it
+            // would stand in front of the drinkers — and then it stood in front of the
+            // licence and the market too, because both of those are ordinary children of
+            // the HUD canvas at 5. Anything that is a WINDOW over the room needs to say so
+            // rather than rely on being built late: stage -10, HUD 5, till 6, service flow
+            // 12, recipe book 15, licence 20, the market 22.
             _idRoot = NewRect("IdCard", root);
+            var idCanvas = _idRoot.gameObject.AddComponent<Canvas>();
+            idCanvas.overrideSorting = true;
+            idCanvas.sortingOrder = 20;
+            _idRoot.gameObject.AddComponent<GraphicRaycaster>();
             Stretch(_idRoot, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var scrim = _idRoot.gameObject.AddComponent<Image>();
             scrim.color = UITheme.Scrim;
@@ -4071,6 +4084,10 @@ namespace LastCall.UI
             // purple margin all round the tablet, which read as a window frame nobody
             // asked for — now the night dims and the device is the only lit thing.
             _dayEndPanel = NewRect("DayEnd", root);
+            var dayEndCanvas = _dayEndPanel.gameObject.AddComponent<Canvas>();
+            dayEndCanvas.overrideSorting = true;
+            dayEndCanvas.sortingOrder = 22;   // the market covers the whole room, till included
+            _dayEndPanel.gameObject.AddComponent<GraphicRaycaster>();
             Stretch(_dayEndPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var panelImg = _dayEndPanel.gameObject.AddComponent<Image>();
             panelImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.88f);
