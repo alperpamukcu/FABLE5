@@ -100,6 +100,47 @@ namespace LastCall.Core
             return offers;
         }
 
+        /// <summary>
+        /// What the board is HOLDING BACK, and at what standing — the same two branches as
+        /// <see cref="OffersFor"/>, with the star test inverted.
+        ///
+        /// The shop could only ever show what the room's standing already allowed, so the
+        /// stock waiting behind the next rung was invisible and an aisle that was merely
+        /// early looked exactly like one that was finished (the author, 2026-08-10). Written
+        /// as its own pass rather than folded into OffersFor because the two answer different
+        /// questions and a caller wanting one must not pay for the other.
+        /// </summary>
+        public static List<(IngredientCard Card, double Stars)> GatedFor(
+            Shelf shelf, IReadOnlyList<IngredientCard> catalogue, double stars)
+        {
+            var held = new List<(IngredientCard, double)>();
+            if (shelf == null || catalogue == null) return held;
+
+            var newByStyle = new Dictionary<string, IngredientCard>();
+            foreach (var candidate in catalogue)
+            {
+                var style = candidate.Info?.Style;
+                if (string.IsNullOrEmpty(style)) continue;
+                if (FindByStyle(shelf, style) != null) continue;
+                if (!newByStyle.TryGetValue(style, out var best) || candidate.Info.Tier < best.Info.Tier)
+                    newByStyle[style] = candidate;
+            }
+            foreach (var card in newByStyle.Values)
+                if (stars < RequiredStars(card.Info.Tier))
+                    held.Add((card, RequiredStars(card.Info.Tier)));
+
+            foreach (var candidate in catalogue)
+            {
+                if (candidate.Info == null) continue;
+                if (shelf.Find(candidate.Id) != null) continue;
+                var current = FindByStyle(shelf, candidate.Info.Style);
+                if (current?.Ingredient.Info == null) continue;
+                if (stars < RequiredStars(candidate.Info.Tier))
+                    held.Add((candidate, RequiredStars(candidate.Info.Tier)));
+            }
+            return held;
+        }
+
         /// <summary>The shelf bottle stocking the given style, or null.</summary>
         public static ShelfBottle FindByStyle(Shelf shelf, string style)
         {

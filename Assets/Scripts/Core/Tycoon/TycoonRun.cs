@@ -263,6 +263,12 @@ namespace LastCall.Core
                     if (band.IsStyleBand && seen.Add(band.Style)) yield return band.Style;
         }
 
+        /// <summary>The stock the board is holding back tonight, and the standing each one
+        /// waits for. The shop draws one tile from this so an early aisle does not read as
+        /// a finished one.</summary>
+        public IEnumerable<(IngredientCard Card, double Stars)> GatedStock() =>
+            Market.GatedFor(_shelf, _brandCatalogue, Rating.Average);
+
         /// <summary>What a recipe costs to put on the menu, priced off its tier's rank —
         /// kept cheap enough that the menu can GROW at the pace the rent climbs, because the
         /// ladder of bought recipes is the income curve now (P16).</summary>

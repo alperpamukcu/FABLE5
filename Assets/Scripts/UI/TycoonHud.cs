@@ -124,6 +124,12 @@ namespace LastCall.UI
             ("nightnurse", 5f), ("courier", 36f), ("coder", 31f), ("celebrant", 13f),
             ("undone", 28f), ("inked", 22f), ("dockman", 25f), ("wanderer", 15f),
             ("suit", 5f), ("skater", 15f),
+            // The 2026-08-10 cast — goths, students, glamour, the anime-adjacent, a fat
+            // nerd, two bikers and money in a suit, plus one commission from a photograph.
+            // Head rows measured off each shipped idle frame, as ever.
+            ("bearded", 26f), ("gothgirl", 30f), ("gothboy", 5f), ("studentf", 13f),
+            ("studentm", 31f), ("glam", 9f), ("sweetgirl", 14f), ("nerd", 36f),
+            ("bikerold", 26f), ("bikeryoung", 25f), ("execwoman", 5f), ("execman", 23f),
         };
         private readonly List<PatronLook> _looks = new List<PatronLook>();
         private RectTransform _hudRoot;            // the canvas rect — the screen's right edge for entrances
@@ -1394,45 +1400,56 @@ namespace LastCall.UI
                     floorY = 8f;
                     cellH = RackGlassH;
                 }
-                // Stand IN the compartment: as tall as the opening allows, never taller
-                // than the glass is drawn, and never so wide it touches a divider.
-                float h = Mathf.Min(RackGlassH, cellH - 6f);
-                float maxW = 74f;                       // the 80-unit cell, less its walls
-                if (h * piece.Aspect > maxW) h = maxW / Mathf.Max(0.01f, piece.Aspect);
-
+                // A SET OF FIVE, filling the bay with a little air at each end. Derived
+                // rather than drawn — the line's OWN sprite at its own tier, five times —
+                // so a bought rung changes all five at once and there is no second asset
+                // to keep in step. Perspective is carried by DEPTH, not by scale alone:
+                // the outermost stand furthest back, so they sit higher, smaller and
+                // dimmer, which is what a shelf drawn from slightly above looks like.
+                // The RUN is sized from the BAY, not the bay from the glass. Five glasses
+                // as tall as the opening allows would each be 47 units wide in a 150-unit
+                // interior, so they would land on top of one another; asking instead what
+                // width lets five stand across the bay with a clean overlap, and taking the
+                // height from THAT, is the only ordering that fills the shelf.
+                const int Stacked = 5;
+                const float Overlap = 0.62f;                    // step, as a share of a glass
+                float bay = cellH * (75f / 53f);                // the interior, in HUD units
+                float wForBay = (bay - 10f) / (1f + Overlap * (Stacked - 1));
+                float h = Mathf.Min(wForBay / Mathf.Max(0.01f, piece.Aspect), cellH - 6f);
+                float gw = h * piece.Aspect;
+                float step = gw * Overlap;
+                // The shadow is cast by the RUN, not by one glass, so it is laid down
+                // once the run's width is known.
                 var shadow = NewRect($"S_{g.Id}", _glassRack);
                 shadow.anchorMin = shadow.anchorMax = new Vector2(0.5f, 0);
                 shadow.pivot = new Vector2(0.5f, 0.5f);
-                shadow.sizeDelta = new Vector2(Mathf.Min(64f, h * piece.Aspect + 10f), 10);
-                shadow.anchoredPosition = new Vector2(x, floorY + 2f);
+                shadow.sizeDelta = new Vector2(gw + step * (Stacked - 1) + 8f, 10);
+                shadow.anchoredPosition = new Vector2(x, floorY + 3f);
                 var shImg = shadow.gameObject.AddComponent<Image>();
                 shImg.sprite = BackBarArt.BottleShadow();
                 shImg.raycastTarget = false;
 
-                // A SET, not a single glass (the author: it should never read as one).
-                // Derived rather than drawn: three of the line's OWN sprite at its own
-                // tier, stood in a row across the compartment with the outer two set back
-                // and dimmed. Deriving means a bought tier changes all three at once and
-                // there is no second asset to keep in step.
-                float gw = h * piece.Aspect;
-                float step = Mathf.Min(gw * 0.46f, (74f - gw) * 0.5f + gw * 0.30f);
-                for (int k = 0; k < 3; k++)
+                for (int k = 0; k < Stacked; k++)
                 {
-                    int depth = k == 1 ? 0 : 1;                 // 1 = the two behind
-                    float dx = (k - 1) * step;
+                    // 0 at the front (the middle of the run), 2 at the back (the ends)
+                    int depth = Mathf.Abs(k - (Stacked / 2));
+                    float dx = (k - (Stacked - 1) * 0.5f) * step;
                     var rt = NewRect($"G_{g.Id}_{k}", _glassRack);
                     rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0);
                     rt.pivot = new Vector2(0.5f, 0);
-                    float kh = depth == 0 ? h : h * 0.94f;
+                    float kh = h * (1f - 0.045f * depth);
                     rt.sizeDelta = new Vector2(kh * piece.Aspect, kh);
-                    rt.anchoredPosition = new Vector2(x + dx, floorY + (depth == 0 ? 0f : 3f));
+                    // Further back stands higher on the surface — that is what depth looks
+                    // like on a shelf drawn from slightly above.
+                    rt.anchoredPosition = new Vector2(x + dx, floorY + depth * 3f);
                     var img = rt.gameObject.AddComponent<Image>();
                     img.sprite = piece.Sprite;
                     img.preserveAspect = true;
                     img.raycastTarget = false;
-                    // Further back is darker: the alcove is lit from above and in front.
-                    img.color = depth == 0 ? Color.white : new Color(0.62f, 0.66f, 0.68f, 0.95f);
-                    if (depth != 0) rt.SetAsFirstSibling();     // behind the front one
+                    // ...and darker: the bay is lit from the front.
+                    float lit = 1f - 0.19f * depth;
+                    img.color = new Color(lit, lit * 1.02f, lit * 1.04f, 1f);
+                    for (int d = 0; d < depth; d++) rt.SetAsFirstSibling();
                 }
                 // No tier stars under the rack (the author, 2026-08-02): the glass's own
                 // dress already says which rung it is, and a row of stars under every one
@@ -1898,16 +1915,37 @@ namespace LastCall.UI
         private PatronLook LookFor(CustomerVisit visit)
         {
             if (_looks.Count == 0) return null;
+            // A seat that already holds a look keeps it: this is asked again every time
+            // the licence is opened, and a face that changed under the player would undo
+            // the whole point of having twenty-two of them.
+            foreach (var seat in _seats)
+                if (seat.Visit == visit && seat.Look != null) return seat.Look;
+
             string key = visit != null && visit.Regular != null
                          && !string.IsNullOrEmpty(visit.Regular.Name)
                 ? visit.Regular.Name
                 : visit == null ? "" : visit.PatienceMax.ToString("R");
+            int start;
             unchecked
             {
                 int h = 17;
                 for (int i = 0; i < key.Length; i++) h = h * 31 + key[i];
-                return _looks[Mathf.Abs(h) % _looks.Count];
+                start = Mathf.Abs(h) % _looks.Count;
             }
+            // NO TWO OF THE SAME PERSON IN THE ROOM (the author, 2026-08-10). Each drawing
+            // IS a character, so the same face on two stools reads as a bug rather than as
+            // a coincidence. The hash still decides WHO — it stays deterministic under the
+            // seed — and a collision simply walks to the next free face.
+            for (int step = 0; step < _looks.Count; step++)
+            {
+                var candidate = _looks[(start + step) % _looks.Count];
+                bool taken = false;
+                foreach (var seat in _seats)
+                    if (seat.Visit != null && seat.Visit != visit && seat.Look == candidate)
+                    { taken = true; break; }
+                if (!taken) return candidate;
+            }
+            return _looks[start];   // more stools than faces: somebody has to double up
         }
 
         // ── day end ─────────────────────────────────────────────────────────────
@@ -2289,6 +2327,39 @@ namespace LastCall.UI
                         () => run.BuyGlassTier(glass.Id));
                     AddTile(spec);
                 }
+            }
+
+            // WHAT THE NEXT STAR OPENS (the author). The board only shows what the room's
+            // standing already allows, so the stock waiting behind the next rung was
+            // invisible — the player could not tell an empty aisle from a finished one.
+            // Core answers both halves: how many cards are gated, and at what.
+            if (_shopTab == 1 || _shopTab == 2)
+            {
+                bool boozeTab = _shopTab == 1;
+                int locked = 0;
+                double next = double.MaxValue;
+                foreach (var g in run.GatedStock())
+                {
+                    if (IngredientCategories.IsAlcoholic(g.Card.Info?.Category, g.Card.Type) != boozeTab)
+                        continue;
+                    locked++;
+                    if (g.Stars < next) next = g.Stars;
+                }
+                if (locked > 0)
+                    AddTile(new TileSpec
+                    {
+                        Name = locked + (locked == 1 ? " more waiting" : " more waiting"),
+                        Money = next.ToString("0.0") + "★",
+                        State = TileState.Sealed,
+                        Identity = "MORE STOCK AT " + next.ToString("0.0") + " STARS",
+                        MetaLine = locked + (locked == 1 ? " line" : " lines")
+                                   + " the van will not bring you yet",
+                        Body = "The board is rolled against what the room thinks of this bar. "
+                               + "Reach " + next.ToString("0.0")
+                               + " stars and the next of them start appearing here.",
+                        BuffA = new Buff(BuffKind.Bad, "Needs " + next.ToString("0.0")
+                                         + " stars · you are at " + run.Rating.Average.ToString("0.0")),
+                    });
             }
 
             // A DEPARTMENT WITH NOTHING IN IT SAYS SO. Splitting the board in two means
@@ -3284,16 +3355,16 @@ namespace LastCall.UI
             });
             // The three game modes (the author's dev tool): a fresh bar, a mid-run bar,
             // and the endgame sandbox — playtest any act without earning your way to it.
-            SettingsRow(3, "DEV · FRESH START", () =>
+            SettingsRow(3, "DEV · FRESH START — day 1, empty bar", () =>
             { _bootstrap.StartNewRun(null); ToggleSettings(); });
-            SettingsRow(4, "DEV · MIDGAME", () =>
+            SettingsRow(4, "DEV · MIDGAME — day 12, stocked", () =>
             { _bootstrap.StartNewRun(null); Run.DevPreset(1); ApplyBarLook(); ToggleSettings(); });
-            SettingsRow(5, "DEV · ENDGAME", () =>
+            SettingsRow(5, "DEV · ENDGAME — late run, full shelf", () =>
             { _bootstrap.StartNewRun(null); Run.DevPreset(2); ApplyBarLook(); ToggleSettings(); });
             // Straight to the books and the shop (the author, 2026-08-07). It runs the real
             // clock rather than forcing the phase, so the night closes honestly — anyone
             // still sitting drinks up or walks, and the rent lands as it always would.
-            SettingsRow(6, "DEV · SKIP TO DAY END", () =>
+            SettingsRow(6, "DEV · SKIP TO DAY END — close now, open the market", () =>
             {
                 if (Run == null || Run.Phase != TycoonPhase.DayOpen) { Toast("NOT MID-DAY"); return; }
                 _flow?.CloseFlow();
@@ -4593,7 +4664,10 @@ namespace LastCall.UI
                 // sh_niche2 is DRAWN AT 116x112 — the exact rect — so it goes in 1:1: no
                 // slicing, no stretch, no smear. A back-bar alcove is a thing in the bar
                 // rather than a piece of chrome, which is why this one is generated.
-                var nicheArt = ItemArt.Load("sh_niche2") ?? ItemArt.Load("sh_niche");
+                // sh_niche3: a cool DISPLAY CASE in the page's own family. The generated warm
+                // wooden alcove was a lovely picture of somewhere else — a brown lamp-lit
+                // cupboard pasted into a white-and-green catalogue.
+                var nicheArt = ItemArt.Load("sh_niche3") ?? ItemArt.Load("sh_niche2");
                 if (nicheArt != null) ni.sprite = nicheArt;
                 else ni.color = ShopAisle;
                 ni.raycastTarget = false;

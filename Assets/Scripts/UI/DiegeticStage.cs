@@ -51,14 +51,17 @@ namespace LastCall.UI
         // ShelfCell resolves that from the live transform rather than assuming 16:9,
         // which is what the old hardcoded rack slots did.
         private const float ShelfCellPx = 80f;      // cell pitch, art px
-        // THE FLOOR IS THE BOARD, NOT THE COLOUR STEP. 93 is where the bay interior lifts
-        // from (16,9,22) to (13,30,40) — a luminance change, which is what the first pass
-        // sampled, and it is thirteen rows above anything an object can stand on. Row 106
-        // is the warm lip (141,82,30) of the wooden board, and it runs unbroken THROUGH the
-        // divider columns, which is what proves it is a shelf rather than a shadow. Off by
-        // 13 art px the glasses hung 26 HUD units in the air with the whole lit band showing
-        // under their feet.
-        private const float ShelfFloorPx = 106f;    // the board's lip, art px from the art's top
+        // THE FLOOR IS THE TURQUOISE, AND IT IS DRAWN IN PERSPECTIVE (the author,
+        // 2026-08-10). Rows 93..105 are (13,30,40) — thirteen rows of it — and rows
+        // 106..112 are the wooden board (141,82,30 lipping to 161,107,57). The wood is not
+        // the floor: it is the shelf's FRONT EDGE, seen from slightly above, and the
+        // turquoise band behind it is the surface things stand on. Both earlier readings
+        // were wrong in opposite directions — 93 stood a glass on the back lip of the
+        // surface, 106 stood it on the front edge, in front of the shelf.
+        //
+        // A glass belongs a little way INTO that band, so some floor shows in front of it
+        // the way it would on a real shelf. Two thirds back reads correctly at every size.
+        private const float ShelfFloorPx = 101f;    // into the turquoise surface, art px from the top
         private const float ShelfCeilPx = 53f;      // the shelf board above it
         public const int ShelfCells = 8;
 
