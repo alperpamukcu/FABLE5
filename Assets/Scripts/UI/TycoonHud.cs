@@ -488,7 +488,8 @@ namespace LastCall.UI
             "POINT AT A LINE TO READ IT.\nNOTHING IS CHARGED UNTIL YOU PLACE THE ORDER.";
 
         private Text _fittingNote, _cartLine, _checkoutLabel, _cartHeadLabel, _osClock;
-        private RectTransform _checkout;
+        private Text _billNextLabel;
+        private RectTransform _checkout, _billNext;
         private ScrollRect _shopScroll;
         /// <summary>Where the aisle was left. Rebuilding after a pick must not throw the
         /// player back to the top of the shelf (the author, 2026-08-07).</summary>
@@ -1632,11 +1633,13 @@ namespace LastCall.UI
             var run = Run;
             _dayEndBill.gameObject.SetActive(_dayEndStep == 0);
             _dayEndTablet.gameObject.SetActive(_dayEndStep == 1);
+            if (_billNext != null) _billNext.gameObject.SetActive(_dayEndStep == 0);
             _dayEndTitle.text = _dayEndStep == 0
                 ? "LAST CALL — THE BOOKS" : "LAST CALL — ORDERING IN";
-            _openTomorrowLabel.text = _dayEndStep == 0 ? $"CONTINUE  →  {ShopBrand}"
-                : run.Day % 6 == 0 ? "START TUESDAY  →   (MONDAY IS DARK)"
-                : "START THE DAY  →";
+            if (_billNextLabel != null) _billNextLabel.text = "CONTINUE  →  THE ORDER";
+            _openTomorrowLabel.text = run.Day % 6 == 0
+                ? "START TUESDAY →\n(MONDAY IS DARK)"
+                : "OPEN TOMORROW →";
             var floor = run.Floor;
             int served = 0, stormed = 0;
             foreach (var visit in floor.Finished)
@@ -3329,11 +3332,28 @@ namespace LastCall.UI
             // multiple of the face's 8px design size, so the monospace columns the receipt is
             // set in actually land on the pixel grid instead of blurring between it.
             var bill = _dayEndBill = NewRect("Bill", _dayEndPanel);
-            Place(bill, new Vector2(0.5f, 1), new Vector2(400, 500), new Vector2(0, -50));
+            Place(bill, new Vector2(0.5f, 1), new Vector2(400, 470), new Vector2(0, -50));
             bill.gameObject.AddComponent<Image>().color = UITheme.Cream[4];
             _invoiceText = NewText("Invoice", bill, _body, 16, TextAnchor.UpperLeft, UITheme.Night[1]);
             Stretch(_invoiceText.rectTransform, Vector2.zero, Vector2.one, new Vector2(14, 12), new Vector2(-14, -12));
             _invoiceText.supportRichText = true;
+
+            // The bill's OWN way forward (2026-08-07). The day-end button moved inside the
+            // tablet, and the tablet is only up on the market step — which left the books
+            // with no door out of them at all. The slip carries its own now.
+            _billNext = NewRect("BillNext", _dayEndPanel);
+            Place(_billNext, new Vector2(0.5f, 1), new Vector2(400, 44), new Vector2(0, -530));
+            var billNextImg = _billNext.gameObject.AddComponent<Image>();
+            billNextImg.color = UITheme.PrimaryAction;
+            var billNextBtn = _billNext.gameObject.AddComponent<Button>();
+            billNextBtn.targetGraphic = billNextImg;
+            billNextBtn.onClick.AddListener(OnDayEndAdvance);
+            _billNextLabel = NewText("Label", _billNext, _display, 16, TextAnchor.MiddleCenter,
+                UITheme.TextOnAmber);
+            Stretch(_billNextLabel.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(10, 0), new Vector2(-10, 0));
+            _billNextLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _billNextLabel.text = "CONTINUE  →";
 
             // Right column: the shop, as the tablet the bar orders from (v5 P13). It was a flat
             // grid of thirteen identical cards — a bottle, a stool and a musician all reading the
