@@ -306,7 +306,19 @@ namespace LastCall.UI
             // reads their money diegetically from the till).
             if (registerSprite != null)
             {
-                var reg = NewRect("Register", root);
+                // THE TILL STANDS ON THE BAR, SO IT STANDS IN FRONT OF THE DRINKERS.
+                // The whole stage canvas sits at -10, under the HUD's 5, and the customers
+                // are HUD objects — so the register was behind everyone at the bar, which
+                // is the one place a till cannot be. It gets its own canvas at 6: over the
+                // seats, under the service flow (12) and the licence (20).
+                var regLayer = NewRect("RegisterLayer", root);
+                Stretch(regLayer, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var regCanvas = regLayer.gameObject.AddComponent<Canvas>();
+                regCanvas.overrideSorting = true;
+                regCanvas.sortingOrder = 6;
+                regLayer.gameObject.AddComponent<GraphicRaycaster>();
+
+                var reg = NewRect("Register", regLayer);
                 reg.anchorMin = reg.anchorMax = new Vector2(0, 0);
                 reg.pivot = new Vector2(0.5f, 0);
                 // Fixed footprint (hi-bit): a 2x-density sprite renders finer pixels

@@ -106,6 +106,8 @@ namespace LastCall.UI
             /// drift from the body it belongs to if it IS the body.</summary>
             public Sprite Face;
             public float HeadY;
+            /// <summary>What the bar must be worth before this person comes in.</summary>
+            public float Stars;
             /// <summary>Where that head lands in HUD units, from the rig's own constants:
             /// the sprite is drawn CharSize tall off a 180 canvas and pushed down by
             /// CharFootDrop so the counter takes the legs.</summary>
@@ -118,18 +120,31 @@ namespace LastCall.UI
         /// Patron/&lt;slug&gt;/&lt;clip&gt;. A look that fails to load is dropped rather than
         /// drawn as a hole — a bench without the art still runs.
         /// </summary>
-        private static readonly (string Slug, float HeadY)[] PatronCast =
+        /// <summary>
+        /// WHO CAN WALK IN, and what the room has to be worth first.
+        ///
+        /// The star gate is the point (the author, 2026-08-10): a bar nobody talks about
+        /// gets the people who will drink anywhere, and the room fills out as its standing
+        /// climbs. It is a presentation rule, not a rules-layer one — which face is drawn
+        /// cannot change what anybody orders or pays — so it lives here with the art it
+        /// governs, and the cast can grow to a hundred without touching Core.
+        ///
+        /// Head rows are measured off each shipped idle frame; they place the order ticket.
+        /// </summary>
+        private static readonly (string Slug, float HeadY, float Stars)[] PatronCast =
         {
-            (null, 13f),            // Bar Patron v7 — the rig's own reference
-            ("nightnurse", 5f), ("courier", 36f), ("coder", 31f), ("celebrant", 13f),
-            ("undone", 28f), ("inked", 22f), ("dockman", 25f), ("wanderer", 15f),
-            ("suit", 5f), ("skater", 15f),
-            // The 2026-08-10 cast — goths, students, glamour, the anime-adjacent, a fat
-            // nerd, two bikers and money in a suit, plus one commission from a photograph.
-            // Head rows measured off each shipped idle frame, as ever.
-            ("bearded", 26f), ("gothgirl", 30f), ("gothboy", 5f), ("studentf", 13f),
-            ("studentm", 31f), ("glam", 9f), ("sweetgirl", 14f), ("nerd", 36f),
-            ("bikerold", 26f), ("bikeryoung", 25f), ("execwoman", 5f), ("execman", 23f),
+            (null, 13f, 0f),            // Bar Patron v7 — the rig's own reference
+            // Nobody special: the people who drink in any bar that is open.
+            ("nightnurse", 5f, 0f), ("courier", 36f, 0f), ("undone", 28f, 0f),
+            ("dockman", 25f, 0f), ("bearded", 26f, 0f),
+            // Word is getting round.
+            ("coder", 31f, 1.5f), ("inked", 22f, 1.5f), ("studentm", 31f, 1.5f),
+            ("nerd", 36f, 1.5f), ("bikeryoung", 25f, 1.5f),
+            // A bar worth crossing town for.
+            ("wanderer", 15f, 2.5f), ("studentf", 13f, 2.5f), ("gothgirl", 30f, 2.5f),
+            ("bikerold", 26f, 2.5f),
+            // The room people dress up for.
+            ("glam", 9f, 3.5f), ("execwoman", 5f, 3.5f), ("execman", 23f, 3.5f),
         };
         private readonly List<PatronLook> _looks = new List<PatronLook>();
         private RectTransform _hudRoot;            // the canvas rect — the screen's right edge for entrances
@@ -177,7 +192,7 @@ namespace LastCall.UI
         /// and read as furniture rather than as a bin standing in the corner (the author,
         /// 2026-08-04); the mouth is still wider than the carried glass, which is the only size
         /// it actually has to beat.</summary>
-        private const float BinW = 216f, BinH = 247f;
+        private const float BinW = 184f, BinH = 210f;
 
         private RectTransform _drinkGlass;
         private Image _drinkGlassLiquid;
@@ -1414,8 +1429,28 @@ namespace LastCall.UI
                 const int Stacked = 5;
                 const float Overlap = 0.62f;                    // step, as a share of a glass
                 float bay = cellH * (75f / 53f);                // the interior, in HUD units
+                // PROPORTION ACROSS THE WHOLE RACK, not within one bay. Sizing each line to
+                // fill its own bay made a rocks tumbler and a highball the same height,
+                // because the wide one had to shrink to fit five across — so the shelf said
+                // they were the same glass. The run is measured from the WIDEST vessel in
+                // the set instead, and every other line is drawn at the same units-per-
+                // sprite-pixel, which is what makes a pint taller than a tumbler on screen
+                // exactly as it is on the page.
+                // ONE k FOR THE WHOLE SET — HUD units per sprite pixel — taken from the
+                // widest and tallest vessels the bar owns. Dividing by each sprite's own
+                // height instead gave every line the same drawn height, which is the very
+                // thing that was wrong: a rocks tumbler is not as tall as a pint.
+                float widestPx = 1f, tallestPx = 1f;
+                foreach (var other in run.Glassware)
+                {
+                    var op = GlassArt.For(other, run.GlassTier(other.Id));
+                    if (op.Sprite == null) continue;
+                    widestPx = Mathf.Max(widestPx, op.Sprite.rect.width);
+                    tallestPx = Mathf.Max(tallestPx, op.Sprite.rect.height);
+                }
                 float wForBay = (bay - 10f) / (1f + Overlap * (Stacked - 1));
-                float h = Mathf.Min(wForBay / Mathf.Max(0.01f, piece.Aspect), cellH - 6f);
+                float k = Mathf.Min(wForBay / widestPx, (cellH - 6f) / tallestPx);
+                float h = piece.Sprite.rect.height * k;
                 float gw = h * piece.Aspect;
                 float step = gw * Overlap;
                 // The shadow is cast by the RUN, not by one glass, so it is laid down
@@ -1446,9 +1481,12 @@ namespace LastCall.UI
                     img.sprite = piece.Sprite;
                     img.preserveAspect = true;
                     img.raycastTarget = false;
-                    // ...and darker: the bay is lit from the front.
-                    float lit = 1f - 0.19f * depth;
-                    img.color = new Color(lit, lit * 1.02f, lit * 1.04f, 1f);
+                    // SHADED, front to back and warm to cool. The bay is lit from in front
+                    // and above, so the further in a glass stands the less light reaches it
+                    // AND the bluer what does reach it becomes — a flat brightness ramp
+                    // read as five copies at five opacities rather than as depth.
+                    float lit = 1f - 0.21f * depth;
+                    img.color = new Color(lit * 0.98f, lit * 1.0f, lit * 1.06f, 1f);
                     for (int d = 0; d < depth; d++) rt.SetAsFirstSibling();
                 }
                 // No tier stars under the rack (the author, 2026-08-02): the glass's own
@@ -1890,7 +1928,8 @@ namespace LastCall.UI
                 var face = Resources.Load<Sprite>(string.IsNullOrEmpty(entry.Slug)
                     ? "Patron/face" : $"Patron/{entry.Slug}/face");
                 _looks.Add(new PatronLook
-                { Slug = entry.Slug, Clips = clips, HeadY = entry.HeadY, Face = face });
+                { Slug = entry.Slug, Clips = clips, HeadY = entry.HeadY, Face = face,
+                  Stars = entry.Stars });
             }
         }
 
@@ -1925,27 +1964,35 @@ namespace LastCall.UI
                          && !string.IsNullOrEmpty(visit.Regular.Name)
                 ? visit.Regular.Name
                 : visit == null ? "" : visit.PatienceMax.ToString("R");
+            // Only the people this bar has earned. Someone is always available — the
+            // 0-star set never empties — so this cannot starve.
+            var open = new List<PatronLook>();
+            float standing = Run != null ? (float)Run.Rating.Average : 0f;
+            foreach (var look in _looks)
+                if (look.Stars <= standing + 0.001f) open.Add(look);
+            if (open.Count == 0) open.Add(_looks[0]);
+
             int start;
             unchecked
             {
                 int h = 17;
                 for (int i = 0; i < key.Length; i++) h = h * 31 + key[i];
-                start = Mathf.Abs(h) % _looks.Count;
+                start = Mathf.Abs(h) % open.Count;
             }
             // NO TWO OF THE SAME PERSON IN THE ROOM (the author, 2026-08-10). Each drawing
             // IS a character, so the same face on two stools reads as a bug rather than as
             // a coincidence. The hash still decides WHO — it stays deterministic under the
             // seed — and a collision simply walks to the next free face.
-            for (int step = 0; step < _looks.Count; step++)
+            for (int step = 0; step < open.Count; step++)
             {
-                var candidate = _looks[(start + step) % _looks.Count];
+                var candidate = open[(start + step) % open.Count];
                 bool taken = false;
                 foreach (var seat in _seats)
                     if (seat.Visit != null && seat.Visit != visit && seat.Look == candidate)
                     { taken = true; break; }
                 if (!taken) return candidate;
             }
-            return _looks[start];   // more stools than faces: somebody has to double up
+            return open[start];     // more stools than faces: somebody has to double up
         }
 
         // ── day end ─────────────────────────────────────────────────────────────
@@ -2436,11 +2483,17 @@ namespace LastCall.UI
             string styleWord = string.IsNullOrEmpty(style) ? "" : style.Replace('_', ' ');
             int tier = card.Info?.Tier ?? 1;
 
-            spec.Identity = card.Name.ToUpperInvariant()
-                + (styleWord.Length > 0 ? " · " + styleWord.ToUpperInvariant() : "");
+            // THE NAME, ALONE, IN BOLD BESIDE ITS PICTURE (the author). The style used to
+            // ride the same row — "SMIRKOFF VODKA · VODKA" — which made the heading a
+            // sentence and left the mark next to a fact rather than next to a title. The
+            // style is a property of the bottle, so it goes on the property row.
+            spec.Identity = card.Name.ToUpperInvariant();
             // The ABV lives HERE, not on the identity line: "GRAND MARINER TRIPLE SEC ·
             // TRIPLE SEC" is already 37 of the 46 characters that fit.
             var meta = new StringBuilder();
+            if (styleWord.Length > 0)
+                meta.Append(char.ToUpperInvariant(styleWord[0])).Append(styleWord.Substring(1))
+                    .Append(" · ");
             meta.Append("Rung ").Append(tier).Append(" of 4");
             if (card.Info != null && card.Info.Abv > 0)
                 meta.Append(" · ").Append(card.Info.Abv).Append("% ABV");
@@ -2678,6 +2731,9 @@ namespace LastCall.UI
                 _inspBuffAIcon.enabled = false; _inspBuffBIcon.enabled = false;
                 return;
             }
+            // The mark alone said "a bottle"; the NAME beside it says which. The identity
+            // row already carried it, but a hundred units to the right of the picture it
+            // belongs to — so the two read as separate facts about the same tile.
             _inspIdentity.text = spec.Identity ?? "";
             _inspMeta.text = spec.MetaLine ?? "";
             _inspBody.text = spec.Body ?? "";
