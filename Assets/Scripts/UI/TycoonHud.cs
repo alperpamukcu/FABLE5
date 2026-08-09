@@ -101,6 +101,10 @@ namespace LastCall.UI
         {
             public string Slug;
             public Dictionary<PatronClip, Sprite[]> Clips;
+            /// <summary>This person's licence photo, cropped out of their own idle frame
+            /// by scratchpad/driver/patron_faces.py. Derived, never drawn: a face cannot
+            /// drift from the body it belongs to if it IS the body.</summary>
+            public Sprite Face;
             public float HeadY;
             /// <summary>Where that head lands in HUD units, from the rig's own constants:
             /// the sprite is drawn CharSize tall off a 180 canvas and pushed down by
@@ -1344,7 +1348,13 @@ namespace LastCall.UI
                 // reference aspect, well above the 110-unit strip this used to be.
                 _glassRack.sizeDelta = new Vector2(1280, 360);
                 _glassRack.anchoredPosition = Vector2.zero;
+                // BEHIND EVERYTHING. The rack is built lazily, on the first ApplyBarLook,
+                // which is long after the HUD's own children exist — so it arrived as the
+                // last sibling and drew over the menu keys, the bill and the whole market
+                // (the author, 2026-08-09). It is scenery: it belongs at the back.
+                _glassRack.SetAsFirstSibling();
             }
+            _glassRack.SetAsFirstSibling();
             foreach (Transform c in _glassRack) Destroy(c.gameObject);
 
             // The compartments, asked of the bar itself. A missing stage (a bench, a test
@@ -1390,15 +1400,31 @@ namespace LastCall.UI
                 shImg.sprite = BackBarArt.BottleShadow();
                 shImg.raycastTarget = false;
 
-                var rt = NewRect($"G_{g.Id}", _glassRack);
-                rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0);
-                rt.pivot = new Vector2(0.5f, 0);
-                rt.sizeDelta = new Vector2(h * piece.Aspect, h);
-                rt.anchoredPosition = new Vector2(x, floorY);
-                var img = rt.gameObject.AddComponent<Image>();
-                img.sprite = piece.Sprite;
-                img.preserveAspect = true;
-                img.raycastTarget = false;
+                // A SET, not a single glass (the author: it should never read as one).
+                // Derived rather than drawn: three of the line's OWN sprite at its own
+                // tier, stood in a row across the compartment with the outer two set back
+                // and dimmed. Deriving means a bought tier changes all three at once and
+                // there is no second asset to keep in step.
+                float gw = h * piece.Aspect;
+                float step = Mathf.Min(gw * 0.46f, (74f - gw) * 0.5f + gw * 0.30f);
+                for (int k = 0; k < 3; k++)
+                {
+                    int depth = k == 1 ? 0 : 1;                 // 1 = the two behind
+                    float dx = (k - 1) * step;
+                    var rt = NewRect($"G_{g.Id}_{k}", _glassRack);
+                    rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0);
+                    rt.pivot = new Vector2(0.5f, 0);
+                    float kh = depth == 0 ? h : h * 0.94f;
+                    rt.sizeDelta = new Vector2(kh * piece.Aspect, kh);
+                    rt.anchoredPosition = new Vector2(x + dx, floorY + (depth == 0 ? 0f : 3f));
+                    var img = rt.gameObject.AddComponent<Image>();
+                    img.sprite = piece.Sprite;
+                    img.preserveAspect = true;
+                    img.raycastTarget = false;
+                    // Further back is darker: the alcove is lit from above and in front.
+                    img.color = depth == 0 ? Color.white : new Color(0.62f, 0.66f, 0.68f, 0.95f);
+                    if (depth != 0) rt.SetAsFirstSibling();     // behind the front one
+                }
                 // No tier stars under the rack (the author, 2026-08-02): the glass's own
                 // dress already says which rung it is, and a row of stars under every one
                 // read as a scoreboard bolted to the counter.
@@ -1810,7 +1836,11 @@ namespace LastCall.UI
             }
             // Idle is a slow two-frame breath — a settled customer barely moves; the walk
             // strides (matched to the slower gait), the order talks.
-            float fps = clip == PatronClip.Walk ? 9f : clip == PatronClip.Order ? 7f : 2.5f;
+            // Rates re-timed for the 2026-08-09 cast (the author: the talking runs too
+            // slowly). The order clip is somebody speaking a sentence, not miming one:
+            // its five frames at 7fps took most of a second per syllable. Idle is still a
+            // breath rather than a fidget, just not a sigh.
+            float fps = clip == PatronClip.Walk ? 10f : clip == PatronClip.Order ? 12f : 3.5f;
             return Mathf.FloorToInt(t * fps) % n;
         }
 
@@ -1831,7 +1861,10 @@ namespace LastCall.UI
                 // A look with no idle has no art on disk. Skip it instead of seating a
                 // customer who renders as nothing.
                 if (clips[PatronClip.Idle].Length == 0) continue;
-                _looks.Add(new PatronLook { Slug = entry.Slug, Clips = clips, HeadY = entry.HeadY });
+                var face = Resources.Load<Sprite>(string.IsNullOrEmpty(entry.Slug)
+                    ? "Patron/face" : $"Patron/{entry.Slug}/face");
+                _looks.Add(new PatronLook
+                { Slug = entry.Slug, Clips = clips, HeadY = entry.HeadY, Face = face });
             }
         }
 
@@ -2112,7 +2145,13 @@ namespace LastCall.UI
             else if (_shopTab == 2)
             {
                 _cardTarget = ShopSection("THE RECIPE BOOK");
-                foreach (var recipe in run.LockedRecipes)
+                // LOWEST GATE FIRST (the author). The book is a ladder — what opens next
+                // is the only thing on it the player can act on — and it was listing in
+                // catalogue order, so the drink three stars away sat above the one that
+                // unseals tonight. Ties keep the catalogue's order.
+                var book = new List<RecipeDefinition>(run.LockedRecipes);
+                book.Sort((a, b) => run.RecipeStarGate(a).CompareTo(run.RecipeStarGate(b)));
+                foreach (var recipe in book)
                 {
                     var r = recipe;
                     double gate = run.RecipeStarGate(r);
@@ -3269,7 +3308,16 @@ namespace LastCall.UI
 
             if (_ledgerPanel != null) _ledgerPanel.gameObject.SetActive(false);
             _idRoot.gameObject.SetActive(true);
-            _idPhoto.sprite = stage != null ? stage.PortraitSpriteFor(reg.ArchetypeId) : null;
+            // THE PHOTO IS THIS DRINKER (the author, 2026-08-09). It used to be the
+            // ARCHETYPE's portrait — one picture for everyone off the late shift — while
+            // eleven different people sit on the stool. Reading a customer is the game;
+            // a licence that does not match the face in front of you is a licence that
+            // teaches the player to stop looking. The archetype portrait stays as the
+            // fallback for a look with no photo on disk.
+            var idLook = LookFor(visit);
+            _idPhoto.sprite = idLook != null && idLook.Face != null
+                ? idLook.Face
+                : (stage != null ? stage.PortraitSpriteFor(reg.ArchetypeId) : null);
             _idPhoto.color = _idPhoto.sprite != null ? Color.white : UITheme.Night[3];
 
             _idName.text = reg.Name.ToUpperInvariant();
@@ -4433,14 +4481,12 @@ namespace LastCall.UI
             }
 
             // Hovering fills the inspector — the one place long text is allowed to live.
-            var trig = rt.gameObject.AddComponent<EventTrigger>();
-            var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            // NOT an EventTrigger: it implements IScrollHandler too, so it ate the mouse
+            // wheel and froze the aisle over every tile that had something to read.
             var shown = spec;
-            enter.callback.AddListener(_ => ShowInspector(shown));
-            trig.triggers.Add(enter);
-            var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
-            exit.callback.AddListener(_ => ShowInspector(null));
-            trig.triggers.Add(exit);
+            var hover = rt.gameObject.AddComponent<HoverRelay>();
+            hover.Entered = () => ShowInspector(shown);
+            hover.Exited = () => ShowInspector(null);
 
             // 1 — THE STRIP: 8 x 208 of solid state colour down the left edge. 1664 units,
             // which is 1.7x the area of the entire old thumbnail, and it reads from across
@@ -4661,8 +4707,14 @@ namespace LastCall.UI
             }
 
             // 7 — THE CHIP, added last so nothing can draw over the state glyph.
+            // THE CHIP, square on the corner (the author: the exclamation sits crooked).
+            // It was 18x18 hung on the tile's corner while the state strip runs 8 wide down
+            // the same edge, so the chip overhung the strip by 10 and every glyph inside it
+            // read as off-centre against the two edges the eye actually measures from. It
+            // is 20x20 now, inset 2 from both, so the square is symmetric on the corner and
+            // whatever sits in it is centred on the square.
             var chip = NewRect("Chip", rt);
-            Place(chip, new Vector2(0, 1), new Vector2(18, 18), Vector2.zero);
+            Place(chip, new Vector2(0, 1), new Vector2(20, 20), new Vector2(2, -2));
             var chipImg = chip.gameObject.AddComponent<Image>();
             chipImg.color = StripOf(state);
             chipImg.raycastTarget = false;
@@ -4679,9 +4731,14 @@ namespace LastCall.UI
             }
             else
             {
-                var g = NewText("G", chip, _display, 16, TextAnchor.MiddleCenter, ChipInk(state));
+                // _shop, not _display: PressStart2P sets "!" with its own side bearing
+                // inside a 16-wide cell, so a MiddleCenter box centres the CELL and leaves
+                // the mark visibly left of true. Silkscreen Bold's marks are drawn on
+                // their own centre.
+                var g = NewText("G", chip, _shop, 16, TextAnchor.MiddleCenter, ChipInk(state));
                 Stretch(g.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 g.horizontalOverflow = HorizontalWrapMode.Overflow;
+                g.verticalOverflow = VerticalWrapMode.Overflow;
                 g.text = state == TileState.Orderable ? "+"
                     : state == TileState.Unaffordable ? "!" : "=";
             }
