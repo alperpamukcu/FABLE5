@@ -3897,7 +3897,14 @@ namespace LastCall.UI
         // measured off licence_shell2.png (510×315: navy band rows 23–51, portrait x 26–168
         // y 81–286, rules y 96/127/159/190/219) and drawn at 1.4×. The old shell ran long
         // and its lettering was hard to read; the values sit on the display face now.
-        private const float LicScale = 1.4f;
+        // 1.15, not 1.4 (the author: the licence is unnecessarily large and the portrait
+        // is given far too much of it). The scale was pinned by the photo: a 96px face
+        // drawn at a whole 2x needs a 192-wide window, and only 1.4 gave one. The faces are
+        // cut at 72 now — closer to the 59-72 px of real face in the crop, so LESS
+        // resampling, not more — which lets the whole card come down to 586x362. That is
+        // 33% less area, and the shell's printed furniture scales with it because it is one
+        // uniform factor.
+        private const float LicScale = 1.15f;
         private const float LicW = 510f * LicScale, LicH = 315f * LicScale;
         private static readonly Rect LicPortrait = new Rect(26f * LicScale, -81f * LicScale,
             143f * LicScale, 206f * LicScale);
@@ -3988,9 +3995,14 @@ namespace LastCall.UI
             // pixel art, which is the one thing it cannot survive, and it left 88 units of
             // dead white under every face. Two flat 2x is 192, sits inside the window, and
             // every pixel lands on a whole pixel.
-            photo.sizeDelta = new Vector2(192, 192);
+            // A WHOLE 2x of the 72px face, hung from the TOP of the window. The window is
+            // 164x237 at this scale, so the photo takes 144 of its width and leaves 89
+            // units of letterbox underneath — which the record now stands in rather than
+            // the card being made bigger to hide it.
+            const float LicPhoto = 144f;
+            photo.sizeDelta = new Vector2(LicPhoto, LicPhoto);
             photo.anchoredPosition = new Vector2(
-                LicPortrait.x + (LicPortrait.width - 192f) * 0.5f, LicPortrait.y - 4f);
+                LicPortrait.x + (LicPortrait.width - LicPhoto) * 0.5f, LicPortrait.y - 6f);
 
             // The data column, one field to a printed rule (the author's note: the text and
             // the art disagreed — now the art's own lines decide where the text sits). The
@@ -3999,19 +4011,25 @@ namespace LastCall.UI
             // The name left this column for the band, so everything below moves up a rule
             // and the last one is free for the order to breathe into.
             _idAgeFrom = LicenceField(card, "AGE  ·  CITIZEN OF", LicFieldsX, LicLines[0], LicFieldsW, out _);
-            _idRel = LicenceField(card, "STANDING", LicFieldsX, LicLines[1], colW, out _idRelLabel);
-            _idRates = LicenceField(card, "RATES THIS BAR", LicFieldsX + colW + 16f, LicLines[1],
-                colW, out _idRatesLabel);
+            // STANDING AND RATING GO UNDER THE FACE, in the letterbox the portrait was
+            // wasting — they are facts about this person, so they belong beside their
+            // picture, and moving them frees a whole rule for the order.
+            float recW = LicPortrait.width - 8f;
+            float recX = LicPortrait.x + 4f;
+            float recY = -LicPortrait.y + LicPhoto + 18f;
+            _idRel = LicenceField(card, "STANDING", recX, recY, recW, out _idRelLabel);
+            _idRates = LicenceField(card, "RATES THIS BAR", recX, recY + 40f, recW,
+                out _idRatesLabel);
 
             // The order, seated on its own rule with the glass drawn beside it.
             var idIcon = NewRect("OrderIcon", card);
             Place(idIcon, new Vector2(0, 1), new Vector2(30, 30), Vector2.zero);
             idIcon.pivot = new Vector2(0, 0);
-            idIcon.anchoredPosition = new Vector2(LicFieldsX, -LicLines[2] + 2f);
+            idIcon.anchoredPosition = new Vector2(LicFieldsX, -LicLines[1] + 2f);
             _idOrderIcon = idIcon.gameObject.AddComponent<Image>();
             _idOrderIcon.preserveAspect = true;
             _idOrderIcon.raycastTarget = false;
-            _idOrder = LicenceField(card, "ORDER", LicFieldsX + 40f, LicLines[2],
+            _idOrder = LicenceField(card, "ORDER", LicFieldsX + 40f, LicLines[1],
                 LicFieldsW - 40f, out _, 16);
             // What is IN it, under the name (v5 P16): the menu speaks styles now, so the
             // licence has to say gin-and-tonic, not just "Gin & Tonic" — this line is the
@@ -4027,7 +4045,7 @@ namespace LastCall.UI
             Place(_idOrderParts.rectTransform, new Vector2(0, 1), new Vector2(LicFieldsW, 12),
                 Vector2.zero);
             _idOrderParts.rectTransform.pivot = new Vector2(0, 0);
-            _idOrderParts.rectTransform.anchoredPosition = new Vector2(LicFieldsX, -LicLines[3] + 20f);
+            _idOrderParts.rectTransform.anchoredPosition = new Vector2(LicFieldsX, -LicLines[2] + 20f);
 
             // Hovering the order shows the RECIPE (2026-07-31): the drink they asked for,
             // said the way the book says it — prep, pour shares, glass — without leaving
@@ -4035,7 +4053,7 @@ namespace LastCall.UI
             var orderHit = NewRect("OrderHit", card);
             Place(orderHit, new Vector2(0, 1), new Vector2(LicFieldsW, 52), Vector2.zero);
             orderHit.pivot = new Vector2(0, 0);
-            orderHit.anchoredPosition = new Vector2(LicFieldsX, -LicLines[2] - 6f);
+            orderHit.anchoredPosition = new Vector2(LicFieldsX, -LicLines[1] - 6f);
             var orderHitImg = orderHit.gameObject.AddComponent<Image>();
             orderHitImg.color = new Color(0, 0, 0, 0.001f);
             // VERTICAL and vice (the author, 2026-08-02): the cream chip vanished into the
@@ -4074,13 +4092,13 @@ namespace LastCall.UI
             // Serving preferences — the endorsements, drawn as pictograms (the author,
             // 2026-08-01) in the free band under the rule; the field text only survives to
             // say SERVE IT CLEAN when there is nothing to draw.
-            _idIntent = LicenceField(card, "SERVING PREFERENCES", LicFieldsX, LicLines[4],
+            _idIntent = LicenceField(card, "SERVING PREFERENCES", LicFieldsX, LicLines[3],
                 LicFieldsW, out _idIntentLabel, 12);
             _idIntentLabel.alignment = TextAnchor.LowerRight;   // the parts share this row
             _idPrefRow = NewRect("PrefRow", card);
             Place(_idPrefRow, new Vector2(0, 1), new Vector2(LicFieldsW, 42), Vector2.zero);
             _idPrefRow.pivot = new Vector2(0, 1);
-            _idPrefRow.anchoredPosition = new Vector2(LicFieldsX, -LicLines[4] - 2f);
+            _idPrefRow.anchoredPosition = new Vector2(LicFieldsX, -LicLines[3] - 2f);
             var prefLayout = _idPrefRow.gameObject.AddComponent<HorizontalLayoutGroup>();
             prefLayout.spacing = 8;
             prefLayout.childControlWidth = true; prefLayout.childForceExpandWidth = false;
