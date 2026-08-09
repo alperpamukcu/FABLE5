@@ -3948,7 +3948,10 @@ namespace LastCall.UI
             shopScroll.viewport = offerView; shopScroll.content = _offerRow;
             shopScroll.horizontal = false;
             shopScroll.movementType = ScrollRect.MovementType.Clamped;
-            shopScroll.scrollSensitivity = 110f;
+            // One notch of the wheel used to throw the aisle most of a screen (110 was set
+            // when the author asked for a faster page and it overshot by twenty). A notch
+            // should move the shelf, not the department.
+            shopScroll.scrollSensitivity = 5.5f;
             shopScroll.inertia = false;
 
             var barTrack = NewRect("ScrollTrack", screen);
@@ -4301,6 +4304,26 @@ namespace LastCall.UI
             }
 
             // 2 — THE PRODUCT, on the shelf line every class shares.
+            // Glassware is mostly transparent, and transparent on a white page is nothing
+            // at all (the author: the glasses disappear). A vessel gets a recess to stand
+            // in — a shaded back with a lit lip at the foot line — the way the bar's own
+            // back shelf gives them something to be seen against. Bottles are opaque and
+            // need none of it.
+            if (spec.Art != null && spec.ArtH == VesselH)
+            {
+                var niche = NewRect("Niche", rt);
+                Place(niche, new Vector2(0.5f, 0), new Vector2(116, 112), new Vector2(0, 64));
+                var ni = niche.gameObject.AddComponent<Image>();
+                var nicheArt = ItemArt.Load("sh_niche");
+                if (nicheArt != null) { ni.sprite = nicheArt; ni.type = Image.Type.Sliced; }
+                else ni.color = ShopAisle;
+                ni.raycastTarget = false;
+                // A dead listing dims the recess with the glass in it rather than going
+                // pale — a pale recess is the white page again, and the vessel vanishes
+                // exactly where it was supposed to become visible.
+                if (state == TileState.Unaffordable || state == TileState.Held)
+                    ni.color = new Color(0.72f, 0.74f, 0.72f, 1f);
+            }
             if (spec.Art != null)
             {
                 var thumb = NewRect("Art", rt);
@@ -4314,18 +4337,22 @@ namespace LastCall.UI
             }
             else if (state == TileState.Sealed)
             {
-                // A crate the house will not open. No product, no name — the tile with
-                // nothing in its well is unmistakable from six columns away.
+                // A crate the house will not open, and it is the WHOLE tile that is shut:
+                // the chains run corner to corner (the author — a 78px X in the middle read
+                // as an ornament, not as something chained), drawn at the tile's own
+                // 160x208 so no link is stretched into an oval, with the padlock where they
+                // cross. No product and no name: the empty well is the tell.
                 var chain = NewRect("Chain", rt);
-                Place(chain, new Vector2(0.5f, 1), new Vector2(78, 78), new Vector2(0, -34));
+                Stretch(chain, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 var chainImg = chain.gameObject.AddComponent<Image>();
-                chainImg.sprite = ItemArt.Load("sh_chain");
+                chainImg.sprite = ItemArt.Load("sh_chain_x") ?? ItemArt.Load("sh_chain");
                 chainImg.raycastTarget = false;
-                chainImg.color = new Color(1f, 1f, 1f, 0.92f);
+                chainImg.color = new Color(1f, 1f, 1f, 0.95f);
                 var padlock = NewRect("Lock", rt);
-                Place(padlock, new Vector2(0.5f, 1), new Vector2(28, 42), new Vector2(0, -52));
+                Place(padlock, new Vector2(0.5f, 0.5f), new Vector2(42, 63), new Vector2(0, 6));
                 var lockImg = padlock.gameObject.AddComponent<Image>();
                 lockImg.sprite = ItemArt.Load("sh_lock");
+                lockImg.preserveAspect = true;
                 lockImg.raycastTarget = false;
             }
 
@@ -4381,8 +4408,11 @@ namespace LastCall.UI
                 money.verticalOverflow = VerticalWrapMode.Truncate;
                 money.text = spec.Money;
             }
-            else if (!string.IsNullOrEmpty(spec.Word))
+            else if (!string.IsNullOrEmpty(spec.Word) && state != TileState.Held)
             {
+                // Held says it on the sash across the product, so the action row stays
+                // empty — printing FULL twice on one tile is the habit this rewrite was
+                // supposed to break.
                 var word = NewText("Word", rt, _shop, 16, TextAnchor.LowerLeft, MoneyInk(state));
                 Place(word.rectTransform, new Vector2(0, 0), new Vector2(66, 20), new Vector2(12, 6));
                 word.horizontalOverflow = HorizontalWrapMode.Wrap;
@@ -4409,6 +4439,26 @@ namespace LastCall.UI
 
             // 6 — the picked tile is the only one wearing a frame on all four sides.
             if (state == TileState.Picked) Frame(rt, 2f, StripPicked);
+
+            // A BAND ACROSS THE PRODUCT for anything there is nothing to buy on (the
+            // author: besides going grey it should say FULL right on the box). Grey art
+            // alone asks the player to notice an absence; a word across the bottle states
+            // it. It sits over the product and under the name, so it can never collide
+            // with a text — there is no text in the art band by construction.
+            if (state == TileState.Held && !string.IsNullOrEmpty(spec.Word))
+            {
+                var band = NewRect("Sash", rt);
+                Place(band, new Vector2(0, 1), new Vector2(TileW, 30), new Vector2(0, -62));
+                var bandImg = band.gameObject.AddComponent<Image>();
+                bandImg.color = new Color(ShopInk.r, ShopInk.g, ShopInk.b, 0.86f);
+                bandImg.raycastTarget = false;
+                var bandText = NewText("L", band, _shop, 16, TextAnchor.MiddleCenter, Color.white);
+                Stretch(bandText.rectTransform, Vector2.zero, Vector2.one,
+                    new Vector2(6, 0), new Vector2(-6, 0));
+                bandText.horizontalOverflow = HorizontalWrapMode.Wrap;
+                bandText.verticalOverflow = VerticalWrapMode.Truncate;
+                bandText.text = spec.Word;
+            }
 
             // 7 — THE CHIP, added last so nothing can draw over the state glyph.
             var chip = NewRect("Chip", rt);

@@ -50,6 +50,7 @@ namespace LastCall.EditorTools
             // ring, so a sliced Image draws the bezel at 1:1 and it stays even.
             else if (file == "sh_ipad2") ti.spriteBorder = new Vector4(28, 28, 28, 28);
             else if (file == "sh_tile") ti.spriteBorder = new Vector4(12, 12, 12, 12);
+            else if (file == "sh_niche") ti.spriteBorder = new Vector4(16, 16, 16, 16);
             else if (file == "sh_pill") ti.spriteBorder = new Vector4(10, 6, 10, 6);
             else if (file == "sh_ipad") ti.spriteBorder = new Vector4(62, 62, 62, 62);
             else if (file == "sh_add") ti.spriteBorder = new Vector4(14, 8, 14, 8);
