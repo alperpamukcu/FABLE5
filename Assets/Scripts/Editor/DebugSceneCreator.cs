@@ -32,7 +32,24 @@ namespace LastCall.EditorTools
             // Keep whatever the user had open instead of dropping unsaved edits.
             EditorSceneManager.SaveOpenScenes();
 
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            // The tool owns exactly two roots — "Main Camera" and "Game" — and rebuilds
+            // only those. Everything else in the scene is the AUTHOR'S (2026-08-07, the
+            // level-design request): the StageDressing canvas and anything they placed by
+            // hand survive every rebuild. A missing scene is still built from scratch.
+            UnityEngine.SceneManagement.Scene scene;
+            if (File.Exists(ScenePath))
+            {
+                scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+                foreach (var root in scene.GetRootGameObjects())
+                    if (root.name == "Main Camera" || root.name == "Game")
+                        Object.DestroyImmediate(root);
+            }
+            else
+            {
+                scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            }
+
+            EnsureDressingRoot();
 
             var camGo = new GameObject("Main Camera");
             camGo.tag = "MainCamera";
@@ -115,6 +132,68 @@ namespace LastCall.EditorTools
             Directory.CreateDirectory("Assets/Scenes");
             EditorSceneManager.SaveScene(scene, ScenePath);
             Debug.Log($"[LastCall] Debug scene created at {ScenePath}");
+        }
+
+        // ── the author's own layer ──────────────────────────────────────────────
+
+        /// <summary>
+        /// The hand-editable scene layer (2026-08-07, the author: "sahne tasarımını
+        /// sürükle bırak tarzı level design ile yapamaz mıyım"). A canvas the RUNTIME
+        /// NEVER TOUCHES: it draws between the painted room (order −10) and the HUD
+        /// (order 5), in the room's own 640×360 units, and the scene tool rebuilds
+        /// around it. Whatever the author drags, moves or scales here is theirs.
+        /// </summary>
+        private static GameObject EnsureDressingRoot()
+        {
+            var existing = GameObject.Find("StageDressing");
+            if (existing != null) return existing;
+
+            var go = new GameObject("StageDressing",
+                typeof(Canvas), typeof(UnityEngine.UI.CanvasScaler));
+            var canvas = go.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = -5;   // over the room art, under every HUD element
+            var scaler = go.GetComponent<UnityEngine.UI.CanvasScaler>();
+            scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(640, 360);
+            scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 1f;
+            return go;
+        }
+
+        /// <summary>
+        /// Select PNG/sprite assets in the Project window, run this, and each lands on
+        /// the dressing layer as an Image at its own native pixel size — then drag it
+        /// where it belongs in the Scene view. The closest thing UGUI has to dropping
+        /// a sprite straight into the world.
+        /// </summary>
+        [MenuItem("LastCall/Add Selected Sprites To Dressing")]
+        public static void AddSelectedSpritesToDressing()
+        {
+            var root = EnsureDressingRoot();
+            int added = 0;
+            foreach (var obj in Selection.objects)
+            {
+                Sprite sprite = obj as Sprite;
+                if (sprite == null && obj is Texture2D tex)
+                    sprite = AssetDatabase.LoadAssetAtPath<Sprite>(AssetDatabase.GetAssetPath(tex));
+                if (sprite == null) continue;
+
+                var go = new GameObject(sprite.name, typeof(RectTransform),
+                    typeof(UnityEngine.UI.Image));
+                go.transform.SetParent(root.transform, false);
+                var rt = (RectTransform)go.transform;
+                rt.sizeDelta = sprite.rect.size;                 // native pixels, no stretch
+                rt.anchoredPosition = new Vector2(added * 12f, added * -12f); // stagger drops
+                var img = go.GetComponent<UnityEngine.UI.Image>();
+                img.sprite = sprite;
+                img.raycastTarget = false;   // decor never eats a click meant for the game
+                Undo.RegisterCreatedObjectUndo(go, "Add Dressing Sprite");
+                added++;
+            }
+            if (added > 0) EditorSceneManager.MarkSceneDirty(
+                UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+            Debug.Log($"[LastCall] {added} sprite(s) added to StageDressing — drag them into place.");
         }
 
         private static T LoadRequired<T>(string path) where T : Object
