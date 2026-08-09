@@ -88,7 +88,40 @@ namespace LastCall.UI
         private const float CharFootDrop = 150f;   // same waist crop at 350 (art-measured)
         private enum PatronClip { Idle, Order, Drink, Walk, Cheer, Upset }
         private const float ReactSeconds = 1.15f;   // the one-shot reaction beat before they go
-        private Dictionary<PatronClip, Sprite[]> _patron;
+
+        /// <summary>
+        /// One person who might sit down: six clips and the row their head occupies inside
+        /// the 180px canvas. The head row is not decoration — the order ticket and the
+        /// patience gauge hang off it, and ten people of ten different heights cannot share
+        /// one hardcoded window. Measured off the shipped idle frames by
+        /// scratchpad/driver/patrons10_ship.py, which is also what stood them on a common
+        /// foot line in the first place.
+        /// </summary>
+        private sealed class PatronLook
+        {
+            public string Slug;
+            public Dictionary<PatronClip, Sprite[]> Clips;
+            public float HeadY;
+            /// <summary>Where that head lands in HUD units, from the rig's own constants:
+            /// the sprite is drawn CharSize tall off a 180 canvas and pushed down by
+            /// CharFootDrop so the counter takes the legs.</summary>
+            public float HeadTop => (180f - HeadY) * (CharSize / 180f) - CharFootDrop;
+        }
+
+        /// <summary>
+        /// The cast, and the head row measured for each. v7 is first and keeps its old
+        /// folder layout (Patron/&lt;clip&gt;); the ten cast on 2026-08-09 live under
+        /// Patron/&lt;slug&gt;/&lt;clip&gt;. A look that fails to load is dropped rather than
+        /// drawn as a hole — a bench without the art still runs.
+        /// </summary>
+        private static readonly (string Slug, float HeadY)[] PatronCast =
+        {
+            (null, 13f),            // Bar Patron v7 — the rig's own reference
+            ("nightnurse", 5f), ("courier", 36f), ("coder", 31f), ("celebrant", 13f),
+            ("undone", 28f), ("inked", 22f), ("dockman", 25f), ("wanderer", 15f),
+            ("suit", 5f), ("skater", 15f),
+        };
+        private readonly List<PatronLook> _looks = new List<PatronLook>();
         private RectTransform _hudRoot;            // the canvas rect — the screen's right edge for entrances
 
         private sealed class SeatView
@@ -117,6 +150,8 @@ namespace LastCall.UI
             public float DrinkT;             // time since they started drinking
             public float ReactLeft;          // remaining departure-reaction one-shot time
             public PatronClip ReactClip;     // Cheer or Upset, chosen from their satisfaction
+            public PatronLook Look;          // who is sitting here, and how tall they are
+            public RectTransform Gauge;      // the patience bar, re-hung off their own head
         }
         private readonly List<SeatView> _seats = new List<SeatView>();
 
@@ -1396,7 +1431,9 @@ namespace LastCall.UI
                     // left the card — skipped cleanly while the clips have no frames yet.
                     v.ReactClip = !v.ExitStorm && v.Visit.Satisfaction >= 0.55
                         ? PatronClip.Cheer : PatronClip.Upset;
-                    v.ReactLeft = _patron.TryGetValue(v.ReactClip, out var rf) && rf.Length > 0
+                    var reactLook = v.Look ?? (_looks.Count > 0 ? _looks[0] : null);
+                    v.ReactLeft = reactLook != null
+                        && reactLook.Clips.TryGetValue(v.ReactClip, out var rf) && rf.Length > 0
                         ? ReactSeconds : 0f;
                 }
             }
@@ -1413,6 +1450,17 @@ namespace LastCall.UI
                     {
                         v.Visit = visit;
                         v.WalkT = 0f;
+                        // Who walked in, and how tall they are. The ticket and the gauge
+                        // hang off THEIR head: the cast runs from 135 to 166 pixels of
+                        // figure, which is 60 HUD units of difference, and a fixed window
+                        // would leave the short ones with their paperwork floating.
+                        v.Look = LookFor(visit);
+                        if (v.Look != null)
+                        {
+                            v.Tag.anchoredPosition = new Vector2(0, v.Look.HeadTop + 15f);
+                            if (v.Gauge != null)
+                                v.Gauge.anchoredPosition = new Vector2(0, v.Look.HeadTop + 6f);
+                        }
                         v.Root.gameObject.SetActive(true);
                         Sfx.Play("door", 0.5f);   // someone through the door (P17)
                         break;
@@ -1664,7 +1712,8 @@ namespace LastCall.UI
         /// <paramref name="t"/>, mirrored when <paramref name="facing"/> is -1 (leaving right).</summary>
         private void UpdatePatronFrame(SeatView view, PatronClip clip, float t, int facing)
         {
-            if (_patron == null || !_patron.TryGetValue(clip, out var frames) || frames.Length == 0) return;
+            var look = view.Look ?? (_looks.Count > 0 ? _looks[0] : null);
+            if (look == null || !look.Clips.TryGetValue(clip, out var frames) || frames.Length == 0) return;
             view.Portrait.sprite = frames[PatronFrameIndex(clip, t, frames.Length)];
             // A touch wider than tall (CharWiden), mirrored to face right on the way out.
             view.Portrait.rectTransform.localScale = new Vector3(CharWiden * (facing < 0 ? -1f : 1f), 1f, 1f);
@@ -1695,23 +1744,56 @@ namespace LastCall.UI
 
         private void LoadPatronFrames()
         {
-            _patron = new Dictionary<PatronClip, Sprite[]>
+            _looks.Clear();
+            foreach (var entry in PatronCast)
             {
-                [PatronClip.Idle]  = LoadPatronClip("idle"),
-                [PatronClip.Order] = LoadPatronClip("order"),
-                [PatronClip.Drink] = LoadPatronClip("drink"),
-                [PatronClip.Walk]  = LoadPatronClip("walk"),
-                [PatronClip.Cheer] = LoadPatronClip("cheer"),
-                [PatronClip.Upset] = LoadPatronClip("upset"),
-            };
+                var clips = new Dictionary<PatronClip, Sprite[]>
+                {
+                    [PatronClip.Idle]  = LoadPatronClip(entry.Slug, "idle"),
+                    [PatronClip.Order] = LoadPatronClip(entry.Slug, "order"),
+                    [PatronClip.Drink] = LoadPatronClip(entry.Slug, "drink"),
+                    [PatronClip.Walk]  = LoadPatronClip(entry.Slug, "walk"),
+                    [PatronClip.Cheer] = LoadPatronClip(entry.Slug, "cheer"),
+                    [PatronClip.Upset] = LoadPatronClip(entry.Slug, "upset"),
+                };
+                // A look with no idle has no art on disk. Skip it instead of seating a
+                // customer who renders as nothing.
+                if (clips[PatronClip.Idle].Length == 0) continue;
+                _looks.Add(new PatronLook { Slug = entry.Slug, Clips = clips, HeadY = entry.HeadY });
+            }
         }
 
-        /// <summary>All frames of one clip from Resources/Patron/&lt;clip&gt;, ordered by name.</summary>
-        private static Sprite[] LoadPatronClip(string clip)
+        /// <summary>All frames of one clip, ordered by name. The original patron lives at
+        /// Patron/&lt;clip&gt;; everyone cast since lives under their own slug.</summary>
+        private static Sprite[] LoadPatronClip(string slug, string clip)
         {
-            var sprites = Resources.LoadAll<Sprite>($"Patron/{clip}");
+            var sprites = Resources.LoadAll<Sprite>(
+                string.IsNullOrEmpty(slug) ? $"Patron/{clip}" : $"Patron/{slug}/{clip}");
             System.Array.Sort(sprites, (a, b) => string.CompareOrdinal(a.name, b.name));
             return sprites;
+        }
+
+        /// <summary>
+        /// Which face sits down. Not rolled — a named regular is the SAME person every
+        /// night, so hashing their name means Marguerite is always the nurse off the late
+        /// shift, and recognising her across visits is the whole point of regulars. An
+        /// anonymous drinker is keyed off the patience the run already rolled for them,
+        /// which is deterministic under the seed and costs the RNG streams nothing (so the
+        /// sim's arrivals stay byte-identical).
+        /// </summary>
+        private PatronLook LookFor(CustomerVisit visit)
+        {
+            if (_looks.Count == 0) return null;
+            string key = visit != null && visit.Regular != null
+                         && !string.IsNullOrEmpty(visit.Regular.Name)
+                ? visit.Regular.Name
+                : visit == null ? "" : visit.PatienceMax.ToString("R");
+            unchecked
+            {
+                int h = 17;
+                for (int i = 0; i < key.Length; i++) h = h * 31 + key[i];
+                return _looks[Mathf.Abs(h) % _looks.Count];
+            }
         }
 
         // ── day end ─────────────────────────────────────────────────────────────
@@ -3607,6 +3689,7 @@ namespace LastCall.UI
                 clockBg.sizeDelta = new Vector2(BustW * 0.72f, 8f);
                 clockBg.anchoredPosition = new Vector2(0, CharWinH + 1f);
                 clockBg.gameObject.AddComponent<Image>().color = UITheme.Night[0];
+                seat.Gauge = clockBg;   // re-hung off each look's own head, below
                 var clockFill = NewRect("ClockFill", clockBg);
                 clockFill.anchorMin = new Vector2(0, 0); clockFill.anchorMax = new Vector2(0, 1);
                 clockFill.pivot = new Vector2(0, 0.5f);
