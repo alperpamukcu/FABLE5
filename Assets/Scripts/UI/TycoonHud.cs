@@ -309,6 +309,7 @@ namespace LastCall.UI
         private RectTransform _idRoot;
         private Image _idPhoto;
         private Text _idName, _idAgeFrom, _idRel, _idIntent, _idOrder, _idOrderParts, _idRates, _idRatesLabel;
+        private Image _idFlag;
         private Text _idRelLabel, _idIntentLabel;
         private RectTransform _idRecipeTip;
         private RectTransform _idRecipeTipBody;
@@ -1545,17 +1546,6 @@ namespace LastCall.UI
                 float gw = h * piece.Aspect;
                 float step = gw * Overlap;
                 float rise = cellH * SurfaceDepth;              // the far edge, in HUD units
-                // The shadow is cast by the RUN, not by one glass, so it is laid down
-                // once the run's width is known.
-                var shadow = NewRect($"S_{g.Id}", _glassRack);
-                shadow.anchorMin = shadow.anchorMax = new Vector2(0.5f, 0);
-                shadow.pivot = new Vector2(0.5f, 0.5f);
-                shadow.sizeDelta = new Vector2(gw + step * (BackRow - 1) + 12f, 10);
-                shadow.anchoredPosition = new Vector2(x, floorY + 3f);
-                var shImg = shadow.gameObject.AddComponent<Image>();
-                shImg.sprite = BackBarArt.BottleShadow();
-                shImg.raycastTarget = false;
-
                 for (int k = 0; k < BackRow + FrontRow; k++)
                 {
                     // 0..2 are the back row, 3..4 the front row standing in its gaps.
@@ -1573,16 +1563,34 @@ namespace LastCall.UI
                     float kh = h * (back ? 0.84f : 1f);
                     rt.sizeDelta = new Vector2(kh * piece.Aspect, kh);
                     rt.anchoredPosition = new Vector2(x + dx, floorY + (back ? rise : 0f));
+                    // A CONTACT SHADOW UNDER EACH ONE. They are standing IN a shelf now,
+                    // not on a lit counter, and nothing sells that like the dark pooling
+                    // where the glass meets the wood. Laid before the glass so it reads as
+                    // underneath it, and narrower than the foot so it stays a contact
+                    // rather than a halo.
+                    var foot = NewRect($"S_{g.Id}_{k}", _glassRack);
+                    foot.anchorMin = foot.anchorMax = new Vector2(0.5f, 0);
+                    foot.pivot = new Vector2(0.5f, 0.5f);
+                    foot.sizeDelta = new Vector2(kh * piece.Aspect * 0.86f, 7f);
+                    foot.anchoredPosition = new Vector2(x + dx,
+                        floorY + (back ? rise : 0f) + 2f);
+                    var footImg = foot.gameObject.AddComponent<Image>();
+                    footImg.sprite = BackBarArt.BottleShadow();
+                    footImg.raycastTarget = false;
+                    footImg.color = new Color(0f, 0f, 0f, back ? 0.42f : 0.62f);
+                    foot.SetSiblingIndex(rt.GetSiblingIndex());
+
                     var img = rt.gameObject.AddComponent<Image>();
                     img.sprite = piece.Sprite;
                     img.preserveAspect = true;
                     img.raycastTarget = false;
-                    // SHADED, front to back and warm to cool. The bay is lit from in front
-                    // and above, so the further in a glass stands the less light reaches it
-                    // AND the bluer what does reach it becomes — a flat brightness ramp
-                    // read as five copies at five opacities rather than as depth.
-                    float lit = 1f - 0.24f * depth;
-                    img.color = new Color(lit * 0.98f, lit * 1.0f, lit * 1.06f, 1f);
+                    // AND THE GLASS ITSELF IS IN SHADOW. A bay is a hole in the bar front:
+                    // the light that reaches it comes from in front and above and falls off
+                    // fast, so even the near row sits well under full brightness and the far
+                    // row further still. Drawing them at 1.0 lit them as if they were on the
+                    // counter, which is the one place they are not.
+                    float lit = (back ? 0.58f : 0.78f);
+                    img.color = new Color(lit * 0.96f, lit * 1.0f, lit * 1.08f, 1f);
                     for (int d = 0; d < depth; d++) rt.SetAsFirstSibling();
                 }
                 // No tier stars under the rack (the author, 2026-08-02): the glass's own
@@ -3774,8 +3782,24 @@ namespace LastCall.UI
                 : (stage != null ? stage.PortraitSpriteFor(reg.ArchetypeId) : null);
             _idPhoto.color = _idPhoto.sprite != null ? Color.white : UITheme.Night[3];
 
-            _idName.text = reg.Name.ToUpperInvariant();
-            _idAgeFrom.text = $"{reg.Age}  ·  {reg.Hometown.ToUpperInvariant()}";
+            // THE PAPERS BELONG TO THE FACE, NOT TO THE ARCHETYPE (the author, 2026-08-10:
+            // the licence and the guide disagreed). A regular's name used to come out of the
+            // archetype's pool while their PICTURE came from the look — so the card said
+            // "Marguerite" over a portrait the guide calls Marilou Cabrera, and reading a
+            // customer became impossible on purpose. The look is the person now: it carries
+            // the photo, the name, the age and the citizenship, and the archetype keeps only
+            // what it is actually about — how they came in, and how well you know them.
+            var idPapers = PapersFor(idLook);
+            _idName.text = (idPapers != null ? idPapers.Name : reg.Name).ToUpperInvariant();
+            _idAgeFrom.text = idPapers != null
+                ? $"{idPapers.Age}  ·  {idPapers.Country.ToUpperInvariant()}"
+                : $"{reg.Age}  ·  {reg.Hometown.ToUpperInvariant()}";
+            if (_idFlag != null)
+            {
+                _idFlag.sprite = idPapers != null ? ItemArt.Load("fl_" + idPapers.Iso) : null;
+                // A citizenship with no flag drawn shows nothing rather than a white box.
+                _idFlag.enabled = _idFlag.sprite != null;
+            }
             // The count rides on the LABEL, not the value (the author, 2026-08-03: the
             // stars were printing over it). The display face is a fixed-width 16px cell, so
             // "FAMILIAR · 12 VISITS" runs 300 points through a 188-point column and straight
@@ -3952,7 +3976,15 @@ namespace LastCall.UI
             // reserved-slots row is GONE: a row of blanks was noise, not a licence.
             float colW = LicFieldsW * 0.5f - 8f;
             _idName = LicenceField(card, "NAME", LicFieldsX, LicLines[0], LicFieldsW, out _, 24);
-            _idAgeFrom = LicenceField(card, "AGE  ·  CITY", LicFieldsX, LicLines[1], LicFieldsW, out _);
+            _idAgeFrom = LicenceField(card, "AGE  ·  CITIZEN OF", LicFieldsX, LicLines[1], LicFieldsW, out _);
+            // The flag rides the citizenship line, at the right of its field. 16x11 is the
+            // size the flags are drawn at, so it goes in 1:1 and never resamples.
+            var idFlag = NewRect("Flag", card);
+            Place(idFlag, new Vector2(0, 1), new Vector2(16, 11),
+                new Vector2(LicFieldsX + LicFieldsW - 20f, LicLines[1] - 2f));
+            _idFlag = idFlag.gameObject.AddComponent<Image>();
+            _idFlag.raycastTarget = false;
+            _idFlag.enabled = false;
             _idRel = LicenceField(card, "STANDING", LicFieldsX, LicLines[2], colW, out _idRelLabel);
             _idRates = LicenceField(card, "RATES THIS BAR", LicFieldsX + colW + 16f, LicLines[2],
                 colW, out _idRatesLabel);
