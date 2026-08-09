@@ -156,6 +156,69 @@ namespace LastCall.UI
             ("profess", 23f, 2.5f), ("chrome", 40f, 2.5f), ("platina", 26f, 2.5f),
             ("gothqueen", 5f, 2.5f),
         };
+        /// <summary>
+        /// WHO A DRINKER IS, on paper. A name, an age, a country and its flag — chosen
+        /// against the DRAWING rather than at random, so the age matches the face the
+        /// artist drew and the name matches how it reads (2026-08-10). Mostly American,
+        /// because that is the bar's world, with eight passports from elsewhere where the
+        /// picture itself argued for one: a blond beard and blue eyes is Swedish, a
+        /// three-piece with a pocket square is a London suit, a waxed handlebar over a
+        /// waistcoat is the Turkish barber's own uniform.
+        ///
+        /// Names are taken from the MIDDLE of each country's common-name lists rather than
+        /// the top: the most famous name in a country belongs to a celebrity, the tenth
+        /// belongs to a person.
+        /// </summary>
+        private sealed class Papers
+        {
+            public readonly string Name;
+            public readonly int Age;
+            public readonly string Country;
+            public readonly string Iso;
+            public Papers(string name, int age, string country, string iso)
+            { Name = name; Age = age; Country = country; Iso = iso; }
+        }
+
+        private static readonly Dictionary<string, Papers> PatronPapers =
+            new Dictionary<string, Papers>
+        {
+            { "", new Papers("Miles Corrigan", 26, "United States", "us") },
+            { "nightnurse", new Papers("Marilou Cabrera", 37, "Philippines", "ph") },
+            { "courier", new Papers("Danny Ferraro", 23, "United States", "us") },
+            { "undone", new Papers("Craig Delaney", 46, "United States", "us") },
+            { "dockman", new Papers("Dennis Wojcik", 63, "United States", "us") },
+            { "bearded", new Papers("Fredrik Ohlsson", 34, "Sweden", "se") },
+            { "walrus", new Papers("Kurt Ostrowski", 57, "United States", "us") },
+            { "barber", new Papers("Serkan Aydemir", 33, "Turkey", "tr") },
+            { "bouncer", new Papers("Marcus Boyd", 42, "United States", "us") },
+            { "ember", new Papers("Meredith Nolan", 34, "United States", "us") },
+            { "coder", new Papers("Elliot Brandt", 24, "United States", "us") },
+            { "inked", new Papers("Rowan Pike", 33, "United States", "us") },
+            { "studentm", new Papers("Trevor Hanley", 21, "United States", "us") },
+            { "nerd", new Papers("Spencer Kaplan", 25, "United States", "us") },
+            { "bikeryoung", new Papers("Shane Mercer", 26, "United States", "us") },
+            { "lumber", new Papers("Dustin Kilgore", 43, "United States", "us") },
+            { "cueball", new Papers("Neil Prentiss", 55, "United States", "us") },
+            { "violet", new Papers("Sabrina Voss", 24, "United States", "us") },
+            { "teal", new Papers("Piper Landry", 23, "United States", "us") },
+            { "gothpunk", new Papers("Erika Vaughn", 24, "United States", "us") },
+            { "wanderer", new Papers("Joost Kramer", 25, "Netherlands", "nl") },
+            { "studentf", new Papers("Brooke Whitaker", 20, "United States", "us") },
+            { "gothgirl", new Papers("Marissa Vogel", 24, "United States", "us") },
+            { "bikerold", new Papers("Duane Halloran", 64, "United States", "us") },
+            { "profess", new Papers("Ulrich Brenner", 66, "Germany", "de") },
+            { "chrome", new Papers("Andre Whitlock", 36, "United States", "us") },
+            { "platina", new Papers("Paulina Nowicka", 33, "Poland", "pl") },
+            { "gothqueen", new Papers("Genevieve Marsh", 34, "United States", "us") },
+            { "glam", new Papers("Serena Fontana", 35, "Italy", "it") },
+            { "execwoman", new Papers("Vivian Marchetti", 44, "United States", "us") },
+            { "execman", new Papers("Graham Sedgwick", 54, "United Kingdom", "gb") },
+        };
+
+        /// <summary>This drinker's papers, or null for a look nobody has written up.</summary>
+        private static Papers PapersFor(PatronLook look) =>
+            look != null && PatronPapers.TryGetValue(look.Slug ?? "", out var p) ? p : null;
+
         private readonly List<PatronLook> _looks = new List<PatronLook>();
         private RectTransform _hudRoot;            // the canvas rect — the screen's right edge for entrances
 
@@ -3437,7 +3500,7 @@ namespace LastCall.UI
         private void BuildSettings(RectTransform root)
         {
             _settingsPanel = NewRect("Settings", root);
-            Place(_settingsPanel, new Vector2(1, 1), new Vector2(240, 246), new Vector2(-16, -58));
+            Place(_settingsPanel, new Vector2(1, 1), new Vector2(300, 300), new Vector2(-16, -58));
             _settingsPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
 
             var title = NewText("T", _settingsPanel, _body, 10, TextAnchor.UpperCenter, UITheme.TextSecondary);
@@ -3468,6 +3531,11 @@ namespace LastCall.UI
             // Straight to the books and the shop (the author, 2026-08-07). It runs the real
             // clock rather than forcing the phase, so the night closes honestly — anyone
             // still sitting drinks up or walks, and the rent lands as it always would.
+            SettingsRow(7, "DEV · THE ROOM — every drinker, their papers and their star", () =>
+            {
+                ToggleSettings();
+                ToggleGuide();
+            });
             SettingsRow(6, "DEV · SKIP TO DAY END — close now, open the market", () =>
             {
                 if (Run == null || Run.Phase != TycoonPhase.DayOpen) { Toast("NOT MID-DAY"); return; }
@@ -3487,10 +3555,146 @@ namespace LastCall.UI
             _settingsPanel.gameObject.SetActive(false);
         }
 
+        // ── the character guide (dev tool, 2026-08-10) ──────────────────────────
+        // Every drinker on one scrollable sheet: the licence photo, the name, the age, the
+        // citizenship and its flag, the archetype, and the standing the bar has to reach
+        // before they walk in. The author's reason is practical — deciding what to change
+        // about a character means seeing all of them at once — and it is written as a panel
+        // rather than as a printed page because it can become an in-game almanac later:
+        // the same rows, unlocked one at a time as each person is met.
+
+        private RectTransform _guidePanel;
+        private RectTransform _guideRows;
+
+        private void ToggleGuide()
+        {
+            if (_guidePanel == null) return;
+            bool show = !_guidePanel.gameObject.activeSelf;
+            if (show) { CloseId(); RefreshGuide(); }
+            _guidePanel.gameObject.SetActive(show);
+        }
+
+        private void BuildGuide(RectTransform root)
+        {
+            _guidePanel = NewRect("Guide", root);
+            Place(_guidePanel, new Vector2(0.5f, 0.5f), new Vector2(940, 620), new Vector2(0, 10));
+            var canvas = _guidePanel.gameObject.AddComponent<Canvas>();
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = 24;                 // above the market, which is 22
+            _guidePanel.gameObject.AddComponent<GraphicRaycaster>();
+            var bg = _guidePanel.gameObject.AddComponent<Image>();
+            bg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.985f);
+            bg.raycastTarget = true;
+            Frame(_guidePanel, 2f, UITheme.PrimaryAction);
+
+            var title = NewText("T", _guidePanel, _display, 16, TextAnchor.MiddleLeft,
+                UITheme.PrimaryAction);
+            Place(title.rectTransform, new Vector2(0, 1), new Vector2(600, 22), new Vector2(20, -18));
+            title.horizontalOverflow = HorizontalWrapMode.Overflow;
+            title.text = "THE ROOM — WHO DRINKS HERE";
+
+            var note = NewText("N", _guidePanel, _body, 8, TextAnchor.MiddleRight, UITheme.Cream[2]);
+            Place(note.rectTransform, new Vector2(1, 1), new Vector2(420, 12), new Vector2(-20, -22));
+            note.horizontalOverflow = HorizontalWrapMode.Wrap;
+            note.verticalOverflow = VerticalWrapMode.Truncate;
+            note.text = "Star gate = what the bar must be worth before they come in";
+
+            // Column heads, so the rows underneath do not need repeating labels.
+            var head = NewText("H", _guidePanel, _shop, 8, TextAnchor.MiddleLeft, UITheme.Cream[2]);
+            Place(head.rectTransform, new Vector2(0, 1), new Vector2(880, 12), new Vector2(96, -46));
+            head.horizontalOverflow = HorizontalWrapMode.Overflow;
+            head.text = "NAME                          AGE   CITIZEN OF              ARCHETYPE            FROM";
+
+            var view = NewRect("GuideView", _guidePanel);
+            Stretch(view, Vector2.zero, Vector2.one, new Vector2(14, 52), new Vector2(-14, -58));
+            view.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, 0.02f);
+            view.gameObject.AddComponent<RectMask2D>();
+            _guideRows = NewRect("Rows", view);
+            _guideRows.anchorMin = new Vector2(0, 1); _guideRows.anchorMax = Vector2.one;
+            _guideRows.pivot = new Vector2(0.5f, 1);
+            _guideRows.offsetMin = Vector2.zero; _guideRows.offsetMax = Vector2.zero;
+            var layout = _guideRows.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.spacing = 4;
+            layout.childControlWidth = true; layout.childForceExpandWidth = true;
+            layout.childControlHeight = false; layout.childForceExpandHeight = false;
+            var fit = _guideRows.gameObject.AddComponent<ContentSizeFitter>();
+            fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            var scroll = view.gameObject.AddComponent<ScrollRect>();
+            scroll.viewport = view; scroll.content = _guideRows;
+            scroll.horizontal = false;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 28f;
+            scroll.inertia = false;
+
+            NewButton(_guidePanel, "CLOSE", new Vector2(0.5f, 0), new Vector2(180, 32),
+                new Vector2(0, 12), UITheme.PrimaryAction, () => ToggleGuide());
+            _guidePanel.gameObject.SetActive(false);
+        }
+
+        private void RefreshGuide()
+        {
+            if (_guideRows == null) return;
+            for (int i = _guideRows.childCount - 1; i >= 0; i--)
+                Destroy(_guideRows.GetChild(i).gameObject);
+
+            float standing = Run != null ? (float)Run.Rating.Average : 0f;
+            foreach (var look in _looks)
+            {
+                var papers = PapersFor(look);
+                var row = NewRect("R", _guideRows);
+                row.sizeDelta = new Vector2(0, 62);
+                var rowBg = row.gameObject.AddComponent<Image>();
+                bool here = look.Stars <= standing + 0.001f;
+                rowBg.color = here ? new Color(1f, 1f, 1f, 0.045f) : new Color(1f, 1f, 1f, 0.015f);
+
+                if (look.Face != null)
+                {
+                    var photo = NewRect("P", row);
+                    Place(photo, new Vector2(0, 0.5f), new Vector2(54, 54), new Vector2(8, 0));
+                    var pi = photo.gameObject.AddComponent<Image>();
+                    pi.sprite = look.Face; pi.preserveAspect = true; pi.raycastTarget = false;
+                    // Somebody who will not come in yet is shown, but dimmed — the guide is
+                    // a roster, not a spoiler, and the point is seeing WHO is still to come.
+                    pi.color = here ? Color.white : new Color(0.45f, 0.45f, 0.48f, 1f);
+                }
+
+                var line = NewText("L", row, _body, 8, TextAnchor.MiddleLeft,
+                    here ? UITheme.Cream[4] : UITheme.Cream[2]);
+                Place(line.rectTransform, new Vector2(0, 1), new Vector2(700, 14), new Vector2(72, -10));
+                line.horizontalOverflow = HorizontalWrapMode.Overflow;
+                line.text = papers != null
+                    ? papers.Name.PadRight(30) + (papers.Age + "").PadRight(6) + papers.Country
+                    : (look.Slug ?? "patron");
+
+                var sub = NewText("S", row, _body, 8, TextAnchor.MiddleLeft, UITheme.Cream[2]);
+                Place(sub.rectTransform, new Vector2(0, 1), new Vector2(700, 12), new Vector2(72, -28));
+                sub.horizontalOverflow = HorizontalWrapMode.Overflow;
+                sub.text = (look.Slug ?? "patron") + "   ·   6 clips   ·   head row " + (int)look.HeadY;
+
+                var gate = NewText("G", row, _shop, 8, TextAnchor.MiddleRight,
+                    here ? new Color(0.42f, 0.84f, 0.51f, 1f) : UITheme.PrimaryAction);
+                Place(gate.rectTransform, new Vector2(1, 1), new Vector2(220, 14), new Vector2(-10, -10));
+                gate.horizontalOverflow = HorizontalWrapMode.Overflow;
+                gate.text = look.Stars <= 0f ? "OPENS THE DOORS"
+                    : (here ? "IN THE ROOM · " : "WAITS FOR ") + look.Stars.ToString("0.0") + "*";
+
+                if (papers != null)
+                {
+                    var flag = NewRect("F", row);
+                    Place(flag, new Vector2(1, 1), new Vector2(16, 11), new Vector2(-10, -30));
+                    var fi = flag.gameObject.AddComponent<Image>();
+                    fi.sprite = ItemArt.Load("fl_" + papers.Iso);
+                    fi.raycastTarget = false;
+                    // A citizenship with no flag drawn shows nothing rather than a white box.
+                    fi.enabled = fi.sprite != null;
+                }
+            }
+        }
+
         private Text SettingsRow(int index, string label, Action onClick)
         {
             var row = NewRect($"Row{index}", _settingsPanel);
-            Place(row, new Vector2(0.5f, 1), new Vector2(220, 28), new Vector2(0, -24f - index * 32f));
+            Place(row, new Vector2(0.5f, 1), new Vector2(280, 28), new Vector2(0, -24f - index * 32f));
             var img = row.gameObject.AddComponent<Image>();
             img.color = UITheme.Night[3];
             var btn = row.gameObject.AddComponent<Button>();
@@ -4559,6 +4763,7 @@ namespace LastCall.UI
             _bannerText.gameObject.SetActive(false);
 
             BuildLedgerPanel(root);
+            BuildGuide(root);
         }
 
         /// <summary>The register's book of past days (GDD 24 §7, 2026-07-22): a scrollable
