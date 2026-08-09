@@ -25,6 +25,8 @@ namespace LastCall.EditorTools
         // Limelight/Barlow pair is gone: every slot wires a pixel font now.
         private const string PixelDisplayFontPath = "Assets/Fonts/PressStart2P-Regular.ttf";
         private const string PixelBodyFontPath = "Assets/Fonts/Silkscreen-Regular.ttf";
+        /// <summary>The shop's heavier face (2026-08-07) — Silkscreen BOLD, same grid.</summary>
+        private const string ShopFontPath = "Assets/Fonts/SilkscreenBold.ttf";
 
         [MenuItem("LastCall/Create Debug Scene")]
         public static void CreateDebugScene()
@@ -119,6 +121,7 @@ namespace LastCall.EditorTools
             var hudSo = new SerializedObject(hud);
             hudSo.FindProperty("bodyFont").objectReferenceValue = LoadRequired<Font>(PixelBodyFontPath);
             hudSo.FindProperty("displayFont").objectReferenceValue = LoadRequired<Font>(PixelDisplayFontPath);
+            hudSo.FindProperty("shopFont").objectReferenceValue = LoadRequired<Font>(ShopFontPath);
             hudSo.FindProperty("stage").objectReferenceValue = stage;
             hudSo.ApplyModifiedPropertiesWithoutUndo();
 

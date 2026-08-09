@@ -25,6 +25,10 @@ namespace LastCall.UI
     {
         [SerializeField] private Font bodyFont;
         [SerializeField] private Font displayFont;
+        /// <summary>The shop's own face (the author, 2026-08-07: "yeni bir font bul
+        /// kesinlikle"). Silkscreen BOLD — the same pixel grid the bar is set in, with the
+        /// weight the white page needs. Falls back to the body face if unassigned.</summary>
+        [SerializeField] private Font shopFont;
         [SerializeField] private DiegeticStage stage;
 
         private GameBootstrap _bootstrap;
@@ -32,6 +36,7 @@ namespace LastCall.UI
 
         private Font _body;
         private Font _display;
+        private Font _shop;
 
         // top bar
         private Text _dayText;
@@ -464,7 +469,7 @@ namespace LastCall.UI
         /// Renaming is this constant and nothing else — every position is measured.
         /// </summary>
         private const string ShopBrand = "HALLOWAY & SONS";
-        private const string ShopTagline = "BEVERAGE DISTRIBUTION  ·  NEW ARDEN  ·  EST. 1948";
+        private const string ShopTagline = "BEVERAGE DISTRIBUTION · NEW ARDEN";
 
         // The storefront's palette (the author, 2026-08-07: white and green, and readable).
         // A distributor's ordering site is a white page with a house green — the dark shop
@@ -477,13 +482,17 @@ namespace LastCall.UI
         private static readonly Color ShopInk = new Color(0.098f, 0.145f, 0.110f, 1f);     // type
         private static readonly Color ShopInkSoft = new Color(0.404f, 0.451f, 0.412f, 1f);
 
-        private const float AppBarH = 40f, RowH = 46f, RailW = 220f, BrandW = 250f;
-        private const float FootH = 92f, CartW = 240f;
+        private const float OsBarH = 26f, AppBarH = 44f, RowH = 48f, RailW = 230f, BrandW = 250f;
+        private const float FootH = 112f, CartW = 250f, NextW = 190f, BarW = 12f;
         private const string ShopIdleTip =
-            "POINT AT A LINE TO READ IT.  PICK WHAT YOU WANT, THEN PLACE THE ORDER.";
+            "POINT AT A LINE TO READ IT.\nNOTHING IS CHARGED UNTIL YOU PLACE THE ORDER.";
 
-        private Text _fittingNote, _cartLine, _checkoutLabel;
+        private Text _fittingNote, _cartLine, _checkoutLabel, _cartHeadLabel, _osClock;
         private RectTransform _checkout;
+        private ScrollRect _shopScroll;
+        /// <summary>Where the aisle was left. Rebuilding after a pick must not throw the
+        /// player back to the top of the shelf (the author, 2026-08-07).</summary>
+        private float _shopScrollAt = 1f;
 
         /// <summary>
         /// The basket (the author, 2026-08-07: "önce ürünü seç, sepete ekle, sepeti öde").
@@ -522,6 +531,7 @@ namespace LastCall.UI
             var legacy = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             _body = bodyFont != null ? bodyFont : legacy;
             _display = displayFont != null ? displayFont : legacy;
+            _shop = shopFont != null ? shopFont : _body;
 
             _bootstrap = GetComponent<GameBootstrap>();
             if (_bootstrap != null) _bootstrap.RunStarted += OnRunStarted;
@@ -1695,8 +1705,7 @@ namespace LastCall.UI
             foreach (Transform child in _offerRow) Destroy(child.gameObject);
             _tabletTill.text = $"${run.Money}";
             if (_fittingNote != null)
-                _fittingNote.text = run.CanFitTonight
-                    ? "1 FITTING LEFT TONIGHT" : "FITTING SPENT — BACK TOMORROW";
+                _fittingNote.text = run.CanFitTonight ? "1 FITTING LEFT" : "FITTING SPENT";
             var tabOn = ItemArt.Load("sh_tab_on");
             var tabOff = ItemArt.Load("sh_tab_off");
             for (int i = 0; i < _shopTabKeys.Length; i++)
@@ -1715,17 +1724,31 @@ namespace LastCall.UI
                     _shopTabIcons[i].color = on ? Color.white : Color.white;
             }
 
-            // The basket, and the button that pays for it.
+            // The basket LISTS what is in it, then totals it.
+            if (_cartHeadLabel != null)
+                _cartHeadLabel.text = _cart.Count == 0 ? "BASKET" : $"BASKET ({_cart.Count})";
             if (_cartLine != null)
             {
-                int total = CartTotal();
-                _cartLine.text = _cart.Count == 0
-                    ? "BASKET EMPTY"
-                    : $"{_cart.Count} LINE{(_cart.Count == 1 ? "" : "S")}\n<b>${total}</b>";
-                _cartLine.supportRichText = true;
+                if (_cart.Count == 0) _cartLine.text = "NOTHING PICKED YET";
+                else
+                {
+                    var basket = new StringBuilder();
+                    int shown = Mathf.Min(3, _cart.Count);
+                    for (int i = 0; i < shown; i++)
+                    {
+                        string label = _cart[i].Label;
+                        if (label.Length > 18) label = label.Substring(0, 17) + "…";
+                        basket.Append(label).Append("  $").Append(_cart[i].Price).Append('\n');
+                    }
+                    if (_cart.Count > shown) basket.Append("+").Append(_cart.Count - shown).Append(" MORE\n");
+                    basket.Append("<b>TOTAL  $").Append(CartTotal()).Append("</b>");
+                    _cartLine.text = basket.ToString();
+                }
             }
             if (_checkoutLabel != null)
                 _checkoutLabel.text = _cart.Count == 0 ? "BASKET EMPTY" : $"PLACE ORDER  ${CartTotal()}";
+            if (_osClock != null)
+                _osClock.text = $"02:{(run.Day * 7) % 60:00}   ·   DAY {run.Day}";
 
             if (_dayEndStep == 0) return;   // the bill step shows no shop at all
             if (_shopTab == 0)
@@ -1776,7 +1799,23 @@ namespace LastCall.UI
                     double gate = run.RecipeStarGate(r);
                     if (run.Rating.Average < gate)
                     {
-                        AddCard($"✦ SEALED · NEEDS {gate:0.0}★", "sealed", 0, false, null);
+                        // SEALED, and it looks it (the author, 2026-08-07): chains across
+                        // the crate and a padlock on them. The drink's name stays hidden —
+                        // what waits behind the wax is the point of earning the stars.
+                        var sealedCard = AddCard($"SEALED CRATE", $"NEEDS {gate:0.0}★", 0, false, null,
+                            detail: $"A CRATE THE HOUSE WILL NOT OPEN FOR YOU YET.\n"
+                                    + $"IT UNSEALS AT {gate:0.0} STARS — KEEP THE ROOM HAPPY.");
+                        var chain = NewRect("Chain", sealedCard);
+                        Place(chain, new Vector2(0.5f, 0.5f), new Vector2(96, 84), new Vector2(0, 0));
+                        var chainImg = chain.gameObject.AddComponent<Image>();
+                        chainImg.sprite = ItemArt.Load("sh_chain");
+                        chainImg.preserveAspect = true; chainImg.raycastTarget = false;
+                        chainImg.color = new Color(1f, 1f, 1f, 0.92f);
+                        var padlock = NewRect("Lock", sealedCard);
+                        Place(padlock, new Vector2(0.5f, 0.5f), new Vector2(34, 40), new Vector2(0, -2));
+                        var lockImg = padlock.gameObject.AddComponent<Image>();
+                        lockImg.sprite = ItemArt.Load("sh_lock");
+                        lockImg.preserveAspect = true; lockImg.raycastTarget = false;
                         continue;
                     }
                     AddCard($"✦ {r.Name.ToUpperInvariant()}", "ON THE MENU",
@@ -1835,8 +1874,10 @@ namespace LastCall.UI
                                 + "AND A RETURNED FITTING GIVES THE NIGHT ITS DECISION BACK.");
                 }
             }
-            _justOrdered.Clear();      // the stamps have landed; the next rebuild is clean
-            _offerRow.anchoredPosition = Vector2.zero;   // a rebuilt shop reads from the top
+            // The aisle stays where it was left (the author: picking something must not
+            // throw you back to the top). Switching department is what resets it.
+            Canvas.ForceUpdateCanvases();
+            if (_shopScroll != null) _shopScroll.verticalNormalizedPosition = _shopScrollAt;
         }
 
         // ── what a listing IS, in words (the author, 2026-08-07) ─────────────────
@@ -1912,10 +1953,17 @@ namespace LastCall.UI
             return n;
         }
 
+        /// <summary>Notes where the aisle is standing, so a rebuild can put it back.</summary>
+        private void RememberScroll()
+        {
+            if (_shopScroll != null) _shopScrollAt = _shopScroll.verticalNormalizedPosition;
+        }
+
         /// <summary>Picks a listing up, or puts it back. Refuses what the night cannot
         /// carry: a second fitting, or more money than the till holds.</summary>
         private void ToggleCart(string key, string label, int price, bool isFitting, Action buy)
         {
+            RememberScroll();
             for (int i = 0; i < _cart.Count; i++)
                 if (_cart[i].Key == key)
                 {
@@ -1944,6 +1992,7 @@ namespace LastCall.UI
         private void Checkout()
         {
             if (_cart.Count == 0) { Toast("BASKET IS EMPTY"); return; }
+            RememberScroll();
             _justOrdered.Clear();
             int bought = 0;
             foreach (var e in _cart)
@@ -1998,23 +2047,28 @@ namespace LastCall.UI
         {
             // An aisle sign: a coloured tick, the name in the signage colour, and a rule
             // running out to the edge — how a storefront heads a shelf.
+            // An aisle sign that actually signs the aisle (the author: "başlıkların daha ön
+            // plana çıkması lazım") — a solid green band with the name in white, not a
+            // grey line of small caps lost between two rows of cards.
             var h = NewRect("SH", _offerRow);
-            h.gameObject.AddComponent<LayoutElement>().preferredHeight = 24;
-            var pip = NewRect("Pip", h);
-            Place(pip, new Vector2(0, 0.5f), new Vector2(4, 14), new Vector2(6, -2));
-            pip.gameObject.AddComponent<Image>().color = ShopGreen;
-            var t = NewText("T", h, _body, 8, TextAnchor.MiddleLeft, ShopGreenDark);
-            Place(t.rectTransform, new Vector2(0, 0.5f), new Vector2(500, 14), new Vector2(16, -2));
+            h.gameObject.AddComponent<LayoutElement>().preferredHeight = 30;
+            var band = NewRect("Band", h);
+            Stretch(band, Vector2.zero, Vector2.one, new Vector2(0, 2), new Vector2(0, -2));
+            band.gameObject.AddComponent<Image>().color = ShopGreenDark;
+            var pip = NewRect("Pip", band);
+            Place(pip, new Vector2(0, 0.5f), new Vector2(6, 18), new Vector2(10, 0));
+            pip.gameObject.AddComponent<Image>().color = ShopGreenLit;
+            var t = NewText("T", band, _shop, 16, TextAnchor.MiddleLeft, Color.white);
+            Place(t.rectTransform, new Vector2(0, 0.5f), new Vector2(700, 18), new Vector2(26, 0));
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
             t.text = title;
 
             var sec = NewRect("Sec", _offerRow);
             var g = sec.gameObject.AddComponent<GridLayoutGroup>();
-            // Four across the aisle (2026-08-07): the rail takes the left 220, leaving 838
-            // — 4*204 + 3*8 = 840, so the listings run edge to edge with room for a real
-            // picture and a price you can read at a glance.
-            g.cellSize = new Vector2(204, 96);
-            g.spacing = new Vector2(8, 8);
+            // Four across the aisle: the rail takes the left 230 and the scrollbar 20 on the
+            // right, leaving 790 — 4*190 + 3*10 = 790, edge to edge.
+            g.cellSize = new Vector2(190, 104);
+            g.spacing = new Vector2(10, 10);
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             g.constraintCount = 4;
             return sec;
@@ -3286,28 +3340,20 @@ namespace LastCall.UI
             // same. The shell is the cheap half of the fix; the tabs are the real one, because
             // restocking the well and buying a musician are different errands and the player is
             // only ever doing one of them.
+            // The device is drawn at its own aspect (400x252 art → 1120x706) so the
+            // 9-slice stretches both axes by the same factor and the bezel stays even —
+            // the proportions the author called wrong were a 2.06:1 rect wearing a 1.59:1
+            // picture. It fills the screen now, and everything else lives INSIDE it.
             var tablet = _dayEndTablet = NewRect("Tablet", _dayEndPanel);
-            Place(tablet, new Vector2(0.5f, 1), new Vector2(1140, 552), new Vector2(0, -50));
+            Place(tablet, new Vector2(0.5f, 0.5f), new Vector2(1120, 706), new Vector2(0, 0));
             var tabletImg = tablet.gameObject.AddComponent<Image>();
-            // A real device since 2026-08-07: a drawn tablet, 9-sliced so only the flat
-            // runs of its bezel stretch and the corners stay at their own pixel size. The
-            // procedural slab (with its hand-drawn lens and home bar) is the fallback.
-            var shellArt = ItemArt.Load("sh_tablet") ?? ItemArt.Load("mk_tablet");
+            var shellArt = ItemArt.Load("sh_tablet2") ?? ItemArt.Load("sh_tablet");
             if (shellArt != null)
             {
                 tabletImg.sprite = shellArt;
                 tabletImg.type = Image.Type.Sliced;
             }
-            else
-            {
-                tabletImg.color = TabletShell;
-                var lens = NewRect("Lens", tablet);
-                Place(lens, new Vector2(0.5f, 1), new Vector2(5, 5), new Vector2(0, -6));
-                lens.gameObject.AddComponent<Image>().color = TabletLens;
-                var homeBar = NewRect("Home", tablet);
-                Place(homeBar, new Vector2(0.5f, 0), new Vector2(84, 4), new Vector2(0, 6));
-                homeBar.gameObject.AddComponent<Image>().color = TabletLens;
-            }
+            else tabletImg.color = TabletShell;
 
             // The screen sits inside the bezel; the inset matches the drawn frame's own
             // border so the app never laps onto the device.
@@ -3316,6 +3362,37 @@ namespace LastCall.UI
                 new Vector2(BezelX, BezelY), new Vector2(-BezelX, -BezelY));
             screen.gameObject.AddComponent<Image>().color = ShopPage;
 
+            // THE DEVICE'S OWN STATUS BAR (the author, 2026-08-07: "tabletin üst barı da
+            // olmalı gerçekçiliği arttırması için"). It belongs to the tablet, not to the
+            // shop: the hour the bar closed on the left, the radio and the battery right.
+            var osBar = NewRect("OsBar", screen);
+            osBar.anchorMin = new Vector2(0, 1); osBar.anchorMax = new Vector2(1, 1);
+            osBar.pivot = new Vector2(0.5f, 1);
+            osBar.sizeDelta = new Vector2(0, OsBarH);
+            osBar.anchoredPosition = Vector2.zero;
+            osBar.gameObject.AddComponent<Image>().color = new Color(0.87f, 0.89f, 0.87f, 1f);
+            _osClock = NewText("OsClock", osBar, _shop, 16, TextAnchor.MiddleLeft, ShopInk);
+            Place(_osClock.rectTransform, new Vector2(0, 0.5f), new Vector2(260, 18),
+                new Vector2(14, 0));
+            _osClock.horizontalOverflow = HorizontalWrapMode.Overflow;
+            var osCarrier = NewText("OsCarrier", osBar, _shop, 16, TextAnchor.MiddleCenter, ShopInkSoft);
+            Place(osCarrier.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(360, 16),
+                new Vector2(0, 0));
+            osCarrier.horizontalOverflow = HorizontalWrapMode.Overflow;
+            osCarrier.text = "TRADE NET";
+            var osWifi = NewRect("OsWifi", osBar);
+            Place(osWifi, new Vector2(1, 0.5f), new Vector2(20, 14), new Vector2(-58, 0));
+            var wifiImg = osWifi.gameObject.AddComponent<Image>();
+            wifiImg.sprite = ItemArt.Load("sh_wifi"); wifiImg.preserveAspect = true;
+            wifiImg.raycastTarget = false;
+            if (wifiImg.sprite == null) wifiImg.color = ShopInkSoft;
+            var osBatt = NewRect("OsBatt", osBar);
+            Place(osBatt, new Vector2(1, 0.5f), new Vector2(28, 12), new Vector2(-16, 0));
+            var battImg = osBatt.gameObject.AddComponent<Image>();
+            battImg.sprite = ItemArt.Load("sh_batt"); battImg.preserveAspect = true;
+            battImg.raycastTarget = false;
+            if (battImg.sprite == null) battImg.color = ShopInkSoft;
+
             // THE APP BAR (the author, 2026-08-07: the shop should read as an e-commerce
             // app the bar orders from). Brand mark, wordmark, the delivery promise every
             // such app makes, and the money — which is the basket total, in this shop.
@@ -3323,7 +3400,7 @@ namespace LastCall.UI
             strip.anchorMin = new Vector2(0, 1); strip.anchorMax = new Vector2(1, 1);
             strip.pivot = new Vector2(0.5f, 1);
             strip.sizeDelta = new Vector2(0, AppBarH);
-            strip.anchoredPosition = Vector2.zero;
+            strip.anchoredPosition = new Vector2(0, -OsBarH);
             var stripImg = strip.gameObject.AddComponent<Image>();
             var barArt = ItemArt.Load("sh_bar");
             if (barArt != null) { stripImg.sprite = barArt; stripImg.type = Image.Type.Sliced; }
@@ -3342,20 +3419,20 @@ namespace LastCall.UI
             // The wordmark IS the logo (the author: "logusu isminden oluşabilir") — the
             // house name set in the display face over a green rule, letterhead fashion.
             // The letters are set here, not drawn, because the generator cannot spell.
-            const float BrandX = 54f;
+            const float BrandX = 56f;
             var brand = NewText("Brand", strip, _display, 16, TextAnchor.MiddleLeft, ShopGreenDark);
             Place(brand.rectTransform, new Vector2(0, 0.5f), new Vector2(BrandW, 20),
-                new Vector2(BrandX, 2));
+                new Vector2(BrandX, 4));
             brand.horizontalOverflow = HorizontalWrapMode.Overflow;
             brand.text = ShopBrand;
 
             var swash = NewRect("Swash", strip);
-            Place(swash, new Vector2(0, 0.5f), new Vector2(BrandW, 2f), new Vector2(BrandX, -10f));
+            Place(swash, new Vector2(0, 0.5f), new Vector2(BrandW, 3f), new Vector2(BrandX, -9f));
             swash.gameObject.AddComponent<Image>().color = ShopGreen;
 
-            var tagline = NewText("Tag", strip, _body, 8, TextAnchor.MiddleLeft, ShopInkSoft);
-            Place(tagline.rectTransform, new Vector2(0, 0.5f), new Vector2(430, 12),
-                new Vector2(BrandX + BrandW + 24f, 0));
+            var tagline = NewText("Tag", strip, _shop, 16, TextAnchor.MiddleLeft, ShopInkSoft);
+            Place(tagline.rectTransform, new Vector2(0, 0.5f), new Vector2(430, 18),
+                new Vector2(BrandX + BrandW + 22f, 0));
             tagline.horizontalOverflow = HorizontalWrapMode.Overflow;
             tagline.text = ShopTagline;
 
@@ -3367,9 +3444,9 @@ namespace LastCall.UI
             var balArt = ItemArt.Load("sh_balance");
             if (balArt != null) { balanceImg.sprite = balArt; balanceImg.type = Image.Type.Sliced; }
             else balanceImg.color = ShopGreenDark;
-            var balanceLabel = NewText("BalanceL", balance, _body, 8, TextAnchor.MiddleLeft,
+            var balanceLabel = NewText("BalanceL", balance, _shop, 16, TextAnchor.MiddleLeft,
                 ShopGreenLit);
-            Place(balanceLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(70, 12),
+            Place(balanceLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(80, 16),
                 new Vector2(12, 0));
             balanceLabel.text = "BALANCE";
             _tabletTill = NewText("Till", balance, _display, 16, TextAnchor.MiddleRight, Color.white);
@@ -3378,9 +3455,9 @@ namespace LastCall.UI
             _tabletTill.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             // Tonight's one fitting, said where the shop can see it.
-            _fittingNote = NewText("Fitting", strip, _body, 8, TextAnchor.MiddleRight, ShopInkSoft);
-            Place(_fittingNote.rectTransform, new Vector2(1, 0.5f), new Vector2(190, 12),
-                new Vector2(-196, 0));
+            _fittingNote = NewText("Fitting", strip, _shop, 16, TextAnchor.MiddleRight, ShopInkSoft);
+            Place(_fittingNote.rectTransform, new Vector2(1, 0.5f), new Vector2(300, 18),
+                new Vector2(-206, 0));
             _fittingNote.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             // THE DEPARTMENT RAIL (2026-08-07). A shop's sections live down the left edge,
@@ -3390,21 +3467,25 @@ namespace LastCall.UI
             var rail = NewRect("Rail", screen);
             rail.anchorMin = new Vector2(0, 0); rail.anchorMax = new Vector2(0, 1);
             rail.pivot = new Vector2(0, 1);
-            rail.sizeDelta = new Vector2(RailW, -(AppBarH + 8f));
-            rail.anchoredPosition = new Vector2(0, -AppBarH);
+            rail.sizeDelta = new Vector2(RailW, -(OsBarH + AppBarH + FootH + 8f));
+            rail.anchoredPosition = new Vector2(0, -(OsBarH + AppBarH));
             rail.gameObject.AddComponent<Image>().color = ShopAisle;
 
-            var railHead = NewText("RailHead", rail, _body, 8, TextAnchor.MiddleLeft, ShopGreen);
-            Place(railHead.rectTransform, new Vector2(0, 1), new Vector2(RailW - 24, 14),
-                new Vector2(14, -14));
-            railHead.text = "DEPARTMENTS";
+            // The rail's own head: a green band with the word in white, so the departments
+            // read as a titled column and not as four loose buttons.
+            var railHead = NewRect("RailHeadBar", rail);
+            Place(railHead, new Vector2(0, 1), new Vector2(RailW, 30), new Vector2(0, 0));
+            railHead.gameObject.AddComponent<Image>().color = ShopGreenDark;
+            var railHeadText = NewText("RailHead", railHead, _shop, 16, TextAnchor.MiddleLeft, Color.white);
+            Stretch(railHeadText.rectTransform, Vector2.zero, Vector2.one, new Vector2(14, 0), new Vector2(-8, 0));
+            railHeadText.text = "DEPARTMENTS";
 
             for (int i = 0; i < ShopTabs.Length; i++)
             {
                 int tab = i;
                 var key = NewRect($"Tab{i}", rail);
-                Place(key, new Vector2(0, 1), new Vector2(RailW - 20f, RowH),
-                    new Vector2(10f, -(30f + i * (RowH + 6f))));
+                Place(key, new Vector2(0, 1), new Vector2(RailW - 16f, RowH),
+                    new Vector2(8f, -(38f + i * (RowH + 6f))));
                 var bg = key.gameObject.AddComponent<Image>();
                 // Drawn keys, 9-sliced: the lit and resting states are two pieces of art,
                 // swapped in RebuildDayEnd, so a selected department is a different OBJECT
@@ -3412,35 +3493,58 @@ namespace LastCall.UI
                 if (ItemArt.Load("sh_tab_off") != null) bg.type = Image.Type.Sliced;
                 var btn = key.gameObject.AddComponent<Button>();
                 btn.targetGraphic = bg;
-                btn.onClick.AddListener(() => { _shopTab = tab; RebuildDayEnd(); });
+                // Switching department clears last order's stamps and takes the aisle back
+                // to the top — but staying in one keeps both (the author, 2026-08-07).
+                btn.onClick.AddListener(() =>
+                {
+                    if (_shopTab != tab) { _justOrdered.Clear(); _shopScrollAt = 1f; }
+                    _shopTab = tab;
+                    RebuildDayEnd();
+                });
 
                 var icon = NewRect("I", key);
-                Place(icon, new Vector2(0, 0.5f), new Vector2(24, 24), new Vector2(16, 0));
+                Place(icon, new Vector2(0, 0.5f), new Vector2(26, 26), new Vector2(14, 0));
                 var iconImg = icon.gameObject.AddComponent<Image>();
                 iconImg.sprite = ItemArt.Load(ShopTabIcons[i]);
                 iconImg.preserveAspect = true; iconImg.raycastTarget = false;
                 if (iconImg.sprite == null) iconImg.color = new Color(1, 1, 1, 0);
                 _shopTabIcons[i] = iconImg;
 
-                var label = NewText("L", key, _body, 8, TextAnchor.MiddleLeft, ShopInk);
-                Stretch(label.rectTransform, Vector2.zero, Vector2.one, new Vector2(46, 0), new Vector2(-8, 0));
+                var label = NewText("L", key, _shop, 16, TextAnchor.MiddleLeft, ShopInk);
+                Stretch(label.rectTransform, Vector2.zero, Vector2.one, new Vector2(48, 0), new Vector2(-8, 0));
                 label.text = ShopTabs[i];
                 _shopTabKeys[i] = bg;
                 _shopTabLabels[i] = label;
             }
 
-            // The trade terms at the foot of the rail, where a distributor puts them.
-            var promise = NewText("Promise", rail, _body, 8, TextAnchor.LowerLeft, ShopInkSoft);
-            Place(promise.rectTransform, new Vector2(0, 0), new Vector2(RailW - 28, 56),
-                new Vector2(14, 16));
-            promise.alignment = TextAnchor.LowerLeft;
-            promise.text = "DELIVERED BEFORE\nYOU OPEN.\n\nONE FITTING PER\nORDER — TRADE RULE.";
+            // The trade terms fill the rest of the column, so the rail is never a strip of
+            // buttons over an empty half-metre of screen.
+            var terms = NewRect("Terms", rail);
+            Place(terms, new Vector2(0, 0), new Vector2(RailW - 16f, 210f), new Vector2(8f, 10f));
+            var termsImg = terms.gameObject.AddComponent<Image>();
+            var termsArt = ItemArt.Load("sh_panel");
+            if (termsArt != null) { termsImg.sprite = termsArt; termsImg.type = Image.Type.Sliced; }
+            else termsImg.color = Color.white;
+            var termsHead = NewText("TermsH", terms, _shop, 16, TextAnchor.UpperLeft, ShopGreenDark);
+            Place(termsHead.rectTransform, new Vector2(0, 1), new Vector2(RailW - 36f, 18f),
+                new Vector2(12, -10));
+            termsHead.text = "TRADE TERMS";
+            var terms1 = NewText("Terms1", terms, _shop, 16, TextAnchor.UpperLeft, ShopInkSoft);
+            Stretch(terms1.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(12, 10), new Vector2(-10, -34));
+            terms1.horizontalOverflow = HorizontalWrapMode.Wrap;
+            terms1.verticalOverflow = VerticalWrapMode.Truncate;
+            terms1.text = "DELIVERED BEFORE YOU OPEN.\n\n"
+                        + "ONE FITTING PER ORDER.\n\n"
+                        + "NO RETURNS ONCE THE\nDAY TURNS.\n\n"
+                        + "ACCOUNT SETTLES ON\nDELIVERY.";
 
             // The aisle: titled sections stacked and scrolling, right of the rail and above
             // the counter strip that carries the description and the basket.
             var offerView = NewRect("OfferView", screen);
-            Stretch(offerView, Vector2.zero, Vector2.one, new Vector2(RailW + 10f, FootH + 8f),
-                new Vector2(-12, -(AppBarH + 8f)));
+            Stretch(offerView, Vector2.zero, Vector2.one,
+                new Vector2(RailW + 10f, FootH + 8f),
+                new Vector2(-(BarW + 14f), -(OsBarH + AppBarH + 8f)));
             offerView.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, 0.003f);
             offerView.gameObject.AddComponent<RectMask2D>();
             _offerRow = NewRect("Offers", offerView);
@@ -3448,16 +3552,37 @@ namespace LastCall.UI
             _offerRow.pivot = new Vector2(0.5f, 1);
             _offerRow.offsetMin = Vector2.zero; _offerRow.offsetMax = Vector2.zero;
             var shopLayout = _offerRow.gameObject.AddComponent<VerticalLayoutGroup>();
-            shopLayout.spacing = 8;
+            shopLayout.spacing = 10;
             shopLayout.childControlWidth = true; shopLayout.childForceExpandWidth = true;
             shopLayout.childControlHeight = true; shopLayout.childForceExpandHeight = false;
             var shopFit = _offerRow.gameObject.AddComponent<ContentSizeFitter>();
             shopFit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            var shopScroll = offerView.gameObject.AddComponent<ScrollRect>();
+            var shopScroll = _shopScroll = offerView.gameObject.AddComponent<ScrollRect>();
             shopScroll.viewport = offerView; shopScroll.content = _offerRow;
             shopScroll.horizontal = false;
             shopScroll.movementType = ScrollRect.MovementType.Clamped;
-            shopScroll.scrollSensitivity = 30f;
+            // The wheel moved the aisle a line at a time (the author: "çok yavaş") — a
+            // shop scrolls in handfuls, and with no inertia it stops where you stop.
+            shopScroll.scrollSensitivity = 110f;
+            shopScroll.inertia = false;
+
+            // A visible bar down the right edge: a page you can scroll should say so.
+            var barTrack = NewRect("ScrollTrack", screen);
+            barTrack.anchorMin = new Vector2(1, 0); barTrack.anchorMax = new Vector2(1, 1);
+            barTrack.pivot = new Vector2(1, 1);
+            barTrack.sizeDelta = new Vector2(BarW, -(OsBarH + AppBarH + FootH + 16f));
+            barTrack.anchoredPosition = new Vector2(-8f, -(OsBarH + AppBarH + 8f));
+            barTrack.gameObject.AddComponent<Image>().color = new Color(0.84f, 0.87f, 0.84f, 1f);
+            var scrollbar = barTrack.gameObject.AddComponent<Scrollbar>();
+            scrollbar.direction = Scrollbar.Direction.BottomToTop;
+            var handle = NewRect("Handle", barTrack);
+            Stretch(handle, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var handleImg = handle.gameObject.AddComponent<Image>();
+            handleImg.color = ShopGreen;
+            scrollbar.targetGraphic = handleImg;
+            scrollbar.handleRect = handle;
+            shopScroll.verticalScrollbar = scrollbar;
+            shopScroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.Permanent;
 
             // THE COUNTER STRIP (2026-08-07). Left: what the thing under the pointer
             // actually is — a bottle's style and what it is used in, an upgrade's effect.
@@ -3465,47 +3590,66 @@ namespace LastCall.UI
             var foot = NewRect("Foot", screen);
             foot.anchorMin = new Vector2(0, 0); foot.anchorMax = new Vector2(1, 0);
             foot.pivot = new Vector2(0.5f, 0);
-            foot.sizeDelta = new Vector2(-(RailW + 22f), FootH);
-            foot.anchoredPosition = new Vector2((RailW + 10f) * 0.5f - 6f, 8f);
+            foot.sizeDelta = new Vector2(-16f, FootH);
+            foot.anchoredPosition = new Vector2(0, 8f);
+
+            var panelArt = ItemArt.Load("sh_panel");
 
             var descPanel = NewRect("Desc", foot);
             descPanel.anchorMin = Vector2.zero; descPanel.anchorMax = new Vector2(1, 1);
-            descPanel.offsetMin = Vector2.zero; descPanel.offsetMax = new Vector2(-CartW - 8f, 0);
+            descPanel.offsetMin = Vector2.zero;
+            descPanel.offsetMax = new Vector2(-(CartW + NextW + 16f), 0);
             var descImg = descPanel.gameObject.AddComponent<Image>();
-            var panelArt = ItemArt.Load("sh_panel");
             if (panelArt != null) { descImg.sprite = panelArt; descImg.type = Image.Type.Sliced; }
-            else descImg.color = ShopAisle;
+            else descImg.color = Color.white;
 
-            _marketTip = NewText("MarketTip", descPanel, _body, 8, TextAnchor.UpperLeft, ShopInk);
+            var descHead = NewText("DescH", descPanel, _shop, 16, TextAnchor.UpperLeft, ShopGreenDark);
+            Place(descHead.rectTransform, new Vector2(0, 1), new Vector2(300, 18), new Vector2(14, -10));
+            descHead.text = "PRODUCT DETAIL";
+
+            _marketTip = NewText("MarketTip", descPanel, _shop, 16, TextAnchor.UpperLeft, ShopInk);
             Stretch(_marketTip.rectTransform, Vector2.zero, Vector2.one,
-                new Vector2(12, 8), new Vector2(-12, -8));
+                new Vector2(14, 10), new Vector2(-14, -32));
             _marketTip.supportRichText = true;
+            _marketTip.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _marketTip.verticalOverflow = VerticalWrapMode.Truncate;
             _marketTip.text = ShopIdleTip;
 
-            // The basket: what is picked, what it comes to, and the button that pays for it.
+            // The basket, and it SHOWS what is in it (the author: "sepet görüntülenebilmeli").
             var cart = NewRect("Cart", foot);
             cart.anchorMin = new Vector2(1, 0); cart.anchorMax = new Vector2(1, 1);
             cart.pivot = new Vector2(1, 0.5f);
             cart.sizeDelta = new Vector2(CartW, 0);
-            cart.anchoredPosition = new Vector2(0, 0);
+            cart.anchoredPosition = new Vector2(-(NextW + 8f), 0);
             var cartImg = cart.gameObject.AddComponent<Image>();
             if (panelArt != null) { cartImg.sprite = panelArt; cartImg.type = Image.Type.Sliced; }
-            else cartImg.color = ShopAisle;
+            else cartImg.color = Color.white;
 
-            var cartIcon = NewRect("CartI", cart);
-            Place(cartIcon, new Vector2(0, 1), new Vector2(20, 20), new Vector2(10, -8));
+            var cartHead = NewRect("CartHead", cart);
+            Place(cartHead, new Vector2(0, 1), new Vector2(CartW, 26), new Vector2(0, 0));
+            cartHead.gameObject.AddComponent<Image>().color = ShopGreenDark;
+            var cartIcon = NewRect("CartI", cartHead);
+            Place(cartIcon, new Vector2(0, 0.5f), new Vector2(18, 18), new Vector2(10, 0));
             var cartIconImg = cartIcon.gameObject.AddComponent<Image>();
             cartIconImg.sprite = ItemArt.Load("sh_i_cart");
             cartIconImg.preserveAspect = true; cartIconImg.raycastTarget = false;
-            if (cartIconImg.sprite == null) cartIconImg.color = ShopGreen;
+            cartIconImg.color = Color.white;
+            _cartHeadLabel = NewText("CartHL", cartHead, _shop, 16, TextAnchor.MiddleLeft, Color.white);
+            Place(_cartHeadLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(CartW - 44, 16),
+                new Vector2(34, 0));
+            _cartHeadLabel.text = "BASKET";
 
-            _cartLine = NewText("CartLine", cart, _body, 8, TextAnchor.UpperLeft, ShopInk);
-            Place(_cartLine.rectTransform, new Vector2(0, 1), new Vector2(CartW - 46, 30),
-                new Vector2(36, -8));
-            _cartLine.text = "BASKET EMPTY";
+            // The lines themselves, listed.
+            _cartLine = NewText("CartLine", cart, _shop, 16, TextAnchor.UpperLeft, ShopInk);
+            Place(_cartLine.rectTransform, new Vector2(0, 1), new Vector2(CartW - 20, 62),
+                new Vector2(10, -30));
+            _cartLine.supportRichText = true;
+            _cartLine.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _cartLine.verticalOverflow = VerticalWrapMode.Truncate;
+            _cartLine.text = "NOTHING PICKED YET";
 
             _checkout = NewRect("Checkout", cart);
-            Place(_checkout, new Vector2(0, 0), new Vector2(CartW - 20, 30), new Vector2(10, 10));
+            Place(_checkout, new Vector2(0, 0), new Vector2(CartW - 20, 32), new Vector2(10, 10));
             var checkoutImg = _checkout.gameObject.AddComponent<Image>();
             var btnArt = ItemArt.Load("sh_btn");
             if (btnArt != null) { checkoutImg.sprite = btnArt; checkoutImg.type = Image.Type.Sliced; }
@@ -3513,21 +3657,29 @@ namespace LastCall.UI
             var checkoutBtn = _checkout.gameObject.AddComponent<Button>();
             checkoutBtn.targetGraphic = checkoutImg;
             checkoutBtn.onClick.AddListener(Checkout);
-            _checkoutLabel = NewText("L", _checkout, _body, 8, TextAnchor.MiddleCenter, Color.white);
+            _checkoutLabel = NewText("L", _checkout, _shop, 16, TextAnchor.MiddleCenter, Color.white);
             Stretch(_checkoutLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _checkoutLabel.text = "PLACE ORDER";
-            _marketTip.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-            // OPEN TOMORROW sits under the device, wide and unmissable — it is the way out
-            // of the whole day-end, not a control of the shop.
-            _openTomorrow = NewRect("OpenTomorrow", _dayEndPanel);
-            Place(_openTomorrow, new Vector2(0.5f, 0), new Vector2(560, 40), new Vector2(0, 40));
-            _openTomorrow.gameObject.AddComponent<Image>().color = UITheme.PrimaryAction;
-            var otBtn = _openTomorrow.gameObject.AddComponent<Button>();
-            otBtn.onClick.AddListener(OnDayEndAdvance);
-            var otLabel = _openTomorrowLabel = NewText("Label", _openTomorrow, _display, 14, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
-            Stretch(otLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            otLabel.text = "OPEN TOMORROW →";
+            // And the way out, bottom right of the device (the author's placement).
+            _openTomorrow = NewRect("OpenTomorrow", foot);
+            _openTomorrow.anchorMin = new Vector2(1, 0); _openTomorrow.anchorMax = new Vector2(1, 1);
+            _openTomorrow.pivot = new Vector2(1, 0.5f);
+            _openTomorrow.sizeDelta = new Vector2(NextW, 0);
+            _openTomorrow.anchoredPosition = Vector2.zero;
+            var otImg = _openTomorrow.gameObject.AddComponent<Image>();
+            if (btnArt != null) { otImg.sprite = btnArt; otImg.type = Image.Type.Sliced; }
+            otImg.color = UITheme.PrimaryAction;
+            var otBtn2 = _openTomorrow.gameObject.AddComponent<Button>();
+            otBtn2.targetGraphic = otImg;
+            otBtn2.onClick.AddListener(OnDayEndAdvance);
+            _openTomorrowLabel = NewText("Label", _openTomorrow, _shop, 16, TextAnchor.MiddleCenter,
+                UITheme.TextOnAmber);
+            Stretch(_openTomorrowLabel.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(8, 0), new Vector2(-8, 0));
+            _openTomorrowLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _openTomorrowLabel.text = "OPEN TOMORROW →";
+
             _dayEndPanel.gameObject.SetActive(false);
 
             _bannerText = NewText("Closed", root, _display, 22, TextAnchor.MiddleCenter, UITheme.ViceRed[3]);
@@ -3700,20 +3852,34 @@ namespace LastCall.UI
             var img = rt.gameObject.AddComponent<Image>();
             bool afford = Run.Money >= price;
             bool picked = cartKey != null && InCart(cartKey);
-            // A white product card on a white page, the way a trade site sets one out.
+            bool sold = cartKey != null && _justOrdered.Contains(cartKey);
+            // Three states, three COLOURS — the author, 2026-08-07: green meant both "in
+            // stock" and "picked", which is why nothing read. Picked is AMBER now, bought
+            // is green, stock-out is grey, and everything else is plain white paper.
             var cardArt = ItemArt.Load("sh_card");
             if (cardArt != null)
             {
                 img.sprite = cardArt;
                 img.type = Image.Type.Sliced;
-                img.color = owned ? new Color(0.85f, 0.97f, 0.86f)
-                    : picked ? new Color(0.80f, 0.95f, 0.82f)
+                img.color = picked ? new Color(1f, 0.90f, 0.66f)
+                    : sold || owned ? new Color(0.83f, 0.96f, 0.84f)
                     : !available ? new Color(0.90f, 0.90f, 0.88f)
                     : afford ? Color.white
                     : new Color(0.94f, 0.92f, 0.90f);
             }
-            else img.color = owned || picked ? ShopGreenLit : available ? Color.white : ShopAisle;
-            if (picked) Hairline(rt, new Vector2(0, 0), new Vector2(1, 0), ShopGreen);
+            else img.color = picked ? UITheme.Amber[3]
+                : sold || owned ? ShopGreenLit : available ? Color.white : ShopAisle;
+            // A picked line wears a thick amber edge on all four sides — a tick alone was
+            // not enough to see across a shelf of listings.
+            if (picked)
+            {
+                Hairline(rt, new Vector2(0, 0), new Vector2(1, 0), UITheme.Amber[2]);
+                Hairline(rt, new Vector2(0, 1), new Vector2(1, 1), UITheme.Amber[2]);
+                var pickMark = NewText("Pick", rt, _shop, 16, TextAnchor.MiddleCenter, ShopInk);
+                Place(pickMark.rectTransform, new Vector2(1, 1), new Vector2(22, 22),
+                    new Vector2(-24, -4));
+                pickMark.text = "✓";
+            }
 
             if (available)
             {
@@ -3762,39 +3928,41 @@ namespace LastCall.UI
                 textLeft = 78f;
             }
 
-            var name = NewText("Name", rt, _body, 8, TextAnchor.UpperLeft,
+            var name = NewText("Name", rt, _shop, 16, TextAnchor.UpperLeft,
                 available || owned ? ShopInk : ShopInkSoft);
             Stretch(name.rectTransform, Vector2.zero, Vector2.one,
-                new Vector2(textLeft, 42), new Vector2(-10, -10));
+                new Vector2(textLeft, 46), new Vector2(-28, -8));
             name.horizontalOverflow = HorizontalWrapMode.Wrap;
             name.verticalOverflow = VerticalWrapMode.Truncate;
             name.text = title;
 
             // The price, in the display face — the number a shopper reads first.
             var priceText = NewText("Price", rt, _display, 16, TextAnchor.LowerLeft,
-                owned ? ShopGreen
+                sold || owned ? ShopGreen
                 : !available ? ShopInkSoft : afford ? ShopGreenDark : new Color(0.70f, 0.20f, 0.20f));
-            Place(priceText.rectTransform, new Vector2(0, 0), new Vector2(140, 20),
-                new Vector2(textLeft, 24));
+            Place(priceText.rectTransform, new Vector2(0, 0), new Vector2(150, 20),
+                new Vector2(textLeft, 26));
             priceText.horizontalOverflow = HorizontalWrapMode.Overflow;
-            priceText.text = owned ? "IN STOCK" : available ? $"${price}" : "—";
+            priceText.text = sold ? "SOLD" : owned ? "IN STOCK" : available ? $"${price}" : "—";
 
-            // And the state, under it, in its own line: basket language.
-            var stateText = NewText("State", rt, _body, 8, TextAnchor.LowerLeft,
-                picked ? ShopGreenDark
-                : owned ? ShopGreen
+            // And the state, under it, in its own line: shop language, one word each way.
+            var stateText = NewText("State", rt, _shop, 16, TextAnchor.LowerLeft,
+                picked ? new Color(0.55f, 0.36f, 0.05f)
+                : sold || owned ? ShopGreen
                 : !available ? ShopInkSoft
                 : afford ? ShopInkSoft : new Color(0.70f, 0.20f, 0.20f));
-            Place(stateText.rectTransform, new Vector2(0, 0), new Vector2(180, 12),
-                new Vector2(textLeft, 8));
+            Place(stateText.rectTransform, new Vector2(0, 0), new Vector2(190, 16),
+                new Vector2(textLeft, 6));
             stateText.horizontalOverflow = HorizontalWrapMode.Overflow;
-            stateText.text = picked ? "✓ IN BASKET"
+            stateText.text = picked ? "IN BASKET"
+                : sold ? "ON THE VAN"
                 : owned ? sub
                 : !available ? sub
                 : afford ? "ADD TO BASKET" : "OVER BALANCE";
 
-            // The stamp lands on whatever this order just bought.
-            if (cartKey != null && _justOrdered.Contains(cartKey)) StampSold(rt);
+            // The stamp lands on whatever this order bought, and stays there for the rest
+            // of the market day (the author, 2026-08-07).
+            if (sold) StampSold(rt);
             return rt;
         }
 
