@@ -42,7 +42,11 @@ namespace LastCall.EditorTools
             // probed at exactly 20px on all four sides.
             // The distributor's white/green kit (2026-08-07), each border probed off its
             // own art: the tablet's bezel measured at 40px on every side.
-            else if (file == "sh_tablet") ti.spriteBorder = new Vector4(40, 40, 40, 40);
+            // The iPad's bezel probed at 62px on every side (Tools/market_borders.py and
+            // the ipad_dark recolour agree) — a device you can see, not a white line.
+            else if (file == "sh_ipad") ti.spriteBorder = new Vector4(62, 62, 62, 62);
+            else if (file == "sh_add") ti.spriteBorder = new Vector4(14, 8, 14, 8);
+            else if (file == "sh_tablet" || file == "sh_tablet2") ti.spriteBorder = new Vector4(40, 40, 40, 40);
             else if (file == "sh_card") ti.spriteBorder = new Vector4(10, 8, 10, 8);
             else if (file == "sh_bar") ti.spriteBorder = new Vector4(10, 8, 10, 8);
             else if (file == "sh_tab_on" || file == "sh_tab_off") ti.spriteBorder = new Vector4(8, 6, 8, 6);
