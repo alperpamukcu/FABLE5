@@ -507,26 +507,44 @@ namespace LastCall.UI
                 float textX = 2f;
                 if (ingredient)
                 {
-                    // Style-keyed art is the RETIRED shelf; the live bottle for this style
-                    // hangs on the run's own shelf, and a v3 bottle's icon is its FRONT
-                    // plate — the one with the label — never the interior back.
-                    var live = Run != null
-                        ? LastCall.Core.Market.FindByStyle(Run.Shelf, spec.Style) : null;
-                    var art = live != null
-                        ? ItemArt.Bottle(live.Ingredient)   // the composed flat, label and all
-                        : ItemArt.Bottle(spec.Style);
-                    if (art != null)
+                    // EVERY BOTTLE THAT WOULD DO, not one of them (2026-08-10, the author:
+                    // "seviyesi yeten rumların hepsini göster"). A band asks for a STYLE at
+                    // a minimum tier, and a well with three rums can answer it three ways —
+                    // the card used to draw whichever one FindByStyle happened to return,
+                    // so a shelf full of choices looked like a shelf with one bottle on it.
+                    var pour = new List<Sprite>();
+                    if (Run != null)
                     {
-                        var icon = NewRect("B", line);
-                        Place(icon, new Vector2(0, 0.5f), new Vector2(SpecRowH - 3f, SpecRowH - 3f),
-                            new Vector2(3f, 0));
+                        foreach (var b in Run.Shelf.Bottles)
+                        {
+                            var info = b.Ingredient?.Info;
+                            if (info == null || info.Style != spec.Style) continue;
+                            if (info.Tier < spec.MinTier) continue;   // too plain for this drink
+                            var a = ItemArt.Bottle(b.Ingredient);
+                            if (a != null) pour.Add(a);
+                        }
+                    }
+                    if (pour.Count == 0)
+                    {
+                        var fallback = ItemArt.Bottle(spec.Style);
+                        if (fallback != null) pour.Add(fallback);
+                    }
+                    float box = SpecRowH - 3f;
+                    // They overlap as they multiply rather than growing the row: a spec card
+                    // is a fixed grid and three bottles must cost the same height as one.
+                    float step = pour.Count > 1 ? Mathf.Min(box, 40f / pour.Count) : box;
+                    for (int b = 0; b < pour.Count; b++)
+                    {
+                        var icon = NewRect("B" + b, line);
+                        Place(icon, new Vector2(0, 0.5f), new Vector2(box, box),
+                            new Vector2(3f + b * step, 0));
                         var img = icon.gameObject.AddComponent<Image>();
-                        img.sprite = art;
+                        img.sprite = pour[b];
                         img.preserveAspect = true;
                         img.raycastTarget = false;
                         img.color = stocked ? Color.white : new Color(1f, 1f, 1f, 0.35f);
                     }
-                    textX = SpecRowH + 4f;
+                    textX = SpecRowH + 4f + Mathf.Max(0, pour.Count - 1) * step;
                 }
 
                 // The CONTENTS are the text face: lighter and narrower than the name above
@@ -3097,7 +3115,15 @@ namespace LastCall.UI
             // The mark alone said "a bottle"; the NAME beside it says which. The identity
             // row already carried it, but a hundred units to the right of the picture it
             // belongs to — so the two read as separate facts about the same tile.
-            _inspIdentity.text = spec.Identity ?? "";
+            // WHITE AND HEAVY (2026-08-10, the author: the bottle had a mark and a grey
+            // line of specifications, and nowhere did it say WHAT IT WAS). The identity row
+            // was already here and already carried the name; it was set in the body face at
+            // the body's weight, so it read as one more line of small print.
+            // NEVER BLANK. A tile that forgot to set Identity showed the bottle's mark, a
+            // grey line of specifications and no name at all — which is exactly the one
+            // thing the panel exists to say. The tile's own name is always there.
+            _inspIdentity.text = !string.IsNullOrEmpty(spec.Identity)
+                ? spec.Identity : (spec.Name ?? "").ToUpperInvariant();
             _inspMeta.text = spec.MetaLine ?? "";
             _inspBody.text = spec.Body ?? "";
             WriteBuff(_inspBuffA, _inspBuffAIcon, spec.BuffA);
@@ -4284,6 +4310,14 @@ namespace LastCall.UI
             if (view.Body.gameObject.activeSelf != on) view.Body.gameObject.SetActive(on);
             if (!on) return;
 
+            // WHO IS IN FRONT (2026-08-10, the author: a walker crossed in front of the
+            // people already at the bar). Every body sat at one sorting order, so their
+            // relative depth was whatever the renderer felt like. Somebody still walking
+            // in or out is BEHIND everyone seated — they are further into the room — and
+            // among the seated, the nearer stool draws in front, which is just perspective.
+            bool walking = view.Exiting || view.WalkT < 1f;
+            view.Body.sortingOrder = walking ? 22 : 25;
+
             float drawnH = CharSize / StageToHud;                       // stage units tall
             float k = drawnH / Mathf.Max(0.0001f, view.Body.sprite.bounds.size.y);
             view.Body.transform.localScale = new Vector3(k * CharWiden, k, 1f);
@@ -5191,7 +5225,9 @@ namespace LastCall.UI
             const float InspGutter = 12f, InspText = 36f;
             const float InspCol = InspectorW - InspText - 12f;   // 560 - 36 - 12 = 512
 
-            _inspIdentity = NewText("Identity", inspector, _shop, 16, TextAnchor.UpperLeft, InspectorInk);
+            // The heaviest ink on the panel: white, in the shop's bold face. Everything
+            // else here is specification; this is the product.
+            _inspIdentity = NewText("Identity", inspector, _shop, 16, TextAnchor.UpperLeft, Color.white);
             Place(_inspIdentity.rectTransform, new Vector2(0, 1), new Vector2(InspCol, 20),
                 new Vector2(InspText, -6));
             _inspIdentity.horizontalOverflow = HorizontalWrapMode.Wrap;
@@ -5675,20 +5711,46 @@ namespace LastCall.UI
             // 4 — ONE contextual token, or the stock meter where stock IS the fact.
             if (spec.StockFrac >= 0f)
             {
+                // A METER YOU CAN ACTUALLY READ (2026-08-10, the author). It was a 6-unit
+                // hairline with an 8pt percentage floating to its right: at a glance you
+                // could tell "some" from "none" and nothing else. Now it is 12 deep with a
+                // dark surround, so the bar has an edge to be read against, and the number
+                // rides ON it in the shop's bold face — one object, one reading.
                 float frac = Mathf.Clamp01(spec.StockFrac);
-                var track = NewRect("Track", rt);
-                Place(track, new Vector2(0, 1), new Vector2(100, 6), new Vector2(12, -171));
-                var trackImg = track.gameObject.AddComponent<Image>();
-                trackImg.color = ShopInkSoft;      // dark: a pale track on white paper was
-                trackImg.raycastTarget = false;    // 1.2:1 and could not be seen at all
+                const float MeterW = 136f, MeterH = 14f, MeterY = -170f;
+                var surround = NewRect("Track", rt);
+                Place(surround, new Vector2(0, 1), new Vector2(MeterW, MeterH), new Vector2(12, MeterY));
+                var surroundImg = surround.gameObject.AddComponent<Image>();
+                surroundImg.color = new Color(0.16f, 0.20f, 0.17f, 1f);
+                surroundImg.raycastTarget = false;
+
+                var well = NewRect("Well", rt);
+                Place(well, new Vector2(0, 1), new Vector2(MeterW - 4f, MeterH - 4f),
+                    new Vector2(14, MeterY - 2f));
+                var wellImg = well.gameObject.AddComponent<Image>();
+                wellImg.color = new Color(0.80f, 0.84f, 0.80f, 1f);
+                wellImg.raycastTarget = false;
+
                 var fill = NewRect("Fill", rt);
                 // Width IS the fraction, so the bar cannot overflow its track by construction.
-                Place(fill, new Vector2(0, 1), new Vector2(100f * frac, 6), new Vector2(12, -171));
+                Place(fill, new Vector2(0, 1), new Vector2((MeterW - 4f) * frac, MeterH - 4f),
+                    new Vector2(14, MeterY - 2f));
                 var fillImg = fill.gameObject.AddComponent<Image>();
                 fillImg.color = frac < 0.25f ? ShopCost : StripStock;
                 fillImg.raycastTarget = false;
-                var pct = NewText("Pct", rt, _body, 8, TextAnchor.MiddleRight, TileMetaInk);
-                Place(pct.rectTransform, new Vector2(1, 1), new Vector2(34, 12), new Vector2(-8, -168));
+
+                // The reading sits on the meter, and in the colour that survives BOTH the
+                // filled and the empty half — white with its own dark shadow behind it.
+                var pctShadow = NewText("PctS", rt, _shop, 8, TextAnchor.MiddleCenter,
+                    new Color(0f, 0f, 0f, 0.55f));
+                Place(pctShadow.rectTransform, new Vector2(0, 1), new Vector2(MeterW, MeterH),
+                    new Vector2(13, MeterY - 1f));
+                pctShadow.raycastTarget = false;
+                pctShadow.text = Mathf.RoundToInt(frac * 100f) + "%";
+                var pct = NewText("Pct", rt, _shop, 8, TextAnchor.MiddleCenter, Color.white);
+                Place(pct.rectTransform, new Vector2(0, 1), new Vector2(MeterW, MeterH),
+                    new Vector2(12, MeterY));
+                pct.raycastTarget = false;
                 pct.text = Mathf.RoundToInt(frac * 100f) + "%";
             }
             else if (!string.IsNullOrEmpty(spec.Meta) && state != TileState.Sealed)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using LastCall.Core;
@@ -725,17 +725,23 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void ABrimfulGlass_TakesNoFinishingTouch()
+        public void ABrimfulGlass_StillTakesItsFinishingTouch()
         {
-            // The shaker's rule, against the glass it is actually going in: ice needs somewhere
-            // to go, and a full glass that takes it anyway is a garnished drink for free.
+            // THE RULE CHANGED (2026-08-10, the author: "buz limon tuz şeker gibi eklentiler
+            // doluluğu değiştirmemeli"). A preparation is a RECORDED STEP — AddPreparation
+            // has never touched TotalVolume — so refusing one for want of room applied a
+            // volume rule to something with no volume, and it read as the bench seizing up
+            // the moment the pour came out right. A rim of salt displaces nothing.
             var run = NewRun();
             run.PourAtGlass("soda", run.ServingGlass.Capacity);
 
             Assert.IsTrue(run.ServingGlass.IsFull);
-            Assert.IsFalse(run.CanFinishAtGlass);
-            Assert.Throws<InvalidOperationException>(
-                () => run.AddPreparationAtGlass(Preparations.Ice));
+            run.AddPreparationAtGlass(Preparations.Ice);
+
+            Assert.IsTrue(run.ServingGlass.HasPreparation(Preparations.Ice.Id),
+                "the finishing touch lands");
+            Assert.AreEqual(1.0, run.ServingGlass.FillFraction, 1e-9,
+                "and it displaces nothing: the glass is exactly as full as it was");
         }
 
         [Test]
@@ -829,10 +835,11 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void AFullGlassTakesNothingMore_NotEvenIce()
+        public void AFullGlassTakesNoMoreLIQUID_ButStillTakesIce()
         {
-            // Pouring past the brim stops at it (GDD 21 §3) — and once it is there, the ice and
-            // the twist are refused too, because they need room the glass no longer has.
+            // Pouring past the brim stops at it (GDD 21 §3). What is refused is VOLUME —
+            // liquid and the pinch of garnish that pours like one. A preparation is a step
+            // on a list and goes on regardless (2026-08-10).
             var run = NewRun();
             run.PourMeasure("gin", 0.6);
             double taken = run.PourMeasure("soda", 0.9);   // only 0.4 of it can fit
@@ -840,12 +847,13 @@ namespace LastCall.Tests
             Assert.AreEqual(0.4, taken, 1e-9, "the pour stops at the brim, it does not overflow");
             Assert.IsTrue(run.Glass.IsFull);
             Assert.AreEqual(1.0, run.Glass.FillFraction, 1e-9);
-            Assert.IsFalse(run.CanAddPreparation);
 
             Assert.AreEqual(0, run.PourMeasure("gin", 0.3), "a full glass takes no more liquid");
             Assert.AreEqual(0, run.PourGarnish("gin"), "nor a pinch of garnish");
-            Assert.Throws<InvalidOperationException>(() => run.AddPreparation(Preparations.Ice),
-                "nor a cube of ice");
+
+            Assert.IsTrue(run.CanAddPreparation, "but a cube of ice needs no room");
+            run.AddPreparation(Preparations.Ice);
+            Assert.IsTrue(run.Glass.HasPreparation(Preparations.Ice.Id));
             Assert.AreEqual(1.0, run.Glass.FillFraction, 1e-9, "and it is still exactly full");
         }
 

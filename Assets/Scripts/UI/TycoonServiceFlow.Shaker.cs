@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using LastCall.Core;
@@ -572,8 +572,7 @@ namespace LastCall.UI
             // A tin filled to the brim has no room for a cube of ice or a twist of lemon, so the
             // piece falls away instead of going in — the rules refuse it either way, and dropping
             // it in silently would just look broken (2026-07-28).
-            if (inMouth && !run.Glass.IsEmpty && run.Glass.IsFull) ShowShakerFull();
-            else if (inMouth && !run.Glass.IsEmpty)
+            if (inMouth && !run.Glass.IsEmpty)
             {
                 run.AddPreparation(_draggingPrep);
                 SayShaker(ShakerLine(run));
@@ -775,10 +774,10 @@ namespace LastCall.UI
             // first and shrinking as they recede — the serve stage's own placement, called
             // through the same two helpers, so the ice bucket on this bench is the same ice
             // bucket in the same place as the one on that counter.
-            AddPrepSource(0, "ICE", Preparations.Ice, "ice", UITheme.Cyan[4]);
-            AddPrepSource(1, "LEMON", Preparations.LemonTwist, "lemon_twist", UITheme.Amber[4]);
-            AddPrepSource(2, "SALT", Preparations.SaltRim, "salt_rim", UITheme.Cream[4]);
-            AddPrepSource(3, "SUGAR", Preparations.SugarRim, "sugar_rim", UITheme.Magenta[4]);
+            // THE FOUR LEFT THE BENCH (2026-08-10, the author). Ice, a twist, a salt rim
+            // and a sugar rim are finished AT THE GLASS — that is where a bartender puts
+            // them and where AddPreparationAtGlass has always applied them. On the tin they
+            // were a second door to the same act, and the one that could refuse you.
 
             // The single piece that follows the mouse while a prep is held. Its pivot is at the
             // top (the grip), so it hangs below the cursor and swings about that point.

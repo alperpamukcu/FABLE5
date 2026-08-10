@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -937,15 +937,21 @@ namespace LastCall.Core
         public void AddPreparation(PreparationDefinition preparation)
         {
             EnsurePhase(TycoonPhase.DayOpen);
-            if (Glass.IsFull)
-                throw new InvalidOperationException(
-                    "The shaker is full to the brim — there is no room for anything else.");
+            // No fullness test, for the same reason as at the glass: a preparation is a
+            // recorded step with no volume, so a brimful tin still takes a twist.
             Glass.AddPreparation(preparation);
         }
 
         /// <summary>Whether that preparation would be taken, so the UI can say "full" instead of
         /// offering a drop that will be refused.</summary>
-        public bool CanAddPreparation => Phase == TycoonPhase.DayOpen && !Glass.IsFull;
+        /// <summary>
+        /// A PREPARATION TAKES NO ROOM (2026-08-10, the author: "buz limon tuz şeker gibi
+        /// eklentiler doluluğu değiştirmemeli"). AddPreparation records a step; it has never
+        /// touched TotalVolume. So a tin filled to the brim refusing a twist of lemon was a
+        /// rule about volume applied to something that has none — and it read as the bench
+        /// seizing up the moment you got the pour right.
+        /// </summary>
+        public bool CanAddPreparation => Phase == TycoonPhase.DayOpen;
 
         /// <summary>
         /// Finishes the drink in the SERVING GLASS rather than in the shaker (v5 P14) — ice,
@@ -961,14 +967,14 @@ namespace LastCall.Core
         public void AddPreparationAtGlass(PreparationDefinition preparation)
         {
             EnsurePhase(TycoonPhase.DayOpen);
-            if (ServingGlass.IsFull)
-                throw new InvalidOperationException(
-                    "The glass is full to the brim — there is no room for anything else.");
+            // No fullness test: a rim of salt and a twist of lemon displace nothing, so a
+            // glass poured to the brim can still be finished (2026-08-10).
             ServingGlass.AddPreparation(preparation);
         }
 
         /// <summary>Whether the serving glass would take a finishing touch right now.</summary>
-        public bool CanFinishAtGlass => Phase == TycoonPhase.DayOpen && !ServingGlass.IsFull;
+        /// <summary>Finishing takes no room either — see <see cref="CanAddPreparation"/>.</summary>
+        public bool CanFinishAtGlass => Phase == TycoonPhase.DayOpen;
 
         /// <summary>Shakes the built drink (GDD 24 §2.5). Recorded on the shaker; the craft
         /// effect of a good shake is a later balance pass, the plumbing is here now.</summary>
