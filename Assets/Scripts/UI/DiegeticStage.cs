@@ -561,9 +561,13 @@ namespace LastCall.UI
             // THE TILL STANDS ON THE BAR, SO IT STANDS IN FRONT OF THE DRINKERS.
             // The customers are HUD objects at sorting 5 — so the register gets its own
             // canvas at 6: over the seats, under the service flow (12) and the licence (20).
-            // Its shadow and the wallet plaque keep the old scene canvas's −10, where they
-            // drew before: under the patrons, and visible through the till's display window.
-            var backRoot = OverlayCanvas("RegisterBack", -10, raycasts: false);
+            // Its shadow and the wallet plaque draw at −7: under the patrons and the
+            // dressing (−5), visible through the till's display window — and ABOVE the
+            // fallback room, which also sits at −10. On the old single canvas the plaque
+            // outdrew the fallback by sibling order; two canvases on the same order have
+            // no defined order at all, and a lost art reference would have taken the
+            // wallet with it.
+            var backRoot = OverlayCanvas("RegisterBack", -7, raycasts: false);
             var frontRoot = OverlayCanvas("RegisterLayer", 6, raycasts: true);
 
             var reg = NewRect("Register", frontRoot);
