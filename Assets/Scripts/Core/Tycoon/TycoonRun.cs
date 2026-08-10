@@ -174,7 +174,8 @@ namespace LastCall.Core
             IReadOnlyList<IngredientCard> brandCatalogue = null,
             IReadOnlyList<GlasswareDefinition> glassware = null,
             IReadOnlyList<SnackDefinition> snacks = null,
-            IReadOnlyList<IngredientCard> lockedStock = null)
+            IReadOnlyList<IngredientCard> lockedStock = null,
+            IReadOnlyList<FixtureDefinition> fixtures = null)
         {
             _shelf = shelf ?? throw new ArgumentNullException(nameof(shelf));
             if (recipes == null) throw new ArgumentNullException(nameof(recipes));
@@ -197,6 +198,7 @@ namespace LastCall.Core
 
             _glassware = glassware ?? Array.Empty<GlasswareDefinition>();
             _snacks = snacks ?? Array.Empty<SnackDefinition>();
+            _fixtureCatalogue = fixtures ?? Array.Empty<FixtureDefinition>();
             RestockSnacks();
 
             Money = _config.StartingMoney;
@@ -342,7 +344,7 @@ namespace LastCall.Core
 
         public sealed class DayPurchase
         {
-            public enum Kind { Brand, Recipe, Seat, Glassware, Counter }
+            public enum Kind { Brand, Recipe, Seat, Glassware, Counter, Fixture }
             public Kind What { get; }
             public string Id { get; }
             public string Name { get; }
@@ -392,6 +394,11 @@ namespace LastCall.Core
                 case DayPurchase.Kind.Counter:
                     if (CounterTier > 1) CounterTier--;
                     if (UpgradesToday > 0) UpgradesToday--;
+                    break;
+                case DayPurchase.Kind.Fixture:
+                    // Dressing is not a fitting, so there is no fitting to give back —
+                    // the piece just goes back on the truck.
+                    _fixtures.Remove(p.Id);
                     break;
             }
             Money += p.Price;
@@ -1242,6 +1249,45 @@ namespace LastCall.Core
             _todayPurchases.Add(new DayPurchase(
                 DayPurchase.Kind.Counter, "counter", $"Bar Top {CounterTier}", price));
             return price;
+        }
+
+        // ── bar dressing (2026-08-10): the modular fixtures ─────────────────────
+        // Plants, lamps, wall pieces — bought at day end like everything else, gated on
+        // the bar's standing like the better recipes, refundable the same night. They are
+        // COSMETIC: no ambience number, and no fitting slot spent, because the fitting
+        // cap is for things that change what the bar IS (stools, glassware, the counter),
+        // and a fern changes what it looks like.
+
+        private readonly IReadOnlyList<FixtureDefinition> _fixtureCatalogue;
+        private readonly HashSet<string> _fixtures = new HashSet<string>();
+
+        /// <summary>Everything the market could ever sell for the room, gated or not.</summary>
+        public IReadOnlyList<FixtureDefinition> FixtureCatalogue => _fixtureCatalogue;
+
+        public bool OwnsFixture(string fixtureId) => _fixtures.Contains(fixtureId);
+
+        /// <summary>How many pieces of dressing the bar owns — the cheap change-detection
+        /// handle the stage watches, so it only rebuilds the room when the room changed.</summary>
+        public int OwnedFixtureCount => _fixtures.Count;
+
+        public int BuyFixture(string fixtureId)
+        {
+            EnsurePhase(TycoonPhase.DayEnd);
+            FixtureDefinition def = null;
+            foreach (var f in _fixtureCatalogue)
+                if (f.Id == fixtureId) { def = f; break; }
+            if (def == null)
+                throw new InvalidOperationException($"No fixture '{fixtureId}' in the catalogue.");
+            if (_fixtures.Contains(fixtureId))
+                throw new InvalidOperationException($"The bar already has {def.Name}.");
+            if (Rating.Average < def.Stars)
+                throw new InvalidOperationException(
+                    $"{def.Name} needs a {def.Stars:0.0}-star room; this bar rates {Rating.Average:0.0}.");
+            Spend(def.Price);
+            _fixtures.Add(fixtureId);
+            _todayPurchases.Add(new DayPurchase(
+                DayPurchase.Kind.Fixture, fixtureId, def.Name, def.Price));
+            return def.Price;
         }
 
         /// <summary>

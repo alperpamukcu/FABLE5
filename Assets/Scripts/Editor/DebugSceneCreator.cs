@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using LastCall.UI;
 using LastCall.Game;
 using UnityEditor;
@@ -20,6 +20,7 @@ namespace LastCall.EditorTools
         private const string ArchetypesPath = "Assets/Data/customers/archetypes.json";
         private const string GlasswarePath = "Assets/Data/glassware/glassware.json";
         private const string SnacksPath = "Assets/Data/snacks/snacks.json";
+        private const string FixturesPath = "Assets/Data/fixtures/fixtures.json";
         // v2 pixel fonts (16_ui_style_guide v2 §1: Press Start 2P headings/numbers,
         // Silkscreen body/caption — spec-sanctioned fallbacks for m6x11/m5x7). The legacy
         // Limelight/Barlow pair is gone: every slot wires a pixel font now.
@@ -88,6 +89,7 @@ namespace LastCall.EditorTools
             so.FindProperty("archetypesJson").objectReferenceValue = LoadRequired<TextAsset>(ArchetypesPath);
             so.FindProperty("glasswareJson").objectReferenceValue = LoadRequired<TextAsset>(GlasswarePath);
             so.FindProperty("snacksJson").objectReferenceValue = LoadRequired<TextAsset>(SnacksPath);
+            so.FindProperty("fixturesJson").objectReferenceValue = LoadRequired<TextAsset>(FixturesPath);
             so.ApplyModifiedPropertiesWithoutUndo();
 
             // The stage carries only what the player still sees (2026-08-07 sweep): the room,

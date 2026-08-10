@@ -194,6 +194,41 @@ namespace LastCall.Game
             return snacks;
         }
 
+        /// <summary>
+        /// Bar dressing (2026-08-10): the modular fixtures. One catalogue entry per slot —
+        /// two fixtures fighting over one hook is a content bug and fails here, at load,
+        /// where a content bug belongs.
+        /// </summary>
+        public static IReadOnlyList<FixtureDefinition> ParseFixtures(string json)
+        {
+            var dto = FromJson<FixturesFileDto>(json, "fixtures");
+            if (dto.fixtures == null || dto.fixtures.Count == 0)
+                throw new FormatException("Fixtures file contains no fixtures.");
+
+            var seenIds = new HashSet<string>();
+            var seenSlots = new HashSet<string>();
+            var fixtures = new List<FixtureDefinition>(dto.fixtures.Count);
+            foreach (var f in dto.fixtures)
+            {
+                if (!seenIds.Add(f.id ?? ""))
+                    throw new FormatException($"Fixtures file lists '{f.id}' twice.");
+                if (!seenSlots.Add(f.slot ?? ""))
+                    throw new FormatException(
+                        $"Fixture '{f.id}' wants slot '{f.slot}', which another fixture already has.");
+                try
+                {
+                    fixtures.Add(new FixtureDefinition(f.id, f.name, f.slot, f.price,
+                        f.stars, f.flavor, f.sprite,
+                        f.lightR, f.lightG, f.lightB, f.lightIntensity, f.lightRadius));
+                }
+                catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
+                {
+                    throw new FormatException($"Fixture '{f.id}': {e.Message}");
+                }
+            }
+            return fixtures;
+        }
+
         private static PrepMethod ParsePrep(string raw, string context)
         {
             if (string.IsNullOrEmpty(raw)) return PrepMethod.Shaken;
@@ -264,6 +299,32 @@ namespace LastCall.Game
             public string category;
             public bool carbonated;
             public bool locked;
+        }
+
+        [Serializable]
+        private sealed class FixtureDto
+        {
+            public string id;
+            public string name;
+            public string slot;
+            public int price;
+            public double stars;
+            public string flavor;
+            public string sprite;
+            // A lamp is a fixture whose intensity is above zero; JsonUtility cannot say
+            // "absent", so unlit fixtures simply leave the light block off (0 defaults).
+            public float lightR;
+            public float lightG;
+            public float lightB;
+            public float lightIntensity;
+            public float lightRadius;
+        }
+
+        [Serializable]
+        private sealed class FixturesFileDto
+        {
+            public int version;
+            public List<FixtureDto> fixtures;
         }
 
         [Serializable]

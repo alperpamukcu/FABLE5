@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using LastCall.Core;
 using UnityEngine;
 
@@ -20,6 +20,9 @@ namespace LastCall.Game
         /// boot so a bad file fails loudly today, even though the run consumes them in P14/P16.</summary>
         [SerializeField] private TextAsset glasswareJson;
         [SerializeField] private TextAsset snacksJson;
+
+        /// <summary>The bar-dressing catalogue (2026-08-10). Leave unassigned for a bare room.</summary>
+        [SerializeField] private TextAsset fixturesJson;
 
         [SerializeField] private string seed = "LASTCALL-DEV";
 
@@ -90,6 +93,9 @@ namespace LastCall.Game
             Snacks = snacksJson != null
                 ? DataLoader.ParseSnacks(snacksJson.text)
                 : System.Array.Empty<SnackDefinition>();
+            var fixtures = fixturesJson != null
+                ? DataLoader.ParseFixtures(fixturesJson.text)
+                : System.Array.Empty<FixtureDefinition>();
             LockedStock = bar.LockedCards;
             if (Glassware.Count > 0)
             {
@@ -106,7 +112,8 @@ namespace LastCall.Game
                 brandCatalogue: brandCatalogue,
                 glassware: Glassware,
                 snacks: Snacks,
-                lockedStock: LockedStock);
+                lockedStock: LockedStock,
+                fixtures: fixtures);
 
             Debug.Log($"[LastCall] Tycoon run started — seed '{CurrentSeed}', " +
                       $"{startingBottles.Count} bottles, wallet ${Tycoon.Money}, " +
