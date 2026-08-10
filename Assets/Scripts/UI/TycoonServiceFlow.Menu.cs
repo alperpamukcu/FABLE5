@@ -312,11 +312,19 @@ namespace LastCall.UI
             // pilot glass is genuinely see-through, so the drink is drawn BEHIND the sprite —
             // an EARLIER SIBLING in the same rect, so it renders first — and the glass covers
             // it for free. No back plate, no film, no label to protect.
-            var wet = NewRect("Fluid", slot);
-            wet.anchorMin = wet.anchorMax = new Vector2(0.5f, 0);
-            wet.pivot = new Vector2(0.5f, 0);
-            wet.sizeDelta = new Vector2(artW, artH);
-            wet.anchoredPosition = new Vector2(0, 2f);
+            // Drink and glass live in ONE rect, and it is that rect the pointer lifts.
+            // They used to be siblings under the slot with only the art handed to
+            // Pressable, so hovering raised the bottle and left its contents standing
+            // where they were (the author, 2026-08-10: "sıvı sabit kalıyor, şişe ön
+            // plana çıkıyor"). Anything that moves a bottle has to move what is in it.
+            var body = NewRect("Bottle", slot);
+            body.anchorMin = body.anchorMax = new Vector2(0.5f, 0);
+            body.pivot = new Vector2(0.5f, 0);
+            body.sizeDelta = new Vector2(artW, artH);
+            body.anchoredPosition = new Vector2(0, 2f);
+
+            var wet = NewRect("Fluid", body);
+            Stretch(wet, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var fluid = wet.gameObject.AddComponent<BottleFluid>();
             fluid.raycastTarget = false;
             var drink = UITheme.StyleColor(card.Info?.Style, card.Type);
@@ -326,11 +334,8 @@ namespace LastCall.UI
                 ? (float)(bottle.Remaining / bottle.Capacity)
                 : 0f);
 
-            var art = NewRect("Art", slot);
-            art.anchorMin = art.anchorMax = new Vector2(0.5f, 0);
-            art.pivot = new Vector2(0.5f, 0);
-            art.sizeDelta = new Vector2(artW, artH);
-            art.anchoredPosition = new Vector2(0, 2f);
+            var art = NewRect("Art", body);
+            Stretch(art, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var img = art.gameObject.AddComponent<Image>();
             img.sprite = ItemArt.Bottle(card);
             img.preserveAspect = true; img.raycastTarget = false;
@@ -371,7 +376,7 @@ namespace LastCall.UI
             // The bottle answers the pointer whether or not it can be taken: a bottle that is OUT
             // still lifts, because "you found the thing" and "the thing will do something" are two
             // different answers and the player needs the first one to trust the shelf at all.
-            Pressable(slot, art, img, lift: shut ? 2f : 5f, depth: shut ? 0f : 5f);
+            Pressable(slot, body, img, lift: shut ? 2f : 5f, depth: shut ? 0f : 5f);
 
             var trigger = slot.gameObject.AddComponent<EventTrigger>();
             var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
@@ -388,7 +393,7 @@ namespace LastCall.UI
             trigger.triggers.Add(press);
 
             var sink = slot.gameObject.AddComponent<PressSink>();
-            sink.Face = art; sink.Depth = 3f; sink.Squash = 0.01f;
+            sink.Face = body; sink.Depth = 3f; sink.Squash = 0.01f;
         }
 
         /// <summary>What is left in the bottle and what it costs, raised beside it on hover

@@ -2328,6 +2328,120 @@ namespace LastCall.UI
         private RectTransform _invoiceRows;
         private Text _billWhen;
 
+        /// <summary>
+        /// The night's stars, drawn as stars — five of them, 24px on the pixel grid, with
+        /// the lit row revealed through a mask the way the top bar's standing is. A number
+        /// says how the night went; a row of stars is SEEN going that way.
+        /// </summary>
+        private float BillStars(float y, float frac)
+        {
+            const float StarPx = 24f, Gap = 6f;
+            float rowW = 5f * StarPx + 4f * Gap;
+            var host = NewRect("Stars", _invoiceRows);
+            host.anchorMin = new Vector2(0.5f, 1); host.anchorMax = new Vector2(0.5f, 1);
+            host.pivot = new Vector2(0.5f, 1);
+            host.sizeDelta = new Vector2(rowW, StarPx);
+            host.anchoredPosition = new Vector2(0, -y);
+            var art = ItemArt.Load("star");
+            for (int i = 0; i < 5; i++)
+            {
+                var dim = NewRect("D" + i, host);
+                Place(dim, new Vector2(0, 0.5f), new Vector2(StarPx, StarPx),
+                    new Vector2(i * (StarPx + Gap) + StarPx * 0.5f, 0));
+                dim.pivot = new Vector2(0.5f, 0.5f);
+                var di = dim.gameObject.AddComponent<Image>();
+                di.sprite = art; di.preserveAspect = true; di.raycastTarget = false;
+                di.color = new Color(0.72f, 0.68f, 0.60f, 0.5f);
+            }
+            var lit = NewRect("Lit", host);
+            lit.anchorMin = new Vector2(0, 0); lit.anchorMax = new Vector2(0, 1);
+            lit.pivot = new Vector2(0, 0.5f);
+            lit.sizeDelta = new Vector2(rowW * Mathf.Clamp01(frac), 0);
+            lit.anchoredPosition = Vector2.zero;
+            lit.gameObject.AddComponent<RectMask2D>();
+            for (int i = 0; i < 5; i++)
+            {
+                var on = NewRect("L" + i, lit);
+                Place(on, new Vector2(0, 0.5f), new Vector2(StarPx, StarPx),
+                    new Vector2(i * (StarPx + Gap) + StarPx * 0.5f, 0));
+                on.pivot = new Vector2(0.5f, 0.5f);
+                var oi = on.gameObject.AddComponent<Image>();
+                oi.sprite = art; oi.preserveAspect = true; oi.raycastTarget = false;
+                oi.color = UITheme.Amber[3];
+            }
+            return y + StarPx + 6f;
+        }
+
+        /// <summary>
+        /// One critic: their licence photo, their stars, their name, and one short line of
+        /// WHY — derived from what the visit still knows at day end. The face is the point:
+        /// reading customers is the game, so the night's verdicts wear the faces that gave
+        /// them.
+        /// </summary>
+        private float BillCritic(float y, CustomerVisit v, Color ink)
+        {
+            const float RowH = 44f, Photo = 36f;
+            var row = NewRect("Critic", _invoiceRows);
+            row.anchorMin = new Vector2(0, 1); row.anchorMax = new Vector2(1, 1);
+            row.pivot = new Vector2(0.5f, 1);
+            row.sizeDelta = new Vector2(0, RowH);
+            row.anchoredPosition = new Vector2(0, -y);
+
+            var look = LookFor(v);
+            if (look != null && look.Face != null)
+            {
+                var photo = NewRect("P", row);
+                Place(photo, new Vector2(0, 0.5f), new Vector2(Photo, Photo), new Vector2(0, 0));
+                photo.pivot = new Vector2(0, 0.5f);
+                var pi = photo.gameObject.AddComponent<Image>();
+                pi.sprite = look.Face; pi.raycastTarget = false;
+            }
+
+            var star = NewRect("S", row);
+            Place(star, new Vector2(0, 1), new Vector2(12, 12), new Vector2(Photo + 10f, -3f));
+            star.pivot = new Vector2(0, 1);
+            var si = star.gameObject.AddComponent<Image>();
+            si.sprite = ItemArt.Load("star"); si.preserveAspect = true;
+            si.raycastTarget = false; si.color = ink;
+
+            var papers = PapersFor(look);
+            string name = papers != null ? papers.Name.ToUpperInvariant()
+                : v.Regular != null ? v.Regular.Name.ToUpperInvariant() : "A DRINKER";
+            var line = NewText("L", row, _shop, 16, TextAnchor.UpperLeft, ink);
+            Place(line.rectTransform, new Vector2(0, 1), new Vector2(280, 18),
+                new Vector2(Photo + 26f, 0));
+            line.rectTransform.pivot = new Vector2(0, 1);
+            line.horizontalOverflow = HorizontalWrapMode.Overflow;
+            // OVERFLOW, not truncate: SilkscreenBold's line height at 16 is taller than a
+            // tight rect, and Truncate drops the WHOLE line — both critics rendered with a
+            // star, a reason, and no name at all (measured: the Text existed, said "4.6
+            // MARCUS BOYD", and drew nothing).
+            line.verticalOverflow = VerticalWrapMode.Overflow;
+            line.text = BarRating.ExactStarsFor(v.Satisfaction).ToString("0.0") + "  " + name;
+
+            var why = NewText("W", row, _body, 8, TextAnchor.UpperLeft, BillQuiet);
+            Place(why.rectTransform, new Vector2(0, 1), new Vector2(280, 12),
+                new Vector2(Photo + 10f, -22f));
+            why.rectTransform.pivot = new Vector2(0, 1);
+            why.horizontalOverflow = HorizontalWrapMode.Wrap;
+            why.verticalOverflow = VerticalWrapMode.Truncate;
+            why.text = CriticReason(v);
+            return y + RowH;
+        }
+
+        /// <summary>One short honest line, from what a finished visit still carries. The
+        /// judge's full verdict is transient — said in the service log, never stored — so
+        /// this reads the STATE: how they left, what they were made, how it landed.</summary>
+        private string CriticReason(CustomerVisit v)
+        {
+            if (v.State == VisitState.StormedOff) return "walked out before the pour";
+            if (v.IdInspected && v.Served != null && v.Order.Wanted.Id != v.Served.Id)
+                return "was made the wrong drink — " + v.Served.Name.ToLowerInvariant();
+            if (v.Satisfaction >= 0.85) return "served exactly right · paid $" + v.PaidBase;
+            if (v.Satisfaction >= 0.55) return "a fair pour, nothing more";
+            return "a rough pour, and they noticed";
+        }
+
         private float BillRow(float y, string label, string value, Color ink, bool heavy) =>
             BillRow(y, label, value, ink, heavy, null);
 
@@ -2386,9 +2500,10 @@ namespace LastCall.UI
 
         private float BillNote(float y, string text) => BillNote(y, text, BillQuiet);
 
-        private float BillNote(float y, string text, Color ink)
+        private float BillNote(float y, string text, Color ink, bool centred = false)
         {
-            var note = NewText("N", _invoiceRows, _body, 8, TextAnchor.MiddleLeft, ink);
+            var note = NewText("N", _invoiceRows, _body, 8,
+                centred ? TextAnchor.MiddleCenter : TextAnchor.MiddleLeft, ink);
             note.rectTransform.anchorMin = new Vector2(0, 1);
             note.rectTransform.anchorMax = new Vector2(1, 1);
             note.rectTransform.pivot = new Vector2(0.5f, 1);
@@ -2550,20 +2665,36 @@ namespace LastCall.UI
                 _billWhen.text = CalendarFor(run.Day) + "  ·  " + CrowdName(run.CrowdToday);
             float y = 0f;
 
-            var counts = new Dictionary<string, int>();
-            var totals = new Dictionary<string, int>();
-            var order = new List<string>();
-            foreach (var visit in floor.Finished)
+            // THE NIGHT IN ONE LOOK (2026-08-10, the author: "az ama öz" — less type, only
+            // what has to be known and SEEN). The itemised drink list is gone: it was the
+            // noisiest block on the slip and its answer lives in SALES anyway. What earns
+            // its place instead: the night's stars drawn AS stars, and the two people who
+            // decided them — the best and the worst of the room, face, score and reason.
+            double tonight = BarRating.ExactStarsFor(floor.AverageSatisfaction);
+            y = BillStars(y, (float)(tonight / BarRating.MaxStars));
+            y = BillNote(y, "TONIGHT " + tonight.ToString("0.0") + "  ·  BAR "
+                            + run.Rating.Average.ToString("0.0") + "  ·  "
+                            + served + " SERVED  ·  " + stormed + " WALKED", BillQuiet, centred: true);
+            y += 8f;
+
+            // The critics: the highest and the lowest word the night produced. One visit
+            // gets one row; an empty room gets nothing, not a block of placeholders.
+            CustomerVisit high = null, low = null;
+            foreach (var v in floor.Finished)
             {
-                if (visit.Served == null || visit.PaidBase <= 0) continue;
-                string name = visit.Served.Name.ToUpperInvariant();
-                if (!counts.ContainsKey(name)) { counts[name] = 0; totals[name] = 0; order.Add(name); }
-                counts[name]++;
-                totals[name] += visit.PaidBase;
+                if (v.State == VisitState.Served && (high == null || v.Satisfaction > high.Satisfaction))
+                    high = v;
+                if (low == null || v.Satisfaction < low.Satisfaction) low = v;
             }
-            if (order.Count == 0) y = BillNote(y, "nothing sold");
-            else foreach (var name in order)
-                y = BillRow(y, counts[name] + "x  " + name, "$" + totals[name], BillInk, false);
+            if (low == high) low = null;
+            if (high != null || low != null)
+            {
+                y = BillRule(y);
+                if (high != null)
+                    y = BillCritic(y, high, BillInk);
+                if (low != null)
+                    y = BillCritic(y, low, BillRed);
+            }
 
             y = BillRule(y);
             y = BillRow(y, "SALES", "$" + run.DaySales, BillInk, false, "bi_sales");
@@ -2574,14 +2705,8 @@ namespace LastCall.UI
             y = BillRule(y);
             y = BillRow(y, "NET", (net >= 0 ? "+$" : "-$") + Math.Abs(net),
                         net >= 0 ? BillInk : BillRed, true, "bi_net");
-            y = BillRow(y, "TILL", "$" + run.Money, BillInk, true, "bi_till");
-            y = BillRule(y);
-
-            // The footer a real slip carries: who came, how they left, and the standing
-            // they left behind — the number tomorrow's crowd is drawn from.
-            y = BillNote(y, served + " served  ·  " + stormed + " walked");
-            y = BillNote(y, "tonight " + BarRating.ExactStarsFor(floor.AverageSatisfaction).ToString("0.0")
-                            + "★  ·  bar " + run.Rating.Average.ToString("0.0") + "★");
+            y = BillRow(y, "TILL", (run.Money < 0 ? "-$" + (-run.Money) : "$" + run.Money),
+                        run.Money < 0 ? BillRed : BillInk, true, "bi_till");
             if (run.Ledger.DebtStrikes > 0)
             {
                 y += 6f;

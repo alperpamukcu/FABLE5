@@ -19,6 +19,7 @@ namespace LastCall.UI
 
         private RectTransform _pourBottle;    // the grabbable bottle
         private Image _pourBottleBody;
+        private BottleFluid _pourFluid;       // what is left in the bottle you are holding
         private MetaballFluid _shakerFluid;   // the metaball liquid: pour stream + pooled body
         private Splasher _shakerSplash;       // brief splashes (dissolving salt / sugar)
         private ShakerSolids _shakerSolids;   // ice / lemon afloat inside the shaker
@@ -226,6 +227,12 @@ namespace LastCall.UI
             var bottleSprite = ItemArt.BottleOpen(_focusBottle);
             _pourBottleBody.sprite = bottleSprite;
             _pourBottleBody.color = bottleSprite != null ? Color.white : colour;   // real art, else the style tint
+            if (_pourFluid != null)
+            {
+                _pourFluid.color = new Color(colour.r, colour.g, colour.b, 0.92f);
+                _pourFluid.Bind(bottleSprite, _focusBottle.Id);
+                PushPourLevel(run);
+            }
             _pourBottle.anchoredPosition = _bottleRest;
             _pourBottle.localRotation = Quaternion.identity;
             _shakerSplash.Clear();
@@ -247,6 +254,18 @@ namespace LastCall.UI
                 ? $"SHAKEN · {run.ShakeEnergy:P0}" : "";
         }
 
+        /// <summary>Show what the RULES say is left in the bottle being poured from.
+        /// Read every frame rather than on pour start and stop: the level is what the pour
+        /// is spending, so it has to fall while the stream is running, not after it.</summary>
+        private void PushPourLevel(TycoonRun run)
+        {
+            if (_pourFluid == null || _focusBottle == null) return;
+            var onShelf = run.Shelf?.Find(_focusBottle.Id);
+            _pourFluid.SetLevel(onShelf != null && onShelf.Capacity > 0.0
+                ? (float)(onShelf.Remaining / onShelf.Capacity)
+                : 0f);
+        }
+
         /// <summary>
         /// One frame of the tilt-pour. The bottle follows the mouse while grabbed; the
         /// higher it is lifted the further it leans toward the shaker (GDD 24 §2). Liquid
@@ -255,6 +274,8 @@ namespace LastCall.UI
         private void UpdateTiltPour(TycoonRun run)
         {
             if (Mouse.current == null || _focusBottle == null) return;
+
+            PushPourLevel(run);
 
             // A grab already in flight must not survive the lid going on either.
             if (_capped) { _bottleGrabbed = false; return; }
@@ -746,9 +767,25 @@ namespace LastCall.UI
             _pourBottle.pivot = new Vector2(0.5f, 0.22f);
             _pourBottle.sizeDelta = new Vector2(180, BottleH);
             _pourBottle.anchoredPosition = _bottleRest;
-            _pourBottleBody = _pourBottle.gameObject.AddComponent<Image>();
+            // The art moves to a CHILD so the drink can be drawn behind it. A parent's own
+            // Graphic renders before its children, so with the bottle image on the bottle
+            // rect itself there was no way to get anything underneath it; the bottle in
+            // your hand poured a stream while staying visually full to the shoulder.
+            // What is left in it now falls as it empties (the author, 2026-08-10).
+            var hitBottle = _pourBottle.gameObject.AddComponent<Image>();
+            hitBottle.color = new Color(0, 0, 0, 0.001f);   // invisible, still grabbable
+
+            var pourWet = NewRect("Fluid", _pourBottle);
+            Stretch(pourWet, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _pourFluid = pourWet.gameObject.AddComponent<BottleFluid>();
+            _pourFluid.raycastTarget = false;
+
+            var pourArt = NewRect("Body", _pourBottle);
+            Stretch(pourArt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _pourBottleBody = pourArt.gameObject.AddComponent<Image>();
             _pourBottleBody.preserveAspect = true;    // the real bottle art, set per focus in RefreshShaker
             _pourBottleBody.color = UITheme.Cyan[3];
+            _pourBottleBody.raycastTarget = false;
             if (ItemArt.Bottle("vodka") == null)      // no art available → keep a procedural neck
             {
                 var neck = NewRect("Neck", _pourBottle);
