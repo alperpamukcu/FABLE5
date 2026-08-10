@@ -575,7 +575,7 @@ namespace LastCall.UI
         /// <summary>How wide the hover spec is, beside the card.</summary>
         private const float TipW = 252f;
 
-        /// <summary>The spec for the ordered drink, shown BESIDE the card (hover).</summary>
+        /// <summary>The spec for the ordered drink, shown AT THE POINTER (hover).</summary>
         private void ShowOrderRecipeTip()
         {
             var visit = _idVisit;
@@ -584,6 +584,44 @@ namespace LastCall.UI
             _idRecipeTip.sizeDelta = new Vector2(TipW, h + 16f);
             _idRecipeTip.gameObject.SetActive(true);
             _idRecipeTip.SetAsLastSibling();
+            // NOTHING IN IT MAY TAKE THE POINTER. Only the background used to say so, which
+            // was survivable while the panel was parked out in the margin; under the cursor
+            // a single raycasting hairline or line of spec text brings the flicker back, and
+            // the contents are rebuilt on every hover, so it is enforced on every hover.
+            foreach (var g in _idRecipeTip.GetComponentsInChildren<Graphic>(true))
+                g.raycastTarget = false;
+            FollowPointerWithRecipeTip();     // place it before its first frame is drawn
+        }
+
+        /// <summary>
+        /// The recipe panel rides the pointer (the author, 2026-08-10). It used to be
+        /// parked in the scrim's margin beside the card, which was itself a retreat: over
+        /// the fields it FLICKERED, because the panel took the pointer, which fired the
+        /// order line's PointerExit, which hid the panel, which handed the pointer back,
+        /// many times a second. Nothing in the panel takes a raycast any more, so it can
+        /// sit under the cursor without ever being the thing the cursor is on.
+        ///
+        /// It hangs down and to the right, and TURNS BACK at the edges rather than running
+        /// off the screen — a tip you cannot read is not a tip.
+        /// </summary>
+        private void FollowPointerWithRecipeTip()
+        {
+            if (_idRecipeTip == null || !_idRecipeTip.gameObject.activeSelf) return;
+            var mouse = UnityEngine.InputSystem.Mouse.current;
+            if (mouse == null || _idRoot == null) return;
+            Vector2 local;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _idRoot, mouse.position.ReadValue(), null, out local)) return;
+
+            const float Gap = 18f;
+            Vector2 size = _idRecipeTip.sizeDelta;
+            float halfW = _idRoot.rect.width * 0.5f, halfH = _idRoot.rect.height * 0.5f;
+            // pivot is (0,1): the position IS the panel's top-left corner
+            float x = local.x + Gap;
+            if (x + size.x > halfW) x = local.x - Gap - size.x;
+            float y = local.y - Gap;
+            if (y - size.y < -halfH) y = local.y + Gap + size.y;
+            _idRecipeTip.anchoredPosition = new Vector2(x, y);
         }
         private Image _idOrderIcon;
 
@@ -840,6 +878,7 @@ namespace LastCall.UI
             var run = Run;
             if (run == null) return;
             WatchGlassRack();
+            FollowPointerWithRecipeTip();
 
             if (run.Phase == TycoonPhase.DayOpen)
             {
@@ -4045,8 +4084,8 @@ namespace LastCall.UI
         // of the paper and dropped the endorsement cells clean off the bottom of it —
         // which every rect measurement passed, because they were all still inside the
         // CARD RECT. Only a screenshot could show it, and did.
-        private static readonly Rect LicPortrait = new Rect(18f * LicScale, -31f * LicScale,
-            50f * LicScale, 52f * LicScale);
+        private static readonly Rect LicPortrait = new Rect(19f * LicScale, -32f * LicScale,
+            48f * LicScale, 48f * LicScale);
         private const float LicHeaderH = 14f * LicScale;
         private const float LicHeaderY = -13f * LicScale;
         private const float LicFieldsX = 74f * LicScale;
@@ -4057,8 +4096,8 @@ namespace LastCall.UI
         // art's own coordinates — the boxes are drawn on the stock, not by the UI.
         private const float LicCellX = 18f * LicScale, LicCellW = 50f * LicScale;
         private const float LicCellH = 24f * LicScale;
-        private static readonly float[] LicCells = { 87f * LicScale, 114f * LicScale };
-        private const float LicNumRule = 143f * LicScale;
+        private static readonly float[] LicCells = { 85f * LicScale, 112f * LicScale };
+        private const float LicNumRule = 141f * LicScale;
 
         /// <summary>
         /// One licence line, SEATED on a rule: the value's bottom edge lands on the shell's own
@@ -4135,7 +4174,7 @@ namespace LastCall.UI
             // thing up here that changes from card to card besides the number below.
             var idFlag = NewRect("Flag", card);
             Place(idFlag, new Vector2(1, 1), new Vector2(24, 16),
-                new Vector2(-59, bandMid));
+                new Vector2(-59, bandMid + 8f));
             _idFlag = idFlag.gameObject.AddComponent<Image>();
             _idFlag.preserveAspect = true;
             _idFlag.raycastTarget = false;
