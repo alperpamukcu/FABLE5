@@ -679,6 +679,7 @@ namespace LastCall.UI
         private readonly Image[] _shopTabKeys = new Image[ShopTabs.Length];
         private readonly Text[] _shopTabLabels = new Text[ShopTabs.Length];
         private readonly Image[] _shopTabIcons = new Image[ShopTabs.Length];
+        private readonly Image[] _shopTabLits = new Image[ShopTabs.Length];
         private int _shopTab;
         private Text _tabletTill;
 
@@ -696,7 +697,13 @@ namespace LastCall.UI
         // failed the only test that matters, which is whether you can read it.
         private static readonly Color ShopGreen = new Color(0.161f, 0.514f, 0.267f, 1f);   // house
         /// <summary>The page's own stock, so a resting tab is a leaf of the same file.</summary>
-        private static readonly Color ShopPaper = new Color(0.965f, 0.969f, 0.961f, 1f);
+        /// <summary>A resting tab is a leaf BEHIND the page, so it is the page's stock with
+        /// the room's own green mixed into it — five stark white boxes beside one dark one
+        /// read as buttons, which is what the author did not like.</summary>
+        private static readonly Color ShopPaper = new Color(0.839f, 0.878f, 0.847f, 1f);
+        /// <summary>The lit edge along the open tab's top: the one bright line in the row,
+        /// so the eye finds the open file without reading a word.</summary>
+        private static readonly Color ShopTabLit = new Color(0.435f, 0.847f, 0.522f, 1f);
         /// <summary>How long a tab's title takes to come up to white. Short enough to feel
         /// like a response, long enough to read as a light coming on rather than a swap.</summary>
         private const float TabFade = 0.18f;
@@ -932,6 +939,8 @@ namespace LastCall.UI
             WatchFixtures();
             FadeShopTabs();
             StepCurtain();
+            StepSlide();
+            RunTheTill(run);
             FollowPointerWithRecipeTip();
             FollowPointerWithShopSpec();
 
@@ -1530,6 +1539,32 @@ namespace LastCall.UI
             }
         }
 
+        // ── the till that counts (2026-08-10) ───────────────────────────────────
+        // Buying used to be a number swapping for another number, which is not something
+        // you can watch happen. The till RUNS DOWN to what you spent — fast enough not to
+        // be a wait, slow enough that the money leaving is an event with a direction — and
+        // both readouts, the diegetic one on the register and the market's account line,
+        // read from the same running figure so they can never disagree mid-count.
+
+        private float _tillShown = float.NaN;
+
+        private void RunTheTill(TycoonRun run)
+        {
+            float want = run.Money;
+            if (float.IsNaN(_tillShown) || Motion.Reduced) { _tillShown = want; }
+            else if (!Mathf.Approximately(_tillShown, want))
+            {
+                // Proportional, with a floor: a $2 refill still moves, a $200 fitting does
+                // not take ten times as long as a $20 one.
+                float speed = Mathf.Max(28f, Mathf.Abs(want - _tillShown) * 4.5f);
+                _tillShown = Mathf.MoveTowards(_tillShown, want, speed * Time.unscaledDeltaTime);
+            }
+            int shown = Mathf.RoundToInt(_tillShown);
+            if (_moneyText != null) _moneyText.text = "$" + shown;
+            if (_tabletTill != null) _tabletTill.text = "$" + shown;
+            if (stage != null) stage.SetMoney("$" + shown);
+        }
+
         private void WatchFixtures()
         {
             var run = Run;
@@ -1771,10 +1806,11 @@ namespace LastCall.UI
             if (_clockRule != null) _clockRule.color = last ? UITheme.Magenta[3] : UITheme.Cyan[2];
 
             bool red = run.Money < 0;
-            _moneyText.text = $"${run.Money}";
+            // The till's figure belongs to RunTheTill now: writing it here as well would
+            // snap the number back to the truth mid-count and swallow the animation.
             _moneyText.color = red ? UITheme.ViceRed[3] : UITheme.Money;
             if (_tillRule != null) _tillRule.color = red ? UITheme.ViceRed[3] : UITheme.Amber[2];
-            if (stage != null) stage.SetMoney($"${run.Money}");
+
             _crowdText.text = run.CrowdToday == WealthTier.HighRoller ? "TONIGHT · HIGH ROLLERS"
                 : run.CrowdToday == WealthTier.Broke ? "TONIGHT · BROKE CROWD" : "TONIGHT · REGULARS";
             _crowdText.color = run.CrowdToday == WealthTier.HighRoller ? UITheme.Magenta[4]
@@ -2274,12 +2310,105 @@ namespace LastCall.UI
             _dayEndStep = 0;   // the bill first; the market only after CONTINUE
             _dayEndPanel.gameObject.SetActive(true);
             RebuildDayEnd();
+            // THE BILL ARRIVES rather than appearing (2026-08-10). A night's takings
+            // materialising fully formed reads as a screen swap; a slip dropping onto the
+            // counter reads as the night being counted.
+            PlayPanel(_dayEndBill, new Vector2(0, 90f), 0.36f);
         }
 
         private void OnDayEndAdvance()
         {
-            if (_dayEndStep == 0) { _dayEndStep = 1; Sfx.Play("click", 0.6f); RebuildDayEnd(); }
-            else OnOpenTomorrow();
+            if (_dayEndStep == 0)
+            {
+                _dayEndStep = 1;
+                Sfx.Play("click", 0.6f);
+                RebuildDayEnd();
+                // THE SLIP GOES AND THE VAN ARRIVES: the bill leaves to the left, the
+                // market comes in from the right, so the two read as one movement through
+                // the evening rather than as two screens that happened to follow.
+                PlayPanel(_dayEndTablet, new Vector2(180f, 0f), 0.34f);
+            }
+            else
+            {
+                // Closing the shop IS the screen going dark: the tablet pulls away and the
+                // curtain takes over, so the market never simply vanishes.
+                PlayTabletOut();
+            }
+        }
+
+        // ── panel movement (2026-08-10) ─────────────────────────────────────────
+        // Driven from Update by a timer rather than by a coroutine, for the same reason the
+        // curtain is: it is the pattern this HUD is known to run correctly, it survives a
+        // panel being rebuilt underneath it, and its whole state is two floats anybody can
+        // read back. A coroutine here left the panels parked at their start offset when
+        // anything interrupted them, which is worse than no animation at all.
+
+        private RectTransform _slideRt;
+        private Vector2 _slideHome, _slideFrom;
+        private float _slideT, _slideDur;
+        private bool _slideOut;                 // out: away and gone, then tomorrow
+        private CanvasGroup _slideGroup;
+
+        /// <summary>Brings a panel in from an offset. Reduced motion places it.</summary>
+        private void PlayPanel(RectTransform rt, Vector2 from, float dur)
+        {
+            SettleSlide();
+            if (rt == null) return;
+            if (Motion.Reduced) return;
+            _slideRt = rt;
+            _slideGroup = rt.GetComponent<CanvasGroup>();
+            if (_slideGroup == null) _slideGroup = rt.gameObject.AddComponent<CanvasGroup>();
+            _slideHome = rt.anchoredPosition;
+            _slideFrom = from;
+            _slideDur = dur;
+            _slideT = 0f;
+            _slideOut = false;
+            rt.anchoredPosition = _slideHome + from;
+            _slideGroup.alpha = 0f;
+        }
+
+        /// <summary>The market pulls away, and the night begins from black behind it.</summary>
+        private void PlayTabletOut()
+        {
+            SettleSlide();
+            if (_dayEndTablet == null || Motion.Reduced) { OnOpenTomorrow(); return; }
+            _slideRt = _dayEndTablet;
+            _slideGroup = _dayEndTablet.GetComponent<CanvasGroup>();
+            if (_slideGroup == null) _slideGroup = _dayEndTablet.gameObject.AddComponent<CanvasGroup>();
+            _slideHome = _dayEndTablet.anchoredPosition;
+            _slideFrom = new Vector2(0f, -220f);
+            _slideDur = 0.3f;
+            _slideT = 0f;
+            _slideOut = true;
+        }
+
+        /// <summary>Puts whatever was moving back where it belongs. Any new movement starts
+        /// from rest, so an interrupted slide can never become the panel's new home.</summary>
+        private void SettleSlide()
+        {
+            if (_slideRt == null) return;
+            _slideRt.anchoredPosition = _slideHome;
+            if (_slideGroup != null) _slideGroup.alpha = 1f;
+            _slideRt = null; _slideGroup = null;
+        }
+
+        private void StepSlide()
+        {
+            if (_slideRt == null) return;
+            _slideT += Time.unscaledDeltaTime;
+            float k = _slideDur <= 0f ? 1f : Mathf.Clamp01(_slideT / _slideDur);
+            if (_slideOut)
+            {
+                float e = k * k;                                   // gathers pace away
+                _slideRt.anchoredPosition = Vector2.Lerp(_slideHome, _slideHome + _slideFrom, e);
+                if (_slideGroup != null) _slideGroup.alpha = 1f - e;
+                if (k >= 1f) { SettleSlide(); OnOpenTomorrow(); }
+                return;
+            }
+            float o = 1f - (1f - k) * (1f - k) * (1f - k);          // lands soft
+            _slideRt.anchoredPosition = Vector2.Lerp(_slideHome + _slideFrom, _slideHome, o);
+            if (_slideGroup != null) _slideGroup.alpha = Mathf.Clamp01(k * 1.8f);
+            if (k >= 1f) SettleSlide();
         }
 
         private void RebuildDayEnd()
@@ -2363,7 +2492,7 @@ namespace LastCall.UI
 
             // The tablet.
             foreach (Transform child in _offerRow) Destroy(child.gameObject);
-            _tabletTill.text = $"${run.Money}";
+            // (the account line counts too — see RunTheTill)
             // Tonight's fitting, said ONCE. It used to appear in five places — a band, a
             // rail note, the stool's tip, the glassware tip and a toast — and the author
             // still met it as a surprise, because none of the five was beside the control
@@ -2382,6 +2511,7 @@ namespace LastCall.UI
                 _shopTabKeys[i].color = on ? ShopGreenDark : ShopPaper;
                 var key = (RectTransform)_shopTabKeys[i].transform;
                 key.sizeDelta = new Vector2(TabKeyW, on ? TabLiveH : TabRestH);
+                if (_shopTabLits[i] != null) _shopTabLits[i].enabled = on;
             }
 
             // The order LISTS what is in it, at full length. The 18-character cut existed
@@ -3382,7 +3512,7 @@ namespace LastCall.UI
             float fromA = scrim.color.a, toA = open ? c.a : 0f;
             if (!Motion.Reduced)
             {
-                float dur = open ? 0.28f : 0.2f;
+                float dur = open ? 0.42f : 0.32f;   // a board this size does not snap
                 for (float t = 0; t < dur; t += Time.unscaledDeltaTime)
                 {
                     float k = t / dur;
@@ -5202,6 +5332,15 @@ namespace LastCall.UI
                 key.anchoredPosition = new Vector2(8f + i * (TabKeyW + 8f), 0);
                 var bg = key.gameObject.AddComponent<Image>();
                 Frame(key, 2f, ShopGreenDark);
+                // The lit top edge, shown only on the open tab (RefreshDayEnd switches it).
+                var lit = NewRect("Lit", key);
+                lit.anchorMin = new Vector2(0, 1); lit.anchorMax = new Vector2(1, 1);
+                lit.pivot = new Vector2(0.5f, 1);
+                lit.sizeDelta = new Vector2(-6f, 3f);
+                lit.anchoredPosition = new Vector2(0, -2f);
+                var litImg = lit.gameObject.AddComponent<Image>();
+                litImg.color = ShopTabLit; litImg.raycastTarget = false;
+                _shopTabLits[i] = litImg;
                 var btn = key.gameObject.AddComponent<Button>();
                 btn.targetGraphic = bg;
                 btn.onClick.AddListener(() =>
@@ -5643,7 +5782,9 @@ namespace LastCall.UI
         private RectTransform _curtain;
         private Image _curtainImg;
         private float _curtainT;          // 1 = full black, 0 = gone
-        private const float CurtainHold = 0.35f, CurtainLift = 0.75f;
+        // Slower, on the author's note: at a third of a second the hold read as a stutter
+        // rather than as a room being dark. Three quarters held, a second and a half up.
+        private const float CurtainHold = 0.75f, CurtainLift = 1.5f;
 
         /// <summary>True while the room is still coming up: the clock must not run.</summary>
         private bool DoorsClosed => _curtainT > 0.001f;
