@@ -2313,7 +2313,12 @@ namespace LastCall.UI
         // leaders lined a receipt up only while every name stayed short; a long drink
         // pushed its price off the grid and the whole slip leaned.
 
-        private const float BillW = 440f, BillHeadH = 48f, BillRowH = 22f;
+        // 140x192 art at 3x. The type zones are MEASURED off the generated cream — the
+        // solid stock spans y 12..561 and x 6..411 at this scale — and the margins hold
+        // the print clear of both tears (the licence's lesson: measure the paper, not
+        // the canvas).
+        private const float BillW = 420f, BillH = 576f, BillHeadH = 62f, BillRowH = 22f;
+        private const float BillInset = 34f;   // type margin inside the torn stock
         private static readonly Color BillPaper = new Color(0.965f, 0.945f, 0.886f, 1f);
         private static readonly Color BillEdge = new Color(0.62f, 0.58f, 0.50f, 1f);
         private static readonly Color BillBand = new Color(0.102f, 0.165f, 0.290f, 1f);
@@ -2322,26 +2327,6 @@ namespace LastCall.UI
         private static readonly Color BillQuiet = new Color(0.51f, 0.47f, 0.41f, 1f);
         private RectTransform _invoiceRows;
         private Text _billWhen;
-
-        /// <summary>One torn edge, tiled across the slip so every tooth is the same size.
-        /// The bottom edge is the same sprite turned over — both tears are cut from one
-        /// line, which is what makes them read as the same roll.</summary>
-        private void BillTear(RectTransform bill, bool top)
-        {
-            var art = ItemArt.Load("bill_tear");
-            if (art == null) return;
-            var rt = NewRect(top ? "TearTop" : "TearFoot", bill);
-            rt.anchorMin = new Vector2(0, top ? 1 : 0);
-            rt.anchorMax = new Vector2(1, top ? 1 : 0);
-            rt.pivot = new Vector2(0.5f, top ? 0 : 1);
-            rt.sizeDelta = new Vector2(0, 6f);
-            rt.anchoredPosition = Vector2.zero;
-            rt.localScale = new Vector3(1f, top ? 1f : -1f, 1f);
-            var img = rt.gameObject.AddComponent<Image>();
-            img.sprite = art;
-            img.type = Image.Type.Tiled;
-            img.raycastTarget = false;
-        }
 
         private float BillRow(float y, string label, string value, Color ink, bool heavy) =>
             BillRow(y, label, value, ink, heavy, null);
@@ -2366,10 +2351,10 @@ namespace LastCall.UI
                 if (art != null)
                 {
                     var icon = NewRect("M", row);
-                    Place(icon, new Vector2(0, 0.5f), new Vector2(12, 12), new Vector2(0, 0));
+                    Place(icon, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(0, 0));
                     var iimg = icon.gameObject.AddComponent<Image>();
                     iimg.sprite = art; iimg.color = ink; iimg.raycastTarget = false;
-                    gutter = 18f;
+                    gutter = 22f;
                 }
             }
 
@@ -2606,11 +2591,10 @@ namespace LastCall.UI
                     y = BillNote(y, "one more red day closes the bar", BillRed);
             }
 
-            // THE SLIP IS AS LONG AS THE NIGHT WAS. A fixed 470 left a quiet night with a
-            // hand's width of blank paper under it and a busy one clipped at the fold.
-            _dayEndBill.sizeDelta = new Vector2(BillW, BillHeadH + y + 26f);   // room for the foot's tear
+            // The sheet is the ROLL's size; the print is the night's. What varies is how
+            // much blank stock is left above the foot tear — which is how receipts work.
             if (_billNext != null)
-                _billNext.anchoredPosition = new Vector2(0, -(_dayEndBill.sizeDelta.y * 0.5f + 32f));
+                _billNext.anchoredPosition = new Vector2(0, -(BillH * 0.5f + 34f));
 
             // The tablet.
             foreach (Transform child in _offerRow) Destroy(child.gameObject);
@@ -5274,44 +5258,35 @@ namespace LastCall.UI
             // THE SLIP, CENTRED (2026-08-10). It hung from the top of the screen at a
             // fixed 470, so a quiet night left a hand's width of blank paper under the
             // total and the bill sat high on a screen that had room for it in the middle.
+            // THE PAPER IS GENERATED NOW (2026-08-10, the author: the drawn sheet and its
+            // marks read as filler). PixelLab painted a receipt torn off a roll — jagged at
+            // both ends, warm, slightly handled — at 140x192, drawn here at a WHOLE 3x like
+            // the licence, because pixel art magnifies only in whole steps. FIXED size, and
+            // that is a receipt being honest: the paper is the roll's, the print is the
+            // night's, and a quiet night leaves blank stock above the foot tear.
             var bill = _dayEndBill = NewRect("Bill", _dayEndPanel);
-            Place(bill, new Vector2(0.5f, 0.5f), new Vector2(BillW, 470), Vector2.zero);
+            Place(bill, new Vector2(0.5f, 0.5f), new Vector2(BillW, BillH), Vector2.zero);
             var sheet = bill.gameObject.AddComponent<Image>();
-            // PAPER, NOT A PANEL (2026-08-10, the author: it was "normal bir kare"). A
-            // 9-sliced sheet carries its own edge shading and a faint grain at 1:1 while
-            // the middle stretches to the night's length; the two TORN edges are separate
-            // tiled strips, because a tear's teeth have to stay the same size wherever you
-            // look and a stretched zigzag is a smear.
-            sheet.sprite = ItemArt.Load("bill_paper");
-            if (sheet.sprite != null) { sheet.type = Image.Type.Sliced; sheet.color = Color.white; }
-            else { sheet.color = BillPaper; Frame(bill, 2f, BillEdge); }
-            BillTear(bill, top: true);
-            BillTear(bill, top: false);
+            sheet.sprite = ItemArt.Load("bill_sheet");
+            if (sheet.sprite == null) { sheet.color = BillPaper; Frame(bill, 2f, BillEdge); }
 
-            // The head band: what this document is, and which night it is about. The same
-            // language as the licence — a dark band carrying the identity, paper below.
-            var head = NewRect("Head", bill);
-            head.anchorMin = new Vector2(0, 1); head.anchorMax = new Vector2(1, 1);
-            head.pivot = new Vector2(0.5f, 1);
-            head.sizeDelta = new Vector2(-4f, BillHeadH);
-            head.anchoredPosition = new Vector2(0, -2f);
-            head.gameObject.AddComponent<Image>().color = BillBand;
-            var headTitle = NewText("T", head, _display, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
-            Place(headTitle.rectTransform, new Vector2(0, 1), new Vector2(BillW - 32f, 20),
-                new Vector2(14, -8));
+            // The head is PRINTED, not banded: a receipt is one ink on one paper, and the
+            // navy band belonged to the licence, not to a till roll.
+            var headTitle = NewText("T", bill, _display, 24, TextAnchor.MiddleCenter, BillInk);
+            Place(headTitle.rectTransform, new Vector2(0.5f, 1), new Vector2(BillW - 60f, 26),
+                new Vector2(0, -30f));
             headTitle.horizontalOverflow = HorizontalWrapMode.Overflow;
             headTitle.text = "LAST CALL";
-            _billWhen = NewText("W", head, _body, 8, TextAnchor.MiddleLeft,
-                new Color(0.72f, 0.78f, 0.86f, 1f));
-            Place(_billWhen.rectTransform, new Vector2(0, 1), new Vector2(BillW - 32f, 12),
-                new Vector2(14, -32));
+            _billWhen = NewText("W", bill, _body, 8, TextAnchor.MiddleCenter, BillQuiet);
+            Place(_billWhen.rectTransform, new Vector2(0.5f, 1), new Vector2(BillW - 60f, 12),
+                new Vector2(0, -52f));
             _billWhen.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             // Every line lands in here, one rect to a row, so the columns cannot bend.
             _invoiceRows = NewRect("Rows", bill);
             _invoiceRows.anchorMin = new Vector2(0, 1); _invoiceRows.anchorMax = new Vector2(1, 1);
             _invoiceRows.pivot = new Vector2(0.5f, 1);
-            _invoiceRows.sizeDelta = new Vector2(-28f, 0);
+            _invoiceRows.sizeDelta = new Vector2(-BillInset * 2f, 0);
             _invoiceRows.anchoredPosition = new Vector2(0, -(BillHeadH + 12f));
 
             // The bill's OWN way forward (2026-08-07). The day-end button moved inside the
