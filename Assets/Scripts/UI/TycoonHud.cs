@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -311,6 +311,8 @@ namespace LastCall.UI
         private Text _idName, _idAgeFrom, _idRel, _idIntent, _idOrder, _idOrderParts, _idRates, _idRatesLabel;
         private Image _idFlag;
         private Text _idRelLabel, _idIntentLabel;
+        private Text _idCitizen, _idNumber, _idVisitCount;
+        private Image[] _idStars;
         private RectTransform _idRecipeTip;
         private RectTransform _idRecipeTipBody;
         private RectTransform _idPrefRow;
@@ -1936,6 +1938,9 @@ namespace LastCall.UI
             if (view.ExitT >= 1f)
             {
                 view.Exiting = false;
+                // They are through the door: book the visit and the stars against the FACE
+                // that walked out, which is the last moment both are still in hand.
+                RecordDeparture(view.Look, view.Visit);
                 view.Visit = null;
                 view.Group.alpha = 1f;
                 view.Portrait.rectTransform.localScale = new Vector3(CharWiden, 1f, 1f);   // reset the mirror
@@ -3790,34 +3795,43 @@ namespace LastCall.UI
             // the photo, the name, the age and the citizenship, and the archetype keeps only
             // what it is actually about — how they came in, and how well you know them.
             var idPapers = PapersFor(idLook);
-            _idName.text = (idPapers != null ? idPapers.Name : reg.Name).ToUpperInvariant();
-            _idAgeFrom.text = idPapers != null
-                ? $"{idPapers.Age}  ·  {idPapers.Country.ToUpperInvariant()}"
-                : $"{reg.Age}  ·  {reg.Hometown.ToUpperInvariant()}";
+            string idFullName = (idPapers != null ? idPapers.Name : reg.Name).ToUpperInvariant();
+            _idName.text = idFullName;
+            _idAgeFrom.text = (idPapers != null ? idPapers.Age : reg.Age).ToString();
+            _idCitizen.text = (idPapers != null ? idPapers.Country : reg.Hometown).ToUpperInvariant();
+            _idNumber.text = LicenceNumber(idLook, idFullName);
             if (_idFlag != null)
             {
                 _idFlag.sprite = idPapers != null ? ItemArt.Load("fl_" + idPapers.Iso) : null;
                 // A citizenship with no flag drawn shows nothing rather than a white box.
                 _idFlag.enabled = _idFlag.sprite != null;
             }
-            // The count rides on the LABEL, not the value (the author, 2026-08-03: the
-            // stars were printing over it). The display face is a fixed-width 16px cell, so
-            // "FAMILIAR · 12 VISITS" runs 300 points through a 188-point column and straight
-            // into the rating beside it; the relationship alone fits, and the small navy
-            // label has room to spare.
-            _idRel.text = reg.Visits > 0
-                ? reg.Relationship.ToString().ToUpperInvariant()
-                : "NEW FACE";
-            _idRelLabel.text = reg.Visits > 0
-                ? $"STANDING  ·  {reg.Visits} VISIT{(reg.Visits == 1 ? "" : "S")}"
-                : "STANDING";
+            // THE TWO DATA CELLS. The count is per FACE, not per archetype: this card says
+            // Miles Corrigan over Miles Corrigan's photograph, so "how many times" has to
+            // mean how many times HE came in, which is what the departure log books.
+            var rec = LogFor(idLook);
+            _idVisitCount.text = (rec.Visits + 1).ToString();     // this one counts as they sit
+            _idRel.text = rec.Visits == 0
+                ? "FIRST TIME"
+                : reg.Relationship.ToString().ToUpperInvariant();
 
-            // What THEY make of US — their own nights here, said in stars. A stranger has no
-            // row at all (the author's note: empty fields were noise, not a licence).
-            bool stranger = reg.Visits == 0;
-            _idRatesLabel.text = stranger ? "" : "RATES THIS BAR";
-            _idRates.text = stranger ? ""
-                : Stars(Mathf.RoundToInt(5f * reg.SatisfiedCount / reg.Visits));
+            // What THEY make of US, in the stars they have actually left. Somebody who has
+            // not rated the bar yet KEEPS THE ROW — five grey stars and a question mark —
+            // because a blank box reads as a field that does not exist, while an empty row
+            // of stars reads as a verdict not yet given, which is the true state.
+            bool rated = rec.Ratings > 0;
+            double avg = rated ? rec.Stars / rec.Ratings : 0.0;
+            _idRates.text = rated ? avg.ToString("0.0") : "?";
+            _idRates.color = rated ? UITheme.Night[1] : UITheme.Night[3];
+            for (int i = 0; i < _idStars.Length; i++)
+            {
+                // Half a star still lights its place, so 2.5 shows three lit rather than
+                // rounding a customer's opinion down to nothing.
+                bool lit = rated && avg >= i + 0.5;
+                _idStars[i].color = lit
+                    ? UITheme.Amber[3]
+                    : new Color(0.62f, 0.58f, 0.50f, rated ? 0.55f : 0.35f);
+            }
 
             // No price, anywhere on the card (C3): the licence says who they are and what they
             // want, and what a drink costs is the menu's business.
@@ -3842,27 +3856,129 @@ namespace LastCall.UI
             if (spec.ExtraShaken) chips += PrefChip(PrefArt.Shaker(), "SHAKEN HARD");
             // No fill chip (the author, 2026-08-02): nobody demands a fill any more — the
             // only fill rule is the house floor, and it lives in the judge, not the licence.
-            _idIntent.text = chips == 0 ? "SERVE IT CLEAN" : "";
+            // A licence says NONE in an empty endorsements field rather than leaving it
+            // blank, because blank means "not filled in" and NONE means "there are none".
+            _idIntent.text = chips == 0 ? "NONE  ·  SERVE IT CLEAN" : "";
         }
 
-        /// <summary>One pictogram with its word under it. Returns 1 so the caller can count.</summary>
+        /// <summary>
+        /// One endorsement, drawn the way a licence draws its categories: a bordered cell
+        /// with the pictogram and the word side by side, not a picture with a caption
+        /// floating under it. Returns 1 so the caller can count.
+        /// </summary>
         private int PrefChip(Sprite icon, string label)
         {
+            const float CellH = 38f, IconBox = 26f;
             var chip = NewRect("Pref", _idPrefRow);
+            var plate = chip.gameObject.AddComponent<Image>();
+            plate.color = new Color(0.98f, 0.97f, 0.93f, 1f);
+            plate.raycastTarget = false;
+            Frame(chip, 2f, new Color(0.42f, 0.39f, 0.34f, 1f));
+
             var iconRt = NewRect("I", chip);
-            Place(iconRt, new Vector2(0.5f, 1), new Vector2(26, 26), Vector2.zero);
-            iconRt.pivot = new Vector2(0.5f, 1);
+            Place(iconRt, new Vector2(0, 0.5f), new Vector2(IconBox, IconBox), new Vector2(7, 0));
             var img = iconRt.gameObject.AddComponent<Image>();
             img.sprite = icon; img.preserveAspect = true; img.raycastTarget = false;
             img.enabled = icon != null;
-            var t = NewText("L", chip, _body, 8, TextAnchor.UpperCenter, UITheme.Night[1]);
-            Place(t.rectTransform, new Vector2(0.5f, 1), new Vector2(96, 10), new Vector2(0, -28));
+
+            var t = NewText("L", chip, _body, 8, TextAnchor.MiddleLeft, UITheme.Night[1]);
+            Place(t.rectTransform, new Vector2(0, 0.5f), new Vector2(200, 12),
+                new Vector2(IconBox + 12f, 0));
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
             t.text = label;
+
             var le = chip.gameObject.AddComponent<LayoutElement>();
-            le.preferredWidth = Mathf.Max(44f, label.Length * 7f);
-            le.preferredHeight = 40f;
+            // The measured cell: icon gutter, the word at 6.7 points a character, and the
+            // border's own margin. The old chip guessed at 7 per character with no gutter
+            // and the widest word ran out of its box.
+            le.preferredWidth = IconBox + 12f + label.Length * 6.7f + 12f;
+            le.preferredHeight = CellH;
             return 1;
+        }
+
+        /// <summary>
+        /// A caption in one of the rail's printed boxes, and the big value under it. The
+        /// box itself is on the stock (licence_gen.py); this fills it.
+        /// </summary>
+        private Text LicCell(RectTransform card, float top, string caption, out Text captionText,
+            float valueDrop = 22f, int valueSize = 24)
+        {
+            captionText = NewText("C_" + caption, card, _body, 8, TextAnchor.UpperCenter,
+                UITheme.ClubBlue[2]);
+            Place(captionText.rectTransform, new Vector2(0, 1), new Vector2(LicCellW, 12),
+                new Vector2(LicCellX, -top - 6f));
+            captionText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            captionText.text = caption;
+            // The drop is a parameter because the two cells do not hold the same thing: one
+            // is a caption over a number, the other is a caption over a row of stars with
+            // the number under THEM. Sharing a fixed drop printed the rating straight
+            // through its own third star.
+            var val = NewText("V_" + caption, card, _display, valueSize, TextAnchor.UpperCenter,
+                UITheme.Night[1]);
+            Place(val.rectTransform, new Vector2(0, 1), new Vector2(LicCellW, valueSize + 2f),
+                new Vector2(LicCellX, -top - valueDrop));
+            val.horizontalOverflow = HorizontalWrapMode.Overflow;
+            return val;
+        }
+
+        // ── what the bar remembers about a face (2026-08-10) ────────────────────────
+        // The licence prints how often this person has come and what they have made of the
+        // place, so somebody has to count. It is kept per LOOK rather than per RegularState
+        // because the look IS the person on this card — it carries the photograph, the name
+        // and the papers — while the archetype behind it only says how they came in. The
+        // tally decides nothing; it is what the card reads back, which is why it may live
+        // up here with the rest of the identity rather than in Core.
+        private sealed class PatronRecord
+        {
+            public int Visits;
+            public double Stars;
+            public int Ratings;
+        }
+
+        private readonly Dictionary<string, PatronRecord> _patronLog =
+            new Dictionary<string, PatronRecord>();
+
+        private PatronRecord LogFor(PatronLook look)
+        {
+            string key = look != null && !string.IsNullOrEmpty(look.Slug) ? look.Slug : "patron";
+            PatronRecord rec;
+            if (!_patronLog.TryGetValue(key, out rec))
+            {
+                rec = new PatronRecord();
+                _patronLog[key] = rec;
+            }
+            return rec;
+        }
+
+        /// <summary>One person has walked back out. Books the visit and the stars they left.</summary>
+        private void RecordDeparture(PatronLook look, CustomerVisit visit)
+        {
+            if (visit == null) return;
+            var rec = LogFor(look);
+            rec.Visits++;
+            // THE SAME NUMBER THE BAR'S OWN STANDING IS BUILT FROM (BarRating.Record books
+            // exactly this for every finished visit), so the licence and the top bar cannot
+            // disagree about how a night went.
+            rec.Stars += BarRating.ExactStarsFor(visit.Satisfaction);
+            rec.Ratings++;
+        }
+
+        /// <summary>
+        /// The document number. Deterministic in the person, so the same face carries the
+        /// same licence every night of a run — a number that changed on re-entry would be
+        /// the one field on the card that proves it is scenery.
+        /// </summary>
+        private static string LicenceNumber(PatronLook look, string name)
+        {
+            string key = (look != null && !string.IsNullOrEmpty(look.Slug) ? look.Slug : "patron")
+                + "|" + (name ?? "");
+            int h = 17;
+            unchecked
+            {
+                for (int i = 0; i < key.Length; i++) h = h * 31 + key[i];
+            }
+            h &= 0x7FFFFFFF;      // not Mathf.Abs: int.MinValue has no positive counterpart
+            return string.Format("NA {0:0000} {1:0000}", h % 10000, h / 10000 % 10000);
         }
 
         // The week (the author's calendar): six open days, Tuesday through Sunday —
@@ -3911,16 +4027,38 @@ namespace LastCall.UI
         // the generator has never hit one.
         private const float LicScale = 3f;
         private const float LicW = 256f * LicScale, LicH = 160f * LicScale;
-        // The portrait well, in art pixels: x 5..55, y 23..97 -> 150 x 222 at 3x, which
-        // holds a 72px face at a whole 2x with room around it.
-        private static readonly Rect LicPortrait = new Rect(5f * LicScale, -23f * LicScale,
-            50f * LicScale, 74f * LicScale);
-        private const float LicHeaderH = 15f * LicScale;
-        private const float LicHeaderY = -2f * LicScale;
-        private const float LicFieldsX = 62f * LicScale;
-        private const float LicFieldsW = 188f * LicScale;
-        private static readonly float[] LicLines =   // the art's five rules, ×1.4
-            { 54f * LicScale, 84f * LicScale, 114f * LicScale, 144f * LicScale };
+        //
+        // A DRIVING-LICENCE STRUCTURE (2026-08-10, the author: "sürücü belgelerine benzer
+        // bir yapı"). What makes a document read as a licence is not its outline — it is
+        // the numbered field grid, the boxed data cells under the photograph and the
+        // pictogram endorsements at the foot. So the card is built that way now: the band
+        // carries the jurisdiction and the licence number, the name is field 1 where a
+        // licence puts it, and the rail under the photo carries two data cells.
+        //
+        // The well is CUT TO THE PHOTO. It used to be 222 units around a 144 photo, which
+        // was both the author's "too much room for the portrait" and the reason a caption
+        // printed across every face: 78 units of the well were letterbox.
+        // EVERY ZONE IS MEASURED OFF THE CREAM, NOT OFF THE CANVAS (2026-08-10). The
+        // generator did not draw the card on transparency, it drew it on an opaque
+        // near-white ground, so the 256x160 sprite carries a 228x138 card at x 14..241,
+        // y 11..148. Laying the fields out to the canvas put the rules off the right edge
+        // of the paper and dropped the endorsement cells clean off the bottom of it —
+        // which every rect measurement passed, because they were all still inside the
+        // CARD RECT. Only a screenshot could show it, and did.
+        private static readonly Rect LicPortrait = new Rect(18f * LicScale, -31f * LicScale,
+            50f * LicScale, 52f * LicScale);
+        private const float LicHeaderH = 14f * LicScale;
+        private const float LicHeaderY = -13f * LicScale;
+        private const float LicFieldsX = 74f * LicScale;
+        private const float LicFieldsW = 161f * LicScale;
+        private static readonly float[] LicLines =   // the art's four printed rules
+            { 46f * LicScale, 71f * LicScale, 99f * LicScale, 124f * LicScale };
+        // The rail's two data cells and the rule the licence number is printed on, at the
+        // art's own coordinates — the boxes are drawn on the stock, not by the UI.
+        private const float LicCellX = 18f * LicScale, LicCellW = 50f * LicScale;
+        private const float LicCellH = 24f * LicScale;
+        private static readonly float[] LicCells = { 87f * LicScale, 114f * LicScale };
+        private const float LicNumRule = 143f * LicScale;
 
         /// <summary>
         /// One licence line, SEATED on a rule: the value's bottom edge lands on the shell's own
@@ -3974,93 +4112,122 @@ namespace LastCall.UI
             if (shell.sprite == null) shell.color = UITheme.Cream[4];   // no art: a plain card
             card.gameObject.AddComponent<Button>().transition = Selectable.Transition.None; // swallow clicks
 
-            // THE NAVY BAND CARRIES THE PERSON, not the bureau. It used to print
-            // "NEW ARDEN · PATRON LICENCE" — 320 units of ink identical on all thirty-one
-            // cards, every night of every run, across 9% of the card. The shell art already
-            // says what this document is; the band's job is to say WHO it is about. The name
-            // and the age move up onto it, and the flag rides the same baseline.
-            _idName = NewText("Name", card, _display, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
-            Place(_idName.rectTransform, new Vector2(0, 1), new Vector2(430, 20),
-                new Vector2(20, LicHeaderY - LicHeaderH * 0.5f + 10f));
-            _idName.horizontalOverflow = HorizontalWrapMode.Wrap;
-            _idName.verticalOverflow = VerticalWrapMode.Truncate;
+            // THE BAND IS THE HEADER OF A LICENCE: the issuing authority on the left, the
+            // document number on the right. It carried the NAME for a week, which read well
+            // but is not where a licence puts a name — and the header it replaced was 320
+            // units of ink identical on every card. The number fixes that: it is the one
+            // header field that is different on all thirty-one.
+            float bandMid = LicHeaderY - LicHeaderH * 0.5f;
+            var authority = NewText("Authority", card, _display, 16, TextAnchor.MiddleLeft,
+                UITheme.Cream[4]);
+            Place(authority.rectTransform, new Vector2(0, 1), new Vector2(200, 18),
+                new Vector2(56, bandMid + 6f));
+            authority.horizontalOverflow = HorizontalWrapMode.Overflow;
+            authority.text = "NEW ARDEN";
+            var docType = NewText("DocType", card, _body, 8, TextAnchor.MiddleLeft,
+                new Color(0.62f, 0.72f, 0.88f, 1f));
+            Place(docType.rectTransform, new Vector2(0, 1), new Vector2(260, 12),
+                new Vector2(220, bandMid + 5f));
+            docType.horizontalOverflow = HorizontalWrapMode.Overflow;
+            docType.text = "PATRON LICENCE  ·  CLASS B";
 
+            // The flag rides the header, where a licence puts its emblem. It is the one
+            // thing up here that changes from card to card besides the number below.
             var idFlag = NewRect("Flag", card);
-            Place(idFlag, new Vector2(1, 1), new Vector2(16, 11),
-                new Vector2(-24, LicHeaderY - LicHeaderH * 0.5f + 5.5f));
+            Place(idFlag, new Vector2(1, 1), new Vector2(24, 16),
+                new Vector2(-59, bandMid));
             _idFlag = idFlag.gameObject.AddComponent<Image>();
+            _idFlag.preserveAspect = true;
             _idFlag.raycastTarget = false;
             _idFlag.enabled = false;
 
-            var photo = NewRect("Photo", card);
-            Place(photo, new Vector2(0, 1), new Vector2(LicPortrait.width, LicPortrait.height),
-                new Vector2(LicPortrait.x, LicPortrait.y));
-            _idPhoto = photo.gameObject.AddComponent<Image>();
-            _idPhoto.preserveAspect = true;
-            // A WHOLE STEP, TOP-ALIGNED. The faces are 96x96 and the window is 200x288, so
-            // preserveAspect was drawing them at 2.0854x — a fractional magnification of
-            // pixel art, which is the one thing it cannot survive, and it left 88 units of
-            // dead white under every face. Two flat 2x is 192, sits inside the window, and
-            // every pixel lands on a whole pixel.
-            // A WHOLE 2x of the 72px face, hung from the TOP of the window. The window is
-            // 164x237 at this scale, so the photo takes 144 of its width and leaves 89
-            // units of letterbox underneath — which the record now stands in rather than
-            // the card being made bigger to hide it.
+            // A WHOLE 2x OF THE 72px FACE, centred in a well cut to fit it. Pixel art
+            // magnifies only in whole steps, so 144 is not a taste — it is the only size
+            // the photo can be drawn at on this card without resampling. The source is cut
+            // at 1:1 too (patron_faces.py): the faces used to be measured per character and
+            // pulled to 72, which magnified 26 of the 31 by a fraction and duplicated some
+            // pixel rows and not others. That unevenness is what the author saw as the
+            // photo being stretched, and it was.
             const float LicPhoto = 144f;
-            photo.sizeDelta = new Vector2(LicPhoto, LicPhoto);
-            photo.anchoredPosition = new Vector2(
-                LicPortrait.x + (LicPortrait.width - LicPhoto) * 0.5f, LicPortrait.y - 6f);
+            var photo = NewRect("Photo", card);
+            Place(photo, new Vector2(0, 1), new Vector2(LicPhoto, LicPhoto), new Vector2(
+                LicPortrait.x + (LicPortrait.width - LicPhoto) * 0.5f,
+                LicPortrait.y - (LicPortrait.height - LicPhoto) * 0.5f));
+            _idPhoto = photo.gameObject.AddComponent<Image>();
+            // The window and the sprite are both square, so this can never squash a face —
+            // and a face that would not fit is cropped by the frame, never stretched to it.
+            _idPhoto.preserveAspect = true;
 
-            // The data column, one field to a printed rule (the author's note: the text and
-            // the art disagreed — now the art's own lines decide where the text sits). The
-            // reserved-slots row is GONE: a row of blanks was noise, not a licence.
-            float colW = LicFieldsW * 0.5f - 8f;
-            // The name left this column for the band, so everything below moves up a rule
-            // and the last one is free for the order to breathe into.
-            _idAgeFrom = LicenceField(card, "AGE  ·  CITIZEN OF", LicFieldsX, LicLines[0], LicFieldsW, out _);
-            // STANDING AND RATING GO UNDER THE FACE, in the letterbox the portrait was
-            // wasting — they are facts about this person, so they belong beside their
-            // picture, and moving them frees a whole rule for the order.
-            float recW = LicPortrait.width - 8f;
-            float recX = LicPortrait.x + 4f;
-            // CLEAR OF THE PHOTO. At the old 586 card this landed under it; at 768 the
-            // portrait well is taller than the photo, so 18 units below the photo's foot
-            // was still inside the well and STANDING printed across the bottom of the face.
-            // Measured: the photo ends 144 below the well's top, so the record starts 34
-            // below that and the two cannot touch.
-            // The photo's foot is LicPhoto below the well's top; 52 puts the label's own
-            // top clear of it. Measured rather than nudged: at 34 the STANDING label still
-            // printed across the bottom eight units of every face.
-            float recY = -LicPortrait.y + LicPhoto + 52f;
-            _idRel = LicenceField(card, "STANDING", recX, recY, recW, out _idRelLabel);
-            _idRates = LicenceField(card, "RATES THIS BAR", recX, recY + 40f, recW,
-                out _idRatesLabel);
+            // ── the rail's two data cells, under the photograph ────────────────────
+            // A licence keeps its counts in boxes beside the picture, and these are facts
+            // about the person rather than about the drink: how often they have walked in,
+            // and what they have made of the place. The boxes themselves are printed on the
+            // stock; what goes in them is lettered here.
+            _idVisitCount = LicCell(card, LicCells[0], "VISITS", out _idRelLabel);
+            _idRel = NewText("Standing", card, _body, 8, TextAnchor.UpperCenter, UITheme.Night[3]);
+            Place(_idRel.rectTransform, new Vector2(0, 1), new Vector2(LicCellW, 12),
+                new Vector2(LicCellX, -LicCells[0] - LicCellH + 16f));
+            _idRel.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            // Caption, then the stars, then the number under them — so the drop clears the
+            // star row rather than landing in the middle of it.
+            _idRates = LicCell(card, LicCells[1], "RATES THIS BAR", out _idRatesLabel,
+                valueDrop: 50f, valueSize: 16);
+            // FIVE STARS, ALWAYS DRAWN. Somebody who has not rated the bar yet still gets
+            // the row — greyed, with a question mark where the number goes — because a
+            // blank box says "no such field" while five empty stars say "not yet".
+            _idStars = new Image[5];
+            const float StarBox = 24f, StarGap = 2f;
+            float starRun = 5f * StarBox + 4f * StarGap;
+            for (int i = 0; i < 5; i++)
+            {
+                var s = NewRect("Star" + i, card);
+                Place(s, new Vector2(0, 1), new Vector2(StarBox, StarBox), new Vector2(
+                    LicCellX + (LicCellW - starRun) * 0.5f + i * (StarBox + StarGap),
+                    -LicCells[1] - 24f));
+                _idStars[i] = s.gameObject.AddComponent<Image>();
+                _idStars[i].sprite = ItemArt.Load("star");
+                _idStars[i].preserveAspect = true;
+                _idStars[i].raycastTarget = false;
+            }
+
+            // The licence number, on the rule that closes the rail.
+            _idNumber = NewText("Num", card, _body, 8, TextAnchor.LowerCenter, UITheme.Night[3]);
+            Place(_idNumber.rectTransform, new Vector2(0, 1), new Vector2(LicCellW, 12),
+                new Vector2(LicCellX, -LicNumRule + 3f));
+            _idNumber.rectTransform.pivot = new Vector2(0, 0);
+            _idNumber.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            // ── the numbered field grid ───────────────────────────────────────────
+            // The numbers are what make a form read as a licence rather than as a label
+            // printed on card stock, and they cost one character each.
+            _idName = LicenceField(card, "1   NAME", LicFieldsX, LicLines[0], LicFieldsW, out _);
+            _idAgeFrom = LicenceField(card, "2   AGE", LicFieldsX, LicLines[1], 100f, out _);
+            _idCitizen = LicenceField(card, "3   CITIZEN OF", LicFieldsX + 130f, LicLines[1],
+                LicFieldsW - 130f, out _);
 
             // The order, seated on its own rule with the glass drawn beside it.
             var idIcon = NewRect("OrderIcon", card);
             Place(idIcon, new Vector2(0, 1), new Vector2(30, 30), Vector2.zero);
             idIcon.pivot = new Vector2(0, 0);
-            idIcon.anchoredPosition = new Vector2(LicFieldsX, -LicLines[1] + 2f);
+            idIcon.anchoredPosition = new Vector2(LicFieldsX, -LicLines[2] + 2f);
             _idOrderIcon = idIcon.gameObject.AddComponent<Image>();
             _idOrderIcon.preserveAspect = true;
             _idOrderIcon.raycastTarget = false;
-            _idOrder = LicenceField(card, "ORDER", LicFieldsX + 40f, LicLines[1],
+            _idOrder = LicenceField(card, "4   ORDER", LicFieldsX + 40f, LicLines[2],
                 LicFieldsW - 40f, out _, 16);
             // What is IN it, under the name (v5 P16): the menu speaks styles now, so the
             // licence has to say gin-and-tonic, not just "Gin & Tonic" — this line is the
             // player's recipe knowledge since the band rows left with v2.
-            // It SHARES the serving-preferences caption row (the author, 2026-08-03). Under
-            // the order's own rule there are eight points before that caption starts and this
-            // line needs twelve, so it printed straight through it; beside the drink's name
-            // there is no room either — measured in play, the longest name and the longest
-            // list of parts come to 429 points in a 352-point field. The caption row is 392
-            // wide and its own text is barely a quarter of that, so the two sit on it
-            // together, the parts to the left and the caption pushed to the right.
-            _idOrderParts = NewText("OrderParts", card, _body, 8, TextAnchor.LowerLeft, UITheme.Night[3]);
-            Place(_idOrderParts.rectTransform, new Vector2(0, 1), new Vector2(LicFieldsW, 12),
-                Vector2.zero);
-            _idOrderParts.rectTransform.pivot = new Vector2(0, 0);
-            _idOrderParts.rectTransform.anchoredPosition = new Vector2(LicFieldsX, -LicLines[2] + 20f);
+            // UNDER the order's own rule, which is where a sub-field belongs. It used to
+            // share the serving-preferences caption row two rules down — the only place it
+            // fitted on the old five-rule card — so what a drink was made of was printed
+            // nowhere near the drink. The four-rule grid leaves 84 units under this rule
+            // and the line needs twelve.
+            _idOrderParts = NewText("OrderParts", card, _body, 8, TextAnchor.UpperLeft, UITheme.Night[3]);
+            Place(_idOrderParts.rectTransform, new Vector2(0, 1), new Vector2(LicFieldsW, 14),
+                new Vector2(LicFieldsX, -LicLines[2] - 6f));
+            _idOrderParts.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             // Hovering the order shows the RECIPE (2026-07-31): the drink they asked for,
             // said the way the book says it — prep, pour shares, glass — without leaving
@@ -4068,7 +4235,7 @@ namespace LastCall.UI
             var orderHit = NewRect("OrderHit", card);
             Place(orderHit, new Vector2(0, 1), new Vector2(LicFieldsW, 52), Vector2.zero);
             orderHit.pivot = new Vector2(0, 0);
-            orderHit.anchoredPosition = new Vector2(LicFieldsX, -LicLines[1] - 6f);
+            orderHit.anchoredPosition = new Vector2(LicFieldsX, -LicLines[2] - 6f);
             var orderHitImg = orderHit.gameObject.AddComponent<Image>();
             orderHitImg.color = new Color(0, 0, 0, 0.001f);
             // VERTICAL and vice (the author, 2026-08-02): the cream chip vanished into the
@@ -4082,7 +4249,7 @@ namespace LastCall.UI
             _idRecipeTip = NewRect("RecipeTip", _idRoot);
             Place(_idRecipeTip, new Vector2(0.5f, 0.5f), new Vector2(TipW, 120), Vector2.zero);
             _idRecipeTip.pivot = new Vector2(0, 1);
-            _idRecipeTip.anchoredPosition = new Vector2(LicW * 0.5f + 12f, LicH * 0.5f - LicLines[1] + 16f);
+            _idRecipeTip.anchoredPosition = new Vector2(LicW * 0.5f + 12f, LicH * 0.5f - LicLines[2] + 16f);
             var tipBg = _idRecipeTip.gameObject.AddComponent<Image>();
             tipBg.color = new Color(0.07f, 0.07f, 0.11f, 0.96f);
             // Nothing in the panel may take a raycast, or hovering it reads as leaving the
@@ -4107,13 +4274,12 @@ namespace LastCall.UI
             // Serving preferences — the endorsements, drawn as pictograms (the author,
             // 2026-08-01) in the free band under the rule; the field text only survives to
             // say SERVE IT CLEAN when there is nothing to draw.
-            _idIntent = LicenceField(card, "SERVING PREFERENCES", LicFieldsX, LicLines[3],
+            _idIntent = LicenceField(card, "5   ENDORSEMENTS", LicFieldsX, LicLines[3],
                 LicFieldsW, out _idIntentLabel, 12);
-            _idIntentLabel.alignment = TextAnchor.LowerRight;   // the parts share this row
             _idPrefRow = NewRect("PrefRow", card);
-            Place(_idPrefRow, new Vector2(0, 1), new Vector2(LicFieldsW, 42), Vector2.zero);
+            Place(_idPrefRow, new Vector2(0, 1), new Vector2(LicFieldsW, 44), Vector2.zero);
             _idPrefRow.pivot = new Vector2(0, 1);
-            _idPrefRow.anchoredPosition = new Vector2(LicFieldsX, -LicLines[3] - 2f);
+            _idPrefRow.anchoredPosition = new Vector2(LicFieldsX, -LicLines[3] - 6f);
             var prefLayout = _idPrefRow.gameObject.AddComponent<HorizontalLayoutGroup>();
             prefLayout.spacing = 8;
             prefLayout.childControlWidth = true; prefLayout.childForceExpandWidth = false;
