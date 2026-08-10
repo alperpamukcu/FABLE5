@@ -3920,7 +3920,7 @@ namespace LastCall.UI
         private const float LicFieldsX = 62f * LicScale;
         private const float LicFieldsW = 188f * LicScale;
         private static readonly float[] LicLines =   // the art's five rules, ×1.4
-            { 50f * LicScale, 64f * LicScale, 79f * LicScale, 94f * LicScale, 112f * LicScale };
+            { 54f * LicScale, 84f * LicScale, 114f * LicScale, 144f * LicScale };
 
         /// <summary>
         /// One licence line, SEATED on a rule: the value's bottom edge lands on the shell's own
@@ -4023,7 +4023,15 @@ namespace LastCall.UI
             // picture, and moving them frees a whole rule for the order.
             float recW = LicPortrait.width - 8f;
             float recX = LicPortrait.x + 4f;
-            float recY = -LicPortrait.y + LicPhoto + 18f;
+            // CLEAR OF THE PHOTO. At the old 586 card this landed under it; at 768 the
+            // portrait well is taller than the photo, so 18 units below the photo's foot
+            // was still inside the well and STANDING printed across the bottom of the face.
+            // Measured: the photo ends 144 below the well's top, so the record starts 34
+            // below that and the two cannot touch.
+            // The photo's foot is LicPhoto below the well's top; 52 puts the label's own
+            // top clear of it. Measured rather than nudged: at 34 the STANDING label still
+            // printed across the bottom eight units of every face.
+            float recY = -LicPortrait.y + LicPhoto + 52f;
             _idRel = LicenceField(card, "STANDING", recX, recY, recW, out _idRelLabel);
             _idRates = LicenceField(card, "RATES THIS BAR", recX, recY + 40f, recW,
                 out _idRatesLabel);
