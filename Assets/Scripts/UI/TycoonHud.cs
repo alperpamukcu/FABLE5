@@ -931,6 +931,7 @@ namespace LastCall.UI
             WatchGlassRack();
             WatchFixtures();
             FadeShopTabs();
+            StepCurtain();
             FollowPointerWithRecipeTip();
             FollowPointerWithShopSpec();
 
@@ -940,7 +941,11 @@ namespace LastCall.UI
                 // cost a storm-off by itself, but the clock never fully stops.
                 bool menuOpen = (_flow != null && _flow.IsOpen) ||
                                 (_idRoot != null && _idRoot.gameObject.activeSelf);
-                run.Tick(Time.deltaTime * (menuOpen ? (float)TycoonConfig.MenuTimeScale : 1f));
+                // The night does not start until the room is up (2026-08-10): the curtain
+                // holds the clock, so nobody walks in through a black screen and no patience
+                // is spent on a night the player cannot see yet.
+                if (!DoorsClosed)
+                    run.Tick(Time.deltaTime * (menuOpen ? (float)TycoonConfig.MenuTimeScale : 1f));
             }
 
             if (run.Phase != _lastPhase)
@@ -4842,6 +4847,19 @@ namespace LastCall.UI
                 new Vector2(-14, PlaqueY), UITheme.Night[2], ToggleSettings);
             BuildSettings(root);
 
+            // THE CURTAIN, above everything the HUD owns. Its own canvas at 30 so it also
+            // covers the market (22), the licence (20) and the guide (24) — a night that
+            // starts from black starts from black whatever was left open.
+            _curtain = NewRect("Curtain", root);
+            Stretch(_curtain, Vector2.zero, Vector2.one, new Vector2(-64, -64), new Vector2(64, 64));
+            var curtainCanvas = _curtain.gameObject.AddComponent<Canvas>();
+            curtainCanvas.overrideSorting = true;
+            curtainCanvas.sortingOrder = 30;
+            _curtainImg = _curtain.gameObject.AddComponent<Image>();
+            _curtainImg.color = new Color(0f, 0f, 0f, 0f);
+            _curtainImg.raycastTarget = false;   // black, not a wall: it never eats a click
+            _curtain.gameObject.SetActive(false);
+
             // BIN GLASS retired (v5 P13 / C7): a drink is thrown away by carrying it to the bin
             // on the counter, which is the same verb that serves it.
 
@@ -5611,7 +5629,47 @@ namespace LastCall.UI
             {
                 _lastPhase = TycoonPhase.DayOpen;
                 ApplyBarLook();
+                OpenTheDoors();
             }
+        }
+
+        // ── the curtain (2026-08-10) ────────────────────────────────────────────
+        // The market shut and the next night was simply THERE, mid-tick, with the clock
+        // already running and drinkers already walking in — the shop closing and the doors
+        // opening were the same frame. A night should start from black: the room comes up,
+        // and only when it is up does the clock move. The hold is what makes it a beat
+        // rather than a flourish, and it is the one thing a fade alone cannot do.
+
+        private RectTransform _curtain;
+        private Image _curtainImg;
+        private float _curtainT;          // 1 = full black, 0 = gone
+        private const float CurtainHold = 0.35f, CurtainLift = 0.75f;
+
+        /// <summary>True while the room is still coming up: the clock must not run.</summary>
+        private bool DoorsClosed => _curtainT > 0.001f;
+
+        private void OpenTheDoors()
+        {
+            if (_curtain == null) return;
+            _curtain.gameObject.SetActive(true);
+            _curtain.SetAsLastSibling();
+            _curtainT = 1f + CurtainHold / CurtainLift;   // the hold rides on the same clock
+            _curtainImg.color = new Color(0f, 0f, 0f, 1f);
+        }
+
+        private void StepCurtain()
+        {
+            if (_curtain == null || _curtainT <= 0f) return;
+            _curtainT -= Time.unscaledDeltaTime / CurtainLift;
+            if (_curtainT <= 0f)
+            {
+                _curtainT = 0f;
+                _curtain.gameObject.SetActive(false);
+                return;
+            }
+            // Above 1 is the hold: still fully black, not yet lifting.
+            float a = Mathf.Clamp01(_curtainT);
+            _curtainImg.color = new Color(0f, 0f, 0f, a * a);   // eases out of black
         }
 
         /// <summary>
