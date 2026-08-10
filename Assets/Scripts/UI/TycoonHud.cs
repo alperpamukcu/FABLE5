@@ -2323,7 +2323,30 @@ namespace LastCall.UI
         private RectTransform _invoiceRows;
         private Text _billWhen;
 
-        private float BillRow(float y, string label, string value, Color ink, bool heavy)
+        /// <summary>One torn edge, tiled across the slip so every tooth is the same size.
+        /// The bottom edge is the same sprite turned over — both tears are cut from one
+        /// line, which is what makes them read as the same roll.</summary>
+        private void BillTear(RectTransform bill, bool top)
+        {
+            var art = ItemArt.Load("bill_tear");
+            if (art == null) return;
+            var rt = NewRect(top ? "TearTop" : "TearFoot", bill);
+            rt.anchorMin = new Vector2(0, top ? 1 : 0);
+            rt.anchorMax = new Vector2(1, top ? 1 : 0);
+            rt.pivot = new Vector2(0.5f, top ? 0 : 1);
+            rt.sizeDelta = new Vector2(0, 6f);
+            rt.anchoredPosition = Vector2.zero;
+            rt.localScale = new Vector3(1f, top ? 1f : -1f, 1f);
+            var img = rt.gameObject.AddComponent<Image>();
+            img.sprite = art;
+            img.type = Image.Type.Tiled;
+            img.raycastTarget = false;
+        }
+
+        private float BillRow(float y, string label, string value, Color ink, bool heavy) =>
+            BillRow(y, label, value, ink, heavy, null);
+
+        private float BillRow(float y, string label, string value, Color ink, bool heavy, string mark)
         {
             var row = NewRect("R", _invoiceRows);
             Place(row, new Vector2(0, 1), new Vector2(0, BillRowH), new Vector2(0, -y));
@@ -2332,9 +2355,27 @@ namespace LastCall.UI
             row.sizeDelta = new Vector2(0, BillRowH);
             row.anchoredPosition = new Vector2(0, -y);
 
+            // THE MARK (2026-08-10, the author asked for one per line). White silhouettes
+            // tinted by the row's own ink, so the colour says whether it cost you and the
+            // shape says what it was — neither has to carry both, which is the rule the
+            // inspector's buff icons already follow.
+            float gutter = 0f;
+            if (!string.IsNullOrEmpty(mark))
+            {
+                var art = ItemArt.Load(mark);
+                if (art != null)
+                {
+                    var icon = NewRect("M", row);
+                    Place(icon, new Vector2(0, 0.5f), new Vector2(12, 12), new Vector2(0, 0));
+                    var iimg = icon.gameObject.AddComponent<Image>();
+                    iimg.sprite = art; iimg.color = ink; iimg.raycastTarget = false;
+                    gutter = 18f;
+                }
+            }
+
             var l = NewText("L", row, heavy ? _shop : _body, 16, TextAnchor.MiddleLeft, ink);
             l.rectTransform.anchorMin = new Vector2(0, 0); l.rectTransform.anchorMax = new Vector2(0.62f, 1);
-            l.rectTransform.offsetMin = Vector2.zero; l.rectTransform.offsetMax = Vector2.zero;
+            l.rectTransform.offsetMin = new Vector2(gutter, 0); l.rectTransform.offsetMax = Vector2.zero;
             l.horizontalOverflow = HorizontalWrapMode.Wrap;
             l.verticalOverflow = VerticalWrapMode.Truncate;
             l.text = label;
@@ -2540,15 +2581,15 @@ namespace LastCall.UI
                 y = BillRow(y, counts[name] + "x  " + name, "$" + totals[name], BillInk, false);
 
             y = BillRule(y);
-            y = BillRow(y, "SALES", "$" + run.DaySales, BillInk, false);
-            y = BillRow(y, "TIPS", "$" + run.DayTips, BillInk, false);
-            y = BillRow(y, "RENT", "-$" + run.DayRent, BillRed, false);
-            y = BillRow(y, "STOCK", "-$" + run.DayStock, BillRed, false);
-            y = BillRow(y, "SHOP", "-$" + run.DayUpgrades, BillRed, false);
+            y = BillRow(y, "SALES", "$" + run.DaySales, BillInk, false, "bi_sales");
+            y = BillRow(y, "TIPS", "$" + run.DayTips, BillInk, false, "bi_tips");
+            y = BillRow(y, "RENT", "-$" + run.DayRent, BillRed, false, "bi_rent");
+            y = BillRow(y, "STOCK", "-$" + run.DayStock, BillRed, false, "bi_stock");
+            y = BillRow(y, "SHOP", "-$" + run.DayUpgrades, BillRed, false, "bi_shop");
             y = BillRule(y);
             y = BillRow(y, "NET", (net >= 0 ? "+$" : "-$") + Math.Abs(net),
-                        net >= 0 ? BillInk : BillRed, true);
-            y = BillRow(y, "TILL", "$" + run.Money, BillInk, true);
+                        net >= 0 ? BillInk : BillRed, true, "bi_net");
+            y = BillRow(y, "TILL", "$" + run.Money, BillInk, true, "bi_till");
             y = BillRule(y);
 
             // The footer a real slip carries: who came, how they left, and the standing
@@ -2567,7 +2608,7 @@ namespace LastCall.UI
 
             // THE SLIP IS AS LONG AS THE NIGHT WAS. A fixed 470 left a quiet night with a
             // hand's width of blank paper under it and a busy one clipped at the fold.
-            _dayEndBill.sizeDelta = new Vector2(BillW, BillHeadH + y + 18f);
+            _dayEndBill.sizeDelta = new Vector2(BillW, BillHeadH + y + 26f);   // room for the foot's tear
             if (_billNext != null)
                 _billNext.anchoredPosition = new Vector2(0, -(_dayEndBill.sizeDelta.y * 0.5f + 32f));
 
@@ -5235,8 +5276,17 @@ namespace LastCall.UI
             // total and the bill sat high on a screen that had room for it in the middle.
             var bill = _dayEndBill = NewRect("Bill", _dayEndPanel);
             Place(bill, new Vector2(0.5f, 0.5f), new Vector2(BillW, 470), Vector2.zero);
-            bill.gameObject.AddComponent<Image>().color = BillPaper;
-            Frame(bill, 2f, BillEdge);
+            var sheet = bill.gameObject.AddComponent<Image>();
+            // PAPER, NOT A PANEL (2026-08-10, the author: it was "normal bir kare"). A
+            // 9-sliced sheet carries its own edge shading and a faint grain at 1:1 while
+            // the middle stretches to the night's length; the two TORN edges are separate
+            // tiled strips, because a tear's teeth have to stay the same size wherever you
+            // look and a stretched zigzag is a smear.
+            sheet.sprite = ItemArt.Load("bill_paper");
+            if (sheet.sprite != null) { sheet.type = Image.Type.Sliced; sheet.color = Color.white; }
+            else { sheet.color = BillPaper; Frame(bill, 2f, BillEdge); }
+            BillTear(bill, top: true);
+            BillTear(bill, top: false);
 
             // The head band: what this document is, and which night it is about. The same
             // language as the licence — a dark band carrying the identity, paper below.
@@ -5262,7 +5312,7 @@ namespace LastCall.UI
             _invoiceRows.anchorMin = new Vector2(0, 1); _invoiceRows.anchorMax = new Vector2(1, 1);
             _invoiceRows.pivot = new Vector2(0.5f, 1);
             _invoiceRows.sizeDelta = new Vector2(-28f, 0);
-            _invoiceRows.anchoredPosition = new Vector2(0, -(BillHeadH + 10f));
+            _invoiceRows.anchoredPosition = new Vector2(0, -(BillHeadH + 12f));
 
             // The bill's OWN way forward (2026-08-07). The day-end button moved inside the
             // tablet, and the tablet is only up on the market step — which left the books

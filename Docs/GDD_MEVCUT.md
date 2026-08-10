@@ -87,7 +87,7 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 
 | Küme | Sayı | Not |
 |---|---|---|
-| Şişe kartı | **41** (30 canlı / 11 kilitli) | T1 26 · T2 5 · T3 5 · T4 5; markalar parodi (Smirkoff, Jonny Wanderer, Maliboo…) |
+| Şişe kartı | **41** (30 canlı / 11 kilitli) | T1 26 · T2 5 · T3 5 · T4 5; markalar parodi (Smirkoff, John Runner, Maliboo…) |
 | Başlangıç rafı | 6 | vodka_astra, gin_boothby, soda_klara, lemon_fresh, syrup_house, beer_kestrel (+bootstrap'ta sabit) |
 | Gazlı bayrağı | 3 | cola, tonic, energy (soda ve ginger Bubbly ama bayraksız — bilinçli veri gerçeği) |
 | Tarif | **53** | Built 19 · Shaken 24 · Stirred 10; pint 1 / rocks 13 / highball 22 / coupe 10 / martini 7 |

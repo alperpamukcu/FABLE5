@@ -1,4 +1,4 @@
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 namespace LastCall.EditorTools
@@ -54,6 +54,9 @@ namespace LastCall.EditorTools
             // guess: sh_ipad2 is 274x175 (exactly the 1096x700 it renders at) with a 28px
             // ring, so a sliced Image draws the bezel at 1:1 and it stays even.
             else if (file == "sh_ipad2") ti.spriteBorder = new Vector4(28, 28, 28, 28);
+            // The till slip's paper: a 10px ring so the edge shading and the handled
+            // corner draw at 1:1 while the middle stretches to the night's length.
+            else if (file == "bill_paper") ti.spriteBorder = new Vector4(10, 10, 10, 10);
             else if (file == "sh_tile") ti.spriteBorder = new Vector4(12, 12, 12, 12);
             else if (file == "sh_niche") ti.spriteBorder = new Vector4(16, 16, 16, 16);
             // The tab's bottom band is only 6 so the seam where a lit tab runs into the

@@ -125,7 +125,7 @@ BOTTLES = {
     'bourbon_redline': (
         'a square clear glass whiskey bottle with a SLANTED rectangular gold-framed '
         'label and a small striding walking man emblem, a black cap',
-        'WANDERER', 2.2),
+        'JOHN RUNNER', 2.2),
     # "şişenin şekli biraz daha benzetilsin orijinaline" (2026-08-05): the square is
     # the whole identity — flat front, hard bevelled shoulders, fluted short neck.
     'bourbon_old_harrow': (
