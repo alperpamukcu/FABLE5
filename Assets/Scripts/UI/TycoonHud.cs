@@ -695,6 +695,11 @@ namespace LastCall.UI
         // A distributor's ordering site is a white page with a house green — the dark shop
         // failed the only test that matters, which is whether you can read it.
         private static readonly Color ShopGreen = new Color(0.161f, 0.514f, 0.267f, 1f);   // house
+        /// <summary>The page's own stock, so a resting tab is a leaf of the same file.</summary>
+        private static readonly Color ShopPaper = new Color(0.965f, 0.969f, 0.961f, 1f);
+        /// <summary>How long a tab's title takes to come up to white. Short enough to feel
+        /// like a response, long enough to read as a light coming on rather than a swap.</summary>
+        private const float TabFade = 0.18f;
         private static readonly Color ShopGreenLit = new Color(0.290f, 0.706f, 0.400f, 1f);
         private static readonly Color ShopGreenDark = new Color(0.075f, 0.290f, 0.157f, 1f);
         private static readonly Color ShopPage = new Color(0.949f, 0.961f, 0.945f, 1f);    // paper
@@ -736,7 +741,9 @@ namespace LastCall.UI
         // The page, top to bottom: 20 + 40 + 32 + 8 + 400 + 8 + 128 + 8 = 644, which is the
         // screen a 1096x700 device leaves inside a 28 bezel. Every one of these is load
         // bearing; the old set carried a hardcoded 436 that overshot its own rail by 34.
-        private const float OsBarH = 20f, AppBarH = 40f, TabBarH = 32f, TabKeyW = 160f;
+        private const float OsBarH = 20f, AppBarH = 40f, TabBarH = 38f, TabKeyW = 160f;
+        /// <summary>A file's tabs: the open one stands taller than the ones behind it.</summary>
+        private const float TabRestH = 30f, TabLiveH = 38f;
         // The foot, re-balanced (the author: bring the basket forward). It reads as a
         // sum and has to: 8 + 560 + 8 + 312 + 8 + 136 + 8 = 1040, the screen's width.
         // The inspector gives up 80 units and the order takes them: the order is the
@@ -923,6 +930,7 @@ namespace LastCall.UI
             if (run == null) return;
             WatchGlassRack();
             WatchFixtures();
+            FadeShopTabs();
             FollowPointerWithRecipeTip();
             FollowPointerWithShopSpec();
 
@@ -1494,6 +1502,28 @@ namespace LastCall.UI
         // sprites at most. -1 forces the first sync of a run, so a fresh bar starts
         // bare even when the last one was furnished.
         private int _lastFixtureCount = -1;
+
+        /// <summary>
+        /// The open tab's title comes UP to white rather than being swapped to it (the
+        /// author, 2026-08-10). One frame of green and the next of white reads as a redraw;
+        /// a fifth of a second of travel reads as the tab lighting up. The icons ride the
+        /// same curve, so the whole key brightens as one object.
+        /// </summary>
+        private void FadeShopTabs()
+        {
+            if (_shopTabLabels == null) return;
+            float step = Time.unscaledDeltaTime / TabFade;
+            for (int i = 0; i < _shopTabLabels.Length; i++)
+            {
+                if (_shopTabLabels[i] == null) continue;
+                bool on = i == _shopTab;
+                var want = on ? Color.white : ShopGreenDark;
+                _shopTabLabels[i].color = Color.Lerp(_shopTabLabels[i].color, want, step);
+                if (_shopTabIcons[i] != null)
+                    _shopTabIcons[i].color = Color.Lerp(_shopTabIcons[i].color,
+                        on ? Color.white : new Color(0.55f, 0.62f, 0.56f, 1f), step);
+            }
+        }
 
         private void WatchFixtures()
         {
@@ -2340,22 +2370,13 @@ namespace LastCall.UI
                 _fittingNote.color = room ? ShopGreenDark : ShopCost;
             }
             if (_fittingLamp != null) _fittingLamp.color = room ? ShopGreenLit : ShopCost;
-            var tabOn = ItemArt.Load("sh_k_tab_on") ?? ItemArt.Load("sh_tab_on");
-            var tabOff = ItemArt.Load("sh_k_tab_off") ?? ItemArt.Load("sh_tab_off");
             for (int i = 0; i < _shopTabKeys.Length; i++)
             {
                 bool on = i == _shopTab;
-                if (tabOn != null && tabOff != null)
-                {
-                    _shopTabKeys[i].sprite = on ? tabOn : tabOff;
-                    _shopTabKeys[i].color = Color.white;
-                }
-                else _shopTabKeys[i].color = on ? ShopGreen : Color.white;
-                // White type on the green key, ink on the resting one — the contrast is
-                // the whole point (the author: the dark keys could not be read).
-                _shopTabLabels[i].color = on ? Color.white : ShopInk;
-                if (_shopTabIcons[i] != null && _shopTabIcons[i].sprite != null)
-                    _shopTabIcons[i].color = on ? Color.white : Color.white;
+                _shopTabKeys[i].sprite = null;
+                _shopTabKeys[i].color = on ? ShopGreenDark : ShopPaper;
+                var key = (RectTransform)_shopTabKeys[i].transform;
+                key.sizeDelta = new Vector2(TabKeyW, on ? TabLiveH : TabRestH);
             }
 
             // The order LISTS what is in it, at full length. The 18-character cut existed
@@ -5100,16 +5121,24 @@ namespace LastCall.UI
             for (int i = 0; i < ShopTabs.Length; i++)
             {
                 int tab = i;
+                // DRAWN, NOT DRAWN-ON (2026-08-10, the author's file brief). A sprite
+                // cannot do the one thing a file tab has to do — carry a seam under the
+                // tabs you are not reading and NO seam under the one you are — so the tabs
+                // are rects with the page's own 2px outline, and the COLOUR does the work:
+                //
+                //   resting  paper fill + dark green outline on all four sides, so its
+                //            bottom edge is a visible seam lying on the page's own border
+                //   open     dark green FILL, so its outline vanishes into it and its
+                //            bottom edge merges with the page's border — no seam at all
+                //
+                // Both draw at 2 units, the page's own thickness, on the page's own plane,
+                // and the open one stands taller. Nothing is stretched, so nothing smears.
                 var key = NewRect($"Tab{i}", tabBar);
-                Place(key, new Vector2(0, 0.5f), new Vector2(TabKeyW, 30f),
-                    new Vector2(8f + i * (TabKeyW + 8f), 0));
+                key.anchorMin = key.anchorMax = key.pivot = new Vector2(0, 0);
+                key.sizeDelta = new Vector2(TabKeyW, TabRestH);
+                key.anchoredPosition = new Vector2(8f + i * (TabKeyW + 8f), 0);
                 var bg = key.gameObject.AddComponent<Image>();
-                // SLICED, because the art is 64x28 and the key is 160 (2026-08-10). Simple
-                // stretched that drawing 2.5x across — the rounded shoulders and the seam
-                // smeared, which is the crookedness the author was looking at — while the
-                // importer had already measured it a 9-slice border of (14,6,14,10) that
-                // nothing was using. Sliced draws those edges at 1:1 and stretches only the
-                // flat middle, which is what a middle is for.
+                Frame(key, 2f, ShopGreenDark);
                 var btn = key.gameObject.AddComponent<Button>();
                 btn.targetGraphic = bg;
                 btn.onClick.AddListener(() =>
