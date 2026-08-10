@@ -475,6 +475,8 @@ namespace LastCall.UI
             Color prepInk = dark ? UITheme.Magenta[3] : new Color(0.11f, 0.37f, 0.40f);
             Color have = dark ? new Color(1f, 1f, 1f, 0.07f) : new Color(0.36f, 0.22f, 0.08f, 0.09f);
             Color miss = dark ? new Color(0.61f, 0.58f, 0.66f, 0.55f) : new Color(0.52f, 0.44f, 0.36f, 0.6f);
+            Color gone = dark ? new Color(0.86f, 0.24f, 0.32f, 0.16f) : new Color(0.74f, 0.16f, 0.20f, 0.13f);
+            Color goneInk = dark ? new Color(0.94f, 0.40f, 0.46f) : new Color(0.66f, 0.12f, 0.16f);
 
             var rows = RecipeSpecRows(r);
             float y = 0f;
@@ -491,11 +493,15 @@ namespace LastCall.UI
                 line.anchoredPosition = new Vector2(0, -y);
                 y += rowH;
 
-                // The frame is the "you have this" tell: a lit slab behind the row.
-                if (stocked)
+                // THE SLAB SAYS WHICH WAY (2026-08-10, the author: "olmayan özellikle
+                // belirtilsin"). A lit wash behind a row you can pour, a red one behind a
+                // row you cannot — and a WORD on the red ones, because colour alone leaves
+                // the two indistinguishable for anyone who cannot separate them. It is the
+                // same rule the inspector's buff icons already follow.
+                if (ingredient)
                 {
                     var slab = line.gameObject.AddComponent<Image>();
-                    slab.color = have;
+                    slab.color = stocked ? have : gone;
                     slab.raycastTarget = false;
                 }
 
@@ -530,17 +536,31 @@ namespace LastCall.UI
                 var label = NewText("L", line, _body, spec.Hint ? 8 : 16, TextAnchor.MiddleLeft,
                     ingredient ? (stocked ? ink : miss) : (i == 0 ? prepInk : quiet));
                 Place(label.rectTransform, new Vector2(0, 0.5f),
-                    new Vector2(width - textX - SpecAmountW - 6f, rowH), Vector2.zero);
+                    new Vector2(width - textX - SpecAmountW - (ingredient && !stocked ? 66f : 6f), rowH),
+                    Vector2.zero);
                 label.rectTransform.pivot = new Vector2(0, 0.5f);
                 label.rectTransform.anchoredPosition = new Vector2(textX, 0);
                 label.horizontalOverflow = HorizontalWrapMode.Overflow;
                 label.raycastTarget = false;
                 label.text = spec.Label + (spec.MinTier > 1 ? $"  T{spec.MinTier}+" : "");
 
+                // NONE: the shape half of the tell. Right-aligned into the gap the share
+                // leaves, so it reads on the same sweep as the percentage rather than
+                // hiding at the end of a long ingredient name.
+                if (ingredient && !stocked)
+                {
+                    var none = NewText("X", line, _body, 8, TextAnchor.MiddleRight, goneInk);
+                    Place(none.rectTransform, new Vector2(1, 0.5f), new Vector2(60f, rowH),
+                        new Vector2(-SpecAmountW - 4f, 0));
+                    none.horizontalOverflow = HorizontalWrapMode.Overflow;
+                    none.raycastTarget = false;
+                    none.text = "NONE";
+                }
+
                 if (spec.Amount.Length > 0)
                 {
                     var amount = NewText("A", line, _display, 16, TextAnchor.MiddleRight,
-                        ingredient && !stocked ? miss : figure);
+                        ingredient && !stocked ? goneInk : figure);
                     Place(amount.rectTransform, new Vector2(1, 0.5f), new Vector2(SpecAmountW, rowH),
                         new Vector2(-2, 0));
                     amount.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -788,6 +808,10 @@ namespace LastCall.UI
             public string MetaLine;
             public string Body;
             public Buff BuffA, BuffB;
+            /// <summary>Set on a tile that sells a DRINK. The pointer then gets the whole
+            /// spec card — prep, shares, glass, and what the shelf is missing — instead of
+            /// a sentence about it (2026-08-10).</summary>
+            public RecipeDefinition Recipe;
         }
 
         private readonly List<CartEntry> _cart = new List<CartEntry>();
@@ -883,6 +907,7 @@ namespace LastCall.UI
             WatchGlassRack();
             WatchFixtures();
             FollowPointerWithRecipeTip();
+            FollowPointerWithShopSpec();
 
             if (run.Phase == TycoonPhase.DayOpen)
             {
@@ -2498,16 +2523,26 @@ namespace LastCall.UI
                         });
                         continue;
                     }
+                    // WHAT THE SHELF CANNOT POUR, said in the description as well as drawn
+                    // on the card (2026-08-10, the author). A recipe you cannot make is still
+                    // worth buying — the stock comes later — but that has to be a decision,
+                    // not a surprise on the first night it is ordered.
+                    var lacking = MissingStyles(r);
                     var spec = new TileSpec
                     {
                         Name = r.Name,
                         Meta = PrepWord(r) + " · " + GlassNameFor(r),
                         Art = DrinkIcon.For(r, _bootstrap.Glassware),
                         ArtH = IconH,
+                        Recipe = r,
                         Identity = r.Name.ToUpperInvariant(),
                         MetaLine = PrepWord(r) + " · served in a " + GlassNameFor(r),
                         Body = BandLine(r),
                         BuffA = new Buff(BuffKind.Gain, "On the menu tomorrow — one more drink to sell"),
+                        BuffB = lacking.Count == 0
+                            ? new Buff(BuffKind.Gain, "Your shelf can pour it tonight")
+                            : new Buff(BuffKind.Bad, "Nothing on the shelf pours "
+                                + string.Join(" or ", lacking)),
                     };
                     DressBuyable(spec, run.RecipePrice(r), "recipe:" + r.Id, false,
                         () => run.UnlockRecipe(r.Id));
@@ -2973,6 +3008,47 @@ namespace LastCall.UI
         /// carries what identifies a thing, the inspector carries what explains it, and the
         /// two sets are disjoint by construction because they come from one TileSpec.
         /// </summary>
+        private const float ShopSpecW = 268f;
+        private RectTransform _shopSpec, _shopSpecBody;
+
+        /// <summary>
+        /// The pour, on the pointer. Nothing in it may take a raycast: the panel sits under
+        /// the cursor, and a graphic that answers the pointer would read as leaving the tile
+        /// underneath — which hides the panel, which hands the pointer back, many times a
+        /// second. The licence tip learned this the hard way (2026-08-10).
+        /// </summary>
+        private void ShowShopSpec(RecipeDefinition r)
+        {
+            if (_shopSpec == null || _shopSpecBody == null) return;
+            if (r == null) { _shopSpec.gameObject.SetActive(false); return; }
+            float h = DrawRecipeSpec(_shopSpecBody, r, dark: true, width: ShopSpecW - 20f);
+            _shopSpec.sizeDelta = new Vector2(ShopSpecW, h + 16f);
+            _shopSpec.gameObject.SetActive(true);
+            _shopSpec.SetAsLastSibling();
+            foreach (var g in _shopSpec.GetComponentsInChildren<Graphic>(true)) g.raycastTarget = false;
+            FollowPointerWithShopSpec();
+        }
+
+        /// <summary>Hangs the spec off the cursor, turning back at the edges of the market's
+        /// own panel rather than running off it.</summary>
+        private void FollowPointerWithShopSpec()
+        {
+            if (_shopSpec == null || !_shopSpec.gameObject.activeSelf) return;
+            var mouse = UnityEngine.InputSystem.Mouse.current;
+            if (mouse == null || _dayEndPanel == null) return;
+            Vector2 local;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _dayEndPanel, mouse.position.ReadValue(), null, out local)) return;
+            const float Gap = 20f;
+            Vector2 size = _shopSpec.sizeDelta;
+            float halfW = _dayEndPanel.rect.width * 0.5f, halfH = _dayEndPanel.rect.height * 0.5f;
+            float x = local.x + Gap;
+            if (x + size.x > halfW) x = local.x - Gap - size.x;
+            float y = local.y - Gap;
+            if (y - size.y < -halfH) y = local.y + Gap + size.y;
+            _shopSpec.anchoredPosition = new Vector2(x, y);
+        }
+
         private void ShowInspector(TileSpec spec)
         {
             if (_inspIdentity == null) return;
@@ -3617,6 +3693,24 @@ namespace LastCall.UI
             double gate = lockedRow ? run.RecipeStarGate(r) : 0;
             DrawRecipeSpec(body, r, dark: false, width: bodyW,
                 note: gate > 0 ? $"OPENS AT {gate:0.0}★" : null);
+        }
+
+        /// <summary>
+        /// The styles this drink names that the shelf cannot pour, in the recipe's own
+        /// order. Empty when the bar can make it tonight. Type bands (ANY SPIRIT) are not
+        /// counted: they ask for a kind, not a bottle, and the well always has a kind.
+        /// </summary>
+        private List<string> MissingStyles(RecipeDefinition r)
+        {
+            var missing = new List<string>();
+            foreach (var band in r.RatioRequirements)
+            {
+                if (!band.IsStyleBand) continue;
+                if (InStock(band.Style, band.MinTier)) continue;
+                string word = band.Style.Replace('_', ' ').ToUpperInvariant();
+                if (!missing.Contains(word)) missing.Add(word);
+            }
+            return missing;
         }
 
         /// <summary>"GIN 45–65 · LEMON 20–40 · SYRUP 10–30" — the pour, said in shares.</summary>
@@ -5110,6 +5204,26 @@ namespace LastCall.UI
                 else { _inspBuffBIcon = ii; _inspBuffB = line; }
             }
 
+            // THE POINTER GETS THE RECIPE (2026-08-10, the author). The inspector says what
+            // a drink IS in a sentence; buying one is a question about the POUR, and a pour
+            // is a table. The panel rides the cursor the way the licence's does, and for the
+            // same reason: parked anywhere fixed it either covers the tile you are reading
+            // or sits too far from it to belong to it.
+            _shopSpec = NewRect("ShopSpec", _dayEndPanel);
+            Place(_shopSpec, new Vector2(0.5f, 0.5f), new Vector2(ShopSpecW, 120), Vector2.zero);
+            _shopSpec.pivot = new Vector2(0, 1);
+            var specBg = _shopSpec.gameObject.AddComponent<Image>();
+            specBg.color = new Color(0.07f, 0.09f, 0.08f, 0.97f);
+            specBg.raycastTarget = false;
+            var specEdge = new Color(ShopGreenLit.r, ShopGreenLit.g, ShopGreenLit.b, 0.85f);
+            Hairline(_shopSpec, new Vector2(0, 0), new Vector2(1, 0), specEdge);
+            Hairline(_shopSpec, new Vector2(0, 1), new Vector2(1, 1), specEdge);
+            HairlineV(_shopSpec, 0f, specEdge);
+            HairlineV(_shopSpec, 1f, specEdge);
+            _shopSpecBody = NewRect("Body", _shopSpec);
+            Stretch(_shopSpecBody, Vector2.zero, Vector2.one, new Vector2(10, 6), new Vector2(-10, -6));
+            _shopSpec.gameObject.SetActive(false);
+
             // THE ORDER, and it lists what is in it.
             var order = NewRect("Order", foot);
             Place(order, new Vector2(0, 0.5f), new Vector2(OrderW, FootH), new Vector2(576, 0));
@@ -5386,8 +5500,8 @@ namespace LastCall.UI
             // wheel and froze the aisle over every tile that had something to read.
             var shown = spec;
             var hover = rt.gameObject.AddComponent<HoverRelay>();
-            hover.Entered = () => ShowInspector(shown);
-            hover.Exited = () => ShowInspector(null);
+            hover.Entered = () => { ShowInspector(shown); ShowShopSpec(shown.Recipe); };
+            hover.Exited = () => { ShowInspector(null); ShowShopSpec(null); };
 
             // 1 — THE STRIP: 8 x 208 of solid state colour down the left edge. 1664 units,
             // which is 1.7x the area of the entire old thumbnail, and it reads from across
