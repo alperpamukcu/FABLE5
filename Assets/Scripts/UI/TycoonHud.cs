@@ -2496,6 +2496,7 @@ namespace LastCall.UI
                 // a bottle belongs to is a question about the bottle, not about the roll.
                 bool booze = _shopTab == 1;
                 _cardTarget = ShopSection(booze ? "TONIGHT'S BOARD" : "THE MIXER BOARD");
+                _liquorHead = _cardTarget; _kegHead = null; _garnishHead = null;
                 bool anyKeg = false, anyGarnish = false;
                 for (int pass = 0; pass < 2; pass++)
                 for (int i = 0; i < run.MarketOffers.Count; i++)
@@ -2513,9 +2514,9 @@ namespace LastCall.UI
                                         : card.Type == IngredientType.Garnish;
                     if ((pass == 1) != second) continue;
                     if (pass == 1 && booze && !anyKeg)
-                    { anyKeg = true; _cardTarget = ShopSection("ON TAP — THE KEGS"); }
+                    { anyKeg = true; _cardTarget = ShopSection("ON TAP — THE KEGS"); _kegHead = _cardTarget; }
                     if (pass == 1 && !booze && !anyGarnish)
-                    { anyGarnish = true; _cardTarget = ShopSection("THE GARNISH TRAY"); }
+                    { anyGarnish = true; _cardTarget = ShopSection("THE GARNISH TRAY"); _garnishHead = _cardTarget; }
                     var spec = new TileSpec
                     {
                         Name = offer.Bottle.Name,
@@ -2532,6 +2533,20 @@ namespace LastCall.UI
                         () => run.BuyBrand(index));
                     AddTile(spec);
                 }
+
+                // THE LOCK BELONGS TO THE AISLE, NOT TO THE DEPARTMENT (2026-08-10, the
+                // author). One crate at the foot of the tab said "more is coming" without
+                // saying WHERE, so a player looking at a finished keg aisle had to guess
+                // whether the news was about kegs or about spirits. Each aisle answers for
+                // its own shelf now, and an aisle with nothing behind a star says nothing.
+                SectionGate(run, booze
+                    ? (System.Func<IngredientCard, bool>)(c => c.Type != IngredientType.Beer)
+                    : (c => c.Type != IngredientType.Garnish), booze,
+                    booze ? "bottle" : "mixer", _liquorHead);
+                if (anyKeg)
+                    SectionGate(run, c => c.Type == IngredientType.Beer, true, "keg", _kegHead);
+                if (anyGarnish)
+                    SectionGate(run, c => c.Type == IngredientType.Garnish, false, "garnish", _garnishHead);
             }
             else if (_shopTab == 3)
             {
@@ -2718,18 +2733,9 @@ namespace LastCall.UI
                 int locked = 0;
                 double next = double.MaxValue;
                 string noun = "line", plural = "lines", verb = "the van will not bring you yet";
-                if (_shopTab == 1 || _shopTab == 2)
-                {
-                    bool boozeTab = _shopTab == 1;
-                    foreach (var g in run.GatedStock())
-                    {
-                        if (IngredientCategories.IsAlcoholic(g.Card.Info?.Category, g.Card.Type) != boozeTab)
-                            continue;
-                        locked++;
-                        if (g.Stars < next) next = g.Stars;
-                    }
-                }
-                else if (_shopTab == 3)
+                // Liquor and mixers answer per AISLE now (SectionGate), because "more is
+                // coming" without saying which shelf is a question, not an answer.
+                if (_shopTab == 3)
                 {
                     noun = "drink"; plural = "drinks"; verb = "the house will not open for you yet";
                     foreach (var r in run.LockedRecipes)
@@ -3172,6 +3178,45 @@ namespace LastCall.UI
                 buff.Kind == BuffKind.Gain ? "sh_b_star"
                 : buff.Kind == BuffKind.Cost ? "sh_b_coin"
                 : buff.Kind == BuffKind.Bad ? "sh_b_lock" : "sh_b_pour");
+        }
+
+        private RectTransform _liquorHead, _kegHead, _garnishHead;
+
+        /// <summary>
+        /// The sealed crate for ONE aisle: how many of its lines are still behind a star,
+        /// and the nearest of those stars. Draws nothing when the aisle is finished, which
+        /// is the whole signal — a shelf with no crate at its foot has nothing left to give.
+        /// </summary>
+        private void SectionGate(TycoonRun run, System.Func<IngredientCard, bool> belongs,
+            bool booze, string noun, RectTransform grid)
+        {
+            if (grid == null) return;
+            int locked = 0;
+            double next = double.MaxValue;
+            foreach (var g in run.GatedStock())
+            {
+                if (IngredientCategories.IsAlcoholic(g.Card.Info?.Category, g.Card.Type) != booze) continue;
+                if (!belongs(g.Card)) continue;
+                locked++;
+                if (g.Stars < next) next = g.Stars;
+            }
+            if (locked == 0) return;
+            var was = _cardTarget;
+            _cardTarget = grid;
+            AddTile(new TileSpec
+            {
+                Name = locked + " more waiting",
+                Money = next.ToString("0.0") + "★",
+                State = TileState.Sealed,
+                Identity = "MORE " + noun.ToUpperInvariant() + "S AT " + next.ToString("0.0") + " STARS",
+                MetaLine = locked + " " + (locked == 1 ? noun : noun + "s")
+                           + " the van will not bring you yet",
+                Body = "This shelf is rolled against what the room thinks of this bar. Reach "
+                       + next.ToString("0.0") + " stars and the next of them start appearing here.",
+                BuffA = new Buff(BuffKind.Bad, "Needs " + next.ToString("0.0")
+                                 + " stars · you are at " + run.Rating.Average.ToString("0.0")),
+            });
+            _cardTarget = was;
         }
 
         /// <summary>A titled section of the market: its header row, then its own grid.</summary>
