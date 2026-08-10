@@ -26,13 +26,21 @@ namespace LastCall.UI
             public Graphic Art;
             public bool Lit;
             public float Timer, MinOn, MaxOn, DimAlpha, FullAlpha;
+            // The tube's spill into the room (2026-08-10): a real Light2D that rides the
+            // SAME schedule as its lettering. A sign and its light on separate rhythms is
+            // the fake this class exists to avoid, so the light is a passenger on the
+            // sign's own entry, never a registration of its own.
+            public UnityEngine.Rendering.Universal.Light2D Spill;
+            public float SpillIntensity;
         }
 
         private readonly List<Sign> _signs = new List<Sign>();
 
         /// <summary>Puts an already-built graphic — a lettered sign, say — on the blink. Its
-        /// current alpha is taken as "lit", so a deliberately faint glow layer stays faint.</summary>
-        public void Register(Graphic art, float minOn = 2.5f, float maxOn = 7f, float dim = 0.22f)
+        /// current alpha is taken as "lit", so a deliberately faint glow layer stays faint.
+        /// A Light2D passed with it stutters in step, scaled by the lettering's own alpha.</summary>
+        public void Register(Graphic art, float minOn = 2.5f, float maxOn = 7f, float dim = 0.22f,
+            UnityEngine.Rendering.Universal.Light2D spill = null)
         {
             if (art == null) return;
             _signs.Add(new Sign
@@ -40,6 +48,7 @@ namespace LastCall.UI
                 Art = art, Lit = true, MinOn = minOn, MaxOn = maxOn,
                 FullAlpha = art.color.a, DimAlpha = art.color.a * dim,
                 Timer = Random.Range(minOn, maxOn),
+                Spill = spill, SpillIntensity = spill != null ? spill.intensity : 0f,
             });
         }
 
@@ -60,6 +69,8 @@ namespace LastCall.UI
                 c.a = Mathf.MoveTowards(c.a, n.Lit ? n.FullAlpha : n.DimAlpha,
                                         dt * (n.Lit ? 6f : 18f));
                 n.Art.color = c;
+                if (n.Spill != null && n.FullAlpha > 0f)
+                    n.Spill.intensity = n.SpillIntensity * (c.a / n.FullAlpha);
             }
         }
     }

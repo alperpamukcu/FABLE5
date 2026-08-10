@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
 namespace LastCall.UI
@@ -11,12 +12,21 @@ namespace LastCall.UI
     /// with the wallet in its display window. Everything interactive above it (seats,
     /// patrons, glasses, menus) belongs to <see cref="TycoonHud"/> and the service flow.
     ///
-    /// The 2026-08-07 sweep removed the retired pre-menu loop this class used to carry:
-    /// the on-stage bottle rail and its slide choreography, the pour-glass HUD, the mood
-    /// gauge, the solo customer and his old ID card. Bottles live in the menu, customers
-    /// in the HUD's seat row, and the licence card in TycoonHud — none of it ever came
-    /// back here, so the code did not either. All coordinates are in the 640×360 reference
-    /// space with a bottom-left origin.
+    /// IN THE WORLD NOW, NOT ON A CANVAS (2026-08-10). The room and the counter draw as
+    /// world-space SpriteRenderers under the URP 2D Renderer, because that is the one
+    /// place a Light2D can reach them: an overlay canvas is composited after the camera
+    /// and no light or bloom can ever touch it. The room carries real light — a global
+    /// wash, a warm pool under each of the four painted lamps, and the sign's own spill —
+    /// and the modular fixtures (bar upgrades) will be world sprites lit by the same
+    /// system. What must draw OVER the HUD's patrons stays canvas: the till (order 6),
+    /// its shadow and the wallet plaque (−10), and the lettered sign (−9), whose pixel
+    /// text needs the canvas rasterizer.
+    ///
+    /// One world unit is one stage unit: the PixelPerfectCamera holds the camera at
+    /// ortho 180 over a 640×360 reference, so the visible world is 360×aspect wide —
+    /// exactly the width CanvasScaler gives the overlay UI at match-height, which is how
+    /// the stage sprites and the HUD keep agreeing about where things are. All public
+    /// coordinates remain in the 640×360 reference space with a bottom-left origin.
     /// </summary>
     public sealed class DiegeticStage : MonoBehaviour
     {
@@ -46,37 +56,27 @@ namespace LastCall.UI
         // cell's interior runs y 53..92 with its floor at y 93.
         //
         // The numbers below are in the ART's own pixels. They only equal stage units at
-        // the reference aspect: StageArtFit scales the counter by parentWidth/640 and
-        // hangs it from the rest line, so at 16:10 the cells sit narrower AND higher.
-        // ShelfCell resolves that from the live transform rather than assuming 16:9,
-        // which is what the old hardcoded rack slots did.
+        // the reference aspect: the counter is scaled by visibleWidth/640 and hangs from
+        // the rest line, so at 16:10 the cells sit narrower AND higher. ShelfCell resolves
+        // that from the live fit rather than assuming 16:9.
         private const float ShelfCellPx = 80f;      // cell pitch, art px
         // THE FLOOR IS THE TURQUOISE, AND IT IS DRAWN IN PERSPECTIVE (the author,
         // 2026-08-10). Rows 93..105 are (13,30,40) — thirteen rows of it — and rows
         // 106..112 are the wooden board (141,82,30 lipping to 161,107,57). The wood is not
         // the floor: it is the shelf's FRONT EDGE, seen from slightly above, and the
-        // turquoise band behind it is the surface things stand on. Both earlier readings
-        // were wrong in opposite directions — 93 stood a glass on the back lip of the
-        // surface, 106 stood it on the front edge, in front of the shelf.
-        //
-        // A glass belongs a little way INTO that band, so some floor shows in front of it
-        // the way it would on a real shelf. Two thirds back reads correctly at every size.
-        // The NEAR edge of that surface — where a glass at the front of the shelf stands.
-        // The band runs 93..105, so 104 is the front row's feet and the far row's feet are
-        // ShelfDepthPx above it, still inside the band. Standing the far row 13 px up put
-        // it at row 88, which is off the surface entirely and above the shelf.
+        // turquoise band behind it is the surface things stand on.
         private const float ShelfFloorPx = 104f;    // the near edge, art px from the art's top
         /// <summary>How deep the drawn shelf surface is, front edge to back, in art px.</summary>
         public const float ShelfDepthPx = 9f;
         private const float ShelfCeilPx = 53f;      // the shelf board above it
         public const int ShelfCells = 8;
 
-        private RectTransform _counter;
+        private Transform _counterTr;
         private Vector2 _counterNative;
+        private float _counterScale;                // stage units per counter-art pixel
 
         /// <summary>How many stage units one pixel of the counter art is worth right now.</summary>
-        public float CounterArtScale => (_counter != null && _counterNative.x > 0f)
-            ? _counter.rect.width / _counterNative.x : 0f;
+        public float CounterArtScale => _counterTr != null ? _counterScale : 0f;
 
         /// <summary>Where a given ROW of the counter art is, in stage units. The rest line is
         /// CounterSurfaceInset art-pixels below the art's top, and that line is pinned to
@@ -94,8 +94,8 @@ namespace LastCall.UI
         public bool ShelfCell(int index, out float centerX, out float floorY, out float height)
         {
             centerX = 0f; floorY = 0f; height = 0f;
-            if (_counter == null || _counterNative.x <= 0f) return false;
-            float scale = _counter.rect.width / _counterNative.x;
+            if (_counterTr == null || _counterNative.x <= 0f) return false;
+            float scale = _counterScale;
             // The art's own top edge, in stage units: the rest line is CounterSurfaceInset
             // art-pixels below it, and that line is pinned to CounterRestY.
             float artTopY = CounterRestY + CounterSurfaceInset * scale;
@@ -118,11 +118,24 @@ namespace LastCall.UI
 
         private const float CounterRestY = 128f;           // counter-top rest line (till, glassware)
         // Measured off the art: the bar's far edge — where a glass is set down — is this far
-        // below the sprite's top. The two candidates drawn for this put it 2px and 54px down,
-        // so it is a property of the picture, never a constant to assume (2026-07-29).
+        // below the sprite's top (2026-07-29).
         private const float CounterSurfaceInset = 2f;
         private const float CounterFrontY = 96f;           // surface line: the bottom 96px band
         private const float Overscan = 48f;         // bleed past screen edges (aspect safety)
+
+        // ── the light plan (2026-08-10) ─────────────────────────────────────────
+        // The room's four hanging lamps, measured off club_room.png by clustering its
+        // warm-bright pixels (Tools would guess; the art knows): bulb centres at art
+        // x 65 / 237 / 406 / 579, y 84 from the top. Each gets a warm pool; the global
+        // wash is slightly cool and slightly below 1 so the pools read as light and not
+        // as paint. The sign's spill rides NeonBlink with its lettering.
+        private static readonly Vector2[] LampArtPx =
+            { new Vector2(65, 84), new Vector2(237, 84), new Vector2(406, 84), new Vector2(579, 84) };
+        private static readonly Color GlobalTint = new Color(0.86f, 0.85f, 0.95f);
+        private const float GlobalIntensity = 0.85f;
+        private static readonly Color LampTint = new Color(1f, 0.80f, 0.52f);
+        private const float LampIntensity = 0.55f;
+        private const float LampRadius = 92f;
 
         private Font _display;
         [SerializeField] private Font displayFont;         // Press Start 2P (headings/numbers)
@@ -142,8 +155,16 @@ namespace LastCall.UI
 
         private NeonBlink _neon;
 
-        // Ambient life, deliberately sparse: a neon flicker and nothing else.
-        private Image _backgroundImage;
+        // ── the world ───────────────────────────────────────────────────────────
+        private Transform _world;                   // root of every world-space stage object
+        private Material _litMaterial;              // Sprite-Lit-Default, shared by the stage
+        private SpriteRenderer _backdropSr, _backgroundSr;
+        private Vector2 _backgroundNative;
+        private float _backgroundScale = 1f;        // stage units per background-art pixel
+        private Light2D _globalLight;
+        private Light2D _signLight;
+        private RectTransform _signHost;            // the sign's canvas host, Cover-fitted
+        private float _lastVisibleW = -1f;
 
         /// <summary>Update the diegetic wallet shown on the cash register plaque.</summary>
         public void SetMoney(string text)
@@ -174,32 +195,242 @@ namespace LastCall.UI
         private void Update()
         {
             _neon?.Step(Time.deltaTime);
+            // A resized window has to re-fit, and only the camera knows the live aspect.
+            float w = VisibleWidth();
+            if (!Mathf.Approximately(w, _lastVisibleW)) Refit(w);
         }
 
-        /// <summary>
-        /// What the painted room cannot do for itself: blink (GDD 24 §8). The room art is its
-        /// own sky and its own skyline — the sign is the one live element on the wall.
-        /// </summary>
-        private void BuildBackdrop(RectTransform root, Vector2 native)
+        /// <summary>The visible world width in stage units: 360 × aspect, read off the camera
+        /// so the stage and the match-height UI canvases always agree about it.</summary>
+        private static float VisibleWidth()
         {
-            // Sized and scaled exactly like the room art, so the sign hangs on the wall the
-            // picture actually draws rather than on the screen edge.
-            var host = NewRect("Backdrop", root);
-            var hostFit = host.gameObject.AddComponent<StageArtFit>();
-            hostFit.Native = native;
+            var cam = Camera.main;
+            return cam != null ? cam.orthographicSize * 2f * cam.aspect : Reference.x;
+        }
+
+        /// <summary>Stage units (bottom-left origin) → world position. One world unit is one
+        /// stage unit; the camera sits over the stage's centre.</summary>
+        private static Vector3 StageToWorld(float x, float y) =>
+            new Vector3(x - Reference.x * 0.5f, y - Reference.y * 0.5f, 0f);
+
+        // ── scene construction ──────────────────────────────────────────────────
+
+        private void BuildScene()
+        {
+            _world = new GameObject("StageWorld").transform;
+            _world.position = Vector3.zero;
+
+            // The one material the whole stage shares. Sprites-Default is unlit — under the
+            // 2D renderer an unlit sprite ignores every Light2D, which would make the whole
+            // migration a very quiet no-op.
+            var litShader = Shader.Find("Universal Render Pipeline/2D/Sprite-Lit-Default");
+            if (litShader != null) _litMaterial = new Material(litShader);
+            else Debug.LogWarning("DiegeticStage: Sprite-Lit-Default not found — the stage will draw unlit.");
+
+            // Opaque backdrop behind everything, overscanned past the screen edges so no
+            // aspect-ratio border ever exposes the clear colour / editor checker.
+            _backdropSr = WorldSprite("Backdrop",
+                Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 1f),
+                order: 0);
+            _backdropSr.color = UITheme.Night[0];
 
             _neon = new NeonBlink();
 
-            // The bar's own sign, high and off to one side — the one deliberate touch of colour
-            // in a scene that is otherwise all shadow. Its word is real text drawn in the pixel
-            // font: the art generator cannot spell, so a sign that has to say something is built
-            // here rather than painted (2026-07-29).
-            BuildLetteredNeon(host, new Vector2(470f, 300f), "LAST CALL", UITheme.Magenta[4]);
+            // The room. Real club background when installed, else the flat procedural
+            // placeholders on their own canvas, so a broken reference is still a visible bar.
+            if (backgroundSprite != null)
+            {
+                _backgroundSr = WorldSprite("Background", backgroundSprite, order: 10);
+                _backgroundNative = backgroundSprite.rect.size;
+
+                // The lamps the picture already painted, made real: a warm pool under each
+                // bulb. Positions are measured art pixels, converted per-fit in Refit.
+                for (int i = 0; i < LampArtPx.Length; i++)
+                    PointLight("Lamp" + i, LampTint, LampIntensity, LampRadius);
+                _signLight = PointLight("SignSpill", UITheme.Magenta[4], 0.9f, 60f);
+
+                BuildSign();
+            }
+            else
+            {
+                BuildFallbackRoom();
+            }
+
+            // The global wash: what "the room is dim" means to the lighting system. Slightly
+            // cool and slightly below 1, so the warm pools have something to be warmer than.
+            _globalLight = new GameObject("GlobalLight").AddComponent<Light2D>();
+            _globalLight.transform.SetParent(_world, false);
+            _globalLight.lightType = Light2D.LightType.Global;
+            _globalLight.color = GlobalTint;
+            _globalLight.intensity = GlobalIntensity;
+            LightAllLayers(_globalLight);
+
+            // The bar. A drawn asset: it carries EMPTY shelves, which is not decoration but
+            // structure — glassware is a buyable upgrade and those shelves are where the
+            // bought glasses get drawn. There is no procedural counter to fall back on, so a
+            // lost reference is an invisible bar and no other symptom (2026-07-29).
+            if (counterSprite == null)
+                Debug.LogWarning("DiegeticStage: no counterSprite — the bar will not be drawn. " +
+                                 "Check the reference in the scene, or re-run LastCall > Create Debug Scene.");
+            if (counterSprite != null)
+            {
+                var sr = WorldSprite("Counter", counterSprite, order: 30);
+                _counterTr = sr.transform;
+                _counterNative = counterSprite.rect.size;
+            }
+
+            BuildRegister();
+
+            Refit(VisibleWidth());
+
+            if (!Motion.Reduced) StartCoroutine(Ambient());
+        }
+
+        /// <summary>One world-space stage sprite on the shared lit material.</summary>
+        private SpriteRenderer WorldSprite(string name, Sprite sprite, int order)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(_world, false);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = order;
+            if (_litMaterial != null) sr.sharedMaterial = _litMaterial;
+            return sr;
+        }
+
+        private Light2D PointLight(string name, Color tint, float intensity, float radius)
+        {
+            var l = new GameObject(name).AddComponent<Light2D>();
+            l.transform.SetParent(_world, false);
+            l.lightType = Light2D.LightType.Point;
+            l.color = tint;
+            l.intensity = intensity;
+            l.pointLightInnerRadius = radius * 0.15f;
+            l.pointLightOuterRadius = radius;
+            l.falloffIntensity = 0.62f;
+            LightAllLayers(l);
+            return l;
+        }
+
+        /// <summary>
+        /// Light2D ships targeting whatever sorting layers its serialized default says, and
+        /// that default is not a public API — so the target list is set outright to every
+        /// layer the project has. The UI never suffers for it: overlay canvases are composited
+        /// after the camera and no 2D light can reach them at all.
+        /// </summary>
+        private static void LightAllLayers(Light2D light)
+        {
+            var f = typeof(Light2D).GetField("m_ApplyToSortingLayers",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (f == null) return;
+            var layers = SortingLayer.layers;
+            var ids = new int[layers.Length];
+            for (int i = 0; i < layers.Length; i++) ids[i] = layers[i].id;
+            f.SetValue(light, ids);
+        }
+
+        /// <summary>
+        /// Everything whose size depends on the window: the backdrop, the room's cover fit,
+        /// the counter's width fit, and the lights that hang off the room's own pixels.
+        /// Scaled by ONE factor each, so every art pixel stays square (the StageArtFit rule,
+        /// now in world units).
+        /// </summary>
+        private void Refit(float visibleW)
+        {
+            _lastVisibleW = visibleW;
+            float visibleH = Reference.y;
+
+            if (_backdropSr != null)
+            {
+                var b = _backdropSr.sprite.bounds.size;
+                _backdropSr.transform.localScale = new Vector3(
+                    (visibleW + Overscan * 2f) / b.x, (visibleH + Overscan * 2f) / b.y, 1f);
+            }
+
+            if (_backgroundSr != null)
+            {
+                // Cover: the larger ratio fills both axes, overflow is cropped by the frame.
+                var b = _backgroundSr.sprite.bounds.size;
+                float k = Mathf.Max(visibleW / b.x, visibleH / b.y);
+                _backgroundSr.transform.localScale = new Vector3(k, k, 1f);
+                _backgroundScale = k * (b.x / _backgroundNative.x);   // stage units per art px
+
+                // The lamps hang where the picture drew them: art px from the TOP, through
+                // the same cover fit the picture itself got.
+                for (int i = 0; i < LampArtPx.Length; i++)
+                {
+                    var lamp = _world.Find("Lamp" + i);
+                    if (lamp == null) continue;
+                    lamp.position = ArtPxToWorld(LampArtPx[i]);
+                }
+                if (_signHost != null)
+                {
+                    // The sign's spill sits at the lettering's centre. The sign hangs at art
+                    // (470,300) bottom-left origin, and its rect is 93×20.
+                    var c = StageArtPointToWorld(new Vector2(470f + 46.5f, 300f + 10f));
+                    if (_signLight != null) _signLight.transform.position = c;
+                }
+            }
+
+            if (_counterTr != null)
+            {
+                var sr = _counterTr.GetComponent<SpriteRenderer>();
+                var b = sr.sprite.bounds.size;
+                float k = visibleW / b.x;                      // WidthAligned: span the window
+                _counterTr.localScale = new Vector3(k, k, 1f);
+                _counterScale = k * (b.x / _counterNative.x);  // stage units per art px
+                // Hung from the rest line: the art's top is CounterSurfaceInset above it.
+                float artTopStage = CounterRestY + CounterSurfaceInset * _counterScale;
+                float artHStage = _counterNative.y * _counterScale;
+                _counterTr.position = new Vector3(0f, artTopStage - artHStage * 0.5f - Reference.y * 0.5f, 0f);
+            }
+        }
+
+        /// <summary>Background-art pixel (y from the TOP, the way art is measured) → world.</summary>
+        private Vector3 ArtPxToWorld(Vector2 artPx) =>
+            StageArtPointToWorld(new Vector2(artPx.x, _backgroundNative.y - artPx.y));
+
+        /// <summary>A point in the background art's own bottom-left space → world, through the
+        /// cover fit (scaled about the centre, so the mapping is scale-about-centre too).</summary>
+        private Vector3 StageArtPointToWorld(Vector2 artPoint) => new Vector3(
+            (artPoint.x - _backgroundNative.x * 0.5f) * _backgroundScale,
+            (artPoint.y - _backgroundNative.y * 0.5f) * _backgroundScale, 0f);
+
+        // ── the lettered sign (canvas: pixel text needs the canvas rasterizer) ─────
+
+        /// <summary>
+        /// What the painted room cannot do for itself: blink (GDD 24 §8). The word is real
+        /// text in the pixel font — the art generator cannot spell — so it keeps a small
+        /// overlay canvas of its own at −9: above the world stage, under the dressing (−5)
+        /// and everything else, exactly where the old scene canvas held it. Its LIGHT lives
+        /// in the world and stutters on the same schedule.
+        /// </summary>
+        private void BuildSign()
+        {
+            var canvasGo = new GameObject("SignCanvas", typeof(Canvas), typeof(CanvasScaler));
+            var canvas = canvasGo.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = -9;
+            var scaler = canvasGo.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = Reference;
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 1f;
+            var root = (RectTransform)canvasGo.transform;
+
+            // Sized and scaled exactly like the room art, so the sign hangs on the wall the
+            // picture actually draws rather than on the screen edge.
+            _signHost = NewRect("SignHost", root);
+            var hostFit = _signHost.gameObject.AddComponent<StageArtFit>();
+            hostFit.Native = _backgroundNative;
+
+            BuildLetteredNeon(_signHost, new Vector2(470f, 300f), "LAST CALL", UITheme.Magenta[4]);
         }
 
         /// <summary>
         /// A neon sign whose word is real text: the word set in the display face, and a soft
-        /// copy behind it for the glow. Both blink together, so the sign reads as one object.
+        /// copy behind it for the glow. Both blink together, so the sign reads as one object —
+        /// and the world-side spill light blinks with the word.
         /// </summary>
         private void BuildLetteredNeon(RectTransform host, Vector2 centre, string word, Color tint)
         {
@@ -221,170 +452,115 @@ namespace LastCall.UI
             label.text = word;
 
             _neon.Register(glow, 3f, 9f, 0.10f);
-            _neon.Register(label, 3f, 9f, 0.25f);
+            _neon.Register(label, 3f, 9f, 0.25f, _signLight);
         }
 
-        // ── scene construction ──────────────────────────────────────────────────
+        // ── the till (canvas: it must draw OVER the HUD's seated patrons) ─────────
 
-        private void BuildScene()
+        private void BuildRegister()
         {
-            var canvasGo = new GameObject("SceneCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            var canvas = canvasGo.GetComponent<Canvas>();
+            if (registerSprite == null) return;
+
+            // THE TILL STANDS ON THE BAR, SO IT STANDS IN FRONT OF THE DRINKERS.
+            // The customers are HUD objects at sorting 5 — so the register gets its own
+            // canvas at 6: over the seats, under the service flow (12) and the licence (20).
+            // Its shadow and the wallet plaque keep the old scene canvas's −10, where they
+            // drew before: under the patrons, and visible through the till's display window.
+            var backRoot = OverlayCanvas("RegisterBack", -10, raycasts: false);
+            var frontRoot = OverlayCanvas("RegisterLayer", 6, raycasts: true);
+
+            var reg = NewRect("Register", frontRoot);
+            reg.anchorMin = reg.anchorMax = new Vector2(0, 0);
+            reg.pivot = new Vector2(0.5f, 0);
+            // Fixed footprint (hi-bit): a 2x-density sprite renders finer pixels
+            // into the same 57px slot instead of doubling on screen.
+            const float regW = 57f;
+            reg.sizeDelta = new Vector2(regW, regW * registerSprite.rect.height / registerSprite.rect.width);
+            reg.anchoredPosition = new Vector2(RegisterX, RegisterBaseY);
+            var regImg = reg.gameObject.AddComponent<Image>();
+            regImg.sprite = registerSprite; regImg.preserveAspect = true;
+            // The till is clickable: it opens the ledger of days gone by (GDD 24 §7).
+            regImg.raycastTarget = true;
+            var regBtn = reg.gameObject.AddComponent<Button>();
+            regBtn.targetGraphic = regImg;
+            regBtn.transition = Selectable.Transition.None;
+            regBtn.onClick.AddListener(() => _onRegisterClicked?.Invoke());
+
+            // A soft contact shadow under it — the thing that actually sells "resting on"
+            // rather than "floating near".
+            var shadow = NewRect("TillShadow", backRoot);
+            shadow.anchorMin = shadow.anchorMax = new Vector2(0, 0);
+            shadow.pivot = new Vector2(0.5f, 0.5f);
+            shadow.sizeDelta = new Vector2(regW * 0.92f, 5f);
+            shadow.anchoredPosition = new Vector2(RegisterX, RegisterBaseY + 1f);
+            var shImg = shadow.gameObject.AddComponent<Image>();
+            shImg.color = new Color(0f, 0f, 0f, 0.42f); shImg.raycastTarget = false;
+
+            // The money sits IN the till's display window, and the window's place is read
+            // off the art rather than guessed at (2026-07-29).
+            float regH = reg.sizeDelta.y;
+            var plaque = NewRect("MoneyPlaque", backRoot);
+            plaque.anchorMin = plaque.anchorMax = new Vector2(0, 0);   // absolute, on the till
+            plaque.pivot = new Vector2(0.5f, 0);
+            plaque.sizeDelta = new Vector2(regW * (DisplayRight - DisplayLeft),
+                                           regH * (DisplayBottom - DisplayTop));
+            // The window's fractions run from the sprite's TOP; the rect measures from its
+            // base, so the bottom of the window is 1 - DisplayBottom up from it.
+            plaque.anchoredPosition = new Vector2(
+                RegisterX + regW * ((DisplayLeft + DisplayRight) * 0.5f - 0.5f),
+                RegisterBaseY + regH * (1f - DisplayBottom));
+            var pImg = plaque.gameObject.AddComponent<Image>();
+            pImg.color = UITheme.Night[0]; pImg.raycastTarget = false;
+            // 8, not 10: the window is about eight units deep, and the pixel face only
+            // rasterises cleanly at whole multiples of its 8px design size anyway.
+            _moneyText = NewText("Money", plaque, _display, 8, TextAnchor.MiddleCenter, UITheme.Money);
+            Stretch((RectTransform)_moneyText.transform, Vector2.zero, Vector2.one, new Vector2(2, 0), new Vector2(-2, 0));
+            _moneyText.text = "$0";
+        }
+
+        private static RectTransform OverlayCanvas(string name, int order, bool raycasts)
+        {
+            var go = new GameObject(name, typeof(Canvas), typeof(CanvasScaler));
+            var canvas = go.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = -10; // behind the HUD overlay (order 0)
-            var scaler = canvasGo.GetComponent<CanvasScaler>();
+            canvas.sortingOrder = order;
+            var scaler = go.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = Reference;     // 640×360 → ×3 = 1080p, integer scaling
+            scaler.referenceResolution = Reference;
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            scaler.matchWidthOrHeight = 1f;             // match height: keeps the 96px counter band exact
-            var root = (RectTransform)canvasGo.transform;
+            scaler.matchWidthOrHeight = 1f;
+            if (raycasts) go.AddComponent<GraphicRaycaster>();
+            return (RectTransform)go.transform;
+        }
 
-            // Opaque backdrop behind everything, overscanned past the screen edges so no
-            // aspect-ratio border ever exposes the clear colour / editor checker.
-            var backdrop = NewRect("Backdrop", root);
-            Stretch(backdrop, Vector2.zero, Vector2.one, new Vector2(-Overscan, -Overscan), new Vector2(Overscan, Overscan));
-            var backdropImg = backdrop.gameObject.AddComponent<Image>();
-            backdropImg.color = UITheme.Night[0]; backdropImg.raycastTarget = false;
+        // ── the procedural fallback room (no environment art wired) ──────────────
 
-            // The room. Real club background when installed, else the flat procedural
-            // sky / crowd / neon placeholders so a broken reference is still a visible bar.
-            if (backgroundSprite != null)
-            {
-                // Scaled to cover by ONE factor rather than stretched to a fixed overscanned
-                // rect: the old way pulled the art 1.24× across and 1.36× up, so no pixel of it
-                // was square and the room stood 9% too tall (2026-07-29). See StageArtFit.
-                var bg = NewRect("Background", root);
-                var bgImg = bg.gameObject.AddComponent<Image>();
-                bgImg.sprite = backgroundSprite; bgImg.raycastTarget = false;
-                var fit = bg.gameObject.AddComponent<StageArtFit>();
-                fit.Native = backgroundSprite.rect.size;
-                _backgroundImage = bgImg;
+        /// <summary>The flat stand-in room, canvas-drawn as it always was: a dev safety net,
+        /// not a lit scene. A broken art reference should look wrong, not invisible.</summary>
+        private void BuildFallbackRoom()
+        {
+            var root = OverlayCanvas("FallbackRoom", -10, raycasts: false);
 
-                // The weather is a SIBLING of the room, not a child of it. Parented under the
-                // room it drew on TOP of it — a UI child always does — which is how an extra sky
-                // layer came to cover the very skyline it was meant to sit behind (2026-07-29).
-                BuildBackdrop(root, backgroundSprite.rect.size);
-            }
-            else
-            {
-                var sky = FullLayer(root, "SkyCity", UITheme.Night[0]);
-                Window(sky, new Vector2(60, 40), new Vector2(70, 300));
-                Window(sky, new Vector2(80, 44), new Vector2(510, 300));
+            var sky = FullLayer(root, "SkyCity", UITheme.Night[0]);
+            Window(sky, new Vector2(60, 40), new Vector2(70, 300));
+            Window(sky, new Vector2(80, 44), new Vector2(510, 300));
 
-                var far = NewRect("ClubFar", root);
-                Stretch(far, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                var wall = NewRect("BackWall", far);
-                Stretch(wall, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, CounterFrontY), Vector2.zero);
-                var wallImg = wall.gameObject.AddComponent<Image>();
-                wallImg.color = UITheme.Night[1]; wallImg.raycastTarget = false;
-                AddCrowd(far);
+            var far = NewRect("ClubFar", root);
+            Stretch(far, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var wall = NewRect("BackWall", far);
+            Stretch(wall, new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, CounterFrontY), Vector2.zero);
+            var wallImg = wall.gameObject.AddComponent<Image>();
+            wallImg.color = UITheme.Night[1]; wallImg.raycastTarget = false;
+            AddCrowd(far);
 
-                var mid = FullLayer(root, "ClubMid", new Color(0, 0, 0, 0));
-                AddNeonSigns(mid);
-            }
-
-            // The bar. A drawn asset: it carries EMPTY shelves, which is not decoration but
-            // structure — glassware is a buyable upgrade and those shelves are where the
-            // bought glasses get drawn. The surface line inside the art is CounterSurfaceInset
-            // below its top, and that line is pinned to CounterRestY, so everything on the
-            // counter still stands on a constant. Scaled by one factor, not stretched.
-            // There is no procedural counter to fall back on, so a lost reference is an
-            // invisible bar and no other symptom — exactly what happened when this asset was
-            // re-imported under a fresh GUID while the scene pointed at the old one (2026-07-29).
-            if (counterSprite == null)
-                Debug.LogWarning("DiegeticStage: no counterSprite — the bar will not be drawn. " +
-                                 "Check the reference in the scene, or re-run LastCall > Create Debug Scene.");
-            if (counterSprite != null)
-            {
-                var c = NewRect("Counter", root);
-                var counterImage = c.gameObject.AddComponent<Image>();
-                counterImage.sprite = counterSprite; counterImage.raycastTarget = false;
-                var cfit = c.gameObject.AddComponent<StageArtFit>();
-                cfit.Fit = StageArtFit.Mode.WidthAligned;
-                cfit.Native = counterSprite.rect.size;
-                cfit.RestLineY = CounterRestY;
-                cfit.RestFromTop = CounterSurfaceInset;
-                _counter = c;
-                _counterNative = counterSprite.rect.size;
-            }
-
-            // Cash register on the bar top, with the wallet in its display window (the player
-            // reads their money diegetically from the till).
-            if (registerSprite != null)
-            {
-                // THE TILL STANDS ON THE BAR, SO IT STANDS IN FRONT OF THE DRINKERS.
-                // The whole stage canvas sits at -10, under the HUD's 5, and the customers
-                // are HUD objects — so the register was behind everyone at the bar, which
-                // is the one place a till cannot be. It gets its own canvas at 6: over the
-                // seats, under the service flow (12) and the licence (20).
-                var regLayer = NewRect("RegisterLayer", root);
-                Stretch(regLayer, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                var regCanvas = regLayer.gameObject.AddComponent<Canvas>();
-                regCanvas.overrideSorting = true;
-                regCanvas.sortingOrder = 6;
-                regLayer.gameObject.AddComponent<GraphicRaycaster>();
-
-                var reg = NewRect("Register", regLayer);
-                reg.anchorMin = reg.anchorMax = new Vector2(0, 0);
-                reg.pivot = new Vector2(0.5f, 0);
-                // Fixed footprint (hi-bit): a 2x-density sprite renders finer pixels
-                // into the same 57px slot instead of doubling on screen.
-                const float regW = 57f;
-                reg.sizeDelta = new Vector2(regW, regW * registerSprite.rect.height / registerSprite.rect.width);
-                // Down onto the surface, not balanced on the far edge: the rest line IS that
-                // edge, so an object placed exactly on it reads as standing behind the bar
-                // rather than on it (2026-07-29).
-                reg.anchoredPosition = new Vector2(RegisterX, RegisterBaseY);
-                var regImg = reg.gameObject.AddComponent<Image>();
-                regImg.sprite = registerSprite; regImg.preserveAspect = true;
-                // The till is clickable: it opens the ledger of days gone by (GDD 24 §7).
-                regImg.raycastTarget = true;
-                var regBtn = reg.gameObject.AddComponent<Button>();
-                regBtn.targetGraphic = regImg;
-                regBtn.transition = Selectable.Transition.None;
-                regBtn.onClick.AddListener(() => _onRegisterClicked?.Invoke());
-
-                // A soft contact shadow under it — the thing that actually sells "resting on"
-                // rather than "floating near".
-                var shadow = NewRect("TillShadow", root);
-                shadow.anchorMin = shadow.anchorMax = new Vector2(0, 0);
-                shadow.pivot = new Vector2(0.5f, 0.5f);
-                shadow.sizeDelta = new Vector2(regW * 0.92f, 5f);
-                shadow.anchoredPosition = new Vector2(RegisterX, RegisterBaseY + 1f);
-                var shImg = shadow.gameObject.AddComponent<Image>();
-                shImg.color = new Color(0f, 0f, 0f, 0.42f); shImg.raycastTarget = false;
-                shadow.SetSiblingIndex(reg.GetSiblingIndex());
-
-                // The money sits IN the till's display window, and the window's place is read
-                // off the art rather than guessed at. The old plaque was a hand-written 46x14
-                // at a hand-written offset, so it overhung the till on both sides (2026-07-29).
-                float regH = reg.sizeDelta.y;
-                var plaque = NewRect("MoneyPlaque", root);
-                plaque.anchorMin = plaque.anchorMax = new Vector2(0, 0);   // absolute, on the till
-                plaque.pivot = new Vector2(0.5f, 0);
-                plaque.sizeDelta = new Vector2(regW * (DisplayRight - DisplayLeft),
-                                               regH * (DisplayBottom - DisplayTop));
-                // The window's fractions run from the sprite's TOP; the rect measures from its
-                // base, so the bottom of the window is 1 - DisplayBottom up from it.
-                plaque.anchoredPosition = new Vector2(
-                    RegisterX + regW * ((DisplayLeft + DisplayRight) * 0.5f - 0.5f),
-                    RegisterBaseY + regH * (1f - DisplayBottom));
-                var pImg = plaque.gameObject.AddComponent<Image>();
-                pImg.color = UITheme.Night[0]; pImg.raycastTarget = false;
-                // 8, not 10: the window is about eight units deep, and the pixel face only
-                // rasterises cleanly at whole multiples of its 8px design size anyway.
-                _moneyText = NewText("Money", plaque, _display, 8, TextAnchor.MiddleCenter, UITheme.Money);
-                Stretch((RectTransform)_moneyText.transform, Vector2.zero, Vector2.one, new Vector2(2, 0), new Vector2(-2, 0));
-                _moneyText.text = "$0";
-            }
-
-            if (!Motion.Reduced) StartCoroutine(Ambient());
+            var mid = FullLayer(root, "ClubMid", new Color(0, 0, 0, 0));
+            AddNeonSigns(mid);
         }
 
         /// <summary>
-        /// Ambient life, deliberately sparse: the room flickers off for a frame every few
-        /// seconds. Purely cosmetic — this jitter never touches RunRng, so run determinism
-        /// is unaffected.
+        /// Ambient life, deliberately sparse: the room flickers for a frame every few
+        /// seconds — the GLOBAL LIGHT dips now, which is what a mains stutter is. Purely
+        /// cosmetic; this jitter never touches RunRng, so run determinism is unaffected.
         /// </summary>
         private System.Collections.IEnumerator Ambient()
         {
@@ -392,11 +568,11 @@ namespace LastCall.UI
             while (true)
             {
                 nextFlicker -= Time.unscaledDeltaTime;
-                if (nextFlicker <= 0f && _backgroundImage != null)
+                if (nextFlicker <= 0f && _globalLight != null)
                 {
-                    _backgroundImage.color = new Color(0.72f, 0.72f, 0.78f);
+                    _globalLight.intensity = GlobalIntensity * 0.72f;
                     yield return new WaitForSecondsRealtime(0.05f);
-                    if (_backgroundImage != null) _backgroundImage.color = Color.white;
+                    if (_globalLight != null) _globalLight.intensity = GlobalIntensity;
                     nextFlicker = Random.Range(3f, 7f);
                 }
                 yield return null;
