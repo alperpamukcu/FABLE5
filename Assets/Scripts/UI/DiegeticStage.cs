@@ -308,6 +308,21 @@ namespace LastCall.UI
             if (!Motion.Reduced) StartCoroutine(Ambient());
         }
 
+        /// <summary>
+        /// A world-space sprite on the stage, for something the HUD owns but the ROOM has to
+        /// light — the seated drinkers (2026-08-10). They were UI Images on an overlay canvas,
+        /// which no Light2D can reach, so a lamp bought for the corner lit the wall behind a
+        /// customer and not the customer. The caller keeps driving it; all this hands out is a
+        /// renderer already parented to the stage and already on the lit material.
+        ///
+        /// Sorting orders are the stage's own ledger: room 10, wall dressing 20, DRINKERS 25,
+        /// the bar 30, whatever stands on the bar 35. A drinker at 25 is drawn over by the
+        /// counter, which is how the bar takes their legs — the honest version of the mask the
+        /// canvas needed.
+        /// </summary>
+        public SpriteRenderer NewStageSprite(string name, int order) =>
+            WorldSprite(name, null, order);
+
         /// <summary>One world-space stage sprite on the shared lit material.</summary>
         private SpriteRenderer WorldSprite(string name, Sprite sprite, int order)
         {

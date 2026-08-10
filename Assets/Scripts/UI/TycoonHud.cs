@@ -226,7 +226,7 @@ namespace LastCall.UI
         {
             public RectTransform Root;       // the customer + tag, positioned at the counter (click target)
             public CanvasGroup Group;        // fades them in as they walk up
-            public Image Portrait;           // the animated character image (inside the counter mask)
+            public SpriteRenderer Body;      // the animated character, a WORLD sprite so the room's lights reach it
             public RectTransform Tag;        // the floating order ticket above the head
             public Image TagBg;
             public Text Name;
@@ -849,6 +849,7 @@ namespace LastCall.UI
                 v.WalkT = 0f;
                 if (v.Group != null) v.Group.alpha = 1f;
                 if (v.Root != null) v.Root.gameObject.SetActive(false);
+                SyncPatronBody(v);
             }
         }
 
@@ -1819,6 +1820,7 @@ namespace LastCall.UI
                 if (view.Visit == null)
                 {
                     if (view.Root.gameObject.activeSelf) view.Root.gameObject.SetActive(false);
+                    SyncPatronBody(view);
                     continue;
                 }
 
@@ -2010,7 +2012,7 @@ namespace LastCall.UI
                 RecordDeparture(view.Look, view.Visit);
                 view.Visit = null;
                 view.Group.alpha = 1f;
-                view.Portrait.rectTransform.localScale = new Vector3(CharWiden, 1f, 1f);   // reset the mirror
+                if (view.Body != null) view.Body.flipX = false;   // reset the mirror
                 view.Root.gameObject.SetActive(false);
             }
         }
@@ -2043,7 +2045,15 @@ namespace LastCall.UI
             UpdatePatronFrame(view, clip, t, facing: 1);
 
             float flush = (!ordered || drinking) ? 1f : Mathf.Clamp01(patience / 0.35f);
-            view.Portrait.color = Color.Lerp(new Color(1f, 0.72f, 0.72f, 1f), Color.white, flush);
+            // RGB ONLY: the alpha on this renderer is the walk-in/leave fade, which
+            // SyncPatronBody owns. Writing a whole Color here would snap a fading customer
+            // back to solid every frame.
+            if (view.Body != null)
+            {
+                var flushed = Color.Lerp(new Color(1f, 0.72f, 0.72f, 1f), Color.white, flush);
+                var had = view.Body.color;
+                view.Body.color = new Color(flushed.r, flushed.g, flushed.b, had.a);
+            }
         }
 
         /// <summary>Sets the character image to the right frame of <paramref name="clip"/> at time
@@ -2052,9 +2062,13 @@ namespace LastCall.UI
         {
             var look = view.Look ?? (_looks.Count > 0 ? _looks[0] : null);
             if (look == null || !look.Clips.TryGetValue(clip, out var frames) || frames.Length == 0) return;
-            view.Portrait.sprite = frames[PatronFrameIndex(clip, t, frames.Length)];
-            // A touch wider than tall (CharWiden), mirrored to face right on the way out.
-            view.Portrait.rectTransform.localScale = new Vector3(CharWiden * (facing < 0 ? -1f : 1f), 1f, 1f);
+            if (view.Body == null) return;
+            view.Body.sprite = frames[PatronFrameIndex(clip, t, frames.Length)];
+            // A touch wider than tall (CharWiden). The mirror is flipX rather than a negative
+            // scale: a negative scale on a lit sprite inverts its winding and the 2D renderer
+            // drops it, so a leaving customer would simply vanish.
+            view.Body.flipX = facing < 0;
+            SyncPatronBody(view);
         }
 
         /// <summary>The frame index for a clip at time t. Most clips loop at a fixed rate; the
@@ -4122,6 +4136,42 @@ namespace LastCall.UI
         private static string CalendarFor(int day) =>
             $"WEEK {(day - 1) / 6 + 1} · {OpenDayNames[(day - 1) % 6]}";
 
+        /// <summary>
+        /// Stands the world body where its seat says, at the size and the alpha the seat is
+        /// wearing. The body is a PASSENGER of the stool: every line that already moved,
+        /// faded or hid a seat keeps working untouched, and this reads the result once a
+        /// frame rather than each of them having to learn about the room.
+        ///
+        /// The conversion is the stage's own contract — one world unit is one stage unit,
+        /// the HUD is drawn at twice that (StageToHud), and the stage's origin is the middle
+        /// of its 640x360. The character's FEET sit CharFootDrop below the stool's line,
+        /// which is what the counter then covers.
+        /// </summary>
+        private void SyncPatronBody(SeatView view)
+        {
+            if (view.Body == null) return;
+            bool on = view.Root != null && view.Root.gameObject.activeSelf && view.Body.sprite != null;
+            if (view.Body.gameObject.activeSelf != on) view.Body.gameObject.SetActive(on);
+            if (!on) return;
+
+            float drawnH = CharSize / StageToHud;                       // stage units tall
+            float k = drawnH / Mathf.Max(0.0001f, view.Body.sprite.bounds.size.y);
+            view.Body.transform.localScale = new Vector3(k * CharWiden, k, 1f);
+
+            var p = view.Root.anchoredPosition;
+            float footY = (p.y - CharFootDrop) / StageToHud;            // stage units
+            view.Body.transform.position = new Vector3(
+                p.x / StageToHud - StageRef.x * 0.5f,
+                footY + drawnH * 0.5f - StageRef.y * 0.5f, 0f);
+
+            var c = view.Body.color;
+            c.a = view.Group != null ? view.Group.alpha : 1f;
+            view.Body.color = c;
+        }
+
+        /// <summary>The stage's reference frame, the one both halves agree on.</summary>
+        private static readonly Vector2 StageRef = new Vector2(640f, 360f);
+
         /// <summary>0–5 stars as glyphs, the empty ones kept so the width never jumps.</summary>
         private static string Stars(int n) =>
             new string('★', Mathf.Clamp(n, 0, 5)) + new string('☆', 5 - Mathf.Clamp(n, 0, 5));
@@ -4594,23 +4644,22 @@ namespace LastCall.UI
                 button.onClick.AddListener(() => OnSeatClicked(index));
                 seat.Group = seat.Root.gameObject.AddComponent<CanvasGroup>();
 
-                // The customer stands behind the bar. A masked window shows them from about the
-                // waist up (the bar clips the legs); the animated character sprite lives inside it.
-                var win = NewRect("CharWin", seat.Root);
-                win.anchorMin = win.anchorMax = new Vector2(0.5f, 0);
-                win.pivot = new Vector2(0.5f, 0);
-                win.sizeDelta = new Vector2(CharSize, CharWinH);
-                win.anchoredPosition = new Vector2(0, 0);
-                win.gameObject.AddComponent<RectMask2D>();
-
-                var charRt = NewRect("Char", win);
-                charRt.anchorMin = charRt.anchorMax = new Vector2(0.5f, 0);
-                charRt.pivot = new Vector2(0.5f, 0);
-                charRt.sizeDelta = new Vector2(CharSize, CharSize);
-                charRt.anchoredPosition = new Vector2(0, -CharFootDrop);   // drop the legs below the window
-                seat.Portrait = charRt.gameObject.AddComponent<Image>();
-                seat.Portrait.preserveAspect = true;
-                seat.Portrait.raycastTarget = false;
+                // THE CUSTOMER STANDS IN THE ROOM, NOT ON THE HUD (2026-08-10). They were an
+                // Image inside a RectMask2D window on this canvas — and an overlay canvas is
+                // composited after the camera, so no Light2D could ever reach them: the room
+                // was lit and the people in it were not. The body is a world sprite now, and
+                // the mask is gone with it, because the BAR takes their legs. Sorting 25 puts
+                // them over the room and under the counter, which is the same crop the window
+                // was faking, done by the object that would really do it.
+                //
+                // Everything else about a stool stays here: the click target, the order tag,
+                // the patience gauge and the fade all belong to the interface, not the room.
+                var stageForBody = stage != null ? stage : FindFirstObjectByType<DiegeticStage>();
+                if (stageForBody != null)
+                {
+                    seat.Body = stageForBody.NewStageSprite($"Patron{i}", 25);
+                    seat.Body.gameObject.SetActive(false);
+                }
 
                 // The order tag, floating above the head.
                 seat.Tag = NewRect("Tag", seat.Root);
