@@ -279,9 +279,10 @@ namespace LastCall.UI
             float ry = Mathf.Max(1f, halfW * 0.34f) / Mathf.Max(rowH, 1e-4f);   // in rows
 
             Color32 body = color;
-            Color32 shade = new Color(color.r * 0.80f, color.g * 0.80f, color.b * 0.80f, color.a);
-            Color32 rim = new Color(Mathf.Min(1f, color.r * 1.16f), Mathf.Min(1f, color.g * 1.16f),
-                                    Mathf.Min(1f, color.b * 1.16f), color.a);
+            Color32 shade = Mul(color, 0.78f);
+            Color32 backArc = Mul(color, 1.14f);     // seen THROUGH the drink: faint
+            Color32 disc = Mul(color, 1.03f);        // the surface itself, barely lighter
+            Color32 frontArc = Mul(color, 1.42f, 18f / 255f);   // against the near glass
 
             int top = Mathf.Min(rows - 1, Mathf.CeilToInt(surface + ry));
             int prev = -1;
@@ -290,23 +291,41 @@ namespace LastCall.UI
                 float l = rect.x + cav.Left[y] * rect.width;
                 float r = rect.x + cav.Right[y] * rect.width;
                 if (r <= l) continue;
-                float yy = rect.y + y * rowH;
-
-                // How much of THIS row the drink covers, across the row's width. Outside the
-                // ellipse the row is empty; inside it, the near half is full.
-                if (prev >= 0) AddBand(vh, prev, y, cav, rect, rowH, surface, ry, body, shade, rim);
+                if (prev >= 0)
+                    AddBand(vh, prev, y, cav, rect, rowH, surface, ry,
+                            body, shade, backArc, disc, frontArc);
                 prev = y;
             }
         }
 
-        /// <summary>One horizontal band of drink, between two measured rows.</summary>
-        private void AddBand(VertexHelper vh, int y0, int y1, Cavity cav, Rect rect,
-            float rowH, float surface, float ry, Color32 body, Color32 shade, Color32 rim)
+        private static Color32 Mul(Color c, float k, float lift = 0f)
         {
-            const int Seg = 6;      // across the bottle: enough to curve the surface, cheap
+            return new Color(Mathf.Min(1f, c.r * k + lift), Mathf.Min(1f, c.g * k + lift),
+                             Mathf.Min(1f, c.b * k + lift), c.a);
+        }
+
+        /// <summary>One horizontal band of drink, between two measured rows.
+        ///
+        /// The bottle is a CYLINDER, so the surface is a disc and a disc seen from a
+        /// shallow angle projects to an ELLIPSE with two arcs that are not the same thing:
+        /// the BACK arc, domed up at the centre, is where the drink meets the far wall and
+        /// is seen through the drink; the FRONT arc, dipping down at the centre, is where
+        /// it meets the glass we are looking at. That second one is the contour, and it is
+        /// a thin line. Between them lies the surface, a touch lighter because you are
+        /// looking down onto it.
+        ///
+        /// NOTE the sign: UI space has Y increasing UPWARD, so the back arc is at the
+        /// LARGER row index here and the front at the smaller — the mirror of the Python
+        /// chain this look was designed in, where rows count downward.</summary>
+        private void AddBand(VertexHelper vh, int y0, int y1, Cavity cav, Rect rect,
+            float rowH, float surface, float ry, Color32 body, Color32 shade,
+            Color32 backArc, Color32 disc, Color32 frontArc)
+        {
+            const int Seg = 8;      // across the bottle: enough to curve the surface, cheap
             float yA = rect.y + y0 * rowH, yB = rect.y + y1 * rowH;
             float lA = rect.x + cav.Left[y0] * rect.width, rA = rect.x + cav.Right[y0] * rect.width;
             float lB = rect.x + cav.Left[y1] * rect.width, rB = rect.x + cav.Right[y1] * rect.width;
+            float midRow = (y0 + y1) * 0.5f;
 
             for (int s = 0; s < Seg; s++)
             {
@@ -314,35 +333,56 @@ namespace LastCall.UI
                 float x0A = Mathf.Lerp(lA, rA, t0), x1A = Mathf.Lerp(lA, rA, t1);
                 float x0B = Mathf.Lerp(lB, rB, t0), x1B = Mathf.Lerp(lB, rB, t1);
 
-                // the surface height over each column, in rect units
-                float s0 = SurfaceAt(t0, surface, ry) * rowH + rect.y;
-                float s1 = SurfaceAt(t1, surface, ry) * rowH + rect.y;
+                // the BACK arc over each column, in rect units: the drink stops there
+                float s0 = Back(t0, surface, ry) * rowH + rect.y;
+                float s1 = Back(t1, surface, ry) * rowH + rect.y;
 
                 float a0 = Mathf.Min(yA, s0), b0 = Mathf.Min(yB, s0);
                 float a1 = Mathf.Min(yA, s1), b1 = Mathf.Min(yB, s1);
                 if (b0 <= a0 && b1 <= a1) continue;
 
-                Color32 cL = LerpC(body, shade, Mathf.Pow(Mathf.Abs(t0 * 2f - 1f), 1.6f));
-                Color32 cR = LerpC(body, shade, Mathf.Pow(Mathf.Abs(t1 * 2f - 1f), 1.6f));
-                bool crest = b0 >= s0 - rowH || b1 >= s1 - rowH;
+                float tm = (t0 + t1) * 0.5f;
+                float arcM = Arc(tm, ry);
+                float slosh = Slosh(tm, ry);
+                float backRow = surface + arcM + slosh;
+                float frontRow = surface - arcM + slosh;
+
+                Color32 cL, cR;
+                if (midRow >= backRow - 0.75f) { cL = cR = backArc; }
+                else if (midRow >= frontRow + 0.75f) { cL = cR = disc; }
+                else if (midRow >= frontRow - 0.75f) { cL = cR = frontArc; }
+                else
+                {
+                    cL = LerpC(body, shade, Mathf.Pow(Mathf.Abs(t0 * 2f - 1f), 1.6f));
+                    cR = LerpC(body, shade, Mathf.Pow(Mathf.Abs(t1 * 2f - 1f), 1.6f));
+                }
 
                 int i = vh.currentVertCount;
                 vh.AddVert(new Vector3(x0A, a0), cL, Vector2.zero);
                 vh.AddVert(new Vector3(x1A, a1), cR, Vector2.zero);
-                vh.AddVert(new Vector3(x1B, b1), crest ? rim : cR, Vector2.zero);
-                vh.AddVert(new Vector3(x0B, b0), crest ? rim : cL, Vector2.zero);
+                vh.AddVert(new Vector3(x1B, b1), cR, Vector2.zero);
+                vh.AddVert(new Vector3(x0B, b0), cL, Vector2.zero);
                 vh.AddTriangle(i, i + 1, i + 2);
                 vh.AddTriangle(i + 2, i + 3, i);
             }
         }
 
-        /// <summary>The waterline over the bottle at 0..1 across it, in rows.</summary>
-        private float SurfaceAt(float t, float surface, float ry)
+        private static float Arc(float t, float ry)
         {
             float nx = t * 2f - 1f;
-            float dome = ry * Mathf.Sqrt(Mathf.Max(0f, 1f - nx * nx));
-            float slosh = _wave * Mathf.Sin(_phase + nx * 2.2f) * Mathf.Max(ry, 1f) * 6f;
-            return surface + dome + slosh;
+            return ry * Mathf.Sqrt(Mathf.Max(0f, 1f - nx * nx));
+        }
+
+        private float Slosh(float t, float ry)
+        {
+            float nx = t * 2f - 1f;
+            return _wave * Mathf.Sin(_phase + nx * 2.2f) * Mathf.Max(ry, 1f) * 6f;
+        }
+
+        /// <summary>The drink's upper limit over the bottle at 0..1 across it, in rows.</summary>
+        private float Back(float t, float surface, float ry)
+        {
+            return surface + Arc(t, ry) + Slosh(t, ry);
         }
 
         private static Color32 LerpC(Color32 a, Color32 b, float t) => Color32.Lerp(a, b, t);

@@ -149,7 +149,7 @@ namespace LastCall.UI
             // ── the 2026-08-10 casting ──────────────────────────────────────────
             // Moustaches and beards, three bald men, four women in platinum, violet,
             // teal and copper, and the goths redrawn.
-            ("walrus", 22f, 0f), ("barber", 19f, 0f), ("bouncer", 37f, 0f),
+            ("barber", 19f, 0f), ("bouncer", 37f, 0f),
             ("ember", 8f, 0f),
             ("lumber", 16f, 1.5f), ("cueball", 31f, 1.5f), ("violet", 15f, 1.5f),
             ("teal", 22f, 1.5f), ("gothpunk", 0f, 1.5f),
@@ -188,7 +188,6 @@ namespace LastCall.UI
             { "undone", new Papers("Craig Delaney", 46, "United States", "us") },
             { "dockman", new Papers("Dennis Wojcik", 63, "United States", "us") },
             { "bearded", new Papers("Fredrik Ohlsson", 34, "Sweden", "se") },
-            { "walrus", new Papers("Kurt Ostrowski", 57, "United States", "us") },
             { "barber", new Papers("Serkan Aydemir", 33, "Turkey", "tr") },
             { "bouncer", new Papers("Marcus Boyd", 42, "United States", "us") },
             { "ember", new Papers("Meredith Nolan", 34, "United States", "us") },
@@ -2670,33 +2669,58 @@ namespace LastCall.UI
                 }
             }
 
-            // WHAT THE NEXT STAR OPENS (the author). The board only shows what the room's
-            // standing already allows, so the stock waiting behind the next rung was
-            // invisible — the player could not tell an empty aisle from a finished one.
-            // Core answers both halves: how many cards are gated, and at what.
-            if (_shopTab == 1 || _shopTab == 2)
+            // WHAT THE NEXT STAR OPENS, IN EVERY DEPARTMENT (the author, 2026-08-10).
+            // The board only shows what the room's standing already allows, so anything
+            // waiting behind the next rung was invisible and the player could not tell an
+            // empty aisle from a FINISHED one. Two aisles carried this tile; now every
+            // department that still has something locked carries it, and it always names
+            // the NEXT gate — at two stars it is the three-star crate, not the two.
             {
-                bool boozeTab = _shopTab == 1;
                 int locked = 0;
                 double next = double.MaxValue;
-                foreach (var g in run.GatedStock())
+                string noun = "line", plural = "lines", verb = "the van will not bring you yet";
+                if (_shopTab == 1 || _shopTab == 2)
                 {
-                    if (IngredientCategories.IsAlcoholic(g.Card.Info?.Category, g.Card.Type) != boozeTab)
-                        continue;
-                    locked++;
-                    if (g.Stars < next) next = g.Stars;
+                    bool boozeTab = _shopTab == 1;
+                    foreach (var g in run.GatedStock())
+                    {
+                        if (IngredientCategories.IsAlcoholic(g.Card.Info?.Category, g.Card.Type) != boozeTab)
+                            continue;
+                        locked++;
+                        if (g.Stars < next) next = g.Stars;
+                    }
+                }
+                else if (_shopTab == 3)
+                {
+                    noun = "drink"; plural = "drinks"; verb = "the house will not open for you yet";
+                    foreach (var r in run.LockedRecipes)
+                    {
+                        double gate = run.RecipeStarGate(r);
+                        if (run.Rating.Average >= gate) continue;
+                        locked++;
+                        if (gate < next) next = gate;
+                    }
+                }
+                else if (_shopTab == 4)
+                {
+                    noun = "piece"; plural = "pieces"; verb = "the room has not earned yet";
+                    foreach (var f in run.FixtureCatalogue)
+                    {
+                        if (run.OwnsFixture(f.Id) || run.Rating.Average >= f.Stars) continue;
+                        locked++;
+                        if (f.Stars < next) next = f.Stars;
+                    }
                 }
                 if (locked > 0)
                     AddTile(new TileSpec
                     {
-                        Name = locked + (locked == 1 ? " more waiting" : " more waiting"),
+                        Name = locked + " more waiting",
                         Money = next.ToString("0.0") + "★",
                         State = TileState.Sealed,
-                        Identity = "MORE STOCK AT " + next.ToString("0.0") + " STARS",
-                        MetaLine = locked + (locked == 1 ? " line" : " lines")
-                                   + " the van will not bring you yet",
-                        Body = "The board is rolled against what the room thinks of this bar. "
-                               + "Reach " + next.ToString("0.0")
+                        Identity = "MORE AT " + next.ToString("0.0") + " STARS",
+                        MetaLine = locked + " " + (locked == 1 ? noun : plural) + " " + verb,
+                        Body = "This department is rolled against what the room thinks of "
+                               + "this bar. Reach " + next.ToString("0.0")
                                + " stars and the next of them start appearing here.",
                         BuffA = new Buff(BuffKind.Bad, "Needs " + next.ToString("0.0")
                                          + " stars · you are at " + run.Rating.Average.ToString("0.0")),
@@ -3746,7 +3770,9 @@ namespace LastCall.UI
         private void BuildSettings(RectTransform root)
         {
             _settingsPanel = NewRect("Settings", root);
-            Place(_settingsPanel, new Vector2(1, 1), new Vector2(300, 300), new Vector2(-16, -58));
+            // 420, not 300: the dev rows say what they DO ("close now, open the market"),
+            // and a button whose caption does not fit is a button with no caption.
+            Place(_settingsPanel, new Vector2(1, 1), new Vector2(420, 320), new Vector2(-16, -58));
             _settingsPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
 
             var title = NewText("T", _settingsPanel, _body, 10, TextAnchor.UpperCenter, UITheme.TextSecondary);
@@ -3956,14 +3982,20 @@ namespace LastCall.UI
         private Text SettingsRow(int index, string label, Action onClick)
         {
             var row = NewRect($"Row{index}", _settingsPanel);
-            Place(row, new Vector2(0.5f, 1), new Vector2(280, 28), new Vector2(0, -24f - index * 32f));
+            Place(row, new Vector2(0.5f, 1), new Vector2(396, 30), new Vector2(0, -24f - index * 34f));
             var img = row.gameObject.AddComponent<Image>();
             img.color = UITheme.Night[3];
             var btn = row.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => onClick());
-            var text = NewText("L", row, _body, 12, TextAnchor.MiddleCenter, UITheme.TextPrimary);
-            Stretch(text.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            // THE LABEL WAS TAKEN AND NEVER WRITTEN (2026-08-10). Only the three settings
+            // rows had text, because RefreshSettings assigns theirs afterwards — every dev
+            // button was a blank slab you had to have written to know what it did.
+            var text = NewText("L", row, _body, 8, TextAnchor.MiddleCenter, UITheme.TextPrimary);
+            Stretch(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 0), new Vector2(-8, 0));
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
+            text.text = label;
             return text;
         }
 
@@ -5035,12 +5067,15 @@ namespace LastCall.UI
             {
                 int tab = i;
                 var key = NewRect($"Tab{i}", tabBar);
-                Place(key, new Vector2(0, 0.5f), new Vector2(TabKeyW, 28f),
+                Place(key, new Vector2(0, 0.5f), new Vector2(TabKeyW, 30f),
                     new Vector2(8f + i * (TabKeyW + 8f), 0));
                 var bg = key.gameObject.AddComponent<Image>();
-                // Drawn AT 160x28, so it goes in 1:1 — no slicing, no middle band to
-                // smear. Every control below follows the same rule.
-                bg.type = Image.Type.Simple;
+                // SLICED, because the art is 64x28 and the key is 160 (2026-08-10). Simple
+                // stretched that drawing 2.5x across — the rounded shoulders and the seam
+                // smeared, which is the crookedness the author was looking at — while the
+                // importer had already measured it a 9-slice border of (14,6,14,10) that
+                // nothing was using. Sliced draws those edges at 1:1 and stretches only the
+                // flat middle, which is what a middle is for.
                 var btn = key.gameObject.AddComponent<Button>();
                 btn.targetGraphic = bg;
                 btn.onClick.AddListener(() =>
@@ -5049,8 +5084,11 @@ namespace LastCall.UI
                     _shopTab = tab;
                     RebuildDayEnd();
                 });
+                // AT ITS OWN SIZE. The icons are cut on a 24 canvas and were drawn into a
+                // 20 box: 0.833x, a fractional shrink of pixel art, which rounds some rows
+                // away and keeps others. 24 in a 30-tall key is 1:1 and has room to breathe.
                 var icon = NewRect("I", key);
-                Place(icon, new Vector2(0, 0.5f), new Vector2(20, 20), new Vector2(10, 0));
+                Place(icon, new Vector2(0, 0.5f), new Vector2(24, 24), new Vector2(8, 0));
                 var iconImg = icon.gameObject.AddComponent<Image>();
                 iconImg.sprite = ItemArt.Load(ShopTabIcons[i]);
                 iconImg.preserveAspect = true; iconImg.raycastTarget = false;
@@ -5058,7 +5096,7 @@ namespace LastCall.UI
                 _shopTabIcons[i] = iconImg;
                 var label = NewText("L", key, _shop, 16, TextAnchor.MiddleLeft, ShopInk);
                 Stretch(label.rectTransform, Vector2.zero, Vector2.one,
-                    new Vector2(36, 0), new Vector2(-6, 0));
+                    new Vector2(40, 0), new Vector2(-6, 0));
                 label.horizontalOverflow = HorizontalWrapMode.Wrap;
                 label.verticalOverflow = VerticalWrapMode.Truncate;
                 label.text = ShopTabs[i];
