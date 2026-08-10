@@ -25,6 +25,15 @@ namespace LastCall.UI
     /// One Graphic per bottle, one strip of triangles, no particles: a shelf carries a dozen
     /// bottles and <see cref="MetaballFluid"/>'s solver is for the one vessel being poured.
     /// </summary>
+    /// <remarks>
+    /// The CanvasRenderer is declared HERE rather than inherited. Graphic carries a
+    /// [RequireComponent(typeof(CanvasRenderer))] of its own, but AddComponent does not
+    /// walk base-class requirements — so every bottle in the menu came up as a "Fluid"
+    /// object with no renderer, threw MissingComponentException the moment its colour was
+    /// set, and took the whole menu build down with it: the drink menu simply never opened
+    /// (2026-08-10). A UI graphic must state its own needs.
+    /// </remarks>
+    [RequireComponent(typeof(CanvasRenderer))]
     public sealed class BottleFluid : MaskableGraphic
     {
         // ── the cavity ──────────────────────────────────────────────────────────────────
