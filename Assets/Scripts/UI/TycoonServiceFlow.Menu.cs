@@ -41,6 +41,26 @@ namespace LastCall.UI
             return card.Info == null || !card.Info.Carbonated;
         }
 
+        /// <summary>The word a bottle wears on the shelf: its STYLE, which is what a recipe
+        /// asks for, falling back to what kind of thing it is when a bottle names no style.
+        /// Short by nature — the plates stand as close together as the bottles do.</summary>
+        private static string ShelfWord(IngredientCard card)
+        {
+            string style = card.Info?.Style;
+            if (!string.IsNullOrEmpty(style)) return style.Replace('_', ' ').ToUpperInvariant();
+            switch (card.Type)
+            {
+                case IngredientType.Beer: return "BEER";
+                case IngredientType.Spirit: return "SPIRIT";
+                case IngredientType.Sour: return "SOUR";
+                case IngredientType.Sweet: return "SWEET";
+                case IngredientType.Bitter: return "BITTER";
+                case IngredientType.Bubbly: return "SODA";
+                case IngredientType.Garnish: return "GARNISH";
+                default: return card.Name.ToUpperInvariant();
+            }
+        }
+
         /// <summary>Everything written on the sheet is slanted — the closest a pixel face gets
         /// to a hand that scrawled the list out behind the bar.</summary>
         private static Text Handwritten(Text t)
@@ -90,7 +110,7 @@ namespace LastCall.UI
                 _serveButton.interactable = loaded;
                 if (_serveLabel != null)
                 {
-                    _serveLabel.text = loaded ? "SERVE  →" : "POUR FIRST";
+                    _serveLabel.text = loaded ? "SERVE" : "POUR FIRST";
                     _serveLabel.color = loaded ? Color.black : new Color(0.1f, 0.08f, 0.06f, 0.45f);
                 }
             }
@@ -121,7 +141,16 @@ namespace LastCall.UI
             }
             float areaW = _bottleList.rect.width, areaH = _bottleList.rect.height;
 
-            int perRow = Mathf.Max(7, Mathf.CeilToInt(items.Count / 3f));
+            // BIGGER, AND STOOD CLOSER TOGETHER (2026-08-11, the author). The wall used to
+            // divide a plank into `perRow` equal slots and drop one bottle in the middle of
+            // each, so a shelf of five short bottles was five bottles marooned in a lot of
+            // wood — and every bottle was capped by a slot width nobody had measured against
+            // its art. A row is packed by its bottles' OWN widths now: the height is the
+            // shelf's (which is what a slim bottle can grow on), the width follows from each
+            // silhouette's aspect, and they stand at a fixed gap, centred. A row that would
+            // outgrow the plank is scaled down as a whole — so bottles never overlap and
+            // never leave the wall, by construction rather than by a chosen column count.
+            int perRow = Mathf.Max(5, Mathf.CeilToInt(items.Count / 3f));
             int shelves = Mathf.Max(3, Mathf.CeilToInt(items.Count / (float)perRow));
             // The top padding is headroom for the first shelf's overhanging bottles and
             // must come out of the bands' budget, or the bottom band spills off the page.
@@ -175,11 +204,28 @@ namespace LastCall.UI
 
                 // Centred on the plank rather than packed to the left: a shelf with two bottles
                 // on it is a shelf with two bottles on it, not a row that ran out.
-                float slotW = (areaW * 0.96f) / perRow;
-                float startX = -slotW * count * 0.5f;
+                float artH = shelfH - ShelfFaceH + BottleRise;
+                var wide = new float[Mathf.Max(count, 1)];
+                float run0 = 0f;
                 for (int i = 0; i < count; i++)
-                    AddShelfBottle(band, items[from + i], run,
-                        startX + slotW * (i + 0.5f), slotW, shelfH);
+                {
+                    var piece = BottleArt.For(items[from + i].Ingredient);
+                    float aspect = piece.Exists && piece.Aspect > 0f ? piece.Aspect : 0.5f;
+                    wide[i] = artH * aspect;
+                    run0 += wide[i];
+                }
+                float span = run0 + BottleGap * Mathf.Max(0, count - 1);
+                float roomW = areaW * 0.96f;
+                float k = span > roomW && span > 0f ? roomW / span : 1f;   // the row shrinks whole
+                artH *= k;
+                float x = -span * k * 0.5f;
+                for (int i = 0; i < count; i++)
+                {
+                    float w = wide[i] * k;
+                    AddShelfBottle(band, items[from + i], run, x + w * 0.5f,
+                        w + BottleGap * k, shelfH, w, artH);
+                    x += w + BottleGap * k;
+                }
             }
 
             BuildKegRow(run, kegs);
@@ -266,7 +312,7 @@ namespace LastCall.UI
         /// says why on itself instead of opening a stage that would refuse it.
         /// </summary>
         private void AddShelfBottle(RectTransform band, ShelfBottle bottle, TycoonRun run,
-            float centreX, float slotW, float shelfH)
+            float centreX, float slotW, float shelfH, float artW, float artH)
         {
             var card = bottle.Ingredient;
             bool empty = bottle.IsEmpty;
@@ -277,8 +323,11 @@ namespace LastCall.UI
                     : (run.Glass.IsFull ? "FULL" : null);
             bool shut = blocked != null;
 
+            // The hit plate is the BOTTLE's own size now, not a share of the plank: with the
+            // row packed tight, a slot wider than its art would reach across its neighbour
+            // and the two would trade hovers.
             var slot = NewRect($"Slot_{card.Id}", band);
-            Place(slot, new Vector2(0.5f, 0), new Vector2(slotW - 6f, shelfH - ShelfFaceH - 20f),
+            Place(slot, new Vector2(0.5f, 0), new Vector2(slotW - 4f, artH),
                 new Vector2(centreX, ShelfFaceH + 14f));
             var hit = slot.gameObject.AddComponent<Image>();
             hit.color = new Color(0, 0, 0, 0.001f);          // invisible, but catches the pointer
@@ -287,7 +336,7 @@ namespace LastCall.UI
             var shadow = NewRect("Shadow", slot);
             shadow.anchorMin = shadow.anchorMax = new Vector2(0.5f, 0);
             shadow.pivot = new Vector2(0.5f, 0.5f);
-            shadow.sizeDelta = new Vector2(slotW * 0.62f, 12);
+            shadow.sizeDelta = new Vector2(artW * 0.92f, 12);
             shadow.anchoredPosition = new Vector2(0, 14);
             var shImg = shadow.gameObject.AddComponent<Image>();
             shImg.sprite = BackBarArt.BottleShadow(); shImg.raycastTarget = false;
@@ -295,44 +344,19 @@ namespace LastCall.UI
             // Feet ON the plank (the author: bottles must centre on the shelf's depth):
             // preserveAspect centres vertically inside its rect, which floated short
             // bottles above the wood — so the rect is cut to the art's own aspect and
-            // pinned by its base to the plank's mid-depth.
-            var piece0 = BottleArt.For(card);
-            // 24 → 6 of headroom (the author, 2026-08-05: "oyun içi şişenin boyutunu
-            // büyüt") — the v3 masters are slim, and the height is the only axis a
-            // slim bottle can grow on.
-            float artH = shelfH - ShelfFaceH - 6f, artW = slotW - 12f;
-            if (piece0.Exists && piece0.Aspect > 0f)
-            {
-                if (artH * piece0.Aspect <= artW) artW = artH * piece0.Aspect;
-                else artH = artW / piece0.Aspect;
-            }
-            // WHAT IS LEFT IN THE BOTTLE, BACK IN THE BOTTLE (2026-08-10). This is the rebuild
-            // BottleArt's sweep left room for ("when that art lands, the liquid layer gets
-            // rebuilt against it"), not a resurrection of the plate machinery it removed: the
-            // pilot glass is genuinely see-through, so the drink is drawn BEHIND the sprite —
-            // an EARLIER SIBLING in the same rect, so it renders first — and the glass covers
-            // it for free. No back plate, no film, no label to protect.
-            // Drink and glass live in ONE rect, and it is that rect the pointer lifts.
-            // They used to be siblings under the slot with only the art handed to
-            // Pressable, so hovering raised the bottle and left its contents standing
-            // where they were (the author, 2026-08-10: "sıvı sabit kalıyor, şişe ön
-            // plana çıkıyor"). Anything that moves a bottle has to move what is in it.
+            // pinned by its base to the plank's mid-depth. The size is the SHELF's
+            // decision now (see BuildShelfPage) so a row can be packed by its bottles'
+            // real widths instead of by an even division of the plank.
+            //
+            // A BOTTLE IS ITS OWN COLOUR (2026-08-11, the author). The drink layer that
+            // drew behind the glass for one day is gone: the flat-era sprites are opaque,
+            // so it was invisible wherever it was right and spilled past the silhouette
+            // wherever the rect was wider than the art. What is left is on the hover card.
             var body = NewRect("Bottle", slot);
             body.anchorMin = body.anchorMax = new Vector2(0.5f, 0);
             body.pivot = new Vector2(0.5f, 0);
             body.sizeDelta = new Vector2(artW, artH);
             body.anchoredPosition = new Vector2(0, 2f);
-
-            var wet = NewRect("Fluid", body);
-            Stretch(wet, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var fluid = wet.gameObject.AddComponent<BottleFluid>();
-            fluid.raycastTarget = false;
-            var drink = UITheme.StyleColor(card.Info?.Style, card.Type);
-            fluid.color = new Color(drink.r, drink.g, drink.b, shut ? 0.42f : 0.92f);
-            fluid.Bind(ItemArt.Bottle(card), card.Id);
-            fluid.SetLevel(bottle.Capacity > 0.0
-                ? (float)(bottle.Remaining / bottle.Capacity)
-                : 0f);
 
             var art = NewRect("Art", body);
             Stretch(art, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
@@ -352,26 +376,39 @@ namespace LastCall.UI
             // 2026-08-03: "yazılar birbiriyle giriyor"). A name that will not fit is cut with
             // a visible ".." — the hover card carries it whole, so nothing is lost, and two
             // plates can no longer meet by construction.
-            string label = shut ? $"{card.Name} · {blocked}" : card.Name;
-            float maxPlateW = slotW - 4f;
-            int fits = Mathf.FloorToInt((maxPlateW - 18f) / 7f);
-            if (label.Length > fits && fits > 4)
-                label = label.Substring(0, fits - 2).TrimEnd() + "..";
-            float plateW = Mathf.Min(label.Length * 7f + 18f, maxPlateW);
-            var plate = NewRect("Plate", band);
-            Place(plate, new Vector2(0.5f, 0), new Vector2(plateW, 20f),
-                new Vector2(centreX, ShelfFaceH * 0.5f - 2f));
-            var plateImg = plate.gameObject.AddComponent<Image>();
-            plateImg.sprite = BackBarArt.NamePlate();
-            plateImg.type = Image.Type.Sliced;
-            plateImg.raycastTarget = false;
-            if (shut) plateImg.color = new Color(1f, 1f, 1f, 0.7f);
-            var name = Outlined(NewText("N", plate, _body, 8, TextAnchor.MiddleCenter,
-                shut ? UITheme.Cream[2] : UITheme.Cream[4]), 1f);
-            Stretch(name.rectTransform, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
-            name.horizontalOverflow = HorizontalWrapMode.Overflow;
-            name.raycastTarget = false;
-            name.text = label;
+            //
+            // THE PLATE SAYS WHAT IT IS, NOT WHOSE IT IS (2026-08-11). Packing the row by the
+            // bottles' own widths left a plate about 45 units wide under a slim bottle, and
+            // "SMIRKOFF VODKA" set at 8 needs three times that — so the names printed
+            // straight through each other again, the very failure the cap was written for.
+            // The brand is on the hover card; the plate carries the STYLE, which is both
+            // short enough to fit and the word the recipes are written in ("GIN 45–65%"), so
+            // the shelf and the book finally speak the same language. A plate that still
+            // cannot fit four characters is not drawn at all.
+            string label = shut ? blocked : ShelfWord(card);
+            const float Em = 5.4f;                 // Silkscreen at 8, measured off the shelf
+            float maxPlateW = slotW - 2f;
+            int fits = Mathf.FloorToInt((maxPlateW - 12f) / Em);
+            if (fits >= 4)                         // under 4 characters a plate says nothing
+            {
+                if (label.Length > fits) label = label.Substring(0, fits - 2).TrimEnd() + "..";
+                float plateW = Mathf.Min(label.Length * Em + 12f, maxPlateW);
+                var plate = NewRect("Plate", band);
+                Place(plate, new Vector2(0.5f, 0), new Vector2(plateW, 20f),
+                    new Vector2(centreX, ShelfFaceH * 0.5f - 2f));
+                var plateImg = plate.gameObject.AddComponent<Image>();
+                plateImg.sprite = BackBarArt.NamePlate();
+                plateImg.type = Image.Type.Sliced;
+                plateImg.raycastTarget = false;
+                if (shut) plateImg.color = new Color(1f, 1f, 1f, 0.7f);
+                var name = Outlined(NewText("N", plate, _body, 8, TextAnchor.MiddleCenter,
+                    shut ? UITheme.Cream[2] : UITheme.Cream[4]), 1f);
+                Stretch(name.rectTransform, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
+                name.horizontalOverflow = HorizontalWrapMode.Overflow;
+                name.verticalOverflow = VerticalWrapMode.Overflow;
+                name.raycastTarget = false;
+                name.text = label;
+            }
 
             // The bottle answers the pointer whether or not it can be taken: a bottle that is OUT
             // still lifts, because "you found the thing" and "the thing will do something" are two
@@ -503,6 +540,16 @@ namespace LastCall.UI
 
         private const float ShelfFaceH = 34f;
 
+        /// <summary>How far a bottle stands ABOVE its own band, in front of the niche
+        /// overhead. The mask carries the same amount as top padding (see ListTopPad), so
+        /// the top shelf keeps its heads.</summary>
+        private const float BottleRise = 10f;
+
+        /// <summary>The air between two bottles standing on the same plank. Small on
+        /// purpose: a back bar is crowded, and the shoulders nearly touching is what makes
+        /// it read as stock rather than as a display.</summary>
+        private const float BottleGap = 10f;
+
         /// <summary>Mask headroom above the first shelf band, so the top row's bottles —
         /// which overhang their band by ~10px like every row's do — keep their heads.</summary>
         private const float ListTopPad = 16f;
@@ -614,6 +661,13 @@ namespace LastCall.UI
             Stretch(pageClip, Vector2.zero, Vector2.one, new Vector2(40, 92), new Vector2(-40, -102));
             pageClip.gameObject.AddComponent<RectMask2D>();
 
+            // THE KEGS STAND IN FRONT OF THE WALL (2026-08-11, the author: "bira fıçıları
+            // en alttaki rafın altında kalıyor"). They are built before the shelves so the
+            // ledge can be built before them, and UGUI draws siblings in order — so the
+            // bottom plank was printing over the crowns of barrels standing on the floor in
+            // front of it. A keg is nearer the camera than the wall is; it draws later.
+            _kegRow.SetAsLastSibling();
+
             _bottleList = NewRect("Bottles", pageClip);
             Stretch(_bottleList, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _listHome = _bottleList.anchoredPosition;
@@ -634,7 +688,7 @@ namespace LastCall.UI
             // old guard asked for something in the shaker and starved the six built drinks;
             // this one asks for something poured ANYWHERE — tin or glass — because the pass
             // stage with two empty vessels is a dead end dressed as a button.
-            _serveButton = AddFlexButton(actions, "SERVE  →", UITheme.PrimaryAction, () => GoTo(Stage.Serve));
+            _serveButton = AddFlexButton(actions, "SERVE", UITheme.PrimaryAction, () => GoTo(Stage.Serve));
             _serveLabel = _serveButton.GetComponentInChildren<Text>();
 
             AddBinButton(_menuPanel);

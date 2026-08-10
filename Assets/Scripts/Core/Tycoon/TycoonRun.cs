@@ -1239,7 +1239,9 @@ namespace LastCall.Core
             UpgradesToday++;
             _glassTiers[glassId] = tier + 1;
             _todayPurchases.Add(new DayPurchase(DayPurchase.Kind.Glassware, glassId,
-                tier + 1 >= MaxGlassTier ? $"{def.Name} — Legendary" : $"{def.Name} {tier}★",
+                // Said in words: this label is printed in the pixel faces, and none of them
+                // carries a star (2026-08-11).
+                tier + 1 >= MaxGlassTier ? $"{def.Name} — Legendary" : $"{def.Name} {tier}-star",
                 price));
             return price;
         }

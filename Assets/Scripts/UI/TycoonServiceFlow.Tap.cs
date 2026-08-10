@@ -326,7 +326,7 @@ namespace LastCall.UI
             back.gameObject.AddComponent<Button>().onClick.AddListener(() => GoTo(Stage.Menu));
             var backLabel = NewText("Label", back, _body, 8, TextAnchor.MiddleCenter, UITheme.TextPrimary);
             Stretch(backLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            backLabel.text = "← BACK TO THE MENU";
+            backLabel.text = "BACK TO THE MENU";
 
             var done = NewRect("Done", _tapPanel);
             Place(done, new Vector2(0.5f, 0), new Vector2(240, 34), new Vector2(130, 12));
@@ -337,7 +337,7 @@ namespace LastCall.UI
             });
             var doneLabel = NewText("Label", done, _body, 8, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
             Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            doneLabel.text = "SERVE IT → PICK A SEAT";
+            doneLabel.text = "SERVE IT · PICK A SEAT";
         }
 
         private void RefreshTap()

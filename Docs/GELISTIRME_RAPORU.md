@@ -73,6 +73,27 @@ servis akışı 12 · kimlik 20 · market 22 · rehber 24.
 (kozmetik: yıldız kapılı, aynı gece iadeli, **gecelik fitting harcamaz**) → HUD `WatchFixtures`
 (sayaçla değişim izler) → `DiegeticStage.SyncFixtures` (slotlara diker, ışığı kurar).
 
+### 0.3b · İş kolu — yüzeyin dürüstlüğü (2026-08-11)
+
+Sekiz maddelik bir tur; hepsi "ekranda yanlış duruyor" ile başladı, hiçbiri orada bitmedi.
+Ortak kural: **UI mobilyası üretilmez, çizilir** (`ChromeArt.cs`, yeni) — ve **hiçbir şey
+bir yazı tipinden resim istemez**.
+
+| Ne | Neden | Kanıt / ölçüm |
+|---|---|---|
+| **Şişe içi sıvı katmanı kaldırıldı** (`BottleFluid` silindi) | dökme sahnesinde sıvı şişenin sağından solundan taşıyordu | katmanın kendi ölçümü zaten söylüyordu: düz-dönem sprite'larının gövdesi **alfa 255** — arkasına çizilen içki doğru olduğu her yerde görünmez, yalnız siluetin **dışına** taştığı yerde görünürdü. Kavrama rect'i sabit 180, sanat `preserveAspect` ile kutulanmış: taşan tam da o fark. İçki artık şişenin kendi sanatının rengi; kalan miktar hover kartında (2026-08-07 süpürmesinin koyduğu yer) |
+| **Raf kendi genişliğine göre diziliyor** | "şişeler daha büyük ve birbirine daha yakın dursun" | eskiden plank `perRow` eşit yuvaya bölünüyordu; şimdi yükseklik rafın, genişlik her siluetin kendi oranından, aralık sabit 10. Ölçüldü: sanat 33×128 → **37×144**, komşu aralığı ~129 → **10** |
+| **Raf tabelası markayı değil STİLİ taşıyor** | sıkı dizilişte "SMIRKOFF VODKA" komşusunun tabelasına basıyordu (aynı hata üçüncü kez) | tabela ~45 birim; 8 puntoda ölçülen genişlik 5,4/karakter. Stil hem sığıyor hem tariflerin dili: VODKA · GIN · SYRUP · LEMON · SODA. Dört karakter sığmıyorsa tabela hiç çizilmiyor |
+| **Fıçılar rafların önünde** | "en alttaki rafın altında kalıyor" | UGUI kardeş sırasına göre çizer; keg satırı ledge'den sonra ama raflardan **önce** kuruluyordu. `SetAsLastSibling` |
+| **Fatura puntosu bir kademe büyük** | belgenin tamamı 8'de dizilmişti (ipucu boyutu), oysa günün okunduğu yer burası | 8→16, 16→24; satır 22→30, kritik satırı 44→64. Rakamlar `_display` yerine `_shop`: PressStart2P 24'te karakter başına 24 birim, "-$1240" tek başına sağ sütunun 146 biriminin 144'ünü yiyordu |
+| **Fatura işaretleri elle çizildi** | üretilen yedi ikon 16 pikselde çamurdu | `ChromeArt` maskeleri: tek siluet, **16'da çizilip 16'da basılıyor** (1,25× ölçek piksel kenarlarını ekranın kendi ızgarasının arasına düşürüyordu). Yıldız 16 maskesinin tam 2 katında |
+| **Market kartı ve ADD tuşu çizildi** | "AI slop olduğu belli oluyor" / "çok yapay duruyor" | kart gri tonlarda, durumun kağıdıyla boyanıyor: cetveli ve oturma gölgesi listenin kendi renginin tonları. Tuşun **atması** var (altında iki koyu satır) — düğme ile içinde yazı olan renkli dikdörtgen arasındaki fark bu |
+| **Kitapta her tarif kutuda** | "açıkta olunca karmaşıklık oluşuyor" | ince cetvelli satırlar bir form için doğru, katalog için değil: bir spec kartı beş sıra ölçü demek, alt alta beş tanesi tek uzun sayı sütunu okunuyordu |
+| **Font ikonları temizlendi** | "oyunda fontlara dahil icon emoji kullanmayalım" | ★ → ◆ ✖ ⚙ ❧ ✓ ▸ — 17 çağrı yeri. Piksel yüzler bu glifleri taşımıyor, sistem yedeğinden başka bir ağırlıkta geliyorlardı. Gerekli iki yerde (ayar dişlisi, hazır garnitür tiki) **çizilmiş sprite**, kalanında kelime |
+
+Doğrulama: 188/188 test, ve beş yüzey play'de ölçülüp resmedildi (raf, tezgah, kitap,
+fatura, market) — derlenmesine güvenilmedi.
+
 ### 0.4 · Bu turda yakalanan hatalar
 
 Hepsi ölçümle bulundu; hiçbiri "bakınca fark edildi" değil:
@@ -93,7 +114,7 @@ Aşağıdaki §1–8 satırları bu günlükle **çelişiyor**; düzeltilmeden o
 | §  | Bayat ifade | Bugünkü gerçek |
 |---|---|---|
 | §1, §2 | "175 test" | **186** |
-| §2 | "Sanat: şişeler düz-sprite; sıvı dış sanatçıda" | sıvı katmanı **geri geldi** (`BottleFluid`, `bb42753`) — pilot cam saydam olduğu için arka plaka gerekmiyor |
+| §2 | "Sanat: şişeler düz-sprite; sıvı dış sanatçıda" | denetim **doğru**: sıvı katmanı 2026-08-10'da bir günlüğüne geri geldi (`BottleFluid`, `bb42753`) ve 2026-08-11'de kaldırıldı — düz-dönem sprite'ları opak, arkasına çizilen içki yalnız siluetin dışına taşarak görünüyordu. Şişenin rengi kendi sanatının |
 | §4 | "UI ~14.2k satır" | **14.791**; `TycoonHud` 3.4k değil **5.833** |
 | §5 | "DiegeticStage emekli döngü ~700 satır" | süpürüldü; dosya yeniden yazıldı (world-space) |
 | §7 | "M1 (ana sahne) entegre değil" | **ana sahne artık world-space ve ışıklı**; modüler parça sistemi kurulu |

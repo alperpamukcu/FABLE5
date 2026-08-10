@@ -46,7 +46,7 @@ namespace LastCall.Core
                     throw new ArgumentException($"Glass '{id}' has profile value {w}; must be in (0, 1].", nameof(profile));
             if (tierPrices == null || tierPrices.Count != 5)
                 throw new ArgumentException(
-                    $"Glass '{id}' needs exactly 5 upgrade prices (1★ through the 5★ legendary set).",
+                    $"Glass '{id}' needs exactly 5 upgrade prices (1-star through the 5-star legendary set).",
                     nameof(tierPrices));
             foreach (var p in tierPrices)
                 if (p <= 0) throw new ArgumentException($"Glass '{id}' has a non-positive upgrade price.", nameof(tierPrices));

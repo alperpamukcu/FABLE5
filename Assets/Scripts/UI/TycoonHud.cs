@@ -916,7 +916,6 @@ namespace LastCall.UI
             // (the author, 2026-08-05).
             ItemArt.ClearCache();
             BottleArt.ClearCache();
-            BottleFluid.ClearCache();   // cavities AND the levels they were last drawn at
             _lastPhase = TycoonPhase.DayOpen;
             _lastStormedCount = 0;
             ResetSeats();
@@ -1252,7 +1251,7 @@ namespace LastCall.UI
 
             var hint = NewText("Hint", _drinkGlass, _body, 10, TextAnchor.UpperCenter, UITheme.Cyan[4]);
             Place(hint.rectTransform, new Vector2(0.5f, 1), new Vector2(170, 18), new Vector2(0, 24));
-            hint.text = "DRAG TO SERVE →";
+            hint.text = "DRAG TO SERVE";
             hint.raycastTarget = false;
 
             _drinkGlass.gameObject.SetActive(false);
@@ -1406,7 +1405,7 @@ namespace LastCall.UI
             // reaction line is honest — but the bill is not on the table yet. The money and
             // the stars float up when they finish and get up (TabFloat), which is when a
             // customer actually pays.
-            string line = verdict.OrdersAgain ? "★ ANOTHER ROUND!"
+            string line = verdict.OrdersAgain ? "ANOTHER ROUND!"
                 : verdict.Match == OrderMatch.Exact ? "PERFECT!"
                 : verdict.Match == OrderMatch.Close ? "THANKS."
                 : "NOT WHAT I ASKED";
@@ -1967,8 +1966,10 @@ namespace LastCall.UI
                     // A regular ordering again after a perfect serve gets a gold star and the
                     // round count (GDD 24 §4) — the reward for reading them right, made
                     // visible. The name is part of what the card teaches: it waits for the read.
+                    // "x3", not a star from the font: no pixel face here carries one, so it
+                    // arrived as a fallback glyph at the wrong weight beside a name set in ours.
                     string star = visit.ExtraOrdersTaken > 0
-                        ? $"<color=#F5C97B>★{visit.ExtraOrdersTaken + 1} </color>" : "";
+                        ? $"<color=#F5C97B>x{visit.ExtraOrdersTaken + 1} </color>" : "";
                     view.Name.supportRichText = true;
                     view.Name.text = known
                         ? star + (visit.Regular?.Name ?? "Customer").ToUpperInvariant() : "";
@@ -2318,7 +2319,13 @@ namespace LastCall.UI
         // top and the foot — because three takes in a row drew perforated stamp edges on
         // all four sides: shape is a specification, and the generator does not hit
         // specifications. Solid stock spans y 6..591, full width, measured off the cream.
-        private const float BillW = 456f, BillH = 600f, BillHeadH = 62f, BillRowH = 22f;
+        // SET BIGGER (2026-08-11, the author: "faturadaki yazıların puntosunu arttır"). The
+        // slip was set at 8 for everything that was not a figure, which is the size the HUD
+        // uses for a hint you glance at — and this is the document the whole day is read
+        // off. Every line moves up one legal step: the pixel faces rasterise cleanly only at
+        // whole multiples of 8, so 8 goes to 16 and 16 to 24, and the rows and the marks
+        // grow with them rather than the type growing inside its old gutter.
+        private const float BillW = 456f, BillH = 600f, BillHeadH = 62f, BillRowH = 30f;
         private const float BillInset = 36f;   // type margin inside the sheet
         private static readonly Color BillPaper = new Color(0.965f, 0.945f, 0.886f, 1f);
         private static readonly Color BillEdge = new Color(0.62f, 0.58f, 0.50f, 1f);
@@ -2336,14 +2343,14 @@ namespace LastCall.UI
         /// </summary>
         private float BillStars(float y, float frac)
         {
-            const float StarPx = 24f, Gap = 6f;
+            const float StarPx = 32f, Gap = 6f;   // the 16px star at a whole 2x
             float rowW = 5f * StarPx + 4f * Gap;
             var host = NewRect("Stars", _invoiceRows);
             host.anchorMin = new Vector2(0.5f, 1); host.anchorMax = new Vector2(0.5f, 1);
             host.pivot = new Vector2(0.5f, 1);
             host.sizeDelta = new Vector2(rowW, StarPx);
             host.anchoredPosition = new Vector2(0, -y);
-            var art = ItemArt.Load("star");
+            var art = ChromeArt.Mark("star");
             for (int i = 0; i < 5; i++)
             {
                 var dim = NewRect("D" + i, host);
@@ -2381,7 +2388,7 @@ namespace LastCall.UI
         /// </summary>
         private float BillCritic(float y, CustomerVisit v, Color ink)
         {
-            const float RowH = 44f, Photo = 36f;
+            const float RowH = 64f, Photo = 44f;
             var row = NewRect("Critic", _invoiceRows);
             row.anchorMin = new Vector2(0, 1); row.anchorMax = new Vector2(1, 1);
             row.pivot = new Vector2(0.5f, 1);
@@ -2399,18 +2406,18 @@ namespace LastCall.UI
             }
 
             var star = NewRect("S", row);
-            Place(star, new Vector2(0, 1), new Vector2(12, 12), new Vector2(Photo + 10f, -3f));
+            Place(star, new Vector2(0, 1), new Vector2(16, 16), new Vector2(Photo + 10f, -2f));
             star.pivot = new Vector2(0, 1);
             var si = star.gameObject.AddComponent<Image>();
-            si.sprite = ItemArt.Load("star"); si.preserveAspect = true;
+            si.sprite = ChromeArt.Mark("star"); si.preserveAspect = true;
             si.raycastTarget = false; si.color = ink;
 
             var papers = PapersFor(look);
             string name = papers != null ? papers.Name.ToUpperInvariant()
                 : v.Regular != null ? v.Regular.Name.ToUpperInvariant() : "A DRINKER";
-            var line = NewText("L", row, _shop, 16, TextAnchor.UpperLeft, ink);
-            Place(line.rectTransform, new Vector2(0, 1), new Vector2(280, 18),
-                new Vector2(Photo + 26f, 0));
+            var line = NewText("L", row, _shop, 24, TextAnchor.UpperLeft, ink);
+            Place(line.rectTransform, new Vector2(0, 1), new Vector2(300, 26),
+                new Vector2(Photo + 34f, 0));
             line.rectTransform.pivot = new Vector2(0, 1);
             line.horizontalOverflow = HorizontalWrapMode.Overflow;
             // OVERFLOW, not truncate: SilkscreenBold's line height at 16 is taller than a
@@ -2420,12 +2427,12 @@ namespace LastCall.UI
             line.verticalOverflow = VerticalWrapMode.Overflow;
             line.text = BarRating.ExactStarsFor(v.Satisfaction).ToString("0.0") + "  " + name;
 
-            var why = NewText("W", row, _body, 8, TextAnchor.UpperLeft, BillQuiet);
-            Place(why.rectTransform, new Vector2(0, 1), new Vector2(280, 12),
-                new Vector2(Photo + 10f, -22f));
+            var why = NewText("W", row, _body, 16, TextAnchor.UpperLeft, BillQuiet);
+            Place(why.rectTransform, new Vector2(0, 1), new Vector2(BillW - BillInset * 2f - Photo - 10f, 34),
+                new Vector2(Photo + 10f, -30f));
             why.rectTransform.pivot = new Vector2(0, 1);
             why.horizontalOverflow = HorizontalWrapMode.Wrap;
-            why.verticalOverflow = VerticalWrapMode.Truncate;
+            why.verticalOverflow = VerticalWrapMode.Overflow;
             why.text = CriticReason(v);
             return y + RowH;
         }
@@ -2462,28 +2469,40 @@ namespace LastCall.UI
             float gutter = 0f;
             if (!string.IsNullOrEmpty(mark))
             {
-                var art = ItemArt.Load(mark);
+                // Hand-drawn at the size it prints (see ChromeArt). The generated set was
+                // seven little illustrations shrunk to 16 px, which is mud with a shadow on
+                // it — the author asked for simpler and more useful, and a mark that has one
+                // silhouette is both.
+                var art = ChromeArt.Mark(mark);
                 if (art != null)
                 {
                     var icon = NewRect("M", row);
                     Place(icon, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(0, 0));
                     var iimg = icon.gameObject.AddComponent<Image>();
                     iimg.sprite = art; iimg.color = ink; iimg.raycastTarget = false;
-                    gutter = 22f;
+                    gutter = 24f;
                 }
             }
 
-            var l = NewText("L", row, heavy ? _shop : _body, 16, TextAnchor.MiddleLeft, ink);
+            var l = NewText("L", row, heavy ? _shop : _body, 24, TextAnchor.MiddleLeft, ink);
             l.rectTransform.anchorMin = new Vector2(0, 0); l.rectTransform.anchorMax = new Vector2(0.62f, 1);
             l.rectTransform.offsetMin = new Vector2(gutter, 0); l.rectTransform.offsetMax = Vector2.zero;
-            l.horizontalOverflow = HorizontalWrapMode.Wrap;
-            l.verticalOverflow = VerticalWrapMode.Truncate;
+            // Overflow on both axes: the labels are one short word each, and Truncate at
+            // this size drops the WHOLE line the moment the face's line height clears the
+            // row — which is exactly how the critics' names went missing.
+            l.horizontalOverflow = HorizontalWrapMode.Overflow;
+            l.verticalOverflow = VerticalWrapMode.Overflow;
             l.text = label;
 
-            var v = NewText("V", row, heavy ? _shop : _display, 16, TextAnchor.MiddleRight, ink);
+            // The figure is set in the SHOP's bold face at 24 rather than the display face:
+            // PressStart2P is a full 24 units per character, so "-$1240" alone is 144 of the
+            // 146 the right column has — one more digit and the night's takings walk off the
+            // paper. SilkscreenBold carries the same weight in two thirds of the width.
+            var v = NewText("V", row, _shop, 24, TextAnchor.MiddleRight, ink);
             v.rectTransform.anchorMin = new Vector2(0.62f, 0); v.rectTransform.anchorMax = Vector2.one;
             v.rectTransform.offsetMin = Vector2.zero; v.rectTransform.offsetMax = Vector2.zero;
             v.horizontalOverflow = HorizontalWrapMode.Overflow;
+            v.verticalOverflow = VerticalWrapMode.Overflow;
             v.text = value;
             return y + BillRowH;
         }
@@ -2503,17 +2522,17 @@ namespace LastCall.UI
 
         private float BillNote(float y, string text, Color ink, bool centred = false)
         {
-            var note = NewText("N", _invoiceRows, _body, 8,
+            var note = NewText("N", _invoiceRows, _body, 16,
                 centred ? TextAnchor.MiddleCenter : TextAnchor.MiddleLeft, ink);
             note.rectTransform.anchorMin = new Vector2(0, 1);
             note.rectTransform.anchorMax = new Vector2(1, 1);
             note.rectTransform.pivot = new Vector2(0.5f, 1);
-            note.rectTransform.sizeDelta = new Vector2(0, 14f);
+            note.rectTransform.sizeDelta = new Vector2(0, 22f);
             note.rectTransform.anchoredPosition = new Vector2(0, -y);
             note.horizontalOverflow = HorizontalWrapMode.Wrap;
-            note.verticalOverflow = VerticalWrapMode.Truncate;
+            note.verticalOverflow = VerticalWrapMode.Overflow;
             note.text = text;
-            return y + 15f;
+            return y + 24f;
         }
 
         private void ShowDayEnd()
@@ -2631,7 +2650,7 @@ namespace LastCall.UI
             if (_billNext != null) _billNext.gameObject.SetActive(_dayEndStep == 0);
             _dayEndTitle.text = _dayEndStep == 0
                 ? "LAST CALL — THE BOOKS" : "LAST CALL — ORDERING IN";
-            if (_billNextLabel != null) _billNextLabel.text = "CONTINUE  →  THE ORDER";
+            if (_billNextLabel != null) _billNextLabel.text = "CONTINUE TO THE ORDER";
             // The title belongs to the BILL. Over the market it printed above the device,
             // in the scrim, saying what the device already says.
             _dayEndTitle.gameObject.SetActive(_dayEndStep == 0);
@@ -2647,11 +2666,8 @@ namespace LastCall.UI
             // The bill: income over expenses, net in bold, then the debt stamp. All the
             // day's line items come straight off the run's itemised book (GDD 24 §7).
             int net = run.DayIncome - run.DayExpenses;
-            string netColour = net >= 0 ? "2A5926" : "A62B44";
-            string stamp = run.Ledger.DebtStrikes == 0 ? ""
-                : $"\n\n<color=#A62B44>◆ IN THE RED — STRIKE {run.Ledger.DebtStrikes}/{DayLedger.StrikesToClose} ◆</color>";
-            if (run.Ledger.DebtStrikes == DayLedger.StrikesToClose - 1)
-                stamp += "\n<color=#A62B44>one more red day closes the bar</color>";
+            // (the strike stamp is a ROW now — see the bottom of the slip. What stood here
+            // was the last of the one-Text receipt: a rich-text block nobody printed.)
 
             // RECEIPT v3 (2026-08-10, the author: "tüm satırların uyacağı arka plan ve
             // metin düzeni"). It was one Text with hand-typed dot leaders holding the
@@ -2698,16 +2714,16 @@ namespace LastCall.UI
             }
 
             y = BillRule(y);
-            y = BillRow(y, "SALES", "$" + run.DaySales, BillInk, false, "bi_sales");
-            y = BillRow(y, "TIPS", "$" + run.DayTips, BillInk, false, "bi_tips");
-            y = BillRow(y, "RENT", "-$" + run.DayRent, BillRed, false, "bi_rent");
-            y = BillRow(y, "STOCK", "-$" + run.DayStock, BillRed, false, "bi_stock");
-            y = BillRow(y, "SHOP", "-$" + run.DayUpgrades, BillRed, false, "bi_shop");
+            y = BillRow(y, "SALES", "$" + run.DaySales, BillInk, false, "sales");
+            y = BillRow(y, "TIPS", "$" + run.DayTips, BillInk, false, "tips");
+            y = BillRow(y, "RENT", "-$" + run.DayRent, BillRed, false, "rent");
+            y = BillRow(y, "STOCK", "-$" + run.DayStock, BillRed, false, "stock");
+            y = BillRow(y, "SHOP", "-$" + run.DayUpgrades, BillRed, false, "shop");
             y = BillRule(y);
             y = BillRow(y, "NET", (net >= 0 ? "+$" : "-$") + Math.Abs(net),
-                        net >= 0 ? BillInk : BillRed, true, "bi_net");
+                        net >= 0 ? BillInk : BillRed, true, "net");
             y = BillRow(y, "TILL", (run.Money < 0 ? "-$" + (-run.Money) : "$" + run.Money),
-                        run.Money < 0 ? BillRed : BillInk, true, "bi_till");
+                        run.Money < 0 ? BillRed : BillInk, true, "till");
             if (run.Ledger.DebtStrikes > 0)
             {
                 y += 6f;
@@ -2936,7 +2952,7 @@ namespace LastCall.UI
                         {
                             Name = "Sealed Crate",
                             Meta = "Sealed",
-                            Money = gate.ToString("0.0") + "★",
+                            Money = gate.ToString("0.0"),
                             State = TileState.Sealed,
                             Identity = "A SEALED CRATE",
                             MetaLine = "The house will not open this one for you yet",
@@ -3079,7 +3095,7 @@ namespace LastCall.UI
                         else if (run.Rating.Average < f.Stars)
                         {
                             spec.State = TileState.Sealed;
-                            spec.Money = f.Stars.ToString("0.0") + "★";
+                            spec.Money = f.Stars.ToString("0.0");
                             spec.BuffA = new Buff(BuffKind.Bad, "Needs a " + f.Stars.ToString("0.0")
                                 + "-star room · you are at " + run.Rating.Average.ToString("0.0"));
                         }
@@ -3127,7 +3143,7 @@ namespace LastCall.UI
                     AddTile(new TileSpec
                     {
                         Name = locked + " more waiting",
-                        Money = next.ToString("0.0") + "★",
+                        Money = next.ToString("0.0"),
                         State = TileState.Sealed,
                         Identity = "MORE AT " + next.ToString("0.0") + " STARS",
                         MetaLine = locked + " " + (locked == 1 ? noun : plural) + " " + verb,
@@ -3573,7 +3589,7 @@ namespace LastCall.UI
             AddTile(new TileSpec
             {
                 Name = locked + " more waiting",
-                Money = next.ToString("0.0") + "★",
+                Money = next.ToString("0.0"),
                 State = TileState.Sealed,
                 Identity = "MORE " + noun.ToUpperInvariant() + "S AT " + next.ToString("0.0") + " STARS",
                 MetaLine = locked + " " + (locked == 1 ? noun : noun + "s")
@@ -4132,8 +4148,10 @@ namespace LastCall.UI
             var sec = NewRect("Sec", _bookList);
             var g = sec.gameObject.AddComponent<GridLayoutGroup>();
             float fullW = BkW * BkPaperW - 44f;
-            g.cellSize = new Vector2(fullW / 2f - 6f, 30f + tallest);
-            g.spacing = new Vector2(12, 8);
+            // 30 of head plus the spec, and now 14 more: a box needs air inside it or the
+            // print lies on its own rule.
+            g.cellSize = new Vector2(fullW / 2f - 6f, 44f + tallest);
+            g.spacing = new Vector2(12, 10);
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             g.constraintCount = cols;
             foreach (var r in rs) BookRow(sec, r, lockedRows, run);
@@ -4144,21 +4162,21 @@ namespace LastCall.UI
         private void BookRow(RectTransform parent, RecipeDefinition r, bool lockedRow, TycoonRun run)
         {
             var row = NewRect($"R_{r.Id}", parent);
-            // A printed line, not a key (2026-08-01): transparent row, thin ink rule under
-            // it, the way the licence's own fields sit on their rules.
+            // EACH RECIPE IN ITS OWN BOX (2026-08-11, the author: "açıkta olunca karmaşıklık
+            // oluşuyor"). They were printed lines separated by a hairline, which is the right
+            // treatment for a form and the wrong one for a catalogue: a spec card is five
+            // stacked pours, and five of those under thin rules read as one long column of
+            // numbers. A card gives each drink an edge, and the eye can stop at it.
             var rowImg = row.gameObject.AddComponent<Image>();
-            rowImg.color = new Color(0, 0, 0, 0.001f);
-            var rowRule = NewRect("Rule", row);
-            rowRule.anchorMin = new Vector2(0.01f, 0); rowRule.anchorMax = new Vector2(0.99f, 0);
-            rowRule.pivot = new Vector2(0.5f, 0);
-            rowRule.sizeDelta = new Vector2(0, 1);
-            rowRule.anchoredPosition = new Vector2(0, 1);
-            var rowRuleImg = rowRule.gameObject.AddComponent<Image>();
-            rowRuleImg.color = new Color(0.30f, 0.20f, 0.10f, lockedRow ? 0.20f : 0.35f);
-            rowRuleImg.raycastTarget = false;
+            rowImg.sprite = ChromeArt.Card();
+            rowImg.type = Image.Type.Sliced;
+            rowImg.color = lockedRow ? new Color(0.93f, 0.90f, 0.82f) : new Color(0.99f, 0.97f, 0.90f);
+            var lift = row.gameObject.AddComponent<Shadow>();
+            lift.effectColor = new Color(0.24f, 0.15f, 0.06f, lockedRow ? 0.18f : 0.30f);
+            lift.effectDistance = new Vector2(2, -2);
 
             var icon = NewRect("I", row);
-            Place(icon, new Vector2(0, 0.5f), new Vector2(40, 40), new Vector2(6, 0));
+            Place(icon, new Vector2(0, 0.5f), new Vector2(40, 40), new Vector2(10, 0));
             var img = icon.gameObject.AddComponent<Image>();
             img.sprite = DrinkIcon.For(r, _bootstrap.Glassware);
             img.preserveAspect = true; img.raycastTarget = false;
@@ -4167,19 +4185,19 @@ namespace LastCall.UI
 
             var name = NewText("N", row, _display, 16, TextAnchor.UpperLeft,
                 lockedRow ? new Color(0.45f, 0.36f, 0.28f) : new Color(0.13f, 0.08f, 0.05f));
-            Stretch(name.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(52, -24), new Vector2(-4, -4));
+            Stretch(name.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(58, -30), new Vector2(-8, -8));
             name.text = r.Name.ToUpperInvariant();
 
             // The same spec card the licence draws, in the book's own ink (2026-08-02):
             // exact shares, the bottles' own art, and the stocked ones lit.
             var body = NewRect("Spec", row);
-            float bodyW = parent.GetComponent<GridLayoutGroup>().cellSize.x - 56f;
+            float bodyW = parent.GetComponent<GridLayoutGroup>().cellSize.x - 70f;
             Place(body, new Vector2(0, 1), new Vector2(bodyW, 10), Vector2.zero);
             body.pivot = new Vector2(0, 1);
-            body.anchoredPosition = new Vector2(52, -24);
+            body.anchoredPosition = new Vector2(58, -30);
             double gate = lockedRow ? run.RecipeStarGate(r) : 0;
             DrawRecipeSpec(body, r, dark: false, width: bodyW,
-                note: gate > 0 ? $"OPENS AT {gate:0.0}★" : null);
+                note: gate > 0 ? $"OPENS AT {gate:0.0} STARS" : null);
         }
 
         /// <summary>
@@ -4492,7 +4510,7 @@ namespace LastCall.UI
             _dayEndPanel.gameObject.SetActive(false);
             CloseId();
             _bannerText.gameObject.SetActive(true);
-            _bannerText.text = "✖ THE BAR IS CLOSED\nthree days in the red — NEW RUN to try again";
+            _bannerText.text = "THE BAR IS CLOSED\nthree days in the red — NEW RUN to try again";
         }
 
         // ── the licence: read the customer (GDD 24 §5) ───────────────────────────
@@ -5205,8 +5223,8 @@ namespace LastCall.UI
             // ── the quiet end: nothing here is part of the night ───────────────
             NewButton(top, "NEW RUN", new Vector2(1, 0.5f), new Vector2(86, 26),
                 new Vector2(-46, PlaqueY), UITheme.Night[3], () => _bootstrap.StartNewRun(null));
-            NewButton(top, "⚙", new Vector2(1, 0.5f), new Vector2(26, 26),
-                new Vector2(-14, PlaqueY), UITheme.Night[2], ToggleSettings);
+            NewButton(top, "SETTINGS", new Vector2(1, 0.5f), new Vector2(26, 26),
+                new Vector2(-14, PlaqueY), UITheme.Night[2], ToggleSettings, ChromeArt.Mark("cog"));
             BuildSettings(root);
 
             // THE CURTAIN, above everything the HUD owns. Its own canvas at 30 so it also
@@ -5347,12 +5365,12 @@ namespace LastCall.UI
             // and the two most-pressed controls in the game were parked on it. The face
             // band (art rows 9..45) is empty drawn panelling and puts them nearer the
             // counter, which is where the hand already is.
-            NewButton(root, "▸  MENU — MAKE A DRINK", new Vector2(0.5f, 0),
+            NewButton(root, "MENU — MAKE A DRINK", new Vector2(0.5f, 0),
                 new Vector2(300, 40), new Vector2(0, 180), UITheme.PrimaryAction, OnMenuClicked);
 
             // The recipe book, beside the making verb (v5 P16): the menu speaks styles now,
             // so how a drink is MADE has to live somewhere the player can read mid-shift.
-            NewButton(root, "❧ BOOK", new Vector2(0.5f, 0),
+            NewButton(root, "BOOK", new Vector2(0.5f, 0),
                 new Vector2(84, 40), new Vector2(-196, 180), UITheme.Night[3], ToggleRecipeBook);
             BuildRecipeBook(root);
 
@@ -5403,9 +5421,9 @@ namespace LastCall.UI
                 new Vector2(0, -30f));
             headTitle.horizontalOverflow = HorizontalWrapMode.Overflow;
             headTitle.text = "LAST CALL";
-            _billWhen = NewText("W", bill, _body, 8, TextAnchor.MiddleCenter, BillQuiet);
-            Place(_billWhen.rectTransform, new Vector2(0.5f, 1), new Vector2(BillW - 60f, 12),
-                new Vector2(0, -52f));
+            _billWhen = NewText("W", bill, _body, 16, TextAnchor.MiddleCenter, BillQuiet);
+            Place(_billWhen.rectTransform, new Vector2(0.5f, 1), new Vector2(BillW - 60f, 20),
+                new Vector2(0, -54f));
             _billWhen.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             // Every line lands in here, one rect to a row, so the columns cannot bend.
@@ -5433,7 +5451,7 @@ namespace LastCall.UI
             Stretch(_billNextLabel.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(10, 0), new Vector2(-10, 0));
             _billNextLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _billNextLabel.text = "CONTINUE  →";
+            _billNextLabel.text = "CONTINUE";
 
             // THE DEVICE. 1096 x 700 wearing sh_ipad2, which is drawn at 274 x 175 — the
             // same ratio to five decimals — with a 28px border. A sliced Image draws its
@@ -6001,7 +6019,7 @@ namespace LastCall.UI
                 room.supportRichText = true;
                 string walked = d.WalkedOut > 0
                     ? $" · {d.WalkedOut} left without one" : " · nobody left thirsty";
-                room.text = $"        {d.Served} served{walked} · {d.NightStars:0.0}★ on the night"
+                room.text = $"        {d.Served} served{walked} · {d.NightStars:0.0} stars on the night"
                           + $" · {MoodLabel(d.AverageSatisfaction)}";
 
                 Spacer(12);
@@ -6094,8 +6112,11 @@ namespace LastCall.UI
 
             var rt = NewRect("Tile", _cardTarget != null ? _cardTarget : _offerRow);
             var img = rt.gameObject.AddComponent<Image>();
-            var plateArt = ItemArt.Load("sh_tile");
-            if (plateArt != null) { img.sprite = plateArt; img.type = Image.Type.Sliced; }
+            // DRAWN, not generated (2026-08-11, the author: the plate read as slop). The
+            // grey-scale card is tinted with the state's paper, so its rule and its footing
+            // shade are shades of the listing's own colour rather than a frame laid on top.
+            img.sprite = ChromeArt.Card();
+            img.type = Image.Type.Sliced;
             img.color = PlateOf(state);
 
             // The click. A tile that cannot be acted on gets no Button at all, so the
@@ -6223,7 +6244,7 @@ namespace LastCall.UI
                     new Vector2(0, -27));
                 what.horizontalOverflow = HorizontalWrapMode.Wrap;
                 what.verticalOverflow = VerticalWrapMode.Truncate;
-                what.text = "TO UNSEAL";
+                what.text = "STARS TO UNSEAL";
             }
             else
             {
@@ -6325,16 +6346,21 @@ namespace LastCall.UI
 
             if (hasPill && !string.IsNullOrEmpty(spec.PillVerb))
             {
+                // A KEY YOU COULD PRESS (2026-08-11, the author: "ADD butonu çok yapay
+                // duruyor"). The generated pill was a flat lozenge with a word on it — a
+                // picture of a button. This one is drawn with an edge and a throw: two dark
+                // rows under the face, so it stands above the card instead of being printed
+                // on it. The label rides one pixel up, off the throw.
                 var pill = NewRect("Pill", rt);
-                Place(pill, new Vector2(1, 0), new Vector2(70, 20), new Vector2(-8, 6));
+                Place(pill, new Vector2(1, 0), new Vector2(74, 24), new Vector2(-8, 6));
                 var pillImg = pill.gameObject.AddComponent<Image>();
-                var pillArt = ItemArt.Load("sh_k_add") ?? ItemArt.Load("sh_pill");
-                if (pillArt != null) pillImg.sprite = pillArt;   // 70x20, drawn to fit
+                pillImg.sprite = ChromeArt.Key();
+                pillImg.type = Image.Type.Sliced;
                 pillImg.color = PillOf(state);
                 pillImg.raycastTarget = false;
                 var label = NewText("L", pill, _shop, 8, TextAnchor.MiddleCenter, PillInk(state));
                 Stretch(label.rectTransform, Vector2.zero, Vector2.one,
-                    new Vector2(6, 0), new Vector2(-6, 0));
+                    new Vector2(6, 3), new Vector2(-6, 0));
                 label.horizontalOverflow = HorizontalWrapMode.Wrap;
                 label.verticalOverflow = VerticalWrapMode.Truncate;
                 label.text = spec.PillVerb;
@@ -6481,8 +6507,13 @@ namespace LastCall.UI
             return rt;
         }
 
+        /// <summary>A key with a word on it — or, when <paramref name="icon"/> is handed one,
+        /// with a DRAWN mark on it instead. A button too small for its word used to borrow a
+        /// glyph from the font (the cog was a "⚙"), which no pixel face carries: it arrived
+        /// from whatever fallback the system had, at a weight belonging to no other control
+        /// on the screen.</summary>
         private void NewButton(RectTransform parent, string label, Vector2 anchor,
-            Vector2 size, Vector2 pos, Color fill, Action onClick)
+            Vector2 size, Vector2 pos, Color fill, Action onClick, Sprite icon = null)
         {
             var rt = NewRect(label, parent);
             rt.anchorMin = rt.anchorMax = rt.pivot = anchor;
@@ -6500,8 +6531,17 @@ namespace LastCall.UI
             var sink = rt.gameObject.AddComponent<PressSink>();
             sink.Face = face; sink.Depth = 3f; sink.Squash = 0.015f; sink.Lift = 2f; sink.Tint = img;
 
-            var text = NewText("Label", face, _body, 12, TextAnchor.MiddleCenter,
-                fill == UITheme.PrimaryAction ? UITheme.TextOnAmber : UITheme.TextPrimary);
+            Color ink = fill == UITheme.PrimaryAction ? UITheme.TextOnAmber : UITheme.TextPrimary;
+            if (icon != null)
+            {
+                var mark = NewRect("Mark", face);
+                Stretch(mark, Vector2.zero, Vector2.one, new Vector2(5, 5), new Vector2(-5, -5));
+                var mi = mark.gameObject.AddComponent<Image>();
+                mi.sprite = icon; mi.color = ink; mi.preserveAspect = true; mi.raycastTarget = false;
+                return;
+            }
+
+            var text = NewText("Label", face, _body, 12, TextAnchor.MiddleCenter, ink);
             Stretch(text.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             text.text = label;
         }

@@ -275,8 +275,19 @@ namespace LastCall.UI
             var name = NewText("N", tub, _body, 8, TextAnchor.LowerCenter,
                 already ? UITheme.Lime[4] : UITheme.TextPrimary);
             Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(96, 14), new Vector2(0, 0));
-            name.text = already ? "✓ " + label : label;
-            if (already) return;   // it is on the drink; the tub stops offering it
+            name.text = label;
+            if (already)
+            {
+                // A DRAWN tick, not one borrowed from the typeface (2026-08-11): the pixel
+                // faces carry no such glyph, so it was set from a fallback font and read as
+                // a stray mark rather than as a thing this bench had ticked off.
+                var done = NewRect("Done", tub);
+                Place(done, new Vector2(0.5f, 0), new Vector2(16, 16), new Vector2(-52f, 2f));
+                var di = done.gameObject.AddComponent<Image>();
+                di.sprite = ChromeArt.Mark("tick");
+                di.color = UITheme.Lime[4]; di.raycastTarget = false;
+                return;   // it is on the drink; the tub stops offering it
+            }
 
             var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
             down.callback.AddListener(_ =>
@@ -1055,7 +1066,7 @@ namespace LastCall.UI
             back.gameObject.AddComponent<Button>().onClick.AddListener(() => GoTo(Stage.Menu));
             var backLabel = NewText("Label", back, _body, 13, TextAnchor.MiddleCenter, UITheme.TextPrimary);
             Stretch(backLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            backLabel.text = "← ADD MORE";
+            backLabel.text = "ADD MORE";
 
             var done = NewRect("Done", _servePanel);
             Place(done, new Vector2(0.5f, 0), new Vector2(240, 34), new Vector2(130, 12));
@@ -1067,7 +1078,7 @@ namespace LastCall.UI
             });
             var doneLabel = NewText("Label", done, _body, 13, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
             Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            doneLabel.text = "SERVE IT → PICK A SEAT";
+            doneLabel.text = "SERVE IT · PICK A SEAT";
         }
     }
 }
