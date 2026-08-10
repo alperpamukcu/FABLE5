@@ -3696,7 +3696,23 @@ namespace LastCall.UI
                 Destroy(_guideRows.GetChild(i).gameObject);
 
             float standing = Run != null ? (float)Run.Rating.Average : 0f;
-            foreach (var look in _looks)
+            // IN THE ORDER THEY ARRIVE (the author, 2026-08-10). The roster's job is
+            // "who drinks here and when", and read down the star gate it answers that in
+            // one pass: everyone already in the room at the top, then the next person the
+            // bar has to earn, and so on. In generation order it answered nothing — the
+            // gates ran 0, 0, 1.5, 0, 2.5, 1.5 and the reader had to sort it by eye.
+            // List.Sort is not stable, so the generation index is the tiebreaker rather
+            // than a hope: a batch of characters gated alike still reads as the batch it
+            // was drawn in.
+            var roster = new List<PatronLook>(_looks);
+            var drawnOrder = new Dictionary<PatronLook, int>();
+            for (int i = 0; i < _looks.Count; i++) drawnOrder[_looks[i]] = i;
+            roster.Sort((a, b) =>
+            {
+                int byGate = a.Stars.CompareTo(b.Stars);
+                return byGate != 0 ? byGate : drawnOrder[a].CompareTo(drawnOrder[b]);
+            });
+            foreach (var look in roster)
             {
                 var papers = PapersFor(look);
                 var row = NewRect("R", _guideRows);
@@ -3835,7 +3851,9 @@ namespace LastCall.UI
             // what it is actually about — how they came in, and how well you know them.
             var idPapers = PapersFor(idLook);
             string idFullName = (idPapers != null ? idPapers.Name : reg.Name).ToUpperInvariant();
-            _idName.text = idFullName;
+            // Bold: the name is the headline of the document, and it was printing at the
+            // same weight as the age on the rule under it.
+            _idName.text = "<b>" + idFullName + "</b>";
             _idAgeFrom.text = (idPapers != null ? idPapers.Age : reg.Age).ToString();
             _idCitizen.text = (idPapers != null ? idPapers.Country : reg.Hometown).ToUpperInvariant();
             _idNumber.text = LicenceNumber(idLook, idFullName);
