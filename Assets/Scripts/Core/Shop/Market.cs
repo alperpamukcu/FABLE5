@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace LastCall.Core
@@ -56,7 +56,28 @@ namespace LastCall.Core
         /// (the author, 2026-08-02: the brand ladder climbs the same stars the menu does —
         /// starter, mid at 2.0, good at 3.0, great at 4.0). Rung 1 sells to anyone.
         /// </summary>
-        public static double RequiredStars(int tier) => tier <= 1 ? 0.0 : Math.Min(4.0, tier);
+        /// <summary>
+        /// THE FIRST STAR HAS TO BUY SOMETHING (2026-08-10, the author: "1 yıldız
+        /// eklentileri de eklenmeli... mevcut içerikleri bölerek... oyuncu birden bire
+        /// içeriğe boğulmamalı"). The ladder ran 0 → 2 → 3 → 4, so earning the first star
+        /// opened nothing at all and the second opened a whole tier at once: a dead rung
+        /// followed by a flood.
+        ///
+        /// Nothing new is added — tier 2 is SPLIT. Measured off base_bar.json, its five
+        /// bottles price at 6, 6, 7, 7 and 15, so the four house brands arrive at one star
+        /// and the one that costs twice as much waits for two. The split is by price rather
+        /// than by a hand-picked list, so new tier-2 content sorts itself.
+        /// </summary>
+        public const int FirstRungPrice = 10;
+
+        public static double RequiredStars(int tier, int price) =>
+            tier <= 1 ? 0.0
+            : tier == 2 ? (price > 0 && price < FirstRungPrice ? 1.0 : 2.0)
+            : Math.Min(4.0, tier);
+
+        /// <summary>Tier alone, for anything that has no price to hand. Kept honest by
+        /// answering the LATER of the two, so nothing is offered a rung too early.</summary>
+        public static double RequiredStars(int tier) => RequiredStars(tier, int.MaxValue);
 
         /// <summary>
         /// The offers against the current shelf: for each style in the catalogue you do
@@ -84,7 +105,7 @@ namespace LastCall.Core
                     newByStyle[style] = candidate;
             }
             foreach (var card in newByStyle.Values)
-                if (stars >= RequiredStars(card.Info.Tier))
+                if (stars >= RequiredStars(card.Info.Tier, card.Info.Price))
                     offers.Add(new MarketOffer(card, isNewStock: true, StockPrice(card)));
 
             // Better bottles: unowned brands of a stocked style, gated by the stars.
@@ -94,7 +115,7 @@ namespace LastCall.Core
                 if (shelf.Find(candidate.Id) != null) continue;    // that exact brand is owned
                 var current = FindByStyle(shelf, candidate.Info.Style);
                 if (current?.Ingredient.Info == null) continue;
-                if (stars >= RequiredStars(candidate.Info.Tier))
+                if (stars >= RequiredStars(candidate.Info.Tier, candidate.Info.Price))
                     offers.Add(new MarketOffer(candidate, isNewStock: false, StockPrice(candidate)));
             }
             return offers;
@@ -126,8 +147,8 @@ namespace LastCall.Core
                     newByStyle[style] = candidate;
             }
             foreach (var card in newByStyle.Values)
-                if (stars < RequiredStars(card.Info.Tier))
-                    held.Add((card, RequiredStars(card.Info.Tier)));
+                if (stars < RequiredStars(card.Info.Tier, card.Info.Price))
+                    held.Add((card, RequiredStars(card.Info.Tier, card.Info.Price)));
 
             foreach (var candidate in catalogue)
             {
@@ -135,8 +156,8 @@ namespace LastCall.Core
                 if (shelf.Find(candidate.Id) != null) continue;
                 var current = FindByStyle(shelf, candidate.Info.Style);
                 if (current?.Ingredient.Info == null) continue;
-                if (stars < RequiredStars(candidate.Info.Tier))
-                    held.Add((candidate, RequiredStars(candidate.Info.Tier)));
+                if (stars < RequiredStars(candidate.Info.Tier, candidate.Info.Price))
+                    held.Add((candidate, RequiredStars(candidate.Info.Tier, candidate.Info.Price)));
             }
             return held;
         }

@@ -282,8 +282,16 @@ namespace LastCall.Core
         /// starter-only bar tops out at 2.5 stars — the old 3.0 gate on the mid tier was
         /// therefore UNREACHABLE and the sim deadlocked every run at 2.5. Each gate now
         /// sits inside the band the previous tier can actually earn.</summary>
+        /// <summary>
+        /// The book's rungs. SPLIT AT ONE STAR (2026-08-10, the same note as the stock
+        /// ladder): ranks 9–14 all opened at two, so the first star bought nothing here
+        /// either and the second handed over six drinks at once. The band divides — the
+        /// three easiest of them come at one star — and no recipe was added or moved out
+        /// of the book to do it.
+        /// </summary>
         public double RecipeStarGate(RecipeDefinition recipe) =>
             recipe.Rank <= 8 ? 0.0
+            : recipe.Rank <= 11 ? 1.0
             : recipe.Rank <= 14 ? 2.0
             : recipe.Rank <= 21 ? 3.0
             : 4.0;
