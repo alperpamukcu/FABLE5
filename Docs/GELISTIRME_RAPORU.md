@@ -1,6 +1,116 @@
 # LAST CALL — GELİŞTİRME RAPORU
 
-**Tarih:** 2026-08-07 · **Yöntem:** 8 kollu kod denetimi (dosya:satır kanıtlı) + sim raporu + doküman-kod karşılaştırması · **Eş belge:** `Docs/GDD_MEVCUT.md` (oyunun bugünkü kuralları)
+**Denetim tarihi:** 2026-08-07 · **Günlük son güncelleme:** 2026-08-10
+**Yöntem:** 8 kollu kod denetimi (dosya:satır kanıtlı) + sim raporu + doküman-kod karşılaştırması
+**Eş belge:** `Docs/GDD_MEVCUT.md` (oyunun bugünkü kuralları)
+
+> Bu belge iki şey taşıyor: **§0 geliştirme günlüğü** (ne yapıldı, neden, hangi ölçümle) ve
+> **§1–8 duran denetim** (sistem sağlığı + öncelikli borç listesi). Denetim 2026-08-07'de
+> yazıldı; günlük ondan sonrasını sürüyor ve denetimin bayatlayan satırlarını §0.5'te
+> tek tek işaretliyor. Bir sayı iki yerde çelişirse **günlük doğrudur** — o ölçülmüş,
+> denetim hatırlanmış olabilir.
+
+---
+
+## 0 · Geliştirme günlüğü
+
+### 0.1 · Kapsam ve ölçüm
+
+2026-08-09 süpürmesinden (`8add99e`) bu yana **40 commit**. Bugünün ölçülmüş hâli:
+
+| Ölçü | Değer | Not |
+|---|---|---|
+| EditMode testi | **186** (11 dosya, 3.621 satır) | denetim günü 175'ti; +11'i yeni içerik kuralları |
+| Core | 30 dosya, **5.181 satır** | saf C#, `noEngineReferences` |
+| UI | 25 dosya, **14.791 satır** | hâlâ sıfır otomatik test (§4 borcu duruyor) |
+| `TycoonHud.cs` | **5.833 satır** | denetimdeki "3.4k" iki kat bayat — tek sınıf borcu **büyüdü** |
+| `Resources/Items` | 308 PNG | market kiti + şişe plakaları |
+| `Resources/Patron` | 30 karakter klasörü | her biri 6 klip + vesikalık |
+| `Resources/Fixtures` | 7 PNG | yeni: modüler sahne parçaları |
+
+### 0.2 · İş kolu — kimlik kartı ve kadro (2026-08-10)
+
+Oyunun gizli-bilgi mekaniği kartın kendisinde yaşıyor, o yüzden kart bir kozmetik değil
+bir okuma yüzeyi. On commit'lik bir tur:
+
+| Ne | Neden | Kanıt |
+|---|---|---|
+| **31 karakterlik kadro** (`db10df2`, `6efdbdb`, `9e891b6`) | tek arketip portresi 31 kişiyi temsil edemiyordu | her karakter 6 klip; `patron_casting.html` ile klipler oyunun kendi hızında oynatılarak seçildi |
+| **Yıldız kapıları** | "kim ne zaman gelir" bir ilerleme ekseni olsun | kapılar 0 / 1.5 / 2.5 / 3.5; rehber bu sırada listeler |
+| **Vesikalıklar 1:1** (`5328758`) | 31 yüzün 26'sı **kesirli** oranda büyütülüyordu (1.014×–1.241×) | NEAREST kesirli oranda bazı satırları ikiler, hepsini değil — "sünmüş" his buydu |
+| **Tepe payı bestelenerek** (`b0a853a`) | 4 karakterin tacı kaynak satır 0'da; kırpma pay üretemez | figür plakaya tam piksel kaydırılıyor: herkeste tam 12 px |
+| **Burun hizası** (`7734c60`) | gövde kutusunun merkezi omuzdur, yüz değil | ten bandının medyanı **kötüleştirdi** (10 yüz kaydı); bandı alın–burun arasına daraltmak çözdü |
+| **Sürücü belgesi yapısı** (`5328758`, `8b4a42b`) | belge hissi numaralı alan ızgarasından gelir | 1–5 numaralı alanlar, veri kutuları, onay hücreleri |
+| **Kağıdın gerçek sınırı** (`8b4a42b`) | üretici kartı **opak beyaz zemine** çizmiş; 256×160 tuvalde stok 228×138 | çizgiler kağıttan taşıyordu; her bölge kremden ölçüldü |
+
+**Ders (yazıya geçti):** rect ölçümü "kart dikdörtgeninin içinde" der ve geçirir; kağıdın
+kendi sınırı ayrı bir testtir. `licard.py` artık dikdörtgene değil kreme bakıyor, ayrıca
+mürekkep-üstüne-mürekkep çakışmasını da ölçüyor (puan kendi üçüncü yıldızının üstüne
+basıyordu, her metin kendi kutusuna sığdığı için tüm eski testler geçmişti).
+
+### 0.3 · İş kolu — 2D dinamik ışık ve modüler sahne (2026-08-10)
+
+Dört fazlı geçiş; her fazın kendi kanıtı var.
+
+| Faz | Commit | Ne yapıldı | Kanıt |
+|---|---|---|---|
+| **A** | `b1d67c3` | URP 3D forward yolundan **2D Renderer**'a; bloom-only volume; URP `PixelPerfectCamera`, post açık | ekran görüntüsü **birebir aynı** — kasıtlı no-op kontrol noktası |
+| **B** | `32b2d11` | sahne overlay canvas'tan **world-space** `SpriteRenderer`'a; 6 `Light2D` | `ShelfCell` eski sayıların aynısını verdi (hücre 0 → cx −280, taban 26, h 51, ölçek 1.000) |
+| **C** | `4535234` | `fixtures.json` + `ParseFixtures` + Core `BuyFixture`/iade/kapı | 9 yeni test |
+| **D** | `5918360` | 7 sahne slotu + 7 sprite + market **DRESSING** bölümü | 7 parça ayakta, 5'i ışıklı, SHOP −$180 defterde |
+| **E** | `671805b` | müşteriler world-space'e; maske yerine tezgah kırpması | küresel ışık 0.85→0.15'te gövde (88,48,45)→(36,19,17) **%59 karardı**, HUD rafı kıpırdamadı |
+
+**Işık planı** (tahmin değil, `club_room.png`'den ölçüldü): dört tavan lambasının ampulleri
+sanat x 65 / 237 / 406 / 579, y 84. Küresel yıkama 0.85 (hafif soğuk), lamba havuzları 0.55,
+neon spill `NeonBlink`'in **aynı** programında.
+
+**Sıralama defteri (dünya):** zemin 0 · oda 10 · duvar dekoru 20 · **içenler 25** · tezgah 30 ·
+tezgah üstü 35. Canvas'lar: RegisterBack −7 · SignCanvas −9 · dressing −5 · HUD 5 · kasa 6 ·
+servis akışı 12 · kimlik 20 · market 22 · rehber 24.
+
+**Fikstür zinciri:** `Assets/Data/fixtures/fixtures.json` (7 parça, 5'i ışıklı, kapılar 0/1.5/2.5)
+→ `DataLoader.ParseFixtures` (slot başına tek parça, yüklemede patlar) → `TycoonRun.BuyFixture`
+(kozmetik: yıldız kapılı, aynı gece iadeli, **gecelik fitting harcamaz**) → HUD `WatchFixtures`
+(sayaçla değişim izler) → `DiegeticStage.SyncFixtures` (slotlara diker, ışığı kurar).
+
+### 0.4 · Bu turda yakalanan hatalar
+
+Hepsi ölçümle bulundu; hiçbiri "bakınca fark edildi" değil:
+
+| Hata | Nasıl bulundu | Neden önemli |
+|---|---|---|
+| **İçki menüsü hiç açılmıyordu** (`e9ca821`) | play'de `IsOpen=False`, konsolda `MissingComponentException` | `AddComponent` **taban sınıf** `RequireComponent`'ını takip etmiyor; `BottleFluid` CanvasRenderer'sız doğup menü inşasını öldürüyordu. Ekranda "sıralama hatası" gibi görünüyor, değil |
+| **Kağıt zemini** (`8b4a42b`) | PNG'nin renk profili | ancak ekran görüntüsü gösterebildi; rect testleri geçmişti |
+| **Mum tezgahın arkasında** (`5918360`) | ilk kanıt turu | sorting 20 < tezgah 30; tezgah üstü slotlar 35'e alındı |
+| **Fikstür PNG'leri düz doku** (`5918360`) | `Resources.Load` null döndü | postprocessor kuralı derlenmeden önce inen dosyalar eski ayarla kalıyor; force reimport gerek |
+| **Eşit sıralı iki canvas** (`3000314`) | inceleme turu | plaket ve fallback oda ikisi de −10; eşit sırada çizim düzeni **tanımsız** |
+| **Ayna negatif ölçekle** (`671805b`) | geçiş sırasında öngörüldü | ışıklı sprite'ta negatif ölçek sarımı ters çevirir, renderer eler — çıkan müşteri kaybolurdu |
+
+### 0.5 · Denetimin bayatlayan satırları
+
+Aşağıdaki §1–8 satırları bu günlükle **çelişiyor**; düzeltilmeden okunmasın:
+
+| §  | Bayat ifade | Bugünkü gerçek |
+|---|---|---|
+| §1, §2 | "175 test" | **186** |
+| §2 | "Sanat: şişeler düz-sprite; sıvı dış sanatçıda" | sıvı katmanı **geri geldi** (`BottleFluid`, `bb42753`) — pilot cam saydam olduğu için arka plaka gerekmiyor |
+| §4 | "UI ~14.2k satır" | **14.791**; `TycoonHud` 3.4k değil **5.833** |
+| §5 | "DiegeticStage emekli döngü ~700 satır" | süpürüldü; dosya yeniden yazıldı (world-space) |
+| §7 | "M1 (ana sahne) entegre değil" | **ana sahne artık world-space ve ışıklı**; modüler parça sistemi kurulu |
+| §8 P0 | "`BottleArt.cs` bayrağını commit et" | çalışma ağacı temiz |
+
+### 0.6 · Bu turda **kapanmayan** boşluklar
+
+Dürüst liste — hiçbiri "sonra bakarız" diye gizlenmedi:
+
+| Boşluk | Etki | Ölçü |
+|---|---|---|
+| **Gölge yok** | ışık her şeyin içinden geçiyor; mum tezgahta gölge düşürmüyor | `ShadowCaster2D` sayısı: **0** |
+| **Slotlar kodda sabit** | yeni yerleşim noktası kod değişikliği ister — "içerik veridir" kuralıyla çelişir | `DiegeticStage.FixtureSlots`: 7 sabit `Vector2` |
+| **Fikstür sanatı placeholder** | prosedürel; PixelLab geçişi dosya-adı birebir yapılabilir | 7 PNG |
+| **Sim botu fikstür almıyor** | satın alma yolu botla sınanmıyor (kozmetik oldukları için tabanı bozmuyor) | `TycoonSimulator`'da `BuyFixture`: **0** |
+| **UI testsiz** | denetimin §4 borcu; bu tur menü regresyonuyla **bedelini gösterdi** | 14.791 satır, 0 test |
+| **Elle yerleştirilen dekor ışık almıyor** | `StageDressing` overlay canvas'ta (−5) | sürükle-bırak katmanı world'e taşınmadı |
 
 ---
 
@@ -106,3 +216,14 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 | **P2** | TycoonHud'u parçalara böl (Flow'un partial deseni) | 3.4k satırlık tek sınıf dağılır |
 | **P2** | Sanat programına dönüş: İncil + tercihler Docs'a, M2 yeniden girişi, M1 konsepti | askıdaki hat kapanır |
 | **P2** | Tutorial/FTUE + kayıt sistemi (P18 devri) | yeni oyuncu ve oturum sürekliliği |
+
+### 8.1 · Işık/sahne turundan çıkan yeni öneriler (2026-08-10)
+
+| Öncelik | İş | Neden / çıktı |
+|---|---|---|
+| **P1** | `ShadowCaster2D`: tezgah + fikstürler | ışık şu an her şeyin içinden geçiyor; gölge, sistemi "dekor" olmaktan çıkaran adım |
+| **P1** | Fikstür slotlarını `fixtures.json`'a taşı | yeni yerleşim noktası kod değil içerik olur; §5'teki "içerik veridir" kuralına döner |
+| **P1** | PlayMode duman testi: sahneyi kur, menüyü aç, bir gün oynat | menü regresyonu (`e9ca821`) tam olarak bu ağın yokluğunda geçti — testler yeşildi |
+| **P2** | `StageDressing` katmanını world-space'e al | elle yerleştirilen dekor da ışık alsın; şu an odanın tek ışıksız parçası |
+| **P2** | Fikstür sanatının PixelLab turu (rapor-önce) | placeholder'lar dosya-adı birebir değiştirilebilir; kod dokunulmaz |
+| **P2** | Bota fikstür alımı öğret | kozmetik oldukları için tabanı bozmaz ama satın alma yolu sınanır |
