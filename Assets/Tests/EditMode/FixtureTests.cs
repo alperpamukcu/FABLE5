@@ -48,11 +48,19 @@ namespace LastCall.Tests
 
         // ── parsing ─────────────────────────────────────────────────────────────
 
+        /// <summary>The hooks every catalogue in these tests stands its pieces in. A room
+        /// with no slots is a content bug of its own, so every fixture case needs them.</summary>
+        private const string Slots = @"""slots"": [
+            { ""id"": ""plant_left"", ""x"": 20, ""y"": 129 },
+            { ""id"": ""lamp_left"", ""x"": 151, ""y"": 266 },
+            { ""id"": ""s1"", ""x"": 0, ""y"": 0 },
+            { ""id"": ""s2"", ""x"": 10, ""y"": 0, ""onCounter"": true }],";
+
         [Test]
         public void ParseFixtures_ReadsTheCatalogue_LightsAndAll()
         {
-            var fixtures = DataLoader.ParseFixtures(@"{
-                ""version"": 1,
+            var loaded = DataLoader.ParseFixtures(@"{
+                ""version"": 1," + Slots + @"
                 ""fixtures"": [
                     { ""id"": ""fern"", ""name"": ""Fern"", ""slot"": ""plant_left"",
                       ""price"": 20, ""stars"": 0, ""flavor"": ""green"", ""sprite"": ""fx_fern"" },
@@ -62,30 +70,56 @@ namespace LastCall.Tests
                       ""lightIntensity"": 0.55, ""lightRadius"": 70 }
                 ]}");
 
+            var fixtures = loaded.Fixtures;
             Assert.AreEqual(2, fixtures.Count);
             Assert.IsFalse(fixtures[0].HasLight, "a fern does not shine");
             Assert.IsTrue(fixtures[1].HasLight);
             Assert.AreEqual(70f, fixtures[1].LightRadius);
             Assert.AreEqual(1.5, fixtures[1].Stars);
+
+            // The slots come out of the same file, and they carry where AND how they draw.
+            Assert.AreEqual(4, loaded.Slots.Count);
+            Assert.AreEqual(129f, loaded.Slots[0].Y);
+            Assert.IsFalse(loaded.Slots[2].OnCounter);
+            Assert.IsTrue(loaded.Slots[3].OnCounter, "a counter-top slot says so in the data");
+        }
+
+        [Test]
+        public void AFixture_CannotName_ASlotTheRoomDoesNotHave()
+        {
+            // The room used to warn about this at RUNTIME, on the night the piece was
+            // bought — a fixture sold and never seen. It is a content bug, so it fails at
+            // the load like every other content bug.
+            Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{" + Slots + @"
+                ""fixtures"": [
+                    { ""id"": ""a"", ""name"": ""A"", ""slot"": ""nowhere"",
+                      ""price"": 10, ""sprite"": ""x"" }]}"));
+        }
+
+        [Test]
+        public void ARoom_WithNoSlots_IsRefused()
+        {
+            Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{ ""fixtures"": [
+                { ""id"": ""a"", ""name"": ""A"", ""slot"": ""s1"", ""price"": 10, ""sprite"": ""x"" }]}"));
         }
 
         [Test]
         public void ParseFixtures_RefusesContentBugs_AtLoad()
         {
             // The same id twice.
-            Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{ ""fixtures"": [
+            Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{" + Slots + @" ""fixtures"": [
                 { ""id"": ""a"", ""name"": ""A"", ""slot"": ""s1"", ""price"": 10, ""sprite"": ""x"" },
                 { ""id"": ""a"", ""name"": ""B"", ""slot"": ""s2"", ""price"": 10, ""sprite"": ""x"" }]}"));
             // Two fixtures fighting over one hook.
-            Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{ ""fixtures"": [
+            Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{" + Slots + @" ""fixtures"": [
                 { ""id"": ""a"", ""name"": ""A"", ""slot"": ""s1"", ""price"": 10, ""sprite"": ""x"" },
                 { ""id"": ""b"", ""name"": ""B"", ""slot"": ""s1"", ""price"": 10, ""sprite"": ""x"" }]}"));
             // A lamp that shines but has no radius.
-            Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{ ""fixtures"": [
+            Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{" + Slots + @" ""fixtures"": [
                 { ""id"": ""a"", ""name"": ""A"", ""slot"": ""s1"", ""price"": 10, ""sprite"": ""x"",
                   ""lightIntensity"": 0.5 }]}"));
             // A freebie.
-            Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{ ""fixtures"": [
+            Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{" + Slots + @" ""fixtures"": [
                 { ""id"": ""a"", ""name"": ""A"", ""slot"": ""s1"", ""price"": 0, ""sprite"": ""x"" }]}"));
         }
 

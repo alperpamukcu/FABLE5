@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
@@ -139,22 +139,22 @@ namespace LastCall.UI
 
         // ── the fixture slots (2026-08-10): where bought dressing stands ────────
         // Named hooks in the ROOM ART's own space (art px, bottom-left origin — identical
-        // to stage units at the native 640×360). Each is the BOTTOM-CENTRE of whatever
-        // stands there, chosen against the picture: the plants flank the floor, the
-        // lanterns hang in the gaps the four painted lamps leave (their bulbs are at x
-        // 65/237/406/579), the wall pieces sit on the free wall band between the plant
-        // shelf and the lamps, and the candle stands at the quiet end of the counter.
-        // fixtures.json refers to these by name; an unknown slot warns and stands down.
-        private static readonly Dictionary<string, Vector2> FixtureSlots = new Dictionary<string, Vector2>
+        // to stage units at the native 640×360), each marking the BOTTOM CENTRE of whatever
+        // stands there. They were seven constants in this file, which made a new place to
+        // put a plant a CODE change in a project whose first rule about content is that
+        // content is data. They come out of fixtures.json now, beside the fixtures that
+        // name them, and the parser refuses a fixture whose slot the room does not have.
+        private readonly Dictionary<string, LastCall.Game.StageSlot> _slots =
+            new Dictionary<string, LastCall.Game.StageSlot>();
+
+        /// <summary>Hands the room its hooks. Told, not read — the same way the till is told
+        /// the money — so the stage never reaches into the run or the loader.</summary>
+        public void SetSlots(IReadOnlyList<LastCall.Game.StageSlot> slots)
         {
-            { "plant_left", new Vector2(20f, 129f) },
-            { "plant_right", new Vector2(616f, 129f) },
-            { "counter_end", new Vector2(26f, 106f) },
-            { "wall_left", new Vector2(150f, 222f) },
-            { "wall_right", new Vector2(490f, 220f) },
-            { "lamp_left", new Vector2(151f, 266f) },
-            { "lamp_right", new Vector2(493f, 266f) },
-        };
+            _slots.Clear();
+            if (slots == null) return;
+            foreach (var s in slots) _slots[s.Id] = s;
+        }
 
         private readonly List<(LastCall.Core.FixtureDefinition Def, Transform Body, Light2D Glow)>
             _placedFixtures = new List<(LastCall.Core.FixtureDefinition, Transform, Light2D)>();
@@ -350,6 +350,39 @@ namespace LastCall.UI
         }
 
         /// <summary>
+        /// A CONTACT SHADOW under something standing on the floor — a soft dark ellipse at
+        /// its feet, the trick that already sells the till as resting on the bar and the
+        /// rack glasses as standing in their bays.
+        ///
+        /// This replaces a real ShadowCaster2D, and the reason is measured rather than
+        /// assumed (2026-08-10): with the room frozen, switching every point light's
+        /// shadows on changed ZERO pixels. URP's 2D shadows cast radially from the light,
+        /// and in a head-on composition where every caster is flat at the same depth and
+        /// every lamp hangs above, the shadows all fall below the counter — behind the HUD,
+        /// where nothing can see them. The technique that reads at this camera is the one
+        /// the game already uses, so this is it, applied to the dressing.
+        /// </summary>
+        private void ContactShadow(Transform under, float width)
+        {
+            var art = ItemArt.Load("shadow_soft");
+            var go = new GameObject(under.name + "_Shadow");
+            go.transform.SetParent(_world, false);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = art;
+            // OVER THE COUNTER (31), not under the dressing. The floor slots sit at the bar's
+            // own rest line, so a blob at 19 was drawn and then covered by the counter at 30 —
+            // a shadow you cannot see is not a shadow. 31 puts it on the bar top where the
+            // thing casting it is standing, still under anything that stands ON the bar (35).
+            sr.sortingOrder = 31;
+            sr.color = new Color(0f, 0f, 0f, art != null ? 0.38f : 0f);
+            if (_litMaterial != null) sr.sharedMaterial = _litMaterial;
+            _shadows.Add((under, sr, width));
+        }
+
+        private readonly List<(Transform Under, SpriteRenderer Blob, float Width)> _shadows =
+            new List<(Transform, SpriteRenderer, float)>();
+
+        /// <summary>
         /// Light2D ships targeting whatever sorting layers its serialized default says, and
         /// that default is not a public API — so the target list is set outright to every
         /// layer the project has. The UI never suffers for it: overlay canvases are composited
@@ -446,13 +479,16 @@ namespace LastCall.UI
                 if (placed.Glow != null) Destroy(placed.Glow.gameObject);
             }
             _placedFixtures.Clear();
+            foreach (var sh in _shadows) if (sh.Blob != null) Destroy(sh.Blob.gameObject);
+            _shadows.Clear();
             if (owned == null || _world == null) return;
 
             foreach (var def in owned)
             {
-                if (!FixtureSlots.ContainsKey(def.Slot))
+                if (!_slots.ContainsKey(def.Slot))
                 {
-                    Debug.LogWarning($"DiegeticStage: fixture '{def.Id}' wants unknown slot '{def.Slot}'.");
+                    Debug.LogWarning($"DiegeticStage: fixture '{def.Id}' wants unknown slot " +
+                                     $"'{def.Slot}' — the stage was never handed it.");
                     continue;
                 }
                 var sprite = Resources.Load<Sprite>("Fixtures/" + def.Sprite);
@@ -465,9 +501,11 @@ namespace LastCall.UI
                 // Room dressing draws between the picture (10) and the bar (30); a piece
                 // standing ON the counter must draw over the counter that holds it — the
                 // candle was sorting behind the bar top and simply vanished (measured on
-                // the first proof shot, 2026-08-10).
-                bool onCounter = def.Slot == "counter_end";
+                // the first proof shot, 2026-08-10). The slot says which it is, so a new
+                // counter-top place needs no code either.
+                bool onCounter = _slots[def.Slot].OnCounter;
                 var sr = WorldSprite("Fx_" + def.Id, sprite, order: onCounter ? 35 : 20);
+
                 Light2D glow = null;
                 if (def.HasLight)
                 {
@@ -476,6 +514,12 @@ namespace LastCall.UI
                         def.LightIntensity, def.LightRadius);
                 }
                 _placedFixtures.Add((def, sr.transform, glow));
+
+                // WHAT SELLS "STANDING ON" RATHER THAN "FLOATING NEAR": only pieces that
+                // touch a surface get one. A sconce on the wall and a lantern on a cord
+                // touch nothing, and a blob under them would read as a stain.
+                if (!onCounter && !def.HasLight)
+                    ContactShadow(sr.transform, sprite.rect.width * 0.9f);
             }
             PlaceFixtures();
         }
@@ -487,10 +531,11 @@ namespace LastCall.UI
         {
             foreach (var placed in _placedFixtures)
             {
-                var slot = FixtureSlots[placed.Def.Slot];
+                LastCall.Game.StageSlot slot;
+                if (!_slots.TryGetValue(placed.Def.Slot, out slot)) continue;
                 var basePos = _backgroundSr != null
-                    ? StageArtPointToWorld(slot)
-                    : StageToWorld(slot.x, slot.y);
+                    ? StageArtPointToWorld(new Vector2(slot.X, slot.Y))
+                    : StageToWorld(slot.X, slot.Y);
                 float k = _backgroundSr != null ? _backgroundScale : 1f;
                 placed.Body.localScale = new Vector3(k, k, 1f);
                 float h = placed.Body.GetComponent<SpriteRenderer>().sprite.bounds.size.y * k;
@@ -499,6 +544,20 @@ namespace LastCall.UI
                 // the shade — which for every launch fixture is about ⅔ up the sprite.
                 if (placed.Glow != null)
                     placed.Glow.transform.position = basePos + new Vector3(0f, h * 0.66f, 0f);
+            }
+
+            // The blobs ride their own pieces, so a re-fitted window moves the shadow with
+            // the thing casting it rather than leaving it on the old floor.
+            foreach (var sh in _shadows)
+            {
+                if (sh.Blob == null || sh.Under == null || sh.Blob.sprite == null) continue;
+                float k = _backgroundSr != null ? _backgroundScale : 1f;
+                var b = sh.Under.GetComponent<SpriteRenderer>();
+                float footY = b != null ? b.bounds.min.y : sh.Under.position.y;
+                var art = sh.Blob.sprite.bounds.size;
+                sh.Blob.transform.localScale = new Vector3(
+                    sh.Width * k / art.x, sh.Width * k * 0.28f / art.y, 1f);
+                sh.Blob.transform.position = new Vector3(sh.Under.position.x, footY + 1f * k, 0f);
             }
         }
 

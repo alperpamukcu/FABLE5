@@ -1,5 +1,43 @@
 {
   "version": 1,
+  "slots": [
+    {
+      "id": "plant_left",
+      "x": 20,
+      "y": 129
+    },
+    {
+      "id": "plant_right",
+      "x": 616,
+      "y": 129
+    },
+    {
+      "id": "counter_end",
+      "x": 26,
+      "y": 106,
+      "onCounter": true
+    },
+    {
+      "id": "wall_left",
+      "x": 150,
+      "y": 222
+    },
+    {
+      "id": "wall_right",
+      "x": 490,
+      "y": 220
+    },
+    {
+      "id": "lamp_left",
+      "x": 151,
+      "y": 266
+    },
+    {
+      "id": "lamp_right",
+      "x": 493,
+      "y": 266
+    }
+  ],
   "fixtures": [
     {
       "id": "fern_pot",
@@ -29,7 +67,7 @@
       "sprite": "fx_candle",
       "lightR": 1.0,
       "lightG": 0.72,
-      "lightB": 0.40,
+      "lightB": 0.4,
       "lightIntensity": 0.5,
       "lightRadius": 26
     },
@@ -42,7 +80,7 @@
       "flavor": "Warm brass, warmer light.",
       "sprite": "fx_sconce",
       "lightR": 1.0,
-      "lightG": 0.80,
+      "lightG": 0.8,
       "lightB": 0.55,
       "lightIntensity": 0.5,
       "lightRadius": 46
@@ -57,7 +95,7 @@
       "sprite": "fx_lantern",
       "lightR": 1.0,
       "lightG": 0.78,
-      "lightB": 0.50,
+      "lightB": 0.5,
       "lightIntensity": 0.55,
       "lightRadius": 70
     },

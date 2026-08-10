@@ -38,6 +38,11 @@ namespace LastCall.Game
         /// <summary>Future stock (v5 P10): locked bottles the shop can sell later.</summary>
         public IReadOnlyList<IngredientCard> LockedStock { get; private set; }
 
+        /// <summary>Where the room stands its bought dressing (2026-08-10). Presentation
+        /// data: it comes out of the same file as the fixtures but never enters Core.</summary>
+        public IReadOnlyList<StageSlot> StageSlots { get; private set; }
+            = System.Array.Empty<StageSlot>();
+
         public string CurrentSeed { get; private set; }
 
         /// <summary>Raised after a new run is dealt (including the initial one).</summary>
@@ -93,9 +98,11 @@ namespace LastCall.Game
             Snacks = snacksJson != null
                 ? DataLoader.ParseSnacks(snacksJson.text)
                 : System.Array.Empty<SnackDefinition>();
-            var fixtures = fixturesJson != null
+            var dressing = fixturesJson != null
                 ? DataLoader.ParseFixtures(fixturesJson.text)
-                : System.Array.Empty<FixtureDefinition>();
+                : new LoadedFixtures(System.Array.Empty<FixtureDefinition>(),
+                                     System.Array.Empty<StageSlot>());
+            StageSlots = dressing.Slots;
             LockedStock = bar.LockedCards;
             if (Glassware.Count > 0)
             {
@@ -113,7 +120,7 @@ namespace LastCall.Game
                 glassware: Glassware,
                 snacks: Snacks,
                 lockedStock: LockedStock,
-                fixtures: fixtures);
+                fixtures: dressing.Fixtures);
 
             Debug.Log($"[LastCall] Tycoon run started — seed '{CurrentSeed}', " +
                       $"{startingBottles.Count} bottles, wallet ${Tycoon.Money}, " +

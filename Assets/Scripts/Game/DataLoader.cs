@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using LastCall.Core;
 using UnityEngine;
@@ -27,6 +27,22 @@ namespace LastCall.Game
             Name = name;
             Cards = cards;
             LockedCards = lockedCards ?? System.Array.Empty<IngredientCard>();
+        }
+    }
+
+    /// <summary>A parsed fixtures file: what the room can be dressed with, and where.</summary>
+    public sealed class LoadedFixtures
+    {
+        /// <summary>The catalogue Core sells from.</summary>
+        public IReadOnlyList<FixtureDefinition> Fixtures { get; }
+
+        /// <summary>Where the stage stands them. Presentation, so it never reaches Core.</summary>
+        public IReadOnlyList<StageSlot> Slots { get; }
+
+        public LoadedFixtures(IReadOnlyList<FixtureDefinition> fixtures, IReadOnlyList<StageSlot> slots)
+        {
+            Fixtures = fixtures;
+            Slots = slots;
         }
     }
 
@@ -199,11 +215,28 @@ namespace LastCall.Game
         /// two fixtures fighting over one hook is a content bug and fails here, at load,
         /// where a content bug belongs.
         /// </summary>
-        public static IReadOnlyList<FixtureDefinition> ParseFixtures(string json)
+        public static LoadedFixtures ParseFixtures(string json)
         {
             var dto = FromJson<FixturesFileDto>(json, "fixtures");
             if (dto.fixtures == null || dto.fixtures.Count == 0)
                 throw new FormatException("Fixtures file contains no fixtures.");
+            if (dto.slots == null || dto.slots.Count == 0)
+                throw new FormatException("Fixtures file declares no slots to stand them in.");
+
+            // THE SLOTS ARE CONTENT NOW (2026-08-10). They were seven hardcoded Vector2s in
+            // DiegeticStage, which meant a new place to put a plant was a code change — in a
+            // project whose first rule about content is that content is data. A slot that
+            // nothing can find is a silent hole in the room, so an unknown slot fails HERE,
+            // at load, rather than warning into the console on the night it is bought.
+            var slots = new List<StageSlot>(dto.slots.Count);
+            var slotIds = new HashSet<string>();
+            foreach (var sl in dto.slots)
+            {
+                if (!slotIds.Add(sl.id ?? ""))
+                    throw new FormatException($"Fixtures file declares slot '{sl.id}' twice.");
+                try { slots.Add(new StageSlot(sl.id, sl.x, sl.y, sl.onCounter)); }
+                catch (ArgumentException e) { throw new FormatException($"Slot '{sl.id}': {e.Message}"); }
+            }
 
             var seenIds = new HashSet<string>();
             var seenSlots = new HashSet<string>();
@@ -215,6 +248,9 @@ namespace LastCall.Game
                 if (!seenSlots.Add(f.slot ?? ""))
                     throw new FormatException(
                         $"Fixture '{f.id}' wants slot '{f.slot}', which another fixture already has.");
+                if (!slotIds.Contains(f.slot ?? ""))
+                    throw new FormatException(
+                        $"Fixture '{f.id}' wants slot '{f.slot}', which the room does not have.");
                 try
                 {
                     fixtures.Add(new FixtureDefinition(f.id, f.name, f.slot, f.price,
@@ -226,7 +262,7 @@ namespace LastCall.Game
                     throw new FormatException($"Fixture '{f.id}': {e.Message}");
                 }
             }
-            return fixtures;
+            return new LoadedFixtures(fixtures, slots);
         }
 
         private static PrepMethod ParsePrep(string raw, string context)
@@ -321,9 +357,19 @@ namespace LastCall.Game
         }
 
         [Serializable]
+        private sealed class SlotDto
+        {
+            public string id;
+            public float x;
+            public float y;
+            public bool onCounter;
+        }
+
+        [Serializable]
         private sealed class FixturesFileDto
         {
             public int version;
+            public List<SlotDto> slots;
             public List<FixtureDto> fixtures;
         }
 

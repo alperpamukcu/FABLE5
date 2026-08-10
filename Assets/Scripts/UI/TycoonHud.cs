@@ -1490,6 +1490,10 @@ namespace LastCall.UI
             var owned = new List<FixtureDefinition>();
             foreach (var f in run.FixtureCatalogue)
                 if (run.OwnsFixture(f.Id)) owned.Add(f);
+            // The room is handed its hooks before anything is stood in them. Cheap enough
+            // to repeat: seven entries into a dictionary, only on the frames the dressing
+            // actually changed.
+            stage.SetSlots(_bootstrap != null ? _bootstrap.StageSlots : null);
             stage.SyncFixtures(owned);
         }
 
