@@ -290,7 +290,6 @@ namespace LastCall.UI
         // day end — two steps now (the author, 2026-08-01): first the bill alone, then
         // the market, each with its own verb on the same button.
         private RectTransform _dayEndPanel;
-        private Text _invoiceText;
         private RectTransform _offerRow;
         private RectTransform _openTomorrow;
         private Text _bannerText;
@@ -933,12 +932,17 @@ namespace LastCall.UI
 
         private void Update()
         {
+            // THE CURTAIN STEPS FIRST, AND UNCONDITIONALLY. Everything below is gated on
+            // there being a run, and a full-screen black that is gated on game state is a
+            // black screen waiting to happen: any frame where Run is null — between runs,
+            // or on the first frames of one — would leave it up with nothing to lift it.
+            StepCurtain();
+
             var run = Run;
             if (run == null) return;
             WatchGlassRack();
             WatchFixtures();
             FadeShopTabs();
-            StepCurtain();
             StepSlide();
             RunTheTill(run);
             FollowPointerWithRecipeTip();
@@ -2304,6 +2308,72 @@ namespace LastCall.UI
 
         // ── day end ─────────────────────────────────────────────────────────────
 
+        // ── the slip's own grid (2026-08-10) ────────────────────────────────────
+        // One rect per line, the label pinned left and the figure pinned right. Dot
+        // leaders lined a receipt up only while every name stayed short; a long drink
+        // pushed its price off the grid and the whole slip leaned.
+
+        private const float BillW = 440f, BillHeadH = 48f, BillRowH = 22f;
+        private static readonly Color BillPaper = new Color(0.965f, 0.945f, 0.886f, 1f);
+        private static readonly Color BillEdge = new Color(0.62f, 0.58f, 0.50f, 1f);
+        private static readonly Color BillBand = new Color(0.102f, 0.165f, 0.290f, 1f);
+        private static readonly Color BillInk = new Color(0.13f, 0.11f, 0.09f, 1f);
+        private static readonly Color BillRed = new Color(0.65f, 0.17f, 0.27f, 1f);
+        private static readonly Color BillQuiet = new Color(0.51f, 0.47f, 0.41f, 1f);
+        private RectTransform _invoiceRows;
+        private Text _billWhen;
+
+        private float BillRow(float y, string label, string value, Color ink, bool heavy)
+        {
+            var row = NewRect("R", _invoiceRows);
+            Place(row, new Vector2(0, 1), new Vector2(0, BillRowH), new Vector2(0, -y));
+            row.anchorMin = new Vector2(0, 1); row.anchorMax = new Vector2(1, 1);
+            row.pivot = new Vector2(0.5f, 1);
+            row.sizeDelta = new Vector2(0, BillRowH);
+            row.anchoredPosition = new Vector2(0, -y);
+
+            var l = NewText("L", row, heavy ? _shop : _body, 16, TextAnchor.MiddleLeft, ink);
+            l.rectTransform.anchorMin = new Vector2(0, 0); l.rectTransform.anchorMax = new Vector2(0.62f, 1);
+            l.rectTransform.offsetMin = Vector2.zero; l.rectTransform.offsetMax = Vector2.zero;
+            l.horizontalOverflow = HorizontalWrapMode.Wrap;
+            l.verticalOverflow = VerticalWrapMode.Truncate;
+            l.text = label;
+
+            var v = NewText("V", row, heavy ? _shop : _display, 16, TextAnchor.MiddleRight, ink);
+            v.rectTransform.anchorMin = new Vector2(0.62f, 0); v.rectTransform.anchorMax = Vector2.one;
+            v.rectTransform.offsetMin = Vector2.zero; v.rectTransform.offsetMax = Vector2.zero;
+            v.horizontalOverflow = HorizontalWrapMode.Overflow;
+            v.text = value;
+            return y + BillRowH;
+        }
+
+        private float BillRule(float y)
+        {
+            var rule = NewRect("Rule", _invoiceRows);
+            rule.anchorMin = new Vector2(0, 1); rule.anchorMax = new Vector2(1, 1);
+            rule.pivot = new Vector2(0.5f, 1);
+            rule.sizeDelta = new Vector2(0, 1);
+            rule.anchoredPosition = new Vector2(0, -(y + 5f));
+            rule.gameObject.AddComponent<Image>().color = BillEdge;
+            return y + 12f;
+        }
+
+        private float BillNote(float y, string text) => BillNote(y, text, BillQuiet);
+
+        private float BillNote(float y, string text, Color ink)
+        {
+            var note = NewText("N", _invoiceRows, _body, 8, TextAnchor.MiddleLeft, ink);
+            note.rectTransform.anchorMin = new Vector2(0, 1);
+            note.rectTransform.anchorMax = new Vector2(1, 1);
+            note.rectTransform.pivot = new Vector2(0.5f, 1);
+            note.rectTransform.sizeDelta = new Vector2(0, 14f);
+            note.rectTransform.anchoredPosition = new Vector2(0, -y);
+            note.horizontalOverflow = HorizontalWrapMode.Wrap;
+            note.verticalOverflow = VerticalWrapMode.Truncate;
+            note.text = text;
+            return y + 15f;
+        }
+
         private void ShowDayEnd()
         {
             var run = Run;
@@ -2441,18 +2511,19 @@ namespace LastCall.UI
             if (run.Ledger.DebtStrikes == DayLedger.StrikesToClose - 1)
                 stamp += "\n<color=#A62B44>one more red day closes the bar</color>";
 
-            // Receipt v2 (v5 P13): a till slip, not a summary panel. Header, then the drinks
-            // that actually crossed the bar as line items, then the totals block. The lines are
-            // taken from what was POURED (`visit.Served`) and priced at `PaidBase`, so a night
-            // where the player misread somebody still adds up — a wrong drink is paid at its
-            // own price, and listing menu prices instead would leave the bill short.
-            var sb = new StringBuilder();
-            sb.AppendLine($"<b>{Rule}</b>");
-            sb.AppendLine($"<b>   LAST CALL   </b>");
-            sb.AppendLine($"   {CalendarFor(run.Day)} · {CrowdName(run.CrowdToday)}");
-            sb.AppendLine($"<b>{Rule}</b>");
+            // RECEIPT v3 (2026-08-10, the author: "tüm satırların uyacağı arka plan ve
+            // metin düzeni"). It was one Text with hand-typed dot leaders holding the
+            // columns together, which only lines up while every name is short enough —
+            // a long drink name pushed its price off the grid and the whole slip leaned.
+            // Every line is a ROW now: a rect with the label pinned left and the figure
+            // pinned right, so the columns are structural and no string can bend them.
+            // The lines are taken from what was POURED (`visit.Served`) and priced at
+            // `PaidBase`, so a night where the player misread somebody still adds up.
+            foreach (Transform old in _invoiceRows) Destroy(old.gameObject);
+            if (_billWhen != null)
+                _billWhen.text = CalendarFor(run.Day) + "  ·  " + CrowdName(run.CrowdToday);
+            float y = 0f;
 
-            var lines = new List<string>();
             var counts = new Dictionary<string, int>();
             var totals = new Dictionary<string, int>();
             var order = new List<string>();
@@ -2464,31 +2535,41 @@ namespace LastCall.UI
                 counts[name]++;
                 totals[name] += visit.PaidBase;
             }
-            foreach (var name in order)
-                lines.Add(Line($"{counts[name]}x {name}", $"${totals[name]}", null));
-            if (lines.Count == 0)
-                sb.AppendLine("<color=#9C8F80>   nothing sold</color>");
-            else
-                foreach (var line in lines) sb.AppendLine(line);
+            if (order.Count == 0) y = BillNote(y, "nothing sold");
+            else foreach (var name in order)
+                y = BillRow(y, counts[name] + "x  " + name, "$" + totals[name], BillInk, false);
 
-            sb.AppendLine($"<color=#9C8F80>{Rule}</color>");
-            sb.AppendLine(Line("SALES", $"${run.DaySales}", null));
-            sb.AppendLine(Line("TIPS", $"${run.DayTips}", null));
-            sb.AppendLine(Line("RENT", $"-${run.DayRent}", "A62B44"));
-            sb.AppendLine(Line("STOCK", $"-${run.DayStock}", "A62B44"));
-            sb.AppendLine(Line("SHOP", $"-${run.DayUpgrades}", "A62B44"));
-            sb.AppendLine($"<color=#9C8F80>{Rule}</color>");
-            sb.AppendLine("<b>" + Line("NET", $"{(net >= 0 ? "+" : "-")}${Math.Abs(net)}", netColour) + "</b>");
-            sb.AppendLine("<b>" + Line("TILL", $"${run.Money}", null) + "</b>");
-            sb.AppendLine($"<color=#9C8F80>{Rule}</color>");
+            y = BillRule(y);
+            y = BillRow(y, "SALES", "$" + run.DaySales, BillInk, false);
+            y = BillRow(y, "TIPS", "$" + run.DayTips, BillInk, false);
+            y = BillRow(y, "RENT", "-$" + run.DayRent, BillRed, false);
+            y = BillRow(y, "STOCK", "-$" + run.DayStock, BillRed, false);
+            y = BillRow(y, "SHOP", "-$" + run.DayUpgrades, BillRed, false);
+            y = BillRule(y);
+            y = BillRow(y, "NET", (net >= 0 ? "+$" : "-$") + Math.Abs(net),
+                        net >= 0 ? BillInk : BillRed, true);
+            y = BillRow(y, "TILL", "$" + run.Money, BillInk, true);
+            y = BillRule(y);
 
-            // The footer a real slip carries: who came, how they left, and the standing they
-            // left behind — the number tomorrow's crowd is actually drawn from.
-            sb.AppendLine($"<color=#9C8F80>   {served} served · {stormed} walked</color>");
-            sb.AppendLine($"<color=#9C8F80>   tonight {BarRating.ExactStarsFor(floor.AverageSatisfaction):0.0}* " +
-                          $"· bar {run.Rating.Average:0.0}*</color>");
-            sb.Append(stamp);
-            _invoiceText.text = sb.ToString();
+            // The footer a real slip carries: who came, how they left, and the standing
+            // they left behind — the number tomorrow's crowd is drawn from.
+            y = BillNote(y, served + " served  ·  " + stormed + " walked");
+            y = BillNote(y, "tonight " + BarRating.ExactStarsFor(floor.AverageSatisfaction).ToString("0.0")
+                            + "★  ·  bar " + run.Rating.Average.ToString("0.0") + "★");
+            if (run.Ledger.DebtStrikes > 0)
+            {
+                y += 6f;
+                y = BillNote(y, "IN THE RED — STRIKE " + run.Ledger.DebtStrikes
+                                + "/" + DayLedger.StrikesToClose, BillRed);
+                if (run.Ledger.DebtStrikes == DayLedger.StrikesToClose - 1)
+                    y = BillNote(y, "one more red day closes the bar", BillRed);
+            }
+
+            // THE SLIP IS AS LONG AS THE NIGHT WAS. A fixed 470 left a quiet night with a
+            // hand's width of blank paper under it and a busy one clipped at the fold.
+            _dayEndBill.sizeDelta = new Vector2(BillW, BillHeadH + y + 18f);
+            if (_billNext != null)
+                _billNext.anchoredPosition = new Vector2(0, -(_dayEndBill.sizeDelta.y * 0.5f + 32f));
 
             // The tablet.
             foreach (Transform child in _offerRow) Destroy(child.gameObject);
@@ -5149,18 +5230,48 @@ namespace LastCall.UI
             // Left column: the till slip (v5 P13). Cream stock, and pinned to 16pt — a whole
             // multiple of the face's 8px design size, so the monospace columns the receipt is
             // set in actually land on the pixel grid instead of blurring between it.
+            // THE SLIP, CENTRED (2026-08-10). It hung from the top of the screen at a
+            // fixed 470, so a quiet night left a hand's width of blank paper under the
+            // total and the bill sat high on a screen that had room for it in the middle.
             var bill = _dayEndBill = NewRect("Bill", _dayEndPanel);
-            Place(bill, new Vector2(0.5f, 1), new Vector2(400, 470), new Vector2(0, -50));
-            bill.gameObject.AddComponent<Image>().color = UITheme.Cream[4];
-            _invoiceText = NewText("Invoice", bill, _body, 16, TextAnchor.UpperLeft, UITheme.Night[1]);
-            Stretch(_invoiceText.rectTransform, Vector2.zero, Vector2.one, new Vector2(14, 12), new Vector2(-14, -12));
-            _invoiceText.supportRichText = true;
+            Place(bill, new Vector2(0.5f, 0.5f), new Vector2(BillW, 470), Vector2.zero);
+            bill.gameObject.AddComponent<Image>().color = BillPaper;
+            Frame(bill, 2f, BillEdge);
+
+            // The head band: what this document is, and which night it is about. The same
+            // language as the licence — a dark band carrying the identity, paper below.
+            var head = NewRect("Head", bill);
+            head.anchorMin = new Vector2(0, 1); head.anchorMax = new Vector2(1, 1);
+            head.pivot = new Vector2(0.5f, 1);
+            head.sizeDelta = new Vector2(-4f, BillHeadH);
+            head.anchoredPosition = new Vector2(0, -2f);
+            head.gameObject.AddComponent<Image>().color = BillBand;
+            var headTitle = NewText("T", head, _display, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
+            Place(headTitle.rectTransform, new Vector2(0, 1), new Vector2(BillW - 32f, 20),
+                new Vector2(14, -8));
+            headTitle.horizontalOverflow = HorizontalWrapMode.Overflow;
+            headTitle.text = "LAST CALL";
+            _billWhen = NewText("W", head, _body, 8, TextAnchor.MiddleLeft,
+                new Color(0.72f, 0.78f, 0.86f, 1f));
+            Place(_billWhen.rectTransform, new Vector2(0, 1), new Vector2(BillW - 32f, 12),
+                new Vector2(14, -32));
+            _billWhen.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            // Every line lands in here, one rect to a row, so the columns cannot bend.
+            _invoiceRows = NewRect("Rows", bill);
+            _invoiceRows.anchorMin = new Vector2(0, 1); _invoiceRows.anchorMax = new Vector2(1, 1);
+            _invoiceRows.pivot = new Vector2(0.5f, 1);
+            _invoiceRows.sizeDelta = new Vector2(-28f, 0);
+            _invoiceRows.anchoredPosition = new Vector2(0, -(BillHeadH + 10f));
 
             // The bill's OWN way forward (2026-08-07). The day-end button moved inside the
             // tablet, and the tablet is only up on the market step — which left the books
             // with no door out of them at all. The slip carries its own now.
+            // ON THE SLIP'S FOOT, not at a fixed 530 down the panel: the bill is centred
+            // and its length is the night's, so a fixed key sat on top of a short slip and
+            // under a long one. RebuildDayEnd puts it where the paper actually ends.
             _billNext = NewRect("BillNext", _dayEndPanel);
-            Place(_billNext, new Vector2(0.5f, 1), new Vector2(400, 44), new Vector2(0, -530));
+            Place(_billNext, new Vector2(0.5f, 0.5f), new Vector2(BillW, 44), Vector2.zero);
             var billNextImg = _billNext.gameObject.AddComponent<Image>();
             billNextImg.color = UITheme.PrimaryAction;
             var billNextBtn = _billNext.gameObject.AddComponent<Button>();
