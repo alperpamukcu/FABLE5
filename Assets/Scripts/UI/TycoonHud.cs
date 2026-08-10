@@ -3897,23 +3897,30 @@ namespace LastCall.UI
         // measured off licence_shell2.png (510×315: navy band rows 23–51, portrait x 26–168
         // y 81–286, rules y 96/127/159/190/219) and drawn at 1.4×. The old shell ran long
         // and its lettering was hard to read; the values sit on the display face now.
-        // 1.15, not 1.4 (the author: the licence is unnecessarily large and the portrait
-        // is given far too much of it). The scale was pinned by the photo: a 96px face
-        // drawn at a whole 2x needs a 192-wide window, and only 1.4 gave one. The faces are
-        // cut at 72 now — closer to the 59-72 px of real face in the crop, so LESS
-        // resampling, not more — which lets the whole card come down to 586x362. That is
-        // 33% less area, and the shell's printed furniture scales with it because it is one
-        // uniform factor.
-        private const float LicScale = 1.15f;
-        private const float LicW = 510f * LicScale, LicH = 315f * LicScale;
-        private static readonly Rect LicPortrait = new Rect(26f * LicScale, -81f * LicScale,
-            143f * LicScale, 206f * LicScale);
-        private const float LicHeaderH = 29f * LicScale;
-        private const float LicHeaderY = -23f * LicScale;
-        private const float LicFieldsX = 200f * LicScale;
-        private const float LicFieldsW = 280f * LicScale;
+        // A CARD CUT TO OUR OWN ZONES (2026-08-10). The old shell was 510x315 with its
+        // furniture wherever the drawing had put it, and the layout bent around it; worse,
+        // its scale was the PHOTO's hostage, because pixel art magnifies only in whole
+        // steps and a 96px face at 2x demanded a 192-wide window.
+        //
+        // licence_shell3 is authored the other way round: the zones came first and the art
+        // was cut to them. 256x160 drawn at a WHOLE 3x — every art pixel lands on three
+        // screen pixels, nothing resamples — which is a 768x480 card, larger than the 714
+        // it replaces. PixelLab drew the paper (stock, wear, a guilloche tint); the band,
+        // the portrait well and the five rules are printed onto it at exact coordinates,
+        // because furniture that has to line up with a text field is a specification and
+        // the generator has never hit one.
+        private const float LicScale = 3f;
+        private const float LicW = 256f * LicScale, LicH = 160f * LicScale;
+        // The portrait well, in art pixels: x 5..55, y 23..97 -> 150 x 222 at 3x, which
+        // holds a 72px face at a whole 2x with room around it.
+        private static readonly Rect LicPortrait = new Rect(5f * LicScale, -23f * LicScale,
+            50f * LicScale, 74f * LicScale);
+        private const float LicHeaderH = 15f * LicScale;
+        private const float LicHeaderY = -2f * LicScale;
+        private const float LicFieldsX = 62f * LicScale;
+        private const float LicFieldsW = 188f * LicScale;
         private static readonly float[] LicLines =   // the art's five rules, ×1.4
-            { 96f * LicScale, 127f * LicScale, 159f * LicScale, 190f * LicScale, 219f * LicScale };
+            { 50f * LicScale, 64f * LicScale, 79f * LicScale, 94f * LicScale, 112f * LicScale };
 
         /// <summary>
         /// One licence line, SEATED on a rule: the value's bottom edge lands on the shell's own
@@ -3962,8 +3969,8 @@ namespace LastCall.UI
             var card = NewRect("Card", _idRoot);
             Place(card, new Vector2(0.5f, 0.5f), new Vector2(LicW, LicH), new Vector2(0, 10));
             var shell = card.gameObject.AddComponent<Image>();
-            shell.sprite = ItemArt.Load("licence_shell2");
-            if (shell.sprite == null) shell.sprite = ItemArt.Load("licence_shell");
+            shell.sprite = ItemArt.Load("licence_shell3");
+            if (shell.sprite == null) shell.sprite = ItemArt.Load("licence_shell2");
             if (shell.sprite == null) shell.color = UITheme.Cream[4];   // no art: a plain card
             card.gameObject.AddComponent<Button>().transition = Selectable.Transition.None; // swallow clicks
 
