@@ -2313,12 +2313,13 @@ namespace LastCall.UI
         // leaders lined a receipt up only while every name stayed short; a long drink
         // pushed its price off the grid and the whole slip leaned.
 
-        // 140x192 art at 3x. The type zones are MEASURED off the generated cream — the
-        // solid stock spans y 12..561 and x 6..411 at this scale — and the margins hold
-        // the print clear of both tears (the licence's lesson: measure the paper, not
-        // the canvas).
-        private const float BillW = 420f, BillH = 576f, BillHeadH = 62f, BillRowH = 22f;
-        private const float BillInset = 34f;   // type margin inside the torn stock
+        // 152x200 art at 3x (grown on the author's note). The stock is generated; the
+        // SILHOUETTE is authored — straight roll sides, a fine tear carved only at the
+        // top and the foot — because three takes in a row drew perforated stamp edges on
+        // all four sides: shape is a specification, and the generator does not hit
+        // specifications. Solid stock spans y 6..591, full width, measured off the cream.
+        private const float BillW = 456f, BillH = 600f, BillHeadH = 62f, BillRowH = 22f;
+        private const float BillInset = 36f;   // type margin inside the sheet
         private static readonly Color BillPaper = new Color(0.965f, 0.945f, 0.886f, 1f);
         private static readonly Color BillEdge = new Color(0.62f, 0.58f, 0.50f, 1f);
         private static readonly Color BillBand = new Color(0.102f, 0.165f, 0.290f, 1f);
