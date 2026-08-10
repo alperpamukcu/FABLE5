@@ -5,7 +5,9 @@
         "LastCall.Core",
         "LastCall.Game",
         "LastCall.UI",
-        "Unity.2D.PixelPerfect"
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Universal.2D.Runtime",
+        "Unity.RenderPipelines.Core.Runtime"
     ],
     "includePlatforms": [
         "Editor"

@@ -4,7 +4,7 @@ using LastCall.Game;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.U2D;
+using UnityEngine.Rendering.Universal;
 
 namespace LastCall.EditorTools
 {
@@ -61,15 +61,24 @@ namespace LastCall.EditorTools
             cam.backgroundColor = new Color(0.05f, 0.03f, 0.075f); // Night 1 (#0D0813)
             cam.transform.position = new Vector3(0f, 0f, -10f);
 
-            // Pixel Perfect Camera (15 v2 §4, PATCH_15 §C): 640×360 reference, integer
-            // scaling only (×2, ×3 = 1080p), PPU 1 to match the /Art/ importer. Governs
-            // future world-space sprites; the UI canvases integer-scale via CanvasScaler.
-            var ppc = camGo.AddComponent<PixelPerfectCamera>();
+            // Pixel Perfect Camera (15 v2 §4, PATCH_15 §C): 640×360 reference, PPU 1 —
+            // URP's OWN component now (2026-08-10), because the 2D Renderer is what draws
+            // the world and the legacy package version is a stranger to it. PixelSnapping
+            // rather than UpscaleRenderTexture: snapping keeps the world's visible width
+            // equal to 360×aspect, which is EXACTLY the width the CanvasScaler gives the
+            // overlay UI at match-height — the stage sprites and the HUD keep agreeing
+            // about where things are at every window shape, the way the two canvases used
+            // to. An upscaled RT would letterbox the world while the UI kept filling.
+            var ppc = camGo.AddComponent<UnityEngine.Rendering.Universal.PixelPerfectCamera>();
             ppc.assetsPPU = 1;
             ppc.refResolutionX = 640;
             ppc.refResolutionY = 360;
-            ppc.upscaleRT = true;      // render at 640×360, then integer-upscale
-            ppc.pixelSnapping = true;  // snap sprites to the pixel grid
+            ppc.gridSnapping = UnityEngine.Rendering.Universal.PixelPerfectCamera.GridSnapping.PixelSnapping;
+            ppc.cropFrame = UnityEngine.Rendering.Universal.PixelPerfectCamera.CropFrame.None;
+
+            // The bloom volume finally has somewhere to render: HDR light in the world.
+            // The UI never blooms — overlay canvases draw after the camera entirely.
+            cam.GetUniversalAdditionalCameraData().renderPostProcessing = true;
 
             var game = new GameObject("Game");
             var bootstrap = game.AddComponent<GameBootstrap>();
