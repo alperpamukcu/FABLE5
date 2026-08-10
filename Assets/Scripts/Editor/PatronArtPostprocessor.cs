@@ -15,7 +15,8 @@ namespace LastCall.EditorTools
         private void OnPreprocessTexture()
         {
             var p = assetPath.Replace('\\', '/');
-            if (!p.Contains("Resources/Patron/") && !p.Contains("Resources/Items/")) return;
+            bool fixture = p.Contains("Resources/Fixtures/");
+            if (!p.Contains("Resources/Patron/") && !p.Contains("Resources/Items/") && !fixture) return;
 
             var ti = (TextureImporter)assetImporter;
             ti.textureType = TextureImporterType.Sprite;
@@ -28,7 +29,11 @@ namespace LastCall.EditorTools
             // Readable, so a UI Image can hit-test against the sprite's alpha — that is what
             // lets an icon like the waste bin be clickable on the object itself, not on a box.
             ti.isReadable = true;
-            ti.spritePixelsPerUnit = 100;
+            // Fixtures stand in the WORLD, where the stage runs at one unit per art pixel
+            // (PixelPerfectCamera assetsPPU = 1): PPU 1 means a fixture drawn at scale 1 is
+            // pixel-for-pixel on the room's own grid, nothing resampled. UI sprites keep
+            // the canvas-era 100.
+            ti.spritePixelsPerUnit = fixture ? 1 : 100;
 
             // Frames and plates are stretched to fit their UI rect, so give them 9-slice
             // borders — otherwise the brass caps and rivets smear as the rect grows.

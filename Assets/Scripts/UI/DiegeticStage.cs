@@ -137,6 +137,28 @@ namespace LastCall.UI
         private const float LampIntensity = 0.55f;
         private const float LampRadius = 92f;
 
+        // ── the fixture slots (2026-08-10): where bought dressing stands ────────
+        // Named hooks in the ROOM ART's own space (art px, bottom-left origin — identical
+        // to stage units at the native 640×360). Each is the BOTTOM-CENTRE of whatever
+        // stands there, chosen against the picture: the plants flank the floor, the
+        // lanterns hang in the gaps the four painted lamps leave (their bulbs are at x
+        // 65/237/406/579), the wall pieces sit on the free wall band between the plant
+        // shelf and the lamps, and the candle stands at the quiet end of the counter.
+        // fixtures.json refers to these by name; an unknown slot warns and stands down.
+        private static readonly Dictionary<string, Vector2> FixtureSlots = new Dictionary<string, Vector2>
+        {
+            { "plant_left", new Vector2(20f, 129f) },
+            { "plant_right", new Vector2(616f, 129f) },
+            { "counter_end", new Vector2(26f, 106f) },
+            { "wall_left", new Vector2(150f, 222f) },
+            { "wall_right", new Vector2(490f, 220f) },
+            { "lamp_left", new Vector2(151f, 266f) },
+            { "lamp_right", new Vector2(493f, 266f) },
+        };
+
+        private readonly List<(LastCall.Core.FixtureDefinition Def, Transform Body, Light2D Glow)>
+            _placedFixtures = new List<(LastCall.Core.FixtureDefinition, Transform, Light2D)>();
+
         private Font _display;
         [SerializeField] private Font displayFont;         // Press Start 2P (headings/numbers)
 
@@ -384,11 +406,86 @@ namespace LastCall.UI
                 float artHStage = _counterNative.y * _counterScale;
                 _counterTr.position = new Vector3(0f, artTopStage - artHStage * 0.5f - Reference.y * 0.5f, 0f);
             }
+
+            PlaceFixtures();
         }
 
         /// <summary>Background-art pixel (y from the TOP, the way art is measured) → world.</summary>
         private Vector3 ArtPxToWorld(Vector2 artPx) =>
             StageArtPointToWorld(new Vector2(artPx.x, _backgroundNative.y - artPx.y));
+
+        // ── the bought dressing ─────────────────────────────────────────────────
+
+        /// <summary>
+        /// Rebuilds the room's dressing to match what the run says the bar owns. Called by
+        /// the HUD whenever the owned set changes (a buy, a refund, a new run) — the stage
+        /// itself never reads the run, it is told, the same way the till is told the money.
+        /// Each piece is a world sprite in the fixture's own slot; a piece whose definition
+        /// shines gets a Light2D of its own, hung at the sprite's glow line.
+        /// </summary>
+        public void SyncFixtures(IReadOnlyList<LastCall.Core.FixtureDefinition> owned)
+        {
+            foreach (var placed in _placedFixtures)
+            {
+                if (placed.Body != null) Destroy(placed.Body.gameObject);
+                if (placed.Glow != null) Destroy(placed.Glow.gameObject);
+            }
+            _placedFixtures.Clear();
+            if (owned == null || _world == null) return;
+
+            foreach (var def in owned)
+            {
+                if (!FixtureSlots.ContainsKey(def.Slot))
+                {
+                    Debug.LogWarning($"DiegeticStage: fixture '{def.Id}' wants unknown slot '{def.Slot}'.");
+                    continue;
+                }
+                var sprite = Resources.Load<Sprite>("Fixtures/" + def.Sprite);
+                if (sprite == null)
+                {
+                    Debug.LogWarning($"DiegeticStage: fixture '{def.Id}' has no sprite " +
+                                     $"'Fixtures/{def.Sprite}' — sold but not drawn.");
+                    continue;
+                }
+                // Room dressing draws between the picture (10) and the bar (30); a piece
+                // standing ON the counter must draw over the counter that holds it — the
+                // candle was sorting behind the bar top and simply vanished (measured on
+                // the first proof shot, 2026-08-10).
+                bool onCounter = def.Slot == "counter_end";
+                var sr = WorldSprite("Fx_" + def.Id, sprite, order: onCounter ? 35 : 20);
+                Light2D glow = null;
+                if (def.HasLight)
+                {
+                    glow = PointLight("FxGlow_" + def.Id,
+                        new Color(def.LightR, def.LightG, def.LightB),
+                        def.LightIntensity, def.LightRadius);
+                }
+                _placedFixtures.Add((def, sr.transform, glow));
+            }
+            PlaceFixtures();
+        }
+
+        /// <summary>Stands every placed piece in its slot for the CURRENT fit — the slots
+        /// ride the room art the way the painted lamps do, so a re-fitted window moves the
+        /// dressing with the picture rather than away from it.</summary>
+        private void PlaceFixtures()
+        {
+            foreach (var placed in _placedFixtures)
+            {
+                var slot = FixtureSlots[placed.Def.Slot];
+                var basePos = _backgroundSr != null
+                    ? StageArtPointToWorld(slot)
+                    : StageToWorld(slot.x, slot.y);
+                float k = _backgroundSr != null ? _backgroundScale : 1f;
+                placed.Body.localScale = new Vector3(k, k, 1f);
+                float h = placed.Body.GetComponent<SpriteRenderer>().sprite.bounds.size.y * k;
+                placed.Body.position = basePos + new Vector3(0f, h * 0.5f, 0f);
+                // The glow hangs at the piece's own light line — the flame, the belly of
+                // the shade — which for every launch fixture is about ⅔ up the sprite.
+                if (placed.Glow != null)
+                    placed.Glow.transform.position = basePos + new Vector3(0f, h * 0.66f, 0f);
+            }
+        }
 
         /// <summary>A point in the background art's own bottom-left space → world, through the
         /// cover fit (scaled about the centre, so the mapping is scale-about-centre too).</summary>

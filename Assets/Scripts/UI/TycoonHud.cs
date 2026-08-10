@@ -871,6 +871,7 @@ namespace LastCall.UI
             CloseId();
             if (_ledgerPanel != null) _ledgerPanel.gameObject.SetActive(false);
             if (_drinkGlass != null) { _drinkGlass.gameObject.SetActive(false); _glassShown = false; _glassGrabbed = false; }
+            _lastFixtureCount = -1;   // force the dressing to re-sync against the new run
             ApplyBarLook();
         }
 
@@ -879,6 +880,7 @@ namespace LastCall.UI
             var run = Run;
             if (run == null) return;
             WatchGlassRack();
+            WatchFixtures();
             FollowPointerWithRecipeTip();
 
             if (run.Phase == TycoonPhase.DayOpen)
@@ -1443,6 +1445,31 @@ namespace LastCall.UI
         /// moves: two float compares a frame against a rack that is silently wrong.
         /// </summary>
         private float _rackCellX = float.NaN, _rackCellY = float.NaN;
+
+        // The dressing is synced by COUNT, the cheapest honest change signal Core
+        // offers: a buy and a refund both move it, and the stage rebuild is seven
+        // sprites at most. -1 forces the first sync of a run, so a fresh bar starts
+        // bare even when the last one was furnished.
+        private int _lastFixtureCount = -1;
+
+        private void WatchFixtures()
+        {
+            var run = Run;
+            if (run == null) return;
+            var stage = _stage != null ? _stage : FindFirstObjectByType<DiegeticStage>();
+            _stage = stage;
+            if (stage == null) return;
+            if (run.OwnedFixtureCount == _lastFixtureCount) return;
+            _lastFixtureCount = run.OwnedFixtureCount;
+            var owned = new List<FixtureDefinition>();
+            foreach (var f in run.FixtureCatalogue)
+                if (run.OwnsFixture(f.Id)) owned.Add(f);
+            stage.SyncFixtures(owned);
+        }
+
+        /// <summary>A fixture's sprite, from its own Resources shelf (PPU 1 — world art).</summary>
+        private static Sprite FixtureArt(string name) =>
+            string.IsNullOrEmpty(name) ? null : Resources.Load<Sprite>("Fixtures/" + name);
 
         private void WatchGlassRack()
         {
@@ -2544,6 +2571,50 @@ namespace LastCall.UI
                         () => run.BuyGlassTier(glass.Id));
                     AddTile(spec);
                 }
+
+                // THE DRESSING (2026-08-10): the modular room pieces. Cosmetic, so no
+                // fitting is spent — a fern changes what the room looks like, not what
+                // the bar can do — and each piece names its own slot in the picture.
+                // Unlike the sealed recipe crates, a gated piece SHOWS itself: hiding
+                // names is the recipe book's mechanic, not the furniture catalogue's.
+                if (run.FixtureCatalogue.Count > 0)
+                {
+                    _cardTarget = ShopSection("THE DRESSING");
+                    foreach (var fx in run.FixtureCatalogue)
+                    {
+                        var f = fx;
+                        var spec = new TileSpec
+                        {
+                            Name = f.Name,
+                            Meta = f.HasLight ? "Dressing · lit" : "Dressing",
+                            Art = FixtureArt(f.Sprite),
+                            ArtH = IconH,
+                            Identity = f.Name.ToUpperInvariant(),
+                            MetaLine = f.HasLight
+                                ? "The room · carries its own light"
+                                : "The room · dressing",
+                            Body = f.Flavor,
+                            BuffA = new Buff(BuffKind.Gain, f.HasLight
+                                ? "Stands in the room and lights it"
+                                : "Stands in the room from tonight"),
+                            BuffB = new Buff(BuffKind.Gain, "Never spends the night's fitting"),
+                        };
+                        if (run.OwnsFixture(f.Id))
+                        {
+                            spec.State = TileState.Held; spec.Word = "OURS";
+                        }
+                        else if (run.Rating.Average < f.Stars)
+                        {
+                            spec.State = TileState.Sealed;
+                            spec.Money = f.Stars.ToString("0.0") + "★";
+                            spec.BuffA = new Buff(BuffKind.Bad, "Needs a " + f.Stars.ToString("0.0")
+                                + "-star room · you are at " + run.Rating.Average.ToString("0.0"));
+                        }
+                        else DressBuyable(spec, f.Price, "fx:" + f.Id, false,
+                            () => run.BuyFixture(f.Id));
+                        AddTile(spec);
+                    }
+                }
             }
 
             // WHAT THE NEXT STAR OPENS (the author). The board only shows what the room's
@@ -2762,6 +2833,10 @@ namespace LastCall.UI
                 case TycoonRun.DayPurchase.Kind.Glassware:
                     foreach (var g in Run.Glassware)
                         if (g.Id == pch.Id) return GlassArt.For(g, Run.GlassTier(g.Id)).Sprite;
+                    return null;
+                case TycoonRun.DayPurchase.Kind.Fixture:
+                    foreach (var f in Run.FixtureCatalogue)
+                        if (f.Id == pch.Id) return FixtureArt(f.Sprite);
                     return null;
                 default:
                     return ItemArt.Load("sh_i_upgrades");
