@@ -861,6 +861,7 @@ namespace LastCall.UI
             // (the author, 2026-08-05).
             ItemArt.ClearCache();
             BottleArt.ClearCache();
+            BottleFluid.ClearCache();   // cavities AND the levels they were last drawn at
             _lastPhase = TycoonPhase.DayOpen;
             _lastStormedCount = 0;
             ResetSeats();

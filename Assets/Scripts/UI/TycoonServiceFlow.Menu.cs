@@ -306,6 +306,26 @@ namespace LastCall.UI
                 if (artH * piece0.Aspect <= artW) artW = artH * piece0.Aspect;
                 else artH = artW / piece0.Aspect;
             }
+            // WHAT IS LEFT IN THE BOTTLE, BACK IN THE BOTTLE (2026-08-10). This is the rebuild
+            // BottleArt's sweep left room for ("when that art lands, the liquid layer gets
+            // rebuilt against it"), not a resurrection of the plate machinery it removed: the
+            // pilot glass is genuinely see-through, so the drink is drawn BEHIND the sprite —
+            // an EARLIER SIBLING in the same rect, so it renders first — and the glass covers
+            // it for free. No back plate, no film, no label to protect.
+            var wet = NewRect("Fluid", slot);
+            wet.anchorMin = wet.anchorMax = new Vector2(0.5f, 0);
+            wet.pivot = new Vector2(0.5f, 0);
+            wet.sizeDelta = new Vector2(artW, artH);
+            wet.anchoredPosition = new Vector2(0, 2f);
+            var fluid = wet.gameObject.AddComponent<BottleFluid>();
+            fluid.raycastTarget = false;
+            var drink = UITheme.StyleColor(card.Info?.Style, card.Type);
+            fluid.color = new Color(drink.r, drink.g, drink.b, shut ? 0.42f : 0.92f);
+            fluid.Bind(ItemArt.Bottle(card), card.Id);
+            fluid.SetLevel(bottle.Capacity > 0.0
+                ? (float)(bottle.Remaining / bottle.Capacity)
+                : 0f);
+
             var art = NewRect("Art", slot);
             art.anchorMin = art.anchorMax = new Vector2(0.5f, 0);
             art.pivot = new Vector2(0.5f, 0);
@@ -318,9 +338,7 @@ namespace LastCall.UI
                 ? UITheme.StyleColor(card.Info?.Style, card.Type)
                 : (shut ? new Color(1f, 1f, 1f, 0.38f) : Color.white);
 
-            // What is left in the bottle lives on the hover card: the drawn-liquid overlay
-            // retired with the layered bottle art (2026-08-07 sweep — the flat sprites are
-            // the whole picture, and a layered set is an external artist's brief now).
+            // The hover card still SAYS what is left; the bottle now shows it.
 
             // A little SIGN under each bottle (the author): a brass-framed plate sized to
             // its own name, pinned to the shelf face — a tabela, not floating text. Sized to
