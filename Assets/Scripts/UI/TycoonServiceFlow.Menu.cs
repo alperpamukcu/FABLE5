@@ -154,7 +154,12 @@ namespace LastCall.UI
             int shelves = Mathf.Max(3, Mathf.CeilToInt(items.Count / (float)perRow));
             // The top padding is headroom for the first shelf's overhanging bottles and
             // must come out of the bands' budget, or the bottom band spills off the page.
-            float shelfH = (areaH - GridGap - ListTopPad) / shelves;
+            // So must EVERY gap between them: the budget used to give back a single GridGap
+            // however many shelves there were, which left the bottom plank a few pixels
+            // under the mask — and raising the headroom to the overhang it actually needs
+            // would have pushed the bottom clean off. The page is now spent exactly:
+            // headroom + the bands + the gaps between them.
+            float shelfH = (areaH - ListTopPad - GridGap * Mathf.Max(0, shelves - 1)) / shelves;
 
             for (int row = 0; row < shelves; row++)
             {
@@ -328,7 +333,7 @@ namespace LastCall.UI
             // and the two would trade hovers.
             var slot = NewRect($"Slot_{card.Id}", band);
             Place(slot, new Vector2(0.5f, 0), new Vector2(slotW - 4f, artH),
-                new Vector2(centreX, ShelfFaceH + 14f));
+                new Vector2(centreX, ShelfFaceH + BottleFoot));
             var hit = slot.gameObject.AddComponent<Image>();
             hit.color = new Color(0, 0, 0, 0.001f);          // invisible, but catches the pointer
 
@@ -348,26 +353,30 @@ namespace LastCall.UI
             // decision now (see BuildShelfPage) so a row can be packed by its bottles'
             // real widths instead of by an even division of the plank.
             //
-            // A BOTTLE IS ITS OWN COLOUR (2026-08-11, the author). The drink layer that
-            // drew behind the glass for one day is gone: the flat-era sprites are opaque,
-            // so it was invisible wherever it was right and spilled past the silhouette
-            // wherever the rect was wider than the art. What is left is on the hover card.
             var body = NewRect("Bottle", slot);
             body.anchorMin = body.anchorMax = new Vector2(0.5f, 0);
             body.pivot = new Vector2(0.5f, 0);
             body.sizeDelta = new Vector2(artW, artH);
-            body.anchoredPosition = new Vector2(0, 2f);
+            body.anchoredPosition = new Vector2(0, BottleStand);
+
+            var sprite = ItemArt.Bottle(card);
+
+            // What is left, drawn behind the glass and cut out by it — see BottleFill for
+            // why it is a stencil and not a rect (2026-08-11, the author: "şişeler boş
+            // görünüyor"). Built BEFORE the art so the art draws over it.
+            BottleFill.Under(body).Show(
+                sprite, UITheme.LiquidColor(card.Info?.Style, card.Type),
+                bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 0.0,
+                shut ? 0.38f : 1f);
 
             var art = NewRect("Art", body);
             Stretch(art, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var img = art.gameObject.AddComponent<Image>();
-            img.sprite = ItemArt.Bottle(card);
+            img.sprite = sprite;
             img.preserveAspect = true; img.raycastTarget = false;
             img.color = img.sprite == null
                 ? UITheme.StyleColor(card.Info?.Style, card.Type)
                 : (shut ? new Color(1f, 1f, 1f, 0.38f) : Color.white);
-
-            // The hover card still SAYS what is left; the bottle now shows it.
 
             // A little SIGN under each bottle (the author): a brass-framed plate sized to
             // its own name, pinned to the shelf face — a tabela, not floating text. Sized to
@@ -413,7 +422,7 @@ namespace LastCall.UI
             // The bottle answers the pointer whether or not it can be taken: a bottle that is OUT
             // still lifts, because "you found the thing" and "the thing will do something" are two
             // different answers and the player needs the first one to trust the shelf at all.
-            Pressable(slot, body, img, lift: shut ? 2f : 5f, depth: shut ? 0f : 5f);
+            Pressable(slot, body, img, lift: shut ? 2f : HoverLift, depth: shut ? 0f : 5f);
 
             var trigger = slot.gameObject.AddComponent<EventTrigger>();
             var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
@@ -550,9 +559,32 @@ namespace LastCall.UI
         /// it read as stock rather than as a display.</summary>
         private const float BottleGap = 10f;
 
-        /// <summary>Mask headroom above the first shelf band, so the top row's bottles —
-        /// which overhang their band by ~10px like every row's do — keep their heads.</summary>
-        private const float ListTopPad = 16f;
+        /// <summary>How high a bottle's foot stands above the shelf face — the plank has
+        /// depth, and a bottle stands on the middle of it rather than on its front edge.</summary>
+        private const float BottleFoot = 14f;
+
+        /// <summary>The last two pixels of stand-off between the slot and the art itself.</summary>
+        private const float BottleStand = 2f;
+
+        /// <summary>How far the pointer raises a bottle out of the row.</summary>
+        private const float HoverLift = 5f;
+
+        /// <summary>Mask headroom above the first shelf band, so the top row's bottles keep
+        /// their heads.
+        ///
+        /// DERIVED, NOT CHOSEN (2026-08-11, the author: "backbarın en üstündeki alkollerin
+        /// en üstü kesiliyor"). This was 16, written when a bottle overhung its band by
+        /// about ten pixels. It does not any more: the art grew to <c>shelfH − ShelfFaceH +
+        /// BottleRise</c> while its foot stayed at <c>ShelfFaceH + BottleFoot</c>, so the
+        /// real overhang is <c>BottleFoot + BottleStand + BottleRise</c> — twenty-six — and
+        /// the pointer adds another five on top of that. Ten pixels of every top-row bottle
+        /// were being clipped, which on a tall bottle is exactly its cap.
+        ///
+        /// So the number is no longer a guess: it is the sum of the four things that lift a
+        /// bottle above its band, plus two pixels of air — measured in play at 11px of
+        /// overhang against 10 predicted, which is close enough to want the rounding to have
+        /// somewhere to go.</summary>
+        private const float ListTopPad = BottleFoot + BottleStand + BottleRise + HoverLift + 2f;
         private RectTransform _kegRow;
         private static readonly Color ShelfWood = new Color(0.30f, 0.19f, 0.12f, 1f);
         private static readonly Color ShelfLip = new Color(0.46f, 0.31f, 0.19f, 1f);

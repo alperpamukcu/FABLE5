@@ -131,6 +131,7 @@ namespace LastCall.UI
         private RectTransform _serveCabinet, _serveCabinetShelf;
         private RectTransform _serveBottle;        // the bottle in hand
         private Image _serveBottleImage;
+        private BottleFill _serveFill;             // what is left in it, behind the glass
         private IngredientCard _serveFocusBottle;
         private bool _serveBottleGrabbed;
         private Vector2 _serveBottleRest;
@@ -229,7 +230,7 @@ namespace LastCall.UI
             int slot = 0;
             foreach (var bottle in run.Shelf.Bottles)
                 if (IsGlassSide(bottle.Ingredient) && !bottle.IsEmpty)
-                    AddCabinetBottle(bottle.Ingredient, slot++);
+                    AddCabinetBottle(bottle, slot++);
         }
 
         /// <summary>Where the n-th thing on the prep table stands, and how big it is drawn:
@@ -444,8 +445,9 @@ namespace LastCall.UI
         /// long you hold it there. Sized off its own art, so a squat cola bottle and a tall
         /// siphon stand at their true proportions behind the door.
         /// </summary>
-        private void AddCabinetBottle(IngredientCard card, int index)
+        private void AddCabinetBottle(ShelfBottle stock, int index)
         {
+            var card = stock.Ingredient;
             // Which wire shelf, which place on it, which rank. The front rank fills all
             // three shelves first; what will not fit stands BEHIND the front rank — a shelf
             // with two ranks reads as a stocked fridge, and the depth stays playable because
@@ -475,7 +477,19 @@ namespace LastCall.UI
             var hit = slot.gameObject.AddComponent<Image>();
             hit.color = new Color(1f, 1f, 1f, 0.001f);   // the whole slot takes the press
 
-            var art = NewRect("Bottle", slot);
+            // The drink and the glass travel together — one rect holds both, so the hover
+            // lift raises a full bottle rather than sliding its art off its contents, and
+            // taking it into the hand empties its place on the wire.
+            var body = NewRect("Body", slot);
+            Stretch(body, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+            // A fridge full of mixers reads as stock only if the bottles are stocked: the
+            // drink stands behind the glass here for the same reason it does on the wall.
+            BottleFill.Under(body).Show(
+                ItemArt.Bottle(card), UITheme.LiquidColor(card.Info?.Style, card.Type),
+                stock.Capacity > 0 ? stock.Remaining / stock.Capacity : 0.0);
+
+            var art = NewRect("Bottle", body);
             Stretch(art, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var img = art.gameObject.AddComponent<Image>();
             img.sprite = ItemArt.Bottle(card);
@@ -491,7 +505,7 @@ namespace LastCall.UI
             name.text = RailLabel(card);
             name.gameObject.SetActive(false);
 
-            Pressable(slot, art, img, lift: 5f, depth: 5f);
+            Pressable(slot, body, img, lift: 5f, depth: 5f);
 
             var c = card;
             var trig = slot.gameObject.AddComponent<EventTrigger>();
@@ -500,7 +514,7 @@ namespace LastCall.UI
             {
                 var run = Run;
                 if (run == null) return;
-                TakeCabinetBottle(run, c, art);
+                TakeCabinetBottle(run, c, body);
             });
             trig.triggers.Add(down);
             // Hover pulls the bottle to the front of anything it stands behind (the rank-2
@@ -529,6 +543,7 @@ namespace LastCall.UI
             _serveBottleImage.sprite = ItemArt.Bottle(c);
             _serveBottleImage.color = _serveBottleImage.sprite != null
                 ? Color.white : UITheme.StyleColor(c.Info?.Style, c.Type);
+            PushServeFill(run);
             _servePourTotal = 0;
             _serveBottle.anchoredPosition = _serveBottleRest;
             _serveBottle.localRotation = Quaternion.identity;
@@ -548,10 +563,12 @@ namespace LastCall.UI
             var run = Run;
             if (run == null || _serveCabinetShelf == null) return;
             var slot = _serveCabinetShelf.Find($"M_{ingredientId}") as RectTransform;
-            var art = slot != null ? slot.Find("Bottle") as RectTransform : null;
+            // "Body", not "Bottle": the art shares a rect with the drink behind it now, and
+            // hiding only the glass would leave a bottle's contents standing on the wire.
+            var body = slot != null ? slot.Find("Body") as RectTransform : null;
             var card = run.Shelf.Find(ingredientId)?.Ingredient;
-            if (art == null || card == null) return;
-            TakeCabinetBottle(run, card, art);
+            if (body == null || card == null) return;
+            TakeCabinetBottle(run, card, body);
         }
 
         /// <summary>
@@ -649,8 +666,25 @@ namespace LastCall.UI
                     // The bottle ran dry mid-pour: put it down and rebuild the shelf without it.
                     PutTheBottleBack(run);
                     RefreshServe();
+                    return;
                 }
             }
+
+            // Every frame the bottle is in hand, pouring or not: it is draining while you
+            // hold it over the glass, so a level set once on pick-up would be a lie by the
+            // second measure.
+            PushServeFill(run);
+        }
+
+        /// <summary>How full the bottle in hand is, read off the shelf it came from.</summary>
+        private void PushServeFill(TycoonRun run)
+        {
+            if (_serveFill == null) return;
+            if (_serveFocusBottle == null) { _serveFill.Hide(); return; }
+            var stock = run?.Shelf?.Find(_serveFocusBottle.Id);
+            _serveFill.Show(_serveBottleImage.sprite,
+                UITheme.LiquidColor(_serveFocusBottle.Info?.Style, _serveFocusBottle.Type),
+                stock != null && stock.Capacity > 0 ? stock.Remaining / stock.Capacity : 0.0);
         }
 
         /// <summary>
@@ -1031,7 +1065,13 @@ namespace LastCall.UI
             _serveBottle.pivot = new Vector2(0.5f, 0.22f);
             _serveBottle.sizeDelta = new Vector2(118, ServeVesselH);
             _serveBottle.anchoredPosition = _serveBottleRest;
-            _serveBottleImage = _serveBottle.gameObject.AddComponent<Image>();
+            // The drink first, then the art in a CHILD of its own. It cannot stay on the
+            // hand rect itself: a parent Graphic draws before its children, so the bottle
+            // would have gone behind its own contents however the fill was ordered.
+            _serveFill = BottleFill.Under(_serveBottle);
+            var serveArt = NewRect("Art", _serveBottle);
+            Stretch(serveArt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _serveBottleImage = serveArt.gameObject.AddComponent<Image>();
             _serveBottleImage.preserveAspect = true;
             _serveBottleImage.raycastTarget = false;
             _serveBottle.gameObject.SetActive(false);

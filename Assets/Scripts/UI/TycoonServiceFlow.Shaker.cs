@@ -19,6 +19,7 @@ namespace LastCall.UI
 
         private RectTransform _pourBottle;    // the grabbable bottle
         private Image _pourBottleBody;
+        private BottleFill _pourFill;         // what is left in it, behind the glass
         private MetaballFluid _shakerFluid;   // the metaball liquid: pour stream + pooled body
         private Splasher _shakerSplash;       // brief splashes (dissolving salt / sugar)
         private ShakerSolids _shakerSolids;   // ice / lemon afloat inside the shaker
@@ -226,6 +227,7 @@ namespace LastCall.UI
             var bottleSprite = ItemArt.BottleOpen(_focusBottle);
             _pourBottleBody.sprite = bottleSprite;
             _pourBottleBody.color = bottleSprite != null ? Color.white : colour;   // real art, else the style tint
+            PushPourFill(run);
             _pourBottle.anchoredPosition = _bottleRest;
             _pourBottle.localRotation = Quaternion.identity;
             _shakerSplash.Clear();
@@ -336,6 +338,22 @@ namespace LastCall.UI
             if (pourNow) _shakerLoopWanted = "pour_loop";   // the stage frame drives the source
             if (pourNow) RefreshShakerMixBar(run);          // the gauge follows the stream
             _pouring = pourNow;
+
+            // Every frame, not only the pouring ones: the bottle in hand is the same bottle
+            // that stands on the wall, and it drains while you hold it over the tin. Setting
+            // it once on the way in would show the level it had when you picked it up.
+            PushPourFill(run);
+        }
+
+        /// <summary>How full the bottle in hand is, read off the shelf it came from.</summary>
+        private void PushPourFill(TycoonRun run)
+        {
+            if (_pourFill == null) return;
+            if (_focusBottle == null) { _pourFill.Hide(); return; }
+            var stock = run?.Shelf?.Find(_focusBottle.Id);
+            _pourFill.Show(_pourBottleBody.sprite,
+                UITheme.LiquidColor(_focusBottle.Info?.Style, _focusBottle.Type),
+                stock != null && stock.Capacity > 0 ? stock.Remaining / stock.Capacity : 0.0);
         }
 
         /// <summary>
@@ -749,17 +767,16 @@ namespace LastCall.UI
             // The art is a CHILD of the grab rect, which is itself an invisible hit plate:
             // a bottle is a narrow silhouette and the grab has to be the whole slot.
             //
-            // NOTHING IS DRAWN BEHIND IT (2026-08-11, the author: "şişelerin içerisindeki
-            // sıvılar sağdan soldan taşıyor"). A drink layer lived here for one day, and it
-            // could only ever have looked wrong: the shipped bottles are the FLAT era's,
-            // alpha 255 across the body, so the drink behind one was invisible everywhere
-            // it was correct — and visible only where it fell OUTSIDE the silhouette. The
-            // grab rect is a fixed 180 wide while the art is preserveAspect-letterboxed
-            // inside it, so that outside was a bar of colour down each side. What a bottle
-            // holds is its OWN art's colour; how much is left is on the hover card, which
-            // is where the 2026-08-07 sweep put it.
+            // The drink rides BEHIND the art, cut out by it (2026-08-11, the author:
+            // "hepsinde ne kadar miktarı kaldıysa o kadar doluluk olmalı"). The bar of
+            // colour that used to run down either side of this bottle is exactly what the
+            // stencil removes: the grab rect is a fixed 180 wide and the art is
+            // letterboxed inside it, so a plain rectangle of drink had nothing to stop it
+            // at the glass. See BottleFill.
             var hitBottle = _pourBottle.gameObject.AddComponent<Image>();
             hitBottle.color = new Color(0, 0, 0, 0.001f);   // invisible, still grabbable
+
+            _pourFill = BottleFill.Under(_pourBottle);
 
             var pourArt = NewRect("Body", _pourBottle);
             Stretch(pourArt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
