@@ -22,11 +22,17 @@ namespace LastCall.UI
     /// its shadow and the wallet plaque (−10), and the lettered sign (−9), whose pixel
     /// text needs the canvas rasterizer.
     ///
-    /// One world unit is one stage unit: the PixelPerfectCamera holds the camera at
-    /// ortho 180 over a 640×360 reference, so the visible world is 360×aspect wide —
-    /// exactly the width CanvasScaler gives the overlay UI at match-height, which is how
-    /// the stage sprites and the HUD keep agreeing about where things are. All public
-    /// coordinates remain in the 640×360 reference space with a bottom-left origin.
+    /// One world unit is one stage unit, and the PixelPerfectCamera draws it at a WHOLE
+    /// number of screen pixels — two at a 1052px window, three at 1440p. How much room
+    /// that shows follows from the window: 526 units of height at 1052px, not 360, with
+    /// the backdrop, the picture and the counter all bleeding out to fill it. Spare window
+    /// is spare bar; there are no black bars, and the camera is never cropped.
+    ///
+    /// The overlay canvases are pinned to that same whole number (see
+    /// <see cref="DesignFrame"/>) rather than scaling smoothly off the height, which is
+    /// what they used to do and is what made the props slide on the counter: the world
+    /// drew at 2× while the UI drew at 2.92×. All public coordinates remain in the
+    /// 640×360 reference space with a bottom-left origin.
     /// </summary>
     public sealed class DiegeticStage : MonoBehaviour
     {
@@ -206,7 +212,7 @@ namespace LastCall.UI
         private void Awake()
         {
             Application.runInBackground = true; // keep animations advancing unfocused
-            Windowbox();
+            FillTheWindow();
             _display = displayFont != null
                 ? displayFont : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (portraits != null)
@@ -224,36 +230,33 @@ namespace LastCall.UI
         }
 
         /// <summary>
-        /// Crops the camera to the stage's own 16:9, so a window of any shape shows exactly
-        /// the room and not a strip of whatever is beside it.
+        /// Makes sure the camera fills the window rather than boxing itself inside it.
         ///
-        /// Set in code rather than left to the scene asset because it is the other half of
-        /// <see cref="VisibleWidth"/>: the geometry is pinned at 640×360 here, and a camera
-        /// still showing 360×aspect would simply reveal the edges of the room on a wide
-        /// window. The two have to be true together or neither is worth setting.
+        /// Windowboxing it was the wrong half of the right idea (2026-08-11): it did stop
+        /// the room from stretching, and it did it by drawing black bars, which the author
+        /// rejected on sight — a wide monitor should get more bar, not a smaller one in a
+        /// frame. So the camera keeps showing 360 × aspect and the ROOM fills whatever that
+        /// is; what stopped moving instead is everything the player reads or touches, which
+        /// now lives in a fixed safe frame (see <see cref="DesignFrame"/>).
         /// </summary>
-        private static void Windowbox()
+        private static void FillTheWindow()
         {
             var cam = Camera.main;
             if (cam == null) return;
             var ppc = cam.GetComponent<UnityEngine.Rendering.Universal.PixelPerfectCamera>();
             if (ppc == null) return;
-            ppc.cropFrame = UnityEngine.Rendering.Universal.PixelPerfectCamera.CropFrame.Windowbox;
+            ppc.cropFrame = UnityEngine.Rendering.Universal.PixelPerfectCamera.CropFrame.None;
         }
 
-        /// <summary>
-        /// The visible world width in stage units — 640, always.
-        ///
-        /// It used to be 360 × aspect, read off the camera, so that the stage and the
-        /// match-height UI canvases agreed about it however the window was shaped. They did
-        /// agree, and the agreement was the problem: a wider window was a wider room, the
-        /// counter was scaled to fill it, and everything standing on the counter moved with
-        /// it (2026-08-11, the author, with two screenshots of the same bar at two window
-        /// sizes). The room is windowboxed to its 640×360 reference now — the camera crops
-        /// to it, the overlay canvases each hold a fixed field of it — so the number that
-        /// used to follow the window is simply the reference again.
-        /// </summary>
-        private static float VisibleWidth() => Reference.x;
+        /// <summary>The visible world width in stage units: 360 × aspect, read off the
+        /// camera. The BACKGROUND uses it — the backdrop, the room's cover fit and the
+        /// counter all bleed out to whatever the window is, so there is never a border.
+        /// Nothing the player touches is placed by it; that is the safe frame's job.</summary>
+        private static float VisibleWidth()
+        {
+            var cam = Camera.main;
+            return cam != null ? cam.orthographicSize * 2f * cam.aspect : Reference.x;
+        }
 
         /// <summary>Stage units (bottom-left origin) → world position. One world unit is one
         /// stage unit; the camera sits over the stage's centre.</summary>

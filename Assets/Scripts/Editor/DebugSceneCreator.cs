@@ -75,12 +75,12 @@ namespace LastCall.EditorTools
             ppc.refResolutionX = 640;
             ppc.refResolutionY = 360;
             ppc.gridSnapping = UnityEngine.Rendering.Universal.PixelPerfectCamera.GridSnapping.PixelSnapping;
-            // WINDOWBOX (2026-08-11, the author: the props kept sliding against the room as
-            // the window changed shape). None let the camera show 360×aspect, so a wider
-            // window was a wider bar and everything measured off that width moved with it.
-            // Cropped to the reference, the room is 640×360 at every window shape and the
-            // UI's DesignFrames centre and scale by the same rule, so they coincide exactly.
-            ppc.cropFrame = UnityEngine.Rendering.Universal.PixelPerfectCamera.CropFrame.Windowbox;
+            // NO CROP (2026-08-11): the camera fills the window and a wider one simply
+            // shows more room. Windowboxing was tried for one commit and drew black bars,
+            // which is not what a 2D game does with a monitor it did not choose. What holds
+            // still instead is the SAFE FRAME the UI is built in (DesignFrame) — the room
+            // grows, the game does not move.
+            ppc.cropFrame = UnityEngine.Rendering.Universal.PixelPerfectCamera.CropFrame.None;
 
             // The bloom volume finally has somewhere to render: HDR light in the world.
             // The UI never blooms — overlay canvases draw after the camera entirely.

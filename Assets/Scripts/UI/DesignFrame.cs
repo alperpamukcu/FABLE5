@@ -1,57 +1,62 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace LastCall.UI
 {
     /// <summary>
-    /// A field of FIXED size inside a canvas, so what is drawn stops depending on the
-    /// shape of the window.
+    /// The safe frame: a field of FIXED size, centred, drawn at the same whole-pixel scale
+    /// as the room behind it, holding everything the player reads or touches.
     ///
-    /// The author, 2026-08-11: "ekran boyutu oynayınca nesnelerin yerleri kayıyor, ölçünün
-    /// hep sabit olması lazım." Every canvas here scales off the HEIGHT (match 1), which
-    /// pins the vertical at 720 units and lets the WIDTH be 720×aspect — so a wider window
-    /// is a wider bar. That was on purpose and it is also the fault: the back bar packs its
-    /// rows by the width it is given, so dragging the window edge repacked the shelves,
-    /// resized every bottle, and moved everything that was measured off an edge.
+    /// This is how a pixel-art game handles a window it did not choose (the author,
+    /// 2026-08-11: "gerçekteki 2d oyunlar nasıl bir yöntem izliyorsa öyle yapalım"), and it
+    /// is three rules that only work together:
     ///
-    /// A fixed field is the usual answer. The layout gets one size forever — the design
-    /// size — and the frame is scaled to fit whatever the window happens to be. Wider than
-    /// 16:9 and the scale stays 1 with the room simply ending; narrower and the whole field
-    /// shrinks together, which keeps the composition and loses only sharpness, in the one
-    /// case where something has to give.
+    ///   1. ONE SCALE, AND IT IS A WHOLE NUMBER. The PixelPerfectCamera snaps the world to
+    ///      an integer zoom — at 1052px of window height it draws 2 screen pixels per stage
+    ///      unit and shows 526 units of room. The canvases are pinned to that same number
+    ///      instead of scaling smoothly off the height, which is where this went wrong: the
+    ///      world was drawing at 2x while the UI drew at 2.92x, so the glasses, the till and
+    ///      the bin could not help sliding against the counter they stand on. A pixel is a
+    ///      pixel everywhere now, and it is square.
+    ///   2. SPARE ROOM IS ROOM. Whatever the window has left over shows more bar — the
+    ///      backdrop, the room picture and the counter all bleed out to fill it. Black bars
+    ///      are what you get for boxing the camera in, and the author rejected them on
+    ///      sight: a wide monitor should buy a wider bar.
+    ///   3. THE FIELD DOES NOT MOVE. Everything laid out in here is centred and never
+    ///      rescales or repacks, so nothing drifts against the room at any window size.
     ///
-    /// It is deliberately NOT a stretch: nothing inside may be anchored to a screen edge,
-    /// because the point is that there are no screen edges any more, only field edges.
+    /// Narrower than the design and the field's edges crop, which is the trade the author
+    /// asked for by name — a very narrow window loses a little of the game rather than
+    /// shrinking all of it. Anything that must survive that belongs nearer the middle;
+    /// that is what a safe frame is for.
+    ///
+    /// Nothing inside may anchor to a screen edge, because there are no screen edges in
+    /// here — only field edges, which is the whole point.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class DesignFrame : MonoBehaviour
     {
+        /// <summary>The height the ROOM is authored at, in stage units. Every canvas's scale
+        /// is expressed against it, which is what keeps them all in step with the world.</summary>
+        public const float StageHeight = 360f;
+
         [SerializeField] private Vector2 _design = new Vector2(1280f, 720f);
 
-        private RectTransform _self, _host;
-        private Vector2 _lastHost = new Vector2(-1f, -1f);
-        private Vector2 _lastDesign = new Vector2(-1f, -1f);
-        private Vector2 _lastView = new Vector2(-1f, -1f);
-
-        /// <summary>The cropped viewport in screen pixels, or zero when there is no camera
-        /// to match — a menu scene with no room behind it falls back to a plain fit.</summary>
-        private static Vector2 Viewport()
-        {
-            var cam = Camera.main;
-            return cam != null ? new Vector2(cam.pixelRect.width, cam.pixelRect.height)
-                               : Vector2.zero;
-        }
+        private RectTransform _self;
+        private CanvasScaler _scaler;
+        private float _lastFactor = -1f;
 
         /// <summary>Puts a fixed <paramref name="design"/>-sized field inside
         /// <paramref name="host"/> and hands it back to build in.</summary>
         public static RectTransform Wrap(RectTransform host, Vector2 design)
         {
-            var go = new GameObject("DesignFrame", typeof(RectTransform));
+            var go = new GameObject("SafeFrame", typeof(RectTransform));
             var rt = (RectTransform)go.transform;
             rt.SetParent(host, false);
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = design;
             rt.anchoredPosition = Vector2.zero;
             rt.localScale = Vector3.one;
+            rt.sizeDelta = design;
             var frame = go.AddComponent<DesignFrame>();
             frame._design = design;
             frame.Fit();
@@ -61,60 +66,45 @@ namespace LastCall.UI
         private void Awake()
         {
             _self = (RectTransform)transform;
-            _host = transform.parent as RectTransform;
+            _scaler = GetComponentInParent<CanvasScaler>();
         }
 
-        // The frame's OWN rect never changes, so it cannot be told by
-        // OnRectTransformDimensionsChange that anything happened — it is the host that
-        // resizes. Watching the host for a change is both the cheapest way to hear about
-        // it and the only one that survives a window drag, which fires continuously.
+        private void OnEnable() { _lastFactor = -1f; Fit(); }
+
         private void LateUpdate() => Fit();
 
-        // A disabled frame gets no LateUpdate, and the service flow spends most of its life
-        // disabled: measured at build time it had cached the canvas rect in SCREEN pixels —
-        // the CanvasScaler had not run yet — and sat at 1.33 until something woke it. So the
-        // cache is dropped whenever the frame comes back, and the first frame it is seen on
-        // is already the right size rather than one frame late.
-        private void OnEnable()
+        /// <summary>Screen pixels per stage unit, as the camera is actually drawing them.
+        /// Read off the camera rather than recomputed, so however the PixelPerfectCamera
+        /// decides to round, the UI rounds with it.</summary>
+        private static float PixelsPerStageUnit()
         {
-            _lastHost = new Vector2(-1f, -1f);
-            Fit();
+            var cam = Camera.main;
+            if (cam == null || !cam.orthographic || cam.orthographicSize <= 0f) return 0f;
+            return Screen.height / (cam.orthographicSize * 2f);
         }
 
         private void Fit()
         {
             if (_self == null) _self = (RectTransform)transform;
-            if (_host == null) _host = transform.parent as RectTransform;
-            if (_host == null) return;
+            if (_scaler == null) _scaler = GetComponentInParent<CanvasScaler>();
 
-            // The design is part of the cache key, not just the host size. AddComponent runs
-            // OnEnable *inside* the call, before Wrap can hand over the design it was asked
-            // for — so the first Fit always runs on the default 1280x720, and a cache keyed
-            // on the host alone would then refuse to hear that the caller wanted 640x360.
-            // Every stage canvas came out at twice its reference that way.
-            var size = _host.rect.size;
-            if (size.x <= 0f || size.y <= 0f) return;
-            var view = Viewport();
-            if (size == _lastHost && _design == _lastDesign && view == _lastView) return;
-            _lastHost = size;
-            _lastDesign = _design;
-            _lastView = view;
+            // The size is a constant; holding it costs nothing and stops a stray layout
+            // group or stretch from quietly turning the safe frame back into a
+            // window-shaped one.
+            if (_self.sizeDelta != _design) _self.sizeDelta = _design;
+            if (_self.localScale != Vector3.one) _self.localScale = Vector3.one;
 
-            // Fit to the CAMERA's viewport, not to the canvas. The room is windowboxed by a
-            // PixelPerfectCamera, which snaps to a whole pixel scale — a 1292px window came
-            // back as a 1280px viewport — while an overlay canvas always covers the window
-            // entire. Min-fitting the canvas would leave the UI 0.9% larger than the room
-            // standing behind it: six pixels of drift at each edge, which is exactly the
-            // drift this class exists to remove. Matched to the viewport, the till sits on
-            // the end of the counter at every window size.
-            float pxPerUnit = Screen.width / size.x;
-            float k = view.x > 0f && pxPerUnit > 0f
-                ? (view.x / pxPerUnit) / _design.x
-                : Mathf.Min(size.x / _design.x, size.y / _design.y);
-            if (k <= 0f || float.IsNaN(k) || float.IsInfinity(k)) k = 1f;
-
-            _self.sizeDelta = _design;
-            _self.localScale = new Vector3(k, k, 1f);
+            if (_scaler == null) return;
+            float px = PixelsPerStageUnit();
+            if (px <= 0f) return;
+            // A canvas authored at 720 for a 360-unit room draws half a stage unit per
+            // canvas unit, so it wants half the pixels. Constant pixel size, not
+            // scale-with-height: the number has to be the camera's, not the window's.
+            float factor = px * StageHeight / _design.y;
+            if (Mathf.Approximately(factor, _lastFactor)) return;
+            _lastFactor = factor;
+            _scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
+            _scaler.scaleFactor = factor;
         }
     }
 }
