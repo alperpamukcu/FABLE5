@@ -1009,6 +1009,7 @@ namespace LastCall.UI
             UpdateOrderTip();     // after the seats: it reads the tickets they just placed
             UpdateDrinkGlass();
             UpdateEscape();
+            StepStarDrop();
         }
 
         /// <summary>
@@ -2470,7 +2471,7 @@ namespace LastCall.UI
         // off. Every line moves up one legal step: the pixel faces rasterise cleanly only at
         // whole multiples of 8, so 8 goes to 16 and 16 to 24, and the rows and the marks
         // grow with them rather than the type growing inside its old gutter.
-        private const float BillW = 456f, BillH = 600f, BillHeadH = 62f, BillRowH = 30f;
+        private const float BillW = 456f, BillH = 600f, BillHeadH = 62f, BillRowH = 26f;
         private const float BillInset = 36f;   // type margin inside the sheet
         private static readonly Color BillPaper = new Color(0.965f, 0.945f, 0.886f, 1f);
         private static readonly Color BillEdge = new Color(0.62f, 0.58f, 0.50f, 1f);
@@ -2486,6 +2487,89 @@ namespace LastCall.UI
         /// the lit row revealed through a mask the way the top bar's standing is. A number
         /// says how the night went; a row of stars is SEEN going that way.
         /// </summary>
+        // ── the stars fall in (2026-08-11) ──────────────────────────────────────
+        //
+        // The author: the paper comes up empty and the stars drop onto it one at a time,
+        // the last one a half if the night earned a half — "yıldızlar böyle sırayla inince
+        // heyecan yaratacağını düşündüm".
+        //
+        // Each star falls from above its place, overshoots and settles, and the next starts
+        // before the one before it has finished — a stagger shorter than the drop, so the
+        // row reads as a run rather than as five separate events. The HALF star needs no
+        // special case: the mask that always cut the row to the night's fraction cuts the
+        // last star down the middle, and now it does it to a star that is falling.
+        private readonly List<RectTransform> _billStars = new List<RectTransform>();
+        private float _starT = -1f;      // < 0 = not running
+        private int _starCount;          // how many are due to land
+        private const float StarFallH = 70f;     // how far above its place a star starts
+        private const float StarDrop = 0.5f;     // one star's fall and settle
+        private const float StarStagger = 0.42f; // the gap between two starting
+
+        /// <summary>Empties the row and starts the run. Reduced motion places them.</summary>
+        private void StartStarDrop(float frac)
+        {
+            _starCount = Mathf.CeilToInt(Mathf.Clamp01(frac) * 5f - 0.001f);
+            if (Motion.Reduced || _billStars.Count == 0) { _starT = -1f; return; }
+            _starT = 0f;
+            foreach (var s in _billStars)
+            {
+                s.localScale = Vector3.one;
+                var g = s.GetComponent<Image>();
+                if (g != null) g.color = new Color(g.color.r, g.color.g, g.color.b, 0f);
+            }
+        }
+
+        private void StepStarDrop()
+        {
+            if (_starT < 0f || _billStars.Count == 0) return;
+            _starT += Time.unscaledDeltaTime;
+            bool running = false;
+            for (int i = 0; i < _billStars.Count; i++)
+            {
+                var star = _billStars[i];
+                if (star == null) continue;
+                var img = star.GetComponent<Image>();
+                if (i >= _starCount)
+                {
+                    // Past the night's count: nothing to land, and the mask hides it anyway.
+                    if (img != null) img.color = Opaque(img.color);
+                    continue;
+                }
+                float t = _starT - i * StarStagger;
+                if (t < 0f)
+                {
+                    if (img != null) img.color = Clear(img.color);
+                    star.anchoredPosition = new Vector2(star.anchoredPosition.x, StarFallH);
+                    running = true;
+                    continue;
+                }
+                float k = Mathf.Clamp01(t / StarDrop);
+                // Out-back: it falls past its place and rocks back into it.
+                const float Over = 1.7f;
+                float u = k - 1f;
+                float e = u * u * ((Over + 1f) * u + Over) + 1f;
+                star.anchoredPosition = new Vector2(star.anchoredPosition.x,
+                    Mathf.Lerp(StarFallH, 0f, e));
+                // ...and rolls as it lands, the wobble dying with the fall.
+                star.localRotation = Quaternion.Euler(0, 0,
+                    Mathf.Sin(k * Mathf.PI * 3f) * 14f * (1f - k));
+                if (img != null)
+                    img.color = new Color(img.color.r, img.color.g, img.color.b,
+                                          Mathf.Clamp01(k * 4f));
+                if (k < 1f) running = true;
+            }
+            if (!running)
+            {
+                foreach (var s in _billStars)
+                    if (s != null) { s.anchoredPosition = new Vector2(s.anchoredPosition.x, 0f);
+                                     s.localRotation = Quaternion.identity; }
+                _starT = -1f;
+            }
+        }
+
+        private static Color Clear(Color c) => new Color(c.r, c.g, c.b, 0f);
+        private static Color Opaque(Color c) => new Color(c.r, c.g, c.b, 1f);
+
         private float BillStars(float y, float frac)
         {
             const float StarPx = 32f, Gap = 6f;   // the 16px star at a whole 2x
@@ -2509,14 +2593,21 @@ namespace LastCall.UI
             var lit = NewRect("Lit", host);
             lit.anchorMin = new Vector2(0, 0); lit.anchorMax = new Vector2(0, 1);
             lit.pivot = new Vector2(0, 0.5f);
-            lit.sizeDelta = new Vector2(rowW * Mathf.Clamp01(frac), 0);
+            // TALLER THAN THE ROW, on purpose (2026-08-11). The mask is what cuts a half
+            // star in half, and it has to keep doing that — but the stars now FALL into
+            // place, and a mask the height of the row would clip the fall to nothing. Extra
+            // height changes no horizontal clipping at all, which is the only clipping this
+            // mask was ever for.
+            lit.sizeDelta = new Vector2(rowW * Mathf.Clamp01(frac), StarFallH * 2f);
             lit.anchoredPosition = Vector2.zero;
             lit.gameObject.AddComponent<RectMask2D>();
+            _billStars.Clear();
             for (int i = 0; i < 5; i++)
             {
                 var on = NewRect("L" + i, lit);
                 Place(on, new Vector2(0, 0.5f), new Vector2(StarPx, StarPx),
                     new Vector2(i * (StarPx + Gap) + StarPx * 0.5f, 0));
+                _billStars.Add(on);
                 on.pivot = new Vector2(0.5f, 0.5f);
                 var oi = on.gameObject.AddComponent<Image>();
                 oi.sprite = art; oi.preserveAspect = true; oi.raycastTarget = false;
@@ -2533,27 +2624,33 @@ namespace LastCall.UI
         /// </summary>
         private float BillCritic(float y, CustomerVisit v, Color ink)
         {
-            // A POLAROID (2026-08-11, the author): the same white border a print has, thicker
-            // under the picture than around it, dropped on the slip at a slight angle. It is
-            // a night's two witnesses stapled to the takings, and a print says that; a bare
-            // square crop said only "here is a face".
-            const float Photo = 44f, Frame = 4f, Chin = 12f;
+            // ONE LINE, IN COLUMNS (2026-08-11, the author: not two stacked lines, a bit
+            // more table-like without being a table; the name smaller and lighter; no star
+            // pictogram for the score; and the DRINK shown by its own icon).
+            //
+            // The columns are the receipt's own: the picture, the drink, the name and what
+            // happened, and the score in the same right-hand column the money lands in. That
+            // last alignment is what makes it read as a book rather than as a caption —
+            // without a single rule being drawn.
+            const float Photo = 34f, Frame = 3f, Chin = 9f, Glyph = 20f;
             float cardW = Photo + Frame * 2f, cardH = Photo + Frame + Chin;
-            float RowH = Mathf.Max(64f, cardH + 8f);
+            float rowH = Mathf.Max(cardH, 26f) + 6f;
 
             var row = NewRect("Critic", _invoiceRows);
             row.anchorMin = new Vector2(0, 1); row.anchorMax = new Vector2(1, 1);
             row.pivot = new Vector2(0.5f, 1);
+            row.sizeDelta = new Vector2(0, rowH);
             row.anchoredPosition = new Vector2(0, -y);
 
+            // A POLAROID: the white border a print has, thicker under the picture than
+            // around it, dropped at a slight angle. A night's two witnesses are stapled to
+            // the takings, and a print says that; a bare square crop said "here is a face".
             var look = LookFor(v);
             if (look != null && look.Face != null)
             {
                 var card = NewRect("Polaroid", row);
                 Place(card, new Vector2(0, 0.5f), new Vector2(cardW, cardH), Vector2.zero);
                 card.pivot = new Vector2(0, 0.5f);
-                // A hair off square. Every print on a counter is, and it is the cheapest
-                // thing that stops two of them reading as a table of thumbnails.
                 card.localRotation = Quaternion.Euler(0, 0, ink == BillRed ? 2.5f : -2.5f);
                 var ci = card.gameObject.AddComponent<Image>();
                 ci.color = new Color(0.99f, 0.98f, 0.94f);
@@ -2569,47 +2666,51 @@ namespace LastCall.UI
                 pi.sprite = look.Face; pi.raycastTarget = false;
             }
 
-            var star = NewRect("S", row);
-            Place(star, new Vector2(0, 1), new Vector2(16, 16), new Vector2(cardW + 10f, -2f));
-            star.pivot = new Vector2(0, 1);
-            var si = star.gameObject.AddComponent<Image>();
-            si.sprite = ChromeArt.Mark("star"); si.preserveAspect = true;
-            si.raycastTarget = false; si.color = ink;
+            // What they were poured, drawn rather than named — the same icon the ticket and
+            // the book use, so one glance ties the three together.
+            var served = v.Served ?? (v.IdInspected ? v.Order.Wanted : null);
+            if (served != null)
+            {
+                var glyph = NewRect("D", row);
+                Place(glyph, new Vector2(0, 0.5f), new Vector2(Glyph, Glyph),
+                    new Vector2(cardW + 8f, 0));
+                glyph.pivot = new Vector2(0, 0.5f);
+                var gi = glyph.gameObject.AddComponent<Image>();
+                gi.sprite = DrinkIcon.For(served, _bootstrap.Glassware);
+                gi.preserveAspect = true; gi.raycastTarget = false;
+                gi.enabled = gi.sprite != null;
+            }
 
             var papers = PapersFor(look);
             string name = papers != null ? papers.Name.ToUpperInvariant()
                 : v.Regular != null ? v.Regular.Name.ToUpperInvariant() : "A DRINKER";
-            // The NAME is a heading, so it keeps the heavy face; the reason under it does
-            // not (2026-08-11). Truncate is still refused on both: SilkscreenBold's line
-            // height clears a tight rect, and Truncate drops the WHOLE line — both critics
-            // once rendered as a star, a reason, and no name at all.
-            float textX = cardW + 10f;
-            float textW = BillW - BillInset * 2f - textX;
-            var line = NewText("L", row, _shop, 24, TextAnchor.UpperLeft, ink);
-            Place(line.rectTransform, new Vector2(0, 1), new Vector2(textW - 24f, 26),
-                new Vector2(textX + 24f, 0));
-            line.rectTransform.pivot = new Vector2(0, 1);
-            line.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            // Smaller and lighter: the regular face at 16, where it used to be the heavy one
+            // at 24. A name on a receipt is a line item, not a headline.
+            float textX = cardW + 8f + Glyph + 8f;
+            float textW = BillW - BillInset * 2f - textX - 54f;   // the score keeps the right
+            var line = NewText("L", row, _body, 16, TextAnchor.MiddleLeft, ink);
+            Place(line.rectTransform, new Vector2(0, 0.5f), new Vector2(textW, rowH),
+                new Vector2(textX, 0));
+            line.rectTransform.pivot = new Vector2(0, 0.5f);
+            // Truncate is refused here as everywhere on this slip: at these sizes it drops
+            // the WHOLE line the moment the face's line height clears the rect, and both
+            // critics once rendered as a star, a reason and no name at all.
+            line.horizontalOverflow = HorizontalWrapMode.Wrap;
             line.verticalOverflow = VerticalWrapMode.Overflow;
-            line.text = BarRating.ExactStarsFor(v.Satisfaction).ToString("0.0") + "  " + name;
+            line.supportRichText = true;
+            line.text = name + "  <color=#" + ColorUtility.ToHtmlStringRGB(BillQuiet) + ">"
+                        + CriticReason(v) + "</color>";
 
-            var why = NewText("W", row, _body, 16, TextAnchor.UpperLeft, BillQuiet);
-            Place(why.rectTransform, new Vector2(0, 1), new Vector2(textW, 34),
-                new Vector2(textX, -30f));
-            why.rectTransform.pivot = new Vector2(0, 1);
-            why.horizontalOverflow = HorizontalWrapMode.Wrap;
-            why.verticalOverflow = VerticalWrapMode.Overflow;
-            why.text = CriticReason(v);
+            var score = NewText("N", row, _body, 24, TextAnchor.MiddleRight, ink);
+            Place(score.rectTransform, new Vector2(1, 0.5f), new Vector2(52f, rowH),
+                new Vector2(0, 0));
+            score.rectTransform.pivot = new Vector2(1, 0.5f);
+            score.horizontalOverflow = HorizontalWrapMode.Overflow;
+            score.verticalOverflow = VerticalWrapMode.Overflow;
+            score.text = BarRating.ExactStarsFor(v.Satisfaction).ToString("0.0");
 
-            // THE ROW IS AS TALL AS WHAT IT SAYS (2026-08-11, the author: "cümleler
-            // taşabiliyor"). It was a fixed 64 with the reason given 34 of it, so a reason
-            // that wrapped to two lines — "was made the wrong drink — neat pour" does —
-            // printed straight over the block underneath. Measured, it cannot.
-            float reasonH = Mathf.Max(18f, why.preferredHeight);
-            why.rectTransform.sizeDelta = new Vector2(textW, reasonH);
-            float used = Mathf.Max(cardH, 30f + reasonH);
-            row.sizeDelta = new Vector2(0, used + 8f);
-            return y + used + 8f;
+            return y + rowH;
         }
 
         /// <summary>One short honest line, from what a finished visit still carries. The
@@ -2617,12 +2718,15 @@ namespace LastCall.UI
         /// this reads the STATE: how they left, what they were made, how it landed.</summary>
         private string CriticReason(CustomerVisit v)
         {
-            if (v.State == VisitState.StormedOff) return "walked out before the pour";
+            // SHORT, because the row is one line now (2026-08-11). The drink is drawn beside
+            // the name, so the reason no longer has to name it — it only has to say what
+            // went right or wrong, in the fewest words that still sound like a person.
+            if (v.State == VisitState.StormedOff) return "walked out";
             if (v.IdInspected && v.Served != null && v.Order.Wanted.Id != v.Served.Id)
-                return "was made the wrong drink — " + v.Served.Name.ToLowerInvariant();
-            if (v.Satisfaction >= 0.85) return "served exactly right · paid $" + v.PaidBase;
-            if (v.Satisfaction >= 0.55) return "a fair pour, nothing more";
-            return "a rough pour, and they noticed";
+                return "wrong drink";
+            if (v.Satisfaction >= 0.85) return "exactly right";
+            if (v.Satisfaction >= 0.55) return "a fair pour";
+            return "a rough pour";
         }
 
         private float BillRow(float y, string label, string value, Color ink, bool heavy) =>
@@ -2735,12 +2839,31 @@ namespace LastCall.UI
             note.rectTransform.anchorMin = new Vector2(0, 1);
             note.rectTransform.anchorMax = new Vector2(1, 1);
             note.rectTransform.pivot = new Vector2(0.5f, 1);
-            note.rectTransform.sizeDelta = new Vector2(0, 22f);
+            note.rectTransform.sizeDelta = new Vector2(0, 19f);
             note.rectTransform.anchoredPosition = new Vector2(0, -y);
             note.horizontalOverflow = HorizontalWrapMode.Wrap;
             note.verticalOverflow = VerticalWrapMode.Overflow;
             note.text = text;
-            return y + 24f;
+            return y + 21f;
+        }
+
+        /// <summary>
+        /// The print can never run off the paper (2026-08-11, the author: "sayfanın
+        /// taşmaması için altındakileri de ona göre ayarlaman gerekiyor").
+        ///
+        /// The slip is a fixed roll and its content is the night's, which varies: two
+        /// critics or none, a debt strike or not, a warning line under it. Tuning the row
+        /// heights until one measured night fits is how a layout breaks on the night after,
+        /// so the block is MEASURED after it is built and, if it is longer than the paper,
+        /// scaled to it. Almost every night leaves this at 1 — it is a floor under the
+        /// design, not the design.
+        /// </summary>
+        private void FitBillToPaper(float printed)
+        {
+            const float FootRoom = 22f;
+            float room = BillH - (BillHeadH + 12f) - FootRoom;
+            float k = printed > room && printed > 0f ? room / printed : 1f;
+            _invoiceRows.localScale = new Vector3(k, k, 1f);
         }
 
         private void ShowDayEnd()
@@ -2749,10 +2872,16 @@ namespace LastCall.UI
             _dayEndStep = 0;   // the bill first; the market only after CONTINUE
             _dayEndPanel.gameObject.SetActive(true);
             RebuildDayEnd();
-            // THE BILL ARRIVES rather than appearing (2026-08-10). A night's takings
-            // materialising fully formed reads as a screen swap; a slip dropping onto the
-            // counter reads as the night being counted.
-            PlayPanel(_dayEndBill, new Vector2(0, 90f), 0.36f);
+            // IT IS PRINTED, NOT SHOWN (2026-08-11, the author: "eski pos makineleri gibi
+            // ekrana animasyonla girer"). The slip feeds down from off the top of the frame,
+            // the whole length of itself, and it does NOT fade: paper coming out of a till
+            // is opaque from its first millimetre, and a fade is what makes an arrival read
+            // as a screen swap instead. A night's takings should sound like a printer.
+            PlayPanel(_dayEndBill, new Vector2(0, DesignFrame.StageHeight + BillH * 0.5f),
+                      0.62f, fade: false);
+            // The paper comes up EMPTY and the night's stars fall onto it, one at a time.
+            StartStarDrop((float)(BarRating.ExactStarsFor(run.Floor.AverageSatisfaction)
+                                  / BarRating.MaxStars));
         }
 
         private void OnDayEndAdvance()
@@ -2786,14 +2915,16 @@ namespace LastCall.UI
         private Vector2 _slideHome, _slideFrom;
         private float _slideT, _slideDur;
         private bool _slideOut;                 // out: away and gone, then tomorrow
+        private bool _slideFade = true;         // paper does not fade in; a tablet does
         private CanvasGroup _slideGroup;
 
         /// <summary>Brings a panel in from an offset. Reduced motion places it.</summary>
-        private void PlayPanel(RectTransform rt, Vector2 from, float dur)
+        private void PlayPanel(RectTransform rt, Vector2 from, float dur, bool fade = true)
         {
             SettleSlide();
             if (rt == null) return;
             if (Motion.Reduced) return;
+            _slideFade = fade;
             _slideRt = rt;
             _slideGroup = rt.GetComponent<CanvasGroup>();
             if (_slideGroup == null) _slideGroup = rt.gameObject.AddComponent<CanvasGroup>();
@@ -2803,7 +2934,7 @@ namespace LastCall.UI
             _slideT = 0f;
             _slideOut = false;
             rt.anchoredPosition = _slideHome + from;
-            _slideGroup.alpha = 0f;
+            _slideGroup.alpha = fade ? 0f : 1f;
         }
 
         /// <summary>The market pulls away, and the night begins from black behind it.</summary>
@@ -2846,7 +2977,8 @@ namespace LastCall.UI
             }
             float o = 1f - (1f - k) * (1f - k) * (1f - k);          // lands soft
             _slideRt.anchoredPosition = Vector2.Lerp(_slideHome + _slideFrom, _slideHome, o);
-            if (_slideGroup != null) _slideGroup.alpha = Mathf.Clamp01(k * 1.8f);
+            if (_slideGroup != null)
+                _slideGroup.alpha = _slideFade ? Mathf.Clamp01(k * 1.8f) : 1f;
             if (k >= 1f) SettleSlide();
         }
 
@@ -2937,14 +3069,14 @@ namespace LastCall.UI
             y = BillRow(y, "TIPS", "$" + run.DayTips, BillInk, false, "tips");
             y = BillSub(y, "$" + tookIn, BillInk);
 
-            y += 6f;
+            y += 4f;
             y = BillNote(y, "PAID OUT", BillQuiet);
             y = BillRow(y, "RENT", "-$" + run.DayRent, BillRed, false, "rent");
             y = BillRow(y, "STOCK", "-$" + run.DayStock, BillRed, false, "stock");
             y = BillRow(y, "SHOP", "-$" + run.DayUpgrades, BillRed, false, "shop");
             y = BillSub(y, "-$" + paidOut, BillRed);
 
-            y += 8f;
+            y += 4f;
             y = BillRule(y);
             y = BillRow(y, "NET", (net >= 0 ? "+$" : "-$") + Math.Abs(net),
                         net >= 0 ? BillInk : BillRed, true, "net");
@@ -2958,6 +3090,8 @@ namespace LastCall.UI
                 if (run.Ledger.DebtStrikes == DayLedger.StrikesToClose - 1)
                     y = BillNote(y, "one more red day closes the bar", BillRed);
             }
+
+            FitBillToPaper(y);
 
             // The sheet is the ROLL's size; the print is the night's. What varies is how
             // much blank stock is left above the foot tear — which is how receipts work.
