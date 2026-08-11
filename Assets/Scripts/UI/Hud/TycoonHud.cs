@@ -7294,13 +7294,20 @@ namespace LastCall.UI
             }
             else
             {
-                // The BOLD face at 8 (the author: a little bigger, a little heavier).
-                // 16 is the next legal size — the pixel faces only rasterise cleanly at
-                // whole multiples of 8 — and "Grand Mariner Triple Sec" at 16 is 300
-                // units against a 140 column, which is three lines in a two-line box.
-                // Silkscreen Bold at 8 is the whole of the available move: 6.25/char
-                // mixed, so the same 24 characters take 150 and wrap to two lines of 22.
-                var name = NewText("Name", rt, _shop, 8, TextAnchor.UpperLeft,
+                // NOT THE BOLD FACE (2026-08-11, the author: change whatever font the
+                // product names are set in). It is the same complaint the receipt's figures
+                // had: Silkscreen Bold is drawn on an 8px grid with NO side bearing, so its
+                // letters touch at every size and a name reads as one long shape. The two
+                // ways out are a lighter weight or a face that carries its own gap;
+                // PressStart2P carries its gap inside the cell, which is why it is the one
+                // of the three that can be set solid — and at 8 it is exactly 1x its design
+                // size, so it lands on the pixel grid perfectly.
+                //
+                // It is wider — a flat 8 units a character against the bold's 6.25 mixed —
+                // so the column holds 17 characters a line instead of 22. The box is two
+                // lines, and the longest name on the shelf is 24 characters, which is what
+                // the measurement below had to settle before this shipped.
+                var name = NewText("Name", rt, _display, 8, TextAnchor.UpperLeft,
                     state == TileState.Unaffordable || state == TileState.Held
                         ? ShopInkSoft : ShopInk);
                 Place(name.rectTransform, new Vector2(0, 1), new Vector2(ContentW, 22),
