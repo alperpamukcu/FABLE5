@@ -281,6 +281,13 @@ namespace LastCall.UI
         // was TAKEN sends it sliding down the counter to them, and the serve happens on
         // ARRIVAL — never before, because ServeTo empties the vessel and the ready gate
         // would hide a glass still in flight.
+        private bool _glassGrabbed;          // in hand, following the cursor
+        private Vector2 _glassVel;           // the carry spring's velocity
+        // STIFF (2026-08-11, the author). Critical damping for k=340 is 36.9, so 31 keeps
+        // just enough overshoot for the drink to feel like it has weight in it without the
+        // glass trailing the hand. The old carry was a third of this and read as sloshing
+        // the glass through the air rather than carrying it.
+        private const float GlassCarryStiffness = 340f, GlassCarryDamping = 31f;
         private bool _glassServing;          // sliding down the counter to a seat
         private bool _glassReturning;        // refused on arrival: sliding home
         private int _glassServeSeat = -1;
@@ -949,6 +956,7 @@ namespace LastCall.UI
                 _drinkGlass.gameObject.SetActive(false);
                 _glassShown = false;
                 _glassServing = false; _glassReturning = false; _glassServeSeat = -1;
+                _glassGrabbed = false;
             }
             _lastFixtureCount = -1;   // force the dressing to re-sync against the new run
             ApplyBarLook();
@@ -1068,22 +1076,29 @@ namespace LastCall.UI
             if (visit.State != VisitState.Waiting) return;
             if (!visit.HasOrdered) return;   // still deciding — no order to read yet (2026-07-23)
 
-            // CLICK-TO-SERVE (2026-08-11): with a drink ready, clicking a customer whose
-            // order was TAKEN serves them — the glass slides the counter and hands over on
-            // arrival. Only taken orders are selectable for the serve; an unread customer
-            // still opens their licence, which IS taking the order — so the ID read stays
-            // the one road to the servable state. (Core's own ServeTo remains blind-serve
-            // capable by design; this gate is the HUD's.)
-            if (_glassShown && !_glassServing && !_glassReturning
-                && run.DrinkReady && visit.IdInspected)
-            {
-                StartServeSlide(index);
-                return;
-            }
-
-            // Clicking a customer reads their licence (GDD 24 §5). Serving is a separate
-            // act: with a drink ready, the next click on a READ customer sends it over.
+            // Clicking a customer reads their licence (GDD 24 §5), and that is ALL it does
+            // again (2026-08-11): serving is dragging the glass onto them. One click, one
+            // meaning — the click-to-serve road had a drink on the counter turning the
+            // licence into a second-click affair, which is how you end up serving somebody
+            // you meant to read.
             ShowId(visit);
+        }
+
+        /// <summary>Which seat the pointer is over, or −1. A rect test on the stool's own
+        /// hit plate, so the drop lands wherever the customer is standing rather than on a
+        /// guessed column — and it costs nothing to ask five stools.</summary>
+        private int SeatUnderPointer(Mouse mouse)
+        {
+            if (mouse == null) return -1;
+            var p = mouse.position.ReadValue();
+            for (int i = 0; i < _seats.Count; i++)
+            {
+                var root = _seats[i].Root;
+                if (root == null || !root.gameObject.activeInHierarchy) continue;
+                if (_seats[i].Visit == null) continue;
+                if (RectTransformUtility.RectangleContainsScreenPoint(root, p, null)) return i;
+            }
+            return -1;
         }
 
         /// <summary>Hands the ready drink to seat <paramref name="index"/> (the glass was dragged
@@ -1281,11 +1296,27 @@ namespace LastCall.UI
             _drinkGlass.sizeDelta = new Vector2(78, CarriedGlassHeight);
             _drinkGlass.anchoredPosition = _glassHome;
 
-            // The glass answers no pointer of its own any more (2026-08-11): serving is a
-            // click on the CUSTOMER, and the glass does the travelling.
+            // THE GLASS IS PICKED UP AGAIN (2026-08-11, the author: back to dragging
+            // instead of clicking). Clicking a customer to serve them was the wrong verb for
+            // the one moment in the loop that is physical: you have made a drink, and what
+            // you do with a drink is carry it to somebody. The whole rect takes the press —
+            // a glass is a narrow silhouette, and asking for the glass itself would be a
+            // precision test nobody signed up for.
             var body = _drinkGlass.gameObject.AddComponent<Image>();
             body.color = new Color(0f, 0f, 0f, 0.004f);
-            body.raycastTarget = false;
+            body.raycastTarget = true;
+            var grab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            grab.callback.AddListener(_ =>
+            {
+                var run = Run;
+                if (run == null || run.Phase != TycoonPhase.DayOpen) return;
+                if (_flow != null && _flow.IsOpen) return;
+                if (!_glassShown || _glassServing || _glassReturning || !run.DrinkReady) return;
+                _glassGrabbed = true;
+                _glassVel = Vector2.zero;
+                Sfx.Play("click", 0.5f);
+            });
+            _drinkGlass.gameObject.AddComponent<EventTrigger>().triggers.Add(grab);
 
             // The layer architecture (the author, 2026-08-02): BACK face and base first,
             // the liquid over it, the FRONT face — interior fully clear — on top.
@@ -1393,31 +1424,6 @@ namespace LastCall.UI
             _glassShown = false;
         }
 
-        /// <summary>
-        /// Sends the ready glass sliding down the counter to seat <paramref name="index"/>.
-        /// The serve itself happens on ARRIVAL (UpdateDrinkGlass), after a re-validation —
-        /// a customer can run out of patience while the glass is in flight.
-        /// </summary>
-        private void StartServeSlide(int index)
-        {
-            if (Motion.Reduced) { if (ServeSeat(index)) { _drinkGlass.gameObject.SetActive(false); _glassShown = false; } return; }
-            var parent = (RectTransform)_drinkGlass.parent;
-            var seat = _seats[index];
-            // The seats live in bottom-left space, the glass in centre space — the dirty
-            // glasses' own counter line (CounterLineY − 36), converted, base to base.
-            float baseY = CounterLineY - 36f;
-            _glassServeFrom = _drinkGlass.anchoredPosition;
-            _glassServeTo = new Vector2(
-                seat.SeatX - parent.rect.width * 0.5f,
-                baseY + CarriedGlassHeight * 0.5f - parent.rect.height * 0.5f);
-            float dist = (_glassServeTo - _glassServeFrom).magnitude;
-            _glassServeDur = Mathf.Min(GlassSlideMax, 0.08f + dist / 4200f);
-            _glassServeT = 0f;
-            _glassServeSeat = index;
-            _glassServing = true;
-            _glassReturning = false;
-        }
-
         /// <summary>The finished drink sits on the counter and is dragged onto a customer to
         /// serve (GDD 24 §3). Heavy, springy carry with a lean into the motion (AAA feel).</summary>
         private void UpdateDrinkGlass()
@@ -1437,6 +1443,7 @@ namespace LastCall.UI
                     _drinkGlass.gameObject.SetActive(false);
                     _glassShown = false;
                     _glassServing = false; _glassReturning = false; _glassServeSeat = -1;
+                _glassGrabbed = false;
                 }
                 return;
             }
@@ -1448,6 +1455,7 @@ namespace LastCall.UI
                 _drinkGlass.anchoredPosition = _glassHome;
                 _glassAngle = 0f;
                 _glassServing = false; _glassReturning = false; _glassServeSeat = -1;
+                _glassGrabbed = false;
             }
             // The glass shows the drink as it was actually built: the vessel it chose, its
             // blended colour and its real fill level — no fixed glass, colour or amount.
@@ -1475,6 +1483,56 @@ namespace LastCall.UI
 
             float dt = Mathf.Max(Time.unscaledDeltaTime, 1e-4f);
             var mouse = Mouse.current;
+
+            // THE CARRY (2026-08-11). While it is held the glass springs after the cursor,
+            // stiff and slightly under-damped, and leans into whichever way it is travelling
+            // — the weight is the whole reason this is a drag and not a click. Letting go
+            // over a customer hands it to them; letting go anywhere else sends it home,
+            // which is the same slide the refusal already used.
+            if (_glassGrabbed)
+            {
+                if (mouse == null || !mouse.leftButton.isPressed)
+                {
+                    _glassGrabbed = false;
+                    int seat = SeatUnderPointer(mouse);
+                    bool served = false, saidWhy = false;
+                    if (seat >= 0)
+                    {
+                        try { served = ServeSeat(seat); }
+                        catch (InvalidOperationException e3)
+                        { Toast(e3.Message.ToUpperInvariant()); saidWhy = true; }
+                    }
+                    if (served)
+                    {
+                        _drinkGlass.gameObject.SetActive(false);
+                        _glassShown = false;
+                        return;
+                    }
+                    if (seat >= 0 && !saidWhy) Toast("NOT FOR THEM — READ THEM FIRST");
+                    // Home it goes, along the counter, by the road it already knows.
+                    _glassServeFrom = _glassHome;
+                    _glassServeTo = _drinkGlass.anchoredPosition;
+                    _glassServeDur = Mathf.Min(GlassSlideMax,
+                        0.08f + (_glassServeTo - _glassServeFrom).magnitude / 4200f);
+                    _glassServeT = 0f;
+                    _glassReturning = true;
+                    return;
+                }
+
+                if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                        (RectTransform)_drinkGlass.parent, mouse.position.ReadValue(), null,
+                        out Vector2 want))
+                {
+                    var before = _drinkGlass.anchoredPosition;
+                    _glassVel += (want - before) * (GlassCarryStiffness * dt);
+                    _glassVel *= Mathf.Exp(-GlassCarryDamping * dt);
+                    _drinkGlass.anchoredPosition = before + _glassVel * dt;
+                    float carry = Mathf.Clamp(-_glassVel.x * 0.012f, -16f, 16f);
+                    _glassAngle = Mathf.Lerp(_glassAngle, carry, 1f - Mathf.Exp(-18f * dt));
+                    _drinkGlass.localRotation = Quaternion.Euler(0, 0, _glassAngle);
+                }
+                return;
+            }
 
             // THE SLIDE (2026-08-11): the glass travels the counter on its own timer; the
             // serve fires on arrival, after a re-validation, because the seat can empty
