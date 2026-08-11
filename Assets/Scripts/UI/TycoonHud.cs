@@ -384,9 +384,15 @@ namespace LastCall.UI
         /// <see cref="RatioRecipeMatcher.IdealPour"/>, which is inside every band and fills
         /// the glass. Built once and shared, so the licence and the book cannot drift.
         /// </summary>
-        private static List<SpecRow> RecipeSpecRows(RecipeDefinition r)
+        /// <param name="poursOnly">Just what goes in the glass and in what share — no prep
+        /// word, no fill line, no glass name. The hover tip asks for this (the author,
+        /// 2026-08-11: "boşu boşuna fazla okunacak iş çıkartıyorlar"); the licence, the book
+        /// and the shop still take the whole card, because those are read once and deliberately
+        /// while this one is read at a glance, five times a night, over somebody's head.</param>
+        private static List<SpecRow> RecipeSpecRows(RecipeDefinition r, bool poursOnly = false)
         {
-            var rows = new List<SpecRow> { new SpecRow(null, PrepWord(r)) };
+            var rows = new List<SpecRow>();
+            if (!poursOnly) rows.Add(new SpecRow(null, PrepWord(r)));
             var bands = r.RatioRequirements;
             var shown = WholePercents(RatioRecipeMatcher.IdealPour(r));
             for (int i = 0; i < bands.Count; i++)
@@ -404,6 +410,7 @@ namespace LastCall.UI
                 string hint = TypeHint(b.Type);
                 if (hint != null) rows.Add(new SpecRow(null, hint, hint: true));
             }
+            if (poursOnly) return rows;
             if (r.MinFill > 0) rows.Add(new SpecRow(null, "FILL", $"{r.MinFill * 100:0}%+"));
             if (!string.IsNullOrEmpty(r.GlassId))
                 rows.Add(new SpecRow(null, r.GlassId.ToUpperInvariant()));
@@ -467,7 +474,7 @@ namespace LastCall.UI
         /// become readable there.
         /// </summary>
         private float DrawRecipeSpec(RectTransform host, RecipeDefinition r, bool dark,
-            float width, string note = null)
+            float width, string note = null, bool poursOnly = false)
         {
             for (int i = host.childCount - 1; i >= 0; i--) Destroy(host.GetChild(i).gameObject);
 
@@ -480,7 +487,7 @@ namespace LastCall.UI
             Color gone = dark ? new Color(0.86f, 0.24f, 0.32f, 0.16f) : new Color(0.74f, 0.16f, 0.20f, 0.13f);
             Color goneInk = dark ? new Color(0.94f, 0.40f, 0.46f) : new Color(0.66f, 0.12f, 0.16f);
 
-            var rows = RecipeSpecRows(r);
+            var rows = RecipeSpecRows(r, poursOnly);
             float y = 0f;
             for (int i = 0; i < rows.Count; i++)
             {
@@ -4729,6 +4736,9 @@ namespace LastCall.UI
         /// carries the endorsements under the pour rather than beside them.</summary>
         private const float OrderTipW = 268f;
 
+        /// <summary>How wide it may grow for a long drink name before the name has to wrap.</summary>
+        private const float OrderTipMaxW = 380f;
+
         private void BuildOrderTip(RectTransform root)
         {
             _orderTip = NewRect("OrderTip", root);
@@ -4748,7 +4758,11 @@ namespace LastCall.UI
             HairlineV(_orderTip, 0f, edge);
             HairlineV(_orderTip, 1f, edge);
 
-            _orderTipTitle = TipLine("Title", 10, TextAnchor.UpperLeft, UITheme.Amber[4]);
+            // The drink's name is the HEADING (the author, 2026-08-11): it is the one thing
+            // being answered, so it is set in the display face at 16 — a whole multiple of
+            // the 8px design size, which is the only size a pixel font rasterises cleanly.
+            _orderTipTitle = TipLine("Title", 16, TextAnchor.UpperLeft, UITheme.Amber[4],
+                                     display: true);
             _orderTipBody = NewRect("Body", _orderTip);
             Place(_orderTipBody, new Vector2(0, 1), new Vector2(OrderTipW - 20f, 10f), Vector2.zero);
             _orderTipBody.pivot = new Vector2(0, 1);
@@ -4769,9 +4783,10 @@ namespace LastCall.UI
             _orderTip.gameObject.SetActive(false);
         }
 
-        private Text TipLine(string name, int size, TextAnchor anchor, Color colour)
+        private Text TipLine(string name, int size, TextAnchor anchor, Color colour,
+            bool display = false)
         {
-            var t = NewText(name, _orderTip, _body, size, anchor, colour);
+            var t = NewText(name, _orderTip, display ? _display : _body, size, anchor, colour);
             Place(t.rectTransform, new Vector2(0, 1), new Vector2(OrderTipW - 20f, size + 4f),
                 Vector2.zero);
             t.rectTransform.pivot = new Vector2(0, 1);
@@ -4831,7 +4846,7 @@ namespace LastCall.UI
         {
             if (visit == null) { _orderTip.gameObject.SetActive(false); return; }
 
-            const float Pad = 10f, Gap = 6f;
+            const float Pad = 10f, Gap = 8f, TitleH = 20f;
             float y = Pad;
 
             _orderTipTitle.rectTransform.anchoredPosition = new Vector2(Pad, -y);
@@ -4840,7 +4855,7 @@ namespace LastCall.UI
                 // Unread. The card is the only thing that may answer, so this says where the
                 // answer is and stops — no name, no drink, no hint of either.
                 _orderTipTitle.text = "READY TO ORDER";
-                y += 14f + Gap;
+                y += TitleH + Gap;
                 foreach (Transform old in _orderTipBody) Destroy(old.gameObject);
                 _orderTipBody.gameObject.SetActive(false);
                 _orderTipPrefHead.gameObject.SetActive(false);
@@ -4849,26 +4864,28 @@ namespace LastCall.UI
                 _orderTipHint.rectTransform.anchoredPosition = new Vector2(Pad, -y);
                 _orderTipHint.text = "CLICK THEM TO READ THE LICENCE";
                 y += 13f + Pad;
-                _orderTip.sizeDelta = new Vector2(OrderTipW, y);
+                SizeTip(OrderTipW, y);
                 Show();
                 return;
             }
 
             _orderTipTitle.text = visit.Order.Wanted.Name.ToUpperInvariant();
-            y += 14f + Gap;
+            y += TitleH + Gap;
+            // The heading may be wider than the pours under it — SEX ON THE BEACH in the
+            // display face is. The box takes the widest thing it holds rather than clipping
+            // the one thing the player came to read.
+            float w = Mathf.Clamp(_orderTipTitle.preferredWidth + Pad * 2f, OrderTipW, OrderTipMaxW);
 
             _orderTipBody.gameObject.SetActive(true);
             _orderTipBody.anchoredPosition = new Vector2(Pad, -y);
+            // JUST THE POUR (the author, 2026-08-11). The prep word, the fill line and the
+            // glass name left this card: the glass is not the player's to pick — the run
+            // chooses it from the recipe — and the prep is not in the match at all, which
+            // reads only ratios. What is left is what actually goes in the glass.
             float specH = DrawRecipeSpec(_orderTipBody, visit.Order.Wanted, dark: true,
-                width: OrderTipW - Pad * 2f);
-            _orderTipBody.sizeDelta = new Vector2(OrderTipW - Pad * 2f, specH);
-            y += specH + Gap;
-
-            // How they want it — the licence's own endorsements, in the licence's own chips.
-            _orderTipPrefHead.gameObject.SetActive(true);
-            _orderTipPrefHead.rectTransform.anchoredPosition = new Vector2(Pad, -y);
-            _orderTipPrefHead.text = "HOW THEY WANT IT";
-            y += 12f + 2f;
+                width: w - Pad * 2f, poursOnly: true);
+            _orderTipBody.sizeDelta = new Vector2(w - Pad * 2f, specH);
+            y += specH;
 
             foreach (Transform old in _orderTipPrefs) Destroy(old.gameObject);
             int chips = 0;
@@ -4878,26 +4895,33 @@ namespace LastCall.UI
             if (visit.Order.Spec.ExtraShaken)
                 chips += PrefChip(PrefArt.Shaker(), "SHAKEN HARD", _orderTipPrefs);
 
+            // Asking for nothing is said by there being nothing there. A line announcing that
+            // the customer wants nothing is a line to read for no news, which is exactly what
+            // was asked to go.
+            _orderTipHint.gameObject.SetActive(false);
+            _orderTipPrefHead.gameObject.SetActive(chips > 0);
+            _orderTipPrefs.gameObject.SetActive(chips > 0);
             if (chips > 0)
             {
-                _orderTipPrefs.gameObject.SetActive(true);
+                y += Gap;
+                _orderTipPrefHead.rectTransform.anchoredPosition = new Vector2(Pad, -y);
+                _orderTipPrefHead.text = "HOW THEY WANT IT";
+                y += 12f + 2f;
                 _orderTipPrefs.anchoredPosition = new Vector2(Pad, -y);
-                _orderTipHint.gameObject.SetActive(false);
-                y += 38f + Pad;
+                _orderTipPrefs.sizeDelta = new Vector2(w - Pad * 2f, 38f);
+                y += 38f;
             }
-            else
-            {
-                // NONE is a reading; blank is a missing one. The licence draws this
-                // distinction and so does this.
-                _orderTipPrefs.gameObject.SetActive(false);
-                _orderTipHint.gameObject.SetActive(true);
-                _orderTipHint.rectTransform.anchoredPosition = new Vector2(Pad, -y);
-                _orderTipHint.text = "NOTHING EXTRA  ·  SERVE IT CLEAN";
-                y += 13f + Pad;
-            }
+            y += Pad;
 
-            _orderTip.sizeDelta = new Vector2(OrderTipW, y);
+            SizeTip(w, y);
             Show();
+
+            void SizeTip(float width, float height)
+            {
+                _orderTip.sizeDelta = new Vector2(width, height);
+                var titleRt = _orderTipTitle.rectTransform;
+                titleRt.sizeDelta = new Vector2(width - Pad * 2f, titleRt.sizeDelta.y);
+            }
 
             void Show()
             {
