@@ -3150,6 +3150,17 @@ namespace LastCall.UI
         {
             var run = Run;
             _dayEndStep = 0;   // the bill first; the market only after CONTINUE
+
+            // THE BEAT IS CLAIMED BEFORE THE REBUILD (2026-08-11, the author: the way out
+            // must not be pressable until the slip has landed and the last star with it).
+            // It was not: RebuildDayEnd shows CONTINUE while _endBeat is 0, and the beats
+            // were only started AFTERWARDS — so the key came up on the first frame of the
+            // night's own arrival and simply stayed there through the call, the feed and
+            // the whole star run. Claiming beat 1 first is the whole fix; the rebuild then
+            // sees a sequence in progress and leaves the key alone.
+            _endBeat = 1;
+            _endT = 0f;
+
             _dayEndPanel.gameObject.SetActive(true);
             RebuildDayEnd();
 
@@ -3160,8 +3171,6 @@ namespace LastCall.UI
             _endStarFrac = (float)(BarRating.ExactStarsFor(run.Floor.AverageSatisfaction)
                                    / BarRating.MaxStars);
             _billHome = _dayEndBill.anchoredPosition;
-            _endBeat = 1;
-            _endT = 0f;
             if (_lastCallRt != null)
             {
                 _lastCallRt.gameObject.SetActive(true);
