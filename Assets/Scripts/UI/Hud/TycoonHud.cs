@@ -2570,7 +2570,12 @@ namespace LastCall.UI
                     Mathf.Sin(Time.unscaledTime * 47f) * amp);
                 if (_billShake <= 0f) _dayEndBill.anchoredPosition = _billHome;
             }
-            if (_starT < 0f && _billShake <= 0f) _endBeat = 0;
+            if (_starT < 0f && _billShake <= 0f)
+            {
+                _endBeat = 0;
+                // The night has finished counting itself; now there is somewhere to go.
+                if (_billNext != null && _dayEndStep == 0) _billNext.gameObject.SetActive(true);
+            }
         }
         private const float StarFallH = 70f;     // how far above its place a star starts
         /// <summary>Where in the drop the star first touches its place — the root of the
@@ -3136,7 +3141,14 @@ namespace LastCall.UI
             var run = Run;
             _dayEndBill.gameObject.SetActive(_dayEndStep == 0);
             _dayEndTablet.gameObject.SetActive(_dayEndStep == 1);
-            if (_billNext != null) _billNext.gameObject.SetActive(_dayEndStep == 0);
+            // NOT UNTIL THE LAST STAR HAS LANDED (2026-08-11, the author). A way out
+            // offered while the night is still being counted is a way out taken: the whole
+            // point of the drop is that the player watches it, and a button under it is the
+            // one thing that can make them look away. StepDayEndBeats shows it.
+            // ...but a rebuild AFTER the counting has finished must not take it away again:
+            // the beats are over and nothing would ever put it back.
+            if (_billNext != null)
+                _billNext.gameObject.SetActive(_dayEndStep == 0 && _endBeat == 0);
             _dayEndTitle.text = "LAST CALL — ORDERING IN";
             if (_billNextLabel != null) _billNextLabel.text = "CONTINUE TO THE ORDER";
             // NO TITLE OVER THE SLIP (2026-08-11, the author: take the yellow LAST CALL —
@@ -7076,40 +7088,48 @@ namespace LastCall.UI
                 // could tell "some" from "none" and nothing else. Now it is 12 deep with a
                 // dark surround, so the bar has an edge to be read against, and the number
                 // rides ON it in the shop's bold face — one object, one reading.
+                // A GAUGE DOWN THE SIDE (2026-08-11, the author: stand the meter up beside
+                // the bottles, and the bottle stays centred in its box).
+                //
+                // It was a 136-wide bar lying at -170, and the ADD pill sits 6..30 up from
+                // the tile's foot — the bar's own bottom edge is 24 up from it, so the two
+                // shared six units and the percentage printed into the key. Standing it up
+                // does not just move the collision, it removes the row they were fighting
+                // over: the strip runs the height of the ART, where there is nothing else,
+                // and reads like the level in the bottle it is standing next to. The art is
+                // an overlay on the left, so nothing about the bottle's placement changes.
                 float frac = Mathf.Clamp01(spec.StockFrac);
-                const float MeterW = 136f, MeterH = 14f, MeterY = -170f;
+                const float StripW = 12f, StripTop = -16f, StripH = 124f, StripX = 10f;
                 var surround = NewRect("Track", rt);
-                Place(surround, new Vector2(0, 1), new Vector2(MeterW, MeterH), new Vector2(12, MeterY));
+                Place(surround, new Vector2(0, 1), new Vector2(StripW, StripH),
+                    new Vector2(StripX, StripTop));
                 var surroundImg = surround.gameObject.AddComponent<Image>();
                 surroundImg.color = new Color(0.16f, 0.20f, 0.17f, 1f);
                 surroundImg.raycastTarget = false;
 
                 var well = NewRect("Well", rt);
-                Place(well, new Vector2(0, 1), new Vector2(MeterW - 4f, MeterH - 4f),
-                    new Vector2(14, MeterY - 2f));
+                Place(well, new Vector2(0, 1), new Vector2(StripW - 4f, StripH - 4f),
+                    new Vector2(StripX + 2f, StripTop - 2f));
                 var wellImg = well.gameObject.AddComponent<Image>();
                 wellImg.color = new Color(0.80f, 0.84f, 0.80f, 1f);
                 wellImg.raycastTarget = false;
 
-                var fill = NewRect("Fill", rt);
-                // Width IS the fraction, so the bar cannot overflow its track by construction.
-                Place(fill, new Vector2(0, 1), new Vector2((MeterW - 4f) * frac, MeterH - 4f),
-                    new Vector2(14, MeterY - 2f));
+                // Anchored to the strip's FOOT and grown upward: a level rises from the
+                // bottom of a bottle, and height IS the fraction, so it cannot overflow.
+                var fill = NewRect("Fill", well);
+                fill.anchorMin = new Vector2(0, 0); fill.anchorMax = new Vector2(1, 0);
+                fill.pivot = new Vector2(0.5f, 0);
+                fill.sizeDelta = new Vector2(0, (StripH - 4f) * frac);
+                fill.anchoredPosition = Vector2.zero;
                 var fillImg = fill.gameObject.AddComponent<Image>();
                 fillImg.color = frac < 0.25f ? ShopCost : StripStock;
                 fillImg.raycastTarget = false;
 
-                // The reading sits on the meter, and in the colour that survives BOTH the
-                // filled and the empty half — white with its own dark shadow behind it.
-                var pctShadow = NewText("PctS", rt, _shop, 8, TextAnchor.MiddleCenter,
-                    new Color(0f, 0f, 0f, 0.55f));
-                Place(pctShadow.rectTransform, new Vector2(0, 1), new Vector2(MeterW, MeterH),
-                    new Vector2(13, MeterY - 1f));
-                pctShadow.raycastTarget = false;
-                pctShadow.text = Mathf.RoundToInt(frac * 100f) + "%";
-                var pct = NewText("Pct", rt, _shop, 8, TextAnchor.MiddleCenter, Color.white);
-                Place(pct.rectTransform, new Vector2(0, 1), new Vector2(MeterW, MeterH),
-                    new Vector2(12, MeterY));
+                // The reading goes at the tile's top corner, over the strip's head — the one
+                // place on the plate with nothing else in it, and nowhere near the key.
+                var pct = NewText("Pct", rt, _shop, 8, TextAnchor.UpperLeft, ShopInkSoft);
+                Place(pct.rectTransform, new Vector2(0, 1), new Vector2(60, 12),
+                    new Vector2(StripX + StripW + 4f, -4f));
                 pct.raycastTarget = false;
                 pct.text = Mathf.RoundToInt(frac * 100f) + "%";
             }
