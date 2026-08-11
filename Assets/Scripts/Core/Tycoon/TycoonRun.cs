@@ -1538,16 +1538,29 @@ namespace LastCall.Core
             foreach (var visit in Floor.Finished) Rating.Record(visit.Satisfaction);
             // The night's stars are CAPPED before they touch the standing (the author's
             // loop): the room can only say what the fittings and the menu let it say.
+            // FAME IS READ BEFORE THE NIGHT IS CLOSED (2026-08-11, the author's ruling).
+            // The line below has always said "fame alone brings the rollers", and the code
+            // then asked for that fame AFTER the night had already dragged it down — so a
+            // made bar could lose its room to one bad evening, which is the opposite of
+            // what a reputation is. Letting a night be worth ZERO stars is what exposed it:
+            // a zero night moves a standing to 0.8 of itself, and since the scale ends at
+            // five, NO standing could clear the roller line afterwards. The rule was always
+            // meant to be read against the standing the bar walked in with.
+            double fame = Rating.Average;
             Rating.CloseNight(Floor.AverageSatisfaction, Math.Min(UpgradeStarCap, MenuStarCap));
 
             // Tomorrow's crowd reacts to TONIGHT (2026-08-02) — a dreadful night drives
             // the paying crowd off — while fame alone brings the rollers: once the
             // STANDING clears the high-roller line, it overrides the night. Keying broke
             // off the zero-start standing either starved the opening week or never fired.
-            double crowdStars = Rating.Average >= BarRating.HighRollerStars
+            double crowdStars = fame >= BarRating.HighRollerStars
                 ? BarRating.HighRollerStars
                 : Rating.LastNight;
-            double standing = (crowdStars - 1.0) / 4.0;
+            // The star scale's INVERSE, and it has to move with it (2026-08-11): this read
+            // (stars - 1) / 4 because stars used to be 1 + 4x. They are 5x now, so the
+            // undo is a division. A test caught it — a made bar stopped drawing rollers,
+            // because its 4.9 standing was being read back as a 0.98 room instead of 0.78.
+            double standing = crowdStars / BarRating.MaxStars;
             // Everything the night was made of, written down with it. The run has always known
             // all of this at this exact moment and the book kept none of it, so a closed day
             // could only say that it made or lost money — never which half of the bar did it.

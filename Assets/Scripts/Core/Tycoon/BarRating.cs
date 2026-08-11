@@ -16,7 +16,8 @@ namespace LastCall.Core
     /// </summary>
     public sealed class BarRating
     {
-        public const int MinStars = 1, MaxStars = 5;
+        /// <summary>A night can now be filed at zero — see <see cref="ExactStarsFor"/>.</summary>
+        public const int MinStars = 0, MaxStars = 5;
 
         /// <summary>A brand-new bar's standing. Zero, on purpose: the climb IS the game.</summary>
         public const double StartStars = 0.0;
@@ -26,16 +27,22 @@ namespace LastCall.Core
         /// starved the whole first week (1.5) or went unreachable entirely (1.0, under the
         /// 1.0 clamp). Against a single night it means what it says — serve a dreadful
         /// night and tomorrow's crowd has no money; fame alone brings the rollers.</summary>
-        public const double HighRollerStars = 4.2;
-        public const double BrokeStars = 1.5;
+        // MOVED WITH THE SCALE, NOT WITH THE FEELING (2026-08-11). Letting zero be earned
+        // dropped every score by (1 - satisfaction), so thresholds tuned against 1 + 4x
+        // suddenly meant different nights: two tests caught it at once — a good night drew
+        // a BROKE crowd and a five-star bar stopped drawing rollers. These are the same
+        // SATISFACTIONS as before, restated on the new scale (0.80 and 0.125 x 5), so what
+        // a night has to be to change tomorrow's room is exactly what it was.
+        public const double HighRollerStars = 4.0;
+        public const double BrokeStars = 0.625;
 
         /// <summary>Display midpoint of the scale.</summary>
-        public const double NeutralStars = 3.0;
+        public const double NeutralStars = 2.5;   // the middle of 0..5, not of 1..5
 
         /// <summary>The standing the arrival rate pivots around. BELOW the display middle
         /// on purpose (2026-08-02): the fittings cap a young bar near 2.0, and pivoting at
         /// 3.0 starved every capped bar's doors for the whole run.</summary>
-        public const double ArrivalPivot = 2.5;
+        public const double ArrivalPivot = 1.875;   // the old 2.5, restated: 0.375 x 5
 
         /// <summary>How fast the standing moves toward a night's (capped) stars.</summary>
         public const double GainRate = 0.10, LossRate = 0.20;
@@ -59,9 +66,24 @@ namespace LastCall.Core
         /// <summary>Last night's (capped) stars, or the start value before any night closes.</summary>
         public double LastNight => _nights.Count == 0 ? StartStars : _nights[_nights.Count - 1];
 
-        /// <summary>The star value of a satisfaction score, unrounded.</summary>
+        /// <summary>
+        /// The star value of a satisfaction score, unrounded.
+        ///
+        /// ZERO IS REACHABLE (2026-08-11, the author: a night where everything was done
+        /// wrong should earn no star at all). It was not: the scale ran 1 + 4x, so a room
+        /// that every single customer walked out of still filed a one-star night, and the
+        /// bottom of the scale said "the worst anyone can do" when it meant "nothing was
+        /// done at all". A floor under a rating is a lie told every time it is hit.
+        ///
+        /// So it is simply five times the satisfaction. Full marks are still five and the
+        /// curve is still straight; what changed is that the bottom now means what it says.
+        /// Every score is 1.0 lower than it was at the same satisfaction, which is a real
+        /// balance move and not a cosmetic one — the broke crowd's 1.5 line is now met at
+        /// 0.30 satisfaction where it used to take 0.125, so a bad night bites sooner. The
+        /// 200-run sim is what settles whether that is too hard.
+        /// </summary>
         public static double ExactStarsFor(double satisfaction) =>
-            1.0 + 4.0 * Math.Max(0.0, Math.Min(1.0, satisfaction));
+            MaxStars * Math.Max(0.0, Math.Min(1.0, satisfaction));
 
         /// <summary>Records one customer's rating as they leave.</summary>
         public void Record(double satisfaction)

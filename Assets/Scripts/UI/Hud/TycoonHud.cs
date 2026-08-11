@@ -217,6 +217,27 @@ namespace LastCall.UI
         private static Papers PapersFor(PatronLook look) =>
             look != null && PatronPapers.TryGetValue(look.Slug ?? "", out var p) ? p : null;
 
+        /// <summary>
+        /// What this drinker is called — the ONE name the bar says about them, wherever it
+        /// says it: the licence prints it, the ticket over their head repeats it, the receipt
+        /// shortens it to the first word.
+        ///
+        /// It belongs to the FACE and not to the archetype (2026-08-10, ShowId). The ticket
+        /// went on reading the archetype's name for another day, so the card said MARILOU
+        /// CABRERA over a photograph while the stool beside it said MARGUERITE — the same
+        /// disagreement that fix was written for, one screen further out (the author,
+        /// 2026-08-11: "kimlikteki isimlerle kafa üstündeki isimler eşleşmiyor"). A look with
+        /// no papers on file falls back to the archetype's name, and the card falls back the
+        /// same way, so the two agree even when there is nothing to agree about.
+        /// </summary>
+        private static string NameOn(CustomerVisit visit, PatronLook look)
+        {
+            var papers = PapersFor(look);
+            if (papers != null && !string.IsNullOrEmpty(papers.Name)) return papers.Name;
+            return visit?.Regular != null && !string.IsNullOrEmpty(visit.Regular.Name)
+                ? visit.Regular.Name : "Customer";
+        }
+
         private readonly List<PatronLook> _looks = new List<PatronLook>();
         private RectTransform _hudRoot;            // the canvas rect — the screen's right edge for entrances
 
@@ -321,7 +342,8 @@ namespace LastCall.UI
         private Image _idFlag;
         private Text _idRelLabel, _idIntentLabel;
         private Text _idCitizen, _idNumber, _idVisitCount;
-        private Image[] _idStars;
+        private Image[] _idStars;       // the grey five, always drawn
+        private Image[] _idStarFills;   // the amber over them, filled to the fraction
         private RectTransform _idRecipeTip;
         private RectTransform _idRecipeTipBody;
         private RectTransform _idPrefRow;
@@ -2225,8 +2247,10 @@ namespace LastCall.UI
                     string star = visit.ExtraOrdersTaken > 0
                         ? $"<color=#F5C97B>x{visit.ExtraOrdersTaken + 1} </color>" : "";
                     view.Name.supportRichText = true;
+                    // The name off their PAPERS, which is the name their licence prints —
+                    // see NameOn. The ticket is where the card is remembered once it is shut.
                     view.Name.text = known
-                        ? star + (visit.Regular?.Name ?? "Customer").ToUpperInvariant() : "";
+                        ? star + NameOn(visit, view.Look).ToUpperInvariant() : "";
                     view.Name.color = UITheme.TextPrimary;
                     view.Order.color = UITheme.Amber[4];
 
@@ -5207,7 +5231,7 @@ namespace LastCall.UI
             // the photo, the name, the age and the citizenship, and the archetype keeps only
             // what it is actually about — how they came in, and how well you know them.
             var idPapers = PapersFor(idLook);
-            string idFullName = (idPapers != null ? idPapers.Name : reg.Name).ToUpperInvariant();
+            string idFullName = NameOn(visit, idLook).ToUpperInvariant();
             // Bold: the name is the headline of the document, and it was printing at the
             // same weight as the age on the rule under it.
             _idName.text = "<b>" + idFullName + "</b>";
@@ -5239,12 +5263,15 @@ namespace LastCall.UI
             _idRates.color = rated ? UITheme.Night[1] : UITheme.Night[3];
             for (int i = 0; i < _idStars.Length; i++)
             {
-                // Half a star still lights its place, so 2.5 shows three lit rather than
-                // rounding a customer's opinion down to nothing.
-                bool lit = rated && avg >= i + 0.5;
-                _idStars[i].color = lit
-                    ? UITheme.Amber[3]
-                    : new Color(0.62f, 0.58f, 0.50f, rated ? 0.55f : 0.35f);
+                // A HALF STAR IS DRAWN AS A HALF (the author, 2026-08-11: "kimlikte yarım
+                // yıldız tam yıldız olarak gözüküyor"). Lighting the whole star from the
+                // halfway mark printed 2.5 and 3.0 as the same row, which is the one thing
+                // this row exists to tell apart. The top bar has always drawn the standing as
+                // a continuous fill — the licence does now too, star by star.
+                float fill = rated ? Mathf.Clamp01((float)avg - i) : 0f;
+                _idStars[i].color = new Color(0.62f, 0.58f, 0.50f, rated ? 0.55f : 0.35f);
+                _idStarFills[i].fillAmount = fill;
+                _idStarFills[i].enabled = fill > 0.001f;
             }
 
             // No price, anywhere on the card (C3): the licence says who they are and what they
@@ -5873,6 +5900,7 @@ namespace LastCall.UI
             // the row — greyed, with a question mark where the number goes — because a
             // blank box says "no such field" while five empty stars say "not yet".
             _idStars = new Image[5];
+            _idStarFills = new Image[5];
             const float StarBox = 24f, StarGap = 2f;
             float starRun = 5f * StarBox + 4f * StarGap;
             for (int i = 0; i < 5; i++)
@@ -5885,6 +5913,21 @@ namespace LastCall.UI
                 _idStars[i].sprite = ItemArt.Load("star");
                 _idStars[i].preserveAspect = true;
                 _idStars[i].raycastTarget = false;
+
+                // The lit half, over the grey whole: a star fills from its left edge, so a
+                // 2.5 leaves the third star half amber instead of rounding a customer's
+                // opinion up to a verdict they did not give (see ShowId).
+                var f = NewRect("Lit", s);
+                Stretch(f, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                _idStarFills[i] = f.gameObject.AddComponent<Image>();
+                _idStarFills[i].sprite = _idStars[i].sprite;
+                _idStarFills[i].type = Image.Type.Filled;
+                _idStarFills[i].fillMethod = Image.FillMethod.Horizontal;
+                _idStarFills[i].fillOrigin = (int)Image.OriginHorizontal.Left;
+                _idStarFills[i].preserveAspect = true;
+                _idStarFills[i].raycastTarget = false;
+                _idStarFills[i].color = UITheme.Amber[3];
+                _idStarFills[i].enabled = false;
             }
 
             // The licence number, on the rule that closes the rail.
@@ -7233,8 +7276,20 @@ namespace LastCall.UI
                 // over: the strip runs the height of the ART, where there is nothing else,
                 // and reads like the level in the bottle it is standing next to. The art is
                 // an overlay on the left, so nothing about the bottle's placement changes.
+                // BESIDE THE BOTTLE, NOT BESIDE THE BOX (2026-08-11, the author). Standing
+                // the gauge up put it at the PLATE's left edge, which is only next to the
+                // product when the product happens to be wide: a tile is 160 across and a
+                // slim bottle draws about 40 of it, so the strip sat a hand's width of white
+                // away from the level it was reporting. It is measured off the drawing now —
+                // the same measurement PlaceProduct stands the art by, so the two cannot
+                // drift — and it runs exactly the drawing's own height, foot to shoulder.
                 float frac = Mathf.Clamp01(spec.StockFrac);
-                const float StripW = 12f, StripTop = -16f, StripH = 124f, StripX = 10f;
+                var drawn = spec.Art != null ? ProductDrawn(spec.Art, spec.ArtH)
+                                             : new Vector2(60f, 124f);
+                const float StripW = 12f, StripGap = 8f;
+                float StripH = Mathf.Max(48f, drawn.y);
+                float StripX = Mathf.Max(4f, TileW * 0.5f - drawn.x * 0.5f - StripGap - StripW);
+                float StripTop = -(TileH - ProductFootY - StripH);
                 var surround = NewRect("Track", rt);
                 Place(surround, new Vector2(0, 1), new Vector2(StripW, StripH),
                     new Vector2(StripX, StripTop));
@@ -7260,11 +7315,12 @@ namespace LastCall.UI
                 fillImg.color = frac < 0.25f ? ShopCost : StripStock;
                 fillImg.raycastTarget = false;
 
-                // The reading goes at the tile's top corner, over the strip's head — the one
-                // place on the plate with nothing else in it, and nowhere near the key.
+                // The reading stays at the plate's top corner — the one place with nothing
+                // else in it, and nowhere near the key — but left-aligned to the STRIP, so
+                // the number and the gauge read as one instrument however wide the bottle is.
                 var pct = NewText("Pct", rt, _shop, 8, TextAnchor.UpperLeft, ShopInkSoft);
                 Place(pct.rectTransform, new Vector2(0, 1), new Vector2(60, 12),
-                    new Vector2(StripX + StripW + 4f, -4f));
+                    new Vector2(Mathf.Max(4f, StripX - 2f), -4f));
                 pct.raycastTarget = false;
                 pct.text = Mathf.RoundToInt(frac * 100f) + "%";
             }
@@ -7558,6 +7614,25 @@ namespace LastCall.UI
         /// magnified 1x or 2x it is pixel art. A downscale is free to be fractional —
         /// that only drops rows.
         /// </summary>
+        /// <summary>Where a tile stands its product: the drawing's foot, up from the plate.</summary>
+        private const float ProductFootY = 68f;
+
+        /// <summary>
+        /// How big the DRAWING inside <paramref name="s"/> comes out on a tile — the same
+        /// arithmetic <see cref="PlaceProduct"/> stands it by, factored out so the stock
+        /// gauge can be pinned to the bottle instead of to the plate (2026-08-11, the
+        /// author: put it right beside the bottle, not beside the box). A tile is 160 wide
+        /// and a slim bottle draws 40 of it, so a gauge at the plate's edge was a hand's
+        /// width of white away from the thing it was measuring.
+        /// </summary>
+        private static Vector2 ProductDrawn(Sprite s, float boxH)
+        {
+            var m = VesselArt.Of(s);
+            float k = Mathf.Min(ContentW / m.Drawing.width, boxH / m.Drawing.height);
+            if (k >= 1f) k = Mathf.Floor(k);
+            return new Vector2(m.Drawing.width * k, m.Drawing.height * k);
+        }
+
         private static void PlaceProduct(RectTransform rt, Sprite s, float boxH)
         {
             // Fitted and stood by the DRAWING, not by the sheet it was saved on (VesselArt,
@@ -7570,7 +7645,7 @@ namespace LastCall.UI
             float k = Mathf.Min(ContentW / m.Drawing.width, boxH / m.Drawing.height);
             if (k >= 1f) k = Mathf.Floor(k);
             Place(rt, new Vector2(0.5f, 0f), new Vector2(w * k, h * k),
-                new Vector2((w * 0.5f - m.Drawing.center.x) * k, 68f - m.Drawing.y * k));
+                new Vector2((w * 0.5f - m.Drawing.center.x) * k, ProductFootY - m.Drawing.y * k));
         }
 
         /// <summary>
