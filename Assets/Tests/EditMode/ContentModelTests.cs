@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using LastCall.Core;
@@ -221,6 +222,21 @@ namespace LastCall.Tests
             Assert.IsTrue(deck.LockedCards.Where(c => c.Info.Style == "cola" || c.Info.Style == "tonic"
                     || c.Info.Style == "energy").All(c => c.Info.Carbonated),
                 "the fizzy mixers say so");
+
+            // THE GENERAL RULES, pinned after each broke once (audit 2026-08-11):
+            // soda_klara and ginger_kicker sat Bubbly-but-unflagged for weeks, and nine
+            // priceless bottles were silently priced by the $8+6/tier fallback — above
+            // their own tier-2 upgrades.
+            foreach (var card in deck.Cards.Concat(deck.LockedCards))
+                if (card.Type == IngredientType.Bubbly)
+                    Assert.IsTrue(card.Info.Carbonated,
+                        $"{card.Id} is Bubbly — it must say carbonated");
+            var opening = new HashSet<string> { "vodka_astra", "gin_boothby", "soda_klara",
+                "lemon_fresh", "syrup_house", "beer_kestrel" };
+            foreach (var card in deck.Cards.Concat(deck.LockedCards))
+                if (!opening.Contains(card.Id))
+                    Assert.Greater(card.Info.Price, 0,
+                        $"{card.Id} reaches the market — it must name its own price");
         }
 
         [Test]

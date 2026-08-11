@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "_comment": "v5 P16 menu redesign (2026-07-31): every cocktail is style-banded — vodka or gin IS the drink. Draught and Neat Pour stay type-based on purpose (brand-agnostic in the fiction). Four tiers by rank: starter 1-8, mid 9-14 (3.0 stars), hard 15-21 (3.5), very hard 22+ (4.0). Mirrors RecipeCatalog.CreateDefault; the parity test holds them together.",
+  "_comment": "v5 P16 menu redesign (2026-07-31): every cocktail is style-banded — vodka or gin IS the drink. Draught and Neat Pour stay type-based on purpose (brand-agnostic in the fiction). Five star gates by rank (TycoonRun.RecipeStarGate, 2026-08-10 one-star split): 1-8 open, 9-11 at 1.0, 12-14 at 2.0, 15-21 at 3.0, 22+ at 4.0. Mirrors RecipeCatalog.CreateDefault; the parity test holds them together.",
   "recipes": [
     {
       "id": "draught", "name": "Draught", "rank": 1,

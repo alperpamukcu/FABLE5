@@ -1103,7 +1103,7 @@ namespace LastCall.UI
             {
                 if (_capped) return;   // the tin is closed — the bench is put away
                 if (Run == null || Run.Glass.IsEmpty) { SayShaker("pour something first"); return; }
-                if (!Run.CanAddPreparation) { ShowShakerFull(); return; }   // no room for it
+                if (!Run.CanAddPreparation) return;   // a phase check now — off-day only
                 _draggingPrep = prep;
                 var dpImg = _dragPiece.GetComponent<Image>();
                 dpImg.sprite = prepSprite;

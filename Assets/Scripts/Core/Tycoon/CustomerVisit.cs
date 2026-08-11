@@ -138,6 +138,10 @@ namespace LastCall.Core
         /// waiting, and after a storm-off, because nothing was sold.</summary>
         public RecipeDefinition Served { get; private set; }
 
+        /// <summary>The VESSEL the drink actually went out in (audit 2026-08-11) — what the
+        /// dirty glass on the stool is, which the recipe's nominal glass id cannot say.</summary>
+        public string ServedGlassId { get; internal set; }
+
         public int ExtraOrdersTaken { get; private set; }
 
         /// <summary>Final satisfaction (0–1) once resolved; storm-offs stay at 0.</summary>

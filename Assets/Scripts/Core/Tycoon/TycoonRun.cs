@@ -76,8 +76,9 @@ namespace LastCall.Core
 
         /// <summary>The satisfaction the bar adds to every served visit (GDD 23 §4's "plus
         /// ambience"). Two ladders with their own ceilings, so a finished glass cabinet cannot
-        /// swallow the counter: the glassware LINES carry 0.15 (the same ceiling the old single
-        /// ladder had, 0.03×2 = 0.006×10), and the counter carries 0.03 a step to 0.06.</summary>
+        /// swallow the counter: the glassware LINES carry 0.15 (a RAISED ceiling — the old single
+        /// ladder capped at 0.06 = 0.006×10; full at 25 steps now), and the counter
+        /// carries 0.03 a step to 0.06.</summary>
         /// <remarks>
         /// The counter used to be worth nothing at all. It was cut out of this sum on
         /// 2026-08-02 along with the wall and the musician, and what it kept instead was a tint
@@ -109,7 +110,10 @@ namespace LastCall.Core
                     for (int s = 0; s < steps && s < GlassStepCap.Length; s++)
                         glassCap += GlassStepCap[s];
                 }
-                return 2.0 + glassCap + 0.25 * Math.Max(0, Seats - 3);
+                // Counted from the CONFIG's opening seats, not a literal (audit 2026-08-11):
+                // the hard-coded 3 against StartingSeats = 4 gave every new bar a free
+                // quarter-star, against this property's own "a dive caps at two" promise.
+                return 2.0 + glassCap + 0.25 * Math.Max(0, Seats - _config.StartingSeats);
             }
         }
 
@@ -391,10 +395,14 @@ namespace LastCall.Core
             {
                 case DayPurchase.Kind.Brand:
                     // Brands only ever JOIN the shelf now (2026-08-02), so a refund is
-                    // simply the bottle going back on the truck.
+                    // simply the bottle going back on the truck — and the board re-rolls
+                    // (audit 2026-08-11): a recipe bought after this brand re-rolled the
+                    // market underneath it, so the refunded bottle was off the shelf AND
+                    // off the board, unbuyable for the rest of the night.
                     if (p.Added != null) _shelf.Remove(p.Added);
                     _newStockIds.Remove(p.Id);
                     p.Offer?.MarkUnsold();
+                    RollMarket();
                     break;
                 case DayPurchase.Kind.Recipe:
                     // Relocks the drink. The bottles it released stay in the catalogue —
@@ -745,18 +753,45 @@ namespace LastCall.Core
         /// <see cref="TycoonConfig.StockPremiumPerTier"/> to the price. A basic bar adds nothing.</summary>
         private int PremiumFor(RecipeDefinition recipe)
         {
+            // STYLE BANDS ARE THE RULE, NOT THE EXCEPTION (audit 2026-08-11). The old loop
+            // read band.Type — which the style-band constructor leaves at its default, and
+            // the default of IngredientType is Spirit. So all 51 style-banded recipes
+            // collapsed to "one premium, from the best Spirit anywhere on the shelf":
+            // a Vodka Soda priced up by your tier-4 bourbon, a Negroni earning one premium
+            // for three bottles. The premium now comes from THE bottle the band names —
+            // per distinct alcoholic style, the bottle of that style actually on the shelf.
             if (recipe.RatioRequirements == null || recipe.RatioRequirements.Count == 0) return 0;
             int premium = 0;
-            var counted = new HashSet<IngredientType>();
+            var countedStyles = new HashSet<string>();
+            var countedTypes = new HashSet<IngredientType>();
             foreach (var band in recipe.RatioRequirements)
             {
-                if (band.Type != IngredientType.Spirit && band.Type != IngredientType.Bitter) continue;
-                if (!counted.Add(band.Type)) continue;   // one premium per alcohol type
-                int bestTier = 1;
-                foreach (var bottle in _shelf.Bottles)
-                    if (bottle.Ingredient.Type == band.Type)
-                        bestTier = Math.Max(bestTier, bottle.Ingredient.Info?.Tier ?? 1);
-                premium += (bestTier - 1) * _config.StockPremiumPerTier;
+                if (band.IsStyleBand)
+                {
+                    if (!countedStyles.Add(band.Style)) continue;
+                    // The best bottle OF THAT STYLE on the shelf — a T1 and a T3 gin can
+                    // stand together (brands only ever join), and the drink pours the best.
+                    int tier = 0; string category = null; var type = default(IngredientType);
+                    foreach (var b in _shelf.Bottles)
+                    {
+                        var inf = b.Ingredient.Info;
+                        if (inf == null || inf.Style != band.Style || inf.Tier <= tier) continue;
+                        tier = inf.Tier; category = inf.Category; type = b.Ingredient.Type;
+                    }
+                    if (tier <= 1) continue;
+                    if (!IngredientCategories.IsAlcoholic(category, type)) continue;
+                    premium += (tier - 1) * _config.StockPremiumPerTier;
+                }
+                else
+                {
+                    if (band.Type != IngredientType.Spirit && band.Type != IngredientType.Bitter) continue;
+                    if (!countedTypes.Add(band.Type)) continue;   // one premium per alcohol type
+                    int bestTier = 1;
+                    foreach (var bottle in _shelf.Bottles)
+                        if (bottle.Ingredient.Type == band.Type)
+                            bestTier = Math.Max(bestTier, bottle.Ingredient.Info?.Tier ?? 1);
+                    premium += (bestTier - 1) * _config.StockPremiumPerTier;
+                }
             }
             return premium;
         }
@@ -814,8 +849,43 @@ namespace LastCall.Core
             if (volume <= 0) return 0;
             // Capped by true headroom BEFORE the shelf draws: the shelf's own cap ignores the
             // head on a pint, and stock drawn for room the foam already owns would evaporate.
+            double asked = volume;
             volume = Math.Min(volume, ServingGlass.Headroom);
-            return _shelf.PourInto(ServingGlass, ingredientId, volume);
+            double poured = _shelf.PourInto(ServingGlass, ingredientId, volume);
+            // THE DRINK DECLARES ITSELF AT THE GLASS (audit 2026-08-11). Built drinks only
+            // become themselves here — the tin can never hold the fizz — so the vessel
+            // chosen at the pour-out was matched against HALF a drink: pure gin read as a
+            // neat pour and every Gin & Tonic in the game was served in a rocks glass,
+            // its own highball dead data. When the glass-side pour names a recipe whose
+            // vessel differs, the barman moves the drink to the proper glass — an upgrade
+            // re-pour, only ever into a glass with room for all of it, so the no-spill
+            // law holds and the "never swap under a drink" rule gains its one honest
+            // exception: the moment the drink stops being what the tin thought it was.
+            if (poured > 0)
+            {
+                RevesselFor(RatioRecipeMatcher.Match(ServingGlass, _recipes, IngredientOf)?.Recipe);
+                // The old glass's brim capped the pour BEFORE the drink declared itself:
+                // whatever the new, roomier vessel can still take of what was asked, it
+                // takes now — otherwise the upgrade moment short-pours by exactly the
+                // difference between the two glasses.
+                double rest = Math.Min(asked - poured, ServingGlass.Headroom);
+                if (rest > 1e-9)
+                    poured += _shelf.PourInto(ServingGlass, ingredientId, rest);
+            }
+            return poured;
+        }
+
+        /// <summary>Moves the serving glass's whole content into <paramref name="recipe"/>'s
+        /// own vessel when it differs and fits. See <see cref="PourAtGlass"/>.</summary>
+        private void RevesselFor(RecipeDefinition recipe)
+        {
+            if (_glassware.Count == 0 || recipe == null) return;
+            var glass = GlassNamed(recipe.GlassId);
+            if (glass == null || ReferenceEquals(glass, ServingGlassware)) return;
+            if (glass.Capacity < ServingGlass.TotalVolume) return;   // never spill by re-pouring
+            var next = NewServingGlass(glass);
+            ServingGlass.TransferInto(next, ServingGlass.TotalVolume, accuracy: 1.0);
+            ServingGlass = next;
         }
 
         public double PourTick(double seconds)
@@ -825,8 +895,25 @@ namespace LastCall.Core
 
             var bottle = _shelf.Find(PouringId);
             double poured = _shelf.PourInto(Glass, PouringId, bottle.PourRate * seconds);
+            if (poured > 0) UnmixTin();
             if (poured <= 0 || bottle.IsEmpty) PouringId = null;
             return poured;
+        }
+
+        /// <summary>
+        /// A pour into the tin UN-mixes it (audit 2026-08-11). Without this, a splash of
+        /// gin shaken early stamped the whole build "mixed": pour vermouth after and the
+        /// two-spirit tin walked straight past the mandatory-mix gate — and the stale
+        /// `shaken` step rode into the serving glass to collect full method credit from
+        /// the judge for a drink that was hand-built. New liquid means mix again.
+        /// </summary>
+        private void UnmixTin()
+        {
+            if (!IsShaken && !IsStirred) return;
+            IsShaken = false; ShakeEnergy = 0;
+            IsStirred = false; StirEnergy = 0;
+            Glass.RemovePreparation(Preparations.Shaken.Id);
+            Glass.RemovePreparation(Preparations.Stirred.Id);
         }
 
         public void EndPour() => PouringId = null;
@@ -837,6 +924,7 @@ namespace LastCall.Core
             ShakerIngredient(ingredientId, nameof(ingredientId));
             if (volume <= 0) return 0;
             double poured = _shelf.PourInto(Glass, ingredientId, volume);
+            if (poured > 0) UnmixTin();
             // The right glass stands ready WHILE the drink is built (2026-07-31): the counter
             // retargets as the tin's contents start naming a recipe, so the serve stage opens
             // with the vessel already correct instead of swapping it in front of the player.
@@ -878,6 +966,10 @@ namespace LastCall.Core
             if (!ServingGlass.IsEmpty && ServingGlass.VolumeOf(kegId) <= 0)
                 throw new InvalidOperationException(
                     "There is already a drink in that glass — serve it or bin it before pulling a pint.");
+            // The matched pair holds (audit 2026-08-11): CanPull greys the key on a full
+            // glass, so the verb refuses the same fact instead of being quietly looser.
+            if (ServingGlass.IsFull)
+                throw new InvalidOperationException("The glass is full — serve it or bin it.");
             // Beer goes in a pint (v5 P14 / C9) — the one glass the bar reaches for without
             // being told, and the reason draught is the drink you can put down in four seconds.
             SelectGlassFor(DraughtRecipe);
@@ -1161,6 +1253,13 @@ namespace LastCall.Core
                 && match.Recipe.Rank > _bestRankServedTonight)
                 _bestRankServedTonight = match.Recipe.Rank;
 
+            // The VESSEL that actually went out, remembered on the visit (audit 2026-08-11):
+            // the dirty glass on the stool used to be conjured from the RECIPE's glass id,
+            // which lies whenever the served vessel differs — and lied by omission for a
+            // drink that matched no recipe at all, which left no glass and freed the stool
+            // instantly, a bussing discount for the worst pour in the house.
+            visit.ServedGlassId = ServingGlassware?.Id;
+
             // What actually went across the bar, not what was asked for — the receipt lists the
             // drink that was poured, and a wrong one is paid at its own price.
             visit.Resolve(verdict, verdict.OrdersAgain ? RollOrder() : null, _config.SavorSeconds,
@@ -1220,8 +1319,12 @@ namespace LastCall.Core
                 foreach (var bottle in _shelf.Bottles)
                 {
                     if (bottle.IsEmpty) continue;
+                    // MinTier counts (audit 2026-08-11): the matcher refuses a Vesper built
+                    // on well gin, so CanMake saying "yes" off that same bottle pushed the
+                    // bot and the honest DeclineOrder both into a build that cannot match.
                     bool hit = band.IsStyleBand
                         ? bottle.Ingredient.Info?.Style == band.Style
+                          && (bottle.Ingredient.Info?.Tier ?? 1) >= band.MinTier
                         : bottle.Ingredient.Type == band.Type;
                     if (hit) { found = true; break; }
                 }

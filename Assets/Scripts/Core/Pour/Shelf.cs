@@ -143,7 +143,11 @@ namespace LastCall.Core
             var bottle = Find(ingredientId);
             if (bottle == null) throw new ArgumentException($"No '{ingredientId}' on the shelf.", nameof(ingredientId));
 
-            double headroom = glass.Capacity - glass.TotalVolume;
+            // TRUE headroom (audit 2026-08-11): the old sum ignored the HEAD, so a pour
+            // toward a pint could draw stock the glass would then refuse — the exact
+            // evaporation the comment above forbids. PourAtGlass's own pre-cap papered
+            // over it from the caller's side; the rule lives here now.
+            double headroom = glass.Headroom;
             if (headroom <= 0) return 0;
 
             double poured = bottle.Draw(Math.Min(requested, headroom));

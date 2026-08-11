@@ -256,6 +256,12 @@ namespace LastCall.Core
             return false;
         }
 
+        /// <summary>Takes a preparation back off the glass. What needed it: a pour into a
+        /// mixed tin UN-mixes it (GDD 21 §14) — without this, one early shake stamped the
+        /// tin "mixed" for the whole build and the mandatory-mix gate could be walked past.</summary>
+        public void RemovePreparation(string id) =>
+            _preparations.RemoveAll(p => p.Id == id);
+
         /// <summary>Empties the glass — served or binned.</summary>
         public void Clear()
         {

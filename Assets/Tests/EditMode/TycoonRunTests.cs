@@ -1010,5 +1010,122 @@ namespace LastCall.Tests
             Assert.Throws<InvalidOperationException>(() => run.Stir(),
                 "nothing in the shaker to stir");
         }
+
+        [Test]
+        public void APourIntoAMixedTin_UnmixesIt()
+        {
+            // The bypass the audit caught (2026-08-11): a splash of gin shaken early used
+            // to stamp the whole build "mixed" — pour vermouth after and the two-spirit
+            // tin walked straight past the gate, stale shaken step and all.
+            var run = MixRun();
+            run.PourMeasure("gin_b", 0.2);
+            run.Shake(1.0);
+            Assert.IsTrue(run.IsMixed);
+
+            run.PourMeasure("vermouth_b", 0.3);
+            Assert.IsFalse(run.IsMixed, "new liquid means mix again");
+            Assert.IsFalse(run.Glass.HasPreparation("shaken"), "the stale step is gone too");
+            Assert.IsTrue(run.MixRequired);
+            Assert.Throws<InvalidOperationException>(() => PourOut(run));
+
+            run.Stir(1.0);
+            PourOut(run);
+            Assert.IsTrue(run.DrinkReady);
+        }
+
+        // ── the audit's other pins (2026-08-11) ─────────────────────────────────
+
+        [Test]
+        public void AFreshBar_CapsAtExactlyTwoStars()
+        {
+            // The cap counted seats from a literal 3 while the config opens with 4 —
+            // a free quarter-star on day one, against the cap's own documented promise.
+            var run = NewRun();
+            Assert.AreEqual(2.0, run.UpgradeStarCap, 1e-9,
+                "no upgrades, opening seats: a dive caps at two");
+        }
+
+        private static GlasswareDefinition TestGlass(string id, double capacity) =>
+            new GlasswareDefinition(id, id, id, new[] { 0.8, 1.0 },
+                new[] { 1, 2, 3, 4, 5 }, capacity);
+
+        [Test]
+        public void ABuiltDrink_DeclaresItselfAtTheGlass_AndMovesToItsOwnVessel()
+        {
+            // The audit's headline: fizz can only enter at the glass, so the vessel chosen
+            // at pour-out was matched against HALF a drink — pure vodka read as a neat
+            // pour and every Vodka Soda was served in a rocks glass, its highball dead data.
+            var shelf = new Shelf(new[]
+            {
+                new ShelfBottle(new IngredientCard("vodka_t", "Vodka", IngredientType.Spirit, 6,
+                    info: new IngredientInfo("vodka", category: "vodka")), capacity: 20),
+                new ShelfBottle(new IngredientCard("soda_t", "Soda", IngredientType.Bubbly, 1,
+                    info: new IngredientInfo("soda", category: "mixer", carbonated: true)), capacity: 20),
+            });
+            var run = new TycoonRun(shelf, RecipeCatalog.CreateDefault(), new RunRng("vessel"),
+                config: new TycoonConfig(20, orderDecisionSeconds: 0, savorSeconds: 0),
+                glassware: new[] { TestGlass("rocks", 0.7), TestGlass("highball", 1.0) });
+
+            run.PourMeasure("vodka_t", 0.3);
+            PourOut(run);
+            Assert.AreEqual("rocks", run.ServingGlassware.Id,
+                "half a drink: pure spirit reads as a neat pour, and that is a rocks glass");
+
+            run.PourAtGlass("soda_t", 0.45);
+            Assert.AreEqual("highball", run.ServingGlassware.Id,
+                "the soda names the drink, and the drink moves to its own glass");
+            Assert.AreEqual(0.75, run.ServingGlass.TotalVolume, 1e-6,
+                "the re-pour spills nothing");
+        }
+
+        [Test]
+        public void CanMake_ReadsTheTierBands_NotJustTheStyles()
+        {
+            // A Vesper wants tier-3 gin; the matcher refuses well gin, so CanMake saying
+            // "yes" off that same bottle pushed the honest DeclineOrder out of reach.
+            var vesper = RecipeCatalog.CreateDefault().First(r => r.Id == "vesper");
+            IngredientCard Booze2(string id, string style, string cat, int tier) =>
+                new IngredientCard(id, id, IngredientType.Spirit, 6,
+                    info: new IngredientInfo(style, tier: tier, category: cat));
+            var shelf = new Shelf(new[]
+            {
+                new ShelfBottle(Booze2("gin_t", "gin", "gin", 1), 20),
+                new ShelfBottle(Booze2("vodka_t", "vodka", "vodka", 2), 20),
+                new ShelfBottle(Booze2("vermouth_t", "vermouth", "liqueur", 1), 20),
+            });
+            var run = new TycoonRun(shelf, RecipeCatalog.CreateDefault(), new RunRng("tiers"));
+            var order = new DrinkOrder(vesper, 10);
+
+            Assert.IsFalse(run.CanMake(order), "well gin cannot answer a tier-3 band");
+
+            var upgraded = new Shelf(new[]
+            {
+                new ShelfBottle(Booze2("gin_t3", "gin", "gin", 3), 20),
+                new ShelfBottle(Booze2("vodka_t", "vodka", "vodka", 2), 20),
+                new ShelfBottle(Booze2("vermouth_t", "vermouth", "liqueur", 1), 20),
+            });
+            var run2 = new TycoonRun(upgraded, RecipeCatalog.CreateDefault(), new RunRng("tiers2"));
+            Assert.IsTrue(run2.CanMake(order), "the tier-3 gin answers it");
+        }
+
+        [Test]
+        public void AnUnmatchedServe_StillLeavesADirtyGlass()
+        {
+            // The bussing discount the audit caught: a drink that matched no recipe left
+            // no glass at all, so the worst pour in the house freed its stool instantly.
+            var run = NewRun();
+            int guard = 0;
+            while (run.Floor.Seated.Count == 0) { Assert.Less(guard++, 100); run.Tick(5); }
+            var visit = run.Floor.Seated[0];
+
+            run.PourMeasure("soda", 0.55);   // pure soda: no recipe at all (gin alone would
+                                             // still read as a neat pour)
+            PourOut(run);
+            run.ServeTo(visit);
+            run.Tick(1.5);   // savour 0: they finish and get up
+
+            Assert.AreEqual(1, run.Floor.Dirty.Count,
+                "whoever drank leaves a glass, matched recipe or not");
+        }
     }
 }

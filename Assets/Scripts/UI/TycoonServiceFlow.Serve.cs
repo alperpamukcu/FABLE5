@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using LastCall.Core;
@@ -297,7 +297,9 @@ namespace LastCall.UI
                 if (r == null) return;
                 if (!r.CanFinishAtGlass)
                 {
-                    _aimText.text = "THE GLASS IS FULL — NO ROOM TO FINISH IT";
+                    // The predicate is a phase check now (2026-08-10: preparations are
+                    // volumeless) — the old "glass is full" line could only ever lie.
+                    _aimText.text = "THE NIGHT IS OVER";
                     _aimText.color = UITheme.Amber[3];
                     return;
                 }
@@ -350,7 +352,7 @@ namespace LastCall.UI
                         && Mathf.Abs(_dragPos.y - opening.y) < 80f;
             if (inMouth && !run.CanFinishAtGlass)
             {
-                _aimText.text = "THE GLASS IS FULL — NO ROOM TO FINISH IT";
+                _aimText.text = "THE NIGHT IS OVER";
                 _aimText.color = UITheme.Amber[3];
             }
             else if (inMouth)
@@ -398,7 +400,19 @@ namespace LastCall.UI
             // has nowhere to put it, and says so rather than swallowing the click (2026-07-28).
             btn.onClick.AddListener(() =>
             {
-                if (Run == null || Run.Glass.IsEmpty) return;
+                if (Run == null) return;
+                if (Run.Glass.IsEmpty)
+                {
+                    // Said, not swallowed (audit 2026-08-11): the jars stand on the SERVE
+                    // bench but pour into the TIN, which is usually already empty here —
+                    // a silent click read as "mint is broken" instead of "wrong order".
+                    if (_aimText != null)
+                    {
+                        _aimText.text = "THE TIN IS EMPTY — GARNISH GOES IN BEFORE THE POUR-OUT";
+                        _aimText.color = UITheme.Amber[3];
+                    }
+                    return;
+                }
                 if (Run.PourGarnish(c.Id) <= 0)
                 {
                     _aimText.text = "THE SHAKER IS FULL — NO ROOM FOR A GARNISH";

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace LastCall.Core
 {
@@ -171,15 +171,10 @@ namespace LastCall.Core
         /// The floor bot cannot grow, so its late collapse is the point, not a bug: its
         /// bankruptcy share is the measure that this threat finally lands.
         /// </summary>
-        /// <remarks>The quadratic divisor tightened 6 → 5.5 when P16's snack margin landed
-        /// (+$4/night at the floor, measured): the bowls softened the squeeze from 19.5% to
-        /// 2.0% bankruptcies on the same seeds, and the divisor is the recorded knob. Day 30
-        /// goes $239 → $252; days 1–10 move by a dollar or two.</remarks>
-        /// <remarks>Retuned for the inertial standing (2026-08-02), measured at both ends:
-        /// the old curve ($178 on day 24 against a $122 floor income) closed every sim run
-        /// at week four; the first soft pass (d²/10, +$420 median till) closed none and
-        /// lost the squeeze. This middle curve — $136 on day 24, $184 on day 30 — puts the
-        /// floor at 11.5% bankruptcies, back in the old regime's healthy band.</remarks>
+        /// <remarks>Two earlier tunings left stale numbers here (audit 2026-08-11) — the
+        /// 5.5-divisor and the "d²/10 soft pass" both predate the shipped curve. What SHIPS
+        /// is `12 + 2d + d²/9` with integer division: **$124 on day 24, $172 on day 30.**
+        /// The history stands in git; this remark carries only the live measurement.</remarks>
         public int Rent(int day) => 12 + 2 * day + (day * day) / 9;
 
         // ── orders (GDD 23 §3) ──────────────────────────────────────────────────

@@ -17,9 +17,11 @@ namespace LastCall.Core
     ///
     /// Four difficulty tiers, priced and gated by rank (see TycoonRun.RecipeStarGate):
     ///   starter  ranks 1–8   — two parts, generous bands; 1–3 open from day one
-    ///   mid      ranks 9–14  — three parts or a shake; 3.0★ (a bar not underwater)
-    ///   hard     ranks 15–21 — shaken sours, four bands, tighter; 3.5★
+    ///   mid      ranks 9–14  — three parts or a shake; gates 1.0★ (9–11) / 2.0★ (12–14)
+    ///   hard     ranks 15–21 — shaken sours, four bands, tighter; 3.0★
     ///   veryhard ranks 22+   — stirred precision, thirds, five-plus bands; 4.0★
+    ///   (five gates since the 2026-08-10 one-star split — TycoonRun.RecipeStarGate is
+    ///   the truth; this table follows it.)
     /// </summary>
     public static class RecipeCatalog
     {

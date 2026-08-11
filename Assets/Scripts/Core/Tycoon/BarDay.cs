@@ -160,9 +160,13 @@ namespace LastCall.Core
                 // The bussing beat (D2, v5 P14): someone who drank leaves their empty glass
                 // on the stool, and the stool is not sat on again until it is cleared — by
                 // the player's click, or by the bar getting to it in its own time. A
-                // storm-off leaves nothing: there was no glass.
-                if (visit.Served != null)
-                    _dirty.Add(new DirtyGlass(BusSeconds, visit.Served.GlassId));
+                // storm-off leaves nothing: there was no glass. EVERY served drink leaves
+                // one (audit 2026-08-11) — the unmatched glass used to vanish, a bussing
+                // discount for the worst pour — and it is the VESSEL that was actually
+                // handed over, not the recipe's nominal one.
+                if (visit.State != VisitState.StormedOff)
+                    _dirty.Add(new DirtyGlass(BusSeconds,
+                        visit.ServedGlassId ?? visit.Served?.GlassId));
                 return true;
             });
 
