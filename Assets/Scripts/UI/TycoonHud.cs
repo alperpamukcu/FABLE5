@@ -2513,9 +2513,12 @@ namespace LastCall.UI
         private int _endBeat;
         private float _endT, _endStarFrac;
         private const float CallIn = 0.4f, CallHold = 1.5f, CallOut = 0.5f;
-        /// <summary>How slowly the paper feeds, and from how far up. Slower than the old
-        /// arrival on purpose: a till is not fast, and the wait is the point.</summary>
-        private const float SlipFeed = 1.05f, SlipFeedFrom = 760f;
+        /// <summary>How slowly the paper feeds, and from how far up.
+        ///
+        /// 1.05 → 2.6 (2026-08-11, the author: much slower still). A till does not throw
+        /// paper at you; it grinds it out, and the grinding is what the whole beat is for —
+        /// the player has nothing to do but watch the night arrive.</summary>
+        private const float SlipFeed = 2.6f, SlipFeedFrom = 760f;
 
         private void StepDayEndBeats()
         {
@@ -2545,7 +2548,8 @@ namespace LastCall.UI
                 // jump the last 760 when the beat ended. Measured exactly that; put back
                 // where it belongs first and the feed is one unbroken movement.
                 _dayEndBill.anchoredPosition = _billHome;
-                PlayPanel(_dayEndBill, new Vector2(0, SlipFeedFrom), SlipFeed, fade: false);
+                PlayPanel(_dayEndBill, new Vector2(0, SlipFeedFrom), SlipFeed,
+                          fade: false, steady: true);
                 return;
             }
 
@@ -3022,15 +3026,22 @@ namespace LastCall.UI
         private float _slideT, _slideDur;
         private bool _slideOut;                 // out: away and gone, then tomorrow
         private bool _slideFade = true;         // paper does not fade in; a tablet does
+        private bool _slideSteady;              // paper is extruded, not thrown
         private CanvasGroup _slideGroup;
 
         /// <summary>Brings a panel in from an offset. Reduced motion places it.</summary>
-        private void PlayPanel(RectTransform rt, Vector2 from, float dur, bool fade = true)
+        /// <param name="steady">Feed it at a near-even rate instead of the usual soft
+        /// landing. A panel arrives — fast, then settling — but paper is EXTRUDED, at the
+        /// speed of the motor pushing it; the ease-out that suits the tablet spends most of
+        /// a long duration crawling the last inch, which at 2.6 seconds reads as a fault.</param>
+        private void PlayPanel(RectTransform rt, Vector2 from, float dur, bool fade = true,
+            bool steady = false)
         {
             SettleSlide();
             if (rt == null) return;
             if (Motion.Reduced) return;
             _slideFade = fade;
+            _slideSteady = steady;
             _slideRt = rt;
             _slideGroup = rt.GetComponent<CanvasGroup>();
             if (_slideGroup == null) _slideGroup = rt.gameObject.AddComponent<CanvasGroup>();
@@ -3081,7 +3092,11 @@ namespace LastCall.UI
                 if (k >= 1f) { SettleSlide(); OnOpenTomorrow(); }
                 return;
             }
-            float o = 1f - (1f - k) * (1f - k) * (1f - k);          // lands soft
+            // Paper: near-even, with just enough give at the end that it settles rather
+            // than stops dead. Everything else: the old soft landing.
+            float o = _slideSteady
+                ? 1f - Mathf.Pow(1f - k, 1.35f)
+                : 1f - (1f - k) * (1f - k) * (1f - k);              // lands soft
             _slideRt.anchoredPosition = Vector2.Lerp(_slideHome + _slideFrom, _slideHome, o);
             if (_slideGroup != null)
                 _slideGroup.alpha = _slideFade ? Mathf.Clamp01(k * 1.8f) : 1f;
