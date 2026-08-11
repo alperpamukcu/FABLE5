@@ -62,11 +62,18 @@ the mouse.** Buttons select; the mouse *does*. Every step below is a physical in
    glass mouth. Off-target liquid **spills** and is lost (this is where spilling lives
    now — the *aiming* game, not the filling game; GDD 21 §3's brim rule still holds
    inside the glass).
-3. **Carry it over (2026-07-22):** the finished drink appears as a **glass on the counter**
-   (staged centre-bottom). **Drag it onto a customer** to serve them — a heavy, springy
-   carry that leans into the motion (an AAA-feeling 2D drag). Dropping it on a seated
-   patron hands it over; `ServiceJudge` (23 §4) resolves and the payment floats up. Clicking
-   a customer now only **reads** their licence — serving is the drag.
+3. **Click to serve (2026-08-11, experimental — replaced the drag):** the finished drink
+   appears as a **glass on the counter** (staged centre-bottom). **Click a customer whose
+   order was TAKEN** and the glass **slides down the counter to them**, serving on
+   ARRIVAL after a re-validation — a customer can run out of patience while the glass is
+   in flight, and then the drink comes back. Only taken orders are selectable: clicking
+   an unread customer opens their licence (which IS taking the order), so the ID read
+   stays the one road to the servable state, and the cyan seat glow marks exactly the
+   clickable set. The **bin is a click** now too, inert with nothing to throw. Two
+   accepted tradeoffs, both experimental: while a drink is ready an already-read licence
+   cannot be re-opened, and Core's `ServeTo` stays deliberately blind-serve-capable —
+   the taken-order gate is the HUD's, so the sim and the tests are untouched.
+   *(The 2026-07-22 heavy drag this replaced lives in git if the experiment fails.)*
 4. **The glass is the drink (ruling 2026-07-28).** Only what has been poured into the
    serving glass can be carried or handed over. `ServeTo` used to tip an unpoured shaker in
    for you, which meant backing out of the flow served a customer a drink that had skipped

@@ -332,7 +332,7 @@ namespace LastCall.UI
             });
             var doneLabel = NewText("Label", done, _body, 8, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
             Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            doneLabel.text = "SERVE IT · PICK A SEAT";
+            doneLabel.text = "SERVE IT · CLICK A CUSTOMER";
         }
 
         private void RefreshTap()

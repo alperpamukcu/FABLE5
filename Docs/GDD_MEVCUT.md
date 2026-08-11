@@ -106,7 +106,7 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 | **Gün sonu** | hesap fişi → market (4 sekme: DOLUM/ŞİŞELER/TARİFLER/YÜKSELTMELER + bu gece alınanlar iade) |
 | **Back bar (menü)** | şişe hover=bilgi kartı, tıkla=rota (garnitür anında; bira→Tap; gazlı→Serve eline; kalan→Shaker). Sahne geçişleri KAYAR (ileri sağdan, geri soldan; açılış fade, kapanış anlık); her istasyonda sol kenar BACK TO BAR |
 | **Shaker** | şişeyi kaldır-yatır dök; hazırlık sürükle; AÇIK tin'de kaşıkla daire=karıştır; kapağı tak; tin'i savur=çalkala; kapalı+karışık → sağ kenar TO THE GLASS |
-| **Serve** | shaker'ı NİŞANLA dök (kaçırırsan döker); dolap şişesi elde `PourAtGlass`; bardakta bitir |
+| **Serve** | shaker'ı NİŞANLA dök (kaçırırsan döker); dolap şişesi elde `PourAtGlass`; bardakta bitir. Servis TIKLAMA (2026-08-11, deneysel): hazır bardak + sipariş ALINMIŞ müşteriye tık → bardak tezgahta kayar, varışta servis; okunmamışa tık kimliği açar; çöp de tıklama, boşken atıl |
 | **Tap** | bardağı yatır-doldur, dikleştir-köpük; verdikt satırı canlı |
 
 Teknik: sahne 640×360 (PixelPerfect), HUD 1280×720; tüm UI kodla kurulur, prefab yok; yalnız yeni Input System (`Mouse.current`).

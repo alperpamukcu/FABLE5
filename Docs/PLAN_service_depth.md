@@ -914,10 +914,14 @@ ten stirred recipes carry two spirits); the drag deleted outright; the cap stays
 - **Faz 1 (shipped with this entry):** Core `Stir`/`IsMixed`/`MixRequired`/`CanPourOut`
   + the refusal on `PourIntoServingGlass` (GDD 21 §14); the sim mixes by `recipe.Prep`;
   8 new gate tests (196 total). Sim report stayed byte-identical.
-- **Faz 2:** the bar spoon on the shaker bench (open tin = stir, capped = shake) and the
-  "TO THE GLASS" edge key gated on `CanPourOut`.
-- **Faz 3:** the two-slot stage slide stepper in `TycoonServiceFlow.GoTo`, edge back
-  buttons, `RectMask2D` on the field, `AdvanceStageOpen` retired.
-- **Faz 4:** the drink-glass state machine (Ready→Sliding→served), seat filter
-  `Waiting && HasOrdered && IdInspected` (HUD-level — Core's blind serve stays legal),
-  bin click, drag deletion.
+- **Faz 2 (shipped):** the bar spoon on the shaker bench (open tin = stir, capped =
+  shake, told apart by the cap) and the right-edge "TO THE GLASS" key gated on
+  `CanPourOut` — verified against a real two-spirit tin in play.
+- **Faz 3 (shipped):** the two-slot stage slide stepper in `TycoonServiceFlow.GoTo`
+  (state synchronous, visuals animated; InTransit + raycast locks; RectMask2D on the
+  field; `AdvanceStageOpen` retired), edge BACK TO BAR keys on all three stations.
+- **Faz 4 (shipped):** click-to-serve — the drink-glass state machine (Ready → Sliding →
+  served on ARRIVAL with re-validation and a comeback on refusal), seat filter
+  `Waiting && HasOrdered && IdInspected` (HUD-level — Core's blind serve stays legal,
+  tests untouched), the seat glow matching the clickable set, the bin as a click, the
+  drag deleted. All four phases measured in play; 196/196 throughout.
