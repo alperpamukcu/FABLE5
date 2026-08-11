@@ -2573,6 +2573,9 @@ namespace LastCall.UI
             if (_starT < 0f && _billShake <= 0f) _endBeat = 0;
         }
         private const float StarFallH = 70f;     // how far above its place a star starts
+        /// <summary>Where in the drop the star first touches its place — the root of the
+        /// out-back curve, not a number picked to look right. See the shake below.</summary>
+        private const float Contact = 1f - 1.7f / (1.7f + 1f);
         private const float StarDrop = 0.5f;     // one star's fall and settle
         private const float StarStagger = 0.42f; // the gap between two starting
 
@@ -2643,11 +2646,17 @@ namespace LastCall.UI
                     img.color = new Color(img.color.r, img.color.g, img.color.b,
                                           Mathf.Clamp01(k * 4f));
                 if (k < 1f) running = true;
-                // EACH LANDING SHAKES THE PAPER (2026-08-11, the author: "her düşüşünde
-                // sarsıntı animasyonu"). Fired once per star, on the frame it arrives —
-                // counting how many have landed is what makes it once rather than every
-                // frame after.
-                else if (i >= _landed) { _landed = i + 1; _billShake = 1f; Sfx.Play("click", 0.5f); }
+
+                // THE SHAKE FIRES ON CONTACT, NOT ON REST (2026-08-11, the author: the
+                // tremor and the star landing are not in step). They were not, and the
+                // easing says why: an out-back curve reaches its target EARLY, punches
+                // past it and rocks back. Solving e(k) = 1 for this overshoot gives
+                // k = Over / (Over + 1) subtracted from 1 — 0.370 at Over 1.7 — and the
+                // star is visibly on the paper from that moment, while the tween does not
+                // finish until 1.0. Firing at the end put the tremor two thirds of a beat
+                // after the impact it was meant to be.
+                if (i >= _landed && k >= Contact) { _landed = i + 1; _billShake = 1f;
+                    Sfx.Play("click", 0.5f); }
             }
             if (!running)
             {
@@ -2784,7 +2793,7 @@ namespace LastCall.UI
             // Smaller and lighter: the regular face at 16, where it used to be the heavy one
             // at 24. A name on a receipt is a line item, not a headline.
             float textX = cardW + 8f + Glyph + 8f;
-            float textW = BillW - BillInset * 2f - textX - 54f;   // the score keeps the right
+            float textW = BillW - BillInset * 2f - textX - 72f;   // the star and score keep the right
             var line = NewText("L", row, _body, 16, TextAnchor.MiddleLeft, ink);
             Place(line.rectTransform, new Vector2(0, 0.5f), new Vector2(textW, rowH),
                 new Vector2(textX, 0));
@@ -2797,6 +2806,18 @@ namespace LastCall.UI
             line.supportRichText = true;
             line.text = name + "  <color=#" + ColorUtility.ToHtmlStringRGB(BillQuiet) + ">"
                         + CriticReason(v) + "</color>";
+
+            // A STAR BESIDE THE FIGURE (2026-08-11, the author: so it is understood that
+            // the number with a point in it is a star rating). Not five of them — the row
+            // above already draws the night as five — but ONE, as a unit mark, the way a
+            // price carries a currency sign. It is the smallest thing that turns "1.0" from
+            // a number into a score.
+            var unit = NewRect("U", row);
+            Place(unit, new Vector2(1, 0.5f), new Vector2(14, 14), new Vector2(-54f, 0));
+            unit.pivot = new Vector2(1, 0.5f);
+            var ui = unit.gameObject.AddComponent<Image>();
+            ui.sprite = ChromeArt.Mark("star");
+            ui.preserveAspect = true; ui.raycastTarget = false; ui.color = ink;
 
             var score = NewText("N", row, _body, 24, TextAnchor.MiddleRight, ink);
             Place(score.rectTransform, new Vector2(1, 0.5f), new Vector2(52f, rowH),
@@ -2891,7 +2912,16 @@ namespace LastCall.UI
             // sadece başlıklarda"). Only the two summary lines — NET and TILL — carry the
             // heavy face now; every itemised line is set in the regular one, which is what a
             // receipt does anyway: the total is the thing you are meant to see first.
-            var l = NewText("L", row, heavy ? _shop : _body, 24, TextAnchor.MiddleLeft, ink);
+            // AND THE HEAVY FACE IS NO LONGER SILKSCREEN BOLD (2026-08-11, the author:
+            // "4 gibi sayilar cok kalin oldugundan sayi arasindaki bosluklar birlesiyor").
+            // That is exactly what it is. The face is drawn on an 8px grid with no side
+            // bearing, so at a whole 3x its digits touch and -$14 reads as one shape; the
+            // pixel size was never the problem, the metrics were. PressStart2P carries its
+            // gap INSIDE the cell, which is why it can be set solid at any size, and it is
+            // already the game's display type. It is wider, so the heavy rows drop to 16 —
+            // still the biggest thing on the slip, because nothing else is set in it.
+            var l = NewText("L", row, heavy ? _display : _body, heavy ? 16 : 24,
+                            TextAnchor.MiddleLeft, ink);
             l.rectTransform.anchorMin = new Vector2(0, 0); l.rectTransform.anchorMax = new Vector2(0.62f, 1);
             l.rectTransform.offsetMin = new Vector2(gutter, 0); l.rectTransform.offsetMax = Vector2.zero;
             // Overflow on both axes: the labels are one short word each, and Truncate at
@@ -2906,7 +2936,8 @@ namespace LastCall.UI
             // a SALES of $4 whose 4 is a smear, and RENT's -$14 with it. PressStart2P is not
             // the escape either, at a full 24 units a character "-$1240" would be 144 of the
             // 146 this column has. The regular face is narrow, legible and correct.
-            var v = NewText("V", row, heavy ? _shop : _body, 24, TextAnchor.MiddleRight, ink);
+            var v = NewText("V", row, heavy ? _display : _body, heavy ? 16 : 24,
+                            TextAnchor.MiddleRight, ink);
             v.rectTransform.anchorMin = new Vector2(0.62f, 0); v.rectTransform.anchorMax = Vector2.one;
             v.rectTransform.offsetMin = Vector2.zero; v.rectTransform.offsetMax = Vector2.zero;
             v.horizontalOverflow = HorizontalWrapMode.Overflow;

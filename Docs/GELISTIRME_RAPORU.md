@@ -94,6 +94,26 @@ bir yazı tipinden resim istemez**.
 Doğrulama: 188/188 test, ve beş yüzey play'de ölçülüp resmedildi (raf, tezgah, kitap,
 fatura, market) — derlenmesine güvenilmedi.
 
+### 0.3c · İş kolu — üç kollu denetim (2026-08-11 gece)
+
+Yazarın emri: "veri, kural ve mantık hatalarını analiz et; gereksiz kodu kaldır;
+dosya düzenini profesyonelleştir." Üç paralel denetçi + üç commit:
+
+**Kural kolu (`21f312f`)** — beş gerçek BUG, hepsi test pinli:
+| Bulgu | Sonuç |
+|---|---|
+| Her Built içki yanlış bardakta | fizz yalnız bardakta girebildiği için kap YARIM içkiye göre seçiliyordu — her Vodka Soda rocks'ta, kendi highball'u ölü veri. Kural: **içki bardakta kendini ilan eder** — bardak-yanı döküm bir tarifi adlandırınca içki kendi kabına aktarılır (taşırmaz, eski brim'in kestiğini tamamlar) |
+| Mix kapısı yandan geçilebiliyordu | erken bir çalkalama tüm inşayı "karışık" damgalıyordu; bayat `shaken` bardağa binip hakemden tam yöntem puanı alıyordu. Kural: **karışmış tin'e dökülen her şey onu karıştırılmamış yapar** |
+| 51 tarifte fiyat primi yanlış | stil bantları `band.Type` varsayılanıyla hep Spirit okunuyordu — Vodka Soda'yı raftaki T4 viski pahalandırıyordu. Prim artık bandın ADLANDIRDIĞI şişeden, stil başına |
+| 9 fiyatsız şişe | $8+6/tier fallback'e düşüyordu: kuyu romu $20, kendi T2 üstü $7 — ve market en-ucuz-önce kuralıyla kötü alımı ZORLUYORDU. Dokuzuna veri fiyatı |
+| Shelf.PourInto köpüğü saymıyordu | kendi yorumunun yasakladığı buharlaşma; `Glass.Headroom` |
+
+Artı borçlar: taze bar 2.25★ tavan (bedava çeyrek yıldız), iade edilen marka gece boyu alınamaz kalıyordu, `CanMake` MinTier bilmiyordu (Vesper kuyu cinle "yapılır" görünüyordu), eşleşmeyen içki kirli bardak bırakmıyordu (en kötü servise bussing indirimi), iki yalancı red metni, kararsız sıralama, üç yerde bayat yıldız-kapısı tablosu. Sim: medyan $176→$169, gerisi düz.
+
+**Ölü kod kolu (`48c39db`)** — ~850KB + ~300 satır: Splasher bütünüyle (her kare kurulup beslenmeyen parçacık sistemi), AddPrepSource (70 satır, tezgâhı 08-10'da terk eden dört küvetin kurucusu), Quality/QualityTier kavramı, SpriteKey (hiç okunmadı, json değerleri var olmayan PNG'leri adlandırıyordu), InstanceId, Tweening'in kullanılmayan coroutine'leri, 43 öksüz PNG (üç eski market kiti), hiç rol almamış walrus karakteri (790KB), TutorialInfo, kaza-kurtarma sahneleri, `dev/null` klasörü. Ders yeniden ödendi: iki blok kesiği yapıya güvenip komşu metod yedi — derleme yakaladı, brace-sayımıyla yeniden (source-edit-safety).
+
+**Düzen kolu (bu commit)** — `Assets/Scripts/UI` 28 düz dosyadan altı alt klasöre (Flow/Hud/Art/Fluid/Behaviours/Layout; asmdef özyinelemeli, namespace'ler değişmedi, git mv .meta'larla); iki editor kökü tek `Scripts/Editor`'da (LastCallImporter Assembly-CSharp-Editor→LastCall.Editor); `Tools/*_raw` gitignore'a. Bilerek DOKUNULMAYAN: `Resources/Items` düz kalır (87 çağrı yeri + json'dan türeyen adlar yol-yüklü — klasörleme her yükü kırar), Data'nın tekli klasörleri (maliyetsiz), Tools betikleri (scratchpad importları kırılır).
+
 ### 0.4 · Bu turda yakalanan hatalar
 
 Hepsi ölçümle bulundu; hiçbiri "bakınca fark edildi" değil:
