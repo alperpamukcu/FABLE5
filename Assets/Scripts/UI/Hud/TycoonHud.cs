@@ -804,7 +804,11 @@ namespace LastCall.UI
         // The inspector gives up 80 units and the order takes them: the order is the
         // control the whole market exists to reach and it was the quietest thing on
         // the page, against a 640-wide dark slab shouting beside it.
-        private const float FootH = 128f, InspectorW = 560f, OrderW = 312f, ExitW = 136f;
+        // THE FOOT: 8 + 880 (the basket) + 8 + 136 (the way out) + 8 = 1040.
+        private const float FootH = 128f, BasketW = 880f, ExitW = 136f, CheckoutW = 212f;
+        /// <summary>The reading card that rides the pointer — narrow, because it stands over
+        /// the aisle it is describing and must not cover the neighbours.</summary>
+        private const float ShopCardW = 320f;
 
         /// <summary>How far the foot stands off the device's own bottom edge.</summary>
         private const float FootY = 8f;
@@ -824,10 +828,19 @@ namespace LastCall.UI
         private const string ShopIdleTip =
             "Point at a line to read it. Nothing is charged until you place the order.";
 
-        private Text _fittingNote, _cartLine, _checkoutLabel, _cartHeadLabel, _osClock;
-        private Text _cartTotal;
-        private Text _inspIdentity, _inspMeta, _inspBody, _inspBuffA, _inspBuffB;
-        private Image _inspBuffAIcon, _inspBuffBIcon, _fittingLamp, _inspMarkImg;
+        private Text _fittingNote, _checkoutLabel, _cartHeadLabel, _osClock;
+        private Text _cartTotal, _cartTotalLabel;
+        /// <summary>The basket's row of picked things: one chip per line, icon and price,
+        /// click to take it back out (2026-08-11, the author).</summary>
+        private RectTransform _cartChips;
+        private Text _cartEmpty;
+        // The reading panel, on the POINTER (2026-08-11, the author: "ürünlerin açıklamasını
+        // pop-up gibi mouse üzerine taşırız ve alt barı tamamen sepet olarak kullanırız").
+        // It used to be a 560-wide slab bolted into the foot, which is where the basket
+        // needed to be: a description is read for a second and a basket is watched all night.
+        private RectTransform _shopCard, _shopCardRule;
+        private Text _cardIdentity, _cardMeta, _cardBody, _cardBuffA, _cardBuffB;
+        private Image _cardBuffAIcon, _cardBuffBIcon, _fittingLamp, _cardMarkImg;
         private Text _billNextLabel;
         private RectTransform _checkout, _billNext;
         private ScrollRect _shopScroll;
@@ -848,6 +861,7 @@ namespace LastCall.UI
             public int Price;
             public bool IsFitting;      // stools/glassware/counter — one a night
             public Action Buy;
+            public Sprite Art;          // what it looks like, for its chip in the basket
         }
 
         /// <summary>
@@ -1013,6 +1027,7 @@ namespace LastCall.UI
             StepSlide();
             RunTheTill(run);
             FollowPointerWithRecipeTip();
+            FollowPointerWithShopCard();
             FollowPointerWithShopSpec();
 
             if (run.Phase == TycoonPhase.DayOpen)
@@ -3457,26 +3472,19 @@ namespace LastCall.UI
                 if (_shopTabLits[i] != null) _shopTabLits[i].enabled = on;
             }
 
-            // The order LISTS what is in it, at full length. The 18-character cut existed
-            // because the panel was competing with a per-line price; the total moved to its
-            // own row, which bought the names their whole width back.
+            // The basket SHOWS what is in it (2026-08-11, the author: "sepetteki font
+            // okunmuyor ... ürünlerin ikonu da gözükmeli ... üstüne basınca çıkarılabilmeli").
+            // It used to be four names set at 8 in a 312-wide box with "+2 more" under them,
+            // which is the whole failure in one line: too small to read, and everything past
+            // the fourth thing simply gone. The foot is the basket now, and a picked line is
+            // a chip you can see and press.
             if (_cartHeadLabel != null)
-                _cartHeadLabel.text = _cart.Count == 0 ? "ORDER" : $"ORDER ({_cart.Count})";
-            if (_cartLine != null)
-            {
-                if (_cart.Count == 0) _cartLine.text = "Nothing picked yet.";
-                else
-                {
-                    var basket = new StringBuilder();
-                    int shown = Mathf.Min(4, _cart.Count);
-                    for (int i = 0; i < shown; i++) basket.Append(_cart[i].Label).Append('\n');
-                    if (_cart.Count > shown)
-                        basket.Append('+').Append(_cart.Count - shown).Append(" more");
-                    _cartLine.text = basket.ToString();
-                }
-            }
+                _cartHeadLabel.text = _cart.Count == 0 ? "BASKET" : $"BASKET ({_cart.Count})";
+            RebuildBasket();
             if (_cartTotal != null)
                 _cartTotal.text = _cart.Count == 0 ? "" : "$" + CartTotal();
+            // "TOTAL" with nothing after it is a label for a number that is not there.
+            if (_cartTotalLabel != null) _cartTotalLabel.enabled = _cart.Count > 0;
             if (_checkoutLabel != null)
                 if (_checkoutUntil < 0f)
                     _checkoutLabel.text = _cart.Count == 0 ? "NOTHING PICKED" : "PLACE ORDER";
@@ -3877,10 +3885,10 @@ namespace LastCall.UI
             // basket — which is still free to empty before it is placed — is where the
             // deciding belongs.
 
-            // The inspector starts on its idle line rather than as an empty black slab —
-            // and this is also what switches the two buff icons off, which otherwise sit
-            // there as white squares with no sprite in them.
-            ShowInspector(null);
+            // The reading card is put away with every rebuild: the tiles it was describing
+            // have just been destroyed, so a card left up is a description of nothing that
+            // the pointer never asked for.
+            ShowShopCard(null);
 
             // The aisle stays where it was left (the author: picking something must not
             // throw you back to the top). Switching department is what resets it.
@@ -3977,7 +3985,8 @@ namespace LastCall.UI
             else if (!afford) { spec.State = TileState.Unaffordable; spec.PillVerb = "NO CASH"; }
             else { spec.State = TileState.Orderable; spec.PillVerb = "ADD"; }
             string label = spec.Name;
-            spec.OnClick = () => ToggleCart(cartKey, label, price, isFitting, buy);
+            var art = spec.Art;                 // the basket draws what the tile drew
+            spec.OnClick = () => ToggleCart(cartKey, label, price, isFitting, buy, art);
         }
 
         private bool CartHasFitting()
@@ -4054,6 +4063,123 @@ namespace LastCall.UI
             return n;
         }
 
+        // A basket chip: wide enough to show what the thing IS, narrow enough that a night's
+        // shopping fits on one row. The row shrinks its chips toward the floor as it fills;
+        // past the floor it says how many more it is holding rather than dropping them.
+        private const float ChipMax = 76f, ChipMin = 46f, ChipGap = 6f;
+
+        /// <summary>
+        /// Draws the basket: one chip per picked line, each with the product's own art and
+        /// its price, each a button that takes it back out (2026-08-11, the author).
+        /// </summary>
+        private void RebuildBasket()
+        {
+            if (_cartChips == null) return;
+            foreach (Transform child in _cartChips) Destroy(child.gameObject);
+            if (_cartEmpty != null) _cartEmpty.gameObject.SetActive(_cart.Count == 0);
+            if (_cart.Count == 0) return;
+
+            float rowW = _cartChips.rect.width, rowH = _cartChips.rect.height;
+            int fits = Mathf.Max(1, Mathf.FloorToInt((rowW + ChipGap) / (ChipMin + ChipGap)));
+            bool over = _cart.Count > fits;
+            int shown = over ? fits - 1 : _cart.Count;
+            int slots = over ? fits : _cart.Count;
+            float box = Mathf.Clamp((rowW + ChipGap) / slots - ChipGap, ChipMin, ChipMax);
+            float x = 0f;
+            for (int i = 0; i < shown; i++)
+            {
+                AddCartChip(_cart[i], x, box, rowH);
+                x += box + ChipGap;
+            }
+            if (over) AddMoreChip(_cart.Count - shown, x, box, rowH);
+        }
+
+        private void AddCartChip(CartEntry entry, float x, float box, float rowH)
+        {
+            var chip = ChipPlate("Chip_" + entry.Key, x, box, rowH, PlateOf(TileState.Picked));
+
+            // The product, standing on the chip's own line — measured off the drawing, so a
+            // carton saved with air around it is the same size as the bottle beside it.
+            var art = NewRect("Art", chip);
+            VesselArt.StandOn(art, new Vector2(0.5f, 0f), entry.Art, rowH - 40f, new Vector2(0, 20f));
+            var ai = art.gameObject.AddComponent<Image>();
+            ai.sprite = entry.Art;
+            ai.preserveAspect = true;
+            ai.raycastTarget = false;
+            ai.enabled = entry.Art != null;
+
+            var price = NewText("P", chip, _shop, 12, TextAnchor.MiddleCenter, ShopGreenDark);
+            Place(price.rectTransform, new Vector2(0.5f, 0), new Vector2(box - 6f, 16), new Vector2(0, 3));
+            price.horizontalOverflow = HorizontalWrapMode.Overflow;
+            price.text = "$" + entry.Price;
+
+            // The way out, drawn ON the chip: a red corner with an X in it. The affordance
+            // has to be visible before the pointer arrives, or "click it again to take it
+            // out" is a rule nobody is told.
+            var cut = NewRect("X", chip);
+            Place(cut, new Vector2(1, 1), new Vector2(16, 16), new Vector2(-2, -2));
+            var cutImg = cut.gameObject.AddComponent<Image>();
+            cutImg.color = ShopCost; cutImg.raycastTarget = false;
+            var cutMark = NewText("L", cut, _shop, 12, TextAnchor.MiddleCenter, Color.white);
+            Stretch(cutMark.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, new Vector2(0, -1));
+            cutMark.raycastTarget = false;
+            cutMark.text = "X";
+
+            var button = chip.gameObject.AddComponent<Button>();
+            button.targetGraphic = chip.GetComponent<Image>();
+            var e = entry;
+            button.onClick.AddListener(() => ToggleCart(e.Key, e.Label, e.Price, e.IsFitting, e.Buy, e.Art));
+
+            var sink = chip.gameObject.AddComponent<PressSink>();
+            sink.Face = art; sink.Depth = 3f; sink.Lift = 3f; sink.Squash = 0.02f;
+
+            // A chip is a picture and a price; WHICH bottle it is goes on the pointer, in the
+            // same card the aisle uses, so the basket needs no small print at all.
+            var hover = chip.gameObject.AddComponent<HoverRelay>();
+            hover.Entered = () => ShowShopCard(new TileSpec
+            {
+                Identity = (e.Label ?? "").ToUpperInvariant(),
+                MetaLine = "$" + e.Price + "  ·  in the basket",
+                Body = "Click it to take it back out. Nothing is charged until you place the order.",
+                Art = e.Art,
+            });
+            hover.Exited = () => ShowShopCard(null);
+        }
+
+        /// <summary>What the row could not fit, counted rather than dropped.</summary>
+        private void AddMoreChip(int more, float x, float box, float rowH)
+        {
+            var chip = ChipPlate("Chip_more", x, box, rowH, ShopAisle);
+            var label = NewText("L", chip, _display, 16, TextAnchor.MiddleCenter, ShopInk);
+            Stretch(label.rectTransform, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
+            label.horizontalOverflow = HorizontalWrapMode.Overflow;
+            label.text = "+" + more;
+            var hover = chip.gameObject.AddComponent<HoverRelay>();
+            int n = more;
+            hover.Entered = () => ShowShopCard(new TileSpec
+            {
+                Identity = "AND " + n + " MORE",
+                MetaLine = "the basket holds them all",
+                Body = "The row ran out of width, not the basket. Everything picked is in the "
+                     + "total, and the order buys all of it.",
+            });
+            hover.Exited = () => ShowShopCard(null);
+        }
+
+        private RectTransform ChipPlate(string name, float x, float box, float rowH, Color paper)
+        {
+            var chip = NewRect(name, _cartChips);
+            chip.anchorMin = chip.anchorMax = new Vector2(0, 1);
+            chip.pivot = new Vector2(0, 1);
+            chip.sizeDelta = new Vector2(box, rowH);
+            chip.anchoredPosition = new Vector2(x, 0);
+            var plate = chip.gameObject.AddComponent<Image>();
+            plate.sprite = ChromeArt.Card();
+            plate.type = Image.Type.Sliced;
+            plate.color = paper;
+            return chip;
+        }
+
         /// <summary>Notes where the aisle is standing, so a rebuild can put it back.</summary>
         private void RememberScroll()
         {
@@ -4062,7 +4188,8 @@ namespace LastCall.UI
 
         /// <summary>Picks a listing up, or puts it back. Refuses what the night cannot
         /// carry: a second fitting, or more money than the till holds.</summary>
-        private void ToggleCart(string key, string label, int price, bool isFitting, Action buy)
+        private void ToggleCart(string key, string label, int price, bool isFitting, Action buy,
+            Sprite art = null)
         {
             RememberScroll();
             for (int i = 0; i < _cart.Count; i++)
@@ -4083,7 +4210,7 @@ namespace LastCall.UI
             if (CartTotal() + price > Run.Money) { Toast("NOT ENOUGH MONEY"); return; }
 
             _cart.Add(new CartEntry { Key = key, Label = label, Price = price,
-                                      IsFitting = isFitting, Buy = buy });
+                                      IsFitting = isFitting, Buy = buy, Art = art });
             Sfx.Play("click", 0.7f);
             RebuildDayEnd();
         }
@@ -4212,29 +4339,41 @@ namespace LastCall.UI
             const float Gap = 20f;
             Vector2 size = _shopSpec.sizeDelta;
             float halfW = _dayEndPanel.rect.width * 0.5f, halfH = _dayEndPanel.rect.height * 0.5f;
+            // Under the reading card when both are up: they describe the same tile, so they
+            // stack into one column rather than fighting for the same corner of the cursor.
+            float drop = _shopCard != null && _shopCard.gameObject.activeSelf
+                ? _shopCard.sizeDelta.y + 6f : 0f;
             float x = local.x + Gap;
             if (x + size.x > halfW) x = local.x - Gap - size.x;
-            float y = local.y - Gap;
-            if (y - size.y < -halfH) y = local.y + Gap + size.y;
+            float y = local.y - Gap - drop;
+            // The drop belongs to the TURNED-BACK case too. Near the foot both panels flip
+            // above the cursor, and without it here the table landed back on top of the card
+            // it was supposed to be stacked under (measured, 2026-08-11).
+            if (y - size.y < -halfH) y = local.y + Gap + drop + size.y;
             _shopSpec.anchoredPosition = new Vector2(x, y);
         }
 
-        private void ShowInspector(TileSpec spec)
+        /// <summary>
+        /// What the pointer is on, said on the pointer. Hiding is the whole answer for "on
+        /// nothing": the card is a thing the cursor carries, so an empty one would be a box
+        /// following the mouse around the shop saying nothing.
+        ///
+        /// The card GROWS to its text (2026-08-11). The slab it replaced was a fixed 128
+        /// units with every line set to Truncate, which is how a description longer than
+        /// three lines simply stopped mid-sentence.
+        /// </summary>
+        private void ShowShopCard(TileSpec spec)
         {
-            if (_inspIdentity == null) return;
-            if (_inspMarkImg != null)
-            {
-                _inspMarkImg.enabled = spec != null && spec.Art != null;
-                if (spec != null) _inspMarkImg.sprite = spec.Art;
-            }
+            if (_cardIdentity == null) return;
             if (spec == null)
             {
-                _inspIdentity.text = "";
-                _inspMeta.text = "";
-                _inspBody.text = ShopIdleTip;
-                _inspBuffA.text = ""; _inspBuffB.text = "";
-                _inspBuffAIcon.enabled = false; _inspBuffBIcon.enabled = false;
+                if (_shopCard != null) _shopCard.gameObject.SetActive(false);
                 return;
+            }
+            if (_cardMarkImg != null)
+            {
+                _cardMarkImg.enabled = spec.Art != null;
+                _cardMarkImg.sprite = spec.Art;
             }
             // The mark alone said "a bottle"; the NAME beside it says which. The identity
             // row already carried it, but a hundred units to the right of the picture it
@@ -4246,12 +4385,68 @@ namespace LastCall.UI
             // NEVER BLANK. A tile that forgot to set Identity showed the bottle's mark, a
             // grey line of specifications and no name at all — which is exactly the one
             // thing the panel exists to say. The tile's own name is always there.
-            _inspIdentity.text = !string.IsNullOrEmpty(spec.Identity)
+            _cardIdentity.text = !string.IsNullOrEmpty(spec.Identity)
                 ? spec.Identity : (spec.Name ?? "").ToUpperInvariant();
-            _inspMeta.text = spec.MetaLine ?? "";
-            _inspBody.text = spec.Body ?? "";
-            WriteBuff(_inspBuffA, _inspBuffAIcon, spec.BuffA);
-            WriteBuff(_inspBuffB, _inspBuffBIcon, spec.BuffB);
+            _cardMeta.text = spec.MetaLine ?? "";
+            _cardBody.text = spec.Body ?? "";
+            WriteBuff(_cardBuffA, _cardBuffAIcon, spec.BuffA);
+            WriteBuff(_cardBuffB, _cardBuffBIcon, spec.BuffB);
+
+            // Every row is stacked on the one above it, and the card is cut to the last of
+            // them — measured off the text itself, so a long name pushes the description
+            // down instead of printing through it.
+            float y = 8f;
+            y += Mathf.Max(20f, _cardIdentity.preferredHeight);
+            if (_cardMeta.text.Length > 0) y += RowAt(_cardMeta, y, 4f);
+            else y += 2f;
+            _shopCardRule.anchoredPosition = new Vector2(10f, -(y + 4f));
+            y += 10f;
+            if (_cardBody.text.Length > 0) y += RowAt(_cardBody, y, 0f);
+            if (_cardBuffA.text.Length > 0) y += BuffAt(_cardBuffA, _cardBuffAIcon, y);
+            if (_cardBuffB.text.Length > 0) y += BuffAt(_cardBuffB, _cardBuffBIcon, y);
+            _shopCard.sizeDelta = new Vector2(ShopCardW, y + 10f);
+            _shopCard.gameObject.SetActive(true);
+            _shopCard.SetAsLastSibling();
+            foreach (var g in _shopCard.GetComponentsInChildren<Graphic>(true)) g.raycastTarget = false;
+            FollowPointerWithShopCard();
+        }
+
+        /// <summary>Parks a text row at <paramref name="y"/> from the card's top, cut to what
+        /// it actually needs, and answers how much of the card it just spent.</summary>
+        private static float RowAt(Text row, float y, float gap)
+        {
+            float h = Mathf.Max(row.fontSize + 2f, row.preferredHeight);
+            var rt = row.rectTransform;
+            rt.sizeDelta = new Vector2(rt.sizeDelta.x, h);
+            rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, -(y + gap));
+            return h + gap + 2f;
+        }
+
+        private static float BuffAt(Text row, Image icon, float y)
+        {
+            float h = RowAt(row, y, 2f);
+            var irt = (RectTransform)icon.transform;
+            irt.anchoredPosition = new Vector2(irt.anchoredPosition.x, -(y + 3f));
+            return h;
+        }
+
+        /// <summary>Hangs the reading card off the cursor, turning back at the edges of the
+        /// market's own panel rather than running off it.</summary>
+        private void FollowPointerWithShopCard()
+        {
+            if (_shopCard == null || !_shopCard.gameObject.activeSelf) return;
+            var mouse = UnityEngine.InputSystem.Mouse.current;
+            if (mouse == null || _dayEndPanel == null) return;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _dayEndPanel, mouse.position.ReadValue(), null, out Vector2 local)) return;
+            const float Gap = 18f;
+            Vector2 size = _shopCard.sizeDelta;
+            float halfW = _dayEndPanel.rect.width * 0.5f, halfH = _dayEndPanel.rect.height * 0.5f;
+            float x = local.x + Gap;
+            if (x + size.x > halfW) x = local.x - Gap - size.x;
+            float y = local.y - Gap;
+            if (y - size.y < -halfH) y = local.y + Gap + size.y;
+            _shopCard.anchoredPosition = new Vector2(x, y);
         }
 
         /// <summary>One effect line: a colour AND its own icon. Colour alone would leave the
@@ -6763,81 +6958,88 @@ namespace LastCall.UI
             foot.sizeDelta = new Vector2(0, FootH);
             foot.anchoredPosition = new Vector2(0, FootY);
 
-            // THE INSPECTOR (the author: the descriptions need a box behind them). A flat
-            // DARK plate inset into the white page — the one treatment that reads as a box
-            // instead of as text lying on the page. Not sh_panel: a 64x48 sprite on a 640
-            // rect stretches 15.4x across against 3.67x down, which is why the two panels
-            // beside each other used to look like different materials.
-            var inspector = NewRect("Inspector", foot);
-            Place(inspector, new Vector2(0, 0.5f), new Vector2(InspectorW, FootH), new Vector2(8, 0));
-            inspector.gameObject.AddComponent<Image>().color = InspectorBack;
-            Hairline(inspector, new Vector2(0, 0), new Vector2(1, 0), ShopGreenDark);
-            Hairline(inspector, new Vector2(0, 1), new Vector2(1, 1), ShopGreenDark);
+            // THE READING CARD, ON THE POINTER (2026-08-11, the author). The description
+            // used to be a 560-wide dark slab bolted into the foot — two thirds of the bar
+            // spent on a sentence you read once, while the basket it sat beside had 312
+            // units to list a night's shopping in. A description belongs to the thing the
+            // pointer is on, so it goes to the pointer, and the foot goes to the basket.
+            //
+            // Built on the day-end PANEL rather than the foot: it has to be able to sit
+            // over the aisle it is describing, and a child of the foot would be clipped to
+            // it. Nothing in it may take a raycast — the panel sits under the cursor, and a
+            // graphic that answers the pointer reads as leaving the tile underneath, which
+            // hides the panel, which hands the pointer back, many times a second.
+            _shopCard = NewRect("ShopCard", _dayEndPanel);
+            Place(_shopCard, new Vector2(0.5f, 0.5f), new Vector2(ShopCardW, 132), Vector2.zero);
+            _shopCard.pivot = new Vector2(0, 1);
+            var cardBg = _shopCard.gameObject.AddComponent<Image>();
+            cardBg.color = InspectorBack;
+            var cardEdge = new Color(ShopGreenLit.r, ShopGreenLit.g, ShopGreenLit.b, 0.85f);
+            Hairline(_shopCard, new Vector2(0, 0), new Vector2(1, 0), cardEdge);
+            Hairline(_shopCard, new Vector2(0, 1), new Vector2(1, 1), cardEdge);
+            HairlineV(_shopCard, 0f, cardEdge);
+            HairlineV(_shopCard, 1f, cardEdge);
 
             // ONE TEXT COLUMN AND ONE ICON GUTTER (the author: align it, and use the
-            // space). Everything used to start at x 12 except the two buff lines, which
-            // started at 30 because their icons sat where the other rows' text did — four
-            // rows on one edge and two on another. The icons keep a 14-unit gutter at
-            // x 12..26 of their own now, and EVERY text starts at x 36.
-            const float InspGutter = 12f, InspText = 36f;
-            const float InspCol = InspectorW - InspText - 12f;   // 560 - 36 - 12 = 512
+            // space). The icons keep a gutter of their own and EVERY text starts beside it.
+            const float CardGutter = 10f, CardText = 34f;
+            const float CardCol = ShopCardW - CardText - 10f;
 
-            // The heaviest ink on the panel: white, in the shop's bold face. Everything
+            // The heaviest ink on the card: white, in the shop's bold face. Everything
             // else here is specification; this is the product.
-            _inspIdentity = NewText("Identity", inspector, _shop, 16, TextAnchor.UpperLeft, Color.white);
-            Place(_inspIdentity.rectTransform, new Vector2(0, 1), new Vector2(InspCol, 20),
-                new Vector2(InspText, -6));
-            _inspIdentity.horizontalOverflow = HorizontalWrapMode.Wrap;
-            _inspIdentity.verticalOverflow = VerticalWrapMode.Truncate;
+            _cardIdentity = NewText("Identity", _shopCard, _shop, 16, TextAnchor.UpperLeft, Color.white);
+            Place(_cardIdentity.rectTransform, new Vector2(0, 1), new Vector2(CardCol, 20),
+                new Vector2(CardText, -8));
+            _cardIdentity.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _cardIdentity.verticalOverflow = VerticalWrapMode.Overflow;
 
-            _inspMeta = NewText("InspMeta", inspector, _body, 8, TextAnchor.UpperLeft, InspectorDim);
-            Place(_inspMeta.rectTransform, new Vector2(0, 1), new Vector2(InspCol, 12),
-                new Vector2(InspText, -28));
-            _inspMeta.horizontalOverflow = HorizontalWrapMode.Wrap;
-            _inspMeta.verticalOverflow = VerticalWrapMode.Truncate;
+            // Sizes UP from 8 (the author: the market's small print was unreadable). The
+            // card is narrower than the slab was, so every line wraps sooner — and the card
+            // grows down to fit rather than truncating, which is what the fixed slab did.
+            _cardMeta = NewText("CardMeta", _shopCard, _body, 10, TextAnchor.UpperLeft, InspectorDim);
+            Place(_cardMeta.rectTransform, new Vector2(0, 1), new Vector2(CardCol, 14),
+                new Vector2(CardText, -30));
+            _cardMeta.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _cardMeta.verticalOverflow = VerticalWrapMode.Overflow;
 
             // A rule under the head, so the identity block and the description read as two
             // things rather than five loose lines on a slate.
-            var inspRule = NewRect("Rule", inspector);
-            Place(inspRule, new Vector2(0, 1), new Vector2(InspectorW - 24f, 1),
-                new Vector2(InspGutter, -44));
-            var ruleImg = inspRule.gameObject.AddComponent<Image>();
+            _shopCardRule = NewRect("Rule", _shopCard);
+            Place(_shopCardRule, new Vector2(0, 1), new Vector2(ShopCardW - 20f, 1),
+                new Vector2(CardGutter, -48));
+            var ruleImg = _shopCardRule.gameObject.AddComponent<Image>();
             ruleImg.color = new Color(0.24f, 0.31f, 0.26f, 1f);
             ruleImg.raycastTarget = false;
 
-            // The product's own mark, in the gutter beside the identity — the gutter is
-            // there for the buff icons and would otherwise be a 24-unit empty strip down
-            // the whole panel.
-            var inspMark = NewRect("Mark", inspector);
-            Place(inspMark, new Vector2(0, 1), new Vector2(16, 16), new Vector2(InspGutter, -8));
-            _inspMarkImg = inspMark.gameObject.AddComponent<Image>();
-            _inspMarkImg.preserveAspect = true;
-            _inspMarkImg.raycastTarget = false;
+            // The product's own mark, in the gutter beside the identity.
+            var cardMark = NewRect("Mark", _shopCard);
+            Place(cardMark, new Vector2(0, 1), new Vector2(20, 20), new Vector2(CardGutter, -8));
+            _cardMarkImg = cardMark.gameObject.AddComponent<Image>();
+            _cardMarkImg.preserveAspect = true;
+            _cardMarkImg.raycastTarget = false;
 
-            // The body: the lightest face at the smallest legal size, in SENTENCE CASE.
-            // 115 characters a line against the old 43, and no shouting.
-            _inspBody = NewText("InspBody", inspector, _body, 8, TextAnchor.UpperLeft, InspectorInk);
-            Place(_inspBody.rectTransform, new Vector2(0, 1), new Vector2(InspCol, 30),
-                new Vector2(InspText, -48));
-            _inspBody.supportRichText = true;
-            _inspBody.horizontalOverflow = HorizontalWrapMode.Wrap;
-            _inspBody.verticalOverflow = VerticalWrapMode.Truncate;
+            _cardBody = NewText("CardBody", _shopCard, _body, 10, TextAnchor.UpperLeft, InspectorInk);
+            Place(_cardBody.rectTransform, new Vector2(0, 1), new Vector2(CardCol, 40),
+                new Vector2(CardText, -54));
+            _cardBody.supportRichText = true;
+            _cardBody.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _cardBody.verticalOverflow = VerticalWrapMode.Overflow;
 
             for (int i = 0; i < 2; i++)
             {
-                float y = i == 0 ? -83f : -101f;
-                var icon = NewRect("BuffI" + i, inspector);
-                Place(icon, new Vector2(0, 1), new Vector2(14, 14), new Vector2(InspGutter, y - 1f));
+                var icon = NewRect("BuffI" + i, _shopCard);
+                Place(icon, new Vector2(0, 1), new Vector2(14, 14), new Vector2(CardGutter, -100f));
                 var ii = icon.gameObject.AddComponent<Image>();
                 ii.preserveAspect = true; ii.raycastTarget = false;
-                var line = NewText("Buff" + i, inspector, _body, 8, TextAnchor.MiddleLeft, InspectorInk);
-                Place(line.rectTransform, new Vector2(0, 1), new Vector2(InspCol, 14),
-                    new Vector2(InspText, y));
+                var line = NewText("Buff" + i, _shopCard, _body, 10, TextAnchor.UpperLeft, InspectorInk);
+                Place(line.rectTransform, new Vector2(0, 1), new Vector2(CardCol, 14),
+                    new Vector2(CardText, -100f));
                 line.horizontalOverflow = HorizontalWrapMode.Wrap;
-                line.verticalOverflow = VerticalWrapMode.Truncate;
-                if (i == 0) { _inspBuffAIcon = ii; _inspBuffA = line; }
-                else { _inspBuffBIcon = ii; _inspBuffB = line; }
+                line.verticalOverflow = VerticalWrapMode.Overflow;
+                if (i == 0) { _cardBuffAIcon = ii; _cardBuffA = line; }
+                else { _cardBuffBIcon = ii; _cardBuffB = line; }
             }
+            _shopCard.gameObject.SetActive(false);
 
             // THE POINTER GETS THE RECIPE (2026-08-10, the author). The inspector says what
             // a drink IS in a sentence; buying one is a question about the POUR, and a pour
@@ -6859,53 +7061,47 @@ namespace LastCall.UI
             Stretch(_shopSpecBody, Vector2.zero, Vector2.one, new Vector2(10, 6), new Vector2(-10, -6));
             _shopSpec.gameObject.SetActive(false);
 
-            // THE ORDER, and it lists what is in it.
-            var order = NewRect("Order", foot);
-            Place(order, new Vector2(0, 0.5f), new Vector2(OrderW, FootH), new Vector2(576, 0));
+            // THE BASKET IS THE FOOT (2026-08-11, the author: "alt barı tamamen sepet olarak
+            // kullanırız ... böylece çok ürün sepete eklenince gözükmeme problemini
+            // kaldırırız"). 880 units instead of 312, and what is in it is DRAWN rather than
+            // listed: the four names at 8 with "+2 more" under them were both unreadable and
+            // a lie about how much the basket holds.
+            var order = NewRect("Basket", foot);
+            Place(order, new Vector2(0, 0.5f), new Vector2(BasketW, FootH), new Vector2(8, 0));
             order.gameObject.AddComponent<Image>().color = Color.white;
             Hairline(order, new Vector2(0, 0), new Vector2(1, 0), ShopAisle);
-            // A HEAVIER HEAD. 26 units and the bold face at 16: the order is the control
-            // the market exists to reach, and it was whispering beside a 640-wide slab.
-            var orderHead = NewRect("OrderHead", order);
-            Place(orderHead, new Vector2(0, 1), new Vector2(OrderW, 26), Vector2.zero);
+
+            // THE HEAD BAND carries the whole control: what is in the basket, what it comes
+            // to, and the key that buys it — one row, all at a size that reads.
+            var orderHead = NewRect("BasketHead", order);
+            Place(orderHead, new Vector2(0, 1), new Vector2(BasketW, 30), Vector2.zero);
             orderHead.gameObject.AddComponent<Image>().color = ShopGreenDark;
-            var orderIcon = NewRect("OrderI", orderHead);
-            Place(orderIcon, new Vector2(0, 0.5f), new Vector2(18, 18), new Vector2(10, 0));
+            var orderIcon = NewRect("BasketI", orderHead);
+            Place(orderIcon, new Vector2(0, 0.5f), new Vector2(20, 20), new Vector2(10, 0));
             var orderIconImg = orderIcon.gameObject.AddComponent<Image>();
             orderIconImg.sprite = ItemArt.Load("sh_i_cart");
             orderIconImg.preserveAspect = true; orderIconImg.raycastTarget = false;
-            _cartHeadLabel = NewText("OrderHL", orderHead, _shop, 16, TextAnchor.MiddleLeft, Color.white);
-            Place(_cartHeadLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(OrderW - 46, 20),
-                new Vector2(36, 0));
-            _cartHeadLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
-            _cartHeadLabel.verticalOverflow = VerticalWrapMode.Truncate;
-            _cartHeadLabel.text = "ORDER";
+            _cartHeadLabel = NewText("BasketHL", orderHead, _shop, 16, TextAnchor.MiddleLeft, Color.white);
+            Place(_cartHeadLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(220, 20),
+                new Vector2(38, 0));
+            _cartHeadLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _cartHeadLabel.verticalOverflow = VerticalWrapMode.Overflow;
+            _cartHeadLabel.text = "BASKET";
 
-            _cartLine = NewText("OrderLines", order, _body, 8, TextAnchor.UpperLeft, ShopInk);
-            Place(_cartLine.rectTransform, new Vector2(0, 1), new Vector2(OrderW - 20, 40),
-                new Vector2(10, -32));
-            _cartLine.horizontalOverflow = HorizontalWrapMode.Wrap;
-            _cartLine.verticalOverflow = VerticalWrapMode.Truncate;
+            // The number the player decides on, beside the key that spends it.
+            _cartTotalLabel = NewText("TotalL", orderHead, _shop, 8, TextAnchor.MiddleRight, ShopPaper);
+            Place(_cartTotalLabel.rectTransform, new Vector2(1, 0.5f), new Vector2(60, 12),
+                new Vector2(-(CheckoutW + 130f), 0));
+            _cartTotalLabel.text = "TOTAL";
+            _cartTotal = NewText("BasketTotal", orderHead, _display, 16, TextAnchor.MiddleRight,
+                Color.white);
+            Place(_cartTotal.rectTransform, new Vector2(1, 0.5f), new Vector2(120, 20),
+                new Vector2(-(CheckoutW + 8f), 0));
+            _cartTotal.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _cartTotal.verticalOverflow = VerticalWrapMode.Overflow;
 
-            // THE TOTAL, on its own banded row and at a size worth reading — it is the
-            // number the player decides on, and it was set at 8 in the corner.
-            var totalRow = NewRect("TotalRow", order);
-            Place(totalRow, new Vector2(0, 1), new Vector2(OrderW - 20, 22), new Vector2(10, -76));
-            var totalBg = totalRow.gameObject.AddComponent<Image>();
-            totalBg.color = new Color(0.898f, 0.937f, 0.902f, 1f);
-            totalBg.raycastTarget = false;
-            var totalLabel = NewText("TotalL", totalRow, _shop, 8, TextAnchor.MiddleLeft, ShopInkSoft);
-            Place(totalLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(80, 12), new Vector2(8, 0));
-            totalLabel.text = "TOTAL";
-            _cartTotal = NewText("OrderTotal", totalRow, _display, 16, TextAnchor.MiddleRight,
-                ShopGreenDark);
-            Place(_cartTotal.rectTransform, new Vector2(1, 0.5f), new Vector2(180, 18),
-                new Vector2(-8, 0));
-            _cartTotal.horizontalOverflow = HorizontalWrapMode.Wrap;
-            _cartTotal.verticalOverflow = VerticalWrapMode.Truncate;
-
-            _checkout = NewRect("Checkout", order);
-            Place(_checkout, new Vector2(0, 0), new Vector2(OrderW - 20, 26), new Vector2(10, 6));
+            _checkout = NewRect("Checkout", orderHead);
+            Place(_checkout, new Vector2(1, 0.5f), new Vector2(CheckoutW, 26), new Vector2(-4, 0));
             var checkoutImg = _checkout.gameObject.AddComponent<Image>();
             var orderArt = ItemArt.Load("sh_k_order");
             if (orderArt != null) checkoutImg.sprite = orderArt;   // 212x26, drawn to fit
@@ -6916,9 +7112,20 @@ namespace LastCall.UI
             _checkoutLabel = NewText("L", _checkout, _shop, 16, TextAnchor.MiddleCenter, Color.white);
             Stretch(_checkoutLabel.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(6, 0), new Vector2(-6, 0));
-            _checkoutLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
-            _checkoutLabel.verticalOverflow = VerticalWrapMode.Truncate;
+            _checkoutLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _checkoutLabel.verticalOverflow = VerticalWrapMode.Overflow;
             _checkoutLabel.text = "PLACE ORDER";
+
+            // THE ROW OF WHAT IS PICKED. Chips are built into it on every rebuild.
+            _cartChips = NewRect("BasketChips", order);
+            Place(_cartChips, new Vector2(0, 1), new Vector2(BasketW - 20f, FootH - 38f),
+                new Vector2(10, -34));
+            _cartEmpty = NewText("BasketEmpty", order, _body, 12, TextAnchor.MiddleLeft, ShopInkSoft);
+            Place(_cartEmpty.rectTransform, new Vector2(0, 1), new Vector2(BasketW - 20f, 40),
+                new Vector2(12, -46));
+            _cartEmpty.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _cartEmpty.verticalOverflow = VerticalWrapMode.Overflow;
+            _cartEmpty.text = ShopIdleTip;
 
             // The way out, bottom right of the device.
             _openTomorrow = NewRect("OpenTomorrow", foot);
@@ -7180,8 +7387,8 @@ namespace LastCall.UI
             // wheel and froze the aisle over every tile that had something to read.
             var shown = spec;
             var hover = rt.gameObject.AddComponent<HoverRelay>();
-            hover.Entered = () => { ShowInspector(shown); ShowShopSpec(shown.Recipe); };
-            hover.Exited = () => { ShowInspector(null); ShowShopSpec(null); };
+            hover.Entered = () => { ShowShopCard(shown); ShowShopSpec(shown.Recipe); };
+            hover.Exited = () => { ShowShopCard(null); ShowShopSpec(null); };
 
             // 1 — THE STRIP: 8 x 208 of solid state colour down the left edge. 1664 units,
             // which is 1.7x the area of the entire old thumbnail, and it reads from across
