@@ -5,37 +5,35 @@ namespace LastCall.Core
 {
     /// <summary>
     /// How a customer wants their drink served (v5 P11, GDD 23 §3.1). The order names a drink;
-    /// this names everything else about it — ice, a rim, a twist, shaken hard. It is **stated**,
+    /// this names everything else about it — ice, a rim, a twist. It is **stated**,
     /// printed on the licence for the player to read; the inferred-preference layer it once
     /// stood beside was demolished with the emotion machinery.
     ///
     /// Every request is gradeable and every miss costs tip rather than payment: a Gin Fizz
     /// served without the ice is still a Gin Fizz, and the customer still pays for it.
+    ///
+    /// THE SHAKE LEFT THE SPEC (2026-08-11, the author: "shaken olması müşterinin talebi
+    /// değil tarifin talebi olmalı"). "Extra shaken" was a customer whim rolled at 25% —
+    /// and it was the only place the mixing method was ever graded, while the RECIPE's own
+    /// shaken/stirred went unread. That was backwards: how a drink is worked belongs to the
+    /// book, and the judge grades it against <see cref="RecipeDefinition.Prep"/> now.
     /// </summary>
     public sealed class ServingSpec
     {
-        public static readonly ServingSpec Plain = new ServingSpec(null, false);
+        public static readonly ServingSpec Plain = new ServingSpec(null);
 
         /// <summary>Ice, a lemon twist, a salted or sugared rim.</summary>
         public IReadOnlyList<PreparationDefinition> Garnishes { get; }
 
-        /// <summary>They want it worked hard — only ever asked of a shaken recipe.</summary>
-        public bool ExtraShaken { get; }
-
         /// <summary>How many separate things they asked for.</summary>
-        public int RequestCount => Garnishes.Count + (ExtraShaken ? 1 : 0);
+        public int RequestCount => Garnishes.Count;
 
         public bool IsPlain => RequestCount == 0;
 
-        public ServingSpec(IReadOnlyList<PreparationDefinition> garnishes,
-            bool extraShaken = false)
+        public ServingSpec(IReadOnlyList<PreparationDefinition> garnishes)
         {
             Garnishes = garnishes ?? Array.Empty<PreparationDefinition>();
-            ExtraShaken = extraShaken;
         }
-
-        /// <summary>Shake energy at or above this counts as "worked hard".</summary>
-        public const double ExtraShakenEnergy = 0.6;
 
         /// <summary>The fill every order expects ("filled to the top" retired 2026-08-02,
         /// its machinery removed in the 2026-08-07 sweep). Under-filling costs;
@@ -48,7 +46,7 @@ namespace LastCall.Core
         /// The share of this spec the delivered glass actually satisfies, 0–1. A plain order is
         /// satisfied by definition — asking for nothing cannot be got wrong.
         /// </summary>
-        public double Delivered(GlassContents glass, double shakeEnergy)
+        public double Delivered(GlassContents glass)
         {
             int total = RequestCount;
             if (total == 0) return 1.0;
@@ -57,8 +55,6 @@ namespace LastCall.Core
             int met = 0;
             foreach (var garnish in Garnishes)
                 if (glass.HasPreparation(garnish.Id)) met++;
-            if (ExtraShaken && glass.HasPreparation(Preparations.Shaken.Id)
-                && shakeEnergy >= ExtraShakenEnergy) met++;
             return (double)met / total;
         }
 
@@ -91,10 +87,11 @@ namespace LastCall.Core
                 }
             }
 
-            bool extraShaken = !draught && recipe.Prep == PrepMethod.Shaken && rng.NextInt(100) < 25;
+            // (The extra-shaken roll stood here until 2026-08-11. Its NextInt stays OUT —
+            // the stream's numbers shift either way, and the sim re-baseline covers it.)
 
-            if (garnishes.Count == 0 && !extraShaken) return Plain;
-            return new ServingSpec(garnishes, extraShaken);
+            if (garnishes.Count == 0) return Plain;
+            return new ServingSpec(garnishes);
         }
 
         /// <summary>The garnishes a customer can ask for (the four droppable preparations).</summary>
@@ -115,7 +112,6 @@ namespace LastCall.Core
             if (IsPlain) return "as it comes";
             var parts = new List<string>();
             foreach (var g in Garnishes) parts.Add(g.Name);
-            if (ExtraShaken) parts.Add("extra shaken");
             return string.Join(", ", parts);
         }
     }

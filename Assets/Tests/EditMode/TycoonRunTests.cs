@@ -22,7 +22,9 @@ namespace LastCall.Tests
                 new RatioRequirement(IngredientType.Spirit, 0.3, 0.7),
                 new RatioRequirement(IngredientType.Bubbly, 0.3, 0.7),
             },
-            minFill: 0.5);
+            // Built (2026-08-11): the method rule grades shaken/stirred recipes against
+            // the delivered glass, and these runs serve unmixed spritzes by the hundred.
+            minFill: 0.5, prep: PrepMethod.Built);
 
         private static readonly IReadOnlyList<RecipeDefinition> Book = new[] { Spritz() };
 

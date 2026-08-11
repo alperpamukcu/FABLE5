@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using LastCall.Core;
 using NUnit.Framework;
@@ -56,26 +56,59 @@ namespace LastCall.Tests
             {
                 var spec = ServingSpec.Roll(draught, rng);
                 Assert.IsEmpty(spec.Garnishes, "a pint takes no garnish");
-                Assert.IsFalse(spec.ExtraShaken, "and a pint is never shaken");
                 Assert.IsTrue(spec.IsPlain,
                     "and with the fill demand retired (2026-08-02) a pint's spec is always plain");
             }
         }
 
-        [Test]
-        public void OnlyAShakenRecipe_IsEverAskedToBeShakenHarder()
-        {
-            var rng = new RunRng("built-spec").GetStream("orders");
-            var built = Built();
-            for (int i = 0; i < 400; i++)
-                Assert.IsFalse(ServingSpec.Roll(built, rng).ExtraShaken,
-                    "a built drink never sees a shaker, so nobody can ask for it worked hard");
+        // ── the method is the recipe's, and the judge reads it (2026-08-11) ─────
+        // "Extra shaken" — a customer whim rolled at 25% — retired with this: how a
+        // drink is worked belongs to the BOOK, and the judge grades the delivered
+        // glass against RecipeDefinition.Prep.
 
-            var rng2 = new RunRng("shaken-spec").GetStream("orders");
-            bool sawShaken = false;
-            for (int i = 0; i < 400 && !sawShaken; i++)
-                if (ServingSpec.Roll(Shakeable(), rng2).ExtraShaken) sawShaken = true;
-            Assert.IsTrue(sawShaken, "a shaken recipe can be");
+        private static RecipeDefinition Stirred(string id = "martini") =>
+            new RecipeDefinition(id, id, rank: 16, baseFlavor: 30, baseMult: 3,
+                flavorPerLevel: 25, multPerLevel: 2,
+                requirements: new[] { new PatternRequirement(1, IngredientType.Spirit) },
+                prep: PrepMethod.Stirred);
+
+        [Test]
+        public void AShakenRecipe_ServedUnshaken_PaysForItOutOfTheTip()
+        {
+            var order = new DrinkOrder(Shakeable(), 10);
+            var shaken = Full(); shaken.AddPreparation(Preparations.Shaken);
+            var still = Full();
+
+            var right = ServiceJudge.Judge(new CustomerVisit(order, 60), OrderMatch.Exact, shaken);
+            var wrongWay = ServiceJudge.Judge(new CustomerVisit(order, 60), OrderMatch.Exact, still);
+
+            Assert.AreEqual(right.BasePaid, wrongWay.BasePaid, "still the drink; still paid");
+            Assert.Less(wrongWay.Tip, right.Tip, "but the book said SHAKE, and nobody did");
+        }
+
+        [Test]
+        public void AStirredRecipe_Shaken_IsBruised_AndScoresTheSameAsUnmixed()
+        {
+            var order = new DrinkOrder(Stirred(), 10);
+            var bruised = Full(); bruised.AddPreparation(Preparations.Shaken);
+            var still = Full();
+
+            var b = ServiceJudge.Judge(new CustomerVisit(order, 60), OrderMatch.Exact, bruised);
+            var s = ServiceJudge.Judge(new CustomerVisit(order, 60), OrderMatch.Exact, still);
+            Assert.AreEqual(s.Tip, b.Tip, "a shaken Martini is bruised — the wrong mix earns no more than none");
+
+            var stirred = Full(); stirred.AddPreparation(Preparations.Stirred);
+            var st = ServiceJudge.Judge(new CustomerVisit(order, 60), OrderMatch.Exact, stirred);
+            Assert.Greater(st.Tip, b.Tip, "the spoon is what the book asked for");
+        }
+
+        [Test]
+        public void ABuiltRecipe_DoesNotCareHowItWasMixed()
+        {
+            Assert.AreEqual(1.0, ServiceJudge.MethodScore(Built(), Full()), 1e-9);
+            var stirred = Full(); stirred.AddPreparation(Preparations.Stirred);
+            Assert.AreEqual(1.0, ServiceJudge.MethodScore(Built(), stirred), 1e-9,
+                "the tin-built black russian's mandatory stir costs nothing");
         }
 
         // ── the spec is graded ──────────────────────────────────────────────────
@@ -83,7 +116,7 @@ namespace LastCall.Tests
         [Test]
         public void EveryPartOfTheSpec_IsGradedIndependently()
         {
-            var spec = new ServingSpec(new[] { Preparations.Ice }, extraShaken: true);
+            var spec = new ServingSpec(new[] { Preparations.Ice, Preparations.LemonTwist });
             Assert.AreEqual(2, spec.RequestCount);
 
             GlassContents Short()
@@ -95,25 +128,22 @@ namespace LastCall.Tests
             }
 
             var none = Short();
-            Assert.AreEqual(0.0, spec.Delivered(none, 0), 1e-9, "nothing asked for was done");
+            Assert.AreEqual(0.0, spec.Delivered(none), 1e-9, "nothing asked for was done");
 
             var iced = Short();
             iced.AddPreparation(Preparations.Ice);
-            Assert.AreEqual(1.0 / 2.0, spec.Delivered(iced, 0), 1e-9);
+            Assert.AreEqual(1.0 / 2.0, spec.Delivered(iced), 1e-9);
 
-            var icedAndShaken = Short();
-            icedAndShaken.AddPreparation(Preparations.Ice);
-            icedAndShaken.AddPreparation(Preparations.Shaken);
-            Assert.AreEqual(1.0 / 2.0, spec.Delivered(icedAndShaken, 0.2), 1e-9,
-                "shaken, but not hard enough to count as worked");
-            Assert.AreEqual(1.0, spec.Delivered(icedAndShaken, 0.9), 1e-9,
-                "shaken hard does count");
+            var both = Short();
+            both.AddPreparation(Preparations.Ice);
+            both.AddPreparation(Preparations.LemonTwist);
+            Assert.AreEqual(1.0, spec.Delivered(both), 1e-9);
         }
 
         [Test]
         public void APlainOrder_CannotBeGotWrong()
         {
-            Assert.AreEqual(1.0, ServingSpec.Plain.Delivered(new GlassContents(1.0), 0), 1e-9);
+            Assert.AreEqual(1.0, ServingSpec.Plain.Delivered(new GlassContents(1.0)), 1e-9);
         }
 
         // ── payment matrix ──────────────────────────────────────────────────────
@@ -139,6 +169,7 @@ namespace LastCall.Tests
 
             var perfectGlass = Full();
             perfectGlass.AddPreparation(Preparations.Ice);
+            perfectGlass.AddPreparation(Preparations.Shaken);   // the book's own method, since 2026-08-11
             var perfect = ServiceJudge.Judge(new CustomerVisit(order, 60), OrderMatch.Exact,
                 perfectGlass);
 
@@ -171,6 +202,7 @@ namespace LastCall.Tests
             var order = new DrinkOrder(Shakeable(), 10, new ServingSpec(new[] { Preparations.Ice }));
             var glass = Full();
             glass.AddPreparation(Preparations.Ice);
+            glass.AddPreparation(Preparations.Shaken);
 
             var newcomer = new RegularState("r1", "Newcomer", "arch");
             var known = new RegularState("r2", "Known", "arch");
@@ -193,6 +225,7 @@ namespace LastCall.Tests
             // the extra order stays available -- the opt-in rule (CLAUDE.md) holds.
             var iced = Full();
             iced.AddPreparation(Preparations.Ice);
+            iced.AddPreparation(Preparations.Shaken);
             var verdict = ServiceJudge.Judge(
                 new CustomerVisit(new DrinkOrder(Shakeable(), 10,
                     new ServingSpec(new[] { Preparations.Ice })), 60), OrderMatch.Exact, iced);

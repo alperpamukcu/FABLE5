@@ -97,6 +97,60 @@ namespace LastCall.UI
                     ? PoolCeilingArtPx / Sprite.rect.height : 0f);
                 return FloorY + (ceiling - FloorY) * Mathf.Clamp01(fraction);
             }
+
+            /// <summary>
+            /// How wide the interior is at height <paramref name="y"/> (0 = bottom of the
+            /// rect, 1 = top), as a fraction of the rect's WIDTH.
+            ///
+            /// The surface of a drink is the width of the glass at the height it has reached,
+            /// which is not one number: a martini's cone is nearly closed at the bottom and
+            /// wide at the rim. <see cref="Profile"/> already carries that shape — it is the
+            /// same array the fluid solver clamps its particles to — so this reads the level
+            /// off the same silhouette the liquid is clipped by, and the two cannot disagree.
+            /// </summary>
+            public float InteriorWidthAt(float y)
+            {
+                if (Profile == null || Profile.Length == 0) return InteriorHalf;
+                float span = RimY - FloorY;
+                float t = span <= 0f ? 0f : Mathf.Clamp01((y - FloorY) / span);
+                float f = t * (Profile.Length - 1);
+                int i0 = Mathf.FloorToInt(f);
+                int i1 = Mathf.Min(i0 + 1, Profile.Length - 1);
+                return InteriorHalf * Mathf.Lerp(Profile[i0], Profile[i1], f - i0);
+            }
+        }
+
+        /// <summary>
+        /// How flat the drink's top face is drawn: an ellipse this many times as tall as it
+        /// is wide. The whole stage is drawn from slightly above — the bottle caps and the
+        /// carton lids read as shallow ellipses on the same rule — so the drink in a glass
+        /// has to as well, or the glass is a cylinder with a flat lid on it.
+        /// </summary>
+        public const float SurfaceSquash = 0.24f;
+
+        private static Sprite _surface;
+
+        /// <summary>A plain white disc, squashed into the surface ellipse by its rect and
+        /// tinted by whatever is standing in the glass.</summary>
+        public static Sprite SurfaceDisc()
+        {
+            if (_surface != null) return _surface;
+            const int W = 64, H = 64;
+            var px = new Color32[W * H];
+            float c = (W - 1) / 2f;
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    float dx = (x - c) / c, dy = (y - c) / c;
+                    px[y * W + x] = dx * dx + dy * dy <= 1f
+                        ? new Color32(255, 255, 255, 255) : new Color32(255, 255, 255, 0);
+                }
+            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            tex.SetPixels32(px);
+            tex.Apply();
+            return _surface = Sprite.Create(tex, new Rect(0, 0, W, H), new Vector2(0.5f, 0.5f),
+                100f, 0, SpriteMeshType.FullRect);
         }
 
         /// <summary>

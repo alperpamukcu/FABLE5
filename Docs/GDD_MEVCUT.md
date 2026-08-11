@@ -32,7 +32,7 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 - **İki saat:** (1) *sorulma sabrı* `max(14, 30−1.6g)` — dolarsa fırtına gibi gider; (2) *içki sabrı* `max(22, 50−2.5g)` — **kimlik okununca** başlar.
 - **Kimlik kartı (gizli bilgi):** `CustomerVisit.Order` `InspectId()` çağrılana dek **throw eder**; gerçek siparişi yalnız Core görür (`OrderTruth`). Kartı açmak siparişi almaktır — geri dönüşü yok. Kör servis yasal: yargıç gerçekle karşılaştırır.
 - **Sipariş havuzu:** açık menüden, en düşük ranktan `3+gün` tarif; stok bakılmaz (kuru şişe = `DeclineOrder`).
-- **Servis tercihi (spec):** ~%50 sade; değilse 1–2 garnitür {buz, limon, tuz, şeker}; Shaken tariflerde %25 "sert çalkala" (enerji ≥0.6). Draught'a garnitür/çalkalama yazılmaz. Beklenen doluluk 0.80 (tepeleme isteği 2026-08-02'de emekli).
+- **Servis tercihi (spec):** ~%50 sade; değilse 1–2 garnitür {buz, limon, tuz, şeker}. Draught'a garnitür yazılmaz. Beklenen doluluk 0.80 (tepeleme isteği 2026-08-02'de emekli). **"Sert çalkala" 2026-08-11'de emekli:** yöntem müşterinin hevesi değil TARİFİN talebi — hakem artık `Prep`'i notluyor (aşağıda).
 - **Ekstra tur:** Exact + zanaat tam + dönen müşteri + bekleme <%90 → en fazla 2 ek sipariş, sabır %80'e tazelenir.
 - **Müdavimler opt-in:** kayıt (registry) verilmezse anonim kalabalık. Müdavim: isim/yaş/şehir/arketip/ziyaret/ilişki taşır; duygu katmanı 2026-08-02'de söküldü — kokteyle verilen tepki tek gerçek.
 
@@ -47,7 +47,7 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 | **Musluk** (`BeginPull/PourTilted/SettleHead`) | yalnız bira | bira olmayan id; shaker doluyken pull |
 
 - **Servis dökümü zorunlu:** içki shaker'da servis edilemez; `PourIntoServingGlass(hacim, isabet)` — isabet dışı kısım dökülür, oranlar bozulmadan (TransferInto brim'e kadar, hazırlıklar bardağa taşınır).
-- **Zorunlu karıştırma (GDD 21 §14, 2026-08-11):** tin'de ≥%3 payla **2+ alkollü** içerik (kategori testi — likörler sayılır, ABV asla kural beslemez) varsa dışa döküm `Shake` ya da `Stir` ister; red `PourIntoServingGlass`'ta, UI `CanPourOut` okur. Bardakta inşa muaf (kural tin hakkında); bin her zaman açık; Info'suz test kartları bilerek muaf. `Stir(enerji)` = `Shake`'in aynası (`IsStirred/StirEnergy`, tek yuva son kazanır). Hakem karıştırma YÖNTEMİNİ hâlâ okumuyor — Martini'yi çalkalamak yasal, sadece yanlış.
+- **Zorunlu karıştırma (GDD 21 §14, 2026-08-11):** tin'de ≥%3 payla **2+ alkollü** içerik (kategori testi — likörler sayılır, ABV asla kural beslemez) varsa dışa döküm `Shake` ya da `Stir` ister; red `PourIntoServingGlass`'ta, UI `CanPourOut` okur. Bardakta inşa muaf (kural tin hakkında); bin her zaman açık; Info'suz test kartları bilerek muaf. `Stir(enerji)` = `Shake`'in aynası (`IsStirred/StirEnergy`, tek yuva son kazanır). Hakem yöntemi aynı gün öğrendi (§6 zanaat): Martini'yi çalkalamak hâlâ YASAL (kapı "karışsın" der, "doğru karışsın" demez) ama bahşişten öder.
 - **Bardak otomatiği:** eşleşen tarifin `GlassId`'si ilk dışa dökümde seçilir; sıvı varken kap değişmez. Kapasiteler: pint 1.6 · highball 1.0 (varsayılan) · rocks 0.7 · martini 0.6 · coupe 0.55.
 - **Bira fiziği (TapPour):** akış 0.42/sn; 45° ideal, >60° döker, 88° tamamı ziyan; dik tutuş köpük %78 → yatık %4; köpük bandı **0.08–0.20** (ideal 0.14); çökme `0.16/sn`, çöken köpüğün %35'i sıvıya döner. `Preparations.Draught` damgası yargıca "köpüğü puanla" der.
 - **Hazırlıklar:** shaken/stirred (tek yuva, sonuncu kazanır), ice, lemon_twist, salt_rim, sugar_rim, draught.
@@ -69,7 +69,7 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 | Taban fiyat | `3 + (rank+1)/2` (bilerek düşük — $4–17) |
 | Stok primi | seçkin Spirit/Bitter bandı başına `(rafın en iyi tier−1) × $2` |
 | Kalabalık çarpanı | HighRoller ×1.25 · Regular ×1.0 · Broke ×0.75 |
-| **Bahşiş (asıl kazanç)** | `taban × kalite`; kalite = 0.45 hız + 0.35 zanaat + 0.20 doluluk. Broke/Yanlış/0 taban → bahşiş yok |
+| **Bahşiş (asıl kazanç)** | `taban × kalite`; kalite = 0.45 hız + 0.35 zanaat + 0.20 doluluk. Zanaat (2026-08-11): kokteylde `0.6 × garnitür-spec + 0.4 × YÖNTEM` — yöntem, SİPARİŞ EDİLEN tarifin `Prep`'ine karşı (Shaken çalkala ister, Stirred kaşık ister; yanlış karıştırma = hiç karıştırmama, çalkalanmış Martini berelidir; Built umursamaz). Draught'ta zanaat = köpük. Ekstra tur artık doğru yöntemi de ister. Broke/Yanlış/0 taban → bahşiş yok |
 | Yanlış içki | *teslim edilenin* taban fiyatı (tanımsızsa $0) |
 | Ret (doluluk <0.35) | $0, memnuniyet 0.02 · Decline: $0, 0.15 |
 | Atıştırmalık | tabına fiyat (bahşişsiz); sabah geri alım `fiyat−1` → kâse başına net $1/birim |
@@ -90,7 +90,7 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 |---|---|---|
 | Şişe kartı | **41** (30 canlı / 11 kilitli) | T1 26 · T2 5 · T3 5 · T4 5; markalar parodi (Smirkoff, John Wanderer, Maliboo…) |
 | Başlangıç rafı | 6 | vodka_astra, gin_boothby, soda_klara, lemon_fresh, syrup_house, beer_kestrel (+bootstrap'ta sabit) |
-| Gazlı bayrağı | 3 | cola, tonic, energy (soda ve ginger Bubbly ama bayraksız — bilinçli veri gerçeği) |
+| Gazlı bayrağı | **5** | cola, tonic, energy + **soda_klara, ginger_kicker (2026-08-11'de çevrildi** — §12 borcu kapandı; ikisi arka bar duvarından Serve dolabına taşındı) |
 | Tarif | **53** | Built 19 · Shaken 24 · Stirred 10; pint 1 / rocks 13 / highball 22 / coupe 10 / martini 7 |
 | Bardak | 5 | 6'şar kademe (T1 + 5 satın alım) |
 | Atıştırmalık | 4 | asla yalnız satılmaz (Core reddi) |
@@ -106,7 +106,7 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 | **Gün sonu** | hesap fişi → market (4 sekme: DOLUM/ŞİŞELER/TARİFLER/YÜKSELTMELER + bu gece alınanlar iade) |
 | **Back bar (menü)** | şişe hover=bilgi kartı, tıkla=rota (garnitür anında; bira→Tap; gazlı→Serve eline; kalan→Shaker). Sahne geçişleri KAYAR (ileri sağdan, geri soldan; açılış fade, kapanış anlık); her istasyonda sol kenar BACK TO BAR |
 | **Shaker** | şişeyi kaldır-yatır dök; hazırlık sürükle; AÇIK tin'de kaşıkla daire=karıştır; kapağı tak; tin'i savur=çalkala; kapalı+karışık → sağ kenar TO THE GLASS |
-| **Serve** | shaker'ı NİŞANLA dök (kaçırırsan döker); dolap şişesi elde `PourAtGlass`; bardakta bitir. Servis TIKLAMA (2026-08-11, deneysel): hazır bardak + sipariş ALINMIŞ müşteriye tık → bardak tezgahta kayar, varışta servis; okunmamışa tık kimliği açar; çöp de tıklama, boşken atıl |
+| **Serve** | shaker'ı NİŞANLA dök (kaçırırsan döker); dolap şişesi elde `PourAtGlass` (dolap YALNIZ gazlı, 2026-08-11 — meyve/şurup tin'de); bardakta bitir Servis TIKLAMA (2026-08-11, deneysel): hazır bardak + sipariş ALINMIŞ müşteriye tık → bardak tezgahta kayar, varışta servis; okunmamışa tık kimliği açar; çöp de tıklama, boşken atıl |
 | **Tap** | bardağı yatır-doldur, dikleştir-köpük; verdikt satırı canlı |
 
 Teknik: sahne 640×360 (PixelPerfect), HUD 1280×720; tüm UI kodla kurulur, prefab yok; yalnız yeni Input System (`Mouse.current`).

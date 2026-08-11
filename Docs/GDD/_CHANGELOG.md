@@ -2,6 +2,14 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `23 §3.1/§4 + 21 §12` **the method is the recipe's (2026-08-11, the author):** "extra
+  shaken" — a customer whim rolled at 25%, and the only place mixing was ever graded —
+  retired; the judge now grades `RecipeDefinition.Prep` against the delivered glass
+  (craft = 0.6 garnish + 0.4 method; wrong mix = no mix; Built indifferent; the extra
+  round demands the right method too). And §12's own debt paid: Klara Soda and Kicker
+  Ginger's `carbonated` flags flipped, the glass-side cabinet stocks carbonated ONLY —
+  juices and still mixers build in the tin, the fizz is topped at the glass.
+
 - `21 §14` **the mandatory mix + the Stir verb (2026-08-11):** two spirits (category test,
   ≥3% share each) may not leave the tin unmixed — the refusal lives on
   `PourIntoServingGlass`, the UI reads `CanPourOut`. `Stir` arrives as `Shake`'s mirror

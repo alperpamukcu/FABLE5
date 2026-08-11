@@ -419,10 +419,15 @@ namespace LastCall.UI
         /// </summary>
         private static bool IsGlassSide(IngredientCard card)
         {
+            // CARBONATED ONLY (2026-08-11, the author: the direct bottle-to-glass pour
+            // ends now that the mix exists). Juices and still mixers build in the TIN like
+            // everything else — one pour system, one door; the glass-side cabinet keeps
+            // exactly what physics keeps out of the shaker: the fizz, topped at the glass
+            // so the bubbles arrive alive (GDD 21 §12). The two legacy flags the section
+            // was holding open (Klara Soda, Kicker Ginger) flipped with this — the door
+            // they were waiting for has existed since P14.
             if (card.Type == IngredientType.Beer) return false;
-            if (card.Info != null && card.Info.Carbonated) return true;
-            string category = card.Info?.Category;
-            return category == IngredientCategories.Mixer || category == IngredientCategories.Juice;
+            return card.Info != null && card.Info.Carbonated;
         }
 
         /// <summary>

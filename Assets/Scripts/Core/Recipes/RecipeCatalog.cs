@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LastCall.Core
 {
@@ -37,14 +37,17 @@ namespace LastCall.Core
             {
                 // ── open from day one: makeable from the opening shelf ──────────────
                 // Beer is the bar's simple order (GDD 21 §10): one thing, pulled, no shaker.
+                // BUILT, both of them (2026-08-11): the method rule exposed the default —
+                // a neat pour and a pint "wanting a shake" was the ctor's Shaken default,
+                // never a design. Built is the either-or-neither class.
                 new RecipeDefinition("draught", "Draught", 1, 5, 1, 10, 1,
                     new[] { new PatternRequirement(1, be) },
-                    exactMixSize: 1, minFill: 0.75, glassId: "pint"),
+                    exactMixSize: 1, minFill: 0.75, glassId: "pint", prep: PrepMethod.Built),
 
                 // The other brand-agnostic order: "pour me something". Type-based on purpose.
                 new RecipeDefinition("neat_pour", "Neat Pour", 1, 5, 1, 10, 1,
                     new[] { new PatternRequirement(1, s) },
-                    exactMixSize: 1, glassId: "rocks"),
+                    exactMixSize: 1, glassId: "rocks", prep: PrepMethod.Built),
 
                 Cocktail("vodka_soda", "Vodka Soda", 2, 15, 2, 15, 1, PrepMethod.Built, "highball",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, bu) },

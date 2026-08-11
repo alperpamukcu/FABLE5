@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using LastCall.Core;
@@ -20,7 +20,10 @@ namespace LastCall.Tests
             new RecipeDefinition(id, id, rank, baseFlavor: 10, baseMult: 2,
                 flavorPerLevel: 0, multPerLevel: 0,
                 requirements: Array.Empty<PatternRequirement>(),
-                ratioRequirements: bands, minFill: 0.5);
+                // BUILT, since the method rule (2026-08-11): a gin-and-soda spritz is a
+                // built drink, and Built recipes are the "either, or neither" mix class —
+                // these suites test the economy, not the spoon.
+                ratioRequirements: bands, minFill: 0.5, prep: PrepMethod.Built);
 
         private static RecipeDefinition Spritz(int rank = 2) => BandRecipe("spritz", rank,
             new RatioRequirement(IngredientType.Spirit, 0.3, 0.7),

@@ -9,7 +9,7 @@
       "exactMixSize": 1, "minMixSize": 0,
       "minFill": 0.75,
       "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
-      "locked": false, "glassId": "pint"
+      "locked": false, "glassId": "pint", "prepMethod": "Built"
     },
     {
       "id": "neat_pour", "name": "Neat Pour", "rank": 1,
@@ -17,7 +17,7 @@
       "requirements": [ { "types": ["Spirit"], "count": 1 } ],
       "exactMixSize": 1, "minMixSize": 0,
       "allDistinctTypes": false, "allEqualFlavor": false, "scoreAllMixCards": false,
-      "locked": false, "glassId": "rocks"
+      "locked": false, "glassId": "rocks", "prepMethod": "Built"
     },
     {
       "id": "vodka_soda", "name": "Vodka Soda", "rank": 2,

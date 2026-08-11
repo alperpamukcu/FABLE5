@@ -307,9 +307,12 @@ serving glass at the serve stage, through the run's `PourAtGlass` verb.
 
 The refusal lives in Core (`ShakerIngredient`), exactly like the keg rule in §10: routing
 around it in a menu is not enough, because the sim and the tests use the same verbs the
-player does. The legacy bubbly bottles (Klara Soda, Kicker Ginger) keep their `carbonated`
-flag OFF until the serve stage grows its mixer rail (P14) — flipping them before there is a
-door for them would make every Spritz and Highball unbuildable overnight.
+player does. ~~The legacy bubbly bottles (Klara Soda, Kicker Ginger) keep their `carbonated`
+flag OFF until the serve stage grows its mixer rail (P14).~~ **Flipped 2026-08-11** — the
+door has existed since P14, and the section's own debt came due when the author asked the
+direct bottle-to-glass pour to end: the glass-side cabinet now stocks **carbonated only**
+(juices and still mixers build in the TIN like everything else, one pour system, one door),
+and the fizz is topped at the glass, where the bubbles survive.
 
 Recipes now carry a **prep method** (shaken / stirred / built): built drinks skip the shaker
 entirely and are assembled in the glass. They also carry a **glass id** (glassware.json) —

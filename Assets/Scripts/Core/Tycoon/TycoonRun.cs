@@ -1154,7 +1154,7 @@ namespace LastCall.Core
             // for, the fill (the 2026-07-22 pivot, made total 2026-08-02: the emotion layer
             // is gone; what a customer gives you back is their reaction to the cocktail).
             var verdict = ServiceJudge.Judge(visit, matchKind, delivered, CrowdToday, Ambience,
-                served: match, shakeEnergy: ShakeEnergy);
+                served: match);
 
             // The night remembers its best EXACT serve (2026-08-02): the menu cap reads it.
             if (matchKind == OrderMatch.Exact && match?.Recipe != null

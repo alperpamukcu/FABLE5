@@ -117,6 +117,7 @@
       "tier": 1,
       "origin": "bottled next door",
       "abv": 0,
+      "carbonated": true,
       "blurb": "Spiced ginger brew. Puts a spark back in - or a fire, if there was one already.",
       "art_prompt": "a cloudy amber ginger beer bottle with a rust-orange label and a ceramic swing top"
     },
@@ -130,6 +131,7 @@
       "tier": 1,
       "origin": "Bergen, Norway",
       "abv": 0,
+      "carbonated": true,
       "blurb": "Cold, clear, and calming. Waters everything down, on purpose.",
       "art_prompt": "a tall clear soda siphon bottle with a pale teal label and rising bubbles"
     },

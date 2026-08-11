@@ -74,6 +74,33 @@ namespace LastCall.Core
         /// floor runs on; the spec is the craft read; the fill is the pour itself.</summary>
         public const double SpeedWeight = 0.45, SpecWeight = 0.35, FillWeight = 0.20;
 
+        /// <summary>How craft splits between the customer's asks and the BOOK's method
+        /// (2026-08-11): the garnish spec carries most of it, the recipe's own shaken/stirred
+        /// the rest. The method is the recipe's demand, never the customer's — a Martini
+        /// wants stirring whoever ordered it.</summary>
+        public const double GarnishShare = 0.6, MethodShare = 0.4;
+
+        /// <summary>
+        /// Was the drink worked the way its RECIPE says (GDD 23 §4, 2026-08-11)? Shaken
+        /// recipes want the tin shaken; stirred recipes want the spoon — and a shaken
+        /// Martini is bruised, so the wrong mix scores the same zero as no mix. Built
+        /// recipes don't care: they are the "either, or neither" class, which is also what
+        /// keeps a tin-built Black Russian's mandatory stir from costing anything.
+        /// </summary>
+        public static double MethodScore(RecipeDefinition recipe, GlassContents delivered)
+        {
+            if (recipe == null || delivered == null) return 1.0;
+            switch (recipe.Prep)
+            {
+                case PrepMethod.Shaken:
+                    return delivered.HasPreparation(Preparations.Shaken.Id) ? 1.0 : 0.0;
+                case PrepMethod.Stirred:
+                    return delivered.HasPreparation(Preparations.Stirred.Id) ? 1.0 : 0.0;
+                default:
+                    return 1.0;
+            }
+        }
+
         /// <summary>Below this fill the customer refuses to pay at all (v5 P11). A glass with a
         /// third of a drink in it is not a drink, whatever the ratios say.</summary>
         public const double RefusalFill = 0.35;
@@ -117,7 +144,7 @@ namespace LastCall.Core
         /// </summary>
         public static ServiceVerdict Judge(CustomerVisit visit, OrderMatch match,
             GlassContents delivered, WealthTier crowd = WealthTier.Regular, double ambienceBonus = 0,
-            RecipeMatch served = null, double shakeEnergy = 0)
+            RecipeMatch served = null)
         {
             if (visit == null) throw new ArgumentNullException(nameof(visit));
 
@@ -140,15 +167,20 @@ namespace LastCall.Core
             // How much of the job was done. Each part is a continuous 0–1: nothing here is a
             // cliff, which is the point of the rewrite — patience used to stop mattering at
             // half-time and the spec used to be worth nothing at the till.
-            double specScore = spec.Delivered(delivered, shakeEnergy);
+            double specScore = spec.Delivered(delivered);
             double fillScore = FillScore(fill, spec.ExpectedFill);
             double speedScore = Math.Max(0.0, 1.0 - visit.WaitFraction);
 
             // A pint's craft is its head (GDD 21 §10.3) — it stands in for the spec, because a
             // pint is not garnished and the head is the part you had to get right by hand.
+            // A cocktail's craft is the customer's asks AND the book's method (2026-08-11):
+            // the METHOD is graded against the ORDERED recipe — you are judged for how the
+            // drink they asked for wanted working, even when you built something else.
             bool draught = delivered != null && delivered.HasPreparation(Preparations.Draught.Id);
             double headScore = draught ? TapPour.HeadScore(delivered.Head / delivered.Capacity) : 1.0;
-            double craftScore = draught ? headScore : specScore;
+            double methodScore = MethodScore(visit.OrderTruth.Wanted, delivered);
+            double craftScore = draught ? headScore
+                : GarnishShare * specScore + MethodShare * methodScore;
 
             double quality = SpeedWeight * speedScore
                            + SpecWeight * craftScore
@@ -177,7 +209,10 @@ namespace LastCall.Core
             // a plain drink poured plainly is not a feat. Scoring it off the raw spec score
             // instead would hand every plain order a free extra round, which is a different
             // (and much richer) game: the sim's refill bill went up half again.
-            bool craftForExtra = draught ? headScore >= 1.0 : (!spec.IsPlain && specScore >= 1.0);
+            // ...and, since 2026-08-11, made the way the BOOK says: a shaken Daiquiri with
+            // its asked-for twist earns the round; a stirred one does not, however pretty.
+            bool craftForExtra = draught ? headScore >= 1.0
+                : (!spec.IsPlain && specScore >= 1.0 && methodScore >= 1.0);
             bool returning = visit.Regular == null || visit.Regular.Visits >= 1;
             bool ordersAgain = match == OrderMatch.Exact && craftForExtra && returning
                 && visit.WaitFraction < ExtraOrderWindow

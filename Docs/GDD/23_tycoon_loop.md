@@ -97,13 +97,16 @@
 ### 3.1 How they want it served (v5 P11, 2026-07-31)
 
 An order is a drink **and a serving spec**: a subset of ice, a lemon twist, a salted or
-sugared rim, and extra shaken. It is **stated** — printed on the licence for the player to
-read. ("Filled to the top" retired 2026-08-02; the inferred-preference layer went with the
-emotion machinery — the 2026-08-07 sweep removed both from the code.)
+sugared rim. It is **stated** — printed on the licence for the player to read. ("Filled to
+the top" retired 2026-08-02; the inferred-preference layer went with the emotion machinery
+— the 2026-08-07 sweep removed both from the code. **"Extra shaken" retired 2026-08-11**:
+the mixing method is the RECIPE's demand, never the customer's — a Martini wants stirring
+whoever ordered it — so the judge grades `RecipeDefinition.Prep` against the delivered
+glass instead of rolling a shake as a whim; see §4.)
 
-The spec is rolled from what the recipe can actually honour: a pint takes no garnish and
-cannot be shaken, and a *built* drink never sees a shaker (21 §12). Asking for something the
-recipe forbids would be an order nobody could fill — the one thing an order must never be.
+The spec is rolled from what the recipe can actually honour: a pint takes no garnish, and a
+*built* drink never sees a shaker (21 §12). Asking for something the recipe forbids would
+be an order nobody could fill — the one thing an order must never be.
 
 Missing any part of the spec costs **tip, never the payment**: a Gin Fizz served without the
 ice is still a Gin Fizz, and it is still paid for.
@@ -141,7 +144,11 @@ drink. It is composed of three continuous scores, none of them a cliff:
 tip     = basePrice x quality
 quality = 0.45 x speed + 0.35 x craft + 0.20 x fill
 speed   = 1 - waitFraction          (the whole patience, not a half-time window)
-craft   = share of the serving spec delivered   (a pint: its head score, 21 s10.3)
+craft   = 0.6 x garnish spec + 0.4 x METHOD   (a pint: its head score, 21 s10.3)
+method  = the ORDERED recipe's Prep, against the glass (2026-08-11): a Shaken
+          recipe wants the shaken preparation, a Stirred one the stirred — the
+          wrong mix scores the zero of no mix (a shaken Martini is bruised).
+          Built recipes are the either-or-neither class and always score 1.
 fill    = 1 - shortfall/expected    (expected 0.80 — nobody demands a fill any more)
 ```
 

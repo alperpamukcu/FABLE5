@@ -268,6 +268,7 @@ namespace LastCall.UI
 
         private RectTransform _drinkGlass;
         private Image _drinkGlassLiquid;
+        private Image _drinkGlassSurface;   // the drink's top face, as the ellipse it is
         private Image _drinkGlassArt;
         private GlasswareDefinition _drinkGlassware;
         private int _drinkGlassTier = 1;
@@ -1274,6 +1275,18 @@ namespace LastCall.UI
             _drinkGlassLiquid.fillOrigin = (int)Image.OriginVertical.Bottom;
             _drinkGlassLiquid.preserveAspect = true;
 
+            // THE TOP OF THE DRINK IS AN ELLIPSE (2026-08-11, the author: the glass is 3D, so
+            // what is in it has to be). A vertical fillAmount cuts the interior with a straight
+            // edge — right for the body, wrong for the surface, which is the one place the
+            // drink shows the player it is a cylinder and not a picture of one. It goes over
+            // the liquid and under the front face, so the glass's own wall still crosses it.
+            var surf = NewRect("Surface", _drinkGlass);
+            surf.anchorMin = surf.anchorMax = surf.pivot = new Vector2(0.5f, 0.5f);
+            _drinkGlassSurface = surf.gameObject.AddComponent<Image>();
+            _drinkGlassSurface.sprite = GlassArt.SurfaceDisc();
+            _drinkGlassSurface.raycastTarget = false;
+            _drinkGlassSurface.enabled = false;
+
             var art = NewRect("Art", _drinkGlass);
             Stretch(art, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _drinkGlassArt = art.gameObject.AddComponent<Image>();
@@ -1294,6 +1307,44 @@ namespace LastCall.UI
             binBtn.onClick.AddListener(OnBinClicked);
 
             _drinkGlass.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// Puts the drink's top face where the drink's top is, at the width the glass has
+        /// there.
+        ///
+        /// The art is letterboxed inside its rect by preserveAspect, so the sprite's own box
+        /// is worked out first: everything the level and the profile say is in SPRITE
+        /// fractions, and placing them against the rect instead would float the surface off
+        /// the liquid on any glass whose drawing is not exactly the rect's shape.
+        /// </summary>
+        private void PlaceDrinkSurface(GlassArt.Piece piece, float fraction)
+        {
+            if (_drinkGlassSurface == null) return;
+            if (piece.Fill == null || fraction <= 0f || piece.Aspect <= 0f)
+            {
+                _drinkGlassSurface.enabled = false;
+                return;
+            }
+
+            Vector2 rect = _drinkGlass.rect.size;
+            float drawnH = Mathf.Min(rect.y, rect.x / piece.Aspect);
+            float drawnW = drawnH * piece.Aspect;
+
+            float level = piece.FillAmount(fraction);          // 0..1 up the sprite
+            float width = piece.InteriorWidthAt(level) * drawnW;
+            if (width <= 1f) { _drinkGlassSurface.enabled = false; return; }
+
+            var rt = _drinkGlassSurface.rectTransform;
+            rt.sizeDelta = new Vector2(width, width * GlassArt.SurfaceSquash);
+            rt.anchoredPosition = new Vector2(0f, (level - 0.5f) * drawnH);
+            // A shade lighter than the body: the top face catches the room, and without the
+            // lift it reads as a hole in the drink rather than the top of it.
+            var body = DrinkColor();
+            _drinkGlassSurface.color = new Color(
+                Mathf.Lerp(body.r, 1f, 0.24f), Mathf.Lerp(body.g, 1f, 0.24f),
+                Mathf.Lerp(body.b, 1f, 0.24f), body.a);
+            _drinkGlassSurface.enabled = true;
         }
 
         /// <summary>The bin's click: throws the ready drink away, fee and all. Inert with
@@ -1387,6 +1438,7 @@ namespace LastCall.UI
             }
             _drinkGlassLiquid.color = DrinkColor();
             _drinkGlassLiquid.fillAmount = piece.FillAmount((float)run.ServingGlass.FillFraction);
+            PlaceDrinkSurface(piece, (float)run.ServingGlass.FillFraction);
             // The finishing touches ride the carried glass too (P14): the customer is handed
             // the drink that was actually finished, salt and wedge and all.
             GlassDecor.Sync(_drinkGlass, piece, run.ServingGlass, run);
@@ -4666,12 +4718,12 @@ namespace LastCall.UI
             // pictogram with its word under it, and the read's fill preference joins them
             // as a glass marked with the band it wants — the empty space counted in the
             // numbers, which is the honest way to say how full a glass should be.
-            var spec = visit.Order.Spec;
             foreach (Transform old in _idPrefRow) Destroy(old.gameObject);
             int chips = 0;
             foreach (var g in visit.Order.Garnishes)
                 chips += PrefChip(PrefArt.ForPreparation(g.Id), g.Name.ToUpperInvariant());
-            if (spec.ExtraShaken) chips += PrefChip(PrefArt.Shaker(), "SHAKEN HARD");
+            // (The SHAKEN HARD chip retired 2026-08-11: the method is the recipe's demand
+            // now, printed where the recipe is — the spec panel and the book.)
             // No fill chip (the author, 2026-08-02): nobody demands a fill any more — the
             // only fill rule is the house floor, and it lives in the judge, not the licence.
             // A licence says NONE in an empty endorsements field rather than leaving it
@@ -4892,8 +4944,6 @@ namespace LastCall.UI
             foreach (var g in visit.Order.Garnishes)
                 chips += PrefChip(PrefArt.ForPreparation(g.Id), g.Name.ToUpperInvariant(),
                                   _orderTipPrefs);
-            if (visit.Order.Spec.ExtraShaken)
-                chips += PrefChip(PrefArt.Shaker(), "SHAKEN HARD", _orderTipPrefs);
 
             // Asking for nothing is said by there being nothing there. A line announcing that
             // the customer wants nothing is a line to read for no news, which is exactly what
