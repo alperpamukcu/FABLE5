@@ -4113,17 +4113,26 @@ namespace LastCall.UI
             price.horizontalOverflow = HorizontalWrapMode.Overflow;
             price.text = "$" + entry.Price;
 
-            // The way out, drawn ON the chip: a red corner with an X in it. The affordance
-            // has to be visible before the pointer arrives, or "click it again to take it
-            // out" is a rule nobody is told.
+            // The way out, drawn ON the chip. The affordance has to be visible before the
+            // pointer arrives, or "click it again to take it out" is a rule nobody is told —
+            // and it is THE HOUSE'S OWN X (2026-08-11, the author: "diğer sahnelerde
+            // kullandığımız x butonu olsun"), the drawn red key the menu closes with, not a
+            // letter typed into a red square. It takes no raycast: the whole chip is the
+            // press, so the corner reads as the reason rather than as a second target.
             var cut = NewRect("X", chip);
-            Place(cut, new Vector2(1, 1), new Vector2(16, 16), new Vector2(-2, -2));
+            Place(cut, new Vector2(1, 1), new Vector2(20, 20), new Vector2(-2, -2));
             var cutImg = cut.gameObject.AddComponent<Image>();
-            cutImg.color = ShopCost; cutImg.raycastTarget = false;
-            var cutMark = NewText("L", cut, _shop, 12, TextAnchor.MiddleCenter, Color.white);
-            Stretch(cutMark.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, new Vector2(0, -1));
-            cutMark.raycastTarget = false;
-            cutMark.text = "X";
+            cutImg.raycastTarget = false;
+            var cutArt = ItemArt.Load("btn_close");
+            if (cutArt != null) { cutImg.sprite = cutArt; cutImg.preserveAspect = true; }
+            else
+            {
+                cutImg.color = ShopCost;
+                var cutMark = NewText("L", cut, _shop, 12, TextAnchor.MiddleCenter, Color.white);
+                Stretch(cutMark.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, new Vector2(0, -1));
+                cutMark.raycastTarget = false;
+                cutMark.text = "X";
+            }
 
             var button = chip.gameObject.AddComponent<Button>();
             button.targetGraphic = chip.GetComponent<Image>();
