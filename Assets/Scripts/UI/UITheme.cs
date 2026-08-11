@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using LastCall.Core;
 using UnityEngine;
 
@@ -31,7 +31,6 @@ namespace LastCall.UI
         public static Color TextOnAmber => Night[2];      // Night 3 on amber fills
         public static Color PrimaryAction => Amber[3];    // Amber 4, one per screen
         public static Color Selection => Cyan[3];         // Cyan 4 glow
-        public static Color VipHeat => Magenta[3];        // Magenta 4
         public static Color Scrim => new Color(Night[0].r, Night[0].g, Night[0].b, 0.70f); // #0D0813 @70%
 
         // Sacred number colours (16 §2) — never reused elsewhere.
@@ -366,12 +365,6 @@ namespace LastCall.UI
         /// </summary>
         public static Color InkOn(Color fill) =>
             0.2126f * fill.r + 0.7152f * fill.g + 0.0722f * fill.b > 0.45f ? Night[0] : Cream[4];
-
-        /// <summary>Body/fill colour for an ingredient type (ramp step 3).</summary>
-        public static Color TypeFill(IngredientType t) => TypeRamp[t][3];
-
-        /// <summary>Darkest step of a type's ramp — used for the 1px outline (§3).</summary>
-        public static Color TypeOutline(IngredientType t) => TypeRamp[t][0];
 
         // ── spacing grid (16 §1) ─────────────────────────────────────────────────
         public const int Grid = 4;

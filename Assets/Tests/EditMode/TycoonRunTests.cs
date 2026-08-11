@@ -407,7 +407,7 @@ namespace LastCall.Tests
         {
             // Glassware went per-LINE (2026-08-02): each glass type is its own ladder,
             // priced by its definition, and it is the only ambience source left.
-            var rocks = new GlasswareDefinition("rocks", "Rocks", "glass_rocks",
+            var rocks = new GlasswareDefinition("rocks", "Rocks",
                 new[] { 1.0, 1.0 }, new[] { 30, 45, 60, 80, 110 }, 1.0);
             var run = new TycoonRun(NewShelf(), Book, new RunRng("glass-lines"),
                 config: new TycoonConfig(200, orderDecisionSeconds: 0, savorSeconds: 0),
@@ -544,7 +544,7 @@ namespace LastCall.Tests
         {
             // Per-line ladders (2026-08-02): a LINE tops out at tier 3, priced by its own
             // definition, and asking for a line the bar does not stock refuses loudly.
-            var rocks = new GlasswareDefinition("rocks", "Rocks", "glass_rocks",
+            var rocks = new GlasswareDefinition("rocks", "Rocks",
                 new[] { 1.0, 1.0 }, new[] { 30, 45, 60, 80, 110 }, 1.0);
             var run = new TycoonRun(NewShelf(), Book, new RunRng("glass-cap"),
                 config: new TycoonConfig(300, orderDecisionSeconds: 0, savorSeconds: 0),
@@ -630,7 +630,7 @@ namespace LastCall.Tests
         // ── glassware (v5 P14 / C9) ─────────────────────────────────────────────
 
         private static GlasswareDefinition Glass(string id, double capacity) =>
-            new GlasswareDefinition(id, id, id, new[] { 1.0, 1.0 },
+            new GlasswareDefinition(id, id, new[] { 1.0, 1.0 },
                 new[] { 10, 20, 30, 45, 65 }, capacity);   // the six-step ladder (2026-08-02)
 
         private static readonly IReadOnlyList<GlasswareDefinition> GlassSet = new[]
@@ -1046,7 +1046,7 @@ namespace LastCall.Tests
         }
 
         private static GlasswareDefinition TestGlass(string id, double capacity) =>
-            new GlasswareDefinition(id, id, id, new[] { 0.8, 1.0 },
+            new GlasswareDefinition(id, id, new[] { 0.8, 1.0 },
                 new[] { 1, 2, 3, 4, 5 }, capacity);
 
         [Test]

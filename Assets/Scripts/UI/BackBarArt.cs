@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace LastCall.UI
 {
@@ -13,7 +13,7 @@ namespace LastCall.UI
     /// </summary>
     public static class BackBarArt
     {
-        private static Sprite _boards, _floor, _lip, _shadow, _nicheTop, _ledge, _luxe, _face;
+        private static Sprite _floor, _shadow, _nicheTop, _ledge, _luxe, _face;
 
         // The luxe ramp (the author, 2026-08-01: "daha lüks bir back bar" — less timber,
         // more lounge): deep aubergine-charcoal panels off the stage's Night palette, with
@@ -39,40 +39,6 @@ namespace LastCall.UI
         private static readonly Color32 LipFace = new Color32(0x14, 0x1E, 0x28, 0xFF);
         private static readonly Color32 LipShine = new Color32(0x6E, 0xE0, 0xD6, 0xFF);
 
-        /// <summary>The wall: vertical walnut boards, tiling cleanly because the seams are
-        /// drawn at the sprite's own edges — no baked frame, which is what broke the kit.</summary>
-        public static Sprite Boards()
-        {
-            if (_boards != null) return _boards;
-            const int W = 96, H = 96, board = 24;
-            var px = new Color32[W * H];
-            uint hash = 977;
-            for (int x = 0; x < W; x++)
-            {
-                int b = x / board;
-                bool seam = x % board == 0;
-                for (int y = 0; y < H; y++)
-                {
-                    hash = (hash ^ (uint)(x * 53 + y * 17 + b * 191)) * 16777619;
-                    Color32 c = seam ? Seam : (b % 2 == 0 ? BoardA : BoardB);
-                    if (!seam && (hash >> 9) % 37 == 0) c = Seam;               // a grain fleck
-                    if (!seam && (hash >> 7) % 53 == 0)
-                        c = new Color32((byte)(c.r + 8), (byte)(c.g + 5), c.b, 255);
-                    // The cornice lamps pool warm light down the boards: brighter toward the
-                    // top of each tile, so the tiled wall reads lit rather than flat.
-                    if (!seam)
-                    {
-                        float warm = y / (float)(H - 1);
-                        c = new Color32((byte)Mathf.Min(255, c.r + (int)(16 * warm) + 6),
-                                        (byte)Mathf.Min(255, c.g + (int)(10 * warm) + 3),
-                                        c.b, 255);
-                    }
-                    px[y * W + x] = c;
-                }
-            }
-            return _boards = Make(px, W, H);
-        }
-
         /// <summary>The shelf floor: a perspective trapezoid, front edge full width and lit,
         /// receding rows narrower and darker — the plane you read as depth.</summary>
         public static Sprite ShelfFloor()
@@ -93,18 +59,6 @@ namespace LastCall.UI
                 }
             }
             return _floor = Make(px, W, H);
-        }
-
-        /// <summary>The lip under the floor's front edge: dark face, one bright brass line.</summary>
-        public static Sprite Lip()
-        {
-            if (_lip != null) return _lip;
-            const int W = 8, H = 10;
-            var px = new Color32[W * H];
-            for (int y = 0; y < H; y++)
-                for (int x = 0; x < W; x++)
-                    px[y * W + x] = y == H - 1 ? LipShine : y == 0 ? Seam : LipFace;
-            return _lip = Make(px, W, H);
         }
 
         /// <summary>The shadow the shelf above throws into the niche: a soft falloff.</summary>

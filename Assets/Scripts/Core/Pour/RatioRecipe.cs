@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace LastCall.Core
@@ -22,12 +22,6 @@ namespace LastCall.Core
             ScoredCards = scoredCards;
             ScoredWeights = scoredWeights;
         }
-
-        /// <summary>The weight of the card at <paramref name="index"/>; 1 when unweighted.</summary>
-        public double WeightAt(int index) =>
-            ScoredWeights != null && index >= 0 && index < ScoredWeights.Count
-                ? ScoredWeights[index]
-                : 1.0;
     }
 
     /// <summary>

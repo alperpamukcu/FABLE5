@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using LastCall.Core;
@@ -61,15 +61,11 @@ namespace LastCall.UI
             }
         }
 
-        /// <summary>Everything written on the sheet is slanted — the closest a pixel face gets
-        /// to a hand that scrawled the list out behind the bar.</summary>
-        private static Text Handwritten(Text t)
-        {
-            // The pixel faces have no true italic, so Unity fakes it by shearing the glyphs —
-            // which read as broken rather than hand-written. Upright it is.
-            t.fontStyle = FontStyle.Normal;
-            return t;
-        }
+        // (Handwritten() retired, audit 2026-08-11: its whole body set fontStyle to
+        // Normal — the default — a decision record wearing a function's clothes. The
+        // decision stands: the pixel faces have no true italic, and Unity's sheared
+        // fake reads as broken, so the sheet is set upright.)
+
 
         /// <summary>Gives a corner control the same press as the section keys: it swaps to its
         /// pressed art and dips as it goes down.</summary>
@@ -237,7 +233,7 @@ namespace LastCall.UI
 
             if (items.Count == 0 && kegs.Count == 0)
             {
-                var none = Handwritten(NewText("Empty", _bottleList, _body, 8,
+                var none = (NewText("Empty", _bottleList, _body, 8,
                     TextAnchor.MiddleCenter, InkSoft));
                 Stretch(none.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 none.text = "nothing on this shelf";
@@ -586,8 +582,6 @@ namespace LastCall.UI
         /// somewhere to go.</summary>
         private const float ListTopPad = BottleFoot + BottleStand + BottleRise + HoverLift + 2f;
         private RectTransform _kegRow;
-        private static readonly Color ShelfWood = new Color(0.30f, 0.19f, 0.12f, 1f);
-        private static readonly Color ShelfLip = new Color(0.46f, 0.31f, 0.19f, 1f);
         private RectTransform _bottleInfo;
         private Button _serveButton;
         private Text _serveLabel;
@@ -605,7 +599,6 @@ namespace LastCall.UI
             // tiled wood behind, the lit art-deco cornice across the top.
             _menuPanel = NewRect("MenuPanel", _field);
             Stretch(_menuPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            _menuHome = _menuPanel.anchoredPosition;
             var boardImg = _menuPanel.gameObject.AddComponent<Image>();
             // Drawn in code (2026-08-01): the generated tile carried a baked frame that
             // repeated as a white grid across the wall. BackBarArt's boards seam at their
@@ -618,7 +611,7 @@ namespace LastCall.UI
             // NEON, not timber (the author, 2026-08-02: the board sign, the ivy and the
             // framed paintings all read as the wrong decade for a vice bar). The name is
             // a magenta neon word with a soft halo — the stage sign's own voice.
-            var glow = Handwritten(NewText("SignGlow", _menuPanel, _display, 24, TextAnchor.MiddleCenter,
+            var glow = (NewText("SignGlow", _menuPanel, _display, 24, TextAnchor.MiddleCenter,
                 new Color(UITheme.Magenta[3].r, UITheme.Magenta[3].g, UITheme.Magenta[3].b, 0.35f)));
             Place(glow.rectTransform, new Vector2(0.5f, 1), new Vector2(420, 44), new Vector2(0, -46f));
             glow.rectTransform.localScale = new Vector3(1.06f, 1.2f, 1f);
@@ -645,7 +638,7 @@ namespace LastCall.UI
 
             // The title sits ON the cornice, part of the architecture rather than floating
             // over the bottles.
-            var title = _menuTitle = Handwritten(NewText("Title", _menuPanel, _display, 24, TextAnchor.MiddleCenter, UITheme.Magenta[4]));
+            var title = _menuTitle = (NewText("Title", _menuPanel, _display, 24, TextAnchor.MiddleCenter, UITheme.Magenta[4]));
             var outline = title.gameObject.AddComponent<UnityEngine.UI.Outline>();
             outline.effectColor = new Color(0.16f, 0.09f, 0.04f, 1f);
             outline.effectDistance = new Vector2(2f, 2f);

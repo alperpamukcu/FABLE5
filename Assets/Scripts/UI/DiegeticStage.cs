@@ -75,22 +75,10 @@ namespace LastCall.UI
         /// <summary>How deep the drawn shelf surface is, front edge to back, in art px.</summary>
         public const float ShelfDepthPx = 9f;
         private const float ShelfCeilPx = 53f;      // the shelf board above it
-        public const int ShelfCells = 8;
 
         private Transform _counterTr;
         private Vector2 _counterNative;
         private float _counterScale;                // stage units per counter-art pixel
-
-        /// <summary>How many stage units one pixel of the counter art is worth right now.</summary>
-        public float CounterArtScale => _counterTr != null ? _counterScale : 0f;
-
-        /// <summary>Where a given ROW of the counter art is, in stage units. The rest line is
-        /// CounterSurfaceInset art-pixels below the art's top, and that line is pinned to
-        /// CounterRestY — so anything that has to sit against the drawing (a key on the bar's
-        /// front face, a glass in a bay) can ask for its row instead of guessing a constant
-        /// that only holds at 16:9.</summary>
-        public float CounterArtRowY(float row) =>
-            CounterRestY + (CounterSurfaceInset - row) * CounterArtScale;
 
         /// <summary>
         /// Where shelf compartment <paramref name="index"/> is standing right now, in STAGE

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using LastCall.Core;
@@ -113,8 +113,7 @@ namespace LastCall.Tests
     public class MarketTests
     {
         private static IngredientCard Bottle(string id, string style, int tier, int price = 0) =>
-            new IngredientCard(id, id, IngredientType.Spirit, 5, QualityTier.HousePour,
-                new IngredientInfo(style, tier, price, "somewhere", 40, "test"));
+            new IngredientCard(id, id, IngredientType.Spirit, 5, new IngredientInfo(style, tier, price, "somewhere", 40, "test"));
 
         private static readonly IReadOnlyList<RecipeDefinition> Recipes = RecipeCatalog.CreateDefault();
 

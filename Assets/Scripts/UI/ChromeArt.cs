@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace LastCall.UI
@@ -299,9 +299,6 @@ namespace LastCall.UI
         /// between a button and a coloured rectangle with a word in it.
         /// </summary>
         public static Sprite Key() => KeySprite("plate:key", false);
-
-        /// <summary>The same key, pushed: the throw is spent and the face has come down.</summary>
-        public static Sprite KeyDown() => KeySprite("plate:keydown", true);
 
         private static Sprite KeySprite(string key, bool down)
         {

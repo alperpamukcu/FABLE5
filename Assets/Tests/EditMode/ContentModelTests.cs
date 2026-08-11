@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,12 +22,10 @@ namespace LastCall.Tests
 
         private static IngredientCard Fizzy(string id = "cola_test") =>
             new IngredientCard(id, "Test Cola", IngredientType.Bubbly, 2,
-                QualityTier.HousePour,
                 new IngredientInfo("cola", category: IngredientCategories.Mixer, carbonated: true));
 
         private static IngredientCard Still(string id, string style, IngredientType type) =>
             new IngredientCard(id, id, type, 5,
-                QualityTier.HousePour,
                 new IngredientInfo(style, category: IngredientCategories.Vodka));
 
         private static TycoonRun RunWith(params IngredientCard[] cards) =>
@@ -126,7 +124,6 @@ namespace LastCall.Tests
             var vodka = Still("vodka_t", "vodka", IngredientType.Spirit);
             var gin = Still("gin_t", "gin", IngredientType.Spirit);
             var soda = new IngredientCard("soda_t", "Soda", IngredientType.Bubbly, 1,
-                QualityTier.HousePour,
                 new IngredientInfo("soda", category: IngredientCategories.Mixer));
             var lookup = new System.Collections.Generic.Dictionary<string, IngredientCard>
                 { ["vodka_t"] = vodka, ["gin_t"] = gin, ["soda_t"] = soda };
@@ -154,10 +151,9 @@ namespace LastCall.Tests
         {
             var ginTonic = RecipeCatalog.CreateDefault().Single(r => r.Id == "gin_tonic");
             var gin = new IngredientCard("gin_t", "Gin", IngredientType.Spirit, 6,
-                QualityTier.HousePour, new IngredientInfo("gin", category: IngredientCategories.Gin));
+                new IngredientInfo("gin", category: IngredientCategories.Gin));
             var vodka = Still("vodka_t", "vodka", IngredientType.Spirit);
             var tonic = new IngredientCard("tonic_t", "Tonic", IngredientType.Bubbly, 2,
-                QualityTier.HousePour,
                 new IngredientInfo("tonic", category: IngredientCategories.Mixer, carbonated: true));
             var lookup = new System.Collections.Generic.Dictionary<string, IngredientCard>
                 { ["gin_t"] = gin, ["vodka_t"] = vodka, ["tonic_t"] = tonic };

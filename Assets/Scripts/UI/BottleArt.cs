@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using LastCall.Core;
 using UnityEngine;
 
@@ -33,22 +33,22 @@ namespace LastCall.UI
             public bool Exists => Sprite != null;
         }
 
-        // Cached per brand + openness. Pieces survive across runs, but domain reload is off
+        // Cached per brand. Pieces survive across runs, but domain reload is off
         // in this project, so a play session that re-imports art must start clean — hence
         // ClearCache from the HUD's run-start.
         private static readonly Dictionary<string, Piece> Cache = new Dictionary<string, Piece>();
 
         public static void ClearCache() => Cache.Clear();
 
-        /// <summary>The bottle a card draws with — the closed art, or the capless pour art.</summary>
-        public static Piece For(IngredientCard card, bool open = false)
+        /// <summary>The bottle a card draws with. (The `open` variant died unreached —
+        /// audit 2026-08-11: the pour bench takes ItemArt.BottleOpen directly.)</summary>
+        public static Piece For(IngredientCard card)
         {
             if (card == null) return default;
-            string key = (open ? "o:" : "c:") + card.Id;
-            if (Cache.TryGetValue(key, out var cached) && cached.Sprite != null) return cached;
+            if (Cache.TryGetValue(card.Id, out var cached) && cached.Sprite != null) return cached;
 
-            var piece = new Piece(open ? ItemArt.BottleOpen(card) : ItemArt.Bottle(card));
-            if (piece.Exists) Cache[key] = piece;   // never cache a miss (Unity fake-null)
+            var piece = new Piece(ItemArt.Bottle(card));
+            if (piece.Exists) Cache[card.Id] = piece;   // never cache a miss (Unity fake-null)
             return piece;
         }
     }

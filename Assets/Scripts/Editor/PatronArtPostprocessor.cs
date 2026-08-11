@@ -37,46 +37,17 @@ namespace LastCall.EditorTools
 
             // Frames and plates are stretched to fit their UI rect, so give them 9-slice
             // borders — otherwise the brass caps and rivets smear as the rect grows.
+            // (The rule chain held sixteen more entries for the two superseded market
+            // kits, plus one for a file that never existed — deleted with their sprites,
+            // audit 2026-08-11. A border rule without its PNG is how ghosts accumulate.)
             string file = System.IO.Path.GetFileNameWithoutExtension(p);
             // The key's corner arc is 14px and its standing lip 11px, so a 16px ring keeps both
             // out of the stretched centre (2026-07-27, art regenerated at 128x80).
             if (file == "plate" || file == "plate_down") ti.spriteBorder = new Vector4(16, 16, 16, 16);
-            // The market app's furniture (2026-08-07). Every border is MEASURED off its own
-            // art by Tools/market_borders.py and pasted here — a 9-slice whose border is
-            // guessed either eats the corner detail or stretches it. The tablet's frame
-            // probed at exactly 20px on all four sides.
-            // The distributor's white/green kit (2026-08-07), each border probed off its
-            // own art: the tablet's bezel measured at 40px on every side.
-            // The iPad's bezel probed at 62px on every side (Tools/market_borders.py and
-            // the ipad_dark recolour agree) — a device you can see, not a white line.
-            // The 2026-08-09 kit, DRAWN rather than generated, so these borders are the
-            // drawing's own construction lines instead of a measurement off somebody's
-            // guess: sh_ipad2 is 274x175 (exactly the 1096x700 it renders at) with a 28px
-            // ring, so a sliced Image draws the bezel at 1:1 and it stays even.
+            // The 2026-08-09 kit, DRAWN rather than generated, so this border is the
+            // drawing's own construction line: sh_ipad2 is 274x175 (exactly the 1096x700
+            // it renders at) with a 28px ring, so a sliced Image draws the bezel at 1:1.
             else if (file == "sh_ipad2") ti.spriteBorder = new Vector4(28, 28, 28, 28);
-            // The till slip's paper: a 10px ring so the edge shading and the handled
-            // corner draw at 1:1 while the middle stretches to the night's length.
-            else if (file == "bill_paper") ti.spriteBorder = new Vector4(10, 10, 10, 10);
-            else if (file == "sh_tile") ti.spriteBorder = new Vector4(12, 12, 12, 12);
-            else if (file == "sh_niche") ti.spriteBorder = new Vector4(16, 16, 16, 16);
-            // The tab's bottom band is only 6 so the seam where a lit tab runs into the
-            // page stays a seam instead of being stretched into a gradient.
-            else if (file == "sh_tab2_on" || file == "sh_tab2_off")
-                ti.spriteBorder = new Vector4(14, 6, 14, 10);
-            else if (file == "sh_pill") ti.spriteBorder = new Vector4(10, 6, 10, 6);
-            else if (file == "sh_ipad") ti.spriteBorder = new Vector4(62, 62, 62, 62);
-            else if (file == "sh_add") ti.spriteBorder = new Vector4(14, 8, 14, 8);
-            else if (file == "sh_tablet" || file == "sh_tablet2") ti.spriteBorder = new Vector4(40, 40, 40, 40);
-            else if (file == "sh_card") ti.spriteBorder = new Vector4(10, 8, 10, 8);
-            else if (file == "sh_bar") ti.spriteBorder = new Vector4(10, 8, 10, 8);
-            else if (file == "sh_tab_on" || file == "sh_tab_off") ti.spriteBorder = new Vector4(8, 6, 8, 6);
-            else if (file == "sh_btn") ti.spriteBorder = new Vector4(6, 6, 6, 6);
-            else if (file == "sh_balance") ti.spriteBorder = new Vector4(10, 5, 10, 5);
-            else if (file == "sh_panel") ti.spriteBorder = new Vector4(12, 9, 12, 9);
-            else if (file == "mk_tablet") ti.spriteBorder = new Vector4(20, 20, 20, 20);
-            else if (file == "mk_tab_on" || file == "mk_tab_off") ti.spriteBorder = new Vector4(10, 6, 10, 6);
-            else if (file == "mk_card") ti.spriteBorder = new Vector4(10, 9, 10, 9);
-            else if (file == "mk_appbar") ti.spriteBorder = new Vector4(10, 5, 10, 5);
         }
     }
 }

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 namespace LastCall.UI
@@ -77,7 +77,6 @@ namespace LastCall.UI
         private const float SleepSpeed = 30f;
         private const int MaxNeighbours = 96;   // generous: a weak constraint is what let the clump form
         private const float MinProfile = 0f;      // the interior is shaped by the profile alone now             // below this a particle is simply at rest
-        private const float WallFriction = 0.72f;     // (kept for API parity)
 
         // ── foam (GDD 21 §10, 2026-07-30) ───────────────────────────────────────
         // The head on a pint used to be a separate rectangular Image laid over the beer, which
@@ -255,9 +254,6 @@ namespace LastCall.UI
         private static readonly int IdHeightCnt = Shader.PropertyToID("_HeightCount");
         private static readonly int IdThreshold = Shader.PropertyToID("_Threshold");
         private static readonly int IdEdgeWidth = Shader.PropertyToID("_EdgeWidth");
-        private static readonly int IdEdgeTint  = Shader.PropertyToID("_EdgeTint");
-        private static readonly int IdEdgeStrength = Shader.PropertyToID("_EdgeStrength");
-        private static readonly int IdStreamAlpha  = Shader.PropertyToID("_StreamAlpha");
         private static readonly int IdFoamColor = Shader.PropertyToID("_FoamColor");
         private static readonly int IdStreamColor = Shader.PropertyToID("_StreamColor");
 
@@ -297,23 +293,6 @@ namespace LastCall.UI
             _material?.SetFloat(IdThreshold, 0.7f);
             _material?.SetFloat(IdEdgeWidth, 0.10f);
             _image.enabled = _material != null;
-        }
-
-        /// <summary>
-        /// How solid a free-falling drop draws against the settled body, 0.1–1 (see the
-        /// shader's <c>_StreamAlpha</c>). Every stage takes the default; it is exposed so a
-        /// pour that wants to read heavier — a syrup, say — can say so.
-        /// </summary>
-        public void SetStreamAlpha(float share) =>
-            _material?.SetFloat(IdStreamAlpha, Mathf.Clamp(share, 0.1f, 1f));
-
-        /// <summary>The meniscus at the liquid's edge: how far it lifts toward
-        /// <c>_EdgeColor</c> and how hard that lift lands. Kept as one call because the two
-        /// only mean anything together.</summary>
-        public void SetEdge(float tint, float strength)
-        {
-            _material?.SetFloat(IdEdgeTint, Mathf.Clamp01(tint));
-            _material?.SetFloat(IdEdgeStrength, Mathf.Clamp01(strength));
         }
 
         private void RefreshSize()
@@ -600,13 +579,6 @@ namespace LastCall.UI
         }
 
         private readonly int[] _surfaceBins = new int[48];
-
-        /// <summary>A sideways nudge to the whole body — a shove of the glass (uv-ish impulse).</summary>
-        public void Disturb(float lateralImpulse)
-        {
-            float v = lateralImpulse * _size.x * 0.5f;   // uv/s → px/s
-            for (int i = 0; i < _pn; i++) _vx[i] += v;
-        }
 
         /// <summary>Punches the surface near a local x — a pour landing or a knock.</summary>
         public void Ripple(float localX, float velImpulse)

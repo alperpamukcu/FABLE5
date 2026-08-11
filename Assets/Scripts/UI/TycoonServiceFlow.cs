@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using LastCall.Core;
@@ -77,7 +77,7 @@ namespace LastCall.UI
         private const float CapCentreX = 0f;
         private const float CapGrowth = 1.3f;
         private const float CapArtOffset = 0.245f;   // the lid art sits this far above its rect centre
-        private const float TinW = 168f, TinAspect = 116f / 208f;
+        private const float TinW = 168f;
         private const float CavityFloor = 0.0913f, CavityRim = 0.6106f;
         private const float GridGap = 6f;
         private Text _menuTitle;
@@ -86,7 +86,6 @@ namespace LastCall.UI
         // puts its grain at 4, so the keys read as the same piece of pixel art as the sheet they
         // sit on rather than a finer sticker laid over it (2026-07-27).
         private const float PlatePixelScale = 0.5f;
-        private Vector2 _menuHome;
         // 64 units against 32px art puts one art pixel on 4 screen pixels — the same grain as the
         // keys, so the corner controls belong to the same drawing (2026-07-27).
         private const float CornerSize = 64f;
@@ -197,8 +196,6 @@ namespace LastCall.UI
             _spoonHeld = false;
             _stirEnergy = 0;
             if (_dragPiece != null) _dragPiece.gameObject.SetActive(false);
-            _shakerSplash?.Clear();
-            _serveSplash?.Clear();
             _shakerFluid?.Clear();
             _serveFluid?.Clear();
             _shakerSolids?.Clear();
@@ -501,29 +498,6 @@ namespace LastCall.UI
             Stretch(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(0, 10), new Vector2(0, -4));
             text.text = label;
             return button;
-        }
-
-        private RectTransform AddListButton(RectTransform parent, string label, Color colour, Action onClick)
-        {
-            var rt = NewRect("Row", parent);
-            rt.gameObject.AddComponent<LayoutElement>().preferredHeight = 30;
-            var img = rt.gameObject.AddComponent<Image>();
-            img.color = onClick == null ? UITheme.Night[0] : UITheme.Night[3];
-            if (onClick != null)
-            {
-                var button = rt.gameObject.AddComponent<Button>();
-                button.targetGraphic = img;
-                button.onClick.AddListener(() => onClick());
-                Pressable(rt, tint: img, lift: 2f, depth: 3f);   // a row is thin: a small lift
-            }
-            var swatch = NewRect("Swatch", rt);
-            Place(swatch, new Vector2(0, 0.5f), new Vector2(10, 20), new Vector2(10, 0));
-            swatch.gameObject.AddComponent<Image>().color = colour;
-            var text = NewText("Label", rt, _body, 13, TextAnchor.MiddleLeft,
-                onClick == null ? UITheme.Cream[1] : colour);
-            Stretch(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(28, 0), new Vector2(-8, 0));
-            text.text = label;
-            return rt;
         }
 
         /// <summary>Stops a panel's own clicks from falling through to the scrim's close.</summary>

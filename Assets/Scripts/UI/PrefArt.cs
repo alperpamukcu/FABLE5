@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -72,27 +72,6 @@ namespace LastCall.UI
         public static Sprite SugarRim() => Cached("sugar_rim", p =>
         {
             CoupeWithRim(p, new Color(0.97f, 0.78f, 0.85f));
-        });
-
-        public static Sprite Shaker() => Cached("shaker", p =>
-        {
-            var tin = new Color(0.74f, 0.76f, 0.80f);
-            var tinShade = new Color(0.56f, 0.59f, 0.64f);
-            // body, a hair narrower at the top, cap above
-            for (int y = 3; y <= 14; y++)
-            {
-                int inset = y > 10 ? 1 : 0;
-                for (int x = 6 + inset; x <= 17 - inset; x++)
-                    Px(p, x, y, x > 14 ? tinShade : tin);
-            }
-            for (int y = 15; y <= 17; y++)
-                for (int x = 8; x <= 15; x++) Px(p, x, y, tinShade);
-            for (int y = 18; y <= 19; y++)
-                for (int x = 10; x <= 13; x++) Px(p, x, y, tin);
-            // the shake, said with speed marks
-            var mark = new Color(0.97f, 0.93f, 0.80f);
-            Px(p, 2, 8, mark); Px(p, 3, 10, mark); Px(p, 2, 12, mark);
-            Px(p, 21, 8, mark); Px(p, 20, 10, mark); Px(p, 21, 12, mark);
         });
 
         private static void CoupeWithRim(Color[] p, Color grains)

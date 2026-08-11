@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace LastCall.Core
@@ -162,10 +162,5 @@ namespace LastCall.Core
                 ? ratioRequirements
                 : RatioRecipeMatcher.DeriveBands(this);
         }
-
-        /// <summary>Level 1 = base values; Recipe Books raise the level (GDD 02 table, last column).</summary>
-        public int FlavorAtLevel(int level) => BaseFlavor + (Math.Max(1, level) - 1) * FlavorPerLevel;
-
-        public int MultAtLevel(int level) => BaseMult + (Math.Max(1, level) - 1) * MultPerLevel;
     }
 }

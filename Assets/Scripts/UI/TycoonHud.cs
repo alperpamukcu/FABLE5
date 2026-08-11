@@ -68,7 +68,6 @@ namespace LastCall.UI
         /// (2026-08-02). Wide enough for most drink names, narrow enough that five tickets
         /// across the counter do not overlap each other.</summary>
         private const float TagMaxW = 236f;
-        private const float BustH = 128f;
         private const float WalkSpeed = 340f;       // walk-in speed (ref px/s) — slightly slower, per the notes (P15)
         private const float ExitSpeed = 560f;       // walk-out speed (ref px/s), back off the right edge
         private const float OffscreenMargin = 150f; // how far past the right edge they start/finish
@@ -1266,8 +1265,6 @@ namespace LastCall.UI
             _binProp.anchoredPosition = new Vector2(-8f, -BinH * 0.5f);
             _binImage = _binProp.gameObject.AddComponent<Image>();
             _binImage.sprite = ItemArt.Load("bin_well");
-            if (_binImage.sprite == null) _binImage.sprite = ItemArt.Load("bin_clean");
-            if (_binImage.sprite == null) _binImage.sprite = ItemArt.Load("bin_prop");
             _binImage.preserveAspect = true;
             _binImage.raycastTarget = false;
             _binImage.color = Color.white;
@@ -4395,8 +4392,8 @@ namespace LastCall.UI
 
         // The board and its paper, as the flow measured them off menu_board.
         private const float BkW = 1148f, BkH = 719f;
-        private const float BkPaperW = 0.655f, BkPaperH = 0.660f;
-        private const float BkPaperCX = -0.015f, BkPaperCY = -0.008f;
+        private const float BkPaperW = 0.655f;
+        private const float BkPaperCX = -0.015f;
 
         private Text BookChip(RectTransform sheet, float x, float y, float w, Action onClick)
         {

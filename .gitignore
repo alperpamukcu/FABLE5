@@ -119,3 +119,7 @@ __pycache__/
 
 # pilot art working files - approved masters ship via Assets/Resources/Items
 Art/pilot/
+
+# raw generator output (audit 2026-08-11)
+Tools/*_raw/
+Assets/.agent/

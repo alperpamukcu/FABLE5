@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace LastCall.Core
@@ -47,9 +47,6 @@ namespace LastCall.Core
         private readonly List<double> _nights = new List<double>();
         private double _standing = StartStars;
 
-        /// <summary>Each closed night's (capped) stars, oldest first.</summary>
-        public IReadOnlyList<double> Nights => _nights;
-
         /// <summary>Stars left over the whole run so far (per-visit tallies; feeds nothing
         /// but curiosity now that the standing is inertial).</summary>
         public int Ratings { get; private set; }
@@ -61,15 +58,6 @@ namespace LastCall.Core
 
         /// <summary>Last night's (capped) stars, or the start value before any night closes.</summary>
         public double LastNight => _nights.Count == 0 ? StartStars : _nights[_nights.Count - 1];
-
-        /// <summary>The stars one visit leaves. Satisfaction 0 is one star, not zero — the
-        /// scale starts at one, and someone who storms off still fills in the card.</summary>
-        public static int StarsFor(double satisfaction)
-        {
-            double raw = 1.0 + 4.0 * Math.Max(0.0, Math.Min(1.0, satisfaction));
-            int stars = (int)Math.Round(raw, MidpointRounding.AwayFromZero);
-            return stars < MinStars ? MinStars : stars > MaxStars ? MaxStars : stars;
-        }
 
         /// <summary>The star value of a satisfaction score, unrounded.</summary>
         public static double ExactStarsFor(double satisfaction) =>

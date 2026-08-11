@@ -266,7 +266,7 @@ namespace LastCall.Tests
         public void AStyleBandedOrder_HasNoFamily_SoOnlyTheExactDrinkWillDo()
         {
             var gin = new IngredientCard("gin", "Gin", IngredientType.Spirit, 6,
-                QualityTier.HousePour, new IngredientInfo("gin", category: IngredientCategories.Gin));
+                new IngredientInfo("gin", category: IngredientCategories.Gin));
             var lookup = new Dictionary<string, IngredientCard> { ["gin"] = gin };
 
             var neatGin = new GlassContents(1.0);

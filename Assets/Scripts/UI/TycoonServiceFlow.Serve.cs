@@ -140,7 +140,6 @@ namespace LastCall.UI
         private RectTransform _serveShaker;     // the grabbable shaker
         private Image _serveShakerBody;
         private MetaballFluid _serveFluid;      // the metaball liquid in the serving glass
-        private Splasher _serveSplash;
 
         /// <summary>The shelf slot standing empty while its bottle is in your hand.</summary>
         private RectTransform _serveCabinetGap;
@@ -177,7 +176,6 @@ namespace LastCall.UI
                 : $"glass {run.ServingGlass.FillFraction:P0} full";
             _serveShaker.anchoredPosition = _serveShakerRest;
             _serveShaker.localRotation = Quaternion.identity;
-            _serveSplash.Clear();
             _serveFluid.Clear();
             _serveFluid.ClearStreamColor();       // nothing is in the air on the way in
             // The pool is the drink IN THE GLASS, not the one in the shaker. Those are the same
@@ -795,7 +793,6 @@ namespace LastCall.UI
             ShowServingGlassware(run);
             PushServePool(run);
             _serveFluid.Step(Time.deltaTime);
-            _serveSplash.Step(Time.deltaTime);
         }
 
         /// <summary>
@@ -1080,7 +1077,6 @@ namespace LastCall.UI
             // are a bigger share of it and the estimate runs generous — measured at four fills,
             // it wants a tenth fewer particles to draw the level it was actually given.
             _serveFluid.SetDensity(0.90f);
-            _serveSplash = new Splasher(_serveSurface);
 
             // The piece in hand between the shelf and the glass.
             _serveDragPiece = NewRect("DragPiece", _serveSurface);

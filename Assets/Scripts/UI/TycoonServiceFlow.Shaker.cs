@@ -21,7 +21,6 @@ namespace LastCall.UI
         private Image _pourBottleBody;
         private BottleFill _pourFill;         // what is left in it, behind the glass
         private MetaballFluid _shakerFluid;   // the metaball liquid: pour stream + pooled body
-        private Splasher _shakerSplash;       // brief splashes (dissolving salt / sugar)
         private ShakerSolids _shakerSolids;   // ice / lemon afloat inside the shaker
         private float _slosh;                 // running slosh phase for the shaker surface
         private Vector2 _bottleRest;
@@ -253,7 +252,6 @@ namespace LastCall.UI
             PushPourFill(run);
             _pourBottle.anchoredPosition = _bottleRest;
             _pourBottle.localRotation = Quaternion.identity;
-            _shakerSplash.Clear();
             _shakerFluid.Clear();
             _shakerFluid.ClearStreamColor();      // a new visit pours nothing yet
             _shakerFluid.SetColor(DrinkColor(run.Glass));
@@ -402,7 +400,6 @@ namespace LastCall.UI
 
             _shakerFluid.Step(Time.deltaTime);
             _shakerSolids.Step(Time.deltaTime);
-            _shakerSplash.Step(Time.deltaTime);
         }
 
         /// <summary>Places the shaker's pooled liquid from the glass interior and its live fill,
@@ -862,7 +859,7 @@ namespace LastCall.UI
             _capPos = _capRest;
             _shakerTop.anchoredPosition = _capRest;
             var topImg = _shakerTop.gameObject.AddComponent<Image>();
-            topImg.sprite = ItemArt.Load("shaker_cap") ?? ItemArt.Load("shaker_top");
+            topImg.sprite = ItemArt.Load("shaker_cap");
             topImg.preserveAspect = true; topImg.raycastTarget = true;
             _benchProps.Clear();
 
@@ -872,7 +869,6 @@ namespace LastCall.UI
             _shakerTop.gameObject.SetActive(topImg.sprite != null);
 
             _shakerSolids = new ShakerSolids(_pourSurface);
-            _shakerSplash = new Splasher(_pourSurface);
             // The metal shaker is opaque, so the fluid draws OVER it (2026-07-24): you see the
             // drink inside the tin as a cutaway, which is the point — a metal shaker you can
             // still read the level in. (A clear vessel would sit in front instead.)
@@ -1055,76 +1051,5 @@ namespace LastCall.UI
             AddEdgeBack(_shakerPanel);
         }
 
-        /// <summary>One source standing on the prep table: pointer-down picks its piece up.</summary>
-        private void AddPrepSource(int index, string label, PreparationDefinition prep,
-                                   string propId, Color colour)
-        {
-            var prepSprite = ItemArt.Prep(prep.Id);
-            var bucketSprite = ItemArt.Bucket(prep.Id);
-            // On the TABLE, at the prop's own size, shrinking as it recedes. It used to be a
-            // 124x112 cell at a hand-rolled `66 + index*34, 210 - index*124` with the art
-            // squeezed into one 112x88 box — a staircase of identical buttons with nothing
-            // under it, and a salt cellar drawn at an ice bucket's footprint. The serve stage
-            // solved this and wrote down why; these are its two helpers.
-            var stand = TableStand(index, 4);
-            var size = FinishPropSize(propId) * stand.depth;
-            var chip = NewRect($"Prep_{label}", _shakerPanel);
-            chip.anchorMin = chip.anchorMax = Vector2.zero;
-            chip.pivot = new Vector2(0.5f, 0f);          // standing on the tabletop line
-            chip.sizeDelta = size + new Vector2(24f, 20f);
-            chip.anchoredPosition = stand.pos;
-            var img = chip.gameObject.AddComponent<Image>();
-            if (bucketSprite != null)
-            {
-                // A real bucket you grab a piece out of (2026-07-23): drag the ice / lemon /
-                // salt / sugar from the bucket into the shaker.
-                img.color = new Color(1f, 1f, 1f, 0.001f);   // clear grab target over the whole cell
-                var icon = NewRect("Bucket", chip);
-                Place(icon, new Vector2(0.5f, 0), size, new Vector2(0, 14f));
-                var iconImg = icon.gameObject.AddComponent<Image>();
-                iconImg.sprite = bucketSprite; iconImg.preserveAspect = true; iconImg.raycastTarget = false;
-                var text = NewText("L", chip, _body, 8, TextAnchor.LowerCenter, UITheme.TextPrimary);
-                Place(text.rectTransform, new Vector2(0.5f, 0), new Vector2(84, 14), new Vector2(0, 0));
-                text.text = label;
-                // It tips toward you before you reach in — the rule every clickable thing in
-                // this project follows, and which nothing on this bench followed.
-                Pressable(chip, icon, iconImg, lift: 5f, depth: 5f);
-            }
-            else
-            {
-                img.color = new Color(colour.r, colour.g, colour.b, 0.85f);
-                var text = NewText("L", chip, _body, 8, TextAnchor.MiddleCenter, UITheme.Night[0]);
-                Stretch(text.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                text.text = label;
-            }
-            _benchProps.Add(chip.gameObject.AddComponent<CanvasGroup>());
-            var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
-            down.callback.AddListener(_ =>
-            {
-                if (_capped) return;   // the tin is closed — the bench is put away
-                if (Run == null || Run.Glass.IsEmpty) { SayShaker("pour something first"); return; }
-                if (!Run.CanAddPreparation) return;   // a phase check now — off-day only
-                _draggingPrep = prep;
-                var dpImg = _dragPiece.GetComponent<Image>();
-                dpImg.sprite = prepSprite;
-                dpImg.color = prepSprite != null ? Color.white : new Color(colour.r, colour.g, colour.b, 0.85f);
-                _dragPieceLabel.text = prepSprite != null ? "" : label;
-                _dragSwing.Reset();
-                // The piece springs in from wherever the cursor is. The prop now stands in the
-                // PANEL's space while the drag lives in the surface's, so the chip's own
-                // position is no longer a valid seed — with no mouse the piece simply starts
-                // at the surface's centre rather than at a point in the wrong coordinate frame.
-                Vector2 start = Vector2.zero;
-                if (Mouse.current != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                        _pourSurface, Mouse.current.position.ReadValue(), null, out Vector2 l0))
-                    start = l0;
-                _dragPos = start;
-                _dragVel = Vector2.zero;
-                _dragPiece.anchoredPosition = _dragPos;
-                _dragPiece.localRotation = Quaternion.identity;
-                _dragPiece.gameObject.SetActive(true);
-            });
-            chip.gameObject.AddComponent<EventTrigger>().triggers.Add(down);
-        }
     }
 }

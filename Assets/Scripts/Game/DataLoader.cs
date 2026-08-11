@@ -83,7 +83,7 @@ namespace LastCall.Game
                         card.origin, card.abv, card.blurb, card.category, card.carbonated);
                 }
                 var parsed = new IngredientCard(card.id, card.name, ParseType(card.type, card.id),
-                    card.flavor, QualityTier.HousePour, info);
+                    card.flavor, info: info);
                 if (card.locked) locked.Add(parsed);
                 else cards.Add(parsed);
             }
@@ -174,7 +174,7 @@ namespace LastCall.Game
                     throw new FormatException($"Glassware file lists '{glass.id}' twice.");
                 try
                 {
-                    glasses.Add(new GlasswareDefinition(glass.id, glass.name, glass.spriteKey,
+                    glasses.Add(new GlasswareDefinition(glass.id, glass.name,
                         glass.profile?.ToArray(), glass.tierPrices?.ToArray(), glass.capacity));
                 }
                 catch (ArgumentException e)
@@ -455,7 +455,6 @@ namespace LastCall.Game
         {
             public string id;
             public string name;
-            public string spriteKey;
             public List<double> profile;
             public List<int> tierPrices;
             public double capacity;

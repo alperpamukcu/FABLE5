@@ -72,7 +72,6 @@ namespace LastCall.Core
         /// — bottles, recipes, restocking — is not a fitting and is not capped.
         /// </summary>
         public int MaxUpgradesPerNight { get; } = 1;
-        public int GlasswarePrice(int tier) => 50 * tier;   // tier = current level; the next step costs this
         public int CounterPrice(int tier) => 40 * tier;
 
         // The old AmbienceBonus(glassware, counter, wall, musician) went with them. It had been
