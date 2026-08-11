@@ -393,7 +393,14 @@ namespace LastCall.UI
         private static List<SpecRow> RecipeSpecRows(RecipeDefinition r, bool poursOnly = false)
         {
             var rows = new List<SpecRow>();
-            if (!poursOnly) rows.Add(new SpecRow(null, PrepWord(r)));
+            // The prep word stays on the trimmed card ONLY when it is graded. ServiceJudge
+            // .MethodScore scores a shaken recipe that was not shaken at zero, and the method
+            // is 40% of craft which is 35% of the tip — about a seventh of the tip, lost with
+            // nothing on screen to say why. NEAT, ON TAP and BUILT are scored nowhere at all
+            // (Built is the "either, or neither" class), so those are the ones that were free
+            // to drop and the ones that went.
+            bool gradedPrep = r.Prep == PrepMethod.Shaken || r.Prep == PrepMethod.Stirred;
+            if (!poursOnly || gradedPrep) rows.Add(new SpecRow(null, PrepWord(r)));
             var bands = r.RatioRequirements;
             var shown = WholePercents(RatioRecipeMatcher.IdealPour(r));
             for (int i = 0; i < bands.Count; i++)
