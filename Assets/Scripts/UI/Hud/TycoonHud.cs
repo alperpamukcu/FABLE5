@@ -805,6 +805,18 @@ namespace LastCall.UI
         // control the whole market exists to reach and it was the quietest thing on
         // the page, against a 640-wide dark slab shouting beside it.
         private const float FootH = 128f, InspectorW = 560f, OrderW = 312f, ExitW = 136f;
+
+        /// <summary>How far the foot stands off the device's own bottom edge.</summary>
+        private const float FootY = 8f;
+
+        /// <summary>The air between the aisle's sheet and the foot under it — a margin, and
+        /// the only thing between the two panels. Measured from the foot's TOP, not from the
+        /// screen's bottom, or the foot's own stand-off is quietly counted as part of it.</summary>
+        private const float AisleGutter = 24f;
+
+        /// <summary>How far inside its own sheet the aisle is cut. The mask, the scroll track
+        /// and the page all read it, so the frame and the cut cannot part company.</summary>
+        private const float PageInset = 12f;
         private const float BarW = 10f;
         // The tile, and the three product classes that share one shelf line.
         private const float TileW = 160f, TileH = 208f, ContentW = 140f;
@@ -6557,11 +6569,24 @@ namespace LastCall.UI
             // overlaps that edge by two units, so it does not sit beside the page, it is
             // attached to it. Four flat Images make the frame, which cannot distort at any
             // size — the thing the stretched sprites kept getting wrong.
+            // THE SHEET IS THE AISLE'S OWN RECT (2026-08-11, the author: the box the
+            // products are listed in and the area the listing is CUT at are not the same,
+            // there is white between them). They were not: the page was a FIXED 416 tall
+            // hanging from the tabs while the mask stretched to the foot, so the two only
+            // ever agreed at one screen height — measured at 26 units of white below the
+            // last row and 12 above the first, and the page running 2 units INTO the foot.
+            //
+            // It also means last night's gutter went to the wrong rect. The air belongs
+            // between the PAGE and the foot, where it reads as a margin; putting it under
+            // the mask just pushed the cut further up its own sheet.
+            //
+            // So there is one set of numbers now: the page hangs from the tabs and stops a
+            // gutter clear of the foot, and the mask and the scroll track are inset inside
+            // it by the same amount on every side.
             var page = NewRect("Page", screen);
-            page.anchorMin = new Vector2(0, 1); page.anchorMax = new Vector2(1, 1);
-            page.pivot = new Vector2(0.5f, 1);
-            page.sizeDelta = new Vector2(-8f, 416f);        // 1040 - 8 = 1032 wide
-            page.anchoredPosition = new Vector2(0, -(OsBarH + AppBarH + TabBarH - 4f));
+            Stretch(page, Vector2.zero, Vector2.one,
+                new Vector2(4f, FootH + FootY + AisleGutter),
+                new Vector2(-4f, -(OsBarH + AppBarH + TabBarH - 4f)));
             page.gameObject.AddComponent<Image>().color = Color.white;
             Frame(page, 2f, ShopGreenDark);
 
@@ -6663,7 +6688,7 @@ namespace LastCall.UI
             // out of room.
             var offerView = NewRect("OfferView", screen);
             Stretch(offerView, Vector2.zero, Vector2.one,
-                new Vector2(8f, FootH + 32f),
+                new Vector2(8f, FootH + FootY + AisleGutter + PageInset),
                 new Vector2(-(BarW + 18f), -(OsBarH + AppBarH + TabBarH + 8f)));
             offerView.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, 0.003f);
             offerView.gameObject.AddComponent<RectMask2D>();
@@ -6690,7 +6715,8 @@ namespace LastCall.UI
             var barTrack = NewRect("ScrollTrack", screen);
             barTrack.anchorMin = new Vector2(1, 0); barTrack.anchorMax = new Vector2(1, 1);
             barTrack.pivot = new Vector2(1, 1);
-            barTrack.sizeDelta = new Vector2(BarW, -(OsBarH + AppBarH + TabBarH + FootH + 40f));
+            barTrack.sizeDelta = new Vector2(BarW,
+                -(OsBarH + AppBarH + TabBarH + 8f + FootH + FootY + AisleGutter + PageInset));
             barTrack.anchoredPosition = new Vector2(-8f, -(OsBarH + AppBarH + TabBarH + 8f));
             barTrack.gameObject.AddComponent<Image>().color = new Color(0.84f, 0.87f, 0.84f, 1f);
             var scrollbar = barTrack.gameObject.AddComponent<Scrollbar>();
@@ -6709,7 +6735,7 @@ namespace LastCall.UI
             foot.anchorMin = new Vector2(0, 0); foot.anchorMax = new Vector2(1, 0);
             foot.pivot = new Vector2(0.5f, 0);
             foot.sizeDelta = new Vector2(0, FootH);
-            foot.anchoredPosition = new Vector2(0, 8f);
+            foot.anchoredPosition = new Vector2(0, FootY);
 
             // THE INSPECTOR (the author: the descriptions need a box behind them). A flat
             // DARK plate inset into the white page — the one treatment that reads as a box
@@ -7276,20 +7302,21 @@ namespace LastCall.UI
                 // over: the strip runs the height of the ART, where there is nothing else,
                 // and reads like the level in the bottle it is standing next to. The art is
                 // an overlay on the left, so nothing about the bottle's placement changes.
-                // BESIDE THE BOTTLE, NOT BESIDE THE BOX (2026-08-11, the author). Standing
-                // the gauge up put it at the PLATE's left edge, which is only next to the
-                // product when the product happens to be wide: a tile is 160 across and a
-                // slim bottle draws about 40 of it, so the strip sat a hand's width of white
-                // away from the level it was reporting. It is measured off the drawing now —
-                // the same measurement PlaceProduct stands the art by, so the two cannot
-                // drift — and it runs exactly the drawing's own height, foot to shoulder.
+                // ONE GAUGE, ONE SIZE, ON THE RIGHT EDGE (2026-08-11, the author's second
+                // ruling, and the better one). Pinning it to each bottle's own drawing put
+                // it where the product was — but that means it MOVES: a page of tiles then
+                // has six gauges at six different x's and six different heights, and an
+                // instrument you have to find on every card is not an instrument. Fixed and
+                // flush right, it is the same stripe in the same place on every plate, and
+                // the eye can run down a column of them and compare.
+                //
+                // It still clears the ADD key by construction: the strip's foot is at the
+                // product's own foot line, 68 up from the plate, and the key lives in the
+                // bottom 30.
                 float frac = Mathf.Clamp01(spec.StockFrac);
-                var drawn = spec.Art != null ? ProductDrawn(spec.Art, spec.ArtH)
-                                             : new Vector2(60f, 124f);
-                const float StripW = 12f, StripGap = 8f;
-                float StripH = Mathf.Max(48f, drawn.y);
-                float StripX = Mathf.Max(4f, TileW * 0.5f - drawn.x * 0.5f - StripGap - StripW);
-                float StripTop = -(TileH - ProductFootY - StripH);
+                const float StripW = 12f, StripH = 124f, StripMargin = 10f;
+                const float StripX = TileW - StripMargin - StripW;
+                const float StripTop = -(TileH - ProductFootY - StripH);
                 var surround = NewRect("Track", rt);
                 Place(surround, new Vector2(0, 1), new Vector2(StripW, StripH),
                     new Vector2(StripX, StripTop));
@@ -7315,12 +7342,11 @@ namespace LastCall.UI
                 fillImg.color = frac < 0.25f ? ShopCost : StripStock;
                 fillImg.raycastTarget = false;
 
-                // The reading stays at the plate's top corner — the one place with nothing
-                // else in it, and nowhere near the key — but left-aligned to the STRIP, so
-                // the number and the gauge read as one instrument however wide the bottle is.
-                var pct = NewText("Pct", rt, _shop, 8, TextAnchor.UpperLeft, ShopInkSoft);
-                Place(pct.rectTransform, new Vector2(0, 1), new Vector2(60, 12),
-                    new Vector2(Mathf.Max(4f, StripX - 2f), -4f));
+                // The reading sits over the strip's head, right-aligned to the same edge —
+                // the number and the gauge are one instrument, so they share an alignment.
+                var pct = NewText("Pct", rt, _shop, 8, TextAnchor.UpperRight, ShopInkSoft);
+                Place(pct.rectTransform, new Vector2(1, 1), new Vector2(60, 12),
+                    new Vector2(-StripMargin, -4f));
                 pct.raycastTarget = false;
                 pct.text = Mathf.RoundToInt(frac * 100f) + "%";
             }
@@ -7616,22 +7642,6 @@ namespace LastCall.UI
         /// </summary>
         /// <summary>Where a tile stands its product: the drawing's foot, up from the plate.</summary>
         private const float ProductFootY = 68f;
-
-        /// <summary>
-        /// How big the DRAWING inside <paramref name="s"/> comes out on a tile — the same
-        /// arithmetic <see cref="PlaceProduct"/> stands it by, factored out so the stock
-        /// gauge can be pinned to the bottle instead of to the plate (2026-08-11, the
-        /// author: put it right beside the bottle, not beside the box). A tile is 160 wide
-        /// and a slim bottle draws 40 of it, so a gauge at the plate's edge was a hand's
-        /// width of white away from the thing it was measuring.
-        /// </summary>
-        private static Vector2 ProductDrawn(Sprite s, float boxH)
-        {
-            var m = VesselArt.Of(s);
-            float k = Mathf.Min(ContentW / m.Drawing.width, boxH / m.Drawing.height);
-            if (k >= 1f) k = Mathf.Floor(k);
-            return new Vector2(m.Drawing.width * k, m.Drawing.height * k);
-        }
 
         private static void PlaceProduct(RectTransform rt, Sprite s, float boxH)
         {
