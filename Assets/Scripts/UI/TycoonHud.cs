@@ -276,16 +276,20 @@ namespace LastCall.UI
         /// <summary>The room, asked where its shelf compartments are.</summary>
         private DiegeticStage _stage;
         private const float CarriedGlassHeight = 116f;
-        private bool _glassGrabbed;
-        private Vector2 _glassGrabOffset;
-        private Vector2 _glassPos, _glassVel;
-        private float _glassAngle, _glassAngVel;
+        // CLICK-TO-SERVE (2026-08-11, the author's loop rework — experimental, replacing
+        // the drag): the ready glass stands at its home; clicking a customer whose order
+        // was TAKEN sends it sliding down the counter to them, and the serve happens on
+        // ARRIVAL — never before, because ServeTo empties the vessel and the ready gate
+        // would hide a glass still in flight.
+        private bool _glassServing;          // sliding down the counter to a seat
+        private bool _glassReturning;        // refused on arrival: sliding home
+        private int _glassServeSeat = -1;
+        private float _glassServeT, _glassServeDur;
+        private Vector2 _glassServeFrom, _glassServeTo;
+        private float _glassAngle;
         private Vector2 _glassHome;
         private bool _glassShown;
-        private const float GlassStiffness = 130f;   // spring to the cursor
-        private const float GlassDamping = 12f;
-        private const float GlassAngStiffness = 90f;  // spring the tilt back upright
-        private const float GlassAngDamping = 9f;
+        private const float GlassSlideMax = 0.22f;   // a full-counter slide, distance-scaled below
 
         // day end — two steps now (the author, 2026-08-01): first the bill alone, then
         // the market, each with its own verb on the same button.
@@ -924,7 +928,12 @@ namespace LastCall.UI
             _flow?.CloseFlow();
             CloseId();
             if (_ledgerPanel != null) _ledgerPanel.gameObject.SetActive(false);
-            if (_drinkGlass != null) { _drinkGlass.gameObject.SetActive(false); _glassShown = false; _glassGrabbed = false; }
+            if (_drinkGlass != null)
+            {
+                _drinkGlass.gameObject.SetActive(false);
+                _glassShown = false;
+                _glassServing = false; _glassReturning = false; _glassServeSeat = -1;
+            }
             _lastFixtureCount = -1;   // force the dressing to re-sync against the new run
             ApplyBarLook();
         }
@@ -980,6 +989,7 @@ namespace LastCall.UI
 
             RefreshTopBar();
             RefreshSeats();
+            UpdateOrderTip();     // after the seats: it reads the tickets they just placed
             UpdateDrinkGlass();
         }
 
@@ -1018,8 +1028,21 @@ namespace LastCall.UI
             if (visit.State != VisitState.Waiting) return;
             if (!visit.HasOrdered) return;   // still deciding — no order to read yet (2026-07-23)
 
-            // Clicking a customer reads their licence (GDD 24 §5). Serving is a separate act:
-            // the finished drink is carried over and dropped on them (drag the glass).
+            // CLICK-TO-SERVE (2026-08-11): with a drink ready, clicking a customer whose
+            // order was TAKEN serves them — the glass slides the counter and hands over on
+            // arrival. Only taken orders are selectable for the serve; an unread customer
+            // still opens their licence, which IS taking the order — so the ID read stays
+            // the one road to the servable state. (Core's own ServeTo remains blind-serve
+            // capable by design; this gate is the HUD's.)
+            if (_glassShown && !_glassServing && !_glassReturning
+                && run.DrinkReady && visit.IdInspected)
+            {
+                StartServeSlide(index);
+                return;
+            }
+
+            // Clicking a customer reads their licence (GDD 24 §5). Serving is a separate
+            // act: with a drink ready, the next click on a READ customer sends it over.
             ShowId(visit);
         }
 
@@ -1032,6 +1055,7 @@ namespace LastCall.UI
             var visit = _seats[index].Visit;
             if (visit == null || visit.State != VisitState.Waiting) return false;
             if (!visit.HasOrdered) return false;   // can't hand a drink to someone still deciding
+            if (!visit.IdInspected) return false;  // only TAKEN orders are servable (HUD rule, 2026-08-11)
             if (!run.DrinkReady) return false;     // only what is in the glass goes out
 
             var verdict = run.ServeTo(visit);
@@ -1219,11 +1243,11 @@ namespace LastCall.UI
             _drinkGlass.sizeDelta = new Vector2(78, CarriedGlassHeight);
             _drinkGlass.anchoredPosition = _glassHome;
 
-            var body = _drinkGlass.gameObject.AddComponent<Image>();   // invisible, but the grab target
+            // The glass answers no pointer of its own any more (2026-08-11): serving is a
+            // click on the CUSTOMER, and the glass does the travelling.
+            var body = _drinkGlass.gameObject.AddComponent<Image>();
             body.color = new Color(0f, 0f, 0f, 0.004f);
-            var grab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
-            grab.callback.AddListener(ev => OnGlassGrab((PointerEventData)ev));
-            _drinkGlass.gameObject.AddComponent<EventTrigger>().triggers.Add(grab);
+            body.raycastTarget = false;
 
             // The layer architecture (the author, 2026-08-02): BACK face and base first,
             // the liquid over it, the FRONT face — interior fully clear — on top.
@@ -1250,23 +1274,60 @@ namespace LastCall.UI
             _drinkGlassArt.preserveAspect = true;
 
             var hint = NewText("Hint", _drinkGlass, _body, 10, TextAnchor.UpperCenter, UITheme.Cyan[4]);
-            Place(hint.rectTransform, new Vector2(0.5f, 1), new Vector2(170, 18), new Vector2(0, 24));
-            hint.text = "DRAG TO SERVE";
+            Place(hint.rectTransform, new Vector2(0.5f, 1), new Vector2(190, 18), new Vector2(0, 24));
+            hint.text = "CLICK A CUSTOMER TO SERVE";
             hint.raycastTarget = false;
+
+            // With the drag gone, the bin answers a CLICK: it was drag-and-drop's landing
+            // pad, and the discard verb still needs a door on the counter.
+            _binImage.raycastTarget = true;
+            var binBtn = _binProp.gameObject.AddComponent<Button>();
+            binBtn.targetGraphic = _binImage;
+            binBtn.transition = Selectable.Transition.None;
+            binBtn.onClick.AddListener(OnBinClicked);
 
             _drinkGlass.gameObject.SetActive(false);
         }
 
-        private void OnGlassGrab(PointerEventData ev)
+        /// <summary>The bin's click: throws the ready drink away, fee and all. Inert with
+        /// nothing to throw — an empty counter never nags.</summary>
+        private void OnBinClicked()
         {
-            if (Run == null || Run.Phase != TycoonPhase.DayOpen) return;
+            var run = Run;
+            if (run == null || run.Phase != TycoonPhase.DayOpen) return;
             if (_flow != null && _flow.IsOpen) return;
-            _glassGrabbed = true;
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    (RectTransform)_drinkGlass.parent, ev.position, null, out Vector2 cursor))
-                _glassGrabOffset = _glassPos - cursor;   // keep the grab point under the cursor
-            else
-                _glassGrabOffset = Vector2.zero;
+            if (!_glassShown || _glassServing || _glassReturning || !run.DrinkReady) return;
+            int fee = run.DiscardGlass();
+            Toast(fee > 0 ? $"BINNED · -${fee}" : "BINNED");
+            if (fee > 0)
+                LogService($"<color=#F27D8A>BINNED</color> a built drink · -${fee}");
+            _drinkGlass.gameObject.SetActive(false);
+            _glassShown = false;
+        }
+
+        /// <summary>
+        /// Sends the ready glass sliding down the counter to seat <paramref name="index"/>.
+        /// The serve itself happens on ARRIVAL (UpdateDrinkGlass), after a re-validation —
+        /// a customer can run out of patience while the glass is in flight.
+        /// </summary>
+        private void StartServeSlide(int index)
+        {
+            if (Motion.Reduced) { if (ServeSeat(index)) { _drinkGlass.gameObject.SetActive(false); _glassShown = false; } return; }
+            var parent = (RectTransform)_drinkGlass.parent;
+            var seat = _seats[index];
+            // The seats live in bottom-left space, the glass in centre space — the dirty
+            // glasses' own counter line (CounterLineY − 36), converted, base to base.
+            float baseY = CounterLineY - 36f;
+            _glassServeFrom = _drinkGlass.anchoredPosition;
+            _glassServeTo = new Vector2(
+                seat.SeatX - parent.rect.width * 0.5f,
+                baseY + CarriedGlassHeight * 0.5f - parent.rect.height * 0.5f);
+            float dist = (_glassServeTo - _glassServeFrom).magnitude;
+            _glassServeDur = Mathf.Min(GlassSlideMax, 0.08f + dist / 4200f);
+            _glassServeT = 0f;
+            _glassServeSeat = index;
+            _glassServing = true;
+            _glassReturning = false;
         }
 
         /// <summary>The finished drink sits on the counter and is dragged onto a customer to
@@ -1283,7 +1344,12 @@ namespace LastCall.UI
 
             if (!ready)
             {
-                if (_glassShown) { _drinkGlass.gameObject.SetActive(false); _glassShown = false; _glassGrabbed = false; }
+                if (_glassShown)
+                {
+                    _drinkGlass.gameObject.SetActive(false);
+                    _glassShown = false;
+                    _glassServing = false; _glassReturning = false; _glassServeSeat = -1;
+                }
                 return;
             }
 
@@ -1291,7 +1357,9 @@ namespace LastCall.UI
             {
                 _glassShown = true;
                 _drinkGlass.gameObject.SetActive(true);
-                _glassPos = _glassHome; _glassVel = Vector2.zero; _glassAngle = 0f; _glassAngVel = 0f;
+                _drinkGlass.anchoredPosition = _glassHome;
+                _glassAngle = 0f;
+                _glassServing = false; _glassReturning = false; _glassServeSeat = -1;
             }
             // The glass shows the drink as it was actually built: the vessel it chose, its
             // blended colour and its real fill level — no fixed glass, colour or amount.
@@ -1316,75 +1384,62 @@ namespace LastCall.UI
             // the drink that was actually finished, salt and wedge and all.
             GlassDecor.Sync(_drinkGlass, piece, run.ServingGlass, run);
 
-            float dt = Mathf.Max(Time.deltaTime, 1e-4f);
+            float dt = Mathf.Max(Time.unscaledDeltaTime, 1e-4f);
             var mouse = Mouse.current;
 
-            if (_glassGrabbed && (mouse == null || !mouse.leftButton.isPressed))
+            // THE SLIDE (2026-08-11): the glass travels the counter on its own timer; the
+            // serve fires on arrival, after a re-validation, because the seat can empty
+            // and the patience can run out while the glass is in flight.
+            if (_glassServing || _glassReturning)
             {
-                _glassGrabbed = false;
-                // Dropped in the bin: the drink is thrown away (v5 P13 / C7). Checked before
-                // the seats, because the bin sits on the counter among them and a drink let go
-                // over it was plainly meant for it.
-                if (IsOverBin(mouse))
+                _glassServeT += dt;
+                float k = _glassServeDur <= 0f ? 1f : Mathf.Clamp01(_glassServeT / _glassServeDur);
+                float e = 1f - (1f - k) * (1f - k) * (1f - k);   // lands soft
+                var from = _glassServing ? _glassServeFrom : _glassServeTo;
+                var to = _glassServing ? _glassServeTo : _glassServeFrom;
+                var before = _drinkGlass.anchoredPosition;
+                _drinkGlass.anchoredPosition = Vector2.Lerp(from, to, e);
+                // lean into the travel, upright at both ends
+                float lean = Mathf.Clamp((_drinkGlass.anchoredPosition.x - before.x) / dt * -0.012f, -18f, 18f);
+                _glassAngle = Mathf.Lerp(_glassAngle, lean * Mathf.Sin(k * Mathf.PI), 0.5f);
+                _drinkGlass.localRotation = Quaternion.Euler(0, 0, _glassAngle);
+                if (k < 1f) return;
+
+                if (_glassReturning)
                 {
-                    int fee = run.DiscardGlass();
-                    Toast(fee > 0 ? $"BINNED · -${fee}" : "BINNED");
-                    if (fee > 0)
-                        LogService($"<color=#F27D8A>BINNED</color> a built drink · -${fee}");
-                    _drinkGlass.gameObject.SetActive(false);
-                    _glassShown = false;
+                    _glassReturning = false;
+                    _drinkGlass.anchoredPosition = _glassHome;
+                    _drinkGlass.localRotation = Quaternion.identity;
                     return;
                 }
-                int seat = SeatUnderCursor(mouse);
-                if (seat >= 0 && ServeSeat(seat))
+                _glassServing = false;
+                int seat = _glassServeSeat;
+                _glassServeSeat = -1;
+                bool served = false, saidWhy = false;
+                try { served = seat >= 0 && ServeSeat(seat); }
+                catch (InvalidOperationException e2)
+                { Toast(e2.Message.ToUpperInvariant()); saidWhy = true; }
+                if (served)
                 {
                     _drinkGlass.gameObject.SetActive(false);   // handed over; a new drink re-shows it
                     _glassShown = false;
-                    return;
                 }
+                else
+                {
+                    // Refused at the stool: the drink comes back. The player keeps it.
+                    if (!saidWhy) Toast("THEY ARE GONE — THE DRINK COMES BACK");
+                    _glassServeT = 0f;
+                    _glassReturning = true;
+                }
+                return;
             }
 
-            // The bin only lifts its lid -- brightens -- while there is something to throw in it
-            // and the hand is over it, so it never nags at an empty counter.
+            // At rest: home, upright. The bin lifts its lid — brightens — under a hover
+            // while there is something to throw, so it never nags at an empty counter.
+            _drinkGlass.anchoredPosition = _glassHome;
+            _drinkGlass.localRotation = Quaternion.identity;
             if (_binImage != null)
-                _binImage.color = _glassGrabbed && IsOverBin(mouse)
-                    ? Color.white
-                    : new Color(0.72f, 0.72f, 0.74f, 1f);
-
-            Vector2 target = _glassHome;
-            if (_glassGrabbed && mouse != null &&
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    (RectTransform)_drinkGlass.parent, mouse.position.ReadValue(), null, out Vector2 cursor))
-                target = cursor + _glassGrabOffset;
-
-            // Spring the glass to the target with a little overshoot (weight), and lean it into
-            // the horizontal motion, springing back upright — the carry has heft.
-            _glassVel += (target - _glassPos) * (GlassStiffness * dt);
-            _glassVel *= Mathf.Exp(-GlassDamping * dt);
-            _glassPos += _glassVel * dt;
-
-            float targetAngle = Mathf.Clamp(-_glassVel.x * 0.035f, -26f, 26f);
-            _glassAngVel += (targetAngle - _glassAngle) * (GlassAngStiffness * dt);
-            _glassAngVel *= Mathf.Exp(-GlassAngDamping * dt);
-            _glassAngle += _glassAngVel * dt;
-
-            _drinkGlass.anchoredPosition = _glassPos;
-            _drinkGlass.localRotation = Quaternion.Euler(0, 0, _glassAngle);
-        }
-
-        /// <summary>Which occupied stool the cursor is over, or -1.</summary>
-        private int SeatUnderCursor(Mouse mouse)
-        {
-            if (mouse == null) return -1;
-            var pos = mouse.position.ReadValue();
-            for (int i = 0; i < _seats.Count; i++)
-            {
-                var s = _seats[i];
-                if (s.Visit == null || s.Exiting || !s.Root.gameObject.activeSelf) continue;
-                if (RectTransformUtility.RectangleContainsScreenPoint(s.Root, pos, null))
-                    return i;
-            }
-            return -1;
+                _binImage.color = IsOverBin(mouse) ? Color.white : new Color(0.72f, 0.72f, 0.74f, 1f);
         }
 
         /// <summary>The carried drink's colour: its ingredients' true liquid colours, blended by
@@ -2062,8 +2117,10 @@ namespace LastCall.UI
                 // are chosen from the visit state; the body below the waist is clipped by the bar.
                 UpdateSeatAnimation(view, visit, patience);
 
-                // The tag glows cyan when a drink is built and this customer can actually take it.
-                bool canTake = drinkReady && !deciding && !drinking;
+                // The tag glows cyan when a drink is built and this customer can actually
+                // take it — and "can take" now includes the READ: only taken orders are
+                // click-servable, so the glowing set and the clickable set are one set.
+                bool canTake = drinkReady && !deciding && !drinking && visit.IdInspected;
                 view.TagBg.color = canTake
                     ? new Color(UITheme.Selection.r, UITheme.Selection.g, UITheme.Selection.b, 0.92f)
                     : new Color(0.07f, 0.07f, 0.11f, 0.90f);
@@ -4620,10 +4677,10 @@ namespace LastCall.UI
         /// with the pictogram and the word side by side, not a picture with a caption
         /// floating under it. Returns 1 so the caller can count.
         /// </summary>
-        private int PrefChip(Sprite icon, string label)
+        private int PrefChip(Sprite icon, string label, RectTransform host = null)
         {
             const float CellH = 38f, IconBox = 26f;
-            var chip = NewRect("Pref", _idPrefRow);
+            var chip = NewRect("Pref", host ?? _idPrefRow);
             var plate = chip.gameObject.AddComponent<Image>();
             plate.color = new Color(0.98f, 0.97f, 0.93f, 1f);
             plate.raycastTarget = false;
@@ -4648,6 +4705,229 @@ namespace LastCall.UI
             le.preferredWidth = IconBox + 12f + label.Length * 6.7f + 12f;
             le.preferredHeight = CellH;
             return 1;
+        }
+
+        // ── the order tip: hover a decided customer's ticket ─────────────────────
+        //
+        // The author, 2026-08-11: hovering the choice above a customer's head should say how
+        // the drink is made and how they want it.
+        //
+        // Both halves already exist and are already shared — DrawRecipeSpec draws the pour
+        // the licence and the book draw, PrefChip draws the endorsements the licence draws —
+        // so this is a third window onto them rather than a third telling of them, and the
+        // three cannot drift apart.
+        //
+        // WHAT IT MAY SAY IS GATED, and not by politeness: the order lives behind the ID
+        // card, Core refuses to hand it over before InspectId, and a tip that answered
+        // anyway would quietly kill the card. Unread, it says only that the licence is where
+        // the answer is — which teaches the mechanic instead of skipping it.
+        private RectTransform _orderTip, _orderTipBody, _orderTipPrefs;
+        private Text _orderTipTitle, _orderTipPrefHead, _orderTipHint;
+        private int _orderTipSeat = -1;
+
+        /// <summary>How wide the hover tip is. A little over the licence's own, because it
+        /// carries the endorsements under the pour rather than beside them.</summary>
+        private const float OrderTipW = 268f;
+
+        private void BuildOrderTip(RectTransform root)
+        {
+            _orderTip = NewRect("OrderTip", root);
+            Place(_orderTip, new Vector2(0.5f, 0.5f), new Vector2(OrderTipW, 160f), Vector2.zero);
+            _orderTip.pivot = new Vector2(0, 1);          // the position IS the top-left corner
+            // Its own sorting layer, above the seats and their tickets — a tip drawn under the
+            // thing it explains is not a tip.
+            var canvas = _orderTip.gameObject.AddComponent<Canvas>();
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = 26;
+            var bg = _orderTip.gameObject.AddComponent<Image>();
+            bg.color = new Color(0.06f, 0.05f, 0.09f, 0.96f);
+            bg.raycastTarget = false;
+            var edge = new Color(UITheme.Cyan[3].r, UITheme.Cyan[3].g, UITheme.Cyan[3].b, 0.45f);
+            Hairline(_orderTip, new Vector2(0, 0), new Vector2(1, 0), edge);
+            Hairline(_orderTip, new Vector2(0, 1), new Vector2(1, 1), edge);
+            HairlineV(_orderTip, 0f, edge);
+            HairlineV(_orderTip, 1f, edge);
+
+            _orderTipTitle = TipLine("Title", 10, TextAnchor.UpperLeft, UITheme.Amber[4]);
+            _orderTipBody = NewRect("Body", _orderTip);
+            Place(_orderTipBody, new Vector2(0, 1), new Vector2(OrderTipW - 20f, 10f), Vector2.zero);
+            _orderTipBody.pivot = new Vector2(0, 1);
+
+            _orderTipPrefHead = TipLine("PrefHead", 8, TextAnchor.UpperLeft,
+                new Color(0.61f, 0.58f, 0.66f));
+            _orderTipPrefs = NewRect("Prefs", _orderTip);
+            Place(_orderTipPrefs, new Vector2(0, 1), new Vector2(OrderTipW - 20f, 38f), Vector2.zero);
+            _orderTipPrefs.pivot = new Vector2(0, 1);
+            var row = _orderTipPrefs.gameObject.AddComponent<HorizontalLayoutGroup>();
+            row.spacing = 5f;
+            row.childControlWidth = true; row.childControlHeight = true;
+            row.childForceExpandWidth = false; row.childForceExpandHeight = false;
+            row.childAlignment = TextAnchor.UpperLeft;
+
+            _orderTipHint = TipLine("Hint", 9, TextAnchor.UpperLeft, UITheme.Cyan[3]);
+
+            _orderTip.gameObject.SetActive(false);
+        }
+
+        private Text TipLine(string name, int size, TextAnchor anchor, Color colour)
+        {
+            var t = NewText(name, _orderTip, _body, size, anchor, colour);
+            Place(t.rectTransform, new Vector2(0, 1), new Vector2(OrderTipW - 20f, size + 4f),
+                Vector2.zero);
+            t.rectTransform.pivot = new Vector2(0, 1);
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.raycastTarget = false;
+            return t;
+        }
+
+        /// <summary>Whether something is open that the tip must not print over.</summary>
+        private bool AnySheetOpen()
+        {
+            if (_flow != null && _flow.IsOpen) return true;
+            return Showing(_idRoot) || Showing(_bookPanel) || Showing(_settingsPanel)
+                || Showing(_guidePanel) || Showing(_ledgerPanel) || Showing(_dayEndPanel);
+        }
+
+        private static bool Showing(RectTransform rt) => rt != null && rt.gameObject.activeSelf;
+
+        /// <summary>
+        /// Which seat's ticket the pointer is over, or −1.
+        ///
+        /// A rect test rather than an EventTrigger, and deliberately: the ticket's background
+        /// takes no raycast, the seat under it is a button that opens the licence, and giving
+        /// the ticket the pointer to win a hover would have taken the click away from the
+        /// customer. Nothing about the input graph changes here.
+        /// </summary>
+        private int HoveredTicket()
+        {
+            if (AnySheetOpen()) return -1;
+            var mouse = UnityEngine.InputSystem.Mouse.current;
+            if (mouse == null) return -1;
+            var p = mouse.position.ReadValue();
+            for (int i = 0; i < _seats.Count; i++)
+            {
+                var tag = _seats[i].Tag;
+                if (tag == null || !tag.gameObject.activeInHierarchy) continue;
+                if (_seats[i].Visit == null) continue;
+                if (RectTransformUtility.RectangleContainsScreenPoint(tag, p, null)) return i;
+            }
+            return -1;
+        }
+
+        private void UpdateOrderTip()
+        {
+            if (_orderTip == null) return;
+            int seat = HoveredTicket();
+            if (seat != _orderTipSeat)
+            {
+                _orderTipSeat = seat;
+                if (seat < 0) _orderTip.gameObject.SetActive(false);
+                else FillOrderTip(_seats[seat].Visit);
+            }
+            if (_orderTip.gameObject.activeSelf) FollowPointerWithOrderTip();
+        }
+
+        private void FillOrderTip(CustomerVisit visit)
+        {
+            if (visit == null) { _orderTip.gameObject.SetActive(false); return; }
+
+            const float Pad = 10f, Gap = 6f;
+            float y = Pad;
+
+            _orderTipTitle.rectTransform.anchoredPosition = new Vector2(Pad, -y);
+            if (!visit.IdInspected)
+            {
+                // Unread. The card is the only thing that may answer, so this says where the
+                // answer is and stops — no name, no drink, no hint of either.
+                _orderTipTitle.text = "READY TO ORDER";
+                y += 14f + Gap;
+                foreach (Transform old in _orderTipBody) Destroy(old.gameObject);
+                _orderTipBody.gameObject.SetActive(false);
+                _orderTipPrefHead.gameObject.SetActive(false);
+                _orderTipPrefs.gameObject.SetActive(false);
+                _orderTipHint.gameObject.SetActive(true);
+                _orderTipHint.rectTransform.anchoredPosition = new Vector2(Pad, -y);
+                _orderTipHint.text = "CLICK THEM TO READ THE LICENCE";
+                y += 13f + Pad;
+                _orderTip.sizeDelta = new Vector2(OrderTipW, y);
+                Show();
+                return;
+            }
+
+            _orderTipTitle.text = visit.Order.Wanted.Name.ToUpperInvariant();
+            y += 14f + Gap;
+
+            _orderTipBody.gameObject.SetActive(true);
+            _orderTipBody.anchoredPosition = new Vector2(Pad, -y);
+            float specH = DrawRecipeSpec(_orderTipBody, visit.Order.Wanted, dark: true,
+                width: OrderTipW - Pad * 2f);
+            _orderTipBody.sizeDelta = new Vector2(OrderTipW - Pad * 2f, specH);
+            y += specH + Gap;
+
+            // How they want it — the licence's own endorsements, in the licence's own chips.
+            _orderTipPrefHead.gameObject.SetActive(true);
+            _orderTipPrefHead.rectTransform.anchoredPosition = new Vector2(Pad, -y);
+            _orderTipPrefHead.text = "HOW THEY WANT IT";
+            y += 12f + 2f;
+
+            foreach (Transform old in _orderTipPrefs) Destroy(old.gameObject);
+            int chips = 0;
+            foreach (var g in visit.Order.Garnishes)
+                chips += PrefChip(PrefArt.ForPreparation(g.Id), g.Name.ToUpperInvariant(),
+                                  _orderTipPrefs);
+            if (visit.Order.Spec.ExtraShaken)
+                chips += PrefChip(PrefArt.Shaker(), "SHAKEN HARD", _orderTipPrefs);
+
+            if (chips > 0)
+            {
+                _orderTipPrefs.gameObject.SetActive(true);
+                _orderTipPrefs.anchoredPosition = new Vector2(Pad, -y);
+                _orderTipHint.gameObject.SetActive(false);
+                y += 38f + Pad;
+            }
+            else
+            {
+                // NONE is a reading; blank is a missing one. The licence draws this
+                // distinction and so does this.
+                _orderTipPrefs.gameObject.SetActive(false);
+                _orderTipHint.gameObject.SetActive(true);
+                _orderTipHint.rectTransform.anchoredPosition = new Vector2(Pad, -y);
+                _orderTipHint.text = "NOTHING EXTRA  ·  SERVE IT CLEAN";
+                y += 13f + Pad;
+            }
+
+            _orderTip.sizeDelta = new Vector2(OrderTipW, y);
+            Show();
+
+            void Show()
+            {
+                _orderTip.gameObject.SetActive(true);
+                // Rebuilt on every hover, so enforced on every hover: nothing in here may
+                // take the pointer, or the tip becomes the thing the cursor is on and the
+                // hover it is answering ends (the licence tip learned this the hard way).
+                foreach (var g in _orderTip.GetComponentsInChildren<Graphic>(true))
+                    g.raycastTarget = false;
+                FollowPointerWithOrderTip();   // placed before its first frame is drawn
+            }
+        }
+
+        /// <summary>Hangs off the pointer, and turns back at the edges of the safe frame
+        /// rather than running off it.</summary>
+        private void FollowPointerWithOrderTip()
+        {
+            var mouse = UnityEngine.InputSystem.Mouse.current;
+            if (mouse == null || _hudRoot == null) return;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _hudRoot, mouse.position.ReadValue(), null, out Vector2 local)) return;
+
+            const float Gap = 16f;
+            Vector2 size = _orderTip.sizeDelta;
+            float halfW = _hudRoot.rect.width * 0.5f, halfH = _hudRoot.rect.height * 0.5f;
+            float x = local.x + Gap;
+            if (x + size.x > halfW) x = local.x - Gap - size.x;
+            float yTop = local.y - Gap;
+            if (yTop - size.y < -halfH) yTop = local.y + Gap + size.y;
+            _orderTip.anchoredPosition = new Vector2(x, yTop);
         }
 
         /// <summary>
@@ -5244,6 +5524,7 @@ namespace LastCall.UI
             NewButton(top, "SETTINGS", new Vector2(1, 0.5f), new Vector2(26, 26),
                 new Vector2(-14, PlaqueY), UITheme.Night[2], ToggleSettings, ChromeArt.Mark("cog"));
             BuildSettings(root);
+            BuildOrderTip(root);
 
             // THE CURTAIN, above everything the HUD owns. Its own canvas at 30 so it also
             // covers the market (22), the licence (20) and the guide (24) — a night that
