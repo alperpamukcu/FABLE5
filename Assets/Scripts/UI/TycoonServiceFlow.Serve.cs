@@ -724,6 +724,18 @@ namespace LastCall.UI
                     _serveGrabbed = false;
                     ShowGlassFull();
                 }
+                else if (tilt > 42f && mouth.y > opening.y - 30f && !run.CanPourOut)
+                {
+                    // THE MANDATORY MIX (GDD 21 §14): two spirits may not leave the tin
+                    // unmixed. Core refuses in PourIntoServingGlass — which this stage
+                    // calls per frame — so the UI reads the predicate and stops the
+                    // stream the way CanPull greys the keg key, instead of catching an
+                    // exception forty times a second.
+                    _serveGrabbed = false;
+                    _serveShaker.localRotation = Quaternion.identity;
+                    if (_aimText != null)
+                        _aimText.text = "IT WANTS A MIX — BACK TO THE SHAKER";
+                }
                 else if (tilt > 42f && mouth.y > opening.y - 30f)
                 {
                     // Aim: how well the mouth is centred over the glass. Within ~half the

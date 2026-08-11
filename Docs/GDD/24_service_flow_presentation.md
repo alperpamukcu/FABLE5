@@ -34,6 +34,17 @@ the mouse.** Buttons select; the mouse *does*. Every step below is a physical in
    with the `shaken` preparation as a 0–1 quality; under- and over-shaking are future
    craft hooks. The interim P4 UI approximates all of this with hold-zones and buttons
    until the P8 interaction pass replaces it.
+6. **The stir is real too (2026-08-11, GDD 21 §14):** a bar spoon rests by the tin. It
+   works the OPEN tin only — pick it up and **work circles over the mouth**; the swept
+   angle around the tin's centre is the energy, so the shake's linear rattle sweeps
+   nothing and the two verbs can never share a gesture (the cap is the switch: open =
+   spoon, capped = shake). Release commits `stirred` at that thoroughness. The mandatory
+   mix cashed the first of §2.5's craft hooks: a two-spirit tin must be shaken or
+   stirred before it may leave (the refusal is Core's, on the pour-out verb).
+7. **The way forward is a key, not a retreat:** once the tin is capped and Core's
+   `CanPourOut` holds, a right-edge **TO THE GLASS** key lights (with a pulse) and moves
+   the flow straight to the serve stage — the Shaker→Serve edge the fast-slide
+   navigation rework runs on.
 
 ## 3. Serving: the glass and the pour
 

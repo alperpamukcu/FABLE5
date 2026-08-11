@@ -63,6 +63,29 @@ namespace LastCall.UI
         private Vector2 _shakerVel;      // the shaker's spring velocity while thrown about
         private Vector2 _shakerHome;     // its rest position
 
+        // The STIR (GDD 21 §14, 2026-08-11): the mandatory mix made Preparations.Stirred
+        // load-bearing, so the bench grew a bar spoon. Stir and shake are told apart by the
+        // CAP — the spoon only works an OPEN tin, the shake only a capped one — so the two
+        // mixing verbs can never fight over one gesture.
+        private RectTransform _spoonRt;
+        private Vector2 _spoonRest;
+        private bool _spoonHeld;
+        private double _stirEnergy;
+        private float _stirPrevAngle;
+        private bool _stirHasPrev;
+        /// <summary>Radians of circling over the tin for a 100% stir — about five laps.</summary>
+        private const float StirFullRadians = 5f * 2f * Mathf.PI;
+
+        // The way OUT of the bench (the author's loop rework): once the tin is capped and
+        // the mix rule is satisfied, the drink moves ON to the glass instead of back
+        // through the menu. Gated on Core's own CanPourOut, so the key can never walk
+        // the player into the refusal.
+        private Button _toGlassBtn;
+        private CanvasGroup _toGlassGroup;
+        private Text _toGlassLabel;
+        private bool _toGlassWasOn;
+        private float _toGlassPulse;
+
         /// <summary>The shake meter's track width; the fill derives from it, so the bar can
         /// actually reach its own end at 100%.</summary>
         private const float ShakeMeterW = 220f;
@@ -237,6 +260,13 @@ namespace LastCall.UI
             _shakerVessel.anchoredPosition = _shakerHome;
             _shakerVessel.localRotation = Quaternion.identity;
             _capped = false; _capGrabbed = false; _capT = 0f;
+            _spoonHeld = false; _stirEnergy = 0; _stirHasPrev = false;
+            _toGlassWasOn = false; _toGlassPulse = 0f;
+            if (_spoonRt != null)
+            {
+                _spoonRt.anchoredPosition = _spoonRest;
+                _spoonRt.localRotation = Quaternion.identity;
+            }
             if (_shakerOpenSize != Vector2.zero) _shakerVessel.sizeDelta = _shakerOpenSize;
             _capPos = _capRest;
             if (_shakerTop != null) { _shakerTop.anchoredPosition = _capRest; _shakerTop.localRotation = Quaternion.identity; }
@@ -496,8 +526,114 @@ namespace LastCall.UI
             var capImg = _shakerTop.GetComponent<Image>();
             if (capImg != null) capImg.raycastTarget = !_capped;   // capped: grab the tin, not the lid
 
-            if (!_capped && !run.Glass.IsEmpty && !_capGrabbed)
-                NudgeShaker("drag the lid onto the tin to close it");
+            if (!_capped && !run.Glass.IsEmpty && !_capGrabbed && !_spoonHeld)
+            {
+                // The mix rule speaks BEFORE the lid does: a two-spirit tin has a decision
+                // to make (spoon or lid), and "close it" alone steers past the spoon.
+                if (run.MixRequired && !run.IsMixed)
+                    NudgeShaker("two spirits — stir it with the spoon, or cap it and shake");
+                else
+                    NudgeShaker("drag the lid onto the tin to close it");
+            }
+        }
+
+        /// <summary>
+        /// The stir (GDD 21 §14): pick the spoon up while the tin is OPEN and work circles
+        /// over its mouth. Energy is the swept ANGLE around the tin's centre — a straight
+        /// rattle sweeps nothing, so the shake's gesture cannot fake a stir. Release with
+        /// anything behind it and the stir commits at that thoroughness.
+        /// </summary>
+        private void UpdateStir(TycoonRun run)
+        {
+            if (_spoonRt == null) return;
+            float dt = Mathf.Max(Time.deltaTime, 1e-4f);
+
+            if (!_spoonHeld)
+            {
+                _spoonRt.anchoredPosition = Vector2.Lerp(
+                    _spoonRt.anchoredPosition, _spoonRest, 1f - Mathf.Exp(-12f * dt));
+                _spoonRt.localRotation = Quaternion.Lerp(
+                    _spoonRt.localRotation, Quaternion.identity, 1f - Mathf.Exp(-12f * dt));
+                return;
+            }
+
+            // Capping mid-stir puts the spoon down: the two verbs never share a tin state.
+            var mouse = Mouse.current;
+            if (mouse == null || !mouse.leftButton.isPressed || _capped)
+            {
+                if (!_capped && !run.Glass.IsEmpty && _stirEnergy > 0.05)
+                {
+                    run.Stir(_stirEnergy);
+                    SayShaker($"STIRRED · {_stirEnergy:P0} · {ShakerLine(run)}");
+                }
+                _spoonHeld = false;
+                _stirEnergy = 0;
+                _stirHasPrev = false;
+                if (_shakeMeterText != null) _shakeMeterText.text = "";
+                return;
+            }
+
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _pourSurface, mouse.position.ReadValue(), null, out Vector2 local))
+                return;
+
+            _spoonRt.anchoredPosition = Vector2.Lerp(
+                _spoonRt.anchoredPosition, local, 1f - Mathf.Exp(-30f * dt));
+
+            // The swept angle, taken about the tin's centre and only while the spoon is
+            // actually over the tin — circling the bench does not stir the drink.
+            var tin = _shakerVessel;
+            Vector2 arm = local - tin.anchoredPosition;
+            bool overTin = Mathf.Abs(arm.x) < tin.rect.width * 0.9f
+                        && Mathf.Abs(arm.y) < tin.rect.height * 0.9f
+                        && arm.magnitude > 8f;
+            if (overTin)
+            {
+                float angle = Mathf.Atan2(arm.y, arm.x);
+                if (_stirHasPrev)
+                {
+                    float swept = Mathf.Abs(Mathf.DeltaAngle(
+                        _stirPrevAngle * Mathf.Rad2Deg, angle * Mathf.Rad2Deg)) * Mathf.Deg2Rad;
+                    _stirEnergy = Mathf.Clamp01((float)_stirEnergy + swept / StirFullRadians);
+                    if (swept > 0.01f) _shakerLoopWanted = "stir_loop";
+                }
+                _stirPrevAngle = angle;
+                _stirHasPrev = true;
+                // the spoon leans into the work, the way the drag pieces swing
+                _spoonRt.localRotation = Quaternion.Euler(0, 0,
+                    Mathf.Sin(Time.unscaledTime * 9f) * 9f);
+            }
+            else _stirHasPrev = false;
+
+            _shakeMeterFill.rectTransform.sizeDelta =
+                new Vector2(Mathf.Round((ShakeMeterW - 4f) * (float)_stirEnergy), -4);
+            _shakeMeterFill.color = Color.Lerp(UITheme.Cyan[3], UITheme.Lime[3], (float)_stirEnergy);
+            if (_shakeMeterText != null) _shakeMeterText.text = $"STIR! {_stirEnergy:P0}";
+            NudgeShaker(overTin ? "work circles over the tin" : "bring the spoon over the tin");
+        }
+
+        /// <summary>
+        /// The right-edge key out of the bench: lit only when the tin is capped and Core
+        /// itself would let the drink leave (<see cref="TycoonRun.CanPourOut"/>). It pulses
+        /// once the moment it first comes alive, so the way forward announces itself.
+        /// </summary>
+        private void UpdateToGlass(TycoonRun run)
+        {
+            if (_toGlassBtn == null) return;
+            bool on = _capped && !run.Glass.IsEmpty && run.CanPourOut;
+            _toGlassBtn.interactable = on;
+            if (_toGlassGroup != null)
+                _toGlassGroup.alpha = on ? 1f : 0.4f;
+            if (on && !_toGlassWasOn) _toGlassPulse = 1f;
+            _toGlassWasOn = on;
+            if (_toGlassPulse > 0f)
+            {
+                _toGlassPulse = Mathf.MoveTowards(_toGlassPulse, 0f, Time.unscaledDeltaTime / 0.35f);
+                float k = 1f + 0.10f * Mathf.Sin(_toGlassPulse * Mathf.PI);
+                ((RectTransform)_toGlassBtn.transform).localScale = new Vector3(k, k, 1f);
+            }
+            if (_capped && !run.Glass.IsEmpty && !run.CanPourOut)
+                NudgeShaker("it wants a mix — shake it, or bin it and start again");
         }
 
         /// <summary>
@@ -865,6 +1001,68 @@ namespace LastCall.UI
             // the real DONE key with no handler on it — and it was the third surface telling
             // the player the same thing the header hint already says. The tin says "grab me" by
             // answering the pointer now.)
+
+            // THE BAR SPOON (GDD 21 §14, 2026-08-11): the stir's instrument, resting by the
+            // tin. Drawn, not generated — it is an instrument the pointer works, and at this
+            // size a rod and a bowl in the bench's own steel read truer than any take.
+            _spoonRest = new Vector2(-195f, -110f);   // leaning by the table's near end
+            _spoonRt = NewRect("BarSpoon", _pourSurface);
+            _spoonRt.pivot = new Vector2(0.5f, 1f);        // held by the grip, bowl hangs down
+            _spoonRt.sizeDelta = new Vector2(26, 118);
+            _spoonRt.anchoredPosition = _spoonRest;
+            var spoonHit = _spoonRt.gameObject.AddComponent<Image>();
+            spoonHit.color = new Color(0, 0, 0, 0.001f);   // the whole slot answers the hand
+            var rod = NewRect("Rod", _spoonRt);
+            rod.anchorMin = rod.anchorMax = new Vector2(0.5f, 1f);
+            rod.pivot = new Vector2(0.5f, 1f);
+            rod.sizeDelta = new Vector2(5, 96);
+            rod.anchoredPosition = Vector2.zero;
+            var rodImg = rod.gameObject.AddComponent<Image>();
+            rodImg.color = new Color(0.72f, 0.75f, 0.80f, 1f);
+            rodImg.raycastTarget = false;
+            var twist = NewRect("Twist", _spoonRt);        // the twisted shaft's glint
+            twist.anchorMin = twist.anchorMax = new Vector2(0.5f, 1f);
+            twist.pivot = new Vector2(0.5f, 1f);
+            twist.sizeDelta = new Vector2(2, 84);
+            twist.anchoredPosition = new Vector2(-1, -6);
+            var twistImg = twist.gameObject.AddComponent<Image>();
+            twistImg.color = new Color(0.92f, 0.94f, 0.97f, 0.85f);
+            twistImg.raycastTarget = false;
+            var bowl = NewRect("Bowl", _spoonRt);
+            bowl.anchorMin = bowl.anchorMax = new Vector2(0.5f, 0f);
+            bowl.pivot = new Vector2(0.5f, 0f);
+            bowl.sizeDelta = new Vector2(16, 24);
+            bowl.anchoredPosition = new Vector2(0, 0);
+            var bowlImg = bowl.gameObject.AddComponent<Image>();
+            bowlImg.color = new Color(0.62f, 0.66f, 0.72f, 1f);
+            bowlImg.raycastTarget = false;
+            var spoonGrab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            spoonGrab.callback.AddListener(_ =>
+            {
+                // The spoon works an OPEN tin only — the cap hands the stage to the shake.
+                if (!_capped && Run != null && Run.Phase == TycoonPhase.DayOpen)
+                { _spoonHeld = true; _stirHasPrev = false; }
+            });
+            _spoonRt.gameObject.AddComponent<EventTrigger>().triggers.Add(spoonGrab);
+            _benchProps.Add(_spoonRt.gameObject.AddComponent<CanvasGroup>());
+
+            // THE WAY FORWARD (the author's loop rework): the drink moves ON to the glass
+            // from here. Right edge centre — the mirror of where the back key will stand —
+            // and lit only when Core itself would let the drink leave.
+            var toGlass = NewRect("ToGlass", _shakerPanel);
+            Place(toGlass, new Vector2(1f, 0.5f), new Vector2(76, 150), new Vector2(-14, 0));
+            var tgImg = toGlass.gameObject.AddComponent<Image>();
+            tgImg.color = UITheme.PrimaryAction;
+            _toGlassBtn = toGlass.gameObject.AddComponent<Button>();
+            _toGlassBtn.targetGraphic = tgImg;
+            _toGlassBtn.onClick.AddListener(() => GoTo(Stage.Serve));
+            _toGlassGroup = toGlass.gameObject.AddComponent<CanvasGroup>();
+            _toGlassLabel = NewText("L", toGlass, _body, 12, TextAnchor.MiddleCenter, Color.black);
+            Stretch(_toGlassLabel.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(4, 4), new Vector2(-4, -4));
+            _toGlassLabel.text = "TO\nTHE\nGLASS";
+            var tgSink = toGlass.gameObject.AddComponent<PressSink>();
+            tgSink.Face = toGlass; tgSink.Depth = 3f; tgSink.Lift = 2f;
 
             // The DONE key on the drawn plate with the full press (the P14 note): the same
             // sprite-and-sink the menu's own keys carry, so the two stages share one hand.

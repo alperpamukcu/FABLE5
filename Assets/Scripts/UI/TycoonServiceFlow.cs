@@ -129,6 +129,7 @@ namespace LastCall.UI
                 _shakerLoopWanted = null;
                 _saidThisFrame = false;   // the readout is unclaimed until something claims it
                 UpdateShake(run); UpdatePrepDrag(run); UpdateTiltPour(run); UpdateCap(run);
+                UpdateStir(run); UpdateToGlass(run);
                 StepShakerFluid(run);
                 Sfx.HoldLoop(_shakerLoopWanted, _shakerLoopWanted == "shake_loop" ? 0.9f : 0.8f);
             }
@@ -161,6 +162,8 @@ namespace LastCall.UI
             _serveFocusBottle = null;
             _shaking = false;
             _shakeEnergy = 0;
+            _spoonHeld = false;
+            _stirEnergy = 0;
             if (_dragPiece != null) _dragPiece.gameObject.SetActive(false);
             _shakerSplash?.Clear();
             _serveSplash?.Clear();

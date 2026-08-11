@@ -105,7 +105,7 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 | **Tarif kitabı** | ara, TIER/PREP/ŞİŞE filtreleri; kilitliler "n★'DA AÇILIR" |
 | **Gün sonu** | hesap fişi → market (4 sekme: DOLUM/ŞİŞELER/TARİFLER/YÜKSELTMELER + bu gece alınanlar iade) |
 | **Back bar (menü)** | şişe hover=bilgi kartı, tıkla=rota (garnitür anında; bira→Tap; gazlı→Serve eline; kalan→Shaker) |
-| **Shaker** | şişeyi kaldır-yatır dök; hazırlık sürükle; kapağı tak; tin'i savur=çalkala |
+| **Shaker** | şişeyi kaldır-yatır dök; hazırlık sürükle; AÇIK tin'de kaşıkla daire=karıştır; kapağı tak; tin'i savur=çalkala; kapalı+karışık → sağ kenar TO THE GLASS |
 | **Serve** | shaker'ı NİŞANLA dök (kaçırırsan döker); dolap şişesi elde `PourAtGlass`; bardakta bitir |
 | **Tap** | bardağı yatır-doldur, dikleştir-köpük; verdikt satırı canlı |
 
