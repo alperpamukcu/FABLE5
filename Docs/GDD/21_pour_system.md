@@ -332,3 +332,34 @@ serve pour became compulsory (2026-07-28) and `ServeTo` stopped handing the shak
 The tell was in the sim all along: "garnish craft landed" read **11.9%**, exactly the draught
 share, because a pint is the one drink whose preparation is stamped on the glass it is pulled
 into. Every cocktail garnish in the game was ungettable. With the transfer fixed it reads 54.7%.
+
+## 14. The mandatory mix (2026-08-11)
+
+**Two spirits may not leave the tin unmixed.** When the shaker holds two or more distinct
+alcoholic ingredients — each at a real share, `MixEpsilon = 3%` of the tin or more — the
+drink must be **shaken or stirred** before `PourIntoServingGlass` will move it. The refusal
+lives in Core on that verb, the sibling of §10's keg rule and §12's carbonated rule: the
+sim and the tests pour through the same door the player does. The UI reads `CanPourOut`
+and stops the stream instead of catching the throw (the `CanPull` idiom).
+
+The rule made `Preparations.Stirred` load-bearing, so the **`Stir` verb** arrived with it —
+`Shake`'s mirror (`IsStirred`/`StirEnergy`, one preparation slot, last mix wins on flags and
+glass alike). Every stirred recipe in the book names two spirits; without a spoon the bar
+could only ever shake its Martinis.
+
+The exact edges, decided rather than discovered later:
+
+- **Alcoholic is the category test** (`IngredientCategories.IsAlcoholic`) — liqueurs count,
+  because a Martini is gin and vermouth and it is exactly the drink this rule is about. ABV
+  never feeds a rule (the law written where the categories live). A Long Island counts six.
+- **Mixed, not mixed correctly.** The judge still does not read the recipe's prep method —
+  shaking a Martini is legal and merely wrong. Grading the method is the balance pass §2's
+  "future craft hooks" line has always reserved.
+- **Built at the glass is exempt by design.** The rule is about the TIN; `PourAtGlass` and
+  the tap never touch it. `black_russian` — the book's one Built recipe with two spirits,
+  and tin-legal — is therefore forced to a mix when built in the tin; the bot stirs it.
+- **The bin stays open.** `DiscardGlass` is ungated: a mistake must always have an exit.
+- **A dash is seasoning.** Below `MixEpsilon` an alcoholic ingredient does not conscript
+  the spoon.
+- **Bench cards opt out.** Null-`Info` test cards carry no category and cannot be called
+  alcoholic; the exemption is pinned by test so a type-fallback cannot arrive by accident.

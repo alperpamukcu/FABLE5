@@ -159,6 +159,21 @@ namespace LastCall.Core
         /// recorded now so the shake motion means something the moment it earns an effect.</summary>
         public double ShakeEnergy { get; private set; }
 
+        /// <summary>True once the open tin has been stirred this build (GDD 21 §14). The
+        /// verb <see cref="Preparations.Stirred"/> waited for arrived 2026-08-11, when the
+        /// mandatory-mix rule made it load-bearing: every stirred recipe in the book names
+        /// two spirits, so a bar without a spoon could only ever shake its Martinis.</summary>
+        public bool IsStirred { get; private set; }
+
+        /// <summary>How thorough the last stir was, 0–1 — <see cref="ShakeEnergy"/>'s twin,
+        /// recorded on the same promise: plumbing now, craft effect at a later balance pass.</summary>
+        public double StirEnergy { get; private set; }
+
+        /// <summary>Has the tin been mixed at all — by tin or by spoon. The mandatory-mix
+        /// rule (GDD 21 §14) demands MIXED, not mixed CORRECTLY: the judge does not read the
+        /// recipe's prep method yet, so shaking a Martini is legal and merely wrong.</summary>
+        public bool IsMixed => IsShaken || IsStirred;
+
         public string PouringId { get; private set; }
 
         private readonly List<MarketOffer> _marketOffers = new List<MarketOffer>();
@@ -993,7 +1008,61 @@ namespace LastCall.Core
             Glass.AddPreparation(Preparations.Shaken);
             IsShaken = true;
             ShakeEnergy = energy < 0 ? 0 : energy > 1 ? 1 : energy;
+            // The glass keeps ONE of shaken/stirred, last one wins (GlassContents) — the
+            // run-level flags must agree with the vessel they describe.
+            IsStirred = false;
+            StirEnergy = 0;
         }
+
+        /// <summary>
+        /// Stirs the open tin (GDD 21 §14) — <see cref="Shake"/>'s mirror, and the second
+        /// way to satisfy the mandatory mix. One preparation slot: a stir after a shake
+        /// REPLACES it, on the glass and on these flags alike.
+        /// </summary>
+        public void Stir(double energy = 1.0)
+        {
+            EnsurePhase(TycoonPhase.DayOpen);
+            if (Glass.IsEmpty) throw new InvalidOperationException("Nothing in the shaker to stir.");
+            Glass.AddPreparation(Preparations.Stirred);
+            IsStirred = true;
+            StirEnergy = energy < 0 ? 0 : energy > 1 ? 1 : energy;
+            IsShaken = false;
+            ShakeEnergy = 0;
+        }
+
+        /// <summary>Below this share of the tin, an alcoholic ingredient is seasoning — a
+        /// dash of vermouth over gin does not conscript the spoon (GDD 21 §14).</summary>
+        public const double MixEpsilon = 0.03;
+
+        /// <summary>
+        /// Does the tin hold a drink that MUST be mixed before it leaves — two or more
+        /// distinct alcoholic ingredients at a real share each? Alcoholic is the category
+        /// test (<see cref="IngredientCategories.IsAlcoholic"/>): liqueurs count, because a
+        /// Martini is gin and vermouth and it is exactly the drink this rule is about. ABV
+        /// never feeds a rule — that law is written where the categories live.
+        /// </summary>
+        public bool MixRequired
+        {
+            get
+            {
+                int booze = 0;
+                foreach (var id in Glass.Ingredients)
+                {
+                    if (Glass.RatioOf(id) < MixEpsilon) continue;
+                    var card = IngredientOf(id);
+                    if (card != null
+                        && IngredientCategories.IsAlcoholic(card.Info?.Category, card.Type)
+                        && ++booze >= 2)
+                        return true;
+                }
+                return false;
+            }
+        }
+
+        /// <summary>Whether the tin may be poured out right now — the UI's grey-the-key
+        /// predicate for the refusal <see cref="PourIntoServingGlass"/> enforces
+        /// (the <see cref="CanPull"/>/<see cref="BeginPull"/> pattern).</summary>
+        public bool CanPourOut => Phase == TycoonPhase.DayOpen && (!MixRequired || IsMixed);
 
         /// <summary>
         /// The serve pour (GDD 24 §3): moves <paramref name="volume"/> from the shaker into
@@ -1004,6 +1073,15 @@ namespace LastCall.Core
         public double PourIntoServingGlass(double volume, double accuracy)
         {
             EnsurePhase(TycoonPhase.DayOpen);
+            // THE MANDATORY MIX (GDD 21 §14, 2026-08-11): two spirits may not leave the tin
+            // unmixed. The refusal lives HERE — the verb by which a drink leaves the shaker —
+            // exactly like the keg rule and the carbonated rule before it: routing around it
+            // in a menu is not enough, because the sim and the tests pour through this same
+            // verb. Drinks built directly at the glass are exempt by design: the rule is
+            // about the tin. The UI reads CanPourOut and stops the stream instead.
+            if (!CanPourOut)
+                throw new InvalidOperationException(
+                    "Two spirits in the tin — shake it or stir it before it goes to the glass.");
             // The glass is chosen here, on the first pour out (v5 P14 / C9): the shaker is what
             // knows the drink, so this is the last moment the bar can reach for the right vessel
             // and the first moment it has anything to reach for it WITH. Whatever the shaker
@@ -1159,6 +1237,8 @@ namespace LastCall.Core
             SpilledBeer = 0;
             IsShaken = false;
             ShakeEnergy = 0;
+            IsStirred = false;
+            StirEnergy = 0;
             Glass = new GlassContents(_config.GlassCapacity);
             ServingGlass = NewServingGlass(DefaultGlassware);   // back to the default until a drink asks
         }

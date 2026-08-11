@@ -902,3 +902,22 @@ the nominal line.
   **Done 2026-08-03** — see the re-bench under P14. The procedural `Densities` table is
   deliberately untouched: it belongs to the fallback silhouettes and was measured against
   them, so it is right for the glasses it actually draws.
+
+## 2026-08-11 — the loop rework (author-directed, four phases)
+
+The author's clarified loop: fast SLIDE navigation between the flow's stages (edge back
+button, no sharp cuts, a new Shaker→Serve edge), a MANDATORY MIX for two-spirit tins,
+and CLICK-TO-SERVE replacing the drag (only taken orders are selectable; the glass slides
+down the counter). Decisions taken: fast-nav over multi-select; `Stir` verb added (all
+ten stirred recipes carry two spirits); the drag deleted outright; the cap stays one-way.
+
+- **Faz 1 (shipped with this entry):** Core `Stir`/`IsMixed`/`MixRequired`/`CanPourOut`
+  + the refusal on `PourIntoServingGlass` (GDD 21 §14); the sim mixes by `recipe.Prep`;
+  8 new gate tests (196 total). Sim report stayed byte-identical.
+- **Faz 2:** the bar spoon on the shaker bench (open tin = stir, capped = shake) and the
+  "TO THE GLASS" edge key gated on `CanPourOut`.
+- **Faz 3:** the two-slot stage slide stepper in `TycoonServiceFlow.GoTo`, edge back
+  buttons, `RectMask2D` on the field, `AdvanceStageOpen` retired.
+- **Faz 4:** the drink-glass state machine (Ready→Sliding→served), seat filter
+  `Waiting && HasOrdered && IdInspected` (HUD-level — Core's blind serve stays legal),
+  bin click, drag deletion.

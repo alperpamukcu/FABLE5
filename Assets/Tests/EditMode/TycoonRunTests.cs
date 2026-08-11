@@ -886,5 +886,127 @@ namespace LastCall.Tests
             Assert.AreEqual(secondPatienceBefore, second.PatienceLeft, 1e-9,
                 "pouring costs the pourer time, not the waiter patience — only Tick does that");
         }
+
+        // ── the mandatory mix (GDD 21 §14, 2026-08-11) ──────────────────────────
+        // Two spirits may not leave the tin unmixed. Alcohol is the CATEGORY test —
+        // these cards carry real IngredientInfo, because the null-Info bench cards
+        // are exempt by design (and that exemption is itself pinned below).
+
+        private static IngredientCard Booze(string id, string category) =>
+            new IngredientCard(id, id, IngredientType.Spirit, 6,
+                info: new IngredientInfo(style: category, category: category));
+
+        private static TycoonRun MixRun() => new TycoonRun(new Shelf(new[]
+            {
+                new ShelfBottle(Booze("gin_b", "gin"), capacity: 20),
+                new ShelfBottle(Booze("vermouth_b", "liqueur"), capacity: 20),
+                new ShelfBottle(new IngredientCard("juice_b", "Juice", IngredientType.Sour, 3),
+                    capacity: 20),
+            }), Book, new RunRng("mix"),
+            config: new TycoonConfig(20, orderDecisionSeconds: 0, savorSeconds: 0));
+
+        [Test]
+        public void TwoSpirits_Unmixed_RefuseThePourOut()
+        {
+            var run = MixRun();
+            run.PourMeasure("gin_b", 0.4);
+            run.PourMeasure("vermouth_b", 0.3);
+
+            Assert.IsTrue(run.MixRequired);
+            Assert.IsFalse(run.CanPourOut, "the UI's grey-the-key predicate agrees");
+            Assert.Throws<InvalidOperationException>(() => PourOut(run),
+                "two spirits may not leave the tin unmixed");
+        }
+
+        [Test]
+        public void AStir_SatisfiesTheGate_AndPoursOut()
+        {
+            var run = MixRun();
+            run.PourMeasure("gin_b", 0.4);
+            run.PourMeasure("vermouth_b", 0.3);
+            run.Stir(0.8);
+
+            Assert.IsTrue(run.IsStirred);
+            Assert.AreEqual(0.8, run.StirEnergy, 1e-9);
+            Assert.IsTrue(run.CanPourOut);
+            PourOut(run);
+            Assert.IsTrue(run.DrinkReady);
+            Assert.IsTrue(run.ServingGlass.HasPreparation("stirred"),
+                "the stir rides across the pour-out with the drink");
+        }
+
+        [Test]
+        public void ShakeThenStir_TheLastMixWins_OnFlagsAndGlassAlike()
+        {
+            var run = MixRun();
+            run.PourMeasure("gin_b", 0.4);
+            run.Shake(1.0);
+            run.Stir(0.5);
+
+            Assert.IsTrue(run.IsStirred);
+            Assert.IsFalse(run.IsShaken, "one preparation slot — the flags mirror the glass");
+            Assert.AreEqual(0, run.ShakeEnergy, 1e-9);
+            Assert.IsTrue(run.Glass.HasPreparation("stirred"));
+            Assert.IsFalse(run.Glass.HasPreparation("shaken"));
+        }
+
+        [Test]
+        public void ADashBelowEpsilon_DoesNotConscriptTheSpoon()
+        {
+            var run = MixRun();
+            run.PourMeasure("gin_b", 0.5);
+            run.PourMeasure("vermouth_b", 0.5 * TycoonRun.MixEpsilon * 0.5);   // a whisper
+
+            Assert.IsFalse(run.MixRequired, "a dash is seasoning, not a second spirit");
+            PourOut(run);
+            Assert.IsTrue(run.DrinkReady);
+        }
+
+        [Test]
+        public void OneSpiritAndJuice_PourFreely()
+        {
+            var run = MixRun();
+            run.PourMeasure("gin_b", 0.4);
+            run.PourMeasure("juice_b", 0.4);
+
+            Assert.IsFalse(run.MixRequired);
+            PourOut(run);
+            Assert.IsTrue(run.DrinkReady);
+        }
+
+        [Test]
+        public void AnUnmixedTin_CanStillBeBinned()
+        {
+            var run = MixRun();
+            run.PourMeasure("gin_b", 0.4);
+            run.PourMeasure("vermouth_b", 0.3);
+
+            Assert.DoesNotThrow(() => run.DiscardGlass(), "the bin is always an exit");
+            Assert.IsTrue(run.Glass.IsEmpty);
+        }
+
+        [Test]
+        public void NullInfoCards_OptOutOfTheGate_ByDesign()
+        {
+            // The bench cards carry no IngredientInfo, so the category test cannot call
+            // them alcoholic — and must not guess from type: ABV and kind never feed a
+            // rule (the law written into IngredientCategories). Pinned so a future
+            // "type fallback" cannot arrive by accident.
+            var run = NewRun();
+            run.PourMeasure("gin", 0.35);   // the suite's own bare gin + soda
+            run.PourMeasure("soda", 0.35);
+
+            Assert.IsFalse(run.MixRequired);
+            PourOut(run);
+            Assert.IsTrue(run.DrinkReady);
+        }
+
+        [Test]
+        public void StirringAnEmptyTin_Refuses()
+        {
+            var run = MixRun();
+            Assert.Throws<InvalidOperationException>(() => run.Stir(),
+                "nothing in the shaker to stir");
+        }
     }
 }

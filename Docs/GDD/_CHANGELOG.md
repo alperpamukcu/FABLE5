@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `21 §14` **the mandatory mix + the Stir verb (2026-08-11):** two spirits (category test,
+  ≥3% share each) may not leave the tin unmixed — the refusal lives on
+  `PourIntoServingGlass`, the UI reads `CanPourOut`. `Stir` arrives as `Shake`'s mirror
+  because every stirred recipe names two spirits. Built-at-glass exempt; bin ungated;
+  judge still blind to the method (the reserved craft pass). Sim report byte-identical
+  with the bot mixing by `recipe.Prep`.
+
 - `22 §4 / 23 §8` **inventory economy (2026-07-23):** the menu is your stock now. You open
   with a **bare well** — two spirits and the essential mixers — and **grow the shelf by
   buying new stock** at the end of each night: the market lists both **new bottles** (styles

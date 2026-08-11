@@ -318,7 +318,18 @@ namespace LastCall.EditorTools
 
             foreach (var garnish in spec.Garnishes)
                 if (!run.Glass.IsFull) run.AddPreparation(garnish);
-            if (spec.ExtraShaken) run.Shake(1.0);
+            // THE BOT MIXES THE WAY THE BOOK SAYS (GDD 21 §14, 2026-08-11): the mandatory
+            // mix refuses a two-spirit tin at the pour-out, so a bot that only shook on
+            // ExtraShaken would crash on most of the mid and hard menu. It follows the
+            // recipe's own prep — and a tin-built Built drink that still trips the rule
+            // (black_russian, the book's one such) gets a stir, which is what a bartender
+            // who built it in a tin would do.
+            if (!run.Glass.IsEmpty)
+            {
+                if (recipe.Prep == PrepMethod.Shaken || spec.ExtraShaken) run.Shake(1.0);
+                else if (recipe.Prep == PrepMethod.Stirred) run.Stir(1.0);
+                else if (run.MixRequired) run.Stir(1.0);
+            }
 
             // Into the glass, dead on the rim. The bot used to hand the shaker over whole, which
             // the rules now refuse (2026-07-28); pouring perfectly keeps its standing unchanged —
