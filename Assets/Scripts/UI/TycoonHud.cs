@@ -1010,6 +1010,7 @@ namespace LastCall.UI
             UpdateDrinkGlass();
             UpdateEscape();
             StepStarDrop();
+            StepDayEndBeats();
         }
 
         /// <summary>
@@ -2501,14 +2502,98 @@ namespace LastCall.UI
         private readonly List<RectTransform> _billStars = new List<RectTransform>();
         private float _starT = -1f;      // < 0 = not running
         private int _starCount;          // how many are due to land
+        private int _landed;             // how many have; the shake fires on the change
+        private float _billShake;        // 1 at the impact, decaying to 0
+        private Vector2 _billHome;
+
+        // The night's end, in beats: 1 the call, 2 the paper feeding, 3 the stars.
+        private RectTransform _lastCallRt;
+        private CanvasGroup _lastCallGroup;
+        private Text _lastCallCard;
+        private int _endBeat;
+        private float _endT, _endStarFrac;
+        private const float CallIn = 0.4f, CallHold = 1.5f, CallOut = 0.5f;
+        /// <summary>How slowly the paper feeds, and from how far up. Slower than the old
+        /// arrival on purpose: a till is not fast, and the wait is the point.</summary>
+        private const float SlipFeed = 1.05f, SlipFeedFrom = 760f;
+
+        private void StepDayEndBeats()
+        {
+            if (_endBeat == 0) return;
+            _endT += Time.unscaledDeltaTime;
+
+            if (_endBeat == 1)
+            {
+                if (Motion.Reduced) { _endT = CallIn + CallHold + CallOut; }
+                float a = _endT < CallIn ? _endT / CallIn
+                        : _endT < CallIn + CallHold ? 1f
+                        : 1f - Mathf.Clamp01((_endT - CallIn - CallHold) / CallOut);
+                if (_lastCallGroup != null) _lastCallGroup.alpha = a;
+                if (_lastCallCard != null)
+                {
+                    // It settles as it arrives — a line that lands rather than appears.
+                    float k = Mathf.Clamp01(_endT / CallIn);
+                    _lastCallCard.rectTransform.anchoredPosition =
+                        new Vector2(0, 10f + (1f - k) * 14f);
+                }
+                if (_endT < CallIn + CallHold + CallOut) return;
+                if (_lastCallRt != null) _lastCallRt.gameObject.SetActive(false);
+                _endBeat = 2; _endT = 0f;
+                // HOME FIRST, THEN FEED. PlayPanel reads the rect's CURRENT position as the
+                // place to land, and the slip has been parked off the top since the call —
+                // so handing it the parked rect made it feed from 1520 down to 760 and then
+                // jump the last 760 when the beat ended. Measured exactly that; put back
+                // where it belongs first and the feed is one unbroken movement.
+                _dayEndBill.anchoredPosition = _billHome;
+                PlayPanel(_dayEndBill, new Vector2(0, SlipFeedFrom), SlipFeed, fade: false);
+                return;
+            }
+
+            if (_endBeat == 2)
+            {
+                // The slide owns the paper until it settles; the stars wait for that.
+                if (_slideRt != null && !Motion.Reduced) return;
+                _dayEndBill.anchoredPosition = _billHome;
+                _endBeat = 3;
+                StartStarDrop(_endStarFrac);
+                return;
+            }
+
+            // Beat 3: the shake lives here, so the paper is only ever moved by one thing.
+            if (_billShake > 0f)
+            {
+                _billShake = Mathf.Max(0f, _billShake - Time.unscaledDeltaTime * 4.5f);
+                float amp = _billShake * _billShake * 7f;   // dies away fast, like a strike
+                _dayEndBill.anchoredPosition = _billHome + new Vector2(
+                    Mathf.Sin(Time.unscaledTime * 62f) * amp * 0.5f,
+                    Mathf.Sin(Time.unscaledTime * 47f) * amp);
+                if (_billShake <= 0f) _dayEndBill.anchoredPosition = _billHome;
+            }
+            if (_starT < 0f && _billShake <= 0f) _endBeat = 0;
+        }
         private const float StarFallH = 70f;     // how far above its place a star starts
         private const float StarDrop = 0.5f;     // one star's fall and settle
         private const float StarStagger = 0.42f; // the gap between two starting
+
+        /// <summary>Takes every star off the paper, so the slip lands with an empty row on
+        /// it (the author: "yıldızlar ilk 0'dır"). Called before the feed, not after.</summary>
+        private void EmptyStarRow()
+        {
+            if (Motion.Reduced) return;
+            foreach (var s in _billStars)
+            {
+                if (s == null) continue;
+                s.anchoredPosition = new Vector2(s.anchoredPosition.x, StarFallH);
+                var g = s.GetComponent<Image>();
+                if (g != null) g.color = Clear(g.color);
+            }
+        }
 
         /// <summary>Empties the row and starts the run. Reduced motion places them.</summary>
         private void StartStarDrop(float frac)
         {
             _starCount = Mathf.CeilToInt(Mathf.Clamp01(frac) * 5f - 0.001f);
+            _landed = 0;
             if (Motion.Reduced || _billStars.Count == 0) { _starT = -1f; return; }
             _starT = 0f;
             foreach (var s in _billStars)
@@ -2557,6 +2642,11 @@ namespace LastCall.UI
                     img.color = new Color(img.color.r, img.color.g, img.color.b,
                                           Mathf.Clamp01(k * 4f));
                 if (k < 1f) running = true;
+                // EACH LANDING SHAKES THE PAPER (2026-08-11, the author: "her düşüşünde
+                // sarsıntı animasyonu"). Fired once per star, on the frame it arrives —
+                // counting how many have landed is what makes it once rather than every
+                // frame after.
+                else if (i >= _landed) { _landed = i + 1; _billShake = 1f; Sfx.Play("click", 0.5f); }
             }
             if (!running)
             {
@@ -2682,8 +2772,13 @@ namespace LastCall.UI
             }
 
             var papers = PapersFor(look);
-            string name = papers != null ? papers.Name.ToUpperInvariant()
-                : v.Regular != null ? v.Regular.Name.ToUpperInvariant() : "A DRINKER";
+            string full = papers != null ? papers.Name
+                : v.Regular != null ? v.Regular.Name : "a drinker";
+            // THE FIRST NAME ONLY (2026-08-11). "MEREDITH NOLAN  walked out" is 26
+            // characters and the column holds 23, so the row wrapped and became the two
+            // lines this was built to stop being. A receipt says a first name anyway.
+            int space = full.IndexOf(' ');
+            string name = (space > 0 ? full.Substring(0, space) : full).ToUpperInvariant();
 
             // Smaller and lighter: the regular face at 16, where it used to be the heavy one
             // at 24. A name on a receipt is a line item, not a headline.
@@ -2872,16 +2967,27 @@ namespace LastCall.UI
             _dayEndStep = 0;   // the bill first; the market only after CONTINUE
             _dayEndPanel.gameObject.SetActive(true);
             RebuildDayEnd();
-            // IT IS PRINTED, NOT SHOWN (2026-08-11, the author: "eski pos makineleri gibi
-            // ekrana animasyonla girer"). The slip feeds down from off the top of the frame,
-            // the whole length of itself, and it does NOT fade: paper coming out of a till
-            // is opaque from its first millimetre, and a fade is what makes an arrival read
-            // as a screen swap instead. A night's takings should sound like a printer.
-            PlayPanel(_dayEndBill, new Vector2(0, DesignFrame.StageHeight + BillH * 0.5f),
-                      0.62f, fade: false);
-            // The paper comes up EMPTY and the night's stars fall onto it, one at a time.
-            StartStarDrop((float)(BarRating.ExactStarsFor(run.Floor.AverageSatisfaction)
-                                  / BarRating.MaxStars));
+
+            // THREE BEATS, IN ORDER (2026-08-11). The night is called and the room darkens
+            // behind the words; the words go; only then does the paper feed, and slowly.
+            // The stars wait for it to LAND — starting them with the slide meant the night's
+            // score was already being counted while the slip was still in the air.
+            _endStarFrac = (float)(BarRating.ExactStarsFor(run.Floor.AverageSatisfaction)
+                                   / BarRating.MaxStars);
+            _billHome = _dayEndBill.anchoredPosition;
+            _endBeat = 1;
+            _endT = 0f;
+            if (_lastCallRt != null)
+            {
+                _lastCallRt.gameObject.SetActive(true);
+                _lastCallGroup.alpha = 0f;
+            }
+            // Parked off the top, opaque: paper out of a till is opaque from its first
+            // millimetre, so it is hidden by being ELSEWHERE rather than by being faint.
+            _dayEndBill.anchoredPosition = _billHome + new Vector2(0, SlipFeedFrom);
+            var billGroup = _dayEndBill.GetComponent<CanvasGroup>();
+            if (billGroup != null) billGroup.alpha = 1f;
+            EmptyStarRow();
         }
 
         private void OnDayEndAdvance()
@@ -3299,7 +3405,10 @@ namespace LastCall.UI
                 // catalogue order, so the drink three stars away sat above the one that
                 // unseals tonight. Ties keep the catalogue's order.
                 var book = new List<RecipeDefinition>(run.LockedRecipes);
-                book.Sort((a, b) => run.RecipeStarGate(a).CompareTo(run.RecipeStarGate(b)));
+                // OrderBy, not Sort (audit 2026-08-11): List.Sort is introsort and NOT
+                // stable, so the big tie groups reshuffled between rebuilds while the
+                // comment above promised catalogue order. LINQ OrderBy is stable.
+                book = book.OrderBy(run.RecipeStarGate).ToList();
                 foreach (var recipe in book)
                 {
                     var r = recipe;
@@ -6020,6 +6129,33 @@ namespace LastCall.UI
             var title = _dayEndTitle = NewText("Title", _dayEndPanel, _display, 16, TextAnchor.MiddleCenter, UITheme.PrimaryAction);
             Place(title.rectTransform, new Vector2(0.5f, 1), new Vector2(900, 24), new Vector2(0, -22));
             title.text = "LAST CALL — THE BOOKS";
+
+            // THE NIGHT IS CALLED BEFORE IT IS COUNTED (2026-08-11, the author: at two in
+            // the morning a line says the day is over, the room goes dark behind it, and
+            // only once the words have gone does the till start printing). It is the beat
+            // the sequence was missing — the slip used to arrive while the bar was still
+            // lit, so the night ended and was totalled in the same movement.
+            _lastCallCard = NewText("Called", _dayEndPanel, _display, 24, TextAnchor.MiddleCenter,
+                UITheme.Amber[4]);
+            Place(_lastCallCard.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(900, 40),
+                new Vector2(0, 10f));
+            _lastCallCard.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _lastCallCard.text = "THAT'S LAST CALL";
+            _lastCallCard.raycastTarget = false;
+            var calledUnder = NewText("CalledSub", _dayEndPanel, _body, 16, TextAnchor.MiddleCenter,
+                new Color(0.72f, 0.68f, 0.62f));
+            Place(calledUnder.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(900, 20),
+                new Vector2(0, -22f));
+            calledUnder.horizontalOverflow = HorizontalWrapMode.Overflow;
+            calledUnder.text = "the doors are shut · counting the till";
+            calledUnder.raycastTarget = false;
+            _lastCallRt = NewRect("Call", _dayEndPanel);   // one group carries both lines
+            Stretch(_lastCallRt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _lastCallCard.transform.SetParent(_lastCallRt, false);
+            calledUnder.transform.SetParent(_lastCallRt, false);
+            _lastCallGroup = _lastCallRt.gameObject.AddComponent<CanvasGroup>();
+            _lastCallGroup.blocksRaycasts = false;
+            _lastCallRt.gameObject.SetActive(false);
 
             // Left column: the till slip (v5 P13). Cream stock, and pinned to 16pt — a whole
             // multiple of the face's 8px design size, so the monospace columns the receipt is
