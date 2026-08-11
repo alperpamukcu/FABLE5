@@ -29,6 +29,17 @@ namespace LastCall.UI
 
         private RectTransform _self, _host;
         private Vector2 _lastHost = new Vector2(-1f, -1f);
+        private Vector2 _lastDesign = new Vector2(-1f, -1f);
+        private Vector2 _lastView = new Vector2(-1f, -1f);
+
+        /// <summary>The cropped viewport in screen pixels, or zero when there is no camera
+        /// to match — a menu scene with no room behind it falls back to a plain fit.</summary>
+        private static Vector2 Viewport()
+        {
+            var cam = Camera.main;
+            return cam != null ? new Vector2(cam.pixelRect.width, cam.pixelRect.height)
+                               : Vector2.zero;
+        }
 
         /// <summary>Puts a fixed <paramref name="design"/>-sized field inside
         /// <paramref name="host"/> and hands it back to build in.</summary>
@@ -76,13 +87,33 @@ namespace LastCall.UI
             if (_host == null) _host = transform.parent as RectTransform;
             if (_host == null) return;
 
+            // The design is part of the cache key, not just the host size. AddComponent runs
+            // OnEnable *inside* the call, before Wrap can hand over the design it was asked
+            // for — so the first Fit always runs on the default 1280x720, and a cache keyed
+            // on the host alone would then refuse to hear that the caller wanted 640x360.
+            // Every stage canvas came out at twice its reference that way.
             var size = _host.rect.size;
-            if (size == _lastHost) return;
+            if (size.x <= 0f || size.y <= 0f) return;
+            var view = Viewport();
+            if (size == _lastHost && _design == _lastDesign && view == _lastView) return;
             _lastHost = size;
+            _lastDesign = _design;
+            _lastView = view;
+
+            // Fit to the CAMERA's viewport, not to the canvas. The room is windowboxed by a
+            // PixelPerfectCamera, which snaps to a whole pixel scale — a 1292px window came
+            // back as a 1280px viewport — while an overlay canvas always covers the window
+            // entire. Min-fitting the canvas would leave the UI 0.9% larger than the room
+            // standing behind it: six pixels of drift at each edge, which is exactly the
+            // drift this class exists to remove. Matched to the viewport, the till sits on
+            // the end of the counter at every window size.
+            float pxPerUnit = Screen.width / size.x;
+            float k = view.x > 0f && pxPerUnit > 0f
+                ? (view.x / pxPerUnit) / _design.x
+                : Mathf.Min(size.x / _design.x, size.y / _design.y);
+            if (k <= 0f || float.IsNaN(k) || float.IsInfinity(k)) k = 1f;
 
             _self.sizeDelta = _design;
-            float k = Mathf.Min(size.x / _design.x, size.y / _design.y);
-            if (k <= 0f || float.IsNaN(k) || float.IsInfinity(k)) k = 1f;
             _self.localScale = new Vector3(k, k, 1f);
         }
     }

@@ -206,6 +206,7 @@ namespace LastCall.UI
         private void Awake()
         {
             Application.runInBackground = true; // keep animations advancing unfocused
+            Windowbox();
             _display = displayFont != null
                 ? displayFont : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (portraits != null)
@@ -222,13 +223,37 @@ namespace LastCall.UI
             if (!Mathf.Approximately(w, _lastVisibleW)) Refit(w);
         }
 
-        /// <summary>The visible world width in stage units: 360 × aspect, read off the camera
-        /// so the stage and the match-height UI canvases always agree about it.</summary>
-        private static float VisibleWidth()
+        /// <summary>
+        /// Crops the camera to the stage's own 16:9, so a window of any shape shows exactly
+        /// the room and not a strip of whatever is beside it.
+        ///
+        /// Set in code rather than left to the scene asset because it is the other half of
+        /// <see cref="VisibleWidth"/>: the geometry is pinned at 640×360 here, and a camera
+        /// still showing 360×aspect would simply reveal the edges of the room on a wide
+        /// window. The two have to be true together or neither is worth setting.
+        /// </summary>
+        private static void Windowbox()
         {
             var cam = Camera.main;
-            return cam != null ? cam.orthographicSize * 2f * cam.aspect : Reference.x;
+            if (cam == null) return;
+            var ppc = cam.GetComponent<UnityEngine.Rendering.Universal.PixelPerfectCamera>();
+            if (ppc == null) return;
+            ppc.cropFrame = UnityEngine.Rendering.Universal.PixelPerfectCamera.CropFrame.Windowbox;
         }
+
+        /// <summary>
+        /// The visible world width in stage units — 640, always.
+        ///
+        /// It used to be 360 × aspect, read off the camera, so that the stage and the
+        /// match-height UI canvases agreed about it however the window was shaped. They did
+        /// agree, and the agreement was the problem: a wider window was a wider room, the
+        /// counter was scaled to fill it, and everything standing on the counter moved with
+        /// it (2026-08-11, the author, with two screenshots of the same bar at two window
+        /// sizes). The room is windowboxed to its 640×360 reference now — the camera crops
+        /// to it, the overlay canvases each hold a fixed field of it — so the number that
+        /// used to follow the window is simply the reference again.
+        /// </summary>
+        private static float VisibleWidth() => Reference.x;
 
         /// <summary>Stage units (bottom-left origin) → world position. One world unit is one
         /// stage unit; the camera sits over the stage's centre.</summary>
@@ -587,7 +612,7 @@ namespace LastCall.UI
             scaler.referenceResolution = Reference;
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 1f;
-            var root = (RectTransform)canvasGo.transform;
+            var root = DesignFrame.Wrap((RectTransform)canvasGo.transform, Reference);
 
             // Sized and scaled exactly like the room art, so the sign hangs on the wall the
             // picture actually draws rather than on the screen edge.
@@ -705,7 +730,9 @@ namespace LastCall.UI
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 1f;
             if (raycasts) go.AddComponent<GraphicRaycaster>();
-            return (RectTransform)go.transform;
+            // Fixed field, like the HUD's: what draws over the room has to be measured in
+            // the same units the room is, and the room is now windowboxed to 640x360.
+            return DesignFrame.Wrap((RectTransform)go.transform, Reference);
         }
 
         // ── the procedural fallback room (no environment art wired) ──────────────

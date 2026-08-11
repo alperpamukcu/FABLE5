@@ -5110,7 +5110,16 @@ namespace LastCall.UI
             // so nothing drifts out of alignment when the window's aspect changes.
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 1f;
-            var root = (RectTransform)canvasGo.transform;
+            // ...but the HUD is built in a FIXED field inside it (2026-08-11, the author:
+            // "boyutu değiştirdikçe arkaplana göre oturttuğumuz nesneler kayıyor —
+            // bardaklar, butonlar, çöp kutusu, kasa"). Match-height pins the vertical and
+            // lets the width run with the window, and everything here that stands ON the
+            // room — the glass shelf, the bin, the till, the buttons — was placed against
+            // a width that moved. The field is 1280x720 forever and the camera is
+            // windowboxed to the same 16:9, so the props and the room they stand in are
+            // measured in the same units at every window shape. See DesignFrame.
+            var root = DesignFrame.Wrap((RectTransform)canvasGo.transform,
+                                        new Vector2(1280f, 720f));
             _hudRoot = root;
 
             if (UnityEngine.EventSystems.EventSystem.current == null)
