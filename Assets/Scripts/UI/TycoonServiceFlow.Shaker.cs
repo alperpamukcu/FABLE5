@@ -628,7 +628,7 @@ namespace LastCall.UI
         {
             // The whole screen (P14 v2, the serve stage's recipe): the stage is the counter
             // you are standing at, not a dialog floating on it.
-            _shakerPanel = NewRect("ShakerPanel", _root);
+            _shakerPanel = NewRect("ShakerPanel", _field);
             Stretch(_shakerPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _shakerPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
             Swallow(_shakerPanel);

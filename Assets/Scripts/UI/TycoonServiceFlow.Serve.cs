@@ -946,7 +946,7 @@ namespace LastCall.UI
             // 1120x640 already covered most of a 1280x720 canvas — but the framing is the point:
             // the stage stops being a dialog you opened and becomes the counter you are standing
             // at, which is what lets the props be props instead of icons on keys.
-            _servePanel = NewRect("ServePanel", _root);
+            _servePanel = NewRect("ServePanel", _field);
             Stretch(_servePanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _servePanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
             Swallow(_servePanel);

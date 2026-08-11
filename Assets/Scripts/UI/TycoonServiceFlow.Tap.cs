@@ -99,7 +99,7 @@ namespace LastCall.UI
 
         private void BuildTapPanel()
         {
-            _tapPanel = NewRect("TapPanel", _root);
+            _tapPanel = NewRect("TapPanel", _field);
             // Near the full canvas. The station needs the height: a font drawn at its real
             // proportion to the glass simply does not fit a 640-tall box (2026-07-30).
             Place(_tapPanel, new Vector2(0.5f, 0.5f), new Vector2(1210, 700), Vector2.zero);

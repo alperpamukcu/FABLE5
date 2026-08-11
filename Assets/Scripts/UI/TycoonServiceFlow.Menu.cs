@@ -603,7 +603,7 @@ namespace LastCall.UI
             // player turns around to face the wall of bottles — a full-screen back-bar, every
             // bottle on one wall, no aisles. The wall is the generated kit at native grain:
             // tiled wood behind, the lit art-deco cornice across the top.
-            _menuPanel = NewRect("MenuPanel", _root);
+            _menuPanel = NewRect("MenuPanel", _field);
             Stretch(_menuPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _menuHome = _menuPanel.anchoredPosition;
             var boardImg = _menuPanel.gameObject.AddComponent<Image>();

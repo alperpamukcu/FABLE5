@@ -34,6 +34,7 @@ namespace LastCall.UI
         private Stage _stage = Stage.Closed;
 
         private RectTransform _root;        // the whole modal (scrim + panels)
+        private RectTransform _field;       // the fixed 1280x720 field the panels are built in
         private RectTransform _menuPanel;
         // Windows open rather than snap (2026-07-24): tapping a bottle on the clipboard plays
         // the menu out and the pour window in, so the two stages are visibly linked.
@@ -263,6 +264,11 @@ namespace LastCall.UI
             var scrimBtn = _root.gameObject.AddComponent<Button>();
             scrimBtn.transition = Selectable.Transition.None;
             scrimBtn.onClick.AddListener(CloseFlow);
+
+            // The scrim keeps the whole screen — a dimmed room with undimmed corners is
+            // not dimmed. The STAGES go in a fixed field instead, so the back bar packs
+            // its shelves to one width forever rather than to the window's (DesignFrame).
+            _field = DesignFrame.Wrap(_root, new Vector2(1280f, 720f));
 
             BuildMenuPanel();
             BuildShakerPanel();
