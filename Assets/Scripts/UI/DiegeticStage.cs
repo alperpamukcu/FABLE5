@@ -224,10 +224,21 @@ namespace LastCall.UI
         private void Update()
         {
             _neon?.Step(Time.deltaTime);
-            // A resized window has to re-fit, and only the camera knows the live aspect.
             float w = VisibleWidth();
             if (!Mathf.Approximately(w, _lastVisibleW)) Refit(w);
+            // The room is built once at the reference and MAGNIFIED to cover the window.
+            // One transform carries it, so the picture, the counter, the lamps, the fixtures
+            // and their shadows all take the same scale by construction — there is no second
+            // number for any of them to disagree with.
+            float k = DesignFrame.SceneScale;
+            if (_world != null && !Mathf.Approximately(k, _worldScale))
+            {
+                _worldScale = k;
+                _world.localScale = new Vector3(k, k, 1f);
+            }
         }
+
+        private float _worldScale = -1f;
 
         /// <summary>
         /// Makes sure the camera fills the window rather than boxing itself inside it.
@@ -243,20 +254,27 @@ namespace LastCall.UI
         {
             var cam = Camera.main;
             if (cam == null) return;
+            // The PixelPerfectCamera has to go, and it is worth saying why: it snaps the
+            // camera to a WHOLE zoom, which means the height it shows jumps in steps as the
+            // window is dragged — 360 stage units at one size, 526 at the next. Nothing that
+            // scales smoothly can stay glued to something that jumps, and the author's
+            // requirement is that nothing move at all. So the camera holds the reference
+            // height exactly and the scene takes one continuous scale instead
+            // (DesignFrame.SceneScale). Pixel art pays for that in the sizes where the scale
+            // is not a whole number; a scene that comes apart when you drag a corner costs
+            // more.
             var ppc = cam.GetComponent<UnityEngine.Rendering.Universal.PixelPerfectCamera>();
-            if (ppc == null) return;
-            ppc.cropFrame = UnityEngine.Rendering.Universal.PixelPerfectCamera.CropFrame.None;
+            if (ppc != null && ppc.enabled) ppc.enabled = false;
+            cam.orthographic = true;
+            cam.orthographicSize = Reference.y * 0.5f;
         }
 
-        /// <summary>The visible world width in stage units: 360 × aspect, read off the
-        /// camera. The BACKGROUND uses it — the backdrop, the room's cover fit and the
-        /// counter all bleed out to whatever the window is, so there is never a border.
-        /// Nothing the player touches is placed by it; that is the safe frame's job.</summary>
-        private static float VisibleWidth()
-        {
-            var cam = Camera.main;
-            return cam != null ? cam.orthographicSize * 2f * cam.aspect : Reference.x;
-        }
+        /// <summary>The width the room is BUILT at — the reference, always. The window is not
+        /// the room's business any more: everything under the stage root is laid out at
+        /// 640×360 and the root itself is magnified by <see cref="DesignFrame.SceneScale"/>,
+        /// so the picture and everything standing in it grow by exactly the same amount and
+        /// cannot come apart.</summary>
+        private static float VisibleWidth() => Reference.x;
 
         /// <summary>Stage units (bottom-left origin) → world position. One world unit is one
         /// stage unit; the camera sits over the stage's centre.</summary>

@@ -36,9 +36,37 @@ namespace LastCall.UI
     [DisallowMultipleComponent]
     public sealed class DesignFrame : MonoBehaviour
     {
-        /// <summary>The height the ROOM is authored at, in stage units. Every canvas's scale
-        /// is expressed against it, which is what keeps them all in step with the world.</summary>
-        public const float StageHeight = 360f;
+        /// <summary>The size the ROOM is authored at, in stage units. Every scale in the game
+        /// is expressed against it, which is what keeps them all in step.</summary>
+        public const float StageWidth = 640f, StageHeight = 360f;
+
+        /// <summary>
+        /// How much the whole scene is magnified to cover this window — ONE number, shared by
+        /// the room and by everything standing in it.
+        ///
+        /// This is the answer to the last and worst version of the drift (2026-08-11, the
+        /// author: "ekran boyutu değiştikçe arkaplandaki konumları hareket ediyor... bir tek
+        /// bardaklar doğru kalıyor"). The room was cover-fitted to the window while the props
+        /// were pinned to a fixed pixel size, so the picture grew and the things standing on
+        /// it did not — and the glasses were the only things that held, because they alone
+        /// were computed from the counter's live fit rather than from a constant.
+        ///
+        /// So there is no fixed pixel size any more. The scene is one picture: it is scaled
+        /// until it covers the window, everything in it is scaled by the same amount, and
+        /// what does not fit is CROPPED — a wide window loses a little off the top and
+        /// bottom, a narrow one a little off the sides, which is the trade the author asked
+        /// for. Nothing can drift against anything else, because nothing has its own scale.
+        /// </summary>
+        public static float SceneScale
+        {
+            get
+            {
+                var cam = Camera.main;
+                if (cam == null || !cam.orthographic || cam.orthographicSize <= 0f) return 1f;
+                float visibleW = cam.orthographicSize * 2f * cam.aspect;
+                return Mathf.Max(visibleW / StageWidth, 1f);
+            }
+        }
 
         [SerializeField] private Vector2 _design = new Vector2(1280f, 720f);
 
@@ -73,14 +101,13 @@ namespace LastCall.UI
 
         private void LateUpdate() => Fit();
 
-        /// <summary>Screen pixels per stage unit, as the camera is actually drawing them.
-        /// Read off the camera rather than recomputed, so however the PixelPerfectCamera
-        /// decides to round, the UI rounds with it.</summary>
+        /// <summary>Screen pixels per stage unit: the camera's own mapping, magnified by the
+        /// scene scale, so a canvas unit and a world unit are the same length on screen.</summary>
         private static float PixelsPerStageUnit()
         {
             var cam = Camera.main;
             if (cam == null || !cam.orthographic || cam.orthographicSize <= 0f) return 0f;
-            return Screen.height / (cam.orthographicSize * 2f);
+            return Screen.height / (cam.orthographicSize * 2f) * SceneScale;
         }
 
         private void Fit()
