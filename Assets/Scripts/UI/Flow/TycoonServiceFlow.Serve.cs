@@ -130,8 +130,11 @@ namespace LastCall.UI
         // POURED rather than clicked, and the measure is how long you hold it.
         private RectTransform _serveCabinet, _serveCabinetShelf;
         private RectTransform _serveBottle;        // the bottle in hand
+        private RectTransform _serveVessel;        // the bottle itself inside it, sized to its art
         private Image _serveBottleImage;
         private BottleFill _serveFill;             // what is left in it, behind the glass
+        /// <summary>The cap of the bottle in hand, as an offset from the grip (VesselArt).</summary>
+        private Vector2 _serveMouth;
         private IngredientCard _serveFocusBottle;
         private bool _serveBottleGrabbed;
         private Vector2 _serveBottleRest;
@@ -496,9 +499,11 @@ namespace LastCall.UI
 
             // The drink and the glass travel together — one rect holds both, so the hover
             // lift raises a full bottle rather than sliding its art off its contents, and
-            // taking it into the hand empties its place on the wire.
+            // taking it into the hand empties its place on the wire. It stands on the wire by
+            // its DRAWING (VesselArt), so a bottle saved with air around it neither shrinks
+            // nor hovers above the shelf it is standing on.
             var body = NewRect("Body", slot);
-            Stretch(body, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            VesselArt.StandOn(body, new Vector2(0.5f, 0f), ItemArt.Bottle(card), h, Vector2.zero);
 
             // A fridge full of mixers reads as stock only if the bottles are stocked: the
             // drink stands behind the glass here for the same reason it does on the wall.
@@ -560,6 +565,9 @@ namespace LastCall.UI
             _serveBottleImage.sprite = ItemArt.Bottle(c);
             _serveBottleImage.color = _serveBottleImage.sprite != null
                 ? Color.white : UITheme.StyleColor(c.Info?.Style, c.Type);
+            // Sized and stood by its own drawing, which is also where its cap is found.
+            _serveMouth = VesselArt.StandOn(_serveVessel, new Vector2(0.5f, 0f),
+                _serveBottleImage.sprite, ServeVesselH, Vector2.zero);
             PushServeFill(run);
             _servePourTotal = 0;
             _serveBottle.anchoredPosition = _serveBottleRest;
@@ -638,8 +646,9 @@ namespace LastCall.UI
                 float tilt = lift * MaxTilt;
                 _serveBottle.localRotation = Quaternion.Euler(0, 0, tilt);
 
-                float rad = tilt * Mathf.Deg2Rad;
-                Vector2 mouth = local + new Vector2(-Mathf.Sin(rad), Mathf.Cos(rad)) * (ServeVesselH * 0.78f);
+                // The cap, swung around the grip — measured off this bottle's own art, the
+                // shaker bench's line to the letter (VesselArt, 2026-08-11).
+                Vector2 mouth = local + VesselArt.Swing(_serveMouth, tilt);
                 var opening = _serveGlass.anchoredPosition
                             + new Vector2(0, _serveGlass.rect.height * (_serveGlassPiece.RimY - 0.5f));
                 bool over = Mathf.Abs(mouth.x - opening.x) < 78f && mouth.y > opening.y - 30f;
@@ -1095,8 +1104,11 @@ namespace LastCall.UI
             // The drink first, then the art in a CHILD of its own. It cannot stay on the
             // hand rect itself: a parent Graphic draws before its children, so the bottle
             // would have gone behind its own contents however the fill was ordered.
-            _serveFill = BottleFill.Under(_serveBottle);
-            var serveArt = NewRect("Art", _serveBottle);
+            // The bottle inside the grab plate, sized to its own art when one is taken out of
+            // the cabinet — the shaker bench's arrangement, for the same reason (VesselArt).
+            _serveVessel = NewRect("Vessel", _serveBottle);
+            _serveFill = BottleFill.Under(_serveVessel);
+            var serveArt = NewRect("Art", _serveVessel);
             Stretch(serveArt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _serveBottleImage = serveArt.gameObject.AddComponent<Image>();
             _serveBottleImage.preserveAspect = true;

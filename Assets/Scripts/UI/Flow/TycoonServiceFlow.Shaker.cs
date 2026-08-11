@@ -18,8 +18,12 @@ namespace LastCall.UI
     {
 
         private RectTransform _pourBottle;    // the grabbable bottle
+        private RectTransform _pourVessel;    // the bottle itself inside it, sized to its art
         private Image _pourBottleBody;
         private BottleFill _pourFill;         // what is left in it, behind the glass
+        /// <summary>Where this bottle's CAP is, as an offset from the grip — measured off the
+        /// art (VesselArt) when the stage refreshes, swung with the bottle when it tips.</summary>
+        private Vector2 _pourMouth;
         private MetaballFluid _shakerFluid;   // the metaball liquid: pour stream + pooled body
         private ShakerSolids _shakerSolids;   // ice / lemon afloat inside the shaker
         private float _slosh;                 // running slosh phase for the shaker surface
@@ -47,8 +51,14 @@ namespace LastCall.UI
         private readonly Pendulum _dragSwing = new Pendulum();
         private Vector2 _dragPos;    // the grip's current position (lags the cursor)
         private Vector2 _dragVel;    // the grip's velocity (drives the spring and the swing)
-        private const float DragStiffness = 150f;  // how hard the grip is pulled to the cursor
-        private const float DragDamping = 9f;       // < critical -> it overshoots and jiggles
+        // STIFFER (2026-08-11, the author: the drag should feel harder — the shaker, the
+        // spoon and the glass). 150/9 against a critical damping of 24.5 is a long way
+        // under it: the grip lagged the cursor and then swung past it, which reads as the
+        // piece being dragged through syrup. 300/28 sits just under critical for the same
+        // shape of motion in a third of the distance — it still leads and settles, it just
+        // stops arguing with the hand.
+        private const float DragStiffness = 300f;  // how hard the grip is pulled to the cursor
+        private const float DragDamping = 28f;      // just under critical -> a hint of overshoot
 
         // The shake (GDD 24 §2.5, 2026-07-22): grab the shaker itself and throw it around —
         // it springs after the cursor with overshoot (loose and lively), the liquid sloshes,
@@ -91,8 +101,11 @@ namespace LastCall.UI
         private Image _shakeMeterFill;
         private Text _shakeMeterText;
         private const float ShakeFullTravel = 4000f;   // px of cursor travel for a full shake
-        private const float ShakeStiffness = 105f;      // loose follow -> it whips around
-        private const float ShakeDamping = 6f;
+        // The tin keeps MORE give than the other two on purpose: the whole verb is
+        // throwing a heavy thing about, and a tin welded to the cursor cannot be shaken.
+        // But 105/6 was a balloon on a string; 210/17 is a full tin with a wrist behind it.
+        private const float ShakeStiffness = 210f;      // follows hard, still swings
+        private const float ShakeDamping = 17f;
 
         // The pour gauge (2026-07-31, the author's note): WHILE pouring, a bar shows each
         // ingredient's share in its own liquid colour with the percentage inked on it — the
@@ -249,6 +262,11 @@ namespace LastCall.UI
             var bottleSprite = ItemArt.BottleOpen(_focusBottle);
             _pourBottleBody.sprite = bottleSprite;
             _pourBottleBody.color = bottleSprite != null ? Color.white : colour;   // real art, else the style tint
+            // It stands on the bench at the size its own drawing asks for, and it is measured
+            // against its CLOSED art: an open bottle is the same bottle with the cap off, so
+            // it must not grow to fill the space the cap left (VesselArt).
+            _pourMouth = VesselArt.StandOn(_pourVessel, new Vector2(0.5f, 0f), bottleSprite,
+                BottleH, Vector2.zero, ItemArt.Bottle(_focusBottle));
             PushPourFill(run);
             _pourBottle.anchoredPosition = _bottleRest;
             _pourBottle.localRotation = Quaternion.identity;
@@ -309,9 +327,12 @@ namespace LastCall.UI
                 float tilt = lift * MaxTilt;                       // degrees, counter-clockwise = leans left
                 _pourBottle.localRotation = Quaternion.Euler(0, 0, tilt);
 
-                // Where the mouth ends up: the bottle's top, swung around its grip.
-                float rad = tilt * Mathf.Deg2Rad;
-                Vector2 mouth = local + new Vector2(-Mathf.Sin(rad), Mathf.Cos(rad)) * (BottleH * 0.78f);
+                // Where the mouth ends up: the bottle's CAP, swung around its grip. It used to
+                // be the top centre of the grab plate, which is the cap only for art that
+                // fills its sheet — the juice cartons poured from a point some 80px above
+                // their own spout (the author, 2026-08-11: "sıvının çıkış yerini kapak olarak
+                // ayarla"). VesselArt reads it off the drawing instead.
+                Vector2 mouth = local + VesselArt.Swing(_pourMouth, tilt);
 
                 var opening = _shakerVessel.anchoredPosition + new Vector2(0, _shakerVessel.rect.height * 0.5f);
                 bool over = Mathf.Abs(mouth.x - opening.x) < 78f && mouth.y > opening.y - 30f;
@@ -560,8 +581,10 @@ namespace LastCall.UI
                     _pourSurface, mouse.position.ReadValue(), null, out Vector2 local))
                 return;
 
+            // 30 -> 60: the spoon is a light thing held in the fingers, so it is the one
+            // that should sit nearest the cursor of the three.
             _spoonRt.anchoredPosition = Vector2.Lerp(
-                _spoonRt.anchoredPosition, local, 1f - Mathf.Exp(-30f * dt));
+                _spoonRt.anchoredPosition, local, 1f - Mathf.Exp(-60f * dt));
 
             // The swept angle, taken about the tin's centre and only while the spoon is
             // actually over the tin — circling the bench does not stir the drink.
@@ -894,9 +917,14 @@ namespace LastCall.UI
             var hitBottle = _pourBottle.gameObject.AddComponent<Image>();
             hitBottle.color = new Color(0, 0, 0, 0.001f);   // invisible, still grabbable
 
-            _pourFill = BottleFill.Under(_pourBottle);
+            // The BOTTLE inside the grab plate. The plate is a fixed slot because a hand needs
+            // one; the vessel is sized per bottle by VesselArt when the stage refreshes, so a
+            // carton stands as a carton and a slim bottle as a slim bottle, both with their
+            // feet on the plate's floor line and their caps where the art puts them.
+            _pourVessel = NewRect("Vessel", _pourBottle);
+            _pourFill = BottleFill.Under(_pourVessel);
 
-            var pourArt = NewRect("Body", _pourBottle);
+            var pourArt = NewRect("Body", _pourVessel);
             Stretch(pourArt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _pourBottleBody = pourArt.gameObject.AddComponent<Image>();
             _pourBottleBody.preserveAspect = true;    // the real bottle art, set per focus in RefreshShaker

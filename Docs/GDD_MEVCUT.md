@@ -105,11 +105,19 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 | **Tarif kitabı** | ara, TIER/PREP/ŞİŞE filtreleri; kilitliler "n★'DA AÇILIR" |
 | **Gün sonu** | hesap fişi → market (4 sekme: DOLUM/ŞİŞELER/TARİFLER/YÜKSELTMELER + bu gece alınanlar iade) |
 | **Back bar (menü)** | şişe hover=bilgi kartı, tıkla=rota (garnitür anında; bira→Tap; gazlı→Serve eline; kalan→Shaker). Sahne geçişleri KAYAR (ileri sağdan, geri soldan; açılış fade, kapanış anlık); her istasyonda sol kenar BACK TO BAR |
-| **Shaker** | şişeyi kaldır-yatır dök; hazırlık sürükle; AÇIK tin'de kaşıkla daire=karıştır; kapağı tak; tin'i savur=çalkala; kapalı+karışık → sağ kenar TO THE GLASS |
+| **Shaker** | şişeyi kaldır-yatır dök (akış şişenin ÖLÇÜLEN kapağından çıkar, 2026-08-11); hazırlık sürükle; AÇIK tin'de kaşıkla daire=karıştır; kapağı tak; tin'i savur=çalkala; kapalı+karışık → sağ kenar TO THE GLASS |
 | **Serve** | shaker'ı NİŞANLA dök (kaçırırsan döker); dolap şişesi elde `PourAtGlass` (dolap YALNIZ gazlı, 2026-08-11 — meyve/şurup tin'de); bardakta bitir Servis TIKLAMA (2026-08-11, deneysel): hazır bardak + sipariş ALINMIŞ müşteriye tık → bardak tezgahta kayar, varışta servis; okunmamışa tık kimliği açar; çöp de tıklama, boşken atıl |
 | **Tap** | bardağı yatır-doldur, dikleştir-köpük; verdikt satırı canlı |
 
 Teknik: sahne 640×360 (PixelPerfect), HUD 1280×720; tüm UI kodla kurulur, prefab yok; yalnız yeni Input System (`Mouse.current`).
+
+**Kaplar sayfadan değil ÇİZİMDEN ölçülür (2026-08-11, `VesselArt`; GDD 15 §8):** şişe/karton
+sahnenin verdiği boyda, kendi çiziminin ölçüsüyle durur — ayakları tezgâhın/rafın çizgisinde,
+ortası işaretinde; kendi yüksekliğinin 0.44'ünden geniş olan kap ENİNDEN sığdırılır (karton
+şişenin yanında karton kalır). Döküm ağzı da ölçülür: kapaklı ve kapaksız çekim aynı sayfadaysa
+kapak, iki çekimin AYRILDIĞI piksellerdir (kartonun ağzı düz çatıya oturan bir güdük, siluetin
+tepesi değil). Şişede kalan sıvı çizimin kutusuna göre doldurulur; opak kap (karton, kutu)
+seviyesini doğası gereği göstermez — sayı hover kartında ve market kutucuğunda.
 
 ## 10 · Teknik omurga
 

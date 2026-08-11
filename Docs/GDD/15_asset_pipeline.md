@@ -54,3 +54,28 @@ Slides/pours are DOTween-shaped translations on whole pixels (see `18_nightclub_
 §3). Bottle tilt for pours uses **pre-authored sprite frames** (0° / −30° / −55°), never
 runtime rotation. Glass fill uses authored fill frames, not a shader. SFX keys:
 stream-start, fill-tick (pitch rises), set-down thunk.
+
+## 8. Vessel art: the sheet, the drawing and the spout (2026-08-11)
+A bottle sheet is not the bottle. The v3 masters are trimmed to their glass, but hand-drawn
+art arrives however it arrives — the juice cartons came on 96×168 sheets with the carton
+standing small inside (the orange one uses 46×88 of it) — and a UI Image lays a sprite out
+on its **whole** sheet. So nothing about a vessel is taken from its sheet. `VesselArt`
+measures the alpha and the game uses the DRAWING:
+
+- **Size.** A vessel stands at the height its scene offers, measured on the drawing, so what
+  a sheet was saved with cannot change how big a bottle is. Anything wider than **0.44 of
+  its own height** is fitted by width instead — a carton is a carton beside a spirit bottle,
+  not a wardrobe.
+- **Standing.** Feet on the scene's line (plank, mat, wire shelf, product line), middle over
+  the mark. No vessel floats on its own margin.
+- **The spout** is where liquid leaves, and it is measured, never assumed. The top of the
+  silhouette is right for a bottle, whose neck is the highest thing on the sheet; it is
+  wrong for a carton, whose top is a flat roof with a stub set into it. So when a capless
+  shot exists alongside the closed one on the same sheet, the cap is found as **what the two
+  shots disagree about** — the pixels that changed, up in the vessel's top.
+- **Level.** What is left in a bottle is drawn across the drawing's box, not the sheet's, and
+  cut out by the art itself (`BottleFill`). Opaque art — a carton, a can — hides its own
+  level by nature; the hover card and the market tile carry the number.
+
+New art therefore needs no metadata, no pivot convention and no table: draw the vessel, keep
+the closed and open shots on one sheet if the vessel has a cap, and the game measures it.

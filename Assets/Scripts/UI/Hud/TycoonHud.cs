@@ -943,6 +943,7 @@ namespace LastCall.UI
             // (the author, 2026-08-05).
             ItemArt.ClearCache();
             BottleArt.ClearCache();
+            VesselArt.ClearCache();     // measurements are of sprites, so they go with them
             _lastPhase = TycoonPhase.DayOpen;
             _lastStormedCount = 0;
             ResetSeats();
@@ -7559,10 +7560,17 @@ namespace LastCall.UI
         /// </summary>
         private static void PlaceProduct(RectTransform rt, Sprite s, float boxH)
         {
+            // Fitted and stood by the DRAWING, not by the sheet it was saved on (VesselArt,
+            // 2026-08-11). A product saved with air around it — the juice cartons are, on a
+            // 96x168 sheet — used to spend the box on that air: it drew a third small and then
+            // hovered above the shelf line every other product on the page stands on. For art
+            // that fills its sheet, which is most of it, this is the same arithmetic as before.
+            var m = VesselArt.Of(s);
             float w = s.rect.width, h = s.rect.height;
-            float k = Mathf.Min(ContentW / w, boxH / h);
+            float k = Mathf.Min(ContentW / m.Drawing.width, boxH / m.Drawing.height);
             if (k >= 1f) k = Mathf.Floor(k);
-            Place(rt, new Vector2(0.5f, 0f), new Vector2(w * k, h * k), new Vector2(0f, 68f));
+            Place(rt, new Vector2(0.5f, 0f), new Vector2(w * k, h * k),
+                new Vector2((w * 0.5f - m.Drawing.center.x) * k, 68f - m.Drawing.y * k));
         }
 
         /// <summary>

@@ -205,14 +205,19 @@ namespace LastCall.UI
 
                 // Centred on the plank rather than packed to the left: a shelf with two bottles
                 // on it is a shelf with two bottles on it, not a row that ran out.
+                //
+                // A row is packed by what each bottle IS DRAWN as, not by the sheet its art
+                // arrived on (2026-08-11): the juice cartons carry a wide margin of nothing
+                // around them, and a row packed by sheets left those four standing in gaps of
+                // their own air, each at a different size. VesselArt measures the drawing.
                 float artH = shelfH - ShelfFaceH + BottleRise;
                 var wide = new float[Mathf.Max(count, 1)];
                 float run0 = 0f;
                 for (int i = 0; i < count; i++)
                 {
-                    var piece = BottleArt.For(items[from + i].Ingredient);
-                    float aspect = piece.Exists && piece.Aspect > 0f ? piece.Aspect : 0.5f;
-                    wide[i] = artH * aspect;
+                    var sprite = BottleArt.For(items[from + i].Ingredient);
+                    var drawn = VesselArt.StandSize(sprite, artH);
+                    wide[i] = drawn.x > 0f ? drawn.x : artH * 0.5f;
                     run0 += wide[i];
                 }
                 float span = run0 + BottleGap * Mathf.Max(0, count - 1);
@@ -324,20 +329,28 @@ namespace LastCall.UI
                     : (run.Glass.IsFull ? "FULL" : null);
             bool shut = blocked != null;
 
+            var sprite = ItemArt.Bottle(card);
+            // How big this bottle actually comes out at the height this shelf offers. The
+            // wide ones (the cartons) stand a little shorter for it — see VesselArt.MaxAspect.
+            var drawn = VesselArt.StandSize(sprite, artH);
+            if (drawn.y <= 0f) drawn = new Vector2(artW, artH);
+
             // The hit plate is the BOTTLE's own size now, not a share of the plank: with the
             // row packed tight, a slot wider than its art would reach across its neighbour
             // and the two would trade hovers.
             var slot = NewRect($"Slot_{card.Id}", band);
-            Place(slot, new Vector2(0.5f, 0), new Vector2(slotW - 4f, artH),
+            Place(slot, new Vector2(0.5f, 0), new Vector2(slotW - 4f, drawn.y),
                 new Vector2(centreX, ShelfFaceH + BottleFoot));
             var hit = slot.gameObject.AddComponent<Image>();
             hit.color = new Color(0, 0, 0, 0.001f);          // invisible, but catches the pointer
 
-            // The ellipse that pins the bottle to the shelf's floor plane (2026-08-01).
+            // The ellipse that pins the bottle to the shelf's floor plane (2026-08-01). Cut to
+            // the drawing's width, so a bottle standing in a wide sheet does not throw a
+            // shadow out past its own glass.
             var shadow = NewRect("Shadow", slot);
             shadow.anchorMin = shadow.anchorMax = new Vector2(0.5f, 0);
             shadow.pivot = new Vector2(0.5f, 0.5f);
-            shadow.sizeDelta = new Vector2(artW * 0.92f, 12);
+            shadow.sizeDelta = new Vector2(drawn.x * 0.92f, 12);
             shadow.anchoredPosition = new Vector2(0, 14);
             var shImg = shadow.gameObject.AddComponent<Image>();
             shImg.sprite = BackBarArt.BottleShadow(); shImg.raycastTarget = false;
@@ -346,16 +359,12 @@ namespace LastCall.UI
             // preserveAspect centres vertically inside its rect, which floated short
             // bottles above the wood — so the rect is cut to the art's own aspect and
             // pinned by its base to the plank's mid-depth. The size is the SHELF's
-            // decision now (see BuildShelfPage) so a row can be packed by its bottles'
-            // real widths instead of by an even division of the plank.
-            //
+            // decision (see BuildShelfPage), and VesselArt turns that height into a rect
+            // by measuring the DRAWING: whatever air the sheet was saved with is taken up
+            // by the rect, never by the bottle, so the feet land on the wood either way.
             var body = NewRect("Bottle", slot);
-            body.anchorMin = body.anchorMax = new Vector2(0.5f, 0);
-            body.pivot = new Vector2(0.5f, 0);
-            body.sizeDelta = new Vector2(artW, artH);
-            body.anchoredPosition = new Vector2(0, BottleStand);
-
-            var sprite = ItemArt.Bottle(card);
+            VesselArt.StandOn(body, new Vector2(0.5f, 0f), sprite, artH,
+                new Vector2(0, BottleStand));
 
             // What is left, drawn behind the glass and cut out by it — see BottleFill for
             // why it is a stencil and not a rect (2026-08-11, the author: "şişeler boş

@@ -85,8 +85,16 @@ namespace LastCall.UI
             if (!_root.activeSelf) _root.SetActive(true);
             _stencil.sprite = sprite;
             _drinkImage.color = new Color(tone.r, tone.g, tone.b, alpha);
-            // The surface rides the TOP edge; the foot stays on the floor of the bottle.
-            _drink.anchorMax = new Vector2(1f, Mathf.Clamp01((float)fraction));
+            // The surface rides the TOP edge; the foot stays on the floor of the bottle — of
+            // the BOTTLE, which is not the same as the floor of the sheet it was saved on. The
+            // level is measured across the drawing (VesselArt), so a carton drawn small and
+            // centred on its sheet reads half full at its own half and not at the sheet's,
+            // where the stencil would have cut the drink off somewhere around its label.
+            var m = VesselArt.Of(sprite);
+            float lo = m.Sheet.y > 0f ? m.Drawing.yMin / m.Sheet.y : 0f;
+            float hi = m.Sheet.y > 0f ? m.Drawing.yMax / m.Sheet.y : 1f;
+            _drink.anchorMin = new Vector2(0f, lo);
+            _drink.anchorMax = new Vector2(1f, Mathf.Lerp(lo, hi, Mathf.Clamp01((float)fraction)));
         }
 
         public void Hide()

@@ -32,6 +32,11 @@ the mouse.** Buttons select; the mouse *does*. Every step below is a physical in
    the further it tips** toward the shaker. Liquid streams from the neck only while the
    mouth lines up over the shaker's opening; more tilt = faster pour (and a jumpier
    stream — speed is risk). Lower the bottle to stop.
+   **The neck it streams from is MEASURED (2026-08-11, the author: "sıvının çıkış yerini
+   kapak olarak ayarla"):** the vessel in hand stands at the size its own drawing asks for
+   and pours from its own cap, both read off the art rather than assumed at the top of the
+   slot — see `15 §8`. A juice carton, whose spout is a stub on a flat roof, poured from the
+   middle of the roof until this landed.
 3. Closing the focus returns to the menu, so stacking a second bottle is two clicks.
 4. **Preparations are dragged, not toggled:** the ice bucket / lemon bowl / salt cellar /
    mint sprigs sit beside the shaker; **pick a piece up and drop it into the shaker's

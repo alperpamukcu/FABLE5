@@ -2,6 +2,16 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `15 §8 / 24 §2` **a vessel is measured, not assumed (2026-08-11, the author's new juice
+  art):** sizes, standing and the SPOUT all come off the drawing now (`VesselArt`), because
+  a UI Image lays a sprite out on its whole sheet and hand-drawn art does not fill its
+  sheet. The pour streams from the cap — found, where a capless shot exists, as what the
+  closed and open shots disagree about, since a carton's spout is a stub on a flat roof and
+  the top of the silhouette is the roof. Vessels wider than 0.44 of their height are fitted
+  by width, so a carton stands beside a spirit bottle at a carton's size. Bench, back bar,
+  fridge and the market's product line all read the one law; tightly-trimmed art (every v3
+  master) is unmoved by it.
+
 - `23 §3.1/§4 + 21 §12` **the method is the recipe's (2026-08-11, the author):** "extra
   shaken" — a customer whim rolled at 25%, and the only place mixing was ever graded —
   retired; the judge now grades `RecipeDefinition.Prep` against the delivered glass
