@@ -1009,6 +1009,8 @@ namespace LastCall.UI
             UpdateDrinkGlass();
             UpdateEscape();
             StepStarDrop();
+            StepMoneyDrops();
+            StepCheckoutKey();
             StepDayEndBeats();
         }
 
@@ -1692,6 +1694,57 @@ namespace LastCall.UI
         // read from the same running figure so they can never disagree mid-count.
 
         private float _tillShown = float.NaN;
+
+        // ── what a line cost, said out loud (2026-08-11) ────────────────────────
+        //
+        // The author: each amount that leaves or arrives should show under the money, one
+        // by one, coloured and signed. The till already ROLLS to its new number, which
+        // says that something happened and never what — buy two lines at $34 and $20 and
+        // the counter slides $54 in one movement, and the player is left doing the
+        // arithmetic backwards to find out what they just agreed to.
+        //
+        // So every purchase drops its own figure out of the account box: red and negative
+        // for money leaving, green and positive for money arriving, staggered so two lines
+        // read as two events rather than one clump.
+        private RectTransform _tillFloats;
+        private readonly List<(RectTransform Rt, Text Label, float Born)> _moneyDrops =
+            new List<(RectTransform, Text, float)>();
+        private const float DropLife = 1.5f, DropRise = 26f, DropStagger = 0.22f;
+
+        /// <summary>One figure, falling out from under the money it changed.</summary>
+        private void DropMoney(int amount, int slot)
+        {
+            if (_tillFloats == null || amount == 0 || Motion.Reduced) return;
+            var rt = NewRect("Drop", _tillFloats);
+            Place(rt, new Vector2(1, 0), new Vector2(126, 16), new Vector2(-10, -14f));
+            rt.pivot = new Vector2(1, 1);
+            var t = NewText("L", rt, _display, 8, TextAnchor.MiddleRight,
+                amount >= 0 ? ShopGreenLit : ShopCost);
+            Stretch(t.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.raycastTarget = false;
+            t.text = (amount >= 0 ? "+$" : "-$") + Mathf.Abs(amount);
+            _moneyDrops.Add((rt, t, Time.unscaledTime + slot * DropStagger));
+        }
+
+        private void StepMoneyDrops()
+        {
+            for (int i = _moneyDrops.Count - 1; i >= 0; i--)
+            {
+                var (rt, label, born) = _moneyDrops[i];
+                if (rt == null) { _moneyDrops.RemoveAt(i); continue; }
+                float t = Time.unscaledTime - born;
+                if (t < 0f) { label.color = Clear(label.color); continue; }
+                float k = t / DropLife;
+                if (k >= 1f) { Destroy(rt.gameObject); _moneyDrops.RemoveAt(i); continue; }
+                // Out fast, then drifting down and away — a figure that is read and gone.
+                rt.anchoredPosition = new Vector2(-10f, -14f - DropRise * (1f - (1f - k) * (1f - k)));
+                label.color = Opaque(label.color);
+                var c = label.color;
+                label.color = new Color(c.r, c.g, c.b,
+                    k < 0.15f ? k / 0.15f : 1f - Mathf.Clamp01((k - 0.55f) / 0.45f));
+            }
+        }
 
         private void RunTheTill(TycoonRun run)
         {
@@ -3304,7 +3357,8 @@ namespace LastCall.UI
             if (_cartTotal != null)
                 _cartTotal.text = _cart.Count == 0 ? "" : "$" + CartTotal();
             if (_checkoutLabel != null)
-                _checkoutLabel.text = _cart.Count == 0 ? "NOTHING PICKED" : "PLACE ORDER";
+                if (_checkoutUntil < 0f)
+                    _checkoutLabel.text = _cart.Count == 0 ? "NOTHING PICKED" : "PLACE ORDER";
             if (_osClock != null) _osClock.text = $"DAY {run.Day}";
 
             if (_dayEndStep == 0) return;   // the bill step shows no shop at all
@@ -3695,38 +3749,13 @@ namespace LastCall.UI
                            + "already behind your bar and what the room thinks of it.",
                 });
 
-            // The refund slip rides every tab: anything bought at THIS close can go back.
-            // It buys immediately — a return is not something you put in a basket.
-            if (run.TodaysPurchases.Count > 0)
-            {
-                _cardTarget = ShopSection("ORDERED TONIGHT — CLICK TO RETURN");
-                for (int i = 0; i < run.TodaysPurchases.Count; i++)
-                {
-                    int idx = i;
-                    var pch = run.TodaysPurchases[i];
-                    AddTile(new TileSpec
-                    {
-                        // Silkscreen cannot draw U+2605, and the label carries one.
-                        Name = pch.Name.Replace('★', '*'),
-                        Meta = "Ordered tonight",
-                        Money = "+$" + pch.Price,
-                        State = TileState.Refundable,
-                        PillVerb = "RETURN",
-                        Art = RefundArt(pch),
-                        ArtH = pch.What == TycoonRun.DayPurchase.Kind.Glassware ? VesselH
-                             : pch.What == TycoonRun.DayPurchase.Kind.Recipe ? IconH : BottleH,
-                        OnClick = () => { run.RefundToday(idx); Toast("RETURNED");
-                                          ApplyBarLook(); RebuildDayEnd(); },
-                        Identity = pch.Name.Replace('★', '*').ToUpperInvariant(),
-                        MetaLine = "On tonight's van · $" + pch.Price,
-                        Body = "Send it back and the till is made whole.",
-                        BuffA = new Buff(BuffKind.Gain, "Refunds $" + pch.Price
-                            + (pch.What == TycoonRun.DayPurchase.Kind.Seat
-                               || pch.What == TycoonRun.DayPurchase.Kind.Glassware
-                               ? " and gives the night its fitting back" : "")),
-                    });
-                }
-            }
+            // NO REFUNDS (2026-08-11, the author: "iadeyi kaldıralım"). A shelf that
+            // could be un-bought at the same close made every purchase provisional: the
+            // cheapest way to play the market was to buy the lot, look at the night, and
+            // send back whatever the room did not want. An order is an order now, and the
+            // basket — which is still free to empty before it is placed — is where the
+            // deciding belongs.
+
             // The inspector starts on its idle line rather than as an empty black slab —
             // and this is also what switches the two buff icons off, which otherwise sit
             // there as white squares with no sprite in them.
@@ -3946,16 +3975,56 @@ namespace LastCall.UI
             RememberScroll();
             _justOrdered.Clear();
             int bought = 0;
+            var paid = new List<int>();
             foreach (var e in _cart)
             {
-                try { e.Buy(); _justOrdered.Add(e.Key); bought++; }
+                try { e.Buy(); _justOrdered.Add(e.Key); paid.Add(e.Price); bought++; }
                 catch (InvalidOperationException) { Toast("ORDER STOPPED — " + e.Label); break; }
             }
             _cart.Clear();
             Sfx.Play("cash", 0.9f);
-            Toast(bought == 1 ? "1 LINE ORDERED" : $"{bought} LINES ORDERED");
             ApplyBarLook();
             RebuildDayEnd();
+
+            // Each line says what it cost, one after the other, under the account.
+            for (int i = 0; i < paid.Count; i++) DropMoney(-paid[i], i);
+
+            // THE KEY ANSWERS (2026-08-11, the author: it should grey out and say it was
+            // bought, for about three seconds, then come back). A toast said the same thing
+            // in a corner of the room; the key is the thing that was pressed, so the key is
+            // where the answer belongs — and a control that cannot be pressed again while
+            // the order is landing cannot be pressed twice by accident either.
+            _checkoutUntil = Time.unscaledTime + CheckoutHold;
+            RefreshCheckoutKey();
+        }
+
+        /// <summary>How long the order key stays spent before it can be used again.</summary>
+        private const float CheckoutHold = 3f;
+        private float _checkoutUntil = -1f;
+
+        private void RefreshCheckoutKey()
+        {
+            if (_checkout == null || _checkoutLabel == null) return;
+            bool spent = Time.unscaledTime < _checkoutUntil;
+            var img = _checkout.GetComponent<Image>();
+            var btn = _checkout.GetComponent<Button>();
+            if (btn != null) btn.interactable = !spent;
+            if (img != null)
+                img.color = spent ? new Color(0.62f, 0.65f, 0.62f, 1f) : Color.white;
+            _checkoutLabel.color = spent ? new Color(0.90f, 0.93f, 0.90f, 0.85f) : Color.white;
+            // Spent, the key says so; free, the BASKET says what it says — an empty one
+            // reads NOTHING PICKED, and hard-coding PLACE ORDER here would have handed the
+            // player a key inviting them to order nothing the moment the hold released.
+            _checkoutLabel.text = spent ? "ORDERED"
+                : _cart.Count == 0 ? "NOTHING PICKED" : "PLACE ORDER";
+        }
+
+        private void StepCheckoutKey()
+        {
+            if (_checkoutUntil < 0f) return;
+            if (Time.unscaledTime < _checkoutUntil) return;
+            _checkoutUntil = -1f;
+            RefreshCheckoutKey();
         }
 
         /// <summary>The stamp, on the CHIP. It used to be a 160-wide rotated word laid
@@ -6378,6 +6447,7 @@ namespace LastCall.UI
             Place(_tabletTill.rectTransform, new Vector2(1, 0), new Vector2(126, 18), new Vector2(-10, 4));
             _tabletTill.horizontalOverflow = HorizontalWrapMode.Wrap;
             _tabletTill.verticalOverflow = VerticalWrapMode.Truncate;
+            _tillFloats = balance;   // the deltas fall out of the account box, below it
 
             // THE SHEET THE DEPARTMENT OPENS (the author: give it a filing feel, and let
             // the frame go round the products too). The aisle sits on a framed page whose
@@ -6483,9 +6553,15 @@ namespace LastCall.UI
             // starts at 1022, so a 6-column grid of 1000 has 4 units of slack inside the
             // mask and 14 units of air before the bar. The old grid asked for 790 in a 730
             // viewport and lost a third of every fourth card behind the scrollbar.
+            // A GUTTER UNDER THE AISLE (2026-08-11, the author: there is no gap at all
+            // between the shelf and the boxes under it, and it does not look professional).
+            // There were eight units — sixteen screen pixels — between the mask's foot and
+            // the inspector's head, which at a glance is the two panels touching. Three
+            // times that is the difference between a page with a foot and a page that ran
+            // out of room.
             var offerView = NewRect("OfferView", screen);
             Stretch(offerView, Vector2.zero, Vector2.one,
-                new Vector2(8f, FootH + 16f),
+                new Vector2(8f, FootH + 32f),
                 new Vector2(-(BarW + 18f), -(OsBarH + AppBarH + TabBarH + 8f)));
             offerView.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, 0.003f);
             offerView.gameObject.AddComponent<RectMask2D>();
@@ -6512,7 +6588,7 @@ namespace LastCall.UI
             var barTrack = NewRect("ScrollTrack", screen);
             barTrack.anchorMin = new Vector2(1, 0); barTrack.anchorMax = new Vector2(1, 1);
             barTrack.pivot = new Vector2(1, 1);
-            barTrack.sizeDelta = new Vector2(BarW, -(OsBarH + AppBarH + TabBarH + FootH + 24f));
+            barTrack.sizeDelta = new Vector2(BarW, -(OsBarH + AppBarH + TabBarH + FootH + 40f));
             barTrack.anchoredPosition = new Vector2(-8f, -(OsBarH + AppBarH + TabBarH + 8f));
             barTrack.gameObject.AddComponent<Image>().color = new Color(0.84f, 0.87f, 0.84f, 1f);
             var scrollbar = barTrack.gameObject.AddComponent<Scrollbar>();
