@@ -3269,6 +3269,24 @@ namespace LastCall.UI
             _slideRt = null; _slideGroup = null;
         }
 
+        /// <summary>
+        /// How paper arrives: fed at a near-even rate, then landing on its stop with a
+        /// bounce (2026-08-11, the author: at the very bottom it should bounce a little and
+        /// settle where it belongs).
+        ///
+        /// The last seventh of the run is the landing, and it is a rebound UPWARD — a thing
+        /// dropping onto a surface comes back off it, it does not sink past it. Two hops,
+        /// the second a quarter of the first, both returning exactly to the rest position,
+        /// so the settle is a consequence of the curve rather than a correction after it.
+        /// </summary>
+        private static float PaperLand(float k)
+        {
+            const float Feed = 0.86f, Hop = 0.035f;
+            if (k < Feed) return 1f - Mathf.Pow(1f - k / Feed, 1.35f);
+            float u = (k - Feed) / (1f - Feed);
+            return 1f - Hop * Mathf.Abs(Mathf.Sin(u * Mathf.PI * 2f)) * (1f - u);
+        }
+
         private void StepSlide()
         {
             if (_slideRt == null) return;
@@ -3282,10 +3300,9 @@ namespace LastCall.UI
                 if (k >= 1f) { SettleSlide(); OnOpenTomorrow(); }
                 return;
             }
-            // Paper: near-even, with just enough give at the end that it settles rather
-            // than stops dead. Everything else: the old soft landing.
-            float o = _slideSteady
-                ? 1f - Mathf.Pow(1f - k, 1.35f)
+            // Paper feeds near-even and BOUNCES onto its stop. Everything else keeps the
+            // old soft landing.
+            float o = _slideSteady ? PaperLand(k)
                 : 1f - (1f - k) * (1f - k) * (1f - k);              // lands soft
             _slideRt.anchoredPosition = Vector2.Lerp(_slideHome + _slideFrom, _slideHome, o);
             if (_slideGroup != null)
