@@ -5135,21 +5135,30 @@ namespace LastCall.UI
             // catches it and burning along its bottom in neon; the three readings sit on
             // it as PLAQUES, each seated on its own coloured rule — the licence card's
             // language, so the game's two instrument surfaces read as one hand.
-            var top = Panel(root, "TopBar", new Vector2(0, 1), new Vector2(1, 1),
-                new Vector2(0, -TopBarH), Vector2.zero, UITheme.Night[1]);
-            Hairline(top, new Vector2(0, 1), new Vector2(1, 1), UITheme.Night[3]);
+            // The BOARD bleeds to the window; the instruments on it do not (2026-08-11).
+            // A fascia that stops at the safe frame reads as a strip floating in the middle
+            // of a wide monitor, and one that carries its plaques out to the window edges
+            // is the drift the frame was built to stop. So the dark board, its hairline and
+            // its neon run edge to edge, and the clock, the till and the standing stay
+            // anchored where they were placed inside the frame.
+            var top = NewRect("TopBar", root);
+            Stretch(top, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -TopBarH), Vector2.zero);
+            var fascia = Panel(top, "Fascia", Vector2.zero, Vector2.one,
+                Vector2.zero, Vector2.zero, UITheme.Night[1]);
+            BleedWidth.Apply(fascia);
+            Hairline(fascia, new Vector2(0, 1), new Vector2(1, 1), UITheme.Night[3]);
 
             // The tube: a bright core over a wider glow, bleeding below the panel. One flat
             // line was the only themed thing up here and it read as a divider; neon reads
             // as a room.
-            var tube = NewRect("Neon", top);
+            var tube = NewRect("Neon", fascia);
             tube.anchorMin = new Vector2(0, 0); tube.anchorMax = new Vector2(1, 0);
             tube.pivot = new Vector2(0.5f, 0);
             tube.sizeDelta = new Vector2(0, 2);
             tube.anchoredPosition = Vector2.zero;
             var tubeImg = tube.gameObject.AddComponent<Image>();
             tubeImg.color = UITheme.Amber[4]; tubeImg.raycastTarget = false;
-            var bloom = NewRect("NeonBloom", top);
+            var bloom = NewRect("NeonBloom", fascia);
             bloom.anchorMin = new Vector2(0, 0); bloom.anchorMax = new Vector2(1, 0);
             bloom.pivot = new Vector2(0.5f, 1);
             bloom.sizeDelta = new Vector2(0, 5);
