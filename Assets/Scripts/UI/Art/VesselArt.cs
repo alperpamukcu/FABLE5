@@ -69,9 +69,18 @@ namespace LastCall.UI
             /// <summary>The cap / spout: where liquid leaves this vessel.</summary>
             public readonly Vector2 Mouth;
 
-            public Metrics(bool measured, Vector2 sheet, Rect drawing, Vector2 mouth)
+            /// <summary>
+            /// The line a FULL vessel is filled to, in sheet pixels — not the top of the
+            /// drawing (2026-08-11, the author: "gerçekte şişenin tamamı dolu olmaz,
+            /// şişenin birazı boş olur, dudak payı gibi"). Nothing is bottled to its own
+            /// brim: a bottle is filled into the base of its neck and a carton stops short
+            /// of its roof, so the level was reading a bottle fuller than any bottle is.
+            /// </summary>
+            public readonly float Fill;
+
+            public Metrics(bool measured, Vector2 sheet, Rect drawing, Vector2 mouth, float fill)
             {
-                Measured = measured; Sheet = sheet; Drawing = drawing; Mouth = mouth;
+                Measured = measured; Sheet = sheet; Drawing = drawing; Mouth = mouth; Fill = fill;
             }
 
             /// <summary>Width over height OF THE DRAWING (never of the sheet).</summary>
@@ -95,7 +104,8 @@ namespace LastCall.UI
         /// <summary>Measures a sprite, once. Everything else here is arithmetic on this.</summary>
         public static Metrics Of(Sprite sprite)
         {
-            if (sprite == null) return new Metrics(false, Vector2.one, new Rect(0, 0, 1, 1), new Vector2(0.5f, 1f));
+            if (sprite == null)
+                return new Metrics(false, Vector2.one, new Rect(0, 0, 1, 1), new Vector2(0.5f, 1f), 1f);
             int key = sprite.GetInstanceID();
             if (Cache.TryGetValue(key, out var hit)) return hit;
             var m = Measure(sprite);
@@ -114,7 +124,7 @@ namespace LastCall.UI
             // the lemon carton's spout 44px above its own cap, which is how this was found.
             Vector2 sheet = sprite.rect.size;
             var whole = new Metrics(false, sheet, new Rect(0, 0, sheet.x, sheet.y),
-                                    new Vector2(sheet.x * 0.5f, sheet.y));
+                                    new Vector2(sheet.x * 0.5f, sheet.y), sheet.y);
             var tex = sprite.texture;
             // A tightly packed atlas sprite has no window to read — asking throws. Nothing in
             // this project is packed, and if that ever changes the sheet still answers.
@@ -135,12 +145,14 @@ namespace LastCall.UI
 
             int ox = Mathf.RoundToInt(window.x), oy = Mathf.RoundToInt(window.y);
             int x0 = int.MaxValue, x1 = int.MinValue, y0 = int.MaxValue, y1 = int.MinValue;
+            var across = new int[h];        // how wide the vessel is at each height
             for (int y = 0; y < h; y++)
             {
                 int row = (oy + y) * tex.width + ox;
                 for (int x = 0; x < w; x++)
                 {
                     if (px[row + x].a < Ink) continue;
+                    across[y]++;
                     if (x < x0) x0 = x;
                     if (x > x1) x1 = x;
                     if (y < y0) y0 = y;
@@ -163,8 +175,27 @@ namespace LastCall.UI
                 from = -1;
             }
             var mouth = new Vector2(offset.x + (bestFrom + bestTo + 1) * 0.5f, offset.y + y1 + 1);
+
+            // THE FILL LINE, off the SHOULDER. Nothing is bottled to its own brim, so the
+            // level a full bottle draws is the height at which the vessel stops being its
+            // full width — the base of the neck — and not the top of the glass. The body's
+            // width is taken from the bottom 60%, where a vessel is at its widest whatever
+            // shape it is; the shoulder is the first row from the top that is back at
+            // (nearly) that width. A vessel that is the same width all the way up has no
+            // shoulder to find — a carton, a can — and gets a plain headspace instead.
+            int floor = y0 + Mathf.Max(1, Mathf.RoundToInt((y1 - y0 + 1) * 0.6f));
+            int bodyW = 0;
+            for (int y = y0; y <= floor && y < h; y++) if (across[y] > bodyW) bodyW = across[y];
+            int shoulder = y0;
+            for (int y = y1; y >= y0; y--)
+                if (across[y] >= bodyW * 0.72f) { shoulder = y; break; }
+            float ch = y1 - y0 + 1;
+            float fill = shoulder >= y1 - ch * 0.06f
+                ? y1 + 1f - ch * 0.08f      // straight-sided: stop short of the roof
+                : shoulder + 1f + ch * 0.02f;   // a bottle fills into the base of its neck
             return new Metrics(true, sheet,
-                new Rect(offset.x + x0, offset.y + y0, x1 - x0 + 1, y1 - y0 + 1), mouth);
+                new Rect(offset.x + x0, offset.y + y0, x1 - x0 + 1, y1 - y0 + 1),
+                mouth, offset.y + fill);
         }
 
         /// <summary>

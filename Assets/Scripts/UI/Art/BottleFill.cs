@@ -90,9 +90,14 @@ namespace LastCall.UI
             // level is measured across the drawing (VesselArt), so a carton drawn small and
             // centred on its sheet reads half full at its own half and not at the sheet's,
             // where the stencil would have cut the drink off somewhere around its label.
+            // FULL IS NOT THE BRIM (2026-08-11, the author: "gerçekte şişenin tamamı dolu
+            // olmaz, şişenin birazı boş olur, dudak payı gibi"). The top of the band is the
+            // vessel's own fill line — the base of a bottle's neck, a carton's headspace —
+            // measured off the silhouette, so 100% draws the level a full bottle stands at
+            // rather than a bottle filled to the cap, which no bottle ever is.
             var m = VesselArt.Of(sprite);
             float lo = m.Sheet.y > 0f ? m.Drawing.yMin / m.Sheet.y : 0f;
-            float hi = m.Sheet.y > 0f ? m.Drawing.yMax / m.Sheet.y : 1f;
+            float hi = m.Sheet.y > 0f ? m.Fill / m.Sheet.y : 1f;
             _drink.anchorMin = new Vector2(0f, lo);
             _drink.anchorMax = new Vector2(1f, Mathf.Lerp(lo, hi, Mathf.Clamp01((float)fraction)));
         }

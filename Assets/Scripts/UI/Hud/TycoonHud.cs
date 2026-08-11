@@ -4066,7 +4066,7 @@ namespace LastCall.UI
         // A basket chip: wide enough to show what the thing IS, narrow enough that a night's
         // shopping fits on one row. The row shrinks its chips toward the floor as it fills;
         // past the floor it says how many more it is holding rather than dropping them.
-        private const float ChipMax = 76f, ChipMin = 46f, ChipGap = 6f;
+        private const float ChipMax = 84f, ChipMin = 46f, ChipGap = 6f;
 
         /// <summary>
         /// Draws the basket: one chip per picked line, each with the product's own art and
@@ -4099,40 +4099,25 @@ namespace LastCall.UI
             var chip = ChipPlate("Chip_" + entry.Key, x, box, rowH, PlateOf(TileState.Picked));
 
             // The product, standing on the chip's own line — measured off the drawing, so a
-            // carton saved with air around it is the same size as the bottle beside it.
+            // carton saved with air around it is the same size as the bottle beside it. It
+            // takes the whole chip above the price now (2026-08-11, the author: the X went,
+            // the picture grew into the corner it was using).
             var art = NewRect("Art", chip);
-            VesselArt.StandOn(art, new Vector2(0.5f, 0f), entry.Art, rowH - 40f, new Vector2(0, 20f));
+            VesselArt.StandOn(art, new Vector2(0.5f, 0f), entry.Art, rowH - 28f, new Vector2(0, 22f));
             var ai = art.gameObject.AddComponent<Image>();
             ai.sprite = entry.Art;
             ai.preserveAspect = true;
             ai.raycastTarget = false;
             ai.enabled = entry.Art != null;
 
-            var price = NewText("P", chip, _shop, 12, TextAnchor.MiddleCenter, ShopGreenDark);
-            Place(price.rectTransform, new Vector2(0.5f, 0), new Vector2(box - 6f, 16), new Vector2(0, 3));
+            // The price in the AISLE's own money face and size (MoneyFace at 16), so a thing
+            // in the basket and the same thing on the shelf are priced in one voice.
+            string token = "$" + entry.Price;
+            var price = NewText("P", chip, MoneyFace(token), 16, TextAnchor.MiddleCenter,
+                MoneyInk(TileState.Picked));
+            Place(price.rectTransform, new Vector2(0.5f, 0), new Vector2(box - 4f, 20), new Vector2(0, 3));
             price.horizontalOverflow = HorizontalWrapMode.Overflow;
-            price.text = "$" + entry.Price;
-
-            // The way out, drawn ON the chip. The affordance has to be visible before the
-            // pointer arrives, or "click it again to take it out" is a rule nobody is told —
-            // and it is THE HOUSE'S OWN X (2026-08-11, the author: "diğer sahnelerde
-            // kullandığımız x butonu olsun"), the drawn red key the menu closes with, not a
-            // letter typed into a red square. It takes no raycast: the whole chip is the
-            // press, so the corner reads as the reason rather than as a second target.
-            var cut = NewRect("X", chip);
-            Place(cut, new Vector2(1, 1), new Vector2(20, 20), new Vector2(-2, -2));
-            var cutImg = cut.gameObject.AddComponent<Image>();
-            cutImg.raycastTarget = false;
-            var cutArt = ItemArt.Load("btn_close");
-            if (cutArt != null) { cutImg.sprite = cutArt; cutImg.preserveAspect = true; }
-            else
-            {
-                cutImg.color = ShopCost;
-                var cutMark = NewText("L", cut, _shop, 12, TextAnchor.MiddleCenter, Color.white);
-                Stretch(cutMark.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, new Vector2(0, -1));
-                cutMark.raycastTarget = false;
-                cutMark.text = "X";
-            }
+            price.text = token;
 
             var button = chip.gameObject.AddComponent<Button>();
             button.targetGraphic = chip.GetComponent<Image>();
