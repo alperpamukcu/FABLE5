@@ -19,6 +19,13 @@ the seats and makes the shelf feel like *stock*, not UI.
 **The hands-on rule (2026-07-22, explicit request): the player performs the motions with
 the mouse.** Buttons select; the mouse *does*. Every step below is a physical interaction.
 
+0. **The stages SLIDE (2026-08-11, the author: no sharp cuts).** One timer pushes the
+   outgoing panel off while the incoming arrives from the other side — forward reads
+   left-to-right (Menu→station, Shaker→Serve), every back edge reverses it. The way back
+   is ONE key in ONE place: a left-edge-centre BACK TO BAR plate on every station, the
+   mirror of the shaker's right-edge TO THE GLASS. Opening from the bar fades; closing
+   snaps (the pivot into serving). State stays synchronous — only the visuals animate —
+   and a half-slid stage takes no input (raycasts off at the root, verbs gated).
 1. Click a bottle in the menu → the screen **dims**; a focus vignette shows the **open
    shaker** and the chosen bottle, big.
 2. **The tilt-pour:** grab the bottle with the mouse and **lift it — the higher it goes,

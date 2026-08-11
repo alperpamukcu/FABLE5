@@ -320,13 +320,8 @@ namespace LastCall.UI
             _tapVerdict = Outlined(NewText("Verdict", _tapPanel, _display, 16, TextAnchor.LowerCenter, UITheme.TextPrimary));
             Stretch(_tapVerdict.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(0, 64), new Vector2(0, 86));
 
-            var back = NewRect("Back", _tapPanel);
-            Place(back, new Vector2(0.5f, 0), new Vector2(240, 34), new Vector2(-130, 12));
-            back.gameObject.AddComponent<Image>().color = UITheme.Night[3];
-            back.gameObject.AddComponent<Button>().onClick.AddListener(() => GoTo(Stage.Menu));
-            var backLabel = NewText("Label", back, _body, 8, TextAnchor.MiddleCenter, UITheme.TextPrimary);
-            Stretch(backLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            backLabel.text = "BACK TO THE MENU";
+            // The way back is the left-edge key now (the loop rework's one back, one place).
+            AddEdgeBack(_tapPanel);
 
             var done = NewRect("Done", _tapPanel);
             Place(done, new Vector2(0.5f, 0), new Vector2(240, 34), new Vector2(130, 12));

@@ -1112,13 +1112,8 @@ namespace LastCall.UI
             });
             _serveShaker.gameObject.AddComponent<EventTrigger>().triggers.Add(sgrab);
 
-            var back = NewRect("Back", _servePanel);
-            Place(back, new Vector2(0.5f, 0), new Vector2(240, 34), new Vector2(-130, 12));
-            back.gameObject.AddComponent<Image>().color = UITheme.Night[3];
-            back.gameObject.AddComponent<Button>().onClick.AddListener(() => GoTo(Stage.Menu));
-            var backLabel = NewText("Label", back, _body, 13, TextAnchor.MiddleCenter, UITheme.TextPrimary);
-            Stretch(backLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            backLabel.text = "ADD MORE";
+            // The way back is the left-edge key now (the loop rework's one back, one place).
+            AddEdgeBack(_servePanel);
 
             var done = NewRect("Done", _servePanel);
             Place(done, new Vector2(0.5f, 0), new Vector2(240, 34), new Vector2(130, 12));

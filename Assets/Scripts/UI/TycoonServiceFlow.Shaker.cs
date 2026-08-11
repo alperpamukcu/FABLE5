@@ -448,23 +448,9 @@ namespace LastCall.UI
             _shakerSolids.SetBounds(minX, maxX, bottomY, topY);
         }
 
-        /// <summary>Eases the window that just opened up to full size and opacity — the menu
-        /// hands over to the pour window instead of cutting to it.</summary>
-        private void AdvanceStageOpen()
-        {
-            if (_stageGroup == null || _stageRect == null) return;
-            _stageT = Mathf.MoveTowards(_stageT, 1f, Mathf.Max(Time.deltaTime, 1e-4f) / StageOpen);
-            float e = 1f - (1f - _stageT) * (1f - _stageT);          // ease-out
-            _stageGroup.alpha = e;
-            float k = Mathf.Lerp(0.94f, 1f, e);
-            _stageRect.localScale = new Vector3(k, k, 1f);
-            if (_stageT >= 1f)
-            {
-                _stageRect.localScale = Vector3.one;
-                _stageGroup.alpha = 1f;
-                _stageGroup = null;
-            }
-        }
+        // (AdvanceStageOpen retired 2026-08-11: the fade-and-scale pop on the incoming
+        // panel gave way to the two-slot stage SLIDE in TycoonServiceFlow — which also
+        // fixes its two old defects: it ran on scaled time, and it ignored Motion.Reduced.)
 
         /// <summary>
         /// The cap (2026-07-24). While the tin is open you build the drink in it; drag the lid
@@ -1064,12 +1050,9 @@ namespace LastCall.UI
             var tgSink = toGlass.gameObject.AddComponent<PressSink>();
             tgSink.Face = toGlass; tgSink.Depth = 3f; tgSink.Lift = 2f;
 
-            // The DONE key on the drawn plate with the full press (the P14 note): the same
-            // sprite-and-sink the menu's own keys carry, so the two stages share one hand.
-            AddFlexButton(_shakerPanel, "DONE — BACK TO MENU", UITheme.PrimaryAction,
-                () => GoTo(Stage.Menu));
-            var done = (RectTransform)_shakerPanel.Find("DONE — BACK TO MENU");
-            Place(done, new Vector2(0.5f, 0), new Vector2(300, 44), new Vector2(160, 10));
+            // The way back wears the LEFT edge now (the loop rework): one key, one place,
+            // every station — the bottom DONE plate retired with the hub-and-spoke cuts.
+            AddEdgeBack(_shakerPanel);
         }
 
         /// <summary>One source standing on the prep table: pointer-down picks its piece up.</summary>

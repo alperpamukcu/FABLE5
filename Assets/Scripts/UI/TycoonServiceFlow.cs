@@ -36,12 +36,21 @@ namespace LastCall.UI
         private RectTransform _root;        // the whole modal (scrim + panels)
         private RectTransform _field;       // the fixed 1280x720 field the panels are built in
         private RectTransform _menuPanel;
-        // Windows open rather than snap (2026-07-24): tapping a bottle on the clipboard plays
-        // the menu out and the pour window in, so the two stages are visibly linked.
-        private CanvasGroup _stageGroup;   // the window currently easing in
-        private RectTransform _stageRect;
-        private float _stageT;
-        private const float StageOpen = 0.22f;
+        // THE STAGES SLIDE (2026-08-11, the author's loop rework: "keskin geçiş olmamalı").
+        // One timer drives BOTH panels — the outgoing pushed off one way, the incoming
+        // arriving from the other — so a stage change reads as the bar moving past the
+        // camera, not as a screen swap. Update-timer, not a coroutine: the HUD's PlayPanel
+        // family already paid for that lesson (an interrupted coroutine parks panels at
+        // their start offsets), and this is its two-slot sibling.
+        private RectTransform _slideOutRt, _slideInRt;
+        private CanvasGroup _slideInGroup;
+        private float _transT, _transDur;
+        private float _slideDir;            // +1: forward (in from the right), -1: back
+        private bool _slideFade;            // Closed→Menu opens with a fade, not a push
+        private const float SlideDur = 0.16f;
+        private const float SlideDist = 1280f;
+        private bool InTransit => _slideOutRt != null || _slideInRt != null;
+        private CanvasGroup _rootGroup;     // raycasts off while the field is moving
         private RectTransform _shakerPanel;
         private RectTransform _servePanel;
 
@@ -109,7 +118,9 @@ namespace LastCall.UI
 
         private void Update()
         {
-            AdvanceStageOpen();
+            // The slide steps FIRST and unconditionally — the curtain's own law: a visual
+            // that gates input must never be starved by an early return.
+            StepStageSlide();
 
             var run = Run;
             if (run == null) return;
@@ -119,6 +130,11 @@ namespace LastCall.UI
                 GoTo(Stage.Closed);
                 return;
             }
+
+            // A half-slid stage takes no input and runs no verbs: the panels are moving
+            // scenery until the slide settles (raycasts are off at the root for the same
+            // reason — two independent locks).
+            if (InTransit) return;
 
             // The shake moves the tin, so the lid is placed AFTER it — placing it first left the
             // cap a frame behind the body, which is why they did not read as one object. The
@@ -148,11 +164,27 @@ namespace LastCall.UI
 
         // ── stage transitions ────────────────────────────────────────────────────
 
+        /// <summary>The panel a stage lives on; null for Closed.</summary>
+        private RectTransform PanelOf(Stage stage) =>
+            stage == Stage.Menu ? _menuPanel
+            : stage == Stage.Shaker ? _shakerPanel
+            : stage == Stage.Serve ? _servePanel
+            : stage == Stage.Tap ? _tapPanel : null;
+
         private void GoTo(Stage stage)
         {
+            var previous = _stage;
             _stage = stage;
+            // Any slide still in flight settles before the panels are touched — the house
+            // "settle before movement" law. State stays SYNCHRONOUS end to end: only the
+            // visuals animate, so call sites that act right after GoTo (the carbonated
+            // route's TakeFromCabinet) keep their contract.
+            SettleStageSlide();
+            bool slide = stage != Stage.Closed && previous != Stage.Closed
+                      && previous != stage && !Motion.Reduced;
+            bool fade = stage != Stage.Closed && previous == Stage.Closed && !Motion.Reduced;
             StopHeldSounds();
-            Sfx.Play("click", 0.6f);
+            Sfx.Play(slide ? "whoosh" : "click", 0.6f);
             _bottleGrabbed = false;
             _pouring = false;
             _serveGrabbed = false;
@@ -173,11 +205,12 @@ namespace LastCall.UI
             if (Run != null && Run.PouringId != null) Run.EndPour();
 
             _root.gameObject.SetActive(stage != Stage.Closed);
-            _menuPanel.gameObject.SetActive(stage == Stage.Menu);
-
-            _shakerPanel.gameObject.SetActive(stage == Stage.Shaker);
-            _servePanel.gameObject.SetActive(stage == Stage.Serve);
-            _tapPanel.gameObject.SetActive(stage == Stage.Tap);
+            // A sliding stage keeps its OUTGOING panel alive for the transit; the slide's
+            // settle turns it off. Everything else applies exactly as it always has.
+            _menuPanel.gameObject.SetActive(stage == Stage.Menu || (slide && previous == Stage.Menu));
+            _shakerPanel.gameObject.SetActive(stage == Stage.Shaker || (slide && previous == Stage.Shaker));
+            _servePanel.gameObject.SetActive(stage == Stage.Serve || (slide && previous == Stage.Serve));
+            _tapPanel.gameObject.SetActive(stage == Stage.Tap || (slide && previous == Stage.Tap));
             _glassHeld = false;
             _glassTilt = 0f;
             if (_tapGlass != null)
@@ -193,21 +226,118 @@ namespace LastCall.UI
             if (stage == Stage.Serve) RefreshServe();
             if (stage == Stage.Tap) RefreshTap();
 
-            // Play the window that just opened.
-            _stageRect = stage == Stage.Menu ? _menuPanel
-                       : stage == Stage.Shaker ? _shakerPanel
-                       : stage == Stage.Serve ? _servePanel
-                       : stage == Stage.Tap ? _tapPanel : null;
-            if (_stageRect != null)
+            // The visuals, last — the state above is already true whatever these draw.
+            if (slide)
             {
-                // Unity's GetComponent returns a fake-null, which ?? happily hands back — check it.
-                var grp = _stageRect.GetComponent<CanvasGroup>();
-                if (grp == null) grp = _stageRect.gameObject.AddComponent<CanvasGroup>();
-                _stageGroup = grp;
-                _stageT = 0f;
-                _stageGroup.alpha = 0f;
+                // Forward reads left-to-right: the hub (Menu) hands off to a station, and
+                // the bench hands the capped tin ON to the glass. Everything else is the
+                // way back.
+                bool forward = previous == Stage.Menu
+                            || (previous == Stage.Shaker && stage == Stage.Serve);
+                PlayStageSlide(PanelOf(previous), PanelOf(stage), forward ? 1f : -1f);
             }
-            else _stageGroup = null;
+            else if (fade)
+                PlayStageFade(PanelOf(stage));
+        }
+
+        // ── the two-slot stage slide ────────────────────────────────────────────
+
+        private CanvasGroup GroupOn(RectTransform rt)
+        {
+            // Unity's GetComponent returns a fake-null, which ?? happily hands back — check it.
+            var grp = rt.GetComponent<CanvasGroup>();
+            if (grp == null) grp = rt.gameObject.AddComponent<CanvasGroup>();
+            return grp;
+        }
+
+        private void PlayStageSlide(RectTransform outRt, RectTransform inRt, float dir)
+        {
+            _slideOutRt = outRt;
+            _slideInRt = inRt;
+            _slideInGroup = GroupOn(inRt);
+            _slideInGroup.alpha = 1f;
+            _slideDir = dir;
+            _slideFade = false;
+            _transT = 0f;
+            _transDur = SlideDur;
+            inRt.anchoredPosition = new Vector2(dir * SlideDist, 0f);
+            if (_rootGroup != null) _rootGroup.blocksRaycasts = false;
+        }
+
+        /// <summary>Closed→Menu: the flow OPENS rather than arrives, so the first panel
+        /// fades up in place instead of shoving in from a direction that means nothing.</summary>
+        private void PlayStageFade(RectTransform inRt)
+        {
+            _slideOutRt = null;
+            _slideInRt = inRt;
+            _slideInGroup = GroupOn(inRt);
+            _slideInGroup.alpha = 0f;
+            _slideFade = true;
+            _transT = 0f;
+            _transDur = SlideDur;
+            inRt.anchoredPosition = Vector2.zero;
+            if (_rootGroup != null) _rootGroup.blocksRaycasts = false;
+        }
+
+        /// <summary>Everything home, the outgoing panel off, the pointer back on. Called
+        /// before any new movement and at the end of every transit — an interrupted slide
+        /// can never become a panel's new resting place.</summary>
+        private void SettleStageSlide()
+        {
+            if (_slideOutRt != null)
+            {
+                _slideOutRt.anchoredPosition = Vector2.zero;
+                if (_slideOutRt != PanelOf(_stage))
+                    _slideOutRt.gameObject.SetActive(false);
+            }
+            if (_slideInRt != null)
+            {
+                _slideInRt.anchoredPosition = Vector2.zero;
+                if (_slideInGroup != null) _slideInGroup.alpha = 1f;
+            }
+            _slideOutRt = null;
+            _slideInRt = null;
+            _slideInGroup = null;
+            if (_rootGroup != null) _rootGroup.blocksRaycasts = true;
+        }
+
+        private void StepStageSlide()
+        {
+            if (!InTransit) return;
+            _transT += Time.unscaledDeltaTime;
+            float k = _transDur <= 0f ? 1f : Mathf.Clamp01(_transT / _transDur);
+            if (k >= 1f) { SettleStageSlide(); return; }
+            if (_slideFade)
+            {
+                if (_slideInGroup != null) _slideInGroup.alpha = k * k * (3f - 2f * k);
+                return;
+            }
+            float e = Tweening.OutCubic(k);
+            if (_slideOutRt != null)
+                _slideOutRt.anchoredPosition = new Vector2(-_slideDir * SlideDist * e, 0f);
+            if (_slideInRt != null)
+                _slideInRt.anchoredPosition = new Vector2(_slideDir * SlideDist * (1f - e), 0f);
+        }
+
+        /// <summary>
+        /// The way back, worn on the left edge centre of every station (the author's loop
+        /// rework): one key, one place, every stage — the mirror of the shaker's TO THE
+        /// GLASS. Returns to the back bar with the reverse slide.
+        /// </summary>
+        private void AddEdgeBack(RectTransform panel)
+        {
+            var rt = NewRect("EdgeBack", panel);
+            Place(rt, new Vector2(0f, 0.5f), new Vector2(76, 150), new Vector2(14, 0));
+            var img = rt.gameObject.AddComponent<Image>();
+            img.color = UITheme.Night[3];
+            var btn = rt.gameObject.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(() => GoTo(Stage.Menu));
+            var label = NewText("L", rt, _body, 12, TextAnchor.MiddleCenter, UITheme.TextPrimary);
+            Stretch(label.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 4), new Vector2(-4, -4));
+            label.text = "BACK\nTO\nBAR";
+            var sink = rt.gameObject.AddComponent<PressSink>();
+            sink.Face = rt; sink.Depth = 3f; sink.Lift = 2f;
         }
 
         private void OpenBottle(IngredientCard card)
@@ -272,6 +402,11 @@ namespace LastCall.UI
             // not dimmed. The STAGES go in a fixed field instead, so the back bar packs
             // its shelves to one width forever rather than to the window's (DesignFrame).
             _field = DesignFrame.Wrap(_root, new Vector2(1280f, 720f));
+            // The slide pushes whole panels through the field, and DesignFrame does not
+            // clip — without the mask a departing stage would draw on in the letterbox.
+            _field.gameObject.AddComponent<RectMask2D>();
+            // One switch for every pointer under the flow: off while the field is moving.
+            _rootGroup = _root.gameObject.AddComponent<CanvasGroup>();
 
             BuildMenuPanel();
             BuildShakerPanel();
