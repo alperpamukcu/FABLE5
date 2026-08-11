@@ -393,14 +393,14 @@ namespace LastCall.UI
         private static List<SpecRow> RecipeSpecRows(RecipeDefinition r, bool poursOnly = false)
         {
             var rows = new List<SpecRow>();
-            // The prep word stays on the trimmed card ONLY when it is graded. ServiceJudge
-            // .MethodScore scores a shaken recipe that was not shaken at zero, and the method
-            // is 40% of craft which is 35% of the tip — about a seventh of the tip, lost with
-            // nothing on screen to say why. NEAT, ON TAP and BUILT are scored nowhere at all
-            // (Built is the "either, or neither" class), so those are the ones that were free
-            // to drop and the ones that went.
-            bool gradedPrep = r.Prep == PrepMethod.Shaken || r.Prep == PrepMethod.Stirred;
-            if (!poursOnly || gradedPrep) rows.Add(new SpecRow(null, PrepWord(r)));
+            // THE PREP WORD ONLY WHEN IT IS GRADED, EVERYWHERE (2026-08-11, the author:
+            // "kaldırılan gereksiz yazıları hepsini kaldır"). ServiceJudge.MethodScore scores
+            // a shaken recipe that was not shaken at zero, and the method is 40% of craft
+            // which is 35% of the tip — so SHAKEN and STIRRED are worth printing. NEAT, ON TAP
+            // and BUILT are scored nowhere at all (Built is the "either, or neither" class):
+            // they were a word on every card that could never change an outcome.
+            if (r.Prep == PrepMethod.Shaken || r.Prep == PrepMethod.Stirred)
+                rows.Add(new SpecRow(null, PrepWord(r)));
             var bands = r.RatioRequirements;
             var shown = WholePercents(RatioRecipeMatcher.IdealPour(r));
             for (int i = 0; i < bands.Count; i++)
@@ -418,10 +418,12 @@ namespace LastCall.UI
                 string hint = TypeHint(b.Type);
                 if (hint != null) rows.Add(new SpecRow(null, hint, hint: true));
             }
+            // THE GLASS IS GONE FROM EVERY CARD. The player never picks it — TycoonRun reads
+            // it off the recipe and puts the right glass on the counter — so naming it was
+            // never an instruction, only a word to read past. The drink's own icon still
+            // shows its shape, which is the part that was ever worth knowing.
             if (poursOnly) return rows;
             if (r.MinFill > 0) rows.Add(new SpecRow(null, "FILL", $"{r.MinFill * 100:0}%+"));
-            if (!string.IsNullOrEmpty(r.GlassId))
-                rows.Add(new SpecRow(null, r.GlassId.ToUpperInvariant()));
             return rows;
         }
 
@@ -1006,6 +1008,26 @@ namespace LastCall.UI
             RefreshSeats();
             UpdateOrderTip();     // after the seats: it reads the tickets they just placed
             UpdateDrinkGlass();
+            UpdateEscape();
+        }
+
+        /// <summary>
+        /// Escape shuts whatever sheet is open, topmost first (2026-08-11, the author).
+        ///
+        /// Order matters and it is the drawing order backwards: the thing lying over
+        /// everything else is the thing the key belongs to. Without that, Escape over the
+        /// book would close the licence underneath it and leave the board sitting there.
+        /// </summary>
+        private void UpdateEscape()
+        {
+            var keys = UnityEngine.InputSystem.Keyboard.current;
+            if (keys == null || !keys.escapeKey.wasPressedThisFrame) return;
+            if (_bookOpen) { ToggleRecipeBook(); return; }
+            if (Showing(_settingsPanel)) { ToggleSettings(); return; }
+            if (Showing(_guidePanel)) { _guidePanel.gameObject.SetActive(false); return; }
+            if (Showing(_ledgerPanel)) { _ledgerPanel.gameObject.SetActive(false); return; }
+            if (Showing(_idRoot)) { _idRoot.gameObject.SetActive(false); _idVisit = null; return; }
+            if (_flow != null && _flow.IsOpen) _flow.CloseFlow();
         }
 
         private bool _flowWasOpen;
@@ -2511,25 +2533,44 @@ namespace LastCall.UI
         /// </summary>
         private float BillCritic(float y, CustomerVisit v, Color ink)
         {
-            const float RowH = 64f, Photo = 44f;
+            // A POLAROID (2026-08-11, the author): the same white border a print has, thicker
+            // under the picture than around it, dropped on the slip at a slight angle. It is
+            // a night's two witnesses stapled to the takings, and a print says that; a bare
+            // square crop said only "here is a face".
+            const float Photo = 44f, Frame = 4f, Chin = 12f;
+            float cardW = Photo + Frame * 2f, cardH = Photo + Frame + Chin;
+            float RowH = Mathf.Max(64f, cardH + 8f);
+
             var row = NewRect("Critic", _invoiceRows);
             row.anchorMin = new Vector2(0, 1); row.anchorMax = new Vector2(1, 1);
             row.pivot = new Vector2(0.5f, 1);
-            row.sizeDelta = new Vector2(0, RowH);
             row.anchoredPosition = new Vector2(0, -y);
 
             var look = LookFor(v);
             if (look != null && look.Face != null)
             {
-                var photo = NewRect("P", row);
-                Place(photo, new Vector2(0, 0.5f), new Vector2(Photo, Photo), new Vector2(0, 0));
-                photo.pivot = new Vector2(0, 0.5f);
+                var card = NewRect("Polaroid", row);
+                Place(card, new Vector2(0, 0.5f), new Vector2(cardW, cardH), Vector2.zero);
+                card.pivot = new Vector2(0, 0.5f);
+                // A hair off square. Every print on a counter is, and it is the cheapest
+                // thing that stops two of them reading as a table of thumbnails.
+                card.localRotation = Quaternion.Euler(0, 0, ink == BillRed ? 2.5f : -2.5f);
+                var ci = card.gameObject.AddComponent<Image>();
+                ci.color = new Color(0.99f, 0.98f, 0.94f);
+                ci.raycastTarget = false;
+                var lift = card.gameObject.AddComponent<Shadow>();
+                lift.effectColor = new Color(0.24f, 0.15f, 0.06f, 0.32f);
+                lift.effectDistance = new Vector2(2, -2);
+
+                var photo = NewRect("P", card);
+                Place(photo, new Vector2(0, 1), new Vector2(Photo, Photo), new Vector2(Frame, -Frame));
+                photo.pivot = new Vector2(0, 1);
                 var pi = photo.gameObject.AddComponent<Image>();
                 pi.sprite = look.Face; pi.raycastTarget = false;
             }
 
             var star = NewRect("S", row);
-            Place(star, new Vector2(0, 1), new Vector2(16, 16), new Vector2(Photo + 10f, -2f));
+            Place(star, new Vector2(0, 1), new Vector2(16, 16), new Vector2(cardW + 10f, -2f));
             star.pivot = new Vector2(0, 1);
             var si = star.gameObject.AddComponent<Image>();
             si.sprite = ChromeArt.Mark("star"); si.preserveAspect = true;
@@ -2538,26 +2579,37 @@ namespace LastCall.UI
             var papers = PapersFor(look);
             string name = papers != null ? papers.Name.ToUpperInvariant()
                 : v.Regular != null ? v.Regular.Name.ToUpperInvariant() : "A DRINKER";
+            // The NAME is a heading, so it keeps the heavy face; the reason under it does
+            // not (2026-08-11). Truncate is still refused on both: SilkscreenBold's line
+            // height clears a tight rect, and Truncate drops the WHOLE line — both critics
+            // once rendered as a star, a reason, and no name at all.
+            float textX = cardW + 10f;
+            float textW = BillW - BillInset * 2f - textX;
             var line = NewText("L", row, _shop, 24, TextAnchor.UpperLeft, ink);
-            Place(line.rectTransform, new Vector2(0, 1), new Vector2(300, 26),
-                new Vector2(Photo + 34f, 0));
+            Place(line.rectTransform, new Vector2(0, 1), new Vector2(textW - 24f, 26),
+                new Vector2(textX + 24f, 0));
             line.rectTransform.pivot = new Vector2(0, 1);
             line.horizontalOverflow = HorizontalWrapMode.Overflow;
-            // OVERFLOW, not truncate: SilkscreenBold's line height at 16 is taller than a
-            // tight rect, and Truncate drops the WHOLE line — both critics rendered with a
-            // star, a reason, and no name at all (measured: the Text existed, said "4.6
-            // MARCUS BOYD", and drew nothing).
             line.verticalOverflow = VerticalWrapMode.Overflow;
             line.text = BarRating.ExactStarsFor(v.Satisfaction).ToString("0.0") + "  " + name;
 
             var why = NewText("W", row, _body, 16, TextAnchor.UpperLeft, BillQuiet);
-            Place(why.rectTransform, new Vector2(0, 1), new Vector2(BillW - BillInset * 2f - Photo - 10f, 34),
-                new Vector2(Photo + 10f, -30f));
+            Place(why.rectTransform, new Vector2(0, 1), new Vector2(textW, 34),
+                new Vector2(textX, -30f));
             why.rectTransform.pivot = new Vector2(0, 1);
             why.horizontalOverflow = HorizontalWrapMode.Wrap;
             why.verticalOverflow = VerticalWrapMode.Overflow;
             why.text = CriticReason(v);
-            return y + RowH;
+
+            // THE ROW IS AS TALL AS WHAT IT SAYS (2026-08-11, the author: "cümleler
+            // taşabiliyor"). It was a fixed 64 with the reason given 34 of it, so a reason
+            // that wrapped to two lines — "was made the wrong drink — neat pour" does —
+            // printed straight over the block underneath. Measured, it cannot.
+            float reasonH = Mathf.Max(18f, why.preferredHeight);
+            why.rectTransform.sizeDelta = new Vector2(textW, reasonH);
+            float used = Mathf.Max(cardH, 30f + reasonH);
+            row.sizeDelta = new Vector2(0, used + 8f);
+            return y + used + 8f;
         }
 
         /// <summary>One short honest line, from what a finished visit still carries. The
@@ -2575,6 +2627,34 @@ namespace LastCall.UI
 
         private float BillRow(float y, string label, string value, Color ink, bool heavy) =>
             BillRow(y, label, value, ink, heavy, null);
+
+        /// <summary>A block's subtotal: a short rule over the figures it adds up, and the
+        /// figure alone on the right. No label — the block above it is the label.</summary>
+        private float BillSub(float y, string value, Color ink)
+        {
+            var row = NewRect("Sub", _invoiceRows);
+            row.anchorMin = new Vector2(0, 1); row.anchorMax = new Vector2(1, 1);
+            row.pivot = new Vector2(0.5f, 1);
+            row.sizeDelta = new Vector2(0, BillRowH);
+            row.anchoredPosition = new Vector2(0, -y);
+
+            var rule = NewRect("R", row);
+            rule.anchorMin = new Vector2(0.62f, 1); rule.anchorMax = new Vector2(1, 1);
+            rule.pivot = new Vector2(0.5f, 1);
+            rule.sizeDelta = new Vector2(0, 1);
+            rule.anchoredPosition = Vector2.zero;
+            var ri = rule.gameObject.AddComponent<Image>();
+            ri.color = new Color(ink.r, ink.g, ink.b, 0.45f);
+            ri.raycastTarget = false;
+
+            var v = NewText("V", row, _body, 24, TextAnchor.MiddleRight, ink);
+            v.rectTransform.anchorMin = new Vector2(0.62f, 0); v.rectTransform.anchorMax = Vector2.one;
+            v.rectTransform.offsetMin = Vector2.zero; v.rectTransform.offsetMax = Vector2.zero;
+            v.horizontalOverflow = HorizontalWrapMode.Overflow;
+            v.verticalOverflow = VerticalWrapMode.Overflow;
+            v.text = value;
+            return y + BillRowH;
+        }
 
         private float BillRow(float y, string label, string value, Color ink, bool heavy, string mark)
         {
@@ -2607,6 +2687,10 @@ namespace LastCall.UI
                 }
             }
 
+            // BOLD IS FOR HEADINGS (2026-08-11, the author: "çok fazla kalın yazı kullanma,
+            // sadece başlıklarda"). Only the two summary lines — NET and TILL — carry the
+            // heavy face now; every itemised line is set in the regular one, which is what a
+            // receipt does anyway: the total is the thing you are meant to see first.
             var l = NewText("L", row, heavy ? _shop : _body, 24, TextAnchor.MiddleLeft, ink);
             l.rectTransform.anchorMin = new Vector2(0, 0); l.rectTransform.anchorMax = new Vector2(0.62f, 1);
             l.rectTransform.offsetMin = new Vector2(gutter, 0); l.rectTransform.offsetMax = Vector2.zero;
@@ -2617,11 +2701,12 @@ namespace LastCall.UI
             l.verticalOverflow = VerticalWrapMode.Overflow;
             l.text = label;
 
-            // The figure is set in the SHOP's bold face at 24 rather than the display face:
-            // PressStart2P is a full 24 units per character, so "-$1240" alone is 144 of the
-            // 146 the right column has — one more digit and the night's takings walk off the
-            // paper. SilkscreenBold carries the same weight in two thirds of the width.
-            var v = NewText("V", row, _shop, 24, TextAnchor.MiddleRight, ink);
+            // The figure follows the label's weight, and for a reason beyond the rule above:
+            // SilkscreenBold's digits do not survive this size — the author's screenshot has
+            // a SALES of $4 whose 4 is a smear, and RENT's -$14 with it. PressStart2P is not
+            // the escape either, at a full 24 units a character "-$1240" would be 144 of the
+            // 146 this column has. The regular face is narrow, legible and correct.
+            var v = NewText("V", row, heavy ? _shop : _body, 24, TextAnchor.MiddleRight, ink);
             v.rectTransform.anchorMin = new Vector2(0.62f, 0); v.rectTransform.anchorMax = Vector2.one;
             v.rectTransform.offsetMin = Vector2.zero; v.rectTransform.offsetMax = Vector2.zero;
             v.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -2771,12 +2856,14 @@ namespace LastCall.UI
             _dayEndBill.gameObject.SetActive(_dayEndStep == 0);
             _dayEndTablet.gameObject.SetActive(_dayEndStep == 1);
             if (_billNext != null) _billNext.gameObject.SetActive(_dayEndStep == 0);
-            _dayEndTitle.text = _dayEndStep == 0
-                ? "LAST CALL — THE BOOKS" : "LAST CALL — ORDERING IN";
+            _dayEndTitle.text = "LAST CALL — ORDERING IN";
             if (_billNextLabel != null) _billNextLabel.text = "CONTINUE TO THE ORDER";
-            // The title belongs to the BILL. Over the market it printed above the device,
-            // in the scrim, saying what the device already says.
-            _dayEndTitle.gameObject.SetActive(_dayEndStep == 0);
+            // NO TITLE OVER THE SLIP (2026-08-11, the author: take the yellow LAST CALL —
+            // THE BOOKS off the top). The slip already says LAST CALL across its own head in
+            // its own ink; a second one in the scrim above it was the same words twice, in a
+            // colour belonging to neither. The market keeps its line, because the tablet does
+            // not name itself.
+            _dayEndTitle.gameObject.SetActive(_dayEndStep == 1);
             // A 136-wide button holds 2 lines of 8 CAPS; the arrow and the parenthetical
             // wrapped to three and pushed themselves out of it.
             _openTomorrowLabel.text = run.Day % 6 == 0 ? "START\nTUESDAY" : "OPEN\nTOMORROW";
@@ -2836,12 +2923,28 @@ namespace LastCall.UI
                     y = BillCritic(y, low, BillRed);
             }
 
+            // WHAT CAME IN, WHAT WENT OUT, WHAT IS LEFT (2026-08-11, the author: "gider ve
+            // kalan daha açık belli edilsin"). The five figures used to run as one ladder
+            // with a rule under it, so the reader had to notice for themselves which of them
+            // were takings and which were bills. They are two named blocks now, each with its
+            // own subtotal — the shape of a receipt — and only the last two lines are heavy.
+            int tookIn = run.DaySales + run.DayTips;
+            int paidOut = run.DayRent + run.DayStock + run.DayUpgrades;
+
             y = BillRule(y);
+            y = BillNote(y, "TOOK IN", BillQuiet);
             y = BillRow(y, "SALES", "$" + run.DaySales, BillInk, false, "sales");
             y = BillRow(y, "TIPS", "$" + run.DayTips, BillInk, false, "tips");
+            y = BillSub(y, "$" + tookIn, BillInk);
+
+            y += 6f;
+            y = BillNote(y, "PAID OUT", BillQuiet);
             y = BillRow(y, "RENT", "-$" + run.DayRent, BillRed, false, "rent");
             y = BillRow(y, "STOCK", "-$" + run.DayStock, BillRed, false, "stock");
             y = BillRow(y, "SHOP", "-$" + run.DayUpgrades, BillRed, false, "shop");
+            y = BillSub(y, "-$" + paidOut, BillRed);
+
+            y += 8f;
             y = BillRule(y);
             y = BillRow(y, "NET", (net >= 0 ? "+$" : "-$") + Math.Abs(net),
                         net >= 0 ? BillInk : BillRed, true, "net");
@@ -3905,8 +4008,16 @@ namespace LastCall.UI
             Stretch(_bookPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var scrim = _bookPanel.gameObject.AddComponent<Image>();
             scrim.color = UITheme.Scrim;
-            // Only the X closes now (the author's ruling): the scrim blocks the bar behind
-            // it but closes nothing. The book also outranks the back-bar flow (canvas 12):
+            // THE DIM CLOSES IT (2026-08-11, the author, reversing the earlier ruling that
+            // only the X may: "kimlikteki gibi assetin dışına arka plana tıklandığında
+            // otomatik kapanmalı ya da esc"). It is the licence's own behaviour, so the two
+            // sheets now shut the same way, and it is the reason the X could go. The board
+            // itself still swallows its clicks — BoardCatch below — so reading the page
+            // cannot close the page.
+            var scrimBtn = _bookPanel.gameObject.AddComponent<Button>();
+            scrimBtn.transition = Selectable.Transition.None;
+            scrimBtn.onClick.AddListener(() => { if (_bookOpen) ToggleRecipeBook(); });
+            // The book also outranks the back-bar flow (canvas 12):
             // its own canvas at 15 lets the BOOK key on the flow's ledge show the thing.
             var bookCanvas = _bookPanel.gameObject.AddComponent<Canvas>();
             bookCanvas.overrideSorting = true;
@@ -3936,24 +4047,9 @@ namespace LastCall.UI
             bcImg.color = new Color(0, 0, 0, 0.001f);
             boardCatch.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
 
-            // The X returns (the author): top-right of the board, and it is the ONLY way
-            // out — outside clicks no longer close, so a stray click cannot eat the page.
-            var closeRt = NewRect("Close", sheet);
-            Place(closeRt, new Vector2(0.5f, 0.5f), new Vector2(56, 56), new Vector2(378f, 288f));
-            var closeImg = closeRt.gameObject.AddComponent<Image>();
-            var closeSprite = ItemArt.Load("btn_close");
-            if (closeSprite != null) { closeImg.sprite = closeSprite; closeImg.preserveAspect = true; }
-            else closeImg.color = new Color(0.62f, 0.15f, 0.17f);
-            var closeBtn = closeRt.gameObject.AddComponent<Button>();
-            closeBtn.targetGraphic = closeImg;
-            var closeDown = ItemArt.Load("btn_close_down");
-            if (closeSprite != null && closeDown != null)
-            {
-                closeBtn.transition = Selectable.Transition.SpriteSwap;
-                var st = closeBtn.spriteState; st.pressedSprite = closeDown; st.selectedSprite = closeSprite;
-                closeBtn.spriteState = st;
-            }
-            closeBtn.onClick.AddListener(ToggleRecipeBook);
+            // No X (2026-08-11). The dim behind the board closes it and so does Escape, which
+            // is what the licence has always done — and a corner button that duplicates a
+            // gesture the player already has is a button that has to be found first.
 
             // The filter chips: click to cycle. Three axes the author named — the star tier,
             // how it is worked, and what bottle it contains.
@@ -4256,33 +4352,47 @@ namespace LastCall.UI
         private void BookSection(string title, List<RecipeDefinition> rs, bool lockedRows, TycoonRun run)
         {
             BookHeader(title);
-            // The rows are SPEC CARDS now, so a cell is as tall as its longest spec: the
-            // prep line, a line per pour, then the fill and the glass. Two columns hold
-            // throughout — stacking the pours is exactly what buys the width back.
-            float tallest = 0;
+
+            // EVERY CARD ITS OWN HEIGHT (2026-08-11, the author: "bu kutular sıkıştırılmalı,
+            // çok geniş yer kaplıyorlar"). A GridLayoutGroup has ONE cell size, so the whole
+            // section was cut to its longest spec: a Long Island is seven pours, and while it
+            // sat in the section every Gin & Tonic beside it got a card three times the height
+            // of its two lines, most of it blank. That is what the screenshot was of.
+            //
+            // So the cards are packed by hand into two columns, each card measured from its
+            // own rows, and each new one goes to whichever column is currently SHORTER. That
+            // is the standard masonry answer, and it keeps the two sides level as well as
+            // tight — filling left-then-right in order would leave one column hanging.
+            const float ColGap = 12f, RowGap = 10f, HeadH = 30f, Air = 14f;
+            float fullW = BkW * BkPaperW - 44f;
+            float cellW = fullW / 2f - ColGap * 0.5f;
+
+            var sec = NewRect("Sec", _bookList);
+            var secLayout = sec.gameObject.AddComponent<LayoutElement>();
+
+            var colH = new float[2];
             foreach (var r in rs)
             {
-                float h = 0;
-                foreach (var row in RecipeSpecRows(r)) h += row.Hint ? SpecHintH : SpecRowH;
-                if (h > tallest) tallest = h;
+                float spec = 0;
+                foreach (var row in RecipeSpecRows(r)) spec += row.Hint ? SpecHintH : SpecRowH;
+                if (lockedRows) spec += SpecRowH;         // the star gate takes its own line
+                float h = HeadH + spec + Air;
+
+                int col = colH[0] <= colH[1] ? 0 : 1;
+                var card = BookRow(sec, r, lockedRows, run, cellW);
+                card.anchorMin = card.anchorMax = new Vector2(0, 1);
+                card.pivot = new Vector2(0, 1);
+                card.sizeDelta = new Vector2(cellW, h);
+                card.anchoredPosition = new Vector2(col * (cellW + ColGap), -colH[col]);
+                colH[col] += h + RowGap;
             }
-            if (lockedRows) tallest += SpecRowH;   // the star gate takes its own line
-            int cols = 2;
-            var sec = NewRect("Sec", _bookList);
-            var g = sec.gameObject.AddComponent<GridLayoutGroup>();
-            float fullW = BkW * BkPaperW - 44f;
-            // 30 of head plus the spec, and now 14 more: a box needs air inside it or the
-            // print lies on its own rule.
-            g.cellSize = new Vector2(fullW / 2f - 6f, 44f + tallest);
-            g.spacing = new Vector2(12, 10);
-            g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            g.constraintCount = cols;
-            foreach (var r in rs) BookRow(sec, r, lockedRows, run);
+            secLayout.preferredHeight = Mathf.Max(colH[0], colH[1]) - RowGap;
         }
 
         /// <summary>One recipe: the glass drawn from its own bands, the name, how it is
         /// worked, and the pour — or, for a locked one, what it is waiting behind.</summary>
-        private void BookRow(RectTransform parent, RecipeDefinition r, bool lockedRow, TycoonRun run)
+        private RectTransform BookRow(RectTransform parent, RecipeDefinition r, bool lockedRow,
+            TycoonRun run, float cellW)
         {
             var row = NewRect($"R_{r.Id}", parent);
             // EACH RECIPE IN ITS OWN BOX (2026-08-11, the author: "açıkta olunca karmaşıklık
@@ -4314,13 +4424,14 @@ namespace LastCall.UI
             // The same spec card the licence draws, in the book's own ink (2026-08-02):
             // exact shares, the bottles' own art, and the stocked ones lit.
             var body = NewRect("Spec", row);
-            float bodyW = parent.GetComponent<GridLayoutGroup>().cellSize.x - 70f;
+            float bodyW = cellW - 70f;
             Place(body, new Vector2(0, 1), new Vector2(bodyW, 10), Vector2.zero);
             body.pivot = new Vector2(0, 1);
             body.anchoredPosition = new Vector2(58, -30);
             double gate = lockedRow ? run.RecipeStarGate(r) : 0;
             DrawRecipeSpec(body, r, dark: false, width: bodyW,
                 note: gate > 0 ? $"OPENS AT {gate:0.0} STARS" : null);
+            return row;
         }
 
         /// <summary>
