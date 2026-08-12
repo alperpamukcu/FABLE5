@@ -21,6 +21,8 @@ LastCall.Game   (Assets/Scripts/Game)   Unity glue: DataLoader (JSON→Core), Ga
 LastCall.UI     (Assets/Scripts/UI)     the whole game UI, built in code — no prefabs
 LastCall.Editor (Assets/Scripts/Editor) editor tooling (LastCall menu)
 LastCall.Tests  (Assets/Tests/EditMode) EditMode tests, references Core + Game
+LastCall.PlayTests (Assets/Tests/PlayMode) PlayMode smoke tests: a virtual mouse plays the
+                                        real scene (Core + Game + uGUI, never UI internals)
 ```
 
 `TycoonServiceFlow` is one partial class split by stage — `.Menu`, `.Shaker`, `.Serve`,
@@ -53,10 +55,18 @@ Unity is normally open alongside the IDE; drive it via the UnityMCP HTTP server
 `run_tests` with `assembly_names: "LastCall.Tests"`. All tests must pass before a push.
 The scene can be rebuilt with the **LastCall → Create Debug Scene** menu item.
 
-The UI has no automated coverage: it is ~11k lines driven entirely by pointer input (and the
-tests asmdef cannot even reference it), and every UI regression so far was caught by entering
-play mode and looking. Measure the thing you changed in play (`execute_code` reads live rects
-and fields) rather than trusting that it compiles.
+**The UI has a floor now** (2026-08-12): `run_tests` with `assembly_names: "LastCall.PlayTests",
+mode: "PlayMode", init_timeout: 180000` plays the real scene with a virtual mouse — the bar
+opens, a stool is clicked and gives up its licence, a bottle is clicked and lands on the
+bench, and the bench pours. It is a floor and not coverage: 17.5k lines of UI still ride on
+four tests, and the rest is still caught by entering play mode and LOOKING. Measure the thing
+you changed in play (`execute_code` reads live rects and fields) rather than trusting that it
+compiles. Run both suites before a push; PlayMode needs the editor OUT of play mode first.
+
+Three things that make PlayMode tests lie, all paid for once (see the suite's own comments):
+a test frame is ~1ms, so every wait for an animation must be `WaitForSecondsRealtime`, never
+a frame count; the field crops rather than scales, so the tests pin the Game view to
+1280×720; and a drinker walks in and then *decides* before the stool answers a click.
 
 ## Workflow
 
