@@ -1,0 +1,325 @@
+using System.Collections;
+using System.IO;
+using LastCall.Core;
+using LastCall.Game;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
+
+namespace LastCall.PlayTests
+{
+    /// <summary>
+    /// THE SCREEN, COMPARED TO THE LAST TIME ANYONE LOOKED AT IT (2026-08-12).
+    ///
+    /// A pixel-art game rendered point-filtered at a fixed field is one of the few kinds of
+    /// software whose output is an exact value: the same state draws the same 921,600 pixels
+    /// every time. That was measured before this file was written — two captures of the back
+    /// bar a second apart came back byte-identical — so "it still looks right" can stop being
+    /// a thing a human remembers and become a thing a test knows.
+    ///
+    /// What it does NOT cover is as deliberate as what it does. The ROOM moves: its 2D lights
+    /// breathe and its neon glows, so the bar floor differs from itself by 22,000 pixels a
+    /// second apart and has no business in an exact test. The screens here are the full-frame
+    /// UI surfaces that hold still — and the bench, which holds still everywhere except the
+    /// strip of room around its panel, so it is compared inside that strip.
+    ///
+    /// THE BASELINES ARE THIS MACHINE'S. They live in Baselines~ (Unity ignores directories
+    /// ending in ~, so they are never imported, compressed or given a .meta) and they are
+    /// committed, because the point is to notice a change between two sessions on the same
+    /// machine. A different GPU may draw one pixel differently and the whole suite goes red;
+    /// that is a known trade, and the reason these do not belong in CI.
+    ///
+    /// When a screen is meant to change, re-bless it: LastCall → Re-bless UI Baselines, then
+    /// run this suite twice (the first run writes the new pictures and fails on purpose, so
+    /// nobody blesses a screen without looking at it).
+    /// </summary>
+    public sealed class LookTests : InputTestFixture
+    {
+        private const int DesignW = 1280, DesignH = 720;
+        private const float SettleSeconds = 0.4f;
+
+        private Mouse _mouse;
+        private GameBootstrap _boot;
+#if UNITY_EDITOR
+        private uint _windowW, _windowH;
+#endif
+
+        [OneTimeSetUp]
+        public void PinTheWindow()
+        {
+#if UNITY_EDITOR
+            UnityEditor.PlayModeWindow.GetRenderingResolution(out _windowW, out _windowH);
+            UnityEditor.PlayModeWindow.SetCustomRenderingResolution(DesignW, DesignH, "LastCall PlayTests");
+#endif
+        }
+
+        [OneTimeTearDown]
+        public void GiveTheWindowBack()
+        {
+#if UNITY_EDITOR
+            if (_windowW > 0 && _windowH > 0)
+                UnityEditor.PlayModeWindow.SetCustomRenderingResolution(_windowW, _windowH, "LastCall");
+#endif
+        }
+
+        public override void Setup()
+        {
+            base.Setup();
+            _mouse = InputSystem.AddDevice<Mouse>();
+        }
+
+        // ── the screens ──────────────────────────────────────────────────────────
+
+        [UnityTest]
+        public IEnumerator The_back_bar_looks_the_way_it_did()
+        {
+            yield return OpenTheBar();
+            yield return ClickOn(Find("MENU — MAKE A DRINK"));
+            yield return LooksTheSame("back_bar");
+        }
+
+        [UnityTest]
+        public IEnumerator The_bench_looks_the_way_it_did()
+        {
+            yield return OpenTheBar();
+            yield return ClickOn(Find("MENU — MAKE A DRINK"));
+            yield return ClickOn(Find("Slot_vodka_astra"));
+            // Inside the panel only: the room shows around its edges and the room is alive.
+            yield return LooksTheSame("bench", new RectInt(40, 30, 1200, 630));
+        }
+
+        [UnityTest]
+        public IEnumerator The_baskets_foot_looks_the_way_it_did()
+        {
+            yield return OpenTheBar();
+
+            // An EMPTY night, called on the spot: nobody was served, so the slip and the
+            // shelves are the same every time this runs. A night played out in real seconds
+            // would put a different receipt on the screen at every capture.
+            _boot.Tycoon.DevSkipToDayEnd();
+
+            // The night is announced, the slip feeds, the stars fall — and only then does the
+            // way on appear. Waiting for the key IS waiting for that sequence to finish.
+            RectTransform next = null;
+            float deadline = Time.realtimeSinceStartup + 25f;
+            while (Time.realtimeSinceStartup < deadline)
+            {
+                next = Find("BillNext");
+                if (next != null && next.gameObject.activeInHierarchy) break;
+                next = null;
+                yield return null;
+            }
+            Assert.That(next, Is.Not.Null, "the night's slip never offered a way on");
+            yield return ClickOn(next);
+            yield return new WaitForSecondsRealtime(0.6f);   // the market slides in from the right
+
+            // THE FOOT, NOT THE WHOLE MARKET. The aisle above it scrolls, and its scroll
+            // settles on one of two pixel offsets depending on how the frames fell — measured:
+            // two stable variants of the same page, differing by a few pixels of content
+            // offset and a flat +5 of brightness over the sheet, everywhere above y 510 and
+            // nowhere below it. The basket is what this pins: it is the surface that was
+            // rebuilt on 2026-08-11, it does not scroll, and it was identical in both variants.
+            yield return LooksTheSame("basket", new RectInt(110, 550, 1120, 150));
+        }
+
+        // ── the comparison ───────────────────────────────────────────────────────
+
+        private static string BaselineDir =>
+            Path.Combine(Application.dataPath, "Tests", "PlayMode", "Baselines~");
+
+        private static string FailureDir =>
+            Path.Combine(Application.dataPath, "..", "Temp", "UiLooks");
+
+        /// <summary>
+        /// Captures the screen and holds it against the blessed picture, pixel for pixel.
+        /// A missing baseline is written and then FAILS the run: a picture nobody has looked
+        /// at is not a baseline, it is just the last thing that happened.
+        /// </summary>
+        private IEnumerator LooksTheSame(string name, RectInt? region = null)
+        {
+            // WAIT FOR IT TO STOP MOVING, rather than for a number of seconds. Panels slide
+            // and fade in, and a screen caught mid-fade is 4% brighter than the same screen a
+            // moment later — which is how the market failed its own baseline by 190,000
+            // pixels that were all the right pixels. Two identical captures in a row is the
+            // only honest definition of "settled", and it costs a few frames.
+            Color32[] now = null, previous = null;
+            RectInt roi = default;
+            float deadline = Time.realtimeSinceStartup + 8f;
+            while (Time.realtimeSinceStartup < deadline)
+            {
+                yield return new WaitForSecondsRealtime(0.15f);
+                yield return new WaitForEndOfFrame();
+
+                var shot = ScreenCapture.CaptureScreenshotAsTexture();
+                Assert.That(shot.width, Is.EqualTo(DesignW),
+                    $"the screen is {shot.width}x{shot.height}; these pictures are only " +
+                    $"comparable at {DesignW}x{DesignH}");
+                roi = region ?? new RectInt(0, 0, shot.width, shot.height);
+                var pixels = Crop(shot, roi);
+                Object.Destroy(shot);
+
+                if (previous != null && Identical(previous, pixels)) { now = pixels; break; }
+                previous = pixels;
+            }
+            Assert.That(now, Is.Not.Null,
+                $"'{name}' never held still long enough to be compared — something on it is " +
+                "always moving, so it cannot be tested this way (see the class comment).");
+
+            Directory.CreateDirectory(BaselineDir);
+            string blessed = Path.Combine(BaselineDir, name + ".png");
+            if (!File.Exists(blessed))
+            {
+                File.WriteAllBytes(blessed, Encode(now, roi.width, roi.height));
+                Assert.Fail($"no blessed picture for '{name}' — one was written to {blessed}. " +
+                            "Look at it; if it is what the game should look like, run again.");
+            }
+
+            var before = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            try
+            {
+                Assert.That(before.LoadImage(File.ReadAllBytes(blessed)), Is.True,
+                    $"'{blessed}' is not a readable picture");
+                Assert.That(new Vector2Int(before.width, before.height),
+                    Is.EqualTo(new Vector2Int(roi.width, roi.height)),
+                    $"the blessed '{name}' is {before.width}x{before.height} and the region " +
+                    $"being compared is {roi.width}x{roi.height} — re-bless it");
+
+                var was = before.GetPixels32();
+                int differing = 0, worst = 0;
+                int minX = int.MaxValue, minY = int.MaxValue, maxX = -1, maxY = -1;
+                for (int i = 0; i < now.Length; i++)
+                {
+                    int d = Mathf.Max(Mathf.Abs(now[i].r - was[i].r),
+                            Mathf.Max(Mathf.Abs(now[i].g - was[i].g), Mathf.Abs(now[i].b - was[i].b)));
+                    if (d == 0) continue;
+                    differing++;
+                    worst = Mathf.Max(worst, d);
+                    int x = i % roi.width, y = i / roi.width;
+                    minX = Mathf.Min(minX, x); maxX = Mathf.Max(maxX, x);
+                    minY = Mathf.Min(minY, y); maxY = Mathf.Max(maxY, y);
+                }
+
+                if (differing > 0)
+                {
+                    Directory.CreateDirectory(FailureDir);
+                    File.WriteAllBytes(Path.Combine(FailureDir, name + ".now.png"),
+                                       Encode(now, roi.width, roi.height));
+                    File.WriteAllBytes(Path.Combine(FailureDir, name + ".diff.png"),
+                                       Encode(Difference(was, now), roi.width, roi.height));
+                    Assert.Fail(
+                        $"'{name}' does not look the way it did: {differing} pixels differ " +
+                        $"(worst channel {worst}), inside x {minX}..{maxX}, y " +
+                        $"{roi.height - 1 - maxY}..{roi.height - 1 - minY} from the top of " +
+                        $"the compared region. What it looks like now, and what changed, " +
+                        $"are written to {Path.GetFullPath(FailureDir)}.");
+                }
+            }
+            finally { Object.Destroy(before); }
+        }
+
+        private static bool Identical(Color32[] a, Color32[] b)
+        {
+            if (a.Length != b.Length) return false;
+            for (int i = 0; i < a.Length; i++)
+                if (a[i].r != b[i].r || a[i].g != b[i].g || a[i].b != b[i].b) return false;
+            return true;
+        }
+
+        /// <summary>
+        /// The region, in the order Unity keeps pixels: BOTTOM-UP. Everything downstream —
+        /// the PNG writer, the blessed picture read back with LoadImage — is bottom-up too,
+        /// and the first run of this file compared a top-down capture against a bottom-up
+        /// baseline: 860,198 of 921,600 pixels "differed", which is what an image looks like
+        /// held against its own mirror.
+        ///
+        /// The region itself is given the way a person reads a screen (y down from the top),
+        /// so that flip happens here, once.
+        /// </summary>
+        private static Color32[] Crop(Texture2D shot, RectInt roi)
+        {
+            var pixels = shot.GetPixels32();
+            int bottom = shot.height - roi.y - roi.height;
+            var cut = new Color32[roi.width * roi.height];
+            for (int y = 0; y < roi.height; y++)
+                System.Array.Copy(pixels, (bottom + y) * shot.width + roi.x,
+                                  cut, y * roi.width, roi.width);
+            return cut;
+        }
+
+        /// <summary>What changed, drawn: every differing pixel lit, everything else black.
+        /// Amplified, because a one-value difference is invisible and still a difference.</summary>
+        private static Color32[] Difference(Color32[] was, Color32[] now)
+        {
+            var diff = new Color32[now.Length];
+            for (int i = 0; i < now.Length; i++)
+            {
+                byte d = (byte)Mathf.Min(255, Mathf.Max(Mathf.Abs(now[i].r - was[i].r),
+                        Mathf.Max(Mathf.Abs(now[i].g - was[i].g), Mathf.Abs(now[i].b - was[i].b))) * 8);
+                diff[i] = new Color32(d, d, d, 255);
+            }
+            return diff;
+        }
+
+        private static byte[] Encode(Color32[] pixels, int w, int h)
+        {
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            tex.SetPixels32(pixels);      // already bottom-up, like everything else here
+            tex.Apply(false);
+            var png = tex.EncodeToPNG();
+            Object.Destroy(tex);
+            return png;
+        }
+
+        // ── the same hand the smoke suite uses ───────────────────────────────────
+
+        private IEnumerator OpenTheBar()
+        {
+            for (int i = 0; i < 180 && (Screen.width != DesignW || Screen.height != DesignH); i++)
+                yield return null;
+            Assert.That(Screen.width, Is.EqualTo(DesignW),
+                "the Game view never became the design width — the pictures would not match anything");
+
+            yield return SceneManager.LoadSceneAsync("Main", LoadSceneMode.Single);
+            float waited = 0f;
+            while (waited < 20f)
+            {
+                _boot = Object.FindFirstObjectByType<GameBootstrap>();
+                if (_boot != null && _boot.Tycoon != null) break;
+                waited += Time.unscaledDeltaTime;
+                yield return null;
+            }
+            Assert.That(_boot, Is.Not.Null, "the scene has no GameBootstrap in it");
+            Assert.That(_boot.Tycoon, Is.Not.Null, "the run never started");
+            yield return new WaitForSecondsRealtime(0.25f);
+        }
+
+        private IEnumerator ClickOn(RectTransform target)
+        {
+            Assert.That(target, Is.Not.Null, "there is nothing there to click");
+            var at = RectTransformUtility.WorldToScreenPoint(null, target.position);
+            Set(_mouse.position, at);
+            yield return null;
+            yield return null;
+            Press(_mouse.leftButton);
+            yield return null;
+            yield return null;
+            Release(_mouse.leftButton);
+            yield return new WaitForSecondsRealtime(SettleSeconds);
+        }
+
+        private static RectTransform Find(string name)
+        {
+            RectTransform hidden = null;
+            foreach (var rt in Object.FindObjectsByType<RectTransform>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (rt.name != name) continue;
+                if (rt.gameObject.activeInHierarchy) return rt;
+                hidden = hidden != null ? hidden : rt;
+            }
+            return hidden;
+        }
+    }
+}

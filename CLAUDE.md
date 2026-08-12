@@ -68,6 +68,16 @@ a test frame is ~1ms, so every wait for an animation must be `WaitForSecondsReal
 a frame count; the field crops rather than scales, so the tests pin the Game view to
 1280×720; and a drinker walks in and then *decides* before the stool answers a click.
 
+**The screens are compared pixel for pixel** (`LookTests`, same assembly): the back bar, the
+bench (inside its panel — the room around it is alive) and the market's basket foot are held
+against blessed pictures in `Assets/Tests/PlayMode/Baselines~/`, which Unity never imports and
+git does keep. A screen is only compared once two captures in a row come back identical. When
+a screen is *meant* to change: **LastCall → Re-bless UI Baselines**, then run the suite twice —
+the first run draws the new pictures and fails on purpose, so nobody blesses a screen without
+looking at it. On a failure the current picture and the diff land in `Temp/UiLooks`
+(**LastCall → Show Last UI Look Failures**). The baselines are THIS machine's; a different GPU
+may differ by a pixel, which is why they stay out of CI.
+
 ## Workflow
 
 - Work directly on `main` and push to GitHub (`alperpamukcu/FABLE5`); the branch/PR
