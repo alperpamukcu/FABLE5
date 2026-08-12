@@ -268,3 +268,13 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 | **P2** | `StageDressing` katmanını world-space'e al | elle yerleştirilen dekor da ışık alsın; şu an odanın tek ışıksız parçası |
 | **P2** | Fikstür sanatının PixelLab turu (rapor-önce) | placeholder'lar dosya-adı birebir değiştirilebilir; kod dokunulmaz |
 | **P2** | Bota fikstür alımı öğret | kozmetik oldukları için tabanı bozmaz ama satın alma yolu sınanır |
+
+### 8.2 · Son müşteri planından çıkan bulgular (2026-08-12)
+
+`GDD 26` + `PLAN_last_call.md` yazılırken veriye bakınca çıkan, hikâyeden bağımsız üç iş:
+
+| Öncelik | İş | Neden / çıktı |
+|---|---|---|
+| **P0** | Kadro evrakını (`PatronPapers`, 30 satır) `TycoonHud`'dan `customers/papers.json`'a taşı | "içerik veridir" kuralını ihlal ediyor; hikâye karakterleri aynı tabloyu paylaşacak, yazarın C#'a dokunması gerekmemeli (PLAN S0) |
+| **P1** | Tarif merdivenine **erken bir stirred içki** ekle | karıştırılan her tarif rank 22+ (4★ bandı), shake ise rank 3'te öğreniliyor — 2026-08-11'de eklenen stir fiili koşunun çoğunda hiç görünmüyor |
+| **P2** | Gecenin bitişi tek cümlede kalsın | `Floor.IsComplete` bugün TEK yerden okunuyor (`TycoonRun:688`) — son müşteri kapanıştan SONRA oturacağı için bu koşul "misafir de gittiyse" hâline gelmeli; ikinci bir okuyucu doğarsa beat sessizce kaybolur |

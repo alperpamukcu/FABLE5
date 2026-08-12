@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "_comment": "THE LAST CUSTOMER (GDD 26). Written 2026-08-12; NOT LOADED YET — the parser lands in PLAN_last_call S1/S5. Everything here is real data against the real catalogue: every 'recipe' is an id from recipes.json, every 'look' is a slug the cast already has a face for, and every 'needStyle' is a style the market actually sells. Names and lines are the author's to replace; the SHAPE is the design (GDD 26 sections 4, 5 and 7): the ask names what is missing, no beat is a dead end, two lines a beat and one sentence each.",
+
+  "characters": [
+    {
+      "id": "collector",
+      "look": "execman",
+      "name": "Graham Sedgwick",
+      "age": 54,
+      "hometown": "London",
+      "iso": "gb",
+      "blurb": "Collects for the building. Never raises his voice, never has to."
+    },
+    {
+      "id": "sister",
+      "look": "ember",
+      "name": "Meredith Nolan",
+      "age": 34,
+      "hometown": "this side of town",
+      "iso": "us",
+      "blurb": "Drank here before it was yours. Knows which stool was whose."
+    },
+    {
+      "id": "critic",
+      "look": "profess",
+      "name": "Ulrich Brenner",
+      "age": 66,
+      "hometown": "Munich",
+      "iso": "de",
+      "blurb": "Writes about rooms like this one. Orders the same drink everywhere, on purpose."
+    }
+  ],
+
+  "beats": [
+    {
+      "id": "collector_1",
+      "character": "collector",
+      "day": 2,
+      "recipe": "neat_pour",
+      "needStyle": "bourbon",
+      "needTier": 0,
+      "grantsRecipeOnAsk": "",
+      "patienceSeconds": 45,
+      "ask": [
+        "So you are the one who took it on.",
+        "A whiskey. Neat. I will wait while you look."
+      ],
+      "nudge": [
+        "Still nothing brown on that shelf."
+      ],
+      "servedRight": [
+        "There it is.",
+        "The building can wait a week. Do not make me come back twice."
+      ],
+      "servedWrong": [
+        "That is not whiskey, and we both know it."
+      ],
+      "declined": [
+        "Then buy a bottle. I will come back."
+      ],
+      "rewardMoney": 40,
+      "rewardStars": 0.0,
+      "rewardRecipe": "",
+      "rewardBottle": "",
+      "returnsAfterDays": 2,
+      "next": "sister_1"
+    },
+    {
+      "id": "sister_1",
+      "character": "sister",
+      "day": 5,
+      "recipe": "moscow_mule",
+      "needStyle": "ginger",
+      "needTier": 0,
+      "grantsRecipeOnAsk": "",
+      "patienceSeconds": 50,
+      "ask": [
+        "He used to make me a mule when the room got loud.",
+        "Ginger, lime, the copper cup he never actually owned."
+      ],
+      "nudge": [
+        "No ginger yet. He always said it was the cheap half."
+      ],
+      "servedRight": [
+        "Close enough that I had to put it down for a second.",
+        "Keep the recipe. It was his."
+      ],
+      "servedWrong": [
+        "That is somebody else's drink."
+      ],
+      "declined": [
+        "It is a small thing to stock. I will ask again."
+      ],
+      "rewardMoney": 0,
+      "rewardStars": 0.25,
+      "rewardRecipe": "gimlet",
+      "rewardBottle": "",
+      "returnsAfterDays": 3,
+      "next": "critic_1"
+    },
+    {
+      "id": "critic_1",
+      "character": "critic",
+      "day": 9,
+      "recipe": "manhattan",
+      "needStyle": "vermouth",
+      "needTier": 0,
+      "grantsRecipeOnAsk": "manhattan",
+      "patienceSeconds": 55,
+      "ask": [
+        "A Manhattan. Stirred — I will know the difference.",
+        "Here is how it is built. Every room gets one honest paragraph; this is yours."
+      ],
+      "nudge": [
+        "Vermouth. It is not an optional ingredient, it is half the drink."
+      ],
+      "servedRight": [
+        "Stirred, cold, and not drowned. Good.",
+        "I will say the room is worth the walk."
+      ],
+      "servedWrong": [
+        "You shook it. I can see the ice in it from here."
+      ],
+      "declined": [
+        "An honest no is worth a paragraph too. Later, then."
+      ],
+      "rewardMoney": 0,
+      "rewardStars": 0.5,
+      "rewardRecipe": "",
+      "rewardBottle": "",
+      "returnsAfterDays": 3,
+      "next": ""
+    }
+  ]
+}

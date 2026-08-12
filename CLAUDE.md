@@ -5,8 +5,9 @@ Unity 6000.3.10f1 (URP) bar-tycoon about reading customers and running the till.
 from code 2026-08-07; read it first for any live rule. `Docs/GDD/` carries the design specs:
 **modules 23 and 24 own the loop**, 21 owns the pour system (21 §10 draught beer), 22 owns
 bottles/brands/market, 14 §5 / 15 §4 / 16 §1 / 18 carry the palette, camera, font and stage
-specs the UI is built on, and 25 is the (partly superseded) bottle-art brief now aimed at an
-external artist. The historical modules (00–13, 17, 19, 20 — card era and the demolished
+specs the UI is built on, 25 is the (partly superseded) bottle-art brief now aimed at an
+external artist, and **26 owns the last customer** — the scripted closing beat, its dialogue
+and its data (staged in `Docs/PLAN_last_call.md`; nothing of it is built yet). The historical modules (00–13, 17, 19, 20 — card era and the demolished
 emotion layer) were DELETED in the 2026-08-07 sweep; recipe truth is `recipes.json` ↔
 `RecipeCatalog` under the parity test, ingredient types are the `IngredientType` enum.
 **The staging document is `Docs/PLAN_service_depth.md` (v5)** — phase order and conflict

@@ -2,6 +2,18 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **NEW `26_last_call_story.md` + `PLAN_last_call.md` (2026-08-12, the author's brief):** the
+  last call becomes a SCRIPTED beat instead of a clock running out. When the door has shut and
+  the room has drained, one named person comes in and asks for a drink the bar cannot pour yet
+  — the ask names what is missing, so it is a door and not a wall — and the arc is data
+  (`Assets/Data/story/story.json`, first three beats written). Dialogue is two lines a beat in
+  the bar's own terse register; the "cutscene" is the 2D light rig dimming to one lamp and the
+  neon igniting, not drawn frames. Nothing is missable: served wrong or declined, the beat
+  re-arms on its return clock. Two findings came out of writing the data: the cast's papers are
+  30 hardcoded lines in `TycoonHud` and must become data first (S0), and **every stirred recipe
+  sits at rank 22+, i.e. the 4★ band**, so the stir verb is invisible for most of a run — until
+  the ladder grows an early stirred drink, the critic's beat teaches it by handing over the page.
+
 - `15 §8 / 24 §2` **a vessel is measured, not assumed (2026-08-11, the author's new juice
   art):** sizes, standing and the SPOUT all come off the drawing now (`VesselArt`), because
   a UI Image lays a sprite out on its whole sheet and hand-drawn art does not fill its
