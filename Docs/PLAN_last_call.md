@@ -9,7 +9,7 @@ invisible to the player on purpose — the beat works before it speaks.
 
 ---
 
-## S0 — The cast becomes data *(prerequisite)*
+## S0 — The cast becomes data *(prerequisite)* ☑ 2026-08-12
 
 **Why first:** a story character needs the same papers the licence prints, and those papers are
 30 hardcoded lines in `TycoonHud` (`PatronPapers`). The story cannot be written on top of C#.
@@ -26,6 +26,15 @@ file is caught); the licence screenshot unchanged (`LookTests` needs no re-bless
 
 **Risk:** the papers are read on the licence, the receipt and the guide — one missed call site
 prints "Customer". Grep for `PapersFor` before and after.
+
+**Shipped.** 30 people left `TycoonHud` for `Assets/Data/customers/papers.json`; the lookup is
+`PatronRoster` in the Game layer (presentation, like `StageSlot`), parsed by
+`DataLoader.ParsePapers` and handed over by the bootstrap as `Cast`. The scene was wired in
+code, not by hand, the way the debug scene wires every other data file. 11 new EditMode tests:
+four faces pinned to the papers they had in C#, the three looks the arc reserves checked for
+existence, and the four loud failures (two people on one look, a flag the art cannot draw, a
+nameless person, an empty cast). Proved in play as well as in test — three licences read off
+the screen against the file: MEREDITH NOLAN / 34 / UNITED STATES, and so on.
 
 ---
 
@@ -49,8 +58,10 @@ recipe; a right serve advances the arc; a wrong serve does not and re-arms; a de
 the night cannot end while the guest is seated; a run built without a story behaves exactly as
 today (every existing test still green).
 
-**Risk:** `IsComplete` is the day's end condition in three places — the run, the HUD's watcher
-and the sim. Seating a guest after closing must not let any of them call the night early.
+**Risk:** `IsComplete` is the day's end condition, and it is read in exactly ONE place
+(`TycoonRun.Tick`) — checked, not assumed. Seating a guest after closing must extend that one
+condition rather than grow a second one somewhere else; the HUD reads `IsClosingTime` for the
+LAST CALL plaque and must keep meaning the same thing by it.
 
 ---
 

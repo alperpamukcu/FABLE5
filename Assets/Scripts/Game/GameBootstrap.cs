@@ -24,6 +24,10 @@ namespace LastCall.Game
         /// <summary>The bar-dressing catalogue (2026-08-10). Leave unassigned for a bare room.</summary>
         [SerializeField] private TextAsset fixturesJson;
 
+        /// <summary>The cast's papers — what the licence prints per face (2026-08-12).
+        /// Leave unassigned and every drinker is called by their archetype name instead.</summary>
+        [SerializeField] private TextAsset papersJson;
+
         [SerializeField] private string seed = "LASTCALL-DEV";
 
         /// <summary>The v4 loop (GDD 23) — what the scene plays.</summary>
@@ -37,6 +41,10 @@ namespace LastCall.Game
 
         /// <summary>Future stock (v5 P10): locked bottles the shop can sell later.</summary>
         public IReadOnlyList<IngredientCard> LockedStock { get; private set; }
+
+        /// <summary>Who the bar can draw, by face (2026-08-12). Presentation data, like the
+        /// stage slots: the licence prints it and Core never sees it.</summary>
+        public PatronRoster Cast { get; private set; }
 
         /// <summary>Where the room stands its bought dressing (2026-08-10). Presentation
         /// data: it comes out of the same file as the fixtures but never enters Core.</summary>
@@ -103,6 +111,7 @@ namespace LastCall.Game
                 : new LoadedFixtures(System.Array.Empty<FixtureDefinition>(),
                                      System.Array.Empty<StageSlot>());
             StageSlots = dressing.Slots;
+            Cast = papersJson != null ? DataLoader.ParsePapers(papersJson.text) : null;
             LockedStock = bar.LockedCards;
             if (Glassware.Count > 0)
             {

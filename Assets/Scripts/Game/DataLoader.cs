@@ -265,6 +265,44 @@ namespace LastCall.Game
             return new LoadedFixtures(fixtures, slots);
         }
 
+        /// <summary>
+        /// The cast's papers (GDD 22 §3, moved out of TycoonHud on 2026-08-12): what the
+        /// licence prints for each face. Loud about the two mistakes that matter — two people
+        /// claiming one look, and a flag code the art cannot draw — because both of them fail
+        /// silently at the far end, on a card the player is being asked to read.
+        /// </summary>
+        public static PatronRoster ParsePapers(string json)
+        {
+            var dto = FromJson<PapersFileDto>(json, "papers");
+            if (dto.papers == null || dto.papers.Count == 0)
+                throw new FormatException("Papers file contains nobody.");
+
+            var people = new List<Papers>(dto.papers.Count);
+            foreach (var p in dto.papers)
+            {
+                string iso = p.iso ?? string.Empty;
+                if (iso.Length != 2 || iso != iso.ToLowerInvariant())
+                    throw new FormatException(
+                        $"Papers for '{p.name}' carry the flag code '{iso}'; it must be two lower-case letters (fl_{iso}.png).");
+                try
+                {
+                    people.Add(new Papers(p.slug, p.name, p.age, p.country, iso));
+                }
+                catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
+                {
+                    throw new FormatException($"Papers for '{p.slug}': {e.Message}");
+                }
+            }
+            try
+            {
+                return new PatronRoster(people);
+            }
+            catch (ArgumentException e)
+            {
+                throw new FormatException("Papers file: " + e.Message);
+            }
+        }
+
         private static PrepMethod ParsePrep(string raw, string context)
         {
             if (string.IsNullOrEmpty(raw)) return PrepMethod.Shaken;
@@ -388,6 +426,23 @@ namespace LastCall.Game
         {
             public int version;
             public List<ArchetypeDto> archetypes;
+        }
+
+        [Serializable]
+        private sealed class PapersFileDto
+        {
+            public int version;
+            public List<PapersDto> papers;
+        }
+
+        [Serializable]
+        private sealed class PapersDto
+        {
+            public string slug;
+            public string name;
+            public int age;
+            public string country;
+            public string iso;
         }
 
         [Serializable]

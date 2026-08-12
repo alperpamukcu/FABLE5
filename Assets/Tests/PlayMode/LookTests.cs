@@ -76,7 +76,7 @@ namespace LastCall.PlayTests
         public IEnumerator The_back_bar_looks_the_way_it_did()
         {
             yield return OpenTheBar();
-            yield return ClickOn(Find("MENU — MAKE A DRINK"));
+            yield return OpenUntil("MENU — MAKE A DRINK", "MenuPanel");
             yield return LooksTheSame("back_bar");
         }
 
@@ -84,8 +84,8 @@ namespace LastCall.PlayTests
         public IEnumerator The_bench_looks_the_way_it_did()
         {
             yield return OpenTheBar();
-            yield return ClickOn(Find("MENU — MAKE A DRINK"));
-            yield return ClickOn(Find("Slot_vodka_astra"));
+            yield return OpenUntil("MENU — MAKE A DRINK", "MenuPanel");
+            yield return OpenUntil("Slot_vodka_astra", "ShakerPanel");
             // Inside the panel only: the room shows around its edges and the room is alive.
             yield return LooksTheSame("bench", new RectInt(40, 30, 1200, 630));
         }
@@ -122,6 +122,34 @@ namespace LastCall.PlayTests
             // nowhere below it. The basket is what this pins: it is the surface that was
             // rebuilt on 2026-08-11, it does not scroll, and it was identical in both variants.
             yield return LooksTheSame("basket", new RectInt(110, 550, 1120, 150));
+        }
+
+        /// <summary>
+        /// Presses a thing until the screen it opens is actually open — and says so plainly
+        /// if it never does.
+        ///
+        /// A picture test that does not check which screen it is looking at will happily
+        /// bless the wrong one: this suite once reported 756,000 differing pixels on the
+        /// bench, and the answer was that the bench had never opened — the capture was of the
+        /// back bar. The retry is the other half: the wall tears itself down and rebuilds when
+        /// it opens, so a rect found on one frame can be destroyed on the next and a click
+        /// lands on a dead object. A player would simply click again.
+        /// </summary>
+        private IEnumerator OpenUntil(string press, string expected)
+        {
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                var target = Find(press);
+                Assert.That(target, Is.Not.Null, $"'{press}' is not on the screen to press");
+                yield return ClickOn(target);
+
+                var panel = Find(expected);
+                if (panel != null && panel.gameObject.activeInHierarchy) yield break;
+                yield return new WaitForSecondsRealtime(0.3f);
+            }
+            var last = Find(expected);
+            Assert.Fail($"pressing '{press}' three times never opened '{expected}' " +
+                        (last == null ? "(it was never even built)" : "(it stayed closed)"));
         }
 
         // ── the comparison ───────────────────────────────────────────────────────

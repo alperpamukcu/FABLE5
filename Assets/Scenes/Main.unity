@@ -220,6 +220,7 @@ MonoBehaviour:
   glasswareJson: {fileID: 4900000, guid: d4f3f8ff083862f4e80b843c095cc8f3, type: 3}
   snacksJson: {fileID: 4900000, guid: 0630b2eb5c30e684483c02153f8b7403, type: 3}
   fixturesJson: {fileID: 4900000, guid: 03c083d2e1aa7974894cccfe4e03849a, type: 3}
+  papersJson: {fileID: 4900000, guid: 349acc66d6515694b8f475fd1e4e07a8, type: 3}
   seed: LASTCALL-DEV
 --- !u!4 &309217864
 Transform:
@@ -358,7 +359,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 180
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2

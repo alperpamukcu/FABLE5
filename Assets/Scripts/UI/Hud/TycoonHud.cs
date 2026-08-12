@@ -156,67 +156,23 @@ namespace LastCall.UI
             ("gothqueen", 5f, 2.5f),
         };
         /// <summary>
-        /// WHO A DRINKER IS, on paper. A name, an age, a country and its flag — chosen
-        /// against the DRAWING rather than at random, so the age matches the face the
-        /// artist drew and the name matches how it reads (2026-08-10). Mostly American,
-        /// because that is the bar's world, with eight passports from elsewhere where the
-        /// picture itself argued for one: a blond beard and blue eyes is Swedish, a
-        /// three-piece with a pocket square is a London suit, a waxed handlebar over a
-        /// waistcoat is the Turkish barber's own uniform.
+        /// The papers for a face — name, age, country, flag — read from the cast file.
         ///
-        /// Names are taken from the MIDDLE of each country's common-name lists rather than
-        /// the top: the most famous name in a country belongs to a celebrity, the tenth
-        /// belongs to a person.
+        /// WHO A DRINKER IS on paper used to be written here: thirty people in a Dictionary
+        /// in the middle of a UI class, chosen against the drawings (the age matches the face
+        /// the artist drew; the eight non-American passports are the ones the picture itself
+        /// argued for). That is content, and content is data — so it moved to
+        /// Assets/Data/customers/papers.json on 2026-08-12, where a writer can add a person
+        /// without opening C# and where the story's characters can share the same table
+        /// (PLAN_last_call S0).
         /// </summary>
-        private sealed class Papers
-        {
-            public readonly string Name;
-            public readonly int Age;
-            public readonly string Country;
-            public readonly string Iso;
-            public Papers(string name, int age, string country, string iso)
-            { Name = name; Age = age; Country = country; Iso = iso; }
-        }
+        private Papers PapersFor(PatronLook look) =>
+            _bootstrap != null && _bootstrap.Cast != null && look != null
+                ? _bootstrap.Cast.For(look.Slug ?? "")
+                : null;
 
-        private static readonly Dictionary<string, Papers> PatronPapers =
-            new Dictionary<string, Papers>
-        {
-            { "", new Papers("Miles Corrigan", 26, "United States", "us") },
-            { "nightnurse", new Papers("Marilou Cabrera", 37, "Philippines", "ph") },
-            { "courier", new Papers("Danny Ferraro", 23, "United States", "us") },
-            { "undone", new Papers("Craig Delaney", 46, "United States", "us") },
-            { "dockman", new Papers("Dennis Wojcik", 63, "United States", "us") },
-            { "bearded", new Papers("Fredrik Ohlsson", 34, "Sweden", "se") },
-            { "barber", new Papers("Serkan Aydemir", 33, "Turkey", "tr") },
-            { "bouncer", new Papers("Marcus Boyd", 42, "United States", "us") },
-            { "ember", new Papers("Meredith Nolan", 34, "United States", "us") },
-            { "coder", new Papers("Elliot Brandt", 24, "United States", "us") },
-            { "inked", new Papers("Rowan Pike", 33, "United States", "us") },
-            { "studentm", new Papers("Trevor Hanley", 21, "United States", "us") },
-            { "nerd", new Papers("Spencer Kaplan", 25, "United States", "us") },
-            { "bikeryoung", new Papers("Shane Mercer", 26, "United States", "us") },
-            { "lumber", new Papers("Dustin Kilgore", 43, "United States", "us") },
-            { "cueball", new Papers("Neil Prentiss", 55, "United States", "us") },
-            { "violet", new Papers("Sabrina Voss", 24, "United States", "us") },
-            { "teal", new Papers("Piper Landry", 23, "United States", "us") },
-            { "gothpunk", new Papers("Erika Vaughn", 24, "United States", "us") },
-            { "wanderer", new Papers("Joost Kramer", 25, "Netherlands", "nl") },
-            { "studentf", new Papers("Brooke Whitaker", 20, "United States", "us") },
-            { "gothgirl", new Papers("Marissa Vogel", 24, "United States", "us") },
-            { "bikerold", new Papers("Duane Halloran", 64, "United States", "us") },
-            { "profess", new Papers("Ulrich Brenner", 66, "Germany", "de") },
-            { "chrome", new Papers("Andre Whitlock", 36, "United States", "us") },
-            { "platina", new Papers("Paulina Nowicka", 33, "Poland", "pl") },
-            { "gothqueen", new Papers("Genevieve Marsh", 34, "United States", "us") },
-            { "glam", new Papers("Serena Fontana", 35, "Italy", "it") },
-            { "execwoman", new Papers("Vivian Marchetti", 44, "United States", "us") },
-            { "execman", new Papers("Graham Sedgwick", 54, "United Kingdom", "gb") },
-        };
 
         /// <summary>This drinker's papers, or null for a look nobody has written up.</summary>
-        private static Papers PapersFor(PatronLook look) =>
-            look != null && PatronPapers.TryGetValue(look.Slug ?? "", out var p) ? p : null;
-
         /// <summary>
         /// What this drinker is called — the ONE name the bar says about them, wherever it
         /// says it: the licence prints it, the ticket over their head repeats it, the receipt
@@ -230,7 +186,7 @@ namespace LastCall.UI
         /// no papers on file falls back to the archetype's name, and the card falls back the
         /// same way, so the two agree even when there is nothing to agree about.
         /// </summary>
-        private static string NameOn(CustomerVisit visit, PatronLook look)
+        private string NameOn(CustomerVisit visit, PatronLook look)
         {
             var papers = PapersFor(look);
             if (papers != null && !string.IsNullOrEmpty(papers.Name)) return papers.Name;
