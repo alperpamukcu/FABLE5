@@ -1067,6 +1067,7 @@ namespace LastCall.UI
             UpdateDrinkGlass();
             UpdateEscape();
             StepStarDrop();
+            StepStamp();
             StepMoneyDrops();
             StepCheckoutKey();
             StepDayEndBeats();
@@ -2733,7 +2734,7 @@ namespace LastCall.UI
                     Mathf.Sin(Time.unscaledTime * 47f) * amp);
                 if (_billShake <= 0f) _dayEndBill.anchoredPosition = _billHome;
             }
-            if (_starT < 0f && _billShake <= 0f)
+            if (_starT < 0f && _stampT < 0f && _billShake <= 0f)
             {
                 _endBeat = 0;
                 // The night has finished counting itself; now there is somewhere to go.
@@ -2766,6 +2767,15 @@ namespace LastCall.UI
         {
             _starCount = Mathf.CeilToInt(Mathf.Clamp01(frac) * 5f - 0.001f);
             _landed = 0;
+            // Nothing to drop is not nothing to say: a night that earned no star gets the
+            // stamp instead, and it takes the same beat the stars would have had.
+            if (_billStamp != null) _billStamp.gameObject.SetActive(_starCount <= 0);
+            _stampT = _starCount <= 0 && !Motion.Reduced ? 0f : -1f;
+            if (_starCount <= 0 && Motion.Reduced && _billStamp != null)
+            {
+                _billStamp.localScale = Vector3.one;
+                _billStamp.localRotation = Quaternion.Euler(0, 0, -9f);
+            }
             if (Motion.Reduced || _billStars.Count == 0) { _starT = -1f; return; }
             _starT = 0f;
             foreach (var s in _billStars)
@@ -2881,7 +2891,69 @@ namespace LastCall.UI
                 oi.sprite = art; oi.preserveAspect = true; oi.raycastTarget = false;
                 oi.color = UITheme.Amber[3];
             }
+
+            // THE STAMP, for a night that earned nothing (2026-08-11, the author: if you
+            // take zero stars something aggressive should come down over them, like a stamp
+            // being struck). It only exists because zero is reachable now — under the old
+            // 1 + 4x scale the worst room in the world still filed one star, so there was
+            // never a night for this to land on.
+            //
+            // It hangs on the ROWS rather than on the star host, because it has to be wider
+            // than the five stars it is being struck across, and it is parked here rather
+            // than built on demand: the run is driven from Update, and a thing that has to
+            // be animated has to exist before the frame it animates in.
+            _billStamp = NewRect("Stamp", _invoiceRows);
+            _billStamp.anchorMin = new Vector2(0.5f, 1); _billStamp.anchorMax = new Vector2(0.5f, 1);
+            _billStamp.pivot = new Vector2(0.5f, 0.5f);
+            _billStamp.sizeDelta = new Vector2(236f, 42f);
+            _billStamp.anchoredPosition = new Vector2(0, -(y + StarPx * 0.5f));
+            var stampPlate = _billStamp.gameObject.AddComponent<Image>();
+            stampPlate.color = new Color(BillRed.r, BillRed.g, BillRed.b, 0.10f);
+            stampPlate.raycastTarget = false;
+            Frame(_billStamp, 3f, new Color(BillRed.r, BillRed.g, BillRed.b, 0.85f));
+            _billStampInk = NewText("W", _billStamp, _display, 24, TextAnchor.MiddleCenter,
+                new Color(BillRed.r, BillRed.g, BillRed.b, 0.92f));
+            Stretch(_billStampInk.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(4, 0), new Vector2(-4, 0));
+            _billStampInk.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _billStampInk.verticalOverflow = VerticalWrapMode.Overflow;
+            _billStampInk.raycastTarget = false;
+            _billStampInk.text = "DISGRACE";
+            _billStamp.gameObject.SetActive(false);
+
             return y + StarPx + 6f;
+        }
+
+        // ── the stamp comes down (2026-08-11) ───────────────────────────────────
+        private RectTransform _billStamp;
+        private Text _billStampInk;
+        private float _stampT = -1f;
+        private const float StampFall = 0.42f;
+
+        /// <summary>
+        /// A rubber stamp is a thing DRIVEN at the paper: it arrives huge, out of focus and
+        /// crooked, and it stops dead. So it scales down hard rather than easing, and the
+        /// only softness in it is after the strike — it rocks a few degrees and settles,
+        /// and the paper takes the blow on the same frame the ink lands.
+        /// </summary>
+        private void StepStamp()
+        {
+            if (_stampT < 0f || _billStamp == null) return;
+            _stampT += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(_stampT / StampFall);
+            float e = k * k * k;                            // gathers pace all the way down
+            float scale = Mathf.Lerp(3.4f, 1f, e);
+            _billStamp.localScale = new Vector3(scale, scale, 1f);
+            _billStamp.localRotation = Quaternion.Euler(0, 0,
+                Mathf.Lerp(-26f, -9f, e) + Mathf.Sin(k * Mathf.PI * 4f) * 3f * (1f - k));
+            var c = _billStampInk.color;
+            _billStampInk.color = new Color(c.r, c.g, c.b, Mathf.Clamp01(k * 2.2f) * 0.92f);
+            if (k < 1f) return;
+            _billStamp.localScale = Vector3.one;
+            _billStamp.localRotation = Quaternion.Euler(0, 0, -9f);
+            _stampT = -1f;
+            _billShake = 1f;                                 // the paper takes it
+            Sfx.Play("click", 0.9f);
         }
 
         /// <summary>
