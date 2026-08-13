@@ -437,7 +437,19 @@ namespace LastCall.PlayTests
             }
             Assert.That(_boot, Is.Not.Null, "the scene has no GameBootstrap in it");
             Assert.That(_boot.Tycoon, Is.Not.Null, "the run never started");
-            yield return new WaitForSecondsRealtime(0.25f);
+
+            // THE BAR IS OPEN WHEN ITS CLOCK IS RUNNING (2026-08-13, and the same fix is in
+            // the smoke suite). The room opens behind a CURTAIN on a canvas above everything,
+            // and the HUD holds the night's clock until it lifts — so a press before that is
+            // a press into a black screen, which is what kept failing the first test of every
+            // session. Elapsed moving is the game's own signal that the doors are open.
+            float open = Time.realtimeSinceStartup + 15f;
+            while (_boot.Tycoon.Floor.Elapsed <= 0 && Time.realtimeSinceStartup < open)
+                yield return null;
+            Assert.That(_boot.Tycoon.Floor.Elapsed, Is.GreaterThan(0),
+                "the curtain never lifted — the night's clock never started");
+            yield return null;
+            yield return null;
         }
 
         private IEnumerator ClickOn(RectTransform target)

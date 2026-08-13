@@ -255,8 +255,19 @@ namespace LastCall.PlayTests
             Assert.That(_boot.Tycoon, Is.Not.Null,
                 $"the run never started within {BootTimeout}s — the boot is half-loaded");
 
-            // The HUD builds its whole self in code; give it the time to do it.
-            yield return new WaitForSecondsRealtime(0.25f);
+            // THE BAR IS OPEN WHEN ITS CLOCK IS RUNNING (2026-08-13). A quarter of a second
+            // was the wait, and the suite's first test kept failing on a press that landed
+            // on nothing: the room opens behind a CURTAIN on its own canvas above everything,
+            // and the HUD deliberately holds the night's clock until it lifts. So the honest
+            // signal that the doors are open is the one the game itself uses — Elapsed only
+            // moves once the curtain is gone, and a press before that is a press into a
+            // black screen. Six retries could not fix what was never a timing budget.
+            float open = Time.realtimeSinceStartup + 15f;
+            while (_boot.Tycoon.Floor.Elapsed <= 0 && Time.realtimeSinceStartup < open)
+                yield return null;
+            Assert.That(_boot.Tycoon.Floor.Elapsed, Is.GreaterThan(0),
+                "the curtain never lifted — the night's clock never started");
+            yield return WaitFrames(2);
         }
 
         /// <summary>Runs the bar's clock forward until somebody is on a stool. The floor seats
