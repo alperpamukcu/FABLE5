@@ -1,6 +1,6 @@
 # LAST CALL — MEVCUT OYUN GDD'Sİ (as-built)
 
-**Tarih:** 2026-08-07 · **Kaynak:** koddan çıkarıldı (8 kollu denetim, dosya:satır kanıtlı) · **Durum:** oyunun *bugün gerçekte olduğu hali* — tasarım niyeti değil, çalışan kural.
+**Tarih:** 2026-08-07 (§9 servis sahneleri 2026-08-13'te yeniden kuruldu) · **Kaynak:** koddan çıkarıldı (8 kollu denetim, dosya:satır kanıtlı) · **Durum:** oyunun *bugün gerçekte olduğu hali* — tasarım niyeti değil, çalışan kural.
 
 Bu belge, tarihi GDD modüllerinden (00–13) ve kod gerisinde kalmış plan maddelerinden arındırılmış tek referanstır. Çelişki listesi için `Docs/GELISTIRME_RAPORU.md` §6.
 
@@ -92,7 +92,7 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 |---|---|---|
 | Şişe kartı | **41** (30 canlı / 11 kilitli) | T1 26 · T2 5 · T3 5 · T4 5; markalar parodi (Smirkoff, John Wanderer, Maliboo…) |
 | Başlangıç rafı | 6 | vodka_astra, gin_boothby, soda_klara, lemon_fresh, syrup_house, beer_kestrel (+bootstrap'ta sabit) |
-| Gazlı bayrağı | **5** | cola, tonic, energy + **soda_klara, ginger_kicker (2026-08-11'de çevrildi** — §12 borcu kapandı; ikisi arka bar duvarından Serve dolabına taşındı) |
+| Gazlı bayrağı | **5** | cola, tonic, energy + **soda_klara, ginger_kicker (2026-08-11'de çevrildi** — §12 borcu kapandı). **2026-08-13:** gazlılar arka bar duvarına GERİ döndü; Serve dolabı kaldırıldı (aşağı) |
 | Tarif | **53** | Built 19 · Shaken 24 · Stirred 10; pint 1 / rocks 13 / highball 22 / coupe 10 / martini 7 |
 | Bardak | 5 | 6'şar kademe (T1 + 5 satın alım) |
 | Atıştırmalık | 4 | asla yalnız satılmaz (Core reddi) |
@@ -106,10 +106,12 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 | **Kimlik kartı** | tabure tıkla → `InspectId()` (kapı!); sipariş satırı hover=ideal oran kartı |
 | **Tarif kitabı** | ara, TIER/PREP/ŞİŞE filtreleri; kilitliler "n★'DA AÇILIR" |
 | **Gün sonu** | hesap fişi → market (4 sekme: DOLUM/ŞİŞELER/TARİFLER/YÜKSELTMELER + bu gece alınanlar iade) |
-| **Back bar (menü)** | şişe hover=bilgi kartı, tıkla=rota (garnitür anında; bira→Tap; gazlı→Serve eline; kalan→Shaker). Sahne geçişleri KAYAR (ileri sağdan, geri soldan; açılış fade, kapanış anlık); her istasyonda sol kenar BACK TO BAR |
-| **Shaker** | şişeyi kaldır-yatır dök (akış şişenin ÖLÇÜLEN kapağından çıkar, 2026-08-11); hazırlık sürükle; AÇIK tin'de kaşıkla daire=karıştır; kapağı tak; tin'i savur=çalkala; kapalı+karışık → sağ kenar TO THE GLASS |
-| **Serve** | shaker'ı NİŞANLA dök (kaçırırsan döker); dolap şişesi elde `PourAtGlass` (dolap YALNIZ gazlı, 2026-08-11 — meyve/şurup tin'de); bardakta bitir Servis TIKLAMA (2026-08-11, deneysel): hazır bardak + sipariş ALINMIŞ müşteriye tık → bardak tezgahta kayar, varışta servis; okunmamışa tık kimliği açar; çöp de tıklama, boşken atıl |
-| **Tap** | bardağı yatır-doldur, dikleştir-köpük; verdikt satırı canlı |
+| **Back bar (menü)** | **İÇECEK SEÇMENİN TEK YERİ (2026-08-13).** Duvar artık garnitür DIŞINDA her şeyi taşır — gazlılar dahil. Şişe hover=bilgi kartı, tıkla=rota (garnitür anında tin'e tutam; bira→Tap; gazlı→Serve eline; kalan→Shaker eline). Kapalı şişe kendi kabına bakar: gazlı SERVİS BARDAĞI dolu diye kapanır, kalanı tin dolu diye. Sahne geçişleri KAYAR (ileri sağdan, geri soldan; açılış fade, kapanış anlık); her istasyonda sol kenar BACK TO BAR |
+| **Shaker** | Elde tek şişe, tin, kapak, kaşık — **tezgâhta içecek rafı YOK (2026-08-13)**; başka şişe için back bar'a dönülür. Şişeyi kaldır-yatır dök (akış şişenin ÖLÇÜLEN kapağından çıkar, 2026-08-11); AÇIK tin'de kaşıkla daire=karıştır; kapağı tak; tin'i savur=çalkala; kapalı+karışık → sağ kenar TO THE GLASS |
+| **Serve** | shaker'ı NİŞANLA dök (kaçırırsan döker); **dolap/raf YOK (2026-08-13)** — buradaki tek şişe back bar'ın elimize verdiği gazlıdır (Core tin'de reddettiği için bardak onun tek kapısı), düğme basılı gelmediğinden **elde DURUR**, basınca kavranır; hazırlık kapları (buz/limon/tuz/şeker + garnitür kavanozları) tezgâhın sol ucunda; SERVE tuşu bardak boşken sönük |
+
+**Her iki tezgâhın seti (2026-08-13):** ekranda mobilya assetı yok — `prep_table` ve `bar_mat` kaldırıldı. Panelin kendisi tezgâhtır: arkada barın kendi duvarı (`BackBarArt.LuxeWall`, gölgede), önünde bir ton açık tezgâh bandı ve buluştukları yerde aydınlık ön kenar; üstünde duran her şey `BackBarArt.BottleShadow` ile temas gölgesi taşır (tin ve şişeninki her kare kendi tabanını takip eder, kaldırınca söner). Yüzeyin kendisi çizilmez — `PourSurface`/`ServeSurface` sadece koordinat uzayıdır.
+| **Tap** | bardağı yatır-doldur, dikleştir-köpük; verdikt satırı canlı; **tezgâh altı gerçek mahzen (2026-08-13)**: hatta bağlı fıçı + stoktaki diğer fıçılar kendi gözlerinde, birine tıkla=onu hatta bağla (Core `CanPull` reddederse hiçbir şey değişmez ve nedeni yazılır); dökerken pour_loop sesi; SERVE tuşu bardak boşken sönük |
 
 Teknik: sahne 640×360 (PixelPerfect), HUD 1280×720; tüm UI kodla kurulur, prefab yok; yalnız yeni Input System (`Mouse.current`).
 
@@ -125,6 +127,6 @@ seviyesini doğası gereği göstermez — sayı hover kartında ve market kutuc
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.
 - **Determinizm:** `RunRng` (FNV-1a→PCG32) adlı akışlar: arrivals, orders, patience, decide, customer, read. `System.Random`/`UnityEngine.Random` yasak.
-- **Veri:** 5 JSON, `JsonUtility` + gürültülü doğrulama; tarifler çift kaynak (json+katalog) parite testli.
+- **Veri:** 6 JSON, `JsonUtility` + gürültülü doğrulama; tarifler çift kaynak (json+katalog) parite testli. **`story/story.json` 2026-08-13'te yüklenir oldu** (`DataLoader.ParseStory`): kadro + tarif kataloğuna karşı kurulur; bilinmeyen look/tarif/gece, sessiz geceye yazılmış misafir, iki host, kimsenin izlemediği ders adı, hiçbir yere çıkmayan beat yüklemede patlar. Yazım kuralı da orada: `needStyle` isteyen beat, o stili `hostWarning` satırında **adıyla** söylemek zorunda. Bootstrap boot'ta ayrıştırır ama koşuya henüz vermez (`storyInPlay` kapalı — diyalog plakası S3'te).
 - **Araçlar:** LastCall menüsü — Create Debug Scene · Simulate Tycoon 200 Runs · Measure Service Speed Response.
-- **Doğrulama:** 238 EditMode testi (11 dosya) + 7 PlayMode testi (4 duman + 3 piksel taban resmi, `Baselines~`); sim botu gerçek oyuncu fiilleriyle 200 koşu, `Docs/tycoon_sim_report.md`.
+- **Doğrulama:** 281 EditMode testi (12 dosya) + 7 PlayMode testi (4 duman + 3 piksel taban resmi, `Baselines~`); sim botu gerçek oyuncu fiilleriyle 200 koşu, `Docs/tycoon_sim_report.md`.

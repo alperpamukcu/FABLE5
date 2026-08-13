@@ -22,11 +22,18 @@ namespace LastCall.Core
         /// <summary>The beats in playing order, starting with the opener.</summary>
         public IReadOnlyList<StoryBeat> Beats => _order;
 
+        /// <summary>What the host says the first time the game does something (GDD 26 §10).
+        /// Part of the arc because they are the same voice and the same file.</summary>
+        public IReadOnlyList<StoryLesson> Lessons { get; }
+
         /// <summary>The first night that is written — Ece's, by design (GDD 26 §1b).</summary>
         public StoryBeat Opener => _order[0];
 
-        public StoryArc(IReadOnlyList<StoryBeat> beats)
+        public StoryArc(IReadOnlyList<StoryBeat> beats, IReadOnlyList<StoryLesson> lessons = null)
         {
+            Lessons = lessons != null
+                ? new List<StoryLesson>(lessons)
+                : (IReadOnlyList<StoryLesson>)Array.Empty<StoryLesson>();
             if (beats == null) throw new ArgumentNullException(nameof(beats));
             if (beats.Count == 0)
                 throw new ArgumentException("An arc with no beats is not a story.", nameof(beats));

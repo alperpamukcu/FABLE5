@@ -158,7 +158,36 @@ not), the crowd's licence rule, and the weekend economy.
 
 ---
 
-## S2 — The bot learns the beat *(balance stays honest)*
+## S2a — The story is loaded ☑ 2026-08-13
+
+**Why it needed its own phase:** nothing outside Core knew the arc existed. `story.json` was a
+text file — no parser, no field on the bootstrap — so both the sim (S2) and the plate (S3) had
+nothing real to play. A bot playing a hand-built arc measures a beat nobody wrote.
+
+- `DataLoader.ParseStory(json, cast, recipes)` — the arc built against the REAL cast and the
+  REAL book, with the loud validation every content file signs: a look nobody has papers for,
+  an ask that is not a recipe, a night that is not one of the six, a guest on a quiet night, a
+  role that is not host/guest, two hosts or none, a lesson naming a condition no code watches,
+  a beat leading nowhere. `StoryLesson`/`StoryCue` give the lessons a fixed vocabulary instead
+  of a scripting language.
+- **A rule the loader now enforces, because it is a rule about writing:** a beat that names a
+  `needStyle` must say that word in a `hostWarning` line. The asks come one at a time (GDD 26
+  §4), so the host's early warning is the ONLY notice a player gets — and "have something
+  brown by Friday" is not a notice, "get a bourbon in before Friday" is. The field is new and
+  the three guest beats now carry one.
+- `GameBootstrap` parses at boot and exposes `Story`. It does NOT hand it to the run yet
+  (`storyInPlay`, off): the guest arrives into a conversation and holds their clock until it
+  ends, so a scene that cannot talk would sit a silent stranger on a stool and stall the night
+  for the talking grace. Delete the field with S3.
+
+**Proof:** 15 EditMode tests on the shipped file — it parses, the schedule is exactly the one
+GDD 26 §11 prints, only the house works a quiet night, every ask exists, the trials get harder
+without any of them becoming impossible, and eleven ways to mis-edit the file are refused by
+name.
+
+---
+
+## S2 — The bot learns the beat ☑ 2026-08-13 *(balance stays honest)*
 
 - `TycoonSimulator`: on a last customer, pour the ask if the shelf can (the bot already builds
   from `RecipeDefinition`), otherwise `DeclineLastCall()`.
@@ -169,6 +198,39 @@ report; the new lines appear; no run deadlocks at closing time.
 
 **Risk:** a bot that neither serves nor declines hangs the night forever — the report's
 "reached the horizon" number is the canary and must stay at 200/200.
+
+**Shipped, and it earned its keep — four findings, none of them guessed.** The bot plays the
+arc the sim builds once and shares across all two hundred runs; it starts the trial on arrival
+(there is no dialogue to read headlessly), pours to the trial's own standard, and says an
+honest no when the shelf cannot answer. The report gained the story block, the beat each run
+was still owing at the horizon, and — the line that did the work — **what came back and why**,
+with the delivered glass in it.
+
+1. **1600 identical wrong drinks** said `rocks 0.70/0.70 [soda_klara=0.84 vodka_astra=0.16]`.
+   A drink DECLARES ITSELF at the glass (`PourAtGlass` re-vessels on every match), so a
+   half-built highball is re-housed mid-build and whatever is already in it stays in it: an
+   overfilled glass is a permanently wrong ratio. The crowd's build survives this only by
+   accident — at 0.85 the clamped ratio lands inside its band and the upgrade rescues it; at
+   the fill an inspector wants, it does not. The bot now builds BUILT drinks in the glass, in
+   small rounds, always in ratio (`BuildInTheGlass`). **The crowd's path is untouched on
+   purpose**; whether it should change is a balance question of its own.
+2. Then the mule came back with **no lime in it at all** — the same trap one layer down: the
+   glass shrank under a big confident pour and the third ingredient never fitted. Small rounds
+   fixed it.
+3. Then the manhattan came back wrong every time, and the reason was not the bot: the beat
+   says `grantsRecipeOnAsk: "manhattan"` and **nothing was granting it**. The ask now hands
+   its page over at the seat (`TycoonRun.GrantRecipe` — no star gate, no price, no slip line;
+   the ONE door in the game that opens the book for free) and the last beat became passable.
+4. With that, **200/200 arcs finish inside thirty nights**, 800 trials passed, 3 failed. The
+   three are all one thing: the gourmet asks for a `gimlet` and the run had not bought the
+   page — the influencer's beat is written to REWARD that page, and rewards land in S5.
+
+**The ordinary night did not move.** Measured properly, by running the same 200 seeds with the
+arc switched off: standing 2.82 → 2.83, storm-offs 17.9% → 17.9%, customers a night 10.5 →
+10.5, serves +0.09%, bankruptcies 0 → 0. What DOES move is the till — median $161 → $208 —
+and that is the arc paying out exactly as designed: a page the bar is given is a page it does
+not buy, and its quarantined stock comes with it. (The report checked into the repo before
+this was stale against several older changes; the storyless run above is the honest baseline.)
 
 ---
 

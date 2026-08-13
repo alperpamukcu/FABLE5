@@ -2,6 +2,53 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `26 §4/§9/§10` **the story is loaded, and the bot plays it (2026-08-13, PLAN S2a+S2):**
+  `DataLoader.ParseStory` builds the arc against the real cast and the real recipe book with
+  the loud validation every content file signs, and the bootstrap parses it at boot (it does
+  not hand it to the run yet — the guest arrives into a conversation nothing can hold up
+  until S3 draws the plate). A new writing rule is enforced at load: a beat that needs a style
+  must SAY that style in a `hostWarning` line, because the asks come one at a time and the
+  host's early warning is the only notice a player gets. The simulator now plays the arc — one
+  immutable arc shared by two hundred runs — and the report gained the written-nights block,
+  the beat each run still owed at the horizon, and *what came back and why*, with the delivered
+  glass in the line. That diagnostic paid for itself three times over: a fizzy Built drink
+  poured in big measures is re-housed mid-build and ends up a permanently wrong ratio (the bot
+  builds in small rounds now; **the crowd's path is untouched, and whether it should change is
+  its own balance question**), and the last beat was failing because `grantsRecipeOnAsk` was
+  written but never wired — the ask now hands its page over at the seat, gate and price waived,
+  the one door in the game that opens the book for free. 200/200 arcs finish inside thirty
+  nights; the ordinary night is unchanged against a storyless run of the same seeds (standing
+  2.82 → 2.83, storm-offs level, customers level), while the till rises $161 → $208 median,
+  which is the granted page not being bought.
+
+- `21 §12` + `GDD_MEVCUT §8/§9` **the three service scenes rebuilt, and the fridge retired
+  (2026-08-13, the author):** the benches were crowded with furniture that did nothing —
+  the shaker's prep table had carried no prop since the four preps moved to the glass on
+  2026-08-10, and the serve stage's drinks fridge stocked only the fizz behind a sprite
+  that drew across the mix gauge. Both are gone. The first attempt replaced them (a speed
+  rail on the bench, an open case at the counter, both carrying the whole cellar) and the
+  author cut that too, which is the ruling that stuck: **no drink is chosen on a service
+  bench.** The bar has ONE picker, the back bar wall, and it now carries everything except
+  garnish — fizz included, where the wall had been hiding it since 2026-08-02. Each bench
+  is what your hands are on: the shaker keeps the bottle you walked in with, the tin, the
+  lid and the spoon; the serve counter keeps the glass, the tin that fills it and the
+  finishing table. **No rule moved** — carbonated still has exactly one door (the serving
+  glass, Core's refusal, §12), beer still only the tap, and the wall hands a fizz bottle
+  over already in hand. The tap gained the opposite of a cut: its under-bar recess is a
+  real cellar now, every stocked keg standing in a bay, and clicking one couples it —
+  through `CanPull`, so a refused swap changes nothing and says why. Both benches wear the
+  back bar's own wall behind them, so the halves of one drink are shot on one set.
+
+  **And then the furniture went too** (same day, the author: "bardak sahnesindeki masa
+  assetini kaldır, zaten mor alan tezgahmış gibi olmalı, aynısı shaker sahnesi için de
+  geçerli"). `prep_table` and `bar_mat` are off both benches: a drawn table was a second
+  surface inside the first, and the props were standing on a picture of a counter that sat
+  on top of the counter. The panel IS the counter now — the wall band, a counter band one
+  step up the Night ramp, and a lit edge where they meet — and everything standing on it
+  carries a `BackBarArt.BottleShadow` contact shadow, the tin's and the bottle's tracking
+  their own foot lines per frame and fading as they are lifted off. The faint slab the two
+  play surfaces used to draw went with them: they are coordinate spaces, not scenery.
+
 - `26 §3/§4` **the last customer is an inspector, and a guest of the house (2026-08-13, the
   author):** the beat reworked from "one drink with dialogue" into a TRIAL — several drinks
   against one clock, revealed one at a time on a post-it, to a standard nothing else asks for

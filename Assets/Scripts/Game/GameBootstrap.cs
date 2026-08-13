@@ -28,6 +28,22 @@ namespace LastCall.Game
         /// Leave unassigned and every drinker is called by their archetype name instead.</summary>
         [SerializeField] private TextAsset papersJson;
 
+        /// <summary>The written nights (GDD 26). Leave unassigned and the run has no last
+        /// customer at all — the story is opt-in exactly like the regulars, which is what
+        /// keeps a bench scene and an older test valid.</summary>
+        [SerializeField] private TextAsset storyJson;
+
+        /// <summary>
+        /// Whether the parsed arc is handed to the RUN, i.e. whether a last customer actually
+        /// walks in (GDD 26). Off until the dialogue plate exists (PLAN_last_call S3): the
+        /// guest arrives into a conversation and holds their clock until it ends, so a scene
+        /// that cannot talk would sit a silent stranger on a stool and stall the night for the
+        /// length of the talking grace. The file is still PARSED at boot either way — a typo
+        /// in the story has to fail here, not in six weeks — and the simulator plays the arc
+        /// regardless, because balance cannot wait for a plate. Delete this field with S3.
+        /// </summary>
+        [SerializeField] private bool storyInPlay;
+
         [SerializeField] private string seed = "LASTCALL-DEV";
 
         /// <summary>The v4 loop (GDD 23) — what the scene plays.</summary>
@@ -45,6 +61,11 @@ namespace LastCall.Game
         /// <summary>Who the bar can draw, by face (2026-08-12). Presentation data, like the
         /// stage slots: the licence prints it and Core never sees it.</summary>
         public PatronRoster Cast { get; private set; }
+
+        /// <summary>The written nights, or null for a run with no story file (GDD 26). The
+        /// run holds its own progress through it; this is the content it was built from, kept
+        /// so the UI can read a character's lines and borrowed face without asking Core.</summary>
+        public StoryArc Story { get; private set; }
 
         /// <summary>Where the room stands its bought dressing (2026-08-10). Presentation
         /// data: it comes out of the same file as the fixtures but never enters Core.</summary>
@@ -112,6 +133,11 @@ namespace LastCall.Game
                                      System.Array.Empty<StageSlot>());
             StageSlots = dressing.Slots;
             Cast = papersJson != null ? DataLoader.ParsePapers(papersJson.text) : null;
+            // The arc needs the cast and the book in hand — a story character IS a face plus
+            // its papers, and every ask is graded against a real recipe (GDD 26 §8/§10).
+            Story = storyJson != null && Cast != null
+                ? DataLoader.ParseStory(storyJson.text, Cast, recipes)
+                : null;
             LockedStock = bar.LockedCards;
             if (Glassware.Count > 0)
             {
@@ -129,7 +155,8 @@ namespace LastCall.Game
                 glassware: Glassware,
                 snacks: Snacks,
                 lockedStock: LockedStock,
-                fixtures: dressing.Fixtures);
+                fixtures: dressing.Fixtures,
+                story: storyInPlay ? Story : null);
 
             Debug.Log($"[LastCall] Tycoon run started — seed '{CurrentSeed}', " +
                       $"{startingBottles.Count} bottles, wallet ${Tycoon.Money}, " +

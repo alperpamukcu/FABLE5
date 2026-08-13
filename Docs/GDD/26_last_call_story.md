@@ -251,7 +251,9 @@ the market's words on the tile. A player who will be asked for a Margarita and h
 must be told *tequila*, before the night it costs them — never left to guess. This is the
 difference between a quest and a tease.
 
-**A beat may bring its own page** (`grantsRecipeOnAsk`). Some asks are for a drink the book
+**A beat may bring its own page** (`grantsRecipeOnAsk`) — live since 2026-08-13
+(`TycoonRun.GrantRecipe`, called when the guest sits: no star gate, no price, no line on the
+slip, and the only door in the game that opens the book for free). Some asks are for a drink the book
 does not contain and the star gate will not open for weeks; the person can simply hand it over
 — "here is how it is built" — and the ask becomes *make this*, not *earn the right to know it*.
 This exists because of a measured hole: **every stirred recipe in the catalogue is rank 22 or
@@ -364,6 +366,17 @@ streams — the same trick the read stream already uses to keep old seeds close.
 cannot parse, the balance report lies. The bot serves the ask when it can pour it and declines
 when it cannot, and the report gains three lines: asks / served / declined. Until that lands,
 every balance number in `tycoon_sim_report.md` is suspect on any day a beat is due.
+
+**Done, 2026-08-13 (S2), and it found things.** 200/200 arcs finish inside thirty nights, and
+the night around them is unchanged — measured by running the same seeds with the arc switched
+off: standing 2.82 → 2.83, storm-offs level, customers a night level. The till rises ($161 →
+$208 median) because a granted page is a page nobody buys. The report also carries **what came
+back and why**, with the delivered glass in the line, which is what turned three silent
+failures into three named causes — see PLAN_last_call S2. The one that matters to this module:
+**a fizzy Built drink cannot be poured to a high fill in big confident measures**, because the
+glass is re-chosen mid-build and an overfilled glass is a permanently wrong ratio. A player
+meets that trap too. If a beat ever wants a full highball of something fizzy, this is the
+thing to test it against.
 
 **Tests.** Core (EditMode): a beat arms on its day, the order is the scripted one, a right
 serve advances, a wrong serve does not, a decline re-arms, and a story file naming a recipe

@@ -369,6 +369,41 @@ namespace LastCall.Core
             return recipe;
         }
 
+        /// <summary>
+        /// A page handed over, not bought (GDD 26 §4): the story's guest writes the recipe on
+        /// the back of a napkin — "here is how it is built" — and the star gate and the price
+        /// are waived, because the ask IS the teaching. It happens at the seat, mid-night, so
+        /// it deliberately skips the day-end rule every other purchase obeys; nothing else in
+        /// the game may use this door, which is why it takes no money and appears on no slip.
+        ///
+        /// Silent when the bar already knows the drink, or when nobody wrote it down.
+        /// </summary>
+        private void GrantRecipe(string recipeId)
+        {
+            if (string.IsNullOrEmpty(recipeId)) return;
+            RecipeDefinition recipe = null;
+            foreach (var r in AllRecipes)
+                if (r.Id == recipeId) { recipe = r; break; }
+            if (recipe == null || !recipe.Locked || _boughtRecipes.Contains(recipeId)) return;
+
+            _boughtRecipes.Add(recipeId);
+            _recipes.Add(recipe);
+            // The page brings its bottles with it, exactly as a bought one does — a recipe
+            // whose stock is still quarantined is a recipe nobody can pour.
+            var styles = new HashSet<string>();
+            foreach (var band in recipe.RatioRequirements)
+                if (!string.IsNullOrEmpty(band.Style)) styles.Add(band.Style);
+            for (int i = _lockedStock.Count - 1; i >= 0; i--)
+            {
+                var card = _lockedStock[i];
+                if (card.Info?.Style != null && styles.Contains(card.Info.Style))
+                {
+                    _brandCatalogue.Add(card);
+                    _lockedStock.RemoveAt(i);
+                }
+            }
+        }
+
         // ── today's purchases: same-day refunds (the author, 2026-08-02) ─────────
         // A slip of everything bought at THIS close. Refunding reverses the purchase in
         // place; at the next dawn the slip is torn up — yesterday's buys are final.
@@ -803,6 +838,10 @@ namespace LastCall.Core
             LastCustomer = visit;
             LastCallBeat = beat;
             Trial = new StoryTrialRun(beat.Trial);
+            // The ask can hand its own page over (GDD 26 §4): a drink the book has not got
+            // and the star gate will not open for weeks is written down for you at the bar,
+            // so the trial is a job and not a wall.
+            GrantRecipe(beat.GrantsRecipeOnAsk);
             _lastCallSpent = true;
             _lastCallAnswered = false;
 

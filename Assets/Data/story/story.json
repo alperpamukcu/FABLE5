@@ -82,7 +82,11 @@
         "A whiskey, neat. Then another. I drink the second one slower."
       ],
       "nudge": [
-        "Still nothing brown on that shelf."
+        "Still no bourbon on that shelf."
+      ],
+      "hostWarning": [
+        "Friday is the man from the building. Get a bourbon in before then.",
+        "He will not ask twice, and he will not ask for anything clever."
       ],
       "servedRight": [
         "There it is. Twice.",
@@ -101,7 +105,7 @@
       "returnsAfterWeeks": 1,
       "next": "influencer_1",
       "hostBefore": [
-        "That one is here about the building, not the whiskey. Have something brown by Friday."
+        "That one is here about the building, not the whiskey."
       ],
       "hostAfter": [
         "He will be back. They always come back to see if you lasted."
@@ -124,6 +128,10 @@
       ],
       "nudge": [
         "No ginger, no mule, no post. That is the whole equation."
+      ],
+      "hostWarning": [
+        "Saturday needs ginger in the well. Buy it now, not on the night.",
+        "She films the drink, not you. Make it look like the picture."
       ],
       "servedRight": [
         "Okay. THAT is going up tonight.",
@@ -165,6 +173,10 @@
       ],
       "nudge": [
         "Vermouth. It is not an optional ingredient, it is half the drink."
+      ],
+      "hostWarning": [
+        "There is a vermouth on the market page. We will need it by Friday.",
+        "Three drinks, no second chances, and he counts the seconds. Practise."
       ],
       "servedRight": [
         "Stirred, cold, on time. All three.",

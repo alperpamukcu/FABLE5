@@ -77,10 +77,17 @@ namespace LastCall.EditorTools
             var glassware = DataLoader.ParseGlassware(Read("glassware/glassware.json"));
             var snacks = DataLoader.ParseSnacks(Read("snacks/snacks.json"));
 
+            // THE ARC IS BUILT ONCE AND PLAYED TWO HUNDRED TIMES (GDD 26 §9). It is content:
+            // immutable, shared, and each run keeps its own StoryProgress through it — which
+            // is exactly why those are two classes. The sim plays the story even while the
+            // scene does not (PLAN S2a's storyInPlay), because balance cannot wait for a UI.
+            var cast = DataLoader.ParsePapers(Read("customers/papers.json"));
+            var story = DataLoader.ParseStory(Read("story/story.json"), cast, recipes);
+
             var stats = new Aggregate();
             for (int i = 0; i < runs; i++)
                 PlayRun($"TYC-{i:0000}", deck, recipes, archetypes, stats,
-                    DrinkBuildSeconds, DayCap, glassware, snacks);
+                    DrinkBuildSeconds, DayCap, glassware, snacks, story);
 
             string report = stats.Report(runs);
             Debug.Log(report);
@@ -96,7 +103,8 @@ namespace LastCall.EditorTools
             IReadOnlyList<RecipeDefinition> recipes, IReadOnlyList<ArchetypeDefinition> archetypes,
             Aggregate stats, double buildSeconds = DrinkBuildSeconds, int dayCap = DayCap,
             IReadOnlyList<GlasswareDefinition> glassware = null,
-            IReadOnlyList<SnackDefinition> snacks = null)
+            IReadOnlyList<SnackDefinition> snacks = null,
+            StoryArc story = null)
         {
             var starting = deck.Cards
                 .Where(c => c.Info == null || c.Info.Tier <= 1)
@@ -107,7 +115,7 @@ namespace LastCall.EditorTools
             // of every night silently declined for want of a tonic that existed nowhere.
             var run = new TycoonRun(shelf, recipes, new RunRng(seed),
                 regulars: new RegularsRegistry(archetypes), glassware: glassware, snacks: snacks,
-                lockedStock: deck.LockedCards);
+                lockedStock: deck.LockedCards, story: story);
 
             double buildTimer = buildSeconds;
             int guard = 0;
@@ -138,6 +146,18 @@ namespace LastCall.EditorTools
 
                     buildTimer += 1.0;
                     if (buildTimer < buildSeconds) continue;
+
+                    // THE LAST CUSTOMER GETS THE BAR TO THEMSELVES (GDD 26). They are the only
+                    // one on the floor when they are there, and they are not served through
+                    // the crowd's loop: no licence to read, no price to take, and a standard
+                    // the ordinary build does not aim at. One drink per build tick, like
+                    // everybody else, so the trial is measured against the same hands.
+                    if (run.LastCustomer != null)
+                    {
+                        PourForTheLastCustomer(run, stats);
+                        buildTimer = 0;
+                        continue;
+                    }
 
                     foreach (var visit in run.Floor.Seated)
                     {
@@ -185,9 +205,13 @@ namespace LastCall.EditorTools
                 }
                 else
                 {
-                    foreach (var visit in run.Floor.Finished)
+                    // THE COUNTED NIGHT ONLY (GDD 26 §3): the guest of the house is not one of
+                    // the bar's customers, so a trial must not show up as a serve, a storm-off
+                    // or a head in the throughput numbers.
+                    var counted = run.Floor.FinishedCounted();
+                    foreach (var visit in counted)
                         if (visit.State == VisitState.StormedOff) stats.StormOffs++;
-                    stats.CustomersFinished += run.Floor.Finished.Count;
+                    stats.CustomersFinished += counted.Count;
 
                     int refill = run.Shelf.RefillCost(run.Config.RefillPricePerCapacity);
                     if (refill > 0 && run.Money >= refill) run.RefillShelf();
@@ -263,6 +287,81 @@ namespace LastCall.EditorTools
             stats.DaysSurvived.Add(run.Ledger.History.Count);
             stats.FinalMoney.Add(run.Money);
             if (run.Phase == TycoonPhase.Closed) stats.Bankruptcies++;
+            // WHERE THE STORY GOT TO when the nights ran out (GDD 26 §9). A beat that stalls
+            // every run is either written for a shelf the bar cannot have by then or asks for
+            // more than the clock allows — and that shows up here as a name, not as a hunch.
+            if (run.Story != null)
+            {
+                if (run.Story.IsFinished) stats.ArcsFinished++;
+                else
+                {
+                    string id = run.Story.Current.Id;
+                    stats.StalledOn.TryGetValue(id, out int stalled);
+                    stats.StalledOn[id] = stalled + 1;
+                }
+            }
+        }
+
+        /// <summary>
+        /// The bot's night with the story's guest (GDD 26 §4, PLAN_last_call S2). It has no
+        /// dialogue to read, so it starts the trial the moment it gets to the stool, then
+        /// builds each ask as it is named — one per build tick, the same hands the crowd
+        /// gets. A shelf that cannot pour the ask gets the HONEST NO rather than a wrong
+        /// drink: the beat comes back next week, which is what the design says a blocked
+        /// night costs, and it is what a player who reads the warning would do.
+        ///
+        /// It pours FULLER here than for the crowd. The ordinary build fills 0.85 of the
+        /// glass and the trial wants <see cref="StoryTrial.MinFill"/> — a bartender pours to
+        /// the standard they are being held to, and a bot that did not would fail every
+        /// trial on the fill alone and report the whole arc as impossible.
+        /// </summary>
+        private static void PourForTheLastCustomer(TycoonRun run, Aggregate stats)
+        {
+            var guest = run.LastCustomer;
+            var trial = run.Trial;
+            if (guest == null || trial == null) return;
+
+            if (trial.State == TrialState.Talking)
+            {
+                stats.StoryTrials++;
+                run.BeginLastCallTrial();
+            }
+            if (trial.IsOver) return;
+
+            var ask = trial.Current;
+            if (ask == null) return;
+            // CAN IT ACTUALLY BE POURED, not just "is there a bottle of that style" — the
+            // last call happens at the DRIEST moment of the night, after the crowd has drunk
+            // the well down and before the morning's refill (2026-08-13, measured: the bot
+            // was topping an inspector's vodka soda out of an empty soda bottle and serving
+            // the vodka, 1600 times). CanMake answers the shelf's question; this one answers
+            // the bottle's. A bartender who cannot pour it says so.
+            // A Built drink goes together IN THE GLASS, the way the design says it does and
+            // the way the trial's fill standard demands (2026-08-13, measured). Anything the
+            // book wants shaken or stirred still goes through the tin, because the verb is
+            // half the grade.
+            run.DiscardGlass();
+            bool built = ask.Prep == PrepMethod.Built
+                ? BuildInTheGlass(run, ask, 0.98)
+                : BuildOrderedDrink(run, guest, fillTarget: 0.98);
+            if (!run.CanMake(guest.Order) || !EnoughLeftToPour(run, ask) || !built)
+            {
+                run.DeclineLastCall();
+                stats.StoryDeclined++;
+                return;
+            }
+
+            // The glass as it goes over the bar, folded into the miss key. A trial drink that
+            // comes back is worth exactly one line of evidence, and this is it — the wrong
+            // drink is never the interesting part, the vessel and the ratios are.
+            string glass = $"{run.ServingGlassware?.Id} {run.ServingGlass.TotalVolume:0.00}/" +
+                           $"{run.ServingGlass.Capacity:0.00} [" +
+                           string.Join(" ", run.ServingGlass.Ingredients.Select(
+                               i => i + "=" + run.ServingGlass.RatioOf(i).ToString("0.00"))) + "]";
+            var verdict = run.ServeTo(guest);
+            stats.RecordTrialDrink(verdict, ask, trial.Trial.MinFill, glass);
+            if (trial.State == TrialState.Passed) stats.StoryPassed++;
+            else if (trial.State == TrialState.Failed) stats.StoryFailed++;
         }
 
         /// <summary>
@@ -270,7 +369,57 @@ namespace LastCall.EditorTools
         /// charges aligned with the seat's visible intent — the same information a player
         /// has without opening the licence.
         /// </summary>
-        private static bool BuildOrderedDrink(TycoonRun run, CustomerVisit visit)
+        /// <summary>
+        /// Builds a BUILT drink in the glass, topping it up each time the glass changes under
+        /// it (2026-08-13, measured — GDD 26 §4). This exists because of a real trap the trial
+        /// walked straight into: a drink DECLARES ITSELF at the glass (`TycoonRun.PourAtGlass`
+        /// re-vessels on every match), so a half-built highball is repeatedly re-housed — pure
+        /// soda reads as something that lives in a rocks glass, and the spirit that follows no
+        /// longer fits. The bot's tin-first build survived it only by accident: at the crowd's
+        /// 0.85 target the clamped ratio happens to stay inside its band, and at the fill an
+        /// inspector wants it does not. It came back as 1600 identical wrong drinks and one
+        /// diagnostic line: `rocks:0.70/0.70 [soda_klara=0.84 vodka_astra=0.16]`.
+        ///
+        /// A player solves this without thinking: pour, watch the barman swap the glass, top
+        /// it up. Three passes are enough — a drink cannot be re-housed more often than that.
+        /// </summary>
+        private static bool BuildInTheGlass(TycoonRun run, RecipeDefinition recipe, double fillTarget)
+        {
+            var bands = recipe.RatioRequirements;
+            var ideal = RatioRecipeMatcher.IdealPour(recipe);
+            var bottles = new ShelfBottle[bands.Count];
+            for (int i = 0; i < bands.Count; i++)
+            {
+                bottles[i] = bands[i].IsStyleBand
+                    ? PickByStyle(run.Shelf, bands[i].Style)
+                    : PickBottleWithMost(run.Shelf, bands[i].Type);
+                if (bottles[i] == null) return false;
+            }
+
+            // IN SMALL ROUNDS, ALWAYS IN RATIO. Big confident pours are what break here: the
+            // glass can shrink under the drink (a highball's worth of vodka and ginger reads
+            // as something that lives in a rocks glass), and whatever was already in it stays
+            // in it — so an overfilled glass is a permanently wrong ratio, and the ingredient
+            // that had not gone in yet never gets in at all. That is exactly how the mule came
+            // back 1600 times as `rocks 0.70/0.70 [vodka=0.55 ginger=0.45]`, with no lime in
+            // it. A round is capped at a fraction of the glass, so a re-vessel costs a
+            // splash instead of the drink.
+            const int Rounds = 12;
+            for (int round = 0; round < Rounds; round++)
+            {
+                double capacity = run.ServingGlass.Capacity;
+                double target = Math.Max(recipe.MinFill, fillTarget) * capacity;
+                double gap = target - run.ServingGlass.TotalVolume;
+                if (gap <= 1e-6) break;
+                double step = Math.Min(gap, capacity * 0.15);
+                for (int i = 0; i < bands.Count; i++)
+                    if (step * ideal[i] > 1e-6) run.PourAtGlass(bottles[i].Id, step * ideal[i]);
+            }
+            return run.DrinkReady;
+        }
+
+        private static bool BuildOrderedDrink(TycoonRun run, CustomerVisit visit,
+            double fillTarget = 0.85)
         {
             run.DiscardGlass();
             var recipe = visit.Order.Wanted;
@@ -288,7 +437,7 @@ namespace LastCall.EditorTools
             if (run.Glassware != null)
                 foreach (var gw in run.Glassware)
                     if (gw.Id == recipe.GlassId) { glassCap = gw.Capacity; break; }
-            double volume = Math.Max(recipe.MinFill, 0.85)
+            double volume = Math.Max(recipe.MinFill, fillTarget)
                             * Math.Min(glassCap, run.Glass.Capacity);
             // Carbonated bands go in AT THE GLASS (C8): Core refuses them in the shaker, so
             // the bot builds the way the player does — still parts into the tin, fizz after
@@ -350,6 +499,44 @@ namespace LastCall.EditorTools
         /// <summary>The fullest bottle of a named style (v5 P10 style bands). Locked recipes
         /// mean nothing reaches this yet — it is here so the day they unlock, the bot answers
         /// them instead of quietly reading every style band as Spirit and building nonsense.</summary>
+        /// <summary>
+        /// Is there enough IN THE BOTTLES to pour this to the trial's standard? The build
+        /// clamps every measure to what is left (`Math.Min(share, bottle.Remaining)`), which
+        /// for the crowd is the right forgiving behaviour — a short measure still reads as
+        /// the drink — but for an inspector it silently hands over something else. Checked
+        /// against the ideal pour with a little slack, because the standard has a little too.
+        /// </summary>
+        private static bool EnoughLeftToPour(TycoonRun run, RecipeDefinition recipe)
+        {
+            if (recipe.RatioRequirements == null || recipe.RatioRequirements.Count == 0) return true;
+            double glassCap = run.Config.GlassCapacity;
+            if (run.Glassware != null)
+                foreach (var gw in run.Glassware)
+                    if (gw.Id == recipe.GlassId) { glassCap = gw.Capacity; break; }
+            double volume = Math.Max(recipe.MinFill, 0.98) * Math.Min(glassCap, run.ServingGlass.Capacity);
+            var ideal = RatioRecipeMatcher.IdealPour(recipe);
+            for (int i = 0; i < recipe.RatioRequirements.Count; i++)
+            {
+                var band = recipe.RatioRequirements[i];
+                var bottle = band.IsStyleBand
+                    ? PickByStyle(run.Shelf, band.Style)
+                    : PickBottleWithMost(run.Shelf, band.Type);
+                if (bottle == null || bottle.Remaining < volume * ideal[i] * 0.95) return false;
+            }
+            return true;
+        }
+
+        private static ShelfBottle PickBottleWithMost(Shelf shelf, IngredientType type)
+        {
+            ShelfBottle best = null;
+            foreach (var bottle in shelf.Bottles)
+            {
+                if (bottle.IsEmpty || bottle.Ingredient.Type != type) continue;
+                if (best == null || bottle.Remaining > best.Remaining) best = bottle;
+            }
+            return best;
+        }
+
         private static ShelfBottle PickByStyle(Shelf shelf, string style)
         {
             ShelfBottle best = null;
@@ -410,6 +597,32 @@ namespace LastCall.EditorTools
             // v5 P11: the base/tip split is the phase's whole point, and refusals/declines are
             // the two new ways a serve can end.
             public int Refused, Declined, SpecOrders, SpecFull;
+            // The written nights (GDD 26 §9). Kept apart from the serve counters on purpose:
+            // a trial is not a service, and folding it in would move numbers the story is
+            // supposed to leave alone. StalledOn is the canary the design asked for — which
+            // beat a run was still owing when its thirty nights ran out.
+            public int StoryTrials, StoryDrinks, StoryPassed, StoryFailed, StoryDeclined;
+            public int ArcsFinished;
+            public readonly Dictionary<string, int> StalledOn = new Dictionary<string, int>();
+            // WHY a trial drink came back (GDD 26 §4). Without this the report can only say
+            // that the bot fails, which is a fact and not a reason — and the reason is the
+            // whole point of measuring: a standard nobody can meet is a design bug, and a
+            // bot that pours wrong is a bot bug, and they look identical from the outside.
+            public readonly Dictionary<string, int> TrialMisses = new Dictionary<string, int>();
+
+            public void RecordTrialDrink(ServiceVerdict verdict, RecipeDefinition ask,
+                double minFill, string glass = null)
+            {
+                StoryDrinks++;
+                if (verdict.CraftLanded) return;   // the trial's verdict carries "perfect" here
+                string why = verdict.Match != OrderMatch.Exact ? $"{ask.Id}: not the drink ({verdict.Match})"
+                    : verdict.SpecScore < 1.0 ? $"{ask.Id}: craft ({verdict.SpecScore:0.00})"
+                    : verdict.FillScore < minFill ? $"{ask.Id}: short pour ({verdict.FillScore:0.00})"
+                    : $"{ask.Id}: method";
+                if (glass != null) why += $" — {glass}";
+                TrialMisses.TryGetValue(why, out int n);
+                TrialMisses[why] = n + 1;
+            }
             public long BaseSum, TipSum;
             public double SpecScoreSum, FillScoreSum;
             // v5 P12: the night is open, so throughput is a result rather than a setting.
@@ -509,6 +722,37 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Snack serves (of serves) | {Pct(SnackServes, Serves)} · ${SnackIncome} |");
                 sb.AppendLine($"| Glasses bussed | {GlassesBussed} |");
                 sb.AppendLine($"| Recipes bought (of 200 runs) | {RecipesBought} |");
+                sb.AppendLine();
+                sb.AppendLine("## The written nights (GDD 26)");
+                sb.AppendLine();
+                sb.AppendLine("The bot starts the trial the moment it reaches the stool (it has no");
+                sb.AppendLine("dialogue to read), pours every ask to the trial's own fill standard, and");
+                sb.AppendLine("says an honest no when the shelf cannot make one. None of this touches");
+                sb.AppendLine("the numbers above: a guest of the house is not a customer.");
+                sb.AppendLine();
+                sb.AppendLine("| Measure | Value |");
+                sb.AppendLine("|---|---|");
+                sb.AppendLine($"| Trials walked in | {StoryTrials} |");
+                sb.AppendLine($"| Drinks poured for them | {StoryDrinks} |");
+                sb.AppendLine($"| Passed / failed / declined | {StoryPassed} / {StoryFailed} / {StoryDeclined} |");
+                sb.AppendLine($"| Arcs finished inside {DayCap} nights | {Pct(ArcsFinished, Runs)} |");
+                if (StalledOn.Count > 0)
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("| Still owing at the horizon | Runs |");
+                    sb.AppendLine("|---|---|");
+                    foreach (var pair in StalledOn.OrderByDescending(p => p.Value))
+                        sb.AppendLine($"| {pair.Key} | {Pct(pair.Value, Runs)} |");
+                }
+                if (TrialMisses.Count > 0)
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("| What came back, and why | Drinks |");
+                    sb.AppendLine("|---|---|");
+                    foreach (var pair in TrialMisses.OrderByDescending(p => p.Value))
+                        sb.AppendLine($"| {pair.Key} | {pair.Value} |");
+                }
+
                 sb.AppendLine();
                 sb.AppendLine("## Red days by day number");
                 sb.AppendLine();

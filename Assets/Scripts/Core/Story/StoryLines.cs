@@ -30,6 +30,15 @@ namespace LastCall.Core
         /// <summary>The answer to an honest no. Declining costs a night, not the arc.</summary>
         public IReadOnlyList<string> Declined { get; }
 
+        /// <summary>
+        /// The host, DAYS EARLY, on the quiet nights before this beat — the one warning the
+        /// player gets about what the shelf will need (GDD 26 §4). It exists because the asks
+        /// are revealed one at a time: the post-it cannot name what is missing in advance, so
+        /// somebody has to, or the weekend is a wall instead of a deadline. It names the
+        /// style in the market's own word, not a colour.
+        /// </summary>
+        public IReadOnlyList<string> HostWarning { get; }
+
         /// <summary>The host's framing, before the guest speaks and after they leave.</summary>
         public IReadOnlyList<string> HostBefore { get; }
         public IReadOnlyList<string> HostAfter { get; }
@@ -37,8 +46,9 @@ namespace LastCall.Core
         public StoryLines(IReadOnlyList<string> ask = null, IReadOnlyList<string> nudge = null,
             IReadOnlyList<string> servedRight = null, IReadOnlyList<string> servedWrong = null,
             IReadOnlyList<string> declined = null, IReadOnlyList<string> hostBefore = null,
-            IReadOnlyList<string> hostAfter = null)
+            IReadOnlyList<string> hostAfter = null, IReadOnlyList<string> hostWarning = null)
         {
+            HostWarning = hostWarning ?? Array.Empty<string>();
             Ask = ask ?? Array.Empty<string>();
             Nudge = nudge ?? Array.Empty<string>();
             ServedRight = servedRight ?? Array.Empty<string>();

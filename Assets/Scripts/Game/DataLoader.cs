@@ -303,6 +303,170 @@ namespace LastCall.Game
             }
         }
 
+        /// <summary>
+        /// The written nights (GDD 26 §10) — `Assets/Data/story/story.json` into a
+        /// <see cref="StoryArc"/>. It needs both other files in hand: the CAST, because a
+        /// story character is a face plus the papers that face already carries (§8), and the
+        /// RECIPES, because every ask is graded against a real one.
+        ///
+        /// Everything that can be checked is checked here, loudly, at load: a look nobody has
+        /// papers for, a drink that does not exist, a night that is not one of the six, a
+        /// guest written for a quiet night, a lesson naming a condition no code observes, a
+        /// beat leading nowhere. The arc is content the player never edits — so every one of
+        /// these is a mistake somebody made in a text file, and all of them would otherwise
+        /// show up weeks later as a customer who never walks in.
+        /// </summary>
+        public static StoryArc ParseStory(string json, PatronRoster cast,
+            IReadOnlyList<RecipeDefinition> recipes)
+        {
+            if (cast == null) throw new ArgumentNullException(nameof(cast));
+            if (recipes == null) throw new ArgumentNullException(nameof(recipes));
+            var dto = FromJson<StoryFileDto>(json, "story");
+            if (dto.beats == null || dto.beats.Count == 0)
+                throw new FormatException("Story file has no beats in it.");
+
+            var book = new Dictionary<string, RecipeDefinition>(StringComparer.Ordinal);
+            foreach (var recipe in recipes) book[recipe.Id] = recipe;
+
+            // ── the people ───────────────────────────────────────────────────────
+            var people = new Dictionary<string, StoryCharacter>(StringComparer.Ordinal);
+            int hosts = 0;
+            if (dto.characters == null || dto.characters.Count == 0)
+                throw new FormatException("Story file has nobody in it.");
+            foreach (var c in dto.characters)
+            {
+                if (people.ContainsKey(c.id ?? string.Empty))
+                    throw new FormatException($"Story: two characters are called '{c.id}'.");
+                var papers = cast.For(c.look ?? string.Empty);
+                if (papers == null)
+                    throw new FormatException(
+                        $"Story character '{c.id}' wears the look '{c.look}', which nobody in " +
+                        "papers.json has papers for.");
+                bool host = string.Equals(c.role, "host", StringComparison.OrdinalIgnoreCase);
+                if (!host && !string.Equals(c.role, "guest", StringComparison.OrdinalIgnoreCase))
+                    throw new FormatException(
+                        $"Story character '{c.id}' has role '{c.role}'; it is 'host' or 'guest'.");
+                if (host) hosts++;
+                if (!string.IsNullOrEmpty(c.placeholderLook) && cast.For(c.placeholderLook) == null)
+                    throw new FormatException(
+                        $"Story character '{c.id}' borrows the face '{c.placeholderLook}', " +
+                        "which is not in papers.json.");
+                try
+                {
+                    people[c.id] = new StoryCharacter(c.id, c.look, papers.Name, papers.Age,
+                        papers.Country, host, c.blurb, c.placeholderLook);
+                }
+                catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
+                {
+                    throw new FormatException($"Story character '{c.id}': {e.Message}");
+                }
+            }
+            if (hosts != 1)
+                throw new FormatException(
+                    $"Story: the bar has {hosts} hosts; it has exactly one (GDD 26 §1b).");
+
+            // ── the nights ───────────────────────────────────────────────────────
+            var beats = new List<StoryBeat>(dto.beats.Count);
+            foreach (var b in dto.beats)
+            {
+                if (!people.TryGetValue(b.character ?? string.Empty, out var who))
+                    throw new FormatException(
+                        $"Beat '{b.id}' is about '{b.character}', who is not in the story's characters.");
+                var night = BarCalendar.Parse(b.night);
+                if (night == null)
+                    throw new FormatException(
+                        $"Beat '{b.id}' happens on a '{b.night}'; the bar opens Tuesday to Sunday.");
+                if (b.asks == null || b.asks.Count == 0)
+                    throw new FormatException($"Beat '{b.id}' asks for nothing.");
+
+                var asks = new List<RecipeDefinition>(b.asks.Count);
+                foreach (var id in b.asks)
+                {
+                    if (!book.TryGetValue(id ?? string.Empty, out var drink))
+                        throw new FormatException(
+                            $"Beat '{b.id}' asks for '{id}', which is not a recipe.");
+                    asks.Add(drink);
+                }
+                RequireRecipe(book, b.grantsRecipeOnAsk, b.id, "grantsRecipeOnAsk");
+                RequireRecipe(book, b.rewardRecipe, b.id, "rewardRecipe");
+
+                // THE ASK ALWAYS NAMES WHAT IS MISSING (GDD 26 §4, the arc's first standing
+                // rule). Since the drinks are revealed one at a time, the host's early
+                // warning is the ONLY notice a player gets — so a beat that needs a style the
+                // shelf may not have, and never says the word, is a wall pretending to be a
+                // quest. Checked here because it is a rule about CONTENT, and content is
+                // where it gets broken.
+                if (!string.IsNullOrEmpty(b.needStyle) && !Mentions(b.hostWarning, b.needStyle))
+                    throw new FormatException(
+                        $"Beat '{b.id}' needs '{b.needStyle}' on the shelf and no hostWarning line " +
+                        "says the word. The player has to be told, days early, in the market's " +
+                        "own vocabulary (GDD 26 §4).");
+
+                try
+                {
+                    var trial = new StoryTrial(asks, b.seconds,
+                        b.minFill > 0 ? b.minFill : StoryTrial.DefaultMinFill, b.allowedMistakes);
+                    var lines = new StoryLines(b.ask, b.nudge, b.servedRight, b.servedWrong,
+                        b.declined, b.hostBefore, b.hostAfter, b.hostWarning);
+                    var reward = new StoryReward(b.rewardMoney, b.rewardStars,
+                        b.rewardRecipe, b.rewardBottle);
+                    beats.Add(new StoryBeat(b.id, who, trial, b.week, night.Value, lines, reward,
+                        b.needStyle, b.needTier, b.grantsRecipeOnAsk,
+                        b.returnsAfterWeeks > 0 ? b.returnsAfterWeeks : 1, b.next));
+                }
+                catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
+                {
+                    throw new FormatException($"Beat '{b.id}': {e.Message}");
+                }
+            }
+
+            // ── the host's lessons ───────────────────────────────────────────────
+            var lessons = new List<StoryLesson>();
+            if (dto.lessons != null)
+                foreach (var l in dto.lessons)
+                {
+                    var cue = StoryCues.Parse(l.when);
+                    if (cue == null)
+                        throw new FormatException(
+                            $"Lesson '{l.id}' fires on '{l.when}', which nothing in the game " +
+                            $"watches for. It is one of: {string.Join(", ", StoryCues.Names)}.");
+                    try
+                    {
+                        lessons.Add(new StoryLesson(l.id, cue.Value, l.say));
+                    }
+                    catch (ArgumentException e)
+                    {
+                        throw new FormatException($"Lesson '{l.id}': {e.Message}");
+                    }
+                }
+
+            try
+            {
+                return new StoryArc(beats, lessons);
+            }
+            catch (ArgumentException e)
+            {
+                throw new FormatException("Story file: " + e.Message);
+            }
+        }
+
+        private static bool Mentions(List<string> lines, string word)
+        {
+            if (lines == null) return false;
+            foreach (var line in lines)
+                if (!string.IsNullOrEmpty(line)
+                    && line.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0) return true;
+            return false;
+        }
+
+        private static void RequireRecipe(Dictionary<string, RecipeDefinition> book,
+            string id, string beatId, string field)
+        {
+            if (string.IsNullOrEmpty(id)) return;
+            if (!book.ContainsKey(id))
+                throw new FormatException($"Beat '{beatId}' names '{id}' as its {field}, which is not a recipe.");
+        }
+
         private static PrepMethod ParsePrep(string raw, string context)
         {
             if (string.IsNullOrEmpty(raw)) return PrepMethod.Shaken;
@@ -426,6 +590,63 @@ namespace LastCall.Game
         {
             public int version;
             public List<ArchetypeDto> archetypes;
+        }
+
+        [Serializable]
+        private sealed class StoryFileDto
+        {
+            public int version;
+            public List<StoryCharacterDto> characters;
+            public List<StoryBeatDto> beats;
+            public List<StoryLessonDto> lessons;
+        }
+
+        [Serializable]
+        private sealed class StoryCharacterDto
+        {
+            public string id;
+            public string look;
+            public string role;
+            public string blurb;
+            public string placeholderLook;
+        }
+
+        [Serializable]
+        private sealed class StoryBeatDto
+        {
+            public string id;
+            public string character;
+            public int week;
+            public string night;
+            public List<string> asks;
+            public double seconds;
+            public double minFill;          // 0 = the house standard (0.90)
+            public int allowedMistakes;
+            public string needStyle;
+            public int needTier;
+            public string grantsRecipeOnAsk;
+            public List<string> ask;
+            public List<string> nudge;
+            public List<string> servedRight;
+            public List<string> servedWrong;
+            public List<string> declined;
+            public List<string> hostWarning;
+            public List<string> hostBefore;
+            public List<string> hostAfter;
+            public int rewardMoney;
+            public double rewardStars;
+            public string rewardRecipe;
+            public string rewardBottle;
+            public int returnsAfterWeeks;   // 0 = the default, one week
+            public string next;
+        }
+
+        [Serializable]
+        private sealed class StoryLessonDto
+        {
+            public string id;
+            public string when;
+            public List<string> say;
         }
 
         [Serializable]

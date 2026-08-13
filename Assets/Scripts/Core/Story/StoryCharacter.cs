@@ -34,8 +34,14 @@ namespace LastCall.Core
         /// beat. Never printed on the licence.</summary>
         public string Blurb { get; }
 
+        /// <summary>A face the plate BORROWS until this character's own portrait is drawn
+        /// (GDD 26 §1b). Null once it is — and the day the real one lands, this field and the
+        /// line in the file that fills it are both deleted. Presentation's business only.</summary>
+        public string PlaceholderLook { get; }
+
         public StoryCharacter(string id, string look, string name, int age = 30,
-            string hometown = null, bool isHost = false, string blurb = null)
+            string hometown = null, bool isHost = false, string blurb = null,
+            string placeholderLook = null)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("A story character needs an id.", nameof(id));
@@ -53,6 +59,7 @@ namespace LastCall.Core
             Hometown = string.IsNullOrWhiteSpace(hometown) ? "this side of town" : hometown;
             IsHost = isHost;
             Blurb = blurb ?? string.Empty;
+            PlaceholderLook = string.IsNullOrWhiteSpace(placeholderLook) ? null : placeholderLook;
         }
 
         public override string ToString() => $"{Name} ({Look})";
