@@ -99,6 +99,9 @@ namespace LastCall.EditorTools
             so.FindProperty("fixturesJson").objectReferenceValue = LoadRequired<TextAsset>(FixturesPath);
             so.FindProperty("papersJson").objectReferenceValue = LoadRequired<TextAsset>(PapersPath);
             so.FindProperty("storyJson").objectReferenceValue = LoadRequired<TextAsset>(StoryPath);
+            // The written nights are IN PLAY from S3 on: the plate can talk now, so the guest
+            // has something to arrive into and something to end the conversation with.
+            so.FindProperty("storyInPlay").boolValue = true;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             // The stage carries only what the player still sees (2026-08-07 sweep): the room,

@@ -221,6 +221,8 @@ MonoBehaviour:
   snacksJson: {fileID: 4900000, guid: 0630b2eb5c30e684483c02153f8b7403, type: 3}
   fixturesJson: {fileID: 4900000, guid: 03c083d2e1aa7974894cccfe4e03849a, type: 3}
   papersJson: {fileID: 4900000, guid: 349acc66d6515694b8f475fd1e4e07a8, type: 3}
+  storyJson: {fileID: 4900000, guid: e57010fbf0fa64542a690017d4d51d5f, type: 3}
+  storyInPlay: 1
   seed: LASTCALL-DEV
 --- !u!4 &309217864
 Transform:

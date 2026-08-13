@@ -787,6 +787,11 @@ namespace LastCall.Core
         private bool _lastCallSpent;      // one last customer a night, served or not
         private bool _lastCallAnswered;   // the arc has been told how tonight went
 
+        /// <summary>How long the guest stays on the stool after the trial ends, so the beat
+        /// can be finished out loud (GDD 26 §7). Long enough for two lines and a look at
+        /// them; the night cannot close while they are sitting there, which is the point.</summary>
+        public const double LastWordSeconds = 12.0;
+
         /// <summary>
         /// The last customer, in the one place the night is already settled (GDD 26 §2). Two
         /// things happen here and nowhere else: the scripted guest is let in once the room has
@@ -901,8 +906,10 @@ namespace LastCall.Core
             }
             else
             {
-                // Passed or out of mistakes: they get up either way, owing nothing.
-                visit.GetUp(Trial.State == TrialState.Passed ? 1.0 : 0.0);
+                // Passed or out of mistakes: they get up either way, owing nothing — but not
+                // on this tick. The beat's last words are said now, and a stool that emptied
+                // instantly ended the night on top of them (GDD 26 §7).
+                visit.GetUp(Trial.State == TrialState.Passed ? 1.0 : 0.0, LastWordSeconds);
                 AnswerLastCall(Trial.State == TrialState.Passed);
             }
 
@@ -1545,8 +1552,8 @@ namespace LastCall.Core
             // the honest no that ends a trial is not also a mark against the room.
             if (ReferenceEquals(visit, LastCustomer))
             {
-                Trial?.Fail();
-                visit.GetUp();
+                Trial?.Fail(toldNo: true);
+                visit.GetUp(0.0, LastWordSeconds);   // they have a line to leave on
                 AnswerLastCall(false);
                 return verdict;
             }

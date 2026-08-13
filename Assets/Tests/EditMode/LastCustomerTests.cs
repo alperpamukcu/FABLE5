@@ -489,16 +489,43 @@ namespace LastCall.Tests
         {
             var run = NewRun(OneWeekend());
             SitAndBegin(run);
+            var told = run.LastCustomer;
             run.DeclineLastCall();
 
+            // They stay on the stool a moment to leave their line on (GDD 26 §7), so what
+            // this pins is not that the stool is empty — it is that NOBODY ELSE comes.
             int guard = 0;
             while (run.Phase == TycoonPhase.DayOpen)
             {
                 Assert.Less(guard++, 100);
                 run.Tick(5);
-                Assert.IsNull(run.LastCustomer, "the last call already happened tonight");
+                if (run.LastCustomer != null)
+                    Assert.AreSame(told, run.LastCustomer, "a second guest walked in tonight");
             }
+            Assert.IsNull(run.LastCustomer, "and the stool is empty by the close");
             Assert.AreEqual(1, run.Story.Missed);
+        }
+
+        [Test]
+        public void The_guest_stays_a_moment_to_say_the_last_thing()
+        {
+            // The failure this pins was invisible in Core and obvious in play: the guest got
+            // up on the same tick as the serve, the room emptied, the night completed, and
+            // the day-end slip came up over a line nobody had read.
+            var run = NewRun(OneWeekend());
+            SitAndBegin(run);
+            var guest = run.LastCustomer;
+            for (int i = 0; i < 3; i++) { BuildPerfect(run); run.ServeTo(guest); }
+
+            Assert.AreEqual(TrialState.Passed, run.Trial.State);
+            Assert.IsTrue(run.Floor.Seated.Contains(guest), "they are still there to say it");
+            Assert.AreEqual(TycoonPhase.DayOpen, run.Phase, "and the night has not closed on it");
+
+            // One tick past the linger takes them off the stool AND closes the night, which
+            // is the whole shape of the beat: the words, then the door, then the books.
+            run.Tick(TycoonRun.LastWordSeconds + 1);
+            Assert.IsFalse(run.Floor.Seated.Contains(guest), "and then they go");
+            Assert.AreEqual(TycoonPhase.DayEnd, run.Phase);
         }
 
         // ── the return clock (the silent failure) ───────────────────────────────

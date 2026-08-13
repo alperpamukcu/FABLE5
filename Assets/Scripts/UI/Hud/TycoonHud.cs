@@ -188,6 +188,11 @@ namespace LastCall.UI
         /// </summary>
         private string NameOn(CustomerVisit visit, PatronLook look)
         {
+            // The story's guest carries their OWN name, not the borrowed face's (GDD 26 §1b).
+            // Until Ece's portrait is drawn her plate wears somebody else's picture, and a
+            // name read off that picture would introduce her as Serena Fontana.
+            if (visit != null && visit.OnTheHouse && visit.Regular != null
+                && !string.IsNullOrEmpty(visit.Regular.Name)) return visit.Regular.Name;
             var papers = PapersFor(look);
             if (papers != null && !string.IsNullOrEmpty(papers.Name)) return papers.Name;
             return visit?.Regular != null && !string.IsNullOrEmpty(visit.Regular.Name)
@@ -1019,6 +1024,7 @@ namespace LastCall.UI
 
             RefreshTopBar();
             RefreshSeats();
+            SyncLastCall(run);    // after the seats: the guest is one of them
             UpdateOrderTip();     // after the seats: it reads the tickets they just placed
             UpdateDrinkGlass();
             UpdateEscape();
@@ -2260,6 +2266,16 @@ namespace LastCall.UI
                         view.Wants.text = "READY TO ORDER";
                         view.Order.text = "";
                     }
+                    else if (visit.OnTheHouse)
+                    {
+                        // THE STORY'S GUEST NAMES ONE DRINK AT A TIME, and the post-it is
+                        // where it is named (GDD 26 §4). Their licence is open from the
+                        // moment they sit — they introduced themselves — so the ticket would
+                        // otherwise print the ask over their head and hand the player the
+                        // whole trial in advance, which is the one thing the reveal is for.
+                        view.Wants.text = "TALK TO THEM";
+                        view.Order.text = "";
+                    }
                     else
                     {
                         // Read: the name above, the order below — the card said the rest.
@@ -2312,6 +2328,11 @@ namespace LastCall.UI
                 bool beingIgnored = visit.AwaitingOrderTaking;
                 float patience = (deciding || drinking) ? 1f : (float)visit.PatienceFraction;
                 float gaugeW = BustW * 0.72f - 2f;
+                // The story's guest keeps their clock on the POST-IT, not over their head
+                // (GDD 26 §4): it is one clock for a run of drinks, it does not start until
+                // the talking stops, and a bar over a stool would read as ordinary patience.
+                if (view.Gauge != null && view.Gauge.gameObject.activeSelf == visit.OnTheHouse)
+                    view.Gauge.gameObject.SetActive(!visit.OnTheHouse);
                 view.PatienceFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(gaugeW * patience), -2);
                 view.PatienceFill.color = (deciding || drinking) ? UITheme.Cyan[3]
                     : beingIgnored
@@ -2535,6 +2556,17 @@ namespace LastCall.UI
             // the whole point of having twenty-two of them.
             foreach (var seat in _seats)
                 if (seat.Visit == visit && seat.Look != null) return seat.Look;
+
+            // THE STORY'S GUEST IS NOT ROLLED (GDD 26 §8): the beat names the face, and it
+            // is the same face every night of the run. Hashing their name instead would put
+            // the rent collector in a different body each time he came back — which is the
+            // one thing a recurring character cannot survive.
+            var run = Run;
+            if (visit != null && run != null && ReferenceEquals(visit, run.LastCustomer))
+            {
+                var written = LookForStory(run.LastCallBeat?.Who);
+                if (written != null) return written;
+            }
 
             string key = visit != null && visit.Regular != null
                          && !string.IsNullOrEmpty(visit.Regular.Name)
@@ -6061,6 +6093,265 @@ namespace LastCall.UI
             return val;
         }
 
+        // ── the last customer (GDD 26 §7, PLAN_last_call S3) ────────────────────
+        //
+        // Two surfaces and nothing else. THE PLATE is the conversation: a face, a name, one
+        // line, and the two things the player can do about it — listen, or say no tonight. It
+        // lives at the bottom edge, on the player's side of the counter, because the room
+        // behind the bar is the one thing this game never covers up. THE POST-IT is the job:
+        // the drink being asked for right now, how many are left, and the clock. It hangs
+        // above EVERYTHING — over the bench, over the tap — because the whole point of a
+        // trial is that you are working while it runs, and a note you cannot read while
+        // pouring is a note nobody wrote.
+
+        private RectTransform _plate;            // the dialogue plate
+        private Image _plateFace;
+        private Text _plateName, _plateLine, _plateKeyLabel;
+        private RectTransform _plateKey, _plateNoKey;
+        private RectTransform _postIt;           // the ask, the count, the clock
+        private Text _postWho, _postAsk, _postCount, _postMissing;
+        private Image _postClock;
+
+        /// <summary>The lines the plate is working through, and where it has got to.</summary>
+        private readonly List<(string who, string look, string line)> _plateScript =
+            new List<(string, string, string)>();
+        private int _plateAt;
+        private string _plateStage = "";         // which part of the night the script is for
+
+        private void BuildLastCall(RectTransform root)
+        {
+            // Its own layer at 7: above the drinkers and the counter props, below the service
+            // flow (12) — opening the bench must cover the conversation, not fight it.
+            _plate = NewRect("LastCallPlate", root);
+            var plateCanvas = _plate.gameObject.AddComponent<Canvas>();
+            plateCanvas.overrideSorting = true;
+            plateCanvas.sortingOrder = 7;
+            _plate.gameObject.AddComponent<GraphicRaycaster>();
+            Place(_plate, new Vector2(0.5f, 0f), new Vector2(820, 140), new Vector2(0, 14));
+            var paper = _plate.gameObject.AddComponent<Image>();
+            paper.sprite = ChromeArt.Card();
+            paper.type = Image.Type.Sliced;
+            paper.color = UITheme.Cream[4];
+            _plate.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
+
+            // The face, in a well cut to it — the same 2x whole-step rule the licence photo
+            // obeys, because it is the same drawing.
+            var well = NewRect("Well", _plate);
+            Place(well, new Vector2(0, 0.5f), new Vector2(104, 104), new Vector2(70, 0));
+            well.gameObject.AddComponent<Image>().color = UITheme.Night[2];
+            var photo = NewRect("Photo", well);
+            Place(photo, new Vector2(0.5f, 0.5f), new Vector2(96, 96), Vector2.zero);
+            _plateFace = photo.gameObject.AddComponent<Image>();
+            _plateFace.preserveAspect = true;
+            _plateFace.raycastTarget = false;
+
+            // The words live BETWEEN the face and the keys, and the column is measured from
+            // both: the well's pivot is its left edge, so it ends at 174, and the key column
+            // starts at 646. 200..640 clears each by a margin. A line that runs under a
+            // button is a line the player reads half of — which is how the first cut of this
+            // plate shipped, and it was obvious the moment it was looked at.
+            _plateName = NewText("Who", _plate, _display, 16, TextAnchor.UpperLeft, UITheme.Night[1]);
+            Place(_plateName.rectTransform, new Vector2(0, 1), new Vector2(440, 22),
+                new Vector2(200, -24));
+            _plateName.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            _plateLine = NewText("Line", _plate, _body, 12, TextAnchor.UpperLeft, UITheme.Night[1]);
+            Place(_plateLine.rectTransform, new Vector2(0, 1), new Vector2(440, 72),
+                new Vector2(200, -54));
+
+            // Two keys, and the second one is the honest exit. A player who cannot pour what
+            // is being asked for must always be able to say so (GDD 26 §5) — the beat comes
+            // back, and nothing about the night is lost by admitting it.
+            _plateKey = NewRect("Listen", _plate);
+            Place(_plateKey, new Vector2(1, 0.5f), new Vector2(150, 40), new Vector2(-24, 22));
+            var keyImg = _plateKey.gameObject.AddComponent<Image>();
+            keyImg.color = UITheme.PrimaryAction;
+            var keyBtn = _plateKey.gameObject.AddComponent<Button>();
+            keyBtn.targetGraphic = keyImg;
+            keyBtn.onClick.AddListener(OnPlateKey);
+            _plateKeyLabel = NewText("Label", _plateKey, _body, 12, TextAnchor.MiddleCenter,
+                UITheme.TextOnAmber);
+            Stretch(_plateKeyLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _plateKeyLabel.text = "GO ON";
+
+            _plateNoKey = NewRect("SayNo", _plate);
+            Place(_plateNoKey, new Vector2(1, 0.5f), new Vector2(150, 32), new Vector2(-24, -26));
+            var noImg = _plateNoKey.gameObject.AddComponent<Image>();
+            noImg.color = UITheme.Night[3];
+            var noBtn = _plateNoKey.gameObject.AddComponent<Button>();
+            noBtn.targetGraphic = noImg;
+            noBtn.onClick.AddListener(OnSayNoTonight);
+            var noLabel = NewText("Label", _plateNoKey, _body, 8, TextAnchor.MiddleCenter,
+                UITheme.TextPrimary);
+            Stretch(noLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            noLabel.text = "SAY NO TONIGHT";
+            _plate.gameObject.SetActive(false);
+
+            // The post-it, top right, ABOVE THE BENCH (14): the note you work from.
+            _postIt = NewRect("LastCallNote", root);
+            var noteCanvas = _postIt.gameObject.AddComponent<Canvas>();
+            noteCanvas.overrideSorting = true;
+            noteCanvas.sortingOrder = 14;
+            // Clear of the LAST CALL plaque, which lives at the top right of the room and is
+            // the other thing this night is announced by. Two magenta words on top of each
+            // other read as one broken thing.
+            Place(_postIt, new Vector2(1, 1), new Vector2(232, 150), new Vector2(-18, -152));
+            var note = _postIt.gameObject.AddComponent<Image>();
+            note.sprite = ChromeArt.Card();
+            note.type = Image.Type.Sliced;
+            note.color = UITheme.Amber[4];
+            note.raycastTarget = false;
+
+            _postWho = NewText("Who", _postIt, _body, 8, TextAnchor.UpperLeft, UITheme.Night[2]);
+            Place(_postWho.rectTransform, new Vector2(0, 1), new Vector2(200, 12), new Vector2(16, -12));
+            _postAsk = NewText("Ask", _postIt, _display, 16, TextAnchor.UpperLeft, UITheme.Night[1]);
+            Place(_postAsk.rectTransform, new Vector2(0, 1), new Vector2(206, 44), new Vector2(16, -30));
+            _postCount = NewText("Count", _postIt, _body, 12, TextAnchor.UpperLeft, UITheme.Night[2]);
+            Place(_postCount.rectTransform, new Vector2(0, 1), new Vector2(200, 16), new Vector2(16, -84));
+            _postMissing = NewText("Missing", _postIt, _body, 8, TextAnchor.UpperLeft, UITheme.ViceRed[2]);
+            Place(_postMissing.rectTransform, new Vector2(0, 1), new Vector2(200, 24), new Vector2(16, -104));
+
+            var track = NewRect("Track", _postIt);
+            Place(track, new Vector2(0, 0), new Vector2(200, 8), new Vector2(16, 14));
+            track.gameObject.AddComponent<Image>().color = UITheme.Night[2];
+            var fill = NewRect("Fill", track);
+            fill.anchorMin = new Vector2(0, 0);
+            fill.anchorMax = new Vector2(1, 1);
+            fill.offsetMin = fill.offsetMax = Vector2.zero;
+            fill.pivot = new Vector2(0, 0.5f);
+            _postClock = fill.gameObject.AddComponent<Image>();
+            _postClock.color = UITheme.Magenta[4];
+            _postClock.type = Image.Type.Filled;
+            _postClock.fillMethod = Image.FillMethod.Horizontal;
+            _postIt.gameObject.SetActive(false);
+        }
+
+        private PatronLook LookNamed(string slug)
+        {
+            if (string.IsNullOrEmpty(slug)) return null;
+            foreach (var look in _looks) if (look.Slug == slug) return look;
+            return null;
+        }
+
+        /// <summary>The face this beat's person wears — their own if it has been drawn, the
+        /// one they borrow until then (GDD 26 §1b). Null once neither exists, which is a
+        /// content error the loader already refuses.</summary>
+        private PatronLook LookForStory(StoryCharacter who) =>
+            who == null ? null : LookNamed(who.Look) ?? LookNamed(who.PlaceholderLook);
+
+        /// <summary>
+        /// Drives the two surfaces off the run's own state (GDD 26 §4). It owns no timing and
+        /// no rules: Core decides whether a trial is talking, pouring or over, and this reads
+        /// that once a frame. The one thing it DOES own is the script — which line of the
+        /// beat is being said, and by whom.
+        /// </summary>
+        private void SyncLastCall(TycoonRun run)
+        {
+            var beat = run.LastCallBeat;
+            var trial = run.Trial;
+            // Nothing of this survives the night's end: the slip is the next thing the player
+            // reads, and a plate at layer 7 would sit on top of it.
+            if (run.Phase != TycoonPhase.DayOpen) { beat = null; trial = null; }
+            if (beat == null || trial == null)
+            {
+                if (_plate != null && _plate.gameObject.activeSelf) _plate.gameObject.SetActive(false);
+                if (_postIt != null && _postIt.gameObject.activeSelf) _postIt.gameObject.SetActive(false);
+                _plateStage = "";
+                return;
+            }
+
+            // The script is rebuilt when the night moves to a new part of itself, and only
+            // then: a plate that re-cued every frame would never get past its first line.
+            string stage = trial.State == TrialState.Talking ? "ask"
+                : trial.State == TrialState.Pouring ? "pour"
+                : trial.State == TrialState.Passed ? "kept" : "missed";
+            if (stage != _plateStage)
+            {
+                _plateStage = stage;
+                _plateAt = 0;
+                _plateScript.Clear();
+                var host = _bootstrap?.Story?.Cast?.FirstOrDefault(c => c.IsHost);
+                if (stage == "ask")
+                {
+                    foreach (var line in beat.Lines.HostBefore) Add(host, line);
+                    foreach (var line in beat.Lines.Ask) Add(beat.Who, line);
+                }
+                else if (stage == "kept" || stage == "missed")
+                {
+                    // THREE WAYS TO MISS, THREE THINGS TO SAY (GDD 26 §5): a wrong drink is
+                    // answered by the wrong-drink line, an honest no by the declined line,
+                    // and a clock that simply ran out by the nudge — because the beat never
+                    // wrote a line for being ignored, and the nudge is what it has.
+                    var said = stage == "kept" ? beat.Lines.ServedRight
+                        : trial.ToldNo ? beat.Lines.Declined
+                        : trial.Mistakes > 0 ? beat.Lines.ServedWrong
+                        : beat.Lines.Nudge;
+                    foreach (var line in said) Add(beat.Who, line);
+                    foreach (var line in beat.Lines.HostAfter) Add(host, line);
+                }
+            }
+
+            bool talking = _plateScript.Count > 0 && _plateAt < _plateScript.Count;
+            if (talking != _plate.gameObject.activeSelf) _plate.gameObject.SetActive(talking);
+            if (talking)
+            {
+                var (who, look, line) = _plateScript[_plateAt];
+                _plateName.text = who.ToUpperInvariant();
+                _plateLine.text = line;
+                var face = LookNamed(look);
+                _plateFace.sprite = face?.Face;
+                _plateFace.enabled = _plateFace.sprite != null;
+                bool last = _plateAt == _plateScript.Count - 1;
+                _plateKeyLabel.text = stage == "ask" && last ? "POUR IT" : "GO ON";
+                _plateNoKey.gameObject.SetActive(stage == "ask");
+            }
+
+            bool working = trial.State == TrialState.Pouring;
+            if (working != _postIt.gameObject.activeSelf) _postIt.gameObject.SetActive(working);
+            if (working)
+            {
+                var ask = trial.Current;
+                _postWho.text = beat.Who.Name.ToUpperInvariant();
+                _postAsk.text = ask != null ? ask.Name.ToUpperInvariant() : "";
+                _postCount.text = $"{trial.Done + 1} OF {trial.Total}"
+                                  + (trial.Trial.AllowedMistakes > 0
+                                      ? $"  ·  {Math.Max(0, trial.Trial.AllowedMistakes - trial.Mistakes)} SPARE"
+                                      : "  ·  NO MISTAKES");
+                var guest = run.LastCustomer;
+                _postClock.fillAmount = guest == null || guest.PatienceMax <= 0
+                    ? 0f : Mathf.Clamp01((float)(guest.PatienceLeft / guest.PatienceMax));
+                _postClock.color = _postClock.fillAmount < 0.25f ? UITheme.ViceRed[3] : UITheme.Magenta[4];
+                var lacking = ask != null ? MissingStyles(ask) : null;
+                _postMissing.text = lacking != null && lacking.Count > 0
+                    ? "NO " + string.Join(", ", lacking).ToUpperInvariant() + " ON THE SHELF" : "";
+            }
+
+            void Add(StoryCharacter speaker, string line)
+            {
+                if (speaker == null || string.IsNullOrEmpty(line)) return;
+                _plateScript.Add((speaker.Name, LookForStory(speaker)?.Slug, line));
+            }
+        }
+
+        /// <summary>The listen key: one line at a time, and the last one starts the clock.</summary>
+        private void OnPlateKey()
+        {
+            var run = Run;
+            if (run == null || run.Trial == null) return;
+            if (_plateAt < _plateScript.Count - 1) { _plateAt++; return; }
+            _plateAt = _plateScript.Count;      // the script is spoken
+            if (run.Trial.State == TrialState.Talking) run.BeginLastCallTrial();
+        }
+
+        /// <summary>The honest no. It costs the night and never the arc (GDD 26 §5).</summary>
+        private void OnSayNoTonight()
+        {
+            var run = Run;
+            if (run == null || run.LastCustomer == null) return;
+            run.DeclineLastCall();
+            Toast("YOU TOLD THEM NO — THEY WILL BE BACK");
+        }
+
         private void BuildIdCard(RectTransform root)
         {
             // ITS OWN LAYER, ABOVE THE BAR. The till was lifted to a canvas at 6 so it
@@ -6592,6 +6883,7 @@ namespace LastCall.UI
             BuildSnackRow(root);
             BuildServiceLog(root);
             BuildIdCard(root);
+            BuildLastCall(root);
 
             // Day end. The panel is a SCRIM over the whole room, not a slab (the author,
             // 2026-08-07: "hala mor bir çerçeve var"). The old 940x600 plate showed a

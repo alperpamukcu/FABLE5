@@ -254,6 +254,33 @@ plate. Play it once by hand and read every line at 1280×720.
 **Risk:** the plate is a new full-width surface at the counter — it must not eat the clicks the
 glass and the bin need. The PlayMode suite's serve test is the guard.
 
+**Shipped in part, 2026-08-13 — the module is visible.** `storyInPlay` is ON: the beat plays in
+the scene, and night one is Ece's.
+
+- **The plate** (layer 7, above the drinkers, below the bench): a face, a name, one line, GO ON
+  and SAY NO TONIGHT. It works a SCRIPT — the host's framing, then the guest's ask; then, when
+  the trial ends, the outcome and the host's last word. The final GO ON of the ask is what
+  starts the clock (`BeginLastCallTrial`), so a slow reader is never punished for reading.
+- **The post-it** (layer 14, above the bench and the tap — the note you work FROM): who is
+  waiting, the drink in hand, `2 OF 3 · NO MISTAKES`, the clock, and what the shelf is missing.
+- **The guest is drawn as themselves**: `LookFor` returns the beat's own face (or the borrowed
+  one) instead of hashing a name, and `NameOn` prints their name rather than the borrowed
+  face's papers — Ece was being introduced as Serena Fontana.
+- **Their seat ticket says TALK TO THEM, not the drink.** Their licence is open from the moment
+  they sit, so the ticket would otherwise print the whole ask over their head and hand the
+  player a trial that is supposed to arrive one drink at a time.
+
+**Two things play found that no test could have.** The guest used to vanish on the same tick as
+the last serve — stool empty, night complete, day-end slip up over a line nobody had read — so
+Core now gives them `LastWordSeconds` on the stool to finish the beat out loud (pinned by a
+test now that it is known). And a trial that simply ran out of clock was being answered with
+the line written for an honest no: `StoryTrialRun.ToldNo` separates the three ways to miss, and
+a timed-out guest gets the nudge instead.
+
+**Still open in S3:** the closing light beat is S4's; the guest sits on whatever stool the floor
+gives them rather than the one nearest the till; a guest whose clock runs out still plays the
+crowd's storm-off exit; and `LookTests` has no blessed picture of the plate yet.
+
 ---
 
 ## S4 — The closing light beat

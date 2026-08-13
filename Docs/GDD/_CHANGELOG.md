@@ -2,6 +2,23 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `26 §7` **the last customer can be seen and spoken to (2026-08-13, PLAN S3 part one):** the
+  arc is IN PLAY — night one is Ece's, and the module stops being invisible. Two surfaces do
+  all of it. **The plate** at the counter (a face, a name, one line, GO ON, SAY NO TONIGHT)
+  works a script: the host frames the night, the guest asks, and the last GO ON is what starts
+  the clock — so reading is never punished. **The post-it**, pinned above the bench and the tap
+  because a trial is worked while it runs: who is waiting, the drink in hand, `2 OF 3 · NO
+  MISTAKES`, the clock, and what the shelf is missing. The guest is drawn as themselves (the
+  beat names the face; hashing their name would have put the rent collector in a different body
+  every visit) and named as themselves (Ece was being introduced as the papers of the face she
+  borrows). Their seat ticket says TALK TO THEM rather than the drink — their licence is open
+  from the moment they sit, and the ticket would have handed over a trial that is meant to
+  arrive one drink at a time. Two fixes came out of PLAYING it, not testing it: the guest used
+  to vanish on the same tick as the last serve, so the night closed over their last line —
+  Core keeps them on the stool for `LastWordSeconds` now — and a trial that ran out of clock
+  was answered with the line written for an honest no, which `StoryTrialRun.ToldNo` now tells
+  apart. 284 EditMode green, 7 PlayMode green.
+
 - `26 §4/§9/§10` **the story is loaded, and the bot plays it (2026-08-13, PLAN S2a+S2):**
   `DataLoader.ParseStory` builds the arc against the real cast and the real recipe book with
   the loud validation every content file signs, and the bootstrap parses it at boot (it does

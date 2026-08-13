@@ -7,7 +7,8 @@ from code 2026-08-07; read it first for any live rule. `Docs/GDD/` carries the d
 bottles/brands/market, 14 §5 / 15 §4 / 16 §1 / 18 carry the palette, camera, font and stage
 specs the UI is built on, 25 is the (partly superseded) bottle-art brief now aimed at an
 external artist, and **26 owns the last customer** — the scripted closing beat, its dialogue
-and its data (staged in `Docs/PLAN_last_call.md`; nothing of it is built yet). The historical modules (00–13, 17, 19, 20 — card era and the demolished
+and its data (staged in `Docs/PLAN_last_call.md`, which is the phase log: S0–S3 shipped, so
+the beat plays in the scene now; S4's light and S5's rewards are not built). The historical modules (00–13, 17, 19, 20 — card era and the demolished
 emotion layer) were DELETED in the 2026-08-07 sweep; recipe truth is `recipes.json` ↔
 `RecipeCatalog` under the parity test, ingredient types are the `IngredientType` enum.
 **The staging document is `Docs/PLAN_service_depth.md` (v5)** — phase order and conflict
@@ -28,6 +29,11 @@ LastCall.PlayTests (Assets/Tests/PlayMode) PlayMode smoke tests: a virtual mouse
 
 `TycoonServiceFlow` is one partial class split by stage — `.Menu`, `.Shaker`, `.Serve`,
 `.Tap` — so a stage can be read whole. Shared state stays in `TycoonServiceFlow.cs`.
+
+**The back bar is the ONLY place a drink is picked up** (2026-08-13). `.Menu`'s wall carries
+every bottle except garnish and routes each one to its station already in hand; the three
+service benches carry no stock of their own. A shelf, rail or fridge on a bench has now been
+built and cut twice — don't build a third.
 
 Hard rules:
 

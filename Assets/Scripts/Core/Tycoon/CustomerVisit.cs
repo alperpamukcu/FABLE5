@@ -320,13 +320,24 @@ namespace LastCall.Core
         /// leaves this way whichever way the trial went (GDD 26 §5); the satisfaction is for
         /// whoever draws the reaction, and it reaches no ledger, because a guest of the house
         /// is not on the books.
+        ///
+        /// THEY TAKE A MOMENT FIRST when given one. The trial's last words are said after the
+        /// last drink lands, and a guest who vanished on the same tick took the whole ending
+        /// with them: the stool emptied, the night completed, and the day-end slip came up
+        /// over a line nobody had read (2026-08-13, seen in play). The seconds are the
+        /// caller's — Core does not know how long a sentence takes to read.
         /// </summary>
-        public void GetUp(double satisfaction = 0)
+        public void GetUp(double satisfaction = 0, double lingerSeconds = 0)
         {
             if (State != VisitState.Waiting)
                 throw new InvalidOperationException("This customer is no longer waiting.");
             Satisfaction = Math.Max(0.0, Math.Min(1.0, satisfaction));
-            State = VisitState.Served;
+            if (lingerSeconds > 0)
+            {
+                SavorLeft = lingerSeconds;
+                State = VisitState.Drinking;
+            }
+            else State = VisitState.Served;
         }
     }
 }

@@ -92,10 +92,17 @@ namespace LastCall.Core
             if (Mistakes > Trial.AllowedMistakes) State = TrialState.Failed;
         }
 
+        /// <summary>True when the night ended because the bar SAID SO rather than because the
+        /// clock or the mistakes ran out. Three failures, three different things to say — and
+        /// a guest who waited out their whole clock must not be answered with the line written
+        /// for an honest no.</summary>
+        public bool ToldNo { get; private set; }
+
         /// <summary>Time ran out, or the bar said no. Either way the night is spent.</summary>
-        public void Fail()
+        public void Fail(bool toldNo = false)
         {
             if (IsOver) return;
+            ToldNo = toldNo;
             State = TrialState.Failed;
         }
 
