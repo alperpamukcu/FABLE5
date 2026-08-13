@@ -134,10 +134,20 @@ namespace LastCall.PlayTests
         /// back bar. The retry is the other half: the wall tears itself down and rebuilds when
         /// it opens, so a rect found on one frame can be destroyed on the next and a click
         /// lands on a dead object. A player would simply click again.
+        ///
+        /// THE FIRST PRESS OF A SESSION IS THE SLOW ONE (2026-08-13, measured): the suite's
+        /// very first test failed here twice in a row — the button on the screen, the panel
+        /// built, and three presses inside one second not opening it — and the same build then
+        /// passed twice. Everything that makes the first play-mode enter expensive lands on
+        /// that press. So this waits longer than a player would need to, which costs nothing
+        /// on the ordinary path (it returns the instant the screen is open) and buys a suite
+        /// that fails only for real reasons. It is still a hard assert: a screen that never
+        /// opens still fails, loudly, with which of the two things went wrong.
         /// </summary>
         private IEnumerator OpenUntil(string press, string expected)
         {
-            for (int attempt = 0; attempt < 3; attempt++)
+            const int Attempts = 6;
+            for (int attempt = 0; attempt < Attempts; attempt++)
             {
                 var target = Find(press);
                 Assert.That(target, Is.Not.Null, $"'{press}' is not on the screen to press");
@@ -145,10 +155,10 @@ namespace LastCall.PlayTests
 
                 var panel = Find(expected);
                 if (panel != null && panel.gameObject.activeInHierarchy) yield break;
-                yield return new WaitForSecondsRealtime(0.3f);
+                yield return new WaitForSecondsRealtime(0.4f);
             }
             var last = Find(expected);
-            Assert.Fail($"pressing '{press}' three times never opened '{expected}' " +
+            Assert.Fail($"pressing '{press}' {Attempts} times never opened '{expected}' " +
                         (last == null ? "(it was never even built)" : "(it stayed closed)"));
         }
 

@@ -291,16 +291,20 @@ namespace LastCall.PlayTests
         /// </summary>
         private IEnumerator WaitUntilTheyReachTheStool(RectTransform seat)
         {
+            // EIGHT still frames, not three (2026-08-13). A walk-in eases into its stool, so
+            // its last few frames each move less than a tenth of a pixel — which reads as
+            // "arrived" to a three-frame test while the drinker is still moving. Eight frames
+            // of nothing is a stop; three is a slow moment inside a move.
             var last = seat.anchoredPosition;
             int still = 0;
             float deadline = Time.realtimeSinceStartup + 25f;
-            while (still < 3 && Time.realtimeSinceStartup < deadline)
+            while (still < 8 && Time.realtimeSinceStartup < deadline)
             {
                 yield return null;
                 if ((seat.anchoredPosition - last).sqrMagnitude < 0.01f) still++;
                 else { still = 0; last = seat.anchoredPosition; }
             }
-            Assert.That(still, Is.GreaterThanOrEqualTo(3),
+            Assert.That(still, Is.GreaterThanOrEqualTo(8),
                 $"the drinker never finished walking in — stool stopped at x={last.x:0}");
         }
 
@@ -334,6 +338,13 @@ namespace LastCall.PlayTests
             // last thought was under it.
             Set(_mouse.position, at);
             yield return WaitFrames(2);
+            // AND THE POINT IS TAKEN AGAIN, HERE (2026-08-13). Two frames passed between
+            // measuring the thing and pressing on it, and things in this game move: a stool
+            // is still drifting the last pixel of a walk-in, a panel is still sliding. The
+            // press then lands beside what the test aimed at, and the failure it causes reads
+            // as "the licence did not open", which is a lie about what happened. A hand that
+            // has already moved to something looks at it once more before it presses.
+            if (target != null) Set(_mouse.position, ScreenPointOf(target));
             Press(_mouse.leftButton);
             yield return WaitFrames(2);
             Release(_mouse.leftButton);
