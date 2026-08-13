@@ -73,6 +73,14 @@ four tests, and the rest is still caught by entering play mode and LOOKING. Meas
 you changed in play (`execute_code` reads live rects and fields) rather than trusting that it
 compiles. Run both suites before a push; PlayMode needs the editor OUT of play mode first.
 
+**A killed PlayMode run poisons the editor** (2026-08-13): the suite drives a VIRTUAL mouse and
+`InputTestFixture` only takes it away in teardown, so a cancelled or wedged run leaves that fake
+device as the editor's only pointer — the game then ignores the real mouse and appears to play
+itself (the bench opening on its own is the usual tell). **LastCall → Clear Ghost Input** drops
+the devices so the real one is re-discovered; if the pointer is still dead, restart the editor.
+A wedged test job also blocks every later `run_tests` with `tests_running` —
+`TestJobManager.ClearStuckJob()` via `execute_code` clears it.
+
 Three things that make PlayMode tests lie, all paid for once (see the suite's own comments):
 a test frame is ~1ms, so every wait for an animation must be `WaitForSecondsRealtime`, never
 a frame count; the field crops rather than scales, so the tests pin the Game view to

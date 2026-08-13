@@ -93,6 +93,18 @@ namespace LastCall.PlayTests
             _mouse = InputSystem.AddDevice<Mouse>();
         }
 
+        public override void TearDown()
+        {
+            // THE HAND GOES BACK IN THE BOX. InputTestFixture restores the whole input system
+            // here, but only if this runs at all — and a run that is cancelled or killed
+            // leaves its virtual mouse as the editor's ONLY pointer, at which point the game
+            // appears to play itself and ignore the player (2026-08-13). Removing the device
+            // explicitly costs nothing and shortens the window in which that can happen.
+            if (_mouse != null && _mouse.added) InputSystem.RemoveDevice(_mouse);
+            _mouse = null;
+            base.TearDown();
+        }
+
         // ── the tests ────────────────────────────────────────────────────────────
 
         [UnityTest]
