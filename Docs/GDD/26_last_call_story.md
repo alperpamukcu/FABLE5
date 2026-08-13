@@ -118,6 +118,53 @@ CALL sign ignites, the ambience thins. No drawn cutscene.
 
 ---
 
+## 2b. Which night they come on (the author, 2026-08-13)
+
+**A guest comes on a Friday or a Saturday.** Not "on day 9" — on a night of the week, in a
+week of the run.
+
+The calendar was already there and already on the screen: six open nights, Tuesday through
+Sunday, Mondays dark, and the plaque has been printing `WEEK 2 · FRIDAY` since long before it
+meant anything. It meant nothing — any night was like any other night. Hanging the story on it
+costs no new vocabulary and turns a caption into a rule the player can read from across the
+room.
+
+What it buys, in order of how much it matters:
+
+1. **The days between become the shopping days.** The whole arc runs on *they asked for
+   something you cannot pour yet* (§4). Under a day number, "come back in two days" is an
+   arbitrary integer in a file. Under the calendar it is a **deadline with a name on it**: he
+   asked on Friday, the market opens after every night, and he is back next Friday. The bar's
+   quiet nights stop being filler and become preparation.
+2. **Rarity keeps the beat from becoming routine.** The plaque lights magenta every night; if
+   somebody walked in under it every night, the beat would be wallpaper by week two. Two
+   candidate nights a week, at most one person on each.
+3. **It is what the fiction already says.** A man who collects for the building, a critic who
+   writes about rooms — these people come when the room is worth being seen in. Nobody
+   important turns up on a Wednesday.
+
+**The house is not a guest.** Ece works the shift; she does not *come to the bar*. Her beat
+zero is the opening Tuesday, and Core allows a quiet night **only** for a character with
+`role: host`. That exception is what keeps the rule sharp rather than blurring it: the weekend
+is what makes a guest a guest.
+
+**Each beat names its own night, in data.** Not rolled — a scripted night must play the same
+way twice, and a character who is a Friday man should be a Friday man every time he comes back.
+
+**The failure this rule can have, and the guard against it.** A missed beat is pushed back by
+its return clock, and under a weekend gate that push must land ON the character's night. "Today
+plus two" would put a Friday guest on a Sunday, where the gate can never open — and nothing
+would throw, nothing would go red; the arc would simply stop for the rest of the run. So the
+return is measured in **weeks on that night** (`returnsAfterWeeks`), and the test that pins it
+is the one to keep: *a beat missed on a Friday comes back on a Friday, never on a Wednesday,
+and never never.*
+
+**Deliberately not in scope:** the weekend does not (yet) mean a bigger crowd, a better tier or
+a different rent. That is the economy's business (GDD 23) and a separate decision; this section
+only says who comes to the door after it has shut.
+
+---
+
 ## 3. The last customer
 
 A scripted `CustomerVisit`, built from data rather than rolled:
@@ -330,7 +377,8 @@ rules apply: public fields, no dictionaries, no nullable types, `""`/`0` for "no
     {
       "id": "collector_1",
       "character": "collector",
-      "day": 2,
+      "week": 1,
+      "night": "friday",
       "recipe": "neat_pour",
       "needStyle": "bourbon",
       "needTier": 0,
@@ -350,7 +398,7 @@ rules apply: public fields, no dictionaries, no nullable types, `""`/`0` for "no
       "rewardStars": 0.0,
       "rewardRecipe": "",
       "rewardBottle": "",
-      "returnsAfterDays": 2,
+      "returnsAfterWeeks": 1,
       "next": "collector_2"
     }
   ]
@@ -359,6 +407,12 @@ rules apply: public fields, no dictionaries, no nullable types, `""`/`0` for "no
 
 Field notes:
 
+- `week` / `night` — WHEN, on the bar's own calendar (§2b): the week counting from the one the
+  bar opened in, and one of `tuesday`…`sunday` (Mondays the bar is dark). A guest's night must
+  be `friday` or `saturday`; only a `host` may be written for a quiet night. The day number is
+  the calendar's business, never the file's.
+- `returnsAfterWeeks` — how long after a miss they try again, **on the same night**. Weeks, not
+  days, because a day count would push a Friday guest onto a night that never comes (§2b).
 - `recipe` — the recipe id the ask is graded against; it must exist in `recipes.json`.
 - `needStyle` / `needTier` — what the beat is *about*, so the card can name what is missing
   without re-deriving it. Empty/0 = "nothing in particular; you should already be able to".
@@ -393,19 +447,30 @@ The first FOUR are written as real data in `Assets/Data/story/story.json` — re
 real styles, and three faces the cast already owns (`execman`, `ember`, `profess`), which are
 reserved from the crowd from S1 on.
 
+Every guest comes at the weekend (§2b); the host takes the quiet opening night. The day number
+is the calendar's, not the author's — it falls out of the week and the night.
+
 | # | Night | Who | Asks for | Teaches | Gate |
 |---|---|---|---|---|---|
-| 0 | 1 | **Ece** — she works here | `neat_pour` of whatever is on the shelf | the beat itself, on a night nothing can be lost — and the arc, in her own words | none |
-| 1 | 2 | **The collector** — takes the rent for the building | `neat_pour` — a whiskey, neat | the market: buy a style you lack | shelf (no bourbon in the opening well) |
-| 2 | 5 | **The sister** — drank here before it was yours | `moscow_mule` | the market again, and the book: the reward is a page (`gimlet`) the 2★ gate has not opened | shelf (ginger) |
-| 3 | 9 | **The critic** — writes about rooms like this | `manhattan`, *stirred* | method: stirred is not shaken — and he hands over the page himself | method (+ vermouth) |
-| 4 | 10 | **The brewer** — sells the kegs two valleys over | a pint with a proper head | draught: the head band | craft |
-| 5 | 13 | **The old regular** — was coming here before | "the usual" | reading: the licence, the visits, the person | reading |
-| 6 | 17 | **The high roller** — spends what the room is worth | a top-shelf brand, by name | tiers: the well pour will not do | tier |
-| 7 | 21 | **Last call** — the drink the bar was known for | everything above, in one glass | the closing beat | all |
+| 0 | W1 · TUE *(1)* | **Ece** — she works here | `neat_pour` of whatever is on the shelf | the beat itself, on a night nothing can be lost — and the arc, in her own words | none |
+| 1 | W1 · FRI *(4)* | **The collector** — takes the rent for the building | `neat_pour` — a whiskey, neat | the market: buy a style you lack | shelf (no bourbon in the opening well) |
+| 2 | W2 · SAT *(11)* | **The sister** — drinks here, and has since the second night | `moscow_mule` | the market again, and the book: the reward is a page (`gimlet`) the 2★ gate has not opened | shelf (ginger) |
+| 3 | W3 · FRI *(16)* | **The critic** — writes about rooms like this | `manhattan`, *stirred* | method: stirred is not shaken — and he hands over the page himself | method (+ vermouth) |
+| 4 | W3 · SAT *(17)* | **The brewer** — sells the kegs two valleys over | a pint with a proper head | draught: the head band | craft |
+| 5 | W4 · FRI *(22)* | **The old regular** — has not missed a weekend yet | "the usual" | reading: the licence, the visits, the person | reading |
+| 6 | W4 · SAT *(23)* | **The high roller** — spends what the room is worth | a top-shelf brand, by name | tiers: the well pour will not do | tier |
+| 7 | W5 · FRI *(28)* | **Last call** — the drink the room gets known for | everything above, in one glass | the closing beat | all |
 
-Through-line: the bar came with a past. Each visitor knows a piece of it; the last one asks for
-the drink that past was famous for. The player never learns more than the bar would tell them.
+Through-line: the room is new, and what it becomes is what these nights make it. Each visitor
+leaves it with something — a bottle, a page, a paragraph, a regular — and the last one asks for
+the drink the bar has by then become known for. Nobody explains the bar to the player; the bar
+is what they have been building.
+
+**The tail has slack, and it is not free.** Eight beats over five weekends leaves a run of
+about thirty nights a few spare nights, and every miss costs a whole week. That is the price
+the weekend rule charges for its deadline, and it is deliberate — but it means the last beats
+can slide off the end of a badly-run bar. The sim's report is where that shows up (S2: the day
+each arc stalled on), not a guess.
 
 ---
 

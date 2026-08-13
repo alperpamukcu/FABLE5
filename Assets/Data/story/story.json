@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_comment": "THE LAST CUSTOMER (GDD 26). Written 2026-08-12; NOT LOADED YET -- the parser lands in PLAN_last_call S1/S5. THE BAR OPENED THIS WEEK: nothing here may lean on the room having a past, because it does not have one. THE FIRST LAST CALL IS ECE'S: on night one she crosses the bar, sits, asks for a drink the well can already pour, and introduces the arc -- the beat teaches itself on a night nothing can be lost. Ece works the shift with the player, teaches (lessons) and frames each beat (hostBefore/hostAfter); the player owns the bar, which is the only version that does not fight the screens -- the till, the rent and the shopping are already theirs. Every 'recipe' is an id from recipes.json, every 'look' is a slug in papers.json, every 'needStyle' is a style the market sells. Names and lines are the author's to replace; the SHAPE is the design: the ask names what is missing, no beat is a dead end, two lines a beat and one sentence each.",
+  "_comment": "THE LAST CUSTOMER (GDD 26). Written 2026-08-12; NOT LOADED YET -- the parser lands in PLAN_last_call S1/S5. THE BAR OPENED THIS WEEK: nothing here may lean on the room having a past, because it does not have one. THE FIRST LAST CALL IS ECE'S: on night one she crosses the bar, sits, asks for a drink the well can already pour, and introduces the arc -- the beat teaches itself on a night nothing can be lost. Ece works the shift with the player, teaches (lessons) and frames each beat (hostBefore/hostAfter); the player owns the bar, which is the only version that does not fight the screens -- the till, the rent and the shopping are already theirs. GUESTS COME AT THE WEEKEND: a beat is scheduled as a WEEK plus a NIGHT of the bar's six-night calendar (Tuesday-Sunday, Mondays dark), and a guest's night must be friday or saturday -- refused at load otherwise. That is what makes the quiet nights the shopping nights: the ask names what is missing and the player has until the weekend to go and buy it. Only the house may work a quiet night, which is why Ece's beat zero is a Tuesday. A missed beat returns on ITS OWN night, 'returnsAfterWeeks' weeks later. Every 'recipe' is an id from recipes.json, every 'look' is a slug in papers.json, every 'needStyle' is a style the market sells. Names and lines are the author's to replace; the SHAPE is the design: the ask names what is missing, no beat is a dead end, two lines a beat and one sentence each.",
   "characters": [
     {
       "id": "ece",
@@ -32,7 +32,8 @@
     {
       "id": "ece_1",
       "character": "ece",
-      "day": 1,
+      "week": 1,
+      "night": "tuesday",
       "recipe": "neat_pour",
       "needStyle": "",
       "needTier": 0,
@@ -61,13 +62,14 @@
       "rewardStars": 0.0,
       "rewardRecipe": "",
       "rewardBottle": "",
-      "returnsAfterDays": 1,
+      "returnsAfterWeeks": 1,
       "next": "collector_1"
     },
     {
       "id": "collector_1",
       "character": "collector",
-      "day": 2,
+      "week": 1,
+      "night": "friday",
       "recipe": "neat_pour",
       "needStyle": "bourbon",
       "needTier": 0,
@@ -94,7 +96,7 @@
       "rewardStars": 0.0,
       "rewardRecipe": "",
       "rewardBottle": "",
-      "returnsAfterDays": 2,
+      "returnsAfterWeeks": 1,
       "next": "sister_1",
       "hostBefore": [
         "That one is here about the building, not the whiskey."
@@ -106,7 +108,8 @@
     {
       "id": "sister_1",
       "character": "sister",
-      "day": 5,
+      "week": 2,
+      "night": "saturday",
       "recipe": "moscow_mule",
       "needStyle": "ginger",
       "needTier": 0,
@@ -133,7 +136,7 @@
       "rewardStars": 0.25,
       "rewardRecipe": "gimlet",
       "rewardBottle": "",
-      "returnsAfterDays": 3,
+      "returnsAfterWeeks": 1,
       "next": "critic_1",
       "hostBefore": [
         "She was here on the second night, in the rain. She stayed."
@@ -145,7 +148,8 @@
     {
       "id": "critic_1",
       "character": "critic",
-      "day": 9,
+      "week": 3,
+      "night": "friday",
       "recipe": "manhattan",
       "needStyle": "vermouth",
       "needTier": 0,
@@ -172,7 +176,7 @@
       "rewardStars": 0.5,
       "rewardRecipe": "",
       "rewardBottle": "",
-      "returnsAfterDays": 3,
+      "returnsAfterWeeks": 1,
       "next": "",
       "hostBefore": [
         "I know that face. He wrote the room I worked in out of business."

@@ -2,6 +2,22 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **NEW `26 §2b` + `Core/BarCalendar` — the guests come at the weekend (2026-08-13, the
+  author):** a story beat is no longer written for "day 9" but for a WEEK and a NIGHT, and a
+  guest's night must be Friday or Saturday. The calendar it hangs on was already on the screen
+  and meant nothing — the plaque has printed `WEEK 2 · FRIDAY` for weeks — so this costs no new
+  vocabulary and buys three things: the quiet nights become the shopping nights (the ask names
+  what is missing, and now the deadline has a name), the beat stays rare enough not to become
+  wallpaper, and the fiction stops asking a rent collector to turn up on a Wednesday. The house
+  is not a guest: Ece may work a quiet night, and beat zero is still the opening Tuesday. The
+  calendar moved out of `TycoonHud` into Core with its words unchanged, because a calendar the
+  UI keeps to itself is one that can disagree with the rules. The one real hazard is silent —
+  a return clock in DAYS would push a Friday guest onto a Sunday, where the gate never opens
+  and the arc stops without ever failing — so returns are counted in weeks on the beat's own
+  night, and that is a test rather than a comment. Arc rescheduled: Ece W1·TUE, the collector
+  W1·FRI, the sister W2·SAT, the critic W3·FRI. The weekend does NOT yet mean a bigger crowd or
+  a different rent; that is the economy's decision, fenced off deliberately.
+
 - `26 §2/§3/§9` + `GDD_MEVCUT §3` **the last customer exists, and says nothing (2026-08-13,
   PLAN_last_call S1):** Core can now play a written night. When the door has shut and the room
   has drained, `BarDay.SeatGuest` sits somebody the night did not roll — outside the arrival

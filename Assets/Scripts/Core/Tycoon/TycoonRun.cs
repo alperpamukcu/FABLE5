@@ -728,6 +728,13 @@ namespace LastCall.Core
         /// no story — the same opt-in the regulars have.</summary>
         public StoryProgress Story { get; }
 
+        /// <summary>Which night of the week this is. The plaque has printed it since long
+        /// before it meant anything; the story is what made it a rule (GDD 26 §2b).</summary>
+        public BarNight Tonight => BarCalendar.NightOf(Day);
+
+        /// <summary>Friday or Saturday — the nights a guest can walk in on.</summary>
+        public bool IsWeekend => BarCalendar.IsWeekend(Day);
+
         /// <summary>The scripted guest while they are on their stool, and null every other
         /// moment. The one visit the arc is watching.</summary>
         public CustomerVisit LastCustomer { get; private set; }

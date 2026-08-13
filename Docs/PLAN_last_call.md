@@ -94,6 +94,36 @@ one the floor hands over; "the stool nearest the till" is the UI's to choose.
 
 ---
 
+## S1b — The guests come at the weekend ☑ 2026-08-13
+
+**Why now, between S1 and the bot:** the sim (S2) and the plate (S3) are both built on top of
+"when is a beat due". Changing that after they exist would mean changing it in three places.
+
+- `Core/BarCalendar.cs` — the week as a rule instead of a caption: six open nights, Tuesday
+  through Sunday, Mondays dark. `NightOf`, `WeekOf`, `DayOf`, `IsWeekend`,
+  `NextNightOnOrAfter`, and the `Label` the plaque prints. The HUD's private copy of the
+  calendar is gone; it calls this one, and the words on the screen did not change.
+- `StoryBeat` is scheduled by `week` + `night`, and computes its own day. A guest written for a
+  quiet night is refused at construction, by name and by night; the host is exempt, because Ece
+  works the shift rather than coming to the bar.
+- `StoryProgress.IsDueOn` gates on the night as well as the clock, and a missed beat returns
+  `returnsAfterWeeks` weeks later **on its own night**.
+- `story.json` rescheduled: Ece W1·TUE, the collector W1·FRI, the sister W2·SAT, the critic
+  W3·FRI.
+
+**Proof:** 255 EditMode green. The calendar's arithmetic is pinned in both directions (day 4 is
+a Friday, week 2's Friday is day 10, and `DayOf` inverts `NightOf`/`WeekOf`); the plaque's exact
+string is pinned so a rule behind a caption cannot change the caption; nobody comes in on the
+Tuesday, the Wednesday or the Thursday; both nights of one weekend can hold a beat; and the
+guard against the failure this rule can actually have — *a missed Friday comes back on a
+Friday, never on a Wednesday, and never never.*
+
+**Risk:** the return clock is the only place a beat can be pushed onto a night its gate never
+opens on, and that failure is SILENT — no exception, no red test, just a story that stops. It
+is a test, not a comment.
+
+---
+
 ## S2 — The bot learns the beat *(balance stays honest)*
 
 - `TycoonSimulator`: on a last customer, pour the ask if the shelf can (the bot already builds

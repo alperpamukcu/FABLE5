@@ -22,7 +22,19 @@ namespace LastCall.Core
         /// built, so a beat can never name a drink that does not exist.</summary>
         public RecipeDefinition Drink { get; }
 
-        /// <summary>The earliest night they can walk in on.</summary>
+        /// <summary>Which week they are written for, counting from the week the bar opened.</summary>
+        public int Week { get; }
+
+        /// <summary>
+        /// The night of that week they come in on — and for a guest that is FRIDAY or SATURDAY,
+        /// refused otherwise (GDD 26 §2b). Nobody important turns up on a Wednesday, and the
+        /// rule is worth more than the exception: it makes the days between a beat into the
+        /// days you go and buy what the last one asked for. The host is not a guest — Ece
+        /// works the shift, so her nights are the arc's to choose.
+        /// </summary>
+        public BarNight Night { get; }
+
+        /// <summary>The earliest night they can walk in on, off the calendar.</summary>
         public int Day { get; }
 
         /// <summary>How long they will sit for it. From the file, never from the dice — a
@@ -41,9 +53,10 @@ namespace LastCall.Core
         /// yet, given as a page so the ask is a job and not a wall (GDD 26 §4).</summary>
         public string GrantsRecipeOnAsk { get; }
 
-        /// <summary>Nights before they try again after a miss. Never zero: a beat that
-        /// re-arms tonight would seat the same person twice in one closing.</summary>
-        public int ReturnsAfterDays { get; }
+        /// <summary>Weeks before they try again after a miss — on their own night, so a beat
+        /// missed on a Friday comes back on a Friday. Never zero: a beat that re-armed the same
+        /// night would seat the same person twice in one closing.</summary>
+        public int ReturnsAfterWeeks { get; }
 
         /// <summary>The beat that follows this one, or null when the arc ends here.</summary>
         public string NextId { get; }
@@ -51,10 +64,10 @@ namespace LastCall.Core
         public StoryLines Lines { get; }
         public StoryReward Reward { get; }
 
-        public StoryBeat(string id, StoryCharacter who, RecipeDefinition drink, int day,
-            double patienceSeconds, StoryLines lines = null, StoryReward reward = null,
-            string needStyle = null, int needTier = 0, string grantsRecipeOnAsk = null,
-            int returnsAfterDays = 1, string nextId = null)
+        public StoryBeat(string id, StoryCharacter who, RecipeDefinition drink, int week,
+            BarNight night, double patienceSeconds, StoryLines lines = null,
+            StoryReward reward = null, string needStyle = null, int needTier = 0,
+            string grantsRecipeOnAsk = null, int returnsAfterWeeks = 1, string nextId = null)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("A beat needs an id.", nameof(id));
@@ -62,31 +75,39 @@ namespace LastCall.Core
                 throw new ArgumentNullException(nameof(who), $"beat '{id}' has nobody in it");
             if (drink == null)
                 throw new ArgumentNullException(nameof(drink), $"beat '{id}' asks for nothing");
-            if (day < 1)
-                throw new ArgumentOutOfRangeException(nameof(day), $"beat '{id}' happens on day {day}");
+            if (week < 1)
+                throw new ArgumentOutOfRangeException(nameof(week), $"beat '{id}' happens in week {week}");
+            if (!who.IsHost && !BarCalendar.IsWeekend(night))
+                throw new ArgumentException(
+                    $"beat '{id}' brings {who.Name} in on a {BarCalendar.Name(night)} — a guest " +
+                    "comes at the weekend (GDD 26 §2b); only the house works the quiet nights.",
+                    nameof(night));
             if (patienceSeconds <= 0)
                 throw new ArgumentOutOfRangeException(nameof(patienceSeconds),
                     $"beat '{id}' would leave before it was read");
             if (needTier < 0)
                 throw new ArgumentOutOfRangeException(nameof(needTier));
-            if (returnsAfterDays < 1)
-                throw new ArgumentOutOfRangeException(nameof(returnsAfterDays),
+            if (returnsAfterWeeks < 1)
+                throw new ArgumentOutOfRangeException(nameof(returnsAfterWeeks),
                     $"beat '{id}' would come back the same night it left");
 
             Id = id;
             Who = who;
             Drink = drink;
-            Day = day;
+            Week = week;
+            Night = night;
+            Day = BarCalendar.DayOf(week, night);
             PatienceSeconds = patienceSeconds;
             Lines = lines ?? StoryLines.Silent;
             Reward = reward ?? StoryReward.None;
             NeedStyle = string.IsNullOrWhiteSpace(needStyle) ? null : needStyle;
             NeedTier = needTier;
             GrantsRecipeOnAsk = string.IsNullOrWhiteSpace(grantsRecipeOnAsk) ? null : grantsRecipeOnAsk;
-            ReturnsAfterDays = returnsAfterDays;
+            ReturnsAfterWeeks = returnsAfterWeeks;
             NextId = string.IsNullOrWhiteSpace(nextId) ? null : nextId;
         }
 
-        public override string ToString() => $"{Id}: {Who.Name} wants {Drink.Name} (day {Day})";
+        public override string ToString() =>
+            $"{Id}: {Who.Name} wants {Drink.Name} ({BarCalendar.Label(Day)})";
     }
 }

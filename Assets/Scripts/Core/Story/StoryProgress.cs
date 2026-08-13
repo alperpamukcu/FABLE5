@@ -43,10 +43,15 @@ namespace LastCall.Core
             DueDay = arc.Opener.Day;
         }
 
-        /// <summary>Is tonight the night? A run past the due day still gets the beat — a
-        /// player who closed early, or a beat pushed back onto a day that has gone by, must
-        /// not lose the story to arithmetic.</summary>
-        public bool IsDueOn(int day) => Current != null && day >= DueDay;
+        /// <summary>
+        /// Is tonight the night? Two things have to be true: the clock has reached the beat,
+        /// and this is the night of the week that beat comes in on (GDD 26 §2b). A run past
+        /// the due day still gets it — the story must never be lost to arithmetic — but it
+        /// waits for the right night to do it, which is what makes a name on the plaque
+        /// something the player can count towards.
+        /// </summary>
+        public bool IsDueOn(int day) =>
+            Current != null && day >= DueDay && BarCalendar.NightOf(day) == Current.Night;
 
         /// <summary>They got what they asked for. The arc moves on, and the next beat cannot
         /// land tonight — one last call a night, always.</summary>
@@ -55,16 +60,25 @@ namespace LastCall.Core
             if (Current == null) return;
             Kept++;
             _at++;
-            DueDay = Current != null ? Math.Max(Current.Day, day + 1) : day + 1;
+            DueDay = Current != null
+                ? Math.Max(Current.Day, BarCalendar.NextNightOnOrAfter(day + 1, Current.Night))
+                : day + 1;
         }
 
-        /// <summary>Wrong drink, honest no, or nobody came to the stool in time. The beat
-        /// stands; it comes back on its own clock.</summary>
+        /// <summary>
+        /// Wrong drink, honest no, or nobody came to the stool in time. The beat stands and
+        /// comes back on its own night, a week or more later — NOT on "today plus two", which
+        /// would push it onto a Wednesday it can never happen on and freeze the arc for the
+        /// rest of the run. This is the one line the weekend rule can be got wrong in.
+        /// </summary>
         public void RecordMissed(int day)
         {
             if (Current == null) return;
             Missed++;
-            DueDay = Math.Max(Current.Day, day + Current.ReturnsAfterDays);
+            int back = BarCalendar.DayOf(
+                BarCalendar.WeekOf(day) + Current.ReturnsAfterWeeks, Current.Night);
+            if (back <= day) back += BarCalendar.OpenNights;   // missed late in its own week
+            DueDay = Math.Max(Current.Day, back);
         }
 
         /// <summary>

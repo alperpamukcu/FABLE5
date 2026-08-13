@@ -5915,13 +5915,12 @@ namespace LastCall.UI
             return string.Format("NA {0:0000} {1:0000}", h % 10000, h / 10000 % 10000);
         }
 
-        // The week (the author's calendar): six open days, Tuesday through Sunday —
-        // Mondays the bar is dark and the calendar simply skips them.
-        private static readonly string[] OpenDayNames =
-            { "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY" };
-
-        private static string CalendarFor(int day) =>
-            $"WEEK {(day - 1) / 6 + 1} · {OpenDayNames[(day - 1) % 6]}";
+        // The week (the author's calendar): six open days, Tuesday through Sunday — Mondays
+        // the bar is dark and the calendar simply skips them. It lives in Core now
+        // (2026-08-13): the story schedules its guests by the weekend, so the week became a
+        // RULE, and a calendar the HUD kept to itself would be a second one, free to disagree
+        // with the game about what day it is. The words are unchanged.
+        private static string CalendarFor(int day) => BarCalendar.Label(day);
 
         /// <summary>
         /// Stands the world body where its seat says, at the size and the alpha the seat is
