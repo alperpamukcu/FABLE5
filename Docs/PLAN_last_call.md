@@ -79,7 +79,12 @@ report; the new lines appear; no run deadlocks at closing time.
 
 ---
 
-## S3 — The ask is legible, and the person speaks (UI)
+## S3 — The ask is legible, and the people speak (UI)
+
+**Ece speaks here too.** The plate is one surface with two users: the guest on their stool and
+the host behind the bar (`hostBefore`/`hostAfter`, and the `lessons` that fire on state). Until
+her portrait is drawn, the character's `placeholderLook` names the face the plate borrows — a
+field that gets deleted the day the real one lands.
 
 - The dialogue plate: face, name, one or two lines, a listen key, and a **SAY NO TONIGHT** key.
   Licence paper language (`ChromeArt.Card`), counter-anchored, never over the bar.
@@ -113,7 +118,12 @@ the ambient flicker will read as a bug. Change intensities, not colours, first.
 
 ## S5 — The first arc, written
 
-- `Assets/Data/story/story.json`: beats 1 and 2 of the arc in `GDD 26 §11`, fully written.
+**Beat zero is Ece's** (GDD 26 §1b): night one, the door shuts, she crosses the bar and asks
+for a neat pour of whatever the well has. It cannot fail for want of stock, it teaches the beat
+on a night with nothing at stake, and its second line is the arc's own introduction. Everything
+after it arrives already framed by her.
+
+- `Assets/Data/story/story.json`: beats 0–2 of the arc in `GDD 26 §11`, fully written.
 - Rewards wired: money, stars, a recipe page, a bottle on the counter.
 - The book shows an open ask as a standing line ("Graham wants a whiskey, neat").
 

@@ -28,6 +28,61 @@ arrival that comes through a shut door.
 
 ---
 
+## 1b. Ece, and whose bar this is
+
+**The bar opened this week.** That is the premise, and it is the one the game already tells:
+six bottles in the well, no reputation, nobody who knows you, and three red days from being
+gone. Nothing in the arc may lean on the room having a past — it does not have one yet.
+
+**The player owns it.** Not because it is the more flattering story, but because it is the only
+one that does not fight the screens: this game hands the player the till, the rent, the
+shopping list and the star rating, and those are an owner's decisions. A story in which
+somebody else owns the room would be arguing with every button.
+
+**Ece is the bartender who works the shift.** Turkish, thirty-one, and has done this before —
+in rooms that did not make it. She is the player's second pair of hands and the arc's voice:
+the owner has the money and the licence to sign, she has the trade. That balance is what lets
+her teach without being the boss and comment without being a customer.
+
+She has **two jobs**, and they are different content:
+
+| | **The teacher** | **The frame** |
+|---|---|---|
+| what | says the first time each thing happens, as a person | introduces the last customer before they sit, reads the room after they leave |
+| keyed to | STATE ("there are two spirits in that tin") | the beat (§2) |
+| data | `lessons` (§10) | the beat's own `hostBefore` / `hostAfter` lines |
+| when | once per run, the moment the condition is first true | at the last call |
+
+The teaching half matters more than it sounds. Everything this game explains today, it explains
+in system voice — "SHAKER EMPTY — TAP A BOTTLE", "IT WANTS A MIX — BACK TO THE SHAKER". Those
+lines are good and they stay; they are the bar talking to itself. Ece is the first time anyone
+says it to *you*, and the tutorial module this project deleted in the 2026-08-07 sweep comes
+back through her rather than as a mode.
+
+**She is never in the CROWD** — her look is reserved out of the arrivals pool forever, so she
+can never walk in as a stranger with someone else's order. But she is not sealed behind the
+bar either: **the first last call is hers.** When the door shuts on night one she crosses to
+the other side of it, sits down, and asks the player for a drink — which is exactly what a
+bartender does when the shift ends, and it teaches the whole beat on a night where nothing can
+be lost. She takes the stool as a `guest` for that beat and goes back to being the host after
+it; the role decides the arrivals pool, not the furniture.
+
+That first beat is also where the arc is introduced: after the drink she says, in her own
+words, that people will start coming in asking for things the shelf does not have, and that
+this is how a room gets a name. Every later beat then arrives already framed (`hostBefore`).
+
+**What she costs in art:** one 72×72 face to speak with — the author is drawing her
+specially, and until it lands the data names a stand-in face (`placeholderLook`) so the plate
+is never blank and never borrows a face that means somebody else. The field is deleted the day
+the portrait ships, which is the whole point of it being a field.
+
+The dependency, precisely: — every look in `Resources/Patron`
+carries one, cropped from its own idle frame. That is the whole dependency for the plate. A
+standing sprite behind the bar is a *later* want, not a blocker, and until it exists the plate
+carries her name with no portrait rather than borrowing somebody else's.
+
+---
+
 ## 2. The beat
 
 ```
@@ -231,13 +286,24 @@ rules apply: public fields, no dictionaries, no nullable types, `""`/`0` for "no
   "version": 1,
   "characters": [
     {
+      "id": "ece",
+      "look": "ece",
+      "role": "host",
+      "blurb": "Works the shift with you. Has done this before, in rooms that did not make it."
+    },
+    {
       "id": "collector",
       "look": "execman",
-      "name": "Graham Sedgwick",
-      "age": 54,
-      "hometown": "London",
-      "iso": "gb",
+      "role": "guest",
       "blurb": "Collects for the building. Never raises his voice."
+    }
+  ],
+
+  "lessons": [
+    {
+      "id": "first_night",
+      "when": "first_night",
+      "say": [ "Six bottles and a keg. That is a bar, technically.", "Read them before you pour. The licence says what they came for." ]
     }
   ],
   "beats": [
@@ -258,6 +324,8 @@ rules apply: public fields, no dictionaries, no nullable types, `""`/`0` for "no
       "servedRight": [ "That is the one.", "The building can wait a week." ],
       "servedWrong": [ "That is not whiskey." ],
       "declined": [ "Then I will come back." ],
+      "hostBefore": [ "That one is here about the building, not the whiskey." ],
+      "hostAfter": [ "He will be back. They always are." ],
       "rewardMoney": 40,
       "rewardStars": 0.0,
       "rewardRecipe": "",
@@ -276,8 +344,20 @@ Field notes:
   without re-deriving it. Empty/0 = "nothing in particular; you should already be able to".
 - `grantsRecipeOnAsk` — a recipe id handed over with the ask, gate and price waived (§4). `""`
   for the ordinary case where the drink is already in the book or buyable.
+- `characters[].role` — `guest` (sits, orders, can be served) or `host` (Ece: behind the bar,
+  never seated, never rolled into the crowd). Exactly one host.
+- `lessons[].when` — the NAME of a condition the code owns. This is deliberately not a
+  scripting language: the game keeps a small table of predicates it can actually observe, the
+  data picks one by name and supplies the words, and an unknown name is refused at load like
+  any other bad reference. The starting vocabulary, all of it already computable:
+  `first_night`, `first_licence` (nobody's card read yet), `two_spirits_in_the_tin`
+  (Core's own `MixRequired && !IsMixed`), `first_keg`, `first_market`, `cannot_pour_the_ask`
+  (a beat is due and the shelf is missing its style), `red_night`, `first_extra_order`.
+  Each fires once per run, the moment its condition is first true.
 - `ask` / `servedRight` / `servedWrong` / `declined` — 1–2 lines each (§7). `nudge` is used on
   returns.
+- `hostBefore` / `hostAfter` — Ece's frame around the beat (§1b): one line before they sit, one
+  after they leave. Empty is allowed; a beat she has nothing to say about is a beat she watches.
 - `reward*` — all optional; every non-empty one must resolve at load or the file is rejected.
 - `next` — the beat that arms when this one is served right. `""` ends the arc.
 
@@ -289,12 +369,13 @@ Seven beats over roughly three weeks, each teaching one system through one perso
 through-line about the bar itself. **The names and lines here are placeholders** — the shape is
 the design; the writing is the author's.
 
-The first three are written as real data in `Assets/Data/story/story.json` — real recipe ids,
+The first FOUR are written as real data in `Assets/Data/story/story.json` — real recipe ids,
 real styles, and three faces the cast already owns (`execman`, `ember`, `profess`), which are
 reserved from the crowd from S1 on.
 
 | # | Night | Who | Asks for | Teaches | Gate |
 |---|---|---|---|---|---|
+| 0 | 1 | **Ece** — she works here | `neat_pour` of whatever is on the shelf | the beat itself, on a night nothing can be lost — and the arc, in her own words | none |
 | 1 | 2 | **The collector** — takes the rent for the building | `neat_pour` — a whiskey, neat | the market: buy a style you lack | shelf (no bourbon in the opening well) |
 | 2 | 5 | **The sister** — drank here before it was yours | `moscow_mule` | the market again, and the book: the reward is a page (`gimlet`) the 2★ gate has not opened | shelf (ginger) |
 | 3 | 9 | **The critic** — writes about rooms like this | `manhattan`, *stirred* | method: stirred is not shaken — and he hands over the page himself | method (+ vermouth) |

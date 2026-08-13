@@ -30,8 +30,8 @@ namespace LastCall.Tests
         public void The_cast_file_parses_and_holds_the_whole_bar()
         {
             var cast = Load();
-            Assert.That(cast.All.Count, Is.EqualTo(30),
-                "the bar has 30 faces; if that changed on purpose, change it here too");
+            Assert.That(cast.All.Count, Is.EqualTo(31),
+                "the bar has 30 drinkers and Ece behind it; if that changed on purpose, change it here too");
         }
 
         [TestCase("", "Miles Corrigan", 26, "us")]
@@ -63,6 +63,18 @@ namespace LastCall.Tests
             foreach (var slug in new[] { "execman", "ember", "profess" })
                 Assert.That(cast.For(slug), Is.Not.Null,
                     $"'{slug}' is reserved for the last-call arc and has no papers");
+        }
+
+        [Test]
+        public void Ece_is_in_the_cast_and_is_turkish()
+        {
+            // GDD 26 §1b: she works the shift, so she has papers like anyone else — but she
+            // is never rolled into the crowd. Losing this row would leave the story's host
+            // nameless on the plate, which is the one line the arc cannot do without.
+            var ece = Load().For("ece");
+            Assert.That(ece, Is.Not.Null, "the bar has no bartender");
+            Assert.That(ece.Name, Is.EqualTo("Ece Toprak"));
+            Assert.That(ece.Iso, Is.EqualTo("tr"));
         }
 
         // ── the loud failures ────────────────────────────────────────────────────

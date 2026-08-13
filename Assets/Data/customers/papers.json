@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_comment": "THE CAST'S PAPERS: what the licence prints for each face (GDD 22 section 3). Moved out of TycoonHud on 2026-08-12 (PLAN_last_call S0) -- 30 people were a hardcoded Dictionary in a UI file, which broke the house rule that content is data and made the story's characters impossible to write without touching C#. The slug is the LOOK: the sprite folder under Resources/Patron, and the key the licence, the receipt and the guide all agree on. The empty slug is the fallback for a face with no papers of its own. Adding a person here is adding a person to the bar; nothing else has to change.",
+  "_comment": "THE CAST'S PAPERS: what the licence prints for each face (GDD 22 section 3). Moved out of TycoonHud on 2026-08-12 (PLAN_last_call S0) -- 30 people were a hardcoded Dictionary in a UI file, which broke the house rule that content is data and made the story's characters impossible to write without touching C#. The slug is the LOOK: the sprite folder under Resources/Patron, and the key the licence, the receipt and the guide all agree on. The empty slug is the fallback for a face with no papers of its own. Adding a person here is adding a person to the bar; nothing else has to change. Ece Toprak (slug 'ece') is the bartender who works the shift with the player -- GDD 26 section 1b. She is cast, not crowd: her look is reserved out of the arrivals pool and her portrait is the one art asset the story is waiting on.",
   "papers": [
     {
       "slug": "",
@@ -211,6 +211,13 @@
       "age": 54,
       "country": "United Kingdom",
       "iso": "gb"
+    },
+    {
+      "slug": "ece",
+      "name": "Ece Toprak",
+      "age": 31,
+      "country": "Turkey",
+      "iso": "tr"
     }
   ]
 }

@@ -1,38 +1,69 @@
 {
   "version": 1,
-  "_comment": "THE LAST CUSTOMER (GDD 26). Written 2026-08-12; NOT LOADED YET — the parser lands in PLAN_last_call S1/S5. Everything here is real data against the real catalogue: every 'recipe' is an id from recipes.json, every 'look' is a slug the cast already has a face for, and every 'needStyle' is a style the market actually sells. Names and lines are the author's to replace; the SHAPE is the design (GDD 26 sections 4, 5 and 7): the ask names what is missing, no beat is a dead end, two lines a beat and one sentence each.",
-
+  "_comment": "THE LAST CUSTOMER (GDD 26). Written 2026-08-12; NOT LOADED YET -- the parser lands in PLAN_last_call S1/S5. THE BAR OPENED THIS WEEK: nothing here may lean on the room having a past, because it does not have one. THE FIRST LAST CALL IS ECE'S: on night one she crosses the bar, sits, asks for a drink the well can already pour, and introduces the arc -- the beat teaches itself on a night nothing can be lost. Ece works the shift with the player, teaches (lessons) and frames each beat (hostBefore/hostAfter); the player owns the bar, which is the only version that does not fight the screens -- the till, the rent and the shopping are already theirs. Every 'recipe' is an id from recipes.json, every 'look' is a slug in papers.json, every 'needStyle' is a style the market sells. Names and lines are the author's to replace; the SHAPE is the design: the ask names what is missing, no beat is a dead end, two lines a beat and one sentence each.",
   "characters": [
+    {
+      "id": "ece",
+      "look": "ece",
+      "role": "host",
+      "blurb": "Works the shift with you. Has done this before, in rooms that did not make it. Takes the first last call herself.",
+      "placeholderLook": "glam"
+    },
     {
       "id": "collector",
       "look": "execman",
-      "name": "Graham Sedgwick",
-      "age": 54,
-      "hometown": "London",
-      "iso": "gb",
+      "role": "guest",
       "blurb": "Collects for the building. Never raises his voice, never has to."
     },
     {
       "id": "sister",
       "look": "ember",
-      "name": "Meredith Nolan",
-      "age": 34,
-      "hometown": "this side of town",
-      "iso": "us",
-      "blurb": "Drank here before it was yours. Knows which stool was whose."
+      "role": "guest",
+      "blurb": "Came in out of the rain on the second night and kept coming back."
     },
     {
       "id": "critic",
       "look": "profess",
-      "name": "Ulrich Brenner",
-      "age": 66,
-      "hometown": "Munich",
-      "iso": "de",
+      "role": "guest",
       "blurb": "Writes about rooms like this one. Orders the same drink everywhere, on purpose."
     }
   ],
-
   "beats": [
+    {
+      "id": "ece_1",
+      "character": "ece",
+      "day": 1,
+      "recipe": "neat_pour",
+      "needStyle": "",
+      "needTier": 0,
+      "grantsRecipeOnAsk": "",
+      "patienceSeconds": 60,
+      "ask": [
+        "Door is shut. Pour me one of whatever we actually have.",
+        "Owner's first night. It is a rule somewhere."
+      ],
+      "nudge": [
+        "Anything on that shelf. I am not the difficult one."
+      ],
+      "servedRight": [
+        "Not bad for a room that did not exist last week.",
+        "Soon they will ask for things we do not stock — say yes, then go and buy it."
+      ],
+      "servedWrong": [
+        "That is not what I asked for, and I am the easy one."
+      ],
+      "declined": [
+        "You are turning down the bartender. Bold."
+      ],
+      "hostBefore": [],
+      "hostAfter": [],
+      "rewardMoney": 0,
+      "rewardStars": 0.0,
+      "rewardRecipe": "",
+      "rewardBottle": "",
+      "returnsAfterDays": 1,
+      "next": "collector_1"
+    },
     {
       "id": "collector_1",
       "character": "collector",
@@ -64,7 +95,13 @@
       "rewardRecipe": "",
       "rewardBottle": "",
       "returnsAfterDays": 2,
-      "next": "sister_1"
+      "next": "sister_1",
+      "hostBefore": [
+        "That one is here about the building, not the whiskey."
+      ],
+      "hostAfter": [
+        "He will be back. They always come back to see if you lasted."
+      ]
     },
     {
       "id": "sister_1",
@@ -76,15 +113,15 @@
       "grantsRecipeOnAsk": "",
       "patienceSeconds": 50,
       "ask": [
-        "He used to make me a mule when the room got loud.",
-        "Ginger, lime, the copper cup he never actually owned."
+        "My brother used to make me a mule when the day had been long.",
+        "Ginger, lime, and the copper cup he never actually owned."
       ],
       "nudge": [
-        "No ginger yet. He always said it was the cheap half."
+        "Still no ginger. He always said it was the cheap half of it."
       ],
       "servedRight": [
         "Close enough that I had to put it down for a second.",
-        "Keep the recipe. It was his."
+        "Keep the page. He would have liked that it is yours now."
       ],
       "servedWrong": [
         "That is somebody else's drink."
@@ -97,7 +134,13 @@
       "rewardRecipe": "gimlet",
       "rewardBottle": "",
       "returnsAfterDays": 3,
-      "next": "critic_1"
+      "next": "critic_1",
+      "hostBefore": [
+        "She was here on the second night, in the rain. She stayed."
+      ],
+      "hostAfter": [
+        "That is how a regular starts. One drink somebody remembers."
+      ]
     },
     {
       "id": "critic_1",
@@ -130,7 +173,71 @@
       "rewardRecipe": "",
       "rewardBottle": "",
       "returnsAfterDays": 3,
-      "next": ""
+      "next": "",
+      "hostBefore": [
+        "I know that face. He wrote the room I worked in out of business."
+      ],
+      "hostAfter": [
+        "One honest paragraph. That is more than most new rooms get."
+      ]
+    }
+  ],
+  "lessons": [
+    {
+      "id": "first_night",
+      "when": "first_night",
+      "say": [
+        "Six bottles and a keg. That is a bar, technically.",
+        "Read them before you pour — the licence says what they came for."
+      ]
+    },
+    {
+      "id": "first_licence",
+      "when": "first_licence",
+      "say": [
+        "Click the stool, not the drink.",
+        "Nobody tells you what they want until you ask."
+      ]
+    },
+    {
+      "id": "two_spirits",
+      "when": "two_spirits_in_the_tin",
+      "say": [
+        "Two spirits in one tin do not become a drink on their own.",
+        "Shake it or stir it. The book says which."
+      ]
+    },
+    {
+      "id": "first_keg",
+      "when": "first_keg",
+      "say": [
+        "Beer is not a cocktail. Lean the glass, then straighten it.",
+        "The head is the whole job."
+      ]
+    },
+    {
+      "id": "first_market",
+      "when": "first_market",
+      "say": [
+        "Whatever we did not stock tonight, somebody will ask for tomorrow.",
+        "Buy narrow. A wide shelf on a new bar is just money standing still."
+      ]
+    },
+    {
+      "id": "cannot_pour_the_ask",
+      "when": "cannot_pour_the_ask",
+      "say": [
+        "We cannot pour that. Not tonight.",
+        "Tell them straight — they come back for straight."
+      ]
+    },
+    {
+      "id": "red_night",
+      "when": "red_night",
+      "say": [
+        "That is one red night. Three and the room is somebody else's.",
+        "I have watched it happen twice. Not keen on a third."
+      ]
     }
   ]
 }
