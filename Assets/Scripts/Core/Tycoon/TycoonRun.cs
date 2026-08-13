@@ -194,7 +194,8 @@ namespace LastCall.Core
             IReadOnlyList<GlasswareDefinition> glassware = null,
             IReadOnlyList<SnackDefinition> snacks = null,
             IReadOnlyList<IngredientCard> lockedStock = null,
-            IReadOnlyList<FixtureDefinition> fixtures = null)
+            IReadOnlyList<FixtureDefinition> fixtures = null,
+            StoryArc story = null)
         {
             _shelf = shelf ?? throw new ArgumentNullException(nameof(shelf));
             if (recipes == null) throw new ArgumentNullException(nameof(recipes));
@@ -225,6 +226,9 @@ namespace LastCall.Core
             Glass = new GlassContents(_config.GlassCapacity);
             ServingGlass = NewServingGlass(DefaultGlassware);
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"));
+            // The story is opt-in exactly like the regulars: a run built without an arc has
+            // no last customer and behaves in every way like a run from before there was one.
+            Story = story != null ? new StoryProgress(story) : null;
         }
 
         // ── the recipe book (v5 P16): buying the menu ───────────────────────────
@@ -518,6 +522,9 @@ namespace LastCall.Core
             RollMarket();
             Day = late ? 30 : 12;
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average);
+            LastCustomer = null;       // a jumped night starts its last call from scratch
+            LastCallBeat = null;
+            _lastCallSpent = _lastCallAnswered = false;
             Phase = TycoonPhase.DayOpen;
         }
 
@@ -684,6 +691,7 @@ namespace LastCall.Core
             EnsurePhase(TycoonPhase.DayOpen);
             var seated = Floor.Tick(seconds, NextArrival);
             SettleDepartures();
+            seated = SettleLastCall(seated);
 
             if (Floor.IsComplete)
             {
@@ -714,6 +722,104 @@ namespace LastCall.Core
             }
         }
 
+        // ── the last customer (GDD 26) ──────────────────────────────────────────
+
+        /// <summary>Where this run has got to in the written nights, or null for a run with
+        /// no story — the same opt-in the regulars have.</summary>
+        public StoryProgress Story { get; }
+
+        /// <summary>The scripted guest while they are on their stool, and null every other
+        /// moment. The one visit the arc is watching.</summary>
+        public CustomerVisit LastCustomer { get; private set; }
+
+        /// <summary>The beat being played tonight. Set when they sit down and kept until the
+        /// night is closed, so the last word can still be said after they have gone.</summary>
+        public StoryBeat LastCallBeat { get; private set; }
+
+        private bool _lastCallSpent;      // one last customer a night, served or not
+        private bool _lastCallAnswered;   // the arc has been told how tonight went
+
+        /// <summary>
+        /// The last customer, in the one place the night is already settled (GDD 26 §2). Two
+        /// things happen here and nowhere else: the scripted guest is let in once the room has
+        /// emptied at closing time, and the arc is told when they get up without an answer.
+        ///
+        /// It runs INSIDE <see cref="Tick"/>, after the floor has settled and before the day's
+        /// end condition is read — because that condition is one line in one place
+        /// (<see cref="BarDay.IsComplete"/>: the door is shut and the last stool is empty) and
+        /// a guest on a stool already satisfies it. The beat needs no second way to end a day.
+        /// </summary>
+        private IReadOnlyList<CustomerVisit> SettleLastCall(IReadOnlyList<CustomerVisit> seated)
+        {
+            if (Story == null) return seated;
+
+            // Up and gone: finished their drink, or tired of waiting for one. Nobody having
+            // answered them is itself an answer, and the beat comes back for it.
+            if (LastCustomer != null && !Floor.Seated.Contains(LastCustomer))
+            {
+                if (!_lastCallAnswered)
+                {
+                    Story.RecordMissed(Day);
+                    _lastCallAnswered = true;
+                }
+                LastCustomer = null;
+            }
+
+            if (_lastCallSpent || LastCustomer != null) return seated;
+            if (!Floor.IsClosingTime || Floor.Seated.Count > 0) return seated;
+            if (!Story.IsDueOn(Day)) return seated;
+
+            // Scripted through and through: the drink is the beat's, the price is the house's
+            // ordinary one, the patience is written down, and not a single die is rolled — a
+            // night that is meant to be the same twice cannot be built out of the arrival RNG.
+            var beat = Story.Current;
+            var visit = new CustomerVisit(
+                new DrinkOrder(beat.Drink, PriceOf(beat.Drink), ServingSpec.Plain),
+                beat.PatienceSeconds, Story.PersonFor(beat.Who));
+            Floor.SeatGuest(visit);
+            LastCustomer = visit;
+            LastCallBeat = beat;
+            _lastCallSpent = true;
+            _lastCallAnswered = false;
+
+            // Whoever just sat down is what the caller draws. Leaving the guest out of this
+            // list would put somebody on a stool that nobody can see.
+            var all = new List<CustomerVisit>(seated.Count + 1);
+            all.AddRange(seated);
+            all.Add(visit);
+            return all;
+        }
+
+        /// <summary>
+        /// Tells the arc how tonight's beat went. Called at the SERVE and at the decline —
+        /// not when the guest gets up — because the words that answer a beat have to land on
+        /// the drink that earned them. A right serve moves the story on; anything else leaves
+        /// it standing and sets the return clock.
+        /// </summary>
+        private void AnswerLastCall(bool servedRight)
+        {
+            if (Story == null || _lastCallAnswered) return;
+            _lastCallAnswered = true;
+            // The reward is data already (GDD 26 §6); paying it out lands in PLAN S5, with
+            // the writing, so that the money and the pages arrive with the words that explain
+            // them rather than out of a silent night.
+            if (servedRight) Story.RecordServed(Day);
+            else Story.RecordMissed(Day);
+        }
+
+        /// <summary>
+        /// The honest no, for the one customer who cannot simply be ignored (GDD 26 §5). It is
+        /// the ordinary <see cref="DeclineOrder"/> — the same mark on the night, the same
+        /// stool freed now instead of in thirty seconds — with the arc's bookkeeping attached,
+        /// so the plate's SAY NO key and the bar's own rule are never two different things.
+        /// </summary>
+        public ServiceVerdict DeclineLastCall()
+        {
+            if (LastCustomer == null)
+                throw new InvalidOperationException("Nobody is waiting on the last call.");
+            return DeclineOrder(LastCustomer);
+        }
+
         private CustomerVisit NextArrival()
         {
             var order = RollOrder();
@@ -739,14 +845,18 @@ namespace LastCall.Core
         private DrinkOrder RollOrder()
         {
             var order = DrinkOrder.Roll(_recipes, Day, _config, _rng.GetStream("orders"));
-            // Premium spirits on the shelf raise the price; the crowd tier then scales it.
-            int price = Math.Max(1, (int)Math.Round(
-                (order.Price + PremiumFor(order.Wanted)) * _config.PriceMultiplier(CrowdToday),
-                MidpointRounding.AwayFromZero));
+            int price = PriceOf(order.Wanted);
             return price == order.Price
                 ? order
                 : new DrinkOrder(order.Wanted, price, order.Spec);   // keep how they want it served
         }
+
+        /// <summary>What the bar charges for a drink tonight: the menu price, plus what the
+        /// premium spirits on the shelf earn it, scaled by the crowd. No dice anywhere in it,
+        /// which is why the scripted last call is priced through the same line as the crowd.</summary>
+        private int PriceOf(RecipeDefinition recipe) => Math.Max(1, (int)Math.Round(
+            (DrinkOrder.MenuPrice(recipe) + PremiumFor(recipe)) * _config.PriceMultiplier(CrowdToday),
+            MidpointRounding.AwayFromZero));
 
         /// <summary>The premium a drink earns from the shelf's stock (GDD 23 §3, 2026-07-23):
         /// for each spirit/bitter the recipe needs, the best bottle above the base tier adds
@@ -1267,6 +1377,10 @@ namespace LastCall.Core
             if (visit.State != VisitState.Waiting)
                 visit.Regular?.RecordVisit((int)Math.Round(verdict.Satisfaction * 3));
 
+            // The last customer is the one visit the arc is watching (GDD 26 §5). Exactly what
+            // they asked for moves the story on; near enough does not, and comes back.
+            if (ReferenceEquals(visit, LastCustomer)) AnswerLastCall(matchKind == OrderMatch.Exact);
+
             // No money moves here. The verdict is settled onto the VISIT (its Paid/PaidBase),
             // and the till collects when they get up — see SettleDepartures. The author's note
             // (2026-07-31): the money and the stars show when the drink is finished, not when
@@ -1294,6 +1408,9 @@ namespace LastCall.Core
             visit.Resolve(verdict);   // no savour: there is no drink to nurse
             visit.Regular?.RecordVisit((int)Math.Round(verdict.Satisfaction * 3));
             DeclinedOrders++;
+            // Told no, the last customer keeps their beat and their return clock: declining
+            // costs a night, never the arc (PLAN_last_call, standing rule 2).
+            if (ReferenceEquals(visit, LastCustomer)) AnswerLastCall(false);
             return verdict;
         }
 
@@ -1589,6 +1706,9 @@ namespace LastCall.Core
             UpgradesToday = 0;         // tonight's fitting is spent; tomorrow gets its own
             _bestRankServedTonight = 0;
             _todayPurchases.Clear();   // yesterday's buys are kept; refunds are same-day only
+            LastCustomer = null;       // last night's beat is over, whichever way it went
+            LastCallBeat = null;
+            _lastCallSpent = _lastCallAnswered = false;
             BuyBackTheBowls();
             ResetVessels();
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average);

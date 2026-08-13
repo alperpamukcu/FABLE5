@@ -108,6 +108,24 @@ namespace LastCall.Core
         /// closing time stops new arrivals, it does not throw anyone out mid-drink.</summary>
         public bool IsComplete => IsClosingTime && _seated.Count == 0;
 
+        /// <summary>
+        /// Sits somebody the night did not roll (GDD 26 §2) — the last customer, who comes in
+        /// after the door is shut and answers to none of the arrival machinery: not the gap
+        /// clock, not the seat count, not the crowd. Everything AFTER the door is the same as
+        /// for anyone else. The floor ticks their patience, buses their glass, and refuses to
+        /// be complete while they are on the stool, which is why this needs no new end
+        /// condition: <see cref="IsComplete"/> already says the shift is over when the last
+        /// stool is empty, and now one of them is not.
+        /// </summary>
+        public void SeatGuest(CustomerVisit visit)
+        {
+            if (visit == null) throw new ArgumentNullException(nameof(visit));
+            if (_seated.Contains(visit))
+                throw new InvalidOperationException("That customer is already at the bar.");
+            _seated.Add(visit);
+            Arrived++;   // they walked in; the night's count would lie without them
+        }
+
         /// <summary>People at the bar who still have not been served.</summary>
         public int Waiting
         {

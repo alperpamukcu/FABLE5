@@ -2,6 +2,20 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `26 §2/§3/§9` + `GDD_MEVCUT §3` **the last customer exists, and says nothing (2026-08-13,
+  PLAN_last_call S1):** Core can now play a written night. When the door has shut and the room
+  has drained, `BarDay.SeatGuest` sits somebody the night did not roll — outside the arrival
+  clock, the seat count and the crowd, ordinary in every way after that — and the day's end
+  condition was left exactly as it was, because *the door is shut and the last stool is empty*
+  already refuses to be true with a guest on a stool. The beat's drink, price and patience come
+  from data and not one die is rolled. Serving what was asked for advances the arc; a wrong
+  drink, an honest no (`DeclineLastCall()`) or simply never coming to the stool spends the
+  night and the beat returns on its own clock — no dead ends, by construction. Content and
+  state are split (`StoryArc` is shared and never changes, `StoryProgress` is per run) so the
+  simulator can hand one arc to two hundred bars. Still silent and still unwired to
+  `story.json`: the story is opt-in like the regulars, so a run without one is the game that
+  shipped. 238 EditMode green (23 new), 7 PlayMode green.
+
 - **NEW `26_last_call_story.md` + `PLAN_last_call.md` (2026-08-12, the author's brief):** the
   last call becomes a SCRIPTED beat instead of a clock running out. When the door has shut and
   the room has drained, one named person comes in and asks for a drink the bar cannot pour yet

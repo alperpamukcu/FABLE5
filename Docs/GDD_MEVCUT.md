@@ -35,6 +35,7 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 - **Servis tercihi (spec):** ~%50 sade; değilse 1–2 garnitür {buz, limon, tuz, şeker}. Draught'a garnitür yazılmaz. Beklenen doluluk 0.80 (tepeleme isteği 2026-08-02'de emekli). **"Sert çalkala" 2026-08-11'de emekli:** yöntem müşterinin hevesi değil TARİFİN talebi — hakem artık `Prep`'i notluyor (aşağıda).
 - **Ekstra tur:** Exact + zanaat tam + dönen müşteri + bekleme <%90 → en fazla 2 ek sipariş, sabır %80'e tazelenir.
 - **Müdavimler opt-in:** kayıt (registry) verilmezse anonim kalabalık. Müdavim: isim/yaş/şehir/arketip/ziyaret/ilişki taşır; duygu katmanı 2026-08-02'de söküldü — kokteyle verilen tepki tek gerçek.
+- **Son müşteri (2026-08-13, Core'da var, henüz sessiz — GDD 26):** hikâye de opt-in; `StoryArc` verilmemiş bir koşu bugünküyle birebir aynı. Verilmişse: kapı kapandıktan **ve** oda boşaldıktan sonra (`IsClosingTime && Seated.Count == 0`) o geceye yazılmış beat'in müşterisi `BarDay.SeatGuest` ile oturur — geliş saati, tabure sayısı ve kalabalık kuralları onu bağlamaz, ondan sonrası herkesle aynı. Siparişi/sabrı/fiyatı veriden gelir, **tek zar atılmaz**; kimlik kuralı onda da geçerli. Gece o tabure boşalana dek bitmez (bitiş koşulu değişmedi). Doğru servis arc'ı ilerletir; yanlış servis, dürüst red (`DeclineLastCall()`) veya hiç ilgilenmemek geceyi harcar, beat kendi dönüş saatiyle geri gelir. Veri bağlantısı ve diyalog kabuğu S3/S5'te.
 
 ## 4 · İçki yapımı — üç yol, tek yasa
 
@@ -121,8 +122,8 @@ seviyesini doğası gereği göstermez — sayı hover kartında ve market kutuc
 
 ## 10 · Teknik omurga
 
-- **5 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game (UI *yapısal olarak* test edilemez).
+- **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.
 - **Determinizm:** `RunRng` (FNV-1a→PCG32) adlı akışlar: arrivals, orders, patience, decide, customer, read. `System.Random`/`UnityEngine.Random` yasak.
 - **Veri:** 5 JSON, `JsonUtility` + gürültülü doğrulama; tarifler çift kaynak (json+katalog) parite testli.
 - **Araçlar:** LastCall menüsü — Create Debug Scene · Simulate Tycoon 200 Runs · Measure Service Speed Response.
-- **Doğrulama:** 175 EditMode testi (9 dosya); sim botu gerçek oyuncu fiilleriyle 200 koşu, `Docs/tycoon_sim_report.md`.
+- **Doğrulama:** 238 EditMode testi (11 dosya) + 7 PlayMode testi (4 duman + 3 piksel taban resmi, `Baselines~`); sim botu gerçek oyuncu fiilleriyle 200 koşu, `Docs/tycoon_sim_report.md`.

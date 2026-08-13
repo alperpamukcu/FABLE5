@@ -38,7 +38,7 @@ the screen against the file: MEREDITH NOLAN / 34 / UNITED STATES, and so on.
 
 ---
 
-## S1 — The beat exists (Core only, silent)
+## S1 — The beat exists (Core only, silent) ☑ 2026-08-13
 
 The last customer arrives, orders, can be served or declined. Nobody says anything yet.
 
@@ -62,6 +62,35 @@ today (every existing test still green).
 (`TycoonRun.Tick`) — checked, not assumed. Seating a guest after closing must extend that one
 condition rather than grow a second one somewhere else; the HUD reads `IsClosingTime` for the
 LAST CALL plaque and must keep meaning the same thing by it.
+
+**Shipped.** The end condition was not extended at all, which is the good news: `IsComplete`
+still says *the door is shut and the last stool is empty*, and a guest on a stool already
+fails it. `BarDay.SeatGuest` sits somebody the night did not roll — outside the arrival clock,
+the seat count and the crowd, ordinary in every way after that — and `TycoonRun.SettleLastCall`
+runs inside `Tick`, between the floor's own settling and that one unchanged line.
+
+Content and state are two classes on purpose: **`StoryArc`** is the written nights, built once
+and shared by every run that plays them (the simulator will hand the same one to two hundred
+bars), and **`StoryProgress`** is where a run has got to — the armed beat, its due day, kept
+and missed, plus one `RegularState` per character so a guest who comes back is somebody the
+bar has met. `TycoonRun` gained `Story`, `LastCustomer`, `LastCallBeat` and `DeclineLastCall()`,
+and prices the scripted ask through the same `PriceOf` line the crowd uses — no die is rolled
+anywhere in the beat.
+
+23 EditMode tests (238 green, every older one untouched): the beat does not arm before its
+day; the guest sits only after the door has shut and only into an empty room; their ask hides
+behind the licence exactly like everyone else's; the night cannot end while they are on the
+stool; a right serve advances the arc and a wrong one re-arms it; an honest no takes the
+ordinary decline mark and keeps the beat; being left to wait is an answer too; one last call a
+night, even after they have gone; and a run built without a story never hears one. The arc
+also refuses, loudly, six ways to mis-edit the file it will be built from — a night that leads
+nowhere, a circle, an orphan beat, two beats on one night, two beats with one name, and a beat
+that comes back the same night it left.
+
+**Two things S1 deliberately left standing, both for S3:** the guest whose patience runs out
+is `StormedOff` like anyone else, and §3 says they should *leave a line, not storm* — that is
+a presentation difference and it is drawn, not decided, in Core. And the stool is whichever
+one the floor hands over; "the stool nearest the till" is the UI's to choose.
 
 ---
 

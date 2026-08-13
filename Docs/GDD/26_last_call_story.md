@@ -133,6 +133,12 @@ They are a `RegularState` like anyone else — name, age, hometown, visits, rela
 the second visit already knows it is the second, and `Relationship` moves on the outcome. The
 face is a reserved look (§8) so the same person is the same picture every night of the run.
 
+**As built (2026-08-13, S1).** All of that is true in Core now except the two lines that are
+about how it *looks*, and those are S3's: a guest whose patience runs out is `StormedOff` like
+anyone else — the quiet leaving is drawn, not decided — and the stool is whichever one the
+floor hands over, not yet the one nearest the till. `StoryProgress` keeps one `RegularState`
+per character for the whole run, so the second visit already knows it is the second.
+
 **They are not a boss fight.** No timer pressure beyond the ordinary patience, no failure
 state, no combat framing. The only thing at stake is the answer.
 
@@ -273,6 +279,20 @@ serve advances, a wrong serve does not, a decline re-arms, and a story file nami
 that does not exist fails at load with a loud message. UI (PlayMode): the last customer walks
 in after the door shuts and the dialogue plate carries their line; the closing light beat gets
 its own blessed picture (`LookTests`).
+
+**As built (2026-08-13, S1).** The Core half is done and green — 23 tests in
+`LastCustomerTests`, the whole EditMode suite at 238. Two of them are worth naming because
+they are the ones a later change is likeliest to break: *the night cannot end while the guest
+is on the stool* (the day's end condition was not extended to make this true — a guest on a
+stool already fails it) and *a run without a story never hears a last call* (the arc is opt-in
+exactly like the regulars, which is what keeps every older test honest). The load-time
+validation is the arc's constructor for now — a circle, an orphan beat, two beats on one
+night, a night that leads nowhere — and grows the recipe/style/reward checks when the file is
+actually parsed in S5.
+
+The classes: **`StoryArc`** is content, built once and shared (the sim will hand one arc to
+two hundred bars); **`StoryProgress`** is where a run has got to. Nothing scripted touches the
+RNG, so the `"story"` stream is still unspent.
 
 ---
 
