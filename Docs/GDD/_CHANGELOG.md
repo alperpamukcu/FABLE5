@@ -2,6 +2,22 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `26 §7` **the room dims to the last customer (2026-08-13, PLAN S4 + the rest of S3):** the
+  closing beat is lit. `DiegeticStage.SetClosingBeat` takes the ceiling down to 0.22 of itself,
+  thins the wash to 0.55, burns the LAST CALL neon at 1.9×, and lights ONE lamp at the guest's
+  own stool — every number an intensity on a light that was already hanging in the room, so the
+  beat never reads as a different game. It ramps over a second, reverses when the stool empties,
+  and `Motion.Reduced` gets the same room without the ramp. The rest of S3 closed with it: the
+  guest takes the stool nearest the till, a guest whose clock runs out walks instead of storming
+  (and is not booked as a walk-out, being on no books), and the story face is reasserted once a
+  frame — the stool had been handing the guest a rolled body while the plate showed the right
+  person, and a stool keeps its look by design, so the beat is made the authority instead.
+  **The proof is measured, not photographed, and that was a correction:** a blessed picture
+  failed its own second run by 89,684 pixels — the plate's cream sits five units apart between
+  runs, and the settings key drew its icon in one and its word in the other. Neither is the
+  closing beat. `LookTests` asserts the four numbers that ARE the beat, then declines the guest
+  and checks the lamp goes out. 284 EditMode green, 8 PlayMode green.
+
 - `26 §7` **the last customer can be seen and spoken to (2026-08-13, PLAN S3 part one):** the
   arc is IN PLAY — night one is Ece's, and the module stops being invisible. Two surfaces do
   all of it. **The plate** at the counter (a face, a name, one line, GO ON, SAY NO TONIGHT)

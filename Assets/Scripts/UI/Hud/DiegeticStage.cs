@@ -212,6 +212,7 @@ namespace LastCall.UI
         private void Update()
         {
             _neon?.Step(Time.deltaTime);
+            StepClosing();
             float w = VisibleWidth();
             if (!Mathf.Approximately(w, _lastVisibleW)) Refit(w);
             // The room is built once at the reference and MAGNIFIED to cover the window.
@@ -302,7 +303,7 @@ namespace LastCall.UI
                 // The lamps the picture already painted, made real: a warm pool under each
                 // bulb. Positions are measured art pixels, converted per-fit in Refit.
                 for (int i = 0; i < LampArtPx.Length; i++)
-                    PointLight("Lamp" + i, LampTint, LampIntensity, LampRadius);
+                    _lamps.Add(PointLight("Lamp" + i, LampTint, LampIntensity, LampRadius));
                 _signLight = PointLight("SignSpill", UITheme.Magenta[4], 0.9f, 60f);
 
                 BuildSign();
@@ -773,6 +774,76 @@ namespace LastCall.UI
         /// seconds — the GLOBAL LIGHT dips now, which is what a mains stutter is. Purely
         /// cosmetic; this jitter never touches RunRng, so run determinism is unaffected.
         /// </summary>
+        // ── the closing beat (GDD 26 §7, PLAN_last_call S4) ─────────────────────
+        //
+        // When the last customer is on their stool the room says so, in the language it
+        // already has: the ceiling comes down, the wash thins, the neon over the door burns
+        // harder, and ONE lamp finds the person at the bar. Nothing is drawn for this — every
+        // number below is an intensity on a light that was already hanging there, which is
+        // what keeps it from reading as a different game for thirty seconds.
+
+        /// <summary>How far the ceiling and the wash drop for the last call.</summary>
+        private const float ClosingCeiling = 0.22f, ClosingWash = 0.55f, ClosingSign = 1.9f;
+
+        /// <summary>The ceiling, kept by reference: the closing beat dims every one of them
+        /// each frame, and finding them by name would rebuild four strings a frame to do it.</summary>
+        private readonly List<Light2D> _lamps = new List<Light2D>();
+
+        /// <summary>The lamp over the guest, built dark and only ever lit for them.</summary>
+        private Light2D _guestLight;
+        private bool _closing;
+        private float _closingT;            // 0 = the ordinary room, 1 = the last call
+        private float _guestWorldX;
+
+        /// <summary>
+        /// Turns the closing beat on or off and says WHERE the person is, in HUD units (the
+        /// stool's own x). Called every frame by the HUD — it is idempotent, and the fade is
+        /// this class's business, not the caller's.
+        /// </summary>
+        public void SetClosingBeat(bool on, float hudX)
+        {
+            _closing = on;
+            _guestWorldX = hudX / (720f / 360f);
+        }
+
+        /// <summary>Drives the fade. Separate from <see cref="Ambient"/> because that one is a
+        /// coroutine that Motion.Reduced switches off, and a player who has asked for less
+        /// movement still gets the light — it simply arrives without the ramp.</summary>
+        private void StepClosing()
+        {
+            float target = _closing ? 1f : 0f;
+            if (Motion.Reduced) _closingT = target;
+            else if (!Mathf.Approximately(_closingT, target))
+                _closingT = Mathf.MoveTowards(_closingT, target, Time.unscaledDeltaTime / 1.1f);
+            else if (_guestLight == null || !_closing) { if (_closingT <= 0f) return; }
+
+            float t = Mathf.SmoothStep(0f, 1f, _closingT);
+
+            if (_globalLight != null)
+                _globalLight.intensity = Mathf.Lerp(GlobalIntensity, GlobalIntensity * ClosingWash, t);
+            float ceilingY = 0f;
+            for (int i = 0; i < _lamps.Count; i++)
+            {
+                if (_lamps[i] == null) continue;
+                _lamps[i].intensity = Mathf.Lerp(LampIntensity, LampIntensity * ClosingCeiling, t);
+                ceilingY = _lamps[i].transform.position.y;
+            }
+            if (_signLight != null)
+                _signLight.intensity = Mathf.Lerp(0.9f, 0.9f * ClosingSign, t);
+
+            if (_guestLight == null && _world != null && t > 0.001f)
+                _guestLight = PointLight("LastCallLamp", LampTint, 0f, LampRadius * 1.15f);
+            if (_guestLight != null)
+            {
+                // It hangs where the other lamps hang — the room has one ceiling, and a pool
+                // that floated at mid-wall would read as a spotlight from nowhere.
+                _guestLight.intensity = Mathf.Lerp(0f, LampIntensity * 2.1f, t);
+                _guestLight.transform.position = new Vector3(_guestWorldX, ceilingY, 0f);
+                if (_guestLight.gameObject.activeSelf != (t > 0.002f))
+                    _guestLight.gameObject.SetActive(t > 0.002f);
+            }
+        }
+
         private System.Collections.IEnumerator Ambient()
         {
             float nextFlicker = Random.Range(3f, 7f);

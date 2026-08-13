@@ -91,6 +91,83 @@ namespace LastCall.PlayTests
         }
 
         [UnityTest]
+        public IEnumerator The_closing_beat_takes_the_room_down_and_lights_the_guest()
+        {
+            // THE LIGHT, MEASURED (GDD 26 §7, S4) — not photographed. A picture was the first
+            // attempt and it was the wrong tool: two runs of the same beat differ by a few
+            // units on the plate's cream (a residual fade over bright pixels rounds where it
+            // does not over dark ones) and by whether the settings key drew its icon or its
+            // word. Neither has anything to do with the closing beat. What the beat IS, is
+            // four numbers — so those are what this asserts, and they cannot drift quietly.
+            yield return OpenTheBar();
+
+            var run = _boot.Tycoon;
+            float deadline = Time.realtimeSinceStartup + 30f;
+            while (run.LastCustomer == null && run.Phase == TycoonPhase.DayOpen
+                   && Time.realtimeSinceStartup < deadline)
+            {
+                run.Tick(1.0);            // the night on the run's own clock, not the wall's
+                yield return null;
+            }
+            Assert.That(run.LastCustomer, Is.Not.Null,
+                "night one is written (GDD 26 §11) and nobody came to the last call");
+
+            yield return new WaitForSecondsRealtime(2.5f);   // the rig ramps over about a second
+
+            float ceiling = 0f;
+            int lamps = 0;
+            for (int i = 0; i < 8; i++)
+            {
+                float lit = Intensity("Lamp" + i);
+                if (lit >= 0f) { ceiling += lit; lamps++; }
+            }
+            float guestLamp = Intensity("LastCallLamp");
+            float sign = Intensity("SignSpill");
+            float wash = Intensity("GlobalLight");
+            Assert.That(lamps, Is.GreaterThan(0), "the room has no ceiling to take down");
+            float perLamp = ceiling / lamps;
+
+            Assert.That(guestLamp, Is.GreaterThan(perLamp * 3f),
+                $"nothing is picking the guest out: their lamp {guestLamp:0.00} against a "
+                + $"ceiling of {perLamp:0.00}");
+            Assert.That(perLamp, Is.LessThan(0.3f), "the ceiling did not come down");
+            Assert.That(wash, Is.LessThan(0.7f), "the room's wash did not thin");
+            Assert.That(sign, Is.GreaterThan(1.2f), "the LAST CALL sign did not ignite");
+
+            // And it gives the room back. The market opens on the ordinary bar, not on a
+            // night that never ended.
+            var run2 = _boot.Tycoon;
+            run2.DeclineLastCall();
+            float deadline2 = Time.realtimeSinceStartup + 20f;
+            while (run2.Phase == TycoonPhase.DayOpen && Time.realtimeSinceStartup < deadline2)
+            { run2.Tick(1.0); yield return null; }
+            yield return new WaitForSecondsRealtime(2f);
+
+            Assert.That(Intensity("LastCallLamp"), Is.LessThan(0.05f),
+                "the guest's lamp is still burning over an empty stool");
+        }
+
+        /// <summary>
+        /// One 2D light's intensity, by the name the stage gave it, WITHOUT naming its type.
+        /// `Light2D` lives in the URP 2D runtime assembly, and this test assembly does not
+        /// reference it — adding that reference is a change to what the whole suite links
+        /// against, for one number. Reflection is the smaller footprint, and the name is the
+        /// contract either way. Returns -1 when there is no such light.
+        /// </summary>
+        private static float Intensity(string lightName)
+        {
+            var go = GameObject.Find(lightName);
+            if (go == null) return -1f;
+            foreach (var c in go.GetComponents<Component>())
+            {
+                if (c == null || c.GetType().Name != "Light2D") continue;
+                var prop = c.GetType().GetProperty("intensity");
+                if (prop != null) return (float)prop.GetValue(c);
+            }
+            return -1f;
+        }
+
+        [UnityTest]
         public IEnumerator The_baskets_foot_looks_the_way_it_did()
         {
             yield return OpenTheBar();

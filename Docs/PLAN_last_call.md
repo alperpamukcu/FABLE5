@@ -277,9 +277,15 @@ test now that it is known). And a trial that simply ran out of clock was being a
 the line written for an honest no: `StoryTrialRun.ToldNo` separates the three ways to miss, and
 a timed-out guest gets the nudge instead.
 
-**Still open in S3:** the closing light beat is S4's; the guest sits on whatever stool the floor
-gives them rather than the one nearest the till; a guest whose clock runs out still plays the
-crowd's storm-off exit; and `LookTests` has no blessed picture of the plate yet.
+**S3 closed out, same day.** The guest takes the stool nearest the till (the last one the bar
+actually owns — the row fills from the door end for everyone else); a guest whose clock runs out
+walks rather than storms, and the night's log does not book them as a walk-out, because they
+were never on its books. And a third thing, found by LOOKING at the first blessed picture: the
+story guest kept turning up in a stranger's body while the plate showed the right person. A
+stool KEEPS its look by design — a face that changes under the player is worse than a wrong one
+— and the guest's stool had been handed a rolled one. Rather than chase which frame won that
+race, the written face is now reasserted once a frame: for this one visit the beat is the
+authority and the seat is not.
 
 ---
 
@@ -295,6 +301,24 @@ in play (`execute_code` reads the light intensities) rather than trusting the ey
 
 **Risk:** the 2D lights are the one part of the room that is already alive; a beat that fights
 the ambient flicker will read as a bug. Change intensities, not colours, first.
+
+**Shipped 2026-08-13.** `DiegeticStage.SetClosingBeat(on, x)` — the HUD says whether a guest is
+in and where their stool is, and the stage does the rest over about a second: the ceiling drops
+to 0.22 of itself, the wash thins to 0.55, the LAST CALL neon burns at 1.9×, and one lamp is
+lit at the guest's own x, hung at the same ceiling height as the others. Nothing is drawn for
+it — every number is an intensity on a light that was already hanging there, which is what
+keeps it from reading as a different game for thirty seconds. `Motion.Reduced` gets the same
+room without the ramp, and the beat reverses itself when the stool empties.
+
+**The proof is measured, not photographed — and that was a correction.** A blessed picture was
+written first and failed its own second run by 89,684 pixels: the plate's cream sat five units
+apart between two runs (a residual fade rounds over bright pixels and not over dark ones) and
+the settings key drew its icon in one run and the word SETTINGS in the other. Neither has
+anything to do with the closing beat. What the beat IS, is four numbers, so `LookTests` asserts
+those instead — the guest's lamp beats the ceiling more than threefold, the ceiling is under
+0.3, the wash is under 0.7, the sign is over 1.2 — and then declines the guest and checks the
+lamp goes out. It reads the intensities by light NAME through reflection rather than making the
+whole test assembly link against the URP 2D runtime for one float.
 
 ---
 

@@ -2124,8 +2124,13 @@ namespace LastCall.UI
                 {
                     v.Exiting = true;
                     v.ExitT = 0f;
-                    v.ExitStorm = v.Visit.State == VisitState.StormedOff;
-                    if (v.ExitStorm)
+                    // THE STORY'S GUEST LEAVES A LINE, NOT A SCENE (GDD 26 §3). Their clock
+                    // running out is a beat that did not land, not a customer storming out of
+                    // a bad bar — they walk, they do not slam, and the night's log does not
+                    // book them as a walk-out because they were never on its books at all.
+                    v.ExitStorm = !v.Visit.OnTheHouse && v.Visit.State == VisitState.StormedOff;
+                    if (v.Visit.OnTheHouse) { }
+                    else if (v.ExitStorm)
                         LogService($"<color=#F27D8A>STORM-OFF</color> " +
                             (v.Visit.IdInspected ? v.Visit.Order.Wanted.Name.ToUpperInvariant() : "?") +
                             " · patience ran out · $0 · " + LogStars(0));
@@ -2159,13 +2164,42 @@ namespace LastCall.UI
                         ? ReactSeconds : 0f;
                 }
             }
+            // 1b) THE GUEST WEARS THE FACE THE BEAT NAMES, whatever order the frame ran in.
+            //
+            // Measured, 2026-08-13: the story's guest kept turning up in a stranger's body
+            // while the plate showed the right person — the stool had been given a rolled
+            // look, and a stool KEEPS its look by design (a face that changes under the
+            // player is worse than a wrong one). Rather than chase which frame won the race,
+            // the written face is simply reasserted here, once a frame, idempotently: for
+            // this one visit the beat is the authority, not the seat.
+            var houseGuest = run.LastCustomer;
+            if (houseGuest != null)
+            {
+                var written = LookForStory(run.LastCallBeat?.Who);
+                if (written != null)
+                    foreach (var v in _seats)
+                        if (v.Visit == houseGuest && v.Look != written)
+                        {
+                            v.Look = written;
+                            v.Tag.anchoredPosition = new Vector2(0, written.HeadTop + 15f);
+                            if (v.Gauge != null)
+                                v.Gauge.anchoredPosition = new Vector2(0, written.HeadTop + 6f);
+                        }
+            }
+
             // 2) Arrivals — a seated customer with no stool takes the first free one and walks in.
             foreach (var visit in seated)
             {
                 bool assigned = false;
                 for (int i = 0; i < _seats.Count; i++) if (_seats[i].Visit == visit) { assigned = true; break; }
                 if (assigned) continue;
-                for (int i = 0; i < run.Seats && i < _seats.Count; i++)
+                // THE GUEST SITS WHERE THEY CAN BE TALKED TO (GDD 26 §3): the stool nearest
+                // the till, which is the end of the row the bar is worked from. Everyone else
+                // takes the first free stool, as they always have.
+                bool nearTheTill = visit.OnTheHouse;
+                int from = nearTheTill ? Math.Min(run.Seats, _seats.Count) - 1 : 0;
+                int step = nearTheTill ? -1 : 1;
+                for (int n = 0, i = from; n < run.Seats && i >= 0 && i < _seats.Count; n++, i += step)
                 {
                     var v = _seats[i];
                     if (v.Visit == null && !v.Exiting)
@@ -6252,6 +6286,18 @@ namespace LastCall.UI
             // Nothing of this survives the night's end: the slip is the next thing the player
             // reads, and a plate at layer 7 would sit on top of it.
             if (run.Phase != TycoonPhase.DayOpen) { beat = null; trial = null; }
+
+            // THE ROOM SAYS IT TOO (GDD 26 §7, S4). The ceiling comes down, the neon over the
+            // door burns harder and one lamp finds whoever is at the bar — driven off the
+            // guest's own stool, so the light lands on the person and not on a guessed spot.
+            if (stage != null)
+            {
+                var lit = run.LastCustomer;
+                float x = 0f;
+                if (lit != null)
+                    foreach (var s in _seats) if (s.Visit == lit) { x = s.Root.anchoredPosition.x; break; }
+                stage.SetClosingBeat(lit != null, x);
+            }
             if (beat == null || trial == null)
             {
                 if (_plate != null && _plate.gameObject.activeSelf) _plate.gameObject.SetActive(false);
@@ -6262,27 +6308,27 @@ namespace LastCall.UI
 
             // The script is rebuilt when the night moves to a new part of itself, and only
             // then: a plate that re-cued every frame would never get past its first line.
-            string stage = trial.State == TrialState.Talking ? "ask"
+            string part = trial.State == TrialState.Talking ? "ask"
                 : trial.State == TrialState.Pouring ? "pour"
                 : trial.State == TrialState.Passed ? "kept" : "missed";
-            if (stage != _plateStage)
+            if (part != _plateStage)
             {
-                _plateStage = stage;
+                _plateStage = part;
                 _plateAt = 0;
                 _plateScript.Clear();
                 var host = _bootstrap?.Story?.Cast?.FirstOrDefault(c => c.IsHost);
-                if (stage == "ask")
+                if (part == "ask")
                 {
                     foreach (var line in beat.Lines.HostBefore) Add(host, line);
                     foreach (var line in beat.Lines.Ask) Add(beat.Who, line);
                 }
-                else if (stage == "kept" || stage == "missed")
+                else if (part == "kept" || part == "missed")
                 {
                     // THREE WAYS TO MISS, THREE THINGS TO SAY (GDD 26 §5): a wrong drink is
                     // answered by the wrong-drink line, an honest no by the declined line,
                     // and a clock that simply ran out by the nudge — because the beat never
                     // wrote a line for being ignored, and the nudge is what it has.
-                    var said = stage == "kept" ? beat.Lines.ServedRight
+                    var said = part == "kept" ? beat.Lines.ServedRight
                         : trial.ToldNo ? beat.Lines.Declined
                         : trial.Mistakes > 0 ? beat.Lines.ServedWrong
                         : beat.Lines.Nudge;
@@ -6302,8 +6348,8 @@ namespace LastCall.UI
                 _plateFace.sprite = face?.Face;
                 _plateFace.enabled = _plateFace.sprite != null;
                 bool last = _plateAt == _plateScript.Count - 1;
-                _plateKeyLabel.text = stage == "ask" && last ? "POUR IT" : "GO ON";
-                _plateNoKey.gameObject.SetActive(stage == "ask");
+                _plateKeyLabel.text = part == "ask" && last ? "POUR IT" : "GO ON";
+                _plateNoKey.gameObject.SetActive(part == "ask");
             }
 
             bool working = trial.State == TrialState.Pouring;
