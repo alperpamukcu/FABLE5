@@ -5254,7 +5254,9 @@ namespace LastCall.UI
             _settingsPanel = NewRect("Settings", root);
             // 420, not 300: the dev rows say what they DO ("close now, open the market"),
             // and a button whose caption does not fit is a button with no caption.
-            Place(_settingsPanel, new Vector2(1, 1), new Vector2(420, 320), new Vector2(-16, -58));
+            // 360, not 320: the last-call skip is a ninth row and a row that does not fit the
+            // panel is a button nobody can press.
+            Place(_settingsPanel, new Vector2(1, 1), new Vector2(420, 360), new Vector2(-16, -58));
             _settingsPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
 
             var title = NewText("T", _settingsPanel, _body, 10, TextAnchor.UpperCenter, UITheme.TextSecondary);
@@ -5297,6 +5299,36 @@ namespace LastCall.UI
                 CloseId();
                 Run.DevSkipToDayEnd();
                 ToggleSettings();
+            });
+
+            // THE ONE THE AUTHOR ASKED FOR (2026-08-13): the written beat happens after the
+            // door shuts and the room drains, which is ninety-five seconds and a shift's work
+            // away from the moment you press play. Waiting that out to look at a line of
+            // dialogue is not testing, it is queueing.
+            SettingsRow(8, "DEV · SKIP TO THE LAST CALL — run tonight out to the guest", () =>
+            {
+                if (Run == null || Run.Phase != TycoonPhase.DayOpen) { Toast("NOT MID-DAY"); return; }
+                if (Run.Story == null) { Toast("THIS RUN HAS NO STORY"); return; }
+                if (Run.LastCustomer != null) { Toast("THEY ARE ALREADY AT THE BAR"); return; }
+                if (!Run.Story.IsDueOn(Run.Day))
+                {
+                    Toast("NOTHING WRITTEN TONIGHT — NEXT IS "
+                          + BarCalendar.Label(Run.Story.DueDay).ToUpperInvariant());
+                    return;
+                }
+                _flow?.CloseFlow();
+                CloseId();
+                // The REAL clock and the REAL verb, the same bargain DevSkipToDayEnd strikes:
+                // everyone still seated storms off exactly as they would have, the rent and
+                // the rating land where they always do. What is skipped is the waiting, never
+                // the rules — a shortcut that lied would measure a game nobody plays.
+                for (int guard = 0; guard < 20000 && Run.LastCustomer == null
+                     && Run.Phase == TycoonPhase.DayOpen; guard++)
+                    Run.Tick(0.25);
+                ToggleSettings();
+                Toast(Run.LastCustomer != null
+                    ? "LAST CALL — " + Run.LastCallBeat.Who.Name.ToUpperInvariant() + " IS AT THE BAR"
+                    : "THE NIGHT ENDED WITHOUT THEM");
             });
 
             _settingsMotion = SettingsRow(2, "MOTION", () =>

@@ -215,7 +215,10 @@ namespace LastCall.UI
             if (tier < 1) tier = 1;
             if (tier > TycoonRun.MaxGlassTier) tier = TycoonRun.MaxGlassTier;
             string key = (glass?.Id ?? "") + "_t" + tier;
-            if (Cache.TryGetValue(key, out var cached)) return cached;
+            // A Piece is a struct, so the corpse check has to reach INSIDE it: what dies with
+            // play mode is the sprite it carries, and a cached Piece whose sprite is gone is
+            // a hit that draws nothing (2026-08-13, the same bug as ChromeArt's cog).
+            if (Cache.TryGetValue(key, out var cached) && cached.Sprite != null) return cached;
             // The generated 3D set wins when installed (the author, 2026-08-02: the
             // procedural glasses read flat). Each tier wears its own dressed sprites
             // (tier_glasses.py — same glass, richer metal); the geometry table applies

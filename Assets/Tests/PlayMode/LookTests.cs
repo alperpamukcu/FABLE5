@@ -202,7 +202,25 @@ namespace LastCall.PlayTests
             }
             Assert.That(next, Is.Not.Null, "the night's slip never offered a way on");
             yield return ClickOn(next);
-            yield return new WaitForSecondsRealtime(0.6f);   // the market slides in from the right
+
+            // WAIT FOR THE MARKET, DO NOT COUNT TO ONE (2026-08-13). This was a fixed 0.6s and
+            // it captured the night's SLIP instead — 161,693 differing pixels that say nothing
+            // about the basket. The slip's own feed got longer the day the written beat arrived
+            // (the guest holds the night open while they talk), and any wait measured in
+            // seconds is a wait that a slower machine or a longer animation walks straight
+            // past. The basket itself is the thing to wait for, and it is the thing being
+            // photographed: the suite's own rule, applied where it had not been.
+            float shop = Time.realtimeSinceStartup + 15f;
+            RectTransform basket = null;
+            while (Time.realtimeSinceStartup < shop)
+            {
+                basket = Find("Basket");
+                if (basket != null && basket.gameObject.activeInHierarchy) break;
+                basket = null;
+                yield return null;
+            }
+            Assert.That(basket, Is.Not.Null, "the order never opened after the slip");
+            yield return new WaitForSecondsRealtime(0.4f);   // it slides in from the right
 
             // THE FOOT, NOT THE WHOLE MARKET. The aisle above it scrolls, and its scroll
             // settles on one of two pixel offsets depending on how the frames fell — measured:

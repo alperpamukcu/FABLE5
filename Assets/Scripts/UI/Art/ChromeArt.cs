@@ -243,8 +243,14 @@ namespace LastCall.UI
         {
             if (string.IsNullOrEmpty(name)) return null;
             string key = "mark:" + name;
-            if (Cache.TryGetValue(key, out var got)) return got;
-            if (!Masks.TryGetValue(name, out var mask)) return Cache[key] = null;
+            // A DESTROYED SPRITE IS NOT A CACHE HIT (2026-08-13, measured: the settings key
+            // drew the word SETTINGS instead of its cog on every play after the first). These
+            // sprites are made at runtime and die with play mode, while the static cache
+            // survives it — the project runs with domain reload off — so the second session
+            // reads back a corpse. Unity's own == already answers this correctly; it just has
+            // to be asked. BottleArt, ItemArt and PrefArt learned it earlier; these had not.
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            if (!Masks.TryGetValue(name, out var mask)) return null;
 
             const int S = 16;
             var px = new Color32[S * S];
@@ -273,7 +279,7 @@ namespace LastCall.UI
         public static Sprite Card()
         {
             const string Key = "plate:card";
-            if (Cache.TryGetValue(Key, out var got)) return got;
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
             const int W = 24, H = 24, Cut = 2;
             var px = new Color32[W * H];
             for (int y = 0; y < H; y++)
@@ -302,7 +308,7 @@ namespace LastCall.UI
 
         private static Sprite KeySprite(string key, bool down)
         {
-            if (Cache.TryGetValue(key, out var got)) return got;
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
             const int W = 20, H = 20;
             int throwH = down ? 1 : 3;
             var px = new Color32[W * H];

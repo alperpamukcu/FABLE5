@@ -62,7 +62,7 @@ namespace LastCall.UI
         public static Sprite For(RecipeDefinition recipe, IReadOnlyList<GlasswareDefinition> glassware)
         {
             if (recipe == null) return null;
-            if (Cache.TryGetValue(recipe.Id, out var cached)) return cached;
+            if (Cache.TryGetValue(recipe.Id, out var cached) && cached != null) return cached;
 
             var sprite = Draw(recipe, GlassFor(recipe, glassware));
             Cache[recipe.Id] = sprite;
