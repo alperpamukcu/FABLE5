@@ -28,17 +28,17 @@ namespace LastCall.UI
         }
 
         /// <summary>
-        /// Whether a bottle belongs on the BACK BAR at all (the author, 2026-08-02: there is
-        /// no sense keeping bottles behind the bar that can never go in the shaker). The wall
-        /// holds what a drink is BUILT from at the tin; the fizz that Core refuses in the
-        /// shaker, and the garnishes that go on at the glass, live in the serve stage where
-        /// they are actually used. Beer stays: its kegs are drawn on the floor below the wall.
+        /// Whether a bottle belongs on the BACK BAR at all. Since the 2026-08-13 rebuild the
+        /// wall shows the WHOLE bar, fizz included — the fridge that used to be the fizz's
+        /// only address is retired, and clicking a carbonated bottle here routes it to the
+        /// glass stage already in hand (OpenBottle), the same door it has always poured
+        /// through. Only the garnishes stay off the wall: they are a pinch, not a bottle,
+        /// and their jars stand on the benches. Beer stays: its kegs are drawn on the floor
+        /// below the wall.
         /// </summary>
         private static bool OnTheBackBar(IngredientCard card)
         {
-            if (card.Type == IngredientType.Beer) return true;
-            if (card.Type == IngredientType.Garnish) return false;
-            return card.Info == null || !card.Info.Carbonated;
+            return card.Type != IngredientType.Garnish;
         }
 
         /// <summary>The word a bottle wears on the shelf: its STYLE, which is what a recipe
@@ -322,11 +322,19 @@ namespace LastCall.UI
         {
             var card = bottle.Ingredient;
             bool empty = bottle.IsEmpty;
+            // Each bottle is judged against the vessel IT pours into. Beer fills the
+            // serving glass off the tap; fizz fills it at the counter (its only door,
+            // GDD 21 §12) — and since 2026-08-13 the fizz stands on this wall, where it
+            // was being greyed out by a FULL TIN it can never reach. Everything else
+            // builds in the tin.
+            bool glassSide = card.Info != null && card.Info.Carbonated;
             string blocked =
                 empty ? "OUT"
                 : card.Type == IngredientType.Beer
                     ? (run.CanPull(card.Id) ? null : run.ServingGlass.IsFull ? "FULL" : "BUSY")
-                    : (run.Glass.IsFull ? "FULL" : null);
+                    : glassSide
+                        ? (run.ServingGlass.IsFull ? "FULL" : null)
+                        : (run.Glass.IsFull ? "FULL" : null);
             bool shut = blocked != null;
 
             var sprite = ItemArt.Bottle(card);

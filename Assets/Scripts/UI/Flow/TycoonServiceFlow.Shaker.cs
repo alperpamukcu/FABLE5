@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using LastCall.Core;
@@ -10,9 +10,16 @@ using UnityEngine.UI;
 namespace LastCall.UI
 {
     /// <summary>
-    /// The shaker stage (GDD 24 §2): tip a bottle into the open tin, drop ice and
-    /// garnishes in by hand, cap it, then grab it and shake. The liquid is a real
-    /// particle body, so it pours, pools and sloshes.
+    /// The shaker stage (GDD 24 §2), rebuilt 2026-08-13: the bench is the tin, the bottle
+    /// in hand, and THE RAIL — one shelf across the back carrying every bottle the bar
+    /// stocks, so a three-ingredient build is three clicks on one bench instead of three
+    /// trips through the menu. Tip the bottle into the open tin, stir with the spoon OR
+    /// cap it and shake, then exit right to the glass. The liquid is a real particle
+    /// body, so it pours, pools and sloshes.
+    ///
+    /// What LEFT the bench in the rebuild: the prep table (it carried nothing since the
+    /// four preps moved to the glass on 2026-08-10 — dead furniture the cap and spoon
+    /// were drawn across), and the dormant prep-drag machinery with it.
     /// </summary>
     public sealed partial class TycoonServiceFlow
     {
@@ -42,23 +49,12 @@ namespace LastCall.UI
         // floor's patience clock runs on its own tick, untouched.
         private const float PourTimeScale = 0.45f;
 
-        // Drag-drop preparations (GDD 24 §2.4): pick a piece off its tray and drop it into
-        // the shaker's mouth. The grip springs after the cursor with overshoot (weighty, lively
-        // lag) and the piece hangs and swings from that grip as a pendulum.
-        private PreparationDefinition _draggingPrep;
-        private RectTransform _dragPiece;
-        private Text _dragPieceLabel;
-        private readonly Pendulum _dragSwing = new Pendulum();
-        private Vector2 _dragPos;    // the grip's current position (lags the cursor)
-        private Vector2 _dragVel;    // the grip's velocity (drives the spring and the swing)
-        // STIFFER (2026-08-11, the author: the drag should feel harder — the shaker, the
-        // spoon and the glass). 150/9 against a critical damping of 24.5 is a long way
-        // under it: the grip lagged the cursor and then swung past it, which reads as the
-        // piece being dragged through syrup. 300/28 sits just under critical for the same
-        // shape of motion in a third of the distance — it still leads and settles, it just
-        // stops arguing with the hand.
-        private const float DragStiffness = 300f;  // how hard the grip is pulled to the cursor
-        private const float DragDamping = 28f;      // just under critical -> a hint of overshoot
+        // NO DRINKS STAND ON THIS BENCH (2026-08-13, the author: "shakerin doldurulduğu
+        // sahnede de içecekler olmayacak, oyuncu içecek seçmek için back bar sahnesine
+        // gidecek"). A speed rail along the back wall was built and taken out again: the
+        // bar has ONE place where a drink is chosen, and it is the back bar. The bench is
+        // what your hands are on — the bottle you came in with, the tin, the lid and the
+        // spoon — and nothing else.
 
         // The shake (GDD 24 §2.5, 2026-07-22): grab the shaker itself and throw it around —
         // it springs after the cursor with overshoot (loose and lively), the liquid sloshes,
@@ -71,6 +67,11 @@ namespace LastCall.UI
         private Vector2 _lastShakeMouse;
         private Vector2 _shakerVel;      // the shaker's spring velocity while thrown about
         private Vector2 _shakerHome;     // its rest position
+
+        // What the mat used to do: say that the tin and the bottle are ON something. Two
+        // contact shadows on the counter line, each following its prop's x and thinning as
+        // it is lifted away — a shaken tin is in the air, and its shadow should know.
+        private RectTransform _tinShadow, _bottleShadow;
 
         // The STIR (GDD 21 §14, 2026-08-11): the mandatory mix made Preparations.Stirred
         // load-bearing, so the bench grew a bar spoon. Stir and shake are told apart by the
@@ -125,49 +126,162 @@ namespace LastCall.UI
             if (signature == _mixBarSig) return;
             _mixBarSig = signature;
 
-            foreach (Transform child in _shakerMixBar) Destroy(child.gameObject);
-            float h = _shakerMixBar.rect.height, y = 0f;
+            // The tin's own column, captioned in the air beside it (labels to the LEFT:
+            // the track hugs the right wall, and the TO THE GLASS key is past it).
+            FillGauge(_shakerMixBar, glass, run, labelsLeft: true);
+        }
+
+        // ── the bench's steps, in order (2026-08-14) ─────────────────────────────
+        //
+        // The author asked for the top-left corner to say what to do, in order, with icons.
+        // It is not a tooltip and not a tutorial that fires once: it is a CHECKLIST that
+        // reads the bench's live state, so the step you are on is lit, the ones behind you
+        // are ticked, and the ones ahead are dim. A player who already knows the bench sees
+        // where they are at a glance; one who does not is told what to do next, in order,
+        // without a word of prose.
+
+        private readonly List<(Image icon, Text label, Image tick)> _stepRows =
+            new List<(Image, Text, Image)>();
+
+        private void BuildStepCard(RectTransform panel)
+        {
+            var card = NewRect("Steps", panel);
+            Place(card, new Vector2(0, 1), new Vector2(210, 128), new Vector2(20, -18));
+            var bg = card.gameObject.AddComponent<Image>();
+            bg.color = new Color(0.05f, 0.05f, 0.09f, 0.72f);
+            bg.raycastTarget = false;
+
+            var head = NewText("H", card, _body, 8, TextAnchor.UpperLeft, UITheme.TextSecondary);
+            Place(head.rectTransform, new Vector2(0, 1), new Vector2(190, 12), new Vector2(12, -8));
+            head.text = "THE BENCH";
+
+            string[] marks = { "pour", "cap", "mix", "toglass" };
+            string[] words = { "FILL THE TIN", "CAP IT", "SHAKE OR STIR", "TO THE GLASS" };
+            for (int i = 0; i < marks.Length; i++)
+            {
+                float y = -26f - i * 24f;
+                var row = NewRect("Step" + i, card);
+                Place(row, new Vector2(0, 1), new Vector2(190, 22), new Vector2(10, y));
+
+                var mark = NewRect("I", row);
+                Place(mark, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(2, 0));
+                var mimg = mark.gameObject.AddComponent<Image>();
+                mimg.sprite = ChromeArt.Mark(marks[i]);
+                mimg.preserveAspect = true;
+                mimg.raycastTarget = false;
+
+                var text = NewText("L", row, _body, 8, TextAnchor.MiddleLeft, UITheme.TextSecondary);
+                Place(text.rectTransform, new Vector2(0, 0.5f), new Vector2(140, 14), new Vector2(26, 0));
+                text.text = words[i];
+
+                var tick = NewRect("T", row);
+                Place(tick, new Vector2(1, 0.5f), new Vector2(12, 12), new Vector2(-4, 0));
+                var timg = tick.gameObject.AddComponent<Image>();
+                timg.sprite = ChromeArt.Mark("tick");
+                timg.preserveAspect = true;
+                timg.raycastTarget = false;
+                timg.enabled = false;
+
+                _stepRows.Add((mimg, text, timg));
+            }
+        }
+
+        /// <summary>
+        /// Which step the bench is on, read off the same state the keys and Core read — the
+        /// card cannot disagree with the bar, because it is not told anything the bar does
+        /// not already know.
+        /// </summary>
+        private void UpdateStepCard(TycoonRun run)
+        {
+            if (_stepRows.Count == 0) return;
+            bool filled = !run.Glass.IsEmpty;
+            bool mixed = run.IsMixed;
+            int at = !filled ? 0 : !_capped ? 1 : !mixed && run.MixRequired ? 2 : !mixed ? 2 : 3;
+
+            for (int i = 0; i < _stepRows.Count; i++)
+            {
+                var (icon, label, tick) = _stepRows[i];
+                bool done = i < at;
+                bool here = i == at;
+                var ink = here ? UITheme.Amber[4] : done ? UITheme.Lime[3] : UITheme.TextSecondary;
+                label.color = ink;
+                icon.color = new Color(ink.r, ink.g, ink.b, here ? 1f : done ? 0.75f : 0.45f);
+                tick.enabled = done;
+                if (tick.enabled) tick.color = UITheme.Lime[3];
+            }
+        }
+
+        /// <summary>
+        /// THE LABELS STAND BESIDE THE COLUMN, NOT INSIDE IT (2026-08-14, the author's
+        /// screenshot: "68% EMPTY" and "32% SMIRKOFF" running out of both sides of a 44-unit
+        /// bar). A gauge this narrow can carry a colour and nothing else; the words go in the
+        /// clear air next to it, each one level with the band it names, and the band keeps the
+        /// hairline that ties them together. Nothing is clipped and nothing overlaps, at any
+        /// mix, because the text was never asked to fit somewhere it cannot.
+        ///
+        /// One drawing for both benches: the tin's gauge and the glass's are the same object
+        /// with different contents, and they were the same forty lines twice.
+        /// </summary>
+        private void FillGauge(RectTransform bar, GlassContents glass, TycoonRun run, bool labelsLeft)
+        {
+            foreach (Transform child in bar) Destroy(child.gameObject);
+            float h = bar.rect.height, y = 0f;
             foreach (var id in glass.Ingredients)
             {
                 var card = run.Shelf.Find(id)?.Ingredient;
                 float share = (float)(glass.RatioOf(id) * glass.FillFraction);   // of the VESSEL
                 float segH = share * h;
-                var seg = NewRect($"S_{id}", _shakerMixBar);
-                seg.anchorMin = new Vector2(0, 0); seg.anchorMax = new Vector2(1, 0);
-                seg.pivot = new Vector2(0.5f, 0);
-                seg.sizeDelta = new Vector2(-2, segH);
-                seg.anchoredPosition = new Vector2(0, y);
-                var img = seg.gameObject.AddComponent<Image>();
-                img.color = UITheme.LiquidColor(card?.Info?.Style, card?.Type ?? IngredientType.Spirit);
-                img.raycastTarget = false;
-                if (segH > 13f)
-                {
-                    var label = NewText("P", seg, _body, 8, TextAnchor.MiddleCenter, UITheme.InkOn(img.color));
-                    Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                    label.horizontalOverflow = HorizontalWrapMode.Overflow;
-                    label.text = $"{share:P0} {(card?.Name ?? id).ToUpperInvariant().Split(' ')[0]}";
-                }
+                var seg = GaugeBand(bar, $"S_{id}", segH, y,
+                    UITheme.LiquidColor(card?.Info?.Style, card?.Type ?? IngredientType.Spirit));
+                GaugeLabel(seg, segH, labelsLeft, UITheme.TextPrimary,
+                    $"{share:P0} {(card?.Name ?? id).ToUpperInvariant().Split(' ')[0]}");
                 y += segH;
             }
+
             float free = Mathf.Max(0f, 1f - (float)glass.FillFraction);
-            if (free > 0.001f)
-            {
-                var seg = NewRect("S_empty", _shakerMixBar);
-                seg.anchorMin = new Vector2(0, 0); seg.anchorMax = new Vector2(1, 0);
-                seg.pivot = new Vector2(0.5f, 0);
-                seg.sizeDelta = new Vector2(-2, free * h);
-                seg.anchoredPosition = new Vector2(0, y);
-                var img = seg.gameObject.AddComponent<Image>();
-                img.color = new Color(1f, 1f, 1f, 0.05f);
-                img.raycastTarget = false;
-                if (free * h > 15f)
-                {
-                    var label = NewText("P", seg, _body, 8, TextAnchor.MiddleCenter, UITheme.TextSecondary);
-                    Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                    label.horizontalOverflow = HorizontalWrapMode.Overflow;
-                    label.text = $"{free:P0} EMPTY";
-                }
-            }
+            if (free <= 0.001f) return;
+            var room = GaugeBand(bar, "S_empty", free * h, y, new Color(1f, 1f, 1f, 0.05f));
+            GaugeLabel(room, free * h, labelsLeft, UITheme.TextSecondary, $"{free:P0} EMPTY");
+        }
+
+        private RectTransform GaugeBand(RectTransform bar, string name, float height, float y, Color fill)
+        {
+            var seg = NewRect(name, bar);
+            seg.anchorMin = new Vector2(0, 0); seg.anchorMax = new Vector2(1, 0);
+            seg.pivot = new Vector2(0.5f, 0);
+            seg.sizeDelta = new Vector2(-2, height);
+            seg.anchoredPosition = new Vector2(0, y);
+            var img = seg.gameObject.AddComponent<Image>();
+            img.color = fill;
+            img.raycastTarget = false;
+            return seg;
+        }
+
+        /// <summary>A band's caption, out in the air beside it, with a hairline back to it.
+        /// Bands too thin to hold a line of type get no caption — a 2% splash is a colour.</summary>
+        private void GaugeLabel(RectTransform seg, float segH, bool onLeft, Color ink, string text)
+        {
+            if (segH < 11f) return;
+            float side = onLeft ? 0f : 1f;
+
+            var tick = NewRect("Tick", seg);
+            tick.anchorMin = tick.anchorMax = new Vector2(side, 0.5f);
+            tick.pivot = new Vector2(onLeft ? 1f : 0f, 0.5f);
+            tick.sizeDelta = new Vector2(8, 1);
+            tick.anchoredPosition = new Vector2(onLeft ? -1f : 1f, 0f);
+            var timg = tick.gameObject.AddComponent<Image>();
+            timg.color = new Color(ink.r, ink.g, ink.b, 0.45f);
+            timg.raycastTarget = false;
+
+            var label = NewText("L", seg, _body, 8,
+                onLeft ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft, ink);
+            var rt = label.rectTransform;
+            rt.anchorMin = rt.anchorMax = new Vector2(side, 0.5f);
+            rt.pivot = new Vector2(onLeft ? 1f : 0f, 0.5f);
+            rt.sizeDelta = new Vector2(170, 12);
+            rt.anchoredPosition = new Vector2(onLeft ? -11f : 11f, 0f);
+            label.horizontalOverflow = HorizontalWrapMode.Overflow;
+            label.text = text;
         }
 
         /// <summary>The 1px neon frame both pour gauges wear.</summary>
@@ -197,7 +311,7 @@ namespace LastCall.UI
 
         private string ShakerLine(TycoonRun run)
         {
-            if (run.Glass.IsEmpty) return "shaker empty — tap a bottle";
+            if (run.Glass.IsEmpty) return "shaker empty — tip the bottle over the tin";
             var sb = new StringBuilder();
             sb.Append($"SHAKER {run.Glass.FillFraction:P0} — ");
             var parts = new List<string>();
@@ -247,27 +361,34 @@ namespace LastCall.UI
             _shakerReadout.color = UITheme.TextSecondary;
         }
 
-        // ── the shaker focus stage: the tilt-pour ────────────────────────────────
-
-        private void RefreshShaker()
+        /// <summary>The bottle in hand, drawn: open art, style tint fallback, sized and
+        /// stood by its own drawing with the mouth measured off it (VesselArt).</summary>
+        private void PushFocusBottleArt(TycoonRun run)
         {
-            var run = Run;
-            if (_focusBottle == null) return;
             var colour = UITheme.StyleColor(_focusBottle.Info?.Style, _focusBottle.Type);
             _shakerTitle.text = _focusBottle.Name.ToUpperInvariant();
-            SayShaker(ShakerLine(run));
             // In the hand it stands OPEN (the author, 2026-08-01): the pour scene uses the
             // capless variant when one exists. Same canvas as the closed art, so the liquid
             // mask and the mouth line all stay put; styles missing an open shot fall back.
             var bottleSprite = ItemArt.BottleOpen(_focusBottle);
             _pourBottleBody.sprite = bottleSprite;
-            _pourBottleBody.color = bottleSprite != null ? Color.white : colour;   // real art, else the style tint
+            _pourBottleBody.color = bottleSprite != null ? Color.white : colour;
             // It stands on the bench at the size its own drawing asks for, and it is measured
             // against its CLOSED art: an open bottle is the same bottle with the cap off, so
             // it must not grow to fill the space the cap left (VesselArt).
             _pourMouth = VesselArt.StandOn(_pourVessel, new Vector2(0.5f, 0f), bottleSprite,
                 BottleH, Vector2.zero, ItemArt.Bottle(_focusBottle));
             PushPourFill(run);
+        }
+
+        // ── the shaker focus stage: the tilt-pour ────────────────────────────────
+
+        private void RefreshShaker()
+        {
+            var run = Run;
+            if (run == null || _focusBottle == null) return;
+            PushFocusBottleArt(run);
+            SayShaker(ShakerLine(run));
             _pourBottle.anchoredPosition = _bottleRest;
             _pourBottle.localRotation = Quaternion.identity;
             _shakerFluid.Clear();
@@ -340,9 +461,9 @@ namespace LastCall.UI
                 // a glass that cannot accept it read as an overflow the rules do not have
                 // (GDD 21 §3, 2026-07-28). The bottle stays in hand — only the pour ends.
                 bool full = run.Glass.IsFull;
-                // Core refuses fizz in the tin (GDD 21 §12). The refusal must SPEAK here:
-                // routed wrong, a carbonated bottle used to tip mutely while BeginPour threw
-                // every frame — the pour looked simply broken (the author, 2026-08-02).
+                // Core refuses fizz in the tin (GDD 21 §12). The rail routes fizz to the glass
+                // stage before it can reach this hand, but the refusal keeps its voice: a
+                // guard that only lives in the routing is a guard that dies in a refactor.
                 bool fizzy = _focusBottle.Info != null && _focusBottle.Info.Carbonated;
                 pourNow = tilt > 42f && over && !full && !fizzy;
                 if (full && tilt > 42f && over) ShowShakerFull();
@@ -389,7 +510,7 @@ namespace LastCall.UI
             _pouring = pourNow;
 
             // Every frame, not only the pouring ones: the bottle in hand is the same bottle
-            // that stands on the wall, and it drains while you hold it over the tin. Setting
+            // that stands on the rail, and it drains while you hold it over the tin. Setting
             // it once on the way in would show the level it had when you picked it up.
             PushPourFill(run);
         }
@@ -421,6 +542,38 @@ namespace LastCall.UI
 
             _shakerFluid.Step(Time.deltaTime);
             _shakerSolids.Step(Time.deltaTime);
+
+            // The shadows, once everything has finished moving for the frame — the same
+            // reason the drink is placed here rather than in the tilt-pour.
+            // The tin never leaves the bench (capping only slides and grows it); the bottle
+            // fades out with the rest of the bench props, so its shadow goes with it. Each
+            // holds ITS OWN foot line: the two stand at different depths on the counter, and
+            // one shared line put the bottle's shadow seventy pixels under its base.
+            PushPropShadow(_tinShadow, _shakerVessel, _shakerHome.y, TinFootY, 158f, 1f);
+            PushPropShadow(_bottleShadow, _pourBottle, _bottleRest.y, BottleFootY, 128f, 1f - _capT);
+        }
+
+        /// <summary>Where each bench prop's base sits when it is standing: the tin's rect is
+        /// centre-pivoted, the bottle's is gripped low at 0.22 of its height.</summary>
+        private float TinFootY => _shakerHome.y - 358f * 0.5f + 14f;
+        private float BottleFootY => _bottleRest.y - BottleH * 0.22f + 6f;
+
+        /// <summary>Keeps one contact shadow under its prop: it holds that prop's own foot
+        /// line, follows its x, and shrinks and fades as the prop is lifted off it. The
+        /// <paramref name="alpha"/> is the prop's own visibility, so a faded bench prop
+        /// does not leave a shadow standing on the counter without it.</summary>
+        private void PushPropShadow(RectTransform shadow, RectTransform prop, float restY,
+                                    float floorY, float width, float alpha)
+        {
+            if (shadow == null || prop == null) return;
+            float lift = Mathf.Max(0f, prop.anchoredPosition.y - restY);
+            float k = Mathf.Clamp01(1f - lift / 200f);
+            shadow.anchoredPosition = new Vector2(prop.anchoredPosition.x, floorY);
+            float w = width * (0.62f + 0.38f * k);
+            shadow.sizeDelta = new Vector2(w, Mathf.Max(10f, w * 0.22f));
+            var img = shadow.GetComponent<Image>();
+            if (img != null && img.sprite != null)
+                img.color = new Color(0f, 0f, 0f, 0.55f * k * Mathf.Clamp01(alpha));
         }
 
         /// <summary>Places the shaker's pooled liquid from the glass interior and its live fill,
@@ -466,15 +619,11 @@ namespace LastCall.UI
             _shakerSolids.SetBounds(minX, maxX, bottomY, topY);
         }
 
-        // (AdvanceStageOpen retired 2026-08-11: the fade-and-scale pop on the incoming
-        // panel gave way to the two-slot stage SLIDE in TycoonServiceFlow — which also
-        // fixes its two old defects: it ran on scaled time, and it ignored Motion.Reduced.)
-
         /// <summary>
         /// The cap (2026-07-24). While the tin is open you build the drink in it; drag the lid
-        /// over its mouth and it snaps on. Capping hands the stage over to shaking: the bottle
-        /// and the buckets fade away and the tin eases into the middle and grows, so nothing is
-        /// left on the bench but the thing you are about to shake.
+        /// over its mouth and it snaps on. Capping hands the stage over to shaking: the bottle,
+        /// the spoon and the rail fade away and the tin eases into the middle and grows, so
+        /// nothing is left on the bench but the thing you are about to shake.
         /// </summary>
         private void UpdateCap(TycoonRun run)
         {
@@ -702,72 +851,76 @@ namespace LastCall.UI
         }
 
         /// <summary>
-        /// The prep drag (GDD 24 §2.4): while a piece is held it follows the mouse; dropping
-        /// it over the shaker's mouth adds the preparation, a miss just falls away.
+        /// The bar's own wall, hung behind a bench from <paramref name="fromY"/> (a
+        /// fraction of the panel) to the top. Both service benches wear it, so the two
+        /// halves of building one drink are shot on one set — the same argument that put
+        /// the prep table on both of them in 2026-08-04, now that the furniture between
+        /// them is gone.
         /// </summary>
-        private void UpdatePrepDrag(TycoonRun run)
+        /// <summary>
+        /// The soft ellipse that PINS A THING TO THE COUNTER (BackBarArt, the same one the
+        /// back bar wall's bottles stand on). With the mat and the prep table gone the
+        /// counter is a plain field, and a prop drawn on a plain field is a prop floating
+        /// over it — the contact shadow is what the drawn surfaces were doing for free.
+        /// Added as the first child of its parent so whatever stands on it draws over it.
+        /// </summary>
+        private RectTransform AddContactShadow(RectTransform parent, float width, Vector2 at)
         {
-            if (_draggingPrep == null || Mouse.current == null) return;
+            var rt = NewRect("Shadow", parent);
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(width, Mathf.Max(10f, width * 0.22f));
+            rt.anchoredPosition = at;
+            rt.SetAsFirstSibling();
+            var img = rt.gameObject.AddComponent<Image>();
+            img.sprite = BackBarArt.BottleShadow();
+            img.raycastTarget = false;
+            img.color = new Color(0f, 0f, 0f, img.sprite != null ? 0.55f : 0f);
+            return rt;
+        }
 
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                _pourSurface, Mouse.current.position.ReadValue(), null, out Vector2 cursor);
+        private void AddBenchWall(RectTransform panel, float fromY)
+        {
+            // THE COUNTER, and the wall behind it — the whole set, in two flat bands.
+            // Both go in BEHIND EVERYTHING on the panel: a band added after the title is a
+            // band drawn over the title, and the panel's own background is a component, so
+            // first CHILD is as far back as a child can go. The counter is built first and
+            // pushed to the front of the child list last, so the order ends up wall, then
+            // counter, then everything that stands on it.
+            var wall = NewRect("Wall", panel);
+            Stretch(wall, new Vector2(0f, fromY), Vector2.one, Vector2.zero, Vector2.zero);
+            wall.SetAsFirstSibling();
+            var img = wall.gameObject.AddComponent<Image>();
+            img.sprite = BackBarArt.LuxeWall();
+            img.type = Image.Type.Tiled;
+            img.raycastTarget = false;
+            // Deep in the room's shade: at full strength the panelling competes with the
+            // props standing in front of it, which is the opposite of what a wall is for.
+            img.color = img.sprite != null ? new Color(0.42f, 0.40f, 0.46f, 1f) : UITheme.Night[2];
 
-            // The grip springs after the cursor with overshoot — it has weight and jiggle — and
-            // the piece hangs from that grip and swings; grab a lemon by one end and the other
-            // end lags and sways (GDD 24 §2.4, 2026-07-22).
-            float dt = Mathf.Max(Time.deltaTime, 1e-4f);
-            _dragVel += (cursor - _dragPos) * (DragStiffness * dt);
-            _dragVel *= Mathf.Exp(-DragDamping * dt);   // frame-rate-independent damping
-            _dragPos += _dragVel * dt;
-            _dragSwing.Step(dt, _dragVel);
-            _dragPiece.anchoredPosition = _dragPos;
-            _dragPiece.localRotation = Quaternion.Euler(0, 0, _dragSwing.Angle);
+            // The counter top. It is A SURFACE, so it carries its own value — one step up
+            // the Night ramp from the panel behind it. Left at the panel's own colour it
+            // was a field rather than a counter, and a black contact shadow drawn on it
+            // was black on near-black: the props read as cut out and pasted on.
+            var top = NewRect("CounterTop", panel);
+            Stretch(top, Vector2.zero, new Vector2(1f, fromY), Vector2.zero, Vector2.zero);
+            top.SetAsFirstSibling();
+            var timg = top.gameObject.AddComponent<Image>();
+            timg.color = UITheme.Night[2];
+            timg.raycastTarget = false;
 
-            if (Mouse.current.leftButton.isPressed) return;
-
-            // Dropped. Over the shaker's mouth → it goes in.
-            var local = _dragPos;
-            var opening = _shakerVessel.anchoredPosition + new Vector2(0, _shakerVessel.rect.height * 0.5f);
-            bool inMouth = Mathf.Abs(local.x - opening.x) < 90f && Mathf.Abs(local.y - opening.y) < 90f;
-            // A tin filled to the brim has no room for a cube of ice or a twist of lemon, so the
-            // piece falls away instead of going in — the rules refuse it either way, and dropping
-            // it in silently would just look broken (2026-07-28).
-            if (inMouth && !run.Glass.IsEmpty)
-            {
-                run.AddPreparation(_draggingPrep);
-                SayShaker(ShakerLine(run));
-                // The piece keeps its own face on the way down. It used to fall as a bare
-                // colour, and the drag layer tints itself WHITE whenever the real art loaded —
-                // which it always does — so ice, lemon, salt and sugar all landed in the tin as
-                // identical white squares that differed only in size.
-                var dragImg = _dragPiece.GetComponent<Image>();
-                var c = dragImg.color;
-                var face = dragImg.sprite;
-                bool granular = _draggingPrep.Id == "salt_rim" || _draggingPrep.Id == "sugar_rim";
-                if (granular)
-                {
-                    // Salt / sugar: a scatter of fine grains that fall and dissolve on the drink.
-                    // Grains are too small to read a sprite, so they stay as tinted specks — and
-                    // the tint has to come from the STYLE, since the drag image is white.
-                    var grain = _draggingPrep.Id == "salt_rim" ? UITheme.Cream[4] : UITheme.Cream[3];
-                    for (int i = 0; i < 8; i++)
-                        _shakerSolids.Add(new Vector2(opening.x + UnityEngine.Random.Range(-16f, 16f), opening.y),
-                            grain, UnityEngine.Random.Range(6f, 9f));
-                }
-                else
-                {
-                    // Ice / lemon: a single piece that falls and dissolves the moment it hits.
-                    _shakerSolids.Add(new Vector2(opening.x + UnityEngine.Random.Range(-16f, 16f), opening.y),
-                        c, _draggingPrep.Id == "ice" ? 30f : 26f, face);
-                }
-                _shakerFluid.Ripple(opening.x, 0.02f);   // the piece ripples the surface as it lands
-            }
-            _draggingPrep = null;
-            _dragPiece.gameObject.SetActive(false);
+            // The lit front edge of the bar top, right where it meets the wall — the line
+            // that turns two bands into a surface with a far edge.
+            var edge = NewRect("CounterEdge", top);
+            Stretch(edge, new Vector2(0f, 1f), Vector2.one, new Vector2(0, -3), Vector2.zero);
+            var eimg = edge.gameObject.AddComponent<Image>();
+            eimg.color = UITheme.Night[3];
+            eimg.raycastTarget = false;
         }
 
         private void BuildShakerPanel()
         {
+            _benchProps.Clear();
+
             // The whole screen (P14 v2, the serve stage's recipe): the stage is the counter
             // you are standing at, not a dialog floating on it.
             _shakerPanel = NewRect("ShakerPanel", _field);
@@ -777,57 +930,41 @@ namespace LastCall.UI
 
             // 16, not 18: the pixel faces only rasterise cleanly at whole multiples of their
             // 8px design size (CLAUDE.md), and the serve stage's twin title is 16 in
-            // PrimaryAction. Two adjacent stages of one class had two different display sizes.
+            // PrimaryAction.
             _shakerTitle = NewText("Title", _shakerPanel, _display, 16, TextAnchor.UpperCenter, UITheme.PrimaryAction);
             Stretch(_shakerTitle.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -44), new Vector2(0, -10));
 
-            var hint = NewText("Hint", _shakerPanel, _body, 12, TextAnchor.UpperCenter, UITheme.TextSecondary);
-            Stretch(hint.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -64), new Vector2(0, -46));
-            hint.text = "GRAB THE BOTTLE TO POUR  ·  GRAB THE SHAKER TO SHAKE IT";
+            var hint = NewText("Hint", _shakerPanel, _body, 8, TextAnchor.UpperCenter, UITheme.TextSecondary);
+            Stretch(hint.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -58), new Vector2(0, -46));
+            hint.text = "GRAB THE BOTTLE TO POUR · STIR IT, OR CAP IT AND SHAKE";
 
-            // The room, the same room the serve stage stands in (2026-08-04). The two halves of
-            // building one drink were being shot on different sets: serve had one-point
-            // perspective with a prep table receding to the upper right and a fridge on the
-            // right wall, and the shaker had a black box with a mat on the floor. Same table,
-            // same wall, same horizon — so the bench and the counter read as one bar seen
-            // twice rather than as two screens.
-            var table = NewRect("PrepTable", _shakerPanel);
-            table.anchorMin = table.anchorMax = Vector2.zero;
-            table.pivot = Vector2.zero;
-            table.sizeDelta = new Vector2(298f, 356f) * TableScale;
-            table.anchoredPosition = TableFoot;
-            var tImg = table.gameObject.AddComponent<Image>();
-            tImg.sprite = ItemArt.Load("prep_table");
-            tImg.preserveAspect = true;
-            tImg.raycastTarget = false;
-            if (tImg.sprite == null) tImg.color = new Color(0.35f, 0.36f, 0.40f, 1f);
+            // THE WALL BEHIND THE BENCH. With the rail taken out the top half of the room
+            // was a flat void, and a bench standing in a void reads as a diagram of a
+            // bench. This is the back bar's own tiling wall (BackBarArt), knocked well
+            // down: the bench is lit, the wall behind it is not, and the two together are
+            // a corner of the same bar the wall screen shows.
+            AddBenchWall(_shakerPanel, 0.60f);
 
-            // The play surface: bottle and shaker live in here, mouse-local. Barely tinted —
-            // the furniture carries the room, and the old half-strength slab read as a dialog
-            // floating on top of it (the serve stage's lesson, applied here).
+            // The play surface — a COORDINATE SPACE, not a thing you can see: where the
+            // tin, the bottle and the spoon are placed and where the pointer is read. The
+            // faint slab it used to wear is gone with the mat, for the same reason (below).
             _pourSurface = NewRect("PourSurface", _shakerPanel);
             Stretch(_pourSurface, Vector2.zero, Vector2.one, new Vector2(16, StageBottom), new Vector2(-16, -StageTop));
-            var surfImg = _pourSurface.gameObject.AddComponent<Image>();
-            surfImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.18f);
-            surfImg.raycastTarget = false;
 
-            // The bar mat the tin stands on (the author's note, generated with transparent
-            // drainage channels so the counter shows through the ribs). Drawn at exactly 2×
-            // its 400×195 pixels — integer, the prep table's lesson.
-            // Centred on the two things that stand on it. It used to sit at x=-120, which put
-            // its right edge at 280 while the bottle rests at 330 — so the bottle stood on
-            // nothing and the mat read as a floor off to one side rather than as the counter
-            // under the work.
-            var matRt = NewRect("Mat", _pourSurface);
-            Place(matRt, new Vector2(0.5f, 0), new Vector2(800, 390), new Vector2(60, -8));
-            var matImg = matRt.gameObject.AddComponent<Image>();
-            matImg.sprite = ItemArt.Load("bar_mat");
-            matImg.raycastTarget = false;
-            if (matImg.sprite == null) matImg.enabled = false;
+            // NO MAT, NO TABLE, NO SLAB (2026-08-13, the author: the panel IS the counter,
+            // on this bench as on the glass one). The bar mat was a picture of a surface
+            // laid over the surface — a lit rectangle with the wall behind it and the real
+            // counter all around it, which read as a tray the bench had been put down on.
+            // The tin and the bottle stand on the counter itself now.
 
             // The shaker vessel: a tapered tin, opening at the top, left of centre. Grab it to
             // shake — it becomes the toy you throw around.
             _shakerHome = new Vector2(-210, -44);
+            _bottleRest = new Vector2(330, -70);   // the bottle's own rest, needed by its foot line
+            // The two contact shadows, built BEFORE the props so they draw under them.
+            // Each is placed on its own prop's foot line every frame (PushPropShadow).
+            _tinShadow = AddContactShadow(_pourSurface, 158f, new Vector2(_shakerHome.x, TinFootY));
+            _bottleShadow = AddContactShadow(_pourSurface, 128f, new Vector2(_bottleRest.x, BottleFootY));
             _shakerVessel = NewRect("Shaker", _pourSurface);
             Place(_shakerVessel, new Vector2(0.5f, 0.5f), new Vector2(200, 358), _shakerHome);
             var shakerImg = _shakerVessel.gameObject.AddComponent<Image>();
@@ -860,7 +997,7 @@ namespace LastCall.UI
             _shakerVessel.gameObject.AddComponent<EventTrigger>().triggers.Add(shakeGrab);
 
             // The metaball fluid draws over the vessel (pool); the solids float on top of it;
-            // the bottle and prep pieces are created after, so they sit in front of the liquid.
+            // the bottle is created after, so it sits in front of the liquid.
             _shakerFluid = new MetaballFluid(_pourSurface);
             // The tin's silhouette (bottom → rim): a full body that draws in to the neck, so the
             // drink takes the shaker's shape instead of filling an invisible box (2026-07-24).
@@ -884,7 +1021,6 @@ namespace LastCall.UI
             var topImg = _shakerTop.gameObject.AddComponent<Image>();
             topImg.sprite = ItemArt.Load("shaker_cap");
             topImg.preserveAspect = true; topImg.raycastTarget = true;
-            _benchProps.Clear();
 
             var capGrab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
             capGrab.callback.AddListener(_ => { if (!_capped) _capGrabbed = true; });
@@ -896,11 +1032,10 @@ namespace LastCall.UI
             // drink inside the tin as a cutaway, which is the point — a metal shaker you can
             // still read the level in. (A clear vessel would sit in front instead.)
             _shakerVessel.SetAsFirstSibling();
-            matRt.SetAsFirstSibling();   // the mat lies UNDER the tin, not over it
 
-            // The grabbable bottle, resting lower-right. Procedural body + neck; the grip
-            // pivot sits low so lifting swings the mouth in a big arc.
-            _bottleRest = new Vector2(330, -70);
+            // The grabbable bottle, resting lower-right (_bottleRest set with the shadows
+            // above, which measure their foot lines off it). The grip pivot sits low so
+            // lifting swings the mouth in a big arc.
             _pourBottle = NewRect("Bottle", _pourSurface);
             _pourBottle.pivot = new Vector2(0.5f, 0.22f);
             _pourBottle.sizeDelta = new Vector2(180, BottleH);
@@ -943,7 +1078,7 @@ namespace LastCall.UI
                 // Capping puts the bench away by fading the props — but a CanvasGroup's alpha
                 // does not stop raycasts, so the faded bottle stayed fully clickable and a
                 // sealed, shaken tin could be topped up from a bottle nobody could see. The
-                // prep chips have always guarded this; the bottle never did.
+                // rail's stands guard the same way.
                 if (_capped) return;
                 if (_focusBottle != null && Run != null && Run.Phase == TycoonPhase.DayOpen)
                     _bottleGrabbed = true;
@@ -951,39 +1086,18 @@ namespace LastCall.UI
             _pourBottle.gameObject.AddComponent<EventTrigger>().triggers.Add(grab);
             _benchProps.Add(_pourBottle.gameObject.AddComponent<CanvasGroup>());
 
-            // The prep sources STAND ON the table, on the line measured off its art, nearest
-            // first and shrinking as they recede — the serve stage's own placement, called
-            // through the same two helpers, so the ice bucket on this bench is the same ice
-            // bucket in the same place as the one on that counter.
-            // THE FOUR LEFT THE BENCH (2026-08-10, the author). Ice, a twist, a salt rim
-            // and a sugar rim are finished AT THE GLASS — that is where a bartender puts
-            // them and where AddPreparationAtGlass has always applied them. On the tin they
-            // were a second door to the same act, and the one that could refuse you.
-
-            // The single piece that follows the mouse while a prep is held. Its pivot is at the
-            // top (the grip), so it hangs below the cursor and swings about that point.
-            _dragPiece = NewRect("DragPiece", _pourSurface);
-            _dragPiece.pivot = new Vector2(0.5f, 1f);
-            _dragPiece.sizeDelta = new Vector2(64, 72);   // in scale with the buckets it leaves
-            var dragImg = _dragPiece.gameObject.AddComponent<Image>();
-            dragImg.raycastTarget = false; dragImg.preserveAspect = true;   // the real prep piece
-            _dragPieceLabel = NewText("L", _dragPiece, _body, 10, TextAnchor.LowerCenter, UITheme.Night[0]);
-            Stretch(_dragPieceLabel.rectTransform, Vector2.zero, Vector2.one, new Vector2(0, 2), new Vector2(0, -2));
-            _dragPiece.gameObject.SetActive(false);
-
-            _shakerReadout = NewText("Readout", _shakerPanel, _body, 13, TextAnchor.LowerCenter, UITheme.TextSecondary);
+            // 13 → 16: pinned to the pixel faces' 8px grid (CLAUDE.md), like every other
+            // size in the rebuild.
+            _shakerReadout = NewText("Readout", _shakerPanel, _body, 16, TextAnchor.LowerCenter, UITheme.TextSecondary);
             Stretch(_shakerReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 92), new Vector2(-16, 118));
 
-            // The pour gauge: a recessed track under the readout, filled live per ingredient.
-            // VERTICAL and engine-drawn (the author, 2026-08-02: the generated tube read
-            // as the wrong decade): a slim standing column, cyan-edged, filled bottom-up
-            // with the TIN's contents as shares of the whole vessel — 5% of vodka reads
-            // 5% VODKA and the room above it reads EMPTY.
-            // Off the bench and against the right wall, the way the serve stage's twin stands.
-            // At x=-340 it hung in the middle of the room, over the prep table's far end and
-            // through the shaker's cap — a gauge drawn across the props it is reporting on.
+            // The pour gauge: a slim standing column, cyan-edged, filled bottom-up with the
+            // TIN's contents as shares of the whole vessel — 5% of vodka reads 5% VODKA and
+            // the room above it reads EMPTY. Against the right wall, left of the TO THE
+            // GLASS key with clear air on both sides (at 520 its labels ran under the key;
+            // at -340, in its first life, it hung over the prep table this rebuild removed).
             var mixTrack = NewRect("MixTrack", _shakerPanel);
-            Place(mixTrack, new Vector2(0.5f, 0.5f), new Vector2(44, 330), new Vector2(520, -10));
+            Place(mixTrack, new Vector2(0.5f, 0.5f), new Vector2(44, 330), new Vector2(490, -24));
             var trackBg = mixTrack.gameObject.AddComponent<Image>();
             trackBg.color = new Color(0.05f, 0.05f, 0.09f, 0.88f);
             trackBg.raycastTarget = false;
@@ -1003,19 +1117,18 @@ namespace LastCall.UI
             meterFill.offsetMax = new Vector2(2, -2); meterFill.anchoredPosition = new Vector2(2, 0);
             _shakeMeterFill = meterFill.gameObject.AddComponent<Image>();
             _shakeMeterFill.raycastTarget = false;
-            _shakeMeterText = NewText("ShakeText", _shakerPanel, _body, 11, TextAnchor.UpperCenter, UITheme.TextSecondary);
+            _shakeMeterText = NewText("ShakeText", _shakerPanel, _body, 8, TextAnchor.UpperCenter, UITheme.TextSecondary);
             Place(_shakeMeterText.rectTransform, new Vector2(0.5f, 0), new Vector2(240, 16), new Vector2(0, 86));
-
-            // (The bottom-left plate that read "↔ GRAB THE SHAKER · SHAKE IT" is gone. It was
-            // a caption wearing a button's clothes — same dark plate, same size, sitting beside
-            // the real DONE key with no handler on it — and it was the third surface telling
-            // the player the same thing the header hint already says. The tin says "grab me" by
-            // answering the pointer now.)
 
             // THE BAR SPOON (GDD 21 §14, 2026-08-11): the stir's instrument, resting by the
             // tin. Drawn, not generated — it is an instrument the pointer works, and at this
             // size a rod and a bowl in the bench's own steel read truer than any take.
-            _spoonRest = new Vector2(-195f, -110f);   // leaning by the table's near end
+            // BESIDE THE TIN AND CLEAR OF THE LID (2026-08-14, the author: the spoon and the
+            // shaker were drawn over each other). Measured rather than nudged: the tin stands
+            // at x −310..−110 and the lid rests across −450..−250, so the only clear air on
+            // this side is the corridor between the BACK key (which ends at −550) and the
+            // lid. The spoon leans there, in reach, touching nothing.
+            _spoonRest = new Vector2(-500f, -104f);
             _spoonRt = NewRect("BarSpoon", _pourSurface);
             _spoonRt.pivot = new Vector2(0.5f, 1f);        // held by the grip, bowl hangs down
             _spoonRt.sizeDelta = new Vector2(26, 118);
@@ -1057,7 +1170,7 @@ namespace LastCall.UI
             _benchProps.Add(_spoonRt.gameObject.AddComponent<CanvasGroup>());
 
             // THE WAY FORWARD (the author's loop rework): the drink moves ON to the glass
-            // from here. Right edge centre — the mirror of where the back key will stand —
+            // from here. Right edge centre — the mirror of where the back key stands —
             // and lit only when Core itself would let the drink leave.
             var toGlass = NewRect("ToGlass", _shakerPanel);
             Place(toGlass, new Vector2(1f, 0.5f), new Vector2(76, 150), new Vector2(-14, 0));
@@ -1067,15 +1180,18 @@ namespace LastCall.UI
             _toGlassBtn.targetGraphic = tgImg;
             _toGlassBtn.onClick.AddListener(() => GoTo(Stage.Serve));
             _toGlassGroup = toGlass.gameObject.AddComponent<CanvasGroup>();
-            _toGlassLabel = NewText("L", toGlass, _body, 12, TextAnchor.MiddleCenter, Color.black);
+            _toGlassLabel = NewText("L", toGlass, _body, 8, TextAnchor.MiddleCenter, Color.black);
             Stretch(_toGlassLabel.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(4, 4), new Vector2(-4, -4));
             _toGlassLabel.text = "TO\nTHE\nGLASS";
             var tgSink = toGlass.gameObject.AddComponent<PressSink>();
             tgSink.Face = toGlass; tgSink.Depth = 3f; tgSink.Lift = 2f;
 
-            // The way back wears the LEFT edge now (the loop rework): one key, one place,
-            // every station — the bottom DONE plate retired with the hub-and-spoke cuts.
+            // What to do, in order, in the corner nothing else uses.
+            BuildStepCard(_shakerPanel);
+
+            // The way back wears the LEFT edge (the loop rework): one key, one place,
+            // every station.
             AddEdgeBack(_shakerPanel);
         }
 
