@@ -146,15 +146,34 @@ namespace LastCall.Core
         /// busy bar turns people away — but a bar that turns away everyone is losing money.</summary>
         public int Balked { get; private set; }
 
+        /// <summary>
+        /// Everyone who left tonight AND COUNTS. The guest of the house does not (GDD 26 §3):
+        /// the story's customer pays nothing and rates nothing, so a trial cannot move the
+        /// bar's standing by walking in — good or bad. Every ledger that reads the night reads
+        /// this list, so "does this person count" is answered once, here, instead of three
+        /// times in three files that can drift apart.
+        /// </summary>
+        public List<CustomerVisit> FinishedCounted()
+        {
+            var counted = new List<CustomerVisit>(_finished.Count);
+            foreach (var visit in _finished) if (!visit.OnTheHouse) counted.Add(visit);
+            return counted;
+        }
+
         /// <summary>Mean of every finished visit's satisfaction, storm-offs counting as 0.</summary>
         public double AverageSatisfaction
         {
             get
             {
-                if (_finished.Count == 0) return 0;
                 double total = 0;
-                foreach (var visit in _finished) total += visit.Satisfaction;
-                return total / _finished.Count;
+                int counted = 0;
+                foreach (var visit in _finished)
+                {
+                    if (visit.OnTheHouse) continue;
+                    total += visit.Satisfaction;
+                    counted++;
+                }
+                return counted == 0 ? 0 : total / counted;
             }
         }
 

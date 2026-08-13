@@ -124,6 +124,40 @@ is a test, not a comment.
 
 ---
 
+## S1c — The beat becomes a trial, and the guest leaves the books ☑ 2026-08-13
+
+**The author's rework:** the last customer is an INSPECTOR now — several drinks, one clock,
+one at a time, to the standard of *exactly the drink, made the way the book says*, with the
+fill forgiven down to 0.90. And they are a **guest of the house**: no licence (Core inspects
+at the seat — the ONE written exception to the hidden-information rule, fenced in CLAUDE.md),
+no bill, no rating, no line on the slip. The trial's stake is the arc, nothing else.
+
+- `StoryTrial` (content: asks/seconds/minFill/allowedMistakes) + `StoryTrialRun` (tonight's
+  attempt: Talking → Pouring → Passed/Failed). Difficulty is data.
+- `CustomerVisit`: `OnTheHouse`, `ClockHeld` (nothing ticks during the dialogue),
+  `AskFor` (next demand, same clock — deliberately NOT the extra-round path, which refreshes),
+  `GetUp` (leaves owing nothing).
+- `BarDay.FinishedCounted()` — every ledger that reads the night reads it here, so "does this
+  person count" is answered once. Rating, slip counts and the sim all go through it.
+- `TycoonRun`: `Trial`, `BeginLastCallTrial()` (the talking ends, the clock starts — with a
+  120s `TalkingGrace` backstop so a held plate can never hold the night), `ServeTo` branches
+  to the trial's pass mark for the guest, `DeclineLastCall` fails the trial without marking
+  the night's books.
+- `story.json` v2: asks/seconds/allowedMistakes per beat; the cast recast — the sister is out,
+  the **influencer** (`teal`) and the **gourmet inspector** (`profess`) are in; difficulty
+  climbs 1 drink/2 err → 2/1 → 2/1 → 3/0.
+
+**Proof:** 262 EditMode green. The ones that matter: the guest pays nothing and moves no
+ledger (the till's only movement on a trial night is the RENT, by name); no rating in either
+direction; nothing ticks while they talk; the talking cannot hold the night hostage; one
+clock, not one per drink; a short pour of the right drink is a mistake; a brimful glass is
+not asked for; mistakes over the allowance end the night; the wrong-drink ask STAYS.
+
+**Deliberately untouched:** the extra-round path (a reward refreshes patience; a demand must
+not), the crowd's licence rule, and the weekend economy.
+
+---
+
 ## S2 — The bot learns the beat *(balance stays honest)*
 
 - `TycoonSimulator`: on a last customer, pour the ask if the shelf can (the bot already builds

@@ -2,6 +2,24 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `26 §3/§4` **the last customer is an inspector, and a guest of the house (2026-08-13, the
+  author):** the beat reworked from "one drink with dialogue" into a TRIAL — several drinks
+  against one clock, revealed one at a time on a post-it, to a standard nothing else asks for
+  (exact drink, exact craft, exact method; the fill alone forgiven at ≥0.90 of the glass), with
+  a written mistake allowance that is data. The named model is Dave the Diver's service nights.
+  And the guest left the books entirely: no licence (they introduce themselves — the ONE
+  written exception to the hidden-information rule, fenced in CLAUDE.md), no bill, no tip, no
+  rating, no line on the slip — `CustomerVisit.OnTheHouse`, read once per ledger via
+  `BarDay.FinishedCounted()`, because a trial that can move the standing is a trial the player
+  can farm or be robbed by. The conversation holds the clock (`ClockHeld`): nothing ticks while
+  they talk, the trial starts it (`BeginLastCallTrial`), and a 120s grace backstop keeps a held
+  plate from holding the night. The asks-one-at-a-time reveal moves the shopping warning to the
+  HOST's lines days early ("have something brown by Friday") — the quiet nights stay the
+  preparation nights. Cast recast to public people with the standing to hold a trial: the
+  influencer (`teal`) and the gourmet inspector (`profess`) join Ece and the collector; the
+  sister and `ember` went back to the crowd. Difficulty climbs across the arc: 1 drink/2
+  mistakes → 2/1 → 2/1 → 3 drinks/none.
+
 - **NEW `26 §2b` + `Core/BarCalendar` — the guests come at the weekend (2026-08-13, the
   author):** a story beat is no longer written for "day 9" but for a WEEK and a NIGHT, and a
   guest's night must be Friday or Saturday. The calendar it hangs on was already on the screen

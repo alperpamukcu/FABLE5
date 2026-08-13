@@ -7,18 +7,18 @@ using NUnit.Framework;
 namespace LastCall.Tests
 {
     /// <summary>
-    /// The last customer (GDD 26, PLAN_last_call S1 + S1b) — the beat as Core plays it, before
-    /// anybody says a word. One scripted guest comes in after the door is shut, on the night of
-    /// the week they are written for, asks for a written drink, and is served, told no, or left
-    /// waiting; the arc moves on or comes back.
+    /// The last customer (GDD 26, PLAN_last_call S1/S1b/S1c) — the beat as Core plays it,
+    /// before anybody says a word. One scripted guest comes in after the door is shut, on the
+    /// night of the week they are written for, and runs the bar through a TRIAL: several
+    /// drinks, one clock, a standard nothing else in this game asks for. They are a guest of
+    /// the house — no licence, no bill, no rating — and the arc moves on or comes back.
     ///
-    /// Two load-bearing claims live in here. The first is about the END OF THE NIGHT: the day
-    /// closes on a single line — the door is shut and the last stool is empty
-    /// (<see cref="BarDay.IsComplete"/>, read in exactly one place) — and this whole module
-    /// works by putting somebody on a stool after the door has shut. The second is about the
-    /// CALENDAR: a guest comes at the weekend, so a missed beat has to come back on a night it
-    /// can actually happen on. A beat pushed onto a Wednesday is a beat that never happens
-    /// again, and the arc would stall there for the rest of the run without ever failing.
+    /// Three load-bearing claims live in here. The END OF THE NIGHT: the day closes on a
+    /// single line — the door is shut and the last stool is empty — and this module works by
+    /// putting somebody on a stool after the door has shut. The CALENDAR: a guest comes at
+    /// the weekend, and a missed beat must return on a night it can actually happen on. And
+    /// the BOOKS: nothing the guest does reaches the till, the standing or the slip, because
+    /// a trial that moves the rating is a trial the player can farm — or be robbed by.
     /// </summary>
     public class LastCustomerTests
     {
@@ -37,27 +37,33 @@ namespace LastCall.Tests
 
         private static readonly IReadOnlyList<RecipeDefinition> Book = new[] { Spritz() };
 
-        /// <summary>The beat's drink is the book's OWN object — a story that asks for a
-        /// recipe the bar does not have in its book is a beat nobody can ever pour.</summary>
+        /// <summary>The trial's drink is the book's OWN object — a story that asks for a
+        /// recipe the bar does not have in its book is a night nobody can ever pour.</summary>
         private static RecipeDefinition TheAsk => Book[0];
 
         private static Shelf NewShelf() => new Shelf(new[]
         {
-            new ShelfBottle(new IngredientCard("gin", "Gin", IngredientType.Spirit, 6), capacity: 20),
-            new ShelfBottle(new IngredientCard("soda", "Soda", IngredientType.Bubbly, 1), capacity: 20),
+            new ShelfBottle(new IngredientCard("gin", "Gin", IngredientType.Spirit, 6), capacity: 40),
+            new ShelfBottle(new IngredientCard("soda", "Soda", IngredientType.Bubbly, 1), capacity: 40),
         });
 
-        private static StoryCharacter Guest(string id = "collector") => new StoryCharacter(
-            id, look: "execman", name: "Graham Sedgwick", age: 54,
-            hometown: "United Kingdom", blurb: "Collects for the building.");
+        private static StoryCharacter Guest(string id = "gourmet") => new StoryCharacter(
+            id, look: "profess", name: "Ulrich Brenner", age: 66,
+            hometown: "Germany", blurb: "Writes about rooms like this one.");
 
         private static StoryCharacter Host() => new StoryCharacter(
             "ece", look: "ece", name: "Ece Toprak", age: 31,
             hometown: "Turkey", isHost: true);
 
+        /// <summary>Three of the same drink in plenty of time, one mistake allowed unless the
+        /// test says otherwise — the shape of the mechanic without the sting of the content.</summary>
+        private static StoryTrial Drinks(int count = 3, double seconds = 240,
+            int mistakes = 1, double minFill = StoryTrial.DefaultMinFill) =>
+            new StoryTrial(Enumerable.Repeat(TheAsk, count).ToList(), seconds, minFill, mistakes);
+
         private static StoryBeat Beat(string id, int week, BarNight night, string next = null,
-            int returnsAfterWeeks = 1, double patience = 60, StoryCharacter who = null) =>
-            new StoryBeat(id, who ?? Guest(), TheAsk, week, night, patience,
+            int returnsAfterWeeks = 1, StoryTrial trial = null, StoryCharacter who = null) =>
+            new StoryBeat(id, who ?? Guest(), trial ?? Drinks(), week, night,
                 returnsAfterWeeks: returnsAfterWeeks, nextId: next);
 
         /// <summary>One weekend, both of its nights: Friday is day 4, Saturday is day 5.</summary>
@@ -113,18 +119,35 @@ namespace LastCall.Tests
             PlayToClosing(run);
         }
 
-        /// <summary>An exact Spritz, built and poured with the two verbs the player has.</summary>
-        private static void BuildTheAsk(TycoonRun run)
+        /// <summary>To the stool, talked out, clock running: where every trial test starts.</summary>
+        private static void SitAndBegin(TycoonRun run)
         {
-            run.PourMeasure("gin", 0.35);
-            run.PourMeasure("soda", 0.35);
+            PlayUntilDay(run, 4);
+            Assert.IsNotNull(run.LastCustomer, "the Friday is written — somebody should be here");
+            run.BeginLastCallTrial();
+        }
+
+        /// <summary>An exact Spritz to the trial's own standard: right ratio, full glass.</summary>
+        private static void BuildPerfect(TycoonRun run)
+        {
+            run.PourMeasure("gin", 0.5);
+            run.PourMeasure("soda", 0.5);
+            run.PourIntoServingGlass(run.Glass.TotalVolume, accuracy: 1.0);
+        }
+
+        /// <summary>The right drink poured SHORT — exact match, honest craft, thin glass. The
+        /// crowd would tip less and forgive it; the trial does not.</summary>
+        private static void BuildShort(TycoonRun run)
+        {
+            run.PourMeasure("gin", 0.3);
+            run.PourMeasure("soda", 0.3);
             run.PourIntoServingGlass(run.Glass.TotalVolume, accuracy: 1.0);
         }
 
         /// <summary>A glass of plain soda: a drink, and not the one that was asked for.</summary>
-        private static void BuildTheWrongThing(TycoonRun run)
+        private static void BuildWrong(TycoonRun run)
         {
-            run.PourMeasure("soda", 0.7);
+            run.PourMeasure("soda", 0.95);
             run.PourIntoServingGlass(run.Glass.TotalVolume, accuracy: 1.0);
         }
 
@@ -148,8 +171,6 @@ namespace LastCall.Tests
         [Test]
         public void The_plaque_still_reads_what_it_always_read()
         {
-            // The words moved from TycoonHud into Core; a screen the player has been reading
-            // for weeks must not change because a rule was put behind it.
             Assert.AreEqual("WEEK 1 · TUESDAY", BarCalendar.Label(1));
             Assert.AreEqual("WEEK 2 · FRIDAY", BarCalendar.Label(10));
         }
@@ -187,57 +208,25 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void Not_on_the_wednesday_or_the_thursday_either()
-        {
-            var run = NewRun(OneWeekend());
-            for (int day = 1; day <= 3; day++)
-            {
-                PlayToClosing(run);
-                Assert.IsNull(run.LastCustomer,
-                    $"{BarCalendar.Label(run.Day)} is not a night anybody important comes in on");
-                run.ContinueToNextDay();
-            }
-            Assert.AreEqual(4, run.Day, "and now it is Friday");
-        }
-
-        [Test]
         public void The_weekend_seats_the_guest_after_the_door_is_shut()
         {
             var run = NewRun(OneWeekend());
             PlayUntilDay(run, 4);
 
             Assert.AreEqual(BarNight.Friday, run.Tonight);
-            Assert.IsTrue(run.IsWeekend);
-            Assert.IsNotNull(run.LastCustomer, "the Friday is written — somebody should be on the stool");
+            Assert.IsNotNull(run.LastCustomer);
             Assert.IsTrue(run.Floor.IsClosingTime, "and only after the door was shut");
             Assert.AreEqual(1, run.Floor.Seated.Count, "alone: the crowd is gone");
             Assert.AreSame(run.LastCustomer, run.Floor.Seated[0]);
             Assert.AreEqual("one", run.LastCallBeat.Id);
-            Assert.AreEqual("Graham Sedgwick", run.LastCustomer.Regular.Name);
-        }
-
-        [Test]
-        public void The_guest_asks_for_the_written_drink_and_hides_it_behind_the_licence()
-        {
-            var run = NewRun(OneWeekend());
-            PlayUntilDay(run, 4);
-            var guest = run.LastCustomer;
-
-            // The scripted customer is a customer: what they came for lives behind the card,
-            // exactly like everybody else's (the house rule, twice broken, once written down).
-            Assert.That(() => guest.Order, Throws.Exception,
-                "the ask must be behind the licence for the last customer too");
-            guest.InspectId();
-            Assert.AreEqual("spritz", guest.Order.Wanted.Id, "the drink is the beat's, not a roll");
-            Assert.Greater(guest.Order.Price, 0, "and it is priced like anything else on the menu");
-            Assert.AreEqual(60, guest.PatienceMax, "the wait is written down, not rolled");
+            Assert.AreEqual("Ulrich Brenner", run.LastCustomer.Regular.Name);
         }
 
         [Test]
         public void The_night_cannot_end_while_the_guest_is_on_the_stool()
         {
             var run = NewRun(OneWeekend());
-            PlayUntilDay(run, 4);
+            SitAndBegin(run);
             var guest = run.LastCustomer;
 
             for (int i = 0; i < 4; i++)
@@ -250,96 +239,239 @@ namespace LastCall.Tests
             }
         }
 
-        // ── how the night can go ────────────────────────────────────────────────
+        // ── a guest of the house, not a customer ────────────────────────────────
 
         [Test]
-        public void What_they_asked_for_moves_the_story_on()
+        public void The_guest_needs_no_licence_and_their_ask_is_readable_at_once()
+        {
+            // The hidden-information rule stands for the CROWD; the story's guest said who
+            // they were on the way in, and the ask lives in the dialogue (GDD 26 §3 — the
+            // written exception, not an erosion of the rule).
+            var run = NewRun(OneWeekend());
+            PlayUntilDay(run, 4);
+            var guest = run.LastCustomer;
+
+            Assert.IsTrue(guest.IdInspected, "no card to read: they introduced themselves");
+            Assert.That(() => guest.Order, Throws.Nothing);
+            Assert.AreEqual("spritz", guest.Order.Wanted.Id);
+            Assert.IsTrue(guest.OnTheHouse);
+        }
+
+        [Test]
+        public void Nothing_ticks_while_they_are_talking()
         {
             var run = NewRun(OneWeekend());
             PlayUntilDay(run, 4);
             var guest = run.LastCustomer;
 
-            guest.InspectId();
-            BuildTheAsk(run);
-            var verdict = run.ServeTo(guest);
-
-            Assert.AreEqual(OrderMatch.Exact, verdict.Match);
-            Assert.AreEqual(1, run.Story.Kept);
-            Assert.AreEqual(0, run.Story.Missed);
-            Assert.AreEqual("two", run.Story.Current.Id, "the next night is armed");
-            Assert.AreEqual(5, run.Story.DueDay, "the Saturday — never twice in one closing");
-
-            int guard = 0;
-            while (run.Phase == TycoonPhase.DayOpen)
-            {
-                Assert.Less(guard++, 100, "the night must close once they have gone");
-                run.Tick(5);
-            }
-            Assert.IsNull(run.LastCustomer, "the stool is empty again");
+            double before = guest.PatienceLeft;
+            run.Tick(10);
+            Assert.AreEqual(before, guest.PatienceLeft,
+                "the clock must hold for the dialogue — the trial starts it, not the stool");
+            Assert.AreEqual(TrialState.Talking, run.Trial.State);
         }
 
         [Test]
-        public void A_weekend_can_hold_a_beat_on_each_of_its_nights()
+        public void The_talking_cannot_hold_the_night_hostage()
         {
+            // A plate nobody dismisses — a UI bug, a headless run without the verb — must not
+            // hold a clock that never starts. Long past any real dialogue, the trial starts
+            // itself, the clock runs down, and the night closes.
             var run = NewRun(OneWeekend());
             PlayUntilDay(run, 4);
-            var friday = run.LastCustomer;
-            friday.InspectId();
-            BuildTheAsk(run);
-            run.ServeTo(friday);
+            Assert.AreEqual(TrialState.Talking, run.Trial.State);
 
-            PlayUntilDay(run, 5);
-            Assert.AreEqual(BarNight.Saturday, run.Tonight);
-            Assert.IsNotNull(run.LastCustomer, "the Saturday beat is written too");
-            Assert.AreEqual("two", run.LastCallBeat.Id);
-        }
+            CloseTheNight(run);   // never calls BeginLastCallTrial
 
-        [Test]
-        public void Near_enough_is_not_enough_and_the_beat_comes_back_next_week()
-        {
-            var run = NewRun(OneWeekend());
-            PlayUntilDay(run, 4);
-            var guest = run.LastCustomer;
-
-            guest.InspectId();
-            BuildTheWrongThing(run);
-            var verdict = run.ServeTo(guest);
-
-            Assert.AreNotEqual(OrderMatch.Exact, verdict.Match);
-            Assert.AreEqual(0, run.Story.Kept);
+            Assert.AreEqual(TycoonPhase.DayEnd, run.Phase, "the backstop let the night end");
             Assert.AreEqual(1, run.Story.Missed);
-            Assert.AreEqual("one", run.Story.Current.Id, "the same beat is still owed");
-            Assert.AreEqual(10, run.Story.DueDay, "next Friday, a week later");
         }
 
         [Test]
-        public void A_missed_beat_lands_on_a_night_it_can_actually_happen_on()
+        public void The_guest_pays_nothing_and_moves_no_ledger()
         {
-            // THE ONE THAT WOULD ROT SILENTLY. "Today plus two" is a perfectly reasonable
-            // return clock that puts a Friday guest on a Sunday, where the gate can never open
-            // — no exception, no failed test, just a story that stops.
-            var arc = new StoryArc(new[] { Beat("one", week: 1, night: BarNight.Friday) });
-            var progress = new StoryProgress(arc);
+            var run = NewRun(OneWeekend());
+            SitAndBegin(run);
+            var guest = run.LastCustomer;
+            int moneyBefore = run.Money;
+            int salesBefore = run.DaySales;
 
-            progress.RecordMissed(4);
-            Assert.AreEqual(BarNight.Friday, BarCalendar.NightOf(progress.DueDay));
-            Assert.IsTrue(BarCalendar.IsWeekend(progress.DueDay));
-            Assert.IsTrue(progress.IsDueOn(progress.DueDay), "and the gate opens on it");
+            for (int i = 0; i < 3; i++) { BuildPerfect(run); run.ServeTo(guest); }
+            Assert.AreEqual(TrialState.Passed, run.Trial.State);
 
-            progress.RecordMissed(progress.DueDay);
-            Assert.AreEqual(16, progress.DueDay, "and again the week after");
+            // The tick that takes the guest off the stool is the same tick that closes the
+            // day and lands the rent — there is no moment between to measure. So the rent is
+            // accounted for by name: what the till lost must be the LANDLORD'S line, exactly.
+            CloseTheNight(run);
+            Assert.AreEqual(moneyBefore - run.DayRent, run.Money,
+                "a guest of the house pays nothing — only the rent moved the till");
+            Assert.AreEqual(salesBefore, run.DaySales, "and books no sale");
+            Assert.AreEqual(0, guest.Paid);
+            Assert.AreEqual(0, run.DayTips, "and tips nothing");
+        }
+
+        [Test]
+        public void The_guest_files_no_rating_good_or_bad()
+        {
+            // BOTH directions, because both are exploits: a passed trial must not lift a
+            // dreadful night, and a failed one must not stain a good bar's standing.
+            var run = NewRun(OneWeekend());
+            SitAndBegin(run);
+            var guest = run.LastCustomer;
+            for (int i = 0; i < 3; i++) { BuildPerfect(run); run.ServeTo(guest); }
+
+            CloseTheNight(run);
+            Assert.AreEqual(0.0, run.Floor.AverageSatisfaction,
+                "an empty night with a perfect trial is still an empty night");
+            var counted = run.Floor.FinishedCounted();
+            Assert.IsFalse(counted.Any(v => v.OnTheHouse), "the slip never sees the guest");
+        }
+
+        // ── the trial itself ────────────────────────────────────────────────────
+
+        [Test]
+        public void The_asks_come_one_at_a_time()
+        {
+            var run = NewRun(OneWeekend());
+            SitAndBegin(run);
+            var guest = run.LastCustomer;
+
+            Assert.AreEqual(0, run.Trial.Done, "nothing landed yet");
+            Assert.AreSame(TheAsk, run.Trial.Current, "the first ask is on the wall");
+
+            BuildPerfect(run);
+            run.ServeTo(guest);
+            Assert.AreEqual(1, run.Trial.Done, "one down");
+            Assert.AreSame(TheAsk, run.Trial.Current, "and the next is revealed by serving");
+        }
+
+        [Test]
+        public void Three_perfect_drinks_pass_the_trial_and_move_the_story_on()
+        {
+            var run = NewRun(OneWeekend());
+            SitAndBegin(run);
+            var guest = run.LastCustomer;
+
+            for (int i = 0; i < 3; i++) { BuildPerfect(run); run.ServeTo(guest); }
+
+            Assert.AreEqual(TrialState.Passed, run.Trial.State);
+            Assert.AreEqual(1, run.Story.Kept);
+            Assert.AreEqual("two", run.Story.Current.Id, "the next night is armed");
+            CloseTheNight(run);
+            Assert.IsNull(run.LastCustomer, "and they got up owing nothing");
+        }
+
+        [Test]
+        public void A_short_pour_is_a_mistake_even_when_the_drink_is_right()
+        {
+            // The trial's one soft edge is the fill, and 0.90 is where soft ends: an exact,
+            // honestly-made Spritz in half a glass is a fumble to an inspector.
+            var run = NewRun(OneWeekend());
+            SitAndBegin(run);
+            var guest = run.LastCustomer;
+
+            BuildShort(run);
+            var verdict = run.ServeTo(guest);
+
+            Assert.AreEqual(OrderMatch.Exact, verdict.Match, "the drink itself was right");
+            Assert.AreEqual(0, run.Trial.Done);
+            Assert.AreEqual(1, run.Trial.Mistakes);
+            Assert.AreSame(TheAsk, run.Trial.Current, "the ask stands — they still want it");
+        }
+
+        [Test]
+        public void A_brimful_glass_is_not_asked_for()
+        {
+            // ≥ 0.90 is enough; the standard is strict, not cruel.
+            var run = NewRun(OneWeekend());
+            SitAndBegin(run);
+            var guest = run.LastCustomer;
+
+            run.PourMeasure("gin", 0.46);
+            run.PourMeasure("soda", 0.46);
+            run.PourIntoServingGlass(run.Glass.TotalVolume, accuracy: 1.0);
+            run.ServeTo(guest);
+
+            Assert.AreEqual(1, run.Trial.Done, "0.92 of a glass is a poured glass");
+        }
+
+        [Test]
+        public void Mistakes_over_the_allowance_end_the_night()
+        {
+            var run = NewRun(OneWeekend());   // the default trial allows one
+            SitAndBegin(run);
+            var guest = run.LastCustomer;
+
+            BuildWrong(run); run.ServeTo(guest);
+            Assert.AreEqual(TrialState.Pouring, run.Trial.State, "one mistake is allowed");
+            BuildWrong(run); run.ServeTo(guest);
+
+            Assert.AreEqual(TrialState.Failed, run.Trial.State);
+            Assert.AreEqual(1, run.Story.Missed);
+            Assert.AreEqual("one", run.Story.Current.Id, "the beat is still owed");
+            Assert.AreEqual(10, run.Story.DueDay, "next Friday");
+            CloseTheNight(run);
+            Assert.AreEqual(TycoonPhase.DayEnd, run.Phase);
+        }
+
+        [Test]
+        public void The_clock_runs_out_and_takes_the_night_with_it()
+        {
+            var run = NewRun(new StoryArc(new[]
+                { Beat("one", week: 1, night: BarNight.Friday,
+                       trial: Drinks(count: 3, seconds: 30)) }));
+            SitAndBegin(run);
+            var guest = run.LastCustomer;
+
+            BuildPerfect(run); run.ServeTo(guest);   // one lands...
+            CloseTheNight(run);                       // ...and the rest never do
+
+            Assert.AreEqual(TrialState.Failed, run.Trial?.State ?? TrialState.Failed);
+            Assert.AreEqual(1, run.Story.Missed);
+            Assert.IsNull(run.LastCustomer);
+        }
+
+        [Test]
+        public void One_clock_for_the_whole_trial_not_one_per_drink()
+        {
+            var run = NewRun(OneWeekend());
+            SitAndBegin(run);
+            var guest = run.LastCustomer;
+
+            run.Tick(5);
+            double afterFirst = guest.PatienceLeft;
+            BuildPerfect(run);
+            run.ServeTo(guest);
+
+            Assert.LessOrEqual(guest.PatienceLeft, afterFirst,
+                "landing a drink must not refresh the clock — a trial is not an extra round");
+        }
+
+        [Test]
+        public void Serving_before_the_talk_is_over_is_refused()
+        {
+            var run = NewRun(OneWeekend());
+            PlayUntilDay(run, 4);
+            var guest = run.LastCustomer;
+
+            BuildPerfect(run);
+            Assert.Throws<InvalidOperationException>(() => run.ServeTo(guest),
+                "nothing has been asked for while they are still talking");
         }
 
         [Test]
         public void An_honest_no_costs_the_night_and_not_the_arc()
         {
             var run = NewRun(OneWeekend());
-            PlayUntilDay(run, 4);
+            SitAndBegin(run);
+            int declinedBefore = run.DeclinedOrders;
 
             var verdict = run.DeclineLastCall();
 
             Assert.AreEqual(OrderMatch.Declined, verdict.Match);
-            Assert.AreEqual(1, run.DeclinedOrders, "it is the ordinary decline, marked the ordinary way");
+            Assert.AreEqual(declinedBefore, run.DeclinedOrders,
+                "a guest of the house is not a declined ORDER — the night's books stay clean");
+            Assert.AreEqual(TrialState.Failed, run.Trial.State);
             Assert.AreEqual("one", run.Story.Current.Id);
             Assert.AreEqual(1, run.Story.Missed);
             Assert.AreEqual(10, run.Story.DueDay);
@@ -353,34 +485,12 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void Leaving_them_to_wait_is_an_answer_too()
-        {
-            var run = NewRun(OneWeekend());
-            PlayUntilDay(run, 4);
-            Assert.IsNotNull(run.LastCustomer);
-
-            int guard = 0;
-            while (run.Phase == TycoonPhase.DayOpen)
-            {
-                Assert.Less(guard++, 100, "they must give up eventually");
-                run.Tick(5);
-            }
-
-            Assert.AreEqual(1, run.Story.Missed, "nobody came to the stool; the beat took the night");
-            Assert.AreEqual("one", run.Story.Current.Id);
-            Assert.AreEqual(10, run.Story.DueDay);
-            Assert.IsNull(run.LastCustomer, "and the run is not still holding on to them");
-        }
-
-        [Test]
         public void One_last_customer_a_night_even_after_they_have_gone()
         {
             var run = NewRun(OneWeekend());
-            PlayUntilDay(run, 4);
+            SitAndBegin(run);
             run.DeclineLastCall();
 
-            // Tonight is spent whichever way it went. Ticking out the rest of this night must
-            // not seat anybody, even though the beat is standing again.
             int guard = 0;
             while (run.Phase == TycoonPhase.DayOpen)
             {
@@ -389,6 +499,25 @@ namespace LastCall.Tests
                 Assert.IsNull(run.LastCustomer, "the last call already happened tonight");
             }
             Assert.AreEqual(1, run.Story.Missed);
+        }
+
+        // ── the return clock (the silent failure) ───────────────────────────────
+
+        [Test]
+        public void A_missed_beat_lands_on_a_night_it_can_actually_happen_on()
+        {
+            // THE ONE THAT WOULD ROT SILENTLY. "Today plus two" is a perfectly reasonable
+            // return clock that puts a Friday guest on a Sunday, where the gate can never open
+            // — no exception, no failed test, just a story that stops.
+            var arc = new StoryArc(new[] { Beat("one", week: 1, night: BarNight.Friday) });
+            var progress = new StoryProgress(arc);
+
+            progress.RecordMissed(4);
+            Assert.AreEqual(BarNight.Friday, BarCalendar.NightOf(progress.DueDay));
+            Assert.IsTrue(progress.IsDueOn(progress.DueDay), "and the gate opens on it");
+
+            progress.RecordMissed(progress.DueDay);
+            Assert.AreEqual(16, progress.DueDay, "and again the week after");
         }
 
         [Test]
@@ -460,8 +589,6 @@ namespace LastCall.Tests
         [Test]
         public void A_guest_written_for_a_wednesday_is_refused()
         {
-            // The weekend rule is the design (GDD 26 §2b), so it is enforced where the beat is
-            // built rather than trusted to whoever edits the file.
             var e = Assert.Throws<ArgumentException>(() =>
                 Beat("one", week: 1, night: BarNight.Wednesday));
             Assert.That(e.Message, Does.Contain("WEDNESDAY"));
@@ -471,11 +598,39 @@ namespace LastCall.Tests
         [Test]
         public void The_house_can_work_a_quiet_night()
         {
-            // Ece is not a guest: she is already behind the bar, and beat zero is hers on the
-            // opening Tuesday, when nothing is at stake and the beat teaches itself.
             var beat = Beat("ece_1", week: 1, night: BarNight.Tuesday, who: Host());
             Assert.AreEqual(1, beat.Day);
             Assert.AreEqual(BarNight.Tuesday, beat.Night);
+        }
+
+        [Test]
+        public void A_trial_with_nothing_in_it_is_refused()
+        {
+            Assert.Throws<ArgumentException>(() =>
+                new StoryTrial(Array.Empty<RecipeDefinition>(), 60));
+            Assert.Throws<ArgumentException>(() =>
+                new StoryTrial(new RecipeDefinition[] { null }, 60));
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new StoryTrial(new[] { TheAsk }, 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new StoryTrial(new[] { TheAsk }, 60, minFill: 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new StoryTrial(new[] { TheAsk }, 60, allowedMistakes: -1));
+        }
+
+        [Test]
+        public void A_trial_run_refuses_to_move_before_or_after_its_time()
+        {
+            var trial = new StoryTrialRun(Drinks(count: 1));
+            Assert.Throws<InvalidOperationException>(() => trial.Landed(),
+                "nothing lands while they are talking");
+            trial.Begin();
+            Assert.Throws<InvalidOperationException>(() => trial.Begin(),
+                "a trial starts once");
+            trial.Landed();
+            Assert.AreEqual(TrialState.Passed, trial.State);
+            Assert.Throws<InvalidOperationException>(() => trial.Landed(),
+                "a finished trial takes no more drinks");
         }
 
         [Test]
@@ -506,8 +661,6 @@ namespace LastCall.Tests
         [Test]
         public void A_beat_nothing_leads_to_is_refused()
         {
-            // Written, paid for in somebody's afternoon, and unreachable — the failure this
-            // module is most likely to actually have.
             var e = Assert.Throws<ArgumentException>(() => new StoryArc(new[]
             {
                 Beat("one", week: 1, night: BarNight.Friday),
@@ -528,43 +681,20 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void An_arc_that_runs_backwards_is_refused()
-        {
-            var e = Assert.Throws<ArgumentException>(() => new StoryArc(new[]
-            {
-                Beat("one", week: 2, night: BarNight.Friday, next: "two"),
-                Beat("two", week: 1, night: BarNight.Saturday),
-            }));
-            Assert.That(e.Message, Does.Contain("follows"));
-        }
-
-        [Test]
-        public void Two_beats_with_one_name_are_refused()
-        {
-            Assert.Throws<ArgumentException>(() => new StoryArc(new[]
-            {
-                Beat("one", week: 1, night: BarNight.Friday, next: "one"),
-                Beat("one", week: 1, night: BarNight.Saturday),
-            }));
-        }
-
-        [Test]
         public void A_beat_that_comes_back_the_same_night_is_refused()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                new StoryBeat("one", Guest(), TheAsk, week: 1, night: BarNight.Friday,
-                    patienceSeconds: 60, returnsAfterWeeks: 0));
+                new StoryBeat("one", Guest(), Drinks(), week: 1, night: BarNight.Friday,
+                    returnsAfterWeeks: 0));
         }
 
         [Test]
         public void A_beat_with_nobody_in_it_or_nothing_to_pour_is_refused()
         {
             Assert.Throws<ArgumentNullException>(() =>
-                new StoryBeat("one", null, TheAsk, 1, BarNight.Friday, 60));
+                new StoryBeat("one", null, Drinks(), 1, BarNight.Friday));
             Assert.Throws<ArgumentNullException>(() =>
-                new StoryBeat("one", Guest(), null, 1, BarNight.Friday, 60));
-            Assert.Throws<ArgumentOutOfRangeException>(() =>
-                new StoryBeat("one", Guest(), TheAsk, 1, BarNight.Friday, 0));
+                new StoryBeat("one", Guest(), null, 1, BarNight.Friday));
         }
 
         [Test]

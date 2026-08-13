@@ -165,35 +165,77 @@ only says who comes to the door after it has shut.
 
 ---
 
-## 3. The last customer
+## 3. The last customer — a guest of the house (reworked 2026-08-13, the author)
 
-A scripted `CustomerVisit`, built from data rather than rolled:
+A scripted `CustomerVisit`, built from data rather than rolled — and **not a customer in any
+way the books notice**. The author's ruling: the story's people are outside the night's
+economy entirely.
 
-| Rolled crowd | The last customer |
+| Rolled crowd | The guest of the house |
 |---|---|
 | `NextArrival()` rolls order, patience, decide delay, and a regular from the pool | every field comes from the beat's data |
-| patience is a roll; they storm off | patience is long and finite; when it runs out they *leave a line*, they do not storm |
-| the ID card gives the drink outright | the card gives the drink **and** what the bar is missing for it |
+| the order hides behind the ID card | **no licence.** They say who they are on the way in; the ask lives in the dialogue |
+| pays at the tab, tips on quality | **pays nothing.** No bill, no tip, no line in SALES |
+| files a rating on the way out; the slip counts them | **files nothing.** Not in the night's stars, not on the slip, not a served/walked count |
+| patience is a roll; they storm off | one written clock for the whole visit; when it runs out they *leave a line*, they do not storm |
 | any stool | the stool nearest the till (they sit where they can be talked to) |
 
-They are a `RegularState` like anyone else — name, age, hometown, visits, relationship — so
-the second visit already knows it is the second, and `Relationship` moves on the outcome. The
-face is a reserved look (§8) so the same person is the same picture every night of the run.
+**Why the books look away, in one flag.** `CustomerVisit.OnTheHouse`, read in exactly one
+place per ledger (`BarDay.FinishedCounted()` for everything that counts the night). Both
+directions are exploits otherwise: a passed trial must not lift a dreadful night's stars, and
+a failed one must not stain a good bar — the trial's stake is the ARC, and the arc only.
 
-**As built (2026-08-13, S1).** All of that is true in Core now except the two lines that are
-about how it *looks*, and those are S3's: a guest whose patience runs out is `StormedOff` like
-anyone else — the quiet leaving is drawn, not decided — and the stool is whichever one the
-floor hands over, not yet the one nearest the till. `StoryProgress` keeps one `RegularState`
-per character for the whole run, so the second visit already knows it is the second.
+**The licence exception is written, not eroded.** "Hidden information stays hidden" is the
+house's hardest rule and it stands for the crowd untouched. The guest is the one written
+exception — their `InspectId()` is called by Core at the seat, because introducing yourself
+is what a licence is for — and any future erosion of the crowd's rule cannot cite this line.
 
-**They are not a boss fight.** No timer pressure beyond the ordinary patience, no failure
-state, no combat framing. The only thing at stake is the answer.
+**§3.1 The conversation holds the clock.** They walk in like anyone else, sit like anyone
+else — then the dialogue begins, and NOTHING ticks while they talk (`ClockHeld`). The trial's
+clock starts when the talking ends (`BeginLastCallTrial()`), so a slow reader is never
+punished for reading. Core does not trust the UI to end a conversation: after
+`StoryTrial.TalkingGrace` (120s, far past any real dialogue) the trial starts itself, because
+a held clock is a night that can never close.
+
+**§3.2 They are a `RegularState` like anyone else** — name, age, hometown, visits,
+relationship — so the second visit already knows it is the second. The face is a reserved
+look (§8), the same person the same picture every night of the run.
+
+**They are still not a boss fight** — the trial (§4) is pressure, but there is no failure
+state beyond the beat re-arming, no combat framing, and nothing the run can lose that it had
+before the door opened. The only thing at stake is the story.
 
 ---
 
-## 4. The ask: an order the bar cannot fill yet
+## 4. The ask: a trial, not an order (reworked 2026-08-13, the author)
 
-The game already knows three separate ways a drink can be out of reach, and the arc should use
+**The shape.** After the talk, the guest asks for a RUN of drinks — several, against ONE
+clock, to a standard nothing else in this game asks for. An inspector's visit: the model the
+author named is Dave the Diver's service nights, one demanding person instead of a full room.
+
+- **One at a time.** The post-it on the screen shows the drink in hand and the clock — never
+  the list. What comes next is the guest's to say (`StoryTrialRun.Current`).
+- **One clock.** `StoryTrial.Seconds` for the whole visit, started when the talking stops.
+  Landing a drink does not refresh it — a trial is a deadline, not the extra round a good
+  serve earns (that path deliberately stays untouched).
+- **The standard.** Exactly the drink (`OrderMatch.Exact`), garnished exactly as asked
+  (spec 1.0), worked the way the book says (method 1.0). The ONE forgiving edge is the fill:
+  ≥ 0.90 of the glass is a poured glass — strict, not cruel, and the author's own number.
+- **Mistakes.** A wrong drink is a fumble: the ask STAYS (they still want it), and it costs
+  the allowance and the time to build another. Past `allowedMistakes`, the night is failed.
+  The early beats are written kind (2 allowed, then 1); the gourmet allows none.
+- **The ordinary verbs, the ordinary judge.** No special mode: the player builds and serves
+  exactly as for anyone, `ServiceJudge` measures exactly as for anyone. Only the PASS MARK
+  is the trial's, and only the arc is at stake — the verdict that comes back is a reaction,
+  not a receipt (§3).
+
+**The shopping week survives the reveal.** Since asks come one at a time, the post-it cannot
+be the thing that names what is missing IN ADVANCE — so that job moves to where it now
+belongs: `needStyle` is what the HOST warns about, days early, in her own lines ("have
+something brown by Friday"). The quiet nights stay the preparation nights (§2b); the warning
+just has a voice now instead of a tile.
+
+The game still knows three separate ways a drink can be out of reach, and the arc should use
 all three in turn, because each one teaches a different part of the shop:
 
 1. **The shelf cannot pour it.** `MissingStyles(recipe)` already computes this and the market
@@ -203,10 +245,11 @@ all three in turn, because each one teaches a different part of the shop:
 3. **The bottle is too plain.** A band with `MinTier` refuses the well pour (`CanMake` honours
    it). → *upgrade the brand.*
 
-**The rule that makes this a door and not a wall:** the ask must always name what is missing,
-in the customer's own words on the licence and in the market's words on the tile. A player who
-hears "I want a Margarita" and has no tequila must be told *tequila*, tonight, by the game —
-never left to guess. This is the difference between a quest and a tease.
+**The rule that makes this a door and not a wall:** the ask must always name what is missing —
+the host days early (`needStyle`, her warning lines), the guest's own nudge on a return, and
+the market's words on the tile. A player who will be asked for a Margarita and has no tequila
+must be told *tequila*, before the night it costs them — never left to guess. This is the
+difference between a quest and a tease.
 
 **A beat may bring its own page** (`grantsRecipeOnAsk`). Some asks are for a drink the book
 does not contain and the star gate will not open for weeks; the person can simply hand it over
@@ -237,9 +280,10 @@ none of them is a loss:
   They leave a line and come back. Declining is honest and cheap; it exists so the player is
   never stuck staring at an order they cannot build.
 
-**Return schedule.** `returnsAfterDays` in data (default 2). Between visits the ask stands: the
-book shows it as an open tab. A beat may also carry `nudge` lines used on the second and third
-returns so the person notices the player is closer ("I saw the crate come in").
+**Return schedule.** `returnsAfterWeeks` in data (default 1), landing on the beat's own night
+(§2b). Between visits the ask stands: the book shows it as an open tab. A beat may also carry
+`nudge` lines used on the second and third returns so the person notices the player is closer
+("I saw the crate come in").
 
 **Nothing is missable.** The arc waits. A player who never buys tequila simply never advances
 past that beat, and the ordinary game continues around it.
@@ -379,14 +423,15 @@ rules apply: public fields, no dictionaries, no nullable types, `""`/`0` for "no
       "character": "collector",
       "week": 1,
       "night": "friday",
-      "recipe": "neat_pour",
+      "asks": ["neat_pour", "neat_pour"],
+      "seconds": 100,
+      "allowedMistakes": 1,
       "needStyle": "bourbon",
       "needTier": 0,
       "grantsRecipeOnAsk": "",
-      "patienceSeconds": 40,
       "ask": [
         "You are the new one.",
-        "A whiskey, neat. I will wait."
+        "A whiskey, neat. Then another. I drink the second one slower."
       ],
       "nudge": [ "Still nothing brown on that shelf." ],
       "servedRight": [ "That is the one.", "The building can wait a week." ],
@@ -413,9 +458,12 @@ Field notes:
   the calendar's business, never the file's.
 - `returnsAfterWeeks` — how long after a miss they try again, **on the same night**. Weeks, not
   days, because a day count would push a Friday guest onto a night that never comes (§2b).
-- `recipe` — the recipe id the ask is graded against; it must exist in `recipes.json`.
-- `needStyle` / `needTier` — what the beat is *about*, so the card can name what is missing
-  without re-deriving it. Empty/0 = "nothing in particular; you should already be able to".
+- `asks` — the trial's drinks IN ORDER (§4), every one an id in `recipes.json`. Revealed one
+  at a time; the first is the night's headline, the thing the host warns about.
+- `seconds` / `allowedMistakes` — the trial's one clock and its allowance (§4). Difficulty is
+  DATA: tightening a beat is an edit, not a commit.
+- `needStyle` / `needTier` — what the beat is *about*, so the HOST can name what is missing
+  days early (§4). Empty/0 = "nothing in particular; you should already be able to".
 - `grantsRecipeOnAsk` — a recipe id handed over with the ask, gate and price waived (§4). `""`
   for the ordinary case where the drink is already in the book or buyable.
 - `characters[].role` — `guest` (sits, orders, can be served) or `host` (Ece: behind the bar,
@@ -444,8 +492,10 @@ through-line about the bar itself. **The names and lines here are placeholders**
 the design; the writing is the author's.
 
 The first FOUR are written as real data in `Assets/Data/story/story.json` — real recipe ids,
-real styles, and three faces the cast already owns (`execman`, `ember`, `profess`), which are
-reserved from the crowd from S1 on.
+real styles, and three faces the cast already owns (`execman`, `teal`, `profess`), which are
+reserved from the crowd from S1 on. (The sister was recast 2026-08-13, the author: the guests
+are public people now — an influencer, a gourmet inspector, a collector — because a trial
+needs somebody with the standing to hold one; `ember` went back to the crowd.)
 
 Every guest comes at the weekend (§2b); the host takes the quiet opening night. The day number
 is the calendar's, not the author's — it falls out of the week and the night.
@@ -454,8 +504,8 @@ is the calendar's, not the author's — it falls out of the week and the night.
 |---|---|---|---|---|---|
 | 0 | W1 · TUE *(1)* | **Ece** — she works here | `neat_pour` of whatever is on the shelf | the beat itself, on a night nothing can be lost — and the arc, in her own words | none |
 | 1 | W1 · FRI *(4)* | **The collector** — takes the rent for the building | `neat_pour` — a whiskey, neat | the market: buy a style you lack | shelf (no bourbon in the opening well) |
-| 2 | W2 · SAT *(11)* | **The sister** — drinks here, and has since the second night | `moscow_mule` | the market again, and the book: the reward is a page (`gimlet`) the 2★ gate has not opened | shelf (ginger) |
-| 3 | W3 · FRI *(16)* | **The critic** — writes about rooms like this | `manhattan`, *stirred* | method: stirred is not shaken — and he hands over the page himself | method (+ vermouth) |
+| 2 | W2 · SAT *(11)* | **The influencer** — four hundred thousand people watch her drink | `moscow_mule` + `vodka_soda`, 90s | the market again, and the book: the reward is a page (`gimlet`) the 2★ gate has not opened | shelf (ginger) |
+| 3 | W3 · FRI *(16)* | **The gourmet** — inspects rooms like this, counts the seconds | `manhattan` + `gimlet` + `whiskey_ginger`, 150s, no mistakes | method: stirred is not shaken — and he hands over the page himself | method (+ vermouth) |
 | 4 | W3 · SAT *(17)* | **The brewer** — sells the kegs two valleys over | a pint with a proper head | draught: the head band | craft |
 | 5 | W4 · FRI *(22)* | **The old regular** — has not missed a weekend yet | "the usual" | reading: the licence, the visits, the person | reading |
 | 6 | W4 · SAT *(23)* | **The high roller** — spends what the room is worth | a top-shelf brand, by name | tiers: the well pour will not do | tier |

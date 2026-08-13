@@ -18,9 +18,13 @@ namespace LastCall.Core
 
         public StoryCharacter Who { get; }
 
-        /// <summary>What they order. Resolved against the real catalogue when the arc is
-        /// built, so a beat can never name a drink that does not exist.</summary>
-        public RecipeDefinition Drink { get; }
+        /// <summary>What they want, which is a RUN of drinks against one clock (GDD 26 §4).
+        /// Resolved against the real catalogue when the arc is built, so a beat can never ask
+        /// for a drink that does not exist.</summary>
+        public StoryTrial Trial { get; }
+
+        /// <summary>The drink the night is remembered by — the first thing they ask for.</summary>
+        public RecipeDefinition Drink => Trial.Headline;
 
         /// <summary>Which week they are written for, counting from the week the bar opened.</summary>
         public int Week { get; }
@@ -37,13 +41,16 @@ namespace LastCall.Core
         /// <summary>The earliest night they can walk in on, off the calendar.</summary>
         public int Day { get; }
 
-        /// <summary>How long they will sit for it. From the file, never from the dice — a
-        /// scripted night has to play the same way twice.</summary>
-        public double PatienceSeconds { get; }
+        /// <summary>How long the whole trial gets, off the trial. From the file, never from
+        /// the dice — a scripted night has to play the same way twice.</summary>
+        public double PatienceSeconds => Trial.Seconds;
 
-        /// <summary>The style the market must sell before this can be poured ("bourbon"), or
-        /// null when the ask needs nothing the bar has not got. The ask ALWAYS names what is
-        /// missing (GDD 26 §4); this is the field the words are checked against.</summary>
+        /// <summary>
+        /// The style the bar has to have in before this night ("bourbon"), or null when it
+        /// needs nothing it has not got. Since the asks are revealed ONE AT A TIME (§4), this
+        /// is what the shopping week is built on: it is what the HOST warns about days early
+        /// (§1b), not what the post-it says — the post-it only ever shows the drink in hand.
+        /// </summary>
         public string NeedStyle { get; }
 
         /// <summary>The tier that style has to reach. 0 means any bottle of it will do.</summary>
@@ -64,8 +71,8 @@ namespace LastCall.Core
         public StoryLines Lines { get; }
         public StoryReward Reward { get; }
 
-        public StoryBeat(string id, StoryCharacter who, RecipeDefinition drink, int week,
-            BarNight night, double patienceSeconds, StoryLines lines = null,
+        public StoryBeat(string id, StoryCharacter who, StoryTrial trial, int week,
+            BarNight night, StoryLines lines = null,
             StoryReward reward = null, string needStyle = null, int needTier = 0,
             string grantsRecipeOnAsk = null, int returnsAfterWeeks = 1, string nextId = null)
         {
@@ -73,8 +80,8 @@ namespace LastCall.Core
                 throw new ArgumentException("A beat needs an id.", nameof(id));
             if (who == null)
                 throw new ArgumentNullException(nameof(who), $"beat '{id}' has nobody in it");
-            if (drink == null)
-                throw new ArgumentNullException(nameof(drink), $"beat '{id}' asks for nothing");
+            if (trial == null)
+                throw new ArgumentNullException(nameof(trial), $"beat '{id}' asks for nothing");
             if (week < 1)
                 throw new ArgumentOutOfRangeException(nameof(week), $"beat '{id}' happens in week {week}");
             if (!who.IsHost && !BarCalendar.IsWeekend(night))
@@ -82,9 +89,6 @@ namespace LastCall.Core
                     $"beat '{id}' brings {who.Name} in on a {BarCalendar.Name(night)} — a guest " +
                     "comes at the weekend (GDD 26 §2b); only the house works the quiet nights.",
                     nameof(night));
-            if (patienceSeconds <= 0)
-                throw new ArgumentOutOfRangeException(nameof(patienceSeconds),
-                    $"beat '{id}' would leave before it was read");
             if (needTier < 0)
                 throw new ArgumentOutOfRangeException(nameof(needTier));
             if (returnsAfterWeeks < 1)
@@ -93,11 +97,10 @@ namespace LastCall.Core
 
             Id = id;
             Who = who;
-            Drink = drink;
+            Trial = trial;
             Week = week;
             Night = night;
             Day = BarCalendar.DayOf(week, night);
-            PatienceSeconds = patienceSeconds;
             Lines = lines ?? StoryLines.Silent;
             Reward = reward ?? StoryReward.None;
             NeedStyle = string.IsNullOrWhiteSpace(needStyle) ? null : needStyle;
@@ -108,6 +111,6 @@ namespace LastCall.Core
         }
 
         public override string ToString() =>
-            $"{Id}: {Who.Name} wants {Drink.Name} ({BarCalendar.Label(Day)})";
+            $"{Id}: {Who.Name} wants {Trial} ({BarCalendar.Label(Day)})";
     }
 }

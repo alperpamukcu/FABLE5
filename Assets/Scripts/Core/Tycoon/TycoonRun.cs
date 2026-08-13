@@ -524,6 +524,7 @@ namespace LastCall.Core
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average);
             LastCustomer = null;       // a jumped night starts its last call from scratch
             LastCallBeat = null;
+            Trial = null;
             _lastCallSpent = _lastCallAnswered = false;
             Phase = TycoonPhase.DayOpen;
         }
@@ -691,6 +692,7 @@ namespace LastCall.Core
             EnsurePhase(TycoonPhase.DayOpen);
             var seated = Floor.Tick(seconds, NextArrival);
             SettleDepartures();
+            Trial?.Waited(seconds);   // the talking backstop's clock, nothing else's
             seated = SettleLastCall(seated);
 
             if (Floor.IsComplete)
@@ -743,6 +745,10 @@ namespace LastCall.Core
         /// night is closed, so the last word can still be said after they have gone.</summary>
         public StoryBeat LastCallBeat { get; private set; }
 
+        /// <summary>Tonight's attempt at the beat's trial — what the post-it is drawn from
+        /// (GDD 26 §4). Null on a night with no last customer.</summary>
+        public StoryTrialRun Trial { get; private set; }
+
         private bool _lastCallSpent;      // one last customer a night, served or not
         private bool _lastCallAnswered;   // the arc has been told how tonight went
 
@@ -760,12 +766,20 @@ namespace LastCall.Core
         {
             if (Story == null) return seated;
 
-            // Up and gone: finished their drink, or tired of waiting for one. Nobody having
+            // The talking cannot hold the night hostage: a plate nobody dismisses — a UI bug,
+            // a headless run that forgot the verb — would hold a clock that never starts and
+            // a day that never ends. Long past any real dialogue, the trial starts itself.
+            if (Trial != null && Trial.State == TrialState.Talking && LastCustomer != null
+                && Trial.TalkedFor >= StoryTrial.TalkingGrace)
+                BeginLastCallTrial();
+
+            // Up and gone: the trial finished, or its clock ran out under them. Nobody having
             // answered them is itself an answer, and the beat comes back for it.
             if (LastCustomer != null && !Floor.Seated.Contains(LastCustomer))
             {
                 if (!_lastCallAnswered)
                 {
+                    Trial?.Fail();          // the clock beat the bar
                     Story.RecordMissed(Day);
                     _lastCallAnswered = true;
                 }
@@ -776,16 +790,19 @@ namespace LastCall.Core
             if (!Floor.IsClosingTime || Floor.Seated.Count > 0) return seated;
             if (!Story.IsDueOn(Day)) return seated;
 
-            // Scripted through and through: the drink is the beat's, the price is the house's
-            // ordinary one, the patience is written down, and not a single die is rolled — a
-            // night that is meant to be the same twice cannot be built out of the arrival RNG.
+            // Scripted through and through, and ON THE HOUSE (GDD 26 §3): the drinks are the
+            // beat's, the clock is written down, no die is rolled — and nothing they do
+            // reaches the till or the standing. They said who they were on the way in, so the
+            // licence is already read: the ask is behind a CONVERSATION tonight, not a card.
             var beat = Story.Current;
             var visit = new CustomerVisit(
-                new DrinkOrder(beat.Drink, PriceOf(beat.Drink), ServingSpec.Plain),
-                beat.PatienceSeconds, Story.PersonFor(beat.Who));
+                new DrinkOrder(beat.Trial.Headline, PriceOf(beat.Trial.Headline), ServingSpec.Plain),
+                beat.Trial.Seconds, Story.PersonFor(beat.Who), onTheHouse: true);
+            visit.InspectId();
             Floor.SeatGuest(visit);
             LastCustomer = visit;
             LastCallBeat = beat;
+            Trial = new StoryTrialRun(beat.Trial);
             _lastCallSpent = true;
             _lastCallAnswered = false;
 
@@ -795,6 +812,64 @@ namespace LastCall.Core
             all.AddRange(seated);
             all.Add(visit);
             return all;
+        }
+
+        /// <summary>
+        /// The talking is over and the clock starts (GDD 26 §3.1). One verb, called by whoever
+        /// finished the dialogue — the UI when the plate is done, the bot the moment it sits
+        /// down — so that a headless run and a played one measure the same seconds.
+        /// </summary>
+        public void BeginLastCallTrial()
+        {
+            if (LastCustomer == null || Trial == null)
+                throw new InvalidOperationException("Nobody is waiting on the last call.");
+            Trial.Begin();
+            LastCustomer.ReleaseClock();
+        }
+
+        /// <summary>
+        /// One drink, held against the standard nothing else in this game is held against
+        /// (GDD 26 §4): exactly what was asked for, made the way the book says, garnished the
+        /// way they asked. The fill is the one forgiving part — nine tenths of the glass is a
+        /// poured glass.
+        ///
+        /// It is the ORDINARY judge doing the measuring; only the pass mark is the trial's.
+        /// Nothing is priced, nothing is tipped and nothing is rated: the verdict that comes
+        /// back is a reaction, not a receipt.
+        /// </summary>
+        private ServiceVerdict ServeTheTrial(CustomerVisit visit, GlassContents delivered)
+        {
+            var match = RatioRecipeMatcher.Match(delivered, _recipes, IngredientOf);
+            var matchKind = ServiceJudge.Compare(visit.OrderTruth, match, delivered, IngredientOf);
+
+            var spec = visit.OrderTruth.Spec;
+            double specScore = spec.Delivered(delivered);
+            double methodScore = ServiceJudge.MethodScore(visit.OrderTruth.Wanted, delivered);
+            double fill = delivered?.FillFraction ?? 0;
+            bool perfect = matchKind == OrderMatch.Exact
+                           && specScore >= 1.0 && methodScore >= 1.0
+                           && fill >= Trial.Trial.MinFill;
+
+            visit.ServedGlassId = ServingGlassware?.Id;
+            if (perfect) Trial.Landed(); else Trial.Fumbled();
+
+            if (Trial.State == TrialState.Pouring)
+            {
+                // Still going: the next drink, or the same one again if that was wrong. One
+                // clock — AskFor does not touch it, which is the whole difference between a
+                // demand and the extra round a good serve earns.
+                visit.AskFor(new DrinkOrder(Trial.Current, PriceOf(Trial.Current), ServingSpec.Plain));
+            }
+            else
+            {
+                // Passed or out of mistakes: they get up either way, owing nothing.
+                visit.GetUp(Trial.State == TrialState.Passed ? 1.0 : 0.0);
+                AnswerLastCall(Trial.State == TrialState.Passed);
+            }
+
+            ResetVessels();
+            return new ServiceVerdict(matchKind, 0, 0, perfect, false,
+                perfect ? 1.0 : 0.0, specScore, fill);
         }
 
         /// <summary>
@@ -1357,6 +1432,18 @@ namespace LastCall.Core
 
             PouringId = null;
             var delivered = ServingGlass;
+
+            // THE STORY'S GUEST IS SERVED WITH THE SAME VERB and judged by the same judge, but
+            // they are not a customer in any way the books notice (GDD 26 §3): no price, no
+            // tip, no rating, and the pass mark is the trial's. One verb, because the bot, the
+            // tests and the player all have to be able to hand somebody a drink the same way.
+            if (Trial != null && !Trial.IsOver && ReferenceEquals(visit, LastCustomer))
+            {
+                if (Trial.State == TrialState.Talking)
+                    throw new InvalidOperationException("They are still talking — nothing has been asked for.");
+                return ServeTheTrial(visit, delivered);
+            }
+
             var match = RatioRecipeMatcher.Match(delivered, _recipes, IngredientOf);
             var matchKind = ServiceJudge.Compare(visit.OrderTruth, match, delivered, IngredientOf);
             // The verdict is priced off the DRINK — the recipe matched, the garnishes asked
@@ -1412,12 +1499,22 @@ namespace LastCall.Core
                 throw new InvalidOperationException("That customer has not asked for anything yet.");
 
             var verdict = ServiceJudge.Declined();
+
+            // Told no, the last customer keeps their beat and their return clock: declining
+            // costs a night, never the arc (PLAN_last_call, standing rule 2). It costs the
+            // BAR nothing else either — a guest of the house is not on the night's slip, so
+            // the honest no that ends a trial is not also a mark against the room.
+            if (ReferenceEquals(visit, LastCustomer))
+            {
+                Trial?.Fail();
+                visit.GetUp();
+                AnswerLastCall(false);
+                return verdict;
+            }
+
             visit.Resolve(verdict);   // no savour: there is no drink to nurse
             visit.Regular?.RecordVisit((int)Math.Round(verdict.Satisfaction * 3));
             DeclinedOrders++;
-            // Told no, the last customer keeps their beat and their return clock: declining
-            // costs a night, never the arc (PLAN_last_call, standing rule 2).
-            if (ReferenceEquals(visit, LastCustomer)) AnswerLastCall(false);
             return verdict;
         }
 
@@ -1659,7 +1756,7 @@ namespace LastCall.Core
             EnsurePhase(TycoonPhase.DayEnd);
             // Every one of tonight's leavers files a rating on the way out -- storm-offs
             // included, because a storm-off is a review too.
-            foreach (var visit in Floor.Finished) Rating.Record(visit.Satisfaction);
+            foreach (var visit in Floor.FinishedCounted()) Rating.Record(visit.Satisfaction);
             // The night's stars are CAPPED before they touch the standing (the author's
             // loop): the room can only say what the fittings and the menu let it say.
             // FAME IS READ BEFORE THE NIGHT IS CLOSED (2026-08-11, the author's ruling).
@@ -1689,7 +1786,7 @@ namespace LastCall.Core
             // all of this at this exact moment and the book kept none of it, so a closed day
             // could only say that it made or lost money — never which half of the bar did it.
             int served = 0, walked = 0;
-            foreach (var visit in Floor.Finished)
+            foreach (var visit in Floor.FinishedCounted())
                 if (visit.State == VisitState.StormedOff) walked++; else served++;
             var result = Ledger.CloseDay(Day, DayIncome, DayExpenses, standing,
                 tillAfter: Money,
@@ -1715,6 +1812,7 @@ namespace LastCall.Core
             _todayPurchases.Clear();   // yesterday's buys are kept; refunds are same-day only
             LastCustomer = null;       // last night's beat is over, whichever way it went
             LastCallBeat = null;
+            Trial = null;
             _lastCallSpent = _lastCallAnswered = false;
             BuyBackTheBowls();
             ResetVessels();

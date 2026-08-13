@@ -166,14 +166,36 @@ namespace LastCall.Core
         public double WaitFraction =>
             PatienceMax <= 0 ? 1.0 : 1.0 - PatienceLeft / PatienceMax;
 
+        /// <summary>
+        /// A guest of the house (GDD 26 §3): the story's customer, who is NOT a customer in
+        /// any of the ways the books care about. They pay nothing, they file no rating, they
+        /// are not on the night's slip, and nobody asks them for their licence — they said
+        /// who they were on the way in. Everything else about them is an ordinary visit,
+        /// which is what lets the same stool, the same serve verb and the same judge do the
+        /// work; only the LEDGERS look away, and each of them looks away in one place.
+        /// </summary>
+        public bool OnTheHouse { get; }
+
+        /// <summary>
+        /// A clock that has not started. A guest of the house arrives into a conversation
+        /// (GDD 26 §3.1) and nothing should be ticking while they are talking — the trial's
+        /// time begins when the talking ends, which is what <see cref="ReleaseClock"/> says.
+        /// </summary>
+        public bool ClockHeld { get; private set; }
+
+        /// <summary>The conversation is over. From here the clock runs like anyone else's.</summary>
+        public void ReleaseClock() => ClockHeld = false;
+
         public CustomerVisit(DrinkOrder order, double patienceSeconds,
             RegularState regular = null, double decideSeconds = 0,
-            double orderPatienceSeconds = 0)
+            double orderPatienceSeconds = 0, bool onTheHouse = false)
         {
             _order = order ?? throw new ArgumentNullException(nameof(order));
             if (patienceSeconds <= 0) throw new ArgumentOutOfRangeException(nameof(patienceSeconds));
             if (decideSeconds < 0) throw new ArgumentOutOfRangeException(nameof(decideSeconds));
             if (orderPatienceSeconds < 0) throw new ArgumentOutOfRangeException(nameof(orderPatienceSeconds));
+            OnTheHouse = onTheHouse;
+            ClockHeld = onTheHouse;   // they are talking; the trial starts it
             PatienceMax = patienceSeconds;
             PatienceLeft = patienceSeconds;
             // Zero means the caller does not model the asking wait at all — the headless
@@ -204,6 +226,9 @@ namespace LastCall.Core
             }
 
             if (State != VisitState.Waiting) return;
+
+            // Nothing runs while they are still talking (GDD 26 §3.1).
+            if (ClockHeld) return;
 
             // Still making up their mind: think first, and only the leftover ticks patience.
             if (DecideLeft > 0)
@@ -275,6 +300,33 @@ namespace LastCall.Core
             {
                 State = VisitState.Served;
             }
+        }
+
+        /// <summary>
+        /// The next thing they ask for, WITHOUT touching the clock (GDD 26 §3.2). A trial is
+        /// several drinks and one clock — which is exactly what the extra-round path is not:
+        /// that one refreshes patience by design, because it is a reward. This is a demand.
+        /// </summary>
+        public void AskFor(DrinkOrder order)
+        {
+            if (order == null) throw new ArgumentNullException(nameof(order));
+            if (State != VisitState.Waiting)
+                throw new InvalidOperationException("This customer is no longer waiting.");
+            _order = order;
+        }
+
+        /// <summary>
+        /// They are done and get up — no drink to nurse, no tab to settle. The story's guest
+        /// leaves this way whichever way the trial went (GDD 26 §5); the satisfaction is for
+        /// whoever draws the reaction, and it reaches no ledger, because a guest of the house
+        /// is not on the books.
+        /// </summary>
+        public void GetUp(double satisfaction = 0)
+        {
+            if (State != VisitState.Waiting)
+                throw new InvalidOperationException("This customer is no longer waiting.");
+            Satisfaction = Math.Max(0.0, Math.Min(1.0, satisfaction));
+            State = VisitState.Served;
         }
     }
 }

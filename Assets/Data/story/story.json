@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "_comment": "THE LAST CUSTOMER (GDD 26). Written 2026-08-12; NOT LOADED YET -- the parser lands in PLAN_last_call S1/S5. THE BAR OPENED THIS WEEK: nothing here may lean on the room having a past, because it does not have one. THE FIRST LAST CALL IS ECE'S: on night one she crosses the bar, sits, asks for a drink the well can already pour, and introduces the arc -- the beat teaches itself on a night nothing can be lost. Ece works the shift with the player, teaches (lessons) and frames each beat (hostBefore/hostAfter); the player owns the bar, which is the only version that does not fight the screens -- the till, the rent and the shopping are already theirs. GUESTS COME AT THE WEEKEND: a beat is scheduled as a WEEK plus a NIGHT of the bar's six-night calendar (Tuesday-Sunday, Mondays dark), and a guest's night must be friday or saturday -- refused at load otherwise. That is what makes the quiet nights the shopping nights: the ask names what is missing and the player has until the weekend to go and buy it. Only the house may work a quiet night, which is why Ece's beat zero is a Tuesday. A missed beat returns on ITS OWN night, 'returnsAfterWeeks' weeks later. Every 'recipe' is an id from recipes.json, every 'look' is a slug in papers.json, every 'needStyle' is a style the market sells. Names and lines are the author's to replace; the SHAPE is the design: the ask names what is missing, no beat is a dead end, two lines a beat and one sentence each.",
+  "version": 2,
+  "_comment": "THE LAST CUSTOMER (GDD 26). Written 2026-08-12, reworked 2026-08-13 (the author): the beat is a TRIAL now -- an inspector's visit in the shape of a service. The guest is a GUEST OF THE HOUSE: no licence (they say who they are), no bill, no rating -- the run's books never see them. They arrive into a conversation; when the talking ends the clock starts, and they ask for a RUN of drinks against that one clock, ONE AT A TIME (the post-it shows the drink in hand, never the list). The standard: exactly the drink, made the way the book says, garnished as asked; fill is the one forgiveness at >= 0.90 of the glass. Wrong drink = a mistake, the ask stays; past allowedMistakes or past the clock, the night is failed and the beat returns on ITS OWN NIGHT, returnsAfterWeeks later. GUESTS COME AT THE WEEKEND (friday/saturday, refused otherwise); only the host may work a quiet night, which is why Ece's beat zero is the opening Tuesday. Because asks are revealed one at a time, the shopping warning lives in needStyle and in the HOST'S lines, days early -- that is what the quiet nights are for. THE BAR OPENED THIS WEEK: nothing here may lean on the room having a past. Every ask is an id in recipes.json, every look a slug in papers.json, every needStyle a style the market sells. Names and lines are the author's to replace; the SHAPE is the design.",
   "characters": [
     {
       "id": "ece",
@@ -16,16 +16,16 @@
       "blurb": "Collects for the building. Never raises his voice, never has to."
     },
     {
-      "id": "sister",
-      "look": "ember",
+      "id": "influencer",
+      "look": "teal",
       "role": "guest",
-      "blurb": "Came in out of the rain on the second night and kept coming back."
+      "blurb": "Four hundred thousand people watch her drink. She never says where she is until she has left."
     },
     {
-      "id": "critic",
+      "id": "gourmet",
       "look": "profess",
       "role": "guest",
-      "blurb": "Writes about rooms like this one. Orders the same drink everywhere, on purpose."
+      "blurb": "Inspects rooms like this one. Orders the same drinks everywhere, on purpose, and counts the seconds."
     }
   ],
   "beats": [
@@ -34,11 +34,12 @@
       "character": "ece",
       "week": 1,
       "night": "tuesday",
-      "recipe": "neat_pour",
+      "asks": ["neat_pour"],
+      "seconds": 90,
+      "allowedMistakes": 2,
       "needStyle": "",
       "needTier": 0,
       "grantsRecipeOnAsk": "",
-      "patienceSeconds": 60,
       "ask": [
         "Door is shut. Pour me one of whatever we actually have.",
         "Owner's first night. It is a rule somewhere."
@@ -48,7 +49,7 @@
       ],
       "servedRight": [
         "Not bad for a room that did not exist last week.",
-        "Soon they will ask for things we do not stock — say yes, then go and buy it."
+        "The ones who come after me will count your seconds. I do not."
       ],
       "servedWrong": [
         "That is not what I asked for, and I am the easy one."
@@ -70,21 +71,22 @@
       "character": "collector",
       "week": 1,
       "night": "friday",
-      "recipe": "neat_pour",
+      "asks": ["neat_pour", "neat_pour"],
+      "seconds": 100,
+      "allowedMistakes": 1,
       "needStyle": "bourbon",
       "needTier": 0,
       "grantsRecipeOnAsk": "",
-      "patienceSeconds": 45,
       "ask": [
         "So you are the one who took it on.",
-        "A whiskey. Neat. I will wait while you look."
+        "A whiskey, neat. Then another. I drink the second one slower."
       ],
       "nudge": [
         "Still nothing brown on that shelf."
       ],
       "servedRight": [
-        "There it is.",
-        "The building can wait a week. Do not make me come back twice."
+        "There it is. Twice.",
+        "The building can wait a week. Do not make me come back to check."
       ],
       "servedWrong": [
         "That is not whiskey, and we both know it."
@@ -97,80 +99,82 @@
       "rewardRecipe": "",
       "rewardBottle": "",
       "returnsAfterWeeks": 1,
-      "next": "sister_1",
+      "next": "influencer_1",
       "hostBefore": [
-        "That one is here about the building, not the whiskey."
+        "That one is here about the building, not the whiskey. Have something brown by Friday."
       ],
       "hostAfter": [
         "He will be back. They always come back to see if you lasted."
       ]
     },
     {
-      "id": "sister_1",
-      "character": "sister",
+      "id": "influencer_1",
+      "character": "influencer",
       "week": 2,
       "night": "saturday",
-      "recipe": "moscow_mule",
+      "asks": ["moscow_mule", "vodka_soda"],
+      "seconds": 90,
+      "allowedMistakes": 1,
       "needStyle": "ginger",
       "needTier": 0,
       "grantsRecipeOnAsk": "",
-      "patienceSeconds": 50,
       "ask": [
-        "My brother used to make me a mule when the day had been long.",
-        "Ginger, lime, and the copper cup he never actually owned."
+        "Do not look at the phone, it is not filming. Yet.",
+        "A mule, the real kind. Then something clear for the second take."
       ],
       "nudge": [
-        "Still no ginger. He always said it was the cheap half of it."
+        "No ginger, no mule, no post. That is the whole equation."
       ],
       "servedRight": [
-        "Close enough that I had to put it down for a second.",
-        "Keep the page. He would have liked that it is yours now."
+        "Okay. THAT is going up tonight.",
+        "Four hundred thousand people are about to know this room exists."
       ],
       "servedWrong": [
-        "That is somebody else's drink."
+        "I cannot post this. Neither should you."
       ],
       "declined": [
-        "It is a small thing to stock. I will ask again."
+        "A room that says no. That is almost content. Almost."
       ],
       "rewardMoney": 0,
       "rewardStars": 0.25,
       "rewardRecipe": "gimlet",
       "rewardBottle": "",
       "returnsAfterWeeks": 1,
-      "next": "critic_1",
+      "next": "gourmet_1",
       "hostBefore": [
-        "She was here on the second night, in the rain. She stayed."
+        "She is why Saturday needs ginger in the well. Trust me on this one."
       ],
       "hostAfter": [
-        "That is how a regular starts. One drink somebody remembers."
+        "That is how a room gets found. One post somebody believes."
       ]
     },
     {
-      "id": "critic_1",
-      "character": "critic",
+      "id": "gourmet_1",
+      "character": "gourmet",
       "week": 3,
       "night": "friday",
-      "recipe": "manhattan",
+      "asks": ["manhattan", "gimlet", "whiskey_ginger"],
+      "seconds": 150,
+      "allowedMistakes": 0,
       "needStyle": "vermouth",
       "needTier": 0,
       "grantsRecipeOnAsk": "manhattan",
-      "patienceSeconds": 55,
       "ask": [
-        "A Manhattan. Stirred — I will know the difference.",
-        "Here is how it is built. Every room gets one honest paragraph; this is yours."
+        "Three drinks. I will name them one at a time, and I will be counting.",
+        "A Manhattan first. Stirred -- I will know the difference."
       ],
       "nudge": [
         "Vermouth. It is not an optional ingredient, it is half the drink."
       ],
       "servedRight": [
-        "Stirred, cold, and not drowned. Good.",
-        "I will say the room is worth the walk."
+        "Stirred, cold, on time. All three.",
+        "I inspect rooms like this for a living. This one passes."
       ],
       "servedWrong": [
         "You shook it. I can see the ice in it from here."
       ],
       "declined": [
-        "An honest no is worth a paragraph too. Later, then."
+        "An honest no is worth a line in the report. Later, then."
       ],
       "rewardMoney": 0,
       "rewardStars": 0.5,
@@ -179,10 +183,10 @@
       "returnsAfterWeeks": 1,
       "next": "",
       "hostBefore": [
-        "I know that face. He wrote the room I worked in out of business."
+        "I know that face. He wrote the room I worked in out of business. Stir, do not shake."
       ],
       "hostAfter": [
-        "One honest paragraph. That is more than most new rooms get."
+        "A pass from him is worth more than a good month. Frame it."
       ]
     }
   ],
@@ -228,19 +232,19 @@
       ]
     },
     {
-      "id": "cannot_pour_the_ask",
+      "id": "cannot_pour",
       "when": "cannot_pour_the_ask",
       "say": [
-        "We cannot pour that. Not tonight.",
-        "Tell them straight — they come back for straight."
+        "We do not have what the weekend wants. Yet.",
+        "The market opens when the door shuts. Go and fix the shelf."
       ]
     },
     {
       "id": "red_night",
       "when": "red_night",
       "say": [
-        "That is one red night. Three and the room is somebody else's.",
-        "I have watched it happen twice. Not keen on a third."
+        "The till is under the rent. It happens to every room once.",
+        "Twice is a habit. Three times is a different bar with your name on it."
       ]
     }
   ]

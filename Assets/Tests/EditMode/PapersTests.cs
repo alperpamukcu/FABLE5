@@ -59,8 +59,9 @@ namespace LastCall.Tests
         {
             // GDD 26 §8: a story character IS a face plus its papers. If one of the reserved
             // looks ever leaves the file, the arc loses its person — quietly, at the far end.
+            // (Recast 2026-08-13: ember went back to the crowd, teal is the influencer.)
             var cast = Load();
-            foreach (var slug in new[] { "execman", "ember", "profess" })
+            foreach (var slug in new[] { "execman", "teal", "profess" })
                 Assert.That(cast.For(slug), Is.Not.Null,
                     $"'{slug}' is reserved for the last-call arc and has no papers");
         }

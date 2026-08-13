@@ -48,6 +48,9 @@ Hard rules:
   name or its price before the card is read makes the card decorative and quietly kills the
   mechanic — it has already happened twice. (The emotion layer this rule was written for was
   demolished 2026-08-02; what a customer gives back is their reaction to the cocktail.)
+  ONE written exception (GDD 26 §3, 2026-08-13): the story's guest of the house — Core itself
+  calls `InspectId()` when it seats them, because they introduce themselves and the ask lives
+  in the dialogue. That exception never extends to the crowd, and cannot be cited to.
 
 ## Verifying changes
 
