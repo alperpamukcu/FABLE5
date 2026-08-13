@@ -2,6 +2,16 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `26 §11` **only Ece for now (2026-08-13, the author: "şimdilik sadece ece olsun"):** the live
+  arc is one written night — hers, on the opening Tuesday — and the collector, the influencer
+  and the gourmet are lifted out of `story.json` into `Docs/story_guests_drafted.json` whole,
+  to be put back one at a time once the story around her is built. Nothing loads the drafts,
+  so an EditMode test builds them against the real cast and the real recipe book anyway: a beat
+  that rots quietly in a drawer is worse than no beat, because it is discovered on the day
+  somebody wants it. One night still exercises the entire module — she arrives after the door
+  shuts, the room dims to her, the plate talks, the trial runs its own clock, the arc finishes
+  — and the sim says so: 200/200 trials walked in, passed, and closed their arc.
+
 - `26 §7` **the room dims to the last customer (2026-08-13, PLAN S4 + the rest of S3):** the
   closing beat is lit. `DiegeticStage.SetClosingBeat` takes the ceiling down to 0.22 of itself,
   thins the wash to 0.55, burns the LAST CALL neon at 1.9×, and lights ONE lamp at the guest's

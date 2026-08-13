@@ -510,6 +510,12 @@ reserved from the crowd from S1 on. (The sister was recast 2026-08-13, the autho
 are public people now — an influencer, a gourmet inspector, a collector — because a trial
 needs somebody with the standing to hold one; `ember` went back to the crowd.)
 
+**ONLY BEAT ZERO IS LIVE (2026-08-13, the author: "şimdilik sadece ece olsun").** The arc the
+game plays is Ece's night and nothing else; the three guest beats below are written, validated
+and parked in `Docs/story_guests_drafted.json`, to be put back one at a time once the story
+around her is built. Nothing loads that file, but an EditMode test still builds it against the
+real cast and the real book, so a drafted beat cannot rot in the drawer.
+
 Every guest comes at the weekend (§2b); the host takes the quiet opening night. The day number
 is the calendar's, not the author's — it falls out of the week and the night.
 

@@ -35,12 +35,18 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void The_shipped_arc_parses_against_the_real_cast_and_the_real_book()
+        public void The_shipped_arc_is_ece_and_only_ece_for_now()
         {
+            // THE AUTHOR'S CALL, 2026-08-13: one written night while the story around her is
+            // built. The three guests who follow are complete and parked in
+            // Docs/story_guests_drafted.json — nothing loads that file, and this test is what
+            // notices if one of them is put back without the rest of the shape being ready.
             var arc = Load();
-            Assert.That(arc.Beats.Count, Is.EqualTo(4),
-                "four nights are written; if that changed on purpose, change it here too");
-            Assert.That(arc.Lessons.Count, Is.GreaterThan(0), "the host teaches");
+            Assert.That(arc.Beats.Count, Is.EqualTo(1),
+                "the live arc is Ece's night alone; the rest wait in Docs/story_guests_drafted.json");
+            Assert.That(arc.Beats[0].Id, Is.EqualTo("ece_1"));
+            Assert.That(arc.Beats[0].Who.IsHost, Is.True, "and she is the house, not a guest");
+            Assert.That(arc.Lessons.Count, Is.GreaterThan(0), "the host still teaches");
         }
 
         [Test]
@@ -52,13 +58,64 @@ namespace LastCall.Tests
                 .Select(b => $"{b.Id}@{BarCalendar.Label(b.Day)}")
                 .ToArray();
 
-            Assert.That(schedule, Is.EqualTo(new[]
+            Assert.That(schedule, Is.EqualTo(new[] { "ece_1@WEEK 1 · TUESDAY" }));
+        }
+
+        [Test]
+        public void The_parked_guests_are_still_good_content()
+        {
+            // The drafts are not loaded by the game, so nothing else would ever catch a typo
+            // in them — and a beat that has quietly rotted in a drawer is worse than no beat,
+            // because it is discovered on the day somebody wants to use it. Built here against
+            // the same cast and the same book the live arc is built against.
+            var drafts = Read("/../Docs/story_guests_drafted.json");
+            Assert.That(drafts, Does.Contain("gourmet_1"), "the drafted guests went missing");
+
+            // Bolt Ece back on so the file is a legal arc, then build it exactly as the
+            // loader would: every rule the live file obeys is checked on the drafts too.
+            string live = Read("/Data/story/story.json");
+            var merged = MergeForCheck(live, drafts);
+            var arc = DataLoader.ParseStory(merged, Cast(), Book());
+            Assert.That(arc.Beats.Count, Is.EqualTo(4), "one host night and three guests");
+            foreach (var beat in arc.Beats)
+                Assert.That(beat.Who.IsHost || BarCalendar.IsWeekend(beat.Night), Is.True,
+                    $"'{beat.Id}' brings a guest in on a {BarCalendar.Name(beat.Night)}");
+        }
+
+        /// <summary>Ece's file with the drafted guests spliced back in, in order, the way a
+        /// writer would do it by hand — the chain relinked from her to the first of them.</summary>
+        private static string MergeForCheck(string live, string drafts)
+        {
+            var liveDoc = MiniJson(live);
+            var draftDoc = MiniJson(drafts);
+            string characters = draftDoc.characters.TrimStart('[').TrimEnd(']');
+            string beats = draftDoc.beats.TrimStart('[').TrimEnd(']');
+            string ece = liveDoc.beats.TrimStart('[').TrimEnd(']')
+                .Replace("\"next\": \"\"", "\"next\": \"collector_1\"");
+            return "{\"version\":3,\"characters\":["
+                   + liveDoc.characters.TrimStart('[').TrimEnd(']') + "," + characters
+                   + "],\"beats\":[" + ece + "," + beats + "]}";
+        }
+
+        /// <summary>The two top-level arrays out of a story file, as raw text. A parser for
+        /// two keys, because the alternative is a JSON library this project does not have.</summary>
+        private static (string characters, string beats) MiniJson(string json)
+        {
+            return (Slice(json, "\"characters\""), Slice(json, "\"beats\""));
+
+            string Slice(string src, string key)
             {
-                "ece_1@WEEK 1 · TUESDAY",
-                "collector_1@WEEK 1 · FRIDAY",
-                "influencer_1@WEEK 2 · SATURDAY",
-                "gourmet_1@WEEK 3 · FRIDAY",
-            }));
+                int at = src.IndexOf(key, StringComparison.Ordinal);
+                Assert.That(at, Is.GreaterThanOrEqualTo(0), $"no {key} in the file");
+                int open = src.IndexOf('[', at), depth = 0;
+                for (int i = open; i < src.Length; i++)
+                {
+                    if (src[i] == '[') depth++;
+                    else if (src[i] == ']' && --depth == 0) return src.Substring(open, i - open + 1);
+                }
+                Assert.Fail($"{key} never closes");
+                return "";
+            }
         }
 
         [Test]
@@ -82,10 +139,11 @@ namespace LastCall.Tests
                 Assert.That(trial.MinFill, Is.EqualTo(StoryTrial.DefaultMinFill),
                     "the fill standard is the house's, not the beat's, unless somebody meant it");
             }
-            // The arc's own shape: the last night is the hardest one written.
-            var last = arc.Beats[arc.Beats.Count - 1];
-            Assert.That(last.Trial.AllowedMistakes, Is.EqualTo(0), "the inspector allows none");
-            Assert.That(last.Trial.Asks.Count, Is.EqualTo(3));
+            // The opener is the kind one: it teaches the beat on a night nothing can be lost
+            // (GDD 26 §1b), so it may not be the hardest thing in the file.
+            var opener = arc.Opener;
+            Assert.That(opener.Trial.Asks.Count, Is.EqualTo(1), "one drink to learn the shape on");
+            Assert.That(opener.Trial.AllowedMistakes, Is.GreaterThan(0), "and room to get it wrong");
         }
 
         [Test]

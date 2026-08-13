@@ -1,0 +1,170 @@
+{
+  "_comment": "WRITTEN AND WAITING (2026-08-13, the author: \"simdilik sadece ece olsun\"). These are the three guest beats of GDD 26 §11, complete and validated against the real cast and the real recipe book on the day they were cut out of Assets/Data/story/story.json. Nothing loads this file -- it is the draft the live arc grows back from, one beat at a time, once the story around Ece is built. To put one back: paste its character into story.json's characters and its beat into beats, and point the previous beat's 'next' at it. Every rule still applies: a guest comes on a friday or a saturday, needStyle must be named in a hostWarning line, and the days must run forwards.",
+  "characters": [
+    {
+      "id": "collector",
+      "look": "execman",
+      "role": "guest",
+      "blurb": "Collects for the building. Never raises his voice, never has to."
+    },
+    {
+      "id": "influencer",
+      "look": "teal",
+      "role": "guest",
+      "blurb": "Four hundred thousand people watch her drink. She never says where she is until she has left."
+    },
+    {
+      "id": "gourmet",
+      "look": "profess",
+      "role": "guest",
+      "blurb": "Inspects rooms like this one. Orders the same drinks everywhere, on purpose, and counts the seconds."
+    }
+  ],
+  "beats": [
+    {
+      "id": "collector_1",
+      "character": "collector",
+      "week": 1,
+      "night": "friday",
+      "asks": [
+        "neat_pour",
+        "neat_pour"
+      ],
+      "seconds": 100,
+      "allowedMistakes": 1,
+      "needStyle": "bourbon",
+      "needTier": 0,
+      "grantsRecipeOnAsk": "",
+      "ask": [
+        "So you are the one who took it on.",
+        "A whiskey, neat. Then another. I drink the second one slower."
+      ],
+      "nudge": [
+        "Still no bourbon on that shelf."
+      ],
+      "hostWarning": [
+        "Friday is the man from the building. Get a bourbon in before then.",
+        "He will not ask twice, and he will not ask for anything clever."
+      ],
+      "servedRight": [
+        "There it is. Twice.",
+        "The building can wait a week. Do not make me come back to check."
+      ],
+      "servedWrong": [
+        "That is not whiskey, and we both know it."
+      ],
+      "declined": [
+        "Then buy a bottle. I will come back."
+      ],
+      "rewardMoney": 40,
+      "rewardStars": 0.0,
+      "rewardRecipe": "",
+      "rewardBottle": "",
+      "returnsAfterWeeks": 1,
+      "next": "influencer_1",
+      "hostBefore": [
+        "That one is here about the building, not the whiskey."
+      ],
+      "hostAfter": [
+        "He will be back. They always come back to see if you lasted."
+      ]
+    },
+    {
+      "id": "influencer_1",
+      "character": "influencer",
+      "week": 2,
+      "night": "saturday",
+      "asks": [
+        "moscow_mule",
+        "vodka_soda"
+      ],
+      "seconds": 90,
+      "allowedMistakes": 1,
+      "needStyle": "ginger",
+      "needTier": 0,
+      "grantsRecipeOnAsk": "",
+      "ask": [
+        "Do not look at the phone, it is not filming. Yet.",
+        "A mule, the real kind. Then something clear for the second take."
+      ],
+      "nudge": [
+        "No ginger, no mule, no post. That is the whole equation."
+      ],
+      "hostWarning": [
+        "Saturday needs ginger in the well. Buy it now, not on the night.",
+        "She films the drink, not you. Make it look like the picture."
+      ],
+      "servedRight": [
+        "Okay. THAT is going up tonight.",
+        "Four hundred thousand people are about to know this room exists."
+      ],
+      "servedWrong": [
+        "I cannot post this. Neither should you."
+      ],
+      "declined": [
+        "A room that says no. That is almost content. Almost."
+      ],
+      "rewardMoney": 0,
+      "rewardStars": 0.25,
+      "rewardRecipe": "gimlet",
+      "rewardBottle": "",
+      "returnsAfterWeeks": 1,
+      "next": "gourmet_1",
+      "hostBefore": [
+        "She is why Saturday needs ginger in the well. Trust me on this one."
+      ],
+      "hostAfter": [
+        "That is how a room gets found. One post somebody believes."
+      ]
+    },
+    {
+      "id": "gourmet_1",
+      "character": "gourmet",
+      "week": 3,
+      "night": "friday",
+      "asks": [
+        "manhattan",
+        "gimlet",
+        "whiskey_ginger"
+      ],
+      "seconds": 150,
+      "allowedMistakes": 0,
+      "needStyle": "vermouth",
+      "needTier": 0,
+      "grantsRecipeOnAsk": "manhattan",
+      "ask": [
+        "Three drinks. I will name them one at a time, and I will be counting.",
+        "A Manhattan first. Stirred -- I will know the difference."
+      ],
+      "nudge": [
+        "Vermouth. It is not an optional ingredient, it is half the drink."
+      ],
+      "hostWarning": [
+        "There is a vermouth on the market page. We will need it by Friday.",
+        "Three drinks, no second chances, and he counts the seconds. Practise."
+      ],
+      "servedRight": [
+        "Stirred, cold, on time. All three.",
+        "I inspect rooms like this for a living. This one passes."
+      ],
+      "servedWrong": [
+        "You shook it. I can see the ice in it from here."
+      ],
+      "declined": [
+        "An honest no is worth a line in the report. Later, then."
+      ],
+      "rewardMoney": 0,
+      "rewardStars": 0.5,
+      "rewardRecipe": "",
+      "rewardBottle": "",
+      "returnsAfterWeeks": 1,
+      "next": "",
+      "hostBefore": [
+        "I know that face. He wrote the room I worked in out of business. Stir, do not shake."
+      ],
+      "hostAfter": [
+        "A pass from him is worth more than a good month. Frame it."
+      ]
+    }
+  ]
+}

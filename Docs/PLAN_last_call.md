@@ -324,6 +324,12 @@ whole test assembly link against the URP 2D runtime for one float.
 
 ## S5 — The first arc, written
 
+**Scope cut 2026-08-13 (the author): ONLY ECE FOR NOW.** The live arc is her night alone and
+the three guests are parked in `Docs/story_guests_drafted.json` — so S5 is no longer "write the
+arc", it is "make one night carry everything it should": her rewards, her lessons, and the book
+showing what is owed. The guests come back one at a time, each with the story around them
+built, which is what S6 becomes.
+
 **Beat zero is Ece's** (GDD 26 §1b): night one, the door shuts, she crosses the bar and asks
 for a neat pour of whatever the well has. It cannot fail for want of stock, it teaches the beat
 on a night with nothing at stake, and its second line is the arc's own introduction. Everything
