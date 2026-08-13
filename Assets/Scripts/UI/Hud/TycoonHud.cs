@@ -40,7 +40,6 @@ namespace LastCall.UI
 
         // top bar
         private Text _dayText;
-        private Text _moneyText;
         private Text _crowdText;
         /// <summary>The bar's standing (v5 P12): the average, then five filled/empty stars.
         /// Replaces the TONIGHT satisfaction bar (D3) — reputation is what the player steers
@@ -48,7 +47,7 @@ namespace LastCall.UI
         private Text _ratingText;
         private RectTransform _starsFill;
         private Text _clockText;          // the hour, the board's biggest reading
-        private Image _clockRule, _tillRule, _standingRule;   // each plaque's lit base
+        private Image _clockRule, _standingRule;   // each plaque's lit base
         private readonly Image[] _ratingStars = new Image[BarRating.MaxStars];
 
         // Seats at the counter (GDD 24 §4, 2026-07-22): customers sit along the bar as
@@ -1817,6 +1816,8 @@ namespace LastCall.UI
             }
         }
 
+        private int _tillLast = int.MinValue;
+
         private void RunTheTill(TycoonRun run)
         {
             float want = run.Money;
@@ -1828,8 +1829,18 @@ namespace LastCall.UI
                 float speed = Mathf.Max(28f, Mathf.Abs(want - _tillShown) * 4.5f);
                 _tillShown = Mathf.MoveTowards(_tillShown, want, speed * Time.unscaledDeltaTime);
             }
+            // The CHANGE is announced off the real figure, not off the animated one: the
+            // counter takes its time getting there, and a float per counted step would be a
+            // stream of ones.
+            if (_tillLast != int.MinValue && run.Money != _tillLast)
+            {
+                var st = _stage != null ? _stage : FindFirstObjectByType<DiegeticStage>();
+                _stage = st;
+                if (st != null) st.FloatMoney(run.Money - _tillLast);
+            }
+            _tillLast = run.Money;
+
             int shown = Mathf.RoundToInt(_tillShown);
-            if (_moneyText != null) _moneyText.text = "$" + shown;
             if (_tabletTill != null) _tabletTill.text = "$" + shown;
             if (stage != null) stage.SetMoney("$" + shown);
         }
@@ -2070,15 +2081,20 @@ namespace LastCall.UI
             // room is being called — visible from across the screen without reading a word.
             bool last = run.Floor.IsClosingTime;
             _dayText.text = last ? "LAST CALL" : CalendarFor(run.Day);
+            RefreshWeekStrip(run);
             _dayText.color = last ? UITheme.Magenta[4] : UITheme.Cyan[3];
             _clockText.color = last ? UITheme.Magenta[4] : UITheme.TextPrimary;
             if (_clockRule != null) _clockRule.color = last ? UITheme.Magenta[3] : UITheme.Cyan[2];
 
-            bool red = run.Money < 0;
-            // The till's figure belongs to RunTheTill now: writing it here as well would
-            // snap the number back to the truth mid-count and swallow the animation.
-            _moneyText.color = red ? UITheme.ViceRed[3] : UITheme.Money;
-            if (_tillRule != null) _tillRule.color = red ? UITheme.ViceRed[3] : UITheme.Amber[2];
+            // DEBT IS SHOWN ON THE MACHINE THAT HOLDS THE MONEY (2026-08-14). The fascia's
+            // copy of the till is gone, so the register's own window goes red instead — and
+            // the line that used to colour the fascia's number went with it. It was left
+            // behind for one build and threw every frame, which took the standing and the
+            // crowd down with it: everything after a NullReference in Update simply does not
+            // run, and the plaque above went quietly blank.
+            var tillStage = _stage != null ? _stage : FindFirstObjectByType<DiegeticStage>();
+            _stage = tillStage;
+            if (tillStage != null) tillStage.SetMoneyInDebt(run.Money < 0);
 
             _crowdText.text = run.CrowdToday == WealthTier.HighRoller ? "TONIGHT · HIGH ROLLERS"
                 : run.CrowdToday == WealthTier.Broke ? "TONIGHT · BROKE CROWD" : "TONIGHT · REGULARS";
@@ -4933,7 +4949,10 @@ namespace LastCall.UI
 
         /// <summary>How tall the board is, and where a plaque sits on it.</summary>
         private const float TopBarH = 54f, PlaqueH = 40f, PlaqueY = 3f;
-        private const float StarSize = 14f, StarGap = 17f;
+        // Bigger than they were (2026-08-14, the author: the standing needs more visual
+        // communication). At 14 they were a texture; at 22 they are the thing the plaque
+        // is about, and the fractional fill is legible at a glance.
+        private const float StarSize = 22f, StarGap = 25f;
 
         /// <summary>
         /// One reading on the board: a recessed slab, lit along its top edge and seated on a
@@ -6159,6 +6178,95 @@ namespace LastCall.UI
             return val;
         }
 
+        // ── the week, on the wall (2026-08-14, the author) ──────────────────────
+        //
+        // Seven columns, Monday to Sunday, with the shutter down on the last one. The night
+        // being played is lit; the nights the story is coming on carry a mark. It is the same
+        // `BarCalendar` the rules count in — the strip cannot say Friday while the arc thinks
+        // it is Thursday, because neither of them is doing its own arithmetic.
+
+        private readonly List<(RectTransform cell, Image plate, Text name, Image mark)> _weekCells =
+            new List<(RectTransform, Image, Text, Image)>();
+        private Text _weekLabel;
+        private int _weekShown = -1;
+
+        private void BuildWeekStrip(RectTransform top)
+        {
+            var strip = NewRect("Week", top);
+            Place(strip, new Vector2(0, 0.5f), new Vector2(248, PlaqueH), new Vector2(236, PlaqueY));
+
+            _weekLabel = NewText("W", strip, _body, 8, TextAnchor.UpperLeft, UITheme.Cyan[3]);
+            Place(_weekLabel.rectTransform, new Vector2(0, 1), new Vector2(120, 12), new Vector2(2, -4));
+            _weekLabel.rectTransform.pivot = new Vector2(0, 1);
+            _weekLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            var names = BarCalendar.WeekColumns;
+            const float cellW = 34f, cellH = 22f;
+            for (int i = 0; i < names.Length; i++)
+            {
+                var cell = NewRect("D" + i, strip);
+                Place(cell, new Vector2(0, 0), new Vector2(cellW - 2f, cellH), new Vector2(i * cellW, 3f));
+                cell.pivot = new Vector2(0, 0);
+                var plate = cell.gameObject.AddComponent<Image>();
+                plate.color = UITheme.Night[2];
+                plate.raycastTarget = false;
+
+                var name = NewText("N", cell, _body, 8, TextAnchor.MiddleCenter, UITheme.TextSecondary);
+                Stretch(name.rectTransform, Vector2.zero, Vector2.one, new Vector2(0, 0), new Vector2(0, -1));
+                name.text = names[i];
+
+                // The story's mark: a dot on the nights somebody is coming. Drawn small and
+                // above the name, so a marked day still reads as a day.
+                var mark = NewRect("M", cell);
+                Place(mark, new Vector2(0.5f, 1), new Vector2(6, 6), new Vector2(0, -1));
+                var mimg = mark.gameObject.AddComponent<Image>();
+                mimg.color = UITheme.Magenta[4];
+                mimg.raycastTarget = false;
+                mimg.enabled = false;
+
+                _weekCells.Add((cell, plate, name, mimg));
+            }
+        }
+
+        /// <summary>
+        /// Paints the strip from the run: which week it is, which night is being played, which
+        /// nights the arc is due on, and the one the bar does not open at all.
+        /// </summary>
+        private void RefreshWeekStrip(TycoonRun run)
+        {
+            if (_weekCells.Count == 0) return;
+            int week = BarCalendar.WeekOf(run.Day);
+            var tonight = BarCalendar.NightOf(run.Day);
+            if (week != _weekShown)
+            {
+                _weekShown = week;
+                _weekLabel.text = $"WEEK {week}";
+            }
+
+            // Which columns the story is coming on, THIS week. A beat due in a later week
+            // leaves the strip clean: the calendar shows the week it is showing.
+            var due = run.Story?.Current;
+            int dueDay = run.Story != null ? run.Story.DueDay : 0;
+            bool dueThisWeek = due != null && BarCalendar.WeekOf(dueDay) == week;
+
+            for (int i = 0; i < _weekCells.Count; i++)
+            {
+                var (cell, plate, name, mark) = _weekCells[i];
+                bool closed = i >= BarCalendar.OpenNights;          // the seventh column
+                bool isTonight = !closed && (int)tonight == i;
+                bool storyNight = dueThisWeek && !closed && (int)BarCalendar.NightOf(dueDay) == i;
+
+                plate.color = closed ? UITheme.Night[1]
+                    : isTonight ? UITheme.Amber[3]
+                    : UITheme.Night[2];
+                name.color = closed ? UITheme.Night[3]
+                    : isTonight ? UITheme.TextOnAmber
+                    : UITheme.TextSecondary;
+                mark.enabled = storyNight;
+                if (storyNight) mark.color = isTonight ? UITheme.Night[0] : UITheme.Magenta[4];
+            }
+        }
+
         // ── the last customer (GDD 26 §7, PLAN_last_call S3) ────────────────────
         //
         // Two surfaces and nothing else. THE PLATE is the conversation: a face, a name, one
@@ -6738,23 +6846,31 @@ namespace LastCall.UI
             Place(_dayText.rectTransform, new Vector2(0, 1), new Vector2(196, 12), new Vector2(9, -5));
             _dayText.rectTransform.pivot = new Vector2(0, 1);
             _dayText.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _clockText = NewText("Clock", clock, _display, 20, TextAnchor.LowerLeft, UITheme.TextPrimary);
+            // A DIGITAL CLOCK IS ITS UNLIT SEGMENTS (2026-08-14, the author: "saat dijital
+            // saat görüntüsünde olsun"). What makes a readout read as a machine rather than as
+            // a caption is the dark 88:88 sitting behind the lit figures — the segments that
+            // are not on. Drawn first, in the same face at the same size, so the two register
+            // exactly; the live time then lights the ones it needs.
+            var ghost = NewText("Ghost", clock, _display, 20, TextAnchor.LowerLeft,
+                new Color(UITheme.Cyan[2].r, UITheme.Cyan[2].g, UITheme.Cyan[2].b, 0.16f));
+            Place(ghost.rectTransform, new Vector2(0, 0), new Vector2(196, 24), new Vector2(9, 4));
+            ghost.rectTransform.pivot = new Vector2(0, 0);
+            ghost.text = "88:88";
+
+            _clockText = NewText("Clock", clock, _display, 20, TextAnchor.LowerLeft, UITheme.Cyan[4]);
             Place(_clockText.rectTransform, new Vector2(0, 0), new Vector2(196, 24), new Vector2(9, 4));
             _clockText.rectTransform.pivot = new Vector2(0, 0);
 
-            // ── the till, centre: the number the whole loop is about ───────────
-            var till = TopPlaque(top, "Till", new Vector2(0.5f, 0.5f), new Vector2(214, PlaqueH),
-                new Vector2(0, PlaqueY), UITheme.Amber[2], out _tillRule);
-            var tillLabel = NewText("L", till, _body, 8, TextAnchor.UpperLeft, UITheme.Amber[2]);
-            Place(tillLabel.rectTransform, new Vector2(0, 1), new Vector2(196, 12), new Vector2(9, -5));
-            tillLabel.rectTransform.pivot = new Vector2(0, 1);
-            tillLabel.text = "TILL";
-            _moneyText = NewText("Money", till, _display, 20, TextAnchor.LowerRight, UITheme.Money);
-            Place(_moneyText.rectTransform, new Vector2(1, 0), new Vector2(196, 24), new Vector2(-9, 4));
-            _moneyText.rectTransform.pivot = new Vector2(1, 0);
+            BuildWeekStrip(top);
+
+            // ── the till is not up here any more (2026-08-14, the author: "para ise
+            // kasada olsun") ───────────────────────────────────────────────────
+            // The money reads off the REGISTER in the room, where the drawer is, and every
+            // rise and fall floats off it. A copy of the same number in the fascia was the
+            // thing that made the till in the room decorative.
 
             // ── the standing, right: the stars and who they brought in ─────────
-            var standing = TopPlaque(top, "Standing", new Vector2(1, 0.5f), new Vector2(236, PlaqueH),
+            var standing = TopPlaque(top, "Standing", new Vector2(1, 0.5f), new Vector2(268, PlaqueH),
                 new Vector2(-158, PlaqueY), UITheme.Amber[3], out _standingRule);
             _crowdText = NewText("Crowd", standing, _body, 8, TextAnchor.UpperLeft, UITheme.Cream[2]);
             Place(_crowdText.rectTransform, new Vector2(0, 1), new Vector2(218, 12), new Vector2(9, -5));
@@ -6798,8 +6914,8 @@ namespace LastCall.UI
                 img.color = UITheme.Amber[3];
                 _ratingStars[i] = img;
             }
-            _ratingText = NewText("Rating", standing, _display, 18, TextAnchor.LowerRight, UITheme.Amber[3]);
-            Place(_ratingText.rectTransform, new Vector2(1, 0), new Vector2(60, 22), new Vector2(-9, 3));
+            _ratingText = NewText("Rating", standing, _display, 20, TextAnchor.LowerRight, UITheme.Amber[4]);
+            Place(_ratingText.rectTransform, new Vector2(1, 0), new Vector2(64, 24), new Vector2(-9, 4));
             _ratingText.rectTransform.pivot = new Vector2(1, 0);
 
             // ── the quiet end: nothing here is part of the night ───────────────

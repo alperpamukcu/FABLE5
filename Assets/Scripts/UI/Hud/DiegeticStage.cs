@@ -188,6 +188,13 @@ namespace LastCall.UI
             if (_moneyText != null) _moneyText.text = text;
         }
 
+        /// <summary>The window goes red when the bar is under water (2026-08-14): the till is
+        /// the only place the money is written now, so it is the only place debt can show.</summary>
+        public void SetMoneyInDebt(bool red)
+        {
+            if (_moneyText != null) _moneyText.color = red ? UITheme.ViceRed[3] : UITheme.Money;
+        }
+
         private System.Action _onRegisterClicked;
 
         /// <summary>Wires the till click to the ledger-history popup (GDD 24 §7).</summary>
@@ -726,6 +733,81 @@ namespace LastCall.UI
             _moneyText = NewText("Money", plaque, _display, 8, TextAnchor.MiddleCenter, UITheme.Money);
             Stretch((RectTransform)_moneyText.transform, Vector2.zero, Vector2.one, new Vector2(2, 0), new Vector2(-2, 0));
             _moneyText.text = "$0";
+
+            // WHERE THE MONEY MOVES, THE CHANGE SHOWS (2026-08-14, the author). The till is
+            // the wallet now — the top bar's copy of it is gone — so every rise and fall says
+            // so ON THE MACHINE: +$12 in green, −$14 in red, lifting off the drawer and fading
+            // over two seconds. The spawn point is a child of the plaque, so it needs no
+            // coordinate conversion and follows the register wherever the room's fit puts it.
+            // ON THE FRONT LAYER, not the plaque's own. The money window is drawn on the
+            // register's BACK canvas (order −7) so the room stands in front of it — which is
+            // right for a number sunk into the machine, and wrong for anything that has to be
+            // seen: the first cut of this floated the change behind the bar (measured, and
+            // invisible). It rides the layer the till's own click surface already uses, at the
+            // same screen coordinates, because both canvases are the same overlay at the same
+            // reference size.
+            _moneyFloatHost = NewRect("Change", frontRoot);
+            _moneyFloatHost.anchorMin = _moneyFloatHost.anchorMax = new Vector2(0, 0);
+            _moneyFloatHost.pivot = new Vector2(0.5f, 0f);
+            _moneyFloatHost.sizeDelta = new Vector2(200, 22);
+            _moneyFloatHost.anchoredPosition = plaque.anchoredPosition
+                                               + new Vector2(0, plaque.sizeDelta.y + 6f);
+        }
+
+        private RectTransform _moneyFloatHost;
+
+        /// <summary>How long a change hangs over the till before it is gone.</summary>
+        private const float MoneyFloatSeconds = 2f;
+
+        /// <summary>
+        /// Lifts a change off the till (2026-08-14, the author's brief, to the letter): the
+        /// figure in GREEN when it rises and RED when it falls, a WHITE outline around that,
+        /// and a BLACK outline outside the white. Two stacked outlines is the only way to get
+        /// two rings out of one label, and the order matters — the black one is added last so
+        /// it draws furthest out.
+        /// </summary>
+        public void FloatMoney(int delta)
+        {
+            if (delta == 0 || _moneyFloatHost == null) return;
+            var rt = NewRect("D", _moneyFloatHost);
+            Stretch(rt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var text = NewText("T", rt, _display, 16, TextAnchor.MiddleCenter,
+                delta > 0 ? UITheme.Lime[3] : UITheme.ViceRed[3]);
+            Stretch((RectTransform)text.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+            text.text = (delta > 0 ? "+" : "−") + "$" + Mathf.Abs(delta);
+
+            var white = text.gameObject.AddComponent<Outline>();
+            white.effectColor = Color.white;
+            white.effectDistance = new Vector2(1.5f, 1.5f);
+            var black = text.gameObject.AddComponent<Outline>();
+            black.effectColor = Color.black;
+            black.effectDistance = new Vector2(3f, 3f);
+
+            StartCoroutine(LiftAndFade(rt, text));
+        }
+
+        private System.Collections.IEnumerator LiftAndFade(RectTransform rt, Text text)
+        {
+            float t = 0f;
+            var from = rt.anchoredPosition;
+            while (t < MoneyFloatSeconds && rt != null)
+            {
+                t += Time.unscaledDeltaTime;
+                float k = Mathf.Clamp01(t / MoneyFloatSeconds);
+                rt.anchoredPosition = from + new Vector2(0, 26f * Mathf.SmoothStep(0f, 1f, k));
+                // It holds its colour for the first half and then goes; a fade that starts at
+                // once reads as a flicker rather than as money leaving the room.
+                float a = k < 0.5f ? 1f : 1f - (k - 0.5f) * 2f;
+                var c = text.color; c.a = a; text.color = c;
+                foreach (var o in text.GetComponents<Outline>())
+                {
+                    var oc = o.effectColor; oc.a = a; o.effectColor = oc;
+                }
+                yield return null;
+            }
+            if (rt != null) Destroy(rt.gameObject);
         }
 
         private static RectTransform OverlayCanvas(string name, int order, bool raycasts)

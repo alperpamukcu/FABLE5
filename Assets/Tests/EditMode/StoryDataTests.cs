@@ -58,7 +58,7 @@ namespace LastCall.Tests
                 .Select(b => $"{b.Id}@{BarCalendar.Label(b.Day)}")
                 .ToArray();
 
-            Assert.That(schedule, Is.EqualTo(new[] { "ece_1@WEEK 1 · TUESDAY" }));
+            Assert.That(schedule, Is.EqualTo(new[] { "ece_1@WEEK 1 · MONDAY" }));
         }
 
         [Test]
@@ -230,10 +230,12 @@ namespace LastCall.Tests
         [Test]
         public void A_night_that_is_not_a_night_is_refused()
         {
+            // SUNDAY IS THE DAY OFF (2026-08-14): it is drawn on the calendar and it is not a
+            // night, so a beat written for one is a beat that could never happen.
             var e = Refused(Wrap(@"
-                { ""id"": ""b1"", ""character"": ""guest"", ""week"": 1, ""night"": ""monday"",
+                { ""id"": ""b1"", ""character"": ""guest"", ""week"": 1, ""night"": ""sunday"",
                   ""asks"": [""neat_pour""], ""seconds"": 60 }"));
-            Assert.That(e.Message, Does.Contain("monday"));
+            Assert.That(e.Message, Does.Contain("sunday"));
         }
 
         [Test]

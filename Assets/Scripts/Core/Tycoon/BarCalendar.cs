@@ -2,15 +2,19 @@ using System;
 
 namespace LastCall.Core
 {
-    /// <summary>The bar's open nights. Monday is dark, so it is not in the week at all —
-    /// the calendar simply skips it, and every night the game has is one of these six.</summary>
+    /// <summary>
+    /// The bar's open nights. SUNDAY IS THE DAY OFF (2026-08-14, the author) and is not in
+    /// the week at all — every night the game has is one of these six, and the calendar draws
+    /// the seventh as the shutter it is.
+    /// </summary>
     public enum BarNight
     {
-        Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday,
+        Monday, Tuesday, Wednesday, Thursday, Friday, Saturday,
     }
 
     /// <summary>
-    /// The week (the author's calendar): six open nights, Tuesday through Sunday, Mondays dark.
+    /// The week (the author's calendar): seven days, six of them open — Monday through
+    /// Saturday — and SUNDAY OFF (2026-08-14).
     ///
     /// It was on the screen for weeks before it was a rule — the plaque and the night's slip
     /// have always read "WEEK 2 · FRIDAY" — and it meant nothing: any night was like any other
@@ -21,10 +25,11 @@ namespace LastCall.Core
     /// </summary>
     public static class BarCalendar
     {
-        /// <summary>Nights the bar opens in a week. Monday is not one of them.</summary>
+        /// <summary>Nights the bar opens in a week. Sunday is not one of them.</summary>
         public const int OpenNights = 6;
 
-        /// <summary>Which night day N is. Day 1 is the first Tuesday.</summary>
+        /// <summary>Which night day N is. Day 1 is the first Monday — the week the bar
+        /// opened in starts on one.</summary>
         public static BarNight NightOf(int day) => (BarNight)(Index(day) % OpenNights);
 
         /// <summary>Which week day N is in, counting from 1.</summary>
@@ -64,12 +69,12 @@ namespace LastCall.Core
         {
             switch (night)
             {
+                case BarNight.Monday: return "MONDAY";
                 case BarNight.Tuesday: return "TUESDAY";
                 case BarNight.Wednesday: return "WEDNESDAY";
                 case BarNight.Thursday: return "THURSDAY";
                 case BarNight.Friday: return "FRIDAY";
-                case BarNight.Saturday: return "SATURDAY";
-                default: return "SUNDAY";
+                default: return "SATURDAY";
             }
         }
 
@@ -80,15 +85,24 @@ namespace LastCall.Core
             if (string.IsNullOrWhiteSpace(name)) return null;
             switch (name.Trim().ToLowerInvariant())
             {
+                case "monday": return BarNight.Monday;
                 case "tuesday": return BarNight.Tuesday;
                 case "wednesday": return BarNight.Wednesday;
                 case "thursday": return BarNight.Thursday;
                 case "friday": return BarNight.Friday;
                 case "saturday": return BarNight.Saturday;
-                case "sunday": return BarNight.Sunday;
-                default: return null;
+                default: return null;   // sunday included: the bar is shut
             }
         }
+
+        /// <summary>The day the shutter stays down. It has no night of its own — it is drawn
+        /// on the calendar and skipped by the clock (2026-08-14).</summary>
+        public const string DayOffName = "SUNDAY";
+
+        /// <summary>The seven columns a calendar draws, in order, with the closed one last.
+        /// Presentation asks for this; the rules only ever count the six.</summary>
+        public static readonly string[] WeekColumns =
+            { "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" };
 
         private static int Index(int day) => Math.Max(1, day) - 1;
     }
