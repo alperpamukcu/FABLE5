@@ -65,6 +65,21 @@ namespace LastCall.Core
         /// night would seat the same person twice in one closing.</summary>
         public int ReturnsAfterWeeks { get; }
 
+        /// <summary>
+        /// THE STANDING THIS GUEST COMES FOR (GDD 26 §12, 2026-08-14, the author: "her hikaye
+        /// müşterisi belli bir yıldıza ulaşmanı isteyecek ... 0-0.5-1-1.5-2-2.5-3-3.5-4-4.5-5
+        /// yıldız seviyesi olacak"). Eleven rungs, eleven names: the arc is the star track,
+        /// and the bar's standing is the thing that walks it.
+        ///
+        /// It does NOT stop them coming. A guest whose rung the bar has not reached still
+        /// walks in on their night and still sits down — they just do not order, and they say
+        /// why (see <see cref="StoryLines.ShortOfGate"/>). A locked beat that silently fails
+        /// to happen teaches the player nothing and is indistinguishable from a bug; a guest
+        /// who turns up and tells you what you are short of is the tutorial for the whole
+        /// system, which is why the opener sits at 0 and can never be missed.
+        /// </summary>
+        public double RequiresStars { get; }
+
         /// <summary>The beat that follows this one, or null when the arc ends here.</summary>
         public string NextId { get; }
 
@@ -74,7 +89,8 @@ namespace LastCall.Core
         public StoryBeat(string id, StoryCharacter who, StoryTrial trial, int week,
             BarNight night, StoryLines lines = null,
             StoryReward reward = null, string needStyle = null, int needTier = 0,
-            string grantsRecipeOnAsk = null, int returnsAfterWeeks = 1, string nextId = null)
+            string grantsRecipeOnAsk = null, int returnsAfterWeeks = 1, string nextId = null,
+            double requiresStars = 0)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("A beat needs an id.", nameof(id));
@@ -94,6 +110,16 @@ namespace LastCall.Core
             if (returnsAfterWeeks < 1)
                 throw new ArgumentOutOfRangeException(nameof(returnsAfterWeeks),
                     $"beat '{id}' would come back the same night it left");
+            // The eleven rungs, and nothing between them. A beat asking for 1.3 stars would
+            // be asking for a number the standing can hold but no player can aim at, and the
+            // whole point of the track is that the next name is a place you can see.
+            if (requiresStars < 0 || requiresStars > BarRating.MaxStars)
+                throw new ArgumentOutOfRangeException(nameof(requiresStars),
+                    $"beat '{id}' asks for {requiresStars} stars; the bar has 0 to {BarRating.MaxStars}");
+            if (Math.Abs(requiresStars * 2 - Math.Round(requiresStars * 2)) > 1e-9)
+                throw new ArgumentException(
+                    $"beat '{id}' asks for {requiresStars} stars; the track is half a star at a time",
+                    nameof(requiresStars));
 
             Id = id;
             Who = who;
@@ -108,6 +134,7 @@ namespace LastCall.Core
             GrantsRecipeOnAsk = string.IsNullOrWhiteSpace(grantsRecipeOnAsk) ? null : grantsRecipeOnAsk;
             ReturnsAfterWeeks = returnsAfterWeeks;
             NextId = string.IsNullOrWhiteSpace(nextId) ? null : nextId;
+            RequiresStars = requiresStars;
         }
 
         public override string ToString() =>
