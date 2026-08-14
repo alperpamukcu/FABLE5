@@ -38,7 +38,7 @@ namespace LastCall.UI
         private readonly Image[][] _bars = new Image[4][];    // four digits, seven bars each
         private readonly Image[][] _glow = new Image[4][];
         private readonly Image[] _colon = new Image[2];
-        private readonly Color _lit, _unlit;
+        private Color _lit, _unlit;   // not readonly: the readout re-hues at closing time
         private int _shownHH = -1, _shownMM = -1;
         private bool _colonShown = true;
 
@@ -106,14 +106,21 @@ namespace LastCall.UI
         /// clock that stayed cyan through it would be the one thing in the room not saying so.</summary>
         public void SetHue(Color lit)
         {
+            // The two colours are the state, not a decoration on top of it: repainting the
+            // bars without moving them would hold until the next minute ticked and `Paint`
+            // put the old hue back — the clock would go magenta and then quietly go cyan
+            // again while the room was still being called.
+            _lit = lit;
+            _unlit = new Color(lit.r, lit.g, lit.b, 0.085f);
             for (int d = 0; d < 4; d++)
                 for (int s = 0; s < 7; s++)
                 {
-                    if (_bars[d][s].color.a > 0.5f) _bars[d][s].color = lit;
-                    else _bars[d][s].color = new Color(lit.r, lit.g, lit.b, 0.14f);
-                    _glow[d][s].color = new Color(lit.r, lit.g, lit.b,
-                        _glow[d][s].color.a > 0.05f ? 0.22f : 0f);
+                    bool on = _bars[d][s].color.a > 0.5f;
+                    _bars[d][s].color = on ? _lit : _unlit;
+                    _glow[d][s].color = new Color(lit.r, lit.g, lit.b, on ? 0.18f : 0f);
                 }
+            foreach (var lamp in _colon)
+                if (lamp != null) lamp.color = _colonShown ? _lit : _unlit;
         }
 
         private void Paint(int digit, int value)

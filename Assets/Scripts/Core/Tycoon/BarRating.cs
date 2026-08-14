@@ -52,6 +52,27 @@ namespace LastCall.Core
         public const double MaxNightlyGain = 0.25;
 
         private readonly List<double> _nights = new List<double>();
+
+        /// <summary>How many nights this bar has closed.</summary>
+        public int NightsClosed => _nights.Count;
+
+        /// <summary>
+        /// The best night this bar has ever had, in the (capped) stars that were actually
+        /// filed. Zero before the first night closes.
+        ///
+        /// Capped, and that matters to anything comparing against it: CloseNight stores what
+        /// the fittings and the menu ALLOWED the night to be worth, so a raw score measured
+        /// against this would claim records the books then refuse to keep.
+        /// </summary>
+        public double BestNight
+        {
+            get
+            {
+                double best = 0;
+                foreach (double n in _nights) if (n > best) best = n;
+                return best;
+            }
+        }
         private double _standing = StartStars;
 
         /// <summary>Stars left over the whole run so far (per-visit tallies; feeds nothing

@@ -2,6 +2,24 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `18` **the board is a beam, not a row of boxes (2026-08-14, the author: "takvim tasarımı
+  kötü, kutu kutu ai tarafından yapıldığı çok belli ... üst barı tamamen yenile"):** the top
+  bar was five bordered slabs side by side, each with a caption over a value at its own
+  height. It is one object now — a fascia with a lit top face, a front that falls away from
+  it, and a neon tube along the bottom that is also THE STATE LIGHT (the whole board burns
+  magenta at last call; it used to be a 2px rule under one plaque that nobody was going to
+  see). On it: the clock as the only body left up here, the week as a MARQUEE — round lamps
+  on a wire over their letters, the wire stopping short of Sunday because the bar does not
+  open — and the standing as five stars standing on the beam with no plate under them
+  ("yıldızlar hala üst barda kutu içerisinde gösteriliyor"). Everything is placed against
+  two rules, `CapY` and `ReadY`, which is what "yazılar hizalanmamış" was pointing at. NEW
+  RUN moved inside the settings key, where a button that throws away the night you are
+  playing belongs. Three measured corrections on the way: the marquee's parts were all
+  pivoted to their left edges and so hung left of their own letters; the standing's number
+  is 72 units wide in a 60-unit rect and overflowed onto the fifth star; and the cog came
+  out at 20 units, which is 1.25× of a 16-pixel drawing — pixel art scales at whole
+  multiples or it does not scale. `ChromeArt.Lamp`/`LampGlow` are the new drawings.
+
 - `18` **the clock is drawn as a clock (2026-08-14, the author: "dijital saat olmamış hiç
   dijital saate benzememiş görsel olarak"):** the first pass at "saat dijital saat görüntüsünde
   olsun" set the hour in the UI's pixel display face and laid a dim `88:88` behind it. That is

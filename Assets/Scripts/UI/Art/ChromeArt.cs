@@ -353,6 +353,60 @@ namespace LastCall.UI
             return Cache[key] = Make(px, S, S, Vector4.zero);
         }
 
+        // ── the marquee lamp ────────────────────────────────────────────────────────
+        //
+        // The board's week is seven of these on a wire (2026-08-14, the author: "takvim
+        // tasarımı kötü, kutu kutu"). It was drawn as a filled 8x8 rect with a bigger rect
+        // behind it for the glow, which is a box behind a box — the exact thing that was
+        // being complained about. A lamp is ROUND, and the light coming off it falls away.
+        //
+        // Both are drawn at the size they are used, never scaled: a 16px circle stretched to
+        // 10 comes back with a lumpy edge, and the whole board is 8px art.
+
+        /// <summary>The bulb itself: a round lamp, hard-edged, white for the caller to tint.</summary>
+        public static Sprite Lamp()
+        {
+            const string Key = "lamp:bulb";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int S = 16;
+            const float C = 7.5f, R = 4.2f;
+            var px = new Color32[S * S];
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float dx = x - C, dy = y - C;
+                    px[y * S + x] = dx * dx + dy * dy <= R * R
+                        ? new Color32(255, 255, 255, 255)
+                        : new Color32(255, 255, 255, 0);
+                }
+            return Cache[Key] = Make(px, S, S, Vector4.zero);
+        }
+
+        /// <summary>The light coming off a lit one: a round falloff in four steps. Four
+        /// steps and not a smooth ramp — a gradient under art drawn at 8px reads as a
+        /// smudge, and the rest of this game's light is banded too.</summary>
+        public static Sprite LampGlow()
+        {
+            const string Key = "lamp:glow";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int S = 24;
+            const float C = 11.5f;
+            var px = new Color32[S * S];
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float dx = x - C, dy = y - C;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    byte a = d <= 4.5f ? (byte)150
+                        : d <= 6.5f ? (byte)78
+                        : d <= 8.5f ? (byte)34
+                        : d <= 10.5f ? (byte)12
+                        : (byte)0;
+                    px[y * S + x] = new Color32(255, 255, 255, a);
+                }
+            return Cache[Key] = Make(px, S, S, Vector4.zero);
+        }
+
         // ── the plates ──────────────────────────────────────────────────────────────
 
         /// <summary>
