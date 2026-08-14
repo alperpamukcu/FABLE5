@@ -402,29 +402,17 @@ namespace LastCall.Game
                         "says the word. The player has to be told, days early, in the market's " +
                         "own vocabulary (GDD 26 §4).");
 
-                // A GATE WITHOUT WORDS IS A BUG WITH A FACE (GDD 26 §12). A guest who comes,
-                // sits and orders nothing has to SAY why — that scene is the entire teaching
-                // of the star track, and a beat that locks silently is a customer the player
-                // will report as broken. Same shape as the rule above it: content is checked
-                // where content is written.
-                if (b.requiresStars > 0 && (b.shortOfGate == null || b.shortOfGate.Count == 0))
-                    throw new FormatException(
-                        $"Beat '{b.id}' asks for {b.requiresStars} stars and has no shortOfGate " +
-                        "line. They still come and sit down when the bar is short — they have " +
-                        "to be able to say what it is short of (GDD 26 §12).");
-
                 try
                 {
                     var trial = new StoryTrial(asks, b.seconds,
                         b.minFill > 0 ? b.minFill : StoryTrial.DefaultMinFill, b.allowedMistakes);
                     var lines = new StoryLines(b.ask, b.nudge, b.servedRight, b.servedWrong,
-                        b.declined, b.hostBefore, b.hostAfter, b.hostWarning, b.shortOfGate);
+                        b.declined, b.hostBefore, b.hostAfter, b.hostWarning);
                     var reward = new StoryReward(b.rewardMoney, b.rewardStars,
                         b.rewardRecipe, b.rewardBottle);
                     beats.Add(new StoryBeat(b.id, who, trial, b.week, night.Value, lines, reward,
                         b.needStyle, b.needTier, b.grantsRecipeOnAsk,
-                        b.returnsAfterWeeks > 0 ? b.returnsAfterWeeks : 1, b.next,
-                        b.requiresStars));
+                        b.returnsAfterWeeks > 0 ? b.returnsAfterWeeks : 1, b.next));
                 }
                 catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
                 {
@@ -648,8 +636,6 @@ namespace LastCall.Game
             public List<string> servedRight;
             public List<string> servedWrong;
             public List<string> declined;
-            public List<string> shortOfGate;
-            public double requiresStars;    // 0 = anybody may be served this beat
             public List<string> hostWarning;
             public List<string> hostBefore;
             public List<string> hostAfter;

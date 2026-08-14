@@ -326,19 +326,17 @@ namespace LastCall.UI
         {
             var card = bottle.Ingredient;
             bool empty = bottle.IsEmpty;
-            // Each bottle is judged against the vessel IT pours into. Beer fills the
-            // serving glass off the tap; fizz fills it at the counter (its only door,
-            // GDD 21 §12) — and since 2026-08-13 the fizz stands on this wall, where it
-            // was being greyed out by a FULL TIN it can never reach. Everything else
-            // builds in the tin.
-            bool glassSide = card.Info != null && card.Info.Carbonated;
+            // Each bottle is judged against the vessel IT pours into — and since GDD 21 §12
+            // was overturned (2026-08-14) there is only one such vessel left: the TIN. Fizz
+            // used to be judged against the serving glass, its old and only door, which now
+            // reads a bottle as pourable while the tin it is about to go into is full, and
+            // greys it out because a glass it never touches is. Beer keeps its own line: it
+            // is pulled at the tap, into the serving glass.
             string blocked =
                 empty ? "OUT"
                 : card.Type == IngredientType.Beer
                     ? (run.CanPull(card.Id) ? null : run.ServingGlass.IsFull ? "FULL" : "BUSY")
-                    : glassSide
-                        ? (run.ServingGlass.IsFull ? "FULL" : null)
-                        : (run.Glass.IsFull ? "FULL" : null);
+                    : (run.Glass.IsFull ? "FULL" : null);
             bool shut = blocked != null;
 
             var sprite = ItemArt.Bottle(card);

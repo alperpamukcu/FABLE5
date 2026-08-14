@@ -37,15 +37,6 @@ namespace LastCall.Core
         /// same beat comes back — but the arc remembers, and the ending will read them.</summary>
         public int Missed { get; private set; }
 
-        /// <summary>
-        /// Nights the guest came, sat, and did not order because the bar had not reached their
-        /// rung (GDD 26 §12). Counted APART from <see cref="Missed"/> on purpose: one of those
-        /// is the player getting a drink wrong and the other is the player not being there
-        /// yet, and an ending that cannot tell them apart would tell somebody who never
-        /// fumbled a serve that they kept letting people down.
-        /// </summary>
-        public int TurnedAway { get; private set; }
-
         public StoryProgress(StoryArc arc)
         {
             Arc = arc ?? throw new ArgumentNullException(nameof(arc));
@@ -61,28 +52,6 @@ namespace LastCall.Core
         /// </summary>
         public bool IsDueOn(int day) =>
             Current != null && day >= DueDay && BarCalendar.NightOf(day) == Current.Night;
-
-        /// <summary>
-        /// Has the bar earned tonight's guest? The gate is asked SEPARATELY from the clock
-        /// (GDD 26 §12) and never folded into <see cref="IsDueOn"/>, because a guest whose
-        /// rung has not been reached still comes: they sit, they say what the bar is short of,
-        /// and they leave without ordering. Folding the two would make a locked night into a
-        /// night where nobody turns up, which teaches nothing and looks like a bug.
-        /// </summary>
-        public bool GateOpenFor(double stars) =>
-            Current == null || stars + 1e-9 >= Current.RequiresStars;
-
-        /// <summary>
-        /// They came, they saw the bar was not there yet, and they went home. The beat STANDS
-        /// — same as a miss, and on the same return clock — but it is written in its own
-        /// column: nothing was fumbled here.
-        /// </summary>
-        public void RecordTurnedAway(int day)
-        {
-            if (Current == null) return;
-            TurnedAway++;
-            PushBack(day);
-        }
 
         /// <summary>They got what they asked for. The arc moves on, and the next beat cannot
         /// land tonight — one last call a night, always.</summary>
@@ -106,13 +75,6 @@ namespace LastCall.Core
         {
             if (Current == null) return;
             Missed++;
-            PushBack(day);
-        }
-
-        /// <summary>The return clock, shared by a miss and a turn-away — one piece of
-        /// arithmetic, so the two cannot drift apart and strand a beat on a Wednesday.</summary>
-        private void PushBack(int day)
-        {
             int back = BarCalendar.DayOf(
                 BarCalendar.WeekOf(day) + Current.ReturnsAfterWeeks, Current.Night);
             if (back <= day) back += BarCalendar.OpenNights;   // missed late in its own week

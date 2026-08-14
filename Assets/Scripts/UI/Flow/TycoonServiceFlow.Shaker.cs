@@ -568,14 +568,14 @@ namespace LastCall.UI
                 // a glass that cannot accept it read as an overflow the rules do not have
                 // (GDD 21 §3, 2026-07-28). The bottle stays in hand — only the pour ends.
                 bool full = run.Glass.IsFull;
-                // Core refuses fizz in the tin (GDD 21 §12). The rail routes fizz to the glass
-                // stage before it can reach this hand, but the refusal keeps its voice: a
-                // guard that only lives in the routing is a guard that dies in a refactor.
-                bool fizzy = _focusBottle.Info != null && _focusBottle.Info.Carbonated;
-                pourNow = tilt > 42f && over && !full && !fizzy;
+                // THE FIZZ GUARD IS GONE (2026-08-14, the author: "soda shakera dökülmüyor").
+                // It stood here to echo Core's old refusal — and outlived it by a day, which
+                // is exactly the failure its own comment warned about, pointed the other way:
+                // a guard kept for safety after the rule it guards has been overturned is a
+                // rule of its own that nobody wrote down. Core takes fizz in the tin now, so
+                // the hand pours it.
+                pourNow = tilt > 42f && over && !full;
                 if (full && tilt > 42f && over) ShowShakerFull();
-                else if (fizzy && tilt > 42f && over)
-                    SayShaker("FIZZ DIES IN THE TIN — BUILD IT AT THE GLASS");
 
                 if (pourNow)
                 {
