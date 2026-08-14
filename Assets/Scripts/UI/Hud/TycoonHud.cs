@@ -983,6 +983,7 @@ namespace LastCall.UI
             // black screen waiting to happen: any frame where Run is null — between runs,
             // or on the first frames of one — would leave it up with nothing to lift it.
             StepCurtain();
+            StepCheckoutLamp();
 
             var run = Run;
             if (run == null) return;
@@ -3455,10 +3456,35 @@ namespace LastCall.UI
             }
             else
             {
+                // ASK BEFORE THE DOOR SHUTS (2026-08-14, the author: "markette eğer bir şey
+                // satın almadan devam ediyorsan veya sepetinde ürün varken devam et diyorsa
+                // oyuncu ekranda emin misin diye bir buton çıkmalı").
+                //
+                // Two ways to lose something here and no way back from either: picks sitting
+                // in the basket are thrown away unbought, and a night nobody shopped on is a
+                // night of rent for nothing. Both are silent today. The question is asked
+                // only when there is something to lose — a bar that bought its stock and
+                // emptied its basket is waved straight through, because a confirm on every
+                // night is a key you learn to press without reading.
+                string worry = ClosingWorry();
+                if (worry != null) { ShowClosingAsk(worry); return; }
                 // Closing the shop IS the screen going dark: the tablet pulls away and the
                 // curtain takes over, so the market never simply vanishes.
                 PlayTabletOut();
             }
+        }
+
+        /// <summary>What the player is about to lose by closing, or null when nothing is.</summary>
+        private string ClosingWorry()
+        {
+            if (_cart.Count > 0)
+                return _cart.Count == 1
+                    ? "ONE LINE IS STILL IN THE BASKET AND HAS NOT BEEN ORDERED."
+                    : _cart.Count + " LINES ARE STILL IN THE BASKET AND HAVE NOT BEEN ORDERED.";
+            var run = Run;
+            if (run != null && run.TodaysPurchases.Count == 0)
+                return "THE VAN CAME AND WENT WITH NOTHING ON IT TONIGHT.";
+            return null;
         }
 
         // ── panel movement (2026-08-10) ─────────────────────────────────────────
@@ -7390,6 +7416,7 @@ namespace LastCall.UI
             _curtainImg = _curtain.gameObject.AddComponent<Image>();
             _curtainImg.color = new Color(0f, 0f, 0f, 0f);
             _curtainImg.raycastTarget = false;   // black, not a wall: it never eats a click
+            BuildCurtainCard(_curtain);
             _curtain.gameObject.SetActive(false);
 
             // BIN GLASS retired (v5 P13 / C7): a drink is thrown away by carrying it to the bin
@@ -7852,6 +7879,7 @@ namespace LastCall.UI
                 label.text = ShopTabs[i];
                 _shopTabKeys[i] = bg;
                 _shopTabLabels[i] = label;
+                MarkHoverable(key, bg);
             }
 
             // Tonight's fitting, said ONCE, at the right of the department bar — it used to
@@ -8073,13 +8101,28 @@ namespace LastCall.UI
 
             _checkout = NewRect("Checkout", orderHead);
             Place(_checkout, new Vector2(1, 0.5f), new Vector2(CheckoutW, 26), new Vector2(-4, 0));
-            var checkoutImg = _checkout.gameObject.AddComponent<Image>();
+            var checkoutImg = _checkoutImg = _checkout.gameObject.AddComponent<Image>();
             var orderArt = ItemArt.Load("sh_k_order");
             if (orderArt != null) checkoutImg.sprite = orderArt;   // 212x26, drawn to fit
             else checkoutImg.color = ShopGreen;
             var checkoutBtn = _checkout.gameObject.AddComponent<Button>();
             checkoutBtn.targetGraphic = checkoutImg;
             checkoutBtn.onClick.AddListener(Checkout);
+            // THE ONE KEY ON THIS DEVICE THAT SPENDS MONEY, and it looked like the rest of
+            // the fascia (2026-08-14, the author: "satın alma butonu biraz daha dikkat edici
+            // olmalı"). It does not get a new colour — the shop's green is the shop's green
+            // — it gets a LAMP behind it that only burns when there is something to buy.
+            // Nothing pulses on an empty basket, so the eye is pulled exactly when acting
+            // is the right thing to do and never as decoration (GDD 16 §5, §6).
+            _checkoutLamp = NewRect("Lamp", orderHead);
+            Place(_checkoutLamp, new Vector2(1, 0.5f), new Vector2(CheckoutW + 14f, 40f),
+                new Vector2(-4, 0));
+            _checkoutLamp.SetAsFirstSibling();
+            _checkoutLampImg = _checkoutLamp.gameObject.AddComponent<Image>();
+            _checkoutLampImg.sprite = ChromeArt.LampGlow();
+            _checkoutLampImg.raycastTarget = false;
+            _checkoutLampImg.color = new Color(1f, 1f, 1f, 0f);
+            MarkHoverable(_checkout, checkoutImg);
             _checkoutLabel = NewText("L", _checkout, _shop, 16, TextAnchor.MiddleCenter, Color.white);
             Stretch(_checkoutLabel.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(6, 0), new Vector2(-6, 0));
@@ -8108,6 +8151,7 @@ namespace LastCall.UI
             var otBtn2 = _openTomorrow.gameObject.AddComponent<Button>();
             otBtn2.targetGraphic = otImg;
             otBtn2.onClick.AddListener(OnDayEndAdvance);
+            MarkHoverable(_openTomorrow, otImg);
             _openTomorrowLabel = NewText("Label", _openTomorrow, _shop, 16, TextAnchor.MiddleCenter,
                 UITheme.TextOnAmber);
             Stretch(_openTomorrowLabel.rectTransform, Vector2.zero, Vector2.one,
@@ -8115,6 +8159,8 @@ namespace LastCall.UI
             _openTomorrowLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
             _openTomorrowLabel.verticalOverflow = VerticalWrapMode.Truncate;
             _openTomorrowLabel.text = "OPEN\nTOMORROW";
+
+            BuildClosingAsk(_dayEndTablet);
 
             _dayEndPanel.gameObject.SetActive(false);
 
@@ -8266,13 +8312,14 @@ namespace LastCall.UI
         private void OnOpenTomorrow()
         {
             var run = Run;
+            int leaving = run.Day;             // read BEFORE the roll: the curtain names both
             run.ContinueToNextDay();
             _dayEndPanel.gameObject.SetActive(false);
             if (run.Phase == TycoonPhase.DayOpen)
             {
                 _lastPhase = TycoonPhase.DayOpen;
                 ApplyBarLook();
-                OpenTheDoors();
+                OpenTheDoors(leaving, run.Day);
             }
         }
 
@@ -8283,38 +8330,354 @@ namespace LastCall.UI
         // and only when it is up does the clock move. The hold is what makes it a beat
         // rather than a flourish, and it is the one thing a fade alone cannot do.
 
-        private RectTransform _curtain;
+        // THE DARK CARRIES THE DATE NOW (2026-08-14, the author: "gün başlarında ekran
+        // kararıyordu, bu kararmaya hafta ve gün takvimi eklensin… hangi günden hangi güne
+        // geçtiğimizi animasyonla belirtsin yazı ile").
+        //
+        // The blackout was two and a quarter seconds of nothing, which is a beat with no
+        // content in it — long enough to feel, too short to say anything, and the one place
+        // in the game where the player is guaranteed to be looking at the screen and NOT
+        // doing anything. It carries the week and the hand-off between two nights: the name
+        // of the night that just closed slides out under the night arriving, and the marquee
+        // the top bar wears is drawn again here, one bulb going dark and the next lighting.
+        //
+        // Same wire, same bulbs, same BarCalendar the rules count in — the dark cannot say
+        // Friday while the beam says Thursday, because neither is doing its own arithmetic.
+
+        // ── the pointer, answered (2026-08-14) ──────────────────────────────────
+        //
+        // The author: "markette mouse bir butonun üstüne gelince belli olsun o buton." Only
+        // ONE control on the whole tablet answered the pointer before today — the basket
+        // chip, which carries a PressSink. Everything else took Unity's default 4% tint,
+        // which on a green fascia is invisible.
+        //
+        // It brightens rather than LIFTS, and that is deliberate: the tiles live inside a
+        // ScrollRect and the tabs are re-laid on every rebuild (their height and colour are
+        // written per frame), so a component that moves a rect would spend its life arguing
+        // with the code that places it. Warmth costs nothing and cannot fight a layout.
+        // HoverRelay, not EventTrigger — EventTrigger implements IScrollHandler too, and
+        // the aisle froze the day that was learned.
+
+        private RectTransform _checkoutLamp;
+        private Image _checkoutLampImg, _checkoutImg;
+
+        /// <summary>
+        /// The lamp behind PLACE ORDER, which only burns when there is an order to place.
+        /// A slow breath rather than a blink: the key is asking to be pressed, not warning
+        /// about anything, and the chrome language keeps the fast pulses for refusals.
+        /// It also goes dark for the three seconds after a checkout, while the key itself
+        /// reads ORDERED — the one moment pressing it again would do nothing.
+        /// </summary>
+        private void StepCheckoutLamp()
+        {
+            if (_checkoutLampImg == null) return;
+            bool wants = _cart.Count > 0 && Time.unscaledTime >= _checkoutUntil;
+            float breath = wants
+                ? 0.35f + 0.30f * Mathf.Sin(Time.unscaledTime * 3.4f)
+                : 0f;
+            var c = UITheme.Lime[3];
+            var now = _checkoutLampImg.color;
+            float a = Mathf.Lerp(now.a, breath, 1f - Mathf.Exp(-9f * Time.unscaledDeltaTime));
+            _checkoutLampImg.color = new Color(c.r, c.g, c.b, a);
+        }
+
+        // ── the question at the door (2026-08-14) ───────────────────────────────
+
+        private RectTransform _closingAsk;
+        private Text _closingAskLine;
+
+        /// <summary>
+        /// The tablet's own dialog, built once and shown over the device rather than over
+        /// the screen: what is at stake is on that device, so the question belongs on it.
+        /// Two keys and no third — going back is the safe one and it sits where the eye
+        /// lands first.
+        /// </summary>
+        private void BuildClosingAsk(RectTransform tablet)
+        {
+            _closingAsk = NewRect("ClosingAsk", tablet);
+            Stretch(_closingAsk, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var scrim = _closingAsk.gameObject.AddComponent<Image>();
+            scrim.color = new Color(0.03f, 0.06f, 0.04f, 0.78f);
+            scrim.raycastTarget = true;   // a wall: nothing behind it may be clicked
+
+            var card = NewRect("Card", _closingAsk);
+            Place(card, new Vector2(0.5f, 0.5f), new Vector2(620, 220), Vector2.zero);
+            var cardImg = card.gameObject.AddComponent<Image>();
+            cardImg.sprite = ChromeArt.Card();
+            cardImg.type = Image.Type.Sliced;
+            cardImg.color = ShopPaper;
+
+            var head = NewText("H", card, _shop, 16, TextAnchor.UpperCenter, ShopGreen);
+            Place(head.rectTransform, new Vector2(0.5f, 1f), new Vector2(560, 24), new Vector2(0, -22));
+            head.text = "CLOSE THE ORDER?";
+
+            _closingAskLine = NewText("L", card, _body, 12, TextAnchor.UpperCenter, ShopInk);
+            Place(_closingAskLine.rectTransform, new Vector2(0.5f, 1f), new Vector2(540, 56),
+                new Vector2(0, -60));
+            _closingAskLine.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _closingAskLine.verticalOverflow = VerticalWrapMode.Overflow;
+
+            var back = NewRect("Back", card);
+            Place(back, new Vector2(0.5f, 0f), new Vector2(240, 44), new Vector2(-132, 34));
+            var backImg = back.gameObject.AddComponent<Image>();
+            backImg.color = ShopGreen;
+            var backBtn = back.gameObject.AddComponent<Button>();
+            backBtn.targetGraphic = backImg;
+            backBtn.onClick.AddListener(() =>
+            {
+                Sfx.Play("click", 0.6f);
+                if (_closingAsk != null) _closingAsk.gameObject.SetActive(false);
+            });
+            var backLabel = NewText("L", back, _shop, 16, TextAnchor.MiddleCenter, Color.white);
+            Stretch(backLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            backLabel.text = "GO BACK";
+            MarkHoverable(back, backImg);
+
+            var anyway = NewRect("Anyway", card);
+            Place(anyway, new Vector2(0.5f, 0f), new Vector2(240, 44), new Vector2(132, 34));
+            var anywayImg = anyway.gameObject.AddComponent<Image>();
+            anywayImg.color = UITheme.Night[3];
+            var anywayBtn = anyway.gameObject.AddComponent<Button>();
+            anywayBtn.targetGraphic = anywayImg;
+            anywayBtn.onClick.AddListener(() =>
+            {
+                if (_closingAsk != null) _closingAsk.gameObject.SetActive(false);
+                PlayTabletOut();
+            });
+            var anywayLabel = NewText("L", anyway, _shop, 16, TextAnchor.MiddleCenter, Color.white);
+            Stretch(anywayLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            anywayLabel.text = "OPEN ANYWAY";
+            MarkHoverable(anyway, anywayImg);
+
+            _closingAsk.SetAsLastSibling();
+            _closingAsk.gameObject.SetActive(false);
+        }
+
+        private void ShowClosingAsk(string worry)
+        {
+            if (_closingAsk == null) { PlayTabletOut(); return; }   // never trap the player
+            _closingAskLine.text = worry;
+            _closingAsk.gameObject.SetActive(true);
+            _closingAsk.SetAsLastSibling();
+            Sfx.Play("click", 0.5f);
+        }
+
+        /// <summary>Make a control answer the pointer. One component per control, living on
+        /// the control, so a rebuilt tile takes its highlight to the grave with it — a list
+        /// held by the HUD would grow by one entry per tile per rebuild and never shrink.</summary>
+        private static void MarkHoverable(RectTransform hit, Graphic face)
+        {
+            if (hit == null || face == null) return;
+            if (hit.GetComponent<HoverWarm>() != null) return;
+            var warm = hit.gameObject.AddComponent<HoverWarm>();
+            warm.Face = face;
+        }
+
+        /// <summary>
+        /// What is written in the dark: the week, the night handing over to the night, and
+        /// the same marquee the beam wears. Built once and driven by StepCurtain — nothing
+        /// here is created per day, because a blackout that allocates is a blackout that
+        /// hitches on the one frame the player is only looking at it.
+        /// </summary>
+        private void BuildCurtainCard(RectTransform curtain)
+        {
+            _curtainCard = NewRect("DateCard", curtain);
+            Place(_curtainCard, new Vector2(0.5f, 0.5f), new Vector2(560, 220), Vector2.zero);
+            _curtainCardGroup = _curtainCard.gameObject.AddComponent<CanvasGroup>();
+            _curtainCardGroup.alpha = 0f;
+            _curtainCardGroup.blocksRaycasts = false;
+
+            _curtainWeek = NewText("Week", _curtainCard, _body, 16, TextAnchor.UpperCenter,
+                UITheme.TextSecondary);
+            Place(_curtainWeek.rectTransform, new Vector2(0.5f, 1f), new Vector2(400, 20),
+                new Vector2(0, -6));
+
+            // The two names share one seat: the one leaving rides up out of it while the one
+            // arriving comes up into it, so the eye follows a single word changing rather
+            // than reading two.
+            var seat = NewRect("Seat", _curtainCard);
+            Place(seat, new Vector2(0.5f, 1f), new Vector2(560, 56), new Vector2(0, -40));
+
+            var leaving = NewRect("Leaving", seat);
+            Stretch(leaving, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _curtainLeavingGroup = leaving.gameObject.AddComponent<CanvasGroup>();
+            _curtainLeaving = NewText("L", leaving, _display, 32, TextAnchor.UpperCenter,
+                UITheme.TextSecondary);
+            Stretch(_curtainLeaving.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+            var arriving = NewRect("Arriving", seat);
+            Stretch(arriving, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _curtainArrivingGroup = arriving.gameObject.AddComponent<CanvasGroup>();
+            _curtainArriving = NewText("A", arriving, _display, 32, TextAnchor.UpperCenter,
+                UITheme.PrimaryAction);
+            Stretch(_curtainArriving.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+            // The marquee, drawn the way the beam draws it: a wire that stops where the work
+            // stops, a bulb under every open night, a shutter under the day off.
+            var names = BarCalendar.WeekColumns;
+            const float step = 60f;
+            float left = -names.Length * step * 0.5f;
+            float railY = -150f;
+
+            var rail = NewRect("Rail", _curtainCard);
+            Place(rail, new Vector2(0.5f, 1f), new Vector2(BarCalendar.OpenNights * step, 1f),
+                new Vector2(left + BarCalendar.OpenNights * step * 0.5f, railY + 13f));
+            var railImg = rail.gameObject.AddComponent<Image>();
+            railImg.color = UITheme.Night[3]; railImg.raycastTarget = false;
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                float cx = left + i * step + step * 0.5f;
+                bool open = i < BarCalendar.OpenNights;
+
+                var stem = NewRect("S" + i, _curtainCard);
+                Place(stem, new Vector2(0.5f, 1f), new Vector2(1, 8), new Vector2(cx, railY + 9f));
+                var simg = stem.gameObject.AddComponent<Image>();
+                simg.color = UITheme.Night[3]; simg.raycastTarget = false;
+                simg.enabled = open;
+
+                if (!open)
+                    for (int s = 0; s < 4; s++)
+                    {
+                        var slat = NewRect("Shut" + s + "_" + i, _curtainCard);
+                        Place(slat, new Vector2(0.5f, 1f), new Vector2(24, 2),
+                            new Vector2(cx, railY - s * 5f));
+                        var slatImg = slat.gameObject.AddComponent<Image>();
+                        slatImg.color = UITheme.Night[3]; slatImg.raycastTarget = false;
+                    }
+
+                var glow = NewRect("G" + i, _curtainCard);
+                Place(glow, new Vector2(0.5f, 1f), new Vector2(32, 32), new Vector2(cx, railY - 4f));
+                var gimg = glow.gameObject.AddComponent<Image>();
+                gimg.sprite = ChromeArt.LampGlow();
+                gimg.raycastTarget = false; gimg.enabled = false;
+
+                var bulb = NewRect("B" + i, _curtainCard);
+                Place(bulb, new Vector2(0.5f, 1f), new Vector2(16, 16), new Vector2(cx, railY - 4f));
+                var bimg = bulb.gameObject.AddComponent<Image>();
+                bimg.sprite = ChromeArt.Lamp();
+                bimg.color = UITheme.Night[2]; bimg.raycastTarget = false;
+
+                var name = NewText("N" + i, _curtainCard, _body, 8, TextAnchor.UpperCenter,
+                    UITheme.TextSecondary);
+                Place(name.rectTransform, new Vector2(0.5f, 1f), new Vector2(step, 12),
+                    new Vector2(cx, railY - 26f));
+                name.text = names[i];
+
+                _curtainCells.Add((bimg, gimg));
+            }
+        }
+
+        private RectTransform _curtain, _curtainCard;
         private Image _curtainImg;
-        private float _curtainT;          // 1 = full black, 0 = gone
-        // Slower, on the author's note: at a third of a second the hold read as a stutter
-        // rather than as a room being dark. Three quarters held, a second and a half up.
-        private const float CurtainHold = 0.75f, CurtainLift = 1.5f;
+        private Text _curtainWeek, _curtainLeaving, _curtainArriving;
+        private CanvasGroup _curtainCardGroup, _curtainLeavingGroup, _curtainArrivingGroup;
+        private readonly List<(Image bulb, Image glow)> _curtainCells =
+            new List<(Image, Image)>();
+        private int _curtainFrom = 1, _curtainTo = 1;
+
+        private float _curtainT;          // seconds elapsed, 0 → CurtainTotal
+        // Four movements on one clock. The author asked for three or four seconds now that
+        // there is something in the dark to read; this is 3.4, which is a beat you can read
+        // a word in and not a loading screen.
+        private const float CurtainFadeIn = 0.35f;   // black is instant; the card arrives
+        private const float CurtainSwap = 0.95f;     // the hand-off between the two nights
+        private const float CurtainHold = 0.85f;     // let it sit, so it is read
+        private const float CurtainLift = 1.25f;     // card out, room up
+        private const float CurtainTotal = CurtainFadeIn + CurtainSwap + CurtainHold + CurtainLift;
 
         /// <summary>True while the room is still coming up: the clock must not run.</summary>
-        private bool DoorsClosed => _curtainT > 0.001f;
+        private bool DoorsClosed => _curtainT < CurtainTotal;
 
-        private void OpenTheDoors()
+        private void OpenTheDoors(int leaving, int arriving)
         {
             if (_curtain == null) return;
+            _curtainFrom = leaving;
+            _curtainTo = arriving;
             _curtain.gameObject.SetActive(true);
             _curtain.SetAsLastSibling();
-            _curtainT = 1f + CurtainHold / CurtainLift;   // the hold rides on the same clock
+            _curtainT = 0f;
             _curtainImg.color = new Color(0f, 0f, 0f, 1f);
+            if (_curtainWeek != null)
+                _curtainWeek.text = "WEEK " + BarCalendar.WeekOf(arriving);
+            if (_curtainLeaving != null)
+                _curtainLeaving.text = BarCalendar.Name(BarCalendar.NightOf(leaving));
+            if (_curtainArriving != null)
+                _curtainArriving.text = BarCalendar.Name(BarCalendar.NightOf(arriving));
+            StepCurtain();   // place everything before the first frame is drawn
         }
 
         private void StepCurtain()
         {
-            if (_curtain == null || _curtainT <= 0f) return;
-            _curtainT -= Time.unscaledDeltaTime / CurtainLift;
-            if (_curtainT <= 0f)
+            if (_curtain == null || _curtainT >= CurtainTotal) return;
+            _curtainT += Time.unscaledDeltaTime;
+            float t = _curtainT;
+
+            // The black itself: full until the lift, then eased away.
+            float liftAt = CurtainFadeIn + CurtainSwap + CurtainHold;
+            float lift = t <= liftAt ? 0f : Mathf.Clamp01((t - liftAt) / CurtainLift);
+            _curtainImg.color = new Color(0f, 0f, 0f, (1f - lift) * (1f - lift) + (1f - lift) * 0.0f);
+
+            // The card: in, held, and out ahead of the room so the last thing to go is black.
+            float inK = Mathf.Clamp01(t / CurtainFadeIn);
+            float outK = Mathf.Clamp01((t - liftAt) / (CurtainLift * 0.55f));
+            if (_curtainCardGroup != null) _curtainCardGroup.alpha = inK * (1f - outK);
+
+            // THE HAND-OFF. The night that closed slides up and out; the night arriving
+            // comes from under it. Smoothstep both ways — a linear slide reads as a scroll.
+            float swap = Mathf.Clamp01((t - CurtainFadeIn) / CurtainSwap);
+            float e = swap * swap * (3f - 2f * swap);
+            // A BATON PASS, NOT A DISSOLVE. Both names crossfading on the same curve put
+            // WEDNESDAY and THURSDAY at half alpha on top of each other for a third of a
+            // second, and two 32pt words in one seat read as damage, not as a change. The
+            // one leaving is gone before the one arriving is legible, and the travel is
+            // bigger than the type so they clear each other rather than pass through.
+            float goes = Mathf.Clamp01(swap / 0.55f);
+            float comes = Mathf.Clamp01((swap - 0.45f) / 0.55f);
+            goes = goes * goes * (3f - 2f * goes);
+            comes = comes * comes * (3f - 2f * comes);
+            if (_curtainLeavingGroup != null)
             {
-                _curtainT = 0f;
-                _curtain.gameObject.SetActive(false);
-                return;
+                _curtainLeavingGroup.alpha = 1f - goes;
+                ((RectTransform)_curtainLeavingGroup.transform).anchoredPosition =
+                    new Vector2(0f, 4f + 46f * goes);
             }
-            // Above 1 is the hold: still fully black, not yet lifting.
-            float a = Mathf.Clamp01(_curtainT);
-            _curtainImg.color = new Color(0f, 0f, 0f, a * a);   // eases out of black
+            if (_curtainArrivingGroup != null)
+            {
+                _curtainArrivingGroup.alpha = comes;
+                ((RectTransform)_curtainArrivingGroup.transform).anchoredPosition =
+                    new Vector2(0f, 4f - 46f * (1f - comes));
+            }
+
+            // The marquee under it: last night's bulb goes out as tonight's comes up.
+            int from = (int)BarCalendar.NightOf(_curtainFrom);
+            int to = (int)BarCalendar.NightOf(_curtainTo);
+            for (int i = 0; i < _curtainCells.Count; i++)
+            {
+                var (bulb, glow) = _curtainCells[i];
+                if (bulb == null) continue;
+                bool closed = i >= BarCalendar.OpenNights;
+                bulb.enabled = !closed;
+                if (closed) { if (glow != null) glow.enabled = false; continue; }
+                float lit = i == to ? e : i == from ? 1f - e : 0f;
+                // Worked nights keep the dull glass they wear on the beam; the two in the
+                // hand-off ride the curve between dull and burning.
+                bool worked = i < to;
+                var cold = worked ? UITheme.Night[3] : UITheme.Night[2];
+                bulb.color = Color.Lerp(cold, UITheme.Amber[4], lit);
+                if (glow != null)
+                {
+                    glow.enabled = lit > 0.01f;
+                    var g = UITheme.Amber[3];
+                    glow.color = new Color(g.r, g.g, g.b, g.a * lit);
+                }
+            }
+
+            if (_curtainT >= CurtainTotal)
+            {
+                _curtainT = CurtainTotal;
+                _curtain.gameObject.SetActive(false);
+            }
         }
 
         /// <summary>
@@ -8351,6 +8714,11 @@ namespace LastCall.UI
                 button.targetGraphic = img;
                 var act = spec.OnClick;
                 button.onClick.AddListener(() => act());
+                // …and only THEN does it warm under the pointer. A sealed crate or a bottle
+                // with no cash behind it lights up for nobody: hover says "you are pointing
+                // at this", and a listing that cannot be acted on must not answer as though
+                // it can (2026-08-14).
+                MarkHoverable(rt, img);
             }
 
             // Hovering fills the inspector — the one place long text is allowed to live.
