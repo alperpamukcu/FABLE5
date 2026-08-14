@@ -101,12 +101,16 @@ namespace LastCall.UI
             BuildShelfPage(run);
 
             bool loaded = !run.Glass.IsEmpty || !run.ServingGlass.IsEmpty;
+            bool owing = BenchUnfinished(run);
             if (_serveButton != null)
             {
+                // Still pressable while the bench is owed something — pressing it is how you
+                // are TAKEN there. A dead key would leave a player with a half-built drink
+                // and no key that does anything, which is the state the bug report describes.
                 _serveButton.interactable = loaded;
                 if (_serveLabel != null)
                 {
-                    _serveLabel.text = loaded ? "SERVE" : "POUR FIRST";
+                    _serveLabel.text = !loaded ? "POUR FIRST" : owing ? "FINISH THE TIN" : "SERVE";
                     _serveLabel.color = loaded ? Color.black : new Color(0.1f, 0.08f, 0.06f, 0.45f);
                 }
             }
@@ -730,7 +734,15 @@ namespace LastCall.UI
             // old guard asked for something in the shaker and starved the six built drinks;
             // this one asks for something poured ANYWHERE — tin or glass — because the pass
             // stage with two empty vessels is a dead end dressed as a button.
-            _serveButton = AddFlexButton(actions, "SERVE", UITheme.PrimaryAction, () => GoTo(Stage.Serve));
+            // The SERVE key is the wall's other door onto the counter, and it carried the
+            // same hole the fizz did (2026-08-14): it lit on "something poured anywhere",
+            // which includes a tin that was never capped. It goes to the bench instead
+            // while the bench is owed something, and says so on arrival.
+            _serveButton = AddFlexButton(actions, "SERVE", UITheme.PrimaryAction, () =>
+            {
+                if (BenchUnfinished(Run)) { DemandBench(BenchOwed(Run).ToUpperInvariant()); return; }
+                GoTo(Stage.Serve);
+            });
             _serveLabel = _serveButton.GetComponentInChildren<Text>();
 
             AddBinButton(_menuPanel);

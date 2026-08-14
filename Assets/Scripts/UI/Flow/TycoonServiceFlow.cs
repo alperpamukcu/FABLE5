@@ -143,6 +143,7 @@ namespace LastCall.UI
             {
                 _shakerLoopWanted = null;
                 _saidThisFrame = false;   // the readout is unclaimed until something claims it
+                StepBenchDemand();        // …unless the player was sent here to be told something
                 UpdateShake(run); UpdateTiltPour(run); UpdateCap(run);
                 UpdateStir(run); UpdateToGlass(run); UpdateStepCard(run);
                 StepShakerFluid(run);
@@ -153,6 +154,7 @@ namespace LastCall.UI
             {
                 _servePouringNow = false;
                 UpdateServeTilt(run); UpdateServePrepDrag(run); UpdateServeCabinet(run);
+                UpdateServeStepCard(run);
                 // One loop source, driven once per frame from whatever poured (P17): the tin
                 // and the hand bottle set the flag, and neither can stop the other's sound.
                 Sfx.HoldLoop(_servePouringNow ? "pour_loop" : null, 0.7f);
@@ -355,6 +357,17 @@ namespace LastCall.UI
             // to the counter instead, already in hand, ready to tip over the glass.
             if (card.Info != null && card.Info.Carbonated)
             {
+                // THE TIN COMES FIRST (2026-08-14, the author: picking a soda after the
+                // spirits jumped to the counter with the tin still open, and an open tin
+                // cannot be reached from there — the drink was stranded). The fizz keeps
+                // its door, but the bench's own gate is not a door it may walk past: an
+                // unfinished tin sends the player back to close it, and the bottle waits
+                // on the wall for the second click.
+                if (BenchUnfinished(Run))
+                {
+                    DemandBench(BenchOwed(Run).ToUpperInvariant() + " — THEN THE FIZZ");
+                    return;
+                }
                 GoTo(Stage.Serve);
                 TakeFromCabinet(card.Id);
                 return;

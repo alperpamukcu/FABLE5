@@ -145,18 +145,31 @@ namespace LastCall.UI
 
         private void BuildStepCard(RectTransform panel)
         {
+            string[] marks = { "pour", "cap", "mix", "toglass" };
+            string[] words = { "FILL THE TIN", "CAP IT", "SHAKE OR STIR", "TO THE GLASS" };
+            BuildStepCard(panel, "THE BENCH", marks, words, _stepRows, new Vector2(20, -18));
+        }
+
+        /// <summary>
+        /// The card itself, for whichever station asks for one (2026-08-14, the author:
+        /// "Shake veya karıştırma yapması gerektiği sahnede sol üstte belirtilsin, aynı
+        /// öğreticiyi bardağa koyma sahnesi içinde oluştur"). Same corner, same 8px rows,
+        /// same tick — a player who learns to read it at the bench can read it at the
+        /// counter without being taught twice.
+        /// </summary>
+        private void BuildStepCard(RectTransform panel, string head, string[] marks,
+            string[] words, List<(Image icon, Text label, Image tick)> rows, Vector2 at)
+        {
             var card = NewRect("Steps", panel);
-            Place(card, new Vector2(0, 1), new Vector2(210, 128), new Vector2(20, -18));
+            Place(card, new Vector2(0, 1), new Vector2(210, 32f + marks.Length * 24f), at);
             var bg = card.gameObject.AddComponent<Image>();
             bg.color = new Color(0.05f, 0.05f, 0.09f, 0.72f);
             bg.raycastTarget = false;
 
-            var head = NewText("H", card, _body, 8, TextAnchor.UpperLeft, UITheme.TextSecondary);
-            Place(head.rectTransform, new Vector2(0, 1), new Vector2(190, 12), new Vector2(12, -8));
-            head.text = "THE BENCH";
+            var title = NewText("H", card, _body, 8, TextAnchor.UpperLeft, UITheme.TextSecondary);
+            Place(title.rectTransform, new Vector2(0, 1), new Vector2(190, 12), new Vector2(12, -8));
+            title.text = head;
 
-            string[] marks = { "pour", "cap", "mix", "toglass" };
-            string[] words = { "FILL THE TIN", "CAP IT", "SHAKE OR STIR", "TO THE GLASS" };
             for (int i = 0; i < marks.Length; i++)
             {
                 float y = -26f - i * 24f;
@@ -182,9 +195,24 @@ namespace LastCall.UI
                 timg.raycastTarget = false;
                 timg.enabled = false;
 
-                _stepRows.Add((mimg, text, timg));
+                rows.Add((mimg, text, timg));
             }
         }
+
+        /// <summary>
+        /// WHETHER THE TIN STILL HAS WORK IN IT (2026-08-14, the author's bug: picking a
+        /// soda after the spirits jumped straight to the glass, leaving a tin that was
+        /// never capped and could no longer be reached). One reading of "done", asked by
+        /// every door out of the bench, so no route can disagree with the step card: there
+        /// is something in the tin, and it is not both capped and mixed the way Core asks.
+        /// </summary>
+        private bool BenchUnfinished(TycoonRun run) =>
+            run != null && !run.Glass.IsEmpty && !(_capped && run.CanPourOut);
+
+        /// <summary>What the tin is still owed, in the player's words — used by the doors
+        /// that turn a player back, so being refused always says why.</summary>
+        private string BenchOwed(TycoonRun run) =>
+            !_capped ? "cap the tin first" : "shake or stir it first";
 
         /// <summary>
         /// Which step the bench is on, read off the same state the keys and Core read — the
@@ -197,12 +225,24 @@ namespace LastCall.UI
             bool filled = !run.Glass.IsEmpty;
             bool mixed = run.IsMixed;
             int at = !filled ? 0 : !_capped ? 1 : !mixed && run.MixRequired ? 2 : !mixed ? 2 : 3;
+            PaintSteps(_stepRows, at, -1, false);
+        }
 
-            for (int i = 0; i < _stepRows.Count; i++)
+        /// <summary>
+        /// The card's ink: everything before the cursor is green and ticked, the cursor
+        /// itself is amber, everything after it is dim. One optional row may be named — it
+        /// is never the cursor and only ticks if it was actually done, because a step you
+        /// may skip must not read as a step you are being blocked on.
+        /// </summary>
+        private void PaintSteps(List<(Image icon, Text label, Image tick)> rows,
+            int at, int optional, bool optionalDone)
+        {
+            for (int i = 0; i < rows.Count; i++)
             {
-                var (icon, label, tick) = _stepRows[i];
-                bool done = i < at;
-                bool here = i == at;
+                var (icon, label, tick) = rows[i];
+                bool opt = i == optional;
+                bool done = opt ? optionalDone : i < at;
+                bool here = !opt && i == at;
                 var ink = here ? UITheme.Amber[4] : done ? UITheme.Lime[3] : UITheme.TextSecondary;
                 label.color = ink;
                 icon.color = new Color(ink.r, ink.g, ink.b, here ? 1f : done ? 0.75f : 0.45f);
@@ -329,6 +369,34 @@ namespace LastCall.UI
         {
             _shakerReadout.text = line;
             _shakerReadout.color = UITheme.TextSecondary;
+            _saidThisFrame = true;
+        }
+
+        // ── being sent back ───────────────────────────────────────────────────────
+        //
+        // A door that turns you around has to say why, and say it where you land. The
+        // readout is rewritten by every stage method each frame, so a line posted at the
+        // moment of the turn would be gone before the stage had finished sliding in. This
+        // holds it for a beat and claims the readout while it does.
+
+        private string _benchDemandLine;
+        private float _benchDemandT;
+
+        /// <summary>Send the player to the bench to finish the tin, with the reason held on
+        /// the readout long enough to be read.</summary>
+        private void DemandBench(string line)
+        {
+            _benchDemandLine = line;
+            _benchDemandT = 2.6f;
+            GoTo(Stage.Shaker);
+        }
+
+        private void StepBenchDemand()
+        {
+            if (_benchDemandT <= 0f) return;
+            _benchDemandT -= Time.unscaledDeltaTime;
+            _shakerReadout.text = _benchDemandLine;
+            _shakerReadout.color = UITheme.ViceRed[3];
             _saidThisFrame = true;
         }
 

@@ -28,6 +28,8 @@ namespace LastCall.UI
         // The serve pour uses the same tilt model (GDD 24 §3): grab the shaker, tip it over
         // the glass. How well the mouth lines up over the glass is the aim — off-centre spills.
         private Text _serveShakerText;
+        private readonly List<(Image icon, Text label, Image tick)> _serveStepRows =
+            new List<(Image, Text, Image)>();
         private Text _serveGlassText;
         private RectTransform _serveSurface;
         private RectTransform _serveGlass;      // the target
@@ -597,6 +599,19 @@ namespace LastCall.UI
         /// did. How well the mouth lines up over the glass is the aim — dead over the glass
         /// pours clean, drifting off spills, and a full pour still drains the shaker.
         /// </summary>
+        /// <summary>
+        /// The counter's card, read off the same state the counter itself obeys: the glass
+        /// is empty until the tin is tipped, the dressing is optional, and the last step is
+        /// a walk. It has no cursor of its own to disagree with — it asks the run.
+        /// </summary>
+        private void UpdateServeStepCard(TycoonRun run)
+        {
+            if (_serveStepRows.Count == 0) return;
+            bool poured = !run.ServingGlass.IsEmpty;
+            bool dressed = run.ServingGlass.PreparationSteps.Count > 0;
+            PaintSteps(_serveStepRows, poured ? 2 : 0, 1, poured && dressed);
+        }
+
         private void UpdateServeTilt(TycoonRun run)
         {
             if (Mouse.current == null) return;
@@ -842,8 +857,18 @@ namespace LastCall.UI
             // The two corner readouts wear the top corners at 8px; the aim line gets its own
             // full-width band UNDER them at 16 — they used to share one band and long aim
             // strings ran under the corner numbers.
+            // THE SAME CARD THE BENCH WEARS (2026-08-14, the author: "aynı öğreticiyi
+            // bardağa koyma sahnesi içinde oluştur"). Top-left, ahead of the tin's line,
+            // which moves down under it — the left column now reads what to do, then what
+            // is in the tin, in that order.
+            BuildStepCard(_servePanel, "THE COUNTER",
+                new[] { "toglass", "garnish", "serve" },
+                // No ampersand: the pixel face draws & as $ (measured in play, 2026-08-14).
+                new[] { "TIP THE TIN", "ICE AND GARNISH", "CARRY IT OVER" },
+                _serveStepRows, new Vector2(20, -18));
+
             _serveShakerText = NewText("Shaker", _servePanel, _body, 8, TextAnchor.UpperLeft, UITheme.TextSecondary);
-            Place(_serveShakerText.rectTransform, new Vector2(0, 1), new Vector2(280, 12), new Vector2(20, -44));
+            Place(_serveShakerText.rectTransform, new Vector2(0, 1), new Vector2(280, 12), new Vector2(20, -132));
             _serveGlassText = NewText("Glass", _servePanel, _body, 8, TextAnchor.UpperRight, UITheme.TextPrimary);
             Place(_serveGlassText.rectTransform, new Vector2(1, 1), new Vector2(280, 12), new Vector2(-20, -44));
 
