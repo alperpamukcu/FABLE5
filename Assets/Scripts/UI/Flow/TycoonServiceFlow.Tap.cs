@@ -322,15 +322,18 @@ namespace LastCall.UI
 
             var done = NewRect("Done", _tapPanel);
             Place(done, new Vector2(0.5f, 0), new Vector2(240, 34), new Vector2(130, 12));
-            done.gameObject.AddComponent<Image>().color = UITheme.PrimaryAction;
             _tapDoneBtn = done.gameObject.AddComponent<Button>();
             _tapDoneBtn.onClick.AddListener(() =>
             {
                 if (!Run.ServingGlass.IsEmpty) GoTo(Stage.Closed);
             });
             _tapDoneGroup = done.gameObject.AddComponent<CanvasGroup>();
-            var doneLabel = NewText("Label", done, _body, 8, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
-            Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var doneFace = NewRect("Face", done);
+            Stretch(doneFace, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            KeyPlate.Dress(done, UITheme.PrimaryAction, _tapDoneBtn, doneFace);   // GDD 16 §2
+            var doneLabel = NewText("Label", doneFace, _body, 8, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
+            Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(4, KeyPlate.Throw), new Vector2(-4, 0));
             doneLabel.text = "SERVE IT · CLICK A CUSTOMER";
         }
 

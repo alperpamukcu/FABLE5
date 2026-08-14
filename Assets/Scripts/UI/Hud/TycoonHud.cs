@@ -384,13 +384,15 @@ namespace LastCall.UI
         private static List<SpecRow> RecipeSpecRows(RecipeDefinition r, bool poursOnly = false)
         {
             var rows = new List<SpecRow>();
-            // THE PREP WORD ONLY WHEN IT IS GRADED, EVERYWHERE (2026-08-11, the author:
-            // "kaldırılan gereksiz yazıları hepsini kaldır"). ServiceJudge.MethodScore scores
-            // a shaken recipe that was not shaken at zero, and the method is 40% of craft
-            // which is 35% of the tip — so SHAKEN and STIRRED are worth printing. NEAT, ON TAP
-            // and BUILT are scored nowhere at all (Built is the "either, or neither" class):
-            // they were a word on every card that could never change an outcome.
-            if (r.Prep == PrepMethod.Shaken || r.Prep == PrepMethod.Stirred)
+            // THE PREP WORD WHEN IT CHANGES WHAT YOU DO (2026-08-11, narrowed to the graded
+            // methods on the author's "kaldırılan gereksiz yazıları hepsini kaldır"; widened
+            // again 2026-08-14 when GDD 21 §12 was overturned). ServiceJudge.MethodScore
+            // scores a shaken recipe that was not shaken at zero, and the method is 40% of
+            // craft which is 35% of the tip — so SHAKEN and STIRRED were always worth
+            // printing. BUILT earns its place now that every drink comes through the tin:
+            // it is the instruction NOT to work this one, which is a thing you can get
+            // wrong. ON TAP stays out — the keg is its own stage and never reads a card.
+            if (r.Id != "draught")
                 rows.Add(new SpecRow(null, PrepWord(r)));
             var bands = r.RatioRequirements;
             var shown = WholePercents(RatioRecipeMatcher.IdealPour(r));
@@ -5667,16 +5669,20 @@ namespace LastCall.UI
         {
             var row = NewRect($"Row{index}", _settingsPanel);
             Place(row, new Vector2(0.5f, 1), new Vector2(396, 30), new Vector2(0, -24f - index * 34f));
-            var img = row.gameObject.AddComponent<Image>();
-            img.color = UITheme.Night[3];
             var btn = row.gameObject.AddComponent<Button>();
-            btn.targetGraphic = img;
             btn.onClick.AddListener(() => onClick());
+            // THE ONE KEY (GDD 16 §2). These were bare rects that did not even press — the
+            // fourth dialect, and the one the author named first: a menu of things you click
+            // where nothing answers the click.
+            var face = NewRect("Face", row);
+            Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            KeyPlate.Dress(row, UITheme.Night[3], btn, face);
             // THE LABEL WAS TAKEN AND NEVER WRITTEN (2026-08-10). Only the three settings
             // rows had text, because RefreshSettings assigns theirs afterwards — every dev
             // button was a blank slab you had to have written to know what it did.
-            var text = NewText("L", row, _body, 8, TextAnchor.MiddleCenter, UITheme.TextPrimary);
-            Stretch(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 0), new Vector2(-8, 0));
+            var text = NewText("L", face, _body, 8, TextAnchor.MiddleCenter, UITheme.TextPrimary);
+            Stretch(text.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(8, KeyPlate.Throw), new Vector2(-8, 0));
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Truncate;
             text.text = label;
@@ -8539,23 +8545,24 @@ namespace LastCall.UI
             rt.anchorMin = rt.anchorMax = rt.pivot = anchor;
             rt.sizeDelta = size;
             rt.anchoredPosition = pos;
-            var img = rt.gameObject.AddComponent<Image>();
-            img.color = fill;
             var button = rt.gameObject.AddComponent<Button>();
-            button.targetGraphic = img;
             button.onClick.AddListener(() => onClick());
             // A face of its own, so the hover lift moves the label with the plate rather than
             // sliding the plate out from under it (PressSink moves one transform).
             var face = NewRect("Face", rt);
             Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var sink = rt.gameObject.AddComponent<PressSink>();
-            sink.Face = face; sink.Depth = 3f; sink.Squash = 0.015f; sink.Lift = 2f; sink.Tint = img;
+            // THE ONE KEY (GDD 16 §2). This used to be a flat coloured rect — the third of
+            // four button dialects the game was speaking at once.
+            KeyPlate.Dress(rt, fill, button, face);
 
             Color ink = fill == UITheme.PrimaryAction ? UITheme.TextOnAmber : UITheme.TextPrimary;
             if (icon != null)
             {
                 var mark = NewRect("Mark", face);
-                Stretch(mark, Vector2.zero, Vector2.one, new Vector2(5, 5), new Vector2(-5, -5));
+                // 5 a side keeps a 16-unit mark at 1:1 in a 26-unit key (GDD 16 §3); the
+                // extra along the bottom lifts it off the key's throw.
+                Stretch(mark, Vector2.zero, Vector2.one,
+                    new Vector2(5, 5 + KeyPlate.Throw), new Vector2(-5, -5));
                 var mi = mark.gameObject.AddComponent<Image>();
                 mi.sprite = icon; mi.color = ink; mi.preserveAspect = true; mi.raycastTarget = false;
                 return rt;
@@ -8571,7 +8578,9 @@ namespace LastCall.UI
             // left MENU — MAKE A DRINK as a whisper inside a 300-unit amber slab.
             int labelSize = rt.sizeDelta.y >= 32f ? 16 : 8;
             var text = NewText("Label", face, _body, labelSize, TextAnchor.MiddleCenter, ink);
-            Stretch(text.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            // Riding up off the throw, the way the market's key has always set its caption.
+            Stretch(text.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(4, KeyPlate.Throw), new Vector2(-4, 0));
             text.text = label;
             return rt;
         }

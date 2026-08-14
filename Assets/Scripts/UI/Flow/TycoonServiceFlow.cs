@@ -325,16 +325,16 @@ namespace LastCall.UI
         {
             var rt = NewRect("EdgeBack", panel);
             Place(rt, new Vector2(0f, 0.5f), new Vector2(76, 150), new Vector2(14, 0));
-            var img = rt.gameObject.AddComponent<Image>();
-            img.color = UITheme.Night[3];
             var btn = rt.gameObject.AddComponent<Button>();
-            btn.targetGraphic = img;
             btn.onClick.AddListener(() => GoTo(Stage.Menu));
-            var label = NewText("L", rt, _body, 12, TextAnchor.MiddleCenter, UITheme.TextPrimary);
-            Stretch(label.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 4), new Vector2(-4, -4));
+            var face = NewRect("Face", rt);
+            Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            KeyPlate.Dress(rt, UITheme.Night[3], btn, face);      // THE ONE KEY (GDD 16 §2)
+            // 8, not 12 — the size that face actually has (GDD 16 §0).
+            var label = NewText("L", face, _body, 8, TextAnchor.MiddleCenter, UITheme.TextPrimary);
+            Stretch(label.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(4, 4 + KeyPlate.Throw), new Vector2(-4, -4));
             label.text = "BACK\nTO\nBAR";
-            var sink = rt.gameObject.AddComponent<PressSink>();
-            sink.Face = rt; sink.Depth = 3f; sink.Lift = 2f;
         }
 
         private void OpenBottle(IngredientCard card)
@@ -351,28 +351,24 @@ namespace LastCall.UI
             // Beer never enters the shaker (GDD 21 §10): the keg opens the tap instead, and the
             // glass it fills is the one that goes out.
             if (card.Type == IngredientType.Beer) { GoTo(Stage.Tap); return; }
-            // Fizz never enters it either (GDD 21 §12): its only door is the serving glass.
-            // Routing it to the shaker anyway put a bottle in the hand that Core refuses
-            // every frame — the author's bug report: "cola, volt enerji dökülmüyor". It goes
-            // to the counter instead, already in hand, ready to tip over the glass.
-            if (card.Info != null && card.Info.Carbonated)
-            {
-                // THE TIN COMES FIRST (2026-08-14, the author: picking a soda after the
-                // spirits jumped to the counter with the tin still open, and an open tin
-                // cannot be reached from there — the drink was stranded). The fizz keeps
-                // its door, but the bench's own gate is not a door it may walk past: an
-                // unfinished tin sends the player back to close it, and the bottle waits
-                // on the wall for the second click.
-                if (BenchUnfinished(Run))
-                {
-                    DemandBench(BenchOwed(Run).ToUpperInvariant() + " — THEN THE FIZZ");
-                    return;
-                }
-                GoTo(Stage.Serve);
-                TakeFromCabinet(card.Id);
-                return;
-            }
-            GoTo(Stage.Shaker);
+            // EVERYTHING ELSE GOES IN THE TIN (2026-08-14, the author: "tüm içecekler
+            // shakera koyulacak"). The fizz used to have its own door onto the counter,
+            // which gave the bar two places to build a drink and left the tin holding half
+            // of one; Core lets carbonated into the tin now, so the wall has one answer for
+            // every bottle. The tin is where a drink is built, whatever the recipe's method
+            // turns out to be.
+            //
+            // THE LID DECIDES WHERE THE WALL SENDS YOU ("shaker açıksa shakera koyma
+            // menüsüne yönlendirecek, shaker kapağı kapandıktan sonra bardağa koyma
+            // menüsüne"). An open tin always takes the bottle — that is what an open tin
+            // is for. A closed one is a finished drink, so the wall reads the pick as "on
+            // with it" and moves to the counter — unless the bench is still owed the
+            // method the recipe asks for, in which case it turns you around and says so.
+            // The lid comes off again on the bench, which is the way back from a cap
+            // closed too early.
+            if (!_capped) { GoTo(Stage.Shaker); return; }
+            if (BenchUnfinished(Run)) { DemandBench(BenchOwed(Run).ToUpperInvariant()); return; }
+            GoTo(Stage.Serve);
         }
 
 
@@ -479,34 +475,21 @@ namespace LastCall.UI
         private Button AddFlexButton(RectTransform parent, string label, Color fill, Action onClick)
         {
             var rt = NewRect(label, parent);
-            var img = rt.gameObject.AddComponent<Image>();
-            img.color = fill;
             var button = rt.gameObject.AddComponent<Button>();
-            button.targetGraphic = img;
             button.onClick.AddListener(() => onClick());
 
-            // Same key as the shelf, so the sheet carries one set of buttons rather than two.
-            var plate = ItemArt.Load("plate");
-            var plateDown = ItemArt.Load("plate_down");
-            if (plate != null)
-            {
-                img.sprite = plate; img.type = Image.Type.Sliced;
-                img.pixelsPerUnitMultiplier = PlatePixelScale;
-                if (plateDown != null)
-                {
-                    button.transition = Selectable.Transition.SpriteSwap;
-                    var st = button.spriteState;
-                    st.pressedSprite = plateDown; st.selectedSprite = plate;
-                    button.spriteState = st;
-                }
-            }
+            // THE ONE KEY (GDD 16 §2). This loaded a `plate` sprite out of Resources with a
+            // pressed twin — the SECOND of four button dialects, and the reason the bench and
+            // the market never looked like the same game. The drawn key replaces it: it is
+            // grey by construction and takes its colour here, so one drawing serves every
+            // state instead of two sprites serving one.
             var face = NewRect("Content", rt);
             Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var sink = rt.gameObject.AddComponent<PressSink>();
-            sink.Face = face; sink.Depth = 4f; sink.Squash = 0.015f;
+            KeyPlate.Dress(rt, fill, button, face);
 
             var text = NewText("Label", face, _body, 16, TextAnchor.MiddleCenter, Color.black);
-            Stretch(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(0, 10), new Vector2(0, -4));
+            Stretch(text.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(0, KeyPlate.Throw), new Vector2(0, -4));
             text.text = label;
             return button;
         }

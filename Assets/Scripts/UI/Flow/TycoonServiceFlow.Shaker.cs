@@ -91,6 +91,8 @@ namespace LastCall.UI
         // through the menu. Gated on Core's own CanPourOut, so the key can never walk
         // the player into the refusal.
         private Button _toGlassBtn;
+        private Button _lidOffKey;
+        private CanvasGroup _lidOffGroup;
         private CanvasGroup _toGlassGroup;
         private Text _toGlassLabel;
         private bool _toGlassWasOn;
@@ -225,7 +227,25 @@ namespace LastCall.UI
             bool filled = !run.Glass.IsEmpty;
             bool mixed = run.IsMixed;
             int at = !filled ? 0 : !_capped ? 1 : !mixed && run.MixRequired ? 2 : !mixed ? 2 : 3;
-            PaintSteps(_stepRows, at, -1, false);
+
+            // THE CARD NAMES THE METHOD (2026-08-14, the author: "tariflerin hangilerinin
+            // çalkalanması gerektiği hangisinin karıştırması gerektiği belirtilsin önemli").
+            // The third row stops being a menu of two and becomes the instruction the tin's
+            // own contents ask for. A Built drink's row is ticked on sight: there is nothing
+            // to do to it, and a step with nothing to do is a step already taken.
+            var method = filled ? run.TinMethod : null;
+            int optional = -1;
+            bool optionalDone = false;
+            if (_stepRows.Count > 2)
+            {
+                _stepRows[2].label.text =
+                    method == PrepMethod.Shaken ? "SHAKE IT"
+                    : method == PrepMethod.Stirred ? "STIR IT"
+                    : method == PrepMethod.Built ? "BUILT, NO MIXING"
+                    : "SHAKE OR STIR";
+                if (method == PrepMethod.Built) { optional = 2; optionalDone = true; }
+            }
+            PaintSteps(_stepRows, at, optional, optionalDone);
         }
 
         /// <summary>
@@ -747,15 +767,64 @@ namespace LastCall.UI
             var capImg = _shakerTop.GetComponent<Image>();
             if (capImg != null) capImg.raycastTarget = !_capped;   // capped: grab the tin, not the lid
 
+            // THE LID COMES OFF AGAIN (2026-08-14, the author: "kapağı kapatıldıktan sonra
+            // isterse kapağı çıkarabilecek karıştırmayı unutursa diye"). Its own key rather
+            // than a drag: the capped tin is grabbed to SHAKE it, so a grabbable lid resting
+            // on top would steal the gesture the stage exists for. It shows only while the
+            // lid is on and the tin is still.
+            if (_lidOffKey != null)
+            {
+                bool offer = _capped && !_shaking && !run.Glass.IsEmpty;
+                if (_lidOffGroup != null)
+                {
+                    _lidOffGroup.alpha = Mathf.MoveTowards(_lidOffGroup.alpha, offer ? 1f : 0f, dt / 0.18f);
+                    _lidOffGroup.blocksRaycasts = offer;
+                }
+                _lidOffKey.interactable = offer;
+            }
+
             if (!_capped && !run.Glass.IsEmpty && !_capGrabbed && !_spoonHeld)
             {
-                // The mix rule speaks BEFORE the lid does: a two-spirit tin has a decision
-                // to make (spoon or lid), and "close it" alone steers past the spoon.
-                if (run.MixRequired && !run.IsMixed)
-                    NudgeShaker("two spirits — stir it with the spoon, or cap it and shake");
-                else
-                    NudgeShaker("drag the lid onto the tin to close it");
+                // The method the tin itself asks for speaks BEFORE the lid does: a drink
+                // with a decision to make (spoon or lid) is steered past the spoon by
+                // "close it" alone. Built says so out loud now that the highballs come
+                // through the tin — "cap it and take it over" is an instruction, not a
+                // silence.
+                switch (run.TinMethod)
+                {
+                    case PrepMethod.Stirred:
+                        NudgeShaker("this one is STIRRED — work the spoon over the open tin");
+                        break;
+                    case PrepMethod.Shaken:
+                        NudgeShaker("this one is SHAKEN — cap the tin, then shake it");
+                        break;
+                    case PrepMethod.Built:
+                        NudgeShaker("this one is BUILT — no shaking; cap it and take it over");
+                        break;
+                    default:
+                        if (run.MixRequired && !run.IsMixed)
+                            NudgeShaker("two spirits — stir it with the spoon, or cap it and shake");
+                        else
+                            NudgeShaker("drag the lid onto the tin to close it");
+                        break;
+                }
             }
+        }
+
+        /// <summary>
+        /// Take the lid back off. The bench returns to the state it was in before the cap —
+        /// the props come back, the tin walks home — and nothing about the DRINK changes: a
+        /// shake that already happened stays in the glass's preparations, because it did
+        /// happen. This is the way back from a lid closed before the spoon was picked up.
+        /// </summary>
+        private void UncapTin()
+        {
+            if (!_capped || _shaking) return;
+            _capped = false;
+            _capGrabbed = false;
+            _capPos = _capRest;
+            Sfx.Play("bottle_open", 0.7f);
+            SayShaker("lid off — the tin is open again");
         }
 
         /// <summary>
@@ -1242,18 +1311,35 @@ namespace LastCall.UI
             // and lit only when Core itself would let the drink leave.
             var toGlass = NewRect("ToGlass", _shakerPanel);
             Place(toGlass, new Vector2(1f, 0.5f), new Vector2(76, 150), new Vector2(-14, 0));
-            var tgImg = toGlass.gameObject.AddComponent<Image>();
-            tgImg.color = UITheme.PrimaryAction;
             _toGlassBtn = toGlass.gameObject.AddComponent<Button>();
-            _toGlassBtn.targetGraphic = tgImg;
             _toGlassBtn.onClick.AddListener(() => GoTo(Stage.Serve));
             _toGlassGroup = toGlass.gameObject.AddComponent<CanvasGroup>();
-            _toGlassLabel = NewText("L", toGlass, _body, 8, TextAnchor.MiddleCenter, Color.black);
+            var tgFace = NewRect("Face", toGlass);
+            Stretch(tgFace, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            KeyPlate.Dress(toGlass, UITheme.PrimaryAction, _toGlassBtn, tgFace);   // GDD 16 §2
+            _toGlassLabel = NewText("L", tgFace, _body, 8, TextAnchor.MiddleCenter, Color.black);
             Stretch(_toGlassLabel.rectTransform, Vector2.zero, Vector2.one,
-                new Vector2(4, 4), new Vector2(-4, -4));
+                new Vector2(4, 4 + KeyPlate.Throw), new Vector2(-4, -4));
             _toGlassLabel.text = "TO\nTHE\nGLASS";
-            var tgSink = toGlass.gameObject.AddComponent<PressSink>();
-            tgSink.Face = toGlass; tgSink.Depth = 3f; tgSink.Lift = 2f;
+
+            // THE WAY BACK OUT OF A LID CLOSED TOO EARLY (2026-08-14). It stands under the
+            // tin, on the side the spoon rests on, and only ever appears once the lid is
+            // actually on — the bench props have faded by then, so it is not one more thing
+            // to read while the drink is being built.
+            var lidOff = NewRect("LidOff", _shakerPanel);
+            Place(lidOff, new Vector2(0f, 0f), new Vector2(160, 52), new Vector2(120, 132));
+            _lidOffKey = lidOff.gameObject.AddComponent<Button>();
+            var lidFace = NewRect("Face", lidOff);
+            Stretch(lidFace, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            KeyPlate.Dress(lidOff, UITheme.Night[3], _lidOffKey, lidFace);
+            var lidLabel = NewText("L", lidFace, _body, 8, TextAnchor.MiddleCenter, UITheme.TextPrimary);
+            Stretch(lidLabel.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(4, 4 + KeyPlate.Throw), new Vector2(-4, -4));
+            lidLabel.text = "TAKE THE LID OFF";
+            _lidOffGroup = lidOff.gameObject.AddComponent<CanvasGroup>();
+            _lidOffGroup.alpha = 0f;
+            _lidOffGroup.blocksRaycasts = false;
+            _lidOffKey.onClick.AddListener(UncapTin);
 
             // What to do, in order, in the corner nothing else uses.
             BuildStepCard(_shakerPanel);

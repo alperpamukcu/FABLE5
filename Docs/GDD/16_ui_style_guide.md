@@ -63,9 +63,14 @@ button has learned the settings menu and the HUD.
   instead, inlaid so the drawing lands 1:1 (see §3).
 - **One amber key per screen.** Amber is the primary action. Two amber keys means neither is.
 
-**Known debt (2026-08-14):** `NewButton` draws a flat fill and `SettingsRow` draws a bare
-`Image` with no throw at all, so the game currently speaks three button dialects. They both
-become the KEY. Until they do, do not add a fourth.
+**Dressed by `KeyPlate.Dress`, and nowhere else.** It sets the drawn body, slices it, tints
+it and wires the press in one call, so a new control cannot accidentally invent a fourth
+dialect — there were four (2026-08-14, now closed): the market's drawn key, the service
+flow's `plate` sprite out of Resources, the HUD's flat coloured rect, and the settings
+menu's bare rect that did not press at all.
+
+Captions on a key are inset along the bottom by `KeyPlate.Throw`, so they ride ON the face
+and not on the throw.
 
 ## 3. The scaling law
 

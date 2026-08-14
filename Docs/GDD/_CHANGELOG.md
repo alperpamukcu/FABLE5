@@ -2,6 +2,15 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `16 §2` **one key, everywhere (2026-08-14):** the four dialects are closed. `KeyPlate.Dress`
+  is the only way a control gets dressed now — the drawn `ChromeArt.Key()` body, sliced,
+  tinted by the caller, with the house press wired to a face that carries the caption. It
+  replaces the service flow's `plate`/`plate_down` sprites out of Resources, the HUD's flat
+  coloured rect and the settings menu's bare rect. MENU, BOOK, every settings row, BACK TO
+  BAR, TO THE GLASS, SERVE IT and POUR FIRST are the same object the market's key always was.
+  `AddEdgeBack` was still setting its caption at 12pt — the audit only measures the screen
+  that is actually on the screen, and the bench had not been on one when it last ran.
+
 - `16` **the chrome has a written language again, and a machine that checks half of it
   (2026-08-14, the author: "butonlar ayarlar menüsü oyunun ekrandaki HUD paneller bunların
   aynı sanat dilinde olması gerekiyor"):** module 16 was describing a game that no longer
