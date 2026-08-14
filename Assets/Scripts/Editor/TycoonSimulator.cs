@@ -18,12 +18,17 @@ namespace LastCall.EditorTools
     /// bar-time per drink, restocks at day end, and buys stools when flush. A floor, not
     /// a prediction.
     ///
-    /// IT TRIES TO BUY BETTER BOTTLES AND CANNOT AFFORD ONE (2026-08-14). The rule is there
-    /// and the report counts what it buys; the count is zero, across two hundred runs, at
-    /// every cushion tried. That is not a bug in the rule — it is the measurement. This bar
-    /// takes $150 a day and spends $145, and an upgrade is a purchase a five-dollar margin
-    /// never reaches. See Docs/star_track_report.md: it is also why the standing stops
-    /// climbing at three stars.
+    /// ~~IT TRIES TO BUY BETTER BOTTLES AND CANNOT AFFORD ONE.~~ **That was the instrument,
+    /// not the bar** (2026-08-14, found by the lineup pass). The count was zero across two
+    /// hundred runs at every cushion tried, and the money was never the reason: `PlayRun`
+    /// built its run WITHOUT a brand catalogue, so the better bottles were never handed to
+    /// the market and the offer never existed to be afforded. It also opened with every
+    /// unlocked tier-1 bottle already on the shelf — a richer bar than the game's own six.
+    ///
+    /// Both are fixed: the bot opens with GameBootstrap's six and shops the same catalogue
+    /// the player does. The first report after it buys **999** upgrades. Every measurement
+    /// taken before this — the star track's plateau included — was of a bar that could not
+    /// pour anything well, and should be read again.
     /// </summary>
     public static class TycoonSimulator
     {
@@ -428,9 +433,33 @@ namespace LastCall.EditorTools
             Hands handsIn = null)
         {
             stats.BeginRun();   // this bar has climbed nothing yet
-            var starting = deck.Cards
-                .Where(c => c.Info == null || c.Info.Tier <= 1)
-                .Select(c => c.Clone()).ToList();
+
+            // THE BOT OPENS THE BAR THE PLAYER OPENS (2026-08-14, the lineup pass).
+            //
+            // It used to start with EVERY unlocked tier-1 bottle already on the shelf and no
+            // brand catalogue at all — so it opened richer than the game does and could never
+            // buy a better bottle, because the better bottles were never handed to the run.
+            // That is why "brand upgrades bought" has read 0 in every report ever written,
+            // and the header blamed a five-dollar margin: the money was never asked. It is
+            // also why the star track came back saying the climb stops around three, on a bar
+            // that was structurally incapable of pouring anything well.
+            //
+            // GameBootstrap's own six, and everything else offered across the counter.
+            var startingIds = new HashSet<string>
+            {
+                "vodka_astra", "gin_boothby", "soda_klara", "lemon_fresh", "syrup_house",
+                "beer_kestrel",
+            };
+            var starting = new List<IngredientCard>();
+            var catalogue = new List<IngredientCard>();
+            foreach (var card in deck.Cards)
+            {
+                if (startingIds.Contains(card.Id)) starting.Add(card.Clone());
+                else catalogue.Add(card);
+            }
+            if (starting.Count == 0)   // the same data-drift guard the game keeps
+                foreach (var card in deck.Cards)
+                    if (card.Info == null || card.Info.Tier <= 1) starting.Add(card.Clone());
             var shelf = new Shelf(starting.Select(c => new ShelfBottle(c)));
             // The quarantined bottles ride along (P16): buying a recipe releases its styles
             // into the market, and without this the sim's bought menu was undrinkable — half
@@ -443,7 +472,8 @@ namespace LastCall.EditorTools
             // same clock — which is the only way the two can be compared at all.
             var rng = new RunRng(seed);
             var run = new TycoonRun(shelf, recipes, rng,
-                regulars: new RegularsRegistry(archetypes), glassware: glassware, snacks: snacks,
+                regulars: new RegularsRegistry(archetypes), brandCatalogue: catalogue,
+                glassware: glassware, snacks: snacks,
                 lockedStock: deck.LockedCards, story: story);
             var hands = handsIn ?? Hands.Steady;
             hands.Dice = rng.GetStream("hands");
@@ -592,6 +622,48 @@ namespace LastCall.EditorTools
                         var offer = run.MarketOffers[oi];
                         if (offer.Sold || !offer.IsNewStock || !neededStyles.Contains(offer.Style)) continue;
                         if (run.Money >= offer.Price + 40) run.BuyBrand(oi);
+                    }
+
+                    // A TIER THE MENU DEMANDS IS STOCK, NOT A LUXURY (2026-08-14, the lineup
+                    // pass). The rule below treats every upgrade as skippable — "nothing
+                    // stops working without it" — and that stopped being true the day the
+                    // book started naming tiers: a Gimlet asks for the reserve gin, and a bar
+                    // holding only the well bottle cannot make one at all. Measured before
+                    // this branch existed: the bot DECLINED 10,520 orders across 200 runs
+                    // against 2 before, and its standing fell from 2.82 to 2.64 — which was
+                    // a bot that could not shop, not a design that could not be played.
+                    //
+                    // Bought at the same $40 cushion new stock is, because it is new stock in
+                    // everything but the market's own two-branch vocabulary.
+                    var demanded = new Dictionary<string, int>();
+                    foreach (var r in run.MenuRecipes)
+                        foreach (var band in r.RatioRequirements)
+                            if (band.IsStyleBand && band.MinTier > 1)
+                                demanded[band.Style] = Math.Max(
+                                    demanded.TryGetValue(band.Style, out int had) ? had : 0, band.MinTier);
+                    for (int oi = 0; oi < run.MarketOffers.Count; oi++)
+                    {
+                        var offer = run.MarketOffers[oi];
+                        if (offer.Sold || offer.IsNewStock) continue;
+                        if (!demanded.TryGetValue(offer.Style, out int want)) continue;
+                        stats.TierOffersSeen++;
+                        if ((offer.Bottle.Info?.Tier ?? 1) < want) continue;
+                        bool already = false;
+                        foreach (var b in run.Shelf.Bottles)
+                            if (b.Ingredient.Info?.Style == offer.Style
+                                && (b.Ingredient.Info?.Tier ?? 1) >= want) { already = true; break; }
+                        if (already) continue;
+                        if (run.Money >= offer.Price + 40)
+                        { run.BuyBrand(oi); stats.BrandsBought++; stats.TierBuys++; }
+                    }
+                    foreach (var kv in demanded)
+                    {
+                        stats.TierDemands++;
+                        bool met = false;
+                        foreach (var b2 in run.Shelf.Bottles)
+                            if (b2.Ingredient.Info?.Style == kv.Key
+                                && (b2.Ingredient.Info?.Tier ?? 1) >= kv.Value) { met = true; break; }
+                        if (!met) stats.TierShort++;
                     }
 
                     // THE BOT SHOPS FOR BETTER BOTTLES NOW (2026-08-14, GDD 26 §12.2 step 3).
@@ -993,6 +1065,15 @@ namespace LastCall.EditorTools
             public int GlassesBussed;
             public int RecipesBought;
             public int BrandsBought;   // upgrades only; new stock is not a choice the bot makes
+
+            // WHETHER THE BAR EVER GETS THE BOTTLES ITS OWN BOOK DEMANDS (2026-08-14, the
+            // lineup pass). A minTier band is a page you own and cannot pour, so a floor
+            // that quietly declines those is measuring nothing. Counted at every day end:
+            // how many (style, tier) demands the menu makes that the shelf cannot answer.
+            public int TierDemands;
+            public int TierShort;
+            public int TierBuys;
+            public int TierOffersSeen;   // upgrade offers whose style the menu demands
             // v5 P11: the base/tip split is the phase's whole point, and refusals/declines are
             // the two new ways a serve can end.
             public int Refused, Declined, SpecOrders, SpecFull;
@@ -1171,6 +1252,10 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Glasses bussed | {GlassesBussed} |");
                 sb.AppendLine($"| Recipes bought (of {Runs} runs) | {RecipesBought} |");
                 sb.AppendLine($"| Brand upgrades bought | {BrandsBought} |");
+                sb.AppendLine($"| Tier demands the shelf could not answer | {TierShort} of {TierDemands}" +
+                              $" ({100.0 * TierShort / Math.Max(1, TierDemands):0.0}%) |");
+                sb.AppendLine($"| Demanded upgrades bought | {TierBuys} |");
+                sb.AppendLine($"| Demanded upgrades OFFERED | {TierOffersSeen} |");
                 sb.AppendLine();
 
                 // ── the star track (GDD 26 §12.2 step 3) ─────────────────────

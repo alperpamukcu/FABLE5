@@ -291,9 +291,12 @@ namespace LastCall.Tests
         {
             var deck = DataLoader.ParseDeck(ReadDataFile("bottles/base_bar.json"));
 
-            // P10's seven, plus the P16 wave's four (cranberry, coffee liqueur, pineapple,
-            // grenadine) — every one released by the recipe that needs it.
-            Assert.AreEqual(11, deck.LockedCards.Count, "the quarantined cocktail ingredients");
+            // P10's seven, the P16 wave's four (cranberry, coffee liqueur, pineapple,
+            // grenadine), and the six the lineup pass caught on 2026-08-14: ginger, mint,
+            // olive, vermouth, amaro and the well rum were all for sale from day one with
+            // no page in the book that wanted them. Every one is released by the recipe
+            // that needs it — which is what "quarantined" has always meant here.
+            Assert.AreEqual(17, deck.LockedCards.Count, "the quarantined cocktail ingredients");
             Assert.IsFalse(deck.Cards.Any(c => deck.LockedCards.Any(l => l.Id == c.Id)),
                 "no locked card leaks into the live deck");
             foreach (var card in deck.Cards.Concat(deck.LockedCards))

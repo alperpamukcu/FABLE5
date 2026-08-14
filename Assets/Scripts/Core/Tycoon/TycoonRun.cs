@@ -312,12 +312,20 @@ namespace LastCall.Core
         /// three easiest of them come at one star — and no recipe was added or moved out
         /// of the book to do it.
         /// </summary>
+        /// <summary>
+        /// AND A FIFTH RUNG (2026-08-14, the author: "en zor tarifi 5 yıldız yapmanı
+        /// istiyorum, oyun sonu açılan bir içki"). The book stopped at four, so the last
+        /// star the bar can earn bought nothing — the standing's own ceiling was the one
+        /// rung with no page behind it. Rank 30 is Last Call and nothing else will be:
+        /// a fifth-star band with a crowd in it is a fourth-star band wearing a hat.
+        /// </summary>
         public double RecipeStarGate(RecipeDefinition recipe) =>
             recipe.Rank <= 8 ? 0.0
             : recipe.Rank <= 11 ? 1.0
             : recipe.Rank <= 14 ? 2.0
             : recipe.Rank <= 21 ? 3.0
-            : 4.0;
+            : recipe.Rank <= 29 ? 4.0
+            : 5.0;
 
         // ── every lock, asked the same way (GDD 26 §12.2 step 4) ────────────────
 

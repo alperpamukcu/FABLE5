@@ -90,15 +90,15 @@ namespace LastCall.Core
                 Cocktail("whiskey_ginger", "Whiskey Ginger", 10, 20, 2, 15, 1, PrepMethod.Built, "highball",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, bu) },
                     locked: true,
-                    Band("bourbon", .30, .50), Band("ginger", .50, .70)),
+                    TopShelf("bourbon", .30, .50, 2), Band("ginger", .50, .70)),
                 Cocktail("moscow_mule", "Moscow Mule", 11, 20, 2, 15, 1, PrepMethod.Built, "highball",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, bu), new PatternRequirement(1, so) },
                     locked: true,
-                    Band("vodka", .30, .50), Band("ginger", .40, .60), Band("lime", .05, .20)),
+                    TopShelf("vodka", .30, .50, 2), Band("ginger", .40, .60), Band("lime", .05, .20)),
                 Cocktail("gimlet", "Gimlet", 12, 25, 2, 20, 1, PrepMethod.Shaken, "coupe",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
                     locked: true,
-                    Band("gin", .55, .75), Band("lime", .15, .35), Band("syrup", .08, .25)),
+                    TopShelf("gin", .55, .75, 2), Band("lime", .15, .35), Band("syrup", .08, .25)),
                 Cocktail("sex_on_beach", "Sex on the Beach", 13, 25, 2, 20, 1, PrepMethod.Built, "highball",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(2, so) },
                     locked: true,
@@ -118,11 +118,11 @@ namespace LastCall.Core
                 Cocktail("whiskey_sour", "Whiskey Sour", 15, 25, 2, 20, 1, PrepMethod.Shaken, "rocks",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
                     locked: true,
-                    Band("bourbon", .45, .65), Band("lemon", .20, .40), Band("syrup", .10, .30)),
+                    TopShelf("bourbon", .45, .65, 3), Band("lemon", .20, .40), Band("syrup", .10, .30)),
                 Cocktail("daiquiri", "Daiquiri", 16, 25, 2, 20, 1, PrepMethod.Shaken, "coupe",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
                     locked: true,
-                    Band("rum", .45, .65), Band("lime", .15, .35), Band("syrup", .10, .30)),
+                    TopShelf("rum", .45, .65, 3), Band("lime", .15, .35), Band("syrup", .10, .30)),
                 Cocktail("gin_fizz", "Gin Fizz", 17, 25, 2, 20, 1, PrepMethod.Shaken, "highball",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw), new PatternRequirement(1, bu) },
                     locked: true,
@@ -134,7 +134,7 @@ namespace LastCall.Core
                 Cocktail("margarita", "Margarita", 19, 30, 3, 20, 1, PrepMethod.Shaken, "coupe",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(1, so) },
                     locked: true,
-                    Band("tequila", .40, .60), Band("triple_sec", .15, .35), Band("lime", .15, .35)),
+                    TopShelf("tequila", .40, .60, 3), Band("triple_sec", .15, .35), Band("lime", .15, .35)),
                 Cocktail("cosmopolitan", "Cosmopolitan", 19, 30, 3, 20, 1, PrepMethod.Shaken, "martini",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(2, so) },
                     locked: true,
@@ -154,7 +154,7 @@ namespace LastCall.Core
                 Cocktail("white_lady", "White Lady", 20, 30, 3, 20, 1, PrepMethod.Shaken, "coupe",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(1, so) },
                     locked: true,
-                    Band("gin", .40, .60), Band("triple_sec", .20, .40), Band("lemon", .15, .35)),
+                    TopShelf("gin", .40, .60, 3), Band("triple_sec", .20, .40), Band("lemon", .15, .35)),
                 Cocktail("southside", "Southside", 21, 30, 3, 20, 1, PrepMethod.Shaken, "coupe",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw), new PatternRequirement(1, g) },
                     locked: true,
@@ -237,7 +237,7 @@ namespace LastCall.Core
                 Cocktail("dark_stormy", "Dark 'n' Stormy", 14, 20, 2, 15, 1, PrepMethod.Built, "highball",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, bu), new PatternRequirement(1, so) },
                     locked: true,
-                    Band("rum", .30, .50), Band("ginger", .40, .60), Band("lime", .05, .20)),
+                    TopShelf("rum", .30, .50, 2), Band("ginger", .40, .60), Band("lime", .05, .20)),
                 Cocktail("sea_breeze", "Sea Breeze", 14, 25, 2, 20, 1, PrepMethod.Built, "highball",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(2, so) },
                     locked: true,
@@ -245,7 +245,7 @@ namespace LastCall.Core
                 Cocktail("tequila_sour", "Tequila Sour", 14, 25, 2, 20, 1, PrepMethod.Shaken, "rocks",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
                     locked: true,
-                    Band("tequila", .45, .65), Band("lemon", .20, .40), Band("syrup", .10, .30)),
+                    TopShelf("tequila", .45, .65, 2), Band("lemon", .20, .40), Band("syrup", .10, .30)),
 
                 // Hard: the mint and the pineapple earn their shelf space here.
                 Cocktail("matador", "Matador", 21, 25, 2, 20, 1, PrepMethod.Shaken, "coupe",
@@ -283,26 +283,44 @@ namespace LastCall.Core
                 Cocktail("martinez", "Martinez", 28, 35, 3, 25, 2, PrepMethod.Stirred, "martini",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(2, sw) },
                     locked: true,
-                    TopShelf("gin", .50, .70, 2), Band("vermouth", .22, .42), Band("triple_sec", .05, .18)),
+                    TopShelf("gin", .50, .70, 4), Band("vermouth", .22, .42), Band("triple_sec", .05, .18)),
                 Cocktail("boulevardier", "Boulevardier", 28, 35, 3, 25, 2, PrepMethod.Stirred, "rocks",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(1, bi) },
                     locked: true,
-                    TopShelf("bourbon", .28, .42, 2), Band("vermouth", .28, .42), Band("amaro", .28, .42)),
+                    TopShelf("bourbon", .28, .42, 4), Band("vermouth", .28, .42), Band("amaro", .28, .42)),
                 Cocktail("rosita", "Rosita", 28, 35, 3, 25, 2, PrepMethod.Stirred, "rocks",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(1, bi) },
                     locked: true,
-                    TopShelf("tequila", .28, .42, 2), Band("vermouth", .28, .42), Band("amaro", .28, .42)),
+                    TopShelf("tequila", .28, .42, 4), Band("vermouth", .28, .42), Band("amaro", .28, .42)),
                 Cocktail("el_presidente", "El Presidente", 28, 35, 3, 25, 2, PrepMethod.Stirred, "coupe",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(3, sw) },
                     locked: true,
-                    TopShelf("rum", .45, .65, 2), Band("vermouth", .20, .38), Band("triple_sec", .06, .18),
+                    TopShelf("rum", .45, .65, 4), Band("vermouth", .20, .38), Band("triple_sec", .06, .18),
                     Band("grenadine", .03, .12)),
                 // The capstone: the only drink that wants the TOP shelf, and it wants two.
                 Cocktail("vesper", "Vesper", 29, 40, 4, 25, 2, PrepMethod.Stirred, "martini",
                     new[] { new PatternRequirement(2, s), new PatternRequirement(1, sw) },
                     locked: true,
-                    TopShelf("gin", .50, .70, 3), TopShelf("vodka", .15, .32, 2),
+                    TopShelf("gin", .50, .70, 4), TopShelf("vodka", .15, .32, 4),
                     Band("vermouth", .06, .18)),
+
+                // ── THE LAST DRINK ON THE LIST (2026-08-14) ──────────────────────
+                //
+                // The house's own, and the only page behind FIVE stars — the author's
+                // brief: "en zor tarifi 5 yıldız yapmanı istiyorum, oyun sonu açılan bir
+                // içki… en pahalı alkolleri içeren oyuna özel bir kokteyl."
+                //
+                // It is not a classic and cannot be: no bar in the world serves it,
+                // because it is what THIS bar pours when the lights come up. Five
+                // ingredients built on the $58 bourbon — the most expensive bottle in the
+                // game and, until today, one no recipe had ever asked for. Stirred, in a
+                // rocks glass, dark and slow: the drink you make for the person who stayed.
+                Cocktail("last_call", "Last Call", 30, 50, 5, 30, 2, PrepMethod.Stirred, "rocks",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(4, sw) },
+                    locked: true,
+                    TopShelf("bourbon", .38, .50, 4), Band("amaro", .16, .26),
+                    Band("vermouth", .14, .24), Band("coffee_liqueur", .06, .14),
+                    Band("syrup", .04, .10)),
             };
         }
 

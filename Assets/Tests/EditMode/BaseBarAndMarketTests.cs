@@ -24,23 +24,118 @@ namespace LastCall.Tests
         private static IReadOnlyList<IngredientCard> Starting() =>
             All().Where(c => c.Info == null || c.Info.Tier <= 1).ToList();
 
+        /// <summary>The quarantined half: stock that exists but waits for its recipe.</summary>
+        private static IReadOnlyList<IngredientCard> Locked() =>
+            DataLoader.ParseDeck(ReadDataFile("bottles/base_bar.json")).LockedCards;
+
         [Test]
-        public void TheStartingShelf_IsSmallEnoughToKnowByHeart()
+        public void TheOpeningWall_IsSmallEnoughToKnowByHeart()
         {
             // The whole point of the base bar: the 46-bottle wall was unreadable.
+            //
+            // COUNTED AT THE FIRST RUNG, NOT OFF THE DECK'S PARTITION (2026-08-14). This
+            // used to count "unlocked tier-1 cards", which stopped meaning anything the day
+            // every tier-1 bottle became something a RECIPE releases: the partition now says
+            // how much stock has no page yet, not how much wall a new player reads. What a
+            // new player reads is the opening shelf plus whatever the zero-star pages bring
+            // with them, and that is the number this holds.
             //
             // Counted per axis since draught arrived (GDD 21 §10, 2026-07-27). The rule is
             // about what you have to hold in your head at once, and the taps are not part of
             // the bottle wall — they are their own short row with their own menu section. A
             // twelfth bottle still costs readability; a third keg does not.
-            var starting = Starting();
-            var bottles = starting.Where(c => c.Type != IngredientType.Beer).ToList();
-            var kegs = starting.Where(c => c.Type == IngredientType.Beer).ToList();
+            var reachable = ReachableAtFirstRung();
+            var bottles = reachable.Where(c => c.Type != IngredientType.Beer).ToList();
+            var kegs = All().Concat(Locked()).Where(c => c.Type == IngredientType.Beer).ToList();
 
-            Assert.LessOrEqual(bottles.Count, 12);
-            Assert.GreaterOrEqual(bottles.Count, 8);
+            Assert.LessOrEqual(bottles.Count, 12,
+                "a thirteenth bottle on the opening wall: " +
+                string.Join(", ", bottles.Select(c => c.Id)));
+            Assert.GreaterOrEqual(bottles.Count, 8,
+                "the opening wall has gone bare: " + string.Join(", ", bottles.Select(c => c.Id)));
             Assert.LessOrEqual(kegs.Count, 3, "more taps than that and beer stops being the simple order");
             Assert.GreaterOrEqual(kegs.Count, 1, "a bar with no tap cannot answer the simplest order there is");
+        }
+
+        /// <summary>
+        /// Everything a bar at zero stars can end up holding: the six it opens with, plus
+        /// every tier-1 bottle whose style is named by a page that also opens at zero stars.
+        /// This is the wall the tutorial happens on.
+        /// </summary>
+        private static List<IngredientCard> ReachableAtFirstRung()
+        {
+            var run = new TycoonRun(new Shelf(new[] { new ShelfBottle(All().First()) }),
+                RecipeCatalog.CreateDefault(), new RunRng("wall"));
+            var styles = new HashSet<string>();
+            foreach (var recipe in RecipeCatalog.CreateDefault())
+            {
+                if (run.RecipeStarGate(recipe) > 0.0) continue;
+                foreach (var band in recipe.RatioRequirements)
+                    if (!string.IsNullOrEmpty(band.Style)) styles.Add(band.Style);
+            }
+            var opening = new HashSet<string>
+            {
+                "vodka_astra", "gin_boothby", "soda_klara", "lemon_fresh", "syrup_house", "beer_kestrel",
+            };
+            return All().Concat(Locked())
+                .Where(c => c.Info != null && c.Info.Tier <= 1)
+                .Where(c => opening.Contains(c.Id) || styles.Contains(c.Info.Style))
+                .ToList();
+        }
+
+        /// <summary>
+        /// NO BOTTLE ON THE BOARD BEFORE A PAGE WANTS IT (2026-08-14, the author:
+        /// "tariflerde içerisinde başlangıçta satın alamadığı alkollerin olduğu kokteyl
+        /// tarifinde olmasının mantığı yok… şu an ginger beer var fakat 0 yıldız
+        /// tariflerinde ginger beer kullanılmıyor").
+        ///
+        /// The two ladders — recipes opening on rank, bottles opening on tier and price —
+        /// had never been checked against each other, and ginger beer was for sale from the
+        /// first night for a drink that arrives at one star. A tier-1 bottle is either on
+        /// the opening shelf, or quarantined until the recipe that names it is bought.
+        /// Beer is the exception and says so: the tap answers an order with no page at all.
+        /// </summary>
+        [Test]
+        public void NoTierOneBottle_IsForSaleBeforeAPageWantsIt()
+        {
+            var opening = new HashSet<string>
+            {
+                "vodka_astra", "gin_boothby", "soda_klara", "lemon_fresh", "syrup_house", "beer_kestrel",
+            };
+            var run = new TycoonRun(new Shelf(new[] { new ShelfBottle(All().First()) }),
+                RecipeCatalog.CreateDefault(), new RunRng("lineup"));
+
+            foreach (var card in All())   // the UNLOCKED partition: on the board from night one
+            {
+                if (card.Info == null || card.Info.Tier > 1) continue;
+                if (opening.Contains(card.Id) || card.Type == IngredientType.Beer) continue;
+                double earliest = double.MaxValue;
+                foreach (var recipe in RecipeCatalog.CreateDefault())
+                    foreach (var band in recipe.RatioRequirements)
+                        if (band.Style == card.Info.Style && band.MinTier <= 1)
+                            earliest = System.Math.Min(earliest, run.RecipeStarGate(recipe));
+                Assert.AreEqual(0.0, earliest,
+                    $"{card.Id} is on the board at zero stars, but the first page that wants " +
+                    $"'{card.Info.Style}' opens at {earliest:0.0} stars — quarantine it, or move the page.");
+            }
+        }
+
+        /// <summary>Every brand above the well — the reserve and top shelves — is named by
+        /// at least one page. A $58 bourbon no recipe asks for is a bottle the player is
+        /// invited to waste money on.</summary>
+        [Test]
+        public void EveryUpgradeBottle_IsNamedByAPage()
+        {
+            var book = RecipeCatalog.CreateDefault();
+            foreach (var card in All().Concat(Locked()))
+            {
+                if (card.Info == null || card.Info.Tier <= 1) continue;
+                if (card.Type == IngredientType.Beer) continue;
+                bool wanted = book.Any(r => r.RatioRequirements.Any(
+                    b => b.Style == card.Info.Style && b.MinTier >= card.Info.Tier));
+                Assert.IsTrue(wanted,
+                    $"{card.Id} is a tier-{card.Info.Tier} {card.Info.Style} and no recipe asks for that tier.");
+            }
         }
 
         [Test]
@@ -96,12 +191,21 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void TheStartingShelf_CoversTheRecipeTable()
+        public void TheOpeningWall_CoversWhatTheFirstRungAsksFor()
         {
-            // The derived ratio bands are by type, so the shelf needs every type present.
-            var types = Starting().Select(c => c.Type).Distinct().ToList();
-            foreach (IngredientType type in System.Enum.GetValues(typeof(IngredientType)))
-                CollectionAssert.Contains(types, type);
+            // It used to demand every IngredientType in the enum off the unlocked partition,
+            // for the derived type bands — and the only two recipes that still use those are
+            // Draught (Beer) and Neat Pour (Spirit). Since the lineup pass (2026-08-14) the
+            // Bitter and Garnish bottles wait for the pages that name them, three and four
+            // rungs up, so the old assertion was asking the first night to stock the last.
+            // What must be true is that the first rung can be PLAYED: every type its own
+            // pages call for is on the wall a zero-star bar can reach.
+            var types = ReachableAtFirstRung().Select(c => c.Type).Distinct().ToList();
+            CollectionAssert.Contains(types, IngredientType.Spirit);
+            CollectionAssert.Contains(types, IngredientType.Beer);
+            CollectionAssert.Contains(types, IngredientType.Bubbly);
+            CollectionAssert.Contains(types, IngredientType.Sour);
+            CollectionAssert.Contains(types, IngredientType.Sweet);
         }
     }
 

@@ -1081,8 +1081,9 @@ namespace LastCall.Tests
         [Test]
         public void CanMake_ReadsTheTierBands_NotJustTheStyles()
         {
-            // A Vesper wants tier-3 gin; the matcher refuses well gin, so CanMake saying
-            // "yes" off that same bottle pushed the honest DeclineOrder out of reach.
+            // A Vesper wants the TOP shelf on both spirits (tier 4 since the lineup pass of
+            // 2026-08-14); the matcher refuses well gin, so CanMake saying "yes" off that
+            // same bottle pushed the honest DeclineOrder out of reach.
             var vesper = RecipeCatalog.CreateDefault().First(r => r.Id == "vesper");
             IngredientCard Booze2(string id, string style, string cat, int tier) =>
                 new IngredientCard(id, id, IngredientType.Spirit, 6,
@@ -1100,12 +1101,12 @@ namespace LastCall.Tests
 
             var upgraded = new Shelf(new[]
             {
-                new ShelfBottle(Booze2("gin_t3", "gin", "gin", 3), 20),
-                new ShelfBottle(Booze2("vodka_t", "vodka", "vodka", 2), 20),
+                new ShelfBottle(Booze2("gin_t4", "gin", "gin", 4), 20),
+                new ShelfBottle(Booze2("vodka_t4", "vodka", "vodka", 4), 20),
                 new ShelfBottle(Booze2("vermouth_t", "vermouth", "liqueur", 1), 20),
             });
             var run2 = new TycoonRun(upgraded, RecipeCatalog.CreateDefault(), new RunRng("tiers2"));
-            Assert.IsTrue(run2.CanMake(order), "the tier-3 gin answers it");
+            Assert.IsTrue(run2.CanMake(order), "the top-shelf pair answers it");
         }
 
         [Test]

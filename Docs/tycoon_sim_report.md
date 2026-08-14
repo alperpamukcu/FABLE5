@@ -11,29 +11,32 @@ Every survival figure is a floor.
 | Bankruptcies | 0 (0.0%) |
 | Reached the 30-day horizon | 200 (100.0%) |
 | Days survived p25/median/p75 | 30 / 30 / 30 |
-| Final till p25/median/p75 | $260 / $276 / $290 |
-| Avg income / expenses per day | $150.2 / $141.4 |
-| Avg daily satisfaction | 58% |
-| Storm-offs | 11252 (17.9%) |
+| Final till p25/median/p75 | $263 / $286 / $303 |
+| Avg income / expenses per day | $157.8 / $148.7 |
+| Avg daily satisfaction | 54% |
+| Storm-offs | 10407 (16.5%) |
 | Customers per night | 10.5 |
-| Served per bar-minute | 4.95 |
-| Bar standing (avg night) | 2.82 stars |
-| Serves Exact / Close / Wrong | 71997 (100.0%) / 0 (0.0%) / 0 (0.0%) |
-| Refused (too little in the glass) / declined | 0 (0.0%) / 2 |
-| Take: base / tip | $468374 / $366702 (366702 (43.9%) of it tip) |
-| Avg base / tip per serve | $6.51 / $5.09 |
-| Avg spec score / fill score | 100% / 100% |
-| Orders with a serving spec, fully met | 32990 (100.0%) of 32990 |
-| Garnish craft landed | 38670 (53.7%) |
-| Extra orders earned (of serves) | 20481 (28.4%) |
-| Extra orders earned (of exact) | 20481 (28.4%) |
-| Draught share of serves | 5680 (7.9%) |
-| Pints in the good head band | 5680 (100.0%) |
+| Served per bar-minute | 4.97 |
+| Bar standing (avg night) | 2.60 stars |
+| Serves Exact / Close / Wrong | 66462 (92.7%) / 0 (0.0%) / 5261 (7.3%) |
+| Refused (too little in the glass) / declined | 0 (0.0%) / 9 |
+| Take: base / tip | $494729 / $386357 (386357 (43.9%) of it tip) |
+| Avg base / tip per serve | $6.90 / $5.39 |
+| Avg spec score / fill score | 100% / 99% |
+| Orders with a serving spec, fully met | 32748 (100.0%) of 32748 |
+| Garnish craft landed | 38568 (53.8%) |
+| Extra orders earned (of serves) | 19185 (26.7%) |
+| Extra orders earned (of exact) | 19185 (28.9%) |
+| Draught share of serves | 5820 (8.1%) |
+| Pints in the good head band | 5820 (100.0%) |
 | Average head poured | 18% |
-| Snack serves (of serves) | 23999 (33.3%) · $65996 |
-| Glasses bussed | 51718 |
-| Recipes bought (of 200 runs) | 3797 |
-| Brand upgrades bought | 0 |
+| Snack serves (of serves) | 23976 (33.4%) · $65756 |
+| Glasses bussed | 52747 |
+| Recipes bought (of 200 runs) | 3728 |
+| Brand upgrades bought | 999 |
+| Tier demands the shelf could not answer | 0 of 15068 (0.0%) |
+| Demanded upgrades bought | 411 |
+| Demanded upgrades OFFERED | 411 |
 
 ## The star track — when a bar reaches each rung
 
@@ -50,9 +53,9 @@ most useful line here: it says a guest written for it would never come.
 | 0.5★ | 200 (100.0%) | 4 / 4 / 4 | 1 |
 | 1.0★ | 200 (100.0%) | 7 / 7 / 7 | 2 |
 | 1.5★ | 200 (100.0%) | 10 / 10 / 11 | 2 |
-| 2.0★ | 200 (100.0%) | 13 / 14 / 14 | 3 |
-| 2.5★ | 200 (100.0%) | 19 / 19 / 20 | 4 |
-| 3.0★ | 44 (22.0%) | 29 / 29 / 30 | 5 |
+| 2.0★ | 200 (100.0%) | 14 / 15 / 16 | 3 |
+| 2.5★ | 186 (93.0%) | 22 / 24 / 26 | 4 |
+| 3.0★ | **none of 200** | — | — |
 | 3.5★ | **none of 200** | — | — |
 | 4.0★ | **none of 200** | — | — |
 | 4.5★ | **none of 200** | — | — |
@@ -77,17 +80,17 @@ the numbers above: a guest of the house is not a customer.
 | Day | Closed | In the red |
 |---|---|---|
 | 1 | 200 | 0 (0.0%) |
-| 2 | 200 | 87 (43.5%) |
-| 3 | 200 | 80 (40.0%) |
-| 4 | 200 | 89 (44.5%) |
-| 5 | 200 | 25 (12.5%) |
-| 6 | 200 | 2 (1.0%) |
-| 7 | 200 | 1 (0.5%) |
-| 8 | 200 | 18 (9.0%) |
-| 9 | 200 | 16 (8.0%) |
-| 10 | 200 | 26 (13.0%) |
-| 11 | 200 | 0 (0.0%) |
-| 12 | 200 | 1 (0.5%) |
-| 13 | 200 | 44 (22.0%) |
-| 14 | 200 | 122 (61.0%) |
-| 15 | 200 | 111 (55.5%) |
+| 2 | 200 | 85 (42.5%) |
+| 3 | 200 | 63 (31.5%) |
+| 4 | 200 | 102 (51.0%) |
+| 5 | 200 | 43 (21.5%) |
+| 6 | 200 | 4 (2.0%) |
+| 7 | 200 | 4 (2.0%) |
+| 8 | 200 | 50 (25.0%) |
+| 9 | 200 | 54 (27.0%) |
+| 10 | 200 | 64 (32.0%) |
+| 11 | 200 | 1 (0.5%) |
+| 12 | 200 | 4 (2.0%) |
+| 13 | 200 | 4 (2.0%) |
+| 14 | 200 | 31 (15.5%) |
+| 15 | 200 | 79 (39.5%) |
