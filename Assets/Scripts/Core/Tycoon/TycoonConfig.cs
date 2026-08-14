@@ -174,7 +174,30 @@ namespace LastCall.Core
         /// 5.5-divisor and the "d²/10 soft pass" both predate the shipped curve. What SHIPS
         /// is `12 + 2d + d²/9` with integer division: **$124 on day 24, $172 on day 30.**
         /// The history stands in git; this remark carries only the live measurement.</remarks>
-        public int Rent(int day) => 12 + 2 * day + (day * day) / 9;
+        /// <summary>
+        /// THE DAY THE RENT STOPS CLIMBING (2026-08-14, the author: "kasıtlı değil fiyatları
+        /// ekonomik dengeyi buna göre ayarla").
+        ///
+        /// The quadratic above was aimed at a bar that never grows, and it hit one that
+        /// cannot. Measured over 120 nights: the takings climb to about $176 by night 21 and
+        /// STOP — six stools is the cap, the menu finishes, and a better bottle is a purchase
+        /// the margin never reaches — while rent keeps compounding. Two curves of different
+        /// orders cross exactly once, on night 31, and every long run died at a median day 36.
+        /// The date was arithmetic, not difficulty.
+        ///
+        /// So the ramp keeps its measured early shape and then levels off where the bar's own
+        /// ceiling is. What that gives up is late pressure FROM RENT, deliberately: the
+        /// author's answer to the late game is more to spend money ON, not less to spend it
+        /// with. When those sinks land, the pressure comes back as ambition rather than as a
+        /// landlord who outgrows the room he is renting.
+        /// </summary>
+        public int RentPlateauDay { get; } = 21;
+
+        public int Rent(int day)
+        {
+            int d = Math.Min(Math.Max(day, 0), RentPlateauDay);
+            return 12 + 2 * d + (d * d) / 9;
+        }
 
         // ── orders (GDD 23 §3) ──────────────────────────────────────────────────
         /// <summary>The order roll pool: this many lowest-rank pourable recipes.</summary>

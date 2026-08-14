@@ -2,6 +2,26 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `23 §6` **the rent stops climbing where the bar's ceiling is (2026-08-14, the author:
+  "kasıtlı değil fiyatları ekonomik dengeyi buna göre ayarla"):** `Rent` keeps its measured
+  ramp and then **plateaus at day 21** ($103). The quadratic was aimed at a bar that never
+  grows and hit one that *cannot* — six stools is the cap, the menu finishes, and a better
+  bottle was a purchase the margin never reached — so the two curves crossed on night 31 and
+  every long run died on a date rather than on a decision.
+  **Measured, 60 runs × 120 nights, before → after:** bankruptcies **60/60 → 0/60**; nights
+  survived **36 → 120**; average standing **2.87 → 3.24**; and the takings, which used to
+  freeze at $176 on night 21, now climb to **$236 by night 116** — the bar can finally afford
+  the better bottles, so the growth the quadratic was demanding actually becomes possible.
+  **3.5★ went from unreachable to 40% of runs.** The first thirty days barely move
+  (bankruptcies stay 0%, income identical, expenses $145.2 → $141.4), which is the point: the
+  early pressure was measured and is kept.
+  What this gives up is late pressure FROM RENT, deliberately — the author's answer to the
+  late game is more to spend money ON (`ileride detaylandırılacak`), so the pressure returns
+  as ambition rather than as a landlord who outgrows the room he rents. The star-track report
+  now asks `TycoonConfig` for the curve instead of restating it, because the paragraph had
+  gone on quoting `12 + 2d + d²/9` after the shipped rule changed and was announcing a
+  crossing that no longer happens.
+
 - `23` / `26 §12.2` **the takings have a ceiling and the rent has none (2026-08-14):** chasing
   why the star track's top five rungs came back empty led out of the story module entirely.
   The bot was taught to shop — one brand upgrade a night, the thing that makes a drink better

@@ -157,8 +157,8 @@ namespace LastCall.EditorTools
             sb.AppendLine();
             sb.AppendLine("## Where the money goes, five nights at a time");
             sb.AppendLine();
-            sb.AppendLine("Rent is `12 + 2d + d²/9` and takings are capped by the room. Two curves");
-            sb.AppendLine("of different orders cross once, and the crossing is the end of the run.");
+            sb.AppendLine("Rent against what the room can take. If rent outgrows the takings the");
+            sb.AppendLine("crossing is the end of the run, and the date is arithmetic, not difficulty.");
             sb.AppendLine();
             sb.AppendLine("| Nights | Avg take | Avg rent | Avg stock | Net |");
             sb.AppendLine("|---|---|---|---|---|");
@@ -188,15 +188,25 @@ namespace LastCall.EditorTools
                     double per = (double)n.income / n.nights;
                     if (per > bestTake) { bestTake = per; bestBand = d; }
                 }
-            int crosses = 1;
-            while (crosses < 999 && 12 + 2 * crosses + crosses * crosses / 9 < bestTake) crosses++;
+            // ASK THE RULE, DO NOT RESTATE IT. This paragraph carried the rent formula as a
+            // copy and went on quoting `12 + 2d + d²/9` after the shipped curve had grown a
+            // plateau — announcing a crossing that no longer happens. It reads the config now,
+            // so a rent change cannot leave a confident wrong sentence behind it.
+            var rentRule = new TycoonConfig();
+            int crosses = 0;
+            for (int d = 1; d <= 999; d++)
+                if (rentRule.Rent(d) >= bestTake) { crosses = d; break; }
             sb.AppendLine();
-            sb.AppendLine($"The best night this bar ever has is **${bestTake:0}** (night {bestBand}), and");
-            sb.AppendLine($"rent passes that on **night {crosses}**. Everything after it is a countdown:");
-            sb.AppendLine("the takings are capped by the room — so many stools, so many minutes, so");
-            sb.AppendLine("long a price list — and rent is not capped by anything. To still be open on");
-            sb.AppendLine($"night 60 a bar would need ${12 + 2 * 60 + 60 * 60 / 9} a night, and on night 90, " +
-                          $"${12 + 2 * 90 + 90 * 90 / 9}.");
+            sb.AppendLine($"The best night this bar ever has is **${bestTake:0}** (night {bestBand}); " +
+                          $"rent on night {Horizon} is **${rentRule.Rent(Horizon)}**.");
+            if (crosses > 0)
+                sb.AppendLine($"Rent passes the best night on **night {crosses}** — everything after it " +
+                              "is a countdown, and the run ends on a date rather than on a decision.");
+            else
+                sb.AppendLine("**Rent never passes it.** The bar can out-earn its landlord for as long " +
+                              "as it keeps growing, so what ends a run is a choice or a mistake — not " +
+                              "the calendar. Late pressure has to come from something to spend money " +
+                              "ON; there is nothing here that takes it away.");
 
             Debug.Log(sb.ToString());
             var path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Docs",

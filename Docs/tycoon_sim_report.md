@@ -11,27 +11,27 @@ Every survival figure is a floor.
 | Bankruptcies | 0 (0.0%) |
 | Reached the 30-day horizon | 200 (100.0%) |
 | Days survived p25/median/p75 | 30 / 30 / 30 |
-| Final till p25/median/p75 | $140 / $166 / $196 |
-| Avg income / expenses per day | $150.2 / $145.2 |
+| Final till p25/median/p75 | $260 / $276 / $290 |
+| Avg income / expenses per day | $150.2 / $141.4 |
 | Avg daily satisfaction | 58% |
-| Storm-offs | 11250 (17.9%) |
+| Storm-offs | 11252 (17.9%) |
 | Customers per night | 10.5 |
-| Served per bar-minute | 4.94 |
-| Bar standing (avg night) | 2.81 stars |
-| Serves Exact / Close / Wrong | 72027 (100.0%) / 0 (0.0%) / 0 (0.0%) |
-| Refused (too little in the glass) / declined | 0 (0.0%) / 0 |
-| Take: base / tip | $468599 / $366760 (366760 (43.9%) of it tip) |
+| Served per bar-minute | 4.95 |
+| Bar standing (avg night) | 2.82 stars |
+| Serves Exact / Close / Wrong | 71997 (100.0%) / 0 (0.0%) / 0 (0.0%) |
+| Refused (too little in the glass) / declined | 0 (0.0%) / 2 |
+| Take: base / tip | $468374 / $366702 (366702 (43.9%) of it tip) |
 | Avg base / tip per serve | $6.51 / $5.09 |
 | Avg spec score / fill score | 100% / 100% |
-| Orders with a serving spec, fully met | 33035 (100.0%) of 33035 |
-| Garnish craft landed | 38712 (53.7%) |
-| Extra orders earned (of serves) | 20516 (28.5%) |
-| Extra orders earned (of exact) | 20516 (28.5%) |
-| Draught share of serves | 5677 (7.9%) |
-| Pints in the good head band | 5677 (100.0%) |
+| Orders with a serving spec, fully met | 32990 (100.0%) of 32990 |
+| Garnish craft landed | 38670 (53.7%) |
+| Extra orders earned (of serves) | 20481 (28.4%) |
+| Extra orders earned (of exact) | 20481 (28.4%) |
+| Draught share of serves | 5680 (7.9%) |
+| Pints in the good head band | 5680 (100.0%) |
 | Average head poured | 18% |
-| Snack serves (of serves) | 24009 (33.3%) · $66024 |
-| Glasses bussed | 51711 |
+| Snack serves (of serves) | 23999 (33.3%) · $65996 |
+| Glasses bussed | 51718 |
 | Recipes bought (of 200 runs) | 3797 |
 | Brand upgrades bought | 0 |
 
@@ -52,7 +52,7 @@ most useful line here: it says a guest written for it would never come.
 | 1.5★ | 200 (100.0%) | 10 / 10 / 11 | 2 |
 | 2.0★ | 200 (100.0%) | 13 / 14 / 14 | 3 |
 | 2.5★ | 200 (100.0%) | 19 / 19 / 20 | 4 |
-| 3.0★ | 30 (15.0%) | 29 / 29 / 29 | 5 |
+| 3.0★ | 44 (22.0%) | 29 / 29 / 30 | 5 |
 | 3.5★ | **none of 200** | — | — |
 | 4.0★ | **none of 200** | — | — |
 | 4.5★ | **none of 200** | — | — |
@@ -77,17 +77,17 @@ the numbers above: a guest of the house is not a customer.
 | Day | Closed | In the red |
 |---|---|---|
 | 1 | 200 | 0 (0.0%) |
-| 2 | 200 | 83 (41.5%) |
+| 2 | 200 | 87 (43.5%) |
 | 3 | 200 | 80 (40.0%) |
-| 4 | 200 | 91 (45.5%) |
+| 4 | 200 | 89 (44.5%) |
 | 5 | 200 | 25 (12.5%) |
-| 6 | 200 | 3 (1.5%) |
-| 7 | 200 | 3 (1.5%) |
-| 8 | 200 | 15 (7.5%) |
-| 9 | 200 | 15 (7.5%) |
-| 10 | 200 | 31 (15.5%) |
+| 6 | 200 | 2 (1.0%) |
+| 7 | 200 | 1 (0.5%) |
+| 8 | 200 | 18 (9.0%) |
+| 9 | 200 | 16 (8.0%) |
+| 10 | 200 | 26 (13.0%) |
 | 11 | 200 | 0 (0.0%) |
 | 12 | 200 | 1 (0.5%) |
-| 13 | 200 | 46 (23.0%) |
-| 14 | 200 | 123 (61.5%) |
+| 13 | 200 | 44 (22.0%) |
+| 14 | 200 | 122 (61.0%) |
 | 15 | 200 | 111 (55.5%) |

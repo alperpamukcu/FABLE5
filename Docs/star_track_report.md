@@ -18,35 +18,35 @@ nobody reaches in twenty weeks is a rung no guest can be written for.
 | 1.5★ | 60 (100.0%) | 10 / 10 / 11 | 2 |
 | 2.0★ | 60 (100.0%) | 13 / 14 / 14 | 3 |
 | 2.5★ | 60 (100.0%) | 19 / 19 / 21 | 4 |
-| 3.0★ | 36 (60.0%) | 31 / 32 / 35 | 6 |
-| 3.5★ | **none of 60** | — | — |
+| 3.0★ | 60 (100.0%) | 31 / 33 / 36 | 6 |
+| 3.5★ | 24 (40.0%) | 67 / 100 / 110 | 17 |
 | 4.0★ | **none of 60** | — | — |
 | 4.5★ | **none of 60** | — | — |
 | 5.0★ | **none of 60** | — | — |
 
-Nights closed: 2161. Bankruptcies: 60 of 60. Days survived p25/median/p75: 36 / 36 / 37.
-Standing across every night: 2.87 stars.
+Nights closed: 7200. Bankruptcies: 0 of 60. Days survived p25/median/p75: 120 / 120 / 120.
+Standing across every night: 3.24 stars.
 
-> **The top of this table is not an answer.** The median run is dead by day 36, and the highest rung anyone reaches (3.0★) lands on day 32. Above that the bot ran out of MONEY, not out of stars: it never shops, so it cannot buy the bottles a better night is made of. Those rungs are UNMEASURED, not unreachable, and nothing should be written for them until a bot that shops has been down this road.
 
 ## Where the money goes, five nights at a time
 
-Rent is `12 + 2d + d²/9` and takings are capped by the room. Two curves
-of different orders cross once, and the crossing is the end of the run.
+Rent against what the room can take. If rent outgrows the takings the
+crossing is the end of the run, and the date is arithmetic, not difficulty.
 
 | Nights | Avg take | Avg rent | Avg stock | Net |
 |---|---|---|---|---|
 | 1–5 | $106 | $19 | $34 | **+$53** |
-| 6–10 | $135 | $35 | $37 | **+$62** |
+| 6–10 | $134 | $35 | $37 | **+$62** |
 | 11–15 | $147 | $57 | $38 | **+$52** |
-| 16–20 | $159 | $84 | $37 | **+$38** |
-| 21–25 | $176 | $117 | $37 | **+$22** |
-| 26–30 | $177 | $155 | $37 | **−$15** |
-| 31–35 | $176 | $199 | $21 | **−$44** |
-| 36–40 | $162 | $230 | $0 | **−$69** |
+| 16–20 | $160 | $84 | $37 | **+$39** |
+| 21–25 | $176 | $103 | $37 | **+$35** |
+| 26–30 | $177 | $103 | $37 | **+$36** |
+| 31–35 | $179 | $103 | $37 | **+$39** |
+| 36–40 | $191 | $103 | $36 | **+$52** |
+| 41–45 | $203 | $103 | $35 | **+$64** |
+| 46–50 | $220 | $103 | $35 | **+$82** |
+| 51–55 | $223 | $103 | $34 | **+$86** |
+| 56–60 | $230 | $103 | $34 | **+$93** |
 
-The best night this bar ever has is **$179** (night 31), and
-rent passes that on **night 31**. Everything after it is a countdown:
-the takings are capped by the room — so many stools, so many minutes, so
-long a price list — and rent is not capped by anything. To still be open on
-night 60 a bar would need $532 a night, and on night 90, $1092.
+The best night this bar ever has is **$236** (night 116); rent on night 120 is **$103**.
+**Rent never passes it.** The bar can out-earn its landlord for as long as it keeps growing, so what ends a run is a choice or a mistake — not the calendar. Late pressure has to come from something to spend money ON; there is nothing here that takes it away.
