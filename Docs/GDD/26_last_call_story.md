@@ -628,6 +628,20 @@ later ones can only be chosen once the earlier ones can be measured.
    "how many stars can a bar reach" but "can a bar turn a profit", and that is a balance
    question for GDD 23, not a story one. The eleven-rung cast is sound as a shape; five of its
    rungs are waiting on the economy.
+
+   **And the economy was then measured too** (same report, "Where the money goes"). The
+   takings climb to about **$176 a night by night 21 and stop** — the room caps them: so many
+   stools, so many minutes, so long a price list. Rent does not stop: `12 + 2d + d²/9`. Two
+   curves of different orders cross exactly once, and here they cross at **night 31**. Every
+   night after that is a countdown, which is why 60 of 60 runs die at a median day 36 — the
+   date is arithmetic, not luck. To still be open on night 60 a bar would need $532 a night;
+   on night 90, $1092.
+
+   **This is the finding the star track was really about.** The top five rungs are not far
+   away, they are on the other side of a wall the game currently builds in week five. Whether
+   that wall is intended — a deliberately finite run — or a cost curve that outgrew its
+   income curve is the author's call, and it is GDD 23's to make. Until it is made, the story
+   has six usable rungs and a written cast of six.
 4. **`UnlockCondition`, one type for every lock.** Today a lock is two unrelated things
    (`RecipeDefinition.Locked` + `_boughtRecipes`, and `_lockedStock` by style); the author is
    adding a third — *"müşteriye doğru siparişi vererek"*, having served a named guest the

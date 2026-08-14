@@ -2,6 +2,26 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `23` / `26 §12.2` **the takings have a ceiling and the rent has none (2026-08-14):** chasing
+  why the star track's top five rungs came back empty led out of the story module entirely.
+  The bot was taught to shop — one brand upgrade a night, the thing that makes a drink better
+  rather than merely possible — and **bought zero across 200 runs**, at a 250 cushion, at 40,
+  and with the style filter removed. Three candidates eliminated; the answer was the fourth:
+  it never has the money. Two real defects fell out on the way — the "no purchase in the last
+  week" cutoff was written as an absolute `day <= 23` against a thirty-day horizon and had
+  silently become "stop shopping in week four, forever" for any longer run; and the upgrade
+  filter reused the menu's style set, which is built from style BANDS while most recipes ask
+  by ingredient type.
+  **Then the economy itself was measured, five nights at a time.** The takings climb to about
+  **$176 a night by night 21 and stop** — the room caps them: so many stools, so many minutes,
+  so long a price list. Rent does not stop: `12 + 2d + d²/9`. The two curves cross on **night
+  31**, and 60 of 60 long runs die at a median day 36 — a date, not a dice roll. To be open on
+  night 60 a bar needs $532 a night; on night 90, $1092. The star-track report solves and
+  prints that crossing itself, so it cannot quietly stop being true.
+  **Whether the wall is intended — a deliberately finite run — or a cost curve that outgrew
+  its income curve is a GDD 23 decision, and it is the author's.** Until it is made the story
+  has six usable rungs.
+
 - `26 §12.2` **the star track, measured — and where the measurement stops (2026-08-14):**
   the eleven thresholds are the biggest guess in the new progression, so they were not
   guessed. `LastCall → Measure the Star Track` plays 60 runs over 120 nights and writes the

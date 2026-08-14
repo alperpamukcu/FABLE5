@@ -28,3 +28,25 @@ Nights closed: 2161. Bankruptcies: 60 of 60. Days survived p25/median/p75: 36 / 
 Standing across every night: 2.87 stars.
 
 > **The top of this table is not an answer.** The median run is dead by day 36, and the highest rung anyone reaches (3.0★) lands on day 32. Above that the bot ran out of MONEY, not out of stars: it never shops, so it cannot buy the bottles a better night is made of. Those rungs are UNMEASURED, not unreachable, and nothing should be written for them until a bot that shops has been down this road.
+
+## Where the money goes, five nights at a time
+
+Rent is `12 + 2d + d²/9` and takings are capped by the room. Two curves
+of different orders cross once, and the crossing is the end of the run.
+
+| Nights | Avg take | Avg rent | Avg stock | Net |
+|---|---|---|---|---|
+| 1–5 | $106 | $19 | $34 | **+$53** |
+| 6–10 | $135 | $35 | $37 | **+$62** |
+| 11–15 | $147 | $57 | $38 | **+$52** |
+| 16–20 | $159 | $84 | $37 | **+$38** |
+| 21–25 | $176 | $117 | $37 | **+$22** |
+| 26–30 | $177 | $155 | $37 | **−$15** |
+| 31–35 | $176 | $199 | $21 | **−$44** |
+| 36–40 | $162 | $230 | $0 | **−$69** |
+
+The best night this bar ever has is **$179** (night 31), and
+rent passes that on **night 31**. Everything after it is a countdown:
+the takings are capped by the room — so many stools, so many minutes, so
+long a price list — and rent is not capped by anything. To still be open on
+night 60 a bar would need $532 a night, and on night 90, $1092.

@@ -148,6 +148,56 @@ namespace LastCall.EditorTools
                               $"rungs are UNMEASURED, not unreachable, and nothing should be written for them " +
                               $"until a bot that shops has been down this road.");
 
+            // ── the crossing ─────────────────────────────────────────────────
+            // Rent is `12 + 2d + d²/9` — quadratic — and a bar's takings are not: they are
+            // capped by the room, the clock and the price list. Two curves of different
+            // orders cross exactly once, and the day they cross is the day the game ends.
+            // The averages in the balance report hide it completely: "$150 in, $145 out"
+            // over thirty days is a bar making money in week one and losing it in week five.
+            sb.AppendLine();
+            sb.AppendLine("## Where the money goes, five nights at a time");
+            sb.AppendLine();
+            sb.AppendLine("Rent is `12 + 2d + d²/9` and takings are capped by the room. Two curves");
+            sb.AppendLine("of different orders cross once, and the crossing is the end of the run.");
+            sb.AppendLine();
+            sb.AppendLine("| Nights | Avg take | Avg rent | Avg stock | Net |");
+            sb.AppendLine("|---|---|---|---|---|");
+            for (int band = 0; band < 12; band++)
+            {
+                int lo = band * 5 + 1, hi = lo + 4;
+                long take = 0, rent = 0, stock = 0, nights = 0;
+                for (int d = lo; d <= hi; d++)
+                {
+                    if (!stats.ByNight.TryGetValue(d, out var n)) continue;
+                    take += n.income; rent += n.rent; stock += n.stock; nights += n.nights;
+                }
+                if (nights == 0) continue;
+                double t = (double)take / nights, r = (double)rent / nights, k = (double)stock / nights;
+                sb.AppendLine($"| {lo}–{hi} | ${t:0} | ${r:0} | ${k:0} | " +
+                              (t - r - k >= 0 ? $"**+${t - r - k:0}**" : $"**−${r + k - t:0}**") + " |");
+            }
+
+            // THE CEILING, SOLVED. The takings flatten because the room does: so many stools,
+            // so many minutes, so long a price list. Rent does not flatten. Printing the best
+            // night the bar ever has, and the night rent passes it, turns the table above from
+            // a shape into a date — and a date is the thing a design can argue with.
+            double bestTake = 0; int bestBand = 0;
+            for (int d = 1; d <= Horizon; d++)
+                if (stats.ByNight.TryGetValue(d, out var n) && n.nights > 0)
+                {
+                    double per = (double)n.income / n.nights;
+                    if (per > bestTake) { bestTake = per; bestBand = d; }
+                }
+            int crosses = 1;
+            while (crosses < 999 && 12 + 2 * crosses + crosses * crosses / 9 < bestTake) crosses++;
+            sb.AppendLine();
+            sb.AppendLine($"The best night this bar ever has is **${bestTake:0}** (night {bestBand}), and");
+            sb.AppendLine($"rent passes that on **night {crosses}**. Everything after it is a countdown:");
+            sb.AppendLine("the takings are capped by the room — so many stools, so many minutes, so");
+            sb.AppendLine("long a price list — and rent is not capped by anything. To still be open on");
+            sb.AppendLine($"night 60 a bar would need ${12 + 2 * 60 + 60 * 60 / 9} a night, and on night 90, " +
+                          $"${12 + 2 * 90 + 90 * 90 / 9}.");
+
             Debug.Log(sb.ToString());
             var path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Docs",
                 "star_track_report.md"));
@@ -774,6 +824,14 @@ namespace LastCall.EditorTools
             public int DaysClosed;
             public readonly List<int> DaysSurvived = new List<int>();
             public readonly List<int> FinalMoney = new List<int>();
+            // WHERE THE MONEY GOES, NIGHT BY NIGHT (2026-08-14). The averages over a run
+            // hide the only thing that matters here: rent is quadratic and takings are not,
+            // so a bar that reads "$150 in, $145 out" on average is a bar that was making
+            // money in week one and losing it in week five. One row a night, so the crossing
+            // can be seen rather than argued about.
+            public readonly Dictionary<int, (int income, int rent, int stock, int nights)> ByNight =
+                new Dictionary<int, (int, int, int, int)>();
+
             public readonly Dictionary<int, (int reds, int closes)> ByDay =
                 new Dictionary<int, (int, int)>();
 
@@ -857,6 +915,9 @@ namespace LastCall.EditorTools
                 SatisfactionSum += result.AverageSatisfaction;
                 ByDay.TryGetValue(result.Day, out var row);
                 ByDay[result.Day] = (row.reds + (result.Net < 0 ? 1 : 0), row.closes + 1);
+                ByNight.TryGetValue(result.Day, out var n);
+                ByNight[result.Day] = (n.income + result.Income, n.rent + result.Rent,
+                                       n.stock + result.Stock, n.nights + 1);
             }
 
             public string Report(int requested)
