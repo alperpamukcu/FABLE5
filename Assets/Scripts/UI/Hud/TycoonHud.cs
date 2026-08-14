@@ -5089,13 +5089,20 @@ namespace LastCall.UI
         /// different heights, values at two more. There are two lines now — the small
         /// upper one for what a reading IS, the lower one for what it SAYS — and every
         /// item on the beam is placed against one of them, left to right.</summary>
-        private const float TopBarH = 54f, CapY = 14f, ReadY = -8f;
-        // Bigger than they were (2026-08-14, the author: the standing needs more visual
-        // communication) — and at a size the DRAWING allows. 14 and then 22 were both picked
-        // by eye from a 16-pixel star, which is 0.875x and 1.375x: the points came back at
-        // two different widths and nobody could say why the row looked soft. 32 is 2x, which
-        // is the only step up there is. `LastCall → Audit UI` found this (GDD 16 §3).
-        private const float StarSize = 32f, StarGap = 34f;
+        private const float TopBarH = 54f, CapY = 12f, ReadY = -9f;
+        // THE STAR IS 16 BECAUSE THE DRAWING IS (2026-08-14, the author: "yıldızları da hizala
+        // ve boyutlarını tasarımını tekrardan gözden geçir"). The size went 14 → 22 → 32
+        // chasing "more visual communication", and 32 was at least honest arithmetic — 2× of a
+        // 16-pixel star. But a 32-unit star is TALLER THAN THE ROW: the board is built on two
+        // rules eleven units apart, and a 32-tall row centred on the lower one climbs into the
+        // caption above it. That collision is what "hizala" was pointing at, and no nudge
+        // fixes it — the shape was simply too big for the beam.
+        //
+        // At 1× it sits inside the row, it is the crispest the drawing can be, and the weight
+        // the standing lost goes where it belongs: the NUMBER, at display 24. A meter should
+        // be quiet when it reads zero, and five big dark stars were the loudest thing on the
+        // right end of an empty bar.
+        private const float StarSize = 16f, StarGap = 18f;
 
         /// <summary>A full-width band `h` units tall, `down` units below the parent's top
         /// edge. `Hairline` can only sit ON an edge and is one unit thick; a beam is built
@@ -6351,45 +6358,58 @@ namespace LastCall.UI
             new List<(Image, Image, Text)>();
         private Text _weekLabel;
         private int _weekShown = -1;
+        private int _vipCell = -1;    // which fitting on the wire is the star
 
-        private const float WeekX = 190f, WeekStep = 30f;
+        // CENTRED, AND TWICE THE SIZE IT WAS (2026-08-14, the author: "hafta göstergesi ufak
+        // ve sönük kalıyor"). At a 30-unit step with 8pt letters it was a row of grey specks
+        // in the middle of an empty beam; the board now reads as three panels — the
+        // instrument, the week, the standing — with the week owning the middle instead of
+        // hiding at the left end of a gap.
+        private const float WeekStep = 52f;
+        private static float WeekLeft => 640f - BarCalendar.WeekColumns.Length * WeekStep * 0.5f;
 
         private void BuildWeekStrip(RectTransform top)
         {
             var names = BarCalendar.WeekColumns;
 
-            // The week reads on the LOWER rule with the day letters, not on its own line —
-            // a label floating half a row above the thing it labels is most of what
-            // "yazılar hizalanmamış" was pointing at.
-            _weekLabel = NewText("Week", top, _body, 8, TextAnchor.MiddleLeft, UITheme.Cyan[3]);
-            Place(_weekLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(56, 12),
-                new Vector2(WeekX, ReadY));
-            _weekLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
-
             // The wire the bulbs hang from. It stops where the WORK stops — six nights, not
-            // seven. The bar does not open on Sunday, so the marquee does not reach it, and
-            // the day is there in letters with no lamp over it: the closed night says so by
-            // the shape of the wall rather than by a greyed-out cell.
-            float railX = WeekX + 60f;
+            // seven. The bar does not open on Sunday, so the marquee does not reach it.
             var rail = NewRect("Rail", top);
             Place(rail, new Vector2(0, 0.5f), new Vector2(BarCalendar.OpenNights * WeekStep, 1f),
-                new Vector2(railX, CapY + 7f));
+                new Vector2(WeekLeft, CapY + 11f));
             rail.pivot = new Vector2(0, 0.5f);
             var railImg = rail.gameObject.AddComponent<Image>();
             railImg.color = UITheme.Night[3]; railImg.raycastTarget = false;
 
             for (int i = 0; i < names.Length; i++)
             {
-                float cx = railX + i * WeekStep + WeekStep * 0.5f;
+                float cx = WeekLeft + i * WeekStep + WeekStep * 0.5f;
+                bool open = i < BarCalendar.OpenNights;
 
-                // The stem it hangs by. Three units of wire between the rail and the glass is
-                // the whole difference between a lamp on a wire and a dot floating under a line.
+                // The stem it hangs by. Wire between the rail and the glass is the whole
+                // difference between a lamp on a wire and a dot floating under a line.
                 var stem = NewRect("S" + i, top);
-                Place(stem, new Vector2(0, 0.5f), new Vector2(1, 4), new Vector2(cx, CapY + 5f));
+                Place(stem, new Vector2(0, 0.5f), new Vector2(1, 6), new Vector2(cx, CapY + 8f));
                 stem.pivot = new Vector2(0.5f, 0.5f);
                 var simg = stem.gameObject.AddComponent<Image>();
                 simg.color = UITheme.Night[3]; simg.raycastTarget = false;
-                simg.enabled = i < BarCalendar.OpenNights;   // nothing hangs over the day off
+                simg.enabled = open;                       // nothing hangs over the day off
+
+                // THE SHUTTER (the author: "pazar gününün tatil olduğu anlaşılsın"). The day
+                // off had been saying so by ABSENCE — no lamp — which reads as "not yet",
+                // not as "closed". A closed bar has its shutter down, so Sunday gets one:
+                // four slats where the others carry a light. It is the same answer the room
+                // gives; nothing here is a greyed-out cell.
+                if (!open)
+                    for (int s = 0; s < 4; s++)
+                    {
+                        var slat = NewRect("Shut" + s, top);
+                        Place(slat, new Vector2(0, 0.5f), new Vector2(22, 2),
+                            new Vector2(cx, CapY + 6f - s * 4f));
+                        slat.pivot = new Vector2(0.5f, 0.5f);
+                        var slatImg = slat.gameObject.AddComponent<Image>();
+                        slatImg.color = UITheme.Night[3]; slatImg.raycastTarget = false;
+                    }
 
                 // Both drawn at the size their sprite is drawn at — a 16px circle squeezed
                 // into 10 units comes back with a lumpy edge, and this is 8px art.
@@ -6400,15 +6420,24 @@ namespace LastCall.UI
                 gimg.sprite = ChromeArt.LampGlow();
                 gimg.raycastTarget = false; gimg.enabled = false;
 
+                // THE NIGHT A NAME COMES IS A STAR ON THE WIRE (the author: "cumartesi günleri
+                // vip hikaye müşterisi geleceği belirtilsin"). It was first drawn as a mark
+                // hung ABOVE the rail and the beam clipped it — there is no room above a
+                // marquee. So Saturday's LAMP is the star: one fitting on the wire is a
+                // different shape from the other five, every week, whether or not a beat is
+                // booked. Shape says what the night is; the light still says when it is.
+                bool vip = open && (BarNight)i == BarCalendar.VipNight;
                 var bulb = NewRect("B" + i, top);
                 Place(bulb, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(cx, CapY));
                 bulb.pivot = new Vector2(0.5f, 0.5f);
                 var bimg = bulb.gameObject.AddComponent<Image>();
-                bimg.sprite = ChromeArt.Lamp();
+                bimg.sprite = vip ? ChromeArt.Mark("star") : ChromeArt.Lamp();
                 bimg.color = UITheme.Night[2]; bimg.raycastTarget = false;
+                if (vip) _vipCell = i;
 
-                var name = NewText("N" + i, top, _body, 8, TextAnchor.MiddleCenter, UITheme.TextSecondary);
-                Place(name.rectTransform, new Vector2(0, 0.5f), new Vector2(WeekStep, 12),
+                // 16, not 8: the day is a WORD now, not a caption under a light.
+                var name = NewText("N" + i, top, _body, 16, TextAnchor.MiddleCenter, UITheme.TextSecondary);
+                Place(name.rectTransform, new Vector2(0, 0.5f), new Vector2(WeekStep, 18),
                     new Vector2(cx, ReadY));
                 name.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                 name.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -6430,7 +6459,8 @@ namespace LastCall.UI
             if (week != _weekShown)
             {
                 _weekShown = week;
-                _weekLabel.text = $"WEEK {week}";
+                // Two short lines on the instrument's own glass: the word, then the count.
+                _weekLabel.text = $"WEEK\n{week:00}";
             }
 
             // Which nights the story is coming on, THIS week. A beat due in a later week
@@ -6451,17 +6481,28 @@ namespace LastCall.UI
                 bool storyNight = dueThisWeek && !closed && (int)BarCalendar.NightOf(dueDay) == i;
 
                 bulb.enabled = !closed;                            // Sunday has no bulb fitted
-                bulb.color = isTonight ? UITheme.Amber[4]
+                // The star fitting keeps its own colour so the VIP night is legible from
+                // across the week even while it is still four days away; the round lamps
+                // only carry the amber of the night being played.
+                bool star = i == _vipCell;
+                var hue = star ? UITheme.Magenta[4] : UITheme.Amber[4];
+                bulb.color = isTonight ? hue
+                    : star ? new Color(hue.r, hue.g, hue.b, 0.62f)
                     : worked ? UITheme.Night[3]
                     : UITheme.Night[2];
                 glow.enabled = isTonight;
-                if (isTonight) glow.color = UITheme.Amber[3];   // the sprite carries the falloff
+                if (isTonight) glow.color = star ? UITheme.Magenta[3] : UITheme.Amber[3];
 
-                name.color = closed ? new Color(UITheme.Night[3].r, UITheme.Night[3].g, UITheme.Night[3].b, 0.7f)
+                // BRIGHT ENOUGH TO BE A CALENDAR (the author: "ufak ve sönük kalıyor"). The
+                // nights AHEAD were drawn at Night[3] — the beam's own shade, so they read as
+                // absent — when they are the half of the week the player is planning around.
+                // They are cream now; the nights already worked are the dim ones, because a
+                // night that is spent is the only one on the wire with nothing left to say.
+                name.color = closed ? UITheme.Night[4]
                     : storyNight ? UITheme.Magenta[4]
                     : isTonight ? UITheme.Amber[4]
-                    : worked ? UITheme.TextSecondary
-                    : UITheme.Night[3];
+                    : worked ? UITheme.Night[4]
+                    : UITheme.Cream[2];
             }
         }
 
@@ -7063,19 +7104,39 @@ namespace LastCall.UI
             // Then it was too small to read ("saat okunaklı değil"), so the case is the full
             // height of the beam and the digits are 28 units tall — the biggest thing on the
             // board, which is right, because the night is measured in it. See SegmentClock.
-            var clockCase = Case(top, "Clock", new Vector2(0, 0.5f), new Vector2(152, 44),
+            // THE HOUR AND THE WEEK ARE ONE INSTRUMENT (2026-08-14, the author: "saat ve
+            // kaçıncı hafta olduğu düzgün bir sayfa düzeninde olsun"). They were two things:
+            // a case at the far left and the words WEEK 1 floating thirty units away in a
+            // different colour, belonging to nothing. They are both the answer to WHEN, so
+            // they read off one glass — the time large, a rule, then the week counter small
+            // beside it, the way a panel-mounted display carries its secondary count.
+            var clockCase = Case(top, "Clock", new Vector2(0, 0.5f), new Vector2(190, 44),
                 new Vector2(12, 0), UITheme.Night[2]);
 
             var glass = NewRect("Glass", clockCase);
-            Place(glass, new Vector2(0.5f, 0.5f), new Vector2(140, 32), Vector2.zero);
+            Place(glass, new Vector2(0.5f, 0.5f), new Vector2(178, 32), Vector2.zero);
             var glassImg = glass.gameObject.AddComponent<Image>();
             // Not black: a display's dark is the panel's own colour seen through a tint.
             glassImg.color = new Color(0.031f, 0.055f, 0.075f, 1f);
             glassImg.raycastTarget = false;
 
             var digits = NewRect("Digits", glass);
-            Place(digits, new Vector2(0, 0.5f), new Vector2(110, 28), new Vector2(15, 0));
+            Place(digits, new Vector2(0, 0.5f), new Vector2(110, 28), new Vector2(8, 0));
             _clock = new SegmentClock(digits, 22f, 28f, 4f, UITheme.Cyan[4]);
+
+            // The divider between the two readings — on the glass, not on the case, because
+            // it separates what the display SAYS, not what the box holds.
+            var tick = NewRect("Divide", glass);
+            Place(tick, new Vector2(0, 0.5f), new Vector2(1, 22), new Vector2(126, 0));
+            var tickImg = tick.gameObject.AddComponent<Image>();
+            tickImg.color = new Color(UITheme.Cyan[4].r, UITheme.Cyan[4].g, UITheme.Cyan[4].b, 0.22f);
+            tickImg.raycastTarget = false;
+
+            _weekLabel = NewText("Week", glass, _body, 8, TextAnchor.MiddleCenter, UITheme.Cyan[3]);
+            Place(_weekLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(44, 26), new Vector2(134, 0));
+            _weekLabel.rectTransform.pivot = new Vector2(0, 0.5f);
+            _weekLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _weekLabel.lineSpacing = 1.5f;
 
             BuildWeekStrip(top);
 
@@ -7094,10 +7155,10 @@ namespace LastCall.UI
             const float RightEdge = -14f;                     // where the key ends
             const float NumberRight = RightEdge - 42f;        // ...then the standing's number
             float starsW = _ratingStars.Length * StarGap;
-            // 84, not 62: "0.0" at display size is 72 units wide and its rect was 60, so it
-            // overflowed LEFT and set itself down on the fifth star. Measure the type, then
-            // leave the gap — the readings on this board never touch.
-            float starsRight = NumberRight - 84f;
+            // The number is 72 units of display type ("0.0") in an 80-unit rect, and the row
+            // clears it by twelve. Measure the type, then leave the gap — the readings on this
+            // board never touch.
+            float starsRight = NumberRight - 92f;
 
             var starsRow = NewRect("Stars", top);
             Place(starsRow, new Vector2(1, 0.5f), new Vector2(starsW, StarSize),
@@ -7113,9 +7174,9 @@ namespace LastCall.UI
                 var img = star.gameObject.AddComponent<Image>();
                 img.sprite = ItemArt.Load("star");
                 img.preserveAspect = true; img.raycastTarget = false;
-                // The empty rung is a HOLE, not a grey star: at Night[3] the five of them
-                // read as a row of five stars and the fill stopped being the message.
-                img.color = new Color(UITheme.Night[3].r, UITheme.Night[3].g, UITheme.Night[3].b, 0.55f);
+                // The empty rung is a SOCKET: dark enough that the fill is the message, lit
+                // enough that five of them read as a scale of five even at 0.0.
+                img.color = UITheme.Night[4];
             }
             _starsFill = NewRect("Fill", starsRow);
             _starsFill.anchorMin = new Vector2(0, 0); _starsFill.anchorMax = new Vector2(0, 1);
@@ -7288,6 +7349,12 @@ namespace LastCall.UI
                 clockBg.sizeDelta = new Vector2(BustW * 0.72f, 8f);
                 clockBg.anchoredPosition = new Vector2(0, CharWinH + 1f);
                 clockBg.gameObject.AddComponent<Image>().color = UITheme.Night[0];
+                // The gauge's length IS the value, and it is re-hung off each look's own head
+                // every frame. Snapping either to whole units would make patience tick down in
+                // visible steps and park the bar off the head it belongs to. See UiAuditExempt.
+                UiAuditExempt.Mark(clockBg, "a patience gauge whose width is the value itself, "
+                    + "re-hung on the customer's own head each frame — snapping it would make "
+                    + "the clock tick in steps");
                 seat.Gauge = clockBg;   // re-hung off each look's own head, below
                 var clockFill = NewRect("ClockFill", clockBg);
                 clockFill.anchorMin = new Vector2(0, 0); clockFill.anchorMax = new Vector2(0, 1);

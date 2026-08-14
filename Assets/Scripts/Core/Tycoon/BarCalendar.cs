@@ -42,6 +42,19 @@ namespace LastCall.Core
             return (week - 1) * OpenNights + (int)night + 1;
         }
 
+        /// <summary>
+        /// THE NIGHT A NAME COMES (2026-08-14, the author: "cumartesi günleri vip hikaye
+        /// müşterisi geleceği belirtilsin"). Saturday is the week's own promise — the calendar
+        /// says so before any beat is scheduled, so the days between are days the player is
+        /// counting towards something rather than days that merely pass.
+        ///
+        /// It is the LATER of the two weekend nights on purpose: a week that ends on its
+        /// biggest night reads as a week, and Friday stays free for a beat that wants to come
+        /// early. The house's guest still may not land anywhere else (see the loader's rule);
+        /// this only names which of the two the wall advertises.
+        /// </summary>
+        public const BarNight VipNight = BarNight.Saturday;
+
         /// <summary>Friday and Saturday: the two nights the room is worth being seen in.</summary>
         public static bool IsWeekend(BarNight night) =>
             night == BarNight.Friday || night == BarNight.Saturday;
