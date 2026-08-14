@@ -75,9 +75,12 @@ namespace LastCall.UI
                     // The colon sits between the pairs, two square lamps on the same grid.
                     var colon = NewRect(host, "Colon", new Vector2(bar * 1.5f, digitH),
                         new Vector2(x, 0));
+                    // Whole units. At 0.19 of the digit height the lamps landed on 5.32 and
+                    // sat half a pixel off the grid the rest of the readout is drawn on.
+                    float colonY = Mathf.Round(digitH * 0.19f);
                     for (int i = 0; i < 2; i++)
                         _colon[i] = NewBar(colon, "C" + i, new Vector2(bar, bar),
-                            new Vector2(0, (i == 0 ? -1f : 1f) * digitH * 0.19f), lit);
+                            new Vector2(0, (i == 0 ? -1f : 1f) * colonY), lit);
                     x += bar * 1.5f + bar;
                 }
             }

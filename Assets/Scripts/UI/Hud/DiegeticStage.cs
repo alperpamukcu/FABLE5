@@ -685,6 +685,13 @@ namespace LastCall.UI
             // wallet with it.
             var backRoot = OverlayCanvas("RegisterBack", -7, raycasts: false);
             var frontRoot = OverlayCanvas("RegisterLayer", 6, raycasts: true);
+            // The till is a PROP standing on the counter, not a piece of the UI's furniture:
+            // it is drawn at a hi-bit density into a fixed 57-unit footprint and everything
+            // that floats off it is measured from where it stands. See UiAuditExempt.
+            UiAuditExempt.Mark(backRoot, "the register is a prop in the room, placed where it "
+                + "stands on the counter and drawn at 2x density into a fixed footprint");
+            UiAuditExempt.Mark(frontRoot, "the register is a prop in the room, placed where it "
+                + "stands on the counter and drawn at 2x density into a fixed footprint");
 
             var reg = NewRect("Register", frontRoot);
             reg.anchorMin = reg.anchorMax = new Vector2(0, 0);

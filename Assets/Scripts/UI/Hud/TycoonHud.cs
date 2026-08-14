@@ -244,7 +244,10 @@ namespace LastCall.UI
         /// and read as furniture rather than as a bin standing in the corner (the author,
         /// 2026-08-04); the mouth is still wider than the carried glass, which is the only size
         /// it actually has to beat.</summary>
-        private const float BinW = 184f, BinH = 210f;
+        // 166x190 is the drawing's own size. It was standing at 184x210 — 1.105x, chosen by
+        // eye — so the well's hoops came back at uneven thicknesses (GDD 16 §3, found by
+        // `LastCall → Audit UI`). Size the container to the art, never the art to the container.
+        private const float BinW = 166f, BinH = 190f;
 
         private RectTransform _drinkGlass;
         private Image _drinkGlassLiquid;
@@ -1963,6 +1966,9 @@ namespace LastCall.UI
                 // reference aspect, well above the 110-unit strip this used to be.
                 _glassRack.sizeDelta = new Vector2(1280, 360);
                 _glassRack.anchoredPosition = Vector2.zero;
+                UiAuditExempt.Mark(_glassRack,
+                    "glasses on a shelf, sized and dimmed by which row they stand in — " +
+                    "perspective, not chrome; rounding them to whole units moves the shelf");
                 // BEHIND EVERYTHING. The rack is built lazily, on the first ApplyBarLook,
                 // which is long after the HUD's own children exist — so it arrived as the
                 // last sibling and drew over the menu keys, the bill and the whole market
@@ -5083,9 +5089,11 @@ namespace LastCall.UI
         /// item on the beam is placed against one of them, left to right.</summary>
         private const float TopBarH = 54f, CapY = 14f, ReadY = -8f;
         // Bigger than they were (2026-08-14, the author: the standing needs more visual
-        // communication). At 14 they were a texture; at 22 they are the thing the board
-        // is about, and the fractional fill is legible at a glance.
-        private const float StarSize = 22f, StarGap = 25f;
+        // communication) — and at a size the DRAWING allows. 14 and then 22 were both picked
+        // by eye from a 16-pixel star, which is 0.875x and 1.375x: the points came back at
+        // two different widths and nobody could say why the row looked soft. 32 is 2x, which
+        // is the only step up there is. `LastCall → Audit UI` found this (GDD 16 §3).
+        private const float StarSize = 32f, StarGap = 34f;
 
         /// <summary>A full-width band `h` units tall, `down` units below the parent's top
         /// edge. `Hairline` can only sit ON an edge and is one unit thick; a beam is built
@@ -8553,7 +8561,16 @@ namespace LastCall.UI
                 return rt;
             }
 
-            var text = NewText("Label", face, _body, 12, TextAnchor.MiddleCenter, ink);
+            // 8 OR 16, NEVER 12. The pixel faces rasterise at whole multiples of their 8px
+            // design size and nowhere else (CLAUDE.md), and every worded key in the game was
+            // drawn at 12 — a size that face does not have — so it arrived softened on the
+            // buttons the player presses all night. Found by `LastCall → Audit UI`.
+            //
+            // The size comes from the KEY, not from one global guess: a tall key is a primary
+            // action and carries the bigger face, a short one would be crowded by it. 8 alone
+            // left MENU — MAKE A DRINK as a whisper inside a 300-unit amber slab.
+            int labelSize = rt.sizeDelta.y >= 32f ? 16 : 8;
+            var text = NewText("Label", face, _body, labelSize, TextAnchor.MiddleCenter, ink);
             Stretch(text.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             text.text = label;
             return rt;

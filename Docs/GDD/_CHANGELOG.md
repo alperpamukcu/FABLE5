@@ -2,6 +2,27 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `16` **the chrome has a written language again, and a machine that checks half of it
+  (2026-08-14, the author: "butonlar ayarlar menüsü oyunun ekrandaki HUD paneller bunların
+  aynı sanat dilinde olması gerekiyor"):** module 16 was describing a game that no longer
+  exists — 640×360, the card era, hand-authored 9-slice sprites, engine primitives banned —
+  while the chrome it was supposed to govern is drawn in code at 1280×720. It is rewritten as
+  the **CHROME LANGUAGE**: the field and its laws (§0), the named objects a surface is built
+  from — BEAM, CASE, GLASS, KEY, PLATE, LAMP, RULE, MARK (§1) — the ONE key (§2), the scaling
+  and fitting laws (§3, §4), what light and colour are allowed to say (§5), **the ten tells**
+  (§6, every one of them something this project shipped and the author rejected), and the
+  delivery gate (§7).
+  **`LastCall → Audit UI` measures the mechanical half** — scale, fit, grid, type, palette —
+  on the live screen and writes `Temp/UiAudit.txt`. It found four defects on its first clean
+  run, three of them shipped the same week: the standing's stars drawing a 16-pixel star at
+  22 units (1.375×, now 32 = 2×), the bin at 1.105×, **every worded key in the game set at
+  12pt** — a size the pixel faces do not have — and the clock's colon lamps at ±5.32. A branch
+  that is not chrome opts out through `UiAuditExempt` and has to say why in a sentence the
+  report prints; the glass rack and the register are placed by perspective and do.
+  **Known debt, written into §2:** the game speaks three button dialects — the market's real
+  `ChromeArt.Key()`, the HUD's flat fill, and the settings menu's bare rect. They become the
+  KEY. 285 EditMode green, 8 PlayMode green, three baselines re-blessed after looking.
+
 - `18` **the board is a beam, not a row of boxes (2026-08-14, the author: "takvim tasarımı
   kötü, kutu kutu ai tarafından yapıldığı çok belli ... üst barı tamamen yenile"):** the top
   bar was five bordered slabs side by side, each with a caption over a value at its own
