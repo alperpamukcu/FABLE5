@@ -203,6 +203,47 @@ namespace LastCall.Tests
             Assert.Throws<FormatException>(() => DataLoader.ParseStory(json, Cast(), Book()));
 
         [Test]
+        public void A_recipe_locked_behind_a_night_that_does_not_exist_is_refused()
+        {
+            // THE WORST FAILURE THIS SYSTEM HAS (GDD 26 §12.2 step 4): a mistyped beat id
+            // makes a page locked forever, with a sentence naming somebody who never comes —
+            // silent, permanent, and indistinguishable from content nobody wrote. Recipes
+            // load before the story, so the load is the first and cheapest moment both
+            // halves are in the same room.
+            var book = new System.Collections.Generic.List<RecipeDefinition>(Book())
+            {
+                new RecipeDefinition("ghost_page", "Ghost Page", rank: 30,
+                    baseFlavor: 10, baseMult: 2, flavorPerLevel: 0, multPerLevel: 0,
+                    requirements: System.Array.Empty<PatternRequirement>(),
+                    ratioRequirements: new[] { new RatioRequirement(IngredientType.Spirit, 0.4, 0.6) },
+                    locked: true,
+                    unlock: UnlockCondition.Kept("a_night_nobody_wrote"),
+                    unlockBeatId: "a_night_nobody_wrote"),
+            };
+            var e = Assert.Throws<FormatException>(() =>
+                DataLoader.ParseStory(Wrap(GoodBeat), Cast(), book));
+            Assert.That(e.Message, Does.Contain("a_night_nobody_wrote"));
+            Assert.That(e.Message, Does.Contain("ghost_page"));
+        }
+
+        [Test]
+        public void A_recipe_locked_behind_a_night_that_exists_loads()
+        {
+            var book = new System.Collections.Generic.List<RecipeDefinition>(Book())
+            {
+                new RecipeDefinition("earned_page", "Earned Page", rank: 30,
+                    baseFlavor: 10, baseMult: 2, flavorPerLevel: 0, multPerLevel: 0,
+                    requirements: System.Array.Empty<PatternRequirement>(),
+                    ratioRequirements: new[] { new RatioRequirement(IngredientType.Spirit, 0.4, 0.6) },
+                    locked: true,
+                    unlock: UnlockCondition.All(UnlockCondition.Stars(2.5),
+                                                UnlockCondition.Kept("b1", "Ulrich")),
+                    unlockBeatId: "b1"),
+            };
+            Assert.DoesNotThrow(() => DataLoader.ParseStory(Wrap(GoodBeat), Cast(), book));
+        }
+
+        [Test]
         public void A_face_nobody_has_papers_for_is_refused()
         {
             var e = Refused(Wrap(GoodBeat, @"

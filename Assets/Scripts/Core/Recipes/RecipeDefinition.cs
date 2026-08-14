@@ -104,6 +104,23 @@ namespace LastCall.Core
         /// <summary>Icon sprite key; defaults to the recipe id (P13 draws the set).</summary>
         public string Icon { get; }
 
+        /// <summary>
+        /// WHAT THIS PAGE IS WAITING FOR, when it is waiting for something a rank cannot say
+        /// (GDD 26 §12.2 step 4, 2026-08-14, the author: "bazı özel tariflerin kilitleri hem
+        /// yıldız seviyesine bağlı olacak hemde örneğin C müşterisini memnun ederek olacak").
+        ///
+        /// Null for every drink whose gate is only its rank — which is all 49 of them today —
+        /// and the run falls back to the rank table for those. It exists so a SPECIAL page
+        /// can name a person: the alengirli bottles the last call asks for are earned from
+        /// the guest who asked, not bought off a number.
+        /// </summary>
+        public UnlockCondition Unlock { get; }
+
+        /// <summary>The written night this page is earned from, or null. Kept beside the
+        /// condition so the loader can check the id against the arc without taking a
+        /// condition apart — a lock is asked whether it is open, not what it is made of.</summary>
+        public string UnlockBeatId { get; }
+
         public RecipeDefinition(
             string id, string name, int rank,
             int baseFlavor, int baseMult, int flavorPerLevel, int multPerLevel,
@@ -123,7 +140,9 @@ namespace LastCall.Core
             // A rule that conscripts the player must be asked for out loud.
             PrepMethod prep = PrepMethod.Built,
             string glassId = null,
-            string icon = null)
+            string icon = null,
+            UnlockCondition unlock = null,
+            string unlockBeatId = null)
         {
             // One kind of band per recipe. A style band and a type band can cover the same
             // pour (the gin is also a Spirit), so mixing kinds double-counts shares and lets
@@ -143,6 +162,10 @@ namespace LastCall.Core
             Prep = prep;
             GlassId = glassId ?? string.Empty;
             Icon = string.IsNullOrEmpty(icon) ? id : icon;
+            // An "always open" condition is not a condition; it is the absence of one, and
+            // storing it would make every unlocked page claim to carry a lock.
+            Unlock = unlock is null || ReferenceEquals(unlock, UnlockCondition.Open) ? null : unlock;
+            UnlockBeatId = string.IsNullOrWhiteSpace(unlockBeatId) ? null : unlockBeatId;
             MinFill = minFill;
             Id = id;
             Name = name;

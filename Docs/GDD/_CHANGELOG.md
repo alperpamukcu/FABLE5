@@ -2,6 +2,29 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `26 §12.2` **a lock can come from data, and the shop prints it (2026-08-14):** the condition
+  type existed but nothing could express one — `RecipeDefinition` had no field, `recipes.json`
+  no key, `RecipeUnlock` was hardcoded to the rank table, and the shop re-derived the star gate
+  in three places and wrote its own sentences. All four closed. A recipe carries `unlockBeat` +
+  `unlockStars`; the loader composes them with `All(...)`, which collapses when neither is
+  given, so **all 49 locked pages behave byte-identically**. The sealed crate and the book row
+  now print the lock's own `Sentence`, so a page earned from a person stops drawing as though
+  it were waiting for stars. `ParseStory` refuses a recipe naming a beat the arc does not have
+  — recipes load first, so that is the first and cheapest moment both halves are in one room,
+  and the failure it prevents is the worst this system has: silent, permanent, and
+  indistinguishable from content nobody wrote. 304 EditMode green, 8 PlayMode green.
+
+- `26 §2b` **Saturday is the rule, not a star on the wall (2026-08-14, the author: "her
+  cumartesi bir hikaye müşterisi gelecek"):** the marquee had been drawing a star on Saturday
+  while the rule still allowed Friday-or-Saturday — a wall advertising a night the arc need
+  not use. `StoryBeat` refuses any guest night but `BarCalendar.VipNight`; the house keeps its
+  quiet nights, and Friday keeps its place in `IsWeekend`, which is the ECONOMY's busy weekend
+  and a different question sharing a word. The two parked guests moved off Friday. The suite
+  caught what a rename would not: the "one weekend, both its nights" fixture no longer
+  describes anything, so it became two consecutive Saturdays and the arc it builds is two
+  weeks long — while the two-beats-on-one-night fixture had to keep both on ONE Saturday or
+  stop testing what it is named after.
+
 - `23 §6` **the rent stops climbing where the bar's ceiling is (2026-08-14, the author:
   "kasıtlı değil fiyatları ekonomik dengeyi buna göre ayarla"):** `Rent` keeps its measured
   ramp and then **plateaus at day 21** ($103). The quadratic was aimed at a bar that never

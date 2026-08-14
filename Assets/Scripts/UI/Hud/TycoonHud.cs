@@ -3892,11 +3892,17 @@ namespace LastCall.UI
                 foreach (var recipe in book)
                 {
                     var r = recipe;
-                    double gate = run.RecipeStarGate(r);
-                    if (run.Rating.Average < gate)
+                    // ASK THE LOCK; DO NOT RE-DERIVE IT (GDD 26 §12.2 step 4). This compared
+                    // the rating to a rank table itself and wrote its own two sentences —
+                    // which meant a page locked behind anything else, a person for instance,
+                    // would have been drawn as though it were waiting for stars. The lock
+                    // says what it wants and the crate prints that.
+                    var lockedBy = run.RecipeUnlock(r);
+                    if (!lockedBy.MetBy(run))
                     {
                         // SEALED, and the name never reaches the tile — that is the whole
                         // mechanic. No art either: the empty well is the tell.
+                        double gate = run.RecipeStarGate(r);
                         AddTile(new TileSpec
                         {
                             Name = "Sealed Crate",
@@ -3905,10 +3911,8 @@ namespace LastCall.UI
                             State = TileState.Sealed,
                             Identity = "A SEALED CRATE",
                             MetaLine = "The house will not open this one for you yet",
-                            Body = "It unseals at " + gate.ToString("0.0")
-                                   + " stars. Keep the room happy and it opens itself.",
-                            BuffA = new Buff(BuffKind.Bad, "Locked until the bar is worth "
-                                             + gate.ToString("0.0") + " stars"),
+                            Body = lockedBy.Sentence,
+                            BuffA = new Buff(BuffKind.Bad, lockedBy.Sentence),
                         });
                         continue;
                     }
@@ -4072,10 +4076,13 @@ namespace LastCall.UI
                     noun = "drink"; plural = "drinks"; verb = "the house will not open for you yet";
                     foreach (var r in run.LockedRecipes)
                     {
-                        double gate = run.RecipeStarGate(r);
-                        if (run.Rating.Average >= gate) continue;
+                        // Locked-ness is the LOCK's answer; the "next at" hint is still a
+                        // star, because a page waiting on a person has no number to count
+                        // towards and must not pull the hint down to zero.
+                        if (run.RecipeUnlock(r).MetBy(run)) continue;
                         locked++;
-                        if (gate < next) next = gate;
+                        double gate = run.RecipeStarGate(r);
+                        if (r.Unlock == null && gate < next) next = gate;
                     }
                 }
                 else if (_shopTab == 4)
@@ -5370,9 +5377,12 @@ namespace LastCall.UI
             Place(body, new Vector2(0, 1), new Vector2(bodyW, 10), Vector2.zero);
             body.pivot = new Vector2(0, 1);
             body.anchoredPosition = new Vector2(58, -30);
-            double gate = lockedRow ? run.RecipeStarGate(r) : 0;
-            DrawRecipeSpec(body, r, dark: false, width: bodyW,
-                note: gate > 0 ? $"OPENS AT {gate:0.0} STARS" : null);
+            // The book prints the lock's own sentence too, so a page earned from a person
+            // does not quietly claim to be waiting for stars.
+            var rowLock = lockedRow ? run.RecipeUnlock(r) : null;
+            string note = rowLock != null && !string.IsNullOrEmpty(rowLock.Sentence)
+                ? "OPENS: " + rowLock.Sentence : null;
+            DrawRecipeSpec(body, r, dark: false, width: bodyW, note: note);
             return row;
         }
 

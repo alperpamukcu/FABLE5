@@ -339,7 +339,7 @@ namespace LastCall.Core
         /// callers already ask the question the right way round.
         /// </summary>
         public UnlockCondition RecipeUnlock(RecipeDefinition recipe) =>
-            UnlockCondition.Stars(RecipeStarGate(recipe));
+            recipe.Unlock ?? UnlockCondition.Stars(RecipeStarGate(recipe));
 
         /// <summary>Is it buyable by the books — money aside? The shop asks this, and prints
         /// <see cref="UnlockCondition.Sentence"/> under the ones that say no.</summary>

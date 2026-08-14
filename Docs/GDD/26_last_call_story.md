@@ -120,8 +120,15 @@ CALL sign ignites, the ambience thins. No drawn cutscene.
 
 ## 2b. Which night they come on (the author, 2026-08-13)
 
-**A guest comes on a Friday or a Saturday.** Not "on day 9" — on a night of the week, in a
-week of the run.
+**A guest comes on a SATURDAY.** Not "on day 9" — on a night of the week, in a week of the run.
+
+> **Narrowed 2026-08-14** (the author: "her cumartesi bir hikaye müşterisi gelecek"). It was
+> Friday-or-Saturday while the marquee drew its star on Saturday alone — a wall advertising a
+> night the arc need not use. One night makes the promise keepable: the player counts towards
+> it, and `BarCalendar.VipNight` is the rule rather than a hint about it. `StoryBeat` refuses
+> anything else for a guest; the house still works the quiet nights, which is why Ece's is a
+> Monday. Friday keeps its place in `BarCalendar.IsWeekend` — that is the ECONOMY's busy
+> weekend, a different question that happens to share a word.
 
 The calendar was already there and already on the screen: six open nights, Tuesday through
 Sunday, Mondays dark, and the plaque has been printing `WEEK 2 · FRIDAY` since long before it
@@ -655,8 +662,19 @@ later ones can only be chosen once the earlier ones can be measured.
    belirtilecek"* asks for. `Kept` is named after the PERSON when the caller knows one,
    because "SERVE ECE WHAT THEY ASK FOR" is something a player can go and do and
    "REQUIRES BEAT ECE_2" is not.
-   Still to come: recipes and bottles carrying their own condition **in data** (today the
-   rank table is wrapped, not replaced), and the market drawing the sentence under the lock.
+   **The condition now comes from DATA and the shop prints it (2026-08-14).** A recipe carries
+   `unlockBeat` + `unlockStars` in `recipes.json`; the loader composes them with `All(...)`,
+   which collapses to nothing when neither is given — so all 49 locked pages keep the rank
+   table and behave byte-identically. `RecipeUnlock` prefers the page's own condition and
+   falls back to the rank. The shop stopped re-deriving the gate in three places and asks the
+   lock instead: the sealed crate and the book row print `Sentence`, so a page earned from a
+   person no longer draws as though it were waiting for stars.
+   **A named night is checked at load.** `ParseStory` is the first moment recipes and the arc
+   are in the same room, and it refuses a recipe pointing at a beat that does not exist — the
+   worst failure this system has is silent, permanent, and looks exactly like content nobody
+   wrote.
+   Still to come: **authoring one** (needs a second beat to point at), and the same treatment
+   for bottles, whose market side still gates purely on stars (`Market.OffersFor`).
 5. **The rest of the cast.** Eleven beats needs eleven written nights and eleven faces; the
    art is gated on PixelLab credit, the writing is not.
 

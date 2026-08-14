@@ -76,6 +76,42 @@ namespace LastCall.Tests
                 "a lock that admits to half of what it wants is worse than one that says nothing");
         }
 
+        // ── a recipe carrying its own lock (GDD 26 §12.2 step 4) ─────────────
+
+        [Test]
+        public void A_recipe_with_no_lock_carries_none()
+        {
+            var plain = Recipe();
+            Assert.IsNull(plain.Unlock, "an always-open condition is the absence of one");
+            Assert.IsNull(plain.UnlockBeatId);
+            // Built from an All() that collapses: the same thing every unlocked page in
+            // recipes.json gets, so none of the 49 changes behaviour.
+            var collapsed = Recipe(UnlockCondition.All(UnlockCondition.Stars(0), UnlockCondition.Open));
+            Assert.IsNull(collapsed.Unlock);
+        }
+
+        [Test]
+        public void A_recipe_can_be_locked_behind_a_rung_and_a_person_at_once()
+        {
+            var r = Recipe(UnlockCondition.All(
+                UnlockCondition.Stars(3), UnlockCondition.Kept("ece_2", "Ece")), beatId: "ece_2");
+            var bar = new Bar { Stars = 3.0 };
+            Assert.IsFalse(r.Unlock.MetBy(bar), "the stars alone are not it");
+            bar.Kept.Add("ece_2");
+            Assert.IsTrue(r.Unlock.MetBy(bar));
+            Assert.AreEqual("ece_2", r.UnlockBeatId,
+                "the beat id rides alongside so the loader can check it against the arc");
+            Assert.That(r.Unlock.Sentence, Does.Contain("3.0"));
+            Assert.That(r.Unlock.Sentence, Does.Contain("ECE"));
+        }
+
+        private static RecipeDefinition Recipe(UnlockCondition unlock = null, string beatId = null) =>
+            new RecipeDefinition("special", "Something Special", rank: 30,
+                baseFlavor: 10, baseMult: 2, flavorPerLevel: 0, multPerLevel: 0,
+                requirements: System.Array.Empty<PatternRequirement>(),
+                ratioRequirements: new[] { new RatioRequirement(IngredientType.Spirit, 0.4, 0.6) },
+                locked: true, unlock: unlock, unlockBeatId: beatId);
+
         [Test]
         public void All_collapses_when_there_is_nothing_to_earn()
         {

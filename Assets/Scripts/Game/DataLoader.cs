@@ -154,7 +154,13 @@ namespace LastCall.Game
                     locked: recipe.locked,
                     prep: ParsePrep(recipe.prepMethod, recipe.id),
                     glassId: recipe.glassId,
-                    icon: recipe.icon));
+                    icon: recipe.icon,
+                    unlock: UnlockCondition.All(
+                        UnlockCondition.Stars(recipe.unlockStars),
+                        string.IsNullOrWhiteSpace(recipe.unlockBeat)
+                            ? UnlockCondition.Open
+                            : UnlockCondition.Kept(recipe.unlockBeat)),
+                    unlockBeatId: recipe.unlockBeat));
             }
             return recipes;
         }
@@ -452,14 +458,33 @@ namespace LastCall.Game
                     }
                 }
 
+            StoryArc arc;
             try
             {
-                return new StoryArc(beats, lessons);
+                arc = new StoryArc(beats, lessons);
             }
             catch (ArgumentException e)
             {
                 throw new FormatException("Story file: " + e.Message);
             }
+
+            // A RECIPE MAY NAME A NIGHT, AND THE NIGHT HAS TO EXIST (GDD 26 §12.2 step 4).
+            // Recipes load before the story does, so this is the first moment both halves are
+            // in the same room — and it is the only moment the check is cheap. A mistyped
+            // beat id would otherwise become a page that is locked forever with a sentence
+            // naming a person who never comes, which is the worst failure this system has:
+            // silent, permanent, and indistinguishable from content nobody wrote.
+            var ids = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var beat in arc.Beats) ids.Add(beat.Id);
+            foreach (var recipe in recipes)
+            {
+                if (recipe.UnlockBeatId == null || ids.Contains(recipe.UnlockBeatId)) continue;
+                throw new FormatException(
+                    $"Recipe '{recipe.Id}' is locked behind story beat '{recipe.UnlockBeatId}', " +
+                    "and the arc has no such night. A page nobody can ever earn is worse than " +
+                    "a page nobody wrote (GDD 26 §12.2).");
+            }
+            return arc;
         }
 
         private static bool Mentions(List<string> lines, string word)
@@ -726,6 +751,12 @@ namespace LastCall.Game
             public string prepMethod;
             public string glassId;
             public string icon;
+            // THE PAGE'S OWN LOCK (GDD 26 §12.2 step 4). Absent on every drink whose gate is
+            // only its rank, which is all of them today; `unlockBeat` names the written night
+            // that hands it over, `unlockStars` the rung it also wants. Either may stand
+            // alone — UnlockCondition.All collapses when one of them is nothing.
+            public string unlockBeat;
+            public double unlockStars;
             public List<RatioDto> ratios;
         }
 
