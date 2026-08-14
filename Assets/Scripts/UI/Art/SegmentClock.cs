@@ -48,10 +48,13 @@ namespace LastCall.UI
         public SegmentClock(RectTransform host, float digitW, float digitH, float bar, Color lit)
         {
             _lit = lit;
-            // The unlit bars have to be READ as absent. The first cut sat them at 0.14 and an
-            // 8 and a 1 looked like the same block of light; they belong just above the glass,
-            // there when you look for them and gone when you read the time.
-            _unlit = new Color(lit.r, lit.g, lit.b, 0.085f);
+            // The unlit bars have to be READ as absent, and it took three tries. 0.14 made an
+            // 8 and a 1 the same block of light. 0.085 still left the dark traces competing
+            // with the time, and 0.045 still did (2026-08-14, the author: "saat okunaklı
+            // değil, koyu mavi dijital izleri daha silik yap"). At 0.025 the ghost is what a
+            // real display's unlit glass is: proof there is a machine behind it, and nothing
+            // you have to read past to get the hour.
+            _unlit = new Color(lit.r, lit.g, lit.b, 0.025f);
 
             float x = 0f;
             for (int d = 0; d < 4; d++)
@@ -114,7 +117,7 @@ namespace LastCall.UI
             // put the old hue back — the clock would go magenta and then quietly go cyan
             // again while the room was still being called.
             _lit = lit;
-            _unlit = new Color(lit.r, lit.g, lit.b, 0.085f);
+            _unlit = new Color(lit.r, lit.g, lit.b, 0.025f);   // keep in step with the ctor
             for (int d = 0; d < 4; d++)
                 for (int s = 0; s < 7; s++)
                 {

@@ -580,6 +580,44 @@ namespace LastCall.Core
                 Tick(0.25);
         }
 
+        /// <summary>
+        /// Dev tooling (2026-08-14, the author: "gün olarak da o zamana ışınlanılmasını
+        /// istiyorum"): moves the calendar to <paramref name="day"/> so a written night can be
+        /// looked at without playing the fortnight standing in front of it. Returns how many
+        /// nights were skipped.
+        ///
+        /// IT STRIKES THE OPPOSITE BARGAIN TO <see cref="DevSkipToDayEnd"/>, ON PURPOSE.
+        /// That one plays the night for real and skips only the waiting. This one does not
+        /// play the nights at all — no rent, no takings, no entry in the books — because the
+        /// honest version was measured and it does not work: closing and reopening real nights
+        /// on a bar nobody is serving puts a fresh run under on day 4, which makes every beat
+        /// past Wednesday unreachable by the tool built to reach them.
+        ///
+        /// So this is a VIEWING tool and says so. It is not a shortcut through the economy —
+        /// nothing here earns anything — it is the calendar being wound forward with the till,
+        /// the standing and the shelf left exactly where they were. The sim bot is what
+        /// measures this game; a dev key that skipped rent would only lie to a person.
+        /// </summary>
+        public int DevJumpToNight(int day)
+        {
+            if (Phase != TycoonPhase.DayOpen || day <= Day) return 0;
+            int from = Day;
+            Day = day;
+            // Everything ContinueToNextDay clears for a new night, minus the books.
+            DaySales = DayTips = DayRent = DayStock = DayUpgrades = 0;
+            UpgradesToday = 0;
+            _bestRankServedTonight = 0;
+            _todayPurchases.Clear();
+            LastCustomer = null;
+            LastCallBeat = null;
+            Trial = null;
+            _lastCallSpent = _lastCallAnswered = false;
+            BuyBackTheBowls();
+            ResetVessels();
+            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average);
+            return Day - from;
+        }
+
         // ── snacks (v5 P16) ─────────────────────────────────────────────────────
 
         private readonly IReadOnlyList<SnackDefinition> _snacks;

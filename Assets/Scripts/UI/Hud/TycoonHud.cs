@@ -5090,19 +5090,14 @@ namespace LastCall.UI
         /// upper one for what a reading IS, the lower one for what it SAYS — and every
         /// item on the beam is placed against one of them, left to right.</summary>
         private const float TopBarH = 54f, CapY = 12f, ReadY = -9f;
-        // THE STAR IS 16 BECAUSE THE DRAWING IS (2026-08-14, the author: "yıldızları da hizala
-        // ve boyutlarını tasarımını tekrardan gözden geçir"). The size went 14 → 22 → 32
-        // chasing "more visual communication", and 32 was at least honest arithmetic — 2× of a
-        // 16-pixel star. But a 32-unit star is TALLER THAN THE ROW: the board is built on two
-        // rules eleven units apart, and a 32-tall row centred on the lower one climbs into the
-        // caption above it. That collision is what "hizala" was pointing at, and no nudge
-        // fixes it — the shape was simply too big for the beam.
-        //
-        // At 1× it sits inside the row, it is the crispest the drawing can be, and the weight
-        // the standing lost goes where it belongs: the NUMBER, at display 24. A meter should
-        // be quiet when it reads zero, and five big dark stars were the loudest thing on the
-        // right end of an empty bar.
-        private const float StarSize = 16f, StarGap = 18f;
+        // 32 — 2× of the 16-pixel drawing, the only step up there is (2026-08-14, the author:
+        // "yıldız barı ortalasın ve boyutu büyütülsün"). It was cut to 16 an hour earlier for
+        // a real reason: at 32 the row climbed into the caption above it. The reason was right
+        // and the fix was wrong — the answer was never to shrink the meter that carries the
+        // whole progression (see GDD 26 §12), it was to stop making the standing obey a grid
+        // built for one-line readings. It is a BLOCK now: a caption centred over a row, the
+        // block as a whole centred in the beam's height, and its own internal spacing.
+        private const float StarSize = 32f, StarGap = 34f;
 
         /// <summary>A full-width band `h` units tall, `down` units below the parent's top
         /// edge. `Hairline` can only sit ON an edge and is one unit thick; a beam is built
@@ -5484,19 +5479,29 @@ namespace LastCall.UI
             // door shuts and the room drains, which is ninety-five seconds and a shift's work
             // away from the moment you press play. Waiting that out to look at a line of
             // dialogue is not testing, it is queueing.
-            SettingsRow(8, "DEV · SKIP TO THE LAST CALL — run tonight out to the guest", () =>
+            SettingsRow(8, "DEV · SKIP TO THE LAST CALL — jump to the night, then run it out", () =>
             {
                 if (Run == null || Run.Phase != TycoonPhase.DayOpen) { Toast("NOT MID-DAY"); return; }
                 if (Run.Story == null) { Toast("THIS RUN HAS NO STORY"); return; }
                 if (Run.LastCustomer != null) { Toast("THEY ARE ALREADY AT THE BAR"); return; }
+                _flow?.CloseFlow();
+                CloseId();
+
+                // THE DAY JUMPS TOO (2026-08-14, the author: "sadece karakteri sahneye
+                // getiriyor ama ben gün olarak da o zamana ışınlanılmasını istiyorum"). It
+                // used to refuse a night the arc was not due on and name the date instead,
+                // which meant looking at a beat two weeks out was still two weeks of pressing
+                // things. `DevJumpToNight` winds the calendar; what that skips, and why it
+                // skips it rather than playing the nights for real, is written there.
+                int skipped = Run.DevJumpToNight(Run.Story.DueDay);
+                if (skipped > 0) ApplyBarLook();
                 if (!Run.Story.IsDueOn(Run.Day))
                 {
-                    Toast("NOTHING WRITTEN TONIGHT — NEXT IS "
+                    ToggleSettings();
+                    Toast("NOTHING WRITTEN AHEAD — LAST WAS "
                           + BarCalendar.Label(Run.Story.DueDay).ToUpperInvariant());
                     return;
                 }
-                _flow?.CloseFlow();
-                CloseId();
                 // The REAL clock and the REAL verb, the same bargain DevSkipToDayEnd strikes:
                 // everyone still seated storms off exactly as they would have, the rent and
                 // the rating land where they always do. What is skipped is the waiting, never
@@ -7152,18 +7157,30 @@ namespace LastCall.UI
             // widget. They stand on the beam, the number reads beside them at display size,
             // and the crowd names itself on the caption line above — three things on two
             // rules instead of a panel with contents.
+            // THE STANDING IS A BLOCK, NOT TWO READINGS ON A GRID (2026-08-14, the author:
+            // "yıldız barı ortalasın ve boyutu büyütülsün"). It is the one thing up here that
+            // is about PROGRESS rather than about tonight — it gates the story's guests and
+            // the shelf itself (GDD 26 §12) — so it gets its own small composition: the crowd
+            // named across the top, the meter and its number under it, and the whole thing
+            // centred in the beam so a 32-unit star has somewhere to be.
             const float RightEdge = -14f;                     // where the key ends
-            const float NumberRight = RightEdge - 42f;        // ...then the standing's number
+            const float BlockRight = RightEdge - 40f;
             float starsW = _ratingStars.Length * StarGap;
-            // The number is 72 units of display type ("0.0") in an 80-unit rect, and the row
-            // clears it by twelve. Measure the type, then leave the gap — the readings on this
-            // board never touch.
-            float starsRight = NumberRight - 92f;
+            const float NumberW = 80f;                        // "0.0" at display 24 is 72 wide
+            float blockW = starsW + 10f + NumberW;
 
-            var starsRow = NewRect("Stars", top);
-            Place(starsRow, new Vector2(1, 0.5f), new Vector2(starsW, StarSize),
-                new Vector2(starsRight, ReadY));
-            starsRow.pivot = new Vector2(1, 0.5f);
+            var standing = NewRect("Standing", top);
+            Place(standing, new Vector2(1, 0.5f), new Vector2(blockW, TopBarH), new Vector2(BlockRight, 0));
+            standing.pivot = new Vector2(1, 0.5f);
+
+            // Inside the block: the row sits low enough to clear its own caption and high
+            // enough to clear the neon. 32 tall centred at -5 spans -21..+11 in a 54 beam.
+            const float RowY = -5f, CapRowY = 18f;
+
+            var starsRow = NewRect("Stars", standing);
+            Place(starsRow, new Vector2(0, 0.5f), new Vector2(starsW, StarSize),
+                new Vector2(0, RowY));
+            starsRow.pivot = new Vector2(0, 0.5f);
             for (int i = 0; i < _ratingStars.Length; i++)
             {
                 var star = NewRect($"B{i}", starsRow);
@@ -7198,14 +7215,15 @@ namespace LastCall.UI
                 _ratingStars[i] = img;
             }
 
-            _ratingText = NewText("Rating", top, _display, 24, TextAnchor.MiddleRight, UITheme.Amber[4]);
-            Place(_ratingText.rectTransform, new Vector2(1, 0.5f), new Vector2(80, 26),
-                new Vector2(NumberRight, ReadY));
+            _ratingText = NewText("Rating", standing, _display, 24, TextAnchor.MiddleRight, UITheme.Amber[4]);
+            Place(_ratingText.rectTransform, new Vector2(1, 0.5f), new Vector2(NumberW, 26),
+                new Vector2(0, RowY));
             _ratingText.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-            _crowdText = NewText("Crowd", top, _body, 8, TextAnchor.MiddleRight, UITheme.Cream[2]);
-            Place(_crowdText.rectTransform, new Vector2(1, 0.5f), new Vector2(300, 12),
-                new Vector2(NumberRight, CapY));
+            // Centred over the block it belongs to, not right-aligned to one edge of it.
+            _crowdText = NewText("Crowd", standing, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[2]);
+            Place(_crowdText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(blockW, 12),
+                new Vector2(0, CapRowY));
             _crowdText.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             // ── the quiet end: one key, and nothing else that is not the night ──
