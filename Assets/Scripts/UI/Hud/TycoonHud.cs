@@ -4810,8 +4810,12 @@ namespace LastCall.UI
             _serviceLog.text = string.Join("\n", _serviceLogLines);
         }
 
+        /// <summary>The visit's score for the log, in marks a pixel font can actually draw.
+        /// It used to be U+2605 — the same glyph that was printing five empty boxes over the
+        /// payment float, and the same one this project already replaces with an asterisk
+        /// wherever a licence name carries it (2026-08-11).</summary>
         private static string LogStars(double satisfaction) =>
-            new string('★', Mathf.Clamp(Mathf.RoundToInt((float)satisfaction * 5f), 0, 5));
+            new string('*', Mathf.Clamp(Mathf.RoundToInt((float)satisfaction * 5f), 0, 5));
 
         /// <summary>The judge's verdict, said as one log line with its reasons.</summary>
         private void LogVerdict(CustomerVisit visit, ServiceVerdict verdict)
@@ -6223,8 +6227,6 @@ namespace LastCall.UI
         private static readonly Vector2 StageRef = new Vector2(640f, 360f);
 
         /// <summary>0–5 stars as glyphs, the empty ones kept so the width never jumps.</summary>
-        private static string Stars(int n) =>
-            new string('★', Mathf.Clamp(n, 0, 5)) + new string('☆', 5 - Mathf.Clamp(n, 0, 5));
 
         private void CloseId()
         {
