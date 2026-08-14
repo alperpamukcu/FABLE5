@@ -16,7 +16,14 @@ namespace LastCall.EditorTools
     /// seat, its recipe bands, and the always-visible half of the read. It builds each
     /// ordered drink at band midpoints with intent-aligned bottles, takes nine seconds of
     /// bar-time per drink, restocks at day end, and buys stools when flush. A floor, not
-    /// a prediction — it never buys brands.
+    /// a prediction.
+    ///
+    /// IT TRIES TO BUY BETTER BOTTLES AND CANNOT AFFORD ONE (2026-08-14). The rule is there
+    /// and the report counts what it buys; the count is zero, across two hundred runs, at
+    /// every cushion tried. That is not a bug in the rule — it is the measurement. This bar
+    /// takes $150 a day and spends $145, and an upgrade is a purchase a five-dollar margin
+    /// never reaches. See Docs/star_track_report.md: it is also why the standing stops
+    /// climbing at three stars.
     /// </summary>
     public static class TycoonSimulator
     {
@@ -92,11 +99,12 @@ namespace LastCall.EditorTools
             sb.AppendLine($"{Runs} runs, horizon **{Horizon} days** (twenty weeks). The 200-run");
             sb.AppendLine("report answers the same question over thirty days and is cut off by it.");
             sb.AppendLine();
-            sb.AppendLine("**This is a floor.** The bot reads only the ID, never shops and never buys");
-            sb.AppendLine("a brand, so a played bar climbs faster and probably further. What the");
-            sb.AppendLine("table is trusted for is the SHAPE: the spacing between rungs, and where");
-            sb.AppendLine("the curve stops moving. A rung nobody reaches in twenty weeks is a rung");
-            sb.AppendLine("no guest can be written for until something else changes.");
+            sb.AppendLine("**This is still a floor.** The bot reads only the ID and plays no better");
+            sb.AppendLine("than band midpoints — but since 2026-08-14 it DOES shop: stock its menu");
+            sb.AppendLine("names, the cheapest passing recipe, stools, glass steps, and one brand");
+            sb.AppendLine("UPGRADE a night behind a fat cushion. What the table is trusted for is the");
+            sb.AppendLine("SHAPE: the spacing between rungs, and where the curve stops moving. A rung");
+            sb.AppendLine("nobody reaches in twenty weeks is a rung no guest can be written for.");
             sb.AppendLine();
             sb.AppendLine("| Rung | Runs that reached it | Day p25/median/p75 | Median week |");
             sb.AppendLine("|---|---|---|---|");
@@ -315,11 +323,19 @@ namespace LastCall.EditorTools
                         if (run.Rating.Average >= run.RecipeStarGate(r) &&
                             (cheapest == null || r.Rank < cheapest.Rank))
                             cheapest = r;
-                    // No purchase in the last week: a recipe bought on day 26 cannot earn
-                    // its price back, and a floor that buys it measures generosity, not play.
-                    // Wave 3 taught this — five more buyables took the floor from 7.5% to
-                    // 42.5% bankruptcies on late-run purchases alone.
-                    if (cheapest != null && run.Day <= 23 &&
+                    // No purchase in the last week: a recipe bought seven nights from the end
+                    // cannot earn its price back, and a floor that buys it measures
+                    // generosity, not play. Wave 3 taught this — five more buyables took the
+                    // floor from 7.5% to 42.5% bankruptcies on late-run purchases alone.
+                    //
+                    // RELATIVE TO THE HORIZON, not day 23 (2026-08-14). It was written as an
+                    // absolute against a thirty-day run and silently became "stop shopping on
+                    // day 24, forever" the moment the star track asked for a hundred and
+                    // twenty — so the long measurement was of a bar that quits improving in
+                    // its fourth week. A cutoff that means "near the end" has to be told
+                    // where the end is.
+                    bool shoppingWeek = run.Day <= dayCap - 7;
+                    if (cheapest != null && shoppingWeek &&
                         run.Money >= run.RecipePrice(cheapest) + 40)
                     {
                         run.UnlockRecipe(cheapest.Id);
@@ -334,6 +350,37 @@ namespace LastCall.EditorTools
                         var offer = run.MarketOffers[oi];
                         if (offer.Sold || !offer.IsNewStock || !neededStyles.Contains(offer.Style)) continue;
                         if (run.Money >= offer.Price + 40) run.BuyBrand(oi);
+                    }
+
+                    // THE BOT SHOPS FOR BETTER BOTTLES NOW (2026-08-14, GDD 26 §12.2 step 3).
+                    // It bought STOCK — a style its menu named and its shelf lacked — and
+                    // never an UPGRADE, which is the whole other half of the market and the
+                    // half that makes a drink better rather than merely possible. That gap is
+                    // why the star track's top five rungs came back empty: the bar could pour
+                    // everything on its menu and never pour any of it well.
+                    //
+                    // One a night, cheapest first, behind a fat cushion. The cushion is not
+                    // caution for its own sake — wave 3 measured five new buyables taking the
+                    // floor from 7.5% to 42.5% bankruptcies — and an upgrade is the most
+                    // skippable purchase in the game: nothing stops working without it.
+                    // NOT filtered by `neededStyles` like new stock is, and the difference is
+                    // the point: new stock is bought to make a drink POSSIBLE, so it has to be
+                    // a style the menu names. An upgrade is bought to make a drink BETTER, and
+                    // the market only ever offers upgrades for styles already on the shelf —
+                    // which are, by definition, styles this bar pours. Reusing the menu's
+                    // style set here filtered on a set built from style BANDS only, and most
+                    // recipes ask by ingredient type.
+                    int bestUpgrade = -1, bestUpgradePrice = int.MaxValue;
+                    for (int oi = 0; oi < run.MarketOffers.Count; oi++)
+                    {
+                        var offer = run.MarketOffers[oi];
+                        if (offer.Sold || offer.IsNewStock) continue;
+                        if (offer.Price < bestUpgradePrice) { bestUpgradePrice = offer.Price; bestUpgrade = oi; }
+                    }
+                    if (bestUpgrade >= 0 && shoppingWeek && run.Money >= bestUpgradePrice + 250)
+                    {
+                        run.BuyBrand(bestUpgrade);
+                        stats.BrandsBought++;
                     }
                     // ONE fitting a night (2026-08-07). The bot spends it the way a player
                     // working the cap would: a stool first while the room is small — seats
@@ -685,6 +732,7 @@ namespace LastCall.EditorTools
             public int SnackServes, SnackIncome;
             public int GlassesBussed;
             public int RecipesBought;
+            public int BrandsBought;   // upgrades only; new stock is not a choice the bot makes
             // v5 P11: the base/tip split is the phase's whole point, and refusals/declines are
             // the two new ways a serve can end.
             public int Refused, Declined, SpecOrders, SpecFull;
@@ -820,7 +868,8 @@ namespace LastCall.EditorTools
                               (Stuck > 0 ? $" ({Stuck} abandoned as stuck)" : "") +
                               $", horizon {DayCap} days, one drink per {DrinkBuildSeconds:0}s of bar time.");
                 sb.AppendLine("Floor bot: serves the named order at band midpoints, pulls a pint");
-                sb.AppendLine("leaned over then straightened, and never buys brands.");
+                sb.AppendLine("leaned over then straightened, and shops — stock, recipes, stools,");
+                sb.AppendLine("glass steps, and one brand upgrade a night it never once affords.");
                 sb.AppendLine("Every survival figure is a floor.");
                 sb.AppendLine();
                 sb.AppendLine("| Metric | Value |");
@@ -849,7 +898,8 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Average head poured | {HeadSum / Math.Max(1, Pints):P0} |");
                 sb.AppendLine($"| Snack serves (of serves) | {Pct(SnackServes, Serves)} · ${SnackIncome} |");
                 sb.AppendLine($"| Glasses bussed | {GlassesBussed} |");
-                sb.AppendLine($"| Recipes bought (of 200 runs) | {RecipesBought} |");
+                sb.AppendLine($"| Recipes bought (of {Runs} runs) | {RecipesBought} |");
+                sb.AppendLine($"| Brand upgrades bought | {BrandsBought} |");
                 sb.AppendLine();
 
                 // ── the star track (GDD 26 §12.2 step 3) ─────────────────────

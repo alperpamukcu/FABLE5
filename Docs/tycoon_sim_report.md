@@ -2,7 +2,8 @@
 
 Runs: **200** of 200, horizon 30 days, one drink per 9s of bar time.
 Floor bot: serves the named order at band midpoints, pulls a pint
-leaned over then straightened, and never buys brands.
+leaned over then straightened, and shops — stock, recipes, stools,
+glass steps, and one brand upgrade a night it never once affords.
 Every survival figure is a floor.
 
 | Metric | Value |
@@ -32,6 +33,7 @@ Every survival figure is a floor.
 | Snack serves (of serves) | 24009 (33.3%) · $66024 |
 | Glasses bussed | 51711 |
 | Recipes bought (of 200 runs) | 3797 |
+| Brand upgrades bought | 0 |
 
 ## The star track — when a bar reaches each rung
 

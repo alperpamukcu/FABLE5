@@ -612,9 +612,22 @@ later ones can only be chosen once the earlier ones can be measured.
    so it cannot buy the bottles a better night is made of. Reading 3.0★ as the game's ceiling
    would be reading the bot's wallet.
 
-   **So: nothing above 2.5★ gets written until a bot that shops has been down this road.**
-   That bot is the next measurement, and it is worth having for its own sake — every survival
-   figure in the balance report is a floor for the same reason.
+   **The bot was then taught to shop, and the answer got sharper rather than higher.** It now
+   buys one brand upgrade a night — the thing that makes a drink *better* rather than merely
+   possible — and across 200 runs it bought **zero**, at every cushion tried and with the
+   style filter removed. That is not a broken rule; it is the measurement. The bar takes
+   $150.2 a day and spends $145.2, and a better bottle is a purchase a five-dollar margin
+   never reaches.
+
+   **So the top of the star track is gated by the ECONOMY, not by the standing.** A bar
+   running at break-even can never buy the bottles that make better drinks, so it can never
+   raise satisfaction, so it can never climb past three stars — and over twenty weeks it does
+   not merely stall, it dies: 60 of 60 runs bankrupt, median day 36.
+
+   **Nothing above 2.5★ can be written until that margin changes.** The question is no longer
+   "how many stars can a bar reach" but "can a bar turn a profit", and that is a balance
+   question for GDD 23, not a story one. The eleven-rung cast is sound as a shape; five of its
+   rungs are waiting on the economy.
 4. **`UnlockCondition`, one type for every lock.** Today a lock is two unrelated things
    (`RecipeDefinition.Locked` + `_boughtRecipes`, and `_lockedStock` by style); the author is
    adding a third — *"müşteriye doğru siparişi vererek"*, having served a named guest the
