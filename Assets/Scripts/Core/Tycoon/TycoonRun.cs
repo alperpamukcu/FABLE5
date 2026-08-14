@@ -560,7 +560,7 @@ namespace LastCall.Core
             LastCustomer = null;       // a jumped night starts its last call from scratch
             LastCallBeat = null;
             Trial = null;
-            _lastCallSpent = _lastCallAnswered = false;
+            _lastCallSpent = _lastCallAnswered = LastCallWithheld = false;
             Phase = TycoonPhase.DayOpen;
         }
 
@@ -611,7 +611,7 @@ namespace LastCall.Core
             LastCustomer = null;
             LastCallBeat = null;
             Trial = null;
-            _lastCallSpent = _lastCallAnswered = false;
+            _lastCallSpent = _lastCallAnswered = LastCallWithheld = false;
             BuyBackTheBowls();
             ResetVessels();
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average);
@@ -819,8 +819,21 @@ namespace LastCall.Core
         public StoryBeat LastCallBeat { get; private set; }
 
         /// <summary>Tonight's attempt at the beat's trial — what the post-it is drawn from
-        /// (GDD 26 §4). Null on a night with no last customer.</summary>
+        /// (GDD 26 §4). Null on a night with no last customer, and null on a night the guest
+        /// came but did not order (see <see cref="LastCallWithheld"/>).</summary>
         public StoryTrialRun Trial { get; private set; }
+
+        /// <summary>
+        /// Tonight's guest came in, but the bar has not reached the standing they came for
+        /// (GDD 26 §12) — so they are on the stool with no order and no clock, and what they
+        /// say is <see cref="StoryLines.ShortOfGate"/> instead of the ask. The beat stands and
+        /// comes back; nothing about tonight was wrong, it was early.
+        /// </summary>
+        public bool LastCallWithheld { get; private set; }
+
+        /// <summary>How many stars tonight's guest came for, or 0 when nobody is due. What
+        /// the plate prints when it has to say what the bar is short of.</summary>
+        public double LastCallNeedsStars => LastCallBeat?.RequiresStars ?? 0;
 
         private bool _lastCallSpent;      // one last customer a night, served or not
         private bool _lastCallAnswered;   // the arc has been told how tonight went
@@ -873,20 +886,41 @@ namespace LastCall.Core
             // reaches the till or the standing. They said who they were on the way in, so the
             // licence is already read: the ask is behind a CONVERSATION tonight, not a card.
             var beat = Story.Current;
+            // THE GATE IS ASKED AT THE STOOL, NOT AT THE DOOR (GDD 26 §12). They come either
+            // way; what changes is whether there is a job tonight. A guest whose rung the bar
+            // has not reached sits down, says what it is short of, and goes home — so the
+            // lock is a scene the player watches rather than a night that quietly does not
+            // happen. Nothing is fumbled, so the arc books it in its own column.
+            LastCallWithheld = !Story.GateOpenFor(Rating.Average);
             var visit = new CustomerVisit(
                 new DrinkOrder(beat.Trial.Headline, PriceOf(beat.Trial.Headline), ServingSpec.Plain),
-                beat.Trial.Seconds, Story.PersonFor(beat.Who), onTheHouse: true);
+                LastCallWithheld ? LastWordSeconds : beat.Trial.Seconds,
+                Story.PersonFor(beat.Who), onTheHouse: true);
             visit.InspectId();
             Floor.SeatGuest(visit);
             LastCustomer = visit;
             LastCallBeat = beat;
-            Trial = new StoryTrialRun(beat.Trial);
-            // The ask can hand its own page over (GDD 26 §4): a drink the book has not got
-            // and the star gate will not open for weeks is written down for you at the bar,
-            // so the trial is a job and not a wall.
-            GrantRecipe(beat.GrantsRecipeOnAsk);
+            // NO TRIAL, SO NO POST-IT. The note on the screen is drawn from `Trial`, and a
+            // night with nothing being asked for must not put a job on the wall.
+            Trial = LastCallWithheld ? null : new StoryTrialRun(beat.Trial);
+            if (LastCallWithheld)
+            {
+                // The clock is theirs and it is short: they stay the length of the last word,
+                // which is the same stay a finished beat gets. The arc is told now rather than
+                // when they stand up, so nothing depends on a stool emptying on time.
+                visit.ReleaseClock();
+                Story.RecordTurnedAway(Day);
+                _lastCallAnswered = true;
+            }
+            else
+            {
+                // The ask can hand its own page over (GDD 26 §4): a drink the book has not got
+                // and the star gate will not open for weeks is written down for you at the bar,
+                // so the trial is a job and not a wall.
+                GrantRecipe(beat.GrantsRecipeOnAsk);
+                _lastCallAnswered = false;
+            }
             _lastCallSpent = true;
-            _lastCallAnswered = false;
 
             // Whoever just sat down is what the caller draws. Leaving the guest out of this
             // list would put somebody on a stool that nobody can see.
@@ -903,6 +937,10 @@ namespace LastCall.Core
         /// </summary>
         public void BeginLastCallTrial()
         {
+            // A withheld night has no trial to start (GDD 26 §12): the guest is sitting there
+            // saying why there is no order, and the plate ends the same way it always does.
+            // Whoever dismisses the dialogue must not have to know which kind of night it is.
+            if (LastCallWithheld) return;
             if (LastCustomer == null || Trial == null)
                 throw new InvalidOperationException("Nobody is waiting on the last call.");
             Trial.Begin();
@@ -1995,7 +2033,7 @@ namespace LastCall.Core
             LastCustomer = null;       // last night's beat is over, whichever way it went
             LastCallBeat = null;
             Trial = null;
-            _lastCallSpent = _lastCallAnswered = false;
+            _lastCallSpent = _lastCallAnswered = LastCallWithheld = false;
             BuyBackTheBowls();
             ResetVessels();
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average);

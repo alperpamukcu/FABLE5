@@ -2,6 +2,18 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `21 §12` **the last two guards of the overturned rule (2026-08-14, the author: "soda
+  shakera dökülmüyor"):** Core took fizz in the tin, the wall routed it to the bench, and
+  then the BENCH refused to pour it — a `!fizzy` term in the tilt-pour's `pourNow`, saying
+  "FIZZ DIES IN THE TIN — BUILD IT AT THE GLASS". Its own comment had argued for keeping it:
+  *"a guard that only lives in the routing is a guard that dies in a refactor."* True, and the
+  mirror is truer — a guard kept after the rule it guards is overturned becomes a rule of its
+  own that nobody wrote down, and it outlived Core's refusal by exactly one day. The wall
+  carried the twin: it judged a fizzy bottle against the SERVING GLASS's fullness, so it
+  greyed out for a glass the bottle never touches and stayed lit over a tin with no room.
+  Both gone; every non-beer bottle is now judged against the tin, because that is the only
+  vessel it can go into.
+
 - `21 §12/§12a` **the loop closes, and a shaken fizz goes off in your hands (2026-08-14, the
   author: "alkolü çöpe attığımızda sıfırlanılması gerekiyor fakat bardak ekranına
   gönderiliyor… kokteyl yapılıp servis edildikten sonra döngü başa dönmüyor"):** `_capped` is

@@ -39,6 +39,19 @@ namespace LastCall.Core
         /// </summary>
         public IReadOnlyList<string> HostWarning { get; }
 
+        /// <summary>
+        /// SAID INSTEAD OF THE ASK, when the bar has not earned this guest yet (GDD 26 §12,
+        /// 2026-08-14, the author: "eğer oyuncu 0.5 yıldız değilken gelirse, gelecek masaya
+        /// oturacak yine ara sahne ve sohbet ekranında neden sipariş vermediğini oyuncunun
+        /// ilerlemesi için ne yapması gerektiğini belirtecek").
+        ///
+        /// They still COME. That is the whole design: a locked night that simply does not
+        /// happen teaches nothing, and a name that never turns up is indistinguishable from a
+        /// bug. So the guest walks in, takes the stool, and says why there is no order
+        /// tonight — which makes the gate a piece of writing rather than a refusal.
+        /// </summary>
+        public IReadOnlyList<string> ShortOfGate { get; }
+
         /// <summary>The host's framing, before the guest speaks and after they leave.</summary>
         public IReadOnlyList<string> HostBefore { get; }
         public IReadOnlyList<string> HostAfter { get; }
@@ -46,8 +59,10 @@ namespace LastCall.Core
         public StoryLines(IReadOnlyList<string> ask = null, IReadOnlyList<string> nudge = null,
             IReadOnlyList<string> servedRight = null, IReadOnlyList<string> servedWrong = null,
             IReadOnlyList<string> declined = null, IReadOnlyList<string> hostBefore = null,
-            IReadOnlyList<string> hostAfter = null, IReadOnlyList<string> hostWarning = null)
+            IReadOnlyList<string> hostAfter = null, IReadOnlyList<string> hostWarning = null,
+            IReadOnlyList<string> shortOfGate = null)
         {
+            ShortOfGate = shortOfGate ?? Array.Empty<string>();
             HostWarning = hostWarning ?? Array.Empty<string>();
             Ask = ask ?? Array.Empty<string>();
             Nudge = nudge ?? Array.Empty<string>();

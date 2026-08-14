@@ -543,7 +543,70 @@ each arc stalled on), not a guess.
 
 ---
 
-## 12. Out of scope (fenced deliberately)
+## 12. The star track — the arc IS the progression (2026-08-14)
+
+> The author: *"Yıldız puanı birçok ilerlemenin kilidi olacak. Her hikaye müşterisi belli bir
+> yıldıza ulaşmanı isteyecek ... 0-0.5-1-1.5-2-2.5-3-3.5-4-4.5-5 yıldız seviyesi olacak.
+> Hikayesel olarak toplam bu kadar karakter olacak."*
+
+**The bar's standing is the spine of the game, and the cast is its ruler.** Eleven rungs, half
+a star apart, and one written guest standing on each: the number in the top bar stops being a
+score and becomes the thing that says who will talk to you next. `StoryBeat.RequiresStars` is
+that rung, and it may only be a rung — a beat asking for 1.3 is refused at construction,
+because the whole point of the track is that the next name is a place you can see from here.
+
+**Where the stars come from is unchanged:** the slip at the end of a night files that night's
+stars (§9's ledger), and the standing is their running average. Nothing in this module awards
+one; the arc only ever reads it.
+
+### 12.1 A locked night still happens
+
+**The gate is asked at the stool, never at the door.** A guest whose rung the bar has not
+reached *still comes*: they arrive on their night, take the stool, the room dims to them, and
+they say why there is no order — which is `StoryLines.ShortOfGate` and is required by the
+loader on any beat with a rung above zero. Then they go home and the beat stands.
+
+This is the one design decision in the section, and it is worth stating why it is not the
+obvious one. A locked beat that simply does not occur teaches the player nothing, is
+indistinguishable from a bug, and makes the calendar lie — a marked Saturday with nobody on
+it is worse than no mark. A guest who turns up to tell you what you are short of turns the
+lock into a scene, and that scene is the tutorial for the entire system. Which is why the
+OPENER SITS AT ZERO: Ece's first night can never be missed, and hers is where the concept is
+explained out loud.
+
+**It is booked in its own column.** `StoryProgress.TurnedAway` counts it, apart from `Missed`.
+One of those is the player getting a drink wrong and the other is the player not being there
+yet; an ending that could not tell them apart would tell somebody who never fumbled a serve
+that they kept letting people down. Both share one return clock (`PushBack`), so a turn-away
+and a miss can never drift onto a night the beat cannot happen on.
+
+**Mechanically, on a withheld night:** `Trial` is null — so there is no post-it, because
+nothing is being asked for — `LastCallWithheld` is set, the visit's clock is released
+immediately, the arc is told at once rather than when the stool empties, and
+`BeginLastCallTrial()` is a no-op so the UI can end every dialogue the same way.
+
+### 12.2 What is NOT built yet (the ordered path)
+
+The pieces below are agreed in shape and not in code. The order matters: the numbers on the
+later ones can only be chosen once the earlier ones can be measured.
+
+1. **The gate** — `RequiresStars`, `ShortOfGate`, `TurnedAway`, the withheld night. **DONE.**
+2. **The withheld scene in the UI** — the plate reads `ShortOfGate` and prints the rung
+   ("SHE COMES BACK AT 2.5★"), the post-it stays down. Next.
+3. **Calibration by simulation** — the sim bot reaches a rung on some night; run 200 and read
+   *which week each rung lands in*. This is where the eleven thresholds get their values.
+   Guessing them is the biggest risk in the design and the machine that answers it exists.
+4. **`UnlockCondition`, one type for every lock.** Today a lock is two unrelated things
+   (`RecipeDefinition.Locked` + `_boughtRecipes`, and `_lockedStock` by style); the author is
+   adding a third — *"müşteriye doğru siparişi vererek"*, having served a named guest the
+   thing they asked for. Three kinds of lock in three places do not survive a fourth. One
+   type — `Stars(n)` | `BeatDone(id)` | `ServedRight(beatId, askIndex)`, composable with
+   `And` — and the market prints **the condition's own sentence** under the lock, which is
+   also what the author's *"başarımlar kilit görselinin altında belirtilecek"* asks for.
+5. **The rest of the cast.** Eleven beats needs eleven written nights and eleven faces; the
+   art is gated on PixelLab credit, the writing is not.
+
+## 13. Out of scope (fenced deliberately)
 
 - Drawn cutscene frames or animated portraits (§7 — the light beat replaces them).
 - Branching plot, reputation trees, multiple endings.
