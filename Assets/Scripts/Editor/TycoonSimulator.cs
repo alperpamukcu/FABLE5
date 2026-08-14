@@ -221,6 +221,170 @@ namespace LastCall.EditorTools
         [InitializeOnLoadMethod]
         private static void PinCulture() => RunCulture.Pin();
 
+        /// <summary>
+        /// HOW STEADY THE BARTENDER'S HANDS ARE (2026-08-14). The floor bot pours the book's
+        /// exact ideal, garnishes everything, works every tin and hits the rim dead on — so
+        /// 200 runs came back **100% Exact, 0% Close, 0% Wrong, 0% Refused**, and the whole
+        /// half of this economy that pays for getting it nearly right has never been measured
+        /// once. The star track was calibrated against a bartender who does not exist.
+        ///
+        /// Every field is a SIGMA or a CHANCE, and all-zero is the floor bot exactly as it
+        /// was — so the shipped report does not move by a cent when this lands.
+        /// </summary>
+        public sealed class Hands
+        {
+            /// <summary>Error on each pour's share of the glass, as a fraction of that share.</summary>
+            public double RatioSigma;
+            /// <summary>Error on how full the glass is aimed for.</summary>
+            public double FillSigma;
+            /// <summary>How far off the rim the tin goes at the pour-out. Spills.</summary>
+            public double AimSigma;
+            /// <summary>Chance of forgetting a garnish the licence asked for.</summary>
+            public double SkipSpec;
+            /// <summary>Chance of not working the tin — only where Core does not refuse it.</summary>
+            public double ForgetMix;
+
+            /// <summary>Its own stream. Set by PlayRun; never shared with the run's.</summary>
+            public SeededRng Dice;
+
+            /// <summary>The floor bot: no error anywhere.</summary>
+            public static Hands Steady => new Hands();
+
+            // A FIXED HAND OF DICE PER DRINK, IN A FIXED ORDER. The obvious way — draw when
+            // you need a number — desynchronises the sweep: a recipe with three bands draws
+            // three times and one with two draws twice, a plain order skips the garnish
+            // draws, and a sigma of zero would draw nothing at all. Two noise levels would
+            // then be pouring for different customers by the second night, and the table
+            // would be reading that shuffle instead of the noise.
+            //
+            // So every drink deals the same twelve numbers whatever it turns out to need,
+            // and each knob reads its own slot. Unused slots are thrown away, which is the
+            // price of the sweep points staying on the same night as each other.
+            private const int Slots = 12;
+            private readonly double[] _hand = new double[Slots];
+
+            public void Deal()
+            {
+                for (int i = 0; i < Slots; i++) _hand[i] = Dice?.NextDouble() ?? 0.5;
+            }
+
+            /// <summary>Symmetric error in [-sigma, +sigma]. Uniform rather than gaussian on
+            /// purpose: a bounded mistake is what a hand makes, and an unbounded one would
+            /// put a long tail of nonsense drinks into a table meant to read as a slope.</summary>
+            public double Jitter(double sigma, int slot) =>
+                sigma <= 0 ? 0 : (_hand[slot % Slots] * 2.0 - 1.0) * sigma;
+
+            public bool Slips(double chance, int slot) =>
+                chance > 0 && _hand[slot % Slots] < chance;
+
+            public bool IsSteady =>
+                RatioSigma <= 0 && FillSigma <= 0 && AimSigma <= 0 && SkipSpec <= 0 && ForgetMix <= 0;
+        }
+
+        /// <summary>
+        /// WHAT GETTING IT NEARLY RIGHT IS WORTH (2026-08-14). The 200-run report has always
+        /// come back 100% Exact / 0% Close / 0% Wrong / 0% Refused, because the floor bot
+        /// pours the book's ideal to the millilitre. Half this economy — everything that pays
+        /// for craft — had therefore never been measured once, and the star track was
+        /// calibrated against a bartender who does not exist.
+        ///
+        /// Same seeds, same nights, five steadinesses of hand. Its own file, and the
+        /// configuration is printed into it, because a noisy run committed over
+        /// tycoon_sim_report.md would be indistinguishable in git from a balance change.
+        /// </summary>
+        [MenuItem("LastCall/Measure Imperfect Hands")]
+        public static void MeasureImperfectHands()
+        {
+            var deck = DataLoader.ParseDeck(Read("bottles/base_bar.json"));
+            var recipes = DataLoader.ParseRecipes(Read("recipes/recipes.json"));
+            var archetypes = DataLoader.ParseArchetypes(Read("customers/archetypes.json"));
+            var glassware = DataLoader.ParseGlassware(Read("glassware/glassware.json"));
+            var snacks = DataLoader.ParseSnacks(Read("snacks/snacks.json"));
+
+            const int Runs = 80;
+            var levels = new (string Name, Hands H)[]
+            {
+                ("steady (the shipped floor)", Hands.Steady),
+                ("a good night",   new Hands { RatioSigma = 0.04, FillSigma = 0.04, AimSigma = 0.03, SkipSpec = 0.03, ForgetMix = 0.02 }),
+                ("an ordinary hand", new Hands { RatioSigma = 0.10, FillSigma = 0.08, AimSigma = 0.07, SkipSpec = 0.08, ForgetMix = 0.05 }),
+                ("busy and rushed", new Hands { RatioSigma = 0.18, FillSigma = 0.14, AimSigma = 0.12, SkipSpec = 0.15, ForgetMix = 0.10 }),
+                ("all thumbs",     new Hands { RatioSigma = 0.30, FillSigma = 0.22, AimSigma = 0.20, SkipSpec = 0.25, ForgetMix = 0.20 }),
+            };
+
+            var sb = new StringBuilder();
+            sb.AppendLine("# What getting it nearly right is worth");
+            sb.AppendLine();
+            sb.AppendLine($"{Runs} runs a level, {DayCap}-day horizon, the SAME seeds at every level.");
+            sb.AppendLine();
+            sb.AppendLine("The bot's dice come off the run's own `RunRng` under a stream named");
+            sb.AppendLine("`hands`, which is seeded independently of arrivals/orders/patience — so a");
+            sb.AppendLine("shaky night is the same NIGHT as a steady one, with the same crowd wanting");
+            sb.AppendLine("the same drinks. Every drink deals a fixed twelve dice in a fixed order,");
+            sb.AppendLine("whatever it needs, so the levels cannot drift apart from each other.");
+            sb.AppendLine();
+            sb.AppendLine("**Read the per-serve columns, not the money.** Tips are rounded to whole");
+            sb.AppendLine("dollars on $4–8 drinks and are paid at ALL only when the crowd is above");
+            sb.AppendLine("Broke, so a money column is partly a census of which nights paid anything.");
+            sb.AppendLine();
+            sb.AppendLine("| Hands | ratio σ | Exact | Wrong | Refused | spec | fill | tip/serve | served/night | stars |");
+            sb.AppendLine("|---|---|---|---|---|---|---|---|---|---|");
+            foreach (var (name, h) in levels)
+            {
+                var stats = new Aggregate();
+                for (int i = 0; i < Runs; i++)
+                    PlayRun($"HAND-{i:0000}", deck, recipes, archetypes, stats,
+                        DrinkBuildSeconds, DayCap, glassware, snacks, null, h);
+                int serves = Math.Max(1, stats.Serves);
+                sb.AppendLine($"| {name} | {h.RatioSigma:0.00} | " +
+                              $"{100.0 * stats.Exact / serves:0.0}% | " +
+                              $"{100.0 * stats.Wrong / serves:0.0}% | " +
+                              $"{100.0 * stats.Refused / serves:0.0}% | " +
+                              $"{stats.SpecScoreSum / serves:P0} | " +
+                              $"{stats.FillScoreSum / serves:P0} | " +
+                              $"${stats.TipSum / serves:0.00} | " +
+                              $"{(double)stats.CustomersFinished / Math.Max(1, stats.NightsClosed):0.0} | " +
+                              $"{stats.StarsSum / Math.Max(1, stats.NightsClosed):0.00} |");
+            }
+            sb.AppendLine();
+            sb.AppendLine("## The headline: the pour barely matters");
+            sb.AppendLine();
+            sb.AppendLine("Measured 2026-08-14. A bartender **eighteen percent off on every single");
+            sb.AppendLine("measure** still gets 99.9% of drinks identified as exactly the right");
+            sb.AppendLine("drink, loses about a dollar of tip a serve, and ends on the same stars as");
+            sb.AppendLine("a machine. The bands are wide enough — typically a tenth of the glass");
+            sb.AppendLine("either side of the ideal — that relative error has to reach roughly 30%");
+            sb.AppendLine("before it crosses one, and only then does anything happen at all.");
+            sb.AppendLine();
+            sb.AppendLine("So the game's central interaction currently has almost no consequence,");
+            sb.AppendLine("and what consequence it does have is nearly all in the GARNISH and the");
+            sb.AppendLine("FILL, which degrade smoothly, rather than in the pour, which does not");
+            sb.AppendLine("degrade at all until it falls off a cliff. That is a balance question and");
+            sb.AppendLine("it is the author's: narrower bands would make aim worth something, and");
+            sb.AppendLine("would also make every existing measurement in this folder harder.");
+            sb.AppendLine();
+            sb.AppendLine("## What the shape of this table means");
+            sb.AppendLine();
+            sb.AppendLine("**A mispour is not a near miss, it is a different drink.** `Compare` only");
+            sb.AppendLine("returns Close when the ordered recipe has a dominant TYPE band, and 51 of");
+            sb.AppendLine("53 recipes are style-banded — so Close is unreachable for almost every");
+            sb.AppendLine("order and a drifted pour goes straight to Wrong. Worse than losing the");
+            sb.AppendLine("tip: a Wrong serve is paid at the menu price of what the glass ACTUALLY");
+            sb.AppendLine("matched, against the bar's unlocked menu only, so an early bar usually");
+            sb.AppendLine("matches nothing and the base goes to zero as well.");
+            sb.AppendLine();
+            sb.AppendLine("**And it is a cliff, not a slope.** A band either accepts a ratio or it");
+            sb.AppendLine("does not, so small error does nothing at all until it crosses an edge and");
+            sb.AppendLine("then costs everything. Fill error is one-sided for the same kind of");
+            sb.AppendLine("reason: the glass cannot overflow, and the fill score only counts");
+            sb.AppendLine("shortfalls, so pouring long is free and pouring short is not.");
+
+            Debug.Log(sb.ToString());
+            var path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Docs",
+                "imperfect_hands_report.md"));
+            File.WriteAllText(path, sb.ToString());
+            Debug.Log($"[TycoonSim] wrote {path}");
+        }
+
         public static void Simulate(int runs)
         {
             var deck = DataLoader.ParseDeck(Read("bottles/base_bar.json"));
@@ -260,7 +424,8 @@ namespace LastCall.EditorTools
             Aggregate stats, double buildSeconds = DrinkBuildSeconds, int dayCap = DayCap,
             IReadOnlyList<GlasswareDefinition> glassware = null,
             IReadOnlyList<SnackDefinition> snacks = null,
-            StoryArc story = null)
+            StoryArc story = null,
+            Hands handsIn = null)
         {
             stats.BeginRun();   // this bar has climbed nothing yet
             var starting = deck.Cards
@@ -270,12 +435,22 @@ namespace LastCall.EditorTools
             // The quarantined bottles ride along (P16): buying a recipe releases its styles
             // into the market, and without this the sim's bought menu was undrinkable — half
             // of every night silently declined for want of a tonic that existed nowhere.
-            var run = new TycoonRun(shelf, recipes, new RunRng(seed),
+            // THE BOT'S OWN DICE (2026-08-14). Held here rather than reached for inside
+            // TycoonRun, and drawn from a stream NOBODY ELSE USES: RunRng seeds every named
+            // stream independently off the seed hash, so adding "hands" cannot perturb
+            // arrivals, orders, patience, customer, read or decide. A run with imperfect
+            // hands is the same NIGHT as a run with perfect ones — same crowd, same orders,
+            // same clock — which is the only way the two can be compared at all.
+            var rng = new RunRng(seed);
+            var run = new TycoonRun(shelf, recipes, rng,
                 regulars: new RegularsRegistry(archetypes), glassware: glassware, snacks: snacks,
                 lockedStock: deck.LockedCards, story: story);
+            var hands = handsIn ?? Hands.Steady;
+            hands.Dice = rng.GetStream("hands");
 
             double buildTimer = buildSeconds;
             int guard = 0;
+            int servedHere = 0;      // this run's own serves; see the snack cadence below
             while (run.Phase != TycoonPhase.Closed && run.Ledger.History.Count < dayCap)
             {
                 if (guard++ > 300_000) { stats.Stuck++; return; }
@@ -340,9 +515,15 @@ namespace LastCall.EditorTools
                         // Every third serve gets a bowl alongside (v5 P16): enough traffic to
                         // measure the snack share without pretending everyone eats. Cycling
                         // the bowls spreads the stock; a drained bowl just skips.
-                        if (stats.Serves % 3 == 0 && run.Snacks.Count > 0)
+                        // COUNTED PER RUN, NOT ACROSS ALL OF THEM (2026-08-14). This read
+                        // `stats.Serves` — the aggregate shared by every run in the batch — so
+                        // the bot's snack cadence in run 200 depended on how many drinks runs
+                        // 1..199 had poured. Runs were not independent samples, and any A/B
+                        // between two bot configurations was comparing two different
+                        // experiments. It is the run's own count now.
+                        if (servedHere % 3 == 0 && run.Snacks.Count > 0)
                         {
-                            var snack = run.Snacks[(stats.Serves / 3) % run.Snacks.Count];
+                            var snack = run.Snacks[(servedHere / 3) % run.Snacks.Count];
                             if (run.SnackLeft(snack.Id) > 0)
                             {
                                 run.ServeSnack(snack.Id, visit);
@@ -350,11 +531,12 @@ namespace LastCall.EditorTools
                                 stats.SnackIncome += snack.Price;
                             }
                         }
-                        if (!BuildOrderedDrink(run, visit)) continue;
+                        if (!BuildOrderedDrink(run, visit, hands)) continue;
                         bool pint = run.ServingGlass.HasPreparation(Preparations.Draught.Id);
                         double head = pint ? run.ServingGlass.Head / run.ServingGlass.Capacity : 0;
                         int specRequests = visit.Order.Spec.RequestCount;
                         var verdict = run.ServeTo(visit);
+                        servedHere++;
                         stats.RecordServe(verdict, pint, head, specRequests);
                         buildTimer = 0;
                         break;
@@ -544,7 +726,7 @@ namespace LastCall.EditorTools
             run.DiscardGlass();
             bool built = ask.Prep == PrepMethod.Built
                 ? BuildInTheGlass(run, ask, 0.98)
-                : BuildOrderedDrink(run, guest, fillTarget: 0.98);
+                : BuildOrderedDrink(run, guest, Hands.Steady, fillTarget: 0.98);
             if (!run.CanMake(guest.Order) || !EnoughLeftToPour(run, ask) || !built)
             {
                 run.DeclineLastCall();
@@ -620,9 +802,10 @@ namespace LastCall.EditorTools
         }
 
         private static bool BuildOrderedDrink(TycoonRun run, CustomerVisit visit,
-            double fillTarget = 0.85)
+            Hands hands, double fillTarget = 0.85)
         {
             run.DiscardGlass();
+            hands.Deal();                     // one hand of dice per drink, before any branch
             var recipe = visit.Order.Wanted;
             if (WantsBeer(recipe)) return PullPint(run, visit);
 
@@ -638,7 +821,10 @@ namespace LastCall.EditorTools
             if (run.Glassware != null)
                 foreach (var gw in run.Glassware)
                     if (gw.Id == recipe.GlassId) { glassCap = gw.Capacity; break; }
-            double volume = Math.Max(recipe.MinFill, fillTarget)
+            // A hand aims for a fill, it does not compute one (see Hands). The floor's
+            // jitter is zero, so this is the same line it always was.
+            double aimedFill = Math.Max(recipe.MinFill, fillTarget) * (1.0 + hands.Jitter(hands.FillSigma, 6));
+            double volume = Math.Max(0.05, Math.Min(1.0, aimedFill))
                             * Math.Min(glassCap, run.Glass.Capacity);
             // EVERYTHING GOES IN THE TIN (2026-08-14, GDD 21 §12 overturned). Carbonated
             // bands used to be held back and poured at the glass after the pour-out, because
@@ -659,14 +845,18 @@ namespace LastCall.EditorTools
                     ? PickByStyle(run.Shelf, band.Style)
                     : PickBottle(run.Shelf, band.Type, visit);
                 if (bottle == null) return false;
-                double share = ideal[bi];
+                // The error is on the SHARE, not on the millilitre: a bartender who is
+                // heavy on the gin is heavy in proportion, and it is the proportion the
+                // bands are graded on.
+                double share = Math.Max(0, ideal[bi] * (1.0 + hands.Jitter(hands.RatioSigma, bi)));
                 double amount = Math.Min(volume * share, bottle.Remaining);
                 run.PourMeasure(bottle.Id, amount);
             }
             if (run.Glass.IsEmpty) return false;
 
+            int garnishSlot = 0;
             foreach (var garnish in spec.Garnishes)
-                if (!run.Glass.IsFull) run.AddPreparation(garnish);
+                if (!run.Glass.IsFull && !hands.Slips(hands.SkipSpec, 8 + garnishSlot++)) run.AddPreparation(garnish);
             // THE BOT MIXES THE WAY THE BOOK SAYS (GDD 21 §14 + 23 §4, 2026-08-11): the
             // method is the RECIPE's demand — the judge grades it now — and the mandatory
             // mix refuses an unworked tin at the pour-out besides. The last branch is the
@@ -674,7 +864,13 @@ namespace LastCall.EditorTools
             // built; a stir is what a bartender who built it in a tin would do.
             if (!run.Glass.IsEmpty)
             {
-                if (recipe.Prep == PrepMethod.Shaken) run.Shake(1.0);
+                // A FORGOTTEN MIX ONLY WHERE CORE FORGIVES IT. Where the pour-out refuses an
+                // unworked tin (GDD 21 §14) the bench tells the player so and they work it —
+                // measuring a bot that walks into a wall it can see would measure nothing.
+                // Where the method is only GRADED, forgetting it is a real, payable mistake.
+                bool forget = !run.MixRequired && hands.Slips(hands.ForgetMix, 10);
+                if (forget) { }
+                else if (recipe.Prep == PrepMethod.Shaken) run.Shake(1.0);
                 else if (recipe.Prep == PrepMethod.Stirred) run.Stir(1.0);
                 else if (run.MixRequired) run.Stir(1.0);
             }
@@ -682,8 +878,12 @@ namespace LastCall.EditorTools
             // Into the glass, dead on the rim. The bot used to hand the shaker over whole, which
             // the rules now refuse (2026-07-28); pouring perfectly keeps its standing unchanged —
             // it never had to aim, and the aim is the player's skill, not the floor's.
+            // THE AIM IS THE PLAYER'S SKILL, and the floor never had to have any — that
+            // was written here as a deliberate exemption. It is a dial now: off the rim
+            // spills, and what spills is gone.
             if (!run.Glass.IsEmpty)
-                run.PourIntoServingGlass(run.Glass.TotalVolume, accuracy: 1.0);
+                run.PourIntoServingGlass(run.Glass.TotalVolume,
+                    accuracy: Math.Max(0.0, 1.0 - Math.Abs(hands.Jitter(hands.AimSigma, 7))));
             return run.DrinkReady;
         }
 
