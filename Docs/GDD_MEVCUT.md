@@ -71,7 +71,8 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 | Taban fiyat | `3 + (rank+1)/2` (bilerek düşük — $4–17) |
 | Stok primi | seçkin Spirit/Bitter bandı başına `(rafın en iyi tier−1) × $2` |
 | Kalabalık çarpanı | HighRoller ×1.25 · Regular ×1.0 · Broke ×0.75 |
-| **Bahşiş (asıl kazanç)** | `taban × kalite`; kalite = 0.45 hız + 0.35 zanaat + 0.20 doluluk. Zanaat (2026-08-11): kokteylde `0.6 × garnitür-spec + 0.4 × YÖNTEM` — yöntem, SİPARİŞ EDİLEN tarifin `Prep`'ine karşı (Shaken çalkala ister, Stirred kaşık ister; yanlış karıştırma = hiç karıştırmama, çalkalanmış Martini berelidir; Built umursamaz). Draught'ta zanaat = köpük. Ekstra tur artık doğru yöntemi de ister. Broke/Yanlış/0 taban → bahşiş yok |
+| **Bahşiş (asıl kazanç)** | `taban × kalite`; kalite = 0.45 hız + 0.35 zanaat + 0.20 doluluk. Zanaat (2026-08-11): kokteylde `0.6 × garnitür-spec + 0.4 × YÖNTEM` — yöntem, SİPARİŞ EDİLEN tarifin `Prep`'ine karşı (Shaken çalkala ister, Stirred kaşık ister; yanlış karıştırma = hiç karıştırmama, çalkalanmış Martini berelidir; Built umursamaz). Draught'ta zanaat = köpük. Ekstra tur artık doğru yöntemi de ister. Broke/Yanlış/0 taban → bahşiş yok; **Close → bahşişin yarısı** (`CloseTipShare`, 2026-08-14) |
+| **Yakın (Close)** | **istenen içki, yanlış oranda** (2026-08-14): tarifin adını andığı her bant bardakta (≥%5), yabancı pay eşleştiricinin kendi %15'i içinde, ama paylar bandı kaçırmış → menü fiyatı, **bahşişin yarısı**. Tier de affedilir: kuyu ciniyle kurulan Vesper buraya düşer. *Aynı aileden başka bir içki* Close değil, Yanlış'tır. Bantsız sipariş (bira, sek) Exact ya da hiç. Eski kural ("baskın TİP eşleşirse") stil bantları yüzünden **hiç ateşlenemiyordu** |
 | Yanlış içki | *teslim edilenin* taban fiyatı (tanımsızsa $0) |
 | Ret (doluluk <0.35) | $0, memnuniyet 0.02 · Decline: $0, 0.15 |
 | Atıştırmalık | tabına fiyat (bahşişsiz); sabah geri alım `fiyat−1` → kâse başına net $1/birim |

@@ -93,19 +93,83 @@ namespace LastCall.Tests
             Assert.AreEqual(OrderMatch.Exact, ServiceJudge.Compare(order, served, glass, Look));
         }
 
+        // ── the middle grade (2026-08-14) ────────────────────────────────────────
+        // This REPLACES TheRightFamily_IsClose_TheWrongOne_IsWrong, which pinned a rule the
+        // shipped game could not run: Close read the DOMINANT TYPE, and every banded recipe
+        // in recipes.json has been style-banded since v5 P10, so the grade was unreachable
+        // and the pour had no step between "perfect" and "worth nothing". Close is now the
+        // ordered drink poured out of tolerance — which is the failure a pouring game
+        // actually produces. Its old case, neat gin for a Spritz, is Wrong now and should be.
+
         [Test]
-        public void TheRightFamily_IsClose_TheWrongOne_IsWrong()
+        public void TheirDrinkMadeWrong_IsClose()
+        {
+            var order = new DrinkOrder(Spritz(), 6);
+
+            // Both of the spritz's bands are in the glass, but it is 80% gin — out of the
+            // 30–70% band, so it matches no recipe at all and used to score as a puddle.
+            var heavyHanded = Glass(("gin", 0.6), ("soda", 0.15));
+            Assert.IsNull(RatioRecipeMatcher.Match(heavyHanded, new[] { Spritz() }, Look),
+                "the pour is outside the band, so it is not the recipe");
+            Assert.AreEqual(OrderMatch.Close,
+                ServiceJudge.Compare(order, null, heavyHanded, Look),
+                "it is still recognisably their drink, made badly");
+        }
+
+        [Test]
+        public void LeavingSomethingOut_IsWrong_NotClose()
         {
             var order = new DrinkOrder(Spritz(), 6);
 
             var neatGin = Glass(("gin", 0.9));
-            Assert.AreEqual(OrderMatch.Close,
-                ServiceJudge.Compare(order, null, neatGin, Look),
-                "a straight spirit shares the spritz's dominant type");
+            Assert.AreEqual(OrderMatch.Wrong, ServiceJudge.Compare(order, null, neatGin, Look),
+                "a spritz with no bubbly is not a spritz made wrong -- it is a gin");
+
+            var aDashOfSoda = Glass(("gin", 0.9), ("soda", 0.02));
+            Assert.AreEqual(OrderMatch.Wrong, ServiceJudge.Compare(order, null, aDashOfSoda, Look),
+                "and a dash does not count as having poured it");
 
             var lemonWater = Glass(("lemon", 0.9));
+            Assert.AreEqual(OrderMatch.Wrong, ServiceJudge.Compare(order, null, lemonWater, Look));
+        }
+
+        [Test]
+        public void ADifferentDrinkWearingTheSameIngredients_IsWrong()
+        {
+            var order = new DrinkOrder(Spritz(), 6);
+
+            // Both bands present and in range, but a third of the glass is something the
+            // recipe never mentions -- the matcher's own stray rule, borrowed so that
+            // "close" and "matched" disagree about the shares and nothing else.
+            var somethingElse = Glass(("gin", 0.35), ("soda", 0.35), ("lemon", 0.30));
             Assert.AreEqual(OrderMatch.Wrong,
-                ServiceJudge.Compare(order, null, lemonWater, Look));
+                ServiceJudge.Compare(order, null, somethingElse, Look));
+        }
+
+        [Test]
+        public void AnAskWithNoBands_IsExactOrNothing()
+        {
+            // The pint and the neat pour: no proportions to miss, so no middle to stand in.
+            var unbanded = new RecipeDefinition("neat", "Neat", 1, 5, 1, 0, 0,
+                Array.Empty<PatternRequirement>());
+            var order = new DrinkOrder(unbanded, 6);
+
+            Assert.AreEqual(OrderMatch.Wrong,
+                ServiceJudge.Compare(order, null, Glass(("gin", 0.9)), Look));
+        }
+
+        [Test]
+        public void ADrinkMadeWrong_IsPaidFor_ButNotTippedLikeAGoodOne()
+        {
+            var brim = Glass(("gin", 0.5), ("soda", 0.45));
+            var right = ServiceJudge.Judge(Visit(price: 10), OrderMatch.Exact, brim);
+            var wonky = ServiceJudge.Judge(Visit(price: 10), OrderMatch.Close, brim);
+
+            Assert.AreEqual(right.BasePaid, wonky.BasePaid, "they drank it, so they pay for it");
+            Assert.Less(wonky.Tip, right.Tip, "but nobody tips full for a drink that came out wrong");
+            Assert.Greater(wonky.Tip, 0, "and it is a haircut, not another cliff");
+            Assert.Less(wonky.Satisfaction, right.Satisfaction,
+                "the real cost is standing -- which is what the star track counts");
         }
 
         [Test]

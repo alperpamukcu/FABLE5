@@ -16,16 +16,16 @@ nobody reaches in twenty weeks is a rung no guest can be written for.
 | 0.5★ | 60 (100.0%) | 4 / 4 / 4 | 1 |
 | 1.0★ | 60 (100.0%) | 7 / 7 / 7 | 2 |
 | 1.5★ | 60 (100.0%) | 10 / 10 / 11 | 2 |
-| 2.0★ | 60 (100.0%) | 13 / 14 / 14 | 3 |
-| 2.5★ | 60 (100.0%) | 19 / 19 / 21 | 4 |
-| 3.0★ | 60 (100.0%) | 31 / 33 / 36 | 6 |
-| 3.5★ | 24 (40.0%) | 67 / 100 / 110 | 17 |
+| 2.0★ | 60 (100.0%) | 13 / 14 / 15 | 3 |
+| 2.5★ | 60 (100.0%) | 19 / 19 / 20 | 4 |
+| 3.0★ | 60 (100.0%) | 29 / 30 / 32 | 5 |
+| 3.5★ | 29 (48.3%) | 63 / 87 / 102 | 15 |
 | 4.0★ | **none of 60** | — | — |
 | 4.5★ | **none of 60** | — | — |
 | 5.0★ | **none of 60** | — | — |
 
 Nights closed: 7200. Bankruptcies: 0 of 60. Days survived p25/median/p75: 120 / 120 / 120.
-Standing across every night: 3.24 stars.
+Standing across every night: 3.27 stars.
 
 
 ## Where the money goes, five nights at a time
@@ -35,18 +35,18 @@ crossing is the end of the run, and the date is arithmetic, not difficulty.
 
 | Nights | Avg take | Avg rent | Avg stock | Net |
 |---|---|---|---|---|
-| 1–5 | $106 | $19 | $34 | **+$53** |
-| 6–10 | $134 | $35 | $37 | **+$62** |
-| 11–15 | $147 | $57 | $38 | **+$52** |
-| 16–20 | $160 | $84 | $37 | **+$39** |
-| 21–25 | $176 | $103 | $37 | **+$35** |
-| 26–30 | $177 | $103 | $37 | **+$36** |
-| 31–35 | $179 | $103 | $37 | **+$39** |
-| 36–40 | $191 | $103 | $36 | **+$52** |
-| 41–45 | $203 | $103 | $35 | **+$64** |
-| 46–50 | $220 | $103 | $35 | **+$82** |
-| 51–55 | $223 | $103 | $34 | **+$86** |
-| 56–60 | $230 | $103 | $34 | **+$93** |
+| 1–5 | $105 | $19 | $33 | **+$53** |
+| 6–10 | $136 | $35 | $37 | **+$64** |
+| 11–15 | $182 | $57 | $38 | **+$88** |
+| 16–20 | $200 | $84 | $37 | **+$79** |
+| 21–25 | $217 | $103 | $37 | **+$76** |
+| 26–30 | $222 | $103 | $37 | **+$82** |
+| 31–35 | $256 | $103 | $37 | **+$116** |
+| 36–40 | $286 | $103 | $36 | **+$147** |
+| 41–45 | $300 | $103 | $34 | **+$163** |
+| 46–50 | $314 | $103 | $34 | **+$177** |
+| 51–55 | $315 | $103 | $34 | **+$178** |
+| 56–60 | $316 | $103 | $34 | **+$179** |
 
-The best night this bar ever has is **$236** (night 116); rent on night 120 is **$103**.
+The best night this bar ever has is **$326** (night 68); rent on night 120 is **$103**.
 **Rent never passes it.** The bar can out-earn its landlord for as long as it keeps growing, so what ends a run is a choice or a mistake — not the calendar. Late pressure has to come from something to spend money ON; there is nothing here that takes it away.

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace LastCall.Core
 {
@@ -8,7 +7,9 @@ namespace LastCall.Core
     {
         /// <summary>The drink they named.</summary>
         Exact,
-        /// <summary>Wrong drink from the right family — dominant type matches.</summary>
+        /// <summary>THE DRINK THEY ASKED FOR, MADE WRONG: everything the recipe names is in
+        /// the glass and nothing much else is, but the proportions missed a band — so it is
+        /// recognisably their drink and it is not their drink.</summary>
         Close,
         /// <summary>Something else entirely. Pays only what the thing in the glass is worth.</summary>
         Wrong,
@@ -74,6 +75,13 @@ namespace LastCall.Core
         /// floor runs on; the spec is the craft read; the fill is the pour itself.</summary>
         public const double SpeedWeight = 0.45, SpecWeight = 0.35, FillWeight = 0.20;
 
+        /// <summary>What is left of the tip when the drink came out wrong (2026-08-14). Half:
+        /// enough that a night of missed pours is visibly a worse night at the till, not so
+        /// much that a busy bartender is better off binning the glass and starting again.
+        /// It is the one number the new middle grade invents, and it is the one to turn if
+        /// the pour is to bite harder.</summary>
+        public const double CloseTipShare = 0.5;
+
         /// <summary>How craft splits between the customer's asks and the BOOK's method
         /// (2026-08-11): the garnish spec carries most of it, the recipe's own shaken/stirred
         /// the rest. The method is the recipe's demand, never the customer's — a Martini
@@ -109,10 +117,35 @@ namespace LastCall.Core
         // and serving their drink right, not also racing the clock.
         public const double ExtraOrderWindow = 0.90;
 
+        /// <summary>How little of an ingredient still counts as having poured it. Below a
+        /// twentieth of the glass it is a dash, and a dash of soda does not make a gin a
+        /// Spritz — which is the hole this floor closes.</summary>
+        public const double TraceShare = 0.05;
+
         /// <summary>
-        /// Compares the served glass to the order. Exact needs the named recipe; Close
-        /// forgives the drink but not the family — its dominant type must match the
-        /// order's dominant band type.
+        /// Compares the served glass to the order. Exact needs the named recipe; Close is the
+        /// SAME drink poured out of tolerance.
+        ///
+        /// **Rewritten 2026-08-14, because the middle grade did not exist.** Close used to be
+        /// "wrong drink from the right family — dominant *type* matches", and
+        /// <c>DominantBandType</c> skipped style bands. Since the v5 P10 style era every one
+        /// of the 52 banded recipes in <c>recipes.json</c> is style-banded (a recipe may not
+        /// mix the two kinds — <see cref="RecipeDefinition"/> refuses it), so that method
+        /// returned null every time and this enum value could never be produced by the
+        /// shipped game. The UI's amber "THANKS." line and the simulator's Close column were
+        /// dead branches; measured across 400 simulated runs the count was zero.
+        ///
+        /// So the grade is redefined as the one the pour actually needs. A drink whose ratios
+        /// drift out of their bands matches NO recipe at all, and the old rule dropped it
+        /// straight to Wrong — where it pays the menu price of whatever the glass happens to
+        /// be (usually nothing) and sours the customer to 0.05. That is a cliff at the edge
+        /// of a band the player cannot see, with no step in between. Close is that step: they
+        /// drink it and they pay for it, they do not tip like it was right, and the room
+        /// remembers — which lands the cost in STANDING, where the star track can see it.
+        ///
+        /// A different drink of the same family stays Wrong. A Gin &amp; Tonic is not a Gin
+        /// Sour, and paying the sour's menu price for one was the old rule's mistake rather
+        /// than its virtue; a wrong drink is already paid for at what it is worth (P11/C1).
         /// </summary>
         public static OrderMatch Compare(DrinkOrder order, RecipeMatch served,
             GlassContents glass, Func<string, IngredientCard> lookup)
@@ -120,12 +153,45 @@ namespace LastCall.Core
             if (order == null || glass == null || glass.IsEmpty) return OrderMatch.Wrong;
             if (served?.Recipe != null && served.Recipe.Id == order.Wanted.Id) return OrderMatch.Exact;
 
-            // No family, no forgiveness: a style-banded recipe (v5 P10) is specified down to
-            // its brand of spirit, so there is no "near enough" version of it.
-            var family = DominantBandType(order.Wanted);
-            return family.HasValue && DominantGlassType(glass, lookup) == family.Value
+            return NearlyTheDrink(order.Wanted, glass, lookup)
                 ? OrderMatch.Close
                 : OrderMatch.Wrong;
+        }
+
+        /// <summary>
+        /// Is this the ordered drink, made wrong? Every band the recipe names has to be IN
+        /// the glass, and the glass must not be mostly something the recipe never mentions —
+        /// the same stray allowance the matcher itself uses, so "close" and "matched" are
+        /// judged against one idea of what the drink is made of. What is forgiven is the one
+        /// thing the matcher refuses: the shares themselves.
+        ///
+        /// The TIER is forgiven with them. A Vesper poured from the well gin fails its
+        /// <c>MinTier</c> band and lands here, which is the honest reading of a bottle that
+        /// is right in kind and lesser in grade — the drink came out, it came out cheaper.
+        ///
+        /// An ask with no bands at all — the pint, the neat pour — is exact or it is nothing:
+        /// there are no proportions to miss, so there is no middle to stand in.
+        /// </summary>
+        private static bool NearlyTheDrink(RecipeDefinition wanted, GlassContents glass,
+            Func<string, IngredientCard> lookup)
+        {
+            var bands = wanted?.RatioRequirements;
+            if (bands == null || bands.Count == 0) return false;
+
+            var byType = RatioRecipeMatcher.RatiosByType(glass, lookup);
+            var byStyle = RatioRecipeMatcher.RatiosByStyle(glass, lookup);
+
+            double named = 0;
+            foreach (var band in bands)
+            {
+                double share;
+                if (band.IsStyleBand) byStyle.TryGetValue(band.Style, out share);
+                else byType.TryGetValue(band.Type, out share);
+                if (share < TraceShare) return false;
+                named += share;
+            }
+
+            return 1.0 - named <= RatioRecipeMatcher.MaxUnnamedShare + 1e-9;
         }
 
         /// <summary>The verdict for an order the bar could not fill and said so (v5 P11, C2).
@@ -186,10 +252,17 @@ namespace LastCall.Core
                            + SpecWeight * craftScore
                            + FillWeight * fillScore;
 
-            // A broke crowd never tips; a wrong drink is not tipped for either.
+            // A broke crowd never tips; a wrong drink is not tipped for either; and a drink
+            // that came out wrong is not tipped like one that came out right. Without that
+            // last clause the new Close grade would pay a missed pour EXACTLY what a perfect
+            // one pays — same menu price, same tip — and the only cost of sloppy hands would
+            // be a quarter of a satisfaction point. The haircut is the money half of the same
+            // sentence: they drink it, they pay for it, they do not thank you for it.
             int tip = 0;
             if (crowd != WealthTier.Broke && match != OrderMatch.Wrong && basePaid > 0)
-                tip = (int)Math.Round(basePaid * TipCeiling * quality, MidpointRounding.AwayFromZero);
+                tip = (int)Math.Round(
+                    basePaid * TipCeiling * quality * (match == OrderMatch.Close ? CloseTipShare : 1.0),
+                    MidpointRounding.AwayFromZero);
 
             double satisfaction =
                 (match == OrderMatch.Exact ? 0.75 : match == OrderMatch.Close ? 0.5 : 0.05)
@@ -235,40 +308,10 @@ namespace LastCall.Core
             return Math.Max(0.0, 1.0 - shortfall / expected);
         }
 
-        /// <summary>The type holding the biggest share of the glass.</summary>
-        private static IngredientType DominantGlassType(GlassContents glass,
-            Func<string, IngredientCard> lookup)
-        {
-            var byType = new Dictionary<IngredientType, double>();
-            foreach (var id in glass.Ingredients)
-            {
-                var card = lookup?.Invoke(id);
-                if (card == null) continue;
-                byType.TryGetValue(card.Type, out double volume);
-                byType[card.Type] = volume + glass.VolumeOf(id);
-            }
-
-            IngredientType best = default;
-            double bestVolume = -1;
-            foreach (var pair in byType)
-                if (pair.Value > bestVolume) { best = pair.Key; bestVolume = pair.Value; }
-            return best;
-        }
-
-        /// <summary>The type the recipe leans on hardest — the widest band midpoint. Style-banded
-        /// recipes (v5 P10) name no type, so they have no "family" and only an exact match will
-        /// do; that is the right answer for a drink specified down to its brand of spirit.</summary>
-        private static IngredientType? DominantBandType(RecipeDefinition recipe)
-        {
-            IngredientType? best = null;
-            double bestMid = -1;
-            foreach (var band in recipe.RatioRequirements)
-            {
-                if (band.IsStyleBand) continue;
-                double mid = (band.MinRatio + band.MaxRatio) / 2.0;
-                if (mid > bestMid) { best = band.Type; bestMid = mid; }
-            }
-            return best;
-        }
+        // DominantGlassType / DominantBandType were deleted with the family rule they served
+        // (2026-08-14). Worth its own line: the glass one picked its winner by walking a
+        // Dictionary, so two ingredients tied on volume were separated by hash order — a
+        // grade that could differ between two identical runs, in a project whose first rule
+        // is that a seed reproduces. It never showed, because it could never be reached.
     }
 }

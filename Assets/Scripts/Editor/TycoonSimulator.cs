@@ -29,6 +29,16 @@ namespace LastCall.EditorTools
     /// the player does. The first report after it buys **999** upgrades. Every measurement
     /// taken before this — the star track's plateau included — was of a bar that could not
     /// pour anything well, and should be read again.
+    ///
+    /// ~~AND THEN IT BOUGHT THE GOOD BOTTLES AND NEVER POURED THEM.~~ Same day, same shape
+    /// of mistake: `PickByStyle` reached for the FULLEST bottle of a style and never read
+    /// the band's `MinTier`, so the reserve gin it had just bought sat on the shelf while
+    /// the well gin went into the Gimlet. 7.3% of every serve missed its band with perfectly
+    /// steady hands, while the day-end counter insisted the shelf could answer every tier
+    /// its menu demanded — both true, and nothing in between reached for the bottle. Fixed
+    /// by picking the fullest bottle that is GOOD ENOUGH for the band; the floor goes back
+    /// to 100% Exact, its standing from 2.60 to 2.85 stars, and the thirty-night table from
+    /// **none of 200** reaching three stars to **102 of 200**.
     /// </summary>
     public static class TycoonSimulator
     {
@@ -233,6 +243,11 @@ namespace LastCall.EditorTools
         /// half of this economy that pays for getting it nearly right has never been measured
         /// once. The star track was calibrated against a bartender who does not exist.
         ///
+        /// (Later the same day the ideal bot stopped scoring 100%: the recipe/bottle ladder
+        /// gave sixteen recipes a MinTier band, and a bar pouring the bottle it can afford
+        /// misses those however steady its hands are. Which is the point of measuring — the
+        /// column moved for a reason that had nothing to do with aim.)
+        ///
         /// Every field is a SIGMA or a CHANCE, and all-zero is the floor bot exactly as it
         /// was — so the shipped report does not move by a cent when this lands.
         /// </summary>
@@ -287,11 +302,15 @@ namespace LastCall.EditorTools
         }
 
         /// <summary>
-        /// WHAT GETTING IT NEARLY RIGHT IS WORTH (2026-08-14). The 200-run report has always
+        /// WHAT GETTING IT NEARLY RIGHT IS WORTH (2026-08-14). The 200-run report used to
         /// come back 100% Exact / 0% Close / 0% Wrong / 0% Refused, because the floor bot
         /// pours the book's ideal to the millilitre. Half this economy — everything that pays
         /// for craft — had therefore never been measured once, and the star track was
         /// calibrated against a bartender who does not exist.
+        ///
+        /// This table is also where the middle grade was found missing and then found again:
+        /// it read 0% Close at every steadiness because <c>ServiceJudge.Compare</c> could not
+        /// produce that grade at all, and it is what measured the rewrite.
         ///
         /// Same seeds, same nights, five steadinesses of hand. Its own file, and the
         /// configuration is printed into it, because a noisy run committed over
@@ -331,8 +350,8 @@ namespace LastCall.EditorTools
             sb.AppendLine("dollars on $4–8 drinks and are paid at ALL only when the crowd is above");
             sb.AppendLine("Broke, so a money column is partly a census of which nights paid anything.");
             sb.AppendLine();
-            sb.AppendLine("| Hands | ratio σ | Exact | Wrong | Refused | spec | fill | tip/serve | served/night | stars |");
-            sb.AppendLine("|---|---|---|---|---|---|---|---|---|---|");
+            sb.AppendLine("| Hands | ratio σ | Exact | Close | Wrong | Refused | spec | fill | tip/serve | served/night | stars |");
+            sb.AppendLine("|---|---|---|---|---|---|---|---|---|---|---|");
             foreach (var (name, h) in levels)
             {
                 var stats = new Aggregate();
@@ -342,6 +361,7 @@ namespace LastCall.EditorTools
                 int serves = Math.Max(1, stats.Serves);
                 sb.AppendLine($"| {name} | {h.RatioSigma:0.00} | " +
                               $"{100.0 * stats.Exact / serves:0.0}% | " +
+                              $"{100.0 * stats.Close / serves:0.0}% | " +
                               $"{100.0 * stats.Wrong / serves:0.0}% | " +
                               $"{100.0 * stats.Refused / serves:0.0}% | " +
                               $"{stats.SpecScoreSum / serves:P0} | " +
@@ -367,15 +387,47 @@ namespace LastCall.EditorTools
             sb.AppendLine("it is the author's: narrower bands would make aim worth something, and");
             sb.AppendLine("would also make every existing measurement in this folder harder.");
             sb.AppendLine();
-            sb.AppendLine("## What the shape of this table means");
+            sb.AppendLine("## The middle grade exists now");
             sb.AppendLine();
-            sb.AppendLine("**A mispour is not a near miss, it is a different drink.** `Compare` only");
-            sb.AppendLine("returns Close when the ordered recipe has a dominant TYPE band, and 51 of");
-            sb.AppendLine("53 recipes are style-banded — so Close is unreachable for almost every");
-            sb.AppendLine("order and a drifted pour goes straight to Wrong. Worse than losing the");
-            sb.AppendLine("tip: a Wrong serve is paid at the menu price of what the glass ACTUALLY");
-            sb.AppendLine("matched, against the bar's unlocked menu only, so an early bar usually");
-            sb.AppendLine("matches nothing and the base goes to zero as well.");
+            sb.AppendLine("The first run of this table (2026-08-14, before the rewrite) had no Close");
+            sb.AppendLine("column, because `Compare` only returned Close when the ordered recipe had");
+            sb.AppendLine("a dominant TYPE band and every banded recipe in `recipes.json` is");
+            sb.AppendLine("style-banded — the grade could not be produced by the shipped game at all,");
+            sb.AppendLine("so a pour that drifted out of its bands went straight to Wrong: paid at");
+            sb.AppendLine("the menu price of whatever the glass happened to match against the bar's");
+            sb.AppendLine("UNLOCKED menu, which for an early bar is usually nothing at all.");
+            sb.AppendLine();
+            sb.AppendLine("Close is now the ordered drink poured OUT OF TOLERANCE: everything the");
+            sb.AppendLine("recipe names is in the glass, nothing much else is, and the shares");
+            sb.AppendLine("missed. Same seeds, same bot, judge swapped underneath:");
+            sb.AppendLine();
+            sb.AppendLine("| | old judge | new judge |");
+            sb.AppendLine("|---|---|---|");
+            sb.AppendLine("| steady hands — Exact / stars | 100.0% / 2.84 | 100.0% / 2.84 |");
+            sb.AppendLine("| all thumbs — Close | 0.0% | 7.9% |");
+            sb.AppendLine("| all thumbs — Wrong | 9.0% | 1.2% |");
+            sb.AppendLine("| all thumbs — stars | 2.58 | 2.78 |");
+            sb.AppendLine();
+            sb.AppendLine("A steady hand does not notice, which is the check that it changed nothing");
+            sb.AppendLine("it should not: the grade only ever touches a serve that was not exact.");
+            sb.AppendLine("Eight of the nine points that used to be total losses are now graded");
+            sb.AppendLine("misses — paid for, tipped at half, and a quarter of a satisfaction point");
+            sb.AppendLine("worse — and a clumsy bar's standing goes from 2.58 stars to 2.78. What is");
+            sb.AppendLine("left in the Wrong column is what belongs there: drinks that left an");
+            sb.AppendLine("ingredient out, or that are a third something the recipe never mentions.");
+            sb.AppendLine();
+            sb.AppendLine("## And the tier ladder was being measured by a bot that ignored it");
+            sb.AppendLine();
+            sb.AppendLine("Found on the way, and worth more than the rewrite that found it. The");
+            sb.AppendLine("first table above ran at **92.7% Exact with perfectly steady hands** —");
+            sb.AppendLine("7.3% of every serve in the game missing its band while the day-end");
+            sb.AppendLine("counter insisted the shelf could answer every tier its menu demanded (0");
+            sb.AppendLine("of 15,916). Both numbers were true. `PickByStyle` chose the FULLEST");
+            sb.AppendLine("bottle of a style and never read the band's `MinTier`, so a bar that had");
+            sb.AppendLine("bought the reserve gin poured its well gin into the recipe that asked for");
+            sb.AppendLine("it. The instrument, not the bar — the third time that has been the answer");
+            sb.AppendLine("in this file. With the bottle chosen the way a bartender would choose it,");
+            sb.AppendLine("the floor is 100% Exact again and its standing goes from 2.60 to 2.84.");
             sb.AppendLine();
             sb.AppendLine("**And it is a cliff, not a slope.** A band either accepts a ratio or it");
             sb.AppendLine("does not, so small error does nothing at all until it crosses an edge and");
@@ -914,7 +966,7 @@ namespace LastCall.EditorTools
             {
                 var band = recipe.RatioRequirements[bi];
                 var bottle = band.IsStyleBand
-                    ? PickByStyle(run.Shelf, band.Style)
+                    ? PickByStyle(run.Shelf, band.Style, band.MinTier)
                     : PickBottle(run.Shelf, band.Type, visit);
                 if (bottle == null) return false;
                 // The error is on the SHARE, not on the millilitre: a bartender who is
@@ -989,7 +1041,7 @@ namespace LastCall.EditorTools
             {
                 var band = recipe.RatioRequirements[i];
                 var bottle = band.IsStyleBand
-                    ? PickByStyle(run.Shelf, band.Style)
+                    ? PickByStyle(run.Shelf, band.Style, band.MinTier)
                     : PickBottleWithMost(run.Shelf, band.Type);
                 if (bottle == null || bottle.Remaining < volume * ideal[i] * 0.95) return false;
             }
@@ -1007,15 +1059,34 @@ namespace LastCall.EditorTools
             return best;
         }
 
-        private static ShelfBottle PickByStyle(Shelf shelf, string style)
+        /// <summary>
+        /// The bottle a bartender would reach for to fill this band: the fullest one of the
+        /// style that is GOOD ENOUGH for it, and the fullest of the style otherwise.
+        ///
+        /// **The tier used to be invisible here** (2026-08-14). It picked purely on what was
+        /// left, so a bar that owned the reserve gin still poured its well gin into a Gimlet
+        /// that names tier 3 — and the band failed, on a shelf that could answer it. It cost
+        /// 7.3% of every serve in the game, with perfectly steady hands, and it read as a
+        /// design problem: the day-end counter said the shelf could answer every demand it
+        /// was making (0 of 15,916), while the serve counter said one in fourteen drinks was
+        /// missing its band. Both were true, because nothing in between reached for the
+        /// bottle. The instrument, not the bar — the third time that has been the answer in
+        /// this file, which is why the fallback below is deliberate rather than tidy: a bar
+        /// that has NOT got the good bottle still pours the drink, badly, the way a player
+        /// would, and that is the Close grade doing its job.
+        /// </summary>
+        private static ShelfBottle PickByStyle(Shelf shelf, string style, int minTier = 0)
         {
-            ShelfBottle best = null;
+            ShelfBottle best = null, bestAtTier = null;
             foreach (var bottle in shelf.Bottles)
             {
                 if (bottle.IsEmpty || bottle.Ingredient.Info?.Style != style) continue;
                 if (best == null || bottle.Remaining > best.Remaining) best = bottle;
+                if (minTier > 1 && (bottle.Ingredient.Info?.Tier ?? 1) >= minTier
+                    && (bestAtTier == null || bottle.Remaining > bestAtTier.Remaining))
+                    bestAtTier = bottle;
             }
-            return best;
+            return bestAtTier ?? best;
         }
 
         /// <summary>

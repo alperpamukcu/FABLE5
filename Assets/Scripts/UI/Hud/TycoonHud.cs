@@ -4845,6 +4845,11 @@ namespace LastCall.UI
                 : verdict.Match == OrderMatch.Close ? "F5C97B" : "F27D8A";
             var why = new List<string>();
             if (verdict.Match == OrderMatch.Wrong) why.Add($"made {made}");
+            // A Close line names its own reason or it is a mystery (2026-08-14). The grade is
+            // "their drink, out of tolerance", and the glass usually matches no recipe at all,
+            // so `made` would read NOTHING NAMED and the reasons list would come back empty —
+            // a serve that paid less than the last one with nothing on the line to say why.
+            if (verdict.Match == OrderMatch.Close) why.Add("measures off");
             if (verdict.SpecScore < 0.999) why.Add($"spec {verdict.SpecScore:P0}");
             if (verdict.FillScore < 0.999) why.Add($"fill {verdict.FillScore:P0}");
             string reasons = why.Count > 0 ? "  <color=#9C8F80>(" + string.Join(", ", why) + ")</color>" : "";

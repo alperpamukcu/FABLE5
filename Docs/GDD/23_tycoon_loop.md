@@ -129,19 +129,37 @@ correct-but-careless serve earned nearly as much as a perfect one.
 | Verdict | Condition | Base pay |
 |---|---|---|
 | **Exact** | served recipe == ordered recipe | menu price |
-| **Close** | wrong drink, but its dominant type matches the order's dominant band type | menu price |
+| **Close** | **their drink, made wrong**: every band the recipe names is in the glass (≥5% of it), strays inside the matcher's own 15%, and the shares missed | menu price, **half tip** |
 | **Wrong** | anything else | **the delivered drink's own menu price** (C1) — $0 if the glass is no recipe at all |
 | **Refused** | the glass is under 35% full | **nothing**, whatever is in it |
 | **Declined** | the bar said it could not make it (§3.1) | nothing |
 
-A style-banded recipe (21 §12) names no ingredient *type*, so it has no "family" and there is
-no Close for it: a drink specified down to its bottles is either right or wrong.
+**Close was rewritten 2026-08-14, because it had never once happened.** It used to read
+"wrong drink, but its dominant TYPE matches" — and since the style era (21 §12) every banded
+recipe in `recipes.json` is style-banded, so the ordered drink had no type to match and the
+grade could not be produced by the shipped game at all. A pour that drifted out of its bands
+matched no recipe and fell straight to Wrong, where an early bar is usually paid nothing: a
+cliff at the edge of a band the player cannot see, with no step in between.
+
+The grade is now the one a pouring game needs — **the drink they ordered, poured out of
+tolerance**. The tier is forgiven with the shares: a Vesper built on the well gin fails its
+`MinTier` band and lands here, which is the honest reading of a bottle that is right in kind
+and lesser in grade. A *different* drink of the same family stays Wrong; a Gin & Tonic is not
+a Gin Sour, and it is already paid for at what it is worth. An ask with no bands at all — the
+pint, the neat pour — is Exact or nothing, having no proportions to miss.
+
+Measured across the change on the same seeds (`Docs/imperfect_hands_report.md`): a steady
+hand does not notice, and a clumsy one turns eight of its nine points of total loss into
+graded misses, standing 2.58 → 2.78. The cost of a bad pour is now mostly **standing**, which
+is what the star track counts — money now, the room's memory later.
 
 **The tip** is a share of the base price, at most equal to it — a perfect serve doubles the
 drink. It is composed of three continuous scores, none of them a cliff:
 
 ```
-tip     = basePrice x quality
+tip     = basePrice x quality x (Close ? 0.5 : 1)   (2026-08-14: a drink that came
+          out wrong is not tipped like one that came out right — without this the
+          new middle grade would pay a missed pour exactly what a perfect one pays)
 quality = 0.45 x speed + 0.35 x craft + 0.20 x fill
 speed   = 1 - waitFraction          (the whole patience, not a half-time window)
 craft   = 0.6 x garnish spec + 0.4 x METHOD   (a pint: its head score, 21 s10.3)

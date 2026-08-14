@@ -2,6 +2,33 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `23 §4` **the middle grade did not exist, and the tier ladder was measured by a bot that
+  ignored it (2026-08-14):** `OrderMatch.Close` was documented, coloured amber in the HUD,
+  counted in the simulator — and unreachable. `Compare` asked for the ordered recipe's
+  dominant *type* band, and since the style era every one of the 52 banded recipes in
+  `recipes.json` is style-banded (a recipe may not mix the two kinds; `RecipeDefinition`
+  refuses it), so the answer was null every single time. A pour that drifted out of its bands
+  therefore matched no recipe and fell straight to **Wrong**, which pays the menu price of
+  whatever the glass happens to be against the bar's UNLOCKED menu — usually nothing. A cliff
+  at the edge of a band the player cannot see, with no step in between.
+  Close is now **the drink they ordered, poured out of tolerance**: every band the recipe
+  names is in the glass, strays inside the matcher's own allowance, and the shares missed. It
+  pays the menu price at half tip and 0.5 satisfaction instead of 0.75 — money now, standing
+  later, which is the currency the star track counts. The tier is forgiven with the shares (a
+  Vesper on the well gin lands here); a *different* drink of the same family stays Wrong.
+  Two dead helpers went with the old rule, one of them a determinism hole: `DominantGlassType`
+  broke volume ties by walking a `Dictionary`, so a seed could have graded two ways.
+  **And the measurement caught something bigger than the rewrite.** The first re-run came back
+  92.7% Exact with perfectly steady hands, while the day-end counter insisted the shelf could
+  answer every tier its menu demanded (0 of 15,916). Both were true: the simulator's
+  `PickByStyle` reached for the FULLEST bottle of a style and never read the band's `MinTier`,
+  so a bar that had bought the reserve gin poured its well gin into the recipe asking for it —
+  the instrument, not the bar, for the third time in that file. With the bottle chosen the way
+  a bartender would choose it the floor is 100% Exact again, its standing goes 2.60 → 2.85,
+  and the thirty-night star table goes from **none of 200** runs reaching three stars to
+  **102 of 200**. Every star-track number taken between the ladder landing and this fix was of
+  a bar that owned good bottles and poured cheap ones. 310 EditMode green.
+
 - `26 §12.3` **the reward IS the unlock, so StoryReward is gone (2026-08-14, the author:
   "Reward olayı aslında kilitli olan geliştirmelerin veya tariflerin kilitlerinin kalkması
   olacak"):** the beat carried money, stars, a recipe id and a bottle id, and nothing read any
