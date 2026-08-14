@@ -153,8 +153,8 @@ namespace LastCall.UI
             if (_stage == Stage.Serve)
             {
                 _servePouringNow = false;
-                UpdateServeTilt(run); UpdateServePrepDrag(run); UpdateServeCabinet(run);
-                UpdateServeStepCard(run);
+                UpdateServeTilt(run); UpdateServePrepDrag(run);
+                UpdateServeStepCard(run); PushServeDone(run);
                 // One loop source, driven once per frame from whatever poured (P17): the tin
                 // and the hand bottle set the flag, and neither can stop the other's sound.
                 Sfx.HoldLoop(_servePouringNow ? "pour_loop" : null, 0.7f);
@@ -178,8 +178,7 @@ namespace LastCall.UI
             _stage = stage;
             // Any slide still in flight settles before the panels are touched — the house
             // "settle before movement" law. State stays SYNCHRONOUS end to end: only the
-            // visuals animate, so call sites that act right after GoTo (the carbonated
-            // route's TakeFromCabinet) keep their contract.
+            // visuals animate, so call sites that act right after GoTo keep their contract.
             SettleStageSlide();
             bool slide = stage != Stage.Closed && previous != Stage.Closed
                       && previous != stage && !Motion.Reduced;
@@ -190,8 +189,6 @@ namespace LastCall.UI
             _pouring = false;
             _serveGrabbed = false;
             _servePrep = null;
-            _serveBottleGrabbed = false;
-            _serveFocusBottle = null;
             _shaking = false;
             _shakeEnergy = 0;
             _spoonHeld = false;

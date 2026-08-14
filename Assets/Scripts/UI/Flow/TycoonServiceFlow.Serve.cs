@@ -18,9 +18,10 @@ namespace LastCall.UI
     /// (the author: "bardağa dökme aşamasında herhangi bir sıvı koyulmayacak, ondan
     /// dolayı o sahnede içeceklerin olmasına gerek yok") — the bar has one place where a
     /// bottle is picked up and it is the back bar. What stands here is the glass, the tin
-    /// that fills it, and the finishing table. The one bottle this stage can hold is the
-    /// one the wall hands over: fizz, whose only door is the serving glass because Core
-    /// refuses it in the tin (GDD 21 §12).
+    /// that fills it, and the finishing table. NO BOTTLE AT ALL, since 2026-08-14: the one
+    /// exception was the fizz the wall handed over, because Core refused it in the tin, and
+    /// GDD 21 §12 was overturned that day — every drink is built in the tin now, so the
+    /// bottle-in-hand this stage kept for carbonated has gone with the rule that needed it.
     /// </summary>
     public sealed partial class TycoonServiceFlow
     {
@@ -94,8 +95,8 @@ namespace LastCall.UI
         /// for the two buttons.</summary>
         private const float StageTop = 86f, StageBottom = 62f;
 
-        /// <summary>How tall the shaker and the bottle in hand are drawn on THIS stage. The shaker
-        /// bench's 180 left the tin looking like a thimble beside a 260-tall glass.</summary>
+        /// <summary>How tall the shaker is drawn on THIS stage. The shaker bench's 180 left
+        /// the tin looking like a thimble beside a 260-tall glass.</summary>
         private const float ServeVesselH = 250f;
 
         /// <summary>The piece being carried from the finishing shelf to the glass.</summary>
@@ -114,30 +115,9 @@ namespace LastCall.UI
         private const float DragStiffness = 300f;
         private const float DragDamping = 28f;
 
-        private RectTransform _serveBottle;        // the bottle in hand
-        private RectTransform _serveVessel;        // the bottle itself inside it, sized to its art
-        private Image _serveBottleImage;
-        private BottleFill _serveFill;             // what is left in it, behind the glass
-        /// <summary>The cap of the bottle in hand, as an offset from the grip (VesselArt).</summary>
-        private Vector2 _serveMouth;
-        private IngredientCard _serveFocusBottle;
-        private bool _serveBottleGrabbed;
-        private Vector2 _serveBottleRest;
-        /// <summary>Glass-fractions a second while a bottle is held over the glass.</summary>
-        private const float GlassPourRate = 0.30f;
         private RectTransform _serveShaker;     // the grabbable shaker
         private Image _serveShakerBody;
         private MetaballFluid _serveFluid;      // the metaball liquid in the serving glass
-
-        /// <summary>How much has gone into the glass since this bottle was picked up.</summary>
-        private double _servePourTotal;
-
-        /// <summary>
-        /// A poured volume said the way a bar says it. A measure is <see cref="MixerMeasure"/> of
-        /// the glass, which is the same unit the mixer keys used to pour in one press — so the
-        /// number on screen and the recipe the judge grades against are counted in the same thing.
-        /// </summary>
-        private static string Measures(double volume) => $"{volume / MixerMeasure:0.0}";
 
         /// <summary>Set by whichever pour path ran this frame; the stage frame drives the
         /// one loop source from it, so the tin and the bottle cannot stop each other's sound.</summary>
@@ -208,12 +188,8 @@ namespace LastCall.UI
                 if (bottle.Ingredient.Type == IngredientType.Garnish && !bottle.IsEmpty)
                     AddGarnishChip(bottle.Ingredient, TableStand(stand++, standCount));
 
-            // NO BOTTLES STAND ON THIS COUNTER. The hand bottle is whatever the player
-            // carried in from the back bar, and it is put down by letting go of it.
-            _serveBottleGrabbed = false;
-            _serveFocusBottle = null;
-            _serveBottle.gameObject.SetActive(false);
-            _servePourTotal = 0;
+            // NO BOTTLES STAND ON THIS COUNTER, and none is carried in either (2026-08-14):
+            // the tin arrives with the whole drink in it.
         }
 
         /// <summary>Where the n-th finishing prop stands on the counter, and how big it is
@@ -422,176 +398,15 @@ namespace LastCall.UI
             return style.Replace('_', ' ').ToUpperInvariant();
         }
 
-        /// <summary>
-        /// Puts a bottle in the hand at the counter. Only the back bar sends one — no
-        /// bottle stands on this stage to be picked up (2026-08-13, the author: nothing to
-        /// pour is chosen here). It arrives with NO BUTTON HELD, which is the whole reason
-        /// this is not a grab: a hand that is already open would drop it on the first frame
-        /// (the route was dead code until the wall began carrying fizz, so it had never
-        /// been played). It stands in the hand, and pressing it closes the hand.
-        /// </summary>
-        private void TakeCabinetBottle(TycoonRun run, IngredientCard c)
-        {
-            _serveFocusBottle = c;
-            _serveBottleGrabbed = false;
-            _serveBottleImage.sprite = ItemArt.Bottle(c);
-            _serveBottleImage.color = _serveBottleImage.sprite != null
-                ? Color.white : UITheme.StyleColor(c.Info?.Style, c.Type);
-            // Sized and stood by its own drawing, which is also where its cap is found.
-            _serveMouth = VesselArt.StandOn(_serveVessel, new Vector2(0.5f, 0f),
-                _serveBottleImage.sprite, ServeVesselH, Vector2.zero);
-            PushServeFill(run);
-            _servePourTotal = 0;
-            _serveBottle.anchoredPosition = _serveBottleRest;
-            _serveBottle.localRotation = Quaternion.identity;
-            _serveBottle.gameObject.SetActive(true);
-            Sfx.Play("bottle_open", 0.8f);
-            _aimText.text = $"{c.Name.ToUpperInvariant()} IN HAND — GRAB IT AND TIP IT OVER THE GLASS";
-            _aimText.color = UITheme.TextSecondary;
-        }
-
-        /// <summary>How the back bar passes a carbonated bottle to this stage: fizz never
-        /// enters the tin (GDD 21 §12) and the serving glass is its only door, so the wall
-        /// sends it here already in hand. A bottle the bar does not stock is a no-op.</summary>
-        private void TakeFromCabinet(string ingredientId)
-        {
-            var run = Run;
-            if (run == null) return;
-            var card = run.Shelf.Find(ingredientId)?.Ingredient;
-            if (card == null) return;
-            TakeCabinetBottle(run, card);
-        }
-
-        /// <summary>
-        /// Puts the bottle down — it goes back to the wall it came from, which is where it
-        /// is picked up again. Nothing else may clear <see cref="_serveFocusBottle"/>: the
-        /// hand and the pour both read it, and a bottle cleared from under a live pour
-        /// leaves a stream coming out of nothing.
-        /// </summary>
-        private void PutTheBottleBack(TycoonRun run)
-        {
-            _serveBottleGrabbed = false;
-            _serveFocusBottle = null;
-            // Drops still falling are the glass's drink now — the next bottle the wall
-            // sends over must not reach back and recolour them.
-            _serveFluid.ClearStreamColor();
-            _serveBottle.gameObject.SetActive(false);
-            _serveBottle.localRotation = Quaternion.identity;
-            _serveBottle.anchoredPosition = _serveBottleRest;
-            if (run != null) RefreshServeText(run, 1.0);
-        }
-
-        /// <summary>Pours whatever bottle is in hand. The tilt and the aim are the shaker's,
-        /// to the letter — one bar, one way of pouring.</summary>
-        private void UpdateServeCabinet(TycoonRun run)
-        {
-            if (_serveFocusBottle == null || Mouse.current == null)
-            {
-                PushServeDone(run);
-                return;
-            }
-            // Letting go puts the bottle back on the shelf. It used to only drop the grab, which
-            // left the bottle floating where the cursor happened to be while its twin stood in
-            // the case — you could never put one down, only abandon it mid-air.
-            if (_serveBottleGrabbed && !Mouse.current.leftButton.isPressed)
-            {
-                PutTheBottleBack(run);
-                PushServeDone(run);
-                return;
-            }
-
-            bool pourNow = false;
-            if (_serveBottleGrabbed &&
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    _serveSurface, Mouse.current.position.ReadValue(), null, out Vector2 local))
-            {
-                float halfW = _serveSurface.rect.width * 0.5f;
-                float halfH = _serveSurface.rect.height * 0.5f;
-                local.x = Mathf.Clamp(local.x, -halfW + 30f, halfW - 30f);
-                local.y = Mathf.Clamp(local.y, -halfH + 20f, halfH - 20f);
-                _serveBottle.anchoredPosition = local;
-
-                float lift = Mathf.Clamp01((local.y - _serveBottleRest.y) / LiftRange);
-                float tilt = lift * MaxTilt;
-                _serveBottle.localRotation = Quaternion.Euler(0, 0, tilt);
-
-                // The cap, swung around the grip — measured off this bottle's own art, the
-                // shaker bench's line to the letter (VesselArt, 2026-08-11).
-                Vector2 mouth = local + VesselArt.Swing(_serveMouth, tilt);
-                var opening = _serveGlass.anchoredPosition
-                            + new Vector2(0, _serveGlass.rect.height * (_serveGlassPiece.RimY - 0.5f));
-                bool over = Mathf.Abs(mouth.x - opening.x) < 78f && mouth.y > opening.y - 30f;
-                bool full = run.ServingGlass.IsFull;
-                pourNow = tilt > 42f && over && !full;
-                if (full && tilt > 42f && over)
-                {
-                    _aimText.text = "THE GLASS IS FULL";
-                    _aimText.color = UITheme.Amber[3];
-                }
-
-                if (pourNow)
-                {
-                    // The LIQUID's colour, not the shelf tag's. StyleColor is the vivid identity
-                    // hue the shelf is read by — amaro's is navy — and pouring with it painted the
-                    // drink a colour it never is, then snapped to the real one the next time the
-                    // stage refreshed (the author, 2026-08-03: navy while pouring, pale blue after
-                    // a trip through the menu). It goes on the STREAM, so the falling drink keeps
-                    // its own colour until it lands.
-                    _serveFluid.SetStreamColor(
-                        UITheme.LiquidColor(_serveFocusBottle.Info?.Style, _serveFocusBottle.Type));
-                    var streamVel = new Vector2((opening.x - mouth.x) * 1.8f, -225f);
-                    _serveFluid.EmitStream(mouth, streamVel, Time.deltaTime);
-                }
-            }
-
-            if (pourNow) _servePouringNow = true;
-            if (pourNow)
-            {
-                double landed = run.PourAtGlass(_serveFocusBottle.Id, GlassPourRate * Time.deltaTime);
-                _servePourTotal += landed;
-                _serveFluid.SetColor(DrinkColor(run.ServingGlass));
-                RefreshServeText(run, 1.0);
-                // How much has gone in. Without it the pour was a held button with no number on
-                // it, and the only way to learn a measure was to serve the drink and be told.
-                _aimText.text = $"{_serveFocusBottle.Name.ToUpperInvariant()}  ·  " +
-                                $"POURED {Measures(_servePourTotal)}  ·  GLASS {run.ServingGlass.FillFraction:P0}";
-                _aimText.color = UITheme.Cyan[3];
-                // It drains as it pours, so the level is pushed on every frame that moved
-                // any — a level set once on pick-up would be a lie by the second measure.
-                // Only on those frames: nothing about a bottle merely held over the glass
-                // can change what is left in it.
-                PushServeFill(run);
-                if (landed <= 0)
-                {
-                    // The bottle ran dry mid-pour: put it down and rebuild the shelf without it.
-                    PutTheBottleBack(run);
-                    RefreshServe();
-                    return;
-                }
-            }
-
-            PushServeDone(run);
-        }
-
         /// <summary>The SERVE key answers only a glass with a drink in it — dim until then.
-        /// Driven every frame from the cabinet update, which always runs on this stage.</summary>
+        /// Driven every frame from the stage's own update, now that the cabinet it used to
+        /// ride on is gone.</summary>
         private void PushServeDone(TycoonRun run)
         {
             if (_serveDoneGroup == null || run == null) return;
             bool ready = !run.ServingGlass.IsEmpty;
             _serveDoneGroup.alpha = ready ? 1f : 0.45f;
             if (_serveDoneBtn != null) _serveDoneBtn.interactable = ready;
-        }
-
-        /// <summary>How full the bottle in hand is, read off the shelf it came from.</summary>
-        private void PushServeFill(TycoonRun run)
-        {
-            if (_serveFill == null) return;
-            if (_serveFocusBottle == null) { _serveFill.Hide(); return; }
-            var stock = run?.Shelf?.Find(_serveFocusBottle.Id);
-            _serveFill.Show(_serveBottleImage.sprite,
-                UITheme.LiquidColor(_serveFocusBottle.Info?.Style, _serveFocusBottle.Type),
-                stock != null && stock.Capacity > 0 ? stock.Remaining / stock.Capacity : 0.0);
         }
 
         /// <summary>
@@ -953,35 +768,6 @@ namespace LastCall.UI
             sdp.preserveAspect = true; sdp.raycastTarget = false;
             _serveDragPiece.gameObject.SetActive(false);
 
-            // The bottle in hand, once one is taken off the shelf.
-            _serveBottleRest = new Vector2(226, -96);
-            _serveBottle = NewRect("HandBottle", _serveSurface);
-            _serveBottle.pivot = new Vector2(0.5f, 0.22f);
-            _serveBottle.sizeDelta = new Vector2(118, ServeVesselH);
-            _serveBottle.anchoredPosition = _serveBottleRest;
-            // An invisible plate over the whole slot, so a bottle STANDING in the hand can
-            // be grabbed again — the wall and the rail hand fizz over with no button held,
-            // and a bottle you cannot take hold of is a bottle you cannot pour.
-            var handHit = _serveBottle.gameObject.AddComponent<Image>();
-            handHit.color = new Color(0, 0, 0, 0.001f);
-            var handGrab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
-            handGrab.callback.AddListener(_ =>
-            {
-                if (_serveFocusBottle != null && Run != null && Run.Phase == TycoonPhase.DayOpen)
-                    _serveBottleGrabbed = true;
-            });
-            _serveBottle.gameObject.AddComponent<EventTrigger>().triggers.Add(handGrab);
-            // The drink first, then the art in a CHILD of its own. It cannot stay on the
-            // hand rect itself: a parent Graphic draws before its children, so the bottle
-            // would have gone behind its own contents however the fill was ordered.
-            _serveVessel = NewRect("Vessel", _serveBottle);
-            _serveFill = BottleFill.Under(_serveVessel);
-            var serveArt = NewRect("Art", _serveVessel);
-            Stretch(serveArt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            _serveBottleImage = serveArt.gameObject.AddComponent<Image>();
-            _serveBottleImage.preserveAspect = true;
-            _serveBottleImage.raycastTarget = false;
-            _serveBottle.gameObject.SetActive(false);
             _serveGlass.SetAsLastSibling();   // the hollow glass draws over the fluid
 
             // The grabbable steel shaker you pour from, resting lower-right.

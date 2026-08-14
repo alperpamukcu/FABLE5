@@ -312,8 +312,16 @@ carbonated bottles to the *serve* stage while the tin held half a drink, and a s
 up after the spirits jumped past the bench with the lid still open — the tin stranded, out
 of reach, uncappable. One place a drink is built beats one place per ingredient class.
 
-`PourAtGlass` survives as a verb (the sim and the glass-declaration path use it); it is no
-longer a door the wall opens.
+`PourAtGlass` survives as a verb, but **nothing in the game calls it any more**: the wall
+stopped opening that door, the serve stage's bottle-in-hand was cut with it (the counter now
+holds only the glass, the tin and the finishing table), and the sim bot builds every drink in
+the tin like the player does. Only the tests still pour through it. It is kept rather than
+deleted because the glass-upgrade re-pour inside it is the law that says a drink declares
+itself — and that law is still worth a home if a second building place is ever wanted.
+
+Measured after the bot was moved onto the player's path: the 200-run report came back
+**byte-identical**. The rule change costs the economy nothing; what it changes is where the
+player stands while a drink is built.
 
 **What the wall does with a click now.** The lid decides: an open tin takes the bottle and
 the wall goes to the bench; a closed tin means a finished drink, so the wall goes to the

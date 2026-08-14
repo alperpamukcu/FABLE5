@@ -2,6 +2,14 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `21 §12` **the second building place is gone with the rule that needed it (2026-08-14):**
+  the serve counter's bottle-in-hand — the one thing the wall could hand it, because fizz had
+  nowhere else to go — is cut, and the sim bot now pours carbonated into the TIN like the
+  player does instead of holding it back for the glass. A bot that builds drinks somewhere
+  the player cannot is a bot that has stopped measuring the game. Measured: the 200-run
+  report came back **byte-identical**, so the rule change costs the economy nothing.
+  `PourAtGlass` is now called by nothing but the tests.
+
 - `21 §12/§14` **the tin takes everything, and the recipe names the method (2026-08-14, the
   author: "tüm içecekler shakera koyulacak soda gibi gazlı içecekler karıştırılacak tarife
   göre" + "tariflerin hangilerinin çalkalanması gerektiği hangisinin karıştırması gerektiği

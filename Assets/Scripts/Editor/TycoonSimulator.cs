@@ -439,11 +439,13 @@ namespace LastCall.EditorTools
                     if (gw.Id == recipe.GlassId) { glassCap = gw.Capacity; break; }
             double volume = Math.Max(recipe.MinFill, fillTarget)
                             * Math.Min(glassCap, run.Glass.Capacity);
-            // Carbonated bands go in AT THE GLASS (C8): Core refuses them in the shaker, so
-            // the bot builds the way the player does — still parts into the tin, fizz after
-            // the pour-out. The old menu had no carbonated style bands, so the first Gin &
-            // Tonic the bot ever built CRASHED the whole batch here (2026-07-31).
-            var atGlass = new List<(string id, double vol)>();
+            // EVERYTHING GOES IN THE TIN (2026-08-14, GDD 21 §12 overturned). Carbonated
+            // bands used to be held back and poured at the glass after the pour-out, because
+            // Core refused fizz in the shaker; it does not any more, and a bot that still
+            // built drinks in two places would stop measuring the game the player plays.
+            // It also means the tin now holds the WHOLE drink when the glassware is chosen,
+            // so the bot's Gin & Tonic reaches for a highball on the strength of being a
+            // Gin & Tonic rather than of being pure gin.
             // The EXACT pour the book prints (2026-08-02), not the bands' raw midpoints:
             // those total 103% on a Gin Sour and 94% on an Espresso Martini, so the bot was
             // measuring a bartender who cannot add up. IdealPour is inside every band and
@@ -458,20 +460,17 @@ namespace LastCall.EditorTools
                 if (bottle == null) return false;
                 double share = ideal[bi];
                 double amount = Math.Min(volume * share, bottle.Remaining);
-                if (bottle.Ingredient.Info?.Carbonated == true)
-                    atGlass.Add((bottle.Id, amount));
-                else
-                    run.PourMeasure(bottle.Id, amount);
+                run.PourMeasure(bottle.Id, amount);
             }
-            if (run.Glass.IsEmpty && atGlass.Count == 0) return false;
+            if (run.Glass.IsEmpty) return false;
 
             foreach (var garnish in spec.Garnishes)
                 if (!run.Glass.IsFull) run.AddPreparation(garnish);
             // THE BOT MIXES THE WAY THE BOOK SAYS (GDD 21 §14 + 23 §4, 2026-08-11): the
             // method is the RECIPE's demand — the judge grades it now — and the mandatory
-            // mix refuses a two-spirit tin at the pour-out besides. A tin-built Built drink
-            // that still trips the rule (black_russian, the book's one such) gets a stir,
-            // which is what a bartender who built it in a tin would do.
+            // mix refuses an unworked tin at the pour-out besides. The last branch is the
+            // one that catches a tin the book reads as some OTHER drink than the one being
+            // built; a stir is what a bartender who built it in a tin would do.
             if (!run.Glass.IsEmpty)
             {
                 if (recipe.Prep == PrepMethod.Shaken) run.Shake(1.0);
@@ -484,8 +483,6 @@ namespace LastCall.EditorTools
             // it never had to aim, and the aim is the player's skill, not the floor's.
             if (!run.Glass.IsEmpty)
                 run.PourIntoServingGlass(run.Glass.TotalVolume, accuracy: 1.0);
-            foreach (var (id, vol) in atGlass)
-                run.PourAtGlass(id, vol);
             return run.DrinkReady;
         }
 
