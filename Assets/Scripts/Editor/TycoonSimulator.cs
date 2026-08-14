@@ -59,6 +59,94 @@ namespace LastCall.EditorTools
             Debug.Log($"[TycoonSim] wrote {path}");
         }
 
+        /// <summary>
+        /// WHERE THE STAR TRACK ACTUALLY ENDS (GDD 26 §12.2 step 3). The 200-run report
+        /// answers this question too, and its answer is cut off: the horizon is thirty days,
+        /// so "no run reached 3.5" there means "not in the first five weeks", which is a very
+        /// different sentence and the design cannot be built on the wrong one.
+        ///
+        /// This asks the long version — a quarter of the runs over four times the nights —
+        /// because the only thing being read is where the climb PLATEAUS. Fewer runs is fine
+        /// for a median; a truncated curve is not fine for anything.
+        /// </summary>
+        [MenuItem("LastCall/Measure the Star Track")]
+        public static void MeasureStarTrack()
+        {
+            var deck = DataLoader.ParseDeck(Read("bottles/base_bar.json"));
+            var recipes = DataLoader.ParseRecipes(Read("recipes/recipes.json"));
+            var archetypes = DataLoader.ParseArchetypes(Read("customers/archetypes.json"));
+            var glassware = DataLoader.ParseGlassware(Read("glassware/glassware.json"));
+            var snacks = DataLoader.ParseSnacks(Read("snacks/snacks.json"));
+            var cast = DataLoader.ParsePapers(Read("customers/papers.json"));
+            var story = DataLoader.ParseStory(Read("story/story.json"), cast, recipes);
+
+            const int Runs = 60, Horizon = 120;
+            var stats = new Aggregate();
+            for (int i = 0; i < Runs; i++)
+                PlayRun($"STAR-{i:0000}", deck, recipes, archetypes, stats,
+                    DrinkBuildSeconds, Horizon, glassware, snacks, story);
+
+            var sb = new StringBuilder();
+            sb.AppendLine("# The star track — how far a bar climbs, and how fast");
+            sb.AppendLine();
+            sb.AppendLine($"{Runs} runs, horizon **{Horizon} days** (twenty weeks). The 200-run");
+            sb.AppendLine("report answers the same question over thirty days and is cut off by it.");
+            sb.AppendLine();
+            sb.AppendLine("**This is a floor.** The bot reads only the ID, never shops and never buys");
+            sb.AppendLine("a brand, so a played bar climbs faster and probably further. What the");
+            sb.AppendLine("table is trusted for is the SHAPE: the spacing between rungs, and where");
+            sb.AppendLine("the curve stops moving. A rung nobody reaches in twenty weeks is a rung");
+            sb.AppendLine("no guest can be written for until something else changes.");
+            sb.AppendLine();
+            sb.AppendLine("| Rung | Runs that reached it | Day p25/median/p75 | Median week |");
+            sb.AppendLine("|---|---|---|---|");
+            for (int i = 0; i < Aggregate.Rungs; i++)
+            {
+                var days = stats.ReachedOn[i];
+                if (days.Count == 0)
+                {
+                    sb.AppendLine($"| {Aggregate.RungStars(i):0.0}★ | **none of {Runs}** | — | — |");
+                    continue;
+                }
+                int med = Aggregate.Quantile(days, 0.5);
+                sb.AppendLine($"| {Aggregate.RungStars(i):0.0}★ | " +
+                              $"{days.Count} ({100.0 * days.Count / Runs:0.0}%) | " +
+                              $"{Aggregate.Quantile(days, 0.25)} / {med} / {Aggregate.Quantile(days, 0.75)} | " +
+                              $"{BarCalendar.WeekOf(Math.Max(1, med))} |");
+            }
+            sb.AppendLine();
+            int lived = Aggregate.Quantile(stats.DaysSurvived, 0.5);
+            sb.AppendLine($"Nights closed: {stats.NightsClosed}. Bankruptcies: {stats.Bankruptcies} of {Runs}. " +
+                          $"Days survived p25/median/p75: {Aggregate.Quantile(stats.DaysSurvived, 0.25)} / " +
+                          $"{lived} / {Aggregate.Quantile(stats.DaysSurvived, 0.75)}.");
+            sb.AppendLine($"Standing across every night: {stats.StarsSum / Math.Max(1, stats.NightsClosed):0.00} stars.");
+            sb.AppendLine();
+
+            // READ THE TWO NUMBERS TOGETHER OR NOT AT ALL. A rung nobody reaches means one of
+            // two completely different things, and the table cannot tell them apart on its
+            // own: the climb flattened, or the bar died first. When the median run is dead at
+            // about the day the last reached rung lands on, the top of this table is measuring
+            // the BOT'S WALLET and not the game's ceiling — and a threshold chosen off it
+            // would be chosen off the wrong curve.
+            int lastReached = -1;
+            for (int i = Aggregate.Rungs - 1; i >= 0; i--)
+                if (stats.ReachedOn[i].Count > 0) { lastReached = i; break; }
+            int lastDay = lastReached >= 0 ? Aggregate.Quantile(stats.ReachedOn[lastReached], 0.5) : 0;
+            if (stats.Bankruptcies > Runs / 2 && lastDay > lived - 14)
+                sb.AppendLine($"> **The top of this table is not an answer.** The median run is dead by day " +
+                              $"{lived}, and the highest rung anyone reaches ({Aggregate.RungStars(lastReached):0.0}★) " +
+                              $"lands on day {lastDay}. Above that the bot ran out of MONEY, not out of stars: " +
+                              $"it never shops, so it cannot buy the bottles a better night is made of. Those " +
+                              $"rungs are UNMEASURED, not unreachable, and nothing should be written for them " +
+                              $"until a bot that shops has been down this road.");
+
+            Debug.Log(sb.ToString());
+            var path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Docs",
+                "star_track_report.md"));
+            File.WriteAllText(path, sb.ToString());
+            Debug.Log($"[TycoonSim] wrote {path}");
+        }
+
         /// <summary>Pins the editor's number culture too. The report below is a checked-in
         /// document; without this it reads "$133,2" on one desktop and "$133.2" on another,
         /// and every regeneration shows up as a diff nobody made.</summary>
@@ -106,6 +194,7 @@ namespace LastCall.EditorTools
             IReadOnlyList<SnackDefinition> snacks = null,
             StoryArc story = null)
         {
+            stats.BeginRun();   // this bar has climbed nothing yet
             var starting = deck.Cards
                 .Where(c => c.Info == null || c.Info.Tier <= 1)
                 .Select(c => c.Clone()).ToList();
@@ -279,6 +368,11 @@ namespace LastCall.EditorTools
                         run.BuyGlassTier(bestGlass.Id);
 
                     stats.RecordNight(run.Floor.Elapsed, run.Rating.LastNight);
+                    // THE STAR TRACK, MEASURED (GDD 26 §12.2 step 3). The standing is read
+                    // AFTER the night is filed and BEFORE the next day opens, which is the
+                    // moment the slip shows it to the player — so "the week the bar reached
+                    // 2.5" means the same thing here and on the screen.
+                    stats.RecordStanding(run.Day, run.Rating.Average);
                     stats.RecordDay(run.ContinueToNextDay());
                 }
             }
@@ -670,6 +764,43 @@ namespace LastCall.EditorTools
                 NightsClosed++;
             }
 
+            // ── the star track (GDD 26 §12) ──────────────────────────────────
+            //
+            // Eleven rungs, half a star apart, and one written guest standing on each. The
+            // question the design cannot answer by argument is WHEN a bar reaches each one,
+            // because that is what says whether a 2.5-star guest belongs in week three or
+            // week nine. This records, per run, the first day the standing crossed each rung.
+            //
+            // A run that never gets there records nothing for that rung — which is itself the
+            // answer, and the reason the table prints how many runs reached it at all before
+            // it prints a week.
+
+            public const int Rungs = 11;                       // 0.0 .. 5.0 by halves
+            public static double RungStars(int i) => i * 0.5;
+            public readonly List<int>[] ReachedOn = MakeRungs();
+            private bool[] _rungHit = new bool[Rungs];
+
+            private static List<int>[] MakeRungs()
+            {
+                var a = new List<int>[Rungs];
+                for (int i = 0; i < Rungs; i++) a[i] = new List<int>();
+                return a;
+            }
+
+            /// <summary>Starts a fresh run's rung memory. Without it the second run would
+            /// think it had already climbed everything the first one did.</summary>
+            public void BeginRun() => _rungHit = new bool[Rungs];
+
+            public void RecordStanding(int day, double stars)
+            {
+                for (int i = 0; i < Rungs; i++)
+                {
+                    if (_rungHit[i] || stars + 1e-9 < RungStars(i)) continue;
+                    _rungHit[i] = true;
+                    ReachedOn[i].Add(day);
+                }
+            }
+
             public void RecordDay(DayResult result)
             {
                 DaysClosed++;
@@ -720,6 +851,33 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Glasses bussed | {GlassesBussed} |");
                 sb.AppendLine($"| Recipes bought (of 200 runs) | {RecipesBought} |");
                 sb.AppendLine();
+
+                // ── the star track (GDD 26 §12.2 step 3) ─────────────────────
+                sb.AppendLine("## The star track — when a bar reaches each rung");
+                sb.AppendLine();
+                sb.AppendLine("Eleven rungs, one written guest on each. This is the table the");
+                sb.AppendLine("thresholds get chosen from, and it is a FLOOR like everything else the");
+                sb.AppendLine("bot measures: it reads only the ID, never shops, and never buys a brand,");
+                sb.AppendLine("so a played bar climbs faster than this. Trust the SHAPE — how far apart");
+                sb.AppendLine("the rungs are — over the absolute weeks. A rung no run reaches is the");
+                sb.AppendLine("most useful line here: it says a guest written for it would never come.");
+                sb.AppendLine();
+                sb.AppendLine("| Rung | Runs that reached it | Day p25/median/p75 | Median week |");
+                sb.AppendLine("|---|---|---|---|");
+                for (int i = 0; i < Rungs; i++)
+                {
+                    var days = ReachedOn[i];
+                    if (days.Count == 0)
+                    {
+                        sb.AppendLine($"| {RungStars(i):0.0}★ | **none of {Runs}** | — | — |");
+                        continue;
+                    }
+                    int med = Q(days, 0.5);
+                    sb.AppendLine($"| {RungStars(i):0.0}★ | {Pct(days.Count, Runs)} | " +
+                                  $"{Q(days, 0.25)} / {med} / {Q(days, 0.75)} | " +
+                                  $"{BarCalendar.WeekOf(Math.Max(1, med))} |");
+                }
+                sb.AppendLine();
                 sb.AppendLine("## The written nights (GDD 26)");
                 sb.AppendLine();
                 sb.AppendLine("The bot starts the trial the moment it reaches the stool (it has no");
@@ -766,7 +924,11 @@ namespace LastCall.EditorTools
             private static string Pct(int part, int whole) =>
                 whole == 0 ? "—" : $"{part} ({(double)part / whole:P1})";
 
-            private static int Q(List<int> values, double q)
+            private static int Q(List<int> values, double q) => Quantile(values, q);
+
+            /// <summary>The same arithmetic the report tables use, reachable from the
+            /// star-track tool so the two documents cannot quote different medians.</summary>
+            public static int Quantile(List<int> values, double q)
             {
                 if (values.Count == 0) return 0;
                 var sorted = values.OrderBy(v => v).ToList();

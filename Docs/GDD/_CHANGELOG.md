@@ -2,6 +2,54 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `26 §12.2` **the star track, measured — and where the measurement stops (2026-08-14):**
+  the eleven thresholds are the biggest guess in the new progression, so they were not
+  guessed. `LastCall → Measure the Star Track` plays 60 runs over 120 nights and writes the
+  first day each rung is crossed to `Docs/star_track_report.md`; the 200-run balance report
+  carries the same table over its own thirty-day horizon.
+  **The bottom six rungs are real and evenly spaced** — 0.0 on day 1, then 4, 7, 10, 14, 19 —
+  all inside the first four weeks, which is a usable schedule: a guest a rung, a rung a few
+  nights, and the shopping week between them with something to be for.
+  **The top five are UNMEASURED, not unreachable,** and the report is built to say so rather
+  than let the reader assume: all sixty runs went bankrupt at a median day 36, and the last
+  rung anyone reaches (3.0★) lands on day 32. The bot ran out of MONEY, not out of stars — it
+  reads only the ID and never shops, so it cannot buy the bottles a better night is made of.
+  The report prints that warning itself whenever the median death lands within a fortnight of
+  the highest rung, because a table that cannot tell "the climb flattened" from "the bar died
+  first" will be read as the former by whoever opens it next. **Nothing above 2.5★ gets
+  written until a bot that shops has been down this road.**
+
+- `26 §12` **the withheld night is a scene (2026-08-14):** `SyncLastCall` keyed the whole
+  panel off `Trial`, and a gated night has none — so the guest arrived, the room dimmed, one
+  lamp found their stool and nobody spoke. The plate now has a "short" part (host framing,
+  the guest's `ShortOfGate` lines, the house's last word), the key reads GOOD NIGHT, SAY NO
+  TONIGHT is hidden because nothing was asked, and `OnPlateKey` no longer guards on a Trial
+  that is deliberately absent. **The rung is DRAWN** — five stars filled to what this guest
+  came for, in the story's magenta, with where the bar stands printed beside them — because a
+  sentence would be a caption standing where a drawing belongs (16 §6.7). The plate's own
+  keys and type moved onto the chrome language while it was open.
+
+- `26 §12` **the star track: the arc IS the progression (2026-08-14, the author: "her hikaye
+  müşterisi belli bir yıldıza ulaşmanı isteyecek ... 0-0.5-1-1.5-2-2.5-3-3.5-4-4.5-5"):** the
+  bar's standing stops being a score and becomes the spine — eleven rungs half a star apart,
+  one written guest on each. `StoryBeat.RequiresStars` is that rung and may only BE a rung
+  (1.3 is refused at construction: the next name has to be a place you can see from here).
+  **A locked night still happens, and that is the whole decision.** The guest comes anyway,
+  takes the stool, and says what the bar is short of — `StoryLines.ShortOfGate`, which the
+  loader now REQUIRES on any gated beat, the same shape as the `hostWarning` rule above it.
+  A beat that silently fails to occur teaches nothing, looks like a bug, and makes the
+  marked Saturday on the new calendar a lie; a guest who turns up to explain the lock is the
+  tutorial for the system, which is why the opener sits at 0 and can never be missed.
+  The gate is asked at the STOOL and never folded into `IsDueOn`, and it is booked in its own
+  column (`TurnedAway`, apart from `Missed`) sharing one return clock — an ending that could
+  not tell "got it wrong" from "was not ready yet" would accuse a player who never fumbled a
+  serve. On a withheld night `Trial` is null, so there is no post-it for a job nobody offered,
+  and `BeginLastCallTrial` is a no-op so the UI ends every dialogue the same way.
+  §12.2 writes the ordered path for what is left: the withheld scene in the UI, then
+  **calibrating the eleven thresholds with the sim** (the biggest risk in the design, and the
+  machine that answers it already exists), then one `UnlockCondition` type to replace the
+  three kinds of lock living in three places before a fourth arrives. 294 EditMode green.
+
 - `21 §12` **the last two guards of the overturned rule (2026-08-14, the author: "soda
   shakera dökülmüyor"):** Core took fizz in the tin, the wall routed it to the bench, and
   then the BENCH refused to pour it — a `!fizzy` term in the tilt-pour's `pourNow`, saying

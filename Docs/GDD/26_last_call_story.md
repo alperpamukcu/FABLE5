@@ -593,9 +593,28 @@ later ones can only be chosen once the earlier ones can be measured.
 1. **The gate** — `RequiresStars`, `ShortOfGate`, `TurnedAway`, the withheld night. **DONE.**
 2. **The withheld scene in the UI** — the plate reads `ShortOfGate` and prints the rung
    ("SHE COMES BACK AT 2.5★"), the post-it stays down. Next.
-3. **Calibration by simulation** — the sim bot reaches a rung on some night; run 200 and read
-   *which week each rung lands in*. This is where the eleven thresholds get their values.
-   Guessing them is the biggest risk in the design and the machine that answers it exists.
+3. **Calibration by simulation** — **MEASURED 2026-08-14** (`LastCall → Measure the Star
+   Track`, `Docs/star_track_report.md`; the 200-run report carries the same table over its
+   own thirty-day horizon). 60 runs, 120 nights:
+
+   | rung | 0.0 | 0.5 | 1.0 | 1.5 | 2.0 | 2.5 | 3.0 | 3.5+ |
+   |---|---|---|---|---|---|---|---|---|
+   | median day | 1 | 4 | 7 | 10 | 14 | 19 | 32 (60% of runs) | never |
+
+   **The bottom six rungs are real and evenly spaced** — one every three days to begin with,
+   stretching to five by 2.5★, all inside the first four weeks. That is a usable schedule: a
+   guest a rung, a rung a few nights, and the shopping week between them has something to be
+   for.
+
+   **The top five are UNMEASURED, not unreachable, and the report says so itself.** Every one
+   of the sixty runs went bankrupt, median day 36 — and the last rung anyone reaches lands on
+   day 32. The bot ran out of money, not out of stars: it reads only the ID and never shops,
+   so it cannot buy the bottles a better night is made of. Reading 3.0★ as the game's ceiling
+   would be reading the bot's wallet.
+
+   **So: nothing above 2.5★ gets written until a bot that shops has been down this road.**
+   That bot is the next measurement, and it is worth having for its own sake — every survival
+   figure in the balance report is a floor for the same reason.
 4. **`UnlockCondition`, one type for every lock.** Today a lock is two unrelated things
    (`RecipeDefinition.Locked` + `_boughtRecipes`, and `_lockedStock` by style); the author is
    adding a third — *"müşteriye doğru siparişi vererek"*, having served a named guest the

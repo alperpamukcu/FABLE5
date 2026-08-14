@@ -33,6 +33,29 @@ Every survival figure is a floor.
 | Glasses bussed | 51711 |
 | Recipes bought (of 200 runs) | 3797 |
 
+## The star track — when a bar reaches each rung
+
+Eleven rungs, one written guest on each. This is the table the
+thresholds get chosen from, and it is a FLOOR like everything else the
+bot measures: it reads only the ID, never shops, and never buys a brand,
+so a played bar climbs faster than this. Trust the SHAPE — how far apart
+the rungs are — over the absolute weeks. A rung no run reaches is the
+most useful line here: it says a guest written for it would never come.
+
+| Rung | Runs that reached it | Day p25/median/p75 | Median week |
+|---|---|---|---|
+| 0.0★ | 200 (100.0%) | 1 / 1 / 1 | 1 |
+| 0.5★ | 200 (100.0%) | 4 / 4 / 4 | 1 |
+| 1.0★ | 200 (100.0%) | 7 / 7 / 7 | 2 |
+| 1.5★ | 200 (100.0%) | 10 / 10 / 11 | 2 |
+| 2.0★ | 200 (100.0%) | 13 / 14 / 14 | 3 |
+| 2.5★ | 200 (100.0%) | 19 / 19 / 20 | 4 |
+| 3.0★ | 30 (15.0%) | 29 / 29 / 29 | 5 |
+| 3.5★ | **none of 200** | — | — |
+| 4.0★ | **none of 200** | — | — |
+| 4.5★ | **none of 200** | — | — |
+| 5.0★ | **none of 200** | — | — |
+
 ## The written nights (GDD 26)
 
 The bot starts the trial the moment it reaches the stool (it has no
