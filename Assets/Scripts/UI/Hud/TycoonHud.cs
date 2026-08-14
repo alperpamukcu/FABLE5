@@ -7245,12 +7245,17 @@ namespace LastCall.UI
                 tagRuleImg.color = UITheme.Cyan[3];
                 tagRuleImg.raycastTarget = false;
 
-                seat.Name = NewText("Name", seat.Tag, _body, 12, TextAnchor.UpperCenter,
+                // 8, NOT 12/10/11 (GDD 16 §0, found by `LastCall → Audit UI`). The ticket over
+                // a customer's head is read across the room all night, and its three rows were
+                // set at three sizes the pixel face does not have — so the thing the player
+                // reads most often was the softest type on the screen. One size, and the rows
+                // are told apart by COLOUR, which they already were: cream, cyan, magenta.
+                seat.Name = NewText("Name", seat.Tag, _body, 8, TextAnchor.UpperCenter,
                     UITheme.TextPrimary);
                 Stretch(seat.Name.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -10));
                 seat.Name.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-                seat.Wants = NewText("Wants", seat.Tag, _body, 10, TextAnchor.UpperCenter,
+                seat.Wants = NewText("Wants", seat.Tag, _body, 8, TextAnchor.UpperCenter,
                     UITheme.Cyan[4]);
                 Stretch(seat.Wants.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -26));
                 seat.Wants.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -7259,7 +7264,7 @@ namespace LastCall.UI
                 // corner-pinned icon had room, which centred the text in a right-shifted box —
                 // visibly off-centre on every seat. Now the TEXT owns the middle and the icon
                 // rides just left of its measured width, per refresh, like a bullet point.
-                seat.Order = NewText("Order", seat.Tag, _body, 11, TextAnchor.UpperCenter,
+                seat.Order = NewText("Order", seat.Tag, _body, 8, TextAnchor.UpperCenter,
                     UITheme.Magenta[4]);
                 Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -42));
                 seat.Order.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -8558,11 +8563,13 @@ namespace LastCall.UI
             Color ink = fill == UITheme.PrimaryAction ? UITheme.TextOnAmber : UITheme.TextPrimary;
             if (icon != null)
             {
+                // A MARK IS SQUARE OR IT IS NOTHING (GDD 16 §3). Insetting the bottom by the
+                // throw made the box 16x13, and `preserveAspect` then fitted the 16px drawing
+                // into 13 — 0.813x, the exact defect this key was made to fix one commit ago.
+                // The mark keeps its square and is LIFTED off the throw instead.
                 var mark = NewRect("Mark", face);
-                // 5 a side keeps a 16-unit mark at 1:1 in a 26-unit key (GDD 16 §3); the
-                // extra along the bottom lifts it off the key's throw.
-                Stretch(mark, Vector2.zero, Vector2.one,
-                    new Vector2(5, 5 + KeyPlate.Throw), new Vector2(-5, -5));
+                Stretch(mark, Vector2.zero, Vector2.one, new Vector2(5, 5), new Vector2(-5, -5));
+                mark.anchoredPosition += new Vector2(0, KeyPlate.Throw * 0.5f);
                 var mi = mark.gameObject.AddComponent<Image>();
                 mi.sprite = icon; mi.color = ink; mi.preserveAspect = true; mi.raycastTarget = false;
                 return rt;
