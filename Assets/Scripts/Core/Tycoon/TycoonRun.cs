@@ -23,7 +23,7 @@ namespace LastCall.Core
     /// Regulars are opt-in: built without a regulars registry, the crowd stays anonymous
     /// and nothing else changes.
     /// </summary>
-    public sealed class TycoonRun
+    public sealed class TycoonRun : IUnlockState
     {
         private readonly RunRng _rng;
         private readonly Shelf _shelf;
@@ -319,6 +319,32 @@ namespace LastCall.Core
             : recipe.Rank <= 21 ? 3.0
             : 4.0;
 
+        // ── every lock, asked the same way (GDD 26 §12.2 step 4) ────────────────
+
+        /// <summary>The bar's standing, as a lock is allowed to see it.</summary>
+        double IUnlockState.Stars => Rating.Average;
+
+        /// <summary>Whether a written night was served the way it was asked for. False for a
+        /// run with no story at all, which is most of the test suites.</summary>
+        bool IUnlockState.BeatWasKept(string beatId) => Story != null && Story.WasKept(beatId);
+
+        /// <summary>
+        /// WHAT THIS RECIPE IS WAITING FOR. The rank table above is still the answer for
+        /// every drink in the book today — it is wrapped rather than replaced, because a
+        /// gate that is only ever a number does not need a type to say so.
+        ///
+        /// What the type buys is the next kind: a recipe whose page is earned from a PERSON
+        /// (`UnlockCondition.Kept`), which the author is adding, and any combination of the
+        /// two. When a recipe carries its own condition in data this reads it from there; the
+        /// callers already ask the question the right way round.
+        /// </summary>
+        public UnlockCondition RecipeUnlock(RecipeDefinition recipe) =>
+            UnlockCondition.Stars(RecipeStarGate(recipe));
+
+        /// <summary>Is it buyable by the books — money aside? The shop asks this, and prints
+        /// <see cref="UnlockCondition.Sentence"/> under the ones that say no.</summary>
+        public bool CanUnlock(RecipeDefinition recipe) => RecipeUnlock(recipe).MetBy(this);
+
         /// <summary>
         /// Buys a locked recipe onto the menu (v5 P16). A day-end act, like every purchase:
         /// deliveries come when the doors are shut. Core refuses shortfalls of money and of
@@ -332,10 +358,13 @@ namespace LastCall.Core
                 if (r.Id == recipeId) { recipe = r; break; }
             if (recipe == null || !recipe.Locked || _boughtRecipes.Contains(recipeId))
                 throw new InvalidOperationException($"'{recipeId}' is not in the book to buy.");
-            double gate = RecipeStarGate(recipe);
-            if (Rating.Average < gate)
+            // ONE REFUSAL, IN THE LOCK'S OWN WORDS. It used to compare a number here and
+            // write its own sentence; a second kind of lock would have needed a second
+            // comparison and a second sentence, and the two would have drifted.
+            var lockedBy = RecipeUnlock(recipe);
+            if (!lockedBy.MetBy(this))
                 throw new InvalidOperationException(
-                    $"The room is not talking about this bar enough yet — {recipe.Name} wants {gate:0.0} stars.");
+                    $"{recipe.Name} is not earned yet — {lockedBy.Sentence}.");
             int price = RecipePrice(recipe);
             if (Money < price)
                 throw new InvalidOperationException($"Not enough money — {recipe.Name} costs ${price}.");

@@ -642,13 +642,21 @@ later ones can only be chosen once the earlier ones can be measured.
    that wall is intended — a deliberately finite run — or a cost curve that outgrew its
    income curve is the author's call, and it is GDD 23's to make. Until it is made, the story
    has six usable rungs and a written cast of six.
-4. **`UnlockCondition`, one type for every lock.** Today a lock is two unrelated things
-   (`RecipeDefinition.Locked` + `_boughtRecipes`, and `_lockedStock` by style); the author is
-   adding a third — *"müşteriye doğru siparişi vererek"*, having served a named guest the
-   thing they asked for. Three kinds of lock in three places do not survive a fourth. One
-   type — `Stars(n)` | `BeatDone(id)` | `ServedRight(beatId, askIndex)`, composable with
-   `And` — and the market prints **the condition's own sentence** under the lock, which is
-   also what the author's *"başarımlar kilit görselinin altında belirtilecek"* asks for.
+4. **`UnlockCondition`, one type for every lock. BUILT 2026-08-14.** A lock is one object
+   that does two things: says whether it is OPEN, and says what it is WAITING FOR in a
+   sentence a shop can print. `Open` | `Stars(n)` | `Kept(beatId, who)` | `All(...)`, asked
+   through `IUnlockState` — deliberately two facts wide (the standing, and whether a written
+   night was kept), so a condition can never grow into a second rules engine.
+   `TycoonRun.RecipeUnlock` returns one and `UnlockRecipe` refuses in its words, so there is
+   one refusal instead of a comparison and a hand-written sentence per lock kind.
+   The **sentence is not a courtesy**: a lock the player cannot read is indistinguishable
+   from a thing the game forgot to give them — the same failure §12.1's withheld night was
+   designed around — and it is what the author's *"başarımlar kilit görselinin altında
+   belirtilecek"* asks for. `Kept` is named after the PERSON when the caller knows one,
+   because "SERVE ECE WHAT THEY ASK FOR" is something a player can go and do and
+   "REQUIRES BEAT ECE_2" is not.
+   Still to come: recipes and bottles carrying their own condition **in data** (today the
+   rank table is wrapped, not replaced), and the market drawing the sentence under the lock.
 5. **The rest of the cast.** Eleven beats needs eleven written nights and eleven faces; the
    art is gated on PixelLab credit, the writing is not.
 

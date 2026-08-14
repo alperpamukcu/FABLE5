@@ -86,10 +86,22 @@ namespace LastCall.Core
 
         /// <summary>They got what they asked for. The arc moves on, and the next beat cannot
         /// land tonight — one last call a night, always.</summary>
+        /// <summary>
+        /// Which written nights were served the way they were asked for, by id. `Kept` counts
+        /// them; this remembers WHICH — because the author's third kind of lock is a bottle
+        /// you earn from a person rather than from a number (GDD 26 §12.2 step 4), and a
+        /// counter cannot answer "did they keep Ece's second night".
+        /// </summary>
+        private readonly HashSet<string> _keptIds = new HashSet<string>(StringComparer.Ordinal);
+
+        public bool WasKept(string beatId) =>
+            !string.IsNullOrEmpty(beatId) && _keptIds.Contains(beatId);
+
         public void RecordServed(int day)
         {
             if (Current == null) return;
             Kept++;
+            _keptIds.Add(Current.Id);
             _at++;
             DueDay = Current != null
                 ? Math.Max(Current.Day, BarCalendar.NextNightOnOrAfter(day + 1, Current.Night))
