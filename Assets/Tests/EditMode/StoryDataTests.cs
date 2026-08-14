@@ -78,8 +78,9 @@ namespace LastCall.Tests
             var arc = DataLoader.ParseStory(merged, Cast(), Book());
             Assert.That(arc.Beats.Count, Is.EqualTo(4), "one host night and three guests");
             foreach (var beat in arc.Beats)
-                Assert.That(beat.Who.IsHost || BarCalendar.IsWeekend(beat.Night), Is.True,
-                    $"'{beat.Id}' brings a guest in on a {BarCalendar.Name(beat.Night)}");
+                Assert.That(beat.Who.IsHost || beat.Night == BarCalendar.VipNight, Is.True,
+                    $"'{beat.Id}' brings a guest in on a {BarCalendar.Name(beat.Night)}; " +
+                    $"guests come on {BarCalendar.Name(BarCalendar.VipNight)}");
         }
 
         /// <summary>Ece's file with the drafted guests spliced back in, in order, the way a
@@ -122,8 +123,9 @@ namespace LastCall.Tests
         public void Only_the_house_works_a_quiet_night()
         {
             foreach (var beat in Load().Beats)
-                Assert.That(beat.Who.IsHost || BarCalendar.IsWeekend(beat.Night), Is.True,
-                    $"'{beat.Id}' brings a guest in on a {BarCalendar.Name(beat.Night)}");
+                Assert.That(beat.Who.IsHost || beat.Night == BarCalendar.VipNight, Is.True,
+                    $"'{beat.Id}' brings a guest in on a {BarCalendar.Name(beat.Night)}; " +
+                    $"guests come on {BarCalendar.Name(BarCalendar.VipNight)}");
         }
 
         [Test]
@@ -194,7 +196,7 @@ namespace LastCall.Tests
         }";
 
         private static readonly string GoodBeat = @"
-            { ""id"": ""b1"", ""character"": ""guest"", ""week"": 1, ""night"": ""friday"",
+            { ""id"": ""b1"", ""character"": ""guest"", ""week"": 1, ""night"": ""saturday"",
               ""asks"": [""neat_pour""], ""seconds"": 60 }";
 
         private static FormatException Refused(string json) =>
@@ -213,7 +215,7 @@ namespace LastCall.Tests
         public void A_drink_that_does_not_exist_is_refused()
         {
             var e = Refused(Wrap(@"
-                { ""id"": ""b1"", ""character"": ""guest"", ""week"": 1, ""night"": ""friday"",
+                { ""id"": ""b1"", ""character"": ""guest"", ""week"": 1, ""night"": ""saturday"",
                   ""asks"": [""neat_pour"", ""unicorn_fizz""], ""seconds"": 60 }"));
             Assert.That(e.Message, Does.Contain("unicorn_fizz"));
         }
@@ -224,7 +226,7 @@ namespace LastCall.Tests
             var e = Refused(Wrap(@"
                 { ""id"": ""b1"", ""character"": ""guest"", ""week"": 1, ""night"": ""wednesday"",
                   ""asks"": [""neat_pour""], ""seconds"": 60 }"));
-            Assert.That(e.Message, Does.Contain("weekend"));
+            Assert.That(e.Message, Does.Contain("SATURDAY"));
         }
 
         [Test]
@@ -242,7 +244,7 @@ namespace LastCall.Tests
         public void A_beat_about_nobody_is_refused()
         {
             var e = Refused(Wrap(@"
-                { ""id"": ""b1"", ""character"": ""ghost"", ""week"": 1, ""night"": ""friday"",
+                { ""id"": ""b1"", ""character"": ""ghost"", ""week"": 1, ""night"": ""saturday"",
                   ""asks"": [""neat_pour""], ""seconds"": 60 }"));
             Assert.That(e.Message, Does.Contain("ghost"));
         }
@@ -251,7 +253,7 @@ namespace LastCall.Tests
         public void A_trial_with_no_time_is_refused()
         {
             Refused(Wrap(@"
-                { ""id"": ""b1"", ""character"": ""guest"", ""week"": 1, ""night"": ""friday"",
+                { ""id"": ""b1"", ""character"": ""guest"", ""week"": 1, ""night"": ""saturday"",
                   ""asks"": [""neat_pour""], ""seconds"": 0 }"));
         }
 
@@ -299,7 +301,7 @@ namespace LastCall.Tests
         public void A_beat_leading_nowhere_is_refused()
         {
             var e = Refused(Wrap(@"
-                { ""id"": ""b1"", ""character"": ""guest"", ""week"": 1, ""night"": ""friday"",
+                { ""id"": ""b1"", ""character"": ""guest"", ""week"": 1, ""night"": ""saturday"",
                   ""asks"": [""neat_pour""], ""seconds"": 60, ""next"": ""b2"" }"));
             Assert.That(e.Message, Does.Contain("b2"));
         }
@@ -315,7 +317,7 @@ namespace LastCall.Tests
         {
             // The arc's first standing rule, enforced where it gets broken: in the writing.
             var e = Refused(Wrap(@"
-                { ""id"": ""b1"", ""character"": ""guest"", ""week"": 1, ""night"": ""friday"",
+                { ""id"": ""b1"", ""character"": ""guest"", ""week"": 1, ""night"": ""saturday"",
                   ""asks"": [""neat_pour""], ""seconds"": 60, ""needStyle"": ""bourbon"",
                   ""hostWarning"": [""Friday is going to be a difficult one.""] }"));
             Assert.That(e.Message, Does.Contain("bourbon"));

@@ -25,7 +25,7 @@
       "id": "collector_1",
       "character": "collector",
       "week": 1,
-      "night": "friday",
+      "night": "saturday",
       "asks": [
         "neat_pour",
         "neat_pour"
@@ -121,7 +121,7 @@
       "id": "gourmet_1",
       "character": "gourmet",
       "week": 3,
-      "night": "friday",
+      "night": "saturday",
       "asks": [
         "manhattan",
         "gimlet",

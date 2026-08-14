@@ -43,15 +43,18 @@ namespace LastCall.Core
         }
 
         /// <summary>
-        /// THE NIGHT A NAME COMES (2026-08-14, the author: "cumartesi günleri vip hikaye
-        /// müşterisi geleceği belirtilsin"). Saturday is the week's own promise — the calendar
-        /// says so before any beat is scheduled, so the days between are days the player is
-        /// counting towards something rather than days that merely pass.
+        /// THE NIGHT A NAME COMES — and now the ONLY one (2026-08-14, the author: "her
+        /// cumartesi bir hikaye müşterisi gelecek"). Saturday is the week's own promise: the
+        /// calendar says so before any beat is scheduled, so the days between are days the
+        /// player is counting towards something rather than days that merely pass.
         ///
-        /// It is the LATER of the two weekend nights on purpose: a week that ends on its
-        /// biggest night reads as a week, and Friday stays free for a beat that wants to come
-        /// early. The house's guest still may not land anywhere else (see the loader's rule);
-        /// this only names which of the two the wall advertises.
+        /// It began as presentation — a star on the marquee — while the RULE still allowed
+        /// Friday or Saturday. A wall that advertises one night while the arc may use another
+        /// is a wall that lies, and this game has a standing rule against exactly that: the
+        /// strip cannot say Friday while the story thinks Saturday, because neither of them
+        /// does its own arithmetic. So the marker became the rule (see <see cref="StoryBeat"/>);
+        /// Friday keeps its place in <see cref="IsWeekend"/>, which is the ECONOMY's busy
+        /// weekend and a different question entirely.
         /// </summary>
         public const BarNight VipNight = BarNight.Saturday;
 

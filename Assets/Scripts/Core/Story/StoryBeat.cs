@@ -100,10 +100,17 @@ namespace LastCall.Core
                 throw new ArgumentNullException(nameof(trial), $"beat '{id}' asks for nothing");
             if (week < 1)
                 throw new ArgumentOutOfRangeException(nameof(week), $"beat '{id}' happens in week {week}");
-            if (!who.IsHost && !BarCalendar.IsWeekend(night))
+            // SATURDAY, AND ONLY SATURDAY (2026-08-14, the author: "her cumartesi bir hikaye
+            // müşterisi gelecek"). It was Friday-or-Saturday, while the calendar on the wall
+            // marked Saturday alone — a strip advertising a night the arc need not use. One
+            // night makes the promise keepable: the player can count towards it, and the
+            // marquee's star is the rule rather than a hint about it. The house is not a
+            // guest; Ece works the quiet nights and always could.
+            if (!who.IsHost && night != BarCalendar.VipNight)
                 throw new ArgumentException(
                     $"beat '{id}' brings {who.Name} in on a {BarCalendar.Name(night)} — a guest " +
-                    "comes at the weekend (GDD 26 §2b); only the house works the quiet nights.",
+                    $"comes on {BarCalendar.Name(BarCalendar.VipNight)} (GDD 26 §2b); only the " +
+                    "house works the other nights.",
                     nameof(night));
             if (needTier < 0)
                 throw new ArgumentOutOfRangeException(nameof(needTier));
