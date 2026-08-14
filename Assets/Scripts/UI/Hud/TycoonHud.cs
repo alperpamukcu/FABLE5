@@ -46,8 +46,9 @@ namespace LastCall.UI
         /// by now, and it carries between nights instead of resetting every morning.</summary>
         private Text _ratingText;
         private RectTransform _starsFill;
-        private Text _clockText;          // the hour, the board's biggest reading
+        private SegmentClock _clock;      // the hour, drawn as a readout and not as a word
         private Image _clockRule, _standingRule;   // each plaque's lit base
+        private bool _clockWasLast;       // the readout only re-tints when the state flips
         private readonly Image[] _ratingStars = new Image[BarRating.MaxStars];
 
         // Seats at the counter (GDD 24 §4, 2026-07-22): customers sit along the bar as
@@ -2074,16 +2075,26 @@ namespace LastCall.UI
             // count days — it simply stops being what the player reads the night by.
             double hour = run.Floor.ClockHour;
             int hh = (int)hour % 24, mm = (int)((hour - (int)hour) * 60);
-            // Kept short on purpose: the clock string is longer than the old "DAY 1" and ran
-            // straight into the till at the money's fixed x. Who is in is on the seat row.
-            _clockText.text = $"{hh:00}:{mm / 5 * 5:00}";
             // The plaque's rule is the state light: cyan through the shift, magenta once the
             // room is being called — visible from across the screen without reading a word.
             bool last = run.Floor.IsClosingTime;
-            _dayText.text = last ? "LAST CALL" : CalendarFor(run.Day);
+            // The colon keeps the second, which is the one thing on this board that moves on
+            // its own. A display whose colon is painted on is a picture of a clock.
+            if (_clock != null)
+            {
+                if (last != _clockWasLast)
+                {
+                    _clockWasLast = last;
+                    _clock.SetHue(last ? UITheme.Magenta[4] : UITheme.Cyan[4]);
+                }
+                _clock.Show(hh, mm / 5 * 5, ((int)(Time.unscaledTime * 2f) & 1) == 0);
+            }
+            // The NIGHT beside the readout, and nothing else. The week number is on the strip
+            // three inches to the right, and printing it twice across one board was the sort
+            // of thing that makes a screen look assembled rather than designed.
+            _dayText.text = last ? "LAST\nCALL" : BarCalendar.Name(BarCalendar.NightOf(run.Day));
             RefreshWeekStrip(run);
             _dayText.color = last ? UITheme.Magenta[4] : UITheme.Cyan[3];
-            _clockText.color = last ? UITheme.Magenta[4] : UITheme.TextPrimary;
             if (_clockRule != null) _clockRule.color = last ? UITheme.Magenta[3] : UITheme.Cyan[2];
 
             // DEBT IS SHOWN ON THE MACHINE THAT HOLDS THE MONEY (2026-08-14). The fascia's
@@ -4970,7 +4981,14 @@ namespace LastCall.UI
             var slab = rt.gameObject.AddComponent<Image>();
             slab.color = UITheme.Night[0];
             slab.raycastTarget = false;
-            Hairline(rt, new Vector2(0, 1), new Vector2(1, 1), UITheme.Night[2]);
+            // A PLAQUE IS A PANEL, NOT A FILL (2026-08-14, the author: "kutular yerine"). One
+            // hairline on top made it a rectangle with a line on it. A bevel is what says the
+            // thing is screwed to the board: the room is above and in front, so the top and
+            // left edges catch it and the right falls into shadow. Four cheap rules, and the
+            // board stops reading as a row of coloured boxes.
+            Hairline(rt, new Vector2(0, 1), new Vector2(1, 1), UITheme.Night[3]);
+            HairlineV(rt, 0f, UITheme.Night[2]);
+            HairlineV(rt, 1f, new Color(0f, 0f, 0f, 0.5f));
 
             var r = NewRect("Rule", rt);
             r.anchorMin = new Vector2(0, 0); r.anchorMax = new Vector2(1, 0);
@@ -6842,24 +6860,38 @@ namespace LastCall.UI
             // ── the hour, left: what the night is measured in ──────────────────
             var clock = TopPlaque(top, "Clock", new Vector2(0, 0.5f), new Vector2(214, PlaqueH),
                 new Vector2(14, PlaqueY), UITheme.Cyan[2], out _clockRule);
-            _dayText = NewText("Day", clock, _body, 8, TextAnchor.UpperLeft, UITheme.Cyan[3]);
-            Place(_dayText.rectTransform, new Vector2(0, 1), new Vector2(196, 12), new Vector2(9, -5));
-            _dayText.rectTransform.pivot = new Vector2(0, 1);
-            _dayText.horizontalOverflow = HorizontalWrapMode.Overflow;
-            // A DIGITAL CLOCK IS ITS UNLIT SEGMENTS (2026-08-14, the author: "saat dijital
-            // saat görüntüsünde olsun"). What makes a readout read as a machine rather than as
-            // a caption is the dark 88:88 sitting behind the lit figures — the segments that
-            // are not on. Drawn first, in the same face at the same size, so the two register
-            // exactly; the live time then lights the ones it needs.
-            var ghost = NewText("Ghost", clock, _display, 20, TextAnchor.LowerLeft,
-                new Color(UITheme.Cyan[2].r, UITheme.Cyan[2].g, UITheme.Cyan[2].b, 0.16f));
-            Place(ghost.rectTransform, new Vector2(0, 0), new Vector2(196, 24), new Vector2(9, 4));
-            ghost.rectTransform.pivot = new Vector2(0, 0);
-            ghost.text = "88:88";
 
-            _clockText = NewText("Clock", clock, _display, 20, TextAnchor.LowerLeft, UITheme.Cyan[4]);
-            Place(_clockText.rectTransform, new Vector2(0, 0), new Vector2(196, 24), new Vector2(9, 4));
-            _clockText.rectTransform.pivot = new Vector2(0, 0);
+            // A DIGITAL CLOCK IS ITS SEGMENTS, NOT ITS TYPEFACE (2026-08-14, the author:
+            // "dijital saat olmamış hiç dijital saate benzememiş"). The first pass set the
+            // hour in the UI's pixel face and laid a dim copy of it behind — which is a
+            // caption in costume, and read as one. What a readout actually is: four
+            // seven-bar digits, the unlit bars still faintly there, a colon keeping the
+            // second, all of it sunk behind glass in a bezel — dark lip above where the
+            // panel shades it, bright lip below where the room catches it. See SegmentClock.
+            var bezel = NewRect("Bezel", clock);
+            Place(bezel, new Vector2(0, 0.5f), new Vector2(126, 34), new Vector2(7, 0));
+            var bezelImg = bezel.gameObject.AddComponent<Image>();
+            bezelImg.color = UITheme.Night[2]; bezelImg.raycastTarget = false;
+            Hairline(bezel, new Vector2(0, 0), new Vector2(1, 0), UITheme.Night[3]);   // lit lip
+            Hairline(bezel, new Vector2(0, 1), new Vector2(1, 1), new Color(0, 0, 0, 0.55f));
+
+            var glass = NewRect("Glass", clock);
+            Place(glass, new Vector2(0, 0.5f), new Vector2(120, 28), new Vector2(10, 0));
+            var glassImg = glass.gameObject.AddComponent<Image>();
+            // Not black: a display's dark is the panel's own colour seen through a tint.
+            glassImg.color = new Color(0.031f, 0.055f, 0.075f, 1f);
+            glassImg.raycastTarget = false;
+
+            var digits = NewRect("Digits", glass);
+            Place(digits, new Vector2(0, 0.5f), new Vector2(85, 25), new Vector2(18, 0));
+            _clock = new SegmentClock(digits, 17f, 25f, 3f, UITheme.Cyan[4]);
+
+            // The date reads BESIDE the display, the way a label reads beside an instrument
+            // rather than on top of it — two short lines, so neither runs into the week strip.
+            _dayText = NewText("Day", clock, _body, 8, TextAnchor.MiddleLeft, UITheme.Cyan[3]);
+            Place(_dayText.rectTransform, new Vector2(0, 0.5f), new Vector2(72, 32), new Vector2(140, 0));
+            _dayText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _dayText.lineSpacing = 1.4f;
 
             BuildWeekStrip(top);
 

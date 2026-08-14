@@ -2,6 +2,20 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `18` **the clock is drawn as a clock (2026-08-14, the author: "dijital saat olmamış hiç
+  dijital saate benzememiş görsel olarak"):** the first pass at "saat dijital saat görüntüsünde
+  olsun" set the hour in the UI's pixel display face and laid a dim `88:88` behind it. That is
+  a caption in costume and it read as one. `SegmentClock` draws the real geometry instead —
+  four digits of seven bars, the unlit ones sitting just above the glass at 0.085, a colon that
+  blinks on its own half-second, one unit of bleed per lit bar — sunk in a bezel with a shadowed
+  lip above and a lit lip below. **The gap is the whole trick:** the first cut tiled bar/arm/bar
+  to exactly the cell height, so an 8 came out a solid brick; a unit of dark between the rows is
+  what makes a numeral read as segments. The week number stopped being printed twice across one
+  board (the strip owns it, the plaque owns the night), and `TopPlaque` gained a bevel — lit top
+  and left, shadowed right — so the readings read as panels screwed to the board rather than as
+  filled rectangles. 285 EditMode green, 8 PlayMode green; no baseline moved, the top bar being
+  in none of them.
+
 - `26 §11` **only Ece for now (2026-08-13, the author: "şimdilik sadece ece olsun"):** the live
   arc is one written night — hers, on the opening Tuesday — and the collector, the influencer
   and the gourmet are lifted out of `story.json` into `Docs/story_guests_drafted.json` whole,
