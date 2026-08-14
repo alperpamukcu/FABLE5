@@ -42,7 +42,8 @@
    "abv": 37.5,
    "blurb": "Sunlight in a bottle. Wakes people up and warms them through.",
    "art_prompt": "a rounded white rum bottle with a coral-pink label and a palm motif",
-   "locked": true
+   "locked": false,
+   "unlockStars": 1.0
   },
   {
    "id": "bourbon_redline",
@@ -72,7 +73,8 @@
    "abv": 30,
    "blurb": "Bitter herbs for bitter moods. Meets anger head-on and wins.",
    "art_prompt": "a dark brooding Italian amaro bottle with a midnight blue label, gold accents",
-   "locked": true
+   "locked": false,
+   "unlockStars": 4.0
   },
   {
    "id": "vermouth_velvet",
@@ -87,7 +89,8 @@
    "abv": 16,
    "blurb": "Sweet red vermouth. Softens what ended badly.",
    "art_prompt": "an elegant red vermouth bottle with a burgundy label and ornate serif frame",
-   "locked": true
+   "locked": false,
+   "unlockStars": 4.0
   },
   {
    "id": "syrup_house",
@@ -129,7 +132,8 @@
    "carbonated": true,
    "blurb": "Spiced ginger brew. Puts a spark back in - or a fire, if there was one already.",
    "art_prompt": "a cloudy amber ginger beer bottle with a rust-orange label and a ceramic swing top",
-   "locked": true
+   "locked": false,
+   "unlockStars": 1.0
   },
   {
    "id": "soda_klara",
@@ -158,7 +162,8 @@
    "abv": 0,
    "blurb": "A sprig on top. Small, green, and quietly restorative.",
    "art_prompt": "a small glass jar of fresh mint sprigs, bright green",
-   "locked": true
+   "locked": false,
+   "unlockStars": 3.0
   },
   {
    "id": "olive_luca",
@@ -173,7 +178,8 @@
    "abv": 0,
    "blurb": "Brined and patient. Takes the edge off an argument.",
    "art_prompt": "a small jar of green olives in brine with a rustic olive-branch label",
-   "locked": true
+   "locked": false,
+   "unlockStars": 4.0
   },
   {
    "id": "beer_kestrel",
@@ -269,9 +275,10 @@
    "price": 8,
    "origin": "Jalisco, Mexico",
    "abv": 40,
-   "locked": true,
+   "locked": false,
    "blurb": "Blue agave, sun-cured. Turns a quiet table loud.",
-   "art_prompt": "a tall clear tequila bottle with a woven agave-green label and a rope neck tie"
+   "art_prompt": "a tall clear tequila bottle with a woven agave-green label and a rope neck tie",
+   "unlockStars": 2.0
   },
   {
    "id": "liqueur_delia",
@@ -284,9 +291,10 @@
    "price": 10,
    "origin": "Saumur, France",
    "abv": 30,
-   "locked": true,
+   "locked": false,
    "blurb": "Bitter orange peel in silk. The bridge in half the classics.",
-   "art_prompt": "a squarish orange liqueur bottle with a deep orange label and gold filigree"
+   "art_prompt": "a squarish orange liqueur bottle with a deep orange label and gold filigree",
+   "unlockStars": 3.0
   },
   {
    "id": "cola_marlow",
@@ -300,7 +308,7 @@
    "origin": "bottled in the city",
    "abv": 0,
    "carbonated": true,
-   "locked": true,
+   "locked": false,
    "blurb": "Sweet, dark and everywhere. Makes hard liquor easy company.",
    "art_prompt": "a classic glass cola bottle with a dark caramel liquid and a ruby-red label"
   },
@@ -316,7 +324,7 @@
    "origin": "Somerset",
    "abv": 0,
    "carbonated": true,
-   "locked": true,
+   "locked": false,
    "blurb": "Quinine and restraint. Exists to make gin presentable.",
    "art_prompt": "a slender tonic water bottle in pale glass with a duck-egg blue label"
   },
@@ -332,7 +340,7 @@
    "origin": "a warehouse, allegedly",
    "abv": 0,
    "carbonated": true,
-   "locked": true,
+   "locked": false,
    "blurb": "Taurine and bad decisions. Keeps the night going past its bedtime.",
    "art_prompt": "a slim energy drink can in electric teal and black with a lightning motif, no text"
   },
@@ -347,7 +355,7 @@
    "price": 6,
    "origin": "pressed this morning",
    "abv": 0,
-   "locked": true,
+   "locked": false,
    "blurb": "Fresh-squeezed sunshine. The soft landing for hard spirits.",
    "art_prompt": "a glass carafe of fresh orange juice with a halved orange beside it"
   },
@@ -362,9 +370,10 @@
    "price": 5,
    "origin": "the market crate",
    "abv": 0,
-   "locked": true,
+   "locked": false,
    "blurb": "Sharper than lemon, greener too. The spine of the rum classics.",
-   "art_prompt": "a small glass carafe of lime juice with cut limes beside it"
+   "art_prompt": "a small glass carafe of lime juice with cut limes beside it",
+   "unlockStars": 1.0
   },
   {
    "id": "rum_tidewater",
@@ -403,7 +412,7 @@
    "category": "juice",
    "tier": 1,
    "price": 6,
-   "locked": true,
+   "locked": false,
    "origin": "Bergen Marshes",
    "abv": 0,
    "blurb": "Tart enough to wake a cocktail up. The pink half of half the classics.",
@@ -418,7 +427,7 @@
    "category": "liqueur",
    "tier": 1,
    "price": 11,
-   "locked": true,
+   "locked": false,
    "origin": "Addis Ababa, Ethiopia",
    "abv": 20,
    "blurb": "Espresso with a passport. Keeps the night going in both directions.",
@@ -433,11 +442,12 @@
    "category": "juice",
    "tier": 1,
    "price": 7,
-   "locked": true,
+   "locked": false,
    "origin": "Puerto Plata",
    "abv": 0,
    "blurb": "Sunshine, pressed. The tiki shelf starts here.",
-   "art_prompt": "a clear carafe with a sunny-yellow blank label and a pineapple leaf motif"
+   "art_prompt": "a clear carafe with a sunny-yellow blank label and a pineapple leaf motif",
+   "unlockStars": 2.0
   },
   {
    "id": "grenadine_rubis",
@@ -448,11 +458,12 @@
    "category": "mixer",
    "tier": 1,
    "price": 5,
-   "locked": true,
+   "locked": false,
    "origin": "Marseille, France",
    "abv": 0,
    "blurb": "Pomegranate red that sinks to the bottom and stays there.",
-   "art_prompt": "a small clear cruet with a ruby blank label band and a silver cap"
+   "art_prompt": "a small clear cruet with a ruby blank label band and a silver cap",
+   "unlockStars": 2.0
   },
   {
    "id": "vodka_leonid",

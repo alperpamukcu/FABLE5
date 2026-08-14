@@ -84,40 +84,88 @@ namespace LastCall.Tests
         }
 
         /// <summary>
-        /// NO BOTTLE ON THE BOARD BEFORE A PAGE WANTS IT (2026-08-14, the author:
-        /// "tariflerde içerisinde başlangıçta satın alamadığı alkollerin olduğu kokteyl
-        /// tarifinde olmasının mantığı yok… şu an ginger beer var fakat 0 yıldız
-        /// tariflerinde ginger beer kullanılmıyor").
+        /// A BOTTLE OPENS ON THE SAME RUNG AS THE FIRST PAGE THAT WANTS IT (2026-08-14).
         ///
-        /// The two ladders — recipes opening on rank, bottles opening on tier and price —
-        /// had never been checked against each other, and ginger beer was for sale from the
-        /// first night for a drink that arrives at one star. A tier-1 bottle is either on
-        /// the opening shelf, or quarantined until the recipe that names it is bought.
+        /// Two authors' notes, one rule. First: "tariflerde içerisinde başlangıçta satın
+        /// alamadığı alkollerin olduğu kokteyl tarifinde olmasının mantığı yok… şu an ginger
+        /// beer var fakat 0 yıldız tariflerinde ginger beer kullanılmıyor" — no bottle for
+        /// sale before something wants it. Then, looking at the shop: "bazı meşrubatlarda
+        /// alkoller gibi sonra açılabilir, örneğin başka yıldız seviyelerinde" — and the
+        /// player must be able to SEE it coming.
+        ///
+        /// The quarantine answered the first and broke the second: a held bottle was not
+        /// merely unbuyable, it was absent from the catalogue, so the mixer board drew the
+        /// words "Nothing tonight" on a night when six pages on the recipe board wanted six
+        /// mixers. The star lock answers both — held back, and legible on the shelf as
+        /// "NEEDS 2.0 STARS". So the two ladders are not merely compatible now, they are the
+        /// SAME ladder, and this is the rung-for-rung equality that says so.
+        ///
         /// Beer is the exception and says so: the tap answers an order with no page at all.
         /// </summary>
         [Test]
-        public void NoTierOneBottle_IsForSaleBeforeAPageWantsIt()
+        public void EveryBottle_OpensOnTheRungOfTheFirstPageThatWantsIt()
         {
             var opening = new HashSet<string>
             {
                 "vodka_astra", "gin_boothby", "soda_klara", "lemon_fresh", "syrup_house", "beer_kestrel",
             };
+            var book = RecipeCatalog.CreateDefault();
             var run = new TycoonRun(new Shelf(new[] { new ShelfBottle(All().First()) }),
-                RecipeCatalog.CreateDefault(), new RunRng("lineup"));
+                book, new RunRng("lineup"));
 
-            foreach (var card in All())   // the UNLOCKED partition: on the board from night one
+            foreach (var card in All().Concat(Locked()))
             {
-                if (card.Info == null || card.Info.Tier > 1) continue;
-                if (opening.Contains(card.Id) || card.Type == IngredientType.Beer) continue;
+                if (card.Info == null || opening.Contains(card.Id)) continue;
+                if (card.Type == IngredientType.Beer) continue;
+
+                // What the shop makes this bottle wait for.
+                double gate = card.Info.Unlock != null
+                    ? card.Info.Unlock.StarsWanted
+                    : Market.RequiredStars(card.Info.Tier, card.Info.Price);
+
+                // The first page that could pour it — a band of its style that its tier fills.
                 double earliest = double.MaxValue;
-                foreach (var recipe in RecipeCatalog.CreateDefault())
+                foreach (var recipe in book)
                     foreach (var band in recipe.RatioRequirements)
-                        if (band.Style == card.Info.Style && band.MinTier <= 1)
+                        if (band.Style == card.Info.Style && band.MinTier <= card.Info.Tier)
                             earliest = System.Math.Min(earliest, run.RecipeStarGate(recipe));
-                Assert.AreEqual(0.0, earliest,
-                    $"{card.Id} is on the board at zero stars, but the first page that wants " +
-                    $"'{card.Info.Style}' opens at {earliest:0.0} stars — quarantine it, or move the page.");
+
+                Assert.AreNotEqual(double.MaxValue, earliest,
+                    $"{card.Id} is a tier-{card.Info.Tier} {card.Info.Style} and no page in the " +
+                    "book can pour it.");
+
+                // AN UPGRADE IS NOT A NEW STYLE, and is held to the weaker half of the rule.
+                // vodka_vor pours every drink the well vodka does, so "the first page that
+                // can pour it" is night one — but nobody NEEDS it then, and a reserve bottle
+                // arriving early is a bar getting better at what it already does. What must
+                // hold is only that it is never later than the page that DEMANDS its tier;
+                // EveryUpgradeBottle_IsNamedByAPage checks that such a page exists at all.
+                if (card.Info.Tier > 1)
+                {
+                    double demandedAt = double.MaxValue;
+                    foreach (var recipe in book)
+                        foreach (var band in recipe.RatioRequirements)
+                            if (band.Style == card.Info.Style && band.MinTier >= card.Info.Tier)
+                                demandedAt = System.Math.Min(demandedAt, run.RecipeStarGate(recipe));
+                    Assert.LessOrEqual(gate, demandedAt,
+                        $"{card.Id} unseals at {gate:0.0} stars but a page demands its tier at " +
+                        $"{demandedAt:0.0} — the page would open unmakeable.");
+                    continue;
+                }
+
+                Assert.AreEqual(earliest, gate, 1e-9,
+                    $"{card.Id} unseals at {gate:0.0} stars but the first page that wants it " +
+                    $"opens at {earliest:0.0} — move one to meet the other.");
             }
+        }
+
+        /// <summary>The quarantine is empty and stays that way: a bottle held back must be
+        /// HELD, not hidden, or the board goes silent about it (2026-08-14).</summary>
+        [Test]
+        public void NothingIsHiddenFromTheBoard()
+        {
+            CollectionAssert.IsEmpty(Locked().Select(c => c.Id).ToList(),
+                "a quarantined bottle cannot be seen or counted towards; use unlockStars");
         }
 
         /// <summary>Every brand above the well — the reserve and top shelves — is named by

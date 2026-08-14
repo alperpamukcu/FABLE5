@@ -291,12 +291,13 @@ namespace LastCall.Tests
         {
             var deck = DataLoader.ParseDeck(ReadDataFile("bottles/base_bar.json"));
 
-            // P10's seven, the P16 wave's four (cranberry, coffee liqueur, pineapple,
-            // grenadine), and the six the lineup pass caught on 2026-08-14: ginger, mint,
-            // olive, vermouth, amaro and the well rum were all for sale from day one with
-            // no page in the book that wanted them. Every one is released by the recipe
-            // that needs it — which is what "quarantined" has always meant here.
-            Assert.AreEqual(17, deck.LockedCards.Count, "the quarantined cocktail ingredients");
+            // THE QUARANTINE IS RETIRED (2026-08-14, second half of the lineup pass). All
+            // seventeen moved onto the star ladder — `unlockStars`, the rung of the first
+            // page that names them — because a bottle the market cannot see is a bottle the
+            // SHOP cannot mention, and the mixer board was drawing "Nothing tonight" on a
+            // night when six pages on the recipe board wanted six mixers. Held back is fine;
+            // hidden is not. The release-on-purchase machinery stays for story stock.
+            Assert.AreEqual(0, deck.LockedCards.Count, "nothing is hidden from the board");
             Assert.IsFalse(deck.Cards.Any(c => deck.LockedCards.Any(l => l.Id == c.Id)),
                 "no locked card leaks into the live deck");
             foreach (var card in deck.Cards.Concat(deck.LockedCards))

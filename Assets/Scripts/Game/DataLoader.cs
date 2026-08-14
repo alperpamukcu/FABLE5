@@ -79,8 +79,12 @@ namespace LastCall.Game
                     if (!IngredientCategories.IsKnown(card.category))
                         throw new FormatException(
                             $"Bottle '{card.id}' has unknown category '{card.category}'.");
+                    if (card.unlockStars < 0)
+                        throw new FormatException(
+                            $"Bottle '{card.id}' waits for {card.unlockStars} stars, which is not a rung.");
                     info = new IngredientInfo(card.style, card.tier, card.price,
-                        card.origin, card.abv, card.blurb, card.category, card.carbonated);
+                        card.origin, card.abv, card.blurb, card.category, card.carbonated,
+                        UnlockCondition.Stars(card.unlockStars));
                 }
                 var parsed = new IngredientCard(card.id, card.name, ParseType(card.type, card.id),
                     card.flavor, info: info);
@@ -577,6 +581,18 @@ namespace LastCall.Game
             public string category;
             public bool carbonated;
             public bool locked;
+
+            /// <summary>
+            /// The standing this bottle waits for (2026-08-14, the author: "bazı
+            /// meşrubatlarda alkoller gibi sonra açılabilir, örneğin başka yıldız
+            /// seviyelerinde"). 0 or absent = for sale as soon as its tier and price allow.
+            ///
+            /// It exists because the tier/price ladder cannot say this: every mixer in the
+            /// game is tier 1, and tier 1 means zero stars, so the only way to hold a tonic
+            /// back used to be the quarantine — which made it INVISIBLE, and an invisible
+            /// bottle teaches the player nothing about what is coming.
+            /// </summary>
+            public double unlockStars;
         }
 
         [Serializable]

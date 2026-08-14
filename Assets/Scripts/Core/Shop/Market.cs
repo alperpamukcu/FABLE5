@@ -174,12 +174,12 @@ namespace LastCall.Core
             }
             foreach (var card in newByStyle.Values)
                 if (!ForSale(card, stars, state))
-                    // A bottle waiting on a PERSON has no star to wait for, and reporting one
+                    // A lock says its own rung when it has one (2026-08-14). A bottle
+                    // waiting on a PERSON still has no star to wait for, and reporting one
                     // would let it drag the aisle's "next at" hint down to a rung that opens
-                    // nothing. NaN says "not a number you can count towards" out loud.
-                    held.Add((card, card.Info.Unlock != null ? double.NaN
-                                    : RequiredStars(card.Info.Tier, card.Info.Price),
-                              HeldSentence(card)));
+                    // nothing; NaN says "not a number you can count towards" out loud. But a
+                    // STAR lock knows exactly which star, and the mixers ride on those now.
+                    held.Add((card, HeldAt(card), HeldSentence(card)));
 
             foreach (var candidate in catalogue)
             {
@@ -188,12 +188,17 @@ namespace LastCall.Core
                 var current = FindByStyle(shelf, candidate.Info.Style);
                 if (current?.Ingredient.Info == null) continue;
                 if (!ForSale(candidate, stars, state))
-                    held.Add((candidate, candidate.Info.Unlock != null ? double.NaN
-                                         : RequiredStars(candidate.Info.Tier, candidate.Info.Price),
-                              HeldSentence(candidate)));
+                    held.Add((candidate, HeldAt(candidate), HeldSentence(candidate)));
             }
             return held;
         }
+
+        /// <summary>The rung a held-back bottle is waiting on: its own lock's answer when it
+        /// carries one, the tier-and-price ladder when it does not.</summary>
+        private static double HeldAt(IngredientCard card) =>
+            card.Info.Unlock != null
+                ? card.Info.Unlock.StarsWanted
+                : RequiredStars(card.Info.Tier, card.Info.Price);
 
         /// <summary>The shelf bottle stocking the given style, or null.</summary>
         public static ShelfBottle FindByStyle(Shelf shelf, string style)

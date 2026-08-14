@@ -31,6 +31,15 @@ namespace LastCall.Core
         /// label on a shelf, not prose.</summary>
         public abstract string Sentence { get; }
 
+        /// <summary>
+        /// THE RUNG THIS WAITS ON, or NaN for a lock that is not about the standing at all
+        /// (2026-08-14). The shop's aisle crate counts what is held back and promises the
+        /// NEAREST star — it can only do that if a lock will say its number, and a lock that
+        /// answers "no number" is honest rather than silent: a bottle earned from a person
+        /// must not drag an aisle's hint down to a rung that opens nothing.
+        /// </summary>
+        public virtual double StarsWanted => double.NaN;
+
         /// <summary>Nothing to earn. The default for everything that is simply for sale.</summary>
         public static readonly UnlockCondition Open = new AlwaysOpen();
 
@@ -65,6 +74,7 @@ namespace LastCall.Core
             // reached it, and floating point must not be the thing that says otherwise.
             public override bool MetBy(IUnlockState state) => state.Stars + 1e-9 >= _stars;
             public override string Sentence => $"NEEDS {_stars:0.0} STARS";
+            public override double StarsWanted => _stars;
         }
 
         private sealed class BeatKept : UnlockCondition
@@ -92,6 +102,24 @@ namespace LastCall.Core
             {
                 foreach (var p in _parts) if (!p.MetBy(state)) return false;
                 return true;
+            }
+
+            /// <summary>The FURTHEST rung any part names — an "everything" lock is not open
+            /// until its slowest half is, and promising the nearer one would be a lie the
+            /// shop tells with a straight face.</summary>
+            public override double StarsWanted
+            {
+                get
+                {
+                    double most = double.NaN;
+                    foreach (var p in _parts)
+                    {
+                        double s = p.StarsWanted;
+                        if (double.IsNaN(s)) continue;
+                        if (double.IsNaN(most) || s > most) most = s;
+                    }
+                    return most;
+                }
             }
             public override string Sentence
             {
