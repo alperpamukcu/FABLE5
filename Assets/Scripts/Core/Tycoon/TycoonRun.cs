@@ -36,6 +36,12 @@ namespace LastCall.Core
         /// roll from and pours are matched against. The menu renders exactly this.</summary>
         public IReadOnlyList<RecipeDefinition> MenuRecipes => _recipes;
         private readonly List<IngredientCard> _brandCatalogue;
+
+        /// <summary>Everything the van could ever bring, sold or not. Read-only, and read by
+        /// the dev bench's lineup table — the shop reaches it through Market, which needs the
+        /// shelf as well, and a table that wants "every bottle in the game" should not have
+        /// to ask a question about tonight's board to get one.</summary>
+        public IReadOnlyList<IngredientCard> CatalogueBottles => _brandCatalogue;
         private readonly List<IngredientCard> _lockedStock;   // bottles waiting on their recipes (v5 P16)
         private readonly RegularsRegistry _regulars;
         private readonly TycoonConfig _config;

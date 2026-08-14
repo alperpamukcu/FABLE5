@@ -1053,6 +1053,9 @@ namespace LastCall.UI
             if (keys == null || !keys.escapeKey.wasPressedThisFrame) return;
             if (_bookOpen) { ToggleRecipeBook(); return; }
             if (Showing(_settingsPanel)) { ToggleSettings(); return; }
+            // The bench is above the guide, so Escape must reach it first — a panel that
+            // covers another and cannot be closed over it is a trap.
+            if (Showing(_devPanel)) { _devPanel.gameObject.SetActive(false); return; }
             if (Showing(_guidePanel)) { _guidePanel.gameObject.SetActive(false); return; }
             if (Showing(_ledgerPanel)) { _ledgerPanel.gameObject.SetActive(false); return; }
             if (Showing(_idRoot)) { _idRoot.gameObject.SetActive(false); _idVisit = null; return; }
@@ -5535,65 +5538,17 @@ namespace LastCall.UI
             // row's place rather than becoming a tenth button that does the same thing.
             SettingsRow(3, "NEW RUN — day 1, empty bar", () =>
             { _bootstrap.StartNewRun(null); ToggleSettings(); });
-            SettingsRow(4, "DEV · MIDGAME — day 12, stocked", () =>
-            { _bootstrap.StartNewRun(null); Run.DevPreset(1); ApplyBarLook(); ToggleSettings(); });
-            SettingsRow(5, "DEV · ENDGAME — late run, full shelf", () =>
-            { _bootstrap.StartNewRun(null); Run.DevPreset(2); ApplyBarLook(); ToggleSettings(); });
-            // Straight to the books and the shop (the author, 2026-08-07). It runs the real
-            // clock rather than forcing the phase, so the night closes honestly — anyone
-            // still sitting drinks up or walks, and the rent lands as it always would.
-            SettingsRow(7, "DEV · THE ROOM — every drinker, their papers and their star", () =>
+            // THE WORKBENCH IS NOT A SETTING (2026-08-14, the author: "dev tool'u daha
+            // verimli bir panele dönüştür bu şekilde seçmek zor oluyor. Ayarlarla dev toolu
+            // ayır"). Five dev rows and three settings shared one 420-wide stack, so the
+            // volume lived a thumb away from "throw this run away and jump two weeks", and
+            // every dev row had to spell its whole job into a caption because there was
+            // nowhere else to say it. Settings keeps what a player changes; everything a
+            // DEVELOPER does moved to its own bench, which has room to group and to explain.
+            SettingsRow(4, "DEV TOOLS — the bench, and the lineup table", () =>
             {
                 ToggleSettings();
-                ToggleGuide();
-            });
-            SettingsRow(6, "DEV · SKIP TO DAY END — close now, open the market", () =>
-            {
-                if (Run == null || Run.Phase != TycoonPhase.DayOpen) { Toast("NOT MID-DAY"); return; }
-                _flow?.CloseFlow();
-                CloseId();
-                Run.DevSkipToDayEnd();
-                ToggleSettings();
-            });
-
-            // THE ONE THE AUTHOR ASKED FOR (2026-08-13): the written beat happens after the
-            // door shuts and the room drains, which is ninety-five seconds and a shift's work
-            // away from the moment you press play. Waiting that out to look at a line of
-            // dialogue is not testing, it is queueing.
-            SettingsRow(8, "DEV · SKIP TO THE LAST CALL — jump to the night, then run it out", () =>
-            {
-                if (Run == null || Run.Phase != TycoonPhase.DayOpen) { Toast("NOT MID-DAY"); return; }
-                if (Run.Story == null) { Toast("THIS RUN HAS NO STORY"); return; }
-                if (Run.LastCustomer != null) { Toast("THEY ARE ALREADY AT THE BAR"); return; }
-                _flow?.CloseFlow();
-                CloseId();
-
-                // THE DAY JUMPS TOO (2026-08-14, the author: "sadece karakteri sahneye
-                // getiriyor ama ben gün olarak da o zamana ışınlanılmasını istiyorum"). It
-                // used to refuse a night the arc was not due on and name the date instead,
-                // which meant looking at a beat two weeks out was still two weeks of pressing
-                // things. `DevJumpToNight` winds the calendar; what that skips, and why it
-                // skips it rather than playing the nights for real, is written there.
-                int skipped = Run.DevJumpToNight(Run.Story.DueDay);
-                if (skipped > 0) ApplyBarLook();
-                if (!Run.Story.IsDueOn(Run.Day))
-                {
-                    ToggleSettings();
-                    Toast("NOTHING WRITTEN AHEAD — LAST WAS "
-                          + BarCalendar.Label(Run.Story.DueDay).ToUpperInvariant());
-                    return;
-                }
-                // The REAL clock and the REAL verb, the same bargain DevSkipToDayEnd strikes:
-                // everyone still seated storms off exactly as they would have, the rent and
-                // the rating land where they always do. What is skipped is the waiting, never
-                // the rules — a shortcut that lied would measure a game nobody plays.
-                for (int guard = 0; guard < 20000 && Run.LastCustomer == null
-                     && Run.Phase == TycoonPhase.DayOpen; guard++)
-                    Run.Tick(0.25);
-                ToggleSettings();
-                Toast(Run.LastCustomer != null
-                    ? "LAST CALL — " + Run.LastCallBeat.Who.Name.ToUpperInvariant() + " IS AT THE BAR"
-                    : "THE NIGHT ENDED WITHOUT THEM");
+                ToggleDevBench();
             });
 
             _settingsMotion = SettingsRow(2, "MOTION", () =>
@@ -5604,6 +5559,288 @@ namespace LastCall.UI
             });
 
             _settingsPanel.gameObject.SetActive(false);
+        }
+
+        // ── THE DEV BENCH (2026-08-14) ──────────────────────────────────────────
+        //
+        // The author: "dev tool'u daha verimli bir panele dönüştür bu şekilde seçmek zor
+        // oluyor. Ayarlarla dev toolu ayır." And, of the lineup: "çok detaylı bir tablo
+        // yapıp dev tool'a oyun içinde koy."
+        //
+        // Two panes, because a bench and a reference are different jobs. On the left, the
+        // VERBS — grouped under headings, each with room to say what it does under its own
+        // name instead of inside it. On the right, the LINEUP: every rung of the star track
+        // with the pages that open on it and the bottles that come with them, read live off
+        // the run so it answers what a generated markdown cannot — what is owned tonight,
+        // what tonight's standing has already opened, and what is still sealed.
+        //
+        // It is the character guide's sibling on purpose: same size, same frame, same scroll,
+        // same close key. A second dev sheet that invented its own shape would be a fifth
+        // dialect two days after the fourth was closed (GDD 16 §2).
+
+        private RectTransform _devPanel, _devRows;
+        private Text _devStanding;
+
+        private void ToggleDevBench()
+        {
+            if (_devPanel == null) return;
+            bool show = !_devPanel.gameObject.activeSelf;
+            if (show) { CloseId(); RefreshDevBench(); }
+            _devPanel.gameObject.SetActive(show);
+        }
+
+        private void BuildDevBench(RectTransform root)
+        {
+            _devPanel = NewRect("DevBench", root);
+            Place(_devPanel, new Vector2(0.5f, 0.5f), new Vector2(1180, 640), new Vector2(0, 6));
+            var canvas = _devPanel.gameObject.AddComponent<Canvas>();
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = 25;                 // above the guide (24) and the market (22)
+            _devPanel.gameObject.AddComponent<GraphicRaycaster>();
+            var bg = _devPanel.gameObject.AddComponent<Image>();
+            bg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.985f);
+            bg.raycastTarget = true;
+            Frame(_devPanel, 2f, UITheme.Cyan[3]);    // cyan, not amber: this is not the game
+
+            var title = NewText("T", _devPanel, _display, 16, TextAnchor.MiddleLeft, UITheme.Cyan[3]);
+            Place(title.rectTransform, new Vector2(0, 1), new Vector2(600, 22), new Vector2(20, -18));
+            title.horizontalOverflow = HorizontalWrapMode.Overflow;
+            title.text = "DEV BENCH";
+
+            _devStanding = NewText("S", _devPanel, _body, 8, TextAnchor.MiddleRight, UITheme.Cream[2]);
+            Place(_devStanding.rectTransform, new Vector2(1, 1), new Vector2(560, 12), new Vector2(-20, -22));
+            _devStanding.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            // ── the left rail: the verbs ────────────────────────────────────────
+            int slot = 0;
+            DevHeading(ref slot, "THE RUN");
+            DevKey(ref slot, "NEW RUN", "day 1, empty bar",
+                () => { _bootstrap.StartNewRun(null); ToggleDevBench(); });
+            DevKey(ref slot, "MIDGAME", "day 12, stocked",
+                () => { _bootstrap.StartNewRun(null); Run.DevPreset(1); ApplyBarLook(); ToggleDevBench(); });
+            DevKey(ref slot, "ENDGAME", "late run, full shelf",
+                () => { _bootstrap.StartNewRun(null); Run.DevPreset(2); ApplyBarLook(); ToggleDevBench(); });
+
+            DevHeading(ref slot, "THE CLOCK");
+            DevKey(ref slot, "SKIP TO DAY END", "close now, open the market", () =>
+            {
+                if (Run == null || Run.Phase != TycoonPhase.DayOpen) { Toast("NOT MID-DAY"); return; }
+                _flow?.CloseFlow();
+                CloseId();
+                Run.DevSkipToDayEnd();
+                ToggleDevBench();
+            });
+            DevKey(ref slot, "SKIP TO THE LAST CALL", "jump to the night, then run it out",
+                DevJumpToLastCall);
+
+            DevHeading(ref slot, "THE PEOPLE");
+            DevKey(ref slot, "THE ROOM", "every drinker, papers and star",
+                () => { ToggleDevBench(); ToggleGuide(); });
+
+            // ── the right pane: the lineup ──────────────────────────────────────
+            var head = NewText("H", _devPanel, _shop, 8, TextAnchor.MiddleLeft, UITheme.Cream[2]);
+            Place(head.rectTransform, new Vector2(0, 1), new Vector2(820, 12), new Vector2(348, -46));
+            head.horizontalOverflow = HorizontalWrapMode.Overflow;
+            head.text = "PRICE  NAME                          HOW IT IS MADE        WHAT IT ASKS FOR";
+
+            var view = NewRect("LineupView", _devPanel);
+            Place(view, new Vector2(0, 1), new Vector2(820, 556), new Vector2(340, -58));
+            view.pivot = new Vector2(0, 1);
+            view.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, 0.02f);
+            view.gameObject.AddComponent<RectMask2D>();
+            _devRows = NewRect("Rows", view);
+            _devRows.anchorMin = new Vector2(0, 1); _devRows.anchorMax = Vector2.one;
+            _devRows.pivot = new Vector2(0.5f, 1);
+            _devRows.offsetMin = Vector2.zero; _devRows.offsetMax = Vector2.zero;
+            var layout = _devRows.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.spacing = 2;
+            layout.childControlWidth = true; layout.childForceExpandWidth = true;
+            // TRUE, unlike the guide's: its rows carry a photo and size themselves, these are
+            // single lines of 8px type that must be told their height. With it false the
+            // LayoutElement is ignored and every row took a Text's default rect — measured at
+            // a hundred pixels a line, four rows to a screen for a table meant to be read in
+            // one pass.
+            layout.childControlHeight = true; layout.childForceExpandHeight = false;
+            var fit = _devRows.gameObject.AddComponent<ContentSizeFitter>();
+            fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            var scroll = view.gameObject.AddComponent<ScrollRect>();
+            scroll.viewport = view; scroll.content = _devRows;
+            scroll.horizontal = false;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 28f;
+            scroll.inertia = false;
+
+            NewButton(_devPanel, "CLOSE", new Vector2(0, 0), new Vector2(300, 32),
+                new Vector2(20, 12), UITheme.Cyan[3], () => ToggleDevBench());
+            _devPanel.gameObject.SetActive(false);
+        }
+
+        private const float DevRailX = 20f, DevRailW = 300f;
+
+        private void DevHeading(ref int slot, string text)
+        {
+            var t = NewText("DH", _devPanel, _shop, 8, TextAnchor.LowerLeft, UITheme.Cyan[3]);
+            Place(t.rectTransform, new Vector2(0, 1), new Vector2(DevRailW, 16),
+                new Vector2(DevRailX, -52f - slot * 26f));
+            t.rectTransform.pivot = new Vector2(0, 1);
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.text = text;
+            slot++;
+        }
+
+        /// <summary>One verb: its NAME on the key, and what it does underneath it rather than
+        /// crammed inside it. That is the whole reason this panel exists.</summary>
+        private void DevKey(ref int slot, string name, string what, Action onClick)
+        {
+            var row = NewRect("DK_" + name, _devPanel);
+            Place(row, new Vector2(0, 1), new Vector2(DevRailW, 22),
+                new Vector2(DevRailX, -52f - slot * 26f));
+            row.pivot = new Vector2(0, 1);
+            var btn = row.gameObject.AddComponent<Button>();
+            btn.onClick.AddListener(() => onClick());
+            var face = NewRect("Face", row);
+            Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            KeyPlate.Dress(row, UITheme.Night[3], btn, face);
+            var label = NewText("L", face, _body, 8, TextAnchor.MiddleLeft, UITheme.TextPrimary);
+            Stretch(label.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(8, KeyPlate.Throw), new Vector2(-8, 0));
+            label.horizontalOverflow = HorizontalWrapMode.Overflow;
+            label.text = name;
+            slot++;
+
+            var note = NewText("N_" + name, _devPanel, _body, 8, TextAnchor.UpperLeft, UITheme.Cream[2]);
+            Place(note.rectTransform, new Vector2(0, 1), new Vector2(DevRailW - 8f, 14),
+                new Vector2(DevRailX + 8f, -52f - slot * 26f + 8f));
+            note.rectTransform.pivot = new Vector2(0, 1);
+            note.horizontalOverflow = HorizontalWrapMode.Overflow;
+            note.text = what;
+            slot++;
+        }
+
+        /// <summary>
+        /// THE LINEUP, RUNG BY RUNG, read off the live run.
+        ///
+        /// `LastCall → Write Balance Guide` already writes the numbers a spreadsheet wants;
+        /// this is the half a document cannot hold — what THIS bar owns tonight, what its
+        /// standing has already opened, and what the next rung is still holding. Both halves
+        /// exist because they answer different questions: the file says how the game is
+        /// priced, this says where this run has got to.
+        /// </summary>
+        private void RefreshDevBench()
+        {
+            if (_devRows == null) return;
+            for (int i = _devRows.childCount - 1; i >= 0; i--)
+                Destroy(_devRows.GetChild(i).gameObject);
+            var run = Run;
+            if (run == null) { _devStanding.text = "no run"; return; }
+
+            double stars = run.Rating.Average;
+            _devStanding.text = $"standing {stars:0.00}★ · day {run.Day} · ${run.Money} · "
+                              + $"{run.MenuRecipes.Count} pages on the menu · "
+                              + $"{run.Shelf.Bottles.Count} bottles on the wall";
+
+            // Every page in the book and every bottle in the catalogue, filed under the rung
+            // that opens it. The bottle's rung is its own lock's answer, so the table cannot
+            // disagree with the shop — both ask the same object.
+            var rungs = new SortedDictionary<double, List<(string line, Color ink)>>();
+            void File(double rung, string line, Color ink)
+            {
+                if (!rungs.TryGetValue(rung, out var list))
+                    rungs[rung] = list = new List<(string, Color)>();
+                list.Add((line, ink));
+            }
+
+            foreach (var r in run.AllRecipes)
+            {
+                double gate = run.RecipeStarGate(r);
+                bool owned = false;
+                foreach (var m in run.MenuRecipes) if (m.Id == r.Id) { owned = true; break; }
+                var bands = new StringBuilder();
+                foreach (var b in r.RatioRequirements)
+                {
+                    if (bands.Length > 0) bands.Append(", ");
+                    bands.Append(b.IsStyleBand ? b.Style : b.Type.ToString());
+                    bands.Append($" {b.MinRatio:P0}-{b.MaxRatio:P0}");
+                    if (b.MinTier > 1) bands.Append($" T{b.MinTier}+");
+                }
+                string how = r.Prep.ToString().ToUpperInvariant()
+                           + (string.IsNullOrEmpty(r.GlassId) ? "" : " · " + r.GlassId);
+                File(gate, $"${run.RecipePrice(r),-4} {r.Name,-28} {how,-20} {bands}",
+                    owned ? UITheme.Lime[3] : run.Money >= run.RecipePrice(r) && stars + 1e-9 >= gate
+                        ? UITheme.TextPrimary : UITheme.Cream[2]);
+            }
+
+            foreach (var card in run.CatalogueBottles)
+            {
+                if (card.Info == null) continue;
+                double rung = card.Info.Unlock != null
+                    ? card.Info.Unlock.StarsWanted
+                    : Market.RequiredStars(card.Info.Tier, card.Info.Price);
+                if (double.IsNaN(rung)) rung = 0.0;   // a bottle earned from a person: file it at the top
+                bool owned = run.Shelf.Find(card.Id) != null;
+                File(rung, $"${card.Info.Price,-4} {card.Name,-28} "
+                         + $"{card.Info.Category + " · tier " + card.Info.Tier,-20} "
+                         + (owned ? "ON THE WALL" : "stock"),
+                    owned ? UITheme.Lime[3] : UITheme.Cream[2]);
+            }
+
+            foreach (var rung in rungs)
+            {
+                bool reached = stars + 1e-9 >= rung.Key;
+                // A SEALED RUNG IS THE MOST INTERESTING ROW ON THE TABLE and it was drawn in
+                // the beam's own shade on a black panel — invisible, so the reader saw a gap
+                // between two blocks and no reason for it. Dimmer than an open rung, never
+                // dimmer than the rows under it.
+                var header = NewText("Rung", _devRows, _shop, 8, TextAnchor.MiddleLeft,
+                    reached ? UITheme.PrimaryAction : UITheme.Cyan[3]);
+                var hr = header.rectTransform;
+                hr.gameObject.AddComponent<LayoutElement>().preferredHeight = 20f;
+                header.horizontalOverflow = HorizontalWrapMode.Overflow;
+                header.text = $"  ★ {rung.Key:0.0}   {rung.Value.Count} LINES"
+                            + (reached ? "   — OPEN" : "   — SEALED");
+
+                foreach (var (line, ink) in rung.Value)
+                {
+                    var row = NewText("L", _devRows, _shop, 8, TextAnchor.MiddleLeft, ink);
+                    row.rectTransform.gameObject.AddComponent<LayoutElement>().preferredHeight = 13f;
+                    row.horizontalOverflow = HorizontalWrapMode.Overflow;
+                    row.text = "    " + line;
+                }
+            }
+        }
+
+        /// <summary>The last-call jump, lifted out of the settings stack unchanged.</summary>
+        private void DevJumpToLastCall()
+        {
+            if (Run == null || Run.Phase != TycoonPhase.DayOpen) { Toast("NOT MID-DAY"); return; }
+            if (Run.Story == null) { Toast("THIS RUN HAS NO STORY"); return; }
+            if (Run.LastCustomer != null) { Toast("THEY ARE ALREADY AT THE BAR"); return; }
+            _flow?.CloseFlow();
+            CloseId();
+
+            // THE DAY JUMPS TOO (2026-08-14): looking at a beat two weeks out used to be two
+            // weeks of pressing things. `DevJumpToNight` winds the calendar; what that skips,
+            // and why it skips it rather than playing the nights for real, is written there.
+            int skipped = Run.DevJumpToNight(Run.Story.DueDay);
+            if (skipped > 0) ApplyBarLook();
+            if (!Run.Story.IsDueOn(Run.Day))
+            {
+                ToggleDevBench();
+                Toast("NOTHING WRITTEN AHEAD — LAST WAS "
+                      + BarCalendar.Label(Run.Story.DueDay).ToUpperInvariant());
+                return;
+            }
+            // The REAL clock and the REAL verb, the same bargain DevSkipToDayEnd strikes:
+            // everyone still seated storms off exactly as they would have, the rent and the
+            // rating land where they always do. What is skipped is the waiting, never the
+            // rules — a shortcut that lied would measure a game nobody plays.
+            for (int guard = 0; guard < 20000 && Run.LastCustomer == null
+                 && Run.Phase == TycoonPhase.DayOpen; guard++)
+                Run.Tick(0.25);
+            ToggleDevBench();
+            Toast(Run.LastCustomer != null
+                ? "LAST CALL — " + Run.LastCallBeat.Who.Name.ToUpperInvariant() + " IS AT THE BAR"
+                : "THE NIGHT ENDED WITHOUT THEM");
         }
 
         // ── the character guide (dev tool, 2026-08-10) ──────────────────────────
@@ -6044,8 +6281,12 @@ namespace LastCall.UI
         private bool AnySheetOpen()
         {
             if (_flow != null && _flow.IsOpen) return true;
+            // The bench belongs on this list for the same reason the guide does: it is a
+            // sheet over the room, and a customer's order tip printing through it would be
+            // the floor talking over a thing that covers the floor.
             return Showing(_idRoot) || Showing(_bookPanel) || Showing(_settingsPanel)
-                || Showing(_guidePanel) || Showing(_ledgerPanel) || Showing(_dayEndPanel);
+                || Showing(_guidePanel) || Showing(_devPanel) || Showing(_ledgerPanel)
+                || Showing(_dayEndPanel);
         }
 
         private static bool Showing(RectTransform rt) => rt != null && rt.gameObject.activeSelf;
@@ -8170,6 +8411,7 @@ namespace LastCall.UI
 
             BuildLedgerPanel(root);
             BuildGuide(root);
+            BuildDevBench(root);
         }
 
         /// <summary>The register's book of past days (GDD 24 §7, 2026-07-22): a scrollable
@@ -8577,13 +8819,19 @@ namespace LastCall.UI
         private int _curtainFrom = 1, _curtainTo = 1;
 
         private float _curtainT;          // seconds elapsed, 0 → CurtainTotal
-        // Four movements on one clock. The author asked for three or four seconds now that
-        // there is something in the dark to read; this is 3.4, which is a beat you can read
-        // a word in and not a loading screen.
-        private const float CurtainFadeIn = 0.35f;   // black is instant; the card arrives
-        private const float CurtainSwap = 0.95f;     // the hand-off between the two nights
-        private const float CurtainHold = 0.85f;     // let it sit, so it is read
-        private const float CurtainLift = 1.25f;     // card out, room up
+        // Four movements on one clock, SIX SECONDS (2026-08-15, the author: "gün geçişinde
+        // takvim gözüktüğü sahne daha yavaş aksın, şu an 3 saniye ise 6 saniye olsun").
+        //
+        // The first cut ran 3.4 — the length of a transition, which is what it was before it
+        // had anything in it. With a date on it, it is a SCENE, and the two want opposite
+        // things: a transition is over before you notice it, a scene waits for you. The extra
+        // time is not spread evenly. The hand-off gets the most, because it is the only thing
+        // moving and the only thing that says what changed; the hold nearly doubles, because
+        // the whole point of putting a week and a night on the screen is that they be read.
+        private const float CurtainFadeIn = 0.50f;   // black is instant; the card arrives
+        private const float CurtainSwap = 1.60f;     // the hand-off between the two nights
+        private const float CurtainHold = 1.90f;     // let it sit, so it is read
+        private const float CurtainLift = 2.00f;     // card out, room up
         private const float CurtainTotal = CurtainFadeIn + CurtainSwap + CurtainHold + CurtainLift;
 
         /// <summary>True while the room is still coming up: the clock must not run.</summary>
@@ -8676,6 +8924,10 @@ namespace LastCall.UI
             if (_curtainT >= CurtainTotal)
             {
                 _curtainT = CurtainTotal;
+                // All the way to clear before it goes. The step that crosses the finish
+                // returns early on the NEXT frame, so whatever alpha the last computed frame
+                // happened to land on — six percent, measured — was the last thing drawn.
+                _curtainImg.color = new Color(0f, 0f, 0f, 0f);
                 _curtain.gameObject.SetActive(false);
             }
         }
