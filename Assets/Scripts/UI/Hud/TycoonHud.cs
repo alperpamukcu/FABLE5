@@ -6526,6 +6526,8 @@ namespace LastCall.UI
         private Image _plateFace;
         private Text _plateName, _plateLine, _plateKeyLabel;
         private RectTransform _plateKey, _plateNoKey;
+        private RectTransform _gateRow, _gateFill;   // the rung a guest came too early for
+        private Text _gateText;
         private RectTransform _postIt;           // the ask, the count, the clock
         private Text _postWho, _postAsk, _postCount, _postMissing;
         private Image _postClock;
@@ -6573,35 +6575,80 @@ namespace LastCall.UI
                 new Vector2(200, -24));
             _plateName.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-            _plateLine = NewText("Line", _plate, _body, 12, TextAnchor.UpperLeft, UITheme.Night[1]);
-            Place(_plateLine.rectTransform, new Vector2(0, 1), new Vector2(440, 72),
-                new Vector2(200, -54));
+            // 16, not 12 — the size the face actually has (GDD 16 §0), and 56 tall so the
+            // gate strip below it has somewhere to live.
+            _plateLine = NewText("Line", _plate, _body, 16, TextAnchor.UpperLeft, UITheme.Night[1]);
+            Place(_plateLine.rectTransform, new Vector2(0, 1), new Vector2(440, 56),
+                new Vector2(200, -52));
+
+            // ── THE RUNG, WHEN THEY CAME TOO EARLY (GDD 26 §12) ───────────────
+            // The dialogue says WHY there is no order; this says HOW FAR. It is drawn in the
+            // standing's own stars rather than written out, because the number the player is
+            // being asked for is the number they watch on the board all night — the same five
+            // shapes, filled to the rung this guest came for, with where the bar actually
+            // stands printed beside it. A sentence would have been a caption in the place a
+            // drawing belongs (GDD 16 §6.7).
+            _gateRow = NewRect("Gate", _plate);
+            Place(_gateRow, new Vector2(0, 1), new Vector2(440, 20), new Vector2(200, -108));
+            for (int i = 0; i < BarRating.MaxStars; i++)
+            {
+                var socket = NewRect($"GS{i}", _gateRow);
+                Place(socket, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(i * 18f + 8f, 0));
+                socket.pivot = new Vector2(0.5f, 0.5f);
+                var si = socket.gameObject.AddComponent<Image>();
+                si.sprite = ItemArt.Load("star");
+                si.preserveAspect = true; si.raycastTarget = false;
+                si.color = new Color(UITheme.Night[2].r, UITheme.Night[2].g, UITheme.Night[2].b, 0.45f);
+            }
+            _gateFill = NewRect("GateFill", _gateRow);
+            _gateFill.anchorMin = new Vector2(0, 0); _gateFill.anchorMax = new Vector2(0, 1);
+            _gateFill.pivot = new Vector2(0, 0.5f);
+            _gateFill.sizeDelta = Vector2.zero;
+            _gateFill.anchoredPosition = Vector2.zero;
+            _gateFill.gameObject.AddComponent<RectMask2D>();
+            for (int i = 0; i < BarRating.MaxStars; i++)
+            {
+                var star = NewRect($"GF{i}", _gateFill);
+                Place(star, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(i * 18f + 8f, 0));
+                star.pivot = new Vector2(0.5f, 0.5f);
+                var si = star.gameObject.AddComponent<Image>();
+                si.sprite = ItemArt.Load("star");
+                si.preserveAspect = true; si.raycastTarget = false;
+                si.color = UITheme.Magenta[2];      // the story's colour, not the board's amber
+            }
+            _gateText = NewText("GateText", _gateRow, _body, 8, TextAnchor.MiddleLeft, UITheme.Night[2]);
+            Place(_gateText.rectTransform, new Vector2(0, 0.5f), new Vector2(300, 16),
+                new Vector2(104, 0));
+            _gateText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _gateRow.gameObject.SetActive(false);
 
             // Two keys, and the second one is the honest exit. A player who cannot pour what
             // is being asked for must always be able to say so (GDD 26 §5) — the beat comes
             // back, and nothing about the night is lost by admitting it.
             _plateKey = NewRect("Listen", _plate);
             Place(_plateKey, new Vector2(1, 0.5f), new Vector2(150, 40), new Vector2(-24, 22));
-            var keyImg = _plateKey.gameObject.AddComponent<Image>();
-            keyImg.color = UITheme.PrimaryAction;
             var keyBtn = _plateKey.gameObject.AddComponent<Button>();
-            keyBtn.targetGraphic = keyImg;
             keyBtn.onClick.AddListener(OnPlateKey);
-            _plateKeyLabel = NewText("Label", _plateKey, _body, 12, TextAnchor.MiddleCenter,
+            var keyFace = NewRect("Face", _plateKey);
+            Stretch(keyFace, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            KeyPlate.Dress(_plateKey, UITheme.PrimaryAction, keyBtn, keyFace);   // GDD 16 §2
+            _plateKeyLabel = NewText("Label", keyFace, _body, 16, TextAnchor.MiddleCenter,
                 UITheme.TextOnAmber);
-            Stretch(_plateKeyLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            Stretch(_plateKeyLabel.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(4, KeyPlate.Throw), new Vector2(-4, 0));
             _plateKeyLabel.text = "GO ON";
 
             _plateNoKey = NewRect("SayNo", _plate);
             Place(_plateNoKey, new Vector2(1, 0.5f), new Vector2(150, 32), new Vector2(-24, -26));
-            var noImg = _plateNoKey.gameObject.AddComponent<Image>();
-            noImg.color = UITheme.Night[3];
             var noBtn = _plateNoKey.gameObject.AddComponent<Button>();
-            noBtn.targetGraphic = noImg;
             noBtn.onClick.AddListener(OnSayNoTonight);
-            var noLabel = NewText("Label", _plateNoKey, _body, 8, TextAnchor.MiddleCenter,
+            var noFace = NewRect("Face", _plateNoKey);
+            Stretch(noFace, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            KeyPlate.Dress(_plateNoKey, UITheme.Night[3], noBtn, noFace);
+            var noLabel = NewText("Label", noFace, _body, 8, TextAnchor.MiddleCenter,
                 UITheme.TextPrimary);
-            Stretch(noLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            Stretch(noLabel.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(4, KeyPlate.Throw), new Vector2(-4, 0));
             noLabel.text = "SAY NO TONIGHT";
             _plate.gameObject.SetActive(false);
 
@@ -6682,17 +6729,24 @@ namespace LastCall.UI
                     foreach (var s in _seats) if (s.Visit == lit) { x = s.Root.anchoredPosition.x; break; }
                 stage.SetClosingBeat(lit != null, x);
             }
-            if (beat == null || trial == null)
+            // A WITHHELD NIGHT HAS NO TRIAL AND IS STILL A SCENE (GDD 26 §12). The guest came,
+            // the bar has not reached their rung, and they are on the stool saying so — which
+            // is the one thing this panel exists for. Keying off `trial` alone hid the plate
+            // and left somebody sitting in a dimmed room in silence.
+            bool withheld = beat != null && run.LastCallWithheld && run.LastCustomer != null;
+            if (beat == null || (trial == null && !withheld))
             {
                 if (_plate != null && _plate.gameObject.activeSelf) _plate.gameObject.SetActive(false);
                 if (_postIt != null && _postIt.gameObject.activeSelf) _postIt.gameObject.SetActive(false);
+                if (_gateRow != null && _gateRow.gameObject.activeSelf) _gateRow.gameObject.SetActive(false);
                 _plateStage = "";
                 return;
             }
 
             // The script is rebuilt when the night moves to a new part of itself, and only
             // then: a plate that re-cued every frame would never get past its first line.
-            string part = trial.State == TrialState.Talking ? "ask"
+            string part = withheld ? "short"
+                : trial.State == TrialState.Talking ? "ask"
                 : trial.State == TrialState.Pouring ? "pour"
                 : trial.State == TrialState.Passed ? "kept" : "missed";
             if (part != _plateStage)
@@ -6705,6 +6759,15 @@ namespace LastCall.UI
                 {
                     foreach (var line in beat.Lines.HostBefore) Add(host, line);
                     foreach (var line in beat.Lines.Ask) Add(beat.Who, line);
+                }
+                else if (part == "short")
+                {
+                    // The guest explains, and the house has the last word — which is where the
+                    // system gets taught, because the host is the one who can say what a star
+                    // is and how you get another one.
+                    foreach (var line in beat.Lines.HostBefore) Add(host, line);
+                    foreach (var line in beat.Lines.ShortOfGate) Add(beat.Who, line);
+                    foreach (var line in beat.Lines.HostAfter) Add(host, line);
                 }
                 else if (part == "kept" || part == "missed")
                 {
@@ -6732,11 +6795,26 @@ namespace LastCall.UI
                 _plateFace.sprite = face?.Face;
                 _plateFace.enabled = _plateFace.sprite != null;
                 bool last = _plateAt == _plateScript.Count - 1;
-                _plateKeyLabel.text = part == "ask" && last ? "POUR IT" : "GO ON";
+                _plateKeyLabel.text = part == "ask" && last ? "POUR IT"
+                    : part == "short" && last ? "GOOD NIGHT" : "GO ON";
+                // Nothing to decline on a night nothing was asked for.
                 _plateNoKey.gameObject.SetActive(part == "ask");
             }
 
-            bool working = trial.State == TrialState.Pouring;
+            // THE RUNG STAYS UP FOR THE WHOLE SCENE, under whoever is speaking: the guest
+            // saying they will be back and the host explaining why are both about one number,
+            // and it is drawn once rather than repeated in two lines of prose.
+            bool showGate = withheld && talking;
+            if (showGate != _gateRow.gameObject.activeSelf) _gateRow.gameObject.SetActive(showGate);
+            if (showGate)
+            {
+                double need = beat.RequiresStars, now = run.Rating.Average;
+                _gateFill.sizeDelta = new Vector2((float)(need / BarRating.MaxStars)
+                                                  * BarRating.MaxStars * 18f, 0);
+                _gateText.text = $"COMES BACK AT {need:0.0}  ·  THE BAR IS AT {now:0.0}";
+            }
+
+            bool working = trial != null && trial.State == TrialState.Pouring;
             if (working != _postIt.gameObject.activeSelf) _postIt.gameObject.SetActive(working);
             if (working)
             {
@@ -6767,10 +6845,13 @@ namespace LastCall.UI
         private void OnPlateKey()
         {
             var run = Run;
-            if (run == null || run.Trial == null) return;
+            // A WITHHELD NIGHT HAS NO TRIAL and the key must still turn the page (GDD 26 §12);
+            // guarding on `Trial` alone left the guest's own scene unadvanceable, with the
+            // only way out being the clock.
+            if (run == null || (run.Trial == null && !run.LastCallWithheld)) return;
             if (_plateAt < _plateScript.Count - 1) { _plateAt++; return; }
             _plateAt = _plateScript.Count;      // the script is spoken
-            if (run.Trial.State == TrialState.Talking) run.BeginLastCallTrial();
+            if (run.Trial != null && run.Trial.State == TrialState.Talking) run.BeginLastCallTrial();
         }
 
         /// <summary>The honest no. It costs the night and never the arc (GDD 26 §5).</summary>
