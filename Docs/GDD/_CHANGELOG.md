@@ -2,6 +2,18 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `21 §12/§12a` **the loop closes, and a shaken fizz goes off in your hands (2026-08-14, the
+  author: "alkolü çöpe attığımızda sıfırlanılması gerekiyor fakat bardak ekranına
+  gönderiliyor… kokteyl yapılıp servis edildikten sonra döngü başa dönmüyor"):** `_capped` is
+  bench state and the bench only cleared it on the way IN, so binning or serving a capped
+  drink left the wall convinced the next bottle belonged at the counter — the loop never came
+  back to the start. Decisions made off the bench now ask the derived `Capped`, which reads
+  the tin and cannot be stale: **an empty tin is never capped.**
+  And shaking fizz **bursts the tin** (`ShakeBlowsTheTin`): the drink is gone, the goods are
+  written off through the bin's own body so it is never the cheap way out, `Blowouts` counts
+  it, and the bench draws the bang before resetting itself. The recipe still outranks the
+  bubbles — a Gin Fizz is shaken WITH its soda, so the rule asks `TinMethod` first.
+
 - `21 §12` **the second building place is gone with the rule that needed it (2026-08-14):**
   the serve counter's bottle-in-hand — the one thing the wall could hand it, because fizz had
   nowhere else to go — is cut, and the sim bot now pours carbonated into the TIN like the

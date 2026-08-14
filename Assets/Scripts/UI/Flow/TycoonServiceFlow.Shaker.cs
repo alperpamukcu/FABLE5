@@ -830,6 +830,74 @@ namespace LastCall.UI
             }
         }
 
+        // ── the tin bursts ────────────────────────────────────────────────────────
+        //
+        // Shaking fizz (2026-08-14, the author: "gazlı içecekler çalkalandığında patlayabilir
+        // shaker boşalsın ve patlama animasyonu olsun ardından sanki çöpe atılmış gibi
+        // tekrardan en baştan başlayabilir"). Core has already emptied the tin and written
+        // the goods off by the time this runs — this is the bang, and the walk back to a
+        // clean bench. The lid is thrown, the drink is thrown, the room shakes, and the
+        // readout says what happened for as long as it takes to read it.
+
+        private float _blowT;                 // counts down while the bang plays
+        private Vector2 _blowLidVel;
+        private Vector2 _blowHome;            // where the tin stood when it went off
+        private float _blowLidSpin;
+        private const float BlowHold = 1.9f;
+
+        private void BlowTheTin()
+        {
+            _blowT = BlowHold;
+            _shaking = false;
+            _shakeEnergy = 0;
+
+            // The drink leaves the tin as a burst of its own colour, thrown up and out.
+            var at = _shakerVessel.anchoredPosition;
+            for (int i = 0; i < 7; i++)
+                _shakerFluid.Splash(at + new Vector2(UnityEngine.Random.Range(-40f, 40f), 20f), 1f);
+            _shakerFluid.ClearPool();
+
+            // The lid goes with it, and keeps going until the bench is rebuilt.
+            _capped = false;
+            _capGrabbed = false;
+            _blowLidVel = new Vector2(UnityEngine.Random.Range(-260f, 260f), 520f);
+            _blowLidSpin = UnityEngine.Random.Range(-620f, 620f);
+
+            _blowHome = _shakerVessel.anchoredPosition;
+            Sfx.Play("bottle_open", 1f);
+            Sfx.Play("upset_sfx", 0.6f);
+            _shakerReadout.text = "IT BLEW — FIZZ DOES NOT GO IN A SHAKEN TIN";
+            _shakerReadout.color = UITheme.ViceRed[3];
+            _saidThisFrame = true;
+        }
+
+        /// <summary>One frame of the bang: the lid flies, and when it is over the bench is
+        /// rebuilt from a Core that is already empty — which is the loop back to the start.</summary>
+        private void StepBlowout()
+        {
+            if (_blowT <= 0f) return;
+            float dt = Time.unscaledDeltaTime;
+            _blowT -= dt;
+            if (_shakerTop != null)
+            {
+                _blowLidVel.y -= 1400f * dt;
+                _shakerTop.anchoredPosition += _blowLidVel * dt;
+                _shakerTop.localRotation *= Quaternion.Euler(0, 0, _blowLidSpin * dt);
+            }
+            // The tin rings with it — a decaying rattle around where it stood, so the bang
+            // is felt on the object that made it rather than announced by a line of text.
+            if (_shakerVessel != null)
+            {
+                float ring = Mathf.Max(0f, _blowT - (BlowHold - 0.45f)) / 0.45f;
+                _shakerVessel.anchoredPosition = _blowHome + new Vector2(
+                    UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f)) * (14f * ring);
+            }
+            _shakerReadout.text = "IT BLEW — FIZZ DOES NOT GO IN A SHAKEN TIN";
+            _shakerReadout.color = UITheme.ViceRed[3];
+            _saidThisFrame = true;
+            if (_blowT <= 0f) RefreshShaker();   // a clean bench, exactly as after the bin
+        }
+
         /// <summary>
         /// Take the lid back off. The bench returns to the state it was in before the cap —
         /// the props come back, the tin walks home — and nothing about the DRINK changes: a
@@ -963,8 +1031,12 @@ namespace LastCall.UI
                 // Released: commit the shake if there's a drink and any energy behind it.
                 if (!run.Glass.IsEmpty && _shakeEnergy > 0.05)
                 {
+                    // Asked BEFORE the shake, because after it the tin is empty and there is
+                    // nothing left to ask (Core's own note on ShakeBlowsTheTin).
+                    bool blows = run.ShakeBlowsTheTin;
                     run.Shake(_shakeEnergy);
-                    SayShaker($"SHAKEN · {_shakeEnergy:P0} · {ShakerLine(run)}");
+                    if (blows) BlowTheTin();
+                    else SayShaker($"SHAKEN · {_shakeEnergy:P0} · {ShakerLine(run)}");
                 }
                 _shaking = false;
                 _shakeEnergy = 0;

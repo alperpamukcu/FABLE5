@@ -329,6 +329,34 @@ counter — unless the bench is still owed the method the recipe asks for, in wh
 turns you around and names it. And the lid **comes off again** (`UncapTin`, its own key on
 the bench) — the author's reason: *"karıştırmayı unutursa diye."*
 
+**AN EMPTY TIN IS NEVER CAPPED** (2026-08-14, the author: *"alkolü çöpe attığımızda
+sıfırlanılması gerekiyor fakat bardak ekranına gönderiliyor"*). `_capped` is bench state and
+the bench only clears it on the way IN — but a drink can end anywhere: the bin on the wall,
+a customer's hand, a tin that burst. So every decision made off the bench asks the derived
+`Capped`, which reads the tin itself and cannot be stale. Without it, binning a capped drink
+left the wall convinced the next bottle belonged at the *counter*, and the loop never came
+back to the start.
+
+## 12a. Shaking fizz bursts the tin (2026-08-14)
+
+*"Gazlı içecekler çalkalandığında patlayabilir, shaker boşalsın ve patlama animasyonu olsun,
+ardından sanki çöpe atılmış gibi tekrardan en baştan başlayabilir."*
+
+`ShakeBlowsTheTin` is true when the tin holds a carbonated ingredient at a real share
+(`MixEpsilon`) **and its own matched recipe does not call for a shake**. `Shake` then bursts
+it: the drink is gone and the goods are written off through the bin's own body
+(`WriteOffVessels`), so blowing a tin is never cheaper than owning the mistake — and
+`Blowouts` counts it. The refusal is deliberately *not* a refusal: the accident is the
+answer, because a bar that quietly declines teaches nothing.
+
+**The recipe outranks the bubbles**, as everywhere else. A Gin Fizz and a Long Island are
+shaken WITH their fizz in this book; a blanket rule would make both unmakeable. A mix the
+book cannot name and that holds fizz bursts too — nothing says it should not.
+
+The bench draws the bang for 1.9s (the lid thrown and spinning, the drink burst out of the
+tin, the tin ringing where it stood, the readout red) and then runs `RefreshShaker` — the
+same clean bench the bin gives, which is the loop back to the start.
+
 **The old note, kept for the record:** ~~the glass side takes carbonated only (juices and
 still mixers build in the TIN like everything else, one pour system, one door), and the fizz
 is topped at the glass, where the bubbles survive.~~

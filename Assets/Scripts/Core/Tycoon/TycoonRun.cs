@@ -1367,12 +1367,56 @@ namespace LastCall.Core
         /// <summary>Finishing takes no room either — see <see cref="CanAddPreparation"/>.</summary>
         public bool CanFinishAtGlass => Phase == TycoonPhase.DayOpen;
 
+        /// <summary>
+        /// WOULD A SHAKE BLOW THE TIN OPEN? (2026-08-14, the author: "gazlı içecekler
+        /// çalkalandığında patlayabilir, shaker boşalsın ve patlama animasyonu olsun.")
+        /// Fizz under pressure is not a technique, it is an accident, and the accident is
+        /// the answer the bar should give — not a refusal, which would teach nothing.
+        ///
+        /// THE RECIPE IS THE AUTHORITY, as everywhere else since GDD 21 §12 was overturned.
+        /// A Gin Fizz and a Long Island are shaken WITH their fizz in this book, so the rule
+        /// asks the tin's own method first and only blows a drink that was never meant to be
+        /// worked that way. A mix the book cannot name and that holds fizz blows too — there
+        /// is nothing saying it should not.
+        ///
+        /// The UI reads this BEFORE it shakes, the <see cref="CanPull"/> idiom: after the
+        /// shake the tin is empty and there is nothing left to ask.
+        /// </summary>
+        public bool ShakeBlowsTheTin
+        {
+            get
+            {
+                if (Glass.IsEmpty || TinMethod == PrepMethod.Shaken) return false;
+                foreach (var id in Glass.Ingredients)
+                {
+                    if (Glass.RatioOf(id) < MixEpsilon) continue;
+                    var card = IngredientOf(id);
+                    if (card?.Info != null && card.Info.Carbonated) return true;
+                }
+                return false;
+            }
+        }
+
+        /// <summary>How many tins have burst this run. The goods are written off exactly as
+        /// a binned drink's are, so blowing one is never the cheap way to start again.</summary>
+        public int Blowouts { get; private set; }
+
         /// <summary>Shakes the built drink (GDD 24 §2.5). Recorded on the shaker; the craft
-        /// effect of a good shake is a later balance pass, the plumbing is here now.</summary>
+        /// effect of a good shake is a later balance pass, the plumbing is here now.
+        ///
+        /// A tin of fizz shaken anyway BURSTS (<see cref="ShakeBlowsTheTin"/>): the drink is
+        /// gone and the bar is back where it started. The rule lives here rather than in the
+        /// bench because the sim and the tests shake through this same verb.</summary>
         public void Shake(double energy = 1.0)
         {
             EnsurePhase(TycoonPhase.DayOpen);
             if (Glass.IsEmpty) throw new InvalidOperationException("Nothing in the shaker to shake.");
+            if (ShakeBlowsTheTin)
+            {
+                Blowouts++;
+                WriteOffVessels();
+                return;
+            }
             Glass.AddPreparation(Preparations.Shaken);
             IsShaken = true;
             ShakeEnergy = energy < 0 ? 0 : energy > 1 ? 1 : energy;
@@ -1522,6 +1566,14 @@ namespace LastCall.Core
         public int DiscardGlass()
         {
             EnsurePhase(TycoonPhase.DayOpen);
+            return WriteOffVessels();
+        }
+
+        /// <summary>The bin's accounting, shared with the burst tin: the goods are written
+        /// off at the same rate and both vessels go back to empty. One body, so a blowout
+        /// can never end up cheaper than owning up to the drink and binning it.</summary>
+        private int WriteOffVessels()
+        {
             double binned = Glass.TotalVolume + ServingGlass.TotalVolume;
             int fee = 0;
             if (binned > 0.01)

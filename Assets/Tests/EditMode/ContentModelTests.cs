@@ -70,6 +70,67 @@ namespace LastCall.Tests
             Assert.IsTrue(run.CanPourOut);
         }
 
+        /// <summary>
+        /// Shaking a tin of fizz bursts it (2026-08-14, the author: "gazlı içecekler
+        /// çalkalandığında patlayabilir"). The drink is gone, the goods are written off at
+        /// the bin's own rate, and the bar is back where it started — the accident is the
+        /// answer, not a refusal.
+        /// </summary>
+        [Test]
+        public void ShakingFizzBurstsTheTinAndCostsTheGoods()
+        {
+            var soda = new IngredientCard("soda_klara", "Klara Soda", IngredientType.Bubbly, 2,
+                new IngredientInfo("soda", category: IngredientCategories.Mixer, carbonated: true));
+            var run = RunWith(soda, Still("vodka_astra", "vodka", IngredientType.Spirit));
+            run.PourMeasure("vodka_astra", 0.4);
+            run.PourMeasure("soda_klara", 0.6);
+            int before = run.Money;
+
+            Assert.IsTrue(run.ShakeBlowsTheTin, "a Vodka Soda is BUILT — shaking it is an accident");
+            run.Shake(1.0);
+
+            Assert.AreEqual(1, run.Blowouts);
+            Assert.IsTrue(run.Glass.IsEmpty, "the tin is empty after it goes off");
+            Assert.IsFalse(run.IsShaken, "and nothing was shaken — there was no drink to shake");
+            Assert.Less(run.Money, before, "the goods are written off, so it is never the cheap way out");
+        }
+
+        /// <summary>
+        /// THE BOOK OUTRANKS THE BUBBLES. A Gin Fizz and a Long Island are shaken WITH their
+        /// fizz in this book, so the rule may not be "carbonated plus a shake is an
+        /// accident" — it has to ask the recipe, or those two become unmakeable. Written
+        /// against a book of one so it tests the RULE and not which cocktails are unlocked
+        /// this week (49 of the 53 shipped recipes are locked out of the matcher).
+        /// </summary>
+        [Test]
+        public void AShakenRecipeMayHoldItsOwnFizz()
+        {
+            var fizzy = new RecipeDefinition(
+                "test_fizz", "Test Fizz", rank: 2, baseFlavor: 10, baseMult: 2,
+                flavorPerLevel: 0, multPerLevel: 0,
+                requirements: System.Array.Empty<PatternRequirement>(),
+                ratioRequirements: new[]
+                {
+                    new RatioRequirement("vodka", 0.3, 0.5),
+                    new RatioRequirement("soda", 0.5, 0.7),
+                },
+                prep: PrepMethod.Shaken);
+            var soda = new IngredientCard("soda_klara", "Klara Soda", IngredientType.Bubbly, 2,
+                new IngredientInfo("soda", category: IngredientCategories.Mixer, carbonated: true));
+            var vodka = Still("vodka_astra", "vodka", IngredientType.Spirit);
+            var run = new TycoonRun(
+                new Shelf(new[] { new ShelfBottle(soda, 20), new ShelfBottle(vodka, 20) }),
+                new[] { fizzy }, new RunRng("fizz-seed"));
+            run.PourMeasure("vodka_astra", 0.4);
+            run.PourMeasure("soda_klara", 0.6);
+
+            Assert.AreEqual(PrepMethod.Shaken, run.TinMethod, "the book calls for a shake");
+            Assert.IsFalse(run.ShakeBlowsTheTin, "so the tin holds, fizz and all");
+            run.Shake(1.0);
+            Assert.AreEqual(0, run.Blowouts);
+            Assert.IsTrue(run.IsShaken);
+        }
+
         [Test]
         public void CarbonatedGoesStraightIntoTheServingGlass()
         {

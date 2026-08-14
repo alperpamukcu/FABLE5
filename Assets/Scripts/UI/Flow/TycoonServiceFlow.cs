@@ -70,6 +70,16 @@ namespace LastCall.UI
         // liquid can go in. Drop the cap on its mouth and the bench clears — the props fade
         // out and the tin slides to the middle and grows — so the focus moves to shaking it.
         private bool _capped, _capGrabbed;
+
+        /// <summary>
+        /// IS THE TIN CLOSED RIGHT NOW? An empty tin is never capped, whatever the lid was
+        /// doing when the drink left it (2026-08-14, the author: binning after a cap sent
+        /// the next bottle straight to the glass stage). `_capped` is bench state and the
+        /// bench only clears it on the way in; the drink can end anywhere — the bin on the
+        /// wall, a customer's hand, a tin that burst — so every decision made OFF the bench
+        /// asks this instead, and it cannot be stale because it reads the tin itself.
+        /// </summary>
+        private bool Capped => _capped && Run != null && !Run.Glass.IsEmpty;
         private float _capT;                  // 0 = open on the bench, 1 = capped and centred
         private Vector2 _capRest, _capPos;
         private Vector2 _shakerOpenSize;
@@ -146,6 +156,10 @@ namespace LastCall.UI
                 StepBenchDemand();        // …unless the player was sent here to be told something
                 UpdateShake(run); UpdateTiltPour(run); UpdateCap(run);
                 UpdateStir(run); UpdateToGlass(run); UpdateStepCard(run);
+                // LAST, and after UpdateCap: a tin that has just gone off owns where the lid
+                // and the body are, and UpdateCap would otherwise walk them both home in the
+                // same frame the bang was drawn.
+                StepBlowout();
                 StepShakerFluid(run);
                 Sfx.HoldLoop(_shakerLoopWanted, _shakerLoopWanted == "shake_loop" ? 0.9f : 0.8f);
             }
@@ -363,7 +377,7 @@ namespace LastCall.UI
             // method the recipe asks for, in which case it turns you around and says so.
             // The lid comes off again on the bench, which is the way back from a cap
             // closed too early.
-            if (!_capped) { GoTo(Stage.Shaker); return; }
+            if (!Capped) { GoTo(Stage.Shaker); return; }
             if (BenchUnfinished(Run)) { DemandBench(BenchOwed(Run).ToUpperInvariant()); return; }
             GoTo(Stage.Serve);
         }
