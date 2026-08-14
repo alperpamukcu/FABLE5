@@ -82,9 +82,19 @@ namespace LastCall.Game
                     if (card.unlockStars < 0)
                         throw new FormatException(
                             $"Bottle '{card.id}' waits for {card.unlockStars} stars, which is not a rung.");
+                    // NEVER BELOW THE LADDER THE BOTTLE IS ALREADY ON. Market.ForSale takes
+                    // the unlock branch INSTEAD of the tier/price test, not on top of it, so
+                    // an unlockStars written under a bottle's own rung would quietly LOWER
+                    // its gate — a $52 reserve gin on sale at one star, and nothing anywhere
+                    // would say why. The later of the two is the honest answer, and for the
+                    // tier-1 mixers this whole field exists for, the ladder says 0 and the
+                    // field is simply the gate.
+                    var gate = card.unlockStars > 0
+                        ? UnlockCondition.Stars(Math.Max(
+                            card.unlockStars, Market.RequiredStars(card.tier, card.price)))
+                        : null;
                     info = new IngredientInfo(card.style, card.tier, card.price,
-                        card.origin, card.abv, card.blurb, card.category, card.carbonated,
-                        UnlockCondition.Stars(card.unlockStars));
+                        card.origin, card.abv, card.blurb, card.category, card.carbonated, gate);
                 }
                 var parsed = new IngredientCard(card.id, card.name, ParseType(card.type, card.id),
                     card.flavor, info: info);

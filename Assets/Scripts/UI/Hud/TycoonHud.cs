@@ -3872,10 +3872,27 @@ namespace LastCall.UI
                     ? (System.Func<IngredientCard, bool>)(c => c.Type != IngredientType.Beer)
                     : (c => c.Type != IngredientType.Garnish), booze,
                     booze ? "bottle" : "mixer", _liquorHead);
-                if (anyKeg)
-                    SectionGate(run, c => c.Type == IngredientType.Beer, true, "keg", _kegHead);
-                if (anyGarnish)
-                    SectionGate(run, c => c.Type == IngredientType.Garnish, false, "garnish", _garnishHead);
+                // AN AISLE THAT IS ALL LOCK STILL NEEDS ITS SIGN (2026-08-14). These two
+                // sections were only ever created while drawing an OFFER, so an aisle whose
+                // whole shelf is still behind a star had no header for its crate to stand
+                // under — and SectionGate returns on a null grid. Harmless while every
+                // garnish was for sale on night one; live the moment mint (3.0 stars) and
+                // the olives (4.0) moved onto the ladder, because below three stars no
+                // garnish is for sale, the mixer crate excludes garnishes by design, and
+                // the two of them would have been counted by nothing at all. That is the
+                // exact silence the ladder was built to end, one aisle further down.
+                var kegHead = booze
+                    ? AisleSign(run, _kegHead, c => c.Type == IngredientType.Beer, true,
+                        "ON TAP — THE KEGS")
+                    : null;
+                if (kegHead != null)
+                    SectionGate(run, c => c.Type == IngredientType.Beer, true, "keg", kegHead);
+                var garnishHead = !booze
+                    ? AisleSign(run, _garnishHead, c => c.Type == IngredientType.Garnish, false,
+                        "THE GARNISH TRAY")
+                    : null;
+                if (garnishHead != null)
+                    SectionGate(run, c => c.Type == IngredientType.Garnish, false, "garnish", garnishHead);
             }
             else if (_shopTab == 3)
             {
@@ -4716,6 +4733,25 @@ namespace LastCall.UI
         }
 
         private RectTransform _liquorHead, _kegHead, _garnishHead;
+
+        /// <summary>
+        /// The header a crate stands under, made on demand: the one the offers already
+        /// built, or a fresh one when this aisle has nothing for sale tonight but something
+        /// waiting behind a star. Null when the aisle is genuinely finished — then no sign
+        /// is drawn and none is wanted.
+        /// </summary>
+        private RectTransform AisleSign(TycoonRun run, RectTransform existing,
+            System.Func<IngredientCard, bool> belongs, bool booze, string title)
+        {
+            if (existing != null) return existing;
+            foreach (var g in run.GatedStock())
+            {
+                if (IngredientCategories.IsAlcoholic(g.Card.Info?.Category, g.Card.Type) != booze) continue;
+                if (!belongs(g.Card)) continue;
+                return ShopSection(title);
+            }
+            return null;
+        }
 
         /// <summary>
         /// The sealed crate for ONE aisle: how many of its lines are still behind a star,

@@ -1,7 +1,7 @@
 {
  "deckId": "base_bar",
  "name": "The Base Bar",
- "_comment": "GDD 22: the branded catalogue (41 bottles: 30 live + 11 locked; the opening shelf is 6), each a parody brand with its own silhouette. Tier 1 is the well you open with; tier 2+ are brand upgrades sold on the end-of-night market. Charges are per full glass (GDD 21 s4). ABV and origin are display/dialogue only and must never feed scoring.",
+ "_comment": "GDD 22: the branded catalogue (41 bottles; the opening shelf is 6, the other 35 are bought across the counter). Tier 1 is the well; tier 2+ are brand upgrades sold on the end-of-night market. A bottle opens on the rung of the FIRST RECIPE that names its style (2026-08-14): tier 2+ climb the tier/price ladder, tier-1 mixers and juices say their rung out loud in unlockStars. Nothing is quarantined any more - held back is fine, hidden is not, because a bottle the market cannot see is one the shop cannot mention. Charges are per full glass (GDD 21 s4). ABV and origin are display/dialogue only and must never feed scoring.",
  "cards": [
   {
    "id": "vodka_astra",
