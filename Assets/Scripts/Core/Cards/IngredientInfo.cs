@@ -42,9 +42,27 @@ namespace LastCall.Core
         /// enforced by the run's shaker verbs, the same way beer is kept out of the tin.</summary>
         public bool Carbonated { get; }
 
+        /// <summary>
+        /// WHAT THIS BOTTLE IS WAITING FOR, when it is waiting for something a tier and a
+        /// price cannot say (GDD 26 §12.2 step 4, 2026-08-14, the author: "bazı alkoller bazı
+        /// yükseltmeler ... müşteriye doğru siparişi vererek kilit açılacak").
+        ///
+        /// Null for every bottle the market gates on the standing alone, which is all of them
+        /// today. It exists so the alengirli spirits a last call asks for can be earned from
+        /// the guest who asked rather than bought off a number — and because the REWARD for
+        /// keeping a night is precisely this lock coming off (the author, 2026-08-14), which
+        /// is why the arc pushes nothing and the bottle names the night instead.
+        /// </summary>
+        public UnlockCondition Unlock { get; }
+
+        /// <summary>The written night this bottle is earned from, or null — kept beside the
+        /// condition so the loader can check the id against the arc.</summary>
+        public string UnlockBeatId { get; }
+
         public IngredientInfo(string style, int tier = 1, int price = 0,
             string origin = null, double abv = 0, string blurb = null,
-            string category = null, bool carbonated = false)
+            string category = null, bool carbonated = false,
+            UnlockCondition unlock = null, string unlockBeatId = null)
         {
             if (string.IsNullOrWhiteSpace(style))
                 throw new ArgumentException("A bottle must say what it is a brand of.", nameof(style));
@@ -60,6 +78,8 @@ namespace LastCall.Core
             Blurb = blurb ?? string.Empty;
             Category = category ?? string.Empty;
             Carbonated = carbonated;
+            Unlock = unlock is null || ReferenceEquals(unlock, UnlockCondition.Open) ? null : unlock;
+            UnlockBeatId = string.IsNullOrWhiteSpace(unlockBeatId) ? null : unlockBeatId;
         }
 
         public override string ToString() => $"{Style} T{Tier} ({Origin}, {Abv:0.#}%)";

@@ -291,8 +291,8 @@ namespace LastCall.Core
         /// <summary>The stock the board is holding back tonight, and the standing each one
         /// waits for. The shop draws one tile from this so an early aisle does not read as
         /// a finished one.</summary>
-        public IEnumerable<(IngredientCard Card, double Stars)> GatedStock() =>
-            Market.GatedFor(_shelf, _brandCatalogue, Rating.Average);
+        public IEnumerable<(IngredientCard Card, double Stars, string Sentence)> GatedStock() =>
+            Market.GatedFor(_shelf, _brandCatalogue, Rating.Average, this);
 
         /// <summary>What a recipe costs to put on the menu, priced off its tier's rank —
         /// kept cheap enough that the menu can GROW at the pace the rent climbs, because the
@@ -2078,7 +2078,7 @@ namespace LastCall.Core
             // not own yet), the higher rungs gated by the bar's standing.
             _newStockIds.Clear();   // yesterday's "NEW" flashes have worn off
             _marketOffers.Clear();
-            _marketOffers.AddRange(Market.OffersFor(_shelf, _brandCatalogue, Rating.Average));
+            _marketOffers.AddRange(Market.OffersFor(_shelf, _brandCatalogue, Rating.Average, this));
         }
 
         /// <summary>A garnish press, as a share of the shaker (survives PourResolver).</summary>

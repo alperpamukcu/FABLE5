@@ -30,8 +30,8 @@ namespace LastCall.Core
         public int Week { get; }
 
         /// <summary>
-        /// The night of that week they come in on — and for a guest that is FRIDAY or SATURDAY,
-        /// refused otherwise (GDD 26 §2b). Nobody important turns up on a Wednesday, and the
+        /// The night of that week they come in on — and for a guest that is SATURDAY, refused
+        /// otherwise (GDD 26 §2b). Nobody important turns up on a Wednesday, and the
         /// rule is worth more than the exception: it makes the days between a beat into the
         /// days you go and buy what the last one asked for. The host is not a guest — Ece
         /// works the shift, so her nights are the arc's to choose.
@@ -84,11 +84,18 @@ namespace LastCall.Core
         public string NextId { get; }
 
         public StoryLines Lines { get; }
-        public StoryReward Reward { get; }
+
+        // THE REWARD IS THE LOCK COMING OFF (2026-08-14, the author: "Reward olayı aslında
+        // kilitli olan geliştirmelerin veya tariflerin kilitlerinin kalkması olacak"). The
+        // beat used to carry money, stars, a recipe id and a bottle id, and NOTHING read any
+        // of them — which turned out not to be an oversight but the wrong model. A beat pays
+        // nothing; the things a beat earns NAME IT (UnlockCondition.Kept), so one night can
+        // open any number of pages and bottles without listing them, and each locked thing
+        // says in its own words what it is waiting for. The push became a pull.
 
         public StoryBeat(string id, StoryCharacter who, StoryTrial trial, int week,
             BarNight night, StoryLines lines = null,
-            StoryReward reward = null, string needStyle = null, int needTier = 0,
+            string needStyle = null, int needTier = 0,
             string grantsRecipeOnAsk = null, int returnsAfterWeeks = 1, string nextId = null,
             double requiresStars = 0)
         {
@@ -135,7 +142,6 @@ namespace LastCall.Core
             Night = night;
             Day = BarCalendar.DayOf(week, night);
             Lines = lines ?? StoryLines.Silent;
-            Reward = reward ?? StoryReward.None;
             NeedStyle = string.IsNullOrWhiteSpace(needStyle) ? null : needStyle;
             NeedTier = needTier;
             GrantsRecipeOnAsk = string.IsNullOrWhiteSpace(grantsRecipeOnAsk) ? null : grantsRecipeOnAsk;

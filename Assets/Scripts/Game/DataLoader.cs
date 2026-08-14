@@ -394,7 +394,6 @@ namespace LastCall.Game
                     asks.Add(drink);
                 }
                 RequireRecipe(book, b.grantsRecipeOnAsk, b.id, "grantsRecipeOnAsk");
-                RequireRecipe(book, b.rewardRecipe, b.id, "rewardRecipe");
 
                 // THE ASK ALWAYS NAMES WHAT IS MISSING (GDD 26 §4, the arc's first standing
                 // rule). Since the drinks are revealed one at a time, the host's early
@@ -425,9 +424,7 @@ namespace LastCall.Game
                         b.minFill > 0 ? b.minFill : StoryTrial.DefaultMinFill, b.allowedMistakes);
                     var lines = new StoryLines(b.ask, b.nudge, b.servedRight, b.servedWrong,
                         b.declined, b.hostBefore, b.hostAfter, b.hostWarning, b.shortOfGate);
-                    var reward = new StoryReward(b.rewardMoney, b.rewardStars,
-                        b.rewardRecipe, b.rewardBottle);
-                    beats.Add(new StoryBeat(b.id, who, trial, b.week, night.Value, lines, reward,
+                    beats.Add(new StoryBeat(b.id, who, trial, b.week, night.Value, lines,
                         b.needStyle, b.needTier, b.grantsRecipeOnAsk,
                         b.returnsAfterWeeks > 0 ? b.returnsAfterWeeks : 1, b.next,
                         b.requiresStars));
@@ -678,10 +675,6 @@ namespace LastCall.Game
             public List<string> hostWarning;
             public List<string> hostBefore;
             public List<string> hostAfter;
-            public int rewardMoney;
-            public double rewardStars;
-            public string rewardRecipe;
-            public string rewardBottle;
             public int returnsAfterWeeks;   // 0 = the default, one week
             public string next;
         }

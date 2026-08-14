@@ -4733,8 +4733,12 @@ namespace LastCall.UI
                 if (IngredientCategories.IsAlcoholic(g.Card.Info?.Category, g.Card.Type) != booze) continue;
                 if (!belongs(g.Card)) continue;
                 locked++;
-                if (g.Stars < next) next = g.Stars;
+                // NaN is a bottle waiting on a person, not on a rung — it counts as held
+                // back but has no number to pull the aisle's hint towards.
+                if (!double.IsNaN(g.Stars) && g.Stars < next) next = g.Stars;
             }
+            // Everything in this aisle waits on somebody; there is no star to promise.
+            if (locked > 0 && next == double.MaxValue) next = run.Rating.Average;
             if (locked == 0) return;
             var was = _cardTarget;
             _cardTarget = grid;

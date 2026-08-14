@@ -2,6 +2,23 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `26 §12.3` **the reward IS the unlock, so StoryReward is gone (2026-08-14, the author:
+  "Reward olayı aslında kilitli olan geliştirmelerin veya tariflerin kilitlerinin kalkması
+  olacak"):** the beat carried money, stars, a recipe id and a bottle id, and nothing read any
+  of them. That turned out not to be an unfinished payout but the WRONG MODEL — and the right
+  one was already standing beside it. A beat pays nothing; the things it earns NAME IT with
+  `Kept(beatId)`, so keeping the night takes their lock off. The push became a pull, and three
+  things fall out: one night can open any number of things without listing them; each locked
+  thing says its own sentence, which the shop already prints; and there is no invisible flag,
+  which is this arc's standing rule 4.
+  **Bottles got the lock too.** `IngredientInfo` carries the same `Unlock`/`UnlockBeatId` pair,
+  and `Market.OffersFor`/`GatedFor` ask it instead of comparing the standing themselves. A
+  named lock with nobody to ask stays CLOSED: a caller that cannot evaluate a condition has not
+  proved it open, and a bottle leaking out of its lock because the caller was old would be
+  silent and in the player's favour — the kind nobody reports. A bottle waiting on a person
+  reports NaN rather than a star, so it cannot drag an aisle's "next at" hint onto a rung that
+  opens nothing. 304 EditMode green, 8 PlayMode green.
+
 - `26 §12.2` **a lock can come from data, and the shop prints it (2026-08-14):** the condition
   type existed but nothing could express one — `RecipeDefinition` had no field, `recipes.json`
   no key, `RecipeUnlock` was hardcoded to the rank table, and the shop re-derived the star gate

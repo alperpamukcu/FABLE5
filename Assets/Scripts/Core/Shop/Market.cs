@@ -88,8 +88,33 @@ namespace LastCall.Core
         /// exists for the cocktails that name it). Rungs above the bar's standing stay off
         /// the board — the ladder climbs the stars.
         /// </summary>
+        /// <summary>
+        /// IS THIS BOTTLE FOR SALE? One question, one answer, asked by both passes below.
+        ///
+        /// A bottle whose papers name no lock is gated the way every bottle always was: the
+        /// standing against its tier and price. A bottle that DOES name one is gated by that
+        /// instead — which is how the alengirli spirits get earned from the guest who asked
+        /// for them (GDD 26 §12.2 step 4).
+        ///
+        /// A named lock with nobody to ask stays CLOSED. A caller that cannot evaluate a
+        /// condition has not proved it open, and a bottle that fell out of its lock because
+        /// the caller was old would be the worst kind of leak: silent, and in the player's
+        /// favour, so nobody reports it.
+        /// </summary>
+        private static bool ForSale(IngredientCard card, double stars, IUnlockState state)
+        {
+            var unlock = card.Info?.Unlock;
+            if (unlock == null) return stars >= RequiredStars(card.Info.Tier, card.Info.Price);
+            return state != null && unlock.MetBy(state);
+        }
+
+        /// <summary>What the shop prints under a held-back bottle.</summary>
+        private static string HeldSentence(IngredientCard card) =>
+            card.Info?.Unlock?.Sentence
+            ?? $"NEEDS {RequiredStars(card.Info.Tier, card.Info.Price):0.0} STARS";
+
         public static List<MarketOffer> OffersFor(Shelf shelf, IReadOnlyList<IngredientCard> catalogue,
-            double stars = double.MaxValue)
+            double stars = double.MaxValue, IUnlockState state = null)
         {
             var offers = new List<MarketOffer>();
             if (shelf == null || catalogue == null) return offers;
@@ -105,7 +130,7 @@ namespace LastCall.Core
                     newByStyle[style] = candidate;
             }
             foreach (var card in newByStyle.Values)
-                if (stars >= RequiredStars(card.Info.Tier, card.Info.Price))
+                if (ForSale(card, stars, state))
                     offers.Add(new MarketOffer(card, isNewStock: true, StockPrice(card)));
 
             // Better bottles: unowned brands of a stocked style, gated by the stars.
@@ -115,7 +140,7 @@ namespace LastCall.Core
                 if (shelf.Find(candidate.Id) != null) continue;    // that exact brand is owned
                 var current = FindByStyle(shelf, candidate.Info.Style);
                 if (current?.Ingredient.Info == null) continue;
-                if (stars >= RequiredStars(candidate.Info.Tier, candidate.Info.Price))
+                if (ForSale(candidate, stars, state))
                     offers.Add(new MarketOffer(candidate, isNewStock: false, StockPrice(candidate)));
             }
             return offers;
@@ -131,10 +156,11 @@ namespace LastCall.Core
         /// as its own pass rather than folded into OffersFor because the two answer different
         /// questions and a caller wanting one must not pay for the other.
         /// </summary>
-        public static List<(IngredientCard Card, double Stars)> GatedFor(
-            Shelf shelf, IReadOnlyList<IngredientCard> catalogue, double stars)
+        public static List<(IngredientCard Card, double Stars, string Sentence)> GatedFor(
+            Shelf shelf, IReadOnlyList<IngredientCard> catalogue, double stars,
+            IUnlockState state = null)
         {
-            var held = new List<(IngredientCard, double)>();
+            var held = new List<(IngredientCard, double, string)>();
             if (shelf == null || catalogue == null) return held;
 
             var newByStyle = new Dictionary<string, IngredientCard>();
@@ -147,8 +173,13 @@ namespace LastCall.Core
                     newByStyle[style] = candidate;
             }
             foreach (var card in newByStyle.Values)
-                if (stars < RequiredStars(card.Info.Tier, card.Info.Price))
-                    held.Add((card, RequiredStars(card.Info.Tier, card.Info.Price)));
+                if (!ForSale(card, stars, state))
+                    // A bottle waiting on a PERSON has no star to wait for, and reporting one
+                    // would let it drag the aisle's "next at" hint down to a rung that opens
+                    // nothing. NaN says "not a number you can count towards" out loud.
+                    held.Add((card, card.Info.Unlock != null ? double.NaN
+                                    : RequiredStars(card.Info.Tier, card.Info.Price),
+                              HeldSentence(card)));
 
             foreach (var candidate in catalogue)
             {
@@ -156,8 +187,10 @@ namespace LastCall.Core
                 if (shelf.Find(candidate.Id) != null) continue;
                 var current = FindByStyle(shelf, candidate.Info.Style);
                 if (current?.Ingredient.Info == null) continue;
-                if (stars < RequiredStars(candidate.Info.Tier, candidate.Info.Price))
-                    held.Add((candidate, RequiredStars(candidate.Info.Tier, candidate.Info.Price)));
+                if (!ForSale(candidate, stars, state))
+                    held.Add((candidate, candidate.Info.Unlock != null ? double.NaN
+                                         : RequiredStars(candidate.Info.Tier, candidate.Info.Price),
+                              HeldSentence(candidate)));
             }
             return held;
         }

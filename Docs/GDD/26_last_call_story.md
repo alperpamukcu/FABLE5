@@ -673,8 +673,33 @@ later ones can only be chosen once the earlier ones can be measured.
    are in the same room, and it refuses a recipe pointing at a beat that does not exist — the
    worst failure this system has is silent, permanent, and looks exactly like content nobody
    wrote.
-   Still to come: **authoring one** (needs a second beat to point at), and the same treatment
-   for bottles, whose market side still gates purely on stars (`Market.OffersFor`).
+   **BOTTLES TOO (2026-08-14).** `IngredientInfo` carries the same pair, `Market.OffersFor` and
+   `GatedFor` ask the lock instead of the standing, and a held-back bottle reports its own
+   sentence. A named lock with nobody to ask stays CLOSED — a caller that cannot evaluate a
+   condition has not proved it open, and a bottle leaking out of its lock because the caller
+   was old would be the worst kind of bug: silent, and in the player's favour, so nobody
+   reports it.
+   Still to come: **authoring one**, which needs a second beat to point at.
+
+### 12.3 The reward IS the unlock (2026-08-14)
+
+> The author: *"Reward olayı aslında kilitli olan geliştirmelerin veya tariflerin
+> kilitlerinin kalkması olacak."*
+
+`StoryReward` — money, stars, a recipe id, a bottle id, parsed on every beat and **read by
+nothing** — is deleted. That was not an unfinished payout; it was the wrong model, and the
+right one was already standing next to it.
+
+**A beat pays nothing. The things a beat earns NAME IT.** A recipe or a bottle carries
+`Kept(beatId)`, so keeping the night is what takes its lock off. The push became a pull, and
+three things fall out of the inversion:
+
+- **One night can open any number of things** without listing them, and a beat never needs
+  editing when a new bottle decides to depend on it.
+- **Each locked thing says its own sentence** — "SERVE ECE WHAT THEY ASK FOR" — which the shop
+  already prints. A pushed reward has no such voice; it arrives, or it silently does not.
+- **There is no invisible flag**, which is standing rule 4 of this arc: rewards land in
+  systems the player already reads. The shop's sealed crate *is* that system.
 5. **The rest of the cast.** Eleven beats needs eleven written nights and eleven faces; the
    art is gated on PixelLab credit, the writing is not.
 
