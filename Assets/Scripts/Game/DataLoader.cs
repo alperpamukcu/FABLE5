@@ -469,7 +469,13 @@ namespace LastCall.Game
 
         private static PrepMethod ParsePrep(string raw, string context)
         {
-            if (string.IsNullOrEmpty(raw)) return PrepMethod.Shaken;
+            // Loud, not silent (2026-08-14): the method now decides whether Core will let
+            // the drink out of the tin at all, so a recipe that forgets to name one is a
+            // content bug, not a shrug. All 53 shipped recipes declare it; this only ever
+            // fires on a new one.
+            if (string.IsNullOrEmpty(raw))
+                throw new FormatException(
+                    $"Recipe '{context}' names no prepMethod — say Shaken, Stirred or Built.");
             return ParseEnum<PrepMethod>(raw, context, "prepMethod");
         }
 

@@ -32,19 +32,42 @@ namespace LastCall.Tests
             new TycoonRun(new Shelf(cards.Select(c => new ShelfBottle(c, 20)).ToList()),
                 RecipeCatalog.CreateDefault(), new RunRng("content-seed"));
 
-        // ── carbonated is built, not shaken (GDD 21 §12) ────────────────────────
+        // ── the tin takes everything but the keg (GDD 21 §12, overturned 2026-08-14) ──
 
         [Test]
-        public void CarbonatedNeverEntersTheShaker()
+        public void CarbonatedEntersTheShakerLikeAnythingElse()
         {
             var run = RunWith(Fizzy(), Still("vodka_t", "vodka", IngredientType.Spirit));
 
-            Assert.Throws<ArgumentException>(() => run.BeginPour("cola_test"),
-                "the held pour must refuse fizz");
-            Assert.Throws<ArgumentException>(() => run.PourMeasure("cola_test", 0.2),
-                "and so must the measured pour");
+            Assert.DoesNotThrow(() => run.BeginPour("cola_test"),
+                "the held pour takes fizz now — the tin is where a drink is built");
+            run.EndPour();
+            Assert.AreEqual(0.2, run.PourMeasure("cola_test", 0.2), 1e-9,
+                "and the measured pour lands it in the tin");
+            Assert.AreEqual(0.2, run.Glass.VolumeOf("cola_test"), 1e-9);
             Assert.DoesNotThrow(() => run.BeginPour("vodka_t"),
                 "a still bottle pours as it always did");
+        }
+
+        /// <summary>
+        /// The method is the recipe's to name, and a Built drink is not conscripted: the
+        /// author's rule of 2026-08-14 is that fizz is mixed "tarife göre", so a highball
+        /// leaves the tin on the strength of being built, not of being shaken.
+        /// </summary>
+        [Test]
+        public void ABuiltDrinkLeavesTheTinWithoutBeingWorked()
+        {
+            // Styled, not just fizzy: vodka_soda's bands are named per STYLE, so a cola in
+            // the soda slot matches nothing (GDD 21 §12's style bands).
+            var soda = new IngredientCard("soda_klara", "Klara Soda", IngredientType.Bubbly, 2,
+                new IngredientInfo("soda", category: IngredientCategories.Mixer, carbonated: true));
+            var run = RunWith(soda, Still("vodka_astra", "vodka", IngredientType.Spirit));
+            run.PourMeasure("vodka_astra", 0.4);
+            run.PourMeasure("soda_klara", 0.6);
+
+            Assert.AreEqual(PrepMethod.Built, run.TinMethod, "the book calls this a Vodka Soda");
+            Assert.IsFalse(run.MixRequired, "and a built drink is never worked");
+            Assert.IsTrue(run.CanPourOut);
         }
 
         [Test]

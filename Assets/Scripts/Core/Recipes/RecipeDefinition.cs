@@ -116,7 +116,12 @@ namespace LastCall.Core
             IReadOnlyList<RatioRequirement> ratioRequirements = null,
             double minFill = 0,
             bool locked = false,
-            PrepMethod prep = PrepMethod.Shaken,
+            // BUILT IS THE DEFAULT, NOT SHAKEN (2026-08-14). The method stopped being a
+            // grading detail the day MixRequired started reading it (GDD 21 §14): an
+            // undeclared prep used to cost a recipe some craft points, and now it REFUSES
+            // the pour-out until somebody works a drink nobody said had to be worked.
+            // A rule that conscripts the player must be asked for out loud.
+            PrepMethod prep = PrepMethod.Built,
             string glassId = null,
             string icon = null)
         {

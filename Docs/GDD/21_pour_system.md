@@ -298,21 +298,41 @@ glass. Loading it with anything more would make the simple order the fiddly one.
 - **Does precision survive a pixel glass?** At 640×360 the glass is maybe 40px tall, so a
   band is ~2px per 5%. The readout may need numeric support after all.
 
-## 12. Carbonated is built, not shaken (v5 P10, 2026-07-31)
+## 12. ~~Carbonated is built, not shaken~~ → **the tin takes everything** (2026-08-14)
 
-Not everything mixable belongs in the tin. **Carbonated ingredients — soda, tonic, cola,
-energy drink — never enter the shaker**: shaking fizz is a mess, not a technique, and the
-whole point of a Gin & Tonic is the bubbles arriving intact. They are added straight to the
-serving glass at the serve stage, through the run's `PourAtGlass` verb.
+**OVERTURNED BY THE AUTHOR, 2026-08-14**: *"tüm içecekler shakera koyulacak, soda gibi gazlı
+içecekler karıştırılacak tarife göre."* Carbonated ingredients now enter the shaker like
+everything else, and what happens to them there is **the recipe's `prepMethod`** — a Gin &
+Tonic is `Built`, so it is capped and carried over without being worked; a Gin Fizz is
+`Shaken`, so it is shaken. Only the **keg** is still refused by `ShakerIngredient` (§10).
 
-The refusal lives in Core (`ShakerIngredient`), exactly like the keg rule in §10: routing
-around it in a menu is not enough, because the sim and the tests use the same verbs the
-player does. ~~The legacy bubbly bottles (Klara Soda, Kicker Ginger) keep their `carbonated`
-flag OFF until the serve stage grows its mixer rail (P14).~~ **Flipped 2026-08-11** — the
-door has existed since P14, and the section's own debt came due when the author asked the
-direct bottle-to-glass pour to end: the glass-side cabinet now stocks **carbonated only**
-(juices and still mixers build in the TIN like everything else, one pour system, one door),
-and the fizz is topped at the glass, where the bubbles survive.
+The rule this replaces said fizz never enters the tin and is topped at the serving glass
+through `PourAtGlass`. It cost the bar a second building place: the wall had to hand
+carbonated bottles to the *serve* stage while the tin held half a drink, and a soda picked
+up after the spirits jumped past the bench with the lid still open — the tin stranded, out
+of reach, uncappable. One place a drink is built beats one place per ingredient class.
+
+`PourAtGlass` survives as a verb (the sim and the glass-declaration path use it); it is no
+longer a door the wall opens.
+
+**What the wall does with a click now.** The lid decides: an open tin takes the bottle and
+the wall goes to the bench; a closed tin means a finished drink, so the wall goes to the
+counter — unless the bench is still owed the method the recipe asks for, in which case it
+turns you around and names it. And the lid **comes off again** (`UncapTin`, its own key on
+the bench) — the author's reason: *"karıştırmayı unutursa diye."*
+
+**The old note, kept for the record:** ~~the glass side takes carbonated only (juices and
+still mixers build in the TIN like everything else, one pour system, one door), and the fizz
+is topped at the glass, where the bubbles survive.~~
+
+**The cabinet itself is gone (2026-08-13.)** The author's ruling: no drink is chosen on a
+service bench — "bardağa dökme aşamasında herhangi bir sıvı koyulmayacak… shakerin
+doldurulduğu sahnede de içecekler olmayacak, oyuncu içecek seçmek için back bar sahnesine
+gidecek". The rule above is untouched — carbonated still has exactly one door, the serving
+glass — but the bottle now comes off the BACK BAR WALL, which carries the whole cellar
+(garnish excepted), and the wall hands it to the serve stage already in hand. A speed rail
+on the shaker bench and an open case on the serve counter were both built and then taken
+out again in the same day: one bar, one place a bottle is picked up.
 
 Recipes now carry a **prep method** (shaken / stirred / built): built drinks skip the shaker
 entirely and are assembled in the glass. They also carry a **glass id** (glassware.json) —
@@ -336,14 +356,27 @@ The tell was in the sim all along: "garnish craft landed" read **11.9%**, exactl
 share, because a pint is the one drink whose preparation is stamped on the glass it is pulled
 into. Every cocktail garnish in the game was ungettable. With the transfer fixed it reads 54.7%.
 
-## 14. The mandatory mix (2026-08-11)
+## 14. The mandatory mix (2026-08-11, re-based on the recipe 2026-08-14)
 
-**Two spirits may not leave the tin unmixed.** When the shaker holds two or more distinct
-alcoholic ingredients — each at a real share, `MixEpsilon = 3%` of the tin or more — the
-drink must be **shaken or stirred** before `PourIntoServingGlass` will move it. The refusal
-lives in Core on that verb, the sibling of §10's keg rule and §12's carbonated rule: the
-sim and the tests pour through the same door the player does. The UI reads `CanPourOut`
-and stops the stream instead of catching the throw (the `CanPull` idiom).
+**THE RECIPE ANSWERS FIRST (2026-08-14.)** `MixRequired` asks the tin what it holds —
+`TinMethod`, the `prepMethod` of the recipe `RatioRecipeMatcher` finds for the tin's own
+contents — and a `Shaken` or `Stirred` drink must be worked while a `Built` one must not.
+This is what lets the twenty-one built highballs come through the tin now that §12 lets the
+fizz in. `TinMethod` reads the TIN and never the order, so it leaks nothing the ID card is
+hiding: a mix declares its own method.
+
+**The structural rule stands in when the book does not know the drink.** Two or more
+distinct alcoholic ingredients — each at a real share, `MixEpsilon = 3%` of the tin or more
+— must be **shaken or stirred** before `PourIntoServingGlass` will move it. The refusal
+lives in Core on that verb, the sibling of §10's keg rule: the sim and the tests pour
+through the same door the player does. The UI reads `CanPourOut` and stops the stream
+instead of catching the throw (the `CanPull` idiom).
+
+**The bench says which.** The step card's third row is the instruction the tin asks for —
+SHAKE IT / STIR IT / BUILT, NO MIXING — and the readout says it in words. The author's
+ruling, 2026-08-14: *"tariflerin hangilerinin çalkalanması gerektiği hangisinin karıştırması
+gerektiği belirtilsin önemli."* The data was already there (22 shaken, 10 stirred, 21 built);
+what was missing was the game saying it.
 
 The rule made `Preparations.Stirred` load-bearing, so the **`Stir` verb** arrived with it —
 `Shake`'s mirror (`IsStirred`/`StirEnergy`, one preparation slot, last mix wins on flags and

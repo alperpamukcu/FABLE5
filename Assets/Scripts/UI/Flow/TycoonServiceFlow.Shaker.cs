@@ -93,6 +93,22 @@ namespace LastCall.UI
         private Button _toGlassBtn;
         private Button _lidOffKey;
         private CanvasGroup _lidOffGroup;
+        private Text _shakerHint;
+
+        /// <summary>The standing line under the bench's title: what this drink asks for, or
+        /// the pair of choices while the tin holds nothing the book can name.</summary>
+        private static string ShakerHintFor(PrepMethod? method, bool bottleInReach = true)
+        {
+            string named =
+                method == PrepMethod.Shaken ? "THIS ONE IS SHAKEN"
+                : method == PrepMethod.Stirred ? "THIS ONE IS STIRRED"
+                : method == PrepMethod.Built ? "THIS ONE IS BUILT — DO NOT WORK IT"
+                : null;
+            if (!bottleInReach) return named ?? "CAPPED — SHAKE IT, OR TAKE IT OVER";
+            return named == null
+                ? "GRAB THE BOTTLE TO POUR · STIR IT, OR CAP IT AND SHAKE"
+                : "GRAB THE BOTTLE TO POUR · " + named;
+        }
         private CanvasGroup _toGlassGroup;
         private Text _toGlassLabel;
         private bool _toGlassWasOn;
@@ -234,6 +250,9 @@ namespace LastCall.UI
             // own contents ask for. A Built drink's row is ticked on sight: there is nothing
             // to do to it, and a step with nothing to do is a step already taken.
             var method = filled ? run.TinMethod : null;
+            // With the lid on there is no bottle to grab, so the line drops that half.
+            if (_shakerHint != null)
+                _shakerHint.text = _capped ? ShakerHintFor(method, false) : ShakerHintFor(method, true);
             int optional = -1;
             bool optionalDone = false;
             if (_stepRows.Count > 2)
@@ -1071,9 +1090,12 @@ namespace LastCall.UI
             _shakerTitle = NewText("Title", _shakerPanel, _display, 16, TextAnchor.UpperCenter, UITheme.PrimaryAction);
             Stretch(_shakerTitle.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -44), new Vector2(0, -10));
 
-            var hint = NewText("Hint", _shakerPanel, _body, 8, TextAnchor.UpperCenter, UITheme.TextSecondary);
-            Stretch(hint.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -58), new Vector2(0, -46));
-            hint.text = "GRAB THE BOTTLE TO POUR · STIR IT, OR CAP IT AND SHAKE";
+            // The standing line under the title. It named both methods as a menu of two,
+            // which stopped being true when the recipe started naming one (2026-08-14) —
+            // UpdateStepCard rewrites it with the method the tin actually asks for.
+            _shakerHint = NewText("Hint", _shakerPanel, _body, 8, TextAnchor.UpperCenter, UITheme.TextSecondary);
+            Stretch(_shakerHint.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -58), new Vector2(0, -46));
+            _shakerHint.text = ShakerHintFor(null);
 
             // THE WALL BEHIND THE BENCH. With the rail taken out the top half of the room
             // was a flat void, and a bench standing in a void reads as a diagram of a

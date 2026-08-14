@@ -1059,13 +1059,13 @@ namespace LastCall.Core
                 throw new ArgumentException(
                     $"'{ingredientId}' is a keg — beer is pulled into the glass, never built in the shaker.",
                     argName);
-            // Carbonated is built, not shaken (v5 P10, GDD 21 §12): fizz goes straight into
-            // the serving glass. Same reasoning as the keg rule above — the refusal lives
-            // here because the sim and the tests use these verbs too.
-            if (bottle.Ingredient.Info != null && bottle.Ingredient.Info.Carbonated)
-                throw new ArgumentException(
-                    $"'{ingredientId}' is carbonated — it goes straight into the serving glass, never the shaker.",
-                    argName);
+            // FIZZ COMES INTO THE TIN NOW (2026-08-14, the author: "tüm içecekler shakera
+            // koyulacak, soda gibi gazlı içecekler karıştırılacak tarife göre"). The old
+            // refusal sent carbonated straight to the serving glass, which gave the bar two
+            // building places and left the tin holding half a drink; the method a recipe
+            // asks for is what decides whether it is worked, and Built is a method. The
+            // serving glass keeps its own door (PourAtGlass) — the tap and the sim use it —
+            // but nothing is barred from the tin except the keg.
             return bottle;
         }
 
@@ -1365,16 +1365,62 @@ namespace LastCall.Core
         public const double MixEpsilon = 0.03;
 
         /// <summary>
-        /// Does the tin hold a drink that MUST be mixed before it leaves — two or more
-        /// distinct alcoholic ingredients at a real share each? Alcoholic is the category
-        /// test (<see cref="IngredientCategories.IsAlcoholic"/>): liqueurs count, because a
-        /// Martini is gin and vermouth and it is exactly the drink this rule is about. ABV
+        /// THE METHOD THE TIN'S OWN CONTENTS ASK FOR (2026-08-14, the author: "tariflerin
+        /// hangilerinin çalkalanması gerektiği hangisinin karıştırması gerektiği belirtilsin
+        /// önemli"). The tin is matched against the book the same way the pour-out picks its
+        /// glassware, and the matched recipe's <see cref="RecipeDefinition.Prep"/> is the
+        /// answer — Built included, because "do not work this one" is an instruction too.
+        /// Null while nothing in the book fits, which is most of a half-built drink's life.
+        ///
+        /// This reads the tin, never the order: a mix declares its own method, so nothing
+        /// here can leak what the customer asked for (the hidden-information rule).
+        /// </summary>
+        public PrepMethod? TinMethod
+        {
+            get
+            {
+                // Cached against the tin's own shape, because the bench asks for this several
+                // times a frame (the step card, the lid's nudge, MixRequired inside
+                // CanPourOut) and a match walks every recipe in the book building two ratio
+                // maps as it goes. Nothing can change the answer without changing how much is
+                // in the tin or how many things are in it — pours only ever add, and the one
+                // verb that takes away empties it.
+                int count = Glass.Ingredients.Count;
+                double volume = Glass.TotalVolume;
+                if (count != _tinSigCount || volume != _tinSigVolume)
+                {
+                    _tinSigCount = count;
+                    _tinSigVolume = volume;
+                    _tinMethod = RatioRecipeMatcher.Match(Glass, _recipes, IngredientOf)?.Recipe?.Prep;
+                }
+                return _tinMethod;
+            }
+        }
+
+        private int _tinSigCount = -1;
+        private double _tinSigVolume = double.NaN;
+        private PrepMethod? _tinMethod;
+
+        /// <summary>
+        /// Does the tin hold a drink that MUST be worked before it leaves?
+        ///
+        /// The recipe answers when the book knows the drink (2026-08-14): a Shaken or a
+        /// Stirred one has to be worked, a Built one never does — which is what lets the
+        /// highballs come through the tin now that the fizz is allowed in it. Only when
+        /// nothing matches does the old structural rule stand in: two or more distinct
+        /// alcoholic ingredients at a real share each. Alcoholic is the category test
+        /// (<see cref="IngredientCategories.IsAlcoholic"/>): liqueurs count, because a
+        /// Martini is gin and vermouth and it is exactly the drink that rule is about. ABV
         /// never feeds a rule — that law is written where the categories live.
         /// </summary>
         public bool MixRequired
         {
             get
             {
+                var method = TinMethod;
+                if (method.HasValue)
+                    return method.Value == PrepMethod.Shaken || method.Value == PrepMethod.Stirred;
+
                 int booze = 0;
                 foreach (var id in Glass.Ingredients)
                 {

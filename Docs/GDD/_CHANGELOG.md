@@ -2,6 +2,27 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `21 §12/§14` **the tin takes everything, and the recipe names the method (2026-08-14, the
+  author: "tüm içecekler shakera koyulacak soda gibi gazlı içecekler karıştırılacak tarife
+  göre" + "tariflerin hangilerinin çalkalanması gerektiği hangisinin karıştırması gerektiği
+  belirtilsin önemli"):** §12's rule that carbonated never enters the shaker is **overturned**.
+  `ShakerIngredient` refuses only the keg now, and what happens to a mix in the tin is its
+  recipe's `prepMethod` — `MixRequired` reads `TinMethod` (the matched recipe's method) and
+  falls back to the two-spirit rule only when the book cannot name the drink. That is what
+  lets the twenty-one **Built** highballs come through the tin instead of being assembled in
+  the serving glass, which is what gave the bar two building places and stranded a tin with
+  the lid open when a soda was picked up after the spirits.
+  **The bench says which:** the step card's third row is SHAKE IT / STIR IT / BUILT, NO
+  MIXING, the line under the title names the method, and the recipe book prints BUILT beside
+  SHAKEN and STIRRED now that it is an instruction you can get wrong. **The wall routes on
+  the lid:** open tin → the bench, closed tin → the counter, closed-but-unworked → back to
+  the bench with the reason. **And the lid comes off again** (`UncapTin`) — "karıştırmayı
+  unutursa diye".
+  Two defaults changed with it, because the method stopped being a grading detail the moment
+  it could refuse a pour: `RecipeDefinition`'s constructor defaults to **Built** (a rule that
+  conscripts the player must be asked for out loud), and `DataLoader` now **throws** on a
+  recipe that names no `prepMethod` instead of silently making it shaken.
+
 - `16 §2` **one key, everywhere (2026-08-14):** the four dialects are closed. `KeyPlate.Dress`
   is the only way a control gets dressed now — the drawn `ChromeArt.Key()` body, sliced,
   tinted by the caller, with the house press wired to a face that carries the caption. It
