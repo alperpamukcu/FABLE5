@@ -1194,8 +1194,13 @@ namespace LastCall.EditorTools
             public readonly Dictionary<int, (int income, int rent, int stock, int nights)> ByNight =
                 new Dictionary<int, (int, int, int, int)>();
 
-            public readonly Dictionary<int, (int reds, int closes)> ByDay =
-                new Dictionary<int, (int, int)>();
+            // A RED NIGHT AND A SHOPPING NIGHT ARE NOT THE SAME NIGHT (2026-08-15). The day's
+            // net counts what was SPENT ON THE BAR — a $58 bourbon bought at closing makes the
+            // books red exactly the way a bad night does. `opReds` leaves the shopping out and
+            // counts only nights the takings failed to cover rent and stock, which is the one
+            // of the two that means the bar is in trouble.
+            public readonly Dictionary<int, (int reds, int opReds, int closes)> ByDay =
+                new Dictionary<int, (int, int, int)>();
 
             public void RecordServe(ServiceVerdict verdict, bool pint = false, double head = 0,
                 int specRequests = 0)
@@ -1276,7 +1281,9 @@ namespace LastCall.EditorTools
                 ExpenseSum += result.Expenses;
                 SatisfactionSum += result.AverageSatisfaction;
                 ByDay.TryGetValue(result.Day, out var row);
-                ByDay[result.Day] = (row.reds + (result.Net < 0 ? 1 : 0), row.closes + 1);
+                bool operatingRed = result.Income - result.Rent - result.Stock < 0;
+                ByDay[result.Day] = (row.reds + (result.Net < 0 ? 1 : 0),
+                                     row.opReds + (operatingRed ? 1 : 0), row.closes + 1);
                 ByNight.TryGetValue(result.Day, out var n);
                 ByNight[result.Day] = (n.income + result.Income, n.rent + result.Rent,
                                        n.stock + result.Stock, n.nights + 1);
@@ -1386,14 +1393,22 @@ namespace LastCall.EditorTools
                 }
 
                 sb.AppendLine();
+                // THE WHOLE HORIZON, NOT THE FIRST FIFTEEN (2026-08-15). This table used to
+                // stop at day 15 while the runs went to 30, so the late game — the half the
+                // audit could not evaluate — was computed every time and thrown away.
                 sb.AppendLine("## Red days by day number");
                 sb.AppendLine();
-                sb.AppendLine("| Day | Closed | In the red |");
-                sb.AppendLine("|---|---|---|");
-                foreach (var day in ByDay.Keys.OrderBy(d => d).Take(15))
+                sb.AppendLine("Two columns because there are two ways to end a night behind: the");
+                sb.AppendLine("takings failed to cover rent and stock, or they covered it and the bar");
+                sb.AppendLine("went shopping. Only the second column is trouble.");
+                sb.AppendLine();
+                sb.AppendLine("| Day | Closed | In the red | Red before shopping |");
+                sb.AppendLine("|---|---|---|---|");
+                foreach (var day in ByDay.Keys.OrderBy(d => d))
                 {
                     var row = ByDay[day];
-                    sb.AppendLine($"| {day} | {row.closes} | {Pct(row.reds, row.closes)} |");
+                    sb.AppendLine($"| {day} | {row.closes} | {Pct(row.reds, row.closes)} | " +
+                                  $"{Pct(row.opReds, row.closes)} |");
                 }
                 return sb.ToString();
             }

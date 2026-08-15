@@ -153,6 +153,31 @@ Dürüst liste — hiçbiri "sonra bakarız" diye gizlenmedi:
 | **UI testsiz** | denetimin §4 borcu; bu tur menü regresyonuyla **bedelini gösterdi** | 14.791 satır, 0 test |
 | **Elle yerleştirilen dekor ışık almıyor** | `StageDressing` overlay canvas'ta (−5) | sürükle-bırak katmanı world'e taşınmadı |
 
+### 0.7 · İş kolu — kesilen tablo ve görünmeyen fiil (2026-08-15)
+
+İki P0/P1 kalemi kapandı ve biri beklenmedik bir cevap verdi.
+
+**Tablo 30 güne açıldı** (`TycoonSimulator` `.Take(15)` düştü) ve ikinci bir sütun kazandı:
+bir gece iki türlü kırmızı biter — ya hasılat kirayı ve stoğu karşılamamıştır, ya karşılamış
+ve bar alışverişe çıkmıştır. Ayrımı `DayResult` zaten taşıyordu (`Rent`/`Stock`/`Upgrades`),
+rapor sormuyordu.
+
+**Bulgu — geç oyunda ekonomik sıkışma YOK.** 200 koşu × 30 gün, alışveriş hariç kırmızı gün
+sayısı **her gün için 0.0%**. Kırmızı eğrisinin tepeleri (g21 %82, g28 %70) tamamen botun
+kendi alışverişi. Denetimin "geç oyun kötüleşiyor" endişesi, ölçülebilir hâle geldiğinde
+kendini doğrulamadı: kira bu ufukta hiç ısırmıyor, bar masrafını her gece çıkarıyor, kaybetmenin
+tek yolu harcamak. **Uyarı:** bu kusursuz oyun (Exact %100). Hata ekonomisi hâlâ ölçülmedi —
+`LastCall → Measure Imperfect Hands` sıradaki P0.
+
+**Kaşık dört yıldıza kadar oyunda yoktu.** Tin kapandığından beri (2026-08-13) yöntemi
+**tarif** söylüyor (`MixRequired` → `TinMethod`), en erken `Stirred` tarif ise rank 22'ydi:
+her stirred klasik vermut ya da amaro ister, ikisi de 4★'da açılıyor. Yani oyuncu barın
+ömrünün çoğunu tezgâhın yarısını hiç görmeden geçirebiliyordu. Black Russian (rank 8, 0★
+— iki ağır sıvı, gaz yok, çalkalamak kahve likörünü köpürtür) ve Mint Julep (rank 21) gerçek
+yöntemlerine döndü; yeni şişe, yeni fiyat, yeni sayfa yok. Sim çıktısı **birebir aynı** kaldı
+(bot yöntemi zaten tariften okuyor), yani bu bir denge değişikliği değil, bir öğretme
+değişikliği.
+
 ---
 
 ## 1 · Yönetici özeti
@@ -245,7 +270,7 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 
 | Öncelik | İş | Neden / çıktı |
 |---|---|---|
-| **P0** | Sim tablosunu 30 güne aç + yeniden koştur | geç-oyun ekonomisi ilk kez görünür; 1 satırlık düzeltme |
+| ~~P0~~ ✅ | ~~Sim tablosunu 30 güne aç + yeniden koştur~~ | **kapandı 2026-08-15** — §0.7; geç oyun görünür ve cevap "sıkışma yok" |
 | **P0** | Bota kusurlu-oyun modu (isabet/oran gürültüsü, gecikme) | Close/Wrong/Refused ekonomisi ilk kez ölçülür |
 | **P0** | `BottleArt.cs` bayrağını commit et (test yeşiliyle) | çalışma ağacı temizlenir |
 | **P0** | CLAUDE.md onarımı (UI satır sayısı, modül işaretçileri) | yanlış pusula düzelir |
@@ -276,5 +301,5 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 | Öncelik | İş | Neden / çıktı |
 |---|---|---|
 | **P0** | Kadro evrakını (`PatronPapers`, 30 satır) `TycoonHud`'dan `customers/papers.json`'a taşı | "içerik veridir" kuralını ihlal ediyor; hikâye karakterleri aynı tabloyu paylaşacak, yazarın C#'a dokunması gerekmemeli (PLAN S0) |
-| **P1** | Tarif merdivenine **erken bir stirred içki** ekle | karıştırılan her tarif rank 22+ (4★ bandı), shake ise rank 3'te öğreniliyor — 2026-08-11'de eklenen stir fiili koşunun çoğunda hiç görünmüyor |
+| ~~P1~~ ✅ | ~~Tarif merdivenine **erken bir stirred içki** ekle~~ | **kapandı 2026-08-15** — Black Russian (rank 8, 0★) ve Mint Julep (rank 21) Built→Stirred; yeni bant testi `TheFirstRung_TeachesEveryVerbTheBenchAsksFor` geri düşmeyi engelliyor |
 | **P2** | Gecenin bitişi tek cümlede kalsın | `Floor.IsComplete` bugün TEK yerden okunuyor (`TycoonRun:688`) — son müşteri kapanıştan SONRA oturacağı için bu koşul "misafir de gittiyse" hâline gelmeli; ikinci bir okuyucu doğarsa beat sessizce kaybolur |

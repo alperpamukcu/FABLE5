@@ -73,7 +73,10 @@ namespace LastCall.Core
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, so) },
                     locked: true,
                     Band("vodka", .30, .50), Band("orange", .50, .70)),
-                Cocktail("black_russian", "Black Russian", 8, 20, 2, 15, 1, PrepMethod.Built, "rocks",
+                // The first drink that wants the spoon. Two heavy liquids and no fizz: shaking
+                // one only foams the coffee liqueur, so it is stirred — which is how the bar
+                // teaches the verb before the vermouth shelf opens at four stars.
+                Cocktail("black_russian", "Black Russian", 8, 20, 2, 15, 1, PrepMethod.Stirred, "rocks",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw) },
                     locked: true,
                     Band("vodka", .55, .75), Band("coffee_liqueur", .25, .45)),
@@ -252,7 +255,7 @@ namespace LastCall.Core
                     new[] { new PatternRequirement(1, s), new PatternRequirement(2, so) },
                     locked: true,
                     Band("tequila", .35, .55), Band("pineapple", .30, .50), Band("lime", .08, .22)),
-                Cocktail("mint_julep", "Mint Julep", 21, 30, 3, 20, 1, PrepMethod.Built, "rocks",
+                Cocktail("mint_julep", "Mint Julep", 21, 30, 3, 20, 1, PrepMethod.Stirred, "rocks",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(1, g) },
                     locked: true,
                     Band("bourbon", .68, .88), Band("syrup", .08, .24), Band("mint", .03, .15)),

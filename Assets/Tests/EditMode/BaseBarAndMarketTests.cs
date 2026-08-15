@@ -255,6 +255,38 @@ namespace LastCall.Tests
             CollectionAssert.Contains(types, IngredientType.Sour);
             CollectionAssert.Contains(types, IngredientType.Sweet);
         }
+
+        /// <summary>
+        /// EVERY VERB THE BENCH CAN ASK FOR IS TAUGHT ON THE FIRST RUNG (2026-08-15).
+        ///
+        /// The bench asks for exactly three things — pour it, shake it, stir it — and since
+        /// the tin was closed (2026-08-13) it is the RECIPE that decides which: `MixRequired`
+        /// reads `Prep`, so a rung with no stirred page never puts the spoon in anyone's hand.
+        /// The audit caught the ladder doing precisely that: the earliest stirred page was
+        /// rank 22, four rungs up, because every stirred classic wants vermouth or amaro and
+        /// both wait for four stars. A player could run most of a bar's life and never learn
+        /// half the bench.
+        ///
+        /// This does not pin WHICH page teaches it — only that the opening rung teaches all
+        /// three. Move Black Russian up and something stirred has to move down with it.
+        /// </summary>
+        [Test]
+        public void TheFirstRung_TeachesEveryVerbTheBenchAsksFor()
+        {
+            var book = RecipeCatalog.CreateDefault();
+            var run = new TycoonRun(new Shelf(new[] { new ShelfBottle(All().First()) }),
+                book, new RunRng("verbs"));
+
+            var taught = book.Where(r => run.RecipeStarGate(r) <= 0.0)
+                .Select(r => r.Prep).Distinct().ToList();
+
+            foreach (var verb in new[] { PrepMethod.Built, PrepMethod.Shaken, PrepMethod.Stirred })
+                CollectionAssert.Contains(taught, verb,
+                    $"no zero-star page is {verb}, so a new bar never learns that half of the " +
+                    "bench. Zero-star pages: " + string.Join(", ", book
+                        .Where(r => run.RecipeStarGate(r) <= 0.0)
+                        .Select(r => $"{r.Id}({r.Prep})")));
+        }
     }
 
     /// <summary>

@@ -71,6 +71,44 @@ namespace LastCall.Tests
         }
 
         /// <summary>
+        /// The other half of the same rule, and the one the ladder was missing (2026-08-15):
+        /// a page that says Stirred holds the tin until the spoon goes in. Black Russian is
+        /// the zero-star page that carries it — two heavy liquids, no fizz, nothing to shake —
+        /// so this is the verb a new bar actually meets rather than one it reads about.
+        /// </summary>
+        [Test]
+        public void TheFirstStirredPage_HoldsTheTinUntilTheSpoonGoesIn()
+        {
+            // The shipped page, not a stand-in — the claim is about the drink a new bar can
+            // actually buy. Every page but the openers is `locked` (the run filters those out
+            // of the matcher until they are bought at a day's end), so it is poured here
+            // through a copy that is open: same rank, same bands, same method.
+            var shipped = RecipeCatalog.CreateDefault().Single(r => r.Id == "black_russian");
+            Assert.AreEqual(PrepMethod.Stirred, shipped.Prep, "the zero-star page that carries the spoon");
+
+            var open = new RecipeDefinition(shipped.Id, shipped.Name, shipped.Rank,
+                shipped.BaseFlavor, shipped.BaseMult, shipped.FlavorPerLevel, shipped.MultPerLevel,
+                shipped.Requirements, ratioRequirements: shipped.RatioRequirements,
+                minFill: shipped.MinFill, prep: shipped.Prep, glassId: shipped.GlassId);
+
+            var kahlua = new IngredientCard("liqueur_kafa", "Kafa", IngredientType.Sweet, 5,
+                new IngredientInfo("coffee_liqueur", category: IngredientCategories.Mixer));
+            var vodka = Still("vodka_astra", "vodka", IngredientType.Spirit);
+            var run = new TycoonRun(
+                new Shelf(new[] { new ShelfBottle(kahlua, 20), new ShelfBottle(vodka, 20) }),
+                new[] { open }, new RunRng("stir-seed"));
+            run.PourMeasure("vodka_astra", 0.65);
+            run.PourMeasure("liqueur_kafa", 0.35);
+
+            Assert.AreEqual(PrepMethod.Stirred, run.TinMethod, "the tin reads as a Black Russian");
+            Assert.IsTrue(run.MixRequired, "and a stirred drink is worked before it leaves the tin");
+            Assert.IsFalse(run.ShakeBlowsTheTin, "there is no fizz in it — shaking is wrong, not an accident");
+
+            run.Stir(1.0);
+            Assert.IsTrue(run.CanPourOut, "once it is stirred the tin lets go");
+        }
+
+        /// <summary>
         /// Shaking a tin of fizz bursts it (2026-08-14, the author: "gazlı içecekler
         /// çalkalandığında patlayabilir"). The drink is gone, the goods are written off at
         /// the bin's own rate, and the bar is back where it started — the accident is the
