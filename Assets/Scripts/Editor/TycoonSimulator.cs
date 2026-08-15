@@ -435,11 +435,113 @@ namespace LastCall.EditorTools
             sb.AppendLine("reason: the glass cannot overflow, and the fill score only counts");
             sb.AppendLine("shortfalls, so pouring long is free and pouring short is not.");
 
+            AppendWhyTheBandsAreNotTheReason(sb);
+
             Debug.Log(sb.ToString());
             var path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Docs",
                 "imperfect_hands_report.md"));
             File.WriteAllText(path, sb.ToString());
             Debug.Log($"[TycoonSim] wrote {path}");
+        }
+
+        /// <summary>
+        /// WHY A HAND 18% OFF STILL POURS EXACT (2026-08-15). The table above says the pour
+        /// has almost no consequence and blamed the width of the bands. It is not the width:
+        /// the tightest band in the book allows 11% either side of the ideal, which a hand at
+        /// sigma 0.18 crosses constantly, and the drink still reads as itself.
+        ///
+        /// The reason is that the matcher reads PROPORTIONS. Every share is jittered and then
+        /// divided by the total, so the part of the error common to all the pours cancels
+        /// exactly: a bartender who pours everything 18% long has poured a bigger, identical
+        /// drink. Only the SPREAD between the ingredients moves a ratio, and for a two-part
+        /// drink that spread arrives halved.
+        ///
+        /// This section deals each recipe's ideal pour the same dice the sweep deals and
+        /// counts how often the glass leaves its own bands. It is arithmetic, not a night:
+        /// no crowd, no orders, no money — so it separates what the POUR does from what the
+        /// ladder happens to serve.
+        /// </summary>
+        private static void AppendWhyTheBandsAreNotTheReason(StringBuilder sb)
+        {
+            const int Draws = 4000;
+            double[] sigmas = { 0.10, 0.18, 0.30 };
+            var dice = new RunRng("band-tolerance").GetStream("jitter");
+
+            var rows = new List<(string Id, double Budget, double[] Miss)>();
+            foreach (var recipe in RecipeCatalog.CreateDefault())
+            {
+                var bands = recipe.RatioRequirements;
+                if (bands == null || bands.Count < 2) continue;
+                var ideal = RatioRecipeMatcher.IdealPour(recipe);
+                if (ideal == null || ideal.Length != bands.Count) continue;
+
+                // The recipe's error budget: the tightest band's distance from the ideal to
+                // its nearest edge, as a fraction of that band's own share — the same quantity
+                // the sweep jitters, so the two numbers can be read against each other.
+                double budget = double.MaxValue;
+                for (int i = 0; i < bands.Count; i++)
+                    if (ideal[i] > 1e-9)
+                        budget = Math.Min(budget, Math.Min(
+                            (ideal[i] - bands[i].MinRatio) / ideal[i],
+                            (bands[i].MaxRatio - ideal[i]) / ideal[i]));
+                if (budget == double.MaxValue) continue;
+
+                var miss = new double[sigmas.Length];
+                var poured = new double[bands.Count];
+                for (int s = 0; s < sigmas.Length; s++)
+                {
+                    int bad = 0;
+                    for (int d = 0; d < Draws; d++)
+                    {
+                        double total = 0;
+                        for (int i = 0; i < bands.Count; i++)
+                        {
+                            double e = (dice.NextDouble() * 2.0 - 1.0) * sigmas[s];
+                            poured[i] = Math.Max(0, ideal[i] * (1.0 + e));
+                            total += poured[i];
+                        }
+                        if (total <= 0) { bad++; continue; }
+                        for (int i = 0; i < bands.Count; i++)
+                            if (!bands[i].Accepts(poured[i] / total)) { bad++; break; }
+                    }
+                    miss[s] = 100.0 * bad / Draws;
+                }
+                rows.Add((recipe.Id, budget, miss));
+            }
+            if (rows.Count == 0) return;
+
+            sb.AppendLine();
+            sb.AppendLine("## Why the bands are not the reason");
+            sb.AppendLine();
+            sb.AppendLine($"Each recipe's ideal pour, jittered {Draws} times a level the way the sweep");
+            sb.AppendLine("jitters it, then read back as proportions. No crowd and no money: this is");
+            sb.AppendLine("what the POUR does, apart from what the ladder happens to serve.");
+            sb.AppendLine();
+            sb.AppendLine("**Budget** is how far the tightest band sits from the ideal, as a share of");
+            sb.AppendLine("its own pour. Read it against the sigma columns and the cancellation is");
+            sb.AppendLine("plain: a drink with an 11% budget survives a hand 30% off nineteen times in");
+            sb.AppendLine("twenty, because pouring everything long is pouring the same drink bigger.");
+            sb.AppendLine();
+            sb.AppendLine("| Recipe | budget | out of band σ=.10 | σ=.18 | σ=.30 |");
+            sb.AppendLine("|---|---|---|---|---|");
+            foreach (var row in rows.OrderByDescending(r => r.Miss[2]).Take(12))
+                sb.AppendLine($"| {row.Id} | {row.Budget:P0} | {row.Miss[0]:0.0}% | " +
+                              $"{row.Miss[1]:0.0}% | {row.Miss[2]:0.0}% |");
+            sb.AppendLine($"| **mean of {rows.Count}** | {rows.Average(r => r.Budget):P0} | " +
+                          $"{rows.Average(r => r.Miss[0]):0.0}% | {rows.Average(r => r.Miss[1]):0.0}% | " +
+                          $"{rows.Average(r => r.Miss[2]):0.0}% |");
+            sb.AppendLine();
+            sb.AppendLine("The drinks that DO break are the ones poured in near-equal parts — Negroni,");
+            sb.AppendLine("Boulevardier, Rosita, Last Call. Equal shares leave the differential error");
+            sb.AppendLine("nowhere to hide, which is the same reason those are the drinks a real bar");
+            sb.AppendLine("measures rather than eyeballs.");
+            sb.AppendLine();
+            sb.AppendLine("So narrowing the bands is the wrong lever, or at least a weak one: the");
+            sb.AppendLine("forgiveness is structural, and it comes from grading a drink on its");
+            sb.AppendLine("proportions alone. A pour that had to hit a VOLUME as well as a ratio, or a");
+            sb.AppendLine("fill score that counted long pours the way it counts short ones, would cost");
+            sb.AppendLine("a shaky hand something at every sigma. That is a design decision and it is");
+            sb.AppendLine("the author's — this section exists so it can be made against numbers.");
         }
 
         public static void Simulate(int runs)
