@@ -169,3 +169,7 @@ Packages/packages-lock.json linguist-generated
 
 # Exceptions for .asset files such as lightning pre-baking
 LightingData.asset     binary
+
+# README images stay plain git blobs — GitHub does not render LFS-stored
+# images inside Markdown, so anything referenced from README.md lives here.
+Docs/readme/*.png       -filter -diff -merge -text
