@@ -268,16 +268,16 @@ renk var, bu renkler sadece hava katmalı ana renkler olmamalı."* Measured on t
 
 | | measured | what it should be |
 |---|---|---|
-| frame above S 0.40 | **55%** | ≤ 20% |
+| frame above S 0.40 | **55%** | ≤ 20% — counted OUTSIDE the architecture ramps (2026-08-18): bordeaux brick and oak ARE over S 0.40 per colour and are §5a/§6's own mandated materials, so the gate measures the six signal ramps plus Amber/ClubBlue's two brightest steps; Graphite/Night/Cream/Brick/Malt and Amber[0–2]/ClubBlue[0–2] count as material |
 | single loudest hue (magenta 300°) | **31% of the frame** | ≤ 10% per hue |
 | `#C23283` alone (Magenta[2], S 0.59) | **21.4% of the frame** | it is a SIGN colour |
 | distinct colours used | 24, and only **17 of the palette's** | spend the ramps |
 
 The cause was mechanical, not taste: the plate had been snapped to a **40-colour** palette
 that is this table minus **Graphite, Brick and Lime** — so the room had no dark neutral to be
-built out of, and Night-plum and Magenta[2] became the walls and the floor. Walls, ceiling and
-cabinetry come from **Graphite** and **Brick**; plaster from **Cream[0..2]**; the espresso
-floor from **Night**. Magenta, Cyan, ViceRed and ClubBlue's bright steps belong to signage,
+built out of, and Night-plum and Magenta[2] became the walls and the floor. Architecture
+takes its colours from §5a's per-object law (plaster field `Cream[3]`, cabinetry and metal
+from **Graphite**, masonry from **Brick**, the espresso floor from **Night**). Magenta, Cyan, ViceRed and ClubBlue's bright steps belong to signage,
 LED, window light and small props — the things that would be EMISSIVE if they were lit, which
 is why they are also the things §7b(1) forbids painting light around.
 
@@ -336,10 +336,17 @@ logging of 15 §2–5 apply as patched 2026-08-17 (55-colour quantize; rim per �
 exact-size REJECT is for sprites — backgrounds are deliberately generated large and
 area-downsampled per this section).
 
-**A. Canvas & framing.** Generate 16:9 (2816×1584 or similar is fine — it downsamples to
-640×360 cleanly). Compose against §5b's anchor table. No text (the neon sign prop excepted),
-no brands, no humans. Chunky pixel look requested in-prompt; the true pixel grid is made in
-post, so generation-side pixel size need not be exact.
+**A. Canvas & framing — NATIVE SIZE, and this is a law (2026-08-18).** Plates are
+generated **directly at target size** (room 640×360, counter strips as 640×360 transparent
+and cropped to 640×150) and are never rescaled anywhere in the chain. This paragraph used
+to say "generate 2816×1584, it downsamples cleanly", and the measurement that killed it is
+recorded in the repo's memory the same day: area-downscaling folds four painted pixels into
+one — the batch shipped that way measured 40,859 colours, 100% off-palette, and read as
+blur beside the hand-drawn bottles. One pixel must be one decision. The generator for this
+path is PixelLab `create_image_pro` (16:9 cap 688×384, so 640×360 fits in one call) via
+`Tools/scene_v3_gen.py`; Nano Banana remains licensed only if it can emit true native-size
+output. Compose against §5b's anchor table. No text (the neon sign prop excepted), no
+brands, no humans.
 
 **B. The green key.** Window panes are flat chroma green `#00FF00`, and that green appears
 NOWHERE else in the image. Post keys the panes to transparent holes; the window plate (§7)

@@ -41,7 +41,7 @@ STYLE = ('clean 1px outlines in each material\'s darkest tone, flat shading, '
 # highlight baked into the plate glows in a dark room, sits on the wrong side when the light
 # moves, and reflects a source that is not there. Form comes from the RAMP's own steps.
 VICE = ('subtle wear and uneven texture, flat matte local colour, form shaded only by '
-        'stepping along each material's own colour ramp, ordered 2x2 dither where a '
+        "stepping along each material's own colour ramp, ordered 2x2 dither where a "
         'surface must gradate, lively hand-pixelled detail, no specular highlights, '
         'no reflections, no cast shadows, no rim light, no glow, no bloom, '
         'even flat lighting, no text, no people')
@@ -62,52 +62,139 @@ PALETTE = [
     0x38161A, 0x5C2226, 0x7E3130, 0x9C4740, 0xB96253,   # Brick
 ]
 
-COUNTER_BASE = ('graphite cabinet base #24272D with panel faces #383D45, '
-                'brass handles #C9822B, glass fridge doors on the right with a '
-                'faint cool interior light #123B45')
+COUNTER_BASE = ('below the top a graphite cabinet base: cabinet faces #383D45, '
+                'recessed panel insets #24272D, thin lit rims #545A64, outline '
+                '#14161A, small brass door handles #C9822B, two glass-door '
+                'fridge sections with frames #383D45, dark glass #24272D, wire '
+                'racks #545A64 and a very faint deep-teal interior light '
+                '#123B45, and one open shelf niche with interior #24272D and '
+                'shelf edges #545A64')
+
+# THE CALM LITANY (2026-08-18, after the homework pass). Every plate prompt ends in
+# this. It is 14 SS7b said as generation words, plus the doctrine the world examples
+# agree on (VA-11 Hall-A, Coffee Talk, PC-98 interiors; Slynyrd's band construction):
+# a room is 3-5 flat horizontal value bands, saturation is light rather than paint,
+# detail lives in clusters of at least 2x2, and nothing painted glows.
+CALM = ("flat matte local colour, big readable colour shapes, minimum detail "
+        "cluster 2x2 px, clean 1px outlines in each material's darkest tone, "
+        'no anti-aliasing, no dithering, no specular highlights, no '
+        'reflections, no cast shadows, no rim light, no glow, no bloom, '
+        'even neutral daylight, no people, no text, no signage')
+
+# The room shell, said as SS5a's per-object law with SS5b's WISH composition (the
+# window punched in the back wall - the straight-on stage cannot use the left-wall
+# perspective shopfront the third batch painted). Frame budget per the doctrine
+# pass: quiet ramps own the frame, the only chroma is the navy window frame.
+ROOM_DESC = (
+    'pixel art, flat straight-on front elevation of an EMPTY bar interior, a '
+    'theatrical stage backdrop with no perspective and no vanishing point, '
+    'built from big flat horizontal bands. Ceiling band: matte plaster '
+    '#9C8F80 with a thin cornice line #6E6459 and two slim graphite air '
+    'ducts #383D45 with top edge #545A64 and straps #24272D. Back wall '
+    'band: matte cream plaster #C9BCA8 with sparse lighter patches #F2E8D5, '
+    'faint shade #9C8F80 and two hairline cracks #6E6459. Centered on the '
+    'back wall one large rectangular window, navy painted wood frame '
+    '#2E4699 with bevel #4467CC, shadow side #1F2E66 and outline #131B3D, '
+    'holding three tall window panes each filled with FLAT solid pure green '
+    '#00FF00, separated by thin navy mullions. The right third of the back '
+    'wall is exposed bordeaux brick: brick field #7E3130, shadowed courses '
+    '#5C2226, sparse lit brick faces #9C4740, mortar lines #38161A. Where '
+    'wall meets floor a graphite baseboard #383D45 with top edge #545A64. '
+    'Floor band filling the bottom third: espresso wood planks in straight '
+    'horizontal rows, plank faces alternating #241830 and #1A1023, sparse '
+    'short grain ticks #362447, seam lines #0D0813. NO furniture, NO '
+    'window view, ' + CALM)
+
+T1_DESC = (
+    'pixel art, straight-on front elevation of one long straight bar '
+    'counter running the full image width, isolated on a transparent '
+    'background, nothing above and nothing behind the counter top. Flat '
+    'oak top slab: top field #8F5A1E with sparse straight grain lines '
+    '#4A2E14 and #C9822B, front edge band #4A2E14, the top surface line '
+    'dead straight and horizontal across the entire width, no foot rail. '
+    + COUNTER_BASE + '. NO wall, NO floor, NO room, NO bottles, NO '
+    'glasses, ' + CALM)
+
+T2_DESC = (
+    'pixel art, straight-on front elevation of one long straight bar '
+    'counter running the full image width, isolated on a transparent '
+    'background, nothing above and nothing behind the counter top. Flat '
+    'white marble top slab: top field #C9BCA8, thin 1px veins #F2E8D5 and '
+    '#9C8F80 as sparse short runs never dense fields, front edge #9C8F80, '
+    'the top surface line dead straight and horizontal across the entire '
+    'width, one slim steel foot rail #545A64 with a single 1px light line '
+    '#808893. ' + COUNTER_BASE + '. NO wall, NO floor, NO room, NO '
+    'bottles, NO glasses, ' + CALM)
+
+T3_DESC = (
+    'pixel art, straight-on front elevation of one long straight bar '
+    'counter running the full image width, isolated on a transparent '
+    'background, nothing above and nothing behind the counter top. Flat '
+    'navy marble top slab: top field #1F2E66 with subtle flat mottling '
+    '#131B3D and #2E4699, thin 1px pale veins #C9BCA8 and a few short '
+    'gold vein ticks #E8A33D as sparse short runs never dense fields, '
+    'polished front edge #2E4699, outline #131B3D, the top surface line '
+    'dead straight and horizontal across the entire width. Along the '
+    'front lip one slim brass rail: body #C9822B, upper face #E8A33D, a '
+    'single 1px pale line #F2E8D5. ' + COUNTER_BASE + '. NO wall, NO '
+    'floor, NO room, NO bottles, NO glasses, ' + CALM)
+
+
+# Second room take (same sitting): the first four seeds all put the wall-floor line at
+# y~255-285, because the prompt said "bottom third" - and the FIXTURE SLOTS are the real
+# constraint. Wall pieces (sconce, neon) hang at art y~138, floor tables stand at y~231:
+# the one line that serves both is the vertical MIDDLE, which is also what the shipped
+# room measures (as-built y=181), so no slot in fixtures.json moves. The wish table's
+# y~130 would put the sconces on the floor; it is the wish that bends, not the data.
+ROOM_DESC2 = ROOM_DESC.replace(
+    'Where '
+    'wall meets floor a graphite baseboard #383D45 with top edge #545A64. '
+    'Floor band filling the bottom third: espresso wood planks in straight '
+    'horizontal rows',
+    'Where wall meets floor a graphite baseboard #383D45 with top edge '
+    '#545A64, and this wall-floor line runs dead straight and horizontal '
+    'across the full width at exactly HALF the image height. Floor band '
+    'filling the entire lower half of the image: espresso wood planks in '
+    'straight horizontal rows'
+).replace(
+    'Centered on the back wall one large rectangular window',
+    'Centered on the back wall, its sill resting just above the wall-floor '
+    'line at half height, one large rectangular window'
+).replace(
+    'two hairline cracks #6E6459',
+    'only a few faint small wear stains and two hairline cracks #6E6459, '
+    'mostly clean flat plaster')
+
+
+def _plate(desc, seed, transparent):
+    return dict(kind='image', tool='create_image_pro', seed=seed,
+        args=dict(width=640, height=360, no_background=transparent,
+                  description=desc),
+        post='counter' if transparent else 'room')
+
 
 # kind: image (create_image_pro / pixflux -> job id -> get_image)
 #       object (create_1_direction_object -> object id -> get_object)
+#
+# The plates are queued as CANDIDATE SETS - same prompt, different seeds - so the
+# author picks from a contact sheet instead of accepting whatever one roll gave
+# (bottle-art rule: new assets go through an HTML report BEFORE the game).
 ASSETS = {
-    'club_room': dict(kind='image', tool='create_image_pro', seed=41301,
-        args=dict(width=640, height=360, no_background=False, description=(
-            'pixel art, EMPTY interior of a Miami vice cocktail lounge at '
-            'golden hour, straight-on view, no furniture - warm cream plaster '
-            'walls #C9BCA8 with a faint sunset-pink tint #FF7DC6 ONLY on the '
-            'window-side edge, espresso wood plank floor #241830 with a violet '
-            'plank step #362447, bordeaux brick wall on the right '
-            '#9C4740 with deep mortar #38161A, silver-blue window frame '
-            '#4467CC with polished chrome edges #808893 holding three flat '
-            'chroma green #00FF00 panels, thin gold trim lines #E8A33D along '
-            'the cornice, ' + VICE)),
-        post='room'),
-    'counter_t1': dict(kind='image', tool='create_image_pro', seed=41211,
-        args=dict(width=640, height=360, no_background=True, description=(
-            'pixel art, isolated bar counter strip running the full image '
-            'width, viewed straight on, on a transparent background - plain '
-            'oak top #8F5A1E with grain #4A2E14 and #C9822B, dead-straight '
-            'level top surface, no foot rail, ' + COUNTER_BASE + ', ' + STYLE)),
-        post='counter'),
-    'counter_t2': dict(kind='image', tool='create_image_pro', seed=41212,
-        args=dict(width=640, height=360, no_background=True, description=(
-            'pixel art, isolated bar counter strip running the full image '
-            'width, viewed straight on, on a transparent background - white '
-            'marble top #C9BCA8 with thin veins #F2E8D5 and #9C8F80, '
-            'dead-straight level top surface, one steel foot rail #545A64 '
-            'with a light line #808893, ' + COUNTER_BASE + ', ' + STYLE)),
-        post='counter'),
-    'counter_t3': dict(kind='image', tool='create_image_pro', seed=41313,
-        args=dict(width=640, height=360, no_background=True, description=(
-            'pixel art, isolated luxurious bar counter strip running the full '
-            'image width, viewed straight on, on a transparent background - '
-            'royal navy marble top #2E4699 with lively irregular veins in '
-            'gold #E8A33D, silver #808893 and cream #F2E8D5, glossy polished '
-            'surface with faint pink #FF7DC6 and cyan #7DF0E3 reflections, '
-            'dead-straight level top surface, one gold foot rail #E8A33D '
-            'with bright glints #F5C97B, cabinet base in deep violet-charcoal '
-            '#362447 with silver handles #808893 and glass door panels '
-            'reflecting cool cyan light #3BC8BE, ' + VICE)),
-        post='counter'),
+    'club_room_a': _plate(ROOM_DESC, 41401, False),
+    'club_room_b': _plate(ROOM_DESC, 41402, False),
+    'club_room_c': _plate(ROOM_DESC, 41403, False),
+    'club_room_d': _plate(ROOM_DESC, 41404, False),
+    'club_room_e': _plate(ROOM_DESC2, 41405, False),
+    'club_room_f': _plate(ROOM_DESC2, 41406, False),
+    'club_room_g': _plate(ROOM_DESC2, 41407, False),
+    'club_room_h': _plate(ROOM_DESC2, 41408, False),
+    'counter_t1_a': _plate(T1_DESC, 41501, True),
+    'counter_t1_b': _plate(T1_DESC, 41502, True),
+    'counter_t1_c': _plate(T1_DESC, 41503, True),
+    'counter_t2_a': _plate(T2_DESC, 41504, True),
+    'counter_t3_a': _plate(T3_DESC, 41601, True),
+    'counter_t3_b': _plate(T3_DESC, 41602, True),
+    'counter_t3_c': _plate(T3_DESC, 41603, True),
     'backbar': dict(kind='image', tool='create_image_pro', seed=41315,
         args=dict(width=640, height=360, no_background=False, description=(
             'pixel art, grand back bar shelving wall of a Miami vice '
