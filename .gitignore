@@ -123,3 +123,9 @@ Art/pilot/
 # raw generator output (audit 2026-08-11)
 Tools/*_raw/
 Assets/.agent/
+
+# PixelLab pipeline (2026-08-17): secret + transient generation state
+Tools/pixellab_token.txt
+Tools/scene_v3_raw/
+Tools/scene_v3_state.json
+Tools/AssetPipeline/staging/
