@@ -166,6 +166,46 @@ ROOM_DESC2 = ROOM_DESC.replace(
     'mostly clean flat plaster')
 
 
+# THE MIAMI SHELL (2026-08-18, the author: "genis tavanli baska bir ic mekan yarat,
+# brick kurali nerden geliyorsa ordan gelen kurallari dikkate alma. Tema Miami
+# club/bar"). SS5a's cream-and-brick material table is deliberately SET ASIDE for this
+# room - that is the author's call and it is scoped: the shell/prop split, the green
+# key, the palette law, the calm litany and the half-height wall-floor line all stand,
+# because none of them come from the mockup sitting the brick came from. Miami is said
+# the way the world references say it (VA-11 Hall-A doctrine): DARK architecture in the
+# palette's own plum and navy, cream art-deco trim, and the loud ramps only as thin
+# deco lines - the neon, the palms and the sunset arrive later as props and the window
+# plate, not as wall paint. The GRAND CEILING is the ask: the top quarter of the frame
+# is ceiling, which reads as height precisely because the wall band stays short.
+MIAMI_DESC = (
+    'pixel art, flat straight-on front elevation of an EMPTY Miami art-deco '
+    'night club interior with a GRAND HIGH CEILING, no perspective and '
+    'no vanishing point, built from big '
+    'flat horizontal bands. Ceiling band filling the entire top quarter of '
+    'the image: deep plum night #1A1023, a stepped art-deco cove of three '
+    'thin horizontal lines #362447 #4A3160 #362447 where ceiling meets '
+    'wall, two long slim recessed light troughs drawn dark and unlit '
+    '#241830 with edges #0D0813. Wall band: deep navy flat panels #1F2E66 '
+    'separated by wide flat pilasters #131B3D with thin vertical deco '
+    'fluting lines #2E4699, one continuous cream deco chair-rail line '
+    '#C9BCA8 running the full width, and above it a thin stepped deco '
+    'accent line in muted magenta #8F2464 and one in deep teal #123B45, '
+    'thin 1-2px lines only never fields. Below the chair rail a dark navy '
+    'wainscot #131B3D with flat recessed panel insets #1F2E66. Centered on '
+    'the back wall, its sill resting just above the wall-floor line at '
+    'exactly HALF the image height, one wide rectangular window with a '
+    'rounded-corner cream art-deco frame #C9BCA8, frame shadow #9C8F80, '
+    'outline #453E38, holding three tall panes each filled with FLAT solid '
+    'pure green #00FF00 separated by thin cream mullions. The wall-floor '
+    'line runs dead straight and horizontal at exactly half the image '
+    'height over a graphite baseboard #383D45 with top edge #545A64. Floor '
+    'band filling the entire lower half: dark polished terrazzo, field '
+    '#241830 with large flat tone patches #1A1023, sparse small 2x2 px '
+    'stone flecks #362447 and #4A3160, one straight cream deco border '
+    'line #9C8F80 running horizontally near the wall. NO furniture, NO '
+    'palm trees, NO neon signs, ' + CALM)
+
+
 def _plate(desc, seed, transparent):
     return dict(kind='image', tool='create_image_pro', seed=seed,
         args=dict(width=640, height=360, no_background=transparent,
@@ -188,6 +228,10 @@ ASSETS = {
     'club_room_f': _plate(ROOM_DESC2, 41406, False),
     'club_room_g': _plate(ROOM_DESC2, 41407, False),
     'club_room_h': _plate(ROOM_DESC2, 41408, False),
+    'club_miami_a': _plate(MIAMI_DESC, 41701, False),
+    'club_miami_b': _plate(MIAMI_DESC, 41702, False),
+    'club_miami_c': _plate(MIAMI_DESC, 41703, False),
+    'club_miami_d': _plate(MIAMI_DESC, 41704, False),
     'counter_t1_a': _plate(T1_DESC, 41501, True),
     'counter_t1_b': _plate(T1_DESC, 41502, True),
     'counter_t1_c': _plate(T1_DESC, 41503, True),
