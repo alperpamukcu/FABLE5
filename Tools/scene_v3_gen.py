@@ -255,6 +255,46 @@ T2_DESC2 = T2_DESC.replace(
     'nothing above and nothing behind the counter top.')
 
 
+# THE 3/4 TOP-DOWN TAKE (2026-08-19, the author, on seeing the 2.5D set: "bakis
+# acisi yanlis. 45 derecelik aciyla tepeden bakilmali. odaya dik bir aciyla bakiyor
+# olmamiz lazim ... acisi masanin acisiyla ayni acida olmali"). Not one-point
+# perspective INTO the room - the classic RPG interior camera: PERPENDICULAR to the
+# back wall (no left-right convergence at all) and tilted ~45 degrees down, the same
+# camera the fixture tables and the tap towers are drawn in, so the props sit on the
+# floor instead of on top of a picture of one. Vertical surfaces read straight-on,
+# the floor reads from above and owns the lower half; the ceiling cannot be seen at
+# this angle, so the grand ceiling of the earlier takes becomes a thin cove strip.
+# Materials are club_miami25_b's, kept by name.
+MIAMI34_DESC = (
+    'pixel art, EMPTY Miami art-deco night club interior in classic RPG '
+    '3/4 top-down oblique view, like a SNES RPG room: orthographic, NO '
+    'vanishing point, no perspective convergence, all lines parallel, '
+    'the camera perpendicular to the back wall and tilted 45 degrees '
+    'down. The back wall stands straight-on and flat: deep navy panels '
+    '#1F2E66 with panel joint lines #131B3D, wide flat pilasters '
+    '#131B3D with thin vertical deco fluting #2E4699, a continuous '
+    'cream deco chair-rail line #C9BCA8, one thin stepped muted magenta '
+    'deco line #8F2464 above it, below a dark navy wainscot #131B3D '
+    'with recessed panel insets #1F2E66 and a cream cap line #9C8F80. '
+    'At the very top edge only a thin plum ceiling cove strip #1A1023 '
+    'with two deco lines #362447 #4A3160 - the ceiling itself is not '
+    'visible from this angle. Narrow vertical side-wall strips at the '
+    'far left and far right edges in the same navy. Centered on the '
+    'back wall one wide rectangular window, rounded-corner cream '
+    'art-deco frame #C9BCA8, frame shadow #9C8F80, outline #453E38, '
+    'three tall panes each filled with FLAT solid pure green #00FF00 '
+    'divided by thin cream mullions, sill just above the wall-floor '
+    'line. The wall meets the floor in one dead straight horizontal '
+    'line at HALF the image height over a graphite baseboard #383D45 '
+    'edged #545A64. The floor fills the entire lower half, seen from '
+    '45 degrees above: dark polished terrazzo #241830 in a regular '
+    'flat tile grid with evenly spaced straight seam lines #0D0813, '
+    'large flat tone patches #1A1023, sparse 2x2 px stone flecks '
+    '#362447 and #4A3160, a cream deco border line #9C8F80 along the '
+    'wall base. Medium detail. NO furniture, NO palm trees, NO neon, '
+    + CALM)
+
+
 def _plate(desc, seed, transparent):
     return dict(kind='image', tool='create_image_pro', seed=seed,
         args=dict(width=640, height=360, no_background=transparent,
@@ -285,6 +325,10 @@ ASSETS = {
     'club_miami25_b': _plate(MIAMI25_DESC, 41802, False),
     'club_miami25_c': _plate(MIAMI25_DESC, 41803, False),
     'club_miami25_d': _plate(MIAMI25_DESC, 41804, False),
+    'club_miami34_a': _plate(MIAMI34_DESC, 41901, False),
+    'club_miami34_b': _plate(MIAMI34_DESC, 41902, False),
+    'club_miami34_c': _plate(MIAMI34_DESC, 41903, False),
+    'club_miami34_d': _plate(MIAMI34_DESC, 41904, False),
     'counter_t2_b': _plate(T2_DESC2, 41505, True),
     'counter_t2_c': _plate(T2_DESC2, 41506, True),
     'counter_t2_d': _plate(T2_DESC2, 41507, True),
