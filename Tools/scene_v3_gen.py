@@ -295,6 +295,30 @@ MIAMI34_DESC = (
     + CALM)
 
 
+# THE 30-DEGREE LOW TOP-DOWN TAKE (2026-08-19, the author, pointing at
+# club_miami25_c itself: "Bunu 30 derece low top-down aciya getir"). Between the
+# 2.5D eye-level box and the 45-degree RPG camera: the back wall still tall and
+# parallel, the side walls still giving the depth the author praised, but the camera
+# lifted so the floor spreads and only a narrow band of the coffered ceiling
+# survives at the top. This take does not re-describe the look from scratch - the
+# picked plate ITSELF rides along as create_image_pro's style image (queue()'s
+# style_from), so "bunu" means this picture, not a paragraph about it.
+MIAMI30_DESC = MIAMI25_DESC.replace(
+    'in mild '
+    '2.5D box perspective: one-point perspective with a single central '
+    'vanishing point, a flat back wall parallel to the picture plane, the '
+    'left wall, right wall, ceiling plane and floor plane all receding '
+    'gently toward it, GRAND HIGH CEILING.',
+    'in LOW TOP-DOWN view: the camera tilted about 30 degrees downward, '
+    'a mildly elevated angle, the flat back wall tall and parallel to '
+    'the picture plane, the left and right walls receding gently, only '
+    'a narrow band of the ceiling visible at the very top, the floor '
+    'plane spreading wide toward the viewer.'
+).replace(
+    'Ceiling plane: deep plum night',
+    'Narrow ceiling band at the top: deep plum night')
+
+
 def _plate(desc, seed, transparent):
     return dict(kind='image', tool='create_image_pro', seed=seed,
         args=dict(width=640, height=360, no_background=transparent,
@@ -325,6 +349,26 @@ ASSETS = {
     'club_miami25_b': _plate(MIAMI25_DESC, 41802, False),
     'club_miami25_c': _plate(MIAMI25_DESC, 41803, False),
     'club_miami25_d': _plate(MIAMI25_DESC, 41804, False),
+    'club_miami30_a': dict(kind='image', tool='create_image_pro', seed=42001,
+        args=dict(width=640, height=360, no_background=False,
+                  description=MIAMI30_DESC,
+                  style_from=os.path.join(STAGE, 'club_miami25_c.png')),
+        post='room'),
+    'club_miami30_b': dict(kind='image', tool='create_image_pro', seed=42002,
+        args=dict(width=640, height=360, no_background=False,
+                  description=MIAMI30_DESC,
+                  style_from=os.path.join(STAGE, 'club_miami25_c.png')),
+        post='room'),
+    'club_miami30_c': dict(kind='image', tool='create_image_pro', seed=42003,
+        args=dict(width=640, height=360, no_background=False,
+                  description=MIAMI30_DESC,
+                  style_from=os.path.join(STAGE, 'club_miami25_c.png')),
+        post='room'),
+    'club_miami30_d': dict(kind='image', tool='create_image_pro', seed=42004,
+        args=dict(width=640, height=360, no_background=False,
+                  description=MIAMI30_DESC,
+                  style_from=os.path.join(STAGE, 'club_miami25_c.png')),
+        post='room'),
     'club_miami34_a': _plate(MIAMI34_DESC, 41901, False),
     'club_miami34_b': _plate(MIAMI34_DESC, 41902, False),
     'club_miami34_c': _plate(MIAMI34_DESC, 41903, False),
@@ -433,6 +477,10 @@ def queue(only=None):
         if st.get(key, {}).get('id'):
             continue
         args = dict(a['args'], seed=a['seed'])
+        style_from = args.pop('style_from', None)
+        if style_from:
+            args['style_image_base64'] = base64.b64encode(
+                io.open(style_from, 'rb').read()).decode()
         msgs = pixellab.call(a['tool'], args, timeout=900)
         body = texts(msgs)
         m = UUID.search(body)
