@@ -206,6 +206,55 @@ MIAMI_DESC = (
     'palm trees, NO neon signs, ' + CALM)
 
 
+# THE 2.5D MIAMI SHELL (2026-08-19, the author, with the reference image in hand:
+# "2.5D olmali bar arkaplani, ve biraz daha detayli olabilir. club_miami_b'nin
+# renklerini duvarlarini zeminin ve catisini begendim"). The flat elevation gives way
+# to the AS-BUILT box perspective the code was already re-measured for on 08-18 - a
+# central vanishing point, flat back wall, receding side walls, visible ceiling and
+# floor planes, the window down the LEFT wall - carrying club_miami_b's materials:
+# plum ceiling, navy deco panels and pilasters, cream trim, one magenta line, dark
+# terrazzo. "Biraz daha detayli" is honoured inside the doctrine: more visible joints,
+# moldings and seams, still in clusters of 2x2 or better, still no baked light.
+MIAMI25_DESC = (
+    'pixel art, interior of an EMPTY Miami art-deco night club in mild '
+    '2.5D box perspective: one-point perspective with a single central '
+    'vanishing point, a flat back wall parallel to the picture plane, the '
+    'left wall, right wall, ceiling plane and floor plane all receding '
+    'gently toward it, GRAND HIGH CEILING. Ceiling plane: deep plum night '
+    '#1A1023 with a stepped deco cove #362447 #4A3160 along its edges, '
+    'two long recessed vent troughs #241830 edged #0D0813, three small '
+    'round recessed downlight discs #C9BCA8, unlit. Walls: deep navy flat '
+    'panels #1F2E66 with visible panel joint lines #131B3D, wide flat '
+    'pilasters #131B3D with thin vertical deco fluting #2E4699, a '
+    'continuous cream deco chair-rail line #C9BCA8, one thin stepped '
+    'muted magenta deco line #8F2464 above it, and below a dark navy '
+    'wainscot #131B3D with recessed panel insets #1F2E66 and a cream cap '
+    'line #9C8F80. The LEFT receding wall carries one tall shopfront '
+    'window in the same perspective: rounded-corner cream art-deco frame '
+    '#C9BCA8, frame shadow #9C8F80, outline #453E38, three tall panes '
+    'each filled with FLAT solid pure green #00FF00 divided by thin '
+    'cream mullions. The back wall meets the floor at just past half the '
+    'image height. Floor plane: dark polished terrazzo #241830 with '
+    'large flat tone patches #1A1023, sparse 2x2 px stone flecks #362447 '
+    'and #4A3160, thin straight tile seam lines #0D0813 receding toward '
+    'the vanishing point, a cream deco border line #9C8F80 along the '
+    'wall base. Medium detail. NO furniture, NO palm trees, NO neon, '
+    + CALM)
+
+# The tier-2 counter, cut off by the frame (2026-08-19, the author: "tezgah olarak
+# counter_t2_a kullanalim ama sahnenin en sagindan en soluna uzanmali") - t2_a
+# measured 67-69px of empty margin at each side, so the ask is a full-bleed take,
+# not surgery on a slab that was drawn with ends.
+T2_DESC2 = T2_DESC.replace(
+    'one long straight bar counter running the full image width, isolated '
+    'on a transparent background, nothing above and nothing behind the '
+    'counter top.',
+    'one long straight bar counter that extends PAST both sides of the '
+    'frame, cut off by the left image edge and by the right image edge, '
+    'no visible counter ends, isolated on a transparent background, '
+    'nothing above and nothing behind the counter top.')
+
+
 def _plate(desc, seed, transparent):
     return dict(kind='image', tool='create_image_pro', seed=seed,
         args=dict(width=640, height=360, no_background=transparent,
@@ -232,6 +281,13 @@ ASSETS = {
     'club_miami_b': _plate(MIAMI_DESC, 41702, False),
     'club_miami_c': _plate(MIAMI_DESC, 41703, False),
     'club_miami_d': _plate(MIAMI_DESC, 41704, False),
+    'club_miami25_a': _plate(MIAMI25_DESC, 41801, False),
+    'club_miami25_b': _plate(MIAMI25_DESC, 41802, False),
+    'club_miami25_c': _plate(MIAMI25_DESC, 41803, False),
+    'club_miami25_d': _plate(MIAMI25_DESC, 41804, False),
+    'counter_t2_b': _plate(T2_DESC2, 41505, True),
+    'counter_t2_c': _plate(T2_DESC2, 41506, True),
+    'counter_t2_d': _plate(T2_DESC2, 41507, True),
     'counter_t1_a': _plate(T1_DESC, 41501, True),
     'counter_t1_b': _plate(T1_DESC, 41502, True),
     'counter_t1_c': _plate(T1_DESC, 41503, True),
