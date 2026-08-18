@@ -480,7 +480,34 @@ namespace LastCall.UI
             if (entryRun == null) return;
             if (_focusBottle != null && _focusBottle.Type == IngredientType.Beer)
                 _tapKegCard = _focusBottle;
+            // NOBODY CHOSE A KEG, SO THE CELLAR CHOOSES (2026-08-15). The station used to be
+            // entered by clicking a keg on the back bar, which named the beer on the way in;
+            // the door is the font in the room now, and it names nothing. Without this the
+            // line stood uncoupled: the title read DRAUGHT, the keg wore a blank label, and
+            // CanPull was never asked, so the handle did nothing and the station looked
+            // broken rather than empty. The first stocked keg in shelf order — deterministic,
+            // and a swap is one click away in the bays below.
+            if (_tapKegCard == null || !StillOnTap(entryRun, _tapKegCard))
+                _tapKegCard = FirstStockedKeg(entryRun);
             CoupleTheKeg(entryRun);
+        }
+
+        /// <summary>Is this keg still one the bar could pour — on the shelf and not run dry?
+        /// A remembered keg that has since emptied would otherwise hold the line against the
+        /// full one standing next to it.</summary>
+        private static bool StillOnTap(TycoonRun run, IngredientCard card)
+        {
+            foreach (var b in run.Shelf.Bottles)
+                if (b.Ingredient.Id == card.Id) return !b.IsEmpty;
+            return false;
+        }
+
+        /// <summary>The first beer the cellar still has, in shelf order.</summary>
+        private static IngredientCard FirstStockedKeg(TycoonRun run)
+        {
+            foreach (var b in run.Shelf.Bottles)
+                if (b.Ingredient.Type == IngredientType.Beer && !b.IsEmpty) return b.Ingredient;
+            return null;
         }
 
         /// <summary>Draws the station around whichever keg is on the line: the title, the

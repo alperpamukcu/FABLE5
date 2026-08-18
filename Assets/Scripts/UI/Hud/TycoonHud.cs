@@ -926,6 +926,10 @@ namespace LastCall.UI
 
             BuildUi();
             if (stage != null) stage.SetRegisterHandler(ToggleLedger);
+            // The beer font on the counter is the only door onto the draught station now
+            // (2026-08-15): the kegs left the back-bar wall, and a pint is poured by walking
+            // to the tap. The flow's own guard turns the click down between days.
+            if (stage != null) stage.SetTapHandler(OnTapClicked);
         }
 
         private void OnDestroy()
@@ -1067,6 +1071,16 @@ namespace LastCall.UI
         // ── the floor ───────────────────────────────────────────────────────────
 
         private void OnMenuClicked() => _flow?.Open();
+
+        /// <summary>The font on the counter, clicked: straight to the draught station. Nothing
+        /// is checked here that the flow does not check itself — but a panel already open
+        /// keeps the room, exactly as a seat does, because a click through an open sheet is
+        /// how the bench lost its tin twice.</summary>
+        private void OnTapClicked()
+        {
+            if (_flow != null && _flow.IsOpen) return;
+            _flow?.OpenTap();
+        }
 
         private void OnSeatClicked(int index)
         {

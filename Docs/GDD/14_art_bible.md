@@ -151,6 +151,21 @@ trusting the tolerance.
 | Window panes | 3 panes ≈ 48×72 each behind the frame's mullions |
 | Brick wall | the right ~third of the frame, receding |
 
+**AS BUILT, and the targets above are now a wish (2026-08-18).** The shipped
+`club_room.png` is the author's third batch and it composes the room differently — the
+window is a full-height shopfront running down the LEFT wall in perspective, not a punched
+opening in the middle of the back wall. The table above is kept because it still says what
+the composition *wants*; the table below is what the code was re-measured against, and it
+is the one to trust.
+
+| Anchor | As shipped |
+|---|---|
+| Back-wall base (centre) | y = 181 from top; the floor owns the bottom 179 px |
+| Window aperture (the KEYED hole) | x 0 → 129, y 58 → 234 — left wall, receding |
+| Ceiling lights | THREE recessed downlights at x 222 / 331 / 455, y 51 (v2 hung four pendants at y 84) |
+| Right wall | plum-navy panelling, not brick; the brick ramp is unused in this room |
+| Visible floor band | y 181 → 232 only — the counter strip covers everything below it, and that 51 px is the whole stage a floor prop has to stand on |
+
 ### 5c. Prop catalogue (each its own file, own colours)
 
 | Prop | Colours | Nominal size / seat |
@@ -160,8 +175,20 @@ trusting the tolerance.
 | Pendant lamp (per §4 states) | OFF: `Graphite[2]` + `Amber[2]` body · ON: adds `Amber[4]` bulb + banded Amber glow (16 v3 §5) | small; hangs over the counter |
 | Neon sign "LAST CALL" | OFF: dead tube `Magenta[1]` (§10 exception — unlit glass, not light) · ON: `Magenta[3–4]` + banded glow | on the brick wall; the ONE neon |
 
+| Bar table, tier 1 (`fx_table_t1`) | rustic oak + raw steel frame | 131×74; floor, `table_left` |
+| Bar table, tier 2 (`fx_table_t2`) | brass pedestal + green tufted leather | 132×78; floor, `table_mid` |
+| Bar table, tier 3 (`fx_table_t3`) | polished steel column + plum vinyl | 127×74; floor, `table_right` |
+| Draught tower, 1/2/3 tap (`fx_tap_single/double/triple`) | steel column, brass collar, red handles on the triple | 22×30 / 24×32 / 25×34; ON the bar top at y 128 |
+| Potted monstera / palm (`fx_monstera`, `fx_fern`) | greens, dark pot | 30×44 / 28×40; floor, both ends |
+
 New furniture enters by growing this table — name, colours from §3's ramps under the
 material law, size, seat — before it enters the game.
+
+The five rows added 2026-08-18 are the author's own batch and they are **off-palette by
+decision** (§11.G): their colours are the concept art's, not §3's ramps. The three tables
+are numbered by the author's own tier, NOT by material — the sheets read lvl1 rustic-oak,
+lvl2 brass-and-leather, lvl3 steel-and-plum, so "the brassy one" is tier TWO and a first
+pass that named them for what they looked like had two of the three backwards.
 
 ## 6. The counter (640×150, its own layer, sold in TIERS)
 
@@ -219,6 +246,44 @@ This is where v2's Miami survives — as the view, not the room.
   skyline silhouettes in `Night[1]`. The loudest the palette ever gets, and it is outside.
 - **Night (LAST CALL):** `Night[0–2]` sky, sparse lit windows (`Amber[3]`, single px), palms
   near-black against it.
+
+## 7b. NO LIGHT IS PAINTED IN, AND THE LOUD COLOURS ARE ACCENTS (2026-08-15)
+
+Two rules from the same session, and they are the same rule twice: **the plate carries
+material, the engine carries light.**
+
+**(1) Nothing lit is baked.** The author: *"üretilen görsellerde yansıma ve ışıklandırma
+olmamalı, bunların hepsini unity içerisinde ekleyeceğiz."* The scene is lit in URP — a global
+light that moves with the shift (§4), a `Light2D` per fixture, and `DiegeticStage.ContactShadow`
+laying the contact shadow. A highlight painted into a plate glows in a dark room, sits on the
+wrong side when the light moves, and reflects a source that is not in the scene. So every
+generation asks for **flat matte local colour**, with form given by stepping along the
+material's own ramp and ordered dither where a surface must gradate — and it says
+*no specular highlights, no reflections, no cast shadows, no rim light, no glow, no bloom*
+out loud, because "no anti-aliasing" alone has already proven not to be enough.
+
+**(2) The saturated ramps are ATMOSPHERE, not architecture.** The author: *"çok fazla cırtlak
+renk var, bu renkler sadece hava katmalı ana renkler olmamalı."* Measured on the shipped
+`club_room.png` the day it was said:
+
+| | measured | what it should be |
+|---|---|---|
+| frame above S 0.40 | **55%** | ≤ 20% |
+| single loudest hue (magenta 300°) | **31% of the frame** | ≤ 10% per hue |
+| `#C23283` alone (Magenta[2], S 0.59) | **21.4% of the frame** | it is a SIGN colour |
+| distinct colours used | 24, and only **17 of the palette's** | spend the ramps |
+
+The cause was mechanical, not taste: the plate had been snapped to a **40-colour** palette
+that is this table minus **Graphite, Brick and Lime** — so the room had no dark neutral to be
+built out of, and Night-plum and Magenta[2] became the walls and the floor. Walls, ceiling and
+cabinetry come from **Graphite** and **Brick**; plaster from **Cream[0..2]**; the espresso
+floor from **Night**. Magenta, Cyan, ViceRed and ClubBlue's bright steps belong to signage,
+LED, window light and small props — the things that would be EMISSIVE if they were lit, which
+is why they are also the things §7b(1) forbids painting light around.
+
+Quantize against the 55 (`UITheme.cs` is its one home). A batch shipped with quantize off is
+off-palette by decision and says so in the log (§11) — but it does not get to be off-palette
+*and* loud.
 
 ## 8. Rim light policy (v3 — no longer a law)
 

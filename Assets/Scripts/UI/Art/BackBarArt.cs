@@ -283,6 +283,12 @@ namespace LastCall.UI
         /// out the night it was ordered. Only the crown shows in frame, so the sprite is
         /// the crown done properly: top ellipse with a rolled rim, recessed well, centre
         /// spear valve, and a strip of ribbed side wall with one handling band.
+        ///
+        /// **NOTHING CALLS THIS SINCE 2026-08-15**, and it is kept rather than deleted: it is
+        /// hand-drawn art, not logic. Its call site was the back-bar keg row, which went when
+        /// beer left the wall for the font on the counter. The kegs the player still sees —
+        /// the one on the line and the spares in the bays — are `ItemArt.Load("keg")` in the
+        /// draught station, and this stands in for nothing there.
         /// </summary>
         public static Sprite KegCrown()
         {

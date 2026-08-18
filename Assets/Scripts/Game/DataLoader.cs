@@ -275,7 +275,8 @@ namespace LastCall.Game
                 {
                     fixtures.Add(new FixtureDefinition(f.id, f.name, f.slot, f.price,
                         f.stars, f.flavor, f.sprite,
-                        f.lightR, f.lightG, f.lightB, f.lightIntensity, f.lightRadius));
+                        f.lightR, f.lightG, f.lightB, f.lightIntensity, f.lightRadius,
+                        f.startsInTheRoom, f.tap));
                 }
                 catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
                 {
@@ -622,6 +623,11 @@ namespace LastCall.Game
             public float lightB;
             public float lightIntensity;
             public float lightRadius;
+            // The room opens with this one already standing in it (the first beer font),
+            // and this one IS a beer font. Both default false, so every entry that does
+            // not mention them is unchanged.
+            public bool startsInTheRoom;
+            public bool tap;
         }
 
         [Serializable]

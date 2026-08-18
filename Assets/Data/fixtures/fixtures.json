@@ -36,6 +36,39 @@
       "id": "lamp_right",
       "x": 493,
       "y": 266
+    },
+    {
+      "id": "table_left",
+      "x": 128,
+      "y": 129
+    },
+    {
+      "id": "table_mid",
+      "x": 320,
+      "y": 129
+    },
+    {
+      "id": "table_right",
+      "x": 516,
+      "y": 129
+    },
+    {
+      "id": "taps_small",
+      "x": 96,
+      "y": 128,
+      "onCounter": true
+    },
+    {
+      "id": "taps_mid",
+      "x": 192,
+      "y": 128,
+      "onCounter": true
+    },
+    {
+      "id": "taps_large",
+      "x": 288,
+      "y": 128,
+      "onCounter": true
     }
   ],
   "fixtures": [
@@ -126,6 +159,64 @@
       "lightB": 1.0,
       "lightIntensity": 0.8,
       "lightRadius": 55
+    },
+    {
+      "id": "table_rustic",
+      "name": "Rustic Bar Table",
+      "slot": "table_left",
+      "price": 40,
+      "stars": 0,
+      "flavor": "Reclaimed oak and a welded frame. It wobbles, and nobody minds.",
+      "sprite": "fx_table_t1"
+    },
+    {
+      "id": "table_brass",
+      "name": "Brass Pedestal Table",
+      "slot": "table_mid",
+      "price": 85,
+      "stars": 1.5,
+      "flavor": "Green leather, a brass stem. The seat people ask for by name.",
+      "sprite": "fx_table_t2"
+    },
+    {
+      "id": "table_steel",
+      "name": "Steel Gaslift Set",
+      "slot": "table_right",
+      "price": 120,
+      "stars": 3.0,
+      "flavor": "Plum vinyl on a polished column. Spins if you let it.",
+      "sprite": "fx_table_t3"
+    },
+    {
+      "id": "taps_one",
+      "name": "Single Draught Tower",
+      "slot": "taps_small",
+      "price": 35,
+      "stars": 0,
+      "flavor": "One line, one lager. A start.",
+      "sprite": "fx_tap_single",
+      "tap": true,
+      "startsInTheRoom": true
+    },
+    {
+      "id": "taps_two",
+      "name": "Twin Draught Tower",
+      "slot": "taps_mid",
+      "price": 65,
+      "stars": 1.5,
+      "flavor": "Two lines, so the stout stops waiting its turn.",
+      "sprite": "fx_tap_double",
+      "tap": true
+    },
+    {
+      "id": "taps_three",
+      "name": "Triple Draught Tower",
+      "slot": "taps_large",
+      "price": 100,
+      "stars": 3.0,
+      "flavor": "Three red handles in a row. The bar looks busy before it is.",
+      "sprite": "fx_tap_triple",
+      "tap": true
     }
   ]
 }

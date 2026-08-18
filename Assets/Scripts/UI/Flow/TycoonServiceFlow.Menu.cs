@@ -33,12 +33,19 @@ namespace LastCall.UI
         /// only address is retired, and clicking a carbonated bottle here routes it to the
         /// glass stage already in hand (OpenBottle), the same door it has always poured
         /// through. Only the garnishes stay off the wall: they are a pinch, not a bottle,
-        /// and their jars stand on the benches. Beer stays: its kegs are drawn on the floor
-        /// below the wall.
+        /// and their jars stand on the benches.
+        ///
+        /// **AND BEER LEFT ENTIRELY** (2026-08-15, the author: "backbardan biralari
+        /// kaldiralim ... bira musluguna tiklanmasi gereksin"). It stood on the floor below
+        /// the wall as a row of keg crowns whose only job was to open the tap station, and
+        /// the room now has the real thing: a beer font on the counter that the bar owns
+        /// from its opening night. A draught is poured by walking to the tap, which is what
+        /// a bartender does — and it means the wall has exactly one kind of answer again:
+        /// everything on it goes in the tin.
         /// </summary>
         private static bool OnTheBackBar(IngredientCard card)
         {
-            return card.Type != IngredientType.Garnish;
+            return card.Type != IngredientType.Garnish && card.Type != IngredientType.Beer;
         }
 
         /// <summary>The word a bottle wears on the shelf: its STYLE, which is what a recipe
@@ -127,18 +134,12 @@ namespace LastCall.UI
             // no aisles. The hover panel still answers what each one is.
             _menuTitle.text = "LAST CALL";
 
-            // Beer leaves the shelves (the author, 2026-08-01): it lives in KEGS on the
-            // floor, drawn at keg scale with only their crowns in frame. Everything else
-            // stands on the wall in rows that widen as the cellar grows, so the endgame
-            // bar still fits on three shelves.
+            // Beer is not here at all (2026-08-15): it is poured at the font on the
+            // counter, in the room. Everything else stands on the wall in rows that widen
+            // as the cellar grows, so the endgame bar still fits on three shelves.
             var items = new List<ShelfBottle>();
-            var kegs = new List<ShelfBottle>();
             foreach (var b in run.Shelf.Bottles)
-            {
-                if (!OnTheBackBar(b.Ingredient)) continue;
-                if (b.Ingredient.Type == IngredientType.Beer) kegs.Add(b);
-                else items.Add(b);
-            }
+                if (OnTheBackBar(b.Ingredient)) items.Add(b);
             float areaW = _bottleList.rect.width, areaH = _bottleList.rect.height;
 
             // BIGGER, AND STOOD CLOSER TOGETHER (2026-08-11, the author). The wall used to
@@ -238,80 +239,12 @@ namespace LastCall.UI
                 }
             }
 
-            BuildKegRow(run, kegs);
-
-            if (items.Count == 0 && kegs.Count == 0)
+            if (items.Count == 0)
             {
                 var none = (NewText("Empty", _bottleList, _body, 8,
                     TextAnchor.MiddleCenter, InkSoft));
                 Stretch(none.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 none.text = "nothing on this shelf";
-            }
-        }
-
-        /// <summary>
-        /// The kegs, at keg scale (the author): real barrels standing on the cellar floor,
-        /// only about a fifth of each in frame at the bottom edge — the new top-perspective
-        /// keg art, since the straight-on keg could not sit on a floor the eye looks down
-        /// at. Clicking a crown opens the tap exactly as the old shelf bottle did.
-        /// </summary>
-        private void BuildKegRow(TycoonRun run, List<ShelfBottle> kegs)
-        {
-            if (_kegRow == null) return;
-            foreach (Transform child in _kegRow) Destroy(child.gameObject);
-            var art = ItemArt.Load("keg_persp");
-            if (art == null) art = BackBarArt.KegCrown();   // no generated keg yet: the drawn one
-            const float KegW = 160f, KegH = 250f, Visible = 0.5f;
-            float xL = -_menuPanel.rect.width * 0.5f + 150f, xR = -190f;
-            float step = kegs.Count > 1 ? Mathf.Min(240f, (xR - xL) / (kegs.Count - 1)) : 0f;
-            for (int i = 0; i < kegs.Count; i++)
-            {
-                var keg = kegs[i];
-                var card = keg.Ingredient;
-                bool empty = keg.IsEmpty;
-                string blocked = empty ? "OUT"
-                    : (run.CanPull(card.Id) ? null : run.ServingGlass.IsFull ? "FULL" : "BUSY");
-                bool shut = blocked != null;
-
-                var slot = NewRect($"Keg_{card.Id}", _kegRow);
-                Place(slot, new Vector2(0.5f, 0), new Vector2(KegW, KegH * Visible + 26f),
-                    new Vector2(xL + step * i, 0f));
-                slot.pivot = new Vector2(0.5f, 0);
-                var hit = slot.gameObject.AddComponent<Image>();
-                hit.color = new Color(0, 0, 0, 0.001f);
-
-                var kegArt = NewRect("Art", slot);
-                Place(kegArt, new Vector2(0.5f, 0), new Vector2(KegW, KegH),
-                    new Vector2(0, -KegH * (1f - Visible)));
-                kegArt.pivot = new Vector2(0.5f, 0);
-                var img = kegArt.gameObject.AddComponent<Image>();
-                if (art != null) { img.sprite = art; img.preserveAspect = true; }
-                else img.color = new Color(0.55f, 0.57f, 0.60f);
-                img.raycastTarget = false;
-                if (shut) img.color = new Color(1f, 1f, 1f, 0.45f);
-
-                // the brand, lettered across the crown
-                var name = Outlined(NewText("N", slot, _body, 8, TextAnchor.MiddleCenter,
-                    shut ? UITheme.Cream[2] : UITheme.Cream[4]), 1f);
-                Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(KegW - 20f, 14f),
-                    new Vector2(0, KegH * Visible + 8f));
-                name.horizontalOverflow = HorizontalWrapMode.Overflow;
-                name.text = shut ? $"{card.Name} · {blocked}" : card.Name;
-
-                Pressable(slot, kegArt, img, lift: shut ? 2f : 5f, depth: shut ? 0f : 5f);
-                var trigger = slot.gameObject.AddComponent<EventTrigger>();
-                var kb = keg;
-                var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
-                enter.callback.AddListener(_ => ShowBottleInfo(kb, run, slot));
-                trigger.triggers.Add(enter);
-                var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
-                exit.callback.AddListener(_ => HideBottleInfo());
-                trigger.triggers.Add(exit);
-                if (shut) continue;
-                var c = card;
-                var press = new EventTrigger.Entry { eventID = EventTriggerType.PointerClick };
-                press.callback.AddListener(_ => { HideBottleInfo(); OpenBottle(c); });
-                trigger.triggers.Add(press);
             }
         }
 
@@ -600,7 +533,6 @@ namespace LastCall.UI
         /// overhang against 10 predicted, which is close enough to want the rounding to have
         /// somewhere to go.</summary>
         private const float ListTopPad = BottleFoot + BottleStand + BottleRise + HoverLift + 2f;
-        private RectTransform _kegRow;
         private RectTransform _bottleInfo;
         private Button _serveButton;
         private Text _serveLabel;
@@ -685,14 +617,6 @@ namespace LastCall.UI
             ledgeImg.sprite = BackBarArt.Ledge();
             ledgeImg.raycastTarget = false;
 
-            // The keg strip lives between the ledge and the buttons: kegs poke up from the
-            // bottom edge, SERVE and the bin keep the top of the pile.
-            _kegRow = NewRect("Kegs", _menuPanel);
-            _kegRow.anchorMin = new Vector2(0, 0); _kegRow.anchorMax = new Vector2(1, 0);
-            _kegRow.pivot = new Vector2(0.5f, 0);
-            _kegRow.sizeDelta = new Vector2(0, 130);
-            _kegRow.anchoredPosition = Vector2.zero;
-
             // The wall's working area: full width under the cornice, above the ledge.
             // The mask's top edge reaches HIGHER than the first shelf band does, because a
             // bottle rises ABOVE its band by construction — the slot stands at 48 and the art
@@ -704,13 +628,6 @@ namespace LastCall.UI
             var pageClip = NewRect("PageClip", _menuPanel);
             Stretch(pageClip, Vector2.zero, Vector2.one, new Vector2(40, 92), new Vector2(-40, -102));
             pageClip.gameObject.AddComponent<RectMask2D>();
-
-            // THE KEGS STAND IN FRONT OF THE WALL (2026-08-11, the author: "bira fıçıları
-            // en alttaki rafın altında kalıyor"). They are built before the shelves so the
-            // ledge can be built before them, and UGUI draws siblings in order — so the
-            // bottom plank was printing over the crowns of barrels standing on the floor in
-            // front of it. A keg is nearer the camera than the wall is; it draws later.
-            _kegRow.SetAsLastSibling();
 
             _bottleList = NewRect("Bottles", pageClip);
             Stretch(_bottleList, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);

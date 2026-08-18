@@ -225,6 +225,15 @@ namespace LastCall.Core
             _glassware = glassware ?? Array.Empty<GlasswareDefinition>();
             _snacks = snacks ?? Array.Empty<SnackDefinition>();
             _fixtureCatalogue = fixtures ?? Array.Empty<FixtureDefinition>();
+            // WHAT THE ROOM ALREADY HAS (2026-08-15). Dressing is bought, with one
+            // exception: the first beer font is the only door onto the draught station now
+            // that the kegs have left the back-bar wall, so a bar that had to buy one could
+            // not pour a pint on its opening night — and `draught` is a rank-1 page every
+            // bar starts with in its book. OWNED rather than free: BuyFixture already
+            // refuses a piece the bar has, the market prints OURS, and a refund only walks
+            // back tonight's purchases, so it cannot be sold back for money nobody paid.
+            foreach (var fixture in _fixtureCatalogue)
+                if (fixture.StartsInTheRoom) _fixtures.Add(fixture.Id);
             RestockSnacks();
 
             Money = _config.StartingMoney;

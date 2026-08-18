@@ -208,8 +208,24 @@ simple order — the one you can serve in four seconds while a cocktail is still
 
 ### 10.1 The kegs
 
-Kegs sit on the shelf beside the bottles as ingredients of the new type **Beer**, so the
-existing shelf, market, restock and dry-bottle rules apply to them unchanged. Two differences
+**THE DOOR IS THE TAP** (2026-08-15, the author: "backbardan biraları kaldıralım ... bira
+koyma sahnesi için oyuna yeni eklediğimiz bira musluğuna tıklanması gereksin, musluğa
+tıklanınca direkt bira koyma sahnesi gelecek"). Beer is no longer on the back-bar wall at
+all: the row of keg crowns that used to stand on its floor is gone, and the only way to the
+draught station is clicking the **beer font standing on the counter** — a fixture, in the
+room, where a bartender would walk to it. So:
+
+- The bar OWNS the first font (`taps_one`) from its opening night — the market prints OURS
+  and it can be neither bought nor sold back. Draught is a rank-1 page every bar starts with,
+  so a bar that had to buy its own tap could not pour a pint on night one.
+- Nobody names a beer on the way in any more, so the **cellar couples itself**: the first
+  stocked keg in shelf order goes on the line, and the bays under the counter swap it in one
+  click, exactly as they did.
+- The wall now has one kind of answer for everything on it: it all goes in the tin.
+
+Kegs still sit on the shelf beside the bottles as ingredients of the type **Beer** — they are
+simply not DRAWN there — so the existing shelf, market, restock and dry-bottle rules apply to
+them unchanged. Two differences
 from a bottle, both because a keg is a keg:
 
 - **Capacity ×4** (24 glasses against a bottle's 6). Beer is the cheap volume order; a keg

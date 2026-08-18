@@ -23,6 +23,13 @@ namespace LastCall.Tests
             new FixtureDefinition("lantern", "Hanging Lantern", "lamp_left", 60, 1.5,
                 "Warm.", "fx_lantern", 1f, 0.78f, 0.5f, 0.55f, 70f);
 
+        /// <summary>The first beer font: the one fixture the room opens already owning, and
+        /// the only door onto the draught station (2026-08-15).</summary>
+        private static FixtureDefinition FirstTap() =>
+            new FixtureDefinition("taps_one", "Single Draught Tower", "s2", 35, 0,
+                "One line, one lager.", "fx_tap_single",
+                startsInTheRoom: true, isTap: true);
+
         private static Shelf NewShelf() => new Shelf(new[]
         {
             new ShelfBottle(new IngredientCard("gin", "Gin", IngredientType.Spirit, 6), capacity: 20),
@@ -67,15 +74,25 @@ namespace LastCall.Tests
                     { ""id"": ""lantern"", ""name"": ""Lantern"", ""slot"": ""lamp_left"",
                       ""price"": 60, ""stars"": 1.5, ""sprite"": ""fx_lantern"",
                       ""lightR"": 1.0, ""lightG"": 0.8, ""lightB"": 0.5,
-                      ""lightIntensity"": 0.55, ""lightRadius"": 70 }
+                      ""lightIntensity"": 0.55, ""lightRadius"": 70 },
+                    { ""id"": ""taps"", ""name"": ""Taps"", ""slot"": ""s2"",
+                      ""price"": 35, ""stars"": 0, ""sprite"": ""fx_tap_single"",
+                      ""tap"": true, ""startsInTheRoom"": true }
                 ]}");
 
             var fixtures = loaded.Fixtures;
-            Assert.AreEqual(2, fixtures.Count);
+            Assert.AreEqual(3, fixtures.Count);
             Assert.IsFalse(fixtures[0].HasLight, "a fern does not shine");
             Assert.IsTrue(fixtures[1].HasLight);
             Assert.AreEqual(70f, fixtures[1].LightRadius);
             Assert.AreEqual(1.5, fixtures[1].Stars);
+
+            // The font's two flags (2026-08-15). Both default false, which is what keeps
+            // every entry that does not mention them reading exactly as it did.
+            Assert.IsTrue(fixtures[2].IsTap, "a beer font says so in the data");
+            Assert.IsTrue(fixtures[2].StartsInTheRoom);
+            Assert.IsFalse(fixtures[0].IsTap, "and a fern is not a door");
+            Assert.IsFalse(fixtures[0].StartsInTheRoom);
 
             // The slots come out of the same file, and they carry where AND how they draw.
             Assert.AreEqual(4, loaded.Slots.Count);
@@ -141,6 +158,36 @@ namespace LastCall.Tests
             var slip = run.TodaysPurchases[run.TodaysPurchases.Count - 1];
             Assert.AreEqual(TycoonRun.DayPurchase.Kind.Fixture, slip.What);
             Assert.AreEqual("Potted Fern", slip.Name);
+        }
+
+        // ── the piece the room opens with (2026-08-15) ──────────────────────────
+
+        [Test]
+        public void TheFirstTap_IsStandingBeforeTheBarOpens()
+        {
+            // Beer left the back-bar wall for the font on the counter, and `draught` is a
+            // rank-1 page every bar starts with — so a bar that had to BUY the door could not
+            // pour a pint on its opening night.
+            var run = new TycoonRun(NewShelf(), Book, new RunRng("fixtures"),
+                fixtures: new[] { Fern(), FirstTap() });
+
+            Assert.IsTrue(run.OwnsFixture("taps_one"), "the font is on the counter from night one");
+            Assert.IsFalse(run.OwnsFixture("fern_pot"), "and nothing else is");
+            Assert.AreEqual(1, run.OwnedFixtureCount);
+        }
+
+        [Test]
+        public void ThePieceTheRoomOpensWith_IsNeitherSoldNorSoldBack()
+        {
+            var run = RunAtDayEnd(fixtures: FirstTap());
+            int before = run.Money;
+
+            Assert.Throws<InvalidOperationException>(() => run.BuyFixture("taps_one"),
+                "the bar cannot be sold a thing it already has");
+            Assert.AreEqual(0, run.TodaysPurchases.Count,
+                "and nothing it never bought can be refunded for money nobody paid");
+            Assert.AreEqual(before, run.Money);
+            Assert.IsTrue(run.OwnsFixture("taps_one"));
         }
 
         [Test]

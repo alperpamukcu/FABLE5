@@ -2,6 +2,40 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `21 §10.1 / 24` **beer left the wall, and the tap on the counter is its own door
+  (2026-08-15, the author: "backbardan biraları kaldıralım ... bira musluğuna tıklanması
+  gereksin, musluğa tıklanınca direkt bira koyma sahnesi gelecek"):** the back bar drew a row
+  of keg crowns on its floor whose whole job was to open the draught station, and the room now
+  has the real thing — the beer fonts that arrived with the fixture set. Clicking one goes
+  straight to the tap. The wall keeps garnish and beer off it now, which leaves it with a
+  single answer for everything on it: it all goes in the tin.
+  The bar **owns the first font** from its opening night (`taps_one`, `startsInTheRoom` in
+  `fixtures.json`) — draught is a rank-1 page every bar starts with, so a bar that had to buy
+  its own tap could not pour a pint on night one. Owned rather than free: the market prints
+  OURS, `BuyFixture` already refuses a piece the bar has, and a refund only walks back
+  tonight's purchases, so it cannot be sold back for money nobody paid. That makes one fixture
+  load-bearing where the class is documented as cosmetic, and `FixtureDefinition` says so.
+  Nobody names a beer on the way in any more, so the **cellar couples itself** — the first
+  stocked keg in shelf order, re-chosen if the remembered one has run dry. Without that the
+  station opened uncoupled: title DRAUGHT, blank keg label, `CanPull` never asked, and a
+  handle that did nothing. The door is a hit plate the STAGE builds over the font (it owns
+  where the font stands) with the HUD owning what the click means — the same split the till
+  has. Canvas, not a physics ray, so an open panel blocks it for free. 315 EditMode green;
+  the back-bar and market baselines were re-blessed after looking at both.
+
+- `14 §7b` **no light is painted in, and the loud colours are atmosphere (2026-08-15, the
+  author: "üretilen görsellerde yansıma ve ışıklandırma olmamalı ... çok fazla cırtlak renk
+  var, bu renkler sadece hava katmalı ana renkler olmamalı"):** two rules, one idea — the
+  plate carries material and the engine carries light. `scene_v3_gen.py`'s shared style string
+  was ASKING for "glass reflections, soft dithered light gradients", which is the opposite of
+  a scene lit by URP's shift light and a `Light2D` per fixture; it now asks for flat matte
+  local colour, form from the ramp's own steps, and says no specular/reflection/cast-shadow/
+  rim/glow/bloom out loud. Measured on the shipped room the same day: **55% of the frame above
+  S 0.40, and Magenta[2] alone 21.4% of it** — a sign colour used as the wall. The cause was
+  mechanical: the plate had been snapped to a 40-colour palette missing **Graphite, Brick and
+  Lime**, so nothing dark and neutral was available to build a room out of. The bible now
+  carries the ceiling (≤20% above S 0.40, ≤10% per hue) and says which ramps own architecture.
+
 - `14 v3 §5–6, §11` **the room went empty and the furniture became props (2026-08-17, same
   day, second sitting):** the author's second Nano Banana batch drifted off the material map
   — teal wall, honey floor, beige fieldstone, steel frame, graphite platform, and on the

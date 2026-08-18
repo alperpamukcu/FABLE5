@@ -33,8 +33,18 @@ STYLE = ('clean 1px outlines in each material\'s darkest tone, flat shading, '
 # keskinlik cok nizami" - too dark, too regimented). Brighter Miami tones, silver/
 # gold/glass materials, and language that breaks the CAD-straight sterility. The
 # quantize step still snaps every pixel to the 55, so the looseness costs no law.
-VICE = ('subtle wear and uneven texture, glass reflections, soft dithered light '
-        'gradients, lively hand-pixelled detail, medium shading, no text, no people')
+# NO LIGHT IS PAINTED IN (2026-08-15, the author: "uretilen gorsellerde yansima ve
+# isiklandirma olmamali, bunlarin hepsini unity icerisinde ekleyecegiz"). This string used
+# to ASK for "glass reflections, soft dithered light gradients" -- the two things the room
+# must not carry. The scene is lit in URP: a global light that shifts with the shift, a
+# Light2D per fixture, and DiegeticStage.ContactShadow puts the contact shadow down. A
+# highlight baked into the plate glows in a dark room, sits on the wrong side when the light
+# moves, and reflects a source that is not there. Form comes from the RAMP's own steps.
+VICE = ('subtle wear and uneven texture, flat matte local colour, form shaded only by '
+        'stepping along each material's own colour ramp, ordered 2x2 dither where a '
+        'surface must gradate, lively hand-pixelled detail, no specular highlights, '
+        'no reflections, no cast shadows, no rim light, no glow, no bloom, '
+        'even flat lighting, no text, no people')
 
 # The 55 (UITheme.cs verbatim; 14 v3 SS3). Quantize maps every opaque pixel to
 # its nearest of these; #00FF00 is keyed to alpha BEFORE quantize ever sees it.
@@ -63,9 +73,9 @@ ASSETS = {
         args=dict(width=640, height=360, no_background=False, description=(
             'pixel art, EMPTY interior of a Miami vice cocktail lounge at '
             'golden hour, straight-on view, no furniture - warm cream plaster '
-            'walls #F2E8D5 washed with soft sunset pink #FF7DC6 near the '
-            'window, espresso wood plank floor #241830 with a violet sheen '
-            '#362447 and warm reflections, bordeaux brick wall on the right '
+            'walls #C9BCA8 with a faint sunset-pink tint #FF7DC6 ONLY on the '
+            'window-side edge, espresso wood plank floor #241830 with a violet '
+            'plank step #362447, bordeaux brick wall on the right '
             '#9C4740 with deep mortar #38161A, silver-blue window frame '
             '#4467CC with polished chrome edges #808893 holding three flat '
             'chroma green #00FF00 panels, thin gold trim lines #E8A33D along '

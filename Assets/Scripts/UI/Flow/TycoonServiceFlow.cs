@@ -119,6 +119,20 @@ namespace LastCall.UI
             GoTo(Stage.Menu);
         }
 
+        /// <summary>
+        /// Straight to the draught station, because the tap is its own door (2026-08-15, the
+        /// author: "musluğa tıklanınca direkt bira koyma sahnesi gelecek"). The kegs used to
+        /// stand on the back-bar floor and opening one came here; beer has left the wall, and
+        /// the font standing on the counter is what the player walks to instead. The station
+        /// couples whatever keg the cellar has on hand, so this needs no argument — see
+        /// <see cref="RefreshTap"/>.
+        /// </summary>
+        public void OpenTap()
+        {
+            if (Run == null || Run.Phase != TycoonPhase.DayOpen) return;
+            GoTo(Stage.Tap);
+        }
+
         public void CloseFlow() => GoTo(Stage.Closed);
 
         /// <summary>Every stage change kills the held-action sound: a loop belongs to the
@@ -359,9 +373,11 @@ namespace LastCall.UI
                 RefreshMenu();
                 return;
             }
-            // Beer never enters the shaker (GDD 21 §10): the keg opens the tap instead, and the
-            // glass it fills is the one that goes out.
-            if (card.Type == IngredientType.Beer) { GoTo(Stage.Tap); return; }
+            // Beer cannot reach here at all any more (2026-08-15): it left the wall with the
+            // kegs, and the only door onto the draught station is the font in the room
+            // (OpenTap). OnTheBackBar keeps it off the shelves, so there is no beer branch to
+            // take — a route that cannot be reached is worse than no route, because the next
+            // reader believes it.
             // EVERYTHING ELSE GOES IN THE TIN (2026-08-14, the author: "tüm içecekler
             // shakera koyulacak"). The fizz used to have its own door onto the counter,
             // which gave the bar two places to build a drink and left the tin holding half

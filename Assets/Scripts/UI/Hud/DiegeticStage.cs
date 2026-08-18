@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
@@ -54,27 +55,44 @@ namespace LastCall.UI
         public const float CounterTopY = CounterRestY;
 
         // ── the bar front's shelf compartments ───────────────────────────────────
-        // The counter art is not decoration: it carries EIGHT empty cells across its
-        // front, and those cells are where the bought glassware belongs. Measured off
-        // Assets/Art/Backgrounds/counter.png (640x150) by sampling the luminance profile,
-        // not estimated — the dividers land at x 77-82, 157-162, 237-242, 317-322,
-        // 397-402, 477-482 and 557-562, so the cells are 80 wide on 80 centres; the upper
-        // cell's interior runs y 53..92 with its floor at y 93.
+        // The counter art is not decoration: it carries EIGHT compartments across its
+        // front, and those are where the bought glassware belongs. RE-MEASURED off the
+        // 2026-08-18 marble-and-graphite counter (14 v3 §11.F: new background, new
+        // measurement) by sampling the cabinet band's column profile.
+        //
+        // THE CELLS ARE NO LONGER EVENLY SPACED, and that is the whole reason this is a
+        // table now. The old turquoise bar front was eight identical 80-wide bays, so a
+        // pitch was enough. The new front is joinery — two cabinet doors, three glass
+        // fridges, three open bays — and a pitch would stand a glass squarely on a stile.
+        //
+        // RE-MEASURED AGAIN for the 2026-08-18 PixelLab counter (the marble-and-graphite
+        // plate it replaces was painted at a few thousand px and downscaled, which is what
+        // made it read blurry; this one is drawn at 640×150 native, 21 colours). The new
+        // front's joinery is NOT the old one's: its right-hand bays are wider, so cells 6
+        // and 7 moved by nearly 50 px. Measured off the art by column continuity and then
+        // CHECKED BY LOOKING, with the eight ticks drawn onto the plate
+        // (Tools/scene_variants_gen.py measure) — every tick stands inside an opening, and
+        // the floor line lands on the fridges' own shelf boards.
+        private static readonly float[] ShelfCentrePx =
+            { 33f, 113f, 192f, 278f, 364f, 449f, 530f, 606f };
         //
         // The numbers below are in the ART's own pixels. They only equal stage units at
         // the reference aspect: the counter is scaled by visibleWidth/640 and hangs from
         // the rest line, so at 16:10 the cells sit narrower AND higher. ShelfCell resolves
         // that from the live fit rather than assuming 16:9.
-        private const float ShelfCellPx = 80f;      // cell pitch, art px
-        // THE FLOOR IS THE TURQUOISE, AND IT IS DRAWN IN PERSPECTIVE (the author,
-        // 2026-08-10). Rows 93..105 are (13,30,40) — thirteen rows of it — and rows
-        // 106..112 are the wooden board (141,82,30 lipping to 161,107,57). The wood is not
-        // the floor: it is the shelf's FRONT EDGE, seen from slightly above, and the
-        // turquoise band behind it is the surface things stand on.
-        private const float ShelfFloorPx = 104f;    // the near edge, art px from the art's top
+        //
+        // The band a glass is drawn in, both ends measured off the 2026-08-18 PixelLab
+        // counter by its row luminance: the plate carries real shelf BOARDS, bright against
+        // the dark interiors, at rows 82..86 and 120..126. So the floor stays at 124 — which
+        // now lands on an actual board rather than near one — and the ceiling comes down from
+        // 72 to 84, the underside of the board above. 72 sat in the gap BETWEEN two boards on
+        // this front, which would have drawn a 52-px glass straight through the upper shelf.
+        // The band is 40 art px now against the old 52, so the glassware run draws a little
+        // smaller; that is the art's own shelf spacing and not a number to tune back up.
+        private const float ShelfFloorPx = 124f;    // the near edge, art px from the art's top
         /// <summary>How deep the drawn shelf surface is, front edge to back, in art px.</summary>
         public const float ShelfDepthPx = 9f;
-        private const float ShelfCeilPx = 53f;      // the shelf board above it
+        private const float ShelfCeilPx = 84f;      // the shelf board above it
 
         private Transform _counterTr;
         private Vector2 _counterNative;
@@ -89,11 +107,12 @@ namespace LastCall.UI
         {
             centerX = 0f; floorY = 0f; height = 0f;
             if (_counterTr == null || _counterNative.x <= 0f) return false;
+            if (index < 0 || index >= ShelfCentrePx.Length) return false;
             float scale = _counterScale;
             // The art's own top edge, in stage units: the rest line is CounterSurfaceInset
             // art-pixels below it, and that line is pinned to CounterRestY.
             float artTopY = CounterRestY + CounterSurfaceInset * scale;
-            centerX = ((index + 0.5f) * ShelfCellPx - _counterNative.x * 0.5f) * scale;
+            centerX = (ShelfCentrePx[index] - _counterNative.x * 0.5f) * scale;
             floorY = artTopY - ShelfFloorPx * scale;
             height = (ShelfFloorPx - ShelfCeilPx) * scale;
             return true;
@@ -118,13 +137,20 @@ namespace LastCall.UI
         private const float Overscan = 48f;         // bleed past screen edges (aspect safety)
 
         // ── the light plan (2026-08-10) ─────────────────────────────────────────
-        // The room's four hanging lamps, measured off club_room.png by clustering its
-        // warm-bright pixels (Tools would guess; the art knows): bulb centres at art
-        // x 65 / 237 / 406 / 579, y 84 from the top. Each gets a warm pool; the global
-        // wash is slightly cool and slightly below 1 so the pools read as light and not
-        // as paint. The sign's spill rides NeonBlink with its lettering.
+        // The room's ceiling lights, measured off club_room.png by clustering its
+        // warm-bright pixels (Tools would guess; the art knows). RE-MEASURED TWICE: v2's
+        // room hung FOUR pendant lamps low over the floor at y 84; the 2026-08-18 painted
+        // shell put THREE recessed downlights at x 222/331/455, y 51; the PixelLab room
+        // that replaced it that evening draws the same three a little higher and a little
+        // wider apart. The clustering is in Tools/scene_variants_gen.py (`measure`), so the
+        // next room does not need this done by hand — and it tests warm-over-cool, not just
+        // brightness, because this room's cornice carries a CYAN rim light that is every bit
+        // as bright as a downlight and is not one.
+        // Each gets a warm pool; the global wash is slightly cool and slightly below 1
+        // so the pools read as light and not as paint. The sign's spill rides NeonBlink
+        // with its lettering.
         private static readonly Vector2[] LampArtPx =
-            { new Vector2(65, 84), new Vector2(237, 84), new Vector2(406, 84), new Vector2(579, 84) };
+            { new Vector2(214, 42), new Vector2(332, 42), new Vector2(464, 42) };
         private static readonly Color GlobalTint = new Color(0.86f, 0.85f, 0.95f);
         private const float GlobalIntensity = 0.85f;
         private static readonly Color LampTint = new Color(1f, 0.80f, 0.52f);
@@ -174,7 +200,7 @@ namespace LastCall.UI
         // ── the world ───────────────────────────────────────────────────────────
         private Transform _world;                   // root of every world-space stage object
         private Material _litMaterial;              // Sprite-Lit-Default, shared by the stage
-        private SpriteRenderer _backdropSr, _backgroundSr;
+        private SpriteRenderer _backdropSr, _backgroundSr, _windowSr;
         private Vector2 _backgroundNative;
         private float _backgroundScale = 1f;        // stage units per background-art pixel
         private Light2D _globalLight;
@@ -199,6 +225,13 @@ namespace LastCall.UI
 
         /// <summary>Wires the till click to the ledger-history popup (GDD 24 §7).</summary>
         public void SetRegisterHandler(System.Action onClick) => _onRegisterClicked = onClick;
+
+        private System.Action _onTapClicked;
+
+        /// <summary>Wires the beer font on the counter to the draught station (2026-08-15).
+        /// The stage owns WHERE the font stands, so it owns the hit plate; the HUD owns what
+        /// clicking it means — the same split the till has had since the ledger landed.</summary>
+        public void SetTapHandler(System.Action onClick) => _onTapClicked = onClick;
 
         /// <summary>The ID photo for an archetype, for the tycoon floor's licence card.</summary>
         public Sprite PortraitSpriteFor(string archetypeId) =>
@@ -304,6 +337,21 @@ namespace LastCall.UI
             // placeholders on their own canvas, so a broken reference is still a visible bar.
             if (backgroundSprite != null)
             {
+                // THE VIEW, BEHIND THE ROOM (14 v3 §5's layer order, §7's plate). The shell's
+                // window panes are keyed to transparent holes, so without this the backdrop
+                // shows through them and the bar looks out on Night[0] — black rectangles
+                // where daylight belongs (measured in play, 2026-08-18).
+                //
+                // Loaded by NAME rather than serialized, because the plate is meant to change
+                // with the shift (day / sunset / night) and one inspector slot cannot hold
+                // three. Only the day plate is drawn yet; the other two arrive with the
+                // author's relight batch, and then this becomes a lookup on the shift.
+                var windowPlate = Resources.Load<Sprite>("Scene/window_day");
+                if (windowPlate != null)
+                {
+                    _windowSr = WorldSprite("WindowPlate", windowPlate, order: 5);
+                }
+
                 _backgroundSr = WorldSprite("Background", backgroundSprite, order: 10);
                 _backgroundNative = backgroundSprite.rect.size;
 
@@ -459,6 +507,16 @@ namespace LastCall.UI
                     (visibleW + Overscan * 2f) / b.x, (visibleH + Overscan * 2f) / b.y, 1f);
             }
 
+            if (_windowSr != null)
+            {
+                // THE SAME COVER FIT AS THE ROOM, deliberately: the plate is authored at the
+                // room's own 640x360 with the sky sitting in the room's own hole, so any fit
+                // that is not identical slides the daylight off the window.
+                var wb = _windowSr.sprite.bounds.size;
+                float wk = Mathf.Max(visibleW / wb.x, visibleH / wb.y);
+                _windowSr.transform.localScale = new Vector3(wk, wk, 1f);
+            }
+
             if (_backgroundSr != null)
             {
                 // Cover: the larger ratio fills both axes, overflow is cropped by the frame.
@@ -521,6 +579,8 @@ namespace LastCall.UI
                 if (placed.Glow != null) Destroy(placed.Glow.gameObject);
             }
             _placedFixtures.Clear();
+            foreach (var door in _tapDoors) if (door != null) Destroy(door.gameObject);
+            _tapDoors.Clear();
             foreach (var sh in _shadows) if (sh.Blob != null) Destroy(sh.Blob.gameObject);
             _shadows.Clear();
             if (owned == null || _world == null) return;
@@ -562,8 +622,80 @@ namespace LastCall.UI
                 // touch nothing, and a blob under them would read as a stain.
                 if (!onCounter && !def.HasLight)
                     ContactShadow(sr.transform, sprite.rect.width * 0.9f);
+
+                // A beer font is the door onto the draught station, so it answers the pointer.
+                if (def.IsTap) BuildTapDoor(def, sr);
             }
             PlaceFixtures();
+        }
+
+        // ── the beer font is a door (2026-08-15) ────────────────────────────────
+        // The author: "bira musluğuna tıklanması gereksin ... musluğa tıklanınca direkt bira
+        // koyma sahnesi gelecek". The kegs left the back-bar wall, so the only way to a pint
+        // is walking to the tap — which means the prop has to be clickable.
+
+        private RectTransform _tapDoorRoot;
+        private readonly List<RectTransform> _tapDoors = new List<RectTransform>();
+
+        /// <summary>
+        /// An invisible plate over a beer font, sized and stood exactly where the font is.
+        ///
+        /// The plate is CANVAS, not world: it inherits the flow's scrim for free (a panel open
+        /// over the room blocks it, the way the till is blocked), which a physics raycast into
+        /// world space would have had to re-implement. Its coordinates are the slot's own —
+        /// the room art is authored at the design frame's own 640×360, so an art pixel IS a
+        /// design unit and the cover fit is the identity. The till's fixed X/Y have always
+        /// assumed the same thing; the ratio is written out anyway so the assumption is
+        /// visible if a wider room is ever painted.
+        ///
+        /// Order 7: over the patrons (5) and the till (6), under the service flow (12). Over
+        /// the patrons on purpose — a seat's hit rect is half again as wide as the bust in it,
+        /// so the far edges of two of them reach across the fonts, and a door that the room
+        /// swallows at the edges is a door the player learns not to trust. What it costs is a
+        /// sliver of empty seat-rect beside each font, nowhere near anybody's body.
+        /// </summary>
+        private void BuildTapDoor(LastCall.Core.FixtureDefinition def, SpriteRenderer body)
+        {
+            LastCall.Game.StageSlot slot;
+            if (!_slots.TryGetValue(def.Slot, out slot)) return;
+            if (_tapDoorRoot == null)
+            {
+                _tapDoorRoot = OverlayCanvas("TapDoors", 7, raycasts: true);
+                UiAuditExempt.Mark(_tapDoorRoot, "the tap door is a hit plate over a prop in "
+                    + "the room, sized to the font's own art and stood in the font's own slot");
+            }
+
+            var art = body.sprite.rect.size;
+            float sx = Reference.x / Mathf.Max(1f, _backgroundNative.x);
+            float sy = Reference.y / Mathf.Max(1f, _backgroundNative.y);
+
+            var plate = NewRect("TapDoor_" + def.Id, _tapDoorRoot);
+            plate.anchorMin = plate.anchorMax = new Vector2(0, 0);
+            plate.pivot = new Vector2(0.5f, 0);
+            plate.sizeDelta = new Vector2(art.x * sx, art.y * sy);
+            plate.anchoredPosition = new Vector2(slot.X * sx, slot.Y * sy);
+            var hit = plate.gameObject.AddComponent<Image>();
+            hit.color = new Color(0, 0, 0, 0);   // invisible, but catches clicks
+            var btn = plate.gameObject.AddComponent<Button>();
+            btn.targetGraphic = hit;
+            btn.transition = Selectable.Transition.None;
+            btn.onClick.AddListener(() => _onTapClicked?.Invoke());
+
+            // THE AFFORDANCE IS THE PROP, not the plate: an invisible plate cannot light up
+            // without drawing a rectangle over the counter, so the pointer lifts the FONT's
+            // own brass instead. The base colour is read off the renderer rather than assumed
+            // white, so a font standing in a dimmed room brightens from where it actually is.
+            var lit = body;
+            var rest = body.color;
+            var trig = plate.gameObject.AddComponent<EventTrigger>();
+            var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            enter.callback.AddListener(_ => { if (lit != null) lit.color = rest * 1.22f; });
+            trig.triggers.Add(enter);
+            var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+            exit.callback.AddListener(_ => { if (lit != null) lit.color = rest; });
+            trig.triggers.Add(exit);
+
+            _tapDoors.Add(plate);
         }
 
         /// <summary>Stands every placed piece in its slot for the CURRENT fit — the slots
