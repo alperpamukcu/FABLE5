@@ -5,10 +5,11 @@ using UnityEngine;
 namespace LastCall.UI
 {
     /// <summary>
-    /// v2 design tokens (14_art_bible v2 §3, 16_ui_style_guide v2 §1). The locked 40-colour
-    /// palette as 8 ramps × 5 steps, the ingredient type→ramp mapping (§5), a 4px spacing
-    /// grid, and the number-colour roles (Money=Amber, Flavor=Cyan, Mult=Magenta — sacred).
-    /// Shading = move along a ramp; never off-ramp. Every UI/scene colour comes from here.
+    /// Design tokens (14_art_bible v3 §3, 16 v3 §0). The locked palette as 11 ramps × 5 steps
+    /// (v2's eight, beer's Malt, and v3's two material ramps), the ingredient type→ramp
+    /// mapping, a 4px spacing grid, and the number-colour roles (Money=Amber, Flavor=Cyan,
+    /// Mult=Magenta — sacred). Shading = move along a ramp; never off-ramp. Every UI/scene
+    /// colour comes from here.
     /// </summary>
     public static class UITheme
     {
@@ -24,6 +25,13 @@ namespace LastCall.UI
         // Beer's own ramp (GDD 21 §10): darker and browner than the spirits' amber, so a tap
         // key is never mistaken for a bottle key at a glance.
         public static readonly Color[] Malt = Ramp(0x3A2410, 0x6B4416, 0x9E6A1D, 0xC98F2B, 0xE6B959);
+        // v3 MATERIAL ramps (14 v3 §3, 2026-08-17): what the room's furniture is made of, not
+        // what anything signals. Graphite is the cold neutral of the cabinet bodies and
+        // metalwork; Brick is the bordeaux masonry wall — browner than ViceRed on purpose, so
+        // the wall can never be read as a refusal. Architecture and furniture ONLY: never type
+        // coding, never a sacred number, never a state light, never a key face.
+        public static readonly Color[] Graphite = Ramp(0x14161A, 0x24272D, 0x383D45, 0x545A64, 0x808893);
+        public static readonly Color[] Brick = Ramp(0x38161A, 0x5C2226, 0x7E3130, 0x9C4740, 0xB96253);
 
         // ── semantic roles ──────────────────────────────────────────────────────
         public static Color TextPrimary => Cream[4];      // Cream 5 on dark

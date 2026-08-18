@@ -20,7 +20,9 @@ deliberate: the props stand ON the room (the shelf, the bin, the till, the stool
 anchor-and-layout-group HUD would slide off the thing it belongs to. Do not "fix" this.
 
 **Palette:** `UITheme` five-step ramps only — `Night`, `Magenta`, `Cyan`, `Amber`, `ViceRed`,
-`ClubBlue`, `Lime`, `Cream`, `Malt`. A literal `new Color(...)` in UI code is a bug unless it
+`ClubBlue`, `Lime`, `Cream`, `Malt`, plus the v3 material ramps `Graphite` and `Brick`
+(14 v3 §3: architecture/furniture only — never a signal, a sacred number or a key face).
+A literal `new Color(...)` in UI code is a bug unless it
 is a tint or an alpha of a token, and it must say why on the line above it.
 
 **Type:** the pixel faces rasterise cleanly only at whole multiples of their 8px design size.

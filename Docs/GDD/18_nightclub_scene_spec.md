@@ -1,7 +1,12 @@
 # LAST CALL — GDD Module: Nightclub Scene & Bottle Rail Spec (v2)
 
-> **STATUS 2026-07-27 — PARTLY SUPERSEDED.**
-> The club scene direction still holds; the specific HUD it describes is module 24.
+> **STATUS 2026-08-17 — PARTLY SUPERSEDED.**
+> The specific HUD it describes is module 24. **The scene CONTENT is superseded by 14 v3
+> §5–7 (2026-08-17):** the room is now the brass-and-marble bar under shift light — no dance
+> floor crowd, no club-far/club-mid layers; the vice sunset lives in the window plates, and
+> the layer order lives in 14 v3 §5. The choreography and motion rules below (§3) still
+> apply as written; §4's budget-of-3 survives but its roster is read against the new room —
+> window life, neon flicker, smoke; the club sweep and the crowd are gone with their layers.
 
 > ⚠️ **PARTIALLY STALE.** The 2026-07-20 note that the camera had flipped to the customer's
 > side is itself dead: it flipped back on 2026-07-23 and §1's "camera faces the CLUB" is right

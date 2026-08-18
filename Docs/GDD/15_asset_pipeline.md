@@ -1,9 +1,14 @@
 # LAST CALL — GDD Module: Automated Asset Production Pipeline (v2 — pixel)
 
-> **STATUS 2026-07-27 — CURRENT.**
-> The asset pipeline still governs how art enters the project.
+> **STATUS 2026-08-17 — CURRENT, patched for 14 v3.**
+> The asset pipeline still governs how art enters the project. Where this doc's v2 text
+> says "40-colour", read the v3 55-colour palette (14 v3 §3); the rim check follows 14 v3
+> §8 (a night option, not a law — day masters are rim-free); and the exact-size REJECT in
+> §2 binds SPRITES — backgrounds are deliberately generated large at 16:9 and
+> area-downsampled per 14 v3 §11 (the no-rescale law is about finished pixel art in the
+> engine, not the authoring downsample). Size specs live in 14 v3 §9.
 
-> Canonical production method for all shipped 2D art. Complements `14_art_bible.md` v2
+> Canonical production method for all shipped 2D art. Complements `14_art_bible.md` v3
 > (which owns the look); this module owns the process. **v2 pixel pivot** — the v1
 > painterly/FLUX+LoRA path is deprecated (see §6). All banks tagged `legacy-cozy-noir`
 > in `17_ui_inventory.md` are frozen and regenerated as pixel art.
@@ -16,17 +21,19 @@ Two generators, both feeding one staging → review → approve loop:
 - **Retro Diffusion** via `Tools/AssetPipeline/server.py` (`models.pixel`) — ALTERNATIVE
   when PixelLab is unavailable/insufficient, keeping the same staging loop.
 
-## 2. Post-process chain (v2)
-generate → **palette quantize** to the 14 v2 40-colour palette (nearest-ramp mapping)
+## 2. Post-process chain (v2, palette per 14 v3)
+generate → **palette quantize** to the 14 v3 55-colour palette (nearest-ramp mapping)
 → **binary alpha cleanup** (no semi-transparent pixels) → **size verify** (exact sprite
-spec from art bible §6; REJECT any off-size output — never rescale) → staging → review
+spec from 14 v3 §9; REJECT any off-size SPRITE output — never rescale a sprite;
+backgrounds follow 14 v3 §11's generate-large → area-downsample chain) → staging → review
 at **1× and 3×** zoom → approve → `Assets/Art/<Category>/` → `LastCallImporter`
 auto-import (point filter, uncompressed, no mipmaps, PPU 1).
 
 ## 3. Review criteria (v2 — replaces the painterly checklist)
-Per asset, at 1× and 3×: palette compliance (40 colours only) · silhouette readable at
-1× · 1 px outline in the darkest ramp step · neon rim present on foreground sprites ·
-no anti-aliasing / no semi-alpha pixels · exact target size · consistent pixel density.
+Per asset, at 1× and 3×: palette compliance (55 colours only) · silhouette readable at
+1× · 1 px outline in the darkest ramp step · rim per 14 v3 §8 (day masters rim-free;
+night rim where it reads) · no anti-aliasing / no semi-alpha pixels · exact target size ·
+consistent pixel density.
 Max 4 rerolls per asset, then a Kontext-style edit or a human decision. Every
 generate/approve/reject is logged (see §5). `approve()` autonomy per repo-root
 `AGENTS.md` — the agent may approve when an asset passes this checklist.
