@@ -65,6 +65,20 @@ namespace LastCall.EditorTools
             // the second panel and the drawer unit. Divider to divider, so a repeat reads
             // as one more cabinet rather than as a seam. Vertical borders stay 0: the stage
             // sets size.y to the art's own height, so there is exactly one tile down.
+            else if (file == "counter")
+            {
+                ti.spriteBorder = new Vector4(168, 0, 305, 0);
+                // Tiling reads the sprite's MESH, and the default tight mesh throws away the
+                // transparent margin the tile is measured against - Unity says so out loud
+                // ("Sprite Tiling might not appear correctly ... not generated with Full Rect")
+                // and then draws the run wrong. Full Rect is part of the border rule, not a
+                // separate preference.
+                // (It lives on TextureImporterSettings, not on the importer itself.)
+                var settings = new TextureImporterSettings();
+                ti.ReadTextureSettings(settings);
+                settings.spriteMeshType = SpriteMeshType.FullRect;
+                ti.SetTextureSettings(settings);
+            }
         }
     }
 }

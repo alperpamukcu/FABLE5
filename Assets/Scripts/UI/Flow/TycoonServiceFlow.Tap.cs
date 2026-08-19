@@ -317,8 +317,11 @@ namespace LastCall.UI
             _tapVerdict = Outlined(NewText("Verdict", _tapPanel, _display, 16, TextAnchor.LowerCenter, UITheme.TextPrimary));
             Stretch(_tapVerdict.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(0, 64), new Vector2(0, 86));
 
-            // The way back is the left-edge key now (the loop rework's one back, one place).
-            AddEdgeBack(_tapPanel);
+            // The way back is the left-edge key now (the loop rework's one back, one place), and
+            // from the draught station it leads to the ROOM: the font on the counter is this
+            // stage's only door, so the back-bar wall is not behind it and landing there is a
+            // room the player never walked into.
+            AddEdgeBack(_tapPanel, Stage.Closed, "BACK\nTO\nROOM");
 
             var done = NewRect("Done", _tapPanel);
             Place(done, new Vector2(0.5f, 0), new Vector2(240, 34), new Vector2(130, 12));

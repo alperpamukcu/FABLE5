@@ -346,12 +346,19 @@ namespace LastCall.UI
         /// rework): one key, one place, every stage — the mirror of the shaker's TO THE
         /// GLASS. Returns to the back bar with the reverse slide.
         /// </summary>
-        private void AddEdgeBack(RectTransform panel)
+        /// <summary>The one back key, on the left edge. Where it leads is the door the stage was
+        /// entered by: the three bench stages hang off the back-bar wall and return to it, while
+        /// the draught station's only door is the font standing in the room (2026-08-19, the
+        /// author: "bira koyma ekranı açıldıktan sonra geri dönmeye çalışıldığında backbara
+        /// dönüyor, ana sahneye dönmeli"), so its key walks back out to the room rather than onto
+        /// a wall the player never passed through.</summary>
+        private void AddEdgeBack(RectTransform panel, Stage back = Stage.Menu,
+            string caption = "BACK\nTO\nBAR")
         {
             var rt = NewRect("EdgeBack", panel);
             Place(rt, new Vector2(0f, 0.5f), new Vector2(76, 150), new Vector2(14, 0));
             var btn = rt.gameObject.AddComponent<Button>();
-            btn.onClick.AddListener(() => GoTo(Stage.Menu));
+            btn.onClick.AddListener(() => GoTo(back));
             var face = NewRect("Face", rt);
             Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             KeyPlate.Dress(rt, UITheme.Night[3], btn, face);      // THE ONE KEY (GDD 16 §2)
@@ -359,7 +366,7 @@ namespace LastCall.UI
             var label = NewText("L", face, _body, 8, TextAnchor.MiddleCenter, UITheme.TextPrimary);
             Stretch(label.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(4, 4 + KeyPlate.Throw), new Vector2(-4, -4));
-            label.text = "BACK\nTO\nBAR";
+            label.text = caption;
         }
 
         private void OpenBottle(IngredientCard card)
