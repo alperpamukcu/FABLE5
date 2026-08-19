@@ -106,9 +106,13 @@ def queue(only=None):
             'size': SIZE,
             'view': VIEW,
             'outline': brief.outline_hint(language),
-            # 'high', not 'medium': the cast is drawn on 37-57 colours and a
-            # medium-detail roll came back on 27, which reads flat beside them.
-            'detail': 'high detail',
+            # BACK TO 'medium'. It was raised to 'high' to cure a flat 27-colour roll, and
+            # what it actually bought was LINE WORK: every face generated at high detail
+            # since has come back with a keyline (85%, 87%, 93%) while the whole approved
+            # cast - drawn at medium - sits between 3 and 33. Detail and delineation are
+            # the same dial to this model, and the house wants one without the other. The
+            # colour-count gate catches flatness on its own.
+            'detail': 'medium detail',
         })
         # The answer names the id inside a ready-to-paste call - get_character(
         # character_id="...") - so the id is pulled as a UUID, not as "everything after
@@ -379,22 +383,50 @@ def figure_stats(im):
     if not xs or not ys:
         return None
     body = ys[-1] - ys[0] + 1
-    # The head: from the crown down to where the silhouette first narrows into a neck and
-    # widens again into shoulders. Taken as the top eighth and measured, which is stable
-    # enough to compare figures against each other.
-    head_rows = [y for y in range(ys[0], ys[0] + int(body * 0.16))]
-    head_w = max((sum(1 for x in range(w) if px[x, y][3] >= 40) for y in head_rows), default=0)
+    # THE HEAD IS MEASURED TOP TO CHIN, not across. The first version took the widest row
+    # in the top sixth, which is hair, not skull: afrowoman's afro scored 0.187 and read as
+    # a bighead beside a cast that is nothing of the kind. Height is the honest proxy - the
+    # head runs from the crown down to the NECK, which is the narrowest row between the
+    # head's own widest and the shoulders' spread, and every silhouette has one.
+    top = ys[0]
+    scan = range(top, top + int(body * 0.30))
+    widths = {y: sum(1 for x in range(w) if px[x, y][3] >= 40) for y in scan}
+    if widths:
+        widest_head = max(widths, key=lambda y: widths[y] if y < top + body * 0.14 else -1)
+        below = [y for y in scan if y > widest_head]
+        neck = min(below, key=lambda y: widths[y]) if below else widest_head
+    else:
+        neck = top
+    head_w = max(1, neck - top)
     colours = len({px[x, y][:3] for x in range(w) for y in range(h) if px[x, y][3] >= 200})
+    # NEAR-BLACK CLOTH, as a share of the figure. It gets its own number because it
+    # DEFEATS the outline measure rather than failing it: a keyline is "a rim darker than
+    # what it encloses", and a black blazer has nothing lighter inside it to be darker
+    # than. silverbob came back with flat black lapels, seams and edges and scored 6% -
+    # the author saw it at a glance ("takim elbisesi siyah konturle gecmis fakat biz siyah
+    # kontur kullanmiyoruz"). So a figure that is largely near-black is refused outright:
+    # at this size the house cannot tell the garment from the line, and neither can anyone.
+    ink = sum(1 for y in range(h) for x in range(w)
+              if px[x, y][3] >= 200 and max(px[x, y][:3]) < 45)
+    solid = sum(1 for y in range(h) for x in range(w) if px[x, y][3] >= 200)
     return {'outline': edge_darkness(im), 'head': head_w / max(1, body),
-            'colours': colours, 'body': body}
+            'colours': colours, 'body': body,
+            'black': 100.0 * ink / max(1, solid)}
 
 
 # CALIBRATED ON THE CAST THE AUTHOR APPROVED, not on a number I liked: pastelman .120,
 # heavyset .147, clubgirl .158, silkwoman .162. The band has to contain all four, because
 # every one of them was looked at and kept. silverbob at .183 sits well outside it, which
 # is what "vucut orantisi ... heavyset ornegine uygun degil" measures out as.
+# Kept for the record, unused as a gate: see judge().
 HEAD_BAND = (0.112, 0.166)
 COLOURS_MIN = 34             # the cast: 37 to 57
+# CALIBRATED ON THE CAST, again, and the first guess was badly wrong: I set 18 and it
+# refused clubgirl (54%, black trousers) and heavyset (40%). Near-black CLOTHING is normal
+# here and is not the problem. What fails is a figure that is near-black almost EVERYWHERE
+# - silverbob's black trouser suit came to 77%, and at that share every internal edge, every
+# lapel and seam, is a black line whether or not anybody drew one.
+BLACK_MAX = 62.0
 
 
 def judge(name, im):
@@ -402,11 +434,17 @@ def judge(name, im):
     st = figure_stats(im)
     if st is None:
         return False
+    # HEAD IS PRINTED, NOT JUDGED - and admitting that is the finding. Two versions were
+    # tried and both measured HAIR: across, an afro reads as a bighead (0.187); top to
+    # chin, a ponytail does (0.182) and a shaved head reads as a pinhead (0.108). The
+    # cast's real proportions are alike; their haircuts are not, and a silhouette cannot
+    # tell the two apart. So the number is reported for the eye to use and the gates keep
+    # only what they can actually see: the keyline, the colour count, the near-black share.
     ok = (st['outline'] <= OUTLINE_MAX
-          and HEAD_BAND[0] <= st['head'] <= HEAD_BAND[1]
-          and st['colours'] >= COLOURS_MIN)
-    print('  %-20s body %d  outline %.0f%%  head/body %.3f  colours %d  -> %s'
-          % (name, st['body'], st['outline'], st['head'], st['colours'],
+          and st['colours'] >= COLOURS_MIN
+          and st['black'] <= BLACK_MAX)
+    print('  %-20s body %d  outline %.0f%%  colours %d  black %.0f%%  (hair+head %.3f)  -> %s'
+          % (name, st['body'], st['outline'], st['colours'], st['black'], st['head'],
              'in band' if ok else 'OUT OF BAND, re-roll'))
     return ok
 

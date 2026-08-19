@@ -202,16 +202,42 @@ FIGURE_OPTIONS = {
     # his forties, a tall woman with long loose hair, a narrow young man with curls. So
     # these two take the silhouettes still missing - a SHORT bob and a SHAVED head - and
     # the ages at the ends of the range. A cast is read by its outlines first.
+    # The suit was BLACK the first time and the author refused it on sight: at this size a
+    # near-black garment cannot be told from a keyline, and the house draws no keylines.
+    # Nothing else about her changes - the silver bob is the silhouette she was cast for.
+    # NO JACKET, third attempt. Black first (refused on sight), then ivory - and the ivory
+    # one came back with a dark keyline round every lapel, pocket and hem. A TAILORED
+    # GARMENT IS DRAWN WITH LINES: that is how the model knows a blazer. So the blazer goes
+    # and the silhouette she was cast for - the silver bob - stays.
     "silverbob": (
         "a woman in her fifties, upright and composed, bar customer in a Miami club, "
         "short silver hair in a sharp bob, large gold earrings, "
-        "a black blazer worn open over a lilac blouse, black trousers, "
-        "no logo, no pattern, no bag, no hat"),
+        "a lilac silk blouse and cream trousers, no jacket, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
     "shaved": (
         "a stocky man in his thirties, heavy shoulders and thick arms, bar customer in a "
         "Miami club, shaved head, dark stubble, "
         "a plain white sleeveless vest, dark grey trousers, "
         "no logo, no pattern, no hat, no tattoo"),
+
+    # ── the third pair (2026-08-19): "farkli etniklerde 2 karakter daha" ────
+    # A bar in Miami is Cuban, Haitian, Colombian, Venezuelan before it is anything else,
+    # and the six drawn so far do not show that. Named plainly in the prompt, because the
+    # model draws what it is told and a vague description defaults to the same face.
+    # Everything else follows the same rules as the rest of the cast: nothing near-black
+    # over the whole figure, one saturated garment at most, the chroma on the person.
+    "afrowoman": (
+        "a Black woman in her forties, warm dark brown skin, tall and full-figured, "
+        "bar customer in a Miami club, a short natural afro, large gold hoop earrings, "
+        "a burnt orange wrap blouse, cream wide-legged trousers, "
+        "no logo, no pattern, no bag, no hat"),
+    # The first take drew a black rim round the shirt's shoulders and sleeves. A buttoned
+    # shirt invites lines the same way a blazer does, so the collar and placket go too.
+    "eastasianman": (
+        "an East Asian man in his thirties, slim and neat, bar customer in a Miami club, "
+        "straight black hair swept back, clean shaven, thin silver-framed glasses, "
+        "a pale mint short sleeved t-shirt, light grey trousers, "
+        "no collar, no buttons, no logo, no pattern, no hat"),
 }
 
 HAND_ANCHOR_NOTE = """\

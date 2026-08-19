@@ -18,10 +18,11 @@
   "png": "AssetPipeline\\sources\\patron_trial\\selective_neutral.png",
   "edge_darkness": 64.2,
   "measured": {
-   "outline": 64.22,
-   "head": 0.153,
+   "outline": 28.276,
+   "head": 0.163,
    "colours": 30,
-   "body": 196
+   "body": 196,
+   "black": 25.178
   }
  },
  "selective_bar": {
@@ -37,10 +38,11 @@
   "png": "AssetPipeline\\sources\\patron_trial\\lineless_neutral.png",
   "edge_darkness": 64.9,
   "measured": {
-   "outline": 64.941,
-   "head": 0.142,
+   "outline": 29.433,
+   "head": 0.152,
    "colours": 24,
-   "body": 197
+   "body": 197,
+   "black": 8.834
   }
  },
  "lineless_bar": {
@@ -88,10 +90,11 @@
   },
   "edge_darkness": 56.8,
   "measured": {
-   "outline": 56.75,
-   "head": 0.158,
+   "outline": 6.926,
+   "head": 0.182,
    "colours": 57,
-   "body": 203
+   "body": 203,
+   "black": 53.849
   }
  },
  "heavyset_160": {
@@ -127,10 +130,11 @@
   },
   "edge_darkness": 54.4,
   "measured": {
-   "outline": 54.442,
-   "head": 0.147,
+   "outline": 2.551,
+   "head": 0.117,
    "colours": 37,
-   "body": 197
+   "body": 197,
+   "black": 40.404
   }
  },
  "pastelman": {
@@ -153,10 +157,11 @@
    "cheer_b": "9e9f4e6b-7185-4506-b63f-b5d3740b87f0"
   },
   "measured": {
-   "outline": 15.59,
-   "head": 0.12,
+   "outline": 8.154,
+   "head": 0.135,
    "colours": 51,
-   "body": 208
+   "body": 208,
+   "black": 5.472
   }
  },
  "silkwoman": {
@@ -179,10 +184,11 @@
    "upset_b": "53046655-646c-4e08-b369-1b27dd3597aa"
   },
   "measured": {
-   "outline": 37.371,
-   "head": 0.162,
+   "outline": 33.135,
+   "head": 0.142,
    "colours": 47,
-   "body": 204
+   "body": 204,
+   "black": 11.354
   }
  },
  "shaved": {
@@ -190,23 +196,64 @@
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 57.065,
-   "head": 0.158,
+   "outline": 22.598,
+   "head": 0.108,
    "colours": 42,
-   "body": 203
+   "body": 203,
+   "black": 28.674
   },
-  "png": "AssetPipeline\\sources\\patron_trial\\shaved.png"
+  "png": "AssetPipeline\\sources\\patron_trial\\shaved.png",
+  "clips": {
+   "walk": "1fa452bb-2c1d-451c-b243-810a14170856",
+   "look_right": "05b04473-19e8-40c3-8f22-b4d6e00c4e17",
+   "look_left": "85d944ad-232a-41d1-9fe6-51501098344a",
+   "order_a": "dcdd0e77-342d-40f0-b651-0c9a6abee880",
+   "drink_a": "7cf31124-4b0d-4d68-9cca-dcb8eda31d7b",
+   "cheer_a": "ed91c879-0c0c-4bc4-aeb2-806f8e8cb74f",
+   "upset_a": "6035de62-f6dc-4842-8dfb-cb38e168862c",
+   "order_b": "2cd2c734-d12a-4ec1-a8a9-66ed477b750a",
+   "drink_b": "fca72c04-5a11-4d9f-b593-4f89ad0b42db",
+   "cheer_b": "dca2583c-0ef7-48b1-afcc-2954415847c6",
+   "upset_b": "7d91228b-6945-45d2-bcc9-f5b86ccc0453"
+  }
  },
- "silverbob": {
-  "character_id": "bdf9d84c-ad56-40a4-9c9c-f79fddec7d80",
+ "afrowoman": {
+  "character_id": "c52e3b8c-1060-4c2f-b4ae-1d4f43344a7f",
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 73.107,
-   "head": 0.152,
-   "colours": 60,
-   "body": 197
+   "outline": 24.409,
+   "head": 0.187,
+   "colours": 44,
+   "body": 214,
+   "black": 7.59
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\afrowoman.png"
+ },
+ "silverbob": {
+  "character_id": "fbdb729d-2bfe-4747-a56e-f36fe238e70c",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 6.533,
+   "head": 0.171,
+   "colours": 47,
+   "body": 199,
+   "black": 0.191
   },
   "png": "AssetPipeline\\sources\\patron_trial\\silverbob.png"
+ },
+ "eastasianman": {
+  "character_id": "0e14d16f-31ef-41ce-a9d4-96c2aa398786",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 38.933,
+   "head": 0.148,
+   "colours": 48,
+   "body": 203,
+   "black": 8.981
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\eastasianman.png"
  }
 }

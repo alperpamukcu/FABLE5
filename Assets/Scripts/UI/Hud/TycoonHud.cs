@@ -62,10 +62,20 @@ namespace LastCall.UI
         private const float CounterLineY = DiegeticStage.CounterTopY * StageToHud;
         private const float BustW = 108f;
 
+        /// <summary>How far apart the stools stand along the counter. It was a local const
+        /// inside the builder; it is up here because the order ticket's width cap is DERIVED
+        /// from it, and the two numbers agreeing by hand is exactly how the tickets came to
+        /// overlap.</summary>
+        private const float SeatGap = 180f;
+
         /// <summary>How wide an order ticket may grow before its order line wraps instead
-        /// (2026-08-02). Wide enough for most drink names, narrow enough that five tickets
-        /// across the counter do not overlap each other.</summary>
-        private const float TagMaxW = 236f;
+        /// (2026-08-02). No longer a taste (2026-08-19, the author: "yan yana olan
+        /// müşterilerin baloncukları üst üste binmemeli"): every ticket is centred on its own
+        /// stool, so two full-width neighbours touch the moment this passes SeatGap. It was
+        /// 236 against a gap of 180 — a card and a half of overlap — and the 16pt display
+        /// face made every named customer hit the cap. SeatGap less twelve leaves a clear
+        /// dozen units of room between two of the widest tickets the bar can draw.</summary>
+        private const float TagMaxW = SeatGap - 12f;
 
         /// <summary>How SMALL a ticket may get (2026-08-19, the author: "gerekmedikçe de
         /// büyük olmamalı"). It used to have a floor of BustW + 48 = 156, which was fine
@@ -81,8 +91,16 @@ namespace LastCall.UI
         private const float TagLift = 22f;
         /// <summary>The air inside the plate, past its 5-unit border. Both axes.</summary>
         private const float TagPad = 7f;
-        /// <summary>One row of 8px type, and the icon row under it.</summary>
-        private const float TagRowH = 14f, IconRowH = 24f;
+        /// <summary>The plate's foot — the one dark row across the bottom of the white field
+        /// (ChromeArt.Bubble). The content box owes the BOTTOM this much extra, or the type
+        /// sits a row low in the white it is centred in (2026-08-19, the author: "yazılar +
+        /// görseller baloncuğun tam ortasında gözükmeli").</summary>
+        private const float TagFoot = 1f;
+        /// <summary>The icon row's height. (The rows of TYPE no longer have a constant: a
+        /// guessed row height is exactly what stopped the ticket being centred — 22 was set
+        /// against a 20-unit line and left every plate two units tall at the bottom. Each row
+        /// is now as tall as the font says it is; see SeatView.NameLineH.)</summary>
+        private const float IconRowH = 24f;
         /// <summary>The thinking beat: how long each of ".", "..", "..." holds. Slow enough
         /// to read as thinking rather than as a fault in the screen.</summary>
         private const float DotBeat = 0.42f;
@@ -117,7 +135,9 @@ namespace LastCall.UI
         // the walk is the clip measured against the world: nine frames, two strides, one
         // cycle a second, and WalkSpeed is derived from that. Everything else follows, so
         // nobody speaks in fast-forward beside somebody walking at nine.
-        private const float ExitSpeed = 560f;       // walk-out speed (ref px/s), back off the right edge
+        // (ExitSpeed is gone, 2026-08-19 — the author: "çıkış animasyonu giriş animasyonu ile
+        //  aynı hızda aynı şekilde". The exit is the entrance mirrored and shares WalkSpeed,
+        //  ArrivalEase and ArrivalPace; see AdvanceExit.)
         private const float OffscreenMargin = 150f; // how far past the right edge they start/finish
         /// <summary>The "placing the order" beat. The clip is two halves joined,
         /// about seventeen frames, which at PatronFps runs 1.42s - the beat is a hair
@@ -244,6 +264,7 @@ namespace LastCall.UI
             // 72% dark, and 47 and 51 colours against a cast that runs 37–57.
             ("silkwoman", 6f, 0f, 8, 5),
             ("pastelman", 2f, 0f, 4, 5),
+            ("shaved", 7f, 0f, 5, 5),
         };
         /// <summary>
         /// The papers for a face — name, age, country, flag — read from the cast file.
@@ -334,6 +355,10 @@ namespace LastCall.UI
             public PatronClip ReactClip;     // Cheer or Upset, chosen from their satisfaction
             public PatronLook Look;          // who is sitting here, and how tall they are
             public RectTransform Gauge;      // the patience bar, re-hung off their own head
+            // How tall ONE line of each row really is, asked of the font at build time (the
+            // faces and sizes never change after that). The plate's height is the sum of the
+            // rows it is showing, which is what makes the type land in the middle of it.
+            public float NameLineH, WantsLineH, OrderLineH;
         }
         private readonly List<SeatView> _seats = new List<SeatView>();
 
@@ -2676,7 +2701,15 @@ namespace LastCall.UI
             {
                 var view = _seats[i];
 
-                if (view.Exiting) { AdvanceExit(view); continue; }
+                if (view.Exiting)
+                {
+                    // The ticket comes down the moment they get up (2026-08-19, the author:
+                    // "içtikten sonra baloncuk kalkabilir") — a leaving customer is done
+                    // talking, and a balloon walking out with them reads as unfinished business.
+                    if (view.Tag.gameObject.activeSelf) view.Tag.gameObject.SetActive(false);
+                    AdvanceExit(view);
+                    continue;
+                }
 
                 if (view.Visit == null)
                 {
@@ -2740,10 +2773,14 @@ namespace LastCall.UI
 
                     if (drinking)
                     {
-                        // Served and content; the drink is theirs to finish before they go.
-                        view.Wants.text = "ENJOYING IT";
-                        view.Wants.color = UITheme.Lime[0];
-                        view.Order.text = known ? wanted : "";
+                        // Served, mid-animation, off-limits: the ticket turns into a loading
+                        // sign (2026-08-19, the author: "bir nevi yüklenme işareti") — the
+                        // thinking beat's own dots, in the club's blue to match the plate's
+                        // edge. The order line is gone: the drink is in their hand now.
+                        view.Wants.text = "DRINKING" + (Motion.Reduced ? "..."
+                            : new string('.', 1 + Mathf.FloorToInt(Time.unscaledTime / DotBeat) % 3));
+                        view.Wants.color = UITheme.ClubBlue[1];
+                        view.Order.text = "";
                         view.Spoken = true;
                     }
                     else if (deciding)
@@ -2786,7 +2823,8 @@ namespace LastCall.UI
                     // pictures are the fastest thing on the ticket to read, so showing them
                     // while the letters are still arriving would answer the question before
                     // the sentence asks it — and the typing would be decoration.
-                    float iconW = LayOutOrderIcons(view, visit, known && view.Spoken && !deciding);
+                    float iconW = LayOutOrderIcons(view, visit,
+                        known && view.Spoken && !deciding && !drinking);
 
                     // The ticket FITS its lines and its WIDEST line (the author, 2026-08-02:
                     // "yazı hiçbir zaman taşmamalı"). SEX ON THE BEACH ran off both ends of
@@ -2810,19 +2848,25 @@ namespace LastCall.UI
                     view.Order.horizontalOverflow = orderLines > 1
                         ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
 
+                    // EACH ROW IS AS TALL AS ITS OWN FONT SAYS (2026-08-19). One constant used
+                    // to stand in for three different line boxes, so the plate was always a
+                    // few units taller than what it held and the type rode high in it.
                     float rowTop = -TagPad;
                     view.Name.rectTransform.offsetMax = new Vector2(-4, rowTop);
-                    if (view.Name.text.Length > 0) rowTop -= TagRowH;
+                    if (view.Name.text.Length > 0) rowTop -= view.NameLineH;
                     view.Wants.rectTransform.offsetMax = new Vector2(-4, rowTop);
-                    if (view.Wants.text.Length > 0) rowTop -= TagRowH;
+                    if (view.Wants.text.Length > 0) rowTop -= view.WantsLineH;
                     view.Order.rectTransform.offsetMax = new Vector2(-4, rowTop);
-                    rowTop -= TagRowH * orderLines;
+                    rowTop -= view.OrderLineH * orderLines;
                     if (view.IconRow != null && view.IconRow.gameObject.activeSelf)
                     {
                         view.IconRow.anchoredPosition = new Vector2(0, rowTop);
                         rowTop -= IconRowH;
                     }
-                    view.Tag.sizeDelta = new Vector2(cardW, -rowTop + TagPad);
+                    // The bottom pays the foot row as well as the padding, so what the type is
+                    // centred in is the WHITE FIELD and not the sprite: the plate's top edge
+                    // is two units of colour and its bottom is two plus the foot's one.
+                    view.Tag.sizeDelta = new Vector2(cardW, -rowTop + TagPad + TagFoot);
                 }
 
                 // (The drink icon used to dock against the order text's measured width, on
@@ -2852,7 +2896,7 @@ namespace LastCall.UI
                 // Drive the animated customer (2026-07-23): walk-in, the sit-and-breathe idle,
                 // a one-shot "placing the order" beat, then nursing the drink. Facing and frame
                 // are chosen from the visit state; the body below the waist is clipped by the bar.
-                UpdateSeatAnimation(view, visit, patience);
+                UpdateSeatAnimation(view, visit);
 
                 // The tag lights when a drink is built and this customer can actually take
                 // it — and "can take" includes the READ: only taken orders are click-servable,
@@ -2865,8 +2909,15 @@ namespace LastCall.UI
                 // walked onto the information ramp, so only the edge moves and the plate is
                 // still recognisably the same object (16 §5: light says state).
                 bool canTake = drinkReady && !deciding && !drinking && visit.IdInspected;
-                view.TagBg.sprite = ChromeArt.Bubble(canTake);
-                if (view.Tail != null) view.Tail.sprite = ChromeArt.BubbleTail(canTake);
+                // A THIRD tone joined the two (2026-08-19, the author: "içecek içiyorsa pembe
+                // rengi vice mavisi olsun"): while they drink, the edge walks onto the club's
+                // blue — the customer is mid-animation and cannot be interacted with, and the
+                // plate says so the same way the dots on it do.
+                var tone = drinking ? ChromeArt.BubbleTone.Drink
+                    : canTake ? ChromeArt.BubbleTone.Take
+                    : ChromeArt.BubbleTone.Order;
+                view.TagBg.sprite = ChromeArt.Bubble(tone);
+                if (view.Tail != null) view.Tail.sprite = ChromeArt.BubbleTail(tone);
                 if (view.IconRule != null)
                     view.IconRule.color = canTake ? UITheme.Cyan[0] : UITheme.Magenta[1];
             }
@@ -2904,9 +2955,12 @@ namespace LastCall.UI
             }
         }
 
-        /// <summary>Plays a customer leaving (2026-07-23): they get up and walk back out to the
-        /// right the way they came (the walk cycle, mirrored). A stormed-off patron shakes first,
-        /// then storms out faster.</summary>
+        /// <summary>Plays a customer leaving (2026-07-23): they get up and walk back out to
+        /// the right the way they came — and since 2026-08-19 it IS the way they came (the
+        /// author: "çıkış animasyonu giriş animasyonu ile aynı hızda aynı şekilde"): the
+        /// entrance mirrored, same WalkSpeed, same near-stool ease, same fade. One pace for
+        /// everybody — the storm-off's shake and its 1.5× hurry are gone; anger is carried by
+        /// the Upset reaction beat and the toast, not by the walk.</summary>
         private void AdvanceExit(SeatView view)
         {
             // The reaction beat first: they stay on the stool and the drink answers — a fist
@@ -2918,22 +2972,23 @@ namespace LastCall.UI
                 return;
             }
 
-            // Get up and walk all the way back off the right edge the way they came.
+            // The entrance run backwards: slow at the stool, full pace by ArrivalEase out —
+            // and the cycle is scaled by the same factor as the floor, so the feet grip at
+            // every step exactly as they do on the way in (see AdvanceWalkIn).
             float exitX = _hudRoot.rect.width + OffscreenMargin;
             float dist = Mathf.Max(1f, exitX - view.SeatX);
-            float speed = view.ExitStorm ? ExitSpeed * 1.5f : ExitSpeed;
-            view.ExitT = Mathf.Min(1f, view.ExitT + Time.deltaTime * speed / dist);
-            float k = view.ExitT;
-
-            float shake = view.ExitStorm && k < 0.25f ? Mathf.Sin(k * 90f) * 8f : 0f;
-            float e = k * k;   // ease-in: rises and steps away, gathering pace
+            float gone = view.ExitT * dist;
+            float pace = Mathf.Lerp(ArrivalPace, 1f, Mathf.Clamp01(gone / ArrivalEase));
+            view.ExitT = Mathf.Min(1f,
+                view.ExitT + Time.deltaTime * WalkSpeed * pace / dist);
             view.Root.anchoredPosition = new Vector2(
-                view.SeatX + shake + (exitX - view.SeatX) * e, CounterLineY);
-            view.Group.alpha = 1f - Mathf.Clamp01((k - 0.5f) / 0.5f);
+                Mathf.Lerp(view.SeatX, exitX, view.ExitT), CounterLineY);
+            // The entrance fades up over its first quarter; leaving fades down over the last.
+            view.Group.alpha = Mathf.Clamp01((1f - view.ExitT) * 4f);
 
             // Mirror the walk so they face the way they are leaving (to the right).
             UpdatePatronFrame(view, PatronClip.Walk, view.AnimClock, facing: -1);
-            view.AnimClock += Time.deltaTime;
+            view.AnimClock += Time.deltaTime * Mathf.Max(0.05f, pace);
 
             if (view.ExitT >= 1f)
             {
@@ -2955,9 +3010,10 @@ namespace LastCall.UI
 
         /// <summary>Chooses the clip and frame for a seated customer from their state and drives
         /// the character image: the sit-and-breathe idle while they wait, a one-shot "placing the
-        /// order" beat the moment they decide, and the drink once served — plus a light impatience
-        /// flush over the last of their patience.</summary>
-        private void UpdateSeatAnimation(SeatView view, CustomerVisit visit, float patience)
+        /// order" beat the moment they decide, and the drink once served. (An impatience flush
+        /// used to tint the body here; removed 2026-08-19, the author: "kızınca kızarmasın
+        /// kararmasın" — running out of patience is the gauge's job, not the skin's.)</summary>
+        private void UpdateSeatAnimation(SeatView view, CustomerVisit visit)
         {
             bool ordered = visit.HasOrdered;
             bool seated = view.WalkT >= 1f;
@@ -2984,17 +3040,6 @@ namespace LastCall.UI
             int exact = -1;
             if (clip == PatronClip.Idle) SeatedGlance(view, ref clip, ref exact);
             UpdatePatronFrame(view, clip, t, facing: 1, exactFrame: exact);
-
-            float flush = (!ordered || drinking) ? 1f : Mathf.Clamp01(patience / 0.35f);
-            // RGB ONLY: the alpha on this renderer is the walk-in/leave fade, which
-            // SyncPatronBody owns. Writing a whole Color here would snap a fading customer
-            // back to solid every frame.
-            if (view.Body != null)
-            {
-                var flushed = Color.Lerp(new Color(1f, 0.72f, 0.72f, 1f), Color.white, flush);
-                var had = view.Body.color;
-                view.Body.color = new Color(flushed.r, flushed.g, flushed.b, had.a);
-            }
         }
 
         // ── where a seated customer is looking (2026-08-19) ──────────────────────
@@ -3390,11 +3435,19 @@ namespace LastCall.UI
             // then the paper is stamped for it, which is a different sentence from stamping
             // over an empty row.
             _stampArmed = false;
-            if (_billStamp != null)
-                _billStamp.gameObject.SetActive(_stampKind != StampKind.None);
             SetStampFace(_stampKind);
+            // AND IT IS NOT ON THE PAPER UNTIL IT IS STRUCK (2026-08-19, the author: NEW
+            // RECORD was sitting over the stars before its own animation). Showing it here
+            // and only ARMING it when the last star landed are two different things, and
+            // this line did the first: the stamp spent the whole star run parked at its
+            // rest pose — full size, printed, crooked — over the row it was waiting for,
+            // and then struck itself down over its own ink. It is shown by ArmStamp now,
+            // on the frame it is driven at the paper and not before.
+            if (_billStamp != null) _billStamp.gameObject.SetActive(false);
             _stampT = -1f;
-            if (_stampKind != StampKind.None && _starCount <= 0) ArmStamp();
+            // A night that earned nothing has no stars to wait for, and reduced motion has
+            // no run to wait for either — both take the stamp now.
+            if (_stampKind != StampKind.None && (_starCount <= 0 || Motion.Reduced)) ArmStamp();
             if (Motion.Reduced || _billStars.Count == 0) { _starT = -1f; return; }
             _starT = 0f;
             foreach (var s in _billStars)
@@ -3588,9 +3641,20 @@ namespace LastCall.UI
             {
                 _billStamp.localScale = Vector3.one;
                 _billStamp.localRotation = Quaternion.Euler(0, 0, -9f);
+                _billStamp.gameObject.SetActive(true);
                 return;
             }
             _stampT = 0f;
+            // THE FIRST FRAME OF THE STRIKE IS SET HERE, not left to the step that runs
+            // next frame. Arming can happen after StepStamp has already run for this frame
+            // (the zero-star night arms from the beats, which are stepped last), and a stamp
+            // shown at whatever pose it was left in flashes at rest for one frame before it
+            // starts falling. Shown huge, crooked and unprinted, it can only fall.
+            _billStamp.localScale = new Vector3(3.4f, 3.4f, 1f);
+            _billStamp.localRotation = Quaternion.Euler(0, 0, -26f);
+            var ink0 = _billStampInk.color;
+            _billStampInk.color = new Color(ink0.r, ink0.g, ink0.b, 0f);
+            _billStamp.gameObject.SetActive(true);
         }
 
         private void StepStamp()
@@ -5147,7 +5211,14 @@ namespace LastCall.UI
         /// own panel rather than running off it.</summary>
         private void FollowPointerWithShopSpec()
         {
-            if (_shopSpec == null || !_shopSpec.gameObject.activeSelf) return;
+            // The card's gate, for the same reason — see FollowPointerWithShopCard.
+            if (_shopSpec == null) return;
+            if (!MarketIsUp)
+            {
+                if (_shopSpec.gameObject.activeSelf) _shopSpec.gameObject.SetActive(false);
+                return;
+            }
+            if (!_shopSpec.gameObject.activeSelf) return;
             var mouse = UnityEngine.InputSystem.Mouse.current;
             if (mouse == null || _dayEndPanel == null) return;
             Vector2 local;
@@ -5247,11 +5318,34 @@ namespace LastCall.UI
             return h;
         }
 
+        /// <summary>
+        /// Whether the pointer's two reading panels are allowed up at all. They describe
+        /// MARKET TILES and nothing else, so the market being on screen is the whole
+        /// condition — the night's slip is the same panel one step earlier, and a bottle's
+        /// specifications hanging off the cursor over the takings describe nothing that is
+        /// on that screen.
+        /// </summary>
+        private bool MarketIsUp => Showing(_dayEndPanel) && _dayEndStep == 1;
+
         /// <summary>Hangs the reading card off the cursor, turning back at the edges of the
         /// market's own panel rather than running off it.</summary>
         private void FollowPointerWithShopCard()
         {
-            if (_shopCard == null || !_shopCard.gameObject.activeSelf) return;
+            // PUT AWAY WITH THE SCREEN IT BELONGS TO (2026-08-19, the author: the card was
+            // still following the mouse around the invoice). Every hover puts it away on
+            // exit, but an exit is not always REPORTED: leaving the market by Escape or by
+            // the foot key takes the panel down UNDER the pointer, which moves nothing and
+            // destroys nothing, so OnPointerExit never fires — and the card outlives the
+            // aisle, then comes back up with the panel on the next night's slip. The gate
+            // is here, in the one thing that runs every frame, rather than at each of the
+            // several ways out.
+            if (_shopCard == null) return;
+            if (!MarketIsUp)
+            {
+                if (_shopCard.gameObject.activeSelf) _shopCard.gameObject.SetActive(false);
+                return;
+            }
+            if (!_shopCard.gameObject.activeSelf) return;
             var mouse = UnityEngine.InputSystem.Mouse.current;
             if (mouse == null || _dayEndPanel == null) return;
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -5736,11 +5830,9 @@ namespace LastCall.UI
         /// item on the beam is placed against one of them, left to right.</summary>
         private const float TopBarH = 54f, CapY = 12f, ReadY = -9f;
 
-        /// <summary>Not black: a display's dark is the panel's own colour seen through a
-        /// tint. ONE constant for the board's two glasses — the hour's and the week's — so
-        /// the instruments cannot disagree about what an unlit readout looks like. (A raw
-        /// colour on purpose: no Night token is this blue-black, and dimming one is not it.)</summary>
-        private static readonly Color DisplayDark = new Color(0.031f, 0.055f, 0.075f, 1f);
+        // The display glass — "not black: a display's dark is the panel's own colour
+        // seen through a tint" — is baked into ChromeArt.Well now, the one place both
+        // instruments get their floor from, so it cannot fork.
         // 32 — the 3D star's own native size, drawn at 1× (2026-08-19, the author:
         // "Yıldızlarda 3 boyutlu yıldız iconlarından olsun"): Items/star3d.png is a
         // PixelLab take quantized onto the Amber/Malt ladder, generated AT 32 because
@@ -7267,55 +7359,48 @@ namespace LastCall.UI
         private int _weekShown = -1;
         private int _vipCell = -1;    // which fitting in the row is the star
 
-        // The instrument's own grid, in plate-local units off its left edge. 52 of pitch
-        // is what three Silkscreen letters at 16 actually need ("hafta göstergesi ufak ve
-        // sönük kalıyor" bought the size; the pitch keeps it). The head column holds the
-        // counter; a display rule divides it from the nights.
-        //
-        // ART-BOUND (2026-08-19): the numbers fit Items/cal_plate.png — 224×22 drawn at
-        // exactly 2×, teal end caps ~8 art px wide — and a new plate re-measures them.
-        // 64 = clear of the left cap plus the head column; 448 = the drawing's own width.
-        private const float WeekPlateW = 448f, WeekPlateH = 44f;
+        // The instrument's own grid, in well-local units off its left edge. 52 of
+        // pitch is what three Silkscreen letters at 16 actually need ("hafta göstergesi
+        // ufak ve sönük kalıyor" bought the size; the pitch keeps it). The head column
+        // holds the counter; a display rule divides it from the nights.
         private const float WeekStep = 52f;
-        private const float WeekHeadCx = 30f;    // the counter column's centre
-        private const float WeekRuleX = 56f;     // the display rule after it
-        private const float WeekDaysX = 64f;     // where the first slot begins
-        private const float WeekLampY = 8f;      // lamp row centre, on the plate
-        private const float WeekNameY = -7f;     // letter row centre, on the plate
+        private const float WeekHeadCx = 40f;    // the counter column's centre
+        private const float WeekRuleX = 76f;     // the display rule after it
+        private const float WeekDaysX = 80f;     // where the first slot begins
+        private const float WeekNameY = 5f;      // the word row, upper half of the glass
+        private const float WeekSignY = -9f;     // the sign under it: tube, star, shutter
 
         private void BuildWeekStrip(RectTransform top)
         {
             var names = BarCalendar.WeekColumns;
-            // THE PLATE IS GENERATED, AND THAT IS A WRITTEN EXCEPTION (2026-08-19, the
-            // author: "Haftalık takvim için pixellabden arkaplan oluştur"). Chrome is
-            // never generated in this project — this one piece is, on the author's own
-            // sentence, and the terms of the licence are the usual ones: produced AT the
-            // size it draws at, quantized to the palette (Night/ClubBlue/Cyan), and it
-            // carries NO information — every lamp, letter and seam is still code on top.
-            // Tools/topbar_gen.py is the producer; a new plate is a re-run, not a repaint.
-            var glass = NewRect("WeekPlate", top);
+            // The generated plate lasted one build ("Oluşturulan takvim görseli bozuk
+            // duruyor, elinden geldiğince kendin tasarımını yap") — the exception to
+            // chrome-is-never-generated was tried on the author's sentence and withdrawn
+            // on the author's next one. The calendar sits in the same drawn WELL the hour
+            // does; two instruments, one language, and nothing on the beam is a picture.
+            float wellW = WeekDaysX + names.Length * WeekStep + 10f;
+            var glass = NewRect("WeekWell", top);
             glass.anchorMin = glass.anchorMax = glass.pivot = new Vector2(0.5f, 0.5f);
-            glass.sizeDelta = new Vector2(WeekPlateW, WeekPlateH);
+            glass.sizeDelta = new Vector2(wellW, 40f);
             glass.anchoredPosition = Vector2.zero;
             var glassImg = glass.gameObject.AddComponent<Image>();
-            var plate = ItemArt.Load("cal_plate");
-            if (plate != null) glassImg.sprite = plate;
-            else glassImg.color = DisplayDark;               // wrong-looking, not invisible
+            glassImg.sprite = ChromeArt.Well();
+            glassImg.type = Image.Type.Sliced;
             glassImg.raycastTarget = false;
 
             // The head: what the instrument counts, then the count. The caption is the
             // small line, the number is the reading — CapY/ReadY's own logic, folded to
-            // the glass's 32 units.
+            // the well's glass.
             var cap = NewText("WeekCap", glass, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[3]);
             Place(cap.rectTransform, new Vector2(0, 0.5f), new Vector2(52, 12),
-                new Vector2(WeekHeadCx, 9f));
+                new Vector2(WeekHeadCx, 7f));
             cap.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             cap.horizontalOverflow = HorizontalWrapMode.Overflow;
             cap.text = "WEEK";
 
             _weekLabel = NewText("Week", glass, _display, 16, TextAnchor.MiddleCenter, UITheme.Cyan[3]);
             Place(_weekLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(52, 18),
-                new Vector2(WeekHeadCx, -6f));
+                new Vector2(WeekHeadCx, -7f));
             _weekLabel.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             _weekLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
 
@@ -7333,58 +7418,12 @@ namespace LastCall.UI
                 float cx = WeekDaysX + i * WeekStep + WeekStep * 0.5f;
                 bool open = i < BarCalendar.OpenNights;
 
-                // The slot rule. Joinery between the nights, quieter than the head's
-                // display rule — a panel of seven slots, not seven boxes.
-                if (i > 0)
-                {
-                    var seam = NewRect("Seam" + i, glass);
-                    Place(seam, new Vector2(0, 0.5f), new Vector2(1, 20),
-                        new Vector2(WeekDaysX + i * WeekStep, 0));
-                    seam.pivot = new Vector2(0.5f, 0.5f);
-                    var seamImg = seam.gameObject.AddComponent<Image>();
-                    seamImg.color = new Color(UITheme.Night[3].r, UITheme.Night[3].g,
-                        UITheme.Night[3].b, 0.8f);
-                    seamImg.raycastTarget = false;
-                }
-
-                // THE SHUTTER (the author: "pazar gününün tatil olduğu anlaşılsın"): slats
-                // where the others carry a lamp. A closed bar has its shutter down; nothing
-                // here is a greyed-out cell.
-                if (!open)
-                    for (int s = 0; s < 4; s++)
-                    {
-                        var slat = NewRect("Shut" + s, glass);
-                        Place(slat, new Vector2(0, 0.5f), new Vector2(22, 2),
-                            new Vector2(cx, WeekLampY + 6f - s * 4f));
-                        slat.pivot = new Vector2(0.5f, 0.5f);
-                        var slatImg = slat.gameObject.AddComponent<Image>();
-                        slatImg.color = UITheme.Night[3]; slatImg.raycastTarget = false;
-                    }
-
-                // Both drawn at the size their sprite is drawn at — a 16px circle squeezed
-                // into 10 units comes back with a lumpy edge, and this is 8px art. The glow
-                // overruns the glass by a few units on purpose; light does.
-                var glow = NewRect("G" + i, glass);
-                Place(glow, new Vector2(0, 0.5f), new Vector2(24, 24), new Vector2(cx, WeekLampY));
-                glow.pivot = new Vector2(0.5f, 0.5f);
-                var gimg = glow.gameObject.AddComponent<Image>();
-                gimg.sprite = ChromeArt.LampGlow();
-                gimg.raycastTarget = false; gimg.enabled = false;
-
-                // THE NIGHT A NAME COMES IS THE STAR FITTING (the author: "cumartesi günleri
-                // vip hikaye müşterisi geleceği belirtilsin"): Saturday's lamp is a star,
-                // every week, whether or not a beat is booked. Shape says what the night is;
-                // the light still says when it is.
-                bool vip = open && (BarNight)i == BarCalendar.VipNight;
-                var bulb = NewRect("B" + i, glass);
-                Place(bulb, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(cx, WeekLampY));
-                bulb.pivot = new Vector2(0.5f, 0.5f);
-                var bimg = bulb.gameObject.AddComponent<Image>();
-                bimg.sprite = vip ? ChromeArt.Mark("star") : ChromeArt.Lamp();
-                bimg.color = UITheme.Night[2]; bimg.raycastTarget = false;
-                if (vip) _vipCell = i;
-
-                // 16, not 8: the day is a WORD, not a caption under a light.
+                // THE WORD IS THE LAMP (the fourth cut's one idea). The lamp row is gone:
+                // the seven names sit on the same glass the hour's digits sit on, and
+                // tonight's name is LIT the way a digit is lit — amber, with a miniature
+                // neon tube burning under it, the beam's own foot light one slot wide.
+                // Spent nights go dim glass, nights ahead read cream; the states live in
+                // the letters, which is where the eye already was.
                 var name = NewText("N" + i, glass, _body, 16, TextAnchor.MiddleCenter, UITheme.TextSecondary);
                 Place(name.rectTransform, new Vector2(0, 0.5f), new Vector2(WeekStep, 18),
                     new Vector2(cx, WeekNameY));
@@ -7392,7 +7431,56 @@ namespace LastCall.UI
                 name.horizontalOverflow = HorizontalWrapMode.Overflow;
                 name.text = names[i];
 
-                _weekCells.Add((bimg, gimg, name));
+                Image sign = null, bloom = null;
+                if (!open)
+                {
+                    // THE SHUTTER (the author: "pazar gününün tatil olduğu anlaşılsın"):
+                    // two slats under the name where the open nights carry their light.
+                    // A closed bar has its shutter down; nothing here is a greyed cell.
+                    for (int sl = 0; sl < 2; sl++)
+                    {
+                        var slat = NewRect("Shut" + sl, glass);
+                        Place(slat, new Vector2(0, 0.5f), new Vector2(21, 2),
+                            new Vector2(cx, WeekSignY + 2f - sl * 4f));
+                        slat.pivot = new Vector2(0.5f, 0.5f);
+                        var slatImg = slat.gameObject.AddComponent<Image>();
+                        slatImg.color = UITheme.Night[3]; slatImg.raycastTarget = false;
+                    }
+                }
+                else if ((BarNight)i == BarCalendar.VipNight)
+                {
+                    // THE NIGHT A NAME COMES IS THE STAR FITTING (the author: "cumartesi
+                    // günleri vip hikaye müşterisi geleceği belirtilsin"): Saturday's sign
+                    // is the star, every week, whether or not a beat is booked. Shape says
+                    // what the night is; how hard it burns says when.
+                    var starRt = NewRect("Star" + i, glass);
+                    Place(starRt, new Vector2(0, 0.5f), new Vector2(16, 16),
+                        new Vector2(cx, WeekSignY - 1f));
+                    starRt.pivot = new Vector2(0.5f, 0.5f);
+                    sign = starRt.gameObject.AddComponent<Image>();
+                    sign.sprite = ChromeArt.Mark("star");
+                    sign.raycastTarget = false;
+                    _vipCell = i;
+                }
+                else
+                {
+                    // The night-tube: a 2-unit core over a 1-unit bloom, unlit until the
+                    // night is being played — the same anatomy as the beam's foot.
+                    var tube = NewRect("Tube" + i, glass);
+                    Place(tube, new Vector2(0, 0.5f), new Vector2(24, 2),
+                        new Vector2(cx, WeekSignY));
+                    tube.pivot = new Vector2(0.5f, 0.5f);
+                    sign = tube.gameObject.AddComponent<Image>();
+                    sign.raycastTarget = false;
+                    var bloomRt = NewRect("Bloom" + i, glass);
+                    Place(bloomRt, new Vector2(0, 0.5f), new Vector2(24, 1),
+                        new Vector2(cx, WeekSignY - 2f));
+                    bloomRt.pivot = new Vector2(0.5f, 0.5f);
+                    bloom = bloomRt.gameObject.AddComponent<Image>();
+                    bloom.raycastTarget = false;
+                }
+
+                _weekCells.Add((sign, bloom, name));
             }
         }
 
@@ -7418,37 +7506,48 @@ namespace LastCall.UI
             int dueDay = run.Story != null ? run.Story.DueDay : 0;
             bool dueThisWeek = due != null && BarCalendar.WeekOf(dueDay) == week;
 
-            // THE BULB SAYS TONIGHT, THE LETTERS SAY WHO IS COMING. They were doing each
-            // other's job for one build — a story night that was also tonight lit magenta,
-            // so the one bulb burning on the wire stopped meaning "you are here".
+            // THE WORD SAYS THE STATE, THE SIGN UNDER IT SAYS WHAT THE NIGHT IS. A
+            // tube burns only under the night being played; the star fitting is always
+            // Saturday's and only how hard it burns changes; the shutter is Sunday's and
+            // never changes at all.
             for (int i = 0; i < _weekCells.Count; i++)
             {
-                var (bulb, glow, name) = _weekCells[i];
+                var (sign, bloom, name) = _weekCells[i];
                 bool closed = i >= BarCalendar.OpenNights;          // the seventh night
                 bool isTonight = !closed && (int)tonight == i;
                 bool worked = !closed && i < (int)tonight;
                 bool storyNight = dueThisWeek && !closed && (int)BarCalendar.NightOf(dueDay) == i;
 
-                bulb.enabled = !closed;                            // Sunday has no bulb fitted
-                // The star fitting keeps its own colour so the VIP night is legible from
-                // across the week even while it is still four days away; the round lamps
-                // only carry the amber of the night being played.
                 bool star = i == _vipCell;
-                var hue = star ? UITheme.Magenta[4] : UITheme.Amber[4];
-                bulb.color = isTonight ? hue
-                    : star ? new Color(hue.r, hue.g, hue.b, 0.62f)
-                    : worked ? UITheme.Night[3]
-                    : UITheme.Night[2];
-                glow.enabled = isTonight;
-                if (isTonight) glow.color = star ? UITheme.Magenta[3] : UITheme.Amber[3];
+                if (sign != null)
+                {
+                    if (star)
+                    {
+                        // Legible from across the week even four days out; full magenta
+                        // only on the night itself.
+                        var m = UITheme.Magenta[4];
+                        sign.color = isTonight ? m : new Color(m.r, m.g, m.b, 0.62f);
+                    }
+                    else
+                    {
+                        // The tube burns the WORD's own hue: a story night that is also
+                        // tonight reads magenta up top, and an amber tube under magenta
+                        // letters would be the strip disagreeing with itself.
+                        sign.enabled = isTonight;
+                        sign.color = storyNight ? UITheme.Magenta[4] : UITheme.Amber[4];
+                    }
+                }
+                if (bloom != null)
+                {
+                    bloom.enabled = isTonight;
+                    var b = storyNight ? UITheme.Magenta[2] : UITheme.Amber[2];
+                    bloom.color = new Color(b.r, b.g, b.b, 0.5f);
+                }
 
-                // BRIGHT ENOUGH TO BE A CALENDAR (the author: "ufak ve sönük kalıyor"). The
-                // nights AHEAD were drawn at Night[3] — the beam's own shade, so they read as
-                // absent — when they are the half of the week the player is planning around.
-                // They are cream now; the nights already worked are the dim ones, because a
-                // night that is spent is the only one on the wire with nothing left to say.
-                // Cream[3], one step up from the first cut (2026-08-19, the author:
-                // "yazılar okumuyor"): [2] on the dark glass was the beam's own murk.
+                // BRIGHT ENOUGH TO BE A CALENDAR (the author: "ufak ve sönük kalıyor",
+                // then "yazılar okumuyor"): nights ahead are cream, one step up from the
+                // first cut; the nights already worked are the dim ones, because a night
+                // that is spent is the only one on the glass with nothing left to say.
                 name.color = closed ? UITheme.Night[4]
                     : storyNight ? UITheme.Magenta[4]
                     : isTonight ? UITheme.Amber[4]
@@ -8145,21 +8244,24 @@ namespace LastCall.UI
             // THE WEEK MOVED OUT (2026-08-19). It shared this glass for a build ("saat ve
             // kaçıncı hafta olduğu düzgün bir sayfa düzeninde olsun", 2026-08-14) and came
             // out as a two-line caption squeezed against the digits — the cramped corner the
-            // author is calling unprofessional. The week is calendar data, and the calendar
-            // is its own instrument now, so the counter reads at ITS head and this case
-            // closed down around the one thing it holds: the case is the digits plus the
-            // same 16 units of margin the week instrument keeps, and nothing else.
-            var clockCase = Case(top, "Clock", new Vector2(0, 0.5f), new Vector2(142, 44),
-                new Vector2(12, 0), UITheme.Night[2]);
+            // author called unprofessional. The week is calendar data and reads at the
+            // calendar's own head now; this instrument holds the hour and nothing else.
+            //
+            // A WELL, NOT A CASE (the fourth cut, same evening: "profesyonel bir UI/UX
+            // designer gibi düşün"). The case was a raised box with a glass inside — two
+            // nested rectangles, and the author called it boxing. A well is ONE object cut
+            // INTO the beam: its floor is the display glass, its top edge is the dark one
+            // (light comes from above — a recess shades at the top, a box shines there),
+            // and its bottom lip catches the room. See ChromeArt.Well.
+            var clockWell = NewRect("Clock", top);
+            Place(clockWell, new Vector2(0, 0.5f), new Vector2(134, 40), new Vector2(16, 0));
+            var clockImg = clockWell.gameObject.AddComponent<Image>();
+            clockImg.sprite = ChromeArt.Well();
+            clockImg.type = Image.Type.Sliced;
+            clockImg.raycastTarget = false;
 
-            var glass = NewRect("Glass", clockCase);
-            Place(glass, new Vector2(0.5f, 0.5f), new Vector2(126, 32), Vector2.zero);
-            var glassImg = glass.gameObject.AddComponent<Image>();
-            glassImg.color = DisplayDark;
-            glassImg.raycastTarget = false;
-
-            var digits = NewRect("Digits", glass);
-            Place(digits, new Vector2(0, 0.5f), new Vector2(110, 28), new Vector2(8, 0));
+            var digits = NewRect("Digits", clockWell);
+            Place(digits, new Vector2(0, 0.5f), new Vector2(110, 28), new Vector2(12, 0));
             // The metrics stopped being arguments (2026-08-19): the digits are hand-drawn
             // 11×14 masks at exactly 2× now — see SegmentClock's own header — so the one
             // size that exists is the drawing's, and passing another would be a lie.
@@ -8184,7 +8286,7 @@ namespace LastCall.UI
             // figure still prints where figures belong, in the ledger and the market. The
             // block is just the five-star run now, right-aligned into the same 40-unit gap
             // off the key the old block kept.
-            const float RightEdge = -14f;                     // where the key ends
+            const float RightEdge = -16f;                     // the grid's outer margin
             const float BlockRight = RightEdge - 40f;
             float starsW = _ratingStars.Length * StarGap;
 
@@ -8296,14 +8398,13 @@ namespace LastCall.UI
 
             // Six stools along the counter: each customer is a bust sitting at the bar with a
             // floating order tag above their head; click anywhere on them to read or serve.
-            const float seatGap = 180f;
             const float seatStartX = 118f;
             for (int i = 0; i < SeatSlots; i++)
             {
                 int index = i;
                 var seat = new SeatView();
                 seat.Index = i;
-                seat.SeatX = seatStartX + i * seatGap;
+                seat.SeatX = seatStartX + i * SeatGap;
 
                 // The click zone spans the bust and its tag; a clear image catches the ray.
                 seat.Root = NewRect($"Seat{i}", root);
@@ -8363,23 +8464,50 @@ namespace LastCall.UI
                 seat.TagBg.type = Image.Type.Sliced;
                 seat.TagBg.raycastTarget = false;
 
-                // The spout hangs BELOW the plate and overlaps it by its own two skirt rows,
-                // which are plain fill and erase the plate's bottom edge exactly where the
-                // balloon should be open. Drawn at 11x8, the size it was authored at, and
-                // never scaled — the one thing in this ticket that must not be.
+                // The spout hangs BELOW the plate and overlaps it by its own three skirt
+                // rows, which are plain fill and erase the plate's bottom band (two rows of
+                // edge and the foot) exactly where the balloon should be open. Drawn at
+                // 11x9, the size it was authored at, and never scaled — the one thing in
+                // this ticket that must not be.
                 var tailRt = NewRect("Tail", seat.Tag);
                 tailRt.anchorMin = tailRt.anchorMax = new Vector2(0.5f, 0);
                 tailRt.pivot = new Vector2(0.5f, 1);
-                tailRt.sizeDelta = new Vector2(11f, 8f);
-                tailRt.anchoredPosition = new Vector2(0, 2f);
+                tailRt.sizeDelta = new Vector2(11f, 9f);
+                tailRt.anchoredPosition = new Vector2(0, 3f);
                 seat.Tail = tailRt.gameObject.AddComponent<Image>();
                 seat.Tail.sprite = ChromeArt.BubbleTail();
                 seat.Tail.raycastTarget = false;
 
-                // 8, NOT 12/10/11 (GDD 16 §0, found by `LastCall → Audit UI`). The ticket over
-                // a customer's head is read across the room all night, and its three rows were
-                // set at three sizes the pixel face does not have — so the thing the player
-                // reads most often was the softest type on the screen.
+                // THE THREE ROWS ARE TWO FACES AT TWO SIZES, and every one of the four
+                // numbers is measured rather than chosen (2026-08-19, after "yazılar daha
+                // okunaklı ve büyük olsun" was answered with 16pt everywhere and came back as
+                // "şimdi de çok büyük"). What the faces actually measure, at the sizes the
+                // pixel rule allows (8 or 16, never between — GDD 16 §0):
+                //
+                //   Silkscreen 8   caps ~5u   "SEX ON THE BEACH" 88u    ← the old ticket
+                //   Press Start 8  caps  8u   "SEX ON THE BEACH" 128u
+                //   Silkscreen 16  caps ~11u  "SEX ON THE BEACH" 176u
+                //   Press Start 16 caps  16u  "SERENA FONTANA"   224u   ← the 236 cap, alone
+                //
+                // The last line is the whole overlap: ONE name in the display face at 16 is
+                // wider than the gap between two stools, so every named customer pushed their
+                // ticket over their neighbour's head. It cannot be fixed by moving the plate
+                // — it has to not be that wide.
+                //
+                // So: the ORDER, the thing the player is being asked to make, takes the
+                // largest step that fits a stool (Silkscreen 16, and it still wraps for the
+                // longest few drinks, which the plate has always grown downward to take). The
+                // NAME and the status line take the display face at 8 — 8-unit caps against
+                // the old ticket's 5, so they are bigger than what was called unreadable and
+                // half of what was called too big.
+                //
+                // THE NAME IS THE TITLE (the author: "ismi başlık gibi kalın ve punto olarak
+                // biraz farklı"). It is the square display face the bill and the stamps use,
+                // set at its own size against the order's body face — a heading by weight and
+                // by face, the way a pixel face can be one. Faux-bolding is the one kind of
+                // bold a pixel font cannot survive, and the size above this one does not fit
+                // on the counter. The status row rides the same face because its dots are the
+                // "busy" sign, and the display face's full stops are the fat square ones.
                 //
                 // THE INKS TURNED OVER with the plate (2026-08-19). Cream, pale cyan and pale
                 // magenta were chosen to sit on a near-black card; on a white one they are
@@ -8387,20 +8515,28 @@ namespace LastCall.UI
                 // the name is the room's own near-black, the status line is the plate's own
                 // magenta, and the order is read blackest of all because it is the thing the
                 // player is actually being asked to make.
-                seat.Name = NewText("Name", seat.Tag, _body, 8, TextAnchor.UpperCenter,
+                seat.Name = NewText("Name", seat.Tag, _display, 8, TextAnchor.UpperCenter,
                     UITheme.Night[1]);
-                Stretch(seat.Name.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -10));
+                Stretch(seat.Name.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -8));
                 seat.Name.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-                seat.Wants = NewText("Wants", seat.Tag, _body, 8, TextAnchor.UpperCenter,
+                seat.Wants = NewText("Wants", seat.Tag, _display, 8, TextAnchor.UpperCenter,
                     UITheme.Magenta[1]);
-                Stretch(seat.Wants.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -26));
+                Stretch(seat.Wants.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -18));
                 seat.Wants.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-                seat.Order = NewText("Order", seat.Tag, _body, 8, TextAnchor.UpperCenter,
+                seat.Order = NewText("Order", seat.Tag, _body, 16, TextAnchor.UpperCenter,
                     UITheme.Night[0]);
-                Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -42));
+                Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -28));
                 seat.Order.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+                // ASK THE FONT how tall its line is, once, here — the faces and the sizes are
+                // fixed from this point on. Every frame's plate is the sum of the rows it is
+                // showing, so a row height guessed even two units wrong is a plate with the
+                // type sitting off-centre in it, which is precisely what a constant did.
+                seat.NameLineH = MeasuredLineHeight(seat.Name);
+                seat.WantsLineH = MeasuredLineHeight(seat.Wants);
+                seat.OrderLineH = MeasuredLineHeight(seat.Order);
 
                 // WHAT THEY WANT, BESIDE HOW THEY WANT IT (2026-08-19, the author: "istenilen
                 // alkol iconun yanında nasıl servis edilmesi isteniyorsa onlarında iconu |
@@ -10366,6 +10502,21 @@ namespace LastCall.UI
                 new Vector2(4, KeyPlate.Throw), new Vector2(-4, 0));
             text.text = label;
             return rt;
+        }
+
+        /// <summary>How tall ONE line of this Text is, asked of the font itself. Measured
+        /// with a capital and an descender in it and with wrapping off, so the answer is the
+        /// line box and never a wrapped paragraph's height.</summary>
+        private static float MeasuredLineHeight(Text t)
+        {
+            var hadText = t.text;
+            var hadWrap = t.horizontalOverflow;
+            t.text = "Xg";
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            float h = Mathf.Ceil(t.preferredHeight);
+            t.text = hadText;
+            t.horizontalOverflow = hadWrap;
+            return h;
         }
 
         private Text NewText(string name, Transform parent, Font font, int size,
