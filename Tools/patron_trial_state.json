@@ -63,10 +63,14 @@
    "walk": "34a2b25d-b947-4e73-83d3-5cfb44af061b",
    "look_right": "3908cbaa-c7ed-4ac7-8324-730248563a4b",
    "look_left": "9593ee1f-7e35-48e9-a511-c4387ac8118c",
-   "order": "0ea7f2c9-7bd2-4776-b315-b992a33a9ead",
-   "drink": "c2513182-f5ff-4e69-b37f-bbdd723ffef6",
-   "cheer": "238b3756-04fa-4181-89be-2cc43458ba27",
-   "upset": "43cce3b3-486a-4f80-b37c-d544d78e0b14"
+   "order_a": "d5903261-5c0e-4de3-b126-c76c83e8ffc9",
+   "cheer_a": "13dc2db1-e2f5-4001-809f-02dea9e891f7",
+   "upset_a": "0d70fb28-1a3e-410b-a231-18cf1a09d0cd",
+   "order_b": "8346a91a-cb93-422d-9115-e371215f64c9",
+   "cheer_b": "bef04ac8-a7d0-4e8f-93fa-8db345bd524a",
+   "upset_b": "de5f9982-29e6-42c9-9523-3665c017db16",
+   "drink_a": "d671dff8-898e-4f44-9686-e31479e18636",
+   "drink_b": "f5256d25-50d5-4af9-acac-9adb9b2113e5"
   }
  },
  "heavyset_160": {
@@ -91,10 +95,14 @@
    "walk": "b5ff5251-450f-4307-9e6a-4ba2c3581aaa",
    "look_right": "dcebd8fd-67d0-46e7-90ac-7f9d4ead5011",
    "look_left": "54deaead-8347-40e0-ac5b-da543bdc83c6",
-   "order": "55be8d75-6004-4d54-b8de-851b286e77a9",
-   "drink": "ad3a97fc-32c7-4184-969e-301f8c78bca6",
-   "cheer": "995e13ae-b83b-45f5-be30-066dd2ebbb46",
-   "upset": "981dd884-6232-4ef8-812a-3bd16cf5129a"
+   "order_a": "aace1ccc-b30b-4295-a244-5ba309506697",
+   "cheer_a": "cd9fa1da-07f8-4605-8295-053fd1dc5fd5",
+   "upset_a": "60cecf18-d28b-4b89-ab9f-027024f9ea7c",
+   "order_b": "f7e64235-0b22-4f73-86cd-7a2dc4d848a2",
+   "cheer_b": "ce7e76ed-cc9a-4f83-a4dc-b0ad6ec24802",
+   "upset_b": "c385f76a-273d-4b07-8e02-174251e61ebc",
+   "drink_a": "0d079270-7a71-4f82-8df0-d65f5b1be934",
+   "drink_b": "f8605bd7-f480-4273-8bd0-6c5b84ca1101"
   }
  }
 }

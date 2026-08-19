@@ -68,22 +68,68 @@ FOOT_Y = brief.RIG_FOOT_Y
 # counter crosses the body at the navel, so what the player sees of a standing figure and
 # a seated one is the same chest, shoulders and head. Not a loop either, because a seated
 # person is not a metronome (the author, twice).
+# folder -> (zip clip or clips, rigid, pick). RIGID means one transform for the whole clip
+# so the frames keep the positions they were drawn in: every moving clip needs it, and a
+# still frame cannot care. PICK takes a single frame out of a clip.
+#
+# A LIST OF CLIPS IS JOINED, in order, into one folder. The one-shots are generated in two
+# halves - out to the middle of the action, then interpolated back to the idle pose - and
+# what the game wants is the whole gesture in one place. The junction frame is dropped
+# because half B was GENERATED from half A's last frame, so its first frame is that same
+# pose: keeping both would hold it for two frames, which reads as a hitch exactly where
+# the join is.
+# ANCHOR says this clip begins on the idle pose, so its whole run is shifted until its
+# first frame lands exactly where the idle frame stands. Without it the two are stood
+# independently - each on its own median - and the same pose ends up in a different place
+# on the canvas: measured at 7,000 to 11,000 differing pixels on heavyset, which is a jump
+# every single time the game leaves the idle or comes back to it. The clips were generated
+# FROM the idle frame, so this is not a fudge; it is restoring what the generator was told.
+#
+# The walk is not anchored: it is a cycle that never claims to start where the idle stands.
 SHIP = {
-    'idle': ('still', False, None),
-    'walk': ('walk', True, None),
-    'look_right': ('look_right', True, None),
-    'look_left': ('look_left', True, None),
-    'order': ('order', True, None),
-    'drink': ('drink', True, None),
-    'cheer': ('cheer', True, None),
-    'upset': ('upset', True, None),
+    # THE IDLE IS A CLIP'S OWN FIRST FRAME, not the character's rotation. Every clip was
+    # generated FROM the rotation, and the server redraws that seed rather than copying it:
+    # heavyset's clips all open on the same figure, and it differs from his rotation by
+    # 7,028 pixels - the shirt hangs differently and the arms sit differently. Shipping the
+    # rotation as the idle would put that difference on screen every time a clip started or
+    # ended. Taking frame 0 of order_a instead makes the idle the exact pose every clip
+    # begins and ends on, and the joins vanish to single digits.
+    'idle': ('order_a', False, 'first', False),
+    'walk': ('walk', True, None, False),
+    'look_right': ('look_right', True, None, True),
+    'look_left': ('look_left', True, None, True),
+    'order': (['order_a', 'order_b'], True, None, True),
+    'drink': (['drink_a', 'drink_b'], True, None, True),
+    'cheer': (['cheer_a', 'cheer_b'], True, None, True),
+    'upset': (['upset_a', 'upset_b'], True, None, True),
 }
+
 
 
 def log(rec):
     rec['ts'] = time.strftime('%Y-%m-%dT%H:%M:%S')
     with io.open(LOG, 'a', encoding='utf-8') as f:
         f.write(json.dumps(rec, ensure_ascii=False) + '\n')
+
+
+def anchor_to(frames, idle):
+    """Shift a whole clip so its FIRST frame stands where the idle frame stands.
+
+    One offset for every frame, so nothing inside the clip moves relative to anything
+    else - the clip keeps the motion it was drawn with and only its address changes.
+    """
+    a, b = patron_gen.bbox(frames[0]), patron_gen.bbox(idle)
+    if a is None or b is None:
+        return frames
+    dx, dy = b[0] - a[0], b[3] - a[3]
+    if dx == 0 and dy == 0:
+        return frames
+    out = []
+    for f in frames:
+        plate = Image.new('RGBA', f.size, (0, 0, 0, 0))
+        plate.paste(f, (dx, dy))
+        out.append(plate)
+    return out
 
 
 def clean(folder):
@@ -105,23 +151,41 @@ def ship(slug):
     print('%s (zip carries %s)' % (slug, ', '.join(sorted(groups))))
 
     head_y = None
-    for folder, (source, lock, pick) in SHIP.items():
-        frames = [still] if source == 'still' else groups.get(source)
+    idle_frame = None
+    for folder, (source, lock, pick, anchor) in SHIP.items():
+        if source == 'still':
+            frames = [still]
+        elif isinstance(source, list):
+            parts = [groups.get(name) for name in source]
+            if any(part is None for part in parts):
+                missing = [n for n, part in zip(source, parts) if part is None]
+                print('  %-12s MISSING %s' % (folder, ', '.join(missing)))
+                continue
+            frames = list(parts[0])
+            for part in parts[1:]:
+                frames += list(part[1:])          # the junction frame, once
+        else:
+            frames = groups.get(source)
         if frames and pick == 'last':
             frames = [frames[-1]]
+        if frames and pick == 'first':
+            frames = [frames[0]]
         if not frames:
             print('  %-11s MISSING' % folder)
             continue
         stood = patron_gen.stand(frames, lock_centre=lock, rigid=lock,
                                  canvas=CANVAS, foot_y=FOOT_Y)
+        if anchor and idle_frame is not None and stood:
+            stood = anchor_to(stood, idle_frame)
         out = os.path.join(PATRON, slug, folder)
         os.makedirs(out, exist_ok=True)
         clean(out)
         for i, f in enumerate(stood):
             f.save(os.path.join(out, '%s_%02d.png' % (folder, i)))
-        print('  %-11s %2d frames' % (folder, len(stood)))
+        print('  %-12s %2d frames' % (folder, len(stood)))
         if folder == 'idle':
             head_y = patron_gen.bbox(stood[0])[1]
+            idle_frame = stood[0]
             patron_gen.make_face(slug, stood[0])
 
     # The hold frame for each glance, measured off the shipped frames rather than the raw

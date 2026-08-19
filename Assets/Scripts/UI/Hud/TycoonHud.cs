@@ -92,39 +92,38 @@ namespace LastCall.UI
         /// eight tenths of a second — long enough to read as speech, short enough that a busy
         /// bar never waits on it.</summary>
         private const float SpeakCps = 20f;
-        /// <summary>Walk-in speed, in HUD units a second. MEASURED against the art rather
-        /// than felt out: the 2026-08-19 walk is six frames — two strides — and a stride
-        /// covers about 40 art px, so a cycle carries the figure 80 art px. Played at
-        /// PatronFps the cycle takes a second, which puts the floor at 160 HUD units a second.
-        /// The old 340 moved the ground at twice the feet, and no amount of frames would
-        /// have fixed that: it was the floor that was wrong, not the drawing.
+        /// <summary>Walk-in speed, in HUD units a second, and the number the whole gait
+        /// hangs off. MEASURED off the drawing, twice — and the first measurement was wrong
+        /// in a way worth keeping written down, because it is the reason the author said
+        /// arriving took too long.
         ///
-        /// 90 now, because the walk was re-cut with SMALL STEPS (the author: "daha küçük
-        /// adımlarla"): nine frames, two strides, and a short stride carries about 22 art
-        /// px — 44 a cycle, 88 HUD units a second. The floor follows the drawing, always,
-        /// and never the other way round.
+        /// I estimated a "small step" at 22 art px and set 90. The frames say otherwise: at
+        /// full spread the feet stand 77 px apart (clubgirl) and 88 (heavyset), which is a
+        /// heel-to-heel stride near 60 once a foot's own length is taken off — so a cycle
+        /// carries the figure about 120 art px, not 44. The floor was moving at less than
+        /// half the feet: the walk was not slow, it was SLIPPING, and every stool was a
+        /// twelve-second journey.
         ///
-        /// 110, not 88: the author watched the measured pace and asked for slightly more
-        /// ("çok az oyun içi hızını arttıralım"). That is a quarter over what the stride
-        /// measures, which the eye reads as walking with purpose rather than as skating —
-        /// past about a third the feet start to slip, so this is the room there is.</summary>
-        private const float WalkSpeed = 110f;
+        /// 120 art px a cycle at PatronFps 12 (nine frames, 0.75s) is 160 art px a second,
+        /// which is 320 HUD units. 310 sits a hair under, where the feet grip.</summary>
+        private const float WalkSpeed = 310f;
         /// <summary>How far out from the stool the arrival ease begins, and how slow it
         /// gets there. Both the floor and the cycle are scaled by it — see AdvanceWalkIn.</summary>
         private const float ArrivalEase = 260f, ArrivalPace = 0.45f;
         /// <summary>Frames a second for the walk: nine frames at nine is one cycle, two
         /// strides, a second — the pace WalkSpeed is measured against. Re-read this
         /// whenever the walk is re-cut; it is the drawing's frame count, not a taste.</summary>
-        private const float PatronFps = 9f;   // ONE RATE FOR EVERY CLIP (2026-08-19,
+        private const float PatronFps = 12f;   // ONE RATE FOR EVERY CLIP (2026-08-19,
         // the author: "FPS tum animasyonlarda ayni olmali"). The walk sets it, because
         // the walk is the clip measured against the world: nine frames, two strides, one
         // cycle a second, and WalkSpeed is derived from that. Everything else follows, so
         // nobody speaks in fast-forward beside somebody walking at nine.
         private const float ExitSpeed = 560f;       // walk-out speed (ref px/s), back off the right edge
         private const float OffscreenMargin = 150f; // how far past the right edge they start/finish
-        private const float OrderAnimSeconds = 1.8f;   // nine frames out and back at
-        // PatronFps: the beat is exactly as long as the clip, because a beat shorter
-        // than its clip cuts the sentence in half.               // the one-shot "placing the order" beat
+        /// <summary>The "placing the order" beat. The clip is two halves joined,
+        /// about seventeen frames, which at PatronFps runs 1.42s - the beat is a hair
+        /// longer, because a beat shorter than its clip cuts the sentence in half.</summary>
+        private const float OrderAnimSeconds = 1.5f;
         private const float DrinkSipSeconds = 2.6f, DrinkHoldSeconds = 1.8f;   // one sip cycle (×3 = the savour)
 
         // The animated customer (2026-07-23): a full-body pixel sprite shown from about the waist
@@ -158,10 +157,16 @@ namespace LastCall.UI
         /// The two glances carry the looking-around, and the same pair does double duty:
         /// an early frame is the small idle glance, the measured hold frame is the full turn
         /// at whoever just sat down beside them.</summary>
+        // ONE WAY TO DRINK, with the glass drawn in the hand (2026-08-19, the author:
+        // "sadece 1 tarz drinking olsun, ayri ayri uretme, bardak elinde olsun"). Three
+        // grips keyed off the served glass were built and taken out again; the trade is
+        // written down where it belongs, in Tools/patron_trial_gen.py - every customer now
+        // drinks from the same plain glass whatever the recipe called for.
         private enum PatronClip { Idle, Order, Drink, Walk, Cheer, Upset, LookRight, LookLeft }
-        private const float ReactSeconds = 1.8f;    // the same out-and-back length, so the
-        // reaction lands back on the idle pose exactly as the beat ends and they walk
-        // off from the pose they were standing in.   // the one-shot reaction beat before they go
+        /// <summary>The reaction beat before they leave: the same joined length as
+        /// the order, so the clip lands back on the idle pose exactly as the beat ends
+        /// and they walk off from the pose they were standing in.</summary>
+        private const float ReactSeconds = 1.5f;
 
         /// <summary>
         /// One person who might sit down: six clips and the row their head occupies inside
@@ -1068,6 +1073,11 @@ namespace LastCall.UI
             public string Name = "";
             public string Meta;              // one contextual token on the tile
             public string Money;             // "$38", "+$105", "3.0★"
+            /// <summary>What a SEALED tile's tag says under its number. Null = "STARS TO
+            /// OPEN", which is what every lock in the shop was until the draught tower
+            /// (2026-08-19): a tower is held back by the rung below it, and a padlock
+            /// promising a star that opens nothing is worse than no label at all.</summary>
+            public string GateNote;
             public string Word;              // "FULL" / "MAX" / "SOLD" — 4 CAPS, never 5
             public string PillVerb;          // "ADD" / "TAKE OUT" / "NO CASH" / "RETURN"
             public TileState State;
@@ -3097,30 +3107,22 @@ namespace LastCall.UI
         private static int PatronFrameIndex(PatronClip clip, float t, int n)
         {
             if (n <= 1) return 0;
-            // OUT AND BACK, for everything that is not a walk cycle. The author asked for a
-            // loop that reads smoothly - walk, idle, order, idle, drink, react, idle, leave -
-            // and measured against their own first frame, not one of these clips comes home:
-            // the ends sit 1,000 to 4,500 pixels from where they started, so playing one
-            // straight and cutting back to the idle is a visible jump every time. Played
-            // 0..n-1..0 the clip ENDS on the pose the idle holds, and the transition
-            // disappears. It also doubles every one-shot, which is the free half of
-            // "generate more frames if nine is not enough".
-            int span = 2 * (n - 1);
+            // STRAIGHT THROUGH, and hold the last frame. Every one-shot is now drawn in two
+            // halves - out to the middle of the action, then INTERPOLATED back to the idle
+            // pose - so its last frame is the idle pose and the return is drawn rather than
+            // reversed. That is what the halves bought: a clip that ends where the idle
+            // stands, at twice the frames, with nothing mirrored.
             if (clip == PatronClip.Walk) return Mathf.FloorToInt(t * PatronFps) % n;
             if (clip == PatronClip.Drink)
             {
-                // A sip, a pause standing still, another sip - the "1. yudum, 2. yudum" the
-                // author asked for, which is this same out-and-back repeated rather than a
-                // longer clip the animation canvas cannot carry (its ceiling is 8 frames).
-                float cycle = span / PatronFps + DrinkHoldSeconds;
+                // A sip, then a pause standing as they were, then another sip - the
+                // "1. yudum, 2. yudum" the author asked for, out of one clip that ends
+                // where it began.
+                float cycle = n / PatronFps + DrinkHoldSeconds;
                 float u = Mathf.Repeat(t, cycle) * PatronFps;
-                if (u >= span) return 0;                       // between sips, at rest
-                int p = Mathf.FloorToInt(u);
-                return p < n ? p : span - p;
+                return u >= n ? n - 1 : Mathf.FloorToInt(u);
             }
-            int q = Mathf.FloorToInt(t * PatronFps);
-            if (q >= span) return 0;                           // done: standing as they were
-            return q < n ? q : span - q;
+            return Mathf.Min(n - 1, Mathf.FloorToInt(t * PatronFps));
         }
 
         private void LoadPatronFrames()
@@ -4610,7 +4612,8 @@ namespace LastCall.UI
                             // One rung at a time, and the tile says which rung is missing —
                             // a greyed tower with no reason on it reads as a bug.
                             spec.State = TileState.Sealed;
-                            spec.Money = f.TapLevel.ToString();
+                            spec.Money = (run.TapLevel + 1).ToString();
+                            spec.GateNote = "LINE TOWER FIRST";
                             spec.BuffA = new Buff(BuffKind.Bad, "Fit the " + (run.TapLevel + 1)
                                 + "-line tower first · this bar runs " + run.TapLevel);
                         }
@@ -5312,32 +5315,51 @@ namespace LastCall.UI
             if (grid == null) return;
             int locked = 0;
             double next = double.MaxValue;
+            // What the starless half of the aisle is waiting for, in ITS OWN words. The
+            // locks already write these — "SERVE ECE WHAT THEY ASK FOR", "NEEDS THE 2-LINE
+            // TOWER" — and the crate has been throwing them away and printing a star
+            // instead, which is the one thing they are guaranteed not to be waiting for.
+            var asked = new List<string>();
             foreach (var g in run.GatedStock())
             {
                 if (IngredientCategories.IsAlcoholic(g.Card.Info?.Category, g.Card.Type) != booze) continue;
                 if (!belongs(g.Card)) continue;
                 locked++;
-                // NaN is a bottle waiting on a person, not on a rung — it counts as held
-                // back but has no number to pull the aisle's hint towards.
-                if (!double.IsNaN(g.Stars) && g.Stars < next) next = g.Stars;
+                // NaN is a line waiting on a person or on the room, not on a rung — it counts
+                // as held back but has no number to pull the aisle's hint towards.
+                if (!double.IsNaN(g.Stars)) { if (g.Stars < next) next = g.Stars; }
+                else if (!string.IsNullOrEmpty(g.Sentence) && !asked.Contains(g.Sentence))
+                    asked.Add(g.Sentence);
             }
-            // Everything in this aisle waits on somebody; there is no star to promise.
-            if (locked > 0 && next == double.MaxValue) next = run.Rating.Average;
             if (locked == 0) return;
+            // NOTHING HERE IS WAITING FOR A STAR (2026-08-19). This used to fall back to the
+            // bar's CURRENT standing, so an aisle held entirely behind the draught tower
+            // promised "get 5.0 stars and more of these show up here" to a bar that already
+            // had five — a sealed crate telling the player to go and do the one thing that
+            // would change nothing. It says what the locks say now.
+            bool starless = next == double.MaxValue;
+            string wanted = asked.Count > 0 ? string.Join(" · ", asked) : "";
             var was = _cardTarget;
             _cardTarget = grid;
             AddTile(new TileSpec
             {
                 Name = locked + " more waiting",
-                Money = next.ToString("0.0"),
+                Money = starless ? locked.ToString() : next.ToString("0.0"),
+                GateNote = starless ? "STILL LOCKED" : null,
                 State = TileState.Sealed,
-                Identity = "MORE " + noun.ToUpperInvariant() + "S AT " + next.ToString("0.0") + " STARS",
+                Identity = starless
+                    ? "MORE " + noun.ToUpperInvariant() + "S TO EARN"
+                    : "MORE " + noun.ToUpperInvariant() + "S AT " + next.ToString("0.0") + " STARS",
                 MetaLine = locked + " " + (locked == 1 ? noun : noun + "s")
                            + " the van will not bring you yet",
-                Body = "Get " + next.ToString("0.0") + " stars and more of these show up "
-                       + "here.",
-                BuffA = new Buff(BuffKind.Bad, "Needs " + next.ToString("0.0")
-                                 + " stars · you have " + run.Rating.Average.ToString("0.0")),
+                Body = starless
+                    ? (wanted.Length > 0 ? wanted : "These are earned, not bought.")
+                    : "Get " + next.ToString("0.0") + " stars and more of these show up "
+                      + "here.",
+                BuffA = new Buff(BuffKind.Bad, starless
+                    ? (wanted.Length > 0 ? wanted : "Earned, not bought")
+                    : "Needs " + next.ToString("0.0")
+                      + " stars · you have " + run.Rating.Average.ToString("0.0")),
             });
             _cardTarget = was;
         }
@@ -9792,7 +9814,7 @@ namespace LastCall.UI
                     new Vector2(0, -27));
                 what.horizontalOverflow = HorizontalWrapMode.Wrap;
                 what.verticalOverflow = VerticalWrapMode.Truncate;
-                what.text = "STARS TO OPEN";
+                what.text = string.IsNullOrEmpty(spec.GateNote) ? "STARS TO OPEN" : spec.GateNote;
             }
             else
             {

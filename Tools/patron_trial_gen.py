@@ -193,32 +193,41 @@ def poll():
 # (south), and the walk-in crosses the room right to left, which is WEST.
 KEPT = ('clubgirl', 'heavyset')
 
+# -- the clip table (2026-08-19, round five) ---------------------------------
+# EVERY ONE-SHOT IS DRAWN IN TWO HALVES, the author's own idea and a good one:
+# "animasyonu ikiye ayirmak mantikli olur mu baslangic-ortasi ortasi-sonu gibi boylece
+# basladigi pozisyona smooth sekilde gelebilir ... boylece FPS'i arttirmis oluruz".
+#
+# Half A runs from the idle pose to the middle of the action. Half B starts on A's last
+# frame and INTERPOLATES to the idle frame - the tool animates between two given poses,
+# so the return is DRAWN rather than reversed, and the clip provably ends where the idle
+# stands. Concatenated that is ~17 frames instead of 9, which is what buys the higher
+# frame rate: more frames at 12fps is the same length, smoother.
+#
+# The canvas ceiling is 8 generated frames whatever we do (a 220px character is padded
+# onto a 256 animation canvas), so halves are the ONLY road to a longer clip.
 CLIPS = {
-    # THERE IS NO IDLE CLIP. Two were generated and both rejected, the second with the
-    # reason: "nefes alis veris istemiyorum ... sabit durmali". A looping clip cannot be
-    # still, so the idle is the character's own standing rotation, held, and the small
-    # looking-around comes from the glances (patron_prompts.IDLE_IS_STILL).
-    #
-    # EVERY CLIP IS STANDING (2026-08-19, the author: "karakter animasyonlari oturur
-    # vaziyette olmayacak hep ayakta olacak"). Two seated experiments are behind this line
-    # and both are worth remembering rather than repeating: a SIT that continues the walk
-    # works and cannot be turned to face front (v3 follows the pose it is handed, and it
-    # was handed a profile), and a front-facing seated pose that turned out to be a
-    # standing figure with its hands clasped. Both are deleted.
-    #
-    # Every clip starts from 'idle' - the SHIPPED standing frame, not something that only
-    # exists in a zip - so each one begins and ends in the pose the player is looking at
-    # and nothing jumps at a clip change.
     'look_right': dict(directions=['south'], frames=8, start='idle'),
     'look_left':  dict(directions=['south'], frames=8, start='idle'),
-    'order':      dict(directions=['south'], frames=8, start='idle'),
-    'drink':      dict(directions=['south'], frames=8, start='idle'),
-    'cheer':      dict(directions=['south'], frames=8, start='idle'),
-    'upset':      dict(directions=['south'], frames=8, start='idle'),
-    # SMALL STEPS (the author: "daha kucuk adimlarla"). The walking-10 template strides
-    # like somebody late for a train and a template's stride length is not a parameter, so
-    # the walk is a v3 custom - the only place the SIZE of a step can be asked for. West,
-    # because the walk-in crosses the room right to left.
+
+    'order_a': dict(directions=['south'], frames=8, start='idle'),
+    'order_b': dict(directions=['south'], frames=8, start=('order_a', 'last'), end=('order_a', 'first')),
+
+    # ONE drink, and the GLASS IS DRAWN IN THE HAND (2026-08-19, the author: "eski tarza
+    # geri donelim sadece 1 tarz drinking olsun, ayri ayri uretme, bardak elinde olsun
+    # normal su bardagi gibi"). Three grips and an empty hand for the game to fill were
+    # both tried; this is simpler and it is what was asked for, so the vessel classes and
+    # the hand-anchor table go with it.
+    'drink_a': dict(directions=['south'], frames=8, start='idle'),
+    'drink_b': dict(directions=['south'], frames=8, start=('drink_a', 'last'), end=('drink_a', 'first')),
+
+    'cheer_a': dict(directions=['south'], frames=8, start='idle'),
+    'cheer_b': dict(directions=['south'], frames=8, start=('cheer_a', 'last'), end=('cheer_a', 'first')),
+    'upset_a': dict(directions=['south'], frames=8, start='idle'),
+    'upset_b': dict(directions=['south'], frames=8, start=('upset_a', 'last'), end=('upset_a', 'first')),
+
+    # The walk is a CYCLE, not a one-shot: it already ends where it begins, by being a
+    # loop. West, because the walk-in crosses the room right to left.
     'walk': dict(directions=['west'], frames=8),
 }
 FRAMES = 8
@@ -234,67 +243,108 @@ CUSTOM = {
     # NO OBJECTS AND NO PLACES IN THESE STRINGS. The tool says so in its own schema
     # ("focusing on the movement or pose only ... avoid environmental details like
     # locations or objects"), and the one description that ignored it - "resting on a bar
-    # top" - came back as a failed generation for both characters, twice. The bar is not
-    # drawn here anyway: what the game needs is the POSE, and the room supplies the bar.
+    # top" - came back as a failed generation for both characters, twice.
     #
-    # And every one of them is STANDING, arms down. The counter crosses the body at the
-    # navel, so a standing figure and a seated one show the player the same chest,
-    # shoulders and head - which is why the seated experiments cost something and bought
-    # nothing.
+    # Every one of them is STANDING, arms down, and every half A ends on the pose half B
+    # is asked to come back from.
     'look_right': ('turning only the head to the right, a small glance to the side, '
                    'then holding that look, the shoulders do not turn, '
                    'the arms stay down at the sides, ' + CALM),
     'look_left': ('turning only the head to the left, a small glance to the side, '
                   'then holding that look, the shoulders do not turn, '
                   'the arms stay down at the sides, ' + CALM),
-    # Speaking, not performing: the mouth moves and the head shifts a little. A v3 order
-    # clip left open waves its arms about, which is a man hailing a taxi, not a customer
-    # saying what they want.
-    'order': ('speaking a short sentence, the mouth moves and the head tilts a little, '
-              'the arms stay down at the sides and do not gesture, ' + CALM),
-    # ONE hand, and the other stays down: the first take brought both up to the mouth,
-    # which is praying, not drinking. The hand is empty because the GAME draws the glass
-    # into it - a drawn one would mean every customer drinks the same vessel whatever was
-    # poured (patron_prompts, THE GLASS IS NEVER DRAWN).
-    'drink': ('lifting one hand up to the mouth as if holding something small, '
-              'tipping the head back a little to sip, then lowering that same hand back '
-              'down to the side, the other arm stays down at the side and does not move, '
-              + CALM),
-    # A reaction from somebody at a bar: a nod and a small smile, not a cheer with the
-    # arms in the air.
-    'cheer': ('a pleased reaction, a small nod and a smile, the shoulders relax, '
-              'the arms stay down at the sides, nothing is raised, ' + CALM),
-    'upset': ('a displeased reaction, a small frown and a slight shake of the head, '
-              'the arms stay down at the sides, nothing is raised, ' + CALM),
+
+    # SPEAKING, over two halves so it lasts (the author: "konusulan animasyonlar daha uzun
+    # surmeli"). A opens the mouth and leans in; B settles back.
+    'order_a': ('beginning to speak, the mouth opens and the head lifts and tilts slightly '
+                'towards the listener, the chin comes up a little, '
+                'the arms stay down at the sides and do not gesture, ' + CALM),
+    'order_b': ('finishing the sentence and settling, the mouth closes, the head comes '
+                'level again and the chin lowers, '
+                'the arms stay down at the sides, ' + CALM),
+
+    # THE GLASS IS DRAWN, after all. It was left out on purpose for a while - an empty
+    # hand lets the GAME pin the served vessel into it, so a customer drinks whatever was
+    # actually poured - and the author has decided the simpler thing: one clip, one plain
+    # glass, drawn. Worth writing down that this makes every customer drink from the same
+    # glass whatever the recipe said, which is a real trade and a deliberate one.
+    #
+    # "Plain" and "water" are load-bearing words: asked for something "tall and heavy" the
+    # model drew a white blob and swung the hand behind the head, and asked for nothing at
+    # all it drew a fist. A drinking glass is a thing it knows.
+    #
+    # And ONLY ONE ARM MOVES, named explicitly: clubgirl's first attempt brought both
+    # hands to her face, which is somebody about to sneeze.
+    'drink_a': ('raising the right hand, holding a plain clear drinking glass, up in front '
+                'of the chest until the glass reaches the mouth, and tilting the head back '
+                'a little to drink from it, as if drinking a glass of water, '
+                'ONLY the right arm moves, the left arm hangs straight down and does not '
+                'move at all, ' + CALM),
+    'drink_b': ('lowering the right hand with the glass back down to the side and bringing '
+                'the head level again, the left arm stays down, ' + CALM),
+    # MORE DEFINITE than the first take (the author: "sevinme ve uzulme animasyonlari
+    # biraz daha belirgin olmali"). Still nothing thrown in the air - what is wanted is
+    # legibility at sixty pixels of head, not theatre, so the whole FACE moves and the
+    # shoulders go with it.
+    'cheer_a': ('a clearly pleased reaction, a broad smile, the eyebrows lift and the head '
+                'nods forward once, the shoulders rise and the chest opens, '
+                'the arms stay down at the sides, ' + CALM),
+    'cheer_b': ('settling back from the smile, the head comes level and the shoulders '
+                'lower again, still pleased, the arms stay down, ' + CALM),
+    'upset_a': ('a clearly displeased reaction, a deep frown, the brows pull together, the '
+                'head turns away and shakes once, the shoulders drop and the chin lowers, '
+                'the arms stay down at the sides, ' + CALM),
+    'upset_b': ('settling back from the frown, the head comes level and forward again, '
+                'still unhappy, the arms stay down, ' + CALM),
+
     'walk': ('walking forward with small short steps at a calm unhurried pace, '
              'the feet stay close to the ground, the arms swing very little, ' + CALM),
 }
 
 
-def start_frame(slug, clip, which='held'):
-    """One clip's held frame, base64, as the starting pose for another.
+def clip_frames(slug, clip):
+    """One clip's frames, from wherever they are.
 
-    Read off the SHIPPED frames (Resources/Patron/<slug>/<clip>), not the raw zip: what
-    the game plays is what the next clip should continue from, and the shipped frames are
-    the ones stood on the rig. The held frame is the one furthest from the first - see
-    peak_frame for why that is not simply the last one.
+    Shipped clips live under Resources/Patron/<slug>/<clip> and are the ones the game
+    plays - those win, because a clip should continue from what the player is looking at.
+    A half that has only just been generated is not shipped yet (it has no folder of its
+    own; it ships concatenated with its other half), so the download zip is the fallback.
     """
-    import base64
     d = os.path.join(ROOT, 'Assets', 'Resources', 'Patron', slug, clip)
-    if not os.path.isdir(d):
+    if os.path.isdir(d):
+        names = sorted(n for n in os.listdir(d) if n.endswith('.png'))
+        if names:
+            return [Image.open(os.path.join(d, n)).convert('RGBA') for n in names]
+    zip_path = os.path.join(RAW, slug + '_anim.zip')
+    if not os.path.exists(zip_path):
         return None
-    names = sorted(n for n in os.listdir(d) if n.endswith('.png'))
-    if not names:
-        return None
-    frames = [Image.open(os.path.join(d, n)).convert('RGBA') for n in names]
-    # 'held' is the pose a clip settles on (measured, see peak_frame); 'last' is where a
-    # clip physically ENDS, which is what a continuation has to start from - the walk's
-    # held frame is mid-stride, and sitting down out of mid-stride is a stumble.
-    held = (frames[-1] if which == 'last'
-            else frames[peak_frame(frames)] if len(frames) > 1 else frames[0])
+    import patron_gen
+    return patron_gen.frames_from_zip(io.open(zip_path, 'rb').read()).get(clip)
+
+
+def frame_b64(frame):
+    import base64
     buf = io.BytesIO()
-    held.save(buf, format='PNG')
+    frame.save(buf, format='PNG')
     return base64.b64encode(buf.getvalue()).decode('ascii')
+
+
+def start_frame(slug, clip, which='held'):
+    """One clip's frame, base64, as a starting or ending pose for another.
+
+    'held' is the pose a clip settles on (measured - see peak_frame, and why it is not
+    simply the last frame). 'last' is where a clip physically ENDS, which is what a
+    continuation has to start from: the walk's held frame is mid-stride, and sitting down
+    out of mid-stride is a stumble; half A's held frame is the middle of the action, and
+    half B has to begin where A stopped.
+    """
+    frames = clip_frames(slug, clip)
+    if not frames:
+        return None
+    pick = (frames[-1] if which == 'last'
+            else frames[0] if which == 'first'
+            else frames[peak_frame(frames)] if len(frames) > 1 else frames[0])
+    return frame_b64(pick)
 
 
 def animate(clip):
@@ -306,7 +356,7 @@ def animate(clip):
         cid = state[name]['character_id']
         done = state[name].setdefault('clips', {})
         if clip in done:
-            print('  %-10s %-11s already queued (%s)' % (name, clip, done[clip][:8]))
+            print('  %-10s %-13s already queued (%s)' % (name, clip, done[clip][:8]))
             continue
         args = {'character_id': cid, 'animation_name': clip,
                 'directions': spec['directions']}
@@ -325,23 +375,40 @@ def animate(clip):
                               else (spec['start'], 'held'))
                 seed = start_frame(name, src, which)
                 if seed is None:
-                    print('  %-10s %-11s needs %s shipped first' % (name, clip, src))
+                    print('  %-10s %-13s needs %s first' % (name, clip, src))
                     continue
                 args['custom_start_frame_base64'] = seed
+            # INTERPOLATION: given both ends, the tool animates between them - which is how
+            # a returning half is guaranteed to arrive at the idle pose instead of near it.
+            # This is the whole reason the one-shots are drawn in halves.
+            # The end pose is half A's FIRST frame, not the shipped idle - same pose, but
+            # on the animation canvas. A 220px character animates on a 220x256 one, and the
+            # server refuses a pair of frames that disagree ("End frame dimensions (220x220)
+            # must match start frame (220x256)"). A's first frame IS the idle, padded by the
+            # server itself, so it is the only version of that pose guaranteed to fit.
+            if spec.get('end'):
+                src2, which2 = (spec['end'] if isinstance(spec['end'], tuple)
+                                else (spec['end'], 'last'))
+                target = start_frame(name, src2, which2)
+                if target is None:
+                    print('  %-10s %-13s needs %s first' % (name, clip, src2))
+                    continue
+                args['end_frame_base64'] = target
         text, _ = call('animate_character', args)
         import re
         ids = re.findall(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', text, re.I)
         job = next((i for i in ids if i != cid), None)
         if not job:
-            print('  %-10s %-11s NO JOB: %s' % (name, clip, text[:220].replace(chr(10), ' ')))
+            print('  %-10s %-13s NO JOB: %s' % (name, clip, text[:220].replace(chr(10), ' ')))
             continue
         done[clip] = job
         save(state)
         log({'asset': 'patron_trial/' + name, 'event': 'animation queued',
              'character_id': cid, 'clip': clip, 'template': spec.get('template'),
              'start': spec.get('start'), 'directions': spec['directions']})
-        print('  %-10s %-11s queued %s (%s)'
-              % (name, clip, job, spec.get('template') or 'v3 custom'))
+        print('  %-10s %-13s queued %s (%s)'
+              % (name, clip, job, 'interpolated' if spec.get('end')
+                 else spec.get('template') or 'v3 custom'))
 
 
 def peak_frame(frames):

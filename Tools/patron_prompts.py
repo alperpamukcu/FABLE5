@@ -26,17 +26,17 @@ decision, not a preference, and the reason is written beside it.
   lying on the wood. This is a constraint on the drawing, which is why it is in the
   prompt rather than in the layout code.
 
-  THE GLASS IS NEVER DRAWN. The customer is drawn with an EMPTY grip and the game puts
-  the served vessel in it - otherwise every customer drinks the same glass whatever was
-  poured. What makes that work is the rig's anchor table (see HAND_ANCHOR_NOTE): per
-  drink frame, an (x, y, angle) the vessel is pinned to.
-
-  Three grips, not one (the author, 2026-08-19): short (shot/rocks), long (highball,
-  pint), stemmed (cocktail, wine - fingers on the STEM, so a coupe is not held in a
-  fist). The vessel draws BEHIND the hand, single layer: the hand is the near thing.
-
-  Each customer drinks in their OWN way (the author's call, cost stated and accepted):
-  three drink clips per person and three anchor measurements, so a new face is not free.
+  THE GLASS IS DRAWN IN THE HAND - reversed the same day it was decided, and both
+  halves are kept here because the reasoning still holds for whoever revisits it.
+  The original rule was that the customer is drawn with an EMPTY grip and the game pins
+  the served vessel into it, so that a customer drinks whatever was actually poured;
+  three grip classes (short / long / stemmed) and a per-frame hand-anchor table were the
+  machinery for it, and all of it was built. The author then chose the simpler thing
+  ("eski tarza geri donelim sadece 1 tarz drinking olsun, ayri ayri uretme, bardak
+  elinde olsun normal su bardagi gibi"): ONE drink clip, a plain glass drawn in the hand.
+  The trade, stated plainly: every customer now drinks from the same glass whatever the
+  recipe said. If that ever grates, the empty-hand road is still open and the anchor note
+  below is what it needs.
 
   MEDIUM COLOUR BUDGET, 14-20. The palette doctrine (14 art bible) puts the chroma on
   the ACTORS and keeps the architecture quiet, so a customer may carry one saturated
