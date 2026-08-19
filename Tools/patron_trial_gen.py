@@ -277,11 +277,51 @@ def animate(clip):
                  spec['directions'][0]))
 
 
+def peak_frame(frames):
+    """Where a turn-and-hold clip should STOP, measured rather than chosen.
+
+    The glance clips were asked to turn 45 degrees and hold, and only half of them do:
+    clubgirl holds her look through the last three frames, while heavyset turns and comes
+    BACK to the front by the end. A clip that returns cannot be held on its last frame, so
+    the rig holds the frame that is furthest from frame 0 instead - the peak of the turn -
+    and plays 0..peak forward when the neighbour arrives, peak..0 backward when they go.
+
+    Distance is counted in changed pixels against frame 0, which for a head-only motion is
+    exactly the amount of head that has turned. Measured 2026-08-19:
+        clubgirl look_right 7, look_left 8 (both hold to the end)
+        heavyset look_right 4, look_left  6 (both return, so both are trimmed)
+    """
+    from PIL import ImageChops
+    base = frames[0].convert('RGB')
+    best, best_i = -1, 0
+    for i, f in enumerate(frames):
+        d = ImageChops.difference(base, f.convert('RGB')).load()
+        w, h = f.size
+        n = sum(1 for y in range(h) for x in range(w) if sum(d[x, y]) > 30)
+        if n > best:
+            best, best_i = n, i
+    return best_i
+
+
+def peaks():
+    """Print the hold frame for every glance clip that has landed."""
+    import patron_gen
+    for name in KEPT:
+        blob = io.open(os.path.join(RAW, name + '_anim.zip'), 'rb').read()
+        g = patron_gen.frames_from_zip(blob)
+        for clip in ('look_right', 'look_left'):
+            if clip in g:
+                print('  %-10s %-11s %d kare -> tut %d'
+                      % (name, clip, len(g[clip]), peak_frame(g[clip])))
+
+
 if __name__ == '__main__':
     cmd = sys.argv[1] if len(sys.argv) > 1 else 'poll'
     if cmd == 'queue':
         queue(sys.argv[2] if len(sys.argv) > 2 else None)
     elif cmd == 'anim':
         animate(sys.argv[2])
+    elif cmd == 'peaks':
+        peaks()
     else:
         poll()
