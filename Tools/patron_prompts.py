@@ -82,6 +82,15 @@ HOUSE_RULES = (
     # DETAIL, for the same reason: shaved came back on 27 colours where the cast runs
     # 37-57, and read flat beside them.
     "detailed shading with fabric folds and clear facial features, "
+    # NO KEYLINE, IN WORDS (2026-08-20). Until today this was left to the `outline`
+    # parameter alone, and the parameter is soft guidance: eight of ten faces came back
+    # between 3% and 39% keyline and two came back at 67% and 77%, from the same setting.
+    # A rule the model loses a coin toss on is a rule that has to be said twice. Named the
+    # way the failures actually looked, too - it is never only the silhouette that gets a
+    # line, it is every garment edge, every seam and every lapel.
+    "absolutely no black outline and no dark keyline, not around the figure and not "
+    "around any garment, no ink lines, no drawn seams, no dark piping, no black edges; "
+    "every edge is shown by a change of colour alone, "
     "full body from head to feet, standing upright, feet apart on the ground, "
     "transparent background, no floor, no furniture, no props, no text"
 )
@@ -243,20 +252,35 @@ FIGURE_OPTIONS = {
     # its canvas against a cast that fills 197-209, which is what "kucuk olmus" is. So the
     # suit goes light and the height is asked for outright; the beard, the wavy hair and
     # the open chest are the author's and they stay.
+    # Third respec, and the fault is now measured rather than guessed: he came back at
+    # 67% keyline where the cast runs 3-39%. THE WAISTCOAT IS THE REASON - it is the same
+    # fault silverbob's blazer had and afrowoman's button placket had, and both were cured
+    # by taking the tailoring OUT OF THE WORDS. The author asked for a waistcoat and keeps
+    # it; what goes is the vocabulary a tailor's garment drags in - lapels, buttons,
+    # stitching, piping - because those are the things the model draws WITH LINES. A soft
+    # suede waistcoat is the same silhouette and none of the ink.
     "spanishsuit": (
         "a tall Spanish man in his thirties, wheat-toned skin, a full dark beard and wavy "
         "dark hair, bar customer in a Miami club, "
-        "an open deep teal waistcoat over a cream shirt unbuttoned to the chest, "
-        "warm brown trousers, a wide leather belt, a gold chain, "
-        "standing at full height, no tie, no jacket, no logo, no pattern, no hat"),
+        "an open soft suede waistcoat in warm teal, worn over a cream shirt open at the "
+        "chest, the waistcoat has no lapels and no visible buttons and no stitching, "
+        "warm brown trousers, a tan belt, a gold chain, "
+        "standing at full height, no black clothing, "
+        "no tie, no jacket, no logo, no hat"),
     # The one figure allowed a print, because the print IS the description. Everything
     # else stays inside the house rules - one loud garment, the rest quiet.
+    # 77% keyline, the worst roll of the whole casting, and her fault is her own print:
+    # a leopard rosette is a NEAR-BLACK MARK, and a coat of them sitting on the silhouette
+    # is indistinguishable from an outline - to the measure and, the author says, to the
+    # eye. So the print stays (it is the description) and its black goes: tan ground, warm
+    # brown spots, which is what a leopard actually is anyway.
     "leopard": (
         "a woman in her twenties with almond eyes and pink lipstick, bar customer in a "
         "Miami club, dark curly hair gathered up in a bun, large hoop earrings, "
-        "an off-the-shoulder leopard print blouse open over a white crop top, "
+        "an off-the-shoulder blouse in a soft tan leopard print with warm brown spots and "
+        "no black in the print, worn open over a white crop top, "
         "bright turquoise leggings, high heels, "
-        "no logo, no bag, no hat"),
+        "no black clothing, no logo, no bag, no hat"),
 
     "eastasianman": (
         "an East Asian man in his thirties, slim and neat, bar customer in a Miami club, "

@@ -296,55 +296,185 @@
   }
  },
  "leopard": {
-  "character_id": "bab9af4d-9a7e-4f52-86b2-735661c009a5",
+  "character_id": "46bd5a3f-8467-4963-ab06-8c5e688ef977",
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 77.043,
-   "head": 0.177,
-   "colours": 42,
-   "body": 209,
-   "black": 27.917
+   "outline": 88.425,
+   "head": 0.199,
+   "colours": 32,
+   "body": 206,
+   "black": 15.511
   },
   "png": "AssetPipeline\\sources\\patron_trial\\leopard.png",
   "clips": {
-   "walk": "263bf8c8-23ae-4e12-ad4d-a07ea49db43b",
-   "look_right": "55012033-4289-40b5-80f8-e9c901b11c40",
-   "look_left": "b4078e1d-3559-47bb-82af-fb7cc700bcce",
-   "order_a": "a20f5b97-922c-44ee-9309-75433f0cc6c9",
-   "drink_a": "324dc28a-81ec-4593-ae2a-bb37501176fe",
-   "cheer_a": "6b8be27a-d3be-4df6-8a2d-62dc122d3df0",
-   "upset_a": "1269e3f3-9fd8-4232-88a7-b6eddc174e3b",
-   "order_b": "343f56f6-7a9d-490a-8802-9c579a300a8f",
-   "drink_b": "cf387479-7365-4f59-9e8b-568034567fc5",
-   "cheer_b": "f5fc3ae8-a5f7-442a-abd5-40d82d17f5d9",
-   "upset_b": "e17d46fb-73ba-4af4-a72a-02d9b9445c42"
-  }
+   "walk": "c777b192-8a61-4fa5-a7cc-cb3d4e04f951",
+   "look_right": "a00bab4b-982c-42da-be4f-02b8d3633192",
+   "look_left": "553e143d-4b7f-4729-b296-b55277ccb1a2",
+   "order_a": "a096e85b-82d3-4cae-b6af-c958cd796d2d",
+   "drink_a": "46cc15f7-2f52-46c1-8833-d9975844871a",
+   "cheer_a": "35c4517a-b30a-4f92-b018-0d6a0eefe4d5",
+   "upset_a": "0f4c8499-bdb7-478b-84c5-d46d5d5442ca",
+   "order_b": "340273ba-d151-466f-9d02-5567c4594762",
+   "drink_b": "55ba2798-5d6c-44ce-a6ce-85cee4cac2cb",
+   "cheer_b": "f19f0a8c-23ff-4339-9616-31bad3bc5683",
+   "upset_b": "ff974ae5-f600-41d4-9fe7-18f6a0f428a0"
+  },
+  "adopted_from": "leopard__r2",
+  "replaced": "bab9af4d-9a7e-4f52-86b2-735661c009a5"
  },
  "spanishsuit": {
-  "character_id": "2184a77e-9b5b-40e4-bd8e-a632bfeedcbc",
+  "character_id": "68565315-bc0c-49d4-8118-5cab6bac4e65",
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 66.557,
-   "head": 0.151,
-   "colours": 45,
-   "body": 205,
-   "black": 22.824
+   "outline": 37.615,
+   "head": 0.148,
+   "colours": 54,
+   "body": 203,
+   "black": 30.281
   },
   "png": "AssetPipeline\\sources\\patron_trial\\spanishsuit.png",
   "clips": {
-   "walk": "fc6351b9-8764-4277-b9d5-2618356e5cce",
-   "look_right": "d4c00aeb-7e4a-4909-974c-88827c1653f6",
-   "look_left": "63f45874-c328-4105-bc68-9843f2bc4f6a",
-   "order_a": "9aa32f0a-506e-46e0-971b-b33c056acde9",
-   "drink_a": "028e4e2a-ce00-40b3-a264-ea18b1638377",
-   "cheer_a": "2c9e12aa-26e4-4963-8e12-7677eff3ab70",
-   "upset_a": "23049809-47a0-4ebb-b937-96a574e6b338",
-   "drink_b": "e0fc455e-66b1-4c70-943d-355fa80a8520",
-   "cheer_b": "67224322-83b2-4fb0-b55f-6f621b7c4422",
-   "upset_b": "29319671-1be6-4e83-95dd-da9e31a4520d",
-   "order_b": "b6ad9eca-256a-421b-9a41-8aa4fcc7a19d"
-  }
+   "walk": "54263278-2ff9-46b9-a5fb-b0e48aa935c9",
+   "look_right": "3aa475f9-c36e-4e40-be3e-88af4d0bd69d",
+   "look_left": "04dcabc5-fb29-42ed-96d0-25642db881fc",
+   "order_a": "156756f7-c6d1-477b-99d4-bd231dc67892",
+   "drink_a": "8089c0e4-76ef-4d2e-b2f2-4e908e21a008",
+   "cheer_a": "bdb31a9f-10a8-41dc-b650-65333ef3e28c",
+   "upset_a": "e3aab475-c3d6-4374-acc2-e53523557e7c",
+   "order_b": "7dbcddce-e7b1-486f-a298-220bd9c3bcca",
+   "drink_b": "31e829ca-4dc7-4de4-b4b5-9516a79c8dde",
+   "cheer_b": "d592e631-44f4-400b-8bf5-f70703ae4296",
+   "upset_b": "0c748dce-6bb1-4da4-a139-4e6763ab6597"
+  },
+  "adopted_from": "spanishsuit__r3",
+  "replaced": "2184a77e-9b5b-40e4-bd8e-a632bfeedcbc"
+ },
+ "spanishsuit__r1": {
+  "character_id": "cdd3f390-b3b4-4b36-afcc-128a2548bf38",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "spanishsuit",
+  "measured": {
+   "outline": 34.276,
+   "head": 0.151,
+   "colours": 29,
+   "body": 192,
+   "black": 14.338
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\spanishsuit__r1.png"
+ },
+ "spanishsuit__r2": {
+  "character_id": "b7e36d98-ec9a-40fe-a07d-1b90c115324c",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "spanishsuit",
+  "measured": {
+   "outline": 81.719,
+   "head": 0.144,
+   "colours": 37,
+   "body": 202,
+   "black": 25.0
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\spanishsuit__r2.png"
+ },
+ "spanishsuit__r3": {
+  "character_id": "68565315-bc0c-49d4-8118-5cab6bac4e65",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "spanishsuit",
+  "measured": {
+   "outline": 37.615,
+   "head": 0.148,
+   "colours": 54,
+   "body": 203,
+   "black": 30.281
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\spanishsuit__r3.png"
+ },
+ "leopard__r1": {
+  "character_id": "5e2094af-b144-4126-a09a-890606d44631",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "leopard",
+  "measured": {
+   "outline": 81.275,
+   "head": 0.198,
+   "colours": 53,
+   "body": 202,
+   "black": 21.57
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\leopard__r1.png"
+ },
+ "leopard__r2": {
+  "character_id": "46bd5a3f-8467-4963-ab06-8c5e688ef977",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "leopard",
+  "measured": {
+   "outline": 88.425,
+   "head": 0.199,
+   "colours": 32,
+   "body": 206,
+   "black": 15.511
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\leopard__r2.png"
+ },
+ "leopard__r3": {
+  "character_id": "82fbbf4b-2cee-4b93-b0bb-ada55c132f96",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "leopard",
+  "measured": {
+   "outline": 83.227,
+   "head": 0.209,
+   "colours": 31,
+   "body": 206,
+   "black": 21.976
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\leopard__r3.png"
+ },
+ "leopard__s11": {
+  "character_id": "53e68d33-33a9-4f1a-9784-fbc496241c42",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "leopard",
+  "measured": {
+   "outline": 85.531,
+   "head": 0.206,
+   "colours": 32,
+   "body": 204,
+   "black": 22.783
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\leopard__s11.png"
+ },
+ "leopard__s21": {
+  "character_id": "593a9e71-8eb1-4aca-831a-8169852f992c",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "leopard",
+  "measured": {
+   "outline": 83.7,
+   "head": 0.205,
+   "colours": 41,
+   "body": 205,
+   "black": 21.919
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\leopard__s21.png"
+ },
+ "leopard__s31": {
+  "character_id": "2b3ad79e-2e09-4566-b926-ec62195483c5",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "leopard",
+  "measured": {
+   "outline": 53.559,
+   "head": 0.234,
+   "colours": 34,
+   "body": 205,
+   "black": 15.281
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\leopard__s31.png"
  }
 }

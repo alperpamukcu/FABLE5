@@ -42,17 +42,26 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import patron_gen                  # noqa: E402
-import patron_delineate            # noqa: E402
 import patron_prompts as brief     # noqa: E402
 import patron_trial_gen as trial   # noqa: E402
 
 PATRON = os.path.join(ROOT, 'Assets', 'Resources', 'Patron')
 LOG = os.path.join(HERE, 'AssetPipeline', 'generation_log.jsonl')
 
-# Whose keyline is stripped at ship time. A face goes in here when it comes back inked
-# and cannot be re-rolled out of it - never as a default, because the filter costs detail
-# (see the note in ship()).
-DELINEATE = {'spanishsuit', 'leopard'}
+# NOTHING IS FILTERED HERE ANY MORE (2026-08-20). For one day this file stripped the
+# black keyline off two faces that came back inked, and the author threw the whole idea
+# out - first where it damaged art he had approved, then outright: "hicbir karakterde
+# siyah kontur olmamali ... dogal kontur olacak". He is right twice over. Removing a line
+# is not free (it eats the drawing's own dark detail along with the ink), and an eroded
+# edge is not the same thing as an edge that was drawn by a change of colour - which is
+# what "dogal kontur" means and what the rest of the cast actually has.
+#
+# So the line is beaten where it is drawn, in patron_prompts.py and in the roll: the brief
+# now forbids the keyline in words as well as in the `outline` parameter, and a face is
+# rolled several times and the MEASURED best is adopted (patron_trial_gen.roll/adopt). The
+# two that could not be re-rolled out of it were re-briefed instead - the tailoring words
+# came off the waistcoat and the black came out of the leopard print - because both times
+# the ink turned out to be something the description was asking for.
 
 CANVAS = brief.RIG_CANVAS_PX
 FOOT_Y = brief.RIG_FOOT_Y
@@ -187,16 +196,6 @@ def ship(slug):
         if not frames:
             print('  %-11s MISSING' % folder)
             continue
-        # THE KEYLINE COMES OFF ONLY WHERE IT IS A PROBLEM. The filter was run over the
-        # whole cast for one shipping and the author stopped it: "karakterlerin gorselleri
-        # bozulmus o yaptigini geri al, sadece yeni uretilenlerin konturunde problem vardi".
-        # He is right, and the reason is worth keeping. Removing a line is not free - it
-        # eats the drawing's own dark detail along with the ink, and on a figure that was
-        # never inked (heavyset came in at 2%) all it can do is soften hair and edges for
-        # nothing. So it is opt-in, per character, and the ones already approved keep the
-        # pixels they were approved as.
-        if slug in DELINEATE:
-            frames = [patron_delineate.delineate(f) for f in frames]
         stood = patron_gen.stand(frames, lock_centre=lock, rigid=lock,
                                  canvas=CANVAS, foot_y=FOOT_Y)
         if anchor and idle_frame is not None and stood:

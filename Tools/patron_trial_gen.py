@@ -317,7 +317,15 @@ CUSTOM = {
 }
 
 
-def edge_darkness(im):
+# WHERE THE COUNTER CUTS, in canvas rows: the foot line is 210 and the game drops the
+# feet 93 art pixels below the bar's top edge (TycoonHud.CharFootDrop), so everything from
+# row 117 down is behind the wood and nobody ever sees it. Measuring a keyline there is
+# measuring a part of the drawing that is not in the game - and it is not a small
+# correction: this round's leopard carries 413 of her 657 keyline pixels on her legs.
+VISIBLE_CUT = 117
+
+
+def edge_darkness(im, bottom=None):
     """What share of the silhouette is drawn as a KEYLINE, as a percentage.
 
     Not simply "how dark is the edge" - that was the first version and silverbob broke it
@@ -336,7 +344,7 @@ def edge_darkness(im):
     px = im.load()
     w, h = im.size
     edge = keyline = 0
-    for y in range(1, h - 1):
+    for y in range(1, min(h - 1, bottom if bottom is not None else h)):
         for x in range(1, w - 1):
             if px[x, y][3] < 40:
                 continue
@@ -375,6 +383,14 @@ def figure_stats(im):
     All three were added the day the author put two new faces beside heavyset and said
     they did not match him "vucut oranti, detay seviyesi vs" - and all three turned out
     to be measurable, which is the only reason they are here rather than in a note.
+
+    OUTLINE IS MEASURED TWICE, and the second one is the one that decides. The first is
+    the whole drawing; 'visible' stops at the counter line, and the two disagree by a lot
+    in both directions - eastasianman is 39% whole and 16% visible, this round's Spaniard
+    is 38% whole and 60% visible. The player only ever sees the visible half, so that is
+    what the gate reads. The cast the author approved runs 4% to 40% on it, which is the
+    band, and it is a coincidence worth noting that the old whole-figure limit of 45 still
+    contains them exactly.
     """
     px = im.load()
     w, h = im.size
@@ -409,8 +425,8 @@ def figure_stats(im):
     ink = sum(1 for y in range(h) for x in range(w)
               if px[x, y][3] >= 200 and max(px[x, y][:3]) < 45)
     solid = sum(1 for y in range(h) for x in range(w) if px[x, y][3] >= 200)
-    return {'outline': edge_darkness(im), 'head': head_w / max(1, body),
-            'colours': colours, 'body': body,
+    return {'outline': edge_darkness(im, VISIBLE_CUT), 'head': head_w / max(1, body),
+            'whole': edge_darkness(im), 'colours': colours, 'body': body,
             'black': 100.0 * ink / max(1, solid)}
 
 
@@ -437,12 +453,13 @@ BODY_BAND = (194, 214)
 def judge(name, im):
     """Print the measurements and say plainly whether the face is in the cast's bands.
 
-    Measured on the DELINEATED figure, because that is the one that ships: the keyline is
-    taken off at ship time (patron_delineate), so judging the raw download would refuse
-    faces for a line the game never sees - and pass ones whose line survives the filter.
+    Measured on the RAW DOWNLOAD, which is also what ships. It briefly measured the
+    filtered figure instead, back when a keyline was stripped at ship time; the author
+    threw that out ("hicbir karakterde siyah kontur olmamali ... dogal kontur olacak") and
+    he is right that a filtered edge is not the same thing as a drawing that never had a
+    line. So the drawing itself has to pass, and this is the number that says whether it
+    does.
     """
-    import patron_delineate
-    im = patron_delineate.delineate(im)
     st = figure_stats(im)
     if st is None:
         return False
@@ -456,10 +473,114 @@ def judge(name, im):
           and st['colours'] >= COLOURS_MIN
           and st['black'] <= BLACK_MAX
           and BODY_BAND[0] <= st['body'] <= BODY_BAND[1])
-    print('  %-20s body %d  outline %.0f%%  colours %d  black %.0f%%  (hair+head %.3f)  -> %s'
-          % (name, st['body'], st['outline'], st['colours'], st['black'], st['head'],
-             'in band' if ok else 'OUT OF BAND, re-roll'))
+    print('  %-20s body %d  outline %.0f%% seen (%.0f%% whole)  colours %d  black %.0f%%'
+          '  (hair+head %.3f)  -> %s'
+          % (name, st['body'], st['outline'], st['whole'], st['colours'], st['black'],
+             st['head'], 'in band' if ok else 'OUT OF BAND, re-roll'))
     return ok
+
+
+# -- rolling a batch and keeping the measured best (2026-08-20) --------------
+# "Fighting a lottery with more coins is not a method" was the argument for stripping the
+# keyline off the finished art instead (a filter that lived here for one day and was
+# thrown out), and it was wrong in one word: fighting a lottery with more coins and NO
+# SCOREBOARD is not a method. Three re-rolls judged by eye lost three times; the
+# same three judged by edge_darkness would have been told apart in a second, because the
+# spread is enormous - the cast runs 3% to 39% keyline from one identical setting.
+#
+# So a face is now rolled N times AT ONCE, every roll is measured, and the best one is
+# adopted under the plain name. The losers stay in the state file with their numbers, so
+# what was rejected and why is on the record rather than in a memory.
+def roll(name, n=3, figure=None, tag='r'):
+    """Queue n candidates for one figure, as <name>__<tag>1 .. n.
+
+    FIGURE overrides the brief for one batch, which is how a fault gets ISOLATED rather
+    than re-rolled at: leopard came back inked six times out of six while the man rolled
+    beside her came back clean, so the fault is in her description and the way to find it
+    is one batch that varies one clause each. Whatever wins is then written back into
+    patron_prompts.py, so the brief still describes what shipped."""
+    state = load()
+    figure = figure or brief.FIGURE_OPTIONS[name]
+    for i in range(1, n + 1):
+        key = '%s__%s%d' % (name, tag, i)
+        if state.get(key, {}).get('character_id'):
+            print('  %-20s already rolled (%s)' % (key, state[key]['character_id'][:8]))
+            continue
+        text, _ = call('create_character', {
+            'description': brief.character_prompt(figure, brief.NEUTRAL_POSE,
+                                                  brief.PIVOT_LANGUAGE),
+            'name': 'trial %s' % key, 'mode': 'v3', 'size': SIZE, 'view': VIEW,
+            'outline': brief.outline_hint(brief.PIVOT_LANGUAGE),
+            'detail': 'medium detail',
+        })
+        import re
+        m = re.search(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
+                      text, re.I)
+        if not m:
+            print('  %-20s NO ID: %s' % (key, text[:200].replace(chr(10), ' ')))
+            continue
+        state[key] = {'character_id': m.group(0), 'language': brief.PIVOT_LANGUAGE,
+                      'size': SIZE, 'roll_of': name}
+        save(state)
+        log({'asset': 'patron_trial/' + key, 'event': 'queued', 'roll_of': name,
+             'character_id': m.group(0), 'size': SIZE, 'view': VIEW})
+        print('  %-20s queued %s' % (key, m.group(0)))
+
+
+def adopt(key):
+    """Promote one candidate to the plain name it was rolled for: its id, its still and
+    its measurements become the character the rest of the pipeline animates and ships."""
+    import shutil
+    state = load()
+    cand = state[key]
+    name = cand['roll_of']
+    old = state.get(name, {}).get('character_id')
+    state[name] = {'character_id': cand['character_id'], 'language': cand['language'],
+                   'size': cand['size'], 'measured': cand.get('measured'),
+                   'png': os.path.relpath(os.path.join(RAW, name + '.png'), HERE),
+                   'clips': {}, 'adopted_from': key, 'replaced': old}
+    shutil.copyfile(os.path.join(RAW, key + '.png'), os.path.join(RAW, name + '.png'))
+    zp = os.path.join(RAW, name + '_anim.zip')
+    if os.path.exists(zp):
+        os.remove(zp)          # the old body's clips are not this body's clips
+    save(state)
+    log({'asset': 'patron_trial/' + name, 'event': 'adopted', 'from': key,
+         'character_id': cand['character_id'], 'replaced': old,
+         'measured': cand.get('measured')})
+    print('  %s -> %s  (%s replaces %s)'
+          % (key, name, cand['character_id'][:8], (old or '-')[:8]))
+
+
+def pull(slug):
+    """Download a character's whole zip to <slug>_anim.zip - the frames of every clip.
+
+    The one step that used to live outside the repo, in a throwaway script, which meant
+    the pipeline could not be re-run from a clean checkout. The endpoint answers HTTP 423
+    while any job is still running, so a failure here usually just means "not yet".
+    """
+    import patron_gen
+    state = load()
+    cid = state[slug]['character_id']
+    text, _ = call('get_character', {'character_id': cid, 'include_preview': False})
+    if 'status: completed' not in text:
+        print('  %-12s %s' % (slug, (text.strip().splitlines() or ['(silent)'])[0]))
+        return False
+    url = next((l.split('download:', 1)[1].strip() for l in text.splitlines()
+                if l.strip().startswith('download:')), None)
+    if not url:
+        print('  %-12s completed, no download url' % slug)
+        return False
+    pending = [l.strip() for l in text.splitlines() if 'pending' in l.lower()]
+    try:
+        blob = patron_gen.download_zip(cid, url)
+    except Exception as e:
+        print('  %-12s not ready (%s) %s' % (slug, e, pending[:1]))
+        return False
+    io.open(os.path.join(RAW, slug + '_anim.zip'), 'wb').write(blob)
+    groups = patron_gen.frames_from_zip(blob)
+    print('  %-12s %s' % (slug, ', '.join('%s(%d)' % (k, len(v))
+                                          for k, v in sorted(groups.items()))))
+    return True
 
 
 def clip_frames(slug, clip):
@@ -515,12 +636,12 @@ def start_frame(slug, clip, which='held'):
 JOB_SLOTS_WAIT = 45
 
 
-def animate(clip):
-    """Queue one clip for every kept character. One clip at a time, on purpose: each is
-    looked at before the next is paid for."""
+def animate(clip, names=None):
+    """Queue one clip for the named characters (KEPT by default). One clip at a time, on
+    purpose: each is looked at before the next is paid for."""
     spec = CLIPS[clip]
     state = load()
-    for name in KEPT:
+    for name in (names or KEPT):
         cid = state[name]['character_id']
         done = state[name].setdefault('clips', {})
         if clip in done:
@@ -631,8 +752,15 @@ if __name__ == '__main__':
     cmd = sys.argv[1] if len(sys.argv) > 1 else 'poll'
     if cmd == 'queue':
         queue(sys.argv[2] if len(sys.argv) > 2 else None)
+    elif cmd == 'roll':
+        roll(sys.argv[2], int(sys.argv[3]) if len(sys.argv) > 3 else 3)
+    elif cmd == 'adopt':
+        adopt(sys.argv[2])
+    elif cmd == 'pull':
+        for slug in sys.argv[2:]:
+            pull(slug)
     elif cmd == 'anim':
-        animate(sys.argv[2])
+        animate(sys.argv[2], sys.argv[3:] or None)
     elif cmd == 'peaks':
         peaks()
     else:
