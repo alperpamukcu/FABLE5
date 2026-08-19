@@ -233,6 +233,31 @@ FIGURE_OPTIONS = {
         "no logo, no pattern, no bag, no hat"),
     # The first take drew a black rim round the shirt's shoulders and sleeves. A buttoned
     # shirt invites lines the same way a blazer does, so the collar and placket go too.
+    # ── the last pair before the cast work pauses (2026-08-20) ─────────────
+    # Both are the author's own descriptions, followed closely: the cast is theirs to
+    # people. The waistcoat is the first tailoring since the keyline lesson, so it is
+    # watched: a suit is exactly the garment the model likes to draw lines on, and the
+    # only defence is the medium-detail setting that turned out to be the real dial.
+    # Second attempt, and both faults were measured. The dark three-piece came out 64%
+    # near-black on 22 colours - the suit swallowed him - and the figure filled only 188 of
+    # its canvas against a cast that fills 197-209, which is what "kucuk olmus" is. So the
+    # suit goes light and the height is asked for outright; the beard, the wavy hair and
+    # the open chest are the author's and they stay.
+    "spanishsuit": (
+        "a tall Spanish man in his thirties, wheat-toned skin, a full dark beard and wavy "
+        "dark hair, bar customer in a Miami club, "
+        "an open deep teal waistcoat over a cream shirt unbuttoned to the chest, "
+        "warm brown trousers, a wide leather belt, a gold chain, "
+        "standing at full height, no tie, no jacket, no logo, no pattern, no hat"),
+    # The one figure allowed a print, because the print IS the description. Everything
+    # else stays inside the house rules - one loud garment, the rest quiet.
+    "leopard": (
+        "a woman in her twenties with almond eyes and pink lipstick, bar customer in a "
+        "Miami club, dark curly hair gathered up in a bun, large hoop earrings, "
+        "an off-the-shoulder leopard print blouse open over a white crop top, "
+        "bright turquoise leggings, high heels, "
+        "no logo, no bag, no hat"),
+
     "eastasianman": (
         "an East Asian man in his thirties, slim and neat, bar customer in a Miami club, "
         "straight black hair swept back, clean shaven, thin silver-framed glasses, "

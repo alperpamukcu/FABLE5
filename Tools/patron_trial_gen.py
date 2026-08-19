@@ -427,10 +427,22 @@ COLOURS_MIN = 34             # the cast: 37 to 57
 # - silverbob's black trouser suit came to 77%, and at that share every internal edge, every
 # lapel and seam, is a black line whether or not anybody drew one.
 BLACK_MAX = 62.0
+# HOW TALL THE DRAWING COMES OUT, which the generator decides for itself: the cast fills
+# 197-209 of its 220 canvas, and a roll that fills less is simply a smaller person once it
+# is standing at the bar - the author spotted one at 188 ("ispanyol kucuk olmus"). It is
+# not a setting, so it is a gate: re-roll until the figure is the cast's size.
+BODY_BAND = (194, 214)
 
 
 def judge(name, im):
-    """Print the measurements and say plainly whether the face is in the cast's bands."""
+    """Print the measurements and say plainly whether the face is in the cast's bands.
+
+    Measured on the DELINEATED figure, because that is the one that ships: the keyline is
+    taken off at ship time (patron_delineate), so judging the raw download would refuse
+    faces for a line the game never sees - and pass ones whose line survives the filter.
+    """
+    import patron_delineate
+    im = patron_delineate.delineate(im)
     st = figure_stats(im)
     if st is None:
         return False
@@ -442,7 +454,8 @@ def judge(name, im):
     # only what they can actually see: the keyline, the colour count, the near-black share.
     ok = (st['outline'] <= OUTLINE_MAX
           and st['colours'] >= COLOURS_MIN
-          and st['black'] <= BLACK_MAX)
+          and st['black'] <= BLACK_MAX
+          and BODY_BAND[0] <= st['body'] <= BODY_BAND[1])
     print('  %-20s body %d  outline %.0f%%  colours %d  black %.0f%%  (hair+head %.3f)  -> %s'
           % (name, st['body'], st['outline'], st['colours'], st['black'], st['head'],
              'in band' if ok else 'OUT OF BAND, re-roll'))
@@ -494,6 +507,14 @@ def start_frame(slug, clip, which='held'):
     return frame_b64(pick)
 
 
+# The server runs at most 20 jobs at once and refuses the 21st outright ("need 1 job
+# slots but only 0 available"). Three characters x seven clips is 21, so a whole round
+# for three people does not fit in one pass - animate() waits for room rather than
+# dropping the overflow on the floor, because a silently missing clip is a customer who
+# freezes mid-visit.
+JOB_SLOTS_WAIT = 45
+
+
 def animate(clip):
     """Queue one clip for every kept character. One clip at a time, on purpose: each is
     looked at before the next is paid for."""
@@ -541,10 +562,20 @@ def animate(clip):
                     print('  %-10s %-13s needs %s first' % (name, clip, src2))
                     continue
                 args['end_frame_base64'] = target
-        text, _ = call('animate_character', args)
         import re
+        text, _ = call('animate_character', args)
         ids = re.findall(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', text, re.I)
         job = next((i for i in ids if i != cid), None)
+        if not job and 'job slots' in text:
+            # No room on the server: wait for a slot and ask again, twice, before giving up.
+            for _ in range(6):
+                time.sleep(JOB_SLOTS_WAIT)
+                text, _ = call('animate_character', args)
+                ids = re.findall(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
+                                 text, re.I)
+                job = next((i for i in ids if i != cid), None)
+                if job:
+                    break
         if not job:
             print('  %-10s %-13s NO JOB: %s' % (name, clip, text[:220].replace(chr(10), ' ')))
             continue

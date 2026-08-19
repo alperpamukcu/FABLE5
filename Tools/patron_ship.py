@@ -42,6 +42,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import patron_gen                  # noqa: E402
+import patron_delineate            # noqa: E402
 import patron_prompts as brief     # noqa: E402
 import patron_trial_gen as trial   # noqa: E402
 
@@ -181,6 +182,12 @@ def ship(slug):
         if not frames:
             print('  %-11s MISSING' % folder)
             continue
+        # THE KEYLINE COMES OFF HERE, on every frame of every clip. PixelLab will not
+        # reliably draw a lineless figure - the same request came back at 3% and at 93% on
+        # consecutive rolls - so the line is removed instead of re-rolled for, and it is
+        # removed at SHIP time so the generated file stays as it came back. Idempotent: a
+        # figure with no line is unchanged by it (patron_delineate).
+        frames = [patron_delineate.delineate(f) for f in frames]
         stood = patron_gen.stand(frames, lock_centre=lock, rigid=lock,
                                  canvas=CANVAS, foot_y=FOOT_Y)
         if anchor and idle_frame is not None and stood:

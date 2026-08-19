@@ -60,6 +60,18 @@ namespace LastCall.UI
         // floated that far above the bar (2026-07-29).
         private const float StageToHud = 720f / 360f;
         private const float CounterLineY = DiegeticStage.CounterTopY * StageToHud;
+
+        /// <summary>How far the whole cast stands BELOW the counter's rest line (2026-08-20,
+        /// the author: "tüm müşteriler 16 pixel aşağı kaysın"). It moves the stool's rect, not
+        /// the body alone, so the figure, the ticket over their head, the patience bar and the
+        /// click target all travel together and nothing has to be re-measured against anything
+        /// else. 16 screen units is 8 of the room's own pixels and 8 of the character's — a
+        /// whole number in both grids, which a pixel drawing has to be moved by or it lands
+        /// between its own pixels. The counter's props (the dirty glass) do NOT take it: they
+        /// stand on the bar, and the bar has not moved.</summary>
+        private const float SeatDrop = 16f;
+        /// <summary>Where a stool's rect actually sits.</summary>
+        private const float SeatLineY = CounterLineY - SeatDrop;
         private const float BustW = 108f;
 
         /// <summary>How far apart the stools stand along the counter. It was a local const
@@ -265,6 +277,9 @@ namespace LastCall.UI
             ("silkwoman", 6f, 0f, 8, 5),
             ("pastelman", 2f, 0f, 4, 5),
             ("shaved", 7f, 0f, 5, 5),
+            ("silverbob", 11f, 0f, 6, 6),
+            ("afrowoman", 0f, 0f, 7, 6),
+            ("eastasianman", 7f, 0f, 5, 6),
         };
         /// <summary>
         /// The papers for a face — name, age, country, flag — read from the cast file.
@@ -2705,8 +2720,13 @@ namespace LastCall.UI
                 {
                     // The ticket comes down the moment they get up (2026-08-19, the author:
                     // "içtikten sonra baloncuk kalkabilir") — a leaving customer is done
-                    // talking, and a balloon walking out with them reads as unfinished business.
+                    // talking, and a balloon walking out with them reads as unfinished
+                    // business. The patience bar goes with it (2026-08-20): their clock
+                    // stopped when they left the stool, and a gauge crossing the room is a
+                    // countdown on somebody who is no longer waiting for anything.
                     if (view.Tag.gameObject.activeSelf) view.Tag.gameObject.SetActive(false);
+                    if (view.Gauge != null && view.Gauge.gameObject.activeSelf)
+                        view.Gauge.gameObject.SetActive(false);
                     AdvanceExit(view);
                     continue;
                 }
@@ -2876,19 +2896,28 @@ namespace LastCall.UI
                 // TWO clocks now (the author, 2026-08-02): the wait to be ASKED, then a fresh
                 // wait for the drink. The gauge draws whichever is live — Core says which —
                 // and the asking wait draws in magenta so a bar that is emptying is visibly
-                // a different failure from a bar that is slow. Deciding holds it full; a
-                // drinking customer is content.
+                // a different failure from a bar that is slow.
                 bool beingIgnored = visit.AwaitingOrderTaking;
                 float patience = (deciding || drinking) ? 1f : (float)visit.PatienceFraction;
                 float gaugeW = BustW * 0.72f - 2f;
-                // The story's guest keeps their clock on the POST-IT, not over their head
-                // (GDD 26 §4): it is one clock for a run of drinks, it does not start until
-                // the talking stops, and a bar over a stool would read as ordinary patience.
-                if (view.Gauge != null && view.Gauge.gameObject.activeSelf == visit.OnTheHouse)
-                    view.Gauge.gameObject.SetActive(!visit.OnTheHouse);
+                // THE BAR IS ONLY UP WHILE IT IS EMPTYING (2026-08-20, the author: "herhangi
+                // bir sabır barı azalmıyorken kafasının üstünde bar gözükmesin ... içki
+                // içerken odadan çıkarken vs"). It used to stand over every seated customer
+                // and simply hold FULL through the beats where no clock runs — thinking,
+                // drinking, walking out — which is a gauge that means nothing three times a
+                // visit, and a room of them says the night is under pressure when it is not.
+                //
+                // The condition is Core's own, not a list of screens: patience ticks in
+                // CustomerVisit.Tick only while the visit is WAITING, is not held, and has
+                // finished deciding. Anything else — a mind being made up, a drink being
+                // nursed, a guest who is being talked to (GDD 26 §4 keeps their clock on the
+                // POST-IT anyway), somebody already off the stool — has no clock to draw.
+                bool clockRunning = !visit.OnTheHouse && !visit.ClockHeld
+                    && !deciding && !drinking && visit.State == VisitState.Waiting;
+                if (view.Gauge != null && view.Gauge.gameObject.activeSelf != clockRunning)
+                    view.Gauge.gameObject.SetActive(clockRunning);
                 view.PatienceFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(gaugeW * patience), -2);
-                view.PatienceFill.color = (deciding || drinking) ? UITheme.Cyan[3]
-                    : beingIgnored
+                view.PatienceFill.color = beingIgnored
                         ? (patience > 0.35f ? UITheme.Magenta[3] : UITheme.ViceRed[3])
                     : patience > 0.5f ? UITheme.Lime[3]
                     : patience > 0.25f ? UITheme.Amber[3] : UITheme.ViceRed[3];
@@ -2945,12 +2974,12 @@ namespace LastCall.UI
                 view.WalkT = Mathf.Min(1f,
                     view.WalkT + Time.deltaTime * WalkSpeed * view.WalkPace / dist);
                 view.Root.anchoredPosition =
-                    new Vector2(Mathf.Lerp(entryX, view.SeatX, view.WalkT), CounterLineY);
+                    new Vector2(Mathf.Lerp(entryX, view.SeatX, view.WalkT), SeatLineY);
                 view.Group.alpha = Mathf.Clamp01(view.WalkT * 4f);
             }
             else
             {
-                view.Root.anchoredPosition = new Vector2(view.SeatX, CounterLineY);
+                view.Root.anchoredPosition = new Vector2(view.SeatX, SeatLineY);
                 view.Group.alpha = 1f;
             }
         }
@@ -2982,7 +3011,7 @@ namespace LastCall.UI
             view.ExitT = Mathf.Min(1f,
                 view.ExitT + Time.deltaTime * WalkSpeed * pace / dist);
             view.Root.anchoredPosition = new Vector2(
-                Mathf.Lerp(view.SeatX, exitX, view.ExitT), CounterLineY);
+                Mathf.Lerp(view.SeatX, exitX, view.ExitT), SeatLineY);
             // The entrance fades up over its first quarter; leaving fades down over the last.
             view.Group.alpha = Mathf.Clamp01((1f - view.ExitT) * 4f);
 
@@ -8411,7 +8440,7 @@ namespace LastCall.UI
                 seat.Root.anchorMin = seat.Root.anchorMax = new Vector2(0, 0);
                 seat.Root.pivot = new Vector2(0.5f, 0);
                 seat.Root.sizeDelta = new Vector2(150f, CharWinH + 110f);
-                seat.Root.anchoredPosition = new Vector2(seat.SeatX, CounterLineY);
+                seat.Root.anchoredPosition = new Vector2(seat.SeatX, SeatLineY);
                 var hit = seat.Root.gameObject.AddComponent<Image>();
                 hit.color = new Color(0, 0, 0, 0);   // invisible, but catches clicks
                 var button = seat.Root.gameObject.AddComponent<Button>();
@@ -8478,11 +8507,16 @@ namespace LastCall.UI
                 seat.Tail.sprite = ChromeArt.BubbleTail();
                 seat.Tail.raycastTarget = false;
 
-                // THE THREE ROWS ARE TWO FACES AT TWO SIZES, and every one of the four
-                // numbers is measured rather than chosen (2026-08-19, after "yazılar daha
-                // okunaklı ve büyük olsun" was answered with 16pt everywhere and came back as
-                // "şimdi de çok büyük"). What the faces actually measure, at the sizes the
-                // pixel rule allows (8 or 16, never between — GDD 16 §0):
+                // THE THREE ROWS ARE ONE FACE AT ONE SIZE (2026-08-20, the author: "alkolün
+                // yazdığı fontu değiştir diğerleriyle aynı yap") — the display face at 8, with
+                // the NAME double-struck bold (PixelBold) so the heading is a weight rather
+                // than a second typeface. The order row was the last thing set in the body
+                // face; a ticket in two faces read as two objects stacked, and the name could
+                // only out-rank a 16pt body row by being 16pt itself, which is what put a
+                // 224-unit name on a 180-unit stool in the first place.
+                //
+                // The measurements that decided it are kept, because they are what rules the
+                // alternatives out (8 or 16, never between — GDD 16 §0):
                 //
                 //   Silkscreen 8   caps ~5u   "SEX ON THE BEACH" 88u    ← the old ticket
                 //   Press Start 8  caps  8u   "SEX ON THE BEACH" 128u
@@ -8494,20 +8528,16 @@ namespace LastCall.UI
                 // ticket over their neighbour's head. It cannot be fixed by moving the plate
                 // — it has to not be that wide.
                 //
-                // So: the ORDER, the thing the player is being asked to make, takes the
-                // largest step that fits a stool (Silkscreen 16, and it still wraps for the
-                // longest few drinks, which the plate has always grown downward to take). The
-                // NAME and the status line take the display face at 8 — 8-unit caps against
-                // the old ticket's 5, so they are bigger than what was called unreadable and
-                // half of what was called too big.
+                // So: every row takes the display face at 8 — 8-unit caps against the old
+                // ticket's 5, bigger than what was called unreadable and half of what was
+                // called too big — and "SEX ON THE BEACH" comes out 128 units, which leaves a
+                // 142-unit ticket inside a 168 cap. Only the two longest drinks in the book
+                // wrap, and the plate has always grown downward to take a second row.
                 //
-                // THE NAME IS THE TITLE (the author: "ismi başlık gibi kalın ve punto olarak
-                // biraz farklı"). It is the square display face the bill and the stamps use,
-                // set at its own size against the order's body face — a heading by weight and
-                // by face, the way a pixel face can be one. Faux-bolding is the one kind of
-                // bold a pixel font cannot survive, and the size above this one does not fit
-                // on the counter. The status row rides the same face because its dots are the
-                // "busy" sign, and the display face's full stops are the fat square ones.
+                // THE NAME IS THE TITLE, and now it is a WEIGHT (2026-08-20, the author:
+                // "isimler kalın yazsın"): the same face and size as the rows under it,
+                // double-struck one pixel wide by PixelBold — which is the only bold an 8px
+                // face has, and is why FontStyle.Bold is not used (see that file).
                 //
                 // THE INKS TURNED OVER with the plate (2026-08-19). Cream, pale cyan and pale
                 // magenta were chosen to sit on a near-black card; on a white one they are
@@ -8519,13 +8549,14 @@ namespace LastCall.UI
                     UITheme.Night[1]);
                 Stretch(seat.Name.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -8));
                 seat.Name.horizontalOverflow = HorizontalWrapMode.Overflow;
+                seat.Name.gameObject.AddComponent<PixelBold>().Distance = 1f;
 
                 seat.Wants = NewText("Wants", seat.Tag, _display, 8, TextAnchor.UpperCenter,
                     UITheme.Magenta[1]);
                 Stretch(seat.Wants.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -18));
                 seat.Wants.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-                seat.Order = NewText("Order", seat.Tag, _body, 16, TextAnchor.UpperCenter,
+                seat.Order = NewText("Order", seat.Tag, _display, 8, TextAnchor.UpperCenter,
                     UITheme.Night[0]);
                 Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -28));
                 seat.Order.horizontalOverflow = HorizontalWrapMode.Overflow;
