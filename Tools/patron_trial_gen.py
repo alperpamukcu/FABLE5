@@ -41,9 +41,15 @@ STATE = os.path.join(HERE, 'patron_trial_state.json')
 RAW = os.path.join(HERE, 'AssetPipeline', 'sources', 'patron_trial')
 LOG = os.path.join(HERE, 'AssetPipeline', 'generation_log.jsonl')
 
-SIZE = 220
-VIEW = 'high top-down'     # the room is 30 degrees; of PixelLab's two, this is the near one
+SIZE = brief.PIVOT_CANVAS_PX
+VIEW = brief.PIVOT_VIEW    # eye level: the author looked at the top-down round and said no
 POSES = (('neutral', brief.NEUTRAL_POSE), ('bar', brief.BAR_POSE))
+
+# Round two (2026-08-19): the language and the ruler are settled, so the axis being asked
+# about is WHO. One still per candidate customer, neutral pose only - create_character
+# ignores pose text anyway (round one proved it), and the author asked for the standing
+# pictures alone. Three generations, not six.
+ROUND_TWO = True
 
 
 def call(tool, args, timeout=900):
@@ -74,21 +80,25 @@ def log(rec):
 
 
 def jobs():
+    if ROUND_TWO:
+        for name, figure in brief.FIGURE_OPTIONS.items():
+            yield name, brief.PIVOT_LANGUAGE, brief.NEUTRAL_POSE, figure
+        return
     for language in brief.LINE_LANGUAGES:
         for pose_name, pose in POSES:
-            yield '%s_%s' % (language, pose_name), language, pose
+            yield '%s_%s' % (language, pose_name), language, pose, brief.TRIAL_FIGURE
 
 
 def queue(only=None):
     state = load()
-    for key, language, pose in jobs():
+    for key, language, pose, figure in jobs():
         if only and only not in key:
             continue
         if state.get(key, {}).get('character_id'):
             print('  %-20s already queued (%s)' % (key, state[key]['character_id'][:8]))
             continue
         text, _ = call('create_character', {
-            'description': brief.character_prompt(brief.TRIAL_FIGURE, pose, language),
+            'description': brief.character_prompt(figure, pose, language),
             'name': 'trial %s' % key,
             'mode': 'v3',
             'size': SIZE,

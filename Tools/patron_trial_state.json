@@ -34,5 +34,23 @@
   "language": "lineless",
   "size": 220,
   "png": "AssetPipeline\\sources\\patron_trial\\lineless_bar.png"
+ },
+ "clubgirl": {
+  "character_id": "2e68de01-9e8f-40fd-bbb6-5db6e5ac88d6",
+  "language": "selective",
+  "size": 220,
+  "png": "AssetPipeline\\sources\\patron_trial\\clubgirl.png"
+ },
+ "heavyset": {
+  "character_id": "d53d8fbf-f387-47d1-a14b-4e143fed0006",
+  "language": "selective",
+  "size": 220,
+  "png": "AssetPipeline\\sources\\patron_trial\\heavyset.png"
+ },
+ "oldregular": {
+  "character_id": "fe3aba65-0ad0-4a8a-89f2-b0c3804dd453",
+  "language": "selective",
+  "size": 220,
+  "png": "AssetPipeline\\sources\\patron_trial\\oldregular.png"
  }
 }

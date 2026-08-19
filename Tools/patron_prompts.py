@@ -42,10 +42,22 @@ decision, not a preference, and the reason is written beside it.
   the ACTORS and keeps the architecture quiet, so a customer may carry one saturated
   garment; the room may not.
 
-  VIEW: high top-down. The room and its tables were redrawn at 30 degrees (the author:
-  "bunu 30 derece low top-down aciya getir"), and of PixelLab's two ladders - low
-  top-down ~20, high top-down ~35 - high is the near one. A figure drawn at a shallower
-  angle than its floor floats on it.
+  VIEW: side, which is PixelLab's word for EYE LEVEL. The first trial was drawn high
+  top-down to match the room's 30-degree floor, and the author looked at it and said no:
+  "karakteri tam karsidan goruyor olmaliyiz, yukaridan degil" (2026-08-19). The customer
+  is the thing the player reads faces on, and a face seen from above is mostly scalp -
+  the room may be looked down on, the person is looked AT. The seam this opens (a figure
+  at eye level standing on a floor drawn at 30 degrees) is paid for by the counter: the
+  bar cuts the body before any ground contact is visible, so there is no floor plane
+  under a customer to disagree with.
+
+  LINE LANGUAGE: selective outline, chosen off the trial - silhouette outlined, inner
+  shapes separated by colour.
+
+  PROPORTION PIVOT: the trial's selective figure, 196px of body on a 220px canvas, is
+  the ruler. "Kafa boyu vucut boyu hep bu pivota benzer olmali" - so the size stays 220
+  and every new customer is read against PIVOT_BODY_PX before it is accepted. A cast
+  whose heads drift is a cast that cannot share one rig.
 
 SCALE is deliberately NOT fixed here. "Her karakter boyu farkli olacagindan orana gore
 belirleyecegiz" - so a person's height is a RATIO of the reference adult, and the
@@ -95,6 +107,40 @@ TRIAL_FIGURE = (
     "plain grey t-shirt, plain dark blue trousers, plain shoes, "
     "no logo, no pattern, no jewellery, no hat, no bag"
 )
+
+# ── the settled rig ruler ────────────────────────────────────────────────────
+# Measured off trial selective_neutral.png: 196px of body inside a 220px canvas, 30
+# colours. Every customer generated from here on is checked against it before it is
+# accepted; a figure more than a few px off has different head-to-body proportions and
+# cannot share the cast's anchors.
+PIVOT_CANVAS_PX = 220
+PIVOT_BODY_PX = 196
+PIVOT_LANGUAGE = 'selective'
+PIVOT_VIEW = 'side'          # PixelLab's name for eye level
+
+# ── the three customers being compared (2026-08-19, round two) ───────────────
+# The line language and the ruler are settled, so the only thing left open is WHO walks
+# in. Three deliberately different bodies, because a proportion pivot that only holds
+# for one build is not a pivot: a slight young woman, a heavy man in middle age, and a
+# tall older regular. All three are dressed for the Miami club room - the chroma is on
+# the person, the room stays concrete and plum (14 art bible).
+FIGURE_OPTIONS = {
+    "clubgirl": (
+        "a young woman in her twenties, slim and short, bar customer in a Miami club, "
+        "dark brown hair in a high ponytail, hoop earrings, "
+        "a cropped magenta halter top, high-waisted black trousers, "
+        "no logo, no pattern, no bag"),
+    "heavyset": (
+        "a heavyset man in his forties, broad and thick-set, bar customer in a Miami "
+        "club, receding black hair, short beard, "
+        "an open cream linen shirt over a teal t-shirt, dark trousers, "
+        "no logo, no pattern, no hat"),
+    "oldregular": (
+        "a tall lean man in his sixties, bar regular, "
+        "grey hair combed back, deep lines on the face, "
+        "a faded olive work jacket over a plain white shirt, worn brown trousers, "
+        "no logo, no pattern, no hat"),
+}
 
 # ── the scale candidates the room is being asked about ───────────────────────
 # (label, reference adult height in art px, fraction of that height BELOW the counter's
