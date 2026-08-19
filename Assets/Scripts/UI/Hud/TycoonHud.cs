@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -95,25 +95,36 @@ namespace LastCall.UI
         /// <summary>Walk-in speed, in HUD units a second. MEASURED against the art rather
         /// than felt out: the 2026-08-19 walk is six frames — two strides — and a stride
         /// covers about 40 art px, so a cycle carries the figure 80 art px. Played at
-        /// WalkFps the cycle takes a second, which puts the floor at 160 HUD units a second.
+        /// PatronFps the cycle takes a second, which puts the floor at 160 HUD units a second.
         /// The old 340 moved the ground at twice the feet, and no amount of frames would
         /// have fixed that: it was the floor that was wrong, not the drawing.
         ///
         /// 90 now, because the walk was re-cut with SMALL STEPS (the author: "daha küçük
         /// adımlarla"): nine frames, two strides, and a short stride carries about 22 art
         /// px — 44 a cycle, 88 HUD units a second. The floor follows the drawing, always,
-        /// and never the other way round.</summary>
-        private const float WalkSpeed = 90f;
+        /// and never the other way round.
+        ///
+        /// 110, not 88: the author watched the measured pace and asked for slightly more
+        /// ("çok az oyun içi hızını arttıralım"). That is a quarter over what the stride
+        /// measures, which the eye reads as walking with purpose rather than as skating —
+        /// past about a third the feet start to slip, so this is the room there is.</summary>
+        private const float WalkSpeed = 110f;
         /// <summary>How far out from the stool the arrival ease begins, and how slow it
         /// gets there. Both the floor and the cycle are scaled by it — see AdvanceWalkIn.</summary>
         private const float ArrivalEase = 260f, ArrivalPace = 0.45f;
         /// <summary>Frames a second for the walk: nine frames at nine is one cycle, two
         /// strides, a second — the pace WalkSpeed is measured against. Re-read this
         /// whenever the walk is re-cut; it is the drawing's frame count, not a taste.</summary>
-        private const float WalkFps = 9f;
+        private const float PatronFps = 9f;   // ONE RATE FOR EVERY CLIP (2026-08-19,
+        // the author: "FPS tum animasyonlarda ayni olmali"). The walk sets it, because
+        // the walk is the clip measured against the world: nine frames, two strides, one
+        // cycle a second, and WalkSpeed is derived from that. Everything else follows, so
+        // nobody speaks in fast-forward beside somebody walking at nine.
         private const float ExitSpeed = 560f;       // walk-out speed (ref px/s), back off the right edge
         private const float OffscreenMargin = 150f; // how far past the right edge they start/finish
-        private const float OrderAnimSeconds = 2.4f;               // the one-shot "placing the order" beat
+        private const float OrderAnimSeconds = 1.8f;   // nine frames out and back at
+        // PatronFps: the beat is exactly as long as the clip, because a beat shorter
+        // than its clip cuts the sentence in half.               // the one-shot "placing the order" beat
         private const float DrinkSipSeconds = 2.6f, DrinkHoldSeconds = 1.8f;   // one sip cycle (×3 = the savour)
 
         // The animated customer (2026-07-23): a full-body pixel sprite shown from about the waist
@@ -148,7 +159,9 @@ namespace LastCall.UI
         /// an early frame is the small idle glance, the measured hold frame is the full turn
         /// at whoever just sat down beside them.</summary>
         private enum PatronClip { Idle, Order, Drink, Walk, Cheer, Upset, LookRight, LookLeft }
-        private const float ReactSeconds = 1.15f;   // the one-shot reaction beat before they go
+        private const float ReactSeconds = 1.8f;    // the same out-and-back length, so the
+        // reaction lands back on the idle pose exactly as the beat ends and they walk
+        // off from the pose they were standing in.   // the one-shot reaction beat before they go
 
         /// <summary>
         /// One person who might sit down: six clips and the row their head occupies inside
@@ -219,8 +232,8 @@ namespace LastCall.UI
             //
             // Head rows and hold frames are MEASURED by Tools/patron_ship.py off the
             // shipped frames — never typed by hand, and re-measured whenever the art moves.
-            ("clubgirl", 24f, 0f, 4, 6),
-            ("heavyset", 25f, 0f, 5, 5),
+            ("clubgirl", 7f, 0f, 4, 6),
+            ("heavyset", 13f, 0f, 5, 5),
         };
         /// <summary>
         /// The papers for a face — name, age, country, flag — read from the cast file.
@@ -2203,9 +2216,19 @@ namespace LastCall.UI
             if (stage == null) return;
             if (run.OwnedFixtureCount == _lastFixtureCount) return;
             _lastFixtureCount = run.OwnedFixtureCount;
+            // ONE TOWER, NOT THE WHOLE LADDER (2026-08-19). A bar that upgraded still OWNS
+            // the single — it was fitted over, not sold back — and every level stands in the
+            // same slot, so handing the room all of them draws three towers one inside the
+            // other. The run says which one is standing; everything else the bar owns is
+            // dressing and goes in as it always did.
+            var standing = run.StandingTap();
             var owned = new List<FixtureDefinition>();
             foreach (var f in run.FixtureCatalogue)
-                if (run.OwnsFixture(f.Id)) owned.Add(f);
+            {
+                if (!run.OwnsFixture(f.Id)) continue;
+                if (f.IsTap && !ReferenceEquals(f, standing)) continue;
+                owned.Add(f);
+            }
             // The room is handed its hooks before anything is stood in them. Cheap enough
             // to repeat: seven entries into a dictionary, only on the frames the dressing
             // actually changed.
@@ -2960,7 +2983,8 @@ namespace LastCall.UI
 
         // ── where a seated customer is looking (2026-08-19) ──────────────────────
         /// <summary>How long the head takes to swing to the far end of a glance.</summary>
-        private const float GlanceTurnSeconds = 0.5f;
+        // (The full turn has no constant of its own any more: it takes as long as its
+        //  frames take at PatronFps. Only the idle's small glance is timed below.)
         /// <summary>How often an unattended customer looks around, and for how long.</summary>
         private const float GlanceEvery = 7f, GlanceLookSeconds = 1.5f;
         /// <summary>How long they hold the look at somebody who just sat down before
@@ -3009,11 +3033,14 @@ namespace LastCall.UI
             if (view.Greeting)
             {
                 view.GreetT += Time.deltaTime;
-                float outT = GlanceTurnSeconds, backAt = outT + GreetHoldSeconds;
-                if (view.GreetT >= backAt + GlanceTurnSeconds) { view.Greeting = false; return; }
+                // The head turns at the house rate too, not at a rate of its own: the turn
+                // takes as long as its own frames take, which is what keeps a glance the
+                // same speed as the walk beside it.
+                float outT = hold / PatronFps, backAt = outT + GreetHoldSeconds;
+                if (view.GreetT >= backAt + outT) { view.Greeting = false; return; }
                 float u = view.GreetT < outT ? view.GreetT / outT
                         : view.GreetT < backAt ? 1f
-                        : 1f - (view.GreetT - backAt) / GlanceTurnSeconds;
+                        : 1f - (view.GreetT - backAt) / outT;
                 // Held at the MEASURED far end rather than the clip's last frame: some of
                 // these clips swing back to the front on their own, and holding their end
                 // would hold a face looking straight ahead.
@@ -3070,27 +3097,30 @@ namespace LastCall.UI
         private static int PatronFrameIndex(PatronClip clip, float t, int n)
         {
             if (n <= 1) return 0;
-            // The reactions play once, spread over the beat, and hold their last frame.
-            if (clip == PatronClip.Cheer || clip == PatronClip.Upset)
-                return Mathf.Min(n - 1, Mathf.FloorToInt(t / ReactSeconds * n));
+            // OUT AND BACK, for everything that is not a walk cycle. The author asked for a
+            // loop that reads smoothly - walk, idle, order, idle, drink, react, idle, leave -
+            // and measured against their own first frame, not one of these clips comes home:
+            // the ends sit 1,000 to 4,500 pixels from where they started, so playing one
+            // straight and cutting back to the idle is a visible jump every time. Played
+            // 0..n-1..0 the clip ENDS on the pose the idle holds, and the transition
+            // disappears. It also doubles every one-shot, which is the free half of
+            // "generate more frames if nine is not enough".
+            int span = 2 * (n - 1);
+            if (clip == PatronClip.Walk) return Mathf.FloorToInt(t * PatronFps) % n;
             if (clip == PatronClip.Drink)
             {
-                float u = Mathf.Repeat(t, DrinkSipSeconds + DrinkHoldSeconds);
-                if (u >= DrinkSipSeconds) return 0;                 // holding the glass at rest
-                int span = 2 * (n - 1);                             // 0..n-1..1 (raise then lower)
-                int p = Mathf.FloorToInt(u / DrinkSipSeconds * span) % span;
+                // A sip, a pause standing still, another sip - the "1. yudum, 2. yudum" the
+                // author asked for, which is this same out-and-back repeated rather than a
+                // longer clip the animation canvas cannot carry (its ceiling is 8 frames).
+                float cycle = span / PatronFps + DrinkHoldSeconds;
+                float u = Mathf.Repeat(t, cycle) * PatronFps;
+                if (u >= span) return 0;                       // between sips, at rest
+                int p = Mathf.FloorToInt(u);
                 return p < n ? p : span - p;
             }
-            // Idle is a slow two-frame breath — a settled customer barely moves; the walk
-            // strides (matched to the slower gait), the order talks.
-            // Rates re-timed for the 2026-08-09 cast (the author: the talking runs too
-            // slowly). The order clip is somebody speaking a sentence, not miming one:
-            // its five frames at 7fps took most of a second per syllable. Idle is still a
-            // breath rather than a fidget, just not a sigh.
-            // 6, not 10: at ten frames a second a six-frame cycle is three steps a second,
-            // which is a jog. One cycle a second is a walk (2026-08-19).
-            float fps = clip == PatronClip.Walk ? WalkFps : clip == PatronClip.Order ? 12f : 3.5f;
-            return Mathf.FloorToInt(t * fps) % n;
+            int q = Mathf.FloorToInt(t * PatronFps);
+            if (q >= span) return 0;                           // done: standing as they were
+            return q < n ? q : span - q;
         }
 
         private void LoadPatronFrames()
@@ -4536,22 +4566,37 @@ namespace LastCall.UI
                         var spec = new TileSpec
                         {
                             Name = f.Name,
-                            Meta = f.HasLight ? "Dressing · lit" : "Dressing",
+                            Meta = f.IsTap ? f.TapLevel + "-line tower"
+                                 : f.HasLight ? "Dressing · lit" : "Dressing",
                             Art = FixtureArt(f.Sprite),
                             ArtH = IconH,
                             Identity = f.Name.ToUpperInvariant(),
-                            MetaLine = f.HasLight
+                            MetaLine = f.IsTap
+                                ? "The counter · " + f.TapLevel
+                                  + (f.TapLevel == 1 ? " keg on tap" : " kegs on tap")
+                                : f.HasLight
                                 ? "The room · carries its own light"
                                 : "The room · dressing",
                             Body = f.Flavor,
-                            BuffA = new Buff(BuffKind.Gain, f.HasLight
+                            // A TOWER IS NOT DRESSING and its card must not say it is: it
+                            // is the only fixture that changes what the bar can sell, and
+                            // the whole reason the player is looking at it is the keg they
+                            // cannot buy yet.
+                            BuffA = new Buff(BuffKind.Gain, f.IsTap
+                                ? "Pours " + f.TapLevel + (f.TapLevel == 1 ? " keg" : " kegs")
+                                  + " · the market opens the rest"
+                                : f.HasLight
                                 ? "Stands in the room and lights it"
                                 : "Stands in the room from tonight"),
                             BuffB = new Buff(BuffKind.Gain, "Never spends the night's fitting"),
                         };
                         if (run.OwnsFixture(f.Id))
                         {
-                            spec.State = TileState.Held; spec.Word = "OURS";
+                            spec.State = TileState.Held;
+                            // A tower that has been fitted over is not what is standing on
+                            // the counter, and saying OURS about all three would leave the
+                            // player unable to tell which one the bar actually runs.
+                            spec.Word = f.IsTap && f.TapLevel < run.TapLevel ? "FITTED" : "OURS";
                         }
                         else if (run.Rating.Average < f.Stars)
                         {
@@ -4559,6 +4604,15 @@ namespace LastCall.UI
                             spec.Money = f.Stars.ToString("0.0");
                             spec.BuffA = new Buff(BuffKind.Bad, "Needs a " + f.Stars.ToString("0.0")
                                 + "-star room · you are at " + run.Rating.Average.ToString("0.0"));
+                        }
+                        else if (f.IsTap && !run.CanBuyTap(f))
+                        {
+                            // One rung at a time, and the tile says which rung is missing —
+                            // a greyed tower with no reason on it reads as a bug.
+                            spec.State = TileState.Sealed;
+                            spec.Money = f.TapLevel.ToString();
+                            spec.BuffA = new Buff(BuffKind.Bad, "Fit the " + (run.TapLevel + 1)
+                                + "-line tower first · this bar runs " + run.TapLevel);
                         }
                         else DressBuyable(spec, f.Price, "fx:" + f.Id, false,
                             () => run.BuyFixture(f.Id));
@@ -4599,6 +4653,10 @@ namespace LastCall.UI
                     foreach (var f in run.FixtureCatalogue)
                     {
                         if (run.OwnsFixture(f.Id) || run.Rating.Average >= f.Stars) continue;
+                        // A tower waiting on the rung below it is not waiting on a star, and
+                        // counting it here would promise that the next star opens something
+                        // no star opens (the same trap StarsWanted answers NaN to).
+                        if (f.IsTap && !run.CanBuyTap(f)) continue;
                         locked++;
                         if (f.Stars < next) next = f.Stars;
                     }

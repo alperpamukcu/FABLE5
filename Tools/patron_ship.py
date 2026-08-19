@@ -62,14 +62,21 @@ FOOT_Y = brief.RIG_FOOT_Y
 # frame cannot care. PICK takes a single frame out of a clip - 'last' for a clip that ends
 # on the pose we want to keep.
 #
-# The idle is ONE FRAME and it is the end of seat_front: a customer who has sat down is
-# facing us with their hands low in front, and the counter turns that into hands on the
-# bar. Not a loop, because a seated person is not a metronome (the author, twice).
+# The idle is ONE FRAME and it is the character's own south rotation - the standing pose,
+# facing us. A seated pose was generated for it and then dropped at the author's word
+# ("seated animasyonlarini kaldiralim kullanmayalim"), which costs nothing visually: the
+# counter crosses the body at the navel, so what the player sees of a standing figure and
+# a seated one is the same chest, shoulders and head. Not a loop either, because a seated
+# person is not a metronome (the author, twice).
 SHIP = {
-    'idle': ('seat_front', False, 'last'),
+    'idle': ('still', False, None),
     'walk': ('walk', True, None),
     'look_right': ('look_right', True, None),
     'look_left': ('look_left', True, None),
+    'order': ('order', True, None),
+    'drink': ('drink', True, None),
+    'cheer': ('cheer', True, None),
+    'upset': ('upset', True, None),
 }
 
 

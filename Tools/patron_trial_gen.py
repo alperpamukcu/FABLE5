@@ -194,38 +194,31 @@ def poll():
 KEPT = ('clubgirl', 'heavyset')
 
 CLIPS = {
-    # THERE IS NO IDLE CLIP. Two were generated and both were rejected, the second with
-    # the reason: "nefes alis veris istemiyorum ... sabit durmali". A looping clip cannot
-    # be still, so the idle stopped being a clip - it is SIT's held frame, and the small
-    # looking-around comes from the glances below (patron_prompts.IDLE_IS_STILL).
+    # THERE IS NO IDLE CLIP. Two were generated and both rejected, the second with the
+    # reason: "nefes alis veris istemiyorum ... sabit durmali". A looping clip cannot be
+    # still, so the idle is the character's own standing rotation, held, and the small
+    # looking-around comes from the glances (patron_prompts.IDLE_IS_STILL).
     #
-    # SIT COMES FIRST AND EVERYTHING ELSE STARTS FROM IT (2026-08-19, the author: "masaya
-    # oturduktan sonra normal duruslari eller veya kollarin masada durdugu hali olmali").
-    # A seated pose with the forearms on the bar cannot be followed by clips drawn with the
-    # arms hanging down - the arms would jump on every clip change. v3 takes a custom start
-    # frame, so sit is generated from the rotation and then every other clip is generated
-    # from SIT'S HELD FRAME. That is why this table has an order and why `start` names it.
-    # THE SIT IS DROPPED (2026-08-19, the author: "oturma animasyonunu bos ver"). Two
-    # takes are on the server and both are honest failures of a kind worth recording: v3
-    # continues a west-facing walk into a seat perfectly well, and will not turn the body
-    # to the front on the way down, so the customer arrived at the bar sitting in profile.
-    # The game seats them by simply showing the seated front pose when the walk ends.
-    'seat_front': dict(directions=['south'], frames=8),
-    # The others start from 'idle', which IS seat_front's held frame - it is what the
-    # game plays, and a clip should continue from what the player is looking at, not
-    # from a frame that only exists in a zip.
+    # EVERY CLIP IS STANDING (2026-08-19, the author: "karakter animasyonlari oturur
+    # vaziyette olmayacak hep ayakta olacak"). Two seated experiments are behind this line
+    # and both are worth remembering rather than repeating: a SIT that continues the walk
+    # works and cannot be turned to face front (v3 follows the pose it is handed, and it
+    # was handed a profile), and a front-facing seated pose that turned out to be a
+    # standing figure with its hands clasped. Both are deleted.
+    #
+    # Every clip starts from 'idle' - the SHIPPED standing frame, not something that only
+    # exists in a zip - so each one begins and ends in the pose the player is looking at
+    # and nothing jumps at a clip change.
     'look_right': dict(directions=['south'], frames=8, start='idle'),
     'look_left':  dict(directions=['south'], frames=8, start='idle'),
     'order':      dict(directions=['south'], frames=8, start='idle'),
     'drink':      dict(directions=['south'], frames=8, start='idle'),
     'cheer':      dict(directions=['south'], frames=8, start='idle'),
     'upset':      dict(directions=['south'], frames=8, start='idle'),
-    # The walk is the one clip that does NOT start from the seated pose - they are on their
-    # feet crossing the room. A template, one generation per direction, seen from the west.
-    # SMALL STEPS (2026-08-19, the author: "daha kucuk adimlarla yurume animasyonu
-    # gerceklestirilmeli"). The walking-10 template strides like somebody late for a
-    # train, and a template's stride length is not a parameter - so the walk is a v3
-    # custom after all, which is the only place the SIZE of a step can be asked for.
+    # SMALL STEPS (the author: "daha kucuk adimlarla"). The walking-10 template strides
+    # like somebody late for a train and a template's stride length is not a parameter, so
+    # the walk is a v3 custom - the only place the SIZE of a step can be asked for. West,
+    # because the walk-in crosses the room right to left.
     'walk': dict(directions=['west'], frames=8),
 }
 FRAMES = 8
@@ -238,49 +231,41 @@ CALM = ('a small restrained movement, calm and natural, '
         'the body stays where it is, no exaggeration, no big gesture')
 
 CUSTOM = {
-    # The pose the game shows for most of a visit. The wrists have to land at the bar's
-    # own line, which is where the counter cuts the body, or the hands are in the half
-    # that is hidden (patron_prompts, THE CUT LINE IS THE WRIST LINE).
     # NO OBJECTS AND NO PLACES IN THESE STRINGS. The tool says so in its own schema
     # ("focusing on the movement or pose only ... avoid environmental details like
-    # locations or objects") and the first sit ignored it - "resting on a bar top" came
-    # back as a failed generation for both characters. The bar is not drawn here anyway;
-    # what is needed is the POSE the bar would put them in.
-    # Two things this had to be told after looking at the first take: TURN, and keep the
-    # elbows bent. Continuing a west-facing walk, v3 stayed side-on all the way down - but
-    # a customer sits at the bar FACING it, which from behind the bar is facing us. And
-    # "forearms forward at waist height" came back as both arms straight out in front,
-    # which is a zombie, not somebody settling onto a stool.
-    'sit': ('sitting down onto a seat and turning to face the viewer at the same time, '
-            'the knees bend, the body lowers, the shoulders turn to face front, '
-            'then settling upright with the elbows bent close to the body and the hands '
-            'coming to rest low in front, and holding still, ' + CALM),
-    'seat_front': ('settling into a seated position facing the viewer, '
-                   'the elbows bent close to the body and the hands resting low in front, '
-                   'the shoulders square to the viewer, then holding still, ' + CALM),
+    # locations or objects"), and the one description that ignored it - "resting on a bar
+    # top" - came back as a failed generation for both characters, twice. The bar is not
+    # drawn here anyway: what the game needs is the POSE, and the room supplies the bar.
+    #
+    # And every one of them is STANDING, arms down. The counter crosses the body at the
+    # navel, so a standing figure and a seated one show the player the same chest,
+    # shoulders and head - which is why the seated experiments cost something and bought
+    # nothing.
     'look_right': ('turning only the head to the right, a small glance to the side, '
                    'then holding that look, the shoulders do not turn, '
-                   'the forearms stay where they are, ' + CALM),
+                   'the arms stay down at the sides, ' + CALM),
     'look_left': ('turning only the head to the left, a small glance to the side, '
                   'then holding that look, the shoulders do not turn, '
-                  'the forearms stay where they are, ' + CALM),
+                  'the arms stay down at the sides, ' + CALM),
     # Speaking, not performing: the mouth moves and the head shifts a little. A v3 order
     # clip left open waves its arms about, which is a man hailing a taxi, not a customer
     # saying what they want.
     'order': ('speaking a short sentence, the mouth moves and the head tilts a little, '
-              'the forearms stay where they are, the arms do not gesture, ' + CALM),
-    # THE GLASS IS NOT DRAWN. The hand closes on nothing and lifts to the mouth; the game
-    # pins the served vessel to the hand. A drawn glass would mean every customer drinks
-    # the same one whatever was poured.
-    'drink': ('lifting one closed empty hand up to the mouth as if holding something, '
-              'tipping the head back a little to sip, then lowering that hand again, '
-              'the other forearm stays where it is, ' + CALM),
-    # A reaction, at a bar, from somebody sitting down: a nod and a small smile, not a
-    # cheer with the arms in the air.
+              'the arms stay down at the sides and do not gesture, ' + CALM),
+    # ONE hand, and the other stays down: the first take brought both up to the mouth,
+    # which is praying, not drinking. The hand is empty because the GAME draws the glass
+    # into it - a drawn one would mean every customer drinks the same vessel whatever was
+    # poured (patron_prompts, THE GLASS IS NEVER DRAWN).
+    'drink': ('lifting one hand up to the mouth as if holding something small, '
+              'tipping the head back a little to sip, then lowering that same hand back '
+              'down to the side, the other arm stays down at the side and does not move, '
+              + CALM),
+    # A reaction from somebody at a bar: a nod and a small smile, not a cheer with the
+    # arms in the air.
     'cheer': ('a pleased reaction, a small nod and a smile, the shoulders relax, '
-              'the forearms stay where they are, no arms raised, ' + CALM),
+              'the arms stay down at the sides, nothing is raised, ' + CALM),
     'upset': ('a displeased reaction, a small frown and a slight shake of the head, '
-              'the forearms stay where they are, no arms raised, ' + CALM),
+              'the arms stay down at the sides, nothing is raised, ' + CALM),
     'walk': ('walking forward with small short steps at a calm unhurried pace, '
              'the feet stay close to the ground, the arms swing very little, ' + CALM),
 }
