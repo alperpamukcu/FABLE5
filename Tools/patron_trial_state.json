@@ -59,9 +59,15 @@
   "size": 220,
   "png": "AssetPipeline\\sources\\patron_trial\\clubgirl_220.png",
   "clips": {
-   "walk": "8dcbcf32-3602-4485-beaf-3d8080c0e388",
-   "look_right": "9c13fef6-4702-4e3d-a653-1ffa3d0f7f02",
-   "look_left": "5aba96ef-96b9-40f8-800a-63f3170ccce3"
+   "sit": "61a15780-2928-48fc-9515-d30d6bcf9f0b",
+   "seat_front": "2836714b-4181-4b0d-a581-934500ca8fe6",
+   "walk": "34a2b25d-b947-4e73-83d3-5cfb44af061b",
+   "look_right": "618c53e9-0207-4c53-91b1-cf5d6045b0e6",
+   "look_left": "7122dd22-a5c8-4386-937d-f80b6dc42057",
+   "order": "0f63fad5-e9f1-46d7-be09-cfb8e4afd3e0",
+   "drink": "6628510d-edac-4798-aabb-57c914f910c1",
+   "cheer": "12d9d4ea-54d9-4e31-84c7-5b3f81042f1a",
+   "upset": "0faf4d20-776f-4542-8664-ba0991e1a614"
   }
  },
  "heavyset_160": {
@@ -82,9 +88,15 @@
   "size": 220,
   "png": "AssetPipeline\\sources\\patron_trial\\heavyset_220.png",
   "clips": {
-   "walk": "992ef358-70e1-4d60-8f8b-6477a69914a0",
-   "look_right": "d4e62dd1-33f0-40df-9134-c6b362aeffc9",
-   "look_left": "4d7b2272-3794-43c3-a992-276a6341dfb1"
+   "sit": "e4ceca46-4278-4a0b-8302-5eb3fce189dc",
+   "seat_front": "255c9f56-2498-4e01-b600-b6d9f815d6ad",
+   "walk": "b5ff5251-450f-4307-9e6a-4ba2c3581aaa",
+   "look_right": "9148bcd5-aa44-471f-9f79-994667929cab",
+   "look_left": "f99d5227-c0c3-4aeb-b497-2cc71bcc8838",
+   "order": "5f798eb1-0669-4ab0-8df9-341de89f5951",
+   "drink": "d155ba97-edc6-4d7c-850e-cba92ce3c5a2",
+   "cheer": "dd86a29a-e8f9-409b-a1fc-4f656f0f6dd3",
+   "upset": "27215715-5262-4f23-b615-462703d59a72"
   }
  }
 }

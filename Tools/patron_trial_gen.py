@@ -33,6 +33,7 @@ import time
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import pixellab                    # noqa: E402
 import patron_prompts as brief     # noqa: E402
@@ -193,65 +194,134 @@ def poll():
 KEPT = ('clubgirl', 'heavyset')
 
 CLIPS = {
-    # THERE IS NO IDLE CLIP any more (2026-08-19). Two were generated and both were
-    # rejected by the author, and the second rejection said why: "nefes alis veris
-    # istemiyorum ... sabit durmali, biraz biraz saga sola bakinmali gibi". A looping clip
-    # cannot be still, so the idle stopped being a clip - see patron_prompts.IDLE_IS_STILL.
-    # The still frame is the character's own south rotation and the occasional glance is
-    # the look clips below, trimmed short. Nothing is generated for it.
-    # The walk-in crosses the room right to left, so the figure is seen from its WEST
-    # side. A template, at one generation per direction: a side-on walk cycle is exactly
-    # what a walk skeleton is for, and this one came back clean.
-    'walk': dict(template='walking-10', directions=['west']),
-    # TURN AND HOLD, not a loop (2026-08-19, the author: "normal duruken kafasina sadece
-    # 45 derece saga ve sola cevirdigi 2 animasyon ... musterinin sagina veya soluna
-    # musteri oturunca devreye girecek"). The game plays one of these once when a
-    # neighbour takes the next stool and then HOLDS THE LAST FRAME while they are there -
-    # so the clip must end on the turned pose, and the rig stores it as a one-shot with a
-    # held tail rather than as a looping clip.
+    # THERE IS NO IDLE CLIP. Two were generated and both were rejected, the second with
+    # the reason: "nefes alis veris istemiyorum ... sabit durmali". A looping clip cannot
+    # be still, so the idle stopped being a clip - it is SIT's held frame, and the small
+    # looking-around comes from the glances below (patron_prompts.IDLE_IS_STILL).
     #
-    # Named by SCREEN direction, because that is what the seat layout knows: look_right
-    # turns toward the stool on the player's right. Nothing below the neck moves - a v3
-    # left to itself turns the shoulders too, and then it is a body turn, not a glance.
-    # Eight frames on the 256 animation canvas a 220px character is padded onto -
-    # its ceiling. Frame 2 is the small idle glance, the peak frame is the full
-    # turn at a new neighbour: one clip, two behaviours.
-    'look_right': dict(directions=['south'], frames=8),
-    'look_left': dict(directions=['south'], frames=8),
+    # SIT COMES FIRST AND EVERYTHING ELSE STARTS FROM IT (2026-08-19, the author: "masaya
+    # oturduktan sonra normal duruslari eller veya kollarin masada durdugu hali olmali").
+    # A seated pose with the forearms on the bar cannot be followed by clips drawn with the
+    # arms hanging down - the arms would jump on every clip change. v3 takes a custom start
+    # frame, so sit is generated from the rotation and then every other clip is generated
+    # from SIT'S HELD FRAME. That is why this table has an order and why `start` names it.
+    # THE SIT IS DROPPED (2026-08-19, the author: "oturma animasyonunu bos ver"). Two
+    # takes are on the server and both are honest failures of a kind worth recording: v3
+    # continues a west-facing walk into a seat perfectly well, and will not turn the body
+    # to the front on the way down, so the customer arrived at the bar sitting in profile.
+    # The game seats them by simply showing the seated front pose when the walk ends.
+    'seat_front': dict(directions=['south'], frames=8),
+    # The others start from 'idle', which IS seat_front's held frame - it is what the
+    # game plays, and a clip should continue from what the player is looking at, not
+    # from a frame that only exists in a zip.
+    'look_right': dict(directions=['south'], frames=8, start='idle'),
+    'look_left':  dict(directions=['south'], frames=8, start='idle'),
+    'order':      dict(directions=['south'], frames=8, start='idle'),
+    'drink':      dict(directions=['south'], frames=8, start='idle'),
+    'cheer':      dict(directions=['south'], frames=8, start='idle'),
+    'upset':      dict(directions=['south'], frames=8, start='idle'),
+    # The walk is the one clip that does NOT start from the seated pose - they are on their
+    # feet crossing the room. A template, one generation per direction, seen from the west.
+    # SMALL STEPS (2026-08-19, the author: "daha kucuk adimlarla yurume animasyonu
+    # gerceklestirilmeli"). The walking-10 template strides like somebody late for a
+    # train, and a template's stride length is not a parameter - so the walk is a v3
+    # custom after all, which is the only place the SIZE of a step can be asked for.
+    'walk': dict(directions=['west'], frames=8),
 }
-FRAMES = 8          # default when a clip does not name its own
+FRAMES = 8
+
+# RESTRAINT IS IN EVERY DESCRIPTION, because it has had to be twice already (the author:
+# "cok abartili hareketler vermemeliler, normal insan gibi sakin az hareket etmeliler").
+# A v3 clip left to itself performs; what stops it is naming the amount and naming what
+# must not move, in the same breath as what must.
+CALM = ('a small restrained movement, calm and natural, '
+        'the body stays where it is, no exaggeration, no big gesture')
+
 CUSTOM = {
-    # Round one of this idle said only "standing still" and the model read that as licence
-    # to re-pose: over nine frames the hands travelled onto the hips. Round two held the
-    # pose but leaned 13px. The author asked for less again, so round three names the
-    # AMOUNT as well as the parts: a couple of pixels, and the figure does not travel.
-    'idle': ('almost motionless, breathing very quietly, '
-             'the shoulders rise and fall by only two or three pixels, '
-             'the head barely moves at all, '
-             'the body does not lean, does not sway and does not shift its weight, '
-             'the figure stays in exactly the same place, '
-             'the arms do not move, the hands stay down at the sides, '
-             'the pose does not change, the feet do not move'),
-    'walk': 'walking at a calm steady pace',
-    'look_right': ('standing still and slowly turning only the head to the right, '
-                   'a 45 degree glance to the side, then holding that look, '
-                   'the shoulders do not turn, the chest stays facing forward, '
-                   'the arms do not move, the feet do not move, the body does not lean'),
-    'look_left': ('standing still and slowly turning only the head to the left, '
-                  'a 45 degree glance to the side, then holding that look, '
-                  'the shoulders do not turn, the chest stays facing forward, '
-                  'the arms do not move, the feet do not move, the body does not lean'),
+    # The pose the game shows for most of a visit. The wrists have to land at the bar's
+    # own line, which is where the counter cuts the body, or the hands are in the half
+    # that is hidden (patron_prompts, THE CUT LINE IS THE WRIST LINE).
+    # NO OBJECTS AND NO PLACES IN THESE STRINGS. The tool says so in its own schema
+    # ("focusing on the movement or pose only ... avoid environmental details like
+    # locations or objects") and the first sit ignored it - "resting on a bar top" came
+    # back as a failed generation for both characters. The bar is not drawn here anyway;
+    # what is needed is the POSE the bar would put them in.
+    # Two things this had to be told after looking at the first take: TURN, and keep the
+    # elbows bent. Continuing a west-facing walk, v3 stayed side-on all the way down - but
+    # a customer sits at the bar FACING it, which from behind the bar is facing us. And
+    # "forearms forward at waist height" came back as both arms straight out in front,
+    # which is a zombie, not somebody settling onto a stool.
+    'sit': ('sitting down onto a seat and turning to face the viewer at the same time, '
+            'the knees bend, the body lowers, the shoulders turn to face front, '
+            'then settling upright with the elbows bent close to the body and the hands '
+            'coming to rest low in front, and holding still, ' + CALM),
+    'seat_front': ('settling into a seated position facing the viewer, '
+                   'the elbows bent close to the body and the hands resting low in front, '
+                   'the shoulders square to the viewer, then holding still, ' + CALM),
+    'look_right': ('turning only the head to the right, a small glance to the side, '
+                   'then holding that look, the shoulders do not turn, '
+                   'the forearms stay where they are, ' + CALM),
+    'look_left': ('turning only the head to the left, a small glance to the side, '
+                  'then holding that look, the shoulders do not turn, '
+                  'the forearms stay where they are, ' + CALM),
+    # Speaking, not performing: the mouth moves and the head shifts a little. A v3 order
+    # clip left open waves its arms about, which is a man hailing a taxi, not a customer
+    # saying what they want.
+    'order': ('speaking a short sentence, the mouth moves and the head tilts a little, '
+              'the forearms stay where they are, the arms do not gesture, ' + CALM),
+    # THE GLASS IS NOT DRAWN. The hand closes on nothing and lifts to the mouth; the game
+    # pins the served vessel to the hand. A drawn glass would mean every customer drinks
+    # the same one whatever was poured.
+    'drink': ('lifting one closed empty hand up to the mouth as if holding something, '
+              'tipping the head back a little to sip, then lowering that hand again, '
+              'the other forearm stays where it is, ' + CALM),
+    # A reaction, at a bar, from somebody sitting down: a nod and a small smile, not a
+    # cheer with the arms in the air.
+    'cheer': ('a pleased reaction, a small nod and a smile, the shoulders relax, '
+              'the forearms stay where they are, no arms raised, ' + CALM),
+    'upset': ('a displeased reaction, a small frown and a slight shake of the head, '
+              'the forearms stay where they are, no arms raised, ' + CALM),
+    'walk': ('walking forward with small short steps at a calm unhurried pace, '
+             'the feet stay close to the ground, the arms swing very little, ' + CALM),
 }
+
+
+def start_frame(slug, clip, which='held'):
+    """One clip's held frame, base64, as the starting pose for another.
+
+    Read off the SHIPPED frames (Resources/Patron/<slug>/<clip>), not the raw zip: what
+    the game plays is what the next clip should continue from, and the shipped frames are
+    the ones stood on the rig. The held frame is the one furthest from the first - see
+    peak_frame for why that is not simply the last one.
+    """
+    import base64
+    d = os.path.join(ROOT, 'Assets', 'Resources', 'Patron', slug, clip)
+    if not os.path.isdir(d):
+        return None
+    names = sorted(n for n in os.listdir(d) if n.endswith('.png'))
+    if not names:
+        return None
+    frames = [Image.open(os.path.join(d, n)).convert('RGBA') for n in names]
+    # 'held' is the pose a clip settles on (measured, see peak_frame); 'last' is where a
+    # clip physically ENDS, which is what a continuation has to start from - the walk's
+    # held frame is mid-stride, and sitting down out of mid-stride is a stumble.
+    held = (frames[-1] if which == 'last'
+            else frames[peak_frame(frames)] if len(frames) > 1 else frames[0])
+    buf = io.BytesIO()
+    held.save(buf, format='PNG')
+    return base64.b64encode(buf.getvalue()).decode('ascii')
 
 
 def animate(clip):
+    """Queue one clip for every kept character. One clip at a time, on purpose: each is
+    looked at before the next is paid for."""
     spec = CLIPS[clip]
     state = load()
     for name in KEPT:
         cid = state[name]['character_id']
         done = state[name].setdefault('clips', {})
         if clip in done:
-            print('  %-10s %-5s already queued (%s)' % (name, clip, done[clip][:8]))
+            print('  %-10s %-11s already queued (%s)' % (name, clip, done[clip][:8]))
             continue
         args = {'character_id': cid, 'animation_name': clip,
                 'directions': spec['directions']}
@@ -261,21 +331,32 @@ def animate(clip):
         else:
             args.update(mode='v3', frame_count=spec.get('frames', FRAMES),
                         action_description=CUSTOM[clip])
+            # Start from another clip's HELD frame rather than from the standing rotation,
+            # so a seated customer's arms do not jump back to their sides every time the
+            # clip changes. The frame is read off what has already shipped, which means a
+            # re-ship with different art re-anchors these clips too.
+            if spec.get('start'):
+                src, which = (spec['start'] if isinstance(spec['start'], tuple)
+                              else (spec['start'], 'held'))
+                seed = start_frame(name, src, which)
+                if seed is None:
+                    print('  %-10s %-11s needs %s shipped first' % (name, clip, src))
+                    continue
+                args['custom_start_frame_base64'] = seed
         text, _ = call('animate_character', args)
         import re
         ids = re.findall(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', text, re.I)
         job = next((i for i in ids if i != cid), None)
         if not job:
-            print('  %-10s %-5s NO JOB: %s' % (name, clip, text[:300]))
+            print('  %-10s %-11s NO JOB: %s' % (name, clip, text[:220].replace(chr(10), ' ')))
             continue
         done[clip] = job
         save(state)
         log({'asset': 'patron_trial/' + name, 'event': 'animation queued',
-             'character_id': cid, 'clip': clip,
-             'template': spec.get('template'), 'directions': spec['directions']})
-        print('  %-10s %-5s queued %s (%s, %s)'
-              % (name, clip, job, spec.get('template') or 'v3 custom',
-                 spec['directions'][0]))
+             'character_id': cid, 'clip': clip, 'template': spec.get('template'),
+             'start': spec.get('start'), 'directions': spec['directions']})
+        print('  %-10s %-11s queued %s (%s)'
+              % (name, clip, job, spec.get('template') or 'v3 custom'))
 
 
 def peak_frame(frames):

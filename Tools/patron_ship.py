@@ -54,11 +54,22 @@ FOOT_Y = brief.RIG_FOOT_Y
 # Which zip clip becomes which folder the game loads. The game asks for six clips
 # (TycoonHud.PatronClip) and two of ours are new; what is missing is simply absent, and
 # the loader drops a clip it cannot find rather than drawing a hole.
+# folder -> (zip clip, rigid). RIGID means one transform for the whole clip so the frames
+# keep the positions they were drawn in: every moving clip needs it, and a still frame
+# cannot care. See patron_gen.stand for what per-frame standing did to the first walk.
+# folder -> (zip clip, rigid, pick). RIGID means one transform for the whole clip so the
+# frames keep the positions they were drawn in: every moving clip needs it, and a still
+# frame cannot care. PICK takes a single frame out of a clip - 'last' for a clip that ends
+# on the pose we want to keep.
+#
+# The idle is ONE FRAME and it is the end of seat_front: a customer who has sat down is
+# facing us with their hands low in front, and the counter turns that into hands on the
+# bar. Not a loop, because a seated person is not a metronome (the author, twice).
 SHIP = {
-    'idle': ('still', False),          # the south rotation, held - see the note above
-    'walk': ('walk', True),
-    'look_right': ('look_right', True),
-    'look_left': ('look_left', True),
+    'idle': ('seat_front', False, 'last'),
+    'walk': ('walk', True, None),
+    'look_right': ('look_right', True, None),
+    'look_left': ('look_left', True, None),
 }
 
 
@@ -87,12 +98,15 @@ def ship(slug):
     print('%s (zip carries %s)' % (slug, ', '.join(sorted(groups))))
 
     head_y = None
-    for folder, (source, lock) in SHIP.items():
+    for folder, (source, lock, pick) in SHIP.items():
         frames = [still] if source == 'still' else groups.get(source)
+        if frames and pick == 'last':
+            frames = [frames[-1]]
         if not frames:
             print('  %-11s MISSING' % folder)
             continue
-        stood = patron_gen.stand(frames, lock_centre=lock, canvas=CANVAS, foot_y=FOOT_Y)
+        stood = patron_gen.stand(frames, lock_centre=lock, rigid=lock,
+                                 canvas=CANVAS, foot_y=FOOT_Y)
         out = os.path.join(PATRON, slug, folder)
         os.makedirs(out, exist_ok=True)
         clean(out)

@@ -80,13 +80,25 @@ def bbox(im):
     return xs[0], ys[0], xs[-1] + 1, ys[-1] + 1
 
 
-def stand(frames, lock_centre=False, canvas=CANVAS, foot_y=FOOT_Y):
-    """Put every frame on the 180 canvas with its feet on the foot line.
+def stand(frames, lock_centre=False, canvas=CANVAS, foot_y=FOOT_Y, rigid=False):
+    """Put a clip on the canvas with its feet on the foot line.
 
-    lock_centre: use ONE horizontal centre for the whole clip (the median of the
-    frames' own centres). The walk needs this - aligning each stride to its own bbox
-    centre pins the figure in place and the legs scissor underneath it, which reads as
-    moonwalking rather than walking.
+    lock_centre: use ONE horizontal centre for the whole clip (the median of the frames'
+    own centres). A walk needs this - aligning each stride to its own bbox centre pins the
+    figure in place and the legs scissor underneath it, which reads as moonwalking.
+
+    rigid: use ONE transform for the WHOLE clip, horizontally AND vertically, so every
+    frame keeps the position it was drawn in relative to its neighbours.
+    THIS IS WHAT A MOVING CLIP NEEDS (2026-08-19, the author: "hareket esnasinda cok
+    oynuyor, smooth bir yuruyus olmuyor"). Standing each frame on its own bbox bottom
+    nails the FEET to one row and lets the head bob by however much the pose is shorter -
+    measured at 12 to 16 pixels a frame on the first shipped walk, which is a limp, not a
+    stride. A real walk keeps the head level and moves the feet; the drawing already does
+    that, and per-frame standing was destroying it. The same applies to a head turn: the
+    body must not slide sideways to keep a tilting head centred.
+
+    Anything still: a single pose can be stood on its own bbox, because there is no
+    neighbour for it to disagree with.
     """
     boxes = [bbox(f) for f in frames]
     good = [(f, b) for f, b in zip(frames, boxes) if b]
@@ -94,6 +106,16 @@ def stand(frames, lock_centre=False, canvas=CANVAS, foot_y=FOOT_Y):
         return []
     centres = sorted((b[0] + b[2]) / 2.0 for _, b in good)
     locked = centres[len(centres) // 2]
+    if rigid:
+        bottoms = sorted(b[3] for _, b in good)
+        dx = int(round(canvas / 2.0 - locked))
+        dy = foot_y - bottoms[len(bottoms) // 2]
+        out = []
+        for f, _ in good:
+            plate = Image.new('RGBA', (canvas, canvas), (0, 0, 0, 0))
+            plate.paste(f, (dx, dy))
+            out.append(plate)
+        return out
     out = []
     for f, b in good:
         x0, y0, x1, y1 = b

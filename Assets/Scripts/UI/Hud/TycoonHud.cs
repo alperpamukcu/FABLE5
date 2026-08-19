@@ -92,7 +92,25 @@ namespace LastCall.UI
         /// eight tenths of a second — long enough to read as speech, short enough that a busy
         /// bar never waits on it.</summary>
         private const float SpeakCps = 20f;
-        private const float WalkSpeed = 340f;       // walk-in speed (ref px/s) — slightly slower, per the notes (P15)
+        /// <summary>Walk-in speed, in HUD units a second. MEASURED against the art rather
+        /// than felt out: the 2026-08-19 walk is six frames — two strides — and a stride
+        /// covers about 40 art px, so a cycle carries the figure 80 art px. Played at
+        /// WalkFps the cycle takes a second, which puts the floor at 160 HUD units a second.
+        /// The old 340 moved the ground at twice the feet, and no amount of frames would
+        /// have fixed that: it was the floor that was wrong, not the drawing.
+        ///
+        /// 90 now, because the walk was re-cut with SMALL STEPS (the author: "daha küçük
+        /// adımlarla"): nine frames, two strides, and a short stride carries about 22 art
+        /// px — 44 a cycle, 88 HUD units a second. The floor follows the drawing, always,
+        /// and never the other way round.</summary>
+        private const float WalkSpeed = 90f;
+        /// <summary>How far out from the stool the arrival ease begins, and how slow it
+        /// gets there. Both the floor and the cycle are scaled by it — see AdvanceWalkIn.</summary>
+        private const float ArrivalEase = 260f, ArrivalPace = 0.45f;
+        /// <summary>Frames a second for the walk: nine frames at nine is one cycle, two
+        /// strides, a second — the pace WalkSpeed is measured against. Re-read this
+        /// whenever the walk is re-cut; it is the drawing's frame count, not a taste.</summary>
+        private const float WalkFps = 9f;
         private const float ExitSpeed = 560f;       // walk-out speed (ref px/s), back off the right edge
         private const float OffscreenMargin = 150f; // how far past the right edge they start/finish
         private const float OrderAnimSeconds = 2.4f;               // the one-shot "placing the order" beat
@@ -201,8 +219,8 @@ namespace LastCall.UI
             //
             // Head rows and hold frames are MEASURED by Tools/patron_ship.py off the
             // shipped frames — never typed by hand, and re-measured whenever the art moves.
-            ("clubgirl", 7f, 0f, 4, 6),
-            ("heavyset", 13f, 0f, 5, 5),
+            ("clubgirl", 24f, 0f, 4, 6),
+            ("heavyset", 25f, 0f, 5, 5),
         };
         /// <summary>
         /// The papers for a face — name, age, country, flag — read from the cast file.
@@ -269,6 +287,11 @@ namespace LastCall.UI
             public DirtyGlass Dirty;         // the empty glass left on this stool (D2)
             public RectTransform DirtyProp;  // its clickable prop on the counter
             public float WalkT;              // 0..1 walk-in progress
+            public float WalkPace;           // 1 at the door, ArrivalPace at the stool
+            public bool SawRight, SawLeft;   // was a neighbour there last frame
+            public bool Greeting;            // playing the one-shot glance at a newcomer
+            public bool GreetRight;          // which way that glance goes
+            public float GreetT;             // how far into it
             public bool Exiting;             // playing the leave animation
             public float ExitT;              // 0..1 leave progress
             public bool ExitStorm;           // stormed off (angry exit) vs served (calm)
@@ -2820,10 +2843,17 @@ namespace LastCall.UI
             if (view.WalkT < 1f)
             {
                 float dist = Mathf.Max(1f, entryX - view.SeatX);
-                view.WalkT = Mathf.Min(1f, view.WalkT + Time.deltaTime * WalkSpeed / dist);
-                // CONSTANT speed, no ease (P15, the notes): the old ease-out meant the ground
-                // slid fast under slow feet at the door and slow under fast feet at the stool —
-                // the walk cycle only reads as walking when the floor moves at one rate.
+                // ARRIVING SLOWS DOWN (2026-08-19, the author: "karakterler koltuğuna
+                // yaklaşınca yürüme hızı biraz yavaşlamalı"). An ease-out lived here once and
+                // was removed for a good reason, written down at the time: the ground slid
+                // fast under slow feet, because only the FLOOR was easing. So the ease is
+                // back with the missing half — WalkPace scales the walk cycle by exactly the
+                // same factor it scales the speed, and the feet stay on the floor at every
+                // pace. Nothing about the cycle is retimed; it is simply played slower.
+                float left = (1f - view.WalkT) * dist;
+                view.WalkPace = Mathf.Lerp(ArrivalPace, 1f, Mathf.Clamp01(left / ArrivalEase));
+                view.WalkT = Mathf.Min(1f,
+                    view.WalkT + Time.deltaTime * WalkSpeed * view.WalkPace / dist);
                 view.Root.anchoredPosition =
                     new Vector2(Mathf.Lerp(entryX, view.SeatX, view.WalkT), CounterLineY);
                 view.Group.alpha = Mathf.Clamp01(view.WalkT * 4f);
@@ -2905,7 +2935,9 @@ namespace LastCall.UI
             else if (view.OrderAnimLeft > 0f) { clip = PatronClip.Order; t = OrderAnimSeconds - view.OrderAnimLeft;
                                                 view.OrderAnimLeft -= Time.deltaTime; }
             else                              { clip = PatronClip.Idle;  t = view.AnimClock; }
-            view.AnimClock += Time.deltaTime;
+            // The clock the walk is played on runs at the pace the figure is moving, so an
+            // arriving customer's feet slow with the floor instead of skating on it.
+            view.AnimClock += Time.deltaTime * (seated ? 1f : Mathf.Max(0.05f, view.WalkPace));
 
             // A seated customer's idle is a STILL frame, so the life in it comes from where
             // they are looking. This runs only in the idle branch — somebody speaking their
@@ -2931,6 +2963,10 @@ namespace LastCall.UI
         private const float GlanceTurnSeconds = 0.5f;
         /// <summary>How often an unattended customer looks around, and for how long.</summary>
         private const float GlanceEvery = 7f, GlanceLookSeconds = 1.5f;
+        /// <summary>How long they hold the look at somebody who just sat down before
+        /// facing front again. Long enough to read as having looked, short enough that
+        /// a bar of six is not a room of people staring at each other.</summary>
+        private const float GreetHoldSeconds = 1.3f;
         /// <summary>The frame the SMALL idle glance stops at. The same clip's measured hold
         /// frame is the full turn; this is a fraction of the way there, which is what makes
         /// looking around read as different from looking AT somebody.</summary>
@@ -2952,30 +2988,48 @@ namespace LastCall.UI
             if (look == null) return;
             bool right = Occupied(view.Index + 1), left = Occupied(view.Index - 1);
 
-            float clock = view.AnimClock + view.Index * 1.7f;
-            bool useRight = right && !left ? true
-                          : left && !right ? false
-                          : Mathf.FloorToInt(clock / GlanceEvery) % 2 == 0;
+            // Somebody SITTING DOWN is the event, not somebody being there: the glance is a
+            // one-shot on the rising edge, and it ends by coming back (2026-08-19, the
+            // author: "bakma animasyonu bittikten sonra normal pozisyona geri dönmeli").
+            // Held forever, it stopped being a glance and became a pose.
+            if (right && !view.SawRight) { view.Greeting = true; view.GreetRight = true;  view.GreetT = 0f; }
+            else if (left && !view.SawLeft) { view.Greeting = true; view.GreetRight = false; view.GreetT = 0f; }
+            view.SawRight = right; view.SawLeft = left;
+
+            bool useRight = view.Greeting ? view.GreetRight
+                          : Mathf.FloorToInt((view.AnimClock + view.Index * 1.7f) / GlanceEvery) % 2 == 0;
             var want = useRight ? PatronClip.LookRight : PatronClip.LookLeft;
-            if (!look.Clips.TryGetValue(want, out var frames) || frames.Length == 0) return;
+            if (!look.Clips.TryGetValue(want, out var frames) || frames.Length == 0)
+            {
+                view.Greeting = false;
+                return;
+            }
             int hold = Mathf.Clamp(useRight ? look.HoldRight : look.HoldLeft, 1, frames.Length - 1);
 
-            if (right || left)
+            if (view.Greeting)
             {
-                // Turned toward them and held: the swing plays once and stops at the
-                // measured far end, because some of these clips swing back on their own.
-                view.NeighbourT += Time.deltaTime;
-                frame = Mathf.Min(hold, Mathf.FloorToInt(view.NeighbourT / GlanceTurnSeconds * (hold + 1)));
+                view.GreetT += Time.deltaTime;
+                float outT = GlanceTurnSeconds, backAt = outT + GreetHoldSeconds;
+                if (view.GreetT >= backAt + GlanceTurnSeconds) { view.Greeting = false; return; }
+                float u = view.GreetT < outT ? view.GreetT / outT
+                        : view.GreetT < backAt ? 1f
+                        : 1f - (view.GreetT - backAt) / GlanceTurnSeconds;
+                // Held at the MEASURED far end rather than the clip's last frame: some of
+                // these clips swing back to the front on their own, and holding their end
+                // would hold a face looking straight ahead.
+                frame = Mathf.Clamp(Mathf.RoundToInt(u * hold), 0, hold);
                 clip = want;
                 return;
             }
-            view.NeighbourT = 0f;
 
-            // Alone: still for most of the cycle, then a small look out and back.
-            float u = Mathf.Repeat(clock, GlanceEvery);
-            if (u >= GlanceLookSeconds) return;                 // the still frame, which is idle
+            // Nobody just arrived: still for most of a slow cycle, then a small look out and
+            // back. The clock carries a phase off the seat index — six customers glancing in
+            // unison would read as a machine, and a phase is free where a random number
+            // would have to be plumbed through RunRng to stay deterministic.
+            float t = Mathf.Repeat(view.AnimClock + view.Index * 1.7f, GlanceEvery);
+            if (t >= GlanceLookSeconds) return;                 // the still frame, which is idle
             int small = Mathf.Min(GlanceSmallFrame, frames.Length - 1);
-            float g = u / GlanceLookSeconds;
+            float g = t / GlanceLookSeconds;
             int f = g < 0.28f ? Mathf.FloorToInt(g / 0.28f * (small + 1))
                   : g > 0.72f ? Mathf.FloorToInt((1f - g) / 0.28f * (small + 1))
                   : small;
@@ -3033,7 +3087,9 @@ namespace LastCall.UI
             // slowly). The order clip is somebody speaking a sentence, not miming one:
             // its five frames at 7fps took most of a second per syllable. Idle is still a
             // breath rather than a fidget, just not a sigh.
-            float fps = clip == PatronClip.Walk ? 10f : clip == PatronClip.Order ? 12f : 3.5f;
+            // 6, not 10: at ten frames a second a six-frame cycle is three steps a second,
+            // which is a jog. One cycle a second is a walk (2026-08-19).
+            float fps = clip == PatronClip.Walk ? WalkFps : clip == PatronClip.Order ? 12f : 3.5f;
             return Mathf.FloorToInt(t * fps) % n;
         }
 
