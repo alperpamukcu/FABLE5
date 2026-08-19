@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -43,7 +43,6 @@ namespace LastCall.UI
         /// <summary>The bar's standing (v5 P12): the average, then five filled/empty stars.
         /// Replaces the TONIGHT satisfaction bar (D3) — reputation is what the player steers
         /// by now, and it carries between nights instead of resetting every morning.</summary>
-        private Text _ratingText;
         private RectTransform _starsFill;
         private SegmentClock _clock;      // the hour, drawn as a readout and not as a word
         private Image _neonTube, _neonBloom;       // the beam's own light, and the state light
@@ -239,6 +238,12 @@ namespace LastCall.UI
             // shipped frames — never typed by hand, and re-measured whenever the art moves.
             ("clubgirl", 7f, 0f, 4, 6),
             ("heavyset", 13f, 0f, 5, 5),
+            // The second pair, drawn to the same rig and MEASURED into the same bands
+            // rather than eyeballed into them (Tools/patron_trial_gen.judge prints all
+            // three): head-to-body inside the cast's own 0.112–0.166, silhouette under
+            // 72% dark, and 47 and 51 colours against a cast that runs 37–57.
+            ("silkwoman", 6f, 0f, 8, 5),
+            ("pastelman", 2f, 0f, 4, 5),
         };
         /// <summary>
         /// The papers for a face — name, age, country, flag — read from the cast file.
@@ -2518,14 +2523,15 @@ namespace LastCall.UI
                 : run.CrowdToday == WealthTier.Broke ? "TONIGHT · BROKE CROWD" : "TONIGHT · REGULARS";
             _crowdText.color = last ? UITheme.Magenta[4]
                 : run.CrowdToday == WealthTier.HighRoller ? UITheme.Magenta[4]
-                : run.CrowdToday == WealthTier.Broke ? UITheme.ViceRed[3] : UITheme.Cream[2];
+                : run.CrowdToday == WealthTier.Broke ? UITheme.ViceRed[3] : UITheme.Cream[3];
 
-            // The standing, as a number and as a row of stars. A half-lit star is a real
-            // half: the average is continuous, and rounding it to whole stars would hide
-            // exactly the movement the player is trying to cause.
+            // The standing, as a row of stars and NOTHING ELSE (2026-08-19, the author:
+            // "0.0 neden gösteriliyor, daha çok görsel bir şerit olmalı"). The number that
+            // read beside them is gone: the fill IS the reading. A half-lit star is a real
+            // half — the average is continuous, and the mask's width carries it exactly,
+            // so nothing legible was lost; the decimal lives on in the ledger and the shop,
+            // where a number is being compared to another number.
             double stars = run.Rating.Average;
-            _ratingText.text = stars.ToString("0.0");
-            // A 1.3 is 1.3 stars of amber: the mask's width IS the rating (the author).
             _starsFill.sizeDelta = new Vector2((float)(stars / 5.0) * _ratingStars.Length * StarGap, 0);
         }
 
@@ -5404,19 +5410,29 @@ namespace LastCall.UI
         }
 
         // ── the service log (dev tooling, 2026-07-31) ────────────────────────────
-        // Top-left, always on for now: one line per service event — what was ordered, what
-        // the judge said and WHY it scored the way it did (match, spec, fill, craft), what
-        // it paid, and the stars it left. The author's in-play instrument for the balance
-        // work: the sim report says what 200 runs did; this says what THIS serve just did.
+        // Top-left: one line per service event — what was ordered, what the judge said and
+        // WHY it scored the way it did (match, spec, fill, craft), what it paid, and the
+        // stars it left. The author's in-play instrument for the balance work: the sim
+        // report says what 200 runs did; this says what THIS serve just did.
+        //
+        // Folded behind its own key since 2026-08-19 (the author: the sheet sat over the
+        // room and hid the scene). Closed by default; the lines keep accumulating while it
+        // is shut, so opening it shows the night so far, not a blank page.
 
         private Text _serviceLog;
+        private RectTransform _serviceLogPanel;
+        private bool _serviceLogOpen;   // closed by default — the sheet covers the room
         private readonly List<string> _serviceLogLines = new List<string>();
         private const int ServiceLogMax = 9;
 
         private void BuildServiceLog(RectTransform root)
         {
-            var panel = NewRect("ServiceLog", root);
-            Place(panel, new Vector2(0, 1), new Vector2(430, 150), new Vector2(10, -66));
+            // The key stays put under the fascia; only the sheet below it comes and goes.
+            NewButton(root, "LOG", new Vector2(0, 1), new Vector2(44, 20),
+                new Vector2(10, -66), UITheme.Night[2], ToggleServiceLog);
+
+            var panel = _serviceLogPanel = NewRect("ServiceLog", root);
+            Place(panel, new Vector2(0, 1), new Vector2(430, 150), new Vector2(10, -90));
             panel.pivot = new Vector2(0, 1);
             var bg = panel.gameObject.AddComponent<Image>();
             bg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.55f);
@@ -5424,6 +5440,13 @@ namespace LastCall.UI
             _serviceLog = NewText("Lines", panel, _body, 8, TextAnchor.UpperLeft, UITheme.TextSecondary);
             _serviceLog.supportRichText = true;
             Stretch(_serviceLog.rectTransform, Vector2.zero, Vector2.one, new Vector2(6, 4), new Vector2(-6, -4));
+            panel.gameObject.SetActive(_serviceLogOpen);
+        }
+
+        private void ToggleServiceLog()
+        {
+            _serviceLogOpen = !_serviceLogOpen;
+            if (_serviceLogPanel != null) _serviceLogPanel.gameObject.SetActive(_serviceLogOpen);
         }
 
         private void LogService(string line)
@@ -5712,13 +5735,19 @@ namespace LastCall.UI
         /// upper one for what a reading IS, the lower one for what it SAYS — and every
         /// item on the beam is placed against one of them, left to right.</summary>
         private const float TopBarH = 54f, CapY = 12f, ReadY = -9f;
-        // 32 — 2× of the 16-pixel drawing, the only step up there is (2026-08-14, the author:
-        // "yıldız barı ortalasın ve boyutu büyütülsün"). It was cut to 16 an hour earlier for
-        // a real reason: at 32 the row climbed into the caption above it. The reason was right
-        // and the fix was wrong — the answer was never to shrink the meter that carries the
-        // whole progression (see GDD 26 §12), it was to stop making the standing obey a grid
-        // built for one-line readings. It is a BLOCK now: a caption centred over a row, the
-        // block as a whole centred in the beam's height, and its own internal spacing.
+
+        /// <summary>Not black: a display's dark is the panel's own colour seen through a
+        /// tint. ONE constant for the board's two glasses — the hour's and the week's — so
+        /// the instruments cannot disagree about what an unlit readout looks like. (A raw
+        /// colour on purpose: no Night token is this blue-black, and dimming one is not it.)</summary>
+        private static readonly Color DisplayDark = new Color(0.031f, 0.055f, 0.075f, 1f);
+        // 32 — the 3D star's own native size, drawn at 1× (2026-08-19, the author:
+        // "Yıldızlarda 3 boyutlu yıldız iconlarından olsun"): Items/star3d.png is a
+        // PixelLab take quantized onto the Amber/Malt ladder, generated AT 32 because
+        // that is the size the row draws at. The earlier 32 was the flat 16px star at
+        // 2×; the size held, the drawing under it changed. Size history: cut to 16 once
+        // ("row climbed into its caption"), restored ("yıldız barı ortalasın ve boyutu
+        // büyütülsün") by giving the standing its own block instead.
         private const float StarSize = 32f, StarGap = 34f;
 
         /// <summary>A full-width band `h` units tall, `down` units below the parent's top
@@ -7064,8 +7093,10 @@ namespace LastCall.UI
             return string.Format("NA {0:0000} {1:0000}", h % 10000, h / 10000 % 10000);
         }
 
-        // The week (the author's calendar): six open days, Tuesday through Sunday — Mondays
-        // the bar is dark and the calendar simply skips them. It lives in Core now
+        // The week (the author's calendar): six open days, Monday through Saturday —
+        // SUNDAY the bar is dark (BarCalendar.OpenNights; this comment said the opposite
+        // week for a while, which is exactly the drift the next line exists to prevent).
+        // It lives in Core now
         // (2026-08-13): the story schedules its guests by the weekend, so the week became a
         // RULE, and a calendar the HUD kept to itself would be a second one, free to disagree
         // with the game about what day it is. The words are unchanged.
@@ -7208,105 +7239,155 @@ namespace LastCall.UI
             return val;
         }
 
-        // ── the week, as a marquee (2026-08-14, the author: "takvim tasarımı kötü, kutu
-        // kutu") ────────────────────────────────────────────────────────────────
+        // ── the week, as an instrument (2026-08-19, the author: "Haftalık takvim
+        // göstergesi daha profesyonelce olmalı") ────────────────────────────────
         //
-        // The first cut was seven filled cells in a row with the day inside each — a table,
-        // and a table is the one thing a bar's wall never has on it. This is signage: a wire
-        // strung across the beam with a bulb hanging under it for every night, and the day's
-        // three letters under that. Tonight's bulb burns and its glow is on; the nights
-        // already worked are dull; the ones ahead are dark glass; SUNDAY has no bulb fitted
-        // at all, because the bar does not open and a dim lamp still says "later". A night
-        // the story is due on burns magenta instead of amber — one bulb, one meaning.
+        // Third cut. The first was seven filled cells — a table, thrown out as "kutu kutu".
+        // The second was signage: bulbs hanging off a wire strung across the open beam, and
+        // the wire is what the author is calling unprofessional now — it reads as bunting,
+        // and its parts (a floating rail, stems, letters with nothing under them) sit ON
+        // nothing. What a bar's wall actually mounts is a PANEL: this is the clock's own
+        // case and glass at calendar width, the week counter reading at its head where the
+        // instrument names its count, and the seven nights as lamps in a slotted row — the
+        // same indicator-lamp grammar the seven-segment hour already speaks. Slot rules are
+        // joinery, not cells: nothing is boxed, the glass is one surface.
         //
-        // It is the same `BarCalendar` the rules count in: the marquee cannot say Friday
+        // What each slot says is unchanged from the marquee (the grammar survived the
+        // furniture): tonight's lamp burns and its glow is on, worked nights are dull glass,
+        // nights ahead wait dark, SATURDAY's fitting is the star (shape says what the night
+        // is, light says when), and SUNDAY carries shutter slats where the others carry a
+        // lamp, because a bar that does not open has its shutter down, not a dimmer bulb.
+        //
+        // It is the same `BarCalendar` the rules count in: the panel cannot say Friday
         // while the arc thinks it is Thursday, because neither is doing its own arithmetic.
 
         private readonly List<(Image bulb, Image glow, Text name)> _weekCells =
             new List<(Image, Image, Text)>();
         private Text _weekLabel;
         private int _weekShown = -1;
-        private int _vipCell = -1;    // which fitting on the wire is the star
+        private int _vipCell = -1;    // which fitting in the row is the star
 
-        // CENTRED, AND TWICE THE SIZE IT WAS (2026-08-14, the author: "hafta göstergesi ufak
-        // ve sönük kalıyor"). At a 30-unit step with 8pt letters it was a row of grey specks
-        // in the middle of an empty beam; the board now reads as three panels — the
-        // instrument, the week, the standing — with the week owning the middle instead of
-        // hiding at the left end of a gap.
+        // The instrument's own grid, in plate-local units off its left edge. 52 of pitch
+        // is what three Silkscreen letters at 16 actually need ("hafta göstergesi ufak ve
+        // sönük kalıyor" bought the size; the pitch keeps it). The head column holds the
+        // counter; a display rule divides it from the nights.
+        //
+        // ART-BOUND (2026-08-19): the numbers fit Items/cal_plate.png — 224×22 drawn at
+        // exactly 2×, teal end caps ~8 art px wide — and a new plate re-measures them.
+        // 64 = clear of the left cap plus the head column; 448 = the drawing's own width.
+        private const float WeekPlateW = 448f, WeekPlateH = 44f;
         private const float WeekStep = 52f;
-        private static float WeekLeft => 640f - BarCalendar.WeekColumns.Length * WeekStep * 0.5f;
+        private const float WeekHeadCx = 30f;    // the counter column's centre
+        private const float WeekRuleX = 56f;     // the display rule after it
+        private const float WeekDaysX = 64f;     // where the first slot begins
+        private const float WeekLampY = 8f;      // lamp row centre, on the plate
+        private const float WeekNameY = -7f;     // letter row centre, on the plate
 
         private void BuildWeekStrip(RectTransform top)
         {
             var names = BarCalendar.WeekColumns;
+            // THE PLATE IS GENERATED, AND THAT IS A WRITTEN EXCEPTION (2026-08-19, the
+            // author: "Haftalık takvim için pixellabden arkaplan oluştur"). Chrome is
+            // never generated in this project — this one piece is, on the author's own
+            // sentence, and the terms of the licence are the usual ones: produced AT the
+            // size it draws at, quantized to the palette (Night/ClubBlue/Cyan), and it
+            // carries NO information — every lamp, letter and seam is still code on top.
+            // Tools/topbar_gen.py is the producer; a new plate is a re-run, not a repaint.
+            var glass = NewRect("WeekPlate", top);
+            glass.anchorMin = glass.anchorMax = glass.pivot = new Vector2(0.5f, 0.5f);
+            glass.sizeDelta = new Vector2(WeekPlateW, WeekPlateH);
+            glass.anchoredPosition = Vector2.zero;
+            var glassImg = glass.gameObject.AddComponent<Image>();
+            var plate = ItemArt.Load("cal_plate");
+            if (plate != null) glassImg.sprite = plate;
+            else glassImg.color = DisplayDark;               // wrong-looking, not invisible
+            glassImg.raycastTarget = false;
 
-            // The wire the bulbs hang from. It stops where the WORK stops — six nights, not
-            // seven. The bar does not open on Sunday, so the marquee does not reach it.
-            var rail = NewRect("Rail", top);
-            Place(rail, new Vector2(0, 0.5f), new Vector2(BarCalendar.OpenNights * WeekStep, 1f),
-                new Vector2(WeekLeft, CapY + 11f));
-            rail.pivot = new Vector2(0, 0.5f);
-            var railImg = rail.gameObject.AddComponent<Image>();
-            railImg.color = UITheme.Night[3]; railImg.raycastTarget = false;
+            // The head: what the instrument counts, then the count. The caption is the
+            // small line, the number is the reading — CapY/ReadY's own logic, folded to
+            // the glass's 32 units.
+            var cap = NewText("WeekCap", glass, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[3]);
+            Place(cap.rectTransform, new Vector2(0, 0.5f), new Vector2(52, 12),
+                new Vector2(WeekHeadCx, 9f));
+            cap.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            cap.horizontalOverflow = HorizontalWrapMode.Overflow;
+            cap.text = "WEEK";
+
+            _weekLabel = NewText("Week", glass, _display, 16, TextAnchor.MiddleCenter, UITheme.Cyan[3]);
+            Place(_weekLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(52, 18),
+                new Vector2(WeekHeadCx, -6f));
+            _weekLabel.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            _weekLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            // The display rule between the count and the nights — on the glass, not the
+            // case, because it separates what the display says (the clock's old divider,
+            // moved to the instrument that still has two readings).
+            var rule = NewRect("Divide", glass);
+            Place(rule, new Vector2(0, 0.5f), new Vector2(1, 22), new Vector2(WeekRuleX, 0));
+            var ruleImg = rule.gameObject.AddComponent<Image>();
+            ruleImg.color = new Color(UITheme.Cyan[4].r, UITheme.Cyan[4].g, UITheme.Cyan[4].b, 0.22f);
+            ruleImg.raycastTarget = false;
 
             for (int i = 0; i < names.Length; i++)
             {
-                float cx = WeekLeft + i * WeekStep + WeekStep * 0.5f;
+                float cx = WeekDaysX + i * WeekStep + WeekStep * 0.5f;
                 bool open = i < BarCalendar.OpenNights;
 
-                // The stem it hangs by. Wire between the rail and the glass is the whole
-                // difference between a lamp on a wire and a dot floating under a line.
-                var stem = NewRect("S" + i, top);
-                Place(stem, new Vector2(0, 0.5f), new Vector2(1, 6), new Vector2(cx, CapY + 8f));
-                stem.pivot = new Vector2(0.5f, 0.5f);
-                var simg = stem.gameObject.AddComponent<Image>();
-                simg.color = UITheme.Night[3]; simg.raycastTarget = false;
-                simg.enabled = open;                       // nothing hangs over the day off
+                // The slot rule. Joinery between the nights, quieter than the head's
+                // display rule — a panel of seven slots, not seven boxes.
+                if (i > 0)
+                {
+                    var seam = NewRect("Seam" + i, glass);
+                    Place(seam, new Vector2(0, 0.5f), new Vector2(1, 20),
+                        new Vector2(WeekDaysX + i * WeekStep, 0));
+                    seam.pivot = new Vector2(0.5f, 0.5f);
+                    var seamImg = seam.gameObject.AddComponent<Image>();
+                    seamImg.color = new Color(UITheme.Night[3].r, UITheme.Night[3].g,
+                        UITheme.Night[3].b, 0.8f);
+                    seamImg.raycastTarget = false;
+                }
 
-                // THE SHUTTER (the author: "pazar gününün tatil olduğu anlaşılsın"). The day
-                // off had been saying so by ABSENCE — no lamp — which reads as "not yet",
-                // not as "closed". A closed bar has its shutter down, so Sunday gets one:
-                // four slats where the others carry a light. It is the same answer the room
-                // gives; nothing here is a greyed-out cell.
+                // THE SHUTTER (the author: "pazar gününün tatil olduğu anlaşılsın"): slats
+                // where the others carry a lamp. A closed bar has its shutter down; nothing
+                // here is a greyed-out cell.
                 if (!open)
                     for (int s = 0; s < 4; s++)
                     {
-                        var slat = NewRect("Shut" + s, top);
+                        var slat = NewRect("Shut" + s, glass);
                         Place(slat, new Vector2(0, 0.5f), new Vector2(22, 2),
-                            new Vector2(cx, CapY + 6f - s * 4f));
+                            new Vector2(cx, WeekLampY + 6f - s * 4f));
                         slat.pivot = new Vector2(0.5f, 0.5f);
                         var slatImg = slat.gameObject.AddComponent<Image>();
                         slatImg.color = UITheme.Night[3]; slatImg.raycastTarget = false;
                     }
 
                 // Both drawn at the size their sprite is drawn at — a 16px circle squeezed
-                // into 10 units comes back with a lumpy edge, and this is 8px art.
-                var glow = NewRect("G" + i, top);
-                Place(glow, new Vector2(0, 0.5f), new Vector2(24, 24), new Vector2(cx, CapY));
+                // into 10 units comes back with a lumpy edge, and this is 8px art. The glow
+                // overruns the glass by a few units on purpose; light does.
+                var glow = NewRect("G" + i, glass);
+                Place(glow, new Vector2(0, 0.5f), new Vector2(24, 24), new Vector2(cx, WeekLampY));
                 glow.pivot = new Vector2(0.5f, 0.5f);
                 var gimg = glow.gameObject.AddComponent<Image>();
                 gimg.sprite = ChromeArt.LampGlow();
                 gimg.raycastTarget = false; gimg.enabled = false;
 
-                // THE NIGHT A NAME COMES IS A STAR ON THE WIRE (the author: "cumartesi günleri
-                // vip hikaye müşterisi geleceği belirtilsin"). It was first drawn as a mark
-                // hung ABOVE the rail and the beam clipped it — there is no room above a
-                // marquee. So Saturday's LAMP is the star: one fitting on the wire is a
-                // different shape from the other five, every week, whether or not a beat is
-                // booked. Shape says what the night is; the light still says when it is.
+                // THE NIGHT A NAME COMES IS THE STAR FITTING (the author: "cumartesi günleri
+                // vip hikaye müşterisi geleceği belirtilsin"): Saturday's lamp is a star,
+                // every week, whether or not a beat is booked. Shape says what the night is;
+                // the light still says when it is.
                 bool vip = open && (BarNight)i == BarCalendar.VipNight;
-                var bulb = NewRect("B" + i, top);
-                Place(bulb, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(cx, CapY));
+                var bulb = NewRect("B" + i, glass);
+                Place(bulb, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(cx, WeekLampY));
                 bulb.pivot = new Vector2(0.5f, 0.5f);
                 var bimg = bulb.gameObject.AddComponent<Image>();
                 bimg.sprite = vip ? ChromeArt.Mark("star") : ChromeArt.Lamp();
                 bimg.color = UITheme.Night[2]; bimg.raycastTarget = false;
                 if (vip) _vipCell = i;
 
-                // 16, not 8: the day is a WORD now, not a caption under a light.
-                var name = NewText("N" + i, top, _body, 16, TextAnchor.MiddleCenter, UITheme.TextSecondary);
+                // 16, not 8: the day is a WORD, not a caption under a light.
+                var name = NewText("N" + i, glass, _body, 16, TextAnchor.MiddleCenter, UITheme.TextSecondary);
                 Place(name.rectTransform, new Vector2(0, 0.5f), new Vector2(WeekStep, 18),
-                    new Vector2(cx, ReadY));
+                    new Vector2(cx, WeekNameY));
                 name.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                 name.horizontalOverflow = HorizontalWrapMode.Overflow;
                 name.text = names[i];
@@ -7327,8 +7408,8 @@ namespace LastCall.UI
             if (week != _weekShown)
             {
                 _weekShown = week;
-                // Two short lines on the instrument's own glass: the word, then the count.
-                _weekLabel.text = $"WEEK\n{week:00}";
+                // Just the count: the word WEEK is the instrument's own printed caption now.
+                _weekLabel.text = $"{week:00}";
             }
 
             // Which nights the story is coming on, THIS week. A beat due in a later week
@@ -7366,11 +7447,13 @@ namespace LastCall.UI
                 // absent — when they are the half of the week the player is planning around.
                 // They are cream now; the nights already worked are the dim ones, because a
                 // night that is spent is the only one on the wire with nothing left to say.
+                // Cream[3], one step up from the first cut (2026-08-19, the author:
+                // "yazılar okumuyor"): [2] on the dark glass was the beam's own murk.
                 name.color = closed ? UITheme.Night[4]
                     : storyNight ? UITheme.Magenta[4]
                     : isTonight ? UITheme.Amber[4]
                     : worked ? UITheme.Night[4]
-                    : UITheme.Cream[2];
+                    : UITheme.Cream[3];
             }
         }
 
@@ -8003,19 +8086,25 @@ namespace LastCall.UI
             // anchored where they were placed inside the frame.
             var top = NewRect("TopBar", root);
             Stretch(top, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -TopBarH), Vector2.zero);
-            // THE BOARD IS A BEAM, NOT A ROW OF BOXES (2026-08-14, the author: "takvim
-            // tasarımı kötü, kutu kutu ai tarafından yapıldığı çok belli ... üst barı
-            // tamamen yenile"). What was there: five bordered slabs side by side, each
-            // holding a caption over a value, every one a different height — the shape a
-            // screen takes when nothing decided what it was. What is here now is ONE
-            // object with a lit top face and a front that falls away from it, and the
-            // readings sit ON it the way things sit on a shelf:
-            //   · the hour is an INSTRUMENT — the only body left up here, and it earns it
-            //   · the week is a MARQUEE — bulbs on a wire over their letters, no cells
-            //   · the standing is FIVE STARS on the beam itself, with nothing behind them
-            //   · one key at the far end; NEW RUN moved inside it, where a thing that ends
-            //     the run you are playing belongs
-            // Everything lines up on CapY and ReadY, all the way across.
+            // THE BOARD IS A BEAM CARRYING INSTRUMENTS (2026-08-19, the author: "bu
+            // şeriti tekrardan tasarla ... hepsinin yeri profesyonelce konumlandırılmalı.
+            // Haftalık takvim göstergesi daha profesyonelce olmalı"). The 2026-08-14 cut
+            // ("kutu kutu" refused) put ONE case on the beam and let the week float as
+            // bulbs on a wire — and the wire is what the author is looking at now: signage
+            // reads as decoration, not as a panel. So the beam still runs edge to edge with
+            // its lit face and its neon foot, and what stands on it is now TWO matched
+            // instruments and one jewel:
+            //   · the HOUR — a case and a dark glass, the digits hand-drawn pixel masks
+            //     (SegmentClock, 2026-08-19: "gerçekten kodlar pixel pixel yapsak")
+            //   · the WEEK — a GENERATED plate ("pixellabden arkaplan oluştur", the one
+            //     written exception to chrome-is-never-generated): teal-capped navy metal,
+            //     the counter at its head, the seven nights as lamps in a slotted row
+            //     (BuildWeekStrip); calendar data lives in the calendar instrument
+            //   · the STANDING — five 3D gold stars straight on the beam (their box was
+            //     refused 2026-08-14 and stays refused; the vice-fade tint lasted one
+            //     build and was refused too), no number
+            //   · one key at the far end; NEW RUN lives inside it
+            // Everything else stands directly on the beam, on one centre line.
             var fascia = Panel(top, "Fascia", Vector2.zero, Vector2.one,
                 Vector2.zero, Vector2.zero, UITheme.Night[1]);
             BleedWidth.Apply(fascia);
@@ -8053,39 +8142,28 @@ namespace LastCall.UI
             // Then it was too small to read ("saat okunaklı değil"), so the case is the full
             // height of the beam and the digits are 28 units tall — the biggest thing on the
             // board, which is right, because the night is measured in it. See SegmentClock.
-            // THE HOUR AND THE WEEK ARE ONE INSTRUMENT (2026-08-14, the author: "saat ve
-            // kaçıncı hafta olduğu düzgün bir sayfa düzeninde olsun"). They were two things:
-            // a case at the far left and the words WEEK 1 floating thirty units away in a
-            // different colour, belonging to nothing. They are both the answer to WHEN, so
-            // they read off one glass — the time large, a rule, then the week counter small
-            // beside it, the way a panel-mounted display carries its secondary count.
-            var clockCase = Case(top, "Clock", new Vector2(0, 0.5f), new Vector2(190, 44),
+            // THE WEEK MOVED OUT (2026-08-19). It shared this glass for a build ("saat ve
+            // kaçıncı hafta olduğu düzgün bir sayfa düzeninde olsun", 2026-08-14) and came
+            // out as a two-line caption squeezed against the digits — the cramped corner the
+            // author is calling unprofessional. The week is calendar data, and the calendar
+            // is its own instrument now, so the counter reads at ITS head and this case
+            // closed down around the one thing it holds: the case is the digits plus the
+            // same 16 units of margin the week instrument keeps, and nothing else.
+            var clockCase = Case(top, "Clock", new Vector2(0, 0.5f), new Vector2(142, 44),
                 new Vector2(12, 0), UITheme.Night[2]);
 
             var glass = NewRect("Glass", clockCase);
-            Place(glass, new Vector2(0.5f, 0.5f), new Vector2(178, 32), Vector2.zero);
+            Place(glass, new Vector2(0.5f, 0.5f), new Vector2(126, 32), Vector2.zero);
             var glassImg = glass.gameObject.AddComponent<Image>();
-            // Not black: a display's dark is the panel's own colour seen through a tint.
-            glassImg.color = new Color(0.031f, 0.055f, 0.075f, 1f);
+            glassImg.color = DisplayDark;
             glassImg.raycastTarget = false;
 
             var digits = NewRect("Digits", glass);
             Place(digits, new Vector2(0, 0.5f), new Vector2(110, 28), new Vector2(8, 0));
-            _clock = new SegmentClock(digits, 22f, 28f, 4f, UITheme.Cyan[4]);
-
-            // The divider between the two readings — on the glass, not on the case, because
-            // it separates what the display SAYS, not what the box holds.
-            var tick = NewRect("Divide", glass);
-            Place(tick, new Vector2(0, 0.5f), new Vector2(1, 22), new Vector2(126, 0));
-            var tickImg = tick.gameObject.AddComponent<Image>();
-            tickImg.color = new Color(UITheme.Cyan[4].r, UITheme.Cyan[4].g, UITheme.Cyan[4].b, 0.22f);
-            tickImg.raycastTarget = false;
-
-            _weekLabel = NewText("Week", glass, _body, 8, TextAnchor.MiddleCenter, UITheme.Cyan[3]);
-            Place(_weekLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(44, 26), new Vector2(134, 0));
-            _weekLabel.rectTransform.pivot = new Vector2(0, 0.5f);
-            _weekLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _weekLabel.lineSpacing = 1.5f;
+            // The metrics stopped being arguments (2026-08-19): the digits are hand-drawn
+            // 11×14 masks at exactly 2× now — see SegmentClock's own header — so the one
+            // size that exists is the drawing's, and passing another would be a lie.
+            _clock = new SegmentClock(digits, UITheme.Cyan[4]);
 
             BuildWeekStrip(top);
 
@@ -8097,24 +8175,21 @@ namespace LastCall.UI
 
             // ── the standing, right: the stars and who they brought in ─────────
             // NO PLATE UNDER THEM (2026-08-14, the author: "yıldızlar hala üst barda kutu
-            // içerisinde gösteriliyor"). Stars are already a shape; boxing them made them a
-            // widget. They stand on the beam, the number reads beside them at display size,
-            // and the crowd names itself on the caption line above — three things on two
-            // rules instead of a panel with contents.
-            // THE STANDING IS A BLOCK, NOT TWO READINGS ON A GRID (2026-08-14, the author:
-            // "yıldız barı ortalasın ve boyutu büyütülsün"). It is the one thing up here that
-            // is about PROGRESS rather than about tonight — it gates the story's guests and
-            // the shelf itself (GDD 26 §12) — so it gets its own small composition: the crowd
-            // named across the top, the meter and its number under it, and the whole thing
-            // centred in the beam so a 32-unit star has somewhere to be.
+            // içerisinde gösteriliyor" — still standing). Stars are already a shape; boxing
+            // them made them a widget. They stand on the beam with the crowd named on the
+            // caption line above.
+            // AND NO NUMBER BESIDE THEM (2026-08-19, the author: "0.0 neden gösteriliyor,
+            // daha çok görsel bir şerit olmalı"). The display-size decimal that shared the
+            // row is gone — the fill fraction says the same thing visually, and the exact
+            // figure still prints where figures belong, in the ledger and the market. The
+            // block is just the five-star run now, right-aligned into the same 40-unit gap
+            // off the key the old block kept.
             const float RightEdge = -14f;                     // where the key ends
             const float BlockRight = RightEdge - 40f;
             float starsW = _ratingStars.Length * StarGap;
-            const float NumberW = 80f;                        // "0.0" at display 24 is 72 wide
-            float blockW = starsW + 10f + NumberW;
 
             var standing = NewRect("Standing", top);
-            Place(standing, new Vector2(1, 0.5f), new Vector2(blockW, TopBarH), new Vector2(BlockRight, 0));
+            Place(standing, new Vector2(1, 0.5f), new Vector2(starsW, TopBarH), new Vector2(BlockRight, 0));
             standing.pivot = new Vector2(1, 0.5f);
 
             // Inside the block: the row sits low enough to clear its own caption and high
@@ -8133,11 +8208,12 @@ namespace LastCall.UI
                 star.sizeDelta = new Vector2(StarSize, StarSize);
                 star.anchoredPosition = new Vector2(i * StarGap + StarGap * 0.5f, 0);
                 var img = star.gameObject.AddComponent<Image>();
-                img.sprite = ItemArt.Load("star");
+                // The socket is the same 3D drawing in dark glass — its own sprite, not a
+                // tint: multiplying the gold star dark turns its facets to mud, and the
+                // socket has to read as the same OBJECT unlit, shading intact.
+                img.sprite = ItemArt.Load("star3d_socket");
                 img.preserveAspect = true; img.raycastTarget = false;
-                // The empty rung is a SOCKET: dark enough that the fill is the message, lit
-                // enough that five of them read as a scale of five even at 0.0.
-                img.color = UITheme.Night[4];
+                img.color = Color.white;
             }
             _starsFill = NewRect("Fill", starsRow);
             _starsFill.anchorMin = new Vector2(0, 0); _starsFill.anchorMax = new Vector2(0, 1);
@@ -8153,20 +8229,19 @@ namespace LastCall.UI
                 star.sizeDelta = new Vector2(StarSize, StarSize);
                 star.anchoredPosition = new Vector2(i * StarGap + StarGap * 0.5f, 0);
                 var img = star.gameObject.AddComponent<Image>();
-                img.sprite = ItemArt.Load("star");
+                // 3D GOLD, BAKED (2026-08-19, the author: "Yıldızlarda 3 boyutlu yıldız
+                // iconlarından olsun fade geçiş rengini beğenmedim"). The vice-fade tint
+                // lasted one build; the fill is the generated star's own gold now, so the
+                // Image tints nothing — colour is IN the sprite, white multiplies clean.
+                img.sprite = ItemArt.Load("star3d");
                 img.preserveAspect = true; img.raycastTarget = false;
-                img.color = UITheme.Amber[3];
+                img.color = Color.white;
                 _ratingStars[i] = img;
             }
 
-            _ratingText = NewText("Rating", standing, _display, 24, TextAnchor.MiddleRight, UITheme.Amber[4]);
-            Place(_ratingText.rectTransform, new Vector2(1, 0.5f), new Vector2(NumberW, 26),
-                new Vector2(0, RowY));
-            _ratingText.horizontalOverflow = HorizontalWrapMode.Overflow;
-
             // Centred over the block it belongs to, not right-aligned to one edge of it.
-            _crowdText = NewText("Crowd", standing, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[2]);
-            Place(_crowdText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(blockW, 12),
+            _crowdText = NewText("Crowd", standing, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[3]);
+            Place(_crowdText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(starsW + 90f, 12),
                 new Vector2(0, CapRowY));
             _crowdText.horizontalOverflow = HorizontalWrapMode.Overflow;
 

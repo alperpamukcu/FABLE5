@@ -16,7 +16,13 @@
   "language": "selective",
   "size": 220,
   "png": "AssetPipeline\\sources\\patron_trial\\selective_neutral.png",
-  "edge_darkness": 64.2
+  "edge_darkness": 64.2,
+  "measured": {
+   "outline": 64.22,
+   "head": 0.153,
+   "colours": 30,
+   "body": 196
+  }
  },
  "selective_bar": {
   "character_id": "6f8ba164-d4ee-4a98-8921-9432d4154723",
@@ -29,7 +35,13 @@
   "language": "lineless",
   "size": 220,
   "png": "AssetPipeline\\sources\\patron_trial\\lineless_neutral.png",
-  "edge_darkness": 64.9
+  "edge_darkness": 64.9,
+  "measured": {
+   "outline": 64.941,
+   "head": 0.142,
+   "colours": 24,
+   "body": 197
+  }
  },
  "lineless_bar": {
   "character_id": "19511c6f-e2cb-4601-a834-9bc6654e4e1d",
@@ -74,7 +86,13 @@
    "drink_a": "d671dff8-898e-4f44-9686-e31479e18636",
    "drink_b": "f5256d25-50d5-4af9-acac-9adb9b2113e5"
   },
-  "edge_darkness": 56.8
+  "edge_darkness": 56.8,
+  "measured": {
+   "outline": 56.75,
+   "head": 0.158,
+   "colours": 57,
+   "body": 203
+  }
  },
  "heavyset_160": {
   "character_id": "3cce9b3b-01f1-428a-9db0-44cf3348d0c9",
@@ -107,20 +125,88 @@
    "drink_a": "0d079270-7a71-4f82-8df0-d65f5b1be934",
    "drink_b": "f8605bd7-f480-4273-8bd0-6c5b84ca1101"
   },
-  "edge_darkness": 54.4
+  "edge_darkness": 54.4,
+  "measured": {
+   "outline": 54.442,
+   "head": 0.147,
+   "colours": 37,
+   "body": 197
+  }
  },
  "pastelman": {
   "character_id": "8afdd7a6-112e-476a-83a9-47fbb0b64380",
   "language": "lineless",
   "size": 220,
   "edge_darkness": 15.6,
-  "png": "AssetPipeline\\sources\\patron_trial\\pastelman.png"
+  "png": "AssetPipeline\\sources\\patron_trial\\pastelman.png",
+  "clips": {
+   "walk": "815798aa-5f03-48fd-af05-98c026c549cc",
+   "look_right": "64063606-36fd-4230-b7b5-bb9e7a3596d7",
+   "look_left": "0a69f555-f5e8-45cc-9de2-ca02998f9748",
+   "order_a": "e03f0511-cac0-47e4-9105-c28d4f3fffa5",
+   "drink_a": "2ddd5e23-261b-4a3b-a4bb-fdc5bc338614",
+   "cheer_a": "3b83a40a-695c-481b-aa56-6e80807880ab",
+   "upset_a": "f1ebda9d-ee93-4c0b-96a4-a83cbad369d3",
+   "order_b": "dc6171b9-73ca-4637-ab48-599828fd0711",
+   "drink_b": "66d21317-5c26-4846-a44b-cffedf8abcfc",
+   "upset_b": "2bd154e6-5f83-43ae-87ea-69dfc3664635",
+   "cheer_b": "9e9f4e6b-7185-4506-b63f-b5d3740b87f0"
+  },
+  "measured": {
+   "outline": 15.59,
+   "head": 0.12,
+   "colours": 51,
+   "body": 208
+  }
  },
  "silkwoman": {
   "character_id": "4b53b96c-1274-48a5-ba35-c1d94cfacf4d",
   "language": "lineless",
   "size": 220,
   "edge_darkness": 37.4,
-  "png": "AssetPipeline\\sources\\patron_trial\\silkwoman.png"
+  "png": "AssetPipeline\\sources\\patron_trial\\silkwoman.png",
+  "clips": {
+   "walk": "02d28b9e-e346-4bb7-ad04-d4e1540b6d36",
+   "look_right": "8ae0bccb-c254-4f17-a3af-38ed3e04f297",
+   "look_left": "52e19c6f-4d8e-4f4f-836e-cf2edad5beac",
+   "order_a": "1cf0a29a-83d0-4a5a-a7d5-27c74bd54891",
+   "drink_a": "91f74241-156e-4c77-82d4-0866ec4da330",
+   "cheer_a": "d524b373-00a1-414c-b32f-185ade4f2127",
+   "upset_a": "417fb142-0822-4759-9825-e13a586771aa",
+   "order_b": "53face96-4c1b-4027-a389-791577c93aed",
+   "drink_b": "e7c7ef51-b3b4-43f0-95c3-56038173d7d4",
+   "cheer_b": "420b96cf-e62a-4a9a-b86c-9caef4430aa1",
+   "upset_b": "53046655-646c-4e08-b369-1b27dd3597aa"
+  },
+  "measured": {
+   "outline": 37.371,
+   "head": 0.162,
+   "colours": 47,
+   "body": 204
+  }
+ },
+ "shaved": {
+  "character_id": "37d81531-bc8f-4888-b40b-fa7aca288169",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 57.065,
+   "head": 0.158,
+   "colours": 42,
+   "body": 203
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\shaved.png"
+ },
+ "silverbob": {
+  "character_id": "bdf9d84c-ad56-40a4-9c9c-f79fddec7d80",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 73.107,
+   "head": 0.152,
+   "colours": 60,
+   "body": 197
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\silverbob.png"
  }
 }

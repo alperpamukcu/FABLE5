@@ -106,7 +106,9 @@ def queue(only=None):
             'size': SIZE,
             'view': VIEW,
             'outline': brief.outline_hint(language),
-            'detail': 'medium detail',
+            # 'high', not 'medium': the cast is drawn on 37-57 colours and a
+            # medium-detail roll came back on 27, which reads flat beside them.
+            'detail': 'high detail',
         })
         # The answer names the id inside a ready-to-paste call - get_character(
         # character_id="...") - so the id is pulled as a UUID, not as "everything after
@@ -172,14 +174,12 @@ def poll():
         if images:
             p = os.path.join(RAW, key + '.png')
             images[0].save(p)
-            ink = edge_darkness(images[0])
-            state[key]['edge_darkness'] = round(ink, 1)
-            if ink > OUTLINE_MAX:
-                print('  %-20s OUTLINE %.0f%% - too inked (cast runs 54-65). Re-roll.'
-                      % (key, ink))
-            print('  %-20s completed -> %s (%dx%d, outline %.0f%%)'
-                  % (key, os.path.basename(p), images[0].width, images[0].height,
-                     edge_darkness(images[0])))
+            st = figure_stats(images[0]) or {}
+            state[key]['measured'] = {k: (round(v, 3) if isinstance(v, float) else v)
+                                      for k, v in st.items()}
+            judge(key, images[0])
+            print('  %-20s completed -> %s (%dx%d)'
+                  % (key, os.path.basename(p), images[0].width, images[0].height))
             state[key]['png'] = os.path.relpath(p, HERE)
             save(state)
         else:
@@ -314,33 +314,101 @@ CUSTOM = {
 
 
 def edge_darkness(im):
-    """What share of the figure's SILHOUETTE is drawn in near-black, as a percentage.
+    """What share of the silhouette is drawn as a KEYLINE, as a percentage.
 
-    The line language is chosen by eye but it cannot be TRUSTED by eye, because PixelLab
-    treats `outline` as soft guidance: the same setting that drew clubgirl at 57% drew
-    silkwoman at 100%, a full black keyline, and the author caught it before I did
-    (2026-08-19: "siyah koyu kontur olmamali, trial lineless_neutral gibi olmali").
-    So it is measured now, and a face outside the cast's band is re-rolled rather than
-    shipped. The band is the cast itself: clubgirl 57, heavyset 54, and the lineless and
-    selective trials both 65 - anything at or near 100 is the inked language, whatever the
-    request said.
+    Not simply "how dark is the edge" - that was the first version and silverbob broke it
+    by wearing a black blazer: a dark garment puts dark pixels on the silhouette without
+    any outline being drawn at all, and she was refused three times for her jacket.
+
+    A keyline is a rim that is darker than the thing it encloses. So an edge pixel counts
+    only when it is near-black AND the pixel a few steps INSIDE the figure is markedly
+    lighter. Black cloth is the same colour as its own interior and scores nothing;
+    an inked figure scores everywhere, including around its face and arms.
+
+    The line language is chosen by eye and cannot be trusted by eye, because PixelLab
+    treats `outline` as soft guidance - the same setting that drew clubgirl drew a later
+    face with a full black keyline (the author: "siyah koyu kontur olmamali").
     """
     px = im.load()
     w, h = im.size
-    edge = dark = 0
+    edge = keyline = 0
     for y in range(1, h - 1):
         for x in range(1, w - 1):
             if px[x, y][3] < 40:
                 continue
-            if any(px[x + dx, y + dy][3] < 40 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
-                edge += 1
-                r, g, b, _ = px[x, y]
-                if max(r, g, b) < 70:
-                    dark += 1
-    return 100.0 * dark / max(1, edge)
+            inward = None
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                if px[x + dx, y + dy][3] < 40:
+                    ix, iy = x - dx * 3, y - dy * 3
+                    if 0 <= ix < w and 0 <= iy < h and px[ix, iy][3] >= 40:
+                        inward = px[ix, iy]
+                    break
+            if inward is None:
+                continue
+            edge += 1
+            r, g, b, _ = px[x, y]
+            if max(r, g, b) < 80 and max(inward[:3]) - max(r, g, b) >= 45:
+                keyline += 1
+    return 100.0 * keyline / max(1, edge)
 
 
-OUTLINE_MAX = 72.0    # the cast runs 54-65; past this it is an inked figure, not ours
+# Recalibrated on the cast once the measure stopped counting dark clothing: see below.
+OUTLINE_MAX = 45.0
+
+
+def figure_stats(im):
+    """The three numbers a new face is accepted or refused on.
+
+    outline   dark share of the silhouette - the line language, which the `outline`
+              parameter only suggests (see edge_darkness).
+    head      the head's height as a fraction of the body's. The cast runs 0.125-0.152;
+              a bigger fraction is a chibi, and no amount of good drawing hides it beside
+              a figure that is not one. v3 has no proportions dial, so this is checked
+              rather than set.
+    colours   how many distinct colours the figure is drawn in - the detail level. The
+              cast runs 37-57; below that a customer reads flat beside the others.
+
+    All three were added the day the author put two new faces beside heavyset and said
+    they did not match him "vucut oranti, detay seviyesi vs" - and all three turned out
+    to be measurable, which is the only reason they are here rather than in a note.
+    """
+    px = im.load()
+    w, h = im.size
+    xs = [x for x in range(w) if any(px[x, y][3] >= 40 for y in range(h))]
+    ys = [y for y in range(h) if any(px[x, y][3] >= 40 for x in range(w))]
+    if not xs or not ys:
+        return None
+    body = ys[-1] - ys[0] + 1
+    # The head: from the crown down to where the silhouette first narrows into a neck and
+    # widens again into shoulders. Taken as the top eighth and measured, which is stable
+    # enough to compare figures against each other.
+    head_rows = [y for y in range(ys[0], ys[0] + int(body * 0.16))]
+    head_w = max((sum(1 for x in range(w) if px[x, y][3] >= 40) for y in head_rows), default=0)
+    colours = len({px[x, y][:3] for x in range(w) for y in range(h) if px[x, y][3] >= 200})
+    return {'outline': edge_darkness(im), 'head': head_w / max(1, body),
+            'colours': colours, 'body': body}
+
+
+# CALIBRATED ON THE CAST THE AUTHOR APPROVED, not on a number I liked: pastelman .120,
+# heavyset .147, clubgirl .158, silkwoman .162. The band has to contain all four, because
+# every one of them was looked at and kept. silverbob at .183 sits well outside it, which
+# is what "vucut orantisi ... heavyset ornegine uygun degil" measures out as.
+HEAD_BAND = (0.112, 0.166)
+COLOURS_MIN = 34             # the cast: 37 to 57
+
+
+def judge(name, im):
+    """Print the measurements and say plainly whether the face is in the cast's bands."""
+    st = figure_stats(im)
+    if st is None:
+        return False
+    ok = (st['outline'] <= OUTLINE_MAX
+          and HEAD_BAND[0] <= st['head'] <= HEAD_BAND[1]
+          and st['colours'] >= COLOURS_MIN)
+    print('  %-20s body %d  outline %.0f%%  head/body %.3f  colours %d  -> %s'
+          % (name, st['body'], st['outline'], st['head'], st['colours'],
+             'in band' if ok else 'OUT OF BAND, re-roll'))
+    return ok
 
 
 def clip_frames(slug, clip):

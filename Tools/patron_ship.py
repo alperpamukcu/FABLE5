@@ -94,7 +94,12 @@ SHIP = {
     # rotation as the idle would put that difference on screen every time a clip started or
     # ended. Taking frame 0 of order_a instead makes the idle the exact pose every clip
     # begins and ends on, and the joins vanish to single digits.
-    'idle': ('order_a', False, 'first', False),
+    # ('order_a' first, falling back to the rotation) - the bootstrap. A character with no
+    # clips yet has only its rotation, and the clips cannot be generated until an idle is
+    # shipped for them to start from; once order_a exists the idle is re-shipped from ITS
+    # frame 0, which is the pose every clip actually opens on. So a new face is shipped
+    # twice, and the second shipping is what makes the joins vanish.
+    'idle': (('order_a', 'still'), False, 'first', False),
     'walk': ('walk', True, None, False),
     'look_right': ('look_right', True, None, True),
     'look_left': ('look_left', True, None, True),
@@ -143,16 +148,19 @@ def clean(folder):
 def ship(slug):
     zip_path = os.path.join(trial.RAW, slug + '_anim.zip')
     still_path = os.path.join(trial.RAW, slug + '.png')
-    if not os.path.exists(zip_path):
-        print('  %s: no clip zip - run patron_trial_gen.py poll first' % slug)
-        return
-    groups = patron_gen.frames_from_zip(io.open(zip_path, 'rb').read())
+    # A face with no clips yet has no zip, and that is a normal state: it is shipped for
+    # its idle alone so the clips have a pose to be generated from (see the note on 'idle').
+    groups = (patron_gen.frames_from_zip(io.open(zip_path, 'rb').read())
+              if os.path.exists(zip_path) else {})
     still = Image.open(still_path).convert('RGBA')
     print('%s (zip carries %s)' % (slug, ', '.join(sorted(groups))))
 
     head_y = None
     idle_frame = None
     for folder, (source, lock, pick, anchor) in SHIP.items():
+        if isinstance(source, tuple):
+            # first source that exists wins - see the bootstrap note on 'idle'
+            source = next((n for n in source if n == 'still' or groups.get(n)), source[-1])
         if source == 'still':
             frames = [still]
         elif isinstance(source, list):

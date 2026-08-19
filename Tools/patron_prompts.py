@@ -72,7 +72,16 @@ HOUSE_RULES = (
     "flat local colour only, absolutely no baked lighting, no highlights, no specular "
     "gleam, no reflections, no glow, no cast shadow on the ground; "
     "even matte tone with simple hand-placed shade steps, "
-    "14 to 20 colours total, "
+    # PROPORTION, spelled out since 2026-08-19. The author put a new pair beside heavyset
+    # and said they did not match him on body proportion or detail, and the measurement
+    # agreed: the cast runs a head 0.125-0.152 of total height and silverbob came back at
+    # 0.183 - a head a third too big, which is the road to chibi. The model has no
+    # proportions dial in v3 mode, so the only place to say it is here.
+    "realistic adult human proportions, a small head about one seventh of the total "
+    "height, long legs, natural adult build, not chibi, not stylised, "
+    # DETAIL, for the same reason: shaved came back on 27 colours where the cast runs
+    # 37-57, and read flat beside them.
+    "detailed shading with fabric folds and clear facial features, "
     "full body from head to feet, standing upright, feet apart on the ground, "
     "transparent background, no floor, no furniture, no props, no text"
 )
@@ -187,6 +196,22 @@ FIGURE_OPTIONS = {
         "short curly dark hair, clean shaven, a thin gold chain, "
         "an open pale coral short sleeved shirt over a white vest, cream trousers, "
         "no logo, no pattern, no hat"),
+
+    # ── the second pair of the 2026-08-19 casting ───────────────────────────
+    # The four before them are: a slim young woman with a high ponytail, a broad man in
+    # his forties, a tall woman with long loose hair, a narrow young man with curls. So
+    # these two take the silhouettes still missing - a SHORT bob and a SHAVED head - and
+    # the ages at the ends of the range. A cast is read by its outlines first.
+    "silverbob": (
+        "a woman in her fifties, upright and composed, bar customer in a Miami club, "
+        "short silver hair in a sharp bob, large gold earrings, "
+        "a black blazer worn open over a lilac blouse, black trousers, "
+        "no logo, no pattern, no bag, no hat"),
+    "shaved": (
+        "a stocky man in his thirties, heavy shoulders and thick arms, bar customer in a "
+        "Miami club, shaved head, dark stubble, "
+        "a plain white sleeveless vest, dark grey trousers, "
+        "no logo, no pattern, no hat, no tattoo"),
 }
 
 HAND_ANCHOR_NOTE = """\
