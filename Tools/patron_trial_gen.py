@@ -193,38 +193,53 @@ def poll():
 KEPT = ('clubgirl', 'heavyset')
 
 CLIPS = {
-    # TEMPLATE, not a written description, and the reason is in the tool's own quality
-    # ladder: a template costs ONE generation per direction where a v3 custom clip on this
-    # canvas costs eight, and 'breathing-idle' is already the idle that was asked for -
-    # "omuzlari ve kafasi hafif hareket etse yeter". Its skeleton moves the shoulders and
-    # head and plants the feet; describing that in words would buy the same motion for
-    # eight times the price. ai_freedom stays 0 so the skeleton is followed rigidly - a
-    # loose idle drifts into a full-body sway, which is the thing the author ruled out.
     # The 'breathing-idle' TEMPLATE was tried first and rejected on the evidence
-    # (2026-08-19): it returns four frames, its first frame draws the figure from BEHIND
-    # on both characters, and one of clubgirl's four never arrived - three usable frames,
-    # which is the opposite of the length that was asked for. So the idle is a v3 custom
-    # after all, and the price of that (8 generations per character) buys the frames.
-    'idle': dict(directions=['south']),
+    # (2026-08-19): four frames, its first frame drawn from BEHIND on both characters, and
+    # one of clubgirl's four never arrived. Three usable frames is the opposite of the
+    # length that was asked for, so the idle is a v3 custom and pays for its frames.
+    # 10 frames: the ceiling is per ANIMATION canvas, and a 160px character is padded
+    # onto a 212x212 one, where the server refuses 12. Named here rather than assumed,
+    # because it moves with the character size and has already surprised this file twice.
+    'idle': dict(directions=['south'], frames=10),
     # The walk-in crosses the room right to left, so the figure is seen from its WEST
-    # side; one direction, one generation. walking-10 is the longest walk template on
-    # offer, which is the "animasyon uzunlugunu maksimumda tutalim" answer for this clip.
+    # side. A template, at one generation per direction: a side-on walk cycle is exactly
+    # what a walk skeleton is for, and this one came back clean.
     'walk': dict(template='walking-10', directions=['west']),
+    # TURN AND HOLD, not a loop (2026-08-19, the author: "normal duruken kafasina sadece
+    # 45 derece saga ve sola cevirdigi 2 animasyon ... musterinin sagina veya soluna
+    # musteri oturunca devreye girecek"). The game plays one of these once when a
+    # neighbour takes the next stool and then HOLDS THE LAST FRAME while they are there -
+    # so the clip must end on the turned pose, and the rig stores it as a one-shot with a
+    # held tail rather than as a looping clip.
+    #
+    # Named by SCREEN direction, because that is what the seat layout knows: look_right
+    # turns toward the stool on the player's right. Nothing below the neck moves - a v3
+    # left to itself turns the shoulders too, and then it is a body turn, not a glance.
+    'look_right': dict(directions=['south'], frames=8),
+    'look_left': dict(directions=['south'], frames=8),
 }
-# Only used if a template result is poor and a clip has to be re-cut as a v3 custom: the
-# canvas ceiling is 8 frames (the server refuses 10 on the 256x256 animation canvas that a
-# 220px character is padded onto), NOT the schema's 16.
-FRAMES = 8
+FRAMES = 8          # default when a clip does not name its own
 CUSTOM = {
-    # The first attempt at this said only "standing still" and the model read that as
-    # licence to re-pose: over nine frames the hands travelled up to the hips and stayed
-    # there. A v3 idle has to be told what must NOT move, in the same breath as what must,
-    # or it animates a pose change instead of a breath.
-    'idle': ('breathing quietly in place, a small rise and fall of the shoulders and a '
-             'slight tilt of the head, '
+    # Round one of this idle said only "standing still" and the model read that as licence
+    # to re-pose: over nine frames the hands travelled onto the hips. Round two held the
+    # pose but leaned 13px. The author asked for less again, so round three names the
+    # AMOUNT as well as the parts: a couple of pixels, and the figure does not travel.
+    'idle': ('almost motionless, breathing very quietly, '
+             'the shoulders rise and fall by only two or three pixels, '
+             'the head barely moves at all, '
+             'the body does not lean, does not sway and does not shift its weight, '
+             'the figure stays in exactly the same place, '
              'the arms do not move, the hands stay down at the sides, '
-             'the pose does not change, the feet do not move, no gesture, no turning'),
+             'the pose does not change, the feet do not move'),
     'walk': 'walking at a calm steady pace',
+    'look_right': ('standing still and slowly turning only the head to the right, '
+                   'a 45 degree glance to the side, then holding that look, '
+                   'the shoulders do not turn, the chest stays facing forward, '
+                   'the arms do not move, the feet do not move, the body does not lean'),
+    'look_left': ('standing still and slowly turning only the head to the left, '
+                  'a 45 degree glance to the side, then holding that look, '
+                  'the shoulders do not turn, the chest stays facing forward, '
+                  'the arms do not move, the feet do not move, the body does not lean'),
 }
 
 
@@ -243,7 +258,7 @@ def animate(clip):
             args.update(mode='template', template_animation_id=spec['template'],
                         ai_freedom=0)
         else:
-            args.update(mode='v3', frame_count=FRAMES,
+            args.update(mode='v3', frame_count=spec.get('frames', FRAMES),
                         action_description=CUSTOM[clip])
         text, _ = call('animate_character', args)
         import re

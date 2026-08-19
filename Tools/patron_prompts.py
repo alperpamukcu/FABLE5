@@ -113,8 +113,19 @@ TRIAL_FIGURE = (
 # colours. Every customer generated from here on is checked against it before it is
 # accepted; a figure more than a few px off has different head-to-body proportions and
 # cannot share the cast's anchors.
-PIVOT_CANVAS_PX = 220
-PIVOT_BODY_PX = 196
+# RULED BY THE COUNTER, not by the canvas (2026-08-19, the author: "musterilerin
+# boyutunu masaya gore dogru belirle"). The first pivot was picked to fill a canvas and
+# it made giants: measured against the bar, a 203px customer is 260cm tall.
+#
+# The measurement, off counter.png: rows 0-66 are the bar's TOP SURFACE seen at 30
+# degrees, rows 67-149 are its FRONT FACE - so the bar's height is 83 art px. A bar top
+# is 110cm, which puts the room at 0.755 art px per cm, and a 170cm adult at 128px, a
+# 180cm one at 136px. The shipped cast, which has always sat right in this room, draws
+# at ~145 art px equivalent; the room's own door and ceiling agree to within a tenth.
+# So the ruler is ~145 for a tall adult, and the canvas follows the body rather than the
+# body following the canvas.
+PIVOT_CANVAS_PX = 160
+PIVOT_BODY_PX = 145
 PIVOT_LANGUAGE = 'selective'
 PIVOT_VIEW = 'side'          # PixelLab's name for eye level
 
