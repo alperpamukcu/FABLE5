@@ -124,8 +124,14 @@ TRIAL_FIGURE = (
 # at ~145 art px equivalent; the room's own door and ceiling agree to within a tenth.
 # So the ruler is ~145 for a tall adult, and the canvas follows the body rather than the
 # body following the canvas.
-PIVOT_CANVAS_PX = 160
-PIVOT_BODY_PX = 145
+# BACK TO 220, and the counter's ruler stands as a fact beside it rather than instead of
+# it. The measurement is still true - a 200px customer at a 110cm bar is 265cm - but the
+# author kept the approved drawings, and a cast has to be consistent with ITSELF before it
+# is consistent with the furniture: a bar of people at two different scales is wrong in a
+# way anybody can see, while a bar of people uniformly a little large is a stylisation.
+# So every customer generated from here on matches the two already in the game.
+PIVOT_CANVAS_PX = 220
+PIVOT_BODY_PX = 200
 # ── the rig the game loads (2026-08-19) ──────────────────────────────────────
 # The drawings arrive on a 220 canvas and the game draws that canvas at one art pixel per
 # stage unit, so the canvas IS the rig: TycoonHud.CharSize = RIG_CANVAS_PX x StageToHud,
@@ -138,7 +144,13 @@ RIG_FOOT_Y = 210
 # the canvas bottom, so 93. TycoonHud.CharFootDrop is this x StageToHud.
 RIG_FOOT_DROP = 93
 
-PIVOT_LANGUAGE = 'selective'
+# 'lineless', not 'selective' - and the two words mean less than they look. PixelLab
+# treats `outline` as soft guidance: 'selective' drew clubgirl and heavyset at 54-57% dark
+# silhouette, and the same setting drew the next pair at 99-100%, a full black keyline the
+# author rejected on sight ("siyah koyu kontur olmamali, trial lineless_neutral gibi
+# olmali"). Asking for 'lineless' is a push in the right direction, not a guarantee, which
+# is why the MEASUREMENT is the real gate (patron_trial_gen.edge_darkness).
+PIVOT_LANGUAGE = 'lineless'
 PIVOT_VIEW = 'side'          # PixelLab's name for eye level
 
 # ── the three customers being compared (2026-08-19, round two) ───────────────
@@ -148,6 +160,7 @@ PIVOT_VIEW = 'side'          # PixelLab's name for eye level
 # tall older regular. All three are dressed for the Miami club room - the chroma is on
 # the person, the room stays concrete and plum (14 art bible).
 FIGURE_OPTIONS = {
+    # ── the cast in the game ────────────────────────────────────────────────
     "clubgirl": (
         "a young woman in her twenties, slim and short, bar customer in a Miami club, "
         "dark brown hair in a high ponytail, hoop earrings, "
@@ -158,45 +171,23 @@ FIGURE_OPTIONS = {
         "club, receding black hair, short beard, "
         "an open cream linen shirt over a teal t-shirt, dark trousers, "
         "no logo, no pattern, no hat"),
-    "oldregular": (
-        "a tall lean man in his sixties, bar regular, "
-        "grey hair combed back, deep lines on the face, "
-        "a faded olive work jacket over a plain white shirt, worn brown trousers, "
+
+    # ── the 2026-08-19 pair, drawn to stand beside them ─────────────────────
+    # Different from the two in the game on every axis that reads at this size - age,
+    # build, hair silhouette, and which colour they carry - because a cast is told apart
+    # by its shapes long before its faces. Both belong to the same Miami room: the chroma
+    # is on the person and the architecture stays quiet (14 art bible).
+    "silkwoman": (
+        "a tall woman in her thirties, slim and elegant, bar customer in a Miami club, "
+        "black hair loose to the shoulders with a centre parting, gold hoop earrings, "
+        "a turquoise satin slip dress with thin straps, "
+        "no logo, no pattern, no bag, no hat"),
+    "pastelman": (
+        "a slim young man in his twenties, tall and narrow, bar customer in a Miami club, "
+        "short curly dark hair, clean shaven, a thin gold chain, "
+        "an open pale coral short sleeved shirt over a white vest, cream trousers, "
         "no logo, no pattern, no hat"),
 }
-
-# ── the scale candidates the room is being asked about ───────────────────────
-# (label, reference adult height in art px, fraction of that height BELOW the counter's
-#  rest line). The counter rest line is DiegeticStage.CounterRestY; the shipped cast sits
-#  at 150px with only 44% of the body under the bar, which is thigh height - the reason
-#  they read as giants leaning over the counter rather than people standing at it.
-REFERENCE_CANDIDATES = [
-    ("belly",  220, 0.62),   # a real bar top: navel / lower ribs
-    ("belly_s", 180, 0.62),  # same cut, smaller people, bigger-looking room
-    ("waist",  190, 0.55),   # more shoulder and arm above the wood, less true
-]
-
-# ── the idle is a BEHAVIOUR, not a loop (2026-08-19) ─────────────────────────
-# The author, after two breathing idles: "nefes alis veris istemiyorum ... omuz ve kollar
-# hareket etmesin ... sabit durmali, biraz biraz saga sola bakinmali gibi".
-#
-# That is not a clip. A looping clip moves every second it is on screen, and a customer
-# who is SEATED at a bar - which is what every idle here depicts, the counter hiding
-# everything below the chest - does not rise and fall forever. So the idle is:
-#
-#     the still frame, held, and every few seconds a small glance to one side.
-#
-# The still frame is the character's own south rotation, which costs nothing and cannot
-# drift. The glances come from the SAME two clips the neighbour glance uses, trimmed to a
-# different frame: an early frame is a small look, the peak frame is the full 45-degree
-# turn at the person who just sat down. One pair of clips, two behaviours, no breathing
-# anywhere - and no generation spent on an idle at all.
-#
-# When the glances happen must flow through RunRng (the house's determinism rule), so a
-# seeded run replays with the same bar looking around at the same moments.
-IDLE_IS_STILL = True
-IDLE_GLANCE_FRAME = 2      # the small look, out of the glance clip's own frames
-IDLE_GLANCE_SECONDS = (4.0, 9.0)   # how long a customer holds still between glances
 
 HAND_ANCHOR_NOTE = """\
 The drink clips carry a table, not a drawing: for each frame, (x, y, angle) in canvas

@@ -15,7 +15,8 @@
   "character_id": "24f27f2e-5d73-4d93-8766-c5af6c945f8a",
   "language": "selective",
   "size": 220,
-  "png": "AssetPipeline\\sources\\patron_trial\\selective_neutral.png"
+  "png": "AssetPipeline\\sources\\patron_trial\\selective_neutral.png",
+  "edge_darkness": 64.2
  },
  "selective_bar": {
   "character_id": "6f8ba164-d4ee-4a98-8921-9432d4154723",
@@ -27,7 +28,8 @@
   "character_id": "30c03467-36bb-4935-bdf2-2bddfcbebc36",
   "language": "lineless",
   "size": 220,
-  "png": "AssetPipeline\\sources\\patron_trial\\lineless_neutral.png"
+  "png": "AssetPipeline\\sources\\patron_trial\\lineless_neutral.png",
+  "edge_darkness": 64.9
  },
  "lineless_bar": {
   "character_id": "19511c6f-e2cb-4601-a834-9bc6654e4e1d",
@@ -57,7 +59,7 @@
   "character_id": "2e68de01-9e8f-40fd-bbb6-5db6e5ac88d6",
   "language": "selective",
   "size": 220,
-  "png": "AssetPipeline\\sources\\patron_trial\\clubgirl_220.png",
+  "png": "AssetPipeline\\sources\\patron_trial\\clubgirl.png",
   "clips": {
    "sit": "61a15780-2928-48fc-9515-d30d6bcf9f0b",
    "walk": "34a2b25d-b947-4e73-83d3-5cfb44af061b",
@@ -71,7 +73,8 @@
    "upset_b": "de5f9982-29e6-42c9-9523-3665c017db16",
    "drink_a": "d671dff8-898e-4f44-9686-e31479e18636",
    "drink_b": "f5256d25-50d5-4af9-acac-9adb9b2113e5"
-  }
+  },
+  "edge_darkness": 56.8
  },
  "heavyset_160": {
   "character_id": "3cce9b3b-01f1-428a-9db0-44cf3348d0c9",
@@ -89,7 +92,7 @@
   "character_id": "d53d8fbf-f387-47d1-a14b-4e143fed0006",
   "language": "selective",
   "size": 220,
-  "png": "AssetPipeline\\sources\\patron_trial\\heavyset_220.png",
+  "png": "AssetPipeline\\sources\\patron_trial\\heavyset.png",
   "clips": {
    "sit": "e4ceca46-4278-4a0b-8302-5eb3fce189dc",
    "walk": "b5ff5251-450f-4307-9e6a-4ba2c3581aaa",
@@ -103,6 +106,21 @@
    "upset_b": "c385f76a-273d-4b07-8e02-174251e61ebc",
    "drink_a": "0d079270-7a71-4f82-8df0-d65f5b1be934",
    "drink_b": "f8605bd7-f480-4273-8bd0-6c5b84ca1101"
-  }
+  },
+  "edge_darkness": 54.4
+ },
+ "pastelman": {
+  "character_id": "8afdd7a6-112e-476a-83a9-47fbb0b64380",
+  "language": "lineless",
+  "size": 220,
+  "edge_darkness": 15.6,
+  "png": "AssetPipeline\\sources\\patron_trial\\pastelman.png"
+ },
+ "silkwoman": {
+  "character_id": "4b53b96c-1274-48a5-ba35-c1d94cfacf4d",
+  "language": "lineless",
+  "size": 220,
+  "edge_darkness": 37.4,
+  "png": "AssetPipeline\\sources\\patron_trial\\silkwoman.png"
  }
 }

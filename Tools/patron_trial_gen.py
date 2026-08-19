@@ -82,8 +82,9 @@ def log(rec):
 
 def jobs():
     if ROUND_TWO:
-        for name, figure in brief.FIGURE_OPTIONS.items():
-            yield name, brief.PIVOT_LANGUAGE, brief.NEUTRAL_POSE, figure
+        for name in TRYING:
+            yield (name, brief.PIVOT_LANGUAGE, brief.NEUTRAL_POSE,
+                   brief.FIGURE_OPTIONS[name])
         return
     for language in brief.LINE_LANGUAGES:
         for pose_name, pose in POSES:
@@ -171,8 +172,14 @@ def poll():
         if images:
             p = os.path.join(RAW, key + '.png')
             images[0].save(p)
-            print('  %-20s completed -> %s (%dx%d)'
-                  % (key, os.path.basename(p), images[0].width, images[0].height))
+            ink = edge_darkness(images[0])
+            state[key]['edge_darkness'] = round(ink, 1)
+            if ink > OUTLINE_MAX:
+                print('  %-20s OUTLINE %.0f%% - too inked (cast runs 54-65). Re-roll.'
+                      % (key, ink))
+            print('  %-20s completed -> %s (%dx%d, outline %.0f%%)'
+                  % (key, os.path.basename(p), images[0].width, images[0].height,
+                     edge_darkness(images[0])))
             state[key]['png'] = os.path.relpath(p, HERE)
             save(state)
         else:
@@ -192,6 +199,10 @@ def poll():
 # Direction is part of the clip, not a separate axis: the idle is watched from the front
 # (south), and the walk-in crosses the room right to left, which is WEST.
 KEPT = ('clubgirl', 'heavyset')
+# Who is being LOOKED AT this round, as opposed to who is in the game. The author asks for
+# stills first and animations only after approval, every time - so a new face is queued
+# here, judged, and only then added to KEPT and given clips.
+TRYING = ('silkwoman', 'pastelman')
 
 # -- the clip table (2026-08-19, round five) ---------------------------------
 # EVERY ONE-SHOT IS DRAWN IN TWO HALVES, the author's own idea and a good one:
@@ -300,6 +311,36 @@ CUSTOM = {
     'walk': ('walking forward with small short steps at a calm unhurried pace, '
              'the feet stay close to the ground, the arms swing very little, ' + CALM),
 }
+
+
+def edge_darkness(im):
+    """What share of the figure's SILHOUETTE is drawn in near-black, as a percentage.
+
+    The line language is chosen by eye but it cannot be TRUSTED by eye, because PixelLab
+    treats `outline` as soft guidance: the same setting that drew clubgirl at 57% drew
+    silkwoman at 100%, a full black keyline, and the author caught it before I did
+    (2026-08-19: "siyah koyu kontur olmamali, trial lineless_neutral gibi olmali").
+    So it is measured now, and a face outside the cast's band is re-rolled rather than
+    shipped. The band is the cast itself: clubgirl 57, heavyset 54, and the lineless and
+    selective trials both 65 - anything at or near 100 is the inked language, whatever the
+    request said.
+    """
+    px = im.load()
+    w, h = im.size
+    edge = dark = 0
+    for y in range(1, h - 1):
+        for x in range(1, w - 1):
+            if px[x, y][3] < 40:
+                continue
+            if any(px[x + dx, y + dy][3] < 40 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                edge += 1
+                r, g, b, _ = px[x, y]
+                if max(r, g, b) < 70:
+                    dark += 1
+    return 100.0 * dark / max(1, edge)
+
+
+OUTLINE_MAX = 72.0    # the cast runs 54-65; past this it is an inked figure, not ours
 
 
 def clip_frames(slug, clip):
