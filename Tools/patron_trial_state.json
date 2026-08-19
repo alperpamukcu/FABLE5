@@ -306,11 +306,45 @@
    "body": 209,
    "black": 27.917
   },
-  "png": "AssetPipeline\\sources\\patron_trial\\leopard.png"
+  "png": "AssetPipeline\\sources\\patron_trial\\leopard.png",
+  "clips": {
+   "walk": "263bf8c8-23ae-4e12-ad4d-a07ea49db43b",
+   "look_right": "55012033-4289-40b5-80f8-e9c901b11c40",
+   "look_left": "b4078e1d-3559-47bb-82af-fb7cc700bcce",
+   "order_a": "a20f5b97-922c-44ee-9309-75433f0cc6c9",
+   "drink_a": "324dc28a-81ec-4593-ae2a-bb37501176fe",
+   "cheer_a": "6b8be27a-d3be-4df6-8a2d-62dc122d3df0",
+   "upset_a": "1269e3f3-9fd8-4232-88a7-b6eddc174e3b",
+   "order_b": "343f56f6-7a9d-490a-8802-9c579a300a8f",
+   "drink_b": "cf387479-7365-4f59-9e8b-568034567fc5",
+   "cheer_b": "f5fc3ae8-a5f7-442a-abd5-40d82d17f5d9",
+   "upset_b": "e17d46fb-73ba-4af4-a72a-02d9b9445c42"
+  }
  },
  "spanishsuit": {
   "character_id": "2184a77e-9b5b-40e4-bd8e-a632bfeedcbc",
   "language": "lineless",
-  "size": 220
+  "size": 220,
+  "measured": {
+   "outline": 66.557,
+   "head": 0.151,
+   "colours": 45,
+   "body": 205,
+   "black": 22.824
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\spanishsuit.png",
+  "clips": {
+   "walk": "fc6351b9-8764-4277-b9d5-2618356e5cce",
+   "look_right": "d4c00aeb-7e4a-4909-974c-88827c1653f6",
+   "look_left": "63f45874-c328-4105-bc68-9843f2bc4f6a",
+   "order_a": "9aa32f0a-506e-46e0-971b-b33c056acde9",
+   "drink_a": "028e4e2a-ce00-40b3-a264-ea18b1638377",
+   "cheer_a": "2c9e12aa-26e4-4963-8e12-7677eff3ab70",
+   "upset_a": "23049809-47a0-4ebb-b937-96a574e6b338",
+   "drink_b": "e0fc455e-66b1-4c70-943d-355fa80a8520",
+   "cheer_b": "67224322-83b2-4fb0-b55f-6f621b7c4422",
+   "upset_b": "29319671-1be6-4e83-95dd-da9e31a4520d",
+   "order_b": "b6ad9eca-256a-421b-9a41-8aa4fcc7a19d"
+  }
  }
 }

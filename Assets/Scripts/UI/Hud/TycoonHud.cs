@@ -280,6 +280,12 @@ namespace LastCall.UI
             ("silverbob", 11f, 0f, 6, 6),
             ("afrowoman", 0f, 0f, 7, 6),
             ("eastasianman", 7f, 0f, 5, 6),
+            // The last two before the casting pauses, both the author's own descriptions -
+            // and the only two whose keyline is stripped at ship time (patron_ship.DELINEATE):
+            // they came back inked and would not re-roll out of it, where everybody above
+            // them keeps the pixels they were approved as.
+            ("spanishsuit", 5f, 0f, 4, 5),
+            ("leopard", 1f, 0f, 5, 7),
         };
         /// <summary>
         /// The papers for a face — name, age, country, flag — read from the cast file.
