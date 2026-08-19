@@ -65,16 +65,17 @@ namespace LastCall.UI
         // pitch was enough. The new front is joinery — two cabinet doors, three glass
         // fridges, three open bays — and a pitch would stand a glass squarely on a stile.
         //
-        // RE-MEASURED AGAIN for the 2026-08-18 PixelLab counter (the marble-and-graphite
-        // plate it replaces was painted at a few thousand px and downscaled, which is what
-        // made it read blurry; this one is drawn at 640×150 native, 21 colours). The new
-        // front's joinery is NOT the old one's: its right-hand bays are wider, so cells 6
-        // and 7 moved by nearly 50 px. Measured off the art by column continuity and then
-        // CHECKED BY LOOKING, with the eight ticks drawn onto the plate
-        // (Tools/scene_variants_gen.py measure) — every tick stands inside an opening, and
-        // the floor line lands on the fridges' own shelf boards.
+        // RE-MEASURED AGAIN for the 2026-08-19 brutalist counter, and THIS TABLE IS ART-BOUND:
+        // it is measured off whatever counter.png currently is, and a new counter invalidates
+        // it silently — a stale table stands a bought glass on a steel stile. Re-measure by
+        // running the column-edge scan and then LOOKING at the eight ticks drawn on the plate.
+        //
+        // What this front is: FIVE bays, not eight — two cabinet doors (x 21..69, 91..139),
+        // two wide glazed bays (168..330, 336..514) and a door on the right (535..605). The
+        // eight cells are spread across them in proportion to width, so the two wide bays
+        // carry two and three glasses: nothing lands within 20 px of a stile.
         private static readonly float[] ShelfCentrePx =
-            { 33f, 113f, 192f, 278f, 364f, 449f, 530f, 606f };
+            { 45f, 115f, 208f, 290f, 366f, 425f, 484f, 570f };
         //
         // The numbers below are in the ART's own pixels. They only equal stage units at
         // the reference aspect: the counter is scaled by visibleWidth/640 and hangs from
@@ -156,7 +157,7 @@ namespace LastCall.UI
         // ceiling plane at y 103 - lower than the last room because this one's ceiling
         // is a perspective plane seen from inside, not a top strip.
         private static readonly Vector2[] LampArtPx =
-            { new Vector2(214, 91), new Vector2(330, 91), new Vector2(463, 91) };
+            { new Vector2(211, 57), new Vector2(331, 57), new Vector2(468, 57) };
         private static readonly Color GlobalTint = new Color(0.86f, 0.85f, 0.95f);
         private const float GlobalIntensity = 0.85f;
         private static readonly Color LampTint = new Color(1f, 0.80f, 0.52f);
@@ -207,6 +208,25 @@ namespace LastCall.UI
         private Transform _world;                   // root of every world-space stage object
         private Material _litMaterial;              // Sprite-Lit-Default, shared by the stage
         private SpriteRenderer _backdropSr, _backgroundSr, _windowSr;
+
+        // ── the view out of the window, played on the shift's clock (2026-08-19) ────
+        // A Miami skyline that runs from a low sun through the pink band into a lit night,
+        // sliced from ONE sheet: Assets/Resources/Scene/window_cycle.png, built by
+        // Tools/window_cycle.py out of four PixelLab animation sheets.
+        //
+        // Each cell is the room's window hole — its bounding box, carrying its alpha — so the
+        // sky is cut to the glass at build time and cannot slide off it at any aspect. That
+        // also means NOTHING IS SCALED anywhere in the chain: the frames are cut 1:1 out of
+        // their 193×150 originals, and here they ride the room's own art scale.
+        //
+        // The cell size is the hole's size, MEASURED (window_cycle.py build prints both these
+        // numbers). The frame COUNT is not a constant on purpose — it is read off the sheet,
+        // so re-generating with more frames needs no edit here.
+        private const int WindowCellW = 115, WindowCellH = 172;
+        /// <summary>The hole's centre in the room art's own bottom-left space.</summary>
+        private static readonly Vector2 WindowCentreArtPx = new Vector2(57.5f, 206f);
+        private Sprite[] _windowFrames;
+        private int _windowFrame = -1;
         private Vector2 _backgroundNative;
         private float _backgroundScale = 1f;        // stage units per background-art pixel
         private Light2D _globalLight;
@@ -348,14 +368,20 @@ namespace LastCall.UI
                 // shows through them and the bar looks out on Night[0] — black rectangles
                 // where daylight belongs (measured in play, 2026-08-18).
                 //
-                // Loaded by NAME rather than serialized, because the plate is meant to change
-                // with the shift (day / sunset / night) and one inspector slot cannot hold
-                // three. Only the day plate is drawn yet; the other two arrive with the
-                // author's relight batch, and then this becomes a lookup on the shift.
-                var windowPlate = Resources.Load<Sprite>("Scene/window_day");
+                // Loaded by NAME rather than serialized, because what hangs here changes with
+                // the shift and one inspector slot cannot hold a whole evening. It is an
+                // ANIMATION now (2026-08-19): a Miami skyline that goes from a low sun to lit
+                // windows across the night, sliced from one sheet and stepped by the clock in
+                // SetSkyFraction. The single day plate stays as the fallback, so a missing or
+                // half-built sheet still leaves daylight in the glass rather than black holes.
+                _windowFrames = LoadWindowFrames();
+                var windowPlate = _windowFrames != null && _windowFrames.Length > 0
+                    ? _windowFrames[0]
+                    : Resources.Load<Sprite>("Scene/window_day");
                 if (windowPlate != null)
                 {
                     _windowSr = WorldSprite("WindowPlate", windowPlate, order: 5);
+                    _windowFrame = _windowFrames != null ? 0 : -1;
                 }
 
                 _backgroundSr = WorldSprite("Background", backgroundSprite, order: 10);
@@ -513,11 +539,12 @@ namespace LastCall.UI
                     (visibleW + Overscan * 2f) / b.x, (visibleH + Overscan * 2f) / b.y, 1f);
             }
 
-            if (_windowSr != null)
+            if (_windowSr != null && _windowFrames == null)
             {
-                // THE SAME COVER FIT AS THE ROOM, deliberately: the plate is authored at the
-                // room's own 640x360 with the sky sitting in the room's own hole, so any fit
-                // that is not identical slides the daylight off the window.
+                // THE SAME COVER FIT AS THE ROOM, deliberately: the still plate is authored at
+                // the room's own 640x360 with the sky sitting in the room's own hole, so any
+                // fit that is not identical slides the daylight off the window. The animated
+                // frames are not plates and are fitted after the room instead — see below.
                 var wb = _windowSr.sprite.bounds.size;
                 float wk = Mathf.Max(visibleW / wb.x, visibleH / wb.y);
                 _windowSr.transform.localScale = new Vector3(wk, wk, 1f);
@@ -530,6 +557,17 @@ namespace LastCall.UI
                 float k = Mathf.Max(visibleW / b.x, visibleH / b.y);
                 _backgroundSr.transform.localScale = new Vector3(k, k, 1f);
                 _backgroundScale = k * (b.x / _backgroundNative.x);   // stage units per art px
+
+                // The animated view is a CUT-OUT of the room's own window hole, not a plate:
+                // it is the hole's bounding box and carries the hole's alpha. So it rides the
+                // room's own art scale and stands at the hole's own centre — which is why it
+                // is fitted here, after _backgroundScale exists, and not in the block above.
+                if (_windowSr != null && _windowFrames != null)
+                {
+                    _windowSr.transform.localScale =
+                        new Vector3(_backgroundScale, _backgroundScale, 1f);
+                    _windowSr.transform.position = StageArtPointToWorld(WindowCentreArtPx);
+                }
 
                 // The lamps hang where the picture drew them: art px from the TOP, through
                 // the same cover fit the picture itself got.
@@ -739,6 +777,77 @@ namespace LastCall.UI
                     sh.Width * k / art.x, sh.Width * k * 0.28f / art.y, 1f);
                 sh.Blob.transform.position = new Vector3(sh.Under.position.x, footY + 1f * k, 0f);
             }
+        }
+
+        /// <summary>
+        /// The sky outside, on the shift's own clock: 0 at opening (18:00, the sun still on
+        /// the skyline) and 1 at closing (02:00, the city lit). Straight proportion, the way
+        /// the author asked for it — the frames are one continuous evening, so the hour and
+        /// the picture advance together.
+        ///
+        /// TOLD, NOT READ, like the money and the slots: the stage never reaches into the run.
+        /// Cheap to call every frame — it only touches the renderer when the frame changes,
+        /// which at 55 frames over a 95-second shift is about once every 1.7 seconds.
+        /// </summary>
+        public void SetSkyFraction(float fraction)
+        {
+            if (_windowSr == null || _windowFrames == null || _windowFrames.Length == 0) return;
+            int last = _windowFrames.Length - 1;
+            int i = Mathf.Clamp(Mathf.RoundToInt(Mathf.Clamp01(fraction) * last), 0, last);
+            if (i == _windowFrame) return;
+            _windowFrame = i;
+            _windowSr.sprite = _windowFrames[i];
+        }
+
+        /// <summary>
+        /// The window's frames, cut out of the one sheet in Resources.
+        ///
+        /// The trailing cells of the last row are usually EMPTY — a frame count rarely fills a
+        /// grid — so they are dropped by reading their alpha rather than by trusting a count
+        /// constant that would go stale the first time the sheet is rebuilt. The scan is one
+        /// cell's worth of pixels at a time and only ever reaches the tail, because it stops
+        /// at the first cell that has something in it.
+        /// </summary>
+        private static Sprite[] LoadWindowFrames()
+        {
+            var sheet = Resources.Load<Texture2D>("Scene/window_cycle");
+            if (sheet == null) return null;
+            int cols = sheet.width / WindowCellW, rows = sheet.height / WindowCellH;
+            if (cols < 1 || rows < 1)
+            {
+                Debug.LogWarning($"DiegeticStage: window_cycle is {sheet.width}×{sheet.height}, " +
+                                 $"too small for a {WindowCellW}×{WindowCellH} cell — " +
+                                 "the still plate will be used instead.");
+                return null;
+            }
+
+            int count = cols * rows;
+            while (count > 1 && IsCellEmpty(sheet, count - 1, cols)) count--;
+
+            var frames = new Sprite[count];
+            for (int i = 0; i < count; i++)
+            {
+                int r = i / cols, c = i % cols;
+                // Sprite rects are measured from the texture's BOTTOM; the sheet is laid out
+                // top-down, so the row index counts back from the top.
+                var rect = new Rect(c * WindowCellW, sheet.height - (r + 1) * WindowCellH,
+                                    WindowCellW, WindowCellH);
+                // PPU 1: the stage runs at one world unit per art pixel, the same rule the
+                // fixtures import under.
+                frames[i] = Sprite.Create(sheet, rect, new Vector2(0.5f, 0.5f), 1f);
+            }
+            return frames;
+        }
+
+        private static bool IsCellEmpty(Texture2D sheet, int index, int cols)
+        {
+            int r = index / cols, c = index % cols;
+            int y = sheet.height - (r + 1) * WindowCellH;
+            if (y < 0) return true;
+            var px = sheet.GetPixels(c * WindowCellW, y, WindowCellW, WindowCellH);
+            for (int i = 0; i < px.Length; i++)
+                if (px[i].a > 0.5f) return false;
+            return true;
         }
 
         /// <summary>A point in the background art's own bottom-left space → world, through the

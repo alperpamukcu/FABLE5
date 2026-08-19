@@ -63,63 +63,62 @@ def save(im, path, key):
          'path': os.path.relpath(path, ROOT), 'size': [im.width, im.height]})
 
 
-# "Masayi biraz asagi cek arka plani biraz yukari cek" (2026-08-19, the author, in
-# play): the room's content rises this many px - the exposed bottom is refilled with
-# its own parquet rows - and CounterRestY comes down 12 on the code side. Together
-# they open ~28px of visible floor above the counter, which is where the tables live.
-ROOM_LIFT = 12   # 16 -> 12 (2026-08-19, the author, with a number this time: "Background 12 Y olsun")
+ROOM_10X = os.path.join(SRC, 'room_pixellab_10x.png')
 
 
 def post_room():
-    im = Image.open(ROOM_SRC).convert('RGBA')
-    px = im.load()
-    w, h = im.size
+    """The room at ORIGINAL SIZE, uncropped, stood flush to the top of the frame.
 
-    def opaque_count(y):
-        return sum(1 for x in range(0, w, 4) if px[x, y][3] >= 200)
+    Three instructions landed on this plate in one sitting and the last one wins:
+    "sigmiyor, taraflari cekilmis" (the first pass smeared 38 rows to fake a fit),
+    "kenarlara gore buyut, kenar orani ayni kalsin" (a cover fit - which cost 78 drawing
+    pixels off each side), and finally "bar arkaplanini kesme, orijinal boyutunda kullan.
+    Eger yukaridan tasacaksa ekranda tassin". So: no smear, no scale, no crop.
 
-    content = [y for y in range(h) if opaque_count(y) > (w // 4) * 0.05]
-    top, bot = content[0], content[-1]
-    print('  content rows %d..%d; filling %d band rows' % (top, bot, top + (h - 1 - bot)))
-    # Per COLUMN, with the nearest opaque pixel: a whole-row copy drags the window
-    # pane's transparency up into the band, and the plate then thinks the band is a
-    # hole. A column that is transparent all the way down (the pane's own x range)
-    # stays transparent - that really is the hole, and the plate fills it.
-    for x in range(w):
-        src = next((py for py in range(top, bot + 1) if px[x, py][3] >= 200), None)
-        if src is not None:
-            r, g, b, _ = px[x, src]
-            for y in range(0, top):
-                px[x, y] = (r, g, b, 255)
-        src = next((py for py in range(bot, top - 1, -1) if px[x, py][3] >= 200), None)
-        if src is not None:
-            r, g, b, _ = px[x, src]
-            for y in range(bot + 1, h):
-                px[x, y] = (r, g, b, 255)
+    The pixels come from the author's 10x master by exact NEAREST /10 - the export is a
+    true integer grid (900 sampled blocks, zero mismatches), so this is a lossless
+    recovery of the drawing, and it carries 272 rows of room against the 258 the 640-wide
+    file had. Those 272 stand flush against the top edge at 1:1.
 
-    # "Kenarlarda bosluk birakmasin": a few left-edge columns are transparent for the
-    # whole frame (the window frame runs off the canvas). Rows that have paint to the
-    # right take it; rows that are pane stay open for the plate's sky.
-    for x in range(0, 12):
-        for y in range(h):
-            if px[x, y][3] >= 200:
-                continue
-            for nx in range(x + 1, min(x + 18, w)):
-                if px[nx, y][3] >= 200:
-                    r, g, b, _ = px[nx, y]
-                    px[x, y] = (r, g, b, 255)
-                    break
+    Nothing overflows at this size, and the author's permission for it to run off the top
+    is kept anyway: if a future room is taller than the frame, it is anchored by its TOP
+    and the surplus leaves the screen rather than being cropped or squeezed. What sits
+    below the drawing is behind the counter - the counter's rest line puts its top edge at
+    row 242 and the floor reaches 271, so the overlap is 29 rows and no gap can open.
 
-    # The lift: crop ROOM_LIFT rows off the top, extend the parquet at the bottom by
-    # repeating the last rows - a pure row move, no resampling anywhere.
-    if ROOM_LIFT > 0:
-        body = im.crop((0, ROOM_LIFT, w, h))
-        out = Image.new('RGBA', (w, h))
-        out.paste(body, (0, 0))
-        floor = im.crop((0, h - ROOM_LIFT, w, h))
-        out.paste(floor, (0, h - ROOM_LIFT))
-        im = out
-    save(im, os.path.join(BACKGROUNDS, 'club_room.png'), 'club_room')
+    The trade, stated: at 1:1 the drawing is 2.35:1 against a 1.78:1 screen, so the room
+    does not fill the frame by itself - the counter fills the rest. That is the author's
+    choice between a cropped room and a whole one.
+    """
+    src = ROOM_10X if os.path.exists(ROOM_10X) else ROOM_SRC
+    m = Image.open(src).convert('RGBA')
+    W, H = m.size
+    step = max(1, W // 640)
+    if step > 1:
+        m = m.resize((W // step, H // step), Image.NEAREST)   # exact, integer, lossless
+        print('  master %dx%d -> native /%d' % (W, H, step))
+    px = m.load()
+    w, h = m.size
+    rows = [y for y in range(h) if any(px[x, y][3] >= 200 for x in range(0, w, 4))]
+    top, bot = rows[0], rows[-1]
+    tall = bot - top + 1
+    print('  content rows %d..%d (%d tall); flush to the top at 1:1, uncropped' % (top, bot, tall))
+
+    out = Image.new('RGBA', (640, 360), (0, 0, 0, 0))
+    out.paste(m.crop((0, top, w, bot + 1)), (0, 0))
+
+    # Below the drawing, extend the floor by repeating its last row per column. It lives
+    # behind the counter and can never be seen at tier 1; it is here so a taller counter
+    # tier cannot open a hole under the bar.
+    op = out.load()
+    for x in range(640):
+        srcy = next((y for y in range(tall - 1, -1, -1) if op[x, y][3] >= 200), None)
+        if srcy is None:
+            continue
+        r, g, b, _ = op[x, srcy]
+        for y in range(tall, 360):
+            op[x, y] = (r, g, b, 255)
+    save(out, os.path.join(BACKGROUNDS, 'club_room.png'), 'club_room')
 
 
 def post_counter():

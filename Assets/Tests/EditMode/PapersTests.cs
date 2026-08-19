@@ -30,14 +30,16 @@ namespace LastCall.Tests
         public void The_cast_file_parses_and_holds_the_whole_bar()
         {
             var cast = Load();
-            Assert.That(cast.All.Count, Is.EqualTo(31),
-                "the bar has 30 drinkers and Ece behind it; if that changed on purpose, change it here too");
+            Assert.That(cast.All.Count, Is.EqualTo(32),
+                "the bar has 31 drinkers and Ece behind it; if that changed on purpose, change it here too");
         }
 
         [TestCase("", "Miles Corrigan", 26, "us")]
         [TestCase("nightnurse", "Marilou Cabrera", 37, "ph")]
         [TestCase("profess", "Ulrich Brenner", 66, "de")]
         [TestCase("execman", "Graham Sedgwick", 54, "gb")]
+        // The 2026-08-19 casting, drawn for the concrete-and-plum room (TycoonHud's cast).
+        [TestCase("linen", "Camila Restrepo", 29, "us")]
         public void A_face_still_carries_the_papers_it_had_in_code(
             string slug, string name, int age, string iso)
         {

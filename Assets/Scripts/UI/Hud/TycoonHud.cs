@@ -153,6 +153,16 @@ namespace LastCall.UI
             ("teal", 22f, 1.5f), ("gothpunk", 0f, 1.5f),
             ("profess", 23f, 2.5f), ("chrome", 40f, 2.5f), ("platina", 26f, 2.5f),
             ("gothqueen", 5f, 2.5f),
+
+            // ── the 2026-08-19 casting: the first face drawn FOR this room ───────
+            // The author, on the new concrete-and-plum bar: "yeni sanat diline ve yeni
+            // mekan paletine atmosfere temaya uygun bir karakter olustur temel
+            // animasyonlari ile". Cream linen against grey concrete, and the saturated
+            // colour she carries - the teal shirt, the gold chain - is on the ACTOR,
+            // which is what the palette doctrine asks for: the room stays quiet and the
+            // people in it are the chroma. Six clips, generated and stood on the cast's
+            // own foot line by Tools/patron_gen.py; HeadY measured, not chosen.
+            ("linen", 16f, 2.5f),
         };
         /// <summary>
         /// The papers for a face — name, age, country, flag — read from the cast file.
@@ -2153,6 +2163,12 @@ namespace LastCall.UI
             // count days — it simply stops being what the player reads the night by.
             double hour = run.Floor.ClockHour;
             int hh = (int)hour % 24, mm = (int)((hour - (int)hour) * 60);
+            // The sky outside runs on this same clock (2026-08-19): the window holds an
+            // evening's worth of frames — a low sun at 18:00 through the pink band to a lit
+            // city by 02:00 — and the shift's fraction is simply which frame is up. Driven
+            // from here, beside the hour it belongs to, so the plaque and the glass can never
+            // disagree about what time it is.
+            if (stage != null) stage.SetSkyFraction((float)run.Floor.NightFraction);
             // The plaque's rule is the state light: cyan through the shift, magenta once the
             // room is being called — visible from across the screen without reading a word.
             bool last = run.Floor.IsClosingTime;
