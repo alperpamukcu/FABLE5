@@ -82,14 +82,12 @@ namespace LastCall.UI
         // the rest line, so at 16:10 the cells sit narrower AND higher. ShelfCell resolves
         // that from the live fit rather than assuming 16:9.
         //
-        // The band a glass is drawn in, both ends measured off the 2026-08-18 PixelLab
-        // counter by its row luminance: the plate carries real shelf BOARDS, bright against
-        // the dark interiors, at rows 82..86 and 120..126. So the floor stays at 124 — which
-        // now lands on an actual board rather than near one — and the ceiling comes down from
-        // 72 to 84, the underside of the board above. 72 sat in the gap BETWEEN two boards on
-        // this front, which would have drawn a 52-px glass straight through the upper shelf.
-        // The band is 40 art px now against the old 52, so the glassware run draws a little
-        // smaller; that is the art's own shelf spacing and not a number to tune back up.
+        // The band a glass is drawn in. 124 is where it stands and 84 is the headroom above,
+        // measured to sit inside the bays' own openings on the 2026-08-19 front — this
+        // counter draws no shelf boards, so the band is a display line rather than a plank,
+        // and it is checked the same way the columns are: by drawing it on the plate. The
+        // band is 40 art px against the older front's 52, so the glassware run draws a little
+        // smaller; that follows the art and is not a number to tune back up on its own.
         private const float ShelfFloorPx = 124f;    // the near edge, art px from the art's top
         /// <summary>How deep the drawn shelf surface is, front edge to back, in art px.</summary>
         public const float ShelfDepthPx = 9f;
@@ -215,16 +213,21 @@ namespace LastCall.UI
         // Tools/window_cycle.py out of four PixelLab animation sheets.
         //
         // Each cell is the room's window hole — its bounding box, carrying its alpha — so the
-        // sky is cut to the glass at build time and cannot slide off it at any aspect. That
-        // also means NOTHING IS SCALED anywhere in the chain: the frames are cut 1:1 out of
-        // their 193×150 originals, and here they ride the room's own art scale.
+        // view is cut to the glass at build time and cannot slide off it at any aspect, and
+        // the painted glazing bars split it into panes for free.
         //
-        // The cell size is the hole's size, MEASURED (window_cycle.py build prints both these
-        // numbers). The frame COUNT is not a constant on purpose — it is read off the sheet,
-        // so re-generating with more frames needs no edit here.
-        private const int WindowCellW = 115, WindowCellH = 172;
+        // The picture is stood in the opening's own PLANE rather than cropped to it: this
+        // window is seen at an angle (183 art rows tall at its near edge, 120 at its far
+        // one) and each frame is fitted to that trapezoid whole, by nearest sampling, so it
+        // tilts with the wall without going soft. That work is all done at build time; at
+        // runtime this is a plain sprite swap.
+        //
+        // The cell size is the hole's size, MEASURED (window_cycle.py build prints it beside
+        // the centre below). The frame COUNT is deliberately not a constant — it is read off
+        // the sheet, so re-generating with more frames needs no edit here.
+        private const int WindowCellW = 109, WindowCellH = 182;
         /// <summary>The hole's centre in the room art's own bottom-left space.</summary>
-        private static readonly Vector2 WindowCentreArtPx = new Vector2(57.5f, 206f);
+        private static readonly Vector2 WindowCentreArtPx = new Vector2(54.5f, 197f);
         private Sprite[] _windowFrames;
         private int _windowFrame = -1;
         private Vector2 _backgroundNative;
@@ -588,11 +591,32 @@ namespace LastCall.UI
 
             if (_counterTr != null)
             {
+                // THE BAR GROWS BY REPEATING, NOT BY STRETCHING (2026-08-19, the author:
+                // "ekrandaki tezgahı unity'nin özelliğiyle sağa ve sola doğru genişlet ...
+                // kenarlara uzattıkça sündüren değil görüntüyü üreten metodla").
+                //
+                // It used to span the window with a UNIFORM SCALE - k = visibleW / artW -
+                // which on a 16:9 window is exactly 1 and invisible, and on anything wider
+                // is the smear the author is looking at: the counter grows sideways AND
+                // upward, its pixels stop being square with the room's, and everything the
+                // stage stands on it (the till, the taps, the rest line) drifts with it.
+                //
+                // Unity's own answer is SpriteDrawMode.Tiled: the sprite's 9-slice border
+                // draws at 1:1 and the CENTRE repeats to fill whatever width is asked for.
+                // The border is set on import (PatronArtPostprocessor) at the drawing's own
+                // cabinet dividers, so a wider window buys more cabinet run. Scale stays 1,
+                // which means one art pixel is one stage unit for good - the counter can no
+                // longer drift against the room whatever shape the window is.
                 var sr = _counterTr.GetComponent<SpriteRenderer>();
-                var b = sr.sprite.bounds.size;
-                float k = visibleW / b.x;                      // WidthAligned: span the window
-                _counterTr.localScale = new Vector3(k, k, 1f);
-                _counterScale = k * (b.x / _counterNative.x);  // stage units per art px
+                sr.drawMode = SpriteDrawMode.Tiled;
+                sr.tileMode = SpriteTileMode.Continuous;
+                // Rounded UP to a whole art pixel, and never shorter than the drawing:
+                // at exactly 16:9 that is 640 and the caps land pixel-for-pixel where they
+                // were drawn, while a wider window is covered without a hairline gap.
+                sr.size = new Vector2(
+                    Mathf.Max(_counterNative.x, Mathf.Ceil(visibleW)), _counterNative.y);
+                _counterTr.localScale = Vector3.one;
+                _counterScale = 1f;                            // stage units per art px
                 // Hung from the rest line: the art's top is CounterSurfaceInset above it.
                 float artTopStage = CounterRestY + CounterSurfaceInset * _counterScale;
                 float artHStage = _counterNative.y * _counterScale;
