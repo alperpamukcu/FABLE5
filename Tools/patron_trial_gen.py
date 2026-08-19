@@ -178,9 +178,95 @@ def poll():
             print('  %-20s completed, nothing drawable in the answer' % key)
 
 
+# ── animation, one clip at a time (2026-08-19, round three) ──────────────────
+# The author kept two of the three candidates (clubgirl, heavyset) and asked to go
+# through the clips IN ORDER rather than queueing a whole cast's worth at once, so this
+# takes the clip name on the command line and does exactly that one.
+#
+# v3 custom mode, 16 frames - the tool's own ceiling and the answer to "animasyon
+# uzunlugunu gercekcilik icin maksimumda tutalim". Cost is canvas x frames: a 220px
+# canvas at 10 frames is ~8 generations per direction, so one clip for the two of them
+# is ~16. That is the reason this queues one clip, looks, and only then queues the next.
+#
+# Direction is part of the clip, not a separate axis: the idle is watched from the front
+# (south), and the walk-in crosses the room right to left, which is WEST.
+KEPT = ('clubgirl', 'heavyset')
+
+CLIPS = {
+    # TEMPLATE, not a written description, and the reason is in the tool's own quality
+    # ladder: a template costs ONE generation per direction where a v3 custom clip on this
+    # canvas costs eight, and 'breathing-idle' is already the idle that was asked for -
+    # "omuzlari ve kafasi hafif hareket etse yeter". Its skeleton moves the shoulders and
+    # head and plants the feet; describing that in words would buy the same motion for
+    # eight times the price. ai_freedom stays 0 so the skeleton is followed rigidly - a
+    # loose idle drifts into a full-body sway, which is the thing the author ruled out.
+    # The 'breathing-idle' TEMPLATE was tried first and rejected on the evidence
+    # (2026-08-19): it returns four frames, its first frame draws the figure from BEHIND
+    # on both characters, and one of clubgirl's four never arrived - three usable frames,
+    # which is the opposite of the length that was asked for. So the idle is a v3 custom
+    # after all, and the price of that (8 generations per character) buys the frames.
+    'idle': dict(directions=['south']),
+    # The walk-in crosses the room right to left, so the figure is seen from its WEST
+    # side; one direction, one generation. walking-10 is the longest walk template on
+    # offer, which is the "animasyon uzunlugunu maksimumda tutalim" answer for this clip.
+    'walk': dict(template='walking-10', directions=['west']),
+}
+# Only used if a template result is poor and a clip has to be re-cut as a v3 custom: the
+# canvas ceiling is 8 frames (the server refuses 10 on the 256x256 animation canvas that a
+# 220px character is padded onto), NOT the schema's 16.
+FRAMES = 8
+CUSTOM = {
+    # The first attempt at this said only "standing still" and the model read that as
+    # licence to re-pose: over nine frames the hands travelled up to the hips and stayed
+    # there. A v3 idle has to be told what must NOT move, in the same breath as what must,
+    # or it animates a pose change instead of a breath.
+    'idle': ('breathing quietly in place, a small rise and fall of the shoulders and a '
+             'slight tilt of the head, '
+             'the arms do not move, the hands stay down at the sides, '
+             'the pose does not change, the feet do not move, no gesture, no turning'),
+    'walk': 'walking at a calm steady pace',
+}
+
+
+def animate(clip):
+    spec = CLIPS[clip]
+    state = load()
+    for name in KEPT:
+        cid = state[name]['character_id']
+        done = state[name].setdefault('clips', {})
+        if clip in done:
+            print('  %-10s %-5s already queued (%s)' % (name, clip, done[clip][:8]))
+            continue
+        args = {'character_id': cid, 'animation_name': clip,
+                'directions': spec['directions']}
+        if spec.get('template'):
+            args.update(mode='template', template_animation_id=spec['template'],
+                        ai_freedom=0)
+        else:
+            args.update(mode='v3', frame_count=FRAMES,
+                        action_description=CUSTOM[clip])
+        text, _ = call('animate_character', args)
+        import re
+        ids = re.findall(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', text, re.I)
+        job = next((i for i in ids if i != cid), None)
+        if not job:
+            print('  %-10s %-5s NO JOB: %s' % (name, clip, text[:300]))
+            continue
+        done[clip] = job
+        save(state)
+        log({'asset': 'patron_trial/' + name, 'event': 'animation queued',
+             'character_id': cid, 'clip': clip,
+             'template': spec.get('template'), 'directions': spec['directions']})
+        print('  %-10s %-5s queued %s (%s, %s)'
+              % (name, clip, job, spec.get('template') or 'v3 custom',
+                 spec['directions'][0]))
+
+
 if __name__ == '__main__':
     cmd = sys.argv[1] if len(sys.argv) > 1 else 'poll'
     if cmd == 'queue':
         queue(sys.argv[2] if len(sys.argv) > 2 else None)
+    elif cmd == 'anim':
+        animate(sys.argv[2])
     else:
         poll()

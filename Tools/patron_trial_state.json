@@ -39,13 +39,21 @@
   "character_id": "2e68de01-9e8f-40fd-bbb6-5db6e5ac88d6",
   "language": "selective",
   "size": 220,
-  "png": "AssetPipeline\\sources\\patron_trial\\clubgirl.png"
+  "png": "AssetPipeline\\sources\\patron_trial\\clubgirl.png",
+  "clips": {
+   "idle": "f4936506-319e-4f6c-8edf-60c3b9d86a51",
+   "walk": "8dcbcf32-3602-4485-beaf-3d8080c0e388"
+  }
  },
  "heavyset": {
   "character_id": "d53d8fbf-f387-47d1-a14b-4e143fed0006",
   "language": "selective",
   "size": 220,
-  "png": "AssetPipeline\\sources\\patron_trial\\heavyset.png"
+  "png": "AssetPipeline\\sources\\patron_trial\\heavyset.png",
+  "clips": {
+   "idle": "760fd5d2-ac3f-414b-a222-79a45994de50",
+   "walk": "992ef358-70e1-4d60-8f8b-6477a69914a0"
+  }
  },
  "oldregular": {
   "character_id": "fe3aba65-0ad0-4a8a-89f2-b0c3804dd453",
