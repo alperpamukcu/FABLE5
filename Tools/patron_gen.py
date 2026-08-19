@@ -48,6 +48,9 @@ LOG = os.path.join(HERE, 'AssetPipeline', 'generation_log.jsonl')
 sys.path.insert(0, HERE)
 import pixellab  # noqa: E402
 
+# The 2026-08-09 cast's rig. The 2026-08-19 cast is bigger and carries its own numbers
+# (patron_prompts.RIG_CANVAS_PX / RIG_FOOT_Y); stand() takes them as arguments so one tool
+# can ship both without either rig being a magic number in the other's code.
 CANVAS = 180
 FOOT_Y = 170          # the cast's common foot line, measured off the shipped frames
 CLIPS = ('idle', 'order', 'drink', 'walk', 'cheer', 'upset')
@@ -77,7 +80,7 @@ def bbox(im):
     return xs[0], ys[0], xs[-1] + 1, ys[-1] + 1
 
 
-def stand(frames, lock_centre=False):
+def stand(frames, lock_centre=False, canvas=CANVAS, foot_y=FOOT_Y):
     """Put every frame on the 180 canvas with its feet on the foot line.
 
     lock_centre: use ONE horizontal centre for the whole clip (the median of the
@@ -95,10 +98,10 @@ def stand(frames, lock_centre=False):
     for f, b in good:
         x0, y0, x1, y1 = b
         cx = locked if lock_centre else (x0 + x1) / 2.0
-        canvas = Image.new('RGBA', (CANVAS, CANVAS), (0, 0, 0, 0))
-        canvas.paste(f.crop(b),
-                     (int(round(CANVAS / 2.0 - (cx - x0))), FOOT_Y - (y1 - y0)))
-        out.append(canvas)
+        plate = Image.new('RGBA', (canvas, canvas), (0, 0, 0, 0))
+        plate.paste(f.crop(b),
+                    (int(round(canvas / 2.0 - (cx - x0))), foot_y - (y1 - y0)))
+        out.append(plate)
     return out
 
 

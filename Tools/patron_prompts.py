@@ -126,6 +126,18 @@ TRIAL_FIGURE = (
 # body following the canvas.
 PIVOT_CANVAS_PX = 160
 PIVOT_BODY_PX = 145
+# ── the rig the game loads (2026-08-19) ──────────────────────────────────────
+# The drawings arrive on a 220 canvas and the game draws that canvas at one art pixel per
+# stage unit, so the canvas IS the rig: TycoonHud.CharSize = RIG_CANVAS_PX x StageToHud,
+# and a frame standing anywhere but the foot line stands anywhere but the floor.
+# Ten pixels of air under the shoes, as the 2026-08-09 rig had.
+RIG_CANVAS_PX = 220
+RIG_FOOT_Y = 210
+# How far the canvas's BOTTOM sits below the counter's far edge, in stage units: the
+# bar's front face measures 83 art px (see the note above), and the feet stand 10 px above
+# the canvas bottom, so 93. TycoonHud.CharFootDrop is this x StageToHud.
+RIG_FOOT_DROP = 93
+
 PIVOT_LANGUAGE = 'selective'
 PIVOT_VIEW = 'side'          # PixelLab's name for eye level
 

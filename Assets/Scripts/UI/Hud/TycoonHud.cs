@@ -67,6 +67,31 @@ namespace LastCall.UI
         /// (2026-08-02). Wide enough for most drink names, narrow enough that five tickets
         /// across the counter do not overlap each other.</summary>
         private const float TagMaxW = 236f;
+
+        /// <summary>How SMALL a ticket may get (2026-08-19, the author: "gerekmedikçe de
+        /// büyük olmamalı"). It used to have a floor of BustW + 48 = 156, which was fine
+        /// while every ticket carried a name and an order — and absurd the moment a customer
+        /// thinking about it says nothing but "...". The floor is now the plate's own two
+        /// borders plus a character of air, so a thinking bubble is the size of a thought.</summary>
+        private const float TagMinW = 34f;
+        /// <summary>How far the ticket floats over its own owner's head. It was 15, which
+        /// was the right number while the ticket ended in a flat edge — the spout added
+        /// 2026-08-19 hangs six units BELOW that edge and landed straight on the patience
+        /// gauge, which floats at head + 1 and is eight tall. 22 puts the point of the spout
+        /// three units clear of the gauge's top and still reads as pointing at them.</summary>
+        private const float TagLift = 22f;
+        /// <summary>The air inside the plate, past its 5-unit border. Both axes.</summary>
+        private const float TagPad = 7f;
+        /// <summary>One row of 8px type, and the icon row under it.</summary>
+        private const float TagRowH = 14f, IconRowH = 24f;
+        /// <summary>The thinking beat: how long each of ".", "..", "..." holds. Slow enough
+        /// to read as thinking rather than as a fault in the screen.</summary>
+        private const float DotBeat = 0.42f;
+        /// <summary>How fast an order is spoken, in characters a second (the author: "yazılar
+        /// konuşma metni gibi harf harf gelecek"). 20 puts SEX ON THE BEACH on the ticket in
+        /// eight tenths of a second — long enough to read as speech, short enough that a busy
+        /// bar never waits on it.</summary>
+        private const float SpeakCps = 20f;
         private const float WalkSpeed = 340f;       // walk-in speed (ref px/s) — slightly slower, per the notes (P15)
         private const float ExitSpeed = 560f;       // walk-out speed (ref px/s), back off the right edge
         private const float OffscreenMargin = 150f; // how far past the right edge they start/finish
@@ -80,11 +105,31 @@ namespace LastCall.UI
         // feet reach -FootDrop+17.5. FootDrop 150 crops ~43% of the figure below the counter
         // (the same waist as before), and the window ends 5px over the head — the gauge and
         // the tag now HUG the head instead of floating 28px above it.
-        private const float CharSize = 350f;       // the character image, a touch bigger again
-        private const float CharWiden = 1.18f;     // stretch a touch wider — the sprite is lanky for the bar
-        private const float CharWinH = 180f;       // ends just over the head (art-measured)
-        private const float CharFootDrop = 150f;   // same waist crop at 350 (art-measured)
-        private enum PatronClip { Idle, Order, Drink, Walk, Cheer, Upset }
+        /// <summary>The rig's canvas (2026-08-19). The cast is stood on it by
+        /// Tools/patron_ship.py, and the game draws it at ONE ART PIXEL PER STAGE UNIT —
+        /// which is not a preference but the condition for belonging to the room: the room
+        /// itself is drawn at one art pixel per stage unit, and a character drawn at any
+        /// other rate has pixels of a different size from the wall behind them.</summary>
+        private const float CharCanvas = 220f;
+        private const float CharSize = CharCanvas * StageToHud;
+        /// <summary>1, and it has to be. The old rig stretched every body 18% wider because
+        /// that cast was drawn lanky; the 2026-08-19 cast is drawn in proportion, and 1.18
+        /// on it is simply a squash — a non-uniform scale on pixel art, which is the one
+        /// thing the art bible will not have.</summary>
+        private const float CharWiden = 1f;
+        private const float CharWinH = CharCanvas;
+        /// <summary>How far the canvas's bottom hangs below the counter's far edge, in HUD
+        /// units. MEASURED, not tuned: the bar's front face is 83 art px tall in counter.png
+        /// (rows 67–149; rows 0–66 are its top surface seen at 30°), so a customer standing
+        /// at it has their feet 83 units down, and the rig leaves 10 px of air under the
+        /// shoes — 93 stage units, doubled into HUD.</summary>
+        private const float CharFootDrop = 93f * StageToHud;
+        /// <summary>Idle is a STILL frame here, not a loop (2026-08-19, the author: "nefes
+        /// alış veriş istemiyorum … sabit durmalı, biraz biraz sağa sola bakınmalı gibi").
+        /// The two glances carry the looking-around, and the same pair does double duty:
+        /// an early frame is the small idle glance, the measured hold frame is the full turn
+        /// at whoever just sat down beside them.</summary>
+        private enum PatronClip { Idle, Order, Drink, Walk, Cheer, Upset, LookRight, LookLeft }
         private const float ReactSeconds = 1.15f;   // the one-shot reaction beat before they go
 
         /// <summary>
@@ -106,10 +151,16 @@ namespace LastCall.UI
             public float HeadY;
             /// <summary>What the bar must be worth before this person comes in.</summary>
             public float Stars;
+            /// <summary>Which frame of each glance is the far end of the turn. MEASURED off
+            /// the shipped frames (Tools/patron_ship.py prints them), because only half of
+            /// these clips end on the turn: some hold the look to the last frame and some
+            /// swing back to the front, and a clip that swings back cannot be held on its
+            /// end. So the game holds the frame furthest from the first one instead.</summary>
+            public int HoldRight, HoldLeft;
             /// <summary>Where that head lands in HUD units, from the rig's own constants:
-            /// the sprite is drawn CharSize tall off a 180 canvas and pushed down by
+            /// the sprite is drawn CharSize tall off the rig canvas and pushed down by
             /// CharFootDrop so the counter takes the legs.</summary>
-            public float HeadTop => (180f - HeadY) * (CharSize / 180f) - CharFootDrop;
+            public float HeadTop => (CharCanvas - HeadY) * (CharSize / CharCanvas) - CharFootDrop;
         }
 
         /// <summary>
@@ -129,40 +180,29 @@ namespace LastCall.UI
         ///
         /// Head rows are measured off each shipped idle frame; they place the order ticket.
         /// </summary>
-        private static readonly (string Slug, float HeadY, float Stars)[] PatronCast =
+        private static readonly (string Slug, float HeadY, float Stars, int HoldRight, int HoldLeft)[]
+            PatronCast =
         {
-            (null, 13f, 0f),            // Bar Patron v7 — the rig's own reference
-            // Nobody special: the people who drink in any bar that is open.
-            ("nightnurse", 5f, 0f), ("courier", 36f, 0f), ("undone", 28f, 0f),
-            ("dockman", 25f, 0f), ("bearded", 26f, 0f),
-            // Word is getting round.
-            ("coder", 31f, 1.5f), ("inked", 22f, 1.5f), ("studentm", 31f, 1.5f),
-            ("nerd", 36f, 1.5f), ("bikeryoung", 25f, 1.5f),
-            // A bar worth crossing town for.
-            ("wanderer", 15f, 2.5f), ("studentf", 13f, 2.5f), ("gothgirl", 30f, 2.5f),
-            ("bikerold", 26f, 2.5f),
-            // The room people dress up for.
-            ("glam", 9f, 3.5f), ("execwoman", 5f, 3.5f), ("execman", 23f, 3.5f),
-
-            // ── the 2026-08-10 casting ──────────────────────────────────────────
-            // Moustaches and beards, three bald men, four women in platinum, violet,
-            // teal and copper, and the goths redrawn.
-            ("barber", 19f, 0f), ("bouncer", 37f, 0f),
-            ("ember", 8f, 0f),
-            ("lumber", 16f, 1.5f), ("cueball", 31f, 1.5f), ("violet", 15f, 1.5f),
-            ("teal", 22f, 1.5f), ("gothpunk", 0f, 1.5f),
-            ("profess", 23f, 2.5f), ("chrome", 40f, 2.5f), ("platina", 26f, 2.5f),
-            ("gothqueen", 5f, 2.5f),
-
-            // ── the 2026-08-19 casting: the first face drawn FOR this room ───────
-            // The author, on the new concrete-and-plum bar: "yeni sanat diline ve yeni
-            // mekan paletine atmosfere temaya uygun bir karakter olustur temel
-            // animasyonlari ile". Cream linen against grey concrete, and the saturated
-            // colour she carries - the teal shirt, the gold chain - is on the ACTOR,
-            // which is what the palette doctrine asks for: the room stays quiet and the
-            // people in it are the chroma. Six clips, generated and stood on the cast's
-            // own foot line by Tools/patron_gen.py; HeadY measured, not chosen.
-            ("linen", 16f, 2.5f),
+            // ── the 2026-08-19 rig, and for now the whole cast ───────────────────
+            // Two people, on purpose (the author: "sadece şimdilik bu karakterler gözüksün
+            // detaylı inceleyebilmem için"). Everyone drawn before them stands on the OLD
+            // rig — a 180 canvas, drawn lanky and stretched 18% wider to compensate — and
+            // loading them beside these would draw them at this rig's scale, which is not a
+            // comparison, just a mistake. They come back one at a time as each is redrawn
+            // to this skeleton and this line language, which is the author's own plan.
+            //
+            // Awaiting that redraw, with the star tier each already earned:
+            //   0.0  nightnurse courier undone dockman bearded barber bouncer ember
+            //   1.5  coder inked studentm nerd bikeryoung lumber cueball violet teal
+            //        gothpunk
+            //   2.5  wanderer studentf gothgirl bikerold profess chrome platina gothqueen
+            //        linen
+            //   3.5  glam execwoman execman
+            //
+            // Head rows and hold frames are MEASURED by Tools/patron_ship.py off the
+            // shipped frames — never typed by hand, and re-measured whenever the art moves.
+            ("clubgirl", 7f, 0f, 4, 6),
+            ("heavyset", 13f, 0f, 5, 5),
         };
         /// <summary>
         /// The papers for a face — name, age, country, flag — read from the cast file.
@@ -223,6 +263,8 @@ namespace LastCall.UI
             public Text Order;
             public Image Icon;               // the ordered drink, drawn by DrinkIcon (v5 P13)
             public Image PatienceFill;
+            public int Index;                // which stool along the bar, left to right
+            public float NeighbourT;         // how long somebody has been sitting beside them
             public float SeatX;              // this stool's resting x
             public DirtyGlass Dirty;         // the empty glass left on this stool (D2)
             public RectTransform DirtyProp;  // its clickable prop on the counter
@@ -233,6 +275,13 @@ namespace LastCall.UI
             public CustomerVisit Visit;      // who is assigned to this stool (stable until they leave)
             public float AnimClock;          // running time for the looping clips (idle, walk)
             public bool WasOrdered;          // edge-detect the deciding→ordered moment
+            public Image Tail;               // the bubble's spout, its own sprite (never sliced)
+            public RectTransform IconRow;    // the drink, a rule, and the serving spec
+            public Image IconRule;           // the drawn bar between what and how
+            public Image[] Garnish;          // one mark per thing on the spec
+            public bool WasKnown;            // edge-detect the licence being read
+            public float SpeakFrom;          // when the order started being spoken
+            public bool Spoken;              // the order has finished arriving
             public float OrderAnimLeft;      // remaining "placing the order" one-shot time
             public float DrinkT;             // time since they started drinking
             public float ReactLeft;          // remaining departure-reaction one-shot time
@@ -707,39 +756,75 @@ namespace LastCall.UI
         private Text _tabletTill;
 
         /// <summary>
-        /// BOOZAAR — the trade the bar orders from (booze + bazaar). A parody storefront in
-        /// the same spirit as the shelf's parody brands, and it carries a brand system of
-        /// its own: the wordmark is set in the display face rather than drawn, because the
-        /// generator cannot spell and a shop that misprints its own name is not a shop.
-        /// Renaming is this constant and nothing else — every position is measured.
+        /// PALM CARGO — the trade the bar orders from. Renamed for the Miami turn
+        /// (2026-08-19, the author: "logosu palmiye ve ada şeklinde olmalı, ismi miami
+        /// temasına uygun"): a supply company off some key down the coast, whose mark is a
+        /// palm on its own island (<see cref="ChromeArt.Isle"/>) — the name says what the
+        /// van does and the mark says where it comes from. A parody storefront in the same
+        /// spirit as the shelf's parody brands; the wordmark is set in the display face
+        /// rather than drawn, because the generator cannot spell and a shop that misprints
+        /// its own name is not a shop. Renaming is this constant and nothing else — every
+        /// position is measured. "PALM CARGO" = 10 x 16 = 160 in the 200 box.
         /// </summary>
-        private const string ShopBrand = "BOOZE CRUISE";
+        private const string ShopBrand = "PALM CARGO";
 
-        // The storefront's palette (the author, 2026-08-07: white and green, and readable).
-        // A distributor's ordering site is a white page with a house green — the dark shop
-        // failed the only test that matters, which is whether you can read it.
-        private static readonly Color ShopGreen = new Color(0.161f, 0.514f, 0.267f, 1f);   // house
-        /// <summary>The page's own stock, so a resting tab is a leaf of the same file.</summary>
-        /// <summary>A resting tab is a leaf BEHIND the page, so it is the page's stock with
-        /// the room's own green mixed into it — five stark white boxes beside one dark one
-        /// read as buttons, which is what the author did not like.</summary>
-        private static readonly Color ShopPaper = new Color(0.839f, 0.878f, 0.847f, 1f);
-        /// <summary>The lit edge along the open tab's top: the one bright line in the row,
-        /// so the eye finds the open file without reading a word.</summary>
-        private static readonly Color ShopTabLit = new Color(0.435f, 0.847f, 0.522f, 1f);
+        // THE STOREFRONT'S PALETTE, v2 (the author, 2026-08-19: miami/vice, eski bir Windows
+        // 98 sitesi hissi, mavi→pembe fade). The house green is GONE — every job it did
+        // (the frame, the tabs, the wordmark, the account readout) is now the vice fade or
+        // one of the two ramps it runs between.
+        //
+        // What did NOT change is the one thing that was ever load-bearing: the aisle is a
+        // PAGE and the page is light. The dark storefront failed the only test that matters
+        // — whether the products can be read — and a vice-blue field under white type would
+        // fail it exactly the same way. The fade dresses the WINDOW; the page inside it
+        // stays paper. The two 98 face greys below carry a blue cast so the chrome and the
+        // fade read as one machine rather than as a grey app with a pink hat.
+        //
+        // The state colours further down (StripStock, StripDeny, StripPicked, …) are NOT
+        // part of this and did not move: those are signals — gain is Lime, refusal is
+        // ViceRed, money is Amber (16 §5, sacred) — and a theme does not get to repaint a
+        // signal. That the "stock" strip stays green is the rule working, not a leftover.
+        /// <summary>The house colour: the blue end of the fade, and the frame's own body.</summary>
+        private static readonly Color ShopVice = UITheme.ClubBlue[2];
+        /// <summary>A resting tab is a leaf BEHIND the page, and a 98 window's face is grey
+        /// — this is that grey with the house blue mixed into it, so five resting tabs read
+        /// as files behind the open one rather than as five buttons.</summary>
+        private static readonly Color ShopPaper = new Color(0.753f, 0.769f, 0.812f, 1f);
+        /// <summary>The lit edge along the open tab's top: the pink end of the fade, which
+        /// is the one bright line in the row, so the eye finds the open file without
+        /// reading a word.</summary>
+        private static readonly Color ShopTabLit = UITheme.Magenta[4];
         /// <summary>How long a tab's title takes to come up to white. Short enough to feel
         /// like a response, long enough to read as a light coming on rather than a swap.</summary>
         private const float TabFade = 0.18f;
-        private static readonly Color ShopGreenLit = new Color(0.290f, 0.706f, 0.400f, 1f);
-        private static readonly Color ShopGreenDark = new Color(0.075f, 0.290f, 0.157f, 1f);
-        private static readonly Color ShopPage = new Color(0.949f, 0.961f, 0.945f, 1f);    // paper
-        private static readonly Color ShopAisle = new Color(0.890f, 0.914f, 0.886f, 1f);   // rail
-        private static readonly Color ShopInk = new Color(0.098f, 0.145f, 0.110f, 1f);     // type
-        private static readonly Color ShopInkSoft = new Color(0.404f, 0.451f, 0.412f, 1f);
+        /// <summary>The pink end: the accent that answers the blue, used where the old green
+        /// was "lit" rather than structural.</summary>
+        private static readonly Color ShopViceLit = UITheme.Magenta[3];
+        /// <summary>The outline everything on this page is cut with — the darkest step of
+        /// the blue end, so the frame belongs to the fade rather than being a black box
+        /// drawn round it.</summary>
+        private static readonly Color ShopViceDeep = UITheme.ClubBlue[0];
+        private static readonly Color ShopPage = new Color(0.969f, 0.973f, 0.984f, 1f);    // paper, cooled
+        private static readonly Color ShopAisle = new Color(0.863f, 0.871f, 0.906f, 1f);   // rail
+        /// <summary>Type. ClubBlue's darkest step rather than an off-palette near-black:
+        /// 15.6:1 on the page, and the ink belongs to the same ramp as the frame.</summary>
+        private static readonly Color ShopInk = UITheme.ClubBlue[0];
+        private static readonly Color ShopInkSoft = new Color(0.353f, 0.376f, 0.451f, 1f);
+
+        // ── the 98 window's own bevel ───────────────────────────────────────────────
+        // Not a new idiom: 16 §1 already says a bevel is four hairlines, lit top and left,
+        // shadowed right and bottom. This is that, with the two colours a 1998 control
+        // surface used — and it is the reason the chrome reads as a MACHINE rather than as
+        // rectangles, without a single sprite being stretched.
+        /// <summary>The lit face of a raised edge — the light is up and to the left.</summary>
+        private static readonly Color BevelLit = new Color(0.937f, 0.945f, 0.973f, 1f);
+        /// <summary>The shadowed face. ClubBlue[1] and not a grey, so the shadow under a
+        /// control is the same night the frame is cut from.</summary>
+        private static readonly Color BevelShade = UITheme.ClubBlue[1];
         /// <summary>Secondary type ON a tile. ShopInkSoft was the obvious pick and it fails
         /// AA against four of the seven plate tints (3.4:1 on the sealed crate) — a grey
         /// chosen for white paper does not survive being reused on coloured paper.</summary>
-        private static readonly Color TileMetaInk = new Color(0.298f, 0.341f, 0.310f, 1f);
+        private static readonly Color TileMetaInk = new Color(0.278f, 0.298f, 0.361f, 1f);
 
         // THE STATE LANGUAGE (2026-08-09). Four independent channels — strip hue, chip
         // glyph, plate tint, and whether a control exists at all — so no two states lean on
@@ -747,7 +832,6 @@ namespace LastCall.UI
         private static readonly Color StripStock = new Color(0.290f, 0.706f, 0.400f, 1f);
         private static readonly Color StripDeny = new Color(0.706f, 0.243f, 0.259f, 1f);
         private static readonly Color StripPicked = new Color(0.937f, 0.678f, 0.180f, 1f);
-        private static readonly Color StripHeld = new Color(0.639f, 0.659f, 0.643f, 1f);
         private static readonly Color StripSealed = new Color(0.310f, 0.231f, 0.161f, 1f);
         private static readonly Color StripReturn = new Color(0.239f, 0.478f, 0.706f, 1f);
         private static readonly Color PlateDeny = new Color(0.965f, 0.949f, 0.941f, 1f);
@@ -759,14 +843,18 @@ namespace LastCall.UI
 
         // The inspector is a DARK plate inset into the white page: the author asked for a
         // box behind the descriptions, and a dark box under light type is the one treatment
-        // that reads as a box rather than as text lying on the page.
-        private static readonly Color InspectorBack = new Color(0.086f, 0.114f, 0.094f, 1f);
-        private static readonly Color InspectorInk = new Color(0.878f, 0.906f, 0.878f, 1f);
-        private static readonly Color InspectorDim = new Color(0.588f, 0.627f, 0.596f, 1f);
+        // that reads as a box rather than as text lying on the page. Recut on ClubBlue for
+        // the vice storefront (2026-08-19) — it was the one large dark field on the page and
+        // a green one left the old theme's fingerprint on it.
+        private static readonly Color InspectorBack = UITheme.ClubBlue[0];
+        private static readonly Color InspectorInk = new Color(0.886f, 0.898f, 0.937f, 1f);
+        private static readonly Color InspectorDim = new Color(0.596f, 0.620f, 0.706f, 1f);
         private static readonly Color BuffGood = new Color(0.427f, 0.847f, 0.518f, 1f);
         private static readonly Color BuffCost = new Color(0.965f, 0.741f, 0.310f, 1f);
         private static readonly Color BuffBad = new Color(0.878f, 0.353f, 0.376f, 1f);
-        private static readonly Color ShopCost = new Color(0.702f, 0.157f, 0.176f, 1f);
+        /// <summary>What a thing costs you. ViceRed's own step, not a hand-picked red —
+        /// refusal and cost are the same voice (16 §5).</summary>
+        private static readonly Color ShopCost = UITheme.ViceRed[2];
 
         // The page, top to bottom: 20 + 40 + 32 + 8 + 400 + 8 + 128 + 8 = 644, which is the
         // screen a 1096x700 device leaves inside a 28 bezel. Every one of these is load
@@ -798,10 +886,77 @@ namespace LastCall.UI
         private const float PageInset = 12f;
         private const float BarW = 10f;
         // The tile, and the three product classes that share one shelf line.
-        private const float TileW = 160f, TileH = 208f, ContentW = 140f;
-        private const float BottleH = 134f, VesselH = 100f, IconH = 96f;
+        // 230, not 208 (2026-08-19). The card took on a name PLATE and a price TAG, and
+        // the rows it already had would have had to pay for them — the art was the only
+        // row with anything to give and it had already given 16 units this morning. A card
+        // that gained two objects is a taller card; the aisle scrolls.
+        private const float TileW = 160f, TileH = 236f, ContentW = 140f;
+        // A bottle is the tallest thing the aisle draws and it may not exceed TileArtH:
+        // PlaceProduct stands every product on ProductFootY and grows it UPWARD, so
+        // ProductFootY + BottleH is the top of the drawing and TileH - TileCapH is the roof.
+        // 118, not 134 (2026-08-19) — it is still by some way the biggest thing on the card.
+        private const float BottleH = 118f, VesselH = 100f, IconH = 96f;
+
+        // ── THE CARD'S GRID (2026-08-19) ────────────────────────────────────────
+        //
+        // Every row on this card used to be placed by its own hand-tuned y — the name at
+        // -144, the meta at -168, the money at 6 up from the foot, the gauge at a third
+        // number derived from a fourth — and the card LOOKED like that: things landed near
+        // each other rather than on anything. (16 §6.4: a caption floating half a line
+        // above the thing it captions reads as carelessness even when nobody can name it.)
+        //
+        // So there is one column of numbers now and every element on the card is placed
+        // from it. They are measured DOWN FROM THE TOP, they sit on a 2-unit rhythm, and
+        // they add up to TileH exactly:
+        //
+        //     0   – 4     the colophon (the storefront's fade — grey when locked)
+        //     10  – 128   the product, with SIX units of air above it and six below
+        //     134 – 174   the name, on its own plate, two lines of 16
+        //     176 – 188   the meta, one line of 8
+        //     190 – 204   the state: one mark and one word
+        //     206 – 226   the foot: the price tag, and the key
+        //     226 – 230   air, so nothing sits ON the plate's own edge
+        //
+        // If a row changes height, the rows under it move by the same amount and the sum
+        // must still be 208. That is the whole discipline; it is what the old card had
+        // none of.
+        //
+        // THREE RULES THIS COLUMN HAS TO KEEP, all of them learned the hard way from a
+        // screenshot (2026-08-19):
+        //
+        //   The art is FRAMED BY AIR, and the two gaps match. It used to start at 4, hard
+        //   against the colophon, so every bottle grew out of the fade bar while sitting six
+        //   units clear of its own name — the card looked hung from the top rather than laid
+        //   out. Six above and six below, and the product floats in the middle of its band.
+        //
+        //   TileArtH >= the tallest art. The first cut of this grid gave the art 124 and
+        //   moved the product's foot to 80 — and BottleH is 134, so every can, carton and
+        //   bottle on the mixer board grew straight out of the top of its own card. The art
+        //   band and the art heights are one number apart and have to be checked together;
+        //   BottleH came down to fit rather than the band going up, because the rows under
+        //   it had nothing left to give.
+        //
+        //   The last row STOPS SHORT of TileH. The foot ran to 208 exactly, which is the
+        //   plate's own edge, so the ADD key and the price were drawn sitting on the border
+        //   — the "butonlar çerçeveyle kesişiyor" in the author's shot. Six units of air is
+        //   the difference between a key on a card and a key through one.
+        private const float TilePad = 10f;      // the left and right margin, both sides
+        private const float TileCapH = 4f;
+        /// <summary>The air over the product AND under it. One number, because the author's
+        /// note is that the two must be equal — "yukarıdaki bar ile olacakları mesafe
+        /// aşağıdaki isimleriyle olacakları mesafeyle aynı olmalı".</summary>
+        private const float TileArtAir = 6f;
+        private const float TileArtTop = TileCapH + TileArtAir, TileArtH = 118f;
+        /// <summary>Two lines of 16 and the air round them. 46, not 40 (2026-08-19, measured
+        /// in play): the legacy Text renderer sets 16 on a 19.2 line, so two lines need 39 —
+        /// and a 40 box minus a 2-unit inset each side left 36, which TRUNCATED the second
+        /// line. "Resurface the Bar" shipped to the screenshot reading RESURFACE.</summary>
+        private const float TileNameTop = TileArtTop + TileArtH + TileArtAir, TileNameH = 46f;
+        private const float TileMetaTop = 182f, TileMetaH = 12f;
+        private const float TileStateTop = 196f, TileStateH = 14f;
+        private const float TileFootTop = 212f, TileFootH = 20f;
         private const string ShopIdleTip =
-            "Point at a line to read it. Nothing is charged until you place the order.";
+            "Point at anything to read it. You only pay when you place the order.";
 
         private Text _fittingNote, _checkoutLabel, _cartHeadLabel, _osClock;
         private Text _cartTotal, _cartTotalLabel;
@@ -1073,6 +1228,17 @@ namespace LastCall.UI
             if (Showing(_guidePanel)) { _guidePanel.gameObject.SetActive(false); return; }
             if (Showing(_ledgerPanel)) { _ledgerPanel.gameObject.SetActive(false); return; }
             if (Showing(_idRoot)) { _idRoot.gameObject.SetActive(false); _idVisit = null; return; }
+            // The market (2026-08-19): now that the title bar's close box is gone the foot
+            // key is the one exit, and a fullscreen panel with one small exit and no Escape
+            // is a trap. Escape walks the SAME door — the ask first if it is up (Escape on
+            // a question is "go back", never "do it"), else the guarded advance, so the
+            // basket warning can never be skipped past with a key.
+            if (Showing(_dayEndPanel) && _dayEndStep == 1)
+            {
+                if (Showing(_closingAsk)) { _closingAsk.gameObject.SetActive(false); return; }
+                OnDayEndAdvance();
+                return;
+            }
             if (_flow != null && _flow.IsOpen) _flow.CloseFlow();
         }
 
@@ -1127,6 +1293,86 @@ namespace LastCall.UI
             // licence into a second-click affair, which is how you end up serving somebody
             // you meant to read.
             ShowId(visit);
+        }
+
+        /// <summary>
+        /// THE TICKET'S BOTTOM ROW: what they want, a rule, then how they want it served.
+        /// Returns how wide it came out — the plate is sized to its widest line and this row
+        /// is very often it.
+        ///
+        /// Every mark is asked for by the PREPARATION'S OWN ID, so a preparation added to the
+        /// garnish pool tomorrow needs a mask in ChromeArt and nothing else here. A mark that
+        /// does not exist yet comes back null and leaves a gap rather than throwing — the
+        /// same contract every other mark in this game is drawn under.
+        ///
+        /// Placed by hand, not by a layout group: this row is centred on a plate whose width
+        /// is decided in the same frame, and a layout group would settle a frame late — which
+        /// on a ticket that grows one character at a time is a row that visibly lags its own
+        /// balloon. (16 §0: positions here are absolute, deliberately.)
+        /// </summary>
+        private float LayOutOrderIcons(SeatView view, CustomerVisit visit, bool show)
+        {
+            var row = view.IconRow;
+            if (row == null) return 0f;
+            if (!show || visit == null)
+            {
+                if (row.gameObject.activeSelf) row.gameObject.SetActive(false);
+                return 0f;
+            }
+            if (!row.gameObject.activeSelf) row.gameObject.SetActive(true);
+
+            var drink = DrinkIcon.For(visit.Order.Wanted, _bootstrap.Glassware);
+            var spec = visit.Order.Garnishes;
+            int marks = 0;
+            for (int i = 0; i < view.Garnish.Length; i++)
+            {
+                var mark = spec != null && i < spec.Count ? ChromeArt.Mark(spec[i].Id) : null;
+                view.Garnish[i].sprite = mark;
+                view.Garnish[i].enabled = mark != null;
+                if (mark != null) marks++;
+            }
+            if (view.Icon != null)
+            {
+                view.Icon.sprite = drink;
+                view.Icon.enabled = drink != null;
+            }
+
+            // 24 for the drink because that is the size DrinkIcon draws a glass at, and 16 for
+            // the marks because that is the size they are authored at. Neither is scaled: a
+            // pixel drawing squeezed to fit a row it does not belong in is the fault this
+            // whole ticket was rebuilt to stop making.
+            const float DrinkW = 24f, MarkW = 16f, RuleW = 1f, Gap = 5f, MarkGap = 3f;
+            float w = drink != null ? DrinkW : 0f;
+            if (marks > 0)
+            {
+                if (w > 0f) w += Gap + RuleW + Gap;
+                w += marks * MarkW + (marks - 1) * MarkGap;
+            }
+            row.sizeDelta = new Vector2(w, IconRowH);
+
+            float x = 0f;
+            if (drink != null)
+            {
+                view.Icon.rectTransform.anchoredPosition = new Vector2(x, 0f);
+                x += DrinkW;
+            }
+            if (view.IconRule != null)
+            {
+                bool ruled = marks > 0 && drink != null;
+                view.IconRule.enabled = ruled;
+                if (ruled)
+                {
+                    view.IconRule.rectTransform.anchoredPosition = new Vector2(x + Gap, 0f);
+                    x += Gap + RuleW + Gap;
+                }
+            }
+            for (int i = 0; i < view.Garnish.Length; i++)
+            {
+                if (!view.Garnish[i].enabled) continue;
+                view.Garnish[i].rectTransform.anchoredPosition = new Vector2(x, 0f);
+                x += MarkW + MarkGap;
+            }
+            return w;
         }
 
         /// <summary>Which seat the pointer is over, or −1. A rect test on the stool's own
@@ -1209,7 +1455,7 @@ namespace LastCall.UI
                         if (view.Dirty == null) return;
                         view.Dirty.Bus();
                         Sfx.Play("glass_down", 0.9f);
-                        Toast("GLASS CLEARED — STOOL FREE");
+                        Toast("GLASS CLEARED — SEAT IS FREE");
                     });
                     var sink = prop.gameObject.AddComponent<PressSink>();
                     sink.Face = prop; sink.Depth = 3f; sink.Lift = 3f; sink.Tint = img;
@@ -1555,7 +1801,7 @@ namespace LastCall.UI
                         _glassShown = false;
                         return;
                     }
-                    if (seat >= 0 && !saidWhy) Toast("NOT FOR THEM — READ THEM FIRST");
+                    if (seat >= 0 && !saidWhy) Toast("READ THEIR ID FIRST");
                     // Home it goes, along the counter, by the road it already knows.
                     _glassServeFrom = _glassHome;
                     _glassServeTo = _drinkGlass.anchoredPosition;
@@ -1621,7 +1867,7 @@ namespace LastCall.UI
                 else
                 {
                     // Refused at the stool: the drink comes back. The player keeps it.
-                    if (!saidWhy) Toast("THEY ARE GONE — THE DRINK COMES BACK");
+                    if (!saidWhy) Toast("THEY LEFT — YOU GET THE DRINK BACK");
                     _glassServeT = 0f;
                     _glassReturning = true;
                 }
@@ -1828,11 +2074,11 @@ namespace LastCall.UI
             {
                 if (_shopTabLabels[i] == null) continue;
                 bool on = i == _shopTab;
-                var want = on ? Color.white : ShopGreenDark;
+                var want = on ? Color.white : ShopViceDeep;
                 _shopTabLabels[i].color = Color.Lerp(_shopTabLabels[i].color, want, step);
                 if (_shopTabIcons[i] != null)
                     _shopTabIcons[i].color = Color.Lerp(_shopTabIcons[i].color,
-                        on ? Color.white : new Color(0.55f, 0.62f, 0.56f, 1f), step);
+                        on ? Color.white : new Color(0.494f, 0.529f, 0.635f, 1f), step);
             }
         }
 
@@ -1869,7 +2115,7 @@ namespace LastCall.UI
             Place(rt, new Vector2(1, 0), new Vector2(126, 16), new Vector2(-10, -14f));
             rt.pivot = new Vector2(1, 1);
             var t = NewText("L", rt, _display, 8, TextAnchor.MiddleRight,
-                amount >= 0 ? ShopGreenLit : ShopCost);
+                amount >= 0 ? ShopViceLit : ShopCost);
             Stretch(t.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
             t.raycastTarget = false;
@@ -2314,7 +2560,7 @@ namespace LastCall.UI
                         if (v.Visit == houseGuest && v.Look != written)
                         {
                             v.Look = written;
-                            v.Tag.anchoredPosition = new Vector2(0, written.HeadTop + 15f);
+                            v.Tag.anchoredPosition = new Vector2(0, written.HeadTop + TagLift);
                             if (v.Gauge != null)
                                 v.Gauge.anchoredPosition = new Vector2(0, written.HeadTop + 6f);
                         }
@@ -2346,7 +2592,7 @@ namespace LastCall.UI
                         v.Look = LookFor(visit);
                         if (v.Look != null)
                         {
-                            v.Tag.anchoredPosition = new Vector2(0, v.Look.HeadTop + 15f);
+                            v.Tag.anchoredPosition = new Vector2(0, v.Look.HeadTop + TagLift);
                             if (v.Gauge != null)
                                 v.Gauge.anchoredPosition = new Vector2(0, v.Look.HeadTop + 6f);
                         }
@@ -2390,7 +2636,11 @@ namespace LastCall.UI
                 // are, not what they want; read, it says only the name and the order.
                 bool known = visit.IdInspected;
                 bool atTheStool = view.WalkT >= 1f;
-                bool showBubble = atTheStool && (!deciding || drinking);
+                // THE BUBBLE IS UP THE WHOLE TIME THEY ARE ON THE STOOL (2026-08-19). It used
+                // to be hidden while they read the menu, so a customer deciding and a customer
+                // who had not arrived yet looked exactly alike — the player had nothing to
+                // wait ON. It says "..." instead, which is a customer visibly thinking.
+                bool showBubble = atTheStool;
                 if (view.Tag.gameObject.activeSelf != showBubble)
                     view.Tag.gameObject.SetActive(showBubble);
 
@@ -2402,35 +2652,53 @@ namespace LastCall.UI
                     // "x3", not a star from the font: no pixel face here carries one, so it
                     // arrived as a fallback glyph at the wrong weight beside a name set in ours.
                     string star = visit.ExtraOrdersTaken > 0
-                        ? $"<color=#F5C97B>x{visit.ExtraOrdersTaken + 1} </color>" : "";
+                        ? $"<color=#8F5A1E>x{visit.ExtraOrdersTaken + 1} </color>" : "";
                     view.Name.supportRichText = true;
                     // The name off their PAPERS, which is the name their licence prints —
                     // see NameOn. The ticket is where the card is remembered once it is shut.
-                    view.Name.text = known
+                    view.Name.text = known && !deciding
                         ? star + NameOn(visit, view.Look).ToUpperInvariant() : "";
-                    view.Name.color = UITheme.TextPrimary;
-                    view.Order.color = UITheme.Amber[4];
 
-                    if (view.Icon != null)
+                    // THE ORDER ARRIVES AS SPEECH (2026-08-19, the author: "yazılar konuşma
+                    // metni gibi harf harf gelecek"). The clock starts on the EDGE of the
+                    // licence being read, not on the frame it is read in, so the ticket cannot
+                    // restart its sentence every time the pointer moves. Reduced motion is
+                    // handed the whole line at once — a typewriter is exactly the sort of
+                    // thing that setting exists to switch off.
+                    if (known && !view.WasKnown)
                     {
-                        view.Icon.sprite = !known ? null
-                            : DrinkIcon.For(visit.Order.Wanted, _bootstrap.Glassware);
-                        view.Icon.enabled = view.Icon.sprite != null;
-                        view.Icon.color = drinking ? new Color(1f, 1f, 1f, 0.5f) : Color.white;
+                        view.WasKnown = true;
+                        view.SpeakFrom = Time.unscaledTime;
                     }
+                    string wanted = known ? visit.Order.Wanted.Name.ToUpperInvariant() : "";
+                    int said = Motion.Reduced ? wanted.Length
+                        : Mathf.Clamp(Mathf.FloorToInt((Time.unscaledTime - view.SpeakFrom) * SpeakCps),
+                                      0, wanted.Length);
+                    view.Spoken = said >= wanted.Length;
 
                     if (drinking)
                     {
                         // Served and content; the drink is theirs to finish before they go.
                         view.Wants.text = "ENJOYING IT";
-                        view.Order.text = known
-                            ? $"{visit.Order.Wanted.Name.ToUpperInvariant()}  ·" : "·";
-                        view.Order.color = UITheme.Lime[3];
+                        view.Wants.color = UITheme.Lime[0];
+                        view.Order.text = known ? wanted : "";
+                        view.Spoken = true;
+                    }
+                    else if (deciding)
+                    {
+                        // Reading the menu. One, two, three dots and round again — the beat is
+                        // the only thing on the ticket, so the ticket is the size of it.
+                        view.Wants.text = Motion.Reduced ? "..."
+                            : new string('.', 1 + Mathf.FloorToInt(Time.unscaledTime / DotBeat) % 3);
+                        view.Wants.color = UITheme.Magenta[1];
+                        view.Order.text = "";
+                        view.Spoken = false;
                     }
                     else if (!known)
                     {
                         // Ready, unread: the one line the author asked for, and nothing else.
                         view.Wants.text = "READY TO ORDER";
+                        view.Wants.color = UITheme.Magenta[1];
                         view.Order.text = "";
                     }
                     else if (visit.OnTheHouse)
@@ -2441,14 +2709,22 @@ namespace LastCall.UI
                         // otherwise print the ask over their head and hand the player the
                         // whole trial in advance, which is the one thing the reveal is for.
                         view.Wants.text = "TALK TO THEM";
+                        view.Wants.color = UITheme.Magenta[1];
                         view.Order.text = "";
+                        view.Spoken = false;
                     }
                     else
                     {
                         // Read: the name above, the order below — the card said the rest.
                         view.Wants.text = "";
-                        view.Order.text = visit.Order.Wanted.Name.ToUpperInvariant();
+                        view.Order.text = wanted.Substring(0, said);
                     }
+
+                    // THE ICON ROW comes up only once the order has finished being SAID. The
+                    // pictures are the fastest thing on the ticket to read, so showing them
+                    // while the letters are still arriving would answer the question before
+                    // the sentence asks it — and the typing would be decoration.
+                    float iconW = LayOutOrderIcons(view, visit, known && view.Spoken && !deciding);
 
                     // The ticket FITS its lines and its WIDEST line (the author, 2026-08-02:
                     // "yazı hiçbir zaman taşmamalı"). SEX ON THE BEACH ran off both ends of
@@ -2456,36 +2732,40 @@ namespace LastCall.UI
                     // up to a cap; past the cap the order wraps to a second row and the card
                     // grows downward instead. Nothing is ever clipped, and nothing floats in
                     // an empty box.
-                    float iconRoom = view.Icon != null && view.Icon.enabled ? 28f : 0f;
+                    //
+                    // BOTH AXES ANSWER THE CONTENT NOW (2026-08-19). The height used to be
+                    // the rows of TYPE only, so the icon row hung off the bottom of the plate;
+                    // and the width had a 156 floor, which drew a poster round three dots.
                     float widest = Mathf.Max(view.Name.preferredWidth,
-                        Mathf.Max(view.Wants.preferredWidth, view.Order.preferredWidth + iconRoom));
-                    float cardW = Mathf.Clamp(widest + 24f, BustW + 48f, TagMaxW);
-                    float textW = cardW - 8f;
+                        Mathf.Max(view.Wants.preferredWidth,
+                            Mathf.Max(view.Order.preferredWidth, iconW)));
+                    float cardW = Mathf.Clamp(widest + TagPad * 2f, TagMinW, TagMaxW);
+                    float textW = cardW - TagPad * 2f;
 
                     // The order is the line that runs long, so it is the one allowed to wrap.
                     int orderLines = view.Order.text.Length == 0 ? 0
-                        : Mathf.Max(1, Mathf.CeilToInt(
-                            (view.Order.preferredWidth + iconRoom) / Mathf.Max(1f, textW)));
+                        : Mathf.Max(1, Mathf.CeilToInt(view.Order.preferredWidth / Mathf.Max(1f, textW)));
                     view.Order.horizontalOverflow = orderLines > 1
                         ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
 
-                    float rowTop = -8f;
+                    float rowTop = -TagPad;
                     view.Name.rectTransform.offsetMax = new Vector2(-4, rowTop);
-                    if (view.Name.text.Length > 0) rowTop -= 16f;
+                    if (view.Name.text.Length > 0) rowTop -= TagRowH;
                     view.Wants.rectTransform.offsetMax = new Vector2(-4, rowTop);
-                    if (view.Wants.text.Length > 0) rowTop -= 16f;
+                    if (view.Wants.text.Length > 0) rowTop -= TagRowH;
                     view.Order.rectTransform.offsetMax = new Vector2(-4, rowTop);
-                    rowTop -= 17f * orderLines;
-                    view.Tag.sizeDelta = new Vector2(cardW, -rowTop + 8f);
+                    rowTop -= TagRowH * orderLines;
+                    if (view.IconRow != null && view.IconRow.gameObject.activeSelf)
+                    {
+                        view.IconRow.anchoredPosition = new Vector2(0, rowTop);
+                        rowTop -= IconRowH;
+                    }
+                    view.Tag.sizeDelta = new Vector2(cardW, -rowTop + TagPad);
                 }
 
-                // The icon docks against the text's measured width, so the centred line reads
-                // as one piece: [glass] DRAUGHT, the pair centred together — on whatever row
-                // the order landed on now that the ticket packs its lines.
-                if (view.Icon != null && view.Icon.enabled)
-                    view.Icon.rectTransform.anchoredPosition = new Vector2(
-                        -view.Order.preferredWidth * 0.5f - 4f,
-                        view.Order.rectTransform.offsetMax.y - 6f);
+                // (The drink icon used to dock against the order text's measured width, on
+                // whatever row the order landed on. It lives on its own row now, beside the
+                // serving spec, and LayOutOrderIcons places the whole row.)
 
                 // TWO clocks now (the author, 2026-08-02): the wait to be ASKED, then a fresh
                 // wait for the drink. The gauge draws whichever is live — Core says which —
@@ -2512,13 +2792,21 @@ namespace LastCall.UI
                 // are chosen from the visit state; the body below the waist is clipped by the bar.
                 UpdateSeatAnimation(view, visit, patience);
 
-                // The tag glows cyan when a drink is built and this customer can actually
-                // take it — and "can take" now includes the READ: only taken orders are
-                // click-servable, so the glowing set and the clickable set are one set.
+                // The tag lights when a drink is built and this customer can actually take
+                // it — and "can take" includes the READ: only taken orders are click-servable,
+                // so the lit set and the clickable set are one set.
+                //
+                // It used to be a TINT over a flat rectangle, and a tint is no use to a
+                // drawing: multiplying a white plate by cyan drags the magenta edge to a
+                // muddy teal and the whole balloon changes colour to say one thing. The lit
+                // ticket is a second SPRITE instead — the same 11x11 geometry with its edge
+                // walked onto the information ramp, so only the edge moves and the plate is
+                // still recognisably the same object (16 §5: light says state).
                 bool canTake = drinkReady && !deciding && !drinking && visit.IdInspected;
-                view.TagBg.color = canTake
-                    ? new Color(UITheme.Selection.r, UITheme.Selection.g, UITheme.Selection.b, 0.92f)
-                    : new Color(0.07f, 0.07f, 0.11f, 0.90f);
+                view.TagBg.sprite = ChromeArt.Bubble(canTake);
+                if (view.Tail != null) view.Tail.sprite = ChromeArt.BubbleTail(canTake);
+                if (view.IconRule != null)
+                    view.IconRule.color = canTake ? UITheme.Cyan[0] : UITheme.Magenta[1];
             }
         }
 
@@ -2585,6 +2873,9 @@ namespace LastCall.UI
                 // that walked out, which is the last moment both are still in hand.
                 RecordDeparture(view.Look, view.Visit);
                 view.Visit = null;
+                // The next customer on this stool speaks their own order from the beginning.
+                view.WasKnown = false;
+                view.Spoken = false;
                 view.Group.alpha = 1f;
                 if (view.Body != null) view.Body.flipX = false;   // reset the mirror
                 view.Root.gameObject.SetActive(false);
@@ -2616,7 +2907,12 @@ namespace LastCall.UI
             else                              { clip = PatronClip.Idle;  t = view.AnimClock; }
             view.AnimClock += Time.deltaTime;
 
-            UpdatePatronFrame(view, clip, t, facing: 1);
+            // A seated customer's idle is a STILL frame, so the life in it comes from where
+            // they are looking. This runs only in the idle branch — somebody speaking their
+            // order or lifting a glass has better things to do with their head.
+            int exact = -1;
+            if (clip == PatronClip.Idle) SeatedGlance(view, ref clip, ref exact);
+            UpdatePatronFrame(view, clip, t, facing: 1, exactFrame: exact);
 
             float flush = (!ordered || drinking) ? 1f : Mathf.Clamp01(patience / 0.35f);
             // RGB ONLY: the alpha on this renderer is the walk-in/leave fade, which
@@ -2630,14 +2926,83 @@ namespace LastCall.UI
             }
         }
 
+        // ── where a seated customer is looking (2026-08-19) ──────────────────────
+        /// <summary>How long the head takes to swing to the far end of a glance.</summary>
+        private const float GlanceTurnSeconds = 0.5f;
+        /// <summary>How often an unattended customer looks around, and for how long.</summary>
+        private const float GlanceEvery = 7f, GlanceLookSeconds = 1.5f;
+        /// <summary>The frame the SMALL idle glance stops at. The same clip's measured hold
+        /// frame is the full turn; this is a fraction of the way there, which is what makes
+        /// looking around read as different from looking AT somebody.</summary>
+        private const int GlanceSmallFrame = 2;
+
+        /// <summary>
+        /// Turns the idle into a look. Nobody beside them: they hold still and glance a
+        /// little to one side every few seconds, alternating. Somebody on one side: they
+        /// turn to that person and HOLD it while they are there. Somebody on both: they
+        /// look between them, on the same slow clock.
+        ///
+        /// The clock is the seat's own animation time plus a phase off its index — six
+        /// customers glancing in unison would read as a machine, and a phase is free where
+        /// a random number would have to be plumbed through RunRng to stay deterministic.
+        /// </summary>
+        private void SeatedGlance(SeatView view, ref PatronClip clip, ref int frame)
+        {
+            var look = view.Look;
+            if (look == null) return;
+            bool right = Occupied(view.Index + 1), left = Occupied(view.Index - 1);
+
+            float clock = view.AnimClock + view.Index * 1.7f;
+            bool useRight = right && !left ? true
+                          : left && !right ? false
+                          : Mathf.FloorToInt(clock / GlanceEvery) % 2 == 0;
+            var want = useRight ? PatronClip.LookRight : PatronClip.LookLeft;
+            if (!look.Clips.TryGetValue(want, out var frames) || frames.Length == 0) return;
+            int hold = Mathf.Clamp(useRight ? look.HoldRight : look.HoldLeft, 1, frames.Length - 1);
+
+            if (right || left)
+            {
+                // Turned toward them and held: the swing plays once and stops at the
+                // measured far end, because some of these clips swing back on their own.
+                view.NeighbourT += Time.deltaTime;
+                frame = Mathf.Min(hold, Mathf.FloorToInt(view.NeighbourT / GlanceTurnSeconds * (hold + 1)));
+                clip = want;
+                return;
+            }
+            view.NeighbourT = 0f;
+
+            // Alone: still for most of the cycle, then a small look out and back.
+            float u = Mathf.Repeat(clock, GlanceEvery);
+            if (u >= GlanceLookSeconds) return;                 // the still frame, which is idle
+            int small = Mathf.Min(GlanceSmallFrame, frames.Length - 1);
+            float g = u / GlanceLookSeconds;
+            int f = g < 0.28f ? Mathf.FloorToInt(g / 0.28f * (small + 1))
+                  : g > 0.72f ? Mathf.FloorToInt((1f - g) / 0.28f * (small + 1))
+                  : small;
+            frame = Mathf.Clamp(f, 0, small);
+            clip = want;
+        }
+
+        /// <summary>Is there somebody sitting on that stool? Off the end of the bar counts
+        /// as nobody, which is why the two end seats only ever glance one way.</summary>
+        private bool Occupied(int index) =>
+            index >= 0 && index < _seats.Count && _seats[index].Visit != null
+            && _seats[index].WalkT >= 1f && !_seats[index].Exiting;
+
         /// <summary>Sets the character image to the right frame of <paramref name="clip"/> at time
-        /// <paramref name="t"/>, mirrored when <paramref name="facing"/> is -1 (leaving right).</summary>
-        private void UpdatePatronFrame(SeatView view, PatronClip clip, float t, int facing)
+        /// <paramref name="t"/>, mirrored when <paramref name="facing"/> is -1 (leaving right).
+        /// <paramref name="exactFrame"/> overrides the clip's own timing when the caller has
+        /// already decided which frame it wants (the glances, which are driven by who is
+        /// sitting where rather than by a clock).</summary>
+        private void UpdatePatronFrame(SeatView view, PatronClip clip, float t, int facing,
+            int exactFrame = -1)
         {
             var look = view.Look ?? (_looks.Count > 0 ? _looks[0] : null);
             if (look == null || !look.Clips.TryGetValue(clip, out var frames) || frames.Length == 0) return;
             if (view.Body == null) return;
-            view.Body.sprite = frames[PatronFrameIndex(clip, t, frames.Length)];
+            view.Body.sprite = frames[exactFrame >= 0
+                ? Mathf.Clamp(exactFrame, 0, frames.Length - 1)
+                : PatronFrameIndex(clip, t, frames.Length)];
             // A touch wider than tall (CharWiden). The mirror is flipX rather than a negative
             // scale: a negative scale on a lit sprite inverts its winding and the 2D renderer
             // drops it, so a leaving customer would simply vanish.
@@ -2685,6 +3050,8 @@ namespace LastCall.UI
                     [PatronClip.Walk]  = LoadPatronClip(entry.Slug, "walk"),
                     [PatronClip.Cheer] = LoadPatronClip(entry.Slug, "cheer"),
                     [PatronClip.Upset] = LoadPatronClip(entry.Slug, "upset"),
+                    [PatronClip.LookRight] = LoadPatronClip(entry.Slug, "look_right"),
+                    [PatronClip.LookLeft]  = LoadPatronClip(entry.Slug, "look_left"),
                 };
                 // A look with no idle has no art on disk. Skip it instead of seating a
                 // customer who renders as nothing.
@@ -2693,7 +3060,8 @@ namespace LastCall.UI
                     ? "Patron/face" : $"Patron/{entry.Slug}/face");
                 _looks.Add(new PatronLook
                 { Slug = entry.Slug, Clips = clips, HeadY = entry.HeadY, Face = face,
-                  Stars = entry.Stars });
+                  Stars = entry.Stars,
+                  HoldRight = entry.HoldRight, HoldLeft = entry.HoldLeft });
             }
         }
 
@@ -3520,11 +3888,11 @@ namespace LastCall.UI
         {
             if (_cart.Count > 0)
                 return _cart.Count == 1
-                    ? "ONE LINE IS STILL IN THE BASKET AND HAS NOT BEEN ORDERED."
-                    : _cart.Count + " LINES ARE STILL IN THE BASKET AND HAVE NOT BEEN ORDERED.";
+                    ? "1 THING IS STILL IN THE BASKET."
+                    : _cart.Count + " THINGS ARE STILL IN THE BASKET.";
             var run = Run;
             if (run != null && run.TodaysPurchases.Count == 0)
-                return "THE VAN CAME AND WENT WITH NOTHING ON IT TONIGHT.";
+                return "THE VAN LEAVES EMPTY TONIGHT.";
             return null;
         }
 
@@ -3647,8 +4015,8 @@ namespace LastCall.UI
             // the beats are over and nothing would ever put it back.
             if (_billNext != null)
                 _billNext.gameObject.SetActive(_dayEndStep == 0 && _endBeat == 0);
-            _dayEndTitle.text = "LAST CALL — ORDERING IN";
-            if (_billNextLabel != null) _billNextLabel.text = "CONTINUE TO THE ORDER";
+            _dayEndTitle.text = "LAST CALL — TIME TO ORDER";
+            if (_billNextLabel != null) _billNextLabel.text = "GO TO THE ORDER";
             // NO TITLE OVER THE SLIP (2026-08-11, the author: take the yellow LAST CALL —
             // THE BOOKS off the top). The slip already says LAST CALL across its own head in
             // its own ink; a second one in the scrim above it was the same words twice, in a
@@ -3767,15 +4135,15 @@ namespace LastCall.UI
             bool room = run.CanFitTonight && !CartHasFitting();
             if (_fittingNote != null)
             {
-                _fittingNote.text = room ? "1 FITTING TONIGHT" : "FITTING SPENT";
-                _fittingNote.color = room ? ShopGreenDark : ShopCost;
+                _fittingNote.text = room ? "1 UPGRADE TONIGHT" : "UPGRADE USED";
+                _fittingNote.color = room ? ShopViceDeep : ShopCost;
             }
-            if (_fittingLamp != null) _fittingLamp.color = room ? ShopGreenLit : ShopCost;
+            if (_fittingLamp != null) _fittingLamp.color = room ? ShopViceLit : ShopCost;
             for (int i = 0; i < _shopTabKeys.Length; i++)
             {
                 bool on = i == _shopTab;
                 _shopTabKeys[i].sprite = null;
-                _shopTabKeys[i].color = on ? ShopGreenDark : ShopPaper;
+                _shopTabKeys[i].color = on ? ShopViceDeep : ShopPaper;
                 var key = (RectTransform)_shopTabKeys[i].transform;
                 key.sizeDelta = new Vector2(TabKeyW, on ? TabLiveH : TabRestH);
                 if (_shopTabLits[i] != null) _shopTabLits[i].enabled = on;
@@ -3815,8 +4183,8 @@ namespace LastCall.UI
                     Art = ItemArt.Load("sh_p_crate") ?? ItemArt.Load("sh_i_restock"),
                     Identity = "RESTOCK THE WHOLE WELL",
                     MetaLine = "Delivered before you open",
-                    Body = "Tops up every bottle behind the bar in one line, at $"
-                           + cfg.RefillPricePerCapacity + " a measure.",
+                    Body = "Fills every bottle behind the bar. $"
+                           + cfg.RefillPricePerCapacity + " per measure.",
                 };
                 if (restock > 0)
                 {
@@ -4038,9 +4406,9 @@ namespace LastCall.UI
                     Identity = "ONE MORE STOOL",
                     MetaLine = "The floor · seat " + Math.Min(run.Seats + 1, cfg.MaxSeats)
                                + " of " + cfg.MaxSeats,
-                    Body = "One more drinker at the bar at a time.",
-                    BuffA = new Buff(BuffKind.Gain, "+1 seat · +0.25 stars on what the bar can be worth"),
-                    BuffB = new Buff(BuffKind.Bad, "Counts as tonight's one fitting"),
+                    Body = "One more customer can sit at the bar.",
+                    BuffA = new Buff(BuffKind.Gain, "+1 seat · +0.25 stars"),
+                    BuffB = new Buff(BuffKind.Bad, "Uses tonight's one upgrade"),
                 };
                 if (run.Seats >= cfg.MaxSeats) { stool.State = TileState.Held; stool.Word = "MAX"; }
                 else DressBuyable(stool, cfg.SeatPrice(run.Seats), "seat", true, () => run.BuySeat());
@@ -4060,10 +4428,10 @@ namespace LastCall.UI
                     ArtH = IconH,
                     Identity = "RESURFACE THE BAR",
                     MetaLine = "The room · rung " + run.CounterTier + " of " + cfg.MaxAmbienceTier,
-                    Body = "A better bar top is the first thing anyone leans on. "
-                           + "It lifts the mood of every visit, not just the ones you get right.",
+                    Body = "A better bar top makes every customer happier. Even the "
+                           + "ones whose drink you get wrong.",
                     BuffA = new Buff(BuffKind.Gain, "+0.03 on every served visit, up to +0.06"),
-                    BuffB = new Buff(BuffKind.Bad, "Counts as tonight's one fitting"),
+                    BuffB = new Buff(BuffKind.Bad, "Uses tonight's one upgrade"),
                 };
                 if (run.CounterTier >= cfg.MaxAmbienceTier)
                 { bar.State = TileState.Held; bar.Word = "MAX"; }
@@ -4087,10 +4455,10 @@ namespace LastCall.UI
                         Identity = glass.Name.ToUpperInvariant() + " GLASSWARE",
                         MetaLine = "Rung " + tier + " of " + TycoonRun.MaxGlassTier
                                    + " · " + DrinksServedIn(glass.Id),
-                        Body = "A finer set lifts every visit's mood and raises what the bar can be worth.",
+                        Body = "Better glasses make every customer happier, and win you stars.",
                         BuffA = new Buff(BuffKind.Gain, "+1 rung on the " + glass.Name.ToLowerInvariant()
                                          + " line · every drink served in one"),
-                        BuffB = new Buff(BuffKind.Bad, "Counts as tonight's one fitting"),
+                        BuffB = new Buff(BuffKind.Bad, "Uses tonight's one upgrade"),
                     };
                     if (maxed) { spec.State = TileState.Held; spec.Word = "MAX"; }
                     else DressBuyable(spec, stepPrice, "glass:" + glass.Id, true,
@@ -4187,11 +4555,10 @@ namespace LastCall.UI
                         State = TileState.Sealed,
                         Identity = "MORE AT " + next.ToString("0.0") + " STARS",
                         MetaLine = locked + " " + (locked == 1 ? noun : plural) + " " + verb,
-                        Body = "This department is rolled against what the room thinks of "
-                               + "this bar. Reach " + next.ToString("0.0")
-                               + " stars and the next of them start appearing here.",
+                        Body = "Get " + next.ToString("0.0") + " stars and more of these "
+                               + "show up here.",
                         BuffA = new Buff(BuffKind.Bad, "Needs " + next.ToString("0.0")
-                                         + " stars · you are at " + run.Rating.Average.ToString("0.0")),
+                                         + " stars · you have " + run.Rating.Average.ToString("0.0")),
                     });
             }
 
@@ -4207,8 +4574,8 @@ namespace LastCall.UI
                     State = TileState.Held,
                     Identity = "NOTHING ON THIS BOARD TONIGHT",
                     MetaLine = "The van brings a different list every night",
-                    Body = "What the market offers is rolled at each close, against what is "
-                           + "already behind your bar and what the room thinks of it.",
+                    Body = "What it brings depends on what you already have, and on "
+                           + "how many stars you have.",
                 });
 
             // NO REFUNDS (2026-08-11, the author: "iadeyi kaldıralım"). A shelf that
@@ -4467,7 +4834,7 @@ namespace LastCall.UI
             {
                 Identity = (e.Label ?? "").ToUpperInvariant(),
                 MetaLine = "$" + e.Price + "  ·  in the basket",
-                Body = "Click it to take it back out. Nothing is charged until you place the order.",
+                Body = "Click to take it back out. You only pay when you place the order.",
                 Art = e.Art,
             });
             hover.Exited = () => ShowShopCard(null);
@@ -4487,8 +4854,8 @@ namespace LastCall.UI
             {
                 Identity = "AND " + n + " MORE",
                 MetaLine = "the basket holds them all",
-                Body = "The row ran out of width, not the basket. Everything picked is in the "
-                     + "total, and the order buys all of it.",
+                Body = "The row is full, the basket is not. Everything you picked "
+                     + "is in the total.",
             });
             hover.Exited = () => ShowShopCard(null);
         }
@@ -4530,9 +4897,9 @@ namespace LastCall.UI
 
             if (isFitting)
             {
-                if (!Run.CanFitTonight) { Toast("ONE FITTING A NIGHT"); return; }
+                if (!Run.CanFitTonight) { Toast("ONE UPGRADE A NIGHT"); return; }
                 foreach (var e in _cart)
-                    if (e.IsFitting) { Toast("ONE FITTING A NIGHT"); return; }
+                    if (e.IsFitting) { Toast("ONE UPGRADE A NIGHT"); return; }
             }
             if (CartTotal() + price > Run.Money) { Toast("NOT ENOUGH MONEY"); return; }
 
@@ -4585,8 +4952,8 @@ namespace LastCall.UI
             var btn = _checkout.GetComponent<Button>();
             if (btn != null) btn.interactable = !spent;
             if (img != null)
-                img.color = spent ? new Color(0.62f, 0.65f, 0.62f, 1f) : Color.white;
-            _checkoutLabel.color = spent ? new Color(0.90f, 0.93f, 0.90f, 0.85f) : Color.white;
+                img.color = spent ? new Color(0.612f, 0.635f, 0.706f, 1f) : Color.white;
+            _checkoutLabel.color = spent ? new Color(0.898f, 0.910f, 0.949f, 0.85f) : Color.white;
             // Spent, the key says so; free, the BASKET says what it says — an empty one
             // reads NOTHING PICKED, and hard-coding PLACE ORDER here would have handed the
             // player a key inviting them to order nothing the moment the hold released.
@@ -4853,10 +5220,10 @@ namespace LastCall.UI
                 Identity = "MORE " + noun.ToUpperInvariant() + "S AT " + next.ToString("0.0") + " STARS",
                 MetaLine = locked + " " + (locked == 1 ? noun : noun + "s")
                            + " the van will not bring you yet",
-                Body = "This shelf is rolled against what the room thinks of this bar. Reach "
-                       + next.ToString("0.0") + " stars and the next of them start appearing here.",
+                Body = "Get " + next.ToString("0.0") + " stars and more of these show up "
+                       + "here.",
                 BuffA = new Buff(BuffKind.Bad, "Needs " + next.ToString("0.0")
-                                 + " stars · you are at " + run.Rating.Average.ToString("0.0")),
+                                 + " stars · you have " + run.Rating.Average.ToString("0.0")),
             });
             _cardTarget = was;
         }
@@ -4873,10 +5240,10 @@ namespace LastCall.UI
             h.gameObject.AddComponent<LayoutElement>().preferredHeight = 26;
             var band = NewRect("Band", h);
             Stretch(band, Vector2.zero, Vector2.one, new Vector2(0, 2), new Vector2(0, -2));
-            band.gameObject.AddComponent<Image>().color = ShopGreenDark;
+            band.gameObject.AddComponent<Image>().color = ShopViceDeep;
             var pip = NewRect("Pip", band);
             Place(pip, new Vector2(0, 0.5f), new Vector2(6, 18), new Vector2(10, 0));
-            pip.gameObject.AddComponent<Image>().color = ShopGreenLit;
+            pip.gameObject.AddComponent<Image>().color = ShopViceLit;
             var t = NewText("T", band, _shop, 16, TextAnchor.MiddleLeft, Color.white);
             Place(t.rectTransform, new Vector2(0, 0.5f), new Vector2(700, 18), new Vector2(26, 0));
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -5923,7 +6290,7 @@ namespace LastCall.UI
             Place(note.rectTransform, new Vector2(1, 1), new Vector2(420, 12), new Vector2(-20, -22));
             note.horizontalOverflow = HorizontalWrapMode.Wrap;
             note.verticalOverflow = VerticalWrapMode.Truncate;
-            note.text = "Star gate = what the bar must be worth before they come in";
+            note.text = "Stars = how many you need before they walk in";
 
             // Column heads, so the rows underneath do not need repeating labels.
             var head = NewText("H", _guidePanel, _shop, 8, TextAnchor.MiddleLeft, UITheme.Cream[2]);
@@ -6091,7 +6458,7 @@ namespace LastCall.UI
             _dayEndPanel.gameObject.SetActive(false);
             CloseId();
             _bannerText.gameObject.SetActive(true);
-            _bannerText.text = "THE BAR IS CLOSED\nthree days in the red — NEW RUN to try again";
+            _bannerText.text = "THE BAR IS CLOSED\nthree days losing money — NEW RUN to try again";
         }
 
         // ── the licence: read the customer (GDD 24 §5) ───────────────────────────
@@ -6386,7 +6753,7 @@ namespace LastCall.UI
                 _orderTipPrefs.gameObject.SetActive(false);
                 _orderTipHint.gameObject.SetActive(true);
                 _orderTipHint.rectTransform.anchoredPosition = new Vector2(Pad, -y);
-                _orderTipHint.text = "CLICK THEM TO READ THE LICENCE";
+                _orderTipHint.text = "CLICK THEM TO READ THEIR ID";
                 y += 13f + Pad;
                 SizeTip(OrderTipW, y);
                 Show();
@@ -7171,7 +7538,7 @@ namespace LastCall.UI
                 double need = beat.RequiresStars, now = run.Rating.Average;
                 _gateFill.sizeDelta = new Vector2((float)(need / BarRating.MaxStars)
                                                   * BarRating.MaxStars * 18f, 0);
-                _gateText.text = $"COMES BACK AT {need:0.0}  ·  THE BAR IS AT {now:0.0}";
+                _gateText.text = $"COMES BACK AT {need:0.0} STARS  ·  YOU HAVE {now:0.0}";
             }
 
             bool working = trial != null && trial.State == TrialState.Pouring;
@@ -7444,7 +7811,7 @@ namespace LastCall.UI
             var hint = NewText("Hint", _idRoot, _body, 12, TextAnchor.MiddleCenter, UITheme.TextSecondary);
             Place(hint.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(400, 20),
                 new Vector2(0, -(LicH * 0.5f) - 16f));
-            hint.text = "TAP OUTSIDE THE CARD TO HAND IT BACK";
+            hint.text = "CLICK OUTSIDE TO GIVE IT BACK";
 
             _idRoot.gameObject.SetActive(false);
         }
@@ -7701,9 +8068,19 @@ namespace LastCall.UI
             // BIN GLASS retired (v5 P13 / C7): a drink is thrown away by carrying it to the bin
             // on the counter, which is the same verb that serves it.
 
-            // Refusal notices ("NOT ENOUGH MONEY") drop in just under the top bar.
+            // Refusal notices ("NOT ENOUGH MONEY") drop in just under the top bar. On their
+            // OWN canvas above every override (2026-08-19): the market sorts at 22 and half
+            // of what the toast says — "ONE UPGRADE A NIGHT", "BASKET IS EMPTY" — is said
+            // IN the market, where a toast without its own order drew under the scrim and
+            // the refusal was never seen at all.
             _toast = NewText("Toast", root, _display, 14, TextAnchor.MiddleCenter, UITheme.ViceRed[3]);
             Place(_toast.rectTransform, new Vector2(0.5f, 1), new Vector2(500, 30), new Vector2(0, -66));
+            var toastCanvas = _toast.gameObject.AddComponent<Canvas>();
+            toastCanvas.overrideSorting = true;
+            toastCanvas.sortingOrder = 30;   // above the market (22), guide (24), bench (25)
+            // …and it must never EAT one. A notice that sits above everything is a notice
+            // that can swallow the click under it; it says a thing and takes nothing.
+            _toast.raycastTarget = false;
             _toast.gameObject.SetActive(false);
 
             // Six stools along the counter: each customer is a bust sitting at the bar with a
@@ -7714,6 +8091,7 @@ namespace LastCall.UI
             {
                 int index = i;
                 var seat = new SeatView();
+                seat.Index = i;
                 seat.SeatX = seatStartX + i * seatGap;
 
                 // The click zone spans the bust and its tag; a clear image catches the ray.
@@ -7748,58 +8126,119 @@ namespace LastCall.UI
                 }
 
                 // The order tag, floating above the head.
+                // THE ORDER BUBBLE (2026-08-19). It was a flat tinted rectangle with one
+                // neon rule under it; it is a drawn balloon now — the palette's white, a hot
+                // magenta edge, and a spout pointing down at the head it belongs to
+                // (ChromeArt.Bubble / BubbleTail, and see that file for why it is drawn
+                // rather than generated).
+                //
+                // 9-SLICED, which is the whole reason it can carry a drawing at all. This
+                // rect changes size on nearly every refresh — its width is its longest line,
+                // its height is how many lines there are — so a picture hung on it plainly
+                // would be stretched every time somebody ordered something with a long name.
+                // Sliced, Unity draws the four real corners 1:1 at any size and repeats the
+                // one-unit runs between them, and nothing distorts at any width or height.
+                //
+                // THE SPOUT IS NOT IN THAT SPRITE. A tail inside a stretched band smears
+                // along it, so it is its own Image under the middle — the same split
+                // BackBarArt's bottle card makes, for the same reason.
                 seat.Tag = NewRect("Tag", seat.Root);
                 seat.Tag.anchorMin = seat.Tag.anchorMax = new Vector2(0.5f, 0);
                 seat.Tag.pivot = new Vector2(0.5f, 0);
-                seat.Tag.sizeDelta = new Vector2(BustW + 48f, 84f);
-                seat.Tag.anchoredPosition = new Vector2(0, CharWinH + 10f);
+                seat.Tag.sizeDelta = new Vector2(TagMinW, 40f);
+                seat.Tag.anchoredPosition = new Vector2(0, CharWinH + TagLift);
                 seat.TagBg = seat.Tag.gameObject.AddComponent<Image>();
+                seat.TagBg.sprite = ChromeArt.Bubble();
+                seat.TagBg.type = Image.Type.Sliced;
                 seat.TagBg.raycastTarget = false;
-                // Vice, not parchment (the author, 2026-08-02: too much yellow): a dark
-                // glassy card with one neon rule under it — the room's own palette.
-                var tagRule = NewRect("Rule", seat.Tag);
-                tagRule.anchorMin = new Vector2(0.06f, 0); tagRule.anchorMax = new Vector2(0.94f, 0);
-                tagRule.pivot = new Vector2(0.5f, 0);
-                tagRule.sizeDelta = new Vector2(0, 2);
-                tagRule.anchoredPosition = new Vector2(0, 2);
-                var tagRuleImg = tagRule.gameObject.AddComponent<Image>();
-                tagRuleImg.color = UITheme.Cyan[3];
-                tagRuleImg.raycastTarget = false;
+
+                // The spout hangs BELOW the plate and overlaps it by its own two skirt rows,
+                // which are plain fill and erase the plate's bottom edge exactly where the
+                // balloon should be open. Drawn at 11x8, the size it was authored at, and
+                // never scaled — the one thing in this ticket that must not be.
+                var tailRt = NewRect("Tail", seat.Tag);
+                tailRt.anchorMin = tailRt.anchorMax = new Vector2(0.5f, 0);
+                tailRt.pivot = new Vector2(0.5f, 1);
+                tailRt.sizeDelta = new Vector2(11f, 8f);
+                tailRt.anchoredPosition = new Vector2(0, 2f);
+                seat.Tail = tailRt.gameObject.AddComponent<Image>();
+                seat.Tail.sprite = ChromeArt.BubbleTail();
+                seat.Tail.raycastTarget = false;
 
                 // 8, NOT 12/10/11 (GDD 16 §0, found by `LastCall → Audit UI`). The ticket over
                 // a customer's head is read across the room all night, and its three rows were
                 // set at three sizes the pixel face does not have — so the thing the player
-                // reads most often was the softest type on the screen. One size, and the rows
-                // are told apart by COLOUR, which they already were: cream, cyan, magenta.
+                // reads most often was the softest type on the screen.
+                //
+                // THE INKS TURNED OVER with the plate (2026-08-19). Cream, pale cyan and pale
+                // magenta were chosen to sit on a near-black card; on a white one they are
+                // invisible. Each row keeps its ROLE and takes the dark step of the same ramp:
+                // the name is the room's own near-black, the status line is the plate's own
+                // magenta, and the order is read blackest of all because it is the thing the
+                // player is actually being asked to make.
                 seat.Name = NewText("Name", seat.Tag, _body, 8, TextAnchor.UpperCenter,
-                    UITheme.TextPrimary);
+                    UITheme.Night[1]);
                 Stretch(seat.Name.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -10));
                 seat.Name.horizontalOverflow = HorizontalWrapMode.Overflow;
 
                 seat.Wants = NewText("Wants", seat.Tag, _body, 8, TextAnchor.UpperCenter,
-                    UITheme.Cyan[4]);
+                    UITheme.Magenta[1]);
                 Stretch(seat.Wants.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -26));
                 seat.Wants.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-                // Centred for real (2026-07-31): the row used to keep a 32px left inset so the
-                // corner-pinned icon had room, which centred the text in a right-shifted box —
-                // visibly off-centre on every seat. Now the TEXT owns the middle and the icon
-                // rides just left of its measured width, per refresh, like a bullet point.
                 seat.Order = NewText("Order", seat.Tag, _body, 8, TextAnchor.UpperCenter,
-                    UITheme.Magenta[4]);
+                    UITheme.Night[0]);
                 Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -42));
                 seat.Order.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-                // The drink itself, on the order row (v5 P13). The shape and colour of the
-                // glass is what a busy player actually reads across five stools. 24px, so it
-                // clears the patience bar; its position follows the text every refresh.
-                var iconRt = NewRect("OrderIcon", seat.Tag);
-                Place(iconRt, new Vector2(0.5f, 1), new Vector2(24, 24), new Vector2(0, -42));
-                iconRt.pivot = new Vector2(1f, 0.5f);   // placed by its right edge, beside the text
+                // WHAT THEY WANT, BESIDE HOW THEY WANT IT (2026-08-19, the author: "istenilen
+                // alkol iconun yanında nasıl servis edilmesi isteniyorsa onlarında iconu |
+                // ayrılık gösterilecek ... ikonografi ile anlatmak önemli"). One row under the
+                // order: the drink's own glass, a rule, then one mark per thing on the serving
+                // spec — ice, a twist, a salted rim, a sugared rim.
+                //
+                // The rule between them is DRAWN, a one-unit Image, not a typed "|". Nothing
+                // in this project asks a font for a picture (ChromeArt's own header) and a
+                // pipe character in the pixel face is a different height on every row it sits
+                // beside. The whole row is laid out in RefreshSeats, because how wide it is
+                // depends on how many things they asked for.
+                var icons = NewRect("Icons", seat.Tag);
+                icons.anchorMin = icons.anchorMax = new Vector2(0.5f, 1);
+                icons.pivot = new Vector2(0.5f, 1);
+                icons.sizeDelta = new Vector2(IconRowH, IconRowH);
+                seat.IconRow = icons;
+
+                var iconRt = NewRect("OrderIcon", icons);
+                iconRt.anchorMin = iconRt.anchorMax = new Vector2(0, 0.5f);
+                iconRt.pivot = new Vector2(0, 0.5f);
+                iconRt.sizeDelta = new Vector2(24, 24);
                 seat.Icon = iconRt.gameObject.AddComponent<Image>();
                 seat.Icon.preserveAspect = true;
                 seat.Icon.raycastTarget = false;
 
+                var ruleRt = NewRect("Rule", icons);
+                ruleRt.anchorMin = ruleRt.anchorMax = new Vector2(0, 0.5f);
+                ruleRt.pivot = new Vector2(0, 0.5f);
+                ruleRt.sizeDelta = new Vector2(1f, 14f);
+                seat.IconRule = ruleRt.gameObject.AddComponent<Image>();
+                seat.IconRule.color = UITheme.Magenta[1];
+                seat.IconRule.raycastTarget = false;
+
+                // TWO marks and no more. ServingSpec.Roll never asks for a third (65% one,
+                // else two), and a row that can grow without a bound is a row that will one
+                // day run off the plate it is centred on.
+                seat.Garnish = new Image[2];
+                for (int g = 0; g < seat.Garnish.Length; g++)
+                {
+                    var gr = NewRect("G" + g, icons);
+                    gr.anchorMin = gr.anchorMax = new Vector2(0, 0.5f);
+                    gr.pivot = new Vector2(0, 0.5f);
+                    gr.sizeDelta = new Vector2(16, 16);
+                    var gi = gr.gameObject.AddComponent<Image>();
+                    gi.color = UITheme.Night[1];
+                    gi.raycastTarget = false;
+                    seat.Garnish[g] = gi;
+                }
                 // The patience gauge rides the BODY, not the ticket (P15, absorbs the P8
                 // gauge item): a slim bar floating just over the head, so reading who is
                 // about to walk means looking at the people, not at their paperwork.
@@ -7883,7 +8322,7 @@ namespace LastCall.UI
             Place(calledUnder.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(900, 20),
                 new Vector2(0, -22f));
             calledUnder.horizontalOverflow = HorizontalWrapMode.Overflow;
-            calledUnder.text = "the doors are shut · counting the till";
+            calledUnder.text = "doors shut · counting the money";
             calledUnder.raycastTarget = false;
             _lastCallRt = NewRect("Call", _dayEndPanel);   // one group carries both lines
             Stretch(_lastCallRt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
@@ -7991,7 +8430,7 @@ namespace LastCall.UI
             osBar.pivot = new Vector2(0.5f, 1);
             osBar.sizeDelta = new Vector2(0, OsBarH);
             osBar.anchoredPosition = Vector2.zero;
-            osBar.gameObject.AddComponent<Image>().color = new Color(0.87f, 0.89f, 0.87f, 1f);
+            osBar.gameObject.AddComponent<Image>().color = new Color(0.867f, 0.878f, 0.918f, 1f);
             // The derived "02:{Day*7%60}" was never a clock — it was noise dressed as one.
             _osClock = NewText("OsClock", osBar, _body, 8, TextAnchor.MiddleLeft, ShopInk);
             Place(_osClock.rectTransform, new Vector2(0, 0.5f), new Vector2(120, 12), new Vector2(12, 0));
@@ -8011,56 +8450,75 @@ namespace LastCall.UI
             battImg.raycastTarget = false;
             if (battImg.sprite == null) battImg.color = ShopInkSoft;
 
-            // THE APP BAR: the house mark, the wordmark, and the money.
+            // THE TITLE BAR (2026-08-19). This is the storefront's whole identity in one
+            // 40-unit run: the vice fade, the mark and wordmark on it, and the money. It
+            // replaced a white app bar with a green wordmark on it.
+            //
+            // The fade is `ChromeArt.FadeStrip` — one texel per band, drawn point-filtered,
+            // so however wide the bar gets it comes back as FLAT runs with a hard edge
+            // between them: twenty-six of 40 across this 1040 (the author asked the first
+            // take's eight for "daha smooth", and more bands is how a band set smooths —
+            // never interpolation, 16 §6.10). No sprite is stretched into a smear either:
+            // the failure the old sh_bar had was that its middle carried MARKS, and a flat
+            // run has no detail to smear.
             var strip = NewRect("Strip", screen);
             strip.anchorMin = new Vector2(0, 1); strip.anchorMax = new Vector2(1, 1);
             strip.pivot = new Vector2(0.5f, 1);
             strip.sizeDelta = new Vector2(0, AppBarH);
             strip.anchoredPosition = new Vector2(0, -OsBarH);
-            // FLAT, not sh_bar. That sprite is 64x32 with a 44x16 centre, so a 1040-wide bar
-            // stretches its middle 23x across against 1.5x down and every mark in it becomes
-            // a streak the width of the page. A bar with nothing to smear cannot smear.
             var stripImg = strip.gameObject.AddComponent<Image>();
+            stripImg.sprite = ChromeArt.FadeStrip();
             stripImg.color = Color.white;
-            Hairline(strip, new Vector2(0, 0), new Vector2(1, 0), ShopAisle);
+            // The bar stands ON the window, so it closes with the frame's own dark edge.
+            Hairline(strip, new Vector2(0, 0), new Vector2(1, 0), ShopViceDeep);
 
+            // The mark: PALM CARGO's palm on its island, drawn in ChromeArt like every mark
+            // (chrome is never generated) and authored at exactly this 28x24 — 1x, no
+            // preserveAspect needed. White on the fade, the same footing as the wordmark, so
+            // mark and name read as one printing.
             var mark = NewRect("Mark", strip);
-            Place(mark, new Vector2(0, 0.5f), new Vector2(32, 28), new Vector2(10, 0));
+            Place(mark, new Vector2(0, 0.5f), new Vector2(28, 24), new Vector2(10, 0));
             var markImg = mark.gameObject.AddComponent<Image>();
-            markImg.sprite = ItemArt.Load("sh_van") ?? ItemArt.Load("sh_mark");
-            markImg.preserveAspect = true; markImg.raycastTarget = false;
-            if (markImg.sprite == null) markImg.color = ShopGreen;
+            markImg.sprite = ChromeArt.Isle();
+            markImg.raycastTarget = false;
 
             // The wordmark IS the logo, and it is the one place the display face earns its
-            // width. "BOOZE CRUISE" = 12 x 16 = 192 in a 200 box.
-            const float BrandX = 50f;
-            var brand = NewText("Brand", strip, _display, 16, TextAnchor.MiddleLeft, ShopGreenDark);
+            // width. "BOOZE CRUISE" = 12 x 16 = 192 in a 200 box. It sits WHITE on the fade
+            // now: on a title bar the name is the brightest thing, and the fade is dark
+            // enough at both ends (ClubBlue[2] 4.9:1, Magenta[3] 4.6:1) to carry it.
+            const float BrandX = 46f;
+            var brand = NewText("Brand", strip, _display, 16, TextAnchor.MiddleLeft, Color.white);
             Place(brand.rectTransform, new Vector2(0, 0.5f), new Vector2(200, 20),
-                new Vector2(BrandX, 3));
+                new Vector2(BrandX, 0));
             brand.horizontalOverflow = HorizontalWrapMode.Overflow;
             brand.text = ShopBrand;
-            var swash = NewRect("Swash", strip);
-            Place(swash, new Vector2(0, 0.5f), new Vector2(ShopBrand.Length * 16f, 3f),
-                new Vector2(BrandX, -10f));
-            swash.gameObject.AddComponent<Image>().color = ShopGreen;
 
-            // The account, two rows so the word and the number cannot print through each other.
+            // NO WINDOW BOXES (2026-08-19). The bar had the era's three — min, max, close —
+            // and the author sent them away: they were a misreading of "buttons like Windows
+            // 98", which asked for the era's BUTTON STYLE, not its window furniture. Their
+            // going is also honest UI: two of the three were drawn dead, and the live one
+            // was a second door out of a market that already has its own key — the foot's
+            // OPEN TOMORROW, which keeps the ClosingAsk guard. One exit, one key (16 §2).
+
+            // The account, two rows so the word and the number cannot print through each
+            // other — and cut as a SUNKEN well rather than wearing sh_k_account, which was
+            // drawn for the green storefront and reads as a green plate on a pink bar.
+            // A readout is a hole in the face, and the bevel is what says so (16 §1, GLASS).
+            // Flush right at the boxes' old margin, since it is the bar's right-most thing.
             var balance = NewRect("Balance", strip);
-            Place(balance, new Vector2(1, 0.5f), new Vector2(150, 32), new Vector2(-12, 0));
+            Place(balance, new Vector2(1, 0.5f), new Vector2(150, 32), new Vector2(-10, 0));
             var balanceImg = balance.gameObject.AddComponent<Image>();
-            var accArt = ItemArt.Load("sh_k_account");   // 150x32, a recessed readout
-            if (accArt != null) balanceImg.sprite = accArt;
-            else balanceImg.color = ShopGreenDark;
+            balanceImg.color = ShopViceDeep;
+            Bevel(balance, 2f, raised: false);
             var balanceLabel = NewText("BalanceL", balance, _body, 8, TextAnchor.MiddleLeft,
-                new Color(0.63f, 0.85f, 0.70f, 1f));   // lit green on the dark field was 2.4:1
-            Place(balanceLabel.rectTransform, new Vector2(0, 1), new Vector2(80, 10), new Vector2(10, -4));
+                new Color(0.667f, 0.702f, 0.847f, 1f));   // 6.2:1 on the well
+            Place(balanceLabel.rectTransform, new Vector2(0, 1), new Vector2(80, 10), new Vector2(10, -6));
             balanceLabel.text = "ACCOUNT";
             _tabletTill = NewText("Till", balance, _display, 16, TextAnchor.MiddleRight, Color.white);
-            Place(_tabletTill.rectTransform, new Vector2(1, 0), new Vector2(126, 18), new Vector2(-10, 4));
+            Place(_tabletTill.rectTransform, new Vector2(1, 0), new Vector2(126, 18), new Vector2(-10, 6));
             _tabletTill.horizontalOverflow = HorizontalWrapMode.Wrap;
             _tabletTill.verticalOverflow = VerticalWrapMode.Truncate;
             _tillFloats = balance;   // the deltas fall out of the account box, below it
-
             // THE SHEET THE DEPARTMENT OPENS (the author: give it a filing feel, and let
             // the frame go round the products too). The aisle sits on a framed page whose
             // top edge runs UNDER the tabs: the lit tab is drawn with no bottom rim and
@@ -8085,8 +8543,18 @@ namespace LastCall.UI
             Stretch(page, Vector2.zero, Vector2.one,
                 new Vector2(4f, FootH + FootY + AisleGutter),
                 new Vector2(-4f, -(OsBarH + AppBarH + TabBarH - 4f)));
-            page.gameObject.AddComponent<Image>().color = Color.white;
-            Frame(page, 2f, ShopGreenDark);
+            page.gameObject.AddComponent<Image>().color = ShopPage;
+            Frame(page, 2f, ShopViceDeep);
+            // THE WALLPAPER (2026-08-19). A 90s trade site had one, and this one is the
+            // room's own weather: a banded sun, a grid running back to it, two palms.
+            // Drawn in code (`ChromeArt.PalmWall`) because chrome is never generated here.
+            //
+            // It is hung at 13% of the house blue and it has to stay there. The page's one
+            // job is that forty products can be read on it, and the wallpaper is allowed to
+            // be the thing you notice SECOND — the moment it competes with a bottle
+            // silhouette it has stopped being a wall and started being noise. Measured on
+            // the palest tile (PlateSealed): the type still clears 11:1 over it.
+            HangWall(page, 1032, 390, new Color(ShopVice.r, ShopVice.g, ShopVice.b, 0.13f));
 
             // THE DEPARTMENT BAR, across the top. It used to be a 230-wide rail down the
             // left; demolishing it hands 274 units back to the aisle, which is the
@@ -8110,10 +8578,15 @@ namespace LastCall.UI
                 // tabs you are not reading and NO seam under the one you are — so the tabs
                 // are rects with the page's own 2px outline, and the COLOUR does the work:
                 //
-                //   resting  paper fill + dark green outline on all four sides, so its
-                //            bottom edge is a visible seam lying on the page's own border
-                //   open     dark green FILL, so its outline vanishes into it and its
-                //            bottom edge merges with the page's border — no seam at all
+                //   resting  face fill + the frame's own dark outline on all four sides,
+                //            so its bottom edge is a visible seam lying on the page's border
+                //   open     that dark colour as the FILL, so its outline vanishes into it
+                //            and its bottom edge merges with the page's border — no seam
+                //
+                // The colour changed to the vice frame's ClubBlue[0] (2026-08-19) and the
+                // trick did not: it never depended on the hue, only on the open tab's fill
+                // and the page's border being the SAME colour. If those two ever drift
+                // apart the seam comes back and the file stops being a file.
                 //
                 // Both draw at 2 units, the page's own thickness, on the page's own plane,
                 // and the open one stands taller. Nothing is stretched, so nothing smears.
@@ -8122,7 +8595,10 @@ namespace LastCall.UI
                 key.sizeDelta = new Vector2(TabKeyW, TabRestH);
                 key.anchoredPosition = new Vector2(8f + i * (TabKeyW + 8f), 0);
                 var bg = key.gameObject.AddComponent<Image>();
-                Frame(key, 2f, ShopGreenDark);
+                // RAISED, not framed (2026-08-19): a 98 site's tab is a button that stands
+                // off the page, and the whole storefront speaks that button now. The lit
+                // magenta edge stays — the bevel says "pressable", the edge says "open".
+                Bevel(key, 2f, raised: true);
                 // The lit top edge, shown only on the open tab (RefreshDayEnd switches it).
                 var lit = NewRect("Lit", key);
                 lit.anchorMin = new Vector2(0, 1); lit.anchorMax = new Vector2(1, 1);
@@ -8217,13 +8693,15 @@ namespace LastCall.UI
             barTrack.sizeDelta = new Vector2(BarW,
                 -(OsBarH + AppBarH + TabBarH + 8f + FootH + FootY + AisleGutter + PageInset));
             barTrack.anchoredPosition = new Vector2(-8f, -(OsBarH + AppBarH + TabBarH + 8f));
-            barTrack.gameObject.AddComponent<Image>().color = new Color(0.84f, 0.87f, 0.84f, 1f);
+            barTrack.gameObject.AddComponent<Image>().color = ShopAisle;
+            Bevel(barTrack, 1f, raised: false);   // a trough is cut INTO the face
             var scrollbar = barTrack.gameObject.AddComponent<Scrollbar>();
             scrollbar.direction = Scrollbar.Direction.BottomToTop;
             var handle = NewRect("Handle", barTrack);
             Stretch(handle, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var handleImg = handle.gameObject.AddComponent<Image>();
-            handleImg.color = ShopGreen;
+            handleImg.color = ShopVice;
+            Bevel(handle, 2f, raised: true);      // and the thumb stands out of it
             scrollbar.targetGraphic = handleImg;
             scrollbar.handleRect = handle;
             shopScroll.verticalScrollbar = scrollbar;
@@ -8252,7 +8730,7 @@ namespace LastCall.UI
             _shopCard.pivot = new Vector2(0, 1);
             var cardBg = _shopCard.gameObject.AddComponent<Image>();
             cardBg.color = InspectorBack;
-            var cardEdge = new Color(ShopGreenLit.r, ShopGreenLit.g, ShopGreenLit.b, 0.85f);
+            var cardEdge = new Color(ShopViceLit.r, ShopViceLit.g, ShopViceLit.b, 0.85f);
             Hairline(_shopCard, new Vector2(0, 0), new Vector2(1, 0), cardEdge);
             Hairline(_shopCard, new Vector2(0, 1), new Vector2(1, 1), cardEdge);
             HairlineV(_shopCard, 0f, cardEdge);
@@ -8286,7 +8764,7 @@ namespace LastCall.UI
             Place(_shopCardRule, new Vector2(0, 1), new Vector2(ShopCardW - 20f, 1),
                 new Vector2(CardGutter, -48));
             var ruleImg = _shopCardRule.gameObject.AddComponent<Image>();
-            ruleImg.color = new Color(0.24f, 0.31f, 0.26f, 1f);
+            ruleImg.color = UITheme.ClubBlue[1];
             ruleImg.raycastTarget = false;
 
             // The product's own mark, in the gutter beside the identity.
@@ -8328,9 +8806,9 @@ namespace LastCall.UI
             Place(_shopSpec, new Vector2(0.5f, 0.5f), new Vector2(ShopSpecW, 120), Vector2.zero);
             _shopSpec.pivot = new Vector2(0, 1);
             var specBg = _shopSpec.gameObject.AddComponent<Image>();
-            specBg.color = new Color(0.07f, 0.09f, 0.08f, 0.97f);
+            specBg.color = new Color(InspectorBack.r, InspectorBack.g, InspectorBack.b, 0.97f);
             specBg.raycastTarget = false;
-            var specEdge = new Color(ShopGreenLit.r, ShopGreenLit.g, ShopGreenLit.b, 0.85f);
+            var specEdge = new Color(ShopViceLit.r, ShopViceLit.g, ShopViceLit.b, 0.85f);
             Hairline(_shopSpec, new Vector2(0, 0), new Vector2(1, 0), specEdge);
             Hairline(_shopSpec, new Vector2(0, 1), new Vector2(1, 1), specEdge);
             HairlineV(_shopSpec, 0f, specEdge);
@@ -8346,14 +8824,17 @@ namespace LastCall.UI
             // a lie about how much the basket holds.
             var order = NewRect("Basket", foot);
             Place(order, new Vector2(0, 0.5f), new Vector2(BasketW, FootH), new Vector2(8, 0));
-            order.gameObject.AddComponent<Image>().color = Color.white;
-            Hairline(order, new Vector2(0, 0), new Vector2(1, 0), ShopAisle);
+            order.gameObject.AddComponent<Image>().color = ShopPage;
+            // The status panel of a 98 window, and it stands OUT of the frame — the basket
+            // is the one surface on this page you commit from, so it is the one that is
+            // raised rather than cut in.
+            Bevel(order, 2f, raised: true);
 
             // THE HEAD BAND carries the whole control: what is in the basket, what it comes
             // to, and the key that buys it — one row, all at a size that reads.
             var orderHead = NewRect("BasketHead", order);
             Place(orderHead, new Vector2(0, 1), new Vector2(BasketW, 30), Vector2.zero);
-            orderHead.gameObject.AddComponent<Image>().color = ShopGreenDark;
+            orderHead.gameObject.AddComponent<Image>().color = ShopViceDeep;
             var orderIcon = NewRect("BasketI", orderHead);
             Place(orderIcon, new Vector2(0, 0.5f), new Vector2(20, 20), new Vector2(10, 0));
             var orderIconImg = orderIcon.gameObject.AddComponent<Image>();
@@ -8381,9 +8862,12 @@ namespace LastCall.UI
             _checkout = NewRect("Checkout", orderHead);
             Place(_checkout, new Vector2(1, 0.5f), new Vector2(CheckoutW, 26), new Vector2(-4, 0));
             var checkoutImg = _checkoutImg = _checkout.gameObject.AddComponent<Image>();
-            var orderArt = ItemArt.Load("sh_k_order");
-            if (orderArt != null) checkoutImg.sprite = orderArt;   // 212x26, drawn to fit
-            else checkoutImg.color = ShopGreen;
+            // The 98 key, not sh_k_order (2026-08-19): the baked plate carried its own baked
+            // bevel, and one baked bevel in a storefront of drawn ones is the odd man out.
+            // Vice blue face — the money key keeps its colour, the face style is the change.
+            checkoutImg.sprite = ChromeArt.Win98Key();
+            checkoutImg.type = Image.Type.Sliced;
+            checkoutImg.color = ShopVice;
             var checkoutBtn = _checkout.gameObject.AddComponent<Button>();
             checkoutBtn.targetGraphic = checkoutImg;
             checkoutBtn.onClick.AddListener(Checkout);
@@ -8408,6 +8892,9 @@ namespace LastCall.UI
             _checkoutLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
             _checkoutLabel.verticalOverflow = VerticalWrapMode.Overflow;
             _checkoutLabel.text = "PLACE ORDER";
+            var checkoutPress = _checkout.gameObject.AddComponent<Win98Press>();
+            checkoutPress.Face = checkoutImg;
+            checkoutPress.Caption = _checkoutLabel.rectTransform;
 
             // THE ROW OF WHAT IS PICKED. Chips are built into it on every rebuild.
             _cartChips = NewRect("BasketChips", order);
@@ -8420,13 +8907,17 @@ namespace LastCall.UI
             _cartEmpty.verticalOverflow = VerticalWrapMode.Overflow;
             _cartEmpty.text = ShopIdleTip;
 
-            // The way out, bottom right of the device.
+            // The way out, bottom right of the device — and since the title bar lost its
+            // close box (2026-08-19) the ONLY way out, which is why it is the biggest key
+            // on the device and the one amber thing on it. The 98 face replaced sh_k_exit's
+            // baked bevel for the same reason the checkout dropped sh_k_order: one button
+            // language per site.
             _openTomorrow = NewRect("OpenTomorrow", foot);
             Place(_openTomorrow, new Vector2(0, 0.5f), new Vector2(ExitW, FootH), new Vector2(896, 0));
             var otImg = _openTomorrow.gameObject.AddComponent<Image>();
-            var exitArt = ItemArt.Load("sh_k_exit");   // 136x128, its own heavy bevel
-            if (exitArt != null) otImg.sprite = exitArt;
-            else otImg.color = UITheme.PrimaryAction;
+            otImg.sprite = ChromeArt.Win98Key();
+            otImg.type = Image.Type.Sliced;
+            otImg.color = UITheme.PrimaryAction;
             var otBtn2 = _openTomorrow.gameObject.AddComponent<Button>();
             otBtn2.targetGraphic = otImg;
             otBtn2.onClick.AddListener(OnDayEndAdvance);
@@ -8438,6 +8929,9 @@ namespace LastCall.UI
             _openTomorrowLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
             _openTomorrowLabel.verticalOverflow = VerticalWrapMode.Truncate;
             _openTomorrowLabel.text = "OPEN\nTOMORROW";
+            var otPress = _openTomorrow.gameObject.AddComponent<Win98Press>();
+            otPress.Face = otImg;
+            otPress.Caption = _openTomorrowLabel.rectTransform;
 
             BuildClosingAsk(_dayEndTablet);
 
@@ -8465,7 +8959,7 @@ namespace LastCall.UI
 
             var title = NewText("Title", _ledgerPanel, _display, 16, TextAnchor.MiddleCenter, UITheme.PrimaryAction);
             Stretch(title.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -44), new Vector2(0, -10));
-            title.text = "THE REGISTER — DAYS PAST";
+            title.text = "THE REGISTER — DAYS SO FAR";
 
             // Column header, then the rows on cream stock beneath it. The header names the
             // TOP line of each entry; every entry now carries a second and third line under
@@ -8514,7 +9008,7 @@ namespace LastCall.UI
             {
                 var empty = NewText("Empty", _ledgerRows, _body, 14, TextAnchor.UpperLeft, UITheme.Night[1]);
                 empty.rectTransform.sizeDelta = new Vector2(0, 28);
-                empty.text = "No days on the books yet — close a night first.";
+                empty.text = "No days yet. Close a night first.";
                 return;
             }
 
@@ -8677,30 +9171,52 @@ namespace LastCall.UI
             _closingAsk = NewRect("ClosingAsk", tablet);
             Stretch(_closingAsk, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var scrim = _closingAsk.gameObject.AddComponent<Image>();
-            scrim.color = new Color(0.03f, 0.06f, 0.04f, 0.78f);
+            scrim.color = new Color(UITheme.ClubBlue[0].r, UITheme.ClubBlue[0].g, UITheme.ClubBlue[0].b, 0.78f);
             scrim.raycastTarget = true;   // a wall: nothing behind it may be clicked
 
+            // THE 98 MESSAGE BOX (2026-08-19, the author: '"Close the Order?" kısmını da
+            // windows 98 tarzına getir'). The question arrives as a little window OF the
+            // site: raised panel, the vice fade for a title bar with the question ON it the
+            // way that decade titled its dialogs, and two 98 keys. The head sits IN the bar
+            // now rather than floating on the paper — a dialog names itself on its chrome.
             var card = NewRect("Card", _closingAsk);
             Place(card, new Vector2(0.5f, 0.5f), new Vector2(620, 220), Vector2.zero);
             var cardImg = card.gameObject.AddComponent<Image>();
-            cardImg.sprite = ChromeArt.Card();
+            cardImg.sprite = ChromeArt.Win98Key();
             cardImg.type = Image.Type.Sliced;
             cardImg.color = ShopPaper;
 
-            var head = NewText("H", card, _shop, 16, TextAnchor.UpperCenter, ShopGreen);
-            Place(head.rectTransform, new Vector2(0.5f, 1f), new Vector2(560, 24), new Vector2(0, -22));
+            var askBar = NewRect("Bar", card);
+            Place(askBar, new Vector2(0.5f, 1f), new Vector2(612, 28), new Vector2(0, -4));
+            var askBarImg = askBar.gameObject.AddComponent<Image>();
+            askBarImg.sprite = ChromeArt.FadeStrip();
+            askBarImg.raycastTarget = false;
+
+            var head = NewText("H", askBar, _shop, 16, TextAnchor.MiddleLeft, Color.white);
+            Stretch(head.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(10, 0), new Vector2(-10, 0));
             head.text = "CLOSE THE ORDER?";
 
-            _closingAskLine = NewText("L", card, _body, 12, TextAnchor.UpperCenter, ShopInk);
-            Place(_closingAskLine.rectTransform, new Vector2(0.5f, 1f), new Vector2(540, 56),
-                new Vector2(0, -60));
+            // THE WARNING IS THE POINT OF THIS BOX, so it is set like one (2026-08-19, the
+            // author: kalin ve buyuk yazsin). It was the body face at 12 — a size the pixel
+            // faces do not have at all (16 SS0: 8, 16 or 24, nothing else), so the one
+            // sentence the dialog exists to make you read was also the softest thing in it.
+            // The shop's bold face at 16 is 1x its design size and lands on the grid.
+            _closingAskLine = NewText("L", card, _shop, 16, TextAnchor.UpperCenter, ShopInk);
+            Place(_closingAskLine.rectTransform, new Vector2(0.5f, 1f), new Vector2(540, 64),
+                new Vector2(0, -56));
             _closingAskLine.horizontalOverflow = HorizontalWrapMode.Wrap;
             _closingAskLine.verticalOverflow = VerticalWrapMode.Overflow;
 
+            // Two 98 keys and no third. GO BACK is the safe one and wears the vice blue —
+            // on this site the coloured key is the one the house recommends; OPEN ANYWAY
+            // stands on the plain face, a step quieter, exactly as able.
             var back = NewRect("Back", card);
             Place(back, new Vector2(0.5f, 0f), new Vector2(240, 44), new Vector2(-132, 34));
             var backImg = back.gameObject.AddComponent<Image>();
-            backImg.color = ShopGreen;
+            backImg.sprite = ChromeArt.Win98Key();
+            backImg.type = Image.Type.Sliced;
+            backImg.color = ShopVice;
             var backBtn = back.gameObject.AddComponent<Button>();
             backBtn.targetGraphic = backImg;
             backBtn.onClick.AddListener(() =>
@@ -8712,11 +9228,16 @@ namespace LastCall.UI
             Stretch(backLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             backLabel.text = "GO BACK";
             MarkHoverable(back, backImg);
+            var backPress = back.gameObject.AddComponent<Win98Press>();
+            backPress.Face = backImg;
+            backPress.Caption = backLabel.rectTransform;
 
             var anyway = NewRect("Anyway", card);
             Place(anyway, new Vector2(0.5f, 0f), new Vector2(240, 44), new Vector2(132, 34));
             var anywayImg = anyway.gameObject.AddComponent<Image>();
-            anywayImg.color = UITheme.Night[3];
+            anywayImg.sprite = ChromeArt.Win98Key();
+            anywayImg.type = Image.Type.Sliced;
+            anywayImg.color = ShopPaper;
             var anywayBtn = anyway.gameObject.AddComponent<Button>();
             anywayBtn.targetGraphic = anywayImg;
             anywayBtn.onClick.AddListener(() =>
@@ -8724,10 +9245,13 @@ namespace LastCall.UI
                 if (_closingAsk != null) _closingAsk.gameObject.SetActive(false);
                 PlayTabletOut();
             });
-            var anywayLabel = NewText("L", anyway, _shop, 16, TextAnchor.MiddleCenter, Color.white);
+            var anywayLabel = NewText("L", anyway, _shop, 16, TextAnchor.MiddleCenter, ShopInk);
             Stretch(anywayLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             anywayLabel.text = "OPEN ANYWAY";
             MarkHoverable(anyway, anywayImg);
+            var anywayPress = anyway.gameObject.AddComponent<Win98Press>();
+            anywayPress.Face = anywayImg;
+            anywayPress.Caption = anywayLabel.rectTransform;
 
             _closingAsk.SetAsLastSibling();
             _closingAsk.gameObject.SetActive(false);
@@ -8989,10 +9513,12 @@ namespace LastCall.UI
 
             var rt = NewRect("Tile", _cardTarget != null ? _cardTarget : _offerRow);
             var img = rt.gameObject.AddComponent<Image>();
-            // DRAWN, not generated (2026-08-11, the author: the plate read as slop). The
-            // grey-scale card is tinted with the state's paper, so its rule and its footing
-            // shade are shades of the listing's own colour rather than a frame laid on top.
-            img.sprite = ChromeArt.Card();
+            // THE 98 PANEL (2026-08-19, the author: "ürün kartlarını kötü buluyorum" — the
+            // chamfered Card read as a washed grey lozenge on a grey page). A listing is a
+            // small raised panel of the site now, square-cornered with the era's two-step
+            // bevel, tinted with the state's paper — so its edges are shades of the
+            // listing's own colour, same rule the Card obeyed, sharper object wearing it.
+            img.sprite = ChromeArt.Win98Key();
             img.type = Image.Type.Sliced;
             img.color = PlateOf(state);
 
@@ -9019,22 +9545,44 @@ namespace LastCall.UI
             hover.Entered = () => { ShowShopCard(shown); ShowShopSpec(shown.Recipe); };
             hover.Exited = () => { ShowShopCard(null); ShowShopSpec(null); };
 
-            // 1 — THE STRIP: 8 x 208 of solid state colour down the left edge. 1664 units,
-            // which is 1.7x the area of the entire old thumbnail, and it reads from across
-            // the room without a single character being set.
-            var strip = NewRect("Strip", rt);
-            Place(strip, new Vector2(0, 0), new Vector2(8f, TileH), Vector2.zero);
-            var stripImg = strip.gameObject.AddComponent<Image>();
-            stripImg.color = StripOf(state);
-            stripImg.raycastTarget = false;
+            // 0 — THE BRAND CAP: four units of the vice fade across the panel's head,
+            // inside the bevel. Every listing carries the storefront's one signature, the
+            // way every window of a 98 site carried its bar — and at four units it is a
+            // COLOPHON, not a title bar: it names the shop, it says nothing about the
+            // listing, so the fade's chrome-only law holds.
+            var cap = NewRect("Cap", rt);
+            Place(cap, new Vector2(0, 1), new Vector2(TileW - 4f, TileCapH), new Vector2(2f, -2f));
+            var capImg = cap.gameObject.AddComponent<Image>();
+            capImg.raycastTarget = false;
             if (state == TileState.Sealed)
             {
-                var hatch = ItemArt.Load("sh_strip_seal");
-                // Drawn 1:1, so no tiling — and WHITE, because an Image tints its sprite
-                // and the hatch is already crate-brown. Tinting brown art brown twice is
-                // how the one textured strip in the market came out as a flat dark bar.
-                if (hatch != null) { stripImg.sprite = hatch; stripImg.color = Color.white; }
+                // A SEALED CRATE LOSES THE STOREFRONT'S COLOURS (2026-08-19, the author:
+                // "kilitli olanların tepesindeki fade şerit yerini gri bir şerit alsın").
+                // The fade is the shop saying "this is ours to sell"; on a crate the shop
+                // will not open, it was the one cheerful thing on an otherwise chained card.
+                //
+                // Cream[1] and not a Graphite step: Graphite and Brick are ARCHITECTURE ONLY
+                // (14 v3 §3) and may never carry a signal, and "you cannot buy this" is a
+                // signal. Cream is under no such rule and its second step is a true grey.
+                capImg.color = UITheme.Cream[1];
             }
+            else capImg.sprite = ChromeArt.FadeStrip();
+
+            // 1 — (THE STRIP IS GONE, 2026-08-19, the author: "kartin solunda yesil,
+            // kirmizi, kahverengi dik serit tasarimi cok AI duruyor" — and the small box on
+            // its top-left corner with it.)
+            //
+            // They were the same mistake twice. A coloured bar welded to an edge and a
+            // coloured square welded to a corner are not things in a bar's world; they are
+            // the house style of a dashboard, and 16 §6.8 has the name for it — a dot
+            // standing in for an object. Worse, they were the ONLY two channels that said
+            // the state, so between them they took a fact that deserved a sentence and gave
+            // it two pieces of decoration.
+            //
+            // What the state says is a ROW now, on the grid with the name and the meta:
+            // a mark and a word (row 4a below). Shape and language carry it, colour comes
+            // along, and the plate's own tint is still underneath — three channels, none of
+            // them bolted to an edge.
 
             // 2 — THE PRODUCT, on the shelf line every class shares.
             // Glassware is mostly transparent, and transparent on a white page is nothing
@@ -9045,7 +9593,8 @@ namespace LastCall.UI
             if (spec.Art != null && spec.ArtH == VesselH)
             {
                 var niche = NewRect("Niche", rt);
-                Place(niche, new Vector2(0.5f, 0), new Vector2(116, 112), new Vector2(0, 64));
+                Place(niche, new Vector2(0.5f, 0), new Vector2(116, 112),
+                    new Vector2(0, ProductFootY - 4f));
                 var ni = niche.gameObject.AddComponent<Image>();
                 // sh_niche2 is DRAWN AT 116x112 — the exact rect — so it goes in 1:1: no
                 // slicing, no stretch, no smear. A back-bar alcove is a thing in the bar
@@ -9061,7 +9610,7 @@ namespace LastCall.UI
                 // pale — a pale recess is the white page again, and the vessel vanishes
                 // exactly where it was supposed to become visible.
                 if (state == TileState.Unaffordable || state == TileState.Held)
-                    ni.color = new Color(0.72f, 0.74f, 0.72f, 1f);
+                    ni.color = new Color(0.714f, 0.729f, 0.784f, 1f);
             }
             if (spec.Art != null)
             {
@@ -9071,7 +9620,7 @@ namespace LastCall.UI
                 ti.sprite = spec.Art;
                 ti.raycastTarget = false;
                 ti.color = state == TileState.Unaffordable ? new Color(0.78f, 0.80f, 0.80f, 0.55f)
-                    : state == TileState.Held ? new Color(0.86f, 0.88f, 0.85f, 0.85f)
+                    : state == TileState.Held ? new Color(0.855f, 0.871f, 0.918f, 0.85f)
                     : Color.white;
             }
             else if (state == TileState.Sealed)
@@ -9081,8 +9630,11 @@ namespace LastCall.UI
                 // as an ornament, not as something chained), drawn at the tile's own
                 // 160x208 so no link is stretched into an oval, with the padlock where they
                 // cross. No product and no name: the empty well is the tell.
+                // AT ITS OWN SIZE, centred (2026-08-19). sh_chain_x is drawn at 160x208 and
+                // the card is 230 now, so stretching it to fill would pull every link into
+                // an oval — the exact fault the art was cut at the tile's size to avoid.
                 var chain = NewRect("Chain", rt);
-                Stretch(chain, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                Place(chain, new Vector2(0.5f, 0.5f), new Vector2(160f, 208f), Vector2.zero);
                 var chainImg = chain.gameObject.AddComponent<Image>();
                 chainImg.sprite = ItemArt.Load("sh_chain_x") ?? ItemArt.Load("sh_chain");
                 chainImg.raycastTarget = false;
@@ -9121,12 +9673,12 @@ namespace LastCall.UI
                 gate.verticalOverflow = VerticalWrapMode.Truncate;
                 gate.text = spec.Money;
                 var what = NewText("Sealed", tag, _body, 8, TextAnchor.MiddleCenter,
-                    new Color(0.63f, 0.68f, 0.64f, 1f));
+                    new Color(0.624f, 0.647f, 0.729f, 1f));
                 Place(what.rectTransform, new Vector2(0.5f, 1), new Vector2(96, 12),
                     new Vector2(0, -27));
                 what.horizontalOverflow = HorizontalWrapMode.Wrap;
                 what.verticalOverflow = VerticalWrapMode.Truncate;
-                what.text = "STARS TO UNSEAL";
+                what.text = "STARS TO OPEN";
             }
             else
             {
@@ -9143,11 +9695,39 @@ namespace LastCall.UI
                 // so the column holds 17 characters a line instead of 22. The box is two
                 // lines, and the longest name on the shelf is 24 characters, which is what
                 // the measurement below had to settle before this shipped.
-                var name = NewText("Name", rt, _display, 8, TextAnchor.UpperLeft,
-                    state == TileState.Unaffordable || state == TileState.Held
-                        ? ShopInkSoft : ShopInk);
-                Place(name.rectTransform, new Vector2(0, 1), new Vector2(ContentW, 22),
-                    new Vector2(12, -144));
+                // THE NAME PLATE (2026-08-19, the author: "isimlerini kutu içerisine al
+                // veya ön plana çıkması için bir şey yap ... daha okunaklı ve kalın bir
+                // font"). The name was 8px PressStart2P lying loose on the card, one grey
+                // among four other greys, and on a shelf of twelve listings the thing you
+                // are actually shopping BY was the quietest reading on the plate.
+                //
+                // It is a NAME PLATE now, and that is not a box invented to hold it: the
+                // back bar of this game has name plates on its rails, so the aisle borrows
+                // the object the room already owns (16 §6, the positive form). Dark field,
+                // light type — the one inversion on the card, which is why the eye lands on
+                // it first.
+                var namePlate = NewRect("NamePlate", rt);
+                Place(namePlate, new Vector2(0, 1), new Vector2(TileW - 8f, TileNameH),
+                    new Vector2(4f, -TileNameTop));
+                var nameBg = namePlate.gameObject.AddComponent<Image>();
+                // ONE PLATE FOR EVERY STATE. The first cut dimmed it for the listings you
+                // cannot buy — Cream[0] under Cream[2] type, which measures 2.6:1 and shipped
+                // a name you had to lean in to read. A name is not a state: what a bottle is
+                // called does not change because the till is empty. The card's own tint and
+                // the red NO CASH key carry that, and the plate stays legible.
+                nameBg.color = ShopViceDeep;
+                nameBg.raycastTarget = false;
+
+                // SILKSCREEN BOLD AT 16, not PressStart2P at 8. Both halves of that matter:
+                // twice the size, and the bold face. The standing objection to this face for
+                // product names (2026-08-11) was that its letters touch — true, and it is a
+                // complaint about 8px, where the gap it does not have is a whole pixel of a
+                // six-pixel glyph. At 16 the same face is 2x its design size, every letter
+                // lands on the grid, and light-on-dark parts them by contrast anyway.
+                var name = NewText("Name", namePlate, _shop, 16, TextAnchor.UpperLeft,
+                    Color.white);
+                Stretch(name.rectTransform, Vector2.zero, Vector2.one,
+                    new Vector2(6, 3), new Vector2(-6, -3));
                 name.horizontalOverflow = HorizontalWrapMode.Wrap;
                 name.verticalOverflow = VerticalWrapMode.Truncate;
                 name.text = spec.Name;
@@ -9183,47 +9763,73 @@ namespace LastCall.UI
                 // product's own foot line, 68 up from the plate, and the key lives in the
                 // bottom 30.
                 float frac = Mathf.Clamp01(spec.StockFrac);
-                const float StripW = 12f, StripH = 124f, StripMargin = 10f;
-                const float StripX = TileW - StripMargin - StripW;
-                const float StripTop = -(TileH - ProductFootY - StripH);
+                const float StripW = 12f;
+                const float StripH = TileArtH - 8f;
+                const float StripX = TileW - TilePad - StripW;
+                const float StripTop = -(TileArtTop + 4f);
                 var surround = NewRect("Track", rt);
                 Place(surround, new Vector2(0, 1), new Vector2(StripW, StripH),
                     new Vector2(StripX, StripTop));
                 var surroundImg = surround.gameObject.AddComponent<Image>();
-                surroundImg.color = new Color(0.16f, 0.20f, 0.17f, 1f);
+                surroundImg.color = UITheme.ClubBlue[0];
                 surroundImg.raycastTarget = false;
 
                 var well = NewRect("Well", rt);
                 Place(well, new Vector2(0, 1), new Vector2(StripW - 4f, StripH - 4f),
                     new Vector2(StripX + 2f, StripTop - 2f));
                 var wellImg = well.gameObject.AddComponent<Image>();
-                wellImg.color = new Color(0.80f, 0.84f, 0.80f, 1f);
+                wellImg.color = new Color(0.792f, 0.812f, 0.871f, 1f);
                 wellImg.raycastTarget = false;
 
-                // Anchored to the strip's FOOT and grown upward: a level rises from the
-                // bottom of a bottle, and height IS the fraction, so it cannot overflow.
+                // THE LEVEL WEARS THE FADE (2026-08-19, the author: "restock doluluk barı da
+                // yeşil yerine bu renk olsun"). The fill is the vertical FadeStrip CROPPED
+                // by a Filled image, never squeezed: the rect spans the whole well and
+                // fillAmount reveals the bottom `frac` of it, so a half bottle shows the
+                // fade's blue half and a full one the whole blue-into-pink run — the level
+                // climbs INTO the pink the way the evening climbs into the neon. Geometry
+                // still carries the reading (height is the fraction); the fade only dresses
+                // it, which is what keeps the chrome-only law honest here.
+                //
+                // The one signal stays a signal: under a quarter the level drops the fade
+                // for flat ShopCost red, because "nearly out" is a warning and a warning is
+                // never worn as decoration.
                 var fill = NewRect("Fill", well);
-                fill.anchorMin = new Vector2(0, 0); fill.anchorMax = new Vector2(1, 0);
-                fill.pivot = new Vector2(0.5f, 0);
-                fill.sizeDelta = new Vector2(0, (StripH - 4f) * frac);
-                fill.anchoredPosition = Vector2.zero;
+                Stretch(fill, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 var fillImg = fill.gameObject.AddComponent<Image>();
-                fillImg.color = frac < 0.25f ? ShopCost : StripStock;
+                if (frac < 0.25f)
+                {
+                    fill.anchorMax = new Vector2(1, 0);
+                    fill.pivot = new Vector2(0.5f, 0);
+                    fill.sizeDelta = new Vector2(0, (StripH - 4f) * frac);
+                    fill.anchoredPosition = Vector2.zero;
+                    fillImg.color = ShopCost;
+                }
+                else
+                {
+                    fillImg.sprite = ChromeArt.FadeStrip(horizontal: false);
+                    fillImg.type = Image.Type.Filled;
+                    fillImg.fillMethod = Image.FillMethod.Vertical;
+                    fillImg.fillOrigin = (int)Image.OriginVertical.Bottom;
+                    fillImg.fillAmount = frac;
+                }
                 fillImg.raycastTarget = false;
 
-                // The reading sits over the strip's head, right-aligned to the same edge —
-                // the number and the gauge are one instrument, so they share an alignment.
-                var pct = NewText("Pct", rt, _shop, 8, TextAnchor.UpperRight, ShopInkSoft);
-                Place(pct.rectTransform, new Vector2(1, 1), new Vector2(60, 12),
-                    new Vector2(-StripMargin, -4f));
+                // The reading moved onto the STATE ROW (2026-08-19), right-aligned. It used
+                // to float at the card's top-right corner, which put a number in the one
+                // band that carries no words — and left the state row half empty. Words
+                // about the listing all live on one line now: what it is on the left, how
+                // much of it there is on the right.
+                var pct = NewText("Pct", rt, _shop, 8, TextAnchor.MiddleRight, ShopInkSoft);
+                Place(pct.rectTransform, new Vector2(1, 1), new Vector2(60, TileStateH),
+                    new Vector2(-TilePad, -TileStateTop));
                 pct.raycastTarget = false;
                 pct.text = Mathf.RoundToInt(frac * 100f) + "%";
             }
             else if (!string.IsNullOrEmpty(spec.Meta) && state != TileState.Sealed)
             {
                 var meta = NewText("Meta", rt, _body, 8, TextAnchor.MiddleLeft, TileMetaInk);
-                Place(meta.rectTransform, new Vector2(0, 1), new Vector2(ContentW, 12),
-                    new Vector2(12, -168));
+                Place(meta.rectTransform, new Vector2(0, 1), new Vector2(ContentW, TileMetaH),
+                    new Vector2(TilePad, -TileMetaTop));
                 meta.horizontalOverflow = HorizontalWrapMode.Wrap;
                 meta.verticalOverflow = VerticalWrapMode.Truncate;
                 meta.text = spec.Meta;
@@ -9235,10 +9841,35 @@ namespace LastCall.UI
             if (!string.IsNullOrEmpty(spec.Money) && state != TileState.Sealed)
             {
                 // Sealed puts its price — the star gate — under the padlock instead.
-                var money = NewText("Money", rt, MoneyFace(spec.Money), 16, TextAnchor.LowerLeft,
-                    MoneyInk(state));
-                Place(money.rectTransform, new Vector2(0, 0), new Vector2(66, 20), new Vector2(12, 6));
-                money.horizontalOverflow = HorizontalWrapMode.Wrap;
+                //
+                // ON A TAG (2026-08-19, the author: "fiyatını gösteren yazıyı bir fiyat
+                // etiketi içerisine al"). A number set loose in the bottom-left corner was
+                // the last thing on this card still being a caption rather than an object;
+                // ChromeArt.PriceTag is the card of stock a shop hangs on a bottle's neck,
+                // 9-sliced so "$8" and "+$105" are one drawing at two widths.
+                //
+                // AMBER, which is not decoration: money is Amber and only money is (16 §5),
+                // so the tag is the sacred colour doing exactly its job. Out of reach, it
+                // drops to the ramp's dark step — still plainly a price tag, plainly one you
+                // cannot pay, and the key beside it says NO CASH in red.
+                var tag = NewRect("PriceTag", rt);
+                Place(tag, new Vector2(0, 1), new Vector2(62, 16f),
+                    new Vector2(TilePad, -(TileFootTop + 2f)));
+                var tagImg = tag.gameObject.AddComponent<Image>();
+                tagImg.sprite = ChromeArt.PriceTag();
+                tagImg.type = Image.Type.Sliced;
+                tagImg.color = state == TileState.Unaffordable || state == TileState.Held
+                    ? UITheme.Amber[0] : UITheme.Money;
+                tagImg.raycastTarget = false;
+
+                // The type sits in the tag's BODY, clear of the nib and its punch hole —
+                // the 11 units the 9-slice keeps for the point are 11 units of no man's land.
+                var money = NewText("Money", tag, MoneyFace(spec.Money), 16, TextAnchor.MiddleLeft,
+                    state == TileState.Unaffordable || state == TileState.Held
+                        ? UITheme.Amber[4] : UITheme.TextOnAmber);
+                Stretch(money.rectTransform, Vector2.zero, Vector2.one,
+                    new Vector2(13, 0), new Vector2(-4, 0));
+                money.horizontalOverflow = HorizontalWrapMode.Overflow;
                 money.verticalOverflow = VerticalWrapMode.Truncate;
                 money.text = spec.Money;
             }
@@ -9247,8 +9878,9 @@ namespace LastCall.UI
                 // Held says it on the sash across the product, so the action row stays
                 // empty — printing FULL twice on one tile is the habit this rewrite was
                 // supposed to break.
-                var word = NewText("Word", rt, _shop, 16, TextAnchor.LowerLeft, MoneyInk(state));
-                Place(word.rectTransform, new Vector2(0, 0), new Vector2(66, 20), new Vector2(12, 6));
+                var word = NewText("Word", rt, _shop, 16, TextAnchor.MiddleLeft, MoneyInk(state));
+                Place(word.rectTransform, new Vector2(0, 1), new Vector2(62, TileFootH),
+                    new Vector2(TilePad, -TileFootTop));
                 word.horizontalOverflow = HorizontalWrapMode.Wrap;
                 word.verticalOverflow = VerticalWrapMode.Truncate;
                 word.text = spec.Word;
@@ -9262,98 +9894,96 @@ namespace LastCall.UI
                 // rows under the face, so it stands above the card instead of being printed
                 // on it. The label rides one pixel up, off the throw.
                 var pill = NewRect("Pill", rt);
-                Place(pill, new Vector2(1, 0), new Vector2(74, 24), new Vector2(-8, 6));
+                Place(pill, new Vector2(1, 1), new Vector2(70, TileFootH),
+                    new Vector2(-TilePad, -TileFootTop));
                 var pillImg = pill.gameObject.AddComponent<Image>();
-                pillImg.sprite = ChromeArt.Key();
+                // The 98 key face (2026-08-19), same drawing as every button on this site.
+                pillImg.sprite = ChromeArt.Win98Key();
                 pillImg.type = Image.Type.Sliced;
                 pillImg.color = PillOf(state);
                 pillImg.raycastTarget = false;
                 var label = NewText("L", pill, _shop, 8, TextAnchor.MiddleCenter, PillInk(state));
                 Stretch(label.rectTransform, Vector2.zero, Vector2.one,
-                    new Vector2(6, 3), new Vector2(-6, 0));
+                    new Vector2(6, 0), new Vector2(-6, 0));
                 label.horizontalOverflow = HorizontalWrapMode.Wrap;
                 label.verticalOverflow = VerticalWrapMode.Truncate;
                 label.text = spec.PillVerb;
+                // The TILE is the click, so the tile's press turns ITS key inside out —
+                // the pointer lands anywhere on the listing and the ADD key answers.
+                if (spec.OnClick != null)
+                {
+                    var press = rt.gameObject.AddComponent<Win98Press>();
+                    press.Face = pillImg;
+                    press.Caption = label.rectTransform;
+                }
             }
 
             // 6 — the picked tile is the only one wearing a frame on all four sides.
             if (state == TileState.Picked) Frame(rt, 2f, StripPicked);
 
-            // A BAND ACROSS THE PRODUCT for anything there is nothing to buy on (the
-            // author: besides going grey it should say FULL right on the box). Grey art
-            // alone asks the player to notice an absence; a word across the bottle states
-            // it. It sits over the product and under the name, so it can never collide
-            // with a text — there is no text in the art band by construction.
-            if (state == TileState.Held && !string.IsNullOrEmpty(spec.Word))
-            {
-                var band = NewRect("Sash", rt);
-                Place(band, new Vector2(0, 1), new Vector2(TileW, 30), new Vector2(0, -62));
-                var bandImg = band.gameObject.AddComponent<Image>();
-                bandImg.color = new Color(ShopInk.r, ShopInk.g, ShopInk.b, 0.86f);
-                bandImg.raycastTarget = false;
-                var bandText = NewText("L", band, _shop, 16, TextAnchor.MiddleCenter, Color.white);
-                Stretch(bandText.rectTransform, Vector2.zero, Vector2.one,
-                    new Vector2(6, 0), new Vector2(-6, 0));
-                bandText.horizontalOverflow = HorizontalWrapMode.Wrap;
-                bandText.verticalOverflow = VerticalWrapMode.Truncate;
-                bandText.text = spec.Word;
-            }
+            // (THE SASH IS GONE, 2026-08-19. A dark band printed FULL across the bottle
+            // while the gauge beside it read 100% and the corner chip wore an "=" — the
+            // same fact three times on one card, which is §6.5 exactly. The state row says
+            // it once, in the place every card says everything.)
 
-            // 7 — THE CHIP, added last so nothing can draw over the state glyph.
-            // THE CHIP, square on the corner (the author: the exclamation sits crooked).
-            // It was 18x18 hung on the tile's corner while the state strip runs 8 wide down
-            // the same edge, so the chip overhung the strip by 10 and every glyph inside it
-            // read as off-centre against the two edges the eye actually measures from. It
-            // is 20x20 now, inset 2 from both, so the square is symmetric on the corner and
-            // whatever sits in it is centred on the square.
-            var chip = NewRect("Chip", rt);
-            Place(chip, new Vector2(0, 1), new Vector2(20, 20), new Vector2(2, -2));
-            var chipImg = chip.gameObject.AddComponent<Image>();
-            chipImg.color = StripOf(state);
-            chipImg.raycastTarget = false;
-            string glyphArt = GlyphSpriteOf(state);
-            if (glyphArt != null)
+            // 7 — THE STATE, IN A ROW (2026-08-19). This is what replaced the edge strip
+            // and the corner chip, and like the chip before it, it is built LAST so nothing
+            // on the card can draw over the one line that says what the listing is doing.
+            //
+            // The card had four channels for saying what a listing was doing — a strip hue,
+            // a chip glyph, a plate tint, and whether a control existed — and two of them
+            // were decoration welded to the plate's edges. They are one LINE now, sitting on
+            // the grid between the meta and the foot, built the way every other line on this
+            // page is built: a drawn mark, then a word, then the reading right-aligned.
+            //
+            // It costs nothing in what the player can tell apart. Shape says it (each state
+            // has its own mark), language says it (each has its own word), the plate's tint
+            // still says it underneath, and the ADD key's presence still says it — so the
+            // colour-blind path reads on three channels instead of on a hue down an edge.
+            // And it gains the thing the strip could never give: a listing you can READ.
+            string stateWord = StateWordOf(state);
+            if (!string.IsNullOrEmpty(stateWord))
             {
-                var g = NewRect("G", chip);
-                Stretch(g, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
-                var gi = g.gameObject.AddComponent<Image>();
-                gi.sprite = ItemArt.Load(glyphArt);
-                gi.preserveAspect = true;
-                gi.raycastTarget = false;
-                gi.color = ChipInk(state);
+                float markX = TilePad;
+                var ink = StateInk(state);
+                var markArt = StateMark(state);
+                RectTransform markRt = null;
+                if (markArt != null)
+                {
+                    markRt = NewRect("StateMark", rt);
+                    Place(markRt, new Vector2(0, 1), new Vector2(TileStateH, TileStateH),
+                        new Vector2(markX, -TileStateTop));
+                    var mi = markRt.gameObject.AddComponent<Image>();
+                    mi.sprite = markArt;
+                    mi.preserveAspect = true;
+                    mi.raycastTarget = false;
+                    mi.color = ink;
+                    markX += TileStateH + 4f;
+                }
+                var stateText = NewText("State", rt, _shop, 8, TextAnchor.MiddleLeft, ink);
+                // IT STOPS SHORT OF THE READING. The stock percentage shares this row and
+                // is right-aligned to the same margin, so a word allowed to overflow would
+                // print straight through it on the restock tab — where a full shelf and an
+                // empty wallet are exactly the two states that have most to say. 44 units
+                // is what "100%" takes in the shop face plus a space to breathe.
+                const float ReadingCol = 44f;
+                Place(stateText.rectTransform, new Vector2(0, 1),
+                    new Vector2(TileW - markX - TilePad - ReadingCol, TileStateH),
+                    new Vector2(markX, -TileStateTop));
+                stateText.horizontalOverflow = HorizontalWrapMode.Wrap;
+                stateText.verticalOverflow = VerticalWrapMode.Truncate;
+                stateText.text = stateWord;
+                // The van still lands. It lands on the ROW rather than on a corner square:
+                // the stamp belongs to the thing that says "ordered", and that is this line.
+                if (state == TileState.Ordered && !Motion.Reduced)
+                    StartCoroutine(StampDrop(markRt != null ? markRt : stateText.rectTransform));
             }
-            else
-            {
-                // _shop, not _display: PressStart2P sets "!" with its own side bearing
-                // inside a 16-wide cell, so a MiddleCenter box centres the CELL and leaves
-                // the mark visibly left of true. Silkscreen Bold's marks are drawn on
-                // their own centre.
-                var g = NewText("G", chip, _shop, 16, TextAnchor.MiddleCenter, ChipInk(state));
-                Stretch(g.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                g.horizontalOverflow = HorizontalWrapMode.Overflow;
-                g.verticalOverflow = VerticalWrapMode.Overflow;
-                g.text = state == TileState.Orderable ? "+"
-                    : state == TileState.Unaffordable ? "!" : "=";
-            }
-            // The stamp lands on the CHIP now, not across the whole plate: the old one was
-            // a 160-wide rotated word over a 190 card, printing through the name under it.
-            if (state == TileState.Ordered && !Motion.Reduced)
-                StartCoroutine(StampDrop(chip));
             return rt;
         }
 
         // ── the state language, in one place ─────────────────────────────────────
         // Seven answers, seven rows. Keeping them as switches beside each other is what
         // makes "no two states may look alike" checkable rather than hopeful.
-
-        private static Color StripOf(TileState s) =>
-            s == TileState.Orderable ? StripStock
-            : s == TileState.Unaffordable ? StripDeny
-            : s == TileState.Picked ? StripPicked
-            : s == TileState.Ordered ? ShopGreenDark
-            : s == TileState.Sealed ? StripSealed
-            : s == TileState.Refundable ? StripReturn
-            : StripHeld;                       // Held and NoFitting
 
         private static Color PlateOf(TileState s) =>
             s == TileState.Unaffordable ? PlateDeny
@@ -9365,12 +9995,64 @@ namespace LastCall.UI
             : s == TileState.NoFitting ? PlateDeny
             : ShopPage;
 
-        /// <summary>Ink ON the strip. White reads on the four dark strips and fails on the
-        /// three light ones — a glyph nobody can see is not a colour-blind fallback.</summary>
-        private static Color ChipInk(TileState s) =>
-            s == TileState.Orderable || s == TileState.Picked
-            || s == TileState.Held || s == TileState.NoFitting
-                ? ShopInk : Color.white;
+        /// <summary>
+        /// WHAT THE STATE SAYS, in words, on the card's own state row. Seven answers, seven
+        /// rows, beside StateInk and StateMark so "no two states may look alike" stays
+        /// checkable by reading three lists side by side.
+        ///
+        /// Orderable is the empty one and that is deliberate: a listing you can simply buy
+        /// has an ADD key on it saying so, and a row underneath repeating "IN STOCK" is the
+        /// same fact twice (16 §6.5). The row appears when there is something to say.
+        /// </summary>
+        private static string StateWordOf(TileState s) =>
+            s == TileState.Picked ? "IN BASKET"
+            : s == TileState.Ordered ? "ON THE VAN"
+            : s == TileState.Refundable ? "SEND BACK"
+            : s == TileState.NoFitting ? "NO ROOM"
+            : s == TileState.Held ? "SHELF FULL"
+            // Sealed is the THIRD state that already says it (2026-08-19, seen in play): a
+            // sealed crate is laid out on its own — chains corner to corner, a padlock where
+            // they cross, and a tag hung under it reading the star gate — so a state row put
+            // a fourth "LOCKED" on the card, in the bottom-left, printed over the chains.
+            // A tile with its own layout does not also get the standard one.
+            //
+            // Unaffordable is the second one the key already says (2026-08-19, the author:
+            // "No Cash buton üzerinde kırmızı şekilde yazsa yeterli olur"). Its key is right
+            // there in the foot reading NO CASH, so a state row saying NO CASH again put the
+            // same two words on one card twice — §6.5, the habit this card keeps relapsing
+            // into. The key says it, in red, and that is the whole answer.
+            : null;               // Orderable, Unaffordable, Sealed — all said elsewhere
+
+        /// <summary>
+        /// THE STATE ROW'S INK. Not the Strip* set — those were drawn to be a SOLID BAR, and
+        /// this row is type on a near-white plate. Measured: the picked amber lands at 1.9:1
+        /// and the held grey at 2.5:1, so half the states would have shipped as a word nobody
+        /// could read. Each state keeps its own hue and takes the dark step of it.
+        /// </summary>
+        private static Color StateInk(TileState s) =>
+            s == TileState.Picked ? UITheme.Amber[1]
+            : s == TileState.Ordered ? ShopViceDeep
+            : s == TileState.Sealed ? StripSealed
+            : s == TileState.Refundable ? UITheme.ClubBlue[2]
+            : s == TileState.NoFitting || s == TileState.Unaffordable ? ShopCost
+            : TileMetaInk;                     // Held, and anything unlisted
+
+        /// <summary>
+        /// The drawing beside the word. Two drawers answer here and that is fine: the market
+        /// has its own glyph set for the things only it has (the van, the crate's padlock,
+        /// the return arrow), and ChromeArt carries the marks the whole game shares. What
+        /// matters is that every state on the row HAS one — the two that used to letter their
+        /// chip, "!" for no cash and "=" for a full shelf, were letters only because a 20x20
+        /// square had room for nothing else.
+        /// </summary>
+        private static Sprite StateMark(TileState s)
+        {
+            string art = GlyphSpriteOf(s);
+            if (art != null) return ItemArt.Load(art);
+            return s == TileState.Unaffordable ? ChromeArt.Mark("tips")
+                : s == TileState.Held ? ChromeArt.Mark("stock")
+                : null;
+        }
 
         private static string GlyphSpriteOf(TileState s) =>
             s == TileState.Picked ? "sh_g_tick"
@@ -9378,7 +10060,7 @@ namespace LastCall.UI
             : s == TileState.Sealed ? "sh_lock"
             : s == TileState.Refundable ? "sh_g_back"
             : s == TileState.NoFitting ? "sh_b_lock"
-            : null;                            // Orderable / Unaffordable / Held set a letter
+            : null;                            // the rest are ChromeArt marks (StateMark)
 
         private static Color PillOf(TileState s) =>
             s == TileState.Orderable ? StripStock
@@ -9389,15 +10071,19 @@ namespace LastCall.UI
         private static Color PillInk(TileState s) =>
             s == TileState.Picked ? PickedInk
             : s == TileState.Orderable || s == TileState.Refundable ? Color.white
+            // NO CASH is now the only place the card says it, so it says it in the refusal
+            // colour rather than in the dead grey a disabled key wears. 4.6:1 on the key's
+            // own face — a word the player is meant to read, not a greyed-out label.
+            : s == TileState.Unaffordable ? ShopCost
             : new Color(0.24f, 0.24f, 0.22f, 1f);
 
         private static Color MoneyInk(TileState s) =>
             s == TileState.Unaffordable ? StripDeny
             : s == TileState.Picked ? PickedInk
-            : s == TileState.Ordered ? ShopGreen
+            : s == TileState.Ordered ? ShopVice
             : s == TileState.Refundable ? StripReturn
             : s == TileState.Held || s == TileState.Sealed ? ShopInkSoft
-            : ShopGreenDark;
+            : ShopViceDeep;
 
         // ── tiny UI helpers (mirroring the house style) ─────────────────────────
 
@@ -9493,6 +10179,57 @@ namespace LastCall.UI
             rt.anchoredPosition = pos;
         }
 
+        /// <summary>
+        /// A 98 BEVEL: four edges, lit top and left, shadowed right and bottom — or the
+        /// other way round, which is the whole difference between a control that stands up
+        /// and a well that is cut into the page (16 §1: "a bevel is four of them").
+        ///
+        /// It is built from rects and not from a sliced sprite on purpose. A bevel is the
+        /// one piece of chrome whose thickness must NOT scale with the thing it is on: two
+        /// units on a 1040-wide page and two units on a 60-wide key, or the window stops
+        /// reading as one machine. Four flat Images cannot distort at any size.
+        ///
+        /// The corners overlap rather than mitre. At two units nobody can see a mitre, and
+        /// every 16-colour toolkit this is quoting overlapped them too.
+        /// </summary>
+        private void Bevel(RectTransform parent, float t, bool raised)
+            => Bevel(parent, t, raised ? BevelLit : BevelShade, raised ? BevelShade : BevelLit);
+
+        private void Bevel(RectTransform parent, float t, Color topLeft, Color bottomRight)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                bool horizontal = i < 2;
+                // i: 0 bottom, 1 top, 2 left, 3 right. Top and left take one colour.
+                bool lit = i == 1 || i == 2;
+                var rt = NewRect("Bev", parent);
+                rt.anchorMin = horizontal ? new Vector2(0, i) : new Vector2(i - 2, 0);
+                rt.anchorMax = horizontal ? new Vector2(1, i) : new Vector2(i - 2, 1);
+                rt.pivot = new Vector2(horizontal ? 0.5f : i - 2, horizontal ? i : 0.5f);
+                rt.sizeDelta = horizontal ? new Vector2(0, t) : new Vector2(t, 0);
+                rt.anchoredPosition = Vector2.zero;
+                var img = rt.gameObject.AddComponent<Image>();
+                img.color = lit ? topLeft : bottomRight;
+                img.raycastTarget = false;
+            }
+        }
+
+        /// <summary>
+        /// The wallpaper, hung under whatever is handed in. Faint on purpose: it is the
+        /// thing you notice on the second look, and the aisle has to win the first one.
+        /// Drawn at half size and stretched x2 (`ChromeArt.PalmWall`), so it stays pixel art.
+        /// </summary>
+        private void HangWall(RectTransform parent, int w, int h, Color tint)
+        {
+            var rt = NewRect("Wall", parent);
+            Stretch(rt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var img = rt.gameObject.AddComponent<Image>();
+            img.sprite = ChromeArt.PalmWall(w, h);
+            img.color = tint;
+            img.raycastTarget = false;
+            rt.SetAsFirstSibling();   // under the aisle, not over it
+        }
+
         /// <summary>A border on all four sides, t units thick. `Hairline` cannot do it —
         /// it hardcodes a 1-unit height — and a picked tile needs to be visible from six
         /// columns away, which one thin rule at the top was not.</summary>
@@ -9524,8 +10261,11 @@ namespace LastCall.UI
         /// magnified 1x or 2x it is pixel art. A downscale is free to be fractional —
         /// that only drops rows.
         /// </summary>
-        /// <summary>Where a tile stands its product: the drawing's foot, up from the plate.</summary>
-        private const float ProductFootY = 68f;
+        /// <summary>Where a tile stands its product: the drawing's foot, up from the plate.
+        /// 80, not 68 (2026-08-19): the card grew a state row, and 12 units had to come from
+        /// somewhere. They come from the art, which had the most to give — the product still
+        /// gets 124 of the card's 208 and is still the biggest thing on it.</summary>
+        private const float ProductFootY = TileH - TileArtTop - TileArtH;
 
         private static void PlaceProduct(RectTransform rt, Sprite s, float boxH)
         {
