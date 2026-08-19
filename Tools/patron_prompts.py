@@ -164,6 +164,28 @@ REFERENCE_CANDIDATES = [
     ("waist",  190, 0.55),   # more shoulder and arm above the wood, less true
 ]
 
+# ── the idle is a BEHAVIOUR, not a loop (2026-08-19) ─────────────────────────
+# The author, after two breathing idles: "nefes alis veris istemiyorum ... omuz ve kollar
+# hareket etmesin ... sabit durmali, biraz biraz saga sola bakinmali gibi".
+#
+# That is not a clip. A looping clip moves every second it is on screen, and a customer
+# who is SEATED at a bar - which is what every idle here depicts, the counter hiding
+# everything below the chest - does not rise and fall forever. So the idle is:
+#
+#     the still frame, held, and every few seconds a small glance to one side.
+#
+# The still frame is the character's own south rotation, which costs nothing and cannot
+# drift. The glances come from the SAME two clips the neighbour glance uses, trimmed to a
+# different frame: an early frame is a small look, the peak frame is the full 45-degree
+# turn at the person who just sat down. One pair of clips, two behaviours, no breathing
+# anywhere - and no generation spent on an idle at all.
+#
+# When the glances happen must flow through RunRng (the house's determinism rule), so a
+# seeded run replays with the same bar looking around at the same moments.
+IDLE_IS_STILL = True
+IDLE_GLANCE_FRAME = 2      # the small look, out of the glance clip's own frames
+IDLE_GLANCE_SECONDS = (4.0, 9.0)   # how long a customer holds still between glances
+
 HAND_ANCHOR_NOTE = """\
 The drink clips carry a table, not a drawing: for each frame, (x, y, angle) in canvas
 pixels for the hand that holds the glass, plus which grip class it is. The served

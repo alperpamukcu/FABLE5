@@ -193,14 +193,12 @@ def poll():
 KEPT = ('clubgirl', 'heavyset')
 
 CLIPS = {
-    # The 'breathing-idle' TEMPLATE was tried first and rejected on the evidence
-    # (2026-08-19): four frames, its first frame drawn from BEHIND on both characters, and
-    # one of clubgirl's four never arrived. Three usable frames is the opposite of the
-    # length that was asked for, so the idle is a v3 custom and pays for its frames.
-    # 10 frames: the ceiling is per ANIMATION canvas, and a 160px character is padded
-    # onto a 212x212 one, where the server refuses 12. Named here rather than assumed,
-    # because it moves with the character size and has already surprised this file twice.
-    'idle': dict(directions=['south'], frames=10),
+    # THERE IS NO IDLE CLIP any more (2026-08-19). Two were generated and both were
+    # rejected by the author, and the second rejection said why: "nefes alis veris
+    # istemiyorum ... sabit durmali, biraz biraz saga sola bakinmali gibi". A looping clip
+    # cannot be still, so the idle stopped being a clip - see patron_prompts.IDLE_IS_STILL.
+    # The still frame is the character's own south rotation and the occasional glance is
+    # the look clips below, trimmed short. Nothing is generated for it.
     # The walk-in crosses the room right to left, so the figure is seen from its WEST
     # side. A template, at one generation per direction: a side-on walk cycle is exactly
     # what a walk skeleton is for, and this one came back clean.
@@ -215,6 +213,9 @@ CLIPS = {
     # Named by SCREEN direction, because that is what the seat layout knows: look_right
     # turns toward the stool on the player's right. Nothing below the neck moves - a v3
     # left to itself turns the shoulders too, and then it is a body turn, not a glance.
+    # Eight frames on the 256 animation canvas a 220px character is padded onto -
+    # its ceiling. Frame 2 is the small idle glance, the peak frame is the full
+    # turn at a new neighbour: one clip, two behaviours.
     'look_right': dict(directions=['south'], frames=8),
     'look_left': dict(directions=['south'], frames=8),
 }
