@@ -129,3 +129,5 @@ Tools/pixellab_token.txt
 Tools/scene_v3_raw/
 Tools/scene_v3_state.json
 Tools/AssetPipeline/staging/
+Tools/AssetPipeline/sources/patron_trial/
+Tools/AssetPipeline/sources/patron_raw/

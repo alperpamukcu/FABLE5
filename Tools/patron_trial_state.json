@@ -1,0 +1,38 @@
+{
+ "inked_neutral": {
+  "character_id": "1c1865d4-2006-4e25-9f10-5a9c7f748377",
+  "language": "inked",
+  "size": 220,
+  "png": "AssetPipeline\\sources\\patron_trial\\inked_neutral.png"
+ },
+ "inked_bar": {
+  "character_id": "0ada6774-8750-45c4-9018-8370066408a2",
+  "language": "inked",
+  "size": 220,
+  "png": "AssetPipeline\\sources\\patron_trial\\inked_bar.png"
+ },
+ "selective_neutral": {
+  "character_id": "24f27f2e-5d73-4d93-8766-c5af6c945f8a",
+  "language": "selective",
+  "size": 220,
+  "png": "AssetPipeline\\sources\\patron_trial\\selective_neutral.png"
+ },
+ "selective_bar": {
+  "character_id": "6f8ba164-d4ee-4a98-8921-9432d4154723",
+  "language": "selective",
+  "size": 220,
+  "png": "AssetPipeline\\sources\\patron_trial\\selective_bar.png"
+ },
+ "lineless_neutral": {
+  "character_id": "30c03467-36bb-4935-bdf2-2bddfcbebc36",
+  "language": "lineless",
+  "size": 220,
+  "png": "AssetPipeline\\sources\\patron_trial\\lineless_neutral.png"
+ },
+ "lineless_bar": {
+  "character_id": "19511c6f-e2cb-4601-a834-9bc6654e4e1d",
+  "language": "lineless",
+  "size": 220,
+  "png": "AssetPipeline\\sources\\patron_trial\\lineless_bar.png"
+ }
+}
