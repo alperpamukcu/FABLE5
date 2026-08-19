@@ -49,6 +49,11 @@ import patron_trial_gen as trial   # noqa: E402
 PATRON = os.path.join(ROOT, 'Assets', 'Resources', 'Patron')
 LOG = os.path.join(HERE, 'AssetPipeline', 'generation_log.jsonl')
 
+# Whose keyline is stripped at ship time. A face goes in here when it comes back inked
+# and cannot be re-rolled out of it - never as a default, because the filter costs detail
+# (see the note in ship()).
+DELINEATE = {'spanishsuit', 'leopard'}
+
 CANVAS = brief.RIG_CANVAS_PX
 FOOT_Y = brief.RIG_FOOT_Y
 
@@ -182,12 +187,16 @@ def ship(slug):
         if not frames:
             print('  %-11s MISSING' % folder)
             continue
-        # THE KEYLINE COMES OFF HERE, on every frame of every clip. PixelLab will not
-        # reliably draw a lineless figure - the same request came back at 3% and at 93% on
-        # consecutive rolls - so the line is removed instead of re-rolled for, and it is
-        # removed at SHIP time so the generated file stays as it came back. Idempotent: a
-        # figure with no line is unchanged by it (patron_delineate).
-        frames = [patron_delineate.delineate(f) for f in frames]
+        # THE KEYLINE COMES OFF ONLY WHERE IT IS A PROBLEM. The filter was run over the
+        # whole cast for one shipping and the author stopped it: "karakterlerin gorselleri
+        # bozulmus o yaptigini geri al, sadece yeni uretilenlerin konturunde problem vardi".
+        # He is right, and the reason is worth keeping. Removing a line is not free - it
+        # eats the drawing's own dark detail along with the ink, and on a figure that was
+        # never inked (heavyset came in at 2%) all it can do is soften hair and edges for
+        # nothing. So it is opt-in, per character, and the ones already approved keep the
+        # pixels they were approved as.
+        if slug in DELINEATE:
+            frames = [patron_delineate.delineate(f) for f in frames]
         stood = patron_gen.stand(frames, lock_centre=lock, rigid=lock,
                                  canvas=CANVAS, foot_y=FOOT_Y)
         if anchor and idle_frame is not None and stood:
