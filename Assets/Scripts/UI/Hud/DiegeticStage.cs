@@ -129,7 +129,9 @@ namespace LastCall.UI
         private const float DisplayLeft = 8f / 49f, DisplayRight = 43f / 49f;
         private const float DisplayTop = 5f / 43f, DisplayBottom = 12f / 43f;
 
-        private const float CounterRestY = 128f;           // counter-top rest line (till, glassware)
+        // 128 -> 116 (2026-08-19, the author, in play: "masayi biraz asagi cek") - the
+        // whole counter layer rides this one number, which is why it is the dial.
+        private const float CounterRestY = 116f;           // counter-top rest line (till, glassware)
         // Measured off the art: the bar's far edge — where a glass is set down — is this far
         // below the sprite's top (2026-07-29).
         private const float CounterSurfaceInset = 2f;
@@ -149,8 +151,12 @@ namespace LastCall.UI
         // Each gets a warm pool; the global wash is slightly cool and slightly below 1
         // so the pools read as light and not as paint. The sign's spill rides NeonBlink
         // with its lettering.
+        // RE-MEASURED A THIRD TIME (2026-08-19) for the author's own PixelLab-site room
+        // (Tools/scene_user_post.py): the same three recessed downlights, now on the
+        // ceiling plane at y 103 - lower than the last room because this one's ceiling
+        // is a perspective plane seen from inside, not a top strip.
         private static readonly Vector2[] LampArtPx =
-            { new Vector2(214, 42), new Vector2(332, 42), new Vector2(464, 42) };
+            { new Vector2(214, 91), new Vector2(330, 91), new Vector2(463, 91) };
         private static readonly Color GlobalTint = new Color(0.86f, 0.85f, 0.95f);
         private const float GlobalIntensity = 0.85f;
         private static readonly Color LampTint = new Color(1f, 0.80f, 0.52f);
@@ -208,7 +214,7 @@ namespace LastCall.UI
         private RectTransform _signHost;            // the sign's canvas host, Cover-fitted
         private float _lastVisibleW = -1f;
 
-        /// <summary>Update the diegetic wallet shown on the cash register plaque.</summary>
+        /// <summary>Update the diegetic wallet - the number standing over the till.</summary>
         public void SetMoney(string text)
         {
             if (_moneyText != null) _moneyText.text = text;
@@ -852,25 +858,23 @@ namespace LastCall.UI
             var shImg = shadow.gameObject.AddComponent<Image>();
             shImg.color = new Color(0f, 0f, 0f, 0.42f); shImg.raycastTarget = false;
 
-            // The money sits IN the till's display window, and the window's place is read
-            // off the art rather than guessed at (2026-07-29).
+            // THE NUMBER, NOT THE PLAQUE (2026-08-19, the author: "ikisine gerek yok,
+            // sadece sayi ile kasanin ustunde paramiz yazsin, bar kaldirilsin"). The
+            // sunken display window and its dark plaque are gone; the wallet is one plain
+            // number standing over the till - and on the FRONT layer, because the back
+            // canvas draws behind the room and a number nobody can read is not a wallet.
             float regH = reg.sizeDelta.y;
-            var plaque = NewRect("MoneyPlaque", backRoot);
-            plaque.anchorMin = plaque.anchorMax = new Vector2(0, 0);   // absolute, on the till
-            plaque.pivot = new Vector2(0.5f, 0);
-            plaque.sizeDelta = new Vector2(regW * (DisplayRight - DisplayLeft),
-                                           regH * (DisplayBottom - DisplayTop));
-            // The window's fractions run from the sprite's TOP; the rect measures from its
-            // base, so the bottom of the window is 1 - DisplayBottom up from it.
-            plaque.anchoredPosition = new Vector2(
-                RegisterX + regW * ((DisplayLeft + DisplayRight) * 0.5f - 0.5f),
-                RegisterBaseY + regH * (1f - DisplayBottom));
-            var pImg = plaque.gameObject.AddComponent<Image>();
-            pImg.color = UITheme.Night[0]; pImg.raycastTarget = false;
-            // 8, not 10: the window is about eight units deep, and the pixel face only
-            // rasterises cleanly at whole multiples of its 8px design size anyway.
-            _moneyText = NewText("Money", plaque, _display, 8, TextAnchor.MiddleCenter, UITheme.Money);
-            Stretch((RectTransform)_moneyText.transform, Vector2.zero, Vector2.one, new Vector2(2, 0), new Vector2(-2, 0));
+            var money = NewRect("Money", frontRoot);
+            money.anchorMin = money.anchorMax = new Vector2(0, 0);
+            money.pivot = new Vector2(0.5f, 0f);
+            money.sizeDelta = new Vector2(200, 20);
+            money.anchoredPosition = new Vector2(RegisterX, RegisterBaseY + regH + 2f);
+            _moneyText = NewText("Value", money, _display, 16, TextAnchor.LowerCenter, UITheme.Money);
+            Stretch((RectTransform)_moneyText.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var moneyEdge = _moneyText.gameObject.AddComponent<Outline>();
+            moneyEdge.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            moneyEdge.effectDistance = new Vector2(1f, -1f);
+            _moneyText.raycastTarget = false;
             _moneyText.text = "$0";
 
             // WHERE THE MONEY MOVES, THE CHANGE SHOWS (2026-08-14, the author). The till is
@@ -889,8 +893,8 @@ namespace LastCall.UI
             _moneyFloatHost.anchorMin = _moneyFloatHost.anchorMax = new Vector2(0, 0);
             _moneyFloatHost.pivot = new Vector2(0.5f, 0f);
             _moneyFloatHost.sizeDelta = new Vector2(200, 22);
-            _moneyFloatHost.anchoredPosition = plaque.anchoredPosition
-                                               + new Vector2(0, plaque.sizeDelta.y + 6f);
+            _moneyFloatHost.anchoredPosition = new Vector2(
+                RegisterX, RegisterBaseY + regH + 24f);
         }
 
         private RectTransform _moneyFloatHost;

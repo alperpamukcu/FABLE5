@@ -1314,7 +1314,9 @@ namespace LastCall.UI
             // one half-height under the frame, so the cut runs horizontally through the bin's
             // waist and its two banding hoops read as the last thing before the floor.
             _binProp.sizeDelta = new Vector2(BinW, BinH);
-            _binProp.anchoredPosition = new Vector2(-8f, -BinH * 0.5f);
+            // Placed by the author's own hand against the new counter (2026-08-19, live:
+            // "Bin X -2 Y -124") - tuned in play, written down here.
+            _binProp.anchoredPosition = new Vector2(-2f, -124f);
             _binImage = _binProp.gameObject.AddComponent<Image>();
             _binImage.sprite = ItemArt.Load("bin_well");
             _binImage.preserveAspect = true;
@@ -1936,8 +1938,14 @@ namespace LastCall.UI
         private static Sprite FixtureArt(string name) =>
             string.IsNullOrEmpty(name) ? null : Resources.Load<Sprite>("Fixtures/" + name);
 
+        // "Ekrandaki bardaklari simdilik kaldir, gerek yok" (2026-08-19): the rack is
+        // parked, not demolished - flip this back on when the new counter art gets its
+        // compartments and the rack has somewhere honest to stand.
+        private const bool GlassRackShown = false;
+
         private void WatchGlassRack()
         {
+            if (!GlassRackShown) { if (_glassRack != null) _glassRack.gameObject.SetActive(false); return; }
             var run = Run;
             if (run == null || _glassRack == null) return;
             var stage = _stage != null ? _stage : FindFirstObjectByType<DiegeticStage>();

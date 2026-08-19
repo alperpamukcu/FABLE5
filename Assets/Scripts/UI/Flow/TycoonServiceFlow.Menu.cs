@@ -128,6 +128,18 @@ namespace LastCall.UI
         /// the notes' shelf view). Hovering one raises an info panel with what is left in it and
         /// what it costs; clicking takes it to the prep stage as the keys used to.
         /// </summary>
+        // ── the plate's own geometry (2026-08-19) ──
+        // "Backbar sahnesindeki arkaplan tamamen bu olacak, şişeleri raflara tam oturt."
+        // Measured off backbar_pixellab.png after its (24,0,664,360) crop, in PANEL units
+        // (art px ×2; y from the panel's bottom). Three niche columns, three shelf
+        // boards: the stand line is each board's own top edge, and the bottles are laid
+        // INTO these cells instead of onto code-drawn planks — the plate is the
+        // furniture now, which retires the drawn plank/face/niche kit below.
+        private static readonly float[] NicheStandY = { 484f, 296f, 116f };
+        private static readonly float[] NicheHeight = { 150f, 158f, 152f };
+        private static readonly Vector2[] NicheSpanX =
+            { new Vector2(68f, 432f), new Vector2(476f, 850f), new Vector2(894f, 1258f) };
+
         private void BuildShelfPage(TycoonRun run)
         {
             // THE WHOLE WALL (2026-07-31): every bottle the bar owns on one back-bar,
@@ -135,87 +147,34 @@ namespace LastCall.UI
             _menuTitle.text = "LAST CALL";
 
             // Beer is not here at all (2026-08-15): it is poured at the font on the
-            // counter, in the room. Everything else stands on the wall in rows that widen
-            // as the cellar grows, so the endgame bar still fits on three shelves.
+            // counter, in the room. Everything else stands in the plate's nine niches,
+            // top shelf first, left to right, spread as evenly as the count divides.
             var items = new List<ShelfBottle>();
             foreach (var b in run.Shelf.Bottles)
                 if (OnTheBackBar(b.Ingredient)) items.Add(b);
-            float areaW = _bottleList.rect.width, areaH = _bottleList.rect.height;
 
-            // BIGGER, AND STOOD CLOSER TOGETHER (2026-08-11, the author). The wall used to
-            // divide a plank into `perRow` equal slots and drop one bottle in the middle of
-            // each, so a shelf of five short bottles was five bottles marooned in a lot of
-            // wood — and every bottle was capped by a slot width nobody had measured against
-            // its art. A row is packed by its bottles' OWN widths now: the height is the
-            // shelf's (which is what a slim bottle can grow on), the width follows from each
-            // silhouette's aspect, and they stand at a fixed gap, centred. A row that would
-            // outgrow the plank is scaled down as a whole — so bottles never overlap and
-            // never leave the wall, by construction rather than by a chosen column count.
-            int perRow = Mathf.Max(5, Mathf.CeilToInt(items.Count / 3f));
-            int shelves = Mathf.Max(3, Mathf.CeilToInt(items.Count / (float)perRow));
-            // The top padding is headroom for the first shelf's overhanging bottles and
-            // must come out of the bands' budget, or the bottom band spills off the page.
-            // So must EVERY gap between them: the budget used to give back a single GridGap
-            // however many shelves there were, which left the bottom plank a few pixels
-            // under the mask — and raising the headroom to the overhang it actually needs
-            // would have pushed the bottom clean off. The page is now spent exactly:
-            // headroom + the bands + the gaps between them.
-            float shelfH = (areaH - ListTopPad - GridGap * Mathf.Max(0, shelves - 1)) / shelves;
-
-            for (int row = 0; row < shelves; row++)
+            int cells = NicheStandY.Length * NicheSpanX.Length;
+            int taken = 0;
+            for (int cell = 0; cell < cells; cell++)
             {
-                int from = row * perRow, count = Mathf.Max(0, Mathf.Min(perRow, items.Count - from));
-                // An empty plank still hangs on the wall (2026-08-01): a young bar faces a
-                // sparsely stocked back-bar, not a wall with one shelf on it.
+                int row = cell / NicheSpanX.Length, col = cell % NicheSpanX.Length;
+                int count = items.Count / cells + (cell < items.Count % cells ? 1 : 0);
+                if (count == 0) continue;
+                int from = taken; taken += count;
 
-                // The sheet lays its children out vertically, so the shelves are STACKED by the
-                // layout rather than anchored by hand -- hand-anchored bands were simply
-                // overridden and the page came up blank.
-                var band = NewRect($"Shelf{row}", _bottleList);
-                var fill = band.gameObject.AddComponent<LayoutElement>();
-                fill.preferredHeight = shelfH; fill.preferredWidth = areaW; fill.flexibleWidth = 1f;
+                float nicheL = NicheSpanX[col].x, nicheR = NicheSpanX[col].y;
+                float nicheW = nicheR - nicheL;
+                var band = NewRect($"Shelf{row}_{col}", _bottleList);
+                band.anchorMin = band.anchorMax = new Vector2(0, 0);
+                band.pivot = new Vector2(0.5f, 0);
+                band.sizeDelta = new Vector2(nicheW, NicheHeight[row]);
+                // The band's bottom IS the stand line: AddShelfBottle stands feet at it.
+                band.anchoredPosition = new Vector2((nicheL + nicheR) * 0.5f, NicheStandY[row]);
 
-                // The plank: a board with a lit front edge, drawn at the sheet's own grain.
-                // The niche (2026-08-01, drawn in code): the shelf above throws a shadow into
-                // the top of the cell, the floor is a perspective trapezoid lighter at its
-                // front edge, and a lit lip hangs under it — depth from geometry, not a picture.
-                var nicheShadow = NewRect("NicheShadow", band);
-                nicheShadow.anchorMin = new Vector2(0.02f, 1); nicheShadow.anchorMax = new Vector2(0.98f, 1);
-                nicheShadow.pivot = new Vector2(0.5f, 1);
-                nicheShadow.sizeDelta = new Vector2(0, 34);
-                nicheShadow.anchoredPosition = Vector2.zero;
-                var ns = nicheShadow.gameObject.AddComponent<Image>();
-                ns.sprite = BackBarArt.NicheTop(); ns.raycastTarget = false;
-
-                // The plank grew a FACE (the author): a thick front board with a brass
-                // edge, tall enough to carry the bottle names — the label is furniture now.
-                var face = NewRect("Face", band);
-                face.anchorMin = new Vector2(0.02f, 0); face.anchorMax = new Vector2(0.98f, 0);
-                face.pivot = new Vector2(0.5f, 0);
-                face.offsetMin = Vector2.zero; face.offsetMax = new Vector2(0, ShelfFaceH);
-                var faceImg = face.gameObject.AddComponent<Image>();
-                faceImg.sprite = BackBarArt.ShelfFace();
-                faceImg.type = Image.Type.Tiled;
-                faceImg.raycastTarget = false;
-
-                var plank = NewRect("Plank", band);
-                plank.anchorMin = new Vector2(0.02f, 0); plank.anchorMax = new Vector2(0.98f, 0);
-                plank.pivot = new Vector2(0.5f, 0);
-                plank.offsetMin = new Vector2(0, ShelfFaceH - 2f);
-                plank.offsetMax = new Vector2(0, ShelfFaceH + 26f);
-                var plankImg = plank.gameObject.AddComponent<Image>();
-                plankImg.sprite = BackBarArt.ShelfFloor();
-                plankImg.raycastTarget = false;
-
-
-                // Centred on the plank rather than packed to the left: a shelf with two bottles
-                // on it is a shelf with two bottles on it, not a row that ran out.
-                //
-                // A row is packed by what each bottle IS DRAWN as, not by the sheet its art
-                // arrived on (2026-08-11): the juice cartons carry a wide margin of nothing
-                // around them, and a row packed by sheets left those four standing in gaps of
-                // their own air, each at a different size. VesselArt measures the drawing.
-                float artH = shelfH - ShelfFaceH + BottleRise;
+                // A cell is packed by what each bottle IS DRAWN as (2026-08-11, unchanged):
+                // VesselArt measures the drawing, the cell scales the whole group down when
+                // the niche cannot take it, and nothing ever crosses a pilaster.
+                float artH = NicheHeight[row] - BottleRise - HoverLift;
                 var wide = new float[Mathf.Max(count, 1)];
                 float run0 = 0f;
                 for (int i = 0; i < count; i++)
@@ -226,15 +185,15 @@ namespace LastCall.UI
                     run0 += wide[i];
                 }
                 float span = run0 + BottleGap * Mathf.Max(0, count - 1);
-                float roomW = areaW * 0.96f;
-                float k = span > roomW && span > 0f ? roomW / span : 1f;   // the row shrinks whole
+                float roomW = nicheW - 16f;
+                float k = span > roomW && span > 0f ? roomW / span : 1f;   // the cell shrinks whole
                 artH *= k;
                 float x = -span * k * 0.5f;
                 for (int i = 0; i < count; i++)
                 {
                     float w = wide[i] * k;
                     AddShelfBottle(band, items[from + i], run, x + w * 0.5f,
-                        w + BottleGap * k, shelfH, w, artH);
+                        w + BottleGap * k, NicheHeight[row], w, artH);
                     x += w + BottleGap * k;
                 }
             }
@@ -282,8 +241,10 @@ namespace LastCall.UI
             // row packed tight, a slot wider than its art would reach across its neighbour
             // and the two would trade hovers.
             var slot = NewRect($"Slot_{card.Id}", band);
+            // The band's bottom IS the plate's shelf-board top (2026-08-19), so the feet
+            // stand at zero - the old ShelfFaceH+BottleFoot lift belonged to the drawn kit.
             Place(slot, new Vector2(0.5f, 0), new Vector2(slotW - 4f, drawn.y),
-                new Vector2(centreX, ShelfFaceH + BottleFoot));
+                new Vector2(centreX, 0f));
             var hit = slot.gameObject.AddComponent<Image>();
             hit.color = new Color(0, 0, 0, 0.001f);          // invisible, but catches the pointer
 
@@ -294,7 +255,7 @@ namespace LastCall.UI
             shadow.anchorMin = shadow.anchorMax = new Vector2(0.5f, 0);
             shadow.pivot = new Vector2(0.5f, 0.5f);
             shadow.sizeDelta = new Vector2(drawn.x * 0.92f, 12);
-            shadow.anchoredPosition = new Vector2(0, 14);
+            shadow.anchoredPosition = new Vector2(0, 3);
             var shImg = shadow.gameObject.AddComponent<Image>();
             shImg.sprite = BackBarArt.BottleShadow(); shImg.raycastTarget = false;
 
@@ -351,8 +312,9 @@ namespace LastCall.UI
                 if (label.Length > fits) label = label.Substring(0, fits - 2).TrimEnd() + "..";
                 float plateW = Mathf.Min(label.Length * Em + 12f, maxPlateW);
                 var plate = NewRect("Plate", band);
+                // Hung on the shelf board's own face, just under the stand line.
                 Place(plate, new Vector2(0.5f, 0), new Vector2(plateW, 20f),
-                    new Vector2(centreX, ShelfFaceH * 0.5f - 2f));
+                    new Vector2(centreX, -22f));
                 var plateImg = plate.gameObject.AddComponent<Image>();
                 plateImg.sprite = BackBarArt.NamePlate();
                 plateImg.type = Image.Type.Sliced;
@@ -551,12 +513,24 @@ namespace LastCall.UI
             _menuPanel = NewRect("MenuPanel", _field);
             Stretch(_menuPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var boardImg = _menuPanel.gameObject.AddComponent<Image>();
-            // Drawn in code (2026-08-01): the generated tile carried a baked frame that
-            // repeated as a white grid across the wall. BackBarArt's boards seam at their
-            // own edges, so the tiling is invisible by construction.
-            boardImg.sprite = BackBarArt.LuxeWall();
-            boardImg.type = Image.Type.Tiled;
-            boardImg.pixelsPerUnitMultiplier = 0.5f;   // one art pixel = 2 screen px, the scene's grain
+            // THE AUTHOR'S OWN PLATE (2026-08-19, "backbar sahnesindeki arkaplan tamamen
+            // bu olacak"): one 640x360 picture stretched across the 1280x720 panel - an
+            // exact integer 2x, the scene's grain - carrying the wall, the niches, the
+            // shelf boards and the marble ledge that BackBarArt used to draw. The drawn
+            // kit remains only as the fallback for a missing file, which should look
+            // wrong rather than invisible.
+            var wallPlate = Resources.Load<Sprite>("Scene/backbar");
+            if (wallPlate != null)
+            {
+                boardImg.sprite = wallPlate;
+                boardImg.type = Image.Type.Simple;
+            }
+            else
+            {
+                boardImg.sprite = BackBarArt.LuxeWall();
+                boardImg.type = Image.Type.Tiled;
+                boardImg.pixelsPerUnitMultiplier = 0.5f;
+            }
             Swallow(_menuPanel);
 
             // NEON, not timber (the author, 2026-08-02: the board sign, the ivy and the
@@ -608,14 +582,17 @@ namespace LastCall.UI
             // the bin (2026-07-27).
             // The counter ledge along the bottom: the same floor plane as the shelves,
             // taller — SERVE and the bin STAND on it instead of floating on the wall.
-            var ledge = NewRect("Ledge", _menuPanel);
-            ledge.anchorMin = new Vector2(0, 0); ledge.anchorMax = new Vector2(1, 0);
-            ledge.pivot = new Vector2(0.5f, 0);
-            ledge.sizeDelta = new Vector2(0, 88);
-            ledge.anchoredPosition = Vector2.zero;
-            var ledgeImg = ledge.gameObject.AddComponent<Image>();
-            ledgeImg.sprite = BackBarArt.Ledge();
-            ledgeImg.raycastTarget = false;
+            if (wallPlate == null)
+            {
+                var ledge = NewRect("Ledge", _menuPanel);
+                ledge.anchorMin = new Vector2(0, 0); ledge.anchorMax = new Vector2(1, 0);
+                ledge.pivot = new Vector2(0.5f, 0);
+                ledge.sizeDelta = new Vector2(0, 88);
+                ledge.anchoredPosition = Vector2.zero;
+                var ledgeImg = ledge.gameObject.AddComponent<Image>();
+                ledgeImg.sprite = BackBarArt.Ledge();
+                ledgeImg.raycastTarget = false;
+            }
 
             // The wall's working area: full width under the cornice, above the ledge.
             // The mask's top edge reaches HIGHER than the first shelf band does, because a
@@ -625,19 +602,16 @@ namespace LastCall.UI
             // depth; on the TOP shelf it used to hit the mask and the author saw beheaded
             // bottles (2026-08-05). The list gets the same amount as top padding, so the
             // bands themselves stand exactly where they always did.
+            // Full-panel now: the niches are placed by hand against the plate's own
+            // measured geometry (NicheStandY/NicheSpanX), so there is no layout group and
+            // no margin to fight - the mask only guards the page slide at the panel edge.
             var pageClip = NewRect("PageClip", _menuPanel);
-            Stretch(pageClip, Vector2.zero, Vector2.one, new Vector2(40, 92), new Vector2(-40, -102));
+            Stretch(pageClip, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             pageClip.gameObject.AddComponent<RectMask2D>();
 
             _bottleList = NewRect("Bottles", pageClip);
             Stretch(_bottleList, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _listHome = _bottleList.anchoredPosition;
-            var listLayout = _bottleList.gameObject.AddComponent<VerticalLayoutGroup>();
-            listLayout.padding = new RectOffset(0, 0, (int)ListTopPad, 0);
-            listLayout.spacing = GridGap; listLayout.childControlHeight = true;
-            listLayout.childControlWidth = true; listLayout.childForceExpandWidth = true;
-            listLayout.childForceExpandHeight = false;
-            listLayout.childAlignment = TextAnchor.UpperLeft;
 
             // SERVE stands on the ledge, centred.
             var actions = NewRect("Actions", _menuPanel);
