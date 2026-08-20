@@ -89,10 +89,26 @@ namespace LastCall.Game
                     // would say why. The later of the two is the honest answer, and for the
                     // tier-1 mixers this whole field exists for, the ladder says 0 and the
                     // field is simply the gate.
-                    var gate = card.unlockStars > 0
+                    if (card.tapLevel < 0)
+                        throw new FormatException(
+                            $"Bottle '{card.id}' asks for {card.tapLevel} draught lines.");
+                    if (card.tapLevel > 0 && ParseType(card.type, card.id) != IngredientType.Beer)
+                        throw new FormatException(
+                            $"Bottle '{card.id}' names a tap level but is not a beer — " +
+                            "only a keg comes out of a line.");
+                    var stars = card.unlockStars > 0
                         ? UnlockCondition.Stars(Math.Max(
                             card.unlockStars, Market.RequiredStars(card.tier, card.price)))
                         : null;
+                    // A KEG NEEDS A LINE TO COME OUT OF (2026-08-19, the author: "marketten
+                    // musluğu geliştirmeden bir üst seviye fıçı bira alınmamalı"). Written
+                    // as a lock rather than as a star rung because it is not one: every keg
+                    // in the game is tier 1, so the ladder says zero for all three of them
+                    // and the tower is the only thing that separates them.
+                    var gate = card.tapLevel > 1
+                        ? UnlockCondition.All(stars ?? UnlockCondition.Open,
+                                              UnlockCondition.Tap(card.tapLevel))
+                        : stars;
                     info = new IngredientInfo(card.style, card.tier, card.price,
                         card.origin, card.abv, card.blurb, card.category, card.carbonated, gate);
                 }
@@ -233,7 +249,8 @@ namespace LastCall.Game
         /// <summary>
         /// Bar dressing (2026-08-10): the modular fixtures. One catalogue entry per slot —
         /// two fixtures fighting over one hook is a content bug and fails here, at load,
-        /// where a content bug belongs.
+        /// where a content bug belongs. The one exception is the draught tower, which is a
+        /// three-rung LADDER standing in a single slot (2026-08-19); see the rule below.
         /// </summary>
         public static LoadedFixtures ParseFixtures(string json)
         {
@@ -259,29 +276,64 @@ namespace LastCall.Game
             }
 
             var seenIds = new HashSet<string>();
-            var seenSlots = new HashSet<string>();
+            // ONE PIECE PER HOOK, WITH ONE EXCEPTION (2026-08-19). A slot is a place in the
+            // picture and two pieces standing in it draw one inside the other — still a
+            // content bug, and still refused here. But the draught tower is a LADDER: three
+            // levels of the same station, of which the room ever stands ONE (the tallest
+            // owned). So a slot may hold several pieces if every one of them is a tower and
+            // no two run the same number of lines. Anything else, including a tower sharing
+            // a hook with a fern, is the old bug and reads as the old message.
+            var slotOwners = new Dictionary<string, FixtureDto>();
+            var slotLevels = new Dictionary<string, HashSet<int>>();
             var fixtures = new List<FixtureDefinition>(dto.fixtures.Count);
             foreach (var f in dto.fixtures)
             {
                 if (!seenIds.Add(f.id ?? ""))
                     throw new FormatException($"Fixtures file lists '{f.id}' twice.");
-                if (!seenSlots.Add(f.slot ?? ""))
-                    throw new FormatException(
-                        $"Fixture '{f.id}' wants slot '{f.slot}', which another fixture already has.");
                 if (!slotIds.Contains(f.slot ?? ""))
                     throw new FormatException(
                         $"Fixture '{f.id}' wants slot '{f.slot}', which the room does not have.");
+                if (slotOwners.TryGetValue(f.slot, out var held))
+                {
+                    if (f.tapLevel <= 0 || held.tapLevel <= 0)
+                        throw new FormatException(
+                            $"Fixture '{f.id}' wants slot '{f.slot}', which another fixture already has.");
+                    if (!slotLevels[f.slot].Add(f.tapLevel))
+                        throw new FormatException(
+                            $"Fixture '{f.id}' is a {f.tapLevel}-line tower, and slot '{f.slot}' " +
+                            "already has one — a ladder cannot have two of the same rung.");
+                }
+                else
+                {
+                    slotOwners[f.slot] = f;
+                    slotLevels[f.slot] = new HashSet<int> { f.tapLevel };
+                }
                 try
                 {
                     fixtures.Add(new FixtureDefinition(f.id, f.name, f.slot, f.price,
                         f.stars, f.flavor, f.sprite,
                         f.lightR, f.lightG, f.lightB, f.lightIntensity, f.lightRadius,
-                        f.startsInTheRoom, f.tap));
+                        f.startsInTheRoom, f.tapLevel));
                 }
                 catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
                 {
                     throw new FormatException($"Fixture '{f.id}': {e.Message}");
                 }
+            }
+            // A LADDER WITH A MISSING RUNG IS UNREACHABLE. The market sells a tower only to
+            // a bar one line short of it, so a catalogue that jumps 1 → 3 puts the triple
+            // permanently out of reach — bought by nobody, ever, and nothing at runtime
+            // would say so. It is a content bug, so it fails at the load.
+            foreach (var pair in slotLevels)
+            {
+                var levels = new List<int>(pair.Value);
+                levels.Sort();
+                if (levels[0] <= 0) continue;                 // not a ladder at all
+                for (int i = 0; i < levels.Count; i++)
+                    if (levels[i] != i + 1)
+                        throw new FormatException(
+                            $"The tower ladder in slot '{pair.Key}' runs {string.Join(", ", levels)} " +
+                            "— it has to climb 1, 2, 3 with no rung missing.");
             }
             return new LoadedFixtures(fixtures, slots);
         }
@@ -604,6 +656,14 @@ namespace LastCall.Game
             /// bottle teaches the player nothing about what is coming.
             /// </summary>
             public double unlockStars;
+
+            /// <summary>
+            /// How many draught lines the bar must run before this keg is for sale
+            /// (2026-08-19). 0 or absent = no tap gate, which is every bottle in the game
+            /// that is not a beer and the first keg, which pours on the tower the bar opens
+            /// with. Beer only: anything else naming one is a content bug and fails at load.
+            /// </summary>
+            public int tapLevel;
         }
 
         [Serializable]
@@ -623,11 +683,15 @@ namespace LastCall.Game
             public float lightB;
             public float lightIntensity;
             public float lightRadius;
-            // The room opens with this one already standing in it (the first beer font),
-            // and this one IS a beer font. Both default false, so every entry that does
-            // not mention them is unchanged.
+            // The room opens with this one already standing in it (the first beer font).
+            // Defaults false, so every entry that does not mention it is unchanged.
             public bool startsInTheRoom;
-            public bool tap;
+
+            /// <summary>How many draught lines this tower runs; 0 (absent) for anything
+            /// that is not one. It replaced a plain `tap` bool on 2026-08-19 when the fonts
+            /// became a three-rung ladder — JsonUtility cannot say "absent", so 0 is the
+            /// not-a-tower answer and every entry that never mentioned taps is unchanged.</summary>
+            public int tapLevel;
         }
 
         [Serializable]

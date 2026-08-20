@@ -14,7 +14,7 @@
     {
       "id": "counter_end",
       "x": 26,
-      "y": 106,
+      "y": 121,
       "onCounter": true
     },
     {
@@ -53,21 +53,9 @@
       "y": 129
     },
     {
-      "id": "taps_small",
-      "x": 96,
-      "y": 128,
-      "onCounter": true
-    },
-    {
-      "id": "taps_mid",
+      "id": "taps",
       "x": 192,
-      "y": 128,
-      "onCounter": true
-    },
-    {
-      "id": "taps_large",
-      "x": 288,
-      "y": 128,
+      "y": 131,
       "onCounter": true
     }
   ],
@@ -190,33 +178,33 @@
     {
       "id": "taps_one",
       "name": "Single Draught Tower",
-      "slot": "taps_small",
+      "slot": "taps",
       "price": 35,
       "stars": 0,
       "flavor": "One line, one lager. A start.",
       "sprite": "fx_tap_single",
-      "tap": true,
+      "tapLevel": 1,
       "startsInTheRoom": true
     },
     {
       "id": "taps_two",
       "name": "Twin Draught Tower",
-      "slot": "taps_mid",
+      "slot": "taps",
       "price": 65,
       "stars": 1.5,
-      "flavor": "Two lines, so the stout stops waiting its turn.",
+      "flavor": "A second line, so the stout stops waiting its turn.",
       "sprite": "fx_tap_double",
-      "tap": true
+      "tapLevel": 2
     },
     {
       "id": "taps_three",
       "name": "Triple Draught Tower",
-      "slot": "taps_large",
+      "slot": "taps",
       "price": 100,
       "stars": 3.0,
       "flavor": "Three red handles in a row. The bar looks busy before it is.",
       "sprite": "fx_tap_triple",
-      "tap": true
+      "tapLevel": 3
     }
   ]
 }

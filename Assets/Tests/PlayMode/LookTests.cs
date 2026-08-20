@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.IO;
 using LastCall.Core;
 using LastCall.Game;
@@ -89,7 +89,19 @@ namespace LastCall.PlayTests
         {
             yield return OpenTheBar();
             yield return OpenUntil("MENU — MAKE A DRINK", "MenuPanel");
-            yield return LooksTheSame("back_bar");
+            // NOT THE WHOLE SCREEN — the back bar leaves a hairline of ROOM down each edge,
+            // and the room is alive (2026-08-19). It always was, but the window used to be a
+            // still plate; it is an evening's worth of frames now, stepped by the shift's
+            // clock, and the window sits exactly there — at art x 0..108, which lands in that
+            // left-hand column. The picture then disagreed with itself by 52 pixels of one
+            // column at 8/255, twice, deterministically: not a flake, a photograph of a clock.
+            // Four columns in from each side is the same rule the bench and the basket
+            // already keep — compare the instrument, not the room around it.
+            //
+            // The BOTTOM edge went the same way the day the room's light started coming out
+            // of the window (its last row drifted by 4/255 across the full width), so the
+            // inset is on all four sides now rather than only the two that had been caught.
+            yield return LooksTheSame("back_bar", new RectInt(4, 4, 1272, 712));
         }
 
         [UnityTest]
@@ -134,7 +146,6 @@ namespace LastCall.PlayTests
                 if (lit >= 0f) { ceiling += lit; lamps++; }
             }
             float guestLamp = Intensity("LastCallLamp");
-            float sign = Intensity("SignSpill");
             float wash = Intensity("GlobalLight");
             Assert.That(lamps, Is.GreaterThan(0), "the room has no ceiling to take down");
             float perLamp = ceiling / lamps;
@@ -144,7 +155,10 @@ namespace LastCall.PlayTests
                 + $"ceiling of {perLamp:0.00}");
             Assert.That(perLamp, Is.LessThan(0.3f), "the ceiling did not come down");
             Assert.That(wash, Is.LessThan(0.7f), "the room's wash did not thin");
-            Assert.That(sign, Is.GreaterThan(1.2f), "the LAST CALL sign did not ignite");
+            // The sign's own line went with the sign (2026-08-19): the beat used to burn the
+            // LAST CALL neon harder as the room came down, and there is no neon in the room
+            // any more. What the beat still is — a ceiling that falls, a wash that thins and
+            // one lamp that finds the guest — is asserted above and is the whole of it now.
 
             // And it gives the room back. The market opens on the ordinary bar, not on a
             // night that never ended.
@@ -228,7 +242,16 @@ namespace LastCall.PlayTests
             // offset and a flat +5 of brightness over the sheet, everywhere above y 510 and
             // nowhere below it. The basket is what this pins: it is the surface that was
             // rebuilt on 2026-08-11, it does not scroll, and it was identical in both variants.
-            yield return LooksTheSame("basket", new RectInt(110, 550, 1120, 150));
+            //
+            // AND NOT THE ROOM BESIDE IT (2026-08-19). The tablet is 1096 wide on a 1280
+            // field, so it ends at screen x 1188 — and this region ran to 1230, catching 42
+            // columns of the ROOM past its right edge. That was harmless while the room's
+            // light was a constant; it is a photograph of a clock now that the light runs off
+            // the window's own frames and moves continuously through the evening. Measured:
+            // 2672 pixels of drift at 3/255, all of it in those columns and none of it in the
+            // basket. 1078 stops just inside the bezel. Same rule the bench and the back bar
+            // keep — compare the instrument, not the room around it.
+            yield return LooksTheSame("basket", new RectInt(110, 550, 1078, 150));
         }
 
         /// <summary>

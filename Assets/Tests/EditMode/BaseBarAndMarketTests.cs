@@ -394,6 +394,79 @@ namespace LastCall.Tests
             RunDayToClose(run);
             Assert.AreEqual(2, run.MarketOffers.Count, "three stars opens the good rung");
         }
+
+        // ── the kegs climb the TOWER, not the stars (2026-08-19) ────────────
+
+        private static IngredientCard Keg(string id, string style, int tapLevel) =>
+            new IngredientCard(id, id, IngredientType.Beer, 4,
+                new IngredientInfo(style, 1, 10, "somewhere", 4, "test", "beer", false,
+                    UnlockCondition.Tap(tapLevel)));
+
+        private static FixtureDefinition Tower(int level) =>
+            new FixtureDefinition("tower_" + level, level + "-Line Tower", "taps",
+                30 * level, 0, "lines", "fx_tap_single",
+                startsInTheRoom: level == 1, tapLevel: level);
+
+        private static TycoonRun BarWithKegs()
+        {
+            var shelf = new Shelf(new[] { new ShelfBottle(Bottle("vodka_a", "vodka", 1)) });
+            return new TycoonRun(shelf, Recipes, new RunRng("KEG"),
+                config: new TycoonConfig(startingMoney: 400),
+                brandCatalogue: new[]
+                {
+                    Keg("beer_one", "lager", 1),
+                    Keg("beer_two", "stout", 2),
+                    Keg("beer_three", "pale_ale", 3),
+                },
+                fixtures: new[] { Tower(1), Tower(2), Tower(3) });
+        }
+
+        [Test]
+        public void ASecondKeg_NeedsASecondLineToComeOutOf()
+        {
+            // The author, 2026-08-19: "marketten musluğu geliştirmeden bir üst seviye fıçı
+            // bira alınmamalı." The bar has five stars and all the money in the world; what
+            // it does not have is somewhere to plug the second keg in.
+            var run = BarWithKegs();
+            run.Rating.DevSet(5.0);
+            RunDayToClose(run);
+
+            var ids = run.MarketOffers.Select(o => o.Bottle.Id).ToList();
+            CollectionAssert.Contains(ids, "beer_one", "the tower the bar opens with pours one");
+            CollectionAssert.DoesNotContain(ids, "beer_two");
+            CollectionAssert.DoesNotContain(ids, "beer_three");
+
+            // ...and the board SAYS SO rather than simply not listing them: a keg that is
+            // merely early must not look like a keg the game forgot.
+            var held = run.GatedStock().Where(g => g.Card.Id == "beer_two").ToList();
+            Assert.AreEqual(1, held.Count, "the stout is shown as held back, not hidden");
+            Assert.That(held[0].Sentence, Does.Contain("2-LINE"));
+
+            run.BuyFixture("tower_2");
+            run.ContinueToNextDay();
+            run.Rating.DevSet(5.0);
+            RunDayToClose(run);
+
+            ids = run.MarketOffers.Select(o => o.Bottle.Id).ToList();
+            CollectionAssert.Contains(ids, "beer_two", "a second line, a second keg");
+            CollectionAssert.DoesNotContain(ids, "beer_three", "and no further than that");
+        }
+
+        [Test]
+        public void TheKegGate_IsNotAStarGateWearingAHat()
+        {
+            // A keg waiting on the counter has no star to wait for, and saying otherwise
+            // would let it drag the shop's "more at N stars" hint down to a rung that opens
+            // nothing. Every keg in the game is tier 1, so the ladder says zero for all of
+            // them and the tower is the only thing that separates them.
+            var run = BarWithKegs();
+            run.Rating.DevSet(0.0);
+            RunDayToClose(run);
+
+            var stout = run.GatedStock().First(g => g.Card.Id == "beer_two");
+            Assert.IsTrue(double.IsNaN(stout.Stars),
+                "the stout is not waiting for a star and must not claim to be");
+        }
     }
 
     public class PreparationTests

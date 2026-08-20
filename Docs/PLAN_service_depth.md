@@ -20,6 +20,17 @@ Status legend: ☐ todo · ◐ in progress · ☑ done
 > curves (only the 08-02 addendum's `12 + 2d + d²/9` is live); "filled to the top"
 > (retired 2026-08-02, machinery removed 2026-08-07). Historical GDD modules 00–13, 17,
 > 19, 20 were deleted in the sweep; 14–16, 18, 21–25 remain the live subsystem specs.
+>
+> **2026-08-13 — P14's FRIDGE IS RETIRED, and nothing stands in its place.** Everything
+> below about the fizzy-drinks cabinet / the drawn `mixer_fridge` / the "right wall" case
+> is a record of a thing that was built and has now been removed, along with the shaker
+> bench's prep table (dead furniture since the four preps moved to the glass on 08-10).
+> The author's ruling: **no drink is chosen on a service bench** — "bardağa dökme
+> aşamasında herhangi bir sıvı koyulmayacak… shakerin doldurulduğu sahnede de içecekler
+> olmayacak, oyuncu içecek seçmek için back bar sahnesine gidecek". The back bar wall is
+> the one picker and now carries the whole cellar, garnish excepted. No RULE changed:
+> carbonated still pours only into the serving glass (21 §12) and the wall hands that
+> bottle over already in hand. See `GDD_MEVCUT §9` for the live scenes.
 
 ---
 

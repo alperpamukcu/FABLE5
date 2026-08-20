@@ -70,12 +70,19 @@ namespace LastCall.UI
         // it silently — a stale table stands a bought glass on a steel stile. Re-measure by
         // running the column-edge scan and then LOOKING at the eight ticks drawn on the plate.
         //
-        // What this front is: FIVE bays, not eight — two cabinet doors (x 21..69, 91..139),
-        // two wide glazed bays (168..330, 336..514) and a door on the right (535..605). The
-        // eight cells are spread across them in proportion to width, so the two wide bays
-        // carry two and three glasses: nothing lands within 20 px of a stile.
+        // MEASURED ON THE BAR AS DRAWN, not on the sprite: the counter is 9-sliced and tiled
+        // out to 807 art px (see CounterMiddleTiles), so the sprite's own x is not where a
+        // thing ends up. Working in drawn space is also what keeps every cell ON SCREEN —
+        // the first pass mapped the sprite's table through the slice and put cells 1 and 8
+        // outside the frame, where a bought glass is drawn and never seen.
+        //
+        // What is visible of the drawn bar, inside the screen's 83..722: one cabinet door
+        // (91..139) and three glazed bays (168..330, 336..497, 503..681). The right-hand door
+        // lands almost entirely off-frame — 20 px of it survive — so it carries nothing. The
+        // eight cells are spread over the rest in proportion to width: the door takes one and
+        // the three bays take two, two and three.
         private static readonly float[] ShelfCentrePx =
-            { 45f, 115f, 208f, 290f, 366f, 425f, 484f, 570f };
+            { 115f, 208f, 290f, 376f, 457f, 533f, 592f, 651f };
         //
         // The numbers below are in the ART's own pixels. They only equal stage units at
         // the reference aspect: the counter is scaled by visibleWidth/640 and hangs from
@@ -97,10 +104,63 @@ namespace LastCall.UI
         private Vector2 _counterNative;
         private float _counterScale;                // stage units per counter-art pixel
 
+        // ── the bar runs past both edges (2026-08-19) ───────────────────────────
+        // The art ends inside the frame: its slab is drawn with depth, so the back edge
+        // tapers in over the last fifty pixels at each end and the bar visibly STOPS, with
+        // floor showing beside its cut corners. The fix is not a wider drawing and NOT a
+        // stretched one — the sprite is 9-sliced (border 168 / 305, FullRect mesh, already
+        // set on the importer) and drawn TILED, so the middle bay repeats at its own size
+        // and the two ends keep their joinery. Everything past the frame is off-screen: what
+        // the player sees is a bar that carries on past both edges.
+        //
+        // How many times the middle bay repeats. TWO is the smallest number that both pushes
+        // the tapered ends out of frame (the counter draws 26% wider than the room, so ~13%
+        // hangs off each side) and lands on a WHOLE tile — Continuous tiling clips a partial
+        // last tile, and a bay sliced down the middle beside the end cabinet is the one
+        // artefact this could produce.
+        private const int CounterMiddleTiles = 2;
+        private float _counterDrawWidth;            // art px actually drawn, native if untiled
+
+        /// <summary>
+        /// Puts the bar on the renderer's 9-slice, and answers how many art pixels wide it
+        /// will actually draw.
+        ///
+        /// Everything is read off the SPRITE rather than written down twice: the border it
+        /// was imported with says where the caps end, so re-cutting the counter art moves
+        /// this with it. A sprite that arrives without a border (or on a Tight mesh, which
+        /// cannot 9-slice at all) is drawn plain at its native width — a bar that stops
+        /// inside the frame is a blemish, and a silent fallback beats a torn one.
+        /// </summary>
+        private float SetUpCounterTiling(SpriteRenderer sr)
+        {
+            var border = sr.sprite.border;          // x left, y bottom, z right, w top
+            float middle = _counterNative.x - border.x - border.z;
+            if (border.x <= 0f || border.z <= 0f || middle <= 0f)
+            {
+                Debug.LogWarning("DiegeticStage: the counter sprite has no left/right border, " +
+                                 "so it cannot be widened without stretching — drawing it at " +
+                                 "its native width. Set the border on the importer.");
+                return _counterNative.x;
+            }
+            float drawn = border.x + middle * CounterMiddleTiles + border.z;
+            sr.drawMode = SpriteDrawMode.Tiled;
+            // Continuous, not Adaptive: Adaptive stretches the tile to make it fit, which is
+            // the one thing this is here to avoid. With a whole number of tiles there is
+            // nothing left to fit.
+            sr.tileMode = SpriteTileMode.Continuous;
+            sr.size = new Vector2(drawn, _counterNative.y);
+            return drawn;
+        }
+
         /// <summary>
         /// Where shelf compartment <paramref name="index"/> is standing right now, in STAGE
         /// units: the centre of its opening, the floor a glass stands on, and how much
         /// headroom there is under the shelf board. False when the bar was never drawn.
+        ///
+        /// ShelfCentrePx is measured on the bar AS DRAWN — 9-sliced out to _counterDrawWidth
+        /// — so a cell is simply its offset from that bar's left edge. Should the sprite ever
+        /// arrive without a border, the bar falls back to its native width and these cells
+        /// are the wrong ones; SetUpCounterTiling logs that case rather than letting it pass.
         /// </summary>
         public bool ShelfCell(int index, out float centerX, out float floorY, out float height)
         {
@@ -111,16 +171,23 @@ namespace LastCall.UI
             // The art's own top edge, in stage units: the rest line is CounterSurfaceInset
             // art-pixels below it, and that line is pinned to CounterRestY.
             float artTopY = CounterRestY + CounterSurfaceInset * scale;
-            centerX = (ShelfCentrePx[index] - _counterNative.x * 0.5f) * scale;
+            float drawn = _counterDrawWidth > 0f ? _counterDrawWidth : _counterNative.x;
+            centerX = (ShelfCentrePx[index] - drawn * 0.5f) * scale;
             floorY = artTopY - ShelfFloorPx * scale;
             height = (ShelfFloorPx - ShelfCeilPx) * scale;
             return true;
         }
 
-        /// <summary>Where the till's base sits. The bar top runs from CounterFrontY (96) up to
-        /// CounterRestY (128), and this sits well forward inside that — near the front of the
-        /// surface, where something on the bartender's side of the bar actually stands.</summary>
-        private const float RegisterBaseY = 104f;
+        /// <summary>Where the till's base sits: twelve units forward of the rest line, near
+        /// the front of the bar top, where something on the bartender's side of the bar
+        /// actually stands.
+        ///
+        /// WRITTEN AS AN OFFSET, not as a number (2026-08-19). It was 104 against a rest line
+        /// of 116, and when the counter moved the till stayed where it was and sank into the
+        /// bar top — the same way the beer fonts had been floating twelve units above it
+        /// since the counter came down. Anything standing on the counter rides the counter's
+        /// one dial now, so the bar can be moved again without a hunt for what came loose.</summary>
+        private const float RegisterBaseY = CounterRestY - 12f;
 
         // The till's display window, as fractions of the sprite — measured off the register
         // art (x 8..42 of 49, y 5..12 of 43, y from the TOP). Read them again if the till is
@@ -128,9 +195,16 @@ namespace LastCall.UI
         private const float DisplayLeft = 8f / 49f, DisplayRight = 43f / 49f;
         private const float DisplayTop = 5f / 43f, DisplayBottom = 12f / 43f;
 
-        // 128 -> 116 (2026-08-19, the author, in play: "masayi biraz asagi cek") - the
-        // whole counter layer rides this one number, which is why it is the dial.
-        private const float CounterRestY = 116f;           // counter-top rest line (till, glassware)
+        // 128 -> 116 (2026-08-19, the author, in play: "masayi biraz asagi cek"), then
+        // 116 -> 131 the same evening ("tezgahi Y ekseninde -122'ye al"). The author reads
+        // this one in the INSPECTOR, not here: the counter is a child of a world root whose
+        // scale is 1 at 16:9, so the transform's y is CounterRestY + CounterSurfaceInset −
+        // the art's own half height (75) − half the stage (180) = CounterRestY − 253. −122
+        // is 131. The whole counter layer rides this number, which is why it is the dial —
+        // and everything standing ON the counter is now written as an offset from it rather
+        // than as its own constant, because the last two moves left the till and the beer
+        // fonts behind.
+        private const float CounterRestY = 131f;           // counter-top rest line (till, glassware)
         // Measured off the art: the bar's far edge — where a glass is set down — is this far
         // below the sprite's top (2026-07-29).
         private const float CounterSurfaceInset = 2f;
@@ -148,8 +222,7 @@ namespace LastCall.UI
         // brightness, because this room's cornice carries a CYAN rim light that is every bit
         // as bright as a downlight and is not one.
         // Each gets a warm pool; the global wash is slightly cool and slightly below 1
-        // so the pools read as light and not as paint. The sign's spill rides NeonBlink
-        // with its lettering.
+        // so the pools read as light and not as paint.
         // RE-MEASURED A THIRD TIME (2026-08-19) for the author's own PixelLab-site room
         // (Tools/scene_user_post.py): the same three recessed downlights, now on the
         // ceiling plane at y 103 - lower than the last room because this one's ceiling
@@ -161,6 +234,197 @@ namespace LastCall.UI
         private static readonly Color LampTint = new Color(1f, 0.80f, 0.52f);
         private const float LampIntensity = 0.55f;
         private const float LampRadius = 92f;
+
+        // ── THE ROOM IS LIT BY ITS OWN WINDOW (2026-08-19) ──────────────────────
+        //
+        // The sky outside is 55 frames of an evening, and from here on it is not just a
+        // picture in a hole: it is the room's light source. Every frame the window puts up,
+        // the glass is READ — the hot band along the horizon becomes the light coming
+        // through it, the frame's own average becomes the wash over everything, and how
+        // bright the whole plate is decides whether it is still day. Nothing here is a
+        // hand-picked colour; the art is the input (the author: "sahne ışıklandırması için
+        // camdaki renkleri referans alacağız").
+        //
+        // What that reads as, measured off the shipped sheet: frame 0's horizon is #FDA911
+        // and its sky #8D2486, so the bar opens drenched in orange from the left with a
+        // plum wash and its ceiling nearly off; frame 54's horizon has fallen to #822C8B
+        // over a #252063 sky, so the window goes cold and quiet and the three downlights
+        // become the only warm thing in the room. The ceiling coming UP as the window goes
+        // down is the whole point — the room answers the evening (the author: "camdan vuran
+        // ışık ve mekanın ışığı da değişmeli").
+        //
+        // AND IT IS DELIBERATELY OVERDONE (the author: "ışıklandırmanın abartı bir boyutta
+        // değişmesini istiyorum"). Two knobs do it and they are the ones to turn: SkyPunch
+        // drives the sampled colour away from its own grey, and the Day/Night pairs below
+        // are far enough apart that the same room reads as two different times of night.
+        /// <summary>How far a sampled colour is pushed off its own luma. 1 = as measured.</summary>
+        private const float SkyPunch = 2.1f;
+        /// <summary>The light through the glass, at its loudest and at its quietest.</summary>
+        private const float WindowDay = 1.30f, WindowNight = 0.25f;
+
+        // ── A WINDOW IS AN AREA, NOT A BULB (2026-08-19) ────────────────────────
+        //
+        // The author: "camdan vuran ışığın tamamı müşterilerin üzerinde olması mantıksal
+        // olarak doğru mu? camla aynı hizadalar — bir arka plana vuran ışığın bir kısmı
+        // müşterilerin üstüne vursa daha mantıklı olmaz mı?" It would, and the numbers said
+        // so: the light sat at the glass (art x 54.5) and the first stool stands at x 59 —
+        // four and a half units, well inside the light's own inner core — so the person
+        // beside the window took the full throw while the back wall, 265 units off, took a
+        // fifth of it. Measured over the six stools: 0.97 at the first against 0.19 on the
+        // wall. A window lit its neighbour and barely lit the room.
+        //
+        // Setting the source back and giving it a cone was the first fix and it was not
+        // enough: pushed to 1200 units with the radius to match, the ratio only fell from
+        // 5.5 to 2.6 and the whole room went dim with it. The reason is structural — a POINT
+        // light always favours what is nearest, and a window does not. A window is an AREA
+        // source: a small room lit through one is lit ALL OVER by it, and what stands beside
+        // the glass catches a graze on top of that, not the whole of it.
+        //
+        // So the window's light is TWO things now. Most of it is a FILL: the room's own wash
+        // takes the window's colour, evenly, so the back wall and the far side are lit by the
+        // sunset exactly as the near side is. What is left is a small hot patch at the glass
+        // — the light on the wall beside a window, which the nearest customer stands in the
+        // edge of. That is the split the instruction describes: the background takes the
+        // light, and PART of it lands on the people.
+        /// <summary>How far the room's wash is dragged to the window's own colour by day.</summary>
+        private const float WindowFillShare = 0.25f;
+
+        // ── AN AMBIENT IS A TINT, NOT A COAT OF PAINT (2026-08-19) ──────────────
+        //
+        // The author: "ilk sahnelerde gerçekçi olmayacak seviyede sarı ışık var, biraz fazla
+        // sarı oluyor mekan." It was, and the arithmetic says exactly how it got there. At
+        // frame 0 the sky measures #A74D44; SkyPunch 2.1 drove that to #EE301D, and 55% of
+        // the way to the beam's #FFB700 left the GLOBAL light — the one that lights every
+        // surface equally — at #F67419, 90% saturated. A global light multiplies everything,
+        // so a saturated orange one does not warm a room, it REPLACES it: the concrete
+        // stopped being concrete and the plum wall came out brown.
+        //
+        // The step that was missing: a room's ambient is not the sky's colour. It is the
+        // sky's colour arriving on the room's own surfaces — grey concrete under a sunset is
+        // warm GREY, not orange. So the ambient is pulled back toward neutral before it is
+        // used, and only the WINDOW'S OWN BEAM keeps the full punch, because a shaft of
+        // sunset light really is that colour. Measured after: ambient #DF968F at 42%
+        // saturation instead of 90%, the plum wall plum again, and the sunset still blazing
+        // where it belongs — in the glass.
+        /// <summary>How much of the sky's hue the room's ambient takes. 1 = the old paint.</summary>
+        private const float AmbientPull = 0.55f;
+        /// <summary>The ambient's own punch. Lower than the beam's: it is a fill, not a shaft.</summary>
+        private const float WashPunch = 1.45f;
+        /// <summary>The wash over the whole room, ditto.</summary>
+        private const float WashDay = 1.10f, WashNight = 0.52f;
+        /// <summary>The ceiling. It runs the OTHER way: the room lights up as the sky dies.</summary>
+        private const float CeilingDay = 0.16f, CeilingNight = 1.85f;
+
+        // ── the room after dark (2026-08-19, the author: "mekanın içerisindeki
+        // ışıklandırma hava karardığında daha etkili ve aydınlatmalı") ──────────
+        //
+        // Turning the ceiling up alone did not make the room LIT: three tight pools on a
+        // dark floor read as three lamps in a cave, and the bar — which is the bottom third
+        // of the screen and the only place the player works — sat outside all of them. Two
+        // things fix that and both are what a real room does after dark.
+        //
+        // The pools GROW. A downlight over a dark room throws further than the same light
+        // over a sunlit one, because there is nothing left to out-shine it; at 92 they
+        // stopped at the wall behind the counter, and at 168 they reach the bar and each
+        // other, so the three read as one lit ceiling instead of three spots.
+        /// <summary>How far a ceiling pool reaches, by day and by night.</summary>
+        private const float LampRadiusDay = 92f, LampRadiusNight = 168f;
+        //
+        // And the WASH warms. At noon a room's ambient is the sky; at two in the morning
+        // there is no sky left in it — what fills the shadows is the room's own lamps coming
+        // back off the walls. Leaving the wash on the sky's cold blue is what kept the night
+        // reading as a blue cave rather than as a bar with its lights on.
+        /// <summary>How far the night's wash is dragged off the sky toward the lamps.</summary>
+        private const float NightBounce = 0.62f;
+        /// <summary>What the room bounces: its own tungsten, one step down from the bulb.</summary>
+        private static readonly Color BounceTint = new Color(1f, 0.72f, 0.42f);
+
+        // THE LIGHT OVER THE BAR. The ceiling alone left the one place the player actually
+        // works — the counter, the bottom third of the screen — in shadow, because the
+        // downlights hang at art y 57 and the bar's rest line is at 128: even a pool that
+        // reaches the back wall arrives at the counter as nothing. A bar has its own light
+        // over the bar; this is that light, and like the ceiling it comes up as the sky
+        // goes down. It is what makes the night READ as service rather than as ambience.
+        /// <summary>The bar's own light, by day (the window carries it) and by night.</summary>
+        private const float BarLightDay = 0.05f, BarLightNight = 1.15f;
+        /// <summary>Hung over the counter's rest line, centred, in the room art's own space.</summary>
+        private static readonly Vector2 BarLightArtPx = new Vector2(320f, 150f);
+        private const float BarLightRadius = 300f;
+        private Light2D _barLight;
+        /// <summary>How far the window's light reaches. The glass is a wall, not a lamp —
+        /// this is wide enough to carry across the room and die on the far side.</summary>
+        private const float WindowRadius = 230f;
+
+        // ── THE WINDOW THROWS, IT DOES NOT RADIATE (2026-08-19) ─────────────────
+        //
+        // The author: "camdan vuran ışığın tamamı müşterilerin üzerinde olması mantıksal
+        // olarak doğru mu? camla aynı hizadalar." It was not, and the numbers say why: the
+        // light sat AT the glass (art x 54.5) and the first stool stands at x 59 — four and
+        // a half units away, well inside the light's own 84-unit inner core. So the person
+        // beside the window was the closest object to the bulb and took the full 2.35, while
+        // the back wall — the surface a window actually faces — sat 265 units off and took
+        // a fraction of it. A window lit its neighbour and barely lit the room.
+        //
+        // Two changes put it right, and both are what the real thing does. The source moves
+        // BEHIND THE GLASS: light through a window comes from outside, so its origin belongs
+        // out there, and then nobody in the room is standing on it. And it becomes a CONE
+        // aimed into the room, because a window throws one way — the beam lands on the far
+        // wall and the floor, which is where the light in the reference photograph is, and
+        // the people at the counter catch its EDGE. Part of it, as asked, rather than all.
+        /// <summary>How far outside the glass the sun's origin sits, in art px.</summary>
+        private const float WindowSetback = 40f;
+        /// <summary>The cone: wide enough to fill the room, tight enough to have a direction.</summary>
+        private const float WindowConeOuter = 168f, WindowConeInner = 78f;
+        /// <summary>Where the cone points, in degrees about Z. A URP 2D spot opens along its
+        /// own UP axis, so −100 aims it right and a little down: across the room and onto the
+        /// floor, which is the way light falls through a window standing above head height.
+        /// THE ONE NUMBER TO CHECK IN THE ENGINE — if the cone comes out pointing up, the
+        /// convention is the transform's right and this wants −10 instead.</summary>
+        private const float WindowAimDegrees = -100f;
+        /// <summary>The luma range the evening actually spans, MEASURED over the 81 frames
+        /// with these same weights, over the SKY pixels only (see SkyAlphaCut): the opening
+        /// plate reads 0.495 and the last 0.156. Normalising over the real range is what
+        /// makes the swing fill the knobs above instead of a third of them — guessed at
+        /// 0.205..0.350 first, and frame 0 came out at two-thirds of a day with its ceiling
+        /// already half on.</summary>
+        private const float SkyLumaNight = 0.156f, SkyLumaDay = 0.495f;
+
+        /// <summary>
+        /// How much of the sky the horizon glow covers when the sun is still in it — 6.8%
+        /// of the sky pixels at frame 0, measured. The key colour is blended toward the
+        /// plain sky average by this, and that blend is load-bearing: the BRIGHTEST pixels
+        /// of a night sky are lit tower windows, which stay warm long after the sun is
+        /// gone. Peak alone would have kept throwing sunset into the room at two in the
+        /// morning. Area is what separates a sunset from a scattering of lamps — the glow
+        /// falls from 6.8% to under 0.4% of the sky, so the window's light goes cold on
+        /// its own, from the art, with nothing about the hour written down.
+        /// </summary>
+        private const float SkyGlowFull = 0.068f;
+
+        /// <summary>
+        /// Only what stands ABOVE the horizon is sky. The sheet marks every pixel warped
+        /// from below the skyline's base at alpha 254 (Tools/window_cycle.py, HORIZON_ROW)
+        /// — invisible on the glass, unmistakable here — and the light read refuses them,
+        /// because the city's lit windows were brightening the ROOM as they came on (the
+        /// author, 2026-08-19: "şehir ışıkları mekanı aydınlatamaz"). An unmarked sheet has
+        /// only 255s, so the gate degrades to the old whole-pane read.
+        /// </summary>
+        private const float SkyAlphaCut = 0.998f;
+
+        private Light2D _windowLight;
+        // WHERE THE EVENING ACTUALLY IS, between two plates. Everything that asks the room
+        // what it is lit by — the closing beat, the back bar's canvas — reads these rather
+        // than a frame's own measurement, so they glide with the light instead of stepping
+        // with the picture.
+        private Color _keyNow = Color.white, _washNow = Color.white;
+        private float _dayNow = 1f;
+        private Color[] _skyKey, _skyWash;      // sampled per frame, lazily
+        private float[] _skyDay;
+        private bool[] _skyRead;
+        // The sky-driven bases the closing beat dims FROM. They used to be the two consts
+        // above; a beat that lerped from a constant would have snapped the room back to
+        // noon-of-nowhere the moment the last call began.
+        private float _washBase = GlobalIntensity, _ceilingBase = LampIntensity;
 
         // ── the fixture slots (2026-08-10): where bought dressing stands ────────
         // Named hooks in the ROOM ART's own space (art px, bottom-left origin — identical
@@ -200,7 +464,6 @@ namespace LastCall.UI
         [SerializeField] private PortraitSprite[] portraits;
         private readonly Dictionary<string, Sprite> _portraits = new Dictionary<string, Sprite>();
 
-        private NeonBlink _neon;
 
         // ── the world ───────────────────────────────────────────────────────────
         private Transform _world;                   // root of every world-space stage object
@@ -208,9 +471,10 @@ namespace LastCall.UI
         private SpriteRenderer _backdropSr, _backgroundSr, _windowSr;
 
         // ── the view out of the window, played on the shift's clock (2026-08-19) ────
-        // A Miami skyline that runs from a low sun through the pink band into a lit night,
-        // sliced from ONE sheet: Assets/Resources/Scene/window_cycle.png, built by
-        // Tools/window_cycle.py out of four PixelLab animation sheets.
+        // A Miami skyline that runs from a golden sun through the pink band into deep
+        // night, sliced from ONE sheet: Assets/Resources/Scene/window_cycle.png, built by
+        // Tools/window_cycle.py out of six PixelLab animation sheets (one of them
+        // generated brightening and played reversed — the chain is pinned there).
         //
         // Each cell is the room's window hole — its bounding box, carrying its alpha — so the
         // view is cut to the glass at build time and cannot slide off it at any aspect, and
@@ -233,8 +497,6 @@ namespace LastCall.UI
         private Vector2 _backgroundNative;
         private float _backgroundScale = 1f;        // stage units per background-art pixel
         private Light2D _globalLight;
-        private Light2D _signLight;
-        private RectTransform _signHost;            // the sign's canvas host, Cover-fitted
         private float _lastVisibleW = -1f;
 
         /// <summary>Update the diegetic wallet - the number standing over the till.</summary>
@@ -280,7 +542,6 @@ namespace LastCall.UI
 
         private void Update()
         {
-            _neon?.Step(Time.deltaTime);
             StepClosing();
             float w = VisibleWidth();
             if (!Mathf.Approximately(w, _lastVisibleW)) Refit(w);
@@ -360,7 +621,6 @@ namespace LastCall.UI
                 order: 0);
             _backdropSr.color = UITheme.Night[0];
 
-            _neon = new NeonBlink();
 
             // The room. Real club background when installed, else the flat procedural
             // placeholders on their own canvas, so a broken reference is still a visible bar.
@@ -394,9 +654,19 @@ namespace LastCall.UI
                 // bulb. Positions are measured art pixels, converted per-fit in Refit.
                 for (int i = 0; i < LampArtPx.Length; i++)
                     _lamps.Add(PointLight("Lamp" + i, LampTint, LampIntensity, LampRadius));
-                _signLight = PointLight("SignSpill", UITheme.Magenta[4], 0.9f, 60f);
 
-                BuildSign();
+                // THE SUN, standing where the window is. It is one light and not a shaped
+                // one: what sells daylight through glass is the DIRECTION it falls from and
+                // the colour it carries, and both of those are already true of a point hung
+                // in the window's own opening. Its colour and its strength are the glass's
+                // to decide, every frame — see ApplySkyLight.
+                _windowLight = PointLight("WindowLight", LampTint, 0f, WindowRadius);
+                // A throw, not a bulb: see WindowSetback / WindowAimDegrees above.
+                _windowLight.pointLightOuterAngle = WindowConeOuter;
+                _windowLight.pointLightInnerAngle = WindowConeInner;
+                _windowLight.transform.rotation = Quaternion.Euler(0f, 0f, WindowAimDegrees);
+                _barLight = PointLight("BarLight", LampTint, 0f, BarLightRadius);
+
             }
             else
             {
@@ -424,11 +694,18 @@ namespace LastCall.UI
                 var sr = WorldSprite("Counter", counterSprite, order: 30);
                 _counterTr = sr.transform;
                 _counterNative = counterSprite.rect.size;
+                _counterDrawWidth = SetUpCounterTiling(sr);
             }
 
             BuildRegister();
 
             Refit(VisibleWidth());
+
+            // The bar opens at the hour the window says it is. Without this the room stood
+            // at the old constants until the clock happened to step a frame — which is a
+            // whole second and a half of the wrong evening, right at the moment the player
+            // is looking hardest.
+            ApplySkyLight(_windowFrame >= 0 ? _windowFrame : 0f);
 
             if (!Motion.Reduced) StartCoroutine(Ambient());
         }
@@ -570,6 +847,17 @@ namespace LastCall.UI
                     _windowSr.transform.localScale =
                         new Vector3(_backgroundScale, _backgroundScale, 1f);
                     _windowSr.transform.position = StageArtPointToWorld(WindowCentreArtPx);
+                    // The sun stands OUTSIDE the opening and is re-hung with it: the window
+                    // moves with the room's fit, so a light left at a build-time position
+                    // would slide off the glass the moment the window is not 16:9. The
+                    // setback is in ART px and goes through the same fit, so the source keeps
+                    // its distance behind the glass at every aspect rather than drifting into
+                    // the room as the picture grows.
+                    if (_windowLight != null)
+                        _windowLight.transform.position = StageArtPointToWorld(
+                            new Vector2(WindowCentreArtPx.x - WindowSetback, WindowCentreArtPx.y));
+                    if (_barLight != null)
+                        _barLight.transform.position = StageArtPointToWorld(BarLightArtPx);
                 }
 
                 // The lamps hang where the picture drew them: art px from the TOP, through
@@ -579,13 +867,6 @@ namespace LastCall.UI
                     var lamp = _world.Find("Lamp" + i);
                     if (lamp == null) continue;
                     lamp.position = ArtPxToWorld(LampArtPx[i]);
-                }
-                if (_signHost != null)
-                {
-                    // The sign's spill sits at the lettering's centre. The sign hangs at art
-                    // (470,300) bottom-left origin, and its rect is 93×20.
-                    var c = StageArtPointToWorld(new Vector2(470f + 46.5f, 300f + 10f));
-                    if (_signLight != null) _signLight.transform.position = c;
                 }
             }
 
@@ -804,23 +1085,226 @@ namespace LastCall.UI
         }
 
         /// <summary>
-        /// The sky outside, on the shift's own clock: 0 at opening (18:00, the sun still on
-        /// the skyline) and 1 at closing (02:00, the city lit). Straight proportion, the way
-        /// the author asked for it — the frames are one continuous evening, so the hour and
-        /// the picture advance together.
+        /// The sky outside, on the shift's own clock: 0 at opening (18:00, the sun still
+        /// golden over the skyline) and 1 at closing (02:00, the city deep in night).
+        /// Straight proportion, the way the author asked for it — the frames are one
+        /// continuous evening, so the hour and the picture advance together.
         ///
         /// TOLD, NOT READ, like the money and the slots: the stage never reaches into the run.
         /// Cheap to call every frame — it only touches the renderer when the frame changes,
-        /// which at 55 frames over a 95-second shift is about once every 1.7 seconds.
+        /// which at 81 frames over a 95-second shift is about once every 1.2 seconds.
         /// </summary>
         public void SetSkyFraction(float fraction)
         {
             if (_windowSr == null || _windowFrames == null || _windowFrames.Length == 0) return;
             int last = _windowFrames.Length - 1;
-            int i = Mathf.Clamp(Mathf.RoundToInt(Mathf.Clamp01(fraction) * last), 0, last);
-            if (i == _windowFrame) return;
-            _windowFrame = i;
-            _windowSr.sprite = _windowFrames[i];
+            // THE PICTURE STEPS AND THE LIGHT DOES NOT (2026-08-19, the author: "ışık
+            // geçişleri havayla beraber smooth olmalı, kesik ışık geçişleri olmasa").
+            //
+            // These are two different kinds of thing and they were being driven as one. The
+            // sky in the glass is PIXEL ART: 81 whole pictures, and it must land on one of
+            // them — a blended sky is a blurred sky and that is the law this project is built
+            // on (16 §6.10). Light is not drawn: it is a number, and a room whose light moves
+            // in 81 steps over a shift changes brightness every 1.2 seconds in a visible
+            // clunk. So the sprite takes the NEAREST frame and the light takes the EXACT
+            // position between two of them.
+            float exact = Mathf.Clamp01(fraction) * last;
+            int i = Mathf.Clamp(Mathf.RoundToInt(exact), 0, last);
+            if (i != _windowFrame)
+            {
+                _windowFrame = i;
+                _windowSr.sprite = _windowFrames[i];
+            }
+            ApplySkyLight(exact);
+        }
+
+        /// <summary>
+        /// READS THE SKY AND LIGHTS THE ROOM WITH IT.
+        ///
+        /// The sky, not the glass: only pixels above the horizon count (see SkyAlphaCut),
+        /// because the city's own windows are pictures of light, not sources of it. Three
+        /// numbers come out of one frame and each one has a job: the mean of the sky's
+        /// brightest few per cent is the SUN — the band along the horizon, and the only part
+        /// of a sky that behaves like a light source; the mean of the whole sky is the
+        /// WASH, because ambient light is the average of everything the heavens send in; and
+        /// the sky's own luma says how much evening is left. Sampled with a stride: this
+        /// is a colour average, and averaging every ninth pixel of twenty thousand lands
+        /// within a unit of averaging all of them.
+        ///
+        /// Cached per frame — the shift walks the frames once, but a new day walks them
+        /// again, and re-reading twenty thousand pixels for a picture already measured is
+        /// work nobody asked for.
+        /// </summary>
+        private void ApplySkyLight(float exact)
+        {
+            if (_windowFrames == null || _windowFrames.Length == 0) return;
+            int last = _windowFrames.Length - 1;
+            int a = Mathf.Clamp(Mathf.FloorToInt(exact), 0, last);
+            int b = Mathf.Min(a + 1, last);
+            float f = Mathf.Clamp01(exact - a);
+            ReadSky(a);
+            ReadSky(b);
+
+            // Between the two plates the hour is standing between. Every number the room is
+            // lit by is continuous; only the picture in the glass is not.
+            _keyNow = Color.Lerp(_skyKey[a], _skyKey[b], f);
+            _washNow = Color.Lerp(_skyWash[a], _skyWash[b], f);
+            _dayNow = Mathf.Lerp(_skyDay[a], _skyDay[b], f);
+            float day = _dayNow;
+
+            if (_windowLight != null)
+            {
+                _windowLight.color = Punch(_keyNow, SkyPunch);
+                _windowLight.intensity = Mathf.Lerp(WindowNight, WindowDay, day);
+            }
+            _washBase = Mathf.Lerp(WashNight, WashDay, day);
+            _ceilingBase = Mathf.Lerp(CeilingNight, CeilingDay, day);
+            if (_globalLight != null)
+            {
+                // Tinted, not painted — see AmbientPull. The beam above keeps SkyPunch.
+                var wash = Neutralise(Punch(_washNow, WashPunch), AmbientPull);
+                wash = Color.Lerp(wash, BounceTint, (1f - day) * NightBounce);
+                var keyAmbient = Neutralise(Punch(_keyNow, SkyPunch), AmbientPull);
+                _globalLight.color = Color.Lerp(wash, keyAmbient, WindowFillShare * day);
+                _globalLight.intensity = _washBase;
+            }
+            if (_barLight != null)
+                _barLight.intensity = Mathf.Lerp(BarLightNight, BarLightDay, day);
+            float lampR = Mathf.Lerp(LampRadiusNight, LampRadiusDay, day);
+            for (int i = 0; i < _lamps.Count; i++)
+            {
+                if (_lamps[i] == null) continue;
+                _lamps[i].intensity = _ceilingBase;
+                _lamps[i].pointLightOuterRadius = lampR;
+                _lamps[i].pointLightInnerRadius = lampR * 0.15f;
+            }
+        }
+
+        /// <summary>
+        /// Measures ONE plate, once. The reading is what costs — twenty thousand pixels — so
+        /// it is cached per frame and the lighting above only ever lerps between two answers
+        /// it already has.
+        /// </summary>
+        private void ReadSky(int frame)
+        {
+            if (_windowFrames == null || frame < 0 || frame >= _windowFrames.Length) return;
+            if (_skyRead == null)
+            {
+                int n = _windowFrames.Length;
+                _skyRead = new bool[n]; _skyKey = new Color[n];
+                _skyWash = new Color[n]; _skyDay = new float[n];
+            }
+
+            if (!_skyRead[frame])
+            {
+                var sp = _windowFrames[frame];
+                var r = sp.textureRect;
+                var px = sp.texture.GetPixels((int)r.x, (int)r.y, (int)r.width, (int)r.height);
+                float sr = 0f, sg = 0f, sb = 0f, sl = 0f;
+                int seen = 0;
+                // Two passes over the same sample: the second wants the mean's own luma to
+                // know what "the brightest few per cent" even means, so it cannot be folded
+                // into the first.
+                for (int p = 0; p < px.Length; p += 9)
+                {
+                    var c = px[p];
+                    // Under 0.5 is the mullions and the frame; under the cut is the city,
+                    // marked at alpha 254 by the build. Neither is sky.
+                    if (c.a < SkyAlphaCut) continue;
+                    float l = c.r * 0.299f + c.g * 0.587f + c.b * 0.114f;
+                    sr += c.r; sg += c.g; sb += c.b; sl += l; seen++;
+                }
+                if (seen == 0) { _skyRead[frame] = true; _skyKey[frame] = LampTint;
+                                 _skyWash[frame] = GlobalTint; _skyDay[frame] = 1f; }
+                else
+                {
+                    float meanL = sl / seen;
+                    // The sun: everything brighter than halfway between the mean and white.
+                    // A percentile would want a sort; this is the same cut without one, and
+                    // on a sky — which is mostly flat bands — it lands on the horizon glow.
+                    float cut = meanL + (1f - meanL) * 0.5f;
+                    float hr = 0f, hg = 0f, hb = 0f; int hot = 0;
+                    for (int p = 0; p < px.Length; p += 9)
+                    {
+                        var c = px[p];
+                        if (c.a < SkyAlphaCut) continue;   // sky only, same gate as above
+                        if (c.r * 0.299f + c.g * 0.587f + c.b * 0.114f < cut) continue;
+                        hr += c.r; hg += c.g; hb += c.b; hot++;
+                    }
+                    var wash = new Color(sr / seen, sg / seen, sb / seen, 1f);
+                    _skyWash[frame] = wash;
+                    // The glow, weighted by how much of the pane it actually covers — see
+                    // SkyGlowFull. No area, no sun: the light through the glass becomes the
+                    // sky's own colour and goes as cold as the sky is.
+                    float glow = Mathf.Clamp01(hot / (float)seen / SkyGlowFull);
+                    _skyKey[frame] = hot > 0
+                        ? Color.Lerp(wash, new Color(hr / hot, hg / hot, hb / hot, 1f), glow)
+                        : wash;
+                    _skyDay[frame] = Mathf.Clamp01(
+                        Mathf.InverseLerp(SkyLumaNight, SkyLumaDay, meanL));
+                    // THE EVENING ONLY EVER DARKENS. The art wobbles — the city's glow
+                    // catches the clouds for a frame near the end and the sky read comes
+                    // back a shade brighter — and a room that brightens at midnight reads
+                    // as dawn. The frames play in order, so the previous frame is measured
+                    // by the time this one is, and this clamp makes the wobble one-way.
+                    if (frame > 0 && _skyRead[frame - 1])
+                        _skyDay[frame] = Mathf.Min(_skyDay[frame], _skyDay[frame - 1]);
+                    _skyRead[frame] = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// WHAT THE ROOM IS LIT BY RIGHT NOW, for the surfaces that a Light2D cannot reach.
+        ///
+        /// The back bar is a canvas — the player turns to face a wall of bottles and that
+        /// wall is UI, so no light in the world touches it, and it used to sit at whatever
+        /// brightness it was drawn at while the room around it moved through an evening
+        /// (the author, 2026-08-19: "backbar sahnesi çok aydınlık, ortamın ışığına uygun
+        /// değil"). Reading these lets it wear the same hour by hand.
+        ///
+        /// Told rather than computed twice: the sampling is <see cref="ApplySkyLight"/>'s and
+        /// this is only the answer it already has.
+        /// </summary>
+        public float RoomDaylight => _dayNow;
+
+        /// <summary>The light coming through the glass — warm at the sunset, cold at two.</summary>
+        public Color RoomKeyLight => Punch(_keyNow, SkyPunch);
+
+        /// <summary>The wash over everything, already dragged toward the lamps after dark.</summary>
+        public Color RoomWashLight
+        {
+            get
+            {
+                // The SAME ambient the room is standing in — neutralised, not the raw sky.
+                // The back bar reads this to dress its canvas, and a wash that is one colour
+                // in the room and a louder one on the wall of bottles is two rooms.
+                var wash = Neutralise(Punch(_washNow, WashPunch), AmbientPull);
+                return Color.Lerp(wash, BounceTint, (1f - _dayNow) * NightBounce);
+            }
+        }
+
+        /// <summary>
+        /// Walks a colour back toward white by <paramref name="keep"/>. What a light does to
+        /// a surface is multiply it, so a light that is only PART of the way from white to a
+        /// hue tints what it falls on; one that goes all the way paints over it.
+        /// </summary>
+        private static Color Neutralise(Color c, float keep) =>
+            new Color(1f + (c.r - 1f) * keep, 1f + (c.g - 1f) * keep, 1f + (c.b - 1f) * keep, 1f);
+
+        /// <summary>
+        /// Drives a colour away from its own grey. The sampled sky is a colour the eye reads
+        /// as ATMOSPHERE — soft, because it is an average of a whole picture — and an average
+        /// used straight as a light washes the room in mud. This keeps the hue the glass
+        /// actually has and gives it the conviction a light needs.
+        /// </summary>
+        private static Color Punch(Color c, float amount)
+        {
+            float l = c.r * 0.299f + c.g * 0.587f + c.b * 0.114f;
+            return new Color(
+                Mathf.Clamp01(l + (c.r - l) * amount),
+                Mathf.Clamp01(l + (c.g - l) * amount),
+                Mathf.Clamp01(l + (c.b - l) * amount), 1f);
         }
 
         /// <summary>
@@ -880,64 +1364,12 @@ namespace LastCall.UI
             (artPoint.x - _backgroundNative.x * 0.5f) * _backgroundScale,
             (artPoint.y - _backgroundNative.y * 0.5f) * _backgroundScale, 0f);
 
-        // ── the lettered sign (canvas: pixel text needs the canvas rasterizer) ─────
-
-        /// <summary>
-        /// What the painted room cannot do for itself: blink (GDD 24 §8). The word is real
-        /// text in the pixel font — the art generator cannot spell — so it keeps a small
-        /// overlay canvas of its own at −9: above the world stage, under the dressing (−5)
-        /// and everything else, exactly where the old scene canvas held it. Its LIGHT lives
-        /// in the world and stutters on the same schedule.
-        /// </summary>
-        private void BuildSign()
-        {
-            var canvasGo = new GameObject("SignCanvas", typeof(Canvas), typeof(CanvasScaler));
-            var canvas = canvasGo.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = -9;
-            var scaler = canvasGo.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = Reference;
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            scaler.matchWidthOrHeight = 1f;
-            var root = DesignFrame.Wrap((RectTransform)canvasGo.transform, Reference);
-
-            // Sized and scaled exactly like the room art, so the sign hangs on the wall the
-            // picture actually draws rather than on the screen edge.
-            _signHost = NewRect("SignHost", root);
-            var hostFit = _signHost.gameObject.AddComponent<StageArtFit>();
-            hostFit.Native = _backgroundNative;
-
-            BuildLetteredNeon(_signHost, new Vector2(470f, 300f), "LAST CALL", UITheme.Magenta[4]);
-        }
-
-        /// <summary>
-        /// A neon sign whose word is real text: the word set in the display face, and a soft
-        /// copy behind it for the glow. Both blink together, so the sign reads as one object —
-        /// and the world-side spill light blinks with the word.
-        /// </summary>
-        private void BuildLetteredNeon(RectTransform host, Vector2 centre, string word, Color tint)
-        {
-            var sign = NewRect("NeonSign", host);
-            sign.anchorMin = sign.anchorMax = sign.pivot = new Vector2(0f, 0f);
-            // Sized to the word: a lettered sign IS its lettering, so there is no frame art to
-            // match. The pixel face only stays crisp at whole multiples of 8.
-            sign.sizeDelta = new Vector2(word.Length * 9f + 12f, 20f);
-            sign.anchoredPosition = centre;
-
-            // The glow first, larger and dim, then the word itself over it.
-            var glow = NewText("Glow", sign, _display, 8, TextAnchor.MiddleCenter,
-                new Color(tint.r, tint.g, tint.b, 0.35f));
-            Stretch(glow.rectTransform, Vector2.zero, Vector2.one, new Vector2(-2, -2), new Vector2(2, 2));
-            glow.text = word;
-
-            var label = NewText("Word", sign, _display, 8, TextAnchor.MiddleCenter, tint);
-            Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            label.text = word;
-
-            _neon.Register(glow, 3f, 9f, 0.10f);
-            _neon.Register(label, 3f, 9f, 0.25f, _signLight);
-        }
+        // THE LETTERED SIGN IS GONE (2026-08-19, the author: "sahnedeki Last Call
+        // neonunu ve ışığını kaldır"). It hung at art (470,300) on its own overlay canvas
+        // at -9, blinked on NeonBlink, and threw a magenta spill into the room; all of it
+        // went together, because a sign's light without its sign is a magenta stain on a
+        // wall with nothing making it. The room's light now comes from the window and its
+        // own lamps, and nothing else.
 
         // ── the till (canvas: it must draw OVER the HUD's seated patrons) ─────────
 
@@ -1140,8 +1572,9 @@ namespace LastCall.UI
         // number below is an intensity on a light that was already hanging there, which is
         // what keeps it from reading as a different game for thirty seconds.
 
-        /// <summary>How far the ceiling and the wash drop for the last call.</summary>
-        private const float ClosingCeiling = 0.22f, ClosingWash = 0.55f, ClosingSign = 1.9f;
+        /// <summary>How far the ceiling and the wash drop for the last call. The sign used
+        /// to burn HARDER here (ClosingSign 1.9) — it went with the sign itself, 2026-08-19.</summary>
+        private const float ClosingCeiling = 0.22f, ClosingWash = 0.55f;
 
         /// <summary>The ceiling, kept by reference: the closing beat dims every one of them
         /// each frame, and finding them by name would rebuild four strings a frame to do it.</summary>
@@ -1177,17 +1610,27 @@ namespace LastCall.UI
 
             float t = Mathf.SmoothStep(0f, 1f, _closingT);
 
+            // FROM the hour the sky left the room, DOWN TO A LEVEL — and the level is
+            // absolute, not a fraction of wherever it started. "The ceiling comes down"
+            // means the room actually goes dark for the beat, whatever time it is; taking
+            // 22% off a night that is already at 1.85 leaves 0.41, which is brighter than
+            // the room this beat was written against and is not a room going dark at all.
+            // So the sky decides where the fall STARTS and the beat decides where it ENDS.
             if (_globalLight != null)
-                _globalLight.intensity = Mathf.Lerp(GlobalIntensity, GlobalIntensity * ClosingWash, t);
+                _globalLight.intensity = Mathf.Lerp(_washBase, GlobalIntensity * ClosingWash, t);
             float ceilingY = 0f;
             for (int i = 0; i < _lamps.Count; i++)
             {
                 if (_lamps[i] == null) continue;
-                _lamps[i].intensity = Mathf.Lerp(LampIntensity, LampIntensity * ClosingCeiling, t);
+                _lamps[i].intensity = Mathf.Lerp(_ceilingBase, LampIntensity * ClosingCeiling, t);
                 ceilingY = _lamps[i].transform.position.y;
             }
-            if (_signLight != null)
-                _signLight.intensity = Mathf.Lerp(0.9f, 0.9f * ClosingSign, t);
+            // The window dies with the room: at the last call the light outside is not what
+            // the beat is about, and leaving it burning kept a bright hole in a dark room.
+            if (_windowLight != null)
+                _windowLight.intensity = Mathf.Lerp(_windowLight.intensity,
+                    Mathf.Lerp(WindowNight, WindowDay, _dayNow) * Mathf.Lerp(1f, ClosingWash, t),
+                    1f - Mathf.Exp(-8f * Time.unscaledDeltaTime));
 
             if (_guestLight == null && _world != null && t > 0.001f)
                 _guestLight = PointLight("LastCallLamp", LampTint, 0f, LampRadius * 1.15f);
@@ -1195,6 +1638,9 @@ namespace LastCall.UI
             {
                 // It hangs where the other lamps hang — the room has one ceiling, and a pool
                 // that floated at mid-wall would read as a spotlight from nowhere.
+                // Against the beat's OWN ceiling, which the block above lands on an absolute
+                // level — so this is the constant it always was, and the contrast it buys
+                // (2.1 against 0.22 of the same base) is nine to one at every hour.
                 _guestLight.intensity = Mathf.Lerp(0f, LampIntensity * 2.1f, t);
                 _guestLight.transform.position = new Vector3(_guestWorldX, ceilingY, 0f);
                 if (_guestLight.gameObject.activeSelf != (t > 0.002f))
@@ -1210,9 +1656,15 @@ namespace LastCall.UI
                 nextFlicker -= Time.unscaledDeltaTime;
                 if (nextFlicker <= 0f && _globalLight != null)
                 {
-                    _globalLight.intensity = GlobalIntensity * 0.72f;
+                    // OFF THE HOUR'S OWN LEVEL, not off a constant (2026-08-19). The flicker
+                    // dipped to GlobalIntensity*0.72 and then RESTORED to GlobalIntensity —
+                    // which was fine while the wash was a constant and is a bug now that the
+                    // sky sets it: the first flicker of the night pinned the room at 0.85
+                    // for good, and every hour after it lit the same. It dips from where the
+                    // evening left the room and puts it back there.
+                    _globalLight.intensity = _washBase * 0.72f;
                     yield return new WaitForSecondsRealtime(0.05f);
-                    if (_globalLight != null) _globalLight.intensity = GlobalIntensity;
+                    if (_globalLight != null) _globalLight.intensity = _washBase;
                     nextFlicker = Random.Range(3f, 7f);
                 }
                 yield return null;
@@ -1254,9 +1706,10 @@ namespace LastCall.UI
 
         private void AddNeonSigns(RectTransform layer)
         {
-            // The wall sign "LAST CALL" + a couple of small accents high on the back wall —
-            // the procedural stand-ins for a missing room picture.
-            NeonSign(layer, UITheme.Magenta[3], new Vector2(200, 22), new Vector2(320, 300), "LAST CALL");
+            // Two small accents high on the back wall — the procedural stand-ins for a
+            // missing room picture. The "LAST CALL" sign that hung between them went with
+            // the real one (2026-08-19): a fallback that shows a sign the room no longer
+            // has is a fallback that lies about the room.
             NeonSign(layer, UITheme.Cyan[3], new Vector2(56, 10), new Vector2(120, 322), null);
             NeonSign(layer, UITheme.Magenta[3], new Vector2(48, 10), new Vector2(548, 316), null);
         }

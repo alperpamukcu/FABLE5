@@ -33,6 +33,39 @@ namespace LastCall.UI
         public static readonly Color[] Graphite = Ramp(0x14161A, 0x24272D, 0x383D45, 0x545A64, 0x808893);
         public static readonly Color[] Brick = Ramp(0x38161A, 0x5C2226, 0x7E3130, 0x9C4740, 0xB96253);
 
+        // ── THE VICE FADE (chrome only) ─────────────────────────────────────────
+        // The market's chrome runs ClubBlue into Magenta, and that run is the storefront's
+        // whole identity (2026-08-19, the author: vice mavisinden vice pembesine fade).
+        //
+        // GDD 16 §6.10 bans a gradient and it still does. This is NOT one: it is a BAND SET
+        // — whole, flat steps a title bar is built out of, each a run of pixels of a single
+        // colour, with a hard edge between them. Nothing is interpolated at draw time and
+        // nothing is anti-aliased.
+        //
+        // TWENTY-SIX bands, up from the first take's eight (2026-08-19, the author: "fade
+        // geçişi daha smooth olsun"). Eight gave the 1040-wide title bar runs of 130 and the
+        // seams read as stripes; twenty-six gives runs of exactly 40 — a whole multiple of
+        // the 4-grid — where the eye reads the RUN and not the seam. Still bands: any width
+        // of this bar contains twenty-six colours and no twenty-seventh.
+        //
+        // Why interpolated steps rather than the two ramps' own six: ClubBlue[2] and
+        // Magenta[2] are three hue-jumps apart, so a fade made only of palette steps lands
+        // as a fault line rather than a run. This is the same licence Malt (21 §10) and the
+        // v3 material ramps were added under, and it is written into 14 §3 / 16 §0.
+        //
+        // CHROME ONLY, like Graphite and Brick and for the same reason: it may never carry a
+        // signal, a sacred number or an ingredient's type. It dresses the market's frame;
+        // the aisle inside it stays paper and stays readable. (The HUD's standing row wore
+        // it for one build on 2026-08-19 and the author took it straight back off — "fade
+        // geçiş rengini beğenmedim" — so the market is its one home, and that is now a
+        // decision made twice.)
+        public static readonly Color[] ViceFade = Bands(0x2E4699, 0xE84DA6, 26);
+
+        /// <summary>A step of the fade by position, 0 (blue) → 1 (pink). Snapped to a band —
+        /// asking for 60% along gives you band 15 of the 26, not a colour between bands.</summary>
+        public static Color Fade(float t) =>
+            ViceFade[Mathf.Clamp(Mathf.FloorToInt(t * ViceFade.Length), 0, ViceFade.Length - 1)];
+
         // ── semantic roles ──────────────────────────────────────────────────────
         public static Color TextPrimary => Cream[4];      // Cream 5 on dark
         public static Color TextSecondary => Cream[3];
@@ -378,6 +411,18 @@ namespace LastCall.UI
         public const int Grid = 4;
         public static float Snap(float v) => Mathf.Round(v / Grid) * Grid;
         public static Vector2 Snap(Vector2 v) => new Vector2(Snap(v.x), Snap(v.y));
+
+        /// <summary>N flat steps from one hex to another, endpoints included. The steps are
+        /// mixed in LINEAR light and handed back in gamma, because a midpoint averaged in
+        /// gamma space comes out muddy — the same correction BlendLiquid makes.</summary>
+        private static Color[] Bands(int fromHex, int toHex, int n)
+        {
+            var a = Hex(fromHex).linear; var b = Hex(toHex).linear;
+            var r = new Color[n];
+            for (int i = 0; i < n; i++)
+                r[i] = Color.Lerp(a, b, n == 1 ? 0f : i / (float)(n - 1)).gamma;
+            return r;
+        }
 
         private static Color[] Ramp(params int[] hexes)
         {

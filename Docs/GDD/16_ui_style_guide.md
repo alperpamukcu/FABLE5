@@ -21,8 +21,11 @@ anchor-and-layout-group HUD would slide off the thing it belongs to. Do not "fix
 
 **Palette:** `UITheme` five-step ramps only — `Night`, `Magenta`, `Cyan`, `Amber`, `ViceRed`,
 `ClubBlue`, `Lime`, `Cream`, `Malt`, plus the v3 material ramps `Graphite` and `Brick`
-(14 v3 §3: architecture/furniture only — never a signal, a sacred number or a key face).
-A literal `new Color(...)` in UI code is a bug unless it
+(14 v3 §3: architecture/furniture only — never a signal, a sacred number or a key face),
+plus the `ViceFade` band set (14 v3 §3a: CHROME only, and it is a band set, not a
+gradient — see §6.10; twenty-six bands since 2026-08-19, when the author asked the
+first take's eight for "daha smooth" — a band set smooths by growing bands, never by
+interpolating). A literal `new Color(...)` in UI code is a bug unless it
 is a tint or an alpha of a token, and it must say why on the line above it.
 
 **Type:** the pixel faces rasterise cleanly only at whole multiples of their 8px design size.
@@ -42,8 +45,11 @@ the whole defence against a screen that looks assembled.
 | **CASE** | A body that holds an instrument: bevelled, lit top and left, shadowed right and bottom. It says *there is a machine in here*. | `Case` | the clock |
 | **GLASS** | The dark inset a readout sits behind. Never pure black — a display's dark is the panel's colour through a tint. | an `Image` inside a CASE | the clock |
 | **KEY** | The ONE pressable object. Chamfered corners, a real throw along its bottom, tinted by state. Everything the player can press is this. | `ChromeArt.Key()` | §2 |
-| **PLATE** | A card a thing stands on. Chamfered, one hairline rule, two shaded rows at its foot so it sits ON the page. | `ChromeArt.Card()` | market listings |
-| **LAMP** | A round bulb, with its light falling off in bands when lit. Signage, never a status dot. | `ChromeArt.Lamp` / `LampGlow` | the week marquee |
+| **PLATE** | A card a thing stands on. Chamfered, one hairline rule, two shaded rows at its foot so it sits ON the page. | `ChromeArt.Card()` | reading cards, chips |
+| **98 KEY** | The market's own pressable: a square raised panel with the era's two-step bevel, greyscale, tinted by state. Pressed it does not travel — it inverts (`Win98Press`), the one press in the game that works that way, because the storefront speaks the desktop's dialect and the bar speaks the bar's. Every button ON the site is this; nothing off the site may be. | `ChromeArt.Win98Key()` | market listings, tabs, checkout, exit, dialogs |
+| **ISLE** | The storefront's mark: PALM CARGO's palm on its island. A mark, not chrome — white, tinted by the caller, drawn at its authored 28×24. | `ChromeArt.Isle()` | the market's title bar |
+| **LAMP** | A round bulb, with its light falling off in bands when lit. Signage, never a status dot. | `ChromeArt.Lamp` / `LampGlow` | the week panel |
+| **WELL** | The recess an instrument's glass sits in, routed INTO the beam: chamfered corners, the top edge dark (light falls from above — a recess shades where a box shines), a lit lip along the bottom, and a floor that IS the display glass. One 9-sliced sprite, any width. (A PixelLab-generated backplate held this row for one build on 2026-08-19 and was withdrawn on the author's next sentence — "oluşturulan takvim görseli bozuk duruyor" — so chrome-is-never-generated stands unbroken.) | `ChromeArt.Well()` | the hour, the week |
 | **RULE / HAIRLINE** | One unit of edge. A bevel is four of them: lit top and left, shadowed right and bottom. | `Hairline` / `HairlineV` | everywhere |
 | **MARK** | A 16×16 drawn glyph, white, for the caller to tint. Never a font glyph — no pixel face carries ⚙. | `ChromeArt.Mark` | keys, steps |
 
@@ -129,6 +135,15 @@ author actually rejected. Read it before designing a surface, and again before s
    the content. If it is only there to fill the space, delete it and let the space be empty.
 10. **Smooth where the game is pixel.** Gradients, anti-aliased arcs, fractional scaling and
     sub-unit positions. Everything here is banded, chamfered and whole.
+    *The market's vice fade is the test of this rule, not the exception to it* (2026-08-19).
+    It runs blue to pink across a 1040-wide title bar and it is still legal, because it is
+    FLAT runs with a hard edge between them and not one interpolated pixel: a one-texel-per-
+    band texture drawn with point filtering (twenty-six bands of 40 since 2026-08-19; the
+    first take's eight read as stripes, and a band set smooths by growing bands). Swap that
+    filter to bilinear and the same object becomes a violation. If a future surface wants a
+    fade, it gets bands or it gets nothing. The restock gauge is allowed to WEAR the fade as
+    its fill (the author, 2026-08-19) because the reading there is carried by geometry —
+    the level's height — and the colour still says only "this is the market's".
 
 **The positive form of all ten:** distinctive chrome comes from the SUBJECT'S OWN WORLD. This
 is a bar. It has a marquee, a till, enamel plates, bottle labels, tape, a register drawer, a

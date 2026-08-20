@@ -28,7 +28,12 @@ namespace LastCall.Tests
         private static FixtureDefinition FirstTap() =>
             new FixtureDefinition("taps_one", "Single Draught Tower", "s2", 35, 0,
                 "One line, one lager.", "fx_tap_single",
-                startsInTheRoom: true, isTap: true);
+                startsInTheRoom: true, tapLevel: 1);
+
+        /// <summary>The rungs above it (2026-08-19): the same station in the same slot.</summary>
+        private static FixtureDefinition Tap(int level) =>
+            new FixtureDefinition("taps_" + level, level + "-Line Tower", "s2", 30 * level, 0,
+                level + " lines.", "fx_tap_single", tapLevel: level);
 
         private static Shelf NewShelf() => new Shelf(new[]
         {
@@ -77,7 +82,7 @@ namespace LastCall.Tests
                       ""lightIntensity"": 0.55, ""lightRadius"": 70 },
                     { ""id"": ""taps"", ""name"": ""Taps"", ""slot"": ""s2"",
                       ""price"": 35, ""stars"": 0, ""sprite"": ""fx_tap_single"",
-                      ""tap"": true, ""startsInTheRoom"": true }
+                      ""tapLevel"": 1, ""startsInTheRoom"": true }
                 ]}");
 
             var fixtures = loaded.Fixtures;
@@ -90,8 +95,10 @@ namespace LastCall.Tests
             // The font's two flags (2026-08-15). Both default false, which is what keeps
             // every entry that does not mention them reading exactly as it did.
             Assert.IsTrue(fixtures[2].IsTap, "a beer font says so in the data");
+            Assert.AreEqual(1, fixtures[2].TapLevel, "and says how many lines it runs");
             Assert.IsTrue(fixtures[2].StartsInTheRoom);
             Assert.IsFalse(fixtures[0].IsTap, "and a fern is not a door");
+            Assert.AreEqual(0, fixtures[0].TapLevel);
             Assert.IsFalse(fixtures[0].StartsInTheRoom);
 
             // The slots come out of the same file, and they carry where AND how they draw.
@@ -131,6 +138,25 @@ namespace LastCall.Tests
             Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{" + Slots + @" ""fixtures"": [
                 { ""id"": ""a"", ""name"": ""A"", ""slot"": ""s1"", ""price"": 10, ""sprite"": ""x"" },
                 { ""id"": ""b"", ""name"": ""B"", ""slot"": ""s1"", ""price"": 10, ""sprite"": ""x"" }]}"));
+            // ...including a tower sharing with something that is not one. The exception
+            // below is for a LADDER, and half a ladder is just the old bug.
+            Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{" + Slots + @" ""fixtures"": [
+                { ""id"": ""a"", ""name"": ""A"", ""slot"": ""s1"", ""price"": 10, ""sprite"": ""x"" },
+                { ""id"": ""b"", ""name"": ""B"", ""slot"": ""s1"", ""price"": 10, ""sprite"": ""x"",
+                  ""tapLevel"": 1 }]}"));
+            // Two towers on the same rung: one of them could never be bought.
+            Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{" + Slots + @" ""fixtures"": [
+                { ""id"": ""a"", ""name"": ""A"", ""slot"": ""s1"", ""price"": 10, ""sprite"": ""x"",
+                  ""tapLevel"": 1 },
+                { ""id"": ""b"", ""name"": ""B"", ""slot"": ""s1"", ""price"": 10, ""sprite"": ""x"",
+                  ""tapLevel"": 1 }]}"));
+            // A ladder with a rung missing: the market sells one line at a time, so the
+            // third tower would be unreachable for the whole game and nothing would say so.
+            Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{" + Slots + @" ""fixtures"": [
+                { ""id"": ""a"", ""name"": ""A"", ""slot"": ""s1"", ""price"": 10, ""sprite"": ""x"",
+                  ""tapLevel"": 1 },
+                { ""id"": ""b"", ""name"": ""B"", ""slot"": ""s1"", ""price"": 10, ""sprite"": ""x"",
+                  ""tapLevel"": 3 }]}"));
             // A lamp that shines but has no radius.
             Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{" + Slots + @" ""fixtures"": [
                 { ""id"": ""a"", ""name"": ""A"", ""slot"": ""s1"", ""price"": 10, ""sprite"": ""x"",
@@ -188,6 +214,72 @@ namespace LastCall.Tests
                 "and nothing it never bought can be refunded for money nobody paid");
             Assert.AreEqual(before, run.Money);
             Assert.IsTrue(run.OwnsFixture("taps_one"));
+        }
+
+        // ── the tower ladder (2026-08-19) ───────────────────────────────────────
+
+        [Test]
+        public void TheLadder_ParsesAsThreeLevelsInOneSlot()
+        {
+            var loaded = DataLoader.ParseFixtures(@"{" + Slots + @" ""fixtures"": [
+                { ""id"": ""t1"", ""name"": ""One"", ""slot"": ""s2"", ""price"": 35,
+                  ""sprite"": ""fx_tap_single"", ""tapLevel"": 1, ""startsInTheRoom"": true },
+                { ""id"": ""t2"", ""name"": ""Two"", ""slot"": ""s2"", ""price"": 65,
+                  ""sprite"": ""fx_tap_double"", ""tapLevel"": 2 },
+                { ""id"": ""t3"", ""name"": ""Three"", ""slot"": ""s2"", ""price"": 100,
+                  ""sprite"": ""fx_tap_triple"", ""tapLevel"": 3 }]}");
+            Assert.AreEqual(3, loaded.Fixtures.Count);
+            foreach (var f in loaded.Fixtures)
+                Assert.AreEqual("s2", f.Slot, "three levels of one station stand in one place");
+        }
+
+        [Test]
+        public void TheTower_ClimbsOneRungAtATime()
+        {
+            var run = RunAtDayEnd(500, FirstTap(), Tap(2), Tap(3));
+            Assert.AreEqual(1, run.TapLevel, "the bar opens with one line");
+
+            Assert.Throws<InvalidOperationException>(() => run.BuyFixture("taps_3"),
+                "the triple cannot be fitted over a bar that never ran two lines");
+            Assert.AreEqual(1, run.TapLevel, "and the refusal costs nothing");
+
+            run.BuyFixture("taps_2");
+            Assert.AreEqual(2, run.TapLevel);
+            run.BuyFixture("taps_3");
+            Assert.AreEqual(3, run.TapLevel);
+        }
+
+        [Test]
+        public void OnlyTheTallestTower_IsStandingOnTheCounter()
+        {
+            var run = RunAtDayEnd(500, FirstTap(), Tap(2), Tap(3));
+            Assert.AreEqual("taps_one", run.StandingTap().Id);
+
+            run.BuyFixture("taps_2");
+
+            // Both are OWNED - a tower is fitted over, not sold back - but the room stands
+            // one of them, or it draws two towers in the same slot, one inside the other.
+            Assert.IsTrue(run.OwnsFixture("taps_one"));
+            Assert.AreEqual("taps_2", run.StandingTap().Id);
+        }
+
+        [Test]
+        public void ARungCannotBeTakenBack_FromUnderTheOneAboveIt()
+        {
+            var run = RunAtDayEnd(500, FirstTap(), Tap(2), Tap(3));
+            run.BuyFixture("taps_2");
+            int twin = run.TodaysPurchases.Count - 1;
+            run.BuyFixture("taps_3");
+
+            Assert.Throws<InvalidOperationException>(() => run.RefundToday(twin),
+                "refunding the twin under a standing triple would hand the bar three " +
+                "lines it never fitted the second of");
+            Assert.AreEqual(3, run.TapLevel);
+
+            // The taller one first, which is the order they were bought in, and then it works.
+            run.RefundToday(run.TodaysPurchases.Count - 1);
+            run.RefundToday(twin);
+            Assert.AreEqual(1, run.TapLevel);
         }
 
         [Test]

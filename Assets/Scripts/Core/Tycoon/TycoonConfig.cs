@@ -9,12 +9,25 @@ namespace LastCall.Core
     /// </summary>
     public sealed class TycoonConfig
     {
-        // The live game's tuning: a served customer nurses the drink through three sip cycles
-        // (~2.6s sip + ~1.8s hold each, matched in TycoonHud) before getting up to leave.
+        // The live game's tuning: a served customer nurses the drink through THREE sip cycles
+        // before getting up to leave — 3 × TycoonHud.DrinkCycleSeconds (4.4), which is the
+        // glass going up, the swallow, the glass coming down, and a moment standing with it
+        // at their side.
+        //
+        // The number is unchanged and was right by accident: the cycle it was written against
+        // (2026-07-23) claimed 2.6s of clip, while the clip actually ran 1.42s, so 13.2 was
+        // buying 4.1 cycles and a customer stood up mid-gesture, glass halfway to their mouth.
+        // The sip is drawn out to a real swallow now (2026-08-20) and the cycle is a fixed
+        // 4.4s whatever length a character's clip shipped at, so this is three whole sips for
+        // everybody. CHANGE ONE AND THE OTHER: a savour that is not a whole number of cycles
+        // cuts the last one off wherever it happens to be.
         public static readonly TycoonConfig Default = new TycoonConfig(savorSeconds: 13.2);
 
+        // orderDecisionSeconds 4.0 → 5.0 (2026-08-19, the author: "düşünme süresi biraz daha
+        // uzun sürsün"): the "..." beat over the head is the thing the player waits ON now,
+        // and at 4s the short rolls were over before the dots read as thinking.
         public TycoonConfig(int startingMoney = 20,
-            double orderDecisionSeconds = 4.0, double savorSeconds = 6.0)
+            double orderDecisionSeconds = 5.0, double savorSeconds = 6.0)
         {
             if (orderDecisionSeconds < 0) throw new ArgumentOutOfRangeException(nameof(orderDecisionSeconds));
             if (savorSeconds < 0) throw new ArgumentOutOfRangeException(nameof(savorSeconds));
@@ -143,7 +156,8 @@ namespace LastCall.Core
         public double OrderDecisionSeconds { get; }
         /// <summary>Widened 0.35 → 0.55 (v5 P11): the notes ask for people who decide in two
         /// seconds and people who take five or more. At ±35% every customer mulled for much
-        /// the same beat; at ±55% the range is ~1.8–6.2s and the floor stops feeling metered.</summary>
+        /// the same beat; at ±55% the range stops feeling metered (~2.3–7.8s at the live 5s
+        /// base since 2026-08-19).</summary>
         public const double OrderDecisionJitter = 0.55;
 
         /// <summary>One decision-delay roll, jittered from the named stream.</summary>

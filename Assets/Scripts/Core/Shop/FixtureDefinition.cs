@@ -16,6 +16,13 @@ namespace LastCall.Core
     /// stands the first font on the counter on night one, and the market shows it as
     /// OURS rather than selling a bar the ability to pour what it already sells.
     ///
+    /// AND IT IS NOT COSMETIC ANY MORE (2026-08-19, the author: "3 seviye musluk olacak,
+    /// marketten musluğu geliştirmeden bir üst seviye fıçı bira alınmamalı"). The three
+    /// towers are one LADDER standing in one slot — <see cref="TapLevel"/> orders it —
+    /// and every keg past the first is locked behind a line to pour it out of. So this
+    /// one kind of dressing does change what the bar can do, which is why the ladder's
+    /// rules live in Core with the rest of them and not in the shop's UI.
+    ///
     /// Core carries the whole definition — including the sprite name and the light
     /// numbers — as plain data it never interprets, the way RecipeDefinition carries its
     /// GlassId: the rules only care about Id, Price and Stars; where the thing stands and
@@ -42,11 +49,22 @@ namespace LastCall.Core
         /// and so never refundable, since a refund only walks back tonight's purchases.</summary>
         public bool StartsInTheRoom { get; }
 
+        /// <summary>
+        /// How many lines this draught tower runs, or 0 for a piece that is not one
+        /// (2026-08-19, the author: "3 seviye musluk olacak"). It replaced a plain bool,
+        /// and the level is doing three jobs the bool could not: it orders the ladder, so
+        /// the market will not sell the triple to a bar that never bought the twin; it is
+        /// what a keg's lock is measured against; and it is how the room picks which of
+        /// several owned towers to actually stand on the counter.
+        ///
+        /// Data rather than a hardcoded id, so a fourth level needs no code.
+        /// </summary>
+        public int TapLevel { get; }
+
         /// <summary>This piece is a BEER FONT: clicking it in the room opens the draught
-        /// station. Data rather than a hardcoded id, so a fourth font needs no code — and a
-        /// bool rather than a general "opens" string, because there is exactly one station a
-        /// prop is a door to, and inventing a second would be inventing a feature.</summary>
-        public bool IsTap { get; }
+        /// station. There is exactly one station a prop is a door to, and inventing a
+        /// second would be inventing a feature.</summary>
+        public bool IsTap => TapLevel > 0;
 
         /// <summary>Resources/Fixtures sprite name. Presentation data, carried not read.</summary>
         public string Sprite { get; }
@@ -64,7 +82,7 @@ namespace LastCall.Core
             double stars, string flavor, string sprite,
             float lightR = 0f, float lightG = 0f, float lightB = 0f,
             float lightIntensity = 0f, float lightRadius = 0f,
-            bool startsInTheRoom = false, bool isTap = false)
+            bool startsInTheRoom = false, int tapLevel = 0)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Fixture needs an id.", nameof(id));
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException($"Fixture '{id}' needs a name.", nameof(name));
@@ -75,6 +93,8 @@ namespace LastCall.Core
             if (lightIntensity < 0) throw new ArgumentOutOfRangeException(nameof(lightIntensity), $"Fixture '{id}' has negative light.");
             if (lightIntensity > 0 && lightRadius <= 0)
                 throw new ArgumentOutOfRangeException(nameof(lightRadius), $"Fixture '{id}' shines but has no radius.");
+            if (tapLevel < 0)
+                throw new ArgumentOutOfRangeException(nameof(tapLevel), $"Fixture '{id}' has {tapLevel} draught lines.");
             Id = id;
             Name = name;
             Slot = slot;
@@ -86,7 +106,7 @@ namespace LastCall.Core
             LightIntensity = lightIntensity;
             LightRadius = lightRadius;
             StartsInTheRoom = startsInTheRoom;
-            IsTap = isTap;
+            TapLevel = tapLevel;
         }
 
         public override string ToString() => $"{Name} ({Id}, ${Price}, slot {Slot})";

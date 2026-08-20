@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace LastCall.Core
 {
@@ -273,7 +273,7 @@ namespace LastCall.Core
         {
             if (verdict == null) throw new ArgumentNullException(nameof(verdict));
             if (State != VisitState.Waiting)
-                throw new InvalidOperationException("This customer is no longer waiting.");
+                throw new InvalidOperationException("They are not waiting any more.");
 
             Paid += verdict.Total;
             PaidBase += verdict.BasePaid;
@@ -311,7 +311,7 @@ namespace LastCall.Core
         {
             if (order == null) throw new ArgumentNullException(nameof(order));
             if (State != VisitState.Waiting)
-                throw new InvalidOperationException("This customer is no longer waiting.");
+                throw new InvalidOperationException("They are not waiting any more.");
             _order = order;
         }
 
@@ -330,7 +330,7 @@ namespace LastCall.Core
         public void GetUp(double satisfaction = 0, double lingerSeconds = 0)
         {
             if (State != VisitState.Waiting)
-                throw new InvalidOperationException("This customer is no longer waiting.");
+                throw new InvalidOperationException("They are not waiting any more.");
             Satisfaction = Math.Max(0.0, Math.Min(1.0, satisfaction));
             if (lingerSeconds > 0)
             {

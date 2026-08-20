@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using LastCall.Core;
@@ -443,7 +443,7 @@ namespace LastCall.UI
         /// reason nothing is happening (2026-07-28).</summary>
         private void ShowShakerFull()
         {
-            _shakerReadout.text = "THE TIN IS FULL — CAP IT AND SHAKE, OR EMPTY IT";
+            _shakerReadout.text = "THE TIN IS FULL — PUT THE LID ON AND SHAKE, OR EMPTY IT";
             _shakerReadout.color = UITheme.ViceRed[3];
             _saidThisFrame = true;
         }
@@ -866,7 +866,7 @@ namespace LastCall.UI
             _blowHome = _shakerVessel.anchoredPosition;
             Sfx.Play("bottle_open", 1f);
             Sfx.Play("upset_sfx", 0.6f);
-            _shakerReadout.text = "IT BLEW — FIZZ DOES NOT GO IN A SHAKEN TIN";
+            _shakerReadout.text = "IT BLEW UP — NEVER SHAKE A FIZZY DRINK";
             _shakerReadout.color = UITheme.ViceRed[3];
             _saidThisFrame = true;
         }
@@ -892,7 +892,7 @@ namespace LastCall.UI
                 _shakerVessel.anchoredPosition = _blowHome + new Vector2(
                     UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f)) * (14f * ring);
             }
-            _shakerReadout.text = "IT BLEW — FIZZ DOES NOT GO IN A SHAKEN TIN";
+            _shakerReadout.text = "IT BLEW UP — NEVER SHAKE A FIZZY DRINK";
             _shakerReadout.color = UITheme.ViceRed[3];
             _saidThisFrame = true;
             if (_blowT <= 0f) RefreshShaker();   // a clean bench, exactly as after the bin

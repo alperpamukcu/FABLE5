@@ -15,6 +15,7 @@ namespace LastCall.Tests
         private sealed class Bar : IUnlockState
         {
             public double Stars { get; set; }
+            public int TapLevel { get; set; }
             public readonly HashSet<string> Kept = new HashSet<string>();
             public bool BeatWasKept(string beatId) => Kept.Contains(beatId);
         }
@@ -61,6 +62,32 @@ namespace LastCall.Tests
             Assert.That(lockedBy.Sentence, Does.Contain("LAST CALL"));
             Assert.That(lockedBy.Sentence, Does.Not.Contain("someone_1"),
                 "an id is not a sentence a player can act on");
+        }
+
+        [Test]
+        public void A_tap_lock_is_about_the_room_not_the_standing()
+        {
+            var gate = UnlockCondition.Tap(2);
+            var bar = new Bar { Stars = 5.0, TapLevel = 1 };
+            Assert.IsFalse(gate.MetBy(bar), "a five-star bar with one line still has one line");
+            bar.TapLevel = 2;
+            Assert.IsTrue(gate.MetBy(bar));
+            bar.TapLevel = 3;
+            Assert.IsTrue(gate.MetBy(bar), "a taller tower still runs the line below it");
+            // It names the thing the player buys, and it names NO star — the shop's "next
+            // at" hint counts stars, and a keg waiting on a counter must not drag it down.
+            Assert.That(gate.Sentence, Does.Contain("2-LINE"));
+            Assert.IsTrue(double.IsNaN(gate.StarsWanted));
+        }
+
+        [Test]
+        public void One_line_is_not_a_lock_at_all()
+        {
+            // Every bar opens with the single tower standing on it, so gating the first keg
+            // on it would be a lock that is open for everyone, forever, printing a sentence
+            // under a bottle nobody is waiting for.
+            Assert.AreSame(UnlockCondition.Open, UnlockCondition.Tap(1));
+            Assert.AreSame(UnlockCondition.Open, UnlockCondition.Tap(0));
         }
 
         [Test]

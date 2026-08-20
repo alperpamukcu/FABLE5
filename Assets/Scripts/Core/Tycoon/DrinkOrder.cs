@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -58,7 +58,7 @@ namespace LastCall.Core
                 .Take(config.OrderPoolSize(day))
                 .ToList();
             if (pool.Count == 0)
-                throw new InvalidOperationException("No pourable recipes to order from.");
+                throw new InvalidOperationException("No drinks you can pour yet.");
 
             var pick = pool[rng.NextInt(pool.Count)];
             return new DrinkOrder(pick, MenuPrice(pick), ServingSpec.Roll(pick, rng));

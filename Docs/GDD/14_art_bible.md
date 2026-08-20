@@ -60,11 +60,47 @@ other.
 | **Graphite** (v3) | `#14161A` | `#24272D` | `#383D45` | `#545A64` | `#808893` | cabinet bodies, metalwork, appliance chrome |
 | **Brick** (v3) | `#38161A` | `#5C2226` | `#7E3130` | `#9C4740` | `#B96253` | the bordeaux masonry wall, and nothing that signals |
 
+**Plus one BAND SET, not a ramp:** `ViceFade` — twenty-six flat steps ClubBlue[2] →
+Magenta[3] (eight until 2026-08-19, grown for the seam read: "fade geçişi daha smooth
+olsun"), the market's chrome and nothing else. It has no [0]–[4] convention because it
+is not a ramp: it is a run. See §3a.
+
 Rules, unchanged from v2 and still absolute:
 - Shading = move along a ramp, NEVER darken/lighten off-ramp.
 - Outlines use the darkest step of the object's own ramp — no pure black, no pure white.
 - Text: `Cream[4]` on dark, `Night[2]` on amber (`UITheme.TextPrimary` / `TextOnAmber`).
 - Generated art is quantized to this palette in post — no exceptions (15 §2, as patched).
+
+### 3a. The VICE FADE — the market's chrome band set (2026-08-19)
+
+The storefront was re-cut as a Miami/vice trade site seen on the bar's tablet, and its
+identity is one run of colour: **`UITheme.ViceFade`, eight flat steps from ClubBlue[2]
+`#2E4699` to Magenta[3] `#E84DA6`**, mixed in linear light. The white-and-green distributor
+page (v5 P13) is gone; the house green went with it.
+
+Three things hold it inside the law:
+
+- **It is a BAND SET, not a gradient** (16 §6.10). The twenty-six steps (eight until
+  2026-08-19) are drawn as a 26×1 texture with POINT filtering, so the 1040-wide title bar
+  is twenty-six flat runs of exactly 40 with a hard edge between them. There is no
+  interpolated pixel on screen at any width. Bilinear filtering would make the same object
+  illegal.
+- **It is CHROME ONLY**, on the same terms as Graphite and Brick: never a signal, never a
+  sacred number, never an ingredient's type, never a key face that means something. The
+  market's state colours did not move — stock is still Lime, refusal still ViceRed, money
+  still Amber (16 §5). A theme does not get to repaint a signal.
+- **It has no second home.** The HUD's standing row wore it for one build (2026-08-19,
+  "puan ve yıldız göstergesi vice fade'inde olabilir") and the author took it back off
+  the same evening ("fade geçiş rengini beğenmedim") — the stars are 3D icons now, not
+  tinted silhouettes. The market's chrome is the fade's one home, decided twice.
+- **The page under it stays paper.** The one thing that was ever load-bearing about the
+  green storefront was that forty products could be READ on it. The fade dresses the
+  window; the aisle inside it is light, and the wallpaper behind the aisle is hung at 13%
+  and has to stay there.
+
+The wallpaper — a banded sun, a grid running back to it, two palms — is drawn in code
+(`ChromeArt.PalmWall`), not generated. UI chrome is never generated in this project and a
+wall under the aisle is chrome: it is part of the instrument, not a picture in it.
 
 Two licensed code exceptions, named so nobody rediscovers them: the drink LIQUID table in
 `UITheme` (transmission colours, measured — 21-era law) and the bottle-style tag colours.

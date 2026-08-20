@@ -155,7 +155,20 @@ namespace LastCall.UI
         /// about seventeen frames, which at PatronFps runs 1.42s - the beat is a hair
         /// longer, because a beat shorter than its clip cuts the sentence in half.</summary>
         private const float OrderAnimSeconds = 1.5f;
-        private const float DrinkSipSeconds = 2.6f, DrinkHoldSeconds = 1.8f;   // one sip cycle (×3 = the savour)
+        /// <summary>ONE SIP CYCLE, END TO END: the glass goes up, they drink, it comes back
+        /// down, and they stand with it at their side until the cycle is up. FIXED, and the
+        /// rest at the end is whatever is left over — so a character whose clip shipped with
+        /// fewer frames simply stands a moment longer, and three cycles is the same 13.2
+        /// seconds for everybody. <c>TycoonConfig.Default</c>'s savour is exactly 3 × this,
+        /// which is what makes a customer get up at the END of a sip instead of halfway
+        /// through raising the glass (they were, at 4.1 cycles — see the note there).</summary>
+        private const float DrinkCycleSeconds = 4.4f;
+        /// <summary>How long each of the three frames AT THE LIPS is held, in ticks of
+        /// 1/PatronFps (2026-08-20, the author: "yudum aldığı 3 frame çok daha yavaş olmalı
+        /// ki yudum alıyor hissi uyandırsın"). Five ticks is 0.42s a frame and 1.25s across
+        /// the three, which is how long a mouthful actually takes; at one tick each the
+        /// whole swallow went by in a quarter of a second and read as a flinch.</summary>
+        private const int DrinkSipTicks = 5;
 
         // The animated customer (2026-07-23): a full-body pixel sprite shown from about the waist
         // up, with the counter clipping the legs. Frames load from Resources/Patron/<clip>.
@@ -280,12 +293,15 @@ namespace LastCall.UI
             ("silverbob", 11f, 0f, 6, 6),
             ("afrowoman", 0f, 0f, 7, 6),
             ("eastasianman", 7f, 0f, 5, 6),
-            // The last two before the casting pauses, both the author's own descriptions -
-            // and the only two whose keyline is stripped at ship time (patron_ship.DELINEATE):
-            // they came back inked and would not re-roll out of it, where everybody above
-            // them keeps the pixels they were approved as.
-            ("spanishsuit", 5f, 0f, 4, 5),
-            ("leopard", 1f, 0f, 5, 7),
+            // The last two before the casting pauses, both the author's own descriptions,
+            // and both DRAWN AGAIN on 2026-08-20 rather than filtered. For one day their
+            // keyline was stripped off the finished frames; the author threw that out
+            // ("hicbir karakterde siyah kontur olmamali ... dogal kontur olacak"), so the
+            // brief was changed where the ink was actually coming from - the waistcoat lost
+            // its tailoring words, the leopard print lost its black - and each was rolled
+            // several times with the best of the batch adopted on measurement.
+            ("spanishsuit", 7f, 0f, 7, 6),
+            ("leopard", 4f, 0f, 4, 6),
         };
         /// <summary>
         /// The papers for a face — name, age, country, flag — read from the cast file.
@@ -3311,12 +3327,46 @@ namespace LastCall.UI
             {
                 // A sip, then a pause standing as they were, then another sip - the
                 // "1. yudum, 2. yudum" the author asked for, out of one clip that ends
-                // where it began.
-                float cycle = n / PatronFps + DrinkHoldSeconds;
-                float u = Mathf.Repeat(t, cycle) * PatronFps;
-                return u >= n ? n - 1 : Mathf.FloorToInt(u);
+                // where it began. The clip is not played flat: see DrinkTicks.
+                float u = Mathf.Repeat(t, DrinkCycleSeconds) * PatronFps;   // in ticks
+                int acc = 0;
+                for (int i = 0; i < n; i++)
+                {
+                    acc += DrinkTicks(i, n);
+                    if (u < acc) return i;
+                }
+                return n - 1;   // the rest: standing with the glass down, as the clip left them
             }
             return Mathf.Min(n - 1, Mathf.FloorToInt(t * PatronFps));
+        }
+
+        /// <summary>
+        /// THE DRINK'S TIMING CHART — how many ticks of 1/PatronFps each frame is held for.
+        /// One rate still (the walk's), with HOLDS on it, which is how an animator slows a
+        /// beat without slowing the film: "FPS tüm animasyonlarda aynı olmalı" is untouched.
+        ///
+        /// Everything hangs off ONE fact about the art: the clip is two halves joined —
+        /// out to the glass at the mouth, then interpolated back to the idle pose — so the
+        /// SIP IS THE MIDDLE FRAME. That is measured, not assumed, and it holds across the
+        /// live cast's two clip lengths: 17 frames puts the glass at the lips on 7-8-9
+        /// (afrowoman, clubgirl, silverbob) and 16 puts it on 6-7-8 (heavyset). The
+        /// remaining cast still stands on the old rig and does not load; when they are
+        /// redrawn they arrive at 17 like everyone else.
+        ///
+        ///   middle ±1   the swallow            5 ticks   0.42s each
+        ///   ±2 … ±4     the arm's travel       2 ticks   the lift takes ~0.5s, and so does
+        ///                                                the lower, where both were 0.25s
+        ///   further     standing, glass down   1 tick    dead frames at either end
+        ///
+        /// A clip long enough for the chart to outrun DrinkCycleSeconds would be cut at the
+        /// rest rather than dropping frames; at 35 ticks (2.9s) against a 4.4s cycle the
+        /// longest clip in the cast has a second and a half of room.
+        /// </summary>
+        private static int DrinkTicks(int frame, int n)
+        {
+            int off = Mathf.Abs(frame - (n - 1) / 2);
+            if (off <= 1) return DrinkSipTicks;
+            return off <= 4 ? 2 : 1;
         }
 
         private void LoadPatronFrames()

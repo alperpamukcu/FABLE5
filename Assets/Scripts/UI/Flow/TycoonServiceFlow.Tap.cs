@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using LastCall.Core;
@@ -131,7 +131,7 @@ namespace LastCall.UI
 
             var hint = NewText("Hint", _tapPanel, _body, 8, TextAnchor.UpperCenter, UITheme.TextSecondary);
             Stretch(hint.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -68), new Vector2(0, -44));
-            hint.text = "HOLD THE GLASS AND POINT WHERE ITS BASE GOES · LEANED FILLS, UPRIGHT BUILDS THE HEAD · CLICK A KEG TO COUPLE IT";
+            hint.text = "HOLD THE GLASS AND AIM · TILT IT TO FILL, HOLD IT STRAIGHT FOR FOAM · CLICK A KEG TO SWAP";
 
             _tapSurface = NewRect("TapSurface", _tapPanel);
             Stretch(_tapSurface, Vector2.zero, Vector2.one, new Vector2(20, 84), new Vector2(-20, -82));

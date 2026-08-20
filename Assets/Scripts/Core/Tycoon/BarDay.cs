@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace LastCall.Core
@@ -121,7 +121,7 @@ namespace LastCall.Core
         {
             if (visit == null) throw new ArgumentNullException(nameof(visit));
             if (_seated.Contains(visit))
-                throw new InvalidOperationException("That customer is already at the bar.");
+                throw new InvalidOperationException("They are already at the bar.");
             _seated.Add(visit);
             Arrived++;   // they walked in; the night's count would lie without them
         }

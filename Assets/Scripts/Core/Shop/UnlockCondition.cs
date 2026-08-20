@@ -50,6 +50,20 @@ namespace LastCall.Core
         public static UnlockCondition Kept(string beatId, string who = null) =>
             new BeatKept(beatId, who);
 
+        /// <summary>
+        /// The bar has a draught tower with at least this many lines (2026-08-19, the
+        /// author: "marketten musluğu geliştirmeden bir üst seviye fıçı bira alınmamalı").
+        ///
+        /// The author's fourth kind, and the first that is about a piece of the ROOM. It
+        /// belongs here rather than in the market's own code for exactly the reason the
+        /// other three do: the shop answers "why can I not buy this?" in one voice, and a
+        /// keg held back by the counter must say so in the same sentence a spirit held back
+        /// by the stars does. It is also physically the truth being modelled — a second keg
+        /// needs a second line, and the tower is where the lines are.
+        /// </summary>
+        public static UnlockCondition Tap(int level) =>
+            level <= 1 ? Open : new TapLines(level);
+
         /// <summary>Every one of them, and the sentence names every one — a lock that admits
         /// to half of what it wants is worse than a lock that says nothing.</summary>
         public static UnlockCondition All(params UnlockCondition[] parts)
@@ -92,6 +106,16 @@ namespace LastCall.Core
             public override string Sentence => string.IsNullOrEmpty(_who)
                 ? "EARNED AT THE LAST CALL"
                 : $"SERVE {_who.ToUpperInvariant()} WHAT THEY ASK FOR";
+        }
+
+        private sealed class TapLines : UnlockCondition
+        {
+            private readonly int _lines;
+            public TapLines(int lines) { _lines = lines; }
+            public override bool MetBy(IUnlockState state) => state != null && state.TapLevel >= _lines;
+            // Named after the thing the player buys, because "NEEDS THE 2-LINE TOWER" is a
+            // shelf in the market they can walk to, and "REQUIRES TAPLEVEL 2" is not.
+            public override string Sentence => $"NEEDS THE {_lines}-LINE TOWER";
         }
 
         private sealed class Every : UnlockCondition
@@ -149,5 +173,11 @@ namespace LastCall.Core
 
         /// <summary>Was this written night served the way it was asked for?</summary>
         bool BeatWasKept(string beatId);
+
+        /// <summary>How many lines the bar's draught tower runs — 0 with no tower at all.
+        /// The third fact, and the last one this interface is meant to grow: it is here
+        /// because a keg needs a line to come out of, which is a fact about the bar rather
+        /// than about the bottle.</summary>
+        int TapLevel { get; }
     }
 }

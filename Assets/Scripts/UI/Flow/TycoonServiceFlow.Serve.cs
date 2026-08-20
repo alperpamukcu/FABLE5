@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using LastCall.Core;
@@ -370,7 +370,7 @@ namespace LastCall.UI
                     // a silent click read as "mint is broken" instead of "wrong order".
                     if (_aimText != null)
                     {
-                        _aimText.text = "THE TIN IS EMPTY — GARNISH GOES IN BEFORE THE POUR-OUT";
+                        _aimText.text = "THE TIN IS EMPTY — PUT THE GARNISH IN BEFORE YOU POUR";
                         _aimText.color = UITheme.Amber[3];
                     }
                     return;
@@ -469,7 +469,7 @@ namespace LastCall.UI
                     _serveGrabbed = false;
                     _serveShaker.localRotation = Quaternion.identity;
                     if (_aimText != null)
-                        _aimText.text = "IT WANTS A MIX — BACK TO THE SHAKER";
+                        _aimText.text = "THIS ONE NEEDS MIXING — BACK TO THE SHAKER";
                 }
                 else if (tilt > 42f && mouth.y > opening.y - 30f)
                 {
@@ -796,7 +796,7 @@ namespace LastCall.UI
                 // with its lid still on the counter. One law, both doors.
                 if (!_capped)
                 {
-                    _aimText.text = "THAT TIN IS STILL OPEN — CAP IT AND WORK IT AT THE BENCH";
+                    _aimText.text = "THE TIN IS OPEN — PUT THE LID ON AND MIX IT";
                     return;
                 }
                 _serveGrabbed = true;

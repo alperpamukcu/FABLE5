@@ -393,6 +393,9 @@ namespace LastCall.Core
         /// run with no story at all, which is most of the test suites.</summary>
         bool IUnlockState.BeatWasKept(string beatId) => Story != null && Story.WasKept(beatId);
 
+        /// <summary>How many draught lines the bar runs, as a lock is allowed to see it.</summary>
+        int IUnlockState.TapLevel => TapLevel;
+
         /// <summary>
         /// WHAT THIS RECIPE IS WAITING FOR. The rank table above is still the answer for
         /// every drink in the book today — it is wrapped rather than replaced, because a
@@ -524,6 +527,18 @@ namespace LastCall.Core
             if (index < 0 || index >= _todayPurchases.Count)
                 throw new ArgumentOutOfRangeException(nameof(index));
             var p = _todayPurchases[index];
+            // A RUNG CANNOT BE PULLED OUT FROM UNDER THE ONE ABOVE IT (2026-08-19). Two
+            // tower levels can be bought in one night — dressing spends no fitting — so
+            // refunding the twin while the triple stands would leave the bar running three
+            // lines it never fitted the second of, and every keg unlocked for one payment.
+            // The taller one goes back first, which is the order they were bought in.
+            if (p.What == DayPurchase.Kind.Fixture)
+            {
+                var tower = FixtureById(p.Id);
+                if (tower != null && tower.TapLevel > 0 && TapLevel > tower.TapLevel)
+                    throw new InvalidOperationException(
+                        $"{tower.Name} is under the {TapLevel}-line tower; take that one back first.");
+            }
             switch (p.What)
             {
                 case DayPurchase.Kind.Brand:
@@ -777,7 +792,7 @@ namespace LastCall.Core
             bool atTheBar = (visit.State == VisitState.Waiting || visit.State == VisitState.Drinking)
                             && Floor.Seated.Contains(visit);
             if (!atTheBar)
-                throw new InvalidOperationException("That customer is not at the bar.");
+                throw new InvalidOperationException("They are not at the bar.");
             // Never alone (GDD 23, the pairing rule): a snack rides an alcoholic order. A
             // customer still reading the menu has not ordered one, so the bowl waits.
             if (!visit.HasOrdered)
@@ -1365,7 +1380,7 @@ namespace LastCall.Core
             if (keg.Ingredient.Type != IngredientType.Beer)
                 throw new ArgumentException($"'{kegId}' is not a keg — it cannot be pulled.", nameof(kegId));
             if (!Glass.IsEmpty)
-                throw new InvalidOperationException("There is a cocktail on the go — bin it before pulling a pint.");
+                throw new InvalidOperationException("Finish or bin the cocktail before you pull a pint.");
             // A pint goes into a clean glass. Topping up the same pint is fine — that is what a
             // second pull IS — but anything else already standing in it is a different drink, and
             // beer poured on top of it would go out as one (2026-07-28). This became reachable
@@ -1377,7 +1392,7 @@ namespace LastCall.Core
             // The matched pair holds (audit 2026-08-11): CanPull greys the key on a full
             // glass, so the verb refuses the same fact instead of being quietly looser.
             if (ServingGlass.IsFull)
-                throw new InvalidOperationException("The glass is full — serve it or bin it.");
+                throw new InvalidOperationException("The glass is full. Serve it or bin it.");
             // Beer goes in a pint (v5 P14 / C9) — the one glass the bar reaches for without
             // being told, and the reason draught is the drink you can put down in four seconds.
             SelectGlassFor(DraughtRecipe);
@@ -1736,9 +1751,9 @@ namespace LastCall.Core
             EnsurePhase(TycoonPhase.DayOpen);
             if (visit == null) throw new ArgumentNullException(nameof(visit));
             if (visit.State != VisitState.Waiting || !Floor.Seated.Contains(visit))
-                throw new InvalidOperationException("That customer is not waiting at the bar.");
+                throw new InvalidOperationException("They are not waiting at the bar.");
             if (!visit.HasOrdered)
-                throw new InvalidOperationException("That customer is still deciding — no order to serve yet.");
+                throw new InvalidOperationException("They are still choosing.");
             if (ServingGlass.IsEmpty)
                 throw new InvalidOperationException(Glass.IsEmpty
                     ? "Nothing to serve."
@@ -1754,7 +1769,7 @@ namespace LastCall.Core
             if (Trial != null && !Trial.IsOver && ReferenceEquals(visit, LastCustomer))
             {
                 if (Trial.State == TrialState.Talking)
-                    throw new InvalidOperationException("They are still talking — nothing has been asked for.");
+                    throw new InvalidOperationException("They are still talking. Nothing ordered yet.");
                 return ServeTheTrial(visit, delivered);
             }
 
@@ -1824,9 +1839,9 @@ namespace LastCall.Core
             EnsurePhase(TycoonPhase.DayOpen);
             if (visit == null) throw new ArgumentNullException(nameof(visit));
             if (visit.State != VisitState.Waiting || !Floor.Seated.Contains(visit))
-                throw new InvalidOperationException("That customer is not waiting at the bar.");
+                throw new InvalidOperationException("They are not waiting at the bar.");
             if (!visit.HasOrdered)
-                throw new InvalidOperationException("That customer has not asked for anything yet.");
+                throw new InvalidOperationException("They have not ordered yet.");
 
             var verdict = ServiceJudge.Declined();
 
@@ -1940,7 +1955,7 @@ namespace LastCall.Core
         {
             EnsurePhase(TycoonPhase.DayEnd);
             if (Seats >= _config.MaxSeats)
-                throw new InvalidOperationException("The bar has no room for another stool.");
+                throw new InvalidOperationException("No room for another stool.");
             EnsureUpgradeRoom();
             int price = _config.SeatPrice(Seats);
             Spend(price);
@@ -1986,7 +2001,7 @@ namespace LastCall.Core
         {
             EnsurePhase(TycoonPhase.DayEnd);
             if (CounterTier >= _config.MaxAmbienceTier)
-                throw new InvalidOperationException("The counter cannot be finer.");
+                throw new InvalidOperationException("The bar top is already the best one.");
             EnsureUpgradeRoom();
             int price = _config.CounterPrice(CounterTier);
             Spend(price);
@@ -2016,16 +2031,71 @@ namespace LastCall.Core
 
         public bool OwnsFixture(string fixtureId) => _fixtures.Contains(fixtureId);
 
+        // ── the draught tower is a LADDER (2026-08-19) ──────────────────────────
+        // The author: "3 seviye musluk olacak, marketten musluğu geliştirmeden bir üst
+        // seviye fıçı bira alınmamalı." Three towers standing in one slot, bought in
+        // order, and every keg past the first waiting on a line to come out of.
+        //
+        // The rules live HERE and not in the shop, for the reason every rule does: the
+        // shop is one caller. Routing a keg around the market — a test, the sim bot, a
+        // future "the distributor left one on the step" — must hit the same wall, and a
+        // gate that only exists in a menu is a gate that has already been walked round
+        // twice in this project's history.
+
+        /// <summary>How many draught lines the bar can pour — the tallest tower it owns,
+        /// 0 for a bar with no tower at all. What every keg's lock is measured against, and
+        /// what the room reads to decide which tower to stand on the counter.</summary>
+        public int TapLevel
+        {
+            get
+            {
+                int best = 0;
+                foreach (var f in _fixtureCatalogue)
+                    if (f.TapLevel > best && _fixtures.Contains(f.Id)) best = f.TapLevel;
+                return best;
+            }
+        }
+
+        /// <summary>
+        /// The tower actually standing on the counter: the tallest one owned. A bar that
+        /// bought the twin still owns the single — it was upgraded, not sold — and drawing
+        /// both would stand two towers in the same slot, one inside the other.
+        /// </summary>
+        public FixtureDefinition StandingTap()
+        {
+            FixtureDefinition best = null;
+            foreach (var f in _fixtureCatalogue)
+                if (f.IsTap && _fixtures.Contains(f.Id) && (best == null || f.TapLevel > best.TapLevel))
+                    best = f;
+            return best;
+        }
+
+        /// <summary>
+        /// Whether the market may sell this tower tonight: a level climbs ONE rung at a
+        /// time. Public because the shop greys the tile out with it and then buys through
+        /// <see cref="BuyFixture"/>, which asks again — the menu decides what to draw, the
+        /// rules decide what may happen.
+        /// </summary>
+        public bool CanBuyTap(FixtureDefinition tower) =>
+            tower != null && tower.TapLevel > 0 && tower.TapLevel == TapLevel + 1;
+
         /// <summary>How many pieces of dressing the bar owns — the cheap change-detection
         /// handle the stage watches, so it only rebuilds the room when the room changed.</summary>
         public int OwnedFixtureCount => _fixtures.Count;
 
+        /// <summary>The catalogue entry with this id, or null. One lookup, so the ladder's
+        /// rules and the purchase share it.</summary>
+        public FixtureDefinition FixtureById(string fixtureId)
+        {
+            foreach (var f in _fixtureCatalogue)
+                if (f.Id == fixtureId) return f;
+            return null;
+        }
+
         public int BuyFixture(string fixtureId)
         {
             EnsurePhase(TycoonPhase.DayEnd);
-            FixtureDefinition def = null;
-            foreach (var f in _fixtureCatalogue)
-                if (f.Id == fixtureId) { def = f; break; }
+            var def = FixtureById(fixtureId);
             if (def == null)
                 throw new InvalidOperationException($"No fixture '{fixtureId}' in the catalogue.");
             if (_fixtures.Contains(fixtureId))
@@ -2033,6 +2103,13 @@ namespace LastCall.Core
             if (Rating.Average < def.Stars)
                 throw new InvalidOperationException(
                     $"{def.Name} needs a {def.Stars:0.0}-star room; this bar rates {Rating.Average:0.0}.");
+            // A tower is bought one rung at a time. Buying the triple over a bar that never
+            // ran two lines would hand it every keg in the catalogue for one payment, which
+            // is the whole ladder skipped in a single click.
+            if (def.TapLevel > 0 && !CanBuyTap(def))
+                throw new InvalidOperationException(
+                    $"{def.Name} runs {def.TapLevel} lines; this bar runs {TapLevel}. " +
+                    "A tower is fitted one line at a time.");
             Spend(def.Price);
             _fixtures.Add(fixtureId);
             _todayPurchases.Add(new DayPurchase(

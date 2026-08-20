@@ -192,6 +192,7 @@
    "origin": "Local, on the coast road",
    "abv": 4,
    "blurb": "Cold, plain and honest. The drink people order when they want to stop deciding.",
+   "tapLevel": 1,
    "art_prompt": "a squat steel beer keg with a pale gold band and a plain enamel label, condensation on the shoulder"
   },
   {
@@ -206,6 +207,7 @@
    "origin": "Two valleys over",
    "abv": 5,
    "blurb": "Black, sweet and filling. Drinks like a meal and settles people down.",
+   "tapLevel": 2,
    "art_prompt": "a dark iron beer keg with a deep charcoal band and a cream oval label, worn at the rim"
   },
   {
@@ -220,6 +222,7 @@
    "origin": "The brewery behind the market",
    "abv": 5,
    "blurb": "Bitter and bright. The one the regulars argue about.",
+   "tapLevel": 3,
    "art_prompt": "a copper beer keg with a warm amber band and a marigold-yellow label, brass fittings"
   },
   {

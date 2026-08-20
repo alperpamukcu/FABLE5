@@ -349,6 +349,158 @@ namespace LastCall.UI
 
             // SERVE — the finished glass, moving: a footed glass with the carry arrow
             // beside it. The last step of the counter, which is a walk, not a press.
+            // ── the serving spec, said in pictures (2026-08-19) ────────────────────
+            // The ticket now prints WHAT they want beside HOW they want it, and how is four
+            // things: ice, a twist of peel, a salted rim, a sugared rim. They are read at a
+            // glance on a 236-wide card across the room, so each one is a SILHOUETTE that
+            // survives at 14 units — no shading, no interior detail, and no two alike in
+            // outline. The two rims are the hard pair: both are a glass mouth with something
+            // on it, so salt is FEW AND CHUNKY and sugar is MANY AND FINE, which is also
+            // what the two things actually look like on a rim.
+
+            // ICE — a cube seen slightly from above, the way every glass in this game draws it.
+            ["ice"] = new[]
+            {
+                "................",
+                "................",
+                "....########....",
+                "...##......##...",
+                "..##........##..",
+                ".##..........##.",
+                ".##..........##.",
+                ".##..........##.",
+                ".##..........##.",
+                ".##..........##.",
+                ".##..........##.",
+                "..##........##..",
+                "...##......##...",
+                "....########....",
+                "................",
+                "................",
+            },
+            // TWIST — a curl of peel, cut and let go. A comma with a hook in it.
+            // Keyed on the PREPARATION'S OWN ID, like the other three, so the ticket can ask
+            // for a mark by the thing it is drawing rather than by a second name that has to
+            // be kept in step with it.
+            ["lemon_twist"] = new[]
+            {
+                "................",
+                "................",
+                ".....######.....",
+                "...##......##...",
+                "..##........##..",
+                "..##........##..",
+                "..##.....####...",
+                "..##....##......",
+                "...##..##.......",
+                "....####........",
+                ".....##.........",
+                "....##..........",
+                "...##...........",
+                "..##............",
+                "................",
+                "................",
+            },
+            // SALT RIM — the glass mouth, and coarse grains standing on it.
+            ["salt_rim"] = new[]
+            {
+                "................",
+                "................",
+                "..##.......##...",
+                ".####.....####..",
+                "..##..###..##...",
+                "......###.......",
+                "................",
+                "################",
+                "################",
+                "..############..",
+                "..##........##..",
+                "..##........##..",
+                "...##......##...",
+                "....########....",
+                "................",
+                "................",
+            },
+            // SUGAR RIM — the same mouth, and a fine band of it instead of grains.
+            ["sugar_rim"] = new[]
+            {
+                "................",
+                "................",
+                "..#..#..#..#..#.",
+                "................",
+                ".#..#..#..#..#..",
+                "................",
+                "................",
+                "################",
+                "################",
+                "..############..",
+                "..##........##..",
+                "..##........##..",
+                "...##......##...",
+                "....########....",
+                "................",
+                "................",
+            },
+            // MINIMISE — the 98 window box, and the only one of the three that is a bar.
+            ["win_min"] = new[]
+            {
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "...##########...",
+                "...##########...",
+                "................",
+                "................",
+            },
+            // MAXIMISE — a window with its own title bar on it.
+            ["win_max"] = new[]
+            {
+                "................",
+                "..############..",
+                "..############..",
+                "..##........##..",
+                "..##........##..",
+                "..##........##..",
+                "..##........##..",
+                "..##........##..",
+                "..##........##..",
+                "..##........##..",
+                "..##........##..",
+                "..##........##..",
+                "..############..",
+                "................",
+                "................",
+                "................",
+            },
+            // CLOSE — the X. Two units thick: at 10 units a one-unit X is a smudge.
+            ["win_close"] = new[]
+            {
+                "................",
+                ".##..........##.",
+                ".###........###.",
+                "..###......###..",
+                "...###....###...",
+                "....###..###....",
+                ".....######.....",
+                "......####......",
+                "......####......",
+                ".....######.....",
+                "....###..###....",
+                "...###....###...",
+                "..###......###..",
+                ".###........###.",
+                ".##..........##.",
+                "................",
+            },
             ["serve"] = new[]
             {
                 "................",
@@ -451,6 +603,52 @@ namespace LastCall.UI
             return Cache[Key] = Make(px, S, S, Vector4.zero);
         }
 
+        /// <summary>
+        /// A WELL: the recess an instrument's glass sits in, routed INTO the beam rather
+        /// than standing on it (2026-08-19, the author: "profesyonel bir UI/UX designer
+        /// gibi düşün" — the third cut of the top bar; boxes were refused twice and a
+        /// generated plate once). The tell of a recess is that its bevel runs BACKWARDS
+        /// from a box's: light falls from above, so the top edge of a cut is the dark one
+        /// and the bottom lip is what catches the room. Baked colours, not greyscale —
+        /// the floor IS the display glass (the panel's own dark seen through a tint,
+        /// nothing near black), and a well is always cut into the one beam.
+        ///
+        /// 9-sliced with a 5px border: the chamfered corners and the edge rows are the
+        /// caps, the floor stretches. One sprite, any width of instrument.
+        /// </summary>
+        public static Sprite Well()
+        {
+            const string Key = "well";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int S = 14, Ch = 2;
+            var clear = new Color32(0, 0, 0, 0);
+            var cut = new Color32(0x0D, 0x08, 0x13, 255);      // Night[0], the sawn edge
+            var lip = new Color32(0x36, 0x24, 0x47, 255);      // Night[3], catching light
+            var floor = new Color32(8, 14, 19, 255);           // the display glass
+            var shade1 = new Color32(4, 7, 10, 255);           // the beam's shadow on it
+            var shade2 = new Color32(6, 10, 14, 255);
+            var px = new Color32[S * S];
+            for (int i = 0; i < px.Length; i++) px[i] = floor;
+            // ty counts from the TOP the way the drawing reads; the buffer fills bottom-up.
+            void Set(int x, int ty, Color32 c) => px[(S - 1 - ty) * S + x] = c;
+            for (int x = 0; x < S; x++)
+            {
+                Set(x, 1, shade1);
+                Set(x, 2, shade2);
+                Set(x, 0, x < Ch || x >= S - Ch ? clear : cut);
+                Set(x, S - 1, x < Ch || x >= S - Ch ? clear : lip);
+            }
+            for (int ty = 1; ty < S - 1; ty++)
+            {
+                bool corner = ty < Ch || ty >= S - Ch;
+                Set(0, ty, corner ? clear : cut);
+                Set(S - 1, ty, corner ? clear : cut);
+            }
+            Set(1, 1, cut); Set(S - 2, 1, cut);                // chamfer diagonals
+            Set(1, S - 2, lip); Set(S - 2, S - 2, lip);
+            return Cache[Key] = Make(px, S, S, new Vector4(5, 5, 5, 5));
+        }
+
         // ── the plates ──────────────────────────────────────────────────────────────
 
         /// <summary>
@@ -512,6 +710,463 @@ namespace LastCall.UI
                     px[y * W + x] = new Color32(v, v, v, 255);
                 }
             return Cache[key] = Make(px, W, H, new Vector4(6, throwH + 2, 6, 4));
+        }
+
+        // ── the market's own chrome: the 98 key and the storefront's mark ───────────
+        //
+        // The market reads as a 90s trade site down to its BUTTONS now (2026-08-19, the
+        // author: "buton tarzı olarak windows 98 gibi olsun ... internet sitesindeki tüm
+        // butonları bu tarza getir"). One face serves them all, greyscale so the tint keeps
+        // deciding what a key MEANS while this sprite decides what it IS.
+
+        /// <summary>
+        /// THE 98 KEY: a square raised plate with a two-step bevel — outer lit edge over an
+        /// inner one, dark twin on the far corner — which is the whole grammar of that era's
+        /// chrome and is four flat runs of grey, no gradient anywhere. The DOWN face inverts
+        /// the bevel, because a 98 button does not travel when pressed: it turns inside out.
+        /// Greyscale by construction like <see cref="Key"/>; tint with the market's paper
+        /// for the classic face, or with a state colour for a key that commits something.
+        /// </summary>
+        public static Sprite Win98Key(bool down = false)
+        {
+            string key = "win98:key" + (down ? ":down" : "");
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            const int S = 14;
+            var px = new Color32[S * S];
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    // Texture rows count up, so y = S-1 is the TOP of the drawn key.
+                    bool topL0 = y == S - 1 || x == 0;
+                    bool botR0 = y == 0 || x == S - 1;
+                    bool topL1 = y == S - 2 || x == 1;
+                    bool botR1 = y == 1 || x == S - 2;
+                    byte v;
+                    if (topL0) v = down ? (byte)90 : (byte)255;        // outer bevel
+                    else if (botR0) v = down ? (byte)255 : (byte)90;
+                    else if (topL1) v = down ? (byte)150 : (byte)240;  // inner bevel
+                    else if (botR1) v = down ? (byte)240 : (byte)150;
+                    else v = down ? (byte)208 : (byte)224;             // the face
+                    px[y * S + x] = new Color32(v, v, v, 255);
+                }
+            return Cache[key] = Make(px, S, S, new Vector4(4, 4, 4, 4));
+        }
+
+        /// <summary>
+        /// THE STOREFRONT'S MARK: a palm on its own island, water going out behind it — the
+        /// island the vice fade's sun would set on. Hand-authored like every mark, white for
+        /// the caller to tint; on the title bar it stands white on the fade beside the
+        /// wordmark. 28x24 and drawn at 28x24: the strip is 40 tall and this is the biggest
+        /// drawing that leaves the wordmark its seat.
+        /// </summary>
+        public static Sprite Isle()
+        {
+            const string Key = "vice:isle";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            string[] mask =
+            {
+                "..............###...........",
+                "......###...#######.........",
+                "....#######..#######........",
+                "...####..####.#####.###.....",
+                "..###.....#######..####.....",
+                ".###......######....####....",
+                ".##.......#####......###....",
+                ".#.......######.......##....",
+                "..........#.###.............",
+                "..........#..##.............",
+                ".............##.............",
+                ".............##.............",
+                "............###.............",
+                "............##..............",
+                "............##..............",
+                "...........###..............",
+                "...........##...............",
+                ".......###########..........",
+                ".....###############........",
+                "...###################......",
+                ".#########################..",
+                "............................",
+                "..##...###...###...###...##.",
+                "............................",
+            };
+            const int W = 28, H = 24;
+            var px = new Color32[W * H];
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                    px[(H - 1 - y) * W + x] = mask[y][x] == '#'
+                        ? new Color32(255, 255, 255, 255)
+                        : new Color32(255, 255, 255, 0);
+            return Cache[Key] = Make(px, W, H, Vector4.zero);
+        }
+
+        /// <summary>
+        /// A STRIP OF SHADE — flat alpha bands running away from a lit edge, one texel per
+        /// band, point-filtered like everything else here.
+        ///
+        /// A new named object (16 §1), because nothing in the kit fitted: LAMP's glow is a
+        /// round falloff for a bulb, and what a shelf needs is the DARK that gathers at the
+        /// back of a niche, which is a line, not a point.
+        ///
+        /// IT IS BLACK, AND THAT IS THE WHOLE POINT (2026-08-19). The first take was white
+        /// and laid over the back bar as light; on a canvas an alpha blend toward white does
+        /// not light a surface, it FOGS it — the wall came back as grey sheets with the
+        /// cabinet's tilework washed out underneath. Shade multiplies the picture instead of
+        /// replacing it, so every mark the plate carries survives being put in the dark, and
+        /// the lit part of a shelf is simply the part no shade fell on. Light by subtraction
+        /// is how a painted surface is lit; adding is how it is erased.
+        ///
+        /// Eight whole steps and no interpolated pixel — the same licence the vice fade holds
+        /// (16 §6.10).
+        /// </summary>
+        public static Sprite StripShade(bool downward = true)
+        {
+            string key = "shade:strip" + (downward ? ":down" : ":up");
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            // Clear at the lit edge, deepening away from it.
+            byte[] steps = { 0, 14, 27, 45, 70, 104, 150, 210 };
+            var px = new Color32[steps.Length];
+            for (int i = 0; i < steps.Length; i++)
+            {
+                // Texture rows count UP, so a shade that DEEPENS DOWNWARD wants its clear
+                // band at the top texel, and the flip wants it at the bottom.
+                int band = downward ? i : steps.Length - 1 - i;
+                px[i] = new Color32(0, 0, 0, steps[band]);
+            }
+            return Cache[key] = Make(px, 1, steps.Length, Vector4.zero);
+        }
+
+        // ── the vice fade, and the wall it hangs on ─────────────────────────────────
+        //
+        // The market's storefront is a 90s trade site seen on the bar's tablet (2026-08-19).
+        // Two things carry that and neither may be a smooth anything: the title bar's run
+        // from vice blue to vice pink, and the faint Miami plate behind the aisle.
+
+        /// <summary>
+        /// The fade as a STRIP OF FLAT BANDS — `UITheme.ViceFade`, one texel per step, drawn
+        /// with point filtering so a 1040-wide title bar comes out as flat runs of 40 with a
+        /// hard edge between them (twenty-six bands since 2026-08-19; the band count lives
+        /// on the token, this strip just wears it). This is the 98 title bar's own trick and
+        /// it is why it is not a gradient (16 §6.10): there is no colour anywhere in it that
+        /// is not one of the bands, at any width.
+        ///
+        /// Point filtering is the load-bearing part. On bilinear this texture IS a gradient,
+        /// which is the exact thing being avoided — `Make` sets it, do not change it here.
+        /// </summary>
+        public static Sprite FadeStrip(bool horizontal = true)
+        {
+            string key = "vice:fade" + (horizontal ? "h" : "v");
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var bands = UITheme.ViceFade;
+            int n = bands.Length;
+            var px = new Color32[n];
+            // Texel 0 is the left edge of a strip and the BOTTOM of a column, so band 0 —
+            // the blue end — lands at the left of a title bar and at the foot of a rail.
+            for (int i = 0; i < n; i++) px[i] = bands[i];
+            return Cache[key] = Make(px, horizontal ? n : 1, horizontal ? 1 : n, Vector4.zero);
+        }
+
+        /// <summary>
+        /// THE WALLPAPER. A Miami horizon — a banded sun, a grid running off to it, and two
+        /// palms — drawn here in code and never generated. UI chrome is not made by a
+        /// generator in this project (see this file's header), and a wallpaper sitting under
+        /// the aisle is chrome: it is part of the instrument, not a picture in it.
+        ///
+        /// It is drawn at HALF the rect it fills and scaled x2, so every mark on it is two
+        /// units across and it reads as pixel art rather than as a photograph gone quiet. It
+        /// is authored WHITE-on-nothing for the caller to tint and fade, exactly like a mark,
+        /// so the page underneath decides how loud it is — and the answer is: barely.
+        /// </summary>
+        public static Sprite PalmWall(int w, int h)
+        {
+            string key = $"vice:wall{w}x{h}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            int W = Mathf.Max(8, w / 2), H = Mathf.Max(8, h / 2);
+            var px = new Color32[W * H];
+            var clear = new Color32(255, 255, 255, 0);
+            for (int i = 0; i < px.Length; i++) px[i] = clear;
+
+            void Put(int x, int y, byte a)
+            {
+                if (x < 0 || y < 0 || x >= W || y >= H) return;
+                int i = y * W + x;
+                if (px[i].a >= a) return;             // the brightest claim on a pixel wins
+                px[i] = new Color32(255, 255, 255, a);
+            }
+
+            // THE SUN, low and centred right. Banded rings, not a falloff: five whole steps
+            // with a gap between each, which is the one sun this decade ever drew.
+            float sunX = W * 0.66f, sunY = H * 0.46f, sunR = Mathf.Min(W, H) * 0.30f;
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    float dx = x - sunX, dy = y - sunY;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy) / sunR;
+                    if (d > 1f) continue;
+                    // The classic cut: the disc is sliced by horizontal gaps that widen as
+                    // they fall, so the sun reads as setting even with no sea under it.
+                    int fromTop = Mathf.RoundToInt(sunY + sunR) - y;
+                    int slice = Mathf.Max(2, 2 + fromTop / 8);
+                    if (y < sunY && fromTop % (slice + 3) < 3) continue;
+                    Put(x, y, (byte)(200 - Mathf.RoundToInt(d * 90f)));
+                }
+
+            // THE GRID, running to the horizon under it. Verticals converge on the sun's
+            // foot; horizontals bunch as they go back. Whole units, no perspective maths
+            // pretending to be a camera.
+            int horizon = Mathf.RoundToInt(sunY - sunR * 0.15f);
+            for (int i = -14; i <= 14; i++)
+            {
+                float spread = i * (W / 10f);
+                for (int y = 0; y < horizon; y++)
+                {
+                    float k = (horizon - y) / (float)Mathf.Max(1, horizon);
+                    int x = Mathf.RoundToInt(sunX + spread * k * k);
+                    Put(x, y, 110);
+                }
+            }
+            for (int step = 1; step <= 9; step++)
+            {
+                int y = horizon - Mathf.RoundToInt(horizon * (step * step) / 81f);
+                for (int x = 0; x < W; x++) Put(x, y, 110);
+            }
+
+            // THE PALMS, one each side, standing off the edges so the aisle's own margins
+            // are not fighting them. A trunk that leans and six fronds — the silhouette does
+            // all the work at this size, so nothing inside it is drawn.
+            void Palm(int baseX, int baseY, int height, int lean)
+            {
+                int topX = baseX, topY = baseY + height;
+                for (int t = 0; t <= height; t++)
+                {
+                    float k = t / (float)height;
+                    int x = baseX + Mathf.RoundToInt(lean * k * k);
+                    if (t == height) topX = x;
+                    Put(x, baseY + t, 150); Put(x + 1, baseY + t, 150);
+                }
+                for (int f = 0; f < 6; f++)
+                {
+                    float ang = Mathf.PI * (0.12f + f * 0.152f);
+                    float ln = height * 0.42f;
+                    for (int t = 0; t <= Mathf.RoundToInt(ln); t++)
+                    {
+                        float k = t / ln;
+                        int x = topX + Mathf.RoundToInt(Mathf.Cos(ang) * ln * k);
+                        // The frond droops: it leaves the crown flat and falls away at the tip.
+                        int y = topY + Mathf.RoundToInt(Mathf.Sin(ang) * ln * k * 0.55f - ln * k * k * 0.75f);
+                        Put(x, y, 150); Put(x, y - 1, 150);
+                    }
+                }
+            }
+            Palm(Mathf.RoundToInt(W * 0.11f), Mathf.RoundToInt(H * 0.05f),
+                 Mathf.RoundToInt(H * 0.62f), Mathf.RoundToInt(-W * 0.03f));
+            Palm(Mathf.RoundToInt(W * 0.90f), Mathf.RoundToInt(H * 0.02f),
+                 Mathf.RoundToInt(H * 0.48f), Mathf.RoundToInt(W * 0.03f));
+
+            return Cache[key] = Make(px, W, H, Vector4.zero);
+        }
+
+        // ── the order bubble over a customer's head (2026-08-19) ────────────────────
+        //
+        // WHY THIS IS DRAWN AND NOT GENERATED, after it was generated. PixelLab drew seven
+        // takes and the author picked bub_card's look — a white field with a hot magenta
+        // edge — and asked for it without the pixel faults. Held against the harvest, that
+        // take could not be repaired: its "canonical plate" reads as a rounded blob with the
+        // spout's diagonal bleeding into the bottom rows, and what looked clean on the proof
+        // sheet was the 9-slice hiding all of it inside the corners. At this size the object
+        // is geometry — a one-unit edge, a two-unit chamfer, a flat fill — and geometry that
+        // has to be exact is drawn exact. The generated set stays in the staging folder as
+        // what the look was chosen FROM.
+        //
+        // THE PLATE IS 9-SLICED AND THE TAIL IS NOT. Same split as BackBarArt's bottle card,
+        // and for the same reason: the ticket's width is decided by its longest line and its
+        // height by how many lines there are, and a spout inside a stretched band smears
+        // along it. The tail is its own sprite, placed by code under the middle of whatever
+        // width the plate ended up.
+
+        /// <summary>Which state the balloon's edge is speaking (16 §5: light says state) —
+        /// only the EDGE moves between tones, so the ticket is always the same object.
+        /// Order is the resting magenta; Take is the information cyan of a drink built and
+        /// claimable; Drink is the club's own blue (2026-08-19, the author: "içecek içiyorsa
+        /// pembe rengi vice mavisi olsun") — this customer is mid-animation and cannot be
+        /// talked to, and the ticket's dots say the same thing in the same colour.</summary>
+        public enum BubbleTone { Order, Take, Drink }
+
+        /// <summary>The bubble's fill: the palette's white, never #FFFFFF (14 v3 §3).</summary>
+        private static readonly Color32 BubbleFill = new Color32(0xF2, 0xE8, 0xD5, 0xFF);
+        /// <summary>Its edge, and the two steps under it. Magenta[3] is the hot line the
+        /// author picked; Magenta[1] is the shade that makes the card sit ON the room rather
+        /// than being a hole cut in it, the same trick <see cref="Card"/> plays in grey.</summary>
+        private static readonly Color32 BubbleEdge = new Color32(0xE8, 0x4D, 0xA6, 0xFF);
+        private static readonly Color32 BubbleFoot = new Color32(0x8F, 0x24, 0x64, 0xFF);
+        /// <summary>The edge when the drink is built and this customer can take it. Cyan is
+        /// the information ramp and the ticket already lit cyan before it had a drawing
+        /// (16 §5).</summary>
+        private static readonly Color32 BubbleEdgeLit = new Color32(0x3B, 0xC8, 0xBE, 0xFF);
+        private static readonly Color32 BubbleFootLit = new Color32(0x1B, 0x5F, 0x66, 0xFF);
+        /// <summary>The edge while they drink: ClubBlue[3] and ClubBlue[1] — the "vice
+        /// mavisi" the author asked for is the palette's own club blue, not a new hue.</summary>
+        private static readonly Color32 BubbleEdgeDrink = new Color32(0x44, 0x67, 0xCC, 0xFF);
+        private static readonly Color32 BubbleFootDrink = new Color32(0x1F, 0x2E, 0x66, 0xFF);
+
+        private static Color32 EdgeOf(BubbleTone tone) =>
+            tone == BubbleTone.Take ? BubbleEdgeLit
+            : tone == BubbleTone.Drink ? BubbleEdgeDrink : BubbleEdge;
+        private static Color32 FootOf(BubbleTone tone) =>
+            tone == BubbleTone.Take ? BubbleFootLit
+            : tone == BubbleTone.Drink ? BubbleFootDrink : BubbleFoot;
+
+        /// <summary>How thick the coloured edge runs. 2 since 2026-08-19 (the author:
+        /// "pembe şeriti kalınlaştırılsın"); the tail's slopes are drawn at the same
+        /// weight, or the outline would change thickness where the spout leaves the plate.</summary>
+        private const int BubbleEdgeW = 2;
+
+        /// <summary>How deep the plate's border runs. The chamfer is 2 and the edge is 2, so
+        /// 5 clears both (and the foot row under them) with room to spare — and 2x5 = 10
+        /// means the bubble can be drawn as short as 10 units, which is shorter than any
+        /// ticket will ever be.</summary>
+        public const int BubbleBorder = 5;
+
+        /// <summary>
+        /// THE ORDER BUBBLE'S PLATE. 11x11, 9-sliced at 5, so every size it is ever drawn at
+        /// is the four real corners with one-unit runs repeated between them.
+        ///
+        /// Chamfered by two rather than square or round: a square card on a dark room reads
+        /// as a dialog box, and a rounded one needs a radius big enough to see, which is a
+        /// border big enough to stop the bubble ever being short. Two units is the room's own
+        /// chamfer — the market's plate and key both wear it.
+        /// </summary>
+        public static Sprite Bubble(BubbleTone tone = BubbleTone.Order)
+        {
+            string key = "bubble:plate:" + tone;
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            const int S = 11, Cut = 2;
+            var edge = EdgeOf(tone);
+            var foot = FootOf(tone);
+            var px = new Color32[S * S];
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    int cx = Mathf.Min(x, S - 1 - x), cy = Mathf.Min(y, S - 1 - y);
+                    if (cx + cy < Cut) { px[y * S + x] = new Color32(0, 0, 0, 0); continue; }
+                    Color32 c;
+                    // The chamfer IS the edge, at BubbleEdgeW deep on the diagonal and the
+                    // straights alike.
+                    if (cx + cy < Cut + BubbleEdgeW || cx < BubbleEdgeW || cy < BubbleEdgeW)
+                        c = edge;
+                    else if (y == BubbleEdgeW) c = foot;                  // ONE row of foot:
+                    // two was drawn first and, on a white field, a two-unit dark band across
+                    // the bottom stops reading as a shadow and starts reading as a second
+                    // object. The card only needs to be told it stands on something.
+                    else c = BubbleFill;
+                    px[y * S + x] = c;
+                }
+            return Cache[key] = Make(px, S, S,
+                new Vector4(BubbleBorder, BubbleBorder, BubbleBorder, BubbleBorder));
+        }
+
+        /// <summary>
+        /// THE SPOUT, pointing down at the head it belongs to. 11 wide, 9 tall, drawn at the
+        /// size it is used and never scaled.
+        ///
+        /// Its top THREE rows are plain fill with no edge on them. Placed overlapping the
+        /// plate's bottom border by those three rows, they erase the plate's own bottom band
+        /// (two rows of edge and the foot) exactly where the balloon should be open, and the
+        /// two read as one shape instead of as a wedge stuck under a box. InfoTail does this
+        /// upside down for the bottle card and the trick is the same one.
+        ///
+        /// The slopes fall one unit per row so every diagonal lands on a whole pixel — a
+        /// slope drawn at any other rate is a staircase with two step heights in it, which is
+        /// the single most visible way a pixel drawing goes wrong. They are BubbleEdgeW wide,
+        /// the plate's own weight, or the outline would thin where the spout leaves it.
+        /// </summary>
+        public static Sprite BubbleTail(BubbleTone tone = BubbleTone.Order)
+        {
+            string key = "bubble:tail:" + tone;
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            // H is not free: the cone falls one unit per row from a half-width of Mid to a
+            // point, which is Mid + 1 rows, and the skirt sits on top of it. Anything taller
+            // leaves an empty row under the tip and the point comes away from the spout.
+            const int W = 11, Skirt = BubbleEdgeW + 1, Mid = W / 2, H = Skirt + Mid + 1;
+            var edge = EdgeOf(tone);
+            var px = new Color32[W * H];
+            for (int i = 0; i < px.Length; i++) px[i] = new Color32(0, 0, 0, 0);
+            for (int y = 0; y < H; y++)
+            {
+                // Texture rows count UP; row H-1 is the mouth and row 0 is the tip.
+                int fromTop = H - 1 - y;
+                bool skirt = fromTop < Skirt;
+                int half = skirt ? Mid : Mid - (fromTop - Skirt);
+                if (half < 0) continue;
+                for (int x = Mid - half; x <= Mid + half; x++)
+                {
+                    bool slope = !skirt && (x < Mid - half + BubbleEdgeW
+                                         || x > Mid + half - BubbleEdgeW);
+                    px[y * W + x] = slope ? edge : BubbleFill;
+                }
+            }
+            // The tip is the row where the half-width reaches nought, and it is already the
+            // edge colour: at half = 0 the one pixel is BOTH slopes at once, so the outline
+            // closes round the spout without a special case.
+            return Cache[key] = Make(px, W, H, Vector4.zero);
+        }
+
+
+        /// <summary>
+        /// A PRICE TAG — the card of stock hung on a bottle's neck (2026-08-19, the author:
+        /// "fiyatını gösteren yazıyı bir fiyat etiketi içerisine al").
+        ///
+        /// It is the market's answer to a rule this project keeps coming back to: chrome
+        /// comes from the SUBJECT'S OWN WORLD (16 §6, the positive form). A price set as
+        /// loose type on a card is a number floating on a page; a price on a tag is a thing
+        /// a shop actually has, and it says "this is what it costs" before a digit is read.
+        ///
+        /// 9-sliced, because "$8" and "+$105" are the same object at two widths. The border
+        /// is LOPSIDED on purpose — 11 on the left, 4 everywhere else — so the whole pointed
+        /// end with its punch hole is inside the corner region and never stretches. Only the
+        /// flat body between the point and the right edge grows.
+        ///
+        /// Drawn WHITE for the caller to tint, like every other mark here: the tag is Amber
+        /// when the price can be paid (money is Amber, 16 §5) and a dead grey when it cannot,
+        /// and one drawing serves both.
+        /// </summary>
+        public static Sprite PriceTag()
+        {
+            const string Key = "shop:pricetag";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int W = 22, H = 16, Point = 8;
+            var px = new Color32[W * H];
+            var clear = new Color32(0, 0, 0, 0);
+            for (int i = 0; i < px.Length; i++) px[i] = clear;
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    // The point: the left `Point` columns close to a nib, two rows a column.
+                    int top = H - 1, bot = 0;
+                    if (x < Point)
+                    {
+                        int cut = (Point - x + 1) / 2;
+                        top = H - 1 - cut; bot = cut;
+                        if (top < bot) continue;
+                    }
+                    if (y > top || y < bot) continue;
+                    // A pixel is the outline if it is on the SHAPE'S boundary — the sloping
+                    // rows of the nib, the flat top and bottom of the body, and the two
+                    // vertical faces. The first cut left x = 0 out of that on the rows
+                    // between the slopes, so the nib's blunt tip had no edge on it and the
+                    // tag read as a torn piece of paper.
+                    bool edge = y == top || y == bot || x == 0 || x == W - 1;
+                    px[y * W + x] = edge ? new Color32(255, 255, 255, 255)
+                                         : new Color32(210, 210, 210, 255);
+                }
+            // THE PUNCH HOLE, where the string goes. It is the one detail that stops the
+            // shape reading as an arrow, and it is why the left border has to be 11.
+            int hx = 4, hy = H / 2;
+            for (int y = hy - 1; y <= hy + 1; y++)
+                for (int x = hx - 1; x <= hx + 1; x++)
+                    if (System.Math.Abs(x - hx) + System.Math.Abs(y - hy) <= 1)
+                        px[y * W + x] = clear;
+            return Cache[Key] = Make(px, W, H, new Vector4(11, 4, 4, 4));
         }
 
         // ── the pour gauge (2026-08-20) ─────────────────────────────────────────────

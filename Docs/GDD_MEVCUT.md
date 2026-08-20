@@ -36,7 +36,7 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 - **Ekstra tur:** Exact + zanaat tam + dönen müşteri + bekleme <%90 → en fazla 2 ek sipariş, sabır %80'e tazelenir.
 - **Müdavimler opt-in:** kayıt (registry) verilmezse anonim kalabalık. Müdavim: isim/yaş/şehir/arketip/ziyaret/ilişki taşır; duygu katmanı 2026-08-02'de söküldü — kokteyle verilen tepki tek gerçek.
 - **Son müşteri = evin misafiri + sınav (2026-08-13 rework, Core'da var, henüz sessiz — GDD 26 §3-4):** hikâye opt-in; `StoryArc` verilmemiş koşu bugünküyle birebir aynı. Verilmişse: kapı kapandıktan **ve** oda boşaldıktan sonra o gecenin beat'inin misafiri `BarDay.SeatGuest` ile oturur. **Defterlerin dışında:** kimlik yok (kendini tanıtır — gizli bilgi kuralının TEK yazılı istisnası, CLAUDE.md'de çitli), hesap yok, bahşiş yok, puan yok, fişte satır yok (`OnTheHouse`; gecenin sayan listesi `BarDay.FinishedCounted()`). **Sınav:** birkaç içki, TEK saat, post-it'te teker teker; standart = tam tarif + tam zanaat + tam yöntem, tek af doluluk ≥0.90; yanlış içki hata sayar ve istek YERİNDE kalır; `allowedMistakes` aşılınca veya saat bitince gece yanar, beat kendi gecesinde `returnsAfterWeeks` hafta sonra döner. Diyalog saati tutar (`ClockHeld`): konuşurken hiçbir şey işlemez, `BeginLastCallTrial()` başlatır, 120 sn `TalkingGrace` emniyeti gece rehin kalmasın diye. Ekstra tur yolu bilerek dokunulmadı (ödül sabrı tazeler; talep tazelemez). Veri bağlantısı ve diyalog kabuğu S3/S5'te.
-- **Takvim artık kural (2026-08-13, `BarCalendar` — GDD 26 §2b):** hafta altı açık gece, Salı→Pazar, Pazartesi bar karanlık (gün 1 = Salı, gün 4 = Cuma, gün 10 = 2. hafta Cuma). Plakadaki `WEEK 2 · FRIDAY` yazısı haftalardır oradaydı ama hiçbir şey ifade etmiyordu; hikâye misafiri **yalnız Cuma-Cumartesi** getirdiği için sessiz geceler artık "eksik olanı gidip alma" geceleri. Ev halkı misafir değil: yalnız `role: host` sessiz gece çalışabilir (Ece'nin açılış Salısı). Takvim `TycoonHud`'dan Core'a taşındı, yazı değişmedi.
+- **Takvim artık kural (2026-08-13, `BarCalendar` — GDD 26 §2b; hafta 2026-08-14'te yeniden kesildi):** hafta altı açık gece, **Pazartesi→Cumartesi, PAZAR kapalı** (gün 1 = Pazartesi; takvim Pazar'ı kepenk olarak çizer). Plakadaki `WEEK 2 · FRIDAY` yazısı haftalardır oradaydı ama hiçbir şey ifade etmiyordu; hikâye misafiri artık **yalnız Cumartesi** gelir (`VipNight`, "her cumartesi bir hikaye müşterisi gelecek") ve sessiz geceler "eksik olanı gidip alma" geceleri. (Bu satır bir süre 2026-08-13 kesimini — Salı→Pazar — anlattı; kod her zaman kazanır.) Ev halkı misafir değil: yalnız `role: host` sessiz gece çalışabilir (Ece'nin açılış Salısı). Takvim `TycoonHud`'dan Core'a taşındı, yazı değişmedi.
 
 ## 4 · İçki yapımı — üç yol, tek yasa
 
@@ -83,6 +83,27 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 
 **Memnuniyet:** `(Exact .75 | Close .50 | Wrong .05) + 0.20(zanaat−.5) + 0.12(doluluk−.5) − 0.30×bekleme + Ambience` (0–1).
 
+### 6.1 · Musluk merdiveni ve fıçı kilidi (2026-08-19)
+
+Yazarın kuralı: *"3 seviye musluk olacak, marketten musluğu geliştirmeden bir üst
+seviye fıçı bira alınmamalı."* Üç kule TEK yuvada (`taps`, tezgâh üstü x192,
+y=`CounterRestY`) duran tek istasyonun üç yaşı — `taps_one/two/three`, `tapLevel`
+1/2/3. Odada aynı anda **yalnız en yükseği** çizilir (`TycoonRun.StandingTap()`);
+alttakiler satılmış değil, üstü kapatılmış sayılır.
+
+- **Basamak atlanmaz:** `BuyFixture` yalnız `TapLevel + 1` olan kuleyi satar
+  (`CanBuyTap`). Mağaza kutucuğu sebebini yazar ("2 LINE TOWER FIRST"), yıldız değil.
+- **İade sırası:** aynı gece iki basamak alınabildiği için üstteki kule dururken
+  alttakini iade etmek reddedilir — üstten geri verilir.
+- **Fıçı kilidi:** her keg `tapLevel` taşır (`beer_kestrel` 1, `beer_collier` 2,
+  `beer_marigold` 3) ve `UnlockCondition.Tap(n)` ile kilitlenir — mağazanın dördüncü
+  kilit türü, ilki odaya bakan. Yıldıza bağlı DEĞİL: üç keg de T1, dolayısıyla merdiven
+  sıfır der ve tek ayıran kule. Tutulan keg `StarsWanted = NaN` döndürür, böylece
+  koridorun "n★'da açılır" ipucunu hiçbir yıldızın açmayacağı bir basamağa çekmez.
+- **Veri:** kule seviyesi `fixtures.json`'da `tapLevel`, keg kilidi `base_bar.json`'da
+  `tapLevel`. Yükleyici iki içerik hatasını kapıda reddeder: bir merdivende aynı
+  basamağın iki kez bulunması ve 1,2,3 dizisinde delik olması (satın alınamaz kule).
+
 ## 7 · Yıldız / itibar omurgası
 
 - `BarRating`: 0★ başlar; gece yıldızı `1+4×memnuniyet`, **iki tavanla** kırpılır; ilerleme ataletli (+0.10 çıkış, −0.20 iniş, gecelik en çok +0.25). Fırtına gidenler de puan yazar.
@@ -106,6 +127,7 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 | Ekran | Oyuncu ne yapar |
 |---|---|
 | **Zemin (HUD)** | tabureye içki sürükle=servis · çöpe sürükle=at (ücretli) · kirli bardak tıkla=topla · kâse tıkla=atıştırmalık taşı · MENÜ/KİTAP/kasa/ayarlar |
+| **Üst şerit (2026-08-19 redesign, aynı akşam ÜÇ tur)** | Kiriş kenardan kenara; üstünde iki YUVA (ChromeArt.Well — kirişe gömülü oyuk: üst kenar karanlık, alt dudak ışıklı, taban = ekran camı) ve serbest duran yıldızlar: (1) SAAT — yuvada elle çizilmiş 11×14 piksel maske rakamlar 2×'te (SegmentClock; tasarım+kanıt Tools/clock_digits.py; hayalet 8 + halo + kolon); (2) HAFTA — aynı yuvada başta WEEK sayacı (display-16 cyan), sonra 7 gece: **kelime lambadır** — bu gecenin adı amber yanar ve altında minyatür neon boru (hikâye gecesiyse magenta), CMT'nin işareti her hafta magenta yıldız, PAZAR kepenk, geçmiş günler sönük cam, ilerisi Cream[3]; ampul sırası ve tel emekli; (3) YILDIZLAR — kutusuz beş **3D altın yıldız** Items/star3d.png (32px @1×, PixelLab, luma-sıralı Amber/Malt eşleme) + koyu cam soket, dolgu maskesi okumadır, SAYI YOK; kalabalık başlığı üstte; çark tuşu −16'da. PixelLab takvim plakası tek build yaşadı ve geri alındı; ViceFade dolgusu da. Neon boru durum ışığı (amber→magenta). |
 | **Kimlik kartı** | tabure tıkla → `InspectId()` (kapı!); sipariş satırı hover=**kutu kartı** (2026-08-20: beş kutulu bar, yalnız mükemmelin kutusu yanık; kesin sayı ancak sayfa mükemmellenince) |
 | **Tarif kitabı** | ara, TIER/PREP/ŞİŞE filtreleri; kilitliler "n★'DA AÇILIR". **TEK SÜTUN** (2026-08-20, "her alkole daha fazla yer"): her malzeme satırında beş kutulu bar (kırmızı→koyu yeşil, yalnız hedef kutu yanık) + en iyi yapımın izi (bar üstünde çentik, altta "YOUR BEST · %n"); mükemmellenen sayfa kesin sayılarını ve PERFECTED damgasını basar. Dört pencere (kitap, kimlik hover, market spec, sipariş balonu) tek çizerden geçer |
 | **Gün sonu** | hesap fişi → market (4 sekme: DOLUM/ŞİŞELER/TARİFLER/YÜKSELTMELER + bu gece alınanlar iade) |
@@ -114,7 +136,7 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 | **Serve** | shaker'ı NİŞANLA dök (kaçırırsan döker); **dolap/raf YOK (2026-08-13)** — buradaki tek şişe back bar'ın elimize verdiği gazlıdır (Core tin'de reddettiği için bardak onun tek kapısı), düğme basılı gelmediğinden **elde DURUR**, basınca kavranır; hazırlık kapları (buz/limon/tuz/şeker + garnitür kavanozları) tezgâhın sol ucunda; SERVE tuşu bardak boşken sönük |
 
 **Her iki tezgâhın seti (2026-08-13):** ekranda mobilya assetı yok — `prep_table` ve `bar_mat` kaldırıldı. Panelin kendisi tezgâhtır: arkada barın kendi duvarı (`BackBarArt.LuxeWall`, gölgede), önünde bir ton açık tezgâh bandı ve buluştukları yerde aydınlık ön kenar; üstünde duran her şey `BackBarArt.BottleShadow` ile temas gölgesi taşır (tin ve şişeninki her kare kendi tabanını takip eder, kaldırınca söner). Yüzeyin kendisi çizilmez — `PourSurface`/`ServeSurface` sadece koordinat uzayıdır.
-| **Tap** | **KAPISI ODADAKİ MUSLUK (2026-08-15).** Tezgâhta duran bira musluğu fikstürüne tıklamak doğrudan bu sahneyi açar (`DiegeticStage` plakası → `TycoonServiceFlow.OpenTap`); 1. seviye musluk (`taps_one`) bar ilk geceden **zaten sahibi** — mağazada OURS yazar, satılmaz, geri verilmez. Kimse fıçı seçmeden gelindiği için mahzen kendisi bağlar: raf sırasında ilk dolu fıçı. Bardağı yatır-doldur, dikleştir-köpük; verdikt satırı canlı; **tezgâh altı gerçek mahzen (2026-08-13)**: hatta bağlı fıçı + stoktaki diğer fıçılar kendi gözlerinde, birine tıkla=onu hatta bağla (Core `CanPull` reddederse hiçbir şey değişmez ve nedeni yazılır); dökerken pour_loop sesi; SERVE tuşu bardak boşken sönük |
+| **Tap** | **KAPISI ODADAKİ MUSLUK (2026-08-15).** Tezgâhta duran bira musluğu fikstürüne tıklamak doğrudan bu sahneyi açar (`DiegeticStage` plakası → `TycoonServiceFlow.OpenTap`); 1. seviye musluk (`taps_one`) bar ilk geceden **zaten sahibi** — mağazada OURS yazar, satılmaz, geri verilmez. **Musluk artık üç basamaklı bir MERDİVEN (2026-08-19, §6.1).** Kimse fıçı seçmeden gelindiği için mahzen kendisi bağlar: raf sırasında ilk dolu fıçı. Bardağı yatır-doldur, dikleştir-köpük; verdikt satırı canlı; **tezgâh altı gerçek mahzen (2026-08-13)**: hatta bağlı fıçı + stoktaki diğer fıçılar kendi gözlerinde, birine tıkla=onu hatta bağla (Core `CanPull` reddederse hiçbir şey değişmez ve nedeni yazılır); dökerken pour_loop sesi; SERVE tuşu bardak boşken sönük |
 
 Teknik: sahne 640×360 (PixelPerfect), HUD 1280×720; tüm UI kodla kurulur, prefab yok; yalnız yeni Input System (`Mouse.current`).
 

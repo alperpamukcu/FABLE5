@@ -104,6 +104,8 @@ namespace LastCall.UI
         private void RefreshMenu()
         {
             var run = Run;
+            // The wall wears the hour it is being looked at, not the hour it was built in.
+            DressWallLight();
             foreach (Transform child in _bottleList) Destroy(child.gameObject);
             BuildShelfPage(run);
 
@@ -130,15 +132,150 @@ namespace LastCall.UI
         /// </summary>
         // ── the plate's own geometry (2026-08-19) ──
         // "Backbar sahnesindeki arkaplan tamamen bu olacak, şişeleri raflara tam oturt."
-        // Measured off backbar_pixellab.png after its (24,0,664,360) crop, in PANEL units
-        // (art px ×2; y from the panel's bottom). Three niche columns, three shelf
-        // boards: the stand line is each board's own top edge, and the bottles are laid
-        // INTO these cells instead of onto code-drawn planks — the plate is the
-        // furniture now, which retires the drawn plank/face/niche kit below.
-        private static readonly float[] NicheStandY = { 484f, 296f, 116f };
-        private static readonly float[] NicheHeight = { 150f, 158f, 152f };
+        // In PANEL units (art px ×2; y from the panel's bottom). Three niche columns,
+        // three shelf boards: the stand line is each board's own top edge, and the
+        // bottles are laid INTO these cells instead of onto code-drawn planks — the
+        // plate is the furniture now, which retires the drawn plank/face/niche kit below.
+        //
+        // RE-MEASURED for the BLUE cabinet (2026-08-19 evening, the author's own plate:
+        // "paylaştığım görsel yeni backbar arkaplanı"). This table is ART-BOUND — it is
+        // measured off whatever Resources/Scene/backbar.png currently is, and a new plate
+        // invalidates it silently, standing a bottle on a shelf board or half inside a
+        // pilaster. It is not measured by eye either: Tools/backbar_measure.py scans the
+        // plate for the frame colour and prints these twelve numbers, so the next cabinet
+        // is a re-run rather than a re-count.
+        //
+        // What it found, in the plate's own 640×360: pilasters at x 4–40, 215–234,
+        // 417–436, 609–636; the cornice ending at y 31 and shelf boards at 104–117,
+        // 194–207, 280–293 (y from the top). The stand lines are those boards' top edges.
+        private static readonly float[] NicheStandY = { 512f, 332f, 160f };
+        private static readonly float[] NicheHeight = { 146f, 154f, 146f };
         private static readonly Vector2[] NicheSpanX =
-            { new Vector2(68f, 432f), new Vector2(476f, 850f), new Vector2(894f, 1258f) };
+            { new Vector2(80f, 430f), new Vector2(468f, 834f), new Vector2(872f, 1218f) };
+
+        // ── the wall's light (2026-08-19) ────────────────────────────────────────
+        //
+        // The author: "backbar sahnesi çok aydınlık, ortamın ışığına uygun değil — önce
+        // biraz tüm sahneyi karart sonra doğal ışıklandırma ile aydınlat."
+        //
+        // The plate is painted FLAT: mean luma 0.467 with no direction in it, the marble
+        // ledge as bright as the shadow behind the top shelf. So the room next door could be
+        // at any hour and this wall sat at noon. It is a CANVAS — no Light2D in the world can
+        // reach it — so the light is painted, in the two moves the instruction names.
+        //
+        // FIRST DARK: the plate is tinted down, and only slightly toward the room's own
+        // colour. Slightly is measured, not timid — the cabinet is BLUE, and a blue surface
+        // multiplied by a sunset's orange goes olive: the first take pulled 55% toward the
+        // room and turned the whole back bar army-green at six o'clock. A deep cabinet
+        // interior barely takes the room's light anyway; what takes it is the surface facing
+        // the room, which is the marble.
+        //
+        // THEN LIT — BY SUBTRACTION. Each niche gets a band of shade that is clear under the
+        // board above it and deepens to its own floor, which is exactly where a back bar's
+        // light falls off: the fitting is under the board, the dark gathers at the shelf.
+        // Nothing is painted ON: adding white to a canvas fogs the tilework, taking light
+        // away leaves every mark the plate carries (see ChromeArt.StripShade). The lit part
+        // of a shelf is the part no shade fell on.
+        //
+        // And the LEDGE takes the hour: the window's own colour by day, the room's warm
+        // bounce by night, multiplied over the marble so it stays marble.
+        /// <summary>How far down the plate is taken before anything is shaped on it.</summary>
+        private const float WallDarkDay = 0.76f, WallDarkNight = 0.60f;
+        /// <summary>How far that tint is dragged toward the room's colour. Small on purpose.</summary>
+        private const float WallTintPull = 0.20f;
+        /// <summary>How deep the shade gets at a niche's floor.</summary>
+        private const float NicheShadeDay = 0.55f, NicheShadeNight = 0.70f;
+        /// <summary>How strongly the room's light lands on the marble, and how tall it is.</summary>
+        private const float LedgeLightDay = 0.62f, LedgeLightNight = 0.55f;
+        private const float LedgeLightH = 140f;   // panel units (the plate's bottom 70 px)
+
+        private Image _menuWall;
+        private readonly List<Image> _nicheShade = new List<Image>();
+        private Image _ledgeLight;
+        private DiegeticStage _stageLight;
+
+        /// <summary>
+        /// Hangs the wall's shade and the ledge's light. Built once with the panel;
+        /// <see cref="DressWallLight"/> colours them for the hour on every open.
+        /// </summary>
+        private void BuildShelfLight(RectTransform panel)
+        {
+            _nicheShade.Clear();
+            // One band per niche ROW, drawn only across the niches themselves: the pilasters
+            // between them are solid timber standing in front of the shelves, and running the
+            // shade over them drew a grey stripe across the cabinet's own frame.
+            for (int row = 0; row < NicheStandY.Length; row++)
+            {
+                float top = NicheStandY[row];
+                float floor = row + 1 < NicheStandY.Length ? NicheStandY[row + 1] : 0f;
+                float height = top - floor;
+                if (height <= 0f) continue;
+                foreach (var span in NicheSpanX)
+                {
+                    var band = NewRect("NicheShade", panel);
+                    band.anchorMin = band.anchorMax = band.pivot = new Vector2(0f, 0f);
+                    band.sizeDelta = new Vector2(span.y - span.x, height);
+                    band.anchoredPosition = new Vector2(span.x, floor);
+                    var img = band.gameObject.AddComponent<Image>();
+                    img.sprite = ChromeArt.StripShade(downward: true);
+                    img.raycastTarget = false;
+                    _nicheShade.Add(img);
+                }
+            }
+
+            // The room, landing on the marble.
+            var ledge = NewRect("LedgeLight", panel);
+            ledge.anchorMin = new Vector2(0f, 0f); ledge.anchorMax = new Vector2(1f, 0f);
+            ledge.pivot = new Vector2(0.5f, 0f);
+            ledge.sizeDelta = new Vector2(0f, LedgeLightH);
+            ledge.anchoredPosition = Vector2.zero;
+            var ledgeImg = ledge.gameObject.AddComponent<Image>();
+            ledgeImg.sprite = ChromeArt.StripShade(downward: false);
+            ledgeImg.raycastTarget = false;
+            _ledgeLight = ledgeImg;
+        }
+
+        /// <summary>
+        /// Puts the room's current hour on the wall. Called on every open, so turning round
+        /// at midnight is a different wall from turning round at six.
+        /// </summary>
+        private void DressWallLight()
+        {
+            // Unqualified, through MonoBehaviour: this file has `using System;` as well as
+            // `using UnityEngine;`, so a bare `Object.` is ambiguous between the two.
+            var stage = _stageLight != null ? _stageLight
+                : (_stageLight = FindFirstObjectByType<DiegeticStage>());
+            Color wash = stage != null ? stage.RoomWashLight : new Color(0.86f, 0.85f, 0.95f);
+            Color key = stage != null ? stage.RoomKeyLight : new Color(1f, 0.80f, 0.52f);
+            float day = stage != null ? stage.RoomDaylight : 1f;
+            // What is actually falling in the room: the window by day, the bounce by night.
+            Color room = Color.Lerp(wash, key, day);
+
+            if (_menuWall != null)
+            {
+                float mul = Mathf.Lerp(WallDarkNight, WallDarkDay, day);
+                var tint = Color.Lerp(Color.white, room, WallTintPull) * mul;
+                _menuWall.color = new Color(tint.r, tint.g, tint.b, 1f);
+            }
+
+            float shade = Mathf.Lerp(NicheShadeNight, NicheShadeDay, day);
+            for (int i = 0; i < _nicheShade.Count; i++)
+                if (_nicheShade[i] != null)
+                    _nicheShade[i].color = new Color(0f, 0f, 0f, shade);
+
+            if (_ledgeLight != null)
+            {
+                // The shade sprite, worn as LIGHT: same bands, the room's colour, and the
+                // marble keeps its own veining because this still multiplies nothing away —
+                // it is laid at the plate's brightest surface, which is where light collects.
+                float lit = Mathf.Lerp(LedgeLightNight, LedgeLightDay, day);
+                var warm = new Color(
+                    Mathf.Clamp01(room.r * 1.25f + 0.60f),
+                    Mathf.Clamp01(room.g * 1.25f + 0.60f),
+                    Mathf.Clamp01(room.b * 1.25f + 0.60f), lit);
+                _ledgeLight.color = warm;
+            }
+        }
 
         private void BuildShelfPage(TycoonRun run)
         {
@@ -531,7 +668,10 @@ namespace LastCall.UI
                 boardImg.type = Image.Type.Tiled;
                 boardImg.pixelsPerUnitMultiplier = 0.5f;
             }
+            _menuWall = boardImg;
             Swallow(_menuPanel);
+            BuildShelfLight(_menuPanel);
+            DressWallLight();
 
             // NEON, not timber (the author, 2026-08-02: the board sign, the ivy and the
             // framed paintings all read as the wrong decade for a vice bar). The name is
