@@ -2,6 +2,31 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `14 §5 / 16` **the dead-weight sweep (2026-08-20):** the project shed what it had
+  stopped using. **The old rig left the build.** `Resources/Patron` carried 43 character
+  folders while `PatronCast` seats 10; Unity packs and indexes *everything* under
+  `Resources/`, so 33 old-rig faces and the original slug-less patron — 3,188 files,
+  18 MB — were riding into every build to be drawn by nobody. They are deleted (git
+  history keeps them; each comes back by being REDRAWN to the 2026-08-19 rig, which was
+  always the plan), and `LoadPatronClip`'s empty-slug branch went with them. NOTE: the
+  story still NAMES four of those faces — `story.json` gives its guest `ece` the
+  placeholder `glam`, and `execman`/`profess`/`teal` are written as looks — none of which
+  resolved to art before this sweep either, because `LookNamed` only ever searched the
+  cast. **Dead builders.** `NeonBlink` (the last survivor of the demolished animated
+  backdrop) and `StageArtFit` (superseded by `DiegeticStage`'s own square-pixel scaling)
+  had no caller and no scene reference; `BackBarArt.ShelfFloor/NicheTop/ShelfFace` went
+  with the back-bar rebuild, and eight colour constants went with them. `TycoonHud.Case`
+  is gone because `ChromeArt.Well` replaced it the same day. `BackBarArt.KegCrown` STAYS
+  under its own written ruling (hand-drawn art, not logic) — the rule this sweep followed
+  is *remove what has already been replaced; leave what the author is still building*, so
+  `TycoonRun.CanUnlock` and `StoryArc.BeatNamed` also stay. **Records, not rules.**
+  `PLAN_emotion_pivot.md` (its own GDD 19 was deleted in the 2026-08-07 sweep) and
+  `PLAN_pour_pivot.md` (GDD 21 is the spec now) are retired; `PLAN_tycoon_pivot.md` and
+  `tycoon_speed_response.md` were NOT, because `PLAN_service_depth` and the simulator
+  still reference them. `Docs/previews/` (27 orphan captures) is gone — `Docs/readme/` is
+  the set README.md actually uses. 275 raw PixelLab generations under `Tools/*_raw/` left
+  the repo, which `.gitignore` had already asked for on 2026-08-11.
+
 - `21 §9a / 23 §3–§5 / GDD_MEVCUT §5–§6` **the perfect pour (2026-08-20, the author's
   respec):** every recipe carries one hidden perfect ratio; the menu lights only the
   20-point box each ingredient's perfect sits in (five discrete boxes, red→dark green)

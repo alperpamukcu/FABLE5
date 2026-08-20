@@ -13,7 +13,7 @@ namespace LastCall.UI
     /// </summary>
     public static class BackBarArt
     {
-        private static Sprite _floor, _shadow, _nicheTop, _ledge, _luxe, _face;
+        private static Sprite _shadow, _ledge, _luxe;
 
         // The luxe ramp (the author, 2026-08-01: "daha lüks bir back bar" — less timber,
         // more lounge): deep aubergine-charcoal panels off the stage's Night palette, with
@@ -24,56 +24,12 @@ namespace LastCall.UI
         private static readonly Color32 PanelA = new Color32(0x11, 0x1C, 0x26, 0xFF);
         private static readonly Color32 PanelB = new Color32(0x0E, 0x18, 0x21, 0xFF);
         private static readonly Color32 PanelEdge = new Color32(0x1C, 0x33, 0x3E, 0xFF);
-        private static readonly Color32 Brass = new Color32(0xB8, 0x8A, 0x3C, 0xFF);
-        private static readonly Color32 BrassLit = new Color32(0xE6, 0xBE, 0x66, 0xFF);
-        private static readonly Color32 FaceWood = new Color32(0x30, 0x1E, 0x12, 0xFF);
-        private static readonly Color32 FaceWoodDim = new Color32(0x28, 0x18, 0x0E, 0xFF);
 
         // The walnut ramp the whole wall is built from.
         private static readonly Color32 Seam = new Color32(0x12, 0x0A, 0x08, 0xFF);
-        private static readonly Color32 BoardA = new Color32(0x2A, 0x1A, 0x10, 0xFF);
-        private static readonly Color32 BoardB = new Color32(0x24, 0x16, 0x0E, 0xFF);
         private static readonly Color32 FloorFront = new Color32(0x4A, 0x5E, 0x6E, 0xFF);
         private static readonly Color32 FloorMid = new Color32(0x33, 0x44, 0x52, 0xFF);
-        private static readonly Color32 FloorBack = new Color32(0x1E, 0x2A, 0x35, 0xFF);
-        private static readonly Color32 LipFace = new Color32(0x14, 0x1E, 0x28, 0xFF);
         private static readonly Color32 LipShine = new Color32(0x6E, 0xE0, 0xD6, 0xFF);
-
-        /// <summary>The shelf floor: a perspective trapezoid, front edge full width and lit,
-        /// receding rows narrower and darker — the plane you read as depth.</summary>
-        public static Sprite ShelfFloor()
-        {
-            if (_floor != null) return _floor;
-            const int W = 320, H = 30, inset = 22;
-            var px = new Color32[W * H];
-            for (int y = 0; y < H; y++)                       // y 0 = bottom = front edge
-            {
-                float depth = y / (float)(H - 1);             // 0 front → 1 back
-                int side = Mathf.RoundToInt(inset * depth);
-                Color32 tone = Color32.Lerp(FloorFront, FloorBack, depth * depth);
-                if (y < 3) tone = Color32.Lerp(FloorFront, LipShine, 0.35f);
-                for (int x = side; x < W - side; x++)
-                {
-                    bool edge = x == side || x == W - side - 1;
-                    px[y * W + x] = edge ? Seam : tone;
-                }
-            }
-            return _floor = Make(px, W, H);
-        }
-
-        /// <summary>The shadow the shelf above throws into the niche: a soft falloff.</summary>
-        public static Sprite NicheTop()
-        {
-            if (_nicheTop != null) return _nicheTop;
-            const int W = 8, H = 36;
-            var px = new Color32[W * H];
-            for (int y = 0; y < H; y++)
-            {
-                byte a = (byte)(150 * (y / (float)(H - 1)) * (y / (float)(H - 1)));
-                for (int x = 0; x < W; x++) px[y * W + x] = new Color32(0, 0, 0, a);
-            }
-            return _nicheTop = Make(px, W, H);
-        }
 
         /// <summary>The ellipse a bottle stands in — what pins it to the floor plane.</summary>
         public static Sprite BottleShadow()
@@ -145,37 +101,6 @@ namespace LastCall.UI
                 }
             }
             return _luxe = Make(px, W, H);
-        }
-
-        /// <summary>
-        /// The shelf's FRONT FACE (the author: shelves thick enough to carry the bottle
-        /// names): dark walnut with a brass edge along the top where the light lands, a
-        /// near-black shadow along the bottom. The names are lettered over it in engine.
-        /// </summary>
-        public static Sprite ShelfFace()
-        {
-            if (_face != null) return _face;
-            const int W = 64, H = 36;
-            var px = new Color32[W * H];
-            uint hash = 733;
-            for (int y = 0; y < H; y++)                       // y 0 = bottom
-                for (int x = 0; x < W; x++)
-                {
-                    hash = (hash ^ (uint)(x * 47 + y * 29)) * 16777619;
-                    Color32 c;
-                    if (y == H - 1) c = new Color32(0x9F, 0xF2, 0xEA, 0xFF);       // the neon core
-                    else if (y == H - 2) c = new Color32(0x35, 0xC8, 0xBE, 0xFF);  // its tube
-                    else if (y == H - 3) c = new Color32(0x14, 0x4A, 0x46, 0xFF);  // the falloff
-                    else if (y <= 1) c = PanelSeam;
-                    else
-                    {
-                        c = (hash >> 6) % 7 == 0 ? new Color32(0x0D, 0x14, 0x1D, 0xFF)
-                            : new Color32(0x10, 0x18, 0x22, 0xFF);                 // dark gloss
-                        if ((hash >> 9) % 61 == 0) c = new Color32(0x18, 0x24, 0x30, 0xFF);
-                    }
-                    px[y * W + x] = c;
-                }
-            return _face = Make(px, W, H);
         }
 
         private static Sprite _plate;

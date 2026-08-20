@@ -3388,8 +3388,7 @@ namespace LastCall.UI
                 // A look with no idle has no art on disk. Skip it instead of seating a
                 // customer who renders as nothing.
                 if (clips[PatronClip.Idle].Length == 0) continue;
-                var face = Resources.Load<Sprite>(string.IsNullOrEmpty(entry.Slug)
-                    ? "Patron/face" : $"Patron/{entry.Slug}/face");
+                var face = Resources.Load<Sprite>($"Patron/{entry.Slug}/face");
                 _looks.Add(new PatronLook
                 { Slug = entry.Slug, Clips = clips, HeadY = entry.HeadY, Face = face,
                   Stars = entry.Stars,
@@ -3397,12 +3396,13 @@ namespace LastCall.UI
             }
         }
 
-        /// <summary>All frames of one clip, ordered by name. The original patron lives at
-        /// Patron/&lt;clip&gt;; everyone cast since lives under their own slug.</summary>
+        /// <summary>All frames of one clip, ordered by name. Everyone in the cast lives
+        /// under their own slug. The very first patron used to sit loose at Patron/&lt;clip&gt;
+        /// with no slug of their own, and this read that too; that art was deleted in the
+        /// 2026-08-20 sweep along with the rest of the old rig, so the branch is gone.</summary>
         private static Sprite[] LoadPatronClip(string slug, string clip)
         {
-            var sprites = Resources.LoadAll<Sprite>(
-                string.IsNullOrEmpty(slug) ? $"Patron/{clip}" : $"Patron/{slug}/{clip}");
+            var sprites = Resources.LoadAll<Sprite>($"Patron/{slug}/{clip}");
             System.Array.Sort(sprites, (a, b) => string.CompareOrdinal(a.name, b.name));
             return sprites;
         }
@@ -6056,26 +6056,6 @@ namespace LastCall.UI
             var img = rt.gameObject.AddComponent<Image>();
             img.color = c; img.raycastTarget = false;
             return img;
-        }
-
-        /// <summary>A body with a bevel: lit along the top and left where the room is,
-        /// shadowed down the right and along the bottom. This is the ONE box left on the
-        /// board — the clock's case — and it earns it by being an object rather than a
-        /// container: the readings themselves sit straight on the beam.</summary>
-        private RectTransform Case(RectTransform parent, string name, Vector2 anchor,
-            Vector2 size, Vector2 pos, Color body)
-        {
-            var rt = NewRect(name, parent);
-            rt.anchorMin = rt.anchorMax = rt.pivot = anchor;
-            rt.sizeDelta = size;
-            rt.anchoredPosition = pos;
-            var img = rt.gameObject.AddComponent<Image>();
-            img.color = body; img.raycastTarget = false;
-            Hairline(rt, new Vector2(0, 1), new Vector2(1, 1), UITheme.Night[3]);
-            Hairline(rt, new Vector2(0, 0), new Vector2(1, 0), new Color(0f, 0f, 0f, 0.55f));
-            HairlineV(rt, 0f, UITheme.Night[3]);
-            HairlineV(rt, 1f, new Color(0f, 0f, 0f, 0.55f));
-            return rt;
         }
 
         private void Hairline(RectTransform parent, Vector2 aMin, Vector2 aMax, Color c)

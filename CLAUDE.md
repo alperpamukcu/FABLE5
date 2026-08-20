@@ -1,6 +1,9 @@
 # CLAUDE.md — LAST CALL
 
 Unity 6000.3.10f1 (URP) bar-tycoon about reading customers and running the till.
+**On a machine that has not run this project before, read `Docs/HANDOFF.md` FIRST** —
+it lists what git deliberately does not carry (the PixelLab token above all) and why
+the PlayMode look tests will fail until the baselines are re-blessed on that GPU.
 **`Docs/GDD_MEVCUT.md` is the as-built rulebook** — the game as it actually runs, extracted
 from code 2026-08-07; read it first for any live rule. `Docs/GDD/` carries the design specs:
 **modules 23 and 24 own the loop**, 21 owns the pour system (21 §10 draught beer), 22 owns
@@ -94,7 +97,8 @@ a screen is *meant* to change: **LastCall → Re-bless UI Baselines**, then run 
 the first run draws the new pictures and fails on purpose, so nobody blesses a screen without
 looking at it. On a failure the current picture and the diff land in `Temp/UiLooks`
 (**LastCall → Show Last UI Look Failures**). The baselines are THIS machine's; a different GPU
-may differ by a pixel, which is why they stay out of CI.
+may differ by a pixel, which is why they stay out of CI — and why a second machine
+re-blesses them once before trusting a red look test (`Docs/HANDOFF.md` §4).
 
 ## Workflow
 
