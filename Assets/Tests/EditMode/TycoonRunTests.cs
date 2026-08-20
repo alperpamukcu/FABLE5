@@ -1066,15 +1066,24 @@ namespace LastCall.Tests
                 config: new TycoonConfig(20, orderDecisionSeconds: 0, savorSeconds: 0),
                 glassware: new[] { TestGlass("rocks", 0.7), TestGlass("highball", 1.0) });
 
-            run.PourMeasure("vodka_t", 0.3);
+            // 0.2 of spirit, not 0.3 (2026-08-20): the box rule reads proportions, and a
+            // 0.3 start can never reach vodka_soda's boxes inside a 0.7 rocks glass — the
+            // brim arrives before the ratio does. The smaller start leaves room for the
+            // shares to cross into the drink's boxes, which is when it declares itself.
+            run.PourMeasure("vodka_t", 0.2);
             PourOut(run);
             Assert.AreEqual("rocks", run.ServingGlassware.Id,
                 "half a drink: pure spirit reads as a neat pour, and that is a rocks glass");
 
-            run.PourAtGlass("soda_t", 0.45);
+            // Enough soda to land the shares on vodka_soda's own perfect proportions —
+            // the amount is derived from the page, not hard-coded.
+            var pv = RatioRecipeMatcher.PerfectPour(
+                RecipeCatalog.CreateDefault().First(r => r.Id == "vodka_soda"));
+            double sodaVol = 0.2 * pv[1] / pv[0];
+            run.PourAtGlass("soda_t", sodaVol);
             Assert.AreEqual("highball", run.ServingGlassware.Id,
                 "the soda names the drink, and the drink moves to its own glass");
-            Assert.AreEqual(0.75, run.ServingGlass.TotalVolume, 1e-6,
+            Assert.AreEqual(0.2 + sodaVol, run.ServingGlass.TotalVolume, 1e-6,
                 "the re-pour spills nothing");
         }
 

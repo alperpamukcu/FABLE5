@@ -90,14 +90,19 @@ namespace LastCall.EditorTools
             sb.AppendLine("## One serve, from top to bottom");
             sb.AppendLine();
             sb.AppendLine("```");
-            sb.AppendLine("  paid   = the ordered drink's menu price      (a WRONG drink pays what");
-            sb.AppendLine("                                                is actually in the glass)");
+            sb.AppendLine("  paid   = menu price × (" + F(ServiceJudge.AccuracyPayFloor) + " + "
+                          + F(1 - ServiceJudge.AccuracyPayFloor) + " × accuracy)   closeness to the");
+            sb.AppendLine("           recipe's perfect pour (21 §9a) — the right box always earns");
+            sb.AppendLine("           something; the WRONG drink pays what is actually in the glass,");
+            sb.AppendLine("           and their drink OUT OF ITS BOX pays nothing at all");
             sb.AppendLine("  tip    = paid × " + F(ServiceJudge.TipCeiling) + " × quality");
             sb.AppendLine();
             sb.AppendLine("  quality = " + F(ServiceJudge.SpeedWeight) + " × speed"
                           + "      how much patience was left when it landed");
             sb.AppendLine("          + " + F(ServiceJudge.SpecWeight) + " × craft"
                           + "      what they asked for, and how the book says to work it");
+            sb.AppendLine("          + " + F(ServiceJudge.AccuracyWeight) + " × accuracy"
+                          + "   the pour against the perfect, again — bill AND thanks");
             sb.AppendLine("          + " + F(ServiceJudge.FillWeight) + " × fill"
                           + "       how close the glass came to " + P(ServingSpec.NormalFill));
             sb.AppendLine();

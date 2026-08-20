@@ -925,3 +925,65 @@ ten stirred recipes carry two spirits); the drag deleted outright; the cap stays
   `Waiting && HasOrdered && IdInspected` (HUD-level — Core's blind serve stays legal,
   tests untouched), the seat glow matching the clickable set, the bin as a click, the
   drag deleted. All four phases measured in play; 196/196 throughout.
+
+
+## 2026-08-20 — the perfect pour (author-directed, three phases)
+
+The author's respec, in one breath: every recipe has a PERFECT ratio the player is never
+shown; the menu shows only which 20-point box each ingredient sits in (five discrete boxes,
+red→dark green); the right box pays by closeness to the perfect and the wrong box is
+"tamamen yanlış"; a PERFECT make reveals the exact numbers on that page for the rest of the
+run; base price and the tip re-seat around closeness, and the whole doc set moves with it.
+Spec lives in GDD 21 §9a; the pay matrix in GDD 23 §4; GDD_MEVCUT §5/§6 updated in the same
+commits (it wins conflicts).
+
+- **Faz A (shipped with this entry): Core + sim + tests.** `RatioBox` (lower-inclusive,
+  epsilon-guarded), `PerfectPour` (IdealPour + FNV-hashed edge-guard nudge, attempt-rolled
+  out of deadlocks; cached on `RecipeDefinition`, the secret itself `internal`), matcher
+  acceptance moved from authored bands to the perfect's box (+ the ≥5% dash floor),
+  `ServiceJudge` pays Exact at `price × (0.10 + 0.90 × accuracy)`, Close at $0/0.30
+  satisfaction, tip quality `0.35/0.25/0.20/0.20` with the accuracy term, `PerfectWindow`
+  ±2.5 points; `TycoonRun` keeps `_perfectedRecipes`/`_bestMakes` (run-lifetime, refund
+  keeps knowledge) behind `ExactPourFor` (throws until perfected — the InspectId pattern).
+  The sim bot plays the discovery loop (box-middle aim until perfected, the revealed
+  perfect after) and reports accuracy / perfect-make rate / pages revealed. The derivation
+  was proven in arithmetic over the shipped json before the C# ran (Tools-side harness):
+  52 recipes, zero grid-edge perfects, zero rank collisions. 334/334 EditMode.
+- **Faz B (next): the menu.** The five-box bar in the ONE shared spec renderer
+  (`DrawRecipeSpec` — book card, licence tip, market spec, order tip inherit it together),
+  best-make row, exact numbers after the reveal via `ExactPourFor` only, more room per
+  alcohol on the book card; a source-scan test keeps `PerfectPour`/`IdealPour` out of the
+  UI assembly. LookTests re-bless follows.
+- **Faz C (after B): the economy sweep.** Same-seed before/after at several hand levels,
+  its own report file; P18's rebalance targets stand — this entry's Faz A already moved
+  the median 30-day till $351 → $194 and bankruptcies 0% → 3% on the floor bot, which is
+  the direction P12 flagged as overdue.
+
+### C11 — the exact share was PUBLIC, and the rulings behind it are overturned by name
+The 2026-08-02 ruling "show the player the perfect number, not the range" (spec cards print
+`IdealPour`), GDD 23 §5's "not pixel-perfect ratios", and 21 §9's generosity-pass rationale
+(±20% bands because free-hand lands ~10%) all pointed the other way. **Ruling:** the author's
+2026-08-20 respec overturns all three deliberately — the number is the REWARD now, closeness
+is money, and the visible box replaces the invisible band as the fairness device. The old
+texts stay in place with overtake notes rather than being rewritten out of history.
+
+### C12 — Close (2026-08-14) exists to soften a cliff the respec makes visible
+Close was invented because a band edge the player cannot see must not be a cliff. The box IS
+visible now, so the cushion (menu price + half tip) is gone: Close pays nothing and keeps
+only its standing (0.30). The grade itself survives — it names "their drink, box missed" in
+the judge, the sim tables and the UI's amber line. Its pinned tests were rewritten in the
+same commit (the plan's own law).
+
+### C13 — "current ratios become the perfect values" has no single number in data
+recipes.json stores min/max BANDS; raw midpoints sum to 103%/94% on 32 recipes. **Ruling:**
+the perfect is DERIVED (`PerfectPour` = settled IdealPour + deterministic edge nudge), not
+authored — zero data edits, the parity test untouched, and editing a band deliberately moves
+the perfect with it. Eleven ideals sat exactly on 20-point grid lines and two-part edge
+pairs (40/60) are unpourable orders; the nudge is load-bearing, not cosmetic.
+
+### C14 — the sim floor changed meaning with the menu
+The steady bot poured IdealPour exactly, so under the respec it would perfect every page on
+first serve and measure nothing about the pre-reveal game. **Ruling:** the bot now plays the
+discovery loop (box-middle aim → reveal → perfect aim). The old "100% Exact" floor survives
+(mid-box is always in-box); what moved is money — accuracy 78% average, so the same serves
+earn ~80% of the old base, which IS the feature.

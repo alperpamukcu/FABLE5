@@ -37,9 +37,19 @@ namespace LastCall.Core
         /// <summary>How close the glass came to the fill they expected, 0–1.</summary>
         public double FillScore { get; }
 
+        /// <summary>How close the pour came to the recipe's perfect ratios, 0–1
+        /// (2026-08-20). 1 for drinks with nothing to measure — a pint, a neat pour,
+        /// a judge called without a shelf to look ingredients up on.</summary>
+        public double Accuracy { get; }
+
+        /// <summary>Every ingredient landed within the perfect window — the make that
+        /// reveals the recipe's exact numbers on the menu (2026-08-20).</summary>
+        public bool PerfectMake { get; }
+
         public ServiceVerdict(OrderMatch match, int basePaid, int tip,
             bool craftLanded, bool ordersAgain, double satisfaction,
-            double specScore = 1, double fillScore = 1)
+            double specScore = 1, double fillScore = 1,
+            double accuracy = 1, bool perfectMake = false)
         {
             Match = match;
             BasePaid = basePaid;
@@ -49,6 +59,8 @@ namespace LastCall.Core
             Satisfaction = satisfaction;
             SpecScore = specScore;
             FillScore = fillScore;
+            Accuracy = accuracy;
+            PerfectMake = perfectMake;
         }
     }
 
@@ -72,15 +84,27 @@ namespace LastCall.Core
         public const double TipCeiling = 1.0;
 
         /// <summary>What the tip is made of. Speed leads, because it is the pressure the whole
-        /// floor runs on; the spec is the craft read; the fill is the pour itself.</summary>
-        public const double SpeedWeight = 0.45, SpecWeight = 0.35, FillWeight = 0.20;
+        /// floor runs on; the spec is the craft read; the accuracy is the pour's closeness to
+        /// the recipe's perfect (2026-08-20); the fill is the glass itself. Fill kept its
+        /// 0.20 deliberately — at 0.15 a visibly thin pour rounded away to the same dollar
+        /// as a full one on a $10 drink, and a term rounding can erase is not a term.</summary>
+        public const double SpeedWeight = 0.35, SpecWeight = 0.25,
+            AccuracyWeight = 0.20, FillWeight = 0.20;
 
-        /// <summary>What is left of the tip when the drink came out wrong (2026-08-14). Half:
-        /// enough that a night of missed pours is visibly a worse night at the till, not so
-        /// much that a busy bartender is better off binning the glass and starting again.
-        /// It is the one number the new middle grade invents, and it is the one to turn if
-        /// the pour is to bite harder.</summary>
-        public const double CloseTipShare = 0.5;
+        // ── the perfect pour (2026-08-20 respec) ────────────────────────────────
+
+        /// <summary>What an in-box pour earns at its WORST, as a share of the menu price. The
+        /// author's own sentence sets both ends of this dial: land the right box far from the
+        /// perfect and "en azından çok düşük de olsa ücret alacaksın" — very low, never zero.
+        /// Zero is reserved for the wrong box, which is not the drink at all.</summary>
+        public const double AccuracyPayFloor = 0.10;
+
+        /// <summary>How close every ingredient must land to the recipe's perfect value for the
+        /// make to count as PERFECT — the make that reveals the exact numbers on the menu.
+        /// 2.5 points of the glass: tight enough that it is an achievement, wide enough that a
+        /// steady hand on a held button can actually reach it (free-hand pouring lands within
+        /// ~10 points at best; a deliberate, watched pour does far better). Tuned by sim.</summary>
+        public const double PerfectWindow = 0.025;
 
         /// <summary>How craft splits between the customer's asks and the BOOK's method
         /// (2026-08-11): the garnish spec carries most of it, the recipe's own shaken/stirred
@@ -201,6 +225,40 @@ namespace LastCall.Core
             new ServiceVerdict(OrderMatch.Declined, 0, 0, false, false, 0.15);
 
         /// <summary>
+        /// How close the glass came to the recipe's perfect pour, 0–1, and how far the WORST
+        /// ingredient missed it (as a share of the glass). Weighted by each band's perfect
+        /// share, because a spirit two points adrift moves the drink more than a garnish two
+        /// points adrift — the mouth weights by volume and so does the judge.
+        ///
+        /// Full marks, by design, for: recipes whose bands were derived rather than authored
+        /// (a pint's craft is its head, a neat pour has nothing to learn), and calls with no
+        /// lookup (nothing to measure — the older tests price drinks without a shelf).
+        /// </summary>
+        public static double AccuracyOf(RecipeDefinition recipe, GlassContents glass,
+            Func<string, IngredientCard> lookup, out double worstMiss)
+        {
+            worstMiss = 0;
+            if (recipe == null || glass == null || lookup == null
+                || !recipe.HasAuthoredRatios)
+                return 1.0;
+
+            var perfect = recipe.Perfect;
+            var shares = RatioRecipeMatcher.SharesFor(recipe, glass, lookup);
+            if (perfect.Length == 0 || shares.Length != perfect.Length) return 1.0;
+
+            double weighted = 0, weight = 0;
+            for (int i = 0; i < perfect.Length; i++)
+            {
+                double miss = Math.Abs(shares[i] - perfect[i]);
+                if (miss > worstMiss) worstMiss = miss;
+                double a = 1.0 - Math.Min(1.0, miss / RatioBox.Width);
+                weighted += perfect[i] * a;
+                weight += perfect[i];
+            }
+            return weight <= 0 ? 1.0 : weighted / weight;
+        }
+
+        /// <summary>
         /// Prices one serve.
         ///
         /// <para><paramref name="served"/> is what the glass actually turned out to be — needed
@@ -210,7 +268,7 @@ namespace LastCall.Core
         /// </summary>
         public static ServiceVerdict Judge(CustomerVisit visit, OrderMatch match,
             GlassContents delivered, WealthTier crowd = WealthTier.Regular, double ambienceBonus = 0,
-            RecipeMatch served = null)
+            RecipeMatch served = null, Func<string, IngredientCard> lookup = null)
         {
             if (visit == null) throw new ArgumentNullException(nameof(visit));
 
@@ -222,13 +280,36 @@ namespace LastCall.Core
                 return new ServiceVerdict(OrderMatch.Refused, 0, 0, false, false,
                     0.02, 0, 0);
 
-            // What the till takes. The right drink (exact or right family) pays its menu price;
-            // the wrong one pays what was actually handed over, which may be nothing at all.
+            // How close the pour came to the recipe's perfect (2026-08-20). Measured against
+            // the ORDERED recipe on an Exact serve — that is the drink whose perfect the
+            // player is chasing — and against the DELIVERED drink on a Wrong one, because a
+            // wrong drink is paid as what it is, at the quality it is.
+            double accuracy; double worstMiss;
+            if (match == OrderMatch.Exact)
+                accuracy = AccuracyOf(visit.OrderTruth.Wanted, delivered, lookup, out worstMiss);
+            else if (match == OrderMatch.Wrong && served?.Recipe != null)
+                accuracy = AccuracyOf(served.Recipe, delivered, lookup, out worstMiss);
+            else { accuracy = 0; worstMiss = double.MaxValue; }
+
+            // What the till takes (the 2026-08-20 matrix). The right drink pays its menu
+            // price SCALED BY CLOSENESS — the box got you paid, the perfect decides how much,
+            // and the floor keeps the author's promise that the right box always earns
+            // something. The ordered drink in the WRONG box pays nothing at all ("tamamen
+            // yanlış"): the box is on the menu for everyone to read, and missing it is
+            // missing the drink. A different drink still pays what it actually is.
             int basePaid;
-            if (match == OrderMatch.Wrong)
-                basePaid = served?.Recipe != null ? DrinkOrder.MenuPrice(served.Recipe) : 0;
+            if (match == OrderMatch.Exact)
+                basePaid = Math.Max(1, (int)Math.Round(visit.OrderTruth.Price
+                    * (AccuracyPayFloor + (1 - AccuracyPayFloor) * accuracy),
+                    MidpointRounding.AwayFromZero));
+            else if (match == OrderMatch.Wrong)
+                basePaid = served?.Recipe != null
+                    ? Math.Max(1, (int)Math.Round(DrinkOrder.MenuPrice(served.Recipe)
+                        * (AccuracyPayFloor + (1 - AccuracyPayFloor) * accuracy),
+                        MidpointRounding.AwayFromZero))
+                    : 0;
             else
-                basePaid = visit.OrderTruth.Price;
+                basePaid = 0;   // Close: their drink, out of its box — refused at the till
 
             // How much of the job was done. Each part is a continuous 0–1: nothing here is a
             // cliff, which is the point of the rewrite — patience used to stop mattering at
@@ -250,27 +331,38 @@ namespace LastCall.Core
 
             double quality = SpeedWeight * speedScore
                            + SpecWeight * craftScore
+                           + AccuracyWeight * accuracy
                            + FillWeight * fillScore;
 
-            // A broke crowd never tips; a wrong drink is not tipped for either; and a drink
-            // that came out wrong is not tipped like one that came out right. Without that
-            // last clause the new Close grade would pay a missed pour EXACTLY what a perfect
-            // one pays — same menu price, same tip — and the only cost of sloppy hands would
-            // be a quarter of a satisfaction point. The haircut is the money half of the same
-            // sentence: they drink it, they pay for it, they do not thank you for it.
+            // Only the RIGHT drink is tipped now (2026-08-20): a broke crowd never tips, a
+            // wrong drink is paid for and nothing more, and the ordered drink out of its box
+            // pays nothing at all — so there is nothing to tip on. Accuracy reaches the tip
+            // twice on purpose, once inside the base it multiplies and once in the quality:
+            // the bill is smaller AND the thanks are cooler, which is how a bar actually
+            // treats a drink that is nearly right.
             int tip = 0;
-            if (crowd != WealthTier.Broke && match != OrderMatch.Wrong && basePaid > 0)
-                tip = (int)Math.Round(
-                    basePaid * TipCeiling * quality * (match == OrderMatch.Close ? CloseTipShare : 1.0),
+            if (crowd != WealthTier.Broke && match == OrderMatch.Exact && basePaid > 0)
+                tip = (int)Math.Round(basePaid * TipCeiling * quality,
                     MidpointRounding.AwayFromZero);
 
+            // Close drops from its P11 half-way house (0.5) to 0.30: they can tell it is
+            // their drink and they can tell it is ruined. Still well above Wrong — being
+            // recognisably wrong about THEIR drink sours less than handing them a stranger's.
             double satisfaction =
-                (match == OrderMatch.Exact ? 0.75 : match == OrderMatch.Close ? 0.5 : 0.05)
+                (match == OrderMatch.Exact ? 0.75 : match == OrderMatch.Close ? 0.30 : 0.05)
+                + (match == OrderMatch.Exact ? 0.10 * (accuracy - 0.5) : 0.0)
                 + (match != OrderMatch.Wrong ? 0.20 * (craftScore - 0.5) : 0.0)
                 + (match != OrderMatch.Wrong ? 0.12 * (fillScore - 0.5) : 0.0)
                 - 0.30 * visit.WaitFraction
                 + ambienceBonus;
             satisfaction = Math.Max(0.0, Math.Min(1.0, satisfaction));
+
+            // THE PERFECT MAKE (2026-08-20): every ingredient within the window of the
+            // recipe's perfect value. This is the make that reveals the exact numbers on the
+            // menu — the run keeps the set, the judge only says whether this serve was one.
+            bool perfectMake = match == OrderMatch.Exact && lookup != null
+                && visit.OrderTruth.Wanted.HasAuthoredRatios
+                && worstMiss <= PerfectWindow;
 
             // Another round is the reward for the exact drink made the way they asked,
             // comfortably inside patience — and only from someone who has been in before.
@@ -292,7 +384,7 @@ namespace LastCall.Core
                 && visit.ExtraOrdersTaken < CustomerVisit.MaxExtraOrders;
 
             return new ServiceVerdict(match, basePaid, tip, craftForExtra, ordersAgain,
-                satisfaction, specScore, fillScore);
+                satisfaction, specScore, fillScore, accuracy, perfectMake);
         }
 
         /// <summary>

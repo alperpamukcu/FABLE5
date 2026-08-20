@@ -2,6 +2,22 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `21 §9a / 23 §3–§5 / GDD_MEVCUT §5–§6` **the perfect pour (2026-08-20, the author's
+  respec):** every recipe carries one hidden perfect ratio; the menu lights only the
+  20-point box each ingredient's perfect sits in (five discrete boxes, red→dark green)
+  until the drink is made PERFECTLY once, after which the exact numbers appear on that
+  page for the rest of the run. The box replaced the authored min/max band as the
+  matcher's acceptance ("tamamen yanlış" outside it, the ≥5% dash floor kept), Exact base
+  pay scales with closeness to the perfect (`× (0.10 + 0.90 × accuracy)`, floored — the
+  author: right box always earns something), Close pays nothing and keeps 0.30
+  satisfaction, and the tip re-seated to `0.35 speed + 0.25 craft + 0.20 accuracy +
+  0.20 fill`. The perfect is DERIVED (settled IdealPour + id-hashed edge-guard nudge —
+  eleven ideals sat exactly on grid lines and a 40/60 pair is an unpourable order), the
+  reveal gate is Core's `ExactPourFor` (throws until perfected, the InspectId pattern),
+  and the sim bot plays the discovery loop. Overturned by name: 2026-08-02's "show the
+  player the perfect number", 23 §5's "not pixel-perfect ratios", the generosity-pass
+  band rationale, and Close's 2026-08-14 half-tip cushion (the cliff is visible now, so
+  it is a target). Conflict rows C11–C14; sim: median 30-day till $351 → $194.
 - `21 §10.1 / 24` **beer left the wall, and the tap on the counter is its own door
   (2026-08-15, the author: "backbardan biraları kaldıralım ... bira musluğuna tıklanması
   gereksin, musluğa tıklanınca direkt bira koyma sahnesi gelecek"):** the back bar drew a row

@@ -1,42 +1,46 @@
 # Tycoon sim report — GDD 23 balance
 
 Runs: **200** of 200, horizon 30 days, one drink per 9s of bar time.
-Floor bot: serves the named order at band midpoints, pulls a pint
+Floor bot: aims each ingredient at the middle of its lit 20-point box
+(the revealed perfect once a page is perfected), pulls a pint
 leaned over then straightened, and shops — stock, recipes, stools,
 glass steps, and one brand upgrade a night it never once affords.
 Every survival figure is a floor.
 
 | Metric | Value |
 |---|---|
-| Bankruptcies | 0 (0.0%) |
-| Reached the 30-day horizon | 200 (100.0%) |
+| Bankruptcies | 6 (3.0%) |
+| Reached the 30-day horizon | 194 (97.0%) |
 | Days survived p25/median/p75 | 30 / 30 / 30 |
-| Final till p25/median/p75 | $298 / $351 / $414 |
-| Avg income / expenses per day | $177.2 / $165.5 |
-| Avg daily satisfaction | 59% |
-| Storm-offs | 11281 (18.0%) |
-| Customers per night | 10.5 |
-| Served per bar-minute | 4.95 |
-| Bar standing (avg night) | 2.85 stars |
-| Serves Exact / Close / Wrong | 71975 (100.0%) / 0 (0.0%) / 0 (0.0%) |
-| Refused (too little in the glass) / declined | 0 (0.0%) / 9 |
-| Take: base / tip | $559950 / $437024 (437024 (43.8%) of it tip) |
-| Avg base / tip per serve | $7.78 / $6.07 |
+| Final till p25/median/p75 | $136 / $194 / $250 |
+| Avg income / expenses per day | $135.1 / $129.3 |
+| Avg daily satisfaction | 56% |
+| Storm-offs | 10051 (16.4%) |
+| Customers per night | 10.3 |
+| Served per bar-minute | 4.83 |
+| Bar standing (avg night) | 2.67 stars |
+| Serves Exact / Close / Wrong | 70724 (100.0%) / 7 (0.0%) / 1 (0.0%) |
+| Refused (too little in the glass) / declined | 0 (0.0%) / 571 |
+| Take: base / tip | $412778 / $327286 (327286 (44.2%) of it tip) |
+| Avg base / tip per serve | $5.84 / $4.63 |
 | Avg spec score / fill score | 100% / 100% |
-| Orders with a serving spec, fully met | 33027 (100.0%) of 33027 |
-| Garnish craft landed | 38697 (53.8%) |
-| Extra orders earned (of serves) | 20477 (28.5%) |
-| Extra orders earned (of exact) | 20477 (28.5%) |
-| Draught share of serves | 5670 (7.9%) |
-| Pints in the good head band | 5670 (100.0%) |
+| Orders with a serving spec, fully met | 32230 (100.0%) of 32230 |
+| Garnish craft landed | 38093 (53.9%) |
+| Extra orders earned (of serves) | 20238 (28.6%) |
+| Extra orders earned (of exact) | 20238 (28.6%) |
+| Pour accuracy on exact serves (avg) | 78% |
+| PERFECT makes (of exact serves) | 1814 (2.6%) |
+| Recipes revealed by run end (avg) | 1.3 |
+| Draught share of serves | 5863 (8.3%) |
+| Pints in the good head band | 5863 (100.0%) |
 | Average head poured | 18% |
-| Snack serves (of serves) | 24059 (33.4%) · $65980 |
-| Glasses bussed | 51707 |
-| Recipes bought (of 200 runs) | 3797 |
-| Brand upgrades bought | 1000 |
-| Tier demands the shelf could not answer | 0 of 16106 (0.0%) |
-| Demanded upgrades bought | 402 |
-| Demanded upgrades OFFERED | 1467 |
+| Snack serves (of serves) | 23642 (33.4%) · $64859 |
+| Glasses bussed | 51265 |
+| Recipes bought (of 200 runs) | 3301 |
+| Brand upgrades bought | 729 |
+| Tier demands the shelf could not answer | 159 of 12516 (1.3%) |
+| Demanded upgrades bought | 727 |
+| Demanded upgrades OFFERED | 1046 |
 
 ## The star track — when a bar reaches each rung
 
@@ -52,10 +56,10 @@ most useful line here: it says a guest written for it would never come.
 | 0.0★ | 200 (100.0%) | 1 / 1 / 1 | 1 |
 | 0.5★ | 200 (100.0%) | 4 / 4 / 4 | 1 |
 | 1.0★ | 200 (100.0%) | 7 / 7 / 7 | 2 |
-| 1.5★ | 200 (100.0%) | 10 / 10 / 11 | 2 |
-| 2.0★ | 200 (100.0%) | 13 / 14 / 14 | 3 |
-| 2.5★ | 200 (100.0%) | 19 / 19 / 20 | 4 |
-| 3.0★ | 102 (51.0%) | 28 / 29 / 30 | 5 |
+| 1.5★ | 200 (100.0%) | 11 / 12 / 12 | 2 |
+| 2.0★ | 198 (99.0%) | 16 / 16 / 17 | 3 |
+| 2.5★ | 193 (96.5%) | 21 / 22 / 23 | 4 |
+| 3.0★ | 24 (12.0%) | 29 / 30 / 30 | 5 |
 | 3.5★ | **none of 200** | — | — |
 | 4.0★ | **none of 200** | — | — |
 | 4.5★ | **none of 200** | — | — |
@@ -84,32 +88,32 @@ went shopping. Only the second column is trouble.
 | Day | Closed | In the red | Red before shopping |
 |---|---|---|---|
 | 1 | 200 | 0 (0.0%) | 0 (0.0%) |
-| 2 | 200 | 85 (42.5%) | 0 (0.0%) |
-| 3 | 200 | 63 (31.5%) | 0 (0.0%) |
-| 4 | 200 | 102 (51.0%) | 0 (0.0%) |
-| 5 | 200 | 43 (21.5%) | 0 (0.0%) |
-| 6 | 200 | 4 (2.0%) | 0 (0.0%) |
-| 7 | 200 | 4 (2.0%) | 0 (0.0%) |
-| 8 | 200 | 50 (25.0%) | 0 (0.0%) |
-| 9 | 200 | 54 (27.0%) | 0 (0.0%) |
-| 10 | 200 | 24 (12.0%) | 0 (0.0%) |
-| 11 | 200 | 0 (0.0%) | 0 (0.0%) |
-| 12 | 200 | 0 (0.0%) | 0 (0.0%) |
-| 13 | 200 | 2 (1.0%) | 0 (0.0%) |
-| 14 | 200 | 10 (5.0%) | 0 (0.0%) |
-| 15 | 200 | 32 (16.0%) | 0 (0.0%) |
-| 16 | 200 | 89 (44.5%) | 0 (0.0%) |
-| 17 | 200 | 95 (47.5%) | 0 (0.0%) |
-| 18 | 200 | 86 (43.0%) | 0 (0.0%) |
-| 19 | 200 | 100 (50.0%) | 0 (0.0%) |
-| 20 | 200 | 135 (67.5%) | 0 (0.0%) |
-| 21 | 200 | 164 (82.0%) | 0 (0.0%) |
-| 22 | 200 | 121 (60.5%) | 0 (0.0%) |
-| 23 | 200 | 57 (28.5%) | 0 (0.0%) |
-| 24 | 200 | 76 (38.0%) | 0 (0.0%) |
-| 25 | 200 | 100 (50.0%) | 0 (0.0%) |
-| 26 | 200 | 120 (60.0%) | 0 (0.0%) |
-| 27 | 200 | 128 (64.0%) | 0 (0.0%) |
-| 28 | 200 | 140 (70.0%) | 0 (0.0%) |
-| 29 | 200 | 132 (66.0%) | 0 (0.0%) |
-| 30 | 200 | 95 (47.5%) | 0 (0.0%) |
+| 2 | 200 | 86 (43.0%) | 0 (0.0%) |
+| 3 | 200 | 85 (42.5%) | 0 (0.0%) |
+| 4 | 200 | 71 (35.5%) | 2 (1.0%) |
+| 5 | 200 | 85 (42.5%) | 0 (0.0%) |
+| 6 | 200 | 57 (28.5%) | 0 (0.0%) |
+| 7 | 200 | 70 (35.0%) | 0 (0.0%) |
+| 8 | 200 | 122 (61.0%) | 1 (0.5%) |
+| 9 | 200 | 130 (65.0%) | 1 (0.5%) |
+| 10 | 200 | 91 (45.5%) | 0 (0.0%) |
+| 11 | 200 | 62 (31.0%) | 1 (0.5%) |
+| 12 | 200 | 23 (11.5%) | 3 (1.5%) |
+| 13 | 200 | 13 (6.5%) | 1 (0.5%) |
+| 14 | 200 | 24 (12.0%) | 3 (1.5%) |
+| 15 | 200 | 80 (40.0%) | 5 (2.5%) |
+| 16 | 200 | 141 (70.5%) | 6 (3.0%) |
+| 17 | 200 | 168 (84.0%) | 8 (4.0%) |
+| 18 | 200 | 182 (91.0%) | 13 (6.5%) |
+| 19 | 199 | 156 (78.4%) | 10 (5.0%) |
+| 20 | 199 | 128 (64.3%) | 11 (5.5%) |
+| 21 | 198 | 120 (60.6%) | 14 (7.1%) |
+| 22 | 198 | 110 (55.6%) | 25 (12.6%) |
+| 23 | 198 | 119 (60.1%) | 18 (9.1%) |
+| 24 | 197 | 14 (7.1%) | 11 (5.6%) |
+| 25 | 196 | 34 (17.3%) | 11 (5.6%) |
+| 26 | 195 | 40 (20.5%) | 7 (3.6%) |
+| 27 | 195 | 43 (22.1%) | 8 (4.1%) |
+| 28 | 194 | 30 (15.5%) | 9 (4.6%) |
+| 29 | 194 | 37 (19.1%) | 12 (6.2%) |
+| 30 | 194 | 34 (17.5%) | 11 (5.7%) |

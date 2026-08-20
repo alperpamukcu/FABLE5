@@ -62,8 +62,12 @@ namespace LastCall.Tests
             var soda = new IngredientCard("soda_klara", "Klara Soda", IngredientType.Bubbly, 2,
                 new IngredientInfo("soda", category: IngredientCategories.Mixer, carbonated: true));
             var run = RunWith(soda, Still("vodka_astra", "vodka", IngredientType.Spirit));
-            run.PourMeasure("vodka_astra", 0.4);
-            run.PourMeasure("soda_klara", 0.6);
+            // At the page's own perfect (2026-08-20): the box rule reads proportions, and
+            // the old 40/60 book ratio sits outside vodka_soda's boxes now.
+            var pv = RatioRecipeMatcher.PerfectPour(
+                RecipeCatalog.CreateDefault().Single(r => r.Id == "vodka_soda"));
+            run.PourMeasure("vodka_astra", pv[0]);
+            run.PourMeasure("soda_klara", pv[1]);
 
             Assert.AreEqual(PrepMethod.Built, run.TinMethod, "the book calls this a Vodka Soda");
             Assert.IsFalse(run.MixRequired, "and a built drink is never worked");
@@ -159,8 +163,9 @@ namespace LastCall.Tests
             var run = new TycoonRun(
                 new Shelf(new[] { new ShelfBottle(soda, 20), new ShelfBottle(vodka, 20) }),
                 new[] { fizzy }, new RunRng("fizz-seed"));
-            run.PourMeasure("vodka_astra", 0.4);
-            run.PourMeasure("soda_klara", 0.6);
+            var pf = RatioRecipeMatcher.PerfectPour(fizzy);
+            run.PourMeasure("vodka_astra", pf[0]);
+            run.PourMeasure("soda_klara", pf[1]);
 
             Assert.AreEqual(PrepMethod.Shaken, run.TinMethod, "the book calls for a shake");
             Assert.IsFalse(run.ShakeBlowsTheTin, "so the tin holds, fizz and all");
@@ -252,16 +257,17 @@ namespace LastCall.Tests
 
             var active = RecipeCatalog.CreateDefault().Where(r => !r.Locked).ToList();
 
+            var pv = RatioRecipeMatcher.PerfectPour(active.Single(r => r.Id == "vodka_soda"));
             var glass = new GlassContents(1.0);
-            glass.Add("vodka_t", 0.40);
-            glass.Add("soda_t", 0.55);
+            glass.Add("vodka_t", pv[0] * 0.95);
+            glass.Add("soda_t", pv[1] * 0.95);
             Assert.AreEqual("vodka_soda",
                 RatioRecipeMatcher.Match(glass, active, id => lookup[id])?.Recipe.Id,
                 "vodka and soda on the open menu is a Vodka Soda, by name");
 
             var wrongSpirit = new GlassContents(1.0);
-            wrongSpirit.Add("gin_t", 0.40);
-            wrongSpirit.Add("soda_t", 0.55);
+            wrongSpirit.Add("gin_t", pv[0] * 0.95);
+            wrongSpirit.Add("soda_t", pv[1] * 0.95);
             Assert.IsNull(RatioRecipeMatcher.Match(wrongSpirit, active, id => lookup[id]),
                 "gin at the same proportions is a different drink — no abstract cousin catches it");
         }
@@ -280,16 +286,17 @@ namespace LastCall.Tests
             var lookup = new System.Collections.Generic.Dictionary<string, IngredientCard>
                 { ["gin_t"] = gin, ["vodka_t"] = vodka, ["tonic_t"] = tonic };
 
+            var pg = RatioRecipeMatcher.PerfectPour(ginTonic);
             var real = new GlassContents(1.0);
-            real.Add("gin_t", 0.40);
-            real.Add("tonic_t", 0.60);
+            real.Add("gin_t", pg[0]);
+            real.Add("tonic_t", pg[1]);
             Assert.AreEqual("gin_tonic",
                 RatioRecipeMatcher.Match(real, new[] { ginTonic }, id => lookup[id])?.Recipe.Id,
                 "gin and tonic at the book ratio is a Gin & Tonic");
 
             var fake = new GlassContents(1.0);
-            fake.Add("vodka_t", 0.40);
-            fake.Add("tonic_t", 0.60);
+            fake.Add("vodka_t", pg[0]);
+            fake.Add("tonic_t", pg[1]);
             Assert.IsNull(RatioRecipeMatcher.Match(fake, new[] { ginTonic }, id => lookup[id]),
                 "vodka at the same proportions is a different drink — the type system could not say so");
         }

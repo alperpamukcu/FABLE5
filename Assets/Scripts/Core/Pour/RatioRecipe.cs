@@ -97,6 +97,36 @@ namespace LastCall.Core
     }
 
     /// <summary>
+    /// The five 20-point boxes every ingredient share falls into (GDD 21 §9, the 2026-08-20
+    /// perfect-pour redesign). The box is what the player is SHOWN — a recipe's menu entry
+    /// lights the box its perfect value sits in, never the value itself — and since the shown
+    /// thing is the promise, the box is also what the matcher judges: in the right box the
+    /// drink counts and pays by closeness, in the wrong box it is simply not the drink.
+    ///
+    /// Boxes are lower-inclusive ([40,60) owns 40), from the author's own example: a perfect
+    /// of 40 lights the yellow 40–60 box, a perfect of 39 lights the orange 20–40 one.
+    /// </summary>
+    public static class RatioBox
+    {
+        public const int Count = 5;
+        public const double Width = 0.20;
+
+        /// <summary>Which box a share sits in, 0–4. Lower-inclusive; a full glass is box 4.
+        /// The epsilon is not decoration: 0.60/0.20 is 2.999…96 in doubles, and without it a
+        /// share of exactly 60% fell into the 40–60 box — the proof harness caught two
+        /// recipes deadlocking on exactly this before the C# ever ran.</summary>
+        public static int IndexOf(double share)
+        {
+            if (share <= 0) return 0;
+            if (share >= 1) return Count - 1;
+            return Math.Min(Count - 1, (int)((share + 1e-9) / Width));
+        }
+
+        public static double Lower(int box) => box * Width;
+        public static double Upper(int box) => (box + 1) * Width;
+    }
+
+    /// <summary>
     /// Matches a poured glass against the recipe table by proportion instead of card count
     /// (GDD 21 §9).
     ///
@@ -104,6 +134,15 @@ namespace LastCall.Core
     /// the customer whether or not it happens to be a Martini; matching one pays Flavor, Mult
     /// and the charge multiplier on top. Inverting that would put the craft layer back in
     /// charge of a game that is now about reading people.
+    ///
+    /// **The 2026-08-20 redesign: the BOX is the acceptance, the PERFECT is the pay.** The
+    /// author's respec gave every recipe one hidden perfect pour and made the visible 20-point
+    /// box the whole contract: "40 vodka koyması gerektiği yerde… 41 koyup [yandaki] bloğa denk
+    /// getirirsen bu tamamen yanlış olacaktır ama 21 koyarsan [aynı] bloğa denk geleceği için
+    /// en azından çok düşük de olsa ücret alacaksın." So <see cref="Satisfies"/> now asks
+    /// box membership instead of the authored min/max band — the authored bands remain the
+    /// recipe's DEFINITION (character, and what the perfect settles inside), they just stopped
+    /// being the acceptance test the player is graded on, because the player cannot see them.
     /// </summary>
     public static class RatioRecipeMatcher
     {
@@ -200,21 +239,53 @@ namespace LastCall.Core
         {
             if (glass.FillFraction < recipe.MinFill) return false;
 
+            // THE BOX IS THE TEST (2026-08-20): each named share must land in the same
+            // 20-point box as the recipe's perfect value — the box the menu lights up — and
+            // must be more than a dash. The dash floor matters most for box 0: a perfect of
+            // 8% mint lights the 0–20 box, and without the floor an empty glass would sit
+            // "in box" for every small ingredient — a Whiskey Smash with no mint is a sour,
+            // not a smash. TraceShare is the judge's own idea of a dash, borrowed whole.
+            var boxes = recipe.PerfectBoxes;
             double accounted = 0;
-            foreach (var requirement in recipe.RatioRequirements)
+            for (int i = 0; i < recipe.RatioRequirements.Count; i++)
             {
+                var requirement = recipe.RatioRequirements[i];
                 double ratio;
                 if (requirement.MinTier > 1)
                     ratio = TopShelfShare(glass, lookup, requirement.Style, requirement.MinTier);
                 else if (requirement.IsStyleBand) byStyle.TryGetValue(requirement.Style, out ratio);
                 else byType.TryGetValue(requirement.Type, out ratio);
-                if (!requirement.Accepts(ratio)) return false;
+                if (ratio < ServiceJudge.TraceShare) return false;
+                if (RatioBox.IndexOf(ratio) != boxes[i]) return false;
                 accounted += ratio;
             }
 
             // Anything the recipe does not name is a stray. A splash is fine; a third of the
             // glass means this is a different drink wearing the recipe's proportions.
             return 1.0 - accounted <= MaxUnnamedShare + 1e-9;
+        }
+
+        /// <summary>
+        /// The shares of the delivered glass, aligned band-for-band with the recipe's
+        /// requirements — the same numbers <see cref="Satisfies"/> tests, surfaced so the
+        /// judge can measure closeness and the run can remember a best make.
+        /// </summary>
+        public static double[] SharesFor(RecipeDefinition recipe, GlassContents glass,
+            Func<string, IngredientCard> lookup)
+        {
+            var bands = recipe?.RatioRequirements;
+            if (bands == null || bands.Count == 0 || glass == null) return Array.Empty<double>();
+            var byType = RatiosByType(glass, lookup);
+            var byStyle = RatiosByStyle(glass, lookup);
+            var shares = new double[bands.Count];
+            for (int i = 0; i < bands.Count; i++)
+            {
+                if (bands[i].MinTier > 1)
+                    shares[i] = TopShelfShare(glass, lookup, bands[i].Style, bands[i].MinTier);
+                else if (bands[i].IsStyleBand) byStyle.TryGetValue(bands[i].Style, out shares[i]);
+                else byType.TryGetValue(bands[i].Type, out shares[i]);
+            }
+            return shares;
         }
 
         /// <summary>
@@ -285,6 +356,141 @@ namespace LastCall.Core
             for (int i = 0; i < n; i++)
                 pour[i] = Math.Min(bands[i].MaxRatio, Math.Max(bands[i].MinRatio, pour[i]));
             return pour;
+        }
+
+        // ── the perfect pour (2026-08-20) ────────────────────────────────────────
+
+        /// <summary>How far inside its box a perfect value must sit, as a share of the glass.
+        /// Bought with arithmetic, not taste: eleven recipes' ideal pours land EXACTLY on a
+        /// 20-point grid line (seven starter highballs at 40/60, the Dry Martini at 80/20…),
+        /// and a two-part drink whose perfects sit ON the edges of adjacent boxes is an
+        /// impossible order — vodka in [40,60) and soda in [60,80) can only sum to 100 at
+        /// exactly 40/60, which no held button will ever pour. So an edge value is walked
+        /// into one of its neighbouring boxes before it is called perfect.</summary>
+        public const double BoxEdgeGuard = 0.02;
+
+        /// <summary>
+        /// The ONE pour this recipe is perfect at — the hidden number the whole 2026-08-20
+        /// respec turns on. <see cref="IdealPour"/> settled, then any component within
+        /// <see cref="BoxEdgeGuard"/> of a 20-point grid line is nudged into a box interior
+        /// and the difference is settled across the others.
+        ///
+        /// WHICH side of the line, and by how much, comes from a stable hash of the recipe id:
+        /// deterministic (a seed reproduces, the parity test can pin values), and DIFFERENT per
+        /// recipe on purpose. Seven starter highballs share the same 40/60 ideal; hashing gives
+        /// each its own perfect (38/62, 43/57…), which is exactly what makes learning a drink's
+        /// perfect worth something — the box bar may look alike, the number under it does not.
+        /// </summary>
+        public static double[] PerfectPour(RecipeDefinition recipe)
+        {
+            var bands = recipe?.RatioRequirements;
+            if (bands == null || bands.Count == 0) return Array.Empty<double>();
+
+            // ATTEMPTS, because directions can deadlock: nudge a 40/60 highball's two edge
+            // components both UP and the settle has nowhere to put the extra 4% — both sit
+            // pinned at their boxes' lower guard. Each attempt re-rolls every direction bit
+            // from the hash; the first one whose result sums to a glass with every component
+            // clear of the grid wins. Deterministic: same id, same answer, every build.
+            double[] pour = null;
+            for (int attempt = 0; attempt < 8; attempt++)
+            {
+                pour = TryPerfect(recipe, bands, attempt);
+                if (SettleHolds(pour)) return pour;
+            }
+            return pour;   // the validity test over the catalogue is the backstop
+        }
+
+        private static bool SettleHolds(double[] pour)
+        {
+            double sum = 0;
+            foreach (var v in pour)
+            {
+                if (DistanceToEdge(v) < BoxEdgeGuard - 1e-6) return false;
+                sum += v;
+            }
+            return Math.Abs(sum - 1.0) <= 1e-6;
+        }
+
+        private static double[] TryPerfect(RecipeDefinition recipe,
+            IReadOnlyList<RatioRequirement> bands, int attempt)
+        {
+            var pour = IdealPour(recipe);
+            int n = pour.Length;
+            for (int pass = 0; pass < 6; pass++)
+            {
+                int worst = -1;
+                for (int i = 0; i < n; i++)
+                    if (DistanceToEdge(pour[i]) < BoxEdgeGuard - 1e-9) { worst = i; break; }
+                if (worst < 0) break;
+
+                // Walk the offender to guard-plus-jitter inside a neighbouring box. The side
+                // is the hash's call unless the authored band only reaches one of them.
+                uint h = Hash(recipe.Id, worst, attempt);
+                double edge = Math.Round(pour[worst] / RatioBox.Width) * RatioBox.Width;
+                double inset = BoxEdgeGuard + (h % 300) / 10000.0;   // 0.020–0.050 inside
+                double up = edge + inset, down = edge - inset;
+                bool preferUp = (h & 0x400) != 0;
+                double target =
+                    Fits(bands[worst], preferUp ? up : down) ? (preferUp ? up : down)
+                    : Fits(bands[worst], preferUp ? down : up) ? (preferUp ? down : up)
+                    : preferUp ? up : down;   // neither fits the authored band: box wins
+                pour[worst] = target;
+
+                // Settle the whole pour back to a full glass, the way IdealPour does, with
+                // the BOX WALLS added: every component may flex only inside its current box
+                // interior (guard kept) intersected with its authored band — the box winning
+                // outright where the two cannot agree. Settling cannot cross a box wall, so
+                // a component fixed by an earlier pass stays in the box it was walked into.
+                for (int settle = 0; settle < 24; settle++)
+                {
+                    double sum = 0;
+                    for (int i = 0; i < n; i++) sum += pour[i];
+                    double need = 1.0 - sum;
+                    if (Math.Abs(need) < 1e-9) break;
+
+                    double slack = 0;
+                    var room = new double[n];
+                    for (int i = 0; i < n; i++)
+                    {
+                        int box = RatioBox.IndexOf(pour[i]);
+                        double lo = Math.Max(bands[i].MinRatio, RatioBox.Lower(box) + BoxEdgeGuard);
+                        double hi = Math.Min(bands[i].MaxRatio, RatioBox.Upper(box) - BoxEdgeGuard);
+                        if (lo > hi)
+                        {
+                            lo = RatioBox.Lower(box) + BoxEdgeGuard;
+                            hi = RatioBox.Upper(box) - BoxEdgeGuard;
+                        }
+                        room[i] = need > 0 ? hi - pour[i] : pour[i] - lo;
+                        if (room[i] < 0) room[i] = 0;
+                        slack += room[i];
+                    }
+                    if (slack <= 1e-12) break;
+                    double step = Math.Min(Math.Abs(need), slack) * Math.Sign(need);
+                    for (int i = 0; i < n; i++) pour[i] += step * (room[i] / slack);
+                }
+            }
+            return pour;
+        }
+
+        private static double DistanceToEdge(double share)
+        {
+            double inBox = share % RatioBox.Width;
+            return Math.Min(inBox, RatioBox.Width - inBox);
+        }
+
+        private static bool Fits(RatioRequirement band, double value) =>
+            value >= band.MinRatio - 1e-9 && value <= band.MaxRatio + 1e-9;
+
+        /// <summary>FNV-1a over the id plus salts — stable across platforms and sessions,
+        /// which System.String.GetHashCode is not. The perfect pour must never move between
+        /// two runs of the same build.</summary>
+        private static uint Hash(string id, int component, int pass)
+        {
+            uint h = 2166136261u;
+            foreach (char c in id) { h ^= c; h *= 16777619u; }
+            h ^= (uint)component; h *= 16777619u;
+            h ^= (uint)pass; h *= 16777619u;
+            return h;
         }
 
         /// <summary>How much of the glass may be ingredients the recipe never mentions.

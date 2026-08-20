@@ -56,9 +56,11 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 
 ## 5 · Tarifler ve eşleme
 
-- **53 tarif** (`recipes.json` ↔ `RecipeCatalog` parite testli). 4'ü canlı başlar (draught, neat_pour, vodka_soda, gin_sour); 49'u satın alınarak açılır.
+- **54 tarif** (`recipes.json` ↔ `RecipeCatalog` parite testli). 4'ü canlı başlar (draught, neat_pour, vodka_soda, gin_sour); 49'u satın alınarak açılır.
 - **Bantlar:** her kokteyl **stil bantlı** (cin ≠ votka); yalnız draught + neat_pour tip bantlı (marka-bağımsız). Stil+tip karışımı kurucuda reddedilir.
-- **Eşleme (`RatioRecipeMatcher`):** MinFill kapısı (yalnız draught 0.75) → her bant payı kabul etmeli (sınırlar dahil) → adsız pay ≤ **0.15**. En yüksek rank kazanır; tarif bonus, kapı değil.
+- **Eşleme (`RatioRecipeMatcher`, 2026-08-20 mükemmel-döküm respeci):** MinFill kapısı (yalnız draught 0.75) → her adlı pay **mükemmel değerin 20'lik KUTUSUNDA** olmalı (kutular alt-sınır-dahil: tam 40 → 40–60 kutusu) VE ≥ **%5** (tutam malzeme sayılmaz — nanesiz Smash, Sour'dur) → adsız pay ≤ **0.15**. En yüksek rank kazanır. El yazması min/max bantlar tarifin TANIMI olarak kaldı (mükemmel onların içine oturur) ama kabul testi değil — oyuncu bandı göremez, kutuyu görür.
+- **Mükemmel döküm (`PerfectPour`, GDD 21 §9a):** `IdealPour` + ızgara kenarı koruması (kenardaki değer, tarif kimliğinin FNV hash'iyle 2–5 puan kutu içine itilir; yedi 40/60 highball'un her biri kendi mükemmelini taşır: 36.6/63.4, 42.5/57.5…). Katalog geneli test: toplam=1, her değer kenardan ≥2 puan içeride, ≥%6, ve her tarifin mükemmel dökümü TÜM kitaba karşı kendisi olarak okunur (0 rank çakışması, 52 tarif).
+- **Öğrenme durumu (`TycoonRun`, koşu ömürlü):** Exact servis en iyi yapımı yazar (`BestMakeFor`: doğruluk + dökülen paylar); her malzeme mükemmele **±2.5 puan** içinde inerse sayfa **mükemmellenir** (`IsPerfected`) ve `ExactPourFor` kesin sayıları verir — o âna kadar FIRLATIR (InspectId deseninin aynısı; iade sayfayı geri alır, öğrenilen geceyi almaz).
 - **MinTier (kalite bandı):** martinez (cin≥T2), boulevardier (viski≥T2), rosita (tekila≥T2), el_presidente (rom≥T2), **vesper (cin≥T3 + votka≥T2)**. Ucuz şişe bandı doldurmaz — hata mesajı yok, içki "daha azı" okunur.
 - **Rank kademeleri:** 1–8 başlangıç (kapısız) · 9–14 → 2.0★ · 15–21 → 3.0★ · 22+ → 4.0★. Fiyat `max(9, 5+5(rank−2)/2)`. Alım kilitli stok stillerini kataloğa salar.
 
@@ -68,12 +70,12 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 
 | Kalem | Formül |
 |---|---|
-| Taban fiyat | `3 + (rank+1)/2` (bilerek düşük — $4–17) |
+| Taban fiyat | `3 + (rank+1)/2` (bilerek düşük — $4–17) × **(0.10 + 0.90 × doğruluk)** (2026-08-20): doğruluk = mükemmel oranlara yakınlık, pay-ağırlıklı; doğru kutu her zaman BİR ŞEY kazandırır (taban $1 tabanı) |
 | Stok primi | seçkin Spirit/Bitter bandı başına `(rafın en iyi tier−1) × $2` |
 | Kalabalık çarpanı | HighRoller ×1.25 · Regular ×1.0 · Broke ×0.75 |
-| **Bahşiş (asıl kazanç)** | `taban × kalite`; kalite = 0.45 hız + 0.35 zanaat + 0.20 doluluk. Zanaat (2026-08-11): kokteylde `0.6 × garnitür-spec + 0.4 × YÖNTEM` — yöntem, SİPARİŞ EDİLEN tarifin `Prep`'ine karşı (Shaken çalkala ister, Stirred kaşık ister; yanlış karıştırma = hiç karıştırmama, çalkalanmış Martini berelidir; Built umursamaz). Draught'ta zanaat = köpük. Ekstra tur artık doğru yöntemi de ister. Broke/Yanlış/0 taban → bahşiş yok; **Close → bahşişin yarısı** (`CloseTipShare`, 2026-08-14) |
-| **Yakın (Close)** | **istenen içki, yanlış oranda** (2026-08-14): tarifin adını andığı her bant bardakta (≥%5), yabancı pay eşleştiricinin kendi %15'i içinde, ama paylar bandı kaçırmış → menü fiyatı, **bahşişin yarısı**. Tier de affedilir: kuyu ciniyle kurulan Vesper buraya düşer. *Aynı aileden başka bir içki* Close değil, Yanlış'tır. Bantsız sipariş (bira, sek) Exact ya da hiç. Eski kural ("baskın TİP eşleşirse") stil bantları yüzünden **hiç ateşlenemiyordu** |
-| Yanlış içki | *teslim edilenin* taban fiyatı (tanımsızsa $0) |
+| **Bahşiş (asıl kazanç)** | `ödenen taban × kalite` (yalnız Exact, 2026-08-20); kalite = **0.35 hız + 0.25 zanaat + 0.20 doğruluk + 0.20 doluluk**. Zanaat (2026-08-11): kokteylde `0.6 × garnitür-spec + 0.4 × YÖNTEM` — yöntem, SİPARİŞ EDİLEN tarifin `Prep`'ine karşı (Shaken çalkala ister, Stirred kaşık ister; yanlış karıştırma = hiç karıştırmama, çalkalanmış Martini berelidir; Built umursamaz). Draught'ta zanaat = köpük. Ekstra tur artık doğru yöntemi de ister. Broke/Yanlış/0 taban → bahşiş yok; Close bahşiş almaz — kasada ödeme yok (2026-08-20) |
+| **Yakın (Close)** | **istenen içki, kutusunun dışında** (2026-08-20): tarifin adını andığı her bant bardakta (≥%5), yabancı pay %15 içinde, ama bir pay KUTUSUNU kaçırmış → **$0, bahşiş yok** ("tamamen yanlış" — kutu menüde herkesin okuyabildiği yerde). Memnuniyet 0.30: kendi içkisinin bozulmuşu, yabancı içkiden az küstürür (0.05'e karşı). Tier hâlâ affedilir: kuyu ciniyle Vesper buraya düşer. *Aynı aileden başka bir içki* Yanlış'tır. Bantsız sipariş (bira, sek) Exact ya da hiç. (2026-08-14 yarım-bahşiş hâli, kutu görünür olunca kaldırıldı: okunabilir uçurum tuzak değil hedeftir) |
+| Yanlış içki | *teslim edilenin* taban fiyatı × kendi doğruluğu (tanımsızsa $0) |
 | Ret (doluluk <0.35) | $0, memnuniyet 0.02 · Decline: $0, 0.15 |
 | Atıştırmalık | tabına fiyat (bahşişsiz); sabah geri alım `fiyat−1` → kâse başına net $1/birim |
 

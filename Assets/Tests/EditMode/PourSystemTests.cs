@@ -289,23 +289,34 @@ namespace LastCall.Tests
 
         private static IReadOnlyList<RecipeDefinition> Book => new[] { Martini() };
 
+        // REWRITTEN 2026-08-20: the acceptance moved from the authored min/max band to
+        // the 20-point BOX the recipe's perfect sits in — the box is what the menu shows,
+        // so the box is what the matcher judges. The pours here are derived from the
+        // recipe's own PerfectPour so the tests hold whichever boxes the id-hash settles on.
         [Test]
-        public void APourInsideEveryBand_IsTheDrink()
+        public void APourInsideEveryLitBox_IsTheDrink()
         {
-            // 0.64 + 0.16 fills 80% of the glass at an 80/20 ratio — note the two are not
-            // the same number, which is exactly the trap the UI has to keep the player out of.
-            var match = RatioRecipeMatcher.Match(Glass(("gin", 0.64), ("vermouth", 0.16)), Book, Look);
+            var p = RatioRecipeMatcher.PerfectPour(Martini());
+            // 80% of a glass at the perfect proportions — the volume and the ratio are not
+            // the same number, which is exactly the trap the UI keeps the player out of.
+            var match = RatioRecipeMatcher.Match(
+                Glass(("gin", p[0] * 0.8), ("vermouth", p[1] * 0.8)), Book, Look);
 
             Assert.IsNotNull(match);
             Assert.AreEqual("martini", match.Recipe.Id);
         }
 
         [Test]
-        public void BandEdgesAreInclusive()
+        public void BoxEdgesAreLowerInclusive()
         {
-            // Exactly 70/30, both ratios sitting on a band edge. A band the player can see
-            // must not have invisible slivers cut off its ends.
-            var match = RatioRecipeMatcher.Match(Glass(("gin", 0.56), ("vermouth", 0.24)), Book, Look);
+            // A share sitting EXACTLY on its box's lower edge is in the box — the menu draws
+            // that edge, so it must not have an invisible sliver cut off it. Built from the
+            // recipe's own boxes so the pin survives the id-hash.
+            var m = Martini();
+            double g = RatioBox.Lower(m.PerfectBoxes[0]);
+            double v = Math.Min(RatioBox.Upper(m.PerfectBoxes[1]) - 0.01, 1.0 - g - 0.05);
+            var match = RatioRecipeMatcher.Match(
+                Glass(("gin", g), ("vermouth", v), ("bitters", 1.0 - g - v)), Book, Look);
 
             Assert.IsNotNull(match);
         }
@@ -322,8 +333,14 @@ namespace LastCall.Tests
         [Test]
         public void ASplashOfSomethingElse_IsTolerated()
         {
+            // The splash dilutes the named shares, so the pour starts from the box floors
+            // rather than the perfect: what this pins is that a 5% stray alone never
+            // unmakes the drink.
+            var m = Martini();
+            double g = RatioBox.Lower(m.PerfectBoxes[0]) + 0.05;
+            double v = 0.95 - g;
             var match = RatioRecipeMatcher.Match(
-                Glass(("gin", 0.68), ("vermouth", 0.18), ("bitters", 0.05)), Book, Look);
+                Glass(("gin", g), ("vermouth", v), ("bitters", 0.05)), Book, Look);
 
             Assert.IsNotNull(match, "a 5% stray is a bartender's splash");
         }
@@ -473,7 +490,9 @@ namespace LastCall.Tests
 
                 var cards = new Dictionary<string, IngredientCard>();
                 var glass = new GlassContents(1.0);
-                var pour = RatioRecipeMatcher.IdealPour(recipe);
+                // The PERFECT pour since 2026-08-20 — the number the menu reveals is the
+                // number that must make the drink it names.
+                var pour = RatioRecipeMatcher.PerfectPour(recipe);
                 for (int i = 0; i < bands.Count; i++)
                 {
                     string id = "b_" + bands[i].Style;
@@ -493,8 +512,9 @@ namespace LastCall.Tests
         [Test]
         public void ATopShelfBand_IsFilledByTheGoodBottle()
         {
+            var p = RatioRecipeMatcher.PerfectPour(TopShelfBook[0]);
             var match = RatioRecipeMatcher.Match(
-                Glass(("top_gin", 0.80), ("vermouth", 0.20)), TopShelfBook, LookTiered);
+                Glass(("top_gin", p[0]), ("vermouth", p[1])), TopShelfBook, LookTiered);
 
             Assert.IsNotNull(match);
             Assert.AreEqual("reserve_martini", match.Recipe.Id);
@@ -536,8 +556,9 @@ namespace LastCall.Tests
                     }),
             };
 
+            var p = RatioRecipeMatcher.PerfectPour(anyGin[0]);
             Assert.IsNotNull(RatioRecipeMatcher.Match(
-                Glass(("well_gin", 0.80), ("vermouth", 0.20)), anyGin, LookTiered));
+                Glass(("well_gin", p[0]), ("vermouth", p[1])), anyGin, LookTiered));
         }
     }
 }

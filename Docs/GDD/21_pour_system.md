@@ -200,6 +200,57 @@ who serves the perfect emotional mix and matches no recipe should still satisfy 
 they just earn fewer points doing it. Inverting that — forcing recipe compliance — would put
 the craft layer back in charge of a game that is now about reading people.
 
+## 9a. The perfect pour and the five boxes (2026-08-20, author-directed)
+
+**Every recipe now has ONE perfect pour, and the player is never shown it.** The respec, in
+the author's words: each recipe carries a perfect ratio (e.g. 40 vodka / 60 soda); the menu
+shows only which **20-point box** each ingredient's perfect sits in — a five-box discrete
+bar, `0–20 red · 20–40 orange · 40–60 yellow · 60–80 green · 80–100 dark green` — until the
+drink has been made **perfectly** once, after which the menu shows the exact numbers.
+
+**The box is the acceptance; the perfect is the pay.**
+
+- Boxes are **lower-inclusive** (an exact 40 lights the 40–60 box — the author's own
+  example), and `RatioBox.IndexOf` carries an epsilon because 0.60/0.20 is 2.999… in
+  doubles.
+- A named ingredient landing in the **wrong box is not the drink** ("tamamen yanlış"): the
+  matcher refuses it, whatever the old min/max band would have said. The authored bands in
+  `recipes.json` remain the recipe's DEFINITION — the perfect settles inside them — but they
+  stopped being the acceptance test, because the player cannot see them and CAN see the box.
+- In the right box, the serve pays by **closeness to the perfect**, floored so the right box
+  always earns something (§ the judge, GDD 23 §4).
+- A dash is still not an ingredient: a named share below `TraceShare` (5%) refuses the
+  match, which matters most for box 0 — a Whiskey Smash with no mint is a sour, not a smash.
+- The stray allowance (15%) and MinFill are unchanged.
+
+**Where the perfect comes from.** `RatioRecipeMatcher.PerfectPour`: the settled `IdealPour`
+of the authored bands, then any component within **2 points of a 20-grid edge** is walked
+into a box interior — eleven recipes' ideals sit EXACTLY on a grid line, and a two-part
+drink whose perfects sit on adjacent edges (40/60) is an impossible order, since only an
+exact 40/60 pour satisfies both boxes. Which side of the line, and by how much (2–5 points),
+comes from a stable FNV hash of the recipe id: deterministic across builds, and DIFFERENT
+per recipe — the seven starter highballs that shared one 40/60 ideal now each carry their
+own perfect (36.6/63.4, 42.5/57.5, 37.1/62.9 …), which is what makes learning a drink's
+number worth something. Direction sets that deadlock the settle are re-rolled per attempt;
+the whole derivation is pinned by catalogue-wide tests (sum = 1, clear of every edge, above
+the dash floor, and **every recipe's perfect pour reads as itself** against the full book —
+zero rank collisions, proven over all 52 authored recipes).
+
+**What the run learns** (`TycoonRun`): a served **Exact** records the pour as the page's
+best make (`BestMakeFor` — accuracy + the shares it was poured at, printed under the boxes
+so the player can triangulate); every ingredient within the **perfect window** (±2.5 points)
+flips the page to **perfected** for the rest of the run. `ExactPourFor` is the reveal gate
+and it THROWS until then — the same shape as the ID card's `InspectId`, because a hidden
+number the UI can reach around is decorative (it has happened twice). Derived-band recipes
+(draught, neat pour) are carved out: a pint's craft is its head, and there is nothing to
+learn or reveal on a neat pour.
+
+**Overtaken by this section:** §9's "the recipe book teaches each pourable recipe as its
+bands" (the book now lights boxes, then reveals numbers); the generosity pass's ±20% bands
+as the graded tolerance (they persist only as the perfect's derivation source); and the old
+exact-share printout on every spec card (2026-08-02's "show the player the perfect number"
+— inverted deliberately: the number is now the REWARD).
+
 ## 10. Draught beer (2026-07-27)
 
 Not every order is a cocktail. **Beer is pulled, not built**: it comes from a keg, it never

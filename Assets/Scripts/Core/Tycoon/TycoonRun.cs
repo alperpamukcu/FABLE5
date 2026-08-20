@@ -255,6 +255,48 @@ namespace LastCall.Core
 
         private readonly HashSet<string> _boughtRecipes = new HashSet<string>();
 
+        // ── the perfect pour: what this run has LEARNED (2026-08-20) ────────────
+        // Run-lifetime like _boughtRecipes, and deliberately never reset by the day flip or
+        // by a refund: a refund takes the PAGE back, not the night you spent learning the
+        // pour. Nothing here survives the run — there is no save layer, and knowledge that
+        // outlived a seed would make two identical seeds play differently.
+
+        private readonly HashSet<string> _perfectedRecipes = new HashSet<string>();
+        private readonly Dictionary<string, RecipeBestMake> _bestMakes =
+            new Dictionary<string, RecipeBestMake>();
+
+        /// <summary>Has this drink been made PERFECTLY this run — every ingredient inside
+        /// the window? The menu shows the exact numbers only when this says yes.</summary>
+        public bool IsPerfected(string recipeId) =>
+            recipeId != null && _perfectedRecipes.Contains(recipeId);
+
+        /// <summary>How many pages this run has perfected (the sim reports it).</summary>
+        public int PerfectedCount => _perfectedRecipes.Count;
+
+        /// <summary>
+        /// THE REVEAL GATE (2026-08-20). The exact perfect pour, band for band — and it
+        /// THROWS until the drink has been made perfectly once, the same way
+        /// <see cref="CustomerVisit.Order"/> throws before the ID is read. This is the only
+        /// door out of Core for the number; a menu that wants to show it has to have earned
+        /// it, and a menu that routes around it is the bug, not the caller.
+        /// </summary>
+        public IReadOnlyList<double> ExactPourFor(RecipeDefinition recipe)
+        {
+            if (recipe == null) throw new ArgumentNullException(nameof(recipe));
+            if (!recipe.HasAuthoredRatios)
+                throw new InvalidOperationException(
+                    $"'{recipe.Id}' has no authored pour — nothing to reveal.");
+            if (!_perfectedRecipes.Contains(recipe.Id))
+                throw new InvalidOperationException(
+                    $"'{recipe.Id}' has not been made perfectly yet — the menu knows only the boxes.");
+            return (double[])recipe.Perfect.Clone();
+        }
+
+        /// <summary>The best this run has made of a drink, or null if it never came out
+        /// right. What the menu prints under the boxes — your own hands' record.</summary>
+        public RecipeBestMake BestMakeFor(string recipeId) =>
+            recipeId != null && _bestMakes.TryGetValue(recipeId, out var best) ? best : null;
+
         /// <summary>What the book still holds: locked recipes not yet bought.</summary>
         public IEnumerable<RecipeDefinition> LockedRecipes
         {
@@ -1721,13 +1763,29 @@ namespace LastCall.Core
             // The verdict is priced off the DRINK — the recipe matched, the garnishes asked
             // for, the fill (the 2026-07-22 pivot, made total 2026-08-02: the emotion layer
             // is gone; what a customer gives you back is their reaction to the cocktail).
+            // The lookup rides along since 2026-08-20 so the judge can measure the pour
+            // against the recipe's perfect — accuracy is money now.
             var verdict = ServiceJudge.Judge(visit, matchKind, delivered, CrowdToday, Ambience,
-                served: match);
+                served: match, lookup: IngredientOf);
 
             // The night remembers its best EXACT serve (2026-08-02): the menu cap reads it.
             if (matchKind == OrderMatch.Exact && match?.Recipe != null
                 && match.Recipe.Rank > _bestRankServedTonight)
                 _bestRankServedTonight = match.Recipe.Rank;
+
+            // What the run LEARNED from this serve (2026-08-20): an exact serve of an
+            // authored recipe writes its shares into the book as the best make if it beat
+            // the old one, and a perfect make reveals the recipe's exact numbers for the
+            // rest of the run. Keyed on the ORDERED page — that is the drink being learned.
+            if (matchKind == OrderMatch.Exact && visit.OrderTruth.Wanted.HasAuthoredRatios)
+            {
+                var wanted = visit.OrderTruth.Wanted;
+                if (!_bestMakes.TryGetValue(wanted.Id, out var best)
+                    || verdict.Accuracy > best.Accuracy)
+                    _bestMakes[wanted.Id] = new RecipeBestMake(verdict.Accuracy,
+                        RatioRecipeMatcher.SharesFor(wanted, delivered, IngredientOf));
+                if (verdict.PerfectMake) _perfectedRecipes.Add(wanted.Id);
+            }
 
             // The VESSEL that actually went out, remembered on the visit (audit 2026-08-11):
             // the dirty glass on the stool used to be conjured from the RECIPE's glass id,

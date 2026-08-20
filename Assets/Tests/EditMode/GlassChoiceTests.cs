@@ -69,7 +69,7 @@ namespace LastCall.Tests
             // delete it then, and keep the one below.
             var run = NewBar();
             var recipe = VodkaSoda(run);
-            var ideal = RatioRecipeMatcher.IdealPour(recipe);
+            var ideal = RatioRecipeMatcher.PerfectPour(recipe);   // the box rule, 2026-08-20
             double volume = 0.98 * 1.0;   // a full highball, which is the glass this drink names
 
             run.PourMeasure("vodka_astra", volume * ideal[0]);
@@ -92,7 +92,7 @@ namespace LastCall.Tests
             // is recognised, re-housed into its own glass, and finished there.
             var run = NewBar();
             var recipe = VodkaSoda(run);
-            var ideal = RatioRecipeMatcher.IdealPour(recipe);
+            var ideal = RatioRecipeMatcher.PerfectPour(recipe);   // the box rule, 2026-08-20
             var ids = new[] { "vodka_astra", "soda_klara" };
 
             for (int round = 0; round < 12; round++)

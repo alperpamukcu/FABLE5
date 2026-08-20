@@ -14,7 +14,8 @@ namespace LastCall.EditorTools
     /// Batch-plays seeded tycoon runs (PLAN_tycoon_pivot P3 gate) and writes
     /// Docs/tycoon_sim_report.md. The bot reads only what a player could: the order on the
     /// seat, its recipe bands, and the always-visible half of the read. It builds each
-    /// ordered drink at band midpoints with intent-aligned bottles, takes nine seconds of
+    /// ordered drink at the middle of each ingredient's lit 20-point box (the revealed
+    /// perfect once a page is perfected) with intent-aligned bottles, takes nine seconds of
     /// bar-time per drink, restocks at day end, and buys stools when flush. A floor, not
     /// a prediction.
     ///
@@ -893,6 +894,7 @@ namespace LastCall.EditorTools
             }
 
             stats.Runs++;
+            stats.RevealedSum += run.PerfectedCount;
             stats.DaysSurvived.Add(run.Ledger.History.Count);
             stats.FinalMoney.Add(run.Money);
             if (run.Phase == TycoonPhase.Closed) stats.Bankruptcies++;
@@ -974,7 +976,8 @@ namespace LastCall.EditorTools
         }
 
         /// <summary>
-        /// Builds the ordered recipe at band midpoints. Bottle choice inside a type prefers
+        /// Builds the ordered recipe at the lit boxes' middles (the revealed perfect once
+        /// the page is perfected). Bottle choice inside a type prefers
         /// charges aligned with the seat's visible intent — the same information a player
         /// has without opening the licence.
         /// </summary>
@@ -1027,6 +1030,41 @@ namespace LastCall.EditorTools
             return run.DrinkReady;
         }
 
+        /// <summary>
+        /// Where a player who can only see the lit boxes would aim: each ingredient at its
+        /// box's middle, settled to a full glass without leaving anybody's box — the same
+        /// proportional settle the book's own pours use. Deterministic, so a seed reproduces.
+        /// </summary>
+        private static double[] BoxMiddleAim(RecipeDefinition recipe)
+        {
+            var bands = recipe.RatioRequirements;
+            int n = bands.Count;
+            var aim = new double[n];
+            for (int i = 0; i < n; i++)
+                aim[i] = RatioBox.Lower(recipe.PerfectBoxes[i]) + RatioBox.Width * 0.5;
+            for (int pass = 0; pass < 24; pass++)
+            {
+                double sum = 0;
+                for (int i = 0; i < n; i++) sum += aim[i];
+                double need = 1.0 - sum;
+                if (Math.Abs(need) < 1e-9) break;
+                double slack = 0;
+                var room = new double[n];
+                for (int i = 0; i < n; i++)
+                {
+                    double lo = RatioBox.Lower(recipe.PerfectBoxes[i]) + 0.01;
+                    double hi = RatioBox.Upper(recipe.PerfectBoxes[i]) - 0.01;
+                    room[i] = need > 0 ? hi - aim[i] : aim[i] - lo;
+                    if (room[i] < 0) room[i] = 0;
+                    slack += room[i];
+                }
+                if (slack <= 1e-12) break;
+                double step = Math.Min(Math.Abs(need), slack) * Math.Sign(need);
+                for (int i = 0; i < n; i++) aim[i] += step * (room[i] / slack);
+            }
+            return aim;
+        }
+
         private static bool BuildOrderedDrink(TycoonRun run, CustomerVisit visit,
             Hands hands, double fillTarget = 0.85)
         {
@@ -1059,11 +1097,18 @@ namespace LastCall.EditorTools
             // It also means the tin now holds the WHOLE drink when the glassware is chosen,
             // so the bot's Gin & Tonic reaches for a highball on the strength of being a
             // Gin & Tonic rather than of being pure gin.
-            // The EXACT pour the book prints (2026-08-02), not the bands' raw midpoints:
-            // those total 103% on a Gin Sour and 94% on an Espresso Martini, so the bot was
-            // measuring a bartender who cannot add up. IdealPour is inside every band and
-            // fills the glass, which is what the card now tells the player to do.
-            var ideal = RatioRecipeMatcher.IdealPour(recipe);
+            // THE BOT PLAYS THE DISCOVERY LOOP (2026-08-20). The menu no longer prints the
+            // exact pour — it lights one 20-point box per ingredient, and the exact number is
+            // revealed only after a PERFECT make. So the bot aims where a player reading that
+            // menu would aim: the middle of each lit box until the run has perfected the
+            // recipe, the revealed perfect after. A bot that poured the perfect from day one
+            // would reveal every page on its first serve and measure nothing about the
+            // pre-reveal economy, which is most of the game now. (Before this the bot poured
+            // IdealPour — the exact number the OLD menu printed, which was the same honesty
+            // for the old rules.)
+            var ideal = run.IsPerfected(recipe.Id)
+                ? RatioRecipeMatcher.PerfectPour(recipe)
+                : BoxMiddleAim(recipe);
             for (int bi = 0; bi < recipe.RatioRequirements.Count; bi++)
             {
                 var band = recipe.RatioRequirements[bi];
@@ -1278,6 +1323,10 @@ namespace LastCall.EditorTools
             }
             public long BaseSum, TipSum;
             public double SpecScoreSum, FillScoreSum;
+            // The perfect-pour game (2026-08-20): how close exact serves land, how many
+            // of them are PERFECT, and how many pages a run has revealed by its end.
+            public double AccuracySum;
+            public int PerfectMakes, RevealedSum;
             // v5 P12: the night is open, so throughput is a result rather than a setting.
             public double NightSecondsSum, StarsSum;
             public int NightsClosed;
@@ -1325,6 +1374,10 @@ namespace LastCall.EditorTools
                 TipSum += verdict.Tip;
                 SpecScoreSum += verdict.SpecScore;
                 FillScoreSum += verdict.FillScore;
+                // The perfect-pour game (2026-08-20): closeness is money now, and the reveal
+                // rate is the number the PerfectWindow constant is tuned against.
+                if (verdict.Match == OrderMatch.Exact) AccuracySum += verdict.Accuracy;
+                if (verdict.PerfectMake) PerfectMakes++;
                 if (specRequests > 0)
                 {
                     SpecOrders++;
@@ -1399,7 +1452,8 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"Runs: **{Runs}** of {requested}" +
                               (Stuck > 0 ? $" ({Stuck} abandoned as stuck)" : "") +
                               $", horizon {DayCap} days, one drink per {DrinkBuildSeconds:0}s of bar time.");
-                sb.AppendLine("Floor bot: serves the named order at band midpoints, pulls a pint");
+                sb.AppendLine("Floor bot: aims each ingredient at the middle of its lit 20-point box");
+                sb.AppendLine("(the revealed perfect once a page is perfected), pulls a pint");
                 sb.AppendLine("leaned over then straightened, and shops — stock, recipes, stools,");
                 sb.AppendLine("glass steps, and one brand upgrade a night it never once affords.");
                 sb.AppendLine("Every survival figure is a floor.");
@@ -1425,6 +1479,9 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Garnish craft landed | {Pct(CraftServes, Serves)} |");
                 sb.AppendLine($"| Extra orders earned (of serves) | {Pct(ExtraOrders, Serves)} |");
                 sb.AppendLine($"| Extra orders earned (of exact) | {Pct(ExtraOrders, Exact)} |");
+                sb.AppendLine($"| Pour accuracy on exact serves (avg) | {AccuracySum / Math.Max(1, Exact):P0} |");
+                sb.AppendLine($"| PERFECT makes (of exact serves) | {Pct(PerfectMakes, Exact)} |");
+                sb.AppendLine($"| Recipes revealed by run end (avg) | {(double)RevealedSum / Math.Max(1, Runs):0.0} |");
                 sb.AppendLine($"| Draught share of serves | {Pct(Pints, Serves)} |");
                 sb.AppendLine($"| Pints in the good head band | {Pct(GoodPints, Pints)} |");
                 sb.AppendLine($"| Average head poured | {HeadSum / Math.Max(1, Pints):P0} |");

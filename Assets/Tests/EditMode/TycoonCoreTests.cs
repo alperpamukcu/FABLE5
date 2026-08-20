@@ -158,18 +158,26 @@ namespace LastCall.Tests
                 ServiceJudge.Compare(order, null, Glass(("gin", 0.9)), Look));
         }
 
+        // REWRITTEN 2026-08-20 (this replaces ADrinkMadeWrong_IsPaidFor_ButNotTippedLikeAGoodOne,
+        // which pinned the P11 half-tip haircut). The box respec made the middle grade honest
+        // the other way: the 20-point box is ON THE MENU for everyone to read, so missing it
+        // is missing the drink — "tamamen yanlış", the author's words — and the till refuses
+        // it whole. What Close keeps is its standing: they can tell it was THEIR drink ruined,
+        // which sours less than a stranger's drink.
         [Test]
-        public void ADrinkMadeWrong_IsPaidFor_ButNotTippedLikeAGoodOne()
+        public void TheirDrinkOutOfItsBox_PaysNothing_ButSoursLessThanAStrangers()
         {
             var brim = Glass(("gin", 0.5), ("soda", 0.45));
             var right = ServiceJudge.Judge(Visit(price: 10), OrderMatch.Exact, brim);
             var wonky = ServiceJudge.Judge(Visit(price: 10), OrderMatch.Close, brim);
+            var wrong = ServiceJudge.Judge(Visit(price: 10), OrderMatch.Wrong, brim, served: null);
 
-            Assert.AreEqual(right.BasePaid, wonky.BasePaid, "they drank it, so they pay for it");
-            Assert.Less(wonky.Tip, right.Tip, "but nobody tips full for a drink that came out wrong");
-            Assert.Greater(wonky.Tip, 0, "and it is a haircut, not another cliff");
+            Assert.AreEqual(0, wonky.BasePaid, "the box was on the menu; missing it is missing the drink");
+            Assert.AreEqual(0, wonky.Tip, "nothing is tipped on a refused bill");
             Assert.Less(wonky.Satisfaction, right.Satisfaction,
-                "the real cost is standing -- which is what the star track counts");
+                "the standing cost is real -- which is what the star track counts");
+            Assert.Greater(wonky.Satisfaction, wrong.Satisfaction,
+                "but their own drink ruined sours less than a stranger's drink");
         }
 
         [Test]

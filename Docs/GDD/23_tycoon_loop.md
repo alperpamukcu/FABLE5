@@ -72,11 +72,19 @@
   survives as the shelf's taxonomy — aisles, icons, the judge's vocabulary — not as recipe
   language. The licence carries an ingredients line under the order, since the band rows
   left with card v2 and a named cocktail is otherwise unlearnable.
-- **The house book (2026-07-31):** a BOOK panel beside the menu button, readable mid-shift —
-  every unlocked recipe with its full pour ("GIN 45–65 · LEMON 20–40 · SYRUP 10–30"), how it
-  is worked (ON TAP / NEAT / BUILT / SHAKEN / STIRRED) and its glass icon; the still-locked
-  ones listed under their tier with the star gate and shop price, so the book doubles as the
-  progression map. Thirty recipes, twelve of them shaken — the author's note that the tin
+- **The house book (2026-07-31; display respec 2026-08-20, see 21 §9a):** a BOOK panel
+  beside the menu button, readable mid-shift — every unlocked recipe with how it is worked
+  (ON TAP / NEAT / BUILT / SHAKEN / STIRRED) and its glass icon; the still-locked ones
+  listed under their tier with the star gate and shop price, so the book doubles as the
+  progression map. **What a pour row shows changed with the perfect-pour respec:** until
+  the drink has been made perfectly once, each ingredient row carries the FIVE-BOX bar
+  (0–20 red · 20–40 orange · 40–60 yellow · 60–80 green · 80–100 dark green) with only the
+  perfect's box lit, plus the run's best make under it; after a perfect make the exact
+  numbers appear. The old full-pour print ("GIN 45–65 · LEMON 20–40") and the later exact
+  ideal-share print are both overtaken — the exact number is the REWARD now, and the gate
+  lives in Core (`TycoonRun.ExactPourFor` throws until perfected), never in the menu. Every
+  window that renders a recipe (book card, licence hover, market spec, order tip) draws
+  through the one shared spec renderer, so the gate cannot be routed around by surface. Thirty recipes, twelve of them shaken — the author's note that the tin
   must be USED drove the second shaken wave (Vodka Sour, Rum Punch, White Lady, Southside).
 - **The order is hidden until the ID card is read** (v5 C3, 2026-07-31). The seat signals
   readiness ("READY · TAP THE ID"); the drink's name, icon and wanted extras appear only
@@ -126,11 +134,11 @@ drink earns; the tip is the whole reward for doing the job well. Menu price is n
 `3 + (rank+1)/2` — about half the old `4 + rank` — because at the old ladder a
 correct-but-careless serve earned nearly as much as a perfect one.
 
-| Verdict | Condition | Base pay |
+| Verdict | Condition | Base pay (2026-08-20, the perfect-pour respec — 21 §9a) |
 |---|---|---|
-| **Exact** | served recipe == ordered recipe | menu price |
-| **Close** | **their drink, made wrong**: every band the recipe names is in the glass (≥5% of it), strays inside the matcher's own 15%, and the shares missed | menu price, **half tip** |
-| **Wrong** | anything else | **the delivered drink's own menu price** (C1) — $0 if the glass is no recipe at all |
+| **Exact** | served recipe == ordered recipe (every named share in its LIT BOX) | menu price **× (0.10 + 0.90 × accuracy)** — closeness to the recipe's perfect, floored so the right box always earns something |
+| **Close** | **their drink, out of its box**: every band the recipe names is in the glass (≥5% of it), strays inside the matcher's own 15%, but a share missed its box | **nothing** — "tamamen yanlış". The box is on the menu for everyone to read; missing it is missing the drink |
+| **Wrong** | anything else | **the delivered drink's own menu price × its own accuracy** (C1's shape kept) — $0 if the glass is no recipe at all |
 | **Refused** | the glass is under 35% full | **nothing**, whatever is in it |
 | **Declined** | the bar said it could not make it (§3.1) | nothing |
 
@@ -153,14 +161,24 @@ hand does not notice, and a clumsy one turns eight of its nine points of total l
 graded misses, standing 2.58 → 2.78. The cost of a bad pour is now mostly **standing**, which
 is what the star track counts — money now, the room's memory later.
 
+**Close's pay was zeroed 2026-08-20** and its satisfaction cut to **0.30** (from 0.5): the
+2026-08-14 grade existed to soften "a cliff at the edge of a band the player cannot see",
+and the perfect-pour respec made the edge VISIBLE — the menu lights the exact 20-point box
+to hit. A cliff the player can read is a target, not a trap. What Close keeps is its
+standing: their own drink ruined sours less than a stranger's drink (0.30 vs 0.05), and the
+grade still names the failure in the sim's tables.
+
 **The tip** is a share of the base price, at most equal to it — a perfect serve doubles the
 drink. It is composed of three continuous scores, none of them a cliff:
 
 ```
-tip     = basePrice x quality x (Close ? 0.5 : 1)   (2026-08-14: a drink that came
-          out wrong is not tipped like one that came out right — without this the
-          new middle grade would pay a missed pour exactly what a perfect one pays)
-quality = 0.45 x speed + 0.35 x craft + 0.20 x fill
+tip     = basePaid x quality        (Exact only, 2026-08-20 — Close pays nothing at
+          the till, so there is nothing to tip on; accuracy reaches the tip twice on
+          purpose, once inside basePaid and once in quality: the bill is smaller AND
+          the thanks are cooler)
+quality = 0.35 x speed + 0.25 x craft + 0.20 x accuracy + 0.20 x fill
+accuracy = closeness to the recipe's perfect pour, weighted by each band's share
+          (21 s9a); reads 1 where there is nothing to measure (a pint, a neat pour)
 speed   = 1 - waitFraction          (the whole patience, not a half-time window)
 craft   = 0.6 x garnish spec + 0.4 x METHOD   (a pint: its head score, 21 s10.3)
 method  = the ORDERED recipe's Prep, against the glass (2026-08-11): a Shaken
@@ -174,8 +192,9 @@ Patience now scales the tip **continuously**. It used to hit zero at half patien
 mattering there, which made the back half of every customer's wait free.
 
 Satisfaction (0-1, feeds the day bar §6):
-`Exact 0.75 / Close 0.5 / Wrong 0.05`, plus `0.20 x (craft - 0.5)`, plus
-`0.12 x (fill - 0.5)`, minus `0.3 x waitFraction`, plus ambience. Storm-off = 0.
+`Exact 0.75 / Close 0.30 / Wrong 0.05`, plus `0.10 x (accuracy - 0.5)` on Exact, plus
+`0.20 x (craft - 0.5)`, plus `0.12 x (fill - 0.5)`, minus `0.3 x waitFraction`, plus
+ambience. Storm-off = 0.
 
 ## 5. The extra order (the emotion layer's new job)
 
@@ -184,7 +203,10 @@ met, or a draught pulled with a perfect head) **and** served before 90% of patie
 (widened from 75% 2026-07-22) — makes the customer **order another drink** (patience
 refreshed to 80%, new roll, new full payment). Capped at **2 extra orders** per visit.
 This is deliberately reachable ("düşünüldüğü kadar zor olmamalı"): reading the ID and
-serving the right named drink well is the skill, not pixel-perfect ratios.
+serving the right named drink well is the skill. (2026-08-20 nuance: the perfect-pour respec
+made closeness MONEY — base pay scales with it — but the extra-round gate deliberately does
+NOT demand a perfect make; an Exact in-box serve with the craft landed still earns the
+round. The perfect is a reward track, not a second gate on this one.)
 
 **Who gets to order twice (v5 P11).** A **first-timer orders once** — the extra round is
 what a returning face earns. The gate is otherwise unchanged: the exact drink, every part of

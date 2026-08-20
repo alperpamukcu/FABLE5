@@ -83,6 +83,35 @@ namespace LastCall.Core
         /// <summary>How full the glass must be for this to count as the drink (0 = no floor).</summary>
         public double MinFill { get; }
 
+        // ── the perfect pour (2026-08-20) ───────────────────────────────────────
+
+        /// <summary>
+        /// THE SECRET NUMBER, aligned band-for-band with <see cref="RatioRequirements"/>:
+        /// the one pour this recipe is perfect at, settled off the authored bands by
+        /// <see cref="RatioRecipeMatcher.PerfectPour"/>. INTERNAL on purpose — the menu may
+        /// only show it after the player has made the drink perfectly once, and that gate is
+        /// <c>TycoonRun.ExactPourFor</c>, which is the only door out of Core. Handing the UI
+        /// a public property here would make the reveal decorative, which is the mistake the
+        /// ID card paid for twice (CLAUDE.md, hidden information).
+        /// </summary>
+        internal double[] Perfect { get; }
+
+        /// <summary>
+        /// Which 20-point box each band's perfect value sits in (0–4). PUBLIC, because the
+        /// box is exactly what the player is told: the menu lights this box and nothing else
+        /// until the drink has been made perfectly. The matcher grades against these too —
+        /// what is shown is what is judged.
+        /// </summary>
+        public IReadOnlyList<int> PerfectBoxes { get; }
+
+        /// <summary>
+        /// True when the bands were hand-authored in data rather than derived from the type
+        /// pattern. The accuracy game only plays on authored recipes: a pint's craft is its
+        /// head and a neat pour has no proportions to learn, so the derived ones grade at
+        /// full accuracy and never carry a hidden perfect to reveal.
+        /// </summary>
+        public bool HasAuthoredRatios { get; }
+
         // ── v5 P10 content model ────────────────────────────────────────────────
 
         /// <summary>
@@ -158,6 +187,7 @@ namespace LastCall.Core
                         nameof(ratioRequirements));
             }
 
+            HasAuthoredRatios = ratioRequirements != null && ratioRequirements.Count > 0;
             Locked = locked;
             Prep = prep;
             GlassId = glassId ?? string.Empty;
@@ -189,6 +219,15 @@ namespace LastCall.Core
             RatioRequirements = ratioRequirements != null && ratioRequirements.Count > 0
                 ? ratioRequirements
                 : RatioRecipeMatcher.DeriveBands(this);
+
+            // The perfect pour is settled ONCE, here, so the matcher and the judge read one
+            // cached truth instead of re-settling per pour — and so a recipe's perfect can
+            // never drift within a session. It is a pure function of the bands and the id,
+            // which is what keeps two builds of the same data agreeing on it.
+            Perfect = RatioRecipeMatcher.PerfectPour(this);
+            var boxes = new int[Perfect.Length];
+            for (int i = 0; i < Perfect.Length; i++) boxes[i] = RatioBox.IndexOf(Perfect[i]);
+            PerfectBoxes = boxes;
         }
     }
 }
