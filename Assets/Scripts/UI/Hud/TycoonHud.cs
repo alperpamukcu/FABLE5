@@ -509,30 +509,36 @@ namespace LastCall.UI
             public readonly string Amount;   // "" on a note row
             public readonly int MinTier;
             public readonly bool Hint;       // a footnote: half height, half size
+            public readonly int Box;         // the lit 20-point box, -1 = no bar on this row
+            public readonly double Best;     // the run's best-make share, -1 = no tick
 
             public SpecRow(string style, string label, string amount = "", int minTier = 1,
-                bool hint = false)
-            { Style = style; Label = label; Amount = amount; MinTier = minTier; Hint = hint; }
+                bool hint = false, int box = -1, double best = -1)
+            { Style = style; Label = label; Amount = amount; MinTier = minTier; Hint = hint;
+              Box = box; Best = best; }
         }
 
         /// <summary>
         /// A recipe as a SPEC CARD: the prep, then one pour to a line, then the fill and the
         /// glass. The vertical form is the readable one (the author, 2026-08-02) — a run-on
-        /// "GIN 45–65% · LEMON 20–40% · SYRUP 10–30%" wraps mid-number and has to be parsed;
-        /// a column is read.
+        /// list wraps mid-number and has to be parsed; a column is read.
         ///
-        /// Each pour shows the EXACT share to build at, not its tolerance band: the bands are
-        /// how forgiving the matcher is, which is the game's business and not an instruction.
-        /// A player told "45–65% gin" has to pick a number anyway, so the card picks it —
-        /// <see cref="RatioRecipeMatcher.IdealPour"/>, which is inside every band and fills
-        /// the glass. Built once and shared, so the licence and the book cannot drift.
+        /// WHAT A POUR ROW SHOWS changed with the perfect-pour respec (2026-08-20, GDD 21
+        /// §9a): until the drink has been made PERFECTLY once, the row carries the five-box
+        /// bar with only the perfect's 20-point box lit — the box is the whole contract now —
+        /// plus a tick where the run's best make landed, so the player can triangulate. After
+        /// a perfect make the exact number appears. The exact value comes ONLY from
+        /// <c>TycoonRun.ExactPourFor</c>, which throws until it is earned: this card must
+        /// never compute the perfect itself, because a menu that can is a menu that leaks
+        /// (the ID card paid for that twice). Built once and shared, so the licence, the
+        /// book, the shop and the order tip cannot drift apart.
         /// </summary>
         /// <param name="poursOnly">Just what goes in the glass and in what share — no prep
         /// word, no fill line, no glass name. The hover tip asks for this (the author,
         /// 2026-08-11: "boşu boşuna fazla okunacak iş çıkartıyorlar"); the licence, the book
         /// and the shop still take the whole card, because those are read once and deliberately
         /// while this one is read at a glance, five times a night, over somebody's head.</param>
-        private static List<SpecRow> RecipeSpecRows(RecipeDefinition r, bool poursOnly = false)
+        private List<SpecRow> RecipeSpecRows(RecipeDefinition r, bool poursOnly = false)
         {
             var rows = new List<SpecRow>();
             // THE PREP WORD WHEN IT CHANGES WHAT YOU DO (2026-08-11, narrowed to the graded
@@ -546,15 +552,30 @@ namespace LastCall.UI
             if (r.Id != "draught")
                 rows.Add(new SpecRow(null, PrepWord(r)));
             var bands = r.RatioRequirements;
-            var shown = WholePercents(RatioRecipeMatcher.IdealPour(r));
+            var run = Run;
+            // The reveal gate, asked rather than computed: only a perfected page has exact
+            // numbers, and only Core may say so. Everything else shows its lit box.
+            bool revealed = r.HasAuthoredRatios && run != null && run.IsPerfected(r.Id);
+            int[] shown = null;
+            if (revealed)
+            {
+                var exact = run.ExactPourFor(r);
+                var copy = new double[exact.Count];
+                for (int i = 0; i < exact.Count; i++) copy[i] = exact[i];
+                shown = WholePercents(copy);
+            }
+            var bestMake = r.HasAuthoredRatios ? run?.BestMakeFor(r.Id) : null;
             for (int i = 0; i < bands.Count; i++)
             {
                 var b = bands[i];
+                bool banded = r.HasAuthoredRatios;
                 rows.Add(new SpecRow(
                     b.IsStyleBand ? b.Style : null,
                     b.IsStyleBand ? b.Style.Replace('_', ' ').ToUpperInvariant() : TypeWord(b.Type),
-                    $"{shown[i]}%",
-                    b.MinTier));
+                    revealed ? $"{shown[i]}%" : "",
+                    b.MinTier,
+                    box: banded ? r.PerfectBoxes[i] : -1,
+                    best: bestMake != null && i < bestMake.Shares.Count ? bestMake.Shares[i] : -1));
             }
             foreach (var b in bands)
             {
@@ -567,6 +588,13 @@ namespace LastCall.UI
             // never an instruction, only a word to read past. The drink's own icon still
             // shows its shape, which is the part that was ever worth knowing.
             if (poursOnly) return rows;
+            // The run's own record, under the boxes (2026-08-20, the author: the player's
+            // best make is on the menu). The tip skips it — that card is read over
+            // somebody's head at a glance — the book, the licence and the shop keep it.
+            if (bestMake != null)
+                rows.Add(new SpecRow(null,
+                    revealed ? "PERFECTED" : $"YOUR BEST · {bestMake.Accuracy * 100:0}%",
+                    hint: true));
             if (r.MinFill > 0) rows.Add(new SpecRow(null, "FILL", $"{r.MinFill * 100:0}%+"));
             return rows;
         }
@@ -748,6 +776,42 @@ namespace LastCall.UI
                     amount.raycastTarget = false;
                     amount.text = spec.Amount;
                 }
+                else if (spec.Box >= 0)
+                {
+                    // THE FIVE BOXES (2026-08-20, GDD 21 §9a): the whole pre-reveal contract
+                    // in 68 pixels. Only the perfect's box is lit, in the ladder's own colour
+                    // for that fifth of the glass; the rest are dark glass. Hard-edged flat
+                    // boxes — a BAND SET, not a gradient (GDD 16 §6.10) — and a bright tick
+                    // where the run's best make landed, which is the player's only compass
+                    // toward a number the menu refuses to say.
+                    const float BoxW = 12f, BoxH = 10f, BoxGap = 2f;
+                    float barW = RatioBox.Count * BoxW + (RatioBox.Count - 1) * BoxGap;
+                    var bar = NewRect("Boxes", line);
+                    Place(bar, new Vector2(1, 0.5f), new Vector2(barW, BoxH),
+                        new Vector2(-2 - barW, 0));
+                    bar.pivot = new Vector2(0, 0.5f);
+                    for (int bx = 0; bx < RatioBox.Count; bx++)
+                    {
+                        var cell = NewRect("C" + bx, bar);
+                        Place(cell, new Vector2(0, 0.5f), new Vector2(BoxW, BoxH),
+                            new Vector2(bx * (BoxW + BoxGap), 0));
+                        var img = cell.gameObject.AddComponent<Image>();
+                        img.raycastTarget = false;
+                        img.color = bx == spec.Box
+                            ? BandBoxColors[bx]
+                            : dark ? new Color(1f, 1f, 1f, 0.08f)
+                                   : new Color(0.24f, 0.16f, 0.08f, 0.12f);
+                    }
+                    if (spec.Best >= 0)
+                    {
+                        var tick = NewRect("Best", bar);
+                        Place(tick, new Vector2(0, 0.5f), new Vector2(2f, BoxH + 4f),
+                            new Vector2(Mathf.Clamp01((float)spec.Best) * (barW - 2f), 0));
+                        var img = tick.gameObject.AddComponent<Image>();
+                        img.raycastTarget = false;
+                        img.color = dark ? UITheme.Cream[4] : new Color(0.13f, 0.08f, 0.05f);
+                    }
+                }
             }
 
             if (!string.IsNullOrEmpty(note))
@@ -762,6 +826,16 @@ namespace LastCall.UI
             }
             return y;
         }
+
+        /// <summary>The five boxes' colours, box 0 to box 4 — the author's ladder (red,
+        /// orange, yellow, green, dark green) mapped onto the palette's own ramps. Amber[3]
+        /// is skipped on purpose: it is the Money colour, and a signal must never wear a
+        /// sacred number's coat (GDD 16).</summary>
+        private static readonly Color[] BandBoxColors =
+        {
+            UITheme.ViceRed[3], UITheme.Amber[2], UITheme.Amber[4],
+            UITheme.Lime[3], UITheme.Lime[1],
+        };
 
         /// <summary>How tall one line of a spec card is — the bottle icons are square to it.</summary>
         private const float SpecRowH = 20f;
@@ -6083,9 +6157,16 @@ namespace LastCall.UI
             // own rows, and each new one goes to whichever column is currently SHORTER. That
             // is the standard masonry answer, and it keeps the two sides level as well as
             // tight — filling left-then-right in order would leave one column hanging.
+            // ONE COLUMN since the perfect-pour respec (2026-08-20, the author: "içki
+            // menüsünde her alkole daha fazla yer verilmeli çünkü artık bu stat blokları da
+            // geldi"). The two-column masonry paid for its density by squeezing every spec
+            // to ~278 units; with a five-box bar and a best-make line on every ingredient
+            // row, the ingredient IS the content now, and it gets the full paper width. The
+            // masonry loop survives with one column so the measure-then-place shape (and
+            // its own-height lesson) stays intact.
             const float ColGap = 12f, RowGap = 10f, HeadH = 30f, Air = 14f;
             float fullW = BkW * BkPaperW - 44f;
-            float cellW = fullW / 2f - ColGap * 0.5f;
+            float cellW = fullW;
 
             var sec = NewRect("Sec", _bookList);
             var secLayout = sec.gameObject.AddComponent<LayoutElement>();
@@ -6098,7 +6179,7 @@ namespace LastCall.UI
                 if (lockedRows) spec += SpecRowH;         // the star gate takes its own line
                 float h = HeadH + spec + Air;
 
-                int col = colH[0] <= colH[1] ? 0 : 1;
+                int col = 0;
                 var card = BookRow(sec, r, lockedRows, run, cellW);
                 card.anchorMin = card.anchorMax = new Vector2(0, 1);
                 card.pivot = new Vector2(0, 1);
@@ -6175,15 +6256,24 @@ namespace LastCall.UI
             return missing;
         }
 
-        /// <summary>"GIN 45–65 · LEMON 20–40 · SYRUP 10–30" — the pour, said in shares.</summary>
+        /// <summary>"GIN 40–60 · LEMON 20–40 · SYRUP 0–20" — the pour, said in LIT BOXES
+        /// (2026-08-20, GDD 21 §9a). This used to print the authored min/max bands, and
+        /// those stopped being the acceptance the day the box became it — a shop tile
+        /// teaching a range the judge no longer grades would be selling a lie. The box
+        /// bounds are public (they are exactly what the book lights up); the perfect
+        /// inside them stays Core's secret.</summary>
         private static string BandLine(RecipeDefinition r)
         {
             // The numbers carry the craft, so they print in heavier ink than the names.
             var parts = new List<string>();
-            foreach (var b in r.RatioRequirements)
+            for (int i = 0; i < r.RatioRequirements.Count; i++)
+            {
+                var b = r.RatioRequirements[i];
+                int box = r.PerfectBoxes[i];
                 parts.Add(string.Format("{0} <color=#1A0E06>{1:0}–{2:0}%</color>",
                     b.IsStyleBand ? b.Style.Replace('_', ' ').ToUpperInvariant() : TypeWord(b.Type),
-                    b.MinRatio * 100, b.MaxRatio * 100));
+                    RatioBox.Lower(box) * 100, RatioBox.Upper(box) * 100));
+            }
             if (r.MinFill > 0)
                 parts.Add(string.Format("<color=#1A0E06>FILL {0:0}%+</color>", r.MinFill * 100));
             return string.Join(" · ", parts);

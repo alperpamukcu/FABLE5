@@ -265,6 +265,29 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void TheUiNeverComputesThePerfect()
+        {
+            // The reveal gate is TycoonRun.ExactPourFor and nothing else. IdealPour and
+            // PerfectPour are pure functions of public band data, so Core cannot REFUSE the
+            // math — but it can be caught reaching for it: the UI assembly must not name
+            // either. This is the fence CLAUDE.md's hidden-information rule asks for, in the
+            // only place a fence around arithmetic can stand. (The Editor assembly — the sim,
+            // the balance guide — is design tooling and stays free to compute.)
+            var uiRoot = System.IO.Path.Combine(UnityEngine.Application.dataPath, "Scripts", "UI");
+            var offenders = new List<string>();
+            foreach (var file in System.IO.Directory.GetFiles(uiRoot, "*.cs",
+                System.IO.SearchOption.AllDirectories))
+            {
+                var text = System.IO.File.ReadAllText(file);
+                if (text.Contains("IdealPour") || text.Contains("PerfectPour"))
+                    offenders.Add(System.IO.Path.GetFileName(file));
+            }
+            Assert.IsEmpty(offenders,
+                "the menu asks TycoonRun what it may show; it never computes the secret: "
+                + string.Join(", ", offenders));
+        }
+
+        [Test]
         public void AnImperfectExactServe_RecordsTheBestMake_ButRevealsNothing()
         {
             var run = RevealRun("imperfect");
