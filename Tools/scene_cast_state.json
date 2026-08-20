@@ -1,0 +1,287 @@
+{
+ "cast_room_a": {
+  "id": "303ab636-da36-49a8-b0c4-2a099eec1f2a",
+  "seed": 43001,
+  "styled": true,
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room_a.png",
+  "stats": {
+   "ink": 0.008384338056510439,
+   "colours": 29,
+   "step": 44,
+   "floor": 288,
+   "black": 8.755208333333334,
+   "v05": 57,
+   "v95": 245,
+   "span": 188
+  }
+ },
+ "cast_room_b": {
+  "id": "9768eeb8-e429-4cdb-af99-e92f15a404d5",
+  "seed": 43002,
+  "styled": true,
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room_b.png",
+  "stats": {
+   "ink": 0.06424779359550942,
+   "colours": 25,
+   "step": 47,
+   "floor": 254,
+   "black": 0.5889756944444444,
+   "v05": 88,
+   "v95": 254,
+   "span": 166
+  }
+ },
+ "cast_room_c": {
+  "id": "7b051aae-b41a-4ae2-8aa3-833f4b2c5054",
+  "seed": 43003,
+  "styled": false,
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room_c.png",
+  "stats": {
+   "ink": 0.0,
+   "colours": 22,
+   "step": 51,
+   "floor": 264,
+   "black": 12.510850694444445,
+   "v05": 73,
+   "v95": 251,
+   "span": 178
+  }
+ },
+ "cast_room_d": {
+  "id": "e626a898-5ac8-4031-8ad6-e931dd02d8ea",
+  "seed": 43004,
+  "styled": false,
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room_d.png",
+  "stats": {
+   "ink": 0.027150856948922452,
+   "colours": 28,
+   "step": 54,
+   "floor": 270,
+   "black": 5.126302083333333,
+   "v05": 64,
+   "v95": 251,
+   "span": 187
+  }
+ },
+ "cast_room2_a": {
+  "id": "17640955-7b9c-4941-9e12-2d1d7dd7ba33",
+  "seed": 43101,
+  "styled": true,
+  "desc": "ROOM_DESC2",
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room2_a.png",
+  "stats": {
+   "ink": 5.056399738976415,
+   "colours": 31,
+   "step": 45,
+   "floor": 244,
+   "black": 1.7886284722222223,
+   "v05": 82,
+   "v95": 252,
+   "span": 170
+  }
+ },
+ "cast_room2_b": {
+  "id": "9679a9ee-b9d0-4254-b7f9-485c064a6c2c",
+  "seed": 43102,
+  "styled": true,
+  "desc": "ROOM_DESC2",
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room2_b.png",
+  "stats": {
+   "ink": 4.704886308659893,
+   "colours": 26,
+   "step": 50,
+   "floor": 263,
+   "black": 14.457899305555555,
+   "v05": 68,
+   "v95": 255,
+   "span": 187
+  }
+ },
+ "cast_room2_c": {
+  "id": "d042ad60-2c40-45d6-b3b2-cb2e73047ef1",
+  "seed": 43103,
+  "styled": false,
+  "desc": "ROOM_DESC2",
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room2_c.png",
+  "stats": {
+   "ink": 2.4252753015207134,
+   "colours": 24,
+   "step": 47,
+   "floor": 261,
+   "black": 11.690538194444445,
+   "v05": 73,
+   "v95": 255,
+   "span": 182
+  }
+ },
+ "cast_room2_d": {
+  "id": "90a5cccf-a032-4584-9916-82c666cb919f",
+  "seed": 43104,
+  "styled": false,
+  "desc": "ROOM_DESC2",
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room2_d.png",
+  "stats": {
+   "ink": 7.497790768812453,
+   "colours": 24,
+   "step": 51,
+   "floor": 247,
+   "black": 16.84982638888889,
+   "v05": 75,
+   "v95": 254,
+   "span": 179
+  }
+ },
+ "cast_room3_a": {
+  "id": "e934d857-90c4-4e9b-9633-5fc783e85987",
+  "seed": 43201,
+  "styled": true,
+  "desc": "ROOM_DESC3",
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room3_a.png",
+  "stats": {
+   "ink": 8.595715886743777,
+   "colours": 32,
+   "step": 59,
+   "floor": 196,
+   "black": 20.734375,
+   "v05": 60,
+   "v95": 253,
+   "span": 193
+  }
+ },
+ "cast_room3_b": {
+  "id": "3aa05c4d-f685-4c91-9877-76212ad647f7",
+  "seed": 43202,
+  "styled": true,
+  "desc": "ROOM_DESC3",
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room3_b.png",
+  "stats": {
+   "ink": 12.983699503897945,
+   "colours": 29,
+   "step": 57,
+   "floor": 191,
+   "black": 21.73394097222222,
+   "v05": 62,
+   "v95": 255,
+   "span": 193
+  }
+ },
+ "cast_room3_c": {
+  "id": "d5909bde-3e24-4ac9-b5ea-cd9a748199b9",
+  "seed": 43203,
+  "styled": false,
+  "desc": "ROOM_DESC3",
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room3_c.png",
+  "stats": {
+   "ink": 11.513923614104664,
+   "colours": 25,
+   "step": 53,
+   "floor": 207,
+   "black": 23.40017361111111,
+   "v05": 65,
+   "v95": 250,
+   "span": 185
+  }
+ },
+ "cast_room3_d": {
+  "id": "8d7fbe0b-24f3-43da-a594-47dd7dc54c16",
+  "seed": 43204,
+  "styled": false,
+  "desc": "ROOM_DESC3",
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room3_d.png",
+  "stats": {
+   "ink": 9.415514493689969,
+   "colours": 24,
+   "step": 48,
+   "floor": 196,
+   "black": 24.700520833333332,
+   "v05": 62,
+   "v95": 255,
+   "span": 193
+  }
+ },
+ "cast_room4_a": {
+  "id": "42283ee9-f274-42ec-8df9-f390a6b0d75d",
+  "seed": 43301,
+  "styled": true,
+  "desc": "ROOM_DESC4",
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room4_a.png",
+  "stats": {
+   "ink": 4.364566576122788,
+   "colours": 28,
+   "step": 43,
+   "floor": 240,
+   "black": 15.81857638888889,
+   "v05": 68,
+   "v95": 253,
+   "span": 185
+  }
+ },
+ "cast_room4_b": {
+  "id": "888e0056-e13f-413f-91a4-8e263664738b",
+  "seed": 43302,
+  "styled": true,
+  "desc": "ROOM_DESC4",
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room4_b.png",
+  "stats": {
+   "ink": 0.0,
+   "colours": 26,
+   "step": 48,
+   "floor": 209,
+   "black": 9.339409722222221,
+   "v05": 63,
+   "v95": 255,
+   "span": 192
+  }
+ },
+ "cast_room4_c": {
+  "id": "5f105c50-138c-440b-9209-2aac4437f9e2",
+  "seed": 43303,
+  "styled": false,
+  "desc": "ROOM_DESC4",
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room4_c.png",
+  "stats": {
+   "ink": 5.758605591810354,
+   "colours": 24,
+   "step": 47,
+   "floor": 175,
+   "black": 2.2252604166666665,
+   "v05": 83,
+   "v95": 253,
+   "span": 170
+  }
+ },
+ "cast_room4_d": {
+  "id": null,
+  "seed": 43304,
+  "styled": false,
+  "desc": "ROOM_DESC4"
+ },
+ "cast_room5_a": {
+  "id": "43402e77-e130-44c2-bba1-ead9b65d54fc",
+  "seed": 43401,
+  "styled": "D:\\FABLE5\\Tools\\AssetPipeline\\sources\\pixellab_user\\room_ref.png",
+  "desc": "ROOM_DESC5",
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room5_a.png"
+ },
+ "cast_room5_b": {
+  "id": "f41bf748-b148-4072-a4d0-034d299b0e4b",
+  "seed": 43402,
+  "styled": "D:\\FABLE5\\Tools\\AssetPipeline\\sources\\pixellab_user\\room_ref.png",
+  "desc": "ROOM_DESC5",
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room5_b.png"
+ },
+ "cast_room6_a": {
+  "id": "5f2ad6ca-550e-4a01-86fe-f9bb4534bdf9",
+  "seed": 43501,
+  "styled": "D:\\FABLE5\\Tools\\AssetPipeline\\sources\\pixellab_user\\room_ref.png",
+  "desc": "ROOM_DESC6",
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room6_a.png"
+ },
+ "cast_room7_a": {
+  "id": "90525d7c-f8ac-4e69-89f0-88a82109b9c9",
+  "seed": 43601,
+  "styled": "D:\\FABLE5\\Tools\\AssetPipeline\\sources\\pixellab_user\\room_ref.png",
+  "desc": "ROOM_DESC7",
+  "file": "D:\\FABLE5\\Tools\\scene_cast_raw\\cast_room7_a.png"
+ }
+}
