@@ -538,7 +538,8 @@ namespace LastCall.UI
         /// 2026-08-11: "boşu boşuna fazla okunacak iş çıkartıyorlar"); the licence, the book
         /// and the shop still take the whole card, because those are read once and deliberately
         /// while this one is read at a glance, five times a night, over somebody's head.</param>
-        private List<SpecRow> RecipeSpecRows(RecipeDefinition r, bool poursOnly = false)
+        private List<SpecRow> RecipeSpecRows(RecipeDefinition r, bool poursOnly = false,
+            bool locked = false)
         {
             var rows = new List<SpecRow>();
             // THE PREP WORD WHEN IT CHANGES WHAT YOU DO (2026-08-11, narrowed to the graded
@@ -554,8 +555,9 @@ namespace LastCall.UI
             var bands = r.RatioRequirements;
             var run = Run;
             // The reveal gate, asked rather than computed: only a perfected page has exact
-            // numbers, and only Core may say so. Everything else shows its lit box.
-            bool revealed = r.HasAuthoredRatios && run != null && run.IsPerfected(r.Id);
+            // numbers, and only Core may say so. A page the bar does not own reveals nothing
+            // at all — you cannot have perfected a drink you cannot make.
+            bool revealed = !locked && r.HasAuthoredRatios && run != null && run.IsPerfected(r.Id);
             int[] shown = null;
             if (revealed)
             {
@@ -564,7 +566,7 @@ namespace LastCall.UI
                 for (int i = 0; i < exact.Count; i++) copy[i] = exact[i];
                 shown = WholePercents(copy);
             }
-            var bestMake = r.HasAuthoredRatios ? run?.BestMakeFor(r.Id) : null;
+            var bestMake = locked || !r.HasAuthoredRatios ? null : run?.BestMakeFor(r.Id);
             for (int i = 0; i < bands.Count; i++)
             {
                 var b = bands[i];
@@ -656,7 +658,7 @@ namespace LastCall.UI
         /// become readable there.
         /// </summary>
         private float DrawRecipeSpec(RectTransform host, RecipeDefinition r, bool dark,
-            float width, string note = null, bool poursOnly = false)
+            float width, string note = null, bool poursOnly = false, bool locked = false)
         {
             for (int i = host.childCount - 1; i >= 0; i--) Destroy(host.GetChild(i).gameObject);
 
@@ -669,12 +671,15 @@ namespace LastCall.UI
             Color gone = dark ? new Color(0.86f, 0.24f, 0.32f, 0.16f) : new Color(0.74f, 0.16f, 0.20f, 0.13f);
             Color goneInk = dark ? new Color(0.94f, 0.40f, 0.46f) : new Color(0.66f, 0.12f, 0.16f);
 
-            var rows = RecipeSpecRows(r, poursOnly);
+            var rows = RecipeSpecRows(r, poursOnly, locked);
             float y = 0f;
             for (int i = 0; i < rows.Count; i++)
             {
                 var spec = rows[i];
                 bool ingredient = spec.Style != null;
+                // The stock reading stays HONEST on a locked page: whether the shelf holds
+                // this bottle is true whether or not the bar owns the recipe, and dimming it
+                // to "NONE" would print a lie next to a lock. Only the gauge goes dark.
                 bool stocked = ingredient && InStock(spec.Style, spec.MinTier);
 
                 float rowH = spec.Hint ? SpecHintH : SpecRowH;
@@ -778,38 +783,62 @@ namespace LastCall.UI
                 }
                 else if (spec.Box >= 0)
                 {
-                    // THE FIVE BOXES (2026-08-20, GDD 21 §9a): the whole pre-reveal contract
-                    // in 68 pixels. Only the perfect's box is lit, in the ladder's own colour
-                    // for that fifth of the glass; the rest are dark glass. Hard-edged flat
-                    // boxes — a BAND SET, not a gradient (GDD 16 §6.10) — and a bright tick
-                    // where the run's best make landed, which is the player's only compass
-                    // toward a number the menu refuses to say.
-                    const float BoxW = 12f, BoxH = 10f, BoxGap = 2f;
-                    float barW = RatioBox.Count * BoxW + (RatioBox.Count - 1) * BoxGap;
-                    var bar = NewRect("Boxes", line);
-                    Place(bar, new Vector2(1, 0.5f), new Vector2(barW, BoxH),
-                        new Vector2(-2 - barW, 0));
-                    bar.pivot = new Vector2(0, 0.5f);
-                    for (int bx = 0; bx < RatioBox.Count; bx++)
+                    // THE POUR GAUGE (2026-08-20, GDD 21 §9a): a sight glass, filled to the
+                    // top of the measure this bottle belongs in. It FILLS rather than lighting
+                    // one box (the author: "%60'ı gösteriyorsa kırmızı turuncu ve sarı kutucuk
+                    // dolu olmalıdır") because a level is what the reading actually is — how
+                    // much of the drink this is — and a liquid level fills from the bottom.
+                    //
+                    // A locked page draws the tube EMPTY: the shopping list is public (the
+                    // bottles are drawn right there), the PROPORTIONS are the craft, and the
+                    // craft is what a page you have not bought is still keeping from you.
+                    var gauge = NewRect("Gauge", line);
+                    Place(gauge, new Vector2(1, 0.5f), new Vector2(GaugeW, GaugeH),
+                        new Vector2(-4 - GaugeW, 0));
+                    gauge.pivot = new Vector2(0, 0.5f);
+
+                    var tube = gauge.gameObject.AddComponent<Image>();
+                    tube.sprite = ChromeArt.GaugeTube((int)GaugeW, (int)GaugeH);
+                    tube.raycastTarget = false;
+                    // The tube wears the SURFACE's ink, not its own: a channel cut into the
+                    // book's paper on a light card, one cut into the panel on a dark one.
+                    tube.color = dark ? new Color(0.30f, 0.24f, 0.38f, stocked ? 1f : 0.6f)
+                                      : new Color(0.80f, 0.74f, 0.62f, stocked ? 1f : 0.6f);
+
+                    if (!locked)
                     {
-                        var cell = NewRect("C" + bx, bar);
-                        Place(cell, new Vector2(0, 0.5f), new Vector2(BoxW, BoxH),
-                            new Vector2(bx * (BoxW + BoxGap), 0));
-                        var img = cell.gameObject.AddComponent<Image>();
-                        img.raycastTarget = false;
-                        img.color = bx == spec.Box
-                            ? BandBoxColors[bx]
-                            : dark ? new Color(1f, 1f, 1f, 0.08f)
-                                   : new Color(0.24f, 0.16f, 0.08f, 0.12f);
+                        var fill = NewRect("Level", gauge);
+                        Place(fill, new Vector2(0, 0.5f), new Vector2(GaugeW - 2f, GaugeH - 3f),
+                            new Vector2(1f, -0.5f));
+                        var lvl = fill.gameObject.AddComponent<Image>();
+                        lvl.sprite = ChromeArt.GaugeLadder(BandBoxColors);
+                        lvl.type = Image.Type.Filled;
+                        lvl.fillMethod = Image.FillMethod.Horizontal;
+                        lvl.fillOrigin = (int)Image.OriginHorizontal.Left;
+                        // The level stands at the TOP of its measure, which is what makes
+                        // "fill to 60%" mean "the yellow band is the one to land in".
+                        lvl.fillAmount = (float)RatioBox.Upper(spec.Box);
+                        lvl.raycastTarget = false;
+                        lvl.color = stocked || !ingredient ? Color.white : new Color(1f, 1f, 1f, 0.5f);
                     }
-                    if (spec.Best >= 0)
+
+                    var glass = NewRect("Glass", gauge);
+                    Stretch(glass, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                    var gimg = glass.gameObject.AddComponent<Image>();
+                    gimg.sprite = ChromeArt.GaugeGlass((int)GaugeW, (int)GaugeH, RatioBox.Count);
+                    gimg.raycastTarget = false;
+
+                    // THE CHALK MARK: where this run's best pour actually landed. The only
+                    // compass the player has toward a number the menu refuses to say, and a
+                    // mark that encodes something true — §6.9's test for a tick's right to exist.
+                    if (spec.Best >= 0 && !locked)
                     {
-                        var tick = NewRect("Best", bar);
-                        Place(tick, new Vector2(0, 0.5f), new Vector2(2f, BoxH + 4f),
-                            new Vector2(Mathf.Clamp01((float)spec.Best) * (barW - 2f), 0));
-                        var img = tick.gameObject.AddComponent<Image>();
-                        img.raycastTarget = false;
-                        img.color = dark ? UITheme.Cream[4] : new Color(0.13f, 0.08f, 0.05f);
+                        var mark = NewRect("Best", gauge);
+                        Place(mark, new Vector2(0, 0.5f), new Vector2(1f, GaugeH + 5f),
+                            new Vector2(1f + Mathf.Clamp01((float)spec.Best) * (GaugeW - 3f), 0));
+                        var mimg = mark.gameObject.AddComponent<Image>();
+                        mimg.raycastTarget = false;
+                        mimg.color = dark ? UITheme.Cream[4] : new Color(0.20f, 0.13f, 0.07f, 0.85f);
                     }
                 }
             }
@@ -836,6 +865,11 @@ namespace LastCall.UI
             UITheme.ViceRed[3], UITheme.Amber[2], UITheme.Amber[4],
             UITheme.Lime[3], UITheme.Lime[1],
         };
+
+        /// <summary>The sight glass's own size. 72 wide so the five measures land on whole
+        /// pixels (70 of interior, 14 to a measure) — a gauge whose scratches sit on
+        /// fractions is the smooth-where-the-game-is-pixel tell (GDD 16 §6.10).</summary>
+        private const float GaugeW = 72f, GaugeH = 12f;
 
         /// <summary>How tall one line of a spec card is — the bottle icons are square to it.</summary>
         private const float SpecRowH = 20f;
@@ -5308,7 +5342,14 @@ namespace LastCall.UI
         {
             if (_shopSpec == null || _shopSpecBody == null) return;
             if (r == null) { _shopSpec.gameObject.SetActive(false); return; }
-            float h = DrawRecipeSpec(_shopSpecBody, r, dark: true, width: ShopSpecW - 20f);
+            // A CRATE IN THE MARKET IS A PAGE YOU DO NOT OWN, so its gauges read empty too
+            // (2026-08-20). This is the surface the old market rule meant when it said
+            // "buyable recipes show their pour on hover" — it shows what goes IN the drink,
+            // which is what the purchase decision needs, and keeps the proportions for the
+            // page you have actually bought. A recipe already on the menu never reaches here.
+            bool unowned = Run != null && r.Locked && !Run.MenuRecipes.Contains(r);
+            float h = DrawRecipeSpec(_shopSpecBody, r, dark: true, width: ShopSpecW - 20f,
+                locked: unowned);
             _shopSpec.sizeDelta = new Vector2(ShopSpecW, h + 16f);
             _shopSpec.gameObject.SetActive(true);
             _shopSpec.SetAsLastSibling();
@@ -6157,16 +6198,15 @@ namespace LastCall.UI
             // own rows, and each new one goes to whichever column is currently SHORTER. That
             // is the standard masonry answer, and it keeps the two sides level as well as
             // tight — filling left-then-right in order would leave one column hanging.
-            // ONE COLUMN since the perfect-pour respec (2026-08-20, the author: "içki
-            // menüsünde her alkole daha fazla yer verilmeli çünkü artık bu stat blokları da
-            // geldi"). The two-column masonry paid for its density by squeezing every spec
-            // to ~278 units; with a five-box bar and a best-make line on every ingredient
-            // row, the ingredient IS the content now, and it gets the full paper width. The
-            // masonry loop survives with one column so the measure-then-place shape (and
-            // its own-height lesson) stays intact.
+            // TWO COLUMNS, and the row earns its width instead of the card being widened for
+            // it (2026-08-20, the author twice: first "her alkole daha fazla yer", then
+            // "ekranda yan yana 2 kart durabilir"). The one-column draft answered the first
+            // ask the expensive way — it halved how many drinks the page could hold, which is
+            // what a catalogue is FOR. What buys the room back is the gauge itself: 72 pixels
+            // of sight glass says what a "45–65%" caption used to spend a text column saying.
             const float ColGap = 12f, RowGap = 10f, HeadH = 30f, Air = 14f;
             float fullW = BkW * BkPaperW - 44f;
-            float cellW = fullW;
+            float cellW = fullW / 2f - ColGap * 0.5f;
 
             var sec = NewRect("Sec", _bookList);
             var secLayout = sec.gameObject.AddComponent<LayoutElement>();
@@ -6175,11 +6215,12 @@ namespace LastCall.UI
             foreach (var r in rs)
             {
                 float spec = 0;
-                foreach (var row in RecipeSpecRows(r)) spec += row.Hint ? SpecHintH : SpecRowH;
+                foreach (var row in RecipeSpecRows(r, locked: lockedRows))
+                    spec += row.Hint ? SpecHintH : SpecRowH;
                 if (lockedRows) spec += SpecRowH;         // the star gate takes its own line
                 float h = HeadH + spec + Air;
 
-                int col = 0;
+                int col = colH[0] <= colH[1] ? 0 : 1;
                 var card = BookRow(sec, r, lockedRows, run, cellW);
                 card.anchorMin = card.anchorMax = new Vector2(0, 1);
                 card.pivot = new Vector2(0, 1);
@@ -6234,7 +6275,12 @@ namespace LastCall.UI
             var rowLock = lockedRow ? run.RecipeUnlock(r) : null;
             string note = rowLock != null && !string.IsNullOrEmpty(rowLock.Sentence)
                 ? "OPENS: " + rowLock.Sentence : null;
-            DrawRecipeSpec(body, r, dark: false, width: bodyW, note: note);
+            // A PAGE THE BAR DOES NOT OWN KEEPS ITS POUR (2026-08-20, the author: "sahip
+            // olmadığın tariflerin yapımı kilitli gözükmeli"). The bottles still show — the
+            // shopping list is how the book works as a progression map, and the shop tile
+            // already says whether the shelf could pour it — but every gauge reads empty,
+            // because the proportions ARE the making and the making is what is locked.
+            DrawRecipeSpec(body, r, dark: false, width: bodyW, note: note, locked: lockedRow);
             return row;
         }
 
@@ -6256,24 +6302,21 @@ namespace LastCall.UI
             return missing;
         }
 
-        /// <summary>"GIN 40–60 · LEMON 20–40 · SYRUP 0–20" — the pour, said in LIT BOXES
-        /// (2026-08-20, GDD 21 §9a). This used to print the authored min/max bands, and
-        /// those stopped being the acceptance the day the box became it — a shop tile
-        /// teaching a range the judge no longer grades would be selling a lie. The box
-        /// bounds are public (they are exactly what the book lights up); the perfect
-        /// inside them stays Core's secret.</summary>
+        /// <summary>"GIN · LEMON · SYRUP" — what goes in it, and not in what share.
+        ///
+        /// It printed the authored bands until 2026-08-20, and the perfect-pour respec takes
+        /// the numbers off it twice over: those bands stopped being the acceptance the day the
+        /// measure became it, and this line is only ever drawn for a page the bar does NOT own
+        /// (the shop's crate) — where the author's rule is that the MAKING stays locked. The
+        /// shopping list is fair game and load-bearing: the tile beside it says whether the
+        /// shelf could pour the thing, which is the decision being made here.</summary>
         private static string BandLine(RecipeDefinition r)
         {
-            // The numbers carry the craft, so they print in heavier ink than the names.
             var parts = new List<string>();
-            for (int i = 0; i < r.RatioRequirements.Count; i++)
-            {
-                var b = r.RatioRequirements[i];
-                int box = r.PerfectBoxes[i];
-                parts.Add(string.Format("{0} <color=#1A0E06>{1:0}–{2:0}%</color>",
-                    b.IsStyleBand ? b.Style.Replace('_', ' ').ToUpperInvariant() : TypeWord(b.Type),
-                    RatioBox.Lower(box) * 100, RatioBox.Upper(box) * 100));
-            }
+            foreach (var b in r.RatioRequirements)
+                parts.Add(b.IsStyleBand
+                    ? b.Style.Replace('_', ' ').ToUpperInvariant()
+                    : TypeWord(b.Type));
             if (r.MinFill > 0)
                 parts.Add(string.Format("<color=#1A0E06>FILL {0:0}%+</color>", r.MinFill * 100));
             return string.Join(" · ", parts);

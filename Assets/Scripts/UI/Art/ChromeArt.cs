@@ -514,6 +514,97 @@ namespace LastCall.UI
             return Cache[key] = Make(px, W, H, new Vector4(6, throwH + 2, 6, 4));
         }
 
+        // ── the pour gauge (2026-08-20) ─────────────────────────────────────────────
+        //
+        // A SIGHT GLASS — the level tube down the side of a keg. It exists because the first
+        // draft of the perfect-pour display was five coloured squares in a row, which is §6.1
+        // ("a row of equal boxes... the single loudest tell") and §6.8 ("a dot standing in for
+        // an object") at once, and the author said so in his own words: "sadece yan yana duran
+        // kutular gibi duruyor". §6.1's fix is the instruction followed here — decide what the
+        // surface IS, then put things on it. It is a tube of glass in a brass collar with the
+        // measures scratched on it, and what it holds is how much of the drink this bottle is.
+        //
+        // Three pieces, because a gauge is three things: the TUBE it is read through, the
+        // LADDER of liquid inside, and the GLASS with the measures on it. The ladder is a
+        // five-texel texture drawn with point filtering — flat runs, hard edges between them,
+        // the same construction §6.10 rules legal for the market's fade — so filling it to
+        // 60% shows red, orange and yellow whole and nothing of the green.
+
+        /// <summary>
+        /// The empty tube: a channel sunk into whatever it is standing on, with a hairline
+        /// collar and a lit bottom lip.
+        ///
+        /// GREY-SCALE BY CONSTRUCTION, the same argument <see cref="Card"/> makes: the gauge
+        /// is tinted with its SURFACE's own ink, so the recess comes out as a shade of the
+        /// paper it is cut into rather than a black slab laid on top of it. The first draft
+        /// was dark glass in Night violet and it was the heaviest thing on a cream recipe
+        /// card — which is §6.3 (the screen's subject should be its biggest reading, and the
+        /// subject is the drink's name, not its syrup measure).
+        /// </summary>
+        public static Sprite GaugeTube(int w, int h)
+        {
+            string key = $"gauge:tube:{w}x{h}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var clear = new Color32(0, 0, 0, 0);
+            var px = new Color32[w * h];
+            void Set(int x, int ty, byte v)
+            {
+                if (x < 0 || x >= w || ty < 0 || ty >= h) return;
+                px[(h - 1 - ty) * w + x] = new Color32(v, v, v, 255);
+            }
+            for (int ty = 0; ty < h; ty++)
+                for (int x = 0; x < w; x++)
+                {
+                    bool endCut = (x == 0 || x == w - 1) && (ty == 0 || ty == h - 1);
+                    if (endCut) { px[(h - 1 - ty) * w + x] = clear; continue; }   // chamfer
+                    if (ty == 0) { Set(x, ty, 96); continue; }        // the sawn top edge
+                    if (ty == h - 1) { Set(x, ty, 255); continue; }   // the lip, catching light
+                    if (x == 0 || x == w - 1) { Set(x, ty, 96); continue; }
+                    Set(x, ty, ty == 1 ? (byte)150 : (byte)196);      // shadow under the rim
+                }
+            return Cache[key] = Make(px, w, h, Vector4.zero);
+        }
+
+        /// <summary>The liquid ladder: one texel per 20-point measure, in the reading's own
+        /// colours. Drawn as a filled image, so the level cuts it on a measure line exactly.</summary>
+        public static Sprite GaugeLadder(Color[] bands)
+        {
+            string key = "gauge:ladder";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var px = new Color32[bands.Length];
+            for (int i = 0; i < bands.Length; i++) px[i] = bands[i];
+            return Cache[key] = Make(px, bands.Length, 1, Vector4.zero);
+        }
+
+        /// <summary>The glass over the liquid: the measures scratched at every 20 points, and
+        /// the shine along the top. Transparent everywhere else, so it reads as one object
+        /// with the tube rather than a frame stuck over a fill.</summary>
+        public static Sprite GaugeGlass(int w, int h, int steps)
+        {
+            string key = $"gauge:glass:{w}x{h}x{steps}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var clear = new Color32(0, 0, 0, 0);
+            var scratch = new Color32(0, 0, 0, 90);            // a measure, cut into the glass
+            var shine = new Color32(255, 255, 255, 26);        // the light along the tube's top
+            var px = new Color32[w * h];
+            for (int i = 0; i < px.Length; i++) px[i] = clear;
+            void Set(int x, int ty, Color32 c)
+            {
+                if (x < 0 || x >= w || ty < 0 || ty >= h) return;
+                px[(h - 1 - ty) * w + x] = c;
+            }
+            int inner = w - 2;
+            for (int x = 1; x < w - 1; x++) Set(x, 2, shine);
+            // The measures are TRUE about the content (§6.9): one at every box boundary, and
+            // none at the ends, where the collar already says where the tube stops.
+            for (int s = 1; s < steps; s++)
+            {
+                int x = 1 + inner * s / steps;
+                for (int ty = 1; ty < h - 1; ty++) Set(x, ty, scratch);
+            }
+            return Cache[key] = Make(px, w, h, Vector4.zero);
+        }
+
         private static Sprite Make(Color32[] px, int w, int h, Vector4 border)
         {
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
