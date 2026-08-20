@@ -70,7 +70,6 @@ namespace LastCall.UI
         }
 
         public static Sprite Shaker => Load("shaker");
-        public static Sprite Glass => Load("glass");
 
         /// <summary>The tray piece for a preparation id (ice / lemon_twist / salt_rim / sugar_rim).</summary>
         public static Sprite Prep(string prepId)

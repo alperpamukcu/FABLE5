@@ -91,33 +91,44 @@ hour/week instrument panel (`ChromeArt.Well` + a rewritten `SegmentClock`), fixt
 unlock conditions, and the room keeping time (`window_cycle`, `star3d`). None of it is
 finished work — it is where the pen was put down.
 
-**PlayMode is RED and it is not the sweep's doing — measured 2026-08-20.** EditMode is
-335/335. PlayMode fails on one root cause: `OpenUntil("MENU — MAKE A DRINK", "MenuPanel")`
-gives up after six presses because the panel stays closed, which takes down whichever
-`LookTests` screens need the bench that run (the failing test NAME moves between runs; the
-cause does not). This was reproduced at `d147d117` with the whole sweep stashed, so the
-regression arrived with the storefront/instrument round, not with the cleanup.
+**DISABLE DOMAIN RELOAD BREAKS THE PLAYMODE SUITE — found and fixed 2026-08-20.** For a
+few hours the suite was red and non-deterministically so: a different test failed each run,
+always with the same shape — *the pointer never reached* the seat, or six presses of
+"MENU — MAKE A DRINK" never opened `MenuPanel`. It was never a code bug.
 
-What was measured in play, so nobody re-derives it:
+`ProjectSettings/EditorSettings.asset` had picked up `m_EnterPlayModeOptions: 1`
+(**Disable Domain Reload**) in `d147d117`. With domain reload off, statics are NOT reset
+between play sessions, so eight tests that each enter play mode inherit the previous one's
+leftovers — and `InputTestFixture`'s virtual mouse is exactly the kind of state that does
+not survive that. The proof is clean: setting is on → red, non-deterministic; setting off →
+**8/8 green, including all three pixel-compared screens**. Nothing else changed.
 
-- The button is healthy — `interactable`, `enabled`, on screen, and an `EventSystem`
-  `RaycastAll` at its centre returns **it alone**, so nothing is covering it.
-- Its handler is wired and works: `btn.onClick.Invoke()` flips `MenuPanel` from inactive to
-  active **immediately**, in the same frame.
+Two facts worth keeping:
 
-So the menu wiring is fine. The defect is in the path the VIRTUAL MOUSE takes to that
-button, or in a state after `OpenTheBar()` that swallows the press — look at what the new
-bottom-of-screen chrome did to the pointer path, and at whether the bar is still settling
-when the first press lands. Note the suite pins the Game view to 1280×720 while the editor
-sat at 1884×1060 during the measurement above.
+- **That setting is TRACKED**, so it travels with the clone. If the suite on the new machine
+  is red with "pointer never reached" anywhere in the message, check this FIRST — before
+  reading a line of UI code.
+- The setting exists for a real reason: with it on, play mode starts almost instantly, which
+  is a genuine win when hand-testing. The trade is that the test floor stops working. If you
+  want it back, turn it on for hand-play and **off before running the suite** — or do the
+  proper fix and reset the UI layer's statics from
+  `[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]`, which
+  is a real job across the sprite caches.
+
+Diagnostics that were run before the cause was found, kept because they rule things out:
+nothing covers the menu button (an `EventSystem.RaycastAll` at its centre returns it alone),
+and `btn.onClick.Invoke()` opens the panel in the same frame — the wiring was always sound.
 
 **A second dead-but-suspicious one:** `TycoonHud.RefundArt` has no caller. It builds the
 picture for a refund row, so this reads more like a wire that was never connected than like
 something retired — worth a look before deleting it.
 
-**Known loose end from that round:** `ItemArt.Glass` still loads the `"glass"` sprite, and
-`TycoonHud:1666` still assigns it, but `glass.png` was deleted with P14's fridge. That
-image resolves to null today. Deliberately not guessed at.
+**Closed since:** `ItemArt.Glass` and its one call site are gone (the author: "glass.png çok
+eski sürüme ait artık kullanılmıyor"). It was a pre-v3 leftover, and the fallback it fed —
+the dirty glass on the counter — sat directly under the rule that forbids it ("the empty on
+the counter is the drawn vessel the drink was served in, not a stock photo of some other
+glass"). An unknown line now leaves the prop undrawn, which the colour it already carries
+was written for.
 
 **Left alone on purpose by the sweep** (dead today, but the author is mid-build):
 `TycoonRun.CanUnlock` — the unlock feature grew a `Kept` condition the same day;

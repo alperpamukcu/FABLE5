@@ -1661,9 +1661,13 @@ namespace LastCall.UI
                     if (run != null && v.Dirty.GlasswareId != null)
                         foreach (var g in run.Glassware)
                             if (g.Id == v.Dirty.GlasswareId) { dirtyDef = g; break; }
+                    // If the line is unknown the glass stays UNDRAWN rather than borrowing
+                    // a stock one — that is the same rule, held at its edge. The old
+                    // `ItemArt.Glass` fallback did exactly what the rule forbids, and its
+                    // art was a pre-v3 leftover deleted with the fridge; the colour set
+                    // below is what a sprite-less prop is already dressed in.
                     if (dirtyDef != null)
                         img.sprite = GlassArt.For(dirtyDef, run.GlassTier(dirtyDef.Id)).Sprite;
-                    else img.sprite = ItemArt.Glass;
                     img.preserveAspect = true;
                     img.color = new Color(1f, 1f, 1f, 0.85f);
                     if (img.sprite == null) img.color = new Color(0.8f, 0.9f, 0.95f, 0.5f);
