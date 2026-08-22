@@ -718,7 +718,7 @@ namespace LastCall.UI
             // The painted wall went with the shaker's (2026-08-22): the room itself is
             // behind the scrim now, so a drawn one would be a second bar inside the first.
             // The bar top stays — it is the surface the glass and its shadow stand on.
-            AddBenchCounter(_servePanel, DiegeticStage.BenchSurfaceFraction);
+            AddBenchCounter(_servePanel, 0.675f);    // moved on open by AlignBenchCounters
 
             // The props' container spans the whole panel: everything in it is placed in
             // panel space, on the counter's own stand line. No layout groups — a room is

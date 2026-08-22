@@ -1496,6 +1496,10 @@ namespace LastCall.UI
         /// its way — the drinkers' tickets and their clocks.</summary>
         private bool CellarOpen => stage != null && stage.DrawerPhase > 0.01f;
 
+        /// <summary>The room, for the service flow — which has to put its bar top on the same
+        /// line the room's counter is on, and cannot ask the scene for it twice.</summary>
+        public DiegeticStage Room => stage;
+
         private void OnMenuClicked()
         {
             if (stage == null) return;

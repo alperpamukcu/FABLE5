@@ -122,9 +122,16 @@ namespace LastCall.UI
             _tapPanel = NewRect("TapPanel", _field);
             // Near the full canvas. The station needs the height: a font drawn at its real
             // proportion to the glass simply does not fit a 640-tall box (2026-07-30).
-            Place(_tapPanel, new Vector2(0.5f, 0.5f), new Vector2(1210, 700), Vector2.zero);
-            _tapPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
+            // THE SAME BENCH AS THE OTHER TWO (2026-08-22, the author: "bira koyma
+            // sahnesinin tasarımı da pour sahnesiyle aynı şekilde olacak"). It was a 1210x700
+            // plate of flat Night over the room; it is the full field now, undimmed, with the
+            // bar top drawn on the room's own counter line. Full field and not the old inset,
+            // because the band has to reach both edges or the room shows past its ends.
+            Stretch(_tapPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var block = _tapPanel.gameObject.AddComponent<Image>();
+            block.color = new Color(0f, 0f, 0f, 0f);
             Swallow(_tapPanel);
+            AddBenchCounter(_tapPanel, 0.675f);      // moved on open by AlignBenchCounters
 
             _tapTitle = NewText("Title", _tapPanel, _display, 16, TextAnchor.UpperCenter, UITheme.TextPrimary);
             Stretch(_tapTitle.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -46), new Vector2(0, -18));
@@ -136,9 +143,12 @@ namespace LastCall.UI
             _tapSurface = NewRect("TapSurface", _tapPanel);
             Stretch(_tapSurface, Vector2.zero, Vector2.one, new Vector2(20, 84), new Vector2(-20, -82));
             var surf = _tapSurface.gameObject.AddComponent<Image>();
-            // The back wall behind the station, a shade off the panel so the room has depth
-            // rather than being one flat field.
-            surf.color = UITheme.Night[0];
+            // A COORDINATE SPACE, not a thing you can see — the same as the shaker's
+            // PourSurface. It was a Night[0] back wall "so the room has depth rather than
+            // being one flat field", which was true while the panel was an opaque plate over
+            // nowhere. The room is behind the station now and has its own depth, so a painted
+            // wall in front of it is just a wall in front of a wall (2026-08-22).
+            surf.color = new Color(0f, 0f, 0f, 0f);
             surf.raycastTarget = false;
             // NOT masked. A Mask here clips the keg beautifully and empties the glass: Unity gives
             // a masked Graphic a stencil-modified COPY of its material, while MetaballFluid goes

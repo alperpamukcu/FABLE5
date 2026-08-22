@@ -123,12 +123,16 @@ namespace LastCall.UI
         /// açıkken tam olarak tezgahın üstüne kapansın").
         ///
         /// DERIVED, not typed: the counter hangs from its own rest line, the drawer lifts the
-        /// whole room by its own travel, and this is those two numbers added. A bench is only
-        /// ever reachable through the cellar now, so the cellar is always open behind it and
-        /// this is always the line to meet.
+        /// whole room by its own travel, and this is those two added.
+        ///
+        /// IT FOLLOWS THE DRAWER rather than assuming it open (2026-08-22). The shaker and the
+        /// glass are only reachable through the cellar, so for them the drawer always is — but
+        /// the DRAUGHT station's door is the font standing in the room, and the cellar behind
+        /// it may well be shut. A fixed line would have landed that bench 121 px above its own
+        /// counter, which is the same stripe of room the other two just stopped showing.
         /// </summary>
-        public static float BenchSurfaceFraction =>
-            (CounterRestY + CounterSurfaceInset + DrawerTravel) / Reference.y;
+        public float BenchSurfaceFraction =>
+            (CounterRestY + CounterSurfaceInset + DrawerTravel * _drawerT) / Reference.y;
         /// <summary>How far the roller drops to clear the opening. The author's mock-ups
         /// put its top at screen row 305 shut and 356 open while the room rose 121, so against
         /// the room it travels 356 - (305 - 121) = 172 — its own height, near enough, less the

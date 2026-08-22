@@ -251,6 +251,7 @@ namespace LastCall.UI
             _tapFluid?.Clear();
             if (Run != null && Run.PullingId != null) Run.EndPull();
 
+            AlignBenchCounters();
             if (stage == Stage.Shaker) RefreshShaker();
             if (stage == Stage.Serve) RefreshServe();
             if (stage == Stage.Tap) RefreshTap();

@@ -1112,6 +1112,31 @@ namespace LastCall.UI
         /// the room's own. The COUNTER stayed, and deliberately — see below, it is what keeps
         /// a black contact shadow from being drawn on black.
         /// </summary>
+        /// <summary>Every bar top drawn on a bench, so AlignBenchCounters can put them all
+        /// on the room's own counter line when a stage opens.</summary>
+        private readonly List<RectTransform> _benchCounters = new List<RectTransform>();
+
+        /// <summary>
+        /// Puts every bench's bar top on the line the room's counter is actually on. Called
+        /// when a stage opens rather than baked at build: the shaker and the glass are always
+        /// entered with the cellar open, the DRAUGHT station usually is not, and the counter
+        /// sits 121 px apart between those two states.
+        /// </summary>
+        private void AlignBenchCounters()
+        {
+            var room = GetComponent<TycoonHud>()?.Room;
+            if (room == null) return;
+            float fromY = room.BenchSurfaceFraction;
+            foreach (var band in _benchCounters)
+            {
+                if (band == null) continue;
+                band.anchorMin = Vector2.zero;
+                band.anchorMax = new Vector2(1f, fromY);
+                band.offsetMin = Vector2.zero;
+                band.offsetMax = Vector2.zero;
+            }
+        }
+
         private void AddBenchCounter(RectTransform panel, float fromY)
         {
             // It goes in BEHIND EVERYTHING on the panel: a band added after the title is a
@@ -1123,6 +1148,7 @@ namespace LastCall.UI
             // was a field rather than a counter, and a black contact shadow drawn on it
             // was black on near-black: the props read as cut out and pasted on.
             var top = NewRect("CounterTop", panel);
+            _benchCounters.Add(top);
             Stretch(top, Vector2.zero, new Vector2(1f, fromY), Vector2.zero, Vector2.zero);
             top.SetAsFirstSibling();
             var timg = top.gameObject.AddComponent<Image>();
@@ -1173,7 +1199,7 @@ namespace LastCall.UI
             // behind the scrim, which is the corner of the bar this wall was imitating. The
             // COUNTER band stays: the props' contact shadows are black, and black on the
             // scrimmed room reads as cut-out-and-pasted exactly as it did on the old panel.
-            AddBenchCounter(_shakerPanel, DiegeticStage.BenchSurfaceFraction);
+            AddBenchCounter(_shakerPanel, 0.675f);   // moved on open by AlignBenchCounters
 
             // The play surface — a COORDINATE SPACE, not a thing you can see: where the
             // tin, the bottle and the spoon are placed and where the pointer is read. The
