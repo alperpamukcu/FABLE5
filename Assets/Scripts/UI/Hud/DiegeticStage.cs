@@ -104,6 +104,69 @@ namespace LastCall.UI
         private Vector2 _counterNative;
         private float _counterScale;                // stage units per counter-art pixel
 
+        // ── the cellar drawer (2026-08-22) ──────────────────────────────────────
+        // The back bar is not a room you travel to any more; it is the counter's own body,
+        // shut behind a roller. MEASURED off the two pieces rather than chosen: the shelf
+        // opening is rows 65..241 of the cropped counter — 176 tall, which is the shutter's
+        // height to the pixel, because the author drew the two to each other.
+        private const float ShutterOpeningTopPx = 65f;   // art px below the counter's top edge
+        /// <summary>How far the room rises to bring the cellar into frame. Read off the
+        /// author's own mock-ups: the slab's dark band sits at screen row 240 shut and 119
+        /// open, and nothing had to be invented to fill the gap because the counter hangs
+        /// exactly this far below the screen.</summary>
+        public const float DrawerTravel = 121f;
+        /// <summary>How far the roller drops to clear the opening. The author's mock-ups
+        /// put its top at screen row 305 shut and 356 open while the room rose 121, so against
+        /// the room it travels 356 - (305 - 121) = 172 — its own height, near enough, less the
+        /// four pixels the open frame leaves showing at the sill. It goes DOWN, which is what
+        /// the pink arrow drawn on it has been pointing at all along.</summary>
+        private const float ShutterTravel = 172f;
+        private const float DrawerSeconds = 0.42f;
+        private Transform _shutterTr;
+        private Vector2 _shutterNative;
+        private float _shutterRestLocalY;
+        private float _drawerT;                     // 0 shut, 1 open
+        private float _drawerTarget;
+
+        /// <summary>Is the cellar open, or on its way there?</summary>
+        public bool DrawerOpen => _drawerTarget > 0.5f;
+        /// <summary>0 shut, 1 open — for anything that has to fade with the drawer.</summary>
+        public float DrawerPhase => _drawerT;
+
+        /// <summary>
+        /// Opens or shuts the counter's cellar. The whole room rides up: the author's two
+        /// mock-ups differ by exactly <see cref="DrawerTravel"/> in every landmark, patrons
+        /// included, so this moves the world root rather than the counter alone.
+        /// </summary>
+        public void SetDrawerOpen(bool open, bool instant = false)
+        {
+            _drawerTarget = open ? 1f : 0f;
+            if (instant || Motion.Reduced) { _drawerT = _drawerTarget; ApplyDrawer(); }
+        }
+
+        private void ApplyDrawer()
+        {
+            if (_world != null)
+                _world.position = new Vector3(
+                    0f, DrawerTravel * _drawerT * Mathf.Max(0.0001f, _worldScale), 0f);
+            if (_shutterTr != null)
+            {
+                var lp = _shutterTr.localPosition;
+                _shutterTr.localPosition =
+                    new Vector3(lp.x, _shutterRestLocalY - ShutterTravel * _drawerT, lp.z);
+            }
+        }
+
+        private void StepDrawer()
+        {
+            if (Mathf.Approximately(_drawerT, _drawerTarget)) return;
+            // Unscaled: the cellar opens while the night's clock is running, and a paused or
+            // slowed run must not leave the roller half down.
+            float step = Time.unscaledDeltaTime / DrawerSeconds;
+            _drawerT = Mathf.MoveTowards(_drawerT, _drawerTarget, step);
+            ApplyDrawer();
+        }
+
         // ── the bar runs past both edges (2026-08-19) ───────────────────────────
         // The art ends inside the frame: its slab is drawn with depth, so the back edge
         // tapers in over the last fifty pixels at each end and the bar visibly STOPS, with
@@ -460,6 +523,10 @@ namespace LastCall.UI
         /// the bar counter replace their flat procedural placeholders.</summary>
         [SerializeField] private Sprite backgroundSprite;
         [SerializeField] private Sprite counterSprite;
+        /// <summary>The roller shutter that shuts the counter's cellar (2026-08-22). Optional:
+        /// with no shutter the cabinet simply stands open, which is what the stage did before
+        /// the drawer existed.</summary>
+        [SerializeField] private Sprite shutterSprite;
         [SerializeField] private Sprite registerSprite;   // cash register, shows the wallet
         private Text _moneyText;
 
@@ -548,6 +615,7 @@ namespace LastCall.UI
         private void Update()
         {
             StepClosing();
+            StepDrawer();
             float w = VisibleWidth();
             if (!Mathf.Approximately(w, _lastVisibleW)) Refit(w);
             // The room is built once at the reference and MAGNIFIED to cover the window.
@@ -700,6 +768,14 @@ namespace LastCall.UI
                 _counterTr = sr.transform;
                 _counterNative = counterSprite.rect.size;
                 _counterDrawWidth = SetUpCounterTiling(sr);
+            }
+            // Order 31: over the counter's own cabinet (30) and under anything standing ON
+            // the bar (35), because the roller shuts the cellar, not the bar top.
+            if (shutterSprite != null)
+            {
+                var sh = WorldSprite("Shutter", shutterSprite, order: 31);
+                _shutterTr = sh.transform;
+                _shutterNative = shutterSprite.rect.size;
             }
 
             BuildRegister();
@@ -907,6 +983,20 @@ namespace LastCall.UI
                 float artTopStage = CounterRestY + CounterSurfaceInset * _counterScale;
                 float artHStage = _counterNative.y * _counterScale;
                 _counterTr.position = new Vector3(0f, artTopStage - artHStage * 0.5f - Reference.y * 0.5f, 0f);
+                if (_shutterTr != null)
+                {
+                    // Laid out SHUT, then the drawer's own offset is re-applied on top, so a
+                    // window resize mid-open does not slam the roller back into the sill.
+                    // NOT tiled, unlike the counter: the roller carries one pink arrow at its
+                    // top centre and a repeat would draw a row of them. It stays at its drawn
+                    // 592 against the counter's 638, which leaves the blue side posts showing
+                    // when shut — the author drew it that way and it reads as deliberate.
+                    float counterTop = artTopStage - Reference.y * 0.5f;
+                    _shutterTr.position = new Vector3(
+                        0f, counterTop - ShutterOpeningTopPx - _shutterNative.y * 0.5f, 0f);
+                    _shutterRestLocalY = _shutterTr.localPosition.y;
+                    ApplyDrawer();
+                }
             }
 
             PlaceFixtures();

@@ -134,6 +134,8 @@ namespace LastCall.EditorTools
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/club_room.png");
             stageSo.FindProperty("counterSprite").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/counter.png");
+            stageSo.FindProperty("shutterSprite").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/counter_shutter.png");
             stageSo.FindProperty("registerSprite").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Props/register2.png");
             stageSo.ApplyModifiedPropertiesWithoutUndo();

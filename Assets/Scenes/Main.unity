@@ -184,6 +184,7 @@ MonoBehaviour:
   displayFont: {fileID: 12800000, guid: dff9897f49bf420488d3b02734457084, type: 3}
   backgroundSprite: {fileID: 21300000, guid: d148df8a4aee4fdea5200f59aa224b28, type: 3}
   counterSprite: {fileID: 21300000, guid: 510a888f65961b84899aae26cf44345b, type: 3}
+  shutterSprite: {fileID: 21300000, guid: 09037743b44ac1044bd8889be18e1fb2, type: 3}
   registerSprite: {fileID: 21300000, guid: a69afce1e8ab8f44cb924ae9eda625c1, type: 3}
   portraits:
   - archetypeId: after_shift
@@ -361,7 +362,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 180
+  orthographic size: 265
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2

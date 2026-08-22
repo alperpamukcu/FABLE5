@@ -70,8 +70,19 @@ namespace LastCall.UI
         /// between its own pixels. The counter's props (the dirty glass) do NOT take it: they
         /// stand on the bar, and the bar has not moved.</summary>
         private const float SeatDrop = 16f;
-        /// <summary>Where a stool's rect actually sits.</summary>
-        private const float SeatLineY = CounterLineY - SeatDrop;
+        /// <summary>Where a stool's rect sits with the cellar shut.</summary>
+        private const float SeatLineBaseY = CounterLineY - SeatDrop;
+        /// <summary>
+        /// Where a stool's rect actually sits. NOT a constant since the counter grew a cellar
+        /// (2026-08-22): opening it lifts the whole room, and the author's mock-ups lift the
+        /// drinkers with it — their heads sit 121 art px higher in the open frame, the same
+        /// travel as the room. This is the ONE place that has to know, because the tag rides
+        /// the seat rect as a child and the BODY is derived from the same anchoredPosition
+        /// every frame, so both follow from this number and cannot drift apart.
+        /// </summary>
+        private float SeatLineY =>
+            SeatLineBaseY + (stage != null
+                ? stage.DrawerPhase * DiegeticStage.DrawerTravel * StageToHud : 0f);
         private const float BustW = 108f;
 
         /// <summary>How far apart the stools stand along the counter. It was a local const
