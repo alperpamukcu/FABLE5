@@ -129,11 +129,14 @@ real time:
    still worth leaving off — statics not resetting between play sessions is a real hazard for
    a suite that enters play eight times — but it does not explain these failures and fixing
    it will not stop them.
-2. **`ProjectSettings/EditorSettings.asset` fights being changed.** Setting
-   `EditorSettings.enterPlayModeOptionsEnabled = false` updates the live editor but does NOT
-   reach the file, even through `SaveAssets`, `File/Save Project` or a `SerializedObject`
-   write — and Unity rewrites the file back to the old value after play. It has to be edited
-   in the Editor UI (Edit → Project Settings → Editor → Enter Play Mode Settings) to stick.
+2. **`ProjectSettings/EditorSettings.asset` fights being changed from code — SETTLED
+   2026-08-22.** Setting `EditorSettings.enterPlayModeOptionsEnabled = false` updates the live
+   editor but does NOT reach the file, even through `SaveAssets`, `File/Save Project` or a
+   `SerializedObject` write, and Unity rewrites the file back after play. The author turned it
+   off in the Editor UI instead (Edit → Project Settings → Editor → Enter Play Mode Settings)
+   and it now holds: the file reads `0 / 0`, survives a play cycle, and no longer has to be
+   hand-corrected before every commit. **If you ever need to change it, use the UI** — a
+   scripted write will look like it worked and will not have.
 
 **A test-side fix went in with this**: both suites' `OpenTheBar()` now waits for
 `Phase == DayOpen`, not just for the curtain to lift. Every door in the flow guards on that
