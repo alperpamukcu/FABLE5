@@ -1,5 +1,27 @@
 # Pending art — the 2026-08-20/21 session
 
+> **UPDATE 2026-08-22 — THE ROOM AND THE COUNTER ARE IN.** `background/room_v4.png` is
+> now `Assets/Art/Backgrounds/club_room.png`, and the author's counter and shutter
+> (`backba-opened-png.png`, `backbar-kapak.png`) are `counter.png` and
+> `counter_shutter.png` beside it. Installed under their OLD names on purpose, so every
+> scene reference and GUID survived. What changed with them:
+>
+> - The counter was **cropped to its own ink** — the drawing carries 112 transparent
+>   rows on top and the stage hangs the sprite by its top edge, so uncropped it would
+>   have hung the slab 112 px low. It is 638×241 now.
+> - `CounterRestY` 131 → **120**, read off `mockup_drawer_closed.png` (the slab's
+>   near-black band starts at screen row 240 of 360). The same slab is at row 119 in the
+>   OPEN frame — a difference of exactly **121**, which is the drawer's whole travel.
+> - The nine-slice border re-measured to **(217, 0, 218, 0)**: the front is three bays
+>   now, not the old eight, with posts scanning at x 7-32, 209-226, 412-429, 605-630.
+> - The two `onCounter` slots followed the surface down 11 (`taps` 131→120,
+>   `counter_end` 121→110). Verified in play: the tap tower's foot sits at −60 against
+>   a counter top of −58, which is the 2 px surface inset.
+>
+> STILL NOT IN: the shutter is imported but **not drawn** — the cabinet stands open, so
+> the drawer mechanic (shutter up, scene up 121) is the next piece. The taps and the UI
+> key below are untouched. EditMode 335/335 and PlayMode 8/8 both green after the swap.
+
 Everything here was made or measured in one sitting and **none of it is in the game yet**.
 It sits in a `~` folder on purpose: Unity never imports a directory whose name ends in `~`,
 and git does keep it — the same trick `Assets/Tests/PlayMode/Baselines~/` uses. That matters

@@ -204,7 +204,12 @@ namespace LastCall.UI
         // and everything standing ON the counter is now written as an offset from it rather
         // than as its own constant, because the last two moves left the till and the beer
         // fonts behind.
-        private const float CounterRestY = 131f;           // counter-top rest line (till, glassware)
+        // 131 -> 120 (2026-08-21, the drawer counter). READ OFF THE AUTHOR'S OWN MOCK-UP
+        // rather than tuned: in mockup_drawer_closed.png the slab's near-black band starts
+        // at screen row 240 of 360, which is 120 above the bottom edge. The same slab sits
+        // at row 119 in the OPEN frame - a difference of exactly 121, which is the drawer's
+        // whole travel and the number Phase 2 will slide the scene by.
+        private const float CounterRestY = 120f;           // counter-top rest line (till, glassware)
         // Measured off the art: the bar's far edge — where a glass is set down — is this far
         // below the sprite's top (2026-07-29).
         private const float CounterSurfaceInset = 2f;

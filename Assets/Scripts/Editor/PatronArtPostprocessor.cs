@@ -67,7 +67,12 @@ namespace LastCall.EditorTools
             // sets size.y to the art's own height, so there is exactly one tile down.
             else if (file == "counter")
             {
-                ti.spriteBorder = new Vector4(168, 0, 305, 0);
+                // RE-MEASURED for the 2026-08-21 drawer counter (638x241 after its 112
+                // transparent rows were cropped off): the blue posts now scan at x 7-32,
+                // 209-226, 412-429 and 605-630, so the front is THREE bays, not the old
+                // eight. Divider to divider again - left cap up to 217, the repeating
+                // tile is the middle bay 217..420, right cap is the rest.
+                ti.spriteBorder = new Vector4(217, 0, 218, 0);
                 // Tiling reads the sprite's MESH, and the default tight mesh throws away the
                 // transparent margin the tile is measured against - Unity says so out loud
                 // ("Sprite Tiling might not appear correctly ... not generated with Full Rect")

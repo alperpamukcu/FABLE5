@@ -14,7 +14,7 @@
     {
       "id": "counter_end",
       "x": 26,
-      "y": 121,
+      "y": 110,
       "onCounter": true
     },
     {
@@ -55,7 +55,7 @@
     {
       "id": "taps",
       "x": 192,
-      "y": 131,
+      "y": 120,
       "onCounter": true
     }
   ],
