@@ -817,6 +817,8 @@ namespace LastCall.UI
 
             // The way back is the left-edge key now (the loop rework's one back, one place).
             AddEdgeBack(_servePanel);
+            AddBinButton(_servePanel);      // see the shaker's, above
+
 
             var done = NewRect("Done", _servePanel);
             Place(done, new Vector2(0.5f, 0), new Vector2(240, 34), new Vector2(130, 12));

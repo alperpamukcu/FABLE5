@@ -1443,6 +1443,11 @@ namespace LastCall.UI
             // The way back wears the LEFT edge (the loop rework): one key, one place,
             // every station.
             AddEdgeBack(_shakerPanel);
+            // THE BIN COMES TO THE BENCH (2026-08-22). It used to stand on the back-bar page,
+            // which is the page the cellar replaced — and the room's own bin refuses while a
+            // bench is open (OnBinClicked), by design, so without this a botched build could
+            // not be thrown away at all until you had walked out of the room you botched it in.
+            AddBinButton(_shakerPanel);
         }
 
     }

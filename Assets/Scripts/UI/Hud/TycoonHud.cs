@@ -2274,7 +2274,10 @@ namespace LastCall.UI
         }
 
         /// <summary>A short notice under the top bar — refusals, mostly (GDD 24 §7).</summary>
-        private void Toast(string message)
+        /// <summary>The bar's one notice line. Public since the bench got its own bin
+        /// (2026-08-22): a discard says the same sentence wherever it is done from, and a
+        /// second message channel on the bench would be a second thing to keep in step.</summary>
+        public void Toast(string message)
         {
             if (_toast == null) return;
             _toast.text = message;

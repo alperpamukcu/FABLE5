@@ -30,12 +30,16 @@ namespace LastCall.UI
         private Font _body;
         private Font _display;
 
-        private enum Stage { Closed, Menu, Shaker, Serve, Tap }
+        // THE BACK-BAR PAGE IS GONE (2026-08-22, the author: "o sahne artık olmayacak
+        // silinecek"). It was the hub every bench hung off; the counter's own cellar took
+        // that job, standing open in the room behind whichever bench is out. What went with
+        // it: TycoonServiceFlow.Menu.cs whole, the wall of bottles it drew, Open(), and the
+        // forward/back reading of the slide that only made sense with a hub in the middle.
+        private enum Stage { Closed, Shaker, Serve, Tap }
         private Stage _stage = Stage.Closed;
 
         private RectTransform _root;        // the whole modal (scrim + panels)
         private RectTransform _field;       // the fixed 1280x720 field the panels are built in
-        private RectTransform _menuPanel;
         // THE STAGES SLIDE (2026-08-11, the author's loop rework: "keskin geçiş olmamalı").
         // One timer drives BOTH panels — the outgoing pushed off one way, the incoming
         // arriving from the other — so a stage change reads as the bar moving past the
@@ -90,7 +94,6 @@ namespace LastCall.UI
         private const float TinW = 168f;
         private const float CavityFloor = 0.0913f, CavityRim = 0.6106f;
         private const float GridGap = 6f;
-        private Text _menuTitle;
         private Vector2 _listHome;
         // The board draws one art pixel as ~5.8 screen pixels. Halving the key's pixels-per-unit
         // puts its grain at 4, so the keys read as the same piece of pixel art as the sheet they
@@ -111,13 +114,6 @@ namespace LastCall.UI
         }
 
         public bool IsOpen => _stage != Stage.Closed;
-
-        /// <summary>Opens the menu to build a drink. Ignored between days.</summary>
-        public void Open()
-        {
-            if (Run == null || Run.Phase != TycoonPhase.DayOpen) return;
-            GoTo(Stage.Menu);
-        }
 
         /// <summary>
         /// Straight to the draught station, because the tap is its own door (2026-08-15, the
@@ -209,8 +205,7 @@ namespace LastCall.UI
 
         /// <summary>The panel a stage lives on; null for Closed.</summary>
         private RectTransform PanelOf(Stage stage) =>
-            stage == Stage.Menu ? _menuPanel
-            : stage == Stage.Shaker ? _shakerPanel
+            stage == Stage.Shaker ? _shakerPanel
             : stage == Stage.Serve ? _servePanel
             : stage == Stage.Tap ? _tapPanel : null;
 
@@ -243,7 +238,6 @@ namespace LastCall.UI
             _root.gameObject.SetActive(stage != Stage.Closed);
             // A sliding stage keeps its OUTGOING panel alive for the transit; the slide's
             // settle turns it off. Everything else applies exactly as it always has.
-            _menuPanel.gameObject.SetActive(stage == Stage.Menu || (slide && previous == Stage.Menu));
             _shakerPanel.gameObject.SetActive(stage == Stage.Shaker || (slide && previous == Stage.Shaker));
             _servePanel.gameObject.SetActive(stage == Stage.Serve || (slide && previous == Stage.Serve));
             _tapPanel.gameObject.SetActive(stage == Stage.Tap || (slide && previous == Stage.Tap));
@@ -257,7 +251,6 @@ namespace LastCall.UI
             _tapFluid?.Clear();
             if (Run != null && Run.PullingId != null) Run.EndPull();
 
-            if (stage == Stage.Menu) { ResetPageSlide(); RefreshMenu(); }
             if (stage == Stage.Shaker) RefreshShaker();
             if (stage == Stage.Serve) RefreshServe();
             if (stage == Stage.Tap) RefreshTap();
@@ -265,11 +258,10 @@ namespace LastCall.UI
             // The visuals, last — the state above is already true whatever these draw.
             if (slide)
             {
-                // Forward reads left-to-right: the hub (Menu) hands off to a station, and
-                // the bench hands the capped tin ON to the glass. Everything else is the
-                // way back.
-                bool forward = previous == Stage.Menu
-                            || (previous == Stage.Shaker && stage == Stage.Serve);
+                // Forward reads left-to-right. With the hub gone there is one forward
+                // move left in the game: the bench hands the capped tin ON to the glass.
+                // Everything else — including arriving from the room — is the way back.
+                bool forward = previous == Stage.Shaker && stage == Stage.Serve;
                 PlayStageSlide(PanelOf(previous), PanelOf(stage), forward ? 1f : -1f);
             }
             else if (fade)
@@ -366,6 +358,34 @@ namespace LastCall.UI
         /// author: "bira koyma ekranı açıldıktan sonra geri dönmeye çalışıldığında backbara
         /// dönüyor, ana sahneye dönmeli"), so its key walks back out to the room rather than onto
         /// a wall the player never passed through.</summary>
+        /// <summary>Gives a corner control the same press as the section keys: it swaps to
+        /// its pressed art and dips as it goes down. (Moved here 2026-08-22 with the back-bar
+        /// page it used to live on — the bin and the tap still want it.)</summary>
+        private static void GiveKeyPress(RectTransform rt, Button btn, Image img, string pressedName)
+        {
+            var down = ItemArt.Load(pressedName);
+            if (down != null && img.sprite != null)
+            {
+                btn.transition = Selectable.Transition.SpriteSwap;
+                var st = btn.spriteState;
+                st.pressedSprite = down; st.selectedSprite = img.sprite;
+                btn.spriteState = st;
+            }
+            var sink = rt.gameObject.AddComponent<PressSink>();
+            sink.Face = rt; sink.Depth = 6f; sink.Squash = 0.02f;
+        }
+
+        /// <summary>Rings a label in black so it stays legible on any coloured key. The ring is
+        /// one font-pixel wide and closes on all eight sides — see <see cref="PixelOutline"/>.
+        /// (Moved here 2026-08-22; the draught station is what still asks for it.)</summary>
+        private static Text Outlined(Text t, float thickness = 2f)
+        {
+            var o = t.gameObject.AddComponent<PixelOutline>();
+            o.EffectColor = new Color(0f, 0f, 0f, 1f);
+            o.Distance = thickness;
+            return t;
+        }
+
         // EVERY STAGE WALKS BACK OUT TO THE ROOM NOW (2026-08-22, the author: "back to
         // bar dendiginde eski bar sahnesine gidiyor o sahne artik olmayacak"). The bench
         // stages used to hang off a full-screen back-bar wall and return to it; the back
@@ -394,13 +414,12 @@ namespace LastCall.UI
         {
             _focusBottle = card;
             Sfx.Play("bottle_open", 0.8f);
-            // Garnishes are a pinch, not a stream — no focus stage needed.
-            if (card.Type == IngredientType.Garnish)
-            {
-                Run.PourGarnish(card.Id);
-                RefreshMenu();
-                return;
-            }
+            // GARNISH CANNOT REACH HERE ANY MORE (2026-08-22), the way beer already could
+            // not. The one door into this method is the cellar, and the cellar is stocked by
+            // the same filter the wall used — no garnish, no beer. A pinch of mint is taken
+            // at the GLASS, where it is dropped in, and that is the only place it is offered.
+            // The old branch poured it and redrew the wall; both the wall and the branch are
+            // gone rather than left as a route nobody can walk.
             // Beer cannot reach here at all any more (2026-08-15): it left the wall with the
             // kegs, and the only door onto the draught station is the font in the room
             // (OpenTap). OnTheBackBar keeps it off the shelves, so there is no beer branch to
@@ -467,7 +486,6 @@ namespace LastCall.UI
             // One switch for every pointer under the flow: off while the field is moving.
             _rootGroup = _root.gameObject.AddComponent<CanvasGroup>();
 
-            BuildMenuPanel();
             BuildShakerPanel();
             BuildServePanel();
             BuildTapPanel();
@@ -495,8 +513,11 @@ namespace LastCall.UI
             btn.onClick.AddListener(() =>
             {
                 int fee = Run.DiscardGlass();
-                RefreshMenu();
-                if (fee > 0) _menuTitle.text = $"BINNED · -${fee}";
+                // Redraw whatever bench it is standing on: the tin and the glass both have
+                // to come back empty, and which one is on screen is the stage's business.
+                if (_stage == Stage.Shaker) RefreshShaker();
+                else if (_stage == Stage.Serve) RefreshServe();
+                GetComponent<TycoonHud>()?.Toast(fee > 0 ? $"BINNED · -${fee}" : "BINNED");
             });
             GiveKeyPress(rt, btn, img, "btn_bin_down");
             if (img.sprite == null)
