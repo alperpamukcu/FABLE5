@@ -54,8 +54,8 @@
     },
     {
       "id": "taps",
-      "x": 192,
-      "y": 120,
+      "x": 540,
+      "y": 102,
       "onCounter": true
     }
   ],
@@ -188,13 +188,23 @@
     },
     {
       "id": "taps_two",
-      "name": "Wide Draught Tower",
+      "name": "Arched Draught Bridge",
       "slot": "taps",
       "price": 65,
       "stars": 1.5,
-      "flavor": "Three spouts on one wide column. The bar looks busy before it is.",
-      "sprite": "fx_tap_wide",
+      "flavor": "A brass bridge on two legs, handles in a row across it.",
+      "sprite": "fx_tap_arch",
       "tapLevel": 2
+    },
+    {
+      "id": "taps_three",
+      "name": "Triple Draught Tower",
+      "slot": "taps",
+      "price": 100,
+      "stars": 3.0,
+      "flavor": "One column, three spouts, and nothing waiting its turn.",
+      "sprite": "fx_tap_tee",
+      "tapLevel": 3
     }
   ]
 }
