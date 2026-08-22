@@ -188,23 +188,13 @@
     },
     {
       "id": "taps_two",
-      "name": "Twin Draught Tower",
+      "name": "Wide Draught Tower",
       "slot": "taps",
       "price": 65,
       "stars": 1.5,
-      "flavor": "A second line, so the stout stops waiting its turn.",
-      "sprite": "fx_tap_double",
+      "flavor": "Three spouts on one wide column. The bar looks busy before it is.",
+      "sprite": "fx_tap_wide",
       "tapLevel": 2
-    },
-    {
-      "id": "taps_three",
-      "name": "Triple Draught Tower",
-      "slot": "taps",
-      "price": 100,
-      "stars": 3.0,
-      "flavor": "Three red handles in a row. The bar looks busy before it is.",
-      "sprite": "fx_tap_triple",
-      "tapLevel": 3
     }
   ]
 }

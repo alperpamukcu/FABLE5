@@ -78,6 +78,11 @@ namespace LastCall.UI
         public static Color Money => Amber[3];
         public static Color Flavor => Cyan[3];
         public static Color Mult => Magenta[3];
+        /// <summary>The making verb and the way back out of the cellar, in the author's own
+        /// magenta (2026-08-22: "Menu - make a drink butonunu kapatma butonu ile aynı
+        /// tasarımda yap"). ONE token for both, so the pair cannot drift apart by being
+        /// tinted in two places.</summary>
+        public static Color MakeAction => Magenta[2];
 
         // ── ingredient type → ramp (14 v2 §5); index by [step] ──────────────────
         public static readonly Dictionary<IngredientType, Color[]> TypeRamp = new Dictionary<IngredientType, Color[]>

@@ -366,7 +366,14 @@ namespace LastCall.UI
         /// author: "bira koyma ekranı açıldıktan sonra geri dönmeye çalışıldığında backbara
         /// dönüyor, ana sahneye dönmeli"), so its key walks back out to the room rather than onto
         /// a wall the player never passed through.</summary>
-        private void AddEdgeBack(RectTransform panel, Stage back = Stage.Menu,
+        // EVERY STAGE WALKS BACK OUT TO THE ROOM NOW (2026-08-22, the author: "back to
+        // bar dendiginde eski bar sahnesine gidiyor o sahne artik olmayacak"). The bench
+        // stages used to hang off a full-screen back-bar wall and return to it; the back
+        // bar is the counter's own cellar now, standing open BEHIND the bench, so the way
+        // back is to leave the bench rather than to open a page the player never passed
+        // through. The draught station already worked this way (2026-08-19); the rest
+        // have caught up, and Stage.Menu now has no door left into it.
+        private void AddEdgeBack(RectTransform panel, Stage back = Stage.Closed,
             string caption = "BACK\nTO\nBAR")
         {
             var rt = NewRect("EdgeBack", panel);

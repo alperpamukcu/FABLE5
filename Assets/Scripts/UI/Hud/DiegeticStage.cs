@@ -146,6 +146,8 @@ namespace LastCall.UI
         private readonly List<RectTransform> _cellarDoors = new List<RectTransform>();
         private System.Action<int> _onCellarPick;
         private RectTransform _shutterDoor;
+        private RectTransform _cellarCloseKey;
+        private Image _cellarCloseArt;
         private IReadOnlyList<string> _cellarIds;
         private CanvasGroup[] _registerFade;
 
@@ -226,6 +228,7 @@ namespace LastCall.UI
                 UiAuditExempt.Mark(_cellarDoorRoot, "the cellar doors are hit plates over the "
                     + "stock standing in the counter, sized to each bottle's own slot");
             }
+            BuildCellarCloseKey();
             while (_cellarDoors.Count < n)
             {
                 int index = _cellarDoors.Count;
@@ -237,9 +240,12 @@ namespace LastCall.UI
                 var btn = plate.gameObject.AddComponent<Button>();
                 btn.targetGraphic = hit;
                 btn.transition = Selectable.Transition.None;
-                // The cellar shuts behind you: the bottle is in hand, and a drawer left
-                // hanging open under the tin is a room the player has already walked out of.
-                btn.onClick.AddListener(() => { SetDrawerOpen(false); _onCellarPick?.Invoke(index); });
+                // THE CELLAR STAYS OPEN BEHIND YOU (2026-08-22, the author: "alkol yapma
+                // sahnesinde arkada zaten backbar açık olacak"). It shut for one afternoon,
+                // which meant every second bottle cost a full open-and-close of the room —
+                // and a bar with the cellar shut behind the tin is a bar you left. The bench
+                // slides in over it instead, and slides off it again.
+                btn.onClick.AddListener(() => _onCellarPick?.Invoke(index));
                 _cellarDoors.Add(plate);
             }
             for (int i = 0; i < _cellarDoors.Count; i++)
@@ -257,6 +263,16 @@ namespace LastCall.UI
         {
             if (_cellarDoorGroup != null)
                 _cellarDoorGroup.blocksRaycasts = _drawerT > 0.99f;
+            if (_cellarCloseKey != null)
+            {
+                bool showing = _drawerT > 0.01f;
+                if (_cellarCloseKey.gameObject.activeSelf != showing)
+                    _cellarCloseKey.gameObject.SetActive(showing);
+                // On the slab, just above the cellar's mouth, riding up with the room.
+                _cellarCloseKey.anchoredPosition = new Vector2(
+                    0f, CounterRestY + CounterSurfaceInset - ShutterOpeningTopPx * 0.5f
+                        + DrawerTravel * _drawerT);
+            }
             if (_cellarDoors.Count == 0) return;
             float slotW = CellarBayWidthPx / CellarPerBay;
             float left = (Reference.x - _counterNative.x) * 0.5f;
@@ -302,6 +318,47 @@ namespace LastCall.UI
                 Reference.x * 0.5f,
                 CounterRestY + CounterSurfaceInset - ShutterOpeningTopPx
                     + (DrawerTravel - ShutterTravel) * _drawerT);
+        }
+
+        /// <summary>
+        /// THE WAY BACK OUT (2026-08-22, the author: "backbar açıldıktan sonra kapatılmıyor
+        /// onun için başka buton ekle"). The roller shuts the cellar and its arrow is the
+        /// diegetic way to do it — but once the drawer is open the roller has travelled to
+        /// the sill and only a few pixels of it are left to aim at, which is not a door, it
+        /// is a keyhole. This key sits on the counter's own slab, over the shelves, and is
+        /// only there while the cellar is.
+        ///
+        /// It is drawn with the author's PINK KEY, nine-sliced: one drawing that fits any
+        /// rectangle, which is the whole reason that art exists.
+        /// </summary>
+        private void BuildCellarCloseKey()
+        {
+            if (_cellarCloseKey != null || _cellarDoorRoot == null) return;
+            _cellarCloseKey = NewRect("CellarClose", _cellarDoorRoot);
+            _cellarCloseKey.anchorMin = _cellarCloseKey.anchorMax = new Vector2(0.5f, 0);
+            _cellarCloseKey.pivot = new Vector2(0.5f, 0.5f);
+            _cellarCloseKey.sizeDelta = new Vector2(104, 30);
+            var btn = _cellarCloseKey.gameObject.AddComponent<Button>();
+            btn.transition = Selectable.Transition.None;
+            // THE ONE KEY (GDD 16 §2), not a fifth dialect. A generated 132x143 plate was
+            // tried here first and thrown out by the author ("çok düşük kalitede ve çok büyük
+            // pixellerden"): its own nine-slice corners are 18 and 24, which do not fit in a
+            // 30-tall button at all, so Unity squashed them. ChromeArt.Key is drawn at 20x20
+            // and greyscale by construction, so it stays crisp at any size and takes the
+            // making verb's own colour — which is how this key and that one are the SAME key.
+            var face = NewRect("Face", _cellarCloseKey);
+            Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _cellarCloseArt = KeyPlate.Dress(_cellarCloseKey, UITheme.MakeAction, btn, face);
+            btn.onClick.AddListener(() => SetDrawerOpen(false));
+
+            var label = NewText("Label", face, _display, 8,
+                                TextAnchor.MiddleCenter, UITheme.TextPrimary);
+            // Inset along the bottom by the key's throw: a caption sitting on the throw
+            // looks dropped (KeyPlate.Throw).
+            Stretch(label.rectTransform, Vector2.zero, Vector2.one,
+                    new Vector2(0, KeyPlate.Throw), Vector2.zero);
+            label.text = "SHUT IT";
+            label.raycastTarget = false;
         }
 
         /// <summary>Slot i's foot, in the counter art's own pixels. One reading, so the

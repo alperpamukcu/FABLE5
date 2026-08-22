@@ -1492,6 +1492,10 @@ namespace LastCall.UI
         /// drawer" — so it opens, and shutting is the roller's own arrow, which is drawn
         /// pointing the way it goes.
         /// </summary>
+        /// <summary>Is the counter's cellar open? Asked by everything that must get out of
+        /// its way — the drinkers' tickets and their clocks.</summary>
+        private bool CellarOpen => stage != null && stage.DrawerPhase > 0.01f;
+
         private void OnMenuClicked()
         {
             if (stage == null) return;
@@ -2958,7 +2962,13 @@ namespace LastCall.UI
                 // to be hidden while they read the menu, so a customer deciding and a customer
                 // who had not arrived yet looked exactly alike — the player had nothing to
                 // wait ON. It says "..." instead, which is a customer visibly thinking.
-                bool showBubble = atTheStool;
+                // …AND DOWN WHILE THE CELLAR IS (2026-08-22, the author: "Backbar
+                // açıldığında müşterilerin kafasının üstündeki barlar gitmeli"). The drinkers
+                // ride the room up with the drawer, and their tickets and clocks ride with
+                // them — straight into the shelves you are trying to read. Nothing is lost by
+                // taking them down: the cellar is a place you are looking AWAY from the room
+                // to work in, and the clocks are still running underneath.
+                bool showBubble = atTheStool && !CellarOpen;
                 if (view.Tag.gameObject.activeSelf != showBubble)
                     view.Tag.gameObject.SetActive(showBubble);
 
@@ -3116,7 +3126,8 @@ namespace LastCall.UI
                 // nursed, a guest who is being talked to (GDD 26 §4 keeps their clock on the
                 // POST-IT anyway), somebody already off the stool — has no clock to draw.
                 bool clockRunning = !visit.OnTheHouse && !visit.ClockHeld
-                    && !deciding && !drinking && visit.State == VisitState.Waiting;
+                    && !deciding && !drinking && visit.State == VisitState.Waiting
+                    && !CellarOpen;          // see the bubble, above
                 if (view.Gauge != null && view.Gauge.gameObject.activeSelf != clockRunning)
                     view.Gauge.gameObject.SetActive(clockRunning);
                 view.PatienceFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(gaugeW * patience), -2);
@@ -8894,7 +8905,7 @@ namespace LastCall.UI
             // band (art rows 9..45) is empty drawn panelling and puts them nearer the
             // counter, which is where the hand already is.
             NewButton(root, "MENU — MAKE A DRINK", new Vector2(0.5f, 0),
-                new Vector2(300, 40), new Vector2(0, 180), UITheme.PrimaryAction, OnMenuClicked);
+                new Vector2(300, 40), new Vector2(0, 180), UITheme.MakeAction, OnMenuClicked);
 
             // The recipe book, beside the making verb (v5 P16): the menu speaks styles now,
             // so how a drink is MADE has to live somewhere the player can read mid-shift.
