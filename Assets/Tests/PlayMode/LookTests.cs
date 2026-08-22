@@ -84,32 +84,29 @@ namespace LastCall.PlayTests
 
         // ── the screens ──────────────────────────────────────────────────────────
 
-        [UnityTest]
-        public IEnumerator The_back_bar_looks_the_way_it_did()
-        {
-            yield return OpenTheBar();
-            yield return OpenUntil("MENU — MAKE A DRINK", "MenuPanel");
-            // NOT THE WHOLE SCREEN — the back bar leaves a hairline of ROOM down each edge,
-            // and the room is alive (2026-08-19). It always was, but the window used to be a
-            // still plate; it is an evening's worth of frames now, stepped by the shift's
-            // clock, and the window sits exactly there — at art x 0..108, which lands in that
-            // left-hand column. The picture then disagreed with itself by 52 pixels of one
-            // column at 8/255, twice, deterministically: not a flake, a photograph of a clock.
-            // Four columns in from each side is the same rule the bench and the basket
-            // already keep — compare the instrument, not the room around it.
-            //
-            // The BOTTOM edge went the same way the day the room's light started coming out
-            // of the window (its last row drifted by 4/255 across the full width), so the
-            // inset is on all four sides now rather than only the two that had been caught.
-            yield return LooksTheSame("back_bar", new RectInt(4, 4, 1272, 712));
-        }
+        // THE BACK-BAR PICTURE IS RETIRED (2026-08-22), and not replaced. It photographed a
+        // full-screen UI panel, which held still because no light in the world touched it.
+        // The back bar is the counter's own cellar now: LIT WORLD ART, tinted every frame by
+        // the evening the room is having. A picture of it would be a photograph of a clock —
+        // the exact failure the comment on this test used to warn about, made structural.
+        // Freezing the shift to hold it still would be testing a bar that does not exist.
+        //
+        // What is lost is real and worth saying out loud: the cellar's LOOK is now only
+        // checked by entering play and looking at it. What still guards it is the smoke
+        // suite, which drives the same door with the same virtual mouse and asserts the
+        // cellar opens and a named bottle in it reaches the bench — behaviour, not pixels.
+        // Its baseline picture went with it; Baselines~/bench.png and basket.png stay,
+        // because both are still panels.
 
         [UnityTest]
         public IEnumerator The_bench_looks_the_way_it_did()
         {
             yield return OpenTheBar();
-            yield return OpenUntil("MENU — MAKE A DRINK", "MenuPanel");
-            yield return OpenUntil("Slot_vodka_astra", "ShakerPanel");
+            // Through the cellar now: the verb opens the counter's own drawer, and the door
+            // carrying the opening vodka takes it to the bench. The bench itself is still a
+            // panel, which is why this picture survives the redesign and the back bar's did not.
+            yield return OpenTheCellar("CellarDoor_vodka_astra");
+            yield return OpenUntil("CellarDoor_vodka_astra", "ShakerPanel");
             // Inside the panel only: the room shows around its edges and the room is alive.
             yield return LooksTheSame("bench", new RectInt(40, 30, 1200, 630));
         }
@@ -274,6 +271,43 @@ namespace LastCall.PlayTests
         /// that fails only for real reasons. It is still a hard assert: a screen that never
         /// opens still fails, loudly, with which of the two things went wrong.
         /// </summary>
+        /// <summary>
+        /// Presses the making verb until the counter's cellar is open. The same shape as
+        /// OpenUntil and for the same reason — the roller takes a moment and a press that
+        /// lands on a moving room is a press into nothing — but it waits on the STAGE's own
+        /// answer rather than on a panel, because the cellar is not one.
+        /// </summary>
+        private IEnumerator OpenTheCellar(string doorName)
+        {
+            // THE SUITE MAY NOT LOOK INSIDE THE UI (CLAUDE.md): it plays the scene through
+            // uGUI and the mouse, so it cannot ask the stage whether its drawer is open. It
+            // asks the POINTER instead, which is a better question anyway — the cellar's
+            // doors only take a ray once the roller is clear, so a door answering IS the
+            // cellar being open, and it is the same thing the player relies on.
+            for (int attempt = 0; attempt < 6; attempt++)
+            {
+                var target = Find("MENU — MAKE A DRINK");
+                Assert.That(target, Is.Not.Null, "the making verb is not on the screen to press");
+                yield return ClickOn(target);
+                yield return new WaitForSecondsRealtime(0.6f);   // the roller's own travel
+                var door = Find(doorName);
+                if (door != null && Reaches(door)) yield break;
+            }
+            Assert.Fail("six presses of the making verb never opened the cellar onto " + doorName);
+        }
+
+        /// <summary>Is this the thing a click at its own centre would land on?</summary>
+        private static bool Reaches(RectTransform target)
+        {
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es == null) return false;
+            var at = RectTransformUtility.WorldToScreenPoint(null, target.position);
+            var data = new UnityEngine.EventSystems.PointerEventData(es) { position = at };
+            var hits = new System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult>();
+            es.RaycastAll(data, hits);
+            return hits.Count > 0 && hits[0].gameObject == target.gameObject;
+        }
+
         private IEnumerator OpenUntil(string press, string expected)
         {
             const int Attempts = 6;

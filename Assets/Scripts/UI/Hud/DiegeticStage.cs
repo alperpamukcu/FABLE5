@@ -146,6 +146,24 @@ namespace LastCall.UI
         private readonly List<RectTransform> _cellarDoors = new List<RectTransform>();
         private System.Action<int> _onCellarPick;
         private RectTransform _shutterDoor;
+        private IReadOnlyList<string> _cellarIds;
+        private CanvasGroup[] _registerFade;
+
+        /// <summary>
+        /// Each door carries its bottle's id in its NAME. It costs nothing and it buys two
+        /// things: a PlayMode test can ask for the vodka rather than for "slot 0", and a
+        /// hierarchy full of CellarDoor0..17 stops being a puzzle the moment something is in
+        /// the wrong bay. The same trick the fixtures use ("Fx_" + def.Id).
+        /// </summary>
+        private void NameCellarDoors(int n)
+        {
+            for (int i = 0; i < n && i < _cellarDoors.Count; i++)
+            {
+                string id = _cellarIds != null && i < _cellarIds.Count ? _cellarIds[i] : null;
+                string want = string.IsNullOrEmpty(id) ? "CellarDoor" + i : "CellarDoor_" + id;
+                if (_cellarDoors[i].name != want) _cellarDoors[i].name = want;
+            }
+        }
 
         /// <summary>Who to tell when a bottle in the cellar is picked, by its index in the
         /// list <see cref="SetCellar"/> was given.</summary>
@@ -174,9 +192,10 @@ namespace LastCall.UI
         /// is told the money — it never reads the run. Anything past <see cref="CellarSlots"/>
         /// is not drawn, because there is no shelf for it to stand on.
         /// </summary>
-        public void SetCellar(IReadOnlyList<Sprite> bottles)
+        public void SetCellar(IReadOnlyList<Sprite> bottles, IReadOnlyList<string> ids = null)
         {
             int n = bottles == null ? 0 : Mathf.Min(bottles.Count, CellarSlots);
+            _cellarIds = ids;
             while (_cellarStock.Count < n)
                 _cellarStock.Add(WorldSprite("Stock" + _cellarStock.Count, null, order: 31));
             for (int i = 0; i < _cellarStock.Count; i++)
@@ -189,6 +208,7 @@ namespace LastCall.UI
                 PlaceCellarSlot(sr, i);
             }
             BuildCellarDoors(n);
+            NameCellarDoors(n);
             LayOutCellarDoors();
         }
 
@@ -209,7 +229,7 @@ namespace LastCall.UI
             while (_cellarDoors.Count < n)
             {
                 int index = _cellarDoors.Count;
-                var plate = NewRect("CellarDoor" + index, _cellarDoorRoot);
+                var plate = NewRect("CellarDoor" + index, _cellarDoorRoot);   // renamed once fed
                 plate.anchorMin = plate.anchorMax = new Vector2(0, 0);
                 plate.pivot = new Vector2(0.5f, 0);
                 var hit = plate.gameObject.AddComponent<Image>();
@@ -326,6 +346,13 @@ namespace LastCall.UI
             }
             LayOutCellarDoors();
             LayOutShutterDoor();
+            if (_registerFade != null)
+                foreach (var g in _registerFade)
+                {
+                    if (g == null) continue;
+                    g.alpha = 1f - _drawerT;
+                    g.blocksRaycasts = _drawerT < 0.01f;
+                }
         }
 
         private void StepDrawer()
@@ -1656,6 +1683,16 @@ namespace LastCall.UI
             // wallet with it.
             var backRoot = OverlayCanvas("RegisterBack", -7, raycasts: false);
             var frontRoot = OverlayCanvas("RegisterLayer", 6, raycasts: true);
+            // THE TILL GOES OUT WITH THE CELLAR (2026-08-22). It stands on the bar and it does
+            // NOT ride the room up — it is on its own overlay — so when the drawer lifts the
+            // shelves, the till is left hanging over them like a price tag on the stock. It
+            // is also nowhere in the author's open mock-up. Fading it is the honest reading:
+            // while the cellar is open you are behind the bar, not at the register.
+            _registerFade = new[]
+            {
+                backRoot.gameObject.AddComponent<CanvasGroup>(),
+                frontRoot.gameObject.AddComponent<CanvasGroup>(),
+            };
             // The till is a PROP standing on the counter, not a piece of the UI's furniture:
             // it is drawn at a hi-bit density into a fixed 57-unit footprint and everything
             // that floats off it is measured from where it stands. See UiAuditExempt.

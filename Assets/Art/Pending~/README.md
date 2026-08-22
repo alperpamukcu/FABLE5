@@ -18,9 +18,10 @@
 >   `counter_end` 121→110). Verified in play: the tap tower's foot sits at −60 against
 >   a counter top of −58, which is the 2 px surface inset.
 >
-> STILL NOT IN: the shutter is imported but **not drawn** — the cabinet stands open, so
-> the drawer mechanic (shutter up, scene up 121) is the next piece. The taps and the UI
-> key below are untouched. EditMode 335/335 and PlayMode 8/8 both green after the swap.
+> SINCE THEN the drawer was built whole: the roller is drawn and moves, the room rides
+> up 121 with the drinkers on it, the bar's own stock stands in the three bays, and both
+> the roller and the bottles answer a click. The making verb opens the cellar instead of
+> the old full-screen page. **The taps and the UI key below are still untouched.**
 
 Everything here was made or measured in one sitting and **none of it is in the game yet**.
 It sits in a `~` folder on purpose: Unity never imports a directory whose name ends in `~`,

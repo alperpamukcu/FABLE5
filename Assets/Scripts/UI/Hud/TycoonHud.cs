@@ -1479,7 +1479,18 @@ namespace LastCall.UI
 
         // ── the floor ───────────────────────────────────────────────────────────
 
-        private void OnMenuClicked() => _flow?.Open();
+        /// <summary>
+        /// THE CELLAR IS THE BACK BAR NOW (2026-08-22). This used to open a full-screen page
+        /// of shelves; the counter carries its own stock behind a roller, so the verb opens
+        /// the drawer in the room instead and the player never leaves the bar. Pressing it
+        /// again shuts it, which is the same thing the roller's own arrow does — one verb,
+        /// two ways to reach it.
+        /// </summary>
+        private void OnMenuClicked()
+        {
+            if (stage == null) return;
+            stage.SetDrawerOpen(!stage.DrawerOpen);
+        }
 
         /// <summary>The font on the counter, clicked: straight to the draught station. Nothing
         /// is checked here that the flow does not check itself — but a panel already open
@@ -2462,7 +2473,9 @@ namespace LastCall.UI
                     _cellarCards.Add(card);          // the SAME order the plates are indexed by
                     if (art.Count >= DiegeticStage.CellarSlots) break;
                 }
-            stage.SetCellar(art);
+            var ids = new List<string>(_cellarCards.Count);
+            foreach (var c in _cellarCards) ids.Add(c.Id);
+            stage.SetCellar(art, ids);
         }
 
         /// <summary>A bottle taken out of the cellar. The index is the stage's, into the list

@@ -162,14 +162,20 @@ namespace LastCall.PlayTests
         {
             yield return OpenTheBar();
 
+            // THE BACK BAR IS THE COUNTER'S OWN CELLAR NOW (2026-08-22). The verb is the same
+            // and the page it used to open is gone: pressing it lifts the room and rolls the
+            // shutter down, and the stock is standing in the bar's own body.
             yield return ClickOn(Find("MENU — MAKE A DRINK"));
-            var menu = Find("MenuPanel");
-            Assert.That(menu, Is.Not.Null, "the menu never built");
-            Assert.That(menu.gameObject.activeInHierarchy, Is.True, "the menu key did not open the wall");
+            yield return new WaitForSecondsRealtime(0.6f);      // the roller's own travel
 
-            // The house pour that every run opens with, standing on the wall.
-            var slot = Find("Slot_vodka_astra");
-            Assert.That(slot, Is.Not.Null, "the opening vodka is not on the back bar");
+            // The house pour that every run opens with, standing in the cellar. The doors
+            // carry their bottle's id, so this asks for the vodka and not for "slot 0".
+            // The suite may not look inside the UI, so "is the cellar open" is asked of the
+            // POINTER: the doors only take a ray once the roller is clear.
+            var slot = Find("CellarDoor_vodka_astra");
+            Assert.That(slot, Is.Not.Null, "the opening vodka is not in the cellar");
+            Assert.That(WhatIsUnder(ScreenPointOf(slot)), Does.Contain("CellarDoor_vodka_astra"),
+                "the menu key did not open the cellar — its doors are still behind the roller");
             string underPointer = WhatIsUnder(ScreenPointOf(slot));
             yield return ClickOn(slot);
 
@@ -186,7 +192,8 @@ namespace LastCall.PlayTests
             var run = _boot.Tycoon;
 
             yield return ClickOn(Find("MENU — MAKE A DRINK"));
-            yield return ClickOn(Find("Slot_vodka_astra"));
+            yield return new WaitForSecondsRealtime(0.6f);      // the cellar has to be open
+            yield return ClickOn(Find("CellarDoor_vodka_astra"));
 
             var panel = Find("ShakerPanel");
             var bottle = Find("Bottle", panel);
