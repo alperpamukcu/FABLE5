@@ -1146,16 +1146,13 @@ namespace LastCall.UI
             // you are standing at, not a dialog floating on it.
             _shakerPanel = NewRect("ShakerPanel", _field);
             Stretch(_shakerPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            // A SCRIM, NOT A PAGE (2026-08-22, the author: "ayrı bir sayfa olarak
-            // açılmayacak ana sahneye açılan bir UI olacak"). This used to be an opaque fill
-            // with a painted wall behind it, because the room was somewhere you had LEFT. The
-            // room is behind it now — the same bar, the same evening, the same drinkers on
-            // their stools — so the backdrop knocks it down instead of replacing it. It still
-            // SWALLOWS the pointer: you can see the bar while you build, you cannot reach past
-            // the bench to it.
-            var scrim = _shakerPanel.gameObject.AddComponent<Image>();
-            scrim.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g,
-                                    UITheme.Night[1].b, 0.72f);
+            // NO DARKENING (2026-08-22, the author: "Shaker ve pour sahnelerinde karartma
+            // olmasın"). This was an opaque page, then a scrim over the room; it is neither
+            // now. The room behind the bench is the bar you are standing in and it keeps its
+            // own light. The plate is still HERE and still raycasts — that is the whole job
+            // it has left: you can see past the bench, you cannot reach past it.
+            var block = _shakerPanel.gameObject.AddComponent<Image>();
+            block.color = new Color(0f, 0f, 0f, 0f);
             Swallow(_shakerPanel);
 
             // 16, not 18: the pixel faces only rasterise cleanly at whole multiples of their
@@ -1176,7 +1173,7 @@ namespace LastCall.UI
             // behind the scrim, which is the corner of the bar this wall was imitating. The
             // COUNTER band stays: the props' contact shadows are black, and black on the
             // scrimmed room reads as cut-out-and-pasted exactly as it did on the old panel.
-            AddBenchCounter(_shakerPanel, 0.60f);
+            AddBenchCounter(_shakerPanel, DiegeticStage.BenchSurfaceFraction);
 
             // The play surface — a COORDINATE SPACE, not a thing you can see: where the
             // tin, the bottle and the spoon are placed and where the pointer is read. The

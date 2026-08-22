@@ -115,6 +115,20 @@ namespace LastCall.UI
         /// open, and nothing had to be invented to fill the gap because the counter hangs
         /// exactly this far below the screen.</summary>
         public const float DrawerTravel = 121f;
+
+        /// <summary>
+        /// WHERE THE BAR TOP IS WITH THE CELLAR OPEN, as a fraction up the screen — the line a
+        /// bench has to close onto so it lands ON the counter instead of leaving a stripe of
+        /// room showing above it (2026-08-22, the author: "açılan arkaplan ui'si backbar
+        /// açıkken tam olarak tezgahın üstüne kapansın").
+        ///
+        /// DERIVED, not typed: the counter hangs from its own rest line, the drawer lifts the
+        /// whole room by its own travel, and this is those two numbers added. A bench is only
+        /// ever reachable through the cellar now, so the cellar is always open behind it and
+        /// this is always the line to meet.
+        /// </summary>
+        public static float BenchSurfaceFraction =>
+            (CounterRestY + CounterSurfaceInset + DrawerTravel) / Reference.y;
         /// <summary>How far the roller drops to clear the opening. The author's mock-ups
         /// put its top at screen row 305 shut and 356 open while the room rose 121, so against
         /// the room it travels 356 - (305 - 121) = 172 — its own height, near enough, less the
