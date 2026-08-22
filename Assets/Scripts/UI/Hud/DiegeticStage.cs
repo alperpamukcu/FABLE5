@@ -125,6 +125,22 @@ namespace LastCall.UI
         private Transform _shutterTr;
         private Vector2 _shutterNative;
         private float _shutterRestLocalY;
+
+        // ── where a bottle stands in the cellar ─────────────────────────────────
+        // MEASURED on the installed counter (638x241), not chosen. The blue posts scan at
+        // x 7-32, 209-226, 412-429 and 605-630, which leaves three bays; the two shelf
+        // boards are 12 px thick at rows 138..149 and 228..239, so a bottle's foot sits on
+        // the board's TOP row. Three bottles a bay is what the author's open mock-up shows.
+        private static readonly float[] CellarBayCentrePx = { 120f, 319f, 517f };
+        private const float CellarBayWidthPx = 175f;      // the narrowest of the three
+        private static readonly float[] CellarShelfFootPx = { 138f, 228f };
+        private const int CellarPerBay = 3;
+        /// <summary>How many bottles the cellar can show at once.</summary>
+        public const int CellarSlots = 3 * 2 * CellarPerBay;
+        /// <summary>Drawn height of a bottle in the cellar. The shallower compartment is
+        /// 138 - 65 = 73 px tall, so this leaves the stock clear of the board above it.</summary>
+        private const float CellarBottleH = 62f;
+        private readonly List<SpriteRenderer> _cellarStock = new List<SpriteRenderer>();
         private float _drawerT;                     // 0 shut, 1 open
         private float _drawerTarget;
 
@@ -142,6 +158,51 @@ namespace LastCall.UI
         {
             _drawerTarget = open ? 1f : 0f;
             if (instant || Motion.Reduced) { _drawerT = _drawerTarget; ApplyDrawer(); }
+        }
+
+        /// <summary>
+        /// What is standing in the counter's cellar. The stage is TOLD, the same way the till
+        /// is told the money — it never reads the run. Anything past <see cref="CellarSlots"/>
+        /// is not drawn, because there is no shelf for it to stand on.
+        /// </summary>
+        public void SetCellar(IReadOnlyList<Sprite> bottles)
+        {
+            int n = bottles == null ? 0 : Mathf.Min(bottles.Count, CellarSlots);
+            while (_cellarStock.Count < n)
+                _cellarStock.Add(WorldSprite("Stock" + _cellarStock.Count, null, order: 31));
+            for (int i = 0; i < _cellarStock.Count; i++)
+            {
+                var sr = _cellarStock[i];
+                bool on = i < n && bottles[i] != null;
+                if (sr.gameObject.activeSelf != on) sr.gameObject.SetActive(on);
+                if (!on) continue;
+                sr.sprite = bottles[i];
+                PlaceCellarSlot(sr, i);
+            }
+        }
+
+        /// <summary>Slot i, filled shelf by shelf and bay by bay, the way a bar restocks.</summary>
+        private void PlaceCellarSlot(SpriteRenderer sr, int i)
+        {
+            int perShelf = CellarBayCentrePx.Length * CellarPerBay;
+            int shelf = i / perShelf, rest = i % perShelf;
+            int bay = rest / CellarPerBay, pos = rest % CellarPerBay;
+
+            // Evenly spread inside the bay, standing ON the board rather than hung from it.
+            float step = CellarBayWidthPx / CellarPerBay;
+            float artX = CellarBayCentrePx[bay] - CellarBayWidthPx * 0.5f + step * (pos + 0.5f);
+            float artFoot = CellarShelfFootPx[Mathf.Min(shelf, CellarShelfFootPx.Length - 1)];
+
+            float h = sr.sprite.bounds.size.y;
+            float k = h > 0.0001f ? CellarBottleH / h : 1f;
+            sr.transform.localScale = new Vector3(k, k, 1f);
+
+            // The counter hangs from its own rest line; the cellar is measured off its TOP
+            // edge, so both live on the same number and a moved bar takes its stock with it.
+            float counterTop = CounterRestY + CounterSurfaceInset - Reference.y * 0.5f;
+            sr.transform.position = new Vector3(
+                artX - _counterNative.x * 0.5f,
+                counterTop - artFoot + CellarBottleH * 0.5f, 0f);
         }
 
         private void ApplyDrawer()
@@ -769,11 +830,12 @@ namespace LastCall.UI
                 _counterNative = counterSprite.rect.size;
                 _counterDrawWidth = SetUpCounterTiling(sr);
             }
-            // Order 31: over the counter's own cabinet (30) and under anything standing ON
-            // the bar (35), because the roller shuts the cellar, not the bar top.
+            // Order 33: over the counter's cabinet (30) AND over the stock standing in it
+            // (31), and under anything on the bar top (35). The roller has to hide the
+            // bottles or it is not shutting anything.
             if (shutterSprite != null)
             {
-                var sh = WorldSprite("Shutter", shutterSprite, order: 31);
+                var sh = WorldSprite("Shutter", shutterSprite, order: 33);
                 _shutterTr = sh.transform;
                 _shutterNative = shutterSprite.rect.size;
             }

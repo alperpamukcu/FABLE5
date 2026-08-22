@@ -2434,6 +2434,31 @@ namespace LastCall.UI
             // actually changed.
             stage.SetSlots(_bootstrap != null ? _bootstrap.StageSlots : null);
             stage.SyncFixtures(owned);
+            RefreshCellar(run);
+        }
+
+        /// <summary>
+        /// Stands the bar's own stock in the counter's cellar (2026-08-22). The SAME rule the
+        /// back-bar wall keeps: garnish is not stock you pour from and beer comes off the
+        /// font on the counter, so neither stands here. The stage is TOLD the pictures and
+        /// never reads the run, which is why this lives on the HUD side of the line.
+        /// </summary>
+        private void RefreshCellar(TycoonRun run)
+        {
+            if (stage == null) return;
+            var art = new List<Sprite>(DiegeticStage.CellarSlots);
+            if (run != null)
+                foreach (var b in run.Shelf.Bottles)
+                {
+                    var card = b.Ingredient;
+                    if (card == null) continue;
+                    if (card.Type == IngredientType.Garnish || card.Type == IngredientType.Beer)
+                        continue;
+                    var sprite = ItemArt.Bottle(card);
+                    if (sprite != null) art.Add(sprite);
+                    if (art.Count >= DiegeticStage.CellarSlots) break;
+                }
+            stage.SetCellar(art);
         }
 
         /// <summary>A fixture's sprite, from its own Resources shelf (PPU 1 — world art).</summary>
