@@ -1327,6 +1327,7 @@ namespace LastCall.UI
             // (2026-08-15): the kegs left the back-bar wall, and a pint is poured by walking
             // to the tap. The flow's own guard turns the click down between days.
             if (stage != null) stage.SetTapHandler(OnTapClicked);
+            if (stage != null) stage.SetCellarHandler(OnCellarPick);
         }
 
         private void OnDestroy()
@@ -2447,6 +2448,7 @@ namespace LastCall.UI
         {
             if (stage == null) return;
             var art = new List<Sprite>(DiegeticStage.CellarSlots);
+            _cellarCards.Clear();
             if (run != null)
                 foreach (var b in run.Shelf.Bottles)
                 {
@@ -2455,11 +2457,23 @@ namespace LastCall.UI
                     if (card.Type == IngredientType.Garnish || card.Type == IngredientType.Beer)
                         continue;
                     var sprite = ItemArt.Bottle(card);
-                    if (sprite != null) art.Add(sprite);
+                    if (sprite == null) continue;
+                    art.Add(sprite);
+                    _cellarCards.Add(card);          // the SAME order the plates are indexed by
                     if (art.Count >= DiegeticStage.CellarSlots) break;
                 }
             stage.SetCellar(art);
         }
+
+        /// <summary>A bottle taken out of the cellar. The index is the stage's, into the list
+        /// it was handed — kept in step by being filled in the one loop above.</summary>
+        private void OnCellarPick(int index)
+        {
+            if (index < 0 || index >= _cellarCards.Count) return;
+            GetComponent<TycoonServiceFlow>()?.PickFromCellar(_cellarCards[index]);
+        }
+
+        private readonly List<IngredientCard> _cellarCards = new List<IngredientCard>();
 
         /// <summary>A fixture's sprite, from its own Resources shelf (PPU 1 — world art).</summary>
         private static Sprite FixtureArt(string name) =>

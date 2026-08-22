@@ -91,33 +91,55 @@ hour/week instrument panel (`ChromeArt.Well` + a rewritten `SegmentClock`), fixt
 unlock conditions, and the room keeping time (`window_cycle`, `star3d`). None of it is
 finished work — it is where the pen was put down.
 
-**DISABLE DOMAIN RELOAD BREAKS THE PLAYMODE SUITE — found and fixed 2026-08-20.** For a
-few hours the suite was red and non-deterministically so: a different test failed each run,
-always with the same shape — *the pointer never reached* the seat, or six presses of
-"MENU — MAKE A DRINK" never opened `MenuPanel`. It was never a code bug.
+**THE PLAYMODE SUITE GOES INTERMITTENTLY RED, AND THE CAUSE IS GHOST INPUT.** Read this
+before you spend an afternoon on it, as this session did — twice, down two wrong paths.
 
-`ProjectSettings/EditorSettings.asset` had picked up `m_EnterPlayModeOptions: 1`
-(**Disable Domain Reload**) in `d147d117`. With domain reload off, statics are NOT reset
-between play sessions, so eight tests that each enter play mode inherit the previous one's
-leftovers — and `InputTestFixture`'s virtual mouse is exactly the kind of state that does
-not survive that. The proof is clean: setting is on → red, non-deterministic; setting off →
-**8/8 green, including all three pixel-compared screens**. Nothing else changed.
+**The symptom** is a different test failing each run with the same shape: *the pointer never
+reached the seat*, or *pressing "MENU — MAKE A DRINK" 6 times never opened MenuPanel*. The
+moving target is what makes it look like a code bug. It is not one.
 
-Two facts worth keeping:
+**The tell is in the console**, not in the test output:
 
-- **That setting is TRACKED**, so it travels with the clone. If the suite on the new machine
-  is red with "pointer never reached" anywhere in the message, check this FIRST — before
-  reading a line of UI code.
-- The setting exists for a real reason: with it on, play mode starts almost instantly, which
-  is a genuine win when hand-testing. The trade is that the test floor stops working. If you
-  want it back, turn it on for hand-play and **off before running the suite** — or do the
-  proper fix and reset the UI layer's statics from
-  `[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]`, which
-  is a real job across the sprite caches.
+```
+ArgumentException: State format KEYS from event does not match state format MOUS of device Mouse:/Mouse
+ArgumentException during event processing of Editor update; resetting event buffer
+```
 
-Diagnostics that were run before the cause was found, kept because they rule things out:
-nothing covers the menu button (an `EventSystem.RaycastAll` at its centre returns it alone),
-and `btn.onClick.Invoke()` opens the panel in the same frame — the wiring was always sound.
+A keyboard event is being delivered to the virtual mouse and the Input System resets its
+event buffer mid-test, so presses land nowhere. `InputTestFixture` leaves this behind, and
+it ACCUMULATES across repeated PlayMode runs — which is exactly what a session that runs
+the suite over and over does.
+
+**The fix is the project's own menu item**: **LastCall → Clear Ghost Input (after a killed
+PlayMode run)** — note the full title; `ExecuteMenuItem("LastCall/Clear Ghost Input")` on
+its own returns false and does nothing. Clear it, then run. Two clean 8/8 runs followed it
+here. If the pointer is still dead, restart the editor.
+
+**A wedged job looks similar and is not the same thing.** `get_test_job` sitting at
+`running 0/None` while the editor reports no tests running is the job tracker stuck, not the
+input. `TestJobManager.ClearStuckJob()` via `execute_code` frees it — the type is at
+`MCPForUnity.Editor.Services.TestJobManager` and the method is static.
+
+**TWO CORRECTIONS TO WHAT THIS FILE SAID EARLIER**, both worth reading because both cost
+real time:
+
+1. **Disable Domain Reload was blamed and is not the cause.** Turning it off gave three
+   green runs in a row and that was taken as proof; the suite went red again later with the
+   setting confirmed OFF, and red at a commit with the whole session's work stashed. It is
+   still worth leaving off — statics not resetting between play sessions is a real hazard for
+   a suite that enters play eight times — but it does not explain these failures and fixing
+   it will not stop them.
+2. **`ProjectSettings/EditorSettings.asset` fights being changed.** Setting
+   `EditorSettings.enterPlayModeOptionsEnabled = false` updates the live editor but does NOT
+   reach the file, even through `SaveAssets`, `File/Save Project` or a `SerializedObject`
+   write — and Unity rewrites the file back to the old value after play. It has to be edited
+   in the Editor UI (Edit → Project Settings → Editor → Enter Play Mode Settings) to stick.
+
+**A test-side fix went in with this**: both suites' `OpenTheBar()` now waits for
+`Phase == DayOpen`, not just for the curtain to lift. Every door in the flow guards on that
+phase and refuses WITHOUT A SOUND, so a press one phase early was being swallowed and
+reported as "the button never opened the panel". That was a real hole even if it was not
+the whole story.
 
 **A second dead-but-suspicious one:** `TycoonHud.RefundArt` has no caller. It builds the
 picture for a refund row, so this reads more like a wire that was never connected than like

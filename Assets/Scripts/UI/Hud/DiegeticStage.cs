@@ -141,6 +141,15 @@ namespace LastCall.UI
         /// 138 - 65 = 73 px tall, so this leaves the stock clear of the board above it.</summary>
         private const float CellarBottleH = 62f;
         private readonly List<SpriteRenderer> _cellarStock = new List<SpriteRenderer>();
+        private RectTransform _cellarDoorRoot;
+        private CanvasGroup _cellarDoorGroup;
+        private readonly List<RectTransform> _cellarDoors = new List<RectTransform>();
+        private System.Action<int> _onCellarPick;
+        private RectTransform _shutterDoor;
+
+        /// <summary>Who to tell when a bottle in the cellar is picked, by its index in the
+        /// list <see cref="SetCellar"/> was given.</summary>
+        public void SetCellarHandler(System.Action<int> onPick) => _onCellarPick = onPick;
         private float _drawerT;                     // 0 shut, 1 open
         private float _drawerTarget;
 
@@ -179,19 +188,118 @@ namespace LastCall.UI
                 sr.sprite = bottles[i];
                 PlaceCellarSlot(sr, i);
             }
+            BuildCellarDoors(n);
+            LayOutCellarDoors();
+        }
+
+        /// <summary>
+        /// One invisible hit plate per bottle, over the room — the SAME door the draught font
+        /// keeps (BuildTapDoor), for the same reason: a world sprite cannot take a click, and
+        /// a plate that swallows at the edges is a door the player learns not to trust.
+        /// </summary>
+        private void BuildCellarDoors(int n)
+        {
+            if (n > 0 && _cellarDoorRoot == null)
+            {
+                _cellarDoorRoot = OverlayCanvas("CellarDoors", 7, raycasts: true);
+                _cellarDoorGroup = _cellarDoorRoot.gameObject.AddComponent<CanvasGroup>();
+                UiAuditExempt.Mark(_cellarDoorRoot, "the cellar doors are hit plates over the "
+                    + "stock standing in the counter, sized to each bottle's own slot");
+            }
+            while (_cellarDoors.Count < n)
+            {
+                int index = _cellarDoors.Count;
+                var plate = NewRect("CellarDoor" + index, _cellarDoorRoot);
+                plate.anchorMin = plate.anchorMax = new Vector2(0, 0);
+                plate.pivot = new Vector2(0.5f, 0);
+                var hit = plate.gameObject.AddComponent<Image>();
+                hit.color = new Color(0, 0, 0, 0);
+                var btn = plate.gameObject.AddComponent<Button>();
+                btn.targetGraphic = hit;
+                btn.transition = Selectable.Transition.None;
+                // The cellar shuts behind you: the bottle is in hand, and a drawer left
+                // hanging open under the tin is a room the player has already walked out of.
+                btn.onClick.AddListener(() => { SetDrawerOpen(false); _onCellarPick?.Invoke(index); });
+                _cellarDoors.Add(plate);
+            }
+            for (int i = 0; i < _cellarDoors.Count; i++)
+                if (_cellarDoors[i].gameObject.activeSelf != (i < n))
+                    _cellarDoors[i].gameObject.SetActive(i < n);
+        }
+
+        /// <summary>
+        /// Puts the doors where the bottles are. They ride the drawer the long way round: the
+        /// stock is in the world and moves with it, the plates are on a fixed overlay, so the
+        /// lift has to be added here by hand. THE DOORS ARE SHUT WHILE THE ROLLER IS —
+        /// anything else lets a click reach through a closed shutter and take a bottle.
+        /// </summary>
+        private void LayOutCellarDoors()
+        {
+            if (_cellarDoorGroup != null)
+                _cellarDoorGroup.blocksRaycasts = _drawerT > 0.99f;
+            if (_cellarDoors.Count == 0) return;
+            float slotW = CellarBayWidthPx / CellarPerBay;
+            float left = (Reference.x - _counterNative.x) * 0.5f;
+            for (int i = 0; i < _cellarDoors.Count; i++)
+            {
+                if (!_cellarDoors[i].gameObject.activeSelf) continue;
+                CellarSlotArt(i, out float artX, out float artFoot);
+                _cellarDoors[i].sizeDelta = new Vector2(slotW - 4f, CellarBottleH);
+                _cellarDoors[i].anchoredPosition = new Vector2(
+                    left + artX,
+                    CounterRestY + CounterSurfaceInset - artFoot + DrawerTravel * _drawerT);
+            }
+        }
+
+        /// <summary>
+        /// The roller's own door. THE AFFORDANCE WAS ALREADY DRAWN: the author put a pink
+        /// arrow at the shutter's top centre pointing down, which is the way it travels, so
+        /// the plate only has to make the picture answer. It rides the roller, which means
+        /// the same plate shuts the cellar again from the sliver the open frame leaves at
+        /// the sill — there is nothing else to click down there.
+        /// </summary>
+        private void BuildShutterDoor()
+        {
+            var root = OverlayCanvas("ShutterDoor", 6, raycasts: true);
+            UiAuditExempt.Mark(root, "the shutter door is a hit plate over the roller in the "
+                + "room, sized to the roller's own art");
+            _shutterDoor = NewRect("ShutterDoor", root);
+            _shutterDoor.anchorMin = _shutterDoor.anchorMax = new Vector2(0, 0);
+            _shutterDoor.pivot = new Vector2(0.5f, 1f);        // hung by its top, like the art
+            _shutterDoor.sizeDelta = _shutterNative;
+            var hit = _shutterDoor.gameObject.AddComponent<Image>();
+            hit.color = new Color(0, 0, 0, 0);
+            var btn = _shutterDoor.gameObject.AddComponent<Button>();
+            btn.targetGraphic = hit;
+            btn.transition = Selectable.Transition.None;
+            btn.onClick.AddListener(() => SetDrawerOpen(!DrawerOpen));
+        }
+
+        private void LayOutShutterDoor()
+        {
+            if (_shutterDoor == null) return;
+            _shutterDoor.anchoredPosition = new Vector2(
+                Reference.x * 0.5f,
+                CounterRestY + CounterSurfaceInset - ShutterOpeningTopPx
+                    + (DrawerTravel - ShutterTravel) * _drawerT);
+        }
+
+        /// <summary>Slot i's foot, in the counter art's own pixels. One reading, so the
+        /// drawn bottle and the plate that catches its click cannot disagree.</summary>
+        private void CellarSlotArt(int i, out float artX, out float artFoot)
+        {
+            int perShelf = CellarBayCentrePx.Length * CellarPerBay;
+            int shelf = i / perShelf, rest = i % perShelf;
+            int bay = rest / CellarPerBay, pos = rest % CellarPerBay;
+            float step = CellarBayWidthPx / CellarPerBay;
+            artX = CellarBayCentrePx[bay] - CellarBayWidthPx * 0.5f + step * (pos + 0.5f);
+            artFoot = CellarShelfFootPx[Mathf.Min(shelf, CellarShelfFootPx.Length - 1)];
         }
 
         /// <summary>Slot i, filled shelf by shelf and bay by bay, the way a bar restocks.</summary>
         private void PlaceCellarSlot(SpriteRenderer sr, int i)
         {
-            int perShelf = CellarBayCentrePx.Length * CellarPerBay;
-            int shelf = i / perShelf, rest = i % perShelf;
-            int bay = rest / CellarPerBay, pos = rest % CellarPerBay;
-
-            // Evenly spread inside the bay, standing ON the board rather than hung from it.
-            float step = CellarBayWidthPx / CellarPerBay;
-            float artX = CellarBayCentrePx[bay] - CellarBayWidthPx * 0.5f + step * (pos + 0.5f);
-            float artFoot = CellarShelfFootPx[Mathf.Min(shelf, CellarShelfFootPx.Length - 1)];
+            CellarSlotArt(i, out float artX, out float artFoot);
 
             float h = sr.sprite.bounds.size.y;
             float k = h > 0.0001f ? CellarBottleH / h : 1f;
@@ -216,6 +324,8 @@ namespace LastCall.UI
                 _shutterTr.localPosition =
                     new Vector3(lp.x, _shutterRestLocalY - ShutterTravel * _drawerT, lp.z);
             }
+            LayOutCellarDoors();
+            LayOutShutterDoor();
         }
 
         private void StepDrawer()
@@ -838,6 +948,7 @@ namespace LastCall.UI
                 var sh = WorldSprite("Shutter", shutterSprite, order: 33);
                 _shutterTr = sh.transform;
                 _shutterNative = shutterSprite.rect.size;
+                BuildShutterDoor();
             }
 
             BuildRegister();

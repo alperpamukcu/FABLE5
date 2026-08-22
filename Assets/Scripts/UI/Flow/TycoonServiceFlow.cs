@@ -133,6 +133,20 @@ namespace LastCall.UI
             GoTo(Stage.Tap);
         }
 
+        /// <summary>
+        /// A bottle taken out of the counter's own cellar (2026-08-22). The cellar is the back
+        /// bar now — it is the same pick, so it takes the same road: <see cref="OpenBottle"/>
+        /// decides where the bottle is carried to, and the lid still decides whether that is
+        /// the tin or the glass. What is NOT here is a stop at the wall: the player already
+        /// has the bottle in hand, so opening the old menu page on the way would be a room
+        /// they walk through without touching anything.
+        /// </summary>
+        public void PickFromCellar(IngredientCard card)
+        {
+            if (card == null || Run == null || Run.Phase != TycoonPhase.DayOpen) return;
+            OpenBottle(card);
+        }
+
         public void CloseFlow() => GoTo(Stage.Closed);
 
         /// <summary>Every stage change kills the held-action sound: a loop belongs to the

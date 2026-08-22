@@ -466,11 +466,21 @@ namespace LastCall.PlayTests
             // and the HUD holds the night's clock until it lifts — so a press before that is
             // a press into a black screen, which is what kept failing the first test of every
             // session. Elapsed moving is the game's own signal that the doors are open.
+            // …AND THE PHASE THE DOORS ANSWER TO (2026-08-22). The clock was necessary and
+            // not sufficient: every door in the flow guards on `Phase != DayOpen` and refuses
+            // WITHOUT A SOUND, so a press one phase early is swallowed and OpenUntil reports
+            // "six presses never opened the panel" for what is really "the bar was not open".
+            // That is the intermittent red this suite kept throwing at whichever screen ran
+            // first, which is why the failing test name moved around and the cause did not.
             float open = Time.realtimeSinceStartup + 15f;
-            while (_boot.Tycoon.Floor.Elapsed <= 0 && Time.realtimeSinceStartup < open)
+            while ((_boot.Tycoon.Floor.Elapsed <= 0
+                    || _boot.Tycoon.Phase != TycoonPhase.DayOpen)
+                   && Time.realtimeSinceStartup < open)
                 yield return null;
             Assert.That(_boot.Tycoon.Floor.Elapsed, Is.GreaterThan(0),
                 "the curtain never lifted — the night's clock never started");
+            Assert.That(_boot.Tycoon.Phase, Is.EqualTo(TycoonPhase.DayOpen),
+                "the run never reached DayOpen — a press before that is swallowed in silence");
             yield return null;
             yield return null;
         }

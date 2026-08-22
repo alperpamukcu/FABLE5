@@ -262,11 +262,23 @@ namespace LastCall.PlayTests
             // signal that the doors are open is the one the game itself uses — Elapsed only
             // moves once the curtain is gone, and a press before that is a press into a
             // black screen. Six retries could not fix what was never a timing budget.
+            // …AND THE PHASE THE DOORS ACTUALLY ANSWER TO (2026-08-22). The clock lifting is
+            // necessary and was not sufficient: every door in the flow opens with the same
+            // guard — `if (Run.Phase != TycoonPhase.DayOpen) return;` — so a press that lands
+            // one phase early does NOTHING AT ALL, silently, and the six retries above it
+            // report "the button never opened the panel" for what is really "the bar was not
+            // open yet". That is the intermittent red this suite has been throwing; it waits
+            // for the state the press requires now, rather than pressing and hoping.
             float open = Time.realtimeSinceStartup + 15f;
-            while (_boot.Tycoon.Floor.Elapsed <= 0 && Time.realtimeSinceStartup < open)
+            while ((_boot.Tycoon.Floor.Elapsed <= 0
+                    || _boot.Tycoon.Phase != TycoonPhase.DayOpen)
+                   && Time.realtimeSinceStartup < open)
                 yield return null;
             Assert.That(_boot.Tycoon.Floor.Elapsed, Is.GreaterThan(0),
                 "the curtain never lifted — the night's clock never started");
+            Assert.That(_boot.Tycoon.Phase, Is.EqualTo(TycoonPhase.DayOpen),
+                "the run never reached DayOpen — every door in the flow refuses a press "
+                + "before that, and refuses it without a sound");
             yield return WaitFrames(2);
         }
 
