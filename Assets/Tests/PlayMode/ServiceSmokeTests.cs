@@ -165,17 +165,11 @@ namespace LastCall.PlayTests
             // THE BACK BAR IS THE COUNTER'S OWN CELLAR NOW (2026-08-22). The verb is the same
             // and the page it used to open is gone: pressing it lifts the room and rolls the
             // shutter down, and the stock is standing in the bar's own body.
-            yield return ClickOn(Find("MENU — MAKE A DRINK"));
-            yield return new WaitForSecondsRealtime(0.6f);      // the roller's own travel
+            yield return OpenTheCellar("CellarDoor_vodka_astra");
 
             // The house pour that every run opens with, standing in the cellar. The doors
             // carry their bottle's id, so this asks for the vodka and not for "slot 0".
-            // The suite may not look inside the UI, so "is the cellar open" is asked of the
-            // POINTER: the doors only take a ray once the roller is clear.
             var slot = Find("CellarDoor_vodka_astra");
-            Assert.That(slot, Is.Not.Null, "the opening vodka is not in the cellar");
-            Assert.That(WhatIsUnder(ScreenPointOf(slot)), Does.Contain("CellarDoor_vodka_astra"),
-                "the menu key did not open the cellar — its doors are still behind the roller");
             string underPointer = WhatIsUnder(ScreenPointOf(slot));
             yield return ClickOn(slot);
 
@@ -191,8 +185,7 @@ namespace LastCall.PlayTests
             yield return OpenTheBar();
             var run = _boot.Tycoon;
 
-            yield return ClickOn(Find("MENU — MAKE A DRINK"));
-            yield return new WaitForSecondsRealtime(0.6f);      // the cellar has to be open
+            yield return OpenTheCellar("CellarDoor_vodka_astra");
             yield return ClickOn(Find("CellarDoor_vodka_astra"));
 
             var panel = Find("ShakerPanel");
@@ -404,6 +397,30 @@ namespace LastCall.PlayTests
 
         /// <summary>What the UI itself says is under a screen point — the evidence a failed
         /// click needs, since "nothing happened" is the one message that explains nothing.</summary>
+        /// <summary>
+        /// Presses the making verb until the counter's cellar is open onto a named door. THE
+        /// SUITE MAY NOT LOOK INSIDE THE UI (CLAUDE.md), so it cannot ask the stage whether
+        /// its drawer is open; it asks the POINTER, which is the better question anyway — the
+        /// doors only take a ray once the roller is clear, so a door answering IS the cellar
+        /// being open. Retried, because ONE press is not reliably enough: the room is still
+        /// settling when the first one lands, and a press that arrives early does nothing at
+        /// all. The look suite learned this first and this is its helper, kept in step.
+        /// </summary>
+        private IEnumerator OpenTheCellar(string doorName)
+        {
+            for (int attempt = 0; attempt < 6; attempt++)
+            {
+                var verb = Find("MENU — MAKE A DRINK");
+                Assert.That(verb, Is.Not.Null, "the making verb is not on the screen to press");
+                yield return ClickOn(verb);
+                yield return new WaitForSecondsRealtime(0.6f);      // the roller's own travel
+                var door = Find(doorName);
+                if (door != null && WhatIsUnder(ScreenPointOf(door)).Contains(doorName))
+                    yield break;
+            }
+            Assert.Fail("six presses of the making verb never opened the cellar onto " + doorName);
+        }
+
         private static string WhatIsUnder(Vector2 screen)
         {
             var es = UnityEngine.EventSystems.EventSystem.current;

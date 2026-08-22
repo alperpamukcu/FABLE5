@@ -1482,14 +1482,20 @@ namespace LastCall.UI
         /// <summary>
         /// THE CELLAR IS THE BACK BAR NOW (2026-08-22). This used to open a full-screen page
         /// of shelves; the counter carries its own stock behind a roller, so the verb opens
-        /// the drawer in the room instead and the player never leaves the bar. Pressing it
-        /// again shuts it, which is the same thing the roller's own arrow does — one verb,
-        /// two ways to reach it.
+        /// the drawer in the room instead and the player never leaves the bar.
+        ///
+        /// IT ONLY OPENS. It toggled for one afternoon and the smoke suite caught what that
+        /// costs: a retry — press, look, press again — cannot drive a toggle, because every
+        /// even press undoes the odd one before it, and six tries land exactly where none
+        /// would. That is not only a test's problem; it is what an impatient player does to
+        /// a control that has not answered yet. The verb is "make a drink", not "flip a
+        /// drawer" — so it opens, and shutting is the roller's own arrow, which is drawn
+        /// pointing the way it goes.
         /// </summary>
         private void OnMenuClicked()
         {
             if (stage == null) return;
-            stage.SetDrawerOpen(!stage.DrawerOpen);
+            stage.SetDrawerOpen(true);
         }
 
         /// <summary>The font on the counter, clicked: straight to the draught station. Nothing

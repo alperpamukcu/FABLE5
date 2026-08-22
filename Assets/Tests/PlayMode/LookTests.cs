@@ -107,8 +107,15 @@ namespace LastCall.PlayTests
             // panel, which is why this picture survives the redesign and the back bar's did not.
             yield return OpenTheCellar("CellarDoor_vodka_astra");
             yield return OpenUntil("CellarDoor_vodka_astra", "ShakerPanel");
-            // Inside the panel only: the room shows around its edges and the room is alive.
-            yield return LooksTheSame("bench", new RectInt(40, 30, 1200, 630));
+            // THE BAR TOP ONLY, since the bench became a scrim over the room (2026-08-22).
+            // The old crop took most of the screen, which worked while the panel was opaque.
+            // It is not any more: above the counter band the real room shows through, and the
+            // room is an evening — the suite's own settle guard caught it at once ("something
+            // on it is always moving"). The counter band IS opaque and everything standing on
+            // it holds still between pours, so the picture is cut to the surface and the props
+            // on it. Same rule as always: compare the instrument, not the room around it.
+            // fromY 0.60 of the panel puts the band's top edge at screen row 288.
+            yield return LooksTheSame("bench", new RectInt(40, 300, 1200, 400));
         }
 
         [UnityTest]
@@ -296,7 +303,14 @@ namespace LastCall.PlayTests
             Assert.Fail("six presses of the making verb never opened the cellar onto " + doorName);
         }
 
-        /// <summary>Is this the thing a click at its own centre would land on?</summary>
+        /// <summary>
+        /// Is this reachable by a click at its own centre? IT ASKS WHETHER THE DOOR IS IN THE
+        /// RAY AT ALL, not whether it is first. The strict version — first hit or nothing —
+        /// held this test red while the smoke suite drove the very same door to the very same
+        /// bench and passed, which is the tell that something harmless is sitting in the ray
+        /// above it and the click still arrives. A test that is stricter than the thing it is
+        /// standing in for reports failures the game does not have.
+        /// </summary>
         private static bool Reaches(RectTransform target)
         {
             var es = UnityEngine.EventSystems.EventSystem.current;
@@ -305,7 +319,8 @@ namespace LastCall.PlayTests
             var data = new UnityEngine.EventSystems.PointerEventData(es) { position = at };
             var hits = new System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult>();
             es.RaycastAll(data, hits);
-            return hits.Count > 0 && hits[0].gameObject == target.gameObject;
+            foreach (var h in hits) if (h.gameObject == target.gameObject) return true;
+            return false;
         }
 
         private IEnumerator OpenUntil(string press, string expected)

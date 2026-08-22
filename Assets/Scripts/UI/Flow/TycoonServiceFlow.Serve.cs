@@ -662,7 +662,16 @@ namespace LastCall.UI
             // standing at, which is what lets the props be props instead of icons on keys.
             _servePanel = NewRect("ServePanel", _field);
             Stretch(_servePanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            _servePanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
+            // A SCRIM, NOT A PAGE (2026-08-22, the author: "ayrı bir sayfa olarak
+            // açılmayacak ana sahneye açılan bir UI olacak"). This used to be an opaque fill
+            // with a painted wall behind it, because the room was somewhere you had LEFT. The
+            // room is behind it now — the same bar, the same evening, the same drinkers on
+            // their stools — so the backdrop knocks it down instead of replacing it. It still
+            // SWALLOWS the pointer: you can see the bar while you build, you cannot reach past
+            // the bench to it.
+            var scrim = _servePanel.gameObject.AddComponent<Image>();
+            scrim.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g,
+                                    UITheme.Night[1].b, 0.72f);
             Swallow(_servePanel);
 
             var title = NewText("Title", _servePanel, _display, 16, TextAnchor.UpperCenter, UITheme.PrimaryAction);
@@ -709,7 +718,10 @@ namespace LastCall.UI
             // wall stands behind it, and everything the player touches stands directly on
             // that surface. A drawn table was a second surface inside the first, and the
             // props had to be walked up its measured top face to clear the BACK TO BAR key.
-            AddBenchWall(_servePanel, 0.68f);
+            // The painted wall went with the shaker's (2026-08-22): the room itself is
+            // behind the scrim now, so a drawn one would be a second bar inside the first.
+            // The bar top stays — it is the surface the glass and its shadow stand on.
+            AddBenchCounter(_servePanel, 0.68f);
 
             // The props' container spans the whole panel: everything in it is placed in
             // panel space, on the counter's own stand line. No layout groups — a room is

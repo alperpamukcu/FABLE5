@@ -1106,24 +1106,17 @@ namespace LastCall.UI
             return rt;
         }
 
-        private void AddBenchWall(RectTransform panel, float fromY)
+        /// <summary>
+        /// The bar top the bench's props stand on. THE PAINTED WALL THAT USED TO COME WITH IT
+        /// IS GONE (2026-08-22): the bench opens onto the room now, so the wall behind it is
+        /// the room's own. The COUNTER stayed, and deliberately — see below, it is what keeps
+        /// a black contact shadow from being drawn on black.
+        /// </summary>
+        private void AddBenchCounter(RectTransform panel, float fromY)
         {
-            // THE COUNTER, and the wall behind it — the whole set, in two flat bands.
-            // Both go in BEHIND EVERYTHING on the panel: a band added after the title is a
+            // It goes in BEHIND EVERYTHING on the panel: a band added after the title is a
             // band drawn over the title, and the panel's own background is a component, so
-            // first CHILD is as far back as a child can go. The counter is built first and
-            // pushed to the front of the child list last, so the order ends up wall, then
-            // counter, then everything that stands on it.
-            var wall = NewRect("Wall", panel);
-            Stretch(wall, new Vector2(0f, fromY), Vector2.one, Vector2.zero, Vector2.zero);
-            wall.SetAsFirstSibling();
-            var img = wall.gameObject.AddComponent<Image>();
-            img.sprite = BackBarArt.LuxeWall();
-            img.type = Image.Type.Tiled;
-            img.raycastTarget = false;
-            // Deep in the room's shade: at full strength the panelling competes with the
-            // props standing in front of it, which is the opposite of what a wall is for.
-            img.color = img.sprite != null ? new Color(0.42f, 0.40f, 0.46f, 1f) : UITheme.Night[2];
+            // first CHILD is as far back as a child can go.
 
             // The counter top. It is A SURFACE, so it carries its own value — one step up
             // the Night ramp from the panel behind it. Left at the panel's own colour it
@@ -1153,7 +1146,16 @@ namespace LastCall.UI
             // you are standing at, not a dialog floating on it.
             _shakerPanel = NewRect("ShakerPanel", _field);
             Stretch(_shakerPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            _shakerPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
+            // A SCRIM, NOT A PAGE (2026-08-22, the author: "ayrı bir sayfa olarak
+            // açılmayacak ana sahneye açılan bir UI olacak"). This used to be an opaque fill
+            // with a painted wall behind it, because the room was somewhere you had LEFT. The
+            // room is behind it now — the same bar, the same evening, the same drinkers on
+            // their stools — so the backdrop knocks it down instead of replacing it. It still
+            // SWALLOWS the pointer: you can see the bar while you build, you cannot reach past
+            // the bench to it.
+            var scrim = _shakerPanel.gameObject.AddComponent<Image>();
+            scrim.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g,
+                                    UITheme.Night[1].b, 0.72f);
             Swallow(_shakerPanel);
 
             // 16, not 18: the pixel faces only rasterise cleanly at whole multiples of their
@@ -1169,12 +1171,12 @@ namespace LastCall.UI
             Stretch(_shakerHint.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -58), new Vector2(0, -46));
             _shakerHint.text = ShakerHintFor(null);
 
-            // THE WALL BEHIND THE BENCH. With the rail taken out the top half of the room
-            // was a flat void, and a bench standing in a void reads as a diagram of a
-            // bench. This is the back bar's own tiling wall (BackBarArt), knocked well
-            // down: the bench is lit, the wall behind it is not, and the two together are
-            // a corner of the same bar the wall screen shows.
-            AddBenchWall(_shakerPanel, 0.60f);
+            // NO PAINTED WALL ANY MORE. It was here because "a bench standing in a void
+            // reads as a diagram of a bench" — and the void is gone: the real room stands
+            // behind the scrim, which is the corner of the bar this wall was imitating. The
+            // COUNTER band stays: the props' contact shadows are black, and black on the
+            // scrimmed room reads as cut-out-and-pasted exactly as it did on the old panel.
+            AddBenchCounter(_shakerPanel, 0.60f);
 
             // The play surface — a COORDINATE SPACE, not a thing you can see: where the
             // tin, the bottle and the spoon are placed and where the pointer is read. The
