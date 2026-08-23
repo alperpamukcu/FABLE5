@@ -142,22 +142,26 @@ namespace LastCall.PlayTests
 
             yield return new WaitForSecondsRealtime(2.5f);   // the rig ramps over about a second
 
-            float ceiling = 0f;
+            // THE HOUSE LIGHTS ARE THE WALL LIGHTS NOW (2026-08-23). This counted "Lamp0..7"
+            // - the three ceiling downlights - and the room it was written for had a ceiling
+            // in frame. This one does not: it is lit by two sconces on the cream band, and
+            // the beat is the same beat, so it is those that have to come down.
+            float house = 0f;
             int lamps = 0;
             for (int i = 0; i < 8; i++)
             {
-                float lit = Intensity("Lamp" + i);
-                if (lit >= 0f) { ceiling += lit; lamps++; }
+                float lit = Intensity("SconceLight" + i);
+                if (lit >= 0f) { house += lit; lamps++; }
             }
             float guestLamp = Intensity("LastCallLamp");
             float wash = Intensity("GlobalLight");
-            Assert.That(lamps, Is.GreaterThan(0), "the room has no ceiling to take down");
-            float perLamp = ceiling / lamps;
+            Assert.That(lamps, Is.GreaterThan(0), "the room has no house lights to take down");
+            float perLamp = house / lamps;
 
             Assert.That(guestLamp, Is.GreaterThan(perLamp * 3f),
                 $"nothing is picking the guest out: their lamp {guestLamp:0.00} against a "
-                + $"ceiling of {perLamp:0.00}");
-            Assert.That(perLamp, Is.LessThan(0.3f), "the ceiling did not come down");
+                + $"house light of {perLamp:0.00}");
+            Assert.That(perLamp, Is.LessThan(0.3f), "the house lights did not come down");
             Assert.That(wash, Is.LessThan(0.7f), "the room's wash did not thin");
             // The sign's own line went with the sign (2026-08-19): the beat used to burn the
             // LAST CALL neon harder as the room came down, and there is no neon in the room
