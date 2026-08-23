@@ -345,8 +345,38 @@ def glass():
     print('  place it on the SAME centre as the animation: WindowCentreArtPx')
 
 
+CYCLE = os.path.join(HERE, 'window_raw', 'cycle')
+# Where the city's lit windows begin in the NEW frames, measured (window_sunset_gen writes
+# them at the hole's own size): the topmost warm pixel in the centre band is row 124, so
+# everything from 120 down ships at CITY_ALPHA and the stage's sky reader never sees a
+# window. Same contract as the old sheet's row 65 - a different picture, not a new rule.
+CYCLE_HORIZON = 120
+
+
+def cycle_frames():
+    """The moments drawn at the window's own size, if there are any.
+
+    These need NO fitting at all - no warp, no scale, no mask. They were drawn at 141x274
+    because that is what the hole is, which was the whole point of redrawing them: the
+    view's pixels are the room's pixels, and the room's own frame does the cutting because
+    the plate draws under it.
+    """
+    if not os.path.isdir(CYCLE):
+        return []
+    out = []
+    for f in sorted(os.listdir(CYCLE)):
+        if f.lower().endswith('.png'):
+            out.append(np.asarray(Image.open(os.path.join(CYCLE, f)).convert('RGB')))
+    return out
+
+
 def build():
     (bx, by, bw, bh), mask = hole()
+
+    drawn = cycle_frames()
+    if drawn:
+        return build_from_cycle(drawn, bx, by, bw, bh)
+
     order, heads = chain()
     frames = [f for n in order for f in heads[n]]
 
@@ -397,6 +427,38 @@ def build():
             'asset': 'window_cycle', 'event': 'built', 'frames': n, 'cell': [bw, bh],
             'cols': SHEET_COLS, 'sheets': order, 'dropped_seams': dropped,
             'ts': time.strftime('%Y-%m-%dT%H:%M:%S')}) + '\n')
+
+
+def build_from_cycle(frames, bx, by, bw, bh):
+    """Pack frames that are already the right size. Nothing is fitted; only the alpha
+    contract is applied, because the stage reads the glass to light the room."""
+    for i, f in enumerate(frames):
+        if f.shape[0] != bh or f.shape[1] != bw:
+            raise SystemExit('cycle frame %d is %dx%d, but the hole is %dx%d - redraw it '
+                             "at the hole's size rather than scaling it"
+                             % (i, f.shape[1], f.shape[0], bw, bh))
+    n = len(frames)
+    rows = (n + SHEET_COLS - 1) // SHEET_COLS
+    sheet = Image.new('RGBA', (SHEET_COLS * bw, rows * bh), (0, 0, 0, 0))
+    a = np.full((bh, bw), 255, np.uint8)
+    a[CYCLE_HORIZON:] = CITY_ALPHA
+    for i, f in enumerate(frames):
+        cell = np.dstack([f.astype(np.uint8), a])
+        r, c = divmod(i, SHEET_COLS)
+        sheet.paste(Image.fromarray(cell, 'RGBA'), (c * bw, r * bh))
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    sheet.save(OUT)
+    room_h = np.asarray(Image.open(ROOM)).shape[0]
+    print('wrote %s  %dx%d' % (os.path.relpath(OUT, ROOT), sheet.width, sheet.height))
+    print("  %d frames DRAWN at the hole's own size - no warp, no scale, no mask" % n)
+    print('  horizon at row %d: sky ships 255, city %d' % (CYCLE_HORIZON, CITY_ALPHA))
+    print()
+    print('-- constants for DiegeticStage.cs --')
+    print('  WindowCellPx   = %d x %d' % (bw, bh))
+    print('  WindowCols     = %d' % SHEET_COLS)
+    print('  WindowFrames   = %d' % n)
+    print('  WindowCentreArtPx (bottom-left origin) = (%.1f, %.1f)'
+          % (bx + bw / 2.0, room_h - (by + bh / 2.0)))
 
 
 if __name__ == '__main__':

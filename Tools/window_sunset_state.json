@@ -1,0 +1,21 @@
+{
+ "golden": {
+  "job_id": "981d8559-a5dd-4368-8867-67b8eb4b90fb",
+  "png": "window_raw\\sunset_golden.png"
+ },
+ "amber": {
+  "job_id": "c7296ef1-5adb-4a3c-9110-526d9c0942bb",
+  "from": "golden",
+  "png": "window_raw\\sunset_amber.png"
+ },
+ "dusk": {
+  "job_id": "3d953f06-bdcc-44ad-91a6-c24904595afe",
+  "from": "amber",
+  "png": "window_raw\\sunset_dusk.png"
+ },
+ "night": {
+  "job_id": "d16604df-ee53-4fbe-8fc3-8239a21f409e",
+  "from": "dusk",
+  "png": "window_raw\\sunset_night.png"
+ }
+}
