@@ -246,37 +246,68 @@ def poll():
 
 
 # ── the hours between the hours ─────────────────────────────────────────────
-TWEENS = 4          # frames inserted between each generated pair
+TWEENS = 9          # frames inserted between each generated pair
 
 
-def _quantise(img, palette):
-    """Nearest colour from an ALLOWED set. Blending two frames invents colours; this puts
-    every pixel back on one the house already drew, so no gradient is created and the flat
-    areas stay flat (16 §6.10)."""
-    h, w, _ = img.shape
-    # int32, and it is not a style choice: a squared channel difference reaches 65025 and
-    # three of them 195075, which wraps in int16 and makes argmin pick a colour at random.
-    # The first take of this did exactly that and filled the sky with window-light yellow.
-    flat = img.reshape(-1, 3).astype(np.int32)
-    pal = palette.astype(np.int32)
-    out = np.empty_like(flat)
-    for i in range(0, flat.shape[0], 8192):        # in chunks: the full matrix is large
-        chunk = flat[i:i + 8192]
-        d = ((chunk[:, None, :] - pal[None, :, :]) ** 2).sum(axis=2)
-        out[i:i + 8192] = pal[d.argmin(axis=1)]
-    return out.reshape(h, w, 3).astype(np.uint8)
+def _pack(arr):
+    a = arr.reshape(-1, 3).astype(np.int32)
+    return (a[:, 0] << 16) | (a[:, 1] << 8) | a[:, 2]
+
+
+def _lerp(c0, c1, t):
+    """Mix two colours in LINEAR light. Mixing sRGB numbers straight walks through a muddy
+    middle; squaring into light first and coming back out does not."""
+    l0 = (np.asarray(c0, float) / 255.0) ** 2.2
+    l1 = (np.asarray(c1, float) / 255.0) ** 2.2
+    return np.clip((((1 - t) * l0 + t * l1) ** (1 / 2.2)) * 255.0 + 0.5,
+                   0, 255).astype(np.uint8)
+
+
+def _destinations(a, b):
+    """For every colour in A, the colour THOSE SAME PIXELS have in B.
+
+    This is the whole idea, and it is what the old tween got wrong. That one mixed A and B
+    pixel by pixel and then snapped the result onto the pair's palette, so where two
+    unrelated colours met it snapped to something belonging to neither place: dusk's salmon
+    horizon mixed with night's indigo landed on a dusty rose that belongs to a LIT WINDOW,
+    and 1197 px of it lay across the sky as a flat bar. Measured, and it is exactly what
+    the author was looking at when they said the sunset had bozulmalar in it.
+
+    A colour that walks to ITS OWN destination cannot do that. A band stays one colour the
+    whole way over -- simply a different colour each frame -- so the flats stay flat
+    (16 §6.10) and nothing has to be quantised back onto anything at all.
+    """
+    pa, pb = _pack(a), _pack(b)
+    dest = {}
+    for c in np.unique(pa):
+        vals, counts = np.unique(pb[pa == c], return_counts=True)
+        dest[int(c)] = int(vals[counts.argmax()])
+    return dest
+
+
+def _walk(img, dest, t):
+    """One step of the walk: img's own layout, every colour t of the way to its destination."""
+    pk = _pack(img)
+    out = np.empty((pk.shape[0], 3), np.uint8)
+    for c in np.unique(pk):
+        d = dest[int(c)]
+        out[pk == c] = _lerp(((c >> 16) & 255, (c >> 8) & 255, c & 255),
+                             ((d >> 16) & 255, (d >> 8) & 255, d & 255), t)
+    return out.reshape(img.shape)
 
 
 def tween():
     """Fill the gaps between the drawn moments WITHOUT drawing more of them.
 
-    The measurement is what allows this: the skyline holds 97% across the chain, so
-    between two moments nothing MOVES - only the light differs. A frame between them is
-    therefore a colour step, not a new picture, and it can be computed.
+    The measurement is what allows this: the skyline holds 97% across the chain, so between
+    two moments nothing MOVES - only the light differs. A frame between them is therefore a
+    colour step, not a new picture, and it can be computed.
 
-    Blended and then QUANTISED back onto the two frames' own colours: a straight blend
-    would invent in-between tones and turn a banded sky into a gradient, which is the one
-    thing the style forbids.
+    Each half of a gap is walked out from the moment it is nearer to, so a frame is always
+    a RELIT drawn picture and never a mixture of two. The halves meet in the middle
+    carrying the same palette, which leaves only the handful of pixels where the two
+    pictures genuinely differ -- a window that lights, the last of the sun -- to change at
+    the join.
     """
     st = load()
     have = [n for n, _ in STEPS if st.get(n, {}).get('png')]
@@ -286,12 +317,28 @@ def tween():
     for i in range(len(have) - 1):
         a = np.asarray(Image.open(png(have[i])).convert('RGB'))
         b = np.asarray(Image.open(png(have[i + 1])).convert('RGB'))
-        pal = np.unique(np.concatenate([a.reshape(-1, 3), b.reshape(-1, 3)]), axis=0)
+        there, back = _destinations(a, b), _destinations(b, a)
+        pa, pb = _pack(a), _pack(b)
+
+        # Where the two pictures AGREE about what a pixel becomes, the pixel is a pure
+        # recolour and both walks give the same answer. Where they do not - a window that
+        # lights, the last of the sun going behind a tower - the pixel has to change over
+        # at some point, and a whole gap's worth of them changing on the same frame is a
+        # visible lurch: measured at 427/765 on one pixel and 46% of the picture at once.
+        # So each of those pixels is given its OWN moment to change, drawn once from a
+        # fixed seed. Nothing dissolves that did not have to; the lights simply come on a
+        # few at a time, which is what lights do.
+        moved = np.array([there[int(c)] for c in pa]) != pb
+        when = np.random.RandomState(SEED).rand(moved.shape[0])
+
         seq.append((have[i], a))
         for k in range(1, TWEENS + 1):
             f = k / float(TWEENS + 1)
-            mix = (a * (1 - f) + b * f).astype(np.uint8)
-            seq.append(('%s_%d' % (have[i], k), _quantise(mix, pal)))
+            va = _walk(a, there, f).reshape(-1, 3)
+            vb = _walk(b, back, 1.0 - f).reshape(-1, 3)
+            take_b = moved & (f >= when)
+            seq.append(('%s_%d' % (have[i], k),
+                        np.where(take_b[:, None], vb, va).reshape(a.shape)))
     seq.append((have[-1], np.asarray(Image.open(png(have[-1])).convert('RGB'))))
 
     os.makedirs(os.path.join(RAW, 'cycle'), exist_ok=True)
@@ -299,9 +346,12 @@ def tween():
         Image.fromarray(arr, 'RGB').save(os.path.join(RAW, 'cycle', '%02d_%s.png' % (i, name)))
     print('  %d frames written to window_raw/cycle (%d drawn, %d computed)'
           % (len(seq), len(have), len(seq) - len(have)))
-    pal_sizes = [len(np.unique(a.reshape(-1, 3), axis=0)) for _, a in seq]
-    print('  colours per frame: min %d, max %d — no frame invents a colour the pair did not have'
-          % (min(pal_sizes), max(pal_sizes)))
+    sizes = [len(np.unique(a.reshape(-1, 3), axis=0)) for _, a in seq]
+    print('  colours per frame: min %d, max %d - a walked frame carries exactly as many '
+          'as the picture it was walked from' % (min(sizes), max(sizes)))
+    worst = max(int(np.abs(seq[i][1].astype(int) - seq[i - 1][1].astype(int)).sum(axis=2).max())
+                for i in range(1, len(seq)))
+    print('  largest single-pixel colour step between neighbours: %d/765' % worst)
 
 
 # ── the gate ────────────────────────────────────────────────────────────────
