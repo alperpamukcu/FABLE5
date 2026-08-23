@@ -1,4 +1,5 @@
-// Auto-applies PIXEL sprite import settings to every PNG under Assets/Art/ (v2 pixel
+// Auto-applies PIXEL sprite import settings to every PNG under Assets/Art/ and
+// Assets/Resources/Scene/ (v2 pixel
 // pivot, PATCH_15 §C / 15_asset_pipeline §4): point filtering, no compression, no
 // mipmaps, PPU 1. Pairs with the project's Pixel Perfect Camera (640×360, integer scale).
 using UnityEditor;
@@ -9,7 +10,12 @@ public class LastCallImporter : AssetPostprocessor
     void OnPreprocessTexture()
     {
         var path = assetPath.Replace("\\", "/").ToLower();
-        if (!path.Contains("/art/")) return;
+        // Resources/Scene is the room's art in all but name — the window's view, its glass,
+        // the palms, the back bar. Its five plates had each been hand-set to these very
+        // settings one file at a time, and a sixth arriving as a blurry Default texture is
+        // then a silent bug (see memory: a new PNG whose rule is not compiled yet keeps
+        // Default and has to be force-reimported). The rule says it instead.
+        if (!path.Contains("/art/") && !path.Contains("/resources/scene/")) return;
 
         var ti = (TextureImporter)assetImporter;
         ti.textureType = TextureImporterType.Sprite;

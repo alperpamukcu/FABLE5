@@ -848,12 +848,42 @@ namespace LastCall.UI
         // different moments, and the trunk crawls like a snake instead of leaning. A trunk
         // is stiff. It goes over as ONE THING.
         //
-        // So the layer is one sprite and the wind is a small ROTATION about its foot. The
+        // So each layer is one sprite and the wind is a small ROTATION about its foot. The
         // trunk keeps its shape by construction — there is no seam left to ripple — and the
         // crown still travels furthest simply because it is furthest from the pivot.
-        private const float PalmLeanDegrees = 2.2f;    // each way, at full gust
-        private const float PalmSwaySpeed = 0.9f;
-        private SpriteRenderer _palmSr;
+        //
+        // SIX LAYERS, SIX RHYTHMS (2026-08-23, the author again: "iki ağacın yaprakları da
+        // bağımsız olarak hareket etmeli"). One sprite fixed the ripple and bought a second
+        // wrong: both trees leaned in perfect lockstep, which is the one thing a pair of
+        // trees never does. So the plate is cut — ONCE, offline, by
+        // Tools/window_palms_split.py — into a pole and a crown for each tree and the ground
+        // plants at each foot, and every piece gets its own speed and its own phase.
+        //
+        // A crown hangs off ITS OWN TRUNK in the hierarchy, so it inherits the trunk's lean
+        // and adds its own turn about the junction on top. That is the whole trick: the
+        // fronds have a life of their own without ever coming off the tree, and the trunk
+        // below the junction never feels it.
+        //
+        // The pivots are art px on the plate's own 141×274 canvas, y from the TOP, printed
+        // by the split script — the ROOTS are off the plate on purpose, because the sill
+        // cuts each trunk long before the ground does, and a tree that turns about its
+        // visible foot swings like a hanged sign.
+        private const float PalmLeanDegrees = 2.2f;    // the trunk, each way at full gust
+        private const float PalmCrownDegrees = 3.0f;   // the fronds, on top of that
+        private const float PlantLeanDegrees = 2.6f;   // the plants on the sill
+
+        private sealed class WindLayer
+        {
+            public SpriteRenderer Sr;
+            public Transform Pivot;      // the point this piece turns about
+            public float Amplitude, Speed, Phase;
+            public Vector2 PivotArt;     // that point, in plate px, y from the top
+            public WindLayer Parent;     // the trunk a crown hangs off, null for a trunk
+        }
+
+        private readonly List<WindLayer> _wind = new List<WindLayer>();
+        private Transform _windRoot;
+        private Vector2 _palmPlate;      // the plate's own size, read off the art
 
         // ── the view out of the window, played on the shift's clock (2026-08-19) ────
         // A Miami skyline that runs from a golden sun through the pink band into deep
@@ -1347,52 +1377,110 @@ namespace LastCall.UI
         /// </summary>
         private void BuildPalms()
         {
-            var sprite = Resources.Load<Sprite>("Scene/window_palms");
-            if (sprite == null) return;
-            // Order 6: over the view (5), under the room (10). The room's own frame and
-            // glazing bars then cut the palms and the sky with one drawing, which is why
-            // neither of them needs a mask of its own.
-            _palmSr = WorldSprite("Palms", sprite, order: 6);
-            // PIVOTED AT THE FOOT, not the middle: a palm bends where it is planted. The
-            // sprite's own pivot is its centre, so the renderer hangs off a parent placed at
-            // the layer's bottom edge and offset up by half its height — turn the parent and
-            // the whole tree leans from the ground.
-            var root = new GameObject("PalmRoot").transform;
-            root.SetParent(_world, false);
-            _palmSr.transform.SetParent(root, false);
+            _windRoot = new GameObject("WindRoot").transform;
+            _windRoot.SetParent(_world, false);
+
+            // The far tree is drawn first, then the near one, then the plants on the sill —
+            // which is the order the split already assumes, since it is the LEFT crown that
+            // overlaps the right one. Orders 6–8 all sit over the view (5) and under the room
+            // (10), so the room's own frame and glazing bars cut every layer with one drawing
+            // and not one of them needs a mask.
+            var rTrunk = WindPiece("window_palm_r", new Vector2(153.3f, 274f), 6,
+                                   PalmLeanDegrees, 0.74f, 1.9f, null);
+            WindPiece("window_palm_r_crown", new Vector2(113f, 94f), 6,
+                      PalmCrownDegrees, 1.31f, 0.6f, rTrunk);
+            var lTrunk = WindPiece("window_palm_l", new Vector2(-5.4f, 274f), 7,
+                                   PalmLeanDegrees, 0.90f, 0f, null);
+            WindPiece("window_palm_l_crown", new Vector2(35f, 69f), 7,
+                      PalmCrownDegrees, 1.53f, 2.4f, lTrunk);
+            WindPiece("window_plants_l", new Vector2(22f, 274f), 8,
+                      PlantLeanDegrees, 1.10f, 1.2f, null);
+            WindPiece("window_plants_r", new Vector2(124f, 274f), 8,
+                      PlantLeanDegrees, 1.22f, 3.1f, null);
         }
 
         /// <summary>
-        /// One frame of wind: the whole layer leans a couple of degrees about its foot. The
-        /// crown still travels furthest — it is furthest from the pivot — but it travels
-        /// because the TRUNK took it there, which is the difference between a tree bending
-        /// and a tree rippling.
+        /// One piece of the window's greenery, hung on a pivot of its own. <paramref
+        /// name="parent"/> is the trunk a crown belongs to — passing it is what keeps the
+        /// fronds on the tree while they move by themselves.
+        /// </summary>
+        private WindLayer WindPiece(string res, Vector2 pivotArt, int order,
+                                    float amplitude, float speed, float phase,
+                                    WindLayer parent)
+        {
+            var sprite = Resources.Load<Sprite>("Scene/" + res);
+            if (sprite == null) return null;
+            _palmPlate = new Vector2(sprite.texture.width, sprite.texture.height);
+
+            var pivot = new GameObject(res).transform;
+            pivot.SetParent(parent != null ? parent.Pivot : _windRoot, false);
+            var sr = WorldSprite(res + "Art", sprite, order);
+            sr.transform.SetParent(pivot, false);
+
+            var layer = new WindLayer
+            {
+                Sr = sr,
+                Pivot = pivot,
+                Amplitude = amplitude,
+                Speed = speed,
+                Phase = phase,
+                PivotArt = pivotArt,
+                Parent = parent,
+            };
+            _wind.Add(layer);
+            return layer;
+        }
+
+        /// <summary>
+        /// One frame of wind. Every layer leans a couple of degrees about its own pivot on
+        /// its own clock, and a crown leans about ITS TRUNK'S junction after that trunk has
+        /// already leaned — so the fronds travel further than the pole carrying them without
+        /// ever leaving it.
         /// </summary>
         private void StepPalms()
         {
-            if (_palmSr == null || _windowSr == null) return;
-            var root = _palmSr.transform.parent;
-            if (root == null) return;
+            if (_windRoot == null || _windowSr == null || _wind.Count == 0) return;
 
-            // The layer sits exactly where the view does, so it is placed off the view's own
-            // transform rather than measured twice — they cannot come apart. Half its height
-            // is needed in two spaces at once: the foot is a WORLD position, while the lift
-            // that puts the sprite back on top of that foot is a LOCAL one under a stage root
-            // the drawer both moves and magnifies.
-            float lift = _palmSr.sprite.bounds.size.y * 0.5f
-                       * _windowSr.transform.localScale.y;
-            float liftWorld = lift * (_world != null ? _world.lossyScale.y : 1f);
-            root.position = new Vector3(_windowSr.transform.position.x,
-                                        _windowSr.transform.position.y - liftWorld, 0f);
-            _palmSr.transform.localScale = _windowSr.transform.localScale;
-            _palmSr.transform.localPosition = new Vector3(0f, lift, 0f);
-
-            // Two waves at different rates so the gust never repeats a beat exactly.
-            float t = Time.unscaledTime * PalmSwaySpeed;
-            float wave = Mathf.Sin(t) * 0.7f + Mathf.Sin(t * 1.7f + 1.3f) * 0.3f;
+            // Every layer keeps the plate's own canvas, so the whole set is hung at the
+            // view's centre off the view's own transform rather than measured twice — they
+            // cannot come apart, whatever the drawer does to the stage under them.
+            _windRoot.position = _windowSr.transform.position;
+            float s = _windowSr.transform.localScale.x;
+            float t = Time.unscaledTime;
             float k = Motion.Reduced ? 0f : 1f;
-            root.localRotation = Quaternion.Euler(0f, 0f, PalmLeanDegrees * wave * k);
+
+            for (int i = 0; i < _wind.Count; i++)
+            {
+                var L = _wind[i];
+                if (L == null || L.Sr == null) continue;
+
+                // The pivot stands at its art point; the sprite is pushed back by the same
+                // offset, which lands the plate exactly over the view again. Turning the
+                // pivot then turns the plate about that art point and nothing else.
+                //
+                // A crown is measured from ITS TRUNK'S pivot, not from the plate's centre —
+                // the difference of two offsets, never the offset of a difference. Handing
+                // ArtOffset a delta re-applies the centring and throws the crown half a
+                // plate off its own tree, which is exactly what it did once.
+                L.Pivot.localPosition = L.Parent == null
+                    ? ArtOffset(L.PivotArt, s)
+                    : ArtOffset(L.PivotArt, s) - ArtOffset(L.Parent.PivotArt, s);
+                L.Sr.transform.localPosition = -ArtOffset(L.PivotArt, s);
+                L.Sr.transform.localScale = new Vector3(s, s, 1f);
+
+                // Two waves at rates that do not divide, so no layer ever repeats a beat and
+                // no two layers fall into step with one another.
+                float w = L.Speed * t + L.Phase;
+                float wave = Mathf.Sin(w) * 0.7f + Mathf.Sin(w * 1.7f + 1.3f) * 0.3f;
+                L.Pivot.localRotation = Quaternion.Euler(0f, 0f, L.Amplitude * wave * k);
+            }
         }
+
+        /// <summary>Plate px (y from the TOP) → an offset from the plate's centre, in the
+        /// stage's own units at the view's scale.</summary>
+        private Vector3 ArtOffset(Vector2 artPx, float scale) => new Vector3(
+            (artPx.x - _palmPlate.x * 0.5f) * scale,
+            (_palmPlate.y * 0.5f - artPx.y) * scale, 0f);
 
         /// <summary>Background-art pixel (y from the TOP, the way art is measured) → world.</summary>
         private Vector3 ArtPxToWorld(Vector2 artPx) =>
