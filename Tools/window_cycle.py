@@ -30,6 +30,7 @@ Three decisions worth reading before changing anything here:
 
 Commands:  measure          what the sheets contain, and their chain order
            build            write the sheet + print the stage constants
+           glass            write the pane's own sheen, cut to the room's mask
 Sources:   Tools/window_raw/*.png   (copy the PixelLab downloads here)
 Ships:     Assets/Resources/Scene/window_cycle.png
 """
@@ -147,6 +148,48 @@ def scales(top, bot, w, sh, overscan=OVERSCAN_PX):
     return u, spans
 
 
+ZOOM = 2                    # whole multiple only: half a source pixel is a smeared one
+
+
+def flat(frame, bw, bh, zoom=ZOOM):
+    """One frame, standing FLAT behind the glass.
+
+    THE WARP BELOW IS RETIRED FOR THIS ROOM (2026-08-22, the author: "gün batımı doğru
+    oturtturulmamış yeni sahneye ... camların olduğu yere cam dokusu koyup arkasına
+    manzarayı koymak daha mantıklı olmaz mı?"). It fitted the picture INTO the opening's
+    trapezoid, which was the right answer while the view was a plate cut to the glass. It
+    is the wrong one now: this room's window is four separate panes, and a picture warped
+    to the whole opening restarts its horizon at every mullion — which is exactly what the
+    author saw.
+
+    A window does not bend the view; the WINDOW is what is angled. So the picture stands
+    flat behind the room and the room's own frame and glazing bars cut it, which they do
+    for free because the panes are keyed transparent and the plate draws under the room
+    (order 5 against the room's 10).
+
+    Scaled by a WHOLE multiple and sampled nearest: a fractional zoom doubles some columns
+    and not others, which on pixel art reads as a picture that cannot hold still.
+    """
+    sh, sw = frame.shape[:2]
+    cw, ch = min(sw, -(-bw // zoom)), min(sh, -(-bh // zoom))
+    x0, y0 = (sw - cw) // 2, (sh - ch) // 2          # a centred slice of the panorama
+    cut = frame[y0:y0 + ch, x0:x0 + cw]
+
+    out = np.zeros((bh, bw, 4), np.uint8)
+    ys = np.clip(np.arange(bh) // zoom, 0, ch - 1)
+    xs = np.clip(np.arange(bw) // zoom, 0, cw - 1)
+    out[:, :, :3] = cut[np.ix_(ys, xs)][:, :, :3]
+
+    # THE HORIZON STILL RIDES IN THE ALPHA. The stage lights the room by reading the glass
+    # and must not take the carpet of lit city windows for a sunrise, so every pixel from
+    # below HORIZON_ROW ships at 254 and only true sky is 255 — the same contract the warp
+    # kept, because the reader on the stage side did not change.
+    src_rows = y0 + ys
+    city = np.repeat((src_rows >= HORIZON_ROW)[:, None], bw, axis=1)
+    out[:, :, 3] = np.where(city, CITY_ALPHA, 255).astype(np.uint8)
+    return out
+
+
 def warp(frame, mask, top, bot, overscan=OVERSCAN_PX):
     """One frame, stood in the window's plane at true aspect and cut to its glass.
 
@@ -259,6 +302,49 @@ def measure():
     print('overscan: %d art px taller than the opening at every column' % OVERSCAN_PX)
 
 
+GLASS_OUT = os.path.join(ROOT, 'Assets', 'Resources', 'Scene', 'window_glass.png')
+
+
+def glass():
+    """The pane itself: what the glass does to the light, drawn OVER the view.
+
+    The author, 2026-08-22: "camların olduğu yere cam dokusu koyup arkasına manzarayı
+    koymak daha mantıklı olmaz mı?" — and it is, because a window is two things. The view
+    stands flat behind the room; this is the sheet of glass in front of it, and without it
+    the opening is a hole in a wall rather than something glazed.
+
+    BANDS, NOT A GRADIENT (16 §6.10). Two hard-edged diagonal streaks and one flat cool
+    wash, all at low alpha: a raking highlight is what tells you there is a pane there at
+    all, and a soft ramp would be the one thing the style forbids. The mask is the ROOM'S
+    OWN, exactly as the animation's is, so the sheen cannot sit a pixel off the glass it
+    belongs to.
+    """
+    (bx, by, bw, bh), mask = hole()
+    out = np.zeros((bh, bw, 4), np.uint8)
+
+    ys = np.arange(bh)[:, None]
+    xs = np.arange(bw)[None, :]
+    # The streaks run with the window's own lean: down-right at roughly 2 rows per column,
+    # which is the angle the mullions already carry.
+    d = (xs * 2 + ys)
+    period = 190
+    phase = d % period
+    wide = (phase < 26)                     # the broad streak
+    thin = (phase >= 40) & (phase < 48)     # its narrow companion
+
+    tint = np.zeros((bh, bw, 4), np.uint8)
+    tint[:, :] = (120, 170, 205, 20)        # a cool wash: glass is never colourless
+    out = tint.copy()
+    out[wide] = (225, 240, 255, 44)
+    out[thin] = (235, 245, 255, 30)
+
+    out[~mask] = (0, 0, 0, 0)               # only where the room says there is a pane
+    Image.fromarray(out, 'RGBA').save(GLASS_OUT)
+    print('wrote %s  %dx%d  (%.0f%% of the box is pane)'
+          % (os.path.relpath(GLASS_OUT, ROOT), bw, bh, 100.0 * mask.mean()))
+    print('  place it on the SAME centre as the animation: WindowCentreArtPx')
+
+
 def build():
     (bx, by, bw, bh), mask = hole()
     order, heads = chain()
@@ -281,7 +367,7 @@ def build():
     rows = (n + SHEET_COLS - 1) // SHEET_COLS
     sheet = Image.new('RGBA', (SHEET_COLS * bw, rows * bh), (0, 0, 0, 0))
     for i, f in enumerate(kept):
-        cell = warp(f, mask, top, bot)
+        cell = flat(f, bw, bh)
         r, c = divmod(i, SHEET_COLS)
         sheet.paste(Image.fromarray(cell, 'RGBA'), (c * bw, r * bh))
 
@@ -290,10 +376,9 @@ def build():
     print('wrote %s  %dx%d' % (os.path.relpath(OUT, ROOT), sheet.width, sheet.height))
     print('  %d frames kept (%d duplicate seam frame(s) dropped), %d columns, cell %dx%d'
           % (n, dropped, SHEET_COLS, bw, bh))
-    u, spans = scales(top, bot, bw, FH)
-    print('  true aspect held at every column (scale %.3f near, %.3f far), '
-          '%d of %d panorama columns in the glass, %d px overscan'
-          % (spans[0] / FH, spans[-1] / FH, round(u[-1] - u[0]) + 1, FW, OVERSCAN_PX))
+    used_w, used_h = min(FW, -(-bw // ZOOM)), min(FH, -(-bh // ZOOM))
+    print('  standing FLAT behind the glass at %dx, so %d of %d panorama columns and %d of %d '
+          'rows are in frame; the room cuts it' % (ZOOM, used_w, FW, used_h, FH))
     a = np.asarray(sheet)[:, :, 3]
     print('  horizon at source row %d: %.0f%% of the glass is sky (alpha 255), '
           'the rest city (alpha %d)'
@@ -316,4 +401,4 @@ def build():
 
 if __name__ == '__main__':
     cmd = sys.argv[1] if len(sys.argv) > 1 else 'measure'
-    {'measure': measure, 'build': build}[cmd]()
+    {'measure': measure, 'build': build, 'glass': glass}[cmd]()

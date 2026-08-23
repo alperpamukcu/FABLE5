@@ -827,7 +827,7 @@ namespace LastCall.UI
         // ── the world ───────────────────────────────────────────────────────────
         private Transform _world;                   // root of every world-space stage object
         private Material _litMaterial;              // Sprite-Lit-Default, shared by the stage
-        private SpriteRenderer _backdropSr, _backgroundSr, _windowSr;
+        private SpriteRenderer _backdropSr, _backgroundSr, _windowSr, _glassSr;
 
         // ── the view out of the window, played on the shift's clock (2026-08-19) ────
         // A Miami skyline that runs from a golden sun through the pink band into deep
@@ -1015,6 +1015,16 @@ namespace LastCall.UI
 
                 _backgroundSr = WorldSprite("Background", backgroundSprite, order: 10);
                 _backgroundNative = backgroundSprite.rect.size;
+
+                // THE PANE ITSELF, over the room and under everything standing in it (the
+                // counter is 30). A window is TWO things: the view stands flat behind the
+                // wall and shows through the keyed panes, and this is the sheet of glass in
+                // front of it. Without it the opening reads as a hole in a wall rather than
+                // something glazed (the author, 2026-08-22). Cut to the room's own mask by
+                // the same tool that cuts the animation, so the sheen cannot sit a pixel off
+                // the glass — Tools/window_cycle.py glass.
+                var glass = Resources.Load<Sprite>("Scene/window_glass");
+                if (glass != null) _glassSr = WorldSprite("WindowGlass", glass, order: 11);
 
                 // The lamps the picture already painted, made real: a warm pool under each
                 // bulb. Positions are measured art pixels, converted per-fit in Refit.
@@ -1223,6 +1233,11 @@ namespace LastCall.UI
                     _windowSr.transform.localScale =
                         new Vector3(_backgroundScale, _backgroundScale, 1f);
                     _windowSr.transform.position = StageArtPointToWorld(WindowCentreArtPx);
+                    if (_glassSr != null)
+                    {
+                        _glassSr.transform.position = _windowSr.transform.position;
+                        _glassSr.transform.localScale = _windowSr.transform.localScale;
+                    }
                     // The sun stands OUTSIDE the opening and is re-hung with it: the window
                     // moves with the room's fit, so a light left at a build-time position
                     // would slide off the glass the moment the window is not 16:9. The
