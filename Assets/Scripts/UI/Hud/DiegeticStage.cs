@@ -829,6 +829,32 @@ namespace LastCall.UI
         private Material _litMaterial;              // Sprite-Lit-Default, shared by the stage
         private SpriteRenderer _backdropSr, _backgroundSr, _windowSr, _glassSr;
 
+        // ── the palms, and the wind in them (2026-08-23) ────────────────────────
+        // The author: "ağaçları görselden ayıralım, ağaçlara animasyonu ayrı vereceğiz çünkü
+        // ağaçlar çok daha fazla sallanması gerekiyor". They are their own drawing on their
+        // own transparency, standing between the sky and the room - so the room's mullions
+        // cut them exactly as they cut the view behind.
+        //
+        // THE WIND IS CODE, NOT FRAMES, and that is the point of separating them. A drawn
+        // sway is one amplitude at one speed for ever; this one BENDS - each horizontal
+        // band is pushed by an amount that grows with its height, so the trunk leans and
+        // the fronds at the top travel furthest, which is what a palm does. It costs
+        // nothing to make the wind stronger, and the two trees can be out of step.
+        //
+        // ONE PIECE, LEANING FROM THE ROOT (2026-08-23, the author: "palmiyelerin gövdesi
+        // beraber hareket etmeli dalgalanma olmamalı"). The first take sliced the layer into
+        // 22 bands and pushed each by its own height — a real bend, and wrong: every band
+        // rounds its offset to a whole pixel, the bands cross their rounding thresholds at
+        // different moments, and the trunk crawls like a snake instead of leaning. A trunk
+        // is stiff. It goes over as ONE THING.
+        //
+        // So the layer is one sprite and the wind is a small ROTATION about its foot. The
+        // trunk keeps its shape by construction — there is no seam left to ripple — and the
+        // crown still travels furthest simply because it is furthest from the pivot.
+        private const float PalmLeanDegrees = 2.2f;    // each way, at full gust
+        private const float PalmSwaySpeed = 0.9f;
+        private SpriteRenderer _palmSr;
+
         // ── the view out of the window, played on the shift's clock (2026-08-19) ────
         // A Miami skyline that runs from a golden sun through the pink band into deep
         // night, sliced from ONE sheet: Assets/Resources/Scene/window_cycle.png, built by
@@ -909,6 +935,7 @@ namespace LastCall.UI
         {
             StepClosing();
             StepDrawer();
+            StepPalms();
             float w = VisibleWidth();
             if (!Mathf.Approximately(w, _lastVisibleW)) Refit(w);
             // The room is built once at the reference and MAGNIFIED to cover the window.
@@ -1025,6 +1052,7 @@ namespace LastCall.UI
                 // the glass — Tools/window_cycle.py glass.
                 var glass = Resources.Load<Sprite>("Scene/window_glass");
                 if (glass != null) _glassSr = WorldSprite("WindowGlass", glass, order: 11);
+                BuildPalms();
 
                 // The lamps the picture already painted, made real: a warm pool under each
                 // bulb. Positions are measured art pixels, converted per-fit in Refit.
@@ -1310,6 +1338,60 @@ namespace LastCall.UI
             }
 
             PlaceFixtures();
+        }
+
+        /// <summary>
+        /// The palms, sliced into horizontal bands so the wind can BEND them rather than
+        /// swing them rigidly. One texture, many renderers: each band shows its own strip of
+        /// it and is pushed sideways on its own, and the push grows with height.
+        /// </summary>
+        private void BuildPalms()
+        {
+            var sprite = Resources.Load<Sprite>("Scene/window_palms");
+            if (sprite == null) return;
+            // Order 6: over the view (5), under the room (10). The room's own frame and
+            // glazing bars then cut the palms and the sky with one drawing, which is why
+            // neither of them needs a mask of its own.
+            _palmSr = WorldSprite("Palms", sprite, order: 6);
+            // PIVOTED AT THE FOOT, not the middle: a palm bends where it is planted. The
+            // sprite's own pivot is its centre, so the renderer hangs off a parent placed at
+            // the layer's bottom edge and offset up by half its height — turn the parent and
+            // the whole tree leans from the ground.
+            var root = new GameObject("PalmRoot").transform;
+            root.SetParent(_world, false);
+            _palmSr.transform.SetParent(root, false);
+        }
+
+        /// <summary>
+        /// One frame of wind: the whole layer leans a couple of degrees about its foot. The
+        /// crown still travels furthest — it is furthest from the pivot — but it travels
+        /// because the TRUNK took it there, which is the difference between a tree bending
+        /// and a tree rippling.
+        /// </summary>
+        private void StepPalms()
+        {
+            if (_palmSr == null || _windowSr == null) return;
+            var root = _palmSr.transform.parent;
+            if (root == null) return;
+
+            // The layer sits exactly where the view does, so it is placed off the view's own
+            // transform rather than measured twice — they cannot come apart. Half its height
+            // is needed in two spaces at once: the foot is a WORLD position, while the lift
+            // that puts the sprite back on top of that foot is a LOCAL one under a stage root
+            // the drawer both moves and magnifies.
+            float lift = _palmSr.sprite.bounds.size.y * 0.5f
+                       * _windowSr.transform.localScale.y;
+            float liftWorld = lift * (_world != null ? _world.lossyScale.y : 1f);
+            root.position = new Vector3(_windowSr.transform.position.x,
+                                        _windowSr.transform.position.y - liftWorld, 0f);
+            _palmSr.transform.localScale = _windowSr.transform.localScale;
+            _palmSr.transform.localPosition = new Vector3(0f, lift, 0f);
+
+            // Two waves at different rates so the gust never repeats a beat exactly.
+            float t = Time.unscaledTime * PalmSwaySpeed;
+            float wave = Mathf.Sin(t) * 0.7f + Mathf.Sin(t * 1.7f + 1.3f) * 0.3f;
+            float k = Motion.Reduced ? 0f : 1f;
+            root.localRotation = Quaternion.Euler(0f, 0f, PalmLeanDegrees * wave * k);
         }
 
         /// <summary>Background-art pixel (y from the TOP, the way art is measured) → world.</summary>

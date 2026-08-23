@@ -60,15 +60,40 @@ SEED = 20260823
 STYLE_REF = os.path.join(RAW, 'sky_ref.png')
 STYLE_COPY = ['color_palette', 'outline', 'detail', 'shading']
 
+# TWO LAYERS, NOT ONE (2026-08-23, the author: "arka plan görselindeki ağaçları
+# görselden ayıralım, ağaçlara animasyonu ayrı vereceğiz çünkü ağaçlar çok daha fazla
+# sallanması gerekiyor"). Palms cannot sway inside a picture of a sunset - a wind that
+# moves the fronds must not move the skyline behind them. So the sky is drawn WITHOUT
+# them and they are drawn on their own, on transparency, and the stage puts one in front
+# of the other. Cutting them out of the finished frames was the other option and it is
+# worse: it leaves palm-shaped holes that then have to be invented back.
+#
+# THE SKY IS BANDED HARDER, not softened ("gök yüzünün renk geçişi biraz daha smooth
+# olmalı"). The house's own answer to a hard ramp is the ViceFade's: a band set smooths by
+# GROWING BANDS, never by interpolating (16 §6.10). Eight bands read as stripes there and
+# twenty-six read as a fade; the same lever is pulled here.
 SCENE = (
-    "a Miami sunset seen from a high bar window, in a TALL upright frame: banded sky "
-    "filling the upper half - deep violet at the top stepping down through magenta and "
-    "hot pink into orange at the horizon - the sun a flat disc sitting on the skyline, "
-    "a downtown of blocky towers in flat purple silhouette across the middle, a lit "
-    "boulevard and low rooftops below it with small warm windows, and one tall palm "
-    "leaning in from each side. Flat bands of colour with hard edges and no gradients, "
-    "no dithering, pixel art, opaque background, no text, no logo, no people, no frame, "
-    "no window bars"
+    "a Miami sunset seen from a high bar window, in a TALL upright frame: the sky fills "
+    "the upper half in MANY NARROW HORIZONTAL BANDS of flat colour, twenty or more, "
+    "stepping smoothly from deep violet at the top through purple, magenta, hot pink, "
+    "coral and amber into orange at the horizon, each band only a few pixels tall so the "
+    "sky reads as a smooth fade made of steps; the sun a flat disc sitting on the "
+    "skyline, a downtown of blocky towers in flat purple silhouette across the middle, "
+    "and a lit boulevard with low rooftops and small warm windows below it. "
+    "NO palm trees, NO plants, NO leaves, nothing in the foreground. "
+    "Hard edges between bands, no dithering, no gradients, pixel art, opaque background, "
+    "the picture reaches all four edges, no text, no logo, no people, no window frame"
+)
+
+# The layer that moves. Drawn on transparency so the sky behind it is untouched, and
+# drawn TALL because these are the palms that lean in from the window's two sides.
+PALMS = (
+    "two tall palm trees on a transparent background, one leaning in from the left edge "
+    "and one from the right, their trunks thin and slightly curved, their fronds spread "
+    "wide across the top, plus a few broad low plant leaves along the bottom corners. "
+    "Flat dark silhouette with two tones only - a near-black body and one lighter edge "
+    "where the sky catches them - no detail inside, no highlights, no glow. Pixel art, "
+    "transparent background, nothing else in the picture, no sky, no ground, no text"
 )
 
 # One picture, four hours. Each is an edit of the one before it, so the city is never
@@ -111,7 +136,9 @@ def _job_from(text):
 
 
 def _keep(name, im):
-    im = im.convert('RGB')
+    # The palms are the one layer that keeps its alpha: flattening them to RGB would fill
+    # the gaps between the fronds with black and there would be nothing to see through.
+    im = im.convert('RGBA' if name == 'palms' else 'RGB')
     im.save(png(name))
     st = load()
     st.setdefault(name, {})['png'] = os.path.relpath(png(name), HERE)
@@ -144,6 +171,35 @@ def still():
         _keep('golden', images[0])
     else:
         print('  golden queued %s' % (st['golden']['job_id'] or text.strip()[:160]))
+
+
+def palms():
+    """The layer that moves, on its own transparency.
+
+    no_background TRUE here and FALSE for the sky, and the pair is the whole idea: the sky
+    IS its background, the palms are cut out of theirs so the sky shows between the fronds.
+    One drawing serves every hour - the stage tints it with the room's own light rather
+    than the palms being redrawn at each, which is also what keeps them from drifting out
+    of register with a sky that was drawn separately.
+    """
+    st = load()
+    if st.get('palms', {}).get('png'):
+        print('  palms already drawn'); return
+    args = {
+        'description': PALMS,
+        'width': W, 'height': H,
+        'no_background': True,
+        'style_image_base64': b64(STYLE_REF),
+        'style_copy': ['outline', 'detail', 'shading'],
+        'seed': SEED + 9,
+    }
+    text, images = trial.call('create_image_pro', args)
+    st.setdefault('palms', {})['job_id'] = _job_from(text)
+    save(st)
+    if images:
+        _keep('palms', images[0])
+    else:
+        print('  palms queued %s' % (st['palms']['job_id'] or text.strip()[:160]))
 
 
 def step(which=None):
@@ -305,4 +361,5 @@ if __name__ == '__main__':
     cmd = sys.argv[1] if len(sys.argv) > 1 else 'report'
     arg = sys.argv[2] if len(sys.argv) > 2 else None
     {'still': lambda: still(), 'step': lambda: step(arg), 'tween': lambda: tween(),
-     'poll': lambda: poll(), 'report': lambda: report()}[cmd]()
+     'poll': lambda: poll(), 'report': lambda: report(),
+     'palms': lambda: palms()}[cmd]()
