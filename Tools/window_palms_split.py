@@ -9,9 +9,17 @@ does. So the plate is cut here, once, into six full-canvas layers:
     window_palm_r / window_palm_r_crown     the right tree's
     window_plants_l / window_plants_r       the ground plants at the foot of each
 
-Every layer keeps the plate's own 141x274 canvas, so the game hangs all six at the window's
-centre and does not have to carry an offset per layer -- the only numbers that cross into
-the code are the PIVOTS this script prints, and they are art px on that same canvas.
+Every layer is written on ONE canvas, so the game hangs all six at the window's centre and
+does not have to carry an offset per layer -- the only numbers that cross into the code are
+the PIVOTS this script prints, and they are art px on the window's own 141x274 opening.
+
+That canvas is PADDED (2026-08-23, the author, having drawn the crowns out whole by hand:
+"png de ekran disinda kaldigindan kesiliyor yapraklar"). A finished crown reaches past the
+opening on the far side of each tree, and a canvas cut to the opening chops those fronds off
+in the FILE, where no care taken in the game can bring them back. The pad is even on all four
+sides, so the plate stays centred on the opening and an offset measured in opening px is
+still measured from the plate's centre. Whatever lands outside the opening is hidden by the
+room's own wall, which draws over all of these.
 
 The cut is not a box. The two crowns touch, so the trees are separated by geodesic distance
 through the ink itself: every pixel goes to the pole it can be reached from soonest, which
@@ -45,7 +53,8 @@ OUT = r'Assets/Resources/Scene'
 
 WHITE = 150          # a pixel this bright everywhere is a star the sky baked into a frond
 POLE_MAX_W = 14      # wider than this and the run is not a pole any more, it is the crown
-GROUND_Y = 274       # the plate's bottom edge: where a trunk's root would stand
+GROUND_Y = 274       # the opening's bottom edge: where a trunk's root would stand
+PAD = 24             # room round the opening so a finished frond is not cut by its own canvas
 CROWN_SHARE = {      # how far past the seam each crown keeps claiming ink, geodesic steps
     'l': 0,          # already whole: its notches sit inside the right crown and stay covered
     'r': 30,         # the occluded one: this is what gives it its left-hand fronds back
@@ -176,10 +185,10 @@ def distance_field(seeds, live):
 
 
 def write(px, w, h, cells, name):
-    im = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    im = Image.new('RGBA', (w + PAD * 2, h + PAD * 2), (0, 0, 0, 0))
     o = im.load()
     for x, y in cells:
-        o[x, y] = px[x, y]
+        o[x + PAD, y + PAD] = px[x, y]
     path = os.path.join(OUT, name + '.png')
     im.save(path)
     return path, len(cells)

@@ -864,10 +864,20 @@ namespace LastCall.UI
         // fronds have a life of their own without ever coming off the tree, and the trunk
         // below the junction never feels it.
         //
-        // The pivots are art px on the plate's own 141×274 canvas, y from the TOP, printed
-        // by the split script — the ROOTS are off the plate on purpose, because the sill
+        // The pivots are art px on the WINDOW'S OWN 141×274 opening, y from the TOP, printed
+        // by the split script — the ROOTS are off the opening on purpose, because the sill
         // cuts each trunk long before the ground does, and a tree that turns about its
         // visible foot swings like a hanged sign.
+        //
+        // THE PLATES ARE BIGGER THAN THE OPENING (2026-08-23, the author, having drawn the
+        // crowns out whole by hand: "png de ekran dışında kaldığından kesiliyor yapraklar"). A
+        // finished crown reaches past the opening on the far side of each tree, and a canvas
+        // cut to the opening chops those fronds off in the FILE, where no amount of care in
+        // the game can bring them back. So the split pads every layer evenly — the plate
+        // stays centred on the opening, the art has room, and the room's own wall (order 10,
+        // over all of these) hides whatever falls outside. Because the pad is even, an offset
+        // measured in opening px is still measured from the plate's centre, and no number
+        // here has to know how wide the pad is.
         private const float PalmLeanDegrees = 2.2f;    // the trunk, each way at full gust
         private const float PalmCrownDegrees = 3.0f;   // the fronds, on top of that
         private const float PlantLeanDegrees = 2.6f;   // the plants on the sill
@@ -1410,7 +1420,12 @@ namespace LastCall.UI
         {
             var sprite = Resources.Load<Sprite>("Scene/" + res);
             if (sprite == null) return null;
-            _palmPlate = new Vector2(sprite.texture.width, sprite.texture.height);
+            var plate = new Vector2(sprite.texture.width, sprite.texture.height);
+            if (_palmPlate != Vector2.zero && plate != _palmPlate)
+                Debug.LogWarning($"[Stage] {res} is {plate} but the other window layers are "
+                                 + $"{_palmPlate}. They all hang at the opening's centre, so a "
+                                 + "layer on a different canvas lands somewhere else.");
+            _palmPlate = plate;
 
             var pivot = new GameObject(res).transform;
             pivot.SetParent(parent != null ? parent.Pivot : _windRoot, false);
@@ -1476,11 +1491,14 @@ namespace LastCall.UI
             }
         }
 
-        /// <summary>Plate px (y from the TOP) → an offset from the plate's centre, in the
-        /// stage's own units at the view's scale.</summary>
-        private Vector3 ArtOffset(Vector2 artPx, float scale) => new Vector3(
-            (artPx.x - _palmPlate.x * 0.5f) * scale,
-            (_palmPlate.y * 0.5f - artPx.y) * scale, 0f);
+        /// <summary>
+        /// Window-opening px (y from the TOP) → an offset from the plate's centre, in the
+        /// stage's own units at the view's scale. The two centres are the same point because
+        /// the plates are padded evenly, which is why the pad appears in no number here.
+        /// </summary>
+        private Vector3 ArtOffset(Vector2 openingPx, float scale) => new Vector3(
+            (openingPx.x - WindowCellW * 0.5f) * scale,
+            (WindowCellH * 0.5f - openingPx.y) * scale, 0f);
 
         /// <summary>Background-art pixel (y from the TOP, the way art is measured) → world.</summary>
         private Vector3 ArtPxToWorld(Vector2 artPx) =>
