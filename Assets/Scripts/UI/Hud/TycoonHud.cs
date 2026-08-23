@@ -1477,34 +1477,17 @@ namespace LastCall.UI
 
         private bool _flowWasOpen;
 
-        // ── the floor ───────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// THE CELLAR IS THE BACK BAR NOW (2026-08-22). This used to open a full-screen page
-        /// of shelves; the counter carries its own stock behind a roller, so the verb opens
-        /// the drawer in the room instead and the player never leaves the bar.
-        ///
-        /// IT ONLY OPENS. It toggled for one afternoon and the smoke suite caught what that
-        /// costs: a retry — press, look, press again — cannot drive a toggle, because every
-        /// even press undoes the odd one before it, and six tries land exactly where none
-        /// would. That is not only a test's problem; it is what an impatient player does to
-        /// a control that has not answered yet. The verb is "make a drink", not "flip a
-        /// drawer" — so it opens, and shutting is the roller's own arrow, which is drawn
-        /// pointing the way it goes.
-        /// </summary>
-        /// <summary>Is the counter's cellar open? Asked by everything that must get out of
-        /// its way — the drinkers' tickets and their clocks.</summary>
+        /// <summary>Is the counter's cellar open? Asked by everything that must get out of its
+        /// way — the drinkers' tickets, their clocks, and the stool that must not be served
+        /// through while the room is lifted.</summary>
         private bool CellarOpen => stage != null && stage.DrawerPhase > 0.01f;
 
         /// <summary>The room, for the service flow — which has to put its bar top on the same
         /// line the room's counter is on, and cannot ask the scene for it twice.</summary>
         public DiegeticStage Room => stage;
 
-        private void OnMenuClicked()
-        {
-            if (stage == null) return;
-            stage.SetDrawerOpen(true);
-        }
+        // ── the floor ───────────────────────────────────────────────────────────
+
 
         /// <summary>The font on the counter, clicked: straight to the draught station. Nothing
         /// is checked here that the flow does not check itself — but a panel already open
@@ -1521,6 +1504,12 @@ namespace LastCall.UI
             var run = Run;
             if (run == null || run.Phase != TycoonPhase.DayOpen) return;
             if (_flow != null && _flow.IsOpen) return;   // finish the build first
+            // NOT WITH THE ROOM LIFTED (2026-08-22, the author: "Ekran aşağı kayıkken yani
+            // backbar açıkken servis yapılmamalı"). With the cellar open you are turned round
+            // to the bar's own body, the drinkers have ridden up out of the way and their
+            // tickets are down — a stool that still answered a click there would be serving
+            // somebody you cannot see, from a room you are not facing.
+            if (CellarOpen) return;
             var visit = _seats[index].Visit;
             if (visit == null) return;
 
@@ -8911,8 +8900,9 @@ namespace LastCall.UI
             // and the two most-pressed controls in the game were parked on it. The face
             // band (art rows 9..45) is empty drawn panelling and puts them nearer the
             // counter, which is where the hand already is.
-            NewButton(root, "MENU — MAKE A DRINK", new Vector2(0.5f, 0),
-                new Vector2(300, 40), new Vector2(0, 180), UITheme.MakeAction, OnMenuClicked);
+            // THE MAKING VERB LEFT THE HUD (2026-08-22). It is on the cellar's own lid now,
+            // beside the arrow that says which way the roller goes — one door, one key, and
+            // the same key shuts it again without moving. See DiegeticStage.BuildCellarCloseKey.
 
             // The recipe book, beside the making verb (v5 P16): the menu speaks styles now,
             // so how a drink is MADE has to live somewhere the player can read mid-shift.

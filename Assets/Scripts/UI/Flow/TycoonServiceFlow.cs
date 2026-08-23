@@ -470,12 +470,23 @@ namespace LastCall.UI
 
             _root = NewRect("FlowRoot", (RectTransform)canvasGo.transform);
             Stretch(_root, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            // NO DIM (2026-08-22, the author again: "Karıştırma ve dökme sahnelerinde arka
+            // plan karartılıyor bu olmayacak"). THIS is what was doing it — Night[0] at 0.86
+            // across the whole screen — and it was never on the panels, which is why taking
+            // the panels' own backdrops off did not stop it. It dimmed the room because the
+            // flow used to be a modal over a room you had left; the benches open onto the bar
+            // now and the bar keeps its light.
+            //
+            // The plate stays and still catches the pointer: it is the floor under a stage
+            // that has stopped sliding, and without it a click between panels reaches the room.
             var scrim = _root.gameObject.AddComponent<Image>();
-            scrim.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.86f);
-            // Clicking the dim outside a panel backs out of the flow.
+            scrim.color = new Color(0f, 0f, 0f, 0f);
+            // Clicking outside a panel used to back out of the flow. The panels are the full
+            // field now, so there is no outside to click — the key on the left edge is the
+            // way out, and a hidden second door that only fires in the letterbox is worse
+            // than none.
             var scrimBtn = _root.gameObject.AddComponent<Button>();
             scrimBtn.transition = Selectable.Transition.None;
-            scrimBtn.onClick.AddListener(CloseFlow);
 
             // The scrim keeps the whole screen — a dimmed room with undimmed corners is
             // not dimmed. The STAGES go in a fixed field instead, so the back bar packs

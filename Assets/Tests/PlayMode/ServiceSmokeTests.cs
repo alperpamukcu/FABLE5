@@ -408,17 +408,19 @@ namespace LastCall.PlayTests
         /// </summary>
         private IEnumerator OpenTheCellar(string doorName)
         {
+            // THE KEY IS A TOGGLE NOW, so this LOOKS BEFORE IT PRESSES: a retry that
+            // presses blind cannot drive one, because every even press undoes the odd one.
             for (int attempt = 0; attempt < 6; attempt++)
             {
-                var verb = Find("MENU — MAKE A DRINK");
-                Assert.That(verb, Is.Not.Null, "the making verb is not on the screen to press");
-                yield return ClickOn(verb);
-                yield return new WaitForSecondsRealtime(0.6f);      // the roller's own travel
                 var door = Find(doorName);
                 if (door != null && WhatIsUnder(ScreenPointOf(door)).Contains(doorName))
                     yield break;
+                var key = Find("CellarKey");
+                Assert.That(key, Is.Not.Null, "the cellar's key is not on the screen to press");
+                yield return ClickOn(key);
+                yield return new WaitForSecondsRealtime(0.6f);      // the roller's own travel
             }
-            Assert.Fail("six presses of the making verb never opened the cellar onto " + doorName);
+            Assert.Fail("six presses of the cellar's key never opened it onto " + doorName);
         }
 
         private static string WhatIsUnder(Vector2 screen)

@@ -139,6 +139,10 @@ namespace LastCall.UI
         /// four pixels the open frame leaves showing at the sill. It goes DOWN, which is what
         /// the pink arrow drawn on it has been pointing at all along.</summary>
         private const float ShutterTravel = 172f;
+        /// <summary>Where the cellar's one key sits, in stage units up from the screen's
+        /// bottom. On the roller's face when it is down — the same band the pink arrow is
+        /// drawn in — and it does not move when the room does.</summary>
+        private const float CellarKeyY = 40f;
         private const float DrawerSeconds = 0.42f;
         private Transform _shutterTr;
         private Vector2 _shutterNative;
@@ -166,6 +170,7 @@ namespace LastCall.UI
         private RectTransform _shutterDoor;
         private RectTransform _cellarCloseKey;
         private Image _cellarCloseArt;
+        private Text _cellarKeyLabel;
         private IReadOnlyList<string> _cellarIds;
         private CanvasGroup[] _registerFade;
 
@@ -283,13 +288,21 @@ namespace LastCall.UI
                 _cellarDoorGroup.blocksRaycasts = _drawerT > 0.99f;
             if (_cellarCloseKey != null)
             {
-                bool showing = _drawerT > 0.01f;
-                if (_cellarCloseKey.gameObject.activeSelf != showing)
-                    _cellarCloseKey.gameObject.SetActive(showing);
-                // On the slab, just above the cellar's mouth, riding up with the room.
-                _cellarCloseKey.anchoredPosition = new Vector2(
-                    0f, CounterRestY + CounterSurfaceInset - ShutterOpeningTopPx * 0.5f
-                        + DrawerTravel * _drawerT);
+                // ONE KEY, ONE PLACE, TWO WORDS (2026-08-22, the author: "bunu kapağın üstüne
+                // taşı, Shut It ile aynı yapıda olmalı ekranda aynı yerde kalmalı"). The verb
+                // used to live on the HUD at the bottom of the screen and the way out lived on
+                // the counter's slab, riding up with the room — two keys, two places, for what
+                // is one door. This is that door: it sits ON THE LID, which is where the
+                // author's own arrow is drawn, and it does NOT ride, so pressing it twice
+                // presses the same pixels.
+                if (!_cellarCloseKey.gameObject.activeSelf)
+                    _cellarCloseKey.gameObject.SetActive(true);
+                _cellarCloseKey.anchoredPosition = new Vector2(0f, CellarKeyY);
+                if (_cellarKeyLabel != null)
+                {
+                    string word = _drawerT > 0.5f ? "SHUT IT" : "MENU — MAKE A DRINK";
+                    if (_cellarKeyLabel.text != word) _cellarKeyLabel.text = word;
+                }
             }
             if (_cellarDoors.Count == 0) return;
             float slotW = CellarBayWidthPx / CellarPerBay;
@@ -352,10 +365,11 @@ namespace LastCall.UI
         private void BuildCellarCloseKey()
         {
             if (_cellarCloseKey != null || _cellarDoorRoot == null) return;
-            _cellarCloseKey = NewRect("CellarClose", _cellarDoorRoot);
+            _cellarCloseKey = NewRect("CellarKey", _cellarDoorRoot);
             _cellarCloseKey.anchorMin = _cellarCloseKey.anchorMax = new Vector2(0.5f, 0);
             _cellarCloseKey.pivot = new Vector2(0.5f, 0.5f);
-            _cellarCloseKey.sizeDelta = new Vector2(104, 30);
+            // Wide enough for the longer of its two captions; it carries both.
+            _cellarCloseKey.sizeDelta = new Vector2(168, 30);
             var btn = _cellarCloseKey.gameObject.AddComponent<Button>();
             btn.transition = Selectable.Transition.None;
             // THE ONE KEY (GDD 16 §2), not a fifth dialect. A generated 132x143 plate was
@@ -367,7 +381,7 @@ namespace LastCall.UI
             var face = NewRect("Face", _cellarCloseKey);
             Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _cellarCloseArt = KeyPlate.Dress(_cellarCloseKey, UITheme.MakeAction, btn, face);
-            btn.onClick.AddListener(() => SetDrawerOpen(false));
+            btn.onClick.AddListener(() => SetDrawerOpen(!DrawerOpen));
 
             var label = NewText("Label", face, _display, 8,
                                 TextAnchor.MiddleCenter, UITheme.TextPrimary);
@@ -375,8 +389,8 @@ namespace LastCall.UI
             // looks dropped (KeyPlate.Throw).
             Stretch(label.rectTransform, Vector2.zero, Vector2.one,
                     new Vector2(0, KeyPlate.Throw), Vector2.zero);
-            label.text = "SHUT IT";
             label.raycastTarget = false;
+            _cellarKeyLabel = label;
         }
 
         /// <summary>Slot i's foot, in the counter art's own pixels. One reading, so the
@@ -834,9 +848,15 @@ namespace LastCall.UI
         // The cell size is the hole's size, MEASURED (window_cycle.py build prints it beside
         // the centre below). The frame COUNT is deliberately not a constant — it is read off
         // the sheet, so re-generating with more frames needs no edit here.
-        private const int WindowCellW = 109, WindowCellH = 182;
+        // RE-MEASURED for the 2026-08-22 room (the author: "mevcut ana sahne
+        // arkaplanının camlarına gün batım animasyonumuzu ekleyelim"). The old room's hole
+        // was 109x182; this one is 141x274 and leans harder — 274 rows at its near edge
+        // against 141 at its far one. Every number here was PRINTED by the tool that cut the
+        // sheet (Tools/window_cycle.py build), never typed: the cell IS the hole, so if these
+        // two ever disagree the view slides off the glass.
+        private const int WindowCellW = 141, WindowCellH = 274;
         /// <summary>The hole's centre in the room art's own bottom-left space.</summary>
-        private static readonly Vector2 WindowCentreArtPx = new Vector2(54.5f, 197f);
+        private static readonly Vector2 WindowCentreArtPx = new Vector2(70.5f, 212.0f);
         private Sprite[] _windowFrames;
         private int _windowFrame = -1;
         private Vector2 _backgroundNative;

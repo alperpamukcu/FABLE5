@@ -286,21 +286,23 @@ namespace LastCall.PlayTests
         /// </summary>
         private IEnumerator OpenTheCellar(string doorName)
         {
-            // THE SUITE MAY NOT LOOK INSIDE THE UI (CLAUDE.md): it plays the scene through
-            // uGUI and the mouse, so it cannot ask the stage whether its drawer is open. It
-            // asks the POINTER instead, which is a better question anyway — the cellar's
-            // doors only take a ray once the roller is clear, so a door answering IS the
-            // cellar being open, and it is the same thing the player relies on.
+            // THE KEY IS A TOGGLE NOW, so this LOOKS BEFORE IT PRESSES. A retry that
+            // presses blind cannot drive a toggle — every even press undoes the odd one —
+            // which this suite learned once already and is not learning twice.
+            //
+            // "Is the cellar open" is asked of the POINTER, because the suite may not look
+            // inside the UI (CLAUDE.md): the doors only take a ray once the roller is clear,
+            // so a door answering IS the cellar being open, and it is what the player relies on.
             for (int attempt = 0; attempt < 6; attempt++)
             {
-                var target = Find("MENU — MAKE A DRINK");
-                Assert.That(target, Is.Not.Null, "the making verb is not on the screen to press");
-                yield return ClickOn(target);
-                yield return new WaitForSecondsRealtime(0.6f);   // the roller's own travel
                 var door = Find(doorName);
                 if (door != null && Reaches(door)) yield break;
+                var key = Find("CellarKey");
+                Assert.That(key, Is.Not.Null, "the cellar's key is not on the screen to press");
+                yield return ClickOn(key);
+                yield return new WaitForSecondsRealtime(0.6f);   // the roller's own travel
             }
-            Assert.Fail("six presses of the making verb never opened the cellar onto " + doorName);
+            Assert.Fail("six presses of the cellar's key never opened it onto " + doorName);
         }
 
         /// <summary>
