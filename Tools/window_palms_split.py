@@ -19,6 +19,20 @@ puts the seam in the contact zone where the fronds already interleave. The plant
 out first, by flooding them with the pole erased -- they hang off the trees ONLY through the
 pole, so erasing it disconnects them cleanly.
 
+AND THE CUT IS NOT A PARTITION EITHER (2026-08-23, the author: "palmiyeler tam degil
+bazilarinin uclari yok onlarida tamamlayabilirsin"). Where the crowns overlap, the plate
+holds ONE silhouette for TWO trees' fronds, and it does not record what is underneath.
+Handing each of those pixels to a single tree therefore truncates the other one: the right
+tree came out with two blunt stumps on its left where its fronds run under the left tree's.
+
+So the contested ink is SHARED. CROWN_SHARE says how far past the seam each crown keeps
+reaching, in geodesic steps: the ink is drawn twice, which costs nothing when both trees are
+the same black silhouette, and it means no hole can ever open along the seam whichever way
+the two lean. The right tree is the one that reaches (30); the left tree is already whole and
+takes nothing (0), because everything it is missing is a notch that sits inside the right
+crown's own reach and is covered by it at every lean. These two numbers were chosen by
+LOOKING at each crown drawn on its own -- 16 left a hole, 44 had one tree swallow the other.
+
 Run:  python Tools/window_palms_split.py
 """
 import os
@@ -32,6 +46,10 @@ OUT = r'Assets/Resources/Scene'
 WHITE = 150          # a pixel this bright everywhere is a star the sky baked into a frond
 POLE_MAX_W = 14      # wider than this and the run is not a pole any more, it is the crown
 GROUND_Y = 274       # the plate's bottom edge: where a trunk's root would stand
+CROWN_SHARE = {      # how far past the seam each crown keeps claiming ink, geodesic steps
+    'l': 0,          # already whole: its notches sit inside the right crown and stay covered
+    'r': 30,         # the occluded one: this is what gives it its left-hand fronds back
+}
 
 
 def load():
@@ -137,27 +155,24 @@ def flood(px, w, h, seeds, blocked):
     return seen
 
 
-def nearest_source(px, w, h, sources, live):
-    """Multi-source BFS: every pixel takes the label of the source it is reached from first,
-    counting steps THROUGH THE INK. Two crowns that merely brush each other part along the
-    brush; a box cut would slice fronds in half."""
-    lab = {}
+def distance_field(seeds, live):
+    """Steps THROUGH THE INK from a set of seeds. Two crowns that merely brush each other
+    part along the brush; a box cut would slice fronds in half."""
+    d = {}
     q = deque()
-    for name, cells in sources.items():
-        for c in cells:
-            if c in live:
-                lab[c] = name
-                q.append(c)
+    for s in seeds:
+        if s in live:
+            d[s] = 0
+            q.append(s)
     while q:
         x, y = q.popleft()
-        me = lab[(x, y)]
         for dy in (-1, 0, 1):
             for dx in (-1, 0, 1):
                 n = (x + dx, y + dy)
-                if (dx or dy) and n in live and n not in lab:
-                    lab[n] = me
+                if (dx or dy) and n in live and n not in d:
+                    d[n] = d[(x, y)] + 1
                     q.append(n)
-    return lab
+    return d
 
 
 def write(px, w, h, cells, name):
@@ -226,30 +241,46 @@ def main():
               % (name, len(got), min(xs), max(xs), min(ys), max(ys)))
 
     live = ink - plants['l'] - plants['r']
-    lab = nearest_source(px, w, h, {'l': [c for c in pole_cells if c in live and c[0] < w // 2],
-                                    'r': [c for c in pole_cells if c in live and c[0] >= w // 2]},
-                         live)
-    stray = [c for c in live if c not in lab]
-    print('unlabelled after the geodesic split: %d' % len(stray))
+    dist = {n: distance_field(set(
+        (x, y) for y, (a, b) in poles[n].items() for x in range(a, b + 1)), live)
+        for n in ('l', 'r')}
+    stray = [c for c in live if c not in dist['l'] and c not in dist['r']]
+    print('ink no pole can reach: %d' % len(stray))
 
+    crowns = {}
     for name in ('l', 'r'):
-        tree = set(c for c in live if lab.get(c) == name)
+        other = 'r' if name == 'l' else 'l'
+        mine, theirs, share = dist[name], dist[other], CROWN_SHARE[name]
         pole = set((x, y) for y, (a, b) in poles[name].items()
                    for x in range(a, b + 1))
-        trunk = tree & pole
-        crown = tree - trunk
-        p, n = write(px, w, h, trunk, 'window_palm_' + name)
-        print('  %-34s %5d px' % (p, n))
-        p, n = write(px, w, h, crown, 'window_palm_%s_crown' % name)
-        print('  %-34s %5d px' % (p, n))
+        tree = set()
+        for c in live:
+            dm = mine.get(c)
+            if dm is None:
+                continue
+            dt = theirs.get(c)
+            # Nearer to my pole, or close enough behind that the pixel is contested and I
+            # keep my claim on it as well. Never both a trunk and a crown.
+            if dt is None or dm <= dt or dm - dt <= share:
+                tree.add(c)
+        crowns[name] = tree - pole
+        p, n = write(px, w, h, tree & pole, 'window_palm_' + name)
+        print('  %-40s %5d px' % (p, n))
+        p, n = write(px, w, h, crowns[name], 'window_palm_%s_crown' % name)
+        print('  %-40s %5d px' % (p, n))
         p, n = write(px, w, h, plants[name], 'window_plants_' + name)
-        print('  %-34s %5d px' % (p, n))
+        print('  %-40s %5d px' % (p, n))
 
-    total = sum(1 for c in ink)
-    kept = 0
+    shared = crowns['l'] & crowns['r']
+    print('ink both crowns carry: %d (%.1f%% of the plate)'
+          % (len(shared), 100.0 * len(shared) / len(ink)))
+    carried = set()
     for name in ('l', 'r'):
-        kept += len(set(c for c in live if lab.get(c) == name)) + len(plants[name])
-    print('ink accounted for: %d of %d (%.2f%%)' % (kept, total, 100.0 * kept / total))
+        carried |= crowns[name] | plants[name]
+        carried |= set((x, y) for y, (a, b) in poles[name].items()
+                       for x in range(a, b + 1))
+    print('ink accounted for: %d of %d (%.2f%%)'
+          % (len(carried & ink), len(ink), 100.0 * len(carried & ink) / len(ink)))
     print('PIVOTS for DiegeticStage (art px on the 141x274 plate, y from the TOP):')
     for name in ('l', 'r'):
         print('  %s root (%.1f, %.1f)   junction (%.1f, %.1f)'
