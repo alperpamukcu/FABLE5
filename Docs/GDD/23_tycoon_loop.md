@@ -86,6 +86,14 @@
   window that renders a recipe (book card, licence hover, market spec, order tip) draws
   through the one shared spec renderer, so the gate cannot be routed around by surface. Thirty recipes, twelve of them shaken — the author's note that the tin
   must be USED drove the second shaken wave (Vodka Sour, Rum Punch, White Lady, Southside).
+  **Display respec II (2026-08-24): the book is an open BOOKLET.** `menu_booklet.png` at
+  exactly 2× — two tall pages whose chapters are the tiers (locked ones under STILL IN THE
+  BOOK), and a page turn played as DRAWN art (`menu_page_00..15`, the peel model out of
+  `Tools/menu_booklet.py`): the front print clips at the fold, the back face shifts by
+  integer art pixels, nothing scales. The gold page furniture (`menu_page_frame`) lives in
+  the same container as the type so it turns with the words. The board's search and filter
+  chips retired with the board; the bottom outer corners and the arrow keys turn the
+  pages, and the ribbon keeps the reader's place across opens.
 - **The order is hidden until the ID card is read** (v5 C3, 2026-07-31). The seat signals
   readiness ("READY · TAP THE ID"); the drink's name, icon and wanted extras appear only
   after the player opens the licence, and **no price appears anywhere on the card or the

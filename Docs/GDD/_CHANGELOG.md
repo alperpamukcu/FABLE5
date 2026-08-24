@@ -2,6 +2,16 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `23 §3 / GDD_MEVCUT` **the menu booklet (2026-08-24):** the recipe book's clipboard
+  board (`menu_board`, a 2.899× fractional upscale) is replaced by the open booklet
+  drawn at exactly 2× (`menu_booklet.png` + `menu_page_frame` + sixteen peel frames,
+  all out of `Tools/menu_booklet.py`). Pages are chapters — the tiers, then STILL IN
+  THE BOOK — and the page TURN is the drawn peel: front print clipped at the fold,
+  back face shifted by integer art pixels, three RectMask2D windows aimed by the
+  generator's own fold numbers. The board's search and TIER/PREP/BOTTLE chips retired
+  with the board; corners or arrow keys turn, the ribbon bookmarks the spread, and
+  `menu_board.png` left the project.
+
 - `14 §5 / 16` **the dead-weight sweep (2026-08-20):** the project shed what it had
   stopped using. **The old rig left the build.** `Resources/Patron` carried 43 character
   folders while `PatronCast` seats 10; Unity packs and indexes *everything* under

@@ -1435,6 +1435,7 @@ namespace LastCall.UI
             UpdateOrderTip();     // after the seats: it reads the tickets they just placed
             UpdateDrinkGlass();
             UpdateEscape();
+            UpdateBookKeys();
             StepStarDrop();
             StepStamp();
             StepMoneyDrops();
@@ -5873,27 +5874,28 @@ namespace LastCall.UI
         // Unlocked recipes print their full bands; locked ones show what tier and stars
         // they are waiting behind, so the book doubles as the progression map.
 
-        private RectTransform _bookPanel, _bookList;
-        // The filters (the author's spec): tier, prep and bottle, each a cycling chip.
-        private int _bookTier = -1;              // -1 all, else 0..3
-        private InputField _bookSearch;          // name substring, the author's "arama"
-        private int _bookPrep = -1;              // -1 all, else (int)PrepMethod
-        private string _bookStyle;               // null = all
-        private Text _bookTierChip, _bookPrepChip, _bookStyleChip;
-        private static readonly string[] BookTiers = { "STARTER", "MID SHELF", "TOP SHELF", "HOUSE PRIDE" };
+        // THE BOOK IS A BOOKLET NOW (2026-08-24, the author: "yeni oluşturduğumuz
+        // menüyü oyuna ekle eski menüyü kaldır"): an open book drawn at exactly 2×, two
+        // tall pages, and a page that TURNS as drawn art (menu_page_00..15) instead of a
+        // list that scrolls. The board's search and filter chips retired with the board —
+        // the tiers are the book's own chapters now, and a page is found by turning to it.
+        private RectTransform _bookPanel;
+        private readonly List<BookPage> _bookPages = new List<BookPage>();
+        private int _bookSpread;                 // the open spread — the ribbon's bookmark
+        private RectTransform _bookWinRestL, _bookWinRestR, _bookWinInL, _bookWinInR;
+        private RectTransform _bookPageRestL, _bookPageRestR, _bookPageInL, _bookPageInR;
+        private Image _bookLeaf;
+        private Sprite[] _bookLeafFrames;
+        private bool _bookTurning;
+        private Coroutine _bookTurnAnim;
 
-        private static int TierIndex(int rank) => rank <= 8 ? 0 : rank <= 14 ? 1 : rank <= 21 ? 2 : 3;
-
-        private List<string> BookStyles()
+        /// <summary>One page's worth of the book: its chapter heading and its rows.</summary>
+        private sealed class BookPage
         {
-            var run = Run;
-            var seen = new List<string>();
-            if (run == null) return seen;
-            // The book LISTS MenuRecipes (BookAdmits, below), so its filter is cut from the
-            // same cloth. Core decides which styles are sayable; this only sorts them.
-            seen.AddRange(run.MenuStyles());
-            seen.Sort(System.StringComparer.Ordinal);
-            return seen;
+            public string Heading;
+            public readonly List<(RecipeDefinition Recipe, bool Locked)> Rows =
+                new List<(RecipeDefinition, bool)>();
+            public float Used;
         }
 
         private bool _bookOpen;
@@ -5906,12 +5908,20 @@ namespace LastCall.UI
             _bookOpen = open;
             Sfx.Play("click", 0.6f);
             var sheet = _bookPanel.Find("Sheet") as RectTransform;
+            // A close mid-turn abandons the turn where it stands; the next open rebuilds
+            // the resting spread, so the leaf can never be left hanging over the gutter.
+            if (_bookTurnAnim != null)
+            {
+                StopCoroutine(_bookTurnAnim);
+                _bookTurnAnim = null;
+                _bookTurning = false;
+            }
             if (open)
             {
                 if (!_bookPanel.gameObject.activeSelf)
                 {
-                    // First frame of the drop: board parked above the screen, scrim clear.
-                    sheet.anchoredPosition = new Vector2(0, BkH);
+                    // First frame of the drop: book parked above the screen, scrim clear.
+                    sheet.anchoredPosition = new Vector2(0, BkParkY);
                     var c = UITheme.Scrim;
                     _bookPanel.GetComponent<Image>().color = new Color(c.r, c.g, c.b, 0);
                 }
@@ -5919,7 +5929,6 @@ namespace LastCall.UI
                 _bookPanel.SetAsLastSibling();   // over the service log and everything else
                 RebuildRecipeBook();
             }
-            else CloseBookPopup();
             if (_bookAnim != null) StopCoroutine(_bookAnim);
             _bookAnim = StartCoroutine(BookSlide(open));
         }
@@ -5931,7 +5940,7 @@ namespace LastCall.UI
             var sheet = _bookPanel.Find("Sheet") as RectTransform;
             var scrim = _bookPanel.GetComponent<Image>();
             var c = UITheme.Scrim;
-            float fromY = sheet.anchoredPosition.y, toY = open ? 0f : BkH;
+            float fromY = sheet.anchoredPosition.y, toY = open ? 0f : BkParkY;
             float fromA = scrim.color.a, toA = open ? c.a : 0f;
             if (!Motion.Reduced)
             {
@@ -5973,141 +5982,78 @@ namespace LastCall.UI
             bookCanvas.sortingOrder = 15;
             _bookPanel.gameObject.AddComponent<GraphicRaycaster>();
 
-            // Promoted to THE menu (2026-08-01): recipes, search and filters live here now
-            // that the clipboard is gone — so it takes the room a menu deserves.
-            // The clipboard lives on in the book (2026-08-01, the author's ask): the wooden
-            // board art, the paper region measured off it, the plate keys and the drawn X --
-            // the old menu's whole visual language, now carrying the recipes instead of the
-            // bottles. Paper constants are the flow's own measurements of menu_board.
+            // THE MENU IS AN OPEN BOOK (2026-08-24): menu_booklet.png at exactly 2× —
+            // the clipboard board was 396×248 stretched onto 1148×719, a 2.899× fractional
+            // upscale, and the reason its clip and its grain never looked as crisp as the
+            // room behind it. Every rect below is placed against the generator's own
+            // printed ruler (Tools/menu_booklet.py), never measured off the PNG after
+            // the fact — the same law HeadY lives under.
             var sheet = NewRect("Sheet", _bookPanel);
-            Place(sheet, new Vector2(0.5f, 0.5f), new Vector2(BkW, BkH), Vector2.zero);
+            Place(sheet, new Vector2(0.5f, 0.5f), new Vector2(BkSheetW, BkSheetH), Vector2.zero);
             var boardImg = sheet.gameObject.AddComponent<Image>();
-            var boardSprite = ItemArt.Load("menu_board");
-            if (boardSprite != null) { boardImg.sprite = boardSprite; boardImg.preserveAspect = true; }
+            var boardSprite = ItemArt.Load("menu_booklet");
+            if (boardSprite != null) boardImg.sprite = boardSprite;
             else boardImg.color = UITheme.Cream[4];
-            // The whole VISIBLE board swallows its clicks (the author, third ruling): the
-            // sprite carries wide transparent margins, so a full-rect swallow ate the very
-            // "outside" clicks meant to close the book. The catcher is sized to the board's
-            // opaque pixels (measured off menu_board.png: 823x632 centred at -6,+6).
+            // The visible leather swallows its clicks so reading the page cannot close the
+            // page; the dim around it still can. The catcher stops at the board's edge —
+            // the ribbon's tail hangs below it, and a ribbon is not a door.
             boardImg.raycastTarget = false;
             var boardCatch = NewRect("BoardCatch", sheet);
-            Place(boardCatch, new Vector2(0.5f, 0.5f), new Vector2(824, 634), new Vector2(-6, 6));
+            Place(boardCatch, new Vector2(0.5f, 0.5f), new Vector2(BkSheetW, BkBoardH),
+                new Vector2(0, BkLiftY));
             var bcImg = boardCatch.gameObject.AddComponent<Image>();
             bcImg.color = new Color(0, 0, 0, 0.001f);
             boardCatch.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
 
-            // No X (2026-08-11). The dim behind the board closes it and so does Escape, which
+            // No X (2026-08-11). The dim behind the book closes it and so does Escape, which
             // is what the licence has always done — and a corner button that duplicates a
             // gesture the player already has is a button that has to be found first.
 
-            // The filter chips: click to cycle. Three axes the author named — the star tier,
-            // how it is worked, and what bottle it contains.
-            float chipY = 142f;   // just under the board's metal clip
-            // One slim toolbar (the author: the filters should look professional and take
-            // less room): search at the left, three compact value-pills at the right, all
-            // inside the paper. A pill drops its option window under itself.
-            float paperR = BkW * BkPaperCX + BkW * BkPaperW * 0.5f;
-            float tierX = paperR - 282f, prepX = paperR - 184f, styleX = paperR - 76f;
-            _bookTierChip = BookChip(sheet, tierX, chipY, 92f, () =>
-            {
-                var opts = new List<string> { "ALL", BookTiers[0], BookTiers[1], BookTiers[2], BookTiers[3] };
-                OpenBookPopup(tierX, chipY, opts, pick => { _bookTier = pick - 1; RebuildRecipeBook(); });
-            });
-            _bookPrepChip = BookChip(sheet, prepX, chipY, 92f, () =>
-            {
-                var opts = new List<string> { "ALL", "BUILT", "SHAKEN", "STIRRED" };
-                OpenBookPopup(prepX, chipY, opts, pick =>
-                {
-                    _bookPrep = pick == 0 ? -1
-                        : pick == 1 ? (int)PrepMethod.Built
-                        : pick == 2 ? (int)PrepMethod.Shaken : (int)PrepMethod.Stirred;
-                    RebuildRecipeBook();
-                });
-            });
-            _bookStyleChip = BookChip(sheet, styleX, chipY, 112f, () =>
-            {
-                var styles = BookStyles();
-                var opts = new List<string> { "ALL" };
-                foreach (var st in styles) opts.Add(st.Replace('_', ' ').ToUpperInvariant());
-                OpenBookPopup(styleX, chipY, opts, pick =>
-                {
-                    _bookStyle = pick == 0 ? null : styles[pick - 1];
-                    RebuildRecipeBook();
-                });
-            });
+            // THE FOUR PRINT WINDOWS AND THE LEAF, in paint order. Each page's print — the
+            // gold furniture, the chapter heading, the cards, the folio — lives in one
+            // container inside a clipping window, so a turn can CLIP it at the fold and
+            // SHIFT it with the sheet, never scale it (menu_booklet.py: "Nothing anywhere
+            // is scaled, so there is nothing to smear and nothing to slide"). Bottom to
+            // top: the page being revealed right of the roll, the resting left page, the
+            // drawn leaf, the front print on the unturned half, and the back-face print
+            // riding the flipped half over the gutter.
+            _bookWinInR = BookWindow(sheet, "WinInR", out _bookPageInR);
+            _bookWinRestL = BookWindow(sheet, "WinRestL", out _bookPageRestL);
+            var leafRt = NewRect("Leaf", sheet);
+            Place(leafRt, new Vector2(0.5f, 0.5f), new Vector2(BkLeafW, BkPageH),
+                new Vector2(0, BkLiftY));
+            _bookLeaf = leafRt.gameObject.AddComponent<Image>();
+            _bookLeaf.raycastTarget = false;
+            _bookLeaf.enabled = false;
+            _bookWinRestR = BookWindow(sheet, "WinRestR", out _bookPageRestR);
+            _bookWinInL = BookWindow(sheet, "WinInL", out _bookPageInL);
 
-            // The search box: type a name, the list narrows as you do.
-            var searchRt = NewRect("Search", sheet);
-            Place(searchRt, new Vector2(0.5f, 0.5f), new Vector2(220, 26),
-                new Vector2(BkW * BkPaperCX - BkW * BkPaperW * 0.5f + 130f, chipY));
-            var searchBg = searchRt.gameObject.AddComponent<Image>();
-            searchBg.color = new Color(0.94f, 0.90f, 0.80f);
-            var searchText = NewText("T", searchRt, _body, 16, TextAnchor.MiddleLeft, new Color(0.16f, 0.10f, 0.06f));
-            Stretch(searchText.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 2), new Vector2(-8, -2));
-            searchText.supportRichText = false;
-            var placeholder = NewText("P", searchRt, _body, 16, TextAnchor.MiddleLeft, new Color(0.5f, 0.42f, 0.32f));
-            Stretch(placeholder.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 2), new Vector2(-8, -2));
-            placeholder.text = "SEARCH…";
-            _bookSearch = searchRt.gameObject.AddComponent<InputField>();
-            _bookSearch.targetGraphic = searchBg;
-            _bookSearch.textComponent = searchText;
-            _bookSearch.placeholder = placeholder;
-            _bookSearch.onValueChanged.AddListener(_ => RebuildRecipeBook());
+            // The page corners turn the page — the same corner the drawn peel lifts from.
+            BookCorner(sheet, "TurnFwd", +1);
+            BookCorner(sheet, "TurnBack", -1);
 
-            var viewport = NewRect("View", sheet);
-            Place(viewport, new Vector2(0.5f, 0.5f),
-                new Vector2(BkW * BkPaperW - 44f, 358f),
-                new Vector2(BkW * BkPaperCX, -56f));
-            viewport.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, 0.004f);
-            viewport.gameObject.AddComponent<RectMask2D>();
-
-            _bookList = NewRect("List", viewport);
-            _bookList.anchorMin = new Vector2(0, 1); _bookList.anchorMax = new Vector2(1, 1);
-            _bookList.pivot = new Vector2(0.5f, 1);
-            _bookList.offsetMin = Vector2.zero; _bookList.offsetMax = Vector2.zero;
-            // Sections (2026-08-01, the author: the groupings must read clearly): the list
-            // is a stack of tier sections, each a full-width header over its own grid, so a
-            // header can never land inside a column and the columns always align.
-            var layout = _bookList.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = 8;
-            layout.childControlWidth = true; layout.childForceExpandWidth = true;
-            layout.childControlHeight = true; layout.childForceExpandHeight = false;
-            var fitter = _bookList.gameObject.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            var scroll = viewport.gameObject.AddComponent<ScrollRect>();
-            scroll.viewport = viewport; scroll.content = _bookList;
-            scroll.horizontal = false;
-            scroll.movementType = ScrollRect.MovementType.Clamped;
-            scroll.scrollSensitivity = 30f;
+            _bookLeafFrames = new Sprite[BkTurnFrames];
+            for (int i = 0; i < BkTurnFrames; i++)
+                _bookLeafFrames[i] = ItemArt.Load($"menu_page_{i:00}");
 
             _bookPanel.gameObject.SetActive(false);
         }
 
-        // The board and its paper, as the flow measured them off menu_board.
-        private const float BkW = 1148f, BkH = 719f;
-        private const float BkPaperW = 0.655f;
-        private const float BkPaperCX = -0.015f;
-
-        private Text BookChip(RectTransform sheet, float x, float y, float w, Action onClick)
-        {
-            // A compact value-pill: cream face, hairline ink frame, the value in small ink.
-            var chip = NewRect("Chip", sheet);
-            Place(chip, new Vector2(0.5f, 0.5f), new Vector2(w, 24), new Vector2(x, y));
-            var img = chip.gameObject.AddComponent<Image>();
-            img.color = new Color(0.95f, 0.92f, 0.82f, 0.95f);
-            var btn = chip.gameObject.AddComponent<Button>();
-            btn.targetGraphic = img;
-            btn.onClick.AddListener(() => { Sfx.Play("click", 0.5f); onClick(); });
-            var frame = new Color(0.30f, 0.20f, 0.10f, 0.5f);
-            Hairline(chip, new Vector2(0, 0), new Vector2(1, 0), frame);
-            Hairline(chip, new Vector2(0, 1), new Vector2(1, 1), frame);
-            HairlineV(chip, 0f, frame);
-            HairlineV(chip, 1f, frame);
-            var t = NewText("T", chip, _body, 8, TextAnchor.MiddleCenter, new Color(0.30f, 0.20f, 0.10f));
-            Stretch(t.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            return t;
-        }
+        // The booklet, placed against menu_booklet.py's printed ruler at exactly 2× —
+        // one art pixel is two HUD units, the room's own rate.
+        private const float BkSheetW = 740f, BkSheetH = 708f;   // the PNG: 370×354 art px
+        private const float BkBoardH = 692f;                    // the leather, sans ribbon tail
+        private const float BkLiftY = 8f;                       // paper centre above sprite centre
+        private const float BkPageW = 334f, BkPageH = 652f;     // one page: 167×326 art px
+        private const float BkLeafW = 700f;                     // the turn frames: 350 art px
+        private const float BkPageDX = 183f;                    // a page's centre off the spine
+        private const float BkReach = 175f;                     // spine → leaf outer edge, art px
+        private const float BkColW = 296f;                      // print column inside the gold frame
+        private const float BkContentTop = 80f, BkContentH = 518f;
+        private const float BkRowGap = 10f;
+        private const float BkParkY = 748f;                     // the drop's overhead park
+        private const int BkTurnFrames = 16;
+        private const float BkFrameSec = 0.040f;                // the script: "16 is smooth at 40ms"
 
         /// <summary>How tall the board is, and THE TWO RULES EVERYTHING ON IT SITS ON.
         /// The old board had a reading wherever its box happened to leave room, which is
@@ -6165,104 +6111,17 @@ namespace LastCall.UI
             var i = r.gameObject.AddComponent<Image>(); i.color = c; i.raycastTarget = false;
         }
 
-        private RectTransform _bookPopup;
-
-        /// <summary>A little paper window of options under a chip. A full-screen invisible
-        /// catcher behind it closes it on any other click.</summary>
-        private void OpenBookPopup(float anchorX, float chipY, List<string> options, Action<int> onPick)
-        {
-            CloseBookPopup();
-            var sheet = _bookPanel.Find("Sheet") as RectTransform;
-            _bookPopup = NewRect("Popup", sheet);
-            var catcher = _bookPopup.gameObject.AddComponent<Image>();
-            catcher.color = new Color(0, 0, 0, 0.001f);
-            Stretch(_bookPopup, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var catchBtn = _bookPopup.gameObject.AddComponent<Button>();
-            catchBtn.transition = Selectable.Transition.None;
-            catchBtn.onClick.AddListener(CloseBookPopup);
-
-            int cols = options.Count > 8 ? 2 : 1;
-            int rows = Mathf.CeilToInt(options.Count / (float)cols);
-            float w = cols * 190f + 8f, h = rows * 28f + 10f;
-            var win = NewRect("Win", _bookPopup);
-            Place(win, new Vector2(0.5f, 0.5f), new Vector2(w, h),
-                new Vector2(anchorX, chipY - 16f - h * 0.5f));
-            var winImg = win.gameObject.AddComponent<Image>();
-            winImg.color = new Color(0.97f, 0.94f, 0.84f);
-            var winShadow = win.gameObject.AddComponent<Shadow>();
-            winShadow.effectColor = new Color(0.2f, 0.12f, 0.06f, 0.5f);
-            winShadow.effectDistance = new Vector2(3, -3);
-
-            for (int i = 0; i < options.Count; i++)
-            {
-                int pick = i;
-                var opt = NewRect($"O{i}", win);
-                Place(opt, new Vector2(0, 1), new Vector2(190, 28),
-                    new Vector2(5 + (i / rows) * 190f, -5f - (i % rows) * 28f));
-                opt.pivot = new Vector2(0, 1);
-                var oImg = opt.gameObject.AddComponent<Image>();
-                oImg.color = new Color(0, 0, 0, 0.001f);
-                var ot = NewText("T", opt, _body, 16, TextAnchor.MiddleLeft, new Color(0.2f, 0.12f, 0.06f));
-                Stretch(ot.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 0), new Vector2(-4, 0));
-                ot.text = options[i];
-                var ob = opt.gameObject.AddComponent<Button>();
-                ob.targetGraphic = oImg;
-                ob.onClick.AddListener(() =>
-                {
-                    Sfx.Play("click", 0.5f);
-                    CloseBookPopup();
-                    onPick(pick);
-                });
-                var sink = opt.gameObject.AddComponent<PressSink>();
-                sink.Face = opt; sink.Depth = 2f; sink.Lift = 1f; sink.Tint = ot;
-            }
-        }
-
-        private void CloseBookPopup()
-        {
-            if (_bookPopup != null) { Destroy(_bookPopup.gameObject); _bookPopup = null; }
-        }
-
-        private bool BookAdmits(RecipeDefinition r)
-        {
-            if (_bookTier >= 0 && TierIndex(r.Rank) != _bookTier) return false;
-            if (_bookPrep >= 0 && (int)r.Prep != _bookPrep) return false;
-            if (r.Id == "draught" || r.Id == "neat_pour")
-                if (_bookPrep >= 0 || _bookStyle != null) return false;   // the two specials filter out
-            if (_bookStyle != null)
-            {
-                bool has = false;
-                foreach (var b in r.RatioRequirements)
-                    if (b.IsStyleBand && b.Style == _bookStyle) { has = true; break; }
-                if (!has) return false;
-            }
-            string q = _bookSearch != null ? _bookSearch.text : null;
-            if (!string.IsNullOrWhiteSpace(q) &&
-                r.Name.IndexOf(q.Trim(), StringComparison.OrdinalIgnoreCase) < 0)
-                return false;
-            return true;
-        }
-
         private static string TierName(int rank) =>
             rank <= 8 ? "STARTER" : rank <= 14 ? "MID SHELF" : rank <= 21 ? "TOP SHELF" : "HOUSE PRIDE";
 
         private void RebuildRecipeBook()
         {
             var run = Run;
-            if (run == null || _bookList == null) return;
-            for (int i = _bookList.childCount - 1; i >= 0; i--)
-                Destroy(_bookList.GetChild(i).gameObject);
+            if (run == null || _bookPanel == null) return;
+            _bookPages.Clear();
 
-            // A set filter reads as its value alone: at 16px the prefixed form no longer
-            // fits the chip, and "SHAKEN" says more than "PREP: SHAKEN" anyway.
-            _bookTierChip.text = _bookTier < 0 ? "TIER: ALL" : BookTiers[_bookTier];
-            _bookPrepChip.text = _bookPrep < 0 ? "PREP: ALL" : ((PrepMethod)_bookPrep).ToString().ToUpperInvariant();
-            _bookStyleChip.text = _bookStyle == null ? "BOTTLE: ALL" : _bookStyle.Replace('_', ' ').ToUpperInvariant();
-
-            var known = new List<RecipeDefinition>();
-            foreach (var r in run.MenuRecipes) if (BookAdmits(r)) known.Add(r);
-            var locked = new List<RecipeDefinition>();
-            foreach (var r in run.LockedRecipes) if (BookAdmits(r)) locked.Add(r);
+            var known = new List<RecipeDefinition>(run.MenuRecipes);
+            var locked = new List<RecipeDefinition>(run.LockedRecipes);
             known.Sort((a, b) => a.Rank.CompareTo(b.Rank));
             locked.Sort((a, b) => a.Rank.CompareTo(b.Rank));
 
@@ -6273,79 +6132,247 @@ namespace LastCall.UI
                     groups.Add(new List<RecipeDefinition>());
                 groups[groups.Count - 1].Add(r);
             }
-            foreach (var g in groups) BookSection(TierName(g[0].Rank), g, lockedRows: false, run);
-            if (locked.Count > 0) BookSection("STILL IN THE BOOK", locked, lockedRows: true, run);
-            _bookList.anchoredPosition = Vector2.zero;   // a fresh filter reads from the top
+            foreach (var g in groups) PageBookSection(TierName(g[0].Rank), g, lockedRows: false);
+            if (locked.Count > 0) PageBookSection("STILL IN THE BOOK", locked, lockedRows: true);
+
+            // The ribbon keeps the reader's place across opens; a book grown shorter just
+            // cannot keep a place it no longer has.
+            int spreads = Mathf.Max(1, (_bookPages.Count + 1) / 2);
+            _bookSpread = Mathf.Clamp(_bookSpread, 0, spreads - 1);
+            ShowRestingSpread();
         }
 
-        private void BookHeader(string text)
+        /// <summary>Deals one chapter onto pages: the tier heads every page it runs over,
+        /// and a new chapter always starts a fresh page, the way chapters do.</summary>
+        private void PageBookSection(string title, List<RecipeDefinition> rs, bool lockedRows)
         {
-            var h = NewRect("H", _bookList);
-            h.gameObject.AddComponent<LayoutElement>().preferredHeight = 34;
-            // The heavy face, not a faked weight (the author, 2026-08-02: the fake bold
-            // read broken). PressStart2P is the game's display type and carries the
-            // heading on its own.
-            var t = NewText("T", h, _display, 16, TextAnchor.MiddleLeft,
-                new Color(0.30f, 0.16f, 0.05f));
-            Stretch(t.rectTransform, Vector2.zero, Vector2.one, new Vector2(6, 4), Vector2.zero);
-            t.text = text;
-            var rule = NewRect("Rule", h);
-            rule.anchorMin = Vector2.zero; rule.anchorMax = new Vector2(1, 0);
-            rule.pivot = new Vector2(0.5f, 0);
-            rule.sizeDelta = new Vector2(0, 2);
-            rule.anchoredPosition = Vector2.zero;
-            var ruleImg = rule.gameObject.AddComponent<Image>();
-            ruleImg.color = new Color(0.36f, 0.20f, 0.08f, 0.5f);
-            ruleImg.raycastTarget = false;
-        }
-
-        /// <summary>A tier's worth of the book: its header, then its own grid — two columns
-        /// while the pours fit a half page, one full-width column when they run long.</summary>
-        private void BookSection(string title, List<RecipeDefinition> rs, bool lockedRows, TycoonRun run)
-        {
-            BookHeader(title);
-
-            // EVERY CARD ITS OWN HEIGHT (2026-08-11, the author: "bu kutular sıkıştırılmalı,
-            // çok geniş yer kaplıyorlar"). A GridLayoutGroup has ONE cell size, so the whole
-            // section was cut to its longest spec: a Long Island is seven pours, and while it
-            // sat in the section every Gin & Tonic beside it got a card three times the height
-            // of its two lines, most of it blank. That is what the screenshot was of.
-            //
-            // So the cards are packed by hand into two columns, each card measured from its
-            // own rows, and each new one goes to whichever column is currently SHORTER. That
-            // is the standard masonry answer, and it keeps the two sides level as well as
-            // tight — filling left-then-right in order would leave one column hanging.
-            // TWO COLUMNS, and the row earns its width instead of the card being widened for
-            // it (2026-08-20, the author twice: first "her alkole daha fazla yer", then
-            // "ekranda yan yana 2 kart durabilir"). The one-column draft answered the first
-            // ask the expensive way — it halved how many drinks the page could hold, which is
-            // what a catalogue is FOR. What buys the room back is the gauge itself: 72 pixels
-            // of sight glass says what a "45–65%" caption used to spend a text column saying.
-            const float ColGap = 12f, RowGap = 10f, HeadH = 30f, Air = 14f;
-            float fullW = BkW * BkPaperW - 44f;
-            float cellW = fullW / 2f - ColGap * 0.5f;
-
-            var sec = NewRect("Sec", _bookList);
-            var secLayout = sec.gameObject.AddComponent<LayoutElement>();
-
-            var colH = new float[2];
+            var page = new BookPage { Heading = title };
+            _bookPages.Add(page);
             foreach (var r in rs)
             {
-                float spec = 0;
-                foreach (var row in RecipeSpecRows(r, locked: lockedRows))
-                    spec += row.Hint ? SpecHintH : SpecRowH;
-                if (lockedRows) spec += SpecRowH;         // the star gate takes its own line
-                float h = HeadH + spec + Air;
-
-                int col = colH[0] <= colH[1] ? 0 : 1;
-                var card = BookRow(sec, r, lockedRows, run, cellW);
-                card.anchorMin = card.anchorMax = new Vector2(0, 1);
-                card.pivot = new Vector2(0, 1);
-                card.sizeDelta = new Vector2(cellW, h);
-                card.anchoredPosition = new Vector2(col * (cellW + ColGap), -colH[col]);
-                colH[col] += h + RowGap;
+                float h = BookCardH(r, lockedRows);
+                if (page.Rows.Count > 0 && page.Used + h > BkContentH)
+                {
+                    page = new BookPage { Heading = title };
+                    _bookPages.Add(page);
+                }
+                page.Rows.Add((r, lockedRows));
+                page.Used += h + BkRowGap;
             }
-            secLayout.preferredHeight = Mathf.Max(colH[0], colH[1]) - RowGap;
+        }
+
+        /// <summary>A card's height from its own rows — the same accounting the retired
+        /// masonry used, so the cards keep their measure on the new paper.</summary>
+        private float BookCardH(RecipeDefinition r, bool lockedRow)
+        {
+            float spec = 0;
+            foreach (var row in RecipeSpecRows(r, locked: lockedRow))
+                spec += row.Hint ? SpecHintH : SpecRowH;
+            if (lockedRow) spec += SpecRowH;         // the star gate takes its own line
+            return 30f + spec + 14f;
+        }
+
+        /// <summary>The resting book: the open spread in the two full windows, the leaf
+        /// down, the turn windows shut.</summary>
+        private void ShowRestingSpread()
+        {
+            FillBookPage(_bookPageRestL, _bookSpread * 2);
+            FillBookPage(_bookPageRestR, _bookSpread * 2 + 1);
+            FillBookPage(_bookPageInL, -1);
+            FillBookPage(_bookPageInR, -1);
+            SetBookWindow(_bookWinRestL, _bookPageRestL, -BkReach, -BkReach + 167f, -BkPageDX);
+            SetBookWindow(_bookWinRestR, _bookPageRestR, BkReach - 167f, BkReach, BkPageDX);
+            SetBookWindow(_bookWinInL, _bookPageInL, 0f, 0f, -BkPageDX);
+            SetBookWindow(_bookWinInR, _bookPageInR, 0f, 0f, BkPageDX);
+            if (_bookLeaf != null) _bookLeaf.enabled = false;
+        }
+
+        /// <summary>Prints one page into its container: the gold furniture (which must
+        /// travel with the type — the author caught it staying behind once), the chapter
+        /// heading, the cards and the folio. Past the last page prints NOTHING: a blank
+        /// leaf is bare paper, not an empty frame.</summary>
+        private void FillBookPage(RectTransform print, int pageIdx)
+        {
+            for (int i = print.childCount - 1; i >= 0; i--)
+                Destroy(print.GetChild(i).gameObject);
+            if (pageIdx < 0 || pageIdx >= _bookPages.Count) return;
+            var run = Run;
+            if (run == null) return;
+            var page = _bookPages[pageIdx];
+
+            var frameArt = ItemArt.Load("menu_page_frame");
+            if (frameArt != null)
+            {
+                var fr = NewRect("Frame", print);
+                Place(fr, new Vector2(0.5f, 0.5f), new Vector2(BkPageW, BkPageH), Vector2.zero);
+                var fi = fr.gameObject.AddComponent<Image>();
+                fi.sprite = frameArt;
+                fi.raycastTarget = false;
+            }
+
+            var head = NewText("Head", print, _display, 16, TextAnchor.MiddleCenter,
+                new Color(0.30f, 0.16f, 0.05f));
+            head.rectTransform.anchorMin = head.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            head.rectTransform.pivot = new Vector2(0.5f, 1f);
+            head.rectTransform.sizeDelta = new Vector2(BkColW, 54f);
+            head.rectTransform.anchoredPosition = new Vector2(0, -12f);
+            head.text = page.Heading;
+
+            var foot = NewText("Foot", print, _body, 16, TextAnchor.MiddleCenter,
+                new Color(0.52f, 0.44f, 0.36f));
+            foot.rectTransform.anchorMin = foot.rectTransform.anchorMax = new Vector2(0.5f, 0f);
+            foot.rectTransform.pivot = new Vector2(0.5f, 0f);
+            foot.rectTransform.sizeDelta = new Vector2(BkColW, 24f);
+            foot.rectTransform.anchoredPosition = new Vector2(0, 16f);
+            foot.text = "· " + (pageIdx + 1) + " ·";
+
+            float y = BkContentTop;
+            foreach (var (r, isLocked) in page.Rows)
+            {
+                float h = BookCardH(r, isLocked);
+                var card = BookRow(print, r, isLocked, run, BkColW);
+                card.anchorMin = card.anchorMax = new Vector2(0.5f, 1f);
+                card.pivot = new Vector2(0.5f, 1f);
+                card.sizeDelta = new Vector2(BkColW, h);
+                card.anchoredPosition = new Vector2(0, -y);
+                y += h + BkRowGap;
+            }
+        }
+
+        /// <summary>Turns the page: +1 forward, -1 back. The drawn peel plays between the
+        /// spread below (lo) and the spread above it — one set of frames serves both
+        /// directions, because the fold is the same fold. Reduced motion turns at once.</summary>
+        private void TurnPage(int dir)
+        {
+            if (!_bookOpen || _bookTurning || _bookPanel == null) return;
+            int spreads = Mathf.Max(1, (_bookPages.Count + 1) / 2);
+            if (dir > 0 && _bookSpread + 1 >= spreads) return;
+            if (dir < 0 && _bookSpread == 0) return;
+            int lo = dir > 0 ? _bookSpread : _bookSpread - 1;
+            if (Motion.Reduced || _bookLeafFrames == null || _bookLeafFrames[0] == null)
+            {
+                _bookSpread = lo + (dir > 0 ? 1 : 0);
+                ShowRestingSpread();
+                return;
+            }
+            Sfx.Play("page_turn", 0.55f);
+            FillBookPage(_bookPageRestL, lo * 2);
+            FillBookPage(_bookPageRestR, lo * 2 + 1);
+            FillBookPage(_bookPageInL, lo * 2 + 2);
+            FillBookPage(_bookPageInR, lo * 2 + 3);
+            _bookTurnAnim = StartCoroutine(BookTurn(dir, lo));
+        }
+
+        private System.Collections.IEnumerator BookTurn(int dir, int lo)
+        {
+            _bookTurning = true;
+            _bookLeaf.enabled = true;
+            for (int s = 0; s < BkTurnFrames; s++)
+            {
+                ApplyTurnFrame(dir > 0 ? s : BkTurnFrames - 1 - s);
+                for (float w = 0; w < BkFrameSec; w += Time.unscaledDeltaTime)
+                    yield return null;
+            }
+            _bookSpread = lo + (dir > 0 ? 1 : 0);
+            ShowRestingSpread();
+            _bookTurning = false;
+            _bookTurnAnim = null;
+        }
+
+        /// <summary>One frame of the peel, by the generator's own numbers (menu_booklet.py
+        /// fold_params at t=(k+1)/16): the leaf sprite carries the paper; the three print
+        /// windows are aimed at the mid-row fold. The fold is ANGLED — the bottom corner
+        /// leads by up to 22 art px — so each window is clamped to the span true on EVERY
+        /// row: a few pixels of bare cream at the fold for one 40 ms frame, never ink
+        /// where the sheet is not.</summary>
+        private void ApplyTurnFrame(int k)
+        {
+            _bookLeaf.sprite = _bookLeafFrames[k];
+            float t = (k + 1) / (float)BkTurnFrames;
+            float e = t * t * (3f - 2f * t);
+            float a = BkReach * (1f - e);
+            float lead = 22f * Mathf.Sin(Mathf.PI * t);
+            float r = 1f + 7f * Mathf.Sin(Mathf.PI * t);
+            float arc = Mathf.PI * r;
+            bool flipped = BkReach - a >= arc;
+
+            // The front print: flat from the spine to the fold, consumed column by column
+            // — and once the back face has landed, cut at ITS creeping edge instead.
+            float frontHi = flipped ? 2f * a + arc - BkReach - lead : a - lead * 0.5f;
+            SetBookWindow(_bookWinRestR, _bookPageRestR,
+                8f, Mathf.Clamp(frontHi, 8f, BkReach), BkPageDX);
+
+            // The revealed page, right of the roll's silhouette. The leaf lies OVER this
+            // window, so its angled edge and its cast shadow do the fine trimming.
+            float roll = flipped ? Mathf.Round(r)
+                : Mathf.Round(r * Mathf.Sin(Mathf.Min(Mathf.PI * 0.5f,
+                    (BkReach - a) / Mathf.Max(0.001f, r))));
+            SetBookWindow(_bookWinInR, _bookPageInR,
+                Mathf.Min(a + roll, BkReach), BkReach, BkPageDX);
+
+            // The back face riding the flipped half: the NEXT left page's print, shifted
+            // right by an INTEGER of art pixels (a shifted column is crisp, a scaled one
+            // is not) and creeping home to zero as the fold reaches the spine.
+            if (flipped)
+            {
+                float shift = Mathf.Round(2f * a + arc);
+                SetBookWindow(_bookWinInL, _bookPageInL,
+                    shift - BkReach + lead, a - lead * 0.5f, -BkPageDX, shift);
+            }
+            else SetBookWindow(_bookWinInL, _bookPageInL, 0f, 0f, -BkPageDX);
+        }
+
+        /// <summary>The arrows leaf through the open book — the same page turn the
+        /// corners give the mouse.</summary>
+        private void UpdateBookKeys()
+        {
+            if (!_bookOpen || _bookTurning) return;
+            var keys = UnityEngine.InputSystem.Keyboard.current;
+            if (keys == null) return;
+            if (keys.rightArrowKey.wasPressedThisFrame) TurnPage(+1);
+            else if (keys.leftArrowKey.wasPressedThisFrame) TurnPage(-1);
+        }
+
+        /// <summary>A page-sized clipping window over the spread, and the print container
+        /// inside it. A turn moves and resizes the WINDOW to the fold's numbers and
+        /// counter-moves the print, so the page face never travels with its own mask.</summary>
+        private RectTransform BookWindow(RectTransform sheet, string name, out RectTransform print)
+        {
+            var win = NewRect(name, sheet);
+            Place(win, new Vector2(0.5f, 0.5f), new Vector2(0, BkPageH), new Vector2(0, BkLiftY));
+            win.gameObject.AddComponent<RectMask2D>();
+            print = NewRect("Print", win);
+            Place(print, new Vector2(0.5f, 0.5f), new Vector2(BkPageW, BkPageH), Vector2.zero);
+            return win;
+        }
+
+        /// <summary>Aims a window at the spine span [lo..hi] (art px, 0 at the stitched
+        /// spine) and parks its print so the page face stays put at pageDX — plus the
+        /// integer art-px shift for the back face riding the flipped half.</summary>
+        private static void SetBookWindow(RectTransform win, RectTransform print,
+            float lo, float hi, float pageDX, float shift = 0f)
+        {
+            float w = Mathf.Max(0f, hi - lo) * 2f;
+            float cx = lo + hi;                     // (lo+hi)/2 art px × 2 HUD units
+            win.sizeDelta = new Vector2(w, BkPageH);
+            win.anchoredPosition = new Vector2(cx, BkLiftY);
+            print.anchoredPosition = new Vector2(pageDX + shift * 2f - cx, 0f);
+        }
+
+        /// <summary>An invisible plate on a page's bottom outer corner — the corner the
+        /// drawn peel lifts from. Right turns forward, left turns back; past the covers
+        /// the press is simply not a page, and nothing happens.</summary>
+        private void BookCorner(RectTransform sheet, string name, int dir)
+        {
+            var rt = NewRect(name, sheet);
+            Place(rt, new Vector2(0.5f, 0.5f), new Vector2(104, 104),
+                new Vector2(dir * (BkPageDX + BkPageW * 0.5f - 52f),
+                            BkLiftY - BkPageH * 0.5f + 52f));
+            var img = rt.gameObject.AddComponent<Image>();
+            img.color = new Color(0, 0, 0, 0.001f);
+            var btn = rt.gameObject.AddComponent<Button>();
+            btn.transition = Selectable.Transition.None;
+            btn.onClick.AddListener(() => TurnPage(dir));
         }
 
         /// <summary>One recipe: the glass drawn from its own bands, the name, how it is
