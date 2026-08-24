@@ -41,6 +41,15 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Stage Background
+    uniqueID: 314159265
+    locked: 0
+  - name: Patrons
+    uniqueID: 271828182
+    locked: 0
+  - name: Bar Counter
+    uniqueID: 161803398
+    locked: 0
   m_RenderingLayers:
   - Default
   - Light Layer 1

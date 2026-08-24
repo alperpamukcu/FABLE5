@@ -628,7 +628,10 @@ namespace LastCall.UI
         /// <summary>How far a sampled colour is pushed off its own luma. 1 = as measured.</summary>
         private const float SkyPunch = 1.7f;
         /// <summary>The light through the glass, at its loudest and at its quietest.</summary>
-        private const float WindowDay = 3.40f, WindowNight = 0.22f;
+        // Halved when the layers came in (2026-08-24): the cone used to spend most of
+        // itself on the counter band; targeted at the wall and the drinkers only, the same
+        // number blew the whole wall to white. Area comes from the radius, not the wattage.
+        private const float WindowDay = 1.75f, WindowNight = 0.20f;
 
         // ── A WINDOW IS AN AREA, NOT A BULB (2026-08-19) ────────────────────────
         //
@@ -734,13 +737,13 @@ namespace LastCall.UI
         private Light2D _barLight;
         /// <summary>How far the window's light reaches. The glass is a wall, not a lamp —
         /// this is wide enough to carry across the room and die on the far side.</summary>
-        private const float WindowRadius = 520f;
+        private const float WindowRadius = 640f;
         /// <summary>Where the sun's beam STARTS falling off, as a fraction of its reach. A
         /// point light fades from its inner radius outwards, and at the house default of
         /// 0.15 the gold was spent 80 units into a room 640 wide - it lit the two people by
         /// the glass and nothing else. Sunlight does not fall off across a room; it crosses
         /// it and dies on the far wall, which is what this fraction buys.</summary>
-        private const float WindowInner = 0.22f;
+        private const float WindowInner = 0.24f;
 
         // ── THE WINDOW THROWS, IT DOES NOT RADIATE (2026-08-19) ─────────────────
         //
@@ -817,10 +820,10 @@ namespace LastCall.UI
         private const int SkyMidTop = 65, SkyMidBottom = 118;
         /// <summary>The glow's reach: from the glass it crosses most of the room and dies
         /// before the far corner, so the room runs gold, then pink, then violet.</summary>
-        private const float SkyGlowRadius = 470f;
+        private const float SkyGlowRadius = 560f;
         /// <summary>The pink's own arc. It is atmosphere, not a lamp: broad and soft, up
         /// while the sky burns and gone with it.</summary>
-        private const float SkyGlowDay = 1.35f, SkyGlowNight = 0.0f;
+        private const float SkyGlowDay = 1.05f, SkyGlowNight = 0.0f;
         /// <summary>How much of the pink's hue survives into the glow. 1 = the poster.</summary>
         private const float SkyGlowPunch = 1.30f;
 
@@ -1173,12 +1176,15 @@ namespace LastCall.UI
                 // falls to violet where it does not.
                 _skyGlow = PointLight("SkyGlow", GlobalTint, 0f, SkyGlowRadius);
                 _skyGlow.falloffIntensity = 0.86f;
+                LightLayers(_skyGlow, LayerBackground, LayerPatrons);
                 // A throw, not a bulb: see WindowSetback / WindowAimDegrees above.
+                LightLayers(_windowLight, LayerBackground, LayerPatrons);
                 _windowLight.pointLightInnerRadius = WindowRadius * WindowInner;
                 _windowLight.pointLightOuterAngle = WindowConeOuter;
                 _windowLight.pointLightInnerAngle = WindowConeInner;
                 _windowLight.transform.rotation = Quaternion.Euler(0f, 0f, WindowAimDegrees);
                 _barLight = PointLight("BarLight", LampTint, 0f, BarLightRadius);
+                LightLayers(_barLight, LayerCounter, LayerPatrons);
 
             }
             else
@@ -1248,13 +1254,28 @@ namespace LastCall.UI
         public SpriteRenderer NewStageSprite(string name, int order) =>
             WorldSprite(name, null, order);
 
-        /// <summary>One world-space stage sprite on the shared lit material.</summary>
+        // THE STAGE IS THREE LAYERS, AND THE LIGHT KNOWS IT (2026-08-24, the author:
+        // "Arkaplan, müşteriler ve tezgah 3 ayrı katmanda ... bunu düşünmek mantıklı olur
+        // mu?"). It is, and URP 2D can act on it: every stage sprite lands on one of three
+        // sorting layers by the order band it already lives in, and every light targets
+        // the layers it is FOR. One sorting layer meant the bar's lamp painted the wall
+        // and the window's cone spent itself on a counter it should barely graze.
+        public const string LayerBackground = "Stage Background";   // orders 0..21
+        public const string LayerPatrons = "Patrons";               // orders 22..29
+        public const string LayerCounter = "Bar Counter";           // orders 30+
+
+        private static string LayerForOrder(int order) =>
+            order < 22 ? LayerBackground : order < 30 ? LayerPatrons : LayerCounter;
+
+        /// <summary>One world-space stage sprite on the shared lit material, standing on
+        /// the sorting layer its order band belongs to.</summary>
         private SpriteRenderer WorldSprite(string name, Sprite sprite, int order)
         {
             var go = new GameObject(name);
             go.transform.SetParent(_world, false);
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
+            sr.sortingLayerName = LayerForOrder(order);
             sr.sortingOrder = order;
             if (_litMaterial != null) sr.sharedMaterial = _litMaterial;
             return sr;
@@ -1272,6 +1293,22 @@ namespace LastCall.UI
             l.falloffIntensity = 0.62f;
             LightAllLayers(l);
             return l;
+        }
+
+        /// <summary>
+        /// Points a light at the layers it is FOR. The sky lights the wall and the people
+        /// and dies before the counter; the bar's own lamp pools on the counter and the
+        /// hands over it without painting the wall behind; only the global wash and the
+        /// closing beat speak to the whole room.
+        /// </summary>
+        private static void LightLayers(Light2D light, params string[] names)
+        {
+            var f = typeof(Light2D).GetField("m_ApplyToSortingLayers",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (f == null) return;
+            var ids = new int[names.Length];
+            for (int i = 0; i < names.Length; i++) ids[i] = SortingLayer.NameToID(names[i]);
+            f.SetValue(light, ids);
         }
 
         /// <summary>
@@ -1298,6 +1335,7 @@ namespace LastCall.UI
             // own rest line, so a blob at 19 was drawn and then covered by the counter at 30 —
             // a shadow you cannot see is not a shadow. 31 puts it on the bar top where the
             // thing casting it is standing, still under anything that stands ON the bar (35).
+            sr.sortingLayerName = LayerForOrder(31);
             sr.sortingOrder = 31;
             sr.color = new Color(0f, 0f, 0f, art != null ? 0.38f : 0f);
             if (_litMaterial != null) sr.sharedMaterial = _litMaterial;
@@ -1608,10 +1646,15 @@ namespace LastCall.UI
                 // Room dressing draws between the picture (10) and the bar (30); a piece
                 // standing ON the counter must draw over the counter that holds it — the
                 // candle was sorting behind the bar top and simply vanished (measured on
-                // the first proof shot, 2026-08-10). The slot says which it is, so a new
-                // counter-top place needs no code either.
+                // the first proof shot, 2026-08-10). A piece that HANGS draws behind the
+                // floor dressing (15): the triptych and the middle table overlap by a few
+                // rows, and two sprites sharing order 20 leave which one wins to chance —
+                // a picture ON the wall is behind a table in FRONT of the wall, always
+                // (2026-08-24). The slot says which it is, so a new counter-top or wall
+                // place needs no code either.
                 var slot = _slots[def.Slot];
                 bool onCounter = slot.OnCounter;
+                bool hangs = slot.Hangs;
                 // A PAIRED slot mounts the same piece twice, symmetric about the hook
                 // (2026-08-24, the wall lamps: "simetrik bir şekilde 2 adet"). One fixture,
                 // one purchase, two mountings — the spread is the slot's, not the piece's,
@@ -1623,7 +1666,7 @@ namespace LastCall.UI
                         ? (m == 0 ? -0.5f : 0.5f) * slot.PairSpreadPx : 0f;
                     string suffix = copies == 2 ? (m == 0 ? "_L" : "_R") : "";
                     var sr = WorldSprite("Fx_" + def.Id + suffix, sprite,
-                                         order: onCounter ? 35 : 20);
+                                         order: onCounter ? 35 : hangs ? 15 : 20);
                     // A matched pair FACES each other: the art is one drawing, and two
                     // copies leaning the same way read as a print error, not a pair.
                     if (copies == 2 && m == 1) sr.flipX = true;
@@ -1641,6 +1684,8 @@ namespace LastCall.UI
                         glow = PointLight(glowName,
                             new Color(def.LightR, def.LightG, def.LightB),
                             def.LightIntensity, def.LightRadius);
+                        if (onCounter) LightLayers(glow, LayerCounter, LayerPatrons);
+                        else LightLayers(glow, LayerBackground, LayerPatrons);
                         if (house)
                         {
                             _houseLights.Add((glow, def.LightIntensity));
@@ -1651,8 +1696,10 @@ namespace LastCall.UI
 
                     // WHAT SELLS "STANDING ON" RATHER THAN "FLOATING NEAR": only pieces that
                     // touch a surface get one. A sconce on the wall and a lantern on a cord
-                    // touch nothing, and a blob under them would read as a stain.
-                    if (!onCounter && !def.HasLight)
+                    // touch nothing, and a blob under them would read as a stain. Every
+                    // hanger shipped lit until the triptych, so !HasLight passed for
+                    // "touches the floor" — the slot says it outright now (2026-08-24).
+                    if (!onCounter && !hangs && !def.HasLight)
                         ContactShadow(sr.transform, sprite.rect.width * 0.9f);
 
                     // A beer font is the door onto the draught station, so it answers the
@@ -2398,7 +2445,10 @@ namespace LastCall.UI
                     1f - Mathf.Exp(-8f * Time.unscaledDeltaTime));
 
             if (_guestLight == null && _world != null && t > 0.001f)
+            {
                 _guestLight = PointLight("LastCallLamp", LampTint, 0f, LampRadius * 1.15f);
+                LightLayers(_guestLight, LayerBackground, LayerPatrons);
+            }
             if (_guestLight != null)
             {
                 // It hangs where the other lamps hang — the room has one ceiling, and a pool
