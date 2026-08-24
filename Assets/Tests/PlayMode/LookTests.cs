@@ -142,15 +142,16 @@ namespace LastCall.PlayTests
 
             yield return new WaitForSecondsRealtime(2.5f);   // the rig ramps over about a second
 
-            // THE HOUSE LIGHTS ARE THE WALL LIGHTS NOW (2026-08-23). This counted "Lamp0..7"
-            // - the three ceiling downlights - and the room it was written for had a ceiling
-            // in frame. This one does not: it is lit by two sconces on the cream band, and
-            // the beat is the same beat, so it is those that have to come down.
+            // THE HOUSE LIGHTS ARE THE WALL LAMPS NOW (2026-08-23; fixture-driven since
+            // 2026-08-24). The room has no ceiling in frame - what comes down at the last
+            // call is the pair of wall lamps standing in the houseLight slot, whichever
+            // level the bar has fitted. The stage names their glows HouseLight0, 1, ... so
+            // this test can find them without seeing the UI assembly.
             float house = 0f;
             int lamps = 0;
             for (int i = 0; i < 8; i++)
             {
-                float lit = Intensity("SconceLight" + i);
+                float lit = Intensity("HouseLight" + i);
                 if (lit >= 0f) { house += lit; lamps++; }
             }
             float guestLamp = Intensity("LastCallLamp");

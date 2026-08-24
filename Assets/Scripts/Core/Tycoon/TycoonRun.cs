@@ -527,17 +527,20 @@ namespace LastCall.Core
             if (index < 0 || index >= _todayPurchases.Count)
                 throw new ArgumentOutOfRangeException(nameof(index));
             var p = _todayPurchases[index];
-            // A RUNG CANNOT BE PULLED OUT FROM UNDER THE ONE ABOVE IT (2026-08-19). Two
-            // tower levels can be bought in one night — dressing spends no fitting — so
-            // refunding the twin while the triple stands would leave the bar running three
-            // lines it never fitted the second of, and every keg unlocked for one payment.
-            // The taller one goes back first, which is the order they were bought in.
+            // A RUNG CANNOT BE PULLED OUT FROM UNDER THE ONE ABOVE IT (2026-08-19; made
+            // generic with the wall lamps, 2026-08-24). Two rungs can be bought in one night
+            // — dressing spends no fitting — so refunding the lower while the higher stands
+            // would leave the bar on a rung it never climbed to, and for the tower that is
+            // every keg unlocked for one payment. The taller goes back first, which is the
+            // order they were bought in.
             if (p.What == DayPurchase.Kind.Fixture)
             {
-                var tower = FixtureById(p.Id);
-                if (tower != null && tower.TapLevel > 0 && TapLevel > tower.TapLevel)
-                    throw new InvalidOperationException(
-                        $"{tower.Name} is under the {TapLevel}-line tower; take that one back first.");
+                var rung = FixtureById(p.Id);
+                if (rung != null && rung.Level > 0 && LadderLevel(rung.Slot) > rung.Level)
+                    throw new InvalidOperationException(rung.IsTap
+                        ? $"{rung.Name} is under the {LadderLevel(rung.Slot)}-line tower; " +
+                          "take that one back first."
+                        : $"{rung.Name} is under a higher rung; take that one back first.");
             }
             switch (p.What)
             {
@@ -2071,13 +2074,32 @@ namespace LastCall.Core
         }
 
         /// <summary>
-        /// Whether the market may sell this tower tonight: a level climbs ONE rung at a
+        /// The highest rung the bar owns on this slot's ladder, 0 for none. THE LADDER
+        /// STOPPED BEING ABOUT BEER on 2026-08-24 (the wall lamps): any slot may carry one,
+        /// and every rule that ordered the towers — one rung at a time, only the tallest
+        /// stands, no refund from under the rung above — now reads this instead of the tap.
+        /// </summary>
+        public int LadderLevel(string slot)
+        {
+            int best = 0;
+            foreach (var f in _fixtureCatalogue)
+                if (f.Slot == slot && f.Level > best && _fixtures.Contains(f.Id)) best = f.Level;
+            return best;
+        }
+
+        /// <summary>
+        /// Whether the market may sell this rung tonight: a ladder climbs ONE rung at a
         /// time. Public because the shop greys the tile out with it and then buys through
         /// <see cref="BuyFixture"/>, which asks again — the menu decides what to draw, the
         /// rules decide what may happen.
         /// </summary>
+        public bool CanBuyRung(FixtureDefinition piece) =>
+            piece != null && piece.Level > 0 && piece.Level == LadderLevel(piece.Slot) + 1;
+
+        /// <summary>The tower's own wording of <see cref="CanBuyRung"/>, kept because a
+        /// draught line is what half the market's locks are phrased against.</summary>
         public bool CanBuyTap(FixtureDefinition tower) =>
-            tower != null && tower.TapLevel > 0 && tower.TapLevel == TapLevel + 1;
+            tower != null && tower.IsTap && CanBuyRung(tower);
 
         /// <summary>How many pieces of dressing the bar owns — the cheap change-detection
         /// handle the stage watches, so it only rebuilds the room when the room changed.</summary>
@@ -2103,13 +2125,16 @@ namespace LastCall.Core
             if (Rating.Average < def.Stars)
                 throw new InvalidOperationException(
                     $"{def.Name} needs a {def.Stars:0.0}-star room; this bar rates {Rating.Average:0.0}.");
-            // A tower is bought one rung at a time. Buying the triple over a bar that never
-            // ran two lines would hand it every keg in the catalogue for one payment, which
-            // is the whole ladder skipped in a single click.
-            if (def.TapLevel > 0 && !CanBuyTap(def))
-                throw new InvalidOperationException(
-                    $"{def.Name} runs {def.TapLevel} lines; this bar runs {TapLevel}. " +
-                    "A tower is fitted one line at a time.");
+            // A ladder is bought one rung at a time. Buying the triple over a bar that
+            // never ran two lines would hand it every keg in the catalogue for one payment
+            // — the whole ladder skipped in a single click — and the wall lamps climb the
+            // same way for the same reason.
+            if (def.Level > 0 && !CanBuyRung(def))
+                throw new InvalidOperationException(def.IsTap
+                    ? $"{def.Name} runs {def.TapLevel} lines; this bar runs " +
+                      $"{LadderLevel(def.Slot)}. A tower is fitted one line at a time."
+                    : $"{def.Name} is rung {def.Level} of its ladder; the bar stands on " +
+                      $"rung {LadderLevel(def.Slot)}. It climbs one rung at a time.");
             Spend(def.Price);
             _fixtures.Add(fixtureId);
             _todayPurchases.Add(new DayPurchase(

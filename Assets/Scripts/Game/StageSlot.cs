@@ -26,13 +26,29 @@ namespace LastCall.Game
         /// existed (2026-08-10).</summary>
         public bool OnCounter { get; }
 
-        public StageSlot(string id, float x, float y, bool onCounter)
+        /// <summary>A PAIR of mounting points, this many art px apart and symmetric about
+        /// the slot (2026-08-24, the author: "simetrik bir şekilde 2 adet duvar lambaları").
+        /// One fixture, two mountings: whatever stands here is drawn twice, spread this far,
+        /// so a matched pair is one purchase and one catalogue entry. 0 = a single hook.</summary>
+        public float PairSpreadPx { get; }
+
+        /// <summary>The room's HOUSE LIGHTS hang here: whatever shines in this slot is run
+        /// on the evening's clock — dim while the window owns the room, up as the sky dies,
+        /// and taken down by the closing beat. A lantern bought as dressing keeps its own
+        /// steady glow; the house lights belong to the hour.</summary>
+        public bool HouseLight { get; }
+
+        public StageSlot(string id, float x, float y, bool onCounter,
+                         float pairSpreadPx = 0f, bool houseLight = false)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Slot needs an id.", nameof(id));
+            if (pairSpreadPx < 0) throw new ArgumentException($"Slot '{id}' has a negative pair spread.");
             Id = id;
             X = x;
             Y = y;
             OnCounter = onCounter;
+            PairSpreadPx = pairSpreadPx;
+            HouseLight = houseLight;
         }
 
         public override string ToString() => $"{Id} ({X}, {Y}){(OnCounter ? " on the counter" : "")}";

@@ -271,7 +271,8 @@ namespace LastCall.Game
             {
                 if (!slotIds.Add(sl.id ?? ""))
                     throw new FormatException($"Fixtures file declares slot '{sl.id}' twice.");
-                try { slots.Add(new StageSlot(sl.id, sl.x, sl.y, sl.onCounter)); }
+                try { slots.Add(new StageSlot(sl.id, sl.x, sl.y, sl.onCounter,
+                                              sl.pairSpreadPx, sl.houseLight)); }
                 catch (ArgumentException e) { throw new FormatException($"Slot '{sl.id}': {e.Message}"); }
             }
 
@@ -293,27 +294,44 @@ namespace LastCall.Game
                 if (!slotIds.Contains(f.slot ?? ""))
                     throw new FormatException(
                         $"Fixture '{f.id}' wants slot '{f.slot}', which the room does not have.");
+                // A piece's rung: a tower carries it in tapLevel, anything else in level.
+                // The ladder rule stopped being about beer on 2026-08-24 (the wall lamps),
+                // so the exception below reads the rung, not the tap. A piece claiming both
+                // fields is refused HERE, before the slot check can blame the wrong thing.
+                if (f.tapLevel > 0 && f.level > 0)
+                    throw new FormatException(
+                        $"Fixture '{f.id}' carries both a tapLevel and a level — a tower's " +
+                        "rung IS its tap level.");
+                int rung = f.tapLevel > 0 ? f.tapLevel : f.level;
                 if (slotOwners.TryGetValue(f.slot, out var held))
                 {
-                    if (f.tapLevel <= 0 || held.tapLevel <= 0)
+                    int heldRung = held.tapLevel > 0 ? held.tapLevel : held.level;
+                    if (rung <= 0 || heldRung <= 0)
                         throw new FormatException(
                             $"Fixture '{f.id}' wants slot '{f.slot}', which another fixture already has.");
-                    if (!slotLevels[f.slot].Add(f.tapLevel))
+                    // One slot, one KIND of ladder. A tower rung and a lamp rung sharing a
+                    // hook would pass the arithmetic below and then lie to everything that
+                    // reads the ladder — LadderLevel would let a tap unlock a lamp mark.
+                    if ((f.tapLevel > 0) != (held.tapLevel > 0))
                         throw new FormatException(
-                            $"Fixture '{f.id}' is a {f.tapLevel}-line tower, and slot '{f.slot}' " +
+                            $"Fixture '{f.id}' puts a different kind of ladder into slot " +
+                            $"'{f.slot}' — a slot's rungs must all be towers or none of them.");
+                    if (!slotLevels[f.slot].Add(rung))
+                        throw new FormatException(
+                            $"Fixture '{f.id}' stands on rung {rung}, and slot '{f.slot}' " +
                             "already has one — a ladder cannot have two of the same rung.");
                 }
                 else
                 {
                     slotOwners[f.slot] = f;
-                    slotLevels[f.slot] = new HashSet<int> { f.tapLevel };
+                    slotLevels[f.slot] = new HashSet<int> { rung };
                 }
                 try
                 {
                     fixtures.Add(new FixtureDefinition(f.id, f.name, f.slot, f.price,
                         f.stars, f.flavor, f.sprite,
                         f.lightR, f.lightG, f.lightB, f.lightIntensity, f.lightRadius,
-                        f.startsInTheRoom, f.tapLevel));
+                        f.startsInTheRoom, f.tapLevel, f.level));
                 }
                 catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
                 {
@@ -332,7 +350,7 @@ namespace LastCall.Game
                 for (int i = 0; i < levels.Count; i++)
                     if (levels[i] != i + 1)
                         throw new FormatException(
-                            $"The tower ladder in slot '{pair.Key}' runs {string.Join(", ", levels)} " +
+                            $"The ladder in slot '{pair.Key}' runs {string.Join(", ", levels)} " +
                             "— it has to climb 1, 2, 3 with no rung missing.");
             }
             return new LoadedFixtures(fixtures, slots);
@@ -692,6 +710,11 @@ namespace LastCall.Game
             /// became a three-rung ladder — JsonUtility cannot say "absent", so 0 is the
             /// not-a-tower answer and every entry that never mentioned taps is unchanged.</summary>
             public int tapLevel;
+
+            /// <summary>This piece's rung on its slot's ladder, for ladders that are not
+            /// the draught tower (2026-08-24, the wall lamps). A tower's rung stays in
+            /// tapLevel; carrying both is a content bug the definition refuses.</summary>
+            public int level;
         }
 
         [Serializable]
@@ -701,6 +724,11 @@ namespace LastCall.Game
             public float x;
             public float y;
             public bool onCounter;
+            // A pair of mounting points this far apart, symmetric about (x, y); 0 = one
+            // hook. And whether what shines here is the room's HOUSE LIGHT, run on the
+            // evening's clock. Defaults keep every old entry unchanged (JsonUtility).
+            public float pairSpreadPx;
+            public bool houseLight;
         }
 
         [Serializable]

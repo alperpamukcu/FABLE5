@@ -35,6 +35,14 @@ namespace LastCall.Tests
             new FixtureDefinition("taps_" + level, level + "-Line Tower", "s2", 30 * level, 0,
                 level + " lines.", "fx_tap_single", tapLevel: level);
 
+        /// <summary>A rung of the wall-lamp ladder (2026-08-24): the ladder that proved the
+        /// rung concept is not about beer. Same slot, climbing marks, no draught in it.</summary>
+        private static FixtureDefinition Lamp(int level, bool startsOwned = false) =>
+            new FixtureDefinition("lamps_" + level, "Mark " + level + " Lamps", "s1",
+                25 * level, 0, "Two on the wall.", "fx_wall_lamp_lv" + (level - 1),
+                0.9f, 0.7f, 0.5f, 0.9f, 120f,
+                startsInTheRoom: startsOwned, level: level);
+
         private static Shelf NewShelf() => new Shelf(new[]
         {
             new ShelfBottle(new IngredientCard("gin", "Gin", IngredientType.Spirit, 6), capacity: 20),
@@ -366,6 +374,97 @@ namespace LastCall.Tests
             run.BuyFixture("fern_pot");
             Assert.Throws<InvalidOperationException>(() => run.BuyFixture("fern_pot"),
                 "one fern per plant_left");
+        }
+
+        // ── the ladder is not about beer (2026-08-24, the wall lamps) ────────────
+
+        [Test]
+        public void ALadder_NeedsNoBeerInIt()
+        {
+            // Three lamp marks in one slot, sharing it the way the towers share theirs —
+            // the slot-collision exception reads the RUNG now, not the tap.
+            var loaded = DataLoader.ParseFixtures(@"{ " + Slots + @"
+                ""fixtures"": [
+                  { ""id"": ""l1"", ""name"": ""Mark 1"", ""slot"": ""s1"", ""price"": 25,
+                    ""sprite"": ""fx_wall_lamp_lv0"", ""level"": 1, ""startsInTheRoom"": true },
+                  { ""id"": ""l2"", ""name"": ""Mark 2"", ""slot"": ""s1"", ""price"": 50,
+                    ""sprite"": ""fx_wall_lamp_lv1"", ""level"": 2 },
+                  { ""id"": ""l3"", ""name"": ""Mark 3"", ""slot"": ""s1"", ""price"": 75,
+                    ""sprite"": ""fx_wall_lamp_lv2"", ""level"": 3 }] }");
+            Assert.AreEqual(3, loaded.Fixtures.Count);
+            Assert.AreEqual(1, loaded.Fixtures[0].Level);
+            Assert.IsFalse(loaded.Fixtures[0].IsTap, "a lamp ladder is not a draught tower");
+            Assert.AreEqual(0, loaded.Fixtures[0].TapLevel, "and unlocks no kegs");
+        }
+
+        [Test]
+        public void APairedSlot_CarriesItsSpreadAndItsClock()
+        {
+            var loaded = DataLoader.ParseFixtures(@"{ ""slots"": [
+                  { ""id"": ""pair"", ""x"": 319, ""y"": 234,
+                    ""pairSpreadPx"": 172, ""houseLight"": true }],
+                ""fixtures"": [
+                  { ""id"": ""l1"", ""name"": ""Mark 1"", ""slot"": ""pair"", ""price"": 25,
+                    ""sprite"": ""fx_wall_lamp_lv0"", ""level"": 1 }] }");
+            Assert.AreEqual(172f, loaded.Slots[0].PairSpreadPx);
+            Assert.IsTrue(loaded.Slots[0].HouseLight);
+        }
+
+        [Test]
+        public void TheLamps_ClimbOneRungAtATime_AndTheFirstIsAlreadyOnTheWall()
+        {
+            var run = RunAtDayEnd(fixtures: new[] { Lamp(1, startsOwned: true),
+                                                    Lamp(2), Lamp(3) });
+            Assert.IsTrue(run.OwnsFixture("lamps_1"), "the room opens lit");
+            Assert.AreEqual(1, run.LadderLevel("s1"));
+
+            Assert.Throws<InvalidOperationException>(() => run.BuyFixture("lamps_3"),
+                "mark 3 over mark 1 skips the ladder");
+            Assert.AreEqual(1, run.LadderLevel("s1"), "and the refusal changes nothing");
+
+            run.BuyFixture("lamps_2");
+            run.BuyFixture("lamps_3");
+            Assert.AreEqual(3, run.LadderLevel("s1"), "climbed in order, it opens");
+            Assert.AreEqual(0, run.TapLevel, "and the taps never heard about any of it");
+        }
+
+        [Test]
+        public void ALampRung_CannotBeTakenBack_FromUnderTheOneAboveIt()
+        {
+            var run = RunAtDayEnd(fixtures: new[] { Lamp(1, startsOwned: true),
+                                                    Lamp(2), Lamp(3) });
+            run.BuyFixture("lamps_2");
+            run.BuyFixture("lamps_3");
+            int mark2 = -1;
+            for (int i = 0; i < run.TodaysPurchases.Count; i++)
+                if (run.TodaysPurchases[i].Id == "lamps_2") mark2 = i;
+
+            Assert.Throws<InvalidOperationException>(() => run.RefundToday(mark2),
+                "mark 2 is under mark 3");
+        }
+
+        [Test]
+        public void ASlot_HoldsOneKindOfLadder()
+        {
+            // A tower rung and a lamp rung sharing a hook would pass the rung arithmetic
+            // and then lie to everything that reads the ladder — LadderLevel would let a
+            // tap unlock a lamp mark. Refused at load, like every other content bug.
+            Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{ " + Slots + @"
+                ""fixtures"": [
+                  { ""id"": ""t1"", ""name"": ""Tower"", ""slot"": ""s2"", ""price"": 35,
+                    ""sprite"": ""fx_tap_single"", ""tapLevel"": 1 },
+                  { ""id"": ""l2"", ""name"": ""Lamp"", ""slot"": ""s2"", ""price"": 50,
+                    ""sprite"": ""fx_wall_lamp_lv1"", ""level"": 2 }] }"),
+                "a slot's rungs must all be towers or none of them");
+        }
+
+        [Test]
+        public void APiece_CannotClimbTwoLaddersAtOnce()
+        {
+            Assert.Throws<ArgumentException>(() =>
+                new FixtureDefinition("both", "Confused", "s1", 10, 0, "", "fx",
+                    tapLevel: 1, level: 2),
+                "a tower's rung IS its tap level — carrying both is a content bug");
         }
     }
 }

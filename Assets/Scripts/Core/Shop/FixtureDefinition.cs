@@ -61,6 +61,18 @@ namespace LastCall.Core
         /// </summary>
         public int TapLevel { get; }
 
+        /// <summary>
+        /// This piece's rung on its slot's ladder, or 0 for a piece that is not on one.
+        /// THE LADDER STOPPED BEING ABOUT BEER on 2026-08-24 (the author: wall lamps with
+        /// "başlangıç, lvl1, lvl2"): several pieces may stand in one slot when every one
+        /// of them carries a rung, the room stands only the tallest owned, the market sells
+        /// one rung at a time, and a rung cannot be refunded from under the one above it.
+        /// A tower's rung is its TapLevel — the tap ladder was the first of these and its
+        /// field keeps its name because a draught line count is also what kegs are locked
+        /// against; a piece that is not a tower carries its rung here instead.
+        /// </summary>
+        public int Level { get; }
+
         /// <summary>This piece is a BEER FONT: clicking it in the room opens the draught
         /// station. There is exactly one station a prop is a door to, and inventing a
         /// second would be inventing a feature.</summary>
@@ -82,7 +94,7 @@ namespace LastCall.Core
             double stars, string flavor, string sprite,
             float lightR = 0f, float lightG = 0f, float lightB = 0f,
             float lightIntensity = 0f, float lightRadius = 0f,
-            bool startsInTheRoom = false, int tapLevel = 0)
+            bool startsInTheRoom = false, int tapLevel = 0, int level = 0)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Fixture needs an id.", nameof(id));
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException($"Fixture '{id}' needs a name.", nameof(name));
@@ -95,6 +107,11 @@ namespace LastCall.Core
                 throw new ArgumentOutOfRangeException(nameof(lightRadius), $"Fixture '{id}' shines but has no radius.");
             if (tapLevel < 0)
                 throw new ArgumentOutOfRangeException(nameof(tapLevel), $"Fixture '{id}' has {tapLevel} draught lines.");
+            if (level < 0)
+                throw new ArgumentOutOfRangeException(nameof(level), $"Fixture '{id}' stands on rung {level}.");
+            if (level > 0 && tapLevel > 0)
+                throw new ArgumentException($"Fixture '{id}' cannot climb two ladders at once — " +
+                                            "a tower's rung IS its tap level.", nameof(level));
             Id = id;
             Name = name;
             Slot = slot;
@@ -107,6 +124,7 @@ namespace LastCall.Core
             LightRadius = lightRadius;
             StartsInTheRoom = startsInTheRoom;
             TapLevel = tapLevel;
+            Level = tapLevel > 0 ? tapLevel : level;
         }
 
         public override string ToString() => $"{Name} ({Id}, ${Price}, slot {Slot})";

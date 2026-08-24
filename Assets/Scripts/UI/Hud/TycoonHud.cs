@@ -2434,17 +2434,16 @@ namespace LastCall.UI
             if (stage == null) return;
             if (run.OwnedFixtureCount == _lastFixtureCount) return;
             _lastFixtureCount = run.OwnedFixtureCount;
-            // ONE TOWER, NOT THE WHOLE LADDER (2026-08-19). A bar that upgraded still OWNS
-            // the single — it was fitted over, not sold back — and every level stands in the
-            // same slot, so handing the room all of them draws three towers one inside the
-            // other. The run says which one is standing; everything else the bar owns is
-            // dressing and goes in as it always did.
-            var standing = run.StandingTap();
+            // ONE RUNG STANDING, NOT THE WHOLE LADDER (2026-08-19; generic since the wall
+            // lamps, 2026-08-24). A bar that upgraded still OWNS the lower rungs — fitted
+            // over, not sold back — and every rung stands in the same slot, so handing the
+            // room all of them draws the ladder one inside the other. Only the slot's
+            // tallest owned rung goes in; everything unranked goes in as it always did.
             var owned = new List<FixtureDefinition>();
             foreach (var f in run.FixtureCatalogue)
             {
                 if (!run.OwnsFixture(f.Id)) continue;
-                if (f.IsTap && !ReferenceEquals(f, standing)) continue;
+                if (f.Level > 0 && f.Level < run.LadderLevel(f.Slot)) continue;
                 owned.Add(f);
             }
             // The room is handed its hooks before anything is stood in them. Cheap enough
@@ -4912,6 +4911,7 @@ namespace LastCall.UI
                         {
                             Name = f.Name,
                             Meta = f.IsTap ? f.TapLevel + "-line tower"
+                                 : f.Level > 0 ? "House light · mark " + f.Level
                                  : f.HasLight ? "Dressing · lit" : "Dressing",
                             Art = FixtureArt(f.Sprite),
                             ArtH = IconH,
@@ -4919,6 +4919,8 @@ namespace LastCall.UI
                             MetaLine = f.IsTap
                                 ? "The counter · " + f.TapLevel
                                   + (f.TapLevel == 1 ? " keg on tap" : " kegs on tap")
+                                : f.Level > 0
+                                ? "The back wall · both lamps, one fitting"
                                 : f.HasLight
                                 ? "The room · carries its own light"
                                 : "The room · dressing",
@@ -4938,10 +4940,11 @@ namespace LastCall.UI
                         if (run.OwnsFixture(f.Id))
                         {
                             spec.State = TileState.Held;
-                            // A tower that has been fitted over is not what is standing on
-                            // the counter, and saying OURS about all three would leave the
-                            // player unable to tell which one the bar actually runs.
-                            spec.Word = f.IsTap && f.TapLevel < run.TapLevel ? "FITTED" : "OURS";
+                            // A rung that has been fitted over is not what is standing in
+                            // the room, and saying OURS about the whole ladder would leave
+                            // the player unable to tell which one the bar actually runs.
+                            spec.Word = f.Level > 0 && f.Level < run.LadderLevel(f.Slot)
+                                ? "FITTED" : "OURS";
                         }
                         else if (run.Rating.Average < f.Stars)
                         {
@@ -4950,15 +4953,19 @@ namespace LastCall.UI
                             spec.BuffA = new Buff(BuffKind.Bad, "Needs a " + f.Stars.ToString("0.0")
                                 + "-star room · you are at " + run.Rating.Average.ToString("0.0"));
                         }
-                        else if (f.IsTap && !run.CanBuyTap(f))
+                        else if (f.Level > 0 && !run.CanBuyRung(f))
                         {
                             // One rung at a time, and the tile says which rung is missing —
-                            // a greyed tower with no reason on it reads as a bug.
+                            // a greyed rung with no reason on it reads as a bug.
+                            int next = run.LadderLevel(f.Slot) + 1;
                             spec.State = TileState.Sealed;
-                            spec.Money = (run.TapLevel + 1).ToString();
-                            spec.GateNote = "LINE TOWER FIRST";
-                            spec.BuffA = new Buff(BuffKind.Bad, "Fit the " + (run.TapLevel + 1)
-                                + "-line tower first · this bar runs " + run.TapLevel);
+                            spec.Money = next.ToString();
+                            spec.GateNote = f.IsTap ? "LINE TOWER FIRST" : "LOWER MARK FIRST";
+                            spec.BuffA = new Buff(BuffKind.Bad, f.IsTap
+                                ? "Fit the " + next + "-line tower first · this bar runs "
+                                  + run.TapLevel
+                                : "Fit mark " + next + " first · these are mark "
+                                  + run.LadderLevel(f.Slot));
                         }
                         else DressBuyable(spec, f.Price, "fx:" + f.Id, false,
                             () => run.BuyFixture(f.Id));
@@ -4999,10 +5006,10 @@ namespace LastCall.UI
                     foreach (var f in run.FixtureCatalogue)
                     {
                         if (run.OwnsFixture(f.Id) || run.Rating.Average >= f.Stars) continue;
-                        // A tower waiting on the rung below it is not waiting on a star, and
+                        // A rung waiting on the rung below it is not waiting on a star, and
                         // counting it here would promise that the next star opens something
                         // no star opens (the same trap StarsWanted answers NaN to).
-                        if (f.IsTap && !run.CanBuyTap(f)) continue;
+                        if (f.Level > 0 && !run.CanBuyRung(f)) continue;
                         locked++;
                         if (f.Stars < next) next = f.Stars;
                     }

@@ -57,6 +57,19 @@
       "x": 540,
       "y": 102,
       "onCounter": true
+    },
+    {
+      "id": "wall_lamps",
+      "x": 319,
+      "y": 234,
+      "pairSpreadPx": 172,
+      "houseLight": true
+    },
+    {
+      "id": "sink",
+      "x": 140,
+      "y": 86,
+      "onCounter": true
     }
   ],
   "fixtures": [
@@ -205,6 +218,62 @@
       "flavor": "One column, three spouts, and nothing waiting its turn.",
       "sprite": "fx_tap_tee",
       "tapLevel": 3
+    },
+    {
+      "id": "wall_lamps_one",
+      "name": "Glass Tube Lamps",
+      "slot": "wall_lamps",
+      "price": 30,
+      "stars": 0,
+      "flavor": "Two plain tubes on the back wall. They do the job.",
+      "sprite": "fx_wall_lamp_lv0",
+      "lightR": 0.48,
+      "lightG": 0.91,
+      "lightB": 0.87,
+      "lightIntensity": 0.85,
+      "lightRadius": 118,
+      "level": 1,
+      "startsInTheRoom": true
+    },
+    {
+      "id": "wall_lamps_two",
+      "name": "Sunset Cylinders",
+      "slot": "wall_lamps",
+      "price": 55,
+      "stars": 1.5,
+      "flavor": "Pink into peach, like the window at eight. The wall keeps the hour.",
+      "sprite": "fx_wall_lamp_lv1",
+      "lightR": 0.97,
+      "lightG": 0.67,
+      "lightB": 0.80,
+      "lightIntensity": 1.0,
+      "lightRadius": 132,
+      "level": 2
+    },
+    {
+      "id": "wall_lamps_three",
+      "name": "Palm Lamps",
+      "slot": "wall_lamps",
+      "price": 90,
+      "stars": 3.0,
+      "flavor": "A brass palm with a lit coconut. Nobody needs it. Everybody wants it.",
+      "sprite": "fx_wall_lamp_lv2",
+      "lightR": 0.91,
+      "lightG": 0.72,
+      "lightB": 0.48,
+      "lightIntensity": 1.15,
+      "lightRadius": 148,
+      "level": 3
+    },
+    {
+      "id": "counter_sink",
+      "name": "Steel Sink",
+      "slot": "sink",
+      "price": 40,
+      "stars": 0,
+      "flavor": "Cold water and a place to put the night's glasses.",
+      "sprite": "fx_sink",
+      "startsInTheRoom": true
     }
   ]
 }
