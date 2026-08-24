@@ -43,6 +43,14 @@ namespace LastCall.Core
         /// </summary>
         public const double MenuTimeScale = 0.3;
 
+        /// <summary>
+        /// Floor-time multiplier while the recipe BOOK is open (2026-08-24, the author:
+        /// "Menü açıkken zaman çok yavaş geçmeli"). Reading the book is homework, not
+        /// service — it slows the room far below the service menus, but the clock still
+        /// never fully stops: the night keeps its one-way arrow.
+        /// </summary>
+        public const double BookTimeScale = 0.05;
+
         // ── the till ────────────────────────────────────────────────────────────
         public int StartingMoney { get; }
 

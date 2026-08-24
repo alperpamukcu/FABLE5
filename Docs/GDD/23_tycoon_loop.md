@@ -87,13 +87,27 @@
   through the one shared spec renderer, so the gate cannot be routed around by surface. Thirty recipes, twelve of them shaken — the author's note that the tin
   must be USED drove the second shaken wave (Vodka Sour, Rum Punch, White Lady, Southside).
   **Display respec II (2026-08-24): the book is an open BOOKLET.** `menu_booklet.png` at
-  exactly 2× — two tall pages whose chapters are the tiers (locked ones under STILL IN THE
-  BOOK), and a page turn played as DRAWN art (`menu_page_00..15`, the peel model out of
-  `Tools/menu_booklet.py`): the front print clips at the fold, the back face shifts by
-  integer art pixels, nothing scales. The gold page furniture (`menu_page_frame`) lives in
-  the same container as the type so it turns with the words. The board's search and filter
-  chips retired with the board; the bottom outer corners and the arrow keys turn the
-  pages, and the ribbon keeps the reader's place across opens.
+  exactly 2× — two tall pages, and a page turn played as DRAWN art (`menu_page_00..15`,
+  the peel model out of `Tools/menu_booklet.py`): the front print clips at the fold, the
+  back face shifts by integer art pixels, nothing scales. The gold page furniture
+  (`menu_page_frame`) lives in the same container as the type so it turns with the words.
+  The board's search and filter chips retired with the board; the bottom outer corners,
+  the drawn `<` `>` paper keys and the arrow keys turn the pages, and the ribbon keeps
+  the reader's place across opens.
+  **Display respec III (2026-08-24, the same evening): the booklet is a COOKBOOK.** The
+  first spread is the title plate and the CONTENTS — each chapter line is the shortcut
+  to its first page — and after that first turn every page is ONE recipe: tier and name
+  in the heading zone, prep and glass, the drink's icon, a LEGEND above the pours saying
+  what the gauge measures and which colour owns which fifth of the glass, the pours at
+  full width, and the drink's own provenance at the foot (`Resources/Data/recipes_lore.json`
+  via `RecipeLore`, pinned to `RecipeCatalog` in both directions by test). The chapters
+  ARE the tiers with locked recipes standing in place among their own (STILL IN THE BOOK
+  retired); a bottle the well cannot pour prints LOCKED · NOT IN THE WELL under its name.
+  A PERFECTED page prints the exact share where its gauge stood (with a PERFECT tag),
+  binds itself in platinum and wears an angled PERFECT RECIPE ribbon over the top corner
+  — the reveal gate is unchanged and still asked of Core through `RecipeSpecRows`. The
+  open book slows the floor to `TycoonConfig.BookTimeScale` (0.05); the service menus
+  keep `MenuTimeScale` (0.3).
 - **The order is hidden until the ID card is read** (v5 C3, 2026-07-31). The seat signals
   readiness ("READY · TAP THE ID"); the drink's name, icon and wanted extras appear only
   after the player opens the licence, and **no price appears anywhere on the card or the

@@ -2,6 +2,18 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `23 §3 / GDD_MEVCUT` **the cookbook respec (2026-08-24, the author's second round):**
+  the booklet's interior is one recipe per page behind a title-and-contents spread
+  (chapter lines click straight to their page). Each page: prep and glass, a gauge
+  LEGEND (what the bar measures, which colour owns which fifth), full-width pours,
+  and provenance at the foot from `Resources/Data/recipes_lore.json` (`RecipeLore`,
+  catalogue-pinned by test — 54 entries). Locked recipes stand IN their tier (STILL IN
+  THE BOOK retired) behind an OPENS gate plate; an unpourable bottle says LOCKED under
+  its name (the overlap bug's grave). A perfected page prints exact shares in place of
+  its gauges, binds in platinum and wears the angled PERFECT RECIPE ribbon. Drawn
+  `<` `>` paper keys join the corner hotspots; the open book slows the floor to
+  `BookTimeScale` 0.05. The card grid, its masonry and `menu_board`-era metrics left
+  `TycoonHud` whole.
 - `23 §3 / GDD_MEVCUT` **the menu booklet (2026-08-24):** the recipe book's clipboard
   board (`menu_board`, a 2.899× fractional upscale) is replaced by the open booklet
   drawn at exactly 2× (`menu_booklet.png` + `menu_page_frame` + sixteen peel frames,

@@ -1407,8 +1407,14 @@ namespace LastCall.UI
                 // The night does not start until the room is up (2026-08-10): the curtain
                 // holds the clock, so nobody walks in through a black screen and no patience
                 // is spent on a night the player cannot see yet.
+                // The BOOK is homework, not service (2026-08-24, the author: "Menü
+                // açıkken zaman çok yavaş geçmeli"): it slows the night nearly to a
+                // hold while the working menus keep their 0.3 — and the clock still
+                // moves, because the night keeps its one-way arrow.
+                float clock = _bookOpen ? (float)TycoonConfig.BookTimeScale
+                    : menuOpen ? (float)TycoonConfig.MenuTimeScale : 1f;
                 if (!DoorsClosed)
-                    run.Tick(Time.deltaTime * (menuOpen ? (float)TycoonConfig.MenuTimeScale : 1f));
+                    run.Tick(Time.deltaTime * clock);
             }
 
             if (run.Phase != _lastPhase)
@@ -5874,13 +5880,16 @@ namespace LastCall.UI
         // Unlocked recipes print their full bands; locked ones show what tier and stars
         // they are waiting behind, so the book doubles as the progression map.
 
-        // THE BOOK IS A BOOKLET NOW (2026-08-24, the author: "yeni oluşturduğumuz
-        // menüyü oyuna ekle eski menüyü kaldır"): an open book drawn at exactly 2×, two
-        // tall pages, and a page that TURNS as drawn art (menu_page_00..15) instead of a
-        // list that scrolls. The board's search and filter chips retired with the board —
-        // the tiers are the book's own chapters now, and a page is found by turning to it.
+        // THE BOOK IS A BOOKLET (2026-08-24) AND A COOKBOOK SINCE THE SAME EVENING
+        // (the author: "bir sayfa tamamen bir tarif olabilir, yemek kitabı gibi"): a
+        // title-and-contents spread opens it, and after the first turn EVERY PAGE IS ONE
+        // RECIPE — name, prep and glass, a legend saying what the gauge measures and
+        // which colour owns which fifth, the pours at full width, and the drink's own
+        // history at the foot. The contents jump straight to a chapter; the tiers ARE
+        // the chapters, with the unowned pages locked in place among their own.
         private RectTransform _bookPanel;
         private readonly List<BookPage> _bookPages = new List<BookPage>();
+        private readonly List<BookChapter> _bookChapters = new List<BookChapter>();
         private int _bookSpread;                 // the open spread — the ribbon's bookmark
         private RectTransform _bookWinRestL, _bookWinRestR, _bookWinInL, _bookWinInR;
         private RectTransform _bookPageRestL, _bookPageRestR, _bookPageInL, _bookPageInR;
@@ -5888,14 +5897,26 @@ namespace LastCall.UI
         private Sprite[] _bookLeafFrames;
         private bool _bookTurning;
         private Coroutine _bookTurnAnim;
+        private RectTransform _bookPrevKey, _bookNextKey;
 
-        /// <summary>One page's worth of the book: its chapter heading and its rows.</summary>
+        private enum BookPageKind { Title, Contents, Recipe }
+
+        /// <summary>One page of the book: the title plate, the contents, or one recipe.</summary>
         private sealed class BookPage
         {
-            public string Heading;
-            public readonly List<(RecipeDefinition Recipe, bool Locked)> Rows =
-                new List<(RecipeDefinition, bool)>();
-            public float Used;
+            public BookPageKind Kind;
+            public string Chapter;
+            public RecipeDefinition Recipe;
+            public bool Locked;
+        }
+
+        /// <summary>A line of the contents: a chapter, where it starts, what it holds.</summary>
+        private sealed class BookChapter
+        {
+            public string Title;
+            public int FirstPage;
+            public int Count;
+            public int LockedCount;
         }
 
         private bool _bookOpen;
@@ -6031,6 +6052,11 @@ namespace LastCall.UI
             // The page corners turn the page — the same corner the drawn peel lifts from.
             BookCorner(sheet, "TurnFwd", +1);
             BookCorner(sheet, "TurnBack", -1);
+            // And the corners SAY so now (2026-08-24, the author: "sağ ve sol ok
+            // butonları koy"): a drawn paper key on each page's bottom outer corner,
+            // standing only while there is a page on that side to turn to.
+            _bookPrevKey = BookPaperKey(sheet, "PrevKey", "<", -1);
+            _bookNextKey = BookPaperKey(sheet, "NextKey", ">", +1);
 
             _bookLeafFrames = new Sprite[BkTurnFrames];
             for (int i = 0; i < BkTurnFrames; i++)
@@ -6049,9 +6075,12 @@ namespace LastCall.UI
         private const float BkPageDX = 183f;                    // a page's centre off the spine
         private const float BkReach = 175f;                     // spine → leaf outer edge, art px
         private const float BkColW = 296f;                      // print column inside the gold frame
-        private const float BkContentTop = 80f, BkContentH = 518f;
-        private const float BkRowGap = 10f;
+        private const float BkContentTop = 80f;                 // under the heading rules
         private const float BkParkY = 748f;                     // the drop's overhead park
+        private const float BkGaugeW = 102f, BkGaugeH = 14f;    // the page's sight glass:
+                                                                // 100 px interior, 20 to a
+                                                                // fifth — whole pixels only
+        private static readonly Color BkPlatinum = new Color(0.83f, 0.86f, 0.92f);
         private const int BkTurnFrames = 16;
         private const float BkFrameSec = 0.040f;                // the script: "16 is smooth at 40ms"
 
@@ -6119,21 +6148,43 @@ namespace LastCall.UI
             var run = Run;
             if (run == null || _bookPanel == null) return;
             _bookPages.Clear();
+            _bookChapters.Clear();
 
-            var known = new List<RecipeDefinition>(run.MenuRecipes);
-            var locked = new List<RecipeDefinition>(run.LockedRecipes);
-            known.Sort((a, b) => a.Rank.CompareTo(b.Rank));
-            locked.Sort((a, b) => a.Rank.CompareTo(b.Rank));
+            // The opening spread: the house's title plate, and the contents facing it —
+            // the menu itself starts when that first page is turned (the author:
+            // "ilk sayfa çevrilince menü başlamalı").
+            _bookPages.Add(new BookPage { Kind = BookPageKind.Title });
+            _bookPages.Add(new BookPage { Kind = BookPageKind.Contents });
 
-            var groups = new List<List<RecipeDefinition>>();
-            foreach (var r in known)
+            // ONE PAGE, ONE RECIPE, grouped whole (the author: "Tüm menü gruplandırılır"):
+            // every drink stands under its tier in rank order, the unowned ones locked in
+            // place among their own — the book is the progression map, chapter by chapter.
+            var all = new List<(RecipeDefinition Recipe, bool Locked)>();
+            foreach (var r in run.MenuRecipes) all.Add((r, false));
+            foreach (var r in run.LockedRecipes) all.Add((r, true));
+            all.Sort((a, b) => a.Recipe.Rank != b.Recipe.Rank
+                ? a.Recipe.Rank.CompareTo(b.Recipe.Rank)
+                : string.CompareOrdinal(a.Recipe.Id, b.Recipe.Id));
+
+            BookChapter chapter = null;
+            foreach (var (r, isLocked) in all)
             {
-                if (groups.Count == 0 || TierName(groups[groups.Count - 1][0].Rank) != TierName(r.Rank))
-                    groups.Add(new List<RecipeDefinition>());
-                groups[groups.Count - 1].Add(r);
+                string tier = TierName(r.Rank);
+                if (chapter == null || chapter.Title != tier)
+                {
+                    chapter = new BookChapter { Title = tier, FirstPage = _bookPages.Count };
+                    _bookChapters.Add(chapter);
+                }
+                chapter.Count++;
+                if (isLocked) chapter.LockedCount++;
+                _bookPages.Add(new BookPage
+                {
+                    Kind = BookPageKind.Recipe,
+                    Chapter = tier,
+                    Recipe = r,
+                    Locked = isLocked,
+                });
             }
-            foreach (var g in groups) PageBookSection(TierName(g[0].Rank), g, lockedRows: false);
-            if (locked.Count > 0) PageBookSection("STILL IN THE BOOK", locked, lockedRows: true);
 
             // The ribbon keeps the reader's place across opens; a book grown shorter just
             // cannot keep a place it no longer has.
@@ -6142,38 +6193,8 @@ namespace LastCall.UI
             ShowRestingSpread();
         }
 
-        /// <summary>Deals one chapter onto pages: the tier heads every page it runs over,
-        /// and a new chapter always starts a fresh page, the way chapters do.</summary>
-        private void PageBookSection(string title, List<RecipeDefinition> rs, bool lockedRows)
-        {
-            var page = new BookPage { Heading = title };
-            _bookPages.Add(page);
-            foreach (var r in rs)
-            {
-                float h = BookCardH(r, lockedRows);
-                if (page.Rows.Count > 0 && page.Used + h > BkContentH)
-                {
-                    page = new BookPage { Heading = title };
-                    _bookPages.Add(page);
-                }
-                page.Rows.Add((r, lockedRows));
-                page.Used += h + BkRowGap;
-            }
-        }
-
-        /// <summary>A card's height from its own rows — the same accounting the retired
-        /// masonry used, so the cards keep their measure on the new paper.</summary>
-        private float BookCardH(RecipeDefinition r, bool lockedRow)
-        {
-            float spec = 0;
-            foreach (var row in RecipeSpecRows(r, locked: lockedRow))
-                spec += row.Hint ? SpecHintH : SpecRowH;
-            if (lockedRow) spec += SpecRowH;         // the star gate takes its own line
-            return 30f + spec + 14f;
-        }
-
         /// <summary>The resting book: the open spread in the two full windows, the leaf
-        /// down, the turn windows shut.</summary>
+        /// down, the turn windows shut, and the arrow keys saying which ways remain.</summary>
         private void ShowRestingSpread()
         {
             FillBookPage(_bookPageRestL, _bookSpread * 2);
@@ -6185,11 +6206,27 @@ namespace LastCall.UI
             SetBookWindow(_bookWinInL, _bookPageInL, 0f, 0f, -BkPageDX);
             SetBookWindow(_bookWinInR, _bookPageInR, 0f, 0f, BkPageDX);
             if (_bookLeaf != null) _bookLeaf.enabled = false;
+            int spreads = Mathf.Max(1, (_bookPages.Count + 1) / 2);
+            if (_bookPrevKey != null) _bookPrevKey.gameObject.SetActive(_bookSpread > 0);
+            if (_bookNextKey != null) _bookNextKey.gameObject.SetActive(_bookSpread + 1 < spreads);
+        }
+
+        /// <summary>Opens the book straight at a page — the contents' quick jump. A jump
+        /// is a LOOKUP, not a gesture: it swaps spreads at once instead of riffling the
+        /// whole distance frame by frame.</summary>
+        private void JumpToPage(int pageIdx)
+        {
+            if (_bookTurning) return;
+            int spread = Mathf.Clamp(pageIdx / 2, 0, Mathf.Max(0, (_bookPages.Count - 1) / 2));
+            if (spread == _bookSpread) return;
+            Sfx.Play("page_turn", 0.4f);
+            _bookSpread = spread;
+            ShowRestingSpread();
         }
 
         /// <summary>Prints one page into its container: the gold furniture (which must
-        /// travel with the type — the author caught it staying behind once), the chapter
-        /// heading, the cards and the folio. Past the last page prints NOTHING: a blank
+        /// travel with the type — the author caught it staying behind once), then the
+        /// page's own matter by its kind. Past the last page prints NOTHING: a blank
         /// leaf is bare paper, not an empty frame.</summary>
         private void FillBookPage(RectTransform print, int pageIdx)
         {
@@ -6210,32 +6247,24 @@ namespace LastCall.UI
                 fi.raycastTarget = false;
             }
 
-            var head = NewText("Head", print, _display, 16, TextAnchor.MiddleCenter,
-                new Color(0.30f, 0.16f, 0.05f));
-            head.rectTransform.anchorMin = head.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            head.rectTransform.pivot = new Vector2(0.5f, 1f);
-            head.rectTransform.sizeDelta = new Vector2(BkColW, 54f);
-            head.rectTransform.anchoredPosition = new Vector2(0, -12f);
-            head.text = page.Heading;
-
-            var foot = NewText("Foot", print, _body, 16, TextAnchor.MiddleCenter,
-                new Color(0.52f, 0.44f, 0.36f));
-            foot.rectTransform.anchorMin = foot.rectTransform.anchorMax = new Vector2(0.5f, 0f);
-            foot.rectTransform.pivot = new Vector2(0.5f, 0f);
-            foot.rectTransform.sizeDelta = new Vector2(BkColW, 24f);
-            foot.rectTransform.anchoredPosition = new Vector2(0, 16f);
-            foot.text = "· " + (pageIdx + 1) + " ·";
-
-            float y = BkContentTop;
-            foreach (var (r, isLocked) in page.Rows)
+            switch (page.Kind)
             {
-                float h = BookCardH(r, isLocked);
-                var card = BookRow(print, r, isLocked, run, BkColW);
-                card.anchorMin = card.anchorMax = new Vector2(0.5f, 1f);
-                card.pivot = new Vector2(0.5f, 1f);
-                card.sizeDelta = new Vector2(BkColW, h);
-                card.anchoredPosition = new Vector2(0, -y);
-                y += h + BkRowGap;
+                case BookPageKind.Title: FillTitlePage(print); break;
+                case BookPageKind.Contents: FillContentsPage(print); break;
+                default: FillRecipePage(print, page, run); break;
+            }
+
+            // The folio — every page but the title plate carries its number, so the
+            // contents' numbers land on something.
+            if (page.Kind != BookPageKind.Title)
+            {
+                var foot = NewText("Foot", print, _body, 16, TextAnchor.MiddleCenter,
+                    new Color(0.52f, 0.44f, 0.36f));
+                foot.rectTransform.anchorMin = foot.rectTransform.anchorMax = new Vector2(0.5f, 0f);
+                foot.rectTransform.pivot = new Vector2(0.5f, 0f);
+                foot.rectTransform.sizeDelta = new Vector2(BkColW, 24f);
+                foot.rectTransform.anchoredPosition = new Vector2(0, 16f);
+                foot.text = "· " + (pageIdx + 1) + " ·";
             }
         }
 
@@ -6256,6 +6285,8 @@ namespace LastCall.UI
                 return;
             }
             Sfx.Play("page_turn", 0.55f);
+            if (_bookPrevKey != null) _bookPrevKey.gameObject.SetActive(false);
+            if (_bookNextKey != null) _bookNextKey.gameObject.SetActive(false);
             FillBookPage(_bookPageRestL, lo * 2);
             FillBookPage(_bookPageRestR, lo * 2 + 1);
             FillBookPage(_bookPageInL, lo * 2 + 2);
@@ -6375,57 +6406,521 @@ namespace LastCall.UI
             btn.onClick.AddListener(() => TurnPage(dir));
         }
 
-        /// <summary>One recipe: the glass drawn from its own bands, the name, how it is
-        /// worked, and the pour — or, for a locked one, what it is waiting behind.</summary>
-        private RectTransform BookRow(RectTransform parent, RecipeDefinition r, bool lockedRow,
-            TycoonRun run, float cellW)
+        /// <summary>The house's title plate — the page the book opens on. The menu
+        /// itself starts when this page is turned.</summary>
+        private void FillTitlePage(RectTransform print)
         {
-            var row = NewRect($"R_{r.Id}", parent);
-            // EACH RECIPE IN ITS OWN BOX (2026-08-11, the author: "açıkta olunca karmaşıklık
-            // oluşuyor"). They were printed lines separated by a hairline, which is the right
-            // treatment for a form and the wrong one for a catalogue: a spec card is five
-            // stacked pours, and five of those under thin rules read as one long column of
-            // numbers. A card gives each drink an edge, and the eye can stop at it.
-            var rowImg = row.gameObject.AddComponent<Image>();
-            rowImg.sprite = ChromeArt.Card();
-            rowImg.type = Image.Type.Sliced;
-            rowImg.color = lockedRow ? new Color(0.93f, 0.90f, 0.82f) : new Color(0.99f, 0.97f, 0.90f);
-            var lift = row.gameObject.AddComponent<Shadow>();
-            lift.effectColor = new Color(0.24f, 0.15f, 0.06f, lockedRow ? 0.18f : 0.30f);
-            lift.effectDistance = new Vector2(2, -2);
+            Color inkHead = new Color(0.30f, 0.16f, 0.05f);
+            Color quiet = new Color(0.52f, 0.44f, 0.36f);
 
-            var icon = NewRect("I", row);
-            Place(icon, new Vector2(0, 0.5f), new Vector2(40, 40), new Vector2(10, 0));
+            var name = NewText("House", print, _display, 24, TextAnchor.MiddleCenter, inkHead);
+            Place(name.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BkColW, 60f),
+                new Vector2(0, 168f));
+            name.text = "LAST CALL";
+
+            var rule = NewRect("Rule", print);
+            Place(rule, new Vector2(0.5f, 0.5f), new Vector2(BkColW - 96f, 2f), new Vector2(0, 132f));
+            var ri = rule.gameObject.AddComponent<Image>();
+            ri.color = new Color(0.79f, 0.51f, 0.17f);
+            ri.raycastTarget = false;
+
+            var sub2 = NewText("Sub", print, _body, 16, TextAnchor.MiddleCenter,
+                new Color(0.11f, 0.37f, 0.40f));
+            Place(sub2.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BkColW, 24f),
+                new Vector2(0, 108f));
+            sub2.text = "HOUSE MENU";
+
+            var mark = NewRect("Mark", print);
+            Place(mark, new Vector2(0.5f, 0.5f), new Vector2(96f, 96f), new Vector2(0, 16f));
+            var mi = mark.gameObject.AddComponent<Image>();
+            mi.sprite = ItemArt.Load("glass3d_martini");
+            mi.preserveAspect = true;
+            mi.raycastTarget = false;
+            mi.enabled = mi.sprite != null;
+            mi.color = new Color(1f, 1f, 1f, 0.9f);
+
+            var word = NewText("Word", print, _body, 16, TextAnchor.MiddleCenter, quiet);
+            Place(word.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BkColW, 24f),
+                new Vector2(0, -64f));
+            word.text = "POURS · PAGES · PROVENANCE";
+
+            var hint = NewText("Hint", print, _body, 16, TextAnchor.MiddleCenter, quiet);
+            Place(hint.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BkColW, 24f),
+                new Vector2(0, -262f));
+            hint.text = "THE CONTENTS FACE THIS PAGE";
+        }
+
+        /// <summary>The contents: one line per chapter, and the line IS the shortcut —
+        /// clicking it opens the book at that chapter's first page (the author:
+        /// "içindekiler kısmı olur direkt hızlı geçiş yapmak için").</summary>
+        private void FillContentsPage(RectTransform print)
+        {
+            var head = NewText("Head", print, _display, 16, TextAnchor.MiddleCenter,
+                new Color(0.30f, 0.16f, 0.05f));
+            head.rectTransform.anchorMin = head.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            head.rectTransform.pivot = new Vector2(0.5f, 1f);
+            head.rectTransform.sizeDelta = new Vector2(BkColW, 54f);
+            head.rectTransform.anchoredPosition = new Vector2(0, -12f);
+            head.text = "CONTENTS";
+
+            float y = BkContentTop + 10f;
+            foreach (var ch in _bookChapters)
+            {
+                var row = NewRect("Ch_" + ch.Title, print);
+                row.anchorMin = row.anchorMax = new Vector2(0.5f, 1f);
+                row.pivot = new Vector2(0.5f, 1f);
+                row.sizeDelta = new Vector2(BkColW, 52f);
+                row.anchoredPosition = new Vector2(0, -y);
+                var slab = row.gameObject.AddComponent<Image>();
+                slab.color = new Color(0.36f, 0.22f, 0.08f, 0.06f);
+                var btn = row.gameObject.AddComponent<Button>();
+                btn.targetGraphic = slab;
+                btn.transition = Selectable.Transition.None;
+                int target = ch.FirstPage;
+                btn.onClick.AddListener(() => JumpToPage(target));
+
+                var nm = NewText("N", row, _display, 16, TextAnchor.UpperLeft,
+                    new Color(0.20f, 0.13f, 0.07f));
+                Place(nm.rectTransform, new Vector2(0, 1), new Vector2(BkColW - 70f, 24f), Vector2.zero);
+                nm.rectTransform.pivot = new Vector2(0, 1);
+                nm.rectTransform.anchoredPosition = new Vector2(8f, -6f);
+                nm.text = ch.Title;
+
+                var folio = NewText("P", row, _display, 16, TextAnchor.MiddleRight,
+                    new Color(0.10f, 0.06f, 0.02f));
+                Place(folio.rectTransform, new Vector2(1, 0.5f), new Vector2(56f, 24f),
+                    new Vector2(-8f, 0));
+                folio.text = (ch.FirstPage + 1).ToString();
+
+                var meta = NewText("M", row, _body, 16, TextAnchor.LowerLeft,
+                    new Color(0.52f, 0.44f, 0.36f));
+                Place(meta.rectTransform, new Vector2(0, 0), new Vector2(BkColW - 70f, 20f), Vector2.zero);
+                meta.rectTransform.pivot = new Vector2(0, 0);
+                meta.rectTransform.anchoredPosition = new Vector2(8f, 4f);
+                meta.text = ch.Count + " POURS"
+                    + (ch.LockedCount > 0 ? " · " + ch.LockedCount + " LOCKED" : "");
+                y += 60f;
+            }
+
+            var note = NewText("Note", print, _body, 16, TextAnchor.MiddleCenter,
+                new Color(0.52f, 0.44f, 0.36f));
+            Place(note.rectTransform, new Vector2(0.5f, 1f), new Vector2(BkColW, 24f),
+                new Vector2(0, -(y + 18f)));
+            note.rectTransform.pivot = new Vector2(0.5f, 1f);
+            note.text = "CLICK A CHAPTER TO OPEN ITS PAGE";
+        }
+
+        /// <summary>One recipe, one page — the cookbook layout (2026-08-24). Top to
+        /// bottom: tier and name in the heading zone, how it is worked and in what
+        /// glass, the drink itself, the gauge's LEGEND (what the bar measures and which
+        /// colour owns which fifth), the pours at full width, and the drink's own story
+        /// pinned at the foot. A perfected page prints the exact share where its gauge
+        /// used to stand, and wears platinum; a locked page keeps its gauges empty and
+        /// says what it waits behind; a bottle the bar cannot pour SAYS SO under its
+        /// name instead of colliding with the gauge (the overlap this layout retires).</summary>
+        private void FillRecipePage(RectTransform print, BookPage page, TycoonRun run)
+        {
+            var r = page.Recipe;
+            bool perfected = !page.Locked && r.HasAuthoredRatios && run.IsPerfected(r.Id);
+
+            Color ink = new Color(0.20f, 0.13f, 0.07f);
+            Color quiet = new Color(0.52f, 0.44f, 0.36f);
+            Color figure = new Color(0.10f, 0.06f, 0.02f);
+            Color prepInk = new Color(0.11f, 0.37f, 0.40f);
+            Color goneInk = new Color(0.66f, 0.12f, 0.16f);
+            Color miss = new Color(0.52f, 0.44f, 0.36f, 0.6f);
+            Color have = new Color(0.36f, 0.22f, 0.08f, 0.09f);
+            Color gone = new Color(0.74f, 0.16f, 0.20f, 0.13f);
+
+            // ── the heading zone: the chapter above, the name on the rule ────────
+            var eyebrow = NewText("Tier", print, _body, 16, TextAnchor.MiddleCenter, quiet);
+            eyebrow.rectTransform.anchorMin = eyebrow.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            eyebrow.rectTransform.pivot = new Vector2(0.5f, 1f);
+            eyebrow.rectTransform.sizeDelta = new Vector2(BkColW, 20f);
+            eyebrow.rectTransform.anchoredPosition = new Vector2(0, -8f);
+            eyebrow.text = page.Chapter + (page.Locked ? " · LOCKED" : "");
+
+            var head = NewText("Head", print, _display, 16, TextAnchor.MiddleCenter,
+                page.Locked ? new Color(0.45f, 0.36f, 0.28f) : new Color(0.30f, 0.16f, 0.05f));
+            head.rectTransform.anchorMin = head.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            head.rectTransform.pivot = new Vector2(0.5f, 1f);
+            head.rectTransform.sizeDelta = new Vector2(BkColW + 20f, 30f);
+            head.rectTransform.anchoredPosition = new Vector2(0, -30f);
+            head.text = r.Name.ToUpperInvariant();
+
+            float y = BkContentTop;
+
+            // ── how it is worked, and in what ────────────────────────────────────
+            var way = NewText("Way", print, _body, 16, TextAnchor.MiddleCenter, prepInk);
+            way.rectTransform.anchorMin = way.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            way.rectTransform.pivot = new Vector2(0.5f, 1f);
+            way.rectTransform.sizeDelta = new Vector2(BkColW, 22f);
+            way.rectTransform.anchoredPosition = new Vector2(0, -y);
+            string glassWord = string.IsNullOrEmpty(r.GlassId)
+                ? "HIGHBALL" : r.GlassId.Replace('_', ' ').ToUpperInvariant();
+            way.text = PrepWord(r) + " · " + glassWord + " GLASS";
+            y += 24f;
+
+            var icon = NewRect("I", print);
+            icon.anchorMin = icon.anchorMax = new Vector2(0.5f, 1f);
+            icon.pivot = new Vector2(0.5f, 1f);
+            icon.sizeDelta = new Vector2(48f, 48f);
+            icon.anchoredPosition = new Vector2(0, -y);
             var img = icon.gameObject.AddComponent<Image>();
             img.sprite = DrinkIcon.For(r, _bootstrap.Glassware);
-            img.preserveAspect = true; img.raycastTarget = false;
+            img.preserveAspect = true;
+            img.raycastTarget = false;
             img.enabled = img.sprite != null;
-            if (lockedRow) img.color = new Color(1, 1, 1, 0.4f);
+            if (page.Locked) img.color = new Color(1, 1, 1, 0.4f);
+            y += 56f;
 
-            var name = NewText("N", row, _display, 16, TextAnchor.UpperLeft,
-                lockedRow ? new Color(0.45f, 0.36f, 0.28f) : new Color(0.13f, 0.08f, 0.05f));
-            Stretch(name.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(58, -30), new Vector2(-8, -8));
-            name.text = r.Name.ToUpperInvariant();
+            // ── the gauge's own legend (the author: the bar must SAY what it means
+            // and which %-band each colour owns) ─────────────────────────────────
+            var cap = NewText("Cap", print, _body, 8, TextAnchor.MiddleCenter, quiet);
+            cap.rectTransform.anchorMin = cap.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            cap.rectTransform.pivot = new Vector2(0.5f, 1f);
+            cap.rectTransform.sizeDelta = new Vector2(BkColW, 12f);
+            cap.rectTransform.anchoredPosition = new Vector2(0, -y);
+            cap.text = "THE POUR · EACH BOTTLE'S SHARE OF THE GLASS";
+            y += 14f;
+            float chipW = (BkColW - (RatioBox.Count - 1) * 4f) / RatioBox.Count;
+            for (int i = 0; i < RatioBox.Count; i++)
+            {
+                float x = -BkColW * 0.5f + i * (chipW + 4f);
+                var chip = NewRect("Lg" + i, print);
+                chip.anchorMin = chip.anchorMax = new Vector2(0.5f, 1f);
+                chip.pivot = new Vector2(0, 1);
+                chip.sizeDelta = new Vector2(chipW, 10f);
+                chip.anchoredPosition = new Vector2(x, -y);
+                var ci = chip.gameObject.AddComponent<Image>();
+                ci.color = BandBoxColors[i];
+                ci.raycastTarget = false;
+                var lb = NewText("T", print, _body, 8, TextAnchor.UpperCenter, quiet);
+                lb.rectTransform.anchorMin = lb.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                lb.rectTransform.pivot = new Vector2(0, 1);
+                lb.rectTransform.sizeDelta = new Vector2(chipW, 12f);
+                lb.rectTransform.anchoredPosition = new Vector2(x, -(y + 12f));
+                lb.text = (int)(RatioBox.Lower(i) * 100) + "-" + (int)(RatioBox.Upper(i) * 100);
+            }
+            y += 30f;
 
-            // The same spec card the licence draws, in the book's own ink (2026-08-02):
-            // exact shares, the bottles' own art, and the stocked ones lit.
-            var body = NewRect("Spec", row);
-            float bodyW = cellW - 70f;
-            Place(body, new Vector2(0, 1), new Vector2(bodyW, 10), Vector2.zero);
-            body.pivot = new Vector2(0, 1);
-            body.anchoredPosition = new Vector2(58, -30);
-            // The book prints the lock's own sentence too, so a page earned from a person
-            // does not quietly claim to be waiting for stars.
-            var rowLock = lockedRow ? run.RecipeUnlock(r) : null;
-            string note = rowLock != null && !string.IsNullOrEmpty(rowLock.Sentence)
-                ? "OPENS: " + rowLock.Sentence : null;
-            // A PAGE THE BAR DOES NOT OWN KEEPS ITS POUR (2026-08-20, the author: "sahip
-            // olmadığın tariflerin yapımı kilitli gözükmeli"). The bottles still show — the
-            // shopping list is how the book works as a progression map, and the shop tile
-            // already says whether the shelf could pour it — but every gauge reads empty,
-            // because the proportions ARE the making and the making is what is locked.
-            DrawRecipeSpec(body, r, dark: false, width: bodyW, note: note, locked: lockedRow);
-            return row;
+            // ── the pours, one full-width row each ───────────────────────────────
+            var specRows = RecipeSpecRows(r, poursOnly: true, locked: page.Locked);
+            for (int i = 0; i < specRows.Count; i++)
+            {
+                var spec = specRows[i];
+                // The prep word already stands over the icon; its row would say it twice.
+                if (i == 0 && r.Id != "draught") continue;
+                bool ingredient = spec.Style != null;
+                bool stocked = !ingredient || InStock(spec.Style, spec.MinTier);
+
+                if (spec.Hint)
+                {
+                    var hintT = NewText("H" + i, print, _body, 8, TextAnchor.MiddleLeft, quiet);
+                    hintT.rectTransform.anchorMin = hintT.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                    hintT.rectTransform.pivot = new Vector2(0.5f, 1f);
+                    hintT.rectTransform.sizeDelta = new Vector2(BkColW - 8f, 14f);
+                    hintT.rectTransform.anchoredPosition = new Vector2(0, -y);
+                    hintT.text = spec.Label;
+                    y += 16f;
+                    continue;
+                }
+
+                var line = NewRect("S" + i, print);
+                line.anchorMin = line.anchorMax = new Vector2(0.5f, 1f);
+                line.pivot = new Vector2(0.5f, 1f);
+                line.sizeDelta = new Vector2(BkColW, 34f);
+                line.anchoredPosition = new Vector2(0, -y);
+                y += 36f;
+
+                if (ingredient)
+                {
+                    var slab = line.gameObject.AddComponent<Image>();
+                    slab.color = stocked ? have : gone;
+                    slab.raycastTarget = false;
+                }
+
+                float textX = 4f;
+                if (ingredient)
+                {
+                    var pour = new List<Sprite>();
+                    foreach (var b in run.Shelf.Bottles)
+                    {
+                        var info = b.Ingredient?.Info;
+                        if (info == null || info.Style != spec.Style) continue;
+                        if (info.Tier < spec.MinTier) continue;
+                        var a = ItemArt.Bottle(b.Ingredient);
+                        if (a != null) pour.Add(a);
+                    }
+                    if (pour.Count == 0)
+                    {
+                        var fallback = ItemArt.Bottle(spec.Style);
+                        if (fallback != null) pour.Add(fallback);
+                    }
+                    const float box = 28f;
+                    float step = pour.Count > 1 ? Mathf.Min(box, 44f / pour.Count) : box;
+                    for (int b = 0; b < pour.Count; b++)
+                    {
+                        var bi = NewRect("B" + b, line);
+                        Place(bi, new Vector2(0, 0.5f), new Vector2(box, box),
+                            new Vector2(3f + b * step, 0));
+                        var bimg = bi.gameObject.AddComponent<Image>();
+                        bimg.sprite = pour[b];
+                        bimg.preserveAspect = true;
+                        bimg.raycastTarget = false;
+                        bimg.color = stocked ? Color.white : new Color(1f, 1f, 1f, 0.35f);
+                    }
+                    textX = box + 6f + Mathf.Max(0, pour.Count - 1) * step;
+                }
+
+                var label = NewText("L", line, _body, 16, TextAnchor.UpperLeft,
+                    ingredient ? (stocked ? ink : miss) : prepInk);
+                Place(label.rectTransform, new Vector2(0, 1),
+                    new Vector2(BkColW - textX - BkGaugeW - 14f, 20f), Vector2.zero);
+                label.rectTransform.pivot = new Vector2(0, 1);
+                label.rectTransform.anchoredPosition = new Vector2(textX, -1f);
+                label.raycastTarget = false;
+                label.text = spec.Label + (spec.MinTier > 1 ? $"  T{spec.MinTier}+" : "");
+
+                // A BOTTLE THE BAR CANNOT POUR SAYS SO (the author: "açık olmayan
+                // alkoller kilitli gözükür") — under its own name, on its own line,
+                // where it can never collide with the gauge.
+                if (ingredient && !stocked)
+                {
+                    var lockT = NewText("X", line, _body, 8, TextAnchor.UpperLeft, goneInk);
+                    Place(lockT.rectTransform, new Vector2(0, 1), new Vector2(200f, 12f), Vector2.zero);
+                    lockT.rectTransform.pivot = new Vector2(0, 1);
+                    lockT.rectTransform.anchoredPosition = new Vector2(textX, -20f);
+                    lockT.raycastTarget = false;
+                    lockT.text = "LOCKED · NOT IN THE WELL";
+                }
+
+                if (spec.Amount.Length > 0)
+                {
+                    // THE PERFECT SHARE PRINTS AS ITS NUMBER (the author: "perfect oran
+                    // bulunduğunda o barın yerini perfect oranın sayısı alır") — the
+                    // gauge stands down, the figure stands up, and the word under it
+                    // says why the page may print it at all.
+                    var amount = NewText("A", line, _display, 16, TextAnchor.UpperRight, figure);
+                    Place(amount.rectTransform, new Vector2(1, 1), new Vector2(BkGaugeW, 20f),
+                        new Vector2(-4f, -1f));
+                    amount.rectTransform.pivot = new Vector2(1, 1);
+                    amount.raycastTarget = false;
+                    amount.text = spec.Amount;
+                    var tag = NewText("PT", line, _body, 8, TextAnchor.UpperRight,
+                        new Color(0.42f, 0.46f, 0.55f));
+                    Place(tag.rectTransform, new Vector2(1, 1), new Vector2(BkGaugeW, 12f),
+                        new Vector2(-4f, -21f));
+                    tag.rectTransform.pivot = new Vector2(1, 1);
+                    tag.raycastTarget = false;
+                    tag.text = "PERFECT";
+                }
+                else if (spec.Box >= 0)
+                {
+                    var gauge = NewRect("Gauge", line);
+                    Place(gauge, new Vector2(1, 0.5f), new Vector2(BkGaugeW, BkGaugeH),
+                        new Vector2(-4f - BkGaugeW, 0));
+                    gauge.pivot = new Vector2(0, 0.5f);
+
+                    var tube = gauge.gameObject.AddComponent<Image>();
+                    tube.sprite = ChromeArt.GaugeTube((int)BkGaugeW, (int)BkGaugeH);
+                    tube.raycastTarget = false;
+                    tube.color = new Color(0.80f, 0.74f, 0.62f, stocked ? 1f : 0.6f);
+
+                    if (!page.Locked)
+                    {
+                        var fill = NewRect("Level", gauge);
+                        Place(fill, new Vector2(0, 0.5f), new Vector2(BkGaugeW - 2f, BkGaugeH - 3f),
+                            new Vector2(1f, -0.5f));
+                        var lvl = fill.gameObject.AddComponent<Image>();
+                        lvl.sprite = ChromeArt.GaugeLadder(BandBoxColors);
+                        lvl.type = Image.Type.Filled;
+                        lvl.fillMethod = Image.FillMethod.Horizontal;
+                        lvl.fillOrigin = (int)Image.OriginHorizontal.Left;
+                        lvl.fillAmount = (float)RatioBox.Upper(spec.Box);
+                        lvl.raycastTarget = false;
+                        lvl.color = stocked || !ingredient ? Color.white : new Color(1f, 1f, 1f, 0.5f);
+                    }
+
+                    var glass = NewRect("Glass", gauge);
+                    Stretch(glass, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                    var gimg = glass.gameObject.AddComponent<Image>();
+                    gimg.sprite = ChromeArt.GaugeGlass((int)BkGaugeW, (int)BkGaugeH, RatioBox.Count);
+                    gimg.raycastTarget = false;
+
+                    if (spec.Best >= 0 && !page.Locked)
+                    {
+                        var mark = NewRect("Best", gauge);
+                        Place(mark, new Vector2(0, 0.5f), new Vector2(1f, BkGaugeH + 5f),
+                            new Vector2(1f + Mathf.Clamp01((float)spec.Best) * (BkGaugeW - 3f), 0));
+                        var mimg = mark.gameObject.AddComponent<Image>();
+                        mimg.raycastTarget = false;
+                        mimg.color = new Color(0.20f, 0.13f, 0.07f, 0.85f);
+                    }
+                }
+            }
+
+            if (r.MinFill > 0)
+            {
+                var fillLine = NewText("Fill", print, _body, 16, TextAnchor.MiddleCenter, figure);
+                fillLine.rectTransform.anchorMin = fillLine.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                fillLine.rectTransform.pivot = new Vector2(0.5f, 1f);
+                fillLine.rectTransform.sizeDelta = new Vector2(BkColW, 20f);
+                fillLine.rectTransform.anchoredPosition = new Vector2(0, -y);
+                fillLine.text = $"FILL {r.MinFill * 100:0}%+ OF THE GLASS";
+                y += 22f;
+            }
+
+            var bestMake = page.Locked || !r.HasAuthoredRatios ? null : run.BestMakeFor(r.Id);
+            if (!perfected && bestMake != null)
+            {
+                var best = NewText("YB", print, _body, 8, TextAnchor.MiddleCenter, quiet);
+                best.rectTransform.anchorMin = best.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                best.rectTransform.pivot = new Vector2(0.5f, 1f);
+                best.rectTransform.sizeDelta = new Vector2(BkColW, 12f);
+                best.rectTransform.anchoredPosition = new Vector2(0, -y);
+                best.text = $"YOUR BEST MAKE · {bestMake.Accuracy * 100:0}%";
+                y += 16f;
+            }
+
+            if (page.Locked)
+            {
+                var gate = NewRect("Gate", print);
+                gate.anchorMin = gate.anchorMax = new Vector2(0.5f, 1f);
+                gate.pivot = new Vector2(0.5f, 1f);
+                gate.sizeDelta = new Vector2(BkColW, 40f);
+                gate.anchoredPosition = new Vector2(0, -(y + 4f));
+                var gi = gate.gameObject.AddComponent<Image>();
+                gi.color = new Color(0.93f, 0.90f, 0.82f);
+                gi.raycastTarget = false;
+                var edge = new Color(0.66f, 0.12f, 0.16f, 0.45f);
+                Hairline(gate, new Vector2(0, 0), new Vector2(1, 0), edge);
+                Hairline(gate, new Vector2(0, 1), new Vector2(1, 1), edge);
+                HairlineV(gate, 0f, edge);
+                HairlineV(gate, 1f, edge);
+                var gt = NewText("T", gate, _body, 16, TextAnchor.MiddleCenter, goneInk);
+                Stretch(gt.rectTransform, Vector2.zero, Vector2.one, new Vector2(6, 2), new Vector2(-6, -2));
+                var gateLock = run.RecipeUnlock(r);
+                gt.text = gateLock != null && !string.IsNullOrEmpty(gateLock.Sentence)
+                    ? "OPENS: " + gateLock.Sentence
+                    : "NOT ON THE HOUSE LIST YET";
+            }
+
+            // ── the bottom matter, pinned to the foot so it can never collide with
+            // the pours above: the story, then the ledger line ───────────────────
+            var lore = RecipeLore.For(r.Id);
+            var sep = NewRect("Sep", print);
+            sep.anchorMin = sep.anchorMax = new Vector2(0.5f, 0f);
+            sep.pivot = new Vector2(0.5f, 0f);
+            sep.sizeDelta = new Vector2(BkColW - 40f, 1f);
+            sep.anchoredPosition = new Vector2(0, 142f);
+            var si = sep.gameObject.AddComponent<Image>();
+            si.color = new Color(0.36f, 0.22f, 0.08f, 0.35f);
+            si.raycastTarget = false;
+
+            if (lore != null)
+            {
+                // Fine print, literally: at 16 the longer histories broke off mid-
+                // sentence (three lines is ~84 characters); at 8 every note in the file
+                // fits whole, and provenance reads as a book's bottom matter should.
+                var note = NewText("Lore", print, _body, 8, TextAnchor.UpperLeft, quiet);
+                note.rectTransform.anchorMin = note.rectTransform.anchorMax = new Vector2(0.5f, 0f);
+                note.rectTransform.pivot = new Vector2(0.5f, 0f);
+                note.rectTransform.sizeDelta = new Vector2(BkColW - 8f, 72f);
+                note.rectTransform.anchoredPosition = new Vector2(0, 66f);
+                note.horizontalOverflow = HorizontalWrapMode.Wrap;
+                note.verticalOverflow = VerticalWrapMode.Truncate;
+                note.text = lore.Note;
+
+                var facts = NewText("Facts", print, _body, 8, TextAnchor.MiddleCenter, quiet);
+                facts.rectTransform.anchorMin = facts.rectTransform.anchorMax = new Vector2(0.5f, 0f);
+                facts.rectTransform.pivot = new Vector2(0.5f, 0f);
+                // 50, not 40: the gold foot rule crosses at 46, and a line that sits ON
+                // it prints as struck-through provenance (seen in play, 2026-08-24).
+                facts.rectTransform.sizeDelta = new Vector2(BkColW, 12f);
+                facts.rectTransform.anchoredPosition = new Vector2(0, 50f);
+                facts.text = lore.Origin + " · $" + DrinkOrder.MenuPrice(r);
+            }
+
+            if (perfected)
+            {
+                PlatinumFrame(print);
+                // The angled ribbon over the top corner (the author: "perfect recipe
+                // diye kartının üst köşesinde açılı bir şekilde belirtilir").
+                var rib = NewRect("PerfectRib", print);
+                rib.anchorMin = rib.anchorMax = new Vector2(1f, 1f);
+                rib.pivot = new Vector2(0.5f, 0.5f);
+                rib.sizeDelta = new Vector2(170f, 22f);
+                rib.anchoredPosition = new Vector2(-52f, -52f);
+                rib.localEulerAngles = new Vector3(0, 0, -45f);
+                var rbi = rib.gameObject.AddComponent<Image>();
+                rbi.color = BkPlatinum;
+                rbi.raycastTarget = false;
+                var rimEdge = new Color(0.42f, 0.46f, 0.55f, 0.9f);
+                Hairline(rib, new Vector2(0, 0), new Vector2(1, 0), rimEdge);
+                Hairline(rib, new Vector2(0, 1), new Vector2(1, 1), rimEdge);
+                var rt = NewText("T", rib, _body, 8, TextAnchor.MiddleCenter,
+                    new Color(0.16f, 0.18f, 0.24f));
+                Stretch(rt.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                rt.text = "PERFECT RECIPE";
+            }
+        }
+
+        /// <summary>The platinum binding a perfected page earns (the author: "kartların
+        /// etrafı platinium rengi kaplanır"): a double platinum border laid over the
+        /// gold one. Drawn as rects, not a tint — gold pixels cannot be multiplied into
+        /// silver, and a frame that only pretends reads as a lighting bug.</summary>
+        private void PlatinumFrame(RectTransform print)
+        {
+            Color pl = BkPlatinum;
+            Color plDark = new Color(0.55f, 0.58f, 0.66f);
+            void Bar(string bn, Vector2 anchor, Vector2 pivot, Vector2 size, Vector2 pos, Color c)
+            {
+                var b = NewRect(bn, print);
+                b.anchorMin = b.anchorMax = anchor;
+                b.pivot = pivot;
+                b.sizeDelta = size;
+                b.anchoredPosition = pos;
+                var bi = b.gameObject.AddComponent<Image>();
+                bi.color = c;
+                bi.raycastTarget = false;
+            }
+            float w = BkPageW - 20f, h = BkPageH - 20f;
+            Bar("PlT", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(w, 2f), new Vector2(0, -10f), pl);
+            Bar("PlB", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(w, 2f), new Vector2(0, 10f), pl);
+            Bar("PlL", new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(2f, h), new Vector2(10f, 0), pl);
+            Bar("PlR", new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(2f, h), new Vector2(-10f, 0), pl);
+            float w2 = BkPageW - 32f, h2 = BkPageH - 32f;
+            Bar("PlT2", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(w2, 1f), new Vector2(0, -16f), plDark);
+            Bar("PlB2", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(w2, 1f), new Vector2(0, 16f), plDark);
+            Bar("PlL2", new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(1f, h2), new Vector2(16f, 0), plDark);
+            Bar("PlR2", new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, h2), new Vector2(-16f, 0), plDark);
+        }
+
+        /// <summary>A drawn paper key on a page's bottom outer corner — the visible half
+        /// of the corner hotspot (the author: "sağ ve sol ok butonları koy").</summary>
+        private RectTransform BookPaperKey(RectTransform sheet, string name, string word, int dir)
+        {
+            var rt = NewRect(name, sheet);
+            Place(rt, new Vector2(0.5f, 0.5f), new Vector2(40f, 30f),
+                new Vector2(dir * (BkPageDX + BkPageW * 0.5f - 34f),
+                            BkLiftY - BkPageH * 0.5f + 21f));
+            var img = rt.gameObject.AddComponent<Image>();
+            img.color = new Color(0.93f, 0.89f, 0.78f);
+            var edge = new Color(0.36f, 0.22f, 0.08f, 0.55f);
+            Hairline(rt, new Vector2(0, 0), new Vector2(1, 0), edge);
+            Hairline(rt, new Vector2(0, 1), new Vector2(1, 1), edge);
+            HairlineV(rt, 0f, edge);
+            HairlineV(rt, 1f, edge);
+            var t = NewText("T", rt, _display, 16, TextAnchor.MiddleCenter,
+                new Color(0.30f, 0.16f, 0.05f));
+            Stretch(t.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            t.text = word;
+            var btn = rt.gameObject.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.transition = Selectable.Transition.None;
+            btn.onClick.AddListener(() => TurnPage(dir));
+            return rt;
         }
 
         /// <summary>
