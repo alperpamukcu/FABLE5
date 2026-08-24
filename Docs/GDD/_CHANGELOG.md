@@ -2,6 +2,14 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `23 §3 / GDD_MEVCUT` **the contents becomes a browser (2026-08-25, third round):** a
+  search line over the contents (name substring, 15 hits), chapter rows that OPEN into
+  their own recipe lists in place — every drink with its folio, each line a jump, LOCKED
+  spelled out beside it — and hover glow on every clickable line. A `<<` home key joins
+  the page arrows at the foot. The title plate takes its own drink: `menu_cover_drink.png`,
+  generated at 64 art px by `Tools/menu_cover_drink_gen.py` (three seeds judged, seed83
+  shipped) and quantized onto the 40-colour palette. Index lines print AND for `&` — the
+  body face's ampersand at 16 reads as `$`.
 - `23 §3 / GDD_MEVCUT` **the cookbook respec (2026-08-24, the author's second round):**
   the booklet's interior is one recipe per page behind a title-and-contents spread
   (chapter lines click straight to their page). Each page: prep and glass, a gauge

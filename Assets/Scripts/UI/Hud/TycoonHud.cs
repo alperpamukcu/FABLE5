@@ -5897,7 +5897,9 @@ namespace LastCall.UI
         private Sprite[] _bookLeafFrames;
         private bool _bookTurning;
         private Coroutine _bookTurnAnim;
-        private RectTransform _bookPrevKey, _bookNextKey;
+        private RectTransform _bookPrevKey, _bookNextKey, _bookHomeKey;
+        private string _bookTocChapter;          // the chapter open in the contents
+        private string _bookTocQuery = "";       // the search line, kept like the ribbon
 
         private enum BookPageKind { Title, Contents, Recipe }
 
@@ -6057,6 +6059,13 @@ namespace LastCall.UI
             // standing only while there is a page on that side to turn to.
             _bookPrevKey = BookPaperKey(sheet, "PrevKey", "<", -1);
             _bookNextKey = BookPaperKey(sheet, "NextKey", ">", +1);
+            // And over the back arrow, the way home (the author: "en başa geç oku da
+            // olmalı") — it jumps to the title spread rather than riffling there.
+            _bookHomeKey = BookPaperKey(sheet, "HomeKey", "<<", 0);
+            // BESIDE the back arrow, not above it: stacked, it stood on the provenance
+            // line's own row, and a long origin ("THE JULEP'S CITY COUSIN, 1880S") grows
+            // toward it. The keys share the foot; the folio is 130px to their right.
+            _bookHomeKey.anchoredPosition = _bookPrevKey.anchoredPosition + new Vector2(44f, 0f);
 
             _bookLeafFrames = new Sprite[BkTurnFrames];
             for (int i = 0; i < BkTurnFrames; i++)
@@ -6209,6 +6218,7 @@ namespace LastCall.UI
             int spreads = Mathf.Max(1, (_bookPages.Count + 1) / 2);
             if (_bookPrevKey != null) _bookPrevKey.gameObject.SetActive(_bookSpread > 0);
             if (_bookNextKey != null) _bookNextKey.gameObject.SetActive(_bookSpread + 1 < spreads);
+            if (_bookHomeKey != null) _bookHomeKey.gameObject.SetActive(_bookSpread > 0);
         }
 
         /// <summary>Opens the book straight at a page — the contents' quick jump. A jump
@@ -6287,6 +6297,7 @@ namespace LastCall.UI
             Sfx.Play("page_turn", 0.55f);
             if (_bookPrevKey != null) _bookPrevKey.gameObject.SetActive(false);
             if (_bookNextKey != null) _bookNextKey.gameObject.SetActive(false);
+            if (_bookHomeKey != null) _bookHomeKey.gameObject.SetActive(false);
             FillBookPage(_bookPageRestL, lo * 2);
             FillBookPage(_bookPageRestR, lo * 2 + 1);
             FillBookPage(_bookPageInL, lo * 2 + 2);
@@ -6358,6 +6369,11 @@ namespace LastCall.UI
         private void UpdateBookKeys()
         {
             if (!_bookOpen || _bookTurning) return;
+            // A hand on the search line owns the keyboard: turning pages under
+            // somebody typing "margarita" would be the book fighting its own index.
+            var sel = UnityEngine.EventSystems.EventSystem.current != null
+                ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
+            if (sel != null && sel.GetComponent<InputField>() != null) return;
             var keys = UnityEngine.InputSystem.Keyboard.current;
             if (keys == null) return;
             if (keys.rightArrowKey.wasPressedThisFrame) TurnPage(+1);
@@ -6430,10 +6446,14 @@ namespace LastCall.UI
                 new Vector2(0, 108f));
             sub2.text = "HOUSE MENU";
 
+            // The house's own drink, drawn for this page (2026-08-25, the author:
+            // "kendin güzel bir kokteyl görseli oluştur") — generated at 64 art px by
+            // Tools/menu_cover_drink_gen.py and quantized onto the 40-colour palette,
+            // shown at exactly 2x. The serving-glass sprite stays as the fallback.
             var mark = NewRect("Mark", print);
-            Place(mark, new Vector2(0.5f, 0.5f), new Vector2(96f, 96f), new Vector2(0, 16f));
+            Place(mark, new Vector2(0.5f, 0.5f), new Vector2(128f, 128f), new Vector2(0, 8f));
             var mi = mark.gameObject.AddComponent<Image>();
-            mi.sprite = ItemArt.Load("glass3d_martini");
+            mi.sprite = ItemArt.Load("menu_cover_drink") ?? ItemArt.Load("glass3d_martini");
             mi.preserveAspect = true;
             mi.raycastTarget = false;
             mi.enabled = mi.sprite != null;
@@ -6450,9 +6470,12 @@ namespace LastCall.UI
             hint.text = "THE CONTENTS FACE THIS PAGE";
         }
 
-        /// <summary>The contents: one line per chapter, and the line IS the shortcut —
-        /// clicking it opens the book at that chapter's first page (the author:
-        /// "içindekiler kısmı olur direkt hızlı geçiş yapmak için").</summary>
+        /// <summary>The contents, grown into a browser (2026-08-25): a search line on
+        /// top, and chapter rows that OPEN here — the chapter's every recipe listed with
+        /// its folio, each line a shortcut to its page (the author: "starter'a
+        /// tıklandığında o sayfa içerisinde içindekiler detaylanacak"). The search and
+        /// the open chapter persist like the ribbon; the search line, while it holds
+        /// letters, owns the list outright.</summary>
         private void FillContentsPage(RectTransform print)
         {
             var head = NewText("Head", print, _display, 16, TextAnchor.MiddleCenter,
@@ -6463,51 +6486,175 @@ namespace LastCall.UI
             head.rectTransform.anchoredPosition = new Vector2(0, -12f);
             head.text = "CONTENTS";
 
-            float y = BkContentTop + 10f;
-            foreach (var ch in _bookChapters)
+            // The search line (the author: "Contents'in üstünde arama kutusu olacak").
+            var box = NewRect("Search", print);
+            box.anchorMin = box.anchorMax = new Vector2(0.5f, 1f);
+            box.pivot = new Vector2(0.5f, 1f);
+            box.sizeDelta = new Vector2(BkColW, 28f);
+            box.anchoredPosition = new Vector2(0, -BkContentTop);
+            var bg = box.gameObject.AddComponent<Image>();
+            bg.color = new Color(0.94f, 0.90f, 0.80f);
+            var boxEdge = new Color(0.36f, 0.22f, 0.08f, 0.55f);
+            Hairline(box, new Vector2(0, 0), new Vector2(1, 0), boxEdge);
+            Hairline(box, new Vector2(0, 1), new Vector2(1, 1), boxEdge);
+            HairlineV(box, 0f, boxEdge);
+            HairlineV(box, 1f, boxEdge);
+            var st = NewText("T", box, _body, 16, TextAnchor.MiddleLeft, new Color(0.16f, 0.10f, 0.06f));
+            Stretch(st.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 2), new Vector2(-8, -2));
+            st.supportRichText = false;
+            var ph = NewText("P", box, _body, 16, TextAnchor.MiddleLeft, new Color(0.5f, 0.42f, 0.32f));
+            Stretch(ph.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 2), new Vector2(-8, -2));
+            ph.text = "SEARCH THE BOOK…";
+            var input = box.gameObject.AddComponent<InputField>();
+            input.targetGraphic = bg;
+            input.textComponent = st;
+            input.placeholder = ph;
+            input.text = _bookTocQuery;
+
+            // The list below rebuilds alone, so typing never tears down its own box.
+            var body = NewRect("Body", print);
+            body.anchorMin = body.anchorMax = new Vector2(0.5f, 1f);
+            body.pivot = new Vector2(0.5f, 1f);
+            body.sizeDelta = new Vector2(BkColW, BkPageH - BkContentTop - 34f - 60f);
+            body.anchoredPosition = new Vector2(0, -(BkContentTop + 34f));
+            input.onValueChanged.AddListener(q => { _bookTocQuery = q; BuildTocBody(body); });
+            BuildTocBody(body);
+        }
+
+        /// <summary>One clickable line of the contents, with the hover glow the author
+        /// asked for ("hangi seçeneğin üstüne geliniyorsa parlamalı"): an amber wash
+        /// that sleeps at a whisper and wakes under the pointer.</summary>
+        private RectTransform TocRow(RectTransform body, float y, float h, Action onClick)
+        {
+            var row = NewRect("Row", body);
+            row.anchorMin = row.anchorMax = new Vector2(0.5f, 1f);
+            row.pivot = new Vector2(0.5f, 1f);
+            row.sizeDelta = new Vector2(BkColW, h);
+            row.anchoredPosition = new Vector2(0, -y);
+            var slab = row.gameObject.AddComponent<Image>();
+            slab.color = new Color(0.79f, 0.51f, 0.17f, 0.30f);
+            var btn = row.gameObject.AddComponent<Button>();
+            btn.targetGraphic = slab;
+            btn.transition = Selectable.Transition.ColorTint;
+            var cb = btn.colors;
+            cb.normalColor = new Color(1f, 1f, 1f, 0.22f);
+            cb.highlightedColor = Color.white;
+            cb.pressedColor = new Color(1f, 0.92f, 0.75f, 1f);
+            cb.selectedColor = new Color(1f, 1f, 1f, 0.22f);
+            cb.fadeDuration = 0.08f;
+            btn.colors = cb;
+            btn.onClick.AddListener(() => { Sfx.Play("click", 0.4f); onClick(); });
+            return row;
+        }
+
+        /// <summary>The contents' list: search hits while the line holds letters, an
+        /// opened chapter's own pages, or the chapter shelf.</summary>
+        private void BuildTocBody(RectTransform body)
+        {
+            if (body == null) return;
+            for (int i = body.childCount - 1; i >= 0; i--)
+                Destroy(body.GetChild(i).gameObject);
+            Color ink = new Color(0.20f, 0.13f, 0.07f);
+            Color dim = new Color(0.45f, 0.36f, 0.28f);
+            Color figure = new Color(0.10f, 0.06f, 0.02f);
+            Color quiet = new Color(0.52f, 0.44f, 0.36f);
+            string q = (_bookTocQuery ?? "").Trim();
+            float y = 0f;
+
+            void RecipeLine(BookPage pg, int pageIdx)
             {
-                var row = NewRect("Ch_" + ch.Title, print);
-                row.anchorMin = row.anchorMax = new Vector2(0.5f, 1f);
-                row.pivot = new Vector2(0.5f, 1f);
-                row.sizeDelta = new Vector2(BkColW, 52f);
-                row.anchoredPosition = new Vector2(0, -y);
-                var slab = row.gameObject.AddComponent<Image>();
-                slab.color = new Color(0.36f, 0.22f, 0.08f, 0.06f);
-                var btn = row.gameObject.AddComponent<Button>();
-                btn.targetGraphic = slab;
-                btn.transition = Selectable.Transition.None;
-                int target = ch.FirstPage;
-                btn.onClick.AddListener(() => JumpToPage(target));
-
-                var nm = NewText("N", row, _display, 16, TextAnchor.UpperLeft,
-                    new Color(0.20f, 0.13f, 0.07f));
-                Place(nm.rectTransform, new Vector2(0, 1), new Vector2(BkColW - 70f, 24f), Vector2.zero);
-                nm.rectTransform.pivot = new Vector2(0, 1);
-                nm.rectTransform.anchoredPosition = new Vector2(8f, -6f);
-                nm.text = ch.Title;
-
-                var folio = NewText("P", row, _display, 16, TextAnchor.MiddleRight,
-                    new Color(0.10f, 0.06f, 0.02f));
-                Place(folio.rectTransform, new Vector2(1, 0.5f), new Vector2(56f, 24f),
-                    new Vector2(-8f, 0));
-                folio.text = (ch.FirstPage + 1).ToString();
-
-                var meta = NewText("M", row, _body, 16, TextAnchor.LowerLeft,
-                    new Color(0.52f, 0.44f, 0.36f));
-                Place(meta.rectTransform, new Vector2(0, 0), new Vector2(BkColW - 70f, 20f), Vector2.zero);
-                meta.rectTransform.pivot = new Vector2(0, 0);
-                meta.rectTransform.anchoredPosition = new Vector2(8f, 4f);
-                meta.text = ch.Count + " POURS"
-                    + (ch.LockedCount > 0 ? " · " + ch.LockedCount + " LOCKED" : "");
-                y += 60f;
+                var row = TocRow(body, y, 24f, () => JumpToPage(pageIdx));
+                var nm = NewText("N", row, _body, 16, TextAnchor.MiddleLeft, pg.Locked ? dim : ink);
+                Place(nm.rectTransform, new Vector2(0, 0.5f), new Vector2(BkColW - 100f, 22f), Vector2.zero);
+                nm.rectTransform.pivot = new Vector2(0, 0.5f);
+                nm.rectTransform.anchoredPosition = new Vector2(8f, 0);
+                // AND, NOT "&" (2026-08-25, seen in play). The body face's ampersand at
+                // 16 is a vertical bar with two nubs — it reads as "GIN $ TONIC". The
+                // recipe's own page prints the true name in the display face, which
+                // draws the glyph properly; this line is the index, and an index that
+                // cannot be read is not one.
+                nm.text = pg.Recipe.Name.ToUpperInvariant().Replace(" & ", " AND ");
+                if (pg.Locked)
+                {
+                    // The word, not a cryptic mark: the dim ink says something is off,
+                    // and only the word says WHAT.
+                    var lk = NewText("L", row, _body, 8, TextAnchor.MiddleRight,
+                        new Color(0.66f, 0.12f, 0.16f));
+                    Place(lk.rectTransform, new Vector2(1, 0.5f), new Vector2(60f, 22f),
+                        new Vector2(-46f, 0));
+                    lk.text = "LOCKED";
+                }
+                var fo = NewText("P", row, _body, 16, TextAnchor.MiddleRight, figure);
+                Place(fo.rectTransform, new Vector2(1, 0.5f), new Vector2(40f, 22f), new Vector2(-8f, 0));
+                fo.text = (pageIdx + 1).ToString();
+                y += 26f;
             }
 
-            var note = NewText("Note", print, _body, 16, TextAnchor.MiddleCenter,
-                new Color(0.52f, 0.44f, 0.36f));
+            if (q.Length > 0)
+            {
+                int hits = 0;
+                for (int p = 0; p < _bookPages.Count; p++)
+                {
+                    var pg = _bookPages[p];
+                    if (pg.Kind != BookPageKind.Recipe) continue;
+                    if (pg.Recipe.Name.IndexOf(q, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                    if (hits >= 15) break;
+                    RecipeLine(pg, p);
+                    hits++;
+                }
+                if (hits == 0)
+                {
+                    var none = NewText("None", body, _body, 16, TextAnchor.MiddleCenter, quiet);
+                    Place(none.rectTransform, new Vector2(0.5f, 1f), new Vector2(BkColW, 24f),
+                        new Vector2(0, -8f));
+                    none.rectTransform.pivot = new Vector2(0.5f, 1f);
+                    none.text = "NOTHING BY THAT NAME";
+                }
+                return;
+            }
+
+            if (_bookTocChapter != null)
+            {
+                var back = TocRow(body, y, 24f, () => { _bookTocChapter = null; BuildTocBody(body); });
+                var bt = NewText("T", back, _body, 16, TextAnchor.MiddleLeft, quiet);
+                Stretch(bt.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 0), new Vector2(-4, 0));
+                bt.text = "< ALL CHAPTERS";
+                y += 30f;
+                for (int p = 0; p < _bookPages.Count; p++)
+                {
+                    var pg = _bookPages[p];
+                    if (pg.Kind != BookPageKind.Recipe || pg.Chapter != _bookTocChapter) continue;
+                    RecipeLine(pg, p);
+                }
+                return;
+            }
+
+            foreach (var ch in _bookChapters)
+            {
+                var chTitle = ch.Title;
+                var row = TocRow(body, y, 50f, () => { _bookTocChapter = chTitle; BuildTocBody(body); });
+                var nm = NewText("N", row, _display, 16, TextAnchor.UpperLeft, ink);
+                Place(nm.rectTransform, new Vector2(0, 1), new Vector2(BkColW - 70f, 24f), Vector2.zero);
+                nm.rectTransform.pivot = new Vector2(0, 1);
+                nm.rectTransform.anchoredPosition = new Vector2(8f, -5f);
+                nm.text = ch.Title;
+                var fo = NewText("P", row, _display, 16, TextAnchor.MiddleRight, figure);
+                Place(fo.rectTransform, new Vector2(1, 0.5f), new Vector2(56f, 24f), new Vector2(-8f, 0));
+                fo.text = (ch.FirstPage + 1).ToString();
+                var meta = NewText("M", row, _body, 16, TextAnchor.LowerLeft, quiet);
+                Place(meta.rectTransform, new Vector2(0, 0), new Vector2(BkColW - 70f, 18f), Vector2.zero);
+                meta.rectTransform.pivot = new Vector2(0, 0);
+                meta.rectTransform.anchoredPosition = new Vector2(8f, 3f);
+                meta.text = ch.Count + " POURS"
+                    + (ch.LockedCount > 0 ? " · " + ch.LockedCount + " LOCKED" : "");
+                y += 56f;
+            }
+
+            var note = NewText("Note", body, _body, 16, TextAnchor.MiddleCenter, quiet);
             Place(note.rectTransform, new Vector2(0.5f, 1f), new Vector2(BkColW, 24f),
-                new Vector2(0, -(y + 18f)));
+                new Vector2(0, -(y + 12f)));
             note.rectTransform.pivot = new Vector2(0.5f, 1f);
-            note.text = "CLICK A CHAPTER TO OPEN ITS PAGE";
+            note.text = "A CHAPTER OPENS ITS OWN LIST HERE";
         }
 
         /// <summary>One recipe, one page — the cookbook layout (2026-08-24). Top to
@@ -6919,7 +7066,8 @@ namespace LastCall.UI
             var btn = rt.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.transition = Selectable.Transition.None;
-            btn.onClick.AddListener(() => TurnPage(dir));
+            // dir 0 is the home key: straight back to the title spread.
+            btn.onClick.AddListener(() => { if (dir == 0) JumpToPage(0); else TurnPage(dir); });
             return rt;
         }
 
