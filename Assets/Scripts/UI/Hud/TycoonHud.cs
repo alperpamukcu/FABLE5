@@ -1264,6 +1264,11 @@ namespace LastCall.UI
             /// (2026-08-19): a tower is held back by the rung below it, and a padlock
             /// promising a star that opens nothing is worse than no label at all.</summary>
             public string GateNote;
+            /// <summary>The star gate this tile is waiting on, or NaN where the lock is
+            /// not about stars (a tower's rung, a person's beat). A real number here is
+            /// drawn as stars under the figure — the number alone made every gate in the
+            /// shop a thing to be read rather than seen (2026-08-25).</summary>
+            public double GateStars = double.NaN;
             public string Word;              // "FULL" / "MAX" / "SOLD" — 4 CAPS, never 5
             public string PillVerb;          // "ADD" / "TAKE OUT" / "NO CASH" / "RETURN"
             public TileState State;
@@ -1309,6 +1314,9 @@ namespace LastCall.UI
         private int _lastStormedCount;   // to catch a customer storming off (GDD 24 §4)
         private Text _toast;
         private float _toastUntil;
+        /// <summary>The notice line's own ink — the refusal red it was built in. A tinted
+        /// notice borrows the channel for one message and this hands it back.</summary>
+        private Color _toastInk = UITheme.ViceRed[3];
 
         private void Awake()
         {
@@ -1658,9 +1666,18 @@ namespace LastCall.UI
             if (!visit.IdInspected) return false;  // only TAKEN orders are servable (HUD rule, 2026-08-11)
             if (!run.DrinkReady) return false;     // only what is in the glass goes out
 
+            // WAS IT ALREADY PERFECT BEFORE THIS ONE? Core keeps a set, not an event, so
+            // the first time is a thing only the caller can see: ask before, ask after
+            // (2026-08-25, the author: a perfect pour must announce itself). The key is
+            // the ORDERED recipe — the same one TycoonRun files the perfect under.
+            var asked = visit.Order.Wanted;
+            bool knewItAlready = run.IsPerfected(asked.Id);
+
             var verdict = run.ServeTo(visit);
             CloseId();
             Sfx.Play("serve_clink");                          // the glass lands in front of them
+            if (verdict.PerfectMake && !knewItAlready && run.IsPerfected(asked.Id))
+                NotePerfect(asked);
             LogVerdict(visit, verdict);
             StartCoroutine(ServeReaction(index, verdict));   // reaction + payment float up
             return true;
@@ -2273,16 +2290,98 @@ namespace LastCall.UI
             if (host != null) Destroy(host.gameObject);
         }
 
+        /// <summary>
+        /// A STAR REQUIREMENT, DRAWN (2026-08-25, the author: "yıldız gereksinimleri her
+        /// zaman görsel olarak belirtilsin"). Five sockets and a gold row filled to
+        /// <paramref name="stars"/> — per-star <see cref="Image.Type.Filled"/>, so a 3.5
+        /// gate is three stars and a half rather than a rounded lie. Every surface that
+        /// names a number in stars draws this beside it: the number says how many, the
+        /// row says how far, and neither is asked to carry the meaning alone.
+        /// </summary>
+        private RectTransform StarRow(RectTransform parent, Vector2 anchor, Vector2 pos,
+            float px, double stars, Color lit, Color socket)
+        {
+            float pitch = px + 2f;
+            var row = NewRect("StarRow", parent);
+            Place(row, anchor, new Vector2(BarRating.MaxStars * pitch, px), pos);
+            var art = ItemArt.Load("star");
+            for (int i = 0; i < BarRating.MaxStars; i++)
+            {
+                var cell = NewRect("S" + i, row);
+                Place(cell, new Vector2(0, 0.5f), new Vector2(px, px), new Vector2(i * pitch, 0));
+                cell.pivot = new Vector2(0, 0.5f);
+                var back = cell.gameObject.AddComponent<Image>();
+                back.sprite = art;
+                back.color = socket;
+                back.preserveAspect = true;
+                back.raycastTarget = false;
+                float fill = Mathf.Clamp01((float)stars - i);
+                if (fill <= 0.001f) continue;
+                var over = NewRect("F", cell);
+                Stretch(over, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var oi = over.gameObject.AddComponent<Image>();
+                oi.sprite = art;
+                oi.color = lit;
+                oi.preserveAspect = true;
+                oi.raycastTarget = false;
+                oi.type = Image.Type.Filled;
+                oi.fillMethod = Image.FillMethod.Horizontal;
+                oi.fillOrigin = (int)Image.OriginHorizontal.Left;
+                oi.fillAmount = fill;
+            }
+            return row;
+        }
+
         /// <summary>A short notice under the top bar — refusals, mostly (GDD 24 §7).</summary>
         /// <summary>The bar's one notice line. Public since the bench got its own bin
         /// (2026-08-22): a discard says the same sentence wherever it is done from, and a
         /// second message channel on the bench would be a second thing to keep in step.</summary>
         public void Toast(string message)
         {
+            Toast(message, null);
+        }
+
+        /// <summary>The same notice line, in a colour and for a length of its own. The
+        /// channel was built vice-red and refusal-shaped; a first perfect pour is the
+        /// opposite kind of news and cannot arrive wearing the same coat (2026-08-25).
+        /// A null tint restores the refusal ink, so no caller has to put it back.</summary>
+        public void Toast(string message, Color? tint, float seconds = 1.6f)
+        {
             if (_toast == null) return;
             _toast.text = message;
-            _toastUntil = Time.unscaledTime + 1.6f;
+            _toast.color = tint ?? _toastInk;
+            _toastUntil = Time.unscaledTime + seconds;
             _toast.gameObject.SetActive(true);
+        }
+
+        /// <summary>
+        /// The first perfect pour of a recipe, told three ways (2026-08-25, the author:
+        /// "bildirim gelmeli ... menüden bakabileceğine yönlendirmeli ... menünün
+        /// girişindeki sayfada bildirimi olmalı"): a gold notice in the moment, a mark on
+        /// the BOOK key for after it fades, and a pressable line on the book's title page
+        /// that opens straight at the page it is about. The book's own page has been the
+        /// reward since the cookbook (platinum, exact shares); this is what tells the
+        /// player to go and look at it.
+        /// </summary>
+        private void NotePerfect(RecipeDefinition recipe)
+        {
+            if (recipe == null) return;
+            if (!_perfectNews.Contains(recipe.Id)) _perfectNews.Add(recipe.Id);
+            Toast("PERFECT POUR · " + recipe.Name.ToUpperInvariant() + " — IN THE BOOK NOW",
+                BkPlatinum, 3.4f);
+            Sfx.Play("cheer_sfx", 0.5f);
+            RefreshBookBadge();
+        }
+
+        /// <summary>The mark on the BOOK key: how many pages are waiting to be looked at.
+        /// It is the only part of the news that survives the notice fading.</summary>
+        private void RefreshBookBadge()
+        {
+            if (_bookBadge == null) return;
+            bool any = _perfectNews.Count > 0;
+            _bookBadge.gameObject.SetActive(any);
+            if (any && _bookBadgeText != null)
+                _bookBadgeText.text = _perfectNews.Count.ToString();
         }
 
         /// <summary>Whether the cursor is over the bin's mouth (v5 P13 / C7).</summary>
@@ -4797,6 +4896,7 @@ namespace LastCall.UI
                             Name = "Sealed Crate",
                             Meta = "Sealed",
                             Money = gate.ToString("0.0"),
+                            GateStars = lockedBy.StarsWanted,
                             State = TileState.Sealed,
                             Identity = "A SEALED CRATE",
                             MetaLine = "The house will not open this one for you yet",
@@ -4957,6 +5057,7 @@ namespace LastCall.UI
                         {
                             spec.State = TileState.Sealed;
                             spec.Money = f.Stars.ToString("0.0");
+                            spec.GateStars = f.Stars;
                             spec.BuffA = new Buff(BuffKind.Bad, "Needs a " + f.Stars.ToString("0.0")
                                 + "-star room · you are at " + run.Rating.Average.ToString("0.0"));
                         }
@@ -5026,6 +5127,7 @@ namespace LastCall.UI
                     {
                         Name = locked + " more waiting",
                         Money = next.ToString("0.0"),
+                        GateStars = next,
                         State = TileState.Sealed,
                         Identity = "MORE AT " + next.ToString("0.0") + " STARS",
                         MetaLine = locked + " " + (locked == 1 ? noun : plural) + " " + verb,
@@ -5739,6 +5841,7 @@ namespace LastCall.UI
             {
                 Name = locked + " more waiting",
                 Money = starless ? locked.ToString() : next.ToString("0.0"),
+                GateStars = starless ? double.NaN : next,
                 GateNote = starless ? "STILL LOCKED" : null,
                 State = TileState.Sealed,
                 Identity = starless
@@ -5898,6 +6001,11 @@ namespace LastCall.UI
         private bool _bookTurning;
         private Coroutine _bookTurnAnim;
         private RectTransform _bookPrevKey, _bookNextKey, _bookHomeKey;
+        private RectTransform _bookBadge;        // the mark on the BOOK key
+        private Text _bookBadgeText;
+        /// <summary>Recipes perfected but not yet looked up — the news the title page
+        /// carries. A page drops off the list the moment it is opened from there.</summary>
+        private readonly List<string> _perfectNews = new List<string>();
         private string _bookTocChapter;          // the chapter open in the contents
         private string _bookTocQuery = "";       // the search line, kept like the ribbon
 
@@ -6468,6 +6576,66 @@ namespace LastCall.UI
             Place(hint.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BkColW, 24f),
                 new Vector2(0, -262f));
             hint.text = "THE CONTENTS FACE THIS PAGE";
+
+            // THE NEWS, ON THE PAGE THE BOOK OPENS ON. Each line is the way to the page
+            // it is about, and opening it is what marks it read.
+            if (_perfectNews.Count == 0) return;
+            var newsHead = NewText("NewsHead", print, _body, 8, TextAnchor.MiddleCenter,
+                new Color(0.42f, 0.46f, 0.55f));
+            Place(newsHead.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BkColW, 12f),
+                new Vector2(0, -104f));
+            newsHead.text = _perfectNews.Count == 1
+                ? "NEW · A PERFECT RECIPE" : "NEW · " + _perfectNews.Count + " PERFECT RECIPES";
+
+            float ny = 0f;
+            for (int i = 0; i < _perfectNews.Count && i < 3; i++)
+            {
+                string id = _perfectNews[i];
+                int page = -1;
+                for (int p = 0; p < _bookPages.Count; p++)
+                    if (_bookPages[p].Kind == BookPageKind.Recipe && _bookPages[p].Recipe.Id == id)
+                    { page = p; break; }
+                if (page < 0) continue;
+                var pg = _bookPages[page];
+                int target = page;
+                var row = NewRect("News", print);
+                row.anchorMin = row.anchorMax = new Vector2(0.5f, 0.5f);
+                row.pivot = new Vector2(0.5f, 1f);
+                row.sizeDelta = new Vector2(BkColW, 26f);
+                row.anchoredPosition = new Vector2(0, -118f - ny);
+                var slab = row.gameObject.AddComponent<Image>();
+                slab.color = BkPlatinum;
+                var btn = row.gameObject.AddComponent<Button>();
+                btn.targetGraphic = slab;
+                btn.transition = Selectable.Transition.ColorTint;
+                var cb = btn.colors;
+                cb.normalColor = new Color(1f, 1f, 1f, 0.55f);
+                cb.highlightedColor = Color.white;
+                cb.pressedColor = new Color(1f, 0.98f, 0.90f, 1f);
+                cb.selectedColor = new Color(1f, 1f, 1f, 0.55f);
+                cb.fadeDuration = 0.08f;
+                btn.colors = cb;
+                btn.onClick.AddListener(() =>
+                {
+                    Sfx.Play("click", 0.4f);
+                    _perfectNews.Remove(id);
+                    RefreshBookBadge();
+                    JumpToPage(target);
+                });
+                var nm = NewText("N", row, _body, 16, TextAnchor.MiddleLeft,
+                    new Color(0.16f, 0.18f, 0.24f));
+                Place(nm.rectTransform, new Vector2(0, 0.5f), new Vector2(BkColW - 60f, 22f),
+                    Vector2.zero);
+                nm.rectTransform.pivot = new Vector2(0, 0.5f);
+                nm.rectTransform.anchoredPosition = new Vector2(8f, 0);
+                nm.text = pg.Recipe.Name.ToUpperInvariant().Replace(" & ", " AND ");
+                var fo = NewText("P", row, _body, 16, TextAnchor.MiddleRight,
+                    new Color(0.16f, 0.18f, 0.24f));
+                Place(fo.rectTransform, new Vector2(1, 0.5f), new Vector2(44f, 22f),
+                    new Vector2(-8f, 0));
+                fo.text = (page + 1).ToString();
+                ny += 30f;
+            }
         }
 
         /// <summary>The contents, grown into a browser (2026-08-25): a search line on
@@ -6576,13 +6744,26 @@ namespace LastCall.UI
                 nm.text = pg.Recipe.Name.ToUpperInvariant().Replace(" & ", " AND ");
                 if (pg.Locked)
                 {
-                    // The word, not a cryptic mark: the dim ink says something is off,
-                    // and only the word says WHAT.
-                    var lk = NewText("L", row, _body, 8, TextAnchor.MiddleRight,
-                        new Color(0.66f, 0.12f, 0.16f));
-                    Place(lk.rectTransform, new Vector2(1, 0.5f), new Vector2(60f, 22f),
-                        new Vector2(-46f, 0));
-                    lk.text = "LOCKED";
+                    // THE INDEX SAYS HOW FAR, NOT JUST THAT IT IS SHUT (2026-08-25). A
+                    // star gate draws its own row here at 8px; a lock that is not about
+                    // stars keeps the word, because five sockets would promise a rung
+                    // that no star ever opens.
+                    var run2 = Run;
+                    var lk2 = run2 != null ? run2.RecipeUnlock(pg.Recipe) : null;
+                    double wants2 = lk2 != null ? lk2.StarsWanted : double.NaN;
+                    if (!double.IsNaN(wants2))
+                    {
+                        StarRow(row, new Vector2(1, 0.5f), new Vector2(-46f, 0), 8f, wants2,
+                            new Color(0.66f, 0.12f, 0.16f), new Color(0.36f, 0.22f, 0.08f, 0.20f));
+                    }
+                    else
+                    {
+                        var lk = NewText("L", row, _body, 8, TextAnchor.MiddleRight,
+                            new Color(0.66f, 0.12f, 0.16f));
+                        Place(lk.rectTransform, new Vector2(1, 0.5f), new Vector2(60f, 22f),
+                            new Vector2(-46f, 0));
+                        lk.text = "LOCKED";
+                    }
                 }
                 var fo = NewText("P", row, _body, 16, TextAnchor.MiddleRight, figure);
                 Place(fo.rectTransform, new Vector2(1, 0.5f), new Vector2(40f, 22f), new Vector2(-8f, 0));
@@ -6932,11 +7113,24 @@ namespace LastCall.UI
 
             if (page.Locked)
             {
+                var gateLock = run.RecipeUnlock(r);
+                double wants = gateLock != null ? gateLock.StarsWanted : double.NaN;
+                bool starGate = !double.IsNaN(wants);
                 var gate = NewRect("Gate", print);
                 gate.anchorMin = gate.anchorMax = new Vector2(0.5f, 1f);
                 gate.pivot = new Vector2(0.5f, 1f);
-                gate.sizeDelta = new Vector2(BkColW, 40f);
-                gate.anchoredPosition = new Vector2(0, -(y + 4f));
+                // 46, not 68: the seven-pour page (Long Island) leaves exactly the foot's
+                // width between its last row and the provenance rule, and a taller plate
+                // has to eat one or the other. Two readings still fit — the rows just sit
+                // closer together than they did on the roomy four-pour pages.
+                float gateH = starGate ? 46f : 40f;
+                gate.sizeDelta = new Vector2(BkColW, gateH);
+                // THE FOOT IS SPOKEN FOR. The provenance is pinned to the bottom of the
+                // page, so a plate that grows down the flow eventually prints over it —
+                // a seven-pour page did exactly that the evening the gate learned to
+                // draw stars. The plate stops above the foot rule instead.
+                float gateTop = Mathf.Min(y + 4f, BkPageH - 158f - gateH);
+                gate.anchoredPosition = new Vector2(0, -gateTop);
                 var gi = gate.gameObject.AddComponent<Image>();
                 gi.color = new Color(0.93f, 0.90f, 0.82f);
                 gi.raycastTarget = false;
@@ -6945,12 +7139,42 @@ namespace LastCall.UI
                 Hairline(gate, new Vector2(0, 1), new Vector2(1, 1), edge);
                 HairlineV(gate, 0f, edge);
                 HairlineV(gate, 1f, edge);
-                var gt = NewText("T", gate, _body, 16, TextAnchor.MiddleCenter, goneInk);
-                Stretch(gt.rectTransform, Vector2.zero, Vector2.one, new Vector2(6, 2), new Vector2(-6, -2));
-                var gateLock = run.RecipeUnlock(r);
-                gt.text = gateLock != null && !string.IsNullOrEmpty(gateLock.Sentence)
-                    ? "OPENS: " + gateLock.Sentence
-                    : "NOT ON THE HOUSE LIST YET";
+                if (starGate)
+                {
+                    // TWO ROWS, THE SAME RULER: what the page wants, and where the bar
+                    // stands tonight. Read together they are a distance — which is the
+                    // thing a gate is actually telling you — and neither row needs its
+                    // number to be believed.
+                    void GateLine(string word, double stars, float top, Color lit, Color ink)
+                    {
+                        var w = NewText("W", gate, _body, 8, TextAnchor.MiddleLeft, ink);
+                        Place(w.rectTransform, new Vector2(0, 1), new Vector2(72f, 14f),
+                            new Vector2(10f, -top));
+                        w.rectTransform.pivot = new Vector2(0, 1);
+                        w.text = word;
+                        StarRow(gate, new Vector2(0, 1), new Vector2(84f, -top - 6f), 11f,
+                            stars, lit, new Color(0.36f, 0.22f, 0.08f, 0.18f));
+                        var n = NewText("N", gate, _display, 16, TextAnchor.MiddleRight, ink);
+                        // 60, and no wrapping: "4.0" is three display glyphs at 16 and a
+                        // 44-unit box broke it onto three stacked lines (seen in play).
+                        Place(n.rectTransform, new Vector2(1, 1), new Vector2(60f, 18f),
+                            new Vector2(-8f, -top + 1f));
+                        n.rectTransform.pivot = new Vector2(1, 1);
+                        n.horizontalOverflow = HorizontalWrapMode.Overflow;
+                        n.text = stars.ToString("0.0");
+                    }
+                    GateLine("OPENS AT", wants, 5f, UITheme.Amber[3], goneInk);
+                    GateLine("YOU HAVE", run.Rating.Average, 25f,
+                        new Color(0.60f, 0.52f, 0.40f), quiet);
+                }
+                else
+                {
+                    var gt = NewText("T", gate, _body, 16, TextAnchor.MiddleCenter, goneInk);
+                    Stretch(gt.rectTransform, Vector2.zero, Vector2.one, new Vector2(6, 2), new Vector2(-6, -2));
+                    gt.text = gateLock != null && !string.IsNullOrEmpty(gateLock.Sentence)
+                        ? "OPENS: " + gateLock.Sentence
+                        : "NOT ON THE HOUSE LIST YET";
+                }
             }
 
             // ── the bottom matter, pinned to the foot so it can never collide with
@@ -9342,7 +9566,11 @@ namespace LastCall.UI
             // IN the market, where a toast without its own order drew under the scrim and
             // the refusal was never seen at all.
             _toast = NewText("Toast", root, _display, 14, TextAnchor.MiddleCenter, UITheme.ViceRed[3]);
-            Place(_toast.rectTransform, new Vector2(0.5f, 1), new Vector2(500, 30), new Vector2(0, -66));
+            _toastInk = _toast.color;
+            // 620, not 500: at display-14 the box held ~34 glyphs, and the longer notices
+            // — "STILL IN THE SHAKER — POUR IT INTO A GLASS", and the perfect pour's own
+            // line — wrapped onto a second row that overhung the top bar (2026-08-25).
+            Place(_toast.rectTransform, new Vector2(0.5f, 1), new Vector2(620, 32), new Vector2(0, -66));
             var toastCanvas = _toast.gameObject.AddComponent<Canvas>();
             toastCanvas.overrideSorting = true;
             toastCanvas.sortingOrder = 30;   // above the market (22), guide (24), bench (25)
@@ -9583,8 +9811,19 @@ namespace LastCall.UI
 
             // The recipe book, beside the making verb (v5 P16): the menu speaks styles now,
             // so how a drink is MADE has to live somewhere the player can read mid-shift.
-            NewButton(root, "BOOK", new Vector2(0.5f, 0),
+            var bookKey = NewButton(root, "BOOK", new Vector2(0.5f, 0),
                 new Vector2(84, 40), new Vector2(-196, 180), UITheme.Night[3], ToggleRecipeBook);
+            // The badge rides the key's top-right corner, so the news is where the way in
+            // already is. Built once and parked; RefreshBookBadge raises it.
+            _bookBadge = NewRect("Badge", bookKey);
+            Place(_bookBadge, new Vector2(1, 1), new Vector2(20, 20), new Vector2(2, 2));
+            var badgeImg = _bookBadge.gameObject.AddComponent<Image>();
+            badgeImg.color = BkPlatinum;
+            badgeImg.raycastTarget = false;
+            _bookBadgeText = NewText("N", _bookBadge, _display, 8, TextAnchor.MiddleCenter,
+                new Color(0.16f, 0.18f, 0.24f));
+            Stretch(_bookBadgeText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _bookBadge.gameObject.SetActive(false);
             BuildRecipeBook(root);
 
             BuildDrinkGlass(root);
@@ -10966,8 +11205,10 @@ namespace LastCall.UI
                 // set straight onto the plate lands on the links whatever row it sits in —
                 // it needs its own ground, not a better y. A dark tag under the padlock is
                 // that ground, and it is the thing a chained crate would actually carry.
+                bool drawnGate = !double.IsNaN(spec.GateStars);
                 var tag = NewRect("Tag", rt);
-                Place(tag, new Vector2(0.5f, 1), new Vector2(104, 44), new Vector2(0, -132));
+                Place(tag, new Vector2(0.5f, 1), new Vector2(104, drawnGate ? 58 : 44),
+                    new Vector2(0, -132));
                 var tagImg = tag.gameObject.AddComponent<Image>();
                 tagImg.color = new Color(ShopInk.r, ShopInk.g, ShopInk.b, 0.92f);
                 tagImg.raycastTarget = false;
@@ -10984,6 +11225,15 @@ namespace LastCall.UI
                 what.horizontalOverflow = HorizontalWrapMode.Wrap;
                 what.verticalOverflow = VerticalWrapMode.Truncate;
                 what.text = string.IsNullOrEmpty(spec.GateNote) ? "STARS TO OPEN" : spec.GateNote;
+                if (drawnGate)
+                {
+                    // The gate itself, drawn between its figure and its word: the row is
+                    // lit to what the crate WANTS, not to what the bar has — a padlock
+                    // states its price, and the standing is read off the top bar.
+                    StarRow(tag, new Vector2(0.5f, 1), new Vector2(0, -30f), 12f,
+                        spec.GateStars, UITheme.Amber[3], new Color(1f, 1f, 1f, 0.16f));
+                    what.rectTransform.anchoredPosition = new Vector2(0, -44);
+                }
             }
             else
             {

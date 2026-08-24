@@ -2,6 +2,19 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `23 §3 / 16 / GDD_MEVCUT` **a star gate is drawn, and a perfect pour announces itself
+  (2026-08-25, fourth round):** every star requirement now draws its stars beside its
+  number — the shop's sealed tag (which is the one renderer behind recipe crates, bottle
+  crates, fixtures and aisle gates), the cookbook's gate plate (two rows on one ruler:
+  what the page wants, where the bar stands) and the index's locked lines. One helper,
+  `StarRow`, per-star `Image.Type.Filled`, so a half rung would read as a half star.
+  Locks that are not about stars (a tower's rung, a person's beat) keep their sentence.
+  **The perfect pour:** `ServeSeat` asks Core whether the ordered recipe was already
+  perfected, serves, and asks again — the first time, a platinum notice names the drink
+  and points at the book, the BOOK key takes a counted badge, and the book's title page
+  carries a pressable line that opens straight at that page and marks it read. The notice
+  channel learned a colour and a length (default still the refusal red) and grew to 620
+  units, which un-wrapped the long refusals too.
 - `23 §3 / GDD_MEVCUT` **the contents becomes a browser (2026-08-25, third round):** a
   search line over the contents (name substring, 15 hits), chapter rows that OPEN into
   their own recipe lists in place — every drink with its folio, each line a jump, LOCKED
