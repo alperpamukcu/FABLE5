@@ -1,0 +1,26 @@
+{
+ "city_a": {
+  "job_id": "3083a490-cecd-4259-9c01-e3a4f5ee0ee7",
+  "png": "AssetPipeline\\staging\\day_sky\\city_a.png"
+ },
+ "city_b": {
+  "job_id": "3906a61d-5771-40e9-84e1-a31cadb5d2a2",
+  "png": "AssetPipeline\\staging\\day_sky\\city_b.png"
+ },
+ "sun_a": {
+  "job_id": "6fb409c6-116f-4341-be53-5d637d2108c0",
+  "png": "AssetPipeline\\staging\\day_sky\\sun_a.png"
+ },
+ "sun_b": {
+  "job_id": "9de9bf37-426c-409b-ac93-2e16252bd32f",
+  "png": "AssetPipeline\\staging\\day_sky\\sun_b.png"
+ },
+ "moon_a": {
+  "job_id": "0e0c8474-50ae-43c8-a12d-473552b9a6b6",
+  "png": "AssetPipeline\\staging\\day_sky\\moon_a.png"
+ },
+ "moon_b": {
+  "job_id": "cc66924e-0b7b-46e1-8a09-c7a031f5f6c0",
+  "png": "AssetPipeline\\staging\\day_sky\\moon_b.png"
+ }
+}

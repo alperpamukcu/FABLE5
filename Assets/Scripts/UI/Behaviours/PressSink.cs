@@ -66,9 +66,13 @@ namespace LastCall.UI
             float pressed = _held ? 1f : 0f;
             float hovered = _over ? 1f : 0f;
             // Resting and asked for nothing: leave the transform alone, so a button the layout
-            // moves under our feet is not fought over every frame.
+            // moves under our feet is not fought over every frame — and TAKE THE NEW HOME with
+            // us while we are down there (2026-08-25). The empties left on the counter ride the
+            // cellar's drawer now (TycoonHud.RefreshDirtyGlasses), and a home cached the first
+            // frame one was drawn is a glass that jumps back down the bar the moment a pointer
+            // touches it. Free: this is the branch that was already doing nothing.
             if (Mathf.Approximately(_t, pressed) && Mathf.Approximately(_h, hovered)
-                && _t <= 0f && _h <= 0f) return;
+                && _t <= 0f && _h <= 0f) { _home = Face.anchoredPosition; return; }
 
             _t = Mathf.MoveTowards(_t, pressed, Time.unscaledDeltaTime * Speed);
             _h = Mathf.MoveTowards(_h, hovered, Time.unscaledDeltaTime * HoverSpeed);

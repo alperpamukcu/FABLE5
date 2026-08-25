@@ -428,6 +428,27 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void AFlatSlot_SaysSo_OnTheFloorAndOnTheBar()
+        {
+            // A MAT is neither a hanger nor a prop: it lies on a surface that already has
+            // dressing standing on it, so it draws under that dressing and casts no contact
+            // shadow of its own (2026-08-25, the rug on the boards and the drip mat on the
+            // bar). It is independent of onCounter, because both surfaces have one.
+            var loaded = DataLoader.ParseFixtures(@"{ ""slots"": [
+                  { ""id"": ""rug"", ""x"": 320, ""y"": 106, ""flat"": true },
+                  { ""id"": ""mat"", ""x"": 540, ""y"": 74, ""onCounter"": true, ""flat"": true },
+                  { ""id"": ""floor"", ""x"": 20, ""y"": 129 }],
+                ""fixtures"": [
+                  { ""id"": ""rug"", ""name"": ""Rug"", ""slot"": ""rug"",
+                    ""price"": 35, ""sprite"": ""fx_floor_rug"" }] }");
+            Assert.IsTrue(loaded.Slots[0].Flat, "a mat on the boards says so in the data");
+            Assert.IsFalse(loaded.Slots[0].OnCounter);
+            Assert.IsTrue(loaded.Slots[1].Flat, "and so does one on the bar top");
+            Assert.IsTrue(loaded.Slots[1].OnCounter, "which is still on the counter");
+            Assert.IsFalse(loaded.Slots[2].Flat, "standing up is the default");
+        }
+
+        [Test]
         public void TheLamps_ClimbOneRungAtATime_AndTheFirstIsAlreadyOnTheWall()
         {
             var run = RunAtDayEnd(fixtures: new[] { Lamp(1, startsOwned: true),

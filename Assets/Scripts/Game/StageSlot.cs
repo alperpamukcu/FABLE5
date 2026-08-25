@@ -44,8 +44,18 @@ namespace LastCall.Game
         /// front of the wall, and a foot-blob under a frame reads as a stain).</summary>
         public bool Hangs { get; }
 
+        /// <summary>Whatever stands here LIES FLAT on its surface, and everything else on
+        /// that surface stands on IT (2026-08-25, the rug and the drip mat). A mat is not a
+        /// prop: it draws under the dressing that shares its surface rather than among it,
+        /// where two pieces on one sorting order leave which one wins to chance — and it
+        /// casts no contact shadow, because a blob under something already lying on the
+        /// floor reads as a stain. Independent of <see cref="OnCounter"/>: the rug is flat
+        /// on the boards, the drip mat is flat on the bar.</summary>
+        public bool Flat { get; }
+
         public StageSlot(string id, float x, float y, bool onCounter,
-                         float pairSpreadPx = 0f, bool houseLight = false, bool hangs = false)
+                         float pairSpreadPx = 0f, bool houseLight = false, bool hangs = false,
+                         bool flat = false)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Slot needs an id.", nameof(id));
             if (pairSpreadPx < 0) throw new ArgumentException($"Slot '{id}' has a negative pair spread.");
@@ -56,6 +66,7 @@ namespace LastCall.Game
             PairSpreadPx = pairSpreadPx;
             HouseLight = houseLight;
             Hangs = hangs;
+            Flat = flat;
         }
 
         public override string ToString() => $"{Id} ({X}, {Y}){(OnCounter ? " on the counter" : "")}";

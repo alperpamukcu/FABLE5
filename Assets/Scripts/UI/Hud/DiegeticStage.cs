@@ -166,17 +166,59 @@ namespace LastCall.UI
         // ── where a bottle stands in the cellar ─────────────────────────────────
         // MEASURED on the installed counter (638x241), not chosen. The blue posts scan at
         // x 7-32, 209-226, 412-429 and 605-630, which leaves three bays; the two shelf
-        // boards are 12 px thick at rows 138..149 and 228..239, so a bottle's foot sits on
-        // the board's TOP row. Three bottles a bay is what the author's open mock-up shows.
+        // boards are 12 px thick at rows 138..149 and 228..239.
         private static readonly float[] CellarBayCentrePx = { 120f, 319f, 517f };
         private const float CellarBayWidthPx = 175f;      // the narrowest of the three
-        private static readonly float[] CellarShelfFootPx = { 138f, 228f };
-        private const int CellarPerBay = 3;
+        /// <summary>
+        /// The line a bottle's foot stands on, in the counter art's own rows.
+        ///
+        /// NOT the board's TOP row (2026-08-25, the author: "rafın en üstündeki pixele temas
+        /// edecek şekilde konumlandırılmışlar fakat rafın yüzeyine oturtulmaları gerekiyor …
+        /// smirkoff -170'de rafta duruyor hissini veriyor"). The boards are drawn with DEPTH
+        /// — twelve rows of blue apiece, which is a plank seen from slightly above and not a
+        /// hairline — so a foot on row 138 is a bottle balanced on the plank's front EDGE.
+        /// The surface it should stand on is the middle of that plank: rows 138..149 and
+        /// 228..239, so 143 and 233. The author read the first one off the inspector as
+        /// -170, and 143 is exactly what puts Smirkoff's transform there.
+        /// </summary>
+        private static readonly float[] CellarShelfFootPx = { 143f, 233f };
+        /// <summary>The row each compartment's CEILING is drawn at — the shelf opening's own
+        /// top edge, then the underside of the board above the lower run. What the cellar's
+        /// lights hang from, so a re-cut counter moves them with the boards.</summary>
+        private static readonly float[] CellarShelfCeilPx = { ShutterOpeningTopPx, 150f };
+        /// <summary>Three bays across, on each of two boards.</summary>
+        private const int CellarBays = 3;
+        /// <summary>
+        /// How thinly and how densely one bay may be packed.
+        ///
+        /// It used to be a flat three, which was what the author's open mock-up showed and
+        /// what an OPENING bar looks like — and 3 × 3 × 2 is eighteen slots against a
+        /// branded catalogue of thirty-six pourable bottles, every one of which JOINS the
+        /// shelf (TycoonRun.BuyBrand). So a bar that kept shopping bought stock the cellar
+        /// simply did not draw, which is half of "satın alınan alkoller eklenmiyor".
+        ///
+        /// The bay takes as many slots as tonight's stock needs and no more: six bottles
+        /// stand spread out, thirty stand shoulder to shoulder (2026-08-25, the author:
+        /// "birbirlerine yakın olabilirler"), and nothing is ever dropped.
+        /// </summary>
+        private const int CellarMinPerBay = 3, CellarMaxPerBay = 6;
         /// <summary>How many bottles the cellar can show at once.</summary>
-        public const int CellarSlots = 3 * 2 * CellarPerBay;
-        /// <summary>Drawn height of a bottle in the cellar. The shallower compartment is
-        /// 138 - 65 = 73 px tall, so this leaves the stock clear of the board above it.</summary>
+        public const int CellarSlots = CellarBays * 2 * CellarMaxPerBay;
+        private int _cellarPerBay = CellarMinPerBay;
+        /// <summary>Drawn height of a bottle in the cellar, at its most generous. The
+        /// shallower compartment runs from the opening's top row (65) to the near board's
+        /// surface (143), so 62 leaves the stock a clear sixteen rows of air under the
+        /// board above it.</summary>
         private const float CellarBottleH = 62f;
+        /// <summary>How much of its own slot the WIDEST bottle in stock may take. The rest is
+        /// the gap between two shoulders at the densest packing — close, which is what was
+        /// asked for, and never touching, which is what stops a shelf reading as one smear.
+        /// At six a bay that is two and a half units of air, five screen pixels.</summary>
+        private const float CellarSlotFill = 0.92f;
+        /// <summary>...and what the cellar actually draws at tonight (see
+        /// <see cref="ChooseCellarFit"/>): one height for the whole shelf, small enough that
+        /// the widest bottle still stands clear of its neighbours.</summary>
+        private float _cellarBottleH = CellarBottleH;
         private readonly List<SpriteRenderer> _cellarStock = new List<SpriteRenderer>();
         private RectTransform _cellarDoorRoot;
         private CanvasGroup _cellarDoorGroup;
@@ -240,6 +282,7 @@ namespace LastCall.UI
         {
             int n = bottles == null ? 0 : Mathf.Min(bottles.Count, CellarSlots);
             _cellarIds = ids;
+            ChooseCellarFit(bottles, n);
             while (_cellarStock.Count < n)
                 _cellarStock.Add(WorldSprite("Stock" + _cellarStock.Count, null, order: 31));
             for (int i = 0; i < _cellarStock.Count; i++)
@@ -254,6 +297,34 @@ namespace LastCall.UI
             BuildCellarDoors(n);
             NameCellarDoors(n);
             LayOutCellarDoors();
+        }
+
+        /// <summary>
+        /// How tightly tonight's stock stands, decided ONCE before anything is placed.
+        ///
+        /// Two answers come out of it. How many slots a bay is cut into: enough for the
+        /// stock and no more, so a young bar spaces its six bottles out and a finished one
+        /// fills the shelf. And how tall a bottle is DRAWN: one height for the whole cellar
+        /// — a shelf where each bottle is scaled to its own slot is a set of thumbnails, not
+        /// a shelf — taken as the tallest that still leaves the widest bottle in stock clear
+        /// inside its slot. Sparse shelves are unaffected: at three a bay there is room for
+        /// the broadest vessel the catalogue has at its full height.
+        /// </summary>
+        private void ChooseCellarFit(IReadOnlyList<Sprite> bottles, int n)
+        {
+            _cellarPerBay = Mathf.Clamp(
+                Mathf.CeilToInt(n / (float)(CellarBays * CellarShelfFootPx.Length)),
+                CellarMinPerBay, CellarMaxPerBay);
+            float slotW = CellarBayWidthPx / _cellarPerBay;
+            float h = CellarBottleH;
+            for (int i = 0; i < n; i++)
+            {
+                var s = bottles[i];
+                if (s == null || s.rect.height <= 0.0001f) continue;
+                float aspect = s.rect.width / s.rect.height;
+                if (aspect > 0.0001f) h = Mathf.Min(h, slotW * CellarSlotFill / aspect);
+            }
+            _cellarBottleH = Mathf.Max(8f, h);
         }
 
         /// <summary>
@@ -327,13 +398,13 @@ namespace LastCall.UI
             LayOutCellarCatcher();
             if (_cellarOpenGroup != null) _cellarOpenGroup.alpha = 1f - _drawerT;
             if (_cellarDoors.Count == 0) return;
-            float slotW = CellarBayWidthPx / CellarPerBay;
+            float slotW = CellarBayWidthPx / _cellarPerBay;
             float left = (Reference.x - _counterNative.x) * 0.5f;
             for (int i = 0; i < _cellarDoors.Count; i++)
             {
                 if (!_cellarDoors[i].gameObject.activeSelf) continue;
                 CellarSlotArt(i, out float artX, out float artFoot);
-                _cellarDoors[i].sizeDelta = new Vector2(slotW - 4f, CellarBottleH);
+                _cellarDoors[i].sizeDelta = new Vector2(slotW - 4f, _cellarBottleH);
                 _cellarDoors[i].anchoredPosition = new Vector2(
                     left + artX,
                     CounterRestY + CounterSurfaceInset - artFoot + DrawerTravel * _drawerT);
@@ -560,10 +631,11 @@ namespace LastCall.UI
         /// drawn bottle and the plate that catches its click cannot disagree.</summary>
         private void CellarSlotArt(int i, out float artX, out float artFoot)
         {
-            int perShelf = CellarBayCentrePx.Length * CellarPerBay;
+            int perBay = Mathf.Max(1, _cellarPerBay);
+            int perShelf = CellarBayCentrePx.Length * perBay;
             int shelf = i / perShelf, rest = i % perShelf;
-            int bay = rest / CellarPerBay, pos = rest % CellarPerBay;
-            float step = CellarBayWidthPx / CellarPerBay;
+            int bay = rest / perBay, pos = rest % perBay;
+            float step = CellarBayWidthPx / perBay;
             artX = CellarBayCentrePx[bay] - CellarBayWidthPx * 0.5f + step * (pos + 0.5f);
             artFoot = CellarShelfFootPx[Mathf.Min(shelf, CellarShelfFootPx.Length - 1)];
         }
@@ -574,15 +646,97 @@ namespace LastCall.UI
             CellarSlotArt(i, out float artX, out float artFoot);
 
             float h = sr.sprite.bounds.size.y;
-            float k = h > 0.0001f ? CellarBottleH / h : 1f;
+            float k = h > 0.0001f ? _cellarBottleH / h : 1f;
             sr.transform.localScale = new Vector3(k, k, 1f);
 
             // The counter hangs from its own rest line; the cellar is measured off its TOP
             // edge, so both live on the same number and a moved bar takes its stock with it.
+            //
+            // ...AND THE ROOM'S OWN OFFSET IS ADDED BACK. These are stage units, but the
+            // DRAWER moves the world root the stock hangs under, so a bottle restocked while
+            // the cellar is open would be placed at the shelf's SHUT height and then ride
+            // 121 units further up with everything else. It never showed while the cellar
+            // was only stocked between nights; it would the moment a bought bottle appears
+            // on the shelf you are standing at.
             float counterTop = CounterRestY + CounterSurfaceInset - Reference.y * 0.5f;
             sr.transform.position = new Vector3(
                 artX - _counterNative.x * 0.5f,
-                counterTop - artFoot + CellarBottleH * 0.5f, 0f);
+                counterTop - artFoot + _cellarBottleH * 0.5f, 0f)
+                + (_world != null ? _world.position : Vector3.zero);
+        }
+
+        // ── the cellar's own light (2026-08-25) ─────────────────────────────────
+        //
+        // The author: "açılan yeni alkol rafımızın ışıklandırmasını yap, o sahne çok karanlık
+        // kalıyor". It was, and the numbers say why: the bar's downlights hang at stage y 276
+        // with a 300 reach and their falloff starts at 0.58 of it, while the cellar's upper
+        // shelf sits about 260 units under them — so what arrived on the stock was the very
+        // tail of a pool aimed at the slab and the drinkers leaning on it. Opening the drawer
+        // brings the lights up WITH the room, so the distance never closes.
+        //
+        // A back bar is not lit from the ceiling; it is lit from UNDER ITS OWN BOARDS, and
+        // that is what these are — one strip a bay, hung just inside each compartment's
+        // ceiling, aimed at the counter layer alone so the wall and the drinkers keep the
+        // light plan they already have.
+        /// <summary>How far under the compartment's ceiling the strip hangs, in art px.</summary>
+        private const float CellarLightDropPx = 11f;
+        /// <summary>Its reach. A bay is 175 wide and a compartment ~78 deep, so this carries
+        /// the length of one bay and dies before the next one's post.</summary>
+        private const float CellarLightRadius = 128f;
+        /// <summary>Where the falloff starts, and how hard it burns. Held wide, because a
+        /// shelf strip is a diffuse line and not a bulb: at the house default the whole pool
+        /// is spent on the bottle necks and the feet stay in the dark they were in.</summary>
+        private const float CellarLightInner = 0.42f;
+        private const float CellarLightIntensity = 1.05f;
+        /// <summary>Warm, because the light in this room is tungsten and the cellar is part
+        /// of the room — one step brighter and cleaner than the ceiling's, the way a lit
+        /// shelf actually reads against the lamps over it.</summary>
+        private static readonly Color CellarLightTint = new Color(1f, 0.87f, 0.68f);
+        private readonly List<Light2D> _cellarLights = new List<Light2D>();
+
+        /// <summary>One strip per compartment, born dark: the drawer is what turns them on.</summary>
+        private void BuildCellarLights()
+        {
+            if (_cellarLights.Count > 0) return;
+            for (int shelf = 0; shelf < CellarShelfCeilPx.Length; shelf++)
+                for (int bay = 0; bay < CellarBayCentrePx.Length; bay++)
+                {
+                    var l = PointLight($"CellarLight{shelf}_{bay}",
+                        CellarLightTint, 0f, CellarLightRadius);
+                    l.pointLightInnerRadius = CellarLightRadius * CellarLightInner;
+                    LightLayers(l, LayerCounter);
+                    _cellarLights.Add(l);
+                }
+            PlaceCellarLights();
+        }
+
+        /// <summary>Hangs them off the counter art's own rows, so a re-cut counter takes its
+        /// shelf lighting with it. Placed in the same frame the stock is (see
+        /// <see cref="PlaceCellarSlot"/>): stage units, plus whatever the drawer is doing.</summary>
+        private void PlaceCellarLights()
+        {
+            if (_cellarLights.Count == 0 || _counterNative.x <= 0f) return;
+            float counterTop = CounterRestY + CounterSurfaceInset - Reference.y * 0.5f;
+            var lift = _world != null ? _world.position : Vector3.zero;
+            int i = 0;
+            for (int shelf = 0; shelf < CellarShelfCeilPx.Length; shelf++)
+                for (int bay = 0; bay < CellarBayCentrePx.Length; bay++, i++)
+                {
+                    if (i >= _cellarLights.Count || _cellarLights[i] == null) continue;
+                    _cellarLights[i].transform.position = new Vector3(
+                        CellarBayCentrePx[bay] - _counterNative.x * 0.5f,
+                        counterTop - CellarShelfCeilPx[shelf] - CellarLightDropPx, 0f) + lift;
+                }
+        }
+
+        /// <summary>They burn with the DRAWER. A cellar lit behind a shut roller would print
+        /// a bar of light across the slats; the peek has its own spill for that moment
+        /// (<see cref="BuildShutterLight"/>) and this stays out of its way.</summary>
+        private void ApplyCellarLight()
+        {
+            for (int i = 0; i < _cellarLights.Count; i++)
+                if (_cellarLights[i] != null)
+                    _cellarLights[i].intensity = CellarLightIntensity * _drawerT;
         }
 
         private void ApplyDrawer()
@@ -601,6 +755,7 @@ namespace LastCall.UI
                     new Vector3(lp.x, _shutterRestLocalY - ShutterTravel * _drawerT - peek, lp.z);
             }
             LayOutShutterLight();
+            ApplyCellarLight();
             LayOutCellarDoors();
             LayOutShutterDoor();
             if (_registerFade != null)
@@ -1450,6 +1605,9 @@ namespace LastCall.UI
                 // one they replace was hung with the window and inherited its branch, so a
                 // room with no sky sheet had no light over its counter either.
                 BuildBarLights();
+                // ...and the cellar's, off the same art: the shelves are a room of their own
+                // once the roller is up, and nothing over the bar reaches into them.
+                BuildCellarLights();
             }
             // Order 33: over the counter's cabinet (30) AND over the stock standing in it
             // (31), and under anything on the bar top (35). The roller has to hide the
@@ -1716,6 +1874,7 @@ namespace LastCall.UI
             }
 
             PositionBarLights(visibleW);
+            PlaceCellarLights();
             PlaceFixtures();
         }
 
@@ -1943,9 +2102,17 @@ namespace LastCall.UI
                 // a picture ON the wall is behind a table in FRONT of the wall, always
                 // (2026-08-24). The slot says which it is, so a new counter-top or wall
                 // place needs no code either.
+                // A MAT DRAWS UNDER WHAT STANDS ON IT (2026-08-25, the rug and the drip
+                // mat). Both share a surface with dressing that is already there — the
+                // tables stand on the boards, the beer font stands on the bar — and two
+                // sprites on one order leave which one wins to chance, which is the exact
+                // trap the triptych's own band was carved out of. So a flat piece drops one
+                // band below its surface's props: 34 under the bar top's 35, 16 under the
+                // floor's 20 and still over the wall's hangers at 15.
                 var slot = _slots[def.Slot];
                 bool onCounter = slot.OnCounter;
                 bool hangs = slot.Hangs;
+                bool flat = slot.Flat;
                 // A PAIRED slot mounts the same piece twice, symmetric about the hook
                 // (2026-08-24, the wall lamps: "simetrik bir şekilde 2 adet"). One fixture,
                 // one purchase, two mountings — the spread is the slot's, not the piece's,
@@ -1957,7 +2124,8 @@ namespace LastCall.UI
                         ? (m == 0 ? -0.5f : 0.5f) * slot.PairSpreadPx : 0f;
                     string suffix = copies == 2 ? (m == 0 ? "_L" : "_R") : "";
                     var sr = WorldSprite("Fx_" + def.Id + suffix, sprite,
-                                         order: onCounter ? 35 : hangs ? 15 : 20);
+                                         order: onCounter ? (flat ? 34 : 35)
+                                              : hangs ? 15 : flat ? 16 : 20);
                     // A matched pair FACES each other: the art is one drawing, and two
                     // copies leaning the same way read as a print error, not a pair.
                     if (copies == 2 && m == 1) sr.flipX = true;
@@ -1990,7 +2158,9 @@ namespace LastCall.UI
                     // touch nothing, and a blob under them would read as a stain. Every
                     // hanger shipped lit until the triptych, so !HasLight passed for
                     // "touches the floor" — the slot says it outright now (2026-08-24).
-                    if (!onCounter && !hangs && !def.HasLight)
+                    // A MAT is the third case: it touches the floor along its whole face,
+                    // so a blob under it is a stain rather than a contact (2026-08-25).
+                    if (!onCounter && !hangs && !flat && !def.HasLight)
                         ContactShadow(sr.transform, sprite.rect.width * 0.9f);
 
                     // A beer font is the door onto the draught station, so it answers the
@@ -2074,9 +2244,17 @@ namespace LastCall.UI
             {
                 LastCall.Game.StageSlot slot;
                 if (!_slots.TryGetValue(placed.Def.Slot, out slot)) continue;
-                var basePos = _backgroundSr != null
+                // THE ROOM'S OWN OFFSET, like the cellar's stock (see PlaceCellarSlot).
+                // These are art/stage points, but the DRAWER moves the world root every
+                // fixture hangs under, so re-dressing the room while the cellar is open —
+                // which is exactly what a dev preset or a mid-night restart does — dropped
+                // the whole set back to its shut height, and the sink came down into the
+                // shelves. It has never fired in a normal night (the market shuts the
+                // cellar), and it is one term.
+                var basePos = (_backgroundSr != null
                     ? StageArtPointToWorld(new Vector2(slot.X + placed.OffsetX, slot.Y))
-                    : StageToWorld(slot.X + placed.OffsetX, slot.Y);
+                    : StageToWorld(slot.X + placed.OffsetX, slot.Y))
+                    + (_world != null ? _world.position : Vector3.zero);
                 float k = _backgroundSr != null ? _backgroundScale : 1f;
                 placed.Body.localScale = new Vector3(k, k, 1f);
                 float h = placed.Body.GetComponent<SpriteRenderer>().sprite.bounds.size.y * k;

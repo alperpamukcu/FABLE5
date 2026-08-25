@@ -73,16 +73,76 @@ namespace LastCall.UI
         /// <summary>Where a stool's rect sits with the cellar shut.</summary>
         private const float SeatLineBaseY = CounterLineY - SeatDrop;
         /// <summary>
+        /// How far the room is riding right now, in HUD units — the counter's cellar lifting
+        /// the whole world (DiegeticStage.SetDrawerOpen).
+        ///
+        /// ONE READING, because everything that stands on the bar has to take the same one:
+        /// the stools, the recipe book, the empties left on the counter, and the takings
+        /// floating over a stool. Each of those used to add the same three terms by hand and
+        /// the ones that FORGOT are exactly the bugs this is here to end — a glass that stays
+        /// put while the counter under it climbs is a glass hanging in the air.
+        /// </summary>
+        private float CounterLift => stage != null
+            ? stage.DrawerPhase * DiegeticStage.DrawerTravel * StageToHud : 0f;
+
+        /// <summary>
+        /// How much of that lift the DRINKERS give back, so the beam does not take their
+        /// heads (2026-08-25, the author: "tezgah açılınca müşterilerin kafası üst bara
+        /// deymeyecek şekilde çok az müşterilerde aşağı insin").
+        ///
+        /// DERIVED from the cast, not tuned: the tallest head in the room is the one drawn
+        /// highest on the rig (the smallest HeadY), the field is 720 units tall and the top
+        /// bar owns the last TopBarH of it. This is what the lift has to give back for that
+        /// head to clear the board with a little air, and it is 0 the moment the cast, the
+        /// beam or the drawer's travel changes enough not to need it.
+        /// </summary>
+        private const float HeadAir = 6f;
+        private static float _cellarSeatDrop = float.NaN;
+        private static float CellarSeatDrop
+        {
+            get
+            {
+                // Read once and kept: the cast is a static table and the answer cannot move
+                // inside a session. It cannot be a field initialiser — PatronCast is declared
+                // below this and static initialisers run in the order they are written, so
+                // that reading would be of a null array.
+                if (float.IsNaN(_cellarSeatDrop))
+                {
+                    float highestHead = float.MaxValue;      // the SMALLEST HeadY is the tallest
+                    foreach (var entry in PatronCast)
+                        highestHead = Mathf.Min(highestHead, entry.HeadY);
+                    if (highestHead > CharCanvas) highestHead = 0f;
+                    // The same reading PatronLook.HeadTop makes, off the cast table instead
+                    // of off one look, so the two cannot drift.
+                    float tallest = (CharCanvas - highestHead) * (CharSize / CharCanvas)
+                                    - CharFootDrop;
+                    _cellarSeatDrop = Mathf.Max(0f,
+                        SeatLineBaseY + DiegeticStage.DrawerTravel * StageToHud + tallest
+                        - (DesignFrame.StageHeight * StageToHud - TopBarH - HeadAir));
+                }
+                return _cellarSeatDrop;
+            }
+        }
+
+        /// <summary>
         /// Where a stool's rect actually sits. NOT a constant since the counter grew a cellar
         /// (2026-08-22): opening it lifts the whole room, and the author's mock-ups lift the
         /// drinkers with it — their heads sit 121 art px higher in the open frame, the same
         /// travel as the room. This is the ONE place that has to know, because the tag rides
         /// the seat rect as a child and the BODY is derived from the same anchoredPosition
         /// every frame, so both follow from this number and cannot drift apart.
+        ///
+        /// They ride it a little SHORT of the room, though — see CellarSeatDrop.
         /// </summary>
-        private float SeatLineY =>
-            SeatLineBaseY + (stage != null
-                ? stage.DrawerPhase * DiegeticStage.DrawerTravel * StageToHud : 0f);
+        private float SeatLineY
+        {
+            get
+            {
+                float lift = CounterLift;
+                float phase = stage != null ? stage.DrawerPhase : 0f;
+                return SeatLineBaseY + lift - CellarSeatDrop * phase;
+            }
+        }
         private const float BustW = 108f;
 
         /// <summary>How far apart the stools stand along the counter. It was a local const
@@ -1404,6 +1464,7 @@ namespace LastCall.UI
                 _glassGrabbed = false;
             }
             _lastFixtureCount = -1;   // force the dressing to re-sync against the new run
+            _lastShelfMark = 0;       // ...and the stock, which keeps its own signal now
             ApplyBarLook();
         }
 
@@ -1420,6 +1481,7 @@ namespace LastCall.UI
             if (run == null) return;
             WatchGlassRack();
             WatchFixtures();
+            WatchCellar();
             FadeShopTabs();
             StepSlide();
             RunTheTill(run);
@@ -1449,7 +1511,18 @@ namespace LastCall.UI
             if (run.Phase != _lastPhase)
             {
                 _lastPhase = run.Phase;
-                if (run.Phase == TycoonPhase.DayEnd) { _dayEndDue = true; _dayEndDueAt = Time.unscaledTime; }
+                if (run.Phase == TycoonPhase.DayEnd)
+                {
+                    _dayEndDue = true;
+                    _dayEndDueAt = Time.unscaledTime;
+                    // AND THE ROOM COMES BACK NOW, not when the books land (2026-08-25, the
+                    // author: "önce açık olan tüm pencereler kapanır, ana sahneye dönülür ve
+                    // oyun sonu ekranı öyle gelir"). Shutting the sheets at ShowDayEnd was
+                    // half the sentence: the last customer's walk to the door then played
+                    // out behind whatever bench or book was still up, and the player never
+                    // saw the thing the books are now waiting for.
+                    CloseEverySheet();
+                }
                 if (run.Phase == TycoonPhase.Closed) ShowClosed();
             }
 
@@ -1763,10 +1836,6 @@ namespace LastCall.UI
                     prop.anchorMin = prop.anchorMax = new Vector2(0, 0);
                     prop.pivot = new Vector2(0.5f, 0);
                     prop.sizeDelta = new Vector2(34, 52);
-                    // ON the counter's drawn surface, not floating at the waist-clip line
-                    // (the author's report): the clip line is the counter's BACK edge; the
-                    // top surface the glass stands on reads ~36px lower in the scene.
-                    prop.anchoredPosition = new Vector2(v.SeatX, CounterLineY - 36f);
                     var img = prop.gameObject.AddComponent<Image>();
                     // The SAME glass everywhere (the author, 2026-08-02): the empty on the
                     // counter is the drawn vessel the drink was served in, at its line's
@@ -1806,6 +1875,20 @@ namespace LastCall.UI
                     v.DirtyProp = null;
                     v.Dirty = null;
                 }
+                // ON the counter's drawn surface, not floating at the waist-clip line (the
+                // author's report): the clip line is the counter's BACK edge; the top surface
+                // the glass stands on reads ~36px lower in the scene.
+                //
+                // AND IT IS PLACED EVERY FRAME, not once when it is made (2026-08-25, the
+                // author: "içilip tezgahta kalan bardaklar tezgahla beraber hareket etmiyorlar
+                // ekranda sabit kalıyorlar"). The empties are the last thing standing on the
+                // bar that was still written as a one-off position, so when the cellar lifted
+                // the counter they stayed exactly where the drinker had left them — on the
+                // screen rather than on the wood. The book beside them takes the same lift off
+                // the same dial (PlaceBookProp); this is that, for the glasses.
+                if (v.DirtyProp != null)
+                    v.DirtyProp.anchoredPosition =
+                        new Vector2(v.SeatX, CounterLineY - 36f + CounterLift);
             }
         }
 
@@ -2252,6 +2335,10 @@ namespace LastCall.UI
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 0);
             rt.sizeDelta = new Vector2(178, 60);
             var start = seat.anchoredPosition + new Vector2(-89f, 118f);   // centred over the seat
+            // ...and it rides the counter, like everything else over the bar. Only the LIFT
+            // is followed and not the seat itself: the word belongs to the stool it was said
+            // at, so it must not walk out of the room with a customer who is leaving.
+            float liftAtStart = CounterLift;
 
             const float duration = 1.35f;
             float tt = 0f;
@@ -2262,7 +2349,8 @@ namespace LastCall.UI
                 // A quick pop on the way in, then a slow rise and fade.
                 float pop = 1f + 0.3f * Mathf.Clamp01(1f - k * 6f) - 0.05f * k;
                 rt.localScale = new Vector3(pop, pop, 1f);
-                rt.anchoredPosition = start + new Vector2(0, 58f * k);
+                rt.anchoredPosition = start
+                    + new Vector2(0, 58f * k + CounterLift - liftAtStart);
                 text.color = new Color(tone.r, tone.g, tone.b, 1f - k * k);
                 yield return null;
             }
@@ -2680,8 +2768,41 @@ namespace LastCall.UI
             // actually changed.
             stage.SetSlots(_bootstrap != null ? _bootstrap.StageSlots : null);
             stage.SyncFixtures(owned);
+        }
+
+        /// <summary>
+        /// The cellar's OWN change signal (2026-08-25, the author: "açılan yeni alkol
+        /// rafımıza satın alınan alkoller ve meşrubatlar eklenmiyor").
+        ///
+        /// They were not. Restocking the shelves hung off WatchFixtures, which returns early
+        /// unless the FIXTURE count moved — so a night spent buying bottles and nothing else
+        /// changed nothing in the room, and a bar could buy the whole catalogue without one
+        /// more bottle appearing behind it. Buying a lamp put them all up at once, which is
+        /// exactly the shape of a bug nobody can describe.
+        ///
+        /// The shelf's own count is the cheapest honest signal — every bottle JOINS the shelf
+        /// (TycoonRun.BuyBrand), so a purchase always moves it — and the ids are folded in
+        /// after it, because an upgrade that swaps a brand in place (Shelf.Replace) changes
+        /// the picture without changing the count.
+        /// </summary>
+        private void WatchCellar()
+        {
+            var run = Run;
+            if (run == null) return;
+            var stage = _stage != null ? _stage : FindFirstObjectByType<DiegeticStage>();
+            _stage = stage;
+            if (stage == null) return;
+            int mark = 17;
+            foreach (var b in run.Shelf.Bottles)
+                mark = mark * 31 + (b.Id != null ? b.Id.GetHashCode() : 0);
+            if (mark == _lastShelfMark) return;
+            _lastShelfMark = mark;
             RefreshCellar(run);
         }
+
+        /// <summary>What the cellar was last built against. 0 is not a shelf any run can
+        /// have, so a fresh run always stocks once.</summary>
+        private int _lastShelfMark;
 
         /// <summary>
         /// Stands the bar's own stock in the counter's cellar (2026-08-22). The SAME rule the
@@ -2725,6 +2846,27 @@ namespace LastCall.UI
         /// <summary>A fixture's sprite, from its own Resources shelf (PPU 1 — world art).</summary>
         private static Sprite FixtureArt(string name) =>
             string.IsNullOrEmpty(name) ? null : Resources.Load<Sprite>("Fixtures/" + name);
+
+        /// <summary>
+        /// Where a ladder's rung stands, on the market card that sells it. READ OFF THE
+        /// SLOT, not assumed: the wall lamps were the first ladder that was not a draught
+        /// tower (2026-08-24) and their line went in as a constant — "the back wall · both
+        /// lamps, one fitting" — which the brass sink then inherited and told the player
+        /// about a basin on the counter (2026-08-25). The slot already carries both facts
+        /// this needs, so a fourth ladder somewhere else needs no code here either.
+        /// </summary>
+        private string RungPlace(FixtureDefinition f)
+        {
+            LastCall.Game.StageSlot slot = null;
+            var slots = _bootstrap != null ? _bootstrap.StageSlots : null;
+            if (slots != null)
+                foreach (var s in slots)
+                    if (s.Id == f.Slot) { slot = s; break; }
+            string where = slot != null && slot.OnCounter ? "The counter" : "The back wall";
+            return where + (slot != null && slot.PairSpreadPx > 0f
+                ? " · both of them, one fitting"
+                : " · fitted over the mark below");
+        }
 
         // "Ekrandaki bardaklari simdilik kaldir, gerek yok" (2026-08-19): the rack is
         // parked, not demolished - flip this back on when the new counter art gets its
@@ -3435,6 +3577,14 @@ namespace LastCall.UI
             if (view.ReactLeft > 0f)
             {
                 view.ReactLeft -= Time.deltaTime;
+                // ON THE STOOL means on the stool AS IT IS RIGHT NOW (2026-08-25, the author:
+                // "müşteriler tepki animasyonu verirlerse tezgah açılıp kapandığında havada
+                // asılı kalıyorlar"). This branch used to return without touching the rect,
+                // which is fine for a room that is standing still and is a person left
+                // hanging in mid-air the moment the cellar lifts the one they are leaning on.
+                // Every other beat — walking in, walking out, sitting — re-reads SeatLineY
+                // each frame; this is simply the one that did not.
+                view.Root.anchoredPosition = new Vector2(view.SeatX, SeatLineY);
                 UpdatePatronFrame(view, view.ReactClip, ReactSeconds - view.ReactLeft, facing: 1);
                 return;
             }
@@ -5258,8 +5408,7 @@ namespace LastCall.UI
         private void PlaceBookProp()
         {
             if (_bookProp == null) return;
-            float lift = stage != null
-                ? stage.DrawerPhase * DiegeticStage.DrawerTravel * StageToHud : 0f;
+            float lift = CounterLift;
             // ON THE DRAWN SURFACE, not on the rest line. CounterLineY is the counter's BACK
             // edge — the line the room crops a drinker at — and the top the bar's props
             // actually stand on reads 36 units lower in the scene. The dirty glass learned
@@ -6004,7 +6153,9 @@ namespace LastCall.UI
                         {
                             Name = f.Name,
                             Meta = f.IsTap ? f.TapLevel + "-line tower"
-                                 : f.Level > 0 ? "House light · mark " + f.Level
+                                 : f.Level > 0
+                                 ? (f.HasLight ? "House light · mark " : "Fitting · mark ")
+                                   + f.Level
                                  : f.HasLight ? "Dressing · lit" : "Dressing",
                             Art = FixtureArt(f.Sprite),
                             ArtH = IconH,
@@ -6013,7 +6164,7 @@ namespace LastCall.UI
                                 ? "The counter · " + f.TapLevel
                                   + (f.TapLevel == 1 ? " keg on tap" : " kegs on tap")
                                 : f.Level > 0
-                                ? "The back wall · both lamps, one fitting"
+                                ? RungPlace(f)
                                 : f.HasLight
                                 ? "The room · carries its own light"
                                 : "The room · dressing",
@@ -11851,16 +12002,189 @@ namespace LastCall.UI
             warm.Face = face;
         }
 
+        // ── the day goes past (2026-08-25) ──────────────────────────────────────
+        //
+        // The author: "gün başı ekranı olmalı; güneşin doğudan çıkıp battığını ve şu anki
+        // saate geldiğini gösteren bir gün geçme animasyonu, aynı zamanda saati tam 18:00'a
+        // saran — Kingdom Come Deliverance 2'deki uyuduğunda gösterilen ekran gibi."
+        //
+        // What was here carried a week and two day-names on black, which is a CAPTION for a
+        // transition rather than a scene. The bar shuts at two in the morning and opens at
+        // six in the evening, and those sixteen hours were nothing at all — so they are the
+        // scene now: the moon finishes its fall into the west, the sky walks from deep night
+        // through first light, morning, noon and afternoon into the room's own golden hour,
+        // the sun climbs out of the east and comes back down, and the readout winds from
+        // 02:00 round to exactly 18:00, where the shift starts.
+        //
+        // ALL OF IT IS DRAWN HERE, in the palette's own tokens — no picture is generated for
+        // it (14 §3: chrome is procedural). The sky is BANDED, twenty flat rows and not a
+        // smooth ramp, which is the same law the room's own light is banded under; the sun
+        // and the moon are the marquee's bulb and its glow, at the size a sun wants; the
+        // moon's crescent is bitten out by a second disc wearing the sky's own colour behind
+        // it. The hour is the game's own SegmentClock, hung at twice the size it wears on
+        // the beam — a whole multiple, because pixel art magnifies in whole steps or not at
+        // all.
+        private const float SkyW = 640f, SkyH = 220f;
+        private const int SkyBands = 20;
+        /// <summary>Where the horizon runs: the generated city's own base band — 10 art
+        /// px of bay at its foot, 20 units at the 2x it stands at. The sun's arc is rooted
+        /// here; the city in front hides everything below its own rooftops.</summary>
+        private const float SkyGround = 20f;
+        /// <summary>The shift's own hours: the doors shut at two, the next one opens at six
+        /// in the evening. The animation is exactly that gap and nothing else.</summary>
+        private const float DayFrom = 2f, DayTo = 18f;
+        /// <summary>When the sun is up, and when the moon is. A Miami summer: first light
+        /// before six, the sun down at eight — so 18:00 is late in its fall, which is why
+        /// the room opens in gold.</summary>
+        private const float SunUp = 6f, SunDown = 20f, MoonUp = 18f, MoonDown = 6f;
+
         /// <summary>
-        /// What is written in the dark: the week, the night handing over to the night, and
-        /// the same marquee the beam wears. Built once and driven by StepCurtain — nothing
-        /// here is created per day, because a blackout that allocates is a blackout that
-        /// hitches on the one frame the player is only looking at it.
+        /// The sky at an hour, top and bottom, keyed off the palette. The horizon carries
+        /// the warm end and the zenith the cold one, which is what a sky does; the last key
+        /// is the evening the room's own window opens on, so the curtain lifts on the colour
+        /// that is already outside it.
+        /// </summary>
+        private static readonly (float Hour, Color Zenith, Color Horizon)[] SkyKeys =
+        {
+            (2.0f,  UITheme.Night[0],    UITheme.Night[2]),
+            (5.0f,  UITheme.Night[1],    UITheme.ClubBlue[1]),
+            (6.5f,  UITheme.ClubBlue[2], UITheme.Amber[3]),
+            (8.0f,  UITheme.ClubBlue[3], UITheme.Cyan[4]),
+            (13.0f, UITheme.ClubBlue[4], UITheme.Cyan[4]),
+            (16.0f, UITheme.ClubBlue[3], UITheme.Amber[4]),
+            (18.0f, UITheme.Magenta[2],  UITheme.Amber[3]),
+        };
+
+        private static void SkyAt(float hour, out Color zenith, out Color horizon)
+        {
+            var keys = SkyKeys;
+            if (hour <= keys[0].Hour) { zenith = keys[0].Zenith; horizon = keys[0].Horizon; return; }
+            for (int i = 1; i < keys.Length; i++)
+            {
+                if (hour > keys[i].Hour) continue;
+                float k = Mathf.InverseLerp(keys[i - 1].Hour, keys[i].Hour, hour);
+                zenith = Color.Lerp(keys[i - 1].Zenith, keys[i].Zenith, k);
+                horizon = Color.Lerp(keys[i - 1].Horizon, keys[i].Horizon, k);
+                return;
+            }
+            zenith = keys[keys.Length - 1].Zenith;
+            horizon = keys[keys.Length - 1].Horizon;
+        }
+
+        /// <summary>A deterministic dib for the skyline and the stars. Nothing in this game
+        /// rolls dice by accident — and a city that re-shuffled itself every morning would
+        /// say the player had gone to sleep somewhere else.</summary>
+        private static float Dib(int seed)
+        {
+            unchecked
+            {
+                int h = seed * 374761393 + 668265263;
+                h = (h ^ (h >> 13)) * 1274126177;
+                return ((h ^ (h >> 16)) & 0xFFFF) / 65535f;
+            }
+        }
+
+        private RectTransform _skyPanel, _sun, _sunGlow, _moon, _moonGlow;
+        private Image _sunImg, _sunGlowImg, _moonImg, _moonGlowImg, _cityImg;
+        private Image[] _skyRows;
+        private Image[] _stars;
+        private SegmentClock _curtainClock;
+        private RectTransform _curtainClockHost;
+
+        /// <summary>Builds the sky the day crosses. Everything in it is placed once and only
+        /// ever re-coloured or re-positioned — a blackout that allocates is a blackout that
+        /// hitches on the one frame the player is only looking at it.</summary>
+        private void BuildSkyPanel(RectTransform card, float top)
+        {
+            _skyPanel = NewRect("Sky", card);
+            Place(_skyPanel, new Vector2(0.5f, 1f), new Vector2(SkyW, SkyH), new Vector2(0, top));
+            // The sun rises FROM BEHIND the horizon, so the panel has to cut it off — and
+            // its glow is wider than the panel, which would otherwise wash the whole card.
+            _skyPanel.gameObject.AddComponent<RectMask2D>();
+
+            float band = SkyH / SkyBands;
+            _skyRows = new Image[SkyBands];
+            for (int i = 0; i < SkyBands; i++)
+            {
+                var row = NewRect("B" + i, _skyPanel);
+                Place(row, new Vector2(0.5f, 1f), new Vector2(SkyW, Mathf.Ceil(band)),
+                    new Vector2(0, -i * band));
+                _skyRows[i] = row.gameObject.AddComponent<Image>();
+                _skyRows[i].raycastTarget = false;
+            }
+
+            // The small hours' stars, over the bands and under everything else.
+            _stars = new Image[30];
+            for (int i = 0; i < _stars.Length; i++)
+            {
+                float sx = (Dib(i * 3 + 1) - 0.5f) * (SkyW - 24f);
+                float sy = SkyH * 0.5f - 14f - Dib(i * 3 + 2) * (SkyH * 0.55f);
+                float px = Dib(i * 3 + 3) > 0.72f ? 3f : 2f;
+                var st = NewRect("St" + i, _skyPanel);
+                Place(st, new Vector2(0.5f, 0.5f), new Vector2(px, px), new Vector2(sx, sy));
+                _stars[i] = st.gameObject.AddComponent<Image>();
+                _stars[i].color = UITheme.Cream[4];
+                _stars[i].raycastTarget = false;
+            }
+
+            // The moon first, because the sun rises through where it has been. A DRAWN
+            // crescent (Tools/day_sky_gen.py, quantized to the house colours) — the first
+            // cut bit a disc out of a second disc wearing the sky's colour, which only
+            // ever matched one band of a banded sky at a time.
+            _moonGlow = NewRect("MoonGlow", _skyPanel);
+            Place(_moonGlow, new Vector2(0.5f, 0.5f), new Vector2(120, 120), Vector2.zero);   // 5x of 24
+            _moonGlowImg = _moonGlow.gameObject.AddComponent<Image>();
+            _moonGlowImg.sprite = ChromeArt.LampGlow();
+            _moonGlowImg.raycastTarget = false;
+
+            _moon = NewRect("Moon", _skyPanel);
+            Place(_moon, new Vector2(0.5f, 0.5f), new Vector2(48, 48), Vector2.zero);   // the 24px art at 2x
+            _moonImg = _moon.gameObject.AddComponent<Image>();
+            _moonImg.sprite = Resources.Load<Sprite>("Scene/curtain_moon");
+            _moonImg.preserveAspect = true;
+            _moonImg.raycastTarget = false;
+
+            // THE CITY IT ALL GOES DOWN BEHIND — generated art, not procedural boxes
+            // (2026-08-25, the author: "kullanilan mevcut gorsel profesyonelce durmuyor,
+            // gerekirse gorsel ve animasyonu uret"). Tools/day_sky_gen.py made it at 320x96
+            // — the Miami skyline across the bay, lit windows and the two palms baked in —
+            // and it stands here at a whole 2x, over the sun, so the sun RISES FROM BEHIND
+            // the towers and sets back behind them.
+            var cityRt = NewRect("City", _skyPanel);
+            Place(cityRt, new Vector2(0.5f, 0f), new Vector2(SkyW, 192f), Vector2.zero);
+            cityRt.pivot = new Vector2(0.5f, 0f);
+            _cityImg = cityRt.gameObject.AddComponent<Image>();
+            _cityImg.sprite = Resources.Load<Sprite>("Scene/curtain_city");
+            _cityImg.raycastTarget = false;
+
+            // The sun LAST: it is the only thing in the sky that passes in front of the city.
+            _sunGlow = NewRect("SunGlow", _skyPanel);
+            Place(_sunGlow, new Vector2(0.5f, 0.5f), new Vector2(240, 240), Vector2.zero);    // 10x of 24
+            _sunGlowImg = _sunGlow.gameObject.AddComponent<Image>();
+            _sunGlowImg.sprite = ChromeArt.LampGlow();
+            _sunGlowImg.raycastTarget = false;
+
+            _sun = NewRect("Sun", _skyPanel);
+            Place(_sun, new Vector2(0.5f, 0.5f), new Vector2(64, 64), Vector2.zero);   // the 32px art at 2x
+            _sunImg = _sun.gameObject.AddComponent<Image>();
+            _sunImg.sprite = Resources.Load<Sprite>("Scene/curtain_sun");
+            _sunImg.preserveAspect = true;
+            _sunImg.raycastTarget = false;
+
+            // BEHIND THE SKYLINE, both bodies and both glows: a sun that rises in front
+            // of a city is a sticker on a photograph.
+            cityRt.SetAsLastSibling();
+        }
+
+        /// <summary>
+        /// What is written in the dark: the day going past, the hour it lands on, the week,
+        /// the night handing over to the night, and the same marquee the beam wears. Built
+        /// once and driven by StepCurtain.
         /// </summary>
         private void BuildCurtainCard(RectTransform curtain)
         {
             _curtainCard = NewRect("DateCard", curtain);
-            Place(_curtainCard, new Vector2(0.5f, 0.5f), new Vector2(560, 220), Vector2.zero);
+            Place(_curtainCard, new Vector2(0.5f, 0.5f), new Vector2(700, 520), Vector2.zero);
             _curtainCardGroup = _curtainCard.gameObject.AddComponent<CanvasGroup>();
             _curtainCardGroup.alpha = 0f;
             _curtainCardGroup.blocksRaycasts = false;
@@ -11868,13 +12192,28 @@ namespace LastCall.UI
             _curtainWeek = NewText("Week", _curtainCard, _body, 16, TextAnchor.UpperCenter,
                 UITheme.TextSecondary);
             Place(_curtainWeek.rectTransform, new Vector2(0.5f, 1f), new Vector2(400, 20),
-                new Vector2(0, -6));
+                new Vector2(0, -2));
+
+            BuildSkyPanel(_curtainCard, -26f);
+
+            // THE HOUR, WOUND. The beam's own readout, hung at twice the size — 4× the art,
+            // which is still a whole multiple and still lands on the pixel grid.
+            _curtainClockHost = NewRect("Hour", _curtainCard);
+            // ITS OWN GEOMETRY, NOT ITS RECT'S. SegmentClock hangs every cell off the
+            // host's LEFT-MIDDLE, so the digits sit half the host's height below its top —
+            // and this host is drawn at twice the size, which doubles that offset too. The
+            // row lands at -300; the rect's top has to be 28 above it. (Measured the hard
+            // way: at a plain -286 the readout printed straight through THURSDAY.)
+            Place(_curtainClockHost, new Vector2(0.5f, 1f), new Vector2(110, 28),
+                new Vector2(0, -272f));
+            _curtainClockHost.localScale = new Vector3(2f, 2f, 1f);
+            _curtainClock = new SegmentClock(_curtainClockHost, UITheme.Cyan[4]);
 
             // The two names share one seat: the one leaving rides up out of it while the one
             // arriving comes up into it, so the eye follows a single word changing rather
             // than reading two.
             var seat = NewRect("Seat", _curtainCard);
-            Place(seat, new Vector2(0.5f, 1f), new Vector2(560, 56), new Vector2(0, -40));
+            Place(seat, new Vector2(0.5f, 1f), new Vector2(560, 56), new Vector2(0, -352));
 
             var leaving = NewRect("Leaving", seat);
             Stretch(leaving, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
@@ -11895,7 +12234,7 @@ namespace LastCall.UI
             var names = BarCalendar.WeekColumns;
             const float step = 60f;
             float left = -names.Length * step * 0.5f;
-            float railY = -150f;
+            float railY = -432f;
 
             var rail = NewRect("Rail", _curtainCard);
             Place(rail, new Vector2(0.5f, 1f), new Vector2(BarCalendar.OpenNights * step, 1f),
@@ -11960,15 +12299,19 @@ namespace LastCall.UI
         //
         // The first cut ran 3.4 — the length of a transition, which is what it was before it
         // had anything in it. With a date on it, it is a SCENE, and the two want opposite
-        // things: a transition is over before you notice it, a scene waits for you. The extra
-        // time is not spread evenly. The hand-off gets the most, because it is the only thing
-        // moving and the only thing that says what changed; the hold nearly doubles, because
-        // the whole point of putting a week and a night on the screen is that they be read.
-        private const float CurtainFadeIn = 0.50f;   // black is instant; the card arrives
-        private const float CurtainSwap = 1.60f;     // the hand-off between the two nights
-        private const float CurtainHold = 1.90f;     // let it sit, so it is read
-        private const float CurtainLift = 2.00f;     // card out, room up
-        private const float CurtainTotal = CurtainFadeIn + CurtainSwap + CurtainHold + CurtainLift;
+        // things: a transition is over before you notice it, a scene waits for you.
+        //
+        // The middle movement is THE DAY now (2026-08-25) rather than a hand-off between two
+        // words: sixteen hours of sky in three and a half seconds, with the names changing
+        // over inside its first half. The hold sits on 18:00 — the same beat as before, now
+        // with an hour to land on — and the total is a little over seven seconds, which is
+        // as long as a time-skip may take before it stops being a rest and starts being a
+        // wait.
+        private const float CurtainFadeIn = 0.45f;   // black is instant; the card arrives
+        private const float CurtainDay = 3.60f;      // 02:00 → 18:00, sun, sky and readout
+        private const float CurtainHold = 1.25f;     // the hour stands where it landed
+        private const float CurtainLift = 1.70f;     // card out, room up
+        private const float CurtainTotal = CurtainFadeIn + CurtainDay + CurtainHold + CurtainLift;
 
         /// <summary>True while the room is still coming up: the clock must not run.</summary>
         private bool DoorsClosed => _curtainT < CurtainTotal;
@@ -11998,7 +12341,7 @@ namespace LastCall.UI
             float t = _curtainT;
 
             // The black itself: full until the lift, then eased away.
-            float liftAt = CurtainFadeIn + CurtainSwap + CurtainHold;
+            float liftAt = CurtainFadeIn + CurtainDay + CurtainHold;
             float lift = t <= liftAt ? 0f : Mathf.Clamp01((t - liftAt) / CurtainLift);
             _curtainImg.color = new Color(0f, 0f, 0f, (1f - lift) * (1f - lift) + (1f - lift) * 0.0f);
 
@@ -12007,9 +12350,19 @@ namespace LastCall.UI
             float outK = Mathf.Clamp01((t - liftAt) / (CurtainLift * 0.55f));
             if (_curtainCardGroup != null) _curtainCardGroup.alpha = inK * (1f - outK);
 
-            // THE HAND-OFF. The night that closed slides up and out; the night arriving
-            // comes from under it. Smoothstep both ways — a linear slide reads as a scroll.
-            float swap = Mathf.Clamp01((t - CurtainFadeIn) / CurtainSwap);
+            // THE DAY ITSELF. One eased run from two in the morning to six in the evening —
+            // slow off the mark, quick through the middle, settling onto the hour rather
+            // than stopping dead at it, which is what a time-skip has to feel like.
+            float dayK = Mathf.Clamp01((t - CurtainFadeIn) / CurtainDay);
+            if (Motion.Reduced) dayK = 1f;
+            float dayE = dayK * dayK * (3f - 2f * dayK);
+            float hour = Mathf.Lerp(DayFrom, DayTo, dayE);
+            StepSky(hour);
+
+            // THE HAND-OFF, inside the day's first half: the night that closed slides up and
+            // out, the night arriving comes from under it. Smoothstep both ways — a linear
+            // slide reads as a scroll.
+            float swap = Mathf.Clamp01(dayK / 0.5f);
             float e = swap * swap * (3f - 2f * swap);
             // A BATON PASS, NOT A DISSOLVE. Both names crossfading on the same curve put
             // WEDNESDAY and THURSDAY at half alpha on top of each other for a third of a
@@ -12066,6 +12419,111 @@ namespace LastCall.UI
                 _curtainImg.color = new Color(0f, 0f, 0f, 0f);
                 _curtain.gameObject.SetActive(false);
             }
+        }
+
+        /// <summary>
+        /// Puts the sky at an hour: the bands, the stars, the city's own windows, the moon
+        /// falling west, the sun crossing, and the readout the whole thing is winding.
+        ///
+        /// Every one of them is driven from the SAME hour — that is the point of the scene.
+        /// A sun that crossed on its own timer and a clock that wound on another would be
+        /// two animations playing at once, which is exactly what a time-skip must not be.
+        /// </summary>
+        private void StepSky(float hour)
+        {
+            if (_skyRows == null) return;
+            SkyAt(hour, out var zenith, out var horizon);
+
+            // The warm end HUGS the horizon rather than spreading evenly up the panel: a
+            // linear ramp reads as a paint chart, and a sky does not do that.
+            for (int i = 0; i < _skyRows.Length; i++)
+            {
+                float k = _skyRows.Length == 1 ? 0f : i / (float)(_skyRows.Length - 1);
+                _skyRows[i].color = Color.Lerp(zenith, horizon, Mathf.Pow(k, 1.6f));
+            }
+
+            // The stars go out at first light and are not seen again before the doors open.
+            float night = 1f - Mathf.Clamp01((hour - 4.4f) / 1.8f);
+            for (int i = 0; i < _stars.Length; i++)
+            {
+                // A slow twinkle, each on its own phase — a still field of dots reads as
+                // dust on the screen.
+                float tw = 0.62f + 0.38f * Mathf.Sin(Time.unscaledTime * 2.6f + Dib(i * 5 + 7) * 6.28f);
+                var c = _stars[i].color;
+                _stars[i].color = new Color(c.r, c.g, c.b, night * tw);
+            }
+
+            // The city LIGHTENS with its sky rather than staying pitch: the tint climbs
+            // above white toward the horizon's own colour at the bright hours, so the
+            // silhouette reads as a city under that sky and not as a hole cut in it. (An
+            // Image tint can only multiply, so the art was generated dark on purpose and
+            // the day is bought by how far past 1 the channels are pushed.)
+            if (_cityImg != null)
+            {
+                float bright = Mathf.Clamp01((horizon.r + horizon.g + horizon.b) / 1.8f);
+                _cityImg.color = Color.Lerp(Color.white,
+                    new Color(1f + horizon.r * 0.5f, 1f + horizon.g * 0.5f,
+                              1f + horizon.b * 0.5f), bright * 0.55f);
+            }
+
+            // THE MOON, finishing its fall into the west. It is already past its peak when
+            // the bar shuts, which is why it only ever comes down on this screen.
+            float moonSpan = 24f - MoonUp + MoonDown;                 // 18:00 → 06:00
+            float moonK = (hour + 24f - MoonUp) / moonSpan;
+            PlaceInSky(_moon, _moonGlow, moonK, out _);
+            bool moonOut = moonK <= 1.02f;
+            float moonFade = Mathf.Clamp01((1.02f - moonK) / 0.12f) * night;
+            _moonImg.enabled = moonOut;
+            _moonGlowImg.enabled = moonOut;
+            if (moonOut)
+            {
+                _moonImg.color = new Color(1f, 1f, 1f, moonFade);
+                var mg = UITheme.ClubBlue[4];
+                _moonGlowImg.color = new Color(mg.r, mg.g, mg.b, 0.5f * moonFade);
+            }
+
+            // THE SUN, out of the east and back down the west. At 18:00 it is low and gold,
+            // which is the light the room's own window is already carrying when the curtain
+            // lifts off it.
+            float sunK = (hour - SunUp) / (SunDown - SunUp);
+            PlaceInSky(_sun, _sunGlow, sunK, out float sunY);
+            bool sunOut = sunK >= -0.04f && sunK <= 1.04f;
+            _sunImg.enabled = sunOut;
+            _sunGlowImg.enabled = sunOut;
+            if (sunOut)
+            {
+                // High and pale, low and orange — a sun reddens at the ends of its own
+                // arc. The drawn disc is already warm, so the low tint only leans it.
+                float high = Mathf.Sin(Mathf.Clamp01(sunK) * Mathf.PI);
+                _sunImg.color = Color.Lerp(new Color(1f, 0.78f, 0.55f), Color.white, high);
+                var halo = Color.Lerp(UITheme.Amber[3], UITheme.Amber[4], high);
+                // Low sun, heavy haze — carried by the ALPHA and not by the size. A glow
+                // that grows off its whole multiple stops landing on the pixel grid, and
+                // its four steps come back with ragged edges (16 §6.10).
+                _sunGlowImg.color = new Color(halo.r, halo.g, halo.b, 0.55f + 0.35f * (1f - high));
+            }
+
+            // And the readout the whole scene is winding. Rounded to the five the beam's own
+            // clock reads in, so the two never disagree about what a minute looks like.
+            if (_curtainClock != null)
+            {
+                int total = Mathf.RoundToInt(hour * 60f / 5f) * 5;
+                _curtainClock.Show((total / 60) % 24, total % 60,
+                    ((int)(Time.unscaledTime * 2f) & 1) == 0);
+            }
+        }
+
+        /// <summary>Stands a body on its arc: east at 0, west at 1, highest at the middle.
+        /// The glow rides with it, and the height comes back out so the moon can ask what
+        /// colour the sky is behind it.</summary>
+        private void PlaceInSky(RectTransform body, RectTransform glow, float k, out float y)
+        {
+            float x = Mathf.Lerp(-SkyW * 0.5f + 46f, SkyW * 0.5f - 46f, k);
+            float horizonY = -SkyH * 0.5f + SkyGround;
+            y = horizonY + Mathf.Sin(Mathf.Clamp(k, 0f, 1f) * Mathf.PI) * 142f;
+            var at = new Vector2(x, y);
+            if (body != null) body.anchoredPosition = at;
+            if (glow != null) glow.anchoredPosition = at;
         }
 
         /// <summary>

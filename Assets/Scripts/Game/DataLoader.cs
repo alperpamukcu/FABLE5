@@ -272,7 +272,8 @@ namespace LastCall.Game
                 if (!slotIds.Add(sl.id ?? ""))
                     throw new FormatException($"Fixtures file declares slot '{sl.id}' twice.");
                 try { slots.Add(new StageSlot(sl.id, sl.x, sl.y, sl.onCounter,
-                                              sl.pairSpreadPx, sl.houseLight, sl.hangs)); }
+                                              sl.pairSpreadPx, sl.houseLight, sl.hangs,
+                                              sl.flat)); }
                 catch (ArgumentException e) { throw new FormatException($"Slot '{sl.id}': {e.Message}"); }
             }
 
@@ -732,6 +733,9 @@ namespace LastCall.Game
             // Whatever stands here hangs on the wall: no contact shadow, and it draws
             // behind the floor dressing (2026-08-24, the flamingo triptych).
             public bool hangs;
+            // Whatever stands here lies FLAT on its surface, under the props that share it
+            // (2026-08-25, the rug on the boards and the drip mat on the bar).
+            public bool flat;
         }
 
         [Serializable]

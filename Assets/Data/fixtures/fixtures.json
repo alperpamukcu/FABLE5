@@ -76,6 +76,19 @@
       "x": 140,
       "y": 68.5,
       "onCounter": true
+    },
+    {
+      "id": "floor_rug",
+      "x": 320,
+      "y": 106,
+      "flat": true
+    },
+    {
+      "id": "beer_mat",
+      "x": 540,
+      "y": 74,
+      "onCounter": true,
+      "flat": true
     }
   ],
   "fixtures": [
@@ -231,11 +244,11 @@
       "slot": "wall_lamps",
       "price": 30,
       "stars": 0,
-      "flavor": "Two plain tubes on the back wall. They do the job.",
+      "flavor": "Cyan at the cap, pink down the tube, a steel bracket holding it. The cheapest thing in the room that knows what year it is.",
       "sprite": "fx_wall_lamp_lv0",
-      "lightR": 0.48,
-      "lightG": 0.91,
-      "lightB": 0.87,
+      "lightR": 1.0,
+      "lightG": 0.72,
+      "lightB": 0.92,
       "lightIntensity": 0.85,
       "lightRadius": 118,
       "level": 1,
@@ -243,15 +256,15 @@
     },
     {
       "id": "wall_lamps_two",
-      "name": "Sunset Cylinders",
+      "name": "Sunset Panels",
       "slot": "wall_lamps",
       "price": 55,
       "stars": 1.5,
-      "flavor": "Pink into peach, like the window at eight. The wall keeps the hour.",
+      "flavor": "A cream face in a coral frame, wide as a window. It washes the wall instead of dotting it.",
       "sprite": "fx_wall_lamp_lv1",
-      "lightR": 0.97,
-      "lightG": 0.67,
-      "lightB": 0.80,
+      "lightR": 1.0,
+      "lightG": 0.93,
+      "lightB": 0.83,
       "lightIntensity": 1.0,
       "lightRadius": 132,
       "level": 2
@@ -289,6 +302,37 @@
       "stars": 0,
       "flavor": "Cold water and a place to put the night's glasses.",
       "sprite": "fx_sink",
+      "level": 1,
+      "startsInTheRoom": true
+    },
+    {
+      "id": "sink_brass",
+      "name": "Brass Sink",
+      "slot": "sink",
+      "price": 85,
+      "stars": 1.5,
+      "flavor": "The same cold water, in a basin that catches the neon and keeps it.",
+      "sprite": "fx_sink_gold",
+      "level": 2
+    },
+    {
+      "id": "floor_rug",
+      "name": "Tide Rug",
+      "slot": "floor_rug",
+      "price": 35,
+      "stars": 0,
+      "flavor": "Orange running through teal, a shoreline read from the air. It takes the echo off the boards.",
+      "sprite": "fx_floor_rug",
+      "startsInTheRoom": true
+    },
+    {
+      "id": "beer_mat",
+      "name": "Drip Mat",
+      "slot": "beer_mat",
+      "price": 15,
+      "stars": 0,
+      "flavor": "Black rubber under the font. It catches what the glass does not.",
+      "sprite": "fx_beer_mat",
       "startsInTheRoom": true
     }
   ]

@@ -2,6 +2,46 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `GDD_MEVCUT §6.2` **the room gets four pieces of the author's own art (2026-08-25):**
+  the wall lamps are replaced drawing for drawing (mark 1 is a glass tube, cyan cap into a
+  pink body in a steel bracket; mark 2 is a cream panel in a coral frame, which is a wash
+  where the old cylinder was a dot; mark 3's palm is unchanged), their light colours are
+  re-measured off the new art rather than kept from the old, and the sink becomes the
+  SECOND ladder that is not a draught tower — steel at rung 1, brass at rung 2, sharing a
+  silhouette to the pixel so the upgrade cannot slide in its hole. The market's rung line
+  was hardcoded for lamps ("the back wall · both lamps, one fitting") and the brass sink
+  inherited it, telling the player about a wall; `RungPlace` reads the slot now.
+  **And a mat is not a prop:** the rug on the boards and the drip mat on the bar lie FLAT
+  on surfaces that already carry dressing, so the slot carries a `flat` flag that drops the
+  piece one sorting band below its surface's props (34 under the bar's 35, 16 under the
+  floor's 20) and takes its contact shadow away — a blob under something touching the floor
+  along its whole face is a stain, not a contact. Both come with the room.
+
+- `23 §6 / GDD_MEVCUT` **the day goes past (2026-08-25, sixth round):** the black between
+  two nights was six seconds carrying a week and two day-names — a caption for a
+  transition. The bar shuts at two in the morning and opens at six in the evening, and
+  those sixteen hours are the scene now: the moon finishes its fall into the west, the
+  stars go out at first light, the sky walks a seven-key ramp from deep night through
+  dawn, morning, noon and afternoon into the room's own golden hour, the sun climbs out of
+  the east and comes back down, the city's windows sleep at dawn and wake for the shift,
+  and the game's own `SegmentClock` winds from 02:00 round to exactly 18:00. All of it is
+  DRAWN in palette tokens (chrome is procedural, 14 §3): the sky is twenty flat bands and
+  not a ramp, the sun and moon are the marquee's own bulb and glow at whole multiples, and
+  the moon's crescent is bitten out by a second disc wearing the sky's colour at the moon's
+  own height. One hour drives every part of it — a sun on its own timer and a clock on
+  another would be two animations playing at once. 7.0s: 0.45 in, 3.60 of day, 1.25 held
+  on the hour, 1.70 out.
+  **Second pass, same day** (the author: the visuals did not look professional —
+  generate them if need be): the procedural box-towers, the lamp-disc sun and the
+  two-disc moon were replaced by generated art through the standard quantize chain
+  (`Tools/day_sky_gen.py` → `Scene/curtain_city.png` 320×96, `curtain_sun.png` 32,
+  `curtain_moon.png` 24; six takes judged on a contact sheet). The skyline stands at
+  a whole 2× IN FRONT of both bodies, so the sun rises from behind the towers and
+  sets back behind them; the silhouette is tinted past white toward the horizon's
+  colour at the bright hours, because an Image tint can only multiply and a pitch
+  city under a noon sky reads as a hole cut in the picture. **And the room comes back BEFORE the books:** `CloseEverySheet`
+  now fires on the phase flip rather than at `ShowDayEnd`, so the last customer's walk to
+  the door plays on a bare stage instead of behind whatever was left open.
 - `23 §6 / GDD_MEVCUT` **the night's end becomes a report (2026-08-25, fifth round):**
   three things the author asked for in one screen.
   **(1) The day waits for the room.** Core already refused to close while anybody was on
