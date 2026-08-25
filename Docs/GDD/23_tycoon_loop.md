@@ -301,6 +301,20 @@ days — it simply stops being what the player reads the night by.
   without the clock starting; one close back above water wipes the strikes. *(Clarified
   2026-07-22 — the first draft struck on net-negative days, which killed bars holding
   $700 cash. The user's rule is about debt, and now so is the code.)*
+- **The night's end waits for the room (2026-08-25).** The day closes when the last stool
+  is empty — that has always been the rule — but the books now wait for the last customer
+  to have finished their reaction and walked out of the frame, and for the money and stars
+  they left to have finished counting themselves over the stool. The scrim used to come
+  down on top of both.
+- **The night's end is a report, not a receipt (2026-08-25).** The slip keeps the money;
+  either side of it stand the two instruments the slip cannot carry: **the week**, every
+  night of it with the stars it filed and the money it made (this one lit, the ones ahead
+  still empty), and **the bar**, the standing with the step tonight moved it drawn on a
+  0–5 gauge — where it stood, where it is going, the ceiling the fittings hold it under,
+  and the crowd tonight has drawn for tomorrow. Every one of those numbers is asked of the
+  rules before the books close (`BarRating.StandingAfter`, `TycoonRun.TonightStars` /
+  `StarCeiling` / `StandingAfterTonight` / `CrowdTomorrow`), never worked out by the
+  screen — `NightReportTests` pins each one by asking, then closing, then comparing.
 - Day end is also when the **market** opens (§7).
 
 ## 7. Reputation and the crowd

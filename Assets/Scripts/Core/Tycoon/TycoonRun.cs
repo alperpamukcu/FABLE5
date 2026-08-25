@@ -135,6 +135,35 @@ namespace LastCall.Core
 
         private int _bestRankServedTonight;
 
+        /// <summary>The lower of the two ceilings — what the bar is ALLOWED to be worth
+        /// tonight, whatever the room thought of it.</summary>
+        public double StarCeiling => Math.Min(UpgradeStarCap, MenuStarCap);
+
+        /// <summary>
+        /// What tonight is worth once both ceilings have had their say: the room's own score,
+        /// clamped by the fittings and the menu. Exactly the number
+        /// <see cref="ContinueToNextDay"/> files, asked before it is filed — the books and
+        /// the screen that shows them cannot disagree about the night.
+        /// </summary>
+        public double TonightStars =>
+            Math.Min(BarRating.ExactStarsFor(Floor.AverageSatisfaction), StarCeiling);
+
+        /// <summary>Where tonight leaves the bar's standing, asked without closing the books
+        /// (see <see cref="BarRating.StandingAfter"/>). What the night's end draws its
+        /// progress from.</summary>
+        public double StandingAfterTonight => Rating.StandingAfter(TonightStars);
+
+        /// <summary>The stars tomorrow's crowd is drawn by: tonight's, unless the bar's own
+        /// fame already clears the roller line, in which case fame overrides the night
+        /// (GDD 23 §7 — see <see cref="ContinueToNextDay"/>, which reads this before the
+        /// night is filed, exactly as the rule intends).</summary>
+        private double CrowdStarsTonight =>
+            Rating.Average >= BarRating.HighRollerStars ? BarRating.HighRollerStars : TonightStars;
+
+        /// <summary>Who tonight has drawn for tomorrow, asked before the books close. The
+        /// night's end shows it; <see cref="ContinueToNextDay"/> books it. One rule.</summary>
+        public WealthTier CrowdTomorrow => BarRating.CrowdFor(CrowdStarsTonight);
+
         /// <summary>Today's crowd, decided by yesterday's satisfaction bar (GDD 23 §7).</summary>
         public WealthTier CrowdToday { get; private set; } = WealthTier.Regular;
 
@@ -1152,7 +1181,11 @@ namespace LastCall.Core
             // A returning face or a fresh roll — the person persists; what is left of them
             // after the emotion demolition (2026-08-02) is who they ARE: name, visits,
             // relationship. The "read" stream still burns a draw so old seeds stay close.
-            var regular = _regulars.RollNext(_rng.GetStream("customer"));
+            //
+            // NOBODY IS A REGULAR ON THE NIGHT THE BAR OPENS (2026-08-25). Day one is the
+            // first night this room has ever been open, so every drinker through the door is
+            // meeting it for the first time; from day two the registry may send people back.
+            var regular = _regulars.RollNext(_rng.GetStream("customer"), allowReturns: Day > 1);
             _rng.GetStream("read").NextInt(100);
 
             return new CustomerVisit(order, patience, regular, decide, askPatience);
@@ -2199,16 +2232,17 @@ namespace LastCall.Core
             // a zero night moves a standing to 0.8 of itself, and since the scale ends at
             // five, NO standing could clear the roller line afterwards. The rule was always
             // meant to be read against the standing the bar walked in with.
-            double fame = Rating.Average;
-            Rating.CloseNight(Floor.AverageSatisfaction, Math.Min(UpgradeStarCap, MenuStarCap));
-
             // Tomorrow's crowd reacts to TONIGHT (2026-08-02) — a dreadful night drives
             // the paying crowd off — while fame alone brings the rollers: once the
             // STANDING clears the high-roller line, it overrides the night. Keying broke
             // off the zero-start standing either starved the opening week or never fired.
-            double crowdStars = fame >= BarRating.HighRollerStars
-                ? BarRating.HighRollerStars
-                : Rating.LastNight;
+            //
+            // READ BEFORE THE NIGHT IS FILED, which is the whole point of the line above:
+            // CrowdStarsTonight asks Rating.Average, and CloseNight is about to move it.
+            // (Tonight's own stars are the same number either way — TonightStars is what
+            // CloseNight is about to file as LastNight.)
+            double crowdStars = CrowdStarsTonight;
+            Rating.CloseNight(Floor.AverageSatisfaction, StarCeiling);
             // The star scale's INVERSE, and it has to move with it (2026-08-11): this read
             // (stars - 1) / 4 because stars used to be 1 + 4x. They are 5x now, so the
             // undo is a division. A test caught it — a made bar stopped drawing rollers,

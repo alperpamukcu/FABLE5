@@ -2,6 +2,38 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `23 §6 / GDD_MEVCUT` **the night's end becomes a report (2026-08-25, fifth round):**
+  three things the author asked for in one screen.
+  **(1) The day waits for the room.** Core already refused to close while anybody was on
+  a stool, but the walk to the door is the HUD's — so the scrim used to come down over the
+  last customer's cheer and their exit. The phase flip now only ARMS the books; they open
+  when the floor is visually clear (nobody drawn, no tab still counting) or after a 9s
+  backstop.
+  **(2) The tab is worth watching.** What a customer paid and the stars they leave now
+  lift off the stool at display-24 with the till's own two rings, for 3.2s instead of 1.6,
+  drifting on a slow sine and leaning into the drift rather than rising in a straight
+  line — the phase comes from the stool's index, never from a roll. The stars are the
+  `StarRow` ruler, so a 3.5 is three and a half here as everywhere else.
+  **(3) The books are a report, not a receipt.** The slip keeps the money and is flanked
+  by two instruments in the room's own chrome: **THE WEEK** (six nights and Sunday; a
+  played night shows the stars it filed and its net, tonight is lit, the nights ahead are
+  five empty sockets, Saturday keeps its VIP star, Sunday its shutter, and the week's own
+  subtotal sits at the foot) and **AFTER TONIGHT** (five 40px stars and the figure over a
+  0–5 gauge: amber to where the bar stands, a dim band across the slice tonight won or
+  lost, a white tick where it stood at opening and a cyan notch at the next rung; beside
+  it WAS x.xx and an arrowed step chip; under it TONIGHT, CEILING and TOMORROW). A fourth
+  beat was added after the star drop — the standing CLIMBS, and only then does the way out
+  appear. Every number is asked of the rules before the books close: `BarRating.Nights` /
+  `StandingAfter` (which `CloseNight` now calls, so there is one climb, not two) and
+  `TycoonRun.TonightStars` / `StarCeiling` / `StandingAfterTonight` / `CrowdTomorrow`;
+  `NightReportTests` pins each by asking, closing, and comparing. The slip dropped its
+  "BAR x.x" (the right-hand instrument's whole subject) and its print starts 8 units
+  lower, which stops the DISGRACE stamp clipping the date line.
+  **Also:** the order bubble's white is 86% opaque (`ChromeArt.BubbleFill`) — only the
+  fill; the spout's skirt stays solid, because those three rows exist to erase the plate's
+  bottom band and a see-through eraser erases nothing. `ChromeArt.Solid()` was added after
+  the gauge came back full at nought: an `Image` with no sprite ignores `Type.Filled`.
+
 - `23 §3 / 16 / GDD_MEVCUT` **a star gate is drawn, and a perfect pour announces itself
   (2026-08-25, fourth round):** every star requirement now draws its stars beside its
   number — the shop's sealed tag (which is the one renderer behind recipe crates, bottle

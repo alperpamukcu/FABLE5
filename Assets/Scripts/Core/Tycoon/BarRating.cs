@@ -53,6 +53,12 @@ namespace LastCall.Core
 
         private readonly List<double> _nights = new List<double>();
 
+        /// <summary>Every night this bar has closed, in the (capped) stars that were filed,
+        /// oldest first. Read-only: the books are written by <see cref="CloseNight"/> and by
+        /// nothing else. The night's end draws the week off this (2026-08-25) — a calendar
+        /// that kept its own tally would be a second set of books.</summary>
+        public IReadOnlyList<double> Nights => _nights;
+
         /// <summary>How many nights this bar has closed.</summary>
         public int NightsClosed => _nights.Count;
 
@@ -126,10 +132,25 @@ namespace LastCall.Core
         {
             double night = Math.Min(ExactStarsFor(nightAverageSatisfaction), cap);
             _nights.Add(night);
-            double delta = night - _standing;
+            _standing = StandingAfter(night);
+        }
+
+        /// <summary>
+        /// Where a night of <paramref name="nightStars"/> would leave the standing — the
+        /// inertial step, asked WITHOUT taking it. Pure: nothing here is written down.
+        ///
+        /// The night's end shows the player what tonight did to their bar before the books
+        /// are actually closed (the author, 2026-08-25: "gün sonunda restoranın yıldız
+        /// ilerlemesini göster"), and a screen that worked the climb out for itself would be
+        /// a second copy of the rule, free to drift from this one. So the rule is asked
+        /// instead: <see cref="CloseNight"/> and the preview are the same three lines.
+        /// </summary>
+        public double StandingAfter(double nightStars)
+        {
+            double delta = nightStars - _standing;
             double move = delta * (delta >= 0 ? GainRate : LossRate);
             if (move > MaxNightlyGain) move = MaxNightlyGain;
-            _standing = Math.Max(0.0, Math.Min(MaxStars, _standing + move));
+            return Math.Max(0.0, Math.Min(MaxStars, _standing + move));
         }
 
         /// <summary>Dev tooling only: parks the standing for the game-mode presets.</summary>

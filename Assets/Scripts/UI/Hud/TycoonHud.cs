@@ -304,14 +304,20 @@ namespace LastCall.UI
             ("silverbob", 11f, 0f, 6, 6),
             ("afrowoman", 0f, 0f, 7, 6),
             ("eastasianman", 7f, 0f, 5, 6),
-            // The last two before the casting pauses, both the author's own descriptions,
-            // and both DRAWN AGAIN on 2026-08-20 rather than filtered. For one day their
-            // keyline was stripped off the finished frames; the author threw that out
-            // ("hicbir karakterde siyah kontur olmamali ... dogal kontur olacak"), so the
-            // brief was changed where the ink was actually coming from - the waistcoat lost
-            // its tailoring words, the leopard print lost its black - and each was rolled
-            // several times with the best of the batch adopted on measurement.
-            ("spanishsuit", 7f, 0f, 7, 6),
+            // The last one before the casting pauses, the author's own description, and
+            // DRAWN AGAIN on 2026-08-20 rather than filtered. For one day her keyline was
+            // stripped off the finished frames; the author threw that out ("hicbir
+            // karakterde siyah kontur olmamali ... dogal kontur olacak"), so the brief was
+            // changed where the ink was actually coming from - the leopard print lost its
+            // black - and she was rolled several times with the best of the batch adopted
+            // on measurement.
+            //
+            // CUT 2026-08-25: "spanishsuit" — the waistcoated drinker who used to sit here —
+            // left the game on the author's call ("İspanyol müşteriyi oyundan kaldır görseli
+            // ve animasyonları bozuk"). His 200 frames were deleted with him. His generation
+            // record is still in Tools/patron_trial_state.json; anyone tempted to re-adopt it
+            // should re-roll the character rather than re-ship those frames, because the
+            // frames are what was wrong with him.
             ("leopard", 4f, 0f, 4, 6),
         };
         /// <summary>
@@ -1348,6 +1354,7 @@ namespace LastCall.UI
             foreach (var v in _seats)
             {
                 v.Visit = null;
+                v.Look = null;          // see AdvanceExit: a stool with nobody on it has no face
                 v.Exiting = false;
                 v.ExitT = 0f;
                 v.WalkT = 0f;
@@ -1369,6 +1376,20 @@ namespace LastCall.UI
             VesselArt.ClearCache();     // measurements are of sprites, so they go with them
             _lastPhase = TycoonPhase.DayOpen;
             _lastStormedCount = 0;
+            _dayEndDue = false;   // a new bar is not owed last night's books
+            _tabFloats = 0;       // and nothing of last night's is still in the air
+            // A NEW BAR REMEMBERS NOBODY (2026-08-25). The guest log and the casting both
+            // outlived the run they were built in: the HUD is made once and StartNewRun only
+            // replaces the run under it, so NEW RUN opened on a bar whose faces already
+            // carried the last run's visit counts and star ratings, and day one printed
+            // "3rd visit" for a room that had been open for ninety seconds. Everything below
+            // is keyed off a run that no longer exists.
+            _patronLog.Clear();
+            _faceOfPerson.Clear();
+            _faceOfVisit.Clear();
+            _faceLastSeen.Clear();
+            _faceClock = 0;
+            _faceRng = null;          // re-seeded off the new run's own seed
             ResetSeats();
             _dayEndPanel.gameObject.SetActive(false);
             _bannerText.gameObject.SetActive(false);
@@ -1428,7 +1449,7 @@ namespace LastCall.UI
             if (run.Phase != _lastPhase)
             {
                 _lastPhase = run.Phase;
-                if (run.Phase == TycoonPhase.DayEnd) ShowDayEnd();
+                if (run.Phase == TycoonPhase.DayEnd) { _dayEndDue = true; _dayEndDueAt = Time.unscaledTime; }
                 if (run.Phase == TycoonPhase.Closed) ShowClosed();
             }
 
@@ -1445,6 +1466,7 @@ namespace LastCall.UI
 
             RefreshTopBar();
             RefreshSeats();
+            PlaceBookProp();      // it stands on the counter, so it rides with the counter
             SyncLastCall(run);    // after the seats: the guest is one of them
             UpdateOrderTip();     // after the seats: it reads the tickets they just placed
             UpdateDrinkGlass();
@@ -1455,6 +1477,48 @@ namespace LastCall.UI
             StepMoneyDrops();
             StepCheckoutKey();
             StepDayEndBeats();
+            StepChipPop();
+            StepDayEndDue();
+        }
+
+        // ── the night waits for the room to empty (2026-08-25) ──────────────────
+        //
+        // The author: "gün müşteri içkisini bitirip ekrandan çıkmadan bitmemeli". It did.
+        // Core has always been right about this — a stool stays taken until the drink is
+        // finished, and BarDay.IsComplete waits for the last one — but the WALK OUT is the
+        // HUD's, and it starts on the same tick that empties the stool. So the scrim came
+        // down over the last customer's cheer and their walk to the door, and the last
+        // thing the player saw of the night they had just worked was it being covered up.
+        //
+        // The phase flip only ARMS the books now; they arrive when the floor is actually
+        // clear — nobody left on screen, and no tab still counting itself over a stool.
+        private bool _dayEndDue;
+        private float _dayEndDueAt;
+
+        /// <summary>The longest the books will wait for a stubborn walker. The far stool is
+        /// about 1000 units from the door at WalkSpeed, plus the reaction beat — call it
+        /// four and a half seconds — so this is a backstop against a view that never
+        /// finishes, never a timer the night is expected to hit.</summary>
+        private const float DayEndPatience = 9f;
+
+        private void StepDayEndDue()
+        {
+            if (!_dayEndDue) return;
+            if (!FloorIsClear() && Time.unscaledTime - _dayEndDueAt < DayEndPatience) return;
+            _dayEndDue = false;
+            ShowDayEnd();
+        }
+
+        /// <summary>Is there anybody still on the screen? A stool's view is hidden by
+        /// <see cref="AdvanceExit"/> on the frame it reaches the door, and a settled tab
+        /// keeps counting for a beat after that — both have to be finished, or the books
+        /// land on top of the thing they are counting.</summary>
+        private bool FloorIsClear()
+        {
+            if (_tabFloats > 0) return false;
+            foreach (var v in _seats)
+                if (v.Root != null && v.Root.gameObject.activeSelf) return false;
+            return true;
         }
 
         /// <summary>
@@ -2205,89 +2269,148 @@ namespace LastCall.UI
             if (text != null) Destroy(text.gameObject);
         }
 
+        /// <summary>How many tabs are still counting themselves over a stool. The night's
+        /// books wait for these (see <see cref="FloorIsClear"/>): the money and the stars a
+        /// customer left are the last thing that happens in a day, and a scrim over them is
+        /// the day ending before it finished paying.</summary>
+        private int _tabFloats;
+
+        /// <summary>How long the takings hang over the stool, and how far they climb. 3.2s
+        /// against the 1.6 it was (2026-08-25, the author: "hemen yok oluyor") — long enough
+        /// to be read twice, which is what a reward has to be.</summary>
+        private const float TabLife = 3.2f, TabClimb = 104f;
+        /// <summary>How far it wanders off the vertical and how far it leans doing it. The
+        /// author again: "düz bir şekilde yukarı çıkmak zorunda değil, metin biraz sağa sola
+        /// eğimli olabilir" — so it drifts on a slow sine and leans INTO the drift, the way
+        /// a thing carried upward on air does.</summary>
+        private const float TabSway = 26f, TabLean = 7f;
+
         /// <summary>
         /// The bill, paid on the way out (2026-07-31): what the whole visit came to — every
         /// round of it — and the stars this customer leaves behind. Fired by the departure
         /// hook, which is the same moment Core settles the tab into the till.
-        /// </summary>
-        /// <summary>
-        /// What a customer paid, rising off their stool.
         ///
-        /// The author, 2026-08-11: the figures are hard to read and there are black and
-        /// white frames around them. Both were one bug wearing two faces. The star line was
-        /// built out of U+2605 and U+2606 — and PressStart2P carries neither, so Unity drew
-        /// the missing-glyph box five times over. The "frames" were tofu. This project's own
-        /// notes already record the trap ("Silkscreen cannot draw U+2605, and the label
-        /// carries one"), which is exactly how it got in.
+        /// The stars are DRAWN, never typed (2026-08-11): the first cut set them in U+2605
+        /// and U+2606, which PressStart2P does not carry, so Unity drew the missing-glyph
+        /// box five times over and the author read the tofu as "black and white frames
+        /// around the figures". They ride the `StarRow` ruler now, like every other star in
+        /// the game — and the money sits on a whole multiple of the face's 8px design size,
+        /// which is the rest of what made it soft.
         ///
-        /// So the stars are DRAWN now, with the mark the slip and the ticket use, at a size
-        /// chosen rather than inherited from a font that could not render them. And the
-        /// money was set at 14, which is not a whole multiple of the face's 8px design size
-        /// — the one sizing rule this project has — so it was being resampled between the
-        /// pixel grid, which is the rest of the softness. 16 is the legal size next to it.
+        /// It was rebuilt on 2026-08-25 to be worth watching: see TabLife/TabSway above.
         /// </summary>
         private System.Collections.IEnumerator TabFloat(int seatIndex, CustomerVisit visit)
         {
             var seat = _seats[seatIndex].Root;
             int tip = visit.Paid - visit.PaidBase;
+            double stars = BarRating.ExactStarsFor(visit.Satisfaction);
+            _tabFloats++;
 
+            // PIVOTED IN THE MIDDLE OF ITS OWN FOOT, so the lean turns it about the point it
+            // is rising from rather than swinging it about a corner off to the left. (The
+            // old rect hung from its bottom-left and was nudged half its width back, which
+            // works for a thing that only ever goes straight up and for nothing else.)
             var host = NewRect("Tab", seat.parent);
-            host.anchorMin = host.anchorMax = host.pivot = new Vector2(0, 0);
-            host.sizeDelta = new Vector2(178, 46);
+            host.anchorMin = host.anchorMax = new Vector2(0, 0);
+            host.pivot = new Vector2(0.5f, 0f);
+            host.sizeDelta = new Vector2(200, 58);
             var group = host.gameObject.AddComponent<CanvasGroup>();
 
-            var paid = NewText("Paid", host, _display, 16, TextAnchor.LowerCenter,
-                UITheme.Amber[4]);
-            Place(paid.rectTransform, new Vector2(0.5f, 1), new Vector2(178, 20), new Vector2(0, 0));
+            // THE FIGURE IS THE EVENT (2026-08-25, the author: "daha belirgin ve dikkat
+            // çekici"). 24 — the next legal step up, a whole 3x of the face's 8px grid —
+            // and ringed the way the till's change is: white against the amber, black
+            // outside the white, so it holds its shape over a lit wall or a dark one.
+            // Amber[3] and not the ramp's palest step: the figure crosses a sunset window
+            // on its way up, and 0xF5C97B against that is cream on cream (measured).
+            var paid = NewText("Paid", host, _display, 24, TextAnchor.LowerCenter,
+                UITheme.Amber[3]);
+            Place(paid.rectTransform, new Vector2(0.5f, 1), new Vector2(200, 28), new Vector2(0, 0));
             paid.rectTransform.pivot = new Vector2(0.5f, 1);
             paid.horizontalOverflow = HorizontalWrapMode.Overflow;
+            paid.verticalOverflow = VerticalWrapMode.Overflow;
             paid.text = "+$" + visit.Paid;
+            Ring(paid);
 
+            float y = 30f;
             // The tip is the part worth its own colour, and it is short enough to sit under
             // the total without a word explaining itself.
             if (tip > 0)
             {
-                var tipText = NewText("Tip", host, _display, 8, TextAnchor.UpperCenter,
-                    UITheme.Lime[3]);
-                Place(tipText.rectTransform, new Vector2(0.5f, 1), new Vector2(178, 10),
-                    new Vector2(0, -20f));
+                var tipText = NewText("Tip", host, _display, 16, TextAnchor.UpperCenter,
+                    UITheme.Lime[4]);
+                Place(tipText.rectTransform, new Vector2(0.5f, 1), new Vector2(200, 18),
+                    new Vector2(0, -y));
                 tipText.rectTransform.pivot = new Vector2(0.5f, 1);
                 tipText.horizontalOverflow = HorizontalWrapMode.Overflow;
+                tipText.verticalOverflow = VerticalWrapMode.Overflow;
                 tipText.text = "+$" + tip + " TIP";
+                Ring(tipText);
+                y += 20f;
             }
 
-            // Five small drawn stars, lit to the visit's own score.
-            const float StarPx = 10f, StarGap = 2f;
-            int lit = Mathf.Clamp(Mathf.RoundToInt((float)visit.Satisfaction * 5f), 0, 5);
-            float rowW = 5f * StarPx + 4f * StarGap;
-            var stars = NewRect("Stars", host);
-            Place(stars, new Vector2(0.5f, 1), new Vector2(rowW, StarPx),
-                new Vector2(0, tip > 0 ? -32f : -22f));
-            stars.pivot = new Vector2(0.5f, 1);
-            var mark = ChromeArt.Mark("star");
-            for (int i = 0; i < 5; i++)
-            {
-                var one = NewRect("S" + i, stars);
-                Place(one, new Vector2(0, 0.5f), new Vector2(StarPx, StarPx),
-                    new Vector2(i * (StarPx + StarGap) + StarPx * 0.5f, 0));
-                one.pivot = new Vector2(0.5f, 0.5f);
-                var img = one.gameObject.AddComponent<Image>();
-                img.sprite = mark; img.preserveAspect = true; img.raycastTarget = false;
-                img.color = i < lit ? UITheme.Amber[3] : new Color(1f, 1f, 1f, 0.22f);
-            }
+            // The stars they leave, on the same ruler every star gate in the game is drawn
+            // on — five sockets and a gold row filled by the fraction, so a 3.5 is three and
+            // a half here exactly as it is on the slip and in the book.
+            // The sockets are DARK here, not the usual faint white: this row is thrown over
+            // the room rather than laid on a panel, and a 20%-white star over the window is
+            // nothing at all. Five dark stars read on any wall, and the gold fills on top.
+            var stars5 = StarRow(host, new Vector2(0.5f, 1), new Vector2(0, -y), 14f,
+                stars, UITheme.Amber[3], new Color(0f, 0f, 0f, 0.55f));
+            stars5.pivot = new Vector2(0.5f, 1);
 
-            var start = seat.anchoredPosition + new Vector2(-89f, 96f);
-            const float duration = 1.6f;
+            var start = seat.anchoredPosition + new Vector2(0f, 96f);
+            // A phase per stool, so two tabs in the air are never the same movement — and
+            // taken from the seat, not from a roll: nothing in this game is random by
+            // accident (the determinism rule), and a wander that reproduces is one less
+            // thing that can differ between two runs of the same seed.
+            float phase = seatIndex * 1.7f;
             float tt = 0f;
-            while (tt < duration && host != null)
+            while (tt < TabLife && host != null)
             {
                 tt += Time.deltaTime;
-                float k = Mathf.Clamp01(tt / duration);
-                host.anchoredPosition = start + new Vector2(0, 64f * k);
-                group.alpha = 1f - k * k;
+                float k = Mathf.Clamp01(tt / TabLife);
+                float climb = 1f - (1f - k) * (1f - k);          // fast off the stool, then easing
+                float wander = Mathf.Sin(phase + k * Mathf.PI * 1.6f);
+                host.anchoredPosition = start + new Vector2(
+                    TabSway * wander * k, TabClimb * climb);
+                // It leans the way it is being carried: the lean is the drift's own slope,
+                // which is why it reads as one movement rather than as a spin.
+                host.localRotation = Quaternion.Euler(0, 0,
+                    -TabLean * Mathf.Cos(phase + k * Mathf.PI * 1.6f) * k);
+                // A pop out of the stool, then a slow settle — the punch is what makes it
+                // arrive rather than appear.
+                float pop = 1f + 0.35f * Mathf.Clamp01(1f - k * 9f) - 0.06f * k;
+                host.localScale = new Vector3(pop, pop, 1f);
+                // It holds its ink for two thirds of the life and only then goes. The old
+                // curve (1 - k²) was already fading on the first frame, which is most of
+                // why it read as "gone at once".
+                group.alpha = k < 0.62f ? 1f : 1f - (k - 0.62f) / 0.38f;
                 yield return null;
             }
+            _tabFloats--;
             if (host != null) Destroy(host.gameObject);
+        }
+
+        /// <summary>
+        /// A dark halo round a label, so a figure thrown over the room keeps its shape on
+        /// any wall it crosses — and the till's own sunset window is the wall it crosses.
+        ///
+        /// TWO BLACKS, NOT THE TILL'S WHITE-THEN-BLACK (measured, 2026-08-25). The white
+        /// ring works on the register, which stands in shadow. Over the window it does not:
+        /// `Outline` draws offset copies BEHIND the glyph, and a pixel face at 24 is a
+        /// three-unit stroke with a unit of anti-aliasing down each side — so the white
+        /// shows straight through the soft edges and a gold "+$4" comes out cream. Two dark
+        /// rings at different distances give the same read on a dark wall and leave the
+        /// gold gold.
+        /// </summary>
+        private static void Ring(Text label)
+        {
+            var near = label.gameObject.AddComponent<Outline>();
+            near.effectColor = new Color(0f, 0f, 0f, 0.92f);
+            near.effectDistance = new Vector2(2f, -2f);
+            var far = label.gameObject.AddComponent<Outline>();
+            far.effectColor = new Color(0f, 0f, 0f, 0.62f);
+            far.effectDistance = new Vector2(3.5f, -3.5f);
         }
 
         /// <summary>
@@ -3341,6 +3464,16 @@ namespace LastCall.UI
                 // that walked out, which is the last moment both are still in hand.
                 RecordDeparture(view.Look, view.Visit);
                 view.Visit = null;
+                // AN EMPTY STOOL HAS NO FACE (2026-08-25). This line is the whole reason the
+                // bar looked like four people on a loop. The arrival that reuses this stool
+                // sets `v.Visit` FIRST and asks LookFor SECOND, and LookFor's first act is to
+                // honour a stool that already holds a look - which this stool still did,
+                // belonging to whoever just walked out. So every customer after the first on
+                // any stool inherited the last one's face: four stools, four faces, all
+                // night, every night, and a licence that read "3rd visit" with a full row of
+                // stars on the bar's opening hour. Measured on 2026-08-25: seven different
+                // people through the door, four faces drawn.
+                view.Look = null;
                 // The next customer on this stool speaks their own order from the beginning.
                 view.WasKnown = false;
                 view.Spoken = false;
@@ -3592,13 +3725,41 @@ namespace LastCall.UI
             return sprites;
         }
 
+        // ── who wears which face (rewritten 2026-08-25) ───────────────────────
+        // The old rule was A HASH OF THE NAME, and the name came out of an archetype's
+        // five-name pool: forty strings collapsed onto ten drawings, the same string always
+        // landed on the same drawing, and two unrelated people both called Marguerite were
+        // one person as far as the licence, the guest log and the player's eye could tell.
+        // The room read as four or five faces on a loop, night after night (the author,
+        // 2026-08-25: "musteriler rastgele gelmeli hergun").
+        //
+        // A face belongs to a PERSON now, for as long as the run remembers them, and a
+        // stranger takes the face nobody has worn for the longest. So a night draws across
+        // the whole cast before it repeats anybody, and the opening night — about eight
+        // drinkers against nine faces — is eight people the bar has never seen, which is
+        // what an opening night is.
+        //
+        // It decides nothing: which drawing sits down cannot change what anybody orders,
+        // pays or waits. That is why it may live up here in the HUD, and why it draws on its
+        // OWN generator rather than on the run's streams, which the floor's arrivals are
+        // counted out of. Seeded off the run's seed all the same, so a shared seed still
+        // shows two players the same crowd.
+        private readonly Dictionary<string, PatronLook> _faceOfPerson =
+            new Dictionary<string, PatronLook>();
+        private readonly Dictionary<CustomerVisit, PatronLook> _faceOfVisit =
+            new Dictionary<CustomerVisit, PatronLook>();
+        private readonly Dictionary<PatronLook, int> _faceLastSeen =
+            new Dictionary<PatronLook, int>();
+        private int _faceClock;
+        private SeededRng _faceRng;
+
+        private SeededRng FaceRng => _faceRng ?? (_faceRng =
+            new RunRng((_bootstrap != null ? _bootstrap.CurrentSeed : null) ?? "").GetStream("faces"));
+
         /// <summary>
-        /// Which face sits down. Not rolled — a named regular is the SAME person every
-        /// night, so hashing their name means Marguerite is always the nurse off the late
-        /// shift, and recognising her across visits is the whole point of regulars. An
-        /// anonymous drinker is keyed off the patience the run already rolled for them,
-        /// which is deterministic under the seed and costs the RNG streams nothing (so the
-        /// sim's arrivals stay byte-identical).
+        /// Which face sits down. The same person is the same face every time they come back —
+        /// recognising them across visits is the whole point of remembering anybody — and a
+        /// person nobody has met yet is given whichever face has been off the floor longest.
         /// </summary>
         private PatronLook LookFor(CustomerVisit visit)
         {
@@ -3610,8 +3771,8 @@ namespace LastCall.UI
                 if (seat.Visit == visit && seat.Look != null) return seat.Look;
 
             // THE STORY'S GUEST IS NOT ROLLED (GDD 26 §8): the beat names the face, and it
-            // is the same face every night of the run. Hashing their name instead would put
-            // the rent collector in a different body each time he came back — which is the
+            // is the same face every night of the run. Rolling one instead would put the
+            // rent collector in a different body each time he came back — which is the
             // one thing a recurring character cannot survive.
             var run = Run;
             if (visit != null && run != null && ReferenceEquals(visit, run.LastCustomer))
@@ -3619,40 +3780,68 @@ namespace LastCall.UI
                 var written = LookForStory(run.LastCallBeat?.Who);
                 if (written != null) return written;
             }
+            if (visit == null) return _looks[0];
 
-            string key = visit != null && visit.Regular != null
-                         && !string.IsNullOrEmpty(visit.Regular.Name)
-                ? visit.Regular.Name
-                : visit == null ? "" : visit.PatienceMax.ToString("R");
+            // Asked again after they have walked out — the night's invoice staples a
+            // polaroid of its two witnesses to the takings. A second answer here would put
+            // a stranger's photograph on the receipt.
+            if (_faceOfVisit.TryGetValue(visit, out var booked)) return booked;
+
             // Only the people this bar has earned. Someone is always available — the
             // 0-star set never empties — so this cannot starve.
+            float standing = run != null ? (float)run.Rating.Average : 0f;
             var open = new List<PatronLook>();
-            float standing = Run != null ? (float)Run.Rating.Average : 0f;
             foreach (var look in _looks)
                 if (look.Stars <= standing + 0.001f) open.Add(look);
             if (open.Count == 0) open.Add(_looks[0]);
 
-            int start;
-            unchecked
-            {
-                int h = 17;
-                for (int i = 0; i < key.Length; i++) h = h * 31 + key[i];
-                start = Mathf.Abs(h) % open.Count;
-            }
-            // NO TWO OF THE SAME PERSON IN THE ROOM (the author, 2026-08-10). Each drawing
+            // NO TWO OF THE SAME DRAWING IN THE ROOM (the author, 2026-08-10). Each drawing
             // IS a character, so the same face on two stools reads as a bug rather than as
-            // a coincidence. The hash still decides WHO — it stays deterministic under the
-            // seed — and a collision simply walks to the next free face.
-            for (int step = 0; step < open.Count; step++)
+            // a coincidence — and the registry can hand back somebody who is still sitting
+            // there, which is the one case that produces it.
+            var free = new List<PatronLook>();
+            foreach (var look in open)
             {
-                var candidate = open[(start + step) % open.Count];
                 bool taken = false;
                 foreach (var seat in _seats)
-                    if (seat.Visit != null && seat.Visit != visit && seat.Look == candidate)
+                    if (seat.Visit != null && seat.Visit != visit && seat.Look == look)
                     { taken = true; break; }
-                if (!taken) return candidate;
+                if (!taken) free.Add(look);
             }
-            return open[start];     // more stools than faces: somebody has to double up
+            bool doubling = free.Count == 0;
+            if (doubling) free = open;      // more stools than faces: somebody has to double up
+
+            string person = visit.Regular != null ? visit.Regular.Id : null;
+            PatronLook theirs = null;
+            bool met = person != null && _faceOfPerson.TryGetValue(person, out theirs);
+            if (met && (doubling || free.Contains(theirs)))
+                return BookFace(visit, person, theirs);
+
+            // The longest-unseen face, and a coin toss between those tied at the back of the
+            // queue — which on the opening night is every face in the building.
+            int oldest = int.MaxValue;
+            foreach (var look in free)
+                oldest = Math.Min(oldest, _faceLastSeen.TryGetValue(look, out var t) ? t : 0);
+            var queue = new List<PatronLook>();
+            foreach (var look in free)
+                if ((_faceLastSeen.TryGetValue(look, out var seen) ? seen : 0) == oldest)
+                    queue.Add(look);
+
+            // A face they are only BORROWING: somebody the bar has already met, whose own
+            // face is on another stool this minute, is drawn as a free one for this visit
+            // alone and keeps their real face for the next time they come in.
+            return BookFace(visit, met ? null : person, queue[FaceRng.NextInt(queue.Count)]);
+        }
+
+        /// <summary>Books a face to a visit — and, when this is the first sight of the person
+        /// behind it, to them for the rest of the run — and stamps it as the most recently
+        /// seen, so the next stranger through the door is given somebody else.</summary>
+        private PatronLook BookFace(CustomerVisit visit, string person, PatronLook look)
+        {
+            _faceOfVisit[visit] = look;
+            if (person != null) _faceOfPerson[person] = look;
+            _faceLastSeen[look] = ++_faceClock;
+            return look;
         }
 
         // ── day end ─────────────────────────────────────────────────────────────
@@ -3675,6 +3864,12 @@ namespace LastCall.UI
         // grow with them rather than the type growing inside its old gutter.
         private const float BillW = 456f, BillH = 600f, BillHeadH = 62f, BillRowH = 26f;
         private const float BillInset = 36f;   // type margin inside the sheet
+        /// <summary>Where the print starts under the head. 12 → 20 on 2026-08-25: the first
+        /// row is the star row, the stamp is struck ACROSS the star row, and a stamp is
+        /// crooked and taller than what it strikes — so on a night that earned nothing its
+        /// raised corner clipped the date line above it. Eight units of paper is the whole
+        /// fix, and the roll has blank stock to spare at the foot.</summary>
+        private const float BillRowsTop = BillHeadH + 20f;
         private static readonly Color BillPaper = new Color(0.965f, 0.945f, 0.886f, 1f);
         private static readonly Color BillEdge = new Color(0.62f, 0.58f, 0.50f, 1f);
         private static readonly Color BillBand = new Color(0.102f, 0.165f, 0.290f, 1f);
@@ -3756,11 +3951,28 @@ namespace LastCall.UI
 
             if (_endBeat == 2)
             {
+                // The two instruments come in WITH the paper, from their own sides — the
+                // desk being laid out while the till prints, which is one movement rather
+                // than three screens arriving one after another.
+                SetBoardsIn(Motion.Reduced ? 1f : Mathf.Clamp01(_endT / BoardsIn));
                 // The slide owns the paper until it settles; the stars wait for that.
                 if (_slideRt != null && !Motion.Reduced) return;
+                SetBoardsIn(1f);
                 _dayEndBill.anchoredPosition = _billHome;
                 _endBeat = 3;
                 StartStarDrop(_endStarFrac);
+                return;
+            }
+
+            // Beat 4: the night's stars are in, so now the BAR moves. It is the last thing
+            // that happens and it happens alone — the standing climbing into its stars with
+            // the step it took printed beside it (2026-08-25).
+            if (_endBeat == 4)
+            {
+                StepStandingClimb();
+                if (_standT >= 0f) return;
+                _endBeat = 0;
+                if (_billNext != null && _dayEndStep == 0) _billNext.gameObject.SetActive(true);
                 return;
             }
 
@@ -3776,11 +3988,22 @@ namespace LastCall.UI
             }
             if (_starT < 0f && _stampT < 0f && _billShake <= 0f)
             {
-                _endBeat = 0;
-                // The night has finished counting itself; now there is somewhere to go.
-                if (_billNext != null && _dayEndStep == 0) _billNext.gameObject.SetActive(true);
+                // The night has finished counting itself. What it did to the BAR is the
+                // last beat — and the way out waits for that too, for the reason the
+                // CONTINUE key waited for the stars.
+                _endBeat = 4; _endT = 0f;
+                StartStandingClimb();
+                if (_standT < 0f)
+                {
+                    _endBeat = 0;
+                    if (_billNext != null && _dayEndStep == 0) _billNext.gameObject.SetActive(true);
+                }
             }
         }
+
+        /// <summary>How long the boards take to arrive. Under the paper's own feed, so they
+        /// are standing there before the slip lands rather than racing it.</summary>
+        private const float BoardsIn = 0.85f;
         private const float StarFallH = 70f;     // how far above its place a star starts
         /// <summary>Where in the drop the star first touches its place — the root of the
         /// out-back curve, not a number picked to look right. See the shake below.</summary>
@@ -4327,13 +4550,765 @@ namespace LastCall.UI
         private void FitBillToPaper(float printed)
         {
             const float FootRoom = 22f;
-            float room = BillH - (BillHeadH + 12f) - FootRoom;
+            float room = BillH - BillRowsTop - FootRoom;
             float k = printed > room && printed > 0f ? room / printed : 1f;
             _invoiceRows.localScale = new Vector3(k, k, 1f);
         }
 
+        // ── the night's two instruments (2026-08-25) ────────────────────────────
+        //
+        // The author: "gün sonu ekranını baştan sona tekrardan tasarla, mevcut haftalık
+        // takvimin ilerlemesini daha profesyonelce göster, gün sonunda restoranın yıldız
+        // ilerlemesini göster, bugün görselle ne kadar ilerlediğini göster."
+        //
+        // The books were ONE object on an empty scrim: a till slip, centred, with four
+        // hundred units of nothing either side of it. And a receipt can only ever say what
+        // tonight COST and TOOK — so neither of the two questions a tycoon player actually
+        // has at two in the morning was on the screen at all: where am I in the week, and
+        // did tonight move my bar.
+        //
+        // They are the two instruments flanking the slip now. THE WEEK is the record: every
+        // night of this week with the stars it filed and the money it made, tonight lit, the
+        // nights ahead still empty sockets, Sunday shuttered. THE BAR is the ladder: the
+        // standing, the step tonight moved it (drawn, on a gauge, against where it stood
+        // before), the ceiling the fittings hold it under, and the next rung up. Both are
+        // drawn in the room's own chrome — the market's card, the bottle gauge's tube — and
+        // both read the RULES for their numbers (BarRating.StandingAfter, TycoonRun's
+        // ceilings and crowd) rather than working the climb out for themselves.
+        private const float BoardW = 356f, BoardH = 384f, BoardX = 430f, BoardY = 48f;
+        private const float BoardPad = 18f;
+        private static readonly Color BoardPlate = new Color(0.102f, 0.063f, 0.137f, 0.96f);
+
+        /// <summary>One of the two boards: the plate, its head, and the body its rows are
+        /// rebuilt into every night.</summary>
+        private sealed class NightBoard
+        {
+            public RectTransform Root;
+            public RectTransform Body;
+            public CanvasGroup Group;
+            public Text Reading;      // the head's right-hand figure
+        }
+        private NightBoard _weekBoard, _standBoard;
+
+        // The standing's moving parts, re-taken every rebuild (the body is destroyed and
+        // built again, so a reference kept across nights would point at a corpse).
+        private Image[] _standStars;
+        private Image _standFill, _standFillGhost;
+        private Text _standNumber, _standDelta;
+        private RectTransform _standDeltaChip, _standWasTick;
+        private Image _standDeltaArrow;
+        private float _standT = -1f;          // < 0 = not running
+        private double _standFrom, _standTo;
+        private const float StandClimb = 1.1f;
+
+        private void BuildNightBoards(RectTransform panel)
+        {
+            _weekBoard = NightBoardPlate(panel, "WeekBoard", -BoardX, "THE WEEK");
+            // IT SAYS WHICH READING IT IS. The top bar is still lit above the scrim with the
+            // standing the bar WALKED IN with — the books have not closed, so it is telling
+            // the truth — and two different star counts on one screen with nothing to tell
+            // them apart is exactly the drift this project refuses everywhere else. The head
+            // names the one this instrument shows.
+            _standBoard = NightBoardPlate(panel, "StandBoard", BoardX, "AFTER TONIGHT");
+        }
+
+        private NightBoard NightBoardPlate(RectTransform panel, string name, float x, string caption)
+        {
+            var board = new NightBoard();
+            board.Root = NewRect(name, panel);
+            Place(board.Root, new Vector2(0.5f, 0.5f), new Vector2(BoardW, BoardH),
+                new Vector2(x, BoardY));
+            var plate = board.Root.gameObject.AddComponent<Image>();
+            plate.sprite = ChromeArt.Card();
+            plate.type = Image.Type.Sliced;
+            plate.color = BoardPlate;
+            plate.raycastTarget = false;
+            board.Group = board.Root.gameObject.AddComponent<CanvasGroup>();
+            board.Group.blocksRaycasts = false;
+
+            // The head names the instrument and gives its one reading, which is the same
+            // grammar the top bar's wells use: a small caption, a big figure.
+            var cap = NewText("Cap", board.Root, _body, 16, TextAnchor.MiddleLeft, UITheme.Cyan[3]);
+            Place(cap.rectTransform, new Vector2(0, 1), new Vector2(BoardW - BoardPad * 2f, 20),
+                new Vector2(BoardPad, -22f));
+            cap.rectTransform.pivot = new Vector2(0, 0.5f);
+            cap.horizontalOverflow = HorizontalWrapMode.Overflow;
+            cap.text = caption;
+
+            board.Reading = NewText("Reading", board.Root, _display, 16, TextAnchor.MiddleRight,
+                UITheme.Amber[4]);
+            Place(board.Reading.rectTransform, new Vector2(1, 1), new Vector2(150, 20),
+                new Vector2(-BoardPad, -22f));
+            board.Reading.rectTransform.pivot = new Vector2(1, 0.5f);
+            board.Reading.horizontalOverflow = HorizontalWrapMode.Overflow;
+            board.Reading.verticalOverflow = VerticalWrapMode.Overflow;
+
+            var rule = NewRect("Rule", board.Root);
+            Place(rule, new Vector2(0, 1), new Vector2(BoardW - BoardPad * 2f, 1),
+                new Vector2(BoardPad, -38f));
+            rule.pivot = new Vector2(0, 0.5f);
+            var ri = rule.gameObject.AddComponent<Image>();
+            ri.color = new Color(UITheme.Cyan[3].r, UITheme.Cyan[3].g, UITheme.Cyan[3].b, 0.32f);
+            ri.raycastTarget = false;
+
+            board.Body = NewRect("Body", board.Root);
+            board.Body.anchorMin = new Vector2(0, 1); board.Body.anchorMax = new Vector2(1, 1);
+            board.Body.pivot = new Vector2(0.5f, 1);
+            board.Body.sizeDelta = new Vector2(-BoardPad * 2f, 0);
+            board.Body.anchoredPosition = new Vector2(0, -48f);
+            return board;
+        }
+
+        /// <summary>Five stars whose lit halves can be re-scored every frame — the star gate's
+        /// row (2026-08-25) with the fills kept, so the standing can CLIMB into them instead
+        /// of appearing already climbed.</summary>
+        private Image[] LiveStarRow(RectTransform parent, Vector2 anchor, Vector2 pos, float px,
+            float gap, Color lit, Color socket)
+        {
+            float pitch = px + gap;
+            var row = NewRect("LiveStars", parent);
+            Place(row, anchor, new Vector2(BarRating.MaxStars * pitch - gap, px), pos);
+            var art = ItemArt.Load("star");
+            var fills = new Image[BarRating.MaxStars];
+            for (int i = 0; i < BarRating.MaxStars; i++)
+            {
+                var cell = NewRect("S" + i, row);
+                Place(cell, new Vector2(0, 0.5f), new Vector2(px, px), new Vector2(i * pitch, 0));
+                cell.pivot = new Vector2(0, 0.5f);
+                var back = cell.gameObject.AddComponent<Image>();
+                back.sprite = art; back.color = socket;
+                back.preserveAspect = true; back.raycastTarget = false;
+                var over = NewRect("F", cell);
+                Stretch(over, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var oi = over.gameObject.AddComponent<Image>();
+                oi.sprite = art; oi.color = lit;
+                oi.preserveAspect = true; oi.raycastTarget = false;
+                oi.type = Image.Type.Filled;
+                oi.fillMethod = Image.FillMethod.Horizontal;
+                oi.fillOrigin = (int)Image.OriginHorizontal.Left;
+                oi.fillAmount = 0f;
+                fills[i] = oi;
+            }
+            return fills;
+        }
+
+        private static void SetStars(Image[] fills, double stars)
+        {
+            if (fills == null) return;
+            for (int i = 0; i < fills.Length; i++)
+                if (fills[i] != null) fills[i].fillAmount = Mathf.Clamp01((float)stars - i);
+        }
+
+        // ── the week, as a record rather than a row of names ────────────────────
+
+        private const float WeekRowH = 40f;
+        /// <summary>Where a night's score starts. Far enough past the VIP mark that
+        /// Saturday's promise is not read as Saturday's first star.</summary>
+        private const float WeekStarsX = 92f;
+
+        private void FillWeekBoard(TycoonRun run)
+        {
+            if (_weekBoard == null) return;
+            var body = _weekBoard.Body;
+            foreach (Transform old in body) Destroy(old.gameObject);
+
+            int week = BarCalendar.WeekOf(run.Day);
+            _weekBoard.Reading.text = week.ToString("00");
+
+            var names = BarCalendar.WeekColumns;
+            float y = 0f;
+            int weekNet = 0;
+            for (int i = 0; i < names.Length; i++)
+            {
+                bool closed = i >= BarCalendar.OpenNights;
+                int day = closed ? 0 : BarCalendar.DayOf(week, (BarNight)i);
+                bool tonight = !closed && day == run.Day;
+                bool past = !closed && day < run.Day;
+                var book = past ? BookFor(run, day) : null;
+                bool scored = tonight || book != null;
+                double stars = tonight ? run.TonightStars : book != null ? book.NightStars : 0;
+                int net = tonight ? run.DayIncome - run.DayExpenses
+                        : book != null ? book.Net : 0;
+                if (scored) weekNet += net;
+
+                var row = NewRect("N" + i, body);
+                row.anchorMin = new Vector2(0, 1); row.anchorMax = new Vector2(1, 1);
+                row.pivot = new Vector2(0.5f, 1);
+                row.sizeDelta = new Vector2(0, WeekRowH);
+                row.anchoredPosition = new Vector2(0, -y);
+                y += WeekRowH;
+
+                // TONIGHT IS THE LIT ROW. The marquee lights the night being played with a
+                // tube under its name; the record lights it by standing it on its own warm
+                // plate, which is the same idea at the size a row can carry.
+                if (tonight)
+                {
+                    var lit = NewRect("Lit", row);
+                    Stretch(lit, Vector2.zero, Vector2.one, new Vector2(-8, 2), new Vector2(8, -2));
+                    var li = lit.gameObject.AddComponent<Image>();
+                    li.sprite = ChromeArt.Card();
+                    li.type = Image.Type.Sliced;
+                    li.color = new Color(UITheme.Amber[1].r, UITheme.Amber[1].g,
+                                         UITheme.Amber[1].b, 0.55f);
+                    li.raycastTarget = false;
+                }
+
+                var name = NewText("D", row, _display, 16, TextAnchor.MiddleLeft,
+                    closed ? UITheme.Night[4]
+                    : tonight ? UITheme.Amber[4]
+                    : past ? UITheme.Cream[3] : UITheme.Cream[1]);
+                Place(name.rectTransform, new Vector2(0, 0.5f), new Vector2(58, 20),
+                    new Vector2(4, 0));
+                name.rectTransform.pivot = new Vector2(0, 0.5f);
+                name.horizontalOverflow = HorizontalWrapMode.Overflow;
+                name.text = names[i];
+
+                // SATURDAY IS PROMISED BEFORE IT ARRIVES (BarCalendar.VipNight): the night a
+                // name comes wears the star every week, whether or not a beat is booked —
+                // exactly as the top bar's marquee has since 2026-08-14.
+                if (!closed && (BarNight)i == BarCalendar.VipNight)
+                {
+                    var vip = NewRect("Vip", row);
+                    Place(vip, new Vector2(0, 0.5f), new Vector2(13, 13), new Vector2(62, 0));
+                    vip.pivot = new Vector2(0, 0.5f);
+                    var vi = vip.gameObject.AddComponent<Image>();
+                    vi.sprite = ChromeArt.Mark("star");
+                    vi.preserveAspect = true; vi.raycastTarget = false;
+                    var m = UITheme.Magenta[4];
+                    vi.color = tonight ? m : new Color(m.r, m.g, m.b, 0.55f);
+                }
+
+                if (closed)
+                {
+                    // The shutter, the marquee's own sign for a night the bar does not open.
+                    for (int sl = 0; sl < 2; sl++)
+                    {
+                        var slat = NewRect("Shut" + sl, row);
+                        Place(slat, new Vector2(0, 0.5f), new Vector2(44, 3),
+                            new Vector2(WeekStarsX, 5f - sl * 10f));
+                        slat.pivot = new Vector2(0, 0.5f);
+                        var si = slat.gameObject.AddComponent<Image>();
+                        si.color = UITheme.Night[3]; si.raycastTarget = false;
+                    }
+                    var shut = NewText("Off", row, _body, 16, TextAnchor.MiddleRight,
+                        UITheme.Night[4]);
+                    Place(shut.rectTransform, new Vector2(1, 0.5f), new Vector2(120, 20),
+                        new Vector2(-4, 0));
+                    shut.rectTransform.pivot = new Vector2(1, 0.5f);
+                    shut.horizontalOverflow = HorizontalWrapMode.Overflow;
+                    shut.text = "CLOSED";
+                    continue;
+                }
+
+                // The night's stars, on the ruler every star in this game is drawn on. A
+                // night not yet worked shows the five EMPTY sockets — the row is the same
+                // length whatever happens, so the week reads as a ladder being filled in.
+                var stars5 = StarRow(row, new Vector2(0, 0.5f), new Vector2(WeekStarsX, 0), 14f,
+                    scored ? stars : 0,
+                    tonight ? UITheme.Amber[4] : UITheme.Amber[3],
+                    new Color(1f, 1f, 1f, scored ? 0.16f : 0.09f));
+                stars5.pivot = new Vector2(0, 0.5f);
+
+                if (!scored) continue;
+                var money = NewText("M", row, _display, 16, TextAnchor.MiddleRight,
+                    net >= 0 ? UITheme.Lime[4] : UITheme.ViceRed[4]);
+                Place(money.rectTransform, new Vector2(1, 0.5f), new Vector2(120, 20),
+                    new Vector2(-4, 0));
+                money.rectTransform.pivot = new Vector2(1, 0.5f);
+                money.horizontalOverflow = HorizontalWrapMode.Overflow;
+                money.text = (net >= 0 ? "+$" : "-$") + Mathf.Abs(net);
+            }
+
+            // The week's own subtotal, which is the one number a week of receipts is for.
+            y += 8f;
+            var foot = NewRect("Foot", body);
+            foot.anchorMin = new Vector2(0, 1); foot.anchorMax = new Vector2(1, 1);
+            foot.pivot = new Vector2(0.5f, 1);
+            foot.sizeDelta = new Vector2(0, 1);
+            foot.anchoredPosition = new Vector2(0, -y);
+            var fi = foot.gameObject.AddComponent<Image>();
+            fi.color = new Color(UITheme.Cream[1].r, UITheme.Cream[1].g, UITheme.Cream[1].b, 0.28f);
+            fi.raycastTarget = false;
+            y += 10f;
+
+            var label = NewText("WeekLabel", body, _body, 16, TextAnchor.MiddleLeft,
+                UITheme.Cream[2]);
+            Place(label.rectTransform, new Vector2(0, 1), new Vector2(200, 22), new Vector2(4, -y));
+            label.rectTransform.pivot = new Vector2(0, 1);
+            label.horizontalOverflow = HorizontalWrapMode.Overflow;
+            label.text = "THE WEEK SO FAR";
+
+            var total = NewText("WeekNet", body, _display, 16, TextAnchor.MiddleRight,
+                weekNet >= 0 ? UITheme.Lime[4] : UITheme.ViceRed[4]);
+            Place(total.rectTransform, new Vector2(1, 1), new Vector2(160, 22), new Vector2(-4, -y));
+            total.rectTransform.pivot = new Vector2(1, 1);
+            total.horizontalOverflow = HorizontalWrapMode.Overflow;
+            total.verticalOverflow = VerticalWrapMode.Overflow;
+            total.text = (weekNet >= 0 ? "+$" : "-$") + Mathf.Abs(weekNet);
+        }
+
+        /// <summary>What the books say about one day, or null for a day they never kept
+        /// (the calendar can be wound forward by the dev tool, which books nothing).</summary>
+        private static DayResult BookFor(TycoonRun run, int day)
+        {
+            var history = run.Ledger.History;
+            for (int i = history.Count - 1; i >= 0; i--)
+                if (history[i].Day == day) return history[i];
+            return null;
+        }
+
+        // ── the bar's own ladder ────────────────────────────────────────────────
+
+        private void FillStandBoard(TycoonRun run)
+        {
+            if (_standBoard == null) return;
+            var body = _standBoard.Body;
+            foreach (Transform old in body) Destroy(old.gameObject);
+            _standStars = null; _standFill = _standFillGhost = null;
+            _standNumber = _standDelta = null;
+            _standDeltaChip = _standWasTick = null; _standDeltaArrow = null;
+
+            double was = run.Rating.Average;
+            double now = run.StandingAfterTonight;
+            _standFrom = was; _standTo = now;
+            _standBoard.Reading.text = "NIGHT " + run.Day;
+
+            float y = 4f;
+            // THE STANDING, AS BIG AS IT IS IMPORTANT. Five 40px stars is the largest star
+            // row in the game, which is correct: this is the number the whole loop is about.
+            _standStars = LiveStarRow(body, new Vector2(0.5f, 1), new Vector2(0, -y), 40f, 8f,
+                UITheme.Amber[4], new Color(1f, 1f, 1f, 0.13f));
+            y += 48f;
+
+            _standNumber = NewText("Now", body, _display, 24, TextAnchor.MiddleCenter,
+                UITheme.Amber[4]);
+            Place(_standNumber.rectTransform, new Vector2(0.5f, 1), new Vector2(200, 30),
+                new Vector2(0, -y));
+            _standNumber.rectTransform.pivot = new Vector2(0.5f, 1);
+            _standNumber.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _standNumber.verticalOverflow = VerticalWrapMode.Overflow;
+            _standNumber.text = was.ToString("0.00");
+            y += 38f;
+
+            // THE STEP, DRAWN. A tenth of a star is nothing to read as a number and
+            // everything to see as a distance: the gauge fills to where the bar stands, a
+            // dimmer band shows where it is going (or where it came from, on a bad night),
+            // and a tick keeps the old mark so the movement has something to be measured
+            // against. This is the author's "bugün ne kadar ilerlediğini göster".
+            const float TrackW = 300f, TrackH = 18f;
+            var track = NewRect("Track", body);
+            Place(track, new Vector2(0.5f, 1), new Vector2(TrackW, TrackH), new Vector2(0, -y));
+            track.pivot = new Vector2(0.5f, 1);
+            var tube = track.gameObject.AddComponent<Image>();
+            tube.sprite = ChromeArt.GaugeTube((int)TrackW, (int)TrackH);
+            tube.color = UITheme.Night[2];
+            tube.raycastTarget = false;
+
+            var inner = NewRect("Inner", track);
+            Stretch(inner, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
+
+            bool rising = now >= was - 1e-9;
+            _standFillGhost = FillBar(inner, rising
+                ? new Color(UITheme.Amber[2].r, UITheme.Amber[2].g, UITheme.Amber[2].b, 0.55f)
+                : new Color(UITheme.ViceRed[3].r, UITheme.ViceRed[3].g, UITheme.ViceRed[3].b, 0.55f));
+            _standFillGhost.fillAmount = (float)(Math.Max(was, now) / BarRating.MaxStars);
+            _standFill = FillBar(inner, UITheme.Amber[4]);
+            _standFill.fillAmount = (float)(was / BarRating.MaxStars);
+
+            var glass = NewRect("Glass", track);
+            Stretch(glass, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var gi = glass.gameObject.AddComponent<Image>();
+            gi.sprite = ChromeArt.GaugeGlass((int)TrackW, (int)TrackH, BarRating.MaxStars);
+            gi.raycastTarget = false;
+
+            // Where it stood when the doors opened tonight.
+            _standWasTick = NewRect("Was", track);
+            Place(_standWasTick, new Vector2(0, 1), new Vector2(2, TrackH + 8f),
+                new Vector2((float)(was / BarRating.MaxStars) * (TrackW - 4f) + 2f, 4f));
+            _standWasTick.pivot = new Vector2(0.5f, 1);
+            var wi = _standWasTick.gameObject.AddComponent<Image>();
+            wi.color = UITheme.Cream[4]; wi.raycastTarget = false;
+
+            // And the next rung on the ladder, if there is one left to climb.
+            int opens;
+            double rung = NextRung(run, now, out opens);
+            if (!double.IsNaN(rung) && rung <= BarRating.MaxStars)
+            {
+                var notch = NewRect("Rung", track);
+                Place(notch, new Vector2(0, 1), new Vector2(2, TrackH + 6f),
+                    new Vector2((float)(rung / BarRating.MaxStars) * (TrackW - 4f) + 2f, 3f));
+                notch.pivot = new Vector2(0.5f, 1);
+                var ni = notch.gameObject.AddComponent<Image>();
+                ni.color = UITheme.Cyan[3]; ni.raycastTarget = false;
+            }
+            y += TrackH + 14f;
+
+            // WAS ... and the movement, in a chip of its own colour.
+            var wasLine = NewText("WasLine", body, _body, 16, TextAnchor.MiddleLeft,
+                UITheme.Cream[2]);
+            Place(wasLine.rectTransform, new Vector2(0, 1), new Vector2(160, 22),
+                new Vector2(4, -y));
+            wasLine.rectTransform.pivot = new Vector2(0, 1);
+            wasLine.horizontalOverflow = HorizontalWrapMode.Overflow;
+            wasLine.text = "WAS " + was.ToString("0.00");
+
+            double step = now - was;
+            var chipInk = Math.Abs(step) < 0.005 ? UITheme.Cream[2]
+                : step > 0 ? UITheme.Lime[4] : UITheme.ViceRed[4];
+            _standDeltaChip = NewRect("Step", body);
+            Place(_standDeltaChip, new Vector2(1, 1), new Vector2(132, 26), new Vector2(-2, -y + 2f));
+            _standDeltaChip.pivot = new Vector2(1, 1);
+            var chip = _standDeltaChip.gameObject.AddComponent<Image>();
+            chip.sprite = ChromeArt.Card();
+            chip.type = Image.Type.Sliced;
+            chip.color = new Color(chipInk.r * 0.32f, chipInk.g * 0.32f, chipInk.b * 0.32f, 0.9f);
+            chip.raycastTarget = false;
+
+            if (Math.Abs(step) >= 0.005)
+            {
+                var arrow = NewRect("Arrow", _standDeltaChip);
+                Place(arrow, new Vector2(0, 0.5f), new Vector2(14, 14), new Vector2(10, 0));
+                arrow.pivot = new Vector2(0, 0.5f);
+                arrow.localRotation = Quaternion.Euler(0, 0, step > 0 ? 0f : 180f);
+                _standDeltaArrow = arrow.gameObject.AddComponent<Image>();
+                _standDeltaArrow.sprite = ChromeArt.Mark("rise");
+                _standDeltaArrow.preserveAspect = true;
+                _standDeltaArrow.raycastTarget = false;
+                _standDeltaArrow.color = chipInk;
+            }
+            _standDelta = NewText("StepText", _standDeltaChip, _display, 16, TextAnchor.MiddleRight,
+                chipInk);
+            Place(_standDelta.rectTransform, new Vector2(1, 0.5f), new Vector2(104, 20),
+                new Vector2(-8, 0));
+            _standDelta.rectTransform.pivot = new Vector2(1, 0.5f);
+            _standDelta.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _standDelta.verticalOverflow = VerticalWrapMode.Overflow;
+            _standDelta.text = Math.Abs(step) < 0.005 ? "HELD"
+                : (step > 0 ? "+" : "-") + Math.Abs(step).ToString("0.00");
+            _standDeltaChip.gameObject.SetActive(false);   // it lands when the climb does
+            y += 34f;
+
+            var rule = NewRect("Rule2", body);
+            rule.anchorMin = new Vector2(0, 1); rule.anchorMax = new Vector2(1, 1);
+            rule.pivot = new Vector2(0.5f, 1);
+            rule.sizeDelta = new Vector2(0, 1);
+            rule.anchoredPosition = new Vector2(0, -y);
+            var rui = rule.gameObject.AddComponent<Image>();
+            rui.color = new Color(UITheme.Cream[1].r, UITheme.Cream[1].g, UITheme.Cream[1].b, 0.28f);
+            rui.raycastTarget = false;
+            y += 12f;
+
+            // The three readings that explain the step: what tonight was worth, what the
+            // bar is allowed to be worth, and who that has drawn for tomorrow.
+            y = StandRow(y, "TONIGHT", run.TonightStars.ToString("0.0"), UITheme.Amber[4], true);
+            double ceiling = run.StarCeiling;
+            bool capped = run.TonightStars >= ceiling - 1e-9
+                          && BarRating.ExactStarsFor(run.Floor.AverageSatisfaction) > ceiling + 1e-9;
+            y = StandRow(y, "CEILING", ceiling.ToString("0.0"),
+                capped ? UITheme.ViceRed[4] : UITheme.Cream[3], true);
+            y = StandRow(y, "TOMORROW", CrowdName(run.CrowdTomorrow), UITheme.Cyan[3], false);
+
+            y += 6f;
+            string note = capped
+                ? "THE ROOM WENT HIGHER THAN THE BAR IS FITTED FOR — BUY THE FITTINGS"
+                : !double.IsNaN(rung) && rung <= BarRating.MaxStars
+                    ? "NEXT RUNG AT " + rung.ToString("0.0") + " STARS — "
+                      + opens + (opens == 1 ? " THING OPENS" : " THINGS OPEN")
+                    : "EVERY RUNG ON THE LADDER IS OPEN";
+            var foot = NewText("Note", body, _body, 16, TextAnchor.UpperLeft,
+                capped ? UITheme.ViceRed[3] : UITheme.Cream[2]);
+            foot.rectTransform.anchorMin = new Vector2(0, 1);
+            foot.rectTransform.anchorMax = new Vector2(1, 1);
+            foot.rectTransform.pivot = new Vector2(0.5f, 1);
+            foot.rectTransform.sizeDelta = new Vector2(-8, 44);
+            foot.rectTransform.anchoredPosition = new Vector2(0, -y);
+            foot.horizontalOverflow = HorizontalWrapMode.Wrap;
+            foot.verticalOverflow = VerticalWrapMode.Overflow;
+            foot.text = note;
+        }
+
+        private Image FillBar(RectTransform inner, Color colour)
+        {
+            var rt = NewRect("Fill", inner);
+            Stretch(rt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var img = rt.gameObject.AddComponent<Image>();
+            // WITH A SPRITE, or Type.Filled is ignored and the gauge reads full at nought
+            // (measured; see ChromeArt.Solid).
+            img.sprite = ChromeArt.Solid();
+            img.color = colour;
+            img.raycastTarget = false;
+            img.type = Image.Type.Filled;
+            img.fillMethod = Image.FillMethod.Horizontal;
+            img.fillOrigin = (int)Image.OriginHorizontal.Left;
+            return img;
+        }
+
+        /// <summary>One reading on the standing board: a caption left, a figure right, and
+        /// the star mark beside the figure when the figure IS stars — the same unit mark the
+        /// slip's critics wear, for the same reason.</summary>
+        private float StandRow(float y, string label, string value, Color ink, bool inStars)
+        {
+            var body = _standBoard.Body;
+            var row = NewRect("R" + label, body);
+            row.anchorMin = new Vector2(0, 1); row.anchorMax = new Vector2(1, 1);
+            row.pivot = new Vector2(0.5f, 1);
+            row.sizeDelta = new Vector2(0, 26);
+            row.anchoredPosition = new Vector2(0, -y);
+
+            var cap = NewText("C", row, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[2]);
+            Place(cap.rectTransform, new Vector2(0, 0.5f), new Vector2(160, 22), new Vector2(4, 0));
+            cap.rectTransform.pivot = new Vector2(0, 0.5f);
+            cap.horizontalOverflow = HorizontalWrapMode.Overflow;
+            cap.text = label;
+
+            if (inStars)
+            {
+                var unit = NewRect("U", row);
+                Place(unit, new Vector2(1, 0.5f), new Vector2(13, 13), new Vector2(-60f, 0));
+                unit.pivot = new Vector2(1, 0.5f);
+                var ui = unit.gameObject.AddComponent<Image>();
+                ui.sprite = ChromeArt.Mark("star");
+                ui.preserveAspect = true; ui.raycastTarget = false; ui.color = ink;
+            }
+
+            var val = NewText("V", row, _display, 16, TextAnchor.MiddleRight, ink);
+            Place(val.rectTransform, new Vector2(1, 0.5f), new Vector2(inStars ? 56 : 200, 22),
+                new Vector2(-4, 0));
+            val.rectTransform.pivot = new Vector2(1, 0.5f);
+            val.horizontalOverflow = HorizontalWrapMode.Overflow;
+            val.verticalOverflow = VerticalWrapMode.Overflow;
+            val.text = value;
+            return y + 28f;
+        }
+
+        /// <summary>The lowest star gate still shut, and how many things it holds. Read off
+        /// the same two questions the dev bench's table asks — a recipe's gate is the run's
+        /// own answer, a bottle's is its lock's — so the board cannot promise a rung the
+        /// shop then refuses to open.</summary>
+        private double NextRung(TycoonRun run, double from, out int opens)
+        {
+            double best = double.NaN;
+            opens = 0;
+            foreach (var r in run.AllRecipes)
+            {
+                bool owned = false;
+                foreach (var m in run.MenuRecipes) if (m.Id == r.Id) { owned = true; break; }
+                if (owned) continue;
+                double gate = run.RecipeStarGate(r);
+                if (double.IsNaN(gate) || gate <= from + 1e-9) continue;
+                if (double.IsNaN(best) || gate < best) best = gate;
+            }
+            foreach (var card in run.CatalogueBottles)
+            {
+                if (card.Info == null || run.Shelf.Find(card.Id) != null) continue;
+                double rung = card.Info.Unlock != null
+                    ? card.Info.Unlock.StarsWanted
+                    : Market.RequiredStars(card.Info.Tier, card.Info.Price);
+                if (double.IsNaN(rung) || rung <= from + 1e-9) continue;
+                if (double.IsNaN(best) || rung < best) best = rung;
+            }
+            if (double.IsNaN(best)) return double.NaN;
+
+            foreach (var r in run.AllRecipes)
+            {
+                bool owned = false;
+                foreach (var m in run.MenuRecipes) if (m.Id == r.Id) { owned = true; break; }
+                if (!owned && Math.Abs(run.RecipeStarGate(r) - best) < 1e-9) opens++;
+            }
+            foreach (var card in run.CatalogueBottles)
+            {
+                if (card.Info == null || run.Shelf.Find(card.Id) != null) continue;
+                double rung = card.Info.Unlock != null
+                    ? card.Info.Unlock.StarsWanted
+                    : Market.RequiredStars(card.Info.Tier, card.Info.Price);
+                if (Math.Abs(rung - best) < 1e-9) opens++;
+            }
+            return best;
+        }
+
+        // ── the climb, and the boards arriving ──────────────────────────────────
+
+        /// <summary>Parks both boards off their own edge, ready to be brought in with the
+        /// paper. Called before the beats, so nothing is on the screen when the night is
+        /// called.</summary>
+        private void SetBoardsIn(float k)
+        {
+            float e = 1f - (1f - k) * (1f - k) * (1f - k);   // out-cubic
+            SetBoardIn(_weekBoard, -BoardX, e);
+            SetBoardIn(_standBoard, BoardX, e);
+        }
+
+        private static void SetBoardIn(NightBoard board, float home, float e)
+        {
+            if (board == null) return;
+            board.Group.alpha = e;
+            board.Root.anchoredPosition = new Vector2(
+                home + Mathf.Sign(home) * 54f * (1f - e), BoardY);
+        }
+
+        private void StartStandingClimb()
+        {
+            if (_standStars == null) { _standT = -1f; return; }
+            if (Motion.Reduced)
+            {
+                ApplyStanding((float)_standTo);
+                if (_standDeltaChip != null) _standDeltaChip.gameObject.SetActive(true);
+                _standT = -1f;
+                return;
+            }
+            _standT = 0f;
+            ApplyStanding((float)_standFrom);
+        }
+
+        private void StepStandingClimb()
+        {
+            if (_standT < 0f) return;
+            _standT += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(_standT / StandClimb);
+            float e = k * k * (3f - 2f * k);
+            ApplyStanding(Mathf.Lerp((float)_standFrom, (float)_standTo, e));
+            if (k < 1f) return;
+            _standT = -1f;
+            if (_standDeltaChip != null)
+            {
+                _standDeltaChip.gameObject.SetActive(true);
+                _chipPop = 1f;
+            }
+            Sfx.Play("click", 0.5f);
+        }
+
+        private float _chipPop;
+
+        private void ApplyStanding(float stars)
+        {
+            SetStars(_standStars, stars);
+            if (_standFill != null)
+                _standFill.fillAmount = stars / BarRating.MaxStars;
+            if (_standNumber != null) _standNumber.text = stars.ToString("0.00");
+        }
+
+        /// <summary>The chip lands rather than appears — one punch, gone in a fifth of a
+        /// second, the same beat the stamp uses at a size a chip can carry.</summary>
+        private void StepChipPop()
+        {
+            if (_chipPop <= 0f || _standDeltaChip == null) return;
+            _chipPop = Mathf.Max(0f, _chipPop - Time.unscaledDeltaTime * 5f);
+            float s = 1f + 0.35f * _chipPop * _chipPop;
+            _standDeltaChip.localScale = new Vector3(s, s, 1f);
+        }
+
+        /// <summary>
+        /// THE BOOK, SHUT, STANDING ON THE BAR. Clicking it opens the menu — the same verb
+        /// the grey BOOK key carried, given the object it was always a label for.
+        ///
+        /// Drawn at 1:2, one art pixel to two HUD units, which is the counter's own grain
+        /// (StageToHud): the room is 640x360 drawn at 1280x720, so anything standing in it at
+        /// any other ratio has finer or coarser pixels than the bar it is standing on. The
+        /// sprite is struck at exactly the size it draws (Tools/book_closed_gen.py) for the
+        /// same reason.
+        ///
+        /// No hover LIFT, only the glow: it is standing on a surface, and a book that rises
+        /// off the bar under the pointer is a book nobody put down.
+        /// </summary>
+        private RectTransform BuildBookProp(RectTransform root)
+        {
+            var art = ItemArt.Load("book_closed");
+
+            // The contact shadow first, so it draws under: the thing that actually sells
+            // "resting on" rather than "floating near" (the till's own words).
+            _bookShadow = NewRect("BookShadow", root);
+            _bookShadow.anchorMin = _bookShadow.anchorMax = new Vector2(0.5f, 0);
+            _bookShadow.pivot = new Vector2(0.5f, 0.5f);
+            _bookShadow.sizeDelta = new Vector2(52f, 10f);
+            var shadow = _bookShadow.gameObject.AddComponent<Image>();
+            shadow.sprite = BackBarArt.BottleShadow();
+            shadow.color = new Color(0f, 0f, 0f, 0.42f);
+            shadow.raycastTarget = false;
+
+            var prop = NewRect("BookProp", root);
+            prop.anchorMin = prop.anchorMax = new Vector2(0.5f, 0);
+            prop.pivot = new Vector2(0.5f, 0);           // stood on its own foot
+            prop.sizeDelta = art != null
+                ? art.rect.size * StageToHud
+                : new Vector2(56f, 110f);
+            var img = prop.gameObject.AddComponent<Image>();
+            img.sprite = art;
+            img.preserveAspect = true;
+            // No art on disk: a plain board in the cover's own colour, still pressable. A
+            // missing sprite must never take the way into the book with it.
+            if (art == null) img.color = UITheme.Amber[0];
+            var btn = prop.gameObject.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.transition = Selectable.Transition.None;
+            btn.onClick.AddListener(ToggleRecipeBook);
+            var glow = prop.gameObject.AddComponent<HoverGlow>();
+            glow.Graphics = new UnityEngine.UI.Graphic[] { img };
+            UiAuditExempt.Mark(prop, "the recipe book is a prop standing on the counter, "
+                + "drawn at the counter's own grain from its own closed art");
+            _bookProp = prop;
+            PlaceBookProp();
+            return prop;
+        }
+
+        /// <summary>
+        /// Stands the book on the bar for THIS frame. The counter rises when the cellar opens
+        /// (DrawerTravel), and anything resting on it has to rise with it or the bar comes up
+        /// through the book — the same lift the stools take, read off the same dial.
+        /// </summary>
+        private void PlaceBookProp()
+        {
+            if (_bookProp == null) return;
+            float lift = stage != null
+                ? stage.DrawerPhase * DiegeticStage.DrawerTravel * StageToHud : 0f;
+            // ON THE DRAWN SURFACE, not on the rest line. CounterLineY is the counter's BACK
+            // edge — the line the room crops a drinker at — and the top the bar's props
+            // actually stand on reads 36 units lower in the scene. The dirty glass learned
+            // this the same way, off the author's own report, and carries the same number.
+            var foot = new Vector2(BookPropX, CounterLineY - 36f + lift);
+            _bookProp.anchoredPosition = foot;
+            if (_bookShadow != null) _bookShadow.anchoredPosition = foot + new Vector2(0f, 2f);
+        }
+
+        /// <summary>
+        /// EVERY SHEET SHUTS, AND THE ROOM COMES BACK (2026-08-25, the author: "Oyun sonu
+        /// ekranı gelmeden önce açık olan tüm pencereler kapanır ana sahneye dönülür ve oyun
+        /// sonu ekranı öyle gelir, aynı şekilde gün başlarken de ekran ana ekran haline gelir
+        /// ve temizlenir").
+        ///
+        /// The night used to be counted UNDER whatever the player had left open: the books
+        /// arrived over a half-read recipe, a licence, an open cellar, a bench with a drink
+        /// still in the tin. The invoice is a scrim over the room, so all of it stayed there,
+        /// lit, behind the one thing that was supposed to be read.
+        ///
+        /// The book is shut HARD rather than toggled: its close is a slide, and a page still
+        /// travelling while the scrim comes down is exactly the mess this exists to prevent.
+        /// Everything else is a panel and simply goes.
+        /// </summary>
+        private void CloseEverySheet()
+        {
+            if (_bookOpen)
+            {
+                _bookOpen = false;
+                if (_bookAnim != null) { StopCoroutine(_bookAnim); _bookAnim = null; }
+                if (_bookTurnAnim != null) { StopCoroutine(_bookTurnAnim); _bookTurnAnim = null; }
+                _bookTurning = false;
+                if (_bookPanel != null) _bookPanel.gameObject.SetActive(false);
+            }
+            if (Showing(_settingsPanel)) _settingsPanel.gameObject.SetActive(false);
+            if (Showing(_devPanel)) _devPanel.gameObject.SetActive(false);
+            if (Showing(_guidePanel)) _guidePanel.gameObject.SetActive(false);
+            if (Showing(_ledgerPanel)) _ledgerPanel.gameObject.SetActive(false);
+            CloseId();
+            _flow?.CloseFlow();
+            // ...and the room itself goes back to how it opens: the counter's cellar shut,
+            // instantly, because this is a cut and not a beat.
+            if (stage != null) stage.SetDrawerOpen(false, instant: true);
+        }
+
         private void ShowDayEnd()
         {
+            // Nothing of the shift survives into the books.
+            CloseEverySheet();
             var run = Run;
             _dayEndStep = 0;   // the bill first; the market only after CONTINUE
 
@@ -4366,9 +5341,7 @@ namespace LastCall.UI
             // comparing tonight's raw stars to a history of capped ones would claim records
             // the ledger then refuses to keep. And it needs a night to beat — the first
             // night of a run is not a personal best, it is the only entry.
-            double capped = System.Math.Min(
-                BarRating.ExactStarsFor(run.Floor.AverageSatisfaction),
-                System.Math.Min(run.UpgradeStarCap, run.MenuStarCap));
+            double capped = run.TonightStars;
             _stampKind = _endStarFrac <= 0f ? StampKind.Disgrace
                 : run.Rating.NightsClosed > 0 && capped > run.Rating.BestNight + 1e-9
                     ? StampKind.Record
@@ -4385,6 +5358,12 @@ namespace LastCall.UI
             var billGroup = _dayEndBill.GetComponent<CanvasGroup>();
             if (billGroup != null) billGroup.alpha = 1f;
             EmptyStarRow();
+            // The instruments are off their own edges until the paper starts feeding: the
+            // night is CALLED on an empty screen, and a board standing there through the
+            // call would be the same mistake the CONTINUE key made.
+            SetBoardsIn(0f);
+            _standT = -1f;
+            _chipPop = 0f;
         }
 
         private void OnDayEndAdvance()
@@ -4543,6 +5522,11 @@ namespace LastCall.UI
             var run = Run;
             _dayEndBill.gameObject.SetActive(_dayEndStep == 0);
             _dayEndTablet.gameObject.SetActive(_dayEndStep == 1);
+            // The books have three objects on them; the market has one, and it covers the
+            // room. The instruments belong to the night's own page.
+            if (_weekBoard != null) _weekBoard.Root.gameObject.SetActive(_dayEndStep == 0);
+            if (_standBoard != null) _standBoard.Root.gameObject.SetActive(_dayEndStep == 0);
+            if (_dayEndStep == 0) { FillWeekBoard(run); FillStandBoard(run); }
             // NOT UNTIL THE LAST STAR HAS LANDED (2026-08-11, the author). A way out
             // offered while the night is still being counted is a way out taken: the whole
             // point of the drop is that the player watches it, and a button under it is the
@@ -4594,8 +5578,10 @@ namespace LastCall.UI
             // decided them — the best and the worst of the room, face, score and reason.
             double tonight = BarRating.ExactStarsFor(floor.AverageSatisfaction);
             y = BillStars(y, (float)(tonight / BarRating.MaxStars));
-            y = BillNote(y, "TONIGHT " + tonight.ToString("0.0") + "  ·  BAR "
-                            + run.Rating.Average.ToString("0.0") + "  ·  "
+            // (BAR left this line on 2026-08-25: the bar's standing is a whole instrument of
+            // its own now, on the right, where it can show the STEP as well as the number.
+            // The slip says what tonight was and who was in the room — a receipt's business.)
+            y = BillNote(y, "TONIGHT " + tonight.ToString("0.0") + "  ·  "
                             + served + " SERVED  ·  " + stormed + " WALKED", BillQuiet, centred: true);
             y += 8f;
 
@@ -6001,7 +6987,13 @@ namespace LastCall.UI
         private bool _bookTurning;
         private Coroutine _bookTurnAnim;
         private RectTransform _bookPrevKey, _bookNextKey, _bookHomeKey;
-        private RectTransform _bookBadge;        // the mark on the BOOK key
+        private RectTransform _bookBadge;        // the mark on the book's own corner
+        private RectTransform _bookProp;         // the shut book standing on the bar
+        private RectTransform _bookShadow;       // what pins it to the counter
+        /// <summary>Where the book stands along the bar, from the middle. Left of centre,
+        /// clear of the sink at one end and the beer font and till at the other — the same
+        /// stretch of counter the old BOOK key floated over, so the hand already knows.</summary>
+        private const float BookPropX = -196f;
         private Text _bookBadgeText;
         /// <summary>Recipes perfected but not yet looked up — the news the title page
         /// carries. A page drops off the list the moment it is opened from there.</summary>
@@ -7290,6 +8282,11 @@ namespace LastCall.UI
             var btn = rt.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.transition = Selectable.Transition.None;
+            // Paper, so it warms rather than presses: these are printed keys on a printed
+            // page and a bevelled throw would make them the only machined things in the book.
+            var keyGlow = rt.gameObject.AddComponent<HoverGlow>();
+            keyGlow.Graphics = new UnityEngine.UI.Graphic[] { img };
+            keyGlow.Gain = 1.10f;      // cream is already near white; 1.22 would blow it out
             // dir 0 is the home key: straight back to the title spread.
             btn.onClick.AddListener(() => { if (dir == 0) JumpToPage(0); else TurnPage(dir); });
             return rt;
@@ -9618,6 +10615,13 @@ namespace LastCall.UI
                 {
                     seat.Body = stageForBody.NewStageSprite($"Patron{i}", 25);
                     seat.Body.gameObject.SetActive(false);
+                    // CLICKING A DRINKER IS THE GAME'S FIRST VERB and nothing said so. The
+                    // stool's hit plate is a transparent rectangle over a WORLD sprite, so
+                    // the affordance has to be the person themselves: they brighten a step
+                    // under the pointer, the same step the beer font and the cellar's
+                    // bottles take (2026-08-25).
+                    var seatGlow = seat.Root.gameObject.AddComponent<HoverGlow>();
+                    seatGlow.Sprites = new[] { seat.Body };
                 }
 
                 // The order tag, floating above the head.
@@ -9807,16 +10811,25 @@ namespace LastCall.UI
             // counter, which is where the hand already is.
             // THE MAKING VERB LEFT THE HUD (2026-08-22). It is on the cellar's own lid now,
             // beside the arrow that says which way the roller goes — one door, one key, and
-            // the same key shuts it again without moving. See DiegeticStage.BuildCellarCloseKey.
+            // the roller's own writing says OPEN and the room around it shuts the cellar again.
+            // See DiegeticStage.BuildOpenSign / BuildCellarCatcher.
 
-            // The recipe book, beside the making verb (v5 P16): the menu speaks styles now,
-            // so how a drink is MADE has to live somewhere the player can read mid-shift.
-            var bookKey = NewButton(root, "BOOK", new Vector2(0.5f, 0),
-                new Vector2(84, 40), new Vector2(-196, 180), UITheme.Night[3], ToggleRecipeBook);
-            // The badge rides the key's top-right corner, so the news is where the way in
+            // THE BOOK IS A BOOK ON THE BAR (2026-08-25, the author: "Book butonu ise
+            // tezgahin ustune sabitlensin ve yeni uretilen book ... kapali kucuk bir
+            // goruntusunu olusturup tezgahin ustune yerlestirelim ona tiklayarak menu
+            // acilacak"). It was a 84x40 grey key floating on the bar's front panel with the
+            // word BOOK on it — the last piece of menu-of-things-you-click left in a room
+            // that had turned everything else into an object you reach for.
+            //
+            // The drawing is DERIVED from the open booklet rather than drawn beside it
+            // (Tools/book_closed_gen.py reads menu_booklet.png's own colours), because the
+            // thing standing on the counter has to be the thing that opens — this project
+            // has paid three times for a second take coming back as a different object.
+            var bookKey = BuildBookProp(root);
+            // The badge rides the book's top-right corner, so the news is where the way in
             // already is. Built once and parked; RefreshBookBadge raises it.
             _bookBadge = NewRect("Badge", bookKey);
-            Place(_bookBadge, new Vector2(1, 1), new Vector2(20, 20), new Vector2(2, 2));
+            Place(_bookBadge, new Vector2(1, 1), new Vector2(20, 20), new Vector2(6, 4));
             var badgeImg = _bookBadge.gameObject.AddComponent<Image>();
             badgeImg.color = BkPlatinum;
             badgeImg.raycastTarget = false;
@@ -9911,7 +10924,7 @@ namespace LastCall.UI
             _invoiceRows.anchorMin = new Vector2(0, 1); _invoiceRows.anchorMax = new Vector2(1, 1);
             _invoiceRows.pivot = new Vector2(0.5f, 1);
             _invoiceRows.sizeDelta = new Vector2(-BillInset * 2f, 0);
-            _invoiceRows.anchoredPosition = new Vector2(0, -(BillHeadH + 12f));
+            _invoiceRows.anchoredPosition = new Vector2(0, -BillRowsTop);
 
             // The bill's OWN way forward (2026-08-07). The day-end button moved inside the
             // tablet, and the tablet is only up on the market step — which left the books
@@ -9926,12 +10939,21 @@ namespace LastCall.UI
             var billNextBtn = _billNext.gameObject.AddComponent<Button>();
             billNextBtn.targetGraphic = billNextImg;
             billNextBtn.onClick.AddListener(OnDayEndAdvance);
+            // The one key on the slip, and it answered nothing until now — a full-width amber
+            // slab that only changed when it was already pressed.
+            var nextGlow = _billNext.gameObject.AddComponent<HoverGlow>();
+            nextGlow.Graphics = new UnityEngine.UI.Graphic[] { billNextImg };
+            nextGlow.Gain = 1.12f;     // amber at 1.22 goes to paper-white
             _billNextLabel = NewText("Label", _billNext, _display, 16, TextAnchor.MiddleCenter,
                 UITheme.TextOnAmber);
             Stretch(_billNextLabel.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(10, 0), new Vector2(-10, 0));
             _billNextLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
             _billNextLabel.text = "CONTINUE";
+
+            // The slip is the night's money; these two are the night's PLACE — where it sits
+            // in the week, and what it did to the bar. See the block above RebuildDayEnd.
+            BuildNightBoards(_dayEndPanel);
 
             // THE DEVICE. 1096 x 700 wearing sh_ipad2, which is drawn at 274 x 175 — the
             // same ratio to five decimals — with a 28px border. A sliced Image draws its
@@ -10154,6 +11176,11 @@ namespace LastCall.UI
                 _shopTabLits[i] = litImg;
                 var btn = key.gameObject.AddComponent<Button>();
                 btn.targetGraphic = bg;
+                // HoverWarm and not HoverGlow: this is the market, and the market's tabs are
+                // repainted whenever one of them opens. Warmth captured on enter and put back
+                // on exit is what that page has always used (MarkHoverable), and using the
+                // room's multiplier here would be a second dialect on one screen.
+                MarkHoverable(key, bg);
                 btn.onClick.AddListener(() =>
                 {
                     if (_shopTab != tab) { _justOrdered.Clear(); _shopScrollAt = 1f; }
@@ -10633,6 +11660,9 @@ namespace LastCall.UI
             int leaving = run.Day;             // read BEFORE the roll: the curtain names both
             run.ContinueToNextDay();
             _dayEndPanel.gameObject.SetActive(false);
+            // The market is a sheet like any other and the next night must not open behind
+            // one — nor behind a cellar somebody left open while they were shopping.
+            CloseEverySheet();
             if (run.Phase == TycoonPhase.DayOpen)
             {
                 _lastPhase = TycoonPhase.DayOpen;

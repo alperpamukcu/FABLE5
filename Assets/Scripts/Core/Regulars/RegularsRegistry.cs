@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace LastCall.Core
@@ -42,12 +42,26 @@ namespace LastCall.Core
         /// <summary>
         /// Who is at the bar next. Early in a run everyone is a stranger; later, most nights
         /// are people you have met — which is what makes the persistent stats mean anything.
+        ///
+        /// <paramref name="allowReturns"/> is how the OPENING NIGHT says no (2026-08-25, the
+        /// author: "her müşteri bara ilk defa geliyor olmalı çünkü bar yeni açıldı"). A bar
+        /// that opened tonight cannot have a regular in it, and the return roll did not know
+        /// that: from the second drinker on it had a 55% chance of sending somebody back in,
+        /// so day one printed "2nd visit" and a row of stars they had left at a bar that did
+        /// not exist yesterday. The gate lives HERE and not in the HUD because it is a rule
+        /// about who the bar knows, and a caller routing around it is exactly the hole the
+        /// house rule about trusting the UI was written for.
+        ///
+        /// The return roll is DRAWN whether or not it can be honoured, so the gate itself
+        /// never costs the stream a draw; what it changes is what happens next, which is the
+        /// whole point.
         /// </summary>
-        public RegularState RollNext(SeededRng rng)
+        public RegularState RollNext(SeededRng rng, bool allowReturns = true)
         {
             if (rng == null) throw new ArgumentNullException(nameof(rng));
 
-            if (_order.Count > 0 && rng.NextInt(100) < ReturnChancePercent)
+            bool comingBack = _order.Count > 0 && rng.NextInt(100) < ReturnChancePercent;
+            if (comingBack && allowReturns)
                 return _order[rng.NextInt(_order.Count)];
 
             return CreateNew(rng);

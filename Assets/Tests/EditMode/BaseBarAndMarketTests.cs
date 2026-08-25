@@ -542,5 +542,62 @@ namespace LastCall.Tests
             Assert.AreEqual(a.Age, b.Age);
             Assert.AreEqual(a.Hometown, b.Hometown);
         }
+
+        // ── the opening night (2026-08-25) ────────────────────────────────
+        // "her müşteri bara ilk defa geliyor olmalı çünkü bar yeni açıldı" — the author, on
+        // finding day one full of people the licence said had been in before and had already
+        // rated the place. A return chance that does not know what day it is will fire on the
+        // second drinker of the first night, which is a regular at a bar that opened an hour
+        // ago.
+
+        [Test]
+        public void OnTheOpeningNight_NobodyHasBeenHereBefore()
+        {
+            // A registry that returns somebody 100 times out of 100 if it is allowed to.
+            var registry = new RegularsRegistry(new[] { Archetype("Eastport") }, 100);
+            var rng = new RunRng("opening").GetStream("customer");
+
+            var seen = new HashSet<string>();
+            for (int i = 0; i < 30; i++)
+            {
+                var regular = registry.RollNext(rng, allowReturns: false);
+                Assert.That(seen.Add(regular.Id), Is.True,
+                    $"'{regular.Id}' walked in twice on the night the bar opened");
+                Assert.That(regular.Visits, Is.Zero, "an opening-night drinker has no history");
+            }
+        }
+
+        [Test]
+        public void AfterTheOpeningNight_FamiliarFacesComeBack()
+        {
+            // The gate is a gate, not a demolition: the same registry, allowed to, sends
+            // people back — which is what makes visits and relationships mean anything.
+            var registry = new RegularsRegistry(new[] { Archetype("Eastport") }, 100);
+            var rng = new RunRng("opening").GetStream("customer");
+
+            var first = registry.RollNext(rng, allowReturns: false);
+            var second = registry.RollNext(rng);
+
+            Assert.That(second.Id, Is.EqualTo(first.Id));
+        }
+
+        [Test]
+        public void TheOpeningNightGate_CostsTheStreamNothing()
+        {
+            // The return roll is drawn whether or not it can be honoured, so turning the gate
+            // on does not shift the arrivals stream by a draw on its own — the first drinker
+            // of a run is the same person either way.
+            RegularState First(bool allowReturns)
+            {
+                var registry = new RegularsRegistry(new[] { Archetype("Eastport", "Milltown") }, 55);
+                return registry.RollNext(new RunRng("SAME").GetStream("customer"), allowReturns);
+            }
+
+            var gated = First(false);
+            var open = First(true);
+            Assert.AreEqual(open.Name, gated.Name);
+            Assert.AreEqual(open.Age, gated.Age);
+            Assert.AreEqual(open.Hometown, gated.Hometown);
+        }
     }
 }

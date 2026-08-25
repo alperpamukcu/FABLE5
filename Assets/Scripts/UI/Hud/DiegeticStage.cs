@@ -139,10 +139,25 @@ namespace LastCall.UI
         /// four pixels the open frame leaves showing at the sill. It goes DOWN, which is what
         /// the pink arrow drawn on it has been pointing at all along.</summary>
         private const float ShutterTravel = 172f;
-        /// <summary>Where the cellar's one key sits, in stage units up from the screen's
-        /// bottom. On the roller's face when it is down — the same band the pink arrow is
-        /// drawn in — and it does not move when the room does.</summary>
-        private const float CellarKeyY = 40f;
+        // WHERE THE WRITING SITS ON THE ROLLER, measured off the roller's own top edge and
+        // not off the screen, because it rides. The shut roller hangs from the shelf
+        // opening's top (57 stage units up) and the screen cuts it off at the sill, so its
+        // readable face is exactly those 57 units: the word takes 21..55 of them and the
+        // chevron 6..17, which leaves the writing clear of both the cut and the sill.
+        private const float SignWordDrop = 19f;    // the word's centre, below the roller's top
+        private const float SignArrowDrop = 45f;   // and the chevron's, under it
+        // THE ROLLER IS HELD OPEN A CRACK UNDER THE POINTER (2026-08-25, the author: "kapağın
+        // üstüne mouse ile gelindiğinde sadece kapak biraz yukarıdan aralanır ve aralanan
+        // yerden ışık çıkar böylece bunun basılabilir etkileşime girilebilir bir nesne olduğu
+        // belli olur"). Seven units, which is the smallest travel that opens a slit wide
+        // enough to hold light at this scale and still reads as a shutter breathing rather
+        // than as the drawer starting to open on its own.
+        //
+        // It travels the way the roller travels: DOWN. The cellar is revealed from the top
+        // edge of the shelf opening, so a crack at the top is exactly what a real one lets
+        // go of first, and the light behind it is the cellar's own.
+        private const float ShutterPeek = 7f;
+        private const float PeekSeconds = 0.14f;
         private const float DrawerSeconds = 0.42f;
         private Transform _shutterTr;
         private Vector2 _shutterNative;
@@ -168,9 +183,13 @@ namespace LastCall.UI
         private readonly List<RectTransform> _cellarDoors = new List<RectTransform>();
         private System.Action<int> _onCellarPick;
         private RectTransform _shutterDoor;
-        private RectTransform _cellarCloseKey;
-        private Image _cellarCloseArt;
-        private Text _cellarKeyLabel;
+        private RectTransform _cellarOpenSign;
+        private CanvasGroup _cellarOpenGroup;
+        private RectTransform _cellarCatcher;    // click anywhere off the shelves to shut it
+        private RectTransform _shelfGuard;       // ...except here: the shelves keep their clicks
+        private bool _shutterHovered;
+        private float _shutterPeek;              // 0 shut tight, 1 held open a crack
+        private Image _shutterLight;             // what spills out of that crack
         private IReadOnlyList<string> _cellarIds;
         private CanvasGroup[] _registerFade;
 
@@ -251,7 +270,7 @@ namespace LastCall.UI
                 UiAuditExempt.Mark(_cellarDoorRoot, "the cellar doors are hit plates over the "
                     + "stock standing in the counter, sized to each bottle's own slot");
             }
-            BuildCellarCloseKey();
+            BuildCellarCatcher();
             while (_cellarDoors.Count < n)
             {
                 int index = _cellarDoors.Count;
@@ -269,6 +288,15 @@ namespace LastCall.UI
                 // and a bar with the cellar shut behind the tin is a bar you left. The bench
                 // slides in over it instead, and slides off it again.
                 btn.onClick.AddListener(() => _onCellarPick?.Invoke(index));
+                // The bottle behind the plate is the affordance (2026-08-25). The plate is a
+                // transparent rectangle: there is nothing on it to light, and drawing one
+                // would put a box on the shelf. The stock renderer at this index is stable
+                // for the life of the stage, so it can be wired once here.
+                if (index < _cellarStock.Count)
+                {
+                    var glow = plate.gameObject.AddComponent<HoverGlow>();
+                    glow.Sprites = new[] { _cellarStock[index] };
+                }
                 _cellarDoors.Add(plate);
             }
             for (int i = 0; i < _cellarDoors.Count; i++)
@@ -286,24 +314,18 @@ namespace LastCall.UI
         {
             if (_cellarDoorGroup != null)
                 _cellarDoorGroup.blocksRaycasts = _drawerT > 0.99f;
-            if (_cellarCloseKey != null)
-            {
-                // ONE KEY, ONE PLACE, TWO WORDS (2026-08-22, the author: "bunu kapağın üstüne
-                // taşı, Shut It ile aynı yapıda olmalı ekranda aynı yerde kalmalı"). The verb
-                // used to live on the HUD at the bottom of the screen and the way out lived on
-                // the counter's slab, riding up with the room — two keys, two places, for what
-                // is one door. This is that door: it sits ON THE LID, which is where the
-                // author's own arrow is drawn, and it does NOT ride, so pressing it twice
-                // presses the same pixels.
-                if (!_cellarCloseKey.gameObject.activeSelf)
-                    _cellarCloseKey.gameObject.SetActive(true);
-                _cellarCloseKey.anchoredPosition = new Vector2(0f, CellarKeyY);
-                if (_cellarKeyLabel != null)
-                {
-                    string word = _drawerT > 0.5f ? "SHUT IT" : "MENU — MAKE A DRINK";
-                    if (_cellarKeyLabel.text != word) _cellarKeyLabel.text = word;
-                }
-            }
+            // THE ROOM IS THE WAY OUT (2026-08-25, the author: "açık olan backbarı kapatmak
+            // için ekranda raflar hariç bir yere basmak yeterli olmalı, Shut it butonu
+            // kaldırılsın"). There was a pink SHUT IT plate floating over the shelves; it is
+            // gone. What shuts the cellar now is everywhere that is not the cellar — the
+            // ordinary click-outside-to-dismiss the book and the licence have always used,
+            // which is why it needed no teaching and no key.
+            //
+            // The shelves keep their own clicks: the catcher is a full screen of nothing,
+            // and the shelf face sits ON it swallowing what lands there, so a miss between
+            // two bottles is a miss and not an exit.
+            LayOutCellarCatcher();
+            if (_cellarOpenGroup != null) _cellarOpenGroup.alpha = 1f - _drawerT;
             if (_cellarDoors.Count == 0) return;
             float slotW = CellarBayWidthPx / CellarPerBay;
             float left = (Reference.x - _counterNative.x) * 0.5f;
@@ -340,6 +362,120 @@ namespace LastCall.UI
             btn.targetGraphic = hit;
             btn.transition = Selectable.Transition.None;
             btn.onClick.AddListener(() => SetDrawerOpen(!DrawerOpen));
+            // The roller breathes under the pointer. HoverRelay rather than HoverGlow: what
+            // answers here is not a colour but the shutter's own travel, and the travel is
+            // the room's to run (ApplyDrawer), not a component's.
+            var relay = _shutterDoor.gameObject.AddComponent<HoverRelay>();
+            relay.Entered = () => _shutterHovered = true;
+            relay.Exited = () => _shutterHovered = false;
+            BuildShutterLight();
+            BuildOpenSign();
+        }
+
+        /// <summary>
+        /// WHAT COMES OUT OF THE CRACK. The roller slides down a few units under the pointer
+        /// and the cellar behind it is lit; this is that light, landing on the sill the roller
+        /// just left. Warm, because the light in this room is tungsten and the cellar is part
+        /// of the room.
+        ///
+        /// It hangs off the OPENING's top edge rather than off the roller, because the
+        /// opening is where a slit can appear at all — the roller travels, the hole does not.
+        /// It rides the drawer for the same reason every other cellar fitting does.
+        ///
+        /// No art on disk means no light and a roller that still peeks: the movement alone
+        /// already says "this is a thing", and half an affordance beats a pink rectangle.
+        /// </summary>
+        private void BuildShutterLight()
+        {
+            if (_shutterLight != null || _shutterDoor == null) return;
+            var art = ItemArt.Load("light_spill");
+            if (art == null) return;
+            var rt = NewRect("ShutterLight", _shutterDoor.parent);
+            rt.anchorMin = rt.anchorMax = new Vector2(0, 0);
+            rt.pivot = new Vector2(0.5f, 1f);      // hung by its top, at the opening's lip
+            rt.sizeDelta = new Vector2(_shutterNative.x, art.rect.height);
+            rt.SetAsFirstSibling();                // under the door plate; it takes no clicks
+            _shutterLight = rt.gameObject.AddComponent<Image>();
+            _shutterLight.sprite = art;
+            _shutterLight.raycastTarget = false;
+            _shutterLight.gameObject.SetActive(false);
+            UiAuditExempt.Mark(rt, "the light out of the cellar's crack is a lit sliver of "
+                + "room, drawn at the shutter's own width");
+            LayOutShutterLight();
+        }
+
+        private void LayOutShutterLight()
+        {
+            if (_shutterLight == null) return;
+            float alpha = _shutterPeek * (1f - _drawerT);
+            bool on = alpha > 0.002f;
+            if (_shutterLight.gameObject.activeSelf != on) _shutterLight.gameObject.SetActive(on);
+            if (!on) return;
+            var rt = (RectTransform)_shutterLight.transform;
+            rt.anchoredPosition = new Vector2(
+                Reference.x * 0.5f,
+                CounterRestY + CounterSurfaceInset - ShutterOpeningTopPx + DrawerTravel * _drawerT);
+            _shutterLight.color = new Color(1f, 1f, 1f, alpha);
+        }
+
+        /// <summary>
+        /// THE WORD PAINTED ON THE ROLLER (2026-08-25, the author: "Menu butonu kaldirilsin
+        /// onun yerine ekrandaki raflarin onundeki kapaga, text olarak Open ve asagi ok
+        /// koyulsun"). Open, and the way it travels, in the italic three-coat lettering
+        /// Tools/open_sign_gen.py strikes - magenta keyline, white-into-dark-pink lining,
+        /// pink body - capped at the 34 px the author set.
+        ///
+        /// IT IS A LABEL AND NOT A BUTTON, on purpose. The roller already IS the door: a hit
+        /// plate the size of the whole drawing sits under this (BuildShutterDoor), which is
+        /// why the plate this replaces never took a click either - the cellar's canvas has
+        /// blocksRaycasts off while the drawer is shut, so everything drawn up here falls
+        /// through to the roller. A second button over the same pixels would be a second door.
+        ///
+        /// IT RIDES. The writing is ON the shutter, so it goes down with the shutter and fades
+        /// as it goes; hanging it off the screen instead would leave the word floating while
+        /// the slats slid away behind it, which reads as a decal on glass.
+        /// </summary>
+        private void BuildOpenSign()
+        {
+            if (_shutterDoor == null || _cellarOpenSign != null) return;
+            var word = ItemArt.Load("sign_open");
+            if (word == null) return;    // no art on disk: a bare roller still opens
+
+            _cellarOpenSign = NewRect("OpenSign", _shutterDoor);
+            _cellarOpenSign.anchorMin = _cellarOpenSign.anchorMax = new Vector2(0.5f, 1f);
+            _cellarOpenSign.pivot = new Vector2(0.5f, 1f);
+            _cellarOpenSign.sizeDelta = Vector2.zero;
+            _cellarOpenSign.anchoredPosition = Vector2.zero;
+            _cellarOpenGroup = _cellarOpenSign.gameObject.AddComponent<CanvasGroup>();
+            _cellarOpenGroup.blocksRaycasts = false;
+            _cellarOpenGroup.interactable = false;
+            UiAuditExempt.Mark(_cellarOpenSign, "the roller's OPEN is struck lettering, not "
+                + "type: one sprite, drawn at the size it was struck");
+
+            // AT ITS OWN SIZE, both pieces. The sprites are struck at the size the stage
+            // draws in - one art pixel is one stage unit here, the same grain as the counter
+            // they are lying on - so anything but 1:1 would put finer pixels on the roller
+            // than the roller itself has.
+            SignMark("OpenSignWord", word, SignWordDrop);
+            SignMark("OpenSignArrow", ItemArt.Load("sign_open_arrow"), SignArrowDrop);
+        }
+
+        /// <summary>One piece of the sign, hung by its own centre this far below the roller's
+        /// top edge and drawn at the size it was struck.</summary>
+        private void SignMark(string name, Sprite art, float drop)
+        {
+            if (art == null) return;
+            // NAMED, not called after its sprite. The roller is the only way into the cellar
+            // now, and the PlayMode suites drive it by aiming at this word — a hook named
+            // after an asset moves the day somebody renames the asset.
+            var rt = NewRect(name, _cellarOpenSign);
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = art.rect.size;
+            rt.anchoredPosition = new Vector2(0f, -drop);
+            var img = rt.gameObject.AddComponent<Image>();
+            img.sprite = art;
+            img.raycastTarget = false;
         }
 
         private void LayOutShutterDoor()
@@ -359,38 +495,65 @@ namespace LastCall.UI
         /// is a keyhole. This key sits on the counter's own slab, over the shelves, and is
         /// only there while the cellar is.
         ///
-        /// It is drawn with the author's PINK KEY, nine-sliced: one drawing that fits any
-        /// rectangle, which is the whole reason that art exists.
+        /// It was drawn with the author's PINK KEY, nine-sliced, and it is GONE (2026-08-25).
+        /// A modal state does not need a key to leave it; it needs somewhere to click that is
+        /// not the modal. Two plates and a floating caption have been replaced by two
+        /// invisible rectangles.
         /// </summary>
-        private void BuildCellarCloseKey()
+        private void BuildCellarCatcher()
         {
-            if (_cellarCloseKey != null || _cellarDoorRoot == null) return;
-            _cellarCloseKey = NewRect("CellarKey", _cellarDoorRoot);
-            _cellarCloseKey.anchorMin = _cellarCloseKey.anchorMax = new Vector2(0.5f, 0);
-            _cellarCloseKey.pivot = new Vector2(0.5f, 0.5f);
-            // Wide enough for the longer of its two captions; it carries both.
-            _cellarCloseKey.sizeDelta = new Vector2(168, 30);
-            var btn = _cellarCloseKey.gameObject.AddComponent<Button>();
-            btn.transition = Selectable.Transition.None;
-            // THE ONE KEY (GDD 16 §2), not a fifth dialect. A generated 132x143 plate was
-            // tried here first and thrown out by the author ("çok düşük kalitede ve çok büyük
-            // pixellerden"): its own nine-slice corners are 18 and 24, which do not fit in a
-            // 30-tall button at all, so Unity squashed them. ChromeArt.Key is drawn at 20x20
-            // and greyscale by construction, so it stays crisp at any size and takes the
-            // making verb's own colour — which is how this key and that one are the SAME key.
-            var face = NewRect("Face", _cellarCloseKey);
-            Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            _cellarCloseArt = KeyPlate.Dress(_cellarCloseKey, UITheme.MakeAction, btn, face);
-            btn.onClick.AddListener(() => SetDrawerOpen(!DrawerOpen));
+            if (_cellarCatcher != null || _cellarDoorRoot == null) return;
 
-            var label = NewText("Label", face, _display, 8,
-                                TextAnchor.MiddleCenter, UITheme.TextPrimary);
-            // Inset along the bottom by the key's throw: a caption sitting on the throw
-            // looks dropped (KeyPlate.Throw).
-            Stretch(label.rectTransform, Vector2.zero, Vector2.one,
-                    new Vector2(0, KeyPlate.Throw), Vector2.zero);
-            label.raycastTarget = false;
-            _cellarKeyLabel = label;
+            // THE CATCHER IS A FULL SCREEN OF NOTHING, and it is the FIRST child of the
+            // cellar's canvas on purpose: Unity hit-tests a canvas back to front by sibling
+            // order, so everything added after this one — the shelf face, then every bottle's
+            // own door — is asked before it is. It only ever sees the clicks nobody else
+            // wanted, which is exactly the definition of "off the shelves".
+            _cellarCatcher = NewRect("CellarCatcher", _cellarDoorRoot);
+            Stretch(_cellarCatcher, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var back = _cellarCatcher.gameObject.AddComponent<Image>();
+            back.color = new Color(0, 0, 0, 0);
+            var backBtn = _cellarCatcher.gameObject.AddComponent<Button>();
+            backBtn.targetGraphic = back;
+            backBtn.transition = Selectable.Transition.None;
+            backBtn.onClick.AddListener(() => SetDrawerOpen(false));
+            _cellarCatcher.SetAsFirstSibling();
+
+            // ...AND THE SHELVES ARE THE EXCEPTION. Sized to the counter's own shelf opening
+            // (LayOutCellarCatcher measures it), it takes the clicks that land on the cellar
+            // and does nothing with them, so missing a bottle by four pixels costs a bottle
+            // and not the whole room.
+            _shelfGuard = NewRect("ShelfGuard", _cellarDoorRoot);
+            _shelfGuard.anchorMin = _shelfGuard.anchorMax = new Vector2(0, 0);
+            _shelfGuard.pivot = new Vector2(0, 0);
+            var guard = _shelfGuard.gameObject.AddComponent<Image>();
+            guard.color = new Color(0, 0, 0, 0);
+            var guardBtn = _shelfGuard.gameObject.AddComponent<Button>();
+            guardBtn.targetGraphic = guard;
+            guardBtn.transition = Selectable.Transition.None;   // swallows, and says nothing
+            _shelfGuard.SetSiblingIndex(1);
+
+            UiAuditExempt.Mark(_cellarCatcher, "the cellar's way out is the room around it: "
+                + "an invisible full-screen catcher under the shelves' own guard");
+        }
+
+        /// <summary>
+        /// Puts the shelf guard over the counter's shelf opening. MEASURED off the same two
+        /// numbers the bottles' own doors are placed from — the opening's top row and the
+        /// counter's height — so the exception and the shelves cannot drift apart.
+        /// </summary>
+        private void LayOutCellarCatcher()
+        {
+            if (_shelfGuard == null) return;
+            float left = (Reference.x - _counterNative.x) * 0.5f;
+            float top = CounterRestY + CounterSurfaceInset - ShutterOpeningTopPx
+                        + DrawerTravel * _drawerT;
+            float foot = CounterRestY + CounterSurfaceInset - _counterNative.y
+                         + DrawerTravel * _drawerT;
+            // The blue posts scan at art x 7 and 630 (see CellarBayCentrePx); between them is
+            // shelf, outside them is cabinet, and the cabinet is not the cellar.
+            _shelfGuard.anchoredPosition = new Vector2(left + 7f, foot);
+            _shelfGuard.sizeDelta = new Vector2(623f, top - foot);
         }
 
         /// <summary>Slot i's foot, in the counter art's own pixels. One reading, so the
@@ -430,9 +593,14 @@ namespace LastCall.UI
             if (_shutterTr != null)
             {
                 var lp = _shutterTr.localPosition;
+                // The peek is spent as the drawer opens: once the cellar is coming up there
+                // is nothing left to hint at, and a roller still holding its crack open
+                // would be fighting its own travel.
+                float peek = ShutterPeek * _shutterPeek * (1f - _drawerT);
                 _shutterTr.localPosition =
-                    new Vector3(lp.x, _shutterRestLocalY - ShutterTravel * _drawerT, lp.z);
+                    new Vector3(lp.x, _shutterRestLocalY - ShutterTravel * _drawerT - peek, lp.z);
             }
+            LayOutShutterLight();
             LayOutCellarDoors();
             LayOutShutterDoor();
             if (_registerFade != null)
@@ -446,6 +614,15 @@ namespace LastCall.UI
 
         private void StepDrawer()
         {
+            // The crack eases open and shut on its own clock, which runs whether or not the
+            // drawer is moving — hovering a roller that is already still is the whole point.
+            float wantPeek = _shutterHovered && !DrawerOpen ? 1f : 0f;
+            if (!Mathf.Approximately(_shutterPeek, wantPeek))
+            {
+                _shutterPeek = Motion.Reduced ? wantPeek : Mathf.MoveTowards(
+                    _shutterPeek, wantPeek, Time.unscaledDeltaTime / PeekSeconds);
+                ApplyDrawer();
+            }
             if (Mathf.Approximately(_drawerT, _drawerTarget)) return;
             // Unscaled: the cellar opens while the night's clock is running, and a paused or
             // slowed run must not leave the roller half down.
@@ -705,36 +882,93 @@ namespace LastCall.UI
         /// <summary>What the room bounces: its own tungsten, one step down from the bulb.</summary>
         private static readonly Color BounceTint = new Color(1f, 0.72f, 0.42f);
 
-        // THE LIGHT OVER THE BAR. The ceiling alone left the one place the player actually
-        // works — the counter, the bottom third of the screen — in shadow, because the
-        // downlights hang at art y 57 and the bar's rest line is at 128: even a pool that
-        // reaches the back wall arrives at the counter as nothing. A bar has its own light
-        // over the bar; this is that light, and like the ceiling it comes up as the sky
-        // goes down. It is what makes the night READ as service rather than as ambience.
-        /// <summary>The bar's own light, by day (the window carries it) and by night.</summary>
-        private const float BarLightDay = 0.55f, BarLightNight = 1.30f;
-        /// <summary>Hung over the counter's rest line, centred, in the room art's own space.</summary>
-        // MEASURED DOWN ONTO THE BAR (2026-08-23). It hung at art y 150 with a 300 reach,
-        // which from the middle of the room touched the top of the back wall and the ceiling
-        // band: the room could never go dark, because the "bar" light was lighting the whole
-        // set. It belongs over the counter - the counter's top edge is at art y 238 - and it
-        // reaches about as far as the working area is wide.
-        // MEASURED ONE LIGHT AT A TIME (2026-08-23). With every other source switched off
-        // this one put L=195 on the middle of the BACK WALL - brighter, on its own, than the
-        // window, the fill and the sconces together, and it is the reason the room read as a
-        // flat pink box at every hour of the evening. In a 2D room the wall is the same plane
-        // as everything else, so a big lamp "over the bar" is really a lamp on the wall. It
-        // is small and low now: a pool at the counter's back edge and nothing above it.
-        // DOWN ONTO THE BAR, and MIND WHICH WAY UP THIS IS MEASURED (2026-08-23).
-        // StageArtPointToWorld takes art px from the BOTTOM — the room art's own origin —
-        // not from the top the way art is usually read. Raising this number twice to push
-        // the lamp DOWN pushed it up the wall instead, to world y +82, and painted a soft
-        // round blob in the middle of the back wall that read as a spotlight aimed at
-        // nothing. It is measured from the bottom: 90 puts it just under the counter's top
-        // edge, where its pool lands on the bar and only bounces up the foot of the wall.
-        private static readonly Vector2 BarLightArtPx = new Vector2(320f, 90f);
-        private const float BarLightRadius = 90f;
-        private Light2D _barLight;
+        // ── THE LIGHT OVER THE BAR, AND THE BAR'S OWN NEON (2026-08-24, the author:
+        //    "BarLight'ı kaldır ve bar masasının üstüne vuran bir ışık yap bu ışık bar
+        //    tezgahını ve müşterileri aydınlatmalı, aynı zamanda bar tezgahındaki neon
+        //    şeriti de ışıklandır") ────────────────────────────────────
+        //
+        // ONE point light called BarLight used to be this, and its whole history is three
+        // wrong hangings in a single day (2026-08-23): over the room, where it lit the back
+        // wall; up the wall, where it painted a round blob on the plaster; and finally at
+        // art (320,90) with a 90 reach — which is BELOW the counter's top edge, so what it
+        // really lit was the cabinet front. The bar top and the people leaning on it were
+        // never in it. A point light also favours whatever is nearest, so one lamp in the
+        // middle of a 640-wide bar lights stools 3 and 4 and leaves both ends dark.
+        //
+        // A bar is lit by TWO things and counter.png draws both of them already, so what
+        // hangs here now is two ROWS of lights and not one lamp:
+        //
+        //   THE DOWNLIGHTS come down from above the drinkers' heads onto the slab, and catch
+        //   heads and shoulders on the way — the "üstüne vuran" the author asked for. They
+        //   can hang high in a way none of the 2026-08-23 attempts could, and the sorting
+        //   layers are why (2026-08-24): pointed at the counter and the patrons only, a lamp
+        //   over the bar cannot reach the back wall however far it throws, which is the fight
+        //   every earlier hanging lost. Three of them, over the STOOLS rather than over the
+        //   middle of the screen, so the pool runs the length of the bar.
+        //
+        //   THE NEON STRIP is the magenta tube drawn along the front of the slab. Until now
+        //   it was PAINT — a bright pink line with no light coming off it, in a room whose
+        //   whole look is neon. It gets its own row of small lights sitting ON it, and since
+        //   they sit below the drinkers they throw UP: the bar's edge light on a customer's
+        //   front, under the tungsten coming down. That pair is what makes a counter read as
+        //   a bar counter instead of as a table with bottles behind it.
+        //
+        // Both rows hang through StageToWorld and not StageArtPointToWorld, which is the
+        // frame the two things they are FOR already live in: the counter is pinned at scale 1
+        // off CounterRestY, and TycoonHud.SyncPatronBody stands the drinkers in plain stage
+        // units. The room art's own space is a cover fit about the picture's centre — the
+        // same units only while VisibleWidth() stays pinned to the reference, which is a
+        // promise about the camera rig and not about the bar.
+
+        /// <summary>The lamps over the bar, and the neon segments along its edge: enough of
+        /// each that the pools overlap into a band instead of reading as separate spots.</summary>
+        private const int BarLightCount = 3, BarNeonCount = 7;
+        /// <summary>Where the run of lamps starts and how far apart they hang, in stage units.
+        /// DERIVED from the stools, not chosen: TycoonHud stands six of them 180 HUD units
+        /// apart from x 118, which is 90 stage units apart from stage x 59. One lamp per PAIR,
+        /// over each pair's own midpoint — 104, 284, 464 — so three pools cover six seats and
+        /// nobody drinks in a gap.</summary>
+        private const float BarLightFirstX = 104f, BarLightPitchX = 180f;
+        /// <summary>How high they hang, in stage units from the BOTTOM — the direction
+        /// StageToWorld reads, and the one that cost 2026-08-23 two wrong hangings. A seated
+        /// drinker is drawn 220 units tall with their feet at stage y 19, so heads top out at
+        /// 239: this clears them and still reaches the slab (see the radius).</summary>
+        private const float BarLightY = 276f;
+        /// <summary>Their reach, MEASURED rather than chosen: the slab's own surface band is
+        /// stage y 94..122, so the light has ~168 units to fall before it lands on the bar
+        /// top, and it has to still be alive when it gets there.</summary>
+        private const float BarLightRadius = 300f;
+        /// <summary>Where the falloff STARTS, as a fraction of the reach. A downlight is not a
+        /// candle: at the house default of 0.15 the whole pool is spent 45 units under the
+        /// bulb and the bar top takes the tail of it. Held out past the slab's own distance,
+        /// the drinkers stand in the core and the counter still gets a real pool.</summary>
+        private const float BarLightInner = 0.58f;
+        /// <summary>The lamps against the sky, like every other light the house owns: dim
+        /// while the window carries the room, up as the evening dies. Lower per lamp than the
+        /// single BarLight's 0.55/1.30 was, because there are three and they overlap.</summary>
+        private const float BarLightDay = 0.18f, BarLightNight = 0.52f;
+        private readonly List<Light2D> _barLights = new List<Light2D>();
+
+        /// <summary>The tube's line, in stage units from the bottom. ART-BOUND and MEASURED
+        /// off counter.png by scanning its top rows: the strip is rows 29..34 below the art's
+        /// top edge (row 29 reads #D77BBA and it ramps back into the slab's own #171119 by
+        /// row 35), and that top edge is pinned at CounterRestY + CounterSurfaceInset. A
+        /// re-cut counter moves this silently — re-scan the rows, do not tune the number.</summary>
+        private const float BarNeonRowPx = 31.5f;
+        private const float BarNeonY = CounterRestY + CounterSurfaceInset - BarNeonRowPx;
+        /// <summary>Small, and it has to be: a tube six art px tall lights its own edge, the
+        /// slab lip over it and the hands that come down onto it. Anything wider stops being
+        /// a strip and turns into a second lamp under the bar.</summary>
+        private const float BarNeonRadius = 70f;
+        /// <summary>The tube's colour, taken off the ramp (GDD 16: shading moves ALONG a ramp,
+        /// never off it). Magenta[4] is #FF7DC6 and the strip's brightest drawn row is
+        /// #D77BBA — the same step, one notch down for having been paint until now.</summary>
+        private static Color BarNeonTint => UITheme.Magenta[4];
+        /// <summary>Neon does not care what hour it is — a tube is on or it is off — but the
+        /// room around it does, so it lifts a little once the window stops out-shouting it.
+        /// Bright enough to read as a SOURCE at every hour, which the paint never did.</summary>
+        private const float BarNeonDay = 0.34f, BarNeonNight = 0.58f;
+        private readonly List<Light2D> _barNeons = new List<Light2D>();
         /// <summary>How far the window's light reaches. The glass is a wall, not a lamp —
         /// this is wide enough to carry across the room and die on the far side.</summary>
         private const float WindowRadius = 640f;
@@ -1183,9 +1417,6 @@ namespace LastCall.UI
                 _windowLight.pointLightOuterAngle = WindowConeOuter;
                 _windowLight.pointLightInnerAngle = WindowConeInner;
                 _windowLight.transform.rotation = Quaternion.Euler(0f, 0f, WindowAimDegrees);
-                _barLight = PointLight("BarLight", LampTint, 0f, BarLightRadius);
-                LightLayers(_barLight, LayerCounter, LayerPatrons);
-
             }
             else
             {
@@ -1214,6 +1445,11 @@ namespace LastCall.UI
                 _counterTr = sr.transform;
                 _counterNative = counterSprite.rect.size;
                 _counterDrawWidth = SetUpCounterTiling(sr);
+                // Built HERE and not up with the room's lights, because they are the BAR's:
+                // the slab, the stock standing on it and the drinkers leaning over it. The
+                // one they replace was hung with the window and inherited its branch, so a
+                // room with no sky sheet had no light over its counter either.
+                BuildBarLights();
             }
             // Order 33: over the counter's cabinet (30) AND over the stock standing in it
             // (31), and under anything on the bar top (35). The roller has to hide the
@@ -1422,8 +1658,6 @@ namespace LastCall.UI
                     if (_windowLight != null)
                         _windowLight.transform.position = StageArtPointToWorld(
                             new Vector2(WindowCentreArtPx.x - WindowSetback, WindowCentreArtPx.y));
-                    if (_barLight != null)
-                        _barLight.transform.position = StageArtPointToWorld(BarLightArtPx);
                     if (_skyGlow != null)
                         _skyGlow.transform.position = _windowSr.transform.position
                             + new Vector3(30f * _backgroundScale, 0f, 0f);
@@ -1481,7 +1715,64 @@ namespace LastCall.UI
                 }
             }
 
+            PositionBarLights(visibleW);
             PlaceFixtures();
+        }
+
+        /// <summary>
+        /// THE ROW OVER THE BAR AND THE ROW ALONG ITS EDGE.
+        ///
+        /// Both are pointed at the counter and the patrons and at nothing else. That is not
+        /// tidiness: a lamp hung this close to the back wall in a head-on 2D room IS a lamp
+        /// on the back wall, and the three failed hangings this replaces were all the same
+        /// fight against that. Aimed at two sorting layers it cannot happen, so the lamps are
+        /// free to hang where a bar's lamps actually hang.
+        ///
+        /// They are born at their NIGHT level rather than at zero. ApplySkyLight owns them
+        /// from the first frame the window has a sheet to read, and a room without one used
+        /// to leave the old lamp dark for ever, which reads as a bug in the art.
+        /// </summary>
+        private void BuildBarLights()
+        {
+            for (int i = 0; i < BarLightCount; i++)
+            {
+                var l = PointLight($"BarDownlight{i}", LampTint, BarLightNight, BarLightRadius);
+                l.pointLightInnerRadius = BarLightRadius * BarLightInner;
+                LightLayers(l, LayerCounter, LayerPatrons);
+                _barLights.Add(l);
+            }
+            for (int i = 0; i < BarNeonCount; i++)
+            {
+                var l = PointLight($"BarNeon{i}", BarNeonTint, BarNeonNight, BarNeonRadius);
+                LightLayers(l, LayerCounter, LayerPatrons);
+                _barNeons.Add(l);
+            }
+        }
+
+        /// <summary>
+        /// Hangs both rows, in stage units, so neither can drift from the counter it is
+        /// lighting or from the drinkers standing at it.
+        ///
+        /// The lamps go over the STOOLS, at the stools' own pitch. The neon spreads over the
+        /// width the bar is actually DRAWN at instead: the slab is 9-sliced out to fill the
+        /// frame, its tube goes out with it, and a run measured against the reference would
+        /// stop short of the ends of its own strip on a wider window.
+        /// </summary>
+        private void PositionBarLights(float visibleW)
+        {
+            for (int i = 0; i < _barLights.Count; i++)
+                if (_barLights[i] != null)
+                    _barLights[i].transform.position =
+                        StageToWorld(BarLightFirstX + i * BarLightPitchX, BarLightY);
+
+            float step = visibleW / Mathf.Max(1, _barNeons.Count);
+            for (int i = 0; i < _barNeons.Count; i++)
+                if (_barNeons[i] != null)
+                    // Half a step in from each end, which is what puts the outer segments ON
+                    // the tube rather than hanging off the ends of it.
+                    _barNeons[i].transform.position = new Vector3(
+                        (i + 0.5f) * step - visibleW * 0.5f,
+                        BarNeonY - Reference.y * 0.5f, 0f);
         }
 
         /// <summary>
@@ -1763,18 +2054,13 @@ namespace LastCall.UI
             btn.onClick.AddListener(() => _onTapClicked?.Invoke());
 
             // THE AFFORDANCE IS THE PROP, not the plate: an invisible plate cannot light up
-            // without drawing a rectangle over the counter, so the pointer lifts the FONT's
-            // own brass instead. The base colour is read off the renderer rather than assumed
-            // white, so a font standing in a dimmed room brightens from where it actually is.
-            var lit = body;
-            var rest = body.color;
-            var trig = plate.gameObject.AddComponent<EventTrigger>();
-            var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
-            enter.callback.AddListener(_ => { if (lit != null) lit.color = rest * 1.22f; });
-            trig.triggers.Add(enter);
-            var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
-            exit.callback.AddListener(_ => { if (lit != null) lit.color = rest; });
-            trig.triggers.Add(exit);
+            // without drawing a rectangle over the counter, so the pointer lights the FONT's
+            // own brass instead. This is where that rule was first written, by hand, with an
+            // EventTrigger and a colour snapped on and off; on 2026-08-25 it became HoverGlow
+            // and every other prop in the room got the same answer, easing rather than
+            // snapping and reading its rest colour at the moment the pointer arrives.
+            var glow = plate.gameObject.AddComponent<HoverGlow>();
+            glow.Sprites = new[] { body };
 
             _tapDoors.Add(plate);
         }
@@ -1912,8 +2198,20 @@ namespace LastCall.UI
                 _globalLight.color = wash;
                 _globalLight.intensity = _washBase;
             }
-            if (_barLight != null)
-                _barLight.intensity = Mathf.Lerp(BarLightNight, BarLightDay, day);
+            // THE BAR'S TWO ROWS, on the same clock as everything else the house owns.
+            // The NEON is set unconditionally: a tube is on or it is off, the closing beat
+            // has no business dimming one, and it is the only light left on the bar once
+            // that beat takes the lamps down.
+            _barDownBase = Mathf.Lerp(BarLightNight, BarLightDay, day);
+            float neonNow = Mathf.Lerp(BarNeonNight, BarNeonDay, day);
+            for (int i = 0; i < _barNeons.Count; i++)
+                if (_barNeons[i] != null) _barNeons[i].intensity = neonNow;
+            // The downlights, like the house lights below, are the closing beat's while it
+            // runs — two writers with no execution order between them would leave the last
+            // call's dimming to a coin toss (the race the sconces paid for, 2026-08-24).
+            if (_closingT <= 0f)
+                for (int i = 0; i < _barLights.Count; i++)
+                    if (_barLights[i] != null) _barLights[i].intensity = _barDownBase;
             // The closing beat owns these while it runs: two writers with no execution
             // order between them would leave the last call's dimming to a coin toss
             // (found by review, 2026-08-24 — the race was inherited from the sconces, but
@@ -2217,6 +2515,10 @@ namespace LastCall.UI
             regBtn.targetGraphic = regImg;
             regBtn.transition = Selectable.Transition.None;
             regBtn.onClick.AddListener(() => _onRegisterClicked?.Invoke());
+            // It opens the ledger, so it says so under the pointer like everything else that
+            // can be pressed.
+            var regGlow = reg.gameObject.AddComponent<HoverGlow>();
+            regGlow.Graphics = new UnityEngine.UI.Graphic[] { regImg };
 
             // A soft contact shadow under it — the thing that actually sells "resting on"
             // rather than "floating near".
@@ -2388,6 +2690,12 @@ namespace LastCall.UI
         private readonly List<(Light2D Light, float Base)> _houseLights =
             new List<(Light2D, float)>();
 
+        /// <summary>Where the bar's downlights stand before the closing beat touches them,
+        /// so the beat falls FROM the hour the sky left them at. Seeded at the night value:
+        /// ApplySkyLight overwrites it from the first frame it has a sheet to read, and a
+        /// room without one still dims from somewhere real.</summary>
+        private float _barDownBase = BarLightNight;
+
         /// <summary>The lamp over the guest, built dark and only ever lit for them.</summary>
         private Light2D _guestLight;
         private bool _closing;
@@ -2437,6 +2745,13 @@ namespace LastCall.UI
                     * Mathf.Lerp(_houseBase, HouseDay * ClosingCeiling, t);
                 ceilingY = _houseLights[i].Light.transform.position.y;
             }
+            // The lamps over the bar come down with the ceiling — they ARE the house, over
+            // the one place the house works — and the tube along the counter's edge does
+            // not, because neon has no dimmer. What the beat leaves is the last drinker in
+            // a dark room with a magenta line under their elbows, which is the picture.
+            float barClosed = Mathf.Lerp(_barDownBase, BarLightDay * ClosingCeiling, t);
+            for (int i = 0; i < _barLights.Count; i++)
+                if (_barLights[i] != null) _barLights[i].intensity = barClosed;
             // The window dies with the room: at the last call the light outside is not what
             // the beat is about, and leaving it burning kept a bright hole in a dark room.
             if (_windowLight != null)

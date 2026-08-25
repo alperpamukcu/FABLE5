@@ -1,0 +1,18 @@
+{
+ "seed11": {
+  "job_id": "54d14af5-18ac-4354-b02d-4b1b25466ffe",
+  "png": "AssetPipeline\\staging\\menu_cover\\seed11.png",
+  "quantized": "AssetPipeline\\staging\\menu_cover\\seed11_q.png"
+ },
+ "seed47": {
+  "job_id": "5b0a1ac3-87f4-4577-9d40-6789d8081aa2",
+  "png": "AssetPipeline\\staging\\menu_cover\\seed47.png",
+  "quantized": "AssetPipeline\\staging\\menu_cover\\seed47_q.png"
+ },
+ "seed83": {
+  "job_id": "6e22ea38-6916-4633-9ff0-004c02ece1fb",
+  "png": "AssetPipeline\\staging\\menu_cover\\seed83.png",
+  "quantized": "AssetPipeline\\staging\\menu_cover\\seed83_q.png"
+ },
+ "shipped": "seed83"
+}

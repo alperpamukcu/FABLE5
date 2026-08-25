@@ -75,7 +75,7 @@ BAYS = ((14, 205), (222, 414), (431, 624))
 # Two customers, because the author asked for them in the scenes. They stand behind the
 # bar on the room's floor and let the counter crop them, which is the order DiegeticStage
 # draws in.
-PATRONS = (('clubgirl', 150), ('spanishsuit', 470))
+PATRONS = (('clubgirl', 150), ('shaved', 470))   # spanishsuit was cut 2026-08-25
 # Where a customer's feet land when the bar is shut, and it is set from the WAIST rather
 # than from the floor (the author: "musterilerin konumu dogru degil masanin arkasinda ve
 # tezgah bel hizasinin cok az ustunde bitmeli"). The bar's top slab starts at y 240, and a

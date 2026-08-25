@@ -1,0 +1,20 @@
+{
+ "greybeard": {
+  "job_id": "954f16bd-a84e-425f-b859-6ddba05c6495",
+  "style": "heavyset",
+  "style_copy": [
+   "outline",
+   "detail",
+   "shading"
+  ],
+  "png": "AssetPipeline\\sources\\patron_trial\\greybeard__styled.png",
+  "measured": {
+   "outline": 92.308,
+   "head": 0.112,
+   "whole": 88.221,
+   "colours": 42,
+   "body": 214,
+   "black": 12.893
+  }
+ }
+}

@@ -272,7 +272,7 @@ namespace LastCall.Game
                 if (!slotIds.Add(sl.id ?? ""))
                     throw new FormatException($"Fixtures file declares slot '{sl.id}' twice.");
                 try { slots.Add(new StageSlot(sl.id, sl.x, sl.y, sl.onCounter,
-                                              sl.pairSpreadPx, sl.houseLight)); }
+                                              sl.pairSpreadPx, sl.houseLight, sl.hangs)); }
                 catch (ArgumentException e) { throw new FormatException($"Slot '{sl.id}': {e.Message}"); }
             }
 
@@ -729,6 +729,9 @@ namespace LastCall.Game
             // evening's clock. Defaults keep every old entry unchanged (JsonUtility).
             public float pairSpreadPx;
             public bool houseLight;
+            // Whatever stands here hangs on the wall: no contact shadow, and it draws
+            // behind the floor dressing (2026-08-24, the flamingo triptych).
+            public bool hangs;
         }
 
         [Serializable]

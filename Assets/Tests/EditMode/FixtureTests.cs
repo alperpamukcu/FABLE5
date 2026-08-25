@@ -411,6 +411,23 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void AHangingSlot_SaysSo_AndTheFloorIsTheDefault()
+        {
+            // A picture on the wall touches no floor: no contact shadow, and it draws
+            // behind the dressing standing in front of the wall. The slot carries it —
+            // every hanger before the triptych happened to be lit, and "has no light"
+            // was quietly standing in for "touches the floor" (2026-08-24).
+            var loaded = DataLoader.ParseFixtures(@"{ ""slots"": [
+                  { ""id"": ""wall"", ""x"": 319, ""y"": 190, ""hangs"": true },
+                  { ""id"": ""floor"", ""x"": 20, ""y"": 129 }],
+                ""fixtures"": [
+                  { ""id"": ""art"", ""name"": ""Triptych"", ""slot"": ""wall"",
+                    ""price"": 45, ""sprite"": ""fx_triptych"" }] }");
+            Assert.IsTrue(loaded.Slots[0].Hangs, "a wall hook says so in the data");
+            Assert.IsFalse(loaded.Slots[1].Hangs, "and the floor is the default");
+        }
+
+        [Test]
         public void TheLamps_ClimbOneRungAtATime_AndTheFirstIsAlreadyOnTheWall()
         {
             var run = RunAtDayEnd(fixtures: new[] { Lamp(1, startsOwned: true),

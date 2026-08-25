@@ -30,8 +30,8 @@ namespace LastCall.Tests
         public void The_cast_file_parses_and_holds_the_whole_bar()
         {
             var cast = Load();
-            Assert.That(cast.All.Count, Is.EqualTo(32),
-                "the bar has 31 drinkers and Ece behind it; if that changed on purpose, change it here too");
+            Assert.That(cast.All.Count, Is.EqualTo(41),
+                "the bar has 40 drinkers and Ece behind it; if that changed on purpose, change it here too");
         }
 
         [TestCase("", "Miles Corrigan", 26, "us")]
@@ -48,6 +48,49 @@ namespace LastCall.Tests
             Assert.That(papers.Name, Is.EqualTo(name));
             Assert.That(papers.Age, Is.EqualTo(age));
             Assert.That(papers.Iso, Is.EqualTo(iso));
+        }
+
+        /// <summary>
+        /// EVERY FACE THE BAR ACTUALLY DRAWS HAS PAPERS (2026-08-25).
+        ///
+        /// This is the hole this test file was written for and did not cover: the roster in
+        /// TycoonHud.PatronCast turned over completely on the 2026-08-19 rig and NOBODY on it
+        /// had a row here, so nine drawings shared one fallback — the archetype's pooled
+        /// forename over a city where the licence prints a country, and no flag. It failed
+        /// silently, on the one card in the game the player is asked to READ.
+        ///
+        /// The list is written out rather than reflected off the UI: LastCall.Tests does not
+        /// reference LastCall.UI (and should not), so the price of catching this is keeping
+        /// nine strings in step with a cast that changes a few times a year.
+        /// </summary>
+        [TestCase("clubgirl")]
+        [TestCase("heavyset")]
+        [TestCase("silkwoman")]
+        [TestCase("pastelman")]
+        [TestCase("shaved")]
+        [TestCase("silverbob")]
+        [TestCase("afrowoman")]
+        [TestCase("eastasianman")]
+        [TestCase("leopard")]
+        public void Every_face_the_bar_draws_today_carries_its_own_papers(string slug)
+        {
+            var papers = Load().For(slug);
+            Assert.That(papers, Is.Not.Null,
+                $"'{slug}' walks into the bar and the licence has nothing to print for them");
+            Assert.That(papers.Country, Is.Not.Empty, $"'{slug}' has no citizenship");
+            Assert.That(papers.Iso, Has.Length.EqualTo(2), $"'{slug}' has no flag to draw");
+        }
+
+        /// <summary>
+        /// THE SPANISH DRINKER IS GONE (2026-08-25, the author: "İspanyol müşteriyi oyundan
+        /// kaldır görseli ve animasyonları bozuk"). His frames were deleted; a row here would
+        /// be a person the bar can name and can never show.
+        /// </summary>
+        [Test]
+        public void The_cut_face_has_no_papers_left_behind()
+        {
+            Assert.That(Load().For("spanishsuit"), Is.Null,
+                "spanishsuit was cut from the cast; his papers should have gone with him");
         }
 
         [Test]

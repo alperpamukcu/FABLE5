@@ -38,8 +38,14 @@ namespace LastCall.Game
         /// steady glow; the house lights belong to the hour.</summary>
         public bool HouseLight { get; }
 
+        /// <summary>Whatever stands here HANGS — it touches no floor and no counter, so it
+        /// casts no contact shadow and draws behind the floor dressing rather than among it
+        /// (2026-08-24, the flamingo triptych: a picture on the wall is behind the table in
+        /// front of the wall, and a foot-blob under a frame reads as a stain).</summary>
+        public bool Hangs { get; }
+
         public StageSlot(string id, float x, float y, bool onCounter,
-                         float pairSpreadPx = 0f, bool houseLight = false)
+                         float pairSpreadPx = 0f, bool houseLight = false, bool hangs = false)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Slot needs an id.", nameof(id));
             if (pairSpreadPx < 0) throw new ArgumentException($"Slot '{id}' has a negative pair spread.");
@@ -49,6 +55,7 @@ namespace LastCall.Game
             OnCounter = onCounter;
             PairSpreadPx = pairSpreadPx;
             HouseLight = houseLight;
+            Hangs = hangs;
         }
 
         public override string ToString() => $"{Id} ({X}, {Y}){(OnCounter ? " on the counter" : "")}";

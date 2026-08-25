@@ -357,6 +357,11 @@ namespace LastCall.UI
             name.text = RailLabel(card);
             var btn = chip.gameObject.AddComponent<Button>();
             btn.targetGraphic = bg;
+            // The jar IS the button, so the jar is what answers the pointer (2026-08-25).
+            // Its plate is a 0.001-alpha rectangle: there was nothing here to light, and a
+            // bench of jars read as a still life until one was gambled on.
+            var jarGlow = chip.gameObject.AddComponent<HoverGlow>();
+            jarGlow.Graphics = new Graphic[] { iimg };
             var c = card;
             // The garnish goes into the shaker, before the pour — so a shaker filled to the brim
             // has nowhere to put it, and says so rather than swallowing the click (2026-07-28).

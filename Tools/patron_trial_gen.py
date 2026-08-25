@@ -206,7 +206,7 @@ KEPT = ('clubgirl', 'heavyset')
 # Who is being LOOKED AT this round, as opposed to who is in the game. The author asks for
 # stills first and animations only after approval, every time - so a new face is queued
 # here, judged, and only then added to KEPT and given clips.
-TRYING = ('silkwoman', 'pastelman')
+TRYING = ('greybeard', 'braidwoman', 'topknot', 'abuela')   # round four, 2026-08-20
 
 # -- the clip table (2026-08-19, round five) ---------------------------------
 # EVERY ONE-SHOT IS DRAWN IN TWO HALVES, the author's own idea and a good one:

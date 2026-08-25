@@ -302,12 +302,17 @@ namespace LastCall.PlayTests
             {
                 var door = Find(doorName);
                 if (door != null && Reaches(door)) yield break;
-                var key = Find("CellarKey");
-                Assert.That(key, Is.Not.Null, "the cellar's key is not on the screen to press");
+                // THE KEY IS GONE (2026-08-25). SHUT IT and its shut-state caption were one
+                // plate floating over the roller; the roller was always the door underneath
+                // it, and now it is the only one. The suite aims at the WORD written on it,
+                // because the roller's own rect is hung by its top and its centre is off the
+                // bottom of the screen - a click there lands nowhere.
+                var key = Find("OpenSignWord");
+                Assert.That(key, Is.Not.Null, "the roller carries no OPEN to press");
                 yield return ClickOn(key);
                 yield return new WaitForSecondsRealtime(0.6f);   // the roller's own travel
             }
-            Assert.Fail("six presses of the cellar's key never opened it onto " + doorName);
+            Assert.Fail("six presses of the roller never opened it onto " + doorName);
         }
 
         /// <summary>

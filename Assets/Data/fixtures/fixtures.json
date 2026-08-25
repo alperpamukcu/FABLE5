@@ -55,20 +55,26 @@
     {
       "id": "taps",
       "x": 540,
-      "y": 102,
+      "y": 76.5,
       "onCounter": true
     },
     {
       "id": "wall_lamps",
       "x": 319,
       "y": 234,
-      "pairSpreadPx": 172,
+      "pairSpreadPx": 224,
       "houseLight": true
+    },
+    {
+      "id": "wall_center",
+      "x": 319,
+      "y": 190,
+      "hangs": true
     },
     {
       "id": "sink",
       "x": 140,
-      "y": 86,
+      "y": 68.5,
       "onCounter": true
     }
   ],
@@ -264,6 +270,16 @@
       "lightIntensity": 1.15,
       "lightRadius": 148,
       "level": 3
+    },
+    {
+      "id": "flamingo_triptych",
+      "name": "Flamingo Triptych",
+      "slot": "wall_center",
+      "price": 45,
+      "stars": 0,
+      "flavor": "The coast in three frames. The flamingo stays past closing.",
+      "sprite": "fx_triptych",
+      "startsInTheRoom": true
     },
     {
       "id": "counter_sink",

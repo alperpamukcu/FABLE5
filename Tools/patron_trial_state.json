@@ -18,8 +18,9 @@
   "png": "AssetPipeline\\sources\\patron_trial\\selective_neutral.png",
   "edge_darkness": 64.2,
   "measured": {
-   "outline": 28.276,
+   "outline": 37.337,
    "head": 0.163,
+   "whole": 28.276,
    "colours": 30,
    "body": 196,
    "black": 25.178
@@ -38,8 +39,9 @@
   "png": "AssetPipeline\\sources\\patron_trial\\lineless_neutral.png",
   "edge_darkness": 64.9,
   "measured": {
-   "outline": 29.433,
+   "outline": 36.898,
    "head": 0.152,
+   "whole": 29.433,
    "colours": 24,
    "body": 197,
    "black": 8.834
@@ -90,8 +92,9 @@
   },
   "edge_darkness": 56.8,
   "measured": {
-   "outline": 6.926,
+   "outline": 9.951,
    "head": 0.182,
+   "whole": 6.926,
    "colours": 57,
    "body": 203,
    "black": 53.849
@@ -130,8 +133,9 @@
   },
   "edge_darkness": 54.4,
   "measured": {
-   "outline": 2.551,
+   "outline": 5.248,
    "head": 0.117,
+   "whole": 2.551,
    "colours": 37,
    "body": 197,
    "black": 40.404
@@ -157,8 +161,9 @@
    "cheer_b": "9e9f4e6b-7185-4506-b63f-b5d3740b87f0"
   },
   "measured": {
-   "outline": 8.154,
+   "outline": 5.33,
    "head": 0.135,
+   "whole": 8.154,
    "colours": 51,
    "body": 208,
    "black": 5.472
@@ -184,8 +189,9 @@
    "upset_b": "53046655-646c-4e08-b369-1b27dd3597aa"
   },
   "measured": {
-   "outline": 33.135,
+   "outline": 14.869,
    "head": 0.142,
+   "whole": 33.135,
    "colours": 47,
    "body": 204,
    "black": 11.354
@@ -196,8 +202,9 @@
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 22.598,
+   "outline": 39.906,
    "head": 0.108,
+   "whole": 22.598,
    "colours": 42,
    "body": 203,
    "black": 28.674
@@ -222,8 +229,9 @@
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 24.409,
+   "outline": 22.683,
    "head": 0.187,
+   "whole": 24.409,
    "colours": 44,
    "body": 214,
    "black": 7.59
@@ -248,8 +256,9 @@
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 6.533,
+   "outline": 4.348,
    "head": 0.171,
+   "whole": 6.533,
    "colours": 47,
    "body": 199,
    "black": 0.191
@@ -274,8 +283,9 @@
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 38.933,
+   "outline": 15.513,
    "head": 0.148,
+   "whole": 38.933,
    "colours": 48,
    "body": 203,
    "black": 8.981
@@ -300,8 +310,9 @@
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 88.425,
+   "outline": 76.923,
    "head": 0.199,
+   "whole": 88.425,
    "colours": 32,
    "body": 206,
    "black": 15.511
@@ -328,11 +339,12 @@
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 37.615,
+   "outline": 13.247,
    "head": 0.148,
-   "colours": 54,
+   "whole": 17.087,
+   "colours": 56,
    "body": 203,
-   "black": 30.281
+   "black": 28.098
   },
   "png": "AssetPipeline\\sources\\patron_trial\\spanishsuit.png",
   "clips": {
@@ -357,8 +369,9 @@
   "size": 220,
   "roll_of": "spanishsuit",
   "measured": {
-   "outline": 34.276,
+   "outline": 39.305,
    "head": 0.151,
+   "whole": 34.276,
    "colours": 29,
    "body": 192,
    "black": 14.338
@@ -371,8 +384,9 @@
   "size": 220,
   "roll_of": "spanishsuit",
   "measured": {
-   "outline": 81.719,
+   "outline": 73.016,
    "head": 0.144,
+   "whole": 81.719,
    "colours": 37,
    "body": 202,
    "black": 25.0
@@ -385,11 +399,12 @@
   "size": 220,
   "roll_of": "spanishsuit",
   "measured": {
-   "outline": 37.615,
+   "outline": 13.247,
    "head": 0.148,
-   "colours": 54,
+   "whole": 17.087,
+   "colours": 56,
    "body": 203,
-   "black": 30.281
+   "black": 28.098
   },
   "png": "AssetPipeline\\sources\\patron_trial\\spanishsuit__r3.png"
  },
@@ -413,8 +428,9 @@
   "size": 220,
   "roll_of": "leopard",
   "measured": {
-   "outline": 88.425,
+   "outline": 76.923,
    "head": 0.199,
+   "whole": 88.425,
    "colours": 32,
    "body": 206,
    "black": 15.511
@@ -427,8 +443,9 @@
   "size": 220,
   "roll_of": "leopard",
   "measured": {
-   "outline": 83.227,
+   "outline": 67.823,
    "head": 0.209,
+   "whole": 83.227,
    "colours": 31,
    "body": 206,
    "black": 21.976
@@ -476,5 +493,337 @@
    "black": 15.281
   },
   "png": "AssetPipeline\\sources\\patron_trial\\leopard__s31.png"
+ },
+ "greybeard__r1": {
+  "character_id": "4dc1dacc-a8f4-405b-a607-a0c878f766ea",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "greybeard",
+  "measured": {
+   "outline": 19.098,
+   "head": 0.131,
+   "whole": 14.168,
+   "colours": 32,
+   "body": 199,
+   "black": 0.011
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\greybeard__r1.png"
+ },
+ "greybeard__r2": {
+  "character_id": "cdc08308-9d40-4b1a-b2ca-b26c0be3bf96",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "greybeard",
+  "measured": {
+   "outline": 92.945,
+   "head": 0.125,
+   "whole": 92.123,
+   "colours": 32,
+   "body": 184,
+   "black": 12.789
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\greybeard__r2.png"
+ },
+ "greybeard__r3": {
+  "character_id": "58d99576-0db1-4c2e-933d-294b7f009313",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "greybeard",
+  "measured": {
+   "outline": 98.339,
+   "head": 0.147,
+   "whole": 89.071,
+   "colours": 41,
+   "body": 204,
+   "black": 12.063
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\greybeard__r3.png"
+ },
+ "braidwoman__r1": {
+  "character_id": "82f30c6c-6c85-4ffc-9bbf-be0866306d07",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "braidwoman",
+  "measured": {
+   "outline": 52.055,
+   "head": 0.152,
+   "whole": 63.636,
+   "colours": 46,
+   "body": 204,
+   "black": 20.908
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\braidwoman__r1.png"
+ },
+ "braidwoman__r2": {
+  "character_id": "774f1426-4c66-455e-b43b-4826dc190484",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "braidwoman",
+  "measured": {
+   "outline": 73.201,
+   "head": 0.19,
+   "whole": 60.714,
+   "colours": 36,
+   "body": 211,
+   "black": 31.983
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\braidwoman__r2.png"
+ },
+ "braidwoman__r3": {
+  "character_id": "7e973ef1-cad4-489c-9454-97fa611dcbc0",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "braidwoman",
+  "measured": {
+   "outline": 69.211,
+   "head": 0.216,
+   "whole": 81.787,
+   "colours": 29,
+   "body": 204,
+   "black": 26.993
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\braidwoman__r3.png"
+ },
+ "topknot__r1": {
+  "character_id": "afd05369-140f-452c-82dc-353f6bd668cd",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "topknot",
+  "measured": {
+   "outline": 70.868,
+   "head": 0.141,
+   "whole": 53.042,
+   "colours": 44,
+   "body": 206,
+   "black": 44.263
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\topknot__r1.png"
+ },
+ "topknot__r2": {
+  "character_id": "47aaa05b-cb8f-45a9-9509-0d238a3e1851",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "topknot",
+  "measured": {
+   "outline": 43.631,
+   "head": 0.172,
+   "whole": 29.537,
+   "colours": 36,
+   "body": 204,
+   "black": 39.335
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\topknot__r2.png"
+ },
+ "topknot__r3": {
+  "character_id": "41830bc5-74d1-47d5-8be0-2937c6db4bd9",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "topknot",
+  "measured": {
+   "outline": 79.722,
+   "head": 0.158,
+   "whole": 67.561,
+   "colours": 38,
+   "body": 203,
+   "black": 28.807
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\topknot__r3.png"
+ },
+ "abuela__r1": {
+  "character_id": "995efbbc-e044-4140-bc30-ae115791c5fe",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "abuela",
+  "measured": {
+   "outline": 92.248,
+   "head": 0.216,
+   "whole": 94.333,
+   "colours": 43,
+   "body": 194,
+   "black": 8.609
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\abuela__r1.png"
+ },
+ "abuela__r2": {
+  "character_id": "74e672f4-5dc6-4754-93d2-236aec9327fa",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "abuela",
+  "measured": {
+   "outline": 81.181,
+   "head": 0.181,
+   "whole": 87.441,
+   "colours": 29,
+   "body": 204,
+   "black": 10.442
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\abuela__r2.png"
+ },
+ "abuela__r3": {
+  "character_id": "6534d4de-9189-4853-be45-aa2b8839d88b",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "abuela",
+  "measured": {
+   "outline": 83.936,
+   "head": 0.209,
+   "whole": 90.366,
+   "colours": 31,
+   "body": 196,
+   "black": 10.056
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\abuela__r3.png"
+ },
+ "greybeard__b1": {
+  "character_id": "2f34607f-a745-4e8f-8990-ea5622b6f485",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "greybeard",
+  "measured": {
+   "outline": 90.584,
+   "head": 0.136,
+   "whole": 83.333,
+   "colours": 40,
+   "body": 206,
+   "black": 13.401
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\greybeard__b1.png"
+ },
+ "greybeard__b2": {
+  "character_id": "fa6c7d1e-f3d0-4ce1-bb47-151f1f6f6903",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "greybeard",
+  "measured": {
+   "outline": 91.148,
+   "head": 0.147,
+   "whole": 92.562,
+   "colours": 32,
+   "body": 218,
+   "black": 11.291
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\greybeard__b2.png"
+ },
+ "greybeard__b3": {
+  "character_id": "f57d5335-2c8a-4db0-b877-56972de93d9e",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "greybeard",
+  "measured": {
+   "outline": 39.13,
+   "head": 0.17,
+   "whole": 49.713,
+   "colours": 39,
+   "body": 188,
+   "black": 7.475
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\greybeard__b3.png"
+ },
+ "greybeard__c1": {
+  "character_id": "87e8bbb6-feab-4be9-92dd-616c2efe93b2",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "greybeard",
+  "measured": {
+   "outline": 90.735,
+   "head": 0.137,
+   "whole": 82.868,
+   "colours": 28,
+   "body": 204,
+   "black": 15.424
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\greybeard__c1.png"
+ },
+ "greybeard__c2": {
+  "character_id": "16cf06cc-e56a-4ad3-827f-ccd49a7d641c",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "greybeard",
+  "measured": {
+   "outline": 95.41,
+   "head": 0.13,
+   "whole": 89.488,
+   "colours": 34,
+   "body": 192,
+   "black": 12.894
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\greybeard__c2.png"
+ },
+ "greybeard__c3": {
+  "character_id": "791a2da8-a7c9-4573-b8bc-804d8d9f780d",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "greybeard",
+  "measured": {
+   "outline": 84.127,
+   "head": 0.166,
+   "whole": 60.982,
+   "colours": 35,
+   "body": 205,
+   "black": 0.296
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\greybeard__c3.png"
+ },
+ "greybeard__n1": {
+  "character_id": "da3915c1-6e9d-4ee1-bd04-ebc22b2bd120",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "greybeard",
+  "measured": {
+   "outline": 76.986,
+   "head": 0.143,
+   "whole": 83.397,
+   "colours": 32,
+   "body": 203,
+   "black": 11.154
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\greybeard__n1.png"
+ },
+ "greybeard": {
+  "character_id": "4dc1dacc-a8f4-405b-a607-a0c878f766ea",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 19.098,
+   "head": 0.131,
+   "whole": 14.168,
+   "colours": 32,
+   "body": 199,
+   "black": 0.011
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\greybeard.png",
+  "clips": {},
+  "adopted_from": "greybeard__r1",
+  "replaced": null
+ },
+ "braidwoman__s1": {
+  "character_id": "d186b574-f154-4f5e-8165-ac5f9c8aa08d",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "braidwoman",
+  "measured": {
+   "outline": 70.3,
+   "head": 0.192,
+   "whole": 83.715,
+   "colours": 45,
+   "body": 203,
+   "black": 23.317
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\braidwoman__s1.png"
+ },
+ "topknot__s1": {
+  "character_id": "4f3f0320-ccdb-40f3-8638-39d19b06c563",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "topknot",
+  "measured": {
+   "outline": 72.981,
+   "head": 0.131,
+   "whole": 79.569,
+   "colours": 38,
+   "body": 198,
+   "black": 18.299
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\topknot__s1.png"
  }
 }

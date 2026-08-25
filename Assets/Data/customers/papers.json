@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_comment": "THE CAST'S PAPERS: what the licence prints for each face (GDD 22 section 3). Moved out of TycoonHud on 2026-08-12 (PLAN_last_call S0) -- 30 people were a hardcoded Dictionary in a UI file, which broke the house rule that content is data and made the story's characters impossible to write without touching C#. The slug is the LOOK: the sprite folder under Resources/Patron, and the key the licence, the receipt and the guide all agree on. The empty slug is the fallback for a face with no papers of its own. Adding a person here is adding a person to the bar; nothing else has to change. Ece Toprak (slug 'ece') is the bartender who works the shift with the player -- GDD 26 section 1b. She is cast, not crowd: her look is reserved out of the arrivals pool and her portrait is the one art asset the story is waiting on.",
+  "_comment": "THE CAST'S PAPERS: what the licence prints for each face (GDD 22 section 3). Moved out of TycoonHud on 2026-08-12 (PLAN_last_call S0) -- 30 people were a hardcoded Dictionary in a UI file, which broke the house rule that content is data and made the story's characters impossible to write without touching C#. The slug is the LOOK: the sprite folder under Resources/Patron, and the key the licence, the receipt and the guide all agree on. The empty slug is the fallback for a face with no papers of its own. Adding a person here is adding a person to the bar; nothing else has to change. Ece Toprak (slug 'ece') is the bartender who works the shift with the player -- GDD 26 section 1b. She is cast, not crowd: her look is reserved out of the arrivals pool and her portrait is the one art asset the story is waiting on. The last nine rows are the 2026-08-19 rig -- the faces the bar actually draws today (TycoonHud.PatronCast). They were written on 2026-08-25 because the whole LIVE cast had no papers at all: each one fell through to the archetype's name pool for a name, printed a HOMETOWN where the licence asks for a citizenship, and drew no flag, so nine different drawings introduced themselves as nine spellings of nobody. Age and citizenship are read off the drawing, the way the first thirty were. spanishsuit was cut on 2026-08-25 (broken art and animations) and never had papers to remove.",
   "papers": [
     {
       "slug": "",
@@ -219,6 +219,16 @@
       "country": "Turkey",
       "iso": "tr"
     },
-    { "slug": "linen", "name": "Camila Restrepo", "age": 29, "country": "United States", "iso": "us" }
+    { "slug": "linen", "name": "Camila Restrepo", "age": 29, "country": "United States", "iso": "us" },
+
+    { "slug": "clubgirl",     "name": "Nina Delgado",     "age": 23, "country": "United States", "iso": "us" },
+    { "slug": "heavyset",     "name": "Ray Mulcahy",      "age": 57, "country": "United States", "iso": "us" },
+    { "slug": "silkwoman",    "name": "Isabel Navarro",   "age": 28, "country": "Philippines",   "iso": "ph" },
+    { "slug": "pastelman",    "name": "Matteo Ferrante",  "age": 22, "country": "Italy",         "iso": "it" },
+    { "slug": "shaved",       "name": "Emre Kayhan",      "age": 39, "country": "Turkey",        "iso": "tr" },
+    { "slug": "silverbob",    "name": "Renate Kohler",    "age": 66, "country": "Germany",       "iso": "de" },
+    { "slug": "afrowoman",    "name": "Simone Baptiste",  "age": 31, "country": "United States", "iso": "us" },
+    { "slug": "eastasianman", "name": "Daniel Yoon",      "age": 26, "country": "United States", "iso": "us" },
+    { "slug": "leopard",      "name": "Talia Reyes",      "age": 27, "country": "United States", "iso": "us" }
   ]
 }

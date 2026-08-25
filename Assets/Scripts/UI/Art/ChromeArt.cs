@@ -195,6 +195,30 @@ namespace LastCall.UI
                 "................",
                 "................",
             },
+            // WHICH WAY A READING MOVED (2026-08-25). Drawn, because the pixel faces carry
+            // no arrow either — PressStart2P has no U+25B2, and the last time a glyph was
+            // assumed the night's slip printed five tofu boxes where its stars should have
+            // been. Symmetric across the vertical, so the SAME mask turned half a turn is
+            // the fall: one drawing, two directions, and they can never disagree in weight.
+            ["rise"] = new[]
+            {
+                "................",
+                "................",
+                ".......##.......",
+                "......####......",
+                ".....######.....",
+                "....########....",
+                "...##########...",
+                "..############..",
+                "......####......",
+                "......####......",
+                "......####......",
+                "......####......",
+                "......####......",
+                "................",
+                "................",
+                "................",
+            },
             // A TICK, for a thing already done.
             ["tick"] = new[]
             {
@@ -992,8 +1016,24 @@ namespace LastCall.UI
         /// talked to, and the ticket's dots say the same thing in the same colour.</summary>
         public enum BubbleTone { Order, Take, Drink }
 
-        /// <summary>The bubble's fill: the palette's white, never #FFFFFF (14 v3 §3).</summary>
-        private static readonly Color32 BubbleFill = new Color32(0xF2, 0xE8, 0xD5, 0xFF);
+        /// <summary>
+        /// The bubble's fill: the palette's white, never #FFFFFF (14 v3 §3) — and SLIGHTLY
+        /// SEE-THROUGH since 2026-08-25 (the author: "baloncukların beyaz kısmı biraz şeffaf
+        /// bir beyaz olsun"). Only the fill: the edge, the foot and the spout's slopes stay
+        /// solid, so the balloon still has a hard drawn outline and the room only shows
+        /// through the paper inside it.
+        ///
+        /// 0xDB is 86%, which is "biraz" — far enough to see the wall move behind a ticket,
+        /// nowhere near far enough to cost the 8px type its contrast.
+        /// </summary>
+        private static readonly Color32 BubbleFill = new Color32(0xF2, 0xE8, 0xD5, 0xDB);
+
+        /// <summary>The same white, solid. The spout's skirt is drawn in this and nothing
+        /// else is: those three rows exist to ERASE the plate's bottom band where the balloon
+        /// should be open (see <see cref="BubbleTail"/>), and a see-through eraser erases
+        /// nothing — a translucent skirt would show the plate's magenta edge straight through
+        /// the mouth of the tail.</summary>
+        private static readonly Color32 BubbleSolid = new Color32(0xF2, 0xE8, 0xD5, 0xFF);
         /// <summary>Its edge, and the two steps under it. Magenta[3] is the hot line the
         /// author picked; Magenta[1] is the shade that makes the card sit ON the room rather
         /// than being a hole cut in it, the same trick <see cref="Card"/> plays in grey.</summary>
@@ -1102,7 +1142,7 @@ namespace LastCall.UI
                 {
                     bool slope = !skirt && (x < Mid - half + BubbleEdgeW
                                          || x > Mid + half - BubbleEdgeW);
-                    px[y * W + x] = slope ? edge : BubbleFill;
+                    px[y * W + x] = slope ? edge : skirt ? BubbleSolid : BubbleFill;
                 }
             }
             // The tip is the row where the half-width reaches nought, and it is already the
@@ -1218,6 +1258,23 @@ namespace LastCall.UI
                     Set(x, ty, ty == 1 ? (byte)150 : (byte)196);      // shadow under the rim
                 }
             return Cache[key] = Make(px, w, h, Vector4.zero);
+        }
+
+        /// <summary>
+        /// ONE SOLID TEXEL, white, for anything that has to be DRAWN rather than merely
+        /// coloured in.
+        ///
+        /// It exists because of a trap paid for on 2026-08-25: an <see cref="Image"/> with
+        /// no sprite ignores <see cref="Image.Type"/> entirely — Filled, Sliced, Tiled, all
+        /// of it — and draws one flat quad. So the standing's gauge, built as a Filled image
+        /// with no sprite, came back FULL on a bar standing at nought. A fill needs something
+        /// to fill.
+        /// </summary>
+        public static Sprite Solid()
+        {
+            const string Key = "solid";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            return Cache[Key] = Make(new[] { new Color32(255, 255, 255, 255) }, 1, 1, Vector4.zero);
         }
 
         /// <summary>The liquid ladder: one texel per 20-point measure, in the reading's own

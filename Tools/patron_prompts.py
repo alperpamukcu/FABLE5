@@ -287,6 +287,74 @@ FIGURE_OPTIONS = {
         "straight black hair swept back, clean shaven, thin silver-framed glasses, "
         "a pale mint short sleeved t-shirt, light grey trousers, "
         "no collar, no buttons, no logo, no pattern, no hat"),
+
+    # ── the fourth round (2026-08-20): "farkli etnik kokenlerde ve farkli
+    #    yapilarda ... karakteristik ozelliklere sahip" ─────────────────────
+    # WHAT THE CAST WAS MISSING, counted rather than felt. The ten in the game are read
+    # apart at ~200px by three things - build, hair silhouette, and which colour they
+    # carry - so the gaps were listed on all three before a word was written:
+    #
+    #   ethnicity  one Black character and she is a woman; no Black man at all, no South
+    #              Asian, no Pacific Islander, and nobody past their fifties.
+    #   build      nothing bigger than heavyset, nothing short-and-round, nothing
+    #              lean-and-old. The cast is mostly slim adults of the same height.
+    #   hair       taken: high ponytail, receding+beard, long loose, short curls, sharp
+    #              bob, shaved, afro, swept back, wavy+beard, curly bun. A long BRAID, a
+    #              TOP KNOT, WHITE hair and a low BUN are all still free.
+    #   colour     taken: magenta, teal, turquoise, coral, lilac, white, burnt orange,
+    #              mint, tan. Free: yellow, green, deep red, blue - one each below.
+    #
+    # THE GARMENT IS CHOSEN OFF THE SCOREBOARD, not off taste. The author asked for
+    # heavyset's look - "trial heavyset gibi natural kontrasli" - and heavyset is not a
+    # matter of opinion here: he is the cleanest roll the casting ever produced, 2.6%
+    # keyline against a cast that runs to 88%. Sorted by that number, what the model
+    # draws WITHOUT lines is plain soft separates - an open shirt over a t-shirt (2.6,
+    # 8.2), a halter (6.9), a blouse and trousers (6.5) - and what it inks is tailoring,
+    # sheen and print (waistcoat 37.6, satin slip 33.1, leopard 88.4). So all four below
+    # are dressed in the first list, and none of them in the second.
+    "greybeard": (
+        "a Black man in his sixties, deep brown skin, tall and lean with narrow "
+        "shoulders, bar customer in a Miami club, close-cropped white hair and a short "
+        "white beard, "
+        "an open loose mustard yellow shirt over a plain white t-shirt, light grey "
+        "trousers, "
+        "no logo, no pattern, no hat, nothing black"),
+    # The braid is the whole silhouette: it has to fall in FRONT of the shoulder or it
+    # disappears behind the figure at this size and she is just another dark-haired
+    # woman. Said outright for that reason, and the bangles are named because a wrist is
+    # what the counter leaves visible.
+    "braidwoman": (
+        "a South Asian woman in her thirties, warm brown skin, short and softly curvy, "
+        "bar customer in a Miami club, a thick black braid worn forward over one "
+        "shoulder and hanging down the front, a small gold nose stud, gold bangles, "
+        # LIGHTENED, off the round that produced greybeard (2026-08-20). He is the
+        # one roll of twelve that came back clean, and he is also the only one of
+        # the four with no dark garment on him: his measured near-black share is
+        # 0.01% against 9-44% on the inked ones. The house already knew the shape of
+        # this - silverbob's black suit, leopard's black rosettes - so the jeans go
+        # light and the clause that greybeard carries comes with them.
+        "a plain emerald green tunic top and light faded indigo jeans, "
+        "no black clothing, no embroidery, no beadwork, no logo, no pattern, no hat"),
+    # The biggest body in the cast, and the point of him: heavyset is broad but he is
+    # not TALL, so the room has no one who fills a stool. Both words are asked for
+    # because the model reads "heavy" as short by default.
+    "topknot": (
+        "a Pacific Islander man in his twenties, brown skin, very tall and heavily "
+        "built with broad shoulders and a thick chest, bar customer in a Miami club, "
+        "long black hair tied up in a top knot, clean shaven, "
+        "an open loose deep red short sleeved shirt over a plain sand coloured "
+        # Stone, not dark grey - same reason as the braid woman's jeans above.
+        "t-shirt, warm stone grey trousers, "
+        "no black clothing, no tattoo, no logo, no pattern, no hat"),
+    # The oldest in the cast by fifteen years, and the only one who is short AND round -
+    # a shape the other ten do not have between them. The skirt is the second reason she
+    # is here: every woman in the cast so far is drawn in trousers or a slip dress.
+    "abuela": (
+        "a short round Cuban woman in her seventies, warm olive skin, soft heavy build, "
+        "bar customer in a Miami club, silver and black hair pinned up in a low bun, "
+        "pearl earrings, kind lined face, "
+        "a plain cornflower blue blouse and a long plain cream skirt, "
+        "no logo, no pattern, no hat, nothing black"),
 }
 
 HAND_ANCHOR_NOTE = """\
