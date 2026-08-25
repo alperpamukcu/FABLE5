@@ -93,22 +93,54 @@
   ],
   "fixtures": [
     {
-      "id": "fern_pot",
-      "name": "Potted Fern",
+      "id": "plant_palm",
+      "name": "Areca Palm",
       "slot": "plant_left",
       "price": 20,
-      "stars": 0,
-      "flavor": "A little green against the dark.",
-      "sprite": "fx_fern"
+      "stars": 0.0,
+      "flavor": "Thin fronds and a clay pot. The cheapest way to stop a corner looking like a corridor.",
+      "sprite": "fx_plant_palm",
+      "level": 1
     },
     {
-      "id": "monstera_pot",
-      "name": "Monstera",
+      "id": "plant_fiddle",
+      "name": "Fiddle-Leaf Fig",
+      "slot": "plant_left",
+      "price": 55,
+      "stars": 1.5,
+      "flavor": "Broad leaves on a bare stem, in a cream vase. It fills the window wall the way a lamp fills a table.",
+      "sprite": "fx_plant_fiddle",
+      "level": 2
+    },
+    {
+      "id": "plant_pothos",
+      "name": "Trailing Pothos",
+      "slot": "plant_left",
+      "price": 95,
+      "stars": 3.0,
+      "flavor": "It grows down instead of up, off three brass legs. The only plant in here that reaches for the floor.",
+      "sprite": "fx_plant_pothos",
+      "level": 3
+    },
+    {
+      "id": "plant_snake",
+      "name": "Snake Plant",
       "slot": "plant_right",
       "price": 25,
-      "stars": 0,
-      "flavor": "Big leaves, easy company.",
-      "sprite": "fx_monstera"
+      "stars": 0.0,
+      "flavor": "Stiff blades in a plain pot. Survives a bar, which is more than most things manage.",
+      "sprite": "fx_plant_snake",
+      "level": 1
+    },
+    {
+      "id": "plant_agave",
+      "name": "Agave Bowl",
+      "slot": "plant_right",
+      "price": 70,
+      "stars": 1.5,
+      "flavor": "Blue-green and low and wide, in a shallow dish. It sits under the neon rather than in front of it.",
+      "sprite": "fx_plant_agave",
+      "level": 2
     },
     {
       "id": "counter_candle",

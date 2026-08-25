@@ -557,6 +557,7 @@ namespace LastCall.UI
             BuildRecipeBook(root);
 
             BuildDrinkGlass(root);
+            BuildMiniPreps(root);   // the counter's own stations, beside where it rests
             BuildSnackRow(root);
             BuildServiceLog(root);
             BuildIdCard(root);

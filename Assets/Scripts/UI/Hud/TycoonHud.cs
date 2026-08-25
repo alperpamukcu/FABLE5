@@ -1256,6 +1256,7 @@ namespace LastCall.UI
             SyncLastCall(run);    // after the seats: the guest is one of them
             UpdateOrderTip();     // after the seats: it reads the tickets they just placed
             UpdateDrinkGlass();
+            StepMiniPreps(run);
             UpdateEscape();
             UpdateBookKeys();
             StepStarDrop();
@@ -1824,7 +1825,15 @@ namespace LastCall.UI
         /// <summary>Where the book stands along the bar, from the middle. Left of centre,
         /// clear of the sink at one end and the beer font and till at the other — the same
         /// stretch of counter the old BOOK key floated over, so the hand already knows.</summary>
-        private const float BookPropX = -196f;
+        // OFF THE MIDDLE OF THE SCREEN (2026-08-25, the author: "menu en ekranin
+        // ortasinda kalmis biraz daha tezgaha dahil hissi verdirilmeli"). At -196 the book
+        // stood at stage x 222 — left of centre by the numbers and dead centre to the eye,
+        // with clear counter either side of it, which is what makes a prop read as placed
+        // ON a surface rather than BELONGING to it. The bar's other working objects are all
+        // pushed to its ends: the sink at 140, the font at 540, the till at 604. This puts
+        // the book in the working left end beside the sink, where the things you actually
+        // pick up live, and leaves the middle of the bar clear for the drinkers.
+        private const float BookPropX = -336f;   // stage x 152, just right of the sink
 
         private Text _bookBadgeText;
 

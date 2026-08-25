@@ -15,7 +15,19 @@ public class LastCallImporter : AssetPostprocessor
         // settings one file at a time, and a sixth arriving as a blurry Default texture is
         // then a silent bug (see memory: a new PNG whose rule is not compiled yet keeps
         // Default and has to be force-reimported). The rule says it instead.
-        if (!path.Contains("/art/") && !path.Contains("/resources/scene/")) return;
+        // ...AND Resources/Fixtures, for exactly the reason written above (2026-08-25).
+        // The room's own furniture lives there - plants, lamps, tables, the sink, the beer
+        // fonts - as PPU 1 world sprites, and every one of its .meta files had been set by
+        // hand to these settings. Five new plants arrived with no .meta at all and would
+        // have imported as bilinear PPU 100: blurry, and a hundred times too small in a
+        // room measured in art pixels. The rule the comment above promised now actually
+        // covers the folder it was describing.
+        //
+        // Resources/ITEMS is deliberately NOT here: those are canvas sprites at PPU 100
+        // (see the meta open_sign_gen ships), and sweeping them to PPU 1 would resize
+        // every prop the HUD draws.
+        if (!path.Contains("/art/") && !path.Contains("/resources/scene/")
+            && !path.Contains("/resources/fixtures/")) return;
 
         var ti = (TextureImporter)assetImporter;
         ti.textureType = TextureImporterType.Sprite;

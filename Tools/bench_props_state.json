@@ -1,0 +1,42 @@
+{
+ "spoon": {
+  "job_id": "f3b8cd4e-cb8b-41a3-a6fa-913b86e10032",
+  "png": "AssetPipeline\\staging\\bench_props\\spoon.png"
+ },
+ "tap_big": {
+  "job_id": "496d283f-a92d-4e5f-a01a-10918092587b",
+  "png": "AssetPipeline\\staging\\bench_props\\tap_big.png"
+ },
+ "dish_salt": {
+  "job_id": "07921555-5e19-4721-8a7d-40257551583d",
+  "png": "AssetPipeline\\staging\\bench_props\\dish_salt.png"
+ },
+ "dish_sugar": {
+  "job_id": "685d5d39-8c9d-45da-bb94-35229fed5e23",
+  "png": "AssetPipeline\\staging\\bench_props\\dish_sugar.png"
+ },
+ "bucket_ice": {
+  "job_id": "5460eb4f-82c3-457a-8a0d-b31ffb9b53f8",
+  "png": "AssetPipeline\\staging\\bench_props\\bucket_ice.png"
+ },
+ "bowl_lemon": {
+  "job_id": "9da6a58c-36a8-40f5-aef4-e6a4482aeff7",
+  "png": "AssetPipeline\\staging\\bench_props\\bowl_lemon.png"
+ },
+ "mini_ice": {
+  "job_id": "89c3c02f-e685-479a-b59e-74b3eb019a21",
+  "png": "AssetPipeline\\staging\\bench_props\\mini_ice.png"
+ },
+ "mini_lemon": {
+  "job_id": "96e5eb2e-7cc6-4f5a-bc84-5c98e1ee3b38",
+  "png": "AssetPipeline\\staging\\bench_props\\mini_lemon.png"
+ },
+ "mini_salt": {
+  "job_id": "c180de0f-3fa0-4c85-a724-489154872c25",
+  "png": "AssetPipeline\\staging\\bench_props\\mini_salt.png"
+ },
+ "mini_sugar": {
+  "job_id": "5cc5734b-b524-4841-8900-fee10eec5d13",
+  "png": "AssetPipeline\\staging\\bench_props\\mini_sugar.png"
+ }
+}

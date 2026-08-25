@@ -191,7 +191,7 @@ namespace LastCall.UI
             if (_stage == Stage.Serve)
             {
                 _servePouringNow = false;
-                UpdateServeTilt(run); UpdateServePrepDrag(run);
+                UpdateServeTilt(run); UpdateServePrepDrag(run); UpdateRimLap(run);
                 UpdateServeStepCard(run); PushServeDone(run);
                 // One loop source, driven once per frame from whatever poured (P17): the tin
                 // and the hand bottle set the flag, and neither can stop the other's sound.
@@ -213,6 +213,9 @@ namespace LastCall.UI
         {
             var previous = _stage;
             _stage = stage;
+            // Leaving the glass bench empties the hand (2026-08-25): a dish mid-lap or a
+            // piece mid-drag must not survive into another stage — or into the room.
+            if (previous == Stage.Serve && stage != Stage.Serve) ResetServeHand();
             // Any slide still in flight settles before the panels are touched — the house
             // "settle before movement" law. State stays SYNCHRONOUS end to end: only the
             // visuals animate, so call sites that act right after GoTo keep their contract.

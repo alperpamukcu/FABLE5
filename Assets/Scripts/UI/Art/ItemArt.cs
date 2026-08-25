@@ -89,10 +89,12 @@ namespace LastCall.UI
         {
             switch (prepId)
             {
-                case "ice": return Load("ice_bucket");
-                case "lemon_twist": return Load("lemon_bucket");
-                case "salt_rim": return Load("salt_bucket");
-                case "sugar_rim": return Load("sugar_bucket");
+                // The 2026-08-25 bench props — counter-proportioned, one take each
+                // (Tools/bench_props_gen.py); the old buckets stay as fallbacks.
+                case "ice": return Load("bench_bucket_ice") ?? Load("ice_bucket");
+                case "lemon_twist": return Load("bench_bowl_lemon") ?? Load("lemon_bucket");
+                case "salt_rim": return Load("bench_dish_salt") ?? Load("salt_bucket");
+                case "sugar_rim": return Load("bench_dish_sugar") ?? Load("sugar_bucket");
                 default: return null;
             }
         }

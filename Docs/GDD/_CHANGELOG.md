@@ -2,6 +2,36 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `21 §5 / 24 §2-3 / GDD_MEVCUT` **the bench rework (2026-08-25, seventh round):** the
+  author's brief in five parts, all shipped together.
+  **(1) The rims are a skill.** Salt and sugar stopped being a piece you drop in: press
+  the dish and run a full lap round the glass's MOUTH with the cursor — the bar spoon's
+  signed-sweep arithmetic turned ninety degrees. A 14-segment ring round the mouth shows
+  the lap; leaving the 34–190 band pauses rather than spills; a half-run rim waits on the
+  shelf as "SALT 60%". The finished lap applies through the same Core verb the drop used.
+  **(2) The ice is counted.** The bucket never turns into a tick: every drag-and-drop
+  adds a cube. `GlassContents.IceCubes` counts them (the STEP list stays deduplicated —
+  the judge still asks "is there ice", never "how much"), `TransferInto` carries them
+  with the drink, and GlassDecor stacks the pile at the liquid line from a fixed lay
+  table (7 drawn, so the pile cannot boil between refreshes). `IceCountTests` pins the
+  boundary.
+  **(3) The bench resets on serve.** SERVE IT — and any exit from the glass bench —
+  empties the hand: dish mid-lap, piece mid-drag, ring, part-run rims, all cleared
+  (`ResetServeHand`, called from the key and from `GoTo`).
+  **(4) The counter is the room's counter, zoomed** ("ekran çok boş görünüyor"): the
+  bench band is drawn from colours SAMPLED off `counter.png` — slab, ridge, seam and the
+  magenta neon rail at the far edge, six sampled rows at 5 units each — so the bench is
+  the same object the room draws, four times closer.
+  **(5) The counter's own stations** ("servis et dedikten sonra unutursa diye"): while a
+  made drink stands on the room's counter, four counter-scaled stations stand beside it —
+  a plain press applies the prep, no lap and no aim; the skill lives on the bench, the
+  counter is the safety net. They ride `CounterLift` and hide while the flow is open.
+  **Art, one take each** (`Tools/bench_props_gen.py`, quantized): the twisted-stem bar
+  spoon (shipped flipped, bowl down), the room's brass single-font grown to 240×480 for
+  the tap bench (its baked handle erased at ship — one rig, one handle — the animated
+  handle re-mounted at the measured valve, the spout re-measured at (−79,+66)), the two
+  rimming dishes, the open ice bucket, the lemon bowl, and the four counter minis.
+
 - `GDD_MEVCUT §6.2` **the room gets four pieces of the author's own art (2026-08-25):**
   the wall lamps are replaced drawing for drawing (mark 1 is a glass tube, cyan cap into a
   pink body in a steel bracket; mark 2 is a cream panel in a coral frame, which is a wash

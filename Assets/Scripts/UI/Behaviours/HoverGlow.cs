@@ -102,6 +102,38 @@ namespace LastCall.UI
             _held = true;
         }
 
+        /// <summary>
+        /// Push a new REST colour in from outside, without the glow and the light fighting
+        /// over the same field.
+        ///
+        /// The props in this room are lit, and until now that only ever came from Unity —
+        /// a SpriteRenderer tinted by a Light2D, which no script writes, so nothing could
+        /// clash. A prop on a CANVAS has no light on it; the only way to put the evening on
+        /// it is for something to write Image.color every frame. That something and this
+        /// component would then take turns clobbering each other: the tint would erase the
+        /// glow, and the rest colour captured on enter would be a frozen snapshot of the
+        /// light at the moment the pointer arrived.
+        ///
+        /// So the light does not write the colour any more, it writes the REST colour. When
+        /// the pointer is away that is the same thing. When it is not, the glow keeps
+        /// driving the graphic and simply glows off a rest colour that is still moving with
+        /// the room — which is exactly what a lit object under a pointer should do.
+        /// </summary>
+        public void Retint(Color c)
+        {
+            if (Graphics == null) return;
+            for (int i = 0; i < Graphics.Length; i++)
+            {
+                if (Graphics[i] == null) continue;
+                if (_held && _restGraphics != null && i < _restGraphics.Length)
+                    _restGraphics[i] = new Color(c.r, c.g, c.b, _restGraphics[i].a);
+                else
+                    Graphics[i].color = new Color(c.r, c.g, c.b, Graphics[i].color.a);
+            }
+            // ALPHA IS LEFT ALONE here for the same reason Apply() leaves it alone.
+            if (_held) Apply(_g);
+        }
+
         private void Restore()
         {
             if (!_held) return;

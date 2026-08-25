@@ -41,7 +41,7 @@ namespace LastCall.UI
         private const float TiltFollow = 22f;
         private const float HandleTilt = 62f;   // degrees the handle swings while it runs
         /// <summary>How far left of the font's centre the spout hangs — the glass goes under it.</summary>
-        private const float SpoutReach = 118f;
+        private const float SpoutReach = 79f;
         /// <summary>Where the glass turns: low, where the hand is.</summary>
         private const float GlassPivotY = 0.16f;
         /// <summary>
@@ -51,19 +51,21 @@ namespace LastCall.UI
         /// </summary>
         private const float PintW = 124f, PintH = 200f;
         /// <summary>
-        /// The faucet's lip, MEASURED off the font art rather than guessed: the spout tip is the
-        /// leftmost opaque pixel of tap.png, at (-39, +34.5) from the sprite's centre in its own
-        /// 82×175 pixels. Scaled by TowerH/175 to the size the tower is drawn at (2026-07-30).
+        /// The faucet's lip, MEASURED off the font art rather than guessed (the 2026-07-30
+        /// discipline, re-run for the new drawing on 2026-08-25): the chrome faucet's mouth
+        /// sits at (-39.5, +33) from bench_tap_big's centre in its own 120×240 pixels, and
+        /// the tower stands at a whole 2× of that art.
         /// </summary>
-        private static Vector2 SpoutOffset => new Vector2(-39f, 34.5f) * (TowerH / 175f);
+        private static Vector2 SpoutOffset => new Vector2(-79f, 66f);
 
         // ── the bar station (2026-07-30) ─────────────────────────────────────────
         // Everything used to float in an empty box: a tower, a glass and a keg side by side on
         // nothing, with no surface under them and no connection between them. The stage is now a
         // station — a counter the tower is bolted to and the glass stands on, a drip tray under
         // the faucet, and the kegs behind the bar with the line running to the font.
-        /// <summary>The counter's top surface, in the pour surface's local space.</summary>
-        private const float CounterY = -140f;
+        /// <summary>The counter's top surface, in the pour surface's local space.
+        /// -170 since the big font (2026-08-25): its 480 needs the headroom.</summary>
+        private const float CounterY = -170f;
         private const float CounterLip = 6f;      // the brass edge along its front, as in the bar
         /// <summary>
         /// The font stands well over the glass, because it does: a bar tower is around 450 mm
@@ -76,7 +78,13 @@ namespace LastCall.UI
         /// show the keg's label, and every millimetre the counter drops for the tower is a
         /// millimetre off the recess.
         /// </summary>
-        private const float TowerW = 145f, TowerH = 310f;
+        // THE ROOM'S OWN FONT, GROWN (2026-08-25, the author: "mevcut ana sahnede
+        // kullandığımız bira musluklarının büyük versiyonu üretilecek"). bench_tap_big is
+        // the counter fixture's brass single-font drawn large — art deco column, chrome
+        // faucet — generated once and quantized, standing at a whole 2× of its 120×240.
+        // The counter dropped 30 to keep its cap clear of the title, and the kegs dropped
+        // with it (see KegBaseY) so none of them pokes up through the new counter line.
+        private const float TowerW = 240f, TowerH = 480f;
         private const float TowerX = -50f;
         /// <summary>The open recess under the bar, where the kegs live in a real one. Putting the
         /// keg BEHIND the counter hid its label under the counter line, and putting it beside the
@@ -90,7 +98,7 @@ namespace LastCall.UI
         /// <summary>The plumbed bay: the keg standing here is the one on tap, and the beer
         /// line runs from ITS coupler. A swap moves the keg to the line, not the line to
         /// the keg — one line, as in a one-font bar.</summary>
-        private const float KegX = 300f, KegBaseY = -315f;
+        private const float KegX = 300f, KegBaseY = -345f;   // -315 until the counter dropped
         /// <summary>Where the spare kegs park, one bay each, nearest first. The recess holds
         /// four kegs in all (one on the line, three parked); the live cellar carries three
         /// beers, so the bays have never had to turn one away. A fourth beer would still be
@@ -236,7 +244,7 @@ namespace LastCall.UI
             var towerSize = new Vector2(TowerW, TowerH);
             Place(tower, new Vector2(0.5f, 0.5f), towerSize, towerPos);
             var towerImg = tower.gameObject.AddComponent<Image>();
-            towerImg.sprite = ItemArt.Load("tap");
+            towerImg.sprite = ItemArt.Load("bench_tap_big") ?? ItemArt.Load("tap");
             towerImg.preserveAspect = true; towerImg.raycastTarget = false;
             if (towerImg.sprite == null) towerImg.color = UITheme.Amber[2];
 
@@ -299,10 +307,10 @@ namespace LastCall.UI
             // parked beside the tap rather than the handle bolted to it.
             _tapHandle.sizeDelta = new Vector2(36, 112);
             _tapHandle.anchorMin = _tapHandle.anchorMax = new Vector2(0.5f, 0.5f);
-            // Onto the brass fitting on top of the faucet — measured off the art at (-29, +87.5)
-            // in the sprite's own pixels, scaled to the size the tower is drawn at.
-            _tapHandle.anchoredPosition =
-                towerPos + new Vector2(-29f, 87.5f) * (TowerH / 175f);
+            // Onto the faucet's valve — the new art's own handle was erased at ship time
+            // (one rig must not wear two handles) and its stem met the faucet at (-8, +41)
+            // of the 120×240 art, which is this at the tower's 2×.
+            _tapHandle.anchoredPosition = towerPos + new Vector2(-16f, 82f);
             var handleImg = _tapHandle.gameObject.AddComponent<Image>();
             handleImg.sprite = ItemArt.Load("tap_handle");
             handleImg.preserveAspect = true; handleImg.raycastTarget = false;

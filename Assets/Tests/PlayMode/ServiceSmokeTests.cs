@@ -148,10 +148,22 @@ namespace LastCall.PlayTests
             Assert.That(seat, Is.Not.Null, "the drinker who sat down was given no stool");
             yield return WaitUntilTheyReachTheStool(seat);
 
-            yield return ClickOn(seat);
+            // AT THE BODY, NOT THE RECT'S CENTRE (2026-08-25). The stool's rect runs from
+            // the counter band up past the drinker's head, so its centre lands on the
+            // COUNTER — where the recipe book now stands, and the book, built later, wins
+            // that raycast (measured: under=[BookProp][Seat1], four runs, two editors). A
+            // player clicks the person they can see; a quarter-height up is their torso.
+            yield return ClickOn(seat, new Vector2(0f, seat.rect.height * 0.27f));
 
+            var clicked = ScreenPointOf(seat) + new Vector2(0f, seat.rect.height * 0.27f);
+            bool anyInspected = false;
+            foreach (var v in _boot.Tycoon.Floor.Seated) if (v.IdInspected) anyInspected = true;
             Assert.That(visit.IdInspected, Is.True,
-                "clicking the stool did not read the licence — the pointer never reached the seat");
+                "clicking the stool did not read the licence — the pointer never reached the seat"
+                + $" [DIAG seat={seat.name} clicked={clicked} under={WhatIsUnder(clicked)}"
+                + $" anyInspected={anyInspected} idOpen={Find("IdCard") != null}"
+                + $" mousePos={_mouse.position.ReadValue()}"
+                + $" state={visit.State} ordered={visit.HasOrdered}]");
             Assert.That(() => visit.Order, Throws.Nothing,
                 "the licence was read and the order stayed hidden");
             Assert.That(visit.Order.Wanted, Is.Not.Null, "the card came out with no drink named on it");
@@ -358,10 +370,17 @@ namespace LastCall.PlayTests
 
         // ── the hand ─────────────────────────────────────────────────────────────
 
-        private IEnumerator ClickOn(RectTransform target)
+        private IEnumerator ClickOn(RectTransform target) => ClickOn(target, Vector2.zero);
+
+        /// <summary>Clicks <paramref name="nudge"/> away from the rect's centre — for a
+        /// target whose centre is not where a player's eye aims. A seated drinker's rect
+        /// reaches all the way down the counter band, and the counter now carries real,
+        /// clickable furniture (the recipe book, 2026-08-25): the player clicks the BODY
+        /// they can see, so the suite does too.</summary>
+        private IEnumerator ClickOn(RectTransform target, Vector2 nudge)
         {
             Assert.That(target, Is.Not.Null, "there is nothing there to click");
-            var at = ScreenPointOf(target);
+            var at = ScreenPointOf(target) + nudge;
             // On screen, or the click is a click into the letterbox and the failure it causes
             // three asserts later says nothing about why.
             Assert.That(at.x, Is.InRange(0f, (float)Screen.width),
@@ -379,7 +398,7 @@ namespace LastCall.PlayTests
             // press then lands beside what the test aimed at, and the failure it causes reads
             // as "the licence did not open", which is a lie about what happened. A hand that
             // has already moved to something looks at it once more before it presses.
-            if (target != null) Set(_mouse.position, ScreenPointOf(target));
+            if (target != null) Set(_mouse.position, ScreenPointOf(target) + nudge);
             Press(_mouse.leftButton);
             yield return WaitFrames(2);
             Release(_mouse.leftButton);

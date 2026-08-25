@@ -93,17 +93,105 @@ namespace LastCall.UI
             // No art on disk: a plain board in the cover's own colour, still pressable. A
             // missing sprite must never take the way into the book with it.
             if (art == null) img.color = UITheme.Amber[0];
+            // THE HAND REACHES THE BOOK LOW (2026-08-25, measured by the PlayMode suite the
+            // day the book moved beside the sink): the stool rects are 150 wide on a 180
+            // pitch and 330 tall, so their click columns cover the whole counter band and a
+            // 56-wide prop cannot stand between them. At x -336 the book's full-height
+            // catch sat exactly under Seat1's centre (298, 224) and, built later, WON the
+            // raycast — the suite's stool click opened the menu instead of the licence,
+            // four runs straight, on two editor instances. The ART no longer raycasts; the
+            // bottom 60 units carry the click (top edge 213, under the seat row's 224), and
+            // the Button and HoverGlow on the prop hear it by event bubbling.
+            img.raycastTarget = false;
+            var reach = NewRect("Reach", prop);
+            reach.anchorMin = new Vector2(0f, 0f);
+            reach.anchorMax = new Vector2(1f, 0f);
+            reach.pivot = new Vector2(0.5f, 0f);
+            reach.offsetMin = Vector2.zero;
+            reach.offsetMax = new Vector2(0f, 60f);
+            var reachImg = reach.gameObject.AddComponent<Image>();
+            reachImg.color = new Color(0f, 0f, 0f, 0.001f);
             var btn = prop.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.transition = Selectable.Transition.None;
             btn.onClick.AddListener(ToggleRecipeBook);
-            var glow = prop.gameObject.AddComponent<HoverGlow>();
-            glow.Graphics = new UnityEngine.UI.Graphic[] { img };
+            _bookGlow = prop.gameObject.AddComponent<HoverGlow>();
+            _bookGlow.Graphics = new UnityEngine.UI.Graphic[] { img };
+            _bookImg = img;
             UiAuditExempt.Mark(prop, "the recipe book is a prop standing on the counter, "
                 + "drawn at the counter's own grain from its own closed art");
+
+            // THE BOOK SAYS WHAT IT IS (2026-08-25, the author: "secilebilir oldugu
+            // anlasilmasi icin parlamali ve mouse ile ustune gelindiginde menuyu ac
+            // yazmali"). The glow was already there and could not be seen, because the
+            // book's own art is the brightest thing on the bar and 1.22x of bright is
+            // bright. Tinting it with the room (below) is what gives the glow somewhere to
+            // go; this is the other half — a prop that opens a whole screen deserves to
+            // say so before it is clicked, rather than after.
+            _bookLabel = NewRect("BookLabel", root);
+            _bookLabel.anchorMin = _bookLabel.anchorMax = new Vector2(0.5f, 0);
+            _bookLabel.pivot = new Vector2(0.5f, 0f);
+            _bookLabel.sizeDelta = new Vector2(132f, 22f);
+            var plate = _bookLabel.gameObject.AddComponent<Image>();
+            plate.sprite = ChromeArt.Card();
+            plate.type = Image.Type.Sliced;
+            plate.color = UITheme.Night[1];
+            plate.raycastTarget = false;
+            var line = NewText("Line", _bookLabel, _display, 8, TextAnchor.MiddleCenter,
+                               UITheme.Amber[4]);
+            Stretch((RectTransform)line.transform, Vector2.zero, Vector2.one,
+                    Vector2.zero, Vector2.zero);
+            line.text = "OPEN THE MENU";
+            line.raycastTarget = false;
+            _bookLabelGroup = _bookLabel.gameObject.AddComponent<CanvasGroup>();
+            _bookLabelGroup.alpha = 0f;
+            _bookLabelGroup.blocksRaycasts = false;
+            _bookLabelGroup.interactable = false;
+            var relay = prop.gameObject.AddComponent<HoverRelay>();
+            relay.Entered = () => _bookHovered = true;
+            relay.Exited = () => _bookHovered = false;
+
             _bookProp = prop;
             PlaceBookProp();
             return prop;
+        }
+
+        private HoverGlow _bookGlow;
+        private Image _bookImg;
+        private RectTransform _bookLabel;
+        private CanvasGroup _bookLabelGroup;
+        private bool _bookHovered;
+
+        /// <summary>How fast the label arrives and leaves. The roller's own peek time, so
+        /// every hint in this room answers at the same speed.</summary>
+        private const float BookLabelFade = 0.14f;
+
+        /// <summary>
+        /// The book, lit by the room and answering the pointer. Called every frame from
+        /// <see cref="PlaceBookProp"/>, which already runs there.
+        ///
+        /// THE TINT IS THE POINT (2026-08-25, the author: "golgelendirmelerden etkilenmiyor
+        /// kasa gibi etkilenmeli"). The room is lit by URP 2D lights and everything standing
+        /// IN it is tinted by them — but the book is a prop on a CANVAS, and no light in
+        /// Unity reaches a canvas. So it wore its own daylight colours through every hour of
+        /// the night, which is precisely the "pasted on" the author is describing: not a
+        /// question of where it stands, but that it is the one thing on the bar the evening
+        /// never touches. <see cref="DiegeticStage.RoomWashLight"/> is the room's own answer
+        /// to that and has been sitting unread since the back bar page that used it was
+        /// deleted; this is its consumer.
+        /// </summary>
+        private void DressBookProp()
+        {
+            if (stage == null) return;
+            if (_bookGlow != null) _bookGlow.Retint(stage.RoomWashLight);
+            else if (_bookImg != null) _bookImg.color = stage.RoomWashLight;
+
+            if (_bookLabelGroup != null)
+            {
+                float want = _bookHovered && !_bookOpen ? 1f : 0f;
+                _bookLabelGroup.alpha = Motion.Reduced ? want : Mathf.MoveTowards(
+                    _bookLabelGroup.alpha, want, Time.unscaledDeltaTime / BookLabelFade);
+            }
         }
 
         /// <summary>
@@ -122,6 +210,11 @@ namespace LastCall.UI
             var foot = new Vector2(BookPropX, CounterLineY - 36f + lift);
             _bookProp.anchoredPosition = foot;
             if (_bookShadow != null) _bookShadow.anchoredPosition = foot + new Vector2(0f, 2f);
+            // The label rides above the book's own head, so it follows the counter's lift
+            // and never has to be placed twice.
+            if (_bookLabel != null)
+                _bookLabel.anchoredPosition = foot + new Vector2(0f, _bookProp.sizeDelta.y + 6f);
+            DressBookProp();
         }
 
         internal void ToggleRecipeBook()

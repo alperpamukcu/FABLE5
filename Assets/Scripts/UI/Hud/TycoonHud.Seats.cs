@@ -370,6 +370,90 @@ namespace LastCall.UI
             }
         }
 
+        // ── the counter's own prep row (2026-08-25) ──────────────────────────────
+        //
+        // The author: "tezgah sahnesinde buz limon tuz şeker gibi nesneler için tezgah
+        // boyuna oranlı görseller üretilecek, eğer oyuncu servis et dedikten sonra buz
+        // limon şeker koymayı unutursa diye." A drink that leaves the bench unfinished
+        // used to mean a walk back through the whole flow; the four stations stand on the
+        // ROOM's counter now, at the counter's own scale (32px art at a whole 2×,
+        // Tools/bench_props_gen.py minis), beside where the made drink rests. They only
+        // offer themselves while a served drink is standing there, and they are the
+        // FORGIVING door: a plain press, no lap and no aim — the skill lives on the
+        // bench, the counter is the safety net.
+        private RectTransform _miniPrepRow;
+        private readonly List<(string prepId, RectTransform rt, Image img)> _miniPreps =
+            new List<(string, RectTransform, Image)>();
+        private const float MiniPrepY = -196f;   // standing on the counter, right of the glass
+
+        private void BuildMiniPreps(RectTransform root)
+        {
+            _miniPrepRow = NewRect("CounterPreps", root);
+            _miniPrepRow.anchorMin = _miniPrepRow.anchorMax = _miniPrepRow.pivot = new Vector2(0.5f, 0.5f);
+            _miniPrepRow.sizeDelta = Vector2.zero;
+            (string prepId, string art, PreparationDefinition prep)[] stations =
+            {
+                ("ice", "bench_mini_ice", Preparations.Ice),
+                ("lemon_twist", "bench_mini_lemon", Preparations.LemonTwist),
+                ("salt_rim", "bench_mini_salt", Preparations.SaltRim),
+                ("sugar_rim", "bench_mini_sugar", Preparations.SugarRim),
+            };
+            for (int i = 0; i < stations.Length; i++)
+            {
+                var (prepId, art, prep) = stations[i];
+                var rt = NewRect("MP_" + prepId, _miniPrepRow);
+                Place(rt, new Vector2(0.5f, 0.5f), new Vector2(64, 64),
+                    new Vector2(120f + i * 74f, MiniPrepY));
+                var img = rt.gameObject.AddComponent<Image>();
+                img.sprite = ItemArt.Load(art);
+                img.preserveAspect = true;
+                if (img.sprite == null) img.color = UITheme.Cyan[3];
+                var btn = rt.gameObject.AddComponent<Button>();
+                btn.targetGraphic = img;
+                var glow = rt.gameObject.AddComponent<HoverGlow>();
+                glow.Graphics = new Graphic[] { img };
+                var thePrep = prep;
+                string theId = prepId;
+                btn.onClick.AddListener(() =>
+                {
+                    var run = Run;
+                    if (run == null || run.Phase != TycoonPhase.DayOpen) return;
+                    if (!run.DrinkReady || !_glassShown || _glassServing || _glassReturning) return;
+                    if (theId != "ice" && run.ServingGlass.HasPreparation(theId)) return;
+                    run.AddPreparationAtGlass(thePrep);
+                    Sfx.Play(theId == "ice" ? "ice_drop" : "garnish");
+                    Toast(theId == "ice"
+                        ? "ICE IN THE GLASS x" + run.ServingGlass.IceCubes
+                        : thePrep.Name.ToUpperInvariant() + " ON THE DRINK", UITheme.Cyan[3]);
+                });
+                _miniPreps.Add((prepId, rt, img));
+            }
+            _miniPrepRow.gameObject.SetActive(false);
+        }
+
+        /// <summary>Shows the counter stations only while a served drink is standing on the
+        /// counter — and rides the counter's own lift, exactly as the dirty glasses do, so
+        /// an open cellar does not leave four dishes hanging in the air.</summary>
+        private void StepMiniPreps(TycoonRun run)
+        {
+            if (_miniPrepRow == null) return;
+            bool on = run != null && run.Phase == TycoonPhase.DayOpen && run.DrinkReady
+                      && _glassShown && !_glassServing && !_glassReturning
+                      && (_flow == null || !_flow.IsOpen) && !CellarOpen;
+            if (_miniPrepRow.gameObject.activeSelf != on)
+                _miniPrepRow.gameObject.SetActive(on);
+            if (!on) return;
+            _miniPrepRow.anchoredPosition = new Vector2(0, CounterLift);
+            // The done stations dim — except the bucket, which never runs out of offers.
+            foreach (var (prepId, _, img) in _miniPreps)
+            {
+                bool done = prepId != "ice" && run.ServingGlass.HasPreparation(prepId);
+                var baseCol = img.sprite != null ? Color.white : UITheme.Cyan[3];
+                img.color = done
+                    ? new Color(baseCol.r, baseCol.g, baseCol.b, 0.4f) : baseCol;
+            }
+        }
+
         // ── the drink you carry (GDD 24 §3, 2026-07-22) ──────────────────────────
 
         private void BuildDrinkGlass(RectTransform root)

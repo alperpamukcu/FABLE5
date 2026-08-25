@@ -229,24 +229,38 @@ namespace LastCall.UI
         /// stand spread out, thirty stand shoulder to shoulder (2026-08-25, the author:
         /// "birbirlerine yakın olabilirler"), and nothing is ever dropped.
         /// </summary>
-        private const int CellarMinPerBay = 3, CellarMaxPerBay = 6;
-        /// <summary>How many bottles the cellar can show at once.</summary>
+        private const int CellarMaxPerBay = 8;
+        /// <summary>How many bottles the cellar can show at once. An upper bound, not a
+        /// promise: what a bay actually holds is decided by the WIDTH of tonight's stock
+        /// (see <see cref="PackCellar"/>), and the narrowest bottle in the catalogue is
+        /// half the width of the broadest. Eight a bay clears the thirty-six pourable
+        /// brands the shop sells with room to spare.</summary>
         public const int CellarSlots = CellarBays * 2 * CellarMaxPerBay;
-        private int _cellarPerBay = CellarMinPerBay;
-        /// <summary>Drawn height of a bottle in the cellar, at its most generous. The
-        /// shallower compartment runs from the opening's top row (65) to the near board's
-        /// surface (143), so 62 leaves the stock a clear sixteen rows of air under the
-        /// board above it.</summary>
+        /// <summary>Drawn height of a bottle in the cellar. The shallower compartment runs
+        /// from the opening's top row (65) to the near board's surface (143), so 62 leaves
+        /// the stock a clear sixteen rows of air under the board above it.
+        ///
+        /// IT IS A CONSTANT AGAIN, and that is the point (2026-08-25, the author: "raftaki
+        /// alkolleri sığdırmak için boyutları değişmemeli gerekirse aralarında 1 pixel
+        /// kalıcak kadar yakınlaşsınlar ama boyutları değişmesin"). It used to be a field
+        /// the shelf shrank until the widest bottle fitted its slot — which meant buying a
+        /// broad-shouldered rum made every OTHER bottle in the bar quietly smaller. A shelf
+        /// is not a thumbnail grid: the bottles are the size they are, and what gives when
+        /// the stock grows is the AIR BETWEEN THEM, down to a single pixel and no further.
+        /// </summary>
         private const float CellarBottleH = 62f;
-        /// <summary>How much of its own slot the WIDEST bottle in stock may take. The rest is
-        /// the gap between two shoulders at the densest packing — close, which is what was
-        /// asked for, and never touching, which is what stops a shelf reading as one smear.
-        /// At six a bay that is two and a half units of air, five screen pixels.</summary>
-        private const float CellarSlotFill = 0.92f;
-        /// <summary>...and what the cellar actually draws at tonight (see
-        /// <see cref="ChooseCellarFit"/>): one height for the whole shelf, small enough that
-        /// the widest bottle still stands clear of its neighbours.</summary>
-        private float _cellarBottleH = CellarBottleH;
+        /// <summary>The least air allowed between two shoulders, in art px. One, because
+        /// that is what the author asked for; not zero, because touching bottles read as
+        /// one smear and the hit plates behind them would share an edge.</summary>
+        private const float CellarMinGapPx = 1f;
+        /// <summary>Where each drawn bottle stands and how wide it is, in the counter art's
+        /// own pixels — filled by <see cref="PackCellar"/> and read by everything else, so
+        /// the bottle and the plate that catches its click cannot disagree. Index is the
+        /// slot's, and the list is SHORTER than the stock handed in when the shelves run
+        /// out of room.</summary>
+        private readonly List<float> _cellarSlotX = new List<float>();
+        private readonly List<float> _cellarSlotW = new List<float>();
+        private readonly List<float> _cellarSlotFoot = new List<float>();
         private readonly List<SpriteRenderer> _cellarStock = new List<SpriteRenderer>();
         private RectTransform _cellarDoorRoot;
         private CanvasGroup _cellarDoorGroup;
@@ -313,7 +327,10 @@ namespace LastCall.UI
         {
             int n = bottles == null ? 0 : Mathf.Min(bottles.Count, CellarSlots);
             _cellarIds = ids;
-            ChooseCellarFit(bottles, n);
+            // The pack decides how many the shelves can actually hold at full size, which
+            // is never MORE than what was handed in and can be less.
+            PackCellar(bottles, n);
+            n = _cellarSlotX.Count;
             while (_cellarStock.Count < n)
                 _cellarStock.Add(WorldSprite("Stock" + _cellarStock.Count, null, order: 31));
             for (int i = 0; i < _cellarStock.Count; i++)
@@ -331,31 +348,87 @@ namespace LastCall.UI
         }
 
         /// <summary>
-        /// How tightly tonight's stock stands, decided ONCE before anything is placed.
+        /// Where tonight's stock stands, decided ONCE before anything is placed.
         ///
-        /// Two answers come out of it. How many slots a bay is cut into: enough for the
-        /// stock and no more, so a young bar spaces its six bottles out and a finished one
-        /// fills the shelf. And how tall a bottle is DRAWN: one height for the whole cellar
-        /// — a shelf where each bottle is scaled to its own slot is a set of thumbnails, not
-        /// a shelf — taken as the tallest that still leaves the widest bottle in stock clear
-        /// inside its slot. Sparse shelves are unaffected: at three a bay there is room for
-        /// the broadest vessel the catalogue has at its full height.
+        /// THE BOTTLES DO NOT CHANGE SIZE (2026-08-25, the author). Every one of them is
+        /// drawn at <see cref="CellarBottleH"/>, always, whatever else is on the shelf.
+        /// What absorbs a growing bar is the SPACING: six bottles stand spread across the
+        /// six compartments, thirty stand shoulder to shoulder with a single pixel of air
+        /// between them, and nothing in between is scaled to make it fit.
+        ///
+        /// So a slot is no longer a fixed share of a bay — it is a bottle's own drawn
+        /// width, and the bay is packed with the real widths. That is not a detail: the
+        /// catalogue's broadest bottle is nearly twice the width of its narrowest, so
+        /// equal slots spend a fat bottle's room on a thin one and then shrink the whole
+        /// shelf to pay for it.
+        ///
+        /// The compartments are filled the way a bar restocks — shelf by shelf, bay by bay
+        /// — and each takes an even share of what is LEFT, so the stock spreads instead of
+        /// piling into the first bay. A compartment that would overrun its bay at the
+        /// minimum gap stops early and hands the rest forward; when the last one is full,
+        /// what remains has nowhere to stand and is not drawn, which is the same rule
+        /// <see cref="CellarSlots"/> has always kept.
         /// </summary>
-        private void ChooseCellarFit(IReadOnlyList<Sprite> bottles, int n)
+        private void PackCellar(IReadOnlyList<Sprite> bottles, int n)
         {
-            _cellarPerBay = Mathf.Clamp(
-                Mathf.CeilToInt(n / (float)(CellarBays * CellarShelfFootPx.Length)),
-                CellarMinPerBay, CellarMaxPerBay);
-            float slotW = CellarBayWidthPx / _cellarPerBay;
-            float h = CellarBottleH;
-            for (int i = 0; i < n; i++)
+            _cellarSlotX.Clear();
+            _cellarSlotW.Clear();
+            _cellarSlotFoot.Clear();
+            if (bottles == null || n <= 0) return;
+
+            int compartments = CellarShelfFootPx.Length * CellarBays;
+            int taken = 0;
+            for (int c = 0; c < compartments && taken < n; c++)
             {
-                var s = bottles[i];
-                if (s == null || s.rect.height <= 0.0001f) continue;
-                float aspect = s.rect.width / s.rect.height;
-                if (aspect > 0.0001f) h = Mathf.Min(h, slotW * CellarSlotFill / aspect);
+                int left = compartments - c;
+                int want = Mathf.Min(Mathf.CeilToInt((n - taken) / (float)left), CellarMaxPerBay);
+
+                // How many of the next `want` actually fit this bay at the tightest legal
+                // packing. Measured off the sprites themselves — the first bottle costs its
+                // own width, every one after it costs a gap as well.
+                int take = 0;
+                float sumW = 0f;
+                while (take < want && taken + take < n)
+                {
+                    float w = CellarDrawnWidth(bottles[taken + take]);
+                    float needed = sumW + w + take * CellarMinGapPx;
+                    if (take > 0 && needed > CellarBayWidthPx) break;
+                    sumW += w;
+                    take++;
+                }
+                if (take == 0) continue;
+
+                // The air left over, shared out evenly — a full bay collapses to the
+                // one-pixel minimum and a sparse one stands its bottles apart. The RUN is
+                // then centred in the bay rather than laid out from its left edge, so the
+                // packing is symmetric at every density and cannot creep past a post.
+                float gap = take > 1
+                    ? Mathf.Max(CellarMinGapPx, (CellarBayWidthPx - sumW) / (take + 1))
+                    : 0f;
+                float run = sumW + (take - 1) * gap;
+                float x = CellarBayCentrePx[c % CellarBays] - run * 0.5f;
+                float foot = CellarShelfFootPx[Mathf.Min(c / CellarBays,
+                    CellarShelfFootPx.Length - 1)];
+                for (int k = 0; k < take; k++)
+                {
+                    float w = CellarDrawnWidth(bottles[taken + k]);
+                    _cellarSlotX.Add(x + w * 0.5f);
+                    _cellarSlotW.Add(w);
+                    _cellarSlotFoot.Add(foot);
+                    x += w + gap;
+                }
+                taken += take;
             }
-            _cellarBottleH = Mathf.Max(8f, h);
+        }
+
+        /// <summary>How wide a bottle is DRAWN, in the counter art's own pixels: its own
+        /// aspect at the one shelf height. A missing sprite is given the catalogue's broadest
+        /// shoulder so a hole in the stock cannot pack the shelf tighter than it will be.
+        /// </summary>
+        private static float CellarDrawnWidth(Sprite s)
+        {
+            if (s == null || s.rect.height <= 0.0001f) return CellarBottleH * 0.5f;
+            return CellarBottleH * (s.rect.width / s.rect.height);
         }
 
         /// <summary>
@@ -433,13 +506,20 @@ namespace LastCall.UI
             if (_cellarOpenGroup != null) _cellarOpenGroup.alpha = 1f - _drawerT;
             if (_cellarShutGroup != null) _cellarShutGroup.alpha = _drawerT;
             if (_cellarDoors.Count == 0) return;
-            float slotW = CellarBayWidthPx / _cellarPerBay;
             float left = (Reference.x - _counterNative.x) * 0.5f;
             for (int i = 0; i < _cellarDoors.Count; i++)
             {
                 if (!_cellarDoors[i].gameObject.activeSelf) continue;
                 CellarSlotArt(i, out float artX, out float artFoot);
-                _cellarDoors[i].sizeDelta = new Vector2(slotW - 4f, _cellarBottleH);
+                // THE PLATE IS THE BOTTLE'S OWN WIDTH now that the slots are not equal.
+                // It used to be a share of the bay less four, which was fine while every
+                // slot was the same size and would be a lie here: a thin vermouth would
+                // carry a plate wider than itself and swallow its fat neighbour's clicks.
+                // The full width, not width-less-four — the gap between two bottles is
+                // one pixel at the tightest packing, so there is nothing left to inset.
+                _cellarDoors[i].sizeDelta = new Vector2(
+                    i < _cellarSlotW.Count ? _cellarSlotW[i] : CellarBottleH * 0.5f,
+                    CellarBottleH);
                 _cellarDoors[i].anchoredPosition = new Vector2(
                     left + artX,
                     CounterRestY + CounterSurfaceInset - artFoot + DrawerTravel * _drawerT);
@@ -788,13 +868,14 @@ namespace LastCall.UI
         /// drawn bottle and the plate that catches its click cannot disagree.</summary>
         private void CellarSlotArt(int i, out float artX, out float artFoot)
         {
-            int perBay = Mathf.Max(1, _cellarPerBay);
-            int perShelf = CellarBayCentrePx.Length * perBay;
-            int shelf = i / perShelf, rest = i % perShelf;
-            int bay = rest / perBay, pos = rest % perBay;
-            float step = CellarBayWidthPx / perBay;
-            artX = CellarBayCentrePx[bay] - CellarBayWidthPx * 0.5f + step * (pos + 0.5f);
-            artFoot = CellarShelfFootPx[Mathf.Min(shelf, CellarShelfFootPx.Length - 1)];
+            if (i < 0 || i >= _cellarSlotX.Count)
+            {
+                artX = CellarBayCentrePx[0];
+                artFoot = CellarShelfFootPx[0];
+                return;
+            }
+            artX = _cellarSlotX[i];
+            artFoot = _cellarSlotFoot[i];
         }
 
         /// <summary>Slot i, filled shelf by shelf and bay by bay, the way a bar restocks.</summary>
@@ -803,7 +884,7 @@ namespace LastCall.UI
             CellarSlotArt(i, out float artX, out float artFoot);
 
             float h = sr.sprite.bounds.size.y;
-            float k = h > 0.0001f ? _cellarBottleH / h : 1f;
+            float k = h > 0.0001f ? CellarBottleH / h : 1f;
             sr.transform.localScale = new Vector3(k, k, 1f);
 
             // The counter hangs from its own rest line; the cellar is measured off its TOP
@@ -818,7 +899,7 @@ namespace LastCall.UI
             float counterTop = CounterRestY + CounterSurfaceInset - Reference.y * 0.5f;
             sr.transform.position = new Vector3(
                 artX - _counterNative.x * 0.5f,
-                counterTop - artFoot + _cellarBottleH * 0.5f, 0f)
+                counterTop - artFoot + CellarBottleH * 0.5f, 0f)
                 + (_world != null ? _world.position : Vector3.zero);
         }
 

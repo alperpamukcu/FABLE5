@@ -63,13 +63,47 @@ S = 8                       # supersample: struck at 8x, thresholded down to har
 # not press harder, it spaces wider - the letters sit further apart and the bowls are drawn
 # rounder, which is the one change that buys daylight without buying height. It also stands
 # up straighter, because a sign that has to be READ before it is admired leans less.
+#
+# ...AND THEN THE MARKER WAS SENT BACK TOO (2026-08-25, the author: "Open bar
+# gorselindeki fontu begenmedim daha miami vice fontunu andiran bir font ile Open bar
+# yazsin"). Every hand above is the same hand: a round felt pen, lower case, written.
+# What was asked for is not another version of that - it is the OTHER kind of lettering
+# entirely, the one on the title card of the show this game's palette comes from.
+#
+# WHAT MAKES A LETTER READ "MIAMI VICE", written down because it is four things and not
+# a font name (the show's title is custom lettering; there is nothing to install):
+#
+#   1. IT IS SET, NOT WRITTEN. Geometric: stems are parallel-sided, bowls are circles,
+#      and nothing tapers. That is why this hand cannot be a pen at all - a round nib
+#      swept along a path IS handwriting, and no amount of tuning makes it typeset. The
+#      Vice letters are built from filled shapes instead: rectangles, rings, wedges.
+#   2. EVERY TERMINAL IS CUT FLAT. A round cap is the single loudest "marker" signal in
+#      the takes above. Here a stroke simply stops, on a straight edge.
+#   3. IT LEANS, AND ONLY A LITTLE. The title card is a modest forward italic - far less
+#      than the 0.26 and 0.36 the tags were sheared at. Twelve degrees, near enough.
+#   4. IT IS CAPITALS. Which is also what finally settles the fight every take above
+#      lost: at a 34 px ceiling the counters are what the coats eat first, and lower
+#      case spends its height on an x-height, a cap line AND a descender. Capitals spend
+#      all of it on one band - 29 rows against the marker's 17 - so an O has half again
+#      as much daylight inside it without the sign growing by a single pixel.
+#
+# 'hand' picks which striker runs. 'pen' is everything above; 'vice' is the new one.
 TAKES = {
-    'tag':   dict(shear=0.26, weight=1.00, track=1.00, round=0.0, flick=1.00),
-    'fat':   dict(shear=0.20, weight=1.22, track=1.08, round=0.9, flick=0.70),
-    'quick': dict(shear=0.36, weight=0.80, track=0.92, round=-0.4, flick=1.55),
-    'wall':  dict(shear=0.21, weight=1.02, track=1.16, round=0.8, flick=0.85),
+    'tag':   dict(hand='pen', shear=0.26, weight=1.00, track=1.00, round=0.0, flick=1.00),
+    'fat':   dict(hand='pen', shear=0.20, weight=1.22, track=1.08, round=0.9, flick=0.70),
+    'quick': dict(hand='pen', shear=0.36, weight=0.80, track=0.92, round=-0.4, flick=1.55),
+    'wall':  dict(hand='pen', shear=0.21, weight=1.02, track=1.16, round=0.8, flick=0.85),
+    # The two Vice cuts differ ONLY in colour and weight; the skeleton is one drawing.
+    #   vice       the shipped one: the house magenta coats, the letters set wide
+    #   vice_cyan  the same letters with a CYAN lining instead of the white one - the
+    #              title card's own two-tone, and the palette's Cyan ramp says the game
+    #              already owns it. Kept as a take rather than shipped, because the three
+    #              coats' colours are the author's written brief and a colour change is
+    #              theirs to make, not mine.
+    'vice':      dict(hand='vice', shear=0.21, weight=1.00, track=1.00),
+    'vice_cyan': dict(hand='vice', shear=0.21, weight=1.00, track=1.00, cyan=True),
 }
-TAKE = dict(TAKES['wall'])
+TAKE = dict(TAKES['vice'])
 SHEAR = TAKE['shear']
 
 
@@ -240,6 +274,180 @@ def strike():
     return small.point(lambda v: 255 if v >= 128 else 0)
 
 
+# ---------------------------------------------------------------------------
+# the second hand: VICE, and it is not a pen
+# ---------------------------------------------------------------------------
+#
+# Everything above draws by SWEEPING A NIB along a path, which is what handwriting is
+# and is exactly why none of those takes could be made to look set. This hand draws the
+# letters as FILLED SHAPES instead - rectangles, rings, wedges - so a stem is parallel-
+# sided because it is a rectangle, and a terminal is flat because a rectangle ends.
+#
+# THE BAND IS THE WHOLE HEIGHT. Capitals only, so all 29 rows go to one band instead of
+# being split between an x-height, a cap line and a descender. That is the change that
+# actually buys the counters their daylight: the marker's 'e' had 17 rows to hold two
+# holes against two coats and lost; a capital E has 29 and three flat arms.
+#
+# 2 to 31 is 30 rows of letter, and one row of lining plus one of keyline on each side
+# is 34 - the author's ceiling, to the pixel, again. Nothing may be added to it.
+VCAP, VBASE = 2.0, 31.0
+VMID = (VCAP + VBASE) / 2.0
+VGAP = 3.0                  # air between two letters' silhouettes
+VSPACE = 10.0               # ...and between the two words
+
+# TWO THICKNESSES, AND THE SECOND ONE IS WHY THE WORD FITS AT ALL.
+#
+# The first cut of this hand drew every stroke at one weight, and the B closed. That is
+# the same wall the marker hit and wrote down: two counters stacked inside a cap height,
+# with a lining and a keyline growing 2 px INTO each of them from every side, needs the
+# counters to be at least seven rows before they show anything. At one weight there are
+# not enough rows in 29 to spend.
+#
+# So the horizontals are thinner than the uprights - which is not a workaround, it is
+# what the title card actually does. A geometric face with modulated strokes is exactly
+# the flavour of the eighties this is reaching for, and the arithmetic falls out of it:
+# a B's bowl 14 rows deep with 3 px arms leaves a 8 px counter, so 4 rows survive both
+# coats. The same 14 rows with 5 px arms leave 4, and nothing survives.
+VUP = 5.0                   # uprights: stems, the O's sides, the bowls' outer walls
+VARM = 3.0                  # horizontals: the E's arms, every bowl's top and bottom
+
+
+def vbox(d, x0, y0, x1, y1, fill=255):
+    """A filled rectangle in final pixels. The only primitive with no curve in it, and
+    most of the alphabet is made of these."""
+    d.rectangle([x0 * S, y0 * S, x1 * S - 1, y1 * S - 1], fill=fill)
+
+
+def vring(d, x0, y0, x1, y1, tx, ty):
+    """An elliptical ring with SEPARATE side and cap thickness: outer disc, inner disc
+    punched back out. Punched rather than outlined because PIL's ellipse outline widens
+    on the diagonals, and a bowl that thickens at four o'clock is a pen again."""
+    d.ellipse([x0 * S, y0 * S, x1 * S, y1 * S], fill=255)
+    d.ellipse([(x0 + tx) * S, (y0 + ty) * S, (x1 - tx) * S, (y1 - ty) * S], fill=0)
+
+
+def vbowl(d, x0, y0, x1, y1, tx, ty, r=4.0):
+    """A bowl hung off a stem: a rounded-cornered ring, open on no side. Rounded rather
+    than elliptical because a bowl whose counter has a FLAT top and bottom keeps more
+    daylight at this size than a lens-shaped one - and the title card's own bowls are
+    squarish, so the two reasons agree for once."""
+    d.rounded_rectangle([x0 * S, y0 * S, x1 * S - 1, y1 * S - 1], radius=r * S, fill=255)
+    d.rounded_rectangle([(x0 + tx) * S, (y0 + ty) * S, (x1 - tx) * S - 1, (y1 - ty) * S - 1],
+                        radius=max(1.0, r - tx) * S, fill=0)
+
+
+def vslant(d, xtop, xbot, y0, y1, w):
+    """A diagonal with VERTICAL sides and flat ends - the N's stroke and the A's legs.
+    Vertical-sided rather than perpendicular-sided on purpose: after the shear a vertical
+    cut leans with the word, which is how a set italic's diagonals are cut, and a
+    perpendicular one would read as a bevel."""
+    d.polygon([((xtop - w / 2) * S, y0 * S), ((xtop + w / 2) * S, y0 * S),
+               ((xbot + w / 2) * S, y1 * S), ((xbot - w / 2) * S, y1 * S)], fill=255)
+
+
+def vice_letters():
+    """Every capital of OPEN BAR, each drawn into its own advance width.
+
+    Returned as (advance width, painter) so the word is laid out by ADDING WIDTHS - a
+    typeset line, not a set of hand-placed marks. The painter is handed the letter's own
+    left edge and draws in absolute final pixels.
+
+    THE STEM IS ALWAYS DRAWN LAST on P, B and R. The first cut drew the stem, then the
+    bowl, then cut the bowl's left half away against the stem - and the cut took the stem
+    with it, which is why that take read "O'EN 3AR". Bowl, cut, THEN stem: the cut only
+    ever removes bowl, and the stem lands on top of the join, which is also what makes
+    that join a dead-straight vertical instead of a tangent.
+
+    Where a letter had to give something up at this size it gave up its FLOURISH and
+    never its counter - the R's leg is straight, the A has no spur, the E's arms are all
+    the same length. That is what a 29 px capital can carry cleanly, and it is also what
+    the show's own lettering does.
+    """
+    w = TAKE.get('weight', 1.0)
+    tv, th = VUP * w, VARM * w
+
+    def O(d, x):
+        # The widest letter in the word, which is why it opens it. Nearly a circle:
+        # 22 across against 29 down, which at this weight leaves a counter 12 wide and
+        # 23 deep - the most daylight anything in the word gets, and the letter that
+        # sets how open the rest have to look beside it.
+        vring(d, x, VCAP, x + 22.0, VBASE, tv, th)
+
+    def P(d, x):
+        # The bowl runs from the cap to a shade past the middle, which is where a
+        # geometric P closes. Its LEFT wall is buried under the stem.
+        vbowl(d, x, VCAP, x + 19.0, VMID + 1.5, tv, th)
+        vbox(d, x - 1.0, VCAP - 1.0, x + tv, VBASE + 1.0, fill=0)   # cut the left wall
+        vbox(d, x, VCAP, x + tv, VBASE)                             # ...and the stem
+
+    def E(d, x):
+        arm = 16.0
+        vbox(d, x, VCAP, x + tv, VBASE)                             # the stem
+        vbox(d, x, VCAP, x + arm, VCAP + th)                        # top arm
+        vbox(d, x, VMID - th / 2.0, x + arm, VMID + th / 2.0)       # middle arm
+        vbox(d, x, VBASE - th, x + arm, VBASE)                      # foot
+
+    def N(d, x):
+        right = 17.0
+        vbox(d, x, VCAP, x + tv, VBASE)
+        vbox(d, x + right, VCAP, x + right + tv, VBASE)
+        vslant(d, x + tv / 2.0, x + right + tv / 2.0, VCAP, VBASE, tv)
+
+    def B(d, x):
+        # Two bowls, the lower one WIDER - the one proportion that stops a B reading as
+        # an 8 at this size. They share the middle arm, so the seam between them is one
+        # 3 px rule rather than two stacked ones, which is another two rows of counter.
+        vbowl(d, x, VCAP, x + 17.0, VMID + th / 2.0, tv, th)
+        vbowl(d, x, VMID - th / 2.0, x + 19.0, VBASE, tv, th)
+        vbox(d, x - 1.0, VCAP - 1.0, x + tv, VBASE + 1.0, fill=0)
+        vbox(d, x, VCAP, x + tv, VBASE)
+
+    def A(d, x):
+        span = 20.0
+        vslant(d, x + span / 2.0, x + tv / 2.0, VCAP, VBASE, tv)          # left leg
+        vslant(d, x + span / 2.0, x + span - tv / 2.0, VCAP, VBASE, tv)   # right leg
+        # The crossbar sits LOW. High, it closes the apex; low, the triangle above it
+        # stays open and the A reads at a glance.
+        bar = VBASE - (VBASE - VCAP) * 0.30
+        vbox(d, x + 3.0, bar - th / 2.0, x + span - 3.0, bar + th / 2.0)
+
+    def R(d, x):
+        P(d, x)
+        # ...and the leg. Straight and splayed, from under the bowl to the baseline.
+        vslant(d, x + tv + 2.0, x + 17.0, VMID + 1.5 - th, VBASE, tv)
+
+    return [(23.0, O), (20.0, P), (17.0, E), (23.0, N), (VSPACE, None),
+            (20.0, B), (21.0, A), (20.0, R)]
+
+
+def strike_vice():
+    """OPEN BAR as a hard 1-bit mask: set at 8x from filled shapes, sheared, thresholded.
+
+    The shear is applied to the STRUCK letters and not to their coordinates, exactly as
+    the pen hand does it - but for the opposite reason. There the point was to keep a
+    round nib round; here it is that a sheared rectangle is still a parallelogram with
+    vertical sides, so every stem keeps its flat top and foot and the word leans without
+    any terminal turning into a bevel.
+    """
+    track = TAKE.get('track', 1.0)
+    letters = vice_letters()
+    total = sum(a for a, _ in letters) + VGAP * track * (len(letters) - 1) + 4.0
+    core = Image.new('L', (int(total * S), int((VBASE + 4) * S)), 0)
+    d = ImageDraw.Draw(core)
+    x = 2.0
+    for advance, paint in letters:
+        if paint is not None:
+            paint(d, x)
+        x += advance + VGAP * track
+
+    w, h = core.size
+    grow = int(SHEAR * h) + 1
+    core = core.transform((w + grow, h), Image.AFFINE, (1, SHEAR, -SHEAR * h, 0, 1, 0),
+                          resample=Image.BILINEAR)
+    small = core.resize((core.size[0] // S, core.size[1] // S), Image.BOX)
+    return small.point(lambda v: 255 if v >= 128 else 0)
+
+
 def grown(mask, by):
     """The mask dilated by `by` pixels - the coats are struck parallel to the letter rather
     than drawn beside it, which is what keeps them even at every corner."""
@@ -269,8 +477,17 @@ def coat(canvas, mask, hi, lo, split):
                 px[x, y] = colour
 
 
+# UITheme's Cyan ramp, for the take that wants the title card's own two-tone. Named here
+# rather than inline for the same reason every other colour in this file is: a palette
+# change has to be one edit in one project.
+CYAN = ('#123B45', '#1B5F66', '#26918F', '#3BC8BE', '#7DF0E3')
+
+
 def word():
-    core = strike()
+    """The sign, in whichever hand the take names. THE THREE COATS ARE THE BRIEF and do
+    not vary by hand - what changes between the marker and the Vice cut is the skeleton
+    underneath them, which is the thing the author asked to change."""
+    core = strike_vice() if TAKE.get('hand') == 'vice' else strike()
     lining = grown(core, LINING)
     keyline = grown(lining, KEY)
 
@@ -278,11 +495,13 @@ def word():
     # so the white sits on the shoulders of the word and the dark pink under its belt.
     split = WAIST
 
+    line_hi, line_lo = (CYAN[4], CYAN[2]) if TAKE.get('cyan') else (LINE_HI, LINE_LO)
+
     # Painted outward-in: each coat covers the one before it and what is left showing is
     # the ring between them. Three passes, no masking arithmetic to get wrong.
     art = Image.new('RGBA', core.size, (0, 0, 0, 0))
     coat(art, keyline, hexcol(KEYLINE), hexcol(KEYLINE), split)
-    coat(art, lining, hexcol(LINE_HI), hexcol(LINE_LO), split)
+    coat(art, lining, hexcol(line_hi), hexcol(line_lo), split)
     coat(art, core, hexcol(BODY_HI), hexcol(BODY_LO), split)
     return trim(art)
 
@@ -519,7 +738,7 @@ def contact():
     from PIL import ImageDraw as D
     scale, pad = 4, 16
     made = []
-    for name in ('tag', 'fat', 'quick', 'wall'):
+    for name in ('tag', 'fat', 'quick', 'wall', 'vice', 'vice_cyan'):
         use(name)
         w = word()
         if w.size[1] > 34:

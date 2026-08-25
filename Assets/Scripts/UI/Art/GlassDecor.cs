@@ -28,7 +28,29 @@ namespace LastCall.UI
     {
         private GlassArt.Piece _piece;
         private string _signature = "";
-        private RectTransform _ice1, _ice2, _mint, _olive;
+        private readonly System.Collections.Generic.List<RectTransform> _ice =
+            new System.Collections.Generic.List<RectTransform>();
+        private RectTransform _mint, _olive;
+
+        /// <summary>The most cubes the drawing will stack (2026-08-25). The COUNT is the
+        /// glass's (GlassContents.IceCubes, unbounded); past this many the picture is a
+        /// full glass of ice whatever the number says, and more sprites would only climb
+        /// out of the mouth.</summary>
+        private const int MaxDrawnCubes = 7;
+
+        /// <summary>Where the n-th cube sits and how it leans — a fixed table, because ice
+        /// that reshuffled itself between refreshes would read as boiling. Hand-laid so the
+        /// pile reads as a pile: alternating sides, climbing as it grows.</summary>
+        private static readonly (float x, float dy, float size, float lean)[] CubeLay =
+        {
+            (-10f,  -6f, 20f,  -24f),
+            ( 12f, -11f, 16f,   29f),
+            (  1f,  -2f, 18f,    8f),
+            (-16f, -14f, 15f,   52f),
+            ( 18f,  -4f, 15f,  -38f),
+            ( -5f, -16f, 14f,   17f),
+            (  8f, -18f, 14f,  -11f),
+        };
         private static Sprite _saltBand, _sugarBand;
 
         /// <summary>Finds or adds the decor layer on <paramref name="glassRect"/> and brings it
@@ -68,6 +90,9 @@ namespace LastCall.UI
             var sig = new StringBuilder();
             if (glass != null)
                 foreach (var prep in glass.PreparationSteps) sig.Append(prep.Id).Append(';');
+            // The cube COUNT is part of the signature: a third cube dropped into an iced
+            // drink must redraw, and "ice;" alone would say nothing changed.
+            if (glass != null && glass.IceCubes > 0) sig.Append('i').Append(glass.IceCubes).Append(';');
             if (mint) sig.Append("m;");
             if (olive) sig.Append("o;");
             string signature = sig.ToString();
@@ -83,7 +108,8 @@ namespace LastCall.UI
         {
             for (int i = transform.childCount - 1; i >= 0; i--)
                 Destroy(transform.GetChild(i).gameObject);
-            _ice1 = _ice2 = _mint = _olive = null;
+            _ice.Clear();
+            _mint = _olive = null;
             if (glass == null) return;
 
             var rect = ((RectTransform)transform).rect;
@@ -114,8 +140,15 @@ namespace LastCall.UI
 
             if (glass.HasPreparation("ice"))
             {
-                _ice1 = IceCube("Ice1", 20f, -10f);
-                _ice2 = IceCube("Ice2", 16f, 12f);
+                // AS MANY CUBES AS WENT IN (2026-08-25, the author: "buz istediği sayıda
+                // atılabilecek ve bardağın içerisinde gözükecek"). The glass counts them
+                // (GlassContents.IceCubes); the lay table keeps each one where it landed.
+                int cubes = Mathf.Clamp(glass.IceCubes, 1, MaxDrawnCubes);
+                for (int n = 0; n < cubes; n++)
+                {
+                    var lay = CubeLay[n];
+                    _ice.Add(IceCube("Ice" + n, lay.size, lay.x, lay.lean));
+                }
             }
 
             // The garnish floats. The sprig stands proud of the surface; the spear leans,
@@ -135,7 +168,7 @@ namespace LastCall.UI
             return piece;
         }
 
-        private RectTransform IceCube(string name, float size, float x)
+        private RectTransform IceCube(string name, float size, float x, float lean)
         {
             var cube = NewChild(name, new Vector2(size, size), Vector2.zero);
             var img = cube.gameObject.AddComponent<Image>();
@@ -146,7 +179,7 @@ namespace LastCall.UI
             img.preserveAspect = true; img.raycastTarget = false;
             if (img.sprite == null) img.color = new Color(0.75f, 0.9f, 1f, 0.9f);
             img.color = new Color(img.color.r, img.color.g, img.color.b, 0.92f);
-            cube.localRotation = Quaternion.Euler(0, 0, x * 2.4f);   // a fixed, deterministic tilt
+            cube.localRotation = Quaternion.Euler(0, 0, lean);   // the lay table's own tilt
             cube.anchoredPosition = new Vector2(x, 0);
             return cube;
         }
@@ -159,10 +192,11 @@ namespace LastCall.UI
             var rect = ((RectTransform)transform).rect;
             float surface = _piece.FillAmount((float)glass.FillFraction);
             float y = (surface - 0.5f) * rect.height;
-            if (_ice1 != null)
+            for (int n = 0; n < _ice.Count; n++)
             {
-                _ice1.anchoredPosition = new Vector2(_ice1.anchoredPosition.x, y - 6f);
-                _ice2.anchoredPosition = new Vector2(_ice2.anchoredPosition.x, y - 11f);
+                if (_ice[n] == null) continue;
+                var lay = CubeLay[Mathf.Min(n, CubeLay.Length - 1)];
+                _ice[n].anchoredPosition = new Vector2(lay.x, y + lay.dy);
             }
             if (_mint != null) _mint.anchoredPosition = new Vector2(_mint.anchoredPosition.x, y + 4f);
             if (_olive != null) _olive.anchoredPosition = new Vector2(_olive.anchoredPosition.x, y - 8f);

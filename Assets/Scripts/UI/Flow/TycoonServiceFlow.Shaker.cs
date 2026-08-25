@@ -1137,31 +1137,67 @@ namespace LastCall.UI
             }
         }
 
+        /// <summary>The room's counter, zoomed (2026-08-25, the author: "ekran çok boş
+        /// gözüküyor, mevcut tezgahın görseline zoom yapılmış gibi gözükmeli"). Every
+        /// colour below is SAMPLED from Assets/Art/Backgrounds/counter.png — the slab, its
+        /// ridge, and the magenta neon rail that runs the counter's far edge — so the bench
+        /// is the same object the room draws, four times closer. Bands, not a texture:
+        /// chrome is procedural (14 §3), and a zoomed pixel surface IS flat runs of colour.</summary>
+        private static readonly Color BenchSlab = Hex(0x1F1924);
+        private static readonly Color BenchSlabSheen = Hex(0x292630);
+        private static readonly Color BenchRidge = Hex(0x312E3A);
+        private static readonly Color BenchSeam = Hex(0x17141C);
+        private static readonly Color[] BenchRail =
+            { Hex(0xD77BBA), Hex(0xB7699F), Hex(0x975885), Hex(0x77476B), Hex(0x573650), Hex(0x372536) };
+
+        private static Color Hex(int v) =>
+            new Color(((v >> 16) & 255) / 255f, ((v >> 8) & 255) / 255f, (v & 255) / 255f);
+
         private void AddBenchCounter(RectTransform panel, float fromY)
         {
             // It goes in BEHIND EVERYTHING on the panel: a band added after the title is a
             // band drawn over the title, and the panel's own background is a component, so
             // first CHILD is as far back as a child can go.
-
-            // The counter top. It is A SURFACE, so it carries its own value — one step up
-            // the Night ramp from the panel behind it. Left at the panel's own colour it
-            // was a field rather than a counter, and a black contact shadow drawn on it
-            // was black on near-black: the props read as cut out and pasted on.
             var top = NewRect("CounterTop", panel);
             _benchCounters.Add(top);
             Stretch(top, Vector2.zero, new Vector2(1f, fromY), Vector2.zero, Vector2.zero);
             top.SetAsFirstSibling();
             var timg = top.gameObject.AddComponent<Image>();
-            timg.color = UITheme.Night[2];
+            timg.color = BenchSlab;
             timg.raycastTarget = false;
 
-            // The lit front edge of the bar top, right where it meets the wall — the line
-            // that turns two bands into a surface with a far edge.
-            var edge = NewRect("CounterEdge", top);
-            Stretch(edge, new Vector2(0f, 1f), Vector2.one, new Vector2(0, -3), Vector2.zero);
-            var eimg = edge.gameObject.AddComponent<Image>();
-            eimg.color = UITheme.Night[3];
-            eimg.raycastTarget = false;
+            // The counter's FAR EDGE, zoomed: the ridge that catches the room, the seam,
+            // and the neon rail the room's own counter wears — the six sampled rows drawn
+            // at 5 units each, which is the x4-and-a-bit the whole bench stands at.
+            float y = 0f;
+            void Band(string name, float h, Color c)
+            {
+                var band = NewRect(name, top);
+                band.anchorMin = new Vector2(0f, 1f); band.anchorMax = Vector2.one;
+                band.pivot = new Vector2(0.5f, 1f);
+                band.offsetMin = new Vector2(0, -y - h);
+                band.offsetMax = new Vector2(0, -y);
+                var img = band.gameObject.AddComponent<Image>();
+                img.color = c; img.raycastTarget = false;
+                y += h;
+            }
+            Band("Ridge", 8f, BenchRidge);
+            Band("Seam", 5f, BenchSeam);
+            for (int i = 0; i < BenchRail.Length; i++)
+                Band("Rail" + i, 5f, BenchRail[i]);
+            Band("Seam2", 5f, BenchSeam);
+
+            // And the slab keeps one soft sheen band a hand's width in — the zoom of the
+            // sheen the room's slab carries — so the big field reads as a surface and not
+            // as a fill.
+            var sheen = NewRect("Sheen", top);
+            sheen.anchorMin = new Vector2(0f, 1f); sheen.anchorMax = Vector2.one;
+            sheen.pivot = new Vector2(0.5f, 1f);
+            sheen.offsetMin = new Vector2(0, -y - 74f);
+            sheen.offsetMax = new Vector2(0, -y - 62f);
+            var simg = sheen.gameObject.AddComponent<Image>();
+            simg.color = BenchSlabSheen;
+            simg.raycastTarget = false;
         }
 
         private void BuildShakerPanel()
@@ -1391,30 +1427,47 @@ namespace LastCall.UI
             _spoonRt.anchoredPosition = _spoonRest;
             var spoonHit = _spoonRt.gameObject.AddComponent<Image>();
             spoonHit.color = new Color(0, 0, 0, 0.001f);   // the whole slot answers the hand
-            var rod = NewRect("Rod", _spoonRt);
-            rod.anchorMin = rod.anchorMax = new Vector2(0.5f, 1f);
-            rod.pivot = new Vector2(0.5f, 1f);
-            rod.sizeDelta = new Vector2(5, 96);
-            rod.anchoredPosition = Vector2.zero;
-            var rodImg = rod.gameObject.AddComponent<Image>();
-            rodImg.color = new Color(0.72f, 0.75f, 0.80f, 1f);
-            rodImg.raycastTarget = false;
-            var twist = NewRect("Twist", _spoonRt);        // the twisted shaft's glint
-            twist.anchorMin = twist.anchorMax = new Vector2(0.5f, 1f);
-            twist.pivot = new Vector2(0.5f, 1f);
-            twist.sizeDelta = new Vector2(2, 84);
-            twist.anchoredPosition = new Vector2(-1, -6);
-            var twistImg = twist.gameObject.AddComponent<Image>();
-            twistImg.color = new Color(0.92f, 0.94f, 0.97f, 0.85f);
-            twistImg.raycastTarget = false;
-            var bowl = NewRect("Bowl", _spoonRt);
-            bowl.anchorMin = bowl.anchorMax = new Vector2(0.5f, 0f);
-            bowl.pivot = new Vector2(0.5f, 0f);
-            bowl.sizeDelta = new Vector2(16, 24);
-            bowl.anchoredPosition = new Vector2(0, 0);
-            var bowlImg = bowl.gameObject.AddComponent<Image>();
-            bowlImg.color = new Color(0.62f, 0.66f, 0.72f, 1f);
-            bowlImg.raycastTarget = false;
+            // A DRAWN spoon at last (2026-08-25, the author: "kaşık için uygun bir görsel
+            // üretilecek"): the twisted-stem bar spoon from Tools/bench_props_gen.py, bowl
+            // down — shipped flipped, because the drawing came bowl-up and a spoon stirs
+            // with its bowl in the drink. Its 32×128 art stands at a whole 2×; the three
+            // grey rectangles it replaces stay below as the no-art fallback.
+            var spoonArt = ItemArt.Load("bench_spoon");
+            if (spoonArt != null)
+            {
+                _spoonRt.sizeDelta = new Vector2(64, 256);
+                var sImg = NewRect("Art", _spoonRt);
+                Stretch(sImg, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var si = sImg.gameObject.AddComponent<Image>();
+                si.sprite = spoonArt; si.preserveAspect = true; si.raycastTarget = false;
+            }
+            else
+            {
+                var rod = NewRect("Rod", _spoonRt);
+                rod.anchorMin = rod.anchorMax = new Vector2(0.5f, 1f);
+                rod.pivot = new Vector2(0.5f, 1f);
+                rod.sizeDelta = new Vector2(5, 96);
+                rod.anchoredPosition = Vector2.zero;
+                var rodImg = rod.gameObject.AddComponent<Image>();
+                rodImg.color = new Color(0.72f, 0.75f, 0.80f, 1f);
+                rodImg.raycastTarget = false;
+                var twist = NewRect("Twist", _spoonRt);        // the twisted shaft's glint
+                twist.anchorMin = twist.anchorMax = new Vector2(0.5f, 1f);
+                twist.pivot = new Vector2(0.5f, 1f);
+                twist.sizeDelta = new Vector2(2, 84);
+                twist.anchoredPosition = new Vector2(-1, -6);
+                var twistImg = twist.gameObject.AddComponent<Image>();
+                twistImg.color = new Color(0.92f, 0.94f, 0.97f, 0.85f);
+                twistImg.raycastTarget = false;
+                var bowl = NewRect("Bowl", _spoonRt);
+                bowl.anchorMin = bowl.anchorMax = new Vector2(0.5f, 0f);
+                bowl.pivot = new Vector2(0.5f, 0f);
+                bowl.sizeDelta = new Vector2(16, 24);
+                bowl.anchoredPosition = new Vector2(0, 0);
+                var bowlImg = bowl.gameObject.AddComponent<Image>();
+                bowlImg.color = new Color(0.62f, 0.66f, 0.72f, 1f);
+                bowlImg.raycastTarget = false;
+            }
             var spoonGrab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
             spoonGrab.callback.AddListener(_ =>
             {

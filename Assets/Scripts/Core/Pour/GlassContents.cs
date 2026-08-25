@@ -187,7 +187,14 @@ namespace LastCall.Core
             // serve pour became compulsory: the sim's "craft landed" figure was exactly the
             // draught share, because a pint is the one drink whose preparation is stamped on
             // the glass it is pulled into.
+            int cubesBefore = target.IceCubes;
             foreach (var step in _preparations) target.AddPreparation(step);
+            // The cubes go with the drink as a COUNT, not as one more drop: the loop above
+            // counted the carried ice step as a cube (that is how repeat calls count), so
+            // the target is set outright to the larger pile — its own, or the one arriving.
+            // (Caught by IceCountTests on the first run: a one-cube tin poured into a
+            // three-cube glass was minting a phantom fourth.)
+            target.IceCubes = Math.Max(cubesBefore, IceCubes);
 
             DrainProportional(leaving);
             return landed;
@@ -236,10 +243,23 @@ namespace LastCall.Core
         /// <summary>Preparation steps applied to this glass, in order. No effect yet by design.</summary>
         public IReadOnlyList<PreparationDefinition> PreparationSteps => _preparations;
 
-        /// <summary>Records a preparation. The same step never applies twice — a drink is shaken or it is not.</summary>
+        /// <summary>
+        /// How many cubes of ice have gone into this glass (2026-08-25, the author: "buz
+        /// istediği sayıda atılabilecek ve bardağın içerisinde gözükecek"). A COUNT and not
+        /// a step: the step list stays deduplicated — the judge and every recipe spec ask
+        /// "is there ice", never "how much" — but the glass remembers each cube, because
+        /// the glass is what the cubes are seen floating in. Carried by
+        /// <see cref="TransferInto"/> like every other preparation, cleared with them.
+        /// </summary>
+        public int IceCubes { get; private set; }
+
+        /// <summary>Records a preparation. The same step never applies twice — a drink is
+        /// shaken or it is not. ICE is the counted exception: the step still applies once,
+        /// but every call drops one more cube into <see cref="IceCubes"/>.</summary>
         public void AddPreparation(PreparationDefinition preparation)
         {
             if (preparation == null) return;
+            if (preparation.Id == "ice") IceCubes++;
             foreach (var existing in _preparations)
                 if (existing.Id == preparation.Id) return;
 
@@ -259,8 +279,11 @@ namespace LastCall.Core
         /// <summary>Takes a preparation back off the glass. What needed it: a pour into a
         /// mixed tin UN-mixes it (GDD 21 §14) — without this, one early shake stamped the
         /// tin "mixed" for the whole build and the mandatory-mix gate could be walked past.</summary>
-        public void RemovePreparation(string id) =>
+        public void RemovePreparation(string id)
+        {
             _preparations.RemoveAll(p => p.Id == id);
+            if (id == "ice") IceCubes = 0;   // no ice step, no cubes to see
+        }
 
         /// <summary>Empties the glass — served or binned.</summary>
         public void Clear()
@@ -268,6 +291,7 @@ namespace LastCall.Core
             _pours.Clear();
             _byIngredient.Clear();
             _preparations.Clear();
+            IceCubes = 0;
             TotalVolume = 0;
             Head = 0;
         }
