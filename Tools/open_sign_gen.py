@@ -51,15 +51,25 @@ S = 8                       # supersample: struck at 8x, thresholded down to har
 # Everything structural (the coats, the ceiling, the counters-first rule) is shared, because
 # those are the brief and not the handwriting.
 #
-#   tag     the shipped one: an even marker, moderate lean
+#   tag     the first shipped one: an even marker, moderate lean
 #   fat     a throw-up: heavy pen, wide letters, standing straighter
 #   quick   a fast tag: thin pen, hard lean, packed tight, long flick
+#   wall    the shipped one: the same marker held further back, letters given air
+#
+# WHY 'wall' IS THE DEFAULT (2026-08-25, the author: "open yazisini degistir istersen
+# yazani da degistir"). The three earlier hands all fought the same losing battle: at a
+# 34 px ceiling the counters are what a coat eats first, and every one of them was struck
+# TIGHT, so the 'e' and the 'p' closed and the word read as four leaning blobs. 'wall' does
+# not press harder, it spaces wider - the letters sit further apart and the bowls are drawn
+# rounder, which is the one change that buys daylight without buying height. It also stands
+# up straighter, because a sign that has to be READ before it is admired leans less.
 TAKES = {
     'tag':   dict(shear=0.26, weight=1.00, track=1.00, round=0.0, flick=1.00),
     'fat':   dict(shear=0.20, weight=1.22, track=1.08, round=0.9, flick=0.70),
     'quick': dict(shear=0.36, weight=0.80, track=0.92, round=-0.4, flick=1.55),
+    'wall':  dict(shear=0.21, weight=1.02, track=1.16, round=0.8, flick=0.85),
 }
-TAKE = dict(TAKES['tag'])
+TAKE = dict(TAKES['wall'])
 SHEAR = TAKE['shear']
 
 
@@ -118,7 +128,14 @@ def ring(cx, cy, rx, ry, a0=0.0, a1=360.0, steps=64):
 
 
 def glyphs():
-    """Every stroke of 'Open', as (points, pen width) in final pixels.
+    """Every stroke of 'Open bar', as (points, pen width) in final pixels.
+
+    WHY TWO WORDS (2026-08-25). The roller is 592 px across and the sign was 90 of them:
+    the ceiling that matters here is the HEIGHT, and width was never spent. 'Open' alone
+    also said the same thing twice, because the chevron under it already points the way the
+    roller travels - so the second word is free room used to say something the arrow cannot.
+    It is what a bar's shutter would actually be tagged with, and it is still the verb that
+    tells the player what the click does.
 
     THE COUNTERS ARE THE SPECIFICATION. Take one was struck with a 5 px pen at this size
     and every hole in the word closed: the 'e' went solid and 'Open' read as four blobs
@@ -169,6 +186,30 @@ def glyphs():
     f = TAKE['flick']
     strokes.append(([(nx + arch * 2, BASELINE - 1.4),
                      (nx + arch * 2 + 4.0 * f, BASELINE - 5.2 * min(1.0, f))], 2.4 * w))
+
+    # ── the second word ────────────────────────────────────────────────────
+    # LOWER CASE THROUGHOUT, and the 'b' is the reason. A capital B at this cap height is
+    # TWO counters stacked in 23 rows, and two coats eat both of them - the same failure
+    # the 'e' was rebuilt to avoid. A lowercase 'b' is the 'p' turned upside down: one
+    # counter, the one hole this size can actually keep, and a stem that carries the cap
+    # height anyway so the word still opens on a tall letter.
+
+    # b - the ascender, then the bowl hung off it at the x-height.
+    bx = x(86.0) + r * 4
+    strokes.append(([(bx, CAP_TOP), (bx, BASELINE)], 3.0 * w))
+    strokes.append((ring(bx + 5.0 + r, mid, 5.6 + r, 7.0), 3.0 * w))
+
+    # a - single-storey: the bowl, and the stem down its right side. Two strokes, one
+    # counter, and no shoulder to close at this size.
+    ax = x(107.0) + r * 5
+    strokes.append((ring(ax, mid, 5.6 + r, 7.0), 3.0 * w))
+    strokes.append(([(ax + 5.6 + r, XTOP + 1.0), (ax + 5.6 + r, BASELINE)], 3.0 * w))
+
+    # r - leg and a shoulder that stops where a marker's would: the arch is cut at 310
+    # degrees rather than run round, which is the whole difference between an 'r' and an 'n'.
+    rx = x(122.0) + r * 6
+    strokes.append(([(rx, XTOP), (rx, BASELINE)], 3.0 * w))
+    strokes.append((ring(rx + arch, XTOP + 5.0, arch, 5.0, a0=180.0, a1=312.0), 3.0 * w))
 
     return strokes
 
@@ -246,16 +287,25 @@ def word():
     return trim(art)
 
 
-def arrow():
+def arrow(up=False):
     """The way it travels. A chevron in the same three coats, so the sign and its mark are
-    one drawing - the roller goes DOWN, which is what the arrow has always said.
+    one drawing - the roller goes DOWN to open, which is what the arrow has always said.
 
     Wide and shallow rather than tall: it sits under the word on a lid that is only a
-    hand's width of art tall, and a deep chevron there reads as a second letter."""
+    hand's width of art tall, and a deep chevron there reads as a second letter.
+
+    ONE DRAWING, TWO DIRECTIONS (2026-08-25). The open cellar leaves a rail of roller
+    standing at the sill and that rail is the way back out, so it carries the same chevron
+    MIRRORED - struck here rather than flipped in Unity, because a sprite flipped by a
+    negative scale is a sprite whose pixels no longer land on the grid. There is no waist
+    on the chevron (see below), so the mirror is exact and not a second hand-drawing that
+    could drift from the first."""
     w, h = 30, 13
     core = Image.new('L', (w * S, h * S), 0)
     pen = ImageDraw.Draw(core)
     pts = [(4 * S, 4 * S), (15 * S, 9 * S), (26 * S, 4 * S)]
+    if up:
+        pts = [(x, h * S - y) for x, y in pts]
     pen.line(pts, fill=255, width=int(3.0 * S), joint='curve')
     for end in (pts[0], pts[-1]):
         r = 1.5 * S
@@ -438,14 +488,16 @@ def ship(img, name):
     return path
 
 
-def sheet(word_img, arrow_img):
-    """The sign as it will be READ: on the roller's own grey, at 1x and at the 2x the stage
-    actually draws it, with a 34-row ruler beside the word."""
-    scale = 6
+def sheet(word_img, arrow_img, up_img):
+    """The sign as it will be READ: on the roller's own grey, with the shut roller's word
+    and chevron over the rail's own mark, which is the only thing left showing once the
+    cellar is open."""
+    scale = 4
     pad = 14
     slat = (0x88, 0x82, 0x8C, 0xFF)
-    w = max(word_img.size[0], arrow_img.size[0]) * scale + pad * 2
-    h = (word_img.size[1] + arrow_img.size[1] + 10) * scale + pad * 3
+    rows = (word_img, arrow_img, up_img)
+    w = max(i.size[0] for i in rows) * scale + pad * 2
+    h = sum(i.size[1] for i in rows) * scale + pad * 4
     out = Image.new('RGBA', (w, h), slat)
     for y in range(0, h, 4 * scale // 2):
         ImageDraw.Draw(out).line([(0, y), (w, y)], fill=(0x6E, 0x69, 0x72, 255))
@@ -456,7 +508,8 @@ def sheet(word_img, arrow_img):
         return y + big.size[1]
 
     y = blit(word_img, pad)
-    blit(arrow_img, y + 6 * scale)
+    y = blit(arrow_img, y + pad // 2)
+    blit(up_img, y + pad)
     return out
 
 
@@ -464,9 +517,9 @@ def contact():
     """Every take side by side on the roller's own grey, so one can be CHOSEN rather than
     argued about. Named, because a take nobody can name cannot be asked for."""
     from PIL import ImageDraw as D
-    scale, pad = 6, 16
+    scale, pad = 4, 16
     made = []
-    for name in ('tag', 'fat', 'quick'):
+    for name in ('tag', 'fat', 'quick', 'wall'):
         use(name)
         w = word()
         if w.size[1] > 34:
@@ -500,16 +553,18 @@ def main():
             use(arg)
     w = word()
     a = arrow()
+    u = arrow(up=True)
     if w.size[1] > 34:
         sys.exit('the writing is %d px tall; the author capped it at 34' % w.size[1])
-    print('word  %dx%d   arrow %dx%d' % (w.size + a.size))
+    print('word  %dx%d   arrow %dx%d   up %dx%d' % (w.size + a.size + u.size))
 
-    sheet(w, a).convert('RGB').save(os.path.join(HERE, 'open_sign_preview.png'))
+    sheet(w, a, u).convert('RGB').save(os.path.join(HERE, 'open_sign_preview.png'))
     print('  preview               Tools/open_sign_preview.png')
     if preview_only:
         return
     ship(w, 'sign_open')
     ship(a, 'sign_open_arrow')
+    ship(u, 'sign_shut_arrow')
     ship(spill(), 'light_spill')
 
 

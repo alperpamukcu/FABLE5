@@ -133,12 +133,28 @@ namespace LastCall.UI
         /// </summary>
         public float BenchSurfaceFraction =>
             (CounterRestY + CounterSurfaceInset + DrawerTravel * _drawerT) / Reference.y;
+        /// <summary>
+        /// HOW MUCH OF THE ROLLER IS LEFT STANDING AT THE SILL once the cellar is open
+        /// (2026-08-25, the author: "back bar kapağı açıkken aşağıdan çok az kapak gözüküyor
+        /// bu gözükmeyi arttırıp gözüken kısıma üst ok görseli koyalım").
+        ///
+        /// It used to be six units — a hairline at the bottom edge of the screen, which is
+        /// not a rail, it is a seam. Sixteen is what a chevron needs to sit ON, and the
+        /// number is bounded from above by the SHELF: with the drawer up, the lower board's
+        /// own top row lands 15 units off the screen's foot and its bottles stand at 10, so
+        /// a rail any taller than this stops reading as a bottom rail parked in front of the
+        /// shelf and starts reading as a shutter that failed to open.
+        /// </summary>
+        private const float ShutterRail = 16f;
         /// <summary>How far the roller drops to clear the opening. The author's mock-ups
         /// put its top at screen row 305 shut and 356 open while the room rose 121, so against
-        /// the room it travels 356 - (305 - 121) = 172 — its own height, near enough, less the
-        /// four pixels the open frame leaves showing at the sill. It goes DOWN, which is what
-        /// the pink arrow drawn on it has been pointing at all along.</summary>
-        private const float ShutterTravel = 172f;
+        /// the room it travels its own height, near enough, less whatever the open frame is
+        /// asked to leave showing at the sill. DERIVED from that rail rather than typed, so
+        /// the two cannot drift: the roller's top ends up exactly <see cref="ShutterRail"/>
+        /// units above the screen's foot. It goes DOWN, which is what the pink arrow drawn
+        /// on it has been pointing at all along.</summary>
+        private const float ShutterTravel =
+            CounterRestY + CounterSurfaceInset - ShutterOpeningTopPx + DrawerTravel - ShutterRail;
         // WHERE THE WRITING SITS ON THE ROLLER, measured off the roller's own top edge and
         // not off the screen, because it rides. The shut roller hangs from the shelf
         // opening's top (57 stage units up) and the screen cuts it off at the sill, so its
@@ -146,6 +162,11 @@ namespace LastCall.UI
         // chevron 6..17, which leaves the writing clear of both the cut and the sill.
         private const float SignWordDrop = 19f;    // the word's centre, below the roller's top
         private const float SignArrowDrop = 45f;   // and the chevron's, under it
+        /// <summary>...and where the OTHER chevron sits: the one on the rail, pointing back
+        /// up, which is the only mark left showing once the cellar is open. Half the rail
+        /// down from the roller's top edge, so it is centred in the strip the player can
+        /// actually see and aim at.</summary>
+        private const float ShutMarkDrop = ShutterRail * 0.5f;
         // THE ROLLER IS HELD OPEN A CRACK UNDER THE POINTER (2026-08-25, the author: "kapağın
         // üstüne mouse ile gelindiğinde sadece kapak biraz yukarıdan aralanır ve aralanan
         // yerden ışık çıkar böylece bunun basılabilir etkileşime girilebilir bir nesne olduğu
@@ -156,6 +177,13 @@ namespace LastCall.UI
         // It travels the way the roller travels: DOWN. The cellar is revealed from the top
         // edge of the shelf opening, so a crack at the top is exactly what a real one lets
         // go of first, and the light behind it is the cellar's own.
+        //
+        // ...AND THE OPEN ROLLER BREATHES THE OTHER WAY (2026-08-25, the author: "Mouse ile
+        // üstüne gelindiğinde biraz daha kapansın basılabilir olduğu anlaşılsın böylece").
+        // The same seven units, spent UP: what the rail at the sill is for is shutting the
+        // cellar again, so the hint it gives has to be the start of that movement and not
+        // the start of the opposite one. One number, two directions, because it is one
+        // gesture — the roller always leans the way the click would take it.
         private const float ShutterPeek = 7f;
         private const float PeekSeconds = 0.14f;
         private const float DrawerSeconds = 0.42f;
@@ -227,6 +255,9 @@ namespace LastCall.UI
         private RectTransform _shutterDoor;
         private RectTransform _cellarOpenSign;
         private CanvasGroup _cellarOpenGroup;
+        private RectTransform _cellarShutSign;   // the rail's own chevron, pointing back up
+        private CanvasGroup _cellarShutGroup;
+        private RectTransform _shutterRailDoor;  // ...and the strip of roller it is drawn on
         private RectTransform _cellarCatcher;    // click anywhere off the shelves to shut it
         private RectTransform _shelfGuard;       // ...except here: the shelves keep their clicks
         private bool _shutterHovered;
@@ -373,6 +404,7 @@ namespace LastCall.UI
             for (int i = 0; i < _cellarDoors.Count; i++)
                 if (_cellarDoors[i].gameObject.activeSelf != (i < n))
                     _cellarDoors[i].gameObject.SetActive(i < n);
+            BuildShutterRail();   // ...and it goes back to the front of the glass
         }
 
         /// <summary>
@@ -396,7 +428,10 @@ namespace LastCall.UI
             // and the shelf face sits ON it swallowing what lands there, so a miss between
             // two bottles is a miss and not an exit.
             LayOutCellarCatcher();
+            // The word and the chevron hand over as the drawer runs: the roller says how to
+            // get IN while it is shut, and the rail says how to get back out once it is not.
             if (_cellarOpenGroup != null) _cellarOpenGroup.alpha = 1f - _drawerT;
+            if (_cellarShutGroup != null) _cellarShutGroup.alpha = _drawerT;
             if (_cellarDoors.Count == 0) return;
             float slotW = CellarBayWidthPx / _cellarPerBay;
             float left = (Reference.x - _counterNative.x) * 0.5f;
@@ -527,19 +562,52 @@ namespace LastCall.UI
             // draws in - one art pixel is one stage unit here, the same grain as the counter
             // they are lying on - so anything but 1:1 would put finer pixels on the roller
             // than the roller itself has.
-            SignMark("OpenSignWord", word, SignWordDrop);
-            SignMark("OpenSignArrow", ItemArt.Load("sign_open_arrow"), SignArrowDrop);
+            SignMark(_cellarOpenSign, "OpenSignWord", word, SignWordDrop);
+            SignMark(_cellarOpenSign, "OpenSignArrow", ItemArt.Load("sign_open_arrow"),
+                SignArrowDrop);
+            BuildShutSign();
         }
 
-        /// <summary>One piece of the sign, hung by its own centre this far below the roller's
-        /// top edge and drawn at the size it was struck.</summary>
-        private void SignMark(string name, Sprite art, float drop)
+        /// <summary>
+        /// THE MARK ON THE RAIL (2026-08-25, the author: "gözüken kısıma üst ok görseli
+        /// koyalım open yazısında koyulduğu gibi aynı şekilde"). The cellar's way back out,
+        /// said the same way its way in is said: the same chevron in the same three coats,
+        /// struck mirrored, sitting on the strip of roller left standing at the sill.
+        ///
+        /// It is the OPEN sign's opposite number in every way, which is why it is built here
+        /// rather than somewhere of its own: same parent, same 1:1 grain, same rule that the
+        /// mark takes no clicks. What differs is one number — this one fades IN as the drawer
+        /// opens, because the word and the chevron are never both true at once.
+        /// </summary>
+        private void BuildShutSign()
         {
-            if (art == null) return;
+            if (_shutterDoor == null || _cellarShutSign != null) return;
+            var mark = ItemArt.Load("sign_shut_arrow");
+            if (mark == null) return;    // no art on disk: the rail still shuts the cellar
+
+            _cellarShutSign = NewRect("ShutSign", _shutterDoor);
+            _cellarShutSign.anchorMin = _cellarShutSign.anchorMax = new Vector2(0.5f, 1f);
+            _cellarShutSign.pivot = new Vector2(0.5f, 1f);
+            _cellarShutSign.sizeDelta = Vector2.zero;
+            _cellarShutSign.anchoredPosition = Vector2.zero;
+            _cellarShutGroup = _cellarShutSign.gameObject.AddComponent<CanvasGroup>();
+            _cellarShutGroup.blocksRaycasts = false;
+            _cellarShutGroup.interactable = false;
+            _cellarShutGroup.alpha = 0f;
+            UiAuditExempt.Mark(_cellarShutSign, "the rail's chevron is struck lettering, not "
+                + "type: one sprite, drawn at the size it was struck");
+            SignMark(_cellarShutSign, "ShutSignArrow", mark, ShutMarkDrop);
+        }
+
+        /// <summary>One piece of a sign, hung by its own centre this far below the roller's
+        /// top edge and drawn at the size it was struck.</summary>
+        private void SignMark(RectTransform host, string name, Sprite art, float drop)
+        {
+            if (art == null || host == null) return;
             // NAMED, not called after its sprite. The roller is the only way into the cellar
             // now, and the PlayMode suites drive it by aiming at this word — a hook named
             // after an asset moves the day somebody renames the asset.
-            var rt = NewRect(name, _cellarOpenSign);
+            var rt = NewRect(name, host);
             rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = art.rect.size;
@@ -549,6 +617,18 @@ namespace LastCall.UI
             img.raycastTarget = false;
         }
 
+        /// <summary>
+        /// Puts the roller's hit plate — and the writing riding on it — where the roller is.
+        ///
+        /// THE PLATE DOES NOT TAKE THE PEEK; THE WRITING DOES (2026-08-25, the author: "Mouse
+        /// raf kapağının üstüne geldiğinde biraz aşağı iniyor aynı şekilde open tuşu da sanki
+        /// kapağın üstündeymiş gibi aşağı inmeli"). The word is painted ON the slats, so when
+        /// the roller leans under the pointer the word has to lean with it or it is a decal
+        /// on glass — but the PLATE that senses the pointer must not move, or its own top
+        /// seven units would slide out from under the very pointer holding them open and the
+        /// roller would sit there flickering at 7 units every 0.14s. So the plate is nailed
+        /// to the roller's rest position and only the two signs ride the crack.
+        /// </summary>
         private void LayOutShutterDoor()
         {
             if (_shutterDoor == null) return;
@@ -556,6 +636,83 @@ namespace LastCall.UI
                 Reference.x * 0.5f,
                 CounterRestY + CounterSurfaceInset - ShutterOpeningTopPx
                     + (DrawerTravel - ShutterTravel) * _drawerT);
+            // The same two numbers ApplyDrawer moves the slats by, read back off the same
+            // fields: down while the cellar is shut, up while it is open.
+            if (_cellarOpenSign != null)
+                _cellarOpenSign.anchoredPosition =
+                    new Vector2(0f, -ShutterPeek * _shutterPeek * (1f - _drawerT));
+            if (_cellarShutSign != null)
+                _cellarShutSign.anchoredPosition =
+                    new Vector2(0f, ShutterPeek * _shutterPeek * _drawerT);
+            LayOutShutterRail();
+        }
+
+        /// <summary>
+        /// THE RAIL IS A DOOR (2026-08-25). The strip of roller left standing at the sill is
+        /// what shuts the cellar again, so it needs to answer a pointer — and it cannot do
+        /// that from the ShutterDoor canvas, which sorts UNDER the cellar's own full-screen
+        /// catcher: with the drawer open, every click and every hover on that strip is eaten
+        /// before it arrives. So the rail's plate lives IN the cellar's canvas as its last
+        /// child, which is the one place Unity asks before the catcher and before the
+        /// shelves' guard, and it blocks nothing while the drawer is shut because that whole
+        /// canvas stops taking rays.
+        ///
+        /// It is a hair narrower than the roller so the two ends of the sill still belong to
+        /// the room, and it is sized to the strip rather than to the roller: a plate the
+        /// height of the whole shutter would hang off the bottom of the screen and take the
+        /// clicks meant for the lower shelf's stock on its way past.
+        /// </summary>
+        private void BuildShutterRail()
+        {
+            if (_cellarDoorRoot == null) return;
+            // LAST, every time it is asked. The stock's own doors are added to this canvas
+            // as the shelf grows, and each one lands after the rail — so "build once" is not
+            // enough here: the rail has to be sent to the back of the queue again whenever
+            // the cellar is re-dealt, or a bottle's plate ends up over the sill.
+            if (_shutterRailDoor != null) { _shutterRailDoor.SetAsLastSibling(); return; }
+            _shutterRailDoor = NewRect("ShutterRail", _cellarDoorRoot);
+            _shutterRailDoor.anchorMin = _shutterRailDoor.anchorMax = new Vector2(0, 0);
+            _shutterRailDoor.pivot = new Vector2(0.5f, 1f);   // hung by its top, like the art
+            var hit = _shutterRailDoor.gameObject.AddComponent<Image>();
+            hit.color = new Color(0, 0, 0, 0);
+            var btn = _shutterRailDoor.gameObject.AddComponent<Button>();
+            btn.targetGraphic = hit;
+            btn.transition = Selectable.Transition.None;
+            btn.onClick.AddListener(() => SetDrawerOpen(false));
+            var relay = _shutterRailDoor.gameObject.AddComponent<HoverRelay>();
+            relay.Entered = () => _shutterHovered = true;
+            relay.Exited = () => _shutterHovered = false;
+            _shutterRailDoor.SetAsLastSibling();
+            UiAuditExempt.Mark(_shutterRailDoor, "the rail is a hit plate over the strip of "
+                + "roller the open frame leaves at the sill, sized to that strip");
+            LayOutShutterRail();
+        }
+
+        /// <summary>Puts the rail's plate over the strip of roller that is actually showing.
+        /// FIXED against the peek, for the reason LayOutShutterDoor gives: the plate the
+        /// pointer is being felt through may not move under the pointer.</summary>
+        private void LayOutShutterRail()
+        {
+            if (_shutterRailDoor == null) return;
+            bool open = _drawerT > 0.5f;
+            if (_shutterRailDoor.gameObject.activeSelf != open)
+            {
+                _shutterRailDoor.gameObject.SetActive(open);
+                // A plate switched off under the pointer never gets its OnPointerExit, and a
+                // hover left standing would hold the shut roller leaning for the rest of the
+                // night. The pointer is re-read every frame anyway, so dropping it here costs
+                // at most one frame of a hover that is about to be re-announced.
+                if (!open) _shutterHovered = false;
+            }
+            if (!open) return;
+            float top = CounterRestY + CounterSurfaceInset - ShutterOpeningTopPx
+                        + (DrawerTravel - ShutterTravel) * _drawerT;
+            _shutterRailDoor.anchoredPosition = new Vector2(Reference.x * 0.5f, top);
+            // Off the roller's own art, which may not be installed yet the first time the
+            // cellar is dealt — the rail is re-laid every time the drawer moves, so a frame
+            // at zero width corrects itself rather than throwing a negative size.
+            _shutterRailDoor.sizeDelta =
+                new Vector2(Mathf.Max(0f, _shutterNative.x - 16f), ShutterRail);
         }
 
         /// <summary>
@@ -747,12 +904,16 @@ namespace LastCall.UI
             if (_shutterTr != null)
             {
                 var lp = _shutterTr.localPosition;
-                // The peek is spent as the drawer opens: once the cellar is coming up there
-                // is nothing left to hint at, and a roller still holding its crack open
-                // would be fighting its own travel.
+                // ONE PEEK, TWO DIRECTIONS, and the drawer's own progress is what picks
+                // between them: down while the cellar is shut (opening a crack at the top,
+                // which is where the light comes out), up while it is open (the start of
+                // the movement that would shut it again). Halfway through the travel both
+                // are half spent and cancel, which is right — a roller already moving has
+                // nothing to hint at.
                 float peek = ShutterPeek * _shutterPeek * (1f - _drawerT);
-                _shutterTr.localPosition =
-                    new Vector3(lp.x, _shutterRestLocalY - ShutterTravel * _drawerT - peek, lp.z);
+                float lean = ShutterPeek * _shutterPeek * _drawerT;
+                _shutterTr.localPosition = new Vector3(
+                    lp.x, _shutterRestLocalY - ShutterTravel * _drawerT - peek + lean, lp.z);
             }
             LayOutShutterLight();
             ApplyCellarLight();
@@ -771,7 +932,10 @@ namespace LastCall.UI
         {
             // The crack eases open and shut on its own clock, which runs whether or not the
             // drawer is moving — hovering a roller that is already still is the whole point.
-            float wantPeek = _shutterHovered && !DrawerOpen ? 1f : 0f;
+            // It no longer asks WHICH way the drawer is: both states lean now (ApplyDrawer
+            // resolves the direction), so the pointer gets an answer over the shut roller
+            // and over the rail alike.
+            float wantPeek = _shutterHovered ? 1f : 0f;
             if (!Mathf.Approximately(_shutterPeek, wantPeek))
             {
                 _shutterPeek = Motion.Reduced ? wantPeek : Mathf.MoveTowards(

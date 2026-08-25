@@ -163,6 +163,71 @@ namespace LastCall.UI
         /// overlap.</summary>
         private const float SeatGap = 180f;
 
+        /// <summary>
+        /// THE ORDER THE ROOM FILLS ITS STOOLS IN (2026-08-25, the author: "Oyundaki
+        /// başlangıç koltukları 4 ise … başlangıçtaki koltuklar 2-3-4-5 sırası olacak
+        /// geliştirme ile alınan koltuklar 1 ve 6 olmalı").
+        ///
+        /// Six stools are drawn along the counter and a new bar owns four of them. It used
+        /// to own the FIRST four, which put every opening night's whole crowd against the
+        /// left-hand wall with two stools' worth of empty bar between them and the till — a
+        /// room that reads half-abandoned on the night it opens, and an upgrade that adds a
+        /// stool to the far end of a line nobody is sitting at. The four it owns now are the
+        /// MIDDLE four and the two an upgrade buys are the two ENDS: the bar fills from its
+        /// centre outward, which is how a bar fills.
+        ///
+        /// DERIVED from the config rather than typed, so a bar that opens with some other
+        /// number of stools still centres them: the opening block sits in the middle of the
+        /// row, and what is left over is added from the till end (the high index, the end
+        /// the bar is worked from) back towards the far wall.
+        /// </summary>
+        private static int[] SeatFillOrder(int slots, int opening)
+        {
+            var order = new int[slots];
+            int first = Mathf.Clamp((slots - opening) / 2, 0, Mathf.Max(0, slots - 1));
+            int n = 0;
+            for (int i = first; i < slots && n < opening; i++) order[n++] = i;
+            for (int i = first + opening; i < slots && n < slots; i++) order[n++] = i;
+            for (int i = first - 1; i >= 0 && n < slots; i--) order[n++] = i;
+            return order;
+        }
+
+        private int[] _seatOrder;
+        private int _seatOrderFor = -1;
+
+        /// <summary>Tonight's fill order, cached against the config that made it.</summary>
+        private int[] SeatOrderFor(TycoonRun run)
+        {
+            int opening = run.Config.StartingSeats;
+            if (_seatOrder == null || _seatOrderFor != opening)
+            {
+                _seatOrder = SeatFillOrder(_seats.Count, opening);
+                _seatOrderFor = opening;
+            }
+            return _seatOrder;
+        }
+
+        /// <summary>
+        /// The n-th OWNED stool counting down from the till end of the counter.
+        ///
+        /// NOT the fill order reversed, which is the trap: the last stool an upgrade buys is
+        /// the one against the FAR wall, so walking the fill order backwards would seat the
+        /// house's guest at the wrong end of a full bar. This asks the counter rather than
+        /// the shopping list.
+        /// </summary>
+        private static int TillEndward(int[] order, int owned, int n)
+        {
+            for (int slot = order.Length - 1; slot >= 0; slot--)
+            {
+                bool mine = false;
+                for (int k = 0; k < owned; k++) if (order[k] == slot) { mine = true; break; }
+                if (!mine) continue;
+                if (n == 0) return slot;
+                n--;
+            }
+            return -1;
+        }
+
         /// <summary>How wide an order ticket may grow before its order line wraps instead
         /// (2026-08-02). No longer a taste (2026-08-19, the author: "yan yana olan
         /// müşterilerin baloncukları üst üste binmemeli"): every ticket is centred on its own
@@ -1267,14 +1332,35 @@ namespace LastCall.UI
         /// a block — and short enough that all three are in the air together, so the stool
         /// reads as paying up rather than as three unrelated events.
         /// </summary>
-        private const float TabStagger = 0.32f;
+        private const float TabStagger = 0.5f;
 
-        /// <summary>Where each of the three leaves from and how high it carries. SMALL
-        /// numbers on purpose: they are three marks off ONE stool, so what separates them is
-        /// mostly the third of a second between them and the phase in their drift — three
-        /// columns would read as a table, which is the receipt this stopped being.</summary>
-        private static readonly float[] TabLaneX = { 0f, -7f, 9f };
-        private static readonly float[] TabLaneClimb = { 0f, 14f, -8f };
+        /// <summary>
+        /// Where each of the three leaves from and how high it carries.
+        /// 
+        /// THE ONE OUT FIRST CARRIES FURTHEST, and that is not decoration — it is what keeps
+        /// them off each other. The first cut let the money climb FOURTEEN FURTHER than the
+        /// stars it was chasing, so it caught them up about a second in and the row of stars
+        /// came down on the "+$17" (measured in play, 2026-08-25). Ordered the other way they
+        /// fan instead of converge and the air between them only grows.
+        ///
+        /// THE SPACING IS SET BY A RULE AND NOT BY EYE. Every mark hangs its content from its
+        /// host's top edge, so two of them clear each other only while the gap in their
+        /// heights EXCEEDS THE UPPER ONE'S OWN HEIGHT — 14 for the star row, 28 for the
+        /// figure. These leave 30 and 34 at full climb, which is that rule plus a few units
+        /// of air, and more than that at every point on the way up. The second cut missed it
+        /// by six units and the tip line sat on the total's descenders.
+        ///
+        /// The sideways numbers stay small: they are three marks off ONE stool, and three
+        /// columns would read as a table, which is the receipt this stopped being.
+        /// </summary>
+        private static readonly float[] TabLaneX = { 0f, -12f, 14f };
+        private static readonly float[] TabLaneClimb = { 30f, 0f, -34f };
+
+        /// <summary>What each mark is called in the hierarchy. NOT "Tab0..2" (measured,
+        /// 2026-08-25): the book's own tab strip already stands five children called exactly
+        /// that, so a search for a tab in flight came back holding the book. Named after what
+        /// the mark says instead, which is what anybody reading the hierarchy wanted.</summary>
+        private static readonly string[] TabLaneName = { "TabStars", "TabPaid", "TabTip" };
 
         /// <summary>
         /// The rack is placed FROM the bar, and the bar re-fits itself whenever the window
@@ -2011,7 +2097,7 @@ namespace LastCall.UI
         // It is the same `BarCalendar` the rules count in: the panel cannot say Friday
         // while the arc thinks it is Thursday, because neither is doing its own arithmetic.
 
-        private readonly List<(Image bulb, Image glow, Text name)> _weekCells =
+        private readonly List<(Image sign, Image bloom, Text name)> _weekCells =
             new List<(Image, Image, Text)>();
 
         private Text _weekLabel;
@@ -2034,6 +2120,28 @@ namespace LastCall.UI
 
         private void BuildWeekStrip(RectTransform top)
         {
+            var glass = BuildWeekGlass(top, _weekCells, out _weekLabel, out _vipCell);
+            glass.anchoredPosition = Vector2.zero;      // centred on the beam, as it was
+        }
+
+        /// <summary>
+        /// THE WEEK INSTRUMENT, BUILT ONCE AND MOUNTED TWICE (2026-08-25, the author, of the
+        /// day card: "Gun baslangic ekranindaki takvim gostergesini begenmiyorum bunu
+        /// gelistir, ana sahnedeki ust bardaki takvim gostergesine benzer yapabilirsin").
+        ///
+        /// The beam and the day card used to draw two different pictures of the same week: a
+        /// panel of lit names up here, and down there a wire strung with bulbs. That wire is
+        /// the OLDER of the two ideas and was already thrown out once up here, for reading as
+        /// bunting - so rather than draw a third picture, the instrument moved. This builds
+        /// the glass, the head and the seven slots; both surfaces mount it, and the card just
+        /// hangs it bigger. That is the whole difference between them.
+        ///
+        /// The caller keeps the cells and lights them with <see cref="LightWeekCells"/>.
+        /// </summary>
+        private RectTransform BuildWeekGlass(RectTransform parent,
+            List<(Image sign, Image bloom, Text name)> cells, out Text weekLabel, out int vipCell)
+        {
+            vipCell = -1;
             var names = BarCalendar.WeekColumns;
             // The generated plate lasted one build ("Oluşturulan takvim görseli bozuk
             // duruyor, elinden geldiğince kendin tasarımını yap") — the exception to
@@ -2041,7 +2149,7 @@ namespace LastCall.UI
             // on the author's next one. The calendar sits in the same drawn WELL the hour
             // does; two instruments, one language, and nothing on the beam is a picture.
             float wellW = WeekDaysX + names.Length * WeekStep + 10f;
-            var glass = NewRect("WeekWell", top);
+            var glass = NewRect("WeekWell", parent);
             glass.anchorMin = glass.anchorMax = glass.pivot = new Vector2(0.5f, 0.5f);
             glass.sizeDelta = new Vector2(wellW, 40f);
             glass.anchoredPosition = Vector2.zero;
@@ -2060,11 +2168,11 @@ namespace LastCall.UI
             cap.horizontalOverflow = HorizontalWrapMode.Overflow;
             cap.text = "WEEK";
 
-            _weekLabel = NewText("Week", glass, _display, 16, TextAnchor.MiddleCenter, UITheme.Cyan[3]);
-            Place(_weekLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(52, 18),
+            weekLabel = NewText("Week", glass, _display, 16, TextAnchor.MiddleCenter, UITheme.Cyan[3]);
+            Place(weekLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(52, 18),
                 new Vector2(WeekHeadCx, -7f));
-            _weekLabel.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            _weekLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
+            weekLabel.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            weekLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             // The display rule between the count and the nights — on the glass, not the
             // case, because it separates what the display says (the clock's old divider,
@@ -2122,7 +2230,7 @@ namespace LastCall.UI
                     sign = starRt.gameObject.AddComponent<Image>();
                     sign.sprite = ChromeArt.Mark("star");
                     sign.raycastTarget = false;
-                    _vipCell = i;
+                    vipCell = i;
                 }
                 else
                 {
@@ -2142,8 +2250,9 @@ namespace LastCall.UI
                     bloom.raycastTarget = false;
                 }
 
-                _weekCells.Add((sign, bloom, name));
+                cells.Add((sign, bloom, name));
             }
+            return glass;
         }
 
         // ── the last customer (GDD 26 §7, PLAN_last_call S3) ────────────────────
@@ -2483,8 +2592,16 @@ namespace LastCall.UI
 
         private CanvasGroup _curtainCardGroup, _curtainLeavingGroup, _curtainArrivingGroup;
 
-        private readonly List<(Image bulb, Image glow)> _curtainCells =
-            new List<(Image, Image)>();
+        private readonly List<(Image sign, Image bloom, Text name)> _curtainCells =
+            new List<(Image, Image, Text)>();
+
+        private int _curtainVip = -1;          // Saturday's fitting, on the card's own copy
+        private int _curtainStoryNight = -1;   // ...and which night the arc is due on
+
+        /// <summary>Where the week instrument hangs on the day card, and how much bigger.
+        /// 1.4 draws its 454 units of glass at 636 - wide enough to be the card's foot
+        /// without touching the 700 the card itself is.</summary>
+        private const float CurtainWeekY = -452f, CurtainWeekScale = 1.4f;
 
         private int _curtainFrom = 1, _curtainTo = 1;
 

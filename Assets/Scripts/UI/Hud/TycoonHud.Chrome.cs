@@ -1130,67 +1130,94 @@ namespace LastCall.UI
         {
             if (_weekCells.Count == 0) return;
             int week = BarCalendar.WeekOf(run.Day);
-            var tonight = BarCalendar.NightOf(run.Day);
             if (week != _weekShown)
             {
                 _weekShown = week;
                 // Just the count: the word WEEK is the instrument's own printed caption now.
                 _weekLabel.text = $"{week:00}";
             }
+            // NOTHING IS HANDING OVER UP HERE. The beam shows one night, fully lit, so it
+            // passes no `leaving` and a full `over` - the crossfade is the DAY CARD's, and
+            // the instrument is the same instrument either way (see LightWeekCells).
+            LightWeekCells(_weekCells, _vipCell, (int)BarCalendar.NightOf(run.Day), -1, 1f,
+                StoryNightOf(run, week));
+        }
 
-            // Which nights the story is coming on, THIS week. A beat due in a later week
-            // leaves the marquee clean: the calendar shows the week it is showing.
+        /// <summary>Which slot in THIS week the arc is due on, or -1. A beat due in a later
+        /// week leaves the calendar clean: it shows the week it is showing.</summary>
+        private static int StoryNightOf(TycoonRun run, int week)
+        {
             var due = run.Story?.Current;
             int dueDay = run.Story != null ? run.Story.DueDay : 0;
-            bool dueThisWeek = due != null && BarCalendar.WeekOf(dueDay) == week;
+            if (due == null || BarCalendar.WeekOf(dueDay) != week) return -1;
+            int i = (int)BarCalendar.NightOf(dueDay);
+            return i < BarCalendar.OpenNights ? i : -1;
+        }
 
-            // THE WORD SAYS THE STATE, THE SIGN UNDER IT SAYS WHAT THE NIGHT IS. A
-            // tube burns only under the night being played; the star fitting is always
-            // Saturday's and only how hard it burns changes; the shutter is Sunday's and
-            // never changes at all.
-            for (int i = 0; i < _weekCells.Count; i++)
+        /// <summary>
+        /// Lights one week instrument, wherever it is mounted.
+        ///
+        /// THE WORD SAYS THE STATE, THE SIGN UNDER IT SAYS WHAT THE NIGHT IS. A tube burns
+        /// only under the night being played; the star fitting is always Saturday's and only
+        /// how hard it burns changes; the shutter is Sunday's and never changes at all.
+        ///
+        /// ONE NUMBER CARRIES BOTH MOUNTS. The beam only ever has one night lit and passes
+        /// <paramref name="over"/> = 1 with no <paramref name="leaving"/>; the day card is a
+        /// HAND-OVER, so the night that closed goes out on exactly the curve the night
+        /// arriving comes up on. Everything else - which nights are spent, which is the
+        /// story's, which is dark - is the same arithmetic on both, which is the point of
+        /// there being one of these rather than two.
+        /// </summary>
+        private static void LightWeekCells(List<(Image sign, Image bloom, Text name)> cells,
+            int vipCell, int tonight, int leaving, float over, int storyNight)
+        {
+            for (int i = 0; i < cells.Count; i++)
             {
-                var (sign, bloom, name) = _weekCells[i];
+                var (sign, bloom, name) = cells[i];
                 bool closed = i >= BarCalendar.OpenNights;          // the seventh night
-                bool isTonight = !closed && (int)tonight == i;
-                bool worked = !closed && i < (int)tonight;
-                bool storyNight = dueThisWeek && !closed && (int)BarCalendar.NightOf(dueDay) == i;
+                float burn = closed ? 0f
+                    : i == tonight ? over
+                    : i == leaving ? 1f - over
+                    : 0f;
+                bool story = !closed && i == storyNight;
+                bool worked = !closed && i < tonight;
 
-                bool star = i == _vipCell;
                 if (sign != null)
                 {
-                    if (star)
+                    if (i == vipCell)
                     {
                         // Legible from across the week even four days out; full magenta
                         // only on the night itself.
                         var m = UITheme.Magenta[4];
-                        sign.color = isTonight ? m : new Color(m.r, m.g, m.b, 0.62f);
+                        sign.color = new Color(m.r, m.g, m.b, Mathf.Lerp(0.62f, 1f, burn));
                     }
                     else
                     {
                         // The tube burns the WORD's own hue: a story night that is also
                         // tonight reads magenta up top, and an amber tube under magenta
                         // letters would be the strip disagreeing with itself.
-                        sign.enabled = isTonight;
-                        sign.color = storyNight ? UITheme.Magenta[4] : UITheme.Amber[4];
+                        sign.enabled = burn > 0.01f;
+                        var t = story ? UITheme.Magenta[4] : UITheme.Amber[4];
+                        sign.color = new Color(t.r, t.g, t.b, t.a * burn);
                     }
                 }
                 if (bloom != null)
                 {
-                    bloom.enabled = isTonight;
-                    var b = storyNight ? UITheme.Magenta[2] : UITheme.Amber[2];
-                    bloom.color = new Color(b.r, b.g, b.b, 0.5f);
+                    bloom.enabled = burn > 0.01f;
+                    var b = story ? UITheme.Magenta[2] : UITheme.Amber[2];
+                    bloom.color = new Color(b.r, b.g, b.b, b.a * 0.5f * burn);
                 }
 
-                // BRIGHT ENOUGH TO BE A CALENDAR (the author: "ufak ve sönük kalıyor",
-                // then "yazılar okumuyor"): nights ahead are cream, one step up from the
+                // BRIGHT ENOUGH TO BE A CALENDAR (the author: "ufak ve sonuk kaliyor",
+                // then "yazilar okumuyor"): nights ahead are cream, one step up from the
                 // first cut; the nights already worked are the dim ones, because a night
                 // that is spent is the only one on the glass with nothing left to say.
-                name.color = closed ? UITheme.Night[4]
-                    : storyNight ? UITheme.Magenta[4]
-                    : isTonight ? UITheme.Amber[4]
+                var rest = closed ? UITheme.Night[4]
+                    : story ? UITheme.Magenta[4]
                     : worked ? UITheme.Night[4]
                     : UITheme.Cream[3];
+                var awake = story ? UITheme.Magenta[4] : UITheme.Amber[4];
+                name.color = burn > 0.001f ? Color.Lerp(rest, awake, burn) : rest;
             }
         }
 

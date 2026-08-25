@@ -769,82 +769,119 @@ namespace LastCall.UI
         /// the game — and the money sits on a whole multiple of the face's 8px design size,
         /// which is the rest of what made it soft.
         ///
-        /// It was rebuilt on 2026-08-25 to be worth watching: see TabLife/TabSway above.
+        /// THREE MARKS, NOT ONE SLIP (2026-08-25). It used to be one host carrying the stars,
+        /// the total and the tip stacked on each other, so they arrived together, drifted
+        /// together and left together — a receipt floating off a stool. They are three now,
+        /// counted out a third of a second apart, each on its own host with its own phase,
+        /// its own climb and its own lean. Nothing about the movement is shared.
+        ///
+        /// The START is shared, on purpose. The stool is walking out from under them — a
+        /// leaving drinker's rect is being lerped across the room — so all three are fired
+        /// from where the stool stood when the tab settled, not from wherever it has got to
+        /// by the time a mark's turn comes round.
         /// </summary>
-        private System.Collections.IEnumerator TabFloat(int seatIndex, CustomerVisit visit)
+        private void TabFloat(int seatIndex, CustomerVisit visit)
         {
             var seat = _seats[seatIndex].Root;
+            var start = seat.anchoredPosition + new Vector2(0f, 96f);
             int tip = visit.Paid - visit.PaidBase;
             double stars = BarRating.ExactStarsFor(visit.Satisfaction);
+
+            // FIRST, THE STARS — what they thought of it, which is what a drinker gets up
+            // with. On the same ruler every star gate in the game is drawn on: five sockets
+            // and a gold row filled by the fraction, so a 3.5 is three and a half here
+            // exactly as it is on the slip and in the book. The sockets are DARK here, not
+            // the usual faint white: this row is thrown over the room rather than laid on a
+            // panel, and a 20%-white star over the window is nothing at all.
+            StartCoroutine(TabMark(seat.parent, start, seatIndex, 0, 0f, host =>
+            {
+                var row = StarRow(host, new Vector2(0.5f, 1), Vector2.zero, 14f,
+                    stars, UITheme.Amber[3], new Color(0f, 0f, 0f, 0.55f));
+                row.pivot = new Vector2(0.5f, 1);
+            }));
+
+            // THEN THE MONEY, AND THE FIGURE IS THE EVENT (2026-08-25, the author: "daha
+            // belirgin ve dikkat çekici"). 24 — the next legal step up, a whole 3x of the
+            // face's 8px grid — and ringed the way the till's change is, so it holds its
+            // shape over a lit wall or a dark one. Amber[3] and not the ramp's palest step:
+            // the figure crosses a sunset window on its way up, and 0xF5C97B against that is
+            // cream on cream (measured).
+            StartCoroutine(TabMark(seat.parent, start, seatIndex, 1, TabStagger, host =>
+            {
+                var paid = NewText("Paid", host, _display, 24, TextAnchor.LowerCenter,
+                    UITheme.Amber[3]);
+                Place(paid.rectTransform, new Vector2(0.5f, 1), new Vector2(200, 28),
+                    Vector2.zero);
+                paid.rectTransform.pivot = new Vector2(0.5f, 1);
+                paid.horizontalOverflow = HorizontalWrapMode.Overflow;
+                paid.verticalOverflow = VerticalWrapMode.Overflow;
+                paid.text = "+$" + visit.Paid;
+                Ring(paid);
+            }));
+
+            // AND LAST THE TIP, which is the part worth its own colour and is short enough
+            // to say what it is without a line explaining itself. It comes last because it
+            // is the part that is not owed — a bar earns it after the bill is already paid.
+            if (tip > 0)
+                StartCoroutine(TabMark(seat.parent, start, seatIndex, 2, TabStagger * 2f,
+                    host =>
+                    {
+                        var tipText = NewText("Tip", host, _display, 16, TextAnchor.UpperCenter,
+                            UITheme.Lime[4]);
+                        Place(tipText.rectTransform, new Vector2(0.5f, 1), new Vector2(200, 18),
+                            Vector2.zero);
+                        tipText.rectTransform.pivot = new Vector2(0.5f, 1);
+                        tipText.horizontalOverflow = HorizontalWrapMode.Overflow;
+                        tipText.verticalOverflow = VerticalWrapMode.Overflow;
+                        tipText.text = "+$" + tip + " TIP";
+                        Ring(tipText);
+                    }));
+        }
+
+        /// <summary>
+        /// One of the three: built, held back its share of a second, then carried up off the
+        /// stool on its own air.
+        ///
+        /// PIVOTED IN THE MIDDLE OF ITS OWN FOOT, so the lean turns it about the point it is
+        /// rising from rather than swinging it about a corner off to the left.
+        ///
+        /// EVERY NUMBER IN THE MOVEMENT COMES FROM (seat, lane) and none of it is rolled:
+        /// nothing in this game is random by accident (the determinism rule), so a wander
+        /// that reproduces is one less thing that can differ between two runs of the same
+        /// seed — and three marks off one stool still take three different paths, because
+        /// the lane is in the phase.
+        /// </summary>
+        private System.Collections.IEnumerator TabMark(Transform parent, Vector2 start,
+            int seatIndex, int lane, float delay, Action<RectTransform> dress)
+        {
+            // Counted the moment it is PROMISED and not the moment it appears: the night's
+            // books wait on this (FloorIsClear), and a tip still holding its breath is money
+            // the day has not finished paying.
             _tabFloats++;
 
-            // PIVOTED IN THE MIDDLE OF ITS OWN FOOT, so the lean turns it about the point it
-            // is rising from rather than swinging it about a corner off to the left. (The
-            // old rect hung from its bottom-left and was nudged half its width back, which
-            // works for a thing that only ever goes straight up and for nothing else.)
-            var host = NewRect("Tab", seat.parent);
+            var host = NewRect(TabLaneName[lane], parent);
             host.anchorMin = host.anchorMax = new Vector2(0, 0);
             host.pivot = new Vector2(0.5f, 0f);
-            host.sizeDelta = new Vector2(200, 58);
+            host.sizeDelta = new Vector2(200, 40);
+            host.anchoredPosition = start + new Vector2(TabLaneX[lane], 0f);
             var group = host.gameObject.AddComponent<CanvasGroup>();
+            group.alpha = 0f;              // not here yet; the wait below is its cue
+            dress(host);
 
-            // THE FIGURE IS THE EVENT (2026-08-25, the author: "daha belirgin ve dikkat
-            // çekici"). 24 — the next legal step up, a whole 3x of the face's 8px grid —
-            // and ringed the way the till's change is: white against the amber, black
-            // outside the white, so it holds its shape over a lit wall or a dark one.
-            // Amber[3] and not the ramp's palest step: the figure crosses a sunset window
-            // on its way up, and 0xF5C97B against that is cream on cream (measured).
-            var paid = NewText("Paid", host, _display, 24, TextAnchor.LowerCenter,
-                UITheme.Amber[3]);
-            Place(paid.rectTransform, new Vector2(0.5f, 1), new Vector2(200, 28), new Vector2(0, 0));
-            paid.rectTransform.pivot = new Vector2(0.5f, 1);
-            paid.horizontalOverflow = HorizontalWrapMode.Overflow;
-            paid.verticalOverflow = VerticalWrapMode.Overflow;
-            paid.text = "+$" + visit.Paid;
-            Ring(paid);
+            for (float wait = delay; wait > 0f && host != null; wait -= Time.deltaTime)
+                yield return null;
 
-            float y = 30f;
-            // The tip is the part worth its own colour, and it is short enough to sit under
-            // the total without a word explaining itself.
-            if (tip > 0)
-            {
-                var tipText = NewText("Tip", host, _display, 16, TextAnchor.UpperCenter,
-                    UITheme.Lime[4]);
-                Place(tipText.rectTransform, new Vector2(0.5f, 1), new Vector2(200, 18),
-                    new Vector2(0, -y));
-                tipText.rectTransform.pivot = new Vector2(0.5f, 1);
-                tipText.horizontalOverflow = HorizontalWrapMode.Overflow;
-                tipText.verticalOverflow = VerticalWrapMode.Overflow;
-                tipText.text = "+$" + tip + " TIP";
-                Ring(tipText);
-                y += 20f;
-            }
-
-            // The stars they leave, on the same ruler every star gate in the game is drawn
-            // on — five sockets and a gold row filled by the fraction, so a 3.5 is three and
-            // a half here exactly as it is on the slip and in the book.
-            // The sockets are DARK here, not the usual faint white: this row is thrown over
-            // the room rather than laid on a panel, and a 20%-white star over the window is
-            // nothing at all. Five dark stars read on any wall, and the gold fills on top.
-            var stars5 = StarRow(host, new Vector2(0.5f, 1), new Vector2(0, -y), 14f,
-                stars, UITheme.Amber[3], new Color(0f, 0f, 0f, 0.55f));
-            stars5.pivot = new Vector2(0.5f, 1);
-
-            var start = seat.anchoredPosition + new Vector2(0f, 96f);
-            // A phase per stool, so two tabs in the air are never the same movement — and
-            // taken from the seat, not from a roll: nothing in this game is random by
-            // accident (the determinism rule), and a wander that reproduces is one less
-            // thing that can differ between two runs of the same seed.
-            float phase = seatIndex * 1.7f;
+            float phase = seatIndex * 1.7f + lane * 2.3f;
+            float climb = TabClimb + TabLaneClimb[lane];
             float tt = 0f;
             while (tt < TabLife && host != null)
             {
                 tt += Time.deltaTime;
                 float k = Mathf.Clamp01(tt / TabLife);
-                float climb = 1f - (1f - k) * (1f - k);          // fast off the stool, then easing
+                float rise = 1f - (1f - k) * (1f - k);        // fast off the stool, then easing
                 float wander = Mathf.Sin(phase + k * Mathf.PI * 1.6f);
                 host.anchoredPosition = start + new Vector2(
-                    TabSway * wander * k, TabClimb * climb);
+                    TabLaneX[lane] + TabSway * wander * k, climb * rise);
                 // It leans the way it is being carried: the lean is the drift's own slope,
                 // which is why it reads as one movement rather than as a spin.
                 host.localRotation = Quaternion.Euler(0, 0,
@@ -949,7 +986,7 @@ namespace LastCall.UI
                         }
                     // The tab settles as they go: what they paid and the stars they leave
                     // behind float over the emptying stool. The serve only earned the face.
-                    if (v.Visit.Paid > 0) StartCoroutine(TabFloat(i, v.Visit));
+                    if (v.Visit.Paid > 0) TabFloat(i, v.Visit);
                     if (v.Visit.Paid > 0) Sfx.Play("cash");
                     Sfx.Play(!v.ExitStorm && v.Visit.Satisfaction >= 0.55 ? "cheer_sfx" : "upset_sfx", 0.6f);
                     // And the body answers before it leaves (P15/D5): a cheer or a slump on
@@ -994,12 +1031,16 @@ namespace LastCall.UI
                 if (assigned) continue;
                 // THE GUEST SITS WHERE THEY CAN BE TALKED TO (GDD 26 §3): the stool nearest
                 // the till, which is the end of the row the bar is worked from. Everyone else
-                // takes the first free stool, as they always have.
+                // takes the first free stool, as they always have — "first" meaning first in
+                // the order the ROOM fills (SeatFillOrder), which is no longer the same thing
+                // as first along the counter.
+                var order = SeatOrderFor(run);
+                int owned = Math.Min(run.Seats, order.Length);
                 bool nearTheTill = visit.OnTheHouse;
-                int from = nearTheTill ? Math.Min(run.Seats, _seats.Count) - 1 : 0;
-                int step = nearTheTill ? -1 : 1;
-                for (int n = 0, i = from; n < run.Seats && i >= 0 && i < _seats.Count; n++, i += step)
+                for (int n = 0; n < owned; n++)
                 {
+                    int i = nearTheTill ? TillEndward(order, owned, n) : order[n];
+                    if (i < 0) break;
                     var v = _seats[i];
                     if (v.Visit == null && !v.Exiting)
                     {

@@ -136,9 +136,9 @@ namespace LastCall.UI
         }
 
         /// <summary>
-        /// What is written in the dark: the day going past, the hour it lands on, the week,
-        /// the night handing over to the night, and the same marquee the beam wears. Built
-        /// once and driven by StepCurtain.
+        /// What is written in the dark: the day going past, the hour it lands on, the night
+        /// handing over to the night, and the week - on the same instrument the beam wears,
+        /// which is where the week is now said. Built once and driven by StepCurtain.
         /// </summary>
         private void BuildCurtainCard(RectTransform curtain)
         {
@@ -148,11 +148,9 @@ namespace LastCall.UI
             _curtainCardGroup.alpha = 0f;
             _curtainCardGroup.blocksRaycasts = false;
 
-            _curtainWeek = NewText("Week", _curtainCard, _body, 16, TextAnchor.UpperCenter,
-                UITheme.TextSecondary);
-            Place(_curtainWeek.rectTransform, new Vector2(0.5f, 1f), new Vector2(400, 20),
-                new Vector2(0, -2));
-
+            // THE WEEK USED TO BE SAID TWICE. A "WEEK 3" line stood here at the card's
+            // head, and the instrument at its foot now prints its own count under its own
+            // caption - so the line went, and the sky came up into the room it left.
             BuildSkyPanel(_curtainCard, -26f);
 
             // THE HOUR, WOUND. The beam's own readout, hung at twice the size — 4× the art,
@@ -188,60 +186,19 @@ namespace LastCall.UI
                 UITheme.PrimaryAction);
             Stretch(_curtainArriving.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
-            // The marquee, drawn the way the beam draws it: a wire that stops where the work
-            // stops, a bulb under every open night, a shutter under the day off.
-            var names = BarCalendar.WeekColumns;
-            const float step = 60f;
-            float left = -names.Length * step * 0.5f;
-            float railY = -432f;
-
-            var rail = NewRect("Rail", _curtainCard);
-            Place(rail, new Vector2(0.5f, 1f), new Vector2(BarCalendar.OpenNights * step, 1f),
-                new Vector2(left + BarCalendar.OpenNights * step * 0.5f, railY + 13f));
-            var railImg = rail.gameObject.AddComponent<Image>();
-            railImg.color = UITheme.Night[3]; railImg.raycastTarget = false;
-
-            for (int i = 0; i < names.Length; i++)
-            {
-                float cx = left + i * step + step * 0.5f;
-                bool open = i < BarCalendar.OpenNights;
-
-                var stem = NewRect("S" + i, _curtainCard);
-                Place(stem, new Vector2(0.5f, 1f), new Vector2(1, 8), new Vector2(cx, railY + 9f));
-                var simg = stem.gameObject.AddComponent<Image>();
-                simg.color = UITheme.Night[3]; simg.raycastTarget = false;
-                simg.enabled = open;
-
-                if (!open)
-                    for (int s = 0; s < 4; s++)
-                    {
-                        var slat = NewRect("Shut" + s + "_" + i, _curtainCard);
-                        Place(slat, new Vector2(0.5f, 1f), new Vector2(24, 2),
-                            new Vector2(cx, railY - s * 5f));
-                        var slatImg = slat.gameObject.AddComponent<Image>();
-                        slatImg.color = UITheme.Night[3]; slatImg.raycastTarget = false;
-                    }
-
-                var glow = NewRect("G" + i, _curtainCard);
-                Place(glow, new Vector2(0.5f, 1f), new Vector2(32, 32), new Vector2(cx, railY - 4f));
-                var gimg = glow.gameObject.AddComponent<Image>();
-                gimg.sprite = ChromeArt.LampGlow();
-                gimg.raycastTarget = false; gimg.enabled = false;
-
-                var bulb = NewRect("B" + i, _curtainCard);
-                Place(bulb, new Vector2(0.5f, 1f), new Vector2(16, 16), new Vector2(cx, railY - 4f));
-                var bimg = bulb.gameObject.AddComponent<Image>();
-                bimg.sprite = ChromeArt.Lamp();
-                bimg.color = UITheme.Night[2]; bimg.raycastTarget = false;
-
-                var name = NewText("N" + i, _curtainCard, _body, 8, TextAnchor.UpperCenter,
-                    UITheme.TextSecondary);
-                Place(name.rectTransform, new Vector2(0.5f, 1f), new Vector2(step, 12),
-                    new Vector2(cx, railY - 26f));
-                name.text = names[i];
-
-                _curtainCells.Add((bimg, gimg));
-            }
+            // THE WEEK, ON THE INSTRUMENT THE BEAM WEARS (2026-08-25, the author: "Gun
+            // baslangic ekranindaki takvim gostergesini begenmiyorum bunu gelistir, ana
+            // sahnedeki ust bardaki takvim gostergesine benzer yapabilirsin").
+            //
+            // What stood here was the marquee - a wire, seven stems, a bulb apiece - which
+            // is the picture the top bar itself threw out for reading as bunting. It was
+            // always the same seven nights, so it is now the same instrument, mounted
+            // bigger: a card in the dark has the room for it and the beam does not.
+            var weekGlass = BuildWeekGlass(_curtainCard, _curtainCells, out _curtainWeek,
+                out _curtainVip);
+            weekGlass.anchorMin = weekGlass.anchorMax = new Vector2(0.5f, 1f);
+            weekGlass.anchoredPosition = new Vector2(0f, CurtainWeekY);
+            weekGlass.localScale = new Vector3(CurtainWeekScale, CurtainWeekScale, 1f);
         }
 
         /// <summary>True while the room is still coming up: the clock must not run.</summary>
@@ -256,8 +213,12 @@ namespace LastCall.UI
             _curtain.SetAsLastSibling();
             _curtainT = 0f;
             _curtainImg.color = new Color(0f, 0f, 0f, 1f);
-            if (_curtainWeek != null)
-                _curtainWeek.text = "WEEK " + BarCalendar.WeekOf(arriving);
+            int week = BarCalendar.WeekOf(arriving);
+            if (_curtainWeek != null) _curtainWeek.text = $"{week:00}";
+            // Read ONCE, on the way in: the card is a scene, and asking the arc which night
+            // it is due on every frame of it would be a question whose answer cannot change
+            // while the room is dark.
+            _curtainStoryNight = Run != null ? StoryNightOf(Run, week) : -1;
             if (_curtainLeaving != null)
                 _curtainLeaving.text = BarCalendar.Name(BarCalendar.NightOf(leaving));
             if (_curtainArriving != null)
@@ -317,29 +278,11 @@ namespace LastCall.UI
                     new Vector2(0f, 4f - 46f * (1f - comes));
             }
 
-            // The marquee under it: last night's bulb goes out as tonight's comes up.
-            int from = (int)BarCalendar.NightOf(_curtainFrom);
-            int to = (int)BarCalendar.NightOf(_curtainTo);
-            for (int i = 0; i < _curtainCells.Count; i++)
-            {
-                var (bulb, glow) = _curtainCells[i];
-                if (bulb == null) continue;
-                bool closed = i >= BarCalendar.OpenNights;
-                bulb.enabled = !closed;
-                if (closed) { if (glow != null) glow.enabled = false; continue; }
-                float lit = i == to ? e : i == from ? 1f - e : 0f;
-                // Worked nights keep the dull glass they wear on the beam; the two in the
-                // hand-off ride the curve between dull and burning.
-                bool worked = i < to;
-                var cold = worked ? UITheme.Night[3] : UITheme.Night[2];
-                bulb.color = Color.Lerp(cold, UITheme.Amber[4], lit);
-                if (glow != null)
-                {
-                    glow.enabled = lit > 0.01f;
-                    var g = UITheme.Amber[3];
-                    glow.color = new Color(g.r, g.g, g.b, g.a * lit);
-                }
-            }
+            // The instrument under it: last night's name goes out as tonight's comes up,
+            // on the same curve the two words in the seat above are trading places on. It
+            // is the beam's own lighting pass with the hand-over the beam never needs.
+            LightWeekCells(_curtainCells, _curtainVip, (int)BarCalendar.NightOf(_curtainTo),
+                (int)BarCalendar.NightOf(_curtainFrom), e, _curtainStoryNight);
 
             if (_curtainT >= CurtainTotal)
             {
