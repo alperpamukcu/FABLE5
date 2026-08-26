@@ -824,42 +824,6 @@ namespace LastCall.UI
             return Cache[Key] = Make(px, W, H, Vector4.zero);
         }
 
-        /// <summary>
-        /// A STRIP OF SHADE — flat alpha bands running away from a lit edge, one texel per
-        /// band, point-filtered like everything else here.
-        ///
-        /// A new named object (16 §1), because nothing in the kit fitted: LAMP's glow is a
-        /// round falloff for a bulb, and what a shelf needs is the DARK that gathers at the
-        /// back of a niche, which is a line, not a point.
-        ///
-        /// IT IS BLACK, AND THAT IS THE WHOLE POINT (2026-08-19). The first take was white
-        /// and laid over the back bar as light; on a canvas an alpha blend toward white does
-        /// not light a surface, it FOGS it — the wall came back as grey sheets with the
-        /// cabinet's tilework washed out underneath. Shade multiplies the picture instead of
-        /// replacing it, so every mark the plate carries survives being put in the dark, and
-        /// the lit part of a shelf is simply the part no shade fell on. Light by subtraction
-        /// is how a painted surface is lit; adding is how it is erased.
-        ///
-        /// Eight whole steps and no interpolated pixel — the same licence the vice fade holds
-        /// (16 §6.10).
-        /// </summary>
-        public static Sprite StripShade(bool downward = true)
-        {
-            string key = "shade:strip" + (downward ? ":down" : ":up");
-            if (Cache.TryGetValue(key, out var got) && got != null) return got;
-            // Clear at the lit edge, deepening away from it.
-            byte[] steps = { 0, 14, 27, 45, 70, 104, 150, 210 };
-            var px = new Color32[steps.Length];
-            for (int i = 0; i < steps.Length; i++)
-            {
-                // Texture rows count UP, so a shade that DEEPENS DOWNWARD wants its clear
-                // band at the top texel, and the flip wants it at the bottom.
-                int band = downward ? i : steps.Length - 1 - i;
-                px[i] = new Color32(0, 0, 0, steps[band]);
-            }
-            return Cache[key] = Make(px, 1, steps.Length, Vector4.zero);
-        }
-
         // ── the vice fade, and the wall it hangs on ─────────────────────────────────
         //
         // The market's storefront is a 90s trade site seen on the bar's tablet (2026-08-19).

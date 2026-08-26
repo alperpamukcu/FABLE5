@@ -194,7 +194,7 @@ namespace LastCall.UI
             if (_stage == Stage.Serve)
             {
                 _servePouringNow = false;
-                UpdateServeTilt(run); UpdateServePrepDrag(run); UpdateRimLap(run);
+                UpdateServeTilt(run);
                 UpdateServeStepCard(run); PushServeDone(run);
                 // One loop source, driven once per frame from whatever poured (P17): the tin
                 // and the hand bottle set the flag, and neither can stop the other's sound.
@@ -231,14 +231,12 @@ namespace LastCall.UI
             _bottleGrabbed = false;
             _pouring = false;
             _serveGrabbed = false;
-            _servePrep = null;
             _shaking = false;
             _shakeEnergy = 0;
             _spoonHeld = false;
             _stirEnergy = 0;
             _shakerFluid?.Clear();
             _serveFluid?.Clear();
-            _shakerSolids?.Clear();
             if (Run != null && Run.PouringId != null) Run.EndPour();
 
             _root.gameObject.SetActive(stage != Stage.Closed);

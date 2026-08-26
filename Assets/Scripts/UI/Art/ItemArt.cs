@@ -75,32 +75,22 @@ namespace LastCall.UI
 
         public static Sprite Shaker => Load("shaker");
 
-        /// <summary>The tray piece for a preparation id (ice / lemon_twist / salt_rim / sugar_rim).</summary>
+        /// <summary>The tray piece for a preparation id (ice / lemon_twist).</summary>
         public static Sprite Prep(string prepId)
         {
             switch (prepId)
             {
                 case "ice": return Load("ice");
                 case "lemon_twist": return Load("prep_lemon");
-                case "salt_rim": return Load("salt");
-                case "sugar_rim": return Load("sugar");
+                // No salt_rim/sugar_rim (2026-08-27): a rim is a CRUST drawn onto the
+                // mouth (GlassDecor), never a piece off a tray, so nothing asked for
+                // those two and their drawings were swept with the accessor's callers.
                 default: return null;
             }
         }
 
-        /// <summary>The source bucket a preparation is dragged out of, on the shaker stage.</summary>
-        public static Sprite Bucket(string prepId)
-        {
-            switch (prepId)
-            {
-                // The 2026-08-25 bench props — counter-proportioned, one take each
-                // (Tools/bench_props_gen.py); the old buckets stay as fallbacks.
-                case "ice": return Load("bench_bucket_ice") ?? Load("ice_bucket");
-                case "lemon_twist": return Load("bench_bowl_lemon") ?? Load("lemon_bucket");
-                case "salt_rim": return Load("bench_dish_salt") ?? Load("salt_bucket");
-                case "sugar_rim": return Load("bench_dish_sugar") ?? Load("sugar_bucket");
-                default: return null;
-            }
-        }
+        // (Bucket retired 2026-08-27 with the eight drawings behind it. Its one caller
+        //  was the serve bench's AddFinishTub, cut with the finishing table; the room's
+        //  counter draws its own dishes from the rail table in TycoonHud.Seats.)
     }
 }

@@ -245,7 +245,6 @@ namespace LastCall.UI
             //  went out of the room on 2026-08-26 and took the float with it. What a
             //  CUSTOMER pays still rises off their own stool — see TabFloat — which is the
             //  only money the shift is asked to watch.)
-            _tillLast = run.Money;
 
             int shown = Mathf.RoundToInt(_tillShown);
             if (_tabletTill != null) _tabletTill.text = "$" + shown;

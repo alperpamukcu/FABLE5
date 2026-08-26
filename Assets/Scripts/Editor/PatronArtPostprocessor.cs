@@ -48,11 +48,10 @@ namespace LastCall.EditorTools
             string file = System.IO.Path.GetFileNameWithoutExtension(p);
             // The key's corner arc is 14px and its standing lip 11px, so a 16px ring keeps both
             // out of the stretched centre (2026-07-27, art regenerated at 128x80).
-            if (file == "plate" || file == "plate_down") ti.spriteBorder = new Vector4(16, 16, 16, 16);
             // The 2026-08-09 kit, DRAWN rather than generated, so this border is the
             // drawing's own construction line: sh_ipad2 is 274x175 (exactly the 1096x700
             // it renders at) with a 28px ring, so a sliced Image draws the bezel at 1:1.
-            else if (file == "sh_ipad2") ti.spriteBorder = new Vector4(28, 28, 28, 28);
+            if (file == "sh_ipad2") ti.spriteBorder = new Vector4(28, 28, 28, 28);
             // THE COUNTER IS NINE-SLICED SO IT CAN BE WIDENED BY REPEATING, NEVER BY
             // STRETCHING (2026-08-19, the author: "sağa ve sola doğru genişlet ... kenarlara
             // uzattıkça sündüren değil görüntüyü üreten metodla"). The stage draws it with

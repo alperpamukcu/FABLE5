@@ -47,11 +47,6 @@ namespace LastCall.UI
         private RectTransform _serveMixBar;
         private string _serveMixSig = "";
         private GlassArt.Piece _serveGlassPiece;
-        private RectTransform _serveGarnishRow; // mint/olive garnishes are added here (2026-07-23)
-
-        /// <summary>One press of a mixer key, as a share of whatever glass is on the counter —
-        /// so a splash into a coupe is a splash, not most of the drink.</summary>
-        private const double MixerMeasure = 0.15;
 
         // ── the first-person staging (v5 P14, the author's diagram of 2026-07-31) ──
         //
@@ -60,40 +55,6 @@ namespace LastCall.UI
         // else. There is no furniture drawn on it (2026-08-13): a table sprite was a
         // second surface inside the first, so the props had to stand on a picture of a
         // counter that sat on top of the counter. They stand on the counter now.
-
-        /// <summary>
-        /// The counter's stand line for the finishing props: a shallow diagonal from the
-        /// near-left corner to the far right, in PANEL px from the bottom-left. It is the
-        /// room's own perspective — the far end of a counter seen from behind it rides up
-        /// and away — and props placed along it shrink toward that end, which is what makes
-        /// the viewpoint read as depth rather than as a row of icons. The near end starts
-        /// clear of the BACK TO BAR key (at x 51 the ice bucket, the most-reached-for tub,
-        /// spent its whole life buried under that plate).
-        /// </summary>
-        // DOWN ONTO THE SLAB (2026-08-25): the diagonal used to climb toward a painted
-        // wall; with the real room behind the bench the same line put the far dishes in
-        // front of the CUSTOMERS, floating at chest height. The whole run now stays on
-        // the zoomed counter band, and the rise is what the slab's own perspective allows.
-        private static readonly Vector2 StandNear = new Vector2(150f, 138f);
-        private static readonly Vector2 StandFar = new Vector2(482f, 208f);
-        private const float StandFarScale = 0.80f;
-
-        /// <summary>
-        /// How big each thing on the finishing shelf actually is. An ice bucket is not a salt
-        /// cellar, and forcing all four into one row height made them read as four of the same
-        /// button wearing different pictures — which is the opposite of a shelf of real things.
-        /// Width and height in stage px, before the label.
-        /// </summary>
-        private static readonly Dictionary<string, Vector2> FinishProps = new Dictionary<string, Vector2>
-        {
-            ["ice"] = new Vector2(112, 84),           // a bucket you reach into with both hands
-            ["lemon_twist"] = new Vector2(100, 74),   // a tub of wedges
-            ["salt_rim"] = new Vector2(76, 54),       // a cellar
-            ["sugar_rim"] = new Vector2(76, 54),
-        };
-
-        private static Vector2 FinishPropSize(string prepId) =>
-            FinishProps.TryGetValue(prepId, out var s) ? s : new Vector2(100, 74);
 
         /// <summary>Room kept clear at the top for the title and the aim line, and at the bottom
         /// for the two buttons.</summary>
@@ -104,44 +65,6 @@ namespace LastCall.UI
         /// <summary>The tin bench's own 358 since the two benches agreed on one tin
         /// (2026-08-26); the pour maths reads the mouth off this, so it moves with it.</summary>
         private const float ServeVesselH = 358f;
-
-        /// <summary>The piece being carried from the finishing shelf to the glass.</summary>
-        private PreparationDefinition _servePrep;
-        private string _servePrepLabel;
-        private RectTransform _serveDragPiece;
-
-        // ── the rims are EARNED now (2026-08-25, the author: "tuz artik bardagin
-        // etrafinda cevirerek tuzlanacak yani ufak bir skill oyunu") ─────────────
-        //
-        // Salt and sugar stopped being a piece you drop in: press the dish and CIRCLE the
-        // glass's mouth with the cursor — the same signed-sweep arithmetic the bar spoon
-        // uses — and the crust builds around the rim as you go. Release early and the arc
-        // KEEPS: a half-rimmed glass stays half-rimmed until you finish the lap, because
-        // punishing a slipped grip with a restart makes a skill game a patience game.
-        private PreparationDefinition _rimPrep;    // the dish in hand, or null
-        private string _rimId;
-        private float _rimAngle;                   // the cursor's last angle round the mouth
-        private bool _rimAngleKnown;
-        private readonly Dictionary<string, float> _rimSwept = new Dictionary<string, float>();
-        private RectTransform _rimRing;            // the progress arc round the mouth
-        private readonly List<Image> _rimTicks = new List<Image>();
-        private const int RimSegments = 14;
-        private const float RimLap = 2f * Mathf.PI;
-        /// <summary>The band round the mouth where the sweep counts: closer is inside the
-        /// glass, further is waving at the room. Wide, because it is a bar trick, not
-        /// surgery.</summary>
-        private const float RimNear = 34f, RimFar = 190f;
-
-        // The carried-piece spring (GDD 24 §2.4's weight, kept when the shaker bench lost
-        // its own prep drag in the 2026-08-13 rebuild): the grip springs after the cursor
-        // with a hint of overshoot and the piece hangs and swings from it as a pendulum.
-        // 300/28 sits just under critical damping — it still leads and settles, it just
-        // stops arguing with the hand (2026-08-11).
-        private readonly Pendulum _dragSwing = new Pendulum();
-        private Vector2 _dragPos;    // the grip's current position (lags the cursor)
-        private Vector2 _dragVel;    // the grip's velocity (drives the spring and the swing)
-        private const float DragStiffness = 300f;
-        private const float DragDamping = 28f;
 
         private RectTransform _serveShaker;     // the grabbable shaker
         private Image _serveShakerBody;
@@ -198,381 +121,21 @@ namespace LastCall.UI
                 : "GRAB THE SHAKER · TIP IT OVER THE GLASS";
             _aimText.color = UITheme.TextSecondary;
 
-            // THE FINISHING TABLE IS GONE FROM HERE (2026-08-26, the author: "bardağa koyma
-            // sahnesinden buz limon tuz şeker vs. yi kaldır"). Ice, the two rims and the
-            // garnishes stood along this counter for a fortnight and the whole of that work
-            // — the rim lap, the counted cubes, the drag — moved to the ROOM's bar, where
-            // the finished drink actually rests: you pour the tin out, take the glass back
-            // to the counter, and finish it with your hands off the rail standing there.
-            // This bench has one job now, which is the pour, and it is the emptier for it
-            // in exactly the way a bench with one job should be.
-            //
-            // The row itself is kept and emptied rather than deleted: the rim ring and the
-            // hand-piece still hang off it, and a null parent is a harder failure than an
-            // empty one.
-            foreach (Transform ch in _serveGarnishRow) Destroy(ch.gameObject);
 
             // NO BOTTLES STAND ON THIS COUNTER, and none is carried in either (2026-08-14):
             // the tin arrives with the whole drink in it.
         }
 
-        /// <summary>Where the n-th finishing prop stands on the counter, and how big it is
-        /// drawn: a position along the counter's stand line (panel space, from the
-        /// bottom-left) and a depth scale that shrinks toward the far end.</summary>
-        private (Vector2 pos, float depth) TableStand(int index, int count)
-        {
-            float t = count <= 1 ? 0f : index / (float)(count - 1);
-            return (Vector2.Lerp(StandNear, StandFar, t), Mathf.Lerp(1f, StandFarScale, t));
-        }
-
-        /// <summary>
-        /// One container on the finishing shelf. NOT a button (the author's brief, 2026-07-31):
-        /// you reach into an open tub and drag a piece out, and it only goes in if you drop it
-        /// in the glass. The drop only counts over the glass's mouth, so finishing a drink is
-        /// an act of aiming rather than a click that could not miss.
-        /// </summary>
-        private void AddFinishTub(string prepId, string label, PreparationDefinition prep,
-                                  (Vector2 pos, float depth) stand)
-        {
-            var run = Run;
-            bool already = run != null && run.ServingGlass.HasPreparation(prep.Id);
-            // Ice is NEVER "done" (2026-08-25): the bucket keeps offering, the drink keeps
-            // counting. The tick would say "no more", which stopped being true.
-            bool countable = prepId == "ice";
-            bool rimGame = prepId == "salt_rim" || prepId == "sugar_rim";
-
-            var size = FinishPropSize(prepId) * stand.depth;
-            var tub = NewRect($"F_{prepId}", _serveGarnishRow);
-            tub.anchorMin = tub.anchorMax = Vector2.zero;      // panel space, from the bottom-left
-            tub.pivot = new Vector2(0.5f, 0f);                 // standing on the tabletop line
-            tub.sizeDelta = size + new Vector2(24f, 20f);      // grab margin round the prop
-            tub.anchoredPosition = stand.pos;
-            var hit = tub.gameObject.AddComponent<Image>();
-            hit.color = new Color(1f, 1f, 1f, 0.001f);   // the whole tub is the grab target
-
-            // It STANDS on the counter; the shadow is what says so now that no table is
-            // drawn under it. Placed at the icon's own foot, inside the grab margin.
-            AddContactShadow(tub, size.x * 0.86f, new Vector2(0, 16f - tub.sizeDelta.y * 0.5f));
-
-            var icon = NewRect("Tub", tub);
-            Place(icon, new Vector2(0.5f, 0), size, new Vector2(0, 14f));
-            var iimg = icon.gameObject.AddComponent<Image>();
-            iimg.sprite = ItemArt.Bucket(prepId) ?? ItemArt.Prep(prepId);
-            iimg.preserveAspect = true; iimg.raycastTarget = false;
-            if (iimg.sprite == null) iimg.color = UITheme.Cyan[3];
-            else if (already && !countable) iimg.color = new Color(1f, 1f, 1f, 0.55f);
-
-            var name = NewText("N", tub, _body, 8, TextAnchor.LowerCenter,
-                already ? UITheme.Lime[4] : UITheme.TextPrimary);
-            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(96, 14), new Vector2(0, 0));
-            name.text = label;
-            if (countable && run != null && run.ServingGlass.IceCubes > 0)
-                name.text = label + " x" + run.ServingGlass.IceCubes;
-            // A rim mid-lap says how far round it is, so a put-down dish reads as paused
-            // rather than as broken.
-            if (rimGame && !already && _rimSwept.TryGetValue(prepId, out float sweptSoFar)
-                && sweptSoFar > 0.2f)
-                name.text = label + " " +
-                    Mathf.RoundToInt(Mathf.Clamp01(sweptSoFar / RimLap) * 100f) + "%";
-            if (already && !countable)
-            {
-                // A DRAWN tick, not one borrowed from the typeface (2026-08-11): the pixel
-                // faces carry no such glyph, so it was set from a fallback font and read as
-                // a stray mark rather than as a thing this bench had ticked off.
-                var done = NewRect("Done", tub);
-                Place(done, new Vector2(0.5f, 0), new Vector2(16, 16), new Vector2(-52f, 2f));
-                var di = done.gameObject.AddComponent<Image>();
-                di.sprite = ChromeArt.Mark("tick");
-                di.color = UITheme.Lime[4]; di.raycastTarget = false;
-                return;   // it is on the drink; the tub stops offering it
-            }
-
-            var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
-            down.callback.AddListener(_ =>
-            {
-                var r = Run;
-                if (r == null) return;
-                if (!r.CanFinishAtGlass)
-                {
-                    // The predicate is a phase check now (2026-08-10: preparations are
-                    // volumeless) — the old "glass is full" line could only ever lie.
-                    _aimText.text = "THE NIGHT IS OVER";
-                    _aimText.color = UITheme.Amber[3];
-                    return;
-                }
-                if (rimGame)
-                {
-                    // The dish comes up in the HAND, not on a drag piece: the skill is the
-                    // lap round the mouth, and the ring round the glass is what shows it.
-                    _rimPrep = prep;
-                    _rimId = prepId;
-                    _rimAngleKnown = false;
-                    ShowRimRing(true);
-                    _aimText.text = "RUN THE RIM — CIRCLE THE MOUTH OF THE GLASS";
-                    _aimText.color = UITheme.Cyan[3];
-                    return;
-                }
-                _servePrep = prep;
-                _servePrepLabel = label;
-                var dpImg = _serveDragPiece.GetComponent<Image>();
-                dpImg.sprite = ItemArt.Prep(prepId);
-                dpImg.color = dpImg.sprite != null ? Color.white : UITheme.Cyan[3];
-                _dragSwing.Reset();
-                Vector2 start = _serveDragPiece.anchoredPosition;
-                if (Mouse.current != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                        _serveSurface, Mouse.current.position.ReadValue(), null, out Vector2 l0))
-                    start = l0;
-                _dragPos = start;
-                _dragVel = Vector2.zero;
-                _serveDragPiece.anchoredPosition = _dragPos;
-                _serveDragPiece.localRotation = Quaternion.identity;
-                _serveDragPiece.gameObject.SetActive(true);
-            });
-            tub.gameObject.AddComponent<EventTrigger>().triggers.Add(down);
-            Pressable(tub, icon, iimg, lift: 5f, depth: 5f);   // the tub tips toward you before you reach in
-        }
-
-        /// <summary>
-        /// Carries a piece from the shelf to the glass. The grip springs after the cursor with
-        /// overshoot and the piece swings from it — and the drop only counts over the glass's
-        /// mouth, so finishing a drink is an act of aiming rather than a click that could not
-        /// miss.
-        /// </summary>
-        private void UpdateServePrepDrag(TycoonRun run)
-        {
-            if (_servePrep == null || Mouse.current == null) return;
-
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                _serveSurface, Mouse.current.position.ReadValue(), null, out Vector2 cursor);
-
-            float dt = Mathf.Max(Time.deltaTime, 1e-4f);
-            _dragVel += (cursor - _dragPos) * (DragStiffness * dt);
-            _dragVel *= Mathf.Exp(-DragDamping * dt);
-            _dragPos += _dragVel * dt;
-            _dragSwing.Step(dt, _dragVel);
-            _serveDragPiece.anchoredPosition = _dragPos;
-            _serveDragPiece.localRotation = Quaternion.Euler(0, 0, _dragSwing.Angle);
-
-            if (Mouse.current.leftButton.isPressed) return;
-
-            var opening = _serveGlass.anchoredPosition
-                        + new Vector2(0, _serveGlass.rect.height * (_serveGlassPiece.RimY - 0.5f));
-            bool inMouth = Mathf.Abs(_dragPos.x - opening.x) < 80f
-                        && Mathf.Abs(_dragPos.y - opening.y) < 80f;
-            if (inMouth && !run.CanFinishAtGlass)
-            {
-                _aimText.text = "THE NIGHT IS OVER";
-                _aimText.color = UITheme.Amber[3];
-            }
-            else if (inMouth)
-            {
-                bool ice = _servePrep != null && _servePrep.Id == "ice";
-                run.AddPreparationAtGlass(_servePrep);
-                Sfx.Play(ice ? "ice_drop" : "garnish");
-                // The drink takes the hit, and the touch appears ON the glass (GlassDecor):
-                // the crust on the rim, the wedge on the edge, the ice at the liquid line.
-                _serveFluid.Ripple(opening.x, 0.03f);
-                GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run);
-                string label = _servePrepLabel;
-                _servePrep = null;
-                _serveDragPiece.gameObject.SetActive(false);
-                RefreshServe();   // the tub's caption moves, so the shelf does have to rebuild
-                _aimText.text = ice
-                    ? $"ICE IN THE GLASS x{run.ServingGlass.IceCubes}"
-                    : $"{label} IN THE GLASS";
-                _aimText.color = UITheme.Cyan[3];
-                return;
-            }
-            _servePrep = null;
-            _serveDragPiece.gameObject.SetActive(false);
-        }
-
-        /// <summary>
-        /// One frame of the rim lap (2026-08-25). While the dish is held, the cursor's
-        /// angle round the glass's MOUTH is tracked and the SWEPT arc accumulates — the
-        /// bar spoon's own arithmetic, turned ninety degrees: the spoon circles inside a
-        /// tin, this circles around a glass. Direction does not matter (a rim is run
-        /// whichever way you go); leaving the band round the mouth pauses the sweep
-        /// rather than spilling it.
-        /// </summary>
-        private void UpdateRimLap(TycoonRun run)
-        {
-            if (_rimPrep == null) return;
-            if (Mouse.current == null || !Mouse.current.leftButton.isPressed)
-            {
-                // The dish goes down; the lap keeps. The shelf caption says how far.
-                _rimPrep = null;
-                ShowRimRing(false);
-                RefreshServe();
-                return;
-            }
-            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    _serveSurface, Mouse.current.position.ReadValue(), null, out Vector2 local))
-                return;
-
-            var mouth = _serveGlass.anchoredPosition
-                      + new Vector2(0, _serveGlass.rect.height * (_serveGlassPiece.RimY - 0.5f));
-            var arm = local - mouth;
-            float dist = arm.magnitude;
-            if (dist < RimNear || dist > RimFar) { _rimAngleKnown = false; PlaceRimRing(mouth); return; }
-
-            float angle = Mathf.Atan2(arm.y, arm.x);
-            if (_rimAngleKnown)
-            {
-                float step = Mathf.Abs(Mathf.DeltaAngle(_rimAngle * Mathf.Rad2Deg,
-                                                        angle * Mathf.Rad2Deg)) * Mathf.Deg2Rad;
-                // A hand, not a glitch: a single frame cannot honestly sweep more than a
-                // third of a lap. Bigger jumps are the cursor crossing the glass.
-                if (step < RimLap / 3f)
-                {
-                    _rimSwept.TryGetValue(_rimId, out float swept);
-                    swept += step;
-                    _rimSwept[_rimId] = swept;
-                    if (swept >= RimLap)
-                    {
-                        // The lap is run: the crust goes on for real, through the same
-                        // Core verb the drop always used.
-                        run.AddPreparationAtGlass(_rimPrep);
-                        Sfx.Play("garnish");
-                        GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run);
-                        _aimText.text = (_rimId == "salt_rim" ? "SALT" : "SUGAR")
-                                        + " ON THE RIM";
-                        _aimText.color = UITheme.Lime[3];
-                        _rimSwept.Remove(_rimId);
-                        _rimPrep = null;
-                        ShowRimRing(false);
-                        RefreshServe();
-                        return;
-                    }
-                }
-            }
-            _rimAngle = angle;
-            _rimAngleKnown = true;
-            PlaceRimRing(mouth);
-        }
-
-        /// <summary>The progress ring: a circle of ticks round the mouth, lighting up as
-        /// the lap is run. Built once, parked off; shown only while a dish is in hand.</summary>
-        private void ShowRimRing(bool on)
-        {
-            if (_rimRing == null)
-            {
-                _rimRing = NewRect("RimRing", _serveSurface);
-                _rimRing.sizeDelta = Vector2.zero;
-                for (int i = 0; i < RimSegments; i++)
-                {
-                    float a = i / (float)RimSegments * 2f * Mathf.PI;
-                    var tick = NewRect("T" + i, _rimRing);
-                    Place(tick, new Vector2(0.5f, 0.5f), new Vector2(6, 16),
-                        new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 118f);
-                    tick.localRotation = Quaternion.Euler(0, 0, a * Mathf.Rad2Deg - 90f);
-                    var img = tick.gameObject.AddComponent<Image>();
-                    img.raycastTarget = false;
-                    _rimTicks.Add(img);
-                }
-            }
-            _rimRing.gameObject.SetActive(on);
-            if (on) _rimRing.SetAsLastSibling();
-        }
-
-        private void PlaceRimRing(Vector2 mouth)
-        {
-            if (_rimRing == null) return;
-            _rimRing.anchorMin = _rimRing.anchorMax = new Vector2(0.5f, 0.5f);
-            _rimRing.anchoredPosition = mouth;
-            _rimSwept.TryGetValue(_rimId ?? "", out float swept);
-            float frac = Mathf.Clamp01(swept / RimLap);
-            var lit = _rimId == "sugar_rim" ? UITheme.Amber[4] : UITheme.Cream[4];
-            for (int i = 0; i < _rimTicks.Count; i++)
-            {
-                bool onTick = i < Mathf.RoundToInt(frac * RimSegments);
-                _rimTicks[i].color = onTick ? lit
-                    : new Color(1f, 1f, 1f, 0.18f);
-            }
-        }
-
         /// <summary>
         /// THE BENCH GOES BACK TO NORMAL when the drink leaves it (2026-08-25, the author:
-        /// "servis et dedikten sonra tezgah normal haline gelmeli"): nothing may still be
-        /// in the hand — not a dish mid-lap, not a piece mid-drag — and the ring is off.
-        /// The half-run rims are forgiven with it: they belonged to the drink that left.
+        /// "servis et dedikten sonra tezgah normal haline gelmeli"): the tin may not stay
+        /// in the hand. It reset three other hands too — a dish mid-lap, a piece mid-drag,
+        /// the progress ring — until the finishing table left this bench for the room's
+        /// counter (2026-08-26) and took all three with it.
         /// </summary>
         private void ResetServeHand()
         {
-            _rimPrep = null;
-            _rimId = null;
-            _rimSwept.Clear();
-            _servePrep = null;
-            if (_serveDragPiece != null) _serveDragPiece.gameObject.SetActive(false);
-            if (_rimRing != null) _rimRing.gameObject.SetActive(false);
             _serveGrabbed = false;
-        }
-
-        private void AddGarnishChip(IngredientCard card, (Vector2 pos, float depth) stand)
-        {
-            var size = new Vector2(72f, 84f) * stand.depth;    // a jar on the table, not a key
-            var chip = NewRect($"G_{card.Id}", _serveGarnishRow);
-            chip.anchorMin = chip.anchorMax = Vector2.zero;
-            chip.pivot = new Vector2(0.5f, 0f);
-            chip.sizeDelta = size + new Vector2(20f, 18f);
-            chip.anchoredPosition = stand.pos;
-            var bg = chip.gameObject.AddComponent<Image>();
-            bg.color = new Color(1f, 1f, 1f, 0.001f);          // the jar is the button; no plate
-            AddContactShadow(chip, size.x * 0.86f, new Vector2(0, 16f - chip.sizeDelta.y * 0.5f));
-            var icon = NewRect("Icon", chip);
-            Place(icon, new Vector2(0.5f, 0), size, new Vector2(0, 14f));
-            var iimg = icon.gameObject.AddComponent<Image>();
-            iimg.sprite = ItemArt.Bottle(card); iimg.preserveAspect = true; iimg.raycastTarget = false;
-            if (iimg.sprite == null) iimg.color = UITheme.StyleColor(card.Info?.Style, card.Type);
-            var name = NewText("N", chip, _body, 8, TextAnchor.LowerCenter, UITheme.TextPrimary);
-            Place(name.rectTransform, new Vector2(0.5f, 0), new Vector2(92, 14), new Vector2(0, 2));
-            name.text = RailLabel(card);
-            var btn = chip.gameObject.AddComponent<Button>();
-            btn.targetGraphic = bg;
-            // The jar IS the button, so the jar is what answers the pointer (2026-08-25).
-            // Its plate is a 0.001-alpha rectangle: there was nothing here to light, and a
-            // bench of jars read as a still life until one was gambled on.
-            var jarGlow = chip.gameObject.AddComponent<HoverGlow>();
-            jarGlow.Graphics = new Graphic[] { iimg };
-            var c = card;
-            // The garnish goes into the shaker, before the pour — so a shaker filled to the brim
-            // has nowhere to put it, and says so rather than swallowing the click (2026-07-28).
-            btn.onClick.AddListener(() =>
-            {
-                if (Run == null) return;
-                if (Run.Glass.IsEmpty)
-                {
-                    // Said, not swallowed (audit 2026-08-11): the jars stand on the SERVE
-                    // bench but pour into the TIN, which is usually already empty here —
-                    // a silent click read as "mint is broken" instead of "wrong order".
-                    if (_aimText != null)
-                    {
-                        _aimText.text = "THE TIN IS EMPTY — PUT THE GARNISH IN BEFORE YOU POUR";
-                        _aimText.color = UITheme.Amber[3];
-                    }
-                    return;
-                }
-                if (Run.PourGarnish(c.Id) <= 0)
-                {
-                    _aimText.text = "THE SHAKER IS FULL — NO ROOM FOR A GARNISH";
-                    _aimText.color = UITheme.Amber[3];
-                    return;
-                }
-                RefreshServe();
-            });
-            Pressable(chip, icon, iimg, lift: 4f, depth: 4f);
-        }
-
-        /// <summary>
-        /// What a jar is called at prop scale: the STYLE, not the brand. You reach for mint,
-        /// not for Fresh Mint — and the brand would not fit under an 84px jar anyway. Falls
-        /// back to the brand for anything with no style to speak of.
-        /// </summary>
-        private static string RailLabel(IngredientCard card)
-        {
-            string style = card.Info?.Style;
-            if (string.IsNullOrEmpty(style)) return card.Name.ToUpperInvariant();
-            return style.Replace('_', ' ').ToUpperInvariant();
         }
 
         /// <summary>The SERVE key answers only a glass with a drink in it — dim until then.
@@ -910,12 +473,6 @@ namespace LastCall.UI
             // behind the scrim now, so a drawn one would be a second bar inside the first.
             // The bar top stays — it is the surface the glass and its shadow stand on.
 
-            // The props' container spans the whole panel: everything in it is placed in
-            // panel space, on the counter's own stand line. No layout groups — a room is
-            // not a list.
-            _serveGarnishRow = NewRect("TableTop", _servePanel);
-            Stretch(_serveGarnishRow, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-
             _aimText = NewText("AimText", _servePanel, _body, 16, TextAnchor.UpperCenter, UITheme.TextSecondary);
             // On the band (2026-08-26): the same shelf the tin bench's readout sits on,
             // so the eye finds the bench's one sentence in one place on both screens.
@@ -963,14 +520,6 @@ namespace LastCall.UI
             // are a bigger share of it and the estimate runs generous — measured at four fills,
             // it wants a tenth fewer particles to draw the level it was actually given.
             _serveFluid.SetDensity(0.90f);
-
-            // The piece in hand between the shelf and the glass.
-            _serveDragPiece = NewRect("DragPiece", _serveSurface);
-            _serveDragPiece.pivot = new Vector2(0.5f, 1f);
-            _serveDragPiece.sizeDelta = new Vector2(76, 84);   // in scale with the tub it came out of
-            var sdp = _serveDragPiece.gameObject.AddComponent<Image>();
-            sdp.preserveAspect = true; sdp.raycastTarget = false;
-            _serveDragPiece.gameObject.SetActive(false);
 
             _serveGlass.SetAsLastSibling();   // the hollow glass draws over the fluid
 

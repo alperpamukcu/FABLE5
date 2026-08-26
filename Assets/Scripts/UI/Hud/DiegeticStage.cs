@@ -160,7 +160,6 @@ namespace LastCall.UI
         // readable face is exactly those 57 units: the word takes 21..55 of them and the
         // chevron 6..17, which leaves the writing clear of both the cut and the sill.
         private const float SignWordDrop = 19f;    // the word's centre, below the roller's top
-        private const float SignArrowDrop = 45f;   // and the chevron's, under it
         /// <summary>...and where the OTHER chevron sits: the one on the rail, pointing back
         /// up, which is the only mark left showing once the cellar is open. Half the rail
         /// down from the roller's top edge, so it is centred in the strip the player can
@@ -2830,10 +2829,8 @@ namespace LastCall.UI
         /// Told rather than computed twice: the sampling is <see cref="ApplySkyLight"/>'s and
         /// this is only the answer it already has.
         /// </summary>
-        public float RoomDaylight => _dayNow;
 
         /// <summary>The light coming through the glass — warm at the sunset, cold at two.</summary>
-        public Color RoomKeyLight => Punch(_keyNow, SkyPunch);
 
         /// <summary>The wash over everything, already dragged toward the lamps after dark.</summary>
         public Color RoomWashLight

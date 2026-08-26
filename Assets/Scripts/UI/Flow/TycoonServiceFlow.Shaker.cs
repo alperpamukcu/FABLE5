@@ -32,7 +32,6 @@ namespace LastCall.UI
         /// art (VesselArt) when the stage refreshes, swung with the bottle when it tips.</summary>
         private Vector2 _pourMouth;
         private MetaballFluid _shakerFluid;   // the metaball liquid: pour stream + pooled body
-        private ShakerSolids _shakerSolids;   // ice / lemon afloat inside the shaker
         private float _slosh;                 // running slosh phase for the shaker surface
         private Vector2 _bottleRest;
         private bool _bottleGrabbed;
@@ -735,7 +734,6 @@ namespace LastCall.UI
             PushShakerPool(run, Mathf.Sin(_slosh) * 1.0f * energy);
 
             _shakerFluid.Step(Time.deltaTime);
-            _shakerSolids.Step(Time.deltaTime);
 
             // The shadows, once everything has finished moving for the frame — the same
             // reason the drink is placed here rather than in the tilt-pour.
@@ -809,8 +807,6 @@ namespace LastCall.UI
             _shakerFluid.SetPool(minX, maxX, bottomY, rimY, fill, rad);
             // The cap's placement belongs to UpdateCap now — it rests on the bench until
             // you drop it on the tin, so it must not be glued to the vessel here.
-            // The solids float on the liquid line and bounce off these same walls.
-            _shakerSolids.SetBounds(minX, maxX, bottomY, topY);
         }
 
         /// <summary>
@@ -1429,7 +1425,6 @@ namespace LastCall.UI
             _shakerTop.gameObject.AddComponent<EventTrigger>().triggers.Add(capGrab);
             _shakerTop.gameObject.SetActive(topImg.sprite != null);
 
-            _shakerSolids = new ShakerSolids(_pourSurface);
             // The metal shaker is opaque, so the fluid draws OVER it (2026-07-24): you see the
             // drink inside the tin as a cutaway, which is the point — a metal shaker you can
             // still read the level in. (A clear vessel would sit in front instead.)

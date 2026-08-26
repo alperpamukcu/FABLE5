@@ -1134,7 +1134,6 @@ namespace LastCall.UI
 
         private static readonly Color TabletShell = new Color(0.13f, 0.12f, 0.15f, 1f);
 
-        private static readonly Color TabletScreen = new Color(0.09f, 0.10f, 0.13f, 1f);
 
         private static readonly Color TabletLens = new Color(0.30f, 0.30f, 0.34f, 1f);
 
@@ -1451,7 +1450,6 @@ namespace LastCall.UI
 
         private const float DropLife = 1.5f, DropRise = 26f, DropStagger = 0.22f;
 
-        private int _tillLast = int.MinValue;
 
         /// <summary>What the cellar was last built against. 0 is not a shelf any run can
         /// have, so a fresh run always stocks once.</summary>
@@ -1570,7 +1568,6 @@ namespace LastCall.UI
 
         private static readonly Color BillEdge = new Color(0.62f, 0.58f, 0.50f, 1f);
 
-        private static readonly Color BillBand = new Color(0.102f, 0.165f, 0.290f, 1f);
 
         private static readonly Color BillInk = new Color(0.13f, 0.11f, 0.09f, 1f);
 
@@ -1953,7 +1950,7 @@ namespace LastCall.UI
         /// different heights, values at two more. There are two lines now — the small
         /// upper one for what a reading IS, the lower one for what it SAYS — and every
         /// item on the beam is placed against one of them, left to right.</summary>
-        private const float TopBarH = 54f, CapY = 12f, ReadY = -9f;
+        private const float TopBarH = 54f;
 
         // The display glass — "not black: a display's dark is the panel's own colour
         // seen through a tint" — is baked into ChromeArt.Well now, the one place both
