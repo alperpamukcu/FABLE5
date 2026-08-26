@@ -78,6 +78,30 @@ namespace LastCall.Core
         /// second would be inventing a feature.</summary>
         public bool IsTap => TapLevel > 0;
 
+        /// <summary>
+        /// This piece is the bar's DRAIN: a drink you decide against goes down it
+        /// (2026-08-26, the author: "çöp kutusunu da kaldır, çöp kutusu yerine lavabo
+        /// kullanılacak"). The pedal bin standing at the right-hand end of the counter was
+        /// a second, invented object doing a job the room already had a fixture for — and
+        /// one the market was already selling two marks of.
+        ///
+        /// It is the second prop that is a door, and it follows the font's rule exactly:
+        /// the flag is DATA, the room hangs a hit plate on whatever carries it, and the
+        /// bar opens owning one because a bar with nowhere to pour a mistake is a bar that
+        /// cannot make one.
+        /// </summary>
+        public bool IsDrain { get; }
+
+        /// <summary>
+        /// Nothing is written off down this drain (the author, same round: "üst seviye
+        /// lavabo alındığında dökülen içkilerden zarar elde edilmeyecek, başlangıç
+        /// lavabosunda içkiyi çöpe attığında para yiyeceksin"). THIS IS WHAT THE UPGRADE
+        /// BUYS — the brass basin is the first piece of dressing that changes what the bar
+        /// can afford to do, so the waiver rides the fixture rather than a rung number in
+        /// Core: a third basin, or a different slot entirely, needs data and no code.
+        /// </summary>
+        public bool DrainsFree { get; }
+
         /// <summary>Resources/Fixtures sprite name. Presentation data, carried not read.</summary>
         public string Sprite { get; }
 
@@ -94,7 +118,8 @@ namespace LastCall.Core
             double stars, string flavor, string sprite,
             float lightR = 0f, float lightG = 0f, float lightB = 0f,
             float lightIntensity = 0f, float lightRadius = 0f,
-            bool startsInTheRoom = false, int tapLevel = 0, int level = 0)
+            bool startsInTheRoom = false, int tapLevel = 0, int level = 0,
+            bool isDrain = false, bool drainsFree = false)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Fixture needs an id.", nameof(id));
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException($"Fixture '{id}' needs a name.", nameof(name));
@@ -112,6 +137,14 @@ namespace LastCall.Core
             if (level > 0 && tapLevel > 0)
                 throw new ArgumentException($"Fixture '{id}' cannot climb two ladders at once — " +
                                             "a tower's rung IS its tap level.", nameof(level));
+            // A waiver on a piece that is not a drain would be a rule nobody can reach:
+            // the fee is charged at the drain, so only a drain can excuse it.
+            if (drainsFree && !isDrain)
+                throw new ArgumentException($"Fixture '{id}' drains free but is not a drain.",
+                                            nameof(drainsFree));
+            if (isDrain && tapLevel > 0)
+                throw new ArgumentException($"Fixture '{id}' cannot be a font and a drain.",
+                                            nameof(isDrain));
             Id = id;
             Name = name;
             Slot = slot;
@@ -125,6 +158,8 @@ namespace LastCall.Core
             StartsInTheRoom = startsInTheRoom;
             TapLevel = tapLevel;
             Level = tapLevel > 0 ? tapLevel : level;
+            IsDrain = isDrain;
+            DrainsFree = drainsFree;
         }
 
         public override string ToString() => $"{Name} ({Id}, ${Price}, slot {Slot})";

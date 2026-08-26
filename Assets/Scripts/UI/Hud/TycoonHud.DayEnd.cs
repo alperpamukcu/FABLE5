@@ -526,33 +526,8 @@ namespace LastCall.UI
         private float BillRow(float y, string label, string value, Color ink, bool heavy) =>
             BillRow(y, label, value, ink, heavy, null);
 
-        /// <summary>A block's subtotal: a short rule over the figures it adds up, and the
-        /// figure alone on the right. No label — the block above it is the label.</summary>
-        private float BillSub(float y, string value, Color ink)
-        {
-            var row = NewRect("Sub", _invoiceRows);
-            row.anchorMin = new Vector2(0, 1); row.anchorMax = new Vector2(1, 1);
-            row.pivot = new Vector2(0.5f, 1);
-            row.sizeDelta = new Vector2(0, BillRowH);
-            row.anchoredPosition = new Vector2(0, -y);
-
-            var rule = NewRect("R", row);
-            rule.anchorMin = new Vector2(0.62f, 1); rule.anchorMax = new Vector2(1, 1);
-            rule.pivot = new Vector2(0.5f, 1);
-            rule.sizeDelta = new Vector2(0, 1);
-            rule.anchoredPosition = Vector2.zero;
-            var ri = rule.gameObject.AddComponent<Image>();
-            ri.color = new Color(ink.r, ink.g, ink.b, 0.45f);
-            ri.raycastTarget = false;
-
-            var v = NewText("V", row, _body, 24, TextAnchor.MiddleRight, ink);
-            v.rectTransform.anchorMin = new Vector2(0.62f, 0); v.rectTransform.anchorMax = Vector2.one;
-            v.rectTransform.offsetMin = Vector2.zero; v.rectTransform.offsetMax = Vector2.zero;
-            v.horizontalOverflow = HorizontalWrapMode.Overflow;
-            v.verticalOverflow = VerticalWrapMode.Overflow;
-            v.text = value;
-            return y + BillRowH;
-        }
+        // (BillSub went with the two named blocks on 2026-08-26 — see the slip's own note.
+        //  A subtotal under two figures is a sum the eye had already made.)
 
         private float BillRow(float y, string label, string value, Color ink, bool heavy, string mark)
         {
@@ -1508,8 +1483,11 @@ namespace LastCall.UI
             // (BAR left this line on 2026-08-25: the bar's standing is a whole instrument of
             // its own now, on the right, where it can show the STEP as well as the number.
             // The slip says what tonight was and who was in the room — a receipt's business.)
-            y = BillNote(y, "TONIGHT " + tonight.ToString("0.0") + "  ·  "
-                            + served + " SERVED  ·  " + stormed + " WALKED", BillQuiet, centred: true);
+            // The row above IS the score, drawn as five stars, so printing "TONIGHT 3.5"
+            // under it was the same reading twice (2026-08-26, the author: the slip reads
+            // busy and over-written). What the stars cannot say is who was in the room.
+            y = BillNote(y, served + " SERVED  ·  " + stormed + " WALKED", BillQuiet,
+                         centred: true);
             y += 8f;
 
             // The critics: the highest and the lowest word the night produced. One visit
@@ -1532,25 +1510,28 @@ namespace LastCall.UI
             }
 
             // WHAT CAME IN, WHAT WENT OUT, WHAT IS LEFT (2026-08-11, the author: "gider ve
-            // kalan daha açık belli edilsin"). The five figures used to run as one ladder
-            // with a rule under it, so the reader had to notice for themselves which of them
-            // were takings and which were bills. They are two named blocks now, each with its
-            // own subtotal — the shape of a receipt — and only the last two lines are heavy.
+            // kalan daha açık belli edilsin").
+            //
+            // HALF THE INK, SAME READING (2026-08-26, the author: "gün sonu fatura ekranı
+            // karmaşık ve çok yazılı duruyor"). It ran thirteen printed rows: two block
+            // captions, five figures, two subtotals whose sums the eye could already make,
+            // and three of the five were routinely ZERO — a bar that bought nothing still
+            // printed STOCK $0 and SHOP $0 every night of the week. The blocks are gone and
+            // so are the subtotals; takings are one figure, bills are the ones that were
+            // actually paid, and the red ink with its minus sign is what separates them —
+            // which is the distinction the 2026-08-11 note was asking for, and the only
+            // part of that scaffolding that was doing any work. RENT always prints: it is
+            // the bill the bar closes over, and a night it did not appear would read as a
+            // night nobody charged.
             int tookIn = run.DaySales + run.DayTips;
-            int paidOut = run.DayRent + run.DayStock + run.DayUpgrades;
 
             y = BillRule(y);
-            y = BillNote(y, "TOOK IN", BillQuiet);
-            y = BillRow(y, "SALES", "$" + run.DaySales, BillInk, false, "sales");
-            y = BillRow(y, "TIPS", "$" + run.DayTips, BillInk, false, "tips");
-            y = BillSub(y, "$" + tookIn, BillInk);
-
-            y += 4f;
-            y = BillNote(y, "PAID OUT", BillQuiet);
+            y = BillRow(y, "TAKINGS", "$" + tookIn, BillInk, false, "sales");
             y = BillRow(y, "RENT", "-$" + run.DayRent, BillRed, false, "rent");
-            y = BillRow(y, "STOCK", "-$" + run.DayStock, BillRed, false, "stock");
-            y = BillRow(y, "SHOP", "-$" + run.DayUpgrades, BillRed, false, "shop");
-            y = BillSub(y, "-$" + paidOut, BillRed);
+            if (run.DayStock > 0)
+                y = BillRow(y, "STOCK", "-$" + run.DayStock, BillRed, false, "stock");
+            if (run.DayUpgrades > 0)
+                y = BillRow(y, "SHOP", "-$" + run.DayUpgrades, BillRed, false, "shop");
 
             y += 4f;
             y = BillRule(y);
@@ -1919,14 +1900,24 @@ namespace LastCall.UI
                 // THE DRESSING (2026-08-10): the modular room pieces. Cosmetic, so no
                 // fitting is spent — a fern changes what the room looks like, not what
                 // the bar can do — and each piece names its own slot in the picture.
-                // Unlike the sealed recipe crates, a gated piece SHOWS itself: hiding
-                // names is the recipe book's mechanic, not the furniture catalogue's.
+                //
+                // A LADDER SHOWS ONE RUNG AHEAD (2026-08-26, the author: "3. seviyeye
+                // geçmek istiyorsan önce 2. seviyeyi açmalısın ve 3. seviye 2. seviyeyi
+                // açmadıysan gözükmemeli"). Every rung of every ladder used to stand on
+                // the board at once, the unreachable ones sealed with a LOWER MARK FIRST
+                // note — three plants, three towers and three lamps filling the aisle with
+                // things that could not be bought tonight whatever the player did. What
+                // shows now is what the bar owns and the ONE rung it may fit next; the rest
+                // arrives as the ladder is climbed, which is what makes climbing it read as
+                // progress rather than as a price list. Unranked pieces are unchanged —
+                // they answer to nothing but their stars.
                 if (run.FixtureCatalogue.Count > 0)
                 {
                     _cardTarget = ShopSection("THE DRESSING");
                     foreach (var fx in run.FixtureCatalogue)
                     {
                         var f = fx;
+                        if (f.Level > run.LadderLevel(f.Slot) + 1) continue;
                         var spec = new TileSpec
                         {
                             Name = f.Name,

@@ -3,8 +3,8 @@
   "slots": [
     {
       "id": "plant_left",
-      "x": 20,
-      "y": 129
+      "x": 150,
+      "y": 136.5
     },
     {
       "id": "plant_right",
@@ -332,10 +332,11 @@
       "slot": "sink",
       "price": 40,
       "stars": 0,
-      "flavor": "Cold water and a place to put the night's glasses.",
+      "flavor": "Cold water, a chipped drain, and a landlord who counts what goes down it.",
       "sprite": "fx_sink",
       "level": 1,
-      "startsInTheRoom": true
+      "startsInTheRoom": true,
+      "drain": true
     },
     {
       "id": "sink_brass",
@@ -343,9 +344,11 @@
       "slot": "sink",
       "price": 85,
       "stars": 1.5,
-      "flavor": "The same cold water, in a basin that catches the neon and keeps it.",
+      "flavor": "A basin that catches the neon and keeps it — and a drain nobody bills you for.",
       "sprite": "fx_sink_gold",
-      "level": 2
+      "level": 2,
+      "drain": true,
+      "drainsFree": true
     },
     {
       "id": "floor_rug",

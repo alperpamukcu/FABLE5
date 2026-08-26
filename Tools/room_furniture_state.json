@@ -1,0 +1,26 @@
+{
+ "table_t1": {
+  "job_id": "b5d611a0-0fae-45ba-9e62-af136a3ca7ac",
+  "png": "AssetPipeline\\staging\\room_furniture\\table_t1.png"
+ },
+ "table_t2": {
+  "job_id": "58c140eb-2f1d-412c-8e4e-e9cd080ec654",
+  "png": "AssetPipeline\\staging\\room_furniture\\table_t2.png"
+ },
+ "table_t3": {
+  "job_id": "3b2122d0-d7d5-4673-801b-d7a5c90bb819",
+  "png": "AssetPipeline\\staging\\room_furniture\\table_t3.png"
+ },
+ "tap_single_big": {
+  "job_id": "0c93acc6-8a99-4042-bc55-f9c8799dff7c",
+  "png": "AssetPipeline\\staging\\room_furniture\\tap_single_big.png"
+ },
+ "tap_arch_big": {
+  "job_id": "63533e38-fa2b-4ec7-9df2-cbb90831ecec",
+  "png": "AssetPipeline\\staging\\room_furniture\\tap_arch_big.png"
+ },
+ "tap_tee_big": {
+  "job_id": "57a42019-247e-47bb-a7b5-7fe07837feaa",
+  "png": "AssetPipeline\\staging\\room_furniture\\tap_tee_big.png"
+ }
+}

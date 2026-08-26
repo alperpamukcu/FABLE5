@@ -136,8 +136,9 @@ namespace LastCall.EditorTools
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/counter.png");
             stageSo.FindProperty("shutterSprite").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/counter_shutter.png");
-            stageSo.FindProperty("registerSprite").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Props/register2.png");
+            // (registerSprite went with the till on 2026-08-26 — the author took the money
+            //  off the playing screen. FindProperty on a field that no longer exists returns
+            //  null and throws, so this line had to go the same day the field did.)
             stageSo.ApplyModifiedPropertiesWithoutUndo();
 
             // The tycoon loop is the only loop now (the card-era HUD and run were demolished

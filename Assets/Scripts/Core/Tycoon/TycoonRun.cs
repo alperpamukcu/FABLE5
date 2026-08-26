@@ -1741,10 +1741,11 @@ namespace LastCall.Core
 
         /// <summary>
         /// Tips whatever is built down the drain and pays for the waste: the fee scales with
-        /// what was actually in the vessels, so binning a splash stings less than binning a
-        /// finished drink. Clamped to the till — only rent may take a bar below zero (GDD 23).
-        /// Post-serve leftovers stay free: the fee is for the DECISION, not for residue.
-        /// Returns what it cost, so the UI can say so.
+        /// what was actually in the vessels, so pouring away a splash stings less than
+        /// pouring away a finished drink. Clamped to the till — only rent may take a bar
+        /// below zero (GDD 23). Post-serve leftovers stay free: the fee is for the DECISION,
+        /// not for residue. Returns what it cost, so the UI can say so — and a bar that has
+        /// fitted the brass basin is charged nothing at all (see <see cref="WasteIsFree"/>).
         /// </summary>
         public int DiscardGlass()
         {
@@ -1752,14 +1753,33 @@ namespace LastCall.Core
             return WriteOffVessels();
         }
 
-        /// <summary>The bin's accounting, shared with the burst tin: the goods are written
+        /// <summary>
+        /// Whether the bar's drain writes anything off (2026-08-26, the author: the upgraded
+        /// sink takes the loss out of a poured-away drink; the one the bar opens with does
+        /// not). ASKED OF THE FIXTURE, not of a rung number: the waiver is a flag on the
+        /// basin in fixtures.json, so a third mark — or a drain in some other slot — is
+        /// content and not a change here. A run built without a fixture catalogue has no
+        /// drain at all and pays the fee, which is what every older test and bench setup
+        /// expects.
+        /// </summary>
+        public bool WasteIsFree
+        {
+            get
+            {
+                foreach (var f in _fixtureCatalogue)
+                    if (f.DrainsFree && _fixtures.Contains(f.Id)) return true;
+                return false;
+            }
+        }
+
+        /// <summary>The drain's accounting, shared with the burst tin: the goods are written
         /// off at the same rate and both vessels go back to empty. One body, so a blowout
-        /// can never end up cheaper than owning up to the drink and binning it.</summary>
+        /// can never end up cheaper than owning up to the drink and pouring it away.</summary>
         private int WriteOffVessels()
         {
             double binned = Glass.TotalVolume + ServingGlass.TotalVolume;
             int fee = 0;
-            if (binned > 0.01)
+            if (binned > 0.01 && !WasteIsFree)
             {
                 fee = (int)Math.Ceiling(binned * BinFeePerVolume);
                 fee = Math.Min(fee, Math.Max(0, Money));

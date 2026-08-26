@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using LastCall.Core;
 using LastCall.Game;
@@ -224,6 +225,7 @@ namespace LastCall.PlayTests
                 yield return null;
             }
             Assert.That(next, Is.Not.Null, "the night's slip never offered a way on");
+            var clickedAt = RectTransformUtility.WorldToScreenPoint(null, next.position);
             yield return ClickOn(next);
 
             // WAIT FOR THE MARKET, DO NOT COUNT TO ONE (2026-08-13). This was a fixed 0.6s and
@@ -242,7 +244,14 @@ namespace LastCall.PlayTests
                 basket = null;
                 yield return null;
             }
-            Assert.That(basket, Is.Not.Null, "the order never opened after the slip");
+            // A PERMANENT DIAGNOSTIC, the same one the smoke suite's stool click carries: a
+            // press that lands on the wrong rect looks exactly like a press that did nothing,
+            // and the only cheap way to tell them apart is to ask the raycaster what was
+            // under the pointer at the moment it fired.
+            Assert.That(basket, Is.Not.Null, "the order never opened after the slip"
+                + " · clicked " + clickedAt + " in " + Screen.width + "x" + Screen.height
+                + " · under: " + WhatIsUnder(clickedAt)
+                + " · key active " + (next != null && next.gameObject.activeInHierarchy));
             yield return new WaitForSecondsRealtime(0.4f);   // it slides in from the right
 
             // THE FOOT, NOT THE WHOLE MARKET. The aisle above it scrolls, and its scroll
@@ -260,7 +269,24 @@ namespace LastCall.PlayTests
             // 2672 pixels of drift at 3/255, all of it in those columns and none of it in the
             // basket. 1078 stops just inside the bezel. Same rule the bench and the back bar
             // keep — compare the instrument, not the room around it.
-            yield return LooksTheSame("basket", new RectInt(110, 550, 1078, 150));
+            //
+            // ONE MORE PIXEL OFF EACH FAR EDGE (2026-08-26). 1078×150 stopped just inside the
+            // bezel and its very LAST pixel — the bottom-right corner, where the bezel is
+            // rounded — was still room: the day the room's furniture was re-cut it went from
+            // 55,59,63 to 26,22,27 and failed this test on ONE pixel, with the basket itself
+            // identical. Re-blessing would have baked the new corner in and bought exactly one
+            // room change of peace. 1077×149 is the same rule applied one pixel further.
+            //
+            // THE ORIGIN STAYS AT 550. This region is given the way a person reads a screen —
+            // y DOWN from the top (see Crop) — so shrinking the height drops the LAST row,
+            // which is the one that was room. Moving the origin instead was tried and shifted
+            // the whole picture by a row against its baseline: 9190 pixels "differed", which
+            // is what an image looks like held one row off itself.
+            //
+            // The blessed picture was CROPPED to match rather than re-blessed. Every pixel
+            // left in it is a pixel that was already blessed, and Re-bless UI Baselines would
+            // have taken the BENCH with it — which is the one thing the gate exists to stop.
+            yield return LooksTheSame("basket", new RectInt(110, 550, 1077, 149));
         }
 
         /// <summary>
@@ -558,6 +584,22 @@ namespace LastCall.PlayTests
             yield return null;
             Release(_mouse.leftButton);
             yield return new WaitForSecondsRealtime(SettleSeconds);
+        }
+
+        /// <summary>Every graphic the UI raycaster finds at a screen point, nearest first.</summary>
+        private static string WhatIsUnder(Vector2 at)
+        {
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es == null) return "(no EventSystem)";
+            var ped = new UnityEngine.EventSystems.PointerEventData(es) { position = at };
+            var hits = new List<UnityEngine.EventSystems.RaycastResult>();
+            es.RaycastAll(ped, hits);
+            if (hits.Count == 0) return "(nothing)";
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < hits.Count && i < 8; i++)
+                sb.Append('[').Append(hits[i].gameObject.name)
+                  .Append('@').Append(hits[i].sortingOrder).Append(']');
+            return sb.ToString();
         }
 
         private static RectTransform Find(string name)

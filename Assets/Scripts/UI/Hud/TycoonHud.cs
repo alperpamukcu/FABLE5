@@ -52,6 +52,10 @@ namespace LastCall.UI
         private SegmentClock _clock;      // the hour, drawn as a readout and not as a word
         private Image _neonTube, _neonBloom;       // the beam's own light, and the state light
         private bool _clockWasLast;       // the readout only re-tints when the state flips
+        /// <summary>What the fascia's neon is currently saying: 0 the shift, 1 last call,
+        /// 2 in the red. -1 until the first frame paints it. One writer, one cache — see
+        /// RefreshChrome's own note about the two that used to fight over it.</summary>
+        private int _beamState = -1;
         private readonly Image[] _ratingStars = new Image[BarRating.MaxStars];
 
         // Seats at the counter (GDD 24 §4, 2026-07-22): customers sit along the bar as
@@ -293,8 +297,20 @@ namespace LastCall.UI
         private const float WalkSpeed = 310f;
 
         /// <summary>How far out from the stool the arrival ease begins, and how slow it
-        /// gets there. Both the floor and the cycle are scaled by it — see AdvanceWalkIn.</summary>
-        private const float ArrivalEase = 260f, ArrivalPace = 0.45f;
+        /// gets there. Both the floor and the cycle are scaled by it — see AdvanceWalkIn.
+        ///
+        /// DEEPER AND EARLIER (2026-08-26, the author: "yürüme animasyonunun sonunda
+        /// yavaşlarken animasyonun yavaşlaması gerekmez mi"). The cycle HAS been riding the
+        /// pace since the ease was rebuilt, so what was missing was not the wiring but the
+        /// reading: at 0.45 over 260 units the last steps run at five and a half frames a
+        /// second for about a third of a second, which is a slow-down you can measure and
+        /// not one you can see. 0.30 over 300 lands the last steps at three and a half
+        /// frames a second and gives the slow-down two thirds of a second more to happen in
+        /// — the difference between a figure that stops and a figure that is stopping.
+        /// Measured before it was picked, because the shift is 95 seconds long and a walk
+        /// is spent out of it: the approach costs 0.45s more than it did, and a curved ease
+        /// (u² rather than u) was tried first and cost 1.7s, which is a customer.</summary>
+        private const float ArrivalEase = 300f, ArrivalPace = 0.30f;
 
         /// <summary>Frames a second for the walk: nine frames at nine is one cycle, two
         /// strides, a second — the pace WalkSpeed is measured against. Re-read this
@@ -456,7 +472,11 @@ namespace LastCall.UI
             ("pastelman", 2f, 0f, 4, 5),
             ("shaved", 7f, 0f, 5, 5),
             ("silverbob", 11f, 0f, 6, 6),
-            ("afrowoman", 0f, 0f, 7, 6),
+            // 0 -> 7 (2026-08-26): her crown was CLIPPED by the rig canvas and a head row
+            // of zero is what that reads as. Tools/afro_crown_fix.py slid the whole set
+            // down seven rows and rebuilt the dome on the curve her own hair was already
+            // drawing, so the measurement moved with the art.
+            ("afrowoman", 7f, 0f, 7, 6),
             ("eastasianman", 7f, 0f, 5, 6),
             // The last one before the casting pauses, the author's own description, and
             // DRAWN AGAIN on 2026-08-20 rather than filtered. For one day her keyline was
@@ -531,21 +551,13 @@ namespace LastCall.UI
 
         // The finished drink on the counter (GDD 24 §3, 2026-07-22): a glass you drag onto a
         // customer to serve, carried with a heavy, springy AAA feel.
-        /// <summary>The bin on the counter (v5 P13 / C7). A drink is thrown away by carrying it
-        /// there, the same verb that serves it — the BIN GLASS button is gone.</summary>
-        private RectTransform _binProp;
-
-        private Image _binImage;
-
-        /// <summary>How big the bin is drawn. The art is 166×190, so this is 1.3× on both axes
-        /// — one scale, because a bin squeezed on one axis stops being a cylinder. It was 1.9×
-        /// and read as furniture rather than as a bin standing in the corner (the author,
-        /// 2026-08-04); the mouth is still wider than the carried glass, which is the only size
-        /// it actually has to beat.</summary>
-        // 166x190 is the drawing's own size. It was standing at 184x210 — 1.105x, chosen by
-        // eye — so the well's hoops came back at uneven thicknesses (GDD 16 §3, found by
-        // `LastCall → Audit UI`). Size the container to the art, never the art to the container.
-        private const float BinW = 166f, BinH = 190f;
+        // THE BIN IS GONE (2026-08-26, the author: "cop kutusunu da kaldir, cop kutusu
+        // yerine lavabo kullanilacak"). A stainless well stood half out of frame at the
+        // counter's right-hand end and answered a click; it was an invented object doing a
+        // job the room already had a fixture for, and one the market was already selling
+        // two marks of. The verb did not change — a built drink is clicked away — only what
+        // it is clicked ON: the SINK, which is a piece of dressing in fixtures.json with its
+        // own hit plate (DiegeticStage.BuildPropDoor) and its own upgrade. See OnDrainClicked.
 
         private RectTransform _drinkGlass;
 
@@ -1124,7 +1136,9 @@ namespace LastCall.UI
             _flow = GetComponent<TycoonServiceFlow>();
 
             BuildUi();
-            if (stage != null) stage.SetRegisterHandler(ToggleLedger);
+            // The sink is the drain (2026-08-26): the bin went, and a drink you decide
+            // against is clicked into the basin that was already standing on the bar.
+            if (stage != null) stage.SetDrainHandler(OnDrainClicked);
             // The beer font on the counter is the only door onto the draught station now
             // (2026-08-15): the kegs left the back-bar wall, and a pint is poured by walking
             // to the tap. The flow's own guard turns the click down between days.
@@ -1833,7 +1847,15 @@ namespace LastCall.UI
         // pushed to its ends: the sink at 140, the font at 540, the till at 604. This puts
         // the book in the working left end beside the sink, where the things you actually
         // pick up live, and leaves the middle of the bar clear for the drinkers.
-        private const float BookPropX = -336f;   // stage x 152, just right of the sink
+        //
+        // ON THE SINK'S OTHER SIDE (2026-08-26, the author: "menüyü lavabonun sol yanına
+        // getir"). It stood at stage 152, which is INSIDE the basin's own footprint — the
+        // sink is 82 art px wide about x 140, so it runs 99…181 and the book was standing in
+        // it rather than beside it. The left shoulder is the free counter: the basin's left
+        // edge is 99, the book is 28 wide, and six units of air between them puts its middle
+        // at stage 79. It is also further from every stool than it has ever been, which the
+        // suite's stool click is grateful for (see BuildBookProp's raycast note).
+        private const float BookPropX = -482f;   // stage x 79, on the sink's left shoulder
 
         private Text _bookBadgeText;
 

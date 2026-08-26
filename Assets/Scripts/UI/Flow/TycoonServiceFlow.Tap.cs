@@ -40,8 +40,6 @@ namespace LastCall.UI
         /// </summary>
         private const float TiltFollow = 22f;
         private const float HandleTilt = 62f;   // degrees the handle swings while it runs
-        /// <summary>How far left of the font's centre the spout hangs — the glass goes under it.</summary>
-        private const float SpoutReach = 79f;
         /// <summary>Where the glass turns: low, where the hand is.</summary>
         private const float GlassPivotY = 0.16f;
         /// <summary>
@@ -51,12 +49,70 @@ namespace LastCall.UI
         /// </summary>
         private const float PintW = 124f, PintH = 200f;
         /// <summary>
-        /// The faucet's lip, MEASURED off the font art rather than guessed (the 2026-07-30
-        /// discipline, re-run for the new drawing on 2026-08-25): the chrome faucet's mouth
-        /// sits at (-39.5, +33) from bench_tap_big's centre in its own 120×240 pixels, and
-        /// the tower stands at a whole 2× of that art.
+        /// ONE FONT PER RUNG (2026-08-26, the author: "bira koyma sahnesinde kullanılan
+        /// büyük boy fıçı hem yanlış hem de bozuk gözüküyor, 3 seviyeye uygun büyütülmüş
+        /// halini oluşturman gerekiyor").
+        ///
+        /// The bench used to stand ONE drawing whatever the bar owned — and that drawing
+        /// matched none of the three towers the market sells: it wore two faucets facing
+        /// opposite ways and carried a red smear where its baked-on handle had been rubbed
+        /// out. The station stands the tower the bar actually bought now, at the bench's own
+        /// grain, and every number that hangs off a font hangs off THIS row instead of off a
+        /// constant: how big it draws, where its lip is, where its lever bolts on.
+        ///
+        /// EVERY FIGURE IS MEASURED, in the art's own pixels, off the shipped sprites
+        /// (Tools/room_furniture_gen.py struck them; the pixel grids that were read are in
+        /// that round's scratchpad). The offsets below are those readings doubled, because a
+        /// font stands at a whole 2× of its drawing — the house rule for pixel art, and the
+        /// reason the sizes are not round numbers.
         /// </summary>
-        private static Vector2 SpoutOffset => new Vector2(-79f, 66f);
+        private readonly struct FontRig
+        {
+            public readonly string Art;      // Resources/Items
+            public readonly Vector2 Size;    // the drawn rect: exactly 2× the art
+            public readonly Vector2 Spout;   // the faucet's lip, from the rect's centre
+            public readonly Vector2 Valve;   // where the lever bolts on, from the same centre
+            public readonly Vector2 Lever;   // how big that lever draws on THIS font
+            public readonly float Rest;      // where the pint waits, from the font's own x
+
+            public FontRig(string art, Vector2 size, Vector2 spout, Vector2 valve, Vector2 lever,
+                           float rest)
+            { Art = art; Size = size; Spout = spout; Valve = valve; Lever = lever; Rest = rest; }
+        }
+
+        /// <summary>
+        /// The three rungs, each checked in play (2026-08-26) and corrected there — the grid
+        /// gave the lip and the valve, the screen gave the last two numbers.
+        ///
+        /// THE LEVER SHRINKS as the tower gets busier, for a different reason on each. The
+        /// single column has open air over its faucet and takes a full lever. The ARCH's
+        /// wheel hangs inside the arch's own opening, so a full lever runs straight through
+        /// the brass above it — the drawn finial that used to fill that gap was rubbed out at
+        /// ship time to make room for a lever that MOVES, and 40 is what fits the hole left
+        /// behind. The TEE's crossbar has clear sky over its middle, but the tee is the
+        /// tallest font in the game: at 112 its lever came up through the FASCIA, which is a
+        /// scrim over the room and does not own the top of the screen.
+        ///
+        /// THE PINT RESTS CLEAR OF THE FONT, not a fixed distance from its lip. On the
+        /// single that is the same thing — the column is 140 wide — but the arch and the tee
+        /// are near enough 370, so a rest measured off the spout stood the glass INSIDE the
+        /// tower: half behind a brass leg, which is a glass nobody would think to pick up.
+        /// It is measured off the font's own half-width instead, plus a hand's width of bar.
+        /// </summary>
+        private static FontRig RigFor(int tapLevel) =>
+            tapLevel >= 3 ? new FontRig("bench_tap_tee", new Vector2(368f, 462f),
+                                        new Vector2(-2f, 35f), new Vector2(-2f, 159f),
+                                        new Vector2(36f, 80f), -254f)
+          : tapLevel == 2 ? new FontRig("bench_tap_arch", new Vector2(376f, 440f),
+                                        new Vector2(-6f, 40f), new Vector2(-6f, 116f),
+                                        new Vector2(36f, 40f), -258f)
+          :                 new FontRig("bench_tap_single", new Vector2(140f, 324f),
+                                        new Vector2(-58f, 70f), new Vector2(-50f, 156f),
+                                        new Vector2(36f, 96f), -154f);
+
+        /// <summary>The font standing on the bench this visit. Set by <see cref="StandTheFont"/>,
+        /// which is the only writer; everything that needs a faucet reads it.</summary>
+        private FontRig _rig = RigFor(1);
 
         // ── the bar station (2026-07-30) ─────────────────────────────────────────
         // Everything used to float in an empty box: a tower, a glass and a keg side by side on
@@ -78,13 +134,11 @@ namespace LastCall.UI
         /// show the keg's label, and every millimetre the counter drops for the tower is a
         /// millimetre off the recess.
         /// </summary>
-        // THE ROOM'S OWN FONT, GROWN (2026-08-25, the author: "mevcut ana sahnede
-        // kullandığımız bira musluklarının büyük versiyonu üretilecek"). bench_tap_big is
-        // the counter fixture's brass single-font drawn large — art deco column, chrome
-        // faucet — generated once and quantized, standing at a whole 2× of its 120×240.
-        // The counter dropped 30 to keep its cap clear of the title, and the kegs dropped
-        // with it (see KegBaseY) so none of them pokes up through the new counter line.
-        private const float TowerW = 240f, TowerH = 480f;
+        // THE ROOM'S OWN FONT, GROWN (2026-08-25) — and since 2026-08-26 it is the font the
+        // bar OWNS, not one of them standing in for all three. Its size is the rig's now;
+        // what is left here is the one number a font does not carry, which is where along
+        // the counter it is bolted. The counter dropped 30 for the big drawing and the kegs
+        // dropped with it (see KegBaseY) so none of them pokes up through the counter line.
         private const float TowerX = -50f;
         /// <summary>The open recess under the bar, where the kegs live in a real one. Putting the
         /// keg BEHIND the counter hid its label under the counter line, and putting it beside the
@@ -117,6 +171,46 @@ namespace LastCall.UI
         /// enough that the stream is visibly falling into the glass.</summary>
         private const float MouthBelowSpout = 34f;
         private Vector2 _tapTowerPos;
+        private RectTransform _tapTower, _tapTray;
+        private Image _tapTowerImg;
+
+        /// <summary>
+        /// Bolts the bar's own font to the bench and moves everything that hangs off a
+        /// faucet with it: the tower's picture and size, the drip tray under its lip, the
+        /// lever at its valve, and where the pint stands waiting to be carried under it.
+        ///
+        /// Called once at build and again at every stage entry, because the ladder is
+        /// climbed at DAY END and the bench is built once at start-up — without the second
+        /// call a bar that fitted the arch on Tuesday would still be pouring out of Monday's
+        /// column. Cheap: four rects, on a screen that has just been opened.
+        /// </summary>
+        private void StandTheFont(int tapLevel)
+        {
+            _rig = RigFor(tapLevel);
+            if (_tapTower == null) return;
+            _tapTowerPos = new Vector2(TowerX, CounterY + _rig.Size.y * 0.5f);
+            _tapTower.sizeDelta = _rig.Size;
+            _tapTower.anchoredPosition = _tapTowerPos;
+            if (_tapTowerImg != null)
+            {
+                // The room's own single font is the fallback: a missing drawing must leave a
+                // tap you can still pour out of, not a magenta hole (the house rule for art).
+                _tapTowerImg.sprite = ItemArt.Load(_rig.Art) ?? ItemArt.Load("tap");
+                _tapTowerImg.color = _tapTowerImg.sprite == null ? UITheme.Amber[2] : Color.white;
+            }
+            if (_tapTray != null)
+                _tapTray.anchoredPosition = new Vector2(TowerX + _rig.Spout.x, CounterY + 17f);
+            if (_tapHandle != null)
+            {
+                _tapHandle.sizeDelta = _rig.Lever;
+                _tapHandle.anchoredPosition = _tapTowerPos + _rig.Valve;
+            }
+            _tapGlassRest = new Vector2(TowerX + _rig.Rest, CounterY + PintH * GlassPivotY);
+            // The glass only moves home if it is not in the player's hand: re-standing the
+            // font mid-pour would tear the pint out of it.
+            if (_tapGlass != null && !_glassHeld)
+                _tapGlass.anchoredPosition = _tapGlassRest;
+        }
 
         // The way out: SERVE only means something once beer stands in the glass, so the
         // key dims until it does — the ToGlass key's own law, applied here.
@@ -227,9 +321,10 @@ namespace LastCall.UI
             // and a swap stands a different keg under it.
             BuildBeerLine();
 
-            // The drip tray, on the counter directly under the faucet.
-            var tray = NewRect("DripTray", _tapSurface);
-            var trayPos = new Vector2(TowerX + SpoutOffset.x, CounterY + 17f);
+            // The drip tray, on the counter directly under the faucet. Re-placed with the
+            // font (StandTheFont): a taller tower puts its lip somewhere else along the bar.
+            var tray = _tapTray = NewRect("DripTray", _tapSurface);
+            var trayPos = new Vector2(TowerX + _rig.Spout.x, CounterY + 17f);
             Place(tray, new Vector2(0.5f, 0.5f), new Vector2(132, 33), trayPos);
             var trayImg = tray.gameObject.AddComponent<Image>();
             trayImg.sprite = ItemArt.Load("drip_tray");
@@ -239,19 +334,16 @@ namespace LastCall.UI
             // The font, and the pint under its spout. Everything here hangs off the tower, so
             // moving the tower moves the whole rig and the spout stays over the glass. It is
             // seated ON the counter — its base sits on the surface, it does not hover over it.
-            var tower = NewRect("Tower", _tapSurface);
-            var towerPos = _tapTowerPos = new Vector2(TowerX, CounterY + TowerH * 0.5f);
-            var towerSize = new Vector2(TowerW, TowerH);
-            Place(tower, new Vector2(0.5f, 0.5f), towerSize, towerPos);
-            var towerImg = tower.gameObject.AddComponent<Image>();
-            towerImg.sprite = ItemArt.Load("bench_tap_big") ?? ItemArt.Load("tap");
+            var tower = _tapTower = NewRect("Tower", _tapSurface);
+            var towerPos = _tapTowerPos = new Vector2(TowerX, CounterY + _rig.Size.y * 0.5f);
+            Place(tower, new Vector2(0.5f, 0.5f), _rig.Size, towerPos);
+            var towerImg = _tapTowerImg = tower.gameObject.AddComponent<Image>();
             towerImg.preserveAspect = true; towerImg.raycastTarget = false;
-            if (towerImg.sprite == null) towerImg.color = UITheme.Amber[2];
 
             // The glass is the thing you hold, so it stands on the counter until you pick it up.
             // Its base rests on the surface: the rect is pivoted low, so the pivot sits a
             // fraction of the glass above the counter.
-            _tapGlassRest = new Vector2(TowerX - SpoutReach - 96f, CounterY + PintH * GlassPivotY);
+            _tapGlassRest = new Vector2(TowerX + _rig.Rest, CounterY + PintH * GlassPivotY);
             _tapGlass = NewRect("Pint", _tapSurface);
             Place(_tapGlass, new Vector2(0.5f, 0.5f), new Vector2(PintW, PintH), _tapGlassRest);
             // Pivoted low, near where a hand holds it: a glass leans off its base, it does not
@@ -300,21 +392,19 @@ namespace LastCall.UI
 
             if (pint.sprite != null) _tapGlass.SetAsLastSibling();   // the glass draws over its contents
 
-            // The handle: pivots at its brass collar, so pulling swings it toward you.
+            // The handle: pivots at its brass collar, so pulling swings it toward you. Near
+            // its own native size — blown up to 60×140 it read as a separate wooden object
+            // parked beside the tap rather than the handle bolted to it. Its size and its
+            // seat are the RIG's (StandTheFont): every font's own drawn handle is rubbed out
+            // at ship time, because one rig must not wear two handles and only this one moves.
             _tapHandle = NewRect("Handle", _tapSurface);
             _tapHandle.pivot = new Vector2(0.5f, 0.06f);
-            // Near its own native size. Blown up to 60×140 it read as a separate wooden object
-            // parked beside the tap rather than the handle bolted to it.
-            _tapHandle.sizeDelta = new Vector2(36, 112);
             _tapHandle.anchorMin = _tapHandle.anchorMax = new Vector2(0.5f, 0.5f);
-            // Onto the faucet's valve — the new art's own handle was erased at ship time
-            // (one rig must not wear two handles) and its stem met the faucet at (-8, +41)
-            // of the 120×240 art, which is this at the tower's 2×.
-            _tapHandle.anchoredPosition = towerPos + new Vector2(-16f, 82f);
             var handleImg = _tapHandle.gameObject.AddComponent<Image>();
             handleImg.sprite = ItemArt.Load("tap_handle");
             handleImg.preserveAspect = true; handleImg.raycastTarget = false;
             if (handleImg.sprite == null) handleImg.color = UITheme.Amber[1];
+            StandTheFont(Run != null ? Run.TapLevel : 1);
 
             // A plate under the verdict and the readout. They used to sit straight on top of the
             // shelving, which read as text spilled over the art rather than as a status strip.
@@ -499,6 +589,10 @@ namespace LastCall.UI
                     }
             var entryRun = Run;
             if (entryRun == null) return;
+            // THE FONT THE BAR OWNS, every time the station opens (2026-08-26). The ladder
+            // is climbed at day end and this bench is built once, so the rung is re-read on
+            // entry rather than trusted from build time.
+            StandTheFont(entryRun.TapLevel);
             if (_focusBottle != null && _focusBottle.Type == IngredientType.Beer)
                 _tapKegCard = _focusBottle;
             // NOBODY CHOSE A KEG, SO THE CELLAR CHOOSES (2026-08-15). The station used to be
@@ -773,7 +867,7 @@ namespace LastCall.UI
         }
 
         /// <summary>The faucet's lip, where the beer leaves the font.</summary>
-        private Vector2 SpoutPoint() => _tapTowerPos + SpoutOffset;
+        private Vector2 SpoutPoint() => _tapTowerPos + _rig.Spout;
 
         /// <summary>
         /// The point the glass turns about while it is being held: its mouth, parked under the

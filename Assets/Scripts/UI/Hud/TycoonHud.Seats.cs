@@ -459,32 +459,9 @@ namespace LastCall.UI
         private void BuildDrinkGlass(RectTransform root)
         {
             _glassHome = new Vector2(0, -200f);   // staged on the counter, above the MENU button
-            // The bin, standing on the counter at the right-hand end, in front of the bar. Built
-            // before the glass so the carried drink passes over it rather than under it.
-            _binProp = NewRect("Bin", root);
-            _binProp.anchorMin = _binProp.anchorMax = _binProp.pivot = new Vector2(1f, 0f);
-            // An OPEN bin, cut in half by the bottom edge (the author, 2026-08-04).
-            //
-            // The bagged sack read as filth and was replaced 2026-08-02 by a chrome pedal bin;
-            // the pedal bin's problem is what it shows once it is cropped. Standing half out of
-            // frame, the half that survived was the domed LID — a closed shape, and the one part
-            // of a bin a glass cannot be aimed at. The new one is an open stainless well, so the
-            // half above the cut is its MOUTH: the dark oval you carry the glass to, which is
-            // the whole verb of the prop.
-            //
-            // Half BELOW the screen, not half past the right edge: the bottom of the rect sits
-            // one half-height under the frame, so the cut runs horizontally through the bin's
-            // waist and its two banding hoops read as the last thing before the floor.
-            _binProp.sizeDelta = new Vector2(BinW, BinH);
-            // Placed by the author's own hand against the new counter (2026-08-19, live:
-            // "Bin X -2 Y -124") - tuned in play, written down here.
-            _binProp.anchoredPosition = new Vector2(-2f, -124f);
-            _binImage = _binProp.gameObject.AddComponent<Image>();
-            _binImage.sprite = ItemArt.Load("bin_well");
-            _binImage.preserveAspect = true;
-            _binImage.raycastTarget = false;
-            _binImage.color = Color.white;
-            if (_binImage.sprite == null) _binImage.enabled = false;
+            // (The bin used to be built here, before the glass, so the carried drink passed
+            //  over it. It went on 2026-08-26 and the sink took the verb — see TycoonHud's
+            //  own headstone for it, and OnDrainClicked below.)
 
             // The drink you carry to a seat is the real glass now (v5 P14 / C9): the same
             // drawing the serve stage stands on the counter, with its interior filled to the
@@ -558,14 +535,6 @@ namespace LastCall.UI
             hint.text = "CLICK A CUSTOMER TO SERVE";
             hint.raycastTarget = false;
 
-            // With the drag gone, the bin answers a CLICK: it was drag-and-drop's landing
-            // pad, and the discard verb still needs a door on the counter.
-            _binImage.raycastTarget = true;
-            var binBtn = _binProp.gameObject.AddComponent<Button>();
-            binBtn.targetGraphic = _binImage;
-            binBtn.transition = Selectable.Transition.None;
-            binBtn.onClick.AddListener(OnBinClicked);
-
             _drinkGlass.gameObject.SetActive(false);
         }
 
@@ -607,18 +576,27 @@ namespace LastCall.UI
             _drinkGlassSurface.enabled = true;
         }
 
-        /// <summary>The bin's click: throws the ready drink away, fee and all. Inert with
-        /// nothing to throw — an empty counter never nags.</summary>
-        private void OnBinClicked()
+        /// <summary>
+        /// The SINK's click: pours the ready drink away, and pays for it (2026-08-26). Inert
+        /// with nothing to pour — an empty counter never nags, and the basin is scenery the
+        /// rest of the night.
+        ///
+        /// What it COSTS is Core's answer, not this one's: the steel basin the bar opens with
+        /// writes the goods off, the brass one it can fit later does not
+        /// (TycoonRun.WasteIsFree), and the toast reports whichever came back. That is the
+        /// whole of the upgrade, and the first piece of dressing that changes what the bar
+        /// can afford to do.
+        /// </summary>
+        private void OnDrainClicked()
         {
             var run = Run;
             if (run == null || run.Phase != TycoonPhase.DayOpen) return;
             if (_flow != null && _flow.IsOpen) return;
             if (!_glassShown || _glassServing || _glassReturning || !run.DrinkReady) return;
             int fee = run.DiscardGlass();
-            Toast(fee > 0 ? $"BINNED · -${fee}" : "BINNED");
+            Toast(fee > 0 ? $"POURED AWAY · -${fee}" : "POURED AWAY");
             if (fee > 0)
-                LogService($"<color=#F27D8A>BINNED</color> a built drink · -${fee}");
+                LogService($"<color=#F27D8A>POURED AWAY</color> a built drink · -${fee}");
             _drinkGlass.gameObject.SetActive(false);
             _glassShown = false;
         }
@@ -780,12 +758,10 @@ namespace LastCall.UI
                 return;
             }
 
-            // At rest: home, upright. The bin lifts its lid — brightens — under a hover
-            // while there is something to throw, so it never nags at an empty counter.
+            // At rest: home, upright. (The bin's hover tint lived here; the sink answers the
+            // pointer with HoverGlow, like every other prop standing in the room.)
             _drinkGlass.anchoredPosition = _glassHome;
             _drinkGlass.localRotation = Quaternion.identity;
-            if (_binImage != null)
-                _binImage.color = IsOverBin(mouse) ? Color.white : new Color(0.72f, 0.72f, 0.74f, 1f);
         }
 
         /// <summary>The carried drink's colour: its ingredients' true liquid colours, blended by
@@ -1004,14 +980,6 @@ namespace LastCall.UI
             var far = label.gameObject.AddComponent<Outline>();
             far.effectColor = new Color(0f, 0f, 0f, 0.62f);
             far.effectDistance = new Vector2(3.5f, -3.5f);
-        }
-
-        /// <summary>Whether the cursor is over the bin's mouth (v5 P13 / C7).</summary>
-        private bool IsOverBin(UnityEngine.InputSystem.Mouse mouse)
-        {
-            if (_binProp == null || mouse == null) return false;
-            return RectTransformUtility.RectangleContainsScreenPoint(
-                _binProp, mouse.position.ReadValue(), null);
         }
 
         private void RefreshSeats()

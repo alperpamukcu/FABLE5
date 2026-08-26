@@ -2,6 +2,50 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `GDD_MEVCUT §9.3-9.4 / 24 / 16` **the room clears its counter (2026-08-26, eighth
+  round):** nine notes from the author, shipped together.
+  **(1) The till and the money leave the playing screen.** The register, the gold balance
+  over it, the change that floated off its drawer and the ledger it opened all went at
+  once. Nothing counts money at you while you serve: the night is read on the slip, and
+  the running balance on the market tablet while you spend it. Debt kept its voice — the
+  fascia's neon now says three states (shift amber, last call magenta, under water vice
+  red) off one cached writer. The ledger's door moved behind the cog.
+  **(2) The bin goes; the SINK is the drain.** A stainless well stood half out of frame
+  doing a job the room already had a fixture for. The verb is unchanged — a built drink
+  is clicked away — only the target: whatever carries `drain: true` in fixtures.json,
+  answered by the same hit-plate rule the beer font uses (`BuildPropDoor`).
+  **(3) The brass basin waives the write-off.** `drainsFree: true` on the upgraded sink;
+  `TycoonRun.WasteIsFree` asks the OWNED catalogue and `WriteOffVessels` skips the fee.
+  Rung numbers are not in Core — a third basin is content. The first piece of dressing
+  that changes what the bar can afford to do. `DrainTests` pins the boundary, including
+  that a fixture-less run still pays.
+  **(4) A ladder shows one rung ahead.** The market's DRESSING aisle stood every rung of
+  every ladder at once, sealed with LOWER MARK FIRST. It shows what is owned and the one
+  rung that may be fitted next; the rest arrives as the ladder is climbed.
+  **(5) The menu moves to the sink's left shoulder.** It was standing INSIDE the basin's
+  footprint (stage 152 against a sink running 99–181); `BookPropX` −336 → −482.
+  **(6) The arrival ease is readable.** The cycle already rode the pace; 0.45 over 260
+  units was a slow-down you could measure and not see. 0.30 over 300 lands the last steps
+  at 3.5 frames a second. Measured before it was picked: the approach costs 0.45s more,
+  and a curved ease was refused at 1.7s — a customer's worth of a 95-second shift.
+  **(7) The slip loses half its ink.** Thirteen printed rows became six or seven: the two
+  block captions and both subtotals gone, takings one figure, and a bill that was not
+  paid is not printed. The stars were already the score, so "TONIGHT 3.5" under them went
+  with it.
+  **(8) The afro gets its crown back.** Every frame of `afrowoman` was drawn with her
+  hair flush against row 0 of the rig canvas and clipped flat. `Tools/afro_crown_fix.py`
+  slides all 95 frames down 7 rows and rebuilds the dome on the curve her own hair was
+  already drawing (25 px wide at the cut, 36 nine rows down → R ≈ 14.7 and a crown exactly
+  7 rows up), sampling the hair for its speckle. Stamped in the PNG so it cannot run
+  twice. Her head row and her licence photo were re-measured off the repaired art.
+  **(9) Furniture, one take each** (`Tools/room_furniture_gen.py`): three table sets at
+  one eye line — two of the three tables had no top at all, only a wire frame — and the
+  three draught fonts grown for the bench. `bench_tap_big` matched none of the towers the
+  market sells (two faucets facing opposite ways, a red smear where its baked handle was
+  rubbed out); the bench stands the tower the bar OWNS now, and every number that hangs
+  off a faucet — its drawn size, its lip, its lever's seat and size — hangs off a measured
+  per-rung rig instead of a constant.
+
 - `21 §5 / 24 §2-3 / GDD_MEVCUT` **the bench rework (2026-08-25, seventh round):** the
   author's brief in five parts, all shipped together.
   **(1) The rims are a skill.** Salt and sugar stopped being a piece you drop in: press

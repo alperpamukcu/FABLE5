@@ -1,4 +1,4 @@
-# LAST CALL — MEVCUT OYUN GDD'Sİ (as-built)
+﻿# LAST CALL — MEVCUT OYUN GDD'Sİ (as-built)
 
 **Tarih:** 2026-08-07 (§9 servis sahneleri 2026-08-13'te yeniden kuruldu) · **Kaynak:** koddan çıkarıldı (8 kollu denetim, dosya:satır kanıtlı) · **Durum:** oyunun *bugün gerçekte olduğu hali* — tasarım niyeti değil, çalışan kural.
 
@@ -184,6 +184,70 @@ ortası işaretinde; kendi yüksekliğinin 0.44'ünden geniş olan kap ENİNDEN 
 kapak, iki çekimin AYRILDIĞI piksellerdir (kartonun ağzı düz çatıya oturan bir güdük, siluetin
 tepesi değil). Şişede kalan sıvı çizimin kutusuna göre doldurulur; opak kap (karton, kutu)
 seviyesini doğası gereği göstermez — sayı hover kartında ve market kutucuğunda.
+
+### 9.3 · Oda temizlendi, lavabo iş aldı (2026-08-26)
+
+Yazarın altı maddesi, tek turda.
+
+- **KASA VE PARA ANA SAHNEDEN ÇIKTI** ("kasa ve parayı ana sahneden kaldır"). Register
+  iki kendi tuvaliyle (−7 ve 6), üstündeki altın bakiye, çekmeceden kalkan +$/−$ süzülmesi
+  ve tıklandığında açtığı defter — dördü birlikte gitti; bir sayı taşımayan makine dekordur,
+  altında makine olmayan sayı ise bu makinenin yerine geçtiği fasya göstergesidir.
+  `DiegeticStage`'den `BuildRegister/SetMoney/SetMoneyInDebt/FloatMoney/SetRegisterHandler`,
+  `registerSprite`, `RegisterX/RegisterBaseY` ve ekran penceresi kesirleri silindi;
+  `DebugSceneCreator`'daki sprite ataması aynı gün gitti (var olmayan alana `FindProperty`
+  null döner ve patlar). **Vardiya boyunca hiçbir yerde bakiye yazmaz** — gecenin hesabı
+  fişte, harcarken de market tabletinde okunur. **Borç yine görünür:** fasyanın neonu artık
+  ÜÇ hâl söylüyor (vardiya amber · son sipariş magenta · eksideysen vice kırmızısı) ve
+  eksi, son siparişi yener; tek yazar, tek önbellek (`_beamState`) — kule rengini saatin
+  kendi değişim kontrolünün içinde boyamak, ikinci bir yazarla birlikte "hangisi son
+  oynadıysa o" demek olurdu. **Defterin kapısı** çarkın arkasına taşındı (ayarlarda
+  "TONIGHT'S BOOK"): bara başka bir biçimde geri konmadı, çünkü kaldırmanın bütün amacı
+  servis ederken kimsenin sana para saymaması.
+- **ÇÖP KUTUSU GİTTİ, YERİNE LAVABO** ("çöp kutusunu da kaldır, çöp kutusu yerine lavabo
+  kullanılacak"). Tezgâhın sağ ucunda yarısı kadrajın altında duran çelik kuyu, odanın
+  ZATEN sahip olduğu (ve marketin iki basamağını sattığı) bir fikstürün işini yapan
+  uydurma bir nesneydi. Fiil değişmedi — yapılmış içki tıklanarak dökülür — yalnız neye
+  tıklandığı: `fixtures.json`'daki **`drain: true`** bayrağını taşıyan parçaya. Bayrak
+  DATA: `DiegeticStage` musluğun çarpma plakasını hangi kuralla asıyorsa lavabonunkini de
+  o kuralla asıyor (`BuildPropDoor`, eski `BuildTapDoor`), affordans propun kendi
+  `HoverGlow`'u. `bin_well.png` ve `BinW/BinH/IsOverBin` silindi.
+- **ÜST SEVİYE LAVABO ZARARI SIFIRLAR** ("üst seviye lavabo alındığında dökülen
+  içkilerden zarar elde edilmeyecek, başlangıç lavabosunda içkiyi çöpe attığında para
+  yiyeceksin"). `sink_brass` **`drainsFree: true`** taşır; `TycoonRun.WasteIsFree` sahip
+  olunan katalogda böyle bir parça var mı diye sorar ve `WriteOffVessels` yazmayı atlar.
+  Kural basamak NUMARASINA değil PARÇAYA bağlı — üçüncü bir tekne ya da başka bir yuvadaki
+  bir gider içerik olur, kod olmaz. Fikstürsüz kurulan koşu (bütün tezgâh kurulumları ve
+  eski süitlerin çoğu) ücreti ödemeye devam eder; `DrainTests` bu sınırı çiviler. Bu, barın
+  NE YAPABİLECEĞİNİ değiştiren ilk döşeme parçası.
+- **MERDİVEN BİR BASAMAK İLERİSİNİ GÖSTERİR** ("3. seviyeye geçmek istiyorsan önce 2.
+  seviyeyi açmalısın ve 3. seviye 2. seviyeyi açmadıysan gözükmemeli"). Kural zaten Core'daydı
+  (`CanBuyRung`, tek basamak); değişen VİTRİN: mağazanın DRESSING koridoru her merdivenin
+  her basamağını aynı anda diziyor, ulaşılamayanları "LOWER MARK FIRST" mührüyle
+  gösteriyordu — üç bitki, üç kule, üç lamba, hepsi bu gece alınamaz. Artık sahip olunanlar
+  ve alınabilecek TEK basamak görünür; gerisi merdiven tırmandıkça gelir. Basamaksız
+  parçalar (tek yuvalı döşeme) değişmedi.
+- **MENÜ LAVABONUN SOL OMZUNA** ("menüyü lavabonun sol yanına getir"). Kitap sahne x
+  152'de duruyordu, yani teknenin AYAK İZİNİN İÇİNDE (lavabo x 140 merkezli 82 px = 99…181);
+  `BookPropX` −336 → **−482** (sahne x 79), teknenin sol kenarıyla arasında 6 birim hava.
+- **YÜRÜYÜŞ GERÇEKTEN YAVAŞLAR** ("yürüme animasyonunun sonunda yavaşlarken animasyonun
+  yavaşlaması gerekmez mi"). Kablolama zaten doğruydu — `WalkPace` hem zemini hem çevrimi
+  aynı katsayıyla ölçekliyor — eksik olan OKUNURLUKTU: 260 birimde 0.45 demek son adımların
+  saniyede 5.5 kare ve üçte bir saniye sürmesi demek, yani ölçülebilen ama görülemeyen bir
+  yavaşlama. **300 birimde 0.30**: varış 3.5 kare/sn, yavaşlama üçte iki saniye daha uzun.
+  Seçilmeden önce ölçüldü — vardiya 95 saniye ve yürüyüş oradan harcanıyor: yaklaşma 0.45 sn
+  pahalandı; eğrili yumuşatma (u² yerine u) önce denendi ve 1.7 sn tuttu, yani bir müşteri.
+
+### 9.4 · Fatura sadeleşti (2026-08-26)
+
+Yazar: "gün sonu fatura ekranı karmaşık ve çok yazılı duruyor". Fiş **on üç** basılı satır
+koşuyordu: iki blok başlığı, beş rakam, gözün zaten yapabildiği iki ara toplam — ve beşin
+üçü rutin olarak SIFIRDI (hiçbir şey almayan bar da her gece STOCK $0 ve SHOP $0 basıyordu).
+Bloklar ve ara toplamlar (`BillSub`) gitti; gelir tek satır (**TAKINGS**), giderler yalnız
+gerçekten ödenenler, ayıran şey kırmızı mürekkep ve eksi işareti — 2026-08-11'in "gider ve
+kalan daha açık belli edilsin" notunun iş gören yarısı buydu. RENT her zaman basar (barın
+üstüne kapandığı fatura odur). Yıldız sırasının altındaki "TONIGHT 3.5" de gitti: yıldızlar
+zaten o okumadır; kalan satır odada kimin olduğunu söyler (n SERVED · n WALKED).
 
 ## 10 · Teknik omurga
 

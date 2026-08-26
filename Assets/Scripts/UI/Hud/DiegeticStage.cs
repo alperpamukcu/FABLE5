@@ -39,7 +39,6 @@ namespace LastCall.UI
     {
         // ── layout (stage units, bottom-left origin) ────────────────────────────
         private static readonly Vector2 Reference = new Vector2(640, 360);
-        private const float RegisterX = 604f;              // till pushed to the counter's right edge
 
         /// <summary>
         /// The bar's FRONT EDGE in stage units — the brass line a customer leans on, and the
@@ -278,7 +277,6 @@ namespace LastCall.UI
         private float _shutterPeek;              // 0 shut tight, 1 held open a crack
         private Image _shutterLight;             // what spills out of that crack
         private IReadOnlyList<string> _cellarIds;
-        private CanvasGroup[] _registerFade;
 
         /// <summary>
         /// Each door carries its bottle's id in its NAME. It costs nothing and it buys two
@@ -1000,13 +998,8 @@ namespace LastCall.UI
             ApplyCellarLight();
             LayOutCellarDoors();
             LayOutShutterDoor();
-            if (_registerFade != null)
-                foreach (var g in _registerFade)
-                {
-                    if (g == null) continue;
-                    g.alpha = 1f - _drawerT;
-                    g.blocksRaycasts = _drawerT < 0.01f;
-                }
+            // The counter's own doors go out with the drawer — see BuildPropDoor's note.
+            if (_propDoorGate != null) _propDoorGate.blocksRaycasts = _drawerT < 0.01f;
         }
 
         private void StepDrawer()
@@ -1105,22 +1098,10 @@ namespace LastCall.UI
             return true;
         }
 
-        /// <summary>Where the till's base sits: twelve units forward of the rest line, near
-        /// the front of the bar top, where something on the bartender's side of the bar
-        /// actually stands.
-        ///
-        /// WRITTEN AS AN OFFSET, not as a number (2026-08-19). It was 104 against a rest line
-        /// of 116, and when the counter moved the till stayed where it was and sank into the
-        /// bar top — the same way the beer fonts had been floating twelve units above it
-        /// since the counter came down. Anything standing on the counter rides the counter's
-        /// one dial now, so the bar can be moved again without a hunt for what came loose.</summary>
-        private const float RegisterBaseY = CounterRestY - 12f;
-
-        // The till's display window, as fractions of the sprite — measured off the register
-        // art (x 8..42 of 49, y 5..12 of 43, y from the TOP). Read them again if the till is
-        // redrawn; the money is placed from these so it lands in the window rather than near it.
-        private const float DisplayLeft = 8f / 49f, DisplayRight = 43f / 49f;
-        private const float DisplayTop = 5f / 43f, DisplayBottom = 12f / 43f;
+        // (RegisterBaseY and the display-window fractions went out with the till on
+        //  2026-08-26 — see BuildRegister's headstone below. Anything else standing on the
+        //  bar still writes itself as an offset from CounterRestY, which is the rule the
+        //  till's own note left behind and the only part of it worth keeping.)
 
         // 128 -> 116 (2026-08-19, the author, in play: "masayi biraz asagi cek"), then
         // 116 -> 131 the same evening ("tezgahi Y ekseninde -122'ye al"). The author reads
@@ -1514,8 +1495,6 @@ namespace LastCall.UI
         /// with no shutter the cabinet simply stands open, which is what the stage did before
         /// the drawer existed.</summary>
         [SerializeField] private Sprite shutterSprite;
-        [SerializeField] private Sprite registerSprite;   // cash register, shows the wallet
-        private Text _moneyText;
 
         /// <summary>Per-archetype ID photos for the licence card. Falls back to a flat silhouette.</summary>
         [System.Serializable]
@@ -1630,30 +1609,19 @@ namespace LastCall.UI
         private Light2D _globalLight;
         private float _lastVisibleW = -1f;
 
-        /// <summary>Update the diegetic wallet - the number standing over the till.</summary>
-        public void SetMoney(string text)
-        {
-            if (_moneyText != null) _moneyText.text = text;
-        }
-
-        /// <summary>The window goes red when the bar is under water (2026-08-14): the till is
-        /// the only place the money is written now, so it is the only place debt can show.</summary>
-        public void SetMoneyInDebt(bool red)
-        {
-            if (_moneyText != null) _moneyText.color = red ? UITheme.ViceRed[3] : UITheme.Money;
-        }
-
-        private System.Action _onRegisterClicked;
-
-        /// <summary>Wires the till click to the ledger-history popup (GDD 24 §7).</summary>
-        public void SetRegisterHandler(System.Action onClick) => _onRegisterClicked = onClick;
-
         private System.Action _onTapClicked;
 
         /// <summary>Wires the beer font on the counter to the draught station (2026-08-15).
         /// The stage owns WHERE the font stands, so it owns the hit plate; the HUD owns what
         /// clicking it means — the same split the till has had since the ledger landed.</summary>
         public void SetTapHandler(System.Action onClick) => _onTapClicked = onClick;
+
+        private System.Action _onDrainClicked;
+
+        /// <summary>Wires the sink to the drain (2026-08-26). Same split as the font: the
+        /// stage knows where the basin stands, the HUD knows what pouring a drink away
+        /// costs.</summary>
+        public void SetDrainHandler(System.Action onClick) => _onDrainClicked = onClick;
 
         /// <summary>The ID photo for an archetype, for the tycoon floor's licence card.</summary>
         public Sprite PortraitSpriteFor(string archetypeId) =>
@@ -1864,8 +1832,6 @@ namespace LastCall.UI
                 _shutterNative = shutterSprite.rect.size;
                 BuildShutterDoor();
             }
-
-            BuildRegister();
 
             Refit(VisibleWidth());
 
@@ -2408,20 +2374,24 @@ namespace LastCall.UI
                     if (!onCounter && !hangs && !flat && !def.HasLight)
                         ContactShadow(sr.transform, sprite.rect.width * 0.9f);
 
-                    // A beer font is the door onto the draught station, so it answers the
-                    // pointer.
-                    if (def.IsTap) BuildTapDoor(def, sr);
+                    // A beer font is the door onto the draught station, and the sink is the
+                    // door onto the drain, so both answer the pointer.
+                    if (def.IsTap) BuildPropDoor(def, sr, () => _onTapClicked?.Invoke());
+                    else if (def.IsDrain) BuildPropDoor(def, sr, () => _onDrainClicked?.Invoke());
                 }
             }
             PlaceFixtures();
         }
 
-        // ── the beer font is a door (2026-08-15) ────────────────────────────────
+        // ── props that are doors (2026-08-15) ───────────────────────────────────
         // The author: "bira musluğuna tıklanması gereksin ... musluğa tıklanınca direkt bira
         // koyma sahnesi gelecek". The kegs left the back-bar wall, so the only way to a pint
-        // is walking to the tap — which means the prop has to be clickable.
+        // is walking to the tap — which means the prop has to be clickable. The SINK joined
+        // it on 2026-08-26 for the same reason from the other end: the pedal bin went, and a
+        // drink you decide against goes down the basin that is already standing there.
 
         private RectTransform _tapDoorRoot;
+        private CanvasGroup _propDoorGate;
         private readonly List<RectTransform> _tapDoors = new List<RectTransform>();
 
         /// <summary>
@@ -2441,7 +2411,8 @@ namespace LastCall.UI
         /// swallows at the edges is a door the player learns not to trust. What it costs is a
         /// sliver of empty seat-rect beside each font, nowhere near anybody's body.
         /// </summary>
-        private void BuildTapDoor(LastCall.Core.FixtureDefinition def, SpriteRenderer body)
+        private void BuildPropDoor(LastCall.Core.FixtureDefinition def, SpriteRenderer body,
+                                   System.Action onClick)
         {
             LastCall.Game.StageSlot slot;
             if (!_slots.TryGetValue(def.Slot, out slot)) return;
@@ -2450,13 +2421,26 @@ namespace LastCall.UI
                 _tapDoorRoot = OverlayCanvas("TapDoors", 7, raycasts: true);
                 UiAuditExempt.Mark(_tapDoorRoot, "the tap door is a hit plate over a prop in "
                     + "the room, sized to the font's own art and stood in the font's own slot");
+                // A PROP DOOR IS SHUT WHILE THE DRAWER IS (2026-08-26). These plates are
+                // CANVAS rects standing at their slot's fixed coordinates, and the slot is on
+                // the counter — which RISES when the cellar opens. The prop goes up with the
+                // room and the plate does not, so an open drawer leaves every one of them
+                // hanging over the shelves, catching clicks meant for the stock behind them.
+                // It went unseen for as long as the only prop door was the beer font at stage
+                // 540, clear of the bottle row; the sink is at 140 and sits straight over it,
+                // and the smoke suite caught it on the first run ("under the pointer:
+                // PropDoor_counter_sink"). The till answered this exact question the same way
+                // and for the same reason — while the cellar is open you are behind the bar,
+                // not at the counter's furniture.
+                _propDoorGate = _tapDoorRoot.gameObject.AddComponent<CanvasGroup>();
+                _propDoorGate.blocksRaycasts = _drawerT < 0.01f;
             }
 
             var art = body.sprite.rect.size;
             float sx = Reference.x / Mathf.Max(1f, _backgroundNative.x);
             float sy = Reference.y / Mathf.Max(1f, _backgroundNative.y);
 
-            var plate = NewRect("TapDoor_" + def.Id, _tapDoorRoot);
+            var plate = NewRect("PropDoor_" + def.Id, _tapDoorRoot);
             plate.anchorMin = plate.anchorMax = new Vector2(0, 0);
             plate.pivot = new Vector2(0.5f, 0);
             plate.sizeDelta = new Vector2(art.x * sx, art.y * sy);
@@ -2466,7 +2450,7 @@ namespace LastCall.UI
             var btn = plate.gameObject.AddComponent<Button>();
             btn.targetGraphic = hit;
             btn.transition = Selectable.Transition.None;
-            btn.onClick.AddListener(() => _onTapClicked?.Invoke());
+            btn.onClick.AddListener(() => onClick?.Invoke());
 
             // THE AFFORDANCE IS THE PROP, not the plate: an invisible plate cannot light up
             // without drawing a rectangle over the counter, so the pointer lights the FONT's
@@ -2503,7 +2487,22 @@ namespace LastCall.UI
                 float k = _backgroundSr != null ? _backgroundScale : 1f;
                 placed.Body.localScale = new Vector3(k, k, 1f);
                 float h = placed.Body.GetComponent<SpriteRenderer>().sprite.bounds.size.y * k;
-                placed.Body.position = basePos + new Vector3(0f, h * 0.5f, 0f);
+                // FURTHER BACK DRAWS BEHIND (2026-08-26). Two pieces of floor dressing share
+                // sorting order 20, and two sprites on one order leave which of them wins to
+                // chance — the trap this file already names twice, for the triptych and for
+                // the mats, each time solved by carving out another band. There are no bands
+                // left to carve between a plant and a table: they stand on the same floor.
+                // So the tie is broken by the ROOM instead — the slot's own depth, as a
+                // hair of Z. The project sorts transparents by distance (Default, and the
+                // camera is orthographic), so a piece standing further up the picture is
+                // further from the lens and loses to the one in front of it, every frame, on
+                // every machine. It surfaced the day the author moved the palm to x 150,
+                // where it shares a footprint with the left-hand table.
+                //
+                // The scale is deliberately tiny: 360 art rows come to 0.72 world units,
+                // nowhere near the camera's clip planes, and Z never outranks a sorting
+                // order — it only decides who goes first when two pieces are already equal.
+                placed.Body.position = basePos + new Vector3(0f, h * 0.5f, slot.Y * 0.002f);
                 // The glow hangs at the piece's own light line — the flame, the belly of
                 // the shade — which for every launch fixture is about ⅔ up the sprite.
                 if (placed.Glow != null)
@@ -2887,166 +2886,17 @@ namespace LastCall.UI
         // wall with nothing making it. The room's light now comes from the window and its
         // own lamps, and nothing else.
 
-        // ── the till (canvas: it must draw OVER the HUD's seated patrons) ─────────
-
-        private void BuildRegister()
-        {
-            if (registerSprite == null) return;
-
-            // THE TILL STANDS ON THE BAR, SO IT STANDS IN FRONT OF THE DRINKERS.
-            // The customers are HUD objects at sorting 5 — so the register gets its own
-            // canvas at 6: over the seats, under the service flow (12) and the licence (20).
-            // Its shadow and the wallet plaque draw at −7: under the patrons and the
-            // dressing (−5), visible through the till's display window — and ABOVE the
-            // fallback room, which also sits at −10. On the old single canvas the plaque
-            // outdrew the fallback by sibling order; two canvases on the same order have
-            // no defined order at all, and a lost art reference would have taken the
-            // wallet with it.
-            var backRoot = OverlayCanvas("RegisterBack", -7, raycasts: false);
-            var frontRoot = OverlayCanvas("RegisterLayer", 6, raycasts: true);
-            // THE TILL GOES OUT WITH THE CELLAR (2026-08-22). It stands on the bar and it does
-            // NOT ride the room up — it is on its own overlay — so when the drawer lifts the
-            // shelves, the till is left hanging over them like a price tag on the stock. It
-            // is also nowhere in the author's open mock-up. Fading it is the honest reading:
-            // while the cellar is open you are behind the bar, not at the register.
-            _registerFade = new[]
-            {
-                backRoot.gameObject.AddComponent<CanvasGroup>(),
-                frontRoot.gameObject.AddComponent<CanvasGroup>(),
-            };
-            // The till is a PROP standing on the counter, not a piece of the UI's furniture:
-            // it is drawn at a hi-bit density into a fixed 57-unit footprint and everything
-            // that floats off it is measured from where it stands. See UiAuditExempt.
-            UiAuditExempt.Mark(backRoot, "the register is a prop in the room, placed where it "
-                + "stands on the counter and drawn at 2x density into a fixed footprint");
-            UiAuditExempt.Mark(frontRoot, "the register is a prop in the room, placed where it "
-                + "stands on the counter and drawn at 2x density into a fixed footprint");
-
-            var reg = NewRect("Register", frontRoot);
-            reg.anchorMin = reg.anchorMax = new Vector2(0, 0);
-            reg.pivot = new Vector2(0.5f, 0);
-            // Fixed footprint (hi-bit): a 2x-density sprite renders finer pixels
-            // into the same 57px slot instead of doubling on screen.
-            const float regW = 57f;
-            reg.sizeDelta = new Vector2(regW, regW * registerSprite.rect.height / registerSprite.rect.width);
-            reg.anchoredPosition = new Vector2(RegisterX, RegisterBaseY);
-            var regImg = reg.gameObject.AddComponent<Image>();
-            regImg.sprite = registerSprite; regImg.preserveAspect = true;
-            // The till is clickable: it opens the ledger of days gone by (GDD 24 §7).
-            regImg.raycastTarget = true;
-            var regBtn = reg.gameObject.AddComponent<Button>();
-            regBtn.targetGraphic = regImg;
-            regBtn.transition = Selectable.Transition.None;
-            regBtn.onClick.AddListener(() => _onRegisterClicked?.Invoke());
-            // It opens the ledger, so it says so under the pointer like everything else that
-            // can be pressed.
-            var regGlow = reg.gameObject.AddComponent<HoverGlow>();
-            regGlow.Graphics = new UnityEngine.UI.Graphic[] { regImg };
-
-            // A soft contact shadow under it — the thing that actually sells "resting on"
-            // rather than "floating near".
-            var shadow = NewRect("TillShadow", backRoot);
-            shadow.anchorMin = shadow.anchorMax = new Vector2(0, 0);
-            shadow.pivot = new Vector2(0.5f, 0.5f);
-            shadow.sizeDelta = new Vector2(regW * 0.92f, 5f);
-            shadow.anchoredPosition = new Vector2(RegisterX, RegisterBaseY + 1f);
-            var shImg = shadow.gameObject.AddComponent<Image>();
-            shImg.color = new Color(0f, 0f, 0f, 0.42f); shImg.raycastTarget = false;
-
-            // THE NUMBER, NOT THE PLAQUE (2026-08-19, the author: "ikisine gerek yok,
-            // sadece sayi ile kasanin ustunde paramiz yazsin, bar kaldirilsin"). The
-            // sunken display window and its dark plaque are gone; the wallet is one plain
-            // number standing over the till - and on the FRONT layer, because the back
-            // canvas draws behind the room and a number nobody can read is not a wallet.
-            float regH = reg.sizeDelta.y;
-            var money = NewRect("Money", frontRoot);
-            money.anchorMin = money.anchorMax = new Vector2(0, 0);
-            money.pivot = new Vector2(0.5f, 0f);
-            money.sizeDelta = new Vector2(200, 20);
-            money.anchoredPosition = new Vector2(RegisterX, RegisterBaseY + regH + 2f);
-            _moneyText = NewText("Value", money, _display, 16, TextAnchor.LowerCenter, UITheme.Money);
-            Stretch((RectTransform)_moneyText.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var moneyEdge = _moneyText.gameObject.AddComponent<Outline>();
-            moneyEdge.effectColor = new Color(0f, 0f, 0f, 0.85f);
-            moneyEdge.effectDistance = new Vector2(1f, -1f);
-            _moneyText.raycastTarget = false;
-            _moneyText.text = "$0";
-
-            // WHERE THE MONEY MOVES, THE CHANGE SHOWS (2026-08-14, the author). The till is
-            // the wallet now — the top bar's copy of it is gone — so every rise and fall says
-            // so ON THE MACHINE: +$12 in green, −$14 in red, lifting off the drawer and fading
-            // over two seconds. The spawn point is a child of the plaque, so it needs no
-            // coordinate conversion and follows the register wherever the room's fit puts it.
-            // ON THE FRONT LAYER, not the plaque's own. The money window is drawn on the
-            // register's BACK canvas (order −7) so the room stands in front of it — which is
-            // right for a number sunk into the machine, and wrong for anything that has to be
-            // seen: the first cut of this floated the change behind the bar (measured, and
-            // invisible). It rides the layer the till's own click surface already uses, at the
-            // same screen coordinates, because both canvases are the same overlay at the same
-            // reference size.
-            _moneyFloatHost = NewRect("Change", frontRoot);
-            _moneyFloatHost.anchorMin = _moneyFloatHost.anchorMax = new Vector2(0, 0);
-            _moneyFloatHost.pivot = new Vector2(0.5f, 0f);
-            _moneyFloatHost.sizeDelta = new Vector2(200, 22);
-            _moneyFloatHost.anchoredPosition = new Vector2(
-                RegisterX, RegisterBaseY + regH + 24f);
-        }
-
-        private RectTransform _moneyFloatHost;
-
-        /// <summary>How long a change hangs over the till before it is gone.</summary>
-        private const float MoneyFloatSeconds = 2f;
-
-        /// <summary>
-        /// Lifts a change off the till (2026-08-14, the author's brief, to the letter): the
-        /// figure in GREEN when it rises and RED when it falls, a WHITE outline around that,
-        /// and a BLACK outline outside the white. Two stacked outlines is the only way to get
-        /// two rings out of one label, and the order matters — the black one is added last so
-        /// it draws furthest out.
-        /// </summary>
-        public void FloatMoney(int delta)
-        {
-            if (delta == 0 || _moneyFloatHost == null) return;
-            var rt = NewRect("D", _moneyFloatHost);
-            Stretch(rt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var text = NewText("T", rt, _display, 16, TextAnchor.MiddleCenter,
-                delta > 0 ? UITheme.Lime[3] : UITheme.ViceRed[3]);
-            Stretch((RectTransform)text.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            text.horizontalOverflow = HorizontalWrapMode.Overflow;
-            text.verticalOverflow = VerticalWrapMode.Overflow;
-            text.text = (delta > 0 ? "+" : "−") + "$" + Mathf.Abs(delta);
-
-            var white = text.gameObject.AddComponent<Outline>();
-            white.effectColor = Color.white;
-            white.effectDistance = new Vector2(1.5f, 1.5f);
-            var black = text.gameObject.AddComponent<Outline>();
-            black.effectColor = Color.black;
-            black.effectDistance = new Vector2(3f, 3f);
-
-            StartCoroutine(LiftAndFade(rt, text));
-        }
-
-        private System.Collections.IEnumerator LiftAndFade(RectTransform rt, Text text)
-        {
-            float t = 0f;
-            var from = rt.anchoredPosition;
-            while (t < MoneyFloatSeconds && rt != null)
-            {
-                t += Time.unscaledDeltaTime;
-                float k = Mathf.Clamp01(t / MoneyFloatSeconds);
-                rt.anchoredPosition = from + new Vector2(0, 26f * Mathf.SmoothStep(0f, 1f, k));
-                // It holds its colour for the first half and then goes; a fade that starts at
-                // once reads as a flicker rather than as money leaving the room.
-                float a = k < 0.5f ? 1f : 1f - (k - 0.5f) * 2f;
-                var c = text.color; c.a = a; text.color = c;
-                foreach (var o in text.GetComponents<Outline>())
-                {
-                    var oc = o.effectColor; oc.a = a; o.effectColor = oc;
-                }
-                yield return null;
-            }
-            if (rt != null) Destroy(rt.gameObject);
-        }
+        // ── the till is gone (2026-08-26) ────────────────────────────────────────
+        // The author: "kasa ve parayı ana sahneden kaldır". The register stood on the bar's
+        // right-hand end on two overlay canvases of its own, wore the bar's balance over it
+        // in gold, floated every rise and fall off the drawer, and opened the ledger when it
+        // was clicked. All four went together: a machine with no number on it is a prop, and
+        // a number with no machine under it is the fascia readout this one replaced.
+        //
+        // WHAT THE ROOM KEEPS: nothing counts money at you while you are serving. The night's
+        // takings are read where a night's takings are read — on the slip, when the books
+        // open — and the market tablet carries the running balance while you are spending it.
+        // The ledger's door moved to the standing block on the fascia (TycoonHud's own note).
 
         private static RectTransform OverlayCanvas(string name, int order, bool raycasts)
         {

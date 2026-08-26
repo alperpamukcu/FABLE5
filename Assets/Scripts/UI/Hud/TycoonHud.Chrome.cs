@@ -158,20 +158,14 @@ namespace LastCall.UI
                 float speed = Mathf.Max(28f, Mathf.Abs(want - _tillShown) * 4.5f);
                 _tillShown = Mathf.MoveTowards(_tillShown, want, speed * Time.unscaledDeltaTime);
             }
-            // The CHANGE is announced off the real figure, not off the animated one: the
-            // counter takes its time getting there, and a float per counted step would be a
-            // stream of ones.
-            if (_tillLast != int.MinValue && run.Money != _tillLast)
-            {
-                var st = _stage != null ? _stage : FindFirstObjectByType<DiegeticStage>();
-                _stage = st;
-                if (st != null) st.FloatMoney(run.Money - _tillLast);
-            }
+            // (The change used to float off the register's drawer as it moved; the register
+            //  went out of the room on 2026-08-26 and took the float with it. What a
+            //  CUSTOMER pays still rises off their own stool — see TabFloat — which is the
+            //  only money the shift is asked to watch.)
             _tillLast = run.Money;
 
             int shown = Mathf.RoundToInt(_tillShown);
             if (_tabletTill != null) _tabletTill.text = "$" + shown;
-            if (stage != null) stage.SetMoney("$" + shown);
         }
 
         private void WatchFixtures()
@@ -496,16 +490,6 @@ namespace LastCall.UI
                 {
                     _clockWasLast = last;
                     _clock.SetHue(last ? UITheme.Magenta[4] : UITheme.Cyan[4]);
-                    // The tube under the whole beam goes with it. This is the state light
-                    // now: a 2px rule under one plaque was never going to be seen, and the
-                    // board itself changing colour is read before anything is read.
-                    if (_neonTube != null)
-                        _neonTube.color = last ? UITheme.Magenta[4] : UITheme.Amber[4];
-                    if (_neonBloom != null)
-                    {
-                        var b = last ? UITheme.Magenta[2] : UITheme.Amber[2];
-                        _neonBloom.color = new Color(b.r, b.g, b.b, last ? 0.42f : 0.30f);
-                    }
                 }
                 _clock.Show(hh, mm / 5 * 5, ((int)(Time.unscaledTime * 2f) & 1) == 0);
             }
@@ -514,15 +498,33 @@ namespace LastCall.UI
             // twice across one board is what made the old one read as assembled.
             RefreshWeekStrip(run);
 
-            // DEBT IS SHOWN ON THE MACHINE THAT HOLDS THE MONEY (2026-08-14). The fascia's
-            // copy of the till is gone, so the register's own window goes red instead — and
-            // the line that used to colour the fascia's number went with it. It was left
-            // behind for one build and threw every frame, which took the standing and the
-            // crowd down with it: everything after a NullReference in Update simply does not
-            // run, and the plaque above went quietly blank.
-            var tillStage = _stage != null ? _stage : FindFirstObjectByType<DiegeticStage>();
-            _stage = tillStage;
-            if (tillStage != null) tillStage.SetMoneyInDebt(run.Money < 0);
+            // THE BEAM IS THE STATE LIGHT (2026-08-14; it now answers to two states, not
+            // one). A 2px rule under one plaque was never going to be seen, and the board
+            // itself changing colour is read before anything is read: amber through the
+            // shift, magenta once the room is being called.
+            //
+            // DEBT JOINED IT ON 2026-08-26. Under water used to redden the REGISTER's own
+            // window, and the register left the room with the rest of the money (the author:
+            // "kasa ve parayı ana sahneden kaldır"), so the beam took the reading. It beats
+            // last call, because a bar in the red is the more urgent of the two facts — and
+            // it is a colour, not a figure: how DEEP under is the book's business (behind the
+            // cog) and the slip's. Both are driven from HERE, off one cached state, because
+            // the tube used to be painted inside the clock's own change-check and a second
+            // writer keyed on a different change would have left it wearing whichever of them
+            // moved last.
+            bool underWater = run.Money < 0;
+            int beam = underWater ? 2 : last ? 1 : 0;
+            if (beam != _beamState)
+            {
+                _beamState = beam;
+                var core = underWater ? UITheme.ViceRed[3]
+                    : last ? UITheme.Magenta[4] : UITheme.Amber[4];
+                var halo = underWater ? UITheme.ViceRed[2]
+                    : last ? UITheme.Magenta[2] : UITheme.Amber[2];
+                if (_neonTube != null) _neonTube.color = core;
+                if (_neonBloom != null)
+                    _neonBloom.color = new Color(halo.r, halo.g, halo.b, beam == 0 ? 0.30f : 0.42f);
+            }
 
             // The caption line over the standing carries the crowd — and gives way to LAST
             // CALL when the room is being called, because at that point what is in front of
@@ -665,6 +667,16 @@ namespace LastCall.UI
                 Sfx.Play("click");
                 RefreshSettings();
             });
+
+            // THE BOOK LOST ITS DOOR WITH THE TILL (2026-08-26, the author: "kasa ve parayı
+            // ana sahneden kaldır"). The register was the way into the night's ledger, and
+            // taking the machine out of the room took the handle with it. It is not going
+            // back onto the bar in another shape: the whole point of the removal is that
+            // nothing counts money at you while you are serving. So it lives behind the cog,
+            // with the other things you go and LOOK for rather than reach for — one row, and
+            // the night's figures are still one press away for anybody who wants them.
+            SettingsRow(5, "TONIGHT'S BOOK — every line the till has taken", () =>
+            { ToggleSettings(); ToggleLedger(); });
 
             _settingsPanel.gameObject.SetActive(false);
         }

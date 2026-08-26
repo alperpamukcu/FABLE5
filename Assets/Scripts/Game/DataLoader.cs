@@ -332,7 +332,7 @@ namespace LastCall.Game
                     fixtures.Add(new FixtureDefinition(f.id, f.name, f.slot, f.price,
                         f.stars, f.flavor, f.sprite,
                         f.lightR, f.lightG, f.lightB, f.lightIntensity, f.lightRadius,
-                        f.startsInTheRoom, f.tapLevel, f.level));
+                        f.startsInTheRoom, f.tapLevel, f.level, f.drain, f.drainsFree));
                 }
                 catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
                 {
@@ -716,6 +716,14 @@ namespace LastCall.Game
             /// the draught tower (2026-08-24, the wall lamps). A tower's rung stays in
             /// tapLevel; carrying both is a content bug the definition refuses.</summary>
             public int level;
+
+            /// <summary>This piece is the bar's drain — a mistake goes down it (2026-08-26).
+            /// Absent is false, so every fixture that is not a sink is unchanged.</summary>
+            public bool drain;
+
+            /// <summary>...and this one costs nothing to pour a drink away in. Only a
+            /// drain may say it; the definition refuses the pairing otherwise.</summary>
+            public bool drainsFree;
         }
 
         [Serializable]
