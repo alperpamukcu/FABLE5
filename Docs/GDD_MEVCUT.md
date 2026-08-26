@@ -325,6 +325,30 @@ artık çağrılmıyor — çökmezler ama ölüdürler, bir sonraki temizlik tu
 - **RAF SOLA KAYDI:** lavabo 181 … kaplar 195..380 … bardak 405 … mat 480 — tezgâh, gecenin
   akış sırasıyla okunur: lavabo, malzemeler, içki, musluk.
 
+### 9.8 · Raf barın sahip olduklarını gösterir; içki kendi altlığında durur (2026-08-26)
+
+- **KİLİT EKONOMİDEYDİ, RAF OKUMUYORDU** (yazar: "bazıları ileriki seviyelerde
+  açılacaktı"). Buz, limon kıvrımı ve iki rım ev temelidir, hep durur. **Zeytin ve nane
+  STOKtur** — `base_bar.json` onları başından beri 3.0 ve 4.0 yıldızın arkasına fiyatlamış;
+  raf artık bunu okuyor. Barın almadığı ya da bu gece bitirdiği bir kavanoz tezgâhta
+  durmaz; alınca durur. **Sıra GÖRÜNÜR indekse göre dizilir**, böylece alınmamış bir
+  garnitür sırada delik bırakmaz ve raf hep altlığın başladığı yerde biter.
+- **KAPTAN İÇİNDEKİ ÇIKAR** (yazar: "buz kovasından buz alırsın buz kovası değil"). El artık
+  koveyi değil KÜPü, kaseyi değil DİLİMİ, kavanozu değil ŞİŞİ kaldırıyor — hem de bardağa
+  düştüğünde yüzen sprite'ın ta kendisini: seçme, taşıma ve yüzme tek nesne. **İki rım
+  İSTİSNA ve bu bir unutkanlık değil:** fiil bardağı tuzun İÇİNDE çevirmek olduğu için elde
+  duran şey kabın kendisidir.
+- **KEPENK AÇILINCA KAYBOLMAZ** (yazar: "kapak açmak için bastığımızda yok oluyorlar").
+  Önce çekmeceyle birlikte kapatılıyordu; kaplar barın üstünde duruyor, bar odayla
+  yükseliyor, ve arkasına uzandığın anda yok olan bir tepsi hata gibi okunur. Artık
+  `CounterLift` ile YUKARI biner; yalnız **imlece cevap vermeyi keser**, çünkü altında
+  mahzenin kendi kapıları var ve şişeye giden tıklama şişeye ulaşmalıdır.
+- **İÇKİNİN BİR YERİ VAR:** bitmiş içki son garnitür (sahne 380) ile bira matı (480)
+  arasında, sahne 430'da durur; boyu 116 → **92** (o boyda bardın en uzun nesnesiydi ve
+  önplan propu gibi okunuyordu). Altında **her zaman** bir altlık çizilir
+  (`counter_coaster`, tam 2×) — içki olsun olmasın: boş altlık, bir sonrakinin nereye
+  konacağını söyleyen şeydir. İkisi de tek sabitten (`GlassHomeX`) yerleşir.
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

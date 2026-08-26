@@ -2,6 +2,29 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `GDD_MEVCUT §9.8 / 22 §5` **the rail shows what the bar owns, and the drink gets a
+  place (2026-08-26, twelfth round):**
+  **The gate was already in the economy and the rail was not reading it.** Ice, the twist
+  and the two rims are house basics and always out; the olive and the mint are STOCK, and
+  base_bar.json has priced them behind 3.0 and 4.0 stars since it was written. A jar the
+  bar has not bought — or has emptied tonight — is off the counter, and buying one puts it
+  there. The row lays out by VISIBLE index, so an unbought garnish leaves no hole and the
+  rail still ends where the coaster begins.
+  **The hand carries what comes OUT of the dish**, not the dish: a cube off the bucket, a
+  wedge off the bowl, a spear off the jar — and it is the same sprite that ends up floating
+  in the drink, so the pick, the carry and the float are one object. The two rims are the
+  written exception: the verb is turning the glass IN the salt, so the dish is what the
+  hand holds.
+  **The rail stops vanishing when the cellar opens.** It was switched off with the drawer;
+  the dishes stand on the bar, the bar rises with the room, and a tray that disappears the
+  moment you reach behind it reads as a bug. It rides CounterLift up instead and only stops
+  ANSWERING the pointer, because the cellar's own doors are under it and a click meant for
+  a bottle must reach the bottle.
+  **The drink has a place.** It stands between the last garnish (stage 380) and the drip mat
+  (480), at 430, and its height went 116 → 92 — at 116 it was the tallest thing on the bar.
+  A coaster is drawn under it ALWAYS, drink or no drink: an empty coaster is what says where
+  the next one lands. Both are placed from one constant.
+
 - `GDD_MEVCUT §9.5 / 24 / 16` **the bench opens onto the room, and the counter band owns
   every control (2026-08-26, eleventh round):** the author's redesign brief, with their own
   1149×426 working area.

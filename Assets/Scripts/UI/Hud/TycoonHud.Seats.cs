@@ -409,6 +409,14 @@ namespace LastCall.UI
             public string Id;
             public RectTransform Rt;
             public Image Img;
+            /// <summary>What leaves the dish when it is picked up: a CUBE off the bucket,
+            /// a WEDGE off the bowl, a spear off the jar (2026-08-26, the author: "buz
+            /// kovasindan buz alirsin buz kovasi degil"). Null on the two rims, which are
+            /// the one case where the dish itself is carried — you turn the glass IN it.
+            /// The sprite is the same one that ends up floating in the drink, so what you
+            /// pick up and what you see in the glass are one object.</summary>
+            public string Carry;
+            public Vector2 CarrySize;
             /// <summary>The volumeless mark this prop puts on the glass, or null when the
             /// prop is stock rather than a mark.</summary>
             public PreparationDefinition Prep;
@@ -448,7 +456,7 @@ namespace LastCall.UI
         // sola kaymalı, bira matı ile sink arasında olmalı"). At X0 100 the rail ran to
         // stage 555 and its last two dishes stood ON the beer font; at -250 the six span
         // stage 195..380 — clear of the basin's right edge (181) and well short of the drip
-        // mat (480). The finished drink moved right with it (see _glassHome), so the counter
+        // mat (480). The finished drink moved right with it (see GlassHome), so the counter
         // reads left to right the way the night runs: sink, the makings, the drink, the tap.
         private const float PrepRailY = -196f, PrepRailX0 = -250f, PrepRailGap = 74f;
 
@@ -475,21 +483,26 @@ namespace LastCall.UI
             // stock. A garnish whose bottle the bar does not stock, or has emptied, is
             // simply not built: an empty jar on the counter is a promise the bar cannot keep.
             (string id, string art, string fallback, PreparationDefinition prep,
-             string style, string word)[] rail =
+             string style, string word, string carry, float carryH)[] rail =
             {
-                ("ice", "counter_ice", "bench_mini_ice", Preparations.Ice, null, "ICE"),
+                ("ice", "counter_ice", "bench_mini_ice", Preparations.Ice, null, "ICE",
+                 "glass_ice", 34f),
                 ("lemon_twist", "counter_lemon", "bench_mini_lemon", Preparations.LemonTwist,
-                 null, "LEMON"),
-                ("olive", "counter_olive", "garnish_olive", null, "olive", "OLIVE"),
-                ("mint", "counter_mint", "garnish_mint", null, "mint", "MINT"),
+                 null, "LEMON", "glass_lemon", 40f),
+                ("olive", "counter_olive", "garnish_olive", null, "olive", "OLIVE",
+                 "glass_olive", 52f),
+                ("mint", "counter_mint", "garnish_mint", null, "mint", "MINT",
+                 "glass_mint", 40f),
+                // The rims carry their DISH, and that is not an oversight: the verb is
+                // turning the glass in the salt, so the thing in the hand is the dish.
                 ("salt_rim", "counter_salt", "bench_mini_salt", Preparations.SaltRim,
-                 null, "TURN IT IN THE SALT"),
+                 null, "TURN IT IN THE SALT", null, 0f),
                 ("sugar_rim", "counter_sugar", "bench_mini_sugar", Preparations.SugarRim,
-                 null, "TURN IT IN THE SUGAR"),
+                 null, "TURN IT IN THE SUGAR", null, 0f),
             };
             for (int i = 0; i < rail.Length; i++)
             {
-                var (id, art, fallback, prep, style, word) = rail[i];
+                var (id, art, fallback, prep, style, word, carry, carryH) = rail[i];
                 var rt = NewRect("MP_" + id, _prepRail);
                 Place(rt, new Vector2(0.5f, 0.5f), new Vector2(64, 64),
                     new Vector2(PrepRailX0 + i * PrepRailGap, PrepRailY));
@@ -499,9 +512,15 @@ namespace LastCall.UI
                 if (img.sprite == null) img.color = UITheme.Cyan[3];
                 var glow = rt.gameObject.AddComponent<HoverGlow>();
                 glow.Graphics = new Graphic[] { img };
+                var carryArt = carry != null ? ItemArt.Load(carry) : null;
                 var prop = new PrepProp
                 {
                     Id = id, Rt = rt, Img = img, Prep = prep, Style = style, Word = word,
+                    Carry = carryArt != null ? carry : null,
+                    CarrySize = carryArt != null
+                        ? new Vector2(carryH * (carryArt.rect.width / carryArt.rect.height),
+                                      carryH)
+                        : new Vector2(64f, 64f),
                     // A rim is TURNED, not dropped (2026-08-25's skill, re-homed here on
                     // 2026-08-26 when the dishes left the glass bench). See StepPrepCarry.
                     IsRim = id == "salt_rim" || id == "sugar_rim",
@@ -542,8 +561,14 @@ namespace LastCall.UI
             if (_flow != null && _flow.IsOpen) return;
             if (CellarOpen || _prepCarry == null) return;
             _prepHeld = prop;
-            _prepCarryImg.sprite = prop.Img.sprite;
-            _prepCarryImg.color = prop.Img.sprite != null ? Color.white : UITheme.Cyan[3];
+            // WHAT COMES OUT OF THE DISH, not the dish (2026-08-26). The hand used to
+            // lift the whole bucket; you take a cube out of a bucket, and the cube you
+            // take is the cube that ends up in the drink — the same sprite, so the pick,
+            // the carry and the float are one object all the way through.
+            var inHand = prop.Carry != null ? ItemArt.Load(prop.Carry) : null;
+            _prepCarryImg.sprite = inHand ?? prop.Img.sprite;
+            _prepCarryImg.color = _prepCarryImg.sprite != null ? Color.white : UITheme.Cyan[3];
+            _prepCarry.sizeDelta = inHand != null ? prop.CarrySize : new Vector2(64f, 64f);
             _prepCarry.anchoredPosition = prop.Rt.anchoredPosition + _prepRail.anchoredPosition;
             _prepCarry.gameObject.SetActive(true);
             _prepCarry.SetAsLastSibling();
@@ -750,8 +775,15 @@ namespace LastCall.UI
         private void StepMiniPreps(TycoonRun run)
         {
             if (_prepRail == null) return;
+            // THE RAIL DOES NOT VANISH WHEN THE CELLAR OPENS (2026-08-26, the author:
+            // "garnishler kapak acmak icin bastigimizda yok oluyorlar"). It used to be
+            // switched off with the drawer; the dishes are standing on the bar, the bar
+            // rises with the room, and a tray that disappears the moment you reach behind
+            // it reads as a bug. It rides CounterLift up instead — and its props stop
+            // ANSWERING the pointer while the drawer is open, because the cellar's own
+            // doors are under them and a click meant for a bottle must reach the bottle.
             bool on = run != null && run.Phase == TycoonPhase.DayOpen
-                      && (_flow == null || !_flow.IsOpen) && !CellarOpen;
+                      && (_flow == null || !_flow.IsOpen);
             if (_prepRail.gameObject.activeSelf != on)
                 _prepRail.gameObject.SetActive(on);
             if (!on)
@@ -760,16 +792,44 @@ namespace LastCall.UI
                 return;
             }
             _prepRail.anchoredPosition = new Vector2(0, CounterLift);
+            if (_coasterRt != null)
+            {
+                if (!_coasterRt.gameObject.activeSelf) _coasterRt.gameObject.SetActive(true);
+                // ON the foot line, under the drink, riding the bar like the dishes beside
+                // it — one line, so the coaster, the glass and the six dishes all touch the
+                // same counter.
+                _coasterRt.anchoredPosition = new Vector2(GlassHomeX, CounterFootY + CounterLift);
+            }
+            bool reachable = !CellarOpen;
+            if (!reachable && _prepHeld != null) DropPrep(false);
 
             bool glass = run.DrinkReady && _glassShown && !_glassServing && !_glassReturning;
+            // WHAT THE BAR OWNS, AND NOTHING ELSE (2026-08-26, the author: "bazilari
+            // ileriki seviyelerde acilacakti"). Ice, the twist and the two rims are house
+            // basics and always out. The olive and the mint are STOCK, and base_bar.json
+            // has always priced them behind three and four stars — the gate existed in the
+            // economy and the rail was not reading it. A jar the bar has not bought, or has
+            // emptied tonight, is not on the counter; buying one puts it there.
+            int slot = 0;
             foreach (var prop in _prepProps)
             {
+                bool stocked = prop.Style == null || GarnishOnTheShelf(run, prop.Style) != null;
+                if (prop.Rt.gameObject.activeSelf != stocked)
+                    prop.Rt.gameObject.SetActive(stocked);
+                if (!stocked) continue;
+                // Laid out by VISIBLE index, so an unbought garnish leaves no hole in the
+                // row — the rail closes up and still ends where the coaster begins.
+                prop.Rt.anchoredPosition = new Vector2(PrepRailX0 + slot * PrepRailGap, PrepRailY);
+                slot++;
+
                 // Spent, or nothing to spend it on. The bucket is never spent — ice is
                 // counted, not applied — which is the one exception the glass already makes.
-                bool done = glass && prop.Id != "ice" && run.ServingGlass.HasPreparation(prop.Id);
+                bool done = glass && prop.Prep != null && prop.Id != "ice"
+                            && run.ServingGlass.HasPreparation(prop.Id);
                 var baseCol = prop.Img.sprite != null ? Color.white : UITheme.Cyan[3];
                 float a = !glass ? 0.55f : done ? 0.4f : 1f;
                 prop.Img.color = new Color(baseCol.r, baseCol.g, baseCol.b, a);
+                prop.Img.raycastTarget = reachable;
             }
             StepPrepCarry(run);
         }
@@ -778,10 +838,29 @@ namespace LastCall.UI
 
         private void BuildDrinkGlass(RectTransform root)
         {
-            // Right of the garnish rail since 2026-08-26 (it was dead centre, and the rail
-            // that moved left now ends at stage 380 — the glass stands at 405, between the
-            // rail and the drip mat, so a drag off any dish travels right into it).
-            _glassHome = new Vector2(170f, -200f);
+            // BETWEEN THE LAST DISH AND THE DRIP MAT (2026-08-26, the author: "son
+            // garnish ile bar mati arasinda tezgahin ustunde durmali"). The rail runs to
+            // stage 380 at its longest and the mat starts at 480; the drink stands at 430,
+            // in the gap, and every drag off a dish travels right into it.
+
+            // THE COASTER IS ALWAYS THERE (same note: "tam bardagin koyulacagi yere bir
+            // bardak altligi olmali sahnede her zaman"). It is the drink's PLACE, so it is
+            // drawn whether or not there is a drink on it — an empty coaster is what tells
+            // the player where the next one will land, and it is why the glass no longer
+            // looks like it is floating on a strip of counter. Built before the glass, so
+            // the drink stands ON it.
+            var coaster = NewRect("Coaster", root);
+            var coasterArt = ItemArt.Load("counter_coaster");
+            coaster.anchorMin = coaster.anchorMax = coaster.pivot = new Vector2(0.5f, 0.5f);
+            coaster.sizeDelta = coasterArt != null
+                ? coasterArt.rect.size * 2f : new Vector2(112f, 44f);
+            _coasterRt = coaster;
+            var coasterImg = coaster.gameObject.AddComponent<Image>();
+            coasterImg.sprite = coasterArt;
+            coasterImg.preserveAspect = true;
+            coasterImg.raycastTarget = false;
+            if (coasterArt == null) coasterImg.enabled = false;
+            coaster.gameObject.SetActive(false);
             // (The bin used to be built here, before the glass, so the carried drink passed
             //  over it. It went on 2026-08-26 and the sink took the verb — see TycoonHud's
             //  own headstone for it, and OnDrainClicked below.)
@@ -793,7 +872,7 @@ namespace LastCall.UI
             _drinkGlass = NewRect("DrinkGlass", root);
             _drinkGlass.anchorMin = _drinkGlass.anchorMax = _drinkGlass.pivot = new Vector2(0.5f, 0.5f);
             _drinkGlass.sizeDelta = new Vector2(78, CarriedGlassHeight);
-            _drinkGlass.anchoredPosition = _glassHome;
+            _drinkGlass.anchoredPosition = GlassHome;
 
             // THE GLASS IS PICKED UP AGAIN (2026-08-11, the author: back to dragging
             // instead of clicking). Clicking a customer to serve them was the wrong verb for
@@ -952,7 +1031,7 @@ namespace LastCall.UI
             {
                 _glassShown = true;
                 _drinkGlass.gameObject.SetActive(true);
-                _drinkGlass.anchoredPosition = _glassHome;
+                _drinkGlass.anchoredPosition = GlassHome;
                 _glassAngle = 0f;
                 _glassServing = false; _glassReturning = false; _glassServeSeat = -1;
                 _glassGrabbed = false;
@@ -1023,7 +1102,7 @@ namespace LastCall.UI
                     }
                     if (seat >= 0 && !saidWhy) Toast("READ THEIR ID FIRST");
                     // Home it goes, along the counter, by the road it already knows.
-                    _glassServeFrom = _glassHome;
+                    _glassServeFrom = GlassHome;
                     _glassServeTo = _drinkGlass.anchoredPosition;
                     _glassServeDur = Mathf.Min(GlassSlideMax,
                         0.08f + (_glassServeTo - _glassServeFrom).magnitude / 4200f);
@@ -1068,7 +1147,7 @@ namespace LastCall.UI
                 if (_glassReturning)
                 {
                     _glassReturning = false;
-                    _drinkGlass.anchoredPosition = _glassHome;
+                    _drinkGlass.anchoredPosition = GlassHome;
                     _drinkGlass.localRotation = Quaternion.identity;
                     return;
                 }
@@ -1096,7 +1175,7 @@ namespace LastCall.UI
 
             // At rest: home, upright. (The bin's hover tint lived here; the sink answers the
             // pointer with HoverGlow, like every other prop standing in the room.)
-            _drinkGlass.anchoredPosition = _glassHome;
+            _drinkGlass.anchoredPosition = GlassHome;
             _drinkGlass.localRotation = Quaternion.identity;
         }
 

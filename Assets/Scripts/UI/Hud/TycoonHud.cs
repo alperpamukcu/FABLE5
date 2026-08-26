@@ -577,7 +577,28 @@ namespace LastCall.UI
         /// <summary>The room, asked where its shelf compartments are.</summary>
         private DiegeticStage _stage;
 
-        private const float CarriedGlassHeight = 116f;
+        /// <summary>How tall the finished drink stands on the counter. 116 -> 92
+        /// (2026-08-26, the author: "boyutu kucultulmeli"): at 116 it was the tallest thing
+        /// on the bar and read as a prop in the foreground rather than a glass waiting on a
+        /// coaster.</summary>
+        private const float CarriedGlassHeight = 92f;
+
+        /// <summary>Where the finished drink stands: stage 430, in the gap between the
+        /// garnish rail's far end (380) and the drip mat (480). The coaster is drawn at
+        /// this x too — they are the same place, and one constant keeps them there.</summary>
+        private const float GlassHomeX = 220f;
+
+        /// <summary>
+        /// THE DRINK STANDS ON THE DISHES' OWN FOOT LINE (2026-08-26). Everything on this
+        /// bar is placed by where it TOUCHES the counter, not by where its middle is: the
+        /// six dishes are 64-tall rects centred on PrepRailY, so their feet are 32 below it,
+        /// and the coaster lies on exactly that line with the glass standing in it. Derived
+        /// rather than typed, so a re-drawn glass or a taller dish keeps the row level.
+        /// </summary>
+        private const float CounterFootY = -196f - 32f;
+
+        /// <summary>The drink's place on the bar, drawn whether or not there is a drink.</summary>
+        private RectTransform _coasterRt;
 
         // CLICK-TO-SERVE (2026-08-11, the author's loop rework — experimental, replacing
         // the drag): the ready glass stands at its home; clicking a customer whose order
@@ -602,7 +623,15 @@ namespace LastCall.UI
 
         private float _glassAngle;
 
-        private Vector2 _glassHome;
+        /// <summary>
+        /// Where the finished drink rests, RIDING THE COUNTER (2026-08-26). It was a plain
+        /// field set once at build, so opening the cellar lifted the bar, the coaster and
+        /// every dish on the rail and left the drink standing in mid-air over the shelves —
+        /// which nobody saw until the coaster arrived and gave it something to be separated
+        /// FROM. The same lift the book, the dirty glasses and the rail already read.
+        /// </summary>
+        private Vector2 GlassHome =>
+            new Vector2(GlassHomeX, CounterFootY + CarriedGlassHeight * 0.5f + CounterLift);
 
         private bool _glassShown;
 

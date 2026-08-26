@@ -109,6 +109,14 @@ JOBS = {
         'single object centred, transparent background, pixel art, no text'),
         ITEMS, 'glass_mint.png'),
 
+    # ── the coaster the finished drink always stands on ──────────────────
+    'counter_coaster': (56, 22, 53, (
+        'a round cork drinks coaster lying flat on a bar, seen from a low three-quarter '
+        'angle so it reads as a shallow ellipse, dark cork with a thin brass rim and a '
+        'faint ring worn into the middle, single object centred, transparent background, '
+        + VICE + ', no text'),
+        ITEMS, 'counter_coaster.png'),
+
     # ── the night boards' plate ─────────────────────────────────────────────────
     'board_plate': (178, 192, 47, (
         'pixel art blank rectangular instrument panel for a game UI, dark navy brushed '

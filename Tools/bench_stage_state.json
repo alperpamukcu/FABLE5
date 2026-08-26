@@ -38,5 +38,9 @@
  "glass_ice": {
   "job_id": "8277cd1b-4312-4d1b-9bfb-2c315e0e3b3a",
   "png": "AssetPipeline\\staging\\bench_stage\\glass_ice.png"
+ },
+ "counter_coaster": {
+  "job_id": "f36d769b-3f99-4ebb-aa94-f110a0a3aaea",
+  "png": "AssetPipeline\\staging\\bench_stage\\counter_coaster.png"
  }
 }
