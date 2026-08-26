@@ -1,0 +1,66 @@
+{
+ "room_dusk": {
+  "id": "a1f62f0c-50d1-4dca-814a-d85c4dd9787c",
+  "family": "room"
+ },
+ "room_night": {
+  "id": "10040b5e-ae2a-496b-86db-7c7ce5285556",
+  "family": "room"
+ },
+ "fx_neon_flamingo": {
+  "id": "902fa258-a909-4631-a5e8-8b74d9040d12",
+  "family": "dressing"
+ },
+ "fx_deco_mirror": {
+  "id": "91d07e5d-04b8-4102-815a-6277441aa107",
+  "family": "dressing"
+ },
+ "fx_jukebox": {
+  "id": "eeee0d0f-a570-43f1-b94f-30882669370e",
+  "family": "dressing"
+ },
+ "counter_vice": {
+  "id": "a9ecd1d4-8e0f-422a-82e4-9792d7f71271",
+  "family": "counter"
+ },
+ "counter_sunset": {
+  "id": "7d30d881-d4b7-4e79-9d91-07775c5de2a5",
+  "family": "counter"
+ },
+ "counter_chrome": {
+  "id": "c538e14d-323f-44b5-80b8-aac6891deab2",
+  "family": "counter"
+ },
+ "fx_palm_pot": {
+  "id": "19cdf0b2-9180-4457-bda0-13ad1b3e83ce",
+  "family": "dressing"
+ },
+ "till_brass": {
+  "id": "9c5556a9-83fe-435c-8e53-9372d68d47ea",
+  "family": "till"
+ },
+ "till_neon": {
+  "id": "74e4ada7-3c56-46a6-b1e2-1f181ef7ec40",
+  "family": "till"
+ },
+ "till_marble": {
+  "id": "02bc4d8b-c815-47ad-9f1d-c4a0c897c9bf",
+  "family": "till"
+ },
+ "fx_plant_fiddle": {
+  "id": "822b6aa0-f796-41d5-983f-3c6d6ddd2f7e",
+  "family": "dressing"
+ },
+ "fx_plant_snake": {
+  "id": "9b86ddc7-85cc-4052-815d-ed942135b0d1",
+  "family": "dressing"
+ },
+ "fx_plant_pothos": {
+  "id": "7da43ad9-d953-4bde-b178-81f9a31f02a1",
+  "family": "dressing"
+ },
+ "fx_plant_agave": {
+  "id": "8505a419-47c8-4824-bdc2-49a518575837",
+  "family": "dressing"
+ }
+}
