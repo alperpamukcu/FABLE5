@@ -439,7 +439,9 @@ namespace LastCall.PlayTests
                 // it, and now it is the only one. The suite aims at the WORD written on it,
                 // because the roller's own rect is hung by its top and its centre is off the
                 // bottom of the screen - a click there lands nowhere.
-                var key = Find("OpenSignWord");
+                // The ARROW since 2026-08-26: the word came off the roller and the chevron
+                // is the whole sign now, drawn at 3× where the word used to sit.
+                var key = Find("OpenSignArrow");
                 Assert.That(key, Is.Not.Null, "the roller carries no OPEN to press");
                 yield return ClickOn(key);
                 yield return new WaitForSecondsRealtime(0.6f);      // the roller's own travel

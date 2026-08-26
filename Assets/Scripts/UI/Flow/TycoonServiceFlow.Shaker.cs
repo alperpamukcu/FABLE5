@@ -200,7 +200,13 @@ namespace LastCall.UI
         {
             string[] marks = { "pour", "cap", "mix", "toglass" };
             string[] words = { "FILL THE TIN", "CAP IT", "SHAKE OR STIR", "TO THE GLASS" };
-            BuildStepCard(panel, "THE BENCH", marks, words, _stepRows, new Vector2(20, -18));
+            // Left column of the band, over the BACK key. THE CAP CARRIES THE BOTTLE'S
+            // NAME (2026-08-26): the bench used to hang the name on its own plate, and on
+            // a band this full a second plate was one instrument too many — the card's
+            // teal head sat beside it saying "THE BENCH", which the player already knows.
+            // RefreshShaker writes whatever is in hand over it.
+            _shakerTitle = BuildStepCard(panel, "THE BENCH", marks, words, _stepRows,
+                                         new Vector2(66, 260));
         }
 
         /// <summary>
@@ -210,47 +216,60 @@ namespace LastCall.UI
         /// same tick — a player who learns to read it at the bench can read it at the
         /// counter without being taught twice.
         /// </summary>
-        /// <summary>How far below the field's own top edge anything on a bench may start.
-        /// The room's fascia is 54 units of instrument and the flow draws OVER it, so a
-        /// card pinned to the top pinned itself across the clock (2026-08-26, the author:
-        /// "üst barın üstüne denk geliyor").</summary>
-        private const float BenchTopClear = 74f;
+        // (BenchTopClear is gone with the last thing pinned to the top of the field:
+        //  since 2026-08-26 every control and reading on a bench lives ON the counter band
+        //  — the author's own 1149×426 — and the room above it belongs to the room.)
 
-        private void BuildStepCard(RectTransform panel, string head, string[] marks,
+        private Text BuildStepCard(RectTransform panel, string head, string[] marks,
             string[] words, List<(Image icon, Text label, Image tick)> rows, Vector2 at)
         {
-            const float CardW = 246f, RowH = 26f, HeadH = 26f;
+            const float CardW = 246f, RowH = 26f;
+            // The plate's drawn head is 60 units at its 2× (see ItemArt.BoardPlate), and
+            // the rows stand under it, over the bottom frame.
+            const float HeadH = 60f;
             var card = NewRect("Steps", panel);
-            Place(card, new Vector2(0, 1), new Vector2(CardW, HeadH + 10f + marks.Length * RowH),
-                new Vector2(at.x, at.y - BenchTopClear));
-            // A PLATE, not a wash of black (2026-08-26). It used to be a 72%-opaque
-            // rectangle, which over a lit wall is a smudge; it is the house's own card now,
-            // with a capped head — the same grammar the fascia's wells and the market's
-            // tiles are built in, so the bench stops looking like a different game.
+            // ON THE COUNTER, standing up from its foot (2026-08-26, the author: "üst
+            // barın üstüne denk geliyor ... tüm butonlar barlar nesneler 1149x426'lık
+            // alanda olmalı"). It was pinned to the panel's TOP-left, which the flow draws
+            // over the room's fascia; the bench's working area is the counter band, so the
+            // card is bottom-anchored and rises from the bar like everything else on it.
+            card.anchorMin = card.anchorMax = new Vector2(0f, 0f);
+            card.pivot = new Vector2(0f, 0f);
+            card.sizeDelta = new Vector2(CardW, HeadH + 8f + marks.Length * RowH + 16f);
+            card.anchoredPosition = at;
+            // THE INVOICE BOARDS' OWN PLATE (2026-08-26, the author: "fatura ekranındaki
+            // UI tarzını beğendim ... alkol yapım sahnesine de ekle"). One instrument
+            // plate for the whole game's readings — sliced, so its drawn frame keeps the 2×
+            // grain at this card's size as it does at the boards'.
             var bg = card.gameObject.AddComponent<Image>();
-            bg.sprite = ChromeArt.Card();
-            bg.type = Image.Type.Sliced;
-            bg.color = UITheme.Night[1];
+            bg.sprite = ItemArt.BoardPlate();
+            if (bg.sprite != null)
+            {
+                bg.type = Image.Type.Sliced;
+                bg.pixelsPerUnitMultiplier = 0.5f;
+            }
+            else
+            {
+                bg.sprite = ChromeArt.Card();
+                bg.type = Image.Type.Sliced;
+                bg.color = UITheme.Night[1];
+            }
             bg.raycastTarget = false;
 
-            var cap = NewRect("Cap", card);
-            cap.anchorMin = new Vector2(0, 1); cap.anchorMax = Vector2.one;
-            cap.pivot = new Vector2(0.5f, 1);
-            cap.offsetMin = new Vector2(3, -HeadH); cap.offsetMax = new Vector2(-3, -3);
-            var capImg = cap.gameObject.AddComponent<Image>();
-            capImg.color = UITheme.Cyan[0];
-            capImg.raycastTarget = false;
-
-            var title = NewText("H", cap, _body, 8, TextAnchor.MiddleLeft, UITheme.Cyan[4]);
-            Stretch(title.rectTransform, Vector2.zero, Vector2.one, new Vector2(9, 0), Vector2.zero);
+            // The title sits IN the plate's teal cap, in the night ink the cap can carry.
+            var title = NewText("H", card, _body, 8, TextAnchor.MiddleLeft, UITheme.Night[0]);
+            Place(title.rectTransform, new Vector2(0, 1), new Vector2(CardW - 52f, 14),
+                  new Vector2(26, -20f));
+            title.rectTransform.pivot = new Vector2(0, 0.5f);
+            title.horizontalOverflow = HorizontalWrapMode.Overflow;
             title.text = head;
 
             for (int i = 0; i < marks.Length; i++)
             {
                 float y = -HeadH - 4f - i * RowH;
                 var row = NewRect("Step" + i, card);
-                Place(row, new Vector2(0, 1), new Vector2(CardW - 16f, RowH - 2f),
-                      new Vector2(8, y));
+                Place(row, new Vector2(0, 1), new Vector2(CardW - 52f, RowH - 2f),
+                      new Vector2(26, y));
 
                 // NUMBERED, NOT PICTURED (2026-08-26, the author: "oluşturulan iconlar
                 // anlaşılır değil"). Four 16px silhouettes were asked to say "fill the tin",
@@ -287,6 +306,8 @@ namespace LastCall.UI
 
                 rows.Add((mimg, text, timg));
             }
+        
+            return title;
         }
 
         /// <summary>
@@ -1204,17 +1225,6 @@ namespace LastCall.UI
                 band.offsetMin = Vector2.zero;
                 band.offsetMax = Vector2.zero;
             }
-            // ...and the wall stands ON that line (2026-08-26). It is hung from the bar top
-            // rather than stretched between two edges, so the counter can move between the
-            // open and shut cellar without the backdrop changing its pixel size.
-            if (_benchWall != null)
-            {
-                _benchWall.anchorMin = new Vector2(0f, fromY);
-                _benchWall.anchorMax = new Vector2(1f, fromY);
-                _benchWall.offsetMin = new Vector2(0f, _benchWall.offsetMin.y);
-                _benchWall.anchoredPosition = new Vector2(0f, 0f);
-                _benchWall.sizeDelta = new Vector2(0f, _benchWall.sizeDelta.y);
-            }
         }
 
         /// <summary>The room's counter, zoomed (2026-08-25, the author: "ekran çok boş
@@ -1297,36 +1307,18 @@ namespace LastCall.UI
             block.color = new Color(0f, 0f, 0f, 0f);
             Swallow(_shakerPanel);
 
-            // 16, not 18: the pixel faces only rasterise cleanly at whole multiples of their
-            // 8px design size (CLAUDE.md), and the serve stage's twin title is 16 in
-            // PrimaryAction.
-            // THE NAME IS ON THE BAR (2026-08-26, the author: "alkolün ismini de tezgahın
-            // üstüne göm"). It used to hang at the top of the field in gold, over the room's
-            // own fascia — a caption floating on nothing, and the loudest thing on a screen
-            // whose subject is a tin. It sits on the counter's back edge now, on a plate cut
-            // into the bar, where a bartender's own name rail would be: below the wall, above
-            // the slab, centred on the work.
-            var namePlate = NewRect("NamePlate", _shakerPanel);
-            Place(namePlate, new Vector2(1f, 0f), new Vector2(330, 30), new Vector2(-40, 236));
-            var npImg = namePlate.gameObject.AddComponent<Image>();
-            npImg.sprite = ChromeArt.Card();
-            npImg.type = Image.Type.Sliced;
-            npImg.color = UITheme.Night[0];
-            npImg.raycastTarget = false;
-            _shakerTitle = NewText("Title", namePlate, _display, 8, TextAnchor.MiddleCenter,
-                                   UITheme.Amber[4]);
-            Stretch(_shakerTitle.rectTransform, Vector2.zero, Vector2.one,
-                    Vector2.zero, Vector2.zero);
-            _shakerTitle.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _shakerTitle.raycastTarget = false;
+            // (The bottle's name lives in the step card's own teal cap since 2026-08-26
+            //  — see BuildStepCard. Its plate here lasted one build: a second plate on a
+            //  full band, standing in the mix gauge's column at every width.)
 
             // The standing line under the title. It named both methods as a menu of two,
             // which stopped being true when the recipe started naming one (2026-08-14) —
             // UpdateStepCard rewrites it with the method the tin actually asks for.
             _shakerHint = NewText("Hint", _shakerPanel, _body, 8, TextAnchor.UpperCenter, UITheme.TextSecondary);
-            // Under the fascia (2026-08-26): the flow draws OVER the room's instruments.
-            Stretch(_shakerHint.rectTransform, new Vector2(0, 1), Vector2.one,
-                    new Vector2(0, -BenchTopClear - 12f), new Vector2(0, -BenchTopClear));
+            // On the band with everything else (2026-08-26): the quiet line over the
+            // readout, where the eye already is when it wants to be told what next.
+            Stretch(_shakerHint.rectTransform, new Vector2(0, 0), new Vector2(1, 0),
+                    new Vector2(16, 114), new Vector2(-16, 128));
             _shakerHint.text = ShakerHintFor(null);
 
             // NO PAINTED WALL ANY MORE. It was here because "a bench standing in a void
@@ -1479,7 +1471,7 @@ namespace LastCall.UI
             // 13 → 16: pinned to the pixel faces' 8px grid (CLAUDE.md), like every other
             // size in the rebuild.
             _shakerReadout = NewText("Readout", _shakerPanel, _body, 16, TextAnchor.LowerCenter, UITheme.TextSecondary);
-            Stretch(_shakerReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 92), new Vector2(-16, 118));
+            Stretch(_shakerReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 84), new Vector2(-16, 110));
 
             // The pour gauge: a slim standing column, cyan-edged, filled bottom-up with the
             // TIN's contents as shares of the whole vessel — 5% of vodka reads 5% VODKA and
@@ -1487,7 +1479,9 @@ namespace LastCall.UI
             // GLASS key with clear air on both sides (at 520 its labels ran under the key;
             // at -340, in its first life, it hung over the prep table this rebuild removed).
             var mixTrack = NewRect("MixTrack", _shakerPanel);
-            Place(mixTrack, new Vector2(0.5f, 0.5f), new Vector2(44, 330), new Vector2(490, -24));
+            // 300 at -60, not 330 at -24: the taller hang poked 34 units over the counter
+            // rail into the room, and the band owns every instrument now (2026-08-26).
+            Place(mixTrack, new Vector2(0.5f, 0.5f), new Vector2(44, 300), new Vector2(490, -60));
             var trackBg = mixTrack.gameObject.AddComponent<Image>();
             trackBg.color = new Color(0.05f, 0.05f, 0.09f, 0.88f);
             trackBg.raycastTarget = false;
@@ -1514,8 +1508,10 @@ namespace LastCall.UI
             // is enough — the one number a player shaking a tin actually wants to see
             // coming.
             var meterRig = _shakeMeterRig = NewRect("WorkMeter", _shakerPanel);
+            // Fourth shelf of the bottom stack: keys, the readout, the hint, then the
+            // meter — measured so no shelf touches the next (2026-08-26).
             Place(meterRig, new Vector2(0.5f, 0), new Vector2(ShakeMeterW, MeterH),
-                  new Vector2(0, 74));
+                  new Vector2(0, 134));
             meterRig.pivot = new Vector2(0.5f, 0);
             var tube = meterRig.gameObject.AddComponent<Image>();
             tube.sprite = ChromeArt.GaugeTube((int)ShakeMeterW, (int)MeterH);
@@ -1636,7 +1632,7 @@ namespace LastCall.UI
             // and lit only when Core itself would let the drink leave.
             var toGlass = NewRect("ToGlass", _shakerPanel);
             Place(toGlass, new Vector2(1f, 0f), new Vector2(216, KeyStripH),
-                  new Vector2(-30, KeyStripY));
+                  new Vector2(-66, KeyStripY));
             _toGlassBtn = toGlass.gameObject.AddComponent<Button>();
             _toGlassBtn.onClick.AddListener(() => GoTo(Stage.Serve));
             _toGlassGroup = toGlass.gameObject.AddComponent<CanvasGroup>();

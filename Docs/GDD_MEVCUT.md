@@ -251,13 +251,7 @@ zaten o okumadır; kalan satır odada kimin olduğunu söyler (n SERVED · n WAL
 
 ### 9.5 · Tezgâh tek oda oldu (2026-08-26)
 
-**ÜÇ KUSUR, TEK KÖK.** Tezgâhların **arkaplanı yoktu**: her panel kendi alt üçte birine bir
-tezgâh bandı çiziyor, üstünü şeffaf bırakıyordu — yani ODA arkadan görünüyordu. Ekranın boş
-okunması da, tin'den bardağa geçerken bütün dünyanın kayması da bundandı. Oda artık **ALANA**
-ait (`BuildBenchStage`): üretilmiş arka duvar (`Scene/bench_back`, tam 2×, tezgâh çizgisinden
-ASILI — iki kenar arasına esnetilen bir fon, tezgâh her kıpırdadığında başka bir piksel boyu
-demektir), altında bar üstü **bir kez** (üç kez değil), ikisinin arkasında da odanın
-sızmaması için düz plaka. Paneller yalnız tezgâhın üstündekileri taşır; kayan sadece onlardır.
+**ÜÇ KUSUR, TEK KÖK — VE DUVAR TEK BİR YAPIM DAYANDI.** Tezgâhların arkaplanı yoktu; bir tur boyunca üretilmiş bir arka duvar asıldı ve aynı gün geri söküldü (yazar: "arkadaki bu planı kaldıralım müşteriler gözüksün") — duvar "tezgâh boş" şikayetine barı tahtayla kapatarak cevap veriyordu: oda ve İÇEN müşteriler, bir lambri resminin arkasında tamamen çizili duruyordu. Sahne artık yalnız BAR ÜSTÜnü sahiplenir (`BuildBenchStage`, bir kez); ray çizgisinin üstünde canlı oda görünür ve sahneler arası kayan yalnız tezgâhın üstündekilerdir. Bütün kontroller yazarın 1149×426'lık çalışma alanında yaşar: kart barda ayakta (sol kolon), dikey karışım sütunları rayın altında ve sağ marjın içinde, alt raflar ölçülü bir istif (tuşlar 26..72, okuma 84..110, ipucu 114..128, iş göstergesi 134..156).
 
 **ÇEKLİST OKUNUR OLDU.** Sol üst köşeye sabitlenmişti ve akış fasyanın ÜSTÜNE çizdiği için
 saatin üzerine biniyordu; dört 16 px işaretinden "tin'i doldur", "kapa", "çalkala ya da
@@ -310,6 +304,26 @@ yalnız bırakılma noktasını sınamak ve imlece ne olduğunu söylemek içind
 **BORÇ:** bardak tezgâhının eski bitirme masasından kalan `AddGarnishChip`, `AddFinishTub`,
 `TableStand` ve o tezgâhın kendi tur makinesi (`UpdateRimLap`, `ShowRimRing`, `PlaceRimRing`)
 artık çağrılmıyor — çökmezler ama ölüdürler, bir sonraki temizlik turunda gitmeliler.
+
+### 9.7 · On birinci tur: plaka dilimlendi, tin birleşti, kepenk sustu (2026-08-26)
+
+- **`board_plate` 9-DİLİMLİ** (`ItemArt.BoardPlate`): kenarlar çizimden ölçüldü (başlık 30,
+  yanlar 12, taban 14 satır), `pixelsPerUnitMultiplier 0.5` ile çerçeve her boyda tam 2×.
+  Panolar 420'ye döndü (içerik alttan taşmıyor), teal kapaklardaki yazı gece mürekkebi,
+  MON şeridi rayların içinde. Aynı plaka tezgâhın adım kartının plakası; tin tezgâhının
+  kart başlığı ŞİŞENİN ADIni taşır (`RefreshShaker` yazar), bardak tezgâhının kartı iki
+  adıma indi (TIP THE TIN · SERVE IT) — buz ve garnitür o tezgâhtan odaya taşınalı beri
+  üçüncü satır, gitmiş bir istasyonun tarifiydi.
+- **İKİ TEZGÂHTA TEK TİN:** bardak sahnesi `ItemArt.Shaker` çiziyordu — başka bir kap,
+  üçte iki boyda. Artık tin tezgâhının gövdesi + OTURMUŞ kapağı, aynı 200×358; ağız
+  matematiği yüksekliğe bağlı olduğundan döküm onunla taşındı (`ServeVesselH` 358).
+- **SERVE IT ▶** tek yüksek satır (display-16), tuş şeridinde; ve **kepengi kapatarak
+  çıkar** — yalnız bu kapı: BACK TO THE BAR mahzeni açık bırakır, çünkü geri dönüş başka
+  bir şişe almak içindir.
+- **KEPENKTE YAZI YOK:** STOCK tek yapım dayandı; 3× büyütülmüş şevron tek başına, kelimenin
+  durduğu yerde. Süitler artık oka basar (`OpenSignArrow`).
+- **RAF SOLA KAYDI:** lavabo 181 … kaplar 195..380 … bardak 405 … mat 480 — tezgâh, gecenin
+  akış sırasıyla okunur: lavabo, malzemeler, içki, musluk.
 
 ## 10 · Teknik omurga
 

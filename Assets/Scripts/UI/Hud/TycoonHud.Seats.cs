@@ -444,7 +444,13 @@ namespace LastCall.UI
         /// <summary>Standing on the counter, right of where the made drink rests. The rail
         /// rides CounterLift like everything else on the bar, so an open cellar takes it up
         /// with the room rather than leaving six dishes hanging in the air.</summary>
-        private const float PrepRailY = -196f, PrepRailX0 = 100f, PrepRailGap = 74f;
+        // BETWEEN THE SINK AND THE DRIP MAT (2026-08-26, the author: "garnishler ekranda
+        // sola kaymalı, bira matı ile sink arasında olmalı"). At X0 100 the rail ran to
+        // stage 555 and its last two dishes stood ON the beer font; at -250 the six span
+        // stage 195..380 — clear of the basin's right edge (181) and well short of the drip
+        // mat (480). The finished drink moved right with it (see _glassHome), so the counter
+        // reads left to right the way the night runs: sink, the makings, the drink, the tap.
+        private const float PrepRailY = -196f, PrepRailX0 = -250f, PrepRailGap = 74f;
 
         // The piece in the hand: a copy of the prop's own drawing, following the cursor.
         private RectTransform _prepCarry;
@@ -772,7 +778,10 @@ namespace LastCall.UI
 
         private void BuildDrinkGlass(RectTransform root)
         {
-            _glassHome = new Vector2(0, -200f);   // staged on the counter, above the MENU button
+            // Right of the garnish rail since 2026-08-26 (it was dead centre, and the rail
+            // that moved left now ends at stage 380 — the glass stands at 405, between the
+            // rail and the drip mat, so a drag off any dish travels right into it).
+            _glassHome = new Vector2(170f, -200f);
             // (The bin used to be built here, before the glass, so the carried drink passed
             //  over it. It went on 2026-08-26 and the sink took the verb — see TycoonHud's
             //  own headstone for it, and OnDrainClicked below.)

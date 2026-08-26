@@ -412,8 +412,11 @@ namespace LastCall.UI
             string caption = "◀  BACK TO THE BAR")
         {
             var rt = NewRect("EdgeBack", panel);
+            // Inside the author's 1149-wide working margin, and CLEAR OF THE SPOON: the
+            // bar spoon's slot hangs off the band's bottom-left at x 108..172, and a key
+            // starting at 66 stood under its bowl (2026-08-26, seen in play).
             Place(rt, new Vector2(0f, 0f), new Vector2(196, KeyStripH),
-                  new Vector2(30, KeyStripY));
+                  new Vector2(190, KeyStripY));
             var btn = rt.gameObject.AddComponent<Button>();
             btn.onClick.AddListener(() => GoTo(back));
             var face = NewRect("Face", rt);
@@ -535,17 +538,18 @@ namespace LastCall.UI
         // the ROOM showed through — which is why the screen read empty, and why moving from
         // the tin to the glass slid the whole world sideways instead of just the props.
         //
-        // The room is one object now and it belongs to the FIELD, not to a panel: the wall
-        // behind the bar, the bar top itself, and a dark plate under both so nothing of the
-        // room leaks past either. The panels keep only what a bench actually differs by —
-        // what is standing on the counter — and those are the only things that slide.
+        // The room is one object and it belongs to the FIELD, not to a panel. The panels
+        // keep only what a bench actually differs by — what is standing on the counter —
+        // and those are the only things that slide.
         //
-        // THE WALL IS DRAWN AT A WHOLE 2×, like everything else on this bench, and it is
-        // hung from the COUNTER LINE upward rather than stretched to fit: a backdrop scaled
-        // to whatever room is left is a backdrop with a different pixel size every time the
-        // counter moves. What it does not reach at the top, the plate behind it covers —
-        // which is the shadow over the top shelf, and reads as one.
-        private RectTransform _benchStage, _benchWall;
+        // THE WALL LASTED ONE BUILD (2026-08-26, the author: "arkadaki bu planı kaldıralım
+        // müşteriler gözüksün"). A generated back wall was hung over the room here for one
+        // round, and it answered "the bench looks empty" by boarding the bar up: the room —
+        // the window, the lamps, the DRINKERS the night is about — sat fully drawn behind a
+        // painting of panelling. What the stage owns now is only the bar top; above the
+        // counter line the live room shows through, exactly as it always has on the draught
+        // bench, and the crowd you are pouring for stays in view while you pour.
+        private RectTransform _benchStage;
 
         private void BuildBenchStage()
         {
@@ -553,43 +557,9 @@ namespace LastCall.UI
             Stretch(_benchStage, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             _benchStage.SetAsFirstSibling();
 
-            // The plate: no part of the room may show past the bench, at any aspect.
-            var air = NewRect("Air", _benchStage);
-            Stretch(air, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var aimg = air.gameObject.AddComponent<Image>();
-            aimg.color = UITheme.Night[0];
-            aimg.raycastTarget = false;
-
-            var wall = _benchWall = NewRect("Wall", _benchStage);
-            wall.pivot = new Vector2(0.5f, 0f);
-            var wimg = wall.gameObject.AddComponent<Image>();
-            wimg.sprite = SceneArt("bench_back");
-            wimg.raycastTarget = false;
-            wimg.type = Image.Type.Simple;
-            if (wimg.sprite == null) wimg.color = UITheme.Night[1];
-            wall.sizeDelta = wimg.sprite != null
-                ? new Vector2(0f, wimg.sprite.rect.height * 2f) : new Vector2(0f, 464f);
-
             // The bar top, ONCE. It used to be built three times, one per bench, which is
             // what made a stage change move it.
-            //
-            // ...AND LAST, not first. AddBenchCounter sends the band to the FRONT of its
-            // parent's children, which was right while the parent's own backdrop was a
-            // component on the panel; here the backdrop is a SIBLING, so first-sibling put
-            // the whole bar top behind the plate and the bench came back with a black floor.
             AddBenchCounter(_benchStage, 0.675f);
-            if (_benchCounters.Count > 0)
-                _benchCounters[_benchCounters.Count - 1].SetAsLastSibling();
-        }
-
-        /// <summary>The bench's own backdrop, out of Resources/Scene. Not ItemArt: that
-        /// folder is canvas props at PPU 100 and this is a room.</summary>
-        private static Sprite SceneArt(string name)
-        {
-            var tex = Resources.Load<Texture2D>("Scene/" + name);
-            if (tex == null) return Resources.Load<Sprite>("Scene/" + name);
-            return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
-                                 new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect);
         }
 
         // ── tiny UI helpers ──────────────────────────────────────────────────────

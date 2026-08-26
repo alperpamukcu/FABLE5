@@ -700,9 +700,18 @@ namespace LastCall.UI
             // instruments. Generated art on CHROME is the third written exception in this
             // project (the calendar backplate and the star icon are the other two) and it is
             // the author's own call, made here in the same words as the first one.
+            //
+            // SLICED, not stretched (the "bozuk" of the first build, same day): the frame
+            // and the capped head keep their drawn 2× grain at any height, and only the
+            // plain navy field stretches. See ItemArt.BoardPlate for the measured borders.
             var plate = board.Root.gameObject.AddComponent<Image>();
-            plate.sprite = ItemArt.Load("board_plate");
-            if (plate.sprite == null)
+            plate.sprite = ItemArt.BoardPlate();
+            if (plate.sprite != null)
+            {
+                plate.type = Image.Type.Sliced;
+                plate.pixelsPerUnitMultiplier = 0.5f;
+            }
+            else
             {
                 plate.sprite = ChromeArt.Card();
                 plate.type = Image.Type.Sliced;
@@ -713,35 +722,33 @@ namespace LastCall.UI
             board.Group.blocksRaycasts = false;
 
             // The head names the instrument and gives its one reading, which is the same
-            // grammar the top bar's wells use: a small caption, a big figure.
-            var cap = NewText("Cap", board.Root, _body, 16, TextAnchor.MiddleLeft, UITheme.Cyan[3]);
+            // grammar the top bar's wells use: a small caption, a big figure. Both sit ON
+            // the plate's drawn teal cap now, so they are set in the NIGHT ink — cyan type
+            // on a cyan band was the first build's other unreadable.
+            var cap = NewText("Cap", board.Root, _body, 16, TextAnchor.MiddleLeft, UITheme.Night[0]);
             Place(cap.rectTransform, new Vector2(0, 1), new Vector2(BoardW - BoardPad * 2f, 20),
-                new Vector2(BoardPad, -22f));
+                new Vector2(BoardPad, -20f));
             cap.rectTransform.pivot = new Vector2(0, 0.5f);
             cap.horizontalOverflow = HorizontalWrapMode.Overflow;
             cap.text = caption;
 
             board.Reading = NewText("Reading", board.Root, _display, 16, TextAnchor.MiddleRight,
-                UITheme.Amber[4]);
+                UITheme.Night[0]);
             Place(board.Reading.rectTransform, new Vector2(1, 1), new Vector2(150, 20),
-                new Vector2(-BoardPad, -22f));
+                new Vector2(-BoardPad, -20f));
             board.Reading.rectTransform.pivot = new Vector2(1, 0.5f);
             board.Reading.horizontalOverflow = HorizontalWrapMode.Overflow;
             board.Reading.verticalOverflow = VerticalWrapMode.Overflow;
 
-            var rule = NewRect("Rule", board.Root);
-            Place(rule, new Vector2(0, 1), new Vector2(BoardW - BoardPad * 2f, 1),
-                new Vector2(BoardPad, -38f));
-            rule.pivot = new Vector2(0, 0.5f);
-            var ri = rule.gameObject.AddComponent<Image>();
-            ri.color = new Color(UITheme.Cyan[3].r, UITheme.Cyan[3].g, UITheme.Cyan[3].b, 0.32f);
-            ri.raycastTarget = false;
+            // (No drawn rule here any more: the plate's own amber hairline closes the cap.)
 
             board.Body = NewRect("Body", board.Root);
             board.Body.anchorMin = new Vector2(0, 1); board.Body.anchorMax = new Vector2(1, 1);
             board.Body.pivot = new Vector2(0.5f, 1);
             board.Body.sizeDelta = new Vector2(-BoardPad * 2f, 0);
-            board.Body.anchoredPosition = new Vector2(0, -48f);
+            // Below the plate's whole drawn head — cap, hairline, top rivets — not below a
+            // number this file made up: the head is the top 30 rows of the drawing at 2×.
+            board.Body.anchoredPosition = new Vector2(0, -68f);
             return board;
         }
 
@@ -823,7 +830,10 @@ namespace LastCall.UI
                 if (tonight)
                 {
                     var lit = NewRect("Lit", row);
-                    Stretch(lit, Vector2.zero, Vector2.one, new Vector2(-8, 2), new Vector2(8, -2));
+                    // INSIDE the plate's drawn side rails (2026-08-26): at -8/+8 the warm
+                    // plate reached over the frame and read as a row that had slipped its
+                    // instrument — the "bozuk" in the author's screenshot.
+                    Stretch(lit, Vector2.zero, Vector2.one, new Vector2(0, 2), new Vector2(0, -2));
                     var li = lit.gameObject.AddComponent<Image>();
                     li.sprite = ChromeArt.Card();
                     li.type = Image.Type.Sliced;

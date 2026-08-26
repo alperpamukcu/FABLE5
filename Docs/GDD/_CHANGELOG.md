@@ -2,6 +2,41 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `GDD_MEVCUT §9.5 / 24 / 16` **the bench opens onto the room, and the counter band owns
+  every control (2026-08-26, eleventh round):** the author's redesign brief, with their own
+  1149×426 working area.
+  **The wall lasted one build.** The generated backdrop answered "the bench looks empty" by
+  boarding the bar up: the room — and the DRINKERS the night is about — sat fully drawn
+  behind a painting of panelling. It is deleted (code and asset); above the counter line the
+  live room shows through on every bench, and only the props slide between stages.
+  **The band owns the UI.** Everything a bench draws now lives in the author's area — from
+  the counter rail down, inside the 1149 margins: the step card stands ON the bar
+  (bottom-anchored, left column), the vertical mix gauges dropped fully below the rail and
+  inside the right margin, the aim/hint/readout lines moved from under the fascia to a
+  measured bottom stack (keys 26..72, readout 84..110, hint 114..128, work meter 134..156),
+  and the BACK key moved right of the bar spoon's hanging slot.
+  **The invoice boards were fixed, then hired.** board_plate is 9-sliced now
+  (ItemArt.BoardPlate — borders measured off the drawing: cap 30, sides 12, foot 14 rows)
+  and drawn with pixelsPerUnitMultiplier 0.5, so the frame keeps its 2× grain at any
+  height; BoardH went back up to 420 and the content that was falling off the bottom fits;
+  the teal caps carry night ink (cyan-on-cyan was the other unreadable); the lit MON row
+  came inside the rails. The same plate is the bench step card's now — the style the author
+  liked, on the screen they asked it onto. The tin bench's card cap carries the BOTTLE'S
+  NAME (RefreshShaker writes it), and the glass bench's card dropped to two honest steps —
+  TIP THE TIN, SERVE IT — because the dressing left that bench for the room's rail.
+  **One tin on both benches.** The glass bench drew ItemArt.Shaker — a different vessel at
+  two-thirds the size — so the object you had just capped came through the slide as
+  somebody else's shaker. It is the tin bench's own body with the cap SEATED, at the same
+  200×358; the pour maths rode along because the mouth derives from the height.
+  **SERVE IT ▶** — one loud display-16 line on a full-height key; what to do next is said
+  by the room over the standing drink, not whispered on the key. And SERVE IT closes the
+  cellar on the way out (the author: "kapak kapalı bir şekilde oyuna dönmeli") — only that
+  door; BACK TO THE BAR keeps it open, because the way back is for another bottle.
+  **The roller says nothing and points.** STOCK lasted one build; the chevron alone, at 3×,
+  hung where the word sat. The suites aim at the arrow now.
+  **The rail slid left** (sink 181 … dishes 195..380 … glass 405 … mat 480), so the counter
+  reads the way the night runs: sink, the makings, the drink, the tap.
+
 - `GDD_MEVCUT §9.5-9.6 / 21 §14 / 24` **the bench becomes a room, and the counter grows a
   garnish rail (2026-08-26, ninth and tenth rounds):**
   **The slip was restored.** "Gün sonu fatura ekranı karmaşık ve çok yazılı" was read as a

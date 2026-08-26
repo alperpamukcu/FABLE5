@@ -1661,11 +1661,12 @@ namespace LastCall.UI
         // drawn in the room's own chrome — the market's card, the bottle gauge's tube — and
         // both read the RULES for their numbers (BarRating.StandingAfter, TycoonRun's
         // ceilings and crowd) rather than working the climb out for themselves.
-        /// <summary>The night's two instruments. 356x350 is not a taste: the plate they
-        /// are drawn on is 178x175 of pixel art and a board stands it at a whole 2x, the
-        /// same rule every other drawing in this game is placed by. It was 384 tall while
-        /// the plate was a sliced chrome card, which stretches to anything.</summary>
-        private const float BoardW = 356f, BoardH = 350f, BoardX = 430f, BoardY = 48f;
+        /// <summary>The night's two instruments. The width is the plate's own drawing at a
+        /// whole 2× (178 art px); the HEIGHT is the content's, because the plate is 9-sliced
+        /// now (ItemArt.BoardPlate) and only its plain navy field stretches — a hard 350 was
+        /// the first build's mistake, and it cut the week's subtotal and the standing's
+        /// next-rung line off the bottom of their own instruments.</summary>
+        private const float BoardW = 356f, BoardH = 420f, BoardX = 430f, BoardY = 48f;
 
         private const float BoardPad = 18f;
 

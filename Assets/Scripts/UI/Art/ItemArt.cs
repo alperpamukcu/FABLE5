@@ -28,6 +28,31 @@ namespace LastCall.UI
             return s;
         }
 
+        private static Sprite _boardPlate;
+
+        /// <summary>
+        /// The night boards' drawn instrument plate, 9-SLICED (2026-08-26, the author:
+        /// "fatura ekranındaki UI tarzını beğendim fakat bozuk gözüküyor"). The drawing is
+        /// 178×175 and the first build stretched the whole picture over whatever rect asked
+        /// for it — content overflowed its bottom and the frame's grain bent with the rect.
+        /// The borders are measured off the drawing itself: the teal cap with its amber
+        /// hairline and top rivets is the top 30 rows, the bottom frame and its rivets the
+        /// last 14, the riveted side rails 12 each — everything between is plain navy that
+        /// CAN stretch. Draw it with <c>Image.Type.Sliced</c> and
+        /// <c>pixelsPerUnitMultiplier = 0.5f</c>, so the frame renders at the same whole 2×
+        /// as every other drawing in this game whatever the plate's size.
+        /// </summary>
+        public static Sprite BoardPlate()
+        {
+            if (_boardPlate != null) return _boardPlate;
+            var flat = Load("board_plate");
+            if (flat == null) return null;
+            _boardPlate = Sprite.Create(flat.texture, flat.rect, new Vector2(0.5f, 0.5f),
+                100f, 0, SpriteMeshType.FullRect, new Vector4(12f, 14f, 12f, 30f));
+            _boardPlate.name = "board_plate_sliced";
+            return _boardPlate;
+        }
+
         /// <summary>Forget every cached sprite — a new run re-resolves the art.</summary>
         public static void ClearCache() => Cache.Clear();
 

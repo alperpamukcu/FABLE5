@@ -101,7 +101,9 @@ namespace LastCall.UI
 
         /// <summary>How tall the shaker is drawn on THIS stage. The shaker bench's 180 left
         /// the tin looking like a thimble beside a 260-tall glass.</summary>
-        private const float ServeVesselH = 250f;
+        /// <summary>The tin bench's own 358 since the two benches agreed on one tin
+        /// (2026-08-26); the pour maths reads the mouth off this, so it moves with it.</summary>
+        private const float ServeVesselH = 358f;
 
         /// <summary>The piece being carried from the finishing shelf to the glass.</summary>
         private PreparationDefinition _servePrep;
@@ -598,8 +600,9 @@ namespace LastCall.UI
         {
             if (_serveStepRows.Count == 0) return;
             bool poured = !run.ServingGlass.IsEmpty;
-            bool dressed = run.ServingGlass.PreparationSteps.Count > 0;
-            PaintSteps(_serveStepRows, poured ? 2 : 0, 1, poured && dressed);
+            // Two rows since the dressing moved to the room (2026-08-26): no optional
+            // middle step any more, so no row is exempt from the ladder.
+            PaintSteps(_serveStepRows, poured ? 1 : 0, -1, false);
         }
 
         private void UpdateServeTilt(TycoonRun run)
@@ -846,22 +849,10 @@ namespace LastCall.UI
             block.color = new Color(0f, 0f, 0f, 0f);
             Swallow(_servePanel);
 
-            // ENGRAVED ON THE BAR, like the tin bench's own name (2026-08-26): the flow
-            // draws OVER the room's fascia, so anything pinned to the top of the field is
-            // pinned across the clock and the week.
-            var namePlate = NewRect("NamePlate", _servePanel);
-            Place(namePlate, new Vector2(1f, 0f), new Vector2(330, 30), new Vector2(-40, 236));
-            var npImg = namePlate.gameObject.AddComponent<Image>();
-            npImg.sprite = ChromeArt.Card();
-            npImg.type = Image.Type.Sliced;
-            npImg.color = UITheme.Night[0];
-            npImg.raycastTarget = false;
-            var title = NewText("Title", namePlate, _display, 8, TextAnchor.MiddleCenter,
-                                UITheme.Amber[4]);
-            Stretch(title.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            title.horizontalOverflow = HorizontalWrapMode.Overflow;
-            title.raycastTarget = false;
-            title.text = "POUR THE GLASS";
+            // (No title and no name plate on this bench since 2026-08-26: the step
+            //  card's first row says TIP THE TIN, the aim line coaches the pour, and a
+            //  plate that only ever said POUR THE GLASS was saying what both already say
+            //  — from the middle of the mix gauge's column.)
 
             // The two corner readouts wear the top corners at 8px; the aim line gets its own
             // full-width band UNDER them at 16 — they used to share one band and long aim
@@ -870,22 +861,26 @@ namespace LastCall.UI
             // bardağa koyma sahnesi içinde oluştur"). Top-left, ahead of the tin's line,
             // which moves down under it — the left column now reads what to do, then what
             // is in the tin, in that order.
+            // TWO steps, because that is what this bench does now (2026-08-26): the ice
+            // and the garnish moved to the room's own counter with the rail, and a card
+            // that still listed them here would be directions to a station that left.
             BuildStepCard(_servePanel, "THE COUNTER",
-                new[] { "toglass", "garnish", "serve" },
-                // No ampersand: the pixel face draws & as $ (measured in play, 2026-08-14).
-                new[] { "TIP THE TIN", "ICE AND GARNISH", "CARRY IT OVER" },
-                _serveStepRows, new Vector2(20, -18));
+                new[] { "toglass", "serve" },
+                new[] { "TIP THE TIN", "SERVE IT" },
+                _serveStepRows, new Vector2(66, 260));
 
-            // BOTH READOUTS CLEAR OF THE CARD (2026-08-26). The tin's line was pinned 132
-            // below the top, which was under the old flat checklist and straight THROUGH the
-            // new plate's first row. They sit under the card and under the fascia
-            // respectively, at the two numbers this file has for exactly that.
-            _serveShakerText = NewText("Shaker", _servePanel, _body, 8, TextAnchor.UpperLeft, UITheme.TextSecondary);
-            Place(_serveShakerText.rectTransform, new Vector2(0, 1), new Vector2(280, 12),
-                  new Vector2(24, -BenchTopClear - 132f));
-            _serveGlassText = NewText("Glass", _servePanel, _body, 8, TextAnchor.UpperRight, UITheme.TextPrimary);
-            Place(_serveGlassText.rectTransform, new Vector2(1, 1), new Vector2(280, 12),
-                  new Vector2(-20, -BenchTopClear));
+            // ON THE BAND (2026-08-26): what is left in the tin reads under the step
+            // card in the left column, what is in the glass reads over the name plate on
+            // the right — each beside the object it is a number for.
+            _serveShakerText = NewText("Shaker", _servePanel, _body, 8, TextAnchor.LowerLeft, UITheme.TextSecondary);
+            Place(_serveShakerText.rectTransform, new Vector2(0, 0), new Vector2(280, 12),
+                  new Vector2(70, 228));
+            _serveShakerText.rectTransform.pivot = new Vector2(0, 0);
+            _serveGlassText = NewText("Glass", _servePanel, _body, 8, TextAnchor.LowerRight, UITheme.TextPrimary);
+            // Under its own gauge's foot, so the number and the column read as one meter.
+            Place(_serveGlassText.rectTransform, new Vector2(1, 0), new Vector2(280, 12),
+                  new Vector2(-66, 130));
+            _serveGlassText.rectTransform.pivot = new Vector2(1, 0);
 
             // VERTICAL and engine-drawn (2026-08-02): the GLASS's contents as shares of
             // the vessel, magenta-edged where the shaker's column is cyan. Against the
@@ -894,7 +889,9 @@ namespace LastCall.UI
             // bottle in hand resting a hair to its left, which is exactly where a gauge
             // must not be.
             var serveTrack = NewRect("MixTrack", _servePanel);
-            Place(serveTrack, new Vector2(0.5f, 0.5f), new Vector2(44, 300), new Vector2(575, -8));
+            // 550, -60: at 575 its right edge stood past the author's 1149-wide working
+            // area, and at -8 its head poked over the counter rail (2026-08-26).
+            Place(serveTrack, new Vector2(0.5f, 0.5f), new Vector2(44, 300), new Vector2(550, -60));
             var serveBg = serveTrack.gameObject.AddComponent<Image>();
             serveBg.color = new Color(0.05f, 0.05f, 0.09f, 0.88f);
             serveBg.raycastTarget = false;
@@ -920,9 +917,10 @@ namespace LastCall.UI
             Stretch(_serveGarnishRow, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
             _aimText = NewText("AimText", _servePanel, _body, 16, TextAnchor.UpperCenter, UITheme.TextSecondary);
-            // Under the fascia (2026-08-26): the flow draws OVER the room instruments.
-            Stretch(_aimText.rectTransform, new Vector2(0, 1), Vector2.one,
-                    new Vector2(0, -BenchTopClear - 22f), new Vector2(0, -BenchTopClear));
+            // On the band (2026-08-26): the same shelf the tin bench's readout sits on,
+            // so the eye finds the bench's one sentence in one place on both screens.
+            Stretch(_aimText.rectTransform, new Vector2(0, 0), new Vector2(1, 0),
+                    new Vector2(16, 78), new Vector2(-16, 104));
 
             // The play surface — a COORDINATE SPACE, not a thing you can see. It is where
             // the glass, the tin and the hand bottle are placed and where the pointer is
@@ -974,14 +972,36 @@ namespace LastCall.UI
 
             _serveGlass.SetAsLastSibling();   // the hollow glass draws over the fluid
 
-            // The grabbable steel shaker you pour from, resting lower-right.
-            _serveShakerRest = new Vector2(96, -96);
+            // THE SAME TIN THE OTHER BENCH WORKS (2026-08-26, the author: "bardağa
+            // koyduğumuz sahnedeki shaker ile shakera koyduğumuz sahnedeki shaker aynı
+            // olmalı"). It was ItemArt.Shaker — a different drawing at two-thirds the size
+            // — so the object you had just capped came through the slide as somebody
+            // else's shaker. It is the tin bench's own body and cap now, at the tin
+            // bench's own 200×358, with the cap SEATED: this bench only ever meets the
+            // tin closed.
+            _serveShakerRest = new Vector2(150, -170);
             _serveShaker = NewRect("Shaker", _serveSurface);
             _serveShaker.pivot = new Vector2(0.5f, 0.22f);
-            _serveShaker.sizeDelta = new Vector2(146, ServeVesselH);
+            _serveShaker.sizeDelta = new Vector2(200, ServeVesselH);
             _serveShaker.anchoredPosition = _serveShakerRest;
             _serveShakerBody = _serveShaker.gameObject.AddComponent<Image>();
-            if (ItemArt.Shaker != null) { _serveShakerBody.sprite = ItemArt.Shaker; _serveShakerBody.preserveAspect = true; _serveShakerBody.color = Color.white; }
+            var serveTin = ItemArt.Load("tin_open") ?? ItemArt.Shaker;
+            if (serveTin != null)
+            {
+                _serveShakerBody.sprite = serveTin;
+                _serveShakerBody.preserveAspect = true;
+                _serveShakerBody.color = Color.white;
+                var capArt = ItemArt.Load("shaker_cap");
+                if (capArt != null)
+                {
+                    var cap = NewRect("Cap", _serveShaker);
+                    Stretch(cap, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                    var capImg = cap.gameObject.AddComponent<Image>();
+                    capImg.sprite = capArt;
+                    capImg.preserveAspect = true;
+                    capImg.raycastTarget = false;
+                }
+            }
             else
             {
                 _serveShakerBody.color = UITheme.Cream[3];
@@ -1013,7 +1033,9 @@ namespace LastCall.UI
 
 
             var done = NewRect("Done", _servePanel);
-            Place(done, new Vector2(0.5f, 0), new Vector2(240, 34), new Vector2(130, 12));
+            // On the key strip with the others, at the key strip's own height — and 250
+            // wide, because the one key that finishes the job earns the widest plate.
+            Place(done, new Vector2(0.5f, 0), new Vector2(250, KeyStripH), new Vector2(120, KeyStripY));
             _serveDoneBtn = done.gameObject.AddComponent<Button>();
             _serveDoneBtn.onClick.AddListener(() =>
             {
@@ -1022,15 +1044,27 @@ namespace LastCall.UI
                 if (Run.ServingGlass.IsEmpty) return;
                 ResetServeHand();
                 GoTo(Stage.Closed);
+                // ...AND THE CELLAR SHUTS BEHIND YOU (2026-08-26, the author: "serve it'e
+                // basıldığında kapak kapalı bir şekilde oyuna dönmeli"). The drawer was
+                // opened to reach the bottle and stayed open through the build, so SERVE IT
+                // dropped you into a room still standing on its shelves — with a drink in
+                // hand and a drinker waiting, which is exactly the moment the room should be
+                // a bar again. Only THIS door closes it: BACK TO THE BAR keeps the cellar
+                // open, because the way back is for reaching another bottle.
+                GetComponent<TycoonHud>()?.Room?.SetDrawerOpen(false);
             });
             _serveDoneGroup = done.gameObject.AddComponent<CanvasGroup>();
             var doneFace = NewRect("Face", done);
             Stretch(doneFace, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             KeyPlate.Dress(done, UITheme.PrimaryAction, _serveDoneBtn, doneFace);   // GDD 16 §2
-            var doneLabel = NewText("Label", doneFace, _body, 8, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
+            // ONE LOUD LINE (2026-08-26, the author's screenshot: the old caption was
+            // twenty-six 8px characters on a 240 plate — a whisper on the one key that
+            // matters). What to do AFTER pressing it is the room's job to say, and the
+            // room already says it over the standing drink.
+            var doneLabel = NewText("Label", doneFace, _display, 16, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
             Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(4, KeyPlate.Throw), new Vector2(-4, 0));
-            doneLabel.text = "SERVE IT · CLICK A CUSTOMER";
+            doneLabel.text = "SERVE IT ▶";
         }
 
     }

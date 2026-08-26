@@ -636,13 +636,16 @@ namespace LastCall.UI
             UiAuditExempt.Mark(_cellarOpenSign, "the roller's OPEN is struck lettering, not "
                 + "type: one sprite, drawn at the size it was struck");
 
-            // AT ITS OWN SIZE, both pieces. The sprites are struck at the size the stage
-            // draws in - one art pixel is one stage unit here, the same grain as the counter
-            // they are lying on - so anything but 1:1 would put finer pixels on the roller
-            // than the roller itself has.
-            SignMark(_cellarOpenSign, "OpenSignWord", word, SignWordDrop);
+            // NO WORD ON THE ROLLER ANY MORE (2026-08-26, the author: "stock yazısı
+            // kaldırılacak, sadece büyük bir ok koyulacak"). OPEN BAR became STOCK the same
+            // morning and STOCK lasted one build: the roller does not need naming, it needs
+            // POINTING AT, and the chevron was already doing that. So the chevron alone,
+            // grown to a whole 3× — big enough to be the door's whole voice — hung where the
+            // word used to sit. `word` is still loaded above as the no-art guard: the sign
+            // tool ships the word and the arrows together, so its absence still means "no
+            // art on disk", and the suites now aim at the ARROW.
             SignMark(_cellarOpenSign, "OpenSignArrow", ItemArt.Load("sign_open_arrow"),
-                SignArrowDrop);
+                SignWordDrop + 8f, scale: 3f);
             BuildShutSign();
         }
 
@@ -678,17 +681,19 @@ namespace LastCall.UI
         }
 
         /// <summary>One piece of a sign, hung by its own centre this far below the roller's
-        /// top edge and drawn at the size it was struck.</summary>
-        private void SignMark(RectTransform host, string name, Sprite art, float drop)
+        /// top edge — drawn at the size it was struck, or at a whole multiple of it, which
+        /// is the only kind of "bigger" pixel art has.</summary>
+        private void SignMark(RectTransform host, string name, Sprite art, float drop,
+                              float scale = 1f)
         {
             if (art == null || host == null) return;
             // NAMED, not called after its sprite. The roller is the only way into the cellar
-            // now, and the PlayMode suites drive it by aiming at this word — a hook named
+            // now, and the PlayMode suites drive it by aiming at this mark — a hook named
             // after an asset moves the day somebody renames the asset.
             var rt = NewRect(name, host);
             rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
             rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = art.rect.size;
+            rt.sizeDelta = art.rect.size * scale;
             rt.anchoredPosition = new Vector2(0f, -drop);
             var img = rt.gameObject.AddComponent<Image>();
             img.sprite = art;
