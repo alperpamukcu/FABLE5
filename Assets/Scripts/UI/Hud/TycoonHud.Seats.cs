@@ -275,6 +275,12 @@ namespace LastCall.UI
                         Sfx.Play("glass_down", 0.9f);
                         Toast("GLASS CLEARED — SEAT IS FREE");
                     });
+                    // ...and it says so before it is pressed (2026-08-26): the author's
+                    // rule is about this KIND of interaction, not about the menu alone.
+                    var dirtyRelay = prop.gameObject.AddComponent<HoverRelay>();
+                    var dirtyRt = prop;
+                    dirtyRelay.Entered = () => ShowPropTip(dirtyRt, "CLEAR THE GLASS");
+                    dirtyRelay.Exited = () => HidePropTip(dirtyRt);
                     var sink = prop.gameObject.AddComponent<PressSink>();
                     sink.Face = prop; sink.Depth = 3f; sink.Lift = 3f; sink.Tint = img;
                     v.DirtyProp = prop;
@@ -335,6 +341,11 @@ namespace LastCall.UI
                 var btn = bowl.gameObject.AddComponent<Button>();
                 btn.targetGraphic = hit;
                 btn.transition = Selectable.Transition.None;
+                var snackRelay = bowl.gameObject.AddComponent<HoverRelay>();
+                var snackRt = bowl;
+                var snackName = s.Name.ToUpperInvariant();
+                snackRelay.Entered = () => ShowPropTip(snackRt, "TAKE THE " + snackName);
+                snackRelay.Exited = () => HidePropTip(snackRt);
                 btn.onClick.AddListener(() =>
                 {
                     var r = Run;
@@ -398,9 +409,37 @@ namespace LastCall.UI
             public string Id;
             public RectTransform Rt;
             public Image Img;
+            /// <summary>The volumeless mark this prop puts on the glass, or null when the
+            /// prop is stock rather than a mark.</summary>
             public PreparationDefinition Prep;
+            /// <summary>The ingredient STYLE this prop pours, or null when it is a mark.
+            /// Resolved to a shelf bottle at drop time, because the bar's stock changes.</summary>
+            public string Style;
+            public bool IsRim;           // turned in the dish, not dropped in the glass
             public string Word;          // what the pointer is told it does
         }
+
+        // ── the rim, turned on the counter (2026-08-26) ──────────────────────────
+        //
+        // The lap arithmetic is the glass bench's own, moved with the dishes: hold the dish
+        // over the drink and run a full circle round its MOUTH with the cursor. It came here
+        // because the dishes did, and it came WHOLE - taking the dishes off that bench and
+        // applying salt on a single drop would have deleted a skill the author asked for
+        // eight days earlier ("tuz artik bardagin etrafinda cevirerek ... ufak bir skill
+        // oyunu") without anybody asking for it back.
+        //
+        // The numbers are the bench's, to the unit, so a player who learned the lap there
+        // does not have to learn it again: a band round the mouth where the sweep counts, a
+        // single-frame jump bigger than a third of a lap thrown away as the cursor crossing
+        // the glass rather than a hand moving, and a part-run lap KEPT against its dish.
+        private const int RimSegments = 14;
+        private const float RimLap = 2f * Mathf.PI;
+        private const float RimNear = 28f, RimFar = 150f;
+        private readonly Dictionary<string, float> _rimSwept = new Dictionary<string, float>();
+        private RectTransform _rimRing;
+        private readonly List<Image> _rimTicks = new List<Image>();
+        private float _rimAngle;
+        private bool _rimAngleKnown;
 
         /// <summary>Standing on the counter, right of where the made drink rests. The rail
         /// rides CounterLift like everything else on the bar, so an open cellar takes it up
@@ -420,16 +459,31 @@ namespace LastCall.UI
             // Art first, fallback second: the 2026-08-26 counter set is drawn at the bar's
             // own eye line (the author: "masanin acisiyla ayni aciya sahip"), and the
             // 2026-08-25 minis stay behind it so a missing drawing never costs a verb.
-            (string id, string art, string fallback, PreparationDefinition prep, string word)[] rail =
+            // SIX, AND TWO OF THEM ARE NOT PREPARATIONS (2026-08-26, the author listed
+            // "buz, zeytin, tuz, seker, nane"). Ice and the two rims and the twist are
+            // PreparationDefinitions - volumeless marks on the glass. The olive and the
+            // mint are INGREDIENTS: they are stock, they come off the shelf, they run out,
+            // and they are what recipes.json's "olive" and "mint" style bands are graded
+            // against. So the rail carries two kinds of prop and each drops through its own
+            // Core verb - AddPreparationAtGlass for a mark, PourAtGlass for a pinch of
+            // stock. A garnish whose bottle the bar does not stock, or has emptied, is
+            // simply not built: an empty jar on the counter is a promise the bar cannot keep.
+            (string id, string art, string fallback, PreparationDefinition prep,
+             string style, string word)[] rail =
             {
-                ("ice", "counter_ice", "bench_mini_ice", Preparations.Ice, "ICE"),
-                ("lemon_twist", "counter_lemon", "bench_mini_lemon", Preparations.LemonTwist, "LEMON"),
-                ("salt_rim", "counter_salt", "bench_mini_salt", Preparations.SaltRim, "SALT THE RIM"),
-                ("sugar_rim", "counter_sugar", "bench_mini_sugar", Preparations.SugarRim, "SUGAR THE RIM"),
+                ("ice", "counter_ice", "bench_mini_ice", Preparations.Ice, null, "ICE"),
+                ("lemon_twist", "counter_lemon", "bench_mini_lemon", Preparations.LemonTwist,
+                 null, "LEMON"),
+                ("olive", "counter_olive", "garnish_olive", null, "olive", "OLIVE"),
+                ("mint", "counter_mint", "garnish_mint", null, "mint", "MINT"),
+                ("salt_rim", "counter_salt", "bench_mini_salt", Preparations.SaltRim,
+                 null, "TURN IT IN THE SALT"),
+                ("sugar_rim", "counter_sugar", "bench_mini_sugar", Preparations.SugarRim,
+                 null, "TURN IT IN THE SUGAR"),
             };
             for (int i = 0; i < rail.Length; i++)
             {
-                var (id, art, fallback, prep, word) = rail[i];
+                var (id, art, fallback, prep, style, word) = rail[i];
                 var rt = NewRect("MP_" + id, _prepRail);
                 Place(rt, new Vector2(0.5f, 0.5f), new Vector2(64, 64),
                     new Vector2(PrepRailX0 + i * PrepRailGap, PrepRailY));
@@ -439,7 +493,13 @@ namespace LastCall.UI
                 if (img.sprite == null) img.color = UITheme.Cyan[3];
                 var glow = rt.gameObject.AddComponent<HoverGlow>();
                 glow.Graphics = new Graphic[] { img };
-                var prop = new PrepProp { Id = id, Rt = rt, Img = img, Prep = prep, Word = word };
+                var prop = new PrepProp
+                {
+                    Id = id, Rt = rt, Img = img, Prep = prep, Style = style, Word = word,
+                    // A rim is TURNED, not dropped (2026-08-25's skill, re-homed here on
+                    // 2026-08-26 when the dishes left the glass bench). See StepPrepCarry.
+                    IsRim = id == "salt_rim" || id == "sugar_rim",
+                };
 
                 // PICKED UP, NOT PRESSED. A whole-rect PointerDown rather than a Button:
                 // what follows is a carry, and a Button fires on the way back UP, after the
@@ -497,13 +557,24 @@ namespace LastCall.UI
                     (RectTransform)_prepCarry.parent, mouse.position.ReadValue(), null,
                     out Vector2 at))
                 _prepCarry.anchoredPosition = at;
+            // A RIM DISH WORKS WHILE IT IS HELD. Everything else waits for the release.
+            bool glassOut = _glassShown && !_glassServing && !_glassReturning
+                            && _drinkGlass != null && run != null && run.DrinkReady;
+            if (_prepHeld.IsRim && glassOut)
+            {
+                bool done = _prepHeld.Prep != null
+                            && !run.ServingGlass.HasPreparation(_prepHeld.Id)
+                            && StepRimLap(run, _prepHeld, mouse.position.ReadValue());
+                if (done) { DropPrep(false); return; }
+            }
+            else ShowRimRing(false);
+
             if (mouse.leftButton.isPressed) return;
 
-            bool overGlass = _glassShown && !_glassServing && !_glassReturning
-                && _drinkGlass != null
+            bool overGlass = glassOut
                 && RectTransformUtility.RectangleContainsScreenPoint(
                        _drinkGlass, mouse.position.ReadValue(), null);
-            DropPrep(overGlass && run != null && run.DrinkReady);
+            DropPrep(overGlass);
         }
 
         private void DropPrep(bool intoTheGlass)
@@ -511,9 +582,32 @@ namespace LastCall.UI
             var prop = _prepHeld;
             _prepHeld = null;
             if (_prepCarry != null) _prepCarry.gameObject.SetActive(false);
+            ShowRimRing(false);
+            _rimAngleKnown = false;
             if (!intoTheGlass || prop == null) return;
+            // A RIM IS NEVER APPLIED BY A DROP. Putting the dish down over the glass is
+            // putting the dish down; what puts salt on a rim is the lap, and a half-run one
+            // waits on the counter until the dish is picked up again.
+            if (prop.IsRim) return;
             var run = Run;
             if (run == null) return;
+
+            // Stock, not a mark: the olive and the mint are poured out of a bottle the bar
+            // owns, through the one Core verb that puts an ingredient straight into the
+            // serving glass. A pinch, measured against the GLASS rather than the tin -
+            // PourGarnish's own fraction, in the vessel this drop is actually aimed at.
+            if (prop.Prep == null)
+            {
+                var bottle = GarnishOnTheShelf(run, prop.Style);
+                if (bottle == null) { Toast("NONE LEFT"); return; }
+                double pinch = run.ServingGlass.Capacity * GarnishPinch;
+                if (run.PourAtGlass(bottle.Id, pinch) <= 0)
+                { Toast("THE GLASS IS FULL"); return; }
+                Sfx.Play("garnish");
+                Toast(bottle.Name.ToUpperInvariant() + " IN THE DRINK", UITheme.Lime[3]);
+                return;
+            }
+
             if (prop.Id != "ice" && run.ServingGlass.HasPreparation(prop.Id))
             {
                 Toast("ALREADY ON THAT DRINK");
@@ -524,6 +618,117 @@ namespace LastCall.UI
             Toast(prop.Id == "ice"
                 ? "ICE IN THE GLASS x" + run.ServingGlass.IceCubes
                 : prop.Prep.Name.ToUpperInvariant() + " ON THE DRINK", UITheme.Cyan[3]);
+        }
+
+        /// <summary>How much of the glass one tap of a garnish is worth. The tin's own
+        /// GarnishClickFraction, so a pinch is a pinch wherever it is taken.</summary>
+        private const double GarnishPinch = 0.05;
+
+        /// <summary>The bar's bottle of this garnish style, or null if it stocks none or has
+        /// emptied the one it had. Asked at DROP time and never cached: a jar the bar ran out
+        /// of halfway through a night must stop pouring halfway through that night.</summary>
+        private static IngredientCard GarnishOnTheShelf(TycoonRun run, string style)
+        {
+            if (run == null || string.IsNullOrEmpty(style)) return null;
+            foreach (var b in run.Shelf.Bottles)
+                if (!b.IsEmpty && b.Ingredient.Type == IngredientType.Garnish
+                    && b.Ingredient.Info != null && b.Ingredient.Info.Style == style)
+                    return b.Ingredient;
+            return null;
+        }
+
+        /// <summary>
+        /// The lap, run against the drink standing on the counter. Called from StepPrepCarry
+        /// while a rim dish is in the hand; returns true when the crust went on, which is the
+        /// signal to put the dish back.
+        /// </summary>
+        private bool StepRimLap(TycoonRun run, PrepProp prop, Vector2 screen)
+        {
+            var mouth = GlassMouth();
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    (RectTransform)_prepCarry.parent, screen, null, out Vector2 local))
+                return false;
+            ShowRimRing(true);
+            PlaceRimRing(mouth, prop);
+
+            var arm = local - mouth;
+            float dist = arm.magnitude;
+            if (dist < RimNear || dist > RimFar) { _rimAngleKnown = false; return false; }
+
+            float angle = Mathf.Atan2(arm.y, arm.x);
+            if (_rimAngleKnown)
+            {
+                float step = Mathf.Abs(Mathf.DeltaAngle(_rimAngle * Mathf.Rad2Deg,
+                                                        angle * Mathf.Rad2Deg)) * Mathf.Deg2Rad;
+                if (step < RimLap / 3f)
+                {
+                    _rimSwept.TryGetValue(prop.Id, out float swept);
+                    swept += step;
+                    _rimSwept[prop.Id] = swept;
+                    if (swept >= RimLap)
+                    {
+                        run.AddPreparationAtGlass(prop.Prep);
+                        Sfx.Play("garnish");
+                        _rimSwept.Remove(prop.Id);
+                        Toast((prop.Id == "salt_rim" ? "SALT" : "SUGAR") + " ON THE RIM",
+                              UITheme.Lime[3]);
+                        _rimAngleKnown = false;
+                        return true;
+                    }
+                }
+            }
+            _rimAngle = angle;
+            _rimAngleKnown = true;
+            return false;
+        }
+
+        /// <summary>Where the drink's mouth is, in the rail's own space.</summary>
+        private Vector2 GlassMouth() =>
+            _drinkGlass == null ? Vector2.zero
+            : _drinkGlass.anchoredPosition + new Vector2(0f, _drinkGlass.rect.height * 0.34f);
+
+        private void ShowRimRing(bool on)
+        {
+            if (_rimRing == null)
+            {
+                if (!on) return;
+                _rimRing = NewRect("RimRing", (RectTransform)_prepCarry.parent);
+                _rimRing.anchorMin = _rimRing.anchorMax = _rimRing.pivot = new Vector2(0.5f, 0.5f);
+                _rimRing.sizeDelta = Vector2.zero;
+                for (int i = 0; i < RimSegments; i++)
+                {
+                    var tick = NewRect("T" + i, _rimRing);
+                    tick.anchorMin = tick.anchorMax = tick.pivot = new Vector2(0.5f, 0.5f);
+                    tick.sizeDelta = new Vector2(5f, 13f);
+                    var img = tick.gameObject.AddComponent<Image>();
+                    img.raycastTarget = false;
+                    _rimTicks.Add(img);
+                }
+            }
+            if (_rimRing.gameObject.activeSelf != on) _rimRing.gameObject.SetActive(on);
+            if (on) _rimRing.SetAsLastSibling();
+        }
+
+        /// <summary>Stands the ring on the drink's mouth and colours it by how far the lap
+        /// has run — tick colour, no arc: the bench's own reading, at the bench's own
+        /// fourteen segments, so the two are one gesture with one picture.</summary>
+        private void PlaceRimRing(Vector2 mouth, PrepProp prop)
+        {
+            if (_rimRing == null) return;
+            _rimRing.anchoredPosition = mouth;
+            _rimSwept.TryGetValue(prop.Id, out float swept);
+            float ran = Mathf.Clamp01(swept / RimLap);
+            var lit = prop.Id == "sugar_rim" ? UITheme.Amber[4] : UITheme.Cream[4];
+            for (int i = 0; i < _rimTicks.Count; i++)
+            {
+                float a = (i / (float)RimSegments) * RimLap;
+                _rimTicks[i].rectTransform.anchoredPosition =
+                    new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 62f;
+                _rimTicks[i].rectTransform.localRotation =
+                    Quaternion.Euler(0, 0, a * Mathf.Rad2Deg - 90f);
+                _rimTicks[i].color = (i / (float)RimSegments) < ran
+                    ? lit : new Color(1f, 1f, 1f, 0.18f);
+            }
         }
 
         /// <summary>

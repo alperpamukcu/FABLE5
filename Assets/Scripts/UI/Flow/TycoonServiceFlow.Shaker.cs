@@ -114,11 +114,46 @@ namespace LastCall.UI
         private bool _toGlassWasOn;
         private float _toGlassPulse;
 
-        /// <summary>The shake meter's track width; the fill derives from it, so the bar can
+        /// <summary>The work meter's track. The fill derives from it, so the bar can
         /// actually reach its own end at 100%.</summary>
-        private const float ShakeMeterW = 220f;
+        private const float ShakeMeterW = 260f, MeterH = 22f;
+        /// <summary>Where the tube's mark stands: the point past which the tin is worked
+        /// enough for the drink to be worth pouring. Measured against the same 0..1 both
+        /// verbs report, so one mark reads for the shake and for the stir.</summary>
+        private const float EnoughMark = 0.72f;
+        private RectTransform _shakeMeterRig, _shakeMeterMark;
         private Image _shakeMeterFill;
         private Text _shakeMeterText;
+
+        /// <summary>
+        /// Puts a reading on the work meter and brings it out. AT REST IT IS NOT THERE:
+        /// the old bar sat on the counter empty and black whenever nobody was shaking, which
+        /// is a gauge reporting on nothing. StepWorkMeter takes it away again.
+        /// </summary>
+        private void ShowWorkMeter(float amount, Color tone, string caption)
+        {
+            if (_shakeMeterRig == null) return;
+            _meterHeldThisFrame = true;
+            if (!_shakeMeterRig.gameObject.activeSelf) _shakeMeterRig.gameObject.SetActive(true);
+            _shakeMeterFill.fillAmount = Mathf.Clamp01(amount);
+            // Past the mark it goes green, and that is the whole reading: the colour says
+            // "enough" at the same instant the fill crosses the tick that says where enough is.
+            _shakeMeterFill.color = amount >= EnoughMark ? UITheme.Lime[3] : tone;
+            if (_shakeMeterText != null) _shakeMeterText.text = caption;
+            if (_shakeMeterMark != null)
+                _shakeMeterMark.gameObject.SetActive(amount < EnoughMark);
+        }
+
+        /// <summary>Takes the meter away on the first frame nothing claimed it.</summary>
+        private void StepWorkMeter()
+        {
+            if (_shakeMeterRig == null) return;
+            if (!_meterHeldThisFrame && _shakeMeterRig.gameObject.activeSelf)
+                _shakeMeterRig.gameObject.SetActive(false);
+            _meterHeldThisFrame = false;
+        }
+
+        private bool _meterHeldThisFrame;
         private const float ShakeFullTravel = 4000f;   // px of cursor travel for a full shake
         // The tin keeps MORE give than the other two on purpose: the whole verb is
         // throwing a heavy thing about, and a tin welded to the cursor cannot be shaken.
@@ -555,9 +590,12 @@ namespace LastCall.UI
             PushShakerPool(run, 0f);
             _mixBarSig = "!";                 // force a redraw on stage entry
             RefreshShakerMixBar(run);
-            _shakeMeterFill.rectTransform.sizeDelta = new Vector2(0, -4);
-            _shakeMeterText.text = run.Glass.HasPreparation("shaken")
-                ? $"SHAKEN · {run.ShakeEnergy:P0}" : "";
+            // Stage entry: the meter reports on nothing until a hand claims it, and a tin
+            // that ARRIVED shaken says so once rather than standing an empty bar on the bar.
+            _shakeMeterFill.fillAmount = 0f;
+            if (run.Glass.HasPreparation("shaken"))
+                ShowWorkMeter((float)run.ShakeEnergy, UITheme.Amber[3],
+                              $"SHAKEN  {run.ShakeEnergy:P0}");
         }
 
         /// <summary>
@@ -983,7 +1021,6 @@ namespace LastCall.UI
                 _spoonHeld = false;
                 _stirEnergy = 0;
                 _stirHasPrev = false;
-                if (_shakeMeterText != null) _shakeMeterText.text = "";
                 return;
             }
 
@@ -1021,10 +1058,8 @@ namespace LastCall.UI
             }
             else _stirHasPrev = false;
 
-            _shakeMeterFill.rectTransform.sizeDelta =
-                new Vector2(Mathf.Round((ShakeMeterW - 4f) * (float)_stirEnergy), -4);
-            _shakeMeterFill.color = Color.Lerp(UITheme.Cyan[3], UITheme.Lime[3], (float)_stirEnergy);
-            if (_shakeMeterText != null) _shakeMeterText.text = $"STIR! {_stirEnergy:P0}";
+            ShowWorkMeter((float)_stirEnergy, UITheme.Cyan[3],
+                          $"STIR  {_stirEnergy:P0}");
             NudgeShaker(overTin ? "work circles over the tin" : "bring the spoon over the tin");
         }
 
@@ -1080,7 +1115,6 @@ namespace LastCall.UI
                 _shakerVessel.localRotation = Quaternion.identity;
                 // Leave the shaker wherever it was set down — no teleport home (2026-07-22).
                 _shakerVel = Vector2.zero;
-                if (_shakeMeterText != null) _shakeMeterText.text = "";
                 return;
             }
 
@@ -1109,10 +1143,8 @@ namespace LastCall.UI
                 // also being handed a surface-space x while it now expects the tin's own frame.
             }
 
-            _shakeMeterFill.rectTransform.sizeDelta =
-                new Vector2(Mathf.Round((ShakeMeterW - 4f) * (float)_shakeEnergy), -4);
-            _shakeMeterFill.color = Color.Lerp(UITheme.Amber[3], UITheme.Lime[3], (float)_shakeEnergy);
-            if (_shakeMeterText != null) _shakeMeterText.text = $"SHAKE! {_shakeEnergy:P0}";
+            ShowWorkMeter((float)_shakeEnergy, UITheme.Amber[3],
+                          $"SHAKE  {_shakeEnergy:P0}");
         }
 
         /// <summary>
@@ -1463,20 +1495,75 @@ namespace LastCall.UI
             _shakerMixBar = NewRect("MixSegs", mixTrack);
             Stretch(_shakerMixBar, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
 
-            // The shake meter, above the bottom bar. Its usable width is derived, not typed:
-            // the fill was hardcoded to 200px inside a 216px track, so a shake the caption
-            // called 100% left the bar visibly short of its own end.
-            var meterBg = NewRect("ShakeMeterBg", _shakerPanel);
-            Place(meterBg, new Vector2(0.5f, 0), new Vector2(ShakeMeterW, 14), new Vector2(0, 70));
-            meterBg.gameObject.AddComponent<Image>().color = UITheme.Night[0];
-            var meterFill = NewRect("ShakeMeterFill", meterBg);
-            meterFill.anchorMin = new Vector2(0, 0); meterFill.anchorMax = new Vector2(0, 1);
-            meterFill.pivot = new Vector2(0, 0.5f); meterFill.offsetMin = new Vector2(2, 2);
-            meterFill.offsetMax = new Vector2(2, -2); meterFill.anchoredPosition = new Vector2(2, 0);
-            _shakeMeterFill = meterFill.gameObject.AddComponent<Image>();
+            // THE WORK METER (2026-08-26, the author: "doluluk barlarını tamamen tekrardan
+            // tasarla, çok amatörce duruyor").
+            //
+            // It was a 220x14 rectangle of flat Night[0] with a second flat rectangle
+            // growing inside it and its caption floating in the air above — no tube, no
+            // glass, no marks, and on a bench where nothing is being shaken it is simply a
+            // black bar sitting on the counter with nothing in it. That is exactly what the
+            // author was looking at.
+            //
+            // THE HOUSE ALREADY OWNS A FINISHED GAUGE and no bench was using it: the
+            // day-end standing track is GaugeTube + a Solid-sprited Image.Type.Filled +
+            // GaugeGlass over the top, and it is the same instrument this needs. So the
+            // meter is that gauge, with three things added that a WORK bar wants and a
+            // standing bar does not: it is only there while there is work (the whole rig
+            // hides at rest instead of sitting empty), its caption is set INTO the tube
+            // rather than hung over it, and it carries a mark at the point where the work
+            // is enough — the one number a player shaking a tin actually wants to see
+            // coming.
+            var meterRig = _shakeMeterRig = NewRect("WorkMeter", _shakerPanel);
+            Place(meterRig, new Vector2(0.5f, 0), new Vector2(ShakeMeterW, MeterH),
+                  new Vector2(0, 74));
+            meterRig.pivot = new Vector2(0.5f, 0);
+            var tube = meterRig.gameObject.AddComponent<Image>();
+            tube.sprite = ChromeArt.GaugeTube((int)ShakeMeterW, (int)MeterH);
+            tube.color = UITheme.Night[2];
+            tube.raycastTarget = false;
+
+            var meterInner = NewRect("Inner", meterRig);
+            Stretch(meterInner, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
+
+            var fill = NewRect("Fill", meterInner);
+            Stretch(fill, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _shakeMeterFill = fill.gameObject.AddComponent<Image>();
+            // WITH A SPRITE, or Type.Filled is ignored and the gauge reads full at nought
+            // (the day-end track paid for that lesson; see ChromeArt.Solid).
+            _shakeMeterFill.sprite = ChromeArt.Solid();
             _shakeMeterFill.raycastTarget = false;
-            _shakeMeterText = NewText("ShakeText", _shakerPanel, _body, 8, TextAnchor.UpperCenter, UITheme.TextSecondary);
-            Place(_shakeMeterText.rectTransform, new Vector2(0.5f, 0), new Vector2(240, 16), new Vector2(0, 86));
+            _shakeMeterFill.type = Image.Type.Filled;
+            _shakeMeterFill.fillMethod = Image.FillMethod.Horizontal;
+            _shakeMeterFill.fillOrigin = (int)Image.OriginHorizontal.Left;
+            _shakeMeterFill.fillAmount = 0f;
+
+            var meterGlass = NewRect("Glass", meterRig);
+            Stretch(meterGlass, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var mg = meterGlass.gameObject.AddComponent<Image>();
+            mg.sprite = ChromeArt.GaugeGlass((int)ShakeMeterW, (int)MeterH, 5);
+            mg.raycastTarget = false;
+
+            // WHERE ENOUGH IS. A tin is worked until the drink is mixed, not until the bar
+            // is full, and the bar was saying nothing about which point that was.
+            _shakeMeterMark = NewRect("Enough", meterRig);
+            Place(_shakeMeterMark, new Vector2(0, 0), new Vector2(2, MeterH + 8f),
+                  new Vector2(EnoughMark * (ShakeMeterW - 4f) + 2f, -4f));
+            _shakeMeterMark.pivot = new Vector2(0.5f, 0);
+            var mkImg = _shakeMeterMark.gameObject.AddComponent<Image>();
+            mkImg.color = UITheme.Cream[4];
+            mkImg.raycastTarget = false;
+
+            // The caption is INSIDE the tube — a gauge whose reading floats above it is a
+            // gauge and a label, which is two objects doing one job.
+            _shakeMeterText = NewText("ShakeText", meterRig, _body, 8, TextAnchor.MiddleCenter,
+                                      UITheme.TextPrimary);
+            Stretch(_shakeMeterText.rectTransform, Vector2.zero, Vector2.one,
+                    Vector2.zero, Vector2.zero);
+            _shakeMeterText.raycastTarget = false;
+            var edge = _shakeMeterText.gameObject.AddComponent<Outline>();
+            edge.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            edge.effectDistance = new Vector2(1f, -1f);
+            meterRig.gameObject.SetActive(false);
 
             // THE BAR SPOON (GDD 21 §14, 2026-08-11): the stir's instrument, resting by the
             // tin. Drawn, not generated — it is an instrument the pointer works, and at this

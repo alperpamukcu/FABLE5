@@ -249,6 +249,68 @@ kalan daha açık belli edilsin" notunun iş gören yarısı buydu. RENT her zam
 üstüne kapandığı fatura odur). Yıldız sırasının altındaki "TONIGHT 3.5" de gitti: yıldızlar
 zaten o okumadır; kalan satır odada kimin olduğunu söyler (n SERVED · n WALKED).
 
+### 9.5 · Tezgâh tek oda oldu (2026-08-26)
+
+**ÜÇ KUSUR, TEK KÖK.** Tezgâhların **arkaplanı yoktu**: her panel kendi alt üçte birine bir
+tezgâh bandı çiziyor, üstünü şeffaf bırakıyordu — yani ODA arkadan görünüyordu. Ekranın boş
+okunması da, tin'den bardağa geçerken bütün dünyanın kayması da bundandı. Oda artık **ALANA**
+ait (`BuildBenchStage`): üretilmiş arka duvar (`Scene/bench_back`, tam 2×, tezgâh çizgisinden
+ASILI — iki kenar arasına esnetilen bir fon, tezgâh her kıpırdadığında başka bir piksel boyu
+demektir), altında bar üstü **bir kez** (üç kez değil), ikisinin arkasında da odanın
+sızmaması için düz plaka. Paneller yalnız tezgâhın üstündekileri taşır; kayan sadece onlardır.
+
+**ÇEKLİST OKUNUR OLDU.** Sol üst köşeye sabitlenmişti ve akış fasyanın ÜSTÜNE çizdiği için
+saatin üzerine biniyordu; dört 16 px işaretinden "tin'i doldur", "kapa", "çalkala ya da
+karıştır" ve "bardağa götür"ün okunması bekleniyordu — o boyutta dördü de aynı lekedir.
+`BenchTopClear` = 74 birim aşağıda, kapaklı başlıklı ev kartı, ve işaret artık **ADIM
+NUMARASI**. Alkolün adı alanın tepesinde altın renkte asılıydı; artık tezgâhın arka kenarına
+kesilmiş bir plakada, SAĞ uçta — ortada dururken tin ve bardağın arkasına düşüyordu.
+
+**TUŞLAR BARA İNDİ.** BACK ve TO THE GLASS, duvarın yarısında asılı 76×150'lik, kelimeleri alt
+alta dizilmiş sütunlardı — bir barda hiçbir şey omuz hizasında duvardan kullanılmaz. Tezgâhın
+ön kenarında tek satırlık şerit (`KeyStripY/KeyStripH`), her birinde ok; çöp o sıradan uzakta.
+
+**İŞ GÖSTERGESİ:** çalkalama/karıştırma çubuğu 220×14'lük düz Night[0] dikdörtgeni ve içinde
+büyüyen ikinci bir düz dikdörtgendi; başlığı havada asılıydı. Kimse çalkalamazken tezgâhın
+üstünde duran boş siyah bir bar. **Evin bitmiş göstergesi zaten vardı ve hiçbir tezgâh onu
+kullanmıyordu:** `ChromeArt.GaugeTube` + `Solid` sprite'lı `Image.Type.Filled` + `GaugeGlass`.
+Bar artık o alettir, üç farkla: **iş yokken hiç yoktur** (`StepWorkMeter`, hiçbir el talep
+etmediği ilk karede çekilir), başlığı tüpÜN İÇİNDEdir, ve **yeterin nerede olduğunu**
+söyleyen bir çentik taşır (`EnoughMark` 0.72; dolgu çentiği geçince yeşile döner).
+
+### 9.6 · Tezgâhın garnitür rafı ve turu (2026-08-26)
+
+Bitmiş içkinin yanında beliren dört istasyon artık gece boyu barda duran **altılı bir RAF**,
+ve **SÜRÜKLENİYORLAR** — içkiyi tabureye taşımakla aynı fiil, aynı ağırlık. Hep açıktır,
+çünkü bir barın garnitür tepsisi gelip gitmez; içkiye göre değişen şey KULLANILABİLİRLİKtır,
+onu da sönme ve bırakmanın reddi söyler.
+
+**RAF İKİ TÜR PARÇA TAŞIR ve her biri kendi Core fiilinden geçer.** Buz, limon, tuz ve şeker
+`PreparationDefinition` — hacimsiz işaretler, `AddPreparationAtGlass`. **Zeytin ve nane ise
+İÇERİKtİr**: stoktur, raftan gelir, biter, ve `recipes.json`'un "olive"/"mint" stil bantları
+onlara göre notlanır — `PourAtGlass(id, ServingGlass.Capacity × 0.05)` ile düşerler (tin'in
+kendi `GarnishClickFraction`'ı, ama hedef kapta ölçülür). Barın stoklamadığı ya da bitirdiği
+bir garnitür hiç kurulmaz.
+
+**TUR TEZGÂHA TAŞINDI, SİLİNMEDİ.** Kaplar bardak tezgâhından kalkınca tuz/şekeri tek
+bırakmayla uygulamak, sekiz gün önce açıkça istenmiş bir beceriyi ("tuz artık bardağın
+etrafında çevirerek ... ufak bir skill oyunu") kimse geri istemeden silmek olurdu. Aritmetik
+tezgâha BÜTÜN taşındı (`StepRimLap`): kabı içkinin üstünde tut ve imleçle AĞZININ etrafında
+tam bir tur at. Sayılar tezgâhın kendi sayıları — süpürmenin saydığı bant, turun üçte
+birinden büyük tek kare sıçramalarının atılması, yarım kalan turun kabına yazılması — böylece
+orada öğrenen oyuncu burada yeniden öğrenmez. **Bir tur asla bırakmayla uygulanmaz.**
+
+**İMLEÇ ETİKETLERİ:** yazarın kuralı menüye değil bu TÜR etkileşime dair — tek plaka
+(`_propTip`), hangi rect'in üzerinde duracağı söylenir ve EKRAN üzerinden çevirir, böylece
+sahnenin kendi tuvalindeki bir prop (lavabo, bira musluğu) için de HUD'ınki için olduğu gibi
+çalışır. Kirli bardak "CLEAR THE GLASS", atıştırmalık "TAKE THE <ad>", lavabo "POUR IT AWAY",
+musluk "PULL A PINT". **Bardak lavaboya SÜRÜKLENİR**; drenaj artık hiç tıklama almaz, plakası
+yalnız bırakılma noktasını sınamak ve imlece ne olduğunu söylemek içindir.
+
+**BORÇ:** bardak tezgâhının eski bitirme masasından kalan `AddGarnishChip`, `AddFinishTub`,
+`TableStand` ve o tezgâhın kendi tur makinesi (`UpdateRimLap`, `ShowRimRing`, `PlaceRimRing`)
+artık çağrılmıyor — çökmezler ama ölüdürler, bir sonraki temizlik turunda gitmeliler.
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

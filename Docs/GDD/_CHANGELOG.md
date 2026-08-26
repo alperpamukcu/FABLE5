@@ -2,6 +2,53 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `GDD_MEVCUT §9.5-9.6 / 21 §14 / 24` **the bench becomes a room, and the counter grows a
+  garnish rail (2026-08-26, ninth and tenth rounds):**
+  **The slip was restored.** "Gün sonu fatura ekranı karmaşık ve çok yazılı" was read as a
+  note about the receipt; the sentence after it named the two BOARDS beside the receipt.
+  TOOK IN / PAID OUT, both subtotals, TIPS and TONIGHT's reading are back exactly as they
+  were, and the boards got what was actually asked for — a drawn navy plate with a teal
+  capped head, one drawing stood twice, BoardH 384 → 350 so it lands at a whole 2×.
+  **One room, not three panels.** The benches had no background: each panel drew a band of
+  counter across its own bottom third and left the rest transparent, so the ROOM showed
+  through — which is why the screen read empty and why a stage change slid the world. The
+  room belongs to the FIELD now (generated wall hung FROM the counter line at a whole 2×,
+  the bar top built once instead of three times, a plate behind both); the panels keep only
+  what a bench differs by, and those are the only things that slide.
+  **The checklist, the name and the keys.** The card came 74 units off the fascia it was
+  pinned across and its four 16px marks became STEP NUMBERS; the bottle's name moved from
+  the top of the field to a plate cut into the counter's right-hand end; BACK and TO THE
+  GLASS came off the wall onto a strip along the bar's front edge, one line each.
+  **The work meter is the house's own gauge.** It was a flat 220×14 rectangle with a second
+  flat rectangle growing inside it — and on a bench where nothing is being shaken, an empty
+  black bar. The day-end standing track's vocabulary (GaugeTube + Solid-sprited Filled +
+  GaugeGlass) was finished and unused by every bench; the meter is that, plus three things a
+  WORK bar wants: it is not there at rest, its caption is inside the tube, and it carries a
+  mark at the point where the work is enough.
+  **The garnish rail.** Four stations that appeared beside a finished drink became six props
+  that stand on the bar all night and are DRAGGED — the same verb and weight as carrying the
+  drink to a stool. Two kinds of prop, each through its own Core verb:
+  AddPreparationAtGlass for the volumeless marks (ice, twist, both rims), PourAtGlass for
+  the two that are STOCK (olive, mint) — they come off the shelf, they run out, and
+  recipes.json grades its "olive" and "mint" bands against them.
+  **The rim lap moved with the dishes rather than dying with them.** Taking them off the
+  glass bench and applying salt on a single drop would have deleted a skill asked for eight
+  days earlier, unasked. The arithmetic came whole: hold the dish over the drink and run a
+  full circle round its MOUTH. Same band, same one-third-of-a-lap jump rejection, same
+  part-run kept against its dish. A drop never applies a rim.
+  **Hover captions, and the sink is dragged to.** One plate told which rect to stand over
+  and converting through the screen, so a prop on the stage's canvas works like one on the
+  HUD's; the dirty glass, the snack bowls, the sink, the font and all six rail props say
+  what they do. Discarding is a release of the carried glass over the basin — the drain
+  takes no click at all, because a click made throwing a drink away cheaper than serving it.
+  **The room's front has light** (ambient 0.24 → 0.40: everything lighting this room aims at
+  its back, and the tables and drinkers stand in front of all of it), **the menu drops half
+  its own height**, and **the shutter says STOCK** — OPEN BAR was a sign for the people on
+  the other side of that counter.
+  **Debt:** the glass bench's old finishing table left `AddGarnishChip`, `AddFinishTub`,
+  `TableStand` and its own rim machinery with no callers. They do not crash; they are dead,
+  and the next sweep should take them.
+
 - `GDD_MEVCUT §9.3-9.4 / 24 / 16` **the room clears its counter (2026-08-26, eighth
   round):** nine notes from the author, shipped together.
   **(1) The till and the money leave the playing screen.** The register, the gold balance

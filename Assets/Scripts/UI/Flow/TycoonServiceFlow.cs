@@ -184,6 +184,9 @@ namespace LastCall.UI
                 // and the body are, and UpdateCap would otherwise walk them both home in the
                 // same frame the bang was drawn.
                 StepBlowout();
+                // LAST of the bench's own steps: the meter withdraws on the first frame no
+                // hand claimed it, so whichever verb wrote to it above has already had its say.
+                StepWorkMeter();
                 StepShakerFluid(run);
                 Sfx.HoldLoop(_shakerLoopWanted, _shakerLoopWanted == "shake_loop" ? 0.9f : 0.8f);
             }
