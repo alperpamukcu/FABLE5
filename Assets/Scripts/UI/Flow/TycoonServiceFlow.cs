@@ -397,11 +397,20 @@ namespace LastCall.UI
         // back is to leave the bench rather than to open a page the player never passed
         // through. The draught station already worked this way (2026-08-19); the rest
         // have caught up, and Stage.Menu now has no door left into it.
+        /// <summary>Where a bench's own controls live: a strip along the FRONT EDGE of the
+        /// bar, at the height a hand rests at. They stood at the vertical middle of the two
+        /// side edges until 2026-08-26 (the author: "butonların konumlarını ... tamamen
+        /// tekrardan tasarla, çok amatörce duruyor") — 76 wide, 150 tall, three words stacked
+        /// one per line, floating halfway up a wall with nothing under them. Nothing in a bar
+        /// is operated at shoulder height on a wall; the controls are on the bar.</summary>
+        private const float KeyStripY = 26f, KeyStripH = 46f;
+
         private void AddEdgeBack(RectTransform panel, Stage back = Stage.Closed,
-            string caption = "BACK\nTO\nBAR")
+            string caption = "◀  BACK TO THE BAR")
         {
             var rt = NewRect("EdgeBack", panel);
-            Place(rt, new Vector2(0f, 0.5f), new Vector2(76, 150), new Vector2(14, 0));
+            Place(rt, new Vector2(0f, 0f), new Vector2(196, KeyStripH),
+                  new Vector2(30, KeyStripY));
             var btn = rt.gameObject.AddComponent<Button>();
             btn.onClick.AddListener(() => GoTo(back));
             var face = NewRect("Face", rt);
@@ -501,6 +510,7 @@ namespace LastCall.UI
             // One switch for every pointer under the flow: off while the field is moving.
             _rootGroup = _root.gameObject.AddComponent<CanvasGroup>();
 
+            BuildBenchStage();
             BuildShakerPanel();
             BuildServePanel();
             BuildTapPanel();
@@ -508,6 +518,76 @@ namespace LastCall.UI
             _root.gameObject.SetActive(false);
         }
 
+
+        // ── the bench's own room (2026-08-26) ────────────────────────────────────
+        //
+        // The author, in one note: "bardağa koyma sahnesiyle shakera koyma sahnesi aynı
+        // sahne olacak, arkaplan değişmeyecek tezgahın üstündekiler değişecek ... shaker
+        // sahnesinden bardak sahnesine geçerken arkaplan sabit kalacak sadece nesneler
+        // kayacak ... tezgahı doldurmamız lazım çok boş duruyor, tezgah için bir arkaplan
+        // üret."
+        //
+        // Three faults, one cause. The benches had no BACKGROUND: each panel drew a band of
+        // counter across its own bottom third and left the top two thirds transparent, so
+        // the ROOM showed through — which is why the screen read empty, and why moving from
+        // the tin to the glass slid the whole world sideways instead of just the props.
+        //
+        // The room is one object now and it belongs to the FIELD, not to a panel: the wall
+        // behind the bar, the bar top itself, and a dark plate under both so nothing of the
+        // room leaks past either. The panels keep only what a bench actually differs by —
+        // what is standing on the counter — and those are the only things that slide.
+        //
+        // THE WALL IS DRAWN AT A WHOLE 2×, like everything else on this bench, and it is
+        // hung from the COUNTER LINE upward rather than stretched to fit: a backdrop scaled
+        // to whatever room is left is a backdrop with a different pixel size every time the
+        // counter moves. What it does not reach at the top, the plate behind it covers —
+        // which is the shadow over the top shelf, and reads as one.
+        private RectTransform _benchStage, _benchWall;
+
+        private void BuildBenchStage()
+        {
+            _benchStage = NewRect("BenchStage", _field);
+            Stretch(_benchStage, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _benchStage.SetAsFirstSibling();
+
+            // The plate: no part of the room may show past the bench, at any aspect.
+            var air = NewRect("Air", _benchStage);
+            Stretch(air, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var aimg = air.gameObject.AddComponent<Image>();
+            aimg.color = UITheme.Night[0];
+            aimg.raycastTarget = false;
+
+            var wall = _benchWall = NewRect("Wall", _benchStage);
+            wall.pivot = new Vector2(0.5f, 0f);
+            var wimg = wall.gameObject.AddComponent<Image>();
+            wimg.sprite = SceneArt("bench_back");
+            wimg.raycastTarget = false;
+            wimg.type = Image.Type.Simple;
+            if (wimg.sprite == null) wimg.color = UITheme.Night[1];
+            wall.sizeDelta = wimg.sprite != null
+                ? new Vector2(0f, wimg.sprite.rect.height * 2f) : new Vector2(0f, 464f);
+
+            // The bar top, ONCE. It used to be built three times, one per bench, which is
+            // what made a stage change move it.
+            //
+            // ...AND LAST, not first. AddBenchCounter sends the band to the FRONT of its
+            // parent's children, which was right while the parent's own backdrop was a
+            // component on the panel; here the backdrop is a SIBLING, so first-sibling put
+            // the whole bar top behind the plate and the bench came back with a black floor.
+            AddBenchCounter(_benchStage, 0.675f);
+            if (_benchCounters.Count > 0)
+                _benchCounters[_benchCounters.Count - 1].SetAsLastSibling();
+        }
+
+        /// <summary>The bench's own backdrop, out of Resources/Scene. Not ItemArt: that
+        /// folder is canvas props at PPU 100 and this is a room.</summary>
+        private static Sprite SceneArt(string name)
+        {
+            var tex = Resources.Load<Texture2D>("Scene/" + name);
+            if (tex == null) return Resources.Load<Sprite>("Scene/" + name);
+            return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+                                 new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect);
+        }
 
         // ── tiny UI helpers ──────────────────────────────────────────────────────
 
@@ -517,7 +597,11 @@ namespace LastCall.UI
             // Just the bin — you click the object, not a button plate around it.
             var rt = NewRect("Bin", parent);
             // On the ledge, right of SERVE (2026-08-01) — it STANDS somewhere now.
-            Place(rt, new Vector2(1, 0), new Vector2(CornerSize, CornerSize), new Vector2(-140f, 22f));
+            // Clear of the key strip since 2026-08-26: the way forward is a key on that
+            // strip now, and a bin sharing its row is one slip away from the one press
+            // nobody wants to make by accident.
+            Place(rt, new Vector2(1, 0), new Vector2(CornerSize, CornerSize),
+                  new Vector2(-278f, 22f));
             var img = rt.gameObject.AddComponent<Image>();
             img.preserveAspect = true;
             img.sprite = ItemArt.Load("btn_bin");

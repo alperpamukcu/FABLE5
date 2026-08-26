@@ -207,7 +207,12 @@ namespace LastCall.UI
             // edge — the line the room crops a drinker at — and the top the bar's props
             // actually stand on reads 36 units lower in the scene. The dirty glass learned
             // this the same way, off the author's own report, and carries the same number.
-            var foot = new Vector2(BookPropX, CounterLineY - 36f + lift);
+            // HALF ITS OWN HEIGHT LOWER (2026-08-26, the author: "menü kendi boyunun yarısı
+            // kadar aşağı insin"). Written as a fraction of the prop rather than as another
+            // constant, so a re-drawn book lands where this rule says and not where today's
+            // 110 units happen to put it.
+            var foot = new Vector2(BookPropX,
+                CounterLineY - 36f - _bookProp.sizeDelta.y * 0.5f + lift);
             _bookProp.anchoredPosition = foot;
             if (_bookShadow != null) _bookShadow.anchoredPosition = foot + new Vector2(0f, 2f);
             // The label rides above the book's own head, so it follows the counter's lift

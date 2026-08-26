@@ -1,0 +1,42 @@
+{
+ "bench_back": {
+  "job_id": "5df5d984-c400-4806-8eef-f2f2110f10bf",
+  "png": "AssetPipeline\\staging\\bench_stage\\bench_back.png"
+ },
+ "counter_salt": {
+  "job_id": "86f75d6d-07ac-428a-9b73-d5e6ab69ba93",
+  "png": "AssetPipeline\\staging\\bench_stage\\counter_salt.png"
+ },
+ "counter_sugar": {
+  "job_id": "9b7df179-3d2c-40b0-8b56-8e00562ff345",
+  "png": "AssetPipeline\\staging\\bench_stage\\counter_sugar.png"
+ },
+ "counter_olive": {
+  "job_id": "7ef48d8b-7511-480c-a2ea-0be1c026864d",
+  "png": "AssetPipeline\\staging\\bench_stage\\counter_olive.png"
+ },
+ "counter_mint": {
+  "job_id": "cc98553f-cdb4-487c-bd33-89b0e65c3fb9",
+  "png": "AssetPipeline\\staging\\bench_stage\\counter_mint.png"
+ },
+ "glass_lemon": {
+  "job_id": "6bbfc8bf-c1e8-4e0f-a118-37cbb3a79546",
+  "png": "AssetPipeline\\staging\\bench_stage\\glass_lemon.png"
+ },
+ "glass_olive": {
+  "job_id": "a973c21b-ad22-4a31-bfa9-3195d80c7cd9",
+  "png": "AssetPipeline\\staging\\bench_stage\\glass_olive.png"
+ },
+ "glass_mint": {
+  "job_id": "afd63e4f-fb0e-46aa-b476-9dde648fc0c9",
+  "png": "AssetPipeline\\staging\\bench_stage\\glass_mint.png"
+ },
+ "board_plate": {
+  "job_id": "a1884196-d0e9-436a-ad71-13c255c3817e",
+  "png": "AssetPipeline\\staging\\bench_stage\\board_plate.png"
+ },
+ "glass_ice": {
+  "job_id": "8277cd1b-4312-4d1b-9bfb-2c315e0e3b3a",
+  "png": "AssetPipeline\\staging\\bench_stage\\glass_ice.png"
+ }
+}

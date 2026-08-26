@@ -233,7 +233,6 @@ namespace LastCall.UI
             var block = _tapPanel.gameObject.AddComponent<Image>();
             block.color = new Color(0f, 0f, 0f, 0f);
             Swallow(_tapPanel);
-            AddBenchCounter(_tapPanel, 0.675f);      // moved on open by AlignBenchCounters
 
             _tapTitle = NewText("Title", _tapPanel, _display, 16, TextAnchor.UpperCenter, UITheme.TextPrimary);
             Stretch(_tapTitle.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -46), new Vector2(0, -18));
@@ -429,7 +428,7 @@ namespace LastCall.UI
             // from the draught station it leads to the ROOM: the font on the counter is this
             // stage's only door, so the back-bar wall is not behind it and landing there is a
             // room the player never walked into.
-            AddEdgeBack(_tapPanel, Stage.Closed, "BACK\nTO\nROOM");
+            AddEdgeBack(_tapPanel, Stage.Closed, "◀  BACK TO THE ROOM");
 
             var done = NewRect("Done", _tapPanel);
             Place(done, new Vector2(0.5f, 0), new Vector2(240, 34), new Vector2(130, 12));

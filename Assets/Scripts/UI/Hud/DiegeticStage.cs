@@ -1237,8 +1237,18 @@ namespace LastCall.UI
         private const float MidShare = 0.45f;
         /// <summary>The ambient's own punch. Lower than the beam's: it is a fill, not a shaft.</summary>
         private const float WashPunch = 1.45f;
-        /// <summary>The wash over the whole room, ditto.</summary>
-        private const float WashDay = 0.24f, WashNight = 0.26f;
+        /// <summary>
+        /// The wash over the whole room, ditto.
+        ///
+        /// UP, BECAUSE THE FRONT OF THE ROOM HAS NO KEY (2026-08-26, the author: "ana
+        /// sahnede masa ve müşteriler çok karanlık"). Everything that lights this room aims
+        /// at its BACK — the window from the left, the sky glow behind it, the sconces and
+        /// the wall lamps on the far wall — and the tables and the drinkers stand in FRONT
+        /// of all of it, with only the ambient on them. At 0.24 that ambient was a memory
+        /// of light rather than light. The lamps are untouched: raising them would have
+        /// blown the wall they are already washing, and what was dark was never the wall.
+        /// </summary>
+        private const float WashDay = 0.40f, WashNight = 0.42f;
         // (The wall lights run the OTHER way to the sky - the room lights up as the day
         //  dies - and their numbers live with the rest of the sconce plan, above.)
 
@@ -1616,12 +1626,24 @@ namespace LastCall.UI
         /// clicking it means — the same split the till has had since the ledger landed.</summary>
         public void SetTapHandler(System.Action onClick) => _onTapClicked = onClick;
 
-        private System.Action _onDrainClicked;
+        /// <summary>The drain's own hit plate, for the HUD to test a dropped glass against
+        /// (2026-08-26: a drink is poured away by CARRYING it to the sink). Null until the
+        /// room owns a drain, which a run without fixtures never does.</summary>
+        private RectTransform _drainDoor;
 
-        /// <summary>Wires the sink to the drain (2026-08-26). Same split as the font: the
-        /// stage knows where the basin stands, the HUD knows what pouring a drink away
-        /// costs.</summary>
-        public void SetDrainHandler(System.Action onClick) => _onDrainClicked = onClick;
+        /// <summary>Is this screen point on the sink? Asked by the carry, once, on release.</summary>
+        public bool PointerOverDrain(Vector2 screenPoint) =>
+            _drainDoor != null && _drainDoor.gameObject.activeInHierarchy
+            && (_propDoorGate == null || _propDoorGate.blocksRaycasts)
+            && RectTransformUtility.RectangleContainsScreenPoint(_drainDoor, screenPoint, null);
+
+        private System.Action<RectTransform, string> _onPropHover;
+
+        /// <summary>Wires the room's props to the HUD's hover caption (2026-08-26). The stage
+        /// knows WHERE a prop is and what it is called; the HUD owns the plate that says so.
+        /// Told, not read, like the money and the slots before it.</summary>
+        public void SetPropHoverHandler(System.Action<RectTransform, string> onHover) =>
+            _onPropHover = onHover;
 
         /// <summary>The ID photo for an archetype, for the tycoon floor's licence card.</summary>
         public Sprite PortraitSpriteFor(string archetypeId) =>
@@ -2285,6 +2307,7 @@ namespace LastCall.UI
             _houseLights.Clear();
             foreach (var door in _tapDoors) if (door != null) Destroy(door.gameObject);
             _tapDoors.Clear();
+            _drainDoor = null;
             foreach (var sh in _shadows) if (sh.Blob != null) Destroy(sh.Blob.gameObject);
             _shadows.Clear();
             if (owned == null || _world == null) return;
@@ -2376,8 +2399,15 @@ namespace LastCall.UI
 
                     // A beer font is the door onto the draught station, and the sink is the
                     // door onto the drain, so both answer the pointer.
-                    if (def.IsTap) BuildPropDoor(def, sr, () => _onTapClicked?.Invoke());
-                    else if (def.IsDrain) BuildPropDoor(def, sr, () => _onDrainClicked?.Invoke());
+                    if (def.IsTap)
+                        BuildPropDoor(def, sr, () => _onTapClicked?.Invoke(), "PULL A PINT");
+                    // THE DRAIN TAKES NO CLICK (2026-08-26). Its plate is here for two
+                    // other jobs: the carried glass tests its release against it, and the
+                    // pointer is told what the basin is for. A click as well would be a
+                    // second, cheaper way to do the one thing in this game that costs money
+                    // - which is exactly the shape the author sent back.
+                    else if (def.IsDrain)
+                        _drainDoor = BuildPropDoor(def, sr, null, "POUR IT AWAY");
                 }
             }
             PlaceFixtures();
@@ -2411,11 +2441,12 @@ namespace LastCall.UI
         /// swallows at the edges is a door the player learns not to trust. What it costs is a
         /// sliver of empty seat-rect beside each font, nowhere near anybody's body.
         /// </summary>
-        private void BuildPropDoor(LastCall.Core.FixtureDefinition def, SpriteRenderer body,
-                                   System.Action onClick)
+        private RectTransform BuildPropDoor(LastCall.Core.FixtureDefinition def,
+                                            SpriteRenderer body, System.Action onClick,
+                                            string word)
         {
             LastCall.Game.StageSlot slot;
-            if (!_slots.TryGetValue(def.Slot, out slot)) return;
+            if (!_slots.TryGetValue(def.Slot, out slot)) return null;
             if (_tapDoorRoot == null)
             {
                 _tapDoorRoot = OverlayCanvas("TapDoors", 7, raycasts: true);
@@ -2446,11 +2477,14 @@ namespace LastCall.UI
             plate.sizeDelta = new Vector2(art.x * sx, art.y * sy);
             plate.anchoredPosition = new Vector2(slot.X * sx, slot.Y * sy);
             var hit = plate.gameObject.AddComponent<Image>();
-            hit.color = new Color(0, 0, 0, 0);   // invisible, but catches clicks
-            var btn = plate.gameObject.AddComponent<Button>();
-            btn.targetGraphic = hit;
-            btn.transition = Selectable.Transition.None;
-            btn.onClick.AddListener(() => onClick?.Invoke());
+            hit.color = new Color(0, 0, 0, 0);   // invisible, but catches the pointer
+            if (onClick != null)
+            {
+                var btn = plate.gameObject.AddComponent<Button>();
+                btn.targetGraphic = hit;
+                btn.transition = Selectable.Transition.None;
+                btn.onClick.AddListener(() => onClick());
+            }
 
             // THE AFFORDANCE IS THE PROP, not the plate: an invisible plate cannot light up
             // without drawing a rectangle over the counter, so the pointer lights the FONT's
@@ -2461,7 +2495,17 @@ namespace LastCall.UI
             var glow = plate.gameObject.AddComponent<HoverGlow>();
             glow.Sprites = new[] { body };
 
+            // ...and it SAYS what it does, before it is pressed (2026-08-26). The glow was
+            // already the affordance; the word is what turns "this can be clicked" into
+            // "this is the drain". The HUD owns the plate the word is written on.
+            var relay = plate.gameObject.AddComponent<HoverRelay>();
+            var thePlate = plate;
+            var theWord = word;
+            relay.Entered = () => _onPropHover?.Invoke(thePlate, theWord);
+            relay.Exited = () => _onPropHover?.Invoke(thePlate, null);
+
             _tapDoors.Add(plate);
+            return plate;
         }
 
         /// <summary>Stands every placed piece in its slot for the CURRENT fit — the slots

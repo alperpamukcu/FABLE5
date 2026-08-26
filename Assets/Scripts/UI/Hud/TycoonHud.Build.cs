@@ -557,7 +557,10 @@ namespace LastCall.UI
             BuildRecipeBook(root);
 
             BuildDrinkGlass(root);
-            BuildMiniPreps(root);   // the counter's own stations, beside where it rests
+            BuildMiniPreps(root);   // the counter's own garnish rail, beside where it rests
+            // Built LAST of the room's furniture, so the caption draws over every prop it
+            // can be raised by rather than under one of them.
+            BuildPropTip(root);
             BuildSnackRow(root);
             BuildServiceLog(root);
             BuildIdCard(root);

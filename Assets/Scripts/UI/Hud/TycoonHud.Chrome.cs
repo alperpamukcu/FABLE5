@@ -112,6 +112,89 @@ namespace LastCall.UI
             RefreshGlassRack(run);
         }
 
+        // ── what a prop does, said before it is pressed (2026-08-26) ─────────────
+        //
+        // The author: "bu tarz etkileşimlerde etkileşime girilen nesnenin üzerinde ne olduğu
+        // yazmalı, örneğin menünün üstüne gelindiğinde menüyü aç demek olduğunu biliyorsun."
+        // The recipe book has said OPEN THE MENU on hover since 2026-08-25 and it was the
+        // only prop in the room that did. Everything else — the sink, the beer font, the six
+        // things on the garnish rail — was a drawing you had to press to find out about.
+        //
+        // ONE PLATE, not one per prop. The book's own label is a child of the book and
+        // follows it; six more of those would be six more rects riding the counter's lift.
+        // This one lives on the HUD root, is told which rect to stand over, and converts
+        // through the screen — so it works for a prop on the stage's own canvas (the sink,
+        // the font) exactly as it does for one on the HUD's.
+        private RectTransform _propTip;
+        private Text _propTipText;
+        private CanvasGroup _propTipGroup;
+        private RectTransform _propTipOver;
+        private const float PropTipFade = 0.12f;
+
+        private void BuildPropTip(RectTransform root)
+        {
+            _propTip = NewRect("PropTip", root);
+            _propTip.anchorMin = _propTip.anchorMax = new Vector2(0.5f, 0.5f);
+            _propTip.pivot = new Vector2(0.5f, 0f);
+            _propTip.sizeDelta = new Vector2(180f, 22f);
+            var plate = _propTip.gameObject.AddComponent<Image>();
+            plate.sprite = ChromeArt.Card();
+            plate.type = Image.Type.Sliced;
+            plate.color = UITheme.Night[1];
+            plate.raycastTarget = false;
+            _propTipText = NewText("Line", _propTip, _display, 8, TextAnchor.MiddleCenter,
+                                   UITheme.Amber[4]);
+            Stretch(_propTipText.rectTransform, Vector2.zero, Vector2.one,
+                    Vector2.zero, Vector2.zero);
+            _propTipText.raycastTarget = false;
+            _propTipText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _propTipGroup = _propTip.gameObject.AddComponent<CanvasGroup>();
+            _propTipGroup.alpha = 0f;
+            _propTipGroup.blocksRaycasts = false;
+            _propTipGroup.interactable = false;
+            UiAuditExempt.Mark(_propTip, "the hover caption stands over whatever prop the "
+                + "pointer is on, in that prop's own place rather than in a fixed one");
+        }
+
+        /// <summary>The pointer arrived on a prop: say what pressing it does.</summary>
+        internal void ShowPropTip(RectTransform over, string word)
+        {
+            if (_propTip == null || over == null || string.IsNullOrEmpty(word)) return;
+            _propTipOver = over;
+            _propTipText.text = word;
+        }
+
+        /// <summary>...and left it. Only the prop that RAISED the tip may lower it: two props
+        /// whose rects touch would otherwise trade it, and the second one's Exit would take
+        /// down the first one's Enter.</summary>
+        internal void HidePropTip(RectTransform over)
+        {
+            if (_propTipOver == over) _propTipOver = null;
+        }
+
+        private void StepPropTip()
+        {
+            if (_propTip == null) return;
+            var over = _propTipOver;
+            bool up = over != null && over.gameObject.activeInHierarchy;
+            float want = up ? 1f : 0f;
+            _propTipGroup.alpha = Motion.Reduced ? want : Mathf.MoveTowards(
+                _propTipGroup.alpha, want, Time.unscaledDeltaTime / PropTipFade);
+            if (!up || _propTipGroup.alpha <= 0f) return;
+
+            // THROUGH THE SCREEN, because the prop may not be on this canvas. The sink and
+            // the beer font are hit plates on the stage's own overlay; a straight read of
+            // their anchoredPosition would place the caption in the HUD's coordinates as if
+            // it were the stage's, which is only the same thing by accident.
+            var corners = new Vector3[4];
+            over.GetWorldCorners(corners);
+            var top = (corners[1] + corners[2]) * 0.5f;
+            var screen = RectTransformUtility.WorldToScreenPoint(null, top);
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    (RectTransform)_propTip.parent, screen, null, out Vector2 local))
+                _propTip.anchoredPosition = local + new Vector2(0f, 8f);
+        }
+
         /// <summary>One figure, falling out from under the money it changed.</summary>
         private void DropMoney(int amount, int slot)
         {

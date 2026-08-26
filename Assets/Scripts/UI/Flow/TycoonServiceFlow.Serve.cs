@@ -196,23 +196,19 @@ namespace LastCall.UI
                 : "GRAB THE SHAKER · TIP IT OVER THE GLASS";
             _aimText.color = UITheme.TextSecondary;
 
-            // The prep table finishes the drink: ice and the rims go on at the GLASS, so a
-            // built drink can have them at all, then the stocked garnishes (mint, olive).
-            // Everything stands ALONG THE TABLETOP, nearest thing biggest — the ice bucket
-            // takes the near end because it is the thing you reach for most.
+            // THE FINISHING TABLE IS GONE FROM HERE (2026-08-26, the author: "bardağa koyma
+            // sahnesinden buz limon tuz şeker vs. yi kaldır"). Ice, the two rims and the
+            // garnishes stood along this counter for a fortnight and the whole of that work
+            // — the rim lap, the counted cubes, the drag — moved to the ROOM's bar, where
+            // the finished drink actually rests: you pour the tin out, take the glass back
+            // to the counter, and finish it with your hands off the rail standing there.
+            // This bench has one job now, which is the pour, and it is the emptier for it
+            // in exactly the way a bench with one job should be.
+            //
+            // The row itself is kept and emptied rather than deleted: the rim ring and the
+            // hand-piece still hang off it, and a null parent is a harder failure than an
+            // empty one.
             foreach (Transform ch in _serveGarnishRow) Destroy(ch.gameObject);
-            int standCount = 4;
-            foreach (var bottle in run.Shelf.Bottles)
-                if (bottle.Ingredient.Type == IngredientType.Garnish && !bottle.IsEmpty)
-                    standCount++;
-            int stand = 0;
-            AddFinishTub("ice", "ICE", Preparations.Ice, TableStand(stand++, standCount));
-            AddFinishTub("lemon_twist", "LEMON", Preparations.LemonTwist, TableStand(stand++, standCount));
-            AddFinishTub("salt_rim", "SALT", Preparations.SaltRim, TableStand(stand++, standCount));
-            AddFinishTub("sugar_rim", "SUGAR", Preparations.SugarRim, TableStand(stand++, standCount));
-            foreach (var bottle in run.Shelf.Bottles)
-                if (bottle.Ingredient.Type == IngredientType.Garnish && !bottle.IsEmpty)
-                    AddGarnishChip(bottle.Ingredient, TableStand(stand++, standCount));
 
             // NO BOTTLES STAND ON THIS COUNTER, and none is carried in either (2026-08-14):
             // the tin arrives with the whole drink in it.
@@ -850,8 +846,21 @@ namespace LastCall.UI
             block.color = new Color(0f, 0f, 0f, 0f);
             Swallow(_servePanel);
 
-            var title = NewText("Title", _servePanel, _display, 16, TextAnchor.UpperCenter, UITheme.PrimaryAction);
-            Stretch(title.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -40), new Vector2(0, -10));
+            // ENGRAVED ON THE BAR, like the tin bench's own name (2026-08-26): the flow
+            // draws OVER the room's fascia, so anything pinned to the top of the field is
+            // pinned across the clock and the week.
+            var namePlate = NewRect("NamePlate", _servePanel);
+            Place(namePlate, new Vector2(1f, 0f), new Vector2(330, 30), new Vector2(-40, 236));
+            var npImg = namePlate.gameObject.AddComponent<Image>();
+            npImg.sprite = ChromeArt.Card();
+            npImg.type = Image.Type.Sliced;
+            npImg.color = UITheme.Night[0];
+            npImg.raycastTarget = false;
+            var title = NewText("Title", namePlate, _display, 8, TextAnchor.MiddleCenter,
+                                UITheme.Amber[4]);
+            Stretch(title.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            title.horizontalOverflow = HorizontalWrapMode.Overflow;
+            title.raycastTarget = false;
             title.text = "POUR THE GLASS";
 
             // The two corner readouts wear the top corners at 8px; the aim line gets its own
@@ -867,10 +876,16 @@ namespace LastCall.UI
                 new[] { "TIP THE TIN", "ICE AND GARNISH", "CARRY IT OVER" },
                 _serveStepRows, new Vector2(20, -18));
 
+            // BOTH READOUTS CLEAR OF THE CARD (2026-08-26). The tin's line was pinned 132
+            // below the top, which was under the old flat checklist and straight THROUGH the
+            // new plate's first row. They sit under the card and under the fascia
+            // respectively, at the two numbers this file has for exactly that.
             _serveShakerText = NewText("Shaker", _servePanel, _body, 8, TextAnchor.UpperLeft, UITheme.TextSecondary);
-            Place(_serveShakerText.rectTransform, new Vector2(0, 1), new Vector2(280, 12), new Vector2(20, -132));
+            Place(_serveShakerText.rectTransform, new Vector2(0, 1), new Vector2(280, 12),
+                  new Vector2(24, -BenchTopClear - 132f));
             _serveGlassText = NewText("Glass", _servePanel, _body, 8, TextAnchor.UpperRight, UITheme.TextPrimary);
-            Place(_serveGlassText.rectTransform, new Vector2(1, 1), new Vector2(280, 12), new Vector2(-20, -44));
+            Place(_serveGlassText.rectTransform, new Vector2(1, 1), new Vector2(280, 12),
+                  new Vector2(-20, -BenchTopClear));
 
             // VERTICAL and engine-drawn (2026-08-02): the GLASS's contents as shares of
             // the vessel, magenta-edged where the shaker's column is cyan. Against the
@@ -897,7 +912,6 @@ namespace LastCall.UI
             // The painted wall went with the shaker's (2026-08-22): the room itself is
             // behind the scrim now, so a drawn one would be a second bar inside the first.
             // The bar top stays — it is the surface the glass and its shadow stand on.
-            AddBenchCounter(_servePanel, 0.675f);    // moved on open by AlignBenchCounters
 
             // The props' container spans the whole panel: everything in it is placed in
             // panel space, on the counter's own stand line. No layout groups — a room is
@@ -906,7 +920,9 @@ namespace LastCall.UI
             Stretch(_serveGarnishRow, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
             _aimText = NewText("AimText", _servePanel, _body, 16, TextAnchor.UpperCenter, UITheme.TextSecondary);
-            Stretch(_aimText.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -78), new Vector2(0, -56));
+            // Under the fascia (2026-08-26): the flow draws OVER the room instruments.
+            Stretch(_aimText.rectTransform, new Vector2(0, 1), Vector2.one,
+                    new Vector2(0, -BenchTopClear - 22f), new Vector2(0, -BenchTopClear));
 
             // The play surface — a COORDINATE SPACE, not a thing you can see. It is where
             // the glass, the tin and the hand bottle are placed and where the pointer is

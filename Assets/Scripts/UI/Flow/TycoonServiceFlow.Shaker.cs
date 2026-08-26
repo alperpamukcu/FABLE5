@@ -175,34 +175,71 @@ namespace LastCall.UI
         /// same tick — a player who learns to read it at the bench can read it at the
         /// counter without being taught twice.
         /// </summary>
+        /// <summary>How far below the field's own top edge anything on a bench may start.
+        /// The room's fascia is 54 units of instrument and the flow draws OVER it, so a
+        /// card pinned to the top pinned itself across the clock (2026-08-26, the author:
+        /// "üst barın üstüne denk geliyor").</summary>
+        private const float BenchTopClear = 74f;
+
         private void BuildStepCard(RectTransform panel, string head, string[] marks,
             string[] words, List<(Image icon, Text label, Image tick)> rows, Vector2 at)
         {
+            const float CardW = 246f, RowH = 26f, HeadH = 26f;
             var card = NewRect("Steps", panel);
-            Place(card, new Vector2(0, 1), new Vector2(210, 32f + marks.Length * 24f), at);
+            Place(card, new Vector2(0, 1), new Vector2(CardW, HeadH + 10f + marks.Length * RowH),
+                new Vector2(at.x, at.y - BenchTopClear));
+            // A PLATE, not a wash of black (2026-08-26). It used to be a 72%-opaque
+            // rectangle, which over a lit wall is a smudge; it is the house's own card now,
+            // with a capped head — the same grammar the fascia's wells and the market's
+            // tiles are built in, so the bench stops looking like a different game.
             var bg = card.gameObject.AddComponent<Image>();
-            bg.color = new Color(0.05f, 0.05f, 0.09f, 0.72f);
+            bg.sprite = ChromeArt.Card();
+            bg.type = Image.Type.Sliced;
+            bg.color = UITheme.Night[1];
             bg.raycastTarget = false;
 
-            var title = NewText("H", card, _body, 8, TextAnchor.UpperLeft, UITheme.TextSecondary);
-            Place(title.rectTransform, new Vector2(0, 1), new Vector2(190, 12), new Vector2(12, -8));
+            var cap = NewRect("Cap", card);
+            cap.anchorMin = new Vector2(0, 1); cap.anchorMax = Vector2.one;
+            cap.pivot = new Vector2(0.5f, 1);
+            cap.offsetMin = new Vector2(3, -HeadH); cap.offsetMax = new Vector2(-3, -3);
+            var capImg = cap.gameObject.AddComponent<Image>();
+            capImg.color = UITheme.Cyan[0];
+            capImg.raycastTarget = false;
+
+            var title = NewText("H", cap, _body, 8, TextAnchor.MiddleLeft, UITheme.Cyan[4]);
+            Stretch(title.rectTransform, Vector2.zero, Vector2.one, new Vector2(9, 0), Vector2.zero);
             title.text = head;
 
             for (int i = 0; i < marks.Length; i++)
             {
-                float y = -26f - i * 24f;
+                float y = -HeadH - 4f - i * RowH;
                 var row = NewRect("Step" + i, card);
-                Place(row, new Vector2(0, 1), new Vector2(190, 22), new Vector2(10, y));
+                Place(row, new Vector2(0, 1), new Vector2(CardW - 16f, RowH - 2f),
+                      new Vector2(8, y));
 
+                // NUMBERED, NOT PICTURED (2026-08-26, the author: "oluşturulan iconlar
+                // anlaşılır değil"). Four 16px silhouettes were asked to say "fill the tin",
+                // "cap it", "shake or stir" and "take it over"; at that size a shaker and a
+                // lid are the same blob, and a picture that has to be decoded is worse than
+                // no picture at all beside the words that already say it. The mark is the
+                // STEP NUMBER now, in a socket — which is the one thing about a checklist
+                // that a glance actually needs: where you are in it.
                 var mark = NewRect("I", row);
-                Place(mark, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(2, 0));
+                Place(mark, new Vector2(0, 0.5f), new Vector2(18, 18), new Vector2(2, 0));
                 var mimg = mark.gameObject.AddComponent<Image>();
-                mimg.sprite = ChromeArt.Mark(marks[i]);
-                mimg.preserveAspect = true;
+                mimg.sprite = ChromeArt.Card();
+                mimg.type = Image.Type.Sliced;
+                mimg.color = UITheme.Night[3];
                 mimg.raycastTarget = false;
+                var num = NewText("N", mark, _display, 8, TextAnchor.MiddleCenter,
+                                  UITheme.TextSecondary);
+                Stretch(num.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                num.text = (i + 1).ToString();
+                num.raycastTarget = false;
 
                 var text = NewText("L", row, _body, 8, TextAnchor.MiddleLeft, UITheme.TextSecondary);
-                Place(text.rectTransform, new Vector2(0, 0.5f), new Vector2(140, 14), new Vector2(26, 0));
+                Place(text.rectTransform, new Vector2(0, 0.5f), new Vector2(178, 14),
+                      new Vector2(28, 0));
                 text.text = words[i];
 
                 var tick = NewRect("T", row);
@@ -1135,6 +1172,17 @@ namespace LastCall.UI
                 band.offsetMin = Vector2.zero;
                 band.offsetMax = Vector2.zero;
             }
+            // ...and the wall stands ON that line (2026-08-26). It is hung from the bar top
+            // rather than stretched between two edges, so the counter can move between the
+            // open and shut cellar without the backdrop changing its pixel size.
+            if (_benchWall != null)
+            {
+                _benchWall.anchorMin = new Vector2(0f, fromY);
+                _benchWall.anchorMax = new Vector2(1f, fromY);
+                _benchWall.offsetMin = new Vector2(0f, _benchWall.offsetMin.y);
+                _benchWall.anchoredPosition = new Vector2(0f, 0f);
+                _benchWall.sizeDelta = new Vector2(0f, _benchWall.sizeDelta.y);
+            }
         }
 
         /// <summary>The room's counter, zoomed (2026-08-25, the author: "ekran çok boş
@@ -1220,14 +1268,33 @@ namespace LastCall.UI
             // 16, not 18: the pixel faces only rasterise cleanly at whole multiples of their
             // 8px design size (CLAUDE.md), and the serve stage's twin title is 16 in
             // PrimaryAction.
-            _shakerTitle = NewText("Title", _shakerPanel, _display, 16, TextAnchor.UpperCenter, UITheme.PrimaryAction);
-            Stretch(_shakerTitle.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -44), new Vector2(0, -10));
+            // THE NAME IS ON THE BAR (2026-08-26, the author: "alkolün ismini de tezgahın
+            // üstüne göm"). It used to hang at the top of the field in gold, over the room's
+            // own fascia — a caption floating on nothing, and the loudest thing on a screen
+            // whose subject is a tin. It sits on the counter's back edge now, on a plate cut
+            // into the bar, where a bartender's own name rail would be: below the wall, above
+            // the slab, centred on the work.
+            var namePlate = NewRect("NamePlate", _shakerPanel);
+            Place(namePlate, new Vector2(1f, 0f), new Vector2(330, 30), new Vector2(-40, 236));
+            var npImg = namePlate.gameObject.AddComponent<Image>();
+            npImg.sprite = ChromeArt.Card();
+            npImg.type = Image.Type.Sliced;
+            npImg.color = UITheme.Night[0];
+            npImg.raycastTarget = false;
+            _shakerTitle = NewText("Title", namePlate, _display, 8, TextAnchor.MiddleCenter,
+                                   UITheme.Amber[4]);
+            Stretch(_shakerTitle.rectTransform, Vector2.zero, Vector2.one,
+                    Vector2.zero, Vector2.zero);
+            _shakerTitle.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _shakerTitle.raycastTarget = false;
 
             // The standing line under the title. It named both methods as a menu of two,
             // which stopped being true when the recipe started naming one (2026-08-14) —
             // UpdateStepCard rewrites it with the method the tin actually asks for.
             _shakerHint = NewText("Hint", _shakerPanel, _body, 8, TextAnchor.UpperCenter, UITheme.TextSecondary);
-            Stretch(_shakerHint.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -58), new Vector2(0, -46));
+            // Under the fascia (2026-08-26): the flow draws OVER the room's instruments.
+            Stretch(_shakerHint.rectTransform, new Vector2(0, 1), Vector2.one,
+                    new Vector2(0, -BenchTopClear - 12f), new Vector2(0, -BenchTopClear));
             _shakerHint.text = ShakerHintFor(null);
 
             // NO PAINTED WALL ANY MORE. It was here because "a bench standing in a void
@@ -1235,7 +1302,6 @@ namespace LastCall.UI
             // behind the scrim, which is the corner of the bar this wall was imitating. The
             // COUNTER band stays: the props' contact shadows are black, and black on the
             // scrimmed room reads as cut-out-and-pasted exactly as it did on the old panel.
-            AddBenchCounter(_shakerPanel, 0.675f);   // moved on open by AlignBenchCounters
 
             // The play surface — a COORDINATE SPACE, not a thing you can see: where the
             // tin, the bottle and the spoon are placed and where the pointer is read. The
@@ -1482,7 +1548,8 @@ namespace LastCall.UI
             // from here. Right edge centre — the mirror of where the back key stands —
             // and lit only when Core itself would let the drink leave.
             var toGlass = NewRect("ToGlass", _shakerPanel);
-            Place(toGlass, new Vector2(1f, 0.5f), new Vector2(76, 150), new Vector2(-14, 0));
+            Place(toGlass, new Vector2(1f, 0f), new Vector2(216, KeyStripH),
+                  new Vector2(-30, KeyStripY));
             _toGlassBtn = toGlass.gameObject.AddComponent<Button>();
             _toGlassBtn.onClick.AddListener(() => GoTo(Stage.Serve));
             _toGlassGroup = toGlass.gameObject.AddComponent<CanvasGroup>();
@@ -1492,7 +1559,9 @@ namespace LastCall.UI
             _toGlassLabel = NewText("L", tgFace, _body, 8, TextAnchor.MiddleCenter, Color.black);
             Stretch(_toGlassLabel.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(4, 4 + KeyPlate.Throw), new Vector2(-4, -4));
-            _toGlassLabel.text = "TO\nTHE\nGLASS";
+            // ONE LINE, and the arrow says which way (2026-08-26). Three words stacked in a
+            // 76-wide column is a column of words, not a key.
+            _toGlassLabel.text = "TO THE GLASS  ▶";
 
             // THE WAY BACK OUT OF A LID CLOSED TOO EARLY (2026-08-14). It stands under the
             // tin, on the side the spoon rests on, and only ever appears once the lid is

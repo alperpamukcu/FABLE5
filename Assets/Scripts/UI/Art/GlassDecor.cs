@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using LastCall.Core;
 using UnityEngine;
 using UnityEngine.UI;
@@ -132,7 +132,10 @@ namespace LastCall.UI
                 var wedge = NewChild("Wedge", new Vector2(30f, 30f),
                     new Vector2(interiorW * 0.5f + 2f, rimYLocal + 4f));
                 var img = wedge.gameObject.AddComponent<Image>();
-                img.sprite = ItemArt.Prep("lemon_twist");
+                // A WEDGE, not a wheel (2026-08-26). prep_lemon is a slice seen face on -
+                // a cross-section lying on a plate - and hooking one over a rim drew a coin
+                // balanced on the glass. glass_lemon is cut from a lemon.
+                img.sprite = ItemArt.Load("glass_lemon") ?? ItemArt.Prep("lemon_twist");
                 img.preserveAspect = true; img.raycastTarget = false;
                 if (img.sprite == null) img.color = UITheme.Amber[3];
                 wedge.localRotation = Quaternion.Euler(0, 0, -18f);
@@ -153,15 +156,21 @@ namespace LastCall.UI
 
             // The garnish floats. The sprig stands proud of the surface; the spear leans,
             // olives half under. Both ride the fill in PlaceFloats, exactly as the ice does.
-            if (mint) _mint = Float("Mint", "garnish_mint", new Vector2(26f, 27f), -14f, -8f);
-            if (olive) _olive = Float("Olive", "garnish_olive", new Vector2(30f, 31f), 10f, 34f);
+            // Both re-cut on 2026-08-26 with the ice and the wedge: the old sprig and the
+            // old spear were drawn for a tray, at a tray's size, with a keyline a garnish
+            // floating in a drink has no business wearing.
+            if (mint) _mint = Float("Mint", "glass_mint", "garnish_mint",
+                                    new Vector2(26f, 27f), -14f, -8f);
+            if (olive) _olive = Float("Olive", "glass_olive", "garnish_olive",
+                                      new Vector2(22f, 40f), 10f, 20f);
         }
 
-        private RectTransform Float(string name, string art, Vector2 size, float x, float lean)
+        private RectTransform Float(string name, string art, string fallback,
+                                   Vector2 size, float x, float lean)
         {
             var piece = NewChild(name, size, new Vector2(x, 0));
             var img = piece.gameObject.AddComponent<Image>();
-            img.sprite = ItemArt.Load(art);
+            img.sprite = ItemArt.Load(art) ?? ItemArt.Load(fallback);
             img.preserveAspect = true; img.raycastTarget = false;
             if (img.sprite == null) img.color = UITheme.Lime[3];
             piece.localRotation = Quaternion.Euler(0, 0, lean);
@@ -172,10 +181,14 @@ namespace LastCall.UI
         {
             var cube = NewChild(name, new Vector2(size, size), Vector2.zero);
             var img = cube.gameObject.AddComponent<Image>();
-            // The licence's own cube (the author picked it): the same PrefArt sprite, so
-            // the ask on the card and the cube in the glass wear one face.
-            img.sprite = PrefArt.Ice();
-            if (img.sprite == null) img.sprite = ItemArt.Prep("ice");
+            // ITS OWN CUBE (2026-08-26, the author: "bardagin icerisindeki buz gorselini
+            // tekrardan olustur"). It wore the LICENCE's pictogram, which is a mark drawn to
+            // read at 12 px on a card - a flat white lozenge - and seven of them stacked in a
+            // glass read as a snowdrift. glass_ice is a drawn cube with facets and a
+            // highlight, struck at the size it floats at. The pictogram stays the fallback:
+            // the card and the glass agreeing was the old reason for it, and a missing
+            // drawing should still put something in the drink.
+            img.sprite = ItemArt.Load("glass_ice") ?? PrefArt.Ice() ?? ItemArt.Prep("ice");
             img.preserveAspect = true; img.raycastTarget = false;
             if (img.sprite == null) img.color = new Color(0.75f, 0.9f, 1f, 0.9f);
             img.color = new Color(img.color.r, img.color.g, img.color.b, 0.92f);

@@ -370,7 +370,7 @@ namespace LastCall.UI
             }
         }
 
-        // ── the counter's own prep row (2026-08-25) ──────────────────────────────
+        // ── the counter's prep RAIL (2026-08-26) ──────────────────────────────
         //
         // The author: "tezgah sahnesinde buz limon tuz şeker gibi nesneler için tezgah
         // boyuna oranlı görseller üretilecek, eğer oyuncu servis et dedikten sonra buz
@@ -378,80 +378,189 @@ namespace LastCall.UI
         // used to mean a walk back through the whole flow; the four stations stand on the
         // ROOM's counter now, at the counter's own scale (32px art at a whole 2×,
         // Tools/bench_props_gen.py minis), beside where the made drink rests. They only
-        // offer themselves while a served drink is standing there, and they are the
-        // FORGIVING door: a plain press, no lap and no aim — the skill lives on the
-        // bench, the counter is the safety net.
-        private RectTransform _miniPrepRow;
-        private readonly List<(string prepId, RectTransform rt, Image img)> _miniPreps =
-            new List<(string, RectTransform, Image)>();
-        private const float MiniPrepY = -196f;   // standing on the counter, right of the glass
+        // offered themselves while a served drink was standing there, and they were the
+        // FORGIVING door: a plain press, no lap and no aim.
+        //
+        // IT IS THE WHOLE VERB NOW (2026-08-26, the author: "buz, zeytin, tuz, şeker,
+        // nane gibi bardağa koyulan şeyler ana sahnede tezgahta dursun ... bardağa ana
+        // sahnedeki nesnelerden sürükleyerek koyulabilecek"). What goes IN a glass
+        // stopped being part of building the mix: you pour the drink out of the tin,
+        // come back to the room, and finish it on the bar with your hands. So the props
+        // STAND on the counter all night, whether or not there is a glass in front of
+        // them, and they are DRAGGED — the same verb, and the same weight, as carrying
+        // the drink to a stool. Six, not four: the olive and the mint used to live on
+        // the glass bench's garnish rail and came here with the rest of them.
+        private RectTransform _prepRail;
+        private readonly List<PrepProp> _prepProps = new List<PrepProp>();
+
+        private sealed class PrepProp
+        {
+            public string Id;
+            public RectTransform Rt;
+            public Image Img;
+            public PreparationDefinition Prep;
+            public string Word;          // what the pointer is told it does
+        }
+
+        /// <summary>Standing on the counter, right of where the made drink rests. The rail
+        /// rides CounterLift like everything else on the bar, so an open cellar takes it up
+        /// with the room rather than leaving six dishes hanging in the air.</summary>
+        private const float PrepRailY = -196f, PrepRailX0 = 100f, PrepRailGap = 74f;
+
+        // The piece in the hand: a copy of the prop's own drawing, following the cursor.
+        private RectTransform _prepCarry;
+        private Image _prepCarryImg;
+        private PrepProp _prepHeld;
 
         private void BuildMiniPreps(RectTransform root)
         {
-            _miniPrepRow = NewRect("CounterPreps", root);
-            _miniPrepRow.anchorMin = _miniPrepRow.anchorMax = _miniPrepRow.pivot = new Vector2(0.5f, 0.5f);
-            _miniPrepRow.sizeDelta = Vector2.zero;
-            (string prepId, string art, PreparationDefinition prep)[] stations =
+            _prepRail = NewRect("CounterPreps", root);
+            _prepRail.anchorMin = _prepRail.anchorMax = _prepRail.pivot = new Vector2(0.5f, 0.5f);
+            _prepRail.sizeDelta = Vector2.zero;
+            // Art first, fallback second: the 2026-08-26 counter set is drawn at the bar's
+            // own eye line (the author: "masanin acisiyla ayni aciya sahip"), and the
+            // 2026-08-25 minis stay behind it so a missing drawing never costs a verb.
+            (string id, string art, string fallback, PreparationDefinition prep, string word)[] rail =
             {
-                ("ice", "bench_mini_ice", Preparations.Ice),
-                ("lemon_twist", "bench_mini_lemon", Preparations.LemonTwist),
-                ("salt_rim", "bench_mini_salt", Preparations.SaltRim),
-                ("sugar_rim", "bench_mini_sugar", Preparations.SugarRim),
+                ("ice", "counter_ice", "bench_mini_ice", Preparations.Ice, "ICE"),
+                ("lemon_twist", "counter_lemon", "bench_mini_lemon", Preparations.LemonTwist, "LEMON"),
+                ("salt_rim", "counter_salt", "bench_mini_salt", Preparations.SaltRim, "SALT THE RIM"),
+                ("sugar_rim", "counter_sugar", "bench_mini_sugar", Preparations.SugarRim, "SUGAR THE RIM"),
             };
-            for (int i = 0; i < stations.Length; i++)
+            for (int i = 0; i < rail.Length; i++)
             {
-                var (prepId, art, prep) = stations[i];
-                var rt = NewRect("MP_" + prepId, _miniPrepRow);
+                var (id, art, fallback, prep, word) = rail[i];
+                var rt = NewRect("MP_" + id, _prepRail);
                 Place(rt, new Vector2(0.5f, 0.5f), new Vector2(64, 64),
-                    new Vector2(120f + i * 74f, MiniPrepY));
+                    new Vector2(PrepRailX0 + i * PrepRailGap, PrepRailY));
                 var img = rt.gameObject.AddComponent<Image>();
-                img.sprite = ItemArt.Load(art);
+                img.sprite = ItemArt.Load(art) ?? ItemArt.Load(fallback);
                 img.preserveAspect = true;
                 if (img.sprite == null) img.color = UITheme.Cyan[3];
-                var btn = rt.gameObject.AddComponent<Button>();
-                btn.targetGraphic = img;
                 var glow = rt.gameObject.AddComponent<HoverGlow>();
                 glow.Graphics = new Graphic[] { img };
-                var thePrep = prep;
-                string theId = prepId;
-                btn.onClick.AddListener(() =>
-                {
-                    var run = Run;
-                    if (run == null || run.Phase != TycoonPhase.DayOpen) return;
-                    if (!run.DrinkReady || !_glassShown || _glassServing || _glassReturning) return;
-                    if (theId != "ice" && run.ServingGlass.HasPreparation(theId)) return;
-                    run.AddPreparationAtGlass(thePrep);
-                    Sfx.Play(theId == "ice" ? "ice_drop" : "garnish");
-                    Toast(theId == "ice"
-                        ? "ICE IN THE GLASS x" + run.ServingGlass.IceCubes
-                        : thePrep.Name.ToUpperInvariant() + " ON THE DRINK", UITheme.Cyan[3]);
-                });
-                _miniPreps.Add((prepId, rt, img));
+                var prop = new PrepProp { Id = id, Rt = rt, Img = img, Prep = prep, Word = word };
+
+                // PICKED UP, NOT PRESSED. A whole-rect PointerDown rather than a Button:
+                // what follows is a carry, and a Button fires on the way back UP, after the
+                // drop has already been decided.
+                var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+                down.callback.AddListener(_ => GrabPrep(prop));
+                rt.gameObject.AddComponent<EventTrigger>().triggers.Add(down);
+                var relay = rt.gameObject.AddComponent<HoverRelay>();
+                var theRt = rt;
+                relay.Entered = () => ShowPropTip(theRt, word);
+                relay.Exited = () => HidePropTip(theRt);
+                _prepProps.Add(prop);
             }
-            _miniPrepRow.gameObject.SetActive(false);
+
+            // The piece in the hand. Built once, hidden, and dressed at every pick-up: a
+            // sprite spawned per drag would be a new GameObject on every touch of the bar.
+            _prepCarry = NewRect("PrepInHand", root);
+            _prepCarry.anchorMin = _prepCarry.anchorMax = _prepCarry.pivot = new Vector2(0.5f, 0.5f);
+            _prepCarry.sizeDelta = new Vector2(64, 64);
+            _prepCarryImg = _prepCarry.gameObject.AddComponent<Image>();
+            _prepCarryImg.preserveAspect = true;
+            _prepCarryImg.raycastTarget = false;
+            _prepCarry.gameObject.SetActive(false);
+
+            _prepRail.gameObject.SetActive(false);
         }
 
-        /// <summary>Shows the counter stations only while a served drink is standing on the
-        /// counter — and rides the counter's own lift, exactly as the dirty glasses do, so
-        /// an open cellar does not leave four dishes hanging in the air.</summary>
+        /// <summary>Takes a piece off the rail. Refused between days and behind a panel —
+        /// the bar is not yours to reach across while the books are open.</summary>
+        private void GrabPrep(PrepProp prop)
+        {
+            var run = Run;
+            if (run == null || run.Phase != TycoonPhase.DayOpen) return;
+            if (_flow != null && _flow.IsOpen) return;
+            if (CellarOpen || _prepCarry == null) return;
+            _prepHeld = prop;
+            _prepCarryImg.sprite = prop.Img.sprite;
+            _prepCarryImg.color = prop.Img.sprite != null ? Color.white : UITheme.Cyan[3];
+            _prepCarry.anchoredPosition = prop.Rt.anchoredPosition + _prepRail.anchoredPosition;
+            _prepCarry.gameObject.SetActive(true);
+            _prepCarry.SetAsLastSibling();
+            HidePropTip(prop.Rt);
+            Sfx.Play("click", 0.4f);
+        }
+
+        /// <summary>The carry itself: the piece follows the cursor, and letting go over the
+        /// glass puts it in the drink. Anywhere else it simply goes back — a garnish dropped
+        /// on the floor is not a mechanic anybody asked for.</summary>
+        private void StepPrepCarry(TycoonRun run)
+        {
+            if (_prepHeld == null) return;
+            var mouse = Mouse.current;
+            if (mouse == null) { DropPrep(false); return; }
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    (RectTransform)_prepCarry.parent, mouse.position.ReadValue(), null,
+                    out Vector2 at))
+                _prepCarry.anchoredPosition = at;
+            if (mouse.leftButton.isPressed) return;
+
+            bool overGlass = _glassShown && !_glassServing && !_glassReturning
+                && _drinkGlass != null
+                && RectTransformUtility.RectangleContainsScreenPoint(
+                       _drinkGlass, mouse.position.ReadValue(), null);
+            DropPrep(overGlass && run != null && run.DrinkReady);
+        }
+
+        private void DropPrep(bool intoTheGlass)
+        {
+            var prop = _prepHeld;
+            _prepHeld = null;
+            if (_prepCarry != null) _prepCarry.gameObject.SetActive(false);
+            if (!intoTheGlass || prop == null) return;
+            var run = Run;
+            if (run == null) return;
+            if (prop.Id != "ice" && run.ServingGlass.HasPreparation(prop.Id))
+            {
+                Toast("ALREADY ON THAT DRINK");
+                return;
+            }
+            run.AddPreparationAtGlass(prop.Prep);
+            Sfx.Play(prop.Id == "ice" ? "ice_drop" : "garnish");
+            Toast(prop.Id == "ice"
+                ? "ICE IN THE GLASS x" + run.ServingGlass.IceCubes
+                : prop.Prep.Name.ToUpperInvariant() + " ON THE DRINK", UITheme.Cyan[3]);
+        }
+
+        /// <summary>
+        /// The rail, every frame: out whenever the bar is open, dimmed where a piece has
+        /// already been used, and carrying whatever is in the hand.
+        ///
+        /// ALWAYS OUT (2026-08-26). It used to appear only beside a finished drink, which
+        /// made it read as a prompt; a bar's garnish tray does not come and go, and the
+        /// player is meant to know where these things live before they need them. What
+        /// changes with the drink is whether a piece can be USED, and that is said by the
+        /// dimming and by the drop refusing — not by the tray vanishing.
+        /// </summary>
         private void StepMiniPreps(TycoonRun run)
         {
-            if (_miniPrepRow == null) return;
-            bool on = run != null && run.Phase == TycoonPhase.DayOpen && run.DrinkReady
-                      && _glassShown && !_glassServing && !_glassReturning
+            if (_prepRail == null) return;
+            bool on = run != null && run.Phase == TycoonPhase.DayOpen
                       && (_flow == null || !_flow.IsOpen) && !CellarOpen;
-            if (_miniPrepRow.gameObject.activeSelf != on)
-                _miniPrepRow.gameObject.SetActive(on);
-            if (!on) return;
-            _miniPrepRow.anchoredPosition = new Vector2(0, CounterLift);
-            // The done stations dim — except the bucket, which never runs out of offers.
-            foreach (var (prepId, _, img) in _miniPreps)
+            if (_prepRail.gameObject.activeSelf != on)
+                _prepRail.gameObject.SetActive(on);
+            if (!on)
             {
-                bool done = prepId != "ice" && run.ServingGlass.HasPreparation(prepId);
-                var baseCol = img.sprite != null ? Color.white : UITheme.Cyan[3];
-                img.color = done
-                    ? new Color(baseCol.r, baseCol.g, baseCol.b, 0.4f) : baseCol;
+                if (_prepHeld != null) DropPrep(false);
+                return;
             }
+            _prepRail.anchoredPosition = new Vector2(0, CounterLift);
+
+            bool glass = run.DrinkReady && _glassShown && !_glassServing && !_glassReturning;
+            foreach (var prop in _prepProps)
+            {
+                // Spent, or nothing to spend it on. The bucket is never spent — ice is
+                // counted, not applied — which is the one exception the glass already makes.
+                bool done = glass && prop.Id != "ice" && run.ServingGlass.HasPreparation(prop.Id);
+                var baseCol = prop.Img.sprite != null ? Color.white : UITheme.Cyan[3];
+                float a = !glass ? 0.55f : done ? 0.4f : 1f;
+                prop.Img.color = new Color(baseCol.r, baseCol.g, baseCol.b, a);
+            }
+            StepPrepCarry(run);
         }
 
         // ── the drink you carry (GDD 24 §3, 2026-07-22) ──────────────────────────
@@ -671,6 +780,19 @@ namespace LastCall.UI
                 if (mouse == null || !mouse.leftButton.isPressed)
                 {
                     _glassGrabbed = false;
+                    // THE SINK IS A PLACE YOU CARRY IT TO (2026-08-26, the author: "bardağı
+                    // çöpe atmak için ana sahnede bardağı lavaboya sürüklemek gerekir").
+                    // It answered a click for one round, which made throwing a drink away
+                    // cheaper and easier than serving it — the wrong shape for the one verb
+                    // that costs money. It is the same carry as the serve now, and it is
+                    // asked FIRST: the sink is at the far end of the bar from every stool,
+                    // so a drop that is over the basin was never also over a drinker.
+                    if (stage != null && mouse != null
+                        && stage.PointerOverDrain(mouse.position.ReadValue()))
+                    {
+                        OnDrainClicked();
+                        if (!_glassShown) return;
+                    }
                     int seat = SeatUnderPointer(mouse);
                     bool served = false, saidWhy = false;
                     if (seat >= 0)

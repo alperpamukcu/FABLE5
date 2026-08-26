@@ -416,8 +416,50 @@ def vice_letters():
         # ...and the leg. Straight and splayed, from under the bowl to the baseline.
         vslant(d, x + tv + 2.0, x + 17.0, VMID + 1.5 - th, VBASE, tv)
 
-    return [(23.0, O), (20.0, P), (17.0, E), (23.0, N), (VSPACE, None),
-            (20.0, B), (21.0, A), (20.0, R)]
+    # ── the four the second word needed (2026-08-26) ────────────────────────────
+    # The shutter stopped saying OPEN BAR and started saying what is behind it, so the
+    # alphabet grew by exactly the letters that word costs and by nothing else. Each is
+    # built from the same four primitives and follows the same rule the first seven do:
+    # where a letter has to give something up it gives up its flourish, never its counter.
+
+    def T(d, x):
+        arm = 19.0
+        vbox(d, x, VCAP, x + arm, VCAP + th)                        # the arm
+        vbox(d, x + arm / 2.0 - tv / 2.0, VCAP, x + arm / 2.0 + tv / 2.0, VBASE)
+
+    def C(d, x):
+        # A ring with its right shoulder and hip bitten out. The bite is SQUARE and stops
+        # short of the middle: a C opened past its own centre reads as a bracket.
+        # HOW DEEP THE BITE HAS TO BE, measured on the first strike: at 13.0 across and
+        # 3.5 down the mouth was two rows of daylight and the letter read as an O with a
+        # nick in it - "STOOK". The bite runs from the ring's own middle now.
+        vring(d, x, VCAP, x + 21.0, VBASE, tv, th)
+        vbox(d, x + 11.5, VCAP - 1.0, x + 22.0, VCAP + th + 5.0, fill=0)
+        vbox(d, x + 11.5, VBASE - th - 5.0, x + 22.0, VBASE + 1.0, fill=0)
+
+    def K(d, x):
+        vbox(d, x, VCAP, x + tv, VBASE)                             # the stem
+        # Both diagonals meet the stem at the middle. Splayed wide, because a K whose
+        # arms hug the stem is an I with a scratch beside it.
+        vslant(d, x + 18.0, x + tv, VCAP, VMID, tv)
+        vslant(d, x + tv, x + 18.0, VMID, VBASE, tv)
+
+    def SS(d, x):
+        # Two bowls again, the OPPOSITE halves cut away from each: the top one loses its
+        # right, the bottom one its left, and the middle arm they share is the spine. It
+        # is the B's construction turned inside out, which is what an S is.
+        vbowl(d, x, VCAP, x + 19.0, VMID + th / 2.0, tv, th)
+        vbox(d, x + 19.0 - tv, VMID - 4.0, x + 20.0, VMID + th, fill=0)
+        vbowl(d, x, VMID - th / 2.0, x + 19.0, VBASE, tv, th)
+        vbox(d, x - 1.0, VMID - th, x + tv, VMID + 4.0, fill=0)
+
+    # THE WORD (2026-08-26, the author: "Open bar yazısı ve boyutu değiştirilsin"). OPEN
+    # BAR was a sign for the people on the OTHER side of this counter; the roller it is
+    # painted on is the bartender's own under-bar cabinet, and rolling it down is how you
+    # reach the night's bottles. One word, five letters — a third of the width the two
+    # words took, which is most of the "boyutu" half of the note answered by the wording
+    # alone, and the chevron under it still says which way it travels.
+    return [(20.0, SS), (20.0, T), (22.0, O), (25.0, C), (19.0, K)]
 
 
 def strike_vice():

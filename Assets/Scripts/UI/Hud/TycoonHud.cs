@@ -1136,9 +1136,10 @@ namespace LastCall.UI
             _flow = GetComponent<TycoonServiceFlow>();
 
             BuildUi();
-            // The sink is the drain (2026-08-26): the bin went, and a drink you decide
-            // against is clicked into the basin that was already standing on the bar.
-            if (stage != null) stage.SetDrainHandler(OnDrainClicked);
+            // Every prop in the room says what it does before it is pressed (2026-08-26).
+            if (stage != null)
+                stage.SetPropHoverHandler((rt, word) =>
+                { if (word == null) HidePropTip(rt); else ShowPropTip(rt, word); });
             // The beer font on the counter is the only door onto the draught station now
             // (2026-08-15): the kegs left the back-bar wall, and a pint is poured by walking
             // to the tap. The flow's own guard turns the click down between days.
@@ -1271,6 +1272,7 @@ namespace LastCall.UI
             UpdateOrderTip();     // after the seats: it reads the tickets they just placed
             UpdateDrinkGlass();
             StepMiniPreps(run);
+            StepPropTip();
             UpdateEscape();
             UpdateBookKeys();
             StepStarDrop();
@@ -1659,7 +1661,11 @@ namespace LastCall.UI
         // drawn in the room's own chrome — the market's card, the bottle gauge's tube — and
         // both read the RULES for their numbers (BarRating.StandingAfter, TycoonRun's
         // ceilings and crowd) rather than working the climb out for themselves.
-        private const float BoardW = 356f, BoardH = 384f, BoardX = 430f, BoardY = 48f;
+        /// <summary>The night's two instruments. 356x350 is not a taste: the plate they
+        /// are drawn on is 178x175 of pixel art and a board stands it at a whole 2x, the
+        /// same rule every other drawing in this game is placed by. It was 384 tall while
+        /// the plate was a sliced chrome card, which stretches to anything.</summary>
+        private const float BoardW = 356f, BoardH = 350f, BoardX = 430f, BoardY = 48f;
 
         private const float BoardPad = 18f;
 

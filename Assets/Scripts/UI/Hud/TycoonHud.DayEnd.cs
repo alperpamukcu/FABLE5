@@ -526,8 +526,37 @@ namespace LastCall.UI
         private float BillRow(float y, string label, string value, Color ink, bool heavy) =>
             BillRow(y, label, value, ink, heavy, null);
 
-        // (BillSub went with the two named blocks on 2026-08-26 — see the slip's own note.
-        //  A subtotal under two figures is a sum the eye had already made.)
+        /// <summary>A block's subtotal: a short rule over the figures it adds up, and the
+        /// figure alone on the right. No label — the block above it is the label.
+        ///
+        /// It was taken out on 2026-08-26 and PUT BACK the same day: the author had asked for
+        /// the day-end BOARDS to be dressed, not for the slip to be cut, and a receipt with
+        /// its blocks removed is a receipt that has stopped showing its working.</summary>
+        private float BillSub(float y, string value, Color ink)
+        {
+            var row = NewRect("Sub", _invoiceRows);
+            row.anchorMin = new Vector2(0, 1); row.anchorMax = new Vector2(1, 1);
+            row.pivot = new Vector2(0.5f, 1);
+            row.sizeDelta = new Vector2(0, BillRowH);
+            row.anchoredPosition = new Vector2(0, -y);
+
+            var rule = NewRect("R", row);
+            rule.anchorMin = new Vector2(0.62f, 1); rule.anchorMax = new Vector2(1, 1);
+            rule.pivot = new Vector2(0.5f, 1);
+            rule.sizeDelta = new Vector2(0, 1);
+            rule.anchoredPosition = Vector2.zero;
+            var ri = rule.gameObject.AddComponent<Image>();
+            ri.color = new Color(ink.r, ink.g, ink.b, 0.45f);
+            ri.raycastTarget = false;
+
+            var v = NewText("V", row, _body, 24, TextAnchor.MiddleRight, ink);
+            v.rectTransform.anchorMin = new Vector2(0.62f, 0); v.rectTransform.anchorMax = Vector2.one;
+            v.rectTransform.offsetMin = Vector2.zero; v.rectTransform.offsetMax = Vector2.zero;
+            v.horizontalOverflow = HorizontalWrapMode.Overflow;
+            v.verticalOverflow = VerticalWrapMode.Overflow;
+            v.text = value;
+            return y + BillRowH;
+        }
 
         private float BillRow(float y, string label, string value, Color ink, bool heavy, string mark)
         {
@@ -662,10 +691,23 @@ namespace LastCall.UI
             board.Root = NewRect(name, panel);
             Place(board.Root, new Vector2(0.5f, 0.5f), new Vector2(BoardW, BoardH),
                 new Vector2(x, BoardY));
+            // A DRAWN PLATE (2026-08-26, the author: "fatura ekraninda yandaki iki bari
+            // UI'ye uygun duzgun arkaplan gorselleri ile olusturmani istedim"). The two
+            // boards stood on the same tinted chrome card every dialogue in the game uses,
+            // which is what made them read as panels rather than as instruments. They stand
+            // on their own now: navy brushed metal with a teal capped head, drawn once and
+            // stood twice, because a matched pair whose plates do not match is two
+            // instruments. Generated art on CHROME is the third written exception in this
+            // project (the calendar backplate and the star icon are the other two) and it is
+            // the author's own call, made here in the same words as the first one.
             var plate = board.Root.gameObject.AddComponent<Image>();
-            plate.sprite = ChromeArt.Card();
-            plate.type = Image.Type.Sliced;
-            plate.color = BoardPlate;
+            plate.sprite = ItemArt.Load("board_plate");
+            if (plate.sprite == null)
+            {
+                plate.sprite = ChromeArt.Card();
+                plate.type = Image.Type.Sliced;
+                plate.color = BoardPlate;
+            }
             plate.raycastTarget = false;
             board.Group = board.Root.gameObject.AddComponent<CanvasGroup>();
             board.Group.blocksRaycasts = false;
@@ -1483,11 +1525,8 @@ namespace LastCall.UI
             // (BAR left this line on 2026-08-25: the bar's standing is a whole instrument of
             // its own now, on the right, where it can show the STEP as well as the number.
             // The slip says what tonight was and who was in the room — a receipt's business.)
-            // The row above IS the score, drawn as five stars, so printing "TONIGHT 3.5"
-            // under it was the same reading twice (2026-08-26, the author: the slip reads
-            // busy and over-written). What the stars cannot say is who was in the room.
-            y = BillNote(y, served + " SERVED  ·  " + stormed + " WALKED", BillQuiet,
-                         centred: true);
+            y = BillNote(y, "TONIGHT " + tonight.ToString("0.0") + "  ·  "
+                            + served + " SERVED  ·  " + stormed + " WALKED", BillQuiet, centred: true);
             y += 8f;
 
             // The critics: the highest and the lowest word the night produced. One visit
@@ -1510,28 +1549,32 @@ namespace LastCall.UI
             }
 
             // WHAT CAME IN, WHAT WENT OUT, WHAT IS LEFT (2026-08-11, the author: "gider ve
-            // kalan daha açık belli edilsin").
+            // kalan daha açık belli edilsin"). The five figures used to run as one ladder
+            // with a rule under it, so the reader had to notice for themselves which of them
+            // were takings and which were bills. They are two named blocks now, each with its
+            // own subtotal — the shape of a receipt — and only the last two lines are heavy.
             //
-            // HALF THE INK, SAME READING (2026-08-26, the author: "gün sonu fatura ekranı
-            // karmaşık ve çok yazılı duruyor"). It ran thirteen printed rows: two block
-            // captions, five figures, two subtotals whose sums the eye could already make,
-            // and three of the five were routinely ZERO — a bar that bought nothing still
-            // printed STOCK $0 and SHOP $0 every night of the week. The blocks are gone and
-            // so are the subtotals; takings are one figure, bills are the ones that were
-            // actually paid, and the red ink with its minus sign is what separates them —
-            // which is the distinction the 2026-08-11 note was asking for, and the only
-            // part of that scaffolding that was doing any work. RENT always prints: it is
-            // the bill the bar closes over, and a night it did not appear would read as a
-            // night nobody charged.
+            // CUT AND RESTORED THE SAME DAY (2026-08-26). This block was read out of "gün
+            // sonu fatura ekranı karmaşık ve çok yazılı duruyor" and the reading was wrong:
+            // the sentence after it named the two BOARDS beside the slip and asked for them
+            // to be dressed. The slip was never the complaint. It is back exactly as it was,
+            // and the note stays because a receipt that has stopped showing its working is
+            // the kind of "simpler" nobody asked for.
             int tookIn = run.DaySales + run.DayTips;
+            int paidOut = run.DayRent + run.DayStock + run.DayUpgrades;
 
             y = BillRule(y);
-            y = BillRow(y, "TAKINGS", "$" + tookIn, BillInk, false, "sales");
+            y = BillNote(y, "TOOK IN", BillQuiet);
+            y = BillRow(y, "SALES", "$" + run.DaySales, BillInk, false, "sales");
+            y = BillRow(y, "TIPS", "$" + run.DayTips, BillInk, false, "tips");
+            y = BillSub(y, "$" + tookIn, BillInk);
+
+            y += 4f;
+            y = BillNote(y, "PAID OUT", BillQuiet);
             y = BillRow(y, "RENT", "-$" + run.DayRent, BillRed, false, "rent");
-            if (run.DayStock > 0)
-                y = BillRow(y, "STOCK", "-$" + run.DayStock, BillRed, false, "stock");
-            if (run.DayUpgrades > 0)
-                y = BillRow(y, "SHOP", "-$" + run.DayUpgrades, BillRed, false, "shop");
+            y = BillRow(y, "STOCK", "-$" + run.DayStock, BillRed, false, "stock");
+            y = BillRow(y, "SHOP", "-$" + run.DayUpgrades, BillRed, false, "shop");
+            y = BillSub(y, "-$" + paidOut, BillRed);
 
             y += 4f;
             y = BillRule(y);
