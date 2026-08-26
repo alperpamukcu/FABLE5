@@ -408,6 +408,31 @@ namespace LastCall.UI
         /// is operated at shoulder height on a wall; the controls are on the bar.</summary>
         private const float KeyStripY = 26f, KeyStripH = 46f;
 
+        // ── the bench's composition (2026-08-26, the author: "sahnede butonlar nesneler
+        // esyalar ust uste biniyor, bir duzen yok, bu sahneye duzen getir") ────────
+        //
+        // One rule split the knot: PROPS ARE DIEGETIC, CHROME IS NOT. The tin, the bottle,
+        // the spoon and the glass are things STANDING ON THE COUNTER, and a thing on the
+        // counter is nearer the camera than the wall behind it — so a tall tin drawing over
+        // the counter rail into the room is perspective, not a collision. Everything the
+        // player READS, though — the card, the gauges, the keys, the text — is an
+        // instrument, and instruments stay inside the band below the rail.
+        //
+        // The band is three columns: instruments left (the step card, the spoon standing
+        // against the wall), the work centre (tin, then tin-and-glass), the measures right
+        // (mix gauge over the bin). Every prop's FOOT is on one line, because a counter
+        // where each object stands at its own height is not a counter; and both step
+        // cards' TOP edges land on one line, so the eye finds the checklist in the same
+        // place on both phases of the build.
+
+        /// <summary>Where a prop's foot touches the bench, in surface-centre coordinates
+        /// (screen y 585 — low in the band, clear of the bottom text stack).</summary>
+        private const float BenchFootY = -225f;
+
+        /// <summary>The step cards' shared TOP line: bottom-anchored y for a card of the
+        /// given height, so a four-row card and a two-row card start at the same edge.</summary>
+        private static float CardSeat(float height) => 422f - height;
+
         private void AddEdgeBack(RectTransform panel, Stage back = Stage.Closed,
             string caption = "◀  BACK TO THE BAR")
         {

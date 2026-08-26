@@ -465,6 +465,22 @@ namespace LastCall.UI
         private Image _prepCarryImg;
         private PrepProp _prepHeld;
 
+        // ── the grains a carried pinch sheds (2026-08-26) ────────────────────────
+        //
+        // The author: "surukleyen kucuk taneler dokuluyor gibi gozukebilir." A clump of
+        // salt in a hand LEAKS, and the leak is what makes it read as loose crystals
+        // rather than as a small white object. Two units square, falling under their own
+        // gravity, fading as they go — and shed by DISTANCE TRAVELLED rather than by time,
+        // so a pinch held still does not bleed onto the counter and one swept across the
+        // bar leaves a trail behind the hand.
+        private readonly List<(RectTransform Rt, Image Img, Vector2 Vel, float Born)> _grains
+            = new List<(RectTransform, Image, Vector2, float)>();
+        private Vector2 _grainLastAt;
+        private float _grainCarried;
+        private const float GrainEvery = 26f;     // units of travel between crystals
+        private const float GrainLife = 0.55f;
+        private const float GrainFall = 520f;
+
         private void BuildMiniPreps(RectTransform root)
         {
             _prepRail = NewRect("CounterPreps", root);
@@ -493,12 +509,15 @@ namespace LastCall.UI
                  "glass_olive", 52f),
                 ("mint", "counter_mint", "garnish_mint", null, "mint", "MINT",
                  "glass_mint", 40f),
-                // The rims carry their DISH, and that is not an oversight: the verb is
-                // turning the glass in the salt, so the thing in the hand is the dish.
+                // A PINCH, not the dish (2026-08-26, the author: "surukledigimiz tuz ve
+                // seker daha cok tuz ve seker yumagi gibi olmali"). Carrying the whole
+                // cellar was the same mistake the bucket made, and the answer is the same:
+                // what leaves a dish of salt is salt. The lap still turns the GLASS in it —
+                // the pinch in the hand is what you are turning it through.
                 ("salt_rim", "counter_salt", "bench_mini_salt", Preparations.SaltRim,
-                 null, "TURN IT IN THE SALT", null, 0f),
+                 null, "TURN IT IN THE SALT", "carry_salt", 32f),
                 ("sugar_rim", "counter_sugar", "bench_mini_sugar", Preparations.SugarRim,
-                 null, "TURN IT IN THE SUGAR", null, 0f),
+                 null, "TURN IT IN THE SUGAR", "carry_sugar", 30f),
             };
             for (int i = 0; i < rail.Length; i++)
             {
@@ -572,6 +591,8 @@ namespace LastCall.UI
             _prepCarry.anchoredPosition = prop.Rt.anchoredPosition + _prepRail.anchoredPosition;
             _prepCarry.gameObject.SetActive(true);
             _prepCarry.SetAsLastSibling();
+            _grainCarried = 0f;
+            _grainLastAt = _prepCarry.anchoredPosition;
             HidePropTip(prop.Rt);
             Sfx.Play("click", 0.4f);
         }
@@ -587,7 +608,15 @@ namespace LastCall.UI
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     (RectTransform)_prepCarry.parent, mouse.position.ReadValue(), null,
                     out Vector2 at))
+            {
+                if (_prepHeld.IsRim)
+                {
+                    _grainCarried += (at - _grainLastAt).magnitude;
+                    while (_grainCarried >= GrainEvery) { _grainCarried -= GrainEvery; ShedGrain(at); }
+                }
+                _grainLastAt = at;
                 _prepCarry.anchoredPosition = at;
+            }
             // A RIM DISH WORKS WHILE IT IS HELD. Everything else waits for the release.
             bool glassOut = _glassShown && !_glassServing && !_glassReturning
                             && _drinkGlass != null && run != null && run.DrinkReady;
@@ -606,6 +635,49 @@ namespace LastCall.UI
                 && RectTransformUtility.RectangleContainsScreenPoint(
                        _drinkGlass, mouse.position.ReadValue(), null);
             DropPrep(overGlass);
+        }
+
+        /// <summary>One crystal off the pinch, thrown a little sideways and then falling.
+        /// Its sideways kick comes from the grain COUNT, not from a roll: the same hand
+        /// движение sheds the same trail, and the determinism rule never comes up.</summary>
+        private void ShedGrain(Vector2 at)
+        {
+            if (_prepHeld == null || _prepCarry == null) return;
+            var rt = NewRect("Grain", (RectTransform)_prepCarry.parent);
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(3f, 3f);
+            rt.anchoredPosition = at + new Vector2(0f, -12f);
+            var img = rt.gameObject.AddComponent<Image>();
+            img.color = _prepHeld.Id == "salt_rim"
+                ? new Color(0.95f, 0.96f, 0.97f) : new Color(0.94f, 0.89f, 0.77f);
+            img.raycastTarget = false;
+            float kick = ((_grains.Count * 37) % 41) / 20f - 1f;   // -1..1, walked, not rolled
+            _grains.Add((rt, img, new Vector2(kick * 34f, -20f), Time.unscaledTime));
+        }
+
+        /// <summary>The shed crystals, falling. Cheap: a handful of 3-unit rects with a
+        /// half-second life, and the list is empty the moment the hand is empty.</summary>
+        private void StepGrains()
+        {
+            if (_grains.Count == 0) return;
+            float now = Time.unscaledTime;
+            float dt = Mathf.Min(Time.unscaledDeltaTime, 0.05f);
+            for (int i = _grains.Count - 1; i >= 0; i--)
+            {
+                var (rt, img, vel, born) = _grains[i];
+                float k = (now - born) / GrainLife;
+                if (rt == null || k >= 1f)
+                {
+                    if (rt != null) Destroy(rt.gameObject);
+                    _grains.RemoveAt(i);
+                    continue;
+                }
+                vel = new Vector2(vel.x * 0.94f, vel.y - GrainFall * dt);
+                rt.anchoredPosition += vel * dt;
+                var c = img.color;
+                img.color = new Color(c.r, c.g, c.b, 1f - k * k);
+                _grains[i] = (rt, img, vel, born);
+            }
         }
 
         private void DropPrep(bool intoTheGlass)
@@ -718,6 +790,23 @@ namespace LastCall.UI
             _drinkGlass == null ? Vector2.zero
             : _drinkGlass.anchoredPosition + new Vector2(0f, _drinkGlass.rect.height * 0.34f);
 
+        /// <summary>
+        /// The lap's instrument (2026-08-26, the author: "tuz ve sekeri bardagin etrafina
+        /// surdugumuz mini oyun gelistirilsin, gorsel olarak hic estetik ve iyi degil").
+        ///
+        /// It was fourteen 5×13 rectangles on a circle, half-lit, and nothing else: no
+        /// centre, no reading, no sense of a lap being RUN — the author's word for it was
+        /// "boxes", and that is what it was. Four things now, and each earns its place:
+        ///
+        ///   the SEAT   a dim ring of the same fourteen marks, so the circle you are being
+        ///              asked to run is visible before you start running it
+        ///   the CRUST  the marks behind the sweep, in the dish's own colour and TALLER —
+        ///              a crust builds up, so the mark grows as it takes
+        ///   the HEAD   the mark under the cursor burns brighter and stands proudest, which
+        ///              is the one thing that says "this is where you are"
+        ///   the COUNT  the lap's own percentage in the middle of the glass's mouth, in the
+        ///              house's display face, so a half-run rim is a number and not a guess
+        /// </summary>
         private void ShowRimRing(bool on)
         {
             if (_rimRing == null)
@@ -730,15 +819,27 @@ namespace LastCall.UI
                 {
                     var tick = NewRect("T" + i, _rimRing);
                     tick.anchorMin = tick.anchorMax = tick.pivot = new Vector2(0.5f, 0.5f);
-                    tick.sizeDelta = new Vector2(5f, 13f);
+                    tick.sizeDelta = new Vector2(6f, 12f);
                     var img = tick.gameObject.AddComponent<Image>();
+                    img.sprite = ChromeArt.Card();
+                    img.type = Image.Type.Sliced;
                     img.raycastTarget = false;
                     _rimTicks.Add(img);
                 }
+                _rimCount = NewText("Lap", _rimRing, _display, 8, TextAnchor.MiddleCenter,
+                                    UITheme.Cream[4]);
+                Place(_rimCount.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(120, 16),
+                      Vector2.zero);
+                _rimCount.raycastTarget = false;
+                var edge = _rimCount.gameObject.AddComponent<Outline>();
+                edge.effectColor = new Color(0f, 0f, 0f, 0.9f);
+                edge.effectDistance = new Vector2(1f, -1f);
             }
             if (_rimRing.gameObject.activeSelf != on) _rimRing.gameObject.SetActive(on);
             if (on) _rimRing.SetAsLastSibling();
         }
+
+        private Text _rimCount;
 
         /// <summary>Stands the ring on the drink's mouth and colours it by how far the lap
         /// has run — tick colour, no arc: the bench's own reading, at the bench's own
@@ -750,17 +851,39 @@ namespace LastCall.UI
             _rimSwept.TryGetValue(prop.Id, out float swept);
             float ran = Mathf.Clamp01(swept / RimLap);
             var lit = prop.Id == "sugar_rim" ? UITheme.Amber[4] : UITheme.Cream[4];
+            var seat = new Color(1f, 1f, 1f, 0.15f);
+            // The head is where the HAND is, not where the fill ends: the lap counts a
+            // swept ANGLE, so the cursor may be anywhere on the circle while the crust
+            // fills from the start. The mark under the cursor is the one that burns.
+            int head = _rimAngleKnown
+                ? Mathf.RoundToInt(Mathf.Repeat(_rimAngle / RimLap, 1f) * RimSegments) % RimSegments
+                : -1;
             for (int i = 0; i < _rimTicks.Count; i++)
-            {
+                {
                 float a = (i / (float)RimSegments) * RimLap;
-                _rimTicks[i].rectTransform.anchoredPosition =
-                    new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 62f;
-                _rimTicks[i].rectTransform.localRotation =
-                    Quaternion.Euler(0, 0, a * Mathf.Rad2Deg - 90f);
-                _rimTicks[i].color = (i / (float)RimSegments) < ran
-                    ? lit : new Color(1f, 1f, 1f, 0.18f);
+                bool crusted = (i / (float)RimSegments) < ran;
+                bool burning = i == head;
+                // A crust BUILDS: the mark grows as it takes, and the one being laid now
+                // stands proudest of all.
+                float len = burning ? 20f : crusted ? 15f : 10f;
+                float wide = burning ? 8f : crusted ? 7f : 5f;
+                var rt = _rimTicks[i].rectTransform;
+                rt.sizeDelta = new Vector2(wide, len);
+                rt.anchoredPosition = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * RimRingRadius;
+                rt.localRotation = Quaternion.Euler(0, 0, a * Mathf.Rad2Deg - 90f);
+                _rimTicks[i].color = burning ? Color.white : crusted ? lit : seat;
+            }
+            if (_rimCount != null)
+            {
+                _rimCount.text = Mathf.RoundToInt(ran * 100f) + "%";
+                _rimCount.color = ran >= 1f ? UITheme.Lime[3] : lit;
             }
         }
+
+        /// <summary>How far out the ring stands from the mouth. Inside RimFar and outside
+        /// RimNear, so the marks sit in the band the sweep is actually counted in — a ring
+        /// drawn where the hand is not counted is a ring that lies.</summary>
+        private const float RimRingRadius = 62f;
 
         /// <summary>
         /// The rail, every frame: out whenever the bar is open, dimmed where a piece has
@@ -832,6 +955,7 @@ namespace LastCall.UI
                 prop.Img.raycastTarget = reachable;
             }
             StepPrepCarry(run);
+            StepGrains();
         }
 
         // ── the drink you carry (GDD 24 §3, 2026-07-22) ──────────────────────────
@@ -849,17 +973,16 @@ namespace LastCall.UI
             // the player where the next one will land, and it is why the glass no longer
             // looks like it is floating on a strip of counter. Built before the glass, so
             // the drink stands ON it.
+            // DRAWN, at the proportion the counter needs (2026-08-26): a generated one
+            // shipped first and stood 38 units deep under a 92-unit glass, which is a bowl,
+            // with its lower half over the counter's front edge. See BackBarArt.Coaster.
             var coaster = NewRect("Coaster", root);
-            var coasterArt = ItemArt.Load("counter_coaster");
             coaster.anchorMin = coaster.anchorMax = coaster.pivot = new Vector2(0.5f, 0.5f);
-            coaster.sizeDelta = coasterArt != null
-                ? coasterArt.rect.size * 2f : new Vector2(112f, 44f);
+            coaster.sizeDelta = new Vector2(112f, 36f);
             _coasterRt = coaster;
             var coasterImg = coaster.gameObject.AddComponent<Image>();
-            coasterImg.sprite = coasterArt;
-            coasterImg.preserveAspect = true;
+            coasterImg.sprite = BackBarArt.Coaster();
             coasterImg.raycastTarget = false;
-            if (coasterArt == null) coasterImg.enabled = false;
             coaster.gameObject.SetActive(false);
             // (The bin used to be built here, before the glass, so the carried drink passed
             //  over it. It went on 2026-08-26 and the sink took the verb — see TycoonHud's

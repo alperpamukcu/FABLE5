@@ -1261,6 +1261,75 @@ namespace LastCall.UI
         }
 
         /// <summary>
+        /// THE INSTRUMENT PLATE: the night boards' face, and the benches' step card.
+        ///
+        /// It was a GENERATED drawing for two days and the author sent it back — "UI
+        /// görselinin çerçevesinde pixel problemleri ve görsel problemler var" — and they
+        /// were right, in a way that is worth writing down because it is the house rule
+        /// arriving by the back door. The model drew a frame that was a DASHED magenta line
+        /// down the left, a solid teal line down the right, and a mixture of the two along
+        /// the foot: three different rails on one rectangle, none of them repeating, so
+        /// nine-slicing it stretched noise. A frame is chrome, chrome is procedural (14 §3),
+        /// and this is the third time this project has learned it.
+        ///
+        /// What survives from the drawing is its LOOK, which the author liked: a navy field,
+        /// a teal capped head with a brass hairline under it, and four brass rivets. What
+        /// changes is that every one of those is now placed on a grid — the rails match, the
+        /// corners are square, and the middle is one flat colour, so it slices exactly.
+        ///
+        /// Drawn at 48×48 and sliced (6, 6, 6, 18): the cap and the rivet row live inside
+        /// the top border, the foot rivets inside the bottom, and only flat field stretches.
+        /// Stand it with pixelsPerUnitMultiplier 0.5 for the house's whole 2× grain.
+        /// </summary>
+        public static Sprite Instrument()
+        {
+            const string Key = "instrument";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int W = 48, H = 48, Cap = 14;
+            var px = new Color32[W * H];
+            Color32 field = UITheme.ClubBlue[0];
+            Color32 rail = UITheme.Cyan[2];
+            Color32 keyline = UITheme.Night[0];
+            Color32 capFace = UITheme.Cyan[1];
+            Color32 capLit = UITheme.Cyan[3];
+            Color32 brass = UITheme.Amber[3];
+            Color32 clear = new Color32(0, 0, 0, 0);
+
+            void Set(int x, int ty, Color32 c)
+            {
+                if (x < 0 || x >= W || ty < 0 || ty >= H) return;
+                px[(H - 1 - ty) * W + x] = c;               // ty counts DOWN from the top
+            }
+
+            for (int ty = 0; ty < H; ty++)
+                for (int x = 0; x < W; x++)
+                {
+                    // A cut corner, so the plate reads as a machined panel and not a box.
+                    if ((x == 0 || x == W - 1) && (ty == 0 || ty == H - 1)) { Set(x, ty, clear); continue; }
+                    if (x == 0 || x == W - 1 || ty == 0 || ty == H - 1) { Set(x, ty, keyline); continue; }
+                    if (x == 1 || x == W - 2 || ty == 1 || ty == H - 2) { Set(x, ty, rail); continue; }
+                    if (ty < Cap) { Set(x, ty, ty == 2 ? capLit : capFace); continue; }
+                    if (ty == Cap) { Set(x, ty, brass); continue; }          // the hairline
+                    Set(x, ty, field);
+                }
+
+            // Four rivets, inset from the field's own corners. 3×3, because a 2×2 rivet at
+            // this grain reads as a dead pixel and a 4×4 as a bolt.
+            void Rivet(int x0, int y0)
+            {
+                for (int dy = 0; dy < 3; dy++)
+                    for (int dx = 0; dx < 3; dx++)
+                        Set(x0 + dx, y0 + dy, dx == 0 || dy == 2 ? (Color32)UITheme.Amber[1] : brass);
+            }
+            Rivet(4, Cap + 3);
+            Rivet(W - 7, Cap + 3);
+            Rivet(4, H - 8);
+            Rivet(W - 7, H - 8);
+
+            return Cache[Key] = Make(px, W, H, new Vector4(6f, 6f, 6f, 18f));
+        }
+
+        /// <summary>
         /// ONE SOLID TEXEL, white, for anything that has to be DRAWN rather than merely
         /// coloured in.
         ///

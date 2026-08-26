@@ -349,6 +349,42 @@ artık çağrılmıyor — çökmezler ama ölüdürler, bir sonraki temizlik tu
   (`counter_coaster`, tam 2×) — içki olsun olmasın: boş altlık, bir sonrakinin nereye
   konacağını söyleyen şeydir. İkisi de tek sabitten (`GlassHomeX`) yerleşir.
 
+### 9.9 · On üçüncü tur: sahne bir kompozisyon, içki bir şey oldu (2026-08-26)
+
+**KOMPOZİSYON TEK KURALLA ÇÖZÜLDÜ: PROPLAR DİYEJETİK, KROM DEĞİL.** Tin, şişe, kaşık ve
+bardak tezgâhta DURAN şeylerdir ve tezgâhtaki nesne arkasındaki duvardan yakındır — uzun
+bir tin'in ray çizgisini aşıp odanın önüne çizilmesi perspektiftir, çakışma değil.
+Okunan her şey — kart, göstergeler, tuşlar, yazı — alettir ve rayın altındaki bantta
+kalır. Bant üç kolon: solda aletler (kart x 130, kaşık sol kenarda ayakta), ortada iş
+(tin, sonra tin+bardak), sağda ölçüler (karışım sütunu, çöp). Her propun AYAĞI tek
+çizgide (`BenchFootY`, ekran 585), iki kartın ÜST kenarı tek çizgide (`CardSeat`).
+
+**KAPAK KAPANINCA BARDAK KENDİ GELİR** (yazar: "bardağa koyma aşamasına artık ayrı bir
+sahne istemiyorum"). TO THE GLASS tuşu emekli; tin kapalı VE dökülebilir olunca
+(`CanPourOut` — karışmamış iki alkollü tin kapıda durur) bardak 0.45 sn sonra kayarak
+gelir. El bir şeyin üstündeyken asla: çalışan elin altından sahne çekilmez.
+
+**PLAKA ÇİZİLDİ** (`ChromeArt.Instrument`): üretilmiş `board_plate` çerçevesi tek
+dikdörtgende üç farklı raydı — solda kesik magenta, sağda düz teal — ve 9-dilim gürültüyü
+esnetiyordu. Krom prosedüreldir (14 §3); çizimin BEĞENİLEN görünüşü (lacivert yüz, teal
+kapak, pirinç çizgi, dört perçin) 48×48'lik gride yeniden çizildi; panolar ve adım kartı
+onu giyer. `board_plate.png` silindi.
+
+**İÇKİ BİR ŞEY OLDU:**
+- **Buz YÜZER:** küpler sıvı çizgisinde kendi yavaş salınımına biner (faz = küp indeksi,
+  zar yok), birkaç derece yalpalar, bardak boşaldıkça oturur. Nane/zeytin yarı güçle sallanır.
+- **LİMON CAMA OTURUR:** `glass_lemon_rim` yarığıyla kenara geçer, yarısı içeride hissi;
+  dekorun çocuğu olduğundan bardak nereye giderse onunla gider.
+- **KABUK AĞIZDA VE GÖRÜNÜR:** eski şerit iç genışlikte ve 7 birimdi — ağzın içinde
+  yüzen kutucuklar. Şimdi ağız genişliğinde, iki kat derin, üç parça: koyu oturak,
+  benek, ışık alan üst dudağı.
+- **RIMLER YUMAK TAŞIR** (`carry_salt/sugar`): kap değil tutam; taşırken YOL BAŞINA tane
+  döker (`ShedGrain`, 26 birimde bir, sapma tane sayısından yürütülür, zar yok).
+- **TUR ALETİ:** on dört kutu yerine dört okuma — sönük oturak halkası, kabın renginde
+  BÜYÜYEN kabuk işaretleri, imlecin altında yanan baş, ve ağzın ortasında yüzde.
+- **ALTLIK ÇİZİLDİ** (`BackBarArt.Coaster`): üretilen iki deneme de oran tutturamadı;
+  altlık tam ölçü isteyen bir elipstir — mantar, aşınmış halka, pirinç kenar, 56×18.
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

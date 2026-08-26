@@ -42,5 +42,21 @@
  "counter_coaster": {
   "job_id": "f36d769b-3f99-4ebb-aa94-f110a0a3aaea",
   "png": "AssetPipeline\\staging\\bench_stage\\counter_coaster.png"
+ },
+ "carry_salt": {
+  "job_id": "8a660fb8-b0bd-4284-8bbd-bff8e31cbf43",
+  "png": "AssetPipeline\\staging\\bench_stage\\carry_salt.png"
+ },
+ "carry_sugar": {
+  "job_id": "374a2513-e891-4224-b849-e24733c07d5c",
+  "png": "AssetPipeline\\staging\\bench_stage\\carry_sugar.png"
+ },
+ "glass_lemon_rim": {
+  "job_id": "1ff70665-268d-488c-86c2-00115192532b",
+  "png": "AssetPipeline\\staging\\bench_stage\\glass_lemon_rim.png"
+ },
+ "counter_coaster2": {
+  "job_id": "905675c8-c6fa-4065-802f-29d86e1a2d51",
+  "png": "AssetPipeline\\staging\\bench_stage\\counter_coaster2.png"
  }
 }

@@ -53,6 +53,11 @@ namespace LastCall.UI
         };
         private static Sprite _saltBand, _sugarBand;
 
+        /// <summary>How the ice rides. Slow and shallow: a cube in a drink is buoyed by it,
+        /// not thrown about, and anything faster reads as a boiling glass — the exact word
+        /// the lay table was written to avoid.</summary>
+        private const float BobRate = 1.6f, BobRise = 2.6f, BobRoll = 5f;
+
         /// <summary>Finds or adds the decor layer on <paramref name="glassRect"/> and brings it
         /// up to date with what is actually on <paramref name="glass"/>.</summary>
         public static void Sync(RectTransform glassRect, GlassArt.Piece piece, GlassContents glass,
@@ -117,28 +122,73 @@ namespace LastCall.UI
             float interiorW = _piece.InteriorHalf * w;           // InteriorHalf is of the half-width
             float rimYLocal = (_piece.RimY - 0.5f) * h;          // glass rects pivot centre
 
+            // THE CRUST IS ON THE MOUTH AND YOU CAN SEE IT (2026-08-26, the author:
+            // "bardagin etrafina surdugumuz seker ve tuz daha belirgin olmali ve bardagin
+            // agzinda olmali, su an kaymalar var ve sadece kutulardan olusuyor fark
+            // edilmiyor bile").
+            //
+            // Three faults in one strip. It was drawn at the glass's INTERIOR width, which
+            // is narrower than the rim it is supposed to be crusted onto, so it floated
+            // inside the mouth instead of sitting on it. It was seven units tall against a
+            // ninety-unit glass. And its speckle was six rows of hard white dots on nothing
+            // — at that size, boxes.
+            //
+            // It is the RIM's own width now (the drawn width at the mouth, not the
+            // interior), twice as deep, and it is drawn as three pieces rather than one:
+            // a dark seat where the crust meets the glass so it reads as ON something, the
+            // speckle itself, and a bright lip along the very top edge where a real crust
+            // catches the light. Nothing about it is random — see Speckles.
             if (glass.HasPreparation("salt_rim") || glass.HasPreparation("sugar_rim"))
             {
                 bool salt = glass.HasPreparation("salt_rim");
-                var band = NewChild("Crust", new Vector2(interiorW + 8f, 7f),
-                    new Vector2(0, rimYLocal + 2f));
+                float mouthW = _piece.InteriorWidthAt(_piece.RimY) * w;
+                if (mouthW < 4f) mouthW = interiorW * 2f;
+                var tone = salt ? new Color(0.95f, 0.96f, 0.97f) : new Color(0.94f, 0.89f, 0.77f);
+
+                var seat = NewChild("CrustSeat", new Vector2(mouthW + 10f, 4f),
+                    new Vector2(0, rimYLocal - 5f));
+                var seatImg = seat.gameObject.AddComponent<Image>();
+                seatImg.color = new Color(0f, 0f, 0f, 0.30f);
+                seatImg.raycastTarget = false;
+
+                var band = NewChild("Crust", new Vector2(mouthW + 12f, 14f),
+                    new Vector2(0, rimYLocal + 1f));
                 var img = band.gameObject.AddComponent<Image>();
                 img.sprite = salt ? SaltBand() : SugarBand();
+                img.color = tone;
                 img.raycastTarget = false;
+
+                var lip = NewChild("CrustLip", new Vector2(mouthW + 12f, 3f),
+                    new Vector2(0, rimYLocal + 7f));
+                var lipImg = lip.gameObject.AddComponent<Image>();
+                lipImg.color = new Color(tone.r, tone.g, tone.b, 0.9f);
+                lipImg.raycastTarget = false;
             }
 
+            // THE WEDGE STRADDLES THE GLASS (2026-08-26, the author: "bardagin camina
+            // sokulan version bir limon uretmelisin, bir kismi bardagin icerisinde
+            // hissettirmeli"). glass_lemon_rim is cut with a slit so it sits ON the edge
+            // with its lower half inside the drink; it hangs at the RIM's own edge rather
+            // than half an interior in, and it is drawn as a CHILD of this decor — which
+            // is the whole of the author's other note about it, because this decor rides
+            // the glass rect and everything parented to it moves and leans with the drink.
             if (glass.HasPreparation("lemon_twist"))
             {
-                var wedge = NewChild("Wedge", new Vector2(30f, 30f),
-                    new Vector2(interiorW * 0.5f + 2f, rimYLocal + 4f));
+                float mouthHalf = _piece.InteriorWidthAt(_piece.RimY) * w * 0.5f;
+                if (mouthHalf < 2f) mouthHalf = interiorW * 0.5f;
+                var wedge = NewChild("Wedge", new Vector2(34f, 34f),
+                    new Vector2(mouthHalf - 4f, rimYLocal + 2f));
                 var img = wedge.gameObject.AddComponent<Image>();
                 // A WEDGE, not a wheel (2026-08-26). prep_lemon is a slice seen face on -
                 // a cross-section lying on a plate - and hooking one over a rim drew a coin
                 // balanced on the glass. glass_lemon is cut from a lemon.
-                img.sprite = ItemArt.Load("glass_lemon") ?? ItemArt.Prep("lemon_twist");
+                img.sprite = ItemArt.Load("glass_lemon_rim") ?? ItemArt.Load("glass_lemon")
+                          ?? ItemArt.Prep("lemon_twist");
                 img.preserveAspect = true; img.raycastTarget = false;
                 if (img.sprite == null) img.color = UITheme.Amber[3];
-                wedge.localRotation = Quaternion.Euler(0, 0, -18f);
+                // Barely leaned: a wedge cut to sit on a rim sits square on it. The old
+                // -18 was propping a WHEEL against the glass.
+                wedge.localRotation = Quaternion.Euler(0, 0, -6f);
             }
 
             if (glass.HasPreparation("ice"))
@@ -205,14 +255,35 @@ namespace LastCall.UI
             var rect = ((RectTransform)transform).rect;
             float surface = _piece.FillAmount((float)glass.FillFraction);
             float y = (surface - 0.5f) * rect.height;
+            // ICE FLOATS (2026-08-26, the author: "icine koyulan buz yuzuyor hissi
+            // vermeli"). The cubes sat at fixed offsets off the liquid line, which is a
+            // pile of ice RESTING on a surface — the one thing ice in a drink never does.
+            // Each cube now rides its own slow bob and rolls a few degrees with it, out of
+            // phase with the others: a sine on the unscaled clock, with the phase taken
+            // from the cube's own index so it is the same drink every time it is drawn and
+            // no randomness is involved (the house rule). Amplitude is small on purpose —
+            // ice in a full glass is buoyed, not tossed — and it SETTLES as the glass
+            // empties, because a cube with nothing under it is aground.
+            float afloat = Mathf.Clamp01((float)glass.FillFraction / 0.35f);
+            float clock = Time.unscaledTime;
             for (int n = 0; n < _ice.Count; n++)
             {
                 if (_ice[n] == null) continue;
                 var lay = CubeLay[Mathf.Min(n, CubeLay.Length - 1)];
-                _ice[n].anchoredPosition = new Vector2(lay.x, y + lay.dy);
+                float phase = n * 1.7f;
+                float bob = Mathf.Sin(clock * BobRate + phase) * BobRise * afloat;
+                float roll = Mathf.Sin(clock * BobRate * 0.8f + phase) * BobRoll * afloat;
+                _ice[n].anchoredPosition = new Vector2(lay.x, y + lay.dy + bob);
+                _ice[n].localRotation = Quaternion.Euler(0, 0, lay.lean + roll);
             }
-            if (_mint != null) _mint.anchoredPosition = new Vector2(_mint.anchoredPosition.x, y + 4f);
-            if (_olive != null) _olive.anchoredPosition = new Vector2(_olive.anchoredPosition.x, y - 8f);
+            // The sprig and the spear ride the same swell, half as hard: they are lighter
+            // and they are anchored on the rim, so they nod rather than bob.
+            if (_mint != null)
+                _mint.anchoredPosition = new Vector2(_mint.anchoredPosition.x,
+                    y + 4f + Mathf.Sin(clock * BobRate + 0.6f) * BobRise * 0.5f * afloat);
+            if (_olive != null)
+                _olive.anchoredPosition = new Vector2(_olive.anchoredPosition.x,
+                    y - 8f + Mathf.Sin(clock * BobRate + 2.4f) * BobRise * 0.5f * afloat);
         }
 
         private RectTransform NewChild(string name, Vector2 size, Vector2 pos)

@@ -2,6 +2,33 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `GDD_MEVCUT §9.9 / 24 §2-3 / 14 §3` **the bench becomes a composition, and the drink
+  becomes a thing (2026-08-26, thirteenth round):**
+  **One rule untied the layout:** props are DIEGETIC, chrome is not. The tin, bottle, spoon
+  and glass stand ON the counter and may rise past the rail into the room — that is
+  perspective; everything the player READS stays in the band. Three columns (instruments
+  left, work centre, measures right), every prop's foot on one line (BenchFootY), both step
+  cards' tops on one line (CardSeat). The cap rests on the counter instead of hiding behind
+  the card.
+  **The glass arrives by itself.** The TO THE GLASS key retired: capping the tin is the
+  player saying the build is done, so once the tin is closed AND pourable (CanPourOut — an
+  unmixed two-spirit tin still waits at the door, saying so) the glass slides in after one
+  0.45s beat. Never out from under a working hand.
+  **The instrument plate is drawn** (ChromeArt.Instrument): the generated board_plate's
+  frame was three different rails on one rectangle and nine-slicing stretched noise. Chrome
+  is procedural — the liked LOOK (navy face, teal cap, brass hairline, four rivets) redrawn
+  on a 48×48 grid; the boards and the step card wear it; the PNG is deleted.
+  **The drink became a thing:** ice FLOATS (per-cube bob and roll, phase from the cube's
+  index — no dice — settling as the glass empties; mint and olive nod at half strength);
+  the lemon is a rim-straddling wedge (glass_lemon_rim, slit over the edge, half inside,
+  and it moves with the glass because the decor is the glass's child); the crust sits ON
+  the mouth at the mouth's width, twice as deep, three pieces (dark seat, speckle, lit
+  lip); the rims carry a PINCH (carry_salt/sugar) that sheds grains by distance travelled
+  as it is dragged; the lap's ring became an instrument (dim seat ring, crust marks that
+  GROW as they take, a burning head under the cursor, the percentage in the mouth); and
+  the coaster is a drawn ellipse (BackBarArt.Coaster) after two generated takes failed on
+  proportion.
+
 - `GDD_MEVCUT §9.8 / 22 §5` **the rail shows what the bar owns, and the drink gets a
   place (2026-08-26, twelfth round):**
   **The gate was already in the economy and the rail was not reading it.** Ice, the twist

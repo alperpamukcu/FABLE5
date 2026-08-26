@@ -206,7 +206,7 @@ namespace LastCall.UI
             // teal head sat beside it saying "THE BENCH", which the player already knows.
             // RefreshShaker writes whatever is in hand over it.
             _shakerTitle = BuildStepCard(panel, "THE BENCH", marks, words, _stepRows,
-                                         new Vector2(66, 260));
+                                         new Vector2(130, CardSeat(162f)));
         }
 
         /// <summary>
@@ -226,7 +226,7 @@ namespace LastCall.UI
             const float CardW = 246f, RowH = 26f;
             // The plate's drawn head is 60 units at its 2× (see ItemArt.BoardPlate), and
             // the rows stand under it, over the bottom frame.
-            const float HeadH = 60f;
+            const float HeadH = 34f;
             var card = NewRect("Steps", panel);
             // ON THE COUNTER, standing up from its foot (2026-08-26, the author: "üst
             // barın üstüne denk geliyor ... tüm butonlar barlar nesneler 1149x426'lık
@@ -242,24 +242,15 @@ namespace LastCall.UI
             // plate for the whole game's readings — sliced, so its drawn frame keeps the 2×
             // grain at this card's size as it does at the boards'.
             var bg = card.gameObject.AddComponent<Image>();
-            bg.sprite = ItemArt.BoardPlate();
-            if (bg.sprite != null)
-            {
-                bg.type = Image.Type.Sliced;
-                bg.pixelsPerUnitMultiplier = 0.5f;
-            }
-            else
-            {
-                bg.sprite = ChromeArt.Card();
-                bg.type = Image.Type.Sliced;
-                bg.color = UITheme.Night[1];
-            }
+            bg.sprite = ChromeArt.Instrument();
+            bg.type = Image.Type.Sliced;
+            bg.pixelsPerUnitMultiplier = 0.5f;
             bg.raycastTarget = false;
 
             // The title sits IN the plate's teal cap, in the night ink the cap can carry.
             var title = NewText("H", card, _body, 8, TextAnchor.MiddleLeft, UITheme.Night[0]);
             Place(title.rectTransform, new Vector2(0, 1), new Vector2(CardW - 52f, 14),
-                  new Vector2(26, -20f));
+                  new Vector2(26, -16f));
             title.rectTransform.pivot = new Vector2(0, 0.5f);
             title.horizontalOverflow = HorizontalWrapMode.Overflow;
             title.text = head;
@@ -1089,24 +1080,48 @@ namespace LastCall.UI
         /// itself would let the drink leave (<see cref="TycoonRun.CanPourOut"/>). It pulses
         /// once the moment it first comes alive, so the way forward announces itself.
         /// </summary>
+        /// <summary>
+        /// THE GLASS COMES TO YOU (2026-08-26, the author: "bardaga koyma asamasina artik
+        /// ayri bir sahne istemiyorum, shaker kapagi kapatildiktan sonra ekrana otomatik
+        /// bardak gelsin").
+        ///
+        /// There was a key here — TO THE GLASS, lit when Core would let the drink leave the
+        /// tin, pulsing once the moment it came alive. It is gone. Capping the tin is the
+        /// player SAYING the build is finished, so nothing more should have to be pressed:
+        /// the moment the tin is closed AND pourable the glass slides in by itself, on the
+        /// same counter, with the same background standing still behind it.
+        ///
+        /// WHY IT WAITS FOR CanPourOut RATHER THAN FOR THE CAP. A tin holding two spirits
+        /// may not leave the shaker unmixed (GDD 21 §14), so a cap is not always the end of
+        /// the work — sometimes the shake is. Firing on the cap alone would carry a drink
+        /// that Core is about to refuse onto the next bench and strand it there; firing on
+        /// "the drink may now be poured" is the same instant for a built drink and the
+        /// right one for a shaken one. The bench still says so out loud while it waits.
+        ///
+        /// ONE BEAT of delay, because a screen that changes on the same frame as the lid
+        /// lands reads as the lid having done something else.
+        /// </summary>
         private void UpdateToGlass(TycoonRun run)
         {
-            if (_toGlassBtn == null) return;
-            bool on = _capped && !run.Glass.IsEmpty && run.CanPourOut;
-            _toGlassBtn.interactable = on;
-            if (_toGlassGroup != null)
-                _toGlassGroup.alpha = on ? 1f : 0.4f;
-            if (on && !_toGlassWasOn) _toGlassPulse = 1f;
-            _toGlassWasOn = on;
-            if (_toGlassPulse > 0f)
+            bool ready = _capped && !run.Glass.IsEmpty && run.CanPourOut;
+            if (!ready)
             {
-                _toGlassPulse = Mathf.MoveTowards(_toGlassPulse, 0f, Time.unscaledDeltaTime / 0.35f);
-                float k = 1f + 0.10f * Mathf.Sin(_toGlassPulse * Mathf.PI);
-                ((RectTransform)_toGlassBtn.transform).localScale = new Vector3(k, k, 1f);
+                _toGlassWait = 0f;
+                if (_capped && !run.Glass.IsEmpty)
+                    NudgeShaker("it wants a mix — shake it, or bin it and start again");
+                return;
             }
-            if (_capped && !run.Glass.IsEmpty && !run.CanPourOut)
-                NudgeShaker("it wants a mix — shake it, or bin it and start again");
+            // Not while a hand is still on something: a cap released over the tin and a
+            // spoon still circling are both "the player is working", and the bench does
+            // not move out from under a working hand.
+            if (_capGrabbed || _shaking || _spoonHeld || _bottleGrabbed) { _toGlassWait = 0f; return; }
+            _toGlassWait += Time.unscaledDeltaTime;
+            if (_toGlassWait >= ToGlassBeat) { _toGlassWait = 0f; GoTo(Stage.Serve); }
         }
+
+        /// <summary>How long the closed tin is left standing before the glass arrives.</summary>
+        private const float ToGlassBeat = 0.45f;
+        private float _toGlassWait;
 
         /// <summary>
         /// The mouse-energy shake (GDD 24 §2.5): while the pad is held, cursor travel builds
@@ -1341,7 +1356,8 @@ namespace LastCall.UI
 
             // The shaker vessel: a tapered tin, opening at the top, left of centre. Grab it to
             // shake — it becomes the toy you throw around.
-            _shakerHome = new Vector2(-210, -44);
+            // Foot on the bench line: the tin is 358 tall about its centre.
+            _shakerHome = new Vector2(-210, BenchFootY + 179f);
             _bottleRest = new Vector2(330, -70);   // the bottle's own rest, needed by its foot line
             // The two contact shadows, built BEFORE the props so they draw under them.
             // Each is placed on its own prop's foot line every frame (PushPropShadow).
@@ -1394,7 +1410,11 @@ namespace LastCall.UI
             // The tin's rim, dome and cap ride ABOVE the liquid (2026-07-24): the fluid draws
             // over the open body to show the level, but it must never cover the cap.
             _shakerOpenSize = _shakerVessel.sizeDelta;
-            _capRest = new Vector2(-350, -150);   // bottom-left of the tin
+            // Under the card, on the counter between it and the tin (2026-08-26: at -150
+            // the dome stood half-hidden behind the step card's lower rows). The rect is
+            // mostly empty air — the lid art rides CapArtOffset above its centre — so the
+            // rest is derived from where the DOME should sit, not from the rect.
+            _capRest = new Vector2(-350, -165f - CapArtOffset * 358f);
             _shakerTop = NewRect("ShakerCap", _pourSurface);
             _shakerTop.anchorMin = _shakerTop.anchorMax = _shakerTop.pivot = new Vector2(0.5f, 0.5f);
             _shakerTop.sizeDelta = _shakerOpenSize;
@@ -1569,7 +1589,11 @@ namespace LastCall.UI
             // at x −310..−110 and the lid rests across −450..−250, so the only clear air on
             // this side is the corridor between the BACK key (which ends at −550) and the
             // lid. The spoon leans there, in reach, touching nothing.
-            _spoonRest = new Vector2(-500f, -104f);
+            // Against the left edge, in the margin the card leaves (2026-08-26): the
+            // spoon is the one prop that lives in the instrument column, standing like a
+            // tool on its rack, and its foot is on the bench's own line. y is the foot
+            // plus the drawn spoon's full height, because the slot hangs from its grip.
+            _spoonRest = new Vector2(-540f, BenchFootY + 256f);
             _spoonRt = NewRect("BarSpoon", _pourSurface);
             _spoonRt.pivot = new Vector2(0.5f, 1f);        // held by the grip, bowl hangs down
             _spoonRt.sizeDelta = new Vector2(26, 118);
@@ -1627,24 +1651,9 @@ namespace LastCall.UI
             _spoonRt.gameObject.AddComponent<EventTrigger>().triggers.Add(spoonGrab);
             _benchProps.Add(_spoonRt.gameObject.AddComponent<CanvasGroup>());
 
-            // THE WAY FORWARD (the author's loop rework): the drink moves ON to the glass
-            // from here. Right edge centre — the mirror of where the back key stands —
-            // and lit only when Core itself would let the drink leave.
-            var toGlass = NewRect("ToGlass", _shakerPanel);
-            Place(toGlass, new Vector2(1f, 0f), new Vector2(216, KeyStripH),
-                  new Vector2(-66, KeyStripY));
-            _toGlassBtn = toGlass.gameObject.AddComponent<Button>();
-            _toGlassBtn.onClick.AddListener(() => GoTo(Stage.Serve));
-            _toGlassGroup = toGlass.gameObject.AddComponent<CanvasGroup>();
-            var tgFace = NewRect("Face", toGlass);
-            Stretch(tgFace, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            KeyPlate.Dress(toGlass, UITheme.PrimaryAction, _toGlassBtn, tgFace);   // GDD 16 §2
-            _toGlassLabel = NewText("L", tgFace, _body, 8, TextAnchor.MiddleCenter, Color.black);
-            Stretch(_toGlassLabel.rectTransform, Vector2.zero, Vector2.one,
-                new Vector2(4, 4 + KeyPlate.Throw), new Vector2(-4, -4));
-            // ONE LINE, and the arrow says which way (2026-08-26). Three words stacked in a
-            // 76-wide column is a column of words, not a key.
-            _toGlassLabel.text = "TO THE GLASS  ▶";
+            // (The TO THE GLASS key retired on 2026-08-26 — the glass arrives on its own
+            //  now; see UpdateToGlass. Its 216 units of the key strip went back to the bar,
+            //  which is most of why the band stopped looking crowded.)
 
             // THE WAY BACK OUT OF A LID CLOSED TOO EARLY (2026-08-14). It stands under the
             // tin, on the side the spoon rests on, and only ever appears once the lid is

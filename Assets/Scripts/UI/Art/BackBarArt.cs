@@ -49,6 +49,49 @@ namespace LastCall.UI
             return _shadow = Make(px, W, H);
         }
 
+        private static Sprite _coaster;
+
+        /// <summary>
+        /// THE DRINK'S MAT, drawn (2026-08-26, the author: "bardak altligi sahneye
+        /// sigmiyor, baska bir altlik yap ve tezgaha tam otursun").
+        ///
+        /// A generated one shipped first and did not fit: at its own aspect it stood 38
+        /// units deep under a 92-unit glass, which is not a mat but a bowl, and its lower
+        /// half hung over the counter's front edge. A coaster is a flat disc seen from a low
+        /// angle — an ellipse — and an ellipse is two lines of arithmetic, at exactly the
+        /// proportion the counter needs rather than whatever proportion came back. Squashing
+        /// the drawing instead was not available: pixel art scales at whole multiples or it
+        /// does not scale (the house rule).
+        ///
+        /// Three rings out from the middle: cork, a darker worn ring where glasses have
+        /// stood, and a brass edge that catches the room's neon the way every other fitting
+        /// on this bar does.
+        /// </summary>
+        public static Sprite Coaster()
+        {
+            if (_coaster != null) return _coaster;
+            const int W = 56, H = 18;
+            var px = new Color32[W * H];
+            var cork = new Color32(0x4A, 0x2E, 0x14, 0xFF);
+            var worn = new Color32(0x3D, 0x24, 0x10, 0xFF);
+            var brass = new Color32(0xC9, 0x82, 0x2B, 0xFF);
+            var lit = new Color32(0xE8, 0xA3, 0x3D, 0xFF);
+            float cx = (W - 1) / 2f, cy = (H - 1) / 2f;
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    float dx = (x - cx) / cx, dy = (y - cy) / cy;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    Color32 c;
+                    if (d > 1f) c = new Color32(0, 0, 0, 0);
+                    else if (d > 0.88f) c = y < cy ? lit : brass;   // the rim, lit from above
+                    else if (d > 0.52f) c = cork;
+                    else c = worn;
+                    px[y * W + x] = c;
+                }
+            return _coaster = Make(px, W, H);
+        }
+
         /// <summary>The counter ledge at the bottom of the wall — the same floor plane, taller,
         /// where SERVE and the bin stand.</summary>
         public static Sprite Ledge()

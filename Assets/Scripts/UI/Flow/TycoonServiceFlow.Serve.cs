@@ -867,7 +867,7 @@ namespace LastCall.UI
             BuildStepCard(_servePanel, "THE COUNTER",
                 new[] { "toglass", "serve" },
                 new[] { "TIP THE TIN", "SERVE IT" },
-                _serveStepRows, new Vector2(66, 260));
+                _serveStepRows, new Vector2(130, CardSeat(110f)));
 
             // ON THE BAND (2026-08-26): what is left in the tin reads under the step
             // card in the left column, what is in the glass reads over the name plate on
@@ -935,7 +935,9 @@ namespace LastCall.UI
             // poured drink pools behind it and shows through; the outline+rim draw in front.
             // The layer architecture (the author, 2026-08-02): the BACK face sits under
             // the pooled drink; the glass image itself becomes the clear FRONT face.
-            var glassRest = new Vector2(-110, -88);
+            // Centre-left of the work column, foot on the bench's own line: the glass is
+            // 260 tall about its centre, so half of that stands it on BenchFootY.
+            var glassRest = new Vector2(-110, BenchFootY + ServeGlassHeight * 0.5f);
             // Under the glass, on the counter. Re-sized with the vessel in
             // ShowServingGlassware — a coupe casts a wider shadow than a highball.
             _serveGlassShadow = AddContactShadow(_serveSurface, 150f,
@@ -979,7 +981,7 @@ namespace LastCall.UI
             // else's shaker. It is the tin bench's own body and cap now, at the tin
             // bench's own 200×358, with the cap SEATED: this bench only ever meets the
             // tin closed.
-            _serveShakerRest = new Vector2(150, -170);
+            _serveShakerRest = new Vector2(190, BenchFootY + 0.22f * ServeVesselH);
             _serveShaker = NewRect("Shaker", _serveSurface);
             _serveShaker.pivot = new Vector2(0.5f, 0.22f);
             _serveShaker.sizeDelta = new Vector2(200, ServeVesselH);

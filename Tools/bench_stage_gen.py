@@ -117,6 +117,30 @@ JOBS = {
         + VICE + ', no text'),
         ITEMS, 'counter_coaster.png'),
 
+    # ── the thirteenth round ───────────────────────────────────
+    'carry_salt': (28, 28, 61, (
+        'a small loose pinch of coarse white salt crystals held in mid air, an irregular '
+        'clump with a few single grains falling away from it, no container, no hand, '
+        'single object centred, transparent background, pixel art, no text'),
+        ITEMS, 'carry_salt.png'),
+    'carry_sugar': (28, 28, 67, (
+        'a small loose pinch of pale golden sugar crystals held in mid air, an irregular '
+        'clump with a few single grains falling away from it, no container, no hand, '
+        'single object centred, transparent background, pixel art, no text'),
+        ITEMS, 'carry_sugar.png'),
+    'glass_lemon_rim': (44, 40, 71, (
+        'a lemon wedge hooked over the rim of a drinking glass, cut with a deep slit so it '
+        'straddles the glass edge, yellow rind on the outside and pale flesh facing in, '
+        'seen from the front, the wedge alone with no glass drawn, single object centred, '
+        'transparent background, pixel art, no text'),
+        ITEMS, 'glass_lemon_rim.png'),
+    'counter_coaster2': (48, 16, 73, (
+        'a flat round bar coaster seen almost edge on from a very low angle so it reads as '
+        'a thin shallow ellipse only a few pixels tall, dark cork with a thin brass rim, '
+        'lying flat on a bar top, single object centred, transparent background, '
+        + VICE + ', no text'),
+        ITEMS, 'counter_coaster2.png'),
+
     # ── the night boards' plate ─────────────────────────────────────────────────
     'board_plate': (178, 192, 47, (
         'pixel art blank rectangular instrument panel for a game UI, dark navy brushed '

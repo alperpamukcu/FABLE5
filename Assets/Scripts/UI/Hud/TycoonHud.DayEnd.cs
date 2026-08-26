@@ -705,18 +705,9 @@ namespace LastCall.UI
             // and the capped head keep their drawn 2× grain at any height, and only the
             // plain navy field stretches. See ItemArt.BoardPlate for the measured borders.
             var plate = board.Root.gameObject.AddComponent<Image>();
-            plate.sprite = ItemArt.BoardPlate();
-            if (plate.sprite != null)
-            {
-                plate.type = Image.Type.Sliced;
-                plate.pixelsPerUnitMultiplier = 0.5f;
-            }
-            else
-            {
-                plate.sprite = ChromeArt.Card();
-                plate.type = Image.Type.Sliced;
-                plate.color = BoardPlate;
-            }
+            plate.sprite = ChromeArt.Instrument();
+            plate.type = Image.Type.Sliced;
+            plate.pixelsPerUnitMultiplier = 0.5f;
             plate.raycastTarget = false;
             board.Group = board.Root.gameObject.AddComponent<CanvasGroup>();
             board.Group.blocksRaycasts = false;
