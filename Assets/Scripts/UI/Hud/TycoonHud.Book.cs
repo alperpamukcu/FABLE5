@@ -227,7 +227,7 @@ namespace LastCall.UI
             if (_bookPanel == null) return;
             bool open = !_bookOpen;
             _bookOpen = open;
-            Sfx.Play("click", 0.6f);
+            Sfx.Play(open ? "book_open" : "book_close", 0.85f);
             var sheet = _bookPanel.Find("Sheet") as RectTransform;
             // A close mid-turn abandons the turn where it stands; the next open rebuilds
             // the resting spread, so the leaf can never be left hanging over the gutter.

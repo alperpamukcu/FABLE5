@@ -209,10 +209,32 @@ namespace LastCall.UI
             t.raycastTarget = false;
             t.text = (amount >= 0 ? "+$" : "-$") + Mathf.Abs(amount);
             _moneyDrops.Add((rt, t, Time.unscaledTime + slot * DropStagger));
+            _coinDue.Add(Time.unscaledTime + slot * DropStagger);
+        }
+
+        /// <summary>
+        /// A COIN PER RECEIPT LINE (2026-08-27). Checkout played one `cash` for a basket
+        /// of six while the receipt already staggered a -$N line per item beneath the
+        /// till — the picture counted and the sound did not. Each line's coin waits for
+        /// that line's own delay, so a six-item order sounds like six things being paid
+        /// for. Held in a plain due-list rather than a coroutine per line: they are
+        /// timestamps on the unscaled clock, and the drops beside them work the same way.
+        /// </summary>
+        private readonly List<float> _coinDue = new List<float>();
+
+        private void StepCoinDue()
+        {
+            for (int i = _coinDue.Count - 1; i >= 0; i--)
+                if (Time.unscaledTime >= _coinDue[i])
+                {
+                    _coinDue.RemoveAt(i);
+                    Sfx.Play("coin", 0.55f);
+                }
         }
 
         private void StepMoneyDrops()
         {
+            StepCoinDue();
             for (int i = _moneyDrops.Count - 1; i >= 0; i--)
             {
                 var (rt, label, born) = _moneyDrops[i];
@@ -258,7 +280,10 @@ namespace LastCall.UI
             _stage = stage;
             if (stage == null) return;
             if (run.OwnedFixtureCount == _lastFixtureCount) return;
+            bool firstSync = _lastFixtureCount < 0;
+            int gained = run.OwnedFixtureCount - _lastFixtureCount;
             _lastFixtureCount = run.OwnedFixtureCount;
+            if (!firstSync && gained > 0) Sfx.Play("level_up", 0.9f);
             // ONE RUNG STANDING, NOT THE WHOLE LADDER (2026-08-19; generic since the wall
             // lamps, 2026-08-24). A bar that upgraded still OWNS the lower rungs — fitted
             // over, not sold back — and every rung stands in the same slot, so handing the

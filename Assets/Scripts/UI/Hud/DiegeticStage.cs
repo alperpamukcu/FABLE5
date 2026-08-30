@@ -311,7 +311,13 @@ namespace LastCall.UI
         /// </summary>
         public void SetDrawerOpen(bool open, bool instant = false)
         {
-            _drawerTarget = open ? 1f : 0f;
+            float wanted = open ? 1f : 0f;
+            // Only when it actually MOVES. Callers set the same state freely (SERVE IT
+            // shuts a cellar that may already be shut), and a roller that speaks every
+            // time it is asked to stay put is a roller that rattles.
+            if (!Mathf.Approximately(_drawerTarget, wanted) && !instant)
+                Sfx.Play(open ? "cellar_open" : "cellar_close", 0.75f);
+            _drawerTarget = wanted;
             if (instant || Motion.Reduced) { _drawerT = _drawerTarget; ApplyDrawer(); }
         }
 

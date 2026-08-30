@@ -160,6 +160,60 @@ def impact(seconds, name, tone=1400.0, q=3.0, crack=0.004, body=0.9):
     return trans * body
 
 
+def analog(seconds, hz, name, detune=0.010, voices=3, shape='saw',
+           cut0=2200.0, cut1=520.0, res=1.6, drift=0.0018):
+    """AN ANALOG-STYLE VOICE — the game's period, in one function (2026-08-27).
+
+    LAST CALL is a 1980s Miami bar, and the era's reward and progression sounds are
+    not chiptune: chiptune is a square wave from a console's chip, while this room's
+    sound is a polysynth — several oscillators at slightly different pitches, run
+    through a resonant low-pass that CLOSES as the note decays. Three things make it
+    read as that rather than as a beep:
+
+      * DETUNE. Several voices a few cents apart beat against each other, which is
+        the whole warmth of the era. One oscillator is a test tone.
+      * A MOVING FILTER. Brightness falling over the note is what a real synth's
+        envelope does to a real filter, and it is why the sound has a shape instead
+        of just a volume.
+      * DRIFT. A slow, tiny wobble on the pitch — analog oscillators never sit still,
+        and a perfectly stable pitch is the one thing that always sounds digital.
+
+    The filter is applied in two bands and mixed rather than swept per-sample: a true
+    per-sample sweep needs a time-varying biquad, and at these lengths the difference
+    is inaudible while the cost is not.
+    """
+    x = t(seconds)
+    r = rng(name + ':analog')
+    out = np.zeros_like(x)
+    for v in range(voices):
+        # Spread the voices either side of centre, and let each drift on its own.
+        cents = (v - (voices - 1) / 2.0) * detune
+        wob = drift * np.sin(2 * math.pi * (0.7 + 0.31 * v) * x + r.uniform(0, 6.28))
+        f = hz * (1.0 + cents + wob)
+        ph = 2 * math.pi * np.cumsum(f) / SR + r.uniform(0, 6.28)
+        if shape == 'saw':
+            # A band-limited-ish saw: a short harmonic sum, so nothing aliases into
+            # the harshness the brief forbids.
+            v_out = np.zeros_like(x)
+            for k in range(1, 9):
+                v_out += np.sin(ph * k) / k
+            v_out *= 0.6
+        elif shape == 'square':
+            v_out = np.zeros_like(x)
+            for k in (1, 3, 5, 7, 9):
+                v_out += np.sin(ph * k) / k
+            v_out *= 0.75
+        else:
+            v_out = np.sin(ph)
+        out += v_out
+    out /= max(voices, 1)
+    # The filter envelope, as a crossfade from open to closed.
+    bright = lowpass(out, cut0, res)
+    dark = lowpass(out, cut1, res)
+    k = np.linspace(0.0, 1.0, x.size) ** 0.7
+    return bright * (1.0 - k) + dark * k
+
+
 def sweep(seconds, f0, f1, name, curve=1.0):
     """A pitch glide — air, a whoosh, a drawer sliding."""
     x = t(seconds)

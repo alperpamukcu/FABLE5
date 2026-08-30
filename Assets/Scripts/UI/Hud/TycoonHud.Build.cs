@@ -904,7 +904,11 @@ namespace LastCall.UI
                 MarkHoverable(key, bg);
                 btn.onClick.AddListener(() =>
                 {
-                    if (_shopTab != tab) { _justOrdered.Clear(); _shopScrollAt = 1f; }
+                    if (_shopTab != tab)
+                    {
+                        _justOrdered.Clear(); _shopScrollAt = 1f;
+                        Sfx.Play("key_press", 0.55f);
+                    }
                     _shopTab = tab;
                     RebuildDayEnd();
                 });

@@ -86,6 +86,7 @@ namespace LastCall.UI
                 try
                 {
                     run.ServeSnack(snack.Id, visit);
+                    Sfx.Play("bowl_down", 0.75f);
                     Toast($"{snack.Name.ToUpperInvariant()} — ON THE TAB");
                 }
                 catch (InvalidOperationException e) { Toast(e.Message.ToUpperInvariant()); }
@@ -476,6 +477,11 @@ namespace LastCall.UI
         private readonly List<(RectTransform Rt, Image Img, Vector2 Vel, float Born)> _grains
             = new List<(RectTransform, Image, Vector2, float)>();
         private Vector2 _grainLastAt;
+
+        /// <summary>Set by <see cref="StepRimLap"/> on a frame the lap actually turned;
+        /// read and cleared once a frame by the rail's step. One loop source, one
+        /// decider — the tin bench's rule, applied to the counter.</summary>
+        private bool _rimLoopWanted;
         private float _grainCarried;
         private const float GrainEvery = 26f;     // units of travel between crystals
         private const float GrainLife = 0.55f;
@@ -687,6 +693,8 @@ namespace LastCall.UI
             if (_prepCarry != null) _prepCarry.gameObject.SetActive(false);
             ShowRimRing(false);
             _rimAngleKnown = false;
+            _rimLoopWanted = false;
+            Sfx.HoldLoop(null);
             if (!intoTheGlass || prop == null) return;
             // A RIM IS NEVER APPLIED BY A DROP. Putting the dish down over the glass is
             // putting the dish down; what puts salt on a rim is the lap, and a half-run one
@@ -753,6 +761,8 @@ namespace LastCall.UI
                 return false;
             ShowRimRing(true);
             PlaceRimRing(mouth, prop);
+
+            _rimLoopWanted = true;      // consumed once a frame by StepPreps
 
             var arm = local - mouth;
             float dist = arm.magnitude;
@@ -956,6 +966,12 @@ namespace LastCall.UI
             }
             StepPrepCarry(run);
             StepGrains();
+            // THE RIM'S GRIND, decided once (2026-08-27). The flag is set by StepRimLap
+            // while the lap is actually turning and cleared here after it is read, so a
+            // cursor that leaves the band, a dish that is put down, or a stage that opens
+            // over the room all stop the sound by simply not asking for it again.
+            Sfx.HoldLoop(_rimLoopWanted ? "rim_turn" : null, 0.7f);
+            _rimLoopWanted = false;
         }
 
         // ── the drink you carry (GDD 24 §3, 2026-07-22) ──────────────────────────
@@ -1154,6 +1170,7 @@ namespace LastCall.UI
             if (!_glassShown)
             {
                 _glassShown = true;
+                Sfx.Play("glass_down", 0.7f);
                 _drinkGlass.gameObject.SetActive(true);
                 _drinkGlass.anchoredPosition = GlassHome;
                 _glassAngle = 0f;
@@ -1928,8 +1945,10 @@ namespace LastCall.UI
                 // pace. Nothing about the cycle is retimed; it is simply played slower.
                 float left = (1f - view.WalkT) * dist;
                 view.WalkPace = Mathf.Lerp(ArrivalPace, 1f, Mathf.Clamp01(left / ArrivalEase));
+                bool stillWalking = view.WalkT < 1f;
                 view.WalkT = Mathf.Min(1f,
                     view.WalkT + Time.deltaTime * WalkSpeed * view.WalkPace / dist);
+                if (stillWalking && view.WalkT >= 1f) Sfx.Play("stool_take", 0.7f);
                 view.Root.anchoredPosition =
                     new Vector2(Mathf.Lerp(entryX, view.SeatX, view.WalkT), SeatLineY);
                 view.Group.alpha = Mathf.Clamp01(view.WalkT * 4f);
@@ -2023,7 +2042,11 @@ namespace LastCall.UI
             bool seated = view.WalkT >= 1f;
             bool drinking = visit.State == VisitState.Drinking;
 
-            if (ordered && !view.WasOrdered && seated) view.OrderAnimLeft = OrderAnimSeconds;
+            if (ordered && !view.WasOrdered && seated)
+            {
+                view.OrderAnimLeft = OrderAnimSeconds;
+                Sfx.Play("order_ready", 0.6f);
+            }
             view.WasOrdered = ordered;
 
             if (drinking) view.DrinkT += Time.deltaTime; else view.DrinkT = 0f;

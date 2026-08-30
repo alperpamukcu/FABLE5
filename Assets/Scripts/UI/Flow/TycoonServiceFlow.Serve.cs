@@ -604,6 +604,7 @@ namespace LastCall.UI
                 // a bar again. Only THIS door closes it: BACK TO THE BAR keeps the cellar
                 // open, because the way back is for reaching another bottle.
                 GetComponent<TycoonHud>()?.Room?.SetDrawerOpen(false);
+                Sfx.Play("serve_it", 1f);
             });
             _serveDoneGroup = done.gameObject.AddComponent<CanvasGroup>();
             var doneFace = NewRect("Face", done);

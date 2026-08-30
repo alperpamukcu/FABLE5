@@ -213,6 +213,7 @@ namespace LastCall.UI
             _curtain.SetAsLastSibling();
             _curtainT = 0f;
             _curtainImg.color = new Color(0f, 0f, 0f, 1f);
+            Sfx.Play("curtain", 0.8f);
             int week = BarCalendar.WeekOf(arriving);
             if (_curtainWeek != null) _curtainWeek.text = $"{week:00}";
             // Read ONCE, on the way in: the card is a scene, and asking the arc which night

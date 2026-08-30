@@ -238,7 +238,7 @@ namespace LastCall.UI
                 // finish until 1.0. Firing at the end put the tremor two thirds of a beat
                 // after the impact it was meant to be.
                 if (i >= _landed && k >= Contact) { _landed = i + 1; _billShake = 1f;
-                    Sfx.Play("click", 0.5f); }
+                    Sfx.Play("key_press", 0.5f); }
             }
             if (!running)
             {
@@ -390,7 +390,7 @@ namespace LastCall.UI
             _billStamp.localRotation = Quaternion.Euler(0, 0, -9f);
             _stampT = -1f;
             _billShake = 1f;                                 // the paper takes it
-            Sfx.Play("click", 0.9f);
+            Sfx.Play("stamp", 0.95f);
         }
 
         /// <summary>
@@ -1244,7 +1244,7 @@ namespace LastCall.UI
                 _standDeltaChip.gameObject.SetActive(true);
                 _chipPop = 1f;
             }
-            Sfx.Play("click", 0.5f);
+            Sfx.Play("key_press", 0.5f);
         }
 
         private void ApplyStanding(float stars)
@@ -1331,7 +1331,7 @@ namespace LastCall.UI
             if (_dayEndStep == 0)
             {
                 _dayEndStep = 1;
-                Sfx.Play("click", 0.6f);
+                Sfx.Play("key_press", 0.6f);
                 RebuildDayEnd();
                 // THE SLIP GOES AND THE VAN ARRIVES: the bill leaves to the left, the
                 // market comes in from the right, so the two read as one movement through
@@ -1409,6 +1409,7 @@ namespace LastCall.UI
             _slideDur = 0.3f;
             _slideT = 0f;
             _slideOut = true;
+            Sfx.Play("whoosh", 0.7f);
         }
 
         /// <summary>Puts whatever was moving back where it belongs. Any new movement starts
@@ -2207,7 +2208,7 @@ namespace LastCall.UI
             backBtn.targetGraphic = backImg;
             backBtn.onClick.AddListener(() =>
             {
-                Sfx.Play("click", 0.6f);
+                Sfx.Play("key_press", 0.6f);
                 if (_closingAsk != null) _closingAsk.gameObject.SetActive(false);
             });
             var backLabel = NewText("L", back, _shop, 16, TextAnchor.MiddleCenter, Color.white);
@@ -2247,9 +2248,10 @@ namespace LastCall.UI
         {
             if (_closingAsk == null) { PlayTabletOut(); return; }   // never trap the player
             _closingAskLine.text = worry;
+            Sfx.Play("prompt_up", 0.7f);
             _closingAsk.gameObject.SetActive(true);
             _closingAsk.SetAsLastSibling();
-            Sfx.Play("click", 0.5f);
+            Sfx.Play("key_press", 0.5f);
         }
     }
 }

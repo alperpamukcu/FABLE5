@@ -485,6 +485,48 @@ ehliyet okuma (oyunun MERKEZİ hareketi, sessizdi), lavabo, rim'in kapanması, �
 kapak alma, tin kavrama, kaşık, ve musluk kolu (kol her kare çağrılan bir yerde, o yüzden
 YALNIZ durum değişince — aksi hâlde 60 Hz'de makineli tüfek olurdu).
 
+### 9.12 · Barın sesi tamamlandı: foley ve sentez (2026-08-27)
+
+**AYRIM TEK CÜMLE: BAR FOLEY'DİR, OYUN SENTEZDİR.** Barmenin elinin dokunduğu her şey — cam,
+ahşap, metal, kâğıt, sıvı — fiziksel nesnesi olarak modellendi, çünkü oyuncunun bir tezgâhın
+arkasında olduğuna inanması gerekiyor. SİSTEMİN söylediği her şey — yıldız, seviye, hükum,
+gecenin açılışı, kofinin sonu — **1980'ler polisentezi**, çünkü orada konuşan oda değil oyun,
+ve bu bar Miami'de neonla aydınlanıyor. İki ses, asla karıştırılmadan: oyuncu her an barın mı
+yoksa oyunun mu konuştuğunu biliyor.
+
+**`analog()` dönemi tek fonksiyona koydu** (`Tools/sfx_dsp.py`): chiptune bir konsol çipinin
+kare dalgasıdır; bu oda ise bir polisentezdir. Üç şey onu "beep" olmaktan çıkarıyor —
+**DETUNE** (birkaç sent aralıklı sesler birbiriyle vuruşur, dönemin bütün sıcaklığı budur),
+**HAREKETLİ FİLTRE** (nota sönerken parlaklığın düşmesi sese şekil verir), ve **DRIFT**
+(analog osilatörler asla sabit durmaz; kusursuz sabit perde her zaman dijital duyulur).
+Banka **67 klip**: 43'ü ilk turdan, 24'ü bu turdan.
+
+**HER KARE ÇALIŞAN YERLERİN HEPSİ KORUNDU** — bu turun asıl riski buydu. `RefreshTapText`
+her kare koşuyor, yani hüküm dallarına konacak düz bir `Play` saniyede altmış kez ateş
+ederdi: yasaklanan "bozuk ses"in ta kendisi, üstelik en gürültülü anda. Üç dala üç ekleme
+yerine **zincirin sonunda tek kapı** (`SpeakVerdict`), ve metin değişimi TEK BAŞINA yetmiyor:
+`score` bira girerken 1.0'ın etrafında salınıyor ve iyi bir bardak yolda "TOO MUCH HEAD"in
+içinden geçiyor, o yüzden kapı hem metnin değişmesini hem MUSLUĞUN KAPANMASINI istiyor.
+Hüküm biten bir dökümün yargısıdır, koşarken yapılan yorum değil.
+
+Aynı dikkatle: dolu-bardak kesintisi ile köpük oturması **aynı kenarda birbirini dışlıyor**
+(biri doluluktan durdu, diğeri elin bırakmasından — ikisini birden çalmak en önemli kenarda
+çift vuruş olurdu); oturma sesi yürüyüşün iki yanından okunan kenarla; sipariş sesi zaten
+kenar olan `!view.WasOrdered` koşulunun içinde; ve seviye atlama `_lastFixtureCount`'un
+**−1'den başladığını** hesaba katarak — aksi halde oyun başlar başlamaz var olduğu için
+oyuncuyu tebrik ederdi, ki o zaman bir şey aldığında tebrik etmesinin bir anlamı kalmazdı.
+
+**RIM TURU DÖNGÜSÜ TEZGÂHIN KURALINI ALDI:** oyunda TEK döngü kanalı var, o yüzden karede tek
+karar veren olmalı. `StepRimLap` yalnız **istiyor** (`_rimLoopWanted`), rafın adımı okuyup
+temizliyor — imleç ağzın çevresindeki bandan çıktığında tur durakladığı için, doğrudan
+başlatılsaydı duraklamış bir tur öğütüp durur, yani takılı bir ses olurdu.
+
+**SESSİZLİKLERİN İTİRAFI:** marketın **beş reddi de** sessizdi — dükkân yalnız yazıyla hayır
+diyordu, ellerine bakan bir oyuncu hiçbir şey olmadığını görüyordu; ödemede altı kalemlik
+sepete tek `cash` çalıyordu, oysa fiş zaten kalem başı bir satır düşürüyordu (artık satırın
+kendi gecikmesiyle sikke); gece sonunun damgası bankanın EN KÜÇÜK sesini çalıyordu; ve
+bütün yapımı bitiren tek basış olan **SERVE IT tamamen sessizdi**.
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

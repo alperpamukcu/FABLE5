@@ -351,11 +351,11 @@ namespace LastCall.UI
 
             if (isFitting)
             {
-                if (!Run.CanFitTonight) { Toast("ONE UPGRADE A NIGHT"); return; }
+                if (!Run.CanFitTonight) { Sfx.Play("deny", 0.7f); Toast("ONE UPGRADE A NIGHT"); return; }
                 foreach (var e in _cart)
-                    if (e.IsFitting) { Toast("ONE UPGRADE A NIGHT"); return; }
+                    if (e.IsFitting) { Sfx.Play("deny", 0.7f); Toast("ONE UPGRADE A NIGHT"); return; }
             }
-            if (CartTotal() + price > Run.Money) { Toast("NOT ENOUGH MONEY"); return; }
+            if (CartTotal() + price > Run.Money) { Sfx.Play("deny", 0.7f); Toast("NOT ENOUGH MONEY"); return; }
 
             _cart.Add(new CartEntry { Key = key, Label = label, Price = price,
                                       IsFitting = isFitting, Buy = buy, Art = art });
@@ -367,7 +367,7 @@ namespace LastCall.UI
         /// A refusal stops the rest — the till is the shop's word, not the basket's.</summary>
         private void Checkout()
         {
-            if (_cart.Count == 0) { Toast("BASKET IS EMPTY"); return; }
+            if (_cart.Count == 0) { Sfx.Play("deny", 0.7f); Toast("BASKET IS EMPTY"); return; }
             RememberScroll();
             _justOrdered.Clear();
             int bought = 0;
@@ -375,7 +375,7 @@ namespace LastCall.UI
             foreach (var e in _cart)
             {
                 try { e.Buy(); _justOrdered.Add(e.Key); paid.Add(e.Price); bought++; }
-                catch (InvalidOperationException) { Toast("ORDER STOPPED — " + e.Label); break; }
+                catch (InvalidOperationException) { Sfx.Play("deny", 0.8f); Toast("ORDER STOPPED — " + e.Label); break; }
             }
             _cart.Clear();
             Sfx.Play("cash", 0.9f);
@@ -1277,6 +1277,7 @@ namespace LastCall.UI
                 // the stamp belongs to the thing that says "ordered", and that is this line.
                 if (state == TileState.Ordered && !Motion.Reduced)
                     StartCoroutine(StampDrop(markRt != null ? markRt : stateText.rectTransform));
+                    Sfx.Play("stamp", 0.8f);
             }
             return rt;
         }

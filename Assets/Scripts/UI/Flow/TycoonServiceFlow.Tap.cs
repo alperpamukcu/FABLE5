@@ -363,6 +363,7 @@ namespace LastCall.UI
             {
                 if (Run == null || Run.Phase != TycoonPhase.DayOpen || Mouse.current == null) return;
                 _glassHeld = true;
+                Sfx.Play("glass_pickup", 0.8f);
             });
             _tapGlass.gameObject.AddComponent<EventTrigger>().triggers.Add(glassGrab);
 
@@ -552,6 +553,7 @@ namespace LastCall.UI
                     ? "A COCKTAIL IS IN THE TIN — POUR IT OUT FIRST"
                     : "FINISH THE PINT IN THE GLASS BEFORE CHANGING KEGS";
                 _tapVerdict.color = UITheme.Amber[3];
+                Sfx.Play("deny", 0.8f);
                 return;
             }
             if (run.PullingId != null) run.EndPull();
@@ -714,7 +716,15 @@ namespace LastCall.UI
             _tapHandle.localRotation = Quaternion.Euler(0, 0, pouring ? HandleTilt : 0f);
             // The handle only speaks when it MOVES — comparing against last frame's
             // state, because this runs every frame the station is open.
-            if (pouring != _pouringNow) Sfx.Play("tap_handle", pouring ? 0.8f : 0.55f);
+            if (pouring != _pouringNow)
+            {
+                Sfx.Play("tap_handle", pouring ? 0.8f : 0.55f);
+                if (!pouring)
+                {
+                    if (run.ServingGlass.IsFull) Sfx.Play("pour_cutoff", 0.6f);
+                    else if (run.ServingGlass.Head > 0) Sfx.Play("head_settle", 0.5f);
+                }
+            }
 
             _pouringNow = pouring;
             // The tap has a voice now (2026-08-13): the pull runs the same held pour loop the
@@ -949,6 +959,37 @@ namespace LastCall.UI
             else if (score >= 1.0) { _tapVerdict.text = "GOOD PINT"; _tapVerdict.color = UITheme.Lime[3]; }
             else if (head > TapPour.GoodHeadMax) { _tapVerdict.text = "TOO MUCH HEAD"; _tapVerdict.color = UITheme.ViceRed[3]; }
             else { _tapVerdict.text = "FLAT — NEEDS A HEAD"; _tapVerdict.color = UITheme.ViceRed[3]; }
+
+            SpeakVerdict(_tapVerdict.text);
         }
+
+        /// <summary>
+        /// The pint's verdict, said aloud once per change — and only once the beer has
+        /// STOPPED, which is the part that is easy to get wrong.
+        ///
+        /// RefreshTapText runs every frame the station is open, so a Play() in any of
+        /// those branches would fire sixty times a second: the exact "bozuk ses" the
+        /// brief forbids, arriving at the loudest possible moment. A text-change guard
+        /// alone is still not enough, because `score` crosses 1.0 back and forth WHILE
+        /// beer is going in and the head is climbing — the line genuinely changes several
+        /// times during one pull, and a pint on its way to good passes through TOO MUCH
+        /// HEAD. So the gate is both: the line must have changed, AND the tap must be
+        /// shut. A verdict is a judgement on a finished pour, not a running commentary.
+        ///
+        /// Only the three JUDGEMENTS speak. "TAKE THE GLASS TO THE TAP" and its siblings
+        /// are instructions, and a bar that chimes at you for reading the instructions is
+        /// a bar nobody can think in.
+        /// </summary>
+        private void SpeakVerdict(string line)
+        {
+            if (_pouringNow) { _spokenVerdict = line; return; }   // mid-pull: watch, don't speak
+            if (line == _spokenVerdict) return;
+            _spokenVerdict = line;
+            if (line == "GOOD PINT") Sfx.Play("verdict_good", 0.85f);
+            else if (line == "TOO MUCH HEAD") Sfx.Play("verdict_bad", 0.7f);
+            else if (line == "FLAT — NEEDS A HEAD") Sfx.Play("verdict_flat", 0.7f);
+        }
+
+        private string _spokenVerdict;
     }
 }
