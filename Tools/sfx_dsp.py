@@ -51,7 +51,14 @@ LEVELS = {
     'body':    -13.0,   # glass down, cap seating, a bottle set on wood
     'weight':   -9.0,   # a door, the cellar, a tin capped
     'moment':   -6.0,   # cash, a served drink, a star
-    'bed':     -26.0,   # the music bed — quieter than the old hum on purpose
+    # THE BED, MEASURED IN PLAY (2026-08-27). -26 was a guess and it was wrong by
+    # about eight decibels: the music reached the output at roughly -40 dBFS, which is
+    # not subtle, it is inaudible — replacing a hum with silence is not what was asked
+    # for. -19 puts it under the quietest regular effect (the UI tick at -24 peaks far
+    # higher than the bed's average) while staying continuously present. It can sit
+    # this much louder than the old drone precisely BECAUSE it is music: a steady sine
+    # wears through at any level, a chord turning every eight seconds does not.
+    'bed':     -19.0,
     'loop':    -16.0,   # held loops: pour, shake, stir, tap
 }
 

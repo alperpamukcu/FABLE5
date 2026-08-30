@@ -226,12 +226,16 @@ namespace LastCall.UI
         public static void Ambience(bool ducked)
         {
             var i = Instance;
-            if (i._ambience.clip == null)
-            {
-                i._ambience.clip = i.Clip("ambience_loop");
-                if (i._ambience.clip == null) return;
-                i._ambience.Play();
-            }
+            if (i._ambience.clip == null) i._ambience.clip = i.Clip("ambience_loop");
+            if (i._ambience.clip == null) return;
+            // KEEP IT PLAYING, not merely ASSIGNED (2026-08-27). This started the bed
+            // only on the frame the clip was first loaded, so anything that stopped the
+            // source afterwards stopped the music for the rest of the session and
+            // nothing noticed: an AudioClip reimported while the editor is in play mode
+            // does it (measured — `playing=False` with the clip still attached), and so
+            // would a device change or a scene load. Checked every frame because this is
+            // already called every frame, and isPlaying is a field read.
+            if (!i._ambience.isPlaying) i._ambience.Play();
             i._ambienceTarget = (ducked ? 0.25f : 0.7f) * Sound.Effective;
         }
 
