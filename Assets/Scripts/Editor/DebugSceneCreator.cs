@@ -64,6 +64,14 @@ namespace LastCall.EditorTools
             cam.backgroundColor = new Color(0.05f, 0.03f, 0.075f); // Night 1 (#0D0813)
             cam.transform.position = new Vector3(0f, 0f, -10f);
 
+            // THE EARS (2026-08-27). The scene had no AudioListener at all — measured in
+            // play, LISTENERS=0 — so the whole sound bank was rendering to nothing while
+            // every other reading looked healthy: the sources were playing, at the right
+            // levels, with the Game view unmuted. Unity simply outputs no audio without
+            // one. Sfx guarantees a listener at runtime as a safety net for any scene,
+            // but the camera is where it belongs, so a rebuilt scene carries its own.
+            camGo.AddComponent<AudioListener>();
+
             // Pixel Perfect Camera (15 v2 §4, PATCH_15 §C): 640×360 reference, PPU 1 —
             // URP's OWN component now (2026-08-10), because the 2D Renderer is what draws
             // the world and the legacy package version is a stranger to it. PixelSnapping

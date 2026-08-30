@@ -33,7 +33,8 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from sfx_dsp import (SR, LEVELS, analog, bandpass, dc_block, env_ad, env_ar,  # noqa
                      highpass, impact, lowpass, modal, noise, normalize, place,
-                     render, rng, silence, soft_limit, sweep, t, write)
+                     render, rng, silence, soft_limit, sweep, write)
+from sfx_dsp import t as t_
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                    '..', 'Assets', 'Resources', 'Audio')
@@ -93,7 +94,7 @@ def liquid(seconds, name, low=280.0, high=2600.0, bubbles=0.0, thickness=0.5):
     bubbles. The breathing is what separates a pour from a hiss — a real stream is
     never steady, it wobbles as it breaks up."""
     n = int(round(seconds * SR))
-    x = t(seconds)
+    x = t_(seconds)
     core = noise(seconds, name + ':liq', 'pink')
     core = lowpass(highpass(core, low), high)
     # Two slow, non-harmonic wobbles so the breathing never falls into a rhythm.
@@ -165,7 +166,7 @@ def s_whoosh():
     air, not a synth sweep."""
     d = 0.34
     n = noise(d, 'whoosh', 'pink')
-    x = t(d)
+    x = t_(d)
     # The band travels down as the panel passes: near, then gone.
     out = np.zeros_like(n)
     for f0, f1, w in ((1800.0, 420.0, 1.0), (3200.0, 900.0, 0.5)):
@@ -329,7 +330,7 @@ def s_rim_turn():
     x = highpass(noise(d, 'rim', 'white'), 2600.0)
     x = lowpass(x, 9000.0)
     # A slow grind under the grit so it is a TURN and not a hiss.
-    g = 1.0 + 0.45 * np.sin(2 * np.pi * 5.3 * t(d)) + 0.2 * np.sin(2 * np.pi * 11.9 * t(d))
+    g = 1.0 + 0.45 * np.sin(2 * np.pi * 5.3 * t_(d)) + 0.2 * np.sin(2 * np.pi * 11.9 * t_(d))
     return x * g
 
 
@@ -383,7 +384,7 @@ def s_stir_loop():
     a continuous ring with the spoon ticking round the wall, quiet and unhurried."""
     d = 0.85
     n = int(round(d * SR))
-    x = t(d)
+    x = t_(d)
     # The spoon travelling: a soft band of noise moving in a circle.
     trav = bandpass(noise(d, 'stir_t', 'pink'), 1700.0, 2.0)
     trav = trav * (0.55 + 0.45 * np.sin(2 * np.pi * 2.35 * x))
@@ -600,22 +601,55 @@ def s_day_close():
 
 
 def s_ambience_loop():
-    """The bar bed: a low room tone, a distant murmur, and the faintest hum from the
-    neon. It must be almost subliminal — it plays for the whole night, and anything
-    with a feature in it becomes maddening by the third minute.
+    """THE HUM IS GONE (2026-08-27, the author: "oyunda ugultu sesi var, bu gercekci
+    ve iyi degil, bu kaldirilsin; oyunda arka planda ortama uygun alttan muzik
+    calmali").
 
-    Six seconds, and `render(loop=True)` crossfades the wrap, which is the fix for
-    the old bed cracking audibly once every 5.75 seconds."""
-    d = 6.0
-    x = t(d)
-    room = lowpass(noise(d, 'amb_room', 'pink'), 520.0) * 1.0
-    murmur = bandpass(noise(d, 'amb_mur', 'pink'), 640.0, 0.8) * 0.30
-    murmur = murmur * (0.7 + 0.3 * np.sin(2 * np.pi * 0.13 * x)
-                       + 0.2 * np.sin(2 * np.pi * 0.31 * x + 0.9))
-    # The neon's hum, at exact multiples of the loop length so it tiles perfectly.
-    hum = (0.030 * np.sin(2 * np.pi * (100.0 // (1 / d) / d) * x)
-           + 0.018 * np.sin(2 * np.pi * 120.0 * x + 0.4))
-    return lowpass(room + murmur + hum, 2600.0)
+    They were right and the fault was mine: the old bed was room tone plus a murmur
+    plus two sine waves at 100 and 120 Hz standing in for a neon transformer. A
+    steady low sine IS a drone — it has no beginning, no movement and no reason, and
+    over a whole night it stops being atmosphere and becomes tinnitus. Nothing
+    justifies a hum in a game the player sits inside for twenty minutes at a time.
+
+    What replaces it is MUSIC, not texture: a slow four-chord turn on the house
+    polysynth, i - VI - III - VII in A minor, the progression this kind of room has
+    used since 1984. Each chord is a full bar of eight seconds and the whole cycle is
+    32 seconds, so nothing repeats inside a customer's visit. It sits at -26 dBFS,
+    quieter than the old bed, because a bed you notice is a bed that is too loud —
+    the test is whether you can hold a conversation over it.
+
+    A little room tone stays UNDER the music (a bar is not a vacuum), but it is
+    filtered to a whisper and carries no tone of its own.
+    """
+    d = 32.0
+    x = t_(d)
+    out = silence(d)
+    # A minor: i, VI, III, VII — the four chords, one bar each.
+    bars = [
+        (220.00, 261.63, 329.63),   # Am
+        (174.61, 220.00, 261.63),   # F
+        (261.63, 329.63, 392.00),   # C
+        (196.00, 246.94, 293.66),   # G
+    ]
+    bar = d / len(bars)
+    for k, chord in enumerate(bars):
+        # Each chord swells in and out so the turn breathes rather than steps.
+        v = silence(bar * 1.6)
+        for n, hz in enumerate(chord):
+            tone = analog(bar * 1.6, hz, 'ambm%d_%d' % (k, n), voices=3,
+                          detune=0.012, cut0=900.0, cut1=380.0, res=1.1)
+            v = v + tone * (1.0 - 0.18 * n)
+        v = v * env_ar(bar * 1.6, bar * 0.55, bar * 0.75)
+        place(out, k * bar, v, 0.30)
+        # A bass note under each chord, an octave and a half down — this is what makes
+        # it a BED rather than a pad floating in the middle of the mix.
+        root = analog(bar * 1.4, chord[0] * 0.5, 'ambb%d' % k, voices=2,
+                      detune=0.008, cut0=320.0, cut1=150.0)
+        place(out, k * bar, root * env_ar(bar * 1.4, bar * 0.4, bar * 0.6), 0.22)
+    # The room itself, well under the music and with no tone in it.
+    room = lowpass(noise(d, 'amb_room', 'pink'), 420.0)
+    out = out + room * 0.16
+    return lowpass(out, 2200.0)
 
 
 
@@ -804,7 +838,7 @@ def s_printer_feed():
     and paper being dragged over a bar — it runs for about two and a half seconds,
     so it must tile without a bump."""
     d = 0.55
-    x = t(d)
+    x = t_(d)
     motor = bandpass(noise(d, 'pf_m', 'pink'), 420.0, 2.2)
     # The stepper's own rate, at an exact multiple of the loop so it tiles.
     step = 0.5 + 0.5 * np.sin(2 * np.pi * (11.0 / d) * x)
@@ -884,6 +918,203 @@ def s_id_card_away():
     return lowpass(x, 5200.0) * 0.8
 
 
+
+# ── the third pass (2026-08-27): the pour, the stamp, and voices ────────────
+
+
+def s_pour_glass():
+    """HELD LOOP: spirit going into a GLASS.
+
+    The author: "sivi dokulme sesi kusursuz olmali, cok asamali olmali - suyun
+    bardaga dokulmesi, shakere dokulmesi, yere dokulmesi hepsi gercekteki gibi farkli
+    olmali." They are right that one clip cannot be all three, and the reason is
+    physical: what you hear when you pour is not the liquid, it is THE VESSEL. A
+    glass is a hard, open, resonant tube, so it rings around 700 Hz and the ring is
+    bright and clear.
+
+    The other half of "multi-stage" is handled at the call site rather than here: the
+    loop's PITCH rises as the glass fills, because the air column above the liquid
+    gets shorter and its resonance climbs. That rise is the single most recognisable
+    thing about filling a vessel, and it comes free from HoldLoop's energy parameter.
+    """
+    d = 1.20
+    x = liquid(d, 'pg', low=380.0, high=3400.0, bubbles=1.1, thickness=0.5)
+    # The glass's own air column, excited by the stream.
+    body = bandpass(noise(d, 'pg_body', 'pink'), 700.0, 3.0) * 0.5
+    return lowpass(x + body, 7000.0)
+
+
+def s_pour_tin():
+    """HELD LOOP: the same spirit going into a METAL TIN.
+
+    Steel is not glass: it is stiffer, it damps far faster, and its ring is lower and
+    duller with a metallic edge rather than a clear tone. A shaker also has a much
+    narrower mouth, so the stream breaks up less and there are fewer bubbles. Side by
+    side with pour_glass this should be unmistakably a different container.
+    """
+    d = 1.20
+    x = liquid(d, 'pt', low=240.0, high=2100.0, bubbles=0.6, thickness=0.75)
+    body = bandpass(noise(d, 'pt_body', 'pink'), 430.0, 2.2) * 0.55
+    # A faint metallic sheen — the tin answering the stream.
+    sheen = bandpass(noise(d, 'pt_sheen', 'white'), 2900.0, 6.0) * 0.10
+    return lowpass(x + body + sheen, 5200.0)
+
+
+def s_pour_floor():
+    """HELD LOOP: liquid missing everything and hitting the bar.
+
+    NO RESONANCE AT ALL — that is the whole point. A vessel rings because it is a
+    closed air column; a flat surface has none, so a spill is broad, wet, splattery
+    and DEAD. It is also the sound of losing money, so it is deliberately the least
+    pleasant of the three without being harsh.
+    """
+    d = 1.10
+    x = liquid(d, 'pf', low=150.0, high=2600.0, bubbles=2.4, thickness=1.0)
+    # Splatter: short wet ticks with no pitch, scattered.
+    n = int(round(d * SR))
+    spat = np.zeros(n)
+    r = rng('pf:spat')
+    for _ in range(70):
+        at = r.uniform(0.0, 0.96) * d
+        ln = int(r.uniform(0.004, 0.014) * SR)
+        b = r.standard_normal(ln) * np.exp(-np.linspace(0, 7, ln))
+        place(spat, at, b, r.uniform(0.15, 0.5))
+    return lowpass(x + highpass(spat, 700.0) * 0.5, 4200.0)
+
+
+def s_stamp():
+    """THE STAMP LANDS (2026-08-27, the author: "damga vurma sesi daha tatmin edici
+    olmali ve damga tam vuruldugunda hissi vermeli").
+
+    The old one was a rubber head and a desk under it, and it was over in 280ms with
+    nothing to land ON. What makes a stamp satisfying is not loudness, it is the
+    SEQUENCE — and there are four parts to it, in this order:
+
+      1. the travel   a short breath of air as the head comes down
+      2. the STRIKE   the ink pad meeting paper: the hard, brief transient
+      3. the desk     the bench under it taking the blow, low and immediate
+      4. the lift     a faint suction as the rubber peels off the sheet
+
+    Part 4 is the one nobody thinks of and the one that makes it feel FINISHED: a
+    stamp you never hear leave is a stamp still pressed to the page. The strike is
+    also given real weight (-9 dBFS) because this is the night's verdict landing.
+    """
+    d = 0.55
+    out = silence(d)
+    # 1 · the travel down
+    place(out, 0.0, lowpass(noise(0.06, 'st_air', 'pink'), 1400.0)
+          * env_ar(0.06, 0.02, 0.03), 0.30)
+    # 2 · the strike — rubber and ink on paper, wide and very short
+    strike = impact(0.07, 'st_hit', tone=620.0, q=1.1, crack=0.0026) * 1.5
+    strike += paper(0.07, 'st_pap', bright=6000.0, bursts=3) * 0.8
+    place(out, 0.055, strike * env_ad(0.07, 0.0004, 0.020), 1.0)
+    # 3 · the desk taking it
+    place(out, 0.057, wood_body(0.28, 104.0, 'st_desk', amp=1.0, decay=0.070)
+          * env_ad(0.28, 0.0008, 0.070), 1.15)
+    # 4 · the lift: rubber peeling off paper
+    place(out, 0.20, highpass(noise(0.16, 'st_peel', 'pink'), 1800.0)
+          * env_ar(0.16, 0.03, 0.09), 0.30)
+    return lowpass(out, 7500.0)
+
+
+# ── voices ──────────────────────────────────────────────────────────────────
+#
+# The author asked whether a "sim language" is worth doing and what I think. My
+# answer, in code: NOT full babble. Simlish is voice-acted and cannot be synthesised
+# convincingly, and the cheap alternative — Animal Crossing's clipped chirping —
+# would fight this game's whole register. A Miami bar at 2am whose mechanic is
+# READING PEOPLE cannot have its customers chirp.
+#
+# So these are MURMURS, not speech: one to three formant-shaped syllables, low, warm
+# and short, played only where a person actually says something (they place an order,
+# they react to the drink). Formant synthesis is what makes them read as a voice
+# rather than a beep — a pulse train through three resonances IS a vowel, and moving
+# the resonances between syllables is what makes it sound like words rather than a
+# held note.
+
+
+def _voice(seconds, pitch, formants, name, breath=0.10):
+    """One syllable: a pulse train through three resonances."""
+    x = t_(seconds)
+    # A glottal pulse train, slightly drifting — a perfectly steady voice is a synth.
+    r = rng(name + ':v')
+    f0 = pitch * (1.0 + 0.02 * np.sin(2 * np.pi * 4.5 * x + r.uniform(0, 6)))
+    ph = 2 * np.pi * np.cumsum(f0) / SR
+    src = np.zeros_like(x)
+    for k in range(1, 14):
+        src += np.sin(ph * k) / (k ** 1.1)
+    src += noise(seconds, name + ':br', 'pink') * breath
+    out = np.zeros_like(x)
+    for hz, amp, q in formants:
+        out += bandpass(src, hz, q) * amp
+    return out
+
+
+def _say(syllables, name, pitch):
+    """A short utterance: a few syllables with a gap between them."""
+    total = sum(s[0] for s in syllables) + 0.05 * len(syllables)
+    out = silence(total + 0.10)
+    at = 0.02
+    # The vowel shapes, roughly: [a] [e] [o] [u] — three resonances each.
+    VOWELS = {
+        'a': [(730.0, 1.0, 7.0), (1090.0, 0.45, 9.0), (2440.0, 0.16, 11.0)],
+        'e': [(530.0, 1.0, 7.0), (1840.0, 0.40, 9.0), (2480.0, 0.18, 11.0)],
+        'o': [(570.0, 1.0, 6.0), (840.0, 0.40, 8.0), (2410.0, 0.10, 11.0)],
+        'u': [(300.0, 1.0, 6.0), (870.0, 0.30, 8.0), (2240.0, 0.08, 11.0)],
+    }
+    for k, (dur, vowel, bend) in enumerate(syllables):
+        v = _voice(dur, pitch * bend, VOWELS[vowel], '%s%d' % (name, k))
+        v = v * env_ar(dur, dur * 0.22, dur * 0.42)
+        place(out, at, v, 1.0 - 0.12 * k)
+        at += dur + 0.05
+    return lowpass(out, 3400.0)
+
+
+def s_voice_order():
+    """A customer saying what they want. Two syllables, level then falling — the
+    shape of a statement, not a question."""
+    return _say([(0.13, 'a', 1.0), (0.11, 'o', 0.88)], 'vo', 165.0)
+
+
+def s_voice_happy():
+    """Pleased. Two syllables RISING, and a little brighter."""
+    return _say([(0.11, 'e', 1.0), (0.13, 'a', 1.18)], 'vh', 190.0)
+
+
+def s_voice_upset():
+    """Not pleased. One syllable, low, falling away."""
+    return _say([(0.20, 'u', 1.0)], 'vu', 132.0)
+
+
+def s_voice_greet():
+    """Someone taking a stool. Short, low, barely a word."""
+    return _say([(0.10, 'o', 1.0)], 'vg', 150.0)
+
+
+def s_screen_on():
+    """A screen coming up — the market tablet, the night's boards. A short filtered
+    rise with a touch of the house synth under it, so the CHROME has a voice of its
+    own distinct from the room's foley."""
+    d = 0.30
+    out = silence(d)
+    place(out, 0.0, bandpass(noise(0.20, 'so_n', 'pink'), 1500.0, 1.6)
+          * env_ar(0.20, 0.03, 0.12), 0.7)
+    place(out, 0.02, analog(0.24, 440.0, 'so_s', voices=2, cut0=2400.0, cut1=900.0)
+          * env_ad(0.24, 0.008, 0.075), 0.5)
+    return lowpass(out, 6000.0)
+
+
+def s_screen_off():
+    """The same screen going away — the shape reversed, and darker."""
+    d = 0.28
+    out = silence(d)
+    place(out, 0.0, analog(0.22, 330.0, 'sf_s', voices=2, cut0=1600.0, cut1=520.0)
+          * env_ad(0.22, 0.006, 0.070), 0.5)
+    place(out, 0.01, bandpass(noise(0.18, 'sf_n', 'pink'), 1000.0, 1.6)
+          * env_ar(0.18, 0.02, 0.11), 0.6)
+    return lowpass(out, 4000.0)
+
+
 # name -> (builder, level, loop?, drive)
 BANK = {
     'click':          (s_click,         'tick',    False, 1.0),
@@ -907,7 +1138,6 @@ BANK = {
     'grain_pinch':    (s_grain_pinch,   'light',   False, 1.0),
     'rim_turn':       (s_rim_turn,      'loop',    True,  1.0),
     'rim_done':       (s_rim_done,      'light',   False, 1.0),
-    'pour_loop':      (s_pour_loop,     'loop',    True,  1.0),
     'tap_pull':       (s_tap_pull,      'loop',    True,  1.0),
     'shake_loop':     (s_shake_loop,    'loop',    True,  1.1),
     'stir_loop':      (s_stir_loop,     'loop',    True,  1.0),
@@ -917,8 +1147,16 @@ BANK = {
     'head_settle':    (s_head_settle,   'light',   False, 1.0),
     'drain':          (s_drain,         'body',    False, 1.0),
     'blowout':        (s_blowout,       'moment',  False, 1.0),
+    'pour_glass':     (s_pour_glass,    'loop',    True,  1.0),
+    'pour_tin':       (s_pour_tin,      'loop',    True,  1.0),
+    'pour_floor':     (s_pour_floor,    'loop',    True,  1.0),
+    'voice_order':    (s_voice_order,   'light',   False, 1.0),
+    'voice_happy':    (s_voice_happy,   'light',   False, 1.0),
+    'voice_upset':    (s_voice_upset,   'light',   False, 1.0),
+    'voice_greet':    (s_voice_greet,   'light',   False, 1.0),
+    'screen_on':      (s_screen_on,     'light',   False, 1.0),
+    'screen_off':     (s_screen_off,    'light',   False, 1.0),
     'glass_pickup':   (s_glass_pickup,  'light',   False, 1.0),
-    'beer_spill':     (s_beer_spill,    'body',    False, 1.0),
     'pour_cutoff':    (s_pour_cutoff,   'light',   False, 1.0),
     'verdict_good':   (s_verdict_good,  'body',    False, 1.0),
     'verdict_bad':    (s_verdict_bad,   'light',   False, 1.0),
@@ -931,8 +1169,7 @@ BANK = {
     'synth_swell':    (s_synth_swell,   'bed',     False, 1.0),
     'curtain':        (s_curtain,       'light',   False, 1.0),
     'order_ready':    (s_order_ready,   'light',   False, 1.0),
-    'prompt_up':      (s_prompt_up,     'light',   False, 1.0),
-    'stamp':          (s_stamp,         'body',    False, 1.0),
+    'stamp':          (s_stamp,         'weight',  False, 1.0),
     'printer_feed':   (s_printer_feed,  'loop',    True,  1.0),
     'bowl_down':      (s_bowl_down,     'body',    False, 1.0),
     'dish_down':      (s_dish_down,     'light',   False, 1.0),
@@ -951,7 +1188,7 @@ BANK = {
     'bill_slip':      (s_bill_slip,     'body',    False, 1.0),
     'day_open':       (s_day_open,      'moment',  False, 1.0),
     'day_close':      (s_day_close,     'moment',  False, 1.0),
-    'ambience_loop':  (s_ambience_loop, 'bed',     True,  1.0),
+    'ambience_loop':  (s_ambience_loop, 'bed',     True,  1.0),   # music, not a hum
 }
 
 

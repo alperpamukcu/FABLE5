@@ -198,6 +198,8 @@ namespace LastCall.UI
                              _shakerLoopWanted == "shake_loop" ? 0.9f : 0.8f,
                              _shakerLoopWanted == "shake_loop" ? (float)_shakeEnergy
                            : _shakerLoopWanted == "stir_loop" ? (float)_stirEnergy
+                           // The tin rises as it fills, exactly as the glass does.
+                           : _shakerLoopWanted == "pour_tin" ? (float)run.Glass.FillFraction
                            : -1f);
             }
 
@@ -208,7 +210,8 @@ namespace LastCall.UI
                 UpdateServeStepCard(run); PushServeDone(run);
                 // One loop source, driven once per frame from whatever poured (P17): the tin
                 // and the hand bottle set the flag, and neither can stop the other's sound.
-                Sfx.HoldLoop(_servePouringNow ? "pour_loop" : null, 0.7f);
+                Sfx.HoldLoop(_servePouringNow ? "pour_glass" : null, 0.7f,
+                             _servePouringNow ? (float)run.ServingGlass.FillFraction : -1f);
             }
 
             if (_stage == Stage.Tap) UpdateTap(run);

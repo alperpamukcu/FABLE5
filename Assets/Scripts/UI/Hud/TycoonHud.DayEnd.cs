@@ -1413,7 +1413,7 @@ namespace LastCall.UI
             _slideDur = 0.3f;
             _slideT = 0f;
             _slideOut = true;
-            Sfx.Play("whoosh", 0.7f);
+            Sfx.Play("screen_off", 0.75f);
         }
 
         /// <summary>Puts whatever was moving back where it belongs. Any new movement starts
@@ -2252,7 +2252,7 @@ namespace LastCall.UI
         {
             if (_closingAsk == null) { PlayTabletOut(); return; }   // never trap the player
             _closingAskLine.text = worry;
-            Sfx.Play("prompt_up", 0.7f);
+            Sfx.Play("screen_on", 0.7f);
             _closingAsk.gameObject.SetActive(true);
             _closingAsk.SetAsLastSibling();
             Sfx.Play("key_press", 0.5f);

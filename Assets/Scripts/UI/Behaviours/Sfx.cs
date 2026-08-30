@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace LastCall.UI
@@ -106,6 +106,7 @@ namespace LastCall.UI
 
         private void Build()
         {
+            EnsureListener();
             _voices = new AudioSource[OneShotVoices];
             for (int i = 0; i < OneShotVoices; i++)
             {
@@ -118,6 +119,31 @@ namespace LastCall.UI
             _loop.loop = true; _loop.playOnAwake = false;
         }
 
+        /// <summary>
+        /// THE ROOM HAD NO EARS (2026-08-27, and it is why none of this was audible).
+        ///
+        /// The author: "oyun içi sesleri play modda duyamıyorum." Everything measured
+        /// healthy — the Game view's mute off, AudioListener.volume 1, PlayerPrefs
+        /// unmuted, the sources genuinely playing at the right levels — because every
+        /// one of those is about the SENDING side. Unity renders no audio at all without
+        /// an AudioListener, and the scene had exactly zero: FindObjectsByType returned
+        /// LISTENERS=0, and the Main Camera carried none. A whole sound bank was playing
+        /// into a room with no microphone in it.
+        ///
+        /// The listener belongs on the camera and this class also puts it there when the
+        /// scene has one — but it is guaranteed HERE, because Sfx is the one object that
+        /// exists whenever a sound is asked for, in the real scene and in the test
+        /// scenes alike. A second listener would draw a warning every frame, so this only
+        /// ever fills a hole; it never adds one beside an existing pair of ears.
+        /// </summary>
+        private void EnsureListener()
+        {
+            if (FindFirstObjectByType<AudioListener>(FindObjectsInactive.Include) != null) return;
+            var cam = Camera.main;
+            var host = cam != null ? cam.gameObject : gameObject;
+            host.AddComponent<AudioListener>();
+        }
+
         private AudioClip Clip(string name)
         {
             if (_clips.TryGetValue(name, out var c)) return c;
@@ -128,7 +154,13 @@ namespace LastCall.UI
 
         /// <summary>One-shot, with a whisper of deterministic pitch wobble so five clinks in
         /// a row read as five glasses rather than a sampler.</summary>
-        public static void Play(string name, float volume = 1f)
+        /// <param name="pitch">
+        /// A deliberate pitch, where the CALLER knows something the sampler does not —
+        /// which of six stools is speaking, for instance. Left at 0 the usual whisper of
+        /// deterministic wobble applies instead, so five clinks in a row read as five
+        /// glasses rather than one sample played five times.
+        /// </param>
+        public static void Play(string name, float volume = 1f, float pitch = 0f)
         {
             var i = Instance;
             var clip = i.Clip(name);
@@ -136,12 +168,12 @@ namespace LastCall.UI
             var v = i._voices[i._next];
             i._next = (i._next + 1) % OneShotVoices;
             i._jitter = (i._jitter * 73 + 41) % 97;
-            v.pitch = 0.97f + 0.06f * (i._jitter / 96f);
+            v.pitch = pitch > 0f ? pitch : 0.97f + 0.06f * (i._jitter / 96f);
             v.PlayOneShot(clip, volume * Sound.Effective);
         }
 
         /// <summary>
-        /// Starts (or keeps) the held action loop — "pour_loop", "shake_loop", "stir_loop",
+        /// Starts (or keeps) the held action loop — "pour_glass", "pour_tin", "shake_loop",
         /// "tap_pull", "rim_turn" — and stops it when <paramref name="name"/> is null.
         ///
         /// THE ENERGY REACHES THE SOUND NOW (2026-08-27). This took a name and a volume, so

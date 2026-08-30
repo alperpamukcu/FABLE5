@@ -482,6 +482,26 @@ namespace LastCall.UI
         /// read and cleared once a frame by the rail's step. One loop source, one
         /// decider — the tin bench's rule, applied to the counter.</summary>
         private bool _rimLoopWanted;
+
+        /// <summary>
+        /// One customer saying one thing. The SEAT decides the pitch, so the six stools
+        /// carry six voices from four clips and a given drinker sounds like themselves
+        /// every night. The spread is deliberately narrow (0.86..1.16): wider than this
+        /// and the low seats read as a giant while the high ones read as a cartoon, and
+        /// the murmur stops being a person in a bar.
+        /// </summary>
+        private void SpeakSeat(int seat, string clip, float volume)
+        {
+            // A murmur is not a fanfare: if the room already has a voice in the air it
+            // waits rather than talking over itself, because two of these at once is
+            // babble and babble is what this deliberately is not.
+            if (Time.unscaledTime - _lastVoiceAt < VoiceGap) return;
+            _lastVoiceAt = Time.unscaledTime;
+            Sfx.Play(clip, volume, 0.86f + 0.06f * (seat % 6));
+        }
+
+        private float _lastVoiceAt;
+        private const float VoiceGap = 0.28f;
         private float _grainCarried;
         private const float GrainEvery = 26f;     // units of travel between crystals
         private const float GrainLife = 0.55f;
@@ -1604,6 +1624,8 @@ namespace LastCall.UI
                     if (v.Visit.Paid > 0) TabFloat(i, v.Visit);
                     if (v.Visit.Paid > 0) Sfx.Play("cash");
                     Sfx.Play(!v.ExitStorm && v.Visit.Satisfaction >= 0.55 ? "cheer_sfx" : "upset_sfx", 0.6f);
+                SpeakSeat(v.Index, !v.ExitStorm && v.Visit.Satisfaction >= 0.55
+                          ? "voice_happy" : "voice_upset", 0.75f);
                     // And the body answers before it leaves (P15/D5): a cheer or a slump on
                     // the stool. This is where the emotional tell lives now the stat rows
                     // left the card — skipped cleanly while the clips have no frames yet.
@@ -1955,7 +1977,11 @@ namespace LastCall.UI
                 bool stillWalking = view.WalkT < 1f;
                 view.WalkT = Mathf.Min(1f,
                     view.WalkT + Time.deltaTime * WalkSpeed * view.WalkPace / dist);
-                if (stillWalking && view.WalkT >= 1f) Sfx.Play("stool_take", 0.7f);
+                if (stillWalking && view.WalkT >= 1f)
+                {
+                    Sfx.Play("stool_take", 0.7f);
+                    SpeakSeat(view.Index, "voice_greet", 0.55f);
+                }
                 view.Root.anchoredPosition =
                     new Vector2(Mathf.Lerp(entryX, view.SeatX, view.WalkT), SeatLineY);
                 view.Group.alpha = Mathf.Clamp01(view.WalkT * 4f);
@@ -2053,6 +2079,7 @@ namespace LastCall.UI
             {
                 view.OrderAnimLeft = OrderAnimSeconds;
                 Sfx.Play("order_ready", 0.6f);
+                SpeakSeat(view.Index, "voice_order", 0.7f);
             }
             view.WasOrdered = ordered;
 

@@ -51,7 +51,7 @@ LEVELS = {
     'body':    -13.0,   # glass down, cap seating, a bottle set on wood
     'weight':   -9.0,   # a door, the cellar, a tin capped
     'moment':   -6.0,   # cash, a served drink, a star
-    'bed':     -22.0,   # ambience
+    'bed':     -26.0,   # the music bed — quieter than the old hum on purpose
     'loop':    -16.0,   # held loops: pour, shake, stir, tap
 }
 

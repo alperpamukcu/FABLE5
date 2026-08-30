@@ -527,6 +527,55 @@ sepete tek `cash` çalıyordu, oysa fiş zaten kalem başı bir satır düşür�
 kendi gecikmesiyle sikke); gece sonunun damgası bankanın EN KÜÇÜK sesini çalıyordu; ve
 bütün yapımı bitiren tek basış olan **SERVE IT tamamen sessizdi**.
 
+### 9.13 · Odanın kulakları yoktu, ve uğultu müziğe döndü (2026-08-27)
+
+**ÇEKİRDEK HATA: SAHNEDE HİÇ `AudioListener` YOKTU.** Yazar "oyun içi sesleri play modda
+duyamıyorum" dedi. Ölçüm zinciri BAŞTAN SONA sağlıklı görünüyordu — Game view'ın mute'u
+kapalı, `AudioListener.volume` 1, PlayerPrefs temiz, kaynaklar doğru seviyelerde
+GERÇEKTEN çalıyor — çünkü bunların hepsi **GÖNDEREN** taraf. Unity dinleyicisiz hiçbir ses
+render etmez ve sahnede tam olarak sıfır tane vardı (`LISTENERS=0`, Main Camera'da da yok).
+Koca bir ses bankası mikrofonsuz bir odaya çalıyormuş. **DERS:** alıcı tarafı doğrula,
+göndereni değil. Çözüm iki katmanlı: `DebugSceneCreator` kameraya koyuyor (konvansiyonel
+yer), `Sfx.EnsureListener` çalışma anında **yoksa** ekliyor (her sahnede ağ). Kanıt:
+`AudioListener.GetOutputData` tepe değeri 0.000 → **0.088**.
+
+**UĞULTU KALDIRILDI, YERİNE MÜZİK KONDU** (yazar: "oyunda uğultu sesi var bu gerçekçi ve iyi
+değil ... arka planda ortama uygun alttan müzik çalmalı"). Haklıydı ve kusur benimdi:
+eski yatak oda tonuna ek olarak neon trafosunu taklit eden **100 ve 120 Hz'de iki sinüs**
+taşıyordu. Sabit alçak sinüs bir DRONE'dur — başlangıcı, hareketi ve sebebi yoktur, ve bir
+gece boyunca atmosfer olmaktan çıkıp tınnitusa dönüşür. Yerine **müzik**: A minörde
+i–VI–III–VII, akor başına sekiz saniye, toplam **32 saniyelik** döngü (bir müşterinin
+ziyareti içinde tekrar etmiyor), altında bas notası ve çok altında oda tonu. **−26 dBFS**,
+yani eski yataktan DAHA SESSİZ: fark edilen bir yatak fazla yüksektir.
+
+**DÖKME ÜÇ KAPA AYRILDI** (yazar: "suyun bardağa dökülmesi shakere dökülmesi yere
+dökülmesi hepsi gerçektiki gibi farklı olmalı"). Fiziksel gerekçe: dökarken duyduğun şey
+sıvı değil, **KAPTIR**. `pour_glass` sert, açık, ~700 Hz'de berrak çınlayan bir tüp;
+`pour_tin` çelik — daha alçak, çok daha hızlı sönen, madeni parlaklıklı, dar ağız olduğu
+için daha az kabarcık; `pour_floor` **hıç rezonanssız** — düz yüzeyin hava sütunu yoktur, o
+yüzden geniş, ıslak, sıçramalı ve ÖLÜ. "Çok aşamalı"nın ikinci yarısı çağrı noktasında:
+döngünün **perdesi doluluk oranıyla yükseliyor**, çünkü sıvının üstündeki hava sütunu
+kısalıyor — bir kabın dolduğunu anlatan tek en tanıdık şey budur. Bira taşarken **döngüyü
+dökülme KAZANIYOR**: oyuncunun en çok duyması gereken ve hâlâ düzeltebileceği tek şey o.
+
+**DAMGA DÖRT PARÇA OLDU** (yazar: "damga tam vurulduğunda hissi vermeli"). Tatmin
+yükseklikten değil **SIRADAN** gelir: (1) inerken hava, (2) VURUŞ — mürekkep yastığının
+kâğıda değmesi, (3) altındaki tezgâhın darbeyi alması, (4) **kalkarken lastik sıyrılması**.
+Dördüncüsü kimsenin aklına gelmeyen ve işi BİTİREN parça: kalktığını duymadığın damga hâlâ
+sayfaya basılı duruyordur.
+
+**MÜŞTERİLERİN DİLİ — yazar sordu, cevap:** Simlish DEĞİL. Simlish seslendirilmiştir,
+sentezlenemez; yerine geçen kırpılmış cıvıltı ise bu oyunun kütüğüyle kavga eder — mekaniği
+İNSAN OKUMAK olan sabah 2 Miami barının müşterileri cıvıldayamaz. Onun yerine **MIRILTI**:
+birüç formant biçimli hece, alçak ve sıcak, saniyenin üçte birinde biten — ve yalnız
+insanın gerçekten bir şey söylediği anlarda (sipariş, tepki, oturma), sürekli değil.
+Formant sentezi ses etkisini veren şey: darbe dizisi + üç rezonans = sesli harf, ve
+heceler arası rezonans değişimi tutulan notayı içinde kelime olan bir şeye çevirir.
+**PERDEYİ TABURE BELİRLİYOR**, yani dört klip altı farklı ses veriyor ve 2 numaralı
+taburedeki içici her gelişinde aynı insan gibi duyuluyor. Yayılım bilerek dar
+(0.86–1.16): daha genişi alt tabureleri deve, üst tabureleri çizgi filme çevirirdi.
+Üst üste konuşma yok — havada ses varsa yenisi beklir, çünkü iki mırıltı birden gevezeliktir.
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

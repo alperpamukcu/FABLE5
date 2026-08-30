@@ -698,7 +698,7 @@ namespace LastCall.UI
                 _shakerFluid.ClearStreamColor();
             }
 
-            if (pourNow) _shakerLoopWanted = "pour_loop";   // the stage frame drives the source
+            if (pourNow) _shakerLoopWanted = "pour_tin";    // the stage frame drives the source
             if (pourNow) RefreshShakerMixBar(run);          // the gauge follows the stream
             _pouring = pourNow;
 

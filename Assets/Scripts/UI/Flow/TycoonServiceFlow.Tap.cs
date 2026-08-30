@@ -729,16 +729,26 @@ namespace LastCall.UI
             _pouringNow = pouring;
             // The tap has a voice now (2026-08-13): the pull runs the same held pour loop the
             // bench does, a shade quieter — a running tap you cannot hear reads as a broken one.
-            Sfx.HoldLoop(pouring ? "tap_pull" : null, 0.6f);
+            // THE SPILL WINS THE CHANNEL (2026-08-27). There is one held-loop source in
+            // the whole game, so a frame that is both pouring AND spilling has to pick,
+            // and it picks the spill: beer going on the floor is the thing the player
+            // most needs to hear, and it is the only one of the two they can still fix.
+            // The pint's own pull rises as the glass fills, the same way the bench's two
+            // pours do — the air column above the beer shortens as it goes in.
+            Sfx.HoldLoop(_spillingNow ? "pour_floor" : pouring ? "tap_pull" : null,
+                         _spillingNow ? 0.75f : 0.6f,
+                         _spillingNow ? -1f
+                       : pouring ? (float)run.ServingGlass.FillFraction : -1f);
             if (pouring)
             {
                 double before = run.ServingGlass.TotalVolume + run.ServingGlass.Head;
                 run.PourTilted(dt, _glassTilt);
-                if (run.SpilledBeer > _spilledLast + 0.04)
-                {
-                    _spilledLast = run.SpilledBeer;
-                    Sfx.Play("beer_spill", 0.6f);
-                }
+                // Spilling is a STATE, not an event: the beer keeps running past the
+                // rim for as long as the glass is tipped, so the sound is held for as
+                // long as it is happening. The one-shot splash it replaced fired on a
+                // threshold and said nothing about how long the loss went on.
+                _spillingNow = run.SpilledBeer > _spilledLast + 0.0004;
+                _spilledLast = run.SpilledBeer;
 
                 // A stream from the faucet's lip, falling into the mouth wherever it now is.
                 var toMouth = mouth - spout;
@@ -1000,5 +1010,9 @@ namespace LastCall.UI
         /// <summary>How much had been spilled last time the splash was heard. SpilledBeer
         /// is monotonic, so this is the only edge available.</summary>
         private double _spilledLast;
+
+        /// <summary>Set on any frame the spill total grew; read once per frame by the
+        /// stage so the one loop source is decided in a single place.</summary>
+        private bool _spillingNow;
     }
 }
