@@ -89,38 +89,68 @@ def paper(seconds, name, bright=5200.0, bursts=7):
     return lowpass(highpass(out, 900.0), bright)
 
 
-def liquid(seconds, name, low=280.0, high=2600.0, bubbles=0.0, thickness=0.5):
-    """Running liquid: band-limited noise whose loudness breathes, plus optional
-    bubbles. The breathing is what separates a pour from a hiss — a real stream is
-    never steady, it wobbles as it breaks up."""
+def liquid(seconds, name, low=280.0, high=2600.0, bubbles=0.0, thickness=0.5,
+           glug=0.0, vessel=0.0):
+    """Running liquid.
+
+    REBUILT 2026-08-27 (the author: "su dokme sesi ... gercekci degil"). The old one
+    was band-limited noise with a slow wobble and a scattering of quiet bubbles, and
+    it hissed. The mistake was treating the STREAM as the sound.
+
+    It is not. A stream of water is nearly silent — what you hear when someone pours
+    is AIR: pockets of it dragged under the surface and collapsing. Each collapse is
+    a little resonator whose pitch RISES sharply as the bubble shrinks, and a crowd
+    of those is the "glug" that makes water unmistakable. Get the bubbles wrong and
+    no amount of stream noise will save it; get them right and the stream is almost
+    a garnish.
+
+    So `glug` is now the main parameter. Bubbles are LOUDER, far more numerous, and
+    they cluster — real pouring gurgles in bursts as the neck of the bottle lets air
+    back in, rather than fizzing evenly. `vessel` adds the container's own resonance
+    to the bubbles, which is what makes the same water sound different in a glass, a
+    tin and on the floor.
+    """
     n = int(round(seconds * SR))
     x = t_(seconds)
     core = noise(seconds, name + ':liq', 'pink')
     core = lowpass(highpass(core, low), high)
-    # Two slow, non-harmonic wobbles so the breathing never falls into a rhythm.
     breathe = (1.0
                + 0.30 * np.sin(2 * np.pi * 3.1 * x)
                + 0.18 * np.sin(2 * np.pi * 7.7 * x + 1.1)
                + 0.10 * np.sin(2 * np.pi * 13.3 * x + 2.3))
-    out = core * breathe * (0.6 + thickness * 0.5)
+    out = core * breathe * (0.6 + thickness * 0.5) * 0.55
+    r = rng(name + ':bub')
+
+    # THE GLUG. Bursts, not an even sprinkle: a bottle gurgles when air gets back in,
+    # so the bubbles arrive in clumps with quieter gaps between them.
+    if glug > 0:
+        bursts = max(1, int(seconds * 7 * glug))
+        for b in range(bursts):
+            at0 = r.uniform(0.0, max(seconds - 0.10, 0.01))
+            for _ in range(int(r.uniform(3, 8))):
+                at = at0 + r.uniform(0.0, 0.075)
+                if at >= seconds - 0.02:
+                    continue
+                f0 = r.uniform(180.0, 620.0)
+                ln = int(r.uniform(0.018, 0.055) * SR)
+                xx = np.arange(ln) / SR
+                # Minnaert: the bubble shrinks, so its pitch climbs steeply.
+                ph = 2 * np.pi * np.cumsum(f0 * (1.0 + 9.0 * xx)) / SR
+                body = np.sin(ph) * np.exp(-xx / 0.014)
+                if vessel > 0:
+                    body = body + np.sin(ph * 1.6) * np.exp(-xx / 0.009) * vessel * 0.4
+                place(out, at, body, r.uniform(0.35, 0.95) * glug)
+
+    # The finer fizz that rides on top of any pour.
     if bubbles > 0:
-        r = rng(name + ':bub')
-        count = int(bubbles * seconds * 30)
-        for _ in range(count):
-            at = int(r.uniform(0.0, 0.96) * n)
-            f = r.uniform(420.0, 1500.0)
-            ln = int(r.uniform(0.010, 0.035) * SR)
-            if at + ln >= n:
-                continue
+        for _ in range(int(bubbles * seconds * 26)):
+            at = r.uniform(0.0, max(seconds - 0.04, 0.01))
+            f = r.uniform(700.0, 2200.0)
+            ln = int(r.uniform(0.006, 0.020) * SR)
             xx = np.arange(ln) / SR
-            # A bubble is a pitch that RISES as it collapses.
-            ph = 2 * np.pi * np.cumsum(f * (1 + 5 * xx)) / SR
-            place(out, at / SR, np.sin(ph) * np.exp(-xx / 0.008) * r.uniform(0.05, 0.16))
+            ph = 2 * np.pi * np.cumsum(f * (1 + 7 * xx)) / SR
+            place(out, at, np.sin(ph) * np.exp(-xx / 0.006), r.uniform(0.05, 0.18))
     return out
-
-
-# ── the bank ────────────────────────────────────────────────────────────────
-# Each entry returns a finished float array; `render` is called by BUILD.
 
 def s_click():
     """The UI tick. Everything in this game is a physical plate, so the tick is a
@@ -176,10 +206,42 @@ def s_whoosh():
 
 
 def s_page_turn():
-    """One sheet of a bar menu turning over."""
-    d = 0.26
-    return paper(d, 'page', bright=4800.0, bursts=6) * env_ar(d, 0.006, 0.10)
+    """A PAGE GOING OVER, WHICH IS A JOURNEY (2026-08-27, the author: "menu sayfa
+    degistirme sesi kotu").
 
+    The old one was six noise bursts scattered over a quarter-second — the texture of
+    paper with none of the SHAPE of a page turning. A page does three things and the
+    middle one is the part everybody recognises:
+
+      1. the LIFT   a corner peeling off the sheet below it: a short rising rustle
+      2. the ARC    the sheet travelling through the air. THIS is the sound people
+                    mean by "page turn" — a broad whoosh whose brightness falls as
+                    the paper slows, and it lasts a good fifth of a second
+      3. the LAND   the sheet meeting the stack: a soft, dull slap with no ring
+
+    Paper has no pitch anywhere in it, so all three are filtered noise — but they are
+    filtered DIFFERENTLY and they follow each other, which is what makes it a page
+    rather than a handful of crackle.
+    """
+    d = 0.46
+    out = silence(d)
+    # 1 · the corner peeling
+    place(out, 0.0, highpass(noise(0.10, 'pg_lift', 'white'), 3000.0)
+          * env_ar(0.10, 0.02, 0.05), 0.45)
+    # 2 · the arc: a band of air sliding down as the sheet slows
+    n = int(round(0.24 * SR))
+    air = noise(0.24, 'pg_arc', 'pink')
+    bright = bandpass(air, 2600.0, 1.0)
+    dark = bandpass(air, 900.0, 1.0)
+    k = np.linspace(0.0, 1.0, n) ** 0.8
+    arc = bright * (1.0 - k) + dark * k
+    # It is loudest in the middle of the swing, where the sheet is moving fastest.
+    place(out, 0.055, arc * np.sin(np.pi * np.linspace(0, 1, n)) ** 0.8, 1.0)
+    # 3 · landing on the stack — dull, and the only impact in it
+    land = lowpass(noise(0.12, 'pg_land', 'white'), 2400.0)
+    land = land + lowpass(noise(0.12, 'pg_land2', 'pink'), 700.0) * 0.8
+    place(out, 0.28, land * env_ad(0.12, 0.0016, 0.026), 0.9)
+    return lowpass(out, 8000.0)
 
 def s_book_open():
     """The counter book opening: a wooden cover, then pages settling."""
@@ -220,38 +282,110 @@ def s_door():
 
 
 def s_stool_take():
-    """Someone settling onto a stool: cloth and a little wooden creak."""
-    d = 0.30
-    cloth = lowpass(noise(d, 'stool_c', 'pink'), 1300.0) * env_ar(d, 0.03, 0.14)
-    creak = wood_body(0.18, 240.0, 'stool_w', amp=0.5, decay=0.040)
-    out = cloth * 0.8
-    at = int(0.09 * SR)
-    place(out, at / SR, creak, env_ad(0.18, 0.004, 0.040))
-    return out
+    """SOMEONE PUTTING THEIR WEIGHT ON A BAR STOOL (2026-08-27, the author: "masaya
+    musteri oturma sesi kotu").
 
+    The old one was cloth and a single wooden ring, which is a person brushing past
+    furniture. Sitting down is WEIGHT ARRIVING, and weight arriving on a frame does
+    something a struck object never does: the creak BENDS. A joint under a growing
+    load rises in pitch as it tightens, and that glide is the difference between a
+    stool taking someone and a stick being tapped.
+
+    Four parts, all overlapping rather than in a row, because a body lands as one
+    movement: the cushion compressing (a soft low thump), the clothing settling, the
+    frame's joints taking up under the load (the rising creak), and the footrest
+    taking a shoe.
+    """
+    d = 0.70
+    out = silence(d)
+    # The seat compressing — low, soft, no ring at all.
+    place(out, 0.0, lowpass(noise(0.20, 'sit_cush', 'pink'), 420.0)
+          * env_ad(0.20, 0.006, 0.055), 1.0)
+    place(out, 0.005, modal(0.22, [(96.0, 1.0, 0.045), (148.0, 0.4, 0.030)], 'sit_thump')
+          * env_ad(0.22, 0.004, 0.045), 0.9)
+    # Clothing.
+    place(out, 0.02, bandpass(noise(0.30, 'sit_cloth', 'pink'), 2200.0, 1.1)
+          * env_ar(0.30, 0.04, 0.16), 0.55)
+    # THE CREAK THAT BENDS: a joint tightening under load climbs as it takes up.
+    n = int(round(0.34 * SR))
+    x = np.arange(n) / SR
+    f = 300.0 + 190.0 * (x / 0.34) ** 0.7
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    creak = np.zeros(n)
+    for k in (1, 2, 3):
+        creak += np.sin(ph * k) / (k * 1.6)
+    # A real creak is a stick-slip judder, not a clean glide.
+    creak *= 0.55 + 0.45 * np.sin(2 * np.pi * 34.0 * x)
+    place(out, 0.10, lowpass(creak, 2600.0) * env_ar(0.34, 0.06, 0.18), 0.85)
+    # A shoe finding the footrest.
+    place(out, 0.30, (impact(0.12, 'sit_foot', tone=700.0, q=1.8, crack=0.0028)
+                      + metal_body(0.12, 260.0, 'sit_rest', amp=0.5, decay=0.030))
+          * env_ad(0.12, 0.0008, 0.028), 0.9)
+    return lowpass(out, 5200.0)
 
 def s_cellar_open():
-    """The counter's cellar: a wooden door on a runner, sliding then stopping."""
-    d = 0.46
-    run = bandpass(noise(0.34, 'cell_r', 'pink'), 620.0, 1.4) * env_ar(0.34, 0.04, 0.10)
-    out = silence(d)
-    place(out, 0.0, run, 0.9)
-    stop = wood_body(0.14, 130.0, 'cell_s', decay=0.045) * env_ad(0.14, 0.001, 0.045)
-    at = int(0.31 * SR)
-    place(out, at / SR, stop, 1.1)
-    return lowpass(out, 3400.0)
+    """THE CELLAR IS A ROLLER SHUTTER, NOT A DRAWER (2026-08-27, the author:
+    "backbar kapaginin acilma sesi kisa ve kotu").
 
+    They are right twice. It WAS short — 0.46s — and it was the wrong object: a band
+    of noise and a wooden knock, which is a drawer sliding and stopping. What is
+    actually over the cellar is a metal roller: dozens of slats running up a track,
+    and the sound of that is RHYTHMIC. Each slat crossing the guide is its own small
+    metallic tick, and the ticks come faster or slower as the shutter moves.
+
+    Two things make it read as a real one. First the rate DECELERATES — a shutter
+    thrown upward slows as it runs out of throw, so the ticks spread out toward the
+    end, and a constant rate is the giveaway of a synthesised rattle. Second the
+    whole curtain RINGS underneath: a sheet of linked metal has a body, so the ticks
+    drive a resonance rather than sitting on silence. It ends with the shutter
+    reaching its stop and the curtain ringing off.
+    """
+    d = 1.30
+    out = silence(d)
+    r = rng('roll:open')
+    # The slats, decelerating. Time is walked forward by a gap that grows.
+    at = 0.02
+    gap = 0.028
+    k = 0
+    while at < 1.02:
+        tick = impact(0.030, 'ro%d' % k, tone=r.uniform(1700, 3100), q=3.0, crack=0.0011)
+        tick += metal_body(0.030, r.uniform(700, 1150), 'rom%d' % k, amp=0.35, decay=0.012)
+        place(out, at, tick * env_ad(0.030, 0.0003, 0.010), r.uniform(0.9, 1.5))
+        at += gap
+        gap *= 1.055          # every slat takes a little longer than the last
+        k += 1
+    # The curtain itself: the ticks drive its body, so it is a sheet and not a list.
+    out = out + bandpass(out, 520.0, 1.1) * 0.55
+    # And it arrives at the top stop.
+    place(out, 1.03, (impact(0.22, 'ro_stop', tone=820.0, q=1.5, crack=0.0026) * 1.2
+                      + metal_body(0.22, 300.0, 'ro_stopm', amp=0.9, decay=0.085))
+          * env_ad(0.22, 0.0006, 0.075), 0.75)
+    return lowpass(out, 7000.0)
 
 def s_cellar_close():
-    d = 0.40
-    run = bandpass(noise(0.28, 'cellc_r', 'pink'), 560.0, 1.4) * env_ar(0.28, 0.03, 0.09)
+    """The same curtain coming down. Gravity is the difference: it ACCELERATES where
+    the opening decelerates, so the ticks crowd together toward the end, and it lands
+    harder because it arrives with the weight of the whole sheet behind it."""
+    d = 1.15
     out = silence(d)
-    place(out, 0.0, run, 0.85)
-    stop = wood_body(0.16, 112.0, 'cellc_s', decay=0.055) * env_ad(0.16, 0.001, 0.055)
-    at = int(0.25 * SR)
-    place(out, at / SR, stop, 1.25)
-    return lowpass(out, 3000.0)
-
+    r = rng('roll:close')
+    at = 0.02
+    gap = 0.058
+    k = 0
+    while at < 0.88:
+        tick = impact(0.028, 'rc%d' % k, tone=r.uniform(1500, 2800), q=3.0, crack=0.0011)
+        tick += metal_body(0.028, r.uniform(620, 1000), 'rcm%d' % k, amp=0.35, decay=0.012)
+        place(out, at, tick * env_ad(0.028, 0.0003, 0.010), r.uniform(0.85, 1.45))
+        at += gap
+        gap *= 0.955          # falling: each slat arrives sooner than the last
+        k += 1
+    out = out + bandpass(out, 470.0, 1.1) * 0.55
+    # It meets the sill with the sheet's whole weight on it.
+    place(out, 0.90, (impact(0.26, 'rc_stop', tone=560.0, q=1.3, crack=0.0032) * 1.4
+                      + metal_body(0.26, 220.0, 'rc_stopm', amp=1.0, decay=0.10)
+                      + wood_body(0.26, 120.0, 'rc_sill', amp=0.7, decay=0.055))
+          * env_ad(0.26, 0.0006, 0.090), 1.2)
+    return lowpass(out, 5800.0)
 
 def s_bottle_open():
     """A cap coming off: the crack of the seal, then the gas."""
@@ -359,50 +493,82 @@ def s_tap_pull():
 
 
 def s_shake_loop():
-    """HELD LOOP: ice in a metal tin. This is the loudest thing a bartender does, and
-    it is ICE ON METAL — a rattle of hard knocks inside a ringing box."""
-    d = 0.52
+    """HELD LOOP: A COCKTAIL SHAKER BEING WORKED (2026-08-27, the author: "shaker
+    karistirma sesi kotu ... gercekci degil").
+
+    The old one scattered twenty-six knocks at random across half a second, and
+    random is exactly what a shake is not. A shake is a STROKE: the tin goes one way,
+    the ice slams into the end, it comes back, the ice slams into the other end. Two
+    impacts a cycle, evenly spaced, at about two and a half strokes a second — and
+    the ear reads that rhythm as a person doing work. Scattered knocks read as a
+    maraca.
+
+    Three layers over that rhythm, and the liquid is the one that was missing
+    entirely: ice hitting steel is the transient, the TIN rings between hits because
+    it is a closed metal box, and the drink inside sloshes and crashes with the ice.
+    Without the liquid it is a tin of stones.
+
+    The loop is one full stroke — out and back — so it tiles at exactly the rhythm it
+    was built on.
+    """
+    d = 0.40           # one out-and-back stroke, 2.5 per second
     n = int(round(d * SR))
     out = np.zeros(n)
-    r = rng('shake:hits')
-    # Knocks land in a loose rhythm around two shakes per loop.
-    for _ in range(26):
-        at = int(r.uniform(0.0, 0.97) * n)
-        ln = int(0.030 * SR)
-        if at + ln >= n:
-            continue
-        h = (impact(0.030, 'sh%d' % at, tone=r.uniform(1500, 3400), q=2.0, crack=0.0012)
-             + metal_body(0.030, r.uniform(380, 560), 'shm%d' % at, amp=0.4, decay=0.020))
-        place(out, at / SR, h * r.uniform(0.4, 1.0))
-    # The tin's own body, driven by the rattle.
-    out += bandpass(out, 620.0, 1.2) * 0.5
-    return lowpass(out, 8500.0)
-
+    r = rng('shake:v2')
+    # THE TWO SLAMS. Each is a cluster of cubes, not one cube — a shaker holds a
+    # handful, and they arrive a few milliseconds apart.
+    for slam, when in ((0, 0.03), (1, 0.23)):
+        for c in range(5):
+            jitter = r.uniform(0.0, 0.016)
+            hit = impact(0.045, 'sh%d_%d' % (slam, c), tone=r.uniform(1900, 3600),
+                         q=2.4, crack=0.0010)
+            hit += modal(0.045, [(r.uniform(2400, 3400), 0.5, 0.012)], 'shi%d_%d' % (slam, c))
+            place(out, when + jitter, hit * env_ad(0.045, 0.0003, 0.011),
+                  r.uniform(0.5, 1.0) * (1.0 if slam == 0 else 0.85))
+    # THE TIN. A closed steel box driven by the slams — this is what makes it a
+    # shaker rather than ice on a table.
+    out = out + bandpass(out, 560.0, 1.6) * 0.7 + bandpass(out, 1450.0, 2.4) * 0.35
+    # THE DRINK. Liquid crashing end to end with the ice, in time with the strokes.
+    x = t_(d)
+    liq = liquid(d, 'sh_liq', low=180.0, high=2400.0, bubbles=1.2, thickness=0.9)
+    swing = 0.45 + 0.55 * np.abs(np.sin(np.pi * 2.5 * x + 0.3))
+    out = out + liq * swing * 0.55
+    return lowpass(out, 8000.0)
 
 def s_stir_loop():
-    """HELD LOOP: a bar spoon circling a mixing tin. Almost the opposite of a shake —
-    a continuous ring with the spoon ticking round the wall, quiet and unhurried."""
-    d = 0.85
+    """HELD LOOP: A BAR SPOON CIRCLING A MIXING TIN.
+
+    The opposite of the shake in every way, and it has to sound like it: stirring is
+    the quiet, unhurried verb. What defines it is a single tone — the spoon's shaft
+    riding the inside wall as it goes round — which RISES AND FALLS once a
+    revolution, because the spoon is nearer the ear at the front of the circle than
+    at the back. That doppler-ish sweep is the whole character, and the old one
+    (a band of noise plus five ticks) did not have it.
+
+    Under it: ice turning over slowly, and the drink moving with the spoon rather
+    than crashing about. One revolution per loop, so the circle is continuous.
+    """
+    d = 0.62           # one revolution
     n = int(round(d * SR))
     x = t_(d)
-    # The spoon travelling: a soft band of noise moving in a circle.
-    trav = bandpass(noise(d, 'stir_t', 'pink'), 1700.0, 2.0)
-    trav = trav * (0.55 + 0.45 * np.sin(2 * np.pi * 2.35 * x))
-    out = trav * 0.5
-    # Ticks where the spoon meets the wall — twice a revolution.
-    r = rng('stir:ticks')
-    for k in range(5):
-        at = int((k / 5.0 + 0.03) * n)
-        ln = int(0.022 * SR)
-        if at + ln >= n:
-            continue
-        tick = metal_body(0.022, r.uniform(900, 1400), 'st%d' % k,
-                          amp=0.5, decay=0.014)
-        place(out, at / SR, tick, 0.55)
-    # The liquid turning with it.
-    out += liquid(d, 'stir_liq', low=240.0, high=1500.0, thickness=0.35) * 0.35
-    return lowpass(out, 7000.0)
-
+    # The spoon riding the wall: a narrow band sweeping once round.
+    src = noise(d, 'stir_ride', 'white')
+    near = bandpass(src, 2600.0, 5.0)
+    far = bandpass(src, 1200.0, 5.0)
+    k = 0.5 - 0.5 * np.cos(2 * np.pi * x / d)          # 0 at the wrap, 1 mid-circle
+    ride = near * k + far * (1.0 - k)
+    out = ride * (0.45 + 0.55 * k) * 0.55
+    # The metal it is riding on, answering faintly.
+    out = out + bandpass(out, 900.0, 2.0) * 0.45
+    # Ice turning over — a couple of soft knocks a revolution, not a rattle.
+    r = rng('stir:ice')
+    for i, when in enumerate((0.12, 0.47)):
+        kn = impact(0.040, 'sti%d' % i, tone=r.uniform(1400, 2200), q=2.6, crack=0.0014)
+        kn += modal(0.040, [(r.uniform(900, 1300), 0.4, 0.014)], 'stim%d' % i)
+        place(out, when, kn * env_ad(0.040, 0.0004, 0.013), 0.35)
+    # The drink turning with it — smooth, no bubbles, nothing breaking.
+    out = out + liquid(d, 'stir_liq', low=220.0, high=1300.0, thickness=0.35) * 0.30
+    return lowpass(out, 6500.0)
 
 def s_cap_on():
     """The lid seating on the tin: metal meeting metal, then a short ring."""
@@ -551,16 +717,42 @@ def s_patience_warn():
 
 
 def s_id_card():
-    """A licence slid out of a wallet and laid on the counter — card on wood."""
-    d = 0.26
-    x = highpass(noise(d, 'id', 'pink'), 1600.0) * env_ar(d, 0.012, 0.10)
-    x = lowpass(x, 6000.0) * 0.7
-    tap = wood_body(0.10, 300.0, 'id_t', amp=0.6, decay=0.024)
-    at = int(0.14 * SR)
-    out = x.copy()
-    place(out, at / SR, tap, env_ad(0.10, 0.0008, 0.024))
-    return out
+    """A LICENCE COMING OUT OF A WALLET (2026-08-27, the author: "kimlik gosterme
+    sesi kotu").
 
+    It was 0.26 seconds of filtered noise and a tap — a thin nothing for the single
+    most important gesture in this game. A licence handed over is three distinct
+    things and they happen in order, which is what the old one had none of:
+
+      1. the WALLET   leather opening — soft, low, no pitch
+      2. the SLIDE    the card drawn out against the leather: a friction sound that
+                      RISES in pitch as the card clears, because less of it is still
+                      gripped. That rise is the whole tell of something being drawn.
+      3. the LAY      plastic landing flat on a wooden counter — bright, short, and
+                      the only hard edge in the whole clip
+
+    A card is thin plastic, so the landing rings high and dies almost instantly:
+    nothing like the glass and metal elsewhere in the bank.
+    """
+    d = 0.62
+    out = silence(d)
+    # 1 · leather
+    place(out, 0.0, lowpass(noise(0.16, 'id_leather', 'pink'), 900.0)
+          * env_ar(0.16, 0.03, 0.09), 0.55)
+    # 2 · the card drawn out, its friction climbing as it clears
+    n = int(round(0.26 * SR))
+    sl = noise(0.26, 'id_slide', 'white')
+    lo = bandpass(sl, 1500.0, 1.5)
+    hi = bandpass(sl, 3600.0, 1.5)
+    climb = np.linspace(0.0, 1.0, n) ** 0.8
+    slide = lo * (1.0 - climb) + hi * climb
+    place(out, 0.09, slide * env_ar(0.26, 0.05, 0.10), 0.85)
+    # 3 · thin plastic meeting wood
+    lay = impact(0.14, 'id_lay', tone=2600.0, q=2.6, crack=0.0014) * 1.0
+    lay += modal(0.14, [(1950.0, 0.6, 0.016), (3400.0, 0.25, 0.010)], 'id_lay')
+    lay += wood_body(0.14, 240.0, 'id_wood', amp=0.45, decay=0.020)
+    place(out, 0.36, lay * env_ad(0.14, 0.0005, 0.024), 1.0)
+    return lowpass(out, 9000.0)
 
 def s_bill_slip():
     """The night's slip: paper coming off a roll, and a stamp landing on it."""
@@ -925,62 +1117,56 @@ def s_id_card_away():
 def s_pour_glass():
     """HELD LOOP: spirit going into a GLASS.
 
-    The author: "sivi dokulme sesi kusursuz olmali, cok asamali olmali - suyun
-    bardaga dokulmesi, shakere dokulmesi, yere dokulmesi hepsi gercekteki gibi farkli
-    olmali." They are right that one clip cannot be all three, and the reason is
-    physical: what you hear when you pour is not the liquid, it is THE VESSEL. A
-    glass is a hard, open, resonant tube, so it rings around 700 Hz and the ring is
-    bright and clear.
-
-    The other half of "multi-stage" is handled at the call site rather than here: the
-    loop's PITCH rises as the glass fills, because the air column above the liquid
-    gets shorter and its resonance climbs. That rise is the single most recognisable
-    thing about filling a vessel, and it comes free from HoldLoop's energy parameter.
+    Glugging leads and the stream follows — see `liquid`, rebuilt 2026-08-27. On top
+    of that the glass's own air column rings clear and bright around 700 Hz, because
+    a tumbler is a hard open tube and it is the most resonant of the three vessels.
+    The loop's PITCH rises with the fill at the call site: the column shortens as the
+    drink goes in, which is the other half of what the author asked for.
     """
     d = 1.20
-    x = liquid(d, 'pg', low=380.0, high=3400.0, bubbles=1.1, thickness=0.5)
-    # The glass's own air column, excited by the stream.
-    body = bandpass(noise(d, 'pg_body', 'pink'), 700.0, 3.0) * 0.5
+    x = liquid(d, 'pg', low=340.0, high=3200.0, bubbles=0.7, thickness=0.5,
+               glug=1.15, vessel=0.9)
+    body = bandpass(noise(d, 'pg_body', 'pink'), 700.0, 3.0) * 0.32
+    # The column answers the bubbles, not just the hiss — that is the glassy ring.
+    body = body + bandpass(x, 760.0, 4.5) * 0.45
     return lowpass(x + body, 7000.0)
-
 
 def s_pour_tin():
     """HELD LOOP: the same spirit going into a METAL TIN.
 
-    Steel is not glass: it is stiffer, it damps far faster, and its ring is lower and
-    duller with a metallic edge rather than a clear tone. A shaker also has a much
-    narrower mouth, so the stream breaks up less and there are fewer bubbles. Side by
-    side with pour_glass this should be unmistakably a different container.
+    Steel is stiffer than glass and damps far faster, so its answer is lower, duller
+    and shorter, with a metallic sheen instead of a clear tone. The tin's mouth is
+    also narrower, so the stream breaks up less and the glugs are FEWER and deeper —
+    a shaker fills with a low chug where a glass chatters.
     """
     d = 1.20
-    x = liquid(d, 'pt', low=240.0, high=2100.0, bubbles=0.6, thickness=0.75)
-    body = bandpass(noise(d, 'pt_body', 'pink'), 430.0, 2.2) * 0.55
-    # A faint metallic sheen — the tin answering the stream.
-    sheen = bandpass(noise(d, 'pt_sheen', 'white'), 2900.0, 6.0) * 0.10
+    x = liquid(d, 'pt', low=220.0, high=2000.0, bubbles=0.35, thickness=0.8,
+               glug=0.75, vessel=0.4)
+    body = bandpass(noise(d, 'pt_body', 'pink'), 430.0, 2.2) * 0.35
+    body = body + bandpass(x, 380.0, 3.0) * 0.5
+    sheen = bandpass(noise(d, 'pt_sheen', 'white'), 2900.0, 6.0) * 0.08
     return lowpass(x + body + sheen, 5200.0)
-
 
 def s_pour_floor():
     """HELD LOOP: liquid missing everything and hitting the bar.
 
-    NO RESONANCE AT ALL — that is the whole point. A vessel rings because it is a
-    closed air column; a flat surface has none, so a spill is broad, wet, splattery
-    and DEAD. It is also the sound of losing money, so it is deliberately the least
-    pleasant of the three without being harsh.
+    NO VESSEL, SO NO RESONANCE AND ALMOST NO GLUG — the two things that make a pour
+    sound like a pour both come from a container, and there is none. What is left is
+    splatter: a broad wet hiss and a scatter of flat, pitchless ticks as drops break
+    on a hard surface. It is meant to be the least satisfying sound in the game,
+    because it is the sound of losing money.
     """
     d = 1.10
-    x = liquid(d, 'pf', low=150.0, high=2600.0, bubbles=2.4, thickness=1.0)
-    # Splatter: short wet ticks with no pitch, scattered.
+    x = liquid(d, 'pf', low=150.0, high=2600.0, bubbles=1.6, thickness=1.0, glug=0.20)
     n = int(round(d * SR))
     spat = np.zeros(n)
     r = rng('pf:spat')
-    for _ in range(70):
+    for _ in range(90):
         at = r.uniform(0.0, 0.96) * d
-        ln = int(r.uniform(0.004, 0.014) * SR)
+        ln = int(r.uniform(0.004, 0.016) * SR)
         b = r.standard_normal(ln) * np.exp(-np.linspace(0, 7, ln))
-        place(spat, at, b, r.uniform(0.15, 0.5))
-    return lowpass(x + highpass(spat, 700.0) * 0.5, 4200.0)
-
+        place(spat, at, b, r.uniform(0.15, 0.55))
+    return lowpass(x + highpass(spat, 700.0) * 0.6, 4200.0)
 
 def s_stamp():
     """THE STAMP LANDS (2026-08-27, the author: "damga vurma sesi daha tatmin edici
@@ -1126,9 +1312,9 @@ BANK = {
     'book_open':      (s_book_open,     'body',    False, 1.0),
     'book_close':     (s_book_close,    'body',    False, 1.0),
     'door':           (s_door,          'weight',  False, 1.0),
-    'stool_take':     (s_stool_take,    'light',   False, 1.0),
-    'cellar_open':    (s_cellar_open,   'weight',  False, 1.0),
-    'cellar_close':   (s_cellar_close,  'weight',  False, 1.0),
+    'stool_take':     (s_stool_take,    'body',    False, 1.4),
+    'cellar_open':    (s_cellar_open,   'weight',  False, 1.5),
+    'cellar_close':   (s_cellar_close,  'weight',  False, 1.5),
     'bottle_open':    (s_bottle_open,   'body',    False, 1.0),
     'bottle_set':     (s_bottle_set,    'body',    False, 1.0),
     'glass_down':     (s_glass_down,    'body',    False, 1.0),
