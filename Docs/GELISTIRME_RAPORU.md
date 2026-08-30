@@ -1,4 +1,4 @@
-# LAST CALL — GELİŞTİRME RAPORU
+﻿# LAST CALL — GELİŞTİRME RAPORU
 
 **Denetim tarihi:** 2026-08-07 · **Günlük son güncelleme:** 2026-08-10
 **Yöntem:** 8 kollu kod denetimi (dosya:satır kanıtlı) + sim raporu + doküman-kod karşılaştırması
@@ -180,6 +180,26 @@ değişikliği.
 
 ---
 
+### 0.8 · İş kolu — barın sesi (2026-08-27)
+
+**ÖLÇÜM ÖNCE, TEDAVİ SONRA.** Yazar "oyunda sesler mevcut değil" dedi. Oyunda ölçüldü:
+`Sound.Effective` **0.00** — sistem çalışıyordu, `PlayerPrefs`'teki mute bayrağı susturuyordu.
+Sonra kliplerin kendisi ölçüldü: on üçün **yedisi patlıyordu** (dalga formu sıfırdan uzakta
+bitiyor; `click.wav` tam ölçeğin %45'inde), hepsi 22 kHz, birkaçında DC kayması.
+
+**ÇIKTI:** 67 kliplik sentezlenmiş banka (`Tools/sfx_dsp.py` + `sfx_bank.py`), tek mastering
+kapısından (`render`) geçiyor — DC süzülür, `tanh` limitlenir, seviye merdivenden atanır,
+uçlar sıfıra çekilir ve **sıfır oldukları iddia edilir**. Patlama ihraç edilemez.
+
+**İKİ GERÇEK HATA yol üstünde çıktı:** (1) `Sfx.HoldLoop` ad+seviye alıyordu, yani `_shakeEnergy`
+ve `_stirEnergy` her kare hesaplanıp ses katmanında çöpe atılıyordu — emek duyulmuyordu;
+(2) `_instance` statiği domain reload'da sıfırlanıp `DontDestroyOnLoad` nesnesi sağ kaldığı
+için her yeniden derleme bir `Sfx` kopyası daha bırakıyordu (oyunda 16 AudioSource ölçüldü),
+ve öksüz olan kendi ambience yatağını çalmaya devam ediyordu.
+
+**AÇIK KALAN:** envanterdeki 177 aksiyonun ~50'si bağlandı. Bankada duran ama hiçbir yerde
+çalmayan klipler için §8'e P1 satırı eklendi.
+
 ## 1 · Yönetici özeti
 
 Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 testle korunuyor; içki fiziği (dökme/çalkalama/musluk) gerçek; gizli-bilgi mekaniği (kimlik kartı) kodda hakikaten kilitli. Üç gerçek borç alanı var: **(a) ekonomi jilet sırtında ve geç-oyun şekli görünmez** (sim tablosu tam kötüleştiği günde kesiliyor), **(b) UI ~13–14k satır ve sıfır otomatik test**, **(c) doküman-kod makası açılmış** (12 doğrulanmış çelişki) ve sanat programı yarım kararlarla askıda.
@@ -217,8 +237,8 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 
 | Boşluk | Ayrıntı |
 |---|---|
-| UI testsiz | 23 dosya, ~14.2k satır (CLAUDE.md "~6k" diyor — **2 kat bayat**); Tests asmdef'i UI'ı referans bile almıyor |
-| PlayMode/input testi yok | "ölü tap kolu" sınıfı hataların ağı yok |
+| UI testsiz | ~28k satır; Tests asmdef'i UI'ı referans bile almıyor. **Kısmen kapandı:** PlayMode süiti (7 test) sanal fareyle gerçek sahneyi oynuyor — taban, kapsam değil |
+| ~~PlayMode/input testi yok~~ ✅ | **kapandı 2026-08-12** — `LastCall.PlayTests`: bar açılır, tabure tıklanır, şişe tezgâha iner, tezgâh döker; ayrıca `LookTests` üç ekranı piksel piksel karşılaştırır |
 | Determinizm | yalnız öz-tutarlılık testli; **altın vektör yok** — platform sapması sessiz geçer |
 | Kültür pini | `tycoon_speed_response.md` tr-TR formatında işlenmiş ("11,6") — pin kanıtsız |
 | Sim başlığı bayat | "marka almaz / bant orta noktası" yazıyor; bot IdealPour kullanıyor ve marka+tarif alıyor |
@@ -228,9 +248,9 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 
 | Alan | Boyut | Not |
 |---|---|---|
-| DiegeticStage emekli döngü | ~**700 satır** | ray koreografisi, eski kimlik kartı, mood göstergesi — sıfır çağıran |
-| Menu.cs ölü aile | ~250 satır | BuildGroupPage/AddItemBox/MixBar/sayfa-çevirme (tek girişi daima gizli) |
-| Yetim PNG (Items) | **14 dosya** | backwall kiti, ivy, tablolar, sign_lastcall, gauge_frame… |
+| ~~DiegeticStage emekli döngü~~ ✅ | ~~700 satır~~ | **süpürüldü** (2026-08-07 ve 2026-08-27 turları) |
+| ~~Menu.cs ölü aile~~ ✅ | ~~250 satır~~ | **dosya bütün olarak silindi** 2026-08-22'de back-bar sayfasıyla birlikte |
+| ~~Yetim PNG (Items)~~ ✅ | ~~14 dosya~~ → gerçekte **22** | **silindi 2026-08-27** (`2c8fb8d8`); her aday adla VE GUID'le doğrulandı, `register2.png` yalnız GUID'le bağlı çıkıp kurtuldu |
 | Gölgelenmiş sanat | 116 v3 plaka (bilinçli rezerv) + 30 bot_* + 20 stil `_open` | yükleme zinciri asla ulaşmıyor |
 | Assets/Art fiilen ölü | 21 şişe + vip_patron + pour_nick(+mask) + club_bg | sahneye bağlı ama gizli/ölü yolda |
 | DTO ölü alanlar | charges/bands/chargeMultiplier | sökülen duygu katmanının kalıntısı |
@@ -273,15 +293,17 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 | ~~P0~~ ✅ | ~~Sim tablosunu 30 güne aç + yeniden koştur~~ | **kapandı 2026-08-15** — §0.7; geç oyun görünür ve cevap "sıkışma yok" |
 | **P0** | Bota kusurlu-oyun modu (isabet/oran gürültüsü, gecikme) | Close/Wrong/Refused ekonomisi ilk kez ölçülür |
 | **P0** | `BottleArt.cs` bayrağını commit et (test yeşiliyle) | çalışma ağacı temizlenir |
-| **P0** | CLAUDE.md onarımı (UI satır sayısı, modül işaretçileri) | yanlış pusula düzelir |
+| ~~P0~~ ✅ | ~~CLAUDE.md onarımı (UI satır sayısı, modül işaretçileri)~~ | **kapandı 2026-08-27** — `.Menu` parçası (2026-08-22'de silinmişti) mimari bölümünden çıktı, içki alma yeri tezgâhın mahzeni olarak yazıldı, UI satır sayısı 17.5k → 28k |
 | **P1** | Ekonomi dengeleme turu (P18) — yeni sim verisiyle | kasa medyanı $7'den yaşanır aralığa |
 | **P1** | Doküman borcu tek geçiş (§6 tablosu) + `GDD_MEVCUT` tek-gerçek ilanı | makas kapanır |
-| **P1** | Ölü kod süpürmesi (DiegeticStage rayı, Menu ailesi, 14 yetim PNG) | ~1.000+ satır ve 60+ dosya gürültüsü gider |
+| ~~P1~~ ✅ | ~~Ölü kod süpürmesi (DiegeticStage rayı, Menu ailesi, 14 yetim PNG)~~ | **kapandı 2026-08-27** (`2c8fb8d8`) — 3931 satır çıktı, 15 girdi; 22 yetim PNG (14 değil), bitirme masasının 452 satırı, boş `ShakerSolids` tertibatı, yıkılmış sayfanın beş mobilyası. Her aday adla VE GUID'le doğrulandı — `register2.png` yalnız GUID'le bağlıydı, ad taraması onu yetim sanardı |
 | **P1** | Determinizm altın vektörleri + kültür pini testi | platform güvencesi gerçek olur |
 | **P2** | UI test dikişi (en az PlayMode duman testi: sahne kur, bir gün oynat, input yolu) | "ölü kol" sınıfına ağ |
 | **P2** | TycoonHud'u parçalara böl (Flow'un partial deseni) | 3.4k satırlık tek sınıf dağılır |
 | **P2** | Sanat programına dönüş: İncil + tercihler Docs'a, M2 yeniden girişi, M1 konsepti | askıdaki hat kapanır |
 | **P2** | Tutorial/FTUE + kayıt sistemi (P18 devri) | yeni oyuncu ve oturum sürekliliği |
+| **P1** | Bankada duran ama çalmayan klipleri bağla | 67 klibin 20'si hiçbir çağrı noktasına bağlı değil — gece sonu (fatura, yıldız, batış), gecenin ritmi (açılış/son sipariş/çan), hikâye beat'i ve dağınık foley. Üretildiler, duyulmuyorlar |
+| **P2** | PlayMode teardown'una hayalet-girdi temizliği | süit her oturumda 1-2 sahte kırmızı veriyor; elle menü adımı kalkar |
 
 ### 8.1 · Işık/sahne turundan çıkan yeni öneriler (2026-08-10)
 

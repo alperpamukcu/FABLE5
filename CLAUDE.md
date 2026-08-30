@@ -30,13 +30,14 @@ LastCall.PlayTests (Assets/Tests/PlayMode) PlayMode smoke tests: a virtual mouse
                                         real scene (Core + Game + uGUI, never UI internals)
 ```
 
-`TycoonServiceFlow` is one partial class split by stage — `.Menu`, `.Shaker`, `.Serve`,
-`.Tap` — so a stage can be read whole. Shared state stays in `TycoonServiceFlow.cs`.
+`TycoonServiceFlow` is one partial class split by stage — `.Shaker`, `.Serve`, `.Tap` — so a
+stage can be read whole. Shared state stays in `TycoonServiceFlow.cs`.
 
-**The back bar is the ONLY place a drink is picked up** (2026-08-13). `.Menu`'s wall carries
-every bottle except garnish and routes each one to its station already in hand; the three
-service benches carry no stock of their own. A shelf, rail or fridge on a bench has now been
-built and cut twice — don't build a third.
+**The COUNTER'S CELLAR is the only place a drink is picked up.** The back-bar page that used
+to own this was demolished 2026-08-22 and `.Menu` went with it — the cellar under the counter
+took the job, standing open in the room behind whichever bench is out. The three service
+benches carry no stock of their own: a shelf, rail or fridge on a bench has been built and
+cut twice, so don't build a third.
 
 Hard rules:
 
@@ -71,7 +72,7 @@ The scene can be rebuilt with the **LastCall → Create Debug Scene** menu item.
 **The UI has a floor now** (2026-08-12): `run_tests` with `assembly_names: "LastCall.PlayTests",
 mode: "PlayMode", init_timeout: 180000` plays the real scene with a virtual mouse — the bar
 opens, a stool is clicked and gives up its licence, a bottle is clicked and lands on the
-bench, and the bench pours. It is a floor and not coverage: 17.5k lines of UI still ride on
+bench, and the bench pours. It is a floor and not coverage: 28k lines of UI still ride on
 four tests, and the rest is still caught by entering play mode and LOOKING. Measure the thing
 you changed in play (`execute_code` reads live rects and fields) rather than trusting that it
 compiles. Run both suites before a push; PlayMode needs the editor OUT of play mode first.
