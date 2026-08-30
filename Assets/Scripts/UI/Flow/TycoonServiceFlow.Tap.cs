@@ -734,6 +734,11 @@ namespace LastCall.UI
             {
                 double before = run.ServingGlass.TotalVolume + run.ServingGlass.Head;
                 run.PourTilted(dt, _glassTilt);
+                if (run.SpilledBeer > _spilledLast + 0.04)
+                {
+                    _spilledLast = run.SpilledBeer;
+                    Sfx.Play("beer_spill", 0.6f);
+                }
 
                 // A stream from the faucet's lip, falling into the mouth wherever it now is.
                 var toMouth = mouth - spout;
@@ -991,5 +996,9 @@ namespace LastCall.UI
         }
 
         private string _spokenVerdict;
+
+        /// <summary>How much had been spilled last time the splash was heard. SpilledBeer
+        /// is monotonic, so this is the only edge available.</summary>
+        private double _spilledLast;
     }
 }

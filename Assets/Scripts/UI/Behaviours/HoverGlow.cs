@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -63,9 +63,21 @@ namespace LastCall.UI
         private Vector3 _home;
         private bool _held;               // rest colours are in hand
 
+        /// <summary>When the room last answered the cursor. Static on purpose: the brake
+        /// belongs to the ROOM, not to each prop — one cooldown per object would let a
+        /// sweep across twelve bottles fire twelve times, which is the rattle this
+        /// exists to prevent.</summary>
+        private static float _lastHoverSound;
+        private const float HoverGap = 0.09f;
+
         public void OnPointerEnter(PointerEventData _)
         {
             Capture();
+            if (Time.unscaledTime - _lastHoverSound >= HoverGap)
+            {
+                _lastHoverSound = Time.unscaledTime;
+                Sfx.Play("hover", 0.18f);
+            }
             _over = true;
         }
 

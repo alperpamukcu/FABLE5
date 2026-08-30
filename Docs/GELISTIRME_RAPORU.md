@@ -200,6 +200,32 @@ ve öksüz olan kendi ambience yatağını çalmaya devam ediyordu.
 **AÇIK KALAN:** envanterdeki 177 aksiyonun ~50'si bağlandı. Bankada duran ama hiçbir yerde
 çalmayan klipler için §8'e P1 satırı eklendi.
 
+### 0.9 · Bankanın tamamlanması (2026-08-27, ikinci ses turu)
+
+**66 KLİBİN 66'SI BAĞLI.** Kalan yirmi klip dört kollu bir çapa taramasıyla yerine oturdu.
+Ajanların yakaladığı en değerli şey bir ÇAKIŞMAYDI: yıldız iniş satırında duran
+`Sfx.Play("key_press")` — aynı günün jenerik-tık süpürmesinden kalmıştı — `star_earn`'ün
+YERİNE geçmeliydi, yanına değil; yoksa her yıldız çift vururdu.
+
+**KENAR KORUMALARI, tek tek:** `day_open` perdenin kendi `_curtainT >= CurtainTotal`
+kapısıyla zaten bir kez; `day_close` mevcut `_lastPhase` kenarıyla; `last_call_bell`
+`_clockWasLast` İKİ YÖNDE de ateşlediği için `if (last)` ile (yoksa ertesi gecenin açılış
+karesinde de çalardı); `beer_spill` için yeni bir `_spilledLast` alanı (`SpilledBeer` yalnız
+büyüyor, okunacak kenar yok) ve **epsilon dekorasyon değil** — dökülme her kare biraz
+artıyor, çıplak bir `>` saniyede altmış kez tetiklerdi; `synth_swell` ve `bar_closed` kendi
+yükselen-kenar bayraklarıyla; `id_card_away` kartın gerçekten açık olup olmadığıyla
+(`CloseId` on iki yerden koşulsuz çağrılıyor, her servis dahil).
+
+**`hover` İÇİN FREN ODAYA AİT, PROPA DEĞİL.** Odadaki her nesne `HoverGlow` taşıyor, yani
+imleci arka bar boyunca süpermek saniyede bir düzine şişe kesiyor. Nesne başına soğuma
+süresi bunu çözmezdi (on iki farklı nesne = on iki ses); soğuma **statik**, yani oda bir
+bütün olarak ancak bu sıklıkta konuşabiliyor. Klip zaten bankanın en sessizi (−30 dBFS).
+
+**BAĞLANMAYAN TEK KLİP EMEKLİ EDİLDİ:** `rent_line` fatura satırı başına bir vuruş istiyordu
+ve öyle bir an yok. Tarifi `sfx_bank.py`'de duruyor (fatura bir gün satır satır yazarsa
+bedava geri gelir), wav silindi — yüklenmeyen sanat borçtur, iki gün önce kendi koyduğumuz
+kural.
+
 ## 1 · Yönetici özeti
 
 Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 testle korunuyor; içki fiziği (dökme/çalkalama/musluk) gerçek; gizli-bilgi mekaniği (kimlik kartı) kodda hakikaten kilitli. Üç gerçek borç alanı var: **(a) ekonomi jilet sırtında ve geç-oyun şekli görünmez** (sim tablosu tam kötüleştiği günde kesiliyor), **(b) UI ~13–14k satır ve sıfır otomatik test**, **(c) doküman-kod makası açılmış** (12 doğrulanmış çelişki) ve sanat programı yarım kararlarla askıda.
@@ -302,8 +328,9 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 | **P2** | TycoonHud'u parçalara böl (Flow'un partial deseni) | 3.4k satırlık tek sınıf dağılır |
 | **P2** | Sanat programına dönüş: İncil + tercihler Docs'a, M2 yeniden girişi, M1 konsepti | askıdaki hat kapanır |
 | **P2** | Tutorial/FTUE + kayıt sistemi (P18 devri) | yeni oyuncu ve oturum sürekliliği |
-| **P1** | Bankada duran ama çalmayan klipleri bağla | 67 klibin 20'si hiçbir çağrı noktasına bağlı değil — gece sonu (fatura, yıldız, batış), gecenin ritmi (açılış/son sipariş/çan), hikâye beat'i ve dağınık foley. Üretildiler, duyulmuyorlar |
-| **P2** | PlayMode teardown'una hayalet-girdi temizliği | süit her oturumda 1-2 sahte kırmızı veriyor; elle menü adımı kalkar |
+| ~~P1~~ ✅ | ~~Bankada duran ama çalmayan klipleri bağla~~ | **kapandı 2026-08-27** — 20'sinin 19'u bağlandı, banka **66/66 bağlı**. `rent_line` EMEKLİ EDİLDİ: fatura satırı diye bir an yok, `RebuildDayEnd` üç maliyet satırını tek sessiz geçişte kuruyor — ona ev vermek stagger'ı İNŞA ETMEK olurdu, ki o özellik, ses turu değil |
+| **P2** | PlayMode'un ilk-koşu sahte kırmızısını teşhis et | Süit her oturumda 1-2 kez kırmızı verip tekrarda yeşil dönüyor. **BU HAYALET GİRDİ DEĞİL:** iki tanılama da işaretçinin hedefe ULAŞTIĞINI gösteriyor (`under=[Seat1]`, `under=[BillNext@22]`, `key active True`) — tıklama iletiliyor ama işlenmiyor. Şüphe: soğuk ilk koşuda `WaitForSecondsRealtime` geçiyor ama çok az KARE dönüyor (import/shader ısınması kareyi ~1ms olmaktan çıkarıyor), yani `Update`'le sürülen animasyon ilerlemiyor. Ölçülmeden dokunulmamalı |
+| — | ~~Teardown'a otomatik hayalet-girdi temizliği~~ | **ÖNERİLMEZ:** `GhostInputGuard` bilerek menü öğesi ve gerekçesi kendi belgesinde ölçülü (2026-08-13): editörde gerçek fare de non-native görünüyor, her play'de ateşlenen bir süpürme oyuncunun kendi imlecini alır. Ayrıca süitin `TearDown`'ı zaten kendi sanal faresini açıkça kaldırıyor |
 
 ### 8.1 · Işık/sahne turundan çıkan yeni öneriler (2026-08-10)
 

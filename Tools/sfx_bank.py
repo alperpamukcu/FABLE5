@@ -812,8 +812,13 @@ def s_printer_feed():
     return lowpass(motor * (0.6 + 0.6 * step) + drag, 6000.0)
 
 
-def s_rent_line():
-    """One line struck onto the slip as the night's costs are printed."""
+# (rent_line was built and then cut, 2026-08-27. It wanted one strike per cost row
+#  on the night's slip, and there is no such moment: RebuildDayEnd lays RENT, STOCK
+#  and SHOP down in a single silent pass with no stagger and no per-row timer. Giving
+#  it a home would mean BUILDING the stagger, which is a feature and not a sound pass.
+#  The recipe stays here so it costs nothing to bring back if the slip ever prints
+#  line by line; the wav does not, because art nothing loads is debt.)
+def _s_rent_line_unused():
     d = 0.10
     x = impact(d, 'rl', tone=1600.0, q=2.6, crack=0.0018)
     x += paper(d, 'rl_p', bright=5000.0, bursts=2) * 0.6
@@ -929,7 +934,6 @@ BANK = {
     'prompt_up':      (s_prompt_up,     'light',   False, 1.0),
     'stamp':          (s_stamp,         'body',    False, 1.0),
     'printer_feed':   (s_printer_feed,  'loop',    True,  1.0),
-    'rent_line':      (s_rent_line,     'tick',    False, 1.0),
     'bowl_down':      (s_bowl_down,     'body',    False, 1.0),
     'dish_down':      (s_dish_down,     'light',   False, 1.0),
     'serve_it':       (s_serve_it,      'weight',  False, 1.0),

@@ -3032,8 +3032,14 @@ namespace LastCall.UI
         /// stool's own x). Called every frame by the HUD — it is idempotent, and the fade is
         /// this class's business, not the caller's.
         /// </summary>
+        /// <summary>Whether the closing beat has already spoken. SetClosingBeat is called
+        /// every frame with the current state, so the swell needs the rising edge.</summary>
+        private bool _closingBeatSpoke;
+
         public void SetClosingBeat(bool on, float hudX)
         {
+            if (on && !_closingBeatSpoke) Sfx.Play("synth_swell", 0.85f);
+            _closingBeatSpoke = on;
             _closing = on;
             _guestWorldX = hudX / (720f / 360f);
         }

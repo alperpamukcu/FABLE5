@@ -432,6 +432,8 @@ namespace LastCall.UI
 
         private void CloseId()
         {
+            if (_idRoot != null && _idRoot.gameObject.activeSelf)
+                Sfx.Play("id_card_away", 0.7f);
             _idVisit = null;
             if (_idRoot != null) _idRoot.gameObject.SetActive(false);
         }

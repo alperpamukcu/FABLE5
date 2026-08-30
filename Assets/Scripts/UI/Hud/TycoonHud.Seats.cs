@@ -599,6 +599,7 @@ namespace LastCall.UI
             _prepCarry.SetAsLastSibling();
             _grainCarried = 0f;
             _grainLastAt = _prepCarry.anchoredPosition;
+            if (prop.IsRim) Sfx.Play("grain_pinch", 0.5f);
             HidePropTip(prop.Rt);
             Sfx.Play("click", 0.4f);
         }
@@ -640,6 +641,7 @@ namespace LastCall.UI
             bool overGlass = glassOut
                 && RectTransformUtility.RectangleContainsScreenPoint(
                        _drinkGlass, mouse.position.ReadValue(), null);
+            if (!overGlass && _prepHeld != null) Sfx.Play("dish_down", 0.55f);
             DropPrep(overGlass);
         }
 
@@ -1342,6 +1344,7 @@ namespace LastCall.UI
                 : verdict.Match == OrderMatch.Exact ? "PERFECT!"
                 : verdict.Match == OrderMatch.Close ? "THANKS."
                 : "NOT WHAT I ASKED";
+            if (verdict.OrdersAgain) Sfx.Play("another_round", 0.85f);
 
             var text = NewText("React", seat.parent, _display, 14, TextAnchor.LowerCenter, tone);
             text.supportRichText = true;
@@ -1547,7 +1550,11 @@ namespace LastCall.UI
             // walk-out never passes unnoticed.
             int stormed = 0;
             foreach (var v in run.Floor.Finished) if (v.State == VisitState.StormedOff) stormed++;
-            if (stormed > _lastStormedCount) Toast("A CUSTOMER STORMED OFF");
+            if (stormed > _lastStormedCount)
+            {
+                Sfx.Play("patience_warn", 0.8f);
+                Toast("A CUSTOMER STORMED OFF");
+            }
             _lastStormedCount = stormed;
 
             // The licence is only good while its holder is at the bar.

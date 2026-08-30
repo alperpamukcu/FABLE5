@@ -1143,6 +1143,10 @@ namespace LastCall.UI
 
         private TycoonPhase _lastPhase = TycoonPhase.DayOpen;
 
+        /// <summary>Whether the closing screen has already announced itself; the phase
+        /// test that raises it runs every frame.</summary>
+        private bool _closedSpoke;
+
         private int _lastStormedCount;   // to catch a customer storming off (GDD 24 §4)
         private Text _toast;
 
@@ -1271,6 +1275,7 @@ namespace LastCall.UI
                 {
                     _dayEndDue = true;
                     _dayEndDueAt = Time.unscaledTime;
+                    Sfx.Play("day_close", 0.8f);
                     // AND THE ROOM COMES BACK NOW, not when the books land (2026-08-25, the
                     // author: "önce açık olan tüm pencereler kapanır, ana sahneye dönülür ve
                     // oyun sonu ekranı öyle gelir"). Shutting the sheets at ShowDayEnd was
@@ -1279,7 +1284,12 @@ namespace LastCall.UI
                     // saw the thing the books are now waiting for.
                     CloseEverySheet();
                 }
-                if (run.Phase == TycoonPhase.Closed) ShowClosed();
+                if (run.Phase == TycoonPhase.Closed)
+                {
+                    if (!_closedSpoke) { _closedSpoke = true; Sfx.Play("bar_closed", 0.9f); }
+                    ShowClosed();
+                }
+                else _closedSpoke = false;
             }
 
             if (_toast != null && _toast.gameObject.activeSelf && Time.unscaledTime > _toastUntil)

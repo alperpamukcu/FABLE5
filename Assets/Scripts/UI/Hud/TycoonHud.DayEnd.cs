@@ -93,6 +93,7 @@ namespace LastCall.UI
                 if (_endT < CallIn + CallHold + CallOut) return;
                 if (_lastCallRt != null) _lastCallRt.gameObject.SetActive(false);
                 _endBeat = 2; _endT = 0f;
+                Sfx.Play("bill_slip", 0.85f);
                 // HOME FIRST, THEN FEED. PlayPanel reads the rect's CURRENT position as the
                 // place to land, and the slip has been parked off the top since the call —
                 // so handing it the parked rect made it feed from 1520 down to 760 and then
@@ -101,6 +102,7 @@ namespace LastCall.UI
                 _dayEndBill.anchoredPosition = _billHome;
                 PlayPanel(_dayEndBill, new Vector2(0, SlipFeedFrom), SlipFeed,
                           fade: false, steady: true);
+                if (!Motion.Reduced) Sfx.HoldLoop("printer_feed", 0.5f);
                 return;
             }
 
@@ -115,7 +117,9 @@ namespace LastCall.UI
                 SetBoardsIn(1f);
                 _dayEndBill.anchoredPosition = _billHome;
                 _endBeat = 3;
+                Sfx.HoldLoop(null);
                 StartStarDrop(_endStarFrac);
+                if (Run != null && Run.Money < 0) Sfx.Play("debt_alarm", 0.8f);
                 return;
             }
 
@@ -238,7 +242,7 @@ namespace LastCall.UI
                 // finish until 1.0. Firing at the end put the tremor two thirds of a beat
                 // after the impact it was meant to be.
                 if (i >= _landed && k >= Contact) { _landed = i + 1; _billShake = 1f;
-                    Sfx.Play("key_press", 0.5f); }
+                    Sfx.Play("star_earn", 0.85f); }
             }
             if (!running)
             {

@@ -1023,6 +1023,7 @@ namespace LastCall.UI
                 if (!_capped && !run.Glass.IsEmpty && _stirEnergy > 0.05)
                 {
                     run.Stir(_stirEnergy);
+                    Sfx.Play("stir_commit", 0.6f);
                     SayShaker($"STIRRED · {_stirEnergy:P0} · {ShakerLine(run)}");
                 }
                 _spoonHeld = false;
@@ -1144,6 +1145,7 @@ namespace LastCall.UI
                 _shaking = false;
                 _shakeEnergy = 0;
                 _shakerVessel.localRotation = Quaternion.identity;
+                Sfx.Play("tin_set_down", 0.7f);
                 // Leave the shaker wherever it was set down — no teleport home (2026-07-22).
                 _shakerVel = Vector2.zero;
                 return;

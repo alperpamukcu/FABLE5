@@ -288,6 +288,7 @@ namespace LastCall.UI
             if (_curtainT >= CurtainTotal)
             {
                 _curtainT = CurtainTotal;
+                Sfx.Play("day_open", 0.75f);   // the black is gone; the bar trades
                 // All the way to clear before it goes. The step that crosses the finish
                 // returns early on the NEXT frame, so whatever alpha the last computed frame
                 // happened to land on — six percent, measured — was the last thing drawn.

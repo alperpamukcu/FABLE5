@@ -378,6 +378,7 @@ namespace LastCall.UI
                 catch (InvalidOperationException) { Sfx.Play("deny", 0.8f); Toast("ORDER STOPPED — " + e.Label); break; }
             }
             _cart.Clear();
+            Sfx.Play("buy", 0.9f);
             Sfx.Play("cash", 0.9f);
             ApplyBarLook();
             RebuildDayEnd();

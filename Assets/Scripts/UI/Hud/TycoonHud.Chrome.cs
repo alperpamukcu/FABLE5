@@ -596,6 +596,7 @@ namespace LastCall.UI
                 if (last != _clockWasLast)
                 {
                     _clockWasLast = last;
+                    if (last) Sfx.Play("last_call_bell", 0.7f);   // on the way in only
                     _clock.SetHue(last ? UITheme.Magenta[4] : UITheme.Cyan[4]);
                 }
                 _clock.Show(hh, mm / 5 * 5, ((int)(Time.unscaledTime * 2f) & 1) == 0);
