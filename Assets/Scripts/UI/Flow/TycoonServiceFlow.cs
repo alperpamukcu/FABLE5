@@ -188,7 +188,17 @@ namespace LastCall.UI
                 // hand claimed it, so whichever verb wrote to it above has already had its say.
                 StepWorkMeter();
                 StepShakerFluid(run);
-                Sfx.HoldLoop(_shakerLoopWanted, _shakerLoopWanted == "shake_loop" ? 0.9f : 0.8f);
+                // THE WORK IS AUDIBLE (2026-08-27). This passed one fixed level for every
+                // loop, so the two verbs the bench is ABOUT — shaking and stirring — sounded
+                // identical however hard you worked them, even though both energies are
+                // measured from real cursor travel every frame. Each verb now hands its own
+                // energy to the loop, which turns it into level AND pitch (see Sfx.HoldLoop);
+                // a pour has none to give, because a pour runs at the rate a bottle pours.
+                Sfx.HoldLoop(_shakerLoopWanted,
+                             _shakerLoopWanted == "shake_loop" ? 0.9f : 0.8f,
+                             _shakerLoopWanted == "shake_loop" ? (float)_shakeEnergy
+                           : _shakerLoopWanted == "stir_loop" ? (float)_stirEnergy
+                           : -1f);
             }
 
             if (_stage == Stage.Serve)

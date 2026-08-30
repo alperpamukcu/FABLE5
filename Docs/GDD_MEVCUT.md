@@ -385,6 +385,106 @@ onu giyer. `board_plate.png` silindi.
 - **ALTLIK ÇİZİLDİ** (`BackBarArt.Coaster`): üretilen iki deneme de oran tutturamadı;
   altlık tam ölçü isteyen bir elipstir — mantar, aşınmış halka, pirinç kenar, 56×18.
 
+### 9.10 · Bitmiş işin süpürülmesi (2026-08-27)
+
+**3931 SATIR GİTTİ, 15 SATIR GELDİ.** Altı kollu bir denetim (kod, sanat, ses, doküman,
+araçlar, veri) projeyi taradı; her aday **silinmeden ÖNCE** adıyla VE **GUID**'iyle
+doğrulandı — sahneye sürüklenmiş bir sprite ada değil GUID'e bağlanır, ve "grep bulamadı"
+bu evde silme gerekçesi değildir (sanat `"v3_"+id+"_flat"` gibi TÜRETİLMİŞ adlarla
+yüklenir). İki süit ilk denemede yeşil: 380/380 ve 7/7.
+
+**BARDAK TEZGÂHININ BİTİRME MASASI (452 satır).** `AddFinishTub`/`AddGarnishChip`'in
+çağıranı yoktu; onlar tek yazar olduğu için `_servePrep` ve `_rimPrep` **asla** null
+olmaktan çıkamıyordu — yani `UpdateServePrepDrag` ve `UpdateRimLap` her kare çağrılıp
+ilk satırda geri dönüyordu. Kanıtlı no-op. Onlarla birlikte: `TableStand`, `StandNear/Far`,
+`FinishProps`, `MixerMeasure`, `RailLabel`, rim takımının tezgâh kopyası (`ShowRimRing`,
+`PlaceRimRing`, on bir alan), sürükleme yayı ve `_serveGarnishRow` — artık hiçbir şey
+ebeveyni olmayan, her tazelemede boş döngülenen bir kap. Tur mekaniği YAŞIYOR:
+kopyası `TycoonHud.Seats`'te, odanın tezgâhında.
+
+**BOŞ FİZİK TERTİBATI.** `ShakerSolids.Add`'in çağıranı yoktu; tertibat her kare BOŞ bir
+gövde listesini adımlıyor ve onun için sınır hesaplıyordu. `Pendulum` da yalnız ölü
+sürüklemedeydi — `DrinkPhysics.cs` bütün olarak gitti.
+
+**YİKİLMİŞ SAYFANIN MOBİLYASI.** Back-bar sayfası 2026-08-22'de yıkıldı; duvarı (`LuxeWall`),
+altındaki raf (`Ledge`), üzerindeki isim plakası (`NamePlate`) ve bilgi balonu
+(`InfoPlate`+`InfoTail`) kaldı. **`KegCrown` DOKUNULMADI** — kendi belgesinde yazılı bir
+saklama kararı taşıyor ("hand-drawn art, not logic"); bu beşi ondan ayıran şey, fıçının
+yeniden çizilebilecek olmasına karşılık bunların artık var olmayan bir sayfanın mobilyası
+olması.
+
+**22 YETİM GÖRSEL.** Kart devrinden (`sh_k_*`, `sh_mark`, `sh_strip_seal`, `btn_close*`,
+`plate*`), yıkılan sayfadan (`Scene/backbar`), ve kesilen koddan yeni yetim kalanlar:
+`ItemArt.Bucket`'in sekiz kovası/kasesi (tek çağıranı `AddFinishTub`'dı) ile
+`ItemArt.Prep`'in artık ulaşılamayan `salt`/`sugar` dalları — rim artık ağıza ÇİZİLEN bir
+kabuk (`GlassDecor.Speckles`), tepsiden alınan bir parça değil. **SAĞDAN ÇIKANLAR:**
+`tap.png` (Tap.cs:198'de canlı yedek), `shaker.png` (üç çağıran), `register2.png`
+(Main.unity'de GUID'le bağlı), `fx_monstera` (§9.9'un yazılı kaydı: beş bitkinin renk
+çıpası, silmek üreten aracı bozar), `bench_mini_*` ve `garnish_*` (rafın canlı yedekleri).
+
+**KALAN BORÇ (silinmedi, rapor edildi):** üç ses AD'ı klipsiz çalınıyor — `stir_loop`,
+`whoosh`, ve yeni bulunan `page_turn` (TycoonHud.Book.cs:488,553). `Sfx` eksik klibi
+sessizce yutuyor, yani bunlar hata vermiyor; on üç klibin hepsi canlı, yetim klip YOK.
+
+### 9.11 · Barın sesi (2026-08-27)
+
+**ÖNCE TEŞHİS: SES SİSTEMİ BOZUK DEĞİLDİ, KAPALIYDI.** Yazar "oyunda sesler mevcut
+değil" dedi; oyunda ölçüldü ve `Sound.Effective` **0.00** çıktı — `PlayerPrefs`'te
+`lastcall.muted=1`, ses 0.2'ye düşmüş. Mute'u değiştiren tek yer üst bardaki ayar
+satırı (`TycoonHud.Chrome.cs:722`) ve ayar **yeniden başlatmayı aşmak üzere tasarlanmış**,
+yani tek bir yanlış tıklama oyunu kalıcı olarak susturuyor. Bu bir kusur değil ama
+**görünürlük borçlu**: mute'un tek göstergesi o panelin içinde.
+
+**SONRA ÖLÇÜM: ON ÜÇ KLİBİN YEDİSİ PATLIYORDU.** Dalga formu sıfırdan uzakta bitiyordu —
+`click.wav` tam ölçeğin **%45**'inde kesiliyor (her basışta sert bir çat), `ambience_loop`
+her 5.75 saniyede bir sarım başında çatlıyor. Hepsi 22 kHz (yarım Nyquist), birkaçında DC
+kayması. Yazarın yasağı ("patlamalar ... kesinlikle olmamalı") tam da bunu tarif ediyordu.
+
+**43 KLİPLİK BANKA SENTEZLENDİ** (`Tools/sfx_dsp.py` + `Tools/sfx_bank.py`). İndirmek yerine
+üretmenin sebebi: hazır paketler yükleyenin bıraktığı seviye, oran ve kırpımla gelir — ki
+değiştirilen kusur tam olarak buydu. Burada her klip **TEK KAPIDAN** çıkıyor (`render`):
+DC süzülür, `tanh` ile yumuşak limitlenir (sert kırpma = patlama), seviyesi merdivenden
+atanır, sonra kenarları yükseltilmiş-kosinüsle sıfıra çekilir ve **uç örnekler sıfır mı diye
+IDDIA EDİLİR**. Patlama artık ihraç edİlemez. Döngüler `loopify` ile kuyruğu başına
+çapraz-solduruyor: sarım noktası ek yeri değil, çapraz geçiş.
+
+**SESİN KENDİSİ FİZİKSEL MODELLENDİ** — hiçbir şey saf sinüs değil. Nesneleri ayıran şey hangi
+parcıalların çınladığı ve ne hızla söndükleri: **cam** yüksek/inharmonik/yavaş (1:2.76:5.40:8.93),
+**ahşap** alçak ve çok hızlı, **metal** inharmonik ve uzun, **kâğıt** perdesiz kısa çıtırtılar,
+**sıvı** band-sınırlı genışliği nefes alan gürültü + kabarcık. Her şey 8 kHz altına
+alçak-geçirilmiş: sabah 2'deki bir bar parlak bir oda değildir, ve süzsüz gürültü yazarın
+yasakladığı "kulak rahatsız eden" sesin ta kendisidir. Zar atılmıyor: her gürültü klip ADIYLA
+tohumlanıyor, yani banka her makinede bayt-bayt aynı çıkıyor (ev kuralı sese de işliyor).
+
+**SEVİYE MERDİVENİ KASITLI** ("farklı yüksekliklerde sesler"): hover −30 dB → tick −24 →
+light −18 → body −13 → weight −9 → moment −6. Ölçüldü: 0.032'den 0.501'e, **24 dB'lik
+yayılım**. Bir arayüz tıkı kasanın altında kalmazsa her basış hizmet ettiği ana ile kavga eder.
+
+**EMEK ARTİK DUYULUYOR.** `Sfx.HoldLoop` yalnız ad+seviye alıyordu, yani `_shakeEnergy` ve
+`_stirEnergy` her kare gerçek imleç yolundan hesaplanıp **ses katmanında çöpe atılıyordu**:
+tin'i deli gibi çalkalayan da hafifçe sallayan da tıpatip aynı döngüyü duyuyordu. Enerji
+(0..1) artık **hem seviyeyi hem perdeyi** sürüyor — gerçek bir çabanın yaptığı budur, yalnız
+birini oynatmak ses düğmesi gibi okunur. İkisi de **yumuşatılıyor** (perde seviyenin yarı
+hızında): zıplayan bir seviye zipper gürültüsü, zıplayan bir perde warble'dır, ve ikisi de
+tam oyuncu en çok çalışırken gelirdi. Oyunda ölçüldü: enerji 0 → `vol .396 pitch .920`,
+enerji 1 → `vol .720 pitch 1.100` (**5.2 dB ve ~3 yarım ses**).
+
+**İKİ `Sfx` NESNESİ BİRİKİYORDU.** Oyunda 16 AudioSource ölçüldü: `_instance` statiği domain
+reload'da sıfırlanıyor ama `DontDestroyOnLoad` nesnesi sağ kalıyor, yani her yeniden derleme
+bir kopya daha bırakıyor — ve öksüz olan kendi ambience yatağını çalmaya devam ediyor. İki
+yatak üst üste faz yıkanmasıdır. `Instance` artık ÖNCE var olanı arıyor, `Awake` ikinciyi
+kendini yıkıyor, ve reload'dan sağ çıkanın serialize edilmeyen ses dizisi boşsa yeniden
+kuruluyor (yoksa yeniden kullanım ilk tıklamada NullReference olurdu).
+
+**MALZEME EŞLEŞMELERİ DÜZELTİLDİ:** `bottle_open` dört iş birden yapıyordu (mahzenden şişe,
+fıçı bağlama, tin'in kapağı, ve tin'in PATLAMASI) ve tin'i kapatmak `glass_down` çalıyordu —
+ahşap üzerinde cam sesi, iki parça çelik için. Artık `cap_on` (metal), `blowout` (mührün
+bırakması + kapak + gaz + dökülen içki, tek olay tek klip), ve bira `tap_pull` (daha dolgun,
+daha alçak, daha gazlı — GDD 21 §10 duyulabilir hale geldi). Sessiz olanlara ses verildi:
+ehliyet okuma (oyunun MERKEZİ hareketi, sessizdi), lavabo, rim'in kapanması, şişe kaldırma,
+kapak alma, tin kavrama, kaşık, ve musluk kolu (kol her kare çağrılan bir yerde, o yüzden
+YALNIZ durum değişince — aksi hâlde 60 Hz'de makineli tüfek olurdu).
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

@@ -771,7 +771,7 @@ namespace LastCall.UI
                     if (swept >= RimLap)
                     {
                         run.AddPreparationAtGlass(prop.Prep);
-                        Sfx.Play("garnish");
+                        Sfx.Play("rim_done", 0.9f);
                         _rimSwept.Remove(prop.Id);
                         Toast((prop.Id == "salt_rim" ? "SALT" : "SUGAR") + " ON THE RIM",
                               UITheme.Lime[3]);
@@ -1119,6 +1119,7 @@ namespace LastCall.UI
             if (_flow != null && _flow.IsOpen) return;
             if (!_glassShown || _glassServing || _glassReturning || !run.DrinkReady) return;
             int fee = run.DiscardGlass();
+            Sfx.Play("drain", 0.9f);
             Toast(fee > 0 ? $"POURED AWAY · -${fee}" : "POURED AWAY");
             if (fee > 0)
                 LogService($"<color=#F27D8A>POURED AWAY</color> a built drink · -${fee}");

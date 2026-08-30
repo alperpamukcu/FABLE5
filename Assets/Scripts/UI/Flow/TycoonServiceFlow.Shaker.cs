@@ -837,7 +837,7 @@ namespace LastCall.UI
                     var d = _capPos + new Vector2(0, lift) - tin.anchoredPosition;
                     bool onTin = Mathf.Abs(d.x) < tin.rect.width * 0.75f
                               && Mathf.Abs(d.y) < tin.rect.height * 0.75f;
-                    if (onTin && !run.Glass.IsEmpty) { _capped = true; Sfx.Play("glass_down"); }
+                    if (onTin && !run.Glass.IsEmpty) { _capped = true; Sfx.Play("cap_on"); }
                     else _capPos = _capRest;
                 }
             }
@@ -947,8 +947,7 @@ namespace LastCall.UI
             _blowLidSpin = UnityEngine.Random.Range(-620f, 620f);
 
             _blowHome = _shakerVessel.anchoredPosition;
-            Sfx.Play("bottle_open", 1f);
-            Sfx.Play("upset_sfx", 0.6f);
+            Sfx.Play("blowout", 1f);
             _shakerReadout.text = "IT BLEW UP — NEVER SHAKE A FIZZY DRINK";
             _shakerReadout.color = UITheme.ViceRed[3];
             _saidThisFrame = true;
@@ -993,7 +992,7 @@ namespace LastCall.UI
             _capped = false;
             _capGrabbed = false;
             _capPos = _capRest;
-            Sfx.Play("bottle_open", 0.7f);
+            Sfx.Play("cap_on", 0.55f);
             SayShaker("lid off — the tin is open again");
         }
 
@@ -1384,6 +1383,7 @@ namespace LastCall.UI
                 if (Run == null || Run.Glass.IsEmpty) { SayShaker("pour something to shake"); return; }
                 if (!_capped) { SayShaker("cap it first — drag the lid onto the tin"); return; }
                 _shaking = true;
+            Sfx.Play("tin_tip", 0.7f);
                 _shakeEnergy = Run.ShakeEnergy;   // continue from what's been shaken, don't reset
                 _shakerVel = Vector2.zero;
                 _lastShakeMouse = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
@@ -1421,7 +1421,12 @@ namespace LastCall.UI
             topImg.preserveAspect = true; topImg.raycastTarget = true;
 
             var capGrab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
-            capGrab.callback.AddListener(_ => { if (!_capped) _capGrabbed = true; });
+            capGrab.callback.AddListener(_ =>
+            {
+                if (_capped) return;
+                _capGrabbed = true;
+                Sfx.Play("cap_on", 0.35f);
+            });
             _shakerTop.gameObject.AddComponent<EventTrigger>().triggers.Add(capGrab);
             _shakerTop.gameObject.SetActive(topImg.sprite != null);
 
@@ -1479,6 +1484,7 @@ namespace LastCall.UI
                 if (_capped) return;
                 if (_focusBottle != null && Run != null && Run.Phase == TycoonPhase.DayOpen)
                     _bottleGrabbed = true;
+            Sfx.Play("bottle_set", 0.45f);   // lifted off the wood
             });
             _pourBottle.gameObject.AddComponent<EventTrigger>().triggers.Add(grab);
             _benchProps.Add(_pourBottle.gameObject.AddComponent<CanvasGroup>());
@@ -1641,7 +1647,7 @@ namespace LastCall.UI
             {
                 // The spoon works an OPEN tin only — the cap hands the stage to the shake.
                 if (!_capped && Run != null && Run.Phase == TycoonPhase.DayOpen)
-                { _spoonHeld = true; _stirHasPrev = false; }
+                { _spoonHeld = true; _stirHasPrev = false; Sfx.Play("tap_handle", 0.5f); }
             });
             _spoonRt.gameObject.AddComponent<EventTrigger>().triggers.Add(spoonGrab);
             _benchProps.Add(_spoonRt.gameObject.AddComponent<CanvasGroup>());

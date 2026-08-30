@@ -75,6 +75,7 @@ namespace LastCall.UI
             // Opening the card IS the inspection (v5 C3): this is the one gate Core opens the
             // order through, so everything below may read it — and the bubble may from now on.
             visit.InspectId();
+            Sfx.Play("id_card", 0.85f);   // a card slid out and laid on the counter
 
             if (_ledgerPanel != null) _ledgerPanel.gameObject.SetActive(false);
             _idRoot.gameObject.SetActive(true);

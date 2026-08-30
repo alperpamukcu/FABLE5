@@ -575,6 +575,7 @@ namespace LastCall.UI
                     return;
                 }
                 _serveGrabbed = true;
+            Sfx.Play("tin_tip", 0.6f);
             });
             _serveShaker.gameObject.AddComponent<EventTrigger>().triggers.Add(sgrab);
 

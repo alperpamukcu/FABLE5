@@ -556,7 +556,7 @@ namespace LastCall.UI
             }
             if (run.PullingId != null) run.EndPull();
             _tapKegCard = card;
-            Sfx.Play("bottle_open", 0.7f);
+            Sfx.Play("cap_on", 0.9f);
             CoupleTheKeg(run);
         }
 
@@ -712,11 +712,14 @@ namespace LastCall.UI
             bool pouring = _glassHeld && underSpout && run.PullingId != null
                            && !run.ServingGlass.IsFull;
             _tapHandle.localRotation = Quaternion.Euler(0, 0, pouring ? HandleTilt : 0f);
+            // The handle only speaks when it MOVES — comparing against last frame's
+            // state, because this runs every frame the station is open.
+            if (pouring != _pouringNow) Sfx.Play("tap_handle", pouring ? 0.8f : 0.55f);
 
             _pouringNow = pouring;
             // The tap has a voice now (2026-08-13): the pull runs the same held pour loop the
             // bench does, a shade quieter — a running tap you cannot hear reads as a broken one.
-            Sfx.HoldLoop(pouring ? "pour_loop" : null, 0.55f);
+            Sfx.HoldLoop(pouring ? "tap_pull" : null, 0.6f);
             if (pouring)
             {
                 double before = run.ServingGlass.TotalVolume + run.ServingGlass.Head;
