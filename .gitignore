@@ -131,3 +131,12 @@ Tools/scene_v3_state.json
 Tools/AssetPipeline/staging/
 Tools/AssetPipeline/sources/patron_trial/
 Tools/AssetPipeline/sources/patron_raw/
+
+# Generation previews and contact sheets. Every one of these is an OUTPUT of a
+# generator that lives beside it in Tools/, so the recipe is tracked and the picture
+# is not — and a session writing previews should not have to think about git. Swept
+# in by an over-broad `git add -A Tools` on 2026-08-27 and taken back out; the rule
+# is here so it cannot happen a third time.
+/Tools/*.png
+/Tools/*.html
+!/Tools/palette_miami.png
