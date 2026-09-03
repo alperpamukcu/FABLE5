@@ -40,6 +40,8 @@ CW, CH = brief.CELLAR['width'], brief.CELLAR['height']
 INK = palette.INK + (255,)
 WALL = 2                  # glass wall thickness at 192 grain
 BASE = 3                  # rows of glass under the cavity
+MOUTH = 4                 # rows of rim and throat kept as the generator drew them
+CELLAR_OUTLINE = 2        # the author: a little heavier at cellar size, so it stands out
 FILM_ALPHA = 77           # 30%: the cavity seen through the front glass
 STREAK_ALPHA = 200        # the specular streak stays nearly solid
 
@@ -54,13 +56,16 @@ def lum(c):
     return 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]
 
 
-def opaque(im):
-    return im.split()[3].point(lambda a: 255 if a >= 128 else 0)
+def opaque(im, cut=128):
+    """The silhouette. `cut` is 128 for a master (binary alpha) and 1 for a FRONT plate —
+    measured on the pilot's cellar copy: with the film at alpha 77 counted as air, the
+    outline pass inked the inside of the walls and the label landed off the bottle."""
+    return im.split()[3].point(lambda a: 255 if a >= cut else 0)
 
 
-def spans(im):
+def spans(im, cut=128):
     """Per row: (x0, x1) of the opaque run, or None. The silhouette in numbers."""
-    a = opaque(im).load()
+    a = opaque(im, cut).load()
     out = []
     for y in range(im.height):
         xs = [x for x in range(im.width) if a[x, y]]
@@ -83,17 +88,19 @@ def centre(im):
     return out
 
 
-def peel_and_ring(im, thickness=1):
+def peel_and_ring(im, thickness=1, cut=128, peel=True):
     """Take the generator's own dark rim off the silhouette, then ring it in INK.
 
     The peel removes boundary pixels darker than lum 46 (ink-like) so an outline never
     thickens by accumulation; the ring adds exactly `thickness` px of Night[0] outside the
     remaining silhouette. thickness=0 gives the lineless variant for the report."""
     px = im.load()
-    a = opaque(im).load()
+    a = opaque(im, cut).load()
     w, h = im.size
-    # peel
-    for _ in range(2):
+    # peel (the master's own generator rim; NOT on a second pass over a copy that is
+    # already ringed - measured on the pilot: the cap pass peeled both rings and put one
+    # back, so the cellar copy came out 1px on the left and 2px on the right)
+    for _ in range(2 if peel else 0):
         drop = []
         for y in range(h):
             for x in range(w):
@@ -107,7 +114,7 @@ def peel_and_ring(im, thickness=1):
             break
         for x, y in drop:
             px[x, y] = (0, 0, 0, 0)
-        a = opaque(im).load()
+        a = opaque(im, cut).load()
     # ring
     for _ in range(thickness):
         add = []
@@ -120,7 +127,7 @@ def peel_and_ring(im, thickness=1):
                     add.append((x, y))
         for x, y in add:
             px[x, y] = INK
-        a = opaque(im).load()
+        a = opaque(im, cut).load()
     return im
 
 
@@ -155,6 +162,24 @@ def measure(im):
             'ratio': round((bot - top + 1) / float(body_w), 2)}
 
 
+# ── geometry ────────────────────────────────────────────────────────────────
+
+def body_and_shoulder(sp):
+    """(body_w, shoulder_row, foot_row) from a spans list.
+
+    body_w is the MEDIAN width of the lower body (55%..90% of the silhouette's height),
+    not the maximum: the base bow and, at 32px, a one-pixel wobble both moved a
+    max-based shoulder down the bottle and dropped the cellar label onto the foot."""
+    rows = [i for i, s in enumerate(sp) if s]
+    top, foot = rows[0], rows[-1]
+    hgt = foot - top + 1
+    lower = [sp[y][1] - sp[y][0] + 1 for y in rows if top + 0.55 * hgt <= y <= top + 0.90 * hgt]
+    lower.sort()
+    body_w = lower[len(lower) // 2] if lower else max(sp[y][1] - sp[y][0] + 1 for y in rows)
+    shoulder = next((y for y in rows if (sp[y][1] - sp[y][0] + 1) >= 0.88 * body_w), top)
+    return body_w, shoulder, foot
+
+
 # ── cavity, plates ──────────────────────────────────────────────────────────
 
 def cavity(im):
@@ -163,12 +188,14 @@ def cavity(im):
     above the foot. Pure geometry — there is no label to confuse it (PLAN §4a)."""
     sp = spans(im)
     rows = [i for i, s in enumerate(sp) if s]
-    body_w = max((sp[y][1] - sp[y][0] + 1) for y in rows)
-    shoulder = next(y for y in rows if (sp[y][1] - sp[y][0] + 1) >= 0.90 * body_w)
-    foot = rows[-1]
+    body_w, shoulder, foot = body_and_shoulder(sp)
     m = Image.new('RGBA', im.size, (0, 0, 0, 0))
     mp = m.load()
-    for y in range(shoulder + WALL, foot - BASE + 1):
+    # FROM THE MOUTH, not the shoulder (the author, 2026-08-27: "omuz hizasinin ustu ile bos
+    # halinin rengi ayni olmali"). A bottle's inside runs up the neck to the lip; starting the
+    # cavity at the shoulder left the neck opaque cream over a blue-grey body, which read as
+    # a neck full of something. MOUTH rows keep the generator's rim and throat.
+    for y in range(rows[0] + MOUTH, foot - BASE + 1):
         s = sp[y]
         if not s:
             continue
@@ -243,11 +270,8 @@ def label_rect(im, fam, want_h):
     """Where the label goes: on the body's widest band, a fraction of the body's width, and
     as TALL as its content needs (want_h) — a ratio-sized label squeezed the emblem to a
     third of itself on the pilot, which is ten pixels of noise."""
-    sp = spans(im)
-    rows = [i for i, s in enumerate(sp) if s]
-    body_w = max((sp[y][1] - sp[y][0] + 1) for y in rows)
-    shoulder = next(y for y in rows if (sp[y][1] - sp[y][0] + 1) >= 0.90 * body_w)
-    foot = rows[-1]
+    sp = spans(im, 1)
+    body_w, shoulder, foot = body_and_shoulder(sp)
     body_h = foot - shoulder
     wf, yc = {'whiskey': (0.72, 0.60), 'liqueur': (0.60, 0.50), 'gin': (0.70, 0.52),
               'can': (0.88, 0.50), 'carton': (0.82, 0.50), 'beer': (0.64, 0.58)}.get(fam, (0.66, 0.55))
@@ -332,6 +356,85 @@ def mode_downsample(im, f):
     return out
 
 
+CAP_TONE = {'vodka': 'Graphite', 'mixer': 'Graphite', 'gin': 'Night', 'rum': 'Amber',
+            'whiskey': 'Amber', 'tequila': 'Amber', 'liqueur': 'Graphite'}
+
+
+def draw_cap(im, fam):
+    """A small cap on the cellar copy (the master is uncapped). Sits on the mouth: as wide
+    as the neck plus one pixel each side, three rows tall, a lit top row, ringed by the
+    outline pass that follows."""
+    sp = spans(im, 1)
+    rows = [i for i, s in enumerate(sp) if s]
+    if not rows:
+        return im
+    top = rows[0]
+    x0, x1 = sp[top]
+    ramp = CAP_TONE.get(fam, 'Graphite')
+    body = palette.ramp(ramp, 3) + (255,)
+    lit = palette.ramp(ramp, 4) + (255,)
+    dark = palette.ramp(ramp, 1) + (255,)
+    px = im.load()
+    for y in range(top - 3, top + 1):
+        if y < 0:
+            continue
+        for x in range(x0 - 1, x1 + 2):
+            if 0 <= x < im.width:
+                px[x, y] = lit if y == top - 3 else (dark if y == top else body)
+    return im
+
+
+def press_label_small(im, card_id, emblem=None):
+    """The cellar label: a colour field, the band, and the emblem at a quarter - NO TEXT
+    (the author: "mahzen boyutunda sadece amblemler veya sekiller olsun, yazilar gozukmesin")."""
+    fam, _, _, lr, br, _ = brief.CARDS[card_id]
+    sp = spans(im, 1)
+    body_w, shoulder, foot = body_and_shoulder(sp)
+    body_h = foot - shoulder
+    lw = max(6, int(body_w * 0.62))
+    lh = max(7, int(body_h * 0.30))
+    cy = shoulder + int(body_h * 0.55)
+    cx = (sp[cy][0] + sp[cy][1]) // 2
+    x0, y0 = cx - lw // 2, cy - lh // 2
+    field = palette.ramp(lr, 3) + (255,)
+    edge = palette.ramp(lr, 0) + (255,)
+    band = palette.ramp(br, 2) + (255,)
+    px = im.load()
+    for y in range(y0, y0 + lh):
+        for x in range(x0, x0 + lw):
+            if 0 <= x < im.width and 0 <= y < im.height:
+                px[x, y] = edge if (x in (x0, x0 + lw - 1) or y in (y0, y0 + lh - 1)) else field
+    by = y0 + lh - 3
+    for x in range(x0 + 1, x0 + lw - 1):
+        px[x, by] = band
+    if emblem is not None:
+        e = palette.quantize(emblem)
+        eb = alpha_bbox(e)
+        if eb:
+            e = e.crop(eb)
+            e = mode_downsample(e, 4) if max(e.size) > 8 else e
+            if e.width <= lw - 2 and e.height <= lh - 5:
+                im.paste(e, (x0 + (lw - e.width) // 2, y0 + 1), e)
+    return im
+
+
+def cellar_copy(front_bare, back, mask, card_id, emblem=None, outline=CELLAR_OUTLINE):
+    """The 32x64 set, REBUILT (the author: "mahzen boyutundaki gorseller kusursuz olmali").
+    Measured on the pilot: a plain third of the master LOSES its outline - a 3x3 block at
+    the edge is one ink pixel and two glass pixels, so the mode picks glass (81 of 140 edge
+    pixels not ink). So the interior is taken by mode, the outline is put back in ink at
+    CELLAR_OUTLINE, the cap is drawn, and the label is pressed AT this size, not shrunk."""
+    fam = brief.family(card_id)
+    fc = downsample_front(front_bare, 3)
+    fc = peel_and_ring(fc, outline, cut=1, peel=False)
+    fc = draw_cap(fc, fam)
+    fc = peel_and_ring(fc, 1, cut=1, peel=False)   # ring the cap; the rest is already ringed
+    fc = press_label_small(fc, card_id, emblem)
+    bc = mode_downsample(back, 3)
+    mc = mode_downsample(mask, 3)
+    return bc, mc, fc
+
+
 def downsample_front(front, f=3):
     """The front's alpha is three-valued (film / streak / solid); the mode keeps that."""
     w, h = front.width // f, front.height // f
@@ -395,7 +498,8 @@ def process_take(card_id, take_path, out_dir, outline=1, emblem=None):
     if fam in brief.SEALED:
         sprite = press_label(master.copy(), card_id, emblem)
         sprite.save(os.path.join(out_dir, 'v4_%s.png' % card_id))
-        mode_downsample(sprite, 3).save(os.path.join(out_dir, 'v4_%s_c.png' % card_id))
+        small = peel_and_ring(mode_downsample(master, 3), CELLAR_OUTLINE)
+        press_label_small(small, card_id, emblem).save(os.path.join(out_dir, 'v4_%s_c.png' % card_id))
         audit['plates'] = ['sprite', 'cellar']
     else:
         mask, shoulder = cavity(master)
@@ -403,32 +507,24 @@ def process_take(card_id, take_path, out_dir, outline=1, emblem=None):
         audit['glass'] = glass
         audit['liquid_rows'] = liquid_rows(master, mask, glass)
         audit['cavity_rows'] = sum(1 for s in spans(mask) if s)
-        back, front = plates(master, mask, glass)
-        front = press_label(front, card_id, emblem)
-        # open state, derived at the cap seam on the OPAQUE master with the label on it,
-        # then given the same film — never a second generation
-        try:
-            import bottle_open_states as bos
-            opened = bos.open_variant(press_label(master.copy(), card_id, emblem), force=True)
-            _, front_open = plates(opened, mask, glass)
-            front_open = press_label(front_open, card_id, emblem)
-        except Exception as e:                      # the seam finder can refuse a shape
-            audit['open_state'] = 'derivation failed: %s' % e
-            front_open = front.copy()
+        back, front_bare = plates(master, mask, glass)
+        # the hand front: the OPEN master with the full label (emblem + wordmark)
+        front = press_label(front_bare.copy(), card_id, emblem)
         back.save(os.path.join(out_dir, 'v4_%s_back.png' % card_id))
         mask.save(os.path.join(out_dir, 'v4_%s_mask.png' % card_id))
         front.save(os.path.join(out_dir, 'v4_%s_front.png' % card_id))
-        front_open.save(os.path.join(out_dir, 'v4_%s_front_open.png' % card_id))
-        # the cellar copies: exactly one third, palette-preserving
-        mode_downsample(back, 3).save(os.path.join(out_dir, 'v4_%s_back_c.png' % card_id))
-        mode_downsample(mask, 3).save(os.path.join(out_dir, 'v4_%s_mask_c.png' % card_id))
-        downsample_front(front, 3).save(os.path.join(out_dir, 'v4_%s_front_c.png' % card_id))
-        downsample_front(front_open, 3).save(os.path.join(out_dir, 'v4_%s_front_open_c.png' % card_id))
+        # the cellar set, rebuilt at its own size: outline, cap, emblem-only label
+        bc, mc, fc = cellar_copy(front_bare, back, mask, card_id, emblem, outline=2)
+        bc.save(os.path.join(out_dir, 'v4_%s_back_c.png' % card_id))
+        mc.save(os.path.join(out_dir, 'v4_%s_mask_c.png' % card_id))
+        fc.save(os.path.join(out_dir, 'v4_%s_front_c.png' % card_id))
+        _, _, fc1 = cellar_copy(front_bare, back, mask, card_id, emblem, outline=1)
+        fc1.save(os.path.join(out_dir, 'v4_%s_front_c1.png' % card_id))
         # the liquid proof: red and blue composites must agree on every label pixel and
         # disagree on the cavity
         proof = composite_proof(back, mask, front)
         audit.update(proof)
-        audit['plates'] = ['back', 'mask', 'front', 'front_open', '+cellar ×4']
+        audit['plates'] = ['back', 'mask', 'front', '+cellar back/mask/front']
     audit['hash'] = sha(master)
     io.open(os.path.join(out_dir, 'audit.json'), 'w', encoding='utf-8').write(json.dumps(audit, indent=1))
     return audit
@@ -498,8 +594,9 @@ def composite_proof(back, mask, front):
     return {'proof_label_pixels_unchanged': label_same, 'proof_cavity_pixels_showing_liquid': cavity_diff}
 
 
-def run(card_id, outline=1):
-    d = os.path.join(RAW, card_id)
+def run(card_id, outline=1, raw_dir=None):
+    """raw_dir lets an archived take set (raw/<card>_capped_v1) be processed as its card."""
+    d = os.path.join(RAW, raw_dir or card_id)
     takes = sorted(f for f in os.listdir(d) if f.endswith('.png')) if os.path.isdir(d) else []
     emb = None
     ed = os.path.join(d, 'emblem')
@@ -508,7 +605,7 @@ def run(card_id, outline=1):
         if os.path.exists(pick):
             emb = Image.open(pick).convert('RGBA')
     for t in takes:
-        out = os.path.join(STAGING, card_id, t[:-4] + ('_o%d' % outline if outline != 1 else ''))
+        out = os.path.join(STAGING, raw_dir or card_id, t[:-4] + ('_o%d' % outline if outline != 1 else ''))
         a = process_take(card_id, os.path.join(d, t), out, outline=outline, emblem=emb)
         print('  %-14s %-12s %s' % (card_id, t, json.dumps({k: a[k] for k in a if k in
               ('rejected', 'measure', 'liquid_rows', 'off_palette', 'proof_label_pixels_unchanged',
@@ -516,9 +613,12 @@ def run(card_id, outline=1):
 
 
 if __name__ == '__main__':
-    args = [a for a in sys.argv[1:] if not a.startswith('--')]
+    argv = sys.argv[1:]
     ol = 1
-    if '--outline' in sys.argv:
-        ol = int(sys.argv[sys.argv.index('--outline') + 1])
-    for cid in args:
-        run(cid, outline=ol)
+    raw = None
+    if '--outline' in argv:
+        i = argv.index('--outline'); ol = int(argv[i + 1]); del argv[i:i + 2]
+    if '--raw' in argv:
+        i = argv.index('--raw'); raw = argv[i + 1]; del argv[i:i + 2]
+    for cid in argv:
+        run(cid, outline=ol, raw_dir=raw)

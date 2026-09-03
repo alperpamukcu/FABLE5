@@ -58,7 +58,6 @@ def card_html(card_id, take_dir):
         back = Image.open(os.path.join(take_dir, 'v4_%s_back.png' % card_id)).convert('RGBA')
         mask = Image.open(os.path.join(take_dir, 'v4_%s_mask.png' % card_id)).convert('RGBA')
         front = Image.open(os.path.join(take_dir, 'v4_%s_front.png' % card_id)).convert('RGBA')
-        fopen = Image.open(os.path.join(take_dir, 'v4_%s_front_open.png' % card_id)).convert('RGBA')
         backc = Image.open(os.path.join(take_dir, 'v4_%s_back_c.png' % card_id)).convert('RGBA')
         maskc = Image.open(os.path.join(take_dir, 'v4_%s_mask_c.png' % card_id)).convert('RGBA')
         frontc = Image.open(os.path.join(take_dir, 'v4_%s_front_c.png' % card_id)).convert('RGBA')
@@ -66,13 +65,18 @@ def card_html(card_id, take_dir):
         for f in (0.25, 0.60, 0.95):
             cells.append('<div><div class="lbl">el · %d%% dolu</div>%s</div>'
                          % (int(f * 100), img(process.composite(back, mask, front, liq, f), 2)))
-        cells.append('<div><div class="lbl">el · AÇIK · 60%%</div>%s</div>'
-                     % img(process.composite(back, mask, fopen, liq, 0.6), 2))
         cells.append('<div><div class="lbl">boş (yalnız plakalar)</div>%s</div>'
                      % img(process.composite(back, mask, front, liq, 0.0), 2))
         for f in (0.25, 0.60, 0.95):
             cells.append('<div><div class="lbl">mahzen · %d%%</div>%s</div>'
                          % (int(f * 100), img(process.composite(backc, maskc, frontc, liq, f), 2)))
+        cells.append('<div><div class="lbl">mahzen 60%% · 6× · kontur 2px</div>%s</div>'
+                     % img(process.composite(backc, maskc, frontc, liq, 0.6), 6))
+        f1 = os.path.join(take_dir, 'v4_%s_front_c1.png' % card_id)
+        if os.path.exists(f1):
+            frontc1 = Image.open(f1).convert('RGBA')
+            cells.append('<div><div class="lbl">mahzen 60%% · 6× · kontur 1px</div>%s</div>'
+                         % img(process.composite(backc, maskc, frontc1, liq, 0.6), 6))
         cells.append('<div><div class="lbl">plakalar 1×: back · mask · front</div>%s %s %s</div>'
                      % (img(back, 1), img(mask, 1), img(front, 1)))
     m = a.get('measure', {})
@@ -107,7 +111,6 @@ def build(cards):
             parts.append('<h2>%s — staging yok</h2>' % cid); continue
         takes = sorted(os.listdir(d))
         parts.append('<h2>%s <small>%d take</small></h2>' % (cid, len(takes)))
-        parts.append(emblem_grid(cid))
         for t in takes:
             parts.append(card_html(cid, os.path.join(d, t)))
     pal = ''.join('<i style="background:#%02x%02x%02x"></i>' % c for c in palette.COLOURS)

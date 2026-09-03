@@ -20,6 +20,13 @@ SEEDS = (11, 23, 47)                          # three takes a card; picked by ey
 EMPTY = ('The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no '
          'coloured contents, no pool at the bottom; the inside shows only pale clear empty '
          'glass all the way down to the base. ')
+# THE MASTER IS OPEN (the author, 2026-08-27: "orijinal boyutta kapak olmayacak"). The hand
+# bottle is the one being poured from, so the generator draws it uncapped - a real open
+# mouth from this camera, a rim and a dark throat - and the cellar copy gets a small drawn
+# cap from the pipeline. No cap seam to find, no mouth to paint.
+OPEN = ('The bottle is OPEN with NO CAP, NO CORK and NO STOPPER: the bare neck ends in an open '
+        'mouth, and from this slightly-above camera the mouth shows as a thin glass rim '
+        'around a small dark opening. ')
 NO_LABEL = ('The bottle has NO LABEL AT ALL: bare glass, no paper, no print, no lettering, '
             'no logo, no sticker, no band, no text of any kind anywhere on it. ')
 CAMERA = ('Seen straight on from slightly above (about 17 degrees), so the cap top and the '
@@ -38,35 +45,35 @@ SEALED_NOTE = ('It is a sealed opaque container, drawn closed. ')
 #   emblem     the 32×32 emblem prompt (no text) for the label's medallion; None = no emblem
 CARDS = {
     # ── vodka: tall straight shoulder, narrow neck, screw cap ──────────────────
-    'vodka_astra':      ('vodka', 2.5, 'a tall slim clear-glass vodka bottle with straight shoulders, a narrow neck and a small silver screw cap', 'Cream', 'ClubBlue', 'a small stylised silver crane bird, flat pixel emblem, no text'),
-    'vodka_vor':        ('vodka', 2.5, 'a tall slim clear-glass vodka bottle with a very plain cylindrical body, minimal shoulders and a short silver screw cap', 'Cream', 'Graphite', 'a small stylised apothecary bottle silhouette, flat pixel emblem, no text'),
-    'vodka_leonid':     ('vodka', 2.5, 'a tall frosted pale-grey glass vodka bottle with straight shoulders and a dark grey screw cap', 'Graphite', 'Cream', 'a small stylised grey goose in flight, flat pixel emblem, no text'),
-    'vodka_okhta':      ('vodka', 2.5, 'a tall clear-glass vodka bottle with a faintly blue tint, elegant straight shoulders and a chrome screw cap', 'ClubBlue', 'Cream', 'a small stylised white whale, flat pixel emblem, no text'),
+    'vodka_astra':      ('vodka', 2.5, 'a tall slim clear-glass vodka bottle with straight shoulders', 'Cream', 'ClubBlue', 'a small stylised silver crane bird, flat pixel emblem, no text'),
+    'vodka_vor':        ('vodka', 2.5, 'a tall slim clear-glass vodka bottle with a very plain cylindrical body, minimal shoulders', 'Cream', 'Graphite', 'a small stylised apothecary bottle silhouette, flat pixel emblem, no text'),
+    'vodka_leonid':     ('vodka', 2.5, 'a tall frosted pale-grey glass vodka bottle with straight shoulders', 'Graphite', 'Cream', 'a small stylised grey goose in flight, flat pixel emblem, no text'),
+    'vodka_okhta':      ('vodka', 2.5, 'a tall clear-glass vodka bottle with a faintly blue tint, elegant straight shoulders', 'ClubBlue', 'Cream', 'a small stylised white whale, flat pixel emblem, no text'),
     # ── gin: squat, broad shoulder, cork + capsule ─────────────────────────────
-    'gin_boothby':      ('gin', 2.1, 'a squat dark-green glass gin bottle with broad shoulders, a short neck and a cork stopper with a cream capsule', 'Cream', 'Lime', 'a small stylised heraldic crest with a crown, flat pixel emblem, no text'),
-    'gin_juniper_crow': ('gin', 2.1, 'a squat pale-green glass gin bottle with broad shoulders, a short neck and a red-capsuled cork stopper', 'Cream', 'ViceRed', 'a small stylised top hat, flat pixel emblem, no text'),
-    'gin_thornwood':    ('gin', 2.1, 'a squat clear-glass gin bottle with a wide round body like a medicine flask, a short neck and a black cork stopper', 'Cream', 'Night', 'a small stylised rose flower, flat pixel emblem, no text'),
-    'gin_veilcrest':    ('gin', 2.1, 'a squat dark-blue glass gin bottle with broad shoulders, a short neck and a brass-capsuled cork stopper', 'Cream', 'Amber', 'a small stylised gibbon face, flat pixel emblem, no text'),
+    'gin_boothby':      ('gin', 2.1, 'a squat dark-green glass gin bottle with broad shoulders and a short neck', 'Cream', 'Lime', 'a small stylised heraldic crest with a crown, flat pixel emblem, no text'),
+    'gin_juniper_crow': ('gin', 2.1, 'a squat pale-green glass gin bottle with broad shoulders', 'Cream', 'ViceRed', 'a small stylised top hat, flat pixel emblem, no text'),
+    'gin_thornwood':    ('gin', 2.1, 'a squat clear-glass gin bottle with a wide round body like a medicine flask', 'Cream', 'Night', 'a small stylised rose flower, flat pixel emblem, no text'),
+    'gin_veilcrest':    ('gin', 2.1, 'a squat dark-blue glass gin bottle with broad shoulders', 'Cream', 'Amber', 'a small stylised gibbon face, flat pixel emblem, no text'),
     # ── rum: round shoulder, slightly bellied, cork ─────────────────────────────
-    'rum_cane_coral':   ('rum', 2.2, 'a clear-glass rum bottle with soft round shoulders and a slightly bellied body, a medium neck and a white cork stopper', 'Cream', 'Magenta', 'a small stylised bat with spread wings, flat pixel emblem, no text'),
-    'rum_tidewater':    ('rum', 2.2, 'an amber-tinted glass rum bottle with round shoulders, a bellied body and a gold-capsuled cork stopper', 'Amber', 'ViceRed', 'a small stylised admiral in a tricorn hat, flat pixel emblem, no text'),
-    'rum_windward':     ('rum', 2.2, 'a dark near-black glass rum bottle with round shoulders, a heavy bellied body and a black cork stopper', 'Night', 'ViceRed', 'a small stylised erupting volcano, flat pixel emblem, no text'),
-    'rum_reina_del_mar':('rum', 2.2, 'a clear-glass rum bottle with round shoulders, a slim bellied body and a white cork stopper', 'Cream', 'Cyan', 'a small stylised palm tree on a beach, flat pixel emblem, no text'),
+    'rum_cane_coral':   ('rum', 2.2, 'a clear-glass rum bottle with soft round shoulders and a slightly bellied body', 'Cream', 'Magenta', 'a small stylised bat with spread wings, flat pixel emblem, no text'),
+    'rum_tidewater':    ('rum', 2.2, 'an amber-tinted glass rum bottle with round shoulders', 'Amber', 'ViceRed', 'a small stylised admiral in a tricorn hat, flat pixel emblem, no text'),
+    'rum_windward':     ('rum', 2.2, 'a dark near-black glass rum bottle with round shoulders', 'Night', 'ViceRed', 'a small stylised erupting volcano, flat pixel emblem, no text'),
+    'rum_reina_del_mar':('rum', 2.2, 'a clear-glass rum bottle with round shoulders', 'Cream', 'Cyan', 'a small stylised palm tree on a beach, flat pixel emblem, no text'),
     # ── whiskey: square/broad body, short neck ─────────────────────────────────
-    'bourbon_redline':  ('whiskey', 2.0, 'a square-shouldered clear-glass whiskey bottle with a broad flat-sided body, a short neck and a black cork stopper', 'Night', 'ViceRed', 'a small stylised striding man in a top hat, flat pixel emblem, no text'),
-    'bourbon_old_harrow':('whiskey', 2.0, 'a square-shouldered clear-glass whiskey bottle with a broad body, a short neck and a black screw cap', 'Night', 'Cream', 'a small stylised hound dog head, flat pixel emblem, no text'),
-    'bourbon_ashfall':  ('whiskey', 1.9, 'a heavy squat clear-glass whiskey bottle with a broad body, a short neck and a red wax-dipped cork top with drips', 'Cream', 'ViceRed', 'a small stylised ornate M monogram seal, flat pixel emblem, no text'),
-    'bourbon_hollow_oak':('whiskey', 2.0, 'a broad-shouldered clear-glass whiskey bottle with a slightly tapered body, a short neck and a gold-foil cork top', 'Amber', 'Night', 'a small stylised old man face in profile, flat pixel emblem, no text'),
+    'bourbon_redline':  ('whiskey', 2.0, 'a square-shouldered clear-glass whiskey bottle with a broad flat-sided body', 'Night', 'ViceRed', 'a small stylised striding man in a top hat, flat pixel emblem, no text'),
+    'bourbon_old_harrow':('whiskey', 2.0, 'a square-shouldered clear-glass whiskey bottle with a broad body', 'Night', 'Cream', 'a small stylised hound dog head, flat pixel emblem, no text'),
+    'bourbon_ashfall':  ('whiskey', 1.9, 'a heavy squat clear-glass whiskey bottle with a broad body and a short neck', 'Cream', 'ViceRed', 'a small stylised ornate M monogram seal, flat pixel emblem, no text'),
+    'bourbon_hollow_oak':('whiskey', 2.0, 'a broad-shouldered clear-glass whiskey bottle with a slightly tapered body', 'Amber', 'Night', 'a small stylised old man face in profile, flat pixel emblem, no text'),
     # ── tequila: long neck, narrow base ─────────────────────────────────────────
-    'tequila_sonora':   ('tequila', 2.3, 'a clear-glass tequila bottle with a long neck, gently sloping shoulders and a gold screw cap', 'Cream', 'Amber', 'a small stylised black crow, flat pixel emblem, no text'),
-    'tequila_alta_luna':('tequila', 2.3, 'a clear-glass tequila bottle with a long neck, square shoulders and a black cork stopper', 'Cream', 'Night', 'a small stylised crescent moon, flat pixel emblem, no text'),
-    'tequila_sol_viejo':('tequila', 2.3, 'a clear-glass tequila bottle with a long neck, square shoulders, a wide low body and a natural cork stopper', 'Amber', 'Lime', 'a small stylised agave plant, flat pixel emblem, no text'),
-    'tequila_cielo_rojo':('tequila', 2.3, 'a hand-blown clear-glass tequila bottle with a blue-tinted rim, a long neck, a bulbous lower body and a rope-tied cork', 'ClubBlue', 'Cream', 'a small stylised blue sun with rays, flat pixel emblem, no text'),
+    'tequila_sonora':   ('tequila', 2.3, 'a clear-glass tequila bottle with a long neck, gently sloping shoulders', 'Cream', 'Amber', 'a small stylised black crow, flat pixel emblem, no text'),
+    'tequila_alta_luna':('tequila', 2.3, 'a clear-glass tequila bottle with a long neck, square shoulders', 'Cream', 'Night', 'a small stylised crescent moon, flat pixel emblem, no text'),
+    'tequila_sol_viejo':('tequila', 2.3, 'a clear-glass tequila bottle with a long neck, square shoulders and a wide low body', 'Amber', 'Lime', 'a small stylised agave plant, flat pixel emblem, no text'),
+    'tequila_cielo_rojo':('tequila', 2.3, 'a hand-blown clear-glass tequila bottle with a blue-tinted rim, a long neck and a bulbous lower body', 'ClubBlue', 'Cream', 'a small stylised blue sun with rays, flat pixel emblem, no text'),
     # ── singles: slim, high shoulder ────────────────────────────────────────────
-    'amaro_notte':      ('liqueur', 2.4, 'a tall slim clear-glass aperitivo bottle with high shoulders, a long neck and a white screw cap', 'ViceRed', 'Cream', 'a small stylised orange slice, flat pixel emblem, no text'),
-    'vermouth_velvet':  ('liqueur', 2.4, 'a tall slim clear-glass vermouth bottle with high shoulders, a long neck and a dark green screw cap', 'Lime', 'Cream', 'a small stylised vine leaf, flat pixel emblem, no text'),
-    'liqueur_delia':    ('liqueur', 2.4, 'a slim clear-glass liqueur bottle with a tapered body, a long neck and a red wax-sealed cork', 'Amber', 'ViceRed', 'a small stylised sailing ship, flat pixel emblem, no text'),
-    'liqueur_kafa':     ('liqueur', 2.4, 'a slim dark-brown glass liqueur bottle with high shoulders, a long neck and a gold screw cap', 'Malt', 'Cream', 'a small stylised koala face, flat pixel emblem, no text'),
+    'amaro_notte':      ('liqueur', 2.4, 'a tall slim clear-glass aperitivo bottle with high shoulders', 'ViceRed', 'Cream', 'a small stylised orange slice, flat pixel emblem, no text'),
+    'vermouth_velvet':  ('liqueur', 2.4, 'a tall slim clear-glass vermouth bottle with high shoulders', 'Lime', 'Cream', 'a small stylised vine leaf, flat pixel emblem, no text'),
+    'liqueur_delia':    ('liqueur', 2.4, 'a slim clear-glass liqueur bottle with a tapered body', 'Amber', 'ViceRed', 'a small stylised sailing ship, flat pixel emblem, no text'),
+    'liqueur_kafa':     ('liqueur', 2.4, 'a slim dark-brown glass liqueur bottle with high shoulders', 'Malt', 'Cream', 'a small stylised koala face, flat pixel emblem, no text'),
     # ── beers: sealed brown glass ───────────────────────────────────────────────
     'beer_kestrel':     ('beer', 2.6, 'a long-neck brown glass beer bottle with a gold crown cap', 'Amber', 'ClubBlue', 'a small stylised kestrel bird, flat pixel emblem, no text'),
     'beer_collier':     ('beer', 2.6, 'a long-neck dark brown glass stout bottle with a black crown cap', 'Night', 'Cream', 'a small stylised harp, flat pixel emblem, no text'),
@@ -81,10 +88,10 @@ CARDS = {
     'cranberry_north':  ('carton', 2.0, 'a plain deep red cranberry juice carton, a gable-top box with a small white screw cap, flat red sides', 'ViceRed', 'Cream', 'a small stylised cluster of three red berries, flat pixel emblem, no text'),
     'pineapple_isla':   ('carton', 2.0, 'a plain golden-yellow pineapple juice carton, a gable-top box with a small white screw cap, flat yellow sides', 'Amber', 'Lime', 'a small stylised pineapple, flat pixel emblem, no text'),
     # ── mixer glass bottles ────────────────────────────────────────────────────
-    'tonic_quinbury':   ('mixer', 2.4, 'a slim clear-glass tonic water bottle with a fluted body, a short neck and a small silver screw cap', 'Cream', 'Cyan', 'a small stylised cinchona leaf, flat pixel emblem, no text'),
-    'soda_klara':       ('mixer', 2.4, 'a slim clear-glass soda water bottle with a plain body, a short neck and a small silver screw cap', 'Cream', 'ClubBlue', 'a small stylised rising bubble trio, flat pixel emblem, no text'),
-    'ginger_kicker':    ('mixer', 2.4, 'a slim amber-tinted glass ginger beer bottle with a plain body, a short neck and a small gold screw cap', 'Amber', 'Night', 'a small stylised kicking boot, flat pixel emblem, no text'),
-    'syrup_house':      ('mixer', 2.4, 'a slim clear-glass syrup bottle with a plain body, a short neck and a small black screw cap', 'Cream', 'Amber', None),
+    'tonic_quinbury':   ('mixer', 2.4, 'a slim clear-glass tonic water bottle with a fluted body', 'Cream', 'Cyan', 'a small stylised cinchona leaf, flat pixel emblem, no text'),
+    'soda_klara':       ('mixer', 2.4, 'a slim clear-glass soda water bottle with a plain body', 'Cream', 'ClubBlue', 'a small stylised rising bubble trio, flat pixel emblem, no text'),
+    'ginger_kicker':    ('mixer', 2.4, 'a slim amber-tinted glass ginger beer bottle with a plain body', 'Amber', 'Night', 'a small stylised kicking boot, flat pixel emblem, no text'),
+    'syrup_house':      ('mixer', 2.4, 'a slim clear-glass syrup bottle with a plain body', 'Cream', 'Amber', None),
 }
 
 SEALED = {'can', 'carton', 'beer'}     # no cavity, no liquid plates — one sprite + derived open
@@ -96,7 +103,7 @@ def build(card_id):
     body = ('%s, about %.1f times as tall as it is wide. ' % (look, ratio))
     if fam in SEALED:
         return body + SEALED_NOTE + NO_LABEL + CAMERA + STYLE
-    return body + EMPTY + NO_LABEL + CAMERA + STYLE
+    return body + EMPTY + OPEN + NO_LABEL + CAMERA + STYLE
 
 
 def emblem_prompt(card_id):
