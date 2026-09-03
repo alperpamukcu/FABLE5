@@ -1245,6 +1245,7 @@ namespace LastCall.UI
             FadeShopTabs();
             StepSlide();
             RunTheTill(run);
+            PushCellarFills(run);       // the cellar levels follow the night's pours (PLAN §4c)
             FollowPointerWithRecipeTip();
             FollowPointerWithShopCard();
             FollowPointerWithShopSpec();

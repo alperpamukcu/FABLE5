@@ -593,6 +593,31 @@ Pilot raporu `Tools/v4_bottles/report.html`; yazar take + amblem + kontur seçec
 take **çıpa** olacak. Çalışma zamanı (BottleArt sandviçi, mahzen SpriteMask, BottleH 384,
 CellarBottleH 64) pilot onayından SONRA.
 
+### 9.15 · v4 şişeler oyunda: sandviç iki sahnede, votka ailesi çıpalı (2026-09-04)
+
+**Çalışma zamanı kuruldu (PLAN v4 §4c + §12 kademe 1).** `BottleArt` yeniden yazıldı: arka plaka
+→ `Clip` (Mask = kavite maskesi) → `Level` (her kare **−tilt** ile ters döndürülen, dünya-hizalı
+rect) → içki + yüzey bandı → ön plaka. Sıvı çizgisi şişe eğilince **yatay kalır** — sektörün
+standart deseni, shader'sız. Doluluk **hacim-doğru**: maskenin texel'leri eğim kovası başına
+(36 × 5°) dünya-yukarıya izdüşümle sıralanıp `fraction`'ıncı texel yüzey oluyor; eğik şişe
+dolu miktarını değiştirmiyor. `BottleFill` yalnız v4 plakası olmayan kartların yedeği.
+**Mahzen:** slot başına üç `SpriteRenderer` — arka (30), `SpriteMask` altında düz renk 1×1 quad
+(31, kaviteye ölçekli, satıra kuantize), ön (32; 31'di, içki etiketi örtüyordu). Doluluk HUD'dan
+(`SetCellarPlates/SetCellarFills/SetCellarTones`) — sahne çalıştırmayı okumaz. `CellarBottleH`
+62 → **64**, el `BottleH` 300 → **384**, `VesselArt.StandOn(fixedScale)` ile v4 masterı **tam 2×**
+(ölçüldü: sabit ölçek olmadan 2.19× duruyordu). `ItemArt.Plates(card, cellar)`; `Bottle` → kapaklı
+mahzen kopyası, `BottleOpen` → açık master.
+
+**Bir yan hata bulundu:** `BuildOpenSign` kapısı retire edilmiş `sign_open.png`'yi yüklüyordu;
+dosya diskten gitmişti (yazarın çalışma ağacı silmesi), editörün Resources önbelleği tükenince
+tabela — ve PlayMode'un bastığı `OpenSignArrow` — sessizce kurulmaz oldu. Kapı artık çizilen
+ok. Silme commit'lendi.
+
+**Sanat:** Smirkoff s23 çıpa; Absolve, Gander, Whale (votka ailesi) ona `style_image` +
+`reference_images` + seed ile üretildi — tek el (kontak sayfası). Amblemler tek çağrı, indeks 0.
+`Tools/v4_bottles/ship.py` yalnız `picks.json`'daki seçimleri `Assets/Resources/Items/v4_*` olarak
+gönderir. Tezgâh baseline'ı elde v4 şişeyle yeniden kutsandı.
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

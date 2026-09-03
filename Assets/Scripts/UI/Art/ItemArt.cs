@@ -44,9 +44,41 @@ namespace LastCall.UI
         /// have their own vessel under <c>bot_{id}</c>; the tier that opens the bar keeps
         /// the style art, which is its art, so the fallback is the rule and not a mercy.
         /// </summary>
+        // ── the v4 sandwich (2026-09-04, Docs/PLAN_bottle_art_v4.md) ──────────────
+        //
+        // A v4 bottle is THREE plates on one 96x192 canvas: the interior (back), the drink's
+        // mask (shoulder to base — full means the shoulder), and the glass front with the
+        // label pressed on it. The cellar carries the same three at 32x64, rebuilt at that
+        // size rather than shrunk, with a drawn cap. Nothing here composes them: the hand
+        // bench builds a BottleArt, the cellar builds sprite renderers under a SpriteMask.
+
+        /// <summary>The v4 plates for a card, or null if the card has no v4 art yet.
+        /// <paramref name="cellar"/> picks the 32x64 set.</summary>
+        public static BottlePlates Plates(LastCall.Core.IngredientCard card, bool cellar = false)
+        {
+            if (card == null) return null;
+            string s = cellar ? "_c" : "";
+            var front = Load("v4_" + card.Id + "_front" + s);
+            if (front == null) return null;
+            return new BottlePlates(Load("v4_" + card.Id + "_back" + s),
+                                    Load("v4_" + card.Id + "_mask" + s), front);
+        }
+
+        public sealed class BottlePlates
+        {
+            public readonly Sprite Back, Mask, Front;
+            public BottlePlates(Sprite back, Sprite mask, Sprite front) { Back = back; Mask = mask; Front = front; }
+            /// <summary>A sealed vessel (carton, can) ships one sprite and no cavity.</summary>
+            public bool Sealed => Mask == null;
+        }
+
         public static Sprite Bottle(LastCall.Core.IngredientCard card)
         {
             if (card == null) return null;
+            // v4 first: the CELLAR front is the capped, closed bottle — the icon of the
+            // brand wherever a closed bottle is asked for (market, hover card, the cellar).
+            var v4 = Load("v4_" + card.Id + "_front_c") ?? Load("v4_" + card.Id + "_c");
+            if (v4 != null) return v4;
             // The FLAT era (the author, 2026-08-05: "gerekirse sıvıları kaldır" — and it
             // was gerekli): the bottle is ONE composed sprite, back and front baked
             // together in the pipeline. No layers at runtime, nothing to mis-stack,
@@ -63,6 +95,9 @@ namespace LastCall.UI
         public static Sprite BottleOpen(LastCall.Core.IngredientCard card)
         {
             if (card == null) return null;
+            // v4: the master IS the open bottle (generated uncapped), so the hand front is it.
+            var v4 = Load("v4_" + card.Id + "_front") ?? Load("v4_" + card.Id);
+            if (v4 != null) return v4;
             var flatOpen = Load("v3_" + card.Id + "_flat_open");
             if (flatOpen != null) return flatOpen;
             // The brand's own capless shot, then its STYLE's — a tier-one brand has no art

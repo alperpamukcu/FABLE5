@@ -24,6 +24,69 @@
    "n": 1,
    "secs": 167.0,
    "poll": "status: completed\nid: 539dc4c2-72c0-4986-b922-6da7f81d7588\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/539dc4c2-72c0-4986-b922-6da7f81d7588/download\n"
+  },
+  "vodka_vor:11": {
+   "job": "2fcc73ef-0d9e-4c79-93d1-5cf92f6e080c",
+   "submit": "id: 2fcc73ef-0d9e-4c79-93d1-5cf92f6e080c\nmodel: pro\ndescription: a tall slim clear-glass vodka bottle with a very plain cylindrical body, minimal shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bott",
+   "n": 1,
+   "secs": 154.6,
+   "poll": "status: completed\nid: 2fcc73ef-0d9e-4c79-93d1-5cf92f6e080c\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/2fcc73ef-0d9e-4c79-93d1-5cf92f6e080c/download\n"
+  },
+  "vodka_vor:23": {
+   "job": "5ac53be9-f89e-434d-8970-72533ab7990d",
+   "submit": "id: 5ac53be9-f89e-434d-8970-72533ab7990d\nmodel: pro\ndescription: a tall slim clear-glass vodka bottle with a very plain cylindrical body, minimal shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bott",
+   "n": 1,
+   "secs": 83.9,
+   "poll": "status: completed\nid: 5ac53be9-f89e-434d-8970-72533ab7990d\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/5ac53be9-f89e-434d-8970-72533ab7990d/download\n"
+  },
+  "vodka_vor:47": {
+   "job": "510b8e69-5c62-4095-a48a-e81932c539a1",
+   "submit": "id: 510b8e69-5c62-4095-a48a-e81932c539a1\nmodel: pro\ndescription: a tall slim clear-glass vodka bottle with a very plain cylindrical body, minimal shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bott",
+   "n": 1,
+   "secs": 150.4,
+   "poll": "status: completed\nid: 510b8e69-5c62-4095-a48a-e81932c539a1\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/510b8e69-5c62-4095-a48a-e81932c539a1/download\n"
+  },
+  "vodka_leonid:11": {
+   "job": "f170f13b-50f9-4ea1-a62b-461d67404d34",
+   "submit": "id: f170f13b-50f9-4ea1-a62b-461d67404d34\nmodel: pro\ndescription: a tall frosted pale-grey glass vodka bottle with straight shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN with NO CAP,",
+   "n": 1,
+   "secs": 117.0,
+   "poll": "status: completed\nid: f170f13b-50f9-4ea1-a62b-461d67404d34\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/f170f13b-50f9-4ea1-a62b-461d67404d34/download\n"
+  },
+  "vodka_leonid:23": {
+   "job": "034d62d0-db5b-4d27-a39b-fc61e615e019",
+   "submit": "id: 034d62d0-db5b-4d27-a39b-fc61e615e019\nmodel: pro\ndescription: a tall frosted pale-grey glass vodka bottle with straight shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN with NO CAP,",
+   "n": 1,
+   "secs": 118.3,
+   "poll": "status: completed\nid: 034d62d0-db5b-4d27-a39b-fc61e615e019\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/034d62d0-db5b-4d27-a39b-fc61e615e019/download\n"
+  },
+  "vodka_leonid:47": {
+   "job": "278cd746-9961-4818-836b-b748767bf5bc",
+   "submit": "id: 278cd746-9961-4818-836b-b748767bf5bc\nmodel: pro\ndescription: a tall frosted pale-grey glass vodka bottle with straight shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN with NO CAP,",
+   "n": 1,
+   "secs": 300.3,
+   "poll": "status: completed\nid: 278cd746-9961-4818-836b-b748767bf5bc\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/278cd746-9961-4818-836b-b748767bf5bc/download\n"
+  },
+  "vodka_okhta:11": {
+   "job": "364ec958-63c5-49c8-b6fe-4e768a6d60ab",
+   "submit": "id: 364ec958-63c5-49c8-b6fe-4e768a6d60ab\nmodel: pro\ndescription: a tall clear-glass vodka bottle with a faintly blue tint, elegant straight shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is ",
+   "n": 1,
+   "secs": 100.6,
+   "poll": "status: completed\nid: 364ec958-63c5-49c8-b6fe-4e768a6d60ab\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/364ec958-63c5-49c8-b6fe-4e768a6d60ab/download\n"
+  },
+  "vodka_okhta:23": {
+   "job": "72e863e6-4c71-451c-a782-9fcb7260908a",
+   "submit": "id: 72e863e6-4c71-451c-a782-9fcb7260908a\nmodel: pro\ndescription: a tall clear-glass vodka bottle with a faintly blue tint, elegant straight shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is ",
+   "n": 1,
+   "secs": 117.1,
+   "poll": "status: completed\nid: 72e863e6-4c71-451c-a782-9fcb7260908a\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/72e863e6-4c71-451c-a782-9fcb7260908a/download\n"
+  },
+  "vodka_okhta:47": {
+   "job": "246bcc41-573d-4ebb-9553-3771cd737a83",
+   "submit": "id: 246bcc41-573d-4ebb-9553-3771cd737a83\nmodel: pro\ndescription: a tall clear-glass vodka bottle with a faintly blue tint, elegant straight shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is ",
+   "n": 1,
+   "secs": 193.0,
+   "poll": "status: completed\nid: 246bcc41-573d-4ebb-9553-3771cd737a83\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/246bcc41-573d-4ebb-9553-3771cd737a83/download\n"
   }
  }
 }

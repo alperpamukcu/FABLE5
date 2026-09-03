@@ -27,7 +27,8 @@ namespace LastCall.UI
         private RectTransform _pourBottle;    // the grabbable bottle
         private RectTransform _pourVessel;    // the bottle itself inside it, sized to its art
         private Image _pourBottleBody;
-        private BottleFill _pourFill;         // what is left in it, behind the glass
+        private BottleFill _pourFill;         // what is left in it, behind the glass (pre-v4 art)
+        private BottleArt _pourArt;           // the v4 sandwich: back, level drink, glass front
         /// <summary>Where this bottle's CAP is, as an offset from the grip — measured off the
         /// art (VesselArt) when the stage refreshes, swung with the bottle when it tips.</summary>
         private Vector2 _pourMouth;
@@ -42,7 +43,10 @@ namespace LastCall.UI
         // şişelerinin boyutunu büyüt") — the v3 masters are slimmer than the old art,
         // and at 230 a 3.7:1 bottle read as a wand. The mouth offset and the tilt
         // maths all derive from this, so the pour arc scales with it.
-        private const float BottleH = 300f;
+        // 384 (2026-09-04, PLAN_bottle_art_v4 §3): the v4 master is 96x192 and draws at exactly
+        // 2x, the same pixel size the cellar's 32x64 copy draws at — one drawing, three times
+        // the resolution when it is in the hand. Was 300, which put a 192-tall master at 1.56x.
+        private const float BottleH = 384f;
         // The pour fills slower than the raw bottle rate so the stream reads as a real pour
         // (GDD 24 §2, 2026-07-22 — "doluş hızı çok hızlı"). Only the drawn volume slows; the
         // floor's patience clock runs on its own tick, untouched.
@@ -561,13 +565,21 @@ namespace LastCall.UI
             // capless variant when one exists. Same canvas as the closed art, so the liquid
             // mask and the mouth line all stay put; styles missing an open shot fall back.
             var bottleSprite = ItemArt.BottleOpen(_focusBottle);
+            // v4: the sandwich draws the bottle — back, drink, front — and the flat body
+            // image stands down; pre-v4 cards keep the flat body and the stencil fill.
+            var plates = ItemArt.Plates(_focusBottle);
+            _pourArt?.Show(plates);   // null across a domain reload mid-play; rebuilt with the UI
+            _pourBottleBody.enabled = plates == null;
             _pourBottleBody.sprite = bottleSprite;
             _pourBottleBody.color = bottleSprite != null ? Color.white : colour;
             // It stands on the bench at the size its own drawing asks for, and it is measured
             // against its CLOSED art: an open bottle is the same bottle with the cap off, so
             // it must not grow to fill the space the cap left (VesselArt).
+            // A v4 bottle is gauged against ITSELF: its open master is the whole canvas, there
+            // is no separate closed sheet to measure the cap against.
             _pourMouth = VesselArt.StandOn(_pourVessel, new Vector2(0.5f, 0f), bottleSprite,
-                BottleH, Vector2.zero, ItemArt.Bottle(_focusBottle));
+                BottleH, Vector2.zero, plates != null ? bottleSprite : ItemArt.Bottle(_focusBottle),
+                fixedScale: plates != null ? BottleH / 192f : 0f);   // exactly 2x for a v4 master
             PushPourFill(run);
         }
 
@@ -712,11 +724,19 @@ namespace LastCall.UI
         private void PushPourFill(TycoonRun run)
         {
             if (_pourFill == null) return;
-            if (_focusBottle == null) { _pourFill.Hide(); return; }
+            if (_focusBottle == null) { _pourFill.Hide(); _pourArt?.Hide(); return; }
             var stock = run?.Shelf?.Find(_focusBottle.Id);
-            _pourFill.Show(_pourBottleBody.sprite,
-                UITheme.LiquidColor(_focusBottle.Info?.Style, _focusBottle.Type),
-                stock != null && stock.Capacity > 0 ? stock.Remaining / stock.Capacity : 0.0);
+            double fraction = stock != null && stock.Capacity > 0 ? stock.Remaining / stock.Capacity : 0.0;
+            var tone = UITheme.LiquidColor(_focusBottle.Info?.Style, _focusBottle.Type);
+            if (_pourArt != null && ItemArt.Plates(_focusBottle) != null)
+            {
+                // THE SURFACE STAYS LEVEL (PLAN §12): the tilt is the grab plate's z rotation,
+                // and the drink counter-rotates by it inside the glass.
+                _pourFill.Hide();
+                _pourArt.SetLevel(tone, fraction, _pourBottle.localRotation.eulerAngles.z);
+                return;
+            }
+            _pourFill.Show(_pourBottleBody.sprite, tone, fraction);
         }
 
         /// <summary>
@@ -1462,6 +1482,7 @@ namespace LastCall.UI
             // feet on the plate's floor line and their caps where the art puts them.
             _pourVessel = NewRect("Vessel", _pourBottle);
             _pourFill = BottleFill.Under(_pourVessel);
+            _pourArt = BottleArt.Under(_pourVessel);
 
             var pourArt = NewRect("Body", _pourVessel);
             Stretch(pourArt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);

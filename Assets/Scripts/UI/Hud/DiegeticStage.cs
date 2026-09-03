@@ -246,7 +246,10 @@ namespace LastCall.UI
         /// is not a thumbnail grid: the bottles are the size they are, and what gives when
         /// the stock grows is the AIR BETWEEN THEM, down to a single pixel and no further.
         /// </summary>
-        private const float CellarBottleH = 62f;
+        // 64 (2026-09-04, PLAN_bottle_art_v4 §3): the v4 cellar copy is 32x64 art drawn at one
+        // art pixel per stage unit, so 64 tall is the drawing at 1:1 and 2x on a 720p screen.
+        // Was 62; the compartment's air above the bottle goes from 16 rows to 14.
+        private const float CellarBottleH = 64f;
         /// <summary>The least air allowed between two shoulders, in art px. One, because
         /// that is what the author asked for; not zero, because touching bottles read as
         /// one smear and the hit plates behind them would share an edge.</summary>
@@ -260,6 +263,17 @@ namespace LastCall.UI
         private readonly List<float> _cellarSlotW = new List<float>();
         private readonly List<float> _cellarSlotFoot = new List<float>();
         private readonly List<SpriteRenderer> _cellarStock = new List<SpriteRenderer>();
+        // THE v4 SANDWICH IN THE CELLAR (2026-09-04, PLAN_bottle_art_v4 §4c). Per slot: the
+        // interior plate behind the front, and between them a flat-colour quad clipped by a
+        // SpriteMask carrying the drink's cavity — so the level is a real level, cut by the
+        // glass, lit by the room like everything else on the counter. The quad is a 1x1 white
+        // sprite scaled to the cavity: flat colour, so scaling distorts nothing. A mask only
+        // reaches sprites that overlap it, so thirty-six masks on one order never cross.
+        private readonly List<SpriteRenderer> _cellarBack = new List<SpriteRenderer>();
+        private readonly List<SpriteRenderer> _cellarDrink = new List<SpriteRenderer>();
+        private readonly List<SpriteMask> _cellarMask = new List<SpriteMask>();
+        private readonly List<Rect> _cellarCavity = new List<Rect>();   // opaque bbox of the mask, in art px
+        private Sprite _whitePx;
         private RectTransform _cellarDoorRoot;
         private CanvasGroup _cellarDoorGroup;
         private readonly List<RectTransform> _cellarDoors = new List<RectTransform>();
@@ -335,12 +349,19 @@ namespace LastCall.UI
             PackCellar(bottles, n);
             n = _cellarSlotX.Count;
             while (_cellarStock.Count < n)
-                _cellarStock.Add(WorldSprite("Stock" + _cellarStock.Count, null, order: 31));
+                // 32, not 31 (2026-09-04): the v4 sandwich puts the interior at 30 and the drink
+                // at 31 UNDER this front; sharing 31 let the drink draw over the label.
+                _cellarStock.Add(WorldSprite("Stock" + _cellarStock.Count, null, order: 32));
             for (int i = 0; i < _cellarStock.Count; i++)
             {
                 var sr = _cellarStock[i];
                 bool on = i < n && bottles[i] != null;
                 if (sr.gameObject.activeSelf != on) sr.gameObject.SetActive(on);
+                if (i < _cellarBack.Count && _cellarBack[i].gameObject.activeSelf != on)
+                {
+                    _cellarBack[i].gameObject.SetActive(on);
+                    _cellarDrink[i].gameObject.SetActive(on);
+                }
                 if (!on) continue;
                 sr.sprite = bottles[i];
                 PlaceCellarSlot(sr, i);
@@ -428,6 +449,112 @@ namespace LastCall.UI
         /// aspect at the one shelf height. A missing sprite is given the catalogue's broadest
         /// shoulder so a hole in the stock cannot pack the shelf tighter than it will be.
         /// </summary>
+        /// <summary>
+        /// The v4 plates and the drink levels for the cellar, in the SAME order as the sprites
+        /// given to <see cref="SetCellar"/>. Slots without plates (pre-v4 cards) draw the flat
+        /// front only. Told by the HUD; the stage never reads the run.
+        /// </summary>
+        public void SetCellarPlates(IReadOnlyList<ItemArt.BottlePlates> plates, IReadOnlyList<float> fills)
+        {
+            while (_cellarBack.Count < _cellarStock.Count)
+            {
+                int i = _cellarBack.Count;
+                var back = WorldSprite("StockBack" + i, null, order: 30);
+                var maskGo = new GameObject("StockMask" + i);
+                maskGo.transform.SetParent(_world, false);
+                var mask = maskGo.AddComponent<SpriteMask>();
+                mask.isCustomRangeActive = true;
+                mask.frontSortingLayerID = mask.backSortingLayerID = back.sortingLayerID;
+                mask.frontSortingOrder = 31; mask.backSortingOrder = 31;
+                var drink = WorldSprite("StockDrink" + i, WhitePixel(), order: 31);
+                drink.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+                _cellarBack.Add(back); _cellarMask.Add(mask); _cellarDrink.Add(drink);
+                _cellarCavity.Add(Rect.zero);
+            }
+            for (int i = 0; i < _cellarStock.Count; i++)
+            {
+                var p = plates != null && i < plates.Count ? plates[i] : null;
+                bool on = p != null && p.Mask != null && _cellarStock[i].gameObject.activeSelf;
+                _cellarBack[i].gameObject.SetActive(on);
+                _cellarDrink[i].gameObject.SetActive(on);
+                _cellarMask[i].gameObject.SetActive(on);
+                if (!on) continue;
+                _cellarBack[i].sprite = p.Back;
+                _cellarMask[i].sprite = p.Mask;
+                _cellarCavity[i] = OpaqueBounds(p.Mask);
+                PlaceCellarSlot(_cellarStock[i], i);
+            }
+            SetCellarFills(fills);
+        }
+
+        /// <summary>The drink levels only — cheap enough to call whenever stock moves.</summary>
+        public void SetCellarFills(IReadOnlyList<float> fills)
+        {
+            for (int i = 0; i < _cellarDrink.Count && i < _cellarStock.Count; i++)
+            {
+                var d = _cellarDrink[i];
+                if (!d.gameObject.activeSelf) continue;
+                float f = fills != null && i < fills.Count ? Mathf.Clamp01(fills[i]) : 0f;
+                var cav = _cellarCavity[i];
+                var sp = _cellarMask[i].sprite;
+                if (sp == null || cav.width <= 0f || f <= 0f) { d.enabled = false; continue; }
+                d.enabled = true;
+                d.color = i < _cellarTones.Count ? _cellarTones[i] : Color.white;
+                // Art pixel -> world: the mask sprite's PPU, times the slot's scale. The cavity
+                // rect is in art pixels from the sprite's bottom-left; the sprite is drawn
+                // centred (pivot 0.5, 0.5), so offsets are from its centre.
+                float ppu = sp.pixelsPerUnit;
+                float k = _cellarMask[i].transform.localScale.x;
+                float unit = k / ppu;
+                float rows = Mathf.Round(cav.height * f);        // whole art rows: one pixel at a time
+                if (rows < 1f) { d.enabled = false; continue; }
+                float w = cav.width * unit, hgt = rows * unit;
+                float cx = (cav.x + cav.width * 0.5f - sp.rect.width * 0.5f) * unit;
+                float cy = (cav.y + rows * 0.5f - sp.rect.height * 0.5f) * unit;
+                d.transform.localScale = new Vector3(w, hgt, 1f);
+                d.transform.position = _cellarMask[i].transform.position + new Vector3(cx, cy, 0f);
+            }
+        }
+
+        /// <summary>The drink colours per slot, same order as the plates.</summary>
+        public void SetCellarTones(IReadOnlyList<Color> tones)
+        {
+            _cellarTones.Clear();
+            if (tones != null) _cellarTones.AddRange(tones);
+        }
+
+        private readonly List<Color> _cellarTones = new List<Color>();
+
+        private Sprite WhitePixel()
+        {
+            if (_whitePx != null) return _whitePx;
+            var tex = new Texture2D(1, 1, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
+            tex.SetPixel(0, 0, Color.white); tex.Apply();
+            // PPU 1: one unit per pixel, so localScale IS the size in stage units.
+            _whitePx = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
+            return _whitePx;
+        }
+
+        /// <summary>The opaque bounding box of a mask sprite, in art pixels from its bottom-left.</summary>
+        private static Rect OpaqueBounds(Sprite sp)
+        {
+            var tex = sp.texture;
+            if (tex == null || !tex.isReadable) return new Rect(0, 0, sp.rect.width, sp.rect.height);
+            int x0 = Mathf.RoundToInt(sp.rect.x), y0 = Mathf.RoundToInt(sp.rect.y);
+            int w = Mathf.RoundToInt(sp.rect.width), h = Mathf.RoundToInt(sp.rect.height);
+            var px = tex.GetPixels32();
+            int minX = w, minY = h, maxX = -1, maxY = -1;
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                    if (px[(y0 + y) * tex.width + x0 + x].a > 127)
+                    {
+                        if (x < minX) minX = x; if (x > maxX) maxX = x;
+                        if (y < minY) minY = y; if (y > maxY) maxY = y;
+                    }
+            if (maxX < 0) return Rect.zero;
+            return new Rect(minX, minY, maxX - minX + 1, maxY - minY + 1);
+        }
+
         private static float CellarDrawnWidth(Sprite s)
         {
             if (s == null || s.rect.height <= 0.0001f) return CellarBottleH * 0.5f;
@@ -627,8 +754,13 @@ namespace LastCall.UI
         private void BuildOpenSign()
         {
             if (_shutterDoor == null || _cellarOpenSign != null) return;
-            var word = ItemArt.Load("sign_open");
-            if (word == null) return;    // no art on disk: a bare roller still opens
+            // THE GUARD IS THE ARROW, not the word (2026-09-04). The roller stopped drawing
+            // the word on 2026-08-26 and sign_open.png left the disk with it; this still
+            // loaded the word as its no-art guard, so the sign — and the OpenSignArrow the
+            // PlayMode suite presses — silently stopped being built once the editor's
+            // Resources cache no longer had the deleted file. What is drawn is what gates.
+            var arrow = ItemArt.Load("sign_open_arrow");
+            if (arrow == null) return;   // no art on disk: a bare roller still opens
 
             _cellarOpenSign = NewRect("OpenSign", _shutterDoor);
             _cellarOpenSign.anchorMin = _cellarOpenSign.anchorMax = new Vector2(0.5f, 1f);
@@ -649,7 +781,7 @@ namespace LastCall.UI
             // word used to sit. `word` is still loaded above as the no-art guard: the sign
             // tool ships the word and the arrows together, so its absence still means "no
             // art on disk", and the suites now aim at the ARROW.
-            SignMark(_cellarOpenSign, "OpenSignArrow", ItemArt.Load("sign_open_arrow"),
+            SignMark(_cellarOpenSign, "OpenSignArrow", arrow,
                 SignWordDrop + 8f, scale: 3f);
             BuildShutSign();
         }
@@ -909,6 +1041,15 @@ namespace LastCall.UI
                 artX - _counterNative.x * 0.5f,
                 counterTop - artFoot + CellarBottleH * 0.5f, 0f)
                 + (_world != null ? _world.position : Vector3.zero);
+            // The sandwich rides the same transform as the front: same plate canvas, same
+            // scale, same position — 1:1 by construction.
+            if (i < _cellarBack.Count)
+            {
+                _cellarBack[i].transform.localScale = sr.transform.localScale;
+                _cellarBack[i].transform.position = sr.transform.position;
+                _cellarMask[i].transform.localScale = sr.transform.localScale;
+                _cellarMask[i].transform.position = sr.transform.position;
+            }
         }
 
         // ── the cellar's own light (2026-08-25) ─────────────────────────────────

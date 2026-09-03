@@ -53,6 +53,11 @@ def _state():
 
 
 def _save(st):
+    # Two generators run at once (takes and emblems); merge over the file so neither
+    # overwrites the other's job records.
+    on_disk = _state()
+    on_disk['jobs'].update(st['jobs'])
+    st['jobs'] = on_disk['jobs']
     io.open(STATE, 'w', encoding='utf-8').write(json.dumps(st, indent=1))
 
 

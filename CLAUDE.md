@@ -1,4 +1,4 @@
-# CLAUDE.md — LAST CALL
+﻿# CLAUDE.md — LAST CALL
 
 Unity 6000.3.10f1 (URP) bar-tycoon about reading customers and running the till.
 **On a machine that has not run this project before, read `Docs/HANDOFF.md` FIRST** —
@@ -129,10 +129,13 @@ re-blesses them once before trusting a red look test (`Docs/HANDOFF.md` §4).
   and a relationship — the emotion machinery (stats, charges, reads, `DemandLevel`, mood
   tips, "filled to the top") was demolished 2026-08-02 and its last remnants removed in the
   2026-08-07 sweep ("sadece verilen kokteyle verdiği tepkiler kaldı").
-- Bottles are **single flat sprites** (`v3_{id}_flat`) since the 2026-08-05 flat era; the
-  runtime liquid-in-bottle layer was removed whole in the 2026-08-07 sweep. What is left in
-  a bottle lives on the hover card. A layered bottle set is an external artist's brief
-  (GDD 25's header) — rebuild the layer against that art when it lands, don't resurrect it.
+- Bottles are the **v4 sandwich** since 2026-09-04 (`Docs/PLAN_bottle_art_v4.md`): three plates
+  per card on one 96×192 canvas (`v4_{id}_back/_mask/_front`) plus a 32×64 cellar set
+  (`_back_c/_mask_c/_front_c`) REBUILT at that size, never shrunk. `BottleArt` draws the hand
+  bottle with a world-level liquid line (§12 tier 1); the cellar is three SpriteRenderers
+  under a SpriteMask. Cards without v4 art fall back to `v3_{id}_flat` / `bot_{id}` and the
+  old `BottleFill`. Masters are generated EMPTY, OPEN and LABEL-LESS; the label is pressed by
+  `Tools/v4_bottles/process.py`; nothing enters `Assets` except through `ship.py` + `picks.json`.
 - `MetaballFluid` fills a vessel from a particle-count estimate that is not exact for every
   silhouette. If a vessel draws short, measure it (`SurfaceY`) and correct that vessel with
   `SetDensity` — do not scale the fill fraction, which just clamps.

@@ -360,6 +360,35 @@ namespace LastCall.UI
             var ids = new List<string>(_cellarCards.Count);
             foreach (var c in _cellarCards) ids.Add(c.Id);
             stage.SetCellar(art, ids);
+            // The v4 sandwich: plates, drink tones and levels in the same order (PLAN §4c).
+            var plates = new List<ItemArt.BottlePlates>(_cellarCards.Count);
+            var tones = new List<Color>(_cellarCards.Count);
+            foreach (var c in _cellarCards)
+            {
+                plates.Add(ItemArt.Plates(c, cellar: true));
+                tones.Add(UITheme.LiquidColor(c.Info?.Style, c.Type));
+            }
+            stage.SetCellarTones(tones);
+            stage.SetCellarPlates(plates, CellarFills(run));
+        }
+
+        /// <summary>What is left in each cellar bottle, in the cellar's own order.</summary>
+        private List<float> CellarFills(TycoonRun run)
+        {
+            var fills = new List<float>(_cellarCards.Count);
+            foreach (var c in _cellarCards)
+            {
+                var b = run?.Shelf?.Find(c.Id);
+                fills.Add(b != null && b.Capacity > 0 ? (float)(b.Remaining / b.Capacity) : 0f);
+            }
+            return fills;
+        }
+
+        /// <summary>Levels move as the night pours; the plates do not. Called from the frame.</summary>
+        private void PushCellarFills(TycoonRun run)
+        {
+            if (stage == null || _cellarCards.Count == 0) return;
+            stage.SetCellarFills(CellarFills(run));
         }
 
         /// <summary>A bottle taken out of the cellar. The index is the stage's, into the list

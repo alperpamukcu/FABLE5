@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace LastCall.UI
@@ -312,7 +312,7 @@ namespace LastCall.UI
         /// pour stage needs from all of this: it swings with the vessel (<see cref="Swing"/>).
         /// </summary>
         public static Vector2 StandOn(RectTransform rect, Vector2 anchor, Sprite sprite,
-            float nominalH, Vector2 foot, Sprite gauge = null)
+            float nominalH, Vector2 foot, Sprite gauge = null, float fixedScale = 0f)
         {
             rect.anchorMin = rect.anchorMax = anchor;
             rect.pivot = new Vector2(0.5f, 0f);
@@ -325,7 +325,11 @@ namespace LastCall.UI
             }
 
             var m = Of(sprite);
-            float scale = Scale(m, gauge, nominalH);
+            // A v4 plate set asks for an EXACT scale (2: the 96x192 master at two screen pixels
+            // per art pixel, PLAN_bottle_art_v4 §3) rather than a stature fitted to the
+            // drawing's own height — a bottle 175 rows tall on a 192 canvas would otherwise
+            // stand at 2.19x and lose its pixel grid.
+            float scale = fixedScale > 0f ? fixedScale : Scale(m, gauge, nominalH);
             Vector2 size = m.Sheet * scale;
             rect.sizeDelta = size;
             // The sheet is shoved sideways by however far its drawing sits off centre, and down
