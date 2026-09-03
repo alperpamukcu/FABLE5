@@ -34,8 +34,10 @@ Bu yedi kusurun hepsi tek bir şeyin eksikliği: **yazılı bir dil ve onu zorla
 1. **Master tuval 96×192**, tek üretim, `create_image_pro` ile; her şişe PİLOTA çıpalı
    (`style_image` + `reference_images` + `seed`). Üretim NATİF boyutta (küçültme yok — hafıza
    art-direction-rules 2026-08-18).
-2. **Mahzen sprite'ı = master ÷ 3 = 32×64**, TÜRETİLİR, asla ikinci kez üretilmez. 1 art px =
-   1 sahne birimi → ekranda tam 2× (720p). `CellarBottleH` 62 → **64**.
+2. **Mahzen sprite'ı = 32×64, masterdan TÜRETİLİR ve kendi gridinde YENİDEN KURULUR** — iç
+   kısım mod ÷3, kontur yeniden mürekkep (1 veya 2 px, yazar seçer), kapak çizili, etiket o
+   boyutta renk bloğu + amblem, yazı yok. Asla ikinci kez üretilmez, asla motorda küçültülmez
+   (§3 ölçümleri). 1 art px = 1 sahne birimi → ekranda tam 2× (720p). `CellarBottleH` 62 → **64**.
 3. **El şişesi = master'ın kendisi**, ekranda 2× → `BottleH` 300 → **384** canvas birimi.
    İki sahnede **aynı çizim, aynı piksel boyu, üç kat çözünürlük** — "yakından bakış" tam bu.
 4. **Gövde BOŞ ve ETİKETSİZ üretilir.** Etiket boru hattında yapılır: üretilmiş küçük amblem
@@ -45,7 +47,9 @@ Bu yedi kusurun hepsi tek bir şeyin eksikliği: **yazılı bir dil ve onu zorla
    (kavite maskesi × `UITheme.LiquidColor` × doluluk) → `_front` (cam filmi %30 alfa;
    etiket/kapak/kontur %100). Etiket sıvının ÖNÜNDE, arka cam sıvının ARKASINDA — yazarın
    istediği tam bu ve mimari olarak garantili.
-6. **Açık hal türetilir** (`bottle_open_states.py`, kapak dikişinden), üretilmez.
+6. **Master AÇIK üretilir** (yazar 2026-08-27: "orijinal boyutta kapak olmayacak"): açık ağız
+   üreticiden gelir (halka + boğaz), türetme yok; **mahzen kopyasına kapağı boru hattı çizer**.
+   Eski "kapak dikişinden türet" yolu ve elle boyanan ağız elipsi kaldırıldı.
 7. **Kontur 1 px, Night[0] `#0D0813`** — ince, palet-içi siyah. (GDD 14 §3 "kendi rampasının
    en koyusu" der; şişelerde tek renk kontur tutarlılık için tercih edildi — pilotta 1 px /
    2 px / kontursuz üç varyant yan yana gösterilir, yazar gözle seçer.)
@@ -107,8 +111,9 @@ v3 sandviçi (`v3_process.py`) etiketi ve kaviteyi üretilmiş resimden **sezgiy
 üç kök sebeple kırıldı (hafıza v3-front-plates-baked-liquid). Etiket üretime hiç girmezse
 ayrıştırılacak bir şey kalmaz:
 
-- **kavite** = silüet içinde, omuz altında, duvar kalınlığı (2 px) içeri çekilmiş satır
-  aralıkları — saf geometri, her şişede aynı kural;
+- **kavite** = silüet içinde, **ağızdan** (üst 4 satır halka/boğaz hariç) tabana, duvar
+  kalınlığı (2 px) içeri çekilmiş satır aralıkları — saf geometri, her şişede aynı kural.
+  (Omuzdan başlatmak boynu "dolu" gösteriyordu — yazarın notu, 2026-08-27.)
 - **etiket** = boru hattının SONRADAN, bilinen bir dikdörtgene bastığı katman — tanım
   gereği opak ve tanım gereği önde.
 
@@ -118,17 +123,17 @@ ayrıştırılacak bir şey kalmaz:
 | `v4_{id}_back` | Yalnız kavite; cam tonunun ~%45 değeri; ortada açık, duvarlarda koyu yatay gradyan (v3 formülü: `cool = cam×0.75 + (150,200,235)×0.25`) | opak |
 | *(sıvı)* | Oyun çizer: kavite maskesi, `UITheme.LiquidColor(style,type)`, doluluk = `Remaining/Capacity`, **kavite yüksekliğinin yüzdesi** ("%30 ise %30") | opak |
 | `v4_{id}_front` | Kavite pikselleri **%30 alfa** (cam filmi), sol duvar spekülar çizgisi ≥%75, **etiket + kapak + kontur %100** | karışık |
-| `v4_{id}_front_open` | Aynı, kapak dikişinden türetilmiş açık boyun | karışık |
-| `v4_{id}_mask` | Kavite maskesi (beyaz/şeffaf) — sıvının Filled-Image sprite'ı | binary |
+| `v4_{id}_mask` | Kavite maskesi (beyaz/şeffaf) — sıvının kırpma maskesi ve §12 hacim tablosunun kaynağı | binary |
+| `v4_{id}_*_c` | Mahzen kopyaları (back/mask/front, 32×64) — front kapaklı, konturu yeniden kurulmuş | — |
 
 Koyu cam: film alfası %30 SABİT kalır, filmin RENGİ camın tonundan alınır — v3'ün "koyu
 camda film inmiyor" hatası eşik değil kural olur.
 
 ### 4c · Çalışma zamanı
-- **El (uGUI, tezgâh):** `BottleArt` yeniden kurulur (2026-08-07'de silinen sınıfın minimal
-  hali): back `Image` → liquid `Image` (`type=Filled, Vertical, Bottom`, sprite=mask,
-  color=LiquidColor, `fillAmount`=doluluk) → front `Image`. `BottleFill` (stencil hilesi)
-  emekli olur — artık gerçek film var.
+- **El (uGUI, tezgâh):** `BottleArt` yeniden kurulur: back `Image` → sıvı → front `Image`.
+  Sıvı **§12 kademe 1** ile çizilir: −tilt ile ters döndürülen "Level" rect altında, hacim
+  tablosundan yükseklik, satıra kuantize, yüzey bandı — `Filled/Vertical` DEĞİL (o çizgi
+  şişeyle döner). `BottleFill`'in stencil fikri bu yeni yapının içinde yaşar.
 - **Mahzen (world-space `SpriteRenderer`):** back SR → `SpriteMask`(mask sprite) altında
   **1×1 beyaz quad** SR (kavite dikdörtgeni × doluluk kadar ölçekli; düz renk olduğu için
   ölçekleme sanatı bozmaz), `Sprite-Lit-Default` ile IŞIK ALIR → front SR. Shader yok.
