@@ -140,3 +140,10 @@ Tools/AssetPipeline/sources/patron_raw/
 /Tools/*.png
 /Tools/*.html
 !/Tools/palette_miami.png
+
+# v4 bottle pipeline: raw takes are provenance and stay; everything below is derived
+/Tools/v4_bottles/staging/
+/Tools/v4_bottles/report.html
+/Tools/v4_bottles/probe_emblem.log
+/Tools/v4_bottles/pilot.log
+/Tools/v4_bottles/__pycache__/

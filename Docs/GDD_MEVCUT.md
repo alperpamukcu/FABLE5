@@ -576,6 +576,23 @@ taburedeki içici her gelişinde aynı insan gibi duyuluyor. Yayılım bilerek d
 (0.86–1.16): daha genişi alt tabureleri deve, üst tabureleri çizgi filme çevirirdi.
 Üst üste konuşma yok — havada ses varsa yenisi beklir, çünkü iki mırıltı birden gevezeliktir.
 
+### 9.14 · İçecek sanatı v4 planı ve pilotu (2026-08-27)
+
+Yazar: *"Tüm içecek assetleri aynı sanata ve uyumluluğa ait olmalı, hepsi tekrardan
+üretilecek"* + beş madde (doluluk görünsün; etiket önde/cam arkada; kısa isimler tür
+kelimesiyle bitsin; ince siyah kontur; iki sahne iki boyut ama tek kimlik). **Plan
+`Docs/PLAN_bottle_art_v4.md`** — on karar, boyut matematiği (96×192 master, mahzen ÷3 =
+32×64, ikisi de ekranda 2×), etiketsiz üretim + boru hattında basılan etiket, üç plaka
+sandviç, isim tablosu, kanıt kapıları. Boru hattı `Tools/v4_bottles/` (brief/gen/process/
+report/palette/fontpx). Teşhis ölçüldü: 29 v3 şişenin 29'u farklı boyutta; v3'ün aracı
+`create_map_object` seed de stil referansı da almıyor (sürüklenmenin mekanik sebebi) —
+v4 `create_image_pro` (style_image + reference_images + seed, ASENKRON job/get_image).
+**Pilot Smirkoff üç seed:** boş (sıvı satırı 0), palet-içi (0), taban bombesi 0.135–0.163,
+sıvı kanıtı geçti (kırmızı/mavi kompozitte etiket pikselleri birebir, kavite farklı).
+Pilot raporu `Tools/v4_bottles/report.html`; yazar take + amblem + kontur seçecek, seçilen
+take **çıpa** olacak. Çalışma zamanı (BottleArt sandviçi, mahzen SpriteMask, BottleH 384,
+CellarBottleH 64) pilot onayından SONRA.
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.
