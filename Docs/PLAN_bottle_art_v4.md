@@ -50,9 +50,8 @@ Bu yedi kusurun hepsi tek bir şeyin eksikliği: **yazılı bir dil ve onu zorla
 6. **Master AÇIK üretilir** (yazar 2026-08-27: "orijinal boyutta kapak olmayacak"): açık ağız
    üreticiden gelir (halka + boğaz), türetme yok; **mahzen kopyasına kapağı boru hattı çizer**.
    Eski "kapak dikişinden türet" yolu ve elle boyanan ağız elipsi kaldırıldı.
-7. **Kontur 1 px, Night[0] `#0D0813`** — ince, palet-içi siyah. (GDD 14 §3 "kendi rampasının
-   en koyusu" der; şişelerde tek renk kontur tutarlılık için tercih edildi — pilotta 1 px /
-   2 px / kontursuz üç varyant yan yana gösterilir, yazar gözle seçer.)
+7. **Kontur 1 px, Night[0] `#0D0813`** — ince, palet-içi siyah, **her iki boyutta** (yazar
+   2026-09-04: "mahzen görünüşünde sadece 1 katman siyah çerçeve"; 2 px varyantı elendi).
 8. **55 renk paleti** (GDD 14 §3), zincirde kuantize; `pixflux`'ta `color_image` ile ZORLANIR.
 9. **İsimler ≤ 14 karakter, tür kelimesiyle biter** (§6 tablosu; sert tavan 15).
 10. **Hiçbir asset rapor görülmeden oyuna girmez** (hafıza bottle-art-v3-respec, yazar
@@ -121,7 +120,7 @@ ayrıştırılacak bir şey kalmaz:
 | Plaka | İçerik | Alfa |
 |---|---|---|
 | `v4_{id}_back` | Yalnız kavite; cam tonunun ~%45 değeri; ortada açık, duvarlarda koyu yatay gradyan (v3 formülü: `cool = cam×0.75 + (150,200,235)×0.25`) | opak |
-| *(sıvı)* | Oyun çizer: kavite maskesi, `UITheme.LiquidColor(style,type)`, doluluk = `Remaining/Capacity`, **kavite yüksekliğinin yüzdesi** ("%30 ise %30") | opak |
+| *(sıvı)* | Oyun çizer: `_mask` (omuz→taban), `UITheme.LiquidColor(style,type)`, doluluk = `Remaining/Capacity`; **%100 = OMUZ çizgisi, boyun hep boş cam** (yazar 2026-09-04) | opak |
 | `v4_{id}_front` | Kavite pikselleri **%30 alfa** (cam filmi), sol duvar spekülar çizgisi ≥%75, **etiket + kapak + kontur %100** | karışık |
 | `v4_{id}_mask` | Kavite maskesi (beyaz/şeffaf) — sıvının kırpma maskesi ve §12 hacim tablosunun kaynağı | binary |
 | `v4_{id}_*_c` | Mahzen kopyaları (back/mask/front, 32×64) — front kapaklı, konturu yeniden kurulmuş | — |
@@ -282,9 +281,8 @@ fontpx.py    3×5 piksel-font; palette.py 55 renk + color_image PNG
 
 ## 11 · Sıra
 
-1. **Pilot = Smirkoff Vodka** (GDD 25 §5 kararı): 3 seed × pro + 1 map_object kontrol adayı;
-   kontur 1/2/0 varyantları; ÷3 türetilmiş vs pixflux-temizlenmiş mahzen yan yana;
-   %25/60/95 doluluk kompozitleri. → HTML → **yazar seçer** ve düzeltme notu verir.
+1. **Pilot = Smirkoff Vodka** — YAPILDI. Yazar **s23**'ü seçti (2026-09-04); `anchor.png` = s23,
+   `picks.json` kaydı. Kapaksız 3 seed, kapılar geçti; %25/60/100 kompozitler raporda.
 2. Seçilen pilot = **çıpa**. Merdiven: vodka×3 → gin×4 → rum×4 → whiskey×4 → tequila×4 →
    tekiller×4 → meşrubat×12 → bira×3. Her parti rapor, her parti tercih.
 3. Çalışma zamanı (§10) pilot onayıyla paralel kurulur; ilk parti oyuna girerken hazırdır.

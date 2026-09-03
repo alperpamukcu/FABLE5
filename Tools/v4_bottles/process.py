@@ -41,7 +41,7 @@ INK = palette.INK + (255,)
 WALL = 2                  # glass wall thickness at 192 grain
 BASE = 3                  # rows of glass under the cavity
 MOUTH = 4                 # rows of rim and throat kept as the generator drew them
-CELLAR_OUTLINE = 2        # the author: a little heavier at cellar size, so it stands out
+CELLAR_OUTLINE = 1        # the author, 2026-09-04: "mahzen gorunusunde sadece 1 katman siyah cerceve"
 FILM_ALPHA = 77           # 30%: the cavity seen through the front glass
 STREAK_ALPHA = 200        # the specular streak stays nearly solid
 
@@ -203,6 +203,20 @@ def cavity(im):
         for x in range(x0, x1 + 1):
             mp[x, y] = (255, 255, 255, 255)
     return m, shoulder
+
+
+def liquid_mask(interior, im):
+    """Where the DRINK may go: the interior cut off at the shoulder. A bottle is "full" at
+    its shoulder — the neck is headspace, never liquid — so 100% is the shoulder line and
+    the neck stays the empty-glass colour the interior plate gives it."""
+    sp = spans(im)
+    _, shoulder, _ = body_and_shoulder(sp)
+    m = interior.copy()
+    mp = m.load()
+    for y in range(0, min(shoulder + WALL, m.height)):
+        for x in range(m.width):
+            mp[x, y] = (0, 0, 0, 0)
+    return m
 
 
 def glass_tone(im, mask):
@@ -502,24 +516,24 @@ def process_take(card_id, take_path, out_dir, outline=1, emblem=None):
         press_label_small(small, card_id, emblem).save(os.path.join(out_dir, 'v4_%s_c.png' % card_id))
         audit['plates'] = ['sprite', 'cellar']
     else:
-        mask, shoulder = cavity(master)
-        glass = glass_tone(master, mask)
+        interior, shoulder = cavity(master)          # mouth to base: the glass inside
+        mask = liquid_mask(interior, master)          # shoulder to base: where drink goes
+        glass = glass_tone(master, interior)
         audit['glass'] = glass
-        audit['liquid_rows'] = liquid_rows(master, mask, glass)
-        audit['cavity_rows'] = sum(1 for s in spans(mask) if s)
-        back, front_bare = plates(master, mask, glass)
+        audit['liquid_rows'] = liquid_rows(master, interior, glass)
+        audit['cavity_rows'] = sum(1 for s in spans(interior) if s)
+        audit['fill_rows'] = sum(1 for s in spans(mask) if s)
+        back, front_bare = plates(master, interior, glass)
         # the hand front: the OPEN master with the full label (emblem + wordmark)
         front = press_label(front_bare.copy(), card_id, emblem)
         back.save(os.path.join(out_dir, 'v4_%s_back.png' % card_id))
         mask.save(os.path.join(out_dir, 'v4_%s_mask.png' % card_id))
         front.save(os.path.join(out_dir, 'v4_%s_front.png' % card_id))
         # the cellar set, rebuilt at its own size: outline, cap, emblem-only label
-        bc, mc, fc = cellar_copy(front_bare, back, mask, card_id, emblem, outline=2)
+        bc, mc, fc = cellar_copy(front_bare, back, mask, card_id, emblem, outline=CELLAR_OUTLINE)
         bc.save(os.path.join(out_dir, 'v4_%s_back_c.png' % card_id))
         mc.save(os.path.join(out_dir, 'v4_%s_mask_c.png' % card_id))
         fc.save(os.path.join(out_dir, 'v4_%s_front_c.png' % card_id))
-        _, _, fc1 = cellar_copy(front_bare, back, mask, card_id, emblem, outline=1)
-        fc1.save(os.path.join(out_dir, 'v4_%s_front_c1.png' % card_id))
         # the liquid proof: red and blue composites must agree on every label pixel and
         # disagree on the cavity
         proof = composite_proof(back, mask, front)
