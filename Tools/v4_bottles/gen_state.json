@@ -12,11 +12,8 @@
    "poll": "status: completed\nid: cf6da940-898e-4dba-99fe-d1996d16a739\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/cf6da940-898e-4dba-99fe-d1996d16a739/download\n"
   },
   "vodka_astra:23": {
-   "job": "07784500-6762-4dfb-95ac-872eb880043b",
-   "submit": "id: 07784500-6762-4dfb-95ac-872eb880043b\nmodel: pro\ndescription: a tall slim clear-glass vodka bottle with straight shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN with NO CAP, NO COR",
-   "n": 1,
-   "secs": 92.1,
-   "poll": "status: completed\nid: 07784500-6762-4dfb-95ac-872eb880043b\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/07784500-6762-4dfb-95ac-872eb880043b/download\n"
+   "job": "df3fa0da-0ddf-4637-b1e8-1d60c0c1d088",
+   "submit": "id: df3fa0da-0ddf-4637-b1e8-1d60c0c1d088\nmodel: pro\ndescription: a tall slim clear-glass vodka bottle with straight shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside sh"
   },
   "vodka_astra:47": {
    "job": "539dc4c2-72c0-4986-b922-6da7f81d7588",
@@ -33,11 +30,8 @@
    "poll": "status: completed\nid: 2fcc73ef-0d9e-4c79-93d1-5cf92f6e080c\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/2fcc73ef-0d9e-4c79-93d1-5cf92f6e080c/download\n"
   },
   "vodka_vor:23": {
-   "job": "5ac53be9-f89e-434d-8970-72533ab7990d",
-   "submit": "id: 5ac53be9-f89e-434d-8970-72533ab7990d\nmodel: pro\ndescription: a tall slim clear-glass vodka bottle with a very plain cylindrical body, minimal shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bott",
-   "n": 1,
-   "secs": 83.9,
-   "poll": "status: completed\nid: 5ac53be9-f89e-434d-8970-72533ab7990d\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/5ac53be9-f89e-434d-8970-72533ab7990d/download\n"
+   "job": "e5b666f4-8049-45aa-9735-6b6f013f3abd",
+   "submit": "id: e5b666f4-8049-45aa-9735-6b6f013f3abd\nmodel: pro\ndescription: a tall slim clear-glass vodka bottle with a very plain cylindrical body, minimal shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no poo"
   },
   "vodka_vor:47": {
    "job": "510b8e69-5c62-4095-a48a-e81932c539a1",
@@ -54,11 +48,8 @@
    "poll": "status: completed\nid: f170f13b-50f9-4ea1-a62b-461d67404d34\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/f170f13b-50f9-4ea1-a62b-461d67404d34/download\n"
   },
   "vodka_leonid:23": {
-   "job": "034d62d0-db5b-4d27-a39b-fc61e615e019",
-   "submit": "id: 034d62d0-db5b-4d27-a39b-fc61e615e019\nmodel: pro\ndescription: a tall frosted pale-grey glass vodka bottle with straight shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN with NO CAP,",
-   "n": 1,
-   "secs": 118.3,
-   "poll": "status: completed\nid: 034d62d0-db5b-4d27-a39b-fc61e615e019\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/034d62d0-db5b-4d27-a39b-fc61e615e019/download\n"
+   "job": "f667566a-8ea6-4900-91af-633dcaf3b233",
+   "submit": "id: f667566a-8ea6-4900-91af-633dcaf3b233\nmodel: pro\ndescription: a tall frosted pale-grey glass vodka bottle with straight shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the in"
   },
   "vodka_leonid:47": {
    "job": "278cd746-9961-4818-836b-b748767bf5bc",
@@ -75,11 +66,8 @@
    "poll": "status: completed\nid: 364ec958-63c5-49c8-b6fe-4e768a6d60ab\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/364ec958-63c5-49c8-b6fe-4e768a6d60ab/download\n"
   },
   "vodka_okhta:23": {
-   "job": "72e863e6-4c71-451c-a782-9fcb7260908a",
-   "submit": "id: 72e863e6-4c71-451c-a782-9fcb7260908a\nmodel: pro\ndescription: a tall clear-glass vodka bottle with a faintly blue tint, elegant straight shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is ",
-   "n": 1,
-   "secs": 117.1,
-   "poll": "status: completed\nid: 72e863e6-4c71-451c-a782-9fcb7260908a\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/72e863e6-4c71-451c-a782-9fcb7260908a/download\n"
+   "job": "1f2a709d-208c-475c-a90f-cc95f13bec25",
+   "submit": "id: 1f2a709d-208c-475c-a90f-cc95f13bec25\nmodel: pro\ndescription: a tall clear-glass vodka bottle with a faintly blue tint, elegant straight shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at t"
   },
   "vodka_okhta:47": {
    "job": "246bcc41-573d-4ebb-9553-3771cd737a83",
@@ -87,6 +75,217 @@
    "n": 1,
    "secs": 193.0,
    "poll": "status: completed\nid: 246bcc41-573d-4ebb-9553-3771cd737a83\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/246bcc41-573d-4ebb-9553-3771cd737a83/download\n"
+  },
+  "gin_boothby:11": {
+   "job": "2c431f96-8d0e-44d9-9744-406500b4d75e",
+   "submit": "id: 2c431f96-8d0e-44d9-9744-406500b4d75e\nmodel: pro\ndescription: a squat dark-green glass gin bottle with broad shoulders and a short neck, about 2.1 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN with N",
+   "n": 1,
+   "secs": 245.3,
+   "poll": "status: completed\nid: 2c431f96-8d0e-44d9-9744-406500b4d75e\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/2c431f96-8d0e-44d9-9744-406500b4d75e/download\n"
+  },
+  "gin_boothby:emblem:5": {
+   "job": "2cf40e59-27a4-4bcb-9262-9088250be1c8",
+   "submit": "id: 2cf40e59-27a4-4bcb-9262-9088250be1c8\nmodel: pro\ndescription: a small stylised heraldic crest with a crown, flat pixel emblem, no text, centred on a transparent background, clean hi-bit pixel art, flat fills, thin dark outline\nsize: 32x32px\ntransparent: True\ncandidates: 64\nstyle_image: yes (color_palette, outline)\nseed: 5\ncost: 20 generations\nstatus: processing (~1-10 min)\n\nhint: get_image(job_",
+   "n": 64,
+   "secs": 130.2,
+   "poll": "status: completed\nid: 2cf40e59-27a4-4bcb-9262-9088250be1c8\nframes: 64\ndownload: https://api.pixellab.ai/mcp/images/2cf40e59-27a4-4bcb-9262-9088250be1c8/download?index=0 ... ?index=63\n(60 more frames not shown \u2014 fetch them from the download URLs above)\n"
+  },
+  "gin_juniper_crow:emblem:5": {
+   "job": "14f602ca-1bdb-4637-9d79-dd36ac504f75",
+   "submit": "id: 14f602ca-1bdb-4637-9d79-dd36ac504f75\nmodel: pro\ndescription: a small stylised top hat, flat pixel emblem, no text, centred on a transparent background, clean hi-bit pixel art, flat fills, thin dark outline\nsize: 32x32px\ntransparent: True\ncandidates: 64\nstyle_image: yes (color_palette, outline)\nseed: 5\ncost: 20 generations\nstatus: processing (~1-10 min)\n\nhint: get_image(job_id=\"14f602ca-1bdb-46"
+  },
+  "gin_boothby:23": {
+   "job": "e34aee2a-cc37-4074-88e4-ce63b1aaba9e",
+   "submit": "id: e34aee2a-cc37-4074-88e4-ce63b1aaba9e\nmodel: pro\ndescription: a squat dark-green glass gin bottle with broad shoulders and a short neck, about 2.1 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; "
+  },
+  "gin_thornwood:emblem:5": {
+   "job": "6e11d589-6ba3-4ee0-9c8a-24ded6317f65",
+   "submit": "id: 6e11d589-6ba3-4ee0-9c8a-24ded6317f65\nmodel: pro\ndescription: a small stylised rose flower, flat pixel emblem, no text, centred on a transparent background, clean hi-bit pixel art, flat fills, thin dark outline\nsize: 32x32px\ntransparent: True\ncandidates: 64\nstyle_image: yes (color_palette, outline)\nseed: 5\ncost: 20 generations\nstatus: processing (~1-10 min)\n\nhint: get_image(job_id=\"6e11d589-6ba"
+  },
+  "gin_boothby:47": {
+   "job": "657a1454-578e-494a-9dc7-0fe2103d1826",
+   "submit": "id: 657a1454-578e-494a-9dc7-0fe2103d1826\nmodel: pro\ndescription: a squat dark-green glass gin bottle with broad shoulders and a short neck, about 2.1 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN with N",
+   "n": 1,
+   "secs": 109.0,
+   "poll": "status: completed\nid: 657a1454-578e-494a-9dc7-0fe2103d1826\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/657a1454-578e-494a-9dc7-0fe2103d1826/download\n"
+  },
+  "gin_veilcrest:emblem:5": {
+   "job": "b4f0a465-309a-4320-8704-2068fb926281",
+   "submit": "id: b4f0a465-309a-4320-8704-2068fb926281\nmodel: pro\ndescription: a small stylised gibbon face, flat pixel emblem, no text, centred on a transparent background, clean hi-bit pixel art, flat fills, thin dark outline\nsize: 32x32px\ntransparent: True\ncandidates: 64\nstyle_image: yes (color_palette, outline)\nseed: 5\ncost: 20 generations\nstatus: processing (~1-10 min)\n\nhint: get_image(job_id=\"b4f0a465-309"
+  },
+  "gin_juniper_crow:11": {
+   "job": "ee21a08c-252d-4342-b874-2648bf32004e",
+   "submit": "id: ee21a08c-252d-4342-b874-2648bf32004e\nmodel: pro\ndescription: a squat pale-green glass gin bottle with broad shoulders, about 2.1 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN with NO CAP, NO CORK an",
+   "n": 1,
+   "secs": 125.6,
+   "poll": "status: completed\nid: ee21a08c-252d-4342-b874-2648bf32004e\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/ee21a08c-252d-4342-b874-2648bf32004e/download\n"
+  },
+  "gin_juniper_crow:23": {
+   "job": "be74d0ed-4c6b-44dc-89be-ac672496c24a",
+   "submit": "id: be74d0ed-4c6b-44dc-89be-ac672496c24a\nmodel: pro\ndescription: a squat pale-green glass gin bottle with broad shoulders, about 2.1 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows "
+  },
+  "gin_juniper_crow:47": {
+   "job": "66691870-bcc7-4e02-a3bb-05bb2508aded",
+   "submit": "id: 66691870-bcc7-4e02-a3bb-05bb2508aded\nmodel: pro\ndescription: a squat pale-green glass gin bottle with broad shoulders, about 2.1 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN with NO CAP, NO CORK an",
+   "n": 1,
+   "secs": 100.6,
+   "poll": "status: completed\nid: 66691870-bcc7-4e02-a3bb-05bb2508aded\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/66691870-bcc7-4e02-a3bb-05bb2508aded/download\n"
+  },
+  "gin_thornwood:11": {
+   "job": "b4a276be-8949-4fc5-aa77-cbc6a35c87f7",
+   "submit": "id: b4a276be-8949-4fc5-aa77-cbc6a35c87f7\nmodel: pro\ndescription: a squat clear-glass gin bottle with a wide round body like a medicine flask, about 2.1 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN with",
+   "n": 1,
+   "secs": 100.5,
+   "poll": "status: completed\nid: b4a276be-8949-4fc5-aa77-cbc6a35c87f7\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/b4a276be-8949-4fc5-aa77-cbc6a35c87f7/download\n"
+  },
+  "gin_thornwood:23": {
+   "job": "a344682b-8742-4a86-aaad-0952fa3f285b",
+   "submit": "id: a344682b-8742-4a86-aaad-0952fa3f285b\nmodel: pro\ndescription: a squat clear-glass gin bottle with a wide round body like a medicine flask, about 2.1 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom"
+  },
+  "gin_thornwood:47": {
+   "job": "29ef0c80-8d8f-46f9-b638-ddf8826296f0",
+   "submit": "id: 29ef0c80-8d8f-46f9-b638-ddf8826296f0\nmodel: pro\ndescription: a squat clear-glass gin bottle with a wide round body like a medicine flask, about 2.1 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN with",
+   "n": 1,
+   "secs": 109.1,
+   "poll": "status: completed\nid: 29ef0c80-8d8f-46f9-b638-ddf8826296f0\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/29ef0c80-8d8f-46f9-b638-ddf8826296f0/download\n"
+  },
+  "gin_veilcrest:11": {
+   "job": "447d327e-beaa-48b4-a246-cfbfa10fe614",
+   "submit": "id: 447d327e-beaa-48b4-a246-cfbfa10fe614\nmodel: pro\ndescription: a squat dark-blue glass gin bottle with broad shoulders, about 2.1 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN with NO CAP, NO CORK and",
+   "n": 1,
+   "secs": 83.9,
+   "poll": "status: completed\nid: 447d327e-beaa-48b4-a246-cfbfa10fe614\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/447d327e-beaa-48b4-a246-cfbfa10fe614/download\n"
+  },
+  "gin_veilcrest:23": {
+   "job": "270fc08c-3c57-4c12-9cc4-6764cff77294",
+   "submit": "id: 270fc08c-3c57-4c12-9cc4-6764cff77294\nmodel: pro\ndescription: a squat dark-blue glass gin bottle with broad shoulders, about 2.1 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows o"
+  },
+  "gin_veilcrest:47": {
+   "job": "2beeb0a1-8013-4661-beeb-6f82ef525d91",
+   "submit": "id: 2beeb0a1-8013-4661-beeb-6f82ef525d91\nmodel: pro\ndescription: a squat dark-blue glass gin bottle with broad shoulders, about 2.1 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN with NO CAP, NO CORK and",
+   "n": 1,
+   "secs": 125.5,
+   "poll": "status: completed\nid: 2beeb0a1-8013-4661-beeb-6f82ef525d91\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/2beeb0a1-8013-4661-beeb-6f82ef525d91/download\n"
+  },
+  "rum_cane_coral:23": {
+   "job": "df16b33c-0844-4b63-8f48-dcaf60e1c626",
+   "submit": "id: df16b33c-0844-4b63-8f48-dcaf60e1c626\nmodel: pro\ndescription: a clear-glass rum bottle with soft round shoulders and a slightly bellied body, about 2.2 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bot"
+  },
+  "rum_tidewater:23": {
+   "job": "03281722-4da7-4336-b853-b2346b3cea6e",
+   "submit": "id: 03281722-4da7-4336-b853-b2346b3cea6e\nmodel: pro\ndescription: an amber-tinted glass rum bottle with round shoulders, about 2.2 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows onl"
+  },
+  "rum_windward:23": {
+   "job": "c1c492b0-d052-4ee5-9230-bbd6202a2456",
+   "submit": "id: c1c492b0-d052-4ee5-9230-bbd6202a2456\nmodel: pro\ndescription: a dark near-black glass rum bottle with round shoulders, about 2.2 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows o"
+  },
+  "rum_reina_del_mar:23": {
+   "job": "2d9964fc-0dce-4bfb-a802-46bd724546fa",
+   "submit": "id: 2d9964fc-0dce-4bfb-a802-46bd724546fa\nmodel: pro\ndescription: a clear-glass rum bottle with round shoulders, about 2.2 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale c"
+  },
+  "bourbon_redline:23": {
+   "job": "17eea7ce-891a-4e46-8af5-5c6d189e65fe",
+   "submit": "id: 17eea7ce-891a-4e46-8af5-5c6d189e65fe\nmodel: pro\ndescription: a square-shouldered clear-glass whiskey bottle with a broad flat-sided body, about 2.0 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom"
+  },
+  "bourbon_old_harrow:23": {
+   "job": "719259ed-6f3e-41fb-9f0f-48ac1a89dcd1",
+   "submit": "id: 719259ed-6f3e-41fb-9f0f-48ac1a89dcd1\nmodel: pro\ndescription: a square-shouldered clear-glass whiskey bottle with a broad body, about 2.0 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the insid"
+  },
+  "bourbon_ashfall:23": {
+   "job": "60fe6efa-cec4-47a5-914b-e6e0c12d7269",
+   "submit": "id: 60fe6efa-cec4-47a5-914b-e6e0c12d7269\nmodel: pro\ndescription: a heavy squat clear-glass whiskey bottle with a broad body and a short neck, about 1.9 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom"
+  },
+  "bourbon_hollow_oak:23": {
+   "job": "85b32242-e711-4a7c-baf4-671648a514d9",
+   "submit": "id: 85b32242-e711-4a7c-baf4-671648a514d9\nmodel: pro\ndescription: a broad-shouldered clear-glass whiskey bottle with a slightly tapered body, about 2.0 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom;"
+  },
+  "tequila_sonora:23": {
+   "job": "f9966446-5f55-47ec-ad64-9ac3579f370c",
+   "submit": "id: f9966446-5f55-47ec-ad64-9ac3579f370c\nmodel: pro\ndescription: a clear-glass tequila bottle with a long neck, gently sloping shoulders, about 2.3 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; th"
+  },
+  "tequila_alta_luna:23": {
+   "job": "7e5625d4-c93f-443d-ae02-315c049db553",
+   "submit": "id: 7e5625d4-c93f-443d-ae02-315c049db553\nmodel: pro\ndescription: a clear-glass tequila bottle with a long neck, square shoulders, about 2.3 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside"
+  },
+  "tequila_sol_viejo:23": {
+   "job": "ac182648-2801-4dc1-8a43-aa3217becb52",
+   "submit": "id: ac182648-2801-4dc1-8a43-aa3217becb52\nmodel: pro\ndescription: a clear-glass tequila bottle with a long neck, square shoulders and a wide low body, about 2.3 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at th"
+  },
+  "tequila_cielo_rojo:23": {
+   "job": "54034ca9-f8e5-4444-ba3c-aa00ad750b48",
+   "submit": "id: 54034ca9-f8e5-4444-ba3c-aa00ad750b48\nmodel: pro\ndescription: a hand-blown clear-glass tequila bottle with a blue-tinted rim, a long neck and a bulbous lower body, about 2.3 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured conten"
+  },
+  "amaro_notte:23": {
+   "job": "2e2155b9-a3cd-4477-b94d-8019ccab837d",
+   "submit": "id: 2e2155b9-a3cd-4477-b94d-8019ccab837d\nmodel: pro\ndescription: a tall slim clear-glass aperitivo bottle with high shoulders, about 2.4 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside sh"
+  },
+  "vermouth_velvet:23": {
+   "job": "3c7389d9-0b7b-48ed-a07e-4913cf497dbd",
+   "submit": "id: 3c7389d9-0b7b-48ed-a07e-4913cf497dbd\nmodel: pro\ndescription: a tall slim clear-glass vermouth bottle with high shoulders, about 2.4 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside sho"
+  },
+  "liqueur_delia:23": {
+   "job": "a2b01dfe-ceb2-4895-bd2f-a5a5c1a6a2f7",
+   "submit": "id: a2b01dfe-ceb2-4895-bd2f-a5a5c1a6a2f7\nmodel: pro\ndescription: a slim clear-glass liqueur bottle with a tapered body, about 2.4 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows onl"
+  },
+  "liqueur_kafa:23": {
+   "job": "4441f2fe-85fd-45d1-82f3-ad9581410113",
+   "submit": "id: 4441f2fe-85fd-45d1-82f3-ad9581410113\nmodel: pro\ndescription: a slim dark-brown glass liqueur bottle with high shoulders, about 2.4 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside show"
+  },
+  "beer_kestrel:23": {
+   "job": "e7d64e06-257d-457c-9063-c5ab1a5af1d4",
+   "submit": "id: e7d64e06-257d-457c-9063-c5ab1a5af1d4\nmodel: pro\ndescription: a long-neck brown glass beer bottle with a gold crown cap, about 2.6 times as tall as it is wide. It is a sealed opaque container, drawn closed. It has its own brand label on the body with the name \"KRONA\" written on it and a small sim"
+  },
+  "beer_collier:23": {
+   "job": "682dcd12-0bd4-4d73-abde-d9967f99b638",
+   "submit": "id: 682dcd12-0bd4-4d73-abde-d9967f99b638\nmodel: pro\ndescription: a long-neck dark brown glass stout bottle with a black crown cap, about 2.6 times as tall as it is wide. It is a sealed opaque container, drawn closed. It has its own brand label on the body with the name \"GOODNESS\" written on it and a"
+  },
+  "beer_marigold:23": {
+   "job": "b4f22120-7181-4437-b3f7-31eef8d52025",
+   "submit": "id: b4f22120-7181-4437-b3f7-31eef8d52025\nmodel: pro\ndescription: a long-neck brown glass ale bottle with a red crown cap, about 2.6 times as tall as it is wide. It is a sealed opaque container, drawn closed. It has its own brand label on the body with the name \"BRASS\" written on it and a small simpl"
+  },
+  "cola_marlow:23": {
+   "job": "3a439881-17fa-436e-aee8-c53a9b6c4fd6",
+   "submit": "id: 3a439881-17fa-436e-aee8-c53a9b6c4fd6\nmodel: pro\ndescription: a plain red aluminium soft drink can with a silver top and pull tab, matte flat red, about 2.0 times as tall as it is wide. It is a sealed opaque container, drawn closed. It has its own brand label on the body with the name \"LOCA\" writ"
+  },
+  "energy_volt:23": {
+   "job": "3963b55d-ef32-47b2-836e-89266a851718",
+   "submit": "id: 3963b55d-ef32-47b2-836e-89266a851718\nmodel: pro\ndescription: a plain slim blue and silver aluminium energy drink can with a silver top and pull tab, about 2.0 times as tall as it is wide. It is a sealed opaque container, drawn closed. It has its own brand label on the body with the name \"BLUE OX"
+  },
+  "orange_grove:23": {
+   "job": "997d6835-a5d0-404c-90ec-60eac21a7732",
+   "submit": "id: 997d6835-a5d0-404c-90ec-60eac21a7732\nmodel: pro\ndescription: a plain orange juice carton, a gable-top box with a small white screw cap, flat orange sides, about 2.0 times as tall as it is wide. It is a sealed opaque container, drawn closed. It has its own brand label on the body with the name \"G"
+  },
+  "lemon_fresh:23": {
+   "job": "259578bf-64e1-41f3-8135-8e8b54e25a08",
+   "submit": "id: 259578bf-64e1-41f3-8135-8e8b54e25a08\nmodel: pro\ndescription: a plain yellow lemonade carton, a gable-top box with a small white screw cap, flat yellow sides, about 2.0 times as tall as it is wide. It is a sealed opaque container, drawn closed. It has its own brand label on the body with the name"
+  },
+  "lime_fresh:23": {
+   "job": "0ce3fbf7-e6e8-4b60-b8ab-dfe845b3d215",
+   "submit": "id: 0ce3fbf7-e6e8-4b60-b8ab-dfe845b3d215\nmodel: pro\ndescription: a plain green limeade carton, a gable-top box with a small white screw cap, flat green sides, about 2.0 times as tall as it is wide. It is a sealed opaque container, drawn closed. It has its own brand label on the body with the name \"L"
+  },
+  "cranberry_north:23": {
+   "job": "2cf702db-24ac-4b83-89be-a148641a4900",
+   "submit": "id: 2cf702db-24ac-4b83-89be-a148641a4900\nmodel: pro\ndescription: a plain deep red cranberry juice carton, a gable-top box with a small white screw cap, flat red sides, about 2.0 times as tall as it is wide. It is a sealed opaque container, drawn closed. It has its own brand label on the body with th"
+  },
+  "pineapple_isla:23": {
+   "job": "f49b3f72-031e-47a9-b6b1-c81ca46b9168",
+   "submit": "id: f49b3f72-031e-47a9-b6b1-c81ca46b9168\nmodel: pro\ndescription: a plain golden-yellow pineapple juice carton, a gable-top box with a small white screw cap, flat yellow sides, about 2.0 times as tall as it is wide. It is a sealed opaque container, drawn closed. It has its own brand label on the body"
+  },
+  "tonic_quinbury:23": {
+   "job": "00cddcf3-b5f8-4f1f-8194-8a58f20106f2",
+   "submit": "id: 00cddcf3-b5f8-4f1f-8194-8a58f20106f2\nmodel: pro\ndescription: a slim clear-glass tonic water bottle with a fluted body, about 2.4 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows "
+  },
+  "soda_klara:23": {
+   "job": "ce946258-0e92-4531-86d2-0e0c659a91b4",
+   "submit": "id: ce946258-0e92-4531-86d2-0e0c659a91b4\nmodel: pro\ndescription: a slim clear-glass soda water bottle with a plain body, about 2.4 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows on"
+  },
+  "ginger_kicker:23": {
+   "job": "67717ad2-a9f5-4a6a-a144-b7e4209da1c7",
+   "submit": "id: 67717ad2-a9f5-4a6a-a144-b7e4209da1c7\nmodel: pro\ndescription: a slim amber-tinted glass ginger beer bottle with a plain body, about 2.4 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside "
+  },
+  "syrup_house:23": {
+   "job": "c4948d27-a06f-43c5-9a2f-edefe6fc0329",
+   "submit": "id: c4948d27-a06f-43c5-9a2f-edefe6fc0329\nmodel: pro\ndescription: a slim clear-glass syrup bottle with a plain body, about 2.4 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pa"
   }
  }
 }

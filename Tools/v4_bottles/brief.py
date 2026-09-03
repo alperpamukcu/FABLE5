@@ -15,7 +15,7 @@ Two blocks are at full strength in every prompt and are not negotiable:
 TOOL = 'create_image_pro'
 CANVAS = {'width': 96, 'height': 192}          # both divisible by 4 (PixelLab) and by 3 (cellar ÷3)
 CELLAR = {'width': 32, 'height': 64}
-SEEDS = (11, 23, 47)                          # three takes a card; picked by eye, never by score
+SEEDS = (23,)                                 # ONE take a card (the author, 2026-09-04: quota)
 
 EMPTY = ('The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no '
          'coloured contents, no pool at the bottom; the inside shows only pale clear empty '
@@ -27,14 +27,18 @@ EMPTY = ('The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill l
 OPEN = ('The bottle is OPEN with NO CAP, NO CORK and NO STOPPER: the bare neck ends in an open '
         'mouth, and from this slightly-above camera the mouth shows as a thin glass rim '
         'around a small dark opening. ')
-NO_LABEL = ('The bottle has NO LABEL AT ALL: bare glass, no paper, no print, no lettering, '
-            'no logo, no sticker, no band, no text of any kind anywhere on it. ')
+# THE LABEL IS THE GENERATOR'S (the author, 2026-09-04: "etiket yazi marka logo her neyi
+# varsa" — draw it with its label, its name and its logo). The pipeline no longer presses
+# one; the film pass keeps printed pixels opaque so the label stays in front of the drink.
+LABEL = ('It has its own brand label on the body with the name "%s" written on it and a '
+         'small simple logo, in flat colours. ')
 CAMERA = ('Seen straight on from slightly above (about 17 degrees), so the cap top and the '
           'shoulders show as shallow ellipses and the base edge bows gently downward; the '
           'bottle is left-right symmetric. ')
-STYLE = ('Clean hi-bit pixel art, flat fills and ramp steps, no dither, no texture noise, one '
-         'key light from the upper left with a single vertical highlight streak on the left '
-         'glass wall, a thin single-colour dark outline, transparent background. ')
+STYLE = ('Clean hi-bit pixel art, flat fills and ramp steps, no dither, no texture noise, '
+         'matte with very little shine — at most one faint thin highlight on the left glass '
+         'wall, no reflections, no glow — a thin single-colour black outline, drawn as a '
+         'single flat layer showing only the bottle front, transparent background. ')
 SEALED_NOTE = ('It is a sealed opaque container, drawn closed. ')
 
 # id -> (family, ratio, look, label_ramp, band_ramp, emblem)
@@ -94,6 +98,19 @@ CARDS = {
     'syrup_house':      ('mixer', 2.4, 'a slim clear-glass syrup bottle with a plain body', 'Cream', 'Amber', None),
 }
 
+BRAND_WORD = {
+    'vodka_astra': 'SMIRKOFF', 'vodka_vor': 'ABSOLVE', 'vodka_leonid': 'GANDER', 'vodka_okhta': 'WHALE',
+    'gin_boothby': "GARDEN'S", 'gin_juniper_crow': 'LEAFEATER', 'gin_thornwood': "HENDRAKE'S", 'gin_veilcrest': 'GIBBON 48',
+    'rum_cane_coral': 'WHITE BAT', 'rum_tidewater': 'ADMIRAL', 'rum_windward': 'KRAKATOA', 'rum_reina_del_mar': 'MALIBOO',
+    'bourbon_redline': 'WALKER', 'bourbon_old_harrow': 'SPANIEL', 'bourbon_ashfall': "MASON'S", 'bourbon_hollow_oak': 'WRINKLE',
+    'tequila_sonora': 'CUERDO', 'tequila_alta_luna': '1810', 'tequila_sol_viejo': 'JULEP', 'tequila_cielo_rojo': 'AZULEJO',
+    'amaro_notte': 'CUMPARI', 'vermouth_velvet': 'VELVET', 'liqueur_delia': 'MARINER', 'liqueur_kafa': 'KOALA',
+    'beer_kestrel': 'KRONA', 'beer_collier': 'GOODNESS', 'beer_marigold': 'BRASS',
+    'cola_marlow': 'LOCA', 'energy_volt': 'BLUE OX', 'orange_grove': 'GROVE', 'lemon_fresh': 'LEMONADE',
+    'lime_fresh': 'LIMEADE', 'cranberry_north': 'NORTH', 'pineapple_isla': 'ISLA',
+    'tonic_quinbury': "QUINN'S", 'soda_klara': 'KLARA', 'ginger_kicker': 'KICKER', 'syrup_house': 'HOUSE',
+}
+
 SEALED = {'can', 'carton', 'beer'}     # no cavity, no liquid plates — one sprite + derived open
 GLASS = {'vodka', 'gin', 'rum', 'whiskey', 'tequila', 'liqueur', 'mixer'}
 
@@ -101,9 +118,10 @@ GLASS = {'vodka', 'gin', 'rum', 'whiskey', 'tequila', 'liqueur', 'mixer'}
 def build(card_id):
     fam, ratio, look, _, _, _ = CARDS[card_id]
     body = ('%s, about %.1f times as tall as it is wide. ' % (look, ratio))
+    label = LABEL % BRAND_WORD.get(card_id, card_id.split('_')[0].title())
     if fam in SEALED:
-        return body + SEALED_NOTE + NO_LABEL + CAMERA + STYLE
-    return body + EMPTY + OPEN + NO_LABEL + CAMERA + STYLE
+        return body + SEALED_NOTE + label + CAMERA + STYLE
+    return body + EMPTY + OPEN + label + CAMERA + STYLE
 
 
 def emblem_prompt(card_id):

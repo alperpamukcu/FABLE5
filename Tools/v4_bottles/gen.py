@@ -224,6 +224,50 @@ def emblem(card_id, seeds=(5,)):
     return got
 
 
+def submit_all(ids, seed=brief.SEEDS[0], size=brief.CANVAS):
+    """Submit one job per card back to back, then poll them all: thirty-six jobs take the
+    time of the slowest, not the sum (the author: every card, one seed, no preview)."""
+    st = _state()
+    pending = {}
+    for cid in ids:
+        os.makedirs(os.path.join(RAW, cid), exist_ok=True)
+        out = os.path.join(RAW, cid, 's%d.png' % seed)
+        if os.path.exists(out):
+            print('  have', cid); continue
+        args = {'description': brief.build(cid), 'width': size['width'], 'height': size['height'],
+                'no_background': True, 'seed': seed}
+        refs = references(True)
+        if refs:
+            args['reference_images'] = json.dumps(refs)
+        if os.path.exists(ANCHOR):
+            args['style_image_base64'] = _b64(ANCHOR)
+            args['style_copy'] = json.dumps(['color_palette', 'outline', 'detail', 'shading'])
+        text, msgs = _call(brief.TOOL, args, timeout=300)
+        jid = _job_id(text, msgs)
+        st['jobs']['%s:%d' % (cid, seed)] = {'job': jid, 'submit': text[:300]}
+        _save(st)
+        if not jid:
+            print('  !! %s: no job id: %s' % (cid, text[:200])); continue
+        pending[cid] = (jid, out)
+        print('  queued %-18s %s' % (cid, jid[:8]))
+    print('collecting %d jobs...' % len(pending))
+    t0 = time.time()
+    while pending and time.time() - t0 < 3600:
+        for cid in list(pending):
+            jid, out = pending[cid]
+            text, msgs = _call('get_image', {'job_id': jid}, timeout=120)
+            imgs = _images_from(text, msgs)
+            if imgs:
+                io.open(out, 'wb').write(imgs[0])
+                print('  -> %-18s done (%.0fs)' % (cid, time.time() - t0))
+                del pending[cid]
+            elif 'failed' in text.lower():
+                print('  !! %s failed: %s' % (cid, text[:200])); del pending[cid]
+        time.sleep(10)
+    if pending:
+        print('  timeout on:', ', '.join(pending))
+
+
 if __name__ == '__main__':
     cmd = sys.argv[1] if len(sys.argv) > 1 else 'balance'
     if cmd == 'balance':
@@ -237,6 +281,10 @@ if __name__ == '__main__':
         ids = [c for pat in sys.argv[2:] for c in brief.CARDS if fnmatch.fnmatch(c, pat)]
         for cid in ids:
             take(cid)
+    elif cmd == 'all':
+        balance()
+        submit_all(list(brief.CARDS))
+        balance()
     elif cmd == 'emblem':
         for cid in sys.argv[2:]:
             emblem(cid)

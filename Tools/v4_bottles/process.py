@@ -44,6 +44,7 @@ MOUTH = 4                 # rows of rim and throat kept as the generator drew th
 CELLAR_OUTLINE = 1        # the author, 2026-09-04: "mahzen gorunusunde sadece 1 katman siyah cerceve"
 FILM_ALPHA = 77           # 30%: the cavity seen through the front glass
 STREAK_ALPHA = 200        # the specular streak stays nearly solid
+GENERATED_LABEL = True    # 2026-09-04: the generator draws the label; nothing is pressed
 
 
 # ── helpers ─────────────────────────────────────────────────────────────────
@@ -80,11 +81,13 @@ def centre(im):
     if bb is None:
         raise ValueError('empty take')
     crop = im.crop(bb)
-    if crop.width > W or crop.height > H - 2:
+    if crop.width > W or crop.height > H:
         raise ValueError('oversize take %dx%d (canvas %dx%d) — rejected, not rescaled'
                          % (crop.width, crop.height, W, H))
+    # Foot two rows above the bottom when there is room; a take that fills the canvas
+    # (hollow_oak came back 191 tall) simply stands on the last row.
     out = Image.new('RGBA', (W, H), (0, 0, 0, 0))
-    out.paste(crop, ((W - crop.width) // 2, H - 2 - crop.height), crop)
+    out.paste(crop, ((W - crop.width) // 2, max(0, min(H - 2, H - crop.height) - 0)), crop)
     return out
 
 
@@ -259,8 +262,14 @@ def plates(master, mask, glass):
             bp[x, y] = palette.nearest(c) + (255,)
             r, g, b, a = fp[x, y]
             if a:
-                bright = lum((r, g, b)) > lum(glass) + 40
-                fp[x, y] = (r, g, b, STREAK_ALPHA if bright else FILM_ALPHA)
+                # Printed pixels (the generated label, its text and logo) stay OPAQUE: they
+                # are far from the glass tone in luma or chroma. Glass-like pixels become
+                # the film the drink shows through. Measured per bottle by the proof gate.
+                lg = lum(glass); gch = max(glass) - min(glass)
+                ch = max(r, g, b) - min(r, g, b)
+                printed = GENERATED_LABEL and (abs(lum((r, g, b)) - lg) > 46 or ch > gch + 34)
+                bright = lum((r, g, b)) > lg + 40 and not printed
+                fp[x, y] = (r, g, b, 255 if printed else (STREAK_ALPHA if bright else FILM_ALPHA))
     return back, front
 
 
@@ -443,7 +452,8 @@ def cellar_copy(front_bare, back, mask, card_id, emblem=None, outline=CELLAR_OUT
     fc = peel_and_ring(fc, outline, cut=1, peel=False)
     fc = draw_cap(fc, fam)
     fc = peel_and_ring(fc, 1, cut=1, peel=False)   # ring the cap; the rest is already ringed
-    fc = press_label_small(fc, card_id, emblem)
+    if not GENERATED_LABEL:
+        fc = press_label_small(fc, card_id, emblem)
     bc = mode_downsample(back, 3)
     mc = mode_downsample(mask, 3)
     return bc, mc, fc
@@ -510,10 +520,12 @@ def process_take(card_id, take_path, out_dir, outline=1, emblem=None):
     master = im
 
     if fam in brief.SEALED:
-        sprite = press_label(master.copy(), card_id, emblem)
+        sprite = master.copy() if GENERATED_LABEL else press_label(master.copy(), card_id, emblem)
         sprite.save(os.path.join(out_dir, 'v4_%s.png' % card_id))
         small = peel_and_ring(mode_downsample(master, 3), CELLAR_OUTLINE)
-        press_label_small(small, card_id, emblem).save(os.path.join(out_dir, 'v4_%s_c.png' % card_id))
+        if not GENERATED_LABEL:
+            small = press_label_small(small, card_id, emblem)
+        small.save(os.path.join(out_dir, 'v4_%s_c.png' % card_id))
         audit['plates'] = ['sprite', 'cellar']
     else:
         interior, shoulder = cavity(master)          # mouth to base: the glass inside
@@ -525,7 +537,7 @@ def process_take(card_id, take_path, out_dir, outline=1, emblem=None):
         audit['fill_rows'] = sum(1 for s in spans(mask) if s)
         back, front_bare = plates(master, interior, glass)
         # the hand front: the OPEN master with the full label (emblem + wordmark)
-        front = press_label(front_bare.copy(), card_id, emblem)
+        front = front_bare.copy() if GENERATED_LABEL else press_label(front_bare.copy(), card_id, emblem)
         back.save(os.path.join(out_dir, 'v4_%s_back.png' % card_id))
         mask.save(os.path.join(out_dir, 'v4_%s_mask.png' % card_id))
         front.save(os.path.join(out_dir, 'v4_%s_front.png' % card_id))

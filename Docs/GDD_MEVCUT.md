@@ -618,6 +618,18 @@ ok. Silme commit'lendi.
 `Tools/v4_bottles/ship.py` yalnız `picks.json`'daki seçimleri `Assets/Resources/Items/v4_*` olarak
 gönderir. Tezgâh baseline'ı elde v4 şişeyle yeniden kutsandı.
 
+### 9.16 · Sadeleştirme: etiket üreticiden, kart başına tek seed, önizleme yok (2026-09-04)
+
+Yazar kotayı görünce (1.567 kalan / 10.000; döngü 18 Eylül) sadeleştirdi: *"şekil ve tarzı boş
+ver … etiket yazı marka logo her neyi varsa … tek katman … her alkolden 1 alternatif … ön izleme
+yapma direkt üret."* Uygulanan: `brief.LABEL` (marka adıyla etiket ve küçük logo üreticiden),
+`STYLE` mat/az parlama, `SEEDS = (23,)`, boru hattında etiket basma kapalı (`GENERATED_LABEL`),
+filmde baskı pikselleri opak (cam tonundan luma > 46 ya da kroma > +34 uzaklık). Çin partisi
+durduruldu (eski brief); etiketsiz votka/cin ham takes `raw/_labelless_v1/`'e arşivlendi; çıpa
+hâlâ Smirkoff s23 (stil için; etiket stile girmez). **PixelLab aynı anda 20 iş koşturuyor** —
+36'lık kuyruk 20'den sonrasını "rate limit exceeded (20/20 jobs)" ile reddetti; `refill.py`
+pencereyi dolu tutuyor. `finish_all` → process → picks → ship, rapor yok.
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

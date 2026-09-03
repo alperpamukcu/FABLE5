@@ -54,8 +54,9 @@ Bu yedi kusurun hepsi tek bir şeyin eksikliği: **yazılı bir dil ve onu zorla
    2026-09-04: "mahzen görünüşünde sadece 1 katman siyah çerçeve"; 2 px varyantı elendi).
 8. **55 renk paleti** (GDD 14 §3), zincirde kuantize; `pixflux`'ta `color_image` ile ZORLANIR.
 9. **İsimler ≤ 14 karakter, tür kelimesiyle biter** (§6 tablosu; sert tavan 15).
-10. **Hiçbir asset rapor görülmeden oyuna girmez** (hafıza bottle-art-v3-respec, yazar
-    2026-08-05): 3× büyütülmüş HTML kontak sayfası, şişe başına tek kelime tercih.
+10. ~~Hiçbir asset rapor görülmeden oyuna girmez~~ — **yazar 2026-09-04'te kaldırdı** ("ön izleme
+    yapma, direkt üret, fazladan kredi harcama"): kart başına tek seed, `finish_all` işler ve
+    `ship.py` ile doğrudan gönderir. Rapor aracı duruyor, istenirse koşar.
 
 ---
 
@@ -141,7 +142,15 @@ camda film inmiyor" hatası eşik değil kural olur.
 
 ---
 
-## 5 · Etiket sistemi
+## 5 · Etiket sistemi — **KALDIRILDI (yazar, 2026-09-04)**
+
+> *"Şekil ve tarzı boş ver; sadece aynı perspektifte aynı boyutlarda, 1 pixel siyah kontraslı,
+> boş şişe üret — etiket, yazı, marka logo her neyi varsa. Tek katman. Her alkolden 1 alternatif,
+> önizleme yapma, direkt üret."* Etiket artık **üreticiden** gelir (`brief.LABEL`); boru hattı
+> etiket basmaz (`GENERATED_LABEL`), yalnız baskı piksellerini filmde opak tutar (luma/kroma
+> uzaklığı). Amblem üretimi ve piksel-font kalıyor ama devre dışı. Aşağısı tarihçe.
+
+### 5 (eski) · Etiket sistemi
 
 Etiket üç katmandan yapılır ve **hepsi deterministik**:
 1. **Zemin**: etiket dikdörtgeni gövdenin en geniş bandında, genişliğin %62'si × gövde

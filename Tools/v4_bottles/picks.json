@@ -1,7 +1,192 @@
 {
  "vodka_astra": {
   "take": "s23",
-  "emblem": 0,
-  "note": "the author, 2026-09-04: \"s23 güzel\""
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "vodka_vor": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "vodka_leonid": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "vodka_okhta": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "gin_boothby": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "gin_juniper_crow": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "gin_thornwood": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "gin_veilcrest": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "rum_cane_coral": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "rum_tidewater": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "rum_windward": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "rum_reina_del_mar": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "bourbon_redline": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "bourbon_old_harrow": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "bourbon_ashfall": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "bourbon_hollow_oak": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "tequila_sonora": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "tequila_alta_luna": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "tequila_sol_viejo": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "tequila_cielo_rojo": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "amaro_notte": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "vermouth_velvet": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "liqueur_delia": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "liqueur_kafa": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "beer_kestrel": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "beer_collier": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "beer_marigold": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "cola_marlow": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "energy_volt": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "orange_grove": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "lemon_fresh": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "lime_fresh": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "cranberry_north": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "pineapple_isla": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "tonic_quinbury": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "soda_klara": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "ginger_kicker": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "syrup_house": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
  }
 }
