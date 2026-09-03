@@ -1,4 +1,4 @@
-# PLAN — İçecek Sanatı v4: tek el, tek kamera, üç plaka, iki boyut
+﻿# PLAN — İçecek Sanatı v4: tek el, tek kamera, üç plaka, iki boyut
 
 **Durum: CANLI PLAN (2026-08-27).** Yazarın briefi: *"Tüm içecek assetleri aynı sanata ve
 uyumluluğa ait olmalı, hepsi tekrardan üretilecek."* Kapsam: `base_bar.json`'daki 41 kartın
@@ -287,3 +287,76 @@ fontpx.py    3×5 piksel-font; palette.py 55 renk + color_image PNG
 
 Maliyet: pro ≈ 20–40 üretim/çağrı; 36 kap × 3 seed ≈ 3.2–4.3k + amblemler ≈ 0.5k. Kota
 10.000 (2026-09-18'de yenilenir). Her partiden önce `get_balance`.
+
+---
+
+## 12 · Sıvının çizimi — sektörün yaptığı, bizim yapacağımız (2026-09-04, araştırma)
+
+Yazar: *"Profesyonelce bu işi gerçek oyunlarda nasıl yapıyorlar, araştır."* Üç kollu araştırma
+(Unity Learn'ün kendi sıvı dersi, Minions Art soyu, Cyanilux, Godot canvas shader'ları, asset-store
+2D liquid paketleri, HL:Alyx'in Valve anlatımı, pixel-art potion öğreticileri; Potion Craft ise
+elle çizilmiş 54 kontur karesi — shader referansı DEĞİL):
+
+**Standart desen, her yerde aynı:** sıvı, kap sprite'ının ALTINDA bir kesme (cutoff) — ama
+yükseklik **dünya uzayında** ölçülür, nesne uzayında değil. Şişe eğilince sıvı çizgisi yatay
+kalır; nesne uzayında ölçseydin sıvı şişeyle döner (bizim `BottleFill`'in bugünkü hatası tam bu:
+el şişesi 118°'ye eğiliyor, çizgi de onunla). 2D karşılığı: uv'yi −tilt kadar döndür, y'yi oku
+(`MetaballLiquid.shader`'ın `rotUv()`'si en-boy düzeltmesiyle zaten bunu yapıyor).
+
+**Çalkantı** simüle edilmez: sıvı çizgisinin EĞİMİ üzerinde, açısal hızdan sürülen sönümlü bir
+sinüs (Minions Art) ya da sönümlü yay (CaptainProton42, Verlet). Bizde bu terim var:
+`MetaballLiquid.shader:160` `_PoolTopY + _SurfTilt*(ux−_SurfCenterX) + wave`, `MetaballFluid`
+4g-sınırlı atalet ivmesini besliyor. **Yeniden yazılmayacak, yeniden kullanılacak.**
+
+**Doluluk hacim değildir** (3D shader'ların hepsinde `_Fill` pivottan yükseklik; eğik şişe
+"daha az dolu" görünür). 2D'de kavite MASKESİ olduğu için kesin çözüm bedava: eğim kovası başına
+(5°) maskenin opak texel'lerini "yukarı" vektörüne izdüşümle sırala, `level(f)` = f×N'inci texel.
+96×192 maske ~9k texel, mikrosaniye. Bu bizim eklediğimiz şey; kaynakların hiçbiri 2D değil.
+
+**Yüzey bandı:** dolum çizgisinin hemen altında sabit kalınlıkta, içkinin bir ton açığı, kavite
+maskesiyle kırpılır (uçları duvara kendiliğinden oturur). **Ağız halkası** ise şişeyle döner ve
+|cos(tilt)| ile incelir — 90°'de düz kenar. Yani: sıvı yüzeyi dünya-yatay bant, ağız ise sanatın
+kendisinde (üreticiden gelen halka + boğaz). Elips boyamak yanlıştı; doğrusu bu.
+
+**Piksel kilidi:** dolum yüksekliği sanatın texel gridine kuantize edilir (`floor(f×rows)/rows`),
+ekrana değil — yüzey bir seferde bir piksel hareket eder.
+
+### 12a · İki kademe (araştırmanın önerisi, aynen)
+- **Kademe 1 — shader'sız, ~40 satır, `BottleFill`'e sığar:** stencil Mask + tam-alfa içki
+  Image'i kalır; araya her kare `−tilt + çalkantıEğimi` ile TERS döndürülen bir "Level"
+  RectTransform girer; içki rect'i kavitenin köşegenine kadar büyütülür (stencil zaten kırpar);
+  üst kenar §12'nin hacim tablosundan; satıra kuantize; altına 1–2 satırlık açık tonda yüzey
+  bandı. Bütün şişe (sanat + sıvı) tek Image olarak döndüğü için piksel yüzler keskin kalır.
+  Mahzen (world-space): aynı şey SpriteMask + ters döndürülmüş SpriteRenderer'la.
+- **Kademe 2 — shader:** yalnız çalkantı gerçekten önemli olursa; `MetaballLiquid.shader`'ın
+  `rotUv` + `_SurfTilt` yolu mask altında çalışacak şekilde (`materialForRendering`'e yaz).
+
+---
+
+## 13 · "Oyunun sıvı mekaniğini şişenin içine koyalım" — karar
+
+Yazarın fikri: `MetaballFluid` şişenin içinde koşsun, eğilince içindeki sıvı doğrudan dökülsün.
+Kodu okuyan değerlendirme:
+
+| Soru | Cevap |
+|---|---|
+| Kap şekli | Maske değil: yerel çerçevede eksen-hizalı kutu + sol-sağ **simetrik** yarı-genişlik profili (`SetProfile`). Şişe için yeter; karton ağzı gibi asimetrik şeyler için yetmez. |
+| Dönme | Var (`SetPool(..., angleRad)`); yerçekimi ve atalet yerel çerçeveye döndürülüyor. Ama seviye yardımcıları (`CountUpTo`, `Reconcile`, `SurfaceY`) yerel-yatay varsayıyor — 118°'de "seviye" şişe eksenine dik olur. |
+| Maliyet | El şişesi ~850–950 parçacık ≈ tin'in kendisi. İkinci eşzamanlı sim projede İLK olurdu: tin ≤3.2 ms + şişe ~2–3 ms → ana iş parçacığında **7–8 ms** (masaüstünde ~130 fps, dizüstünde yarısı). |
+| Akıntı | **Zaten şişenin ağzından çıkıyor**: `UpdateTiltPour` ağzı ölçülü kapaktan hesaplayıp `_shakerFluid.EmitStream(mouth, …)` çağırıyor, akıntı şişenin kendi içki rengini alıyor. Şişe-içi sıvının ekleyeceği tek şey çalkantı + düşen seviye. |
+| Mask tuzağı | GDD 24:348-351 kayıtlı: Mask altındaki Graphic'e Unity stencil'li KOPYA materyal veriyor, `MetaballFluid` parçacık dizisini aslına yazıyor → maskeli sıvı hiç çizilmez. Şişe içi sıvı camla kırpılmak zorunda. |
+| Mahzen | **Asla.** 36 world-space SpriteRenderer; `MetaballFluid` uGUI RawImage. Taşınsa bile 36 solver. Mahzen statik dolum kullanır (§12 kademe 1'in world-space ikizi). |
+| Kural katmanı | Sıvı yalnız render. `Remaining/Capacity` Core'un; ağızdan kaçan parçacık şişede ne kaldığına ASLA karar vermez. |
+
+**Karar: önce geometri/shader dolumu (§12 kademe 1), metaball yalnız SONRA, el şişesine, ölçümle
+kapılı bir deney olarak; mahzende hiç.**
+
+### 13a · Yol haritası
+- **Faz 0 (saatler, shader yok):** `BottleFill`'de içki rect'ini −tilt ile ters döndür, üst kenarı
+  dünya yönelimiyle koy — şişe ters dönünce boyun dolar, taban boşalır. Bench baseline yeniden
+  kutsanır. Yanlış okunan şeyin çoğunu bu tek başına kaldırır.
+- **Faz 1 (1–2 gün, ~0 ms):** hacim-doğru tablo (§12), sönümlü gecikme (tezgâhın `_slosh` deseni),
+  yüzey bandı; mahzende aynı statik dolum SpriteMask ile. v4 plakalarıyla birlikte gelir.
+- **Faz 2 (kapılı deney):** el şişesine `MetaballFluid`: profil = kavite maskesinden, açı sınırı,
+  maske yerine kavite-kırpma; kabul = ölçülen kare süresi + dizüstü testi + görünüşün tin'le
+  uyumu. Geçemezse Faz 1 kalır.
