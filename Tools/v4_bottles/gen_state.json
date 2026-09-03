@@ -20,7 +20,10 @@
   },
   "vodka_astra:47": {
    "job": "539dc4c2-72c0-4986-b922-6da7f81d7588",
-   "submit": "id: 539dc4c2-72c0-4986-b922-6da7f81d7588\nmodel: pro\ndescription: a tall slim clear-glass vodka bottle with straight shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN with NO CAP, NO COR"
+   "submit": "id: 539dc4c2-72c0-4986-b922-6da7f81d7588\nmodel: pro\ndescription: a tall slim clear-glass vodka bottle with straight shoulders, about 2.5 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN with NO CAP, NO COR",
+   "n": 1,
+   "secs": 167.0,
+   "poll": "status: completed\nid: 539dc4c2-72c0-4986-b922-6da7f81d7588\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/539dc4c2-72c0-4986-b922-6da7f81d7588/download\n"
   }
  }
 }
