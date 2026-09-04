@@ -762,6 +762,58 @@ işi için (sabır bitmeden UYARI) hazır bekliyor.
 
 EditMode 383/383, PlayMode 8/8.
 
+### 9.21 · Sabır üç banda bölündü, saat bahşişin çarpanı oldu (2026-09-04)
+
+Yazar: *"Sabır barını 3'e böleceğiz. Kırmızı, sarı, yeşil — böylece hızlı servis etmenin de
+önemi artacak, bahşişi arttıracak. … Sabır barı için profesyonel bir ui üret, temaya ve
+renklere uyan, miami 80s'lere uygun."*
+
+**Kural (Core).** `ServiceBand {Green, Amber, Red}` ve eşikler `ServiceJudge.GreenBand = 1/3`,
+`AmberBand = 2/3` — beklemenin HARCANAN payına göre. `SpeedScore` artık düz `1 − bekleme`
+değil, band kenarlarında kırılan sürekli bir eğri: yeşilin dibinde **0.75**, sarının dibinde
+**0.30**, sonunda 0. `CustomerVisit.Band` hangi saat işliyorsa onun bandını verir, böylece
+kafanın üstündeki bar ile kasa aynı üçlemeyi okur.
+
+**Saat toplamdan çıktı, çarpan oldu.** Ölçüm: hız 0.35 ağırlıklı bir terimken, diğer üç terim
+doluyken müşteri kalkarken verilen içki hâlâ anında verilenin **%65'ini** bahşiş alıyordu (10$
+içkide 6$ karşı 10$). Ağırlığı 0.45'e çıkarmak da yetmedi — ağırlıklı bir terim "çok geç"
+diyemez, ancak bir çarpan diyebilir. Şimdi: `earned = 0.40 craft + 0.30 accuracy + 0.30 fill`
+(toplamı 1) ve `quality = earned × (ClockFloor + (1 − ClockFloor) × speed)`.
+`TipCeiling 1.0 → 1.15` (anında servis eskisinden İYİ öder) ve `ClockFloor = 0.35`.
+
+**Taban ölçüyle kondu.** Tabansız ilk hâl (saf çarpan) 200 koşuda iflası %2 → **%100** yaptı,
+bot 21. günde ölüyordu (serve başına bahşiş 4.65$ → 2.60$, gelir 134$ → 85$/gün): geç içki de
+içkidir, birileri onu yaptı. Tabanla: **iflas %1.0**, medyan kasa $136, gelir $131.7/gün,
+bahşiş serve başına $4.42 — yani hızlı bara eskisinden fazla, ağır bara belirgin az.
+(Rapor dosyası bu turda yazarın kendi meşrubat fiyat çalışmasıyla birlikte koştu; sayılar
+ikisinin toplamı, commit'e girmedi.)
+
+**Gauge (UI).** Aynı evin aleti: `ChromeArt.GaugeTube` gövde + `GaugeGlass(w, h, 3)` cam —
+üç adım istendiği için camdaki iki çizik tam band sınırlarına düşüyor. Boş şerit üç bandı
+kendi koyu tonlarıyla taşıyor (sol kırmızı, orta sarı, sağ yeşil), dolgu canlı band rengi,
+altında bandın rengini alan bir neon şerit (tezgâhın kendi numarası), kırmızı bandda hafif
+nabız (Motion.Reduced'da yok). Sipariş-alınma saatinin magenta rengi kalktı: üç band iki saat
+için de konuşuyor, hangi saatin işlediğini balon zaten söylüyor.
+
+**Tepki içki BİTİNCE veriliyor.** *"Verilen emoji tepkileri içkiyi bitirdikten sonra
+verilmeli."* `TasteMotes` (servisten 0.9 sn sonra) kaldırıldı; burst kalkış dalında, boş bardağı
+bırakıp kalktıkları anda atılıyor — sabrı bitenle aynı yerde, aynı dilde.
+
+**Tek yıldız, tek kalp.** *"Bundan sonra oyunda kalp ve yıldız iconu olarak her yerde bunları
+kullanacaksın."* Oyun üç ayrı yıldız sayıyordu (yazarın gölgeli `star3d`'i, düz beyaz
+`Items/star`, `ChromeArt.Mark("star")`). Artık `ItemArt.Star(lit, px)` ve `ItemArt.Heart(lit, px)`
+— iki durum (yanık / yuva), iki boyut (16 ve 32; 32'lik ikon 14 px kareye sıkışınca çamur olur,
+şişe dersi) ve **kendi rengini taşırlar**: çağıran yalnız alfa ile karartabilir. Kalp yoktu,
+`Tools/heart_icon.py` yıldızın kuruluşuyla çizdi (iki lob + uç, 1 px mürekkep, üç ton, aynı
+parıltı); `Tools/icon_sizes.py` 16'lıkları master'dan türetir (halkayı soy → alan ortalaması →
+palete kilitle → 1 px halka). Kalbin ilk işi: ehliyette ilişki rütbesi üç kalple
+(`Relationships.ForSatisfiedVisits`: Stranger 0 … Confidant 3).
+
+**Backbar 10 px yukarı.** `DrawerTravel 121 → 131` (odanın kendi pikseli, ekranda 20).
+Bench look baseline'ı bu yüzden yeniden kutsandı.
+
+EditMode 389/389 (6 yeni band testi), PlayMode 10/10.
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

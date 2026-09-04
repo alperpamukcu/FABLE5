@@ -1345,10 +1345,12 @@ namespace LastCall.UI
                 {
                     if (i == vipCell)
                     {
-                        // Legible from across the week even four days out; full magenta
-                        // only on the night itself.
-                        var m = UITheme.Magenta[4];
-                        sign.color = new Color(m.r, m.g, m.b, Mathf.Lerp(0.62f, 1f, burn));
+                        // Legible from across the week even four days out, and BRIGHTEST on
+                        // the night itself. The star keeps its own gold (2026-09-04, the
+                        // author's one-icon rule): magenta over it came out a muddy red, and
+                        // the marquee already says which night is the story's in the word
+                        // above it. Only how hard it burns is ours to set.
+                        sign.color = new Color(1f, 1f, 1f, Mathf.Lerp(0.62f, 1f, burn));
                     }
                     else
                     {

@@ -272,7 +272,9 @@ namespace LastCall.Tests
             }
 
             int fresh = TipAfter(0), half = TipAfter(30), late = TipAfter(54);
-            Assert.AreEqual(10, fresh, "a perfect serve doubles a $10 drink");
+            // 10 → 12 (2026-09-04): the ceiling went to 1.15 when the clock was split in
+            // three, so a serve on the instant now pays BETTER than the drink itself.
+            Assert.AreEqual(12, fresh, "a perfect serve more than doubles a $10 drink");
             Assert.Greater(fresh, half, "waiting costs tip");
             Assert.Greater(half, 0, "and half-patience still earns something -- no cliff");
             Assert.Greater(half, late, "and it keeps fading past the old window");

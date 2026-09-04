@@ -511,6 +511,7 @@ namespace LastCall.UI
             public Text Order;
             public Image Icon;               // the ordered drink, drawn by DrinkIcon (v5 P13)
             public Image PatienceFill;
+            public Image PatienceNeon;      // the strip under the glass, lit in the band's colour
             public int Index;                // which stool along the bar, left to right
             public float NeighbourT;         // how long somebody has been sitting beside them
             public float SeatX;              // this stool's resting x
@@ -675,6 +676,7 @@ namespace LastCall.UI
         private Text _idCitizen, _idNumber, _idVisitCount;
 
         private Image[] _idStars;       // the grey five, always drawn
+        private Image[] _idBond;        // how well they know you, in hearts
         private Image[] _idStarFills;   // the amber over them, filled to the fraction
         private RectTransform _idRecipeTip;
 
@@ -1147,7 +1149,6 @@ namespace LastCall.UI
         /// test that raises it runs every frame.</summary>
         private bool _closedSpoke;
 
-        private int _lastStormedCount;   // to catch a customer storming off (GDD 24 §4)
         private Text _toast;
 
         private float _toastUntil;
@@ -1195,7 +1196,6 @@ namespace LastCall.UI
             BottleArt.ClearCache();
             VesselArt.ClearCache();     // measurements are of sprites, so they go with them
             _lastPhase = TycoonPhase.DayOpen;
-            _lastStormedCount = 0;
             _dayEndDue = false;   // a new bar is not owed last night's books
             _tabFloats = 0;       // and nothing of last night's is still in the air
             // A NEW BAR REMEMBERS NOBODY (2026-08-25). The guest log and the casting both
@@ -2303,7 +2303,7 @@ namespace LastCall.UI
                         new Vector2(cx, WeekSignY - 1f));
                     starRt.pivot = new Vector2(0.5f, 0.5f);
                     sign = starRt.gameObject.AddComponent<Image>();
-                    sign.sprite = ChromeArt.Mark("star");
+                    sign.sprite = ItemArt.Star(true, 16f);
                     sign.raycastTarget = false;
                     vipCell = i;
                 }
@@ -2422,9 +2422,8 @@ namespace LastCall.UI
                 Place(socket, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(i * 18f + 8f, 0));
                 socket.pivot = new Vector2(0.5f, 0.5f);
                 var si = socket.gameObject.AddComponent<Image>();
-                si.sprite = ItemArt.Load("star");
+                si.sprite = ItemArt.Star(false, 16f);
                 si.preserveAspect = true; si.raycastTarget = false;
-                si.color = new Color(UITheme.Night[2].r, UITheme.Night[2].g, UITheme.Night[2].b, 0.45f);
             }
             _gateFill = NewRect("GateFill", _gateRow);
             _gateFill.anchorMin = new Vector2(0, 0); _gateFill.anchorMax = new Vector2(0, 1);
@@ -2438,9 +2437,8 @@ namespace LastCall.UI
                 Place(star, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(i * 18f + 8f, 0));
                 star.pivot = new Vector2(0.5f, 0.5f);
                 var si = star.gameObject.AddComponent<Image>();
-                si.sprite = ItemArt.Load("star");
+                si.sprite = ItemArt.Star(true, 16f);
                 si.preserveAspect = true; si.raycastTarget = false;
-                si.color = UITheme.Magenta[2];      // the story's colour, not the board's amber
             }
             _gateText = NewText("GateText", _gateRow, _body, 8, TextAnchor.MiddleLeft, UITheme.Night[2]);
             Place(_gateText.rectTransform, new Vector2(0, 0.5f), new Vector2(300, 16),

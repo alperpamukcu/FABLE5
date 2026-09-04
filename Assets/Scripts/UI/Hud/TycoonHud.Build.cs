@@ -495,12 +495,30 @@ namespace LastCall.UI
                 // The patience gauge rides the BODY, not the ticket (P15, absorbs the P8
                 // gauge item): a slim bar floating just over the head, so reading who is
                 // about to walk means looking at the people, not at their paperwork.
+                // IT IS AN INSTRUMENT, AND IT IS DIVIDED IN THREE (2026-09-04, the author:
+                // "sabır barını 3'e böleceğiz — kırmızı, sarı, yeşil … sabır barı için
+                // profesyonel bir ui üret, temaya ve renklere uyan, miami 80s'lere uygun").
+                //
+                // It was a black rectangle with a coloured stripe in it, which said how much
+                // was left and nothing about what that meant. This is the same instrument the
+                // night's standing gauge and the book's ratio boxes are drawn on —
+                // ChromeArt.GaugeTube for the chassis, GaugeGlass over it for the shine and
+                // the measures — asked for THREE steps, so the two scratches in the glass fall
+                // exactly on the band edges the till pays by (ServiceJudge.GreenBand/AmberBand).
+                // The empty track behind carries the three bands in their own dark tones, so
+                // the thirds can be read before the fill has drained into them, and a neon
+                // strip under the glass takes the live band's colour — the counter's own trick,
+                // which is where this room's light comes from.
+                const float GaugeW = 78f, GaugeH = 10f;
                 var clockBg = NewRect("ClockBg", seat.Root);
                 clockBg.anchorMin = clockBg.anchorMax = new Vector2(0.5f, 0);
                 clockBg.pivot = new Vector2(0.5f, 0);
-                clockBg.sizeDelta = new Vector2(BustW * 0.72f, 8f);
+                clockBg.sizeDelta = new Vector2(GaugeW, GaugeH);
                 clockBg.anchoredPosition = new Vector2(0, CharWinH + 1f);
-                clockBg.gameObject.AddComponent<Image>().color = UITheme.Night[0];
+                var clockTube = clockBg.gameObject.AddComponent<Image>();
+                clockTube.sprite = ChromeArt.GaugeTube((int)GaugeW, (int)GaugeH);
+                clockTube.color = UITheme.Night[1];
+                clockTube.raycastTarget = false;
                 // The gauge's length IS the value, and it is re-hung off each look's own head
                 // every frame. Snapping either to whole units would make patience tick down in
                 // visible steps and park the bar off the head it belongs to. See UiAuditExempt.
@@ -508,13 +526,36 @@ namespace LastCall.UI
                     + "re-hung on the customer's own head each frame — snapping it would make "
                     + "the clock tick in steps");
                 seat.Gauge = clockBg;   // re-hung off each look's own head, below
-                var clockFill = NewRect("ClockFill", clockBg);
-                clockFill.anchorMin = new Vector2(0, 0); clockFill.anchorMax = new Vector2(0, 1);
-                clockFill.pivot = new Vector2(0, 0.5f);
-                clockFill.offsetMin = new Vector2(1, 1); clockFill.offsetMax = new Vector2(1, -1);
-                clockFill.anchoredPosition = new Vector2(1, 0);
-                seat.PatienceFill = clockFill.gameObject.AddComponent<Image>();
-                seat.PatienceFill.raycastTarget = false;
+
+                var neon = NewRect("Neon", clockBg);
+                neon.anchorMin = new Vector2(0, 0); neon.anchorMax = new Vector2(1, 0);
+                neon.pivot = new Vector2(0.5f, 1);
+                neon.offsetMin = new Vector2(3f, -2f); neon.offsetMax = new Vector2(-3f, 0f);
+                seat.PatienceNeon = neon.gameObject.AddComponent<Image>();
+                seat.PatienceNeon.raycastTarget = false;
+
+                var clockInner = NewRect("Inner", clockBg);
+                Stretch(clockInner, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
+                // Left to right: the last third of the wait, the middle, the first. The
+                // drink drains right to left, so the fill arrives in each band in turn.
+                var bandInk = new[] { UITheme.ViceRed[1], UITheme.Amber[1], UITheme.Lime[1] };
+                for (int b = 0; b < 3; b++)
+                {
+                    var zone = NewRect("Band" + b, clockInner);
+                    zone.anchorMin = new Vector2(b / 3f, 0f);
+                    zone.anchorMax = new Vector2((b + 1) / 3f, 1f);
+                    zone.offsetMin = Vector2.zero; zone.offsetMax = Vector2.zero;
+                    var zi = zone.gameObject.AddComponent<Image>();
+                    zi.color = new Color(bandInk[b].r, bandInk[b].g, bandInk[b].b, 0.5f);
+                    zi.raycastTarget = false;
+                }
+                seat.PatienceFill = FillBar(clockInner, UITheme.Lime[3]);
+
+                var clockGlass = NewRect("Glass", clockBg);
+                Stretch(clockGlass, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var clockGi = clockGlass.gameObject.AddComponent<Image>();
+                clockGi.sprite = ChromeArt.GaugeGlass((int)GaugeW, (int)GaugeH, 3);
+                clockGi.raycastTarget = false;
 
                 seat.Root.gameObject.SetActive(false);
                 _seats.Add(seat);

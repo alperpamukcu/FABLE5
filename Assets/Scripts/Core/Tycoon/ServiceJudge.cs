@@ -19,6 +19,27 @@ namespace LastCall.Core
         Declined,
     }
 
+    /// <summary>
+    /// WHICH THIRD OF THEIR PATIENCE A CUSTOMER IS IN (2026-09-04, the author: "sabır barını
+    /// 3'e böleceğiz — kırmızı, sarı, yeşil; böylece hızlı servis etmenin de önemi artacak,
+    /// bahşişi arttıracak").
+    ///
+    /// The clock over a drinker's head has always been one continuous slide, and a slide
+    /// says "you are somewhere in this" — it never says WHEN to hurry. Three bands do: the
+    /// bar can see at a glance who is still fresh, who is turning and who is about to walk,
+    /// and the tip pays for the difference. The band is the rules layer's word, not the
+    /// gauge's, so what is drawn over the head and what the till pays are one reading.
+    /// </summary>
+    public enum ServiceBand
+    {
+        /// <summary>The first third of the wait: they are happy, and it is worth racing for.</summary>
+        Green,
+        /// <summary>The middle third: they have noticed how long this is taking.</summary>
+        Amber,
+        /// <summary>The last third: the drink is late and the tip is nearly gone.</summary>
+        Red,
+    }
+
     /// <summary>The money and outcome of one serve (GDD 23 §4–§5).</summary>
     public sealed class ServiceVerdict
     {
@@ -80,16 +101,84 @@ namespace LastCall.Core
     {
         // ── the tip (v5 P11) ────────────────────────────────────────────────────
         /// <summary>The best tip, as a share of the drink's base price. At 1.0 a perfect serve
-        /// doubles the take — which is the point: base pay is low, service is the earner.</summary>
-        public const double TipCeiling = 1.0;
+        /// doubles the take — which is the point: base pay is low, service is the earner.
+        ///
+        /// 1.0 → 1.15 (2026-09-04, the author: "bahşişi arttıracak"). A drink handed straight
+        /// over is worth MORE than it was, which is the reward half of splitting the clock in
+        /// three; the punishment half is <see cref="ClockFloor"/>, and the two were set
+        /// together against the 200-run sim rather than by eye.</summary>
+        public const double TipCeiling = 1.15;
+
+        /// <summary>
+        /// What survives of a tip when the clock has run out — the share of the earned tip
+        /// that is NOT on the clock at all.
+        ///
+        /// MEASURED, NOT CHOSEN (2026-09-04). With the clock as a bare multiplier and no
+        /// floor, a bar that serves at a middling pace loses so much of its tip that it
+        /// cannot restock: 200 runs went from 2% bankrupt to 100%, dying about day 21, with
+        /// the tip per serve down from $4.65 to $2.60 and the take following it into the
+        /// ground. A late drink is still a drink, and somebody still paid for it. So a third
+        /// of the tip is the craft's, whatever the clock says, and the other two thirds are
+        /// what speed is playing for.
+        /// </summary>
+        public const double ClockFloor = 0.35;
 
         /// <summary>What the tip is made of. Speed leads, because it is the pressure the whole
         /// floor runs on; the spec is the craft read; the accuracy is the pour's closeness to
         /// the recipe's perfect (2026-08-20); the fill is the glass itself. Fill kept its
         /// 0.20 deliberately — at 0.15 a visibly thin pour rounded away to the same dollar
-        /// as a full one on a $10 drink, and a term rounding can erase is not a term.</summary>
-        public const double SpeedWeight = 0.35, SpecWeight = 0.25,
-            AccuracyWeight = 0.20, FillWeight = 0.20;
+        /// as a full one on a $10 drink, and a term rounding can erase is not a term.
+        ///
+        /// THE CLOCK LEFT THE SUM (2026-09-04, the author: "sabır barını 3'e böleceğiz …
+        /// böylece hızlı servis etmenin de önemi artacak, bahşişi arttıracak"). Speed used to
+        /// be one term of four, weighted 0.35, and the arithmetic made a nonsense of the ask:
+        /// with the other three near full, a drink handed over as the customer stood up still
+        /// tipped 65% of one handed over instantly — measured, 6 against 10 on a $10 drink.
+        /// A weighted term cannot say "too late"; only a multiplier can. So the three craft
+        /// terms make the tip you EARNED — they are what weights are for, and they still sum
+        /// to one — and the clock decides how much of it you keep. A flawless serve on the
+        /// instant still tips exactly its base price; the same drink at the amber line tips
+        /// under a third of it; one that arrives as they get up tips nothing.</summary>
+        public const double SpecWeight = 0.40, AccuracyWeight = 0.30, FillWeight = 0.30;
+
+        // ── the three bands (2026-09-04) ────────────────────────────────────────
+
+        /// <summary>Where the green band ends and where the amber does, as shares of the
+        /// wait SPENT. Even thirds: the gauge is divided by eye and the till agrees with it.</summary>
+        public const double GreenBand = 1.0 / 3.0, AmberBand = 2.0 / 3.0;
+
+        /// <summary>What the speed term is still worth at the bottom of each band — the two
+        /// numbers that give the curve its shape. Green gives up a quarter across its whole
+        /// third (being quick is barely punished), amber gives up more than half of what is
+        /// left (the drink is visibly late), and red runs the rest down to nothing.</summary>
+        public const double GreenFloor = 0.75, AmberFloor = 0.30;
+
+        /// <summary>Which band a wait of <paramref name="waitFraction"/> stands in.</summary>
+        public static ServiceBand BandOf(double waitFraction) =>
+            waitFraction < GreenBand ? ServiceBand.Green
+            : waitFraction < AmberBand ? ServiceBand.Amber
+            : ServiceBand.Red;
+
+        /// <summary>
+        /// The speed term of the tip: 1 for a drink handed over on the instant, 0 for one
+        /// that arrives as they get up.
+        ///
+        /// STILL CONTINUOUS, BUT NO LONGER FLAT (2026-09-04). It was <c>1 − wait</c>, a
+        /// straight line with no shape, so a bar could not tell whether it was in trouble
+        /// until the customer left. Now it bends at the band edges — full marks are worth
+        /// racing for, the amber third is where the money actually drains, and red is a
+        /// formality — and because it bends rather than steps, nothing is a cliff and no
+        /// single frame of lateness costs a dollar.
+        /// </summary>
+        public static double SpeedScore(double waitFraction)
+        {
+            double w = Math.Max(0.0, Math.Min(1.0, waitFraction));
+            if (w <= GreenBand)
+                return 1.0 - w * (1.0 - GreenFloor) / GreenBand;
+            if (w <= AmberBand)
+                return GreenFloor - (w - GreenBand) * (GreenFloor - AmberFloor) / (AmberBand - GreenBand);
+            return AmberFloor * (1.0 - (w - AmberBand) / (1.0 - AmberBand));
+        }
 
         // ── the perfect pour (2026-08-20 respec) ────────────────────────────────
 
@@ -316,7 +405,7 @@ namespace LastCall.Core
             // half-time and the spec used to be worth nothing at the till.
             double specScore = spec.Delivered(delivered);
             double fillScore = FillScore(fill, spec.ExpectedFill);
-            double speedScore = Math.Max(0.0, 1.0 - visit.WaitFraction);
+            double speedScore = SpeedScore(visit.WaitFraction);
 
             // A pint's craft is its head (GDD 21 §10.3) — it stands in for the spec, because a
             // pint is not garnished and the head is the part you had to get right by hand.
@@ -329,10 +418,11 @@ namespace LastCall.Core
             double craftScore = draught ? headScore
                 : GarnishShare * specScore + MethodShare * methodScore;
 
-            double quality = SpeedWeight * speedScore
-                           + SpecWeight * craftScore
-                           + AccuracyWeight * accuracy
-                           + FillWeight * fillScore;
+            // What the job was worth, and then what the clock left of it.
+            double craft = SpecWeight * craftScore
+                         + AccuracyWeight * accuracy
+                         + FillWeight * fillScore;
+            double quality = craft * (ClockFloor + (1.0 - ClockFloor) * speedScore);
 
             // Only the RIGHT drink is tipped now (2026-08-20): a broke crowd never tips, a
             // wrong drink is paid for and nothing more, and the ordered drink out of its box

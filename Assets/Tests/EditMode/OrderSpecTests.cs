@@ -177,7 +177,9 @@ namespace LastCall.Tests
                 Full());   // no ice
 
             Assert.AreEqual(10, perfect.BasePaid);
-            Assert.AreEqual(10, perfect.Tip, "spec + fill + speed all full: the tip equals the base");
+            // 10 → 12 (2026-09-04): the tip ceiling went to 1.15 when the clock was split in
+            // three, so a flawless serve on the instant now pays BETTER than the drink itself.
+            Assert.AreEqual(12, perfect.Tip, "spec, fill and the clock all full: the ceiling");
             Assert.AreEqual(10, careless.BasePaid, "still the right drink, still paid");
             Assert.Less(careless.Tip, perfect.Tip, "but carelessness is paid for out of the tip");
         }

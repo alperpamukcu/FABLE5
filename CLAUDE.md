@@ -138,6 +138,11 @@ re-blesses them once before trusting a red look test (`Docs/HANDOFF.md` §4).
   under a SpriteMask. Cards without v4 art fall back to `v3_{id}_flat` / `bot_{id}` and the
   old `BottleFill`. Masters are generated EMPTY, OPEN and LABEL-LESS; the label is pressed by
   `Tools/v4_bottles/process.py`; nothing enters `Assets` except through `ship.py` + `picks.json`.
+- **One star and one heart** (2026-09-04): every star and heart in the game comes from
+  `ItemArt.Star(lit, px)` / `ItemArt.Heart(lit, px)` — two states, two sizes (16 and 32; the
+  accessor picks), and they carry their own colour, so a caller may dim one with alpha but
+  never tint it. The art is `Items/{star3d,heart3d}[_socket][_16].png`; the heart and the 16s
+  are drawn by `Tools/heart_icon.py` and `Tools/icon_sizes.py`, never by hand or a generator.
 - `MetaballFluid` fills a vessel from a particle-count estimate that is not exact for every
   silhouette. If a vessel draws short, measure it (`SurfaceY`) and correct that vessel with
   `SetDensity` — do not scale the fill fraction, which just clamps.

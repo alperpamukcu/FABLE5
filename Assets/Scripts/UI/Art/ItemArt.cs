@@ -35,6 +35,37 @@ namespace LastCall.UI
         /// <summary>Forget every cached sprite — a new run re-resolves the art.</summary>
         public static void ClearCache() => Cache.Clear();
 
+        // ── the house's two icons (2026-09-04) ───────────────────────────────────
+        //
+        // ONE STAR AND ONE HEART, EVERYWHERE (the author: "bundan sonra oyunda kalp ve
+        // yıldız iconu olarak her yerde bunları kullanacaksın"). The game used to count in
+        // three different stars — the author's shaded star3d in the top bar, a flat white
+        // Items/star tinted per caller, and a 16px silhouette drawn in ChromeArt — which is
+        // three answers to "how many stars is this bar". There is one now, in two states
+        // (lit, and the empty socket), and the heart is drawn to the same construction
+        // (Tools/heart_icon.py).
+        //
+        // THEY CARRY THEIR OWN COLOUR. A caller may dim one — the alpha still reads — but
+        // nothing tints them any more: a gold star tinted with a line's ink is a different
+        // star, which is the thing that was wrong with the flat one.
+        //
+        // Each ships at two sizes and this picks between them, because a 32px shaded icon
+        // squeezed onto a 14px square under a point filter is mud (the bottle lesson,
+        // PLAN_bottle_art_v4 §9.18): the 16 is drawn for the small rows, the 32 for the
+        // night's big gauge. Falls back to the old flat star if the art is missing, so a
+        // half-imported project still counts.
+
+        /// <summary>The star, lit or empty, at the size it is about to be drawn.</summary>
+        public static Sprite Star(bool lit, float px) =>
+            Load(Name("star3d", lit, px)) ?? Load("star");
+
+        /// <summary>The heart, lit or empty, at the size it is about to be drawn.</summary>
+        public static Sprite Heart(bool lit, float px) =>
+            Load(Name("heart3d", lit, px));
+
+        private static string Name(string icon, bool lit, float px) =>
+            icon + (lit ? "" : "_socket") + (px <= 20f ? "_16" : "");
+
         /// <summary>The bottle for a shelf style ("vodka", "gin", …); the asset names match.</summary>
         public static Sprite Bottle(string style) => Load(style);
 

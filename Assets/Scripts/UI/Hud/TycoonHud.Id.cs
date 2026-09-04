@@ -120,6 +120,11 @@ namespace LastCall.UI
             _idRel.text = rec.Visits == 0
                 ? "FIRST TIME"
                 : reg.Relationship.ToString().ToUpperInvariant();
+            // …and the same fact as a bond: a stranger lights none of the three.
+            int bond = rec.Visits == 0 ? 0 : (int)reg.Relationship;
+            if (_idBond != null)
+                for (int i = 0; i < _idBond.Length; i++)
+                    if (_idBond[i] != null) _idBond[i].enabled = i < bond;
 
             // What THEY make of US, in the stars they have actually left. Somebody who has
             // not rated the bar yet KEEPS THE ROW — five grey stars and a question mark —
@@ -547,6 +552,32 @@ namespace LastCall.UI
                 new Vector2(LicCellX, -LicCells[0] - LicCellH + 16f));
             _idRel.horizontalOverflow = HorizontalWrapMode.Overflow;
 
+            // HOW WELL THEY KNOW YOU, IN HEARTS (2026-09-04, the author: "bundan sonra
+            // oyunda kalp ve yıldız iconu olarak her yerde bunları kullanacaksın"). The rank
+            // is already a count — Stranger 0, Familiar 1, Regular 2, Confidant 3
+            // (Relationships.ForSatisfiedVisits) — so it is a row of three, drawn the way
+            // the star rows are: the sockets always there, the earned ones lit. The word
+            // above it stays; the hearts are what you read across the bar, the word is what
+            // it is called.
+            const float BondPx = 10f, BondGap = 2f;
+            float bondRun = 3f * BondPx + 2f * BondGap;
+            _idBond = new Image[3];
+            for (int i = 0; i < 3; i++)
+            {
+                var b = NewRect("Bond" + i, card);
+                Place(b, new Vector2(0, 1), new Vector2(BondPx, BondPx), new Vector2(
+                    LicCellX + (LicCellW - bondRun) * 0.5f + i * (BondPx + BondGap),
+                    -LicCells[0] - LicCellH + 27f));
+                var bs = b.gameObject.AddComponent<Image>();
+                bs.sprite = ItemArt.Heart(false, BondPx);
+                bs.preserveAspect = true; bs.raycastTarget = false;
+                var f = NewRect("Lit", b);
+                Stretch(f, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                _idBond[i] = f.gameObject.AddComponent<Image>();
+                _idBond[i].sprite = ItemArt.Heart(true, BondPx);
+                _idBond[i].preserveAspect = true; _idBond[i].raycastTarget = false;
+            }
+
             // Caption, then the stars, then the number under them — so the drop clears the
             // star row rather than landing in the middle of it.
             _idRates = LicCell(card, LicCells[1], "RATES THIS BAR", out _idRatesLabel,
@@ -565,7 +596,7 @@ namespace LastCall.UI
                     LicCellX + (LicCellW - starRun) * 0.5f + i * (StarBox + StarGap),
                     -LicCells[1] - 24f));
                 _idStars[i] = s.gameObject.AddComponent<Image>();
-                _idStars[i].sprite = ItemArt.Load("star");
+                _idStars[i].sprite = ItemArt.Star(false, StarBox);
                 _idStars[i].preserveAspect = true;
                 _idStars[i].raycastTarget = false;
 
@@ -575,13 +606,13 @@ namespace LastCall.UI
                 var f = NewRect("Lit", s);
                 Stretch(f, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 _idStarFills[i] = f.gameObject.AddComponent<Image>();
-                _idStarFills[i].sprite = _idStars[i].sprite;
+                _idStarFills[i].sprite = ItemArt.Star(true, StarBox);
                 _idStarFills[i].type = Image.Type.Filled;
                 _idStarFills[i].fillMethod = Image.FillMethod.Horizontal;
                 _idStarFills[i].fillOrigin = (int)Image.OriginHorizontal.Left;
                 _idStarFills[i].preserveAspect = true;
                 _idStarFills[i].raycastTarget = false;
-                _idStarFills[i].color = UITheme.Amber[3];
+                _idStarFills[i].color = Color.white;
                 _idStarFills[i].enabled = false;
             }
 

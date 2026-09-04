@@ -237,6 +237,16 @@ react (happy / annoyed / angry) → pay → leave**, plus **storm-off**. Two gau
 satisfaction bar and the **patience clock icon** counting down. Reactions must read at a
 glance — anger is animation first, numbers second.
 
+**The patience clock runs in three bands (2026-09-04, shipped.)** Green, amber, red, even
+thirds of the wait — `ServiceJudge.GreenBand`/`AmberBand`, so the gauge over the head and the
+till pay by one reading. The gauge is the house instrument (`ChromeArt.GaugeTube` +
+`GaugeGlass` asked for three steps, so its two measures fall on the band edges): the empty
+track carries the three bands in their own dark tones, the fill takes the live band's colour,
+a neon strip under the glass takes it too, and the last third breathes. The clock is no longer
+one weighted term of the tip but the MULTIPLIER on it — the craft earns the tip, the clock
+decides how much of it you keep — with a floor of 0.35 so a late drink still pays something,
+and a ceiling of 1.15 so an instant one pays better than it used to.
+
 **The reaction is emoji motes, and the COUNT is the grade (2026-09-04, shipped.)** A drinker
 answers a sip with small faces rising from behind them — one shared disc, three mouths (down /
 flat / up) tinted ViceRed / Amber / Lime, drawn 14 px at one stage unit a pixel and ringed in
@@ -244,8 +254,9 @@ ink so they read on any wall. How many is the whole reading: **4–7 for a drink
 8–13 for a fair one, 14–20 for one that landed**, twenty being full marks. They leave the
 shoulders one at a time, each on its own climb, sway and fade, and sit one sorting order under
 their own body so they come up from BEHIND the customer. Fired 0.9 s after the serve — the sip
-frame of the drink clip — and, for a walk-out, at the stool they get up from: the red banner
-that used to announce a storm-off is gone, because the room says it now.
+glass is EMPTY — they set it down, get up, and answer (the author, second pass the same day:
+"içkiyi bitirdikten sonra verilmeli") — and, for a walk-out, at the stool they get up from:
+the red banner that used to announce a storm-off is gone, because the room says it now.
 
 ## 5. The ID card — v3 shipped (P15, 2026-07-31)
 

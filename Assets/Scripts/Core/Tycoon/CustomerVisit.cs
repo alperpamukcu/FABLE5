@@ -115,6 +115,13 @@ namespace LastCall.Core
         /// asked, false once the order is taken (or while they are still deciding).</summary>
         public bool AwaitingOrderTaking => State == VisitState.Waiting && HasOrdered && !IdInspected;
 
+        /// <summary>Which third of the live clock they are in — the SAME thirds the tip is
+        /// paid on (<see cref="ServiceJudge.BandOf"/>), so the gauge over their head and the
+        /// money in the till cannot tell two different stories. Asked of whichever clock is
+        /// running: being kept waiting to be ASKED is its own impatience, and it is drawn in
+        /// the same three colours.</summary>
+        public ServiceBand Band => ServiceJudge.BandOf(1.0 - PatienceFraction);
+
         /// <summary>The running clock as a 0–1 fullness, whichever wait is live. One number
         /// for the gauge, so the HUD never has to know which phase it is drawing.</summary>
         public double PatienceFraction =>

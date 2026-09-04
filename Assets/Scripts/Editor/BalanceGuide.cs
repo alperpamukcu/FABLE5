@@ -97,14 +97,19 @@ namespace LastCall.EditorTools
             sb.AppendLine("           and their drink OUT OF ITS BOX pays nothing at all");
             sb.AppendLine("  tip    = paid × " + F(ServiceJudge.TipCeiling) + " × quality");
             sb.AppendLine();
-            sb.AppendLine("  quality = " + F(ServiceJudge.SpeedWeight) + " × speed"
-                          + "      how much patience was left when it landed");
-            sb.AppendLine("          + " + F(ServiceJudge.SpecWeight) + " × craft"
+            sb.AppendLine("  quality = earned × speed   the craft earns it, the clock keeps it");
+            sb.AppendLine();
+            sb.AppendLine("  earned  = " + F(ServiceJudge.SpecWeight) + " × craft"
                           + "      what they asked for, and how the book says to work it");
             sb.AppendLine("          + " + F(ServiceJudge.AccuracyWeight) + " × accuracy"
                           + "   the pour against the perfect, again — bill AND thanks");
             sb.AppendLine("          + " + F(ServiceJudge.FillWeight) + " × fill"
                           + "       how close the glass came to " + P(ServingSpec.NormalFill));
+            sb.AppendLine();
+            sb.AppendLine("  speed   = 1 at once, " + F(ServiceJudge.GreenFloor) + " at the green line ("
+                          + P(ServiceJudge.GreenBand) + " of the wait), "
+                          + F(ServiceJudge.AmberFloor) + " at the amber line ("
+                          + P(ServiceJudge.AmberBand) + "), 0 as they get up");
             sb.AppendLine();
             sb.AppendLine("  craft   = " + F(ServiceJudge.GarnishShare) + " × their asks"
                           + "  the garnishes on the licence, each all-or-nothing");

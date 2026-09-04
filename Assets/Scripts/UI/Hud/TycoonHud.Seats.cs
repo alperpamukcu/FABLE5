@@ -228,7 +228,6 @@ namespace LastCall.UI
                 NotePerfect(asked);
             LogVerdict(visit, verdict);
             StartCoroutine(ServeReaction(index, verdict));   // reaction + payment float up
-            StartCoroutine(TasteMotes(index, verdict.Satisfaction));   // …and what they think of it
             return true;
         }
 
@@ -1407,15 +1406,6 @@ namespace LastCall.UI
         /// <summary>Where the mouth turns down, and where it turns up.</summary>
         private const double ReactionSour = 0.35, ReactionSweet = 0.7;
 
-        /// <summary>
-        /// WHEN THE GLASS REACHES THE LIPS, measured off the drink clip rather than felt
-        /// for: the art is two halves joined at the sip, so the swallow is the middle frame,
-        /// and DrinkTicks holds ten ticks of 1/PatronFps before it — 0.83s. The taste lands
-        /// a hair after that. A round they ask for instead of drinking (OrdersAgain) never
-        /// plays the clip at all, and the same beat still reads: they tried it, then spoke.
-        /// </summary>
-        private const float TasteSeconds = 0.9f;
-
         /// <summary>How far under the crown the motes leave: they come up from BEHIND the
         /// drinker, so they start at the SHOULDERS and clear the head on the way — measured
         /// in play, where a chin-line start read as a puff off the top of the hair.</summary>
@@ -1432,18 +1422,6 @@ namespace LastCall.UI
                     8 + (int)System.Math.Round((s - ReactionSour) / (ReactionSweet - ReactionSour) * 5));
             return ("good", UITheme.Lime[3],
                 14 + (int)System.Math.Round((s - ReactionSweet) / (1.0 - ReactionSweet) * 6));
-        }
-
-        /// <summary>The taste, one sip after the glass lands.</summary>
-        private System.Collections.IEnumerator TasteMotes(int seatIndex, double satisfaction)
-        {
-            yield return new WaitForSeconds(TasteSeconds);
-            if (seatIndex < 0 || seatIndex >= _seats.Count) yield break;
-            var view = _seats[seatIndex];
-            // Only if they are still the one who was served, and still on the stool: a
-            // reaction thrown at whoever sat down next is a reaction about nothing.
-            if (view.Visit == null || view.Exiting) yield break;
-            ReactionBurst(view, satisfaction, follow: true);
         }
 
         /// <summary>Throws the motes from behind one drinker.</summary>
@@ -1662,10 +1640,17 @@ namespace LastCall.UI
                     // a bad bar — they walk, they do not slam, and the night's log does not
                     // book them as a walk-out because they were never on its books at all.
                     v.ExitStorm = !v.Visit.OnTheHouse && v.Visit.State == VisitState.StormedOff;
-                    // What used to be a banner (see RefreshSeats): the worst face there is,
-                    // as few as they come, pinned to the stool rather than following them
-                    // out — a cloud chasing a leaver across the room reads as a comet.
-                    if (v.ExitStorm) ReactionBurst(v, 0.0, follow: false);
+                    // WHAT THEY THOUGHT, AT THE BOTTOM OF THE GLASS (2026-09-04, the author:
+                    // "verilen emoji tepkileri içkiyi bitirdikten sonra verilmeli"). It used to
+                    // be thrown a sip after the serve, which is a verdict on a drink they had
+                    // barely tasted; it belongs here, where they set the empty down and get up.
+                    // A walk-out gets the same sentence in the same language — the worst face
+                    // there is, as few as they come. Both are pinned to the stool rather than
+                    // following them out: a cloud chasing a leaver reads as a comet. The
+                    // guest of the house is left out, as they are left out of every other
+                    // ledger (GDD 26 §3).
+                    if (!v.Visit.OnTheHouse)
+                        ReactionBurst(v, v.ExitStorm ? 0.0 : v.Visit.Satisfaction, follow: false);
                     if (v.Visit.OnTheHouse) { }
                     else if (v.ExitStorm)
                         LogService($"<color=#F27D8A>STORM-OFF</color> " +
@@ -1962,12 +1947,12 @@ namespace LastCall.UI
                 // serving spec, and LayOutOrderIcons places the whole row.)
 
                 // TWO clocks now (the author, 2026-08-02): the wait to be ASKED, then a fresh
-                // wait for the drink. The gauge draws whichever is live — Core says which —
-                // and the asking wait draws in magenta so a bar that is emptying is visibly
-                // a different failure from a bar that is slow.
-                bool beingIgnored = visit.AwaitingOrderTaking;
+                // wait for the drink. The gauge draws whichever is live — Core says which, and
+                // Core also says which THIRD of it they are in, so the colour over the head is
+                // the same reading the till pays by. (The asking wait used to draw magenta;
+                // the three bands speak for both clocks now, and the bubble says which one is
+                // running far louder than a hue ever did.)
                 float patience = (deciding || drinking) ? 1f : (float)visit.PatienceFraction;
-                float gaugeW = BustW * 0.72f - 2f;
                 // THE BAR IS ONLY UP WHILE IT IS EMPTYING (2026-08-20, the author: "herhangi
                 // bir sabır barı azalmıyorken kafasının üstünde bar gözükmesin ... içki
                 // içerken odadan çıkarken vs"). It used to stand over every seated customer
@@ -1985,11 +1970,18 @@ namespace LastCall.UI
                     && !CellarOpen;          // see the bubble, above
                 if (view.Gauge != null && view.Gauge.gameObject.activeSelf != clockRunning)
                     view.Gauge.gameObject.SetActive(clockRunning);
-                view.PatienceFill.rectTransform.sizeDelta = new Vector2(Mathf.Round(gaugeW * patience), -2);
-                view.PatienceFill.color = beingIgnored
-                        ? (patience > 0.35f ? UITheme.Magenta[3] : UITheme.ViceRed[3])
-                    : patience > 0.5f ? UITheme.Lime[3]
-                    : patience > 0.25f ? UITheme.Amber[3] : UITheme.ViceRed[3];
+                var band = visit.Band;
+                var lit = band == ServiceBand.Green ? UITheme.Lime[3]
+                    : band == ServiceBand.Amber ? UITheme.Amber[3] : UITheme.ViceRed[3];
+                // The last third breathes. Nothing else on the head moves, so a bar that is
+                // about to lose somebody is visible from across the screen without a word.
+                float pulse = band == ServiceBand.Red && !Motion.Reduced
+                    ? 0.74f + 0.26f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 4.2f))
+                    : 1f;
+                view.PatienceFill.fillAmount = patience;
+                view.PatienceFill.color = new Color(lit.r, lit.g, lit.b, pulse);
+                if (view.PatienceNeon != null)
+                    view.PatienceNeon.color = new Color(lit.r, lit.g, lit.b, 0.42f * pulse);
 
                 // Drive the animated customer (2026-07-23): walk-in, the sit-and-breathe idle,
                 // a one-shot "placing the order" beat, then nursing the drink. Facing and frame

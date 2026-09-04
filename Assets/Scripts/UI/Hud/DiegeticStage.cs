@@ -113,7 +113,10 @@ namespace LastCall.UI
         /// author's own mock-ups: the slab's dark band sits at screen row 240 shut and 119
         /// open, and nothing had to be invented to fill the gap because the counter hangs
         /// exactly this far below the screen.</summary>
-        public const float DrawerTravel = 121f;
+        // 121 → 131 (2026-09-04, the author: "backbarın açık halini 10 pixel yukarı çek").
+        // Ten of the ROOM's own pixels, which is the grid every other number on this stage
+        // is measured in — twenty on a 720p screen.
+        public const float DrawerTravel = 131f;
 
         /// <summary>
         /// WHERE THE BAR TOP IS WITH THE CELLAR OPEN, as a fraction up the screen — the line a
