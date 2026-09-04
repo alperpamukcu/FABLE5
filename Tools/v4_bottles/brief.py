@@ -55,7 +55,7 @@ CARDS = {
     'vodka_okhta':      ('vodka', 2.5, 'a tall clear-glass vodka bottle with a faintly blue tint, elegant straight shoulders', 'ClubBlue', 'Cream', 'a small stylised white whale, flat pixel emblem, no text'),
     # ── gin: squat, broad shoulder, cork + capsule ─────────────────────────────
     'gin_boothby':      ('gin', 2.1, 'a squat dark-green glass gin bottle with broad shoulders and a short neck', 'Cream', 'Lime', 'a small stylised heraldic crest with a crown, flat pixel emblem, no text'),
-    'gin_juniper_crow': ('gin', 2.1, 'a squat pale-green glass gin bottle with broad shoulders', 'Cream', 'ViceRed', 'a small stylised top hat, flat pixel emblem, no text'),
+    'gin_juniper_crown': ('gin', 2.1, 'a squat pale-green glass gin bottle with broad shoulders', 'Cream', 'ViceRed', 'a small stylised top hat, flat pixel emblem, no text'),
     'gin_thornwood':    ('gin', 2.1, 'a squat clear-glass gin bottle with a wide round body like a medicine flask', 'Cream', 'Night', 'a small stylised rose flower, flat pixel emblem, no text'),
     'gin_veilcrest':    ('gin', 2.1, 'a squat dark-blue glass gin bottle with broad shoulders', 'Cream', 'Amber', 'a small stylised gibbon face, flat pixel emblem, no text'),
     # ── rum: round shoulder, slightly bellied, cork ─────────────────────────────
@@ -72,7 +72,7 @@ CARDS = {
     'tequila_sonora':   ('tequila', 2.3, 'a clear-glass tequila bottle with a long neck, gently sloping shoulders', 'Cream', 'Amber', 'a small stylised black crow, flat pixel emblem, no text'),
     'tequila_alta_luna':('tequila', 2.3, 'a clear-glass tequila bottle with a long neck, square shoulders', 'Cream', 'Night', 'a small stylised crescent moon, flat pixel emblem, no text'),
     'tequila_sol_viejo':('tequila', 2.3, 'a clear-glass tequila bottle with a long neck, square shoulders and a wide low body', 'Amber', 'Lime', 'a small stylised agave plant, flat pixel emblem, no text'),
-    'tequila_cielo_rojo':('tequila', 2.3, 'a hand-blown clear-glass tequila bottle with a blue-tinted rim, a long neck and a bulbous lower body', 'ClubBlue', 'Cream', 'a small stylised blue sun with rays, flat pixel emblem, no text'),
+    'tequila_cielo_roto':('tequila', 2.3, 'a hand-blown clear-glass tequila bottle with a blue-tinted rim, a long neck and a bulbous lower body', 'ClubBlue', 'Cream', 'a small stylised blue sun with rays, flat pixel emblem, no text'),
     # ── singles: slim, high shoulder ────────────────────────────────────────────
     'amaro_notte':      ('liqueur', 2.4, 'a tall slim clear-glass aperitivo bottle with high shoulders', 'ViceRed', 'Cream', 'a small stylised orange slice, flat pixel emblem, no text'),
     'vermouth_velvet':  ('liqueur', 2.4, 'a tall slim clear-glass vermouth bottle with high shoulders', 'Lime', 'Cream', 'a small stylised vine leaf, flat pixel emblem, no text'),
@@ -96,19 +96,20 @@ CARDS = {
     'soda_klara':       ('mixer', 2.4, 'a slim clear-glass soda water bottle with a plain body', 'Cream', 'ClubBlue', 'a small stylised rising bubble trio, flat pixel emblem, no text'),
     'ginger_kicker':    ('mixer', 2.4, 'a slim amber-tinted glass ginger beer bottle with a plain body', 'Amber', 'Night', 'a small stylised kicking boot, flat pixel emblem, no text'),
     'syrup_house':      ('mixer', 2.4, 'a slim clear-glass syrup bottle with a plain body', 'Cream', 'Amber', None),
+    'grenadine_rubis':  ('mixer', 2.4, 'a small clear-glass grenadine cruet with a ruby-red label band and a silver cap', 'ViceRed', 'Cream', None),
 }
 
 BRAND_WORD = {
     'vodka_astra': 'SMIRKOFF', 'vodka_vor': 'ABSOLVE', 'vodka_leonid': 'GANDER', 'vodka_okhta': 'WHALE',
-    'gin_boothby': "GARDEN'S", 'gin_juniper_crow': 'LEAFEATER', 'gin_thornwood': "HENDRAKE'S", 'gin_veilcrest': 'GIBBON 48',
+    'gin_boothby': "GARDEN'S", 'gin_juniper_crown': 'LEAFEATER', 'gin_thornwood': "HENDRAKE'S", 'gin_veilcrest': 'GIBBON 48',
     'rum_cane_coral': 'WHITE BAT', 'rum_tidewater': 'ADMIRAL', 'rum_windward': 'KRAKATOA', 'rum_reina_del_mar': 'MALIBOO',
     'bourbon_redline': 'WALKER', 'bourbon_old_harrow': 'SPANIEL', 'bourbon_ashfall': "MASON'S", 'bourbon_hollow_oak': 'WRINKLE',
-    'tequila_sonora': 'CUERDO', 'tequila_alta_luna': '1810', 'tequila_sol_viejo': 'JULEP', 'tequila_cielo_rojo': 'AZULEJO',
+    'tequila_sonora': 'CUERDO', 'tequila_alta_luna': '1810', 'tequila_sol_viejo': 'JULEP', 'tequila_cielo_roto': 'AZULEJO',
     'amaro_notte': 'CUMPARI', 'vermouth_velvet': 'VELVET', 'liqueur_delia': 'MARINER', 'liqueur_kafa': 'KOALA',
     'beer_kestrel': 'KRONA', 'beer_collier': 'GOODNESS', 'beer_marigold': 'BRASS',
     'cola_marlow': 'LOCA', 'energy_volt': 'BLUE OX', 'orange_grove': 'GROVE', 'lemon_fresh': 'LEMONADE',
     'lime_fresh': 'LIMEADE', 'cranberry_north': 'NORTH', 'pineapple_isla': 'ISLA',
-    'tonic_quinbury': "QUINN'S", 'soda_klara': 'KLARA', 'ginger_kicker': 'KICKER', 'syrup_house': 'HOUSE',
+    'tonic_quinbury': "QUINN'S", 'soda_klara': 'KLARA', 'ginger_kicker': 'KICKER', 'syrup_house': 'HOUSE', 'grenadine_rubis': 'RUBIS',
 }
 
 SEALED = {'can', 'carton', 'beer'}     # no cavity, no liquid plates — one sprite + derived open

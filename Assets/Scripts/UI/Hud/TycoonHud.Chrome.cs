@@ -370,6 +370,7 @@ namespace LastCall.UI
             }
             stage.SetCellarTones(tones);
             stage.SetCellarPlates(plates, CellarFills(run));
+            _lastCellarFills.Clear();
         }
 
         /// <summary>What is left in each cellar bottle, in the cellar's own order.</summary>
@@ -384,11 +385,20 @@ namespace LastCall.UI
             return fills;
         }
 
-        /// <summary>Levels move as the night pours; the plates do not. Called from the frame.</summary>
+        private readonly List<float> _lastCellarFills = new List<float>();
+
+        /// <summary>Levels move as the night pours; the plates do not. Called from the frame —
+        /// and the stage is only told on the frames a level actually moved (2026-09-04 audit:
+        /// it rewrote thirty-six transforms a frame for nothing).</summary>
         private void PushCellarFills(TycoonRun run)
         {
             if (stage == null || _cellarCards.Count == 0) return;
-            stage.SetCellarFills(CellarFills(run));
+            var fills = CellarFills(run);
+            bool same = fills.Count == _lastCellarFills.Count;
+            for (int i = 0; same && i < fills.Count; i++) same = fills[i] == _lastCellarFills[i];
+            if (same) return;
+            _lastCellarFills.Clear(); _lastCellarFills.AddRange(fills);
+            stage.SetCellarFills(fills);
         }
 
         /// <summary>A bottle taken out of the cellar. The index is the stage's, into the list

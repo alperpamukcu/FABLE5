@@ -630,6 +630,102 @@ hâlâ Smirkoff s23 (stil için; etiket stile girmez). **PixelLab aynı anda 20 
 36'lık kuyruk 20'den sonrasını "rate limit exceeded (20/20 jobs)" ile reddetti; `refill.py`
 pencereyi dolu tutuyor. `finish_all` → process → picks → ship, rapor yok.
 
+### 9.17 · Altıncı tur: sıvı kenara değer, boyun eğince dolar, mahzen kopyası yeniden çizilir (2026-09-04)
+
+Yazar oyunda baktı: *"sınırları tam doğru değil, bazı yerler tam kenarına temas etmiyor sıvı;
+sıvıyı çevirdiğinde ağza da dolması gerekiyor. Küçük boyutlar çok kötü, etiketler gözükmüyor,
+çok kalın kontrasları var — sadece 1 pixel siyah kontras olmalı."* Üç düzeltme, hepsi ölçülerek:
+
+- **Kenar teması** — `process.py` `WALL = 0`: sıvı maskesi cam duvarını artık içeri çekmiyor,
+  içki mürekkep halkasına değiyor.
+- **Boyun dolumu** — `liquid_mask` boynu dahil BÜTÜN iç boşluğu veriyor; "dolu = omuz" kuralı
+  maskeden çıkıp HACİM oldu: `BottleArt.EnsureLut` omuz satırını (medyan gövde genişliğinin
+  %88'i kuralı) bulup `_shoulderFrac`'ı (omuz altındaki doku payı) hesaplıyor, `SetLevel`
+  oranı onunla çarpıyor. Dik dururken 1.0 omuza kadar; eğince aynı hacim boyna akıyor.
+- **Mahzen kopyası YENİDEN ÇİZİLİYOR, örneklenmiyor** — `cellar_render()`: silüet master'ın
+  alfasından alan kapsamasıyla (9'da ≥5), iç boşluklar kenardan flood-fill ile doldurulur
+  (kapalı kaplarda ince üst elipsin bıraktığı delikler halka geçişinde siyah leke oluyordu:
+  cola_marlow 70 halka hücresine 152 mürekkep); cam düz kendi tonu + film + arka gradyan;
+  etiket master'da ölçülüp (`label_block`: cam tonundan luma > 46 / kroma > +34 uzak baskı
+  pikselleri, en yoğun yatay bant) temiz blok olarak çizilir (kâğıt cam tonuna 34 luma'dan
+  yakınsa %80 koyulaşır, ≥5 satır, tek satır mürekkep işareti); kapak yalnız cama çizilir;
+  halka tam bir piksel (`peel_and_ring(front, 1, cut=1, peel=False)`).
+- **Üreticinin sildiği gövde geri verildi** — `restore_body()`: PixelLab'ın `no_background`'ı
+  arka planı renkle keyliyor ve üç kapalı kabın KOYU ön yüzünü de silmişti (cola_marlow gövdesi
+  bbox'unun %22'si opak; orange_grove ve cranberry_north ön yüzleri): oda içlerinden görünüyor,
+  koyu mahzen zemininde "siyah teneke" sanılıyordu. Kanvas kenarından ulaşılamayan her saydam
+  piksel kabın içidir; brief'in istediği renkle (kartın `label_ramp`'i, orta ton, sağ üçte
+  birde bir kademe koyu) doldurulur: 7.780 / 6.633 / 6.237 piksel. Cam şişelerde sıfır delik.
+
+38 kart yeniden işlendi ve `ship.py` ile gönderildi (188 plaka). Bu turun mahzen kopyası §9.18'de
+değişti; doğrulama ve testler §9.19'un sonunda (EditMode 383/383, PlayMode 7/7, bench baseline
+yeniden kutsandı).
+
+### 9.18 · Yedinci tur: mahzen kopyası = master'ın alan ortalaması, cilalı (2026-09-04)
+
+Yazar oyunda 9.17'nin yeniden çizimini gördü: *"şişeler yamık ve kaliteleri çok düşük,
+üstlerinde etiket yok veya 1 pixel çizgi halinde var. Büyük halleri güzel."* İki yol denendi,
+ölçülerek: (1) **üretim** — master'ın 1/3'ü `init_image` olarak `create_image_pixflux`'a
+(32×64, güç 200/300, 55 palet zorunlu; 4 kart × 2 = 8 üretim, çağrı başına 1 kota): gürültü ve
+sapma ekledi; (2) **init'in kendisi** — gövdesi onarılmış master'ın alan-ortalamalı (box) 1/3'ü —
+sayfadaki en sadık şeydi. Üretim yolu bırakıldı (`cellar_gen.py` pilot olarak duruyor).
+
+`cellar_box()` (`cellar_render`'ın yerine): üreticinin kenar halkası önce soyulur (kenarı
+karartmasın), opak hücre = ≥ yarım kapsama, iç delikler komşu ortalamasıyla dolar, her renk
+55'e kilitlenir, **etiket** master'da bulunup (`label_region`: gövde rengi alt gövdenin modu,
+baskı = gövdeden ≥55 luma koyu YA DA açık pikseller, kapak bölgesi olan üst %30 hariç, 4 px
+genişletmeyle harfler birleşir, en büyük blob; kâğıt = bbox'taki baskın renk, işaret = baskın
+baskı rengi) küçük kopyada iki renge kilitlenir ve cam ailelerde 1 px koyu çerçeve alır;
+cam kapak çizilir; halka tam bir piksel. `label_block`'un cam tonuna göre ölçümü krem gövdede
+bütün şişeyi etiket sayıyordu (votka 46×163); luma 34 eşiği de parlama şeridini yakalıyordu —
+iki kutuplu 55 eşiği bunları çözdü.
+
+**Kimlik hataları:** brief'te `gin_juniper_crow` ve `tequila_cielo_rojo` yazıyordu; veri
+`gin_juniper_crown` / `tequila_cielo_roto` — bu yüzden ikisi oyunda eski sanata düşüyordu.
+Düzeltildi, plakalar doğru adla gönderildi, yanlış adlılar silindi. `grenadine_rubis`'in kartı
+hiç yoktu; brief'e eklendi, master'ı üretildi (1 çağrı). 39 kart / 194 plaka. Kota: 9.529 / 10.000.
+
+### 9.19 · Yedinci turun denetimi: dört mercekli çapraz sorgu ve kapatılanlar (2026-09-04)
+
+Plakalar, `process.py`, çalışma zamanı ve import ayarları dört bağımsız ajanla tarandı (doğrulama
+ajanlarının çoğu oturum limitine takıldı; bulgular elle ölçülerek karara bağlandı). Kapatılanlar:
+
+- **Koyu camda saydam halka** — `plates()` mürekkep halkasını cam tonuna 46 luma yakın bulup
+  filme (alfa 77) çeviriyordu (liqueur_kafa 311, rum_windward 348 kenar pikseli). Halka ve
+  silüet kenarı artık hiç filmlenmiyor.
+- **Mahzende ayak halkası yok (33/39)** — `centre()` ayağı 189. satıra koyuyordu, 189//3 = 63 son
+  satır. Ayak H−3'te (188 → mahzen 62, 63 halkaya). Kapak artık ağzın ÜSTÜNE değil ağzın
+  üzerine çiziliyor (bir satır üstte, üç satır ağızda): kopya master'ın oranını korur, tam
+  kanvas take'lerde (hollow_oak) bile sığar; tek kalan hollow_oak'ın alt halkası (191 satırlık take).
+- **Köşelerde çift mürekkep** — silüet yanlara iki hücre atladığında 4-bağlı halka L'nin iç
+  köşesini dolduruyordu; `thin_ring` havaya değmeyen halka hücresini gövde pikseline çevirir
+  (halka çapraz bağlı kalır; hücreyi saydam bırakmak her omuzda bir iğne deliği açıyordu).
+- **Etiket ayakta ölçüldü (sol_viejo)** — `label_region` alt %10'u da dışlar.
+- **Maske saydam ön pikseli örtüyor (redline 64,61)** — `cavity()` aralığı master alfasıyla
+  keser; `plates()` arkayı maskeyle birebir boyar.
+- **`BottleArt` hacim tablosu ±90°** — dökme 118°'ye yatar; yatayı geçince yatay kova okunuyor,
+  ağız tarafındaki köşe kuru çiziliyordu (22 doku pikseline kadar). Tablo 72 kova ile tam daire.
+  **Yukarı vektörünün işareti tersti** (−tilt): her kova aynalıydı, simetrik kaplarda görünmedi.
+  Düzeltildi. Okunamayan/atlas dokular için `textureRect` + uyarı.
+- **Mahzen "dolu = omuz"u bilmiyordu** — düz yükseklik oranı boynu dolduruyor, elden 5–11 satır
+  yüksek çiziyordu. Omuz tablosu `BottleArt.Upright` olarak paylaşıldı; `SetCellarFills` satırı
+  oradan alır. Ofset `localPosition` ile (ölçekli sahnede kaymasın).
+- **Mahzen paketleme kanvasla ölçüyordu** — 32 px kanvas × 5 = 30 yuva, 36 marka; opak
+  genişlikle paketleniyor (`CellarDrawnWidth`), sprite çizimin merkezine kaydırılıyor
+  (`CellarCentreShift`), kapılar da ona göre.
+- **Kare başına `Resources.Load`** — `PushPourFill` her karede `ItemArt.Plates` çözüyordu (kapalı
+  kaplarda ıska önbelleklenmez); `PourPlates()` kart başına bir kez. `PushCellarFills` yalnız bir
+  seviye değişince sahneye yazar.
+- **`SetCellar` maskeyi kapatmıyordu**; ölü kod (`origin`, `_surface.enabled = … ? true : true`) silindi.
+- **`process.py`'deki ikinci `BRAND_WORD`** (eski kimlikli) silindi, `brief.BRAND_WORD` tek tablo;
+  `gen_state.json`'daki bayat anahtarlar temizlendi.
+- **Yeni test `V4PlateImportTests`**: her v4 plaka okunabilir, Point, PPU 100, mip yok, kanvas
+  96×192 / 32×64, her kartın seti tam — postprocessor derlenmeden inen PNG artık sessizce boş
+  şişe çizemez.
+
+Tasarım gereği bırakılanlar: maskedeki #FFFFFF (stencil, çizilmez), 13 el önünde alfa 200
+(parlama şeridi), mahzen maskesinin halkaya değmesi (yazarın "sıvı kenara temas etsin" kuralı).
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

@@ -131,7 +131,9 @@ re-blesses them once before trusting a red look test (`Docs/HANDOFF.md` §4).
   2026-08-07 sweep ("sadece verilen kokteyle verdiği tepkiler kaldı").
 - Bottles are the **v4 sandwich** since 2026-09-04 (`Docs/PLAN_bottle_art_v4.md`): three plates
   per card on one 96×192 canvas (`v4_{id}_back/_mask/_front`) plus a 32×64 cellar set
-  (`_back_c/_mask_c/_front_c`) REBUILT at that size, never shrunk. `BottleArt` draws the hand
+  (`_back_c/_mask_c/_front_c`) derived by `cellar_box` (area average of the master, ring
+  peeled first, palette-snapped, label found on the master and re-drawn crisp, one 1px ring) —
+  never mode-sampled, never regenerated (both were tried and looked worse, GDD_MEVCUT §9.18). `BottleArt` draws the hand
   bottle with a world-level liquid line (§12 tier 1); the cellar is three SpriteRenderers
   under a SpriteMask. Cards without v4 art fall back to `v3_{id}_flat` / `bot_{id}` and the
   old `BottleFill`. Masters are generated EMPTY, OPEN and LABEL-LESS; the label is pressed by

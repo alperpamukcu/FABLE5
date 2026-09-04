@@ -88,11 +88,7 @@
    "submit": "id: 2cf40e59-27a4-4bcb-9262-9088250be1c8\nmodel: pro\ndescription: a small stylised heraldic crest with a crown, flat pixel emblem, no text, centred on a transparent background, clean hi-bit pixel art, flat fills, thin dark outline\nsize: 32x32px\ntransparent: True\ncandidates: 64\nstyle_image: yes (color_palette, outline)\nseed: 5\ncost: 20 generations\nstatus: processing (~1-10 min)\n\nhint: get_image(job_",
    "n": 64,
    "secs": 130.2,
-   "poll": "status: completed\nid: 2cf40e59-27a4-4bcb-9262-9088250be1c8\nframes: 64\ndownload: https://api.pixellab.ai/mcp/images/2cf40e59-27a4-4bcb-9262-9088250be1c8/download?index=0 ... ?index=63\n(60 more frames not shown \u2014 fetch them from the download URLs above)\n"
-  },
-  "gin_juniper_crow:emblem:5": {
-   "job": "14f602ca-1bdb-4637-9d79-dd36ac504f75",
-   "submit": "id: 14f602ca-1bdb-4637-9d79-dd36ac504f75\nmodel: pro\ndescription: a small stylised top hat, flat pixel emblem, no text, centred on a transparent background, clean hi-bit pixel art, flat fills, thin dark outline\nsize: 32x32px\ntransparent: True\ncandidates: 64\nstyle_image: yes (color_palette, outline)\nseed: 5\ncost: 20 generations\nstatus: processing (~1-10 min)\n\nhint: get_image(job_id=\"14f602ca-1bdb-46"
+   "poll": "status: completed\nid: 2cf40e59-27a4-4bcb-9262-9088250be1c8\nframes: 64\ndownload: https://api.pixellab.ai/mcp/images/2cf40e59-27a4-4bcb-9262-9088250be1c8/download?index=0 ... ?index=63\n(60 more frames not shown — fetch them from the download URLs above)\n"
   },
   "gin_boothby:23": {
    "job": "e34aee2a-cc37-4074-88e4-ce63b1aaba9e",
@@ -112,24 +108,6 @@
   "gin_veilcrest:emblem:5": {
    "job": "b4f0a465-309a-4320-8704-2068fb926281",
    "submit": "id: b4f0a465-309a-4320-8704-2068fb926281\nmodel: pro\ndescription: a small stylised gibbon face, flat pixel emblem, no text, centred on a transparent background, clean hi-bit pixel art, flat fills, thin dark outline\nsize: 32x32px\ntransparent: True\ncandidates: 64\nstyle_image: yes (color_palette, outline)\nseed: 5\ncost: 20 generations\nstatus: processing (~1-10 min)\n\nhint: get_image(job_id=\"b4f0a465-309"
-  },
-  "gin_juniper_crow:11": {
-   "job": "ee21a08c-252d-4342-b874-2648bf32004e",
-   "submit": "id: ee21a08c-252d-4342-b874-2648bf32004e\nmodel: pro\ndescription: a squat pale-green glass gin bottle with broad shoulders, about 2.1 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN with NO CAP, NO CORK an",
-   "n": 1,
-   "secs": 125.6,
-   "poll": "status: completed\nid: ee21a08c-252d-4342-b874-2648bf32004e\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/ee21a08c-252d-4342-b874-2648bf32004e/download\n"
-  },
-  "gin_juniper_crow:23": {
-   "job": "be74d0ed-4c6b-44dc-89be-ac672496c24a",
-   "submit": "id: be74d0ed-4c6b-44dc-89be-ac672496c24a\nmodel: pro\ndescription: a squat pale-green glass gin bottle with broad shoulders, about 2.1 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows "
-  },
-  "gin_juniper_crow:47": {
-   "job": "66691870-bcc7-4e02-a3bb-05bb2508aded",
-   "submit": "id: 66691870-bcc7-4e02-a3bb-05bb2508aded\nmodel: pro\ndescription: a squat pale-green glass gin bottle with broad shoulders, about 2.1 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN with NO CAP, NO CORK an",
-   "n": 1,
-   "secs": 100.6,
-   "poll": "status: completed\nid: 66691870-bcc7-4e02-a3bb-05bb2508aded\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/66691870-bcc7-4e02-a3bb-05bb2508aded/download\n"
   },
   "gin_thornwood:11": {
    "job": "b4a276be-8949-4fc5-aa77-cbc6a35c87f7",
@@ -211,10 +189,6 @@
    "job": "ac182648-2801-4dc1-8a43-aa3217becb52",
    "submit": "id: ac182648-2801-4dc1-8a43-aa3217becb52\nmodel: pro\ndescription: a clear-glass tequila bottle with a long neck, square shoulders and a wide low body, about 2.3 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at th"
   },
-  "tequila_cielo_rojo:23": {
-   "job": "54034ca9-f8e5-4444-ba3c-aa00ad750b48",
-   "submit": "id: 54034ca9-f8e5-4444-ba3c-aa00ad750b48\nmodel: pro\ndescription: a hand-blown clear-glass tequila bottle with a blue-tinted rim, a long neck and a bulbous lower body, about 2.3 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured conten"
-  },
   "amaro_notte:23": {
    "job": "2e2155b9-a3cd-4477-b94d-8019ccab837d",
    "submit": "id: 2e2155b9-a3cd-4477-b94d-8019ccab837d\nmodel: pro\ndescription: a tall slim clear-glass aperitivo bottle with high shoulders, about 2.4 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside sh"
@@ -286,6 +260,13 @@
   "syrup_house:23": {
    "job": "c4948d27-a06f-43c5-9a2f-edefe6fc0329",
    "submit": "id: c4948d27-a06f-43c5-9a2f-edefe6fc0329\nmodel: pro\ndescription: a slim clear-glass syrup bottle with a plain body, about 2.4 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pa"
+  },
+  "grenadine_rubis:23": {
+   "job": "dfda5efb-c2ef-42c6-a9d2-8cecbee11f5d",
+   "submit": "id: dfda5efb-c2ef-42c6-a9d2-8cecbee11f5d\nmodel: pro\ndescription: a small clear-glass grenadine cruet with a ruby-red label band and a silver cap, about 2.4 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass all the way down to the base. The bottle is OPEN ",
+   "n": 1,
+   "secs": 133.8,
+   "poll": "status: completed\nid: dfda5efb-c2ef-42c6-a9d2-8cecbee11f5d\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/dfda5efb-c2ef-42c6-a9d2-8cecbee11f5d/download\n"
   }
  }
 }

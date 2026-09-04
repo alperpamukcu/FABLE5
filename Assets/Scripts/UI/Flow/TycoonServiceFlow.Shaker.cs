@@ -29,6 +29,8 @@ namespace LastCall.UI
         private Image _pourBottleBody;
         private BottleFill _pourFill;         // what is left in it, behind the glass (pre-v4 art)
         private BottleArt _pourArt;           // the v4 sandwich: back, level drink, glass front
+        private ItemArt.BottlePlates _pourPlates;   // what the sandwich shows, resolved once per card
+        private object _pourPlatesFor;        // ...and the card it was resolved for
         /// <summary>Where this bottle's CAP is, as an offset from the grip — measured off the
         /// art (VesselArt) when the stage refreshes, swung with the bottle when it tips.</summary>
         private Vector2 _pourMouth;
@@ -567,7 +569,7 @@ namespace LastCall.UI
             var bottleSprite = ItemArt.BottleOpen(_focusBottle);
             // v4: the sandwich draws the bottle — back, drink, front — and the flat body
             // image stands down; pre-v4 cards keep the flat body and the stencil fill.
-            var plates = ItemArt.Plates(_focusBottle);
+            var plates = PourPlates();
             _pourArt?.Show(plates);   // null across a domain reload mid-play; rebuilt with the UI
             _pourBottleBody.enabled = plates == null;
             _pourBottleBody.sprite = bottleSprite;
@@ -720,6 +722,19 @@ namespace LastCall.UI
             PushPourFill(run);
         }
 
+        /// <summary>The focus bottle's v4 plates, resolved once per card: PushPourFill runs
+        /// every frame of the pour, and ItemArt never caches a miss, so a sealed vessel in the
+        /// hand was a Resources.Load per frame (2026-09-04 audit).</summary>
+        private ItemArt.BottlePlates PourPlates()
+        {
+            if (!ReferenceEquals(_pourPlatesFor, _focusBottle))
+            {
+                _pourPlates = _focusBottle != null ? ItemArt.Plates(_focusBottle) : null;
+                _pourPlatesFor = _focusBottle;
+            }
+            return _pourPlates;
+        }
+
         /// <summary>How full the bottle in hand is, read off the shelf it came from.</summary>
         private void PushPourFill(TycoonRun run)
         {
@@ -728,7 +743,7 @@ namespace LastCall.UI
             var stock = run?.Shelf?.Find(_focusBottle.Id);
             double fraction = stock != null && stock.Capacity > 0 ? stock.Remaining / stock.Capacity : 0.0;
             var tone = UITheme.LiquidColor(_focusBottle.Info?.Style, _focusBottle.Type);
-            if (_pourArt != null && ItemArt.Plates(_focusBottle) != null)
+            if (_pourArt != null && PourPlates() != null)
             {
                 // THE SURFACE STAYS LEVEL (PLAN §12): the tilt is the grab plate's z rotation,
                 // and the drink counter-rotates by it inside the glass.

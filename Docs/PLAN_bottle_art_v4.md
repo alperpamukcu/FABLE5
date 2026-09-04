@@ -183,7 +183,7 @@ Meyve suları için tür = içeceğin kendisi (Lemonade, Limeade…) — yazarı
 | vodka_leonid | Grey Gander Vodka | **Gander Vodka** | 12 |
 | vodka_okhta | White Whale Vodka | **Whale Vodka** | 11 |
 | gin_boothby | Garden's Gin | Garden's Gin | 12 |
-| gin_juniper_crow | Leafeater Gin | Leafeater Gin | 13 |
+| gin_juniper_crown | Leafeater Gin | Leafeater Gin | 13 |
 | gin_thornwood | Hendrake's Gin | Hendrake's Gin | 14 |
 | gin_veilcrest | Gibbon 48 Gin | Gibbon 48 Gin | 13 |
 | rum_cane_coral | White Bat Rum | White Bat Rum | 13 |
@@ -197,7 +197,7 @@ Meyve suları için tür = içeceğin kendisi (Lemonade, Limeade…) — yazarı
 | tequila_sonora | Jose Cuerdo Tequila | **Cuerdo Tequila** | 14 |
 | tequila_alta_luna | 1810 Tequila | 1810 Tequila | 12 |
 | tequila_sol_viejo | Don Julep Añejo Tequila | **Julep Tequila** | 13 |
-| tequila_cielo_rojo | Azulejo Tequila | Azulejo Tequila | 15 |
+| tequila_cielo_roto | Azulejo Tequila | Azulejo Tequila | 15 |
 | amaro_notte | Cumpari Amaro | Cumpari Amaro | 13 |
 | vermouth_velvet | Canzone Vermouth | **Velvet Vermouth** | 15 |
 | liqueur_delia | Grand Mariner Triple Sec | **Mariner Liqueur** | 15 |
@@ -372,3 +372,28 @@ kapılı bir deney olarak; mahzende hiç.**
 - **Faz 2 (kapılı deney):** el şişesine `MetaballFluid`: profil = kavite maskesinden, açı sınırı,
   maske yerine kavite-kırpma; kabul = ölçülen kare süresi + dizüstü testi + görünüşün tin'le
   uyumu. Geçemezse Faz 1 kalır.
+
+## 14 · Altıncı tur (2026-09-04) — mahzen kopyası çizilir, sıvı kenara değer, boyun dolar
+
+Yazarın oyun içi geri bildirimi bu planın iki kararını netleştirdi:
+
+- **Karar 2'nin (mahzen 32×64 kendi boyutunda) uygulaması:** ÷3 mod örnekleme değil, yeniden
+  çizim (`cellar_render`). Silüet kapsamayla, iç delikler doldurulur, cam düz + film, etiket
+  master'dan ölçülen blok, halka tam 1 px. Kapalı kaplar aynı çizerden geçer (kapak çizilmez).
+- **§12'nin "dolu = omuz" kuralı hacim olarak uygulanır:** maske bütün iç boşluk, `BottleArt`
+  omuz altı payını ölçer (`_shoulderFrac`), eğimde aynı hacim boyna akar. `WALL = 0`.
+- **Üretici kusuru yakalandı:** `no_background` koyu gövdeleri de silebiliyor → `restore_body`
+  (kenardan flood-fill, brief rengiyle doldurma). Ham take'lerde alfa kapsamasını ölç; bbox'un
+  %60'ının altı şüpheli.
+
+Ayrıntı ve sayılar GDD_MEVCUT §9.17.
+
+## 15 · Yedinci tur (2026-09-04) — mahzen kopyası alan ortalaması + cila; üretim yolu kapandı
+
+§14'teki yeniden çizim oyunda yamık ve cansız çıktı. Pilot (4 kart): img2img üretim gürültü ve
+sapma ekliyor; master'ın alan-ortalamalı 1/3'ü en sadık. **Karar 2'nin nihai uygulaması
+`cellar_box`:** halka soy → box 1/3 (≥½ kapsama) → delik doldur → 55'e kilitle → etiketi
+master'da bul (`label_region`, iki kutuplu, kapak bölgesi hariç) ve küçükte iki renge kilitle +
+cam ailelerde 1 px çerçeve → kapak → tek halka. Mod örnekleme ve kapsama-silüet yeniden çizimi
+tarihçe. Kimlik yazım hataları (crow/crown, rojo/roto) ve eksik grenadine kartı kapatıldı.
+Ayrıntı GDD_MEVCUT §9.18.

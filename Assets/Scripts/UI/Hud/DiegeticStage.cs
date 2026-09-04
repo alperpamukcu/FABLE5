@@ -357,10 +357,15 @@ namespace LastCall.UI
                 var sr = _cellarStock[i];
                 bool on = i < n && bottles[i] != null;
                 if (sr.gameObject.activeSelf != on) sr.gameObject.SetActive(on);
-                if (i < _cellarBack.Count && _cellarBack[i].gameObject.activeSelf != on)
+                // A slot that goes dark takes its whole sandwich with it; a slot that lights
+                // up gets its sandwich from SetCellarPlates, never a previous card's
+                // (2026-09-04 audit: the mask stayed as it was, so a re-lit slot could show
+                // the last card's interior until the plates were set).
+                if (i < _cellarBack.Count && !on)
                 {
-                    _cellarBack[i].gameObject.SetActive(on);
-                    _cellarDrink[i].gameObject.SetActive(on);
+                    _cellarBack[i].gameObject.SetActive(false);
+                    _cellarDrink[i].gameObject.SetActive(false);
+                    _cellarMask[i].gameObject.SetActive(false);
                 }
                 if (!on) continue;
                 sr.sprite = bottles[i];
@@ -506,13 +511,19 @@ namespace LastCall.UI
                 float ppu = sp.pixelsPerUnit;
                 float k = _cellarMask[i].transform.localScale.x;
                 float unit = k / ppu;
-                float rows = Mathf.Round(cav.height * f);        // whole art rows: one pixel at a time
+                // FULL IS THE SHOULDER, AS A VOLUME — the same table the hand reads
+                // (BottleArt.Upright), so the cellar and the bench show one level for one
+                // bottle. A plain height fraction over the whole mask drew a full bottle with
+                // a neck full of drink, 5–11 rows above the hand's level (2026-09-04 audit).
+                float rows = BottleArt.Upright(sp).RowsFor(f);    // whole art rows, from the cavity's foot
                 if (rows < 1f) { d.enabled = false; continue; }
                 float w = cav.width * unit, hgt = rows * unit;
                 float cx = (cav.x + cav.width * 0.5f - sp.rect.width * 0.5f) * unit;
                 float cy = (cav.y + rows * 0.5f - sp.rect.height * 0.5f) * unit;
                 d.transform.localScale = new Vector3(w, hgt, 1f);
-                d.transform.position = _cellarMask[i].transform.position + new Vector3(cx, cy, 0f);
+                // Both hang under _world: place in the parent's frame, so a scaled stage (a
+                // wide monitor, DesignFrame.SceneScale > 1) cannot push the level up.
+                d.transform.localPosition = _cellarMask[i].transform.localPosition + new Vector3(cx, cy, 0f);
             }
         }
 
@@ -555,10 +566,35 @@ namespace LastCall.UI
             return new Rect(minX, minY, maxX - minX + 1, maxY - minY + 1);
         }
 
+        private static readonly Dictionary<Sprite, Rect> _opaqueBounds = new Dictionary<Sprite, Rect>();
+
+        /// <summary>The opaque bbox, measured once per sprite (the cellar asks every pack).</summary>
+        private static Rect CachedOpaqueBounds(Sprite s)
+        {
+            if (!_opaqueBounds.TryGetValue(s, out var r)) { r = OpaqueBounds(s); _opaqueBounds[s] = r; }
+            return r;
+        }
+
         private static float CellarDrawnWidth(Sprite s)
         {
             if (s == null || s.rect.height <= 0.0001f) return CellarBottleH * 0.5f;
-            return CellarBottleH * (s.rect.width / s.rect.height);
+            // THE BOTTLE, NOT ITS CANVAS (2026-09-04 audit): every v4 cellar copy is a 32×64
+            // canvas around a 16–32 px bottle, so measuring the canvas packed five a bay and
+            // left six of the thirty-six pourable brands undrawn. What stands on the shelf,
+            // and what the door should cover, is the opaque width.
+            var ob = CachedOpaqueBounds(s);
+            float artW = ob.width > 0f ? ob.width : s.rect.width;
+            return CellarBottleH * (artW / s.rect.height);
+        }
+
+        /// <summary>How far the drawing's centre sits from its canvas centre, in art px —
+        /// added when the sprite is placed so the BOTTLE, not the canvas, stands on the slot.</summary>
+        private static float CellarCentreShift(Sprite s)
+        {
+            if (s == null) return 0f;
+            var ob = CachedOpaqueBounds(s);
+            if (ob.width <= 0f) return 0f;
+            return s.rect.width * 0.5f - (ob.x + ob.width * 0.5f);
         }
 
         /// <summary>
@@ -1037,8 +1073,11 @@ namespace LastCall.UI
             // was only stocked between nights; it would the moment a bought bottle appears
             // on the shelf you are standing at.
             float counterTop = CounterRestY + CounterSurfaceInset - Reference.y * 0.5f;
+            // The slot is where the DRAWING stands; the sprite's pivot is its canvas centre,
+            // so the canvas is shifted by the drawing's own offset (art px → stage units).
+            float shift = CellarCentreShift(sr.sprite) * k / Mathf.Max(1f, sr.sprite.pixelsPerUnit);
             sr.transform.position = new Vector3(
-                artX - _counterNative.x * 0.5f,
+                artX + shift - _counterNative.x * 0.5f,
                 counterTop - artFoot + CellarBottleH * 0.5f, 0f)
                 + (_world != null ? _world.position : Vector3.zero);
             // The sandwich rides the same transform as the front: same plate canvas, same

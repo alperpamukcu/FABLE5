@@ -24,11 +24,6 @@
   "emblem": null,
   "note": "single seed, 2026-09-04"
  },
- "gin_juniper_crow": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
- },
  "gin_thornwood": {
   "take": "s23",
   "emblem": null,
@@ -90,11 +85,6 @@
   "note": "single seed, 2026-09-04"
  },
  "tequila_sol_viejo": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
- },
- "tequila_cielo_rojo": {
   "take": "s23",
   "emblem": null,
   "note": "single seed, 2026-09-04"
@@ -185,6 +175,21 @@
   "note": "single seed, 2026-09-04"
  },
  "syrup_house": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "gin_juniper_crown": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "tequila_cielo_roto": {
+  "take": "s23",
+  "emblem": null,
+  "note": "single seed, 2026-09-04"
+ },
+ "grenadine_rubis": {
   "take": "s23",
   "emblem": null,
   "note": "single seed, 2026-09-04"
