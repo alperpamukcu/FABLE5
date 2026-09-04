@@ -1,4 +1,4 @@
-# LAST CALL — GDD Module 24: Service Flow & Presentation (v4, 2026-07-22)
+﻿# LAST CALL — GDD Module 24: Service Flow & Presentation (v4, 2026-07-22)
 
 > **STATUS 2026-07-27 — CURRENT.**
 > Owns the service flow and the presentation the player touches.
@@ -236,6 +236,16 @@ Up to 6 customers visible at the bar, each an animated character with states:
 react (happy / annoyed / angry) → pay → leave**, plus **storm-off**. Two gauges per seat:
 satisfaction bar and the **patience clock icon** counting down. Reactions must read at a
 glance — anger is animation first, numbers second.
+
+**The reaction is emoji motes, and the COUNT is the grade (2026-09-04, shipped.)** A drinker
+answers a sip with small faces rising from behind them — one shared disc, three mouths (down /
+flat / up) tinted ViceRed / Amber / Lime, drawn 14 px at one stage unit a pixel and ringed in
+ink so they read on any wall. How many is the whole reading: **4–7 for a drink that missed,
+8–13 for a fair one, 14–20 for one that landed**, twenty being full marks. They leave the
+shoulders one at a time, each on its own climb, sway and fade, and sit one sorting order under
+their own body so they come up from BEHIND the customer. Fired 0.9 s after the serve — the sip
+frame of the drink clip — and, for a walk-out, at the stool they get up from: the red banner
+that used to announce a storm-off is gone, because the room says it now.
 
 ## 5. The ID card — v3 shipped (P15, 2026-07-31)
 

@@ -228,6 +228,7 @@ namespace LastCall.UI
                 NotePerfect(asked);
             LogVerdict(visit, verdict);
             StartCoroutine(ServeReaction(index, verdict));   // reaction + payment float up
+            StartCoroutine(TasteMotes(index, verdict.Satisfaction));   // …and what they think of it
             return true;
         }
 
@@ -1396,6 +1397,71 @@ namespace LastCall.UI
             if (text != null) Destroy(text.gameObject);
         }
 
+        // ── what they thought of it (2026-09-04) ────────────────────────────────
+        //
+        // The author: "müşteriler içkilerini içtikten sonra tepkilerini emoji efektleriyle
+        // verecek … partikül sayısı kötüden/mükemmele göre artacak … mükemmelde 20 adet".
+        // The face is the mood, the COUNT is the grade: four motes for a drink that missed,
+        // twenty for one that landed. ReactionMotes does the flying.
+
+        /// <summary>Where the mouth turns down, and where it turns up.</summary>
+        private const double ReactionSour = 0.35, ReactionSweet = 0.7;
+
+        /// <summary>
+        /// WHEN THE GLASS REACHES THE LIPS, measured off the drink clip rather than felt
+        /// for: the art is two halves joined at the sip, so the swallow is the middle frame,
+        /// and DrinkTicks holds ten ticks of 1/PatronFps before it — 0.83s. The taste lands
+        /// a hair after that. A round they ask for instead of drinking (OrdersAgain) never
+        /// plays the clip at all, and the same beat still reads: they tried it, then spoke.
+        /// </summary>
+        private const float TasteSeconds = 0.9f;
+
+        /// <summary>How far under the crown the motes leave: they come up from BEHIND the
+        /// drinker, so they start at the SHOULDERS and clear the head on the way — measured
+        /// in play, where a chin-line start read as a puff off the top of the hair.</summary>
+        private const float MotesBelowCrown = 74f;
+
+        /// <summary>The face, its ink and how many of them one serve is worth.</summary>
+        private static (string Face, Color Tint, int Count) ReactionFor(double satisfaction)
+        {
+            double s = System.Math.Max(0.0, System.Math.Min(1.0, satisfaction));
+            if (s < ReactionSour)
+                return ("bad", UITheme.ViceRed[3], 4 + (int)System.Math.Round(s / ReactionSour * 3));
+            if (s < ReactionSweet)
+                return ("fair", UITheme.Amber[3],
+                    8 + (int)System.Math.Round((s - ReactionSour) / (ReactionSweet - ReactionSour) * 5));
+            return ("good", UITheme.Lime[3],
+                14 + (int)System.Math.Round((s - ReactionSweet) / (1.0 - ReactionSweet) * 6));
+        }
+
+        /// <summary>The taste, one sip after the glass lands.</summary>
+        private System.Collections.IEnumerator TasteMotes(int seatIndex, double satisfaction)
+        {
+            yield return new WaitForSeconds(TasteSeconds);
+            if (seatIndex < 0 || seatIndex >= _seats.Count) yield break;
+            var view = _seats[seatIndex];
+            // Only if they are still the one who was served, and still on the stool: a
+            // reaction thrown at whoever sat down next is a reaction about nothing.
+            if (view.Visit == null || view.Exiting) yield break;
+            ReactionBurst(view, satisfaction, follow: true);
+        }
+
+        /// <summary>Throws the motes from behind one drinker.</summary>
+        private void ReactionBurst(SeatView view, double satisfaction, bool follow)
+        {
+            if (stage == null || view == null || view.Body == null) return;
+            if (!view.Body.gameObject.activeSelf) return;
+            var (faceName, tint, count) = ReactionFor(satisfaction);
+            var face = ChromeArt.Face(faceName);
+            if (face == null) return;
+            // The body's own position is the middle of the rig canvas; the crown sits
+            // HeadTop above the stool, which is CharSize/2 - CharFootDrop above that middle.
+            float headHud = view.Look != null ? view.Look.HeadTop : CharSize * 0.5f;
+            float upStage = (headHud - (CharSize * 0.5f - CharFootDrop) - MotesBelowCrown) / StageToHud;
+            var at = view.Body.transform.position + new Vector3(0f, upStage, 0f);
+            ReactionMotes.Burst(stage, at, view.Body, follow, face, tint, count);
+        }
+
         /// <summary>
         /// The bill, paid on the way out (2026-07-31): what the whole visit came to — every
         /// round of it — and the stars this customer leaves behind. Fired by the departure
@@ -1566,16 +1632,12 @@ namespace LastCall.UI
             var run = Run;
             var seated = run.Floor.Seated;
 
-            // A patron whose patience ran out storms off (GDD 24 §4) — a loud red notice, so a
-            // walk-out never passes unnoticed.
-            int stormed = 0;
-            foreach (var v in run.Floor.Finished) if (v.State == VisitState.StormedOff) stormed++;
-            if (stormed > _lastStormedCount)
-            {
-                Sfx.Play("patience_warn", 0.8f);
-                Toast("A CUSTOMER STORMED OFF");
-            }
-            _lastStormedCount = stormed;
+            // A patron whose patience ran out storms off (GDD 24 §4). IT IS SAID ON THE
+            // STOOL, NOT IN A BANNER (2026-09-04, the author: "'A customer stormed off'
+            // yazısı kalkacak"). A red line across the top of the screen was the bar
+            // telling you about its own room; the walk-out is now what everyone else
+            // gives back — a handful of sour motes over the stool they got up from, thrown
+            // by the departure branch below, where the seat that did it is known.
 
             // The licence is only good while its holder is at the bar.
             if (_idVisit != null && (_idVisit.State != VisitState.Waiting || !seated.Contains(_idVisit)))
@@ -1600,6 +1662,10 @@ namespace LastCall.UI
                     // a bad bar — they walk, they do not slam, and the night's log does not
                     // book them as a walk-out because they were never on its books at all.
                     v.ExitStorm = !v.Visit.OnTheHouse && v.Visit.State == VisitState.StormedOff;
+                    // What used to be a banner (see RefreshSeats): the worst face there is,
+                    // as few as they come, pinned to the stool rather than following them
+                    // out — a cloud chasing a leaver across the room reads as a comet.
+                    if (v.ExitStorm) ReactionBurst(v, 0.0, follow: false);
                     if (v.Visit.OnTheHouse) { }
                     else if (v.ExitStorm)
                         LogService($"<color=#F27D8A>STORM-OFF</color> " +

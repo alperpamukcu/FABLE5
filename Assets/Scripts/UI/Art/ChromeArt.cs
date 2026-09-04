@@ -573,6 +573,75 @@ namespace LastCall.UI
             return Cache[key] = Make(px, S, S, Vector4.zero);
         }
 
+        // ── the reaction faces (2026-09-04) ─────────────────────────────────────────
+        //
+        // THE THREE FACES A DRINK EARNS (the author: "kötü, fena değil, güzel/mükemmel
+        // için 3 adet emoji/icon"). What a customer gives back once they have tasted it,
+        // thrown up behind them a few at a time by ReactionMotes.
+        //
+        // Fourteen by fourteen and drawn at ONE STAGE UNIT PER PIXEL, never scaled off it:
+        // at this size half a pixel of drift shuts an eye. The disc is shared on purpose —
+        // the three read as one family, only the MOUTH moves, and the caller's tint says
+        // which way it went.
+        //
+        // INKED, NOT PUNCHED (measured in play, 2026-09-04). The first cut was a white
+        // silhouette with the eyes and mouth as HOLES, like the marks above: over the
+        // sunset wall a sour face tinted ViceRed lost its features to the wall showing
+        // through them and its edge to a wall of the same value. A face carries its own
+        // ink now — a ring around it and dark features inside — so it reads on any wall
+        // the room throws behind it, which is the same reason the till's figures are
+        // ringed twice.
+
+        private static readonly Color32 FaceInk = new Color32(0x0D, 0x08, 0x13, 0xFF);
+
+        /// <summary>Ink cells per mood, (col, row) from the TOP-LEFT of the 14x14 face:
+        /// two eyes shared by all three, then the mouth that tells them apart.</summary>
+        private static readonly Dictionary<string, (int X, int Y)[]> FaceMouths =
+            new Dictionary<string, (int X, int Y)[]>
+        {
+            // BAD — the corners drop.
+            ["bad"] = new[] { (5, 8), (6, 8), (7, 8), (8, 8), (4, 9), (9, 9) },
+            // FAIR — a flat line: it was a drink, and it was fine.
+            ["fair"] = new[] { (4, 9), (5, 9), (6, 9), (7, 9), (8, 9), (9, 9) },
+            // GOOD — the same mouth, the other way up.
+            ["good"] = new[] { (4, 8), (9, 8), (5, 9), (6, 9), (7, 9), (8, 9) },
+        };
+
+        private static readonly (int X, int Y)[] FaceEyes =
+            { (4, 5), (4, 6), (9, 5), (9, 6) };
+
+        /// <summary>One 14x14 reaction face: a white disc for the caller to tint, ringed
+        /// and featured in ink. Null for a mood with no mouth.</summary>
+        public static Sprite Face(string mood)
+        {
+            if (string.IsNullOrEmpty(mood)) return null;
+            string key = "face:" + mood;
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            if (!FaceMouths.TryGetValue(mood, out var mouth)) return null;
+
+            const int S = 14;
+            const float C = 6.5f, Body = 5.7f, Ring = 6.7f;
+            var px = new Color32[S * S];
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float dx = x - C, dy = y - C;
+                    float d2 = dx * dx + dy * dy;
+                    px[y * S + x] = d2 <= Body * Body
+                        ? new Color32(255, 255, 255, 255)
+                        : d2 <= Ring * Ring ? FaceInk : new Color32(255, 255, 255, 0);
+                }
+            // The features are authored top-down, the way they read in source; the texture
+            // counts up, so row S-1-y is the row the eye is on.
+            void Ink(int x, int y)
+            {
+                if (x >= 0 && x < S && y >= 0 && y < S) px[(S - 1 - y) * S + x] = FaceInk;
+            }
+            foreach (var e in FaceEyes) Ink(e.X, e.Y);
+            foreach (var m in mouth) Ink(m.X, m.Y);
+            return Cache[key] = Make(px, S, S, Vector4.zero);
+        }
+
         // ── the marquee lamp ────────────────────────────────────────────────────────
         //
         // The board's week is seven of these on a wire (2026-08-14, the author: "takvim

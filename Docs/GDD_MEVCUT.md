@@ -726,6 +726,42 @@ ajanlarının çoğu oturum limitine takıldı; bulgular elle ölçülerek karar
 Tasarım gereği bırakılanlar: maskedeki #FFFFFF (stencil, çizilmez), 13 el önünde alfa 200
 (parlama şeridi), mahzen maskesinin halkaya değmesi (yazarın "sıvı kenara temas etsin" kuralı).
 
+### 9.20 · Tepki artık bir yazı değil, arkadan yükselen emoji zerreleri (2026-09-04)
+
+Yazar: *"'A customer stormed off' yazısı kalkacak, bunun yerine müşteriler içkilerini içtikten
+sonra tepkilerini emoji efektleriyle verecek. Kötü, fena değil, güzel/mükemmel için 3 adet
+emoji/icon … müşterinin assetinin arkasından küçük küçük partiküller olarak yukarı gidecek …
+mükemmelde 20 adet."* Ekranın tepesindeki kırmızı bant kaldırıldı (`_lastStormedCount` sayacıyla
+birlikte); sabrı biten müşterinin tepkisi de artık herkesinkiyle aynı dilde: kalktığı taburenin
+üstünde birkaç ekşi surat.
+
+- **Üç yüz, `ChromeArt.Face`** (prosedürel, ev kuralı: UI chrome üretilmez): 14×14 kanvasta
+  ortak bir disk, sadece AĞIZ değişir — düşük (bad), düz (fair), yukarı (good) — ve çağıran
+  taraf ViceRed / Amber / Lime ile boyar. **Mürekkep içeride:** ilk kesim gözü ve ağzı DELİK
+  bırakıyordu (yukarıdaki `Mark` ailesi gibi); oyunda bakınca gün batımı duvarında kırmızı
+  surat hem hatlarını hem kenarını kaybediyordu, çünkü delikten duvarın kendisi görünüyor.
+  Artık her yüzün kendi 1 px halkası ve koyu hatları var — tıpkı yazının iki kez halkalanması
+  gibi, aynı sebeple.
+- **`ReactionMotes`** (Behaviours): dünya sprite'ları, müşterinin sorting order'ının BİR ALTINDA
+  her karede — oturan gövde 25, çıkan 22, zerreler hep arkada. Her zerre kendi anında çıkar,
+  kendi yüksekliğine (58–104 birim) kendi salınımıyla tırmanır, omuzdan uzağa yatar ve kendi
+  hızında söner; hepsi tek saatte olsaydı perde açılışı olurdu, alkış değil. Sanat 14 px ve bir
+  piksel bir sahne birimi çizilir (720p'de iki ekran pikseli), asla ölçeklenmez.
+- **Sayı, notun kendisi**: `ReactionFor` memnuniyeti üç banda böler (0.35 / 0.70) ve içinde
+  doğrusal sayar — 4–7 kötü, 8–13 fena değil, 14–20 güzel; tam memnuniyet tam 20 eder.
+- **An**: `TasteMotes`, servisten **0.9 sn** sonra. Ölçüm: içme klibi iki yarımın birleşimi, yudum
+  ORTA kare, `DrinkTicks` ondan önce 10 tik tutuyor (12 fps → 0.83 sn). Tekrar ısmarlayan müşteri
+  (OrdersAgain) klibi hiç oynatmaz, aynı vuruş orada da okunur. Sabrı bitende burst kalkış
+  dalında, tabureye çivili (takip etmez: giden birini kovalayan bulut kuyruklu yıldıza benzer).
+- Servisteki söz balonu ("PERFECT!" / "THANKS." / "NOT WHAT I ASKED") duruyor: emoji ne kadar
+  beğendiğini söyler, söz neyin yanlış gittiğini.
+
+Kaldırılan bantla birlikte `patience_warn` klibi de bağlantısız kaldı — bilerek: kalkış dalı
+zaten `upset_sfx` + `voice_upset` çalıyor, üçüncü ses yığın olurdu. Klip bankada duruyor ve asıl
+işi için (sabır bitmeden UYARI) hazır bekliyor.
+
+EditMode 383/383, PlayMode 8/8.
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.
