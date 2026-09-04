@@ -1,4 +1,4 @@
-﻿# LAST CALL — GDD Module 24: Service Flow & Presentation (v4, 2026-07-22)
+# LAST CALL — GDD Module 24: Service Flow & Presentation (v4, 2026-07-22)
 
 > **STATUS 2026-07-27 — CURRENT.**
 > Owns the service flow and the presentation the player touches.
