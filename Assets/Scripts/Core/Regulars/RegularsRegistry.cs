@@ -62,7 +62,13 @@ namespace LastCall.Core
 
             bool comingBack = _order.Count > 0 && rng.NextInt(100) < ReturnChancePercent;
             if (comingBack && allowReturns)
-                return _order[rng.NextInt(_order.Count)];
+            {
+                // A face shown the door for cause does not come back (GDD 28 §4). The draw
+                // is spent either way, so the stream never learns who was barred; what
+                // changes is that a stranger walks in instead.
+                var who = _order[rng.NextInt(_order.Count)];
+                if (!who.Barred) return who;
+            }
 
             return CreateNew(rng);
         }

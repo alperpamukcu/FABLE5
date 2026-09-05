@@ -11,7 +11,12 @@ bottles/brands/market, 14 §5 / 15 §4 / 16 §1 / 18 carry the palette, camera, 
 specs the UI is built on, 25 is the (partly superseded) bottle-art brief now aimed at an
 external artist, and **26 owns the last customer** — the scripted closing beat, its dialogue
 and its data (staged in `Docs/PLAN_last_call.md`, which is the phase log: S0–S3 shipped, so
-the beat plays in the scene now; S4's light and S5's rewards are not built). The historical modules (00–13, 17, 19, 20 — card era and the demolished
+the beat plays in the scene now; S4's light and S5's rewards are not built), and **27 and 28
+own the house and the door** — two ratings sharing one row of stars (COMFORT from the fittings,
+drained by the counter's mess; SERVICE from the drink; the night files the lower), the
+wipe / collect / wash verbs, the upgrade ladder, under-20 customers, borrowed cards and the
+kick (design, staged in `Docs/PLAN_house_and_law.md`: H0 and the silent Core halves H1/H2 are
+what exists; nothing is wired or drawn yet). The historical modules (00–13, 17, 19, 20 — card era and the demolished
 emotion layer) were DELETED in the 2026-08-07 sweep; recipe truth is `recipes.json` ↔
 `RecipeCatalog` under the parity test, ingredient types are the `IngredientType` enum.
 **The staging document is `Docs/PLAN_service_depth.md` (v5)** — phase order and conflict

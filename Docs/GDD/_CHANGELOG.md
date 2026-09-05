@@ -2,6 +2,32 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- `27 / 28 / PLAN_house_and_law` **the house and the door are designed (2026-09-04, design
+  only — nothing wired):** the author's brief — *"oyuncular hem alkolü puanlar hem mekanı, 2
+  ayrı metrik olacak … ortak yıldızlar olacak"* — becomes two rulebooks. **Module 27, the
+  house:** SERVICE (the night's mean satisfaction under the menu ceiling) and COMFORT (what the
+  room is worth: `FreeBase` 2.0 + a `comfort` number on every fixture in `fixtures.json` + half
+  the old glass-step cap + the stools, drained by the counter's mess) are two ratings and the
+  night files the LOWER — `UpgradeStarCap` retires into comfort's base, so the invisible fittings
+  ceiling becomes a visible reading with its own symbol (a medallion; the heart is service, the
+  star is the standing). The counter has a night of its own: a served leaver leaves a glass AND
+  a smudge, the glass holds the stool until collected and nothing clears itself any more; four
+  verbs — collect, wipe (never under a glass), carry to the sink, wash (the tap runs
+  `1.5 + 0.5/glass` s) — and dirt past a six-second grace costs seat-seconds that read as
+  `Cleanliness`, at most one star off the room. Tables become three per-slot ladders; the
+  UPGRADES tab says "mark n of N · +comfort". **Module 28, the door:** drinking age 20; from the
+  second night some arrivals are minors (`MinorChance` 3% + 1%/day, plateau 12%), half of them
+  on a BORROWED card whose tell is the photo; papers are per PERSON, rolled on a new `"papers"`
+  stream, hidden behind the card exactly like the order; `Kick(visit)` needs the card read; a
+  served minor pays and tips and then, as they get up, the bar pays `$20 + $20/whole star` (may go
+  below zero, like rent); a right kick earns the state's `$5` thanks (a well drink; the author's ten was an
+  example and priced above what a served customer nets) paid with the rent so the slip adds up,
+  and the bounced never return; a wrong kick is a walk-out. Reviewed the same night by five
+  adversarial passes; the reversed calls are listed in each module's decisions. **Shipped with the design:** the pure Core halves as new files
+  (`VenueComfort`, `Housekeeping`/`CounterMess`, `IdPapers`, `RegularState.Papers`) with
+  `HouseTests` and `DoorTests`; the wiring (H1b/H2b) and every screen (H3–H5) wait on the
+  shared tree. Conflict ledger and decisions in the PLAN.
+
 - `GDD_MEVCUT §9.9 / 24 §2-3 / 14 §3` **the bench becomes a composition, and the drink
   becomes a thing (2026-08-26, thirteenth round):**
   **One rule untied the layout:** props are DIEGETIC, chrome is not. The tin, bottle, spoon

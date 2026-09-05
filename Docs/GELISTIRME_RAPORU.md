@@ -352,3 +352,19 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 | **P0** | Kadro evrakını (`PatronPapers`, 30 satır) `TycoonHud`'dan `customers/papers.json`'a taşı | "içerik veridir" kuralını ihlal ediyor; hikâye karakterleri aynı tabloyu paylaşacak, yazarın C#'a dokunması gerekmemeli (PLAN S0) |
 | ~~P1~~ ✅ | ~~Tarif merdivenine **erken bir stirred içki** ekle~~ | **kapandı 2026-08-15** — Black Russian (rank 8, 0★) ve Mint Julep (rank 21) Built→Stirred; yeni bant testi `TheFirstRung_TeachesEveryVerbTheBenchAsksFor` geri düşmeyi engelliyor |
 | **P2** | Gecenin bitişi tek cümlede kalsın | `Floor.IsComplete` bugün TEK yerden okunuyor (`TycoonRun:688`) — son müşteri kapanıştan SONRA oturacağı için bu koşul "misafir de gittiyse" hâline gelmeli; ikinci bir okuyucu doğarsa beat sessizce kaybolur |
+
+### 8.3 · Ev ve kapı planından çıkan işler (2026-09-04)
+
+`GDD 27` (mekân: iki puan, temizlik, merdiven) + `GDD 28` (kapı: 20 yaş, ödünç kimlik, kick) +
+`PLAN_house_and_law.md` yazılırken koda bakınca çıkan, planın kendisinden bağımsız işler:
+
+| Öncelik | İş | Neden / çıktı |
+|---|---|---|
+| **P0** | Paylaşılan ağaçtaki sahipsiz Core değişiklikleri (tek saat sabrı, meşrubat fiyatı, TV: `CustomerVisit`, `TycoonConfig`, `DataLoader`, `FixtureDefinition`, `fixtures.json`) commit'lensin | H1b/H2b kablolaması bu dosyalara girer; sahipsiz yarım iş üstüne hunk stage etmek "test edemediğin parçayı commit'lemek" demek (PLAN §çalışma koşulları) |
+| **P0** | `PlayDayServingEveryone` test yardımcısı temizlik yapsın (topla → sil → yıka) | kirli bardak artık kendini temizlemiyor; yardımcı temizlemezse her çivili yıldız sayısı kirli barın sayısı olur |
+| **P1** | Reddedilen sipariş (`DeclineOrder`) GÖRÜNMEZ bir Core bardağı bırakıyor ve tabureyi 7 sn kilitliyor (`BarDay.Tick`, `State != StormedOff`) | hata; H1b'de "dökülmeyen içki iz bırakmaz" ile kapanır (PLAN C6) |
+| **P1** | Fiş ham oda yıldızı, hafta tahtası KIRPILMIŞ gece, defter `NightStars` basıyor — üç yüzey üç sayı | GDD 27 D7 bilinçli tutuyor; ayakta duran tahta min'i açıklamalı, yoksa oyuncu "4.9 yazdı, 2.0 girdi" der |
+| **P1** | `TycoonHud.DayEnd` dressing koridoru "bir basamak ileri" kuralını yalnız HUD'da taşıyor, Core'da/testte pin yok | H1b'de `VisibleRung(slot)` sorgusu ya da katalog testi |
+| **P2** | Sim botu fikstür almıyor (§8.1 P2 hâlâ açık) ve `fixtures.json`'ı hiç yüklemiyor | konfor tabanı fikstürden gelince bot sonsuza dek taban konforda kalır; H1b botu döşeme alıp temizlik yapmayı öğreniyor |
+| **P2** | `GDD 23 §7/§8`, `GDD_MEVCUT §7`, `BALANCE.md` düzyazısı hâlâ `1 + 4x` ve silinmiş "arka duvar / müzisyen" satırlarını taşıyor | kod 5x (2026-08-11); H1b'nin doküman geçişinde silinir |
+| **P2** | `DiegeticStage.LoadScreenFrames` hücre boyu TV'ye sabit (45×45) | lavabo suyu ikinci kare-sayfası; kesici json'dan hücre okumalı (H4) |
