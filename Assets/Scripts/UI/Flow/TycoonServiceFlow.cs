@@ -89,7 +89,15 @@ namespace LastCall.UI
         private Vector2 _shakerOpenSize;
         private readonly List<CanvasGroup> _benchProps = new List<CanvasGroup>();
         private const float CapCentreX = 0f;
-        private const float CapGrowth = 1.3f;
+        // ONE SHAKER, ONE SIZE (2026-09-04, the author: "tüm shakerlar aynı boyutta
+        // gözükmeli"). This was 1.3: capping the tin grew it by a third, and the serve
+        // bench — which is where that same capped tin arrives — draws it at 1.0. So the
+        // object you had just closed shrank by a quarter on its way to the glass, and it
+        // was the SAME DRAWING at two sizes, which is the one thing a prop must never be.
+        // The focus the growth was buying is still bought twice over: the props fade out
+        // and the tin slides to the middle of the bench (UpdateCap), which says "this is
+        // the thing you are about to shake" without telling the player it changed size.
+        private const float CapGrowth = 1.0f;
         private const float CapArtOffset = 0.245f;   // the lid art sits this far above its rect centre
         private const float TinW = 168f;
         private const float CavityFloor = 0.0913f, CavityRim = 0.6106f;
@@ -102,6 +110,11 @@ namespace LastCall.UI
         // 64 units against 32px art puts one art pixel on 4 screen pixels — the same grain as the
         // keys, so the corner controls belong to the same drawing (2026-07-27).
         private const float CornerSize = 64f;
+
+        /// <summary>The bin key. Wide enough to carry a mark AND the word, which is what
+        /// the round button could not do, and tall enough that the cap's six pixels of
+        /// throw read as travel rather than as a flicker.</summary>
+        private const float BinKeyW = 150f, BinKeyH = 52f;
 
 
         private void Awake()
@@ -607,24 +620,60 @@ namespace LastCall.UI
 
         // ── tiny UI helpers ──────────────────────────────────────────────────────
 
-        /// <summary>EMPTY, drawn as a waste bin rather than a word.</summary>
+        /// <summary>
+        /// THE BIN KEY: a bin mark and the word ÇÖP on a cap that sinks into its socket.
+        ///
+        /// This has now been three things. It was a light grey button PLATE with a
+        /// clipart wastebasket on it — the one piece of clipart in the game, and a plate
+        /// that contradicted this method's own comment ("just the bin, no plate"). Then a
+        /// round arcade dome, which the author sent back for being too small and having
+        /// nowhere to put a word: "boyut olarak daha büyük ve dikdörtgen bir buton olsun
+        /// '(çöp ikonu) Çöp' yazsın üstünde."
+        ///
+        /// What survived all three is the PRESS. The cap stands proud of a dark socket
+        /// and drops onto its floor, its cast shadow going as it lands — a key that only
+        /// changed colour would read as a light coming on, not as something moving. The
+        /// mark and the word ride ON the cap and travel with it, so the whole face moves
+        /// as one object.
+        /// </summary>
         private void AddBinButton(RectTransform parent)
         {
-            // Just the bin — you click the object, not a button plate around it.
             var rt = NewRect("Bin", parent);
-            // On the ledge, right of SERVE (2026-08-01) — it STANDS somewhere now.
-            // Clear of the key strip since 2026-08-26: the way forward is a key on that
-            // strip now, and a bin sharing its row is one slip away from the one press
-            // nobody wants to make by accident.
-            Place(rt, new Vector2(1, 0), new Vector2(CornerSize, CornerSize),
-                  new Vector2(-278f, 22f));
+            // On the ledge, clear of the key strip (2026-08-26): the way forward is a key
+            // on that strip, and a bin sharing its row is one slip away from the press
+            // nobody wants to make by accident. Wide enough now to carry its own name.
+            Place(rt, new Vector2(1, 0), new Vector2(BinKeyW, BinKeyH),
+                  new Vector2(-262f, 20f));
             var img = rt.gameObject.AddComponent<Image>();
-            img.preserveAspect = true;
-            img.sprite = ItemArt.Load("btn_bin");
-            img.color = img.sprite != null ? Color.white : UITheme.Night[3];
-            img.alphaHitTestMinimumThreshold = img.sprite != null ? 0.35f : 0f;
+            img.sprite = ChromeArt.KeyCap(UITheme.ViceRed, false, "bin");
+            img.type = Image.Type.Sliced;
+            img.color = Color.white;
             var btn = rt.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
+
+            // The face — mark and word together — rides on the cap. It is parented to the
+            // key and shifted by the cap's own travel when the key goes down, so the
+            // writing sinks with the plastic instead of hovering over it.
+            var face = NewRect("Face", rt);
+            Stretch(face, Vector2.zero, Vector2.one,
+                    new Vector2(0, 0), new Vector2(0, -ChromeArt.KeyCapFaceUp));
+            // Inside the CAP's margin, not the key's: the socket wall and the cap's own
+            // edge eat the first six pixels, so a mark placed against the key's left edge
+            // sits half on the plastic and half on the frame.
+            var mark = NewRect("Mark", face);
+            Place(mark, new Vector2(0, 0.5f), new Vector2(22, 22), new Vector2(26, 0));
+            var mimg = mark.gameObject.AddComponent<Image>();
+            mimg.sprite = ChromeArt.Mark("bin");
+            mimg.preserveAspect = true;
+            mimg.color = UITheme.ViceRed[0];
+            mimg.raycastTarget = false;
+            var word = NewText("L", face, _body, 16, TextAnchor.MiddleLeft, UITheme.ViceRed[0]);
+            Place(word.rectTransform, new Vector2(0, 0.5f), new Vector2(BinKeyW - 68f, 18),
+                  new Vector2(56, 0));
+            word.rectTransform.pivot = new Vector2(0, 0.5f);
+            word.text = "ÇÖP";
+            word.raycastTarget = false;
+
             btn.onClick.AddListener(() =>
             {
                 int fee = Run.DiscardGlass();
@@ -634,13 +683,21 @@ namespace LastCall.UI
                 else if (_stage == Stage.Serve) RefreshServe();
                 GetComponent<TycoonHud>()?.Toast(fee > 0 ? $"BINNED · -${fee}" : "BINNED");
             });
-            GiveKeyPress(rt, btn, img, "btn_bin_down");
-            if (img.sprite == null)
-            {
-                var fallback = NewText("L", rt, _body, 12, TextAnchor.MiddleCenter, UITheme.TextPrimary);
-                Stretch(fallback.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                fallback.text = "EMPTY";
-            }
+
+            // Swapped rather than loaded: both plates are drawn in code, so this does not
+            // go through GiveKeyPress (which fetches its down state from Resources by
+            // name). PressSink is deliberately NOT added on top — the cap's own six
+            // pixels of throw are the movement, and sinking the whole object as well read
+            // as the key falling through the counter.
+            btn.transition = Selectable.Transition.SpriteSwap;
+            var st = btn.spriteState;
+            st.pressedSprite = ChromeArt.KeyCap(UITheme.ViceRed, true, "bin");
+            st.selectedSprite = img.sprite;
+            btn.spriteState = st;
+            var travel = face.gameObject.AddComponent<KeyFaceTravel>();
+            travel.Button = btn;
+            travel.Up = -ChromeArt.KeyCapFaceUp;
+            travel.Down = -ChromeArt.KeyCapFaceDown;
         }
 
         /// <summary>

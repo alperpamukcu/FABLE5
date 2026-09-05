@@ -451,17 +451,11 @@ namespace LastCall.UI
             // the fridge gone it hung in the middle of an empty room instead — with the
             // bottle in hand resting a hair to its left, which is exactly where a gauge
             // must not be.
-            var serveTrack = NewRect("MixTrack", _servePanel);
             // 550, -60: at 575 its right edge stood past the author's 1149-wide working
             // area, and at -8 its head poked over the counter rail (2026-08-26).
-            Place(serveTrack, new Vector2(0.5f, 0.5f), new Vector2(44, 300), new Vector2(550, -60));
-            var serveBg = serveTrack.gameObject.AddComponent<Image>();
-            serveBg.color = new Color(0.05f, 0.05f, 0.09f, 0.88f);
-            serveBg.raycastTarget = false;
-            GaugeEdge(serveTrack,
-                new Color(UITheme.Magenta[3].r, UITheme.Magenta[3].g, UITheme.Magenta[3].b, 0.7f));
-            _serveMixBar = NewRect("MixSegs", serveTrack);
-            Stretch(_serveMixBar, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
+            // The tin bench's instrument, with the other word on its cap (2026-09-04).
+            _serveMixBar = BuildStandingGauge(_servePanel, new Vector2(522, -74),
+                                              new Vector2(96, 212), "GLASS");
 
             // NO FURNITURE ON THIS STAGE AT ALL (2026-08-13, the author: "bardak
             // sahnesindeki masa assetini kaldır, zaten mor alan tezgahmış gibi olmalı").
@@ -542,7 +536,16 @@ namespace LastCall.UI
                 _serveShakerBody.sprite = serveTin;
                 _serveShakerBody.preserveAspect = true;
                 _serveShakerBody.color = Color.white;
-                var capArt = ItemArt.Load("shaker_cap");
+                // ...AND ITS CAP IS OFF (2026-09-04, the author: "bardağa koyarken
+                // ucundaki kapak açık olmalı"). A cobbler shaker does not pour through
+                // its cap: you lift the little cap and the drink comes out of the
+                // strainer under it. This bench was drawing the lid SEATED, so a closed
+                // shaker was tipping into the glass. `shaker_cap_pour` is that same lid
+                // with the cap cut off at its own seam and the strainer opened — derived
+                // from the sprite beside it rather than drawn again, so it is the same
+                // lid to the pixel (Tools/shaker_cap_open.py). The closed lid stays the
+                // fallback, because a missing plate should cost the look and not the pour.
+                var capArt = ItemArt.Load("shaker_cap_pour") ?? ItemArt.Load("shaker_cap");
                 if (capArt != null)
                 {
                     var cap = NewRect("Cap", _serveShaker);

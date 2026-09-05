@@ -1,0 +1,26 @@
+{
+ "pro_a": {
+  "job_id": "bbeb3dd7-6a67-4f5c-9468-06b2eee8cf8b",
+  "png": "AssetPipeline/staging/shaker/pro_a.png"
+ },
+ "pro_b": {
+  "job_id": "6188afed-163e-4237-8c90-d1ab160f11ee",
+  "png": "AssetPipeline/staging/shaker/pro_b.png"
+ },
+ "flux_a": {
+  "job_id": "caa80fcc-26c2-4fdd-947f-9dd914831e27",
+  "png": "AssetPipeline/staging/shaker/flux_a.png"
+ },
+ "flux_b": {
+  "job_id": "c0b42297-0b18-49c3-8d14-a6b92fffd22a",
+  "png": "AssetPipeline/staging/shaker/flux_b.png"
+ },
+ "pixen_a": {
+  "job_id": "80c2738e-5801-4e24-a9d5-940b09d77947",
+  "png": "AssetPipeline/staging/shaker/pixen_a.png"
+ },
+ "pixen_b": {
+  "job_id": "969ba70f-024d-42f7-b869-04c1d73d0fc4",
+  "png": "AssetPipeline/staging/shaker/pixen_b.png"
+ }
+}

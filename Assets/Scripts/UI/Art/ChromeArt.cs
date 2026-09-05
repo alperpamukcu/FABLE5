@@ -251,6 +251,28 @@ namespace LastCall.UI
                 "................",
             },
             // A TICK, for a thing already done.
+            // A WASTE BIN, for the key that throws a drink away. Lid, handle, body and two
+            // staves — the least that still reads as a bin at 16 px, and the same
+            // silhouette everyone already has in their head for "discard".
+            ["bin"] = new[]
+            {
+                "................",
+                "......####......",
+                "......####......",
+                "..############..",
+                "..############..",
+                "................",
+                ".###.######.###.",
+                ".###.######.###.",
+                ".###.######.###.",
+                ".###.######.###.",
+                ".###.######.###.",
+                ".###.######.###.",
+                ".###.######.###.",
+                ".##############.",
+                ".##############.",
+                "................",
+            },
             ["tick"] = new[]
             {
                 "................",
@@ -1449,6 +1471,563 @@ namespace LastCall.UI
             }
             return Cache[key] = Make(px, w, h, Vector4.zero);
         }
+
+        // ── the standing gauge (2026-09-04) ─────────────────────────────────────────
+        //
+        // The author: "Sahnedeki doluluk barı değişmeli." What stood on both benches was a
+        // 44×300 rectangle of near-black with a one-pixel neon hairline round it and flat
+        // blocks of colour stacked inside — a bar chart, and the only bar chart in the game.
+        // The horizontal work meter had already been through this and came out of it by
+        // using the house's own instrument (GaugeTube + Solid + GaugeGlass); the standing
+        // column never was.
+        //
+        // So it is the same instrument, stood up: a steel body with a dark bore, a brass
+        // ring at its foot and the Instrument plate's teal cap at its head. It is drawn 1:1
+        // — 44 sprite pixels in a 44-unit rect — because that is the grain the work meter
+        // sits at and the two are read on the same screen.
+        //
+        // Two sprites rather than one, exactly as the horizontal gauge does it: the BODY is
+        // opaque and draws behind the drink, the GLASS is transparent and draws over it, so
+        // the measures stay scratched into the tube whether the tube is empty or full.
+
+        /// <summary>Where the tube's bore starts and stops, in sprite rows from each end.
+        /// The bench insets its liquid by these, so a level of 1 fills to the collar.</summary>
+        public const int GaugeHead = 13, GaugeFoot = 9;
+
+        /// <summary>The empty standing gauge: steel body, dark bore, brass foot, teal cap.</summary>
+        public static Sprite GaugeColumn(int w, int h)
+        {
+            string key = $"gauge:col:{w}x{h}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var clear = new Color32(0, 0, 0, 0);
+            var px = new Color32[w * h];
+            void Set(int x, int ty, Color32 c)
+            {
+                if (x < 0 || x >= w || ty < 0 || ty >= h) return;
+                px[(h - 1 - ty) * w + x] = c;                   // ty counts DOWN from the top
+            }
+
+            Color32 keyline = UITheme.Night[0];
+            Color32 lit = UITheme.Graphite[3];                  // light comes from the left
+            Color32 shade = UITheme.Graphite[1];
+            Color32 bore = UITheme.Night[0];
+            for (int ty = 0; ty < h; ty++)
+                for (int x = 0; x < w; x++)
+                {
+                    if ((x == 0 || x == w - 1) && (ty == 0 || ty == h - 1)) { Set(x, ty, clear); continue; }
+                    if (x == 0 || x == w - 1 || ty == 0 || ty == h - 1) { Set(x, ty, keyline); continue; }
+                    if (x == 1) { Set(x, ty, lit); continue; }
+                    if (x == w - 2) { Set(x, ty, shade); continue; }
+                    Set(x, ty, bore);
+                }
+
+            // The head: the cap, then the brass hairline under it. The bench writes what
+            // the column measures across this in the pixel face.
+            for (int ty = 1; ty < GaugeHead - 2; ty++)
+                for (int x = 2; x < w - 2; x++)
+                    Set(x, ty, ty == 2 ? (Color32)UITheme.Cyan[3] : (Color32)UITheme.Cyan[1]);
+            for (int x = 2; x < w - 2; x++)
+            {
+                Set(x, GaugeHead - 2, UITheme.Amber[3]);
+                Set(x, GaugeHead - 1, UITheme.Amber[1]);
+            }
+
+            // The foot: the ring the tube stands on, and the plinth under it.
+            int floor = h - GaugeFoot;
+            for (int x = 2; x < w - 2; x++)
+            {
+                Set(x, floor, UITheme.Amber[3]);
+                Set(x, floor + 1, UITheme.Amber[1]);
+            }
+            for (int ty = floor + 2; ty < h - 1; ty++)
+                for (int x = 2; x < w - 2; x++)
+                    Set(x, ty, ty == floor + 2 ? (Color32)UITheme.Graphite[2] : (Color32)UITheme.Graphite[1]);
+
+            return Cache[key] = Make(px, w, h, Vector4.zero);
+        }
+
+        /// <summary>What draws OVER the drink: a measure scratched at every tenth, a long
+        /// one at the half, and the light down the near wall.</summary>
+        public static Sprite GaugeColumnGlass(int w, int h)
+        {
+            string key = $"gauge:colglass:{w}x{h}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var px = new Color32[w * h];
+            void Set(int x, int ty, Color32 c)
+            {
+                if (x < 0 || x >= w || ty < 0 || ty >= h) return;
+                px[(h - 1 - ty) * w + x] = c;
+            }
+            int top = GaugeHead, bot = h - GaugeFoot, inner = bot - top;
+            for (int ty = top; ty < bot; ty++)
+            {
+                Set(3, ty, new Color32(242, 232, 213, 26));     // the shine, two in
+                Set(4, ty, new Color32(242, 232, 213, 14));
+                Set(w - 4, ty, new Color32(13, 8, 19, 70));     // and the far wall's shadow
+            }
+            for (int s = 1; s < 10; s++)
+            {
+                int ty = bot - Mathf.RoundToInt(inner * s / 10f);
+                bool half = s == 5;
+                int run = half ? w - 5 : 7;
+                for (int x = 2; x < 2 + run; x++)
+                    Set(x, ty, half ? new Color32(242, 232, 213, 76) : new Color32(201, 188, 168, 52));
+                if (!half) for (int x = w - 5; x < w - 2; x++) Set(x, ty, new Color32(201, 188, 168, 52));
+            }
+            return Cache[key] = Make(px, w, h, Vector4.zero);
+        }
+
+        // ── the fill gauge, as the shaker itself (2026-09-04) ───────────────────────
+        //
+        // The standing instrument above was the first answer and it was sent back too:
+        // "Doluluk barı için küçük bir shaker görseli içerisinde doluluk barı olacak,
+        // doluluk barı için yaratılan shaker görselinde sadece shakerin dış hatları
+        // olacak içerisi boş olacak."
+        //
+        // Which is the better idea, and for the reason the whole game is built on: the
+        // reading takes the SHAPE OF THE THING IT READS, so nobody has to be told what
+        // the column measures. A cylinder with a brass foot is an instrument you must
+        // learn; a shaker with drink in it is not.
+        //
+        // The outline is neither drawn by hand nor generated — it is TRACED off the
+        // shaker the game already uses, so the gauge and the prop on the bench are the
+        // same object: same shoulders, same collar, same taper. If that art is ever
+        // replaced, its gauge changes with it and no one has to remember to redraw this.
+
+        /// <summary>Half of the fill gauge: the shaker in outline, one pixel wide and
+        /// hollow. Draw <see cref="ShakerGaugeCavity"/>'s contents behind it.</summary>
+        public static Sprite ShakerOutline(int w, int h)
+        {
+            string key = $"shakergauge:{w}x{h}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var span = ShakerSpans(w, h);
+            var px = new Color32[w * h];
+            Color32 ink = UITheme.Cream[2];
+            for (int y = 0; y < h; y++)
+            {
+                int a = span[y].x, b = span[y].y;
+                int pa = y > 0 ? span[y - 1].x : a, pb = y > 0 ? span[y - 1].y : b;
+                int na = y < h - 1 ? span[y + 1].x : a, nb = y < h - 1 ? span[y + 1].y : b;
+                for (int x = a; x <= b; x++)
+                    if (x == a || x == b || y == 0 || y == h - 1
+                        || x < pa || x > pb || x < na || x > nb)
+                        px[(h - 1 - y) * w + x] = ink;
+            }
+            return Cache[key] = Make(px, w, h, Vector4.zero);
+        }
+
+        /// <summary>The same silhouette FILLED — the stencil the contents are cut to, so
+        /// a band can never hang over the tin's shoulder. White, because a Mask reads
+        /// alpha and nothing else.</summary>
+        public static Sprite ShakerSolid(int w, int h)
+        {
+            string key = $"shakersolid:{w}x{h}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var span = ShakerSpans(w, h);
+            var px = new Color32[w * h];
+            var white = new Color32(255, 255, 255, 255);
+            for (int y = 0; y < h; y++)
+                for (int x = span[y].x; x <= span[y].y; x++)
+                    px[(h - 1 - y) * w + x] = white;
+            return Cache[key] = Make(px, w, h, Vector4.zero);
+        }
+
+        /// <summary>Where the drink lives inside that outline, as fractions of the
+        /// sprite's height from the TOP. Not the whole silhouette — a drink does not fill
+        /// the cap; these are the tin's own collar and floor.</summary>
+        public static readonly Vector2 ShakerGaugeCavity = new Vector2(0.335f, 0.985f);
+
+        /// <summary>The silhouette's left and right edge per row, at any size. Measured
+        /// off <c>Items/shaker.png</c> once and cached; falls back to a plain column if
+        /// the art is missing or unreadable, so a gauge always draws.</summary>
+        private static Vector2Int[] ShakerSpans(int w, int h)
+        {
+            string key = $"shakerspans:{w}x{h}";
+            if (SpanCache.TryGetValue(key, out var hit)) return hit;
+            var rows = ShakerRows();
+            var outp = new Vector2Int[h];
+            for (int y = 0; y < h; y++)
+            {
+                if (rows == null || rows.Length == 0) { outp[y] = new Vector2Int(0, w - 1); continue; }
+                var r = rows[Mathf.Min(rows.Length - 1, y * rows.Length / h)];
+                int a = Mathf.RoundToInt(r.x * (w - 1) / (float)Mathf.Max(1, SpanWidth - 1));
+                int b = Mathf.RoundToInt(r.y * (w - 1) / (float)Mathf.Max(1, SpanWidth - 1));
+                outp[y] = new Vector2Int(Mathf.Clamp(a, 0, w - 1), Mathf.Clamp(b, 0, w - 1));
+            }
+            return SpanCache[key] = outp;
+        }
+
+        private static readonly Dictionary<string, Vector2Int[]> SpanCache =
+            new Dictionary<string, Vector2Int[]>();
+        private static Vector2Int[] _shakerRows;
+        private static int SpanWidth = 1;
+
+        private static Vector2Int[] ShakerRows()
+        {
+            if (_shakerRows != null) return _shakerRows;
+            var sprite = ItemArt.Load("shaker");
+            if (sprite == null || sprite.texture == null || !sprite.texture.isReadable)
+                return _shakerRows = new Vector2Int[0];
+            var tex = sprite.texture;
+            var pixels = tex.GetPixels32();
+            int tw = tex.width, th = tex.height;
+            var found = new List<Vector2Int>();
+            int minX = int.MaxValue, maxX = int.MinValue;
+            for (int ty = th - 1; ty >= 0; ty--)          // top row first: y-down like the sprite reads
+            {
+                int a = int.MaxValue, b = int.MinValue;
+                for (int x = 0; x < tw; x++)
+                    if (pixels[ty * tw + x].a >= 128) { if (x < a) a = x; if (x > b) b = x; }
+                if (a > b) { if (found.Count > 0) break; else continue; }
+                found.Add(new Vector2Int(a, b));
+                if (a < minX) minX = a;
+                if (b > maxX) maxX = b;
+            }
+            if (found.Count == 0) return _shakerRows = new Vector2Int[0];
+            SpanWidth = maxX - minX + 1;
+            for (int i = 0; i < found.Count; i++)
+                found[i] = new Vector2Int(found[i].x - minX, found[i].y - minX);
+            return _shakerRows = found.ToArray();
+        }
+
+        // ── the bench's counter grain (2026-09-04) ──────────────────────────────────
+        //
+        // The bench top was one flat #1F1924 with a sheen band across it, which is what a
+        // ZOOM of a flat sprite honestly is, and it read as one.
+        //
+        // MARBLE WAS THE FIRST ANSWER AND IT WAS SENT BACK: "Mermer hissiyatını
+        // beğenmedim başka bir desen kullanalım. Gerçek sahnedeki tezgahın renginde
+        // sadece yakından daha detaylı gözükebilecek göz yormayacak bir desen gerekiyor."
+        // The lesson is worth keeping, because it is not about marble: veining is made of
+        // BIG SHAPES, and a big shape on a surface reads from across the room whether it
+        // is wanted or not. What a working counter wants is the opposite — an even grain
+        // that is one flat colour at a glance and only becomes detail when leaned into.
+        //
+        // So every pattern here lives inside a one-step contrast budget around the slab's
+        // own colour, and none of them draws a shape bigger than a few pixels. They are
+        // hashed rather than dithered, because a regular dither at 4× is a visible dot
+        // screen. <see cref="CounterGrain"/> is the default; the rest stay switchable
+        // because "quieter"/"busier" is a taste call the author makes by eye, not a
+        // rewrite.
+        //
+        // Procedural, because chrome is (14 §3) and because a surface this big cannot be a
+        // shipped picture without being stretched: the band's height changes by 121 units
+        // between a bench opened over the cellar and one that is not, and a stretched pixel
+        // surface stops having pixels. Drawn once, tiled, at a quarter of its pixels per
+        // unit so one art pixel lands as four — the same 4× the bench's own zoom stands at.
+
+        /// <summary>
+        /// A RECESS CUT INTO THE COUNTER — the step card's ground.
+        ///
+        /// The card wore the invoice boards' navy plate, and the author asked for the
+        /// opposite: "masa arkaplanına gömülü hissi". A plate and a recess are drawn the
+        /// same way round in every respect but one, and that one is everything — a raised
+        /// thing is lit along its TOP and shaded along its bottom, and a sunk thing is
+        /// shaded along its top and lit along its bottom, because the light is coming from
+        /// the same place either way. So this is the counter's own colour with the
+        /// shading inverted, and the eye reads "hole" without being told.
+        ///
+        /// Sliced (6,6,6,6) with a flat middle, so it stretches to any card.
+        /// </summary>
+        public static Sprite Inlay(int w, int h)
+        {
+            string key = $"inlay:{w}x{h}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var px = new Color32[w * h];
+            Color32 floor = Hex(0x1A141F);      // a shade under the slab: it is a hole
+            Color32 dark = Hex(0x120D16);       // the cut face the light misses
+            Color32 lip = Hex(0x2E2739);        // ...and the one it climbs back out over
+            Color32 ink = UITheme.Night[0];
+
+            for (int ty = 0; ty < h; ty++)
+                for (int x = 0; x < w; x++)
+                {
+                    Color32 c;
+                    if ((x == 0 || x == w - 1) && (ty == 0 || ty == h - 1)) c = ink;
+                    else if (ty <= 1 || x <= 1) c = ty == 0 || x == 0 ? ink : dark;
+                    else if (ty >= h - 2 || x >= w - 2) c = ty == h - 1 || x == w - 1 ? ink : lip;
+                    else c = floor;
+                    px[(h - 1 - ty) * w + x] = c;
+                }
+            return Cache[key] = Make(px, w, h, new Vector4(6f, 6f, 6f, 6f));
+        }
+
+        /// <summary>
+        /// THE BAR NAPKIN the spoon rests on (2026-09-04, the author: "kaşık ise bir
+        /// peçetenin üstünde durmalı").
+        ///
+        /// A tool lying straight on the counter reads as dropped; on a folded napkin it
+        /// reads as SET DOWN, which is the difference between a bench and a mess. It is
+        /// also the quietest possible way to give the spoon a place of its own — no rail,
+        /// no holder, nothing else to draw.
+        ///
+        /// Paper, so: a soft cream square turned a few degrees off square, one fold line,
+        /// and a deliberately RAGGED edge — a perfectly straight paper edge at this grain
+        /// looks like a tile. The ragged step is hashed off the pixel's own position, so
+        /// it is the same napkin every time the bench opens.
+        /// </summary>
+        public static Sprite Napkin(int w, int h)
+        {
+            string key = $"napkin:{w}x{h}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var px = new Color32[w * h];
+            // PAPER, and paper is pale. Cream[1]/[2] came out as a grey blob on the
+            // counter — it read as a stain rather than a napkin. Two steps up the ramp
+            // puts it where a bar napkin actually sits against dark stone.
+            Color32 face = UITheme.Cream[3];
+            Color32 lit = UITheme.Cream[4];
+            Color32 fold = UITheme.Cream[2];
+            Color32 edge = UITheme.Cream[1];       // its own thickness, where it meets the counter
+
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    // A rounded-off square with a hashed edge: inset grows at the corners.
+                    float u = (x + 0.5f) / w - 0.5f, v = (y + 0.5f) / h - 0.5f;
+                    float d = Mathf.Abs(u) * 1.02f + Mathf.Abs(v) * 0.92f;
+                    float ragged = 0.455f + Hash(x / 2, y / 2, 61) * 0.020f;
+                    if (d > ragged) continue;
+                    Color32 c = face;
+                    if (d > ragged - 0.020f) c = edge;             // the paper's own shadow
+                    else if (v < -0.16f) c = lit;                  // the light catches the top
+                    else if (Mathf.Abs(v - 0.06f) < 0.012f) c = fold;   // one fold
+                    px[(h - 1 - y) * w + x] = c;
+                }
+            return Cache[key] = Make(px, w, h, Vector4.zero);
+        }
+
+        /// <summary>Which grain the counter wears. SLATE by default: it is the one whose
+        /// detail is ARCHITECTURE — the top is laid in panels, with a hairline seam where
+        /// they meet — so leaning in finds structure rather than more noise.</summary>
+        public enum CounterGrain { Slate, Speck, Brushed, Weave, Terrazzo }
+
+        /// <summary>The counter's surface. Tile it; never stretch it.</summary>
+        public static Sprite Counter(int w, int h, CounterGrain grain = CounterGrain.Slate)
+        {
+            string key = $"counter:{w}x{h}:{grain}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+
+            Color32 slab = Hex(0x1F1924);        // BenchSlab, sampled off counter.png
+            Color32 up1 = Hex(0x231D29);         // one step up — the whole contrast budget
+            Color32 up2 = Hex(0x27212E);
+            Color32 dn1 = Hex(0x1B1520);
+            Color32 dn2 = Hex(0x18121C);
+
+            var px = new Color32[w * h];
+            for (int y = 0; y < h; y++)
+            {
+                float v = y / (float)h;
+                for (int x = 0; x < w; x++)
+                {
+                    float u = x / (float)w;
+                    float g = Hash(x, y, 29);
+                    Color32 c = slab;
+                    switch (grain)
+                    {
+                        case CounterGrain.Slate:
+                            // Panels, and a hairline where two of them meet.
+                            int tx = x % 40, ty = y % 30;
+                            if (ty == 0) c = Hash(x, y, 41) > 0.25f ? dn2 : dn1;
+                            else if (ty == 1) c = Hash(x, y, 41) > 0.55f ? up1 : slab;
+                            else if (tx == 0) c = Hash(x, y, 41) > 0.25f ? dn2 : dn1;
+                            else if (Hash(x, y, 41) > 0.95f) c = up1;
+                            break;
+                        case CounterGrain.Speck:
+                            // Polished stone chip: fine grit, no direction at all.
+                            if (g > 0.965f) c = up2;
+                            else if (g > 0.90f) c = up1;
+                            else if (g < 0.055f) c = dn1;
+                            break;
+                        case CounterGrain.Brushed:
+                            // Wiped down a million times: long faint scratches, no shapes.
+                            float row = Hash(0, y, 3);
+                            float streak = Noise(u, v, 96, 24, 11);
+                            if (row > 0.86f && streak > 0.58f && Hash(x, y, 17) > 0.35f) c = up1;
+                            else if (row < 0.16f && streak < 0.42f && Hash(x, y, 17) > 0.35f) c = dn1;
+                            break;
+                        case CounterGrain.Weave:
+                            if ((x + y) % 4 == 0 && Hash(x, y, 53) > 0.55f) c = up1;
+                            else if ((x - y) % 4 == 0 && Hash(x, y, 53) > 0.75f) c = dn1;
+                            break;
+                        case CounterGrain.Terrazzo:
+                            float cell = Noise(u, v, 80, 60, 71);
+                            float fine = Hash(x, y, 73);
+                            if (cell > 0.80f && fine > 0.30f) c = cell > 0.90f ? up2 : up1;
+                            else if (cell < 0.19f && fine > 0.30f) c = dn1;
+                            break;
+                    }
+                    px[(h - 1 - y) * w + x] = c;
+                }
+            }
+            return Cache[key] = Make(px, w, h, Vector4.zero);
+        }
+
+        // ── the bin's push-button (2026-09-04) ──────────────────────────────────────
+        //
+        // The author, with a picture of a glossy green arcade button: "Çöp kutusu için 3
+        // boyutlu basılınca içeri göçen yuvarlak buton istiyorum. Örnekteki gibi renkleri
+        // farklı, animasyonlu."
+        //
+        // So the bin stops being a picture of a bin and becomes the CONTROL it always was
+        // — which is also what its own code always claimed it to be ("you click the
+        // object, not a button plate around it", AddBinButton). The whole illusion lives
+        // in the difference between two plates: UP stands <see cref="ButtonThrow"/> pixels
+        // proud of its socket and casts its own shadow on the socket floor; DOWN is flush,
+        // the shadow gone and the gloss shrunk and slid down the dome. A cap that only
+        // changed colour on press would read as a light coming on, not as a key moving.
+
+        /// <summary>How far the cap stands out of its socket, in sprite pixels.</summary>
+        public const int ButtonThrow = 4;
+
+        /// <summary>The border a <see cref="KeyCap"/> is sliced on, so one drawing serves
+        /// any width the label needs. Only flat field stretches.</summary>
+        public static readonly Vector4 KeyCapBorder = new Vector4(8f, 14f, 8f, 10f);
+
+        /// <summary>
+        /// THE SAME PRESS, AS A WIDE KEY (2026-09-04, take 2). The round dome was drawn
+        /// first and sent back: "boyut olarak daha büyük ve dikdörtgen bir buton olsun
+        /// '(çöp ikonu) Çöp' yazsın üstünde." A 64px disc is small for the one control
+        /// that throws a drink away, and a disc has nowhere to put a word.
+        ///
+        /// What survives is the part that worked — a cap standing proud of a socket and
+        /// dropping into it, with its own cast shadow going as it lands. That travel is
+        /// the whole illusion, so it is spent generously: six pixels on a 52-tall key,
+        /// not the one pixel a subtle version would use.
+        ///
+        /// Nine-sliced (<see cref="KeyCapBorder"/>), because "ÇÖP" and a longer word are
+        /// the same object at two widths — the house rule this project keeps relearning.
+        /// The mark and the word are drawn by the caller ON the cap, so they can move
+        /// with it and stay live text rather than baked pixels.
+        /// </summary>
+        public static Sprite KeyCap(Color[] ramp, bool down, string id)
+        {
+            string key = $"keycap:{id}:{(down ? "dn" : "up")}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            const int W = 64, H = 52, Throw = 6;
+            var px = new Color32[W * H];
+            Color32 ink = UITheme.Night[0];
+
+            void Rect(int x0, int y0, int x1, int y1, Color32 c)
+            {
+                for (int y = Mathf.Max(0, y0); y <= Mathf.Min(H - 1, y1); y++)
+                    for (int x = Mathf.Max(0, x0); x <= Mathf.Min(W - 1, x1); x++)
+                        px[(H - 1 - y) * W + x] = c;                 // y counts DOWN
+            }
+
+            Rect(0, 0, W - 1, H - 1, ink);                            // the socket
+            Rect(1, 1, W - 2, H - 2, UITheme.Graphite[1]);
+            Rect(2, 2, W - 3, H - 3, UITheme.Graphite[0]);
+            foreach (int x in new[] { 0, W - 1 })                     // squared corners
+                foreach (int y in new[] { 0, H - 1 })
+                    px[(H - 1 - y) * W + x] = new Color32(0, 0, 0, 0);
+
+            int lift = down ? 0 : Throw;
+            int cy0 = 4 + (Throw - lift), cy1 = H - 6 - lift;
+            Rect(3, cy0 - 1, W - 4, cy1 + 1, ramp[0]);                // the cap's dark edge
+            Rect(3, cy0, W - 4, cy1, ramp[2]);                        // its face
+            Rect(4, cy1 - 2, W - 5, cy1, ramp[1]);                    // shaded at the foot
+            Rect(4, cy0, W - 5, cy0 + 1, ramp[3]);                    // lit along the top
+            if (!down)
+            {
+                Rect(3, cy1 + 2, W - 4, H - 4, UITheme.Graphite[0]);  // the well below it
+                Rect(3, cy1 + 2, W - 4, cy1 + 3, ink);                // and its cast shadow
+            }
+            return Cache[key] = Make(px, W, H, KeyCapBorder);
+        }
+
+        /// <summary>How far the cap's face sits below the key's top edge, up and pressed —
+        /// the caller moves the label by the difference so the writing travels with the
+        /// cap instead of floating over it.</summary>
+        public const int KeyCapFaceUp = 4, KeyCapFaceDown = 10;
+
+        /// <summary>One arcade push-button, 32×32, in a named ramp — up or pressed.</summary>
+        public static Sprite PushButton(Color[] ramp, bool down, string id)
+        {
+            string key = $"push:{id}:{(down ? "dn" : "up")}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            const int S = 32;
+            var px = new Color32[S * S];
+            Color32 ink = UITheme.Night[0];
+
+            void Disc(float ccx, float ccy, float r, Color32 c)
+            {
+                for (int y = 0; y < S; y++)
+                    for (int x = 0; x < S; x++)
+                    {
+                        int hits = 0;
+                        for (int s = 0; s < 4; s++)
+                        {
+                            float sx = x + ((s & 1) == 0 ? 0.25f : 0.75f);
+                            float sy = y + ((s & 2) == 0 ? 0.25f : 0.75f);
+                            if ((sx - ccx) * (sx - ccx) + (sy - ccy) * (sy - ccy) <= r * r) hits++;
+                        }
+                        if (hits >= 2) px[(S - 1 - y) * S + x] = c;
+                    }
+            }
+
+            float cx = S / 2f, cy = S / 2f, rim = S / 2f - 1f;
+            Disc(cx, cy, rim, ink);                                  // the socket
+            Disc(cx, cy, rim - 1f, UITheme.Graphite[1]);
+            Disc(cx, cy + 0.6f, rim - 2f, UITheme.Graphite[0]);
+
+            int lift = down ? 0 : ButtonThrow;
+            float ccyy = cy - lift + 1f, crad = rim - 3f;
+            if (!down) Disc(cx, ccyy + lift + 1f, crad, ink);        // the cap's own shadow
+            Disc(cx, ccyy, crad, ramp[1]);
+            Disc(cx, ccyy - 0.5f, crad - 1f, ramp[2]);
+            Disc(cx, ccyy - 1f, crad - 2f, ramp[3]);
+            float gloss = down ? crad * 0.26f : crad * 0.42f;
+            Disc(cx - crad * 0.30f, ccyy - crad * 0.34f + (down ? 1.5f : 0f), gloss, ramp[4]);
+
+            // The bin, moulded into the cap in its own deepest step — a lid with a handle,
+            // a body and one stave, which is the least that still reads at this size.
+            Color32 mark = ramp[0];
+            void Set(int x, int y)
+            {
+                if (x >= 0 && x < S && y >= 0 && y < S) px[(S - 1 - y) * S + x] = mark;
+            }
+            int mx = (int)cx, y0 = (int)ccyy - 4;
+            for (int x = -4; x <= 4; x++) Set(mx + x, y0 + 1);
+            for (int x = -1; x <= 1; x++) Set(mx + x, y0);
+            for (int y = y0 + 3; y < y0 + 9; y++) { Set(mx - 3, y); Set(mx, y); Set(mx + 3, y); }
+            for (int x = -3; x <= 3; x++) Set(mx + x, y0 + 8);
+
+            return Cache[key] = Make(px, S, S, Vector4.zero);
+        }
+
+        private static Color32 Hex(int v) =>
+            new Color32((byte)((v >> 16) & 255), (byte)((v >> 8) & 255), (byte)(v & 255), 255);
+
+        /// <summary>An integer hash in 0..1. Deterministic across platforms — no
+        /// System.Random, no float seeds (CLAUDE.md).</summary>
+        private static float Hash(int x, int y, int seed)
+        {
+            unchecked
+            {
+                uint n = (uint)(x * 374761393 + y * 668265263 + seed * 1442695041);
+                n = (n ^ (n >> 13)) * 1274126177u;
+                return ((n ^ (n >> 16)) & 0xFFFF) / 65535f;
+            }
+        }
+
+        /// <summary>Value noise on a WRAPPED lattice, so the tile joins itself on all four
+        /// sides and can be repeated without a seam.</summary>
+        private static float Noise(float u, float v, int gw, int gh, int seed)
+        {
+            float fx = u * gw, fy = v * gh;
+            int x0 = Mathf.FloorToInt(fx), y0 = Mathf.FloorToInt(fy);
+            float tx = Smooth(fx - x0), ty = Smooth(fy - y0);
+            x0 = ((x0 % gw) + gw) % gw;
+            y0 = ((y0 % gh) + gh) % gh;
+            int x1 = (x0 + 1) % gw, y1 = (y0 + 1) % gh;
+            float a = Hash(x0, y0, seed), b = Hash(x1, y0, seed);
+            float c = Hash(x0, y1, seed), d = Hash(x1, y1, seed);
+            float top = a + (b - a) * tx;
+            float bottom = c + (d - c) * tx;
+            return top + (bottom - top) * ty;
+        }
+
+        private static float Smooth(float t) => t * t * (3f - 2f * t);
 
         private static Sprite Make(Color32[] px, int w, int h, Vector4 border)
         {
