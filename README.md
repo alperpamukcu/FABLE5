@@ -9,7 +9,7 @@ takes the order — there is no going back. Then you build the drink with real h
 physics — pour, stir, shake, pull a pint — serve it, and live on the tips. Rent falls due
 every night. Three nights in the red and the bar is gone. Five stars is the long game.
 
-![The back bar — the only place in the game a drink is picked up](Docs/readme/backbar.png)
+![The cellar under the counter — the only place in the game a drink is picked up](Docs/readme/backbar.png)
 
 **Engine:** Unity 6000.3.10f1 (URP) · **Platform:** PC
 **Status:** the tycoon loop is playable end to end and measured by a simulation bot. The
