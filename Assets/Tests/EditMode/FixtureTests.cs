@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using LastCall.Core;
 using LastCall.Game;
@@ -114,6 +115,61 @@ namespace LastCall.Tests
             Assert.AreEqual(129f, loaded.Slots[0].Y);
             Assert.IsFalse(loaded.Slots[2].OnCounter);
             Assert.IsTrue(loaded.Slots[3].OnCounter, "a counter-top slot says so in the data");
+        }
+
+        [Test]
+        public void ABackdropSlot_AndASwatch_ComeOutOfTheData()
+        {
+            // The wall ladder (2026-09-06): a slot whose piece IS the room's back wall, and
+            // a rung that names the window of itself the market shows. Both default off,
+            // so every entry that never mentions them reads as it did.
+            var loaded = DataLoader.ParseFixtures(@"{ ""slots"": [
+                    { ""id"": ""walls"", ""x"": 320, ""y"": 180, ""backdrop"": true },
+                    { ""id"": ""corner"", ""x"": 10, ""y"": 10 } ],
+                ""fixtures"": [
+                    { ""id"": ""w1"", ""name"": ""Cracked"", ""slot"": ""walls"",
+                      ""price"": 40, ""sprite"": ""fx_walls_1"", ""swatch"": ""fx_walls_swatch_1"",
+                      ""level"": 1, ""startsInTheRoom"": true },
+                    { ""id"": ""w2"", ""name"": ""Plaster"", ""slot"": ""walls"",
+                      ""price"": 70, ""sprite"": ""fx_walls_2"", ""swatch"": ""fx_walls_swatch_2"",
+                      ""level"": 2, ""comfort"": 0.3 },
+                    { ""id"": ""fern"", ""name"": ""Fern"", ""slot"": ""corner"",
+                      ""price"": 10, ""sprite"": ""fx_fern"" }]}");
+            Assert.IsTrue(loaded.Slots[0].Backdrop, "the wall says it is the room");
+            Assert.IsFalse(loaded.Slots[1].Backdrop, "and a corner is a hook");
+            Assert.AreEqual("fx_walls_swatch_1", loaded.Fixtures[0].Swatch);
+            Assert.AreEqual(2, loaded.Fixtures[1].Level, "the rungs climb like any ladder");
+            Assert.IsNull(loaded.Fixtures[2].Swatch, "a fern's sprite is its own picture");
+        }
+
+        [Test]
+        public void TheShippedWalls_AreAFourRungLadder_ThatOpensCracked()
+        {
+            // The author's four plates, as content (2026-09-06): club_room4 is the bar the
+            // run opens in and the others climb from it. Read off the real file, because a
+            // rung that names a plate nobody drew is a wall that never changes.
+            string path = UnityEngine.Application.dataPath + "/Data/fixtures/fixtures.json";
+            var loaded = DataLoader.ParseFixtures(System.IO.File.ReadAllText(path));
+            var walls = loaded.Slots.First(s => s.Id == "walls");
+            Assert.IsTrue(walls.Backdrop);
+            var rungs = loaded.Fixtures.Where(f => f.Slot == "walls").OrderBy(f => f.Level).ToList();
+            Assert.AreEqual(new[] { 1, 2, 3, 4 }, rungs.Select(r => r.Level).ToArray());
+            Assert.IsTrue(rungs[0].StartsInTheRoom, "the bar opens in the cracked room");
+            Assert.AreEqual(0, rungs[0].Comfort, "and what it opens with is the FreeBase");
+            for (int i = 1; i < rungs.Count; i++)
+            {
+                Assert.Greater(rungs[i].Comfort, rungs[i - 1].Comfort, rungs[i].Id + " is worth more");
+                Assert.Greater(rungs[i].Price, rungs[i - 1].Price, rungs[i].Id + " costs more");
+                Assert.IsFalse(rungs[i].StartsInTheRoom);
+            }
+            foreach (var r in rungs)
+            {
+                Assert.IsNotNull(r.Swatch, r.Id + " needs a swatch for the market");
+                Assert.IsNotNull(UnityEngine.Resources.Load<UnityEngine.Sprite>("Fixtures/" + r.Sprite),
+                    r.Id + "'s plate is not drawn");
+                Assert.IsNotNull(UnityEngine.Resources.Load<UnityEngine.Sprite>("Fixtures/" + r.Swatch),
+                    r.Id + "'s swatch is not cut");
+            }
         }
 
         [Test]

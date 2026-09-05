@@ -123,8 +123,12 @@ namespace LastCall.EditorTools
             // Environment art (18 §5): club background + the bar, whose empty shelves are where
             // bought glassware will stand. Optional — the stage falls back to flat procedural
             // layers when either is missing.
+            // THE ROOM IS THE FIRST RUNG OF THE WALL LADDER (2026-09-06): the serialized
+            // plate is what the scene shows before any run says otherwise, and the bar
+            // opens in the cracked room, so that is what it is. SyncFixtures swaps the
+            // plate for whatever rung the run owns — the same file, from Resources.
             stageSo.FindProperty("backgroundSprite").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/club_room.png");
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/Fixtures/fx_walls_1.png");
             stageSo.FindProperty("counterSprite").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Backgrounds/counter.png");
             stageSo.FindProperty("shutterSprite").objectReferenceValue =

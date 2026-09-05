@@ -2264,7 +2264,7 @@ namespace LastCall.UI
                                  ? (f.HasLight ? "House light · mark " : "Fitting · mark ")
                                    + f.Level
                                  : f.HasLight ? "Dressing · lit" : "Dressing",
-                            Art = FixtureArt(f.Sprite),
+                            Art = FixtureArt(f.Swatch ?? f.Sprite),
                             ArtH = IconH,
                             Identity = f.Name.ToUpperInvariant(),
                             MetaLine = f.IsTap

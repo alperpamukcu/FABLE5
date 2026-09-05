@@ -2589,6 +2589,17 @@ namespace LastCall.UI
                 // band below its surface's props: 34 under the bar top's 35, 16 under the
                 // floor's 20 and still over the wall's hangers at 15.
                 var slot = _slots[def.Slot];
+                // THE WALL IS A LADDER TOO (2026-09-06, the author's four plates: the
+                // cracked room the bar opens in, then plaster, then panelling, then the
+                // harlequin paper). A rung of it is not stood at a hook — it IS the
+                // picture, so it goes where the picture goes: onto the background's own
+                // renderer, at the same size, under everything that stands in the room.
+                // A stage built without a plate has nowhere to put it and skips it.
+                if (slot.Backdrop)
+                {
+                    if (_backgroundSr != null) _backgroundSr.sprite = sprite;
+                    continue;
+                }
                 bool onCounter = slot.OnCounter;
                 bool hangs = slot.Hangs;
                 bool flat = slot.Flat;

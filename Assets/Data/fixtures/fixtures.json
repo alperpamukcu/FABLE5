@@ -95,6 +95,12 @@
       "x": 546,
       "y": 211,
       "hangs": true
+    },
+    {
+      "id": "walls",
+      "x": 320,
+      "y": 180,
+      "backdrop": true
     }
   ],
   "fixtures": [
@@ -497,6 +503,54 @@
       "flavor": "Black rubber under the font. It catches what the glass does not.",
       "sprite": "fx_beer_mat",
       "startsInTheRoom": true
+    },
+    {
+      "id": "walls_1",
+      "name": "Cracked Plaster",
+      "slot": "walls",
+      "price": 40,
+      "stars": 0,
+      "flavor": "The wall the last tenant left. It holds, mostly, and the cracks have stopped growing.",
+      "sprite": "fx_walls_1",
+      "swatch": "fx_walls_swatch_1",
+      "level": 1,
+      "startsInTheRoom": true
+    },
+    {
+      "id": "walls_2",
+      "name": "Fresh Plaster",
+      "slot": "walls",
+      "price": 70,
+      "comfort": 0.3,
+      "stars": 1.0,
+      "flavor": "Skimmed flat and painted cream. The cracks are under it, and nobody has to know.",
+      "sprite": "fx_walls_2",
+      "swatch": "fx_walls_swatch_2",
+      "level": 2
+    },
+    {
+      "id": "walls_3",
+      "name": "Panelled Wall",
+      "slot": "walls",
+      "price": 130,
+      "comfort": 0.6,
+      "stars": 2.0,
+      "flavor": "A coral wainscot along the whole wall and a stripe at the cornice. The room stops apologising.",
+      "sprite": "fx_walls_3",
+      "swatch": "fx_walls_swatch_3",
+      "level": 3
+    },
+    {
+      "id": "walls_4",
+      "name": "Harlequin Paper",
+      "slot": "walls",
+      "price": 200,
+      "comfort": 1.0,
+      "stars": 3.0,
+      "flavor": "Pink and lilac diamonds over the panelling. The wall the postcards are of.",
+      "sprite": "fx_walls_4",
+      "swatch": "fx_walls_swatch_4",
+      "level": 4
     }
   ]
 }

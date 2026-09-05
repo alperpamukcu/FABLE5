@@ -273,7 +273,7 @@ namespace LastCall.Game
                     throw new FormatException($"Fixtures file declares slot '{sl.id}' twice.");
                 try { slots.Add(new StageSlot(sl.id, sl.x, sl.y, sl.onCounter,
                                               sl.pairSpreadPx, sl.houseLight, sl.hangs,
-                                              sl.flat)); }
+                                              sl.flat, sl.backdrop)); }
                 catch (ArgumentException e) { throw new FormatException($"Slot '{sl.id}': {e.Message}"); }
             }
 
@@ -333,7 +333,7 @@ namespace LastCall.Game
                         f.stars, f.flavor, f.sprite,
                         f.lightR, f.lightG, f.lightB, f.lightIntensity, f.lightRadius,
                         f.startsInTheRoom, f.tapLevel, f.level, f.drain, f.drainsFree,
-                        f.screen, f.comfort, f.cellW, f.cellH, f.water));
+                        f.screen, f.comfort, f.cellW, f.cellH, f.water, f.swatch));
                 }
                 catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
                 {
@@ -696,6 +696,9 @@ namespace LastCall.Game
             public double stars;
             public string flavor;
             public string sprite;
+            /// <summary>The market's picture of it, when the sprite is a whole room plate
+            /// (2026-09-06, the wall ladder). Absent = the sprite is the picture.</summary>
+            public string swatch;
             // A lamp is a fixture whose intensity is above zero; JsonUtility cannot say
             // "absent", so unlit fixtures simply leave the light block off (0 defaults).
             public float lightR;
@@ -755,6 +758,9 @@ namespace LastCall.Game
             // evening's clock. Defaults keep every old entry unchanged (JsonUtility).
             public float pairSpreadPx;
             public bool houseLight;
+            // Whatever stands here IS the room's back wall: its sprite replaces the plate
+            // (2026-09-06, the wall ladder). Absent is false.
+            public bool backdrop;
             // Whatever stands here hangs on the wall: no contact shadow, and it draws
             // behind the floor dressing (2026-08-24, the flamingo triptych).
             public bool hangs;

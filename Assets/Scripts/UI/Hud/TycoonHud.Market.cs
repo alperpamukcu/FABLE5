@@ -191,7 +191,7 @@ namespace LastCall.UI
                     return null;
                 case TycoonRun.DayPurchase.Kind.Fixture:
                     foreach (var f in Run.FixtureCatalogue)
-                        if (f.Id == pch.Id) return FixtureArt(f.Sprite);
+                        if (f.Id == pch.Id) return FixtureArt(f.Swatch ?? f.Sprite);
                     return null;
                 default:
                     return ItemArt.Load("sh_i_upgrades");

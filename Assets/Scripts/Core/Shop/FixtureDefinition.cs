@@ -140,6 +140,14 @@ namespace LastCall.Core
         /// <summary>Resources/Fixtures sprite name. Presentation data, carried not read.</summary>
         public string Sprite { get; }
 
+        /// <summary>
+        /// The picture the MARKET shows for this piece when its own sprite is not one that
+        /// fits a tile (2026-09-06, the wall ladder: a rung is the whole 640x360 room plate,
+        /// and a room shrunk to a stamp is a blur). A 64x48 window of the wall itself, cut
+        /// from the plate at 1x. Null for every piece whose sprite IS its picture.
+        /// </summary>
+        public string Swatch { get; }
+
         /// <summary>A lamp is a fixture whose light intensity is above zero. Colour is
         /// linear 0..1 per channel; radius is in stage units.</summary>
         public bool HasLight => LightIntensity > 0f;
@@ -155,7 +163,8 @@ namespace LastCall.Core
             float lightIntensity = 0f, float lightRadius = 0f,
             bool startsInTheRoom = false, int tapLevel = 0, int level = 0,
             bool isDrain = false, bool drainsFree = false, bool isScreen = false,
-            double comfort = 0, int cellW = 0, int cellH = 0, string water = null)
+            double comfort = 0, int cellW = 0, int cellH = 0, string water = null,
+            string swatch = null)
         {
             if (cellW < 0 || cellH < 0) throw new ArgumentOutOfRangeException(nameof(cellW), "A cell is not negative.");
             if ((cellW > 0) != (cellH > 0)) throw new ArgumentException("A cell has both a width and a height.", nameof(cellH));
@@ -207,6 +216,7 @@ namespace LastCall.Core
             CellW = cellW;
             CellH = cellH;
             Water = string.IsNullOrEmpty(water) ? null : water;
+            Swatch = string.IsNullOrWhiteSpace(swatch) ? null : swatch;
         }
 
         public override string ToString() => $"{Name} ({Id}, ${Price}, slot {Slot})";

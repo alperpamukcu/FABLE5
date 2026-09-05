@@ -53,9 +53,15 @@ namespace LastCall.Game
         /// on the boards, the drip mat is flat on the bar.</summary>
         public bool Flat { get; }
 
+        /// <summary>Whatever stands here IS THE ROOM (2026-09-06, the author's wall ladder:
+        /// "tüm arkaplanı değiştirerek oyunda duvar geliştirmesi olarak sunulacak"). The
+        /// piece is not placed at the hook; its sprite REPLACES the back wall's plate, so a
+        /// rung of this ladder is a whole 640x360 picture of the room. X and Y are moot.</summary>
+        public bool Backdrop { get; }
+
         public StageSlot(string id, float x, float y, bool onCounter,
                          float pairSpreadPx = 0f, bool houseLight = false, bool hangs = false,
-                         bool flat = false)
+                         bool flat = false, bool backdrop = false)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Slot needs an id.", nameof(id));
             if (pairSpreadPx < 0) throw new ArgumentException($"Slot '{id}' has a negative pair spread.");
@@ -67,6 +73,7 @@ namespace LastCall.Game
             HouseLight = houseLight;
             Hangs = hangs;
             Flat = flat;
+            Backdrop = backdrop;
         }
 
         public override string ToString() => $"{Id} ({X}, {Y}){(OnCounter ? " on the counter" : "")}";
