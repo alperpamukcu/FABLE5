@@ -191,7 +191,7 @@ namespace LastCall.UI
                     return null;
                 case TycoonRun.DayPurchase.Kind.Fixture:
                     foreach (var f in Run.FixtureCatalogue)
-                        if (f.Id == pch.Id) return FixtureArt(f.Swatch ?? f.Sprite);
+                        if (f.Id == pch.Id) return UpgradeIcon(f.Group);
                     return null;
                 default:
                     return ItemArt.Load("sh_i_upgrades");
@@ -589,8 +589,9 @@ namespace LastCall.UI
             }
             if (_cardMarkImg != null)
             {
-                _cardMarkImg.enabled = spec.Art != null;
-                _cardMarkImg.sprite = spec.Art;
+                var mark = spec.CardArt ?? spec.Art;
+                _cardMarkImg.enabled = mark != null;
+                _cardMarkImg.sprite = mark;
             }
             // The mark alone said "a bottle"; the NAME beside it says which. The identity
             // row already carried it, but a hundred units to the right of the picture it
@@ -782,6 +783,40 @@ namespace LastCall.UI
         }
 
         /// <summary>A titled section of the market: its header row, then its own grid.</summary>
+        // ── THE UPGRADE SCREEN'S SHELVES (2026-09-06, the author: "upgrade kısmını güzelce
+        // gruplandır karışık gözükmesin, satın alınan eşyalar gözükmemeli"). A fixture names
+        // its group in the data; this is the order the shelves stand in and what the sign over
+        // each says. Anything that names no group, or one nobody titled, goes under THE ROOM
+        // at the end rather than vanishing — a piece the shop cannot shelve is a content bug
+        // that should be SEEN.
+        private static readonly string[] UpgradeGroups = { "walls", "light", "furniture", "greenery", "counter" };
+
+        private static int GroupOrder(string group)
+        {
+            int i = Array.IndexOf(UpgradeGroups, group ?? "");
+            return i < 0 ? UpgradeGroups.Length : i;
+        }
+
+        private static string GroupTitle(string group)
+        {
+            switch (group)
+            {
+                case "walls": return "THE WALLS";
+                case "light": return "THE LIGHT";
+                case "furniture": return "FURNITURE & FLOOR";
+                case "greenery": return "GREENERY";
+                case "counter": return "THE COUNTER";
+                default: return "THE ROOM";
+            }
+        }
+
+        /// <summary>The upgrade icon for a group — a pictogram of the KIND of thing with the
+        /// green up-arrow badge (Tools/upgrade_icons.py, Items/up_*.png) — in place of the
+        /// product's picture on the tile (the author, 2026-09-06). The old green check is the
+        /// fallback for a group nobody drew.</summary>
+        private static Sprite UpgradeIcon(string group) =>
+            ItemArt.Load("up_" + (group ?? "")) ?? ItemArt.Load("sh_i_upgrades");
+
         private RectTransform ShopSection(string title)
         {
             // An aisle sign: a coloured tick, the name in the signage colour, and a rule

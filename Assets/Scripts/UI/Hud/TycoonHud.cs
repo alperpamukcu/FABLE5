@@ -1195,6 +1195,10 @@ namespace LastCall.UI
             public string PillVerb;          // "ADD" / "TAKE OUT" / "NO CASH" / "RETURN"
             public TileState State;
             public Sprite Art;
+            /// <summary>What the inspector card shows instead of <see cref="Art"/> when the
+            /// tile wears an upgrade ICON (2026-09-06): the thing itself — the wall's swatch,
+            /// the glass — for the pointer that wants to see what it is buying.</summary>
+            public Sprite CardArt;
             public float ArtH = BottleH;
             public float StockFrac = -1f;    // >= 0 draws the meter instead of Meta
             public Action OnClick;

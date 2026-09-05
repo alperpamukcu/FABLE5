@@ -131,6 +131,12 @@ namespace LastCall.PlayTests
             yield return OpenTheBar();
 
             var run = _boot.Tycoon;
+            // THE ROOM OPENS BARE (2026-09-06): the wall lamps are bought now, so the house
+            // lights this beat takes down have to be fitted first — the dev way, since the
+            // market has not opened yet on night one. The HUD re-dresses the room on the
+            // next frame it sees the owned count move.
+            run.DevFit("wall_lamps_one");
+            yield return new WaitForSecondsRealtime(0.5f);
             float deadline = Time.realtimeSinceStartup + 30f;
             while (run.LastCustomer == null && run.Phase == TycoonPhase.DayOpen
                    && Time.realtimeSinceStartup < deadline)

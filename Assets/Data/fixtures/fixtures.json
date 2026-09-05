@@ -113,7 +113,8 @@
       "stars": 0.0,
       "flavor": "Thin fronds and a clay pot. The cheapest way to stop a corner looking like a corridor.",
       "sprite": "fx_plant_palm",
-      "level": 1
+      "level": 1,
+      "group": "greenery"
     },
     {
       "id": "plant_fiddle",
@@ -124,7 +125,8 @@
       "stars": 1.5,
       "flavor": "Broad leaves on a bare stem, in a cream vase. It fills the window wall the way a lamp fills a table.",
       "sprite": "fx_plant_fiddle",
-      "level": 2
+      "level": 2,
+      "group": "greenery"
     },
     {
       "id": "plant_pothos",
@@ -135,7 +137,8 @@
       "stars": 3.0,
       "flavor": "It grows down instead of up, off three brass legs. The only plant in here that reaches for the floor.",
       "sprite": "fx_plant_pothos",
-      "level": 3
+      "level": 3,
+      "group": "greenery"
     },
     {
       "id": "plant_snake",
@@ -146,7 +149,8 @@
       "stars": 0.0,
       "flavor": "Stiff blades in a plain pot. Survives a bar, which is more than most things manage.",
       "sprite": "fx_plant_snake",
-      "level": 1
+      "level": 1,
+      "group": "greenery"
     },
     {
       "id": "plant_agave",
@@ -157,7 +161,8 @@
       "stars": 1.5,
       "flavor": "Blue-green and low and wide, in a shallow dish. It sits under the neon rather than in front of it.",
       "sprite": "fx_plant_agave",
-      "level": 2
+      "level": 2,
+      "group": "greenery"
     },
     {
       "id": "plant_monstera",
@@ -168,7 +173,8 @@
       "stars": 3.0,
       "flavor": "Split leaves the size of dinner plates, leaning into the neon like it paid for it.",
       "sprite": "fx_monstera",
-      "level": 3
+      "level": 3,
+      "group": "greenery"
     },
     {
       "id": "counter_candle",
@@ -183,7 +189,8 @@
       "lightG": 0.72,
       "lightB": 0.4,
       "lightIntensity": 0.5,
-      "lightRadius": 26
+      "lightRadius": 26,
+      "group": "light"
     },
     {
       "id": "brass_sconce",
@@ -198,7 +205,8 @@
       "lightG": 0.8,
       "lightB": 0.55,
       "lightIntensity": 0.5,
-      "lightRadius": 46
+      "lightRadius": 46,
+      "group": "light"
     },
     {
       "id": "hanging_lantern",
@@ -213,7 +221,8 @@
       "lightG": 0.78,
       "lightB": 0.5,
       "lightIntensity": 0.55,
-      "lightRadius": 70
+      "lightRadius": 70,
+      "group": "light"
     },
     {
       "id": "paper_lantern",
@@ -228,7 +237,8 @@
       "lightG": 0.55,
       "lightB": 0.45,
       "lightIntensity": 0.5,
-      "lightRadius": 70
+      "lightRadius": 70,
+      "group": "light"
     },
     {
       "id": "neon_martini",
@@ -243,7 +253,8 @@
       "lightG": 0.95,
       "lightB": 1.0,
       "lightIntensity": 0.8,
-      "lightRadius": 55
+      "lightRadius": 55,
+      "group": "light"
     },
     {
       "id": "table_left_1",
@@ -254,7 +265,8 @@
       "stars": 0,
       "flavor": "Reclaimed oak and a welded frame. It wobbles, and nobody minds.",
       "sprite": "fx_table_t1",
-      "level": 1
+      "level": 1,
+      "group": "furniture"
     },
     {
       "id": "table_left_2",
@@ -265,7 +277,8 @@
       "stars": 1.5,
       "flavor": "Green leather, a brass stem. The seat people ask for by name.",
       "sprite": "fx_table_t2",
-      "level": 2
+      "level": 2,
+      "group": "furniture"
     },
     {
       "id": "table_left_3",
@@ -276,7 +289,8 @@
       "stars": 3.0,
       "flavor": "Plum vinyl on a polished column. Spins if you let it.",
       "sprite": "fx_table_t3",
-      "level": 3
+      "level": 3,
+      "group": "furniture"
     },
     {
       "id": "table_mid_1",
@@ -287,7 +301,8 @@
       "stars": 0,
       "flavor": "Reclaimed oak and a welded frame. It wobbles, and nobody minds.",
       "sprite": "fx_table_t1",
-      "level": 1
+      "level": 1,
+      "group": "furniture"
     },
     {
       "id": "table_mid_2",
@@ -298,7 +313,8 @@
       "stars": 1.5,
       "flavor": "Green leather, a brass stem. The seat people ask for by name.",
       "sprite": "fx_table_t2",
-      "level": 2
+      "level": 2,
+      "group": "furniture"
     },
     {
       "id": "table_mid_3",
@@ -309,7 +325,8 @@
       "stars": 3.0,
       "flavor": "Plum vinyl on a polished column. Spins if you let it.",
       "sprite": "fx_table_t3",
-      "level": 3
+      "level": 3,
+      "group": "furniture"
     },
     {
       "id": "table_right_1",
@@ -320,7 +337,8 @@
       "stars": 0,
       "flavor": "Reclaimed oak and a welded frame. It wobbles, and nobody minds.",
       "sprite": "fx_table_t1",
-      "level": 1
+      "level": 1,
+      "group": "furniture"
     },
     {
       "id": "table_right_2",
@@ -331,7 +349,8 @@
       "stars": 1.5,
       "flavor": "Green leather, a brass stem. The seat people ask for by name.",
       "sprite": "fx_table_t2",
-      "level": 2
+      "level": 2,
+      "group": "furniture"
     },
     {
       "id": "table_right_3",
@@ -342,7 +361,8 @@
       "stars": 3.0,
       "flavor": "Plum vinyl on a polished column. Spins if you let it.",
       "sprite": "fx_table_t3",
-      "level": 3
+      "level": 3,
+      "group": "furniture"
     },
     {
       "id": "taps_one",
@@ -353,7 +373,8 @@
       "flavor": "One line, one lager. A start.",
       "sprite": "fx_tap_single",
       "tapLevel": 1,
-      "startsInTheRoom": true
+      "startsInTheRoom": true,
+      "group": "counter"
     },
     {
       "id": "taps_two",
@@ -364,7 +385,8 @@
       "stars": 1.5,
       "flavor": "A brass bridge on two legs, handles in a row across it.",
       "sprite": "fx_tap_arch",
-      "tapLevel": 2
+      "tapLevel": 2,
+      "group": "counter"
     },
     {
       "id": "taps_three",
@@ -375,7 +397,8 @@
       "stars": 3.0,
       "flavor": "One column, three spouts, and nothing waiting its turn.",
       "sprite": "fx_tap_tee",
-      "tapLevel": 3
+      "tapLevel": 3,
+      "group": "counter"
     },
     {
       "id": "wall_lamps_one",
@@ -391,7 +414,8 @@
       "lightIntensity": 0.85,
       "lightRadius": 118,
       "level": 1,
-      "startsInTheRoom": true
+      "group": "light",
+      "comfort": 0.1
     },
     {
       "id": "wall_lamps_two",
@@ -407,7 +431,8 @@
       "lightB": 0.83,
       "lightIntensity": 1.0,
       "lightRadius": 132,
-      "level": 2
+      "level": 2,
+      "group": "light"
     },
     {
       "id": "wall_lamps_three",
@@ -423,7 +448,8 @@
       "lightB": 0.48,
       "lightIntensity": 1.15,
       "lightRadius": 148,
-      "level": 3
+      "level": 3,
+      "group": "light"
     },
     {
       "id": "flamingo_triptych",
@@ -433,7 +459,9 @@
       "stars": 0,
       "flavor": "The coast in three frames. The flamingo stays past closing.",
       "sprite": "fx_triptych",
-      "startsInTheRoom": true
+      "group": "walls",
+      "comfort": 0.2,
+      "level": 1
     },
     {
       "id": "counter_sink",
@@ -448,7 +476,8 @@
       "cellH": 35,
       "level": 1,
       "startsInTheRoom": true,
-      "drain": true
+      "drain": true,
+      "group": "counter"
     },
     {
       "id": "sink_brass",
@@ -464,7 +493,8 @@
       "cellH": 35,
       "level": 2,
       "drain": true,
-      "drainsFree": true
+      "drainsFree": true,
+      "group": "counter"
     },
     {
       "id": "floor_rug",
@@ -474,7 +504,8 @@
       "stars": 0,
       "flavor": "Orange running through teal, a shoreline read from the air. It takes the echo off the boards.",
       "sprite": "fx_floor_rug",
-      "startsInTheRoom": true
+      "group": "furniture",
+      "comfort": 0.2
     },
     {
       "id": "wall_tv",
@@ -487,12 +518,13 @@
       "cellW": 49,
       "cellH": 49,
       "screen": true,
-      "startsInTheRoom": true,
       "lightR": 0.62,
       "lightG": 0.78,
       "lightB": 1.0,
       "lightIntensity": 0.45,
-      "lightRadius": 58
+      "lightRadius": 58,
+      "group": "walls",
+      "comfort": 0.2
     },
     {
       "id": "beer_mat",
@@ -502,7 +534,8 @@
       "stars": 0,
       "flavor": "Black rubber under the font. It catches what the glass does not.",
       "sprite": "fx_beer_mat",
-      "startsInTheRoom": true
+      "startsInTheRoom": true,
+      "group": "counter"
     },
     {
       "id": "walls_1",
@@ -514,7 +547,8 @@
       "sprite": "fx_walls_1",
       "swatch": "fx_walls_swatch_1",
       "level": 1,
-      "startsInTheRoom": true
+      "startsInTheRoom": true,
+      "group": "walls"
     },
     {
       "id": "walls_2",
@@ -526,7 +560,8 @@
       "flavor": "Skimmed flat and painted cream. The cracks are under it, and nobody has to know.",
       "sprite": "fx_walls_2",
       "swatch": "fx_walls_swatch_2",
-      "level": 2
+      "level": 2,
+      "group": "walls"
     },
     {
       "id": "walls_3",
@@ -538,7 +573,8 @@
       "flavor": "A coral wainscot along the whole wall and a stripe at the cornice. The room stops apologising.",
       "sprite": "fx_walls_3",
       "swatch": "fx_walls_swatch_3",
-      "level": 3
+      "level": 3,
+      "group": "walls"
     },
     {
       "id": "walls_4",
@@ -550,7 +586,8 @@
       "flavor": "Pink and lilac diamonds over the panelling. The wall the postcards are of.",
       "sprite": "fx_walls_4",
       "swatch": "fx_walls_swatch_4",
-      "level": 4
+      "level": 4,
+      "group": "walls"
     }
   ]
 }

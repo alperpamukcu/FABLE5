@@ -2165,12 +2165,16 @@ namespace LastCall.UI
             }
             else
             {
-                _cardTarget = ShopSection("THE ROOM");
+                // THE UPGRADE SCREEN (2026-09-06): grouped shelves, nothing already bought on
+                // them, and an upgrade icon on every face — what KIND of thing is raised, the
+                // thing itself on the inspector card. A line that is maxed is bought: gone.
+                int raised = 0;
+                _cardTarget = ShopSection("SEATS & BAR");
                 var stool = new TileSpec
                 {
                     Name = "One More Stool",
                     Meta = "Seat " + Math.Min(run.Seats + 1, cfg.MaxSeats) + " of " + cfg.MaxSeats,
-                    Art = ItemArt.Load("sh_i_upgrades"),
+                    Art = UpgradeIcon("seats"),
                     ArtH = IconH,
                     Identity = "ONE MORE STOOL",
                     MetaLine = "The floor · seat " + Math.Min(run.Seats + 1, cfg.MaxSeats)
@@ -2179,9 +2183,11 @@ namespace LastCall.UI
                     BuffA = new Buff(BuffKind.Gain, "+1 seat · +0.25 stars"),
                     BuffB = new Buff(BuffKind.Bad, "Uses tonight's one upgrade"),
                 };
-                if (run.Seats >= cfg.MaxSeats) { stool.State = TileState.Held; stool.Word = "MAX"; }
-                else DressBuyable(stool, cfg.SeatPrice(run.Seats), "seat", true, () => run.BuySeat());
-                AddTile(stool);
+                if (run.Seats < cfg.MaxSeats)
+                {
+                    DressBuyable(stool, cfg.SeatPrice(run.Seats), "seat", true, () => run.BuySeat());
+                    AddTile(stool); raised++;
+                }
 
                 // THE COUNTER. It has been a real, priced, guarded fitting in Core the whole
                 // time — BuyCounter, CounterPrice, two steps at $40 and $80, worth up to 0.06
@@ -2193,7 +2199,8 @@ namespace LastCall.UI
                 {
                     Name = "Resurface the Bar",
                     Meta = "Rung " + run.CounterTier + " of " + cfg.MaxAmbienceTier,
-                    Art = ItemArt.Load("sh_p_bar") ?? ItemArt.Load("sh_i2_upgrades"),
+                    Art = UpgradeIcon("bar"),
+                    CardArt = ItemArt.Load("sh_p_bar"),
                     ArtH = IconH,
                     Identity = "RESURFACE THE BAR",
                     MetaLine = "The room · rung " + run.CounterTier + " of " + cfg.MaxAmbienceTier,
@@ -2202,25 +2209,29 @@ namespace LastCall.UI
                     BuffA = new Buff(BuffKind.Gain, "+0.03 on every served visit, up to +0.06"),
                     BuffB = new Buff(BuffKind.Bad, "Uses tonight's one upgrade"),
                 };
-                if (run.CounterTier >= cfg.MaxAmbienceTier)
-                { bar.State = TileState.Held; bar.Word = "MAX"; }
-                else DressBuyable(bar, cfg.CounterPrice(run.CounterTier), "counter", true,
-                    () => run.BuyCounter());
-                AddTile(bar);
+                if (run.CounterTier < cfg.MaxAmbienceTier)
+                {
+                    DressBuyable(bar, cfg.CounterPrice(run.CounterTier), "counter", true,
+                        () => run.BuyCounter());
+                    AddTile(bar); raised++;
+                }
 
+                _cardTarget = ShopSection("GLASSWARE");
                 foreach (var g in run.Glassware)
                 {
                     var glass = g;
                     int tier = run.GlassTier(glass.Id);
                     bool maxed = tier >= TycoonRun.MaxGlassTier;
+                    if (maxed) continue;           // a finished line is a bought one
                     int stepPrice = maxed ? 0 : glass.TierPrices[tier - 1];
                     var spec = new TileSpec
                     {
                         Name = glass.Name,
                         // "{tier-1}★ → {tier}★" spent 4 of its 16 characters drawing nothing.
                         Meta = "Rung " + tier + " of " + TycoonRun.MaxGlassTier,
-                        Art = GlassArt.For(glass, Mathf.Min(tier + 1, TycoonRun.MaxGlassTier)).Sprite,
-                        ArtH = VesselH,
+                        Art = UpgradeIcon("glass"),
+                        CardArt = GlassArt.For(glass, Mathf.Min(tier + 1, TycoonRun.MaxGlassTier)).Sprite,
+                        ArtH = IconH,
                         Identity = glass.Name.ToUpperInvariant() + " GLASSWARE",
                         MetaLine = "Rung " + tier + " of " + TycoonRun.MaxGlassTier
                                    + " · " + DrinksServedIn(glass.Id),
@@ -2229,10 +2240,9 @@ namespace LastCall.UI
                                          + " line · every drink served in one"),
                         BuffB = new Buff(BuffKind.Bad, "Uses tonight's one upgrade"),
                     };
-                    if (maxed) { spec.State = TileState.Held; spec.Word = "MAX"; }
-                    else DressBuyable(spec, stepPrice, "glass:" + glass.Id, true,
+                    DressBuyable(spec, stepPrice, "glass:" + glass.Id, true,
                         () => run.BuyGlassTier(glass.Id));
-                    AddTile(spec);
+                    AddTile(spec); raised++;
                 }
 
                 // THE DRESSING (2026-08-10): the modular room pieces. Cosmetic, so no
@@ -2249,13 +2259,31 @@ namespace LastCall.UI
                 // arrives as the ladder is climbed, which is what makes climbing it read as
                 // progress rather than as a price list. Unranked pieces are unchanged —
                 // they answer to nothing but their stars.
+                // GROUPED, AND ONLY WHAT CAN STILL BE BOUGHT (2026-09-06). The catalogue is
+                // walked shelf by shelf in the groups' own order (stable, so a shelf keeps
+                // the file's order inside it); an owned piece — a fitted rung, a bought
+                // single, the mat the bar opened with — is not on the shelf at all.
                 if (run.FixtureCatalogue.Count > 0)
                 {
-                    _cardTarget = ShopSection("THE DRESSING");
-                    foreach (var fx in run.FixtureCatalogue)
+                    string shelf = null;
+                    var fileOrder = new Dictionary<FixtureDefinition, int>();
+                    for (int i = 0; i < run.FixtureCatalogue.Count; i++) fileOrder[run.FixtureCatalogue[i]] = i;
+                    var byShelf = new List<FixtureDefinition>(run.FixtureCatalogue);
+                    byShelf.Sort((a, b) =>
+                    {
+                        int o = GroupOrder(a.Group).CompareTo(GroupOrder(b.Group));
+                        return o != 0 ? o : fileOrder[a].CompareTo(fileOrder[b]);
+                    });
+                    foreach (var fx in byShelf)
                     {
                         var f = fx;
                         if (f.Level > run.LadderLevel(f.Slot) + 1) continue;
+                        if (run.OwnsFixture(f.Id)) continue;
+                        if (f.Group != shelf || _cardTarget == null)
+                        {
+                            shelf = f.Group;
+                            _cardTarget = ShopSection(GroupTitle(shelf));
+                        }
                         var spec = new TileSpec
                         {
                             Name = f.Name,
@@ -2264,7 +2292,8 @@ namespace LastCall.UI
                                  ? (f.HasLight ? "House light · mark " : "Fitting · mark ")
                                    + f.Level
                                  : f.HasLight ? "Dressing · lit" : "Dressing",
-                            Art = FixtureArt(f.Swatch ?? f.Sprite),
+                            Art = UpgradeIcon(f.Group),
+                            CardArt = FixtureArt(f.Swatch ?? f.Sprite),
                             ArtH = IconH,
                             Identity = f.Name.ToUpperInvariant(),
                             MetaLine = f.IsTap
@@ -2301,16 +2330,7 @@ namespace LastCall.UI
                                 (f.Level > 0 ? "Mark " + f.Level + " of " + rungs + " · " : "")
                                 + "+" + f.Comfort.ToString("0.0") + " comfort to the room");
                         }
-                        if (run.OwnsFixture(f.Id))
-                        {
-                            spec.State = TileState.Held;
-                            // A rung that has been fitted over is not what is standing in
-                            // the room, and saying OURS about the whole ladder would leave
-                            // the player unable to tell which one the bar actually runs.
-                            spec.Word = f.Level > 0 && f.Level < run.LadderLevel(f.Slot)
-                                ? "FITTED" : "OURS";
-                        }
-                        else if (run.Rating.Average < f.Stars)
+                        if (run.Rating.Average < f.Stars)
                         {
                             spec.State = TileState.Sealed;
                             spec.Money = f.Stars.ToString("0.0");
@@ -2334,9 +2354,12 @@ namespace LastCall.UI
                         }
                         else DressBuyable(spec, f.Price, "fx:" + f.Id, false,
                             () => run.BuyFixture(f.Id));
-                        AddTile(spec);
+                        AddTile(spec); raised++;
                     }
                 }
+                // Nothing left to raise: say so, rather than an aisle with three signs and no
+                // cards under any of them.
+                if (raised == 0) _cardTarget = ShopSection("THE ROOM IS FITTED — NOTHING LEFT TO RAISE");
             }
 
             // WHAT THE NEXT STAR OPENS, IN EVERY DEPARTMENT (the author, 2026-08-10).

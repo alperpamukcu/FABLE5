@@ -333,7 +333,7 @@ namespace LastCall.Game
                         f.stars, f.flavor, f.sprite,
                         f.lightR, f.lightG, f.lightB, f.lightIntensity, f.lightRadius,
                         f.startsInTheRoom, f.tapLevel, f.level, f.drain, f.drainsFree,
-                        f.screen, f.comfort, f.cellW, f.cellH, f.water, f.swatch));
+                        f.screen, f.comfort, f.cellW, f.cellH, f.water, f.swatch, f.group));
                 }
                 catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
                 {
@@ -699,6 +699,8 @@ namespace LastCall.Game
             /// <summary>The market's picture of it, when the sprite is a whole room plate
             /// (2026-09-06, the wall ladder). Absent = the sprite is the picture.</summary>
             public string swatch;
+            /// <summary>The shelf of the upgrade screen it is sold from (2026-09-06).</summary>
+            public string group;
             // A lamp is a fixture whose intensity is above zero; JsonUtility cannot say
             // "absent", so unlit fixtures simply leave the light block off (0 defaults).
             public float lightR;

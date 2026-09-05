@@ -148,6 +148,14 @@ namespace LastCall.Core
         /// </summary>
         public string Swatch { get; }
 
+        /// <summary>
+        /// Which shelf of the upgrade screen this piece is sold from (2026-09-06, the author:
+        /// "upgrade kısmını güzelce gruplandır karışık gözükmesin"): walls, light, furniture,
+        /// greenery, counter. Content, like the slot — the market titles and orders the groups,
+        /// and a piece that names none is shelved under the room in general.
+        /// </summary>
+        public string Group { get; }
+
         /// <summary>A lamp is a fixture whose light intensity is above zero. Colour is
         /// linear 0..1 per channel; radius is in stage units.</summary>
         public bool HasLight => LightIntensity > 0f;
@@ -164,7 +172,7 @@ namespace LastCall.Core
             bool startsInTheRoom = false, int tapLevel = 0, int level = 0,
             bool isDrain = false, bool drainsFree = false, bool isScreen = false,
             double comfort = 0, int cellW = 0, int cellH = 0, string water = null,
-            string swatch = null)
+            string swatch = null, string group = null)
         {
             if (cellW < 0 || cellH < 0) throw new ArgumentOutOfRangeException(nameof(cellW), "A cell is not negative.");
             if ((cellW > 0) != (cellH > 0)) throw new ArgumentException("A cell has both a width and a height.", nameof(cellH));
@@ -217,6 +225,7 @@ namespace LastCall.Core
             CellH = cellH;
             Water = string.IsNullOrEmpty(water) ? null : water;
             Swatch = string.IsNullOrWhiteSpace(swatch) ? null : swatch;
+            Group = string.IsNullOrWhiteSpace(group) ? null : group.Trim().ToLowerInvariant();
         }
 
         public override string ToString() => $"{Name} ({Id}, ${Price}, slot {Slot})";

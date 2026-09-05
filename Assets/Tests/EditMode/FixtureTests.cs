@@ -129,7 +129,7 @@ namespace LastCall.Tests
                 ""fixtures"": [
                     { ""id"": ""w1"", ""name"": ""Cracked"", ""slot"": ""walls"",
                       ""price"": 40, ""sprite"": ""fx_walls_1"", ""swatch"": ""fx_walls_swatch_1"",
-                      ""level"": 1, ""startsInTheRoom"": true },
+                      ""group"": ""Walls"", ""level"": 1, ""startsInTheRoom"": true },
                     { ""id"": ""w2"", ""name"": ""Plaster"", ""slot"": ""walls"",
                       ""price"": 70, ""sprite"": ""fx_walls_2"", ""swatch"": ""fx_walls_swatch_2"",
                       ""level"": 2, ""comfort"": 0.3 },
@@ -138,8 +138,34 @@ namespace LastCall.Tests
             Assert.IsTrue(loaded.Slots[0].Backdrop, "the wall says it is the room");
             Assert.IsFalse(loaded.Slots[1].Backdrop, "and a corner is a hook");
             Assert.AreEqual("fx_walls_swatch_1", loaded.Fixtures[0].Swatch);
+            Assert.AreEqual("walls", loaded.Fixtures[0].Group, "the shelf it is sold from, lower-cased");
+            Assert.IsNull(loaded.Fixtures[2].Group, "a piece that names no shelf");
             Assert.AreEqual(2, loaded.Fixtures[1].Level, "the rungs climb like any ladder");
             Assert.IsNull(loaded.Fixtures[2].Swatch, "a fern's sprite is its own picture");
+        }
+
+        [Test]
+        public void TheRoomOpensBare_AndTheDressingIsBought()
+        {
+            // The author, 2026-09-06: the picture, the wall lamps, the rug and the set are
+            // UPGRADES — bought, not given — and the bar mat is not one. What the bar opens
+            // with is the FreeBase and carries no comfort; what is bought carries some.
+            string path = UnityEngine.Application.dataPath + "/Data/fixtures/fixtures.json";
+            var loaded = DataLoader.ParseFixtures(System.IO.File.ReadAllText(path));
+            var given = loaded.Fixtures.Where(f => f.StartsInTheRoom).Select(f => f.Id).OrderBy(s => s).ToArray();
+            Assert.AreEqual(new[] { "beer_mat", "counter_sink", "taps_one", "walls_1" }, given,
+                "the room opens with the mat, the sink, one tap and the cracked wall — nothing else");
+            foreach (var id in given)
+                Assert.AreEqual(0, loaded.Fixtures.First(f => f.Id == id).Comfort, id + " is the FreeBase");
+            foreach (var id in new[] { "flamingo_triptych", "wall_lamps_one", "floor_rug", "wall_tv" })
+            {
+                var piece = loaded.Fixtures.First(f => f.Id == id);
+                Assert.IsFalse(piece.StartsInTheRoom, id + " is bought now");
+                Assert.Greater(piece.Comfort, 0, id + " is worth something to the room");
+                Assert.Greater(piece.Price, 0);
+            }
+            foreach (var f in loaded.Fixtures)
+                Assert.IsNotNull(f.Group, f.Id + " names no shelf of the upgrade screen");
         }
 
         [Test]

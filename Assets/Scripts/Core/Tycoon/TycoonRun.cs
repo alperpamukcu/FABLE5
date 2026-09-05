@@ -2255,6 +2255,20 @@ namespace LastCall.Core
         /// handle the stage watches, so it only rebuilds the room when the room changed.</summary>
         public int OwnedFixtureCount => _fixtures.Count;
 
+        /// <summary>
+        /// Dev tooling (2026-09-06): stands a catalogue piece in the room for nothing, any
+        /// phase, no gate — the way <see cref="DevPreset"/> hands out glass tiers. The room
+        /// opens bare now (the lamps, the picture, the rug and the set are bought), so a test
+        /// or a preset that needs the house lit on night one fits them here. Unknown ids are
+        /// refused: a dev verb that quietly accepted a typo would be a fixture nobody draws.
+        /// </summary>
+        public void DevFit(string fixtureId)
+        {
+            foreach (var f in _fixtureCatalogue)
+                if (f.Id == fixtureId) { _fixtures.Add(f.Id); return; }
+            throw new ArgumentException($"No fixture '{fixtureId}' in the catalogue.", nameof(fixtureId));
+        }
+
         /// <summary>The catalogue entry with this id, or null. One lookup, so the ladder's
         /// rules and the purchase share it.</summary>
         public FixtureDefinition FixtureById(string fixtureId)
