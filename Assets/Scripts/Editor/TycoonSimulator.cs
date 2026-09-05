@@ -1759,7 +1759,8 @@ namespace LastCall.EditorTools
                 sb.AppendLine();
                 sb.AppendLine("Eleven rungs, one written guest on each. This is the table the");
                 sb.AppendLine("thresholds get chosen from, and it is a FLOOR like everything else the");
-                sb.AppendLine("bot measures: it reads only the ID, never shops, and never buys a brand,");
+                sb.AppendLine("bot measures: it reads only the ID and shops by rule (stock, the cheapest");
+                sb.AppendLine("page, one rung a night, a brand it can rarely afford), never by taste —");
                 sb.AppendLine("so a played bar climbs faster than this. Trust the SHAPE — how far apart");
                 sb.AppendLine("the rungs are — over the absolute weeks. A rung no run reaches is the");
                 sb.AppendLine("most useful line here: it says a guest written for it would never come.");

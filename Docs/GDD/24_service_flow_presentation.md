@@ -270,8 +270,8 @@ x 15–89 / y 37–132, header rows 3–21.
 Reading order, top to bottom: **NAME** big · AGE·CITY / STANDING · RATES THIS BAR (their
 own satisfied-visit share as stars — what THEY make of US) / reserved slots (favourite ·
 last visit · spent, blank until save arrives, P18) · the **ORDER band** with the drink's
-icon · **SERVING PREFERENCES** (garnishes + shaken hard + filled to the top — everything
-the tip grades, in one line). **No price anywhere** (C3), and **opening the card is the
+icon · **SERVING PREFERENCES** (garnishes + the method the recipe asks for — everything
+the tip grades, in one line; "filled to the top" left with the emotion layer, 2026-08-02). **No price anywhere** (C3), and **opening the card is the
 `InspectId()` that unlocks the order** — before it, Core refuses and the seat bubble shows
 only READY · TAP THE ID. Emotion stat rows left the card per D1; the tell moves to the
 reaction animations. The scrim click hands the card back.

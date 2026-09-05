@@ -98,7 +98,7 @@ Constraints the notes bend but the project does not:
 | Patience per customer, visible, decreasing, zero = leaves | Patience rolls ±20% (`RollPatience`), seat clock heats, storm-offs | Gauge on the body (was P8); patience scaling **tips and stars** (P11) |
 | Variable order-decide times (2s / 5s / longer) | `RollDecideDelay`: 4s ±35% ≈ 2.6–5.4s | Widen the spread a touch (P11); nothing structural |
 | Second/third orders from satisfied returners | Extra-order rule, measured 18.7% of exact serves | Pairing rules: beer-then-beer, drink+snack (P11) |
-| Serving preferences vocabulary | `Preparations` (ice/lemon/salt/sugar rims), `FillPreference`, `ShakeEnergy` recorded on every shake | Orders *requesting* them + the judge *grading* them (P11) |
+| Serving preferences vocabulary | `Preparations` (ice/lemon/salt/sugar rims), ~~`FillPreference`~~ (retired with the emotion layer, 2026-08-02 — there is no such type), `ShakeEnergy` recorded on every shake | Orders *requesting* them + the judge *grading* them (P11) |
 | Liquid fits every glass, never overflows | Core brim-cap law + per-vessel fluid calibration procedure (profile + `SetDensity`, measured) | Run the procedure per new glass (P14) |
 | Serve button press feel | `PressSink` | The drawn face (P13) |
 | Stock counts, OUT states | Shelf drains; menu keys carry OUT/FULL/BUSY | Out-of-stock *requests* (C2, P11); snack stock (P16) |
@@ -303,7 +303,7 @@ to the board instead.
   DONE on the drawn plate with the full `PressSink`. Measured in play, sibling order pinned
   (mat under tin). Worth an eye pass: the mat's x-offset and the tray's lean are first
   guesses
-- ◐ **Serve stage in the shaker's interaction style**. Right rail done:
+- ☑ **Serve stage in the shaker's interaction style** *(box closed 2026-09-06; the stage shipped in full — see GDD_MEVCUT §4/§9)*. Right rail done:
   - ☑ **Mixers added at the glass** (the P10 `PourAtGlass` verb). P10 put the rule in Core —
     carbonated never enters the shaker — and then there was no door in the UI to do it
     through, so **the six built cocktails could not be made by playing at all**. The rail
@@ -326,7 +326,7 @@ went unnoticed — but a built drink leaves the shaker empty and a soda was draw
 And both rails were sized for two keys; they carry up to eight now, so they run the height of
 the play surface and are labelled above themselves (FINISH / MIXERS) instead of a garnish
 caption stranded in the middle of the keys.
-- ◐ **Glassware system** (C9). Core half done:
+- ☑ **Glassware system** (C9) *(box closed 2026-09-06: six tiers per line, the generated 3D set, capacity per glass — all in; see the 08-02 addenda below and GDD_MEVCUT)*. Core half done:
   - ☑ **Capacity per glass** — P10 specced it and shipped without it, so every glass held
     1.0 and the set was cosmetic. A coupe is 0.55 and a pint 1.6, scaled against the old
     single glass, and `minFill` and the ratio bands are shares of *that*.
@@ -643,7 +643,7 @@ measured (`SurfaceY`) inside every silhouette; tap stage unchanged (beer glass j
 
 ## P15 — Customers alive + ID card v3
 
-- ◐ **Animation set** (D5, on the current body first). *Reactions landed 2026-07-31*: two
+- ☑ **Animation set** (D5) *(box closed 2026-09-06: the 2026-08-19 rig carries idle, order, drink, cheer, upset, walk and the two glances per face — Tools/patron_ship.py; the note below is the first body's history)*. *Reactions landed 2026-07-31*: two
   custom 7-frame south clips on Bar Patron v7 (`cheer` — fist up, head tips back; `upset` —
   shoulders slump, hand drops to the counter), played one-shot on the stool at the departure
   beat, right where the tab settles — the emotional tell D1 moved off the card lives here.
@@ -687,7 +687,7 @@ checked in play.
   snack share 33.3% of serves, zero solo snacks possible (pinned by test), and the rent
   divisor tightened 6→5.5 in the same commit because the first, free-refill pass wiped
   the P18 squeeze (19.5%→0% bankruptcies) — restored to 16.0% on the same seeds
-- ◐ **The back-bar wall + the Book as THE menu** *(the author's direction, 2026-07-31)*:
+- ☑ **The back-bar wall + the Book as THE menu** *(the author's direction, 2026-07-31; box closed 2026-09-06: the wall was built, then DEMOLISHED on 2026-08-22 — the counter's cellar took the job, the Book stayed the browser; CLAUDE.md)*:
   the aisle menu retires. Two surfaces replace it: (1) the HOUSE BOOK becomes the recipe
   browser — filter chips shipped (tier · prep · bottle, cycling), scroll shipped; (2) the
   bottle picker becomes a full-screen BAR BACK WALL — the player "turns around" to face

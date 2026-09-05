@@ -33,6 +33,7 @@ namespace LastCall.EditorTools
         private const string DeckPath = "Assets/Data/bottles/base_bar.json";
         private const string RecipesPath = "Assets/Data/recipes/recipes.json";
         private const string GlasswarePath = "Assets/Data/glassware/glassware.json";
+        private const string FixturesPath = "Assets/Data/fixtures/fixtures.json";
         private const string OutPath = "Docs/BALANCE.md";
 
         private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
@@ -43,6 +44,7 @@ namespace LastCall.EditorTools
             var deck = DataLoader.ParseDeck(Load(DeckPath));
             var recipes = DataLoader.ParseRecipes(Load(RecipesPath));
             var glassware = DataLoader.ParseGlassware(Load(GlasswarePath));
+            var fixtures = DataLoader.ParseFixtures(Load(FixturesPath));
             var config = new TycoonConfig();
 
             var sb = new StringBuilder();
@@ -53,6 +55,8 @@ namespace LastCall.EditorTools
             Stars(sb);
             Shelf(sb, deck, config);
             Night(sb, config);
+            Room(sb, fixtures.Fixtures, config);
+            Door(sb);
             Footer(sb);
 
             Directory.CreateDirectory(Path.GetDirectoryName(OutPath));
@@ -311,13 +315,96 @@ namespace LastCall.EditorTools
             sb.AppendLine();
         }
 
+        private static void Room(StringBuilder sb, IReadOnlyList<FixtureDefinition> fixtures,
+            TycoonConfig config)
+        {
+            sb.AppendLine("## The room (GDD 27)");
+            sb.AppendLine();
+            sb.AppendLine("Two ratings share the stars: SERVICE is what the drinks were worth, COMFORT is");
+            sb.AppendLine("what the room is worth, and the night files the LOWER. Comfort is a base the");
+            sb.AppendLine("bar builds, drained while the counter is a mess.");
+            sb.AppendLine();
+            sb.AppendLine($"- the room as it opens is worth **{F(VenueComfort.FreeBase)}** (the FreeBase — the");
+            sb.AppendLine("  pieces the bar starts with carry no comfort of their own)");
+            sb.AppendLine($"- every glass step counts at **{P(VenueComfort.GlassComfortShare)}** of its star cap,");
+            sb.AppendLine($"  every stool past the first {config.StartingSeats} adds **+{F(VenueComfort.StoolComfort)}**");
+            sb.AppendLine($"- a counter left dirty past **{F(Housekeeping.DirtGrace)} s** costs **−{F(VenueComfort.DirtPenalty)}**");
+            sb.AppendLine($"  of comfort until it is wiped; a wash takes {F(Housekeeping.WashBaseSeconds)} s plus");
+            sb.AppendLine($"  {F(Housekeeping.WashPerGlassSeconds)} s a glass");
+            sb.AppendLine($"- comfort is clamped to **{F(VenueComfort.MaxComfort)}**");
+            sb.AppendLine();
+            sb.AppendLine("The ladders, rung by rung — a rung's comfort is ABSOLUTE (fitting over the last");
+            sb.AppendLine("rung replaces its value, it does not add):");
+            sb.AppendLine();
+            sb.AppendLine("| slot | rungs |");
+            sb.AppendLine("|---|---|");
+            var ladders = new SortedDictionary<string, List<FixtureDefinition>>(System.StringComparer.Ordinal);
+            var singles = new List<FixtureDefinition>();
+            foreach (var f in fixtures)
+            {
+                if (f.Level > 0)
+                {
+                    if (!ladders.TryGetValue(f.Slot, out var rungs)) ladders[f.Slot] = rungs = new List<FixtureDefinition>();
+                    rungs.Add(f);
+                }
+                else singles.Add(f);
+            }
+            foreach (var pair in ladders)
+            {
+                pair.Value.Sort((a, b) => a.Level.CompareTo(b.Level));
+                var cells = new List<string>();
+                foreach (var r in pair.Value)
+                    cells.Add($"{r.Name}{(r.StartsInTheRoom ? " (ours)" : " " + Money(r.Price))}"
+                              + (r.Comfort > 0 ? $" · +{F(r.Comfort)}" : " · 0")
+                              + (r.Stars > 0 ? $" ({F(r.Stars)}★)" : ""));
+                sb.AppendLine($"| `{pair.Key}` | {string.Join(" → ", cells)} |");
+            }
+            sb.AppendLine();
+            sb.AppendLine("Single pieces:");
+            sb.AppendLine();
+            sb.AppendLine("| piece | price | comfort | needs |");
+            sb.AppendLine("|---|---:|---:|---:|");
+            foreach (var f in singles)
+                sb.AppendLine($"| {f.Name} | {(f.StartsInTheRoom ? "ours" : Money(f.Price))} | "
+                              + $"{(f.Comfort > 0 ? "+" + F(f.Comfort) : "0")} | {(f.Stars > 0 ? F(f.Stars) + "★" : "—")} |");
+            sb.AppendLine();
+            double budget = VenueComfort.FreeBase;
+            foreach (var pair in ladders) budget += pair.Value[pair.Value.Count - 1].Comfort;
+            foreach (var f in singles) budget += f.Comfort;
+            sb.AppendLine($"Every top rung and every single together: **{F(budget)}** of comfort against the");
+            sb.AppendLine($"{F(VenueComfort.MaxComfort)} ceiling, before glass and stools — the player chooses.");
+            sb.AppendLine();
+        }
+
+        private static void Door(StringBuilder sb)
+        {
+            sb.AppendLine("## The door (GDD 28)");
+            sb.AppendLine();
+            sb.AppendLine($"- the drinking age is **{IdPapers.DrinkingAge}**; a minor's card is a forgery");
+            sb.AppendLine($"  **{P(IdPapers.ForgedShare)}** of the time, and of those **{P(IdPapers.AlteredShare)}**");
+            sb.AppendLine("  are the minor's own card altered (the year bumped, a flag that is not their");
+            sb.AppendLine("  country's) rather than borrowed");
+            sb.AppendLine($"- **{P(IdPapers.YoungAdultShare)}** of adults look young enough to be asked");
+            sb.AppendLine($"- serving a minor is fined when they leave: **${IdPapers.FineBase} + ${IdPapers.FinePerStar}**");
+            sb.AppendLine("  per whole star of the bar's standing at that moment");
+            sb.AppendLine($"- a rightful kick earns **${IdPapers.KickBonus}** at the close");
+            sb.AppendLine();
+            sb.AppendLine("| standing | 0★ | 1★ | 2★ | 3★ | 4★ | 5★ |");
+            sb.AppendLine("|---|---:|---:|---:|---:|---:|---:|");
+            sb.Append("| fine |");
+            foreach (int s in new[] { 0, 1, 2, 3, 4, 5 }) sb.Append($" ${IdPapers.FineFor(s)} |");
+            sb.AppendLine();
+            sb.AppendLine();
+        }
+
         private static void Footer(StringBuilder sb)
         {
             sb.AppendLine("---");
             sb.AppendLine();
             sb.AppendLine("Every figure above comes from: `DrinkOrder.MenuPrice`, `ServiceJudge`,");
             sb.AppendLine("`ServingSpec`, `BarRating`, `RatioRecipe`, `ShelfBottle`, `TycoonConfig`,");
-            sb.AppendLine("and the JSON under `Assets/Data`. Nothing here is typed in by hand.");
+            sb.AppendLine("`VenueComfort`, `Housekeeping`, `IdPapers`, and the JSON under `Assets/Data`.");
+            sb.AppendLine("Nothing here is typed in by hand.");
             sb.AppendLine();
         }
 

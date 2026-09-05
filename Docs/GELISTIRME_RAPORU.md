@@ -287,47 +287,49 @@ kadroya alınıyor, üç aday yazarın seçiminde), PLAN_service_depth P18 (ekon
 
 ## 1 · Yönetici özeti
 
-Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 testle korunuyor; içki fiziği (dökme/çalkalama/musluk) gerçek; gizli-bilgi mekaniği (kimlik kartı) kodda hakikaten kilitli. Üç gerçek borç alanı var: **(a) ekonomi jilet sırtında ve geç-oyun şekli görünmez** (sim tablosu tam kötüleştiği günde kesiliyor), **(b) UI ~13–14k satır ve sıfır otomatik test**, **(c) doküman-kod makası açılmış** (12 doğrulanmış çelişki) ve sanat programı yarım kararlarla askıda.
+*(2026-09-06 yenilemesi.)* Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik (altın vektörlerle pinli), **483 EditMode testiyle** korunuyor; içki fiziği (dökme/çalkalama/musluk) gerçek; gizli-bilgi mekaniği (kimlik kartı) kodda hakikaten kilitli; ev (iki puan, temizlik, merdivenler — duvar dahil) ve kapı (20 yaş, ödünç/değiştirilmiş kart, kick) oyunda; hikâyenin ev sahibi konuşuyor. Kalan borç: **(a) ekonomi 30 günde yaşıyor ama uzun ufukta kira gelir tavanını 31. gecede kesiyor** (GDD 26 §12.2 — sonlu koşu mu, büyüme mi: yazarın kararı, GDD 23), **(b) UI 28k satır, 10 PlayMode testi bir tabandır, kapsam değil**, **(c) hikâye kadrosu yüz bekliyor** (PixelLab kredisi, S6).
 
 ## 2 · Sistem sağlık tablosu
 
 | Sistem | Durum | Kanıt | Risk |
 |---|---|---|---|
-| Core tycoon döngüsü | 🟢 Sağlam | 34 test; faz kapıları her fiilde | düşük |
-| İçki yapımı (3 yol) | 🟢 Sağlam | 32+36 test; brim/bira/gazlı redleri Core'da | düşük |
+| Core tycoon döngüsü | 🟢 Sağlam | 483 EditMode testi; faz kapıları her fiilde; altın vektörler (`CoreCornersTests`) | düşük |
+| İçki yapımı (3 yol) | 🟢 Sağlam | brim/bira/gazlı/karışım redleri Core'da | düşük |
 | Tarif eşleme | 🟢 Sağlam | parite testi + her tarif için IdealPour testi | düşük |
-| Ekonomi dengesi | 🟠 Kırılgan | net gün ort. **−$0.1**; kasa medyanı $7, p25 −$5 | **yüksek** |
-| Yıldız/itibar | 🟡 Çalışıyor | 2.76★ ortalama, memnuniyet %47, fırtına %17 | orta |
-| UI (9 ekran) | 🟡 Çalışıyor ama çıplak | 0 test, yapısal olarak test edilemez (asmdef) | **yüksek** |
-| Sanat | 🟡 Askıda | şişeler düz-sprite döneminde; sıvı işi dış sanatçıya devredildi; M1/M2 konseptleri geri alındı | orta |
-| Dokümantasyon | 🔴 Makas açık | 12 doğrulanmış çelişki (§6) | orta |
-| Araçlar/sim | 🟢 Güçlü, kör noktalı | 200 koşu gerçek fiillerle; ama yalnız kusursuz oyun | orta |
+| Ekonomi dengesi | 🟡 30 günde yaşıyor | iflas %1.0, kasa medyanı $80, gelir/gider $133.6/$131.4 (200 koşu, 2026-09-06); uzun ufukta 31. gece duvarı (GDD 26 §12.2) | orta |
+| Yıldız/itibar | 🟡 Çalışıyor | 2.72★ ortalama, memnuniyet %60, fırtına %15.4; servis/konfor 2.98/3.11 | orta |
+| UI (9 ekran) | 🟡 Taban var | 10 PlayMode testi (sanal fare + üç piksel baseline); 28k satırın gerisi gözle | orta |
+| Sanat | 🟢 Yazarın elinde | v4 şişe sandviçi, dört oda plakası, tezgâh — sahne/prop sanatı yazarın; benim payım UI + karakter/animasyon | düşük |
+| Dokümantasyon | 🟢 Tek gerçek GDD_MEVCUT | §6 tablosu 2026-09-06'da kapandı; PLAN kutuları kapatıldı | düşük |
+| Araçlar/sim | 🟢 Güçlü | 200 koşu + ev/kapı/kusurlu-el ölçümleri; bot alışveriş yapıyor | düşük |
 
 ## 3 · Denge bulguları (sim: 200 koşu × 30 gün)
 
 | Metrik | Değer | Yorum |
 |---|---|---|
-| İflas | %0.5 | tavan değil taban — bot kusursuz oynuyor |
-| Gün sonu kasa (p25/med/p75) | **−$5 / $7 / $34** | jilet sırtı; bahşiş marjına yaslanmış |
-| Gelir vs gider (gün ort.) | $136.3 / $136.4 | **net negatif** |
-| Kırmızı gün eğrisi | g2–4 ~%40 → g8–11 ~%0 → g13 %11.5 → g14 %25.5 → **g15 %59.5** | ikinci tepe tırmanırken… |
-| **Tablo kesilmesi** | `Report()` `.Take(15)` — ufuk 30 gün | **g16–30 hesaplanıyor ama yazılmıyor**; geç oyun kör |
-| Fırtına gidenler | %17.0 | P18 hedefi <%15, hâlâ üstünde |
-| Draught payı / köpük bandı | %9.2 / %100 | tek senaryolu çekiş profili — band hassasiyeti ölçülmemiş |
-| Verdikt dağılımı | Exact %100, Close 0, Wrong 6/70k, Refused 0 | kusursuz oyun → hata ekonomisi **doğrulanmamış** |
+*(2026-09-06, `Docs/tycoon_sim_report.md` — 200 koşu × 30 gün, bot alışveriş yapıyor.)*
 
-**Ana bulgu:** ekonomi değerlendirmesi yapılamadan önce iki ucuz düzeltme şart — (1) rapor tablosunu 30 güne aç, (2) bota kusurlu-oyun modu ekle (isabet/oran gürültüsü). Mevcut veriler "geç oyun kötüleşiyor" diyor ama kanıt penceresi tam orada kapanıyor.
+| İflas | %1.0 | taban — bot kusursuz döküyor ama kural kadar alıyor |
+| Gün sonu kasa (p25/med/p75) | **$68 / $80 / $88** | yaşanır ama dar; kira 30. günde $136 |
+| Gelir vs gider (gün ort.) | $133.6 / $131.4 | net +$2 |
+| Fırtına gidenler | %15.4 | P18 hedefi <%15'in kıyısında |
+| Draught payı / köpük bandı | %8.2 / %100 | leaned-then-straightened çekiş |
+| Verdikt dağılımı | Exact %100, Close 29, Wrong 0 | kusurlu el ayrı raporda (`imperfect_hands_report.md`) |
+| Servis / konfor (gece ort.) | 2.98 / 3.11 | konforun geceyi tuttuğu geceler %40.6 |
+| Basamak alımı (yuvaya göre) | counter_end 198 · plant_left 171 · table_left 124 · wall_lamps 199 | duvar merdivenini bot hiç almıyor (§9.26) |
+
+**Ana bulgu:** 30 günlük ufukta ekonomi dengede; asıl soru uzun ufuk — gelir ~$176/gece tavanına dayanıp kira onu 31. gecede geçiyor (GDD 26 §12.2). Sonlu koşu mu, büyüme mi: GDD 23'ün, yani yazarın kararı; P18'in ekonomi turu o karardan sonra.
 
 ## 4 · Kalite boşlukları
 
 | Boşluk | Ayrıntı |
 |---|---|
-| UI testsiz | ~28k satır; Tests asmdef'i UI'ı referans bile almıyor. **Kısmen kapandı:** PlayMode süiti (7 test) sanal fareyle gerçek sahneyi oynuyor — taban, kapsam değil |
+| UI testsiz | ~28k satır; Tests asmdef'i UI'ı referans bile almıyor. **Kısmen kapandı:** PlayMode süiti (10 test) sanal fareyle gerçek sahneyi oynuyor — taban, kapsam değil |
 | ~~PlayMode/input testi yok~~ ✅ | **kapandı 2026-08-12** — `LastCall.PlayTests`: bar açılır, tabure tıklanır, şişe tezgâha iner, tezgâh döker; ayrıca `LookTests` üç ekranı piksel piksel karşılaştırır |
-| Determinizm | yalnız öz-tutarlılık testli; **altın vektör yok** — platform sapması sessiz geçer |
-| Kültür pini | `tycoon_speed_response.md` tr-TR formatında işlenmiş ("11,6") — pin kanıtsız |
-| Sim başlığı bayat | "marka almaz / bant orta noktası" yazıyor; bot IdealPour kullanıyor ve marka+tarif alıyor |
-| Kapsamsız Core köşeleri | Relationships eşikleri (1/3/6), GameBootstrap, RunCulture |
+| ~~Determinizm~~ ✅ | **kapandı 2026-09-06** — `CoreCornersTests`: üç tohum × üç akış altın vektörleri, `NextDouble` ham sözcüğü, ve tohumlu bir gecenin ilk altı oturuşu (saniye + sabır) pinli |
+| ~~Kültür pini~~ ✅ | **kapandı 2026-09-06** — `RunCulture` nokta ve `n%` yazıyor, `Pin()` tr-TR'yi alt ediyor (testli) |
+| ~~Sim başlığı bayat~~ ✅ | **kapandı 2026-09-06** — 200 koşu raporunun başlığı zaten güncel; yıldız pistinin "never shops" notu düzeltildi |
+| Kapsamsız Core köşeleri | ~~Relationships eşikleri (1/3/6)~~ ✅ (testli 2026-09-06), ~~RunCulture~~ ✅; GameBootstrap hâlâ yalnız PlayMode'un dolaylı kapsamında |
 
 ## 5 · Ölü kod / temizlik envanteri
 
@@ -336,11 +338,11 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 | ~~DiegeticStage emekli döngü~~ ✅ | ~~700 satır~~ | **süpürüldü** (2026-08-07 ve 2026-08-27 turları) |
 | ~~Menu.cs ölü aile~~ ✅ | ~~250 satır~~ | **dosya bütün olarak silindi** 2026-08-22'de back-bar sayfasıyla birlikte |
 | ~~Yetim PNG (Items)~~ ✅ | ~~14 dosya~~ → gerçekte **22** | **silindi 2026-08-27** (`2c8fb8d8`); her aday adla VE GUID'le doğrulandı, `register2.png` yalnız GUID'le bağlı çıkıp kurtuldu |
-| Gölgelenmiş sanat | ~~30 bot_* + 20 stil `_open`~~ **silindi 2026-09-05** (`d468216d`); 57 `v3_*_flat` plakası silme izni bekliyor (§0.10) | yükleme zinciri artık v4 → kâse → null; v3 dalı koddan çıktı |
+| ~~Gölgelenmiş sanat~~ ✅ | ~~30 bot_* + 20 stil `_open`~~ **silindi 2026-09-05** (`d468216d`); 57 `v3_*_flat` plakası **silindi 2026-09-05** (`e0744f16`) | yükleme zinciri v4 → kâse → null; v3 dalı koddan çıktı |
 | ~~Assets/Art fiilen ölü~~ ✅ | ~~21 şişe + vip_patron + pour_nick(+mask) + club_bg~~ | **bitti** — 2026-09-05'te `Pending~`, arketip portreleri ve `register2` de gitti; `Assets/Art` yalnız üç arka plan |
-| DTO ölü alanlar | charges/bands/chargeMultiplier | sökülen duygu katmanının kalıntısı |
-| Tekrarlar | NewRect/NewText ×4 sınıf; iki mix-bar ikizi (~55 satır ×2); TycoonHud 3.4k satır tek sınıf | bölünmemiş |
-| Veri tuhaflıkları | glassware.json yorumu "3 kademe" der, kod 5 ister; `weight≤0→1` sessiz düzeltme; tequila tek kilitli-T1 hattı | bilinçli mi belgelenmeli |
+| ~~DTO ölü alanlar~~ ✅ | ~~charges/bands/chargeMultiplier~~ | **yok** (2026-09-06 doğrulandı: `DataLoader`'da bu alanlar kalmamış; `bands` yaşayan stil bantlarıdır) |
+| Tekrarlar | NewRect/NewText ×4 sınıf; iki mix-bar ikizi (~55 satır ×2); ~~TycoonHud 3.4k satır tek sınıf~~ (2026-08-25'te dokuz partial'a bölündü) | kalan iki tekrar küçük |
+| ~~Veri tuhaflıkları~~ ✅ | ~~glassware.json yorumu "3 kademe"~~ (yorum altı kademe diyor), ~~`weight≤0→1`~~ (kodda yok) | tequila tek kilitli-T1 hattı bilinçli: tier ladder öyle yazıldı |
 
 ## 6 · Doküman borcu (doğrulanmış çelişkiler)
 
@@ -359,7 +361,7 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 | 11 | CLAUDE.md "12 (reduced motion)" ve "13 (determinism)" işaretçileri | 12'de içerik yok; 13 aslında 10_technical içi §13 |
 | 12 | Bellek "UI chrome asla AI" | yazar yasağı 2026-07-31'de kaldırdı (PLAN kayıtlı) |
 
-**Öneri:** `GDD_MEVCUT.md` yaşayan tek gerçek ilan edilsin; 19/23/25 başlıklarına ve PLAN'ın bayat kutularına tek geçişlik düzeltme yapılsın; CLAUDE.md işaretçileri onarılsın.
+**Kapanış (2026-09-06):** on ikisi de kapandı — 1/2/3/5/6/9/11/12 önceki turlarda (GDD 19 silindi, GDD 23 ve CLAUDE.md düzeltildi, GDD 25 başlığı, bellek), 4 (GDD 24 §5 "filled to the top" çıkarıldı), 7/8 (PLAN P14/P15/P16'nın ◐ kutuları tarih ve işaretçiyle kapatıldı), 10 (PLAN'daki `FillPreference` hücresi emekli diye işaretli). `GDD_MEVCUT.md` tek gerçek; CLAUDE.md öyle diyor.
 
 ## 7 · Sanat programı — askıdaki kararlar
 
@@ -376,19 +378,19 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 | Öncelik | İş | Neden / çıktı |
 |---|---|---|
 | ~~P0~~ ✅ | ~~Sim tablosunu 30 güne aç + yeniden koştur~~ | **kapandı 2026-08-15** — §0.7; geç oyun görünür ve cevap "sıkışma yok" |
-| **P0** | Bota kusurlu-oyun modu (isabet/oran gürültüsü, gecikme) | Close/Wrong/Refused ekonomisi ilk kez ölçülür |
+| ~~P0~~ ✅ | ~~Bota kusurlu-oyun modu (isabet/oran gürültüsü, gecikme)~~ | **kapandı 2026-09-05** — `LastCall → Measure Imperfect Hands` (`Hands.MisreadId`, kusurlu döküm), `Docs/imperfect_hands_report.md` |
 | ~~P0~~ ✅ | ~~`BottleArt.cs` bayrağını commit et~~ | **kapandı** — bayrak çoktan girmiş; 2026-09-05'te ağaç dokuz commit'le temizlendi (§0.10) |
 | ~~P0~~ ✅ | ~~CLAUDE.md onarımı (UI satır sayısı, modül işaretçileri)~~ | **kapandı 2026-08-27** — `.Menu` parçası (2026-08-22'de silinmişti) mimari bölümünden çıktı, içki alma yeri tezgâhın mahzeni olarak yazıldı, UI satır sayısı 17.5k → 28k |
 | **P1** | Ekonomi dengeleme turu (P18) — yeni sim verisiyle | kasa medyanı $7'den yaşanır aralığa |
-| **P1** | Doküman borcu tek geçiş (§6 tablosu) + `GDD_MEVCUT` tek-gerçek ilanı | makas kapanır |
+| ~~P1~~ ✅ | ~~Doküman borcu tek geçiş (§6 tablosu) + `GDD_MEVCUT` tek-gerçek ilanı~~ | **kapandı 2026-09-06** — §6 |
 | ~~P1~~ ✅ | ~~Ölü kod süpürmesi (DiegeticStage rayı, Menu ailesi, 14 yetim PNG)~~ | **kapandı 2026-08-27** (`2c8fb8d8`) — 3931 satır çıktı, 15 girdi; 22 yetim PNG (14 değil), bitirme masasının 452 satırı, boş `ShakerSolids` tertibatı, yıkılmış sayfanın beş mobilyası. Her aday adla VE GUID'le doğrulandı — `register2.png` yalnız GUID'le bağlıydı, ad taraması onu yetim sanardı |
-| **P1** | Determinizm altın vektörleri + kültür pini testi | platform güvencesi gerçek olur |
-| **P2** | UI test dikişi (en az PlayMode duman testi: sahne kur, bir gün oynat, input yolu) | "ölü kol" sınıfına ağ |
-| **P2** | TycoonHud'u parçalara böl (Flow'un partial deseni) | 3.4k satırlık tek sınıf dağılır |
+| ~~P1~~ ✅ | ~~Determinizm altın vektörleri + kültür pini testi~~ | **kapandı 2026-09-06** — `CoreCornersTests` |
+| ~~P2~~ ✅ | ~~UI test dikişi (en az PlayMode duman testi)~~ | **kapandı 2026-08-12** — `LastCall.PlayTests` (10 test) |
+| ~~P2~~ ✅ | ~~TycoonHud'u parçalara böl (Flow'un partial deseni)~~ | **kapandı 2026-08-25** — dokuz partial |
 | **P2** | Sanat programına dönüş: İncil + tercihler Docs'a, M2 yeniden girişi, M1 konsepti | askıdaki hat kapanır |
-| **P2** | Tutorial/FTUE + kayıt sistemi (P18 devri) | yeni oyuncu ve oturum sürekliliği |
+| **P2** | ~~Tutorial/FTUE~~ (ev sahibinin dersleri, 2026-09-05, §9.25) + kayıt sistemi (P18 devri) | oturum sürekliliği hâlâ yok — GDD 23 §6 "tam sıfırlama, roguelite" diyor; kayıt yazılmadı |
 | ~~P1~~ ✅ | ~~Bankada duran ama çalmayan klipleri bağla~~ | **kapandı 2026-08-27** — 20'sinin 19'u bağlandı, banka **66/66 bağlı**. `rent_line` EMEKLİ EDİLDİ: fatura satırı diye bir an yok, `RebuildDayEnd` üç maliyet satırını tek sessiz geçişte kuruyor — ona ev vermek stagger'ı İNŞA ETMEK olurdu, ki o özellik, ses turu değil |
-| **P2** | PlayMode'un ilk-koşu sahte kırmızısını teşhis et | Süit her oturumda 1-2 kez kırmızı verip tekrarda yeşil dönüyor. **BU HAYALET GİRDİ DEĞİL:** iki tanılama da işaretçinin hedefe ULAŞTIĞINI gösteriyor (`under=[Seat1]`, `under=[BillNext@22]`, `key active True`) — tıklama iletiliyor ama işlenmiyor. Şüphe: soğuk ilk koşuda `WaitForSecondsRealtime` geçiyor ama çok az KARE dönüyor (import/shader ısınması kareyi ~1ms olmaktan çıkarıyor), yani `Update`'le sürülen animasyon ilerlemiyor. Ölçülmeden dokunulmamalı |
+| **P2** | PlayMode'un ilk-koşu sahte kırmızısını teşhis et | Süit her oturumda 1-2 kez kırmızı verip tekrarda yeşil dönüyor. **2026-09-06 gözlemi:** yazar play'den çıktıktan hemen sonraki ilk koşuda iki test aynı şekilde düştü (`under=[Seat1]`, tıklama işlenmedi), aynı build'de yeniden koşunca 10/10; `TestResults.xml` gerçeğin kaynağı. **BU HAYALET GİRDİ DEĞİL:** iki tanılama da işaretçinin hedefe ULAŞTIĞINI gösteriyor (`under=[Seat1]`, `under=[BillNext@22]`, `key active True`) — tıklama iletiliyor ama işlenmiyor. Şüphe: soğuk ilk koşuda `WaitForSecondsRealtime` geçiyor ama çok az KARE dönüyor (import/shader ısınması kareyi ~1ms olmaktan çıkarıyor), yani `Update`'le sürülen animasyon ilerlemiyor. Ölçülmeden dokunulmamalı |
 | — | ~~Teardown'a otomatik hayalet-girdi temizliği~~ | **ÖNERİLMEZ:** `GhostInputGuard` bilerek menü öğesi ve gerekçesi kendi belgesinde ölçülü (2026-08-13): editörde gerçek fare de non-native görünüyor, her play'de ateşlenen bir süpürme oyuncunun kendi imlecini alır. Ayrıca süitin `TearDown`'ı zaten kendi sanal faresini açıkça kaldırıyor |
 
 ### 8.1 · Işık/sahne turundan çıkan yeni öneriler (2026-08-10)
@@ -396,8 +398,8 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 | Öncelik | İş | Neden / çıktı |
 |---|---|---|
 | **P1** | `ShadowCaster2D`: tezgah + fikstürler | ışık şu an her şeyin içinden geçiyor; gölge, sistemi "dekor" olmaktan çıkaran adım |
-| **P1** | Fikstür slotlarını `fixtures.json`'a taşı | yeni yerleşim noktası kod değil içerik olur; §5'teki "içerik veridir" kuralına döner |
-| **P1** | PlayMode duman testi: sahneyi kur, menüyü aç, bir gün oynat | menü regresyonu (`e9ca821`) tam olarak bu ağın yokluğunda geçti — testler yeşildi |
+| ~~P1~~ ✅ | ~~Fikstür slotlarını `fixtures.json`'a taşı~~ | **kapandı 2026-08-10** — `slots` veride (`StageSlot`) |
+| ~~P1~~ ✅ | ~~PlayMode duman testi: sahneyi kur, menüyü aç, bir gün oynat~~ | **kapandı 2026-08-12** |
 | **P2** | `StageDressing` katmanını world-space'e al | elle yerleştirilen dekor da ışık alsın; şu an odanın tek ışıksız parçası |
 | **P2** | Fikstür sanatının PixelLab turu (rapor-önce) | placeholder'lar dosya-adı birebir değiştirilebilir; kod dokunulmaz |
 | ~~P2~~ ✅ | ~~Bota fikstür alımı öğret~~ | **kapandı 2026-09-05** (`6673cb47`) — bot `fixtures.json` yüklüyor, gecede bir açık basamağı dolar başına konfora göre alıyor; §9.23 |
@@ -408,9 +410,9 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 
 | Öncelik | İş | Neden / çıktı |
 |---|---|---|
-| **P0** | Kadro evrakını (`PatronPapers`, 30 satır) `TycoonHud`'dan `customers/papers.json`'a taşı | "içerik veridir" kuralını ihlal ediyor; hikâye karakterleri aynı tabloyu paylaşacak, yazarın C#'a dokunması gerekmemeli (PLAN S0) |
+| ~~P0~~ ✅ | ~~Kadro evrakını `customers/papers.json`'a taşı~~ | **kapandı 2026-08-12** (PLAN S0) |
 | ~~P1~~ ✅ | ~~Tarif merdivenine **erken bir stirred içki** ekle~~ | **kapandı 2026-08-15** — Black Russian (rank 8, 0★) ve Mint Julep (rank 21) Built→Stirred; yeni bant testi `TheFirstRung_TeachesEveryVerbTheBenchAsksFor` geri düşmeyi engelliyor |
-| **P2** | Gecenin bitişi tek cümlede kalsın | `Floor.IsComplete` bugün TEK yerden okunuyor (`TycoonRun:688`) — son müşteri kapanıştan SONRA oturacağı için bu koşul "misafir de gittiyse" hâline gelmeli; ikinci bir okuyucu doğarsa beat sessizce kaybolur |
+| ~~P2~~ ✅ | ~~Gecenin bitişi tek cümlede kalsın~~ | **kapandı 2026-08-13** (S1) — `IsComplete` değişmedi; misafir taburedeyken zaten yanlış |
 
 ### 8.3 · Ev ve kapı planından çıkan işler (2026-09-04)
 
@@ -423,7 +425,7 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 | ~~P0~~ ✅ | ~~`PlayDayServingEveryone` test yardımcısı temizlik yapsın~~ | **kapandı** (`6673cb47`) — `TestNight.Clean` iki yardımcıda da |
 | ~~P1~~ ✅ | ~~Reddedilen sipariş görünmez bardak bırakıyor~~ | **kapandı** (`6673cb47`, C6) — sinyal `DrinkServed`, yalnız `ServeTo` kurar |
 | ~~P1~~ ✅ | ~~Fiş ham oda yıldızı, hafta tahtası kırpılmış gece, defter `NightStars` — üç yüzey üç sayı~~ | **kapandı 2026-09-05** (H5) — tahta SERVICE/COMFORT/TONIGHT satırlarıyla min'i açıklıyor, fişte ev satırı; §9.23 |
-| **P1** | `TycoonHud.DayEnd` dressing koridoru "bir basamak ileri" kuralını yalnız HUD'da taşıyor, Core'da/testte pin yok | H1b'de `VisibleRung(slot)` sorgusu ya da katalog testi |
+| ~~P1~~ ✅ | ~~Dressing koridorunun "bir basamak ileri" kuralı Core'da/testte pinsiz~~ | **kapandı 2026-09-06** — `CoreCornersTests.Every_ladder_in_the_catalogue_sells_exactly_the_next_rung` (gerçek dosya, `DevFit` ile tırmanarak) |
 | ~~P2~~ ✅ | ~~Sim botu fikstür almıyor~~ | **kapandı** (`6673cb47`) — bkz. §8.1 |
-| **P2** | ~~`GDD 23 §7/§8`, `GDD_MEVCUT §7`~~ düzeltildi (`6673cb47`); `BALANCE.md` hâlâ eski (`LastCall → Write Balance Guide` ile yeniden üretilmeli, konfor sayfası eklenmeli) | kod 5x (2026-08-11) |
+| ~~P2~~ ✅ | ~~`BALANCE.md` eski~~ | **kapandı 2026-09-06** — üretece oda (GDD 27) ve kapı (GDD 28) sayfaları eklendi, `LastCall → Write Balance Guide` ile yeniden üretildi |
 | ~~P2~~ ✅ | ~~`DiegeticStage.LoadScreenFrames` hücre boyu TV'ye sabit~~ | **kapandı 2026-09-05** (H4) — `cellW`/`cellH` fikstürün kendi satırında; lavabo suyu ikinci sayfa |

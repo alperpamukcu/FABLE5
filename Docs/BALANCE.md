@@ -11,13 +11,19 @@ worth; that one answers whether the game is playable at those worths.
 ## One serve, from top to bottom
 
 ```
-  paid   = the ordered drink's menu price      (a WRONG drink pays what
-                                                is actually in the glass)
-  tip    = paid × 1 × quality
+  paid   = menu price × (0.1 + 0.9 × accuracy)   closeness to the
+           recipe's perfect pour (21 §9a) — the right box always earns
+           something; the WRONG drink pays what is actually in the glass,
+           and their drink OUT OF ITS BOX pays nothing at all
+  tip    = paid × 1.15 × quality
 
-  quality = 0.45 × speed      how much patience was left when it landed
-          + 0.35 × craft      what they asked for, and how the book says to work it
-          + 0.2 × fill       how close the glass came to 80%
+  quality = earned × speed   the craft earns it, the clock keeps it
+
+  earned  = 0.4 × craft      what they asked for, and how the book says to work it
+          + 0.3 × accuracy   the pour against the perfect, again — bill AND thanks
+          + 0.3 × fill       how close the glass came to 80%
+
+  speed   = 1 at once, 0.75 at the green line (33% of the wait), 0.3 at the amber line (67%), 0 as they get up
 
   craft   = 0.6 × their asks  the garnishes on the licence, each all-or-nothing
           + 0.4 × the method  shaken recipe shaken / stirred recipe stirred
@@ -31,7 +37,7 @@ base — the money is in the service, not the pour.
 |---|---|---|
 | glass under 35% full | `ServiceJudge.RefusalFill` | refused outright — **$0**, no tip, satisfaction 0.02 |
 | glass under the recipe's own `MinFill` | `RatioRecipe.Satisfies` | the drink does not match the recipe **at all** |
-| broke crowd | `BarRating.BrokeStars = 1.5` | never tips, whatever the serve |
+| broke crowd | `BarRating.BrokeStars = 0.63` | never tips, whatever the serve |
 | wrong drink | `ServiceJudge.Judge` | never tips |
 | more than 15% of the glass unnamed | `RatioRecipe.Satisfies` | a different drink wearing the proportions |
 
@@ -40,7 +46,7 @@ base — the money is in the service, not the pour.
 Base price is `3 + (rank + 1) / 2` (`DrinkOrder.MenuPrice`), so the ladder is
 deliberately shallow: rank 1 pays $4 and rank 28 pays $17. **Best** is a
 perfect serve — base doubled. **Method graded** marks the drinks where
-shaking or stirring is worth 14% of the tip; on the rest the method is scored 1.0 whatever you do.
+shaking or stirring is worth 16% of the tip; on the rest the method is scored 1.0 whatever you do.
 
 | drink | rank | glass | base | best | method graded | the pour |
 |---|---:|---|---:|---:|:---:|---|
@@ -52,34 +58,34 @@ shaking or stirring is worth 14% of the tip; on the rest the method is scored 1.
 | Whiskey & Cola | 5 | Highball | $6 | $12 | — | BOURBON 40% · COLA 60% |
 | Screwdriver | 6 | Highball | $6 | $12 | — | VODKA 40% · ORANGE 60% |
 | Vodka Bull | 7 | Highball | $7 | $14 | — | VODKA 43% · ENERGY 58% |
-| Black Russian | 8 | Rocks | $7 | $14 | — | VODKA 65% · COFFEE LIQUEUR 35% |
+| Black Russian | 8 | Rocks | $7 | $14 | STIRRED | VODKA 65% · COFFEE LIQUEUR 35% |
 | Cape Codder | 8 | Highball | $7 | $14 | — | VODKA 40% · CRANBERRY 60% |
 | Vodka Tonic | 8 | Highball | $7 | $14 | — | VODKA 40% · TONIC 60% |
 | Cuba Libre | 9 | Highball | $8 | $16 | — | RUM 35% · COLA 57% · LIME 8% |
-| Whiskey Ginger | 10 | Highball | $8 | $16 | — | BOURBON 40% · GINGER 60% |
-| Moscow Mule | 11 | Highball | $9 | $18 | — | VODKA 39% · GINGER 49% · LIME 12% |
-| Gimlet | 12 | Coupe | $9 | $18 | SHAKEN | GIN 63% · LIME 23% · SYRUP 15% |
+| Whiskey Ginger | 10 | Highball | $8 | $16 | — | BOURBON (tier 2+) 40% · GINGER 60% |
+| Moscow Mule | 11 | Highball | $9 | $18 | — | VODKA (tier 2+) 39% · GINGER 49% · LIME 12% |
+| Gimlet | 12 | Coupe | $9 | $18 | SHAKEN | GIN (tier 2+) 63% · LIME 23% · SYRUP 15% |
 | Sex on the Beach | 13 | Highball | $10 | $20 | — | VODKA 33% · ORANGE 33% · CRANBERRY 33% |
 | Tequila Sunrise | 13 | Highball | $10 | $20 | — | TEQUILA 39% · ORANGE 49% · GRENADINE 12% |
-| Dark 'n' Stormy | 14 | Highball | $10 | $20 | — | RUM 39% · GINGER 49% · LIME 12% |
+| Dark 'n' Stormy | 14 | Highball | $10 | $20 | — | RUM (tier 2+) 39% · GINGER 49% · LIME 12% |
 | Paloma | 14 | Highball | $10 | $20 | — | TEQUILA 36% · LIME 13% · SODA 51% |
 | Sea Breeze | 14 | Highball | $10 | $20 | — | VODKA 33% · CRANBERRY 33% · PINEAPPLE 33% |
 | Tequila Mule | 14 | Highball | $10 | $20 | — | TEQUILA 39% · GINGER 49% · LIME 12% |
-| Tequila Sour | 14 | Rocks | $10 | $20 | SHAKEN | TEQUILA 53% · LEMON 28% · SYRUP 18% |
+| Tequila Sour | 14 | Rocks | $10 | $20 | SHAKEN | TEQUILA (tier 2+) 53% · LEMON 28% · SYRUP 18% |
 | Vodka Sour | 14 | Rocks | $10 | $20 | SHAKEN | VODKA 53% · LEMON 28% · SYRUP 18% |
 | Rum Punch | 15 | Highball | $11 | $22 | SHAKEN | RUM 44% · ORANGE 29% · LIME 16% · SYRUP 12% |
-| Whiskey Sour | 15 | Rocks | $11 | $22 | SHAKEN | BOURBON 53% · LEMON 28% · SYRUP 18% |
-| Daiquiri | 16 | Coupe | $11 | $22 | SHAKEN | RUM 55% · LIME 25% · SYRUP 20% |
+| Whiskey Sour | 15 | Rocks | $11 | $22 | SHAKEN | BOURBON (tier 3+) 53% · LEMON 28% · SYRUP 18% |
+| Daiquiri | 16 | Coupe | $11 | $22 | SHAKEN | RUM (tier 3+) 55% · LIME 25% · SYRUP 20% |
 | Gin Fizz | 17 | Highball | $12 | $24 | SHAKEN | GIN 43% · LEMON 23% · SYRUP 13% · SODA 23% |
 | Kamikaze | 18 | Rocks | $12 | $24 | SHAKEN | VODKA 50% · TRIPLE SEC 25% · LIME 25% |
 | Cosmopolitan | 19 | Martini | $13 | $26 | SHAKEN | VODKA 44% · TRIPLE SEC 19% · LIME 14% · CRANBERRY 24% |
-| Margarita | 19 | Coupe | $13 | $26 | SHAKEN | TEQUILA 50% · TRIPLE SEC 25% · LIME 25% |
+| Margarita | 19 | Coupe | $13 | $26 | SHAKEN | TEQUILA (tier 3+) 50% · TRIPLE SEC 25% · LIME 25% |
 | Bourbon Sidecar | 20 | Coupe | $13 | $26 | SHAKEN | BOURBON 48% · TRIPLE SEC 28% · LEMON 23% |
-| White Lady | 20 | Coupe | $13 | $26 | SHAKEN | GIN 48% · TRIPLE SEC 28% · LEMON 23% |
+| White Lady | 20 | Coupe | $13 | $26 | SHAKEN | GIN (tier 3+) 48% · TRIPLE SEC 28% · LEMON 23% |
 | Bahama Mama | 21 | Highball | $14 | $28 | SHAKEN | RUM 39% · PINEAPPLE 34% · COFFEE LIQUEUR 17% · LEMON 11% |
 | Lemon Drop | 21 | Martini | $14 | $28 | SHAKEN | VODKA 48% · LEMON 25% · TRIPLE SEC 16% · SYRUP 10% |
 | Matador | 21 | Coupe | $14 | $28 | SHAKEN | TEQUILA 45% · PINEAPPLE 40% · LIME 15% |
-| Mint Julep | 21 | Rocks | $14 | $28 | — | BOURBON 77% · SYRUP 15% · MINT 8% |
+| Mint Julep | 21 | Rocks | $14 | $28 | STIRRED | BOURBON 77% · SYRUP 15% · MINT 8% |
 | Pink Lady | 21 | Coupe | $14 | $28 | SHAKEN | GIN 60% · LEMON 24% · GRENADINE 17% |
 | Southside | 21 | Coupe | $14 | $28 | SHAKEN | GIN 53% · LIME 23% · SYRUP 15% · MINT 8% |
 | Whiskey Smash | 21 | Rocks | $14 | $28 | SHAKEN | BOURBON 53% · LEMON 23% · SYRUP 15% · MINT 8% |
@@ -91,22 +97,23 @@ shaking or stirring is worth 14% of the tip; on the rest the method is scored 1.
 | Negroni | 25 | Rocks | $16 | $32 | STIRRED | GIN 33% · VERMOUTH 33% · AMARO 33% |
 | Old Fashioned | 26 | Rocks | $16 | $32 | STIRRED | BOURBON 79% · SYRUP 13% · AMARO 8% |
 | Mojito | 27 | Highball | $17 | $34 | — | RUM 35% · LIME 17% · SYRUP 12% · SODA 29% · MINT 7% |
-| Boulevardier | 28 | Rocks | $17 | $34 | STIRRED | BOURBON (tier 2+) 33% · VERMOUTH 33% · AMARO 33% |
-| El Presidente | 28 | Coupe | $17 | $34 | STIRRED | RUM (tier 2+) 54% · VERMOUTH 28% · TRIPLE SEC 11% · GRENADINE 7% |
+| Boulevardier | 28 | Rocks | $17 | $34 | STIRRED | BOURBON (tier 4+) 33% · VERMOUTH 33% · AMARO 33% |
+| El Presidente | 28 | Coupe | $17 | $34 | STIRRED | RUM (tier 4+) 54% · VERMOUTH 28% · TRIPLE SEC 11% · GRENADINE 7% |
 | Long Island | 28 | Highball | $17 | $34 | SHAKEN | VODKA 13% · GIN 13% · RUM 13% · TEQUILA 13% · TRIPLE SEC 13% · LEMON 14% · COLA 22% |
-| Martinez | 28 | Martini | $17 | $34 | STIRRED | GIN (tier 2+) 59% · VERMOUTH 31% · TRIPLE SEC 11% |
-| Rosita | 28 | Rocks | $17 | $34 | STIRRED | TEQUILA (tier 2+) 33% · VERMOUTH 33% · AMARO 33% |
-| Vesper | 29 | Martini | $18 | $36 | STIRRED | GIN (tier 3+) 62% · VODKA (tier 2+) 25% · VERMOUTH 13% |
+| Martinez | 28 | Martini | $17 | $34 | STIRRED | GIN (tier 4+) 59% · VERMOUTH 31% · TRIPLE SEC 11% |
+| Rosita | 28 | Rocks | $17 | $34 | STIRRED | TEQUILA (tier 4+) 33% · VERMOUTH 33% · AMARO 33% |
+| Vesper | 29 | Martini | $18 | $36 | STIRRED | GIN (tier 4+) 62% · VODKA (tier 4+) 25% · VERMOUTH 13% |
+| Last Call | 30 | Rocks | $18 | $36 | STIRRED | BOURBON (tier 4+) 44% · AMARO 21% · VERMOUTH 19% · COFFEE LIQUEUR 10% · SYRUP 7% |
 
 ## What a garnish is worth
 
 A customer's asks are **all-or-nothing each**: `ServingSpec.Delivered`
 returns the SHARE of them that landed, so on an order with two asks each one
-is half the ask score. The ask score is 60% of craft, and craft is 35% of the tip:
+is half the ask score. The ask score is 60% of craft, and craft is 40% of the tip:
 
 ```
-  one ask, on a one-ask order = 21% of the tip  = 21% of the base price
-  on a $6 drink that is $1.26 — for one twist
+  one ask, on a one-ask order = 24% of the tip  = 28% of the base price
+  on a $6 drink that is $1.66 — for one twist
 ```
 
 Missing every ask on a two-ask order therefore costs about a fifth of the
@@ -118,8 +125,8 @@ What they can ask for, and what it costs you to hold it:
 
 | ask | shelf price | restock | notes |
 |---|---:|---:|---|
-| Fresh Mint | — | $18 | garnish |
-| Luca Olives | — | $18 | garnish |
+| Fresh Mint | $4 | $18 | garnish |
+| Luca Olives | $4 | $18 | garnish |
 
 Ice and the rims are free of the shelf entirely — they are preparations, not
 stock, so they cost only the seconds spent adding them.
@@ -127,7 +134,7 @@ stock, so they cost only the seconds spent adding them.
 The **method** is not on this list on purpose (2026-08-11): how a drink is
 worked belongs to the book, not to the customer. It is graded against the
 ORDERED recipe's own `Prep` — a Martini wants stirring whoever ordered it —
-and it is worth 14% of the tip on every shaken or stirred drink, all or nothing.
+and it is worth 16% of the tip on every shaken or stirred drink, all or nothing.
 Built recipes are the "either, or neither" class and always score 1.0.
 
 ## Stars
@@ -149,10 +156,10 @@ who storms off still fills in the card.
 
 | satisfaction | stars |
 |---:|---:|
-| 0 | 1.0 |
-| 0.25 | 2.0 |
-| 0.5 | 3.0 |
-| 0.75 | 4.0 |
+| 0 | 0.0 |
+| 0.25 | 1.3 |
+| 0.5 | 2.5 |
+| 0.75 | 3.8 |
 | 1 | 5.0 |
 
 The **standing** — the number in the top corner — is inertial. A night's
@@ -166,9 +173,9 @@ takes one step toward it:
 So a single five-star night cannot buy a reputation, and a single dreadful
 one costs double what it would have earned. What the standing then buys:
 
-- **4.2+** — high rollers start coming in
-- **under 1.5 last night** — tomorrow's crowd is broke and tips **nothing**
-- arrivals pivot around 2.5, not the display middle of 3
+- **4+** — high rollers start coming in
+- **under 0.63 last night** — tomorrow's crowd is broke and tips **nothing**
+- arrivals pivot around 1.88, not the display middle of 2.5
 
 ## The shelf
 
@@ -180,22 +187,33 @@ to buy. `cost/pour` is that refill spread over the bottle.
 |---|---|---:|---:|---:|---:|
 | Smirkoff Vodka | vodka | 1 | — | $18 | $3.00 |
 | Garden's Gin | gin | 1 | — | $18 | $3.00 |
-| White Bat Rum | rum | 1 | — | $18 | $3.00 |
-| John Wanderer Whiskey | bourbon | 1 | — | $18 | $3.00 |
-| Cumpari Amaro | amaro | 1 | — | $18 | $3.00 |
-| Canzone Vermouth | vermouth | 1 | — | $18 | $3.00 |
-| House Syrup | syrup | 1 | — | $18 | $3.00 |
-| Lemonade | lemon | 1 | — | $18 | $3.00 |
-| Kicker Ginger | ginger | 1 | — | $18 | $3.00 |
-| Klara Soda | soda | 1 | — | $18 | $3.00 |
+| White Bat Rum | rum | 1 | $8 | $18 | $3.00 |
+| John Wanderer Whiskey | bourbon | 1 | $8 | $18 | $3.00 |
+| Cumpari Amaro | amaro | 1 | $10 | $18 | $3.00 |
+| Canzone Vermouth | vermouth | 1 | $10 | $18 | $3.00 |
+| House Syrup | syrup | 1 | $2 | $18 | $3.00 |
+| Lemonade | lemon | 1 | $3 | $18 | $3.00 |
+| Kicker Ginger | ginger | 1 | $3 | $18 | $3.00 |
+| Klara Soda | soda | 1 | $2 | $18 | $3.00 |
 | Krona Lager | lager | 1 | — | $72 | $3.00 |
-| Goodness Stout | stout | 1 | — | $72 | $3.00 |
-| Brass Pale Ale | pale_ale | 1 | — | $72 | $3.00 |
+| Goodness Stout | stout | 1 | $12 | $72 | $3.00 |
+| Brass Pale Ale | pale_ale | 1 | $12 | $72 | $3.00 |
 | Absolve Vodka | vodka | 2 | $6 | $20 | $3.33 |
 | Leafeater Gin | gin | 2 | $6 | $20 | $3.33 |
 | Jack Spaniel's Whiskey | bourbon | 2 | $7 | $20 | $3.33 |
+| Jose Cuerdo Tequila | tequila | 1 | $8 | $18 | $3.00 |
+| Grand Mariner Triple Sec | triple_sec | 1 | $10 | $18 | $3.00 |
+| Loca Cola | cola | 1 | $3 | $18 | $3.00 |
+| Quinn's Tonic | tonic | 1 | $3 | $18 | $3.00 |
+| Blue Ox | energy | 1 | $4 | $18 | $3.00 |
+| Orange Juice | orange | 1 | $4 | $18 | $3.00 |
+| Limeade | lime | 1 | $3 | $18 | $3.00 |
 | Admiral Morgan Rum | rum | 2 | $7 | $20 | $3.33 |
 | 1810 Tequila | tequila | 2 | $15 | $20 | $3.33 |
+| Cranberry | cranberry | 1 | $4 | $18 | $3.00 |
+| Koala Coffee Liqueur | coffee_liqueur | 1 | $11 | $18 | $3.00 |
+| Isla Piña | pineapple | 1 | $4 | $18 | $3.00 |
+| Rubis Grenadine | grenadine | 1 | $3 | $18 | $3.00 |
 | Grey Gander Vodka | vodka | 3 | $22 | $22 | $3.67 |
 | Hendrake's Gin | gin | 3 | $24 | $22 | $3.67 |
 | Mason's Mark Whiskey | bourbon | 3 | $28 | $22 | $3.67 |
@@ -226,9 +244,72 @@ eventually cannot pay:
 |---|---:|---:|---:|---:|---:|---:|---:|
 | rent | $14 | $19 | $24 | $31 | $43 | $61 | $103 |
 
+## The room (GDD 27)
+
+Two ratings share the stars: SERVICE is what the drinks were worth, COMFORT is
+what the room is worth, and the night files the LOWER. Comfort is a base the
+bar builds, drained while the counter is a mess.
+
+- the room as it opens is worth **2** (the FreeBase — the
+  pieces the bar starts with carry no comfort of their own)
+- every glass step counts at **50%** of its star cap,
+  every stool past the first 4 adds **+0.25**
+- a counter left dirty past **10 s** costs **−0.75**
+  of comfort until it is wiped; a wash takes 1.5 s plus
+  0.5 s a glass
+- comfort is clamped to **5**
+
+The ladders, rung by rung — a rung's comfort is ABSOLUTE (fitting over the last
+rung replaces its value, it does not add):
+
+| slot | rungs |
+|---|---|
+| `plant_left` | Areca Palm $20 · +0.1 → Fiddle-Leaf Fig $55 · +0.2 (1.5★) → Trailing Pothos $95 · +0.4 (3★) |
+| `plant_right` | Snake Plant $25 · +0.1 → Agave Bowl $70 · +0.2 (1.5★) → Monstera $95 · +0.4 (3★) |
+| `sink` | Steel Sink (ours) · 0 → Brass Sink $85 · +0.4 (1.5★) |
+| `table_left` | Rustic Bar Table $40 · +0.2 → Brass Pedestal Table $85 · +0.4 (1.5★) → Steel Gaslift Set $120 · +0.6 (3★) |
+| `table_mid` | Rustic Bar Table $40 · +0.2 → Brass Pedestal Table $85 · +0.4 (1.5★) → Steel Gaslift Set $120 · +0.6 (3★) |
+| `table_right` | Rustic Bar Table $40 · +0.2 → Brass Pedestal Table $85 · +0.4 (1.5★) → Steel Gaslift Set $120 · +0.6 (3★) |
+| `taps` | Single Draught Tower (ours) · 0 → Arched Draught Bridge $65 · +0.1 (1.5★) → Triple Draught Tower $100 · +0.2 (3★) |
+| `wall_center` | Flamingo Triptych $45 · +0.2 |
+| `wall_lamps` | Glass Tube Lamps $30 · +0.1 → Sunset Panels $55 · +0.3 (1.5★) → Palm Lamps $90 · +0.7 (3★) |
+| `walls` | Cracked Plaster (ours) · 0 → Fresh Plaster $70 · +0.3 (1★) → Panelled Wall $130 · +0.6 (2★) → Harlequin Paper $200 · +1 (3★) |
+
+Single pieces:
+
+| piece | price | comfort | needs |
+|---|---:|---:|---:|
+| Counter Candle | $30 | +0.2 | — |
+| Brass Sconce | $45 | +0.2 | 1.5★ |
+| Hanging Lantern | $60 | +0.2 | 1.5★ |
+| Paper Lantern | $60 | +0.2 | 2.5★ |
+| Neon Martini | $75 | +0.2 | 2.5★ |
+| Tide Rug | $35 | +0.2 | — |
+| Wall Television | $70 | +0.2 | — |
+| Drip Mat | ours | 0 | — |
+
+Every top rung and every single together: **8.5** of comfort against the
+5 ceiling, before glass and stools — the player chooses.
+
+## The door (GDD 28)
+
+- the drinking age is **20**; a minor's card is a forgery
+  **50%** of the time, and of those **50%**
+  are the minor's own card altered (the year bumped, a flag that is not their
+  country's) rather than borrowed
+- **25%** of adults look young enough to be asked
+- serving a minor is fined when they leave: **$20 + $20**
+  per whole star of the bar's standing at that moment
+- a rightful kick earns **$5** at the close
+
+| standing | 0★ | 1★ | 2★ | 3★ | 4★ | 5★ |
+|---|---:|---:|---:|---:|---:|---:|
+| fine | $20 | $40 | $60 | $80 | $100 | $120 |
+
 ---
 
 Every figure above comes from: `DrinkOrder.MenuPrice`, `ServiceJudge`,
 `ServingSpec`, `BarRating`, `RatioRecipe`, `ShelfBottle`, `TycoonConfig`,
-and the JSON under `Assets/Data`. Nothing here is typed in by hand.
+`VenueComfort`, `Housekeeping`, `IdPapers`, and the JSON under `Assets/Data`.
+Nothing here is typed in by hand.
 
