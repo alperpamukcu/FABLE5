@@ -332,7 +332,8 @@ namespace LastCall.Game
                     fixtures.Add(new FixtureDefinition(f.id, f.name, f.slot, f.price,
                         f.stars, f.flavor, f.sprite,
                         f.lightR, f.lightG, f.lightB, f.lightIntensity, f.lightRadius,
-                        f.startsInTheRoom, f.tapLevel, f.level, f.drain, f.drainsFree));
+                        f.startsInTheRoom, f.tapLevel, f.level, f.drain, f.drainsFree,
+                        f.screen));
                 }
                 catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
                 {
@@ -724,6 +725,11 @@ namespace LastCall.Game
             /// <summary>...and this one costs nothing to pour a drink away in. Only a
             /// drain may say it; the definition refuses the pairing otherwise.</summary>
             public bool drainsFree;
+
+            /// <summary>This piece's sprite is a SHEET OF FRAMES the room plays, not one
+            /// picture (2026-09-04, the wall television). Absent is false, so every
+            /// fixture that is a still stays a still.</summary>
+            public bool screen;
         }
 
         [Serializable]

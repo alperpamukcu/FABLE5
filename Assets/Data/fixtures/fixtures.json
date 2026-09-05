@@ -89,6 +89,12 @@
       "y": 74,
       "onCounter": true,
       "flat": true
+    },
+    {
+      "id": "wall_tv",
+      "x": 546,
+      "y": 211,
+      "hangs": true
     }
   ],
   "fixtures": [
@@ -359,6 +365,22 @@
       "flavor": "Orange running through teal, a shoreline read from the air. It takes the echo off the boards.",
       "sprite": "fx_floor_rug",
       "startsInTheRoom": true
+    },
+    {
+      "id": "wall_tv",
+      "name": "Wall Television",
+      "slot": "wall_tv",
+      "price": 70,
+      "stars": 0,
+      "flavor": "A boxy set bolted over the booths, running adverts nobody watches and everybody looks at.",
+      "sprite": "fx_tv",
+      "screen": true,
+      "startsInTheRoom": true,
+      "lightR": 0.62,
+      "lightG": 0.78,
+      "lightB": 1.0,
+      "lightIntensity": 0.45,
+      "lightRadius": 58
     },
     {
       "id": "beer_mat",

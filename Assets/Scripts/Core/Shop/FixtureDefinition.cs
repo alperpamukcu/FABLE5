@@ -102,6 +102,19 @@ namespace LastCall.Core
         /// </summary>
         public bool DrainsFree { get; }
 
+        /// <summary>
+        /// This piece is a SCREEN: its sprite is a sheet of frames rather than one
+        /// picture, and the room plays them (2026-09-04, the author: a television on the
+        /// wall running adverts, each one ending with the set switching itself off and
+        /// back on again).
+        ///
+        /// Carried, not read — exactly like <see cref="Sprite"/> and the light numbers.
+        /// The rules do not care that a fixture animates: nothing about a night changes
+        /// because a picture moved, so the whole of it is the presentation layer's, and
+        /// Core's only job is to hand the flag across without interpreting it.
+        /// </summary>
+        public bool IsScreen { get; }
+
         /// <summary>Resources/Fixtures sprite name. Presentation data, carried not read.</summary>
         public string Sprite { get; }
 
@@ -119,7 +132,7 @@ namespace LastCall.Core
             float lightR = 0f, float lightG = 0f, float lightB = 0f,
             float lightIntensity = 0f, float lightRadius = 0f,
             bool startsInTheRoom = false, int tapLevel = 0, int level = 0,
-            bool isDrain = false, bool drainsFree = false)
+            bool isDrain = false, bool drainsFree = false, bool isScreen = false)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Fixture needs an id.", nameof(id));
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException($"Fixture '{id}' needs a name.", nameof(name));
@@ -160,6 +173,7 @@ namespace LastCall.Core
             Level = tapLevel > 0 ? tapLevel : level;
             IsDrain = isDrain;
             DrainsFree = drainsFree;
+            IsScreen = isScreen;
         }
 
         public override string ToString() => $"{Name} ({Id}, ${Price}, slot {Slot})";
