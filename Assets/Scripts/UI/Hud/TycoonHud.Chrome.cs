@@ -691,6 +691,12 @@ namespace LastCall.UI
             // where a number is being compared to another number.
             double stars = run.Rating.Average;
             _starsFill.sizeDelta = new Vector2((float)(stars / 5.0) * _ratingStars.Length * StarGap, 0);
+            // The house's two strips (H5): the drinks so far tonight, and the room right now
+            // — the one reading that moves while a glass stands on the counter.
+            if (_serviceFill != null)
+                _serviceFill.sizeDelta = new Vector2((float)(run.ServiceTonight / BarRating.MaxStars) * HouseStripW, 0);
+            if (_comfortFill != null)
+                _comfortFill.sizeDelta = new Vector2((float)(run.ComfortNow / BarRating.MaxStars) * HouseStripW, 0);
 
             RefreshJobStrip(run);
         }

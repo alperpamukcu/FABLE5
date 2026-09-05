@@ -271,7 +271,18 @@ the reason; a night with two right kicks prints `STATE'S THANKS · 2 SHOWN THE D
 and at ~6% of seats by week two that is a seat every other night that pays $5 instead of a drink
 and a tip. Measured, and `MinorChance` is the lever.
 
-## H5 — The two ratings (UI: symbols, slip, boards, the upgrade screen) ☐
+## H5 — The two ratings (UI: symbols, slip, boards, the upgrade screen) ☑ 2026-09-05
+
+**Shipped 2026-09-05.** `ItemArt.Medal(lit, px)` beside Star and Heart (the icons were drawn in
+H1: `medal3d[_socket][_16]`). The top bar carries two strips of five 16 px icons left of the
+standing block — the heart reads `ServiceTonight`, the medallion `ComfortNow` — no numbers, the fill
+is the reading (`IconStrip`, GDD 27 §4.4 and C11 kept: nothing under the standing's caption). The
+slip prints a house row under the score (`BillHouse`: SERVICE with the heart, COMFORT with the
+medallion, the lower in the score's ink). The standing board gains SERVICE and COMFORT rows over
+TONIGHT with their own symbols (`StandRow` takes a unit sprite); both boards 420 → 460. The
+upgrade tiles say "Mark n of N · +0.4 comfort to the room" for every piece with comfort. The
+basket baseline did not move (the market's foot is the compared crop; the tiles are above it).
+
 
 - `Tools/medallion_icon.py` → `medal3d[_socket][_16].png`; `ItemArt.Medal(lit, px)`; the
   contact sheet reported before the icon enters the game.

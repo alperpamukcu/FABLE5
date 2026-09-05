@@ -775,6 +775,51 @@ namespace LastCall.UI
             return y + H + 2f;
         }
 
+        /// <summary>The slip's house row: SERVICE with the heart, COMFORT with the medallion,
+        /// the lower of the two carrying the ink the score wears — that is the one the night
+        /// was filed as. Measured and centred like the score above it.</summary>
+        private float BillHouse(float y, double service, double comfort)
+        {
+            const float Icon = 16f, Gap = 5f, H = 20f, Between = 22f;
+            var row = NewRect("House", _invoiceRows);
+            row.anchorMin = new Vector2(0, 1); row.anchorMax = new Vector2(1, 1);
+            row.pivot = new Vector2(0.5f, 1);
+            row.sizeDelta = new Vector2(0, H);
+            row.anchoredPosition = new Vector2(0, -y);
+
+            bool roomBound = comfort < service - 1e-9;
+            var svc = NewText("S", row, _body, 16, TextAnchor.MiddleLeft, roomBound ? BillQuiet : BillInk);
+            Place(svc.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(120, H), Vector2.zero);
+            svc.rectTransform.pivot = new Vector2(0, 0.5f);
+            svc.horizontalOverflow = HorizontalWrapMode.Overflow;
+            svc.text = "SERVICE " + service.ToString("0.0");
+            var cmf = NewText("C", row, _body, 16, TextAnchor.MiddleLeft, roomBound ? BillInk : BillQuiet);
+            Place(cmf.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(120, H), Vector2.zero);
+            cmf.rectTransform.pivot = new Vector2(0, 0.5f);
+            cmf.horizontalOverflow = HorizontalWrapMode.Overflow;
+            cmf.text = "COMFORT " + comfort.ToString("0.0");
+
+            float svcW = svc.preferredWidth, cmfW = cmf.preferredWidth;
+            float total = Icon + Gap + svcW + Between + Icon + Gap + cmfW;
+            float x = -total * 0.5f;
+            var heart = NewRect("Heart", row);
+            Place(heart, new Vector2(0.5f, 0.5f), new Vector2(Icon, Icon), new Vector2(x, 0));
+            heart.pivot = new Vector2(0, 0.5f);
+            var hi = heart.gameObject.AddComponent<Image>();
+            hi.sprite = ItemArt.Heart(true, Icon); hi.preserveAspect = true; hi.raycastTarget = false;
+            x += Icon + Gap;
+            svc.rectTransform.anchoredPosition = new Vector2(x, 0);
+            x += svcW + Between;
+            var medal = NewRect("Medal", row);
+            Place(medal, new Vector2(0.5f, 0.5f), new Vector2(Icon, Icon), new Vector2(x, 0));
+            medal.pivot = new Vector2(0, 0.5f);
+            var mi = medal.gameObject.AddComponent<Image>();
+            mi.sprite = ItemArt.Medal(true, Icon); mi.preserveAspect = true; mi.raycastTarget = false;
+            x += Icon + Gap;
+            cmf.rectTransform.anchoredPosition = new Vector2(x, 0);
+            return y + H + 2f;
+        }
+
         private float BillNote(float y, string text) => BillNote(y, text, BillQuiet);
 
         private float BillNote(float y, string text, Color ink, bool centred = false)
@@ -1249,8 +1294,15 @@ namespace LastCall.UI
             rui.raycastTarget = false;
             y += 12f;
 
-            // The three readings that explain the step: what tonight was worth, what the
-            // bar is allowed to be worth, and who that has drawn for tomorrow.
+            // The readings that explain the step: the two the night was made of (GDD 27 —
+            // the night files the LOWER, which is why the board shows both), what tonight
+            // was worth, what the bar is allowed to be worth, and who that has drawn for
+            // tomorrow.
+            bool roomBound = run.ComfortTonight < run.ServiceTonight - 1e-9;
+            y = StandRow(y, "SERVICE", run.ServiceTonight.ToString("0.0"),
+                roomBound ? UITheme.Cream[3] : UITheme.Amber[4], true, ItemArt.Heart(true, 13f));
+            y = StandRow(y, "COMFORT", run.ComfortTonight.ToString("0.0"),
+                roomBound ? UITheme.Amber[4] : UITheme.Cream[3], true, ItemArt.Medal(true, 13f));
             y = StandRow(y, "TONIGHT", run.TonightStars.ToString("0.0"), UITheme.Amber[4], true);
             double ceiling = run.StarCeiling;
             bool capped = run.TonightStars >= ceiling - 1e-9
@@ -1297,7 +1349,8 @@ namespace LastCall.UI
         /// <summary>One reading on the standing board: a caption left, a figure right, and
         /// the star mark beside the figure when the figure IS stars — the same unit mark the
         /// slip's critics wear, for the same reason.</summary>
-        private float StandRow(float y, string label, string value, Color ink, bool inStars)
+        private float StandRow(float y, string label, string value, Color ink, bool inStars,
+            Sprite unitArt = null)
         {
             var body = _standBoard.Body;
             var row = NewRect("R" + label, body);
@@ -1318,7 +1371,7 @@ namespace LastCall.UI
                 Place(unit, new Vector2(1, 0.5f), new Vector2(13, 13), new Vector2(-60f, 0));
                 unit.pivot = new Vector2(1, 0.5f);
                 var ui = unit.gameObject.AddComponent<Image>();
-                ui.sprite = ItemArt.Star(true, 13f);
+                ui.sprite = unitArt ?? ItemArt.Star(true, 13f);   // the house's own symbol, else the star
                 ui.preserveAspect = true; ui.raycastTarget = false;
             }
 
@@ -1712,6 +1765,9 @@ namespace LastCall.UI
             // its own now, on the right, where it can show the STEP as well as the number.
             // The slip says what tonight was and who was in the room — a receipt's business.)
             y = BillScore(y, tonight, served, stormed);
+            // THE TWO THE NIGHT WAS MADE OF (GDD 27 §6, H5): the drinks and the room, each
+            // with its own symbol, under the score they were filed as the lower of.
+            y = BillHouse(y, run.ServiceTonight, run.ComfortTonight);
             y += 8f;
 
             // The critics: the highest and the lowest word the night produced. One visit
@@ -2229,6 +2285,19 @@ namespace LastCall.UI
                                 : "Stands in the room from tonight"),
                             BuffB = new Buff(BuffKind.Gain, "Never spends the night's fitting"),
                         };
+                        // WHAT IT IS WORTH TO THE ROOM (GDD 27 §3, H5): every rung says its
+                        // comfort, and a ladder's rung says which mark of how many it is —
+                        // "mark n of N · +0.4 comfort" is the author's own copy for the tab.
+                        if (f.Comfort > 0)
+                        {
+                            int rungs = 0;
+                            if (f.Level > 0)
+                                foreach (var other in run.FixtureCatalogue)
+                                    if (other.Slot == f.Slot && other.Level > 0) rungs++;
+                            spec.BuffB = new Buff(BuffKind.Gain,
+                                (f.Level > 0 ? "Mark " + f.Level + " of " + rungs + " · " : "")
+                                + "+" + f.Comfort.ToString("0.0") + " comfort to the room");
+                        }
                         if (run.OwnsFixture(f.Id))
                         {
                             spec.State = TileState.Held;

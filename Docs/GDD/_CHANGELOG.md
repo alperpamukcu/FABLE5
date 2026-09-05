@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **27 on the boards — H5 (2026-09-05):** the two ratings are seen: two strips of five
+  (heart = tonight's service, medallion = the room's comfort this minute) left of the
+  standing in the top bar, no numbers; the slip's house row under the score; SERVICE and
+  COMFORT rows with their own symbols over TONIGHT on the standing board (both boards
+  420 → 460); the upgrade tiles say "Mark n of N · +comfort". `ItemArt.Medal` joins Star and
+  Heart. GDD_MEVCUT §9.23.
+
 - **27 on the counter — H4 (2026-09-05):** the scene pays for its marks now
   (`ForTheScene` → smudges on). The glass is picked up and carried (washed over the sink, kept
   in the hand otherwise), the mark is a drawn smudge until the cloth on the counter's left end

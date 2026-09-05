@@ -234,6 +234,18 @@ namespace LastCall.UI
                 _ratingStars[i] = img;
             }
 
+            // THE HOUSE'S TWO READINGS (GDD 27 §4.4, H5, 2026-09-05): what the drinks have
+            // been worth tonight (the heart — SERVICE) and what the room is worth this
+            // minute (the medallion — COMFORT), as two strips of five left of the standing.
+            // No numbers, exactly as the stars carry none: the fill IS the reading, and the
+            // night files the lower of the two under the stars' menu ceiling.
+            var house = NewRect("House", top);
+            Place(house, new Vector2(1, 0.5f), new Vector2(HouseStripW, TopBarH),
+                new Vector2(BlockRight - starsW - 26f, 0));
+            house.pivot = new Vector2(1, 0.5f);
+            _serviceFill = IconStrip(house, "Service", ItemArt.Heart(false, 16f), ItemArt.Heart(true, 16f), RowY - 9f);
+            _comfortFill = IconStrip(house, "Comfort", ItemArt.Medal(false, 16f), ItemArt.Medal(true, 16f), RowY + 9f);
+
             // Centred over the block it belongs to, not right-aligned to one edge of it.
             _crowdText = NewText("Crowd", standing, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[3]);
             Place(_crowdText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(starsW + 90f, 12),
@@ -1426,6 +1438,45 @@ namespace LastCall.UI
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Overflow;
             return text;
+        }
+
+        /// <summary>Five of one icon at 16 px, the sockets always there and the lit ones
+        /// under a mask whose width is the reading — the top bar's star row, at the small
+        /// size, for the house's two symbols (GDD 27 §4.4).</summary>
+        private RectTransform IconStrip(RectTransform parent, string name, Sprite socket, Sprite lit, float y)
+        {
+            var row = NewRect(name, parent);
+            Place(row, new Vector2(0, 0.5f), new Vector2(HouseStripW, HouseIcon), new Vector2(0, y));
+            row.pivot = new Vector2(0, 0.5f);
+            for (int i = 0; i < BarRating.MaxStars; i++)
+            {
+                var cell = NewRect("S" + i, row);
+                cell.anchorMin = cell.anchorMax = new Vector2(0, 0.5f);
+                cell.pivot = new Vector2(0.5f, 0.5f);
+                cell.sizeDelta = new Vector2(HouseIcon, HouseIcon);
+                cell.anchoredPosition = new Vector2(i * HouseGap + HouseGap * 0.5f, 0);
+                var img = cell.gameObject.AddComponent<Image>();
+                img.sprite = socket; img.preserveAspect = true; img.raycastTarget = false;
+                if (socket == null) img.color = new Color(1f, 1f, 1f, 0.25f);
+            }
+            var fill = NewRect("Fill", row);
+            fill.anchorMin = new Vector2(0, 0); fill.anchorMax = new Vector2(0, 1);
+            fill.pivot = new Vector2(0, 0.5f);
+            fill.sizeDelta = Vector2.zero;
+            fill.anchoredPosition = Vector2.zero;
+            fill.gameObject.AddComponent<RectMask2D>();
+            for (int i = 0; i < BarRating.MaxStars; i++)
+            {
+                var cell = NewRect("F" + i, fill);
+                cell.anchorMin = cell.anchorMax = new Vector2(0, 0.5f);
+                cell.pivot = new Vector2(0.5f, 0.5f);
+                cell.sizeDelta = new Vector2(HouseIcon, HouseIcon);
+                cell.anchoredPosition = new Vector2(i * HouseGap + HouseGap * 0.5f, 0);
+                var img = cell.gameObject.AddComponent<Image>();
+                img.sprite = lit; img.preserveAspect = true; img.raycastTarget = false;
+                if (lit == null) img.color = UITheme.Amber[4];
+            }
+            return fill;
         }
 
         private static void Place(RectTransform rt, Vector2 anchor, Vector2 size, Vector2 pos)

@@ -403,7 +403,7 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 | ~~P0~~ ✅ | ~~Paylaşılan ağaçtaki sahipsiz Core değişiklikleri commit'lensin~~ | **kapandı 2026-09-05** — tek saat `6cbe1f7b`, musluk kilidi `b136a9c8`, TV/meşrubat 9c ve 6c'nin kendi commit'leri; §0.10 |
 | ~~P0~~ ✅ | ~~`PlayDayServingEveryone` test yardımcısı temizlik yapsın~~ | **kapandı** (`6673cb47`) — `TestNight.Clean` iki yardımcıda da |
 | ~~P1~~ ✅ | ~~Reddedilen sipariş görünmez bardak bırakıyor~~ | **kapandı** (`6673cb47`, C6) — sinyal `DrinkServed`, yalnız `ServeTo` kurar |
-| **P1** | Fiş ham oda yıldızı, hafta tahtası KIRPILMIŞ gece, defter `NightStars` basıyor — üç yüzey üç sayı | GDD 27 D7 bilinçli tutuyor; ayakta duran tahta min'i açıklamalı, yoksa oyuncu "4.9 yazdı, 2.0 girdi" der |
+| ~~P1~~ ✅ | ~~Fiş ham oda yıldızı, hafta tahtası kırpılmış gece, defter `NightStars` — üç yüzey üç sayı~~ | **kapandı 2026-09-05** (H5) — tahta SERVICE/COMFORT/TONIGHT satırlarıyla min'i açıklıyor, fişte ev satırı; §9.23 |
 | **P1** | `TycoonHud.DayEnd` dressing koridoru "bir basamak ileri" kuralını yalnız HUD'da taşıyor, Core'da/testte pin yok | H1b'de `VisibleRung(slot)` sorgusu ya da katalog testi |
 | ~~P2~~ ✅ | ~~Sim botu fikstür almıyor~~ | **kapandı** (`6673cb47`) — bkz. §8.1 |
 | **P2** | ~~`GDD 23 §7/§8`, `GDD_MEVCUT §7`~~ düzeltildi (`6673cb47`); `BALANCE.md` hâlâ eski (`LastCall → Write Balance Guide` ile yeniden üretilmeli, konfor sayfası eklenmeli) | kod 5x (2026-08-11) |

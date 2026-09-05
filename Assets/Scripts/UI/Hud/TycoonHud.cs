@@ -1804,7 +1804,9 @@ namespace LastCall.UI
         /// now (ItemArt.BoardPlate) and only its plain navy field stretches — a hard 350 was
         /// the first build's mistake, and it cut the week's subtotal and the standing's
         /// next-rung line off the bottom of their own instruments.</summary>
-        private const float BoardW = 356f, BoardH = 420f, BoardX = 430f, BoardY = 48f;
+        // 420 → 460 on 2026-09-05 (H5): the standing board took SERVICE and COMFORT above
+        // TONIGHT, two rows of 28, and the week board rides the same plate.
+        private const float BoardW = 356f, BoardH = 460f, BoardX = 430f, BoardY = 48f;
 
         private const float BoardPad = 18f;
 
@@ -2079,6 +2081,11 @@ namespace LastCall.UI
         // ("row climbed into its caption"), restored ("yıldız barı ortalasın ve boyutu
         // büyütülsün") by giving the standing its own block instead.
         private const float StarSize = 32f, StarGap = 34f;
+
+        /// <summary>The house's two strips in the top bar (GDD 27 §4.4): 16 px icons on an
+        /// 18-unit pitch, five wide, one over the other.</summary>
+        private const float HouseIcon = 16f, HouseGap = 18f, HouseStripW = 5 * 18f;
+        private RectTransform _serviceFill, _comfortFill;
 
         // ── settings (P17): the smallest sheet that holds sound and motion ───────
 

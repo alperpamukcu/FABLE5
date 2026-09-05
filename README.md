@@ -13,8 +13,11 @@ every night. Three nights in the red and the bar is gone. Five stars is the long
 
 **Engine:** Unity 6000.3.10f1 (URP) · **Platform:** PC
 **Status:** the tycoon loop is playable end to end and measured by a simulation bot. The
-scripted "last customer" story beat plays in the scene; its closing-light presentation and
-arc rewards are the active work.
+scripted "last customer" story beat plays in the scene with its closing light. The house
+has two ratings — what the drinks were worth and what the room is worth, the night filing
+the lower — and the door has a law: some drinkers are under twenty, some carry a borrowed
+or altered card, and the licence's KICK key is how you answer it. The story's rewards and
+the rest of its cast are what remains.
 
 ---
 

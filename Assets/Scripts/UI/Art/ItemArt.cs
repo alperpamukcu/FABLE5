@@ -122,6 +122,11 @@ namespace LastCall.UI
         public static Sprite Heart(bool lit, float px) =>
             Load(Name("heart3d", lit, px));
 
+        /// <summary>The medallion — COMFORT's symbol (GDD 27 §2.2), drawn in the star's own
+        /// language by Tools/medallion_icon.py — lit or empty, at the size it is drawn at.</summary>
+        public static Sprite Medal(bool lit, float px) =>
+            Load(Name("medal3d", lit, px));
+
         private static string Name(string icon, bool lit, float px) =>
             icon + (lit ? "" : "_socket") + (px <= 20f ? "_16" : "");
 

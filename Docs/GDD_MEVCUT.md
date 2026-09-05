@@ -934,6 +934,15 @@ hücre boyu `fixtures.json`'daki `cellW/cellH` — TV'nin kesicisi de artık hü
 `tap_water` döngüsü çalar (rim döngüsüyle aynı kanal, rim öncelikli). Eşleşmeyen dökümün bardağı da
 sahnede duruyor.
 
+**İki sembol (H5, aynı gün).** Üst şeritte yıldız bloğunun solunda iki beşli şerit: **kalp** =
+gecenin servisi (`ServiceTonight`), **madalyon** = odanın o anki konforu (`ComfortNow`, tezgâhta
+bardak dururken düşen tek okuma); sayı yok, dolgu okumadır (C11 korundu: yıldızın altına bir şey
+girmedi). Fişte puan satırının altında ev satırı (`BillHouse`: SERVICE ♥ n.n · COMFORT ◉ n.n,
+düşük olan puanın mürekkebiyle — gece o olarak dosyalandı). Ayakta duran tahtada TONIGHT'ın
+üstünde SERVICE ve COMFORT satırları kendi sembolleriyle (`StandRow` birim sprite alır); iki tahta
+420 → 460. Yükseltme kartları "Mark n of N · +0.4 comfort to the room" der. `ItemArt.Medal`
+yıldız/kalbin yanında (tek çizim, iki hâl, iki boy, boyanmaz).
+
 **Veri.** 25 parçaya `comfort`; üç masa yuvası üçer basamaklı merdiven (`table_{left,mid,right}_{1,2,3}`,
 rustik/pirinç/çelik, aynı sanat); `plant_monstera` yetim `fx_monstera` ile `plant_right` 3. basamak.
 
