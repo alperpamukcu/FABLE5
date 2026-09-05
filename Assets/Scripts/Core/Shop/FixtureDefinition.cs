@@ -115,6 +115,17 @@ namespace LastCall.Core
         /// </summary>
         public bool IsScreen { get; }
 
+        /// <summary>A sheet's frame cell, in art pixels (2026-09-05). A screen's sheet and a
+        /// drain's water sheet are cut by THIS, read off the data, so a redrawn set changes
+        /// two numbers in its own row and nothing in code. Zero on a piece that is a still.</summary>
+        public int CellW { get; }
+        public int CellH { get; }
+
+        /// <summary>The frame sheet drawn over a drain while the tap runs (GDD 27 §4.3) — the
+        /// sprite name under Resources/Fixtures, cut by <see cref="CellW"/>×<see cref="CellH"/>.
+        /// Null on a drain that has no water drawn for it.</summary>
+        public string Water { get; }
+
         /// <summary>
         /// What this piece is worth to the ROOM (GDD 27 §3, 2026-09-05, the author: "mekanın
         /// geliştirmeleri … masa eklemek, iyi sink eklemek, iyi lamba eklemek, iyi tablo
@@ -144,8 +155,12 @@ namespace LastCall.Core
             float lightIntensity = 0f, float lightRadius = 0f,
             bool startsInTheRoom = false, int tapLevel = 0, int level = 0,
             bool isDrain = false, bool drainsFree = false, bool isScreen = false,
-            double comfort = 0)
+            double comfort = 0, int cellW = 0, int cellH = 0, string water = null)
         {
+            if (cellW < 0 || cellH < 0) throw new ArgumentOutOfRangeException(nameof(cellW), "A cell is not negative.");
+            if ((cellW > 0) != (cellH > 0)) throw new ArgumentException("A cell has both a width and a height.", nameof(cellH));
+            if (!string.IsNullOrEmpty(water) && cellW == 0)
+                throw new ArgumentException("A water sheet needs its cell size.", nameof(water));
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Fixture needs an id.", nameof(id));
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException($"Fixture '{id}' needs a name.", nameof(name));
             if (string.IsNullOrWhiteSpace(slot)) throw new ArgumentException($"Fixture '{id}' needs a slot.", nameof(slot));
@@ -189,6 +204,9 @@ namespace LastCall.Core
             DrainsFree = drainsFree;
             IsScreen = isScreen;
             Comfort = comfort;
+            CellW = cellW;
+            CellH = cellH;
+            Water = string.IsNullOrEmpty(water) ? null : water;
         }
 
         public override string ToString() => $"{Name} ({Id}, ${Price}, slot {Slot})";

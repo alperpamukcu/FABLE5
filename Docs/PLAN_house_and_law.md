@@ -121,14 +121,25 @@ the editor, because the editor was the author's for the night; the editor run fo
 
 **Proof:** as H1.
 
-## H1b + H4 — Comfort and cleanliness, wired and drawn ◐ *(H1b shipped 2026-09-05; H4 open)*
+## H1b + H4 — Comfort and cleanliness, wired and drawn ☑ *(H1b and H4 shipped 2026-09-05)*
 
 **Shipped 2026-09-05, the Core half — with the scene GATED, not paired.** The author said
 "devam" while the tree was still shared, so H1b landed before H4 could: everything below under
 "Core" is in, plus the four one-line HUD hunks that turn the old click into `CollectGlass`, and
 the pairing rule is honoured by a gate instead — `TycoonConfig.CounterSmudges` (the rule is on
 for the sim and every test) with `TycoonConfig.ForTheScene` handing the scene the marks OFF until
-the cloth is drawn, so the scene's counter costs only what it shows: the glasses. H4 flips it.
+the cloth is drawn, so the scene's counter costs only what it shows: the glasses. **H4 flipped it
+the same day:** `ForTheScene` hands the scene the marks ON. The glass is PICKED UP (pointer-down
+collects it through Core, and it follows the hand — let go over the sink it is washed, anywhere
+else it stays in the hand and the strip over the sink says so); the mark under it is a drawn
+smudge (`ChromeArt.Smudge`) that stays until the CLOTH (`ChromeArt.Cloth`, on the counter's left
+end) is picked up and passed over it — Core refuses a wipe under a glass and the refusal is
+toasted once; the sink takes a click for the one free thing it does, washing what the hand holds
+(`WashGlasses`), and the water runs for `WashSecondsFor(n)` as a frame sheet over the basin
+(`fx_sink_water`, drawn by `Tools/sink_water_gen.py` off the sink's own silhouette, cut by the
+`cellW`/`cellH` the fixture's row now states — the television's cutter reads its cell from data
+the same way) with a synthesised tap loop (`tap_water`). The two icon strips of GDD 27 §4.4 are
+H5's, with the medallion.
 Balance moved once on measurement (GDD 27 §7): v0 (penalty 1.0, grace 6 s, half the fixture
 values, a cheapest-first bot) had a 20-second hand losing half a star and tripling bankruptcies
 and a dressing-buying bot going 0%→4% bankrupt for a LOWER standing; v1 is penalty 0.75, grace

@@ -202,11 +202,13 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void TheSceneConfig_KeepsTheMarksOff_UntilTheClothIsDrawn()
+        public void TheSceneConfig_PaysForItsMarks_NowTheClothIsDrawn()
         {
-            // PLAN H4: the scene files only what it can show. The glass is on; the mark is not.
+            // PLAN H4 (2026-09-05): the scene files only what it can show — and since the
+            // cloth is on the counter it shows the marks, so it pays for them like the sim
+            // and every test do. The switch stays, for a scene that has to gate it again.
             Assert.IsTrue(TycoonConfig.Default.CounterSmudges, "the rule itself is on");
-            Assert.IsFalse(TycoonConfig.ForTheScene.CounterSmudges);
+            Assert.IsTrue(TycoonConfig.ForTheScene.CounterSmudges, "the scene draws the cloth now");
 
             var run = new TycoonRun(NewShelf(), Book, new RunRng("scene"),
                 config: new TycoonConfig(200, orderDecisionSeconds: 0, savorSeconds: 0, counterSmudges: false));

@@ -2,6 +2,14 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **27 on the counter — H4 (2026-09-05):** the scene pays for its marks now
+  (`ForTheScene` → smudges on). The glass is picked up and carried (washed over the sink, kept
+  in the hand otherwise), the mark is a drawn smudge until the cloth on the counter's left end
+  is passed over it, the sink's click washes what the hand holds and the tap runs as a frame
+  sheet drawn off the sink's own silhouette (`Tools/sink_water_gen.py`) for exactly Core's
+  `WashSecondsFor`, with a synthesised `tap_water` loop; sheets state their own cell in
+  `fixtures.json` (`cellW`/`cellH`), the television included. GDD_MEVCUT §9.23.
+
 - **28 wired and on the card (2026-09-05, H2b `6c40b5cb` + H3):** every person carries papers
   from their first arrival (`"papers"` stream, Core-only truth, `CustomerVisit.Papers` throws until
   the card is read); from the second night some arrivals are under twenty, half on a borrowed card

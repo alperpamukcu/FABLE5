@@ -922,10 +922,16 @@ ele, tabure anında boş), `Wipe(mess)` (bardağın altı silinmez — önce top
 (`Floor.IsComplete`) önce `House.CloseNight()` çağırır: eldeki ve lavabodaki bardaklar bedava
 yıkanır, tezgâhta kalan zaten ödenmiştir. `ComfortNow` canlı okuma (toleransı geçmiş nokta / tabure).
 
-**Sahne şimdilik yalnız gösterdiğini öder:** `TycoonConfig.CounterSmudges` (varsayılan açık; sim ve
-testler kuralın tamamını ölçer) — `GameBootstrap` `TycoonConfig.ForTheScene` ile lekeleri KAPALI
-geçirir, bez çizilene dek (H4) sahnedeki tezgâh yalnız bardaklardan kaybeder. Kirli bardak tıklaması
-`CollectGlass` oldu ("GLASS COLLECTED — SEAT IS FREE"); eşleşmeyen dökümün bardağı da artık
+**Sahne (H4, aynı gün).** `ForTheScene` lekeleri AÇIK geçirir — sahne artık sim ve testlerle aynı
+kuralın tamamını öder. Boş bardak TUTULUR (basılınca Core `CollectGlass`, tabure o an boşalır;
+bardak eli izler — lavabonun üstünde bırakılırsa yıkanır, başka yerde elde kalır ve lavabonun
+üstündeki şerit "n IN HAND · CLICK THE SINK" yazar); altındaki leke çizili bir iz (`ChromeArt.Smudge`,
+tabure başına) ve BEZ (`ChromeArt.Cloth`, tezgâhın sol ucunda x60) alınıp üstünden geçirilince siler
+(bardağın altını Core reddeder, ret bir kez toast); lavabo tıklaması eldekileri yıkar
+(`WashGlasses`; "NOTHING TO WASH" / "THE TAP IS RUNNING"), su `WashSecondsFor(n)` boyunca kabın
+üstünde kare-sayfa olarak akar (`fx_sink_water`, `Tools/sink_water_gen.py` lavabonun siluetinden;
+hücre boyu `fixtures.json`'daki `cellW/cellH` — TV'nin kesicisi de artık hücreyi veriden okur) ve
+`tap_water` döngüsü çalar (rim döngüsüyle aynı kanal, rim öncelikli). Eşleşmeyen dökümün bardağı da
 sahnede duruyor.
 
 **Veri.** 25 parçaya `comfort`; üç masa yuvası üçer basamaklı merdiven (`table_{left,mid,right}_{1,2,3}`,

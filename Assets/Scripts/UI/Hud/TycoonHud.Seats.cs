@@ -352,25 +352,29 @@ namespace LastCall.UI
                     img.color = new Color(1f, 1f, 1f, 0.85f);
                     if (img.sprite == null) img.color = new Color(0.8f, 0.9f, 0.95f, 0.5f);
                     var view = v;
-                    var btn = prop.gameObject.AddComponent<Button>();
-                    btn.targetGraphic = img;
-                    btn.transition = Selectable.Transition.None;
-                    btn.onClick.AddListener(() =>
+                    // PICKED UP, NOT PRESSED (GDD 27 §4.2, H4 2026-09-05): pointer-down
+                    // collects the glass — Core frees the stool this instant — and the glass
+                    // follows the hand until it is let go. Over the sink it is washed; anywhere
+                    // else it stays in the hand for the sink's own click. The mark under it
+                    // stays for the cloth.
+                    var grab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+                    grab.callback.AddListener(_ =>
                     {
-                        // COLLECTED, not cleared (GDD 27 §4.2, 2026-09-05): the glass goes
-                        // into the hand and the stool frees this instant; the mark under it
-                        // and the trip to the sink are the counter's next verbs (PLAN H4).
                         if (view.Dirty == null || !view.Dirty.HasGlass) return;
-                        try { Run?.CollectGlass(view.Dirty); }
+                        var runNow = Run;
+                        if (runNow == null || (_flow != null && _flow.IsOpen) || CellarOpen) return;
+                        try { runNow.CollectGlass(view.Dirty); }
                         catch (System.InvalidOperationException e) { Toast(e.Message); return; }
-                        Sfx.Play("glass_down", 0.9f);
-                        Toast("GLASS COLLECTED — SEAT IS FREE");
+                        Sfx.Play("glass_pickup", 0.8f);
+                        var art = view.DirtyProp != null ? view.DirtyProp.GetComponent<Image>() : null;
+                        BeginGlassCarry(art != null ? art.sprite : null);
                     });
+                    prop.gameObject.AddComponent<EventTrigger>().triggers.Add(grab);
                     // ...and it says so before it is pressed (2026-08-26): the author's
                     // rule is about this KIND of interaction, not about the menu alone.
                     var dirtyRelay = prop.gameObject.AddComponent<HoverRelay>();
                     var dirtyRt = prop;
-                    dirtyRelay.Entered = () => ShowPropTip(dirtyRt, "CLEAR THE GLASS");
+                    dirtyRelay.Entered = () => ShowPropTip(dirtyRt, "TAKE THE GLASS");
                     dirtyRelay.Exited = () => HidePropTip(dirtyRt);
                     var sink = prop.gameObject.AddComponent<PressSink>();
                     sink.Face = prop; sink.Depth = 3f; sink.Lift = 3f; sink.Tint = img;
@@ -380,8 +384,18 @@ namespace LastCall.UI
                 {
                     Destroy(v.DirtyProp.gameObject);
                     v.DirtyProp = null;
-                    v.Dirty = null;
                 }
+                // THE MARK UNDER IT (GDD 27 §4.1, H4): it stays after the glass is collected,
+                // until the cloth wipes it; the seat forgets the mess only once both are gone.
+                bool mark = v.Dirty != null && v.Dirty.Smudged;
+                if (mark && v.SmudgeProp == null) v.SmudgeProp = BuildSmudge(v);
+                else if (!mark && v.SmudgeProp != null)
+                {
+                    Destroy(v.SmudgeProp.gameObject);
+                    v.SmudgeProp = null;
+                }
+                if (v.Dirty != null && v.Dirty.IsClean && v.DirtyProp == null && v.SmudgeProp == null)
+                    v.Dirty = null;
                 // ON the counter's drawn surface, not floating at the waist-clip line (the
                 // author's report): the clip line is the counter's BACK edge; the top surface
                 // the glass stands on reads ~36px lower in the scene.
@@ -396,6 +410,9 @@ namespace LastCall.UI
                 if (v.DirtyProp != null)
                     v.DirtyProp.anchoredPosition =
                         new Vector2(v.SeatX, CounterLineY - 36f + CounterLift);
+                if (v.SmudgeProp != null)
+                    v.SmudgeProp.anchoredPosition =
+                        new Vector2(v.SeatX + 4f, CounterLineY - 40f + CounterLift);
             }
         }
 
@@ -696,6 +713,8 @@ namespace LastCall.UI
                 _prepProps.Add(prop);
             }
 
+            BuildCloth();
+
             // The piece in the hand. Built once, hidden, and dressed at every pick-up: a
             // sprite spawned per drag would be a new GameObject on every touch of the bar.
             _prepCarry = NewRect("PrepInHand", root);
@@ -797,6 +816,216 @@ namespace LastCall.UI
 
         /// <summary>The shed crystals, falling. Cheap: a handful of 3-unit rects with a
         /// half-second life, and the list is empty the moment the hand is empty.</summary>
+        // ── the counter's own verbs on the screen (GDD 27 §4, H4, 2026-09-05) ───
+        //
+        // Three things the player does with what a drinker leaves: TAKE the glass (pointer-
+        // down on it; it follows the hand and is washed if let go over the sink, kept in the
+        // hand otherwise), WIPE the mark (the cloth, picked up off the counter's left end and
+        // passed over it — never under a glass, which Core refuses in words), and WASH what
+        // is in the hand (the sink's click; the tap runs for Core's WashSecondsFor). Every
+        // one of them is a Core verb the bot already calls; this only draws them.
+
+        private const float ClothX = 60f;     // the counter's left end, clear of the book at 158
+        private RectTransform _clothRt;
+        private Image _clothImg;
+        private bool _clothHeld;
+        private SeatView _clothRefused;
+        private RectTransform _glassCarry;
+        private Image _glassCarryImg;
+        private bool _glassCarrying;
+        private Text _handStrip;
+
+        private void BuildCloth()
+        {
+            if (_clothRt != null) return;
+            _clothRt = NewRect("Cloth", _hudRoot);
+            _clothRt.anchorMin = _clothRt.anchorMax = new Vector2(0.5f, 0.5f);
+            _clothRt.pivot = new Vector2(0.5f, 0f);
+            _clothRt.sizeDelta = new Vector2(52, 32);
+            _clothImg = _clothRt.gameObject.AddComponent<Image>();
+            _clothImg.sprite = ChromeArt.Cloth();
+            _clothImg.preserveAspect = true;
+            var glow = _clothRt.gameObject.AddComponent<HoverGlow>();
+            glow.Graphics = new Graphic[] { _clothImg };
+            var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            down.callback.AddListener(_ => GrabCloth());
+            _clothRt.gameObject.AddComponent<EventTrigger>().triggers.Add(down);
+            var relay = _clothRt.gameObject.AddComponent<HoverRelay>();
+            relay.Entered = () => ShowPropTip(_clothRt, "THE CLOTH");
+            relay.Exited = () => HidePropTip(_clothRt);
+
+            // What the hand holds, said over the sink: glasses waiting, or the wash running.
+            _handStrip = NewText("InHand", _hudRoot, _body, 8, TextAnchor.LowerCenter, UITheme.Cream[3]);
+            _handStrip.rectTransform.anchorMin = _handStrip.rectTransform.anchorMax = new Vector2(0, 0);
+            _handStrip.rectTransform.pivot = new Vector2(0.5f, 0f);
+            _handStrip.rectTransform.sizeDelta = new Vector2(240, 14);
+            _handStrip.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _handStrip.raycastTarget = false;
+            _handStrip.text = "";
+        }
+
+        /// <summary>A stool's mark: the counter's own dark, a little off centre, behind the
+        /// glass that made it.</summary>
+        private RectTransform BuildSmudge(SeatView v)
+        {
+            var rt = NewRect("Smudge", _hudRoot);
+            rt.anchorMin = rt.anchorMax = new Vector2(0, 0);
+            rt.pivot = new Vector2(0.5f, 0f);
+            rt.sizeDelta = new Vector2(56, 18);
+            var img = rt.gameObject.AddComponent<Image>();
+            img.sprite = ChromeArt.Smudge(v.Index);
+            img.preserveAspect = true;
+            rt.SetAsFirstSibling();
+            var relay = rt.gameObject.AddComponent<HoverRelay>();
+            relay.Entered = () => ShowPropTip(rt, "A MARK — WIPE IT");
+            relay.Exited = () => HidePropTip(rt);
+            return rt;
+        }
+
+        /// <summary>Bottom-left HUD units to the centre-anchored space the carried props live in.</summary>
+        private Vector2 ToCentre(Vector2 bottomLeft) =>
+            bottomLeft - _hudRoot.rect.size * 0.5f;
+
+        private void GrabCloth()
+        {
+            var run = Run;
+            if (run == null || run.Phase != TycoonPhase.DayOpen) return;
+            if (_flow != null && _flow.IsOpen) return;
+            if (CellarOpen || _clothRt == null) return;
+            _clothHeld = true;
+            _clothRefused = null;
+            _clothRt.SetAsLastSibling();
+            HidePropTip(_clothRt);
+            Sfx.Play("click", 0.4f);
+        }
+
+        private void DropCloth()
+        {
+            if (!_clothHeld) return;
+            _clothHeld = false;
+            Sfx.Play("dish_down", 0.45f);
+        }
+
+        private void StepCloth(TycoonRun run)
+        {
+            if (_clothRt == null) return;
+            bool on = run != null && run.Phase == TycoonPhase.DayOpen && (_flow == null || !_flow.IsOpen);
+            if (_clothRt.gameObject.activeSelf != on) _clothRt.gameObject.SetActive(on);
+            if (!on) { _clothHeld = false; return; }
+            var home = ToCentre(new Vector2(ClothX, CounterLineY - 36f + CounterLift));
+            if (!_clothHeld)
+            {
+                _clothRt.anchoredPosition = home;
+                _clothImg.raycastTarget = !CellarOpen;
+                return;
+            }
+            var mouse = Mouse.current;
+            if (mouse == null || !mouse.leftButton.isPressed || CellarOpen) { DropCloth(); return; }
+            var screen = mouse.position.ReadValue();
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot, screen, null, out Vector2 at))
+                _clothRt.anchoredPosition = at + new Vector2(0f, -12f);
+            // WIPING IS PASSING OVER (GDD 27 §4.2): the cloth over a mark wipes it. Under a
+            // glass Core refuses, and the refusal is said once per mark per grab.
+            foreach (var v in _seats)
+            {
+                if (v.SmudgeProp == null || v.Dirty == null || !v.Dirty.Smudged) continue;
+                if (!RectTransformUtility.RectangleContainsScreenPoint(v.SmudgeProp, screen, null)) continue;
+                try
+                {
+                    run.Wipe(v.Dirty);
+                    Sfx.Play("rim_done", 0.45f);
+                    for (int i = 0; i < 4; i++) ShedDrop(at + new Vector2((i - 1.5f) * 7f, -16f));
+                }
+                catch (System.InvalidOperationException e)
+                {
+                    if (_clothRefused != v) { _clothRefused = v; Toast(e.Message.ToUpperInvariant()); }
+                }
+            }
+        }
+
+        /// <summary>A droplet off the cloth — the grain's own rig, in water's colour.</summary>
+        private void ShedDrop(Vector2 at)
+        {
+            var rt = NewRect("Drop", _hudRoot);
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(3f, 3f);
+            rt.anchoredPosition = at;
+            var img = rt.gameObject.AddComponent<Image>();
+            img.color = UITheme.Cyan[4];
+            img.raycastTarget = false;
+            float kick = ((_grains.Count * 37) % 41) / 20f - 1f;
+            _grains.Add((rt, img, new Vector2(kick * 26f, -16f), Time.unscaledTime));
+        }
+
+        private void BeginGlassCarry(Sprite art)
+        {
+            if (_glassCarry == null)
+            {
+                _glassCarry = NewRect("GlassInHand", _hudRoot);
+                _glassCarry.anchorMin = _glassCarry.anchorMax = new Vector2(0.5f, 0.5f);
+                _glassCarry.pivot = new Vector2(0.5f, 0.35f);
+                _glassCarry.sizeDelta = new Vector2(34, 52);
+                _glassCarryImg = _glassCarry.gameObject.AddComponent<Image>();
+                _glassCarryImg.preserveAspect = true;
+                _glassCarryImg.raycastTarget = false;
+            }
+            _glassCarryImg.sprite = art;
+            _glassCarryImg.color = art != null ? new Color(1f, 1f, 1f, 0.95f) : new Color(0.8f, 0.9f, 0.95f, 0.5f);
+            _glassCarrying = true;
+            _glassCarry.gameObject.SetActive(true);
+            _glassCarry.SetAsLastSibling();
+        }
+
+        private void StepGlassCarry(TycoonRun run)
+        {
+            if (!_glassCarrying || _glassCarry == null) return;
+            var mouse = Mouse.current;
+            if (mouse == null || run == null || run.Phase != TycoonPhase.DayOpen) { EndGlassCarry(false); return; }
+            var screen = mouse.position.ReadValue();
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot, screen, null, out Vector2 at))
+                _glassCarry.anchoredPosition = at;
+            if (mouse.leftButton.isPressed) return;
+            EndGlassCarry(stage != null && stage.PointerOverDrain(screen));
+        }
+
+        private void EndGlassCarry(bool intoTheSink)
+        {
+            _glassCarrying = false;
+            if (_glassCarry != null) _glassCarry.gameObject.SetActive(false);
+            if (intoTheSink) OnSinkClicked();
+            else Toast("IN HAND — CLICK THE SINK TO WASH", UITheme.Cream[3]);
+        }
+
+        /// <summary>The sink's click: wash what the hand holds. The one free verb on the
+        /// drain — pouring a drink away is still only by carrying it there.</summary>
+        private void OnSinkClicked()
+        {
+            var run = Run;
+            if (run == null || run.Phase != TycoonPhase.DayOpen) return;
+            if (_flow != null && _flow.IsOpen) return;
+            if (run.GlassesInHand == 0) { Toast("NOTHING TO WASH"); return; }
+            if (run.SinkBusy) { Toast("THE TAP IS RUNNING"); return; }
+            try { run.WashGlasses(); }
+            catch (System.InvalidOperationException e) { Toast(e.Message); return; }
+            Sfx.Play("drain", 0.5f);
+            Toast("WASHING UP", UITheme.Cyan[4]);
+        }
+
+        /// <summary>Each frame: the tap runs while Core says so, and the strip over the sink
+        /// says what the hand holds.</summary>
+        private void StepSink(TycoonRun run)
+        {
+            bool busy = run != null && run.Phase == TycoonPhase.DayOpen && run.SinkBusy;
+            if (stage != null) stage.SetTapRunning(busy);
+            if (_handStrip == null) return;
+            string line = run == null || run.Phase != TycoonPhase.DayOpen ? ""
+                : busy ? "WASHING · " + Mathf.CeilToInt((float)run.WashLeft) + "s"
+                : run.GlassesInHand > 0 ? run.GlassesInHand + " IN HAND · CLICK THE SINK" : "";
+            if (_handStrip.text != line) _handStrip.text = line;
+            // Over the sink's own slot (stage 140, 68.5 — the basin is 35 art px tall).
+            _handStrip.rectTransform.anchoredPosition = new Vector2(280f, 137f + 70f + 6f + CounterLift);
+        }
+
         private void StepGrains()
         {
             if (_grains.Count == 0) return;
@@ -1103,11 +1332,17 @@ namespace LastCall.UI
             }
             StepPrepCarry(run);
             StepGrains();
+            StepCloth(run);
+            StepGlassCarry(run);
+            StepSink(run);
             // THE RIM'S GRIND, decided once (2026-08-27). The flag is set by StepRimLap
             // while the lap is actually turning and cleared here after it is read, so a
             // cursor that leaves the band, a dish that is put down, or a stage that opens
             // over the room all stop the sound by simply not asking for it again.
-            Sfx.HoldLoop(_rimLoopWanted ? "rim_turn" : null, 0.7f);
+            // The TAP shares the channel (H4): it runs while Core says the sink is busy, and
+            // the rim's grind, being the one in the hand, takes precedence.
+            string loop = _rimLoopWanted ? "rim_turn" : run.SinkBusy ? "tap_water" : null;
+            Sfx.HoldLoop(loop, loop == "tap_water" ? 0.45f : 0.7f);
             _rimLoopWanted = false;
         }
 

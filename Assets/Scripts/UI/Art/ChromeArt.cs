@@ -2035,6 +2035,88 @@ namespace LastCall.UI
             return Cache[key] = Make(px, S, S, Vector4.zero);
         }
 
+        // ── the counter's mess and its cloth (GDD 27 §4, 2026-09-05) ───────────────
+
+        /// <summary>
+        /// A MARK on the counter: the ring a wet glass leaves, in the counter's own dark, a
+        /// little broken so no two stools carry the same one. Translucent, because it is a
+        /// stain on the bar and not a thing standing on it.
+        /// </summary>
+        public static Sprite Smudge(int seed)
+        {
+            string key = "smudge:" + seed;
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            const int W = 28, H = 9;
+            var px = new Color32[W * H];
+            // A WET RING CATCHES THE LIGHT. The first draft was the counter's own dark at
+            // half alpha, and on the slate it was invisible — photographed in play
+            // (2026-09-05). What a glass leaves on a dark bar is a pale ring of water with
+            // the room's neon in it, so the ring is cream and the wash inside it cyan, both
+            // translucent, both a step brighter than the slab.
+            var ring = new Color32(0xF2, 0xE8, 0xD5, 96);
+            var wash = new Color32(0x7D, 0xF0, 0xE3, 34);
+            float cx = (W - 1) / 2f, cy = (H - 1) / 2f;
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    float dx = (x - cx) / cx, dy = (y - cy) / cy;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    float edge = 0.94f + (Hash(x, y, 11 + seed) - 0.5f) * 0.14f;
+                    Color32 c = new Color32(0, 0, 0, 0);
+                    if (d <= edge && d > edge - 0.26f) c = Hash(x, y, 5 + seed) > 0.14f ? ring : wash;
+                    else if (d <= edge - 0.26f && Hash(x, y, 7 + seed) > 0.55f) c = wash;
+                    px[(H - 1 - y) * W + x] = c;
+                }
+            return Cache[key] = Make(px, W, H, Vector4.zero);
+        }
+
+        /// <summary>THE CLOTH: a bar rag folded once, cream with one stripe, set on the
+        /// counter's end. Drawn at the counter's grain (26x16 art px for a 52x32 rect).</summary>
+        public static Sprite Cloth()
+        {
+            const string key = "cloth";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            const int W = 26, H = 16;
+            var px = new Color32[W * H];
+            Color32 ink = UITheme.Night[0];
+            Color32 face = UITheme.Cream[3];
+            Color32 lit = UITheme.Cream[4];
+            Color32 fold = UITheme.Cream[2];
+            Color32 stripe = UITheme.Amber[2];
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    // rows count from the TOP here; a folded rag: a slab, its top edge lit,
+                    // a fold line a third down, a stripe across the lower half, ragged ends
+                    bool inside = x >= 1 && x <= W - 2 && y >= 2 && y <= H - 2
+                                  && !(x <= 2 && Hash(x, y, 3) > 0.6f) && !(x >= W - 3 && Hash(x, y, 9) > 0.6f);
+                    Color32 c = new Color32(0, 0, 0, 0);
+                    if (inside)
+                    {
+                        c = face;
+                        if (y == 2 || y == 3) c = lit;
+                        if (y == 6) c = fold;
+                        if (y >= 9 && y <= 10) c = stripe;
+                        if (y == H - 2) c = fold;
+                    }
+                    else
+                    {
+                        bool nearby = false;
+                        for (int oy = -1; oy <= 1 && !nearby; oy++)
+                            for (int ox = -1; ox <= 1 && !nearby; ox++)
+                            {
+                                int nx = x + ox, ny = y + oy;
+                                if (nx < 1 || nx > W - 2 || ny < 2 || ny > H - 2) continue;
+                                if ((nx <= 2 && Hash(nx, ny, 3) > 0.6f) || (nx >= W - 3 && Hash(nx, ny, 9) > 0.6f)) continue;
+                                nearby = true;
+                            }
+                        if (nearby) c = ink;
+                    }
+                    px[(H - 1 - y) * W + x] = c;
+                }
+            return Cache[key] = Make(px, W, H, Vector4.zero);
+        }
+
         private static Color32 Hex(int v) =>
             new Color32((byte)((v >> 16) & 255), (byte)((v >> 8) & 255), (byte)(v & 255), 255);
 

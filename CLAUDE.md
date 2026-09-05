@@ -16,10 +16,10 @@ own the house and the door** — two ratings sharing one row of stars (COMFORT f
 drained by the counter's mess; SERVICE from the drink; the night files the lower), the
 wipe / collect / wash verbs, the upgrade ladder, under-20 customers, borrowed cards and the
 kick (staged in `Docs/PLAN_house_and_law.md`: H0, the silent Core halves H1/H2 and the comfort
-wiring H1b are in — the counter keeps its mess and the night files `min(service, comfort)`,
-with the scene's marks gated OFF by `TycoonConfig.ForTheScene` until the cloth is drawn; H2b/H3
-the door are in — papers behind the card, the KICK key, the fine, the thanks; H4 the cloth and
-sink, H5 the two symbols on the boards, H6 content are not built). The historical modules (00–13, 17, 19, 20 — card era and the demolished
+wiring H1b are in — the counter keeps its mess and the night files `min(service, comfort)`;
+H4 draws it — the glass carried to the sink, the cloth over the mark, the tap's water; H2b/H3
+the door are in — papers behind the card, the KICK key, the fine, the thanks; H5 the two
+symbols on the boards and H6 content are not built). The historical modules (00–13, 17, 19, 20 — card era and the demolished
 emotion layer) were DELETED in the 2026-08-07 sweep; recipe truth is `recipes.json` ↔
 `RecipeCatalog` under the parity test, ingredient types are the `IngredientType` enum.
 **The staging document is `Docs/PLAN_service_depth.md` (v5)** — phase order and conflict

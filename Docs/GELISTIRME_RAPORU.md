@@ -226,6 +226,46 @@ ve öyle bir an yok. Tarifi `sfx_bank.py`'de duruyor (fatura bir gün satır sat
 bedava geri gelir), wav silindi — yüklenmeyen sanat borçtur, iki gün önce kendi koyduğumuz
 kural.
 
+### 0.10 · Tek oturuma dönüş — yarım kalanların kapanışı ve süpürme (2026-09-05)
+
+Yazar: *"Tek oturumdan devam edeceğiz çok karmaşa yaşandı. Yarım kalan işleri tespit et, yarım
+kalan işleri bitir. Mevcut projede gereksiz, eski, hatalı sürümleri kaldıralım."* Dört paralel
+oturumun ağaçta bıraktığı 215 dosyalık kirli çalışma alanı hunk hunk sınıflandırıldı (kim, ne,
+bitmiş mi) ve dokuz commit hâlinde `main`'e indi — her biri aynı doğrulanmış ağaçtan, geçici
+index'le (paylaşılan index'e dokunmadan) dilimlenerek:
+
+| Commit | Ne | Sahibi (oturum) |
+|---|---|---|
+| `6cbe1f7b` | tek sabır saati; sipariş almak bir kutu öder (§9.22) | 0c7527bb (bitmiş, commit'siz) |
+| `b136a9c8` | kokteyl yapılırken musluk kilitli | 6c |
+| `6673cb47` | **H1b** — konfor puanı ve tezgâhın gecesi kablolandı (§9.23) | bu oturum |
+| `ae732239` | tezgâhın tek ayak çizgisi, gövdeli bardak altlığı, `ItemArt.OpaqueBounds` | cdfbf9b7 + db |
+| `3d48d683` | fişte çizili $ ve yıldız, haftanın cirosu | e97395d4 |
+| `7ba2f53a` | 25 PNG — odanın sanatı olduğu gibi | yazar + eski turlar |
+| `2378c708` | tezgâh yeniden: kayrak, shaker-gösterge, peçete, ÇÖP tuşu, kapağı açık döküm | db (yazarın yönetiminde) |
+| `d468216d` | süpürme (aşağıda) | bu oturum |
+
+**Süpürme, ölçerek.** `Assets/Resources` altındaki her PNG oyunun kendi yükleme zincirine karşı
+ada, türetilmiş öneke VE sahne GUID'ine göre sınandı (`art_reach.py`): 41 kartın 39'unda tam v4
+sandviç var (iki garnitür kartı hariç — onların resmi tezgâhtaki kâse oldu); `bot_*` meşrubat
+çekimleri, v2 stil şişeleri (`vodka.png` …), `ice/prep_lemon/pint`, `bench_mini_*`, `btn_bin`,
+`sign_open`, sekiz arketip portresi (her yüzün kendi fotoğrafı var), `Pending~` klasörü ve
+`register2` gitti; `ItemArt.Bottle` v4 → garnitür kâsesi → null'a indi, `Bottle(style)` ve
+`ItemArt.Prep` silindi, kitap ve tarif kartları raftaki olmayan stili katalogdan çiziyor
+(`ItemArt.StyleBottle`). Sahne koddan yeniden kuruldu (portre alanı düştü). **Henüz silinmeyen
+(izin bekliyor):** 57 `v3_*_flat` plakası, `lager/pale_ale/stout.png`, `fx_fern`, dört kâse
+yedeği, 37 emekli Tools betiği ve durum dosyası, Antigravity dönemi `Tools/AssetPipeline` sunucusu,
+`Docs/PLAN_tycoon_pivot.md` (PLAN_service_depth'e emilmişti), `_Recovery`/`InitTestScene*`
+kalıntıları — manifesti `scratchpad/sweep_manifest.py`, toplu silme otomatik modda engellendi.
+
+**Yanlış sürüm bulundu, geri alınmadı (yazarın kararı):** `v4_energy_volt.png` çalışma
+kopyasının arka planı opak koyu gri (kesilmemiş bir yeniden çekim) — commit edilmedi, HEAD'deki
+doğru kutu duruyor; 12 PNG yalnız bayt düzeyinde farklı (piksel aynı), onlar da commit edilmedi.
+`fx_tap_single` / `bench_tap_single` yazarın o anki elinde (17:44), dokunulmadı.
+
+**Doğrulama:** EditMode 452/452, PlayMode 10/10 (tezgâh baseline'ı yeni görünümle yeniden
+kutsandı — resme bakılarak), 200 koşu sim + dört ev şekli (§9.23).
+
 ## 1 · Yönetici özeti
 
 Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 testle korunuyor; içki fiziği (dökme/çalkalama/musluk) gerçek; gizli-bilgi mekaniği (kimlik kartı) kodda hakikaten kilitli. Üç gerçek borç alanı var: **(a) ekonomi jilet sırtında ve geç-oyun şekli görünmez** (sim tablosu tam kötüleştiği günde kesiliyor), **(b) UI ~13–14k satır ve sıfır otomatik test**, **(c) doküman-kod makası açılmış** (12 doğrulanmış çelişki) ve sanat programı yarım kararlarla askıda.
@@ -277,8 +317,8 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 | ~~DiegeticStage emekli döngü~~ ✅ | ~~700 satır~~ | **süpürüldü** (2026-08-07 ve 2026-08-27 turları) |
 | ~~Menu.cs ölü aile~~ ✅ | ~~250 satır~~ | **dosya bütün olarak silindi** 2026-08-22'de back-bar sayfasıyla birlikte |
 | ~~Yetim PNG (Items)~~ ✅ | ~~14 dosya~~ → gerçekte **22** | **silindi 2026-08-27** (`2c8fb8d8`); her aday adla VE GUID'le doğrulandı, `register2.png` yalnız GUID'le bağlı çıkıp kurtuldu |
-| Gölgelenmiş sanat | 116 v3 plaka (bilinçli rezerv) + 30 bot_* + 20 stil `_open` | yükleme zinciri asla ulaşmıyor |
-| Assets/Art fiilen ölü | 21 şişe + vip_patron + pour_nick(+mask) + club_bg | sahneye bağlı ama gizli/ölü yolda |
+| Gölgelenmiş sanat | ~~30 bot_* + 20 stil `_open`~~ **silindi 2026-09-05** (`d468216d`); 57 `v3_*_flat` plakası silme izni bekliyor (§0.10) | yükleme zinciri artık v4 → kâse → null; v3 dalı koddan çıktı |
+| ~~Assets/Art fiilen ölü~~ ✅ | ~~21 şişe + vip_patron + pour_nick(+mask) + club_bg~~ | **bitti** — 2026-09-05'te `Pending~`, arketip portreleri ve `register2` de gitti; `Assets/Art` yalnız üç arka plan |
 | DTO ölü alanlar | charges/bands/chargeMultiplier | sökülen duygu katmanının kalıntısı |
 | Tekrarlar | NewRect/NewText ×4 sınıf; iki mix-bar ikizi (~55 satır ×2); TycoonHud 3.4k satır tek sınıf | bölünmemiş |
 | Veri tuhaflıkları | glassware.json yorumu "3 kademe" der, kod 5 ister; `weight≤0→1` sessiz düzeltme; tequila tek kilitli-T1 hattı | bilinçli mi belgelenmeli |
@@ -318,7 +358,7 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 |---|---|---|
 | ~~P0~~ ✅ | ~~Sim tablosunu 30 güne aç + yeniden koştur~~ | **kapandı 2026-08-15** — §0.7; geç oyun görünür ve cevap "sıkışma yok" |
 | **P0** | Bota kusurlu-oyun modu (isabet/oran gürültüsü, gecikme) | Close/Wrong/Refused ekonomisi ilk kez ölçülür |
-| **P0** | `BottleArt.cs` bayrağını commit et (test yeşiliyle) | çalışma ağacı temizlenir |
+| ~~P0~~ ✅ | ~~`BottleArt.cs` bayrağını commit et~~ | **kapandı** — bayrak çoktan girmiş; 2026-09-05'te ağaç dokuz commit'le temizlendi (§0.10) |
 | ~~P0~~ ✅ | ~~CLAUDE.md onarımı (UI satır sayısı, modül işaretçileri)~~ | **kapandı 2026-08-27** — `.Menu` parçası (2026-08-22'de silinmişti) mimari bölümünden çıktı, içki alma yeri tezgâhın mahzeni olarak yazıldı, UI satır sayısı 17.5k → 28k |
 | **P1** | Ekonomi dengeleme turu (P18) — yeni sim verisiyle | kasa medyanı $7'den yaşanır aralığa |
 | **P1** | Doküman borcu tek geçiş (§6 tablosu) + `GDD_MEVCUT` tek-gerçek ilanı | makas kapanır |
@@ -341,7 +381,7 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 | **P1** | PlayMode duman testi: sahneyi kur, menüyü aç, bir gün oynat | menü regresyonu (`e9ca821`) tam olarak bu ağın yokluğunda geçti — testler yeşildi |
 | **P2** | `StageDressing` katmanını world-space'e al | elle yerleştirilen dekor da ışık alsın; şu an odanın tek ışıksız parçası |
 | **P2** | Fikstür sanatının PixelLab turu (rapor-önce) | placeholder'lar dosya-adı birebir değiştirilebilir; kod dokunulmaz |
-| **P2** | Bota fikstür alımı öğret | kozmetik oldukları için tabanı bozmaz ama satın alma yolu sınanır |
+| ~~P2~~ ✅ | ~~Bota fikstür alımı öğret~~ | **kapandı 2026-09-05** (`6673cb47`) — bot `fixtures.json` yüklüyor, gecede bir açık basamağı dolar başına konfora göre alıyor; §9.23 |
 
 ### 8.2 · Son müşteri planından çıkan bulgular (2026-08-12)
 
@@ -360,11 +400,11 @@ Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik, 175 
 
 | Öncelik | İş | Neden / çıktı |
 |---|---|---|
-| **P0** | Paylaşılan ağaçtaki sahipsiz Core değişiklikleri (tek saat sabrı, meşrubat fiyatı, TV: `CustomerVisit`, `TycoonConfig`, `DataLoader`, `FixtureDefinition`, `fixtures.json`) commit'lensin | H1b/H2b kablolaması bu dosyalara girer; sahipsiz yarım iş üstüne hunk stage etmek "test edemediğin parçayı commit'lemek" demek (PLAN §çalışma koşulları) |
-| **P0** | `PlayDayServingEveryone` test yardımcısı temizlik yapsın (topla → sil → yıka) | kirli bardak artık kendini temizlemiyor; yardımcı temizlemezse her çivili yıldız sayısı kirli barın sayısı olur |
-| **P1** | Reddedilen sipariş (`DeclineOrder`) GÖRÜNMEZ bir Core bardağı bırakıyor ve tabureyi 7 sn kilitliyor (`BarDay.Tick`, `State != StormedOff`) | hata; H1b'de "dökülmeyen içki iz bırakmaz" ile kapanır (PLAN C6) |
+| ~~P0~~ ✅ | ~~Paylaşılan ağaçtaki sahipsiz Core değişiklikleri commit'lensin~~ | **kapandı 2026-09-05** — tek saat `6cbe1f7b`, musluk kilidi `b136a9c8`, TV/meşrubat 9c ve 6c'nin kendi commit'leri; §0.10 |
+| ~~P0~~ ✅ | ~~`PlayDayServingEveryone` test yardımcısı temizlik yapsın~~ | **kapandı** (`6673cb47`) — `TestNight.Clean` iki yardımcıda da |
+| ~~P1~~ ✅ | ~~Reddedilen sipariş görünmez bardak bırakıyor~~ | **kapandı** (`6673cb47`, C6) — sinyal `DrinkServed`, yalnız `ServeTo` kurar |
 | **P1** | Fiş ham oda yıldızı, hafta tahtası KIRPILMIŞ gece, defter `NightStars` basıyor — üç yüzey üç sayı | GDD 27 D7 bilinçli tutuyor; ayakta duran tahta min'i açıklamalı, yoksa oyuncu "4.9 yazdı, 2.0 girdi" der |
 | **P1** | `TycoonHud.DayEnd` dressing koridoru "bir basamak ileri" kuralını yalnız HUD'da taşıyor, Core'da/testte pin yok | H1b'de `VisibleRung(slot)` sorgusu ya da katalog testi |
-| **P2** | Sim botu fikstür almıyor (§8.1 P2 hâlâ açık) ve `fixtures.json`'ı hiç yüklemiyor | konfor tabanı fikstürden gelince bot sonsuza dek taban konforda kalır; H1b botu döşeme alıp temizlik yapmayı öğreniyor |
-| **P2** | `GDD 23 §7/§8`, `GDD_MEVCUT §7`, `BALANCE.md` düzyazısı hâlâ `1 + 4x` ve silinmiş "arka duvar / müzisyen" satırlarını taşıyor | kod 5x (2026-08-11); H1b'nin doküman geçişinde silinir |
-| **P2** | `DiegeticStage.LoadScreenFrames` hücre boyu TV'ye sabit (45×45) | lavabo suyu ikinci kare-sayfası; kesici json'dan hücre okumalı (H4) |
+| ~~P2~~ ✅ | ~~Sim botu fikstür almıyor~~ | **kapandı** (`6673cb47`) — bkz. §8.1 |
+| **P2** | ~~`GDD 23 §7/§8`, `GDD_MEVCUT §7`~~ düzeltildi (`6673cb47`); `BALANCE.md` hâlâ eski (`LastCall → Write Balance Guide` ile yeniden üretilmeli, konfor sayfası eklenmeli) | kod 5x (2026-08-11) |
+| ~~P2~~ ✅ | ~~`DiegeticStage.LoadScreenFrames` hücre boyu TV'ye sabit~~ | **kapandı 2026-09-05** (H4) — `cellW`/`cellH` fikstürün kendi satırında; lavabo suyu ikinci sayfa |

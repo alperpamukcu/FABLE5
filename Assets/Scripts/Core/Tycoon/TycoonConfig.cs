@@ -23,12 +23,13 @@ namespace LastCall.Core
         // cuts the last one off wherever it happens to be.
         public static readonly TycoonConfig Default = new TycoonConfig(savorSeconds: 13.2);
 
-        /// <summary>The scene's config: <see cref="Default"/> with the counter's MARKS off
-        /// until the cloth is drawn (PLAN_house_and_law H4) — see
-        /// <see cref="CounterSmudges"/>. The glasses are on: the scene already draws and
-        /// collects them.</summary>
+        /// <summary>The scene's config. It handed the scene the counter's MARKS switched off
+        /// between H1b and H4 (2026-09-05, the same day) — the rule was filed before the cloth
+        /// was drawn, and a comfort the player cannot clean would have been the invisible
+        /// clamp GDD 27 was written to remove. The cloth is on the counter now, so the scene
+        /// pays for everything it shows, exactly as the sim and the tests do.</summary>
         public static readonly TycoonConfig ForTheScene =
-            new TycoonConfig(savorSeconds: 13.2, counterSmudges: false);
+            new TycoonConfig(savorSeconds: 13.2, counterSmudges: true);
 
         // orderDecisionSeconds 4.0 → 5.0 (2026-08-19, the author: "düşünme süresi biraz daha
         // uzun sürsün"): the "..." beat over the head is the thing the player waits ON now,

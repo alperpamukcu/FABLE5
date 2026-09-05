@@ -555,6 +555,81 @@ namespace LastCall.UI
         //  everybody — two readings of one texture is how two props on one bar end up on
         //  two lines.)
 
+        // ── the sink's water (GDD 27 §4.3, 2026-09-05) ──────────────────────────
+        //
+        // The tap runs for as long as Core says the sink is busy (WashSecondsFor: a second
+        // and a half plus half a second a glass), and the HUD tells the stage each frame.
+        // The stream is a frame sheet cut by the fixture's own cell (fixtures.json), laid
+        // over the basin as a child sprite with the basin's pivot, so it lands on the sink
+        // whichever sink is standing in the slot. Nothing is drawn while the tap is off.
+
+        private SpriteRenderer _waterSr;
+        private Sprite[] _waterFrames;
+        private bool _waterOn;
+        private int _waterFrame;
+        private float _waterClock;
+        private const float WaterFrameStep = 1f / 10f;
+
+        private void BuildWater(LastCall.Core.FixtureDefinition def, SpriteRenderer basin)
+        {
+            _waterSr = null;
+            _waterFrames = null;
+            if (def == null || basin == null || basin.sprite == null) return;
+            if (string.IsNullOrEmpty(def.Water) || def.CellW <= 0 || def.CellH <= 0) return;
+            var sheet = Resources.Load<Texture2D>("Fixtures/" + def.Water);
+            if (sheet == null)
+            {
+                Debug.LogWarning($"DiegeticStage: {def.Id} names water '{def.Water}' and there is no such sheet.");
+                return;
+            }
+            int n = sheet.width / def.CellW;
+            if (n < 1 || sheet.height < def.CellH) return;
+            // The basin's own pivot, so frame (0,0) of the water is the basin's (0,0).
+            var pivot = new Vector2(basin.sprite.pivot.x / basin.sprite.rect.width,
+                                    basin.sprite.pivot.y / basin.sprite.rect.height);
+            _waterFrames = new Sprite[n];
+            for (int i = 0; i < n; i++)
+                _waterFrames[i] = Sprite.Create(sheet,
+                    new Rect(i * def.CellW, sheet.height - def.CellH, def.CellW, def.CellH),
+                    pivot, basin.sprite.pixelsPerUnit);
+            var go = new GameObject("Fx_" + def.Id + "_water");
+            go.transform.SetParent(basin.transform, false);
+            _waterSr = go.AddComponent<SpriteRenderer>();
+            _waterSr.sortingLayerName = basin.sortingLayerName;
+            _waterSr.sortingOrder = basin.sortingOrder + 1;
+            if (_litMaterial != null) _waterSr.sharedMaterial = _litMaterial;
+            _waterSr.enabled = false;
+        }
+
+        /// <summary>Told each frame whether the tap is running. Reduced motion holds the
+        /// first frame as a still rather than flickering.</summary>
+        public void SetTapRunning(bool on) => _waterOn = on;
+
+        private void StepWater()
+        {
+            if (_waterSr == null || _waterFrames == null || _waterFrames.Length == 0) return;
+            if (!_waterOn)
+            {
+                if (_waterSr.enabled) _waterSr.enabled = false;
+                return;
+            }
+            if (!_waterSr.enabled)
+            {
+                _waterSr.enabled = true;
+                _waterFrame = 0;
+                _waterClock = 0f;
+                _waterSr.sprite = _waterFrames[0];
+            }
+            if (Motion.Reduced) return;
+            _waterClock += Time.unscaledDeltaTime;
+            while (_waterClock >= WaterFrameStep)
+            {
+                _waterClock -= WaterFrameStep;
+                _waterFrame = (_waterFrame + 1) % _waterFrames.Length;
+            }
+            _waterSr.sprite = _waterFrames[_waterFrame];
+        }
+
         private static float CellarDrawnWidth(Sprite s)
         {
             if (s == null || s.rect.height <= 0.0001f) return CellarBottleH * 0.5f;
@@ -1784,6 +1859,10 @@ namespace LastCall.UI
         private float _lastVisibleW = -1f;
 
         private System.Action _onTapClicked;
+        private System.Action _onSinkClicked;
+
+        /// <summary>The sink's click (2026-09-05): the HUD washes what is in the hand.</summary>
+        public void SetSinkHandler(System.Action onClick) => _onSinkClicked = onClick;
 
         /// <summary>Wires the beer font on the counter to the draught station (2026-08-15).
         /// The stage owns WHERE the font stands, so it owns the hit plate; the HUD owns what
@@ -1820,6 +1899,7 @@ namespace LastCall.UI
 
         private void Update()
         {
+            StepWater();
             StepClosing();
             StepDrawer();
             StepPalms();
@@ -2465,6 +2545,8 @@ namespace LastCall.UI
             foreach (var door in _tapDoors) if (door != null) Destroy(door.gameObject);
             _tapDoors.Clear();
             _drainDoor = null;
+            _waterSr = null;
+            _waterFrames = null;
             // Re-dressing the room destroys the set along with everything else, so the
             // player must be stopped and its handles dropped — a coroutine left running
             // against a destroyed renderer is the shape of bug this file already carries a
@@ -2529,7 +2611,10 @@ namespace LastCall.UI
                     if (def.IsScreen)
                     {
                         int cols;
-                        var frames = LoadScreenFrames(def.Sprite, out cols);
+                        // The cell is the DATA's (2026-09-05); the constants are the
+                        // fallback for a sheet whose row forgot to say.
+                        var frames = LoadScreenFrames(def.Sprite,
+                            def.CellW > 0 ? def.CellW : TvCellW, def.CellH > 0 ? def.CellH : TvCellH, out cols);
                         if (frames != null)
                         {
                             _tvSr = sr;
@@ -2592,7 +2677,15 @@ namespace LastCall.UI
                     // second, cheaper way to do the one thing in this game that costs money
                     // - which is exactly the shape the author sent back.
                     else if (def.IsDrain)
-                        _drainDoor = BuildPropDoor(def, sr, null, "POUR IT AWAY");
+                    {
+                        // ...and since 2026-09-05 the sink DOES take a click, for the one
+                        // free thing it does: washing the glasses in the hand (GDD 27 §4.2).
+                        // Pouring a drink away is still only by carry. The water it runs
+                        // is a frame sheet of its own, over the basin (BuildWater).
+                        _drainDoor = BuildPropDoor(def, sr, () => _onSinkClicked?.Invoke(),
+                                                   "POUR IT AWAY · WASH UP");
+                        BuildWater(def, sr);
+                    }
                 }
             }
             // The set starts once the whole room is dressed, not inside the loop: its own
@@ -3163,17 +3256,17 @@ namespace LastCall.UI
         /// here going stale the next time the sheet is rebuilt. Same reasoning, and same
         /// bottom-up rect arithmetic, as the window's own cutter below.
         /// </summary>
-        private static Sprite[,] LoadScreenFrames(string spriteName, out int cols)
+        private static Sprite[,] LoadScreenFrames(string spriteName, int cellW, int cellH, out int cols)
         {
             cols = 0;
             var sheet = Resources.Load<Texture2D>("Fixtures/" + spriteName);
             if (sheet == null) return null;
-            int c = sheet.width / TvCellW, r = sheet.height / TvCellH;
+            int c = sheet.width / cellW, r = sheet.height / cellH;
             if (c < 1 || r < 1)
             {
                 Debug.LogWarning($"DiegeticStage: screen sheet '{spriteName}' is " +
                                  $"{sheet.width}×{sheet.height}, too small for a " +
-                                 $"{TvCellW}×{TvCellH} cell — it will draw as a still.");
+                                 $"{cellW}×{cellH} cell — it will draw as a still.");
                 return null;
             }
             cols = c;
@@ -3191,9 +3284,9 @@ namespace LastCall.UI
                 int wide = row == TvAdRow ? Mathf.Min(TvAdCount, c) : c;
                 for (int col = 0; col < wide; col++)
                 {
-                    var rect = new Rect(col * TvCellW,
-                                        sheet.height - (row + 1) * TvCellH,
-                                        TvCellW, TvCellH);
+                    var rect = new Rect(col * cellW,
+                                        sheet.height - (row + 1) * cellH,
+                                        cellW, cellH);
                     frames[row, col] = Sprite.Create(sheet, rect, new Vector2(0.5f, 0.5f), 1f);
                 }
             }

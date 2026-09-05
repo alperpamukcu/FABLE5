@@ -437,6 +437,9 @@
       "stars": 0,
       "flavor": "Cold water, a chipped drain, and a landlord who counts what goes down it.",
       "sprite": "fx_sink",
+      "water": "fx_sink_water",
+      "cellW": 82,
+      "cellH": 35,
       "level": 1,
       "startsInTheRoom": true,
       "drain": true
@@ -450,6 +453,9 @@
       "stars": 1.5,
       "flavor": "A basin that catches the neon and keeps it — and a drain nobody bills you for.",
       "sprite": "fx_sink_gold",
+      "water": "fx_sink_water",
+      "cellW": 82,
+      "cellH": 35,
       "level": 2,
       "drain": true,
       "drainsFree": true
@@ -472,6 +478,8 @@
       "stars": 0,
       "flavor": "A boxy set bolted over the booths, running adverts nobody watches and everybody looks at.",
       "sprite": "fx_tv",
+      "cellW": 49,
+      "cellH": 49,
       "screen": true,
       "startsInTheRoom": true,
       "lightR": 0.62,

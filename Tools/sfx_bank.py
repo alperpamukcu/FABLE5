@@ -1301,6 +1301,28 @@ def s_screen_off():
     return lowpass(out, 4000.0)
 
 
+def s_tap_water():
+    """HELD LOOP: WATER RUNNING INTO A STEEL BASIN (2026-09-05, GDD 27 §4.3 — the sink
+    runs for as long as the glasses take to wash).
+
+    Two noises and nothing else: the STREAM, which is bright pink noise through a
+    bandpass around two kilohertz with a slow flutter on it (a tap does not run at one
+    level — the flow wavers a few times a second), and the BASIN, the same noise a
+    good deal lower, which is the water already in the sink being hit. The flutter is
+    two slow sines multiplied, so the loop's 0.6 s tiles without a beat you can hear.
+    """
+    d = 0.60
+    n = int(round(d * SR))
+    out = np.zeros(n)
+    t = np.arange(n) / SR
+    flutter = 0.82 + 0.18 * np.sin(2 * np.pi * 5.0 * t) * np.sin(2 * np.pi * (5.0 / 3.0) * t)
+    stream = bandpass(noise(d, 'tw_s', 'pink'), 2100.0, 1.1) * flutter
+    basin = bandpass(noise(d, 'tw_b', 'pink'), 380.0, 1.8)
+    place(out, 0.0, stream, 0.7)
+    place(out, 0.0, basin, 0.45)
+    return lowpass(out, 5200.0)
+
+
 # name -> (builder, level, loop?, drive)
 BANK = {
     'click':          (s_click,         'tick',    False, 1.0),
@@ -1325,6 +1347,7 @@ BANK = {
     'rim_turn':       (s_rim_turn,      'loop',    True,  1.0),
     'rim_done':       (s_rim_done,      'light',   False, 1.0),
     'tap_pull':       (s_tap_pull,      'loop',    True,  1.0),
+    'tap_water':      (s_tap_water,     'loop',    True,  1.0),
     'shake_loop':     (s_shake_loop,    'loop',    True,  1.1),
     'stir_loop':      (s_stir_loop,     'loop',    True,  1.0),
     'cap_on':         (s_cap_on,        'body',    False, 1.0),

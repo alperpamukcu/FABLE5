@@ -517,6 +517,7 @@ namespace LastCall.UI
             public float SeatX;              // this stool's resting x
             public CounterMess Dirty;        // the mess left on this stool: the glass, then the mark (GDD 27 §4)
             public RectTransform DirtyProp;  // its clickable prop on the counter
+            public RectTransform SmudgeProp; // the mark under it, until the cloth (GDD 27 §4)
             public float WalkT;              // 0..1 walk-in progress
             public float WalkPace;           // 1 at the door, ArrivalPace at the stool
             public bool SawRight, SawLeft;   // was a neighbour there last frame
@@ -1275,6 +1276,7 @@ namespace LastCall.UI
             // (2026-08-15): the kegs left the back-bar wall, and a pint is poured by walking
             // to the tap. The flow's own guard turns the click down between days.
             if (stage != null) stage.SetTapHandler(OnTapClicked);
+            if (stage != null) stage.SetSinkHandler(OnSinkClicked);
             if (stage != null) stage.SetCellarHandler(OnCellarPick);
         }
 

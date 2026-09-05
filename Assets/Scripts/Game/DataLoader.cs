@@ -333,7 +333,7 @@ namespace LastCall.Game
                         f.stars, f.flavor, f.sprite,
                         f.lightR, f.lightG, f.lightB, f.lightIntensity, f.lightRadius,
                         f.startsInTheRoom, f.tapLevel, f.level, f.drain, f.drainsFree,
-                        f.screen, f.comfort));
+                        f.screen, f.comfort, f.cellW, f.cellH, f.water));
                 }
                 catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
                 {
@@ -735,6 +735,12 @@ namespace LastCall.Game
             /// 2026-09-05). Absent is 0, which is what the pieces the room opens with
             /// carry: they are the free base.</summary>
             public double comfort;
+
+            /// <summary>A sheet's cell (screens, the drain's water) and the drain's water
+            /// sheet name (2026-09-05). Absent is 0 / null: a still, no water.</summary>
+            public int cellW;
+            public int cellH;
+            public string water;
         }
 
         [Serializable]
