@@ -2,6 +2,32 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **28 wired and on the card (2026-09-05, H2b `6c40b5cb` + H3):** every person carries papers
+  from their first arrival (`"papers"` stream, Core-only truth, `CustomerVisit.Papers` throws until
+  the card is read); from the second night some arrivals are under twenty, half on a borrowed card
+  that prints the LENDER's face and name; `TycoonRun.Kick` with its five guards — a right kick off
+  the books, the face barred, $5 thanks at close; a wrong kick a walk-out at zero; a served minor
+  fined `$20 + $20/whole star` when they get up, after the tab, with no extra round; the KICK key
+  in the licence's header band, the slip's THANKS and FINES rows, the register's line; the bot
+  reads every card (`KickIfDue`, `Hands.MisreadId`). 200 runs: 5.4% of seats are minors, the floor
+  bot shows every one the door, thanks 2.1% of income, bankruptcies 1.5% → 0.5%. GDD_MEVCUT §9.24.
+
+- **2026-09-05 — one session again; nine commits consolidate what four left half-done**
+  (`6cbe1f7b` … `d468216d`): the ONE patience clock (`6cbe1f7b`, GDD_MEVCUT §9.22 — taking the
+  order pays one of the gauge's three boxes back, never a reset); the tap locked while a cocktail
+  is on the go (`b136a9c8`); **module 27 wired — H1b** (`6673cb47`, GDD_MEVCUT §9.23): the night
+  files `min(service, comfort)`, the counter keeps its mess (collect / wipe / wash, ten-second
+  grace, `DirtPenalty` 0.75, nothing clears itself), tables are three ladders, the sim bot keeps the
+  counter and buys the room by comfort per dollar — the scene's MARKS are gated off
+  (`TycoonConfig.ForTheScene`) until the cloth is drawn (H4); the counter's one foot line and the
+  coaster's body (`ae732239`); the slip's drawn dollar and star and the week's take (`3d48d683`);
+  the room's art as it stands (`7ba2f53a`); the tin bench rebuilt — slate, the shaker as its own
+  gauge, the napkin, the ÇÖP key, the cap-off pour (`2378c708`, bench baseline re-blessed); and
+  the sweep (`d468216d`): every plate nothing loads, the archetype portraits, the dead fallbacks —
+  `ItemArt.Bottle` is v4 → the garnish's dish → null. GDD 23 §7/§8 lose their stale lines; the
+  README and GDD_MEVCUT §3 stop describing two clocks. Still to build: H2b/H3 (the door), H4 (the
+  cloth and the sink), H5 (the two symbols on the boards), H6 (content).
+
 - `27 / 28 / PLAN_house_and_law` **the house and the door are designed (2026-09-04, design
   only — nothing wired):** the author's brief — *"oyuncular hem alkolü puanlar hem mekanı, 2
   ayrı metrik olacak … ortak yıldızlar olacak"* — becomes two rulebooks. **Module 27, the

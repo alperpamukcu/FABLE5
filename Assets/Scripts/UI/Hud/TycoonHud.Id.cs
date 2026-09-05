@@ -58,6 +58,18 @@ namespace LastCall.UI
             // name read off that picture would introduce her as Serena Fontana.
             if (visit != null && visit.OnTheHouse && visit.Regular != null
                 && !string.IsNullOrEmpty(visit.Regular.Name)) return visit.Regular.Name;
+            // Once the card is read, a borrowed card's name is the LENDER's (GDD 28 §3.1): the
+            // ticket over the head and the log print what the licence printed, so the name
+            // is never a second, free tell.
+            if (visit != null && visit.IdInspected && visit.Regular != null && !visit.OnTheHouse)
+            {
+                var truth = visit.Papers;
+                if (truth != null && truth.Forgery == Forgery.Borrowed)
+                {
+                    var lent = PapersFor(LenderFor(visit, look));
+                    if (lent != null && !string.IsNullOrEmpty(lent.Name)) return lent.Name;
+                }
+            }
             var papers = PapersFor(look);
             if (papers != null && !string.IsNullOrEmpty(papers.Name)) return papers.Name;
             return visit?.Regular != null && !string.IsNullOrEmpty(visit.Regular.Name)
@@ -87,6 +99,15 @@ namespace LastCall.UI
             // swept on 2026-09-05: every look carries its own face, so the fallback to one
             // never fired.)
             var idLook = LookFor(visit);
+            var ownLook = idLook;
+            // THE CARD MAY NOT BE THEIRS (GDD 28 §3.1, 2026-09-05). A borrowed card prints
+            // somebody else's papers — photo, name, age, country, flag — and the tell is that
+            // the person on the stool is not the person on the card. The lender is booked
+            // per person, once, so a returning minor shows the same stranger's card.
+            IdPapers truth = visit.Papers;
+            if (truth != null && truth.Forgery == Forgery.Borrowed)
+                idLook = LenderFor(visit, ownLook) ?? idLook;
+            if (_idKick != null) _idKick.gameObject.SetActive(!visit.OnTheHouse);
             _idPhoto.sprite = idLook?.Face;
             _idPhoto.color = _idPhoto.sprite != null ? Color.white : UITheme.Night[3];
 
@@ -102,7 +123,11 @@ namespace LastCall.UI
             // Bold: the name is the headline of the document, and it was printing at the
             // same weight as the age on the rule under it.
             _idName.text = "<b>" + idFullName + "</b>";
-            _idAgeFrom.text = (idPapers != null ? idPapers.Age : reg.Age).ToString();
+            // An honest minor's card says how old they are (GDD 28 §2.1): the printed age is
+            // the tell, and it is the truth's, not the face's.
+            int shownAge = truth != null && truth.IsMinor && truth.Forgery == Forgery.None
+                ? truth.PrintedAge : (idPapers != null ? idPapers.Age : reg.Age);
+            _idAgeFrom.text = shownAge.ToString();
             _idCitizen.text = (idPapers != null ? idPapers.Country : reg.Hometown).ToUpperInvariant();
             _idNumber.text = LicenceNumber(idLook, idFullName);
             if (_idFlag != null)
@@ -114,7 +139,7 @@ namespace LastCall.UI
             // THE TWO DATA CELLS. The count is per FACE, not per archetype: this card says
             // Miles Corrigan over Miles Corrigan's photograph, so "how many times" has to
             // mean how many times HE came in, which is what the departure log books.
-            var rec = LogFor(idLook);
+            var rec = LogFor(ownLook);      // the record is the PERSON's, whoever's card it is
             _idVisitCount.text = (rec.Visits + 1).ToString();     // this one counts as they sit
             _idRel.text = rec.Visits == 0
                 ? "FIRST TIME"
@@ -434,6 +459,81 @@ namespace LastCall.UI
 
         /// <summary>0–5 stars as glyphs, the empty ones kept so the width never jumps.</summary>
 
+        /// <summary>The key's size on the card: wide enough for the word on the bench's
+        /// key, and inside the header band's 42 units.</summary>
+        private const float KickW = 128f, KickH = 34f;
+        private RectTransform _idKick;
+
+        /// <summary>
+        /// THE KICK, FROM THE CARD (GDD 28 §4). The visit is read into a local first: the
+        /// card closes itself the moment a visit stops waiting, and the local is what
+        /// survives that. Core decides — right or wrong — and the toast says what the door
+        /// said; a refused kick (unread card, already served) comes back as the rule's own
+        /// words.
+        /// </summary>
+        private void KickTheOneOnTheCard()
+        {
+            var visit = _idVisit;
+            var run = Run;
+            if (visit == null || run == null) return;
+            IdPapers truth = null;
+            try { truth = visit.Papers; } catch (InvalidOperationException) { }
+            try { run.Kick(visit); }
+            catch (InvalidOperationException e) { Toast(e.Message.ToUpperInvariant()); return; }
+            CloseId();
+            Sfx.Play("deny", 0.8f);
+            Toast("SHOWN THE DOOR · " + KickReason(truth).ToUpperInvariant(),
+                visit.OffTheBooks ? (Color?)UITheme.Lime[3] : UITheme.ViceRed[3]);
+        }
+
+        /// <summary>Why somebody was shown the door, in the log's words — off the truth
+        /// behind the card, which a kick has always read.</summary>
+        private static string KickReason(IdPapers truth)
+        {
+            if (truth == null || !truth.ShouldBeKicked) return "they were of age";
+            return truth.IsForged ? "borrowed card" : "under age";
+        }
+
+        private static string KickReason(CustomerVisit visit)
+        {
+            IdPapers truth = null;
+            try { truth = visit.Papers; } catch (InvalidOperationException) { }
+            return KickReason(truth);
+        }
+
+        /// <summary>
+        /// Whose card a borrowed one is (GDD 28 §3.1): booked per PERSON, once, from a stable
+        /// hash of their id — no stream is touched, and a returning minor shows the same
+        /// stranger's card. Never their own face, never a face with no papers, never a face
+        /// on another stool this minute.
+        /// </summary>
+        private PatronLook LenderFor(CustomerVisit visit, PatronLook own)
+        {
+            string person = visit?.Regular?.Id;
+            if (person == null || _looks.Count == 0) return null;
+            if (_lenderOfPerson.TryGetValue(person, out var booked)) return booked;
+            var pool = new List<PatronLook>();
+            foreach (var look in _looks)
+            {
+                if (look == own || PapersFor(look) == null) continue;
+                bool seated = false;
+                foreach (var seat in _seats)
+                    if (seat.Visit != null && seat.Visit != visit && seat.Look == look) { seated = true; break; }
+                if (!seated) pool.Add(look);
+            }
+            if (pool.Count == 0) return null;
+            int h = 17;
+            foreach (char c in person) h = unchecked(h * 31 + c);
+            var lender = pool[(h & 0x7FFFFFFF) % pool.Count];
+            _lenderOfPerson[person] = lender;
+            return lender;
+        }
+
+        private readonly Dictionary<string, PatronLook> _lenderOfPerson = new Dictionary<string, PatronLook>();
+
+        /// <summary>A face that could pass for nineteen, by its papers.</summary>
+        private bool IsYoung(PatronLook look) => PapersFor(look)?.Young == true;
+
         private void CloseId()
         {
             if (_idRoot != null && _idRoot.gameObject.activeSelf)
@@ -522,6 +622,40 @@ namespace LastCall.UI
             _idFlag.preserveAspect = true;
             _idFlag.raycastTarget = false;
             _idFlag.enabled = false;
+
+            // THE KICK KEY (GDD 28 §4, 2026-09-05, the author: "kimliğin üstündeki butondan
+            // 'kick'leyebileceksin"). ON the card, in its header band, left of the flag —
+            // never on the scrim, whose one meaning is close. The bench's red key
+            // (ChromeArt.KeyCap): a cap that drops into its socket on press, the word riding
+            // it. Hidden, not merely disabled, for the guest of the house.
+            var kick = NewRect("Kick", card);
+            Place(kick, new Vector2(1, 1), new Vector2(KickW, KickH),
+                new Vector2(-59 - 24 - 14, bandMid + KickH * 0.5f));
+            var kickImg = kick.gameObject.AddComponent<Image>();
+            kickImg.sprite = ChromeArt.KeyCap(UITheme.ViceRed, false, "kick");
+            kickImg.type = Image.Type.Sliced;
+            var kickBtn = kick.gameObject.AddComponent<Button>();
+            kickBtn.targetGraphic = kickImg;
+            kickBtn.transition = Selectable.Transition.SpriteSwap;
+            var ks = kickBtn.spriteState;
+            ks.pressedSprite = ChromeArt.KeyCap(UITheme.ViceRed, true, "kick");
+            ks.selectedSprite = kickImg.sprite;
+            kickBtn.spriteState = ks;
+            var kickFace = NewRect("Face", kick);
+            Stretch(kickFace, Vector2.zero, Vector2.one, Vector2.zero,
+                new Vector2(0, -ChromeArt.KeyCapFaceUp));
+            // Cream on the red cap, not the ramp's deepest step: at this key's height the
+            // bench's dark-on-red word read as a smear in play (2026-09-05, photographed).
+            var kickWord = NewText("L", kickFace, _body, 16, TextAnchor.MiddleCenter, UITheme.Cream[4]);
+            Stretch(kickWord.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            kickWord.text = "KICK";
+            kickWord.raycastTarget = false;
+            var kickTravel = kickFace.gameObject.AddComponent<KeyFaceTravel>();
+            kickTravel.Button = kickBtn;
+            kickTravel.Up = -ChromeArt.KeyCapFaceUp;
+            kickTravel.Down = -ChromeArt.KeyCapFaceDown;
+            kickBtn.onClick.AddListener(KickTheOneOnTheCard);
+            _idKick = kick;
 
             // A WHOLE 2x OF THE 72px FACE, centred in a well cut to fit it. Pixel art
             // magnifies only in whole steps, so 144 is not a taste — it is the only size

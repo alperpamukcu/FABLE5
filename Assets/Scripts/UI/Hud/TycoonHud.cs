@@ -1304,6 +1304,7 @@ namespace LastCall.UI
             // is keyed off a run that no longer exists.
             _patronLog.Clear();
             _faceOfPerson.Clear();
+            _lenderOfPerson.Clear();
             _faceOfVisit.Clear();
             _faceLastSeen.Clear();
             _faceClock = 0;

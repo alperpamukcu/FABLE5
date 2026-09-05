@@ -523,6 +523,7 @@ namespace LastCall.UI
             // SHORT, because the row is one line now (2026-08-11). The drink is drawn beside
             // the name, so the reason no longer has to name it — it only has to say what
             // went right or wrong, in the fewest words that still sound like a person.
+            if (v.State == VisitState.Kicked) return "shown the door";
             if (v.State == VisitState.StormedOff) return "walked out";
             if (v.IdInspected && v.Served != null && v.Order.Wanted.Id != v.Served.Id)
                 return "wrong drink";
@@ -605,6 +606,26 @@ namespace LastCall.UI
 
             BillFigure(row, amount, sign, ink, _body, 24);
             return y + BillRowH;
+        }
+
+        /// <summary>What the fines were for (GDD 28 §7): the label carries the reason, read
+        /// off the truth behind each fined card — or UNREAD CARD for a minor served blind,
+        /// which is the honest word for it.</summary>
+        private static string FineReason(TycoonRun run)
+        {
+            int under = 0, borrowed = 0, unread = 0;
+            foreach (var v in run.Floor.Finished)
+            {
+                if (!v.Fined) continue;
+                if (!v.IdInspected) { unread++; continue; }
+                var truth = v.Papers;
+                if (truth != null && truth.IsForged) borrowed++; else under++;
+            }
+            var parts = new List<string>();
+            if (under > 0) parts.Add("UNDER AGE");
+            if (borrowed > 0) parts.Add("BORROWED CARD");
+            if (unread > 0) parts.Add("UNREAD CARD");
+            return parts.Count == 0 ? "THE LAW" : string.Join(", ", parts);
         }
 
         private float BillRow(float y, string label, int amount, string sign, Color ink,
@@ -1657,7 +1678,8 @@ namespace LastCall.UI
             var floor = run.Floor;
             int served = 0, stormed = 0;
             foreach (var visit in floor.Finished)
-                if (visit.State == VisitState.StormedOff) stormed++; else served++;
+                if (visit.State == VisitState.StormedOff || visit.State == VisitState.Kicked) stormed++;
+                else served++;
             var cfg = run.Config;
 
             // The bill: income over expenses, net in bold, then the debt stamp. All the
@@ -1723,13 +1745,19 @@ namespace LastCall.UI
             // to be dressed. The slip was never the complaint. It is back exactly as it was,
             // and the note stays because a receipt that has stopped showing its working is
             // the kind of "simpler" nobody asked for.
-            int tookIn = run.DaySales + run.DayTips;
-            int paidOut = run.DayRent + run.DayStock + run.DayUpgrades;
+            int tookIn = run.DayIncome;      // sales, tips — and the state's thanks (GDD 28 §7)
+            int paidOut = run.DayExpenses;   // rent, stock, shop — and the law's fines
 
             y = BillRule(y);
             y = BillNote(y, "TOOK IN", BillQuiet);
             y = BillRow(y, "SALES", run.DaySales, "", BillInk, false, "sales");
             y = BillRow(y, "TIPS", run.DayTips, "", BillInk, false, "tips");
+            // The door's two lines print only when they happened (GDD 28 §7 — routine zeros
+            // were cut from the slip on 2026-08-11). The label carries the count and the
+            // reason; the figure column stays the figure's.
+            if (run.DayBonus > 0)
+                y = BillRow(y, "THANKS · " + run.RightKicks + " SHOWN OUT", run.DayBonus, "",
+                    BillInk, false, "thanks");
             y = BillSub(y, tookIn, "", BillInk);
 
             y += 4f;
@@ -1737,6 +1765,8 @@ namespace LastCall.UI
             y = BillRow(y, "RENT", run.DayRent, "-", BillRed, false, "rent");
             y = BillRow(y, "STOCK", run.DayStock, "-", BillRed, false, "stock");
             y = BillRow(y, "SHOP", run.DayUpgrades, "-", BillRed, false, "shop");
+            if (run.DayFines > 0)
+                y = BillRow(y, "FINES · " + FineReason(run), run.DayFines, "-", BillRed, false, "fine");
             y = BillSub(y, paidOut, "-", BillRed);
 
             y += 4f;

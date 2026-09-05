@@ -221,14 +221,14 @@
     },
     { "slug": "linen", "name": "Camila Restrepo", "age": 29, "country": "United States", "iso": "us" },
 
-    { "slug": "clubgirl",     "name": "Nina Delgado",     "age": 23, "country": "United States", "iso": "us" },
+    { "slug": "clubgirl", "young": true,     "name": "Nina Delgado",     "age": 23, "country": "United States", "iso": "us" },
     { "slug": "heavyset",     "name": "Ray Mulcahy",      "age": 57, "country": "United States", "iso": "us" },
     { "slug": "silkwoman",    "name": "Isabel Navarro",   "age": 28, "country": "Philippines",   "iso": "ph" },
-    { "slug": "pastelman",    "name": "Matteo Ferrante",  "age": 22, "country": "Italy",         "iso": "it" },
+    { "slug": "pastelman", "young": true,    "name": "Matteo Ferrante",  "age": 22, "country": "Italy",         "iso": "it" },
     { "slug": "shaved",       "name": "Emre Kayhan",      "age": 39, "country": "Turkey",        "iso": "tr" },
     { "slug": "silverbob",    "name": "Renate Kohler",    "age": 66, "country": "Germany",       "iso": "de" },
     { "slug": "afrowoman",    "name": "Simone Baptiste",  "age": 31, "country": "United States", "iso": "us" },
-    { "slug": "eastasianman", "name": "Daniel Yoon",      "age": 26, "country": "United States", "iso": "us" },
-    { "slug": "leopard",      "name": "Talia Reyes",      "age": 27, "country": "United States", "iso": "us" }
+    { "slug": "eastasianman", "young": true, "name": "Daniel Yoon",      "age": 26, "country": "United States", "iso": "us" },
+    { "slug": "leopard", "young": true,      "name": "Talia Reyes",      "age": 27, "country": "United States", "iso": "us" }
   ]
 }

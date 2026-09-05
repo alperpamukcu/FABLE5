@@ -25,8 +25,13 @@ namespace LastCall.Game
         /// <summary>Two letters, lower case: the flag is drawn from <c>fl_{iso}</c>.</summary>
         public string Iso { get; }
 
-        public Papers(string slug, string name, int age, string country, string iso)
+        /// <summary>Could this face pass for nineteen (GDD 28 §3.1)? A visit the room may
+        /// read as young draws from these — every minor, and the adults who look it.</summary>
+        public bool Young { get; }
+
+        public Papers(string slug, string name, int age, string country, string iso, bool young = false)
         {
+            Young = young;
             Slug = slug ?? string.Empty;
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException($"Papers for '{Slug}' have no name.", nameof(name));

@@ -961,7 +961,7 @@ Yazar: *"20 yaş altı kişiler alkol alamayacak … kimliğin üstündeki buton
 aynı zamanda sahte kimlik de işin içerisine eklenecek. Sahte kimlikli birisine alkol vermenin
 büyük para cezası olacak … gelişmişlik seviyesine göre … doğru şekilde kovması ise gün sonunda
 küçük bonus paralar verecek."* Tasarım `GDD/28`, faz günlüğü `PLAN_house_and_law.md` H2b
-(Core) — kartın üstündeki tuş, ödünç yüz ve fişteki satırlar H3'te.
+(Core) ve H3 (ekran, aynı gün — aşağıda).
 
 **Evrak kişinindir ve gizlidir (Core).** Her yeni gelen `NextArrival`'da bir kez, `"papers"`
 akışında `IdPapers.Roll(gün, kayıt yaşı)` alır (`RegularState.Papers`, Core'a ÖZEL; dışarıdan
@@ -999,6 +999,20 @@ eli ölçer (taban bot 0). **200 koşu:** oturanların 3404 / 3404 / 0 (5.4% of 
 ceza $0 · 0★ $0.00 · 1★ $0.00 · 2★ $0.00 · 3★ $0.00; teşekkür $17020 · 2.1%. Kapıdan önce → sonra: iflas 3 (1.5%) → 1 (0.5%); kasa $64 / $76 / $87 → $65 / $77 / $87;
 itibar 2.66 stars → 2.71 stars; gece başına müşteri 10.2 → 10.0; gelir/gider $129.9 / $127.9 → $133.4 / $131.2.
 EditMode 460/460 yeşil.
+
+**Ekran (H3).** `papers.json`'da dört yüz `"young": true` (clubgirl, pastelman, eastasianman,
+leopard); `LookFor` `LooksYoung` bir ziyareti o havuzdan çizer (reşit olmayanlar da, genç görünen
+yetişkinler de). **Ödünç kart** kartta BAŞKASININ evrakını basar — `LenderFor` kişi başına bir kez,
+kimlik id'sinin kararlı hash'inden (kendi yüzü, evraksız yüz ve o an başka taburede oturan yüz
+hariç): fotoğraf, ad, yaş, ülke, bayrak ödünç verenin; kart okununca başın üstündeki fiş ve günlük
+de kartın adını basar (ad ikinci bir ipucu olmasın diye); dürüst reşit olmayanın kartı gerçek yaşı
+(18–19) basar; ziyaret sayısı ve bağ KİŞİNİN. **KICK tuşu** kartın üst bandında bayrağın solunda
+(tezgâhın kırmızı `KeyCap`'i), misafirde gizli; ziyareti yerel değişkene alır, `Run.Kick` çağırır,
+kartı kapatır, `SHOWN THE DOOR · UNDER AGE / BORROWED CARD / THEY WERE OF AGE` yazar (ret Core'un
+kendi sözüyle). Kick edilen fırtına yoluyla çıkar, tepki yok, günlükte sebep. **Fiş:** `THANKS · n
+SHOWN OUT` gelirde, `FINES · UNDER AGE / BORROWED CARD / UNREAD CARD` giderde (yalnız oluştuğunda,
+kendi işaretleriyle), toplamlar `DayIncome`/`DayExpenses`; kapı gösterilen ne SERVED ne WALKED.
+**Defter:** satırda `thanks $n`, `fines $n`, `n shown the door`.
 
 ## 10 · Teknik omurga
 

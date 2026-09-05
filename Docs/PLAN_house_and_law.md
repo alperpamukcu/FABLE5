@@ -188,7 +188,7 @@ as the baseline or the numbers move back before the push. Second risk: the persi
 bot collects instantly; the latency bot (10/20/30 s) is what shows what a human pays, and
 `DirtPenalty` is chosen from that row.
 
-## H2b + H3 — The door, wired and on the card ◐ *(H2b shipped 2026-09-05; H3 next)*
+## H2b + H3 — The door, wired and on the card ☑ *(H2b and H3 shipped 2026-09-05)*
 
 **Shipped 2026-09-05, the Core half.** Everything under "Core" below is in: papers rolled once per
 person on `"papers"` at first arrival; `CustomerVisit.Papers` throws until the card is read;
@@ -200,7 +200,21 @@ points; the bot reads every card (`KickIfDue`, `Hands.MisreadId` on `"door"`) an
 carries the door's rows. Measured over 200 runs: minors met / shown the door / served 3404 / 3404 / 0 (5.4% of seats);
 wrong kicks / misread 0 / 0; fines $0 · 0★ $0.00 · 1★ $0.00 · 2★ $0.00 · 3★ $0.00; thanks $17020 · 2.1%; bankruptcies 3 (1.5%) → 1 (0.5%),
 median till $64 / $76 / $87 → $65 / $77 / $87, standing 2.66 stars → 2.71 stars. EditMode 460/460 green.
-H3 — the KICK key on the card, the young pool and the lender's face, the slip's rows — follows.
+H3 shipped the same day: `papers.json` marks the four faces that could pass for nineteen
+(`"young"`: clubgirl, pastelman, eastasianman, leopard) and `LookFor` draws a `LooksYoung` visit from
+that pool; a borrowed card prints the LENDER's papers (`LenderFor`, booked per person off a stable
+hash of the id — never their own face, never a face with no papers, never one on another stool),
+the ticket and the log print the card's name once read, an honest minor's card prints the true age,
+and the card's counts stay the person's; the KICK key is the bench's red `KeyCap` in the header
+band, left of the flag, hidden for the guest, reading the visit into a local before `Run.Kick`,
+closing the card and toasting `SHOWN THE DOOR · UNDER AGE / BORROWED CARD / THEY WERE OF AGE`; the
+kicked walk out the storm-off's way with no reaction and a log line; the slip prints `THANKS · n
+SHOWN OUT` and `FINES · UNDER AGE / BORROWED CARD / UNREAD CARD` with their own marks, its totals
+read `DayIncome`/`DayExpenses`, and the register's book line carries thanks, fines and faces shown
+the door. The PlayMode kick smoke test the plan asked for is NOT written: opening night has no
+minors by rule and the seeded night-two hunt belongs with the story's smoke test rig, which is
+H6's; the kick was proved in play by hand (a card opened on night two, KICK pressed, the toast
+and the log read).
 
 Core (H2b):
 - `CustomerVisit.Papers` (throws until inspected), `VisitState.Kicked`, `OffTheBooks`, `Fined`,

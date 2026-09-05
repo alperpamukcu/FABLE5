@@ -1689,7 +1689,9 @@ namespace LastCall.UI
                 if (d.Rent > 0) outgoings.Add($"rent ${d.Rent}");
                 if (d.Stock > 0) outgoings.Add($"stock ${d.Stock}");
                 if (d.Upgrades > 0) outgoings.Add($"fittings ${d.Upgrades}");
+                if (d.Fines > 0) outgoings.Add($"fines ${d.Fines}");           // the law (GDD 28 §7)
                 money.text = $"        drinks ${d.Sales} · tips ${d.Tips}"
+                           + (d.Bonus > 0 ? $" · thanks ${d.Bonus}" : "")
                            + (outgoings.Count > 0 ? "   —   " + string.Join(" · ", outgoings) : "");
 
                 var room = NewText($"Day{d.Day}Room", _ledgerRows, _body, 8, TextAnchor.UpperLeft,
@@ -1698,7 +1700,9 @@ namespace LastCall.UI
                 room.supportRichText = true;
                 string walked = d.WalkedOut > 0
                     ? $" · {d.WalkedOut} left without one" : " · nobody left thirsty";
-                room.text = $"        {d.Served} served{walked} · {d.NightStars:0.0} stars on the night"
+                room.text = $"        {d.Served} served{walked}"
+                          + (d.RightKicks > 0 ? $" · {d.RightKicks} shown the door" : "")
+                          + $" · {d.NightStars:0.0} stars on the night"
                           + $" · {MoodLabel(d.AverageSatisfaction)}";
 
                 Spacer(12);

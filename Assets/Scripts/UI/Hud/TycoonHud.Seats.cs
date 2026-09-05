@@ -1777,7 +1777,9 @@ namespace LastCall.UI
                     // running out is a beat that did not land, not a customer storming out of
                     // a bad bar — they walk, they do not slam, and the night's log does not
                     // book them as a walk-out because they were never on its books at all.
-                    v.ExitStorm = !v.Visit.OnTheHouse && v.Visit.State == VisitState.StormedOff;
+                    bool kicked = v.Visit.State == VisitState.Kicked;
+                    v.ExitStorm = !v.Visit.OnTheHouse
+                        && (v.Visit.State == VisitState.StormedOff || kicked);
                     // WHAT THEY THOUGHT, AT THE BOTTOM OF THE GLASS (2026-09-04, the author:
                     // "verilen emoji tepkileri içkiyi bitirdikten sonra verilmeli"). It used to
                     // be thrown a sip after the serve, which is a verdict on a drink they had
@@ -1791,10 +1793,15 @@ namespace LastCall.UI
                     // taken at the serve is still on the seat when they set the glass down,
                     // and it is the only thing here that knows the pour was exact. A
                     // storm-off never reaches it — there was no glass.
-                    if (!v.Visit.OnTheHouse)
+                    // Shown the door (GDD 28 §8): no verdict on a drink they never had, no
+                    // cheer, no slump — the log says why, and the walk out is the storm-off's.
+                    if (!v.Visit.OnTheHouse && !kicked)
                         ReactionBurst(v, v.ExitStorm ? 0.0 : v.Visit.Satisfaction, follow: false,
                             perfect: !v.ExitStorm && v.Note.Flawless);
                     if (v.Visit.OnTheHouse) { }
+                    else if (kicked)
+                        LogService($"<color=#F27D8A>SHOWN THE DOOR</color> · " + KickReason(v.Visit)
+                            + (v.Visit.OffTheBooks ? "" : " · " + LogStars(0)));
                     else if (v.ExitStorm)
                         LogService($"<color=#F27D8A>STORM-OFF</color> " +
                             (v.Visit.IdInspected ? v.Visit.Order.Wanted.Name.ToUpperInvariant() : "?") +
@@ -1818,14 +1825,15 @@ namespace LastCall.UI
                     // behind float over the emptying stool. The serve only earned the face.
                     if (v.Visit.Paid > 0) TabFloat(i, v.Visit);
                     if (v.Visit.Paid > 0) Sfx.Play("cash");
-                    Sfx.Play(!v.ExitStorm && v.Visit.Satisfaction >= 0.55 ? "cheer_sfx" : "upset_sfx", 0.6f);
+                    if (!kicked)
+                        Sfx.Play(!v.ExitStorm && v.Visit.Satisfaction >= 0.55 ? "cheer_sfx" : "upset_sfx", 0.6f);
                     // And the body answers before it leaves (P15/D5): a cheer or a slump on
                     // the stool. This is where the emotional tell lives now the stat rows
                     // left the card — skipped cleanly while the clips have no frames yet.
                     v.ReactClip = !v.ExitStorm && v.Visit.Satisfaction >= 0.55
                         ? PatronClip.Cheer : PatronClip.Upset;
                     var reactLook = v.Look ?? (_looks.Count > 0 ? _looks[0] : null);
-                    v.ReactLeft = reactLook != null
+                    v.ReactLeft = !kicked && reactLook != null
                         && reactLook.Clips.TryGetValue(v.ReactClip, out var rf) && rf.Length > 0
                         ? ReactSeconds : 0f;
                 }
@@ -2556,6 +2564,16 @@ namespace LastCall.UI
             foreach (var look in _looks)
                 if (look.Stars <= standing + 0.001f) open.Add(look);
             if (open.Count == 0) open.Add(_looks[0]);
+
+            // A FACE THAT COULD PASS FOR NINETEEN (GDD 28 §3.1, 2026-09-05): a visit the room
+            // may read as young draws from the young pool — every minor does, and so do the
+            // adults who look it, which is what keeps the face from being the verdict.
+            if (visit.Regular != null && visit.Regular.LooksYoung)
+            {
+                var young = new List<PatronLook>();
+                foreach (var look in open) if (IsYoung(look)) young.Add(look);
+                if (young.Count > 0) open = young;
+            }
 
             // NO TWO OF THE SAME DRAWING IN THE ROOM (the author, 2026-08-10). Each drawing
             // IS a character, so the same face on two stools reads as a bug rather than as

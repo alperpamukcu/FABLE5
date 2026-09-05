@@ -379,7 +379,7 @@ namespace LastCall.Game
                         $"Papers for '{p.name}' carry the flag code '{iso}'; it must be two lower-case letters (fl_{iso}.png).");
                 try
                 {
-                    people.Add(new Papers(p.slug, p.name, p.age, p.country, iso));
+                    people.Add(new Papers(p.slug, p.name, p.age, p.country, iso, p.young));
                 }
                 catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
                 {
@@ -852,6 +852,9 @@ namespace LastCall.Game
             public int age;
             public string country;
             public string iso;
+            /// <summary>Whether this face could pass for nineteen (GDD 28 §3.1): the pool a
+            /// visit the room may read as young draws its face from. Absent is false.</summary>
+            public bool young;
         }
 
         [Serializable]
