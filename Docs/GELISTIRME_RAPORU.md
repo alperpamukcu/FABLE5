@@ -252,6 +252,8 @@ index'le (paylaşılan index'e dokunmadan) dilimlenerek:
 | `e0744f16` | süpürmenin ikinci yarısı — 190 dosya (yazar manifesti çalıştırdı) | yazar + bu oturum |
 | `dd7a7fdf` | yazarın sanat turu — arka duvar, musluk kulesi, kutu etiketi | yazar |
 | `5948a965` | **S5** — ev sahibinin dersleri konuşur, kitapta açık hesap (§9.25) | bu oturum |
+| `7c188737` | yazarın ikinci v4 turu — 38 plaka | yazar |
+| `2608fd6e` | **duvar merdiveni** — yazarın dört oda plakası, `backdrop` yuvası, +20 tabela (§9.26) | yazar + bu oturum |
 
 **Süpürme, ölçerek.** `Assets/Resources` altındaki her PNG oyunun kendi yükleme zincirine karşı
 ada, türetilmiş öneke VE sahne GUID'ine göre sınandı (`art_reach.py`): 41 kartın 39'unda tam v4

@@ -2,6 +2,11 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **27's fourth ladder — the wall (2026-09-06):** the author's four room plates (the cracked
+  plaster the bar opens in, fresh plaster, the panelled wall, the harlequin paper) sell as a
+  ladder in a `backdrop` slot whose rung REPLACES the room's plate; the market shows a 64×48
+  `swatch` of each wall. The door's sign reads +20 ONLY on all four. GDD_MEVCUT §9.26.
+
 - **26's host speaks — S5 (2026-09-05):** the seven written lessons are said. Core observes
   each `StoryCue` where it is true (`TycoonRun.Lessons.cs`), `StoryProgress.Learn` spends it
   once a run, `LessonDue`/`HeardLesson` hand it to whoever draws the bar: the dialogue plate on

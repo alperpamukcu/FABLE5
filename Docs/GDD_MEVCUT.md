@@ -970,33 +970,6 @@ Okuma: 1 = bardak payının yarıya inmesinin bedeli; 2 = yeni taban; 3 = çür�
 altında, itibar durur, yoksul gece ARTMAZ); 4 = insan eli, `DirtPenalty`/`DirtGrace` bu satırdan
 seçildi. EditMode 452/452 yeşil.
 
-### 9.25 · Ev sahibi konuşur: dersler ve kitaptaki açık hesap (2026-09-05)
-
-PLAN_last_call S5'in Ece'ye kalan iki yarısı (`5948a965`). Ödül satırı GDD 26 §12.3 ile
-(2026-08-14) çoktan ters çevrilmişti — beat ödemez, kazandırdığı şeyler onu ADLARIYLA kilit
-yapar (`unlockBeat`) — ama `story.json`'daki yedi ders ayrıştırılıp **hiçbir yerde söylenmiyordu**
-ve kitap açık hesabı göstermiyordu.
-
-- **Dersler (Core):** `StoryCue` koşullarını Core gözler — ilk kapı (ctor ve `ContinueToNextDay`),
-  kimsenin kartı okunmamışken bekleyen biri ve tin'de karışmamış iki alkol (`Tick`'te),
-  ilk fıçı (`BeginPull`), ilk market ve kira altında kapanan gece (kapanışta), ilk ekstra tur
-  (`ServeTo`), ve **bu hafta** gelen misafirin rafta olmayan stili (kapıda; ark boyunca ilk
-  `needStyle` taşıyan beat'e bakar — silahlı beat Ece'nin sessiz Pazartesi'si olabilir).
-  `StoryProgress.Learn(cue)` koşu başına bir kez; `TycoonRun.LessonDue` sırayla, `HeardLesson()`
-  düşürür; ders yazılmamış cue sessizce harcanır; hikâyesiz koşuda hiçbiri yok. Rastgelelik yok,
-  bot ders okumaz (kuyruk en çok sekiz).
-- **Dersler (UI):** açık gecede diyalog plakası — Ece'nin adı ve yüzü, satır başına GO ON, sonda
-  GOT IT, SAY NO yok; beat oynuyorsa beat kazanır ve ders kuyrukta bekler. Kapanışın iki dersi
-  (ilk market, kırmızı gece) markette 98 mesaj kutusu (`BuildHostNote`, kapanış sorusunun
-  penceresi), Escape aynı tuş. Ece'nin yüzü kadroda olmadığından plaka şimdilik adıyla ve boş
-  kuyuyla konuşur (kadroya alınıyor: `Tools/patron_prompts.py` "ece").
-- **Açık hesap (GDD 26 §5):** `StoryProgress.CurrentAsked` (kaçırma/geri çevrilme ile açılır,
-  beat tutulunca kapanır). Kitabın başlık sayfasında haberlerin üstünde OPEN TAB: sorulmuşsa
-  "<AD> WANTS <İÇKİ> · <GECE>", ilk ziyaretten önce ise `needStyle` varken ve gecesi bu hafta
-  ya da gelecek haftaysa "GET <STİL> IN · <AD> COMES <GECE>".
-- **Doğrulama:** `StoryLessonTests` 13 test (473/473), PlayMode 10/10, oyunda fotoğraf
-  (plaka, market notu, kitap sekmesi).
-
 ### 9.24 · Kapı: 20 yaş, ödünç kimlik, kick, ceza, teşekkür (2026-09-05)
 
 Yazar: *"20 yaş altı kişiler alkol alamayacak … kimliğin üstündeki butondan 'kick'leyebileceksin,
@@ -1061,6 +1034,58 @@ artık ödünç değil değiştirilmiş: kendi yüzü, kendi adı, yılı 21–2
 OLMAYAN bir bayrak (`WrongFlagFor`, kişi id'sinden kararlı; kadronun çizili bayrakları arasından).
 `"papers"` akışında yalnız sahte kartlı reşit olmayan için bir çekiliş daha. Günlük ve fiş
 `altered card` / `ALTERED CARD` der; bot ayırt etmeden kapı gösterir.
+
+### 9.25 · Ev sahibi konuşur: dersler ve kitaptaki açık hesap (2026-09-05)
+
+PLAN_last_call S5'in Ece'ye kalan iki yarısı (`5948a965`). Ödül satırı GDD 26 §12.3 ile
+(2026-08-14) çoktan ters çevrilmişti — beat ödemez, kazandırdığı şeyler onu ADLARIYLA kilit
+yapar (`unlockBeat`) — ama `story.json`'daki yedi ders ayrıştırılıp **hiçbir yerde söylenmiyordu**
+ve kitap açık hesabı göstermiyordu.
+
+- **Dersler (Core):** `StoryCue` koşullarını Core gözler — ilk kapı (ctor ve `ContinueToNextDay`),
+  kimsenin kartı okunmamışken bekleyen biri ve tin'de karışmamış iki alkol (`Tick`'te),
+  ilk fıçı (`BeginPull`), ilk market ve kira altında kapanan gece (kapanışta), ilk ekstra tur
+  (`ServeTo`), ve **bu hafta** gelen misafirin rafta olmayan stili (kapıda; ark boyunca ilk
+  `needStyle` taşıyan beat'e bakar — silahlı beat Ece'nin sessiz Pazartesi'si olabilir).
+  `StoryProgress.Learn(cue)` koşu başına bir kez; `TycoonRun.LessonDue` sırayla, `HeardLesson()`
+  düşürür; ders yazılmamış cue sessizce harcanır; hikâyesiz koşuda hiçbiri yok. Rastgelelik yok,
+  bot ders okumaz (kuyruk en çok sekiz).
+- **Dersler (UI):** açık gecede diyalog plakası — Ece'nin adı ve yüzü, satır başına GO ON, sonda
+  GOT IT, SAY NO yok; beat oynuyorsa beat kazanır ve ders kuyrukta bekler. Kapanışın iki dersi
+  (ilk market, kırmızı gece) markette 98 mesaj kutusu (`BuildHostNote`, kapanış sorusunun
+  penceresi), Escape aynı tuş. Ece'nin yüzü kadroda olmadığından plaka şimdilik adıyla ve boş
+  kuyuyla konuşur (kadroya alınıyor: `Tools/patron_prompts.py` "ece").
+- **Açık hesap (GDD 26 §5):** `StoryProgress.CurrentAsked` (kaçırma/geri çevrilme ile açılır,
+  beat tutulunca kapanır). Kitabın başlık sayfasında haberlerin üstünde OPEN TAB: sorulmuşsa
+  "<AD> WANTS <İÇKİ> · <GECE>", ilk ziyaretten önce ise `needStyle` varken ve gecesi bu hafta
+  ya da gelecek haftaysa "GET <STİL> IN · <AD> COMES <GECE>".
+- **Doğrulama:** `StoryLessonTests` 13 test (473/473), PlayMode 10/10, oyunda fotoğraf
+  (plaka, market notu, kitap sekmesi).
+
+### 9.26 · Duvar bir merdiven: yazarın dört oda plakası (2026-09-06)
+
+Yazar: *"Seninle paylaştığım görseller tüm arkaplanı değiştirerek oyunda duvar geliştirmesi
+olarak sunulacak. club_room4 başlangıç barı olacak. 1-2-3-4 diye gidiyor."* (`2608fd6e`)
+
+- **Veri:** `fixtures.json`'a `walls` yuvası (`backdrop: true` — parçası çengele dikilmez, sprite'ı
+  odanın arka plakasının YERİNE geçer; x/y hükümsüz) ve dört basamak: `walls_1` Cracked Plaster
+  (bizim, $40, 0 konfor), `walls_2` Fresh Plaster $70 · +0.3 (1.0★), `walls_3` Panelled Wall
+  $130 · +0.6 (2.0★), `walls_4` Harlequin Paper $200 · +1.0 (3.0★). Plakalar
+  `Resources/Fixtures/fx_walls_1..4.png` (640×360; yazarın club_room4 → 1'i, o sırayla). Market
+  karosu için her basamağın KENDİ duvarından kesilmiş 64×48 `fx_walls_swatch_N`
+  (`FixtureDefinition.Swatch`, satırdaki `swatch`): odayı pula küçültmek bulanıktı, pencere 1×
+  keskin. Merdiven kuralları aynen (`CanBuyRung`, rung n+2 gizli, yalnız en üst basamak çizilir).
+- **Sahne:** `StageSlot.Backdrop`; `DiegeticStage.SyncFixtures` backdrop yuvasındaki (en üst)
+  basamağı `_backgroundSr.sprite`'a yazar. Sahnenin serileştirilmiş plakası artık `fx_walls_1`
+  (Create Debug Scene ile yeniden kuruldu), `Assets/Art/Backgrounds/club_room.png` silindi. Kapıdaki
+  tabela dört plakada da **+20 ONLY** — GDD 28'in yaşı.
+- **Konfor bütçesi** 8.9 → 9.9 (tavan 5.0). **Ev simi A/B** (aynı build, aynı tohumlar, 100 koşu;
+  merdivensiz → merdivenli), basamak alan bot (şekil 2): konfor gece ort. 3.13 → **3.13**, konforun geceyi tuttuğu geceler 40.5% → **40.5%**, itibar 2.73 → **2.73**, 3.0★'a ulaşan 18.0% → **18.0%**, iflas 0.0% → 0.0%, kasa medyanı $75 → $75. Alışveriş yapmayan bot
+  (şekil 1, konfor/itibar/3.0★): 2.88 / 2.69 / 5.0% → 2.88 / 2.69 / 5.0% — merdiven yalnız alanı taşır. 200 koşu raporu
+  bayt-aynı (zemin botu alışveriş yapmaz).
+- **Testler:** `FixtureTests` +2 (backdrop/swatch ayrıştırma; gerçek dosyada dört basamak, çatlak
+  açılış, plakalar ve örnekler Resources'ta); oyunda üç fotoğraf (açılış odası, UPGRADES rafı,
+  2. basamak alındıktan sonraki gece).
 
 ## 10 · Teknik omurga
 
