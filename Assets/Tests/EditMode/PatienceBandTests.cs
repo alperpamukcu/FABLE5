@@ -30,11 +30,13 @@ namespace LastCall.Tests
             return glass;
         }
 
-        /// <summary>A visit whose drink clock has already run <paramref name="spent"/> of it.</summary>
+        /// <summary>A visit whose bar has already run <paramref name="spent"/> of it. The card
+        /// is read first, on a full bar, so the asking box lands where it is clamped away and
+        /// the fraction under test is exactly <paramref name="spent"/>.</summary>
         private static CustomerVisit Waited(double spent, double patience = 60)
         {
             var visit = new CustomerVisit(new DrinkOrder(Shakeable(), 10), patience);
-            visit.InspectId();                 // the drink clock starts when the order is taken
+            visit.InspectId();
             visit.Tick(patience * spent);
             return visit;
         }

@@ -305,71 +305,72 @@ namespace LastCall.Tests
             return g;
         }
 
-        // ── two waits, not one (2026-08-02) ──────────────────────────────────────
-        // The author's rule: being kept waiting to ORDER and being kept waiting for the
-        // DRINK are different insults, on different clocks, and taking the order starts
-        // the second one from full.
+        // ── one clock, and taking the order pays a box back (2026-09-04) ─────────
+        // The author's rule: "sipariş almak barı 0lamaz +1 kutu daha ekler". One bar runs
+        // the whole visit — being kept waiting to be ASKED spends the same patience the
+        // drink does — and going over to take the order adds one of the gauge's three
+        // boxes to what is left, capped at full.
 
         [Test]
-        public void BeingIgnoredWhileReadyToOrder_RunsItsOwnClockOut()
+        public void BeingIgnoredWhileReadyToOrder_SpendsTheSameClock()
         {
-            var visit = new CustomerVisit(IcedOrder(), patienceSeconds: 60,
-                orderPatienceSeconds: 20);
+            var visit = new CustomerVisit(IcedOrder(), patienceSeconds: 60);
 
-            visit.Tick(19);
-            Assert.AreEqual(VisitState.Waiting, visit.State, "still there at 19 of 20");
-            Assert.AreEqual(60, visit.PatienceLeft, 1e-9, "the drink clock has not started");
+            visit.Tick(15);
+            Assert.AreEqual(45, visit.PatienceLeft, 1e-9,
+                "nobody has come to ask, and that is the bar draining");
+            Assert.IsTrue(visit.AwaitingOrderTaking);
 
-            visit.Tick(2);
+            visit.Tick(46);
             Assert.AreEqual(VisitState.StormedOff, visit.State,
-                "nobody came to ask — that is a walk-out even with nothing poured");
+                "nobody ever came — that is a walk-out even with nothing poured");
         }
 
         [Test]
-        public void TakingTheOrder_StartsTheDrinkWaitFromFull()
+        public void TakingTheOrder_AddsOneBox_WithoutResettingTheBar()
         {
-            var visit = new CustomerVisit(IcedOrder(), patienceSeconds: 60,
-                orderPatienceSeconds: 20);
+            var visit = new CustomerVisit(IcedOrder(), patienceSeconds: 60);
 
-            visit.Tick(15);                       // fifteen seconds of being ignored
-            visit.InspectId();                    // …then somebody finally asks
+            visit.Tick(30);                       // half the bar gone waiting to be asked
+            visit.InspectId();                    // …then somebody finally comes over
 
-            Assert.AreEqual(60, visit.PatienceLeft, 1e-9,
-                "the wait for the drink begins here, at full — not with what the asking left");
+            Assert.AreEqual(50, visit.PatienceLeft, 1e-9,
+                "one box back on what was left — 30 + 20 — never a refill to the brim");
             Assert.IsFalse(visit.AwaitingOrderTaking);
 
-            visit.Tick(59);
+            visit.Tick(49);
             Assert.AreEqual(VisitState.Waiting, visit.State);
             visit.Tick(2);
-            Assert.AreEqual(VisitState.StormedOff, visit.State, "and it runs out on its own");
+            Assert.AreEqual(VisitState.StormedOff, visit.State, "and it runs out from there");
         }
 
         [Test]
-        public void TheTwoWaits_AreDifferentLengths()
+        public void TakingTheOrderEarly_CannotOverfillTheBar()
         {
-            // Config, not a visit: the two curves must never collapse into one number, or
-            // splitting them changes nothing a player can feel.
-            var config = new TycoonConfig();
-            for (int day = 1; day <= 30; day++)
-                Assert.AreNotEqual(config.PatienceSeconds(day), config.OrderPatienceSeconds(day),
-                    $"day {day}");
+            // The reward is real where it should be (a stool you got to late) and invisible
+            // where it should be: a gauge that reads past full would be a fourth box, and
+            // the till pays by thirds of exactly three.
+            var visit = new CustomerVisit(IcedOrder(), patienceSeconds: 60);
+
+            visit.Tick(5);
+            visit.InspectId();
+
+            Assert.AreEqual(60, visit.PatienceLeft, 1e-9);
+            Assert.AreEqual(1.0, visit.PatienceFraction, 1e-9);
+            Assert.AreEqual(0.0, visit.WaitFraction, 1e-9, "and the tip sees a full bar too");
         }
 
         [Test]
-        public void AnExtraRound_DoesNotWaitToBeAsked()
+        public void AnExtraRound_IsNotPaidTheAskingBox()
         {
             // Served blind, earns another round, and only then is the card read. The refill
-            // Resolve set is that round's clock; reading the card must not replace it, and
-            // the asking clock must not storm off a customer who is already drinking with you.
-            var visit = new CustomerVisit(IcedOrder(10), patienceSeconds: 60,
-                orderPatienceSeconds: 20);
+            // Resolve set is that round's clock; reading the card must not top it up again —
+            // nobody had to walk over, they asked across the bar.
+            var visit = new CustomerVisit(IcedOrder(10), patienceSeconds: 60);
             visit.Resolve(ServiceJudge.Judge(visit, OrderMatch.Exact, IcedGlass()), IcedOrder(8));
 
             visit.InspectId();
             Assert.AreEqual(60 * CustomerVisit.ExtraOrderPatienceRefill, visit.PatienceLeft, 1e-9);
-
-            visit.Tick(21);
-            Assert.AreEqual(VisitState.Waiting, visit.State, "the asking clock is spent, not live");
         }
 
         [Test]

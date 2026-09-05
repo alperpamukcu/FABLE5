@@ -1188,13 +1188,9 @@ namespace LastCall.Core
             var order = RollOrder();
             var patienceRng = _rng.GetStream("patience");
             double patience = _config.RollPatience(Day, patienceRng);
-            // The asking wait rides the same stream, drawn right after the drink wait, so a
-            // seed still reproduces a night exactly (2026-08-02).
-            double askPatience = _config.RollOrderPatience(Day, patienceRng);
             double decide = _config.RollDecideDelay(_rng.GetStream("decide"));
             if (_regulars == null)
-                return new CustomerVisit(order, patience, decideSeconds: decide,
-                    orderPatienceSeconds: askPatience);
+                return new CustomerVisit(order, patience, decideSeconds: decide);
 
             // A returning face or a fresh roll — the person persists; what is left of them
             // after the emotion demolition (2026-08-02) is who they ARE: name, visits,
@@ -1206,7 +1202,7 @@ namespace LastCall.Core
             var regular = _regulars.RollNext(_rng.GetStream("customer"), allowReturns: Day > 1);
             _rng.GetStream("read").NextInt(100);
 
-            return new CustomerVisit(order, patience, regular, decide, askPatience);
+            return new CustomerVisit(order, patience, regular, decide);
         }
 
         private DrinkOrder RollOrder()

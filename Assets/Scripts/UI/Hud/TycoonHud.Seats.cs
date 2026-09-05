@@ -2027,6 +2027,7 @@ namespace LastCall.UI
                     view.Order.horizontalOverflow = orderLines > 1
                         ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
 
+
                     // EACH ROW IS AS TALL AS ITS OWN FONT SAYS (2026-08-19). One constant used
                     // to stand in for three different line boxes, so the plate was always a
                     // few units taller than what it held and the type rode high in it.
@@ -2052,12 +2053,14 @@ namespace LastCall.UI
                 // whatever row the order landed on. It lives on its own row now, beside the
                 // serving spec, and LayOutOrderIcons places the whole row.)
 
-                // TWO clocks now (the author, 2026-08-02): the wait to be ASKED, then a fresh
-                // wait for the drink. The gauge draws whichever is live — Core says which, and
-                // Core also says which THIRD of it they are in, so the colour over the head is
-                // the same reading the till pays by. (The asking wait used to draw magenta;
-                // the three bands speak for both clocks now, and the bubble says which one is
-                // running far louder than a hue ever did.)
+                // ONE clock again (the author, 2026-09-04: "sipariş almak barı 0lamaz +1 kutu
+                // daha ekler"). It was split in two on 2026-08-02 and taking the order started
+                // the second from full, so the gauge visibly refilled to the brim and said the
+                // wait had not begun. The bar runs from the moment they have decided to the
+                // moment the drink lands; walking over to ask pays one of its three boxes back
+                // into it, capped at full. Core says which THIRD they are in, so the colour
+                // over the head is the same reading the till pays by, and the bubble — not a
+                // hue — says which wait it is.
                 float patience = (deciding || drinking) ? 1f : (float)visit.PatienceFraction;
                 // THE BAR IS ONLY UP WHILE IT IS EMPTYING (2026-08-20, the author: "herhangi
                 // bir sabır barı azalmıyorken kafasının üstünde bar gözükmesin ... içki

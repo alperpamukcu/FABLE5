@@ -137,26 +137,29 @@ namespace LastCall.Core
         public int BalkAtWaiting { get; } = 3;
 
         // ── patience (GDD 23 §2, balance v1) ────────────────────────────────────
+
+        /// <summary>
+        /// The WHOLE wait, in seconds: from the moment they have made up their mind to the
+        /// moment the drink lands. It covers being kept waiting to be ASKED as well — those
+        /// were two clocks between 2026-08-02 and 2026-09-04, and taking the order started
+        /// the second one from full, which meant a bar that got to a stool quickly paid for
+        /// none of the wait it had already spent. One clock now, and reading the card pays a
+        /// third of it back (<see cref="CustomerVisit.OrderTakenPatienceBonus"/>).
+        ///
+        /// The number is deliberately unchanged through that rewrite. Measured over 200
+        /// seeded runs of a busy one-stool-at-a-time bot, the merge moves storm-offs from
+        /// 28.4% to 7.4% and the average serve from 8% of the wait spent to 35% — which is
+        /// the point: the three bands were decorative before (14 red serves in 54,000, because
+        /// the gauge refilled at the order) and the tip's clock now has something to say.
+        /// A shorter curve would claw the pressure back; that is a separate design call and
+        /// wants its own measurement, not a silent ride-along on this one.
+        /// </summary>
         public double PatienceSeconds(int day) => Math.Max(22.0, 50.0 - 2.5 * day);
         public const double PatienceJitter = 0.20;
 
         /// <summary>One patience roll, jittered from the named stream.</summary>
         public double RollPatience(int day, SeededRng rng) =>
             PatienceSeconds(day) * (1.0 + (rng.NextDouble() * 2.0 - 1.0) * PatienceJitter);
-
-        /// <summary>
-        /// Seconds a customer will sit with their order ready before giving up on being
-        /// ASKED for it (the author, 2026-08-02: ordering and waiting are two different
-        /// waits). Deliberately a different, shorter curve than
-        /// <see cref="PatienceSeconds"/>: being ignored while you are trying to order is
-        /// a sharper insult than waiting on a drink somebody is visibly making, and one
-        /// clock reused for both would have made the split invisible.
-        /// </summary>
-        public double OrderPatienceSeconds(int day) => Math.Max(14.0, 30.0 - 1.6 * day);
-
-        /// <summary>One order-patience roll, jittered from the named stream.</summary>
-        public double RollOrderPatience(int day, SeededRng rng) =>
-            OrderPatienceSeconds(day) * (1.0 + (rng.NextDouble() * 2.0 - 1.0) * PatienceJitter);
 
         // ── deciding & savouring (GDD 23 §2, 2026-07-23) ────────────────────────
         /// <summary>Seconds a freshly seated customer mulls the menu before ordering. Zero
