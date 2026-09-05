@@ -173,6 +173,37 @@ namespace LastCall.UI
                 "................",
                 "................",
             },
+            // CASH — the dollar itself, DRAWN (2026-09-04, the author: "faturada $ iconu ...
+            // kullanılmalı"). Every figure on the night's slip was carrying a typed $ out of
+            // the body face, which at 24 is one more narrow glyph in a row of narrow glyphs:
+            // the eye had to read the number to find out it was money. This is the same 16px
+            // stroke the marks beside it are drawn in, so a figure now OPENS with a mark the
+            // way the labels do — and the money is the thing seen first, which is a receipt's
+            // whole job. Two units thick everywhere, stem through the S, because a one-unit
+            // dollar at this size is the smudge the generated set was thrown out for.
+            // It is drawn 14 ROWS TALL inside its 16, not the 10 the label marks opposite it
+            // use: this one stands beside TYPE and has to match a cap, where they stand
+            // beside a word and have to match a line. Measured against both faces — the
+            // slip's regular at 24 and the heavy at 16 — whose capitals are about 14 units.
+            ["cash"] = new[]
+            {
+                "................",
+                ".......##.......",
+                "....########....",
+                "...##..##..##...",
+                "...##..##.......",
+                "...##..##.......",
+                "...##..##.......",
+                "....######......",
+                "......######....",
+                ".......##..##...",
+                ".......##..##...",
+                ".......##..##...",
+                "...##..##..##...",
+                "....########....",
+                ".......##.......",
+                "................",
+            },
             // A STAR, because the game counts in them and no pixel face carries one. This is
             // the silhouette the licence and the standing row already wear, traced off
             // Items/star.png — the bar counts in ONE star, not in two that nearly match.

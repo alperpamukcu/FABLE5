@@ -1838,7 +1838,11 @@ namespace LastCall.UI
 
         // ── the week, as a record rather than a row of names ────────────────────
 
-        private const float WeekRowH = 40f;
+        /// <summary>40 → 38 on 2026-09-04, when a night's row took a second figure (the
+        /// TAKE over the NET). Seven of these, a rule and a two-line foot have to finish
+        /// clear of the plate's own drawn foot — its bottom border is 18 art px at 2×, and
+        /// the rivets live inside it — so the rows give the foot the two units it needs.</summary>
+        private const float WeekRowH = 38f;
 
         /// <summary>Where a night's score starts. Far enough past the VIP mark that
         /// Saturday's promise is not read as Saturday's first star.</summary>
