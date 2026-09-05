@@ -40,7 +40,7 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 - **BOŞ TABURENİN YÜZÜ YOKTUR (2026-08-25) — "aynı müşteriler geliyor"un ASIL sebebi buydu.** Gelen müşteri taburede önce `v.Visit`e yazılıyor, yüz SONRA soruluyordu; `LookFor`'un ilk işi ise "zaten yüzü olan tabureye dokunma" — ve o tabure hâlâ az önce çıkan kişinin yüzünü taşıyordu, çünkü `view.Look` ayrılışta hiç temizlenmiyordu. Sonuç: her taburede yalnız İLK müşteri gerçek bir yüz alıyor, sonrakilerin hepsi onu miras alıyordu — dört tabure, koşu boyunca **dört yüz**, ve misafir defteri (yüz başına tutulur) barın açılış saatinde "3. ziyaret" + dolu yıldız satırı basıyordu. Play'de ölçüldü: kapıdan yedi ayrı kişi girmişken dört yüz çiziliyordu; tek satırlık `view.Look = null` sonrası yedi kişi = yedi yüz, hepsi 1 ziyaret.
 - **Misafir defteri koşuyla sıfırlanır (2026-08-25):** `_patronLog` (yüz başına ziyaret + bırakılan yıldız) hiç temizlenmiyordu; HUD bir kez kurulduğu için NEW RUN, yüzleri önceki koşunun sayaçlarıyla açıyordu. Yüz atamaları da aynı yerde sıfırlanır.
 - **Kimlik evrakı canlı kadroyu da kapsıyor (2026-08-25):** `customers/papers.json` 2026-08-19 rig'inin dokuz yüzünü de taşıyor. O güne dek CANLI kadronun tek satırı yoktu: isim arketip havuzuna düşüyor, "citizen of" alanına ülke yerine ŞEHİR basılıyor, bayrak hiç çizilmiyordu — okunması istenen tek kartta, sessizce. `PapersTests` dokuzunu tek tek çitliyor.
-- **Son müşteri = evin misafiri + sınav (2026-08-13 rework, Core'da var, henüz sessiz — GDD 26 §3-4):** hikâye opt-in; `StoryArc` verilmemiş koşu bugünküyle birebir aynı. Verilmişse: kapı kapandıktan **ve** oda boşaldıktan sonra o gecenin beat'inin misafiri `BarDay.SeatGuest` ile oturur. **Defterlerin dışında:** kimlik yok (kendini tanıtır — gizli bilgi kuralının TEK yazılı istisnası, CLAUDE.md'de çitli), hesap yok, bahşiş yok, puan yok, fişte satır yok (`OnTheHouse`; gecenin sayan listesi `BarDay.FinishedCounted()`). **Sınav:** birkaç içki, TEK saat, post-it'te teker teker; standart = tam tarif + tam zanaat + tam yöntem, tek af doluluk ≥0.90; yanlış içki hata sayar ve istek YERİNDE kalır; `allowedMistakes` aşılınca veya saat bitince gece yanar, beat kendi gecesinde `returnsAfterWeeks` hafta sonra döner. Diyalog saati tutar (`ClockHeld`): konuşurken hiçbir şey işlemez, `BeginLastCallTrial()` başlatır, 120 sn `TalkingGrace` emniyeti gece rehin kalmasın diye. Ekstra tur yolu bilerek dokunulmadı (ödül sabrı tazeler; talep tazelemez). Veri bağlantısı ve diyalog kabuğu S3/S5'te.
+- **Son müşteri = evin misafiri + sınav (2026-08-13 rework, Core'da var, henüz sessiz — GDD 26 §3-4):** hikâye opt-in; `StoryArc` verilmemiş koşu bugünküyle birebir aynı. Verilmişse: kapı kapandıktan **ve** oda boşaldıktan sonra o gecenin beat'inin misafiri `BarDay.SeatGuest` ile oturur. **Defterlerin dışında:** kimlik yok (kendini tanıtır — gizli bilgi kuralının TEK yazılı istisnası, CLAUDE.md'de çitli), hesap yok, bahşiş yok, puan yok, fişte satır yok (`OnTheHouse`; gecenin sayan listesi `BarDay.FinishedCounted()`). **Sınav:** birkaç içki, TEK saat, post-it'te teker teker; standart = tam tarif + tam zanaat + tam yöntem, tek af doluluk ≥0.90; yanlış içki hata sayar ve istek YERİNDE kalır; `allowedMistakes` aşılınca veya saat bitince gece yanar, beat kendi gecesinde `returnsAfterWeeks` hafta sonra döner. Diyalog saati tutar (`ClockHeld`): konuşurken hiçbir şey işlemez, `BeginLastCallTrial()` başlatır, 120 sn `TalkingGrace` emniyeti gece rehin kalmasın diye. Ekstra tur yolu bilerek dokunulmadı (ödül sabrı tazeler; talep tazelemez). Veri bağlantısı ve diyalog kabuğu S3'te geldi; **ev sahibinin dersleri ve kitaptaki açık hesap 2026-09-05'te (§9.25).**
 - **Takvim artık kural (2026-08-13, `BarCalendar` — GDD 26 §2b; hafta 2026-08-14'te yeniden kesildi):** hafta altı açık gece, **Pazartesi→Cumartesi, PAZAR kapalı** (gün 1 = Pazartesi; takvim Pazar'ı kepenk olarak çizer). Plakadaki `WEEK 2 · FRIDAY` yazısı haftalardır oradaydı ama hiçbir şey ifade etmiyordu; hikâye misafiri artık **yalnız Cumartesi** gelir (`VipNight`, "her cumartesi bir hikaye müşterisi gelecek") ve sessiz geceler "eksik olanı gidip alma" geceleri. (Bu satır bir süre 2026-08-13 kesimini — Salı→Pazar — anlattı; kod her zaman kazanır.) Ev halkı misafir değil: yalnız `role: host` sessiz gece çalışabilir (Ece'nin açılış Salısı). Takvim `TycoonHud`'dan Core'a taşındı, yazı değişmedi.
 
 ## 4 · İçki yapımı — üç yol, tek yasa
@@ -969,6 +969,33 @@ medyanı 2.50 / 3.35 / 3.83; 2.5★'a ulaşan 196 (98.0%) → 196 (98.0%) (gün 
 Okuma: 1 = bardak payının yarıya inmesinin bedeli; 2 = yeni taban; 3 = çürüme (konfor tabanın
 altında, itibar durur, yoksul gece ARTMAZ); 4 = insan eli, `DirtPenalty`/`DirtGrace` bu satırdan
 seçildi. EditMode 452/452 yeşil.
+
+### 9.25 · Ev sahibi konuşur: dersler ve kitaptaki açık hesap (2026-09-05)
+
+PLAN_last_call S5'in Ece'ye kalan iki yarısı (`5948a965`). Ödül satırı GDD 26 §12.3 ile
+(2026-08-14) çoktan ters çevrilmişti — beat ödemez, kazandırdığı şeyler onu ADLARIYLA kilit
+yapar (`unlockBeat`) — ama `story.json`'daki yedi ders ayrıştırılıp **hiçbir yerde söylenmiyordu**
+ve kitap açık hesabı göstermiyordu.
+
+- **Dersler (Core):** `StoryCue` koşullarını Core gözler — ilk kapı (ctor ve `ContinueToNextDay`),
+  kimsenin kartı okunmamışken bekleyen biri ve tin'de karışmamış iki alkol (`Tick`'te),
+  ilk fıçı (`BeginPull`), ilk market ve kira altında kapanan gece (kapanışta), ilk ekstra tur
+  (`ServeTo`), ve **bu hafta** gelen misafirin rafta olmayan stili (kapıda; ark boyunca ilk
+  `needStyle` taşıyan beat'e bakar — silahlı beat Ece'nin sessiz Pazartesi'si olabilir).
+  `StoryProgress.Learn(cue)` koşu başına bir kez; `TycoonRun.LessonDue` sırayla, `HeardLesson()`
+  düşürür; ders yazılmamış cue sessizce harcanır; hikâyesiz koşuda hiçbiri yok. Rastgelelik yok,
+  bot ders okumaz (kuyruk en çok sekiz).
+- **Dersler (UI):** açık gecede diyalog plakası — Ece'nin adı ve yüzü, satır başına GO ON, sonda
+  GOT IT, SAY NO yok; beat oynuyorsa beat kazanır ve ders kuyrukta bekler. Kapanışın iki dersi
+  (ilk market, kırmızı gece) markette 98 mesaj kutusu (`BuildHostNote`, kapanış sorusunun
+  penceresi), Escape aynı tuş. Ece'nin yüzü kadroda olmadığından plaka şimdilik adıyla ve boş
+  kuyuyla konuşur (kadroya alınıyor: `Tools/patron_prompts.py` "ece").
+- **Açık hesap (GDD 26 §5):** `StoryProgress.CurrentAsked` (kaçırma/geri çevrilme ile açılır,
+  beat tutulunca kapanır). Kitabın başlık sayfasında haberlerin üstünde OPEN TAB: sorulmuşsa
+  "<AD> WANTS <İÇKİ> · <GECE>", ilk ziyaretten önce ise `needStyle` varken ve gecesi bu hafta
+  ya da gelecek haftaysa "GET <STİL> IN · <AD> COMES <GECE>".
+- **Doğrulama:** `StoryLessonTests` 13 test (473/473), PlayMode 10/10, oyunda fotoğraf
+  (plaka, market notu, kitap sekmesi).
 
 ### 9.24 · Kapı: 20 yaş, ödünç kimlik, kick, ceza, teşekkür (2026-09-05)
 

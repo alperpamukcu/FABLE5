@@ -53,6 +53,13 @@ She has **two jobs**, and they are different content:
 | data | `lessons` (§10) | the beat's own `hostBefore` / `hostAfter` lines |
 | when | once per run, the moment the condition is first true | at the last call |
 
+**Built 2026-09-05 (PLAN S5).** The cues are Core's (`StoryCue`, observed where each is true —
+`TycoonRun.Lessons.cs`), the bookkeeping is the run's (`StoryProgress.Learn`, once per run), and
+the words are the file's. On an open night she speaks on the dialogue plate (GO ON / GOT IT, no
+SAY NO); at the close — the first market, a red night — on a 98 message box of the market's own,
+because the plate would sit on the slip. `cannot_pour_the_ask` looks ALONG the arc for the first
+guest this week who needs a style, since the armed beat may be her own quiet night.
+
 The teaching half matters more than it sounds. Everything this game explains today, it explains
 in system voice — "SHAKER EMPTY — TAP A BOTTLE", "IT WANTS A MIX — BACK TO THE SHAKER". Those
 lines are good and they stay; they are the bar talking to itself. Ece is the first time anyone
@@ -290,7 +297,10 @@ none of them is a loss:
   never stuck staring at an order they cannot build.
 
 **Return schedule.** `returnsAfterWeeks` in data (default 1), landing on the beat's own night
-(§2b). Between visits the ask stands: the book shows it as an open tab. A beat may also carry
+(§2b). Between visits the ask stands: the book shows it as an open tab — built 2026-09-05:
+`StoryProgress.CurrentAsked` and OPEN TAB on the book's title page, "<NAME> WANTS <DRINK> ·
+<NIGHT>" once heard, and before the first visit the host's warning "GET <STYLE> IN · <NAME>
+COMES <NIGHT>" while their week is this one or next. A beat may also carry
 `nudge` lines used on the second and third returns so the person notices the player is closer
 ("I saw the crate come in").
 

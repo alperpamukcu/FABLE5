@@ -16,8 +16,9 @@ every night. Three nights in the red and the bar is gone. Five stars is the long
 scripted "last customer" story beat plays in the scene with its closing light. The house
 has two ratings — what the drinks were worth and what the room is worth, the night filing
 the lower — and the door has a law: some drinkers are under twenty, some carry a borrowed
-or altered card, and the licence's KICK key is how you answer it. The story's rewards and
-the rest of its cast are what remains.
+or altered card, and the licence's KICK key is how you answer it. The bartender who works
+the shift speaks up the first time each thing happens. The rest of the story's cast is what
+remains.
 
 ---
 

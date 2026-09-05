@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **26's host speaks — S5 (2026-09-05):** the seven written lessons are said. Core observes
+  each `StoryCue` where it is true (`TycoonRun.Lessons.cs`), `StoryProgress.Learn` spends it
+  once a run, `LessonDue`/`HeardLesson` hand it to whoever draws the bar: the dialogue plate on
+  an open night, a 98 message box on the market at the close. The shelf warning looks along the
+  arc for this week's guest. The book's title page carries the OPEN TAB (§5) off
+  `StoryProgress.CurrentAsked`. GDD_MEVCUT §9.25.
+
 - **28's second tell — H6, the code half (2026-09-05):** the ALTERED card. Half the forged
   cards are the minor's own with the year bumped to 21–24 and a flag that is not their
   country's (`WrongFlagFor`, stable per person); the log and the slip name it. The picture

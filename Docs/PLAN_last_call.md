@@ -322,7 +322,7 @@ whole test assembly link against the URP 2D runtime for one float.
 
 ---
 
-## S5 — The first arc, written
+## S5 — The first arc, written ◐ 2026-09-05 (the lessons and the tab; the rewards are the locks)
 
 **Scope cut 2026-08-13 (the author): ONLY ECE FOR NOW.** The live arc is her night alone and
 the three guests are parked in `Docs/story_guests_drafted.json` — so S5 is no longer "write the
@@ -342,12 +342,49 @@ after it arrives already framed by her.
 **Proof:** play both beats end to end: fail one on purpose, decline one, serve one right, and
 watch the reward land in the system it belongs to. EditMode pins each reward kind.
 
+**Shipped 2026-09-05 — the two halves that were still hers.** The reward line above is
+superseded by GDD 26 §12.3 (2026-08-14): a beat pays nothing, the things it earns NAME it
+(`unlockBeat`), so "rewards wired" is done the day a second beat exists to be named. What
+was actually missing was that **nobody ever spoke the lessons** — seven were written, parsed
+and read by nothing — and that **the book showed no open tab**.
+
+- **The lessons speak (Core + UI).** `TycoonRun.LessonDue` / `HeardLesson()` and
+  `StoryProgress.Learn(cue)`: each `StoryCue` is observed by Core where it is true — the first
+  door in the constructor and `ContinueToNextDay`; somebody waiting while no card was ever read,
+  and two spirits standing unmixed in the tin, once a tick; the first pull in `BeginPull`; the
+  first market and a night under the rent at the close; an extra round in `ServeTo`; and a guest
+  THIS WEEK wanting a style the shelf lacks at the door (looked for along the arc, since the
+  armed beat may be Ece's quiet Monday and the guest who needs bourbon is Saturday's). Once per
+  run, queued in the order the moments came; a card read before the licence lesson lands
+  spends it silently; a run without a story has none. On an open night the lesson is the
+  dialogue plate with her name and face and GO ON / GOT IT and no SAY NO; at the close it is a
+  98 message box of the market's own (`BuildHostNote`), because the plate is a thing of the open
+  night and would sit on the slip. Thirteen EditMode tests (`StoryLessonTests`).
+- **The open tab (GDD 26 §5).** `StoryProgress.CurrentAsked` — set by a miss or a turn-away,
+  cleared when the arc moves on — and the book's title page prints OPEN TAB above the news:
+  "<NAME> WANTS <DRINK> · <NIGHT>" once the ask has been heard, and before the first visit
+  "GET <STYLE> IN · <NAME> COMES <NIGHT>" while the guest's week is this one or next.
+- **Ece's face is being cast** (the author: every face from here on is drawn against heavyset).
+  Three rolls are on the casting sheet; until one is adopted the plate speaks with her name and
+  an empty well, since `glam` has no frames on this rig either.
+
+Still S5's: nothing. What the plan called "rewards" now waits on S6 — the first `unlockBeat`
+is authored the day the collector's night goes back into the file.
+
 ---
 
 ## S6 — The rest of the cast *(content, repeatable)*
 
 Beats 3–7. No new code unless a beat needs a gate the data cannot express — and if one does,
 that is a design question first (GDD 26 §4), not a special case in C#.
+
+**Gated on faces (2026-09-05).** The three drafted guests wear `execman`, `teal` and `profess`,
+which are old-rig looks with no frames under `Resources/Patron` — a guest put back today would
+sit in a rolled stranger's body with a blank plate. Each comes back the day their face is
+drawn to heavyset's rig (`Tools/patron_prompts.py` → roll → judge → the author's pick → clips →
+`patron_ship.py`), and with them the first `unlockBeat`: the collector's kept night opening a
+bourbon, the influencer's the `gimlet` page (§11). The PixelLab cycle is the pacing: one face
+with its eleven clips is ~90 generations.
 
 ---
 

@@ -10,8 +10,9 @@ from code 2026-08-07; read it first for any live rule. `Docs/GDD/` carries the d
 bottles/brands/market, 14 §5 / 15 §4 / 16 §1 / 18 carry the palette, camera, font and stage
 specs the UI is built on, 25 is the (partly superseded) bottle-art brief now aimed at an
 external artist, and **26 owns the last customer** — the scripted closing beat, its dialogue
-and its data (staged in `Docs/PLAN_last_call.md`, which is the phase log: S0–S3 shipped, so
-the beat plays in the scene now; S4's light and S5's rewards are not built), and **27 and 28
+and its data (staged in `Docs/PLAN_last_call.md`, which is the phase log: S0–S5 shipped — the
+beat plays in the scene with its light, the host's lessons speak, the book carries the open
+tab; S6, the rest of the cast, waits on faces drawn to heavyset's rig), and **27 and 28
 own the house and the door** — two ratings sharing one row of stars (COMFORT from the fittings,
 drained by the counter's mess; SERVICE from the drink; the night files the lower), the
 wipe / collect / wash verbs, the upgrade ladder, under-20 customers, borrowed cards and the

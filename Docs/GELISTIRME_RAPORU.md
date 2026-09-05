@@ -249,6 +249,9 @@ index'le (paylaşılan index'e dokunmadan) dilimlenerek:
 | `ce9365b0` | **H4** — bardak lavaboya taşınır, bez lekeyi siler, musluk suyu; sahne lekeleri öder | bu oturum |
 | `479b301c` | **H5** — kalp/madalyon şeritleri, fişte ev satırı, tahtada SERVICE/COMFORT | bu oturum |
 | `9b3bd33b` | **H6 (kod)** — değiştirilmiş kart: yanlış bayrak; sanat yazarın seçimini bekliyor | bu oturum |
+| `e0744f16` | süpürmenin ikinci yarısı — 190 dosya (yazar manifesti çalıştırdı) | yazar + bu oturum |
+| `dd7a7fdf` | yazarın sanat turu — arka duvar, musluk kulesi, kutu etiketi | yazar |
+| `5948a965` | **S5** — ev sahibinin dersleri konuşur, kitapta açık hesap (§9.25) | bu oturum |
 
 **Süpürme, ölçerek.** `Assets/Resources` altındaki her PNG oyunun kendi yükleme zincirine karşı
 ada, türetilmiş öneke VE sahne GUID'ine göre sınandı (`art_reach.py`): 41 kartın 39'unda tam v4
@@ -276,8 +279,8 @@ görünümle yeniden kutsandı — resme bakılarak), 200 koşu sim + dört ev �
 
 **Aynı gün kapanan plan fazları:** PLAN_house_and_law H1b, H2b, H3, H4, H5 ve H6'nın kod yarısı —
 GDD 27 ve 28 artık oyunda. **Kalan:** H6'nın sanatı (resim basamakları 2–3, mermer lavabo —
-yazarın rapordan seçimi), PLAN_last_call S5 (Ece'nin ödülleri) ve S6 (kadro içeriği),
-PLAN_service_depth P18 (ekonomi/tutorial/kayıt).
+yazarın rapordan seçimi), PLAN_last_call S6 (kadro içeriği — üç misafirin yüzü heavyset rig'inde çizilince; Ece'nin yüzü
+kadroya alınıyor, üç aday yazarın seçiminde), PLAN_service_depth P18 (ekonomi/tutorial/kayıt).
 
 ## 1 · Yönetici özeti
 
