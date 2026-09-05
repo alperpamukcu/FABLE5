@@ -694,6 +694,27 @@ namespace LastCall.UI
 
         private bool _glassShown;
 
+        // ── THE SHAKER ON THE COASTER (2026-09-06, the author: "ana sahnede bardak
+        // altliginin ustunde gozukecek ... shaker asamasinda iken ana sahnedeki shakera
+        // basip o sahneye geri donebilir") ──────────────────────────────────────
+        //
+        // A drink left standing in the tin is work in progress, and until now the only
+        // sign of it on the main screen was a line of text as the bench closed. The tin
+        // itself stands on the counter instead — on the drink's own coaster, which it can
+        // share because the two are exactly exclusive: the glass appears when the serving
+        // glass has something in it, the tin when it does not and the shaker does
+        // (Core's own DrinkWaitingInShaker). Clicking it is the way back to the bench.
+        private RectTransform _shakerProp, _shakerPropLabel;
+        private Image _shakerPropImg;
+        private CanvasGroup _shakerPropLabelGroup;
+        private bool _shakerPropHovered, _shakerPropShown;
+        private string _shakerPropTier = "?";
+
+        /// <summary>The box the little tin is drawn in: its 48px sheet at the counter's own
+        /// grain (two units an art pixel), so it stands beside the glass at the same scale
+        /// the room is drawn at.</summary>
+        private const float ShakerPropBox = 48f * StageToHud;
+
         private const float GlassSlideMax = 0.22f;   // a full-counter slide, distance-scaled below
 
         // day end — two steps now (the author, 2026-08-01): first the bill alone, then
@@ -1416,6 +1437,7 @@ namespace LastCall.UI
             SyncHostNote(run);    // the closing's lessons, on the market
             UpdateOrderTip();     // after the seats: it reads the tickets they just placed
             UpdateDrinkGlass();
+            UpdateShakerProp();   // the tin waits on the same coaster the glass does
             StepMiniPreps(run);
             StepPropTip();
             UpdateEscape();

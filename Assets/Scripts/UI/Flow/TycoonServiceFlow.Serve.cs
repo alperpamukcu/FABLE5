@@ -45,6 +45,10 @@ namespace LastCall.UI
         private RectTransform _serveGlassShadow;
         private Image _serveGlassBack;
         private RectTransform _serveMixBar;
+
+        /// <summary>The lid drawn over the tin on this bench — kept so the tier can dress
+        /// it (2026-09-06, the gold shaker). See TycoonServiceFlow.Shaker's DressShakerArt.</summary>
+        private Image _serveCapImg;
         private string _serveMixSig = "";
         private GlassArt.Piece _serveGlassPiece;
 
@@ -554,6 +558,7 @@ namespace LastCall.UI
                     capImg.sprite = capArt;
                     capImg.preserveAspect = true;
                     capImg.raycastTarget = false;
+                    _serveCapImg = capImg;
                 }
             }
             else

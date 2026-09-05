@@ -101,6 +101,13 @@
       "x": 320,
       "y": 180,
       "backdrop": true
+    },
+    {
+      "id": "shaker",
+      "x": 430,
+      "y": 74,
+      "onCounter": true,
+      "carried": true
     }
   ],
   "fixtures": [
@@ -588,6 +595,30 @@
       "swatch": "fx_walls_swatch_4",
       "level": 4,
       "group": "walls"
+    },
+    {
+      "id": "shaker_steel",
+      "name": "Steel Shaker",
+      "slot": "shaker",
+      "group": "counter",
+      "price": 35,
+      "stars": 0,
+      "flavor": "The tin the room came with. Dented at the base, cold in the hand, and it has never lost a drink.",
+      "sprite": "shaker_prop",
+      "level": 1,
+      "startsInTheRoom": true
+    },
+    {
+      "id": "shaker_gold",
+      "name": "Gold Shaker",
+      "slot": "shaker",
+      "group": "counter",
+      "price": 140,
+      "comfort": 0.4,
+      "stars": 2.0,
+      "flavor": "Polished gold, and the drink inside it is exactly the same drink. That is not what anybody is looking at.",
+      "sprite": "shaker_prop_t2",
+      "level": 2
     }
   ]
 }

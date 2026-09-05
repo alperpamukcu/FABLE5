@@ -1375,6 +1375,8 @@ namespace LastCall.UI
             coasterImg.sprite = BackBarArt.Coaster();
             coasterImg.raycastTarget = false;
             coaster.gameObject.SetActive(false);
+            BuildShakerProp(root);
+
             // (The bin used to be built here, before the glass, so the carried drink passed
             //  over it. It went on 2026-08-26 and the sink took the verb — see TycoonHud's
             //  own headstone for it, and OnDrainClicked below.)
@@ -1520,6 +1522,113 @@ namespace LastCall.UI
 
         /// <summary>The finished drink sits on the counter and is dragged onto a customer to
         /// serve (GDD 24 §3). Heavy, springy carry with a lean into the motion (AAA feel).</summary>
+        /// <summary>
+        /// THE TIN ON THE COUNTER (2026-09-06). Built beside the coaster it stands on, and
+        /// before the drink glass, so a glass being carried draws over it rather than under.
+        /// Everything about WHEN it is there is <see cref="UpdateShakerProp"/>'s.
+        /// </summary>
+        private void BuildShakerProp(RectTransform root)
+        {
+            _shakerProp = NewRect("ShakerProp", root);
+            _shakerProp.anchorMin = _shakerProp.anchorMax = _shakerProp.pivot = new Vector2(0.5f, 0.5f);
+            _shakerProp.sizeDelta = new Vector2(ShakerPropBox, ShakerPropBox);
+            _shakerPropImg = _shakerProp.gameObject.AddComponent<Image>();
+            _shakerPropImg.preserveAspect = true;
+            // The drawing takes the click, not its box: the tin is a narrow silhouette on a
+            // square sheet, and a box would catch presses meant for the counter beside it.
+            // (The sheet is readable — the postprocessor sets it — so alphaHitTest works.)
+            _shakerPropImg.raycastTarget = true;
+            _shakerPropImg.alphaHitTestMinimumThreshold = 0.4f;
+            var btn = _shakerProp.gameObject.AddComponent<Button>();
+            btn.targetGraphic = _shakerPropImg;
+            btn.transition = Selectable.Transition.None;
+            btn.onClick.AddListener(() =>
+            {
+                var run = Run;
+                if (run == null || run.Phase != TycoonPhase.DayOpen) return;
+                if (_flow == null || _flow.IsOpen || CellarOpen) return;
+                Sfx.Play("tin_tip", 0.6f);
+                _flow.OpenShaker();
+            });
+            var glow = _shakerProp.gameObject.AddComponent<HoverGlow>();
+            glow.Graphics = new UnityEngine.UI.Graphic[] { _shakerPropImg };
+            var relay = _shakerProp.gameObject.AddComponent<HoverRelay>();
+            relay.Entered = () => _shakerPropHovered = true;
+            relay.Exited = () => _shakerPropHovered = false;
+
+            // The hint, in the room's one hint language (the book's plate, the roller's own
+            // fade): a prop that opens a whole screen says so before it is clicked.
+            _shakerPropLabel = NewRect("ShakerPropLabel", root);
+            _shakerPropLabel.anchorMin = _shakerPropLabel.anchorMax = new Vector2(0.5f, 0.5f);
+            _shakerPropLabel.pivot = new Vector2(0.5f, 0f);
+            _shakerPropLabel.sizeDelta = new Vector2(160f, 22f);
+            var plate = _shakerPropLabel.gameObject.AddComponent<Image>();
+            plate.sprite = ChromeArt.Card();
+            plate.type = Image.Type.Sliced;
+            plate.color = UITheme.Night[1];
+            plate.raycastTarget = false;
+            var line = NewText("Line", _shakerPropLabel, _display, 8, TextAnchor.MiddleCenter,
+                               UITheme.Amber[4]);
+            Stretch((RectTransform)line.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            line.text = "BACK TO THE TIN";
+            line.raycastTarget = false;
+            _shakerPropLabelGroup = _shakerPropLabel.gameObject.AddComponent<CanvasGroup>();
+            _shakerPropLabelGroup.alpha = 0f;
+            _shakerPropLabelGroup.blocksRaycasts = false;
+            _shakerPropLabelGroup.interactable = false;
+
+            _shakerProp.gameObject.SetActive(false);
+            _shakerPropLabel.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// The tin stands on the counter while a drink waits in it, and it is the door back
+        /// to the bench. Driven off Core: <c>DrinkWaitingInShaker</c> is "something is in the
+        /// shaker and nothing has been poured out yet", which is exactly the state the author
+        /// described — in the shaker stage, not yet at the glass.
+        ///
+        /// It rides the counter (the cellar lifts the room), it wears whichever tin the bar
+        /// owns, and it is not there while the bench itself is open — you are holding it.
+        /// </summary>
+        private void UpdateShakerProp()
+        {
+            if (_shakerProp == null) return;
+            var run = Run;
+            bool show = run != null && run.Phase == TycoonPhase.DayOpen
+                && (_flow == null || !_flow.IsOpen)
+                && !CellarOpen
+                && run.DrinkWaitingInShaker;
+            if (show)
+            {
+                string tier = run.LadderLevel("shaker") >= 2 ? "_t2" : "";
+                if (tier != _shakerPropTier)
+                {
+                    _shakerPropTier = tier;
+                    _shakerPropImg.sprite = ItemArt.Load("shaker_prop" + tier)
+                                            ?? ItemArt.Load("shaker_prop");
+                }
+                // Standing on the coaster, by its own lowest drawn pixel — the same reading
+                // every dish on this counter is placed by (DishRestY), plus the mat's lift
+                // and whatever the room is doing with the counter this frame.
+                float y = DishRestY(_shakerPropImg.sprite, ShakerPropBox) + CoasterLift + CounterLift;
+                _shakerProp.anchoredPosition = new Vector2(GlassHomeX, y);
+                _shakerPropLabel.anchoredPosition =
+                    new Vector2(GlassHomeX, y + ShakerPropBox * 0.5f + 6f);
+            }
+            if (show != _shakerPropShown)
+            {
+                _shakerPropShown = show;
+                _shakerProp.gameObject.SetActive(show);
+                _shakerPropLabel.gameObject.SetActive(show);
+                if (show) Sfx.Play("glass_down", 0.45f);   // it is set down on the mat
+                else _shakerPropHovered = false;
+            }
+            if (!show) return;
+            float want = _shakerPropHovered ? 1f : 0f;
+            _shakerPropLabelGroup.alpha = Motion.Reduced ? want : Mathf.MoveTowards(
+                _shakerPropLabelGroup.alpha, want, Time.unscaledDeltaTime / BookLabelFade);
+        }
+
         private void UpdateDrinkGlass()
         {
             var run = Run;

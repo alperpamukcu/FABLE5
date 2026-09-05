@@ -172,6 +172,36 @@ namespace LastCall.UI
         private RectTransform _shakerMixBar;
         private string _mixBarSig = "";
 
+        // ── which tin the bar owns (2026-09-06) ──────────────────────────────────
+        //
+        // The steel shaker came with the room; the gold one is a rung on the `shaker`
+        // ladder, and the two benches wear whichever the bar has fitted. The plates are
+        // the author's own, drawn on one canvas per tier and landed on the sheet these
+        // rects already work (Tools/shaker_ship.py), so the tier is a NAME and nothing
+        // here has to know what a gold shaker looks like.
+
+        private Image _shakerBodyImg, _shakerCapImg;
+
+        /// <summary>The tier's suffix on a shaker plate: "" for the steel one the bar opened
+        /// with, "_t2" once the gold rung is fitted. Read off Core's own ladder.</summary>
+        private string ShakerTier => Run != null && Run.LadderLevel("shaker") >= 2 ? "_t2" : "";
+
+        /// <summary>Puts the owned tin on both benches. Called on the way into either one, so
+        /// a rung bought at the market is on the counter the next time the tin is opened.</summary>
+        private void DressShakerArt()
+        {
+            string t = ShakerTier;
+            var tin = ItemArt.Load("tin_open" + t) ?? ItemArt.Load("tin_open");
+            if (_shakerBodyImg != null && tin != null) _shakerBodyImg.sprite = tin;
+            if (_serveShakerBody != null && tin != null) _serveShakerBody.sprite = tin;
+            var cap = ItemArt.Load("shaker_cap" + t) ?? ItemArt.Load("shaker_cap");
+            if (_shakerCapImg != null && cap != null) _shakerCapImg.sprite = cap;
+            // The pouring lid is the same lid with its tip off, and it falls back the same
+            // way the serve bench always did: a missing plate costs the look, never the pour.
+            var pour = ItemArt.Load("shaker_cap_pour" + t) ?? ItemArt.Load("shaker_cap_pour") ?? cap;
+            if (_serveCapImg != null && pour != null) _serveCapImg.sprite = pour;
+        }
+
         private void RefreshShakerMixBar(TycoonRun run)
         {
             if (_shakerMixBar == null) return;
@@ -1526,7 +1556,7 @@ namespace LastCall.UI
             // The real steel shaker (2026-07-23). It sits in front of the fluid so the metal
             // reads solid — the falling stream shows above the mouth then vanishes into the tin.
             var tinSprite = ItemArt.Load("tin_open") ?? ItemArt.Shaker;
-            if (tinSprite != null) { shakerImg.sprite = tinSprite; shakerImg.preserveAspect = true; shakerImg.color = Color.white; }
+            if (tinSprite != null) { shakerImg.sprite = tinSprite; shakerImg.preserveAspect = true; shakerImg.color = Color.white; _shakerBodyImg = shakerImg; }
             else
             {
                 shakerImg.color = UITheme.Cream[2];
@@ -1581,6 +1611,7 @@ namespace LastCall.UI
             _shakerTop.anchoredPosition = _capRest;
             var topImg = _shakerTop.gameObject.AddComponent<Image>();
             topImg.sprite = ItemArt.Load("shaker_cap");
+            _shakerCapImg = topImg;
             topImg.preserveAspect = true; topImg.raycastTarget = true;
 
             var capGrab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };

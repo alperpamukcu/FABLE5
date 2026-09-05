@@ -163,6 +163,19 @@ namespace LastCall.UI
             OpenBottle(card);
         }
 
+        /// <summary>
+        /// Back to the tin (2026-09-06, the author: "ana sahnedeki shakera basip o sahneye
+        /// geri donebilir"). The bench is not a place you can only be sent to any more: a
+        /// drink left standing in the tin puts the shaker on the counter, and the shaker is
+        /// the way back to the work. Guarded like every other door — the room can offer it
+        /// when the rules would not, so the rules are asked here rather than trusted there.
+        /// </summary>
+        public void OpenShaker()
+        {
+            if (Run == null || Run.Phase != TycoonPhase.DayOpen) return;
+            GoTo(Stage.Shaker);
+        }
+
         public void CloseFlow() => GoTo(Stage.Closed);
 
         /// <summary>Every stage change kills the held-action sound: a loop belongs to the
@@ -289,6 +302,9 @@ namespace LastCall.UI
             if (Run != null && Run.PullingId != null) Run.EndPull();
 
             AlignBenchCounters();
+            // THE TIN THE BAR OWNS, not the one it opened with (2026-09-06): the gold shaker
+            // is a rung, and a rung can be bought between two visits to this bench.
+            if (stage == Stage.Shaker || stage == Stage.Serve) DressShakerArt();
             if (stage == Stage.Shaker) RefreshShaker();
             if (stage == Stage.Serve) RefreshServe();
             if (stage == Stage.Tap) RefreshTap();

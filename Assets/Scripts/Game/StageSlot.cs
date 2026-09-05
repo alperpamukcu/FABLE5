@@ -59,9 +59,15 @@ namespace LastCall.Game
         /// rung of this ladder is a whole 640x360 picture of the room. X and Y are moot.</summary>
         public bool Backdrop { get; }
 
+        /// <summary>Whatever stands here is CARRIED (2026-09-06, the shaker): the room does
+        /// not stand it at a hook — it is a tool, and the HUD draws it where the work is,
+        /// only while there is work in it. The slot still says WHERE for anything that wants
+        /// to know, and the market still sells the ladder; the stage simply skips it.</summary>
+        public bool Carried { get; }
+
         public StageSlot(string id, float x, float y, bool onCounter,
                          float pairSpreadPx = 0f, bool houseLight = false, bool hangs = false,
-                         bool flat = false, bool backdrop = false)
+                         bool flat = false, bool backdrop = false, bool carried = false)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Slot needs an id.", nameof(id));
             if (pairSpreadPx < 0) throw new ArgumentException($"Slot '{id}' has a negative pair spread.");
@@ -74,6 +80,7 @@ namespace LastCall.Game
             Hangs = hangs;
             Flat = flat;
             Backdrop = backdrop;
+            Carried = carried;
         }
 
         public override string ToString() => $"{Id} ({X}, {Y}){(OnCounter ? " on the counter" : "")}";

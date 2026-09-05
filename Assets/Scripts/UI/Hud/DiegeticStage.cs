@@ -2565,7 +2565,12 @@ namespace LastCall.UI
                                      $"'{def.Slot}' — the stage was never handed it.");
                     continue;
                 }
+                // A carried piece's drawing lives with the tools in Items, not on the room's
+                // own shelf — and it is not stood here anyway, so a missing plate is no
+                // reason to skip the rest of the loop's bookkeeping.
                 var sprite = Resources.Load<Sprite>("Fixtures/" + def.Sprite);
+                if (sprite == null && _slots.TryGetValue(def.Slot, out var carriedSlot)
+                    && carriedSlot.Carried) continue;
                 if (sprite == null)
                 {
                     Debug.LogWarning($"DiegeticStage: fixture '{def.Id}' has no sprite " +
@@ -2600,6 +2605,11 @@ namespace LastCall.UI
                     if (_backgroundSr != null) _backgroundSr.sprite = sprite;
                     continue;
                 }
+                // A CARRIED piece is not room dressing (2026-09-06, the shaker): the bar
+                // owns it and the market sold it, but where it stands is the HUD's — on the
+                // coaster while a drink waits in it, in the hand on the bench, nowhere at
+                // all the rest of the night. The room would stand it at a hook forever.
+                if (slot.Carried) continue;
                 bool onCounter = slot.OnCounter;
                 bool hangs = slot.Hangs;
                 bool flat = slot.Flat;

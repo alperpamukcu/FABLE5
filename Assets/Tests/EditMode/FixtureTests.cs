@@ -153,8 +153,9 @@ namespace LastCall.Tests
             string path = UnityEngine.Application.dataPath + "/Data/fixtures/fixtures.json";
             var loaded = DataLoader.ParseFixtures(System.IO.File.ReadAllText(path));
             var given = loaded.Fixtures.Where(f => f.StartsInTheRoom).Select(f => f.Id).OrderBy(s => s).ToArray();
-            Assert.AreEqual(new[] { "beer_mat", "counter_sink", "taps_one", "walls_1" }, given,
-                "the room opens with the mat, the sink, one tap and the cracked wall — nothing else");
+            Assert.AreEqual(new[] { "beer_mat", "counter_sink", "shaker_steel", "taps_one", "walls_1" }, given,
+                "the room opens with the mat, the sink, the steel tin, one tap and the cracked "
+                + "wall — nothing else");
             foreach (var id in given)
                 Assert.AreEqual(0, loaded.Fixtures.First(f => f.Id == id).Comfort, id + " is the FreeBase");
             foreach (var id in new[] { "flamingo_triptych", "wall_lamps_one", "floor_rug", "wall_tv" })
@@ -166,6 +167,40 @@ namespace LastCall.Tests
             }
             foreach (var f in loaded.Fixtures)
                 Assert.IsNotNull(f.Group, f.Id + " names no shelf of the upgrade screen");
+        }
+
+        [Test]
+        public void TheShakerIsALadderTheRoomDoesNotStand()
+        {
+            // The author's own tin, and a gold one to buy (2026-09-06). It is a TOOL: the
+            // slot is carried, so the room never stands it at a hook — the counter draws it
+            // while a drink waits in it and the bench puts it in your hand. What the data
+            // has to get right is that it is a two-rung ladder like any other and that both
+            // its plates are on the shelf the HUD loads them from.
+            string path = UnityEngine.Application.dataPath + "/Data/fixtures/fixtures.json";
+            var loaded = DataLoader.ParseFixtures(System.IO.File.ReadAllText(path));
+            var slot = loaded.Slots.First(s => s.Id == "shaker");
+            Assert.IsTrue(slot.Carried, "the shaker is carried, not stood");
+            Assert.IsFalse(slot.Backdrop);
+
+            var rungs = loaded.Fixtures.Where(f => f.Slot == "shaker").OrderBy(f => f.Level).ToList();
+            Assert.AreEqual(new[] { 1, 2 }, rungs.Select(r => r.Level).ToArray());
+            Assert.IsTrue(rungs[0].StartsInTheRoom, "the steel tin came with the room");
+            Assert.AreEqual(0, rungs[0].Comfort, "and it is part of the FreeBase");
+            Assert.Greater(rungs[1].Comfort, 0, "the gold one is worth something to the room");
+            Assert.AreEqual("counter", rungs[0].Group, "sold off the counter's shelf");
+            foreach (var r in rungs)
+                Assert.IsNotNull(UnityEngine.Resources.Load<UnityEngine.Sprite>("Items/" + r.Sprite),
+                    r.Id + "'s picture is not on the Items shelf");
+            // The tin the benches actually draw, both tiers, on the sheet they share.
+            foreach (var plate in new[] { "shaker", "tin_open", "shaker_cap", "shaker_cap_pour" })
+                foreach (var tier in new[] { "", "_t2" })
+                {
+                    var art = UnityEngine.Resources.Load<UnityEngine.Sprite>("Items/" + plate + tier);
+                    Assert.IsNotNull(art, plate + tier + " is missing");
+                    Assert.AreEqual(new UnityEngine.Vector2(116, 208), art.rect.size,
+                        plate + tier + " is off the shared sheet — the lid would not land on the neck");
+                }
         }
 
         [Test]

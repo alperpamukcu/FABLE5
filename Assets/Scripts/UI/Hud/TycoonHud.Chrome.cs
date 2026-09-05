@@ -410,9 +410,12 @@ namespace LastCall.UI
             GetComponent<TycoonServiceFlow>()?.PickFromCellar(_cellarCards[index]);
         }
 
-        /// <summary>A fixture's sprite, from its own Resources shelf (PPU 1 — world art).</summary>
+        /// <summary>A fixture's sprite, from its own Resources shelf (PPU 1 — world art) —
+        /// or, for a CARRIED piece whose drawing lives with the tools rather than with the
+        /// room's dressing (2026-09-06, the shaker), off the Items shelf beside them.</summary>
         private static Sprite FixtureArt(string name) =>
-            string.IsNullOrEmpty(name) ? null : Resources.Load<Sprite>("Fixtures/" + name);
+            string.IsNullOrEmpty(name) ? null
+            : Resources.Load<Sprite>("Fixtures/" + name) ?? ItemArt.Load(name);
 
         /// <summary>
         /// Where a ladder's rung stands, on the market card that sells it. READ OFF THE
