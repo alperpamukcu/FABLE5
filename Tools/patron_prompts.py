@@ -355,6 +355,24 @@ FIGURE_OPTIONS = {
         "pearl earrings, kind lined face, "
         "a plain cornflower blue blouse and a long plain cream skirt, "
         "no logo, no pattern, no hat, nothing black"),
+
+    # ── THE HOST (2026-09-05): Ece, GDD 26 §1b ──────────────────────────────
+    # The one face the story has always needed and never had: "Turkish, thirty-one,
+    # and has done this before" - the bartender who works the shift and takes the first
+    # last call herself, sitting on a stool as a guest for that one night. So she is
+    # drawn like the cast (the same rig, the same rules, measured against heavyset),
+    # not as a portrait. The author's standing order for every face from here on:
+    # "Karakter üretirken de sanat Heavyset karakteriyle aynı olacak".
+    # Dressed off the scoreboard, like the fourth round: an open shirt over a t-shirt
+    # is the garment the model draws cleanest (heavyset 2.6%), and her hair goes LOW so
+    # the silhouette is not clubgirl's high ponytail. Nothing black, no tailoring words.
+    "ece": (
+        "a Turkish woman of thirty-one, light olive skin, medium height and athletic "
+        "build, bar customer in a Miami club, dark brown hair pulled back in a low "
+        "ponytail with a side parting, one small silver hoop earring, "
+        "an open loose white short sleeved shirt over a plain plum t-shirt, "
+        "plain dark teal trousers, "
+        "no logo, no pattern, no bag, no hat, no apron, nothing black"),
 }
 
 HAND_ANCHOR_NOTE = """\

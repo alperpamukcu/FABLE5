@@ -825,5 +825,50 @@
    "black": 18.299
   },
   "png": "AssetPipeline\\sources\\patron_trial\\topknot__s1.png"
+ },
+ "ece__r1": {
+  "character_id": "45fe753e-e37a-4bd9-91eb-a671fc930dc9",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "ece",
+  "measured": {
+   "outline": 9.615,
+   "head": 0.146,
+   "whole": 11.176,
+   "colours": 31,
+   "body": 206,
+   "black": 27.692
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\ece__r1.png"
+ },
+ "ece__r2": {
+  "character_id": "9346baba-1a4e-42b8-b386-0c0e9c714470",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "ece",
+  "measured": {
+   "outline": 65.625,
+   "head": 0.171,
+   "whole": 82.586,
+   "colours": 29,
+   "body": 210,
+   "black": 11.351
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\ece__r2.png"
+ },
+ "ece__r3": {
+  "character_id": "82c52229-6da7-46e8-b4ec-9204d3f0e850",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "ece",
+  "measured": {
+   "outline": 78.571,
+   "head": 0.13,
+   "whole": 85.459,
+   "colours": 51,
+   "body": 208,
+   "black": 13.436
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\ece__r3.png"
  }
 }
