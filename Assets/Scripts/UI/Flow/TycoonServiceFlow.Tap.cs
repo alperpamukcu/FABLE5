@@ -350,9 +350,11 @@ namespace LastCall.UI
             _tapGlass.pivot = new Vector2(0.5f, GlassPivotY);
             var pint = _tapPintImage = _tapGlass.gameObject.AddComponent<Image>();
             // The SAME glass everywhere (the author, 2026-08-02): the pint under the tap is
-            // the drawn glassware pint at its line's tier, refreshed on stage entry. The
-            // generated pint.png stays as the fallback for a run built without glassware.
-            pint.sprite = ItemArt.Load("pint");
+            // the drawn glassware pint at its line's tier, refreshed on stage entry. Until
+            // then it wears the line's first tier, so a run built without glassware still
+            // has a glass here (the generated pint.png it used to fall back on was swept
+            // on 2026-09-05).
+            pint.sprite = ItemArt.Load("glass3d_pint");
             pint.preserveAspect = true;
             if (pint.sprite == null) pint.color = UITheme.Cream[2];
             // No alpha hit-test here: the sprite was hollowed out so the beer shows through it,

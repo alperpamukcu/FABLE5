@@ -125,15 +125,24 @@ namespace LastCall.UI
         private static string Name(string icon, bool lit, float px) =>
             icon + (lit ? "" : "_socket") + (px <= 20f ? "_16" : "");
 
-        /// <summary>The bottle for a shelf style ("vodka", "gin", …); the asset names match.</summary>
-        public static Sprite Bottle(string style) => Load(style);
-
         /// <summary>
-        /// A BRAND's own bottle where one was drawn for it (the author, 2026-08-03: the
-        /// 48-dollar vodka wore the house pour's bottle). The upper tiers of each spirit
-        /// have their own vessel under <c>bot_{id}</c>; the tier that opens the bar keeps
-        /// the style art, which is its art, so the fallback is the rule and not a mercy.
+        /// A bottle OF A STYLE, for a line whose style the shelf does not carry: the first
+        /// card of that style in the catalogue handed in. Null when there is none — the
+        /// old <c>Items/{style}.png</c> bottles this used to fall back on were the v2 set,
+        /// swept on 2026-09-05 once every pourable card had its v4 sandwich.
         /// </summary>
+        public static Sprite StyleBottle(IReadOnlyList<LastCall.Core.IngredientCard> catalogue, string style)
+        {
+            if (catalogue == null || string.IsNullOrEmpty(style)) return null;
+            foreach (var c in catalogue)
+                if (c?.Info?.Style == style)
+                {
+                    var a = Bottle(c);
+                    if (a != null) return a;
+                }
+            return null;
+        }
+
         // ── the v4 sandwich (2026-09-04, Docs/PLAN_bottle_art_v4.md) ──────────────
         //
         // A v4 bottle is THREE plates on one 96x192 canvas: the interior (back), the drink's
@@ -165,19 +174,17 @@ namespace LastCall.UI
         public static Sprite Bottle(LastCall.Core.IngredientCard card)
         {
             if (card == null) return null;
-            // v4 first: the CELLAR front is the capped, closed bottle — the icon of the
-            // brand wherever a closed bottle is asked for (market, hover card, the cellar).
+            // The CELLAR front is the capped, closed bottle — the icon of the brand
+            // wherever a closed bottle is asked for (market, hover card, the cellar).
             var v4 = Load("v4_" + card.Id + "_front_c") ?? Load("v4_" + card.Id + "_c");
             if (v4 != null) return v4;
-            // The FLAT era (the author, 2026-08-05: "gerekirse sıvıları kaldır" — and it
-            // was gerekli): the bottle is ONE composed sprite, back and front baked
-            // together in the pipeline. No layers at runtime, nothing to mis-stack,
-            // no liquid to stand in front of anything. The hover card carries what
-            // is left in each bottle, as it always has.
-            var flat = Load("v3_" + card.Id + "_flat");
-            if (flat != null) return flat;
-            var own = Load("bot_" + card.Id);
-            return own != null ? own : Load(card.Info?.Style);
+            // A garnish has no bottle: its dish on the counter is its picture, on the
+            // market board as on the bar. (The flat v3 plates, the bot_{id} takes and the
+            // v2 style bottles that used to stand behind this line were swept on
+            // 2026-09-05 — every pourable card has its v4 sandwich, so nothing reached them.)
+            if (card.Type == LastCall.Core.IngredientType.Garnish)
+                return Load("counter_" + card.Info?.Style);
+            return null;
         }
 
         /// <summary>The same brand with its closure off — what the pour stage shows, because
@@ -187,32 +194,10 @@ namespace LastCall.UI
             if (card == null) return null;
             // v4: the master IS the open bottle (generated uncapped), so the hand front is it.
             var v4 = Load("v4_" + card.Id + "_front") ?? Load("v4_" + card.Id);
-            if (v4 != null) return v4;
-            var flatOpen = Load("v3_" + card.Id + "_flat_open");
-            if (flatOpen != null) return flatOpen;
-            // The brand's own capless shot, then its STYLE's — a tier-one brand has no art
-            // of its own but its style does, and falling straight through to the shut
-            // bottle would have put the cap back on the one in your hand.
-            return Load("bot_" + card.Id + "_open")
-                ?? Load(card.Info?.Style + "_open")
-                ?? Bottle(card);
+            return v4 != null ? v4 : Bottle(card);
         }
 
         public static Sprite Shaker => Load("shaker");
-
-        /// <summary>The tray piece for a preparation id (ice / lemon_twist).</summary>
-        public static Sprite Prep(string prepId)
-        {
-            switch (prepId)
-            {
-                case "ice": return Load("ice");
-                case "lemon_twist": return Load("prep_lemon");
-                // No salt_rim/sugar_rim (2026-08-27): a rim is a CRUST drawn onto the
-                // mouth (GlassDecor), never a piece off a tray, so nothing asked for
-                // those two and their drawings were swept with the accessor's callers.
-                default: return null;
-            }
-        }
 
         // (Bucket retired 2026-08-27 with the eight drawings behind it. Its one caller
         //  was the serve bench's AddFinishTub, cut with the finishing table; the room's

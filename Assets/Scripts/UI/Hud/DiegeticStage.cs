@@ -1676,12 +1676,6 @@ namespace LastCall.UI
         /// the drawer existed.</summary>
         [SerializeField] private Sprite shutterSprite;
 
-        /// <summary>Per-archetype ID photos for the licence card. Falls back to a flat silhouette.</summary>
-        [System.Serializable]
-        public struct PortraitSprite { public string archetypeId; public Sprite sprite; }
-        [SerializeField] private PortraitSprite[] portraits;
-        private readonly Dictionary<string, Sprite> _portraits = new Dictionary<string, Sprite>();
-
 
         // ── the world ───────────────────────────────────────────────────────────
         private Transform _world;                   // root of every world-space stage object
@@ -1815,19 +1809,12 @@ namespace LastCall.UI
         public void SetPropHoverHandler(System.Action<RectTransform, string> onHover) =>
             _onPropHover = onHover;
 
-        /// <summary>The ID photo for an archetype, for the tycoon floor's licence card.</summary>
-        public Sprite PortraitSpriteFor(string archetypeId) =>
-            !string.IsNullOrEmpty(archetypeId) && _portraits.TryGetValue(archetypeId, out var s) ? s : null;
-
         private void Awake()
         {
             Application.runInBackground = true; // keep animations advancing unfocused
             FillTheWindow();
             _display = displayFont != null
                 ? displayFont : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (portraits != null)
-                foreach (var p in portraits)
-                    if (p.sprite != null && !string.IsNullOrEmpty(p.archetypeId)) _portraits[p.archetypeId] = p.sprite;
             BuildScene();
         }
 

@@ -83,12 +83,11 @@ namespace LastCall.UI
             // ARCHETYPE's portrait — one picture for everyone off the late shift — while
             // eleven different people sit on the stool. Reading a customer is the game;
             // a licence that does not match the face in front of you is a licence that
-            // teaches the player to stop looking. The archetype portrait stays as the
-            // fallback for a look with no photo on disk.
+            // teaches the player to stop looking. (The archetype portraits themselves were
+            // swept on 2026-09-05: every look carries its own face, so the fallback to one
+            // never fired.)
             var idLook = LookFor(visit);
-            _idPhoto.sprite = idLook != null && idLook.Face != null
-                ? idLook.Face
-                : (stage != null ? stage.PortraitSpriteFor(reg.ArchetypeId) : null);
+            _idPhoto.sprite = idLook?.Face;
             _idPhoto.color = _idPhoto.sprite != null ? Color.white : UITheme.Night[3];
 
             // THE PAPERS BELONG TO THE FACE, NOT TO THE ARCHETYPE (the author, 2026-08-10:

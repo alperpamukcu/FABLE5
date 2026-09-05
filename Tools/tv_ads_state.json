@@ -1,0 +1,18 @@
+{
+ "cocktail": {
+  "job_id": "c6cae23b-fa20-467f-9e1b-128b67f202c5",
+  "desc": "(probe take, already paid)"
+ },
+ "flamingo": {
+  "job_id": "a6bf834b-e45b-47b2-99f3-6ea9862e18da",
+  "desc": "a pink flamingo standing on one leg in front of a big orange setting sun, teal water below, palm silhouette at the side, 1980s Miami vice pixel art advertisement on a bar television, flat matte colours, hard pixel edges, ordered dither, bold simple shapes readable at a tiny size, filling the whole frame, no text, no letters, no words, no writing, no glow, no bloom, no reflections, no cast shadows, no rim light, flat even ambient lighting"
+ },
+ "palmcar": {
+  "job_id": "39074780-2fbc-447a-9ba8-6d97417ef881",
+  "desc": "a white convertible car driving past two tall palm trees toward an orange and pink sunset horizon, 1980s Miami vice pixel art advertisement on a bar television, flat matte colours, hard pixel edges, ordered dither, bold simple shapes readable at a tiny size, filling the whole frame, no text, no letters, no words, no writing, no glow, no bloom, no reflections, no cast shadows, no rim light, flat even ambient lighting"
+ },
+ "beer": {
+  "job_id": "b8c75102-68ee-4ff9-9930-0098da28dee4",
+  "desc": "a full golden beer glass with a thick white foam head, centred on a purple background with simple rising bubbles, 1980s Miami vice pixel art advertisement on a bar television, flat matte colours, hard pixel edges, ordered dither, bold simple shapes readable at a tiny size, filling the whole frame, no text, no letters, no words, no writing, no glow, no bloom, no reflections, no cast shadows, no rim light, flat even ambient lighting"
+ }
+}

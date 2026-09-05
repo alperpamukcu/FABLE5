@@ -252,7 +252,9 @@ namespace LastCall.UI
                     }
                     if (pour.Count == 0)
                     {
-                        var fallback = ItemArt.Bottle(spec.Style);
+                        // Nothing of that style on the shelf: the catalogue's own bottle
+                        // of it stands in, so the card still shows what it wants.
+                        var fallback = ItemArt.StyleBottle(Run.CatalogueBottles, spec.Style);
                         if (fallback != null) pour.Add(fallback);
                     }
                     float box = SpecRowH - 3f;

@@ -1631,7 +1631,8 @@ namespace LastCall.UI
             _pourBottleBody.preserveAspect = true;    // the real bottle art, set per focus in RefreshShaker
             _pourBottleBody.color = UITheme.Cyan[3];
             _pourBottleBody.raycastTarget = false;
-            if (ItemArt.Bottle("vodka") == null)      // no art available → keep a procedural neck
+            // The house vodka's plate stands for the whole set: no v4 art, no bottles.
+            if (ItemArt.Load("v4_vodka_astra_front") == null)      // no art available → keep a procedural neck
             {
                 var neck = NewRect("Neck", _pourBottle);
                 Place(neck, new Vector2(0.5f, 1), new Vector2(20, 34), new Vector2(0, 0));

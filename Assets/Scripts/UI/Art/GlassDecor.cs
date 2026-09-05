@@ -182,8 +182,7 @@ namespace LastCall.UI
                 // A WEDGE, not a wheel (2026-08-26). prep_lemon is a slice seen face on -
                 // a cross-section lying on a plate - and hooking one over a rim drew a coin
                 // balanced on the glass. glass_lemon is cut from a lemon.
-                img.sprite = ItemArt.Load("glass_lemon_rim") ?? ItemArt.Load("glass_lemon")
-                          ?? ItemArt.Prep("lemon_twist");
+                img.sprite = ItemArt.Load("glass_lemon_rim") ?? ItemArt.Load("glass_lemon");
                 img.preserveAspect = true; img.raycastTarget = false;
                 if (img.sprite == null) img.color = UITheme.Amber[3];
                 // Barely leaned: a wedge cut to sit on a rim sits square on it. The old
@@ -209,18 +208,15 @@ namespace LastCall.UI
             // Both re-cut on 2026-08-26 with the ice and the wedge: the old sprig and the
             // old spear were drawn for a tray, at a tray's size, with a keyline a garnish
             // floating in a drink has no business wearing.
-            if (mint) _mint = Float("Mint", "glass_mint", "garnish_mint",
-                                    new Vector2(26f, 27f), -14f, -8f);
-            if (olive) _olive = Float("Olive", "glass_olive", "garnish_olive",
-                                      new Vector2(22f, 40f), 10f, 20f);
+            if (mint) _mint = Float("Mint", "glass_mint", new Vector2(26f, 27f), -14f, -8f);
+            if (olive) _olive = Float("Olive", "glass_olive", new Vector2(22f, 40f), 10f, 20f);
         }
 
-        private RectTransform Float(string name, string art, string fallback,
-                                   Vector2 size, float x, float lean)
+        private RectTransform Float(string name, string art, Vector2 size, float x, float lean)
         {
             var piece = NewChild(name, size, new Vector2(x, 0));
             var img = piece.gameObject.AddComponent<Image>();
-            img.sprite = ItemArt.Load(art) ?? ItemArt.Load(fallback);
+            img.sprite = ItemArt.Load(art);
             img.preserveAspect = true; img.raycastTarget = false;
             if (img.sprite == null) img.color = UITheme.Lime[3];
             piece.localRotation = Quaternion.Euler(0, 0, lean);
@@ -238,7 +234,7 @@ namespace LastCall.UI
             // highlight, struck at the size it floats at. The pictogram stays the fallback:
             // the card and the glass agreeing was the old reason for it, and a missing
             // drawing should still put something in the drink.
-            img.sprite = ItemArt.Load("glass_ice") ?? PrefArt.Ice() ?? ItemArt.Prep("ice");
+            img.sprite = ItemArt.Load("glass_ice") ?? PrefArt.Ice();
             img.preserveAspect = true; img.raycastTarget = false;
             if (img.sprite == null) img.color = new Color(0.75f, 0.9f, 1f, 0.9f);
             img.color = new Color(img.color.r, img.color.g, img.color.b, 0.92f);

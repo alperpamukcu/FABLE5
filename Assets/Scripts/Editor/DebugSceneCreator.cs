@@ -113,28 +113,13 @@ namespace LastCall.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
 
             // The stage carries only what the player still sees (2026-08-07 sweep): the room,
-            // the counter, the till and the licence portraits. The old rail bottles, the
-            // pour-glass pair and the solo customer left with their stage code.
+            // the counter and its shutter. The old rail bottles, the pour-glass pair and the
+            // solo customer left with their stage code; the archetype portraits followed on
+            // 2026-09-05, once every face on a licence was the drinker's own.
             var stage = game.AddComponent<LastCall.UI.DiegeticStage>();
             var stageSo = new SerializedObject(stage);
             stageSo.FindProperty("displayFont").objectReferenceValue = LoadRequired<Font>(PixelDisplayFontPath);
 
-            // ID photos, keyed by archetype id — the file name is the key.
-            var portraitProp = stageSo.FindProperty("portraits");
-            var portraitPaths = new System.Collections.Generic.List<(string id, string path)>();
-            foreach (var g in AssetDatabase.FindAssets("t:Sprite", new[] { "Assets/Art/Portraits/Archetypes" }))
-            {
-                var path = AssetDatabase.GUIDToAssetPath(g);
-                portraitPaths.Add((Path.GetFileNameWithoutExtension(path), path));
-            }
-            portraitProp.arraySize = portraitPaths.Count;
-            for (int i = 0; i < portraitPaths.Count; i++)
-            {
-                var el = portraitProp.GetArrayElementAtIndex(i);
-                el.FindPropertyRelative("archetypeId").stringValue = portraitPaths[i].id;
-                el.FindPropertyRelative("sprite").objectReferenceValue =
-                    AssetDatabase.LoadAssetAtPath<Sprite>(portraitPaths[i].path);
-            }
             // Environment art (18 §5): club background + the bar, whose empty shelves are where
             // bought glassware will stand. Optional — the stage falls back to flat procedural
             // layers when either is missing.
