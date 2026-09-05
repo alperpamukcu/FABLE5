@@ -28,21 +28,51 @@ namespace LastCall.Core
 
         /// <summary>A bottle holds six glasses and pours at a bottle's pace. Pass 0 for either
         /// to take the default for the ingredient's type — which is how a keg gets to be a keg
-        /// (GDD 21 §10.1) without every call site having to know it is holding one.</summary>
+        /// (GDD 21 §10.1), and a mixer a mixer, without every call site having to know what it
+        /// is holding.</summary>
         public ShelfBottle(IngredientCard ingredient, double capacity = 0, double pourRate = 0)
         {
             Ingredient = ingredient ?? throw new ArgumentNullException(nameof(ingredient));
             if (capacity < 0) throw new ArgumentOutOfRangeException(nameof(capacity));
             if (pourRate < 0) throw new ArgumentOutOfRangeException(nameof(pourRate));
             bool keg = ingredient.Type == IngredientType.Beer;
-            Capacity = capacity > 0 ? capacity : (keg ? KegCapacity : BottleCapacity);
+            Capacity = capacity > 0 ? capacity : DefaultCapacity(ingredient);
             Remaining = Capacity;
             PourRate = pourRate > 0 ? pourRate : (keg ? KegPourRate : BottlePourRate);
+        }
+
+        /// <summary>
+        /// What a vessel of this holds when nobody says otherwise: a keg, a small mixer
+        /// bottle, or a bottle. Public because the SHOP has to say the same number the shelf
+        /// will hand out — a listing that promised a spirit's six measures and delivered a
+        /// mixer's three would be the shop lying about the goods.
+        /// </summary>
+        public static double DefaultCapacity(IngredientCard ingredient)
+        {
+            if (ingredient == null) return BottleCapacity;
+            if (ingredient.Type == IngredientType.Beer) return KegCapacity;
+            return IngredientCategories.IsSoftDrink(ingredient.Info?.Category)
+                ? MixerCapacity : BottleCapacity;
         }
 
         public const double BottleCapacity = 6.0, BottlePourRate = 0.55;
         /// <summary>A keg is four bottles deep and moves twice as fast (GDD 21 §10.1).</summary>
         public const double KegCapacity = 24.0, KegPourRate = 1.1;
+
+        /// <summary>
+        /// A SOFT DRINK IS A SMALL BOTTLE (2026-09-04, the author: "0.70cl'lik veya 1lt'lik
+        /// şişeler boyutunda değil, hacimleri daha az olmalı"). Every mixer and juice used to
+        /// hold exactly what a spirit holds, so a cola on the shelf was a 70cl bottle of cola
+        /// — which is not a thing, and it read as one because the number was shared.
+        ///
+        /// Half a spirit bottle: a 35cl mixer standing beside a 70cl spirit, which is roughly
+        /// what a bar actually takes them in. It POURS at the same rate as any other bottle,
+        /// so a small bottle is a bottle that empties sooner rather than one that behaves
+        /// differently in the hand — and since a mixer is poured half a glass at a time where
+        /// a spirit goes in by the third, that is about five drinks before it wants filling.
+        /// The refill is priced per measure, so the small bottle costs less to fill too.
+        /// </summary>
+        public const double MixerCapacity = 3.0;
 
         /// <summary>
         /// Takes up to <paramref name="requested"/> and returns what was actually available.

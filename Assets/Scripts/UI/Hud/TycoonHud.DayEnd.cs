@@ -1354,6 +1354,11 @@ namespace LastCall.UI
                 // only when there is something to lose — a bar that bought its stock and
                 // emptied its basket is waved straight through, because a confirm on every
                 // night is a key you learn to press without reading.
+                //
+                // Since the two foot keys became one (2026-09-04) the FOOT can no longer
+                // reach here with a full basket — that press buys instead — so the basket
+                // branch below now belongs to Escape alone. It stays: Escape is still a way
+                // out of the market, and it must not be the cheap way to bin the picks.
                 string worry = ClosingWorry();
                 if (worry != null) { ShowClosingAsk(worry); return; }
                 // Closing the shop IS the screen going dark: the tablet pulls away and the
@@ -1493,9 +1498,6 @@ namespace LastCall.UI
             // colour belonging to neither. The market keeps its line, because the tablet does
             // not name itself.
             _dayEndTitle.gameObject.SetActive(_dayEndStep == 1);
-            // A 136-wide button holds 2 lines of 8 CAPS; the arrow and the parenthetical
-            // wrapped to three and pushed themselves out of it.
-            _openTomorrowLabel.text = run.Day % 6 == 0 ? "START\nTUESDAY" : "OPEN\nTOMORROW";
             var floor = run.Floor;
             int served = 0, stormed = 0;
             foreach (var visit in floor.Finished)
@@ -1634,6 +1636,11 @@ namespace LastCall.UI
             // which is the whole failure in one line: too small to read, and everything past
             // the fourth thing simply gone. The foot is the basket now, and a picked line is
             // a chip you can see and press.
+            //
+            // BEFORE ANY OF IT IS DRAWN, the whole-well line is re-priced against what the
+            // basket now holds (2026-09-04) — the chips, the total and the key are all read
+            // off _cart, so a stale price here is a stale price everywhere.
+            RepriceWholeWell();
             if (_cartHeadLabel != null)
                 _cartHeadLabel.text = _cart.Count == 0 ? "BASKET" : $"BASKET ({_cart.Count})";
             RebuildBasket();
@@ -1641,9 +1648,22 @@ namespace LastCall.UI
                 _cartTotal.text = _cart.Count == 0 ? "" : "$" + CartTotal();
             // "TOTAL" with nothing after it is a label for a number that is not there.
             if (_cartTotalLabel != null) _cartTotalLabel.enabled = _cart.Count > 0;
-            if (_checkoutLabel != null)
-                if (_checkoutUntil < 0f)
-                    _checkoutLabel.text = _cart.Count == 0 ? "NOTHING PICKED" : "PLACE ORDER";
+            // WHAT THE NIGHT LEAVES YOU WITH (2026-09-04, the author: "sepete ürün
+            // eklendiğinde kalan bakiyeyi göstermeli"). The top bar says what the till HOLDS
+            // and the basket said what the order COSTS, and the player was doing the
+            // subtraction — on the one screen where getting it wrong is how a bar goes
+            // under. It goes red at nothing left: the shop refuses to overspend, so zero is
+            // the wall, and a wall you can see is not a refusal you have to discover.
+            int leftInTill = run.Money - CartTotal();
+            if (_cartLeft != null)
+            {
+                _cartLeft.text = _cart.Count == 0 ? "" : "$" + leftInTill;
+                _cartLeft.color = leftInTill > 0 ? Color.white : ShopCost;
+            }
+            if (_cartLeftLabel != null) _cartLeftLabel.enabled = _cart.Count > 0;
+            // The foot key reads the basket for which errand it is on — buy, or open
+            // tomorrow — so every rebuild that can have changed the basket re-dresses it.
+            RefreshMarketKey();
             if (_osClock != null) _osClock.text = $"DAY {run.Day}";
 
             if (_dayEndStep == 0) return;   // the bill step shows no shop at all
@@ -1652,7 +1672,11 @@ namespace LastCall.UI
                 // RESTOCK. One band, not two: "everything at once" and "bottle by bottle"
                 // were one errand split down the middle for no reason.
                 _cardTarget = ShopSection("THE WELL");
-                int restock = run.Shelf.RefillCost(cfg.RefillPricePerCapacity);
+                // WHAT THE SHELF IS SHORT, AND WHAT THIS LINE WOULD STILL ADD — two numbers
+                // now, and the difference between them is what the basket is already
+                // covering bottle by bottle (2026-09-04; see WholeWellPrice).
+                int shelfShort = run.Shelf.RefillCost(cfg.RefillPricePerCapacity);
+                int restock = WholeWellPrice();
                 var all = new TileSpec
                 {
                     Name = "Restock the Whole Well",
@@ -1668,16 +1692,27 @@ namespace LastCall.UI
                 if (restock > 0)
                 {
                     all.BuffA = new Buff(BuffKind.Cost, "$" + cfg.RefillPricePerCapacity
-                        + " a measure · " + restock + " to fill the shelf");
+                        + " a measure · " + restock + (restock < shelfShort
+                            ? " for the bottles not already in the basket"
+                            : " to fill the shelf"));
                     all.BuffB = new Buff(BuffKind.Gain,
-                        "Covers every bottle below — you cannot need both");
-                    DressBuyable(all, restock, "restock:all", false, () => run.RefillShelf());
+                        "Tops up every bottle below that you have not picked yourself");
+                    DressBuyable(all, restock, WholeWellKey, false, () => run.RefillShelf());
                 }
                 else
                 {
+                    // TWO WAYS TO HAVE NOTHING TO DO, and they are not the same news: a shelf
+                    // with nothing missing, and a shelf whose every short bottle is already
+                    // in the basket. Either way the crate is not for sale — the author:
+                    // "eğer restock edilebilecek ürün yoksa restock alınamamalı".
                     all.State = TileState.Held;
-                    all.Word = "FULL";
-                    all.BuffA = new Buff(BuffKind.Gain, "Nothing to pour away — every bottle is at the brim.");
+                    all.Word = shelfShort > 0 ? "IN" : "FULL";
+                    // 6 CAPS: the state row keeps 44 units for the reading beside it, and
+                    // ALL IN BASKET wrapped and lost its second line (measured in play).
+                    all.StateWord = shelfShort > 0 ? "ALL IN" : null;
+                    all.BuffA = new Buff(BuffKind.Gain, shelfShort > 0
+                        ? "Every bottle that needs filling is already in the basket."
+                        : "Nothing to pour away — every bottle is at the brim.");
                 }
                 AddTile(all);
 
@@ -1692,23 +1727,25 @@ namespace LastCall.UI
                     double mx = x.Capacity - x.Remaining, my = y.Capacity - y.Remaining;
                     return my.CompareTo(mx);
                 });
-                // THE WHOLE WELL COVERS EVERY BOTTLE IN IT (the author). Both could sit in
-                // the same order, and the player paid twice for the same measure: the
-                // restock-all tops up every bottle, so a per-bottle refill picked beside it
-                // buys nothing. The tile says so instead of taking the money — and picking
-                // the whole well throws the singles back out of the order, because the
-                // basket is the place where "you already have this" has to be true.
-                bool wellOrdered = InCart("restock:all") || _justOrdered.Contains("restock:all");
-                if (InCart("restock:all"))
-                    for (int i = _cart.Count - 1; i >= 0; i--)
-                        if (_cart[i].Key != null && _cart[i].Key.StartsWith("refill:"))
-                            _cart.RemoveAt(i);
+                // THE WHOLE WELL COVERS WHAT YOU HAVE NOT PICKED YOURSELF (2026-09-04). It
+                // used to cover EVERYTHING and throw the singles back out of the basket to
+                // prove it — a line that silently edited the order after the player had made
+                // it, and which left the crate quoting a price for measures the basket was
+                // paying for twice. The crate is a remainder now, so both can stand in one
+                // order and the two numbers add up to exactly one shelf.
+                //
+                // What still cannot happen is picking a bottle the crate is ALREADY paying
+                // for: those tiles say IN. A bottle picked BEFORE the crate keeps its own
+                // line and stays takeable — pulling it out simply puts its measures back on
+                // the crate, which re-prices on the same rebuild.
+                bool wellOrdered = InCart(WholeWellKey) || _justOrdered.Contains(WholeWellKey);
 
                 foreach (var b in shelf)
                 {
                     var bottle = b;
                     int cost = (int)Math.Ceiling((bottle.Capacity - bottle.Remaining)
                         * cfg.RefillPricePerCapacity);
+                    string key = RefillKey + bottle.Ingredient.Id;
                     var spec = new TileSpec
                     {
                         Name = bottle.Ingredient.Name,
@@ -1719,8 +1756,8 @@ namespace LastCall.UI
                             ? (float)(bottle.Remaining / bottle.Capacity) : 0f,
                     };
                     DescribeBottle(spec, bottle.Ingredient, bottle);
-                    if (cost > 0 && !wellOrdered)
-                        DressBuyable(spec, cost, "refill:" + bottle.Ingredient.Id, false,
+                    if (cost > 0 && (!wellOrdered || InCart(key)))
+                        DressBuyable(spec, cost, key, false,
                             () => run.RefillBottle(bottle.Ingredient.Id));
                     else if (cost > 0)
                     {
@@ -1764,6 +1801,10 @@ namespace LastCall.UI
                     {
                         Name = offer.Bottle.Name,
                         Art = ItemArt.Bottle(offer.Bottle),
+                        // The rung it stands on, drawn up its left margin (2026-09-04). Only
+                        // on the BOARD: the restock aisle sells measures of what the bar
+                        // already owns, and a gate on a bottle you are holding is history.
+                        RungStars = RungOf(offer.Bottle),
                     };
                     DescribeBottle(spec, offer.Bottle, null);
                     // "New stock" is a fact about the offer, not a prefix on the name —
@@ -1860,6 +1901,10 @@ namespace LastCall.UI
                         Art = DrinkIcon.For(r, _bootstrap.Glassware),
                         ArtH = IconH,
                         Recipe = r,
+                        // The page's own rung, on the same ladder its sealed neighbours
+                        // print — the book is sorted by this number, so it is the one fact
+                        // that explains the order of the aisle.
+                        RungStars = run.RecipeStarGate(r),
                         Identity = r.Name.ToUpperInvariant(),
                         MetaLine = PrepWord(r) + " · served in a " + GlassNameFor(r),
                         Body = BandLine(r),

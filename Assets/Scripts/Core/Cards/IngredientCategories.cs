@@ -51,5 +51,27 @@ namespace LastCall.Core
         public static bool IsAlcoholic(string category, IngredientType type) =>
             type == IngredientType.Beer
             || (!string.IsNullOrEmpty(category) && Booze.Contains(category));
+
+        private static readonly HashSet<string> Soft = new HashSet<string>(
+            new[] { Juice, Mixer }, StringComparer.Ordinal);
+
+        /// <summary>
+        /// Whether a bottle is a SOFT DRINK — the mixers and the juices: cola, tonic, soda,
+        /// the syrups and the pressed fruit (2026-09-04, the author: "meşrubat fiyatları
+        /// daha uygun olmalı, dolulukları ise gerçekçi olmalı ... hacimleri daha az").
+        ///
+        /// A bar does not buy these in the bottle it buys spirits in. They come small and
+        /// they come cheap, and treating them as another 70cl bottle at another spirit's
+        /// price was both of those wrong at once — which is why this is a question the shop
+        /// and the shelf both ask (<see cref="ShelfBottle.MixerCapacity"/>,
+        /// <see cref="Market.StockPrice"/>).
+        ///
+        /// Keyed on the CATEGORY for the same reason <see cref="IsAlcoholic"/> is: it is the
+        /// closed, parse-validated set, where Abv is display-only and must never feed a rule.
+        /// The GARNISH jars are deliberately not in it — a jar of olives is not a soft drink,
+        /// and it is measured by the sprig rather than by the pour.
+        /// </summary>
+        public static bool IsSoftDrink(string category) =>
+            !string.IsNullOrEmpty(category) && Soft.Contains(category);
     }
 }

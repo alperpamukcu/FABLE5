@@ -691,6 +691,27 @@ namespace LastCall.UI
             // where a number is being compared to another number.
             double stars = run.Rating.Average;
             _starsFill.sizeDelta = new Vector2((float)(stars / 5.0) * _ratingStars.Length * StarGap, 0);
+
+            RefreshJobStrip(run);
+        }
+
+        /// <summary>
+        /// The week's job in one line: how many are left, and of what. It counts DOWN rather
+        /// than up — "3 MORE NEGRONIS" is an instruction and "2/5 NEGRONI" is a scoreboard,
+        /// and this sits beside a LOG key at 8px where only one of those is worth the room.
+        /// Done, it says so in the lime the rest of the game says "landed" in, and stays
+        /// said for the rest of the week: a job finished on Tuesday should still be visible
+        /// on Friday, or the player cannot tell it from one never given.
+        /// </summary>
+        private void RefreshJobStrip(TycoonRun run)
+        {
+            if (_jobStrip == null) return;
+            var job = run.Job;
+            if (job == null || !job.RunsOn(run.Day)) { _jobStrip.text = ""; return; }
+            string drink = job.RecipeName.ToUpperInvariant();
+            _jobStrip.text = job.IsDone
+                ? $"<color=#6FCC4B>{job.Who} · {drink} DONE</color>"
+                : $"<color=#E84DA6>{job.Who}</color> · {job.Left} MORE {drink}";
         }
 
         private void BuildServiceLog(RectTransform root)
@@ -698,6 +719,25 @@ namespace LastCall.UI
             // The key stays put under the fascia; only the sheet below it comes and goes.
             NewButton(root, "LOG", new Vector2(0, 1), new Vector2(44, 20),
                 new Vector2(10, -66), UITheme.Night[2], ToggleServiceLog);
+
+            // THE WEEK'S JOB, BESIDE THE LOG KEY (2026-09-04, the author: "bu görev oyun
+            // içerisinde LOG'un olduğu yerde çok yer kaplamamalı"). One line, 8px, on the
+            // LOG key's own row and running off to its right: a count, then the drink. It
+            // is not a panel and it does not open — a job you have to press for is a job
+            // nobody reads, and a job with a box around it is a second window on a screen
+            // whose whole rule is that its instruments are objects in the room.
+            //
+            // It draws NOTHING at all before the first hand-over, so week one is exactly
+            // the screen it was.
+            _jobStrip = NewText("WeekJob", root, _display, 8, TextAnchor.MiddleLeft,
+                UITheme.Cream[3]);
+            Place(_jobStrip.rectTransform, new Vector2(0, 1), new Vector2(300, 20),
+                new Vector2(60, -66));
+            _jobStrip.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _jobStrip.verticalOverflow = VerticalWrapMode.Truncate;
+            _jobStrip.supportRichText = true;
+            _jobStrip.raycastTarget = false;
+            _jobStrip.text = "";
 
             var panel = _serviceLogPanel = NewRect("ServiceLog", root);
             Place(panel, new Vector2(0, 1), new Vector2(430, 150), new Vector2(10, -90));

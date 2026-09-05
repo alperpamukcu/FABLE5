@@ -382,6 +382,52 @@ namespace LastCall.UI
                 seat.Tail.sprite = ChromeArt.BubbleTail();
                 seat.Tail.raycastTarget = false;
 
+                // ── THE SPEECH BALLOON (2026-09-04, the author: "konuşmalar normalde
+                // kafalarının üstlerinde bulunan kartlardan ayrı olarak klasik diyalog
+                // baloncuğunda olmalı ... birkaç saniye görünüp sonra yok olmalı").
+                //
+                // Its own object, deliberately. The ticket beside it is a standing readout —
+                // it is up for as long as somebody is on the stool, and everything on it is
+                // a FACT about the order. A line of speech is an EVENT: it arrives when they
+                // say it and it is gone a few seconds later. Those two things cannot share a
+                // rect without one of them behaving like the other, which is what happened
+                // when the pour note went into the ticket's status row: the plate grew a
+                // paragraph and then held that size for the length of the drink.
+                //
+                // Same balloon art, so the bar has one speech language — but the DRINK tone,
+                // whose edge is the club's blue, because everything this bubble ever says is
+                // said over a glass that has already been handed over. It sits exactly where
+                // the ticket sits and the ticket stands down while it is up: one thing over
+                // one head, which is the author's "kutucuk yerine".
+                seat.Say = NewRect("Say", seat.Root);
+                seat.Say.anchorMin = seat.Say.anchorMax = new Vector2(0.5f, 0);
+                seat.Say.pivot = new Vector2(0.5f, 0);
+                seat.Say.sizeDelta = new Vector2(TagMinW, 40f);
+                seat.Say.anchoredPosition = new Vector2(0, CharWinH + TagLift);
+                seat.SayBg = seat.Say.gameObject.AddComponent<Image>();
+                seat.SayBg.sprite = ChromeArt.Bubble(ChromeArt.BubbleTone.Drink);
+                seat.SayBg.type = Image.Type.Sliced;
+                seat.SayBg.raycastTarget = false;
+
+                var sayTail = NewRect("Tail", seat.Say);
+                sayTail.anchorMin = sayTail.anchorMax = new Vector2(0.5f, 0);
+                sayTail.pivot = new Vector2(0.5f, 1);
+                sayTail.sizeDelta = new Vector2(11f, 9f);
+                sayTail.anchoredPosition = new Vector2(0, 3f);
+                seat.SayTail = sayTail.gameObject.AddComponent<Image>();
+                seat.SayTail.sprite = ChromeArt.BubbleTail(ChromeArt.BubbleTone.Drink);
+                seat.SayTail.raycastTarget = false;
+
+                // The ticket's own face and size, because it is the same mouth talking.
+                seat.SayText = NewText("Line", seat.Say, _display, 8, TextAnchor.UpperCenter,
+                    UITheme.Night[0]);
+                Stretch(seat.SayText.rectTransform, Vector2.zero, Vector2.one,
+                    new Vector2(TagPad, 0), new Vector2(-TagPad, -TagPad));
+                seat.SayText.horizontalOverflow = HorizontalWrapMode.Wrap;
+                seat.SayText.verticalOverflow = VerticalWrapMode.Overflow;
+                seat.SayLineH = MeasuredLineHeight(seat.SayText);
+                seat.Say.gameObject.SetActive(false);
+
                 // THE THREE ROWS ARE ONE FACE AT ONE SIZE (2026-08-20, the author: "alkolün
                 // yazdığı fontu değiştir diğerleriyle aynı yap") — the display face at 8, with
                 // the NAME double-struck bold (PixelBold) so the heading is a weight rather
@@ -1184,54 +1230,39 @@ namespace LastCall.UI
             _cartHeadLabel.verticalOverflow = VerticalWrapMode.Overflow;
             _cartHeadLabel.text = "BASKET";
 
-            // The number the player decides on, beside the key that spends it.
+            // TWO NUMBERS, RIGHT TO LEFT: what the order comes to, and what the till has
+            // left after it. The band used to carry the total alone beside a PLACE ORDER
+            // key; that key and the way out were merged into ONE (2026-09-04), which freed
+            // the whole right end — and the author asked for the second reading to live in
+            // it ("sepete ürün eklendiğinde kalan bakiyeyi göstermeli"), because the top bar
+            // says what the till HOLDS and the basket said what the order COSTS and nobody
+            // should be doing that subtraction in their head at the till.
+            //
+            // The columns are hand-set from the band's right edge and they do not move:
+            //   -10 … -130  the total          -138 … -198  "TOTAL"
+            //  -206 … -326  what is left       -334 … -464  "LEFT IN THE TILL"
+            // 464 units in a band 808 wide, and BASKET (n) ends 550 from the right.
             _cartTotalLabel = NewText("TotalL", orderHead, _shop, 8, TextAnchor.MiddleRight, ShopPaper);
             Place(_cartTotalLabel.rectTransform, new Vector2(1, 0.5f), new Vector2(60, 12),
-                new Vector2(-(CheckoutW + 130f), 0));
+                new Vector2(-138f, 0));
             _cartTotalLabel.text = "TOTAL";
             _cartTotal = NewText("BasketTotal", orderHead, _display, 16, TextAnchor.MiddleRight,
                 Color.white);
             Place(_cartTotal.rectTransform, new Vector2(1, 0.5f), new Vector2(120, 20),
-                new Vector2(-(CheckoutW + 8f), 0));
+                new Vector2(-10f, 0));
             _cartTotal.horizontalOverflow = HorizontalWrapMode.Overflow;
             _cartTotal.verticalOverflow = VerticalWrapMode.Overflow;
 
-            _checkout = NewRect("Checkout", orderHead);
-            Place(_checkout, new Vector2(1, 0.5f), new Vector2(CheckoutW, 26), new Vector2(-4, 0));
-            var checkoutImg = _checkoutImg = _checkout.gameObject.AddComponent<Image>();
-            // The 98 key, not sh_k_order (2026-08-19): the baked plate carried its own baked
-            // bevel, and one baked bevel in a storefront of drawn ones is the odd man out.
-            // Vice blue face — the money key keeps its colour, the face style is the change.
-            checkoutImg.sprite = ChromeArt.Win98Key();
-            checkoutImg.type = Image.Type.Sliced;
-            checkoutImg.color = ShopVice;
-            var checkoutBtn = _checkout.gameObject.AddComponent<Button>();
-            checkoutBtn.targetGraphic = checkoutImg;
-            checkoutBtn.onClick.AddListener(Checkout);
-            // THE ONE KEY ON THIS DEVICE THAT SPENDS MONEY, and it looked like the rest of
-            // the fascia (2026-08-14, the author: "satın alma butonu biraz daha dikkat edici
-            // olmalı"). It does not get a new colour — the shop's green is the shop's green
-            // — it gets a LAMP behind it that only burns when there is something to buy.
-            // Nothing pulses on an empty basket, so the eye is pulled exactly when acting
-            // is the right thing to do and never as decoration (GDD 16 §5, §6).
-            _checkoutLamp = NewRect("Lamp", orderHead);
-            Place(_checkoutLamp, new Vector2(1, 0.5f), new Vector2(CheckoutW + 14f, 40f),
-                new Vector2(-4, 0));
-            _checkoutLamp.SetAsFirstSibling();
-            _checkoutLampImg = _checkoutLamp.gameObject.AddComponent<Image>();
-            _checkoutLampImg.sprite = ChromeArt.LampGlow();
-            _checkoutLampImg.raycastTarget = false;
-            _checkoutLampImg.color = new Color(1f, 1f, 1f, 0f);
-            MarkHoverable(_checkout, checkoutImg);
-            _checkoutLabel = NewText("L", _checkout, _shop, 16, TextAnchor.MiddleCenter, Color.white);
-            Stretch(_checkoutLabel.rectTransform, Vector2.zero, Vector2.one,
-                new Vector2(6, 0), new Vector2(-6, 0));
-            _checkoutLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _checkoutLabel.verticalOverflow = VerticalWrapMode.Overflow;
-            _checkoutLabel.text = "PLACE ORDER";
-            var checkoutPress = _checkout.gameObject.AddComponent<Win98Press>();
-            checkoutPress.Face = checkoutImg;
-            checkoutPress.Caption = _checkoutLabel.rectTransform;
+            _cartLeftLabel = NewText("LeftL", orderHead, _shop, 8, TextAnchor.MiddleRight, ShopPaper);
+            Place(_cartLeftLabel.rectTransform, new Vector2(1, 0.5f), new Vector2(130, 12),
+                new Vector2(-334f, 0));
+            _cartLeftLabel.text = "LEFT IN THE TILL";
+            _cartLeft = NewText("BasketLeft", orderHead, _display, 16, TextAnchor.MiddleRight,
+                Color.white);
+            Place(_cartLeft.rectTransform, new Vector2(1, 0.5f), new Vector2(120, 20),
+                new Vector2(-206f, 0));
+            _cartLeft.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _cartLeft.verticalOverflow = VerticalWrapMode.Overflow;
 
             // THE ROW OF WHAT IS PICKED. Chips are built into it on every rebuild.
             _cartChips = NewRect("BasketChips", order);
@@ -1244,31 +1275,58 @@ namespace LastCall.UI
             _cartEmpty.verticalOverflow = VerticalWrapMode.Overflow;
             _cartEmpty.text = ShopIdleTip;
 
-            // The way out, bottom right of the device — and since the title bar lost its
-            // close box (2026-08-19) the ONLY way out, which is why it is the biggest key
-            // on the device and the one amber thing on it. The 98 face replaced sh_k_exit's
-            // baked bevel for the same reason the checkout dropped sh_k_order: one button
-            // language per site.
-            _openTomorrow = NewRect("OpenTomorrow", foot);
-            Place(_openTomorrow, new Vector2(0, 0.5f), new Vector2(ExitW, FootH), new Vector2(896, 0));
-            var otImg = _openTomorrow.gameObject.AddComponent<Image>();
+            // ONE KEY, NOT TWO (2026-09-04, the author: "satın al butonu ve güne geç butonu
+            // yerine ... 2 butonu 1 buton yapıyoruz"). The market asked two questions from
+            // two corners — PLACE ORDER in the basket's head band, OPEN TOMORROW down here —
+            // and only ever one of them had an answer: with an empty basket the order key
+            // said NOTHING PICKED, and with a full one the way out threw the picks away and
+            // had to ask whether you meant it. So it is ONE key in one place: it BUYS while
+            // there is something to buy, and it opens tomorrow once there is not. Emptying
+            // the basket is how you get past it without spending — the chips do that, and
+            // Escape still walks the same guarded door.
+            //
+            // Bottom right of the device, and since the title bar lost its close box
+            // (2026-08-19) the only way out, which is why it is the biggest key on the
+            // device. The 98 face replaced sh_k_exit's baked bevel for the same reason the
+            // checkout dropped sh_k_order: one button language per site.
+            //
+            // THE LAMP CAME WITH THE ORDER KEY (2026-08-14, the author: "satın alma butonu
+            // biraz daha dikkat edici olmalı"). It burns only when there is an order to
+            // place, so the eye is pulled to the key exactly when spending is the right
+            // thing to do and never as decoration (GDD 16 §5, §6) — which is also what
+            // tells the key's two faces apart without a second control.
+            _marketKeyLamp = NewRect("Lamp", foot);
+            Place(_marketKeyLamp, new Vector2(0, 0.5f), new Vector2(ExitW + 16f, FootH + 24f),
+                new Vector2(BasketW + 8f, 0));
+            _marketKeyLampImg = _marketKeyLamp.gameObject.AddComponent<Image>();
+            _marketKeyLampImg.sprite = ChromeArt.LampGlow();
+            _marketKeyLampImg.raycastTarget = false;
+            _marketKeyLampImg.color = new Color(1f, 1f, 1f, 0f);
+
+            _marketKey = NewRect("OpenTomorrow", foot);
+            Place(_marketKey, new Vector2(0, 0.5f), new Vector2(ExitW, FootH), new Vector2(BasketW + 16f, 0));
+            var otImg = _marketKeyImg = _marketKey.gameObject.AddComponent<Image>();
             otImg.sprite = ChromeArt.Win98Key();
             otImg.type = Image.Type.Sliced;
-            otImg.color = UITheme.PrimaryAction;
-            var otBtn2 = _openTomorrow.gameObject.AddComponent<Button>();
+            otImg.color = MarketKeyNight;
+            var otBtn2 = _marketKey.gameObject.AddComponent<Button>();
             otBtn2.targetGraphic = otImg;
-            otBtn2.onClick.AddListener(OnDayEndAdvance);
-            MarkHoverable(_openTomorrow, otImg);
-            _openTomorrowLabel = NewText("Label", _openTomorrow, _shop, 16, TextAnchor.MiddleCenter,
-                UITheme.TextOnAmber);
-            Stretch(_openTomorrowLabel.rectTransform, Vector2.zero, Vector2.one,
-                new Vector2(6, 0), new Vector2(-6, 0));
-            _openTomorrowLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
-            _openTomorrowLabel.verticalOverflow = VerticalWrapMode.Truncate;
-            _openTomorrowLabel.text = "OPEN\nTOMORROW";
-            var otPress = _openTomorrow.gameObject.AddComponent<Win98Press>();
+            otBtn2.onClick.AddListener(OnMarketKey);
+            MarkHoverable(_marketKey, otImg);
+            // 24, not 16 (2026-09-04). The pixel faces only rasterise cleanly at whole
+            // multiples of their 8px design size, so the step from 16 is to 24 — and a
+            // 208-wide key holds it: TOMORROW is the longest word on either face at 8
+            // characters, which sets 150 of the 196 the caption has.
+            _marketKeyLabel = NewText("Label", _marketKey, _shop, 24, TextAnchor.MiddleCenter,
+                MarketKeyNightInk);
+            Stretch(_marketKeyLabel.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(4, 0), new Vector2(-4, 0));
+            _marketKeyLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _marketKeyLabel.verticalOverflow = VerticalWrapMode.Truncate;
+            _marketKeyLabel.text = "OPEN\nTOMORROW";
+            var otPress = _marketKey.gameObject.AddComponent<Win98Press>();
             otPress.Face = otImg;
-            otPress.Caption = _openTomorrowLabel.rectTransform;
+            otPress.Caption = _marketKeyLabel.rectTransform;
 
             BuildClosingAsk(_dayEndTablet);
 

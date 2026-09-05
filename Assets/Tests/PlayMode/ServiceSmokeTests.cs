@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using LastCall.Core;
 using LastCall.Game;
 using NUnit.Framework;
@@ -7,6 +8,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 
 namespace LastCall.PlayTests
 {
@@ -236,6 +238,222 @@ namespace LastCall.PlayTests
             Assert.That(run.Glass.TotalVolume, Is.GreaterThan(0.0));
             Assert.That(run.Glass.Ingredients, Contains.Item("vodka_astra"),
                 "something poured, but not the bottle that was picked up");
+        }
+
+        /// <summary>
+        /// ONE KEY IN THE MARKET'S FOOT, AND IT DOES BOTH ERRANDS (2026-09-04, the author:
+        /// "2 butonu 1 buton yapıyoruz"). The market used to carry PLACE ORDER in the
+        /// basket's head band and OPEN TOMORROW in the foot; they are the same key now, and
+        /// which errand it is on is read off the basket.
+        ///
+        /// Worth a floor test because the failure mode is silent and total: a key that keeps
+        /// the wrong face buys nothing and ends the night instead, or ends nothing and offers
+        /// to buy an empty basket. Nothing about that shows up in a compile, and the picture
+        /// suite only ever sees the empty-basket face.
+        ///
+        /// It shops the way a player does — the aisle, a tile, the key — and never asks the
+        /// UI what it thinks: the caption on the key and the run's own book of purchases are
+        /// the whole of the evidence.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator The_markets_one_key_buys_first_and_opens_tomorrow_after()
+        {
+            yield return OpenTheBar();
+            var run = _boot.Tycoon;
+
+            // An empty night, called on the spot — the same door the look suite walks.
+            run.DevSkipToDayEnd();
+            yield return OpenTheMarket();
+
+            // THERE IS NO SECOND KEY. The head band's PLACE ORDER was named "Checkout", and
+            // its absence is the merge itself: if that rect comes back, so has the pair.
+            Assert.That(Find("Checkout"), Is.Null,
+                "the basket's head band has a key again — the market is back to two");
+
+            var key = Find("OpenTomorrow");
+            Assert.That(key, Is.Not.Null, "the market has no key in its foot at all");
+            var caption = key.GetComponentInChildren<Text>();
+            Assert.That(caption, Is.Not.Null, "the key has no caption");
+            Assert.That(caption.text, Does.Not.Contain("ORDER"),
+                "nothing is picked and the key already offers to buy: " + caption.text);
+
+            // THE MIXERS AISLE, which is the cheap one — every bottle in it is 2–4, so a bar
+            // that has just paid its first night's rent can still afford the first thing it
+            // points at. That is the aisle this key was merged alongside (the soft drinks got
+            // small and cheap the same day), so it is the right one to shop from.
+            yield return ClickOn(Find("Tab2"));
+            yield return new WaitForSecondsRealtime(0.4f);
+
+            // Pick the first thing that will actually go in: a listing the till cannot cover
+            // still answers the pointer, it just refuses, so the basket is the only honest
+            // signal that something landed. Only the top of the aisle is tried — below the
+            // fold the press would be a press into the scroll view's clip.
+            bool picked = false;
+            for (int i = 0; i < 6 && !picked; i++)
+            {
+                var tile = NthTile(i);
+                if (tile == null) break;
+                yield return ClickOn(tile);
+                picked = caption.text.Contains("ORDER");
+            }
+            Assert.That(picked, Is.True,
+                "six listings were pressed in the mixer aisle and the basket stayed empty "
+                + "— the key still reads: " + caption.text);
+            Assert.That(caption.text, Is.EqualTo("PLACE\nORDER"),
+                "something is in the basket and the key does not say what it would do");
+
+            // AND THE KEY SPENDS. The run's own book is what says so — the UI could paint
+            // anything it liked and Core is what actually took the money.
+            int before = run.TodaysPurchases.Count;
+            yield return ClickOn(key);
+            yield return new WaitForSecondsRealtime(0.4f);
+            Assert.That(run.TodaysPurchases.Count, Is.EqualTo(before + 1),
+                "the key was pressed on a full basket and nothing was bought");
+            Assert.That(caption.text, Is.EqualTo("ORDERED"),
+                "the order landed and the key did not answer");
+            Assert.That(run.Phase, Is.EqualTo(TycoonPhase.DayEnd),
+                "the key bought AND ended the night — it did both errands at one press");
+        }
+
+        /// <summary>
+        /// THE RESTOCK AISLE ADDS UP ONCE (2026-09-04, the author: "hem ayrı olarak
+        /// alkolleri restocklayıp hem de ayrıyeten tam fiyatına restock satın alınıyor").
+        ///
+        /// The whole-well crate quoted the shelf's entire shortfall no matter what the basket
+        /// was already covering, so a bottle picked by hand and the crate beside it billed
+        /// the same measures twice. The crate is a remainder now, and this is the arithmetic
+        /// said out loud: put EVERY short bottle in the basket by hand, and the crate has
+        /// nothing left to sell — the author's second sentence, "eğer restock edilebilecek
+        /// ürün yoksa restock alınamamalı".
+        ///
+        /// It is proved against the TILL and the SHELF, not against a label: what the night
+        /// costs is the one number a wrong answer here would move.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator The_restock_aisle_never_bills_the_same_measure_twice()
+        {
+            yield return OpenTheBar();
+            var run = _boot.Tycoon;
+
+            // A mid bar, so the till can cover an order; then two bottles pulled down by a
+            // known amount, so the shortfall is a number this test knows rather than one it
+            // has to read back off the screen.
+            run.DevPreset(1);
+            var drained = new List<ShelfBottle>();
+            foreach (var b in run.Shelf.Bottles)
+            {
+                if (b.Ingredient.Type == IngredientType.Beer || b.Capacity < 2.5) continue;
+                b.Draw(2.0);
+                drained.Add(b);
+                if (drained.Count == 2) break;
+            }
+            Assert.That(drained.Count, Is.EqualTo(2), "the well had no two bottles to pull down");
+
+            int shortfall = run.Shelf.RefillCost(run.Config.RefillPricePerCapacity);
+            Assert.That(shortfall, Is.GreaterThan(0), "nothing was short after draining two bottles");
+
+            run.DevSkipToDayEnd();
+            yield return OpenTheMarket();
+            yield return ClickOn(Find("Tab0"));
+            yield return new WaitForSecondsRealtime(0.4f);
+
+            // The aisle sorts what is emptiest first, so behind the crate at slot 0 stand
+            // exactly the two bottles that were drained.
+            var head = Find("BasketHL").GetComponent<Text>();
+            yield return ClickOn(NthTile(1));
+            yield return ClickOn(NthTile(2));
+            Assert.That(head.text, Is.EqualTo("BASKET (2)"),
+                "the two short bottles did not both go in: " + head.text);
+
+            // AND NOW THE CRATE HAS NOTHING TO ADD. Pressing it must not put a third line in
+            // the basket — that line is the double bill.
+            yield return ClickOn(NthTile(0));
+            Assert.That(head.text, Is.EqualTo("BASKET (2)"),
+                "the whole-well crate went in on top of the bottles it would have covered: "
+                + head.text);
+
+            int before = run.Money;
+            yield return ClickOn(Find("OpenTomorrow"));
+            yield return new WaitForSecondsRealtime(0.5f);
+            Assert.That(before - run.Money, Is.EqualTo(shortfall),
+                "the order charged something other than the shelf's shortfall");
+            foreach (var b in drained)
+                Assert.That(b.Remaining, Is.EqualTo(b.Capacity).Within(1e-9),
+                    b.Id + " was paid for and not filled");
+        }
+
+        /// <summary>
+        /// AN EMPTY-HANDED NIGHT IS ASKED ABOUT (2026-09-04, the author: "hiçbir şey almadan
+        /// devam etmek istediğinde emin misin diye tekrar sorsun"). A night nobody shopped on
+        /// is a night of rent for nothing, and the one key in the foot now ends the night on
+        /// a single press — so the question in front of it is the whole of the guard.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Leaving_the_market_having_bought_nothing_asks_first()
+        {
+            yield return OpenTheBar();
+            var run = _boot.Tycoon;
+            run.DevSkipToDayEnd();
+            yield return OpenTheMarket();
+
+            Assert.That(run.TodaysPurchases.Count, Is.EqualTo(0), "the night bought something on its own");
+            yield return ClickOn(Find("OpenTomorrow"));
+            yield return new WaitForSecondsRealtime(0.4f);
+
+            var ask = Find("ClosingAsk");
+            Assert.That(ask != null && ask.gameObject.activeInHierarchy, Is.True,
+                "the market let an empty-handed night close without asking");
+            Assert.That(run.Phase, Is.EqualTo(TycoonPhase.DayEnd),
+                "the night ended anyway, behind the question");
+        }
+
+        /// <summary>Walks the night's slip and stops when the market is on screen and settled.
+        /// Three tests take this same door; the look suite keeps its own copy because it has
+        /// to photograph what it finds at the end of it.</summary>
+        private IEnumerator OpenTheMarket()
+        {
+            RectTransform next = null;
+            float deadline = Time.realtimeSinceStartup + 25f;
+            while (Time.realtimeSinceStartup < deadline)
+            {
+                next = Find("BillNext");
+                if (next != null && next.gameObject.activeInHierarchy) break;
+                next = null;
+                yield return null;
+            }
+            Assert.That(next, Is.Not.Null, "the night's slip never offered a way on");
+            yield return ClickOn(next);
+
+            RectTransform basket = null;
+            float shop = Time.realtimeSinceStartup + 15f;
+            while (Time.realtimeSinceStartup < shop)
+            {
+                basket = Find("Basket");
+                if (basket != null && basket.gameObject.activeInHierarchy) break;
+                basket = null;
+                yield return null;
+            }
+            Assert.That(basket, Is.Not.Null, "the market never opened after the slip");
+            yield return new WaitForSecondsRealtime(0.5f);   // it slides in from the right
+        }
+
+        /// <summary>The nth listing in the open aisle, in the order they are laid out — or
+        /// null once the aisle runs out. Named "Tile" by the market that builds them.</summary>
+        private static RectTransform NthTile(int index)
+        {
+            var tiles = new List<RectTransform>();
+            foreach (var rt in Object.FindObjectsByType<RectTransform>(
+                         FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                if (rt.name == "Tile" && rt.gameObject.activeInHierarchy) tiles.Add(rt);
+            // Top-down, then left-to-right: the order a reader meets them, which is not the
+            // order FindObjectsByType hands them back in.
+            tiles.Sort((a, b) =>
+            {
+                var pa = a.position; var pb = b.position;
+                int byRow = pb.y.CompareTo(pa.y);
+                return byRow != 0 ? byRow : pa.x.CompareTo(pb.x);
+            });
+            return index < tiles.Count ? tiles[index] : null;
         }
 
         // ── the bar, opened ──────────────────────────────────────────────────────

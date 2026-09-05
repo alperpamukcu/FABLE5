@@ -114,6 +114,14 @@ namespace LastCall.UI
             if (tier > 1)
                 spec.BuffB = new Buff(BuffKind.Gain,
                     "Joins the shelf; the well bottle stays");
+            // WHAT SIZE IT COMES IN, said out loud for the one kind of bottle that is not
+            // the size the rest of the shelf is (2026-09-04). The mixers hold half a
+            // spirit's measures now; a shelf where the bar's cheapest goods quietly ran out
+            // twice as fast, with nothing on the listing to say so, would read as a bug.
+            else if (IngredientCategories.IsSoftDrink(card.Info?.Category))
+                spec.BuffB = new Buff(BuffKind.Cost,
+                    "A small bottle — " + ShelfBottle.MixerCapacity.ToString("0.#")
+                    + " measures, half a spirit's");
         }
 
         /// <summary>
@@ -220,6 +228,60 @@ namespace LastCall.UI
             int n = 0;
             foreach (var e in _cart) n += e.Price;
             return n;
+        }
+
+        /// <summary>The basket key of a single bottle's top-up.</summary>
+        private const string RefillKey = "refill:", WholeWellKey = "restock:all";
+
+        /// <summary>
+        /// WHAT THE WHOLE-WELL LINE WOULD STILL ADD (2026-09-04, the author: "alkolleri
+        /// restocklamak veya sepete eklemek restock fiyatını aktif olarak değiştirmeli ...
+        /// hem ayrı olarak alkolleri restocklayıp hem de ayrıyeten tam fiyatına restock
+        /// satın alınıyor").
+        ///
+        /// It was the WHOLE shelf's shortfall, always — a fixed number sitting beside the
+        /// per-bottle lines that were paying part of it. Pick three bottles and the crate
+        /// beside them still quoted the full amount, so the basket added the same measures
+        /// up twice and the total the player agreed to was not the total anything charged.
+        ///
+        /// It is a REMAINDER now: everything still missing, minus what the basket is already
+        /// covering. That is also exactly what Core will charge when the line executes —
+        /// <see cref="TycoonRun.RefillShelf"/> reads the shelf at the moment it runs, and the
+        /// singles were picked first, so by then those bottles are full and cost nothing.
+        /// The basket's arithmetic and the till's are the same arithmetic again.
+        ///
+        /// Zero means there is nothing left for it to do, and the tile says so instead of
+        /// selling it: the author's second sentence, and the reason this returns a number
+        /// rather than a bool.
+        /// </summary>
+        private int WholeWellPrice()
+        {
+            var run = Run;
+            if (run == null) return 0;
+            int missing = run.Shelf.RefillCost(run.Config.RefillPricePerCapacity);
+            foreach (var e in _cart)
+                if (e.Key != null && e.Key.StartsWith(RefillKey, StringComparison.Ordinal))
+                    missing -= e.Price;
+            return Math.Max(0, missing);
+        }
+
+        /// <summary>
+        /// Keeps a whole-well line already in the basket honest as bottles are picked up and
+        /// put back beside it. Called on every rebuild and NOT from the restock tab's own
+        /// branch: the basket is the foot of every tab, so a chip taken out while the player
+        /// is standing in the mixer aisle has to re-price the crate just the same.
+        ///
+        /// A line that falls to nothing leaves — a $0 chip in the basket is a thing the
+        /// player has to reason about for no reason.
+        /// </summary>
+        private void RepriceWholeWell()
+        {
+            for (int i = _cart.Count - 1; i >= 0; i--)
+            {
+                if (_cart[i].Key != WholeWellKey) continue;
+                int price = WholeWellPrice();
+                if (price <= 0) _cart.RemoveAt(i); else _cart[i].Price = price;
+            }
         }
 
         /// <summary>
@@ -392,32 +454,61 @@ namespace LastCall.UI
             // where the answer belongs — and a control that cannot be pressed again while
             // the order is landing cannot be pressed twice by accident either.
             _checkoutUntil = Time.unscaledTime + CheckoutHold;
-            RefreshCheckoutKey();
+            RefreshMarketKey();
         }
 
-        private void RefreshCheckoutKey()
+        /// <summary>
+        /// THE ONE KEY (2026-09-04, the author). Which errand it is holding is not a mode the
+        /// player sets — it is read off the basket, every rebuild and every frame the hold
+        /// releases on: something picked and it BUYS, nothing picked and it opens tomorrow.
+        /// The old pair could contradict each other (a key reading NOTHING PICKED beside a
+        /// way out that would silently bin what WAS picked); one key cannot.
+        /// </summary>
+        private void OnMarketKey()
         {
-            if (_checkout == null || _checkoutLabel == null) return;
-            bool spent = Time.unscaledTime < _checkoutUntil;
-            var img = _checkout.GetComponent<Image>();
-            var btn = _checkout.GetComponent<Button>();
-            if (btn != null) btn.interactable = !spent;
-            if (img != null)
-                img.color = spent ? new Color(0.612f, 0.635f, 0.706f, 1f) : Color.white;
-            _checkoutLabel.color = spent ? new Color(0.898f, 0.910f, 0.949f, 0.85f) : Color.white;
-            // Spent, the key says so; free, the BASKET says what it says — an empty one
-            // reads NOTHING PICKED, and hard-coding PLACE ORDER here would have handed the
-            // player a key inviting them to order nothing the moment the hold released.
-            _checkoutLabel.text = spent ? "ORDERED"
-                : _cart.Count == 0 ? "NOTHING PICKED" : "PLACE ORDER";
+            if (_cart.Count > 0) { Checkout(); return; }
+            OnDayEndAdvance();
         }
 
-        private void StepCheckoutKey()
+        /// <summary>Dresses that key: the errand it is on, said in its face, its ink and its
+        /// caption. The only place any of the three is decided.</summary>
+        private void RefreshMarketKey()
+        {
+            if (_marketKey == null || _marketKeyLabel == null) return;
+            bool spent = Time.unscaledTime < _checkoutUntil;
+            bool buying = _cart.Count > 0;
+            var btn = _marketKey.GetComponent<Button>();
+            if (btn != null) btn.interactable = !spent;
+            // Three faces, and the colour is what says which: grey while the order lands,
+            // GREEN when it is money the key spends, and the storefront's magenta when it is
+            // the night it ends (see MarketKeyBuy / MarketKeyNight for why those two).
+            //
+            // Through HoverWarm, not straight onto the Image: the press that flips the key
+            // happens with the pointer ON it, and a warmed face restores what it captured on
+            // enter. Writing the colour behind the component would put the old face back the
+            // moment the pointer left.
+            if (_marketKeyImg != null)
+            {
+                var face = spent ? MarketKeySpent : buying ? MarketKeyBuy : MarketKeyNight;
+                var warm = _marketKey.GetComponent<HoverWarm>();
+                if (warm != null) warm.Repaint(face); else _marketKeyImg.color = face;
+            }
+            _marketKeyLabel.color = spent ? MarketKeySpentInk
+                : buying ? MarketKeyBuyInk : MarketKeyNightInk;
+            // A 136-wide key holds 2 lines of 8 CAPS, which is what sets every caption here.
+            // NOTHING PICKED is gone with the second key: an empty basket is no longer a
+            // refusal to explain, it is simply the night being over.
+            _marketKeyLabel.text = spent ? "ORDERED"
+                : buying ? "PLACE\nORDER"
+                : Run != null && Run.Day % 6 == 0 ? "START\nTUESDAY" : "OPEN\nTOMORROW";
+        }
+
+        private void StepMarketKey()
         {
             if (_checkoutUntil < 0f) return;
             if (Time.unscaledTime < _checkoutUntil) return;
             _checkoutUntil = -1f;
-            RefreshCheckoutKey();
+            RefreshMarketKey();
         }
 
         /// <summary>
@@ -765,23 +856,89 @@ namespace LastCall.UI
         }
 
         /// <summary>
-        /// The lamp behind PLACE ORDER, which only burns when there is an order to place.
+        /// The lamp behind the foot key, which only burns when there is an order to place —
+        /// so it is lit for exactly the half of the key's life that spends money, and dark
+        /// while the same key is only offering to open tomorrow.
         /// A slow breath rather than a blink: the key is asking to be pressed, not warning
         /// about anything, and the chrome language keeps the fast pulses for refusals.
         /// It also goes dark for the three seconds after a checkout, while the key itself
         /// reads ORDERED — the one moment pressing it again would do nothing.
         /// </summary>
-        private void StepCheckoutLamp()
+        private void StepMarketKeyLamp()
         {
-            if (_checkoutLampImg == null) return;
+            if (_marketKeyLampImg == null) return;
             bool wants = _cart.Count > 0 && Time.unscaledTime >= _checkoutUntil;
             float breath = wants
                 ? 0.35f + 0.30f * Mathf.Sin(Time.unscaledTime * 3.4f)
                 : 0f;
-            var c = UITheme.Lime[3];
-            var now = _checkoutLampImg.color;
+            // Lime 5, a step brighter than the key it stands behind (2026-09-04): a halo the
+            // same colour as its lamp is not a halo. On the tablet's dark surround it reads
+            // as the key blooming rather than as a rectangle changing shade.
+            var c = UITheme.Lime[4];
+            var now = _marketKeyLampImg.color;
             float a = Mathf.Lerp(now.a, breath, 1f - Mathf.Exp(-9f * Time.unscaledDeltaTime));
-            _checkoutLampImg.color = new Color(c.r, c.g, c.b, a);
+            _marketKeyLampImg.color = new Color(c.r, c.g, c.b, a);
+        }
+
+        /// <summary>
+        /// THE RUNG A LISTING STANDS ON, drawn up the left margin of its art band: five
+        /// sockets from the foot, the first <paramref name="stars"/> of them lit, half a
+        /// rung drawn as half a star the same way every other star row in the game does it.
+        ///
+        /// Vertical because it is a LADDER and because the tile has exactly one free column:
+        /// the art is centred in a 140-wide well and the stock gauge owns the right edge, so
+        /// the left 12 units are the only place an instrument can stand on every tab without
+        /// something else having to move for it.
+        /// </summary>
+        private void StarLadder(RectTransform tile, double stars)
+        {
+            const float Px = 12f, Gap = 3f;
+            var art = ItemArt.Star(false, Px);
+            var litArt = ItemArt.Star(true, Px);
+            if (art == null) return;
+            var col = NewRect("Rung", tile);
+            float h = BarRating.MaxStars * (Px + Gap) - Gap;
+            Place(col, new Vector2(0, 1), new Vector2(Px, h),
+                new Vector2(TilePad - 4f, -(TileArtTop + 8f)));
+            for (int i = 0; i < BarRating.MaxStars; i++)
+            {
+                var cell = NewRect("R" + i, col);
+                // Anchored to the column's FOOT, so rung one is the bottom star and the
+                // lit run climbs — a ladder read from the ground, like the bar's own.
+                Place(cell, new Vector2(0, 0), new Vector2(Px, Px), new Vector2(0, i * (Px + Gap)));
+                var back = cell.gameObject.AddComponent<Image>();
+                back.sprite = art;
+                back.color = new Color(1f, 1f, 1f, 0.85f);
+                back.preserveAspect = true;
+                back.raycastTarget = false;
+                float fill = Mathf.Clamp01((float)stars - i);
+                if (fill <= 0.001f) continue;
+                var over = NewRect("F", cell);
+                Stretch(over, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var oi = over.gameObject.AddComponent<Image>();
+                oi.sprite = litArt;
+                oi.color = Color.white;
+                oi.preserveAspect = true;
+                oi.raycastTarget = false;
+                oi.type = Image.Type.Filled;
+                oi.fillMethod = Image.FillMethod.Horizontal;
+                oi.fillOrigin = (int)Image.OriginHorizontal.Left;
+                oi.fillAmount = fill;
+            }
+        }
+
+        /// <summary>
+        /// What rung a bottle opened on: its own lock's answer where it carries one, the
+        /// tier-and-price ladder where it does not — the same question <see cref="Market"/>
+        /// asks to decide whether to offer it at all, asked here to DRAW it. NaN where the
+        /// lock is not about stars at all (a person's beat), and a NaN draws nothing.
+        /// </summary>
+        private static double RungOf(IngredientCard card)
+        {
+            var info = card?.Info;
+            if (info == null) return double.NaN;
+            return info.Unlock != null ? info.Unlock.StarsWanted
+                : Market.RequiredStars(info.Tier, info.Price);
         }
 
         /// <summary>
@@ -1034,6 +1191,22 @@ namespace LastCall.UI
                 name.text = spec.Name;
             }
 
+            // 3b — THE RUNG, DOWN THE LEFT EDGE (2026-09-04, the author: "markette açık olan
+            // her ürünün kutusunun bir tarafında kaç yıldız gerekiyorsa yıldız iconu ile
+            // gösterilsin"). A sealed crate has always printed what it is waiting for; an
+            // OPEN one said nothing, so the ladder the whole shop is arranged by — which
+            // bottle belongs to which rung — was visible only on the half of the aisle you
+            // could not buy from.
+            //
+            // A LADDER, and it climbs: rung one at the bottom. Five sockets, so a listing
+            // that opens for anybody reads as five empty ones rather than as a tile that
+            // forgot to say. It is the same five-star ruler the sealed crates, the bill and
+            // the recipe book are drawn on (one helper, one cetvel), stood on its end so it
+            // can live in the one band of the tile nothing else uses — the art's left
+            // margin, opposite the stock gauge, which is why neither has to move.
+            if (state != TileState.Sealed && !double.IsNaN(spec.RungStars))
+                StarLadder(rt, spec.RungStars);
+
             // 4 — ONE contextual token, or the stock meter where stock IS the fact.
             if (spec.StockFrac >= 0f)
             {
@@ -1242,7 +1415,7 @@ namespace LastCall.UI
             // still says it underneath, and the ADD key's presence still says it — so the
             // colour-blind path reads on three channels instead of on a hue down an edge.
             // And it gains the thing the strip could never give: a listing you can READ.
-            string stateWord = StateWordOf(state);
+            string stateWord = spec.StateWord ?? StateWordOf(state);
             if (!string.IsNullOrEmpty(stateWord))
             {
                 float markX = TilePad;

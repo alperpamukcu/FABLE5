@@ -60,6 +60,21 @@ namespace LastCall.UI
             _over = false; _held = false;
         }
 
+        /// <summary>
+        /// REPAINT THE RESTING COLOUR, hover or no hover (2026-09-04). Capturing on enter is
+        /// only half the rule: a key that is repainted WHILE the pointer is on it would cool
+        /// back to the colour it wore when the pointer arrived — which since the market's two
+        /// foot keys became one is a key showing the shop's blue over a caption reading OPEN
+        /// TOMORROW. Anything that repaints a warmed face has to say so here instead of
+        /// writing <c>Face.color</c> behind this component's back.
+        /// </summary>
+        public void Repaint(Color cold)
+        {
+            if (Face == null) return;
+            _cold = cold;
+            if (!_over) Face.color = cold;   // hovered, LateUpdate warms it from the new cold
+        }
+
         private void LateUpdate()
         {
             if (!_over || Face == null) return;

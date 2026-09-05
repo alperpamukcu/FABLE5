@@ -530,6 +530,16 @@ namespace LastCall.UI
             public float AnimClock;          // running time for the looping clips (idle, walk)
             public bool WasOrdered;          // edge-detect the deciding→ordered moment
             public Image Tail;               // the bubble's spout, its own sprite (never sliced)
+            // ── what they SAY, which is not what the ticket shows (2026-09-04) ──────
+            // The plate above a drinker's head is a TICKET: a name, an order, a spec, a
+            // clock. Speech is a different object with a different life — it arrives, it is
+            // read, it goes — and putting a sentence in a row of the ticket made the ticket
+            // grow a paragraph and stay that size for as long as they nursed the glass.
+            public RectTransform Say;        // the speech balloon, its own object
+            public Image SayBg, SayTail;
+            public Text SayText;
+            public float SayLineH;           // asked of the font once, like the ticket's rows
+            public float SayUntil;           // unscaled time it goes away
             public RectTransform IconRow;    // the drink, a rule, and the serving spec
             public Image IconRule;           // the drawn bar between what and how
             public Image[] Garnish;          // one mark per thing on the spec
@@ -538,6 +548,10 @@ namespace LastCall.UI
             public bool Spoken;              // the order has finished arriving
             public float OrderAnimLeft;      // remaining "placing the order" one-shot time
             public float DrinkT;             // time since they started drinking
+            /// <summary>What this drinker will say about the glass they were handed —
+            /// read off the pour at the moment of the serve and kept, so the line cannot
+            /// change under them while they drink it. Default (silent) until served.</summary>
+            public PourNote Note;
             public float ReactLeft;          // remaining departure-reaction one-shot time
             public PatronClip ReactClip;     // Cheer or Upset, chosen from their satisfaction
             public PatronLook Look;          // who is sitting here, and how tall they are
@@ -644,13 +658,11 @@ namespace LastCall.UI
 
         private RectTransform _offerRow;
 
-        private RectTransform _openTomorrow;
-
         private Text _bannerText;
 
         private RectTransform _dayEndBill, _dayEndTablet;
 
-        private Text _openTomorrowLabel, _dayEndTitle;
+        private Text _dayEndTitle;
 
         private int _dayEndStep;
 
@@ -899,8 +911,37 @@ namespace LastCall.UI
         // The inspector gives up 80 units and the order takes them: the order is the
         // control the whole market exists to reach and it was the quietest thing on
         // the page, against a 640-wide dark slab shouting beside it.
-        // THE FOOT: 8 + 880 (the basket) + 8 + 136 (the way out) + 8 = 1040.
-        private const float FootH = 128f, BasketW = 880f, ExitW = 136f, CheckoutW = 212f;
+        // THE FOOT: 8 + 808 (the basket) + 8 + 208 (the one key) + 8 = 1040. ExitW is the
+        // key that buys AND the key that opens tomorrow since the two were merged
+        // (2026-09-04); it took 72 units off the basket the same day, because the author
+        // asked for it to be harder to miss ("daha dikkat çekici olmalı") and the honest way
+        // to make a control louder is to make it BIGGER — a pulse on a key with nothing to
+        // pulse about is decoration, which 16 §5 does not allow. At 208 the caption sets at
+        // 24 instead of 16, which is where the noise actually went.
+        // The basket keeps room for fifteen chips at 808, so nothing was taken from it that
+        // it was using.
+        private const float FootH = 128f, BasketW = 800f, ExitW = 216f;
+
+        // THE ONE KEY'S TWO FACES (2026-09-04, the author: "satın alma seçeneğinde rengi
+        // yeşil olmalı ... sonraki güne geçme butonunda renk değişmeli").
+        //
+        // GREEN TO SPEND. Lime carries no sacred role (16 §2 spends Amber on money, Cyan on
+        // flavour, Magenta on the multiplier), so it was free to take one — and it is the
+        // colour the key's own lamp has always burned, so the lit key and its glow are now
+        // one object rather than a blue key inside a green halo. Dark ink from its own ramp:
+        // Lime 4 is bright enough that black-green reads better on it than white.
+        //
+        // AND THE NIGHT'S END COMES OFF AMBER. It had to move for two reasons, and the
+        // second is the load-bearing one: amber is MONEY (16 §5) and this face is the one
+        // that spends none. Magenta 4 is the storefront's own lit accent — the colour the
+        // market's fade runs into and its open tab is edged with — so the exit is loud
+        // without borrowing a meaning that belongs to a number.
+        private static readonly Color MarketKeyBuy = UITheme.Lime[3];
+        private static readonly Color MarketKeyBuyInk = UITheme.Lime[0];
+        private static readonly Color MarketKeyNight = UITheme.Magenta[3];
+        private static readonly Color MarketKeyNightInk = Color.white;
+        private static readonly Color MarketKeySpent = new Color(0.612f, 0.635f, 0.706f, 1f);
+        private static readonly Color MarketKeySpentInk = new Color(0.898f, 0.910f, 0.949f, 0.85f);
 
         /// <summary>The reading card that rides the pointer — narrow, because it stands over
         /// the aisle it is describing and must not cover the neighbours.</summary>
@@ -1001,9 +1042,9 @@ namespace LastCall.UI
         private const string ShopIdleTip =
             "Point at anything to read it. You only pay when you place the order.";
 
-        private Text _fittingNote, _checkoutLabel, _cartHeadLabel, _osClock;
+        private Text _fittingNote, _marketKeyLabel, _cartHeadLabel, _osClock;
 
-        private Text _cartTotal, _cartTotalLabel;
+        private Text _cartTotal, _cartTotalLabel, _cartLeft, _cartLeftLabel;
 
         /// <summary>The basket's row of picked things: one chip per line, icon and price,
         /// click to take it back out (2026-08-11, the author).</summary>
@@ -1023,7 +1064,7 @@ namespace LastCall.UI
 
         private Text _billNextLabel;
 
-        private RectTransform _checkout, _billNext;
+        private RectTransform _marketKey, _billNext;
 
         private ScrollRect _shopScroll;
 
@@ -1095,7 +1136,18 @@ namespace LastCall.UI
             /// drawn as stars under the figure — the number alone made every gate in the
             /// shop a thing to be read rather than seen (2026-08-25).</summary>
             public double GateStars = double.NaN;
+            /// <summary>The rung an OPEN listing stands on, or NaN to draw no ladder
+            /// (2026-09-04, the author: "markette açık olan her ürünün kutusunun bir
+            /// tarafında kaç yıldız gerekiyorsa yıldız iconu ile gösterilsin"). A sealed
+            /// crate says its gate on its tag instead — see <see cref="GateStars"/> — so the
+            /// two are never both drawn and the shop says the number once.</summary>
+            public double RungStars = double.NaN;
             public string Word;              // "FULL" / "MAX" / "SOLD" — 4 CAPS, never 5
+            /// <summary>Overrides the state row's word for a listing whose state is right
+            /// and whose stock phrase is not (2026-09-04). The whole-well crate is HELD when
+            /// the basket already covers every short bottle, and the shared reading for held
+            /// is SHELF FULL — which on that one tile is a lie about the shelf.</summary>
+            public string StateWord;
             public string PillVerb;          // "ADD" / "TAKE OUT" / "NO CASH" / "RETURN"
             public TileState State;
             public Sprite Art;
@@ -1148,6 +1200,9 @@ namespace LastCall.UI
         /// <summary>Whether the closing screen has already announced itself; the phase
         /// test that raises it runs every frame.</summary>
         private bool _closedSpoke;
+
+        /// <summary>The week's job, one line beside the LOG key (2026-09-04).</summary>
+        private Text _jobStrip;
 
         private Text _toast;
 
@@ -1235,7 +1290,7 @@ namespace LastCall.UI
             // black screen waiting to happen: any frame where Run is null — between runs,
             // or on the first frames of one — would leave it up with nothing to lift it.
             StepCurtain();
-            StepCheckoutLamp();
+            StepMarketKeyLamp();
 
             var run = Run;
             if (run == null) return;
@@ -1317,7 +1372,7 @@ namespace LastCall.UI
             StepStarDrop();
             StepStamp();
             StepMoneyDrops();
-            StepCheckoutKey();
+            StepMarketKey();
             StepDayEndBeats();
             StepChipPop();
             StepDayEndDue();
@@ -2567,9 +2622,9 @@ namespace LastCall.UI
         // HoverRelay, not EventTrigger — EventTrigger implements IScrollHandler too, and
         // the aisle froze the day that was learned.
 
-        private RectTransform _checkoutLamp;
+        private RectTransform _marketKeyLamp;
 
-        private Image _checkoutLampImg, _checkoutImg;
+        private Image _marketKeyLampImg, _marketKeyImg;
 
         // ── the question at the door (2026-08-14) ───────────────────────────────
 

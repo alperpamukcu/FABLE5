@@ -26,6 +26,8 @@ namespace LastCall.UI
             foreach (var v in _seats)
             {
                 v.Visit = null;
+                v.Note = default;
+                HushSeat(v);
                 v.Look = null;          // see AdvanceExit: a stool with nobody on it has no face
                 v.Exiting = false;
                 v.ExitT = 0f;
@@ -202,6 +204,62 @@ namespace LastCall.UI
             return -1;
         }
 
+        /// <summary>
+        /// HOW LONG A LINE STAYS UP (2026-09-04, the author: "birkaç saniye görünüp sonra yok
+        /// olmalı"). Long enough to read a clause of the game's own 8px face twice over at a
+        /// comfortable pace, short enough that a room of six is never a wall of paper.
+        /// </summary>
+        private const float SaySeconds = 4.5f;
+
+        /// <summary>How wide a spoken line is allowed to get before it wraps. Wider than the
+        /// ticket's cap because a balloon is up for four seconds and a ticket is up all
+        /// night: a line that overhangs a neighbour's head briefly is readable, one that
+        /// parks there is a layout fault. Still inside the gap between two stools.</summary>
+        private const float SayMaxW = SeatGap - 4f;
+
+        /// <summary>
+        /// Puts one line in a drinker's balloon and starts its clock. An empty line says
+        /// nothing at all — a pint with a good head and every garnish on it has no business
+        /// making a speech, and silence there is the note working rather than failing.
+        /// </summary>
+        private void SayIt(SeatView view, string line)
+        {
+            if (view == null || view.Say == null || view.SayText == null) return;
+            if (string.IsNullOrEmpty(line)) { HushSeat(view); return; }
+            view.SayText.text = line.ToUpperInvariant();
+            view.SayUntil = Time.unscaledTime + SaySeconds;
+            view.Say.gameObject.SetActive(true);
+            LayOutSay(view);
+        }
+
+        /// <summary>Takes a balloon down and forgets what was in it.</summary>
+        private static void HushSeat(SeatView view)
+        {
+            if (view == null || view.Say == null) return;
+            view.SayUntil = 0f;
+            if (view.SayText != null) view.SayText.text = "";
+            if (view.Say.gameObject.activeSelf) view.Say.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// THE BALLOON IS THE SIZE OF WHAT IS IN IT (the author: "baloncuk metnin boyutuna
+        /// göre boyutlandırılacak"). One measurement, both ways: the line's own preferred
+        /// width up to the cap, then however many rows that width forces, then the plate is
+        /// the sum of them plus the padding and the balloon's own foot. The same arithmetic
+        /// the ticket does — it is the same drawn balloon, and neither may ever clip type.
+        /// </summary>
+        private void LayOutSay(SeatView view)
+        {
+            var text = view.SayText;
+            float widest = text.preferredWidth;
+            float cardW = Mathf.Clamp(widest + TagPad * 2f, TagMinW, SayMaxW);
+            float textW = cardW - TagPad * 2f;
+            int lines = text.text.Length == 0 ? 0
+                : Mathf.Max(1, Mathf.CeilToInt(widest / Mathf.Max(1f, textW)));
+            view.Say.sizeDelta = new Vector2(cardW,
+                lines * view.SayLineH + TagPad * 2f + TagFoot);
+        }
+
         /// <summary>Hands the ready drink to seat <paramref name="index"/> (the glass was dragged
         /// onto them). Returns true if it was served.</summary>
         private bool ServeSeat(int index)
@@ -220,6 +278,22 @@ namespace LastCall.UI
             // the ORDERED recipe — the same one TycoonRun files the perfect under.
             var asked = visit.Order.Wanted;
             bool knewItAlready = run.IsPerfected(asked.Id);
+
+            // WHAT THEY WILL SAY ABOUT IT, TAKEN NOW (2026-09-04). ServeTo empties the
+            // serving glass into the visit, so the pour can only be read on this side of the
+            // call — and it is read ONCE and kept, because the note must not change while
+            // they are drinking it. Against the ORDERED drink: that is the pour the player
+            // was aiming at, so that is the pour worth coaching.
+            // …and what they asked for ON it goes in with it: a garnish that was ordered
+            // and never arrived is the second half of what they have to say. visit.Order is
+            // legal here because ServeSeat has already refused an unread card.
+            _seats[index].Note = PourAdvice.For(asked, run.ServingGlass,
+                id => run.Shelf.Find(id)?.Ingredient, visit.Order.Spec);
+            // …and they SAY it, now, over the glass they were just handed — not when they
+            // start drinking. An extra round never enters Drinking at all (CustomerVisit
+            // .Resolve refreshes the order and stays Waiting), and the drink they are
+            // commenting on is the one that just landed either way.
+            SayIt(_seats[index], _seats[index].Note.Sentence);
 
             var verdict = run.ServeTo(visit);
             CloseId();
@@ -483,25 +557,14 @@ namespace LastCall.UI
         /// decider — the tin bench's rule, applied to the counter.</summary>
         private bool _rimLoopWanted;
 
-        /// <summary>
-        /// One customer saying one thing. The SEAT decides the pitch, so the six stools
-        /// carry six voices from four clips and a given drinker sounds like themselves
-        /// every night. The spread is deliberately narrow (0.86..1.16): wider than this
-        /// and the low seats read as a giant while the high ones read as a cartoon, and
-        /// the murmur stops being a person in a bar.
-        /// </summary>
-        private void SpeakSeat(int seat, string clip, float volume)
-        {
-            // A murmur is not a fanfare: if the room already has a voice in the air it
-            // waits rather than talking over itself, because two of these at once is
-            // babble and babble is what this deliberately is not.
-            if (Time.unscaledTime - _lastVoiceAt < VoiceGap) return;
-            _lastVoiceAt = Time.unscaledTime;
-            Sfx.Play(clip, volume, 0.86f + 0.06f * (seat % 6));
-        }
-
-        private float _lastVoiceAt;
-        private const float VoiceGap = 0.28f;
+        // NOBODY IN THIS BAR HAS A VOICE ANY MORE (2026-09-04, the author: "konuşma sesi
+        // olmayacak"). SpeakSeat lived here: four murmur clips, pitched by the stool so the
+        // six seats sounded like six people, fired on the greeting, the order and the way
+        // out. What they say is WRITTEN now — the bubble over the head carries the order, the
+        // thinking beat and the note on the drink — and a murmur under a written line is the
+        // same information twice, in the one channel that cannot be read at a glance or
+        // turned off separately. The stool, the till and the room keep every sound they had;
+        // only the mouths are quiet.
         private float _grainCarried;
         private const float GrainEvery = 26f;     // units of travel between crystals
         private const float GrainLife = 0.55f;
@@ -1411,9 +1474,20 @@ namespace LastCall.UI
         /// in play, where a chin-line start read as a puff off the top of the hair.</summary>
         private const float MotesBelowCrown = 74f;
 
+        /// <summary>
+        /// A PERFECT POUR IS ITS OWN RUNG (2026-09-04, the author: "eğer perfect ise kusursuz
+        /// olduğunu belirtsin ... partiküller abartılsın"). The three bands below grade
+        /// SATISFACTION, which a perfect pour shares with any merely good drink served
+        /// promptly — so the rarest thing in the game arrived looking exactly like the
+        /// common one. It gets a count no other serve can reach, gold instead of green, and
+        /// an answer thrown from the player's own side of the counter.
+        /// </summary>
+        private const int PerfectMotes = 32, PerfectBackMotes = 20;
+
         /// <summary>The face, its ink and how many of them one serve is worth.</summary>
-        private static (string Face, Color Tint, int Count) ReactionFor(double satisfaction)
+        private static (string Face, Color Tint, int Count) ReactionFor(double satisfaction, bool perfect)
         {
+            if (perfect) return ("good", UITheme.Amber[4], PerfectMotes);
             double s = System.Math.Max(0.0, System.Math.Min(1.0, satisfaction));
             if (s < ReactionSour)
                 return ("bad", UITheme.ViceRed[3], 4 + (int)System.Math.Round(s / ReactionSour * 3));
@@ -1425,11 +1499,12 @@ namespace LastCall.UI
         }
 
         /// <summary>Throws the motes from behind one drinker.</summary>
-        private void ReactionBurst(SeatView view, double satisfaction, bool follow)
+        private void ReactionBurst(SeatView view, double satisfaction, bool follow,
+            bool perfect = false)
         {
             if (stage == null || view == null || view.Body == null) return;
             if (!view.Body.gameObject.activeSelf) return;
-            var (faceName, tint, count) = ReactionFor(satisfaction);
+            var (faceName, tint, count) = ReactionFor(satisfaction, perfect);
             var face = ChromeArt.Face(faceName);
             if (face == null) return;
             // The body's own position is the middle of the rig canvas; the crown sits
@@ -1438,6 +1513,13 @@ namespace LastCall.UI
             float upStage = (headHud - (CharSize * 0.5f - CharFootDrop) - MotesBelowCrown) / StageToHud;
             var at = view.Body.transform.position + new Vector3(0f, upStage, 0f);
             ReactionMotes.Burst(stage, at, view.Body, follow, face, tint, count);
+            if (!perfect) return;
+            // AND THE BAR ANSWERS. A second burst from below the counter's line, in the
+            // room's magenta, so a perfect pour is a thing the two sides of the bar do
+            // TOGETHER rather than a thing that happens to a customer. It is pinned to the
+            // stool and never follows anybody: the player does not walk out.
+            ReactionMotes.Burst(stage, at + new Vector3(0f, -MotesBelowCrown / StageToHud, 0f),
+                view.Body, false, face, UITheme.Magenta[3], PerfectBackMotes);
         }
 
         /// <summary>
@@ -1468,22 +1550,23 @@ namespace LastCall.UI
             var seat = _seats[seatIndex].Root;
             var start = seat.anchoredPosition + new Vector2(0f, 96f);
             int tip = visit.Paid - visit.PaidBase;
-            double stars = BarRating.ExactStarsFor(visit.Satisfaction);
 
-            // FIRST, THE STARS — what they thought of it, which is what a drinker gets up
-            // with. On the same ruler every star gate in the game is drawn on: five sockets
-            // and a gold row filled by the fraction, so a 3.5 is three and a half here
-            // exactly as it is on the slip and in the book. The sockets are DARK here, not
-            // the usual faint white: this row is thrown over the room rather than laid on a
-            // panel, and a 20%-white star over the window is nothing at all.
-            StartCoroutine(TabMark(seat.parent, start, seatIndex, 0, 0f, host =>
-            {
-                var row = StarRow(host, new Vector2(0.5f, 1), Vector2.zero, 14f,
-                    stars, UITheme.Amber[3], new Color(0f, 0f, 0f, 0.55f));
-                row.pivot = new Vector2(0.5f, 1);
-            }));
+            // THE SCORE CAME OFF THE STOOL (2026-09-04, the author: "müşterilerin verdikleri
+            // ücretle beraber gözüken puanları gizlensin"). A leaving drinker threw three
+            // marks — a five-star row, the money, the tip — and the first of them was a
+            // GRADE: a number about a drink already drunk, printed at the one moment the
+            // player can do nothing about it.
+            //
+            // What it said is not lost, it moved to where it is useful. The motes off their
+            // shoulders carry how it went, and the note in the bubble carries what to change
+            // — both while the glass is still in their hand. The bar's own standing still
+            // counts every one of these stars; it is read on the night's slip, where the
+            // night is what is being judged rather than the customer walking out.
+            //
+            // The remaining two marks keep their lanes and their stagger. Lane 0 is simply
+            // empty now, which is what leaves the money climbing highest (TabLaneClimb).
 
-            // THEN THE MONEY, AND THE FIGURE IS THE EVENT (2026-08-25, the author: "daha
+            // THE MONEY, AND THE FIGURE IS THE EVENT (2026-08-25, the author: "daha
             // belirgin ve dikkat çekici"). 24 — the next legal step up, a whole 3x of the
             // face's 8px grid — and ringed the way the till's change is, so it holds its
             // shape over a lit wall or a dark one. Amber[3] and not the ramp's palest step:
@@ -1649,8 +1732,13 @@ namespace LastCall.UI
                     // following them out: a cloud chasing a leaver reads as a comet. The
                     // guest of the house is left out, as they are left out of every other
                     // ledger (GDD 26 §3).
+                    // A PERFECT POUR IS REMEMBERED PAST THE SIP that earned it: the note
+                    // taken at the serve is still on the seat when they set the glass down,
+                    // and it is the only thing here that knows the pour was exact. A
+                    // storm-off never reaches it — there was no glass.
                     if (!v.Visit.OnTheHouse)
-                        ReactionBurst(v, v.ExitStorm ? 0.0 : v.Visit.Satisfaction, follow: false);
+                        ReactionBurst(v, v.ExitStorm ? 0.0 : v.Visit.Satisfaction, follow: false,
+                            perfect: !v.ExitStorm && v.Note.Flawless);
                     if (v.Visit.OnTheHouse) { }
                     else if (v.ExitStorm)
                         LogService($"<color=#F27D8A>STORM-OFF</color> " +
@@ -1675,8 +1763,6 @@ namespace LastCall.UI
                     if (v.Visit.Paid > 0) TabFloat(i, v.Visit);
                     if (v.Visit.Paid > 0) Sfx.Play("cash");
                     Sfx.Play(!v.ExitStorm && v.Visit.Satisfaction >= 0.55 ? "cheer_sfx" : "upset_sfx", 0.6f);
-                SpeakSeat(v.Index, !v.ExitStorm && v.Visit.Satisfaction >= 0.55
-                          ? "voice_happy" : "voice_upset", 0.75f);
                     // And the body answers before it leaves (P15/D5): a cheer or a slump on
                     // the stool. This is where the emotional tell lives now the stat rows
                     // left the card — skipped cleanly while the clips have no frames yet.
@@ -1734,6 +1820,8 @@ namespace LastCall.UI
                     {
                         v.Visit = visit;
                         v.WalkT = 0f;
+                        v.Note = default;      // the last drinker's line is not this one's
+                        HushSeat(v);           // …and neither is what they said about it
                         // Who walked in, and how tall they are. The ticket and the gauge
                         // hang off THEIR head: the cast runs from 135 to 166 pixels of
                         // figure, which is 60 HUD units of difference, and a fixed window
@@ -1808,7 +1896,25 @@ namespace LastCall.UI
                 // them — straight into the shelves you are trying to read. Nothing is lost by
                 // taking them down: the cellar is a place you are looking AWAY from the room
                 // to work in, and the clocks are still running underneath.
-                bool showBubble = atTheStool && !CellarOpen;
+                // THE BALLOON'S OWN CLOCK, read before the ticket's, because the ticket
+                // stands down while somebody is talking.
+                bool saying = view.Say != null && view.Say.gameObject.activeSelf;
+                if (saying && Time.unscaledTime >= view.SayUntil) { HushSeat(view); saying = false; }
+                if (saying && (!atTheStool || CellarOpen)) { HushSeat(view); saying = false; }
+
+                // ONE THING OVER ONE HEAD (2026-09-04, the author: "kafalarının üstündeki
+                // kutucuk yerine konuşma baloncukları gözükmeli"). The ticket is a standing
+                // readout of an OPEN order; speech is what happens once the drink is in
+                // their hand. So the ticket goes down while a line is being said — and stays
+                // down for the rest of the savour, because a customer who has been served
+                // has no order left to read and a plate over them saying so was the loading
+                // sign this beat replaced.
+                //
+                // An extra round brings it straight back: Core never puts those visits into
+                // Drinking (CustomerVisit.Resolve refreshes the order and stays Waiting), so
+                // the moment the balloon retires the ticket is up again with the new drink
+                // on it — which is the author's "ikinci siparişte tekrardan görüntüleyebilmeliyiz".
+                bool showBubble = atTheStool && !CellarOpen && !saying && !drinking;
                 if (view.Tag.gameObject.activeSelf != showBubble)
                     view.Tag.gameObject.SetActive(showBubble);
 
@@ -1846,10 +1952,10 @@ namespace LastCall.UI
 
                     if (drinking)
                     {
-                        // Served, mid-animation, off-limits: the ticket turns into a loading
-                        // sign (2026-08-19, the author: "bir nevi yüklenme işareti") — the
-                        // thinking beat's own dots, in the club's blue to match the plate's
-                        // edge. The order line is gone: the drink is in their hand now.
+                        // Served, mid-animation, off-limits. The ticket barely gets to say
+                        // this any more — a drinker's plate stands down for the whole savour
+                        // (see showTag) — but the branch stays honest for the frames between
+                        // a serve and the balloon coming up.
                         view.Wants.text = "DRINKING" + (Motion.Reduced ? "..."
                             : new string('.', 1 + Mathf.FloorToInt(Time.unscaledTime / DotBeat) % 3));
                         view.Wants.color = UITheme.ClubBlue[1];
@@ -2038,7 +2144,6 @@ namespace LastCall.UI
                 if (stillWalking && view.WalkT >= 1f)
                 {
                     Sfx.Play("stool_take", 0.7f);
-                    SpeakSeat(view.Index, "voice_greet", 0.55f);
                 }
                 view.Root.anchoredPosition =
                     new Vector2(Mathf.Lerp(entryX, view.SeatX, view.WalkT), SeatLineY);
@@ -2137,7 +2242,6 @@ namespace LastCall.UI
             {
                 view.OrderAnimLeft = OrderAnimSeconds;
                 Sfx.Play("order_ready", 0.6f);
-                SpeakSeat(view.Index, "voice_order", 0.7f);
             }
             view.WasOrdered = ordered;
 

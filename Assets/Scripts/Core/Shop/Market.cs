@@ -40,16 +40,30 @@ namespace LastCall.Core
     /// </summary>
     public static class Market
     {
-        /// <summary>A tier-1 bottle with no listed price is priced by type and tier here.</summary>
+        /// <summary>
+        /// A tier-1 bottle with no listed price is priced by type and tier here.
+        ///
+        /// SOFT DRINKS COME OFF THIS LADDER FIRST (2026-09-04, the author: "meşrubat
+        /// fiyatları daha uygun olmalı"). The ladder is built for spirits, and a mixer that
+        /// fell through it was quoted 14 — more than the well rum, for a bottle of soda. They
+        /// are small bottles (<see cref="ShelfBottle.MixerCapacity"/>) and they are priced
+        /// like small bottles: 3, which is one measure of the restock the same crate would
+        /// cost to fill. The listed prices in base_bar.json carry the same rule; this branch
+        /// is what catches a new mixer somebody adds without one.
+        /// </summary>
         public static int StockPrice(IngredientCard card)
         {
             if (card?.Info == null) return 0;
             if (card.Info.Price > 0) return card.Info.Price;
+            if (IngredientCategories.IsSoftDrink(card.Info.Category)) return SoftDrinkPrice;
             int byTier = 8 + card.Info.Tier * 6;
             return card.Type == IngredientType.Spirit ? byTier + 6
                 : card.Type == IngredientType.Garnish ? Math.Max(4, byTier - 6)
                 : byTier;
         }
+
+        /// <summary>What an unlisted mixer or juice costs on the van.</summary>
+        public const int SoftDrinkPrice = 3;
 
         /// <summary>
         /// The bar standing a brand rung asks for before the distributor will talk to you

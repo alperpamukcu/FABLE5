@@ -965,6 +965,24 @@ namespace LastCall.Core
         public StoryTrialRun Trial { get; private set; }
 
         /// <summary>
+        /// THE WEEK'S JOB (2026-09-04) — a drink and a count, handed over as the week closes
+        /// and owed by the end of the next one. Null before the first hand-over, and rolled
+        /// again whenever the calendar's week changes.
+        ///
+        /// It is the loop's long unit: everything else in this run is settled inside one
+        /// night. See <see cref="WeeklyJob"/> for why it stands in for the written arc.
+        /// </summary>
+        public WeeklyJob Job { get; private set; }
+
+        /// <summary>The last job that was finished, kept past its week so the night's slip
+        /// can say it landed. Null until one is.</summary>
+        public WeeklyJob JobDone { get; private set; }
+
+        /// <summary>Who signs the week's jobs. Presentation only — nothing is graded by
+        /// whom, and the default is the host who works the shift.</summary>
+        public string JobGiver { get; set; } = WeeklyJob.DefaultGiver;
+
+        /// <summary>
         /// Tonight's guest came in, but the bar has not reached the standing they came for
         /// (GDD 26 §12) — so they are on the stool with no order and no clock, and what they
         /// say is <see cref="StoryLines.ShortOfGate"/> instead of the ask. The beat stands and
@@ -1831,6 +1849,13 @@ namespace LastCall.Core
 
             var match = RatioRecipeMatcher.Match(delivered, _recipes, IngredientOf);
             var matchKind = ServiceJudge.Compare(visit.OrderTruth, match, delivered, IngredientOf);
+            // THE WEEK'S JOB IS COUNTED ON THE DRINK THAT WAS ASKED FOR AND GOT MADE
+            // (2026-09-04). Exact only, and against the ORDERED recipe: a job for five
+            // Negronis is not filled by a Negroni nobody ordered, nor by five near misses.
+            // The story's guest never reaches here (they return above), which is right —
+            // nothing they drink touches the books either.
+            if (Job != null && matchKind == OrderMatch.Exact && Job.RunsOn(Day))
+                Job.Count(visit.OrderTruth.Wanted.Id);
             // The verdict is priced off the DRINK — the recipe matched, the garnishes asked
             // for, the fill (the 2026-07-22 pivot, made total 2026-08-02: the emotion layer
             // is gone; what a customer gives you back is their reaction to the cocktail).
@@ -2300,11 +2325,54 @@ namespace LastCall.Core
             LastCallBeat = null;
             Trial = null;
             _lastCallSpent = _lastCallAnswered = LastCallWithheld = false;
+            SettleTheJob();
             BuyBackTheBowls();
             ResetVessels();
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average);
             Phase = TycoonPhase.DayOpen;
             return result;
+        }
+
+        /// <summary>
+        /// THE HAND-OVER, read off the calendar rather than off a counter (2026-09-04). Day
+        /// has just been incremented, so "the week changed" is the question — and asking it
+        /// that way means a run that skipped nights (DevJumpToNight) lands on exactly one
+        /// job for the week it arrives in, instead of owing a stack of them.
+        ///
+        /// A job that was not finished simply lapses. There is no penalty and that is the
+        /// author's shape for now: the week is a thing to aim at, not a debt.
+        /// </summary>
+        private void SettleTheJob()
+        {
+            int week = BarCalendar.WeekOf(Day);
+            if (Job != null && Job.Week == week) return;      // still this week's
+
+            if (Job != null && Job.IsDone) JobDone = Job;
+            // Rolled from the menu the bar can pour TODAY — the market ran between the
+            // hand-over and here, so this reads the shelf as it is on the first morning of
+            // the week rather than as it was on Saturday night.
+            Job = WeeklyJobs.Roll(MenuRecipes, CanPourTonight, week, _rng, JobGiver);
+        }
+
+        /// <summary>Whether every band of a recipe has a bottle behind the bar to answer it.
+        /// Asked when a job is rolled, so nothing is ever set that cannot be made.</summary>
+        private bool CanPourTonight(RecipeDefinition recipe)
+        {
+            if (recipe == null) return false;
+            foreach (var band in recipe.RatioRequirements)
+            {
+                bool answered = false;
+                foreach (var bottle in _shelf.Bottles)
+                {
+                    var info = bottle.Ingredient.Info;
+                    bool hit = band.IsStyleBand
+                        ? info != null && info.Style == band.Style && info.Tier >= band.MinTier
+                        : bottle.Ingredient.Type == band.Type;
+                    if (hit) { answered = true; break; }
+                }
+                if (!answered) return false;
+            }
+            return true;
         }
 
         // ── helpers ─────────────────────────────────────────────────────────────
