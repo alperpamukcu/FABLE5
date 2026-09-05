@@ -244,6 +244,11 @@ index'le (paylaşılan index'e dokunmadan) dilimlenerek:
 | `7ba2f53a` | 25 PNG — odanın sanatı olduğu gibi | yazar + eski turlar |
 | `2378c708` | tezgâh yeniden: kayrak, shaker-gösterge, peçete, ÇÖP tuşu, kapağı açık döküm | db (yazarın yönetiminde) |
 | `d468216d` | süpürme (aşağıda) | bu oturum |
+| `6c40b5cb` | **H2b** — kapı kablolandı: evrak, kick, ceza, teşekkür (§9.24) | bu oturum |
+| `5820f8e3` | **H3** — KICK tuşu kartta, ödünç yüz, fişte CEZA/TEŞEKKÜR | bu oturum |
+| `ce9365b0` | **H4** — bardak lavaboya taşınır, bez lekeyi siler, musluk suyu; sahne lekeleri öder | bu oturum |
+| `479b301c` | **H5** — kalp/madalyon şeritleri, fişte ev satırı, tahtada SERVICE/COMFORT | bu oturum |
+| `9b3bd33b` | **H6 (kod)** — değiştirilmiş kart: yanlış bayrak; sanat yazarın seçimini bekliyor | bu oturum |
 
 **Süpürme, ölçerek.** `Assets/Resources` altındaki her PNG oyunun kendi yükleme zincirine karşı
 ada, türetilmiş öneke VE sahne GUID'ine göre sınandı (`art_reach.py`): 41 kartın 39'unda tam v4
@@ -263,8 +268,14 @@ kopyasının arka planı opak koyu gri (kesilmemiş bir yeniden çekim) — comm
 doğru kutu duruyor; 12 PNG yalnız bayt düzeyinde farklı (piksel aynı), onlar da commit edilmedi.
 `fx_tap_single` / `bench_tap_single` yazarın o anki elinde (17:44), dokunulmadı.
 
-**Doğrulama:** EditMode 452/452, PlayMode 10/10 (tezgâh baseline'ı yeni görünümle yeniden
-kutsandı — resme bakılarak), 200 koşu sim + dört ev şekli (§9.23).
+**Doğrulama:** EditMode 452/452 (kapı ile 460/460), PlayMode 10/10 (tezgâh baseline'ı yeni
+görünümle yeniden kutsandı — resme bakılarak), 200 koşu sim + dört ev şekli (§9.23), kapı simi
+(§9.24). Her faz oyun içinde fotoğraflandı (kart + KICK, bardak/leke/su/silme, şeritler ve tahtalar).
+
+**Aynı gün kapanan plan fazları:** PLAN_house_and_law H1b, H2b, H3, H4, H5 ve H6'nın kod yarısı —
+GDD 27 ve 28 artık oyunda. **Kalan:** H6'nın sanatı (resim basamakları 2–3, mermer lavabo —
+yazarın rapordan seçimi), PLAN_last_call S5 (Ece'nin ödülleri) ve S6 (kadro içeriği),
+PLAN_service_depth P18 (ekonomi/tutorial/kayıt), izin bekleyen süpürme manifesti (yukarıda).
 
 ## 1 · Yönetici özeti
 
