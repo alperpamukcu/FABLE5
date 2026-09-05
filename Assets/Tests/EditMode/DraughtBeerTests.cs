@@ -217,6 +217,37 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void ACocktailOnTheGoShutsTheDoorOntoTheStation()
+        {
+            // The refusal above is the keg; this is the walk over to it (2026-09-04, the
+            // author: "kokteyl yapim esnasindayken bira yapma sahnesine girilmemeli"). Both
+            // vessels count, because a build can be standing in either one.
+            var run = RunWithKeg(out string kegId);
+            Assert.IsFalse(run.BuildingACocktail, "an empty bar has nothing on the go");
+
+            run.PourMeasure("spirit_a", 0.3);
+            Assert.IsTrue(run.BuildingACocktail, "a mix half made in the tin");
+
+            run.DiscardGlass();
+            Assert.IsFalse(run.BuildingACocktail, "and pouring it away opens the door again");
+        }
+
+        [Test]
+        public void APintDoesNotLockTheTapBehindItself()
+        {
+            // The one drink in the serving glass that is not a cocktail. Topping a pint up is
+            // what a second pull IS, so the station's own door must not shut on the drink it
+            // just poured.
+            var run = RunWithKeg(out string kegId);
+            run.BeginPull(kegId);
+            run.PourTilted(1.0, TapPour.IdealTilt);
+            run.EndPull();
+
+            Assert.IsFalse(run.ServingGlass.IsEmpty, "there is beer in the glass");
+            Assert.IsFalse(run.BuildingACocktail, "and it is a pint, not a cocktail");
+        }
+
+        [Test]
         public void PullingDrawsFromTheKegAndStopsWhenItRunsDry()
         {
             var shelf = new Shelf(new[] { new ShelfBottle(Keg(), capacity: 0.2) });

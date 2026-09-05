@@ -126,6 +126,13 @@ namespace LastCall.UI
         public void OpenTap()
         {
             if (Run == null || Run.Phase != TycoonPhase.DayOpen) return;
+            // NOT WHILE A COCKTAIL IS BEING BUILT (2026-09-04, the author: "kokteyl yapim
+            // esnasindayken bira yapma sahnesine girilmemeli"). Core has always refused the
+            // KEG over a half-built drink; what it could not refuse was the walk over to the
+            // font, so the player arrived at a station whose handle did nothing. The room
+            // says why (TycoonHud.OnTapClicked toasts it) and this is the second lock: the
+            // flow asks the rules rather than trusting the door it was opened by.
+            if (Run.BuildingACocktail) return;
             GoTo(Stage.Tap);
         }
 

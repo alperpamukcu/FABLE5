@@ -60,6 +60,18 @@ namespace LastCall.UI
         private void OnTapClicked()
         {
             if (_flow != null && _flow.IsOpen) return;
+            // ...and not with a drink on the go (2026-09-04, the author: "kokteyl yapim
+            // esnasindayken bira yapma sahnesine girilmemeli"). The rule is Core's — the
+            // flow asks it too, and BeginPull has always refused the keg — but the ROOM is
+            // where the click happens, so the room is where it can be answered with words.
+            // A door that opens onto a bench you cannot work is worse than a locked one.
+            var run = Run;
+            if (run != null && run.BuildingACocktail)
+            {
+                Toast(run.DrinkReady ? "SERVE THAT DRINK FIRST"
+                                     : "FINISH THE COCKTAIL FIRST");
+                return;
+            }
             _flow?.OpenTap();
         }
 

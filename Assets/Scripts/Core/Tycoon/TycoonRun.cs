@@ -191,6 +191,25 @@ namespace LastCall.Core
         /// of quietly showing nothing when the player backs out of the flow.</summary>
         public bool DrinkWaitingInShaker => ServingGlass.IsEmpty && !Glass.IsEmpty;
 
+        /// <summary>
+        /// IS A COCKTAIL ON THE GO? (2026-09-04, the author: "kokteyl yapim esnasindayken
+        /// bira yapma sahnesine girilmemeli.")
+        ///
+        /// <see cref="BeginPull"/> has always refused a keg over a half-built drink, but a
+        /// refusal is not a door: the player could still walk into the draught station,
+        /// stand at a font that would not run, and be told nothing. This is the same fact
+        /// asked one step earlier, so the room can keep them out instead.
+        ///
+        /// Two vessels, because a build can be standing in either: something in the TIN is
+        /// a mix half made, and a full serving glass is a drink already poured out and
+        /// waiting for a customer. A PINT is the one thing in that glass this does not
+        /// count — topping a pint up is what a second pull is, and the tap's own door must
+        /// not lock behind the drink it just poured.
+        /// </summary>
+        public bool BuildingACocktail =>
+            !Glass.IsEmpty ||
+            (!ServingGlass.IsEmpty && !ServingGlass.HasPreparation(Preparations.Draught.Id));
+
         /// <summary>True once the shaker has been shaken this build (GDD 24 §2.5).</summary>
         public bool IsShaken { get; private set; }
 
