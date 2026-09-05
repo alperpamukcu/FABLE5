@@ -7,14 +7,6 @@ to do things in, and which traps this project has already paid for once.
 ---
 
 ## 1 · What the repo does NOT carry
-## 2026-09-05 · Bekleyen işler (bu makinede)
-
-- Süpürmenin izin bekleyen yarısı (57 v3 plakası, 37 emekli Tools betiği, `Tools/AssetPipeline`
-  sunucusu, `Docs/PLAN_tycoon_pivot.md`, `_Recovery`/`InitTestScene*`): liste
-  `Docs/GELISTIRME_RAPORU.md §0.10`. Kod tarafı bitti; silmek yalnız temizlik.
-- Çalışma ağacında commit'siz 13 PNG: `v4_energy_volt.png` (BOZUK — opak arka plan; HEAD doğru),
-  12'si yalnız bayt farkı. `git checkout --` ile geri alınmalı.
-
 
 Everything here is deliberately gitignored. The clone will look complete and will not be.
 

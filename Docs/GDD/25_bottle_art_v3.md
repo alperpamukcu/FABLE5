@@ -8,6 +8,9 @@ a properly layered set is an **external artist's brief** (the author, 2026-08-07
 law: canvas is **80×160** (not 120×280); the no-text rule is **cancelled** (labels carry
 their parody wordmarks); the three-plate sandwich is not on the load path. The camera,
 palette, parody-dress and identity sections remain the binding brief for that artist.
+**Tool citations below are historical (2026-09-05):** `Tools/v3_brief.py`, `Tools/bottle_open_states.py`
+and `Tools/uniform_outline.py` were deleted in the single-session sweep; they describe how the flat era
+was made, not a script that exists. The live bottle pipeline is `Tools/v4_bottles/` (`Docs/PLAN_bottle_art_v4.md`).
 
 **Original status: LIVE spec (2026-08-04).** Owns the full rebuild of the 27 alcohol bottles that
 followed the brand-parody renaming (`base_bar.json`, commit `8fb13e7`). Supersedes the

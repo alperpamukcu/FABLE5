@@ -18,8 +18,9 @@ Two generators, both feeding one staging → review → approve loop:
 - **PixelLab MCP** (registered MCP server `pixellab`, `https://api.pixellab.ai/mcp`) —
   PRIMARY. Purpose-built pixel-art generation (objects, tilesets, UI panels, animation
   frames) with direct agent tools (`create_map_object`, `create_ui_asset`, …).
-- **Retro Diffusion** via `Tools/AssetPipeline/server.py` (`models.pixel`) — ALTERNATIVE
-  when PixelLab is unavailable/insufficient, keeping the same staging loop.
+- ~~**Retro Diffusion** via `Tools/AssetPipeline/server.py` (`models.pixel`)~~ — RETIRED and
+  deleted 2026-09-05 with the rest of the Antigravity-era server; only the author's source art
+  under `Tools/AssetPipeline/sources/` remains. PixelLab is the one generator.
 
 ## 2. Post-process chain (v2, palette per 14 v3)
 generate → **palette quantize** to the 14 v3 55-colour palette (nearest-ramp mapping)

@@ -257,16 +257,18 @@ sandviç var (iki garnitür kartı hariç — onların resmi tezgâhtaki kâse o
 `sign_open`, sekiz arketip portresi (her yüzün kendi fotoğrafı var), `Pending~` klasörü ve
 `register2` gitti; `ItemArt.Bottle` v4 → garnitür kâsesi → null'a indi, `Bottle(style)` ve
 `ItemArt.Prep` silindi, kitap ve tarif kartları raftaki olmayan stili katalogdan çiziyor
-(`ItemArt.StyleBottle`). Sahne koddan yeniden kuruldu (portre alanı düştü). **Henüz silinmeyen
-(izin bekliyor):** 57 `v3_*_flat` plakası, `lager/pale_ale/stout.png`, `fx_fern`, dört kâse
+(`ItemArt.StyleBottle`). Sahne koddan yeniden kuruldu (portre alanı düştü). **İkinci yarı (`e0744f16`,
+yazar manifesti çalıştırdı):** 57 `v3_*_flat` plakası, `lager/pale_ale/stout.png`, `fx_fern`, dört kâse
 yedeği, 37 emekli Tools betiği ve durum dosyası, Antigravity dönemi `Tools/AssetPipeline` sunucusu,
 `Docs/PLAN_tycoon_pivot.md` (PLAN_service_depth'e emilmişti), `_Recovery`/`InitTestScene*`
-kalıntıları — manifesti `scratchpad/sweep_manifest.py`, toplu silme otomatik modda engellendi.
+kalıntıları — 190 dosya. İki düzeltme: `Tools/patron_trial_gen.py` manifestteydi ve KALDI (kadro
+üretiminin roll/adopt/judge aracı, `patron_ship.py` onu import ediyor); clubgirl/heavyset altındaki
+boş `drink_long/short/stem` klasörleri metalarıyla gitti. Silmeden sonra EditMode 460/460, PlayMode 10/10.
 
-**Yanlış sürüm bulundu, geri alınmadı (yazarın kararı):** `v4_energy_volt.png` çalışma
-kopyasının arka planı opak koyu gri (kesilmemiş bir yeniden çekim) — commit edilmedi, HEAD'deki
-doğru kutu duruyor; 12 PNG yalnız bayt düzeyinde farklı (piksel aynı), onlar da commit edilmedi.
-`fx_tap_single` / `bench_tap_single` yazarın o anki elinde (17:44), dokunulmadı.
+**Ağaçtaki PNG'ler (`dd7a7fdf`):** yazar `v4_energy_volt.png`'nin arka planını kendi temizledi ve
+etiketi yeniden yazdı; arka duvarı (harlequin kâğıt, lambri, kapıda +21 ONLY), tezgâh musluk kulesini
+ve dört mahzen plakasını elden geçirdi — on resim yazarın sanat turu olarak commit edildi. Beş PNG
+piksel-özdeş yeniden kayıttı, HEAD'e döndürüldü (piksel doğrulamasıyla, `git checkout` kullanmadan).
 
 **Doğrulama:** EditMode 452/452 (kapı ile 460/460), PlayMode 10/10 (tezgâh baseline'ı yeni
 görünümle yeniden kutsandı — resme bakılarak), 200 koşu sim + dört ev şekli (§9.23), kapı simi
@@ -275,7 +277,7 @@ görünümle yeniden kutsandı — resme bakılarak), 200 koşu sim + dört ev �
 **Aynı gün kapanan plan fazları:** PLAN_house_and_law H1b, H2b, H3, H4, H5 ve H6'nın kod yarısı —
 GDD 27 ve 28 artık oyunda. **Kalan:** H6'nın sanatı (resim basamakları 2–3, mermer lavabo —
 yazarın rapordan seçimi), PLAN_last_call S5 (Ece'nin ödülleri) ve S6 (kadro içeriği),
-PLAN_service_depth P18 (ekonomi/tutorial/kayıt), izin bekleyen süpürme manifesti (yukarıda).
+PLAN_service_depth P18 (ekonomi/tutorial/kayıt).
 
 ## 1 · Yönetici özeti
 

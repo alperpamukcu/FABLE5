@@ -380,7 +380,8 @@ recorded in the repo's memory the same day: area-downscaling folds four painted 
 one — the batch shipped that way measured 40,859 colours, 100% off-palette, and read as
 blur beside the hand-drawn bottles. One pixel must be one decision. The generator for this
 path is PixelLab `create_image_pro` (16:9 cap 688×384, so 640×360 fits in one call) via
-`Tools/scene_v3_gen.py`; Nano Banana remains licensed only if it can emit true native-size
+`Tools/scene_v3_gen.py` (deleted 2026-09-05 — the room plates are the author's own hand now, and
+the generator with its variants tool went with the sweep); Nano Banana remains licensed only if it can emit true native-size
 output. Compose against §5b's anchor table. No text (the neon sign prop excepted), no
 brands, no humans.
 

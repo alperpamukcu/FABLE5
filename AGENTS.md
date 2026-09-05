@@ -29,5 +29,5 @@ PlayMode → look in play) and the gotchas; `Docs/GDD/` is the design source of 
 - Nothing that moves money ships without the 200-run sim (`LastCall → Simulate Tycoon
   200 Runs`) read against the tree before the change.
 
-The Antigravity-era `lastcall-assets` MCP server (`Tools/AssetPipeline/server.py`) is
-retired; only the author's source art under `Tools/AssetPipeline/sources/` is still used.
+The Antigravity-era `lastcall-assets` MCP server (`Tools/AssetPipeline/server.py`) was
+deleted on 2026-09-05; only the author's source art under `Tools/AssetPipeline/sources/` remains.
