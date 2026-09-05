@@ -341,7 +341,7 @@ kadroya alınıyor, üç aday yazarın seçiminde), PLAN_service_depth P18 (ekon
 | ~~Gölgelenmiş sanat~~ ✅ | ~~30 bot_* + 20 stil `_open`~~ **silindi 2026-09-05** (`d468216d`); 57 `v3_*_flat` plakası **silindi 2026-09-05** (`e0744f16`) | yükleme zinciri v4 → kâse → null; v3 dalı koddan çıktı |
 | ~~Assets/Art fiilen ölü~~ ✅ | ~~21 şişe + vip_patron + pour_nick(+mask) + club_bg~~ | **bitti** — 2026-09-05'te `Pending~`, arketip portreleri ve `register2` de gitti; `Assets/Art` yalnız üç arka plan |
 | ~~DTO ölü alanlar~~ ✅ | ~~charges/bands/chargeMultiplier~~ | **yok** (2026-09-06 doğrulandı: `DataLoader`'da bu alanlar kalmamış; `bands` yaşayan stil bantlarıdır) |
-| Tekrarlar | NewRect/NewText ×4 sınıf; iki mix-bar ikizi (~55 satır ×2); ~~TycoonHud 3.4k satır tek sınıf~~ (2026-08-25'te dokuz partial'a bölündü) | kalan iki tekrar küçük |
+| ~~Tekrarlar~~ ✅ | ~~iki mix-bar ikizi~~ (tek `FillGauge`/`BuildStandingGauge` paylaşılıyor, 2026-09-06 doğrulandı); ~~TycoonHud 3.4k satır tek sınıf~~ (2026-08-25'te dokuz partial'a bölündü); NewRect/NewText ×4 sınıf **bilerek kalıyor** — her biri 7 satırlık yerel yardımcı, ortak sınıf çağrı yerlerini değiştirmeden bir şey kazandırmaz | kapandı |
 | ~~Veri tuhaflıkları~~ ✅ | ~~glassware.json yorumu "3 kademe"~~ (yorum altı kademe diyor), ~~`weight≤0→1`~~ (kodda yok) | tequila tek kilitli-T1 hattı bilinçli: tier ladder öyle yazıldı |
 
 ## 6 · Doküman borcu (doğrulanmış çelişkiler)
