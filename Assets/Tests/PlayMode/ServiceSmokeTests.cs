@@ -460,6 +460,7 @@ namespace LastCall.PlayTests
             Assert.That(basket, Is.Not.Null,
                 "the market never opened after the slip (" + presses + " presses)");
             yield return new WaitForSecondsRealtime(0.5f);   // it slides in from the right
+            yield return LetTheHostFinish();                   // her word on the market, read
         }
 
         /// <summary>The nth listing in the open aisle, in the order they are laid out — or
@@ -674,6 +675,7 @@ namespace LastCall.PlayTests
             // presses blind cannot drive one, because every even press undoes the odd one.
             for (int attempt = 0; attempt < 6; attempt++)
             {
+                yield return LetTheHostFinish();
                 var door = Find(doorName);
                 if (door != null && WhatIsUnder(ScreenPointOf(door)).Contains(doorName))
                     yield break;
@@ -690,6 +692,41 @@ namespace LastCall.PlayTests
                 yield return new WaitForSecondsRealtime(0.6f);      // the roller's own travel
             }
             Assert.Fail("six presses of the roller never opened it onto " + doorName);
+        }
+
+        // ── the host, heard out ──────────────────────────────────────────────────
+
+        /// <summary>
+        /// The host speaks up the first time each thing happens (GDD 26 §1b, 2026-09-05) —
+        /// on the plate during the night, in a 98 box over the market — and the player
+        /// answers with its one key before reaching past her. So does this mouse: whatever
+        /// she has to say is heard out, GO ON by GO ON, before the next thing is pressed.
+        /// The plate covers the roller and the box covers the shelves, which is the design
+        /// (read it, then work) and was the suite's first red the day she started talking.
+        /// Bounded: a plate that never goes away is a failure worth seeing.
+        /// </summary>
+        private IEnumerator LetTheHostFinish()
+        {
+            for (int i = 0; i < 12; i++)
+            {
+                var key = HostKey();
+                if (key == null) yield break;
+                // Keys are placed by their anchor, so the rect's own position is an edge;
+                // the press goes to the centre of the face, where a hand would put it.
+                var centre = RectTransformUtility.WorldToScreenPoint(null, key.TransformPoint(key.rect.center));
+                yield return ClickOn(key, centre - ScreenPointOf(key));
+                yield return new WaitForSecondsRealtime(0.2f);
+            }
+        }
+
+        /// <summary>The one key the host is waiting on, or null when she is not talking.</summary>
+        private static RectTransform HostKey()
+        {
+            var plate = Find("LastCallPlate");
+            if (plate != null && plate.gameObject.activeInHierarchy) return Find("Listen", plate);
+            var note = Find("HostNote");
+            if (note != null && note.gameObject.activeInHierarchy) return Find("Key", note);
+            return null;
         }
 
         private static string WhatIsUnder(Vector2 screen)

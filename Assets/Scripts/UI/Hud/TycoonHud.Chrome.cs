@@ -1465,7 +1465,9 @@ namespace LastCall.UI
                 // when no beat is being played, whatever she has to say about the night
                 // goes here — her face, her name, one line a key. Only on an open night;
                 // the closing's lessons are said on the market (SyncHostNote).
-                var lesson = run.Phase == TycoonPhase.DayOpen ? run.LessonDue : null;
+                // Never over the open cellar: the plate sits exactly where the bottles are
+                // picked up, so while the drawer is out the lesson waits, queued.
+                var lesson = run.Phase == TycoonPhase.DayOpen && !CellarOpen ? run.LessonDue : null;
                 if (lesson != null && _plate != null) { SyncLesson(run, lesson); return; }
                 if (_plate != null && _plate.gameObject.activeSelf) _plate.gameObject.SetActive(false);
                 if (_postIt != null && _postIt.gameObject.activeSelf) _postIt.gameObject.SetActive(false);

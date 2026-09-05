@@ -298,6 +298,8 @@ namespace LastCall.PlayTests
             // The blessed picture was CROPPED to match rather than re-blessed. Every pixel
             // left in it is a pixel that was already blessed, and Re-bless UI Baselines would
             // have taken the BENCH with it — which is the one thing the gate exists to stop.
+            // Her word on the market is read first: its scrim would darken the foot.
+            yield return LetTheHostFinish();
             yield return LooksTheSame("basket", new RectInt(110, 550, 1077, 149));
         }
 
@@ -338,6 +340,7 @@ namespace LastCall.PlayTests
             // so a door answering IS the cellar being open, and it is what the player relies on.
             for (int attempt = 0; attempt < 6; attempt++)
             {
+                yield return LetTheHostFinish();
                 var door = Find(doorName);
                 if (door != null && Reaches(door)) yield break;
                 // THE KEY IS GONE (2026-08-25). SHUT IT and its shut-state caption were one
@@ -584,6 +587,58 @@ namespace LastCall.PlayTests
                 "the run never reached DayOpen — a press before that is swallowed in silence");
             yield return null;
             yield return null;
+        }
+
+        // ── the host, heard out ──────────────────────────────────────────────────
+
+        /// <summary>
+        /// The host speaks up the first time each thing happens (GDD 26 §1b, 2026-09-05) —
+        /// on the plate during the night, in a 98 box over the market — and the player
+        /// answers with its one key before reaching past her. So does this mouse; and a
+        /// picture taken with her box still up is a picture of her box, not of the screen
+        /// under it. Bounded: a plate that never goes away is a failure worth seeing.
+        /// </summary>
+        private IEnumerator LetTheHostFinish()
+        {
+            for (int i = 0; i < 12; i++)
+            {
+                var key = HostKey();
+                if (key == null) yield break;
+                yield return ClickCentre(key);
+                yield return new WaitForSecondsRealtime(0.2f);
+            }
+        }
+
+        private static RectTransform HostKey()
+        {
+            var plate = Find("LastCallPlate");
+            if (plate != null && plate.gameObject.activeInHierarchy) return Under(plate, "Listen");
+            var note = Find("HostNote");
+            if (note != null && note.gameObject.activeInHierarchy) return Under(note, "Key");
+            return null;
+        }
+
+        private static RectTransform Under(RectTransform root, string name)
+        {
+            foreach (var rt in root.GetComponentsInChildren<RectTransform>(true))
+                if (rt.name == name) return rt;
+            return null;
+        }
+
+        /// <summary>ClickOn, at the centre of the face: keys are placed by their anchor, so
+        /// the rect's own position is an edge and a press there can land beside it.</summary>
+        private IEnumerator ClickCentre(RectTransform target)
+        {
+            Assert.That(target, Is.Not.Null, "there is nothing there to click");
+            var at = RectTransformUtility.WorldToScreenPoint(null, target.TransformPoint(target.rect.center));
+            Set(_mouse.position, at);
+            yield return null;
+            yield return null;
+            Press(_mouse.leftButton);
+            yield return null;
+            yield return null;
+            Release(_mouse.leftButton);
+            yield return new WaitForSecondsRealtime(SettleSeconds);
         }
 
         private IEnumerator ClickOn(RectTransform target)
