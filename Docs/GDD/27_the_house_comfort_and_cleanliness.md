@@ -146,21 +146,22 @@ glassStepCaps, extraStools)`.
 | Slot | Rung 1 | Rung 2 | Rung 3 | Notes |
 |---|---|---|---|---|
 | `table_left` / `table_mid` / `table_right` | rustic $40 · +0.2 | brass $85 · +0.4 (1.5★) | steel $120 · +0.6 (3.0★) | **three per-slot ladders** — *"masa eklemek"* is rung 1, *"lvl1 masa varsa önce lvl2"* is the ladder. Art exists (`fx_table_t1/t2/t3`). Today's three single tables become the rung-1/2/3 art of each slot. |
-| `wall_lamps` | mark 1 (ours) · 0 | mark 2 $55 · +0.3 | mark 3 $90 · +0.7 | exists |
+| `wall_lamps` | mark 1 $30 · +0.1 **(bought since 2026-09-06)** | mark 2 $55 · +0.3 | mark 3 $90 · +0.7 | exists |
 | `sink` | steel (ours) · 0 | brass $85 · +0.4 (drains free) | marble $140 · +0.8 (3.0★) | rung 3 **needs art** (`Tools/sink_fixture_gen.py`) — ships when drawn |
-| `wall_center` (the picture) | triptych (ours) · 0 | canvas $70 · +0.5 (1.5★) | gallery $120 · +0.9 (3.0★) | rungs 2–3 **need art** |
+| `wall_center` (the picture) | triptych $45 · +0.2 **(bought since 2026-09-06, rung 1)** | canvas $70 · +0.5 (1.5★) | gallery $120 · +0.9 (3.0★) | rungs 2–3 **need art** |
 | `plant_left` | palm $20 · +0.1 | fiddle $55 · +0.2 | pothos $95 · +0.4 | exists |
 | `plant_right` | snake $25 · +0.1 | agave $70 · +0.2 | monstera $95 · +0.4 (3.0★) | rung 3 uses the orphan `fx_monstera` |
 | `taps` | one (ours) · 0 | two · +0.1 | three · +0.2 | the beer ladder is about beer; a token — and the sim's rung-buying bot SKIPS this ladder so kegs stay out of the A/B (§7) |
 | `walls` (the back wall) | cracked plaster (ours) · 0 | fresh plaster $70 · +0.3 (1.0★) | panelled $130 · +0.6 (2.0★) | **FOUR rungs, the author's own plates (2026-09-06)** — rung 4 is the harlequin paper, $200 · +1.0 (3.0★). A rung of this ladder is the whole 640×360 room (`backdrop` slot: the sprite REPLACES the plate, nothing stands at a hook), so the market tile shows a 64×48 `swatch` of the wall instead of the room shrunk. The bar opens in the cracked room; the door's sign reads +20 ONLY on every plate. |
 | singles: candle, sconce, hanging lantern, paper lantern, neon | +0.2 each | | | lit dressing |
-| ours from night one: rug, mat, tv | 0 | | | the FreeBase |
+| singles bought since 2026-09-06: the rug $35 · +0.2, the set $70 · +0.2 | | | | the author: *"mevcut tablo, mevcut duvar lambası, halı ve televizyon bunların hepsi upgrade olmalı"* — the room opens BARE |
+| ours from night one: the mat, one tap, the steel sink, the cracked wall | 0 | | | the FreeBase; *"barmat upgrade değil"* |
 
 These are the **v1** numbers, twice the first draft's: measured against the glass ladder
 (§7), a v0 candle was $30 for a twentieth of a star where a $12 glass step buys a tenth, and a
 bot buying the room by price went from 0% to 4% bankruptcies for a standing that went DOWN.
 Budget with every rung that has art today: 2.0 + 1.8 + 0.7 + 0.4 + 0.2 + 0.4 + 0.4 + 1.0 + 1.5 +
-0.5 + 1.0 (the walls, 2026-09-06) = **9.9 → 5.0**. Five stars of comfort is reachable without the two art-dependent ladders and
+0.5 + 1.0 (the walls, 2026-09-06) + 0.7 (the four given pieces, bought since 2026-09-06) = **10.6 → 5.0**. Five stars of comfort is reachable without the two art-dependent ladders and
 without every rung; the player chooses. The sim keeps moving them (§7).
 
 ### 3.2 Ladder rules (all existing, restated so the module is whole)
@@ -268,6 +269,16 @@ gibi olmalı."* The ladder machinery is built; what changes is the shop window.
 - The UPGRADES tab keeps its order (stool · counter · glass lines · then the room) but every tile
   that is a rung says so: **MARK n OF N**, the comfort it adds, the standing it wants. The owned rung
   shows as a trail under the next one, not as its own full tile.
+- **The upgrade screen, 2026-09-06 (the author: "upgrade kısmını güzelce gruplandır karışık
+  gözükmesin, satın alınan eşyalar gözükmemeli").** The aisle stands in SHELVES — SEATS & BAR,
+  GLASSWARE, THE WALLS, THE LIGHT, FURNITURE & FLOOR, GREENERY, THE COUNTER — each fixture naming
+  its shelf in `fixtures.json` (`group`); a piece the bar OWNS is not on the shelf at all (no
+  OURS/FITTED tiles, no MAX lines), only the next rung and the unbought singles; an empty aisle
+  says THE ROOM IS FITTED. Every tile wears an **upgrade icon** — the kind of thing raised, with a
+  green up-arrow (`Items/up_<group>.png`, `Tools/upgrade_icons.py`, UI chrome) — and the thing
+  itself (the wall's swatch, the glass) is on the inspector card (`TileSpec.CardArt`). The room
+  opens bare: the picture, the wall lamps, the rug and the set are bought; the mat is not an
+  upgrade and stays.
 - Tables become three ladders in data (§3.1); the aisle already hides rung N+2.
 - The "n more waiting" crate keeps skipping rungs that are blocked by order, not by stars.
 

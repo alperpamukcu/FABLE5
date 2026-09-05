@@ -254,6 +254,7 @@ index'le (paylaşılan index'e dokunmadan) dilimlenerek:
 | `5948a965` | **S5** — ev sahibinin dersleri konuşur, kitapta açık hesap (§9.25) | bu oturum |
 | `7c188737` | yazarın ikinci v4 turu — 38 plaka | yazar |
 | `2608fd6e` | **duvar merdiveni** — yazarın dört oda plakası, `backdrop` yuvası, +20 tabela (§9.26) | yazar + bu oturum |
+| `f37db211` | **geliştirme ekranı** — raflar, alınanlar gizli, ikonlar; oda çıplak açılır, dört eşya satın alınır (§9.27) | bu oturum |
 
 **Süpürme, ölçerek.** `Assets/Resources` altındaki her PNG oyunun kendi yükleme zincirine karşı
 ada, türetilmiş öneke VE sahne GUID'ine göre sınandı (`art_reach.py`): 41 kartın 39'unda tam v4

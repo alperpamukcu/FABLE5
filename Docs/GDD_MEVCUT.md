@@ -1087,6 +1087,33 @@ olarak sunulacak. club_room4 başlangıç barı olacak. 1-2-3-4 diye gidiyor."* 
   açılış, plakalar ve örnekler Resources'ta); oyunda üç fotoğraf (açılış odası, UPGRADES rafı,
   2. basamak alındıktan sonraki gece).
 
+### 9.27 · Market bir geliştirme ekranı: raflar, gizli alınanlar, ikonlar; oda çıplak açılır (2026-09-06)
+
+Yazar: *"mevcut tablo mevcut duvar lambası, halı ve televizyon bunların hepsi upgrade olmalı, upgrade
+kısmını güzelce gruplandır karışık gözükmesin, satın alınan eşyalar gözükmemeli, barmat upgrade değil.
+Upgrade görsellerinde ürünün resmi yerine geliştirme iconu gibi bir görsel üretilsin ... duvar iconu
+üstünde yukarı yeşil ok, mobilya geliştirmelerinde sandalye iconu üzerinde yeşil ok gibi."* (`f37db211`)
+
+- **Oda çıplak açılır:** `flamingo_triptych` ($45 · +0.2, resim merdiveninin 1. basamağı), `wall_lamps_one`
+  ($30 · +0.1), `floor_rug` ($35 · +0.2), `wall_tv` ($70 · +0.2) artık `startsInTheRoom` değil — satın alınır ve
+  konfor taşır. Gece birde odada yalnız paspas, tek musluk, çelik lavabo ve çatlak duvar var (FreeBase, 0 konfor);
+  paspas geliştirme değil, hep evin. Duvar lambası alınmadan oda gece cam ışığı ve genel yıkamayla loş — yazarın
+  kararı, harabe barın kendisi.
+- **Raflar:** her fikstür `group` adlandırır (walls/light/furniture/greenery/counter — `FixtureDefinition.Group`);
+  UPGRADES rafı SEATS & BAR, GLASSWARE, THE WALLS, THE LIGHT, FURNITURE & FLOOR, GREENERY, THE COUNTER sırasıyla
+  kurulur (kararlı sıralama, raf içinde dosya sırası). **Alınan gözükmez:** sahip olunan parça (döşenmiş basamak,
+  alınmış tekil, evin paspası) rafta yok; MAX tabure/tezgâh/bardak hattı da yok; sıradaki basamak ve alınmamış
+  tekiller kalır. Rafta hiçbir şey kalmazsa tek levha: THE ROOM IS FITTED — NOTHING LEFT TO RAISE.
+- **İkonlar:** karoda ürün resmi yerine grubun geliştirme ikonu — piktogram + yeşil yukarı ok
+  (`Items/up_{walls,light,furniture,greenery,counter,seats,bar,glass}.png`, 24×24, karoda tam 4×;
+  `Tools/upgrade_icons.py`, UI chrome, paletin rampaları). Ürünün kendisi (duvar örneği, bardak, tezgâh) bilgi
+  kartında (`TileSpec.CardArt`); sepet/iade karosu da ikonu gösterir.
+- **Core:** `TycoonRun.DevFit(id)` — geliştirici fiili, kataloğu parçayı bedava ve fazsız döşer (kapanış ışığı
+  testi lambaları böyle takıyor; bilinmeyen id reddedilir).
+- **Denge:** konfor bütçesi 9.9 → 10.6 (tavan 5.0). Ev simi A/B (aynı build, yalnız veri): basamak alan bot (şekil 2) konfor 3.13 → 3.14, konforun tuttuğu geceler %40,5 → %39,3, itibar 2.73 → 2.74, 3.0★'a ulaşan %18 → %19, kasa $75 → $77; alışveriş yapmayan bot bayt-aynı; duvar merdivenini bot yine almıyor.
+- **Testler:** `FixtureTests` +1 (oda çıplak açılır, dördü alınır, her parça raf adlandırır; group ayrıştırma),
+  kapanış ışığı testi `DevFit` ile; oyunda dört fotoğraf (çıplak oda, rafın başı/ortası/sonu).
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

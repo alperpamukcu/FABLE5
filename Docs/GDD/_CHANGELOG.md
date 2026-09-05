@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **27's shop window — the upgrade screen (2026-09-06):** the aisle stands in shelves (SEATS &
+  BAR, GLASSWARE, THE WALLS, THE LIGHT, FURNITURE & FLOOR, GREENERY, THE COUNTER — `group` in the
+  data), what the bar owns is not on it, every tile wears an upgrade icon (pictogram + green
+  up-arrow, `Tools/upgrade_icons.py`) with the thing itself on the inspector card. The room opens
+  BARE: the picture, the wall lamps, the rug and the set are bought now; the mat is not an
+  upgrade. `TycoonRun.DevFit`. GDD_MEVCUT §9.27.
+
 - **27's fourth ladder — the wall (2026-09-06):** the author's four room plates (the cracked
   plaster the bar opens in, fresh plaster, the panelled wall, the harlequin paper) sell as a
   ladder in a `backdrop` slot whose rung REPLACES the room's plate; the market shows a 64×48
