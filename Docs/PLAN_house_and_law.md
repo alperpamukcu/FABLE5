@@ -295,7 +295,15 @@ basket baseline did not move (the market's foot is the compared crop; the tiles 
 read; the `basket.png` baseline re-blessed only if the basket's foot moved (it should not — the
 market's foot is the compared crop), and only after the session that owns it has been told.
 
-## H6 — Content and the second tell ☐
+## H6 — Content and the second tell ◐ *(the tell shipped 2026-09-05; the art waits on the author's picks)*
+
+**The altered card is in:** `IdPapers.Roll` splits the forged half (`AlteredShare` 0.5) between
+BORROWED (the lender's papers, 21–27) and ALTERED (their own card, the year bumped to 21–24) with
+one more draw on the `"papers"` stream for a forged minor only; the card prints their own face and
+name with the bumped year and a flag that is NOT their country's (`WrongFlagFor`, off the person's
+id); the log and the slip say `altered card`; the bot kicks it like the rest. **The art is not:**
+the picture rungs 2–3 and the marble sink need drawings the author picks from a report before they
+enter the game (the house rule), so those three rows stay out of `fixtures.json` until then.
 
 - Painting rungs 2–3 and the marble sink: generated, reported in HTML, shipped through the
   fixture tools; the `comfort` numbers of GDD 27 §3.1 already wait for them in the design.

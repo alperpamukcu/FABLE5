@@ -1,6 +1,6 @@
 # LAST CALL — GDD Module 28: The Door (age, papers, the kick)
 
-**Status:** design, reviewed, the pure Core half built. Written 2026-09-04 from the author's
+**Status:** built — Core (H2b), the card (H3) and the altered card (H6) shipped 2026-09-05; as-built in GDD_MEVCUT §9.24. Written 2026-09-04 from the author's
 brief: *"20 yaş altı kişiler alkol alamayacak, oyuna 20 yaş altı müşteriler eklenecek. 20 yaş altı
 birisi geldiğinde kimliğinden kontrol ederken kimliğin üstündeki butondan 'kick'leyebileceksin,
 aynı zamanda sahte kimlik de işin içerisine eklenecek. Sahte kimlikli birisine alkol vermenin büyük
@@ -49,7 +49,7 @@ at the bar should not be served, and the card is how you know.**
 | **Honest adult** (the crowd today) | their own papers | none | as today | WRONG kick: a zero review, they walk |
 | **Honest minor** | their own papers, age **18 or 19** | the number | fine | RIGHT kick: thanks |
 | **Borrowed card** | somebody else's papers: another face's photo, name, age (21+), country, flag | **the photo is not the person on the stool** | fine | RIGHT kick: thanks |
-| **Altered card** *(phase 2)* | their own photo and name, age bumped to 21–24 | **the flag does not match the country** | fine | RIGHT kick: thanks |
+| **Altered card** *(shipped 2026-09-05, H6)* | their own photo and name, age bumped to 21–24 | **the flag does not match the country** | fine | RIGHT kick: thanks |
 
 The borrowed card is the first forgery to ship: its tell is the strongest thing on the card (the
 portrait is 144 px and the person is sitting right there), it needs no new art, and it is the

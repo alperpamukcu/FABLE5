@@ -125,14 +125,21 @@ namespace LastCall.UI
             _idName.text = "<b>" + idFullName + "</b>";
             // An honest minor's card says how old they are (GDD 28 §2.1): the printed age is
             // the tell, and it is the truth's, not the face's.
-            int shownAge = truth != null && truth.IsMinor && truth.Forgery == Forgery.None
+            // ...and an ALTERED card prints the bumped year on their own face (H6): both are
+            // the truth's PrintedAge; only a borrowed card wears the lender's paper age.
+            int shownAge = truth != null && truth.IsMinor && truth.Forgery != Forgery.Borrowed
                 ? truth.PrintedAge : (idPapers != null ? idPapers.Age : reg.Age);
             _idAgeFrom.text = shownAge.ToString();
             _idCitizen.text = (idPapers != null ? idPapers.Country : reg.Hometown).ToUpperInvariant();
             _idNumber.text = LicenceNumber(idLook, idFullName);
             if (_idFlag != null)
             {
-                _idFlag.sprite = idPapers != null ? ItemArt.Load("fl_" + idPapers.Iso) : null;
+                // THE ALTERED CARD'S TELL (GDD 28 §2.1, H6): their own face and name, the
+                // year bumped — and a flag that is not their country's, chosen off the
+                // person's id so the same card lies the same way every time it is shown.
+                string iso = idPapers != null ? idPapers.Iso : null;
+                if (truth != null && truth.Forgery == Forgery.Altered) iso = WrongFlagFor(visit, iso);
+                _idFlag.sprite = iso != null ? ItemArt.Load("fl_" + iso) : null;
                 // A citizenship with no flag drawn shows nothing rather than a white box.
                 _idFlag.enabled = _idFlag.sprite != null;
             }
@@ -491,7 +498,27 @@ namespace LastCall.UI
         private static string KickReason(IdPapers truth)
         {
             if (truth == null || !truth.ShouldBeKicked) return "they were of age";
-            return truth.IsForged ? "borrowed card" : "under age";
+            return truth.Forgery == Forgery.Altered ? "altered card"
+                 : truth.IsForged ? "borrowed card" : "under age";
+        }
+
+        /// <summary>A flag that is NOT the country's, for an altered card: any other flag the
+        /// roster draws, picked off the person's id so it never changes under the player.</summary>
+        private string WrongFlagFor(CustomerVisit visit, string iso)
+        {
+            var pool = new List<string>();
+            var cast = _bootstrap != null ? _bootstrap.Cast : null;
+            if (cast != null)
+                foreach (var p in cast.All)
+                    if (!string.IsNullOrEmpty(p.Iso) && p.Iso != iso && !pool.Contains(p.Iso)
+                        && ItemArt.Load("fl_" + p.Iso) != null)
+                        pool.Add(p.Iso);
+            if (pool.Count == 0) return iso;
+            pool.Sort(string.CompareOrdinal);
+            string person = visit?.Regular?.Id ?? "";
+            int h = 23;
+            foreach (char c in person) h = unchecked(h * 31 + c);
+            return pool[(h & 0x7FFFFFFF) % pool.Count];
         }
 
         private static string KickReason(CustomerVisit visit)

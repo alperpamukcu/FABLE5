@@ -11,7 +11,7 @@ namespace LastCall.Core
         /// The tell is the photo — the person on the stool is not the person on the card.</summary>
         Borrowed,
         /// <summary>Their own card with the age bumped; the print gives it away (the flag
-        /// does not match the country). Specified now, built second.</summary>
+        /// does not match the country). Built 2026-09-05 (H6), the second tell.</summary>
         Altered,
     }
 
@@ -39,8 +39,13 @@ namespace LastCall.Core
         /// registry's 21 — both stay legal).</summary>
         public const int DrinkingAge = 20;
 
-        /// <summary>Of the minors who come in, how many carry somebody else's card.</summary>
+        /// <summary>Of the minors who come in, how many carry a card that lies.</summary>
         public const double ForgedShare = 0.5;
+
+        /// <summary>Of the lying cards, how many are ALTERED (their own, the year bumped, a
+        /// wrong flag) rather than BORROWED (somebody else's face). Half and half, so the
+        /// second tell arrives as often as the first once both are in play.</summary>
+        public const double AlteredShare = 0.5;
 
         /// <summary>Of the honest adults, how many could pass for nineteen on the stool. Not a
         /// balance number so much as the rule that keeps the face from being the tell.</summary>
@@ -126,8 +131,15 @@ namespace LastCall.Core
             int trueAge = rng.NextInt(DrinkingAge - 2, DrinkingAge);      // 18 or 19
             bool forged = rng.NextDouble() < ForgedShare;
             if (!forged) return new IdPapers(trueAge, trueAge, Forgery.None, looksYoung: true);
-            int printed = rng.NextInt(DrinkingAge + 1, DrinkingAge + 8);   // 21..27, the lender
-            return new IdPapers(trueAge, printed, Forgery.Borrowed, looksYoung: true);
+            // WHICH FORGERY (GDD 28 §2.1, H6): a borrowed card prints the lender — of age by a
+            // margin, 21..27 — and an altered card is their own with the year bumped, 21..24,
+            // the flag giving it away. One more draw, on this stream only, for a forged
+            // minor only, so no seed's crowd moves.
+            bool altered = rng.NextDouble() < AlteredShare;
+            int printed = altered ? rng.NextInt(DrinkingAge + 1, DrinkingAge + 5)    // 21..24
+                                  : rng.NextInt(DrinkingAge + 1, DrinkingAge + 8);   // 21..27, the lender
+            return new IdPapers(trueAge, printed, altered ? Forgery.Altered : Forgery.Borrowed,
+                                looksYoung: true);
         }
 
         /// <summary>The fine for serving a minor at this standing.</summary>

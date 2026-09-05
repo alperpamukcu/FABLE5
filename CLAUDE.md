@@ -20,7 +20,8 @@ wiring H1b are in — the counter keeps its mess and the night files `min(servic
 H4 draws it — the glass carried to the sink, the cloth over the mark, the tap's water; H5
 shows both ratings — heart and medallion strips in the top bar, the slip's house row, the
 board's SERVICE/COMFORT rows; H2b/H3 the door are in — papers behind the card, the KICK key,
-the fine, the thanks; H6, content and the altered card, is not built). The historical modules (00–13, 17, 19, 20 — card era and the demolished
+the fine, the thanks, and H6's altered card — the flag that is not the country's; H6's art
+— picture rungs 2–3 and the marble sink — waits on the author's picks). The historical modules (00–13, 17, 19, 20 — card era and the demolished
 emotion layer) were DELETED in the 2026-08-07 sweep; recipe truth is `recipes.json` ↔
 `RecipeCatalog` under the parity test, ingredient types are the `IngredientType` enum.
 **The staging document is `Docs/PLAN_service_depth.md` (v5)** — phase order and conflict

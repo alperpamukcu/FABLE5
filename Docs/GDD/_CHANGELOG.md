@@ -2,6 +2,11 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **28's second tell — H6, the code half (2026-09-05):** the ALTERED card. Half the forged
+  cards are the minor's own with the year bumped to 21–24 and a flag that is not their
+  country's (`WrongFlagFor`, stable per person); the log and the slip name it. The picture
+  rungs 2–3 and the marble sink still wait on drawings the author picks.
+
 - **27 on the boards — H5 (2026-09-05):** the two ratings are seen: two strips of five
   (heart = tonight's service, medallion = the room's comfort this minute) left of the
   standing in the top bar, no numbers; the slip's house row under the score; SERVICE and

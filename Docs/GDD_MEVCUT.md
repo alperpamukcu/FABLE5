@@ -1029,6 +1029,12 @@ SHOWN OUT` gelirde, `FINES · UNDER AGE / BORROWED CARD / UNREAD CARD` giderde (
 kendi işaretleriyle), toplamlar `DayIncome`/`DayExpenses`; kapı gösterilen ne SERVED ne WALKED.
 **Defter:** satırda `thanks $n`, `fines $n`, `n shown the door`.
 
+**İkinci ipucu — DEĞİŞTİRİLMİŞ kart (H6, aynı gün).** Sahte kartların yarısı (`AlteredShare` 0.5)
+artık ödünç değil değiştirilmiş: kendi yüzü, kendi adı, yılı 21–24'e çekilmiş — ve ülkesinin
+OLMAYAN bir bayrak (`WrongFlagFor`, kişi id'sinden kararlı; kadronun çizili bayrakları arasından).
+`"papers"` akışında yalnız sahte kartlı reşit olmayan için bir çekiliş daha. Günlük ve fiş
+`altered card` / `ALTERED CARD` der; bot ayırt etmeden kapı gösterir.
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

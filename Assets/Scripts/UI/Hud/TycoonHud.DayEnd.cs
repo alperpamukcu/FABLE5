@@ -613,17 +613,20 @@ namespace LastCall.UI
         /// which is the honest word for it.</summary>
         private static string FineReason(TycoonRun run)
         {
-            int under = 0, borrowed = 0, unread = 0;
+            int under = 0, borrowed = 0, altered = 0, unread = 0;
             foreach (var v in run.Floor.Finished)
             {
                 if (!v.Fined) continue;
                 if (!v.IdInspected) { unread++; continue; }
                 var truth = v.Papers;
-                if (truth != null && truth.IsForged) borrowed++; else under++;
+                if (truth != null && truth.Forgery == Forgery.Altered) altered++;
+                else if (truth != null && truth.IsForged) borrowed++;
+                else under++;
             }
             var parts = new List<string>();
             if (under > 0) parts.Add("UNDER AGE");
             if (borrowed > 0) parts.Add("BORROWED CARD");
+            if (altered > 0) parts.Add("ALTERED CARD");
             if (unread > 0) parts.Add("UNREAD CARD");
             return parts.Count == 0 ? "THE LAW" : string.Join(", ", parts);
         }
