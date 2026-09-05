@@ -226,7 +226,19 @@ namespace LastCall.PlayTests
             }
             Assert.That(next, Is.Not.Null, "the night's slip never offered a way on");
             var clickedAt = RectTransformUtility.WorldToScreenPoint(null, next.position);
-            yield return ClickOn(next);
+
+            // PRESSED UNTIL IT OPENS, like every other door this suite walks (2026-09-05).
+            // One press was the rule here and it is the only door in the file that got one —
+            // and it is the FIRST press of the whole suite, which the helper's own comment
+            // already calls the slow one. Measured: this test failed twice in a full run with
+            // "key active True" and the market never opening, and passed on its own both
+            // times in between. A swallowed first press is exactly what OpenUntil exists for.
+            //
+            // Safe to press twice even though BillNext is not idempotent — a second press on
+            // the market would try to CLOSE it. RebuildDayEnd activates the tablet
+            // synchronously inside the first press, so the basket is activeInHierarchy before
+            // OpenUntil looks; it can only press again when the first genuinely did nothing.
+            yield return OpenUntil("BillNext", "Basket");
 
             // WAIT FOR THE MARKET, DO NOT COUNT TO ONE (2026-08-13). This was a fixed 0.6s and
             // it captured the night's SLIP instead — 161,693 differing pixels that say nothing

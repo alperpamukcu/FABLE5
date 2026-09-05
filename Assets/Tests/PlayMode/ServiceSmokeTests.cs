@@ -422,18 +422,43 @@ namespace LastCall.PlayTests
                 yield return null;
             }
             Assert.That(next, Is.Not.Null, "the night's slip never offered a way on");
-            yield return ClickOn(next);
 
+            // PRESSED UNTIL IT OPENS (2026-09-05). One press was the rule here and it is not
+            // enough: the first press of a play-mode session is the slow one — everything
+            // that makes entering play expensive lands on it — and a swallowed press looks
+            // exactly like a market that refused to open. Measured twice in full runs, and
+            // green on its own both times in between, which is the signature.
+            //
+            // Safe to press twice even though this key is not idempotent (a second press on
+            // an OPEN market would try to close it): RebuildDayEnd activates the tablet
+            // synchronously inside the first press, so the basket is up before the check
+            // below can run — a retry only ever fires when the press genuinely did nothing.
+            // THE KEY ITSELF SAYS WHETHER THE PRESS TOOK. BillNext is only up while the
+            // night is still on its slip (`_dayEndStep == 0`), so it going away IS the press
+            // landing — and pressing an already-open market would try to CLOSE it. So: press
+            // only while the key is still there, and once it is gone simply wait.
+            //
+            // The first cut of this retry got that backwards — it broke out of the loop the
+            // moment the key deactivated, which is precisely the successful case, and turned
+            // a slow open into a failure.
             RectTransform basket = null;
-            float shop = Time.realtimeSinceStartup + 15f;
+            int presses = 0;
+            float shop = Time.realtimeSinceStartup + 20f;
             while (Time.realtimeSinceStartup < shop)
             {
                 basket = Find("Basket");
                 if (basket != null && basket.gameObject.activeInHierarchy) break;
                 basket = null;
-                yield return null;
+                var key = Find("BillNext");
+                if (key != null && key.gameObject.activeInHierarchy && presses < 5)
+                {
+                    presses++;
+                    yield return ClickOn(key);
+                }
+                else yield return null;
             }
-            Assert.That(basket, Is.Not.Null, "the market never opened after the slip");
+            Assert.That(basket, Is.Not.Null,
+                "the market never opened after the slip (" + presses + " presses)");
             yield return new WaitForSecondsRealtime(0.5f);   // it slides in from the right
         }
 
