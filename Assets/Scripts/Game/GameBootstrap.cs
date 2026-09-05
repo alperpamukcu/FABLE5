@@ -150,6 +150,7 @@ namespace LastCall.Game
             }
 
             Tycoon = new TycoonRun(new Shelf(startingBottles), recipes, new RunRng(CurrentSeed),
+                config: TycoonConfig.ForTheScene,
                 regulars: archetypes != null ? new RegularsRegistry(archetypes) : null,
                 brandCatalogue: brandCatalogue,
                 glassware: Glassware,

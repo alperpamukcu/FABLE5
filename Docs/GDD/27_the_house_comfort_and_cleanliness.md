@@ -60,11 +60,15 @@ bounced adult counts, at 0.
   during a night; it changes at the market.
 - `Cleanliness` ∈ [0, 1] — the share of the night the counter was clean, time-weighted per seat and
   CLAMPED (§4.3). A bar that wipes and collects as it goes scores 1.0 and loses nothing.
-- `DirtPenalty` — the most a filthy night can take off the room: **1.0** (balance v0). One star
-  and not more, on purpose: the room opens at 2.0, so a filthy fresh bar still files 1.0 — a
-  night a broke crowd would not have been drawn by even if the crowd read this number (it does
-  not, §2.3). The review's first draft said 1.5; that made the mess worth three quarters of a
-  fresh bar's whole ceiling and put its floor (0.5) under the broke line (0.625).
+- `DirtPenalty` — the most a filthy night can take off the room: **0.75** (balance v1, measured
+  — §7). Under a star, on purpose: the room opens at 2.0, so a filthy fresh bar still files
+  1.25 — well over the broke line (0.625) even if the crowd read this number (it does not,
+  §2.3). The review's first draft said 1.5; that made the mess worth three quarters of a fresh
+  bar's whole ceiling. The first measurement said 1.0 with a six-second grace, and the latency
+  row (§7 shape 4) showed a hand that reached each mess in twenty seconds losing half a star
+  of standing and tripling its bankruptcies — the ordinary pace of a four-stool bar priced
+  like never cleaning at all. Three quarters, with the grace at ten seconds, is the number that
+  lets that hand lose a tenth of a star while a bar that never wipes still loses the room.
 
 There is also a **live** reading for the shift, `ComfortNow = clamp(ComfortBase − DirtPenalty ×
 DirtySpots / Seats, 0, 5)` — the same rule read off the counter as it stands *this second*
@@ -141,20 +145,22 @@ glassStepCaps, extraStools)`.
 
 | Slot | Rung 1 | Rung 2 | Rung 3 | Notes |
 |---|---|---|---|---|
-| `table_left` / `table_mid` / `table_right` | rustic $40 · +0.10 | brass $85 · +0.20 (1.5★) | steel $120 · +0.30 (3.0★) | **three per-slot ladders** — *"masa eklemek"* is rung 1, *"lvl1 masa varsa önce lvl2"* is the ladder. Art exists (`fx_table_t1/t2/t3`). Today's three single tables become the rung-1/2/3 art of each slot. |
-| `wall_lamps` | mark 1 (ours) · 0 | mark 2 $55 · +0.15 | mark 3 $90 · +0.35 | exists |
-| `sink` | steel (ours) · 0 | brass $85 · +0.20 (drains free) | marble $140 · +0.40 (3.0★) | rung 3 **needs art** (`Tools/sink_fixture_gen.py`) — ships when drawn |
-| `wall_center` (the picture) | triptych (ours) · 0 | canvas $70 · +0.25 (1.5★) | gallery $120 · +0.45 (3.0★) | rungs 2–3 **need art** |
-| `plant_left` | palm $20 · +0.05 | fiddle $55 · +0.10 | pothos $95 · +0.20 | exists |
-| `plant_right` | snake $25 · +0.05 | agave $70 · +0.10 | monstera $95 · +0.20 (3.0★) | rung 3 uses the orphan `fx_monstera` |
-| `taps` | one (ours) · 0 | two · +0.05 | three · +0.10 | the beer ladder is about beer; a token — and the sim's rung-buying bot SKIPS this ladder so kegs stay out of the A/B (§7) |
-| singles: candle, sconce, hanging lantern, paper lantern, neon | +0.10 each | | | lit dressing |
+| `table_left` / `table_mid` / `table_right` | rustic $40 · +0.2 | brass $85 · +0.4 (1.5★) | steel $120 · +0.6 (3.0★) | **three per-slot ladders** — *"masa eklemek"* is rung 1, *"lvl1 masa varsa önce lvl2"* is the ladder. Art exists (`fx_table_t1/t2/t3`). Today's three single tables become the rung-1/2/3 art of each slot. |
+| `wall_lamps` | mark 1 (ours) · 0 | mark 2 $55 · +0.3 | mark 3 $90 · +0.7 | exists |
+| `sink` | steel (ours) · 0 | brass $85 · +0.4 (drains free) | marble $140 · +0.8 (3.0★) | rung 3 **needs art** (`Tools/sink_fixture_gen.py`) — ships when drawn |
+| `wall_center` (the picture) | triptych (ours) · 0 | canvas $70 · +0.5 (1.5★) | gallery $120 · +0.9 (3.0★) | rungs 2–3 **need art** |
+| `plant_left` | palm $20 · +0.1 | fiddle $55 · +0.2 | pothos $95 · +0.4 | exists |
+| `plant_right` | snake $25 · +0.1 | agave $70 · +0.2 | monstera $95 · +0.4 (3.0★) | rung 3 uses the orphan `fx_monstera` |
+| `taps` | one (ours) · 0 | two · +0.1 | three · +0.2 | the beer ladder is about beer; a token — and the sim's rung-buying bot SKIPS this ladder so kegs stay out of the A/B (§7) |
+| singles: candle, sconce, hanging lantern, paper lantern, neon | +0.2 each | | | lit dressing |
 | ours from night one: rug, mat, tv | 0 | | | the FreeBase |
 
-Budget: with every rung that has art today, `ComfortBase` can reach 2.0 + 0.9 + 0.35 + 0.20 + 0.10 +
-0.20 + 0.20 + 0.50 + 1.5 + 0.5 = **6.45 → 5.0**. Five stars of comfort is reachable without the two
-art-dependent ladders; with them the player has slack to choose. These are starting stakes — the
-sim moves them (§7).
+These are the **v1** numbers, twice the first draft's: measured against the glass ladder
+(§7), a v0 candle was $30 for a twentieth of a star where a $12 glass step buys a tenth, and a
+bot buying the room by price went from 0% to 4% bankruptcies for a standing that went DOWN.
+Budget with every rung that has art today: 2.0 + 1.8 + 0.7 + 0.4 + 0.2 + 0.4 + 0.4 + 1.0 + 1.5 +
+0.5 = **8.9 → 5.0**. Five stars of comfort is reachable without the two art-dependent ladders and
+without every rung; the player chooses. The sim keeps moving them (§7).
 
 ### 3.2 Ladder rules (all existing, restated so the module is whole)
 
@@ -215,7 +221,8 @@ wipe on the stool wipes all of them, and Core caps `DirtySpots` at `Seats` and `
 ### 4.3 Exposure and the two readings
 
 Every tick, for every mess: if it is still dirty and has stood for longer than `DirtGrace`
-(**6 s** — time to notice and reach for the cloth), it adds `dt` to `DirtSpotSeconds`; a mess that
+(**10 s** — time to notice and reach for the cloth; six in the first draft, and at six the bar
+was paying for the walk across the counter), it adds `dt` to `DirtSpotSeconds`; a mess that
 crosses the line inside a tick pays only for the part past it.
 
 - `Cleanliness = clamp(1 − DirtSpotSeconds / (Seats × Elapsed), 0, 1)` — against the night the
@@ -297,8 +304,8 @@ gibi olmalı."* The ladder machinery is built; what changes is the shop window.
 | `FreeBase` | 2.0 | `VenueComfort` |
 | `GlassComfortShare` | 0.5 | `VenueComfort` |
 | `StoolComfort` | 0.25 per extra stool | `VenueComfort` |
-| `DirtPenalty` | 1.0 | `VenueComfort` |
-| `DirtGrace` | 6 s | `Housekeeping` |
+| `DirtPenalty` | 0.75 (v1; 1.0 in v0) | `VenueComfort` |
+| `DirtGrace` | 10 s (v1; 6 s in v0) | `Housekeeping` |
 | `WashBaseSeconds` / `WashPerGlassSeconds` | 1.5 s / 0.5 s | `Housekeeping.WashSecondsFor` |
 | fixture `comfort` | §3.1 | `fixtures.json` |
 
@@ -348,7 +355,9 @@ ServiceTonight), `ComfortBase by day p25/p50/p75`, `rungs bought by slot`, `Brok
   let the min pick the crowd and put a filthy fresh bar under the broke line.
 - **D9 — the top bar shows icon strips, not decimals** (§4.4). The author's 2026-08-19 ruling on
   that block stands.
-- **D10 — `DirtPenalty` is 1.0, chosen from the latency row** (shape 4) before the wiring ships.
+- **D10 — `DirtPenalty` is 0.75 and `DirtGrace` 10 s, chosen from the latency row** (shape 4)
+  before the wiring shipped; the fixture values doubled from the same measurement (§3.1). The
+  numbers the wiring landed with are in PLAN_house_and_law H1b.
 
 ## 9. Out of scope (fenced deliberately)
 

@@ -151,6 +151,12 @@ namespace LastCall.Core
         /// dirty glass on the stool is, which the recipe's nominal glass id cannot say.</summary>
         public string ServedGlassId { get; internal set; }
 
+        /// <summary>A drink actually crossed the bar to them — set by the serve and by
+        /// nothing else (GDD 27 §4.1). The floor's signal for what they leave behind: a
+        /// declined order, a storm-off, the guest of the house and (module 28) the kicked
+        /// leave nothing, because nothing was poured or nothing counts.</summary>
+        public bool DrinkServed { get; internal set; }
+
         public int ExtraOrdersTaken { get; private set; }
 
         /// <summary>Final satisfaction (0–1) once resolved; storm-offs stay at 0.</summary>

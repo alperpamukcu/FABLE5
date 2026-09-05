@@ -42,7 +42,9 @@ namespace LastCall.Tests
             new TycoonRun(NewShelf(), Book, new RunRng(seed),
                 config: new TycoonConfig(200, orderDecisionSeconds: 0, savorSeconds: 0));
 
-        /// <summary>Serves every seated customer an exact Spritz until the day closes.</summary>
+        /// <summary>Serves every seated customer an exact Spritz until the day closes, and
+        /// keeps the counter clean while it does (GDD 27 §4) — the numbers pinned here are a
+        /// clean bar's.</summary>
         private static void PlayDayServingEveryone(TycoonRun run)
         {
             int guard = 0;
@@ -50,6 +52,7 @@ namespace LastCall.Tests
             {
                 Assert.Less(guard++, 600, "the day must terminate");
                 run.Tick(5);
+                TestNight.Clean(run);
                 foreach (var visit in run.Floor.Seated.ToList())
                 {
                     if (visit.State != VisitState.Waiting) continue;

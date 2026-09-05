@@ -115,6 +115,17 @@ namespace LastCall.Core
         /// </summary>
         public bool IsScreen { get; }
 
+        /// <summary>
+        /// What this piece is worth to the ROOM (GDD 27 §3, 2026-09-05, the author: "mekanın
+        /// geliştirmeleri … masa eklemek, iyi sink eklemek, iyi lamba eklemek, iyi tablo
+        /// eklemek bunlar konforu arttıracak"). Summed by the run over what the room stands —
+        /// the tallest owned rung of each ladder slot and every owned single piece — into the
+        /// comfort base; a fitted-over rung counts nothing, so rungs carry ABSOLUTE values.
+        /// The pieces the room opens with carry 0: they are the free base. Not a gate (that is
+        /// <see cref="Stars"/>); content, like the price.
+        /// </summary>
+        public double Comfort { get; }
+
         /// <summary>Resources/Fixtures sprite name. Presentation data, carried not read.</summary>
         public string Sprite { get; }
 
@@ -132,7 +143,8 @@ namespace LastCall.Core
             float lightR = 0f, float lightG = 0f, float lightB = 0f,
             float lightIntensity = 0f, float lightRadius = 0f,
             bool startsInTheRoom = false, int tapLevel = 0, int level = 0,
-            bool isDrain = false, bool drainsFree = false, bool isScreen = false)
+            bool isDrain = false, bool drainsFree = false, bool isScreen = false,
+            double comfort = 0)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Fixture needs an id.", nameof(id));
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException($"Fixture '{id}' needs a name.", nameof(name));
@@ -147,6 +159,8 @@ namespace LastCall.Core
                 throw new ArgumentOutOfRangeException(nameof(tapLevel), $"Fixture '{id}' has {tapLevel} draught lines.");
             if (level < 0)
                 throw new ArgumentOutOfRangeException(nameof(level), $"Fixture '{id}' stands on rung {level}.");
+            if (comfort < 0 || comfort > 5)
+                throw new ArgumentOutOfRangeException(nameof(comfort), $"Fixture '{id}' comfort must be 0..5.");
             if (level > 0 && tapLevel > 0)
                 throw new ArgumentException($"Fixture '{id}' cannot climb two ladders at once — " +
                                             "a tower's rung IS its tap level.", nameof(level));
@@ -174,6 +188,7 @@ namespace LastCall.Core
             IsDrain = isDrain;
             DrainsFree = drainsFree;
             IsScreen = isScreen;
+            Comfort = comfort;
         }
 
         public override string ToString() => $"{Name} ({Id}, ${Price}, slot {Slot})";

@@ -47,7 +47,9 @@ namespace LastCall.Tests
         private static void PourOut(TycoonRun run) =>
             run.PourIntoServingGlass(run.Glass.TotalVolume, accuracy: 1.0);
 
-        /// <summary>Serves every seated customer an exact Spritz until the day closes.</summary>
+        /// <summary>Serves every seated customer an exact Spritz until the day closes — and
+        /// keeps the counter clean while it does (GDD 27 §4: a glass left on the counter no
+        /// longer clears itself, so every star number pinned here is a CLEAN bar's).</summary>
         private static void PlayDayServingEveryone(TycoonRun run)
         {
             int guard = 0;
@@ -55,6 +57,7 @@ namespace LastCall.Tests
             {
                 Assert.Less(guard++, 600, "the day must terminate");
                 run.Tick(5);
+                TestNight.Clean(run);
                 foreach (var visit in run.Floor.Seated.ToList())
                 {
                     if (visit.State != VisitState.Waiting) continue;
@@ -228,11 +231,12 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void AnEmptyGlass_BlocksTheStool_UntilItIsBussed()
+        public void AnEmptyGlass_HoldsTheStool_UntilItIsCollected()
         {
-            // D2, the bussing beat: a drinker leaves the glass on the stool, and the stool is
-            // not sat on again until it is cleared — the click does it now, the bar's own
-            // clock does it in BarDay.BusSeconds. A storm-off leaves nothing.
+            // D2, the bussing beat, grown up (GDD 27 §4.1, 2026-09-05): a drinker leaves the
+            // glass and a mark on the counter; the glass holds the stool until it is COLLECTED
+            // — and nothing clears it any more, the seven-second clock is gone. A storm-off
+            // leaves nothing.
             var run = new TycoonRun(NewShelf(), Book, new RunRng("bussing"),
                 config: new TycoonConfig(20, orderDecisionSeconds: 0, savorSeconds: 1));
             int guard = 0;
@@ -245,13 +249,21 @@ namespace LastCall.Tests
             run.ServeTo(visit);
             run.Tick(1.5);   // the savour ends; they get up and leave the glass
 
-            Assert.AreEqual(1, run.Floor.Dirty.Count, "the empty glass stands on the stool");
-            var glass = run.Floor.Dirty[0];
-            Assert.IsFalse(glass.Cleared);
+            Assert.AreEqual(1, run.Floor.Messes.Count, "the empty glass stands on the counter");
+            var mess = run.Floor.Messes[0];
+            Assert.IsTrue(mess.HasGlass);
+            Assert.IsTrue(mess.Smudged, "and the counter under it wants the cloth");
+            Assert.AreEqual(1, run.Floor.House.GlassesOnCounter, "which holds the stool");
 
-            glass.Bus();
-            run.Tick(0.1);
-            Assert.AreEqual(0, run.Floor.Dirty.Count, "bussed — the stool is free now");
+            run.Tick(30);
+            Assert.IsTrue(mess.HasGlass, "half a minute later it is STILL there — nothing busses itself");
+
+            run.CollectGlass(mess);
+            Assert.AreEqual(0, run.Floor.House.GlassesOnCounter, "collected — the stool is free now");
+            Assert.AreEqual(1, run.GlassesInHand);
+            Assert.IsTrue(mess.Smudged, "the mark stays until it is wiped");
+            run.Wipe(mess);
+            Assert.AreEqual(0, run.Floor.Messes.Count, "wiped — the spot is clean");
         }
 
         [Test]
@@ -1040,9 +1052,13 @@ namespace LastCall.Tests
         {
             // The cap counted seats from a literal 3 while the config opens with 4 —
             // a free quarter-star on day one, against the cap's own documented promise.
+            // Since 2026-09-05 the cap is the room's COMFORT (GDD 27 §3): the same two stars,
+            // and now a room with no fittings, no mess and no fixture catalogue reads them.
             var run = NewRun();
-            Assert.AreEqual(2.0, run.UpgradeStarCap, 1e-9,
-                "no upgrades, opening seats: a dive caps at two");
+            Assert.AreEqual(2.0, run.ComfortBase, 1e-9,
+                "no upgrades, opening seats: a dive is worth two");
+            Assert.AreEqual(2.0, run.ComfortTonight, 1e-9, "and a clean, empty counter costs nothing");
+            Assert.AreEqual(0.0, run.FixtureComfort, 1e-9, "no catalogue, no fittings");
         }
 
         private static GlasswareDefinition TestGlass(string id, double capacity) =>
@@ -1134,8 +1150,10 @@ namespace LastCall.Tests
             run.ServeTo(visit);
             run.Tick(1.5);   // savour 0: they finish and get up
 
-            Assert.AreEqual(1, run.Floor.Dirty.Count,
+            Assert.AreEqual(1, run.Floor.Messes.Count,
                 "whoever drank leaves a glass, matched recipe or not");
+            Assert.IsTrue(run.Floor.Messes[0].HasGlass);
+            Assert.IsNull(run.Floor.Messes[0].GlasswareId, "a run with no glassware knows no line, and leaves one anyway");
         }
     }
 }

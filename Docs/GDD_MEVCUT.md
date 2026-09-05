@@ -28,8 +28,8 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 
 ## 3 · Müşteri
 
-- **Geliş:** aralık `max(6, 12 − 0.5×gün) × yıldız çarpanı × (1±0.30)`; ≥3 bekleyen varsa gelen **vazgeçer** (balk). Ayrılanın kirli bardağı taburesini 7 sn kilitler (tıkla = topla).
-- **İki saat:** (1) *sorulma sabrı* `max(14, 30−1.6g)` — dolarsa fırtına gibi gider; (2) *içki sabrı* `max(22, 50−2.5g)` — **kimlik okununca** başlar.
+- **Geliş:** aralık `max(6, 12 − 0.5×gün) × yıldız çarpanı × (1±0.30)`; ≥3 bekleyen varsa gelen **vazgeçer** (balk). Ayrılanın (içki SERVİS EDİLENİN) boş bardağı tezgâhta kalır ve toplanana dek taburesini kilitler — kendiliğinden temizlenmez (7 sn'lik saat 2026-09-05'te emekli, §9.23); tıkla = topla (elde birikir, lavaboda yıkanır).
+- **Tek saat (2026-09-04, §9.22):** sabır `max(22, 50−2.5g)` sn, müşteri kararını verdiği an işlemeye başlar ve içki gelene dek işler; sorulmayı beklemek de aynı barı harcar (dolarsa fırtına gibi gider). **Kimlik okumak** barı sıfırlamaz, kalanın üstüne üç kutudan birini (`PatienceMax/3`) ekler, tavan dolu bar. (İki ayrı saat 2026-08-02 → 2026-09-04 arasında vardı.)
 - **Kimlik kartı (gizli bilgi):** `CustomerVisit.Order` `InspectId()` çağrılana dek **throw eder**; gerçek siparişi yalnız Core görür (`OrderTruth`). Kartı açmak siparişi almaktır — geri dönüşü yok. Kör servis yasal: yargıç gerçekle karşılaştırır.
 - **Sipariş havuzu:** açık menüden, en düşük ranktan `3+gün` tarif; stok bakılmaz (kuru şişe = `DeclineOrder`).
 - **Servis tercihi (spec):** ~%50 sade; değilse 1–2 garnitür {buz, limon, tuz, şeker}. Draught'a garnitür yazılmaz. Beklenen doluluk 0.80 (tepeleme isteği 2026-08-02'de emekli). **"Sert çalkala" 2026-08-11'de emekli:** yöntem müşterinin hevesi değil TARİFİN talebi — hakem artık `Prep`'i notluyor (aşağıda).
@@ -176,8 +176,8 @@ kullanan ilk merdivendi; **2026-08-25'te lavabo ikincisi oldu**: `counter_sink` 
 
 ## 7 · Yıldız / itibar omurgası
 
-- `BarRating`: 0★ başlar; gece yıldızı `1+4×memnuniyet`, **iki tavanla** kırpılır; ilerleme ataletli (+0.10 çıkış, −0.20 iniş, gecelik en çok +0.25). Fırtına gidenler de puan yazar.
-- **Tavanlar döngüyü zorlar:** `UpgradeStarCap = 2.0 + bardak adımları (hat başına 0.60'a dek) + 0.25×(tabure−3)`; `MenuStarCap` gece servis edilen en iyi Exact ranka göre 2.0→5.0.
+- `BarRating`: 0★ başlar; gece yıldızı `5×memnuniyet` (2026-08-11'den beri; `1+4×` eski ölçek), **iki tavanla** kırpılır; ilerleme ataletli (+0.10 çıkış, −0.20 iniş, gecelik en çok +0.25). Fırtına gidenler de puan yazar.
+- **İKİ PUAN, ORTAK YILDIZ (2026-09-05, GDD 27; §9.23):** gecenin yıldızı `min(servis, konfor)`. **Servis** = `min(5×ortalama memnuniyet, MenuStarCap)`; **konfor** = `ComfortBase − 1.0 × (1 − temizlik)`, `ComfortBase = 2.0 + Σ fikstür `comfort` (yalnız ayakta duran basamak) + 0.5 × bardak adımı tavanı + 0.25 × ek tabure` (eski `UpgradeStarCap` bu tabana dönüştü; `MenuStarCap` gece servis edilen en iyi Exact ranka göre 2.0→5.0 aynen). Yarının kalabalığı SERVİS tarafını okur (kir tek başına kalabalığı yoksullaştıramaz).
 - **ODA ORTADAN DOLAR (2026-08-25, yazar: "başlangıçtaki koltuklar 2-3-4-5 sırası olacak geliştirme ile alınan koltuklar 1 ve 6 olmalı"):** tezgâh boyunca altı tabure çizilir, yeni bar dördüne sahiptir — eskiden İLK dördüne, yani açılış gecesinin bütün kalabalığı sol duvara yaslanıyor ve kasayla arasında iki tabure boşluk kalıyordu (yeni açılan bir bar terk edilmiş gibi okunuyordu), üstelik yükseltme kimsenin oturmadığı sıranın UZAK ucuna bir tabure daha ekliyordu. Şimdi sahip olunan dördü ORTADAKİ dört (2-3-4-5), yükseltmenin aldığı ikisi ise iki UÇ: önce kasa tarafı (6), sonra uzak duvar (1). Sıra `SeatFillOrder(slots, StartingSeats)` ile TÜRETİLİR (açılış bloğu satırın ortasına yerleşir, artanı kasa ucundan geri doğru eklenir), yani başka bir tabure sayısıyla açılan bir bar da ortalanır. Evin misafiri hâlâ kasaya en yakın taburede oturur ama artık `TillEndward` ile — sırayı TERS gezmek yanlış cevabı verir, çünkü yükseltmenin aldığı SON tabure uzak duvardakidir.
 - Kalabalık yarını seçer: ortalama ≥4.2 HighRoller · ≥1.5 Regular · altı Broke. Ambience: bardak+tezgahtan en çok +0.21 düz bonus.
 
@@ -809,8 +809,9 @@ renklere uyan, miami 80s'lere uygun."*
 **Kural (Core).** `ServiceBand {Green, Amber, Red}` ve eşikler `ServiceJudge.GreenBand = 1/3`,
 `AmberBand = 2/3` — beklemenin HARCANAN payına göre. `SpeedScore` artık düz `1 − bekleme`
 değil, band kenarlarında kırılan sürekli bir eğri: yeşilin dibinde **0.75**, sarının dibinde
-**0.30**, sonunda 0. `CustomerVisit.Band` hangi saat işliyorsa onun bandını verir, böylece
-kafanın üstündeki bar ile kasa aynı üçlemeyi okur.
+**0.30**, sonunda 0. `CustomerVisit.Band` bu bandı verir, böylece kafanın üstündeki bar ile
+kasa aynı üçlemeyi okur. (Bu bölüm yazıldığında iki ayrı saat vardı ve band "hangisi
+işliyorsa" ona bakıyordu; **§9.22 ikisini tek bara indirdi**.)
 
 **Saat toplamdan çıktı, çarpan oldu.** Ölçüm: hız 0.35 ağırlıklı bir terimken, diğer üç terim
 doluyken müşteri kalkarken verilen içki hâlâ anında verilenin **%65'ini** bahşiş alıyordu (10$
@@ -830,8 +831,8 @@ ikisinin toplamı, commit'e girmedi.)
 üç adım istendiği için camdaki iki çizik tam band sınırlarına düşüyor. Boş şerit üç bandı
 kendi koyu tonlarıyla taşıyor (sol kırmızı, orta sarı, sağ yeşil), dolgu canlı band rengi,
 altında bandın rengini alan bir neon şerit (tezgâhın kendi numarası), kırmızı bandda hafif
-nabız (Motion.Reduced'da yok). Sipariş-alınma saatinin magenta rengi kalktı: üç band iki saat
-için de konuşuyor, hangi saatin işlediğini balon zaten söylüyor.
+nabız (Motion.Reduced'da yok). Sipariş-alınma saatinin magenta rengi kalktı: üç band bekleyişin
+tamamı için konuşuyor, hangi aşamada olunduğunu balon zaten söylüyor.
 
 **Tepki içki BİTİNCE veriliyor.** *"Verilen emoji tepkileri içkiyi bitirdikten sonra
 verilmeli."* `TasteMotes` (servisten 0.9 sn sonra) kaldırıldı; burst kalkış dalında, boş bardağı
@@ -851,6 +852,108 @@ palete kilitle → 1 px halka). Kalbin ilk işi: ehliyette ilişki rütbesi üç
 Bench look baseline'ı bu yüzden yeniden kutsandı.
 
 EditMode 389/389 (6 yeni band testi), PlayMode 10/10.
+
+### 9.22 · İki saat tek bara indi; sipariş almak barı sıfırlamıyor, bir kutu ödüyor (2026-09-04)
+
+Yazar: *"Mevcut sabır barı 3 kutudan oluşuyor, sipariş almak barı 0lamaz +1 kutu daha ekler."*
+
+**Neydi.** 2026-08-02'de bekleyiş ikiye bölünmüştü: `OrderPatienceSeconds` (asked olmayı
+bekleme, gün 1'de ~30 sn) ve `PatienceSeconds` (içkiyi bekleme, ~50 sn). `InspectId()` birinciyi
+bitirip ikinciyi **tepeden** başlatıyordu. Ekranda bunun anlamı, tabureye gidildiği anda barın
+ağzına kadar dolmasıydı — yani gösterge "bekleyiş henüz başlamadı" diyordu, oysa müşteri
+oturalı yarım dakika olmuştu. Bahşişin hız çarpanı da aynı yerden sıfırlanıyordu.
+
+**Kural (Core).** Tek saat. `PatienceLeft` müşteri kararını verdiği an işlemeye başlar ve içki
+gelene kadar işler; sipariş alınmaması da aynı barı harcar ve barı biten müşteri, içkisi
+gelmeyen müşteriyle aynı şekilde çekip gider. `InspectId()` artık şunu yapar:
+
+```
+PatienceLeft = Min(PatienceMax, PatienceLeft + PatienceMax × OrderTakenPatienceBonus)
+```
+
+`OrderTakenPatienceBonus = 1/3` — göstergenin üç kutusundan tam biri. `Min` tavanı yüzünden
+ödül **geç kalınan taburede gerçek, hemen gidilen taburede görünmez**; bar hiçbir zaman dördüncü
+bir kutu göstermez, çünkü kasa tam üç bandın üçte birleriyle ödüyor. Fazladan tur (`Resolve`'un
+`ExtraOrderPatienceRefill = 0.8` dolumu) bu kutuyu almaz: o içki bar boyunca istenir, kimsenin
+yürüyüp sorması gerekmez. `OrderPatienceSeconds` / `RollOrderPatience` / `OrderPatienceMax` /
+`OrderPatienceLeft` silindi; `AwaitingOrderTaking` kaldı ama artık yalnızca balonun hangi
+cümleyi göstereceğini söyler, saat seçmez.
+
+**Ölçüm (200 tohumlu koşu, tek taburede sırayla çalışan meşgul bot).** Eski iki saat → yeni tek
+saat: storm-off **%28.4 → %7.4**, servis anında harcanmış bekleme **%8.2 → %34.8**, servis
+bandları yeşil/sarı/kırmızı **51791/2188/14 → 29638/18167/9847**, serve başına bahşiş
+**$3.46 → $2.93**. Yani üç band ilk kez gerçekten kullanılıyor: eskiden 54 bin serviste
+**14 tanesi** kırmızıydı, çünkü gösterge sipariş alındığında doluyordu — §9.21'in yazdığı band
+sistemi fiilen dekoratifti. Kaybedilen müşterinin çoğu da içkiyi beklerken değil, kimse
+gelmediği için gidiyordu.
+
+**`PatienceSeconds` bilerek değişmedi** (50 − 2.5·gün, taban 22). Tek saat toplam olarak eski
+asking-saatinden uzun olduğu için gece belirgin şekilde daha af edici; bunu geri almak ayrı bir
+denge kararı ve kendi ölçümünü hak ediyor, bu değişikliğe sessizce binmemeli. Yazarın kararı:
+süre kalsın.
+
+### 9.23 · Odanın kendi puanı: konfor, tezgâhın gecesi, merdiven (2026-09-05)
+
+Yazar: *"Oyuncular hem alkolü puanlar hem mekanı, 2 ayrı metrik olacak … bu ikisi ayrı metrikler
+olacak fakat ortak yıldızlar olacak. … Tezgahta müşterilerin bıraktığı bardakları toplaman
+gerekecek … bardaklar toplanmadıysa, tezgah silinmediyse bu konfor puanını düşürecek."*
+Tasarım `GDD/27`, faz günlüğü `PLAN_house_and_law.md` (H1b: Core kablolandı; H4 bez, lavabo
+suyu ve ekran sonra).
+
+**İki puan, ortak yıldız (Core).** `ServiceTonight = min(5×ortalama memnuniyet, MenuStarCap)`;
+`ComfortTonight = clamp(ComfortBase − 0.75 × (1 − temizlik), 0, 5)`; gecenin yıldızı
+`min(servis, konfor)` — `StarCeiling` artık `min(ComfortTonight, MenuStarCap)`, eski
+`UpgradeStarCap` `ComfortBase`'e dönüştü: `2.0 + Σ fikstür comfort (yalnız ayakta duran basamak)
++ 0.5 × bardak adımı tavanı + 0.25 × ek tabure`. Fikstürün `comfort`u VERİ (`fixtures.json`,
+`FixtureDefinition.Comfort`; odayla gelenler 0 taşır, üstü örtülen basamak sayılmaz). Yarının
+kalabalığı SERVİS tarafını okur (`CrowdStarsTonight`), kir tek başına kalabalığı yoksullaştıramaz.
+`DayDetail.ServiceStars/ComfortStars` fişe ve deftere yazılır (sor-sonra-kapat testleri).
+
+**Tezgâhın gecesi (`Housekeeping`, `BarDay.House`).** İçki SERVİS EDİLEN ayrılan tezgâhta bir
+`CounterMess` bırakır: boş bardak (toplanana dek tabureyi tutar) + leke (silinene dek). Yedi
+saniyelik `BusSeconds` kendini-temizleme EMEKLİ; hiçbir şey kendiliğinden gitmez. Sinyal
+`CustomerVisit.DrinkServed` (yalnız `ServeTo` kurar): fırtına giden, reddedilen sipariş (eskiden
+görünmez bir bardak bırakıp tabureyi 7 sn kilitliyordu — C6 hatası kapandı) ve evin misafiri hiçbir
+şey bırakmaz; eşleşmeyen döküm yine bardak bırakır. Fiiller `TycoonRun.CollectGlass(mess)` (bardak
+ele, tabure anında boş), `Wipe(mess)` (bardağın altı silinmez — önce topla), `WashGlasses()`
+(lavabo `1.5 + 0.5×n` sn çalışır, meşgulken ikinci yıkama bekler), hepsi `DayOpen` kapılı.
+**Tolerans 10 sn**: bir pislik bu süreden sonra her saniye koltuk-saniye yazar;
+`Cleanliness = clamp(1 − koltuk-saniye / (tabure × Floor.Elapsed), 0, 1)`. Kapanış bloğu
+(`Floor.IsComplete`) önce `House.CloseNight()` çağırır: eldeki ve lavabodaki bardaklar bedava
+yıkanır, tezgâhta kalan zaten ödenmiştir. `ComfortNow` canlı okuma (toleransı geçmiş nokta / tabure).
+
+**Sahne şimdilik yalnız gösterdiğini öder:** `TycoonConfig.CounterSmudges` (varsayılan açık; sim ve
+testler kuralın tamamını ölçer) — `GameBootstrap` `TycoonConfig.ForTheScene` ile lekeleri KAPALI
+geçirir, bez çizilene dek (H4) sahnedeki tezgâh yalnız bardaklardan kaybeder. Kirli bardak tıklaması
+`CollectGlass` oldu ("GLASS COLLECTED — SEAT IS FREE"); eşleşmeyen dökümün bardağı da artık
+sahnede duruyor.
+
+**Veri.** 25 parçaya `comfort`; üç masa yuvası üçer basamaklı merdiven (`table_{left,mid,right}_{1,2,3}`,
+rustik/pirinç/çelik, aynı sanat); `plant_monstera` yetim `fx_monstera` ile `plant_right` 3. basamak.
+
+**Ölçüm (`LastCall → Simulate Tycoon 200 Runs`, `LastCall → Measure Housekeeping`).** Bot
+`fixtures.json` yüklüyor, tezgâhı anında topluyor/siliyor/yıkıyor ve gecede bir kez dolar başına en
+çok konfor veren açık basamağı alıyor (musluk hariç). İlk ölçüm (v0: ceza 1.0, tolerans 6 sn,
+fikstür değerleri yarısı, bot en ucuzu alıyor): 20 sn'de pisliğe ulaşan el yarım yıldız ve iflas
+%4→%13, 30 sn'de %41; en ucuz basamağı alan bot %0→%4 iflasla DÜŞEN itibar — fikstürler dolar
+başına bardak adımının 2–4 katı pahalıydı. v1 (ceza 0.75, tolerans 10 sn, değerler ×2, değere göre
+alım) ile 200 koşu: iflas HEAD raporunda 2 (1.0%) → **3 (1.5%)**; kasa medyanı
+$84 / $136 / $199 → **$64 / $76 / $87**; gelir/gider $131.7 / $127.5 → $129.9 / $127.9; itibar 2.71 stars →
+2.66 stars; servis / konfor gece ortalaması **2.94 / 2.99**; temizlik 100%; konforun geceyi
+tuttuğu geceler 2784 (46.5%); yoksul kalabalık çekilen gece 0 (0.0%); konfor tabanı 10/20/30. gün
+medyanı 2.50 / 3.35 / 3.83; 2.5★'a ulaşan 196 (98.0%) → 196 (98.0%) (gün p25/p50/p75 20 / 21 / 22 →
+21 / 22 / 23); 3.0★ 24 (12.0%) → 8 (4.0%). Dört şekil (100 koşu, aynı tohumlar):
+
+| 1 · instant, no dressing | 0.0% | $134 | 10.2 | 2.96 | 2.85 | 100% | 64.1% | 0.0% | 2.65 | 100.0% | 2.0% |
+| 2 · instant, buys dressing | 1.0% | $76 | 10.2 | 2.94 | 3.05 | 100% | 42.1% | 0.0% | 2.68 | 100.0% | 6.0% |
+| 3 · never wipes or washes | 6.0% | $64 | 10.2 | 2.90 | 2.67 | 53% | 71.0% | 0.0% | 2.44 | 84.0% | 0.0% |
+| 4a · 10 s to the mess | 1.0% | $73 | 10.2 | 2.94 | 3.05 | 100% | 41.3% | 0.0% | 2.69 | 99.0% | 8.0% |
+| 4b · 20 s to the mess | 1.0% | $76 | 10.0 | 2.97 | 2.96 | 91% | 53.5% | 0.0% | 2.66 | 99.0% | 6.0% |
+| 4c · 30 s to the mess | 8.0% | $69 | 9.4 | 2.98 | 2.73 | 82% | 72.3% | 0.0% | 2.51 | 83.0% | 7.0% |
+
+Okuma: 1 = bardak payının yarıya inmesinin bedeli; 2 = yeni taban; 3 = çürüme (konfor tabanın
+altında, itibar durur, yoksul gece ARTMAZ); 4 = insan eli, `DirtPenalty`/`DirtGrace` bu satırdan
+seçildi. EditMode 452/452 yeşil.
 
 ## 10 · Teknik omurga
 

@@ -333,7 +333,7 @@ namespace LastCall.Game
                         f.stars, f.flavor, f.sprite,
                         f.lightR, f.lightG, f.lightB, f.lightIntensity, f.lightRadius,
                         f.startsInTheRoom, f.tapLevel, f.level, f.drain, f.drainsFree,
-                        f.screen));
+                        f.screen, f.comfort));
                 }
                 catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
                 {
@@ -730,6 +730,11 @@ namespace LastCall.Game
             /// picture (2026-09-04, the wall television). Absent is false, so every
             /// fixture that is a still stays a still.</summary>
             public bool screen;
+
+            /// <summary>What the piece is worth to the room's comfort (GDD 27 §3,
+            /// 2026-09-05). Absent is 0, which is what the pieces the room opens with
+            /// carry: they are the free base.</summary>
+            public double comfort;
         }
 
         [Serializable]

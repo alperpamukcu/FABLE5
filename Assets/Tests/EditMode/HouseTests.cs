@@ -75,7 +75,7 @@ namespace LastCall.Tests
             Assert.AreEqual(2.0, VenueComfort.Tonight(2.0, 1.0), Eps);
             Assert.AreEqual(2.0 - VenueComfort.DirtPenalty, VenueComfort.Tonight(2.0, 0.0), Eps);
             Assert.AreEqual(3.0 - VenueComfort.DirtPenalty * 0.5, VenueComfort.Tonight(3.0, 0.5), Eps, "half clean, half the penalty");
-            Assert.AreEqual(0.0, VenueComfort.Tonight(1.0, 0.0), Eps, "and it floors at zero");
+            Assert.AreEqual(0.0, VenueComfort.Tonight(0.5, 0.0), Eps, "and it floors at zero");
         }
 
         [Test]

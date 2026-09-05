@@ -515,7 +515,7 @@ namespace LastCall.UI
             public int Index;                // which stool along the bar, left to right
             public float NeighbourT;         // how long somebody has been sitting beside them
             public float SeatX;              // this stool's resting x
-            public DirtyGlass Dirty;         // the empty glass left on this stool (D2)
+            public CounterMess Dirty;        // the mess left on this stool: the glass, then the mark (GDD 27 §4)
             public RectTransform DirtyProp;  // its clickable prop on the counter
             public float WalkT;              // 0..1 walk-in progress
             public float WalkPace;           // 1 at the door, ArrivalPace at the stool

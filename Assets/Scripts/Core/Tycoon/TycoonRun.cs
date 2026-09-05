@@ -23,7 +23,7 @@ namespace LastCall.Core
     /// Regulars are opt-in: built without a regulars registry, the crowd stays anonymous
     /// and nothing else changes.
     /// </summary>
-    public sealed class TycoonRun : IUnlockState
+    public sealed partial class TycoonRun : IUnlockState
     {
         private readonly RunRng _rng;
         private readonly Shelf _shelf;
@@ -96,32 +96,24 @@ namespace LastCall.Core
         public double Ambience => Math.Min(0.15, 0.006 * GlassUpgradeSteps)    // full at 25 steps
                                 + Math.Min(0.06, 0.03 * (CounterTier - 1));
 
-        /// <summary>The most stars the bar's fittings allow a night to bank (the author's
-        /// loop, 2026-08-02): happy customers alone cannot carry a dive past two stars —
-        /// the glassware line and the extra stools raise the ceiling toward five.</summary>
+        /// <summary>
+        /// THE FITTINGS CEILING BECAME THE ROOM'S RATING (GDD 27, 2026-09-05). Since
+        /// 2026-08-02 this was <c>UpgradeStarCap</c> — "happy customers alone cannot carry a
+        /// dive past two stars; the glassware line and the extra stools raise the ceiling
+        /// toward five" — an invisible clamp the player met only as a CEILING row. It is now
+        /// <see cref="ComfortBase"/> (TycoonRun.House.cs), the same two terms plus what the
+        /// room's fittings are worth, drained by the night's mess into
+        /// <see cref="ComfortTonight"/>, and drawn with a symbol of its own. Kept under its
+        /// old name for the one reader that still asks the old question.
+        /// </summary>
         /// <remarks>FRONT-LOADED per step (measured, 2026-08-02): a flat 0.12/step made a
         /// cap-star cost ~$383 against the ~$100 the healthy three-step economy paid, and
         /// the sim went 13% → 83% bankruptcies on that arithmetic. The early steps of a
-        /// line now carry most of its ceiling (0.20/0.15/0.12/0.08/0.05 — 0.60 a line,
-        /// +3.0 across five); the late, expensive steps are the endgame's prestige, not
-        /// its survival math.</remarks>
-        public double UpgradeStarCap
-        {
-            get
-            {
-                double glassCap = 0;
-                foreach (var g in _glassware)
-                {
-                    int steps = GlassTier(g.Id) - 1;
-                    for (int s = 0; s < steps && s < GlassStepCap.Length; s++)
-                        glassCap += GlassStepCap[s];
-                }
-                // Counted from the CONFIG's opening seats, not a literal (audit 2026-08-11):
-                // the hard-coded 3 against StartingSeats = 4 gave every new bar a free
-                // quarter-star, against this property's own "a dive caps at two" promise.
-                return 2.0 + glassCap + 0.25 * Math.Max(0, Seats - _config.StartingSeats);
-            }
-        }
+        /// line carry most of its ceiling (0.20/0.15/0.12/0.08/0.05 — 0.60 a line, +3.0
+        /// across five); comfort counts half of that sum (GDD 27 D2), so the room's
+        /// fittings are a second road up and not an optional one. Counted from the
+        /// CONFIG's opening seats, not a literal (audit 2026-08-11).</remarks>
+        public double UpgradeStarCap => ComfortBase;
 
         private static readonly double[] GlassStepCap = { 0.20, 0.15, 0.12, 0.08, 0.05 };
 
@@ -136,8 +128,9 @@ namespace LastCall.Core
         private int _bestRankServedTonight;
 
         /// <summary>The lower of the two ceilings — what the bar is ALLOWED to be worth
-        /// tonight, whatever the room thought of it.</summary>
-        public double StarCeiling => Math.Min(UpgradeStarCap, MenuStarCap);
+        /// tonight, whatever the room thought of it: the room's own comfort as it stands
+        /// after the night's mess (GDD 27 §2.3), and the menu.</summary>
+        public double StarCeiling => Math.Min(ComfortTonight, MenuStarCap);
 
         /// <summary>
         /// What tonight is worth once both ceilings have had their say: the room's own score,
@@ -153,12 +146,14 @@ namespace LastCall.Core
         /// progress from.</summary>
         public double StandingAfterTonight => Rating.StandingAfter(TonightStars);
 
-        /// <summary>The stars tomorrow's crowd is drawn by: tonight's, unless the bar's own
-        /// fame already clears the roller line, in which case fame overrides the night
-        /// (GDD 23 §7 — see <see cref="ContinueToNextDay"/>, which reads this before the
-        /// night is filed, exactly as the rule intends).</summary>
+        /// <summary>The stars tomorrow's crowd is drawn by: tonight's SERVICE (GDD 27 §2.3 —
+        /// the crowd is the customers' mood about last night's drinks, so the room's mess can
+        /// hold the standing down but never by itself turn the crowd broke), unless the
+        /// bar's own fame already clears the roller line, in which case fame overrides the
+        /// night (GDD 23 §7 — see <see cref="ContinueToNextDay"/>, which reads this before
+        /// the night is filed, exactly as the rule intends).</summary>
         private double CrowdStarsTonight =>
-            Rating.Average >= BarRating.HighRollerStars ? BarRating.HighRollerStars : TonightStars;
+            Rating.Average >= BarRating.HighRollerStars ? BarRating.HighRollerStars : ServiceTonight;
 
         /// <summary>Who tonight has drawn for tomorrow, asked before the books close. The
         /// night's end shows it; <see cref="ContinueToNextDay"/> books it. One rule.</summary>
@@ -930,6 +925,10 @@ namespace LastCall.Core
 
             if (Floor.IsComplete)
             {
+                // The counter's night ends here, BEFORE anything reads ComfortTonight: what
+                // is still in the hand and in the sink is washed for free, what is still on
+                // the counter has been paid for in exposure (GDD 27 §4.3).
+                Floor.House.CloseNight();
                 int rent = _config.Rent(Day);
                 Money -= rent;
                 DayRent += rent;
@@ -1904,6 +1903,11 @@ namespace LastCall.Core
             // drink that matched no recipe at all, which left no glass and freed the stool
             // instantly, a bussing discount for the worst pour in the house.
             visit.ServedGlassId = ServingGlassware?.Id;
+            // A drink crossed the bar (GDD 27 §4.1): this, and nothing about the STATE, is
+            // what the floor reads when they get up to decide whether a glass and a mark
+            // are left on the counter. The guest's serve above sets nothing — they are
+            // outside the mess as they are outside the books.
+            visit.DrinkServed = true;
 
             // What actually went across the bar, not what was asked for — the receipt lists the
             // drink that was poured, and a wrong one is paid at its own price.
@@ -2322,6 +2326,9 @@ namespace LastCall.Core
                     Rent = DayRent, Stock = DayStock, Upgrades = DayUpgrades,
                     Served = served, WalkedOut = walked,
                     NightStars = Rating.LastNight,
+                    // The two ratings the night was made of (GDD 27 §6), read off the
+                    // floor exactly as the slip asked them a moment ago.
+                    ServiceStars = ServiceTonight, ComfortStars = ComfortTonight,
                 });
 
             if (Ledger.IsBankrupt)

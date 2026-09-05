@@ -37,9 +37,11 @@ the truth you never looked at.
 
 ![Two customers at the bar — the left bubble shows an order because that ID was read; the right one only says READY TO ORDER](Docs/readme/seat_bubbles.png)
 
-Every customer runs two clocks: patience to be *asked* (walk-out is a storm-out that still
-scars your rating) and patience to be *served* once the ID is read. Nail an exact order
-with full craft and a returning customer may ask for an extra round.
+Every customer runs one clock, from the moment they decide to the moment the drink lands:
+being left un-asked spends it exactly as waiting on the drink does (a walk-out is a
+storm-out that still scars your rating), and reading the ID pays one of its three boxes
+back — never a reset. Nail an exact order with full craft and a returning customer may ask
+for an extra round.
 
 ## The drink — three ways, one law
 

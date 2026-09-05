@@ -78,8 +78,9 @@ namespace LastCall.Core
     public sealed class Housekeeping
     {
         /// <summary>Seconds a fresh mess may stand before it starts costing the room: time
-        /// to notice, and to reach for the cloth.</summary>
-        public const double DirtGrace = 6.0;
+        /// to notice, and to reach for the cloth. Ten, not six (measured 2026-09-05, GDD 27
+        /// §7 shape 4): at six the bar was paying for the walk across the counter.</summary>
+        public const double DirtGrace = 10.0;
 
         /// <summary>A wash takes this long, plus a little per glass in it.</summary>
         public const double WashBaseSeconds = 1.5, WashPerGlassSeconds = 0.5;

@@ -15,8 +15,10 @@ the beat plays in the scene now; S4's light and S5's rewards are not built), and
 own the house and the door** — two ratings sharing one row of stars (COMFORT from the fittings,
 drained by the counter's mess; SERVICE from the drink; the night files the lower), the
 wipe / collect / wash verbs, the upgrade ladder, under-20 customers, borrowed cards and the
-kick (design, staged in `Docs/PLAN_house_and_law.md`: H0 and the silent Core halves H1/H2 are
-what exists; nothing is wired or drawn yet). The historical modules (00–13, 17, 19, 20 — card era and the demolished
+kick (staged in `Docs/PLAN_house_and_law.md`: H0, the silent Core halves H1/H2 and the comfort
+wiring H1b are in — the counter keeps its mess and the night files `min(service, comfort)`,
+with the scene's marks gated OFF by `TycoonConfig.ForTheScene` until the cloth is drawn; H2b/H3
+the door, H4 the cloth and sink, H5 the two symbols on the boards, H6 content are not built). The historical modules (00–13, 17, 19, 20 — card era and the demolished
 emotion layer) were DELETED in the 2026-08-07 sweep; recipe truth is `recipes.json` ↔
 `RecipeCatalog` under the parity test, ingredient types are the `IngredientType` enum.
 **The staging document is `Docs/PLAN_service_depth.md` (v5)** — phase order and conflict

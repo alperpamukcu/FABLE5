@@ -54,8 +54,15 @@ namespace LastCall.Core
         public int WalkedOut { get; }
 
         /// <summary>The night's own stars, before the standing averaged them in — what THIS
-        /// night was worth, as opposed to what the bar is worth.</summary>
+        /// night was worth, as opposed to what the bar is worth. The LOWER of the two below
+        /// (GDD 27 §2.3), held under the menu.</summary>
         public double NightStars { get; }
+
+        /// <summary>The two ratings the night was made of (GDD 27 §2): what the customers
+        /// thought of the drinks, and what the room was worth once the mess was counted.
+        /// Zero on a day booked without detail.</summary>
+        public double ServiceStars { get; }
+        public double ComfortStars { get; }
 
         /// <summary>The till once everything was paid. This is the number the strike watches,
         /// so it is the number the book has to show.</summary>
@@ -67,7 +74,7 @@ namespace LastCall.Core
         public DayResult(int day, int income, int expenses, double averageSatisfaction,
             int sales = 0, int tips = 0, int rent = 0, int stock = 0, int upgrades = 0,
             int served = 0, int walkedOut = 0, double nightStars = 0, int tillAfter = 0,
-            bool hasDetail = false)
+            bool hasDetail = false, double serviceStars = 0, double comfortStars = 0)
         {
             Day = day;
             Income = income;
@@ -83,6 +90,8 @@ namespace LastCall.Core
             NightStars = nightStars;
             TillAfter = tillAfter;
             HasDetail = hasDetail;
+            ServiceStars = serviceStars;
+            ComfortStars = comfortStars;
         }
     }
 
@@ -93,6 +102,7 @@ namespace LastCall.Core
     {
         public int Sales, Tips, Rent, Stock, Upgrades, Served, WalkedOut;
         public double NightStars;
+        public double ServiceStars, ComfortStars;
     }
 
     /// <summary>
@@ -145,7 +155,8 @@ namespace LastCall.Core
                 ? new DayResult(day, income, expenses, averageSatisfaction)
                 : new DayResult(day, income, expenses, averageSatisfaction,
                     detail.Sales, detail.Tips, detail.Rent, detail.Stock, detail.Upgrades,
-                    detail.Served, detail.WalkedOut, detail.NightStars, tillAfter, true);
+                    detail.Served, detail.WalkedOut, detail.NightStars, tillAfter, true,
+                    detail.ServiceStars, detail.ComfortStars);
             _history.Add(result);
 
             DebtStrikes = tillAfter < 0 ? DebtStrikes + 1 : 0;

@@ -23,18 +23,38 @@ namespace LastCall.Core
         // cuts the last one off wherever it happens to be.
         public static readonly TycoonConfig Default = new TycoonConfig(savorSeconds: 13.2);
 
+        /// <summary>The scene's config: <see cref="Default"/> with the counter's MARKS off
+        /// until the cloth is drawn (PLAN_house_and_law H4) — see
+        /// <see cref="CounterSmudges"/>. The glasses are on: the scene already draws and
+        /// collects them.</summary>
+        public static readonly TycoonConfig ForTheScene =
+            new TycoonConfig(savorSeconds: 13.2, counterSmudges: false);
+
         // orderDecisionSeconds 4.0 → 5.0 (2026-08-19, the author: "düşünme süresi biraz daha
         // uzun sürsün"): the "..." beat over the head is the thing the player waits ON now,
         // and at 4s the short rolls were over before the dots read as thinking.
         public TycoonConfig(int startingMoney = 20,
-            double orderDecisionSeconds = 5.0, double savorSeconds = 6.0)
+            double orderDecisionSeconds = 5.0, double savorSeconds = 6.0,
+            bool counterSmudges = true)
         {
             if (orderDecisionSeconds < 0) throw new ArgumentOutOfRangeException(nameof(orderDecisionSeconds));
             if (savorSeconds < 0) throw new ArgumentOutOfRangeException(nameof(savorSeconds));
             StartingMoney = startingMoney;
             OrderDecisionSeconds = orderDecisionSeconds;
             SavorSeconds = savorSeconds;
+            CounterSmudges = counterSmudges;
         }
+
+        /// <summary>
+        /// Whether a served leaver marks the counter as well as leaving their glass (GDD 27
+        /// §4.1). The RULE is always on — the sim and every test measure the whole of it —
+        /// and this exists for one caller: the scene, which switches the marks on the night
+        /// it can draw them and hand the player the cloth (PLAN_house_and_law H4). A filed
+        /// comfort the player cannot see or clean would be the invisible clamp GDD 27 was
+        /// written to remove; until the cloth is drawn the scene's counter costs only what
+        /// it shows — the glasses.
+        /// </summary>
+        public bool CounterSmudges { get; }
 
         /// <summary>
         /// Floor-time multiplier while a menu (service flow, licence) is open (GDD 24 §10):

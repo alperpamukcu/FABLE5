@@ -326,7 +326,7 @@ namespace LastCall.UI
         {
             foreach (var v in _seats)
             {
-                bool show = v.Dirty != null && !v.Dirty.Cleared;
+                bool show = v.Dirty != null && v.Dirty.HasGlass;
                 if (show && v.DirtyProp == null)
                 {
                     var prop = NewRect("DirtyGlass", _hudRoot);
@@ -357,10 +357,14 @@ namespace LastCall.UI
                     btn.transition = Selectable.Transition.None;
                     btn.onClick.AddListener(() =>
                     {
-                        if (view.Dirty == null) return;
-                        view.Dirty.Bus();
+                        // COLLECTED, not cleared (GDD 27 §4.2, 2026-09-05): the glass goes
+                        // into the hand and the stool frees this instant; the mark under it
+                        // and the trip to the sink are the counter's next verbs (PLAN H4).
+                        if (view.Dirty == null || !view.Dirty.HasGlass) return;
+                        try { Run?.CollectGlass(view.Dirty); }
+                        catch (System.InvalidOperationException e) { Toast(e.Message); return; }
                         Sfx.Play("glass_down", 0.9f);
-                        Toast("GLASS CLEARED — SEAT IS FREE");
+                        Toast("GLASS COLLECTED — SEAT IS FREE");
                     });
                     // ...and it says so before it is pressed (2026-08-26): the author's
                     // rule is about this KIND of interaction, not about the menu alone.
@@ -1761,10 +1765,11 @@ namespace LastCall.UI
                             (v.Visit.SnacksTaken > 0 ? $" (+{v.Visit.SnacksTaken} snack)" : "") +
                             $" · leaves {LogStars(v.Visit.Satisfaction)}");
                     // The bussing beat (D2): a drinker leaves the empty glass on this stool.
-                    // Core created the DirtyGlass in the same tick that freed the seat; this
-                    // view claims the first one no other stool has claimed.
-                    if (v.Visit.Served != null)
-                        foreach (var g in run.Floor.Dirty)
+                    // Core left the mess in the same tick that freed the seat (GDD 27 §4.1 —
+                    // the SERVE is the signal, so an unmatched pour's glass is claimed too);
+                    // this view claims the first one no other stool has claimed.
+                    if (v.Visit.DrinkServed)
+                        foreach (var g in run.Floor.Messes)
                         {
                             bool claimed = false;
                             foreach (var other in _seats) if (other.Dirty == g) { claimed = true; break; }

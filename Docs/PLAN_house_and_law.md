@@ -121,7 +121,22 @@ the editor, because the editor was the author's for the night; the editor run fo
 
 **Proof:** as H1.
 
-## H1b + H4 — Comfort and cleanliness, wired and drawn (one push) ☐ *(waits for the tree)*
+## H1b + H4 — Comfort and cleanliness, wired and drawn ◐ *(H1b shipped 2026-09-05; H4 open)*
+
+**Shipped 2026-09-05, the Core half — with the scene GATED, not paired.** The author said
+"devam" while the tree was still shared, so H1b landed before H4 could: everything below under
+"Core" is in, plus the four one-line HUD hunks that turn the old click into `CollectGlass`, and
+the pairing rule is honoured by a gate instead — `TycoonConfig.CounterSmudges` (the rule is on
+for the sim and every test) with `TycoonConfig.ForTheScene` handing the scene the marks OFF until
+the cloth is drawn, so the scene's counter costs only what it shows: the glasses. H4 flips it.
+Balance moved once on measurement (GDD 27 §7): v0 (penalty 1.0, grace 6 s, half the fixture
+values, a cheapest-first bot) had a 20-second hand losing half a star and tripling bankruptcies
+and a dressing-buying bot going 0%→4% bankrupt for a LOWER standing; v1 is penalty 0.75, grace
+10 s, fixture values doubled, the bot buying by comfort per dollar. The 200-run report against
+the tree before the change: bankruptcies 2 (1.0%) → 3 (1.5%), median till $84 / $136 / $199 → $64 / $76 / $87, standing
+2.71 stars → 2.66 stars, 2.5★ reached 196 (98.0%) → 196 (98.0%), 3.0★ 24 (12.0%) → 8 (4.0%); service / comfort 2.94 / 2.99, cleanliness
+100%, comfort-bound nights 2784 (46.5%), broke nights 0 (0.0%). The four shapes are in
+`Docs/housekeeping_report.md`. EditMode 452/452 green.
 
 Core (H1b):
 - `FixtureDefinition.Comfort` (+ DTO `comfort`, appended after `screen`); `fixtures.json` values

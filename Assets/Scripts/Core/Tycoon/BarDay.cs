@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace LastCall.Core
@@ -13,50 +13,30 @@ namespace LastCall.Core
     /// was always here (a full row makes the next arrival wait at the door rather than queueing
     /// a backlog); the quota was what hid it.
     ///
+    /// **The counter has a night of its own (GDD 27 §4, 2026-09-05).** What a served leaver
+    /// puts down — their empty glass and a mark on the wood — is the floor's
+    /// <see cref="House"/>, and it clears NOTHING by itself any more: the seven-second bussing
+    /// clock of 2026-08-11 was a stand-in for verbs that did not exist (collect, wipe, carry
+    /// to the sink, wash), and it is retired with them.
+    ///
     /// Deliberately decoupled: BarDay owns seats and timing only. Who arrives — their
     /// order, patience roll, face and read — comes from the factory the caller passes to
     /// <see cref="Tick"/>, so the floor is testable without regulars or menus.
     /// </summary>
-    /// <summary>
-    /// An empty glass left on a stool (D2, v5 P14). It blocks the stool until it is bussed:
-    /// the player's click clears it now, and the bar's own slow clock clears it eventually —
-    /// so ignoring the bussing costs seats-seconds, and clearing it is worth the click.
-    /// </summary>
-    public sealed class DirtyGlass
-    {
-        public double Left { get; private set; }
-        public bool Cleared { get; private set; }
-
-        /// <summary>Which glass line the drink was served in, so the empty on the counter
-        /// is drawn as THE glass, not a stand-in (the author, 2026-08-02).</summary>
-        public string GlasswareId { get; }
-
-        internal DirtyGlass(double seconds, string glasswareId = null)
-        { Left = seconds; GlasswareId = glasswareId; }
-
-        internal void Tick(double seconds)
-        {
-            if (Cleared) return;
-            Left -= seconds;
-            if (Left <= 0) Cleared = true;
-        }
-
-        /// <summary>The player clears it by hand — the stool frees this instant.</summary>
-        public void Bus() => Cleared = true;
-    }
-
     public sealed class BarDay
     {
         public int Day { get; }
         public int Seats { get; }
 
-        /// <summary>Seconds an unbussed glass blocks its stool before the bar gets to it.</summary>
-        public const double BusSeconds = 7.0;
+        /// <summary>The counter's mess, the hand and the sink — the night's housekeeping
+        /// (GDD 27 §4). One per night; nothing on it carries to tomorrow.</summary>
+        public Housekeeping House { get; } = new Housekeeping();
 
-        private readonly List<DirtyGlass> _dirty = new List<DirtyGlass>();
+        /// <summary>Everything a leaver left on the counter that still wants a hand. The
+        /// room claims one per stool it drew the leaver on, exactly as it claimed the old
+        /// glass; a mess with its glass still standing holds that stool.</summary>
+        public IReadOnlyList<CounterMess> Messes => House.Messes;
 
-        /// <summary>The empty glasses standing on stools right now.</summary>
-        public IReadOnlyList<DirtyGlass> Dirty => _dirty;
         public int Arrived { get; private set; }
 
         /// <summary>Seconds of the shift gone by.</summary>
@@ -112,10 +92,10 @@ namespace LastCall.Core
         /// Sits somebody the night did not roll (GDD 26 §2) — the last customer, who comes in
         /// after the door is shut and answers to none of the arrival machinery: not the gap
         /// clock, not the seat count, not the crowd. Everything AFTER the door is the same as
-        /// for anyone else. The floor ticks their patience, buses their glass, and refuses to
-        /// be complete while they are on the stool, which is why this needs no new end
-        /// condition: <see cref="IsComplete"/> already says the shift is over when the last
-        /// stool is empty, and now one of them is not.
+        /// for anyone else. The floor ticks their patience and refuses to be complete while
+        /// they are on the stool, which is why this needs no new end condition:
+        /// <see cref="IsComplete"/> already says the shift is over when the last stool is
+        /// empty, and now one of them is not.
         /// </summary>
         public void SeatGuest(CustomerVisit visit)
         {
@@ -177,6 +157,10 @@ namespace LastCall.Core
             }
         }
 
+        /// <summary>Stools with nobody on them and no glass standing at them: what the door
+        /// can seat this instant.</summary>
+        public int FreeStools => Math.Max(0, Seats - _seated.Count - House.GlassesOnCounter);
+
         /// <summary>
         /// Advances the floor: patience ticks, the settled and the stormed-off leave, and
         /// when a stool is free and the moment comes, the factory seats the next arrival.
@@ -194,25 +178,25 @@ namespace LastCall.Core
                 if (visit.State == VisitState.Waiting || visit.State == VisitState.Drinking)
                     return false;
                 _finished.Add(visit);
-                // The bussing beat (D2, v5 P14): someone who drank leaves their empty glass
-                // on the stool, and the stool is not sat on again until it is cleared — by
-                // the player's click, or by the bar getting to it in its own time. A
-                // storm-off leaves nothing: there was no glass. EVERY served drink leaves
-                // one (audit 2026-08-11) — the unmatched glass used to vanish, a bussing
-                // discount for the worst pour — and it is the VESSEL that was actually
-                // handed over, not the recipe's nominal one.
-                if (visit.State != VisitState.StormedOff)
-                    _dirty.Add(new DirtyGlass(BusSeconds,
-                        visit.ServedGlassId ?? visit.Served?.GlassId));
+                // WHAT THEY LEAVE BEHIND (GDD 27 §4.1). Somebody who was handed a drink
+                // leaves the empty glass and a mark on the counter; the glass holds the
+                // stool until it is collected, the mark stays until it is wiped, and both
+                // cost the room's comfort past their grace. The signal is the SERVE, not the
+                // state: a storm-off poured nothing, a declined order poured nothing (it
+                // used to leave an invisible glass that held the stool seven seconds — the
+                // bug GDD 27 C6 closes), and the guest of the house is outside the books
+                // and outside the mess. EVERY served drink leaves one (audit 2026-08-11) —
+                // the unmatched glass used to vanish, a bussing discount for the worst
+                // pour — and it is the VESSEL that was actually handed over.
+                if (visit.DrinkServed && !visit.OnTheHouse)
+                    House.LeaveMess(visit.ServedGlassId ?? visit.Served?.GlassId,
+                        smudge: _config.CounterSmudges);
                 return true;
             });
 
-            // The dirty glasses age out on the bar's own slow clock.
-            for (int i = _dirty.Count - 1; i >= 0; i--)
-            {
-                _dirty[i].Tick(seconds);
-                if (_dirty[i].Cleared) _dirty.RemoveAt(i);
-            }
+            // The counter's own clock: every mess past its grace costs a seat-second per
+            // second, and the sink counts down. Ticked with the floor, never with the screen.
+            House.Tick(seconds);
 
             // How much of this tick falls before closing. Taken BEFORE the clock advances, and
             // clamped: a single tick big enough to cover the whole shift must still let the
@@ -226,7 +210,7 @@ namespace LastCall.Core
             if (open > 0)
             {
                 _untilNextArrival -= open;
-                while (_untilNextArrival <= 0 && _seated.Count + _dirty.Count < Seats && !IsTooBusyToSit)
+                while (_untilNextArrival <= 0 && FreeStools > 0 && !IsTooBusyToSit)
                 {
                     var visit = arrivalFactory();
                     _seated.Add(visit);
@@ -242,7 +226,7 @@ namespace LastCall.Core
                 {
                     // Held at the door by a room that is too far behind rather than by a full
                     // one: that is somebody deciding against the place, and the gap restarts.
-                    if (IsTooBusyToSit && _seated.Count + _dirty.Count < Seats)
+                    if (IsTooBusyToSit && FreeStools > 0)
                     {
                         Balked++;
                         _untilNextArrival = NextGap();

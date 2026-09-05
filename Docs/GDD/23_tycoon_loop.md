@@ -325,9 +325,13 @@ days — it simply stops being what the player reads the night by.
   0.4–0.75 → **Regulars**; < 0.4 → **Broke crowd** (prices ×0.75, no tips).
   A good bar attracts customers worth serving well — reputation compounds like the shelf.
 
-**The stars are the reputation (v5 P12 / D3, 2026-07-31).** Every customer leaves **1–5 stars**
-on the way out — storm-offs included, because a storm-off is a review too. Satisfaction 0 is one
-star, not zero: the scale starts at one. The bar's **running average** across the whole run is
+**The stars are the reputation (v5 P12 / D3, 2026-07-31; rescaled 2026-08-11; split in two
+2026-09-05).** Every customer leaves **0–5 stars** on the way out — storm-offs included, because
+a storm-off is a review too. The scale is five times the satisfaction and zero is reachable (a
+night where everything was done wrong earns nothing; the `1 + 4x` scale this paragraph first
+carried was retired on 2026-08-11). Since GDD 27 the night files the LOWER of two ratings —
+what the customers thought of the drinks (this paragraph) and what the room was worth once
+the counter's mess was counted — and tomorrow's crowd reads the customers' side. The bar's **running average** across the whole run is
 what the top corner shows and what the crowd reads, replacing the TONIGHT satisfaction bar. The
 two old bars translate straight across: 0.75 satisfaction is 4.0 stars, 0.40 is 2.6.
 
@@ -358,9 +362,11 @@ content as new data, on the P10 model.
 Rotating random offers (stream `"shop"`), a few per night:
 - **Better bottles** (tier 2/3 brands — existing Market, §3 price effect makes them earn).
 - **Bar upgrades with visual counterparts** (module 24 §6): stools 4→5→6, glassware
-  (capacity/looks), the counter, the back wall, **the musician** (background performer;
-  +satisfaction ambience bonus). Every purchase changes the main scene — progress you can
-  see.
+  (capacity/looks), the counter, and the room's FIXTURES — tables, lamps, the sink, the
+  picture, plants — bought as LADDERS one rung at a time (GDD_MEVCUT §6.1–6.2; GDD 27 §3
+  and §5 for what each rung is worth to the room's comfort). Every purchase changes the main
+  scene — progress you can see. (The back wall and the musician this line once named were
+  cut on 2026-08-04.)
 
 ## 9. Difficulty & the forever game
 

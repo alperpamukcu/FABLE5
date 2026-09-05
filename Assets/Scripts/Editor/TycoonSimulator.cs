@@ -265,6 +265,18 @@ namespace LastCall.EditorTools
             /// <summary>Chance of not working the tin — only where Core does not refuse it.</summary>
             public double ForgetMix;
 
+            // ── the counter's night (GDD 27 §7, 2026-09-05) ─────────────────────
+            /// <summary>Collects every glass at once (so the stools still turn) but never
+            /// wipes and never washes: shape 3, the bar that lets the room rot.</summary>
+            public bool NeverCleans;
+            /// <summary>How long a mess stands before this hand gets to it — the human case
+            /// the instant-cleaning floor bot cannot measure (shape 4). Zero is instant.</summary>
+            public double CleanLatencySeconds;
+            /// <summary>Whether the bot spends on the room's dressing at day end (the cheapest
+            /// open rung under a cushion, never the beer tower). Shape 1 says no, shape 2 yes;
+            /// the shipped floor says yes, because comfort now climbs by it.</summary>
+            public bool BuysDressing = true;
+
             /// <summary>Its own stream. Set by PlayRun; never shared with the run's.</summary>
             public SeededRng Dice;
 
@@ -299,7 +311,8 @@ namespace LastCall.EditorTools
                 chance > 0 && _hand[slot % Slots] < chance;
 
             public bool IsSteady =>
-                RatioSigma <= 0 && FillSigma <= 0 && AimSigma <= 0 && SkipSpec <= 0 && ForgetMix <= 0;
+                RatioSigma <= 0 && FillSigma <= 0 && AimSigma <= 0 && SkipSpec <= 0 && ForgetMix <= 0
+                && !NeverCleans && CleanLatencySeconds <= 0;
         }
 
         /// <summary>
@@ -317,6 +330,74 @@ namespace LastCall.EditorTools
         /// configuration is printed into it, because a noisy run committed over
         /// tycoon_sim_report.md would be indistinguishable in git from a balance change.
         /// </summary>
+        /// <summary>
+        /// THE ROOM'S FOUR SHAPES (GDD 27 §7, 2026-09-05): the same seeds, four ways of
+        /// keeping a bar. What each row has to show is written in the module; this prints
+        /// them side by side so the numbers are read, not argued.
+        /// </summary>
+        [MenuItem("LastCall/Measure Housekeeping")]
+        public static void MeasureHousekeeping()
+        {
+            var deck = DataLoader.ParseDeck(Read("bottles/base_bar.json"));
+            var recipes = DataLoader.ParseRecipes(Read("recipes/recipes.json"));
+            var archetypes = DataLoader.ParseArchetypes(Read("customers/archetypes.json"));
+            var glassware = DataLoader.ParseGlassware(Read("glassware/glassware.json"));
+            var snacks = DataLoader.ParseSnacks(Read("snacks/snacks.json"));
+            var fixtures = DataLoader.ParseFixtures(Read("fixtures/fixtures.json")).Fixtures;
+
+            const int Runs = 100;
+            var shapes = new (string Name, Hands H)[]
+            {
+                ("1 · instant, no dressing", new Hands { BuysDressing = false }),
+                ("2 · instant, buys dressing", new Hands()),
+                ("3 · never wipes or washes", new Hands { NeverCleans = true }),
+                ("4a · 10 s to the mess", new Hands { CleanLatencySeconds = 10 }),
+                ("4b · 20 s to the mess", new Hands { CleanLatencySeconds = 20 }),
+                ("4c · 30 s to the mess", new Hands { CleanLatencySeconds = 30 }),
+            };
+
+            var sb = new StringBuilder();
+            sb.AppendLine("# The room's four shapes — GDD 27 §7");
+            sb.AppendLine();
+            sb.AppendLine($"{Runs} runs a shape, {DayCap}-day horizon, the SAME seeds in every row.");
+            sb.AppendLine("The counter's mess is on for every row (the sim measures the whole rule);");
+            sb.AppendLine("what differs is how the bot keeps it and whether it buys the room's dressing.");
+            sb.AppendLine();
+            sb.AppendLine("| Shape | bankrupt | till p50 | cust/night | service | comfort | clean | comfort-bound | broke nights | standing | 2.5★ reached | 3.0★ reached |");
+            sb.AppendLine("|---|---|---|---|---|---|---|---|---|---|---|---|");
+            foreach (var (name, h) in shapes)
+            {
+                var stats = new Aggregate();
+                for (int i = 0; i < Runs; i++)
+                    PlayRun($"HOUSE-{i:0000}", deck, recipes, archetypes, stats,
+                        DrinkBuildSeconds, DayCap, glassware, snacks, null,
+                        new Hands { NeverCleans = h.NeverCleans, CleanLatencySeconds = h.CleanLatencySeconds, BuysDressing = h.BuysDressing },
+                        fixtures);
+                int nights = Math.Max(1, stats.NightsClosed);
+                sb.AppendLine($"| {name} | {100.0 * stats.Bankruptcies / Math.Max(1, stats.Runs):0.0}% | " +
+                              $"${Aggregate.Quantile(stats.FinalMoney, 0.5)} | " +
+                              $"{(double)stats.CustomersFinished / nights:0.0} | " +
+                              $"{stats.ServiceSum / nights:0.00} | {stats.ComfortSum / nights:0.00} | " +
+                              $"{stats.CleanSum / nights:P0} | " +
+                              $"{100.0 * stats.ComfortBoundNights / nights:0.0}% | " +
+                              $"{100.0 * stats.BrokeDrawn / nights:0.0}% | " +
+                              $"{stats.StarsSum / nights:0.00} | " +
+                              $"{100.0 * stats.ReachedOn[5].Count / Math.Max(1, stats.Runs):0.0}% | " +
+                              $"{100.0 * stats.ReachedOn[6].Count / Math.Max(1, stats.Runs):0.0}% |");
+            }
+            sb.AppendLine();
+            sb.AppendLine("Read across: shape 1 against the checked-in floor is the cost of halving the");
+            sb.AppendLine("glass share; shape 2 is the new floor; shape 3 is the rot (comfort near the");
+            sb.AppendLine("free base less the penalty, standing stalled, broke nights NOT up, because");
+            sb.AppendLine("the crowd reads the service side); shape 4 is the human, and DirtPenalty is");
+            sb.AppendLine("picked so that 10–20 s hands lose a tenth of a star, not a whole one.");
+            string report = sb.ToString();
+            Debug.Log(report);
+            var path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Docs", "housekeeping_report.md"));
+            File.WriteAllText(path, report);
+            Debug.Log($"[TycoonSim] wrote {path}");
+        }
+
         [MenuItem("LastCall/Measure Imperfect Hands")]
         public static void MeasureImperfectHands()
         {
@@ -563,11 +644,17 @@ namespace LastCall.EditorTools
             // scene does not (PLAN S2a's storyInPlay), because balance cannot wait for a UI.
             var cast = DataLoader.ParsePapers(Read("customers/papers.json"));
             var story = DataLoader.ParseStory(Read("story/story.json"), cast, recipes);
+            // THE BOT'S ROOM HAS FITTINGS NOW (GDD 27, 2026-09-05). The floor bot never
+            // loaded fixtures.json — it opened a bar with no sink, no lamps and no dressing
+            // to buy — which did not matter while the room touched nothing. Comfort climbs
+            // by the room's rungs, so a bot without them would sit at the free base forever
+            // and report a floor that is artificially low (GELISTIRME §8.1 P2, closed here).
+            var fixtures = DataLoader.ParseFixtures(Read("fixtures/fixtures.json")).Fixtures;
 
             var stats = new Aggregate();
             for (int i = 0; i < runs; i++)
                 PlayRun($"TYC-{i:0000}", deck, recipes, archetypes, stats,
-                    DrinkBuildSeconds, DayCap, glassware, snacks, story);
+                    DrinkBuildSeconds, DayCap, glassware, snacks, story, fixtures: fixtures);
 
             string report = stats.Report(runs);
             Debug.Log(report);
@@ -585,7 +672,8 @@ namespace LastCall.EditorTools
             IReadOnlyList<GlasswareDefinition> glassware = null,
             IReadOnlyList<SnackDefinition> snacks = null,
             StoryArc story = null,
-            Hands handsIn = null)
+            Hands handsIn = null,
+            IReadOnlyList<FixtureDefinition> fixtures = null)
         {
             stats.BeginRun();   // this bar has climbed nothing yet
 
@@ -629,7 +717,7 @@ namespace LastCall.EditorTools
             var run = new TycoonRun(shelf, recipes, rng,
                 regulars: new RegularsRegistry(archetypes), brandCatalogue: catalogue,
                 glassware: glassware, snacks: snacks,
-                lockedStock: deck.LockedCards, story: story);
+                lockedStock: deck.LockedCards, story: story, fixtures: fixtures);
             var hands = handsIn ?? Hands.Steady;
             hands.Dice = rng.GetStream("hands");
 
@@ -643,12 +731,28 @@ namespace LastCall.EditorTools
                 if (run.Phase == TycoonPhase.DayOpen)
                 {
                     run.Tick(1.0);
-                    // The bussing beat (D2): the bot clears empty glasses as part of its
-                    // round, so the floor measures a bar that busses -- an ignored glass
-                    // blocks its stool for BarDay.BusSeconds, and that cost belongs to
-                    // inattention, not to the floor.
-                    foreach (var g in run.Floor.Dirty)
-                        if (!g.Cleared) { g.Bus(); stats.GlassesBussed++; }
+                    // THE COUNTER'S NIGHT (GDD 27 §4, 2026-09-05). The bussing beat grew up:
+                    // a leaver's glass holds the stool until it is COLLECTED, the mark under
+                    // it costs the room until it is WIPED, and the hand's glasses go through
+                    // the sink. The bot keeps the counter in the same free glance it always
+                    // bussed in — outside the build gate, so buildTimer is never charged —
+                    // at whatever latency its hands carry: instant is the floor, NeverCleans
+                    // is the rot, and CleanLatencySeconds is the human in between.
+                    // The tick that shut the door ends the night's verbs with it (every verb
+                    // carries the DayOpen guard; the close block has already washed the hand).
+                    if (run.Phase == TycoonPhase.DayOpen)
+                    {
+                        var messes = run.Floor.Messes;
+                        for (int m = messes.Count - 1; m >= 0; m--)
+                        {
+                            var mess = messes[m];
+                            if (mess.Age < hands.CleanLatencySeconds && !hands.NeverCleans) continue;
+                            if (mess.HasGlass) { run.CollectGlass(mess); stats.GlassesBussed++; }
+                            if (mess.Smudged && !hands.NeverCleans) { run.Wipe(mess); stats.Wipes++; }
+                        }
+                        if (!hands.NeverCleans && run.GlassesInHand > 0 && !run.SinkBusy)
+                        { run.WashGlasses(); stats.Washes++; }
+                    }
 
                     // TAKING ORDERS is not building drinks (2026-08-02, the two-clock split).
                     // A customer with their mind made up is now on a clock of their own until
@@ -883,6 +987,34 @@ namespace LastCall.EditorTools
                         && run.Money >= bestPrice + cushion)
                         run.BuyGlassTier(bestGlass.Id);
 
+                    // THE ROOM'S DRESSING (GDD 27 §3, 2026-09-05). Dressing never spends the
+                    // night's fitting, so the bot buys one open rung a night it can afford
+                    // under the same cushion a player working the room would keep — and
+                    // never the beer tower, whose rungs open kegs and would put beer inside
+                    // the comfort A/B. BY VALUE, not by price (the first measurement): the
+                    // cheapest-first bot bought candles and palms for a twentieth of a star
+                    // each and went from 0% to 4% bankruptcies for a standing that went
+                    // DOWN; a player buys the rung that moves the room most per dollar.
+                    if (hands.BuysDressing)
+                    {
+                        FixtureDefinition bestPiece = null;
+                        double bestValue = 0;
+                        foreach (var f in run.FixtureCatalogue)
+                        {
+                            if (f.IsTap || f.Comfort <= 0 || run.OwnsFixture(f.Id)) continue;
+                            if (f.Level > 0 && !run.CanBuyRung(f)) continue;
+                            if (run.Rating.Average < f.Stars) continue;
+                            double value = f.Comfort / f.Price;
+                            if (bestPiece == null || value > bestValue) { bestPiece = f; bestValue = value; }
+                        }
+                        if (bestPiece != null && run.Money >= bestPiece.Price + 60)
+                        {
+                            run.BuyFixture(bestPiece.Id);
+                            stats.RecordRung(bestPiece.Slot);
+                        }
+                    }
+
+                    stats.RecordHouse(run);
                     stats.RecordNight(run.Floor.Elapsed, run.Rating.LastNight);
                     // THE STAR TRACK, MEASURED (GDD 26 §12.2 step 3). The standing is read
                     // AFTER the night is filed and BEFORE the next day opens, which is the
@@ -1281,6 +1413,35 @@ namespace LastCall.EditorTools
             public int Serves, Exact, Close, Wrong, CraftServes, SpeedTips, ExtraOrders;
             public int SnackServes, SnackIncome;
             public int GlassesBussed;
+            // THE ROOM (GDD 27 §7, 2026-09-05): what it was worth, how clean it was kept,
+            // which side held the night, and what the bot bought for it.
+            public int Wipes, Washes;
+            public double ComfortSum, ServiceSum, CleanSum, ComfortBaseSum;
+            public int ComfortBoundNights, BrokeDrawn;
+            public readonly Dictionary<string, int> RungsBySlot = new Dictionary<string, int>();
+            public readonly Dictionary<int, List<double>> ComfortBaseByDay = new Dictionary<int, List<double>>();
+
+            public void RecordRung(string slot)
+            {
+                RungsBySlot.TryGetValue(slot, out int n);
+                RungsBySlot[slot] = n + 1;
+            }
+
+            /// <summary>Read at day end, BEFORE the night is filed — the same moment the slip
+            /// shows the player both ratings.</summary>
+            public void RecordHouse(TycoonRun run)
+            {
+                ComfortSum += run.ComfortTonight;
+                ServiceSum += run.ServiceTonight;
+                CleanSum += run.CleanlinessTonight;
+                ComfortBaseSum += run.ComfortBase;
+                if (run.ComfortTonight < run.ServiceTonight - 1e-9) ComfortBoundNights++;
+                if (run.CrowdTomorrow == WealthTier.Broke) BrokeDrawn++;
+                if (!ComfortBaseByDay.TryGetValue(run.Day, out var list))
+                    ComfortBaseByDay[run.Day] = list = new List<double>();
+                list.Add(run.ComfortBase);
+            }
+
             public int RecipesBought;
             public int BrandsBought;   // upgrades only; new stock is not a choice the bot makes
 
@@ -1444,6 +1605,22 @@ namespace LastCall.EditorTools
                                        n.stock + result.Stock, n.nights + 1);
             }
 
+            private string BaseAt(int day)
+            {
+                if (!ComfortBaseByDay.TryGetValue(day, out var list) || list.Count == 0) return "—";
+                var sorted = new List<double>(list); sorted.Sort();
+                return sorted[sorted.Count / 2].ToString("0.00");
+            }
+
+            private string RungsLine()
+            {
+                if (RungsBySlot.Count == 0) return "none";
+                var parts = new List<string>();
+                foreach (var kv in RungsBySlot) parts.Add($"{kv.Key} {kv.Value}");
+                parts.Sort();
+                return string.Join(" · ", parts);
+            }
+
             public string Report(int requested)
             {
                 var sb = new StringBuilder();
@@ -1454,9 +1631,10 @@ namespace LastCall.EditorTools
                               $", horizon {DayCap} days, one drink per {DrinkBuildSeconds:0}s of bar time.");
                 sb.AppendLine("Floor bot: aims each ingredient at the middle of its lit 20-point box");
                 sb.AppendLine("(the revealed perfect once a page is perfected), pulls a pint");
-                sb.AppendLine("leaned over then straightened, and shops — stock, recipes, stools,");
-                sb.AppendLine("glass steps, and one brand upgrade a night it never once affords.");
-                sb.AppendLine("Every survival figure is a floor.");
+                sb.AppendLine("leaned over then straightened, keeps the counter the instant a mess");
+                sb.AppendLine("lands (collect, wipe, wash), and shops — stock, recipes, stools, glass");
+                sb.AppendLine("steps, the cheapest open dressing rung, and one brand upgrade a night it");
+                sb.AppendLine("never once affords. Every survival figure is a floor.");
                 sb.AppendLine();
                 sb.AppendLine("| Metric | Value |");
                 sb.AppendLine("|---|---|");
@@ -1486,7 +1664,13 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Pints in the good head band | {Pct(GoodPints, Pints)} |");
                 sb.AppendLine($"| Average head poured | {HeadSum / Math.Max(1, Pints):P0} |");
                 sb.AppendLine($"| Snack serves (of serves) | {Pct(SnackServes, Serves)} · ${SnackIncome} |");
-                sb.AppendLine($"| Glasses bussed | {GlassesBussed} |");
+                sb.AppendLine($"| Glasses collected / wipes / washes | {GlassesBussed} / {Wipes} / {Washes} |");
+                sb.AppendLine($"| Service (avg night) / comfort (avg night) | {ServiceSum / Math.Max(1, NightsClosed):0.00} / {ComfortSum / Math.Max(1, NightsClosed):0.00} |");
+                sb.AppendLine($"| Avg cleanliness | {CleanSum / Math.Max(1, NightsClosed):P0} |");
+                sb.AppendLine($"| Nights comfort-bound (room under service) | {Pct(ComfortBoundNights, NightsClosed)} |");
+                sb.AppendLine($"| Broke crowd drawn (of nights) | {Pct(BrokeDrawn, NightsClosed)} |");
+                sb.AppendLine($"| Comfort base by day 10 / 20 / 30 (median) | {BaseAt(10)} / {BaseAt(20)} / {BaseAt(30)} |");
+                sb.AppendLine($"| Dressing rungs bought (by slot) | {RungsLine()} |");
                 sb.AppendLine($"| Recipes bought (of {Runs} runs) | {RecipesBought} |");
                 sb.AppendLine($"| Brand upgrades bought | {BrandsBought} |");
                 sb.AppendLine($"| Tier demands the shelf could not answer | {TierShort} of {TierDemands}" +

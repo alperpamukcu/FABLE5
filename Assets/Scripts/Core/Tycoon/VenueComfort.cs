@@ -37,9 +37,15 @@ namespace LastCall.Core
         /// of this. ONE star, not more, on purpose: a fresh room is worth two, and the
         /// broke-crowd line sits at 0.625 (<see cref="BarRating.BrokeStars"/>) — the mess
         /// may hold the standing down, it may not by itself turn tomorrow's crowd broke
-        /// (the crowd reads the SERVICE side, GDD 27 §2.3). The 200-run latency bot moves
-        /// it from here.</summary>
-        public const double DirtPenalty = 1.0;
+        /// (the crowd reads the SERVICE side, GDD 27 §2.3).
+        ///
+        /// MEASURED DOWN FROM 1.0 (2026-09-05, the latency row of GDD 27 §7): with a six-second
+        /// grace and a whole star at stake, a hand that reached each mess in 20 s lost half a
+        /// star of standing and went from 4% to 13% bankruptcies, and a 30 s hand to 41% —
+        /// the ordinary human pace of a four-stool bar, priced like never cleaning at all.
+        /// Three quarters, with the grace at ten, is the number that lets a 20 s hand lose a
+        /// tenth of a star and a bar that never wipes still lose the room.</summary>
+        public const double DirtPenalty = 0.75;
 
         /// <summary>Comfort is read on the star scale: five is the endgame room.</summary>
         public const double MaxComfort = BarRating.MaxStars;
