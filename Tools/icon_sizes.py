@@ -24,7 +24,7 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ITEMS = os.path.join(ROOT, 'Assets', 'Resources', 'Items')
 INK = (0x0D, 0x08, 0x13)
-ICONS = ['star3d', 'star3d_socket', 'heart3d', 'heart3d_socket']
+ICONS = ['star3d', 'star3d_socket', 'heart3d', 'heart3d_socket', 'medal3d', 'medal3d_socket']
 
 
 def palette_of(im):
