@@ -2501,6 +2501,12 @@ namespace LastCall.UI
             foreach (var door in _tapDoors) if (door != null) Destroy(door.gameObject);
             _tapDoors.Clear();
             _drainDoor = null;
+            // Re-dressing the room destroys the set along with everything else, so the
+            // player must be stopped and its handles dropped — a coroutine left running
+            // against a destroyed renderer is the shape of bug this file already carries a
+            // warning about for the cellar (see PlaceFixtures below).
+            if (_tvPlayer != null) { StopCoroutine(_tvPlayer); _tvPlayer = null; }
+            _tvSr = null; _tvGlow = null; _tvFrames = null; _tvCols = 0;
             foreach (var sh in _shadows) if (sh.Blob != null) Destroy(sh.Blob.gameObject);
             _shadows.Clear();
             if (owned == null || _world == null) return;
@@ -2553,6 +2559,21 @@ namespace LastCall.UI
                     var sr = WorldSprite("Fx_" + def.Id + suffix, sprite,
                                          order: onCounter ? (flat ? 34 : 35)
                                               : hangs ? 15 : flat ? 16 : 20);
+                    // A SCREEN's sprite is a sheet, and the loader handed the whole sheet
+                    // in as one picture. Cut it and start the set playing; if the cut fails
+                    // the fixture simply stays the still it already is.
+                    if (def.IsScreen)
+                    {
+                        int cols;
+                        var frames = LoadScreenFrames(def.Sprite, out cols);
+                        if (frames != null)
+                        {
+                            _tvSr = sr;
+                            _tvFrames = frames;
+                            _tvCols = cols;
+                            SetTvFrame(TvAdRow, 0);
+                        }
+                    }
                     // A matched pair FACES each other: the art is one drawing, and two
                     // copies leaning the same way read as a print error, not a pair.
                     if (copies == 2 && m == 1) sr.flipX = true;
@@ -2576,6 +2597,13 @@ namespace LastCall.UI
                         {
                             _houseLights.Add((glow, def.LightIntensity));
                             glow.intensity = def.LightIntensity * _houseBase;
+                        }
+                        // The set's own spill is driven by the picture, not by the hour:
+                        // it dies when the tube dies and comes back with the warm-up.
+                        if (def.IsScreen)
+                        {
+                            _tvGlow = glow;
+                            _tvGlowBase = def.LightIntensity;
                         }
                     }
                     _placedFixtures.Add((def, sr.transform, glow, off));
@@ -2603,6 +2631,14 @@ namespace LastCall.UI
                         _drainDoor = BuildPropDoor(def, sr, null, "POUR IT AWAY");
                 }
             }
+            // The set starts once the whole room is dressed, not inside the loop: its own
+            // glow is hung a few lines above and the player drives both together.
+            // Motion.Reduced silences it the way it silences the ambient flicker — a screen
+            // cutting itself off every few seconds is exactly what that setting is for; the
+            // first advert stays on the wall as a still.
+            if (_tvSr != null && _tvFrames != null && !Motion.Reduced)
+                _tvPlayer = StartCoroutine(PlayTelevision());
+            else if (_tvSr != null) SetTvGlow(1f);
             PlaceFixtures();
         }
 
@@ -3055,6 +3091,149 @@ namespace LastCall.UI
                 Mathf.Clamp01(l + (c.r - l) * amount),
                 Mathf.Clamp01(l + (c.g - l) * amount),
                 Mathf.Clamp01(l + (c.b - l) * amount), 1f);
+        }
+
+        // ── the wall television (2026-09-04) ────────────────────────────────────
+        // The author: "Televizyon içinde gözükecek animasyonlar oluştur sürekli olarak
+        // animasyon dönecek her reklamdan sonra televizyon kapanacak kapanma animasyonu ile
+        // sonra açılacak açılma animasyonu ile kapalı kaldığı süre 5 saniye kadar olucak."
+        //
+        // So the set runs a LOOP with four beats: an advert holds, the tube collapses, the
+        // screen stays dark for five seconds, the tube warms back up on the NEXT advert.
+        // Nothing here is a rule — a night does not change because a picture moved — so the
+        // whole clock lives in the stage and Core only carries the flag that says "sheet".
+
+        // The cell is the AUTHOR'S OWN cabinet drawing, so its size is the art's and not a
+        // number chosen here (2026-09-04: "Televizyon görseli bu olacak" — a 45×45 set seen
+        // at an angle). Tools/tv_build.py seats the adverts in its face and lays the sheet
+        // out; a redraw at another size changes these two numbers and nothing else.
+        private const int TvCellW = 49, TvCellH = 49;
+        private const int TvAdRow = 0, TvOffRow = 1, TvOnRow = 2;
+        private const int TvAdCount = 4;
+
+        /// <summary>How long one advert holds before the set shuts itself off.</summary>
+        private const float TvAdHold = 6f;
+        /// <summary>The author's five seconds of dark, named rather than typed twice.</summary>
+        private const float TvDarkHold = 5f;
+        /// <summary>Seconds a frame of the collapse and the warm-up each get.</summary>
+        private const float TvFrameStep = 0.055f;
+
+        private SpriteRenderer _tvSr;
+        private Coroutine _tvPlayer;
+        private Light2D _tvGlow;
+        private float _tvGlowBase;
+        private Sprite[,] _tvFrames;      // [row, col]
+        private int _tvCols;
+
+        /// <summary>
+        /// Plays the set for as long as the room is standing.
+        ///
+        /// The dark beat carries the light with it: a television that goes black while its
+        /// spill keeps washing the wall reads as a bug, and the glow is the only part of
+        /// this the sprite cannot say. It is the same split the sky already makes — the
+        /// PICTURE steps between whole frames and the LIGHT is a number.
+        ///
+        /// WaitForSecondsRealtime, not WaitForSeconds: this is ambience and it must keep
+        /// running while a panel has the game paused, which is the rule the PlayMode suite
+        /// learned the hard way (a test frame is ~1ms, so a frame count is not a wait).
+        /// </summary>
+        private System.Collections.IEnumerator PlayTelevision()
+        {
+            int ad = 0;
+            while (true)
+            {
+                if (_tvSr == null || _tvFrames == null) yield break;
+
+                // the advert, held
+                SetTvFrame(TvAdRow, ad);
+                SetTvGlow(1f);
+                yield return new WaitForSecondsRealtime(TvAdHold);
+
+                // it switches itself off
+                for (int i = 0; i < _tvCols; i++)
+                {
+                    if (_tvFrames[TvOffRow, i] == null) break;
+                    SetTvFrame(TvOffRow, i);
+                    // The spill dies with the picture rather than after it.
+                    SetTvGlow(1f - (i + 1) / (float)_tvCols);
+                    yield return new WaitForSecondsRealtime(TvFrameStep);
+                }
+                SetTvGlow(0f);
+                yield return new WaitForSecondsRealtime(TvDarkHold);
+
+                // ...and comes back on the NEXT advert, which is why the warm-up plays
+                // before the still rather than after it.
+                ad = (ad + 1) % TvAdCount;
+                for (int i = 0; i < _tvCols; i++)
+                {
+                    if (_tvFrames[TvOnRow, i] == null) break;
+                    SetTvFrame(TvOnRow, i);
+                    SetTvGlow((i + 1) / (float)_tvCols);
+                    yield return new WaitForSecondsRealtime(TvFrameStep);
+                }
+            }
+        }
+
+        private void SetTvFrame(int row, int col)
+        {
+            if (_tvSr == null || _tvFrames == null) return;
+            if (row < 0 || row >= _tvFrames.GetLength(0)) return;
+            if (col < 0 || col >= _tvFrames.GetLength(1)) return;
+            var sp = _tvFrames[row, col];
+            if (sp != null) _tvSr.sprite = sp;
+        }
+
+        /// <summary>The CRT's spill, as a fraction of the fixture's own json intensity.</summary>
+        private void SetTvGlow(float t)
+        {
+            if (_tvGlow == null) return;
+            _tvGlow.intensity = _tvGlowBase * Mathf.Clamp01(t);
+        }
+
+        /// <summary>
+        /// Cuts a screen's sheet into [row, col] frames.
+        ///
+        /// Rows are the STATES (advert stills, the collapse, the warm-up) and the row widths
+        /// differ — there are four adverts and six frames of tube — so the short row's tail
+        /// is left null and the player stops at the first one, rather than a count constant
+        /// here going stale the next time the sheet is rebuilt. Same reasoning, and same
+        /// bottom-up rect arithmetic, as the window's own cutter below.
+        /// </summary>
+        private static Sprite[,] LoadScreenFrames(string spriteName, out int cols)
+        {
+            cols = 0;
+            var sheet = Resources.Load<Texture2D>("Fixtures/" + spriteName);
+            if (sheet == null) return null;
+            int c = sheet.width / TvCellW, r = sheet.height / TvCellH;
+            if (c < 1 || r < 1)
+            {
+                Debug.LogWarning($"DiegeticStage: screen sheet '{spriteName}' is " +
+                                 $"{sheet.width}×{sheet.height}, too small for a " +
+                                 $"{TvCellW}×{TvCellH} cell — it will draw as a still.");
+                return null;
+            }
+            cols = c;
+            var frames = new Sprite[r, c];
+            for (int row = 0; row < r; row++)
+            {
+                // The ADVERTS row is shorter than the two tube rows — four pictures against
+                // six frames of collapse — so its tail cells are transparent. They are
+                // skipped by COUNT and not by reading the sheet's alpha: the fixtures are
+                // imported without Read/Write enabled (LastCallImporter sets everything
+                // else and deliberately not that), so GetPixels on them throws, and a cutter
+                // that needs a readable texture would work in the editor and fail in a
+                // build. The window's cutter can scan because Scene textures are readable;
+                // this one cannot, so the sheet's shape is stated instead.
+                int wide = row == TvAdRow ? Mathf.Min(TvAdCount, c) : c;
+                for (int col = 0; col < wide; col++)
+                {
+                    var rect = new Rect(col * TvCellW,
+                                        sheet.height - (row + 1) * TvCellH,
+                                        TvCellW, TvCellH);
+                    frames[row, col] = Sprite.Create(sheet, rect, new Vector2(0.5f, 0.5f), 1f);
+                }
+            }
+            return frames;
         }
 
         /// <summary>
