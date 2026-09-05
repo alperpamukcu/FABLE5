@@ -516,6 +516,9 @@ namespace LastCall.UI
             public string Style;
             public bool IsRim;           // turned in the dish, not dropped in the glass
             public string Word;          // what the pointer is told it does
+            /// <summary>The rect's y, worked out from THIS drawing, that puts its lowest
+            /// drawn pixel on the counter's foot line. See <see cref="DishRestY"/>.</summary>
+            public float Rest;
         }
 
         // ── the rim, turned on the counter (2026-08-26) ──────────────────────────
@@ -549,7 +552,34 @@ namespace LastCall.UI
         // stage 195..380 — clear of the basin's right edge (181) and well short of the drip
         // mat (480). The finished drink moved right with it (see GlassHome), so the counter
         // reads left to right the way the night runs: sink, the makings, the drink, the tap.
-        private const float PrepRailY = -196f, PrepRailX0 = -250f, PrepRailGap = 74f;
+        private const float PrepRailX0 = -250f, PrepRailGap = 74f;
+
+        /// <summary>How big a square each dish is drawn inside. The drawings are all
+        /// different shapes, so preserveAspect fits each one in here and leaves the rest of
+        /// the square as air — which is why a dish's rect says nothing about where its foot
+        /// is, and why <see cref="DishRestY"/> exists.</summary>
+        private const float PrepDishBox = 64f;
+
+        /// <summary>
+        /// WHERE A DISH'S RECT HAS TO SIT for the drawing inside it to STAND on the
+        /// counter's foot line (2026-09-04, the author: "garnishlerin en alt pixeli ayni
+        /// yukseklikte olmali").
+        ///
+        /// Two things push a drawing up off the bottom of its square and both are measured
+        /// here rather than guessed: preserveAspect letterboxes the sprite inside the box,
+        /// and the drawing itself may not reach the bottom of its own canvas (the ice
+        /// bucket carries two transparent rows under its base, the lemon bowl five). The
+        /// six dishes came from three different rounds of art at three different aspects,
+        /// so no single offset could have levelled them.
+        /// </summary>
+        private static float DishRestY(Sprite art, float box)
+        {
+            if (art == null || art.rect.height <= 0.0001f) return CounterFootY + box * 0.5f;
+            float scale = Mathf.Min(box / art.rect.width, box / art.rect.height);
+            float drawn = art.rect.height * scale;                 // what preserveAspect gives it
+            float pad = ItemArt.FootPadding(art) * scale;          // empty canvas under the art
+            return CounterFootY + box * 0.5f - (box - drawn) * 0.5f - pad;
+        }
 
         // The piece in the hand: a copy of the prop's own drawing, following the cursor.
         private RectTransform _prepCarry;
@@ -603,35 +633,37 @@ namespace LastCall.UI
             // Core verb - AddPreparationAtGlass for a mark, PourAtGlass for a pinch of
             // stock. A garnish whose bottle the bar does not stock, or has emptied, is
             // simply not built: an empty jar on the counter is a promise the bar cannot keep.
-            (string id, string art, string fallback, PreparationDefinition prep,
+            (string id, string art, PreparationDefinition prep,
              string style, string word, string carry, float carryH)[] rail =
             {
-                ("ice", "counter_ice", "bench_mini_ice", Preparations.Ice, null, "ICE",
+                ("ice", "counter_ice", Preparations.Ice, null, "ICE",
                  "glass_ice", 34f),
-                ("lemon_twist", "counter_lemon", "bench_mini_lemon", Preparations.LemonTwist,
+                ("lemon_twist", "counter_lemon", Preparations.LemonTwist,
                  null, "LEMON", "glass_lemon", 40f),
-                ("olive", "counter_olive", "garnish_olive", null, "olive", "OLIVE",
+                ("olive", "counter_olive", null, "olive", "OLIVE",
                  "glass_olive", 52f),
-                ("mint", "counter_mint", "garnish_mint", null, "mint", "MINT",
+                ("mint", "counter_mint", null, "mint", "MINT",
                  "glass_mint", 40f),
                 // A PINCH, not the dish (2026-08-26, the author: "surukledigimiz tuz ve
                 // seker daha cok tuz ve seker yumagi gibi olmali"). Carrying the whole
                 // cellar was the same mistake the bucket made, and the answer is the same:
                 // what leaves a dish of salt is salt. The lap still turns the GLASS in it —
                 // the pinch in the hand is what you are turning it through.
-                ("salt_rim", "counter_salt", "bench_mini_salt", Preparations.SaltRim,
+                ("salt_rim", "counter_salt", Preparations.SaltRim,
                  null, "TURN IT IN THE SALT", "carry_salt", 32f),
-                ("sugar_rim", "counter_sugar", "bench_mini_sugar", Preparations.SugarRim,
+                ("sugar_rim", "counter_sugar", Preparations.SugarRim,
                  null, "TURN IT IN THE SUGAR", "carry_sugar", 30f),
             };
             for (int i = 0; i < rail.Length; i++)
             {
-                var (id, art, fallback, prep, style, word, carry, carryH) = rail[i];
+                var (id, art, prep, style, word, carry, carryH) = rail[i];
                 var rt = NewRect("MP_" + id, _prepRail);
-                Place(rt, new Vector2(0.5f, 0.5f), new Vector2(64, 64),
-                    new Vector2(PrepRailX0 + i * PrepRailGap, PrepRailY));
+                var dish = ItemArt.Load(art);
+                float rest = DishRestY(dish, PrepDishBox);
+                Place(rt, new Vector2(0.5f, 0.5f), new Vector2(PrepDishBox, PrepDishBox),
+                    new Vector2(PrepRailX0 + i * PrepRailGap, rest));
                 var img = rt.gameObject.AddComponent<Image>();
-                img.sprite = ItemArt.Load(art) ?? ItemArt.Load(fallback);
+                img.sprite = dish;
                 img.preserveAspect = true;
                 if (img.sprite == null) img.color = UITheme.Cyan[3];
                 var glow = rt.gameObject.AddComponent<HoverGlow>();
@@ -640,6 +672,7 @@ namespace LastCall.UI
                 var prop = new PrepProp
                 {
                     Id = id, Rt = rt, Img = img, Prep = prep, Style = style, Word = word,
+                    Rest = rest,
                     Carry = carryArt != null ? carry : null,
                     CarrySize = carryArt != null
                         ? new Vector2(carryH * (carryArt.rect.width / carryArt.rect.height),
@@ -1029,10 +1062,11 @@ namespace LastCall.UI
             if (_coasterRt != null)
             {
                 if (!_coasterRt.gameObject.activeSelf) _coasterRt.gameObject.SetActive(true);
-                // ON the foot line, under the drink, riding the bar like the dishes beside
-                // it — one line, so the coaster, the glass and the six dishes all touch the
-                // same counter.
-                _coasterRt.anchoredPosition = new Vector2(GlassHomeX, CounterFootY + CounterLift);
+                // On the foot line the dishes and the glass stand on, riding the bar with
+                // them — plus the mat's own few pixels back into the counter, because it
+                // LIES on the bar rather than standing on it (see CoasterLift).
+                _coasterRt.anchoredPosition =
+                    new Vector2(GlassHomeX, CounterFootY + CoasterLift + CounterLift);
             }
             bool reachable = !CellarOpen;
             if (!reachable && _prepHeld != null) DropPrep(false);
@@ -1053,7 +1087,9 @@ namespace LastCall.UI
                 if (!stocked) continue;
                 // Laid out by VISIBLE index, so an unbought garnish leaves no hole in the
                 // row — the rail closes up and still ends where the coaster begins.
-                prop.Rt.anchoredPosition = new Vector2(PrepRailX0 + slot * PrepRailGap, PrepRailY);
+                // The x closes up as a slot goes unstocked; the y is the DISH'S OWN and
+                // never moves, because it is where that drawing touches the counter.
+                prop.Rt.anchoredPosition = new Vector2(PrepRailX0 + slot * PrepRailGap, prop.Rest);
                 slot++;
 
                 // Spent, or nothing to spend it on. The bucket is never spent — ice is
@@ -1090,9 +1126,12 @@ namespace LastCall.UI
             // the player where the next one will land, and it is why the glass no longer
             // looks like it is floating on a strip of counter. Built before the glass, so
             // the drink stands ON it.
-            // DRAWN, at the proportion the counter needs (2026-08-26): a generated one
-            // shipped first and stood 38 units deep under a 92-unit glass, which is a bowl,
-            // with its lower half over the counter's front edge. See BackBarArt.Coaster.
+            // DRAWN, at the proportion the counter needs (2026-08-26), and REDRAWN with a
+            // body on 2026-09-04 (the author: "sahnedeki bardak altligi yeniden uretilmeli
+            // ve masanin yuzeyine tam otursun") — the flat ellipse read as a stain on the
+            // bar, and centred on the old foot line its front arc hung off the counter into
+            // the shelf bays. The mat has an edge now and the line moved up to hold it.
+            // See BackBarArt.Coaster and CounterFootY.
             var coaster = NewRect("Coaster", root);
             coaster.anchorMin = coaster.anchorMax = coaster.pivot = new Vector2(0.5f, 0.5f);
             coaster.sizeDelta = new Vector2(112f, 36f);

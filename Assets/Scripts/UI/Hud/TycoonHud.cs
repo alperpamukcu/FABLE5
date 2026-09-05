@@ -604,13 +604,50 @@ namespace LastCall.UI
         private const float GlassHomeX = 220f;
 
         /// <summary>
-        /// THE DRINK STANDS ON THE DISHES' OWN FOOT LINE (2026-08-26). Everything on this
-        /// bar is placed by where it TOUCHES the counter, not by where its middle is: the
-        /// six dishes are 64-tall rects centred on PrepRailY, so their feet are 32 below it,
-        /// and the coaster lies on exactly that line with the glass standing in it. Derived
-        /// rather than typed, so a re-drawn glass or a taller dish keeps the row level.
+        /// THE BAR'S ONE FOOT LINE (2026-08-26; re-cut 2026-09-04). Everything standing on
+        /// this counter is placed by where it TOUCHES it, not by where its middle is — the
+        /// coaster lies on this line with the glass standing in it, and every dish on the
+        /// garnish rail is lifted until its own lowest drawn pixel lands here.
+        ///
+        /// IT WAS A DERIVATION AND THAT IS WHAT WAS WRONG WITH IT. It read the dishes'
+        /// 64-tall rects — "their feet are 32 below their centres" — which is where the
+        /// RECTS end and not where the DRAWINGS do: preserveAspect letterboxes a 48x25 salt
+        /// bowl inside that square, so the bowl's foot floated 15 units over the ice
+        /// bucket's, and the author could see it (2026-09-04: "garnishlerin en alt pixeli
+        /// ayni yukseklikte olmali, buz kovasi biraz yukari tuz kasesi biraz asagi"). A rect
+        /// is not a foot. The line is a NUMBER now and the drawings are lifted onto it one
+        /// by one — see DishRestY.
+        ///
+        /// -228 → -220, and the eight units are the coaster's: at -228 a 36-deep mat centred
+        /// on the line hung its front arc off the counter's drawn band into the shelf bays
+        /// ("masanin yuzeyine tam otursun"). At -220 the whole mat lies on the bar with a
+        /// strip of counter still showing in front of it, and the rail's two extremes move
+        /// the way the author asked — the bucket up, the salt bowl down.
         /// </summary>
-        private const float CounterFootY = -196f - 32f;
+        private const float CounterFootY = -220f;
+
+        /// <summary>
+        /// THE MAT SITS A LITTLE BEHIND THE FOOT LINE (2026-09-04, the author: "bardak
+        /// altligi birkac pixel yukari cekilsin", then "3 pixel daha yukari cekilsin", then
+        /// one more — three of the room's pixels, then three, then one). Everything that
+        /// STANDS on this bar has
+        /// its lowest pixel on <see cref="CounterFootY"/>; a mat does not stand, it LIES —
+        /// and a thing lying flat reads as further into the counter than the dishes beside
+        /// it, which is what these three pixels buy. It also puts a wider strip of bar in
+        /// front of the mat's near edge, so nothing about it reads as hanging off.
+        ///
+        /// SEVEN OF THE ROOM'S OWN PIXELS, not seven screen units: the room is drawn at
+        /// 640x360 in a 1280x720 field, so a prop on this counter can only be moved by whole
+        /// multiples of that grain or it lands between its own pixels (the house rule the
+        /// cast's own 16-unit drop is written to).
+        ///
+        /// THE DRINK COMES WITH IT (2026-09-04, the author: "bardak altligini ne kadar
+        /// yukari cektiysek bardagida ayni miktarda yukari cek"). It stood on the foot line
+        /// through the first three lifts and ended up on the mat's front arc, which is a
+        /// drink standing off the edge of its own mat. The glass and the mat are ONE place
+        /// on this bar, so they take one offset — see GlassHome, which adds this.
+        /// </summary>
+        private const float CoasterLift = 7f * StageToHud;
 
         /// <summary>The drink's place on the bar, drawn whether or not there is a drink.</summary>
         private RectTransform _coasterRt;
@@ -644,9 +681,15 @@ namespace LastCall.UI
         /// every dish on the rail and left the drink standing in mid-air over the shelves —
         /// which nobody saw until the coaster arrived and gave it something to be separated
         /// FROM. The same lift the book, the dirty glasses and the rail already read.
+        ///
+        /// AND IT RIDES THE MAT'S OWN OFFSET TOO (2026-09-04). The drink does not stand on
+        /// the counter, it stands on the COASTER, so wherever the mat is drawn is where the
+        /// glass's foot goes — one term, added in both places, so the two cannot be moved
+        /// apart by hand again.
         /// </summary>
         private Vector2 GlassHome =>
-            new Vector2(GlassHomeX, CounterFootY + CarriedGlassHeight * 0.5f + CounterLift);
+            new Vector2(GlassHomeX,
+                CounterFootY + CoasterLift + CarriedGlassHeight * 0.5f + CounterLift);
 
         private bool _glassShown;
 

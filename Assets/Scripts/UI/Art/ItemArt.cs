@@ -32,8 +32,67 @@ namespace LastCall.UI
         //  job and its frame was three different rails on one rectangle, none repeating —
         //  a nine-slice of noise. It is drawn now: ChromeArt.Instrument.)
 
-        /// <summary>Forget every cached sprite — a new run re-resolves the art.</summary>
-        public static void ClearCache() => Cache.Clear();
+        /// <summary>Forget every cached sprite — a new run re-resolves the art. The
+        /// measurements go with them: a re-imported drawing is a new sprite and its old
+        /// box would be an answer about a texture nobody is holding any more.</summary>
+        public static void ClearCache() { Cache.Clear(); Opaque.Clear(); }
+
+        // ── what a drawing actually covers (2026-09-04) ──────────────────────────
+        //
+        // Every pixel drawing in this game is a CANVAS with a drawing somewhere inside it,
+        // and the two are not the same box: a 32x32 ice bucket carries two transparent rows
+        // under its base, a v4 cellar copy is a 32x64 canvas round a 16px bottle. Anything
+        // that stands a sprite ON something — the cellar's shelf, the counter's foot line —
+        // has to ask where the DRAWING stops, or it lines up canvases and calls it level.
+        //
+        // It lived in DiegeticStage, where the cellar wrote it; it is here because the
+        // counter needs the same answer, and two readings of one texture is how two props
+        // on one bar end up on two lines.
+        private static readonly Dictionary<Sprite, Rect> Opaque = new Dictionary<Sprite, Rect>();
+
+        /// <summary>
+        /// The opaque bounding box inside a sprite's canvas, in art pixels from its
+        /// bottom-left. Measured once per sprite and kept — a texture read is not free and
+        /// the answer cannot change while the sprite lives.
+        ///
+        /// A texture that is not readable answers with its whole canvas, which is the same
+        /// thing every caller assumed before this existed: no worse than not asking.
+        /// </summary>
+        public static Rect OpaqueBounds(Sprite sp)
+        {
+            if (sp == null) return Rect.zero;
+            if (Opaque.TryGetValue(sp, out var hit)) return hit;
+            var r = Measure(sp);
+            Opaque[sp] = r;
+            return r;
+        }
+
+        /// <summary>How many transparent art rows sit UNDER the drawing — what a prop has to
+        /// be lifted by for its lowest drawn pixel to land on a line.</summary>
+        public static float FootPadding(Sprite sp)
+        {
+            var ob = OpaqueBounds(sp);
+            return ob.width > 0f ? ob.y : 0f;
+        }
+
+        private static Rect Measure(Sprite sp)
+        {
+            var tex = sp.texture;
+            if (tex == null || !tex.isReadable) return new Rect(0, 0, sp.rect.width, sp.rect.height);
+            int x0 = Mathf.RoundToInt(sp.rect.x), y0 = Mathf.RoundToInt(sp.rect.y);
+            int w = Mathf.RoundToInt(sp.rect.width), h = Mathf.RoundToInt(sp.rect.height);
+            var px = tex.GetPixels32();
+            int minX = w, minY = h, maxX = -1, maxY = -1;
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                    if (px[(y0 + y) * tex.width + x0 + x].a > 127)
+                    {
+                        if (x < minX) minX = x; if (x > maxX) maxX = x;
+                        if (y < minY) minY = y; if (y > maxY) maxY = y;
+                    }
+            if (maxX < 0) return Rect.zero;
+            return new Rect(minX, minY, maxX - minX + 1, maxY - minY + 1);
+        }
 
         // ── the house's two icons (2026-09-04) ───────────────────────────────────
         //

@@ -52,41 +52,71 @@ namespace LastCall.UI
         private static Sprite _coaster;
 
         /// <summary>
-        /// THE DRINK'S MAT, drawn (2026-08-26, the author: "bardak altligi sahneye
-        /// sigmiyor, baska bir altlik yap ve tezgaha tam otursun").
+        /// THE DRINK'S MAT, drawn — and drawn AGAIN on 2026-09-04 (the author: "sahnedeki
+        /// bardak altligi yeniden uretilmeli ve masanin yuzeyine tam otursun").
         ///
         /// A generated one shipped first and did not fit: at its own aspect it stood 38
-        /// units deep under a 92-unit glass, which is not a mat but a bowl, and its lower
-        /// half hung over the counter's front edge. A coaster is a flat disc seen from a low
-        /// angle — an ellipse — and an ellipse is two lines of arithmetic, at exactly the
-        /// proportion the counter needs rather than whatever proportion came back. Squashing
-        /// the drawing instead was not available: pixel art scales at whole multiples or it
-        /// does not scale (the house rule).
+        /// units deep under a 92-unit glass, which is not a mat but a bowl. What replaced it
+        /// was an ellipse of two colours, and that was the fault this take answers — it had
+        /// no THICKNESS, so it read as a stain on the bar rather than as an object lying on
+        /// it, and it was centred on the counter's foot line with half its body hanging off
+        /// the bar's front edge into the shelf bays below.
         ///
-        /// Three rings out from the middle: cork, a darker worn ring where glasses have
-        /// stood, and a brass edge that catches the room's neon the way every other fitting
-        /// on this bar does.
+        /// So it is built the way every other dish on this counter is drawn: a top face seen
+        /// at the bar's own low angle, a dark side under its front arc, and one ink outline
+        /// round the whole silhouette. 56x18 art px drawn at 112x36 — one art pixel to two
+        /// HUD units, the counter's own grain (the book prop's rule), and shallow enough to
+        /// lie WHOLLY inside the counter's drawn band at
+        /// <see cref="TycoonHud"/>'s foot line.
+        ///
+        /// Three rings out from the middle: a worn centre where glasses have stood, cork
+        /// around it (lighter along the back, where the room reaches it), and a brass edge
+        /// that catches the neon the way every other fitting on this bar does.
         /// </summary>
         public static Sprite Coaster()
         {
             if (_coaster != null) return _coaster;
             const int W = 56, H = 18;
+            // How much of the canvas the TOP FACE takes; the rest is the mat's own edge,
+            // dropped straight down from the face's front arc.
+            const float FaceH = 15f;
+            const int Thick = 3;
             var px = new Color32[W * H];
-            var cork = new Color32(0x4A, 0x2E, 0x14, 0xFF);
-            var worn = new Color32(0x3D, 0x24, 0x10, 0xFF);
+            var ink = new Color32(0x14, 0x0D, 0x10, 0xFF);
+            var side = new Color32(0x3A, 0x22, 0x10, 0xFF);
+            var sideDark = new Color32(0x25, 0x15, 0x0A, 0xFF);
+            var cork = new Color32(0x7A, 0x4C, 0x24, 0xFF);
+            var corkLit = new Color32(0x8C, 0x5A, 0x2E, 0xFF);
+            var worn = new Color32(0x66, 0x3F, 0x1D, 0xFF);
             var brass = new Color32(0xC9, 0x82, 0x2B, 0xFF);
             var lit = new Color32(0xE8, 0xA3, 0x3D, 0xFF);
-            float cx = (W - 1) / 2f, cy = (H - 1) / 2f;
+            float cx = (W - 1) / 2f, cy = (FaceH - 1) / 2f;
+            float rx = (W - 1) / 2f, ry = (FaceH - 1) / 2f;
             for (int y = 0; y < H; y++)
                 for (int x = 0; x < W; x++)
                 {
-                    float dx = (x - cx) / cx, dy = (y - cy) / cy;
+                    // ROWS FROM THE TOP, because that is how the drawing was laid out and
+                    // Unity's texture rows run the other way. The back of the mat is the
+                    // small row and it is the half the room's light reaches.
+                    int row = H - 1 - y;
+                    float dx = (x - cx) / rx, dy = (row - cy) / ry;
                     float d = Mathf.Sqrt(dx * dx + dy * dy);
-                    Color32 c;
-                    if (d > 1f) c = new Color32(0, 0, 0, 0);
-                    else if (d > 0.88f) c = y < cy ? lit : brass;   // the rim, lit from above
-                    else if (d > 0.52f) c = cork;
-                    else c = worn;
+                    Color32 c = new Color32(0, 0, 0, 0);
+                    if (d <= 1f)
+                    {
+                        if (d > 0.93f) c = ink;                       // the silhouette's own line
+                        else if (d > 0.80f) c = row < cy ? lit : brass;
+                        else if (d > 0.52f) c = row < cy ? corkLit : cork;
+                        else c = worn;                                // where glasses have stood
+                    }
+                    else if (row > cy)
+                    {
+                        // The mat has a body: the same ellipse dropped Thick rows is its
+                        // front edge, and what shows of it between the two arcs is the side.
+                        float dy2 = (row - Thick - cy) / ry;
+                        float d2 = Mathf.Sqrt(dx * dx + dy2 * dy2);
+                        if (d2 <= 1f) c = d2 > 0.93f ? ink : d2 > 0.80f ? sideDark : side;
+                    }
                     px[y * W + x] = c;
                 }
             return _coaster = Make(px, W, H);

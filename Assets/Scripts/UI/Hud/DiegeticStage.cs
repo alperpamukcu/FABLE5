@@ -489,7 +489,7 @@ namespace LastCall.UI
                 if (!on) continue;
                 _cellarBack[i].sprite = p.Back;
                 _cellarMask[i].sprite = p.Mask;
-                _cellarCavity[i] = OpaqueBounds(p.Mask);
+                _cellarCavity[i] = ItemArt.OpaqueBounds(p.Mask);
                 PlaceCellarSlot(_cellarStock[i], i);
             }
             SetCellarFills(fills);
@@ -549,34 +549,11 @@ namespace LastCall.UI
             return _whitePx;
         }
 
-        /// <summary>The opaque bounding box of a mask sprite, in art pixels from its bottom-left.</summary>
-        private static Rect OpaqueBounds(Sprite sp)
-        {
-            var tex = sp.texture;
-            if (tex == null || !tex.isReadable) return new Rect(0, 0, sp.rect.width, sp.rect.height);
-            int x0 = Mathf.RoundToInt(sp.rect.x), y0 = Mathf.RoundToInt(sp.rect.y);
-            int w = Mathf.RoundToInt(sp.rect.width), h = Mathf.RoundToInt(sp.rect.height);
-            var px = tex.GetPixels32();
-            int minX = w, minY = h, maxX = -1, maxY = -1;
-            for (int y = 0; y < h; y++)
-                for (int x = 0; x < w; x++)
-                    if (px[(y0 + y) * tex.width + x0 + x].a > 127)
-                    {
-                        if (x < minX) minX = x; if (x > maxX) maxX = x;
-                        if (y < minY) minY = y; if (y > maxY) maxY = y;
-                    }
-            if (maxX < 0) return Rect.zero;
-            return new Rect(minX, minY, maxX - minX + 1, maxY - minY + 1);
-        }
-
-        private static readonly Dictionary<Sprite, Rect> _opaqueBounds = new Dictionary<Sprite, Rect>();
-
-        /// <summary>The opaque bbox, measured once per sprite (the cellar asks every pack).</summary>
-        private static Rect CachedOpaqueBounds(Sprite s)
-        {
-            if (!_opaqueBounds.TryGetValue(s, out var r)) { r = OpaqueBounds(s); _opaqueBounds[s] = r; }
-            return r;
-        }
+        // (The opaque-box reading moved to ItemArt.OpaqueBounds on 2026-09-04, when the
+        //  counter's garnish rail needed the same answer to stand its dishes on one line.
+        //  It was measured and cached here; it is measured and cached there, once, for
+        //  everybody — two readings of one texture is how two props on one bar end up on
+        //  two lines.)
 
         private static float CellarDrawnWidth(Sprite s)
         {
@@ -585,7 +562,7 @@ namespace LastCall.UI
             // canvas around a 16–32 px bottle, so measuring the canvas packed five a bay and
             // left six of the thirty-six pourable brands undrawn. What stands on the shelf,
             // and what the door should cover, is the opaque width.
-            var ob = CachedOpaqueBounds(s);
+            var ob = ItemArt.OpaqueBounds(s);
             float artW = ob.width > 0f ? ob.width : s.rect.width;
             return CellarBottleH * (artW / s.rect.height);
         }
@@ -595,7 +572,7 @@ namespace LastCall.UI
         private static float CellarCentreShift(Sprite s)
         {
             if (s == null) return 0f;
-            var ob = CachedOpaqueBounds(s);
+            var ob = ItemArt.OpaqueBounds(s);
             if (ob.width <= 0f) return 0f;
             return s.rect.width * 0.5f - (ob.x + ob.width * 0.5f);
         }
