@@ -188,7 +188,19 @@ as the baseline or the numbers move back before the push. Second risk: the persi
 bot collects instantly; the latency bot (10/20/30 s) is what shows what a human pays, and
 `DirtPenalty` is chosen from that row.
 
-## H2b + H3 — The door, wired and on the card (one push) ☐ *(waits for the tree)*
+## H2b + H3 — The door, wired and on the card ◐ *(H2b shipped 2026-09-05; H3 next)*
+
+**Shipped 2026-09-05, the Core half.** Everything under "Core" below is in: papers rolled once per
+person on `"papers"` at first arrival; `CustomerVisit.Papers` throws until the card is read;
+`Kick(visit)` with its five guards (`TycoonRun.Door.cs`); a right kick off the books in
+`BarDay.FinishedCounted`, the person barred; a wrong kick a walk-out at zero; the fine set at the
+serve on the standing and taken as they get up, after the tab, once; no extra round for a minor;
+the thanks paid with the rent; six counters on `DayDetail`/`DayResult`, zeroed at both reset
+points; the bot reads every card (`KickIfDue`, `Hands.MisreadId` on `"door"`) and the report
+carries the door's rows. Measured over 200 runs: minors met / shown the door / served 3404 / 3404 / 0 (5.4% of seats);
+wrong kicks / misread 0 / 0; fines $0 · 0★ $0.00 · 1★ $0.00 · 2★ $0.00 · 3★ $0.00; thanks $17020 · 2.1%; bankruptcies 3 (1.5%) → 1 (0.5%),
+median till $64 / $76 / $87 → $65 / $77 / $87, standing 2.66 stars → 2.71 stars. EditMode 460/460 green.
+H3 — the KICK key on the card, the young pool and the lender's face, the slip's rows — follows.
 
 Core (H2b):
 - `CustomerVisit.Papers` (throws until inspected), `VisitState.Kicked`, `OffTheBooks`, `Fined`,

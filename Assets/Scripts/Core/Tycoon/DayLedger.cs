@@ -64,6 +64,16 @@ namespace LastCall.Core
         public double ServiceStars { get; }
         public double ComfortStars { get; }
 
+        /// <summary>The door's night (GDD 28 §7): what the law took, what the state paid, who
+        /// was shown the door rightly and wrongly, how many minors were served, how many sat
+        /// down at all. Zero on a day booked without detail.</summary>
+        public int Fines { get; }
+        public int Bonus { get; }
+        public int RightKicks { get; }
+        public int WrongKicks { get; }
+        public int MinorsServed { get; }
+        public int MinorsMet { get; }
+
         /// <summary>The till once everything was paid. This is the number the strike watches,
         /// so it is the number the book has to show.</summary>
         public int TillAfter { get; }
@@ -74,7 +84,9 @@ namespace LastCall.Core
         public DayResult(int day, int income, int expenses, double averageSatisfaction,
             int sales = 0, int tips = 0, int rent = 0, int stock = 0, int upgrades = 0,
             int served = 0, int walkedOut = 0, double nightStars = 0, int tillAfter = 0,
-            bool hasDetail = false, double serviceStars = 0, double comfortStars = 0)
+            bool hasDetail = false, double serviceStars = 0, double comfortStars = 0,
+            int fines = 0, int bonus = 0, int rightKicks = 0, int wrongKicks = 0,
+            int minorsServed = 0, int minorsMet = 0)
         {
             Day = day;
             Income = income;
@@ -92,6 +104,12 @@ namespace LastCall.Core
             HasDetail = hasDetail;
             ServiceStars = serviceStars;
             ComfortStars = comfortStars;
+            Fines = fines;
+            Bonus = bonus;
+            RightKicks = rightKicks;
+            WrongKicks = wrongKicks;
+            MinorsServed = minorsServed;
+            MinorsMet = minorsMet;
         }
     }
 
@@ -103,6 +121,7 @@ namespace LastCall.Core
         public int Sales, Tips, Rent, Stock, Upgrades, Served, WalkedOut;
         public double NightStars;
         public double ServiceStars, ComfortStars;
+        public int Fines, Bonus, RightKicks, WrongKicks, MinorsServed, MinorsMet;
     }
 
     /// <summary>
@@ -156,7 +175,9 @@ namespace LastCall.Core
                 : new DayResult(day, income, expenses, averageSatisfaction,
                     detail.Sales, detail.Tips, detail.Rent, detail.Stock, detail.Upgrades,
                     detail.Served, detail.WalkedOut, detail.NightStars, tillAfter, true,
-                    detail.ServiceStars, detail.ComfortStars);
+                    detail.ServiceStars, detail.ComfortStars,
+                    detail.Fines, detail.Bonus, detail.RightKicks, detail.WrongKicks,
+                    detail.MinorsServed, detail.MinorsMet);
             _history.Add(result);
 
             DebtStrikes = tillAfter < 0 ? DebtStrikes + 1 : 0;

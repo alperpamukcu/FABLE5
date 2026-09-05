@@ -14,6 +14,11 @@ namespace LastCall.Core
         Served,
         /// <summary>Patience ran out. No payment, satisfaction zero, stool frees up.</summary>
         StormedOff,
+        /// <summary>Shown the door (GDD 28 §4). Rightly — a minor or a borrowed card — they
+        /// are off the books (<see cref="CustomerVisit.OffTheBooks"/>); wrongly, it is a
+        /// walk-out with a zero review. Either way the stool is free at once and nothing is
+        /// left on the counter.</summary>
+        Kicked,
     }
 
     /// <summary>
@@ -156,6 +161,49 @@ namespace LastCall.Core
         /// declined order, a storm-off, the guest of the house and (module 28) the kicked
         /// leave nothing, because nothing was poured or nothing counts.</summary>
         public bool DrinkServed { get; internal set; }
+
+        // ── the door (GDD 28, 2026-09-05) ────────────────────────────────────────
+
+        /// <summary>
+        /// THE TRUTH BEHIND THE CARD — and the one public door to it. Throws until the card
+        /// has been read (the order's own rule, v5 C3): you read the card, then you decide.
+        /// Null for a visit with no person behind it (a run built without regulars has no
+        /// papers and no minors).
+        /// </summary>
+        public IdPapers Papers
+        {
+            get
+            {
+                if (!IdInspected)
+                    throw new InvalidOperationException("The card has not been read; the papers are behind it.");
+                return Regular?.Papers;
+            }
+        }
+
+        /// <summary>A right kick: this visit counts for nothing — no review, no seat in the
+        /// night's mean, neither SERVED nor WALKED on the slip — exactly as the guest of the
+        /// house does not (GDD 28 §4, decided in <c>BarDay.FinishedCounted</c>).</summary>
+        public bool OffTheBooks { get; private set; }
+
+        /// <summary>What the law will take when they get up: set at the serve for a minor or a
+        /// borrowed card (GDD 28 §5), charged once by the run after the tab.</summary>
+        public int FineOwed { get; internal set; }
+
+        /// <summary>Whether that fine has been taken. Once per visit.</summary>
+        public bool Fined { get; private set; }
+
+        internal void MarkFined() => Fined = true;
+
+        /// <summary>Shown the door. The run decides whether it was right (off the books) or
+        /// wrong (a walk-out at zero) — this only ends the visit.</summary>
+        internal void Kick(bool offTheBooks)
+        {
+            if (State != VisitState.Waiting)
+                throw new InvalidOperationException("They are not waiting any more.");
+            Satisfaction = 0;
+            OffTheBooks = offTheBooks;
+            State = VisitState.Kicked;
+        }
 
         public int ExtraOrdersTaken { get; private set; }
 

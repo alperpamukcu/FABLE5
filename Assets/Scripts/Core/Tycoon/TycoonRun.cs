@@ -168,8 +168,10 @@ namespace LastCall.Core
         public int DayRent { get; private set; }
         public int DayStock { get; private set; }
         public int DayUpgrades { get; private set; }
-        public int DayIncome => DaySales + DayTips;
-        public int DayExpenses => DayRent + DayStock + DayUpgrades;
+        /// <summary>Income counts the state's thanks; expenses count the law's fines (GDD 28
+        /// §7). Both are the door's, kept in <c>TycoonRun.Door.cs</c>.</summary>
+        public int DayIncome => DaySales + DayTips + DayBonus;
+        public int DayExpenses => DayRent + DayStock + DayUpgrades + DayFines;
 
         /// <summary>The shaker: the vessel you build the drink in (GDD 24 §2).</summary>
         public GlassContents Glass { get; private set; }
@@ -760,6 +762,7 @@ namespace LastCall.Core
             Day = day;
             // Everything ContinueToNextDay clears for a new night, minus the books.
             DaySales = DayTips = DayRent = DayStock = DayUpgrades = 0;
+            DayFines = DayBonus = RightKicks = WrongKicks = MinorsServed = MinorsMet = 0;
             UpgradesToday = 0;
             _bestRankServedTonight = 0;
             _todayPurchases.Clear();
@@ -929,6 +932,15 @@ namespace LastCall.Core
                 // is still in the hand and in the sink is washed for free, what is still on
                 // the counter has been paid for in exposure (GDD 27 §4.3).
                 Floor.House.CloseNight();
+                // THE STATE'S THANKS, paid with the rent (GDD 28 §6): once, here, before the
+                // slip is drawn, so the paper's TILL is the till. A well drink per face
+                // rightly shown the door tonight.
+                int thanks = RightKicks * IdPapers.KickBonus;
+                if (thanks > 0)
+                {
+                    Money += thanks;
+                    DayBonus += thanks;
+                }
                 int rent = _config.Rent(Day);
                 Money -= rent;
                 DayRent += rent;
@@ -949,6 +961,15 @@ namespace LastCall.Core
             {
                 if (visit.TabSettled) continue;
                 visit.SettleTab();
+                // THE LAW TAKES ITS SHARE AS THEY GET UP (GDD 28 §5): after the tab, once,
+                // and the till may go below zero for it — a fine is a debt that happens to
+                // you, like rent, and it counts toward the red like anything else.
+                if (visit.FineOwed > 0 && !visit.Fined)
+                {
+                    visit.MarkFined();
+                    Money -= visit.FineOwed;
+                    DayFines += visit.FineOwed;
+                }
                 if (visit.Paid <= 0) continue;
                 Money += visit.Paid;
                 DaySales += visit.PaidBase;
@@ -1219,6 +1240,12 @@ namespace LastCall.Core
             // meeting it for the first time; from day two the registry may send people back.
             var regular = _regulars.RollNext(_rng.GetStream("customer"), allowReturns: Day > 1);
             _rng.GetStream("read").NextInt(100);
+            // THE PAPERS ARE THE PERSON'S, ROLLED ONCE (GDD 28 §3): on their first arrival,
+            // on a stream of their own, so no seed's crowd or orders move until the first
+            // minor is met. A returning face comes back with the card it had.
+            if (!regular.PapersRolled)
+                regular.SetPapers(IdPapers.Roll(_rng.GetStream("papers"), Day, regular.Age));
+            if (regular.Papers.ShouldBeKicked) MinorsMet++;
 
             return new CustomerVisit(order, patience, regular, decide);
         }
@@ -1902,6 +1929,23 @@ namespace LastCall.Core
             // which lies whenever the served vessel differs — and lied by omission for a
             // drink that matched no recipe at all, which left no glass and freed the stool
             // instantly, a bussing discount for the worst pour in the house.
+            // THE LAW (GDD 28 §5). A drink served to a minor, or over a borrowed card, goes
+            // through — they pay and they tip like anyone — and the fine lands when they
+            // get up, after the tab (SettleDepartures), sized to the standing at THIS
+            // moment. They get no extra round: the verdict is re-issued without one, so
+            // nothing downstream can announce a round Core refused. Decided on the truth
+            // behind the card, never on what the screen printed.
+            var papers = visit.Regular?.Papers;
+            if (papers != null && papers.ShouldBeKicked && !ReferenceEquals(visit, LastCustomer))
+            {
+                visit.FineOwed = IdPapers.FineFor(Rating.Average);
+                MinorsServed++;
+                if (verdict.OrdersAgain)
+                    verdict = new ServiceVerdict(verdict.Match, verdict.BasePaid, verdict.Tip,
+                        verdict.CraftLanded, false, verdict.Satisfaction, verdict.SpecScore,
+                        verdict.FillScore, verdict.Accuracy, verdict.PerfectMake);
+            }
+
             visit.ServedGlassId = ServingGlassware?.Id;
             // A drink crossed the bar (GDD 27 §4.1): this, and nothing about the STATE, is
             // what the floor reads when they get up to decide whether a glass and a mark
@@ -2317,7 +2361,10 @@ namespace LastCall.Core
             // could only say that it made or lost money — never which half of the bar did it.
             int served = 0, walked = 0;
             foreach (var visit in Floor.FinishedCounted())
-                if (visit.State == VisitState.StormedOff) walked++; else served++;
+                // A wrong kick is on the books as a walk-out; a right one never reaches
+                // this list (GDD 28 §4).
+                if (visit.State == VisitState.StormedOff || visit.State == VisitState.Kicked) walked++;
+                else served++;
             var result = Ledger.CloseDay(Day, DayIncome, DayExpenses, standing,
                 tillAfter: Money,
                 detail: new DayDetail
@@ -2329,6 +2376,11 @@ namespace LastCall.Core
                     // The two ratings the night was made of (GDD 27 §6), read off the
                     // floor exactly as the slip asked them a moment ago.
                     ServiceStars = ServiceTonight, ComfortStars = ComfortTonight,
+                    // The door's night (GDD 28 §7), so the slip, the week board and the sim
+                    // read one record.
+                    Fines = DayFines, Bonus = DayBonus,
+                    RightKicks = RightKicks, WrongKicks = WrongKicks,
+                    MinorsServed = MinorsServed, MinorsMet = MinorsMet,
                 });
 
             if (Ledger.IsBankrupt)
@@ -2340,6 +2392,7 @@ namespace LastCall.Core
             Day++;
             CrowdToday = Ledger.TomorrowsCrowd;
             DaySales = DayTips = DayRent = DayStock = DayUpgrades = 0;
+            DayFines = DayBonus = RightKicks = WrongKicks = MinorsServed = MinorsMet = 0;
             UpgradesToday = 0;         // tonight's fitting is spent; tomorrow gets its own
             _bestRankServedTonight = 0;
             _todayPurchases.Clear();   // yesterday's buys are kept; refunds are same-day only

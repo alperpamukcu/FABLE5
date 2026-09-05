@@ -30,7 +30,7 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 
 - **Geliş:** aralık `max(6, 12 − 0.5×gün) × yıldız çarpanı × (1±0.30)`; ≥3 bekleyen varsa gelen **vazgeçer** (balk). Ayrılanın (içki SERVİS EDİLENİN) boş bardağı tezgâhta kalır ve toplanana dek taburesini kilitler — kendiliğinden temizlenmez (7 sn'lik saat 2026-09-05'te emekli, §9.23); tıkla = topla (elde birikir, lavaboda yıkanır).
 - **Tek saat (2026-09-04, §9.22):** sabır `max(22, 50−2.5g)` sn, müşteri kararını verdiği an işlemeye başlar ve içki gelene dek işler; sorulmayı beklemek de aynı barı harcar (dolarsa fırtına gibi gider). **Kimlik okumak** barı sıfırlamaz, kalanın üstüne üç kutudan birini (`PatienceMax/3`) ekler, tavan dolu bar. (İki ayrı saat 2026-08-02 → 2026-09-04 arasında vardı.)
-- **Kimlik kartı (gizli bilgi):** `CustomerVisit.Order` `InspectId()` çağrılana dek **throw eder**; gerçek siparişi yalnız Core görür (`OrderTruth`). Kartı açmak siparişi almaktır — geri dönüşü yok. Kör servis yasal: yargıç gerçekle karşılaştırır.
+- **Kimlik kartı (gizli bilgi):** `CustomerVisit.Order` `InspectId()` çağrılana dek **throw eder**; gerçek siparişi yalnız Core görür (`OrderTruth`). Kartı açmak siparişi almaktır — geri dönüşü yok. Kör servis yasal: yargıç gerçekle karşılaştırır. **Kartın ikinci işi (2026-09-05, §9.24):** ikinci geceden itibaren gelenlerin bir kısmı 20 yaş altı (yarısı ödünç kartla); `CustomerVisit.Papers` kart okunana dek throw eder, `TycoonRun.Kick(visit)` yalnız okunmuş kartla çalışır — doğru kick defter dışı + $5 teşekkür, yanlış kick walk-out, servis edilen reşit olmayan kalkarken `$20 + $20×⌊itibar⌋` ceza. **Kartın ikinci işi (2026-09-05, §9.24):** ikinci geceden itibaren gelenlerin bir kısmı 20 yaş altı (yarısı ödünç kartla); `CustomerVisit.Papers` kart okunana dek throw eder, `TycoonRun.Kick(visit)` yalnız okunmuş kartla çalışır — doğru kick defter dışı + $5 teşekkür, yanlış kick walk-out, servis edilen reşit olmayan kalkarken `$20 + $20×⌊itibar⌋` ceza.
 - **Sipariş havuzu:** açık menüden, en düşük ranktan `3+gün` tarif; stok bakılmaz (kuru şişe = `DeclineOrder`).
 - **Servis tercihi (spec):** ~%50 sade; değilse 1–2 garnitür {buz, limon, tuz, şeker}. Draught'a garnitür yazılmaz. Beklenen doluluk 0.80 (tepeleme isteği 2026-08-02'de emekli). **"Sert çalkala" 2026-08-11'de emekli:** yöntem müşterinin hevesi değil TARİFİN talebi — hakem artık `Prep`'i notluyor (aşağıda).
 - **Ekstra tur:** Exact + zanaat tam + dönen müşteri + bekleme <%90 → en fazla 2 ek sipariş, sabır %80'e tazelenir.
@@ -122,7 +122,7 @@ memnuniyet bandı (4-7 / 8-13 / 14-20) mükemmel dökümü sıradan iyi bir içk
 | Ret (doluluk <0.35) | $0, memnuniyet 0.02 · Decline: $0, 0.15 |
 | Atıştırmalık | tabına fiyat (bahşişsiz); sabah geri alım `fiyat−1` → kâse başına net $1/birim |
 
-**Gider:** kira (tek eksiye düşüren) · dolum `eksik×$3` · marka `Info.Price` yoksa `8+6×tier(+6 spirit)` (yıldız kapılı `min(4, tier)`) — **MEŞRUBAT MERDİVENDEN ÇIKTI (2026-09-04, yazar: "meşrubat fiyatları daha uygun olmalı ... hacimleri daha az"):** kategorisi `mixer`/`juice` olan her şey json'da **$2–4** (kola/tonik/zencefil/nar 3, soda ve şurup 2, meyve suları 3–4) ve fiyatsız kalanı `Market.SoftDrinkPrice` $3 yakalar — eskiden soda listesizdi ve merdivenden **$14** çıkıyordu, yani kuyu romundan pahalı. **Rafta da yarım şişe:** `ShelfBottle.MixerCapacity` **3.0** ölçü (spirit 6.0, keg 24.0) — 70cl'lik bir kola şişesi diye bir şey yok; döküm hızı değişmedi, yalnız daha erken biter, dolumu da o kadar ucuzdur. 200 koşuluk sim: iflas %7.0 → **%2.0**, medyan kasa $145 → **$193**, karşılanamayan sipariş 1335 → **490** · tarif · tabure `$30/$50` (4→6) · bardak kademesi (hat başına 5 fiyat, json) · tezgah `40×tier` (yalnız Ambience) · çöp `hacim×$2`.
+**Gider:** kira (eksiye düşüren — 2026-09-05'ten beri reşit olmayana servis cezası da, §9.24) · dolum `eksik×$3` · marka `Info.Price` yoksa `8+6×tier(+6 spirit)` (yıldız kapılı `min(4, tier)`) — **MEŞRUBAT MERDİVENDEN ÇIKTI (2026-09-04, yazar: "meşrubat fiyatları daha uygun olmalı ... hacimleri daha az"):** kategorisi `mixer`/`juice` olan her şey json'da **$2–4** (kola/tonik/zencefil/nar 3, soda ve şurup 2, meyve suları 3–4) ve fiyatsız kalanı `Market.SoftDrinkPrice` $3 yakalar — eskiden soda listesizdi ve merdivenden **$14** çıkıyordu, yani kuyu romundan pahalı. **Rafta da yarım şişe:** `ShelfBottle.MixerCapacity` **3.0** ölçü (spirit 6.0, keg 24.0) — 70cl'lik bir kola şişesi diye bir şey yok; döküm hızı değişmedi, yalnız daha erken biter, dolumu da o kadar ucuzdur. 200 koşuluk sim: iflas %7.0 → **%2.0**, medyan kasa $145 → **$193**, karşılanamayan sipariş 1335 → **490** · tarif · tabure `$30/$50` (4→6) · bardak kademesi (hat başına 5 fiyat, json) · tezgah `40×tier` (yalnız Ambience) · çöp `hacim×$2`.
 
 **Memnuniyet:** `(Exact .75 | Close .50 | Wrong .05) + 0.20(zanaat−.5) + 0.12(doluluk−.5) − 0.30×bekleme + Ambience` (0–1).
 
@@ -954,6 +954,51 @@ medyanı 2.50 / 3.35 / 3.83; 2.5★'a ulaşan 196 (98.0%) → 196 (98.0%) (gün 
 Okuma: 1 = bardak payının yarıya inmesinin bedeli; 2 = yeni taban; 3 = çürüme (konfor tabanın
 altında, itibar durur, yoksul gece ARTMAZ); 4 = insan eli, `DirtPenalty`/`DirtGrace` bu satırdan
 seçildi. EditMode 452/452 yeşil.
+
+### 9.24 · Kapı: 20 yaş, ödünç kimlik, kick, ceza, teşekkür (2026-09-05)
+
+Yazar: *"20 yaş altı kişiler alkol alamayacak … kimliğin üstündeki butondan 'kick'leyebileceksin,
+aynı zamanda sahte kimlik de işin içerisine eklenecek. Sahte kimlikli birisine alkol vermenin
+büyük para cezası olacak … gelişmişlik seviyesine göre … doğru şekilde kovması ise gün sonunda
+küçük bonus paralar verecek."* Tasarım `GDD/28`, faz günlüğü `PLAN_house_and_law.md` H2b
+(Core) — kartın üstündeki tuş, ödünç yüz ve fişteki satırlar H3'te.
+
+**Evrak kişinindir ve gizlidir (Core).** Her yeni gelen `NextArrival`'da bir kez, `"papers"`
+akışında `IdPapers.Roll(gün, kayıt yaşı)` alır (`RegularState.Papers`, Core'a ÖZEL; dışarıdan
+tek kapı `CustomerVisit.Papers`, kart okunana dek **throw eder** — siparişin kuralı). Dürüst
+yetişkin kayıt yaşını taşır; `MinorChance(gün) = gün<2 ? 0 : min(0.12, 0.03+0.01·gün)` ile
+gelen reşit olmayanların yarısı (`ForgedShare`) ÖDÜNÇ kart (21–27 basar, gerçek 18–19), yarısı
+kendi yaşını basar. `LooksYoung` odanın görebildiği tek gerçek: her reşit olmayan genç görünür,
+dürüst yetişkinlerin %25'i de — yüz şüphe sebebi, hüküm değil. Regüler olmayan bir koşuda
+(`archetypes` yok) evrak yok, reşit olmayan yok.
+
+**Kick (`TycoonRun.Kick(visit)`).** Beş kapı: gün açık; evin misafiri asla (throw); oturmuş ve
+bekliyor; **kart okunmuş** (kör kick throw); hiç servis edilmemiş (`Paid == 0` — "kart senin
+anındı"). Doğru kick (reşit değil ya da sahte): `VisitState.Kicked` + `OffTheBooks` — `BarDay.
+FinishedCounted`/`AverageSatisfaction` misafir gibi atlar (ne SERVED ne WALKED, not yok), kişi
+`Barred` (kayıt bir daha göndermez, çekiliş harcanır), `RightKicks++`. Yanlış kick (dürüst
+yetişkin): 0 memnuniyetle defterde walk-out, regüler 0'ı hatırlar, `WrongKicks++`, ceza yok.
+Kick edilen tezgâhta hiçbir şey bırakmaz (`DrinkServed` false).
+
+**Servis edilen reşit olmayan.** Servis geçer, öder ve bahşiş verir; `ServeTo` `FineOwed =
+20 + 20 × floor(itibar)` yazar (`IdPapers.FineFor`), fazladan tur vermez (hüküm `OrdersAgain=false`
+ile yeniden basılır), `MinorsServed++`. Ceza **kalkarken**, hesaptan SONRA, bir kez
+(`SettleDepartures`, `visit.Fined`); kasa eksiye düşebilir (kira gibi ikinci ev sahibi), kırmızı
+sayılır. `DayFines` gidere, `DayBonus` gelire girer: `DayIncome = satış + bahşiş + teşekkür`,
+`DayExpenses = kira + stok + dükkân + ceza`.
+
+**Devletin teşekkürü.** Doğru kick başına `KickBonus = $5` (bir kuyu içki), kapanış bloğunda
+kirayla birlikte ve ondan önce ödenir (`Floor.IsComplete`, fiş kasayı doğru basar), gecede bir
+kez; `DevJumpToNight` gece oynamaz, ödemez. Beş sayaç iki sıfırlama noktasında da sıfırlanır
+(`DayFines/DayBonus/RightKicks/WrongKicks/MinorsServed/MinorsMet`); `DayDetail`/`DayResult` hepsini
+taşır.
+
+**Bot (`TycoonSimulator`).** Her kartı okur okumaz `KickIfDue`: reşit olmayanı/sahteyi kapı
+gösterir; `Hands.MisreadId` (kendi `"door"` akışından, ziyaret başına bir çekiliş) kartı kaçıran
+eli ölçer (taban bot 0). **200 koşu:** oturanların 3404 / 3404 / 0 (5.4% of seats); yanlış kick / kaçırılan kart 0 / 0;
+ceza $0 · 0★ $0.00 · 1★ $0.00 · 2★ $0.00 · 3★ $0.00; teşekkür $17020 · 2.1%. Kapıdan önce → sonra: iflas 3 (1.5%) → 1 (0.5%); kasa $64 / $76 / $87 → $65 / $77 / $87;
+itibar 2.66 stars → 2.71 stars; gece başına müşteri 10.2 → 10.0; gelir/gider $129.9 / $127.9 → $133.4 / $131.2.
+EditMode 460/460 yeşil.
 
 ## 10 · Teknik omurga
 

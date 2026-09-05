@@ -136,7 +136,11 @@ namespace LastCall.Core
         public List<CustomerVisit> FinishedCounted()
         {
             var counted = new List<CustomerVisit>(_finished.Count);
-            foreach (var visit in _finished) if (!visit.OnTheHouse) counted.Add(visit);
+            // ...and neither does a face rightly shown the door (GDD 28 §4, D10): no
+            // review, no seat in the mean, neither served nor walked. A WRONG kick stays
+            // on the books as the walk-out it is.
+            foreach (var visit in _finished)
+                if (!visit.OnTheHouse && !visit.OffTheBooks) counted.Add(visit);
             return counted;
         }
 
@@ -149,7 +153,7 @@ namespace LastCall.Core
                 int counted = 0;
                 foreach (var visit in _finished)
                 {
-                    if (visit.OnTheHouse) continue;
+                    if (visit.OnTheHouse || visit.OffTheBooks) continue;
                     total += visit.Satisfaction;
                     counted++;
                 }

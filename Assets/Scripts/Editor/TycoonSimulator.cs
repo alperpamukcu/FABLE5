@@ -277,6 +277,15 @@ namespace LastCall.EditorTools
             /// the shipped floor says yes, because comfort now climbs by it.</summary>
             public bool BuysDressing = true;
 
+            // ── the door (GDD 28 §9, 2026-09-05) ────────────────────────────────
+            /// <summary>Chance, drawn once per visit, that this hand misses a card it should
+            /// have refused — reads a borrowed card as the lender, a nineteen as a twenty.
+            /// Zero is the floor bot, which never misses. From a bot-only stream, not a slot
+            /// in the drink's hand: the card is read before any drink is built.</summary>
+            public double MisreadId;
+            /// <summary>The door's own stream (<c>"door"</c>). Set by PlayRun.</summary>
+            public SeededRng Door;
+
             /// <summary>Its own stream. Set by PlayRun; never shared with the run's.</summary>
             public SeededRng Dice;
 
@@ -663,6 +672,27 @@ namespace LastCall.EditorTools
             Debug.Log($"[TycoonSim] wrote {path}");
         }
 
+        /// <summary>
+        /// THE DOOR, PLAYED (GDD 28 §9). Once the card is read, a minor or a forgery is shown
+        /// the door — unless this hand misreads it, drawn once per visit from the bot's own
+        /// stream. The guest of the house is never judged (Core would refuse anyway).
+        /// </summary>
+        private static void KickIfDue(TycoonRun run, CustomerVisit visit, Hands hands,
+            HashSet<CustomerVisit> judged, Aggregate stats)
+        {
+            if (visit.State != VisitState.Waiting || !visit.IdInspected || visit.Paid > 0) return;
+            if (ReferenceEquals(visit, run.LastCustomer)) return;
+            if (!judged.Add(visit)) return;
+            var papers = visit.Papers;
+            if (papers == null || !papers.ShouldBeKicked) return;
+            if (hands.MisreadId > 0 && hands.Door.NextDouble() < hands.MisreadId)
+            {
+                stats.MisreadCards++;
+                return;
+            }
+            run.Kick(visit);
+        }
+
         private static string Read(string relative) =>
             File.ReadAllText(Path.Combine(Application.dataPath, "Data", relative));
 
@@ -720,6 +750,8 @@ namespace LastCall.EditorTools
                 lockedStock: deck.LockedCards, story: story, fixtures: fixtures);
             var hands = handsIn ?? Hands.Steady;
             hands.Dice = rng.GetStream("hands");
+            hands.Door = rng.GetStream("door");
+            var judged = new HashSet<CustomerVisit>();   // one look at each card, never two draws
 
             double buildTimer = buildSeconds;
             int guard = 0;
@@ -763,7 +795,13 @@ namespace LastCall.EditorTools
                     // on the patience curve.
                     foreach (var visit in run.Floor.Seated)
                         if (visit.State == VisitState.Waiting && visit.HasOrdered && !visit.IdInspected)
+                        {
                             visit.InspectId();
+                            // ...and the card is read for what it IS, not only for the order
+                            // (GDD 28): a minor or a borrowed card is shown the door here,
+                            // the moment the bot has seen it.
+                            KickIfDue(run, visit, hands, judged, stats);
+                        }
 
                     buildTimer += 1.0;
                     if (buildTimer < buildSeconds) continue;
@@ -792,6 +830,8 @@ namespace LastCall.EditorTools
                         // ID. Since v5 C3 that is also the only way Core will hand the order
                         // over — an uninspected visit refuses to name its drink.
                         visit.InspectId();
+                        KickIfDue(run, visit, hands, judged, stats);
+                        if (visit.State != VisitState.Waiting) continue;   // shown the door
                         // An order the bar cannot make is DECLINED, not left to storm off
                         // (P11's honest verb): scored above a storm-off, and the stool frees
                         // now. A competent bartender says "we can't make that".
@@ -1416,6 +1456,12 @@ namespace LastCall.EditorTools
             // THE ROOM (GDD 27 §7, 2026-09-05): what it was worth, how clean it was kept,
             // which side held the night, and what the bot bought for it.
             public int Wipes, Washes;
+            // THE DOOR (GDD 28 §9, 2026-09-05): who came, who was shown it, what it cost and
+            // paid, and the fines by the standing they were sized on.
+            public int MinorsMet, RightKicks, WrongKicks, MinorsServed, MisreadCards;
+            public long FinesSum, BonusSum;
+            public readonly Dictionary<int, (long fines, int nights)> FinesByStar = new Dictionary<int, (long, int)>();
+            private double _lastStanding;
             public double ComfortSum, ServiceSum, CleanSum, ComfortBaseSum;
             public int ComfortBoundNights, BrokeDrawn;
             public readonly Dictionary<string, int> RungsBySlot = new Dictionary<string, int>();
@@ -1582,6 +1628,7 @@ namespace LastCall.EditorTools
 
             public void RecordStanding(int day, double stars)
             {
+                _lastStanding = stars;
                 for (int i = 0; i < Rungs; i++)
                 {
                     if (_rungHit[i] || stars + 1e-9 < RungStars(i)) continue;
@@ -1596,6 +1643,15 @@ namespace LastCall.EditorTools
                 IncomeSum += result.Income;
                 ExpenseSum += result.Expenses;
                 SatisfactionSum += result.AverageSatisfaction;
+                MinorsMet += result.MinorsMet;
+                RightKicks += result.RightKicks;
+                WrongKicks += result.WrongKicks;
+                MinorsServed += result.MinorsServed;
+                FinesSum += result.Fines;
+                BonusSum += result.Bonus;
+                int star = (int)Math.Floor(Math.Max(0, _lastStanding));
+                FinesByStar.TryGetValue(star, out var fs);
+                FinesByStar[star] = (fs.fines + result.Fines, fs.nights + 1);
                 ByDay.TryGetValue(result.Day, out var row);
                 bool operatingRed = result.Income - result.Rent - result.Stock < 0;
                 ByDay[result.Day] = (row.reds + (result.Net < 0 ? 1 : 0),
@@ -1610,6 +1666,17 @@ namespace LastCall.EditorTools
                 if (!ComfortBaseByDay.TryGetValue(day, out var list) || list.Count == 0) return "—";
                 var sorted = new List<double>(list); sorted.Sort();
                 return sorted[sorted.Count / 2].ToString("0.00");
+            }
+
+            private string FinesLine()
+            {
+                var parts = new List<string>();
+                for (int star = 0; star <= 4; star++)
+                {
+                    if (!FinesByStar.TryGetValue(star, out var fs) || fs.nights == 0) continue;
+                    parts.Add($"{star}★ ${(double)fs.fines / fs.nights:0.00}");
+                }
+                return parts.Count == 0 ? "none" : string.Join(" · ", parts);
             }
 
             private string RungsLine()
@@ -1671,6 +1738,14 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Broke crowd drawn (of nights) | {Pct(BrokeDrawn, NightsClosed)} |");
                 sb.AppendLine($"| Comfort base by day 10 / 20 / 30 (median) | {BaseAt(10)} / {BaseAt(20)} / {BaseAt(30)} |");
                 sb.AppendLine($"| Dressing rungs bought (by slot) | {RungsLine()} |");
+                sb.AppendLine($"| Minors met / shown the door / served (of seats) | {MinorsMet} / {RightKicks} / {MinorsServed} ({100.0 * MinorsMet / Math.Max(1, CustomersFinished + RightKicks):0.0}% of seats) |");
+                sb.AppendLine($"| Wrong kicks / cards misread | {WrongKicks} / {MisreadCards} |");
+                sb.AppendLine($"| Fines paid (total · per night at 0/1/2/3★) | ${FinesSum} · {FinesLine()} |");
+                // Of INCOME, not of net: the floor bot runs on a knife edge by design (income
+                // and expenses within a dollar a night), so a share of its net says nothing
+                // about whether the thanks could be farmed. What the design fenced (GDD 28
+                // §9) is the thanks staying a small part of what a night takes.
+                sb.AppendLine($"| State's thanks (total · of income) | ${BonusSum} · {100.0 * BonusSum / Math.Max(1, IncomeSum):0.0}% |");
                 sb.AppendLine($"| Recipes bought (of {Runs} runs) | {RecipesBought} |");
                 sb.AppendLine($"| Brand upgrades bought | {BrandsBought} |");
                 sb.AppendLine($"| Tier demands the shelf could not answer | {TierShort} of {TierDemands}" +
