@@ -1114,6 +1114,38 @@ Upgrade görsellerinde ürünün resmi yerine geliştirme iconu gibi bir görsel
 - **Testler:** `FixtureTests` +1 (oda çıplak açılır, dördü alınır, her parça raf adlandırır; group ayrıştırma),
   kapanış ışığı testi `DevFit` ile; oyunda dört fotoğraf (çıplak oda, rafın başı/ortası/sonu).
 
+### 9.28 · Shaker yazarın: tezgâhta duran tin, tezgâha dönüş kapısı, altın basamak (2026-09-06)
+
+Yazar iki shaker çizdi (gümüş ve altın) ve şunu istedi: *"ana sahnede bardak altlığının üstünde
+gözükecek ... shaker aşamasında iken ana sahnedeki shakera basıp o sahneye geri dönebilir. Altın
+shaker upgrade olacak."* (`5a8bdd1d`)
+
+- **Plakalar (`Tools/shaker_ship.py`):** yazarın dört plakası (bütün, uçsuz, kapaksız tin, ayrı kapak)
+  tier başına tek 208×208 tuvalde geldi; araç hepsinden AYNI 116×208 pencereyi kesiyor — iki tezgâhın
+  paylaştığı sayfa bu, kapak tin'in boynuna ancak öyle oturuyor (VesselArt'ın kendi notu). **Kapağın
+  yeri ölçüldü:** yazarın ayrı kapak dosyası (61,14)'te bütün çizimle **3883/3883** birebir tutuyor.
+  **Dökme kapağı türetildi:** uçsuz çizimin, oturan kapağın kapladığı satırları (0–83) — yani ucu
+  kalkmış, süzgeci açık kubbe; dört plaka katman değil ayrı çizimler (ölçüldü: açık tin'in gövdesi
+  kapalı olanınki değil), o yüzden hiçbir şey çıkarılmadı. Çıktı: `Items/{shaker,tin_open,shaker_cap,
+  shaker_cap_pour}[_t2].png` + tezgâhın küçük tini `Items/shaker_prop[_t2].png` (48×48, yazarın kendi
+  çizimi). Kaynaklar `Tools/AssetPipeline/sources/shaker/`.
+- **Tezgâhta duran tin (HUD):** `DrinkWaitingInShaker` (tin dolu, servis bardağı boş) iken içkinin KENDİ
+  altlığında duruyor — ikisi birbirini dışlıyor, o yüzden aynı yeri paylaşabiliyorlar. Ayak çizgisi
+  `DishRestY` ile ölçülüyor (garnitürlerin cetveli), altlığın kaldırması ve tezgâhın kayması ekleniyor;
+  akış açıkken ya da mahzen kalkıkken yok. Tıklayınca `TycoonServiceFlow.OpenShaker()` (kurallar orada
+  soruluyor), imleç üstündeyken kitabın/merdanenin diliyle "BACK TO THE TIN" plakası. Çarpma testi
+  sanatın alfasında (`alphaHitTestMinimumThreshold`), kutuda değil.
+- **Altın basamak:** `fixtures.json` `shaker` yuvası **`carried: true`** — oda onu bir çengele DİKMEZ;
+  `DiegeticStage.SyncFixtures` taşınan yuvayı atlıyor, market rungu her merdiven gibi satıyor
+  (`shaker_steel` evin, $35 · 0 konfor, level 1; `shaker_gold` $140 · +0.4 · 2.0★, level 2; grup
+  `counter`). Karonun resmi için `FixtureArt` artık `Fixtures/` bulamazsa `Items/`'e düşüyor — taşınan
+  parçanın çizimi aletlerin yanında durur. İki tezgâh da sahip olunan tini giyiyor (`DressShakerArt`,
+  sahneye girişte).
+- **Testler:** `FixtureTests` +1 (taşınan yuva, iki basamak, her iki tier'ın dört plakası 116×208
+  paylaşılan sayfada), oda-çıplak testine `shaker_steel` eklendi; `CoreCornersTests`'in merdiven testi
+  yeni merdiveni kendiliğinden kapsıyor. Tezgâhın piksel baseline'ı yeni tinle yeniden kutsandı (resme
+  bakılarak).
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

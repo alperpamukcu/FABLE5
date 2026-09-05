@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The author's shaker, and a door back to it (2026-09-06):** two tins, steel and gold, landed
+  on the sheet both benches share (`Tools/shaker_ship.py` — the lid's seat measured, the pouring
+  lid derived from the tipless drawing). A drink left in the tin now stands on the drink's own
+  coaster and is the way back into the bench (`OpenShaker`); the gold one is a rung on a CARRIED
+  slot, which the room never stands and the market sells like any other. GDD 24 §6b, 27 §3.1,
+  GDD_MEVCUT §9.28.
+
 - **27's shop window — the upgrade screen (2026-09-06):** the aisle stands in shelves (SEATS &
   BAR, GLASSWARE, THE WALLS, THE LIGHT, FURNITURE & FLOOR, GREENERY, THE COUNTER — `group` in the
   data), what the bar owns is not on it, every tile wears an upgrade icon (pictogram + green

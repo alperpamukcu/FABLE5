@@ -255,6 +255,7 @@ index'le (paylaşılan index'e dokunmadan) dilimlenerek:
 | `7c188737` | yazarın ikinci v4 turu — 38 plaka | yazar |
 | `2608fd6e` | **duvar merdiveni** — yazarın dört oda plakası, `backdrop` yuvası, +20 tabela (§9.26) | yazar + bu oturum |
 | `f37db211` | **geliştirme ekranı** — raflar, alınanlar gizli, ikonlar; oda çıplak açılır, dört eşya satın alınır (§9.27) | bu oturum |
+| `5a8bdd1d` | **shaker** — yazarın iki tini, tezgâhta duran shaker ve tezgâha dönüş, altın basamak (§9.28) | yazar + bu oturum |
 
 **Süpürme, ölçerek.** `Assets/Resources` altındaki her PNG oyunun kendi yükleme zincirine karşı
 ada, türetilmiş öneke VE sahne GUID'ine göre sınandı (`art_reach.py`): 41 kartın 39'unda tam v4

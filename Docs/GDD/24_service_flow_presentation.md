@@ -295,6 +295,27 @@ Every purchase changes the scene (23 §8): new stools appear, the counter/wall a
 better glassware shows in the serve stage, and **the musician** takes the corner stage
 with an ambient playing loop. The scene is the save file, visually.
 
+## 6b. The tin on the counter (2026-09-06)
+
+The author drew the shaker — two of them, a steel and a gold — and with them came a way back
+into the bench: *"shaker asamasinda iken ana sahnedeki shakera basip o sahneye geri
+donebilir"*.
+
+- **A drink left in the tin stands on the counter.** The tin is drawn on the drink's own
+  coaster, which it can share because the two are exactly exclusive — the glass is there when
+  the serving glass has something in it, the tin when it does not and the shaker does
+  (`TycoonRun.DrinkWaitingInShaker`). It is not there while the bench is open (you are holding
+  it) or while the cellar is up.
+- **It is the door back.** Clicking it opens the shaker bench (`TycoonServiceFlow.OpenShaker`,
+  guarded by the rules rather than by the room), and it says so on hover in the room's one hint
+  language — the same plate the book and the roller use.
+- **The gold one is a rung** (GDD 27 §3.1, slot `shaker`, carried): both benches wear whichever
+  tin the bar owns, dressed on the way in, so a rung bought at the market is on the counter the
+  next time the tin is opened.
+- **The plates** are the author's own, landed by `Tools/shaker_ship.py` on the 116×208 sheet the
+  two benches already share: whole, tin, seated lid, pouring lid (the tipless drawing's own lid
+  box) per tier, plus the little 48px tin the counter draws.
+
 ## 7. Day end screens
 
 - **Invoice UI**: a printed bill — income lines (drinks, tips), expense lines (refills,
