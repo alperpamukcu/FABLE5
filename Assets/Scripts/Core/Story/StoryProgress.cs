@@ -26,6 +26,14 @@ namespace LastCall.Core
 
         public bool IsFinished => Current == null;
 
+        /// <summary>The beats still to come, the armed one first. What the host looks along
+        /// when she warns about the shelf (GDD 26 §4): the next guest who needs a style may
+        /// be two nights behind the one that is armed.</summary>
+        public IEnumerable<StoryBeat> Ahead
+        {
+            get { for (int i = _at; i < Arc.Beats.Count; i++) yield return Arc.Beats[i]; }
+        }
+
         /// <summary>The night <see cref="Current"/> is expected on. Starts at the beat's own
         /// day and only ever moves later.</summary>
         public int DueDay { get; private set; }
@@ -46,10 +54,42 @@ namespace LastCall.Core
         /// </summary>
         public int TurnedAway { get; private set; }
 
+        /// <summary>
+        /// Has the beat that is armed already been SAT — asked for and missed, or come and
+        /// turned away — so that its ask is a thing the player has heard? Between visits the
+        /// ask stands, and the book shows it as an open tab (GDD 26 §5); before the first
+        /// visit there is nothing to show but the host's warning. Cleared when the arc moves on.
+        /// </summary>
+        public bool CurrentAsked { get; private set; }
+
         public StoryProgress(StoryArc arc)
         {
             Arc = arc ?? throw new ArgumentNullException(nameof(arc));
             DueDay = arc.Opener.Day;
+        }
+
+        // ── the host's lessons (GDD 26 §1b/§10, PLAN_last_call S5) ────────────────
+        // What the host has already said this run. A lesson fires ONCE per run, the moment
+        // its condition is first true, and never again — which is bookkeeping about the RUN
+        // and so lives here, beside the arc's own clock, not in the shared content.
+
+        private readonly HashSet<StoryCue> _taught = new HashSet<StoryCue>();
+
+        /// <summary>Has the moment for this cue already come and gone this run?</summary>
+        public bool HasTaught(StoryCue cue) => _taught.Contains(cue);
+
+        /// <summary>
+        /// The condition behind <paramref name="cue"/> just became true. Returns the lesson
+        /// the host has for it the FIRST time, and null every time after — or null at once
+        /// when the arc has nothing written for that cue, in which case the moment is still
+        /// spent: a cue the writer left silent is a decision, not a retry.
+        /// </summary>
+        public StoryLesson Learn(StoryCue cue)
+        {
+            if (!_taught.Add(cue)) return null;
+            foreach (var lesson in Arc.Lessons)
+                if (lesson.Cue == cue) return lesson;
+            return null;
         }
 
         /// <summary>
@@ -81,6 +121,7 @@ namespace LastCall.Core
         {
             if (Current == null) return;
             TurnedAway++;
+            CurrentAsked = true;
             PushBack(day);
         }
 
@@ -103,6 +144,7 @@ namespace LastCall.Core
             Kept++;
             _keptIds.Add(Current.Id);
             _at++;
+            CurrentAsked = false;
             DueDay = Current != null
                 ? Math.Max(Current.Day, BarCalendar.NextNightOnOrAfter(day + 1, Current.Night))
                 : day + 1;
@@ -118,6 +160,7 @@ namespace LastCall.Core
         {
             if (Current == null) return;
             Missed++;
+            CurrentAsked = true;
             PushBack(day);
         }
 

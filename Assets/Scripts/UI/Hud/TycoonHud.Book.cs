@@ -725,13 +725,45 @@ namespace LastCall.UI
                 new Vector2(0, -262f));
             hint.text = "THE CONTENTS FACE THIS PAGE";
 
+            // THE OPEN TAB (GDD 26 §5, PLAN_last_call S5): between visits the ask stands,
+            // and the book is where it is written down — a guest who sat and was not served,
+            // or the guest the host has warned about, who wants a style the shelf lacks. It
+            // is the first thing on the page the book opens on, above the news, because it is
+            // the one line in here that is OWED.
+            float top = -104f;
+            string tab = OpenTab(Run);
+            if (tab != null)
+            {
+                var tabHead = NewText("TabHead", print, _body, 8, TextAnchor.MiddleCenter,
+                    new Color(0.42f, 0.46f, 0.55f));
+                Place(tabHead.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BkColW, 12f),
+                    new Vector2(0, top));
+                tabHead.text = "OPEN TAB";
+                var tabRow = NewRect("Tab", print);
+                tabRow.anchorMin = tabRow.anchorMax = new Vector2(0.5f, 0.5f);
+                tabRow.pivot = new Vector2(0.5f, 1f);
+                tabRow.sizeDelta = new Vector2(BkColW, 26f);
+                tabRow.anchoredPosition = new Vector2(0, top - 14f);
+                var slab = tabRow.gameObject.AddComponent<Image>();
+                slab.color = new Color(UITheme.Magenta[4].r, UITheme.Magenta[4].g, UITheme.Magenta[4].b, 0.18f);
+                slab.raycastTarget = false;
+                var tabText = NewText("T", tabRow, _body, 8, TextAnchor.MiddleLeft,
+                    new Color(0.16f, 0.18f, 0.24f));
+                Place(tabText.rectTransform, new Vector2(0, 0.5f), new Vector2(BkColW - 16f, 22f),
+                    Vector2.zero);
+                tabText.rectTransform.pivot = new Vector2(0, 0.5f);
+                tabText.rectTransform.anchoredPosition = new Vector2(8f, 0);
+                tabText.text = tab;
+                top -= 48f;
+            }
+
             // THE NEWS, ON THE PAGE THE BOOK OPENS ON. Each line is the way to the page
             // it is about, and opening it is what marks it read.
             if (_perfectNews.Count == 0) return;
             var newsHead = NewText("NewsHead", print, _body, 8, TextAnchor.MiddleCenter,
                 new Color(0.42f, 0.46f, 0.55f));
             Place(newsHead.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BkColW, 12f),
-                new Vector2(0, -104f));
+                new Vector2(0, top));
             newsHead.text = _perfectNews.Count == 1
                 ? "NEW · A PERFECT RECIPE" : "NEW · " + _perfectNews.Count + " PERFECT RECIPES";
 
@@ -750,7 +782,7 @@ namespace LastCall.UI
                 row.anchorMin = row.anchorMax = new Vector2(0.5f, 0.5f);
                 row.pivot = new Vector2(0.5f, 1f);
                 row.sizeDelta = new Vector2(BkColW, 26f);
-                row.anchoredPosition = new Vector2(0, -118f - ny);
+                row.anchoredPosition = new Vector2(0, top - 14f - ny);
                 var slab = row.gameObject.AddComponent<Image>();
                 slab.color = BkPlatinum;
                 var btn = row.gameObject.AddComponent<Button>();
@@ -784,6 +816,26 @@ namespace LastCall.UI
                 fo.text = (page + 1).ToString();
                 ny += 30f;
             }
+        }
+
+        /// <summary>The line the book owes somebody, or null (GDD 26 §5): the ask that stands
+        /// between visits once it has been heard, or — before the first visit — the host's
+        /// warning about the style the coming guest will want, while their night is this
+        /// week or next.</summary>
+        private static string OpenTab(TycoonRun run)
+        {
+            var story = run?.Story;
+            var beat = story?.Current;
+            if (beat == null) return null;
+            string night = BarCalendar.Name(beat.Night).ToUpperInvariant();
+            if (story.CurrentAsked)
+                return beat.Who.Name.ToUpperInvariant() + " WANTS " + beat.Drink.Name.ToUpperInvariant()
+                       + " · " + night;
+            if (beat.NeedStyle != null
+                && BarCalendar.WeekOf(story.DueDay) <= BarCalendar.WeekOf(run.Day) + 1)
+                return "GET " + beat.NeedStyle.ToUpperInvariant() + " IN · "
+                       + beat.Who.Name.ToUpperInvariant() + " COMES " + night;
+            return null;
         }
 
         /// <summary>The contents, grown into a browser (2026-08-25): a search line on

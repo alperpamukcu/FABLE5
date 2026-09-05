@@ -47,6 +47,7 @@ namespace LastCall.UI
             // basket warning can never be skipped past with a key.
             if (Showing(_dayEndPanel) && _dayEndStep == 1)
             {
+                if (Showing(_hostNote)) { OnHostNoteKey(); return; }
                 if (Showing(_closingAsk)) { _closingAsk.gameObject.SetActive(false); return; }
                 OnDayEndAdvance();
                 return;
@@ -1460,6 +1461,12 @@ namespace LastCall.UI
             bool withheld = beat != null && run.LastCallWithheld && run.LastCustomer != null;
             if (beat == null || (trial == null && !withheld))
             {
+                // THE HOST'S LESSONS RIDE THE SAME PLATE (GDD 26 §1b, PLAN_last_call S5):
+                // when no beat is being played, whatever she has to say about the night
+                // goes here — her face, her name, one line a key. Only on an open night;
+                // the closing's lessons are said on the market (SyncHostNote).
+                var lesson = run.Phase == TycoonPhase.DayOpen ? run.LessonDue : null;
+                if (lesson != null && _plate != null) { SyncLesson(run, lesson); return; }
                 if (_plate != null && _plate.gameObject.activeSelf) _plate.gameObject.SetActive(false);
                 if (_postIt != null && _postIt.gameObject.activeSelf) _postIt.gameObject.SetActive(false);
                 if (_gateRow != null && _gateRow.gameObject.activeSelf) _gateRow.gameObject.SetActive(false);
@@ -1565,10 +1572,61 @@ namespace LastCall.UI
             }
         }
 
+        /// <summary>
+        /// The host's lesson on the plate (GDD 26 §1b "the teacher"): the tutorial this
+        /// project deleted comes back as a person saying the thing once. Her lines are
+        /// worked through with the same key the beat uses; the last one reads GOT IT and
+        /// tells Core it was heard, so the next lesson (if a second moment came on the same
+        /// tick) follows on. No SAY NO: there is nothing to decline.
+        /// </summary>
+        private void SyncLesson(TycoonRun run, StoryLesson lesson)
+        {
+            string part = "lesson:" + lesson.Id;
+            if (part != _plateStage)
+            {
+                _plateStage = part;
+                _plateAt = 0;
+                _plateScript.Clear();
+                var host = _bootstrap?.Story?.Cast?.FirstOrDefault(c => c.IsHost);
+                if (host != null)
+                    foreach (var line in lesson.Say)
+                        if (!string.IsNullOrEmpty(line))
+                            _plateScript.Add((host.Name, LookForStory(host)?.Slug, line));
+                // A story with no host has nobody to say it: the moment is spent silently
+                // rather than leaving a plate up with no one on it.
+                if (_plateScript.Count == 0) { run.HeardLesson(); _plateStage = ""; return; }
+            }
+            bool talking = _plateAt < _plateScript.Count;
+            if (talking != _plate.gameObject.activeSelf) _plate.gameObject.SetActive(talking);
+            if (talking)
+            {
+                var (who, look, line) = _plateScript[_plateAt];
+                _plateName.text = who.ToUpperInvariant();
+                _plateLine.text = line;
+                var face = LookNamed(look);
+                _plateFace.sprite = face?.Face;
+                _plateFace.enabled = _plateFace.sprite != null;
+                _plateKeyLabel.text = _plateAt == _plateScript.Count - 1 ? "GOT IT" : "GO ON";
+                if (_plateNoKey.gameObject.activeSelf) _plateNoKey.gameObject.SetActive(false);
+            }
+            if (_gateRow.gameObject.activeSelf) _gateRow.gameObject.SetActive(false);
+            if (_postIt.gameObject.activeSelf) _postIt.gameObject.SetActive(false);
+        }
+
         /// <summary>The listen key: one line at a time, and the last one starts the clock.</summary>
         private void OnPlateKey()
         {
             var run = Run;
+            // A lesson is worked through with the same key; its last line is GOT IT, and
+            // Core is told so the next one can follow (GDD 26 §1b).
+            if (run != null && _plateStage.StartsWith("lesson:", StringComparison.Ordinal))
+            {
+                if (_plateAt < _plateScript.Count - 1) { _plateAt++; return; }
+                _plateAt = _plateScript.Count;
+                _plateStage = "";
+                run.HeardLesson();
+                return;
+            }
             // A WITHHELD NIGHT HAS NO TRIAL and the key must still turn the page (GDD 26 §12);
             // guarding on `Trial` alone left the guest's own scene unadvanceable, with the
             // only way out being the clock.

@@ -1409,6 +1409,7 @@ namespace LastCall.UI
             RefreshSeats();
             PlaceBookProp();      // it stands on the counter, so it rides with the counter
             SyncLastCall(run);    // after the seats: the guest is one of them
+            SyncHostNote(run);    // the closing's lessons, on the market
             UpdateOrderTip();     // after the seats: it reads the tickets they just placed
             UpdateDrinkGlass();
             StepMiniPreps(run);
@@ -2686,6 +2687,16 @@ namespace LastCall.UI
         // ── the question at the door (2026-08-14) ───────────────────────────────
 
         private RectTransform _closingAsk;
+
+        // THE HOST'S WORD ON THE MARKET (GDD 26 §1b/§10, PLAN_last_call S5): the plate is a
+        // thing of the open night, so the two lessons that come at the CLOSE — the market
+        // opening, a night under the rent — are said in a 98 message box of the site's own,
+        // the same window the closing question uses.
+        private RectTransform _hostNote;
+        private Image _hostNoteFace;
+        private Text _hostNoteWho, _hostNoteLine, _hostNoteKeyLabel;
+        private string _hostNoteLesson = "";   // which lesson the note is reading
+        private int _hostNoteAt;
 
         private Text _closingAskLine;
 

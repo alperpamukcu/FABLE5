@@ -1341,6 +1341,7 @@ namespace LastCall.UI
             otPress.Caption = _marketKeyLabel.rectTransform;
 
             BuildClosingAsk(_dayEndTablet);
+            BuildHostNote(_dayEndTablet);
 
             _dayEndPanel.gameObject.SetActive(false);
 

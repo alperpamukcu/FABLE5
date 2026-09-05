@@ -289,6 +289,8 @@ namespace LastCall.Core
             // The story is opt-in exactly like the regulars: a run built without an arc has
             // no last customer and behaves in every way like a run from before there was one.
             Story = story != null ? new StoryProgress(story) : null;
+            // The first night is the first thing the host has to say (GDD 26 §1b).
+            TeachAtOpen();
         }
 
         // ── the recipe book (v5 P16): buying the menu ───────────────────────────
@@ -925,6 +927,7 @@ namespace LastCall.Core
             SettleDepartures();
             Trial?.Waited(seconds);   // the talking backstop's clock, nothing else's
             seated = SettleLastCall(seated);
+            WatchForLessons();        // the host's cues that are read off the floor
 
             if (Floor.IsComplete)
             {
@@ -945,6 +948,10 @@ namespace LastCall.Core
                 Money -= rent;
                 DayRent += rent;
                 RollMarket();
+                // Two things a closing can be the first of (GDD 26 §10): the market
+                // opening at all, and a night that ended under the rent.
+                Teach(StoryCue.FirstMarket);
+                if (DayIncome < DayExpenses) Teach(StoryCue.RedNight);
                 Phase = TycoonPhase.DayEnd;
             }
             return seated;
@@ -1492,6 +1499,7 @@ namespace LastCall.Core
             // being told, and the reason draught is the drink you can put down in four seconds.
             SelectGlassFor(DraughtRecipe);
             PullingId = kegId;
+            Teach(StoryCue.FirstKeg);
         }
 
         /// <summary>Whether that keg could be opened right now, so the menu can grey the key
@@ -1968,6 +1976,7 @@ namespace LastCall.Core
             // and the till collects when they get up — see SettleDepartures. The author's note
             // (2026-07-31): the money and the stars show when the drink is finished, not when
             // it is served — and the till ticking up at the serve was itself a spoiler.
+            if (verdict.OrdersAgain) Teach(StoryCue.FirstExtraOrder);
             ResetVessels();
             return verdict;
         }
@@ -2405,6 +2414,7 @@ namespace LastCall.Core
             ResetVessels();
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average);
             Phase = TycoonPhase.DayOpen;
+            TeachAtOpen();
             return result;
         }
 

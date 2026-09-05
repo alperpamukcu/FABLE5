@@ -2550,6 +2550,116 @@ namespace LastCall.UI
             _closingAsk.gameObject.SetActive(false);
         }
 
+        /// <summary>
+        /// The host's message box on the market (GDD 26 §1b): her face in a well, her name on
+        /// the title bar the way that decade titled its dialogs, one line, one key. Built the
+        /// way the closing question is built, because on this site a word from the house IS
+        /// a little window of the site.
+        /// </summary>
+        private void BuildHostNote(RectTransform tablet)
+        {
+            _hostNote = NewRect("HostNote", tablet);
+            Stretch(_hostNote, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var scrim = _hostNote.gameObject.AddComponent<Image>();
+            scrim.color = new Color(UITheme.ClubBlue[0].r, UITheme.ClubBlue[0].g, UITheme.ClubBlue[0].b, 0.62f);
+            scrim.raycastTarget = true;   // a wall, like the question's: read it, then shop
+
+            var card = NewRect("Card", _hostNote);
+            Place(card, new Vector2(0.5f, 0.5f), new Vector2(620, 200), Vector2.zero);
+            var cardImg = card.gameObject.AddComponent<Image>();
+            cardImg.sprite = ChromeArt.Win98Key();
+            cardImg.type = Image.Type.Sliced;
+            cardImg.color = ShopPaper;
+
+            var bar = NewRect("Bar", card);
+            Place(bar, new Vector2(0.5f, 1f), new Vector2(612, 28), new Vector2(0, -4));
+            var barImg = bar.gameObject.AddComponent<Image>();
+            barImg.sprite = ChromeArt.FadeStrip();
+            barImg.raycastTarget = false;
+            _hostNoteWho = NewText("H", bar, _shop, 16, TextAnchor.MiddleLeft, Color.white);
+            Stretch(_hostNoteWho.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(10, 0), new Vector2(-10, 0));
+            _hostNoteWho.text = "THE HOUSE";
+
+            // The face, in a well cut to it — the plate's own rule, on the site's paper.
+            var well = NewRect("Well", card);
+            Place(well, new Vector2(0, 0.5f), new Vector2(80, 80), new Vector2(24, -8));
+            well.gameObject.AddComponent<Image>().color = UITheme.Night[2];
+            var photo = NewRect("Photo", well);
+            Place(photo, new Vector2(0.5f, 0.5f), new Vector2(72, 72), Vector2.zero);
+            _hostNoteFace = photo.gameObject.AddComponent<Image>();
+            _hostNoteFace.preserveAspect = true;
+            _hostNoteFace.raycastTarget = false;
+
+            _hostNoteLine = NewText("L", card, _shop, 16, TextAnchor.MiddleLeft, ShopInk);
+            Place(_hostNoteLine.rectTransform, new Vector2(0, 0.5f), new Vector2(470, 80),
+                new Vector2(120, -8));
+            _hostNoteLine.rectTransform.pivot = new Vector2(0, 0.5f);
+            _hostNoteLine.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _hostNoteLine.verticalOverflow = VerticalWrapMode.Overflow;
+
+            var key = NewRect("Key", card);
+            Place(key, new Vector2(0.5f, 0f), new Vector2(240, 44), new Vector2(0, 22));
+            var keyImg = key.gameObject.AddComponent<Image>();
+            keyImg.sprite = ChromeArt.Win98Key();
+            keyImg.type = Image.Type.Sliced;
+            keyImg.color = ShopVice;
+            var keyBtn = key.gameObject.AddComponent<Button>();
+            keyBtn.targetGraphic = keyImg;
+            keyBtn.onClick.AddListener(OnHostNoteKey);
+            _hostNoteKeyLabel = NewText("L", key, _shop, 16, TextAnchor.MiddleCenter, Color.white);
+            Stretch(_hostNoteKeyLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _hostNoteKeyLabel.text = "GO ON";
+            MarkHoverable(key, keyImg);
+            var press = key.gameObject.AddComponent<Win98Press>();
+            press.Face = keyImg;
+            press.Caption = _hostNoteKeyLabel.rectTransform;
+
+            _hostNote.SetAsLastSibling();
+            _hostNote.gameObject.SetActive(false);
+        }
+
+        /// <summary>Drives the note off Core once a frame: up while the market is up and
+        /// the host has a lesson due, the lines one key at a time, GOT IT on the last.</summary>
+        private void SyncHostNote(TycoonRun run)
+        {
+            if (_hostNote == null) return;
+            var lesson = run != null && run.Phase == TycoonPhase.DayEnd && MarketIsUp
+                         && !Showing(_closingAsk) ? run.LessonDue : null;
+            bool show = lesson != null;
+            if (show && lesson.Id != _hostNoteLesson)
+            {
+                _hostNoteLesson = lesson.Id;
+                _hostNoteAt = 0;
+                var host = _bootstrap?.Story?.Cast?.FirstOrDefault(c => c.IsHost);
+                _hostNoteWho.text = host != null ? host.Name.ToUpperInvariant() : "THE HOUSE";
+                var face = host != null ? LookForStory(host) : null;
+                _hostNoteFace.sprite = face?.Face;
+                _hostNoteFace.enabled = _hostNoteFace.sprite != null;
+                _hostNote.SetAsLastSibling();
+                Sfx.Play("screen_on", 0.5f);
+            }
+            if (show)
+            {
+                int at = Math.Min(_hostNoteAt, lesson.Say.Count - 1);
+                _hostNoteLine.text = lesson.Say[at];
+                _hostNoteKeyLabel.text = at >= lesson.Say.Count - 1 ? "GOT IT" : "GO ON";
+            }
+            else _hostNoteLesson = "";
+            if (_hostNote.gameObject.activeSelf != show) _hostNote.gameObject.SetActive(show);
+        }
+
+        private void OnHostNoteKey()
+        {
+            var run = Run;
+            var lesson = run?.LessonDue;
+            Sfx.Play("key_press", 0.6f);
+            if (lesson == null) { if (_hostNote != null) _hostNote.gameObject.SetActive(false); return; }
+            if (_hostNoteAt < lesson.Say.Count - 1) { _hostNoteAt++; return; }
+            run.HeardLesson();
+            _hostNoteLesson = "";
+        }
+
         private void ShowClosingAsk(string worry)
         {
             if (_closingAsk == null) { PlayTabletOut(); return; }   // never trap the player
