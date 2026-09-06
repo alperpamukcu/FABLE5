@@ -270,6 +270,7 @@ index'le (paylaşılan index'e dokunmadan) dilimlenerek:
 | `d2c5728f` | kartonlar bench'e döndü, çizgiroman baloncuğu, lavabo sessiz, neon/TV taşındı | yazar + bu oturum |
 | `f85fd727` | **kimlik yeniden** — çizilen kâğıt, tek ızgara, %20 daha kompakt (GDD 28) | yazar + bu oturum |
 | `b09e7fef` | **altıncı liste** — pasta bekleme, korunan tutuş, ışıklı mat, **konfor 0'dan** (duvarlar +1.25/+2.25/+3.25, $40'lık ilk basamak), kimlik v3, kiriş + ipuçları, ayar penceresi, Türkçe tezgâh, kalın bardak seti (§9.35) | yazar + bu oturum |
+| `2b0fc656` | **yedinci liste** — tutuş/ağız/lavaboya giren bardak, mat fikstür, altın madalyon, kirişte segment rakamı + sayılı ipuçları, kimlik v3.1, yuvarlak balon + ayrılma, görev plakası, market tek boy + iki duvar rafı + madalyonlu meta + sandık, **yıldız ekonomisi** (iflas %34→%9), **PixelLab 3D bardak seti** + oyuk kesimi + jant tanesi/yarım dilim (§9.36) | yazar + bu oturum |
 
 **Süpürme, ölçerek.** `Assets/Resources` altındaki her PNG oyunun kendi yükleme zincirine karşı
 ada, türetilmiş öneke VE sahne GUID'ine göre sınandı (`art_reach.py`): 41 kartın 39'unda tam v4
