@@ -838,6 +838,7 @@ namespace LastCall.UI
                 matImg.raycastTarget = false;
                 matImg.enabled = matArt != null;
                 _prepMat = mat;
+                _prepMatImg = matImg;
             }
 
             for (int i = 0; i < rail.Length; i++)
@@ -916,6 +917,18 @@ namespace LastCall.UI
             _prepCarryImg.color = _prepCarryImg.sprite != null ? Color.white : UITheme.Cyan[3];
             _prepCarry.sizeDelta = inHand != null ? prop.CarrySize : new Vector2(64f, 64f);
             _prepCarry.anchoredPosition = prop.Rt.anchoredPosition + _prepRail.anchoredPosition;
+            // The finger lands on the CUBE where it landed on the dish: the grip is kept in
+            // proportion, since what comes out is smaller than what it came out of.
+            _prepGrabOffset = Vector2.zero;
+            var m = Mouse.current;
+            if (m != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot, m.position.ReadValue(), null, out Vector2 held))
+            {
+                var dish = prop.Rt.rect.size;
+                var scale = new Vector2(dish.x > 1f ? _prepCarry.sizeDelta.x / dish.x : 1f,
+                                        dish.y > 1f ? _prepCarry.sizeDelta.y / dish.y : 1f);
+                _prepGrabOffset = Vector2.Scale(_prepCarry.anchoredPosition - held, scale);
+                _prepCarry.anchoredPosition = held + _prepGrabOffset;
+            }
             _prepCarry.gameObject.SetActive(true);
             _prepCarry.SetAsLastSibling();
             _grainCarried = 0f;
@@ -937,6 +950,7 @@ namespace LastCall.UI
                     (RectTransform)_prepCarry.parent, mouse.position.ReadValue(), null,
                     out Vector2 at))
             {
+                at += _prepGrabOffset;
                 if (_prepHeld.IsRim)
                 {
                     _grainCarried += (at - _grainLastAt).magnitude;
@@ -1014,6 +1028,13 @@ namespace LastCall.UI
         // will take a finished drink. A press that never travels is still the door back
         // to the bench, so the tin keeps both meanings and the hand decides which.
         private Vector2 _glassPressAt;    // where the press on the finished drink landed
+        // THE HAND KEEPS ITS GRIP (2026-09-06, the author: "nesneler tutulurken veya
+        // sürüklenirken hep mouseun ortasına hizalanıyor bunun olmamasını istiyorum").
+        // Every carried thing used to snap its pivot to the cursor the moment it was taken,
+        // so a glass grabbed by the rim jumped to sit centred on the finger. Each grab now
+        // records where on the thing the finger landed, and the carry keeps that offset —
+        // the rim you took it by is the rim it hangs from.
+        private Vector2 _glassGrabOffset, _emptyGrabOffset, _tinGrabOffset, _clothGrabOffset, _prepGrabOffset;
         private bool _glassTravelled;     // ...and whether the hand has moved since
         private SeatView _emptyPressed;   // an empty under a finger that has not travelled yet
         private SeatView _carriedEmpty;   // ...and the one in the air, not yet Core's business
@@ -1116,6 +1137,11 @@ namespace LastCall.UI
             _clothHeld = true;
             _clothRefused = null;
             _clothRt.SetAsLastSibling();
+            // Taken by the corner it was taken by.
+            _clothGrabOffset = Vector2.zero;
+            var m = Mouse.current;
+            if (m != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot, m.position.ReadValue(), null, out Vector2 held))
+                _clothGrabOffset = _clothRt.anchoredPosition - (held + new Vector2(0f, -12f));
             HidePropTip(_clothRt);
             Sfx.Play("click", 0.4f);
         }
@@ -1145,7 +1171,7 @@ namespace LastCall.UI
             if (mouse == null || !mouse.leftButton.isPressed || CellarOpen) { DropCloth(); return; }
             var screen = mouse.position.ReadValue();
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot, screen, null, out Vector2 at))
-                _clothRt.anchoredPosition = at + new Vector2(0f, -12f);
+                _clothRt.anchoredPosition = at + new Vector2(0f, -12f) + _clothGrabOffset;
             // WIPING IS RUBBING (GDD 27 §4.2, corrected 2026-09-06). The cloth used to erase
             // a whole mark the instant it touched any part of it, so a mess was a click with
             // extra steps. It takes the ink out of the pixels it actually passes over now, and
@@ -1292,10 +1318,10 @@ namespace LastCall.UI
             _carriedEmpty = view;
             Sfx.Play("glass_pickup", 0.8f);
             var art = view.DirtyProp != null ? view.DirtyProp.GetComponent<Image>() : null;
-            BeginGlassCarry(art != null ? art.sprite : null);
+            BeginGlassCarry(art != null ? art.sprite : null, view.DirtyProp);
         }
 
-        private void BeginGlassCarry(Sprite art)
+        private void BeginGlassCarry(Sprite art, RectTransform from)
         {
             if (_glassCarry == null)
             {
@@ -1312,6 +1338,18 @@ namespace LastCall.UI
             _glassCarrying = true;
             _glassCarry.gameObject.SetActive(true);
             _glassCarry.SetAsLastSibling();
+            // Lifted from where it stood, by the part of it the finger is on.
+            _emptyGrabOffset = Vector2.zero;
+            var m = Mouse.current;
+            if (m != null && from != null
+                && RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot, m.position.ReadValue(), null, out Vector2 held)
+                && RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot,
+                    RectTransformUtility.WorldToScreenPoint(null, from.TransformPoint(from.rect.center)), null, out Vector2 centre))
+            {
+                var start = centre - new Vector2(0f, (0.5f - _glassCarry.pivot.y) * _glassCarry.rect.height);
+                _glassCarry.anchoredPosition = start;
+                _emptyGrabOffset = start - held;
+            }
         }
 
         private void StepGlassCarry(TycoonRun run)
@@ -1321,7 +1359,7 @@ namespace LastCall.UI
             if (mouse == null || run == null || run.Phase != TycoonPhase.DayOpen) { EndGlassCarry(false); return; }
             var screen = mouse.position.ReadValue();
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot, screen, null, out Vector2 at))
-                _glassCarry.anchoredPosition = at;
+                _glassCarry.anchoredPosition = at + _emptyGrabOffset;
             if (mouse.leftButton.isPressed) return;
             EndGlassCarry(stage != null && stage.PointerOverDrain(screen));
         }
@@ -1369,6 +1407,7 @@ namespace LastCall.UI
 
         /// <summary>The clock that stands over the basin while its tap runs.</summary>
         private RectTransform _sinkClock, _sinkClockHand;
+        private Image _sinkPie;             // the wedge that fills as the tap runs
 
         /// <summary>
         /// The wait, as an object rather than a number (2026-09-06, the author: "eski tip bir
@@ -1378,17 +1417,27 @@ namespace LastCall.UI
         /// </summary>
         private void BuildSinkClock()
         {
+            // A PIE, NOT A CLOCK (2026-09-06, the author: "dairesel peynir gibi saat yönünde
+            // dönerek dolacak bir bar"). The ring is the dial; the disc over it is cut by a
+            // clockwise radial fill from the top, so the lit wedge is exactly the share of
+            // the wait that has gone.
             _sinkClock = NewRect("SinkClock", _hudRoot);
             _sinkClock.anchorMin = _sinkClock.anchorMax = _sinkClock.pivot = new Vector2(0.5f, 0.5f);
             _sinkClock.sizeDelta = new Vector2(24f * StageToHud, 24f * StageToHud);
             var face = _sinkClock.gameObject.AddComponent<Image>();
-            face.sprite = ChromeArt.ClockFace();
+            face.sprite = ChromeArt.PieRing();
             face.raycastTarget = false;
-            _sinkClockHand = NewRect("Hand", _sinkClock);
+            _sinkClockHand = NewRect("Wedge", _sinkClock);
             Stretch(_sinkClockHand, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var hand = _sinkClockHand.gameObject.AddComponent<Image>();
-            hand.sprite = ChromeArt.ClockHand();
-            hand.raycastTarget = false;
+            _sinkPie = _sinkClockHand.gameObject.AddComponent<Image>();
+            _sinkPie.sprite = ChromeArt.PieDisc();
+            _sinkPie.type = Image.Type.Filled;
+            _sinkPie.fillMethod = Image.FillMethod.Radial360;
+            _sinkPie.fillOrigin = (int)Image.Origin360.Top;
+            _sinkPie.fillClockwise = true;
+            _sinkPie.fillAmount = 0f;
+            _sinkPie.color = UITheme.Cyan[4];
+            _sinkPie.raycastTarget = false;
             _sinkClock.gameObject.SetActive(false);
         }
 
@@ -1418,7 +1467,7 @@ namespace LastCall.UI
                     _sinkClock.anchoredPosition = new Vector2(280f, 137f + 70f + 30f + CounterLift);
                     float whole = (float)Mathf.Max(0.01f, (float)run.SinkSeconds);
                     float gone = Mathf.Clamp01(1f - (float)run.WashLeft / whole);
-                    _sinkClockHand.localRotation = Quaternion.Euler(0f, 0f, -360f * gone);
+                    if (_sinkPie != null) _sinkPie.fillAmount = gone;
                 }
             }
             if (_handStrip == null) return;
@@ -1746,6 +1795,12 @@ namespace LastCall.UI
             // rail could hold — and re-centred on that span.
             if (_prepMat != null)
             {
+                // IN THE ROOM'S LIGHT (2026-09-06, the author: "çerez matı ortam
+                // ışıklandırmasından etkilenmiyor etkilenmesi lazım"). The mat is a canvas
+                // picture and no light in the world touches it, so it sat at the brightness
+                // it was drawn at while the counter around it went through an evening. It
+                // wears the same wash the back bar wears.
+                if (_prepMatImg != null && stage != null) _prepMatImg.color = stage.RoomWashLight;
                 bool anyDish = slot > 0;
                 if (_prepMat.gameObject.activeSelf != anyDish) _prepMat.gameObject.SetActive(anyDish);
                 if (anyDish)
@@ -1842,6 +1897,10 @@ namespace LastCall.UI
                 var m = Mouse.current;
                 _glassPressAt = m != null ? m.position.ReadValue() : Vector2.zero;
                 _glassTravelled = false;
+                _glassGrabOffset = Vector2.zero;
+                if (m != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                        (RectTransform)_drinkGlass.parent, _glassPressAt, null, out Vector2 held))
+                    _glassGrabOffset = _drinkGlass.anchoredPosition - held;
                 Sfx.Play("click", 0.5f);
             });
             _drinkGlass.gameObject.AddComponent<EventTrigger>().triggers.Add(grab);
@@ -2139,7 +2198,7 @@ namespace LastCall.UI
 
             var screen = mouse.position.ReadValue();
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot, screen, null, out Vector2 at))
-                _tinCarry.anchoredPosition = at;
+                _tinCarry.anchoredPosition = at + _tinGrabOffset;
             if (mouse.leftButton.isPressed) return;
             EndTinCarry(stage != null && stage.PointerOverDrain(screen));
         }
@@ -2162,6 +2221,16 @@ namespace LastCall.UI
             _tinPressed = false;
             _tinCarry.gameObject.SetActive(true);
             _tinCarry.SetAsLastSibling();
+            // Lifted from where it stood, by the part of it the finger pressed.
+            _tinGrabOffset = Vector2.zero;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot, _tinPressAt, null, out Vector2 held)
+                && RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot,
+                    RectTransformUtility.WorldToScreenPoint(null, _shakerProp.TransformPoint(_shakerProp.rect.center)), null, out Vector2 centre))
+            {
+                var start = centre - new Vector2(0f, (0.5f - _tinCarry.pivot.y) * _tinCarry.rect.height);
+                _tinCarry.anchoredPosition = start;
+                _tinGrabOffset = start - held;
+            }
             _shakerProp.gameObject.SetActive(false);
             _shakerPropLabel.gameObject.SetActive(false);
             _shakerPropHovered = false;
@@ -2312,6 +2381,7 @@ namespace LastCall.UI
                         (RectTransform)_drinkGlass.parent, mouse.position.ReadValue(), null,
                         out Vector2 want))
                 {
+                    want += _glassGrabOffset;
                     var before = _drinkGlass.anchoredPosition;
                     _glassVel += (want - before) * (GlassCarryStiffness * dt);
                     _glassVel *= Mathf.Exp(-GlassCarryDamping * dt);

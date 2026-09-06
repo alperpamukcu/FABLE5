@@ -38,6 +38,10 @@ namespace LastCall.UI
         private float _slosh;                 // running slosh phase for the shaker surface
         private Vector2 _bottleRest;
         private bool _bottleGrabbed;
+        // THE HAND KEEPS ITS GRIP (2026-09-06, the author: "nesneler tutulurken veya
+        // sürüklenirken hep mouseun ortasına hizalanıyor bunun olmamasını istiyorum"): where
+        // on the bottle or the lid the finger landed is where it stays for the carry.
+        private Vector2 _bottleGrabOffset, _capGrabOffset;
         private bool _pouring;
         private const float LiftRange = 200f;  // px of lift for a full tilt
         private const float MaxTilt = 118f;    // degrees the bottle leans at full lift
@@ -777,6 +781,7 @@ namespace LastCall.UI
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     _pourSurface, Mouse.current.position.ReadValue(), null, out Vector2 local))
             {
+                local += _bottleGrabOffset;
                 // Keep the bottle on the surface.
                 float halfW = _pourSurface.rect.width * 0.5f;
                 float halfH = _pourSurface.rect.height * 0.5f;
@@ -1032,7 +1037,7 @@ namespace LastCall.UI
                 float lift = _shakerTop.rect.height * CapArtOffset;
                 if (mouse != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
                         _pourSurface, mouse.position.ReadValue(), null, out Vector2 local))
-                    _capPos = Vector2.Lerp(_capPos, local - new Vector2(0, lift), 1f - Mathf.Exp(-30f * dt));
+                    _capPos = Vector2.Lerp(_capPos, local - new Vector2(0, lift) + _capGrabOffset, 1f - Mathf.Exp(-30f * dt));
                 if (mouse == null || !mouse.leftButton.isPressed)
                 {
                     _capGrabbed = false;
@@ -1692,6 +1697,10 @@ namespace LastCall.UI
             {
                 if (_capped) return;
                 _capGrabbed = true;
+                _capGrabOffset = Vector2.zero;
+                if (Mouse.current != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                        _pourSurface, Mouse.current.position.ReadValue(), null, out Vector2 held))
+                    _capGrabOffset = _capPos - (held - new Vector2(0, _shakerTop.rect.height * CapArtOffset));
                 Sfx.Play("cap_on", 0.35f);
             });
             _shakerTop.gameObject.AddComponent<EventTrigger>().triggers.Add(capGrab);
@@ -1755,7 +1764,13 @@ namespace LastCall.UI
                 // rail's stands guard the same way.
                 if (_capped) return;
                 if (_focusBottle != null && Run != null && Run.Phase == TycoonPhase.DayOpen)
+                {
                     _bottleGrabbed = true;
+                    _bottleGrabOffset = Vector2.zero;
+                    if (Mouse.current != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                            _pourSurface, Mouse.current.position.ReadValue(), null, out Vector2 held))
+                        _bottleGrabOffset = _pourBottle.anchoredPosition - held;
+                }
             Sfx.Play("bottle_set", 0.45f);   // lifted off the wood
             });
             _pourBottle.gameObject.AddComponent<EventTrigger>().triggers.Add(grab);

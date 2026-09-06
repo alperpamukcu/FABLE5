@@ -2625,6 +2625,86 @@ namespace LastCall.UI
             return Cache[Key] = Make(px, S, S, new Vector4(B, B, B, B));
         }
 
+        /// <summary>
+        /// A FULL DISC, for the basin's wait (2026-09-06, the author: "lavabo animasyonunun
+        /// bekleme süresi görseli yazı olarak değil, dairesel peynir gibi saat yönünde dönerek
+        /// dolacak bir bar yap"). Drawn solid and cut by the Image's own radial fill, so the
+        /// wedge that shows is exactly the share of the wait that is gone. The ring under it
+        /// is <see cref="PieRing"/>.
+        /// </summary>
+        public static Sprite PieDisc()
+        {
+            const string Key = "fx:pie:disc";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int S = 24;
+            var px = new Color32[S * S];
+            float c = (S - 1) * 0.5f;
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float dx = x - c, dy = y - c;
+                    if (dx * dx + dy * dy <= 8.6f * 8.6f) px[y * S + x] = new Color32(255, 255, 255, 255);
+                }
+            return Cache[Key] = Make(px, S, S, Vector4.zero);
+        }
+
+        /// <summary>The rim the pie fills inside: a dark plate with a lighter edge, so the
+        /// empty share reads as a dial and not as nothing.</summary>
+        public static Sprite PieRing()
+        {
+            const string Key = "fx:pie:ring";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int S = 24;
+            var px = new Color32[S * S];
+            float c = (S - 1) * 0.5f;
+            var plate = new Color32(0x1A, 0x10, 0x24, 235);   // Night[1]
+            var rim = new Color32(0xC9, 0xBC, 0xA8, 255);     // Cream[3]
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float dx = x - c, dy = y - c;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (d > 11.4f) continue;
+                    px[y * S + x] = d > 10.2f ? rim : plate;
+                }
+            return Cache[Key] = Make(px, S, S, Vector4.zero);
+        }
+
+        /// <summary>A 22-pixel disc: the licence seal's mask (2026-09-06, the author:
+        /// "dairesel çerçeve içerisinde bayrak olmalı"). The flag is a child of an Image
+        /// wearing this and a Mask, so the disc is exactly what shows of it.</summary>
+        public static Sprite Roundel()
+        {
+            const string Key = "lic:roundel";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int S = 22;
+            var px = new Color32[S * S];
+            float c = (S - 1) * 0.5f;
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                    if ((x - c) * (x - c) + (y - c) * (y - c) <= 10.6f * 10.6f)
+                        px[y * S + x] = new Color32(255, 255, 255, 255);
+            return Cache[Key] = Make(px, S, S, Vector4.zero);
+        }
+
+        /// <summary>The ring around the seal: two pixels of ink, nothing inside. Drawn
+        /// white for the caller to tint.</summary>
+        public static Sprite RoundelRing()
+        {
+            const string Key = "lic:roundel:ring";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int S = 22;
+            var px = new Color32[S * S];
+            float c = (S - 1) * 0.5f;
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float d = Mathf.Sqrt((x - c) * (x - c) + (y - c) * (y - c));
+                    if (d <= 10.6f && d > 8.9f) px[y * S + x] = new Color32(255, 255, 255, 255);
+                }
+            return Cache[Key] = Make(px, S, S, Vector4.zero);
+        }
+
         private static Sprite Make(Color32[] px, int w, int h, Vector4 border)
         {
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)

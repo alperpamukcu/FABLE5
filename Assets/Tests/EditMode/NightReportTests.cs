@@ -38,9 +38,18 @@ namespace LastCall.Tests
             new ShelfBottle(new IngredientCard("soda", "Soda", IngredientType.Bubbly, 1), capacity: 40),
         });
 
-        private static TycoonRun NewRun(string seed = "night-report") =>
+        private static TycoonRun NewRun(string seed = "night-report", params FixtureDefinition[] fixtures) =>
             new TycoonRun(NewShelf(), Book, new RunRng(seed),
-                config: new TycoonConfig(200, orderDecisionSeconds: 0, savorSeconds: 0));
+                config: new TycoonConfig(200, orderDecisionSeconds: 0, savorSeconds: 0),
+                fixtures: fixtures);
+
+        /// <summary>A room worth the two stars the old free base gave, put there by a
+        /// fitting the bar owns from the start. The bar opens worth NOTHING since 2026-09-06
+        /// (the author: "konfor 0dan başlamalı"); the nights that measure the ceiling are
+        /// played in a room that has one.</summary>
+        private static FixtureDefinition ARoomWorthTwo() =>
+            new FixtureDefinition("lamps_1", "Mark 1 Lamps", "wall_lamps", 25, 0, "Two on the wall.",
+                "fx_wall_lamp_lv0", startsInTheRoom: true, level: 1, comfort: 2.0);
 
         /// <summary>Serves every seated customer an exact Spritz until the day closes, and
         /// keeps the counter clean while it does (GDD 27 §4) — the numbers pinned here are a
@@ -111,15 +120,34 @@ namespace LastCall.Tests
         [Test]
         public void TonightStars_AreHeldUnderTheFittingsAndTheMenu()
         {
-            var run = NewRun();
+            var run = NewRun("night-report", ARoomWorthTwo());
             PlayDayServingEveryone(run);
 
             Assert.Greater(run.Floor.AverageSatisfaction, 0.8,
                 "every drink was exact, so the ROOM was happy");
             Assert.AreEqual(2.0, run.StarCeiling, 1e-9,
-                "a dive with the starter menu is capped at two");
+                "a two-star room with the starter menu is capped at two");
             Assert.AreEqual(2.0, run.TonightStars, 1e-9,
                 "and the night is worth the ceiling, not the room's own five");
+        }
+
+        [Test]
+        public void ABareRoom_FilesNothing_WhateverTheDrinks()
+        {
+            // 2026-09-06, the author: "oyuncu ilk başta yıkık dökük hiçbir şeyi olmayan bir
+            // barda başlıyor konfor 0dan başlamalı". Cracked plaster and no furniture is a
+            // room worth nothing, and the night files the LOWER of the drinks and the room —
+            // so a perfect service in a bare bar files zero stars until something is put in.
+            // That is the funnel: the walls are the first shelf in the market and the biggest
+            // rung in the catalogue, and this is why.
+            var run = NewRun();
+            PlayDayServingEveryone(run);
+
+            Assert.Greater(run.Floor.AverageSatisfaction, 0.8, "the drinks were fine");
+            Assert.AreEqual(0.0, run.ComfortTonight, 1e-9, "the room is worth nothing");
+            Assert.AreEqual(0.0, run.StarCeiling, 1e-9, "so the ceiling is nothing");
+            Assert.AreEqual(0.0, run.TonightStars, 1e-9, "and the night files nothing");
+            Assert.Greater(run.ServiceTonight, 0.0, "though the service side is still read");
         }
 
         [Test]

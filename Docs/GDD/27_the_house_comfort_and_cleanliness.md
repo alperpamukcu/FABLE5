@@ -61,9 +61,9 @@ bounced adult counts, at 0.
 - `Cleanliness` ∈ [0, 1] — the share of the night the counter was clean, time-weighted per seat and
   CLAMPED (§4.3). A bar that wipes and collects as it goes scores 1.0 and loses nothing.
 - `DirtPenalty` — the most a filthy night can take off the room: **0.75** (balance v1, measured
-  — §7). Under a star, on purpose: the room opens at 2.0, so a filthy fresh bar still files
-  1.25 — well over the broke line (0.625) even if the crowd read this number (it does not,
-  §2.3). The review's first draft said 1.5; that made the mess worth three quarters of a fresh
+  — §7). Under a star, on purpose. (Until 2026-09-06 the room opened at 2.0, so a filthy fresh
+  bar still filed 1.25; it opens at 0 now and a filthy bare bar files 0 — which is the floor,
+  never a debt — and the crowd does not read this number anyway, §2.3.) The review's first draft said 1.5; that made the mess worth three quarters of a fresh
   bar's whole ceiling. The first measurement said 1.0 with a six-second grace, and the latency
   row (§7 shape 4) showed a hand that reached each mess in twenty seconds losing half a star
   of standing and tripling its bankruptcies — the ordinary pace of a four-stool bar priced
@@ -125,8 +125,12 @@ symbol table, owned in §6: the slip's customer rows keep the STAR the author as
 (Seats − StartingSeats)`, clamped to 5. Built: `VenueComfort.Base(fixtureComfort,
 glassStepCaps, extraStools)`.
 
-- `FreeBase = 2.0` — the room as it opens. Deliberately the number `UpgradeStarCap` opened
-  with, so a fresh bar still caps at 2.0 and every pin that says so stays true.
+- `FreeBase = 0.0` — the room as it opens: **NOTHING** (2026-09-06, the author: *"oyuncu ilk
+  başta yıkık dökük hiçbir şeyi olmayan bir barda konfor 0dan başlamalı"*). It opened at 2.0 —
+  the number `UpgradeStarCap` started from — which meant cracked plaster and no furniture
+  already filed two stars of room. The room is worth what has been put into it, and a night in
+  a bare room files **zero** whatever the drinks were (`NightReportTests.ABareRoom_FilesNothing`):
+  that is the funnel to the walls, below.
 - **Fixture comfort is DATA:** a new `comfort` field on every entry in `fixtures.json`
   (`FixtureDefinition.Comfort`, ≥ 0, carried through `DataLoader` like `drainsFree` and `screen`).
   The pieces the room starts with carry **0** — they are the FreeBase. Summed over the STANDING rung
@@ -153,7 +157,7 @@ glassStepCaps, extraStools)`.
 | `plant_right` | snake $25 · +0.1 | agave $70 · +0.2 | monstera $95 · +0.4 (3.0★) | rung 3 uses the orphan `fx_monstera` |
 | `taps` | one (ours) · 0 | two · +0.1 | three · +0.2 | the beer ladder is about beer; a token — and the sim's rung-buying bot SKIPS this ladder so kegs stay out of the A/B (§7) |
 | `shaker` (the tin) | steel (ours) · 0 | gold $140 · +0.4 (2.0★) | | **the author's own two tins (2026-09-06)**. A CARRIED slot: the room never stands it — the counter draws it on the drink's coaster while a drink waits in it, the bench puts it in your hand, and the market sells the rung like any other. |
-| `walls` (the back wall) | cracked plaster (ours) · 0 | fresh plaster $70 · +0.3 (1.0★) | panelled $130 · +0.6 (2.0★) | **FOUR rungs, the author's own plates (2026-09-06)** — rung 4 is the harlequin paper, $200 · +1.0 (3.0★). A rung of this ladder is the whole 640×360 room (`backdrop` slot: the sprite REPLACES the plate, nothing stands at a hook), so the market tile shows a 64×48 `swatch` of the wall instead of the room shrunk. The bar opens in the cracked room; the door's sign reads +20 ONLY on every plate. |
+| `walls` (the back wall) | cracked plaster (ours) · 0 | fresh plaster **$45** · **+1.25 (0★)** | panelled $130 · **+2.25 (1.0★)** | **FOUR rungs, the author's own plates (2026-09-06)** — rung 4 is the harlequin paper, $200 · **+3.25 (2.0★)**. **THE WALLS CARRY THE ROOM** (2026-09-06, the author: *"duvar geliştirmeleri konforu en çok arttıran geliştirmeler olmalı ... markette walls upgrade'i daha çok göze sokulmalı"*): with the free base at 0, the second rung is ungated and alone reaches the first star, and each rung's gate sits under the comfort the rung before it gives. The market's walls shelf is the first shelf, and until rung 2 is up its sign is amber: START HERE ▸ THE WALLS — THE ROOM'S COMFORT; every comfort-bearing tile says its figure (COMFORT +1.25) where the fitting's mark used to be. **MEASURED (§7, 2026-09-06):** the bare start is a real cost. With the bot buying the plaster first (it reads the same START HERE sign), the 200-run floor went from 0% to **34% bankruptcies** at $45, 68% at the old $70, 27% at $40 (which the ladder pin forbids: a rung costs more than the one under it); cutting rungs 3–4 to $90/$150 changed nothing, since the bot never holds $150. The binding constraint is not the price but the standing's climb from zero (0.125 a night toward the walls' 1.25, 1.0★ on day 11 instead of day 7) under the door's zero-star arrival gap (GDD 23 §7) — the author's call whether that opening is the game or the door's rule softens. A rung of this ladder is the whole 640×360 room (`backdrop` slot: the sprite REPLACES the plate, nothing stands at a hook), so the market tile shows a 64×48 `swatch` of the wall instead of the room shrunk. The bar opens in the cracked room; the door's sign reads +20 ONLY on every plate. |
 | singles: candle, sconce, hanging lantern, paper lantern, neon | +0.2 each | | | lit dressing |
 | singles bought since 2026-09-06: the rug $35 · +0.2, the set $70 · +0.2 | | | | the author: *"mevcut tablo, mevcut duvar lambası, halı ve televizyon bunların hepsi upgrade olmalı"* — the room opens BARE |
 | ours from night one: the mat, one tap, the steel sink, the cracked wall | 0 | | | the FreeBase; *"barmat upgrade değil"* |
@@ -161,9 +165,9 @@ glassStepCaps, extraStools)`.
 These are the **v1** numbers, twice the first draft's: measured against the glass ladder
 (§7), a v0 candle was $30 for a twentieth of a star where a $12 glass step buys a tenth, and a
 bot buying the room by price went from 0% to 4% bankruptcies for a standing that went DOWN.
-Budget with every rung that has art today: 2.0 + 1.8 + 0.7 + 0.4 + 0.2 + 0.4 + 0.4 + 1.0 + 1.5 +
-0.5 + 1.0 (the walls, 2026-09-06) + 0.7 (the four given pieces, bought since 2026-09-06) + 0.4
-(the gold tin) = **11.0 → 5.0**. Five stars of comfort is reachable without the two art-dependent ladders and
+Budget with every rung that has art today: 0 (the bare room, 2026-09-06) + 1.8 + 0.7 + 0.4 + 0.2 +
+0.4 + 0.4 + 1.0 + 1.5 + 0.5 + 3.25 (the walls, 2026-09-06) + 0.7 (the four given pieces) + 0.4
+(the gold tin) = **11.25 → 5.0**. Five stars of comfort is reachable without the two art-dependent ladders and
 without every rung; the player chooses. The sim keeps moving them (§7).
 
 ### 3.2 Ladder rules (all existing, restated so the module is whole)
@@ -393,7 +397,7 @@ gibi olmalı."* The ladder machinery is built; what changes is the shop window.
 
 | Constant | Value | Where (as built) |
 |---|---|---|
-| `FreeBase` | 2.0 | `VenueComfort` |
+| `FreeBase` | 0.0 (was 2.0 until 2026-09-06) | `VenueComfort` |
 | `GlassComfortShare` | 0.5 | `VenueComfort` |
 | `StoolComfort` | 0.25 per extra stool | `VenueComfort` |
 | `DirtPenalty` | 0.75 (v1; 1.0 in v0) | `VenueComfort` |

@@ -192,6 +192,27 @@ the whole defence against a screen that looks assembled.
 Everything on the beam is placed against one of them, left to right. A new board gets its own
 pair and every item on it obeys them.
 
+**The beam, left to right (2026-09-06, the author: "Saat/Takvim/para/Madalyon/kalp/yıldız/
+ayarlar butonu ... uygun bir layouta göre tekrar koyulsun az metin kullanılsın"):** the HOUR
+in its well · the TILL in a well of its own (the coin at 2×, the figure in the display's cyan,
+red under water — back on the beam after the register left the room) · the WEEK, centred ·
+the two house readings, each with ONE word beside it (COMFORT over the medals, SERVICE over
+the hearts) · the STANDING's five stars under the crowd's caption · the settings KEY at 42,
+its cog at exactly 2×, amber. **Every reading explains itself under the pointer**: the tip
+(`ShowPropTip` with an icon and a line) carries the mark it is about, its name, and one line —
+"WHAT TONIGHT'S DRINKS ARE WORTH", "WHAT THE ROOM IS WORTH: WALLS, LIGHT, FURNITURE" — and
+hangs UNDER a prop that lives at the top of the screen, where a caption raised above it would
+be off the picture.
+
+**The settings are a WINDOW, not a list (2026-09-06):** a scrim, a titled plate in the centre
+(`ChromeArt.Card`, a band with the cog and the neon under it), the settings as rows — the name
+at the left, the control at the right, a note under a name that needs one — grouped AUDIO /
+DISPLAY / THE RUN, so the one thing that throws the night away (START OVER → NEW RUN, on a
+brick key) sits furthest from the thumb. The volume is a five-block meter with a key at each
+end. The developer's bench keeps one small key at the plate's foot; the bench itself is set
+in a plain proportional face, in Turkish, in four real columns — it is the author's tool and
+not part of the game, so the pixel law does not reach it.
+
 ## 2. The ONE key
 
 Every pressable thing in this game is the same object. A player who has learned the market's

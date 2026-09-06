@@ -81,6 +81,7 @@ namespace LastCall.UI
         private Text _aimText;
         private Vector2 _serveShakerRest;
         private bool _serveGrabbed;
+        private Vector2 _serveGrabOffset;   // the hand keeps its grip (2026-09-06)
         private const float ServePourRate = 0.34f;   // glass-fractions per second (slower, 2026-07-22)
 
         // The way out: SERVE only means something once a drink stands in the glass, so
@@ -183,6 +184,7 @@ namespace LastCall.UI
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     _serveSurface, Mouse.current.position.ReadValue(), null, out Vector2 local))
             {
+                local += _serveGrabOffset;
                 float halfW = _serveSurface.rect.width * 0.5f;
                 float halfH = _serveSurface.rect.height * 0.5f;
                 local.x = Mathf.Clamp(local.x, -halfW + 30f, halfW - 30f);
@@ -594,6 +596,10 @@ namespace LastCall.UI
                     return;
                 }
                 _serveGrabbed = true;
+                _serveGrabOffset = Vector2.zero;
+                if (Mouse.current != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                        _serveSurface, Mouse.current.position.ReadValue(), null, out Vector2 held))
+                    _serveGrabOffset = _serveShaker.anchoredPosition - held;
             Sfx.Play("tin_tip", 0.6f);
             });
             _serveShaker.gameObject.AddComponent<EventTrigger>().triggers.Add(sgrab);

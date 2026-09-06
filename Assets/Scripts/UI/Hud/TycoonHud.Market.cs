@@ -817,7 +817,10 @@ namespace LastCall.UI
         private static Sprite UpgradeIcon(string group) =>
             ItemArt.Load("up_" + (group ?? "")) ?? ItemArt.Load("sh_i_upgrades");
 
-        private RectTransform ShopSection(string title)
+        /// <param name="hot">The shelf the player is being SENT to (2026-09-06, the author:
+        /// "markette oyuncuya walls upgrade'i daha çok göze sokulmalı ona yönlendirilmeli"):
+        /// the band goes amber and the sign says so, until the rung it points at is bought.</param>
+        private RectTransform ShopSection(string title, bool hot = false)
         {
             // An aisle sign: a coloured tick, the name in the signage colour, and a rule
             // running out to the edge — how a storefront heads a shelf.
@@ -828,11 +831,11 @@ namespace LastCall.UI
             h.gameObject.AddComponent<LayoutElement>().preferredHeight = 26;
             var band = NewRect("Band", h);
             Stretch(band, Vector2.zero, Vector2.one, new Vector2(0, 2), new Vector2(0, -2));
-            band.gameObject.AddComponent<Image>().color = ShopViceDeep;
+            band.gameObject.AddComponent<Image>().color = hot ? UITheme.Amber[3] : ShopViceDeep;
             var pip = NewRect("Pip", band);
             Place(pip, new Vector2(0, 0.5f), new Vector2(6, 18), new Vector2(10, 0));
-            pip.gameObject.AddComponent<Image>().color = ShopViceLit;
-            var t = NewText("T", band, _shop, 16, TextAnchor.MiddleLeft, Color.white);
+            pip.gameObject.AddComponent<Image>().color = hot ? UITheme.Night[0] : ShopViceLit;
+            var t = NewText("T", band, _shop, 16, TextAnchor.MiddleLeft, hot ? UITheme.Night[0] : Color.white);
             Place(t.rectTransform, new Vector2(0, 0.5f), new Vector2(700, 18), new Vector2(26, 0));
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
             t.text = title;

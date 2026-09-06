@@ -56,8 +56,8 @@ namespace LastCall.Core
 
         /// <summary>What the room is worth with nobody in it (GDD 27 §3): the free base, the
         /// fittings, half the glass ladder, the extra stools. Changes at the market, never
-        /// during a night. A fresh bar is worth exactly two — the number the retired
-        /// UpgradeStarCap opened with, so every pin that says so stays true.</summary>
+        /// during a night. A fresh bar is worth NOTHING (2026-09-06): the room is what has
+        /// been put into it, and the walls are the first and biggest thing to put in.</summary>
         public double ComfortBase =>
             VenueComfort.Base(FixtureComfort, GlassStepsCap, Math.Max(0, Seats - _config.StartingSeats));
 

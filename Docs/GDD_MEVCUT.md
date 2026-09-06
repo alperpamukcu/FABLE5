@@ -177,7 +177,7 @@ kullanan ilk merdivendi; **2026-08-25'te lavabo ikincisi oldu**: `counter_sink` 
 ## 7 · Yıldız / itibar omurgası
 
 - `BarRating`: 0★ başlar; gece yıldızı `5×memnuniyet` (2026-08-11'den beri; `1+4×` eski ölçek), **iki tavanla** kırpılır; ilerleme ataletli (+0.10 çıkış, −0.20 iniş, gecelik en çok +0.25). Fırtına gidenler de puan yazar.
-- **İKİ PUAN, ORTAK YILDIZ (2026-09-05, GDD 27; §9.23):** gecenin yıldızı `min(servis, konfor)`. **Servis** = `min(5×ortalama memnuniyet, MenuStarCap)`; **konfor** = `ComfortBase − 1.0 × (1 − temizlik)`, `ComfortBase = 2.0 + Σ fikstür `comfort` (yalnız ayakta duran basamak) + 0.5 × bardak adımı tavanı + 0.25 × ek tabure` (eski `UpgradeStarCap` bu tabana dönüştü; `MenuStarCap` gece servis edilen en iyi Exact ranka göre 2.0→5.0 aynen). Yarının kalabalığı SERVİS tarafını okur (kir tek başına kalabalığı yoksullaştıramaz).
+- **İKİ PUAN, ORTAK YILDIZ (2026-09-05, GDD 27; §9.23):** gecenin yıldızı `min(servis, konfor)`. **Servis** = `min(5×ortalama memnuniyet, MenuStarCap)`; **konfor** = `ComfortBase − 1.0 × (1 − temizlik)`, `ComfortBase = 0 + Σ fikstür `comfort` (yalnız ayakta duran basamak) + 0.5 × bardak adımı tavanı + 0.25 × ek tabure` (**taban 2026-09-06'da 2.0'dan 0'a indi — çıplak oda hiçbir şey etmez, gece 0 yıldız dosyalar; §9.35**; eski `UpgradeStarCap` bu tabana dönüştü; `MenuStarCap` gece servis edilen en iyi Exact ranka göre 2.0→5.0 aynen). Yarının kalabalığı SERVİS tarafını okur (kir tek başına kalabalığı yoksullaştıramaz).
 - **ODA ORTADAN DOLAR (2026-08-25, yazar: "başlangıçtaki koltuklar 2-3-4-5 sırası olacak geliştirme ile alınan koltuklar 1 ve 6 olmalı"):** tezgâh boyunca altı tabure çizilir, yeni bar dördüne sahiptir — eskiden İLK dördüne, yani açılış gecesinin bütün kalabalığı sol duvara yaslanıyor ve kasayla arasında iki tabure boşluk kalıyordu (yeni açılan bir bar terk edilmiş gibi okunuyordu), üstelik yükseltme kimsenin oturmadığı sıranın UZAK ucuna bir tabure daha ekliyordu. Şimdi sahip olunan dördü ORTADAKİ dört (2-3-4-5), yükseltmenin aldığı ikisi ise iki UÇ: önce kasa tarafı (6), sonra uzak duvar (1). Sıra `SeatFillOrder(slots, StartingSeats)` ile TÜRETİLİR (açılış bloğu satırın ortasına yerleşir, artanı kasa ucundan geri doğru eklenir), yani başka bir tabure sayısıyla açılan bir bar da ortalanır. Evin misafiri hâlâ kasaya en yakın taburede oturur ama artık `TillEndward` ile — sırayı TERS gezmek yanlış cevabı verir, çünkü yükseltmenin aldığı SON tabure uzak duvardakidir.
 - Kalabalık yarını seçer: ortalama ≥4.2 HighRoller · ≥1.5 Regular · altı Broke. Ambience: bardak+tezgahtan en çok +0.21 düz bonus.
 
@@ -1096,7 +1096,7 @@ Upgrade görsellerinde ürünün resmi yerine geliştirme iconu gibi bir görsel
 
 - **Oda çıplak açılır:** `flamingo_triptych` ($45 · +0.2, resim merdiveninin 1. basamağı), `wall_lamps_one`
   ($30 · +0.1), `floor_rug` ($35 · +0.2), `wall_tv` ($70 · +0.2) artık `startsInTheRoom` değil — satın alınır ve
-  konfor taşır. Gece birde odada yalnız paspas, tek musluk, çelik lavabo ve çatlak duvar var (FreeBase, 0 konfor);
+  konfor taşır. Gece birde odada yalnız paspas, tek musluk, çelik lavabo ve çatlak duvar var (FreeBase — 2026-09-06'dan beri 0; oda hiçbir şey etmez, §9.35);
   paspas geliştirme değil, hep evin. Duvar lambası alınmadan oda gece cam ışığı ve genel yıkamayla loş — yazarın
   kararı, harabe barın kendisi.
 - **Raflar:** her fikstür `group` adlandırır (walls/light/furniture/greenery/counter — `FixtureDefinition.Group`);
@@ -1329,3 +1329,40 @@ Commit `<C>`.
 - **Veri:** 6 JSON, `JsonUtility` + gürültülü doğrulama; tarifler çift kaynak (json+katalog) parite testli. **`story/story.json` 2026-08-13'te yüklenir oldu** (`DataLoader.ParseStory`): kadro + tarif kataloğuna karşı kurulur; bilinmeyen look/tarif/gece, sessiz geceye yazılmış misafir, iki host, kimsenin izlemediği ders adı, hiçbir yere çıkmayan beat yüklemede patlar. Yazım kuralı da orada: `needStyle` isteyen beat, o stili `hostWarning` satırında **adıyla** söylemek zorunda. Bootstrap boot'ta ayrıştırır ama koşuya henüz vermez (`storyInPlay` kapalı — diyalog plakası S3'te).
 - **Araçlar:** LastCall menüsü — Create Debug Scene · Simulate Tycoon 200 Runs · Measure Service Speed Response.
 - **Doğrulama:** 281 EditMode testi (12 dosya) + 7 PlayMode testi (4 duman + 3 piksel taban resmi, `Baselines~`); sim botu gerçek oyuncu fiilleriyle 200 koşu, `Docs/tycoon_sim_report.md`.
+
+### 9.35 · Altıncı liste: peynir dilimi, tutuş, ışıklı mat, sıfır konfor, dar kimlik, kiriş, menü, tezgâh, kalın bardak (2026-09-06)
+
+Yazarın altıncı düzeltme listesi. Hepsi kodda ve fotoğrafla doğrulandı.
+
+- **Lavabo bekleme süresi bir pasta:** saat kadranı ve ibre gitti; `ChromeArt.PieRing` üstünde `Image.Type.Filled / Radial360`
+  bir disk (`PieDisc`), tepeden saat yönünde dolar, dolan dilim geçen sürenin tam payı (`_sinkPie.fillAmount = 1 − WashLeft/SinkSeconds`).
+- **El tutuşunu korur:** taşınan her şey (bitmiş içki, boş bardak, tin, bez, çerez tutamı, tezgâh şişesi, kapak, bardak sahnesindeki tin)
+  basıldığı noktayı kaydeder ve o ofsetle taşınır — pivot artık imlece zıplamaz. Çerez tutamında ofset kap/küp oranında
+  ölçeklenir (parmak kabın neresine bastıysa küpün orasında kalır). Musluk bardağı değişmedi (ağzı musluğun altında kalmalı).
+- **Çerez matı odanın ışığında:** `_prepMatImg.color = stage.RoomWashLight` her kare; arka barın giydiği yıkama.
+- **Konfor sıfırdan başlar:** `VenueComfort.FreeBase = 0`. Çıplak oda hiçbir şey etmez; gece `min(servis, konfor)` dosyaladığı için
+  kusursuz servis bile çıplak barda **0 yıldız** yazar (`NightReportTests.ABareRoom_FilesNothing_WhateverTheDrinks`). Kalabalık
+  SERVİS tarafını okuduğundan müşteri ve para akışı değişmez; yıldız kapıları duvara kadar kapalıdır — huni budur.
+  **Duvarlar odayı taşır:** `walls_2` **$45** · **+1.25 · 0★** (kapısız — bir gecelik hasılat, ikinci gece alınır), `walls_3` $130 · **+2.25 · 1★**, `walls_4` $200 · **+3.25 · 2★**
+  (eski $70/$130/$200, +0.3/+0.6/+1.0 ve 1/2/3★). **Sim (200 koşu):** bot bir çıplak odada önce sıvayı alır (marketin tabelasını okur); taban 0% iflastan **%34'e** çıktı ($45; $70'te %68, $40'ta %27 — merdiven pini $40'ı yasaklar, 3–4. basamağı ucuzlatmak hiçbir şey değiştirmedi). Bağlayıcı kısıt fiyat değil, puanın sıfırdan tırmanışı (gecede 0.125, 1★ 7. gün yerine 11. gün) ve kapının sıfır yıldız varış aralığı (GDD 23 §7) — açılışın bu kadar sert kalması yazarın kararı.. Her basamağın kapısı bir önceki basamağın verdiği konforun altında, ilk basamak tek başına ilk yıldıza
+  ulaşır. Markette duvar rafı ilk raf; 2. basamak alınana kadar tabelası amber "START HERE ▸ THE WALLS — THE ROOM'S COMFORT"
+  (`ShopSection(title, hot: true)`), konfor taşıyan her karo "COMFORT +1.25" yazar (eski "Fitting · mark 2" yerine). Test pinleri:
+  `HouseTests` (0 taban), `ComfortWiringTests`/`TycoonRunTests`/`NightReportTests` kir ve puanı ölçen geceleri `ARoomWorthTwo()`
+  (baştan sahip olunan +2.0 lamba) ile oynar. 492/492.
+- **Kimlik v3:** 196×148 art px (588×444) — ızgara basılana göre ölçüldü (348 birim; 20 harflik içki 320). Bayrak 16×11'in 6 katı,
+  22 px'lik diske kesilmiş (`ChromeArt.Roundel` + `Mask`, üstünde `RoundelRing`), bandın alt kenarına madalyon gibi asılı.
+  KICK anahtarı çizildiği yükseklikte (100×52): dilimlenmiş kapağın 24 birimlik kenarı 30'luk anahtara 16 px kelime için 6 birim yüz
+  bırakıyordu. Yazı bandın solunda üst üste (otorite / sınıf). Onay çipleri beşinci satırın İÇİNDE, başlığın sağında.
+- **Kiriş (üst bar):** saat kuyusu · kasa kuyusu (2× coin, cyan rakam, eksi bakiyede kırmızı; `RunTheTill` kirişi de sürer) · hafta ·
+  COMFORT/SERVICE kelimeleri şeritlerin yanında · yıldızlar · 42'lik ayar anahtarı (çark tam 2×, amber). Üç okuma ve kasa ve anahtar
+  imleç altında ikonlu iki satırlık ipucu verir (`ShowPropTip(over, word, icon, detail)`); ekranın tepesindeki nesnelerde ipucu ALTA asılır.
+- **Ayarlar bir pencere:** scrim + ortada kart (band, çark, neon), AUDIO / DISPLAY / THE RUN grupları, satır = ad + sağda kontrol;
+  ses beş bloklu ölçek ve −/+; SOUND ON/OFF; MOTION FULL/REDUCED; TONIGHT'S BOOK → OPEN; START OVER → NEW RUN (tuğla rengi);
+  altta DEV TOOLS (küçük) ve CLOSE (amber). Sıralama 23.
+- **Geliştirici tezgâhı Türkçe ve düz yazı tipinde:** `LegacyRuntime.ttf` (Arial), dört gerçek sütun (FİYAT / AD / NASIL YAPILIR / NE İSTER),
+  basamak başlıkları "★ 1.0 · 10 SATIR — KİLİTLİ"; fiiller YENİ KOŞU / ORTA OYUN / SON OYUN / GÜN SONUNA ATLA / SON SİPARİŞE ATLA / ODA.
+  Oyunun kendi tostları İngilizce kaldı (piksel yüzlerde Türkçe glif yok).
+- **Bardak seti v2 (çizili):** `GlassArt.PreferDrawn = true` — üretilmiş `glass3d_*` plakaları kurulu ve bir bayrak uzakta. 128×176
+  tuval, duvar 3→5 px, taban 6→10, duvar silindir gibi taranmış (uzak kenar koyu, ışık çizgisi, gövde, iç kenar gölge), tüm boşluğun
+  üstüne %26 cam tonu ("daha az şeffaf"): içki camın İÇİNDEN görünür. Boyutlar aynı (bardak sahnesi 260, tezgâh 92, boşlar 52);
+  kalın duvar 92'de bile ~3 birim kalır, eski 3 px 1.5'e iniyordu.

@@ -37,12 +37,22 @@ namespace LastCall.Tests
         // The economy math here is written against an instant serve (order the moment they
         // sit, gone the moment they are served), so these runs switch the decision beat and
         // the savour off. The pacing itself is covered by TycoonCoreTests.
-        private static TycoonRun NewRun(string seed = "day-one", int startingMoney = 20) =>
+        private static TycoonRun NewRun(string seed = "day-one", int startingMoney = 20,
+            params FixtureDefinition[] fixtures) =>
             new TycoonRun(NewShelf(), Book, new RunRng(seed),
                 // NO WEEKLY JOB (2026-09-06): these runs measure what the BAR earns, and a
                 // job's bonus is Ece's money. WeeklyJobTests plays with them switched on.
                 config: new TycoonConfig(startingMoney, orderDecisionSeconds: 0, savorSeconds: 0,
-                    weeklyJobs: false));
+                    weeklyJobs: false),
+                fixtures: fixtures);
+
+        /// <summary>A room worth two stars, put there by a fitting the bar owns from the
+        /// start. The bar opens worth NOTHING since 2026-09-06 (the author: "konfor 0dan
+        /// başlamalı") and a night in a bare room files nothing, so the tests that watch the
+        /// standing MOVE are played in a room that lets it.</summary>
+        private static FixtureDefinition ARoomWorthTwo() =>
+            new FixtureDefinition("lamps_1", "Mark 1 Lamps", "wall_lamps", 25, 0, "Two on the wall.",
+                "fx_wall_lamp_lv0", startsInTheRoom: true, level: 1, comfort: 2.0);
 
         /// <summary>Tips the whole shaker into the serving glass, dead on the rim. Nothing is
         /// served straight out of the shaker any more (2026-07-28), so every test that hands a
@@ -128,7 +138,7 @@ namespace LastCall.Tests
             // Rewritten for the zero-start standing (2026-08-02): one good night no
             // longer vaults a no-name bar to the rich crowd — the standing is inertial
             // and capped by the fittings and the menu tier.
-            var run = NewRun();
+            var run = NewRun("day-one", 20, ARoomWorthTwo());
             PlayDayServingEveryone(run);
             run.ContinueToNextDay();
             Assert.AreEqual(WealthTier.Regular, run.CrowdToday,
@@ -478,7 +488,7 @@ namespace LastCall.Tests
         [Test]
         public void TheStanding_StartsAtZero_AndOneNightMovesItAStep()
         {
-            var run = NewRun();
+            var run = NewRun("day-one", 20, ARoomWorthTwo());
             Assert.AreEqual(0.0, run.Rating.Average, 1e-9,
                 "a new bar has no reputation at all (2026-08-02)");
             PlayDayServingEveryone(run);
@@ -1078,16 +1088,18 @@ namespace LastCall.Tests
         // ── the audit's other pins (2026-08-11) ─────────────────────────────────
 
         [Test]
-        public void AFreshBar_CapsAtExactlyTwoStars()
+        public void AFreshBar_IsWorthNothing()
         {
             // The cap counted seats from a literal 3 while the config opens with 4 —
             // a free quarter-star on day one, against the cap's own documented promise.
-            // Since 2026-09-05 the cap is the room's COMFORT (GDD 27 §3): the same two stars,
-            // and now a room with no fittings, no mess and no fixture catalogue reads them.
+            // Since 2026-09-05 the cap is the room's COMFORT (GDD 27 §3), and since
+            // 2026-09-06 a room with no fittings is worth NOTHING (the author: "konfor 0dan
+            // başlamalı"): the opening seats are not extra stools, and no fixture catalogue
+            // means no fittings.
             var run = NewRun();
-            Assert.AreEqual(2.0, run.ComfortBase, 1e-9,
-                "no upgrades, opening seats: a dive is worth two");
-            Assert.AreEqual(2.0, run.ComfortTonight, 1e-9, "and a clean, empty counter costs nothing");
+            Assert.AreEqual(0.0, run.ComfortBase, 1e-9,
+                "no upgrades, opening seats: a dive is worth nothing");
+            Assert.AreEqual(0.0, run.ComfortTonight, 1e-9, "and a clean, empty counter costs nothing");
             Assert.AreEqual(0.0, run.FixtureComfort, 1e-9, "no catalogue, no fittings");
         }
 

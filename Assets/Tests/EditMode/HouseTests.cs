@@ -21,36 +21,37 @@ namespace LastCall.Tests
         // ── what the room is worth ───────────────────────────────────────────────
 
         [Test]
-        public void TheMess_CanNeverTurnTheCrowdBrokeByItself()
+        public void TheMess_CanNeverTakeTheRoomBelowNothing()
         {
-            // The broke line is 0.625 and the crowd reads the SERVICE side anyway (GDD 27
-            // §2.3) — but the penalty is held under the free base with room to spare, so a
-            // filthy fresh bar still files a room worth something.
-            Assert.Greater(VenueComfort.FreeBase - VenueComfort.DirtPenalty, BarRating.BrokeStars);
+            // The crowd reads the SERVICE side (GDD 27 §2.3), so the mess never turns tomorrow
+            // broke by itself; and the room it drains floors at nothing — a filthy bare bar
+            // files zero, not a debt.
+            Assert.AreEqual(0.0, VenueComfort.Tonight(VenueComfort.Base(0, 0, 0), 0.0), Eps);
         }
 
         [Test]
-        public void AFreshRoom_IsWorthTheFreeBase()
+        public void AFreshRoom_IsWorthNothing()
         {
-            // The number the old fittings ceiling opened with: a fresh bar still caps at two.
-            Assert.AreEqual(2.0, VenueComfort.FreeBase, Eps);
-            Assert.AreEqual(2.0, VenueComfort.Base(0, 0, 0), Eps);
+            // 2026-09-06, the author: "konfor 0dan başlamalı". The room is what has been put
+            // into it; cracked plaster and no furniture is worth exactly nothing.
+            Assert.AreEqual(0.0, VenueComfort.FreeBase, Eps);
+            Assert.AreEqual(0.0, VenueComfort.Base(0, 0, 0), Eps);
         }
 
         [Test]
         public void TheGlassLadder_CountsAtHalfItsOldWeight()
         {
             // One full glass line used to lift the ceiling by 0.60; it lifts comfort by 0.30.
-            Assert.AreEqual(2.30, VenueComfort.Base(0, 0.60, 0), Eps);
+            Assert.AreEqual(0.30, VenueComfort.Base(0, 0.60, 0), Eps);
             Assert.AreEqual(0.5, VenueComfort.GlassComfortShare, Eps);
         }
 
         [Test]
         public void StoolsAndFittings_AddWhatTheySay()
         {
-            Assert.AreEqual(2.50, VenueComfort.Base(0, 0, 2), Eps, "two extra stools, a quarter each");
-            Assert.AreEqual(2.90, VenueComfort.Base(0.9, 0, 0), Eps, "three steel tables");
-            Assert.AreEqual(2.0, VenueComfort.Base(0, 0, -3), Eps, "a bar cannot lose stools it never had");
+            Assert.AreEqual(0.50, VenueComfort.Base(0, 0, 2), Eps, "two extra stools, a quarter each");
+            Assert.AreEqual(0.90, VenueComfort.Base(0.9, 0, 0), Eps, "three steel tables");
+            Assert.AreEqual(0.0, VenueComfort.Base(0, 0, -3), Eps, "a bar cannot lose stools it never had");
         }
 
         [Test]

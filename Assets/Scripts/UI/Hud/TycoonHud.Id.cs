@@ -468,9 +468,13 @@ namespace LastCall.UI
 
         /// <summary>The key's size on the card: wide enough for the word on the bench's
         /// key, and inside the header band's 42 units.</summary>
-        // Sized to its word at the band's own height (2026-09-06): 128x34 was a key from
-        // a bigger card and it crowded the flag beside it.
-        private const float KickW = 96f, KickH = 30f;
+        // THE CAP AT ITS OWN HEIGHT (v3, 2026-09-06, the author: "kick butonunu düzelt kick
+        // yazısı butondan daha büyük buton tasarımı kötü"). The cap sprite is sliced with
+        // fourteen units of top border and ten of bottom; at 30 tall that left SIX units of
+        // face for a sixteen-pixel word, so the word stood taller than the key it was on.
+        // 52 is the height the cap was drawn at, and the band is 72: it fits, with the word
+        // on its face and the throw under it.
+        private const float KickW = 100f, KickH = 52f;
         private RectTransform _idKick;
 
         /// <summary>
@@ -683,29 +687,54 @@ namespace LastCall.UI
             // but is not where a licence puts a name — and the header it replaced was 320
             // units of ink identical on every card. The number fixes that: it is the one
             // header field that is different on all thirty-one.
+            // STACKED at the band's left (v3): the authority over the document's class,
+            // which leaves the band's right half to the key and the seal.
             float bandMid = LicHeaderY - LicHeaderH * 0.5f;
             var authority = NewText("Authority", card, _display, 16, TextAnchor.MiddleLeft,
                 UITheme.Cream[4]);
-            Place(authority.rectTransform, new Vector2(0, 1), new Vector2(200, 18),
-                new Vector2(56, bandMid + 6f));
+            Place(authority.rectTransform, new Vector2(0, 1), new Vector2(240, 18),
+                new Vector2(LicPad + 4f, bandMid + 19f));
             authority.horizontalOverflow = HorizontalWrapMode.Overflow;
             authority.text = "NEW ARDEN";
             var docType = NewText("DocType", card, _body, 8, TextAnchor.MiddleLeft,
                 new Color(0.62f, 0.72f, 0.88f, 1f));
-            Place(docType.rectTransform, new Vector2(0, 1), new Vector2(260, 12),
-                new Vector2(220, bandMid + 5f));
+            Place(docType.rectTransform, new Vector2(0, 1), new Vector2(240, 12),
+                new Vector2(LicPad + 4f, bandMid - 7f));
             docType.horizontalOverflow = HorizontalWrapMode.Overflow;
             docType.text = "PATRON LICENCE  ·  CLASS B";
 
             // The flag rides the header, where a licence puts its emblem. It is the one
             // thing up here that changes from card to card besides the number below.
-            var idFlag = NewRect("Flag", card);
-            Place(idFlag, new Vector2(1, 1), new Vector2(30, 20),
-                new Vector2(-(LicPad + 15f), bandMid + 10f));
+            // THE FLAG IN A ROUNDEL (v3, 2026-09-06, the author: "kimlikte bayrak görselleri
+            // daha büyük olmalı ve dairesel çerçeve içerisinde bayrak olmalı"). A 30x20 flag
+            // was a postage stamp in the band's corner. It is the licence's SEAL now: the
+            // 16x11 flag at six times, cut to a disc 22 art pixels across — the flag's own
+            // height, so it shows top to bottom and the disc trims only its ends — hung on
+            // the band's lower edge in a ring of ink, the way a medallion hangs on a ribbon.
+            const float Roundel = 22f * LicScale, FlagW = 16f * 6f, FlagH = 11f * 6f;
+            var sealAt = new Vector2(-(LicPad + Roundel * 0.5f),
+                LicHeaderY - LicHeaderH + Roundel * 0.35f);
+            var seal = NewRect("Seal", card);
+            Place(seal, new Vector2(1, 1), new Vector2(Roundel, Roundel), sealAt);
+            seal.pivot = new Vector2(0.5f, 0.5f);
+            var sealImg = seal.gameObject.AddComponent<Image>();
+            sealImg.sprite = ChromeArt.Roundel();
+            sealImg.color = UITheme.Cream[3];       // the paper, where a country has no flag drawn
+            sealImg.raycastTarget = false;
+            seal.gameObject.AddComponent<Mask>().showMaskGraphic = true;
+            var idFlag = NewRect("Flag", seal);
+            Place(idFlag, new Vector2(0.5f, 0.5f), new Vector2(FlagW, FlagH), Vector2.zero);
             _idFlag = idFlag.gameObject.AddComponent<Image>();
-            _idFlag.preserveAspect = true;
+            _idFlag.preserveAspect = false;         // six times exactly; the box is cut to it
             _idFlag.raycastTarget = false;
             _idFlag.enabled = false;
+            var sealRing = NewRect("SealRing", card);
+            Place(sealRing, new Vector2(1, 1), new Vector2(Roundel, Roundel), sealAt);
+            sealRing.pivot = new Vector2(0.5f, 0.5f);
+            var ringImg = sealRing.gameObject.AddComponent<Image>();
+            ringImg.sprite = ChromeArt.RoundelRing();
+            ringImg.color = UITheme.Night[1];
+            ringImg.raycastTarget = false;
 
             // THE KICK KEY (GDD 28 §4, 2026-09-05, the author: "kimliğin üstündeki butondan
             // 'kick'leyebileceksin"). ON the card, in its header band, left of the flag —
@@ -716,7 +745,7 @@ namespace LastCall.UI
             // In the band, right of the type and left of the flag, with the same margin the
             // grid keeps (2026-09-06): the key is furniture on this card, not a floating button.
             Place(kick, new Vector2(1, 1), new Vector2(KickW, KickH),
-                new Vector2(-(LicPad + 32f * LicScale / 3f + 10f), bandMid + KickH * 0.5f));
+                new Vector2(-(LicPad + Roundel + 12f), bandMid + KickH * 0.5f));
             var kickImg = kick.gameObject.AddComponent<Image>();
             kickImg.sprite = ChromeArt.KeyCap(UITheme.ViceRed, false, "kick");
             kickImg.type = Image.Type.Sliced;
@@ -847,8 +876,8 @@ namespace LastCall.UI
             // printed on card stock, and they cost one character each.
             _idName = LicenceField(card, "1   NAME", LicFieldsX, LicLines[0], LicFieldsW, out _);
             _idAgeFrom = LicenceField(card, "2   AGE", LicFieldsX, LicLines[1], 100f, out _);
-            _idCitizen = LicenceField(card, "3   CITIZEN OF", LicFieldsX + 130f, LicLines[1],
-                LicFieldsW - 130f, out _);
+            _idCitizen = LicenceField(card, "3   CITIZEN OF", LicFieldsX + 100f, LicLines[1],
+                LicFieldsW - 100f, out _);
 
             // The order, seated on its own rule with the glass drawn beside it.
             var idIcon = NewRect("OrderIcon", card);
@@ -919,11 +948,15 @@ namespace LastCall.UI
             // 2026-08-01) in the free band under the rule; the field text only survives to
             // say SERVE IT CLEAN when there is nothing to draw.
             _idIntent = LicenceField(card, "5   ENDORSEMENTS", LicFieldsX, LicLines[3],
-                LicFieldsW, out _idIntentLabel, 12);
+                LicFieldsW, out _idIntentLabel, 8);
+            // THE CHIPS SIT IN THE ROW, right of the caption (v3, 2026-09-06). They hung
+            // under the fourth rule, which is under the card: 44 units of chip below a rule
+            // 24 units from the paper's edge. The row is 81 tall and the caption is 12 of
+            // it; a 38-unit chip stands in the rest, six units above the rule.
             _idPrefRow = NewRect("PrefRow", card);
-            Place(_idPrefRow, new Vector2(0, 1), new Vector2(LicFieldsW, 44), Vector2.zero);
+            Place(_idPrefRow, new Vector2(0, 1), new Vector2(LicFieldsW - 150f, 38), Vector2.zero);
             _idPrefRow.pivot = new Vector2(0, 1);
-            _idPrefRow.anchoredPosition = new Vector2(LicFieldsX, -LicLines[3] - 6f);
+            _idPrefRow.anchoredPosition = new Vector2(LicFieldsX + 150f, -LicLines[3] + 44f);
             var prefLayout = _idPrefRow.gameObject.AddComponent<HorizontalLayoutGroup>();
             prefLayout.spacing = 8;
             prefLayout.childControlWidth = true; prefLayout.childForceExpandWidth = false;

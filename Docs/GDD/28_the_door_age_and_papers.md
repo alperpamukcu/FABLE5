@@ -47,11 +47,18 @@ a page of facts. It is drawn now:
 - **Everything printed on it** — the band, the portrait well, the two data cells, the
   four rules — is `LicenceFurniture`, laid out from the same constants that place the
   type. Nothing can drift, because there is only one set of numbers.
-- **224×148 art pixels at 3×** (672×444): a fifth smaller than the old card, with the
-  left rail one column wide (photo, VISITS, RATES THIS BAR at one width and one gap)
-  and the numbered fields in four rows of one pitch.
-- **The band carries the actions**: the jurisdiction and class on the left, the KICK
-  key and the flag squared up on the right at the grid's own margin.
+- **196×148 art pixels at 3×** (588×444) — **v3, 2026-09-06** (the author: *"daha dar bir
+  kimlik ... kick butonunu düzelt ... bayrak görselleri daha büyük olmalı ve dairesel çerçeve
+  içerisinde"*): the grid is sized to what is printed in it — a twenty-letter drink at the
+  display face's 16 is 320 units, the widest thing on the card, and the grid is 348 — with the
+  left rail one column wide (photo, VISITS, RATES THIS BAR at one width and one gap) and the
+  numbered fields in four rows of one pitch. The endorsement chips stand IN the fifth row,
+  right of the caption, instead of hanging under the last rule (where they left the paper).
+- **The band carries the actions**: the jurisdiction over the class at the left; at the right
+  the KICK key — the cap at its drawn height of 52, since the sliced cap's 24 units of border
+  left a 30-tall key six units of face for a sixteen-pixel word — and the **seal**: the 16×11
+  flag at six times, cut to a 22-art-pixel disc (`ChromeArt.Roundel` under a `Mask`, the ring
+  `RoundelRing` over it), hung on the band's lower edge like a medallion on a ribbon.
 
 ## 2. The law
 
@@ -149,8 +156,9 @@ when the customer sits, before any card is read. So:
   slip counts them as WALKED (the people count reads `StormedOff || Kicked && !OffTheBooks`).
   There is no fine for it — the cost is the review and the lost tab. `WrongKicks++`.
 - **The button lives ON the card** (*"kimliğin üstündeki butondan"*): a KICK key in the licence's
-  header band, right of `PATRON LICENCE · CLASS B` and left of the flag (≈ 160 × 30, `KeyPlate`
-  language, ViceRed). Not on the scrim — the scrim's one meaning is *close*, and the review's
+  header band, right of `PATRON LICENCE · CLASS B` and left of the flag's roundel (100 × 52 since
+  v3 — the red `KeyCap` at the height it was drawn, so the word fits on its face; it was 96 × 30
+  and the word stood taller than the key). Not on the scrim — the scrim's one meaning is *close*, and the review's
   first draft would have put the irreversible verb where the habitual close-click lands. Hidden
   (not merely disabled) for the guest of the house. Sequence: read `_idVisit` into a local, call
   the verb, `CloseId`, then the toast — the card auto-closes when a visit stops waiting, so the

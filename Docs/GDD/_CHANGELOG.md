@@ -2,6 +2,16 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The sixth list (2026-09-06):** the basin's wait fills a pie clockwise; every carried thing
+  keeps the grip it was taken by; the snack mat wears the room's light; **the room opens worth
+  NOTHING** (`FreeBase` 2.0 → 0) and the walls carry it (+1.25 / +2.25 / +3.25 at 0 / 1 / 2★,
+  the market's first shelf signed START HERE until the plaster is up, every comfort tile saying
+  its figure — GDD 27 §3); the licence is v3 — narrower, the flag a roundel seal, the KICK cap
+  at its drawn height (GDD 28); the beam re-laid with the till back on it, one word beside each
+  house reading and icon tips under the pointer, a 42-unit settings key; the settings a window
+  with grouped rows; the dev bench in Turkish in a plain face with real columns; and the base
+  glass set redrawn thick-walled with a body (GDD 16 §1). GDD_MEVCUT §9.35.
+
 - **The counter's fourth list (2026-09-06):** the light is a rim around a prop rather than a
   lamp behind it and it sits on the drawing rather than the pivot (GDD 16 §0b); the tin is
   opaque steel (GDD 21); a coaster goes down when somebody orders, every drinker leaves their

@@ -2282,12 +2282,23 @@ namespace LastCall.UI
                         if (f.Group != shelf || _cardTarget == null)
                         {
                             shelf = f.Group;
-                            _cardTarget = ShopSection(GroupTitle(shelf));
+                            // THE WALLS ARE WHERE A BARE BAR IS SENT (2026-09-06): the room
+                            // opens worth nothing and the plaster is the biggest rung it can
+                            // buy, so until the second rung is up the shelf's sign says so.
+                            bool sendHere = shelf == "walls" && run.LadderLevel("walls") < 2;
+                            _cardTarget = sendHere
+                                ? ShopSection("START HERE  \u25B8  THE WALLS — THE ROOM'S COMFORT", hot: true)
+                                : ShopSection(GroupTitle(shelf));
                         }
                         var spec = new TileSpec
                         {
                             Name = f.Name,
+                            // THE NUMBER THE PLAYER IS STEERED BY (2026-09-06): a fitting's
+                            // mark said nothing about what it does; what it adds to the room
+                            // is the thing it is bought for, so a piece that carries comfort
+                            // says how much, in the room's own word.
                             Meta = f.IsTap ? f.TapLevel + "-line tower"
+                                 : f.Comfort > 0 ? "COMFORT +" + f.Comfort.ToString("0.0#", System.Globalization.CultureInfo.InvariantCulture)
                                  : f.Level > 0
                                  ? (f.HasLight ? "House light · mark " : "Fitting · mark ")
                                    + f.Level

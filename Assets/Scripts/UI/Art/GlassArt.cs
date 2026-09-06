@@ -24,13 +24,26 @@ namespace LastCall.UI
     public static class GlassArt
     {
         private const int W = 128, H = 176;
-        private const int Wall = 3;       // wall thickness in texture pixels
-        private const int Base = 6;       // the floor slab of a tumbler
+        // THE BASE SET, v2 (2026-09-06, the author: "bardakları güncellemek için yeni bir
+        // base bardak seti oluştur. Daha kalın ve daha az şeffaf biçimde olabilir. Boyutu
+        // ise sen karar ver, pour sahnesinde büyük ebat gerekiyor, ana sahnede küçük ebat").
+        // Five pixels of wall and ten of slab on the 128x176 canvas: at the pour stage's
+        // 260 the wall is seven units wide, on the counter's 92 it is still nearly three,
+        // which is the whole reason the walls are this thick — the old three-pixel wall
+        // went to a pixel and a half on the counter and the glass read as an outline.
+        // One canvas serves both sizes; the stage scales it as it always did.
+        private const int Wall = 5;       // wall thickness in texture pixels
+        private const int Base = 10;      // the floor slab of a tumbler
 
         private static readonly Color Outline = new Color32(0x14, 0x10, 0x18, 0xFF);
-        private static readonly Color Body = new Color32(0xBF, 0xD6, 0xE4, 0xFF);
-        private static readonly Color Shade = new Color32(0x8D, 0xA5, 0xB6, 0xFF);
+        private static readonly Color Body = new Color32(0xB9, 0xCC, 0xD8, 0xFF);
+        private static readonly Color Shade = new Color32(0x6F, 0x87, 0x97, 0xFF);
         private static readonly Color Shine = new Color32(0xFF, 0xFF, 0xFF, 0xE6);
+        // v2's two additions: the far edge of a wall, where the glass turns away from the
+        // light, and the tint laid over the whole cavity so the vessel has a BODY — the
+        // drink is seen through it rather than inside an outline.
+        private static readonly Color Deep = new Color32(0x4E, 0x62, 0x72, 0xFF);
+        private static readonly Color Glass = new Color(0.78f, 0.88f, 0.94f, 0.26f);
         // The upgrade dress (per-glass tiers, 2026-08-02): tier 2 wears etched rings,
         // tier 3 a gold rim and foot — geometry untouched, so every measured interior
         // and fluid profile survives the promotion.
@@ -237,6 +250,9 @@ namespace LastCall.UI
         private static float Span(Shape s) =>
             (s.Rim + Wall) - (s.Stem ? 0 : s.Floor - Base);
 
+        /// <summary>True: the drawn v2 set; false: the generated glass3d_* plates.</summary>
+        private const bool PreferDrawn = true;
+
         public static Piece For(GlasswareDefinition glass) => For(glass, 1);
 
         /// <summary>The same glass at an upgrade tier (1–6, Core's ladder: tier 1 is the
@@ -254,7 +270,11 @@ namespace LastCall.UI
             // procedural glasses read flat). Each tier wears its own dressed sprites
             // (tier_glasses.py — same glass, richer metal); the geometry table applies
             // to all of them because dress never moves the cavity.
-            var gen = ItemArt.Load($"glass3d_{glass?.Id}");
+            // THE DRAWN SET IS THE BASE SET AGAIN (2026-09-06, the author asked for a new
+            // base set, thicker and less transparent). The generated glasses stay installed
+            // and are one flag away — PreferDrawn — but the thin, pale set was the thing the
+            // author was looking at when they asked.
+            var gen = PreferDrawn ? null : ItemArt.Load($"glass3d_{glass?.Id}");
             var piece = gen != null ? FromGenerated(glass, gen, tier)
                 : Draw(glass, Mathf.Min(tier, 3));   // the procedural dress only knows 1–3
             Cache[key] = piece;
@@ -363,13 +383,17 @@ namespace LastCall.UI
             // the part of the glass you look THROUGH the least.
             if (shape.Stem)
             {
-                for (int y = 0; y < 7; y++)
+                for (int y = 0; y < 8; y++)
                 {
-                    int half = Mathf.RoundToInt(shape.Half * (y < 3 ? 0.52f : 0.44f));
-                    Span(px, y, -half, half, y < 2 ? Shade : Body);
+                    int half = Mathf.RoundToInt(shape.Half * (y < 3 ? 0.54f : 0.46f));
+                    Span(px, y, -half, half, y < 2 ? Deep : y < 4 ? Shade : y == 6 ? Shine : Body);
                 }
-                for (int y = 7; y < shape.Floor; y++) Span(px, y, -4, 4, Body);
-                for (int y = 7; y < shape.Floor; y++) { Put(px, -5, y, Shade); Put(px, 4, y, Shine); }
+                for (int y = 8; y < shape.Floor; y++)
+                {
+                    Span(px, y, -6, 6, Body);
+                    Put(px, -7, y, Deep); Put(px, -6, y, Shade);
+                    Put(px, 4, y, Shine); Put(px, 6, y, Deep);
+                }
             }
 
             for (int y = shape.Floor - (shape.Stem ? 0 : Base); y <= shape.Rim; y++)
@@ -380,7 +404,14 @@ namespace LastCall.UI
                 // Below the interior floor the glass is solid — the base a tumbler stands on.
                 if (y < shape.Floor)
                 {
-                    Span(px, y, -half, half - 1, y < shape.Floor - Base + 2 ? Shade : Body);
+                    // The slab, shaded like the wall: dark at its foot, a bright line near
+                    // its top where the light comes through the thick glass, dark edges.
+                    var slab = y < shape.Floor - Base + 2 ? Deep
+                             : y < shape.Floor - Base + 5 ? Shade
+                             : y == shape.Floor - 3 ? Shine : Body;
+                    Span(px, y, -half, half - 1, slab);
+                    Put(px, -half, y, Deep);
+                    Put(px, half - 1, y, Deep);
                     continue;
                 }
 
@@ -390,10 +421,18 @@ namespace LastCall.UI
                 Span(hole, y, -half + Wall, half - Wall - 1, Color.white);
                 bool etched = tier >= 2 &&
                     (y == shape.Floor + span * 38 / 100 || y == shape.Floor + span * 52 / 100);
-                Span(px, y, -half, -half + Wall - 1, etched ? Etch : Body);
-                Span(px, y, half - Wall, half - 1, etched ? Etch : Body);
-                Put(px, -half, y, Shade);
-                Put(px, half - 1, y, Shade);
+                // THE WALLS HAVE A THICKNESS YOU CAN SEE (v2): shaded across like a
+                // cylinder — the far edge dark, a bright line just inside it on the lit
+                // side where the light catches the glass, the body, and the inner edge in
+                // shade where the wall turns in toward the drink.
+                for (int i = 0; i < Wall; i++)
+                {
+                    var left = i == 0 ? Deep : i == 1 ? Shine : i == Wall - 1 ? Shade : Body;
+                    var right = i == 0 ? Deep : i == Wall - 1 ? Shade : Body;
+                    bool etchHere = etched && i > 1 && i < Wall - 1;
+                    Put(px, -half + i, y, etchHere ? Etch : left);
+                    Put(px, half - 1 - i, y, etchHere ? Etch : right);
+                }
 
                 // One lit column down the inside of the left wall.
                 if (y > shape.Floor + 6 && y < shape.Rim - 5) Put(px, -half + Wall, y, Shine);
@@ -405,7 +444,7 @@ namespace LastCall.UI
             for (int y = shape.Rim; y < shape.Rim + Wall && y < H; y++)
                 Span(px, y, -rimHalf, rimHalf - 1,
                     tier >= 3 ? (y == shape.Rim + Wall - 1 ? GoldDim : Gold)
-                    : y == shape.Rim + Wall - 1 ? Shade : Body);
+                    : y == shape.Rim + Wall - 1 ? Shade : y == shape.Rim + 1 ? Etch : Body);
             // ...and a gold foot for the finest line: the base band of a tumbler, the
             // bottom of a stem's foot.
             if (tier >= 3)
@@ -452,6 +491,13 @@ namespace LastCall.UI
                 if (xR >= 0 && xR < W && px[y * W + xR].a <= 0f)
                     px[y * W + xR] = new Color(0.04f, 0.07f, 0.11f, 0.12f);
             }
+
+            // THE BODY OF THE GLASS (v2, "daha az şeffaf"): the tint over every cavity pixel
+            // the lights above did not already claim. The drink still shows through it —
+            // at three quarters — but the vessel reads as glass with a thickness, not as
+            // an outline around a hole. Last, so it sits under the mouth and wall lights.
+            for (int i = 0; i < px.Length; i++)
+                if (hole[i].a > 0f && px[i].a <= 0f) px[i] = Glass;
 
             var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
             {

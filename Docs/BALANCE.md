@@ -250,13 +250,13 @@ Two ratings share the stars: SERVICE is what the drinks were worth, COMFORT is
 what the room is worth, and the night files the LOWER. Comfort is a base the
 bar builds, drained while the counter is a mess.
 
-- the room as it opens is worth **2** (the FreeBase — the
+- the room as it opens is worth **0** (the FreeBase — the
   pieces the bar starts with carry no comfort of their own)
 - every glass step counts at **50%** of its star cap,
   every stool past the first 4 adds **+0.25**
 - a counter left dirty past **10 s** costs **−0.75**
-  of comfort until it is wiped; a wash takes 1.5 s plus
-  0.5 s a glass
+  of comfort until it is wiped; the tap runs 5 s
+  whatever went into it, and the brass basin halves that
 - comfort is clamped to **5**
 
 The ladders, rung by rung — a rung's comfort is ABSOLUTE (fitting over the last
@@ -266,6 +266,7 @@ rung replaces its value, it does not add):
 |---|---|
 | `plant_left` | Areca Palm $20 · +0.1 → Fiddle-Leaf Fig $55 · +0.2 (1.5★) → Trailing Pothos $95 · +0.4 (3★) |
 | `plant_right` | Snake Plant $25 · +0.1 → Agave Bowl $70 · +0.2 (1.5★) → Monstera $95 · +0.4 (3★) |
+| `shaker` | Steel Shaker (ours) · 0 → Gold Shaker $140 · +0.4 (2★) |
 | `sink` | Steel Sink (ours) · 0 → Brass Sink $85 · +0.4 (1.5★) |
 | `table_left` | Rustic Bar Table $40 · +0.2 → Brass Pedestal Table $85 · +0.4 (1.5★) → Steel Gaslift Set $120 · +0.6 (3★) |
 | `table_mid` | Rustic Bar Table $40 · +0.2 → Brass Pedestal Table $85 · +0.4 (1.5★) → Steel Gaslift Set $120 · +0.6 (3★) |
@@ -273,7 +274,7 @@ rung replaces its value, it does not add):
 | `taps` | Single Draught Tower (ours) · 0 → Arched Draught Bridge $65 · +0.1 (1.5★) → Triple Draught Tower $100 · +0.2 (3★) |
 | `wall_center` | Flamingo Triptych $45 · +0.2 |
 | `wall_lamps` | Glass Tube Lamps $30 · +0.1 → Sunset Panels $55 · +0.3 (1.5★) → Palm Lamps $90 · +0.7 (3★) |
-| `walls` | Cracked Plaster (ours) · 0 → Fresh Plaster $70 · +0.3 (1★) → Panelled Wall $130 · +0.6 (2★) → Harlequin Paper $200 · +1 (3★) |
+| `walls` | Cracked Plaster (ours) · 0 → Fresh Plaster $45 · +1.25 → Panelled Wall $130 · +2.25 (1★) → Harlequin Paper $200 · +3.25 (2★) |
 
 Single pieces:
 
@@ -288,7 +289,7 @@ Single pieces:
 | Wall Television | $70 | +0.2 | — |
 | Drip Mat | ours | 0 | — |
 
-Every top rung and every single together: **8.5** of comfort against the
+Every top rung and every single together: **9.15** of comfort against the
 5 ceiling, before glass and stools — the player chooses.
 
 ## The door (GDD 28)

@@ -150,7 +150,8 @@ namespace LastCall.UI
         // through the screen — so it works for a prop on the stage's own canvas (the sink,
         // the font) exactly as it does for one on the HUD's.
         private RectTransform _propTip;
-        private Text _propTipText;
+        private Text _propTipText, _propTipDetail;
+        private Image _propTipIcon;
         private CanvasGroup _propTipGroup;
         private RectTransform _propTipOver;
         private const float PropTipFade = 0.12f;
@@ -172,6 +173,22 @@ namespace LastCall.UI
                     Vector2.zero, Vector2.zero);
             _propTipText.raycastTarget = false;
             _propTipText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            // A READING'S TIP CARRIES ITS MARK AND A LINE (2026-09-06): the icon at the left,
+            // the name beside it, one line under. Both stay off until a caller hands them
+            // something, so a prop's plain word is the one-row tip it always was.
+            var iconRt = NewRect("Icon", _propTip);
+            Place(iconRt, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(8f, 0));
+            iconRt.pivot = new Vector2(0, 0.5f);
+            _propTipIcon = iconRt.gameObject.AddComponent<Image>();
+            _propTipIcon.preserveAspect = true;
+            _propTipIcon.raycastTarget = false;
+            _propTipIcon.enabled = false;
+            _propTipDetail = NewText("Detail", _propTip, _body, 8, TextAnchor.LowerLeft, UITheme.Cream[3]);
+            Stretch(_propTipDetail.rectTransform, Vector2.zero, Vector2.one,
+                    new Vector2(30f, 5f), new Vector2(-8f, -20f));
+            _propTipDetail.raycastTarget = false;
+            _propTipDetail.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _propTipDetail.enabled = false;
             _propTipGroup = _propTip.gameObject.AddComponent<CanvasGroup>();
             _propTipGroup.alpha = 0f;
             _propTipGroup.blocksRaycasts = false;
@@ -181,11 +198,26 @@ namespace LastCall.UI
         }
 
         /// <summary>The pointer arrived on a prop: say what pressing it does.</summary>
-        internal void ShowPropTip(RectTransform over, string word)
+        internal void ShowPropTip(RectTransform over, string word, Sprite icon = null, string detail = null)
         {
             if (_propTip == null || over == null || string.IsNullOrEmpty(word)) return;
             _propTipOver = over;
             _propTipText.text = word;
+            bool rich = icon != null || !string.IsNullOrEmpty(detail);
+            // Two rows and as wide as its longer line when it carries a mark or a detail;
+            // the one-row word it always was otherwise.
+            float chars = Mathf.Max(word.Length, (detail ?? "").Length);
+            _propTip.sizeDelta = rich
+                ? new Vector2(Mathf.Max(200f, 30f + chars * 7.2f + 12f), 40f)
+                : new Vector2(180f, 22f);
+            _propTipIcon.sprite = icon;
+            _propTipIcon.enabled = icon != null;
+            _propTipDetail.text = detail ?? "";
+            _propTipDetail.enabled = rich;
+            _propTipText.alignment = rich ? TextAnchor.UpperLeft : TextAnchor.MiddleCenter;
+            var tr = _propTipText.rectTransform;
+            tr.offsetMin = rich ? new Vector2(icon != null ? 30f : 10f, 20f) : Vector2.zero;
+            tr.offsetMax = rich ? new Vector2(-8f, -7f) : Vector2.zero;
         }
 
         /// <summary>...and left it. Only the prop that RAISED the tip may lower it: two props
@@ -214,9 +246,18 @@ namespace LastCall.UI
             over.GetWorldCorners(corners);
             var top = (corners[1] + corners[2]) * 0.5f;
             var screen = RectTransformUtility.WorldToScreenPoint(null, top);
+            // UNDER a prop that lives at the top of the screen (2026-09-06: the beam's
+            // readings), where a caption raised above it would be off the picture.
+            bool hang = screen.y > Screen.height * 0.88f;
+            if (hang)
+            {
+                var bottom = (corners[0] + corners[3]) * 0.5f;
+                screen = RectTransformUtility.WorldToScreenPoint(null, bottom);
+            }
+            _propTip.pivot = new Vector2(0.5f, hang ? 1f : 0f);
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     (RectTransform)_propTip.parent, screen, null, out Vector2 local))
-                _propTip.anchoredPosition = local + new Vector2(0f, 8f);
+                _propTip.anchoredPosition = local + new Vector2(0f, hang ? -8f : 8f);
         }
 
         /// <summary>One figure, falling out from under the money it changed.</summary>
@@ -294,6 +335,11 @@ namespace LastCall.UI
 
             int shown = Mathf.RoundToInt(_tillShown);
             if (_tabletTill != null) _tabletTill.text = "$" + shown;
+            if (_beamTill != null)
+            {
+                _beamTill.text = "$" + shown;
+                _beamTill.color = shown < 0 ? UITheme.ViceRed[3] : UITheme.Cyan[4];
+            }
         }
 
         private void WatchFixtures()
@@ -909,75 +955,200 @@ namespace LastCall.UI
         private void ToggleSettings()
         {
             if (_settingsPanel == null) return;
-            _settingsPanel.gameObject.SetActive(!_settingsPanel.gameObject.activeSelf);
-            RefreshSettings();
+            bool show = !_settingsPanel.gameObject.activeSelf;
+            if (show) CloseId();
+            _settingsPanel.gameObject.SetActive(show);
+            if (show) RefreshSettings();
         }
 
+        // The menu's plate and its margins, in one place.
+        private const float SetPlateW = 520f, SetPlateH = 404f, SetInset = 24f, SetRowH = 40f;
+
+        /// <summary>
+        /// A MENU, NOT A LIST (2026-09-06, the author: "ayarlar menüsü tekrardan tasarlansın
+        /// şu an öylesine koyulmuş bir menü mevcut, bunu profesyonel bir oyun menüsü haline
+        /// getir, dev tools için kenara şimdilik bir buton koyabilirsin"). Six keys stacked
+        /// in a corner was a dev panel with three settings in it. This is a WINDOW over the
+        /// room, the way the licence and the market are: its own scrim, a titled plate in
+        /// the centre, and the settings as rows — the name on the left, the control on the
+        /// right — grouped under what they are about. The run's own verbs (the book, a new
+        /// run) are the last group, so the one thing that throws the night away sits
+        /// furthest from the thumb; the developer's bench is one small key at the plate's
+        /// foot, where it is found and not pressed by accident.
+        /// </summary>
         private void BuildSettings(RectTransform root)
         {
             _settingsPanel = NewRect("Settings", root);
-            // 420, not 300: the dev rows say what they DO ("close now, open the market"),
-            // and a button whose caption does not fit is a button with no caption.
-            // 360, not 320: the last-call skip is a ninth row and a row that does not fit the
-            // panel is a button nobody can press.
-            Place(_settingsPanel, new Vector2(1, 1), new Vector2(420, 360), new Vector2(-16, -58));
-            _settingsPanel.gameObject.AddComponent<Image>().color = UITheme.Night[1];
+            var canvas = _settingsPanel.gameObject.AddComponent<Canvas>();
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = 23;                 // over the market (22), under the guide (24)
+            _settingsPanel.gameObject.AddComponent<GraphicRaycaster>();
+            Stretch(_settingsPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var scrim = _settingsPanel.gameObject.AddComponent<Image>();
+            scrim.color = UITheme.Scrim;
+            var scrimBtn = _settingsPanel.gameObject.AddComponent<Button>();
+            scrimBtn.transition = Selectable.Transition.None;
+            scrimBtn.onClick.AddListener(ToggleSettings);
 
-            var title = NewText("T", _settingsPanel, _body, 10, TextAnchor.UpperCenter, UITheme.TextSecondary);
-            Stretch(title.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -18), Vector2.zero);
-            title.text = "— SETTINGS —";
+            var plate = NewRect("Plate", _settingsPanel);
+            Place(plate, new Vector2(0.5f, 0.5f), new Vector2(SetPlateW, SetPlateH), new Vector2(0, 10));
+            var plateImg = plate.gameObject.AddComponent<Image>();
+            plateImg.sprite = ChromeArt.Card();
+            plateImg.type = Image.Type.Sliced;
+            plateImg.color = UITheme.Night[1];
+            plate.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;   // swallow clicks
+            Frame(plate, 2f, UITheme.Night[3]);
 
-            _settingsVolume = SettingsRow(0, "VOLUME", () =>
+            // The title band: the cog it opened from, the word, and the neon under it.
+            var band = NewRect("Band", plate);
+            Place(band, new Vector2(0.5f, 1), new Vector2(SetPlateW - 4f, 44f), new Vector2(0, -2f));
+            band.pivot = new Vector2(0.5f, 1);
+            var bandImg = band.gameObject.AddComponent<Image>();
+            bandImg.color = UITheme.Night[0];
+            bandImg.raycastTarget = false;
+            var cog = NewRect("Cog", band);
+            Place(cog, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(SetInset, 0));
+            cog.pivot = new Vector2(0, 0.5f);
+            var cogImg = cog.gameObject.AddComponent<Image>();
+            cogImg.sprite = ChromeArt.Mark("cog");
+            cogImg.color = UITheme.Amber[4];
+            cogImg.raycastTarget = false;
+            var title = NewText("T", band, _display, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
+            Place(title.rectTransform, new Vector2(0, 0.5f), new Vector2(300, 20), new Vector2(SetInset + 28f, 0));
+            title.rectTransform.pivot = new Vector2(0, 0.5f);
+            title.horizontalOverflow = HorizontalWrapMode.Overflow;
+            title.text = "SETTINGS";
+            Hairline(band, new Vector2(0, 0), new Vector2(1, 0), UITheme.Amber[3]);
+
+            float y = -62f;
+
+            // ── AUDIO ────────────────────────────────────────────────────────────
+            SettingsCaption(plate, "AUDIO", ref y);
+            var vol = SettingsLine(plate, "VOLUME", null, ref y);
+            // The volume is a meter with a key at each end: five blocks, a fifth apiece.
+            // (It used to be one key that CYCLED 20% at a press — six presses to turn it
+            // down a notch, and nothing on it said which way it was going.)
+            const float VolKeyW = 36f, VolCell = 16f;
+            SettingsKey(vol, VolKeyW, 0f, "+", UITheme.Night[3], () =>
             {
-                Sound.Volume = Sound.Volume <= 0.05f ? 0.2f : Sound.Volume >= 0.95f ? 0.2f
-                    : Sound.Volume + 0.2f;      // cycles 0.2 → 1.0 and wraps
+                Sound.Volume = Mathf.Clamp01(Mathf.Round((Sound.Volume + 0.2f) * 5f) / 5f);
                 Sfx.Play("click");
                 RefreshSettings();
             });
-            _settingsMute = SettingsRow(1, "SOUND", () =>
+            _settingsMeter = new Image[5];
+            for (int i = 0; i < 5; i++)
+            {
+                var cell = NewRect("M" + i, vol);
+                Place(cell, new Vector2(1, 0.5f), new Vector2(12f, 14f),
+                    new Vector2(-(VolKeyW + 8f + (4 - i) * VolCell + 4f), 0));
+                cell.pivot = new Vector2(1, 0.5f);
+                _settingsMeter[i] = cell.gameObject.AddComponent<Image>();
+                _settingsMeter[i].raycastTarget = false;
+            }
+            SettingsKey(vol, VolKeyW, VolKeyW + 8f + 5f * VolCell + 8f, "-", UITheme.Night[3], () =>
+            {
+                Sound.Volume = Mathf.Clamp01(Mathf.Round((Sound.Volume - 0.2f) * 5f) / 5f);
+                Sfx.Play("click");
+                RefreshSettings();
+            });
+            _settingsVolume = NewText("V", vol, _body, 8, TextAnchor.MiddleRight, UITheme.Cream[3]);
+            Place(_settingsVolume.rectTransform, new Vector2(1, 0.5f), new Vector2(60, 12),
+                new Vector2(-(VolKeyW * 2f + 16f + 5f * VolCell + 10f), 0));
+            _settingsVolume.rectTransform.pivot = new Vector2(1, 0.5f);
+            _settingsVolume.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            var snd = SettingsLine(plate, "SOUND", null, ref y);
+            _settingsMute = SettingsKey(snd, 96f, 0f, "ON", UITheme.Night[3], () =>
             {
                 Sound.Muted = !Sound.Muted;
                 Sfx.Play("click");              // audible iff it just came back on — itself the test
                 RefreshSettings();
             });
-            // NEW RUN LIVES HERE NOW (2026-08-14, the author: "new run yazısını ayarların
-            // içine taşı"). It was a key on the board, one thumb from the things pressed all
-            // night, and it throws the night away — this is where a thing like that belongs.
-            // It is the same verb the fresh-start dev row already called, so it takes that
-            // row's place rather than becoming a tenth button that does the same thing.
-            SettingsRow(3, "NEW RUN — day 1, empty bar", () =>
-            { _bootstrap.StartNewRun(null); ToggleSettings(); });
-            // THE WORKBENCH IS NOT A SETTING (2026-08-14, the author: "dev tool'u daha
-            // verimli bir panele dönüştür bu şekilde seçmek zor oluyor. Ayarlarla dev toolu
-            // ayır"). Five dev rows and three settings shared one 420-wide stack, so the
-            // volume lived a thumb away from "throw this run away and jump two weeks", and
-            // every dev row had to spell its whole job into a caption because there was
-            // nowhere else to say it. Settings keeps what a player changes; everything a
-            // DEVELOPER does moved to its own bench, which has room to group and to explain.
-            SettingsRow(4, "DEV TOOLS — the bench, and the lineup table", () =>
-            {
-                ToggleSettings();
-                ToggleDevBench();
-            });
 
-            _settingsMotion = SettingsRow(2, "MOTION", () =>
+            // ── DISPLAY ──────────────────────────────────────────────────────────
+            y -= 10f;
+            SettingsCaption(plate, "DISPLAY", ref y);
+            var mot = SettingsLine(plate, "MOTION", "REDUCED: NO SLIDES, NO FLOATS, NO FADES", ref y);
+            _settingsMotion = SettingsKey(mot, 96f, 0f, "FULL", UITheme.Night[3], () =>
             {
                 Motion.Reduced = !Motion.Reduced;
                 Sfx.Play("click");
                 RefreshSettings();
             });
 
+            // ── THE RUN ──────────────────────────────────────────────────────────
             // THE BOOK LOST ITS DOOR WITH THE TILL (2026-08-26, the author: "kasa ve parayı
-            // ana sahneden kaldır"). The register was the way into the night's ledger, and
-            // taking the machine out of the room took the handle with it. It is not going
-            // back onto the bar in another shape: the whole point of the removal is that
-            // nothing counts money at you while you are serving. So it lives behind the cog,
-            // with the other things you go and LOOK for rather than reach for — one row, and
-            // the night's figures are still one press away for anybody who wants them.
-            SettingsRow(5, "TONIGHT'S BOOK — every line the till has taken", () =>
-            { ToggleSettings(); ToggleLedger(); });
+            // ana sahneden kaldır"): nothing counts money at you while you are serving, so
+            // the night's ledger lives here, one press away for anybody who wants it.
+            // NEW RUN LIVES HERE TOO (2026-08-14, the author: "new run yazısını ayarların
+            // içine taşı"): a thing that throws the night away belongs behind a door.
+            y -= 10f;
+            SettingsCaption(plate, "THE RUN", ref y);
+            var book = SettingsLine(plate, "TONIGHT'S BOOK", "EVERY LINE THE TILL HAS TAKEN", ref y);
+            SettingsKey(book, 96f, 0f, "OPEN", UITheme.Night[3], () => { ToggleSettings(); ToggleLedger(); });
+            var fresh = SettingsLine(plate, "START OVER", "DAY 1, AN EMPTY BAR — THIS NIGHT IS LOST", ref y);
+            SettingsKey(fresh, 96f, 0f, "NEW RUN", UITheme.Brick[2], () =>
+            { _bootstrap.StartNewRun(null); ToggleSettings(); });
+
+            // The foot: the developer's door at one corner, the way out at the other.
+            // THE WORKBENCH IS NOT A SETTING (2026-08-14, the author: "ayarlarla dev toolu
+            // ayır"); it keeps one small key here, for now, because the author asked for one.
+            NewButton(plate, "DEV TOOLS", new Vector2(0, 0), new Vector2(110, 26),
+                new Vector2(SetInset, 16), UITheme.Night[2], () => { ToggleSettings(); ToggleDevBench(); });
+            NewButton(plate, "CLOSE", new Vector2(1, 0), new Vector2(120, 32),
+                new Vector2(-SetInset, 14), UITheme.PrimaryAction, ToggleSettings);
 
             _settingsPanel.gameObject.SetActive(false);
+        }
+
+        /// <summary>A group's caption: small amber caps over its rows.</summary>
+        private void SettingsCaption(RectTransform plate, string text, ref float y)
+        {
+            var t = NewText("G_" + text, plate, _body, 8, TextAnchor.LowerLeft, UITheme.Amber[3]);
+            Place(t.rectTransform, new Vector2(0, 1), new Vector2(300, 16), new Vector2(SetInset, y));
+            t.rectTransform.pivot = new Vector2(0, 1);
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.text = text;
+            y -= 18f;
+        }
+
+        /// <summary>One setting's row: its name (and a note under it, if it needs one) on
+        /// the left, a hairline under the row; the control is added by the caller at the
+        /// right edge.</summary>
+        private RectTransform SettingsLine(RectTransform plate, string name, string note, ref float y)
+        {
+            var row = NewRect("R_" + name, plate);
+            Place(row, new Vector2(0, 1), new Vector2(SetPlateW - SetInset * 2f, SetRowH), new Vector2(SetInset, y));
+            row.pivot = new Vector2(0, 1);
+            Hairline(row, new Vector2(0, 0), new Vector2(1, 0), new Color(1f, 1f, 1f, 0.07f));
+            var t = NewText("N", row, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
+            Place(t.rectTransform, new Vector2(0, 0.5f), new Vector2(260, 20), new Vector2(0, note != null ? 6f : 0f));
+            t.rectTransform.pivot = new Vector2(0, 0.5f);
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.raycastTarget = false;
+            t.text = name;
+            if (note != null)
+            {
+                var n = NewText("Note", row, _body, 8, TextAnchor.MiddleLeft, UITheme.Cream[2]);
+                Place(n.rectTransform, new Vector2(0, 0.5f), new Vector2(320, 12), new Vector2(0, -10f));
+                n.rectTransform.pivot = new Vector2(0, 0.5f);
+                n.horizontalOverflow = HorizontalWrapMode.Overflow;
+                n.raycastTarget = false;
+                n.text = note;
+            }
+            y -= SetRowH;
+            return row;
+        }
+
+        /// <summary>A row's control: the house key, right-aligned, its word returned so the
+        /// refresh can rewrite it (ON / OFF, FULL / REDUCED).</summary>
+        private Text SettingsKey(RectTransform row, float w, float rightInset, string label, Color fill, Action onClick)
+        {
+            // The helper names the rect after its label and WRITES the label, so the word
+            // goes in bare (a "K_" prefix here printed itself on every key, photographed).
+            var key = NewButton(row, label, new Vector2(1, 0.5f), new Vector2(w, 28f),
+                new Vector2(-rightInset, 0), fill, onClick);
+            return key.GetComponentInChildren<Text>();
         }
 
         private void ToggleDevBench()
@@ -987,6 +1158,16 @@ namespace LastCall.UI
             if (show) { CloseId(); RefreshDevBench(); }
             _devPanel.gameObject.SetActive(show);
         }
+
+        /// <summary>The bench's face: Unity's built-in Arial. The bench is the author's
+        /// own tool and not part of the game (2026-09-06: "dev tools sadece benim için oyunda
+        /// olmayacağından tasarımı açık ve net olsun yeter pixel art olmasına gerek yok"), so
+        /// it is set in a plain proportional face that has every Turkish glyph and reads at
+        /// any size — never in the pixel faces, which have neither.</summary>
+        private Font _plain;
+
+        private Font Plain =>
+            _plain != null ? _plain : _plain = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
         private void BuildDevBench(RectTransform root)
         {
@@ -1001,27 +1182,31 @@ namespace LastCall.UI
             bg.raycastTarget = true;
             Frame(_devPanel, 2f, UITheme.Cyan[3]);    // cyan, not amber: this is not the game
 
-            var title = NewText("T", _devPanel, _display, 16, TextAnchor.MiddleLeft, UITheme.Cyan[3]);
-            Place(title.rectTransform, new Vector2(0, 1), new Vector2(600, 22), new Vector2(20, -18));
+            // IN TURKISH, IN A PLAIN FACE (2026-09-06, the author: "dev tools güncellensin ve
+            // metinleri türkçe ve okunaklı normal bir fontta üretilsin"). Nothing here is
+            // the game's voice; it is the author's own bench, and it speaks their language.
+            var title = NewText("T", _devPanel, Plain, 22, TextAnchor.MiddleLeft, UITheme.Cyan[3]);
+            Place(title.rectTransform, new Vector2(0, 1), new Vector2(600, 28), new Vector2(20, -20));
+            title.fontStyle = FontStyle.Bold;
             title.horizontalOverflow = HorizontalWrapMode.Overflow;
-            title.text = "DEV BENCH";
+            title.text = "GELİŞTİRİCİ TEZGÂHI";
 
-            _devStanding = NewText("S", _devPanel, _body, 8, TextAnchor.MiddleRight, UITheme.Cream[2]);
-            Place(_devStanding.rectTransform, new Vector2(1, 1), new Vector2(560, 12), new Vector2(-20, -22));
+            _devStanding = NewText("S", _devPanel, Plain, 14, TextAnchor.MiddleRight, UITheme.Cream[2]);
+            Place(_devStanding.rectTransform, new Vector2(1, 1), new Vector2(640, 18), new Vector2(-20, -24));
             _devStanding.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             // ── the left rail: the verbs ────────────────────────────────────────
             int slot = 0;
-            DevHeading(ref slot, "THE RUN");
-            DevKey(ref slot, "NEW RUN", "day 1, empty bar",
+            DevHeading(ref slot, "KOŞU");
+            DevKey(ref slot, "YENİ KOŞU", "1. gün, boş bar",
                 () => { _bootstrap.StartNewRun(null); ToggleDevBench(); });
-            DevKey(ref slot, "MIDGAME", "day 12, stocked",
+            DevKey(ref slot, "ORTA OYUN", "12. gün, stoklu",
                 () => { _bootstrap.StartNewRun(null); Run.DevPreset(1); ApplyBarLook(); ToggleDevBench(); });
-            DevKey(ref slot, "ENDGAME", "late run, full shelf",
+            DevKey(ref slot, "SON OYUN", "geç koşu, dolu raf",
                 () => { _bootstrap.StartNewRun(null); Run.DevPreset(2); ApplyBarLook(); ToggleDevBench(); });
 
-            DevHeading(ref slot, "THE CLOCK");
-            DevKey(ref slot, "SKIP TO DAY END", "close now, open the market", () =>
+            DevHeading(ref slot, "SAAT");
+            DevKey(ref slot, "GÜN SONUNA ATLA", "şimdi kapat, marketi aç", () =>
             {
                 if (Run == null || Run.Phase != TycoonPhase.DayOpen) { Toast("NOT MID-DAY"); return; }
                 _flow?.CloseFlow();
@@ -1029,18 +1214,20 @@ namespace LastCall.UI
                 Run.DevSkipToDayEnd();
                 ToggleDevBench();
             });
-            DevKey(ref slot, "SKIP TO THE LAST CALL", "jump to the night, then run it out",
+            DevKey(ref slot, "SON SİPARİŞE ATLA", "geceye atla, sonra sonuna kadar oynat",
                 DevJumpToLastCall);
 
-            DevHeading(ref slot, "THE PEOPLE");
-            DevKey(ref slot, "THE ROOM", "every drinker, papers and star",
+            DevHeading(ref slot, "İNSANLAR");
+            DevKey(ref slot, "ODA", "her müşteri, kâğıtları ve yıldızı",
                 () => { ToggleDevBench(); ToggleGuide(); });
 
             // ── the right pane: the lineup ──────────────────────────────────────
-            var head = NewText("H", _devPanel, _shop, 8, TextAnchor.MiddleLeft, UITheme.Cream[2]);
-            Place(head.rectTransform, new Vector2(0, 1), new Vector2(820, 12), new Vector2(348, -46));
-            head.horizontalOverflow = HorizontalWrapMode.Overflow;
-            head.text = "PRICE  NAME                          HOW IT IS MADE        WHAT IT ASKS FOR";
+            // FOUR COLUMNS, NOT ONE PADDED STRING (2026-09-06): the bench is set in a
+            // proportional face now, so the columns are rects rather than runs of spaces.
+            var head = NewRect("H", _devPanel);
+            Place(head, new Vector2(0, 1), new Vector2(820, 20), new Vector2(340, -48));
+            head.pivot = new Vector2(0, 1);
+            DevColumns(head, "FİYAT", "AD", "NASIL YAPILIR", "NE İSTER", UITheme.Cream[2], true);
 
             var view = NewRect("LineupView", _devPanel);
             Place(view, new Vector2(0, 1), new Vector2(820, 556), new Vector2(340, -58));
@@ -1069,20 +1256,58 @@ namespace LastCall.UI
             scroll.scrollSensitivity = 28f;
             scroll.inertia = false;
 
-            NewButton(_devPanel, "CLOSE", new Vector2(0, 0), new Vector2(300, 32),
+            NewButton(_devPanel, "KAPAT", new Vector2(0, 0), new Vector2(300, 32),
                 new Vector2(20, 12), UITheme.Cyan[3], () => ToggleDevBench());
             _devPanel.gameObject.SetActive(false);
         }
 
+        /// <summary>The rail's pitch: one slot per heading, two per key (the key and its
+        /// note). Roomier than the pixel bench's 26, because the plain face is taller.</summary>
+        private const float DevSlotH = 30f;
+
         private void DevHeading(ref int slot, string text)
         {
-            var t = NewText("DH", _devPanel, _shop, 8, TextAnchor.LowerLeft, UITheme.Cyan[3]);
-            Place(t.rectTransform, new Vector2(0, 1), new Vector2(DevRailW, 16),
-                new Vector2(DevRailX, -52f - slot * 26f));
+            var t = NewText("DH", _devPanel, Plain, 13, TextAnchor.LowerLeft, UITheme.Cyan[3]);
+            Place(t.rectTransform, new Vector2(0, 1), new Vector2(DevRailW, 20),
+                new Vector2(DevRailX, -56f - slot * DevSlotH));
             t.rectTransform.pivot = new Vector2(0, 1);
+            t.fontStyle = FontStyle.Bold;
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
             t.text = text;
             slot++;
+        }
+
+        /// <summary>One line of the lineup, four columns wide: price, name, how it is
+        /// made, what it asks for. Each column is its own rect, so the table lines up
+        /// whatever the words are and whatever face they are set in.</summary>
+        private void DevColumns(RectTransform row, string price, string name, string how, string asks,
+            Color ink, bool header = false)
+        {
+            float[] w = { 70f, 250f, 190f, 310f };   // the asks are the longest column
+            string[] cols = { price, name, how, asks };
+            float x = 8f;
+            for (int i = 0; i < cols.Length; i++)
+            {
+                var t = NewText("C" + i, row, Plain, header ? 12 : 13, TextAnchor.MiddleLeft, ink);
+                Place(t.rectTransform, new Vector2(0, 0.5f), new Vector2(w[i], 18f), new Vector2(x, 0));
+                t.rectTransform.pivot = new Vector2(0, 0.5f);
+                if (header) t.fontStyle = FontStyle.Bold;
+                t.horizontalOverflow = HorizontalWrapMode.Overflow;
+                t.text = cols[i];
+                x += w[i];
+            }
+        }
+
+        /// <summary>How a recipe is made, in the bench's own language.</summary>
+        private static string DevPrep(PrepMethod prep)
+        {
+            switch (prep)
+            {
+                case PrepMethod.Shaken: return "ÇALKALANIR";
+                case PrepMethod.Stirred: return "KARIŞTIRILIR";
+                case PrepMethod.Built: return "BARDAKTA";
+                default: return prep.ToString().ToUpperInvariant();
+            }
         }
 
         /// <summary>One verb: its NAME on the key, and what it does underneath it rather than
@@ -1090,24 +1315,25 @@ namespace LastCall.UI
         private void DevKey(ref int slot, string name, string what, Action onClick)
         {
             var row = NewRect("DK_" + name, _devPanel);
-            Place(row, new Vector2(0, 1), new Vector2(DevRailW, 22),
-                new Vector2(DevRailX, -52f - slot * 26f));
+            Place(row, new Vector2(0, 1), new Vector2(DevRailW, 28),
+                new Vector2(DevRailX, -56f - slot * DevSlotH));
             row.pivot = new Vector2(0, 1);
             var btn = row.gameObject.AddComponent<Button>();
             btn.onClick.AddListener(() => onClick());
             var face = NewRect("Face", row);
             Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             KeyPlate.Dress(row, UITheme.Night[3], btn, face);
-            var label = NewText("L", face, _body, 8, TextAnchor.MiddleLeft, UITheme.TextPrimary);
+            var label = NewText("L", face, Plain, 14, TextAnchor.MiddleLeft, UITheme.TextPrimary);
             Stretch(label.rectTransform, Vector2.zero, Vector2.one,
-                new Vector2(8, KeyPlate.Throw), new Vector2(-8, 0));
+                new Vector2(10, KeyPlate.Throw), new Vector2(-8, 0));
+            label.fontStyle = FontStyle.Bold;
             label.horizontalOverflow = HorizontalWrapMode.Overflow;
             label.text = name;
             slot++;
 
-            var note = NewText("N_" + name, _devPanel, _body, 8, TextAnchor.UpperLeft, UITheme.Cream[2]);
-            Place(note.rectTransform, new Vector2(0, 1), new Vector2(DevRailW - 8f, 14),
-                new Vector2(DevRailX + 8f, -52f - slot * 26f + 8f));
+            var note = NewText("N_" + name, _devPanel, Plain, 12, TextAnchor.UpperLeft, UITheme.Cream[2]);
+            Place(note.rectTransform, new Vector2(0, 1), new Vector2(DevRailW - 8f, 18),
+                new Vector2(DevRailX + 10f, -56f - slot * DevSlotH + 10f));
             note.rectTransform.pivot = new Vector2(0, 1);
             note.horizontalOverflow = HorizontalWrapMode.Overflow;
             note.text = what;
@@ -1132,19 +1358,19 @@ namespace LastCall.UI
             if (run == null) { _devStanding.text = "no run"; return; }
 
             double stars = run.Rating.Average;
-            _devStanding.text = $"standing {stars:0.00}★ · day {run.Day} · ${run.Money} · "
-                              + $"{run.MenuRecipes.Count} pages on the menu · "
-                              + $"{run.Shelf.Bottles.Count} bottles on the wall";
+            _devStanding.text = $"puan {stars:0.00}★ · gün {run.Day} · ${run.Money} · "
+                              + $"menüde {run.MenuRecipes.Count} sayfa · "
+                              + $"duvarda {run.Shelf.Bottles.Count} şişe";
 
             // Every page in the book and every bottle in the catalogue, filed under the rung
             // that opens it. The bottle's rung is its own lock's answer, so the table cannot
             // disagree with the shop — both ask the same object.
-            var rungs = new SortedDictionary<double, List<(string line, Color ink)>>();
-            void File(double rung, string line, Color ink)
+            var rungs = new SortedDictionary<double, List<(string price, string name, string how, string asks, Color ink)>>();
+            void File(double rung, string price, string name, string how, string asks, Color ink)
             {
                 if (!rungs.TryGetValue(rung, out var list))
-                    rungs[rung] = list = new List<(string, Color)>();
-                list.Add((line, ink));
+                    rungs[rung] = list = new List<(string, string, string, string, Color)>();
+                list.Add((price, name, how, asks, ink));
             }
 
             foreach (var r in run.AllRecipes)
@@ -1160,9 +1386,9 @@ namespace LastCall.UI
                     bands.Append($" {b.MinRatio:P0}-{b.MaxRatio:P0}");
                     if (b.MinTier > 1) bands.Append($" T{b.MinTier}+");
                 }
-                string how = r.Prep.ToString().ToUpperInvariant()
+                string how = DevPrep(r.Prep)
                            + (string.IsNullOrEmpty(r.GlassId) ? "" : " · " + r.GlassId);
-                File(gate, $"${run.RecipePrice(r),-4} {r.Name,-28} {how,-20} {bands}",
+                File(gate, "$" + run.RecipePrice(r), r.Name, how, bands.ToString(),
                     owned ? UITheme.Lime[3] : run.Money >= run.RecipePrice(r) && stars + 1e-9 >= gate
                         ? UITheme.TextPrimary : UITheme.Cream[2]);
             }
@@ -1175,9 +1401,9 @@ namespace LastCall.UI
                     : Market.RequiredStars(card.Info.Tier, card.Info.Price);
                 if (double.IsNaN(rung)) rung = 0.0;   // a bottle earned from a person: file it at the top
                 bool owned = run.Shelf.Find(card.Id) != null;
-                File(rung, $"${card.Info.Price,-4} {card.Name,-28} "
-                         + $"{card.Info.Category + " · tier " + card.Info.Tier,-20} "
-                         + (owned ? "ON THE WALL" : "stock"),
+                File(rung, "$" + card.Info.Price, card.Name,
+                    card.Info.Category + " · seviye " + card.Info.Tier,
+                    owned ? "DUVARDA" : "stokta",
                     owned ? UITheme.Lime[3] : UITheme.Cream[2]);
             }
 
@@ -1188,20 +1414,20 @@ namespace LastCall.UI
                 // the beam's own shade on a black panel — invisible, so the reader saw a gap
                 // between two blocks and no reason for it. Dimmer than an open rung, never
                 // dimmer than the rows under it.
-                var header = NewText("Rung", _devRows, _shop, 8, TextAnchor.MiddleLeft,
+                var header = NewText("Rung", _devRows, Plain, 14, TextAnchor.MiddleLeft,
                     reached ? UITheme.PrimaryAction : UITheme.Cyan[3]);
                 var hr = header.rectTransform;
-                hr.gameObject.AddComponent<LayoutElement>().preferredHeight = 20f;
+                hr.gameObject.AddComponent<LayoutElement>().preferredHeight = 26f;
+                header.fontStyle = FontStyle.Bold;
                 header.horizontalOverflow = HorizontalWrapMode.Overflow;
-                header.text = $"  ★ {rung.Key:0.0}   {rung.Value.Count} LINES"
-                            + (reached ? "   — OPEN" : "   — SEALED");
+                header.text = $"  ★ {rung.Key:0.0}   {rung.Value.Count} SATIR"
+                            + (reached ? "   — AÇIK" : "   — KİLİTLİ");
 
-                foreach (var (line, ink) in rung.Value)
+                foreach (var (price, name, how, asks, ink) in rung.Value)
                 {
-                    var row = NewText("L", _devRows, _shop, 8, TextAnchor.MiddleLeft, ink);
-                    row.rectTransform.gameObject.AddComponent<LayoutElement>().preferredHeight = 13f;
-                    row.horizontalOverflow = HorizontalWrapMode.Overflow;
-                    row.text = "    " + line;
+                    var row = NewRect("L", _devRows);
+                    row.gameObject.AddComponent<LayoutElement>().preferredHeight = 19f;
+                    DevColumns(row, price, name, how, asks, ink);
                 }
             }
         }
@@ -1382,36 +1608,17 @@ namespace LastCall.UI
             }
         }
 
-        private Text SettingsRow(int index, string label, Action onClick)
-        {
-            var row = NewRect($"Row{index}", _settingsPanel);
-            Place(row, new Vector2(0.5f, 1), new Vector2(396, 30), new Vector2(0, -24f - index * 34f));
-            var btn = row.gameObject.AddComponent<Button>();
-            btn.onClick.AddListener(() => onClick());
-            // THE ONE KEY (GDD 16 §2). These were bare rects that did not even press — the
-            // fourth dialect, and the one the author named first: a menu of things you click
-            // where nothing answers the click.
-            var face = NewRect("Face", row);
-            Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            KeyPlate.Dress(row, UITheme.Night[3], btn, face);
-            // THE LABEL WAS TAKEN AND NEVER WRITTEN (2026-08-10). Only the three settings
-            // rows had text, because RefreshSettings assigns theirs afterwards — every dev
-            // button was a blank slab you had to have written to know what it did.
-            var text = NewText("L", face, _body, 8, TextAnchor.MiddleCenter, UITheme.TextPrimary);
-            Stretch(text.rectTransform, Vector2.zero, Vector2.one,
-                new Vector2(8, KeyPlate.Throw), new Vector2(-8, 0));
-            text.horizontalOverflow = HorizontalWrapMode.Wrap;
-            text.verticalOverflow = VerticalWrapMode.Truncate;
-            text.text = label;
-            return text;
-        }
-
         private void RefreshSettings()
         {
             if (_settingsVolume == null) return;
-            _settingsVolume.text = $"VOLUME  {Mathf.RoundToInt(Sound.Volume * 100)}%";
-            _settingsMute.text = Sound.Muted ? "SOUND  OFF" : "SOUND  ON";
-            _settingsMotion.text = Motion.Reduced ? "MOTION  REDUCED" : "MOTION  FULL";
+            _settingsVolume.text = Mathf.RoundToInt(Sound.Volume * 100) + "%";
+            if (_settingsMeter != null)
+                for (int i = 0; i < _settingsMeter.Length; i++)
+                    if (_settingsMeter[i] != null)
+                        _settingsMeter[i].color = !Sound.Muted && Sound.Volume + 1e-3f >= (i + 1) / 5f
+                            ? UITheme.Amber[4] : UITheme.Night[3];
+            _settingsMute.text = Sound.Muted ? "OFF" : "ON";
+            _settingsMotion.text = Motion.Reduced ? "REDUCED" : "FULL";
         }
 
         /// <summary>Leader dots so the bill columns line up in the monospace pixel font.</summary>

@@ -679,6 +679,7 @@ namespace LastCall.UI
         /// the rail's own span, so it follows the dishes rather than being placed beside
         /// them.</summary>
         private RectTransform _prepMat;
+        private Image _prepMatImg;          // tinted by the room's light each frame
 
         /// <summary>How far the mat lies BELOW the counter's foot line. A mat does not
         /// stand, it lies: the dishes' lowest pixels are on the line and the mat's own
@@ -2171,6 +2172,8 @@ namespace LastCall.UI
         // ── settings (P17): the smallest sheet that holds sound and motion ───────
 
         private RectTransform _settingsPanel;
+        private Text _beamTill;             // the till's figure, back on the beam (2026-09-06)
+        private Image[] _settingsMeter;     // the volume, five blocks
 
         private Text _settingsVolume, _settingsMute, _settingsMotion;
 
@@ -2309,8 +2312,12 @@ namespace LastCall.UI
         // drawn 9-slice, and the band, the wells, the boxes and the rules are laid out by the
         // same code that places the type.
         //
-        // 224x148 art pixels at 3x — a whole multiple, and a fifth smaller than the old card.
-        private const float LicW = 224f * LicScale, LicH = 148f * LicScale;
+        // 196x148 art pixels at 3x — a whole multiple. NARROWER AGAIN (v3, 2026-09-06, the
+        // author: "metinlerin nesnelerin kutu bloklarının bayrağın vesikalığın kaplayacağı
+        // alanları hesaba katarak daha dar bir kimlik oluştur"): the grid is sized to what
+        // is printed in it — a twenty-letter drink at the display face's 16 is 320 units,
+        // the widest thing on the card, and the grid is 348 — instead of to the paper.
+        private const float LicW = 196f * LicScale, LicH = 148f * LicScale;
 
         /// <summary>The margin from the paper's edge to anything printed on it.</summary>
         private const float LicPad = 8f * LicScale;

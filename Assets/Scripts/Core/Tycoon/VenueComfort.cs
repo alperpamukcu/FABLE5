@@ -18,10 +18,14 @@ namespace LastCall.Core
     /// </summary>
     public static class VenueComfort
     {
-        /// <summary>The room as it opens, before anything is bought. Deliberately the number
-        /// the old fittings ceiling (UpgradeStarCap) opened with, so a fresh bar still caps
-        /// at two stars and every pin that says so stays true.</summary>
-        public const double FreeBase = 2.0;
+        /// <summary>The room as it opens, before anything is bought: NOTHING (2026-09-06, the
+        /// author: "oyuncu ilk başta yıkık dökük hiçbir şeyi olmayan bir barda başlıyor konfor
+        /// 0dan başlamalı"). It opened at two — the number the old fittings ceiling started
+        /// from — which meant cracked plaster and no furniture already filed two stars of
+        /// room. The room is worth what has been put into it now, and the first thing to put
+        /// in is the walls: the biggest rungs in the catalogue (GDD 27 §3), sold from the
+        /// first shelf, the second rung ungated.</summary>
+        public const double FreeBase = 0.0;
 
         /// <summary>How much of the glassware ladder's measured cap
         /// (<c>TycoonRun.GlassStepCap</c>) still counts. Half: it was the only route to the

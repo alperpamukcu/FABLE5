@@ -884,6 +884,34 @@ namespace LastCall.EditorTools
                     int refill = run.Shelf.RefillCost(run.Config.RefillPricePerCapacity);
                     if (refill > 0 && run.Money >= refill) run.RefillShelf();
 
+                    // THE WALLS FIRST IN A BARE ROOM (2026-09-06). The room opens worth
+                    // NOTHING now and the night files the lower of the drinks and the room,
+                    // so until something is put in no night moves the standing, and the
+                    // door draws the no-name crowd (ArrivalRateFactor at zero). Measured
+                    // before this branch: the bot bought its stock and stools first and
+                    // reached the plaster around night ten — 0% to 100% bankruptcies. The
+                    // market's first shelf says START HERE over the plaster; the bot reads
+                    // the same sign — the best comfort per dollar it can afford, before
+                    // anything else, while the room is worth nothing.
+                    if (hands.BuysDressing && run.ComfortBase <= 0.0)
+                    {
+                        FixtureDefinition first = null;
+                        double firstValue = 0;
+                        foreach (var f in run.FixtureCatalogue)
+                        {
+                            if (f.IsTap || f.Comfort <= 0 || run.OwnsFixture(f.Id)) continue;
+                            if (f.Level > 0 && !run.CanBuyRung(f)) continue;
+                            if (run.Rating.Average < f.Stars) continue;
+                            double value = f.Comfort / f.Price;
+                            if (first == null || value > firstValue) { first = f; firstValue = value; }
+                        }
+                        if (first != null && run.Money >= first.Price + 10)
+                        {
+                            run.BuyFixture(first.Id);
+                            stats.RecordRung(first.Slot);
+                        }
+                    }
+
                     // The menu is bought now (v5 P16). It used to be the FREE progression --
                     // the order pool grew into ranks 1-14 on its own -- so the floor buys the
                     // cheapest gate-passing recipe a night, and the new stock its menu names,

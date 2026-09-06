@@ -73,12 +73,18 @@ namespace LastCall.Tests
             new FixtureDefinition("candle", "Candle", "counter_end", 30, 0, "A flame.", "fx_candle",
                 comfort: comfort);
 
+        /// <summary>A room with something in it. The bar opens worth NOTHING since 2026-09-06
+        /// (the author: "konfor 0dan başlamalı"), and a night's mess can take nothing off
+        /// nothing — so the nights that measure the mess are played in a room worth the two
+        /// stars the old free base gave, put there by a fitting the bar owns from the start.</summary>
+        private static FixtureDefinition ARoomWorthTwo() => Lamp(1, 2.0, owned: true);
+
         [Test]
         public void FixtureComfort_CountsWhatTheRoomStands_NeverAFittedOverRung()
         {
             var run = NewRun("rungs", Lamp(1, 0.0, owned: true), Lamp(2, 0.15), Lamp(3, 0.35), Candle(0.10));
-            Assert.AreEqual(0.0, run.FixtureComfort, 1e-9, "the mark the room opens with is the free base");
-            Assert.AreEqual(2.0, run.ComfortBase, 1e-9);
+            Assert.AreEqual(0.0, run.FixtureComfort, 1e-9, "the mark the room opens with is worth nothing");
+            Assert.AreEqual(0.0, run.ComfortBase, 1e-9, "and so is the room (2026-09-06)");
 
             run.DevSkipToDayEnd();
             run.BuyFixture("lamps_2");
@@ -87,7 +93,7 @@ namespace LastCall.Tests
             run.BuyFixture("lamps_3");
             Assert.AreEqual(0.45, run.FixtureComfort, 1e-9,
                 "mark three REPLACES mark two — rungs carry absolute values, the fitted-over one counts nothing");
-            Assert.AreEqual(2.45, run.ComfortBase, 1e-9);
+            Assert.AreEqual(0.45, run.ComfortBase, 1e-9);
         }
 
         [Test]
@@ -107,7 +113,7 @@ namespace LastCall.Tests
             Assert.AreEqual(TycoonPhase.DayEnd, run.Phase);
 
             double comfort = run.ComfortTonight, service = run.ServiceTonight, tonight = run.TonightStars;
-            Assert.AreEqual(2.0, comfort, 1e-9, "nothing bought, nothing left standing: the free base");
+            Assert.AreEqual(0.0, comfort, 1e-9, "nothing bought, nothing standing: a bare room is worth nothing");
             Assert.AreEqual(1.0, run.CleanlinessTonight, 1e-9);
             Assert.AreEqual(Math.Min(service, comfort), tonight, 1e-9, "the night is the lower of the two");
 
@@ -120,19 +126,19 @@ namespace LastCall.Tests
         [Test]
         public void ADirtyNight_FilesLower_ThanACleanOne_OnTheSameSeed()
         {
-            var clean = NewRun("same-night");
+            var clean = NewRun("same-night", ARoomWorthTwo());
             PlayNight(clean, clean: true);
-            var dirty = NewRun("same-night");
+            var dirty = NewRun("same-night", ARoomWorthTwo());
             PlayNight(dirty, clean: false);
 
             Assert.Greater(dirty.Floor.House.MessesLeft, 0, "somebody drank");
             Assert.Less(dirty.CleanlinessTonight, 1.0, "and nobody cleaned");
             Assert.Less(dirty.ComfortTonight, clean.ComfortTonight, "so the room is worth less");
-            Assert.GreaterOrEqual(dirty.ComfortTonight, VenueComfort.FreeBase - VenueComfort.DirtPenalty,
+            Assert.GreaterOrEqual(dirty.ComfortTonight, dirty.ComfortBase - VenueComfort.DirtPenalty,
                 "and never less than the penalty takes");
 
             var filed = dirty.ContinueToNextDay();
-            Assert.Less(filed.ComfortStars, 2.0);
+            Assert.Less(filed.ComfortStars, dirty.ComfortBase, "the mess took something off the room");
             Assert.LessOrEqual(filed.NightStars, filed.ComfortStars, "the room held the night down");
         }
 
@@ -142,9 +148,9 @@ namespace LastCall.Tests
             // GDD 27 D8: a filthy counter holds the standing down; it does not by itself
             // turn tomorrow's crowd broke. Same seed, one bar cleans and one does not — the
             // crowd both draw is the same crowd.
-            var clean = NewRun("crowd");
+            var clean = NewRun("crowd", ARoomWorthTwo());
             PlayNight(clean, clean: true);
-            var dirty = NewRun("crowd");
+            var dirty = NewRun("crowd", ARoomWorthTwo());
             PlayNight(dirty, clean: false);
             Assert.Less(dirty.ComfortTonight, clean.ComfortTonight);
             Assert.AreEqual(clean.ServiceTonight, dirty.ServiceTonight, 1e-9, "the drinks were the same drinks");
@@ -154,7 +160,7 @@ namespace LastCall.Tests
         [Test]
         public void TheLiveReading_FallsWithAGlassLeft_AndRecoversWhenItIsCarriedAway()
         {
-            var run = NewRun("live");
+            var run = NewRun("live", ARoomWorthTwo());
             int guard = 0;
             while (run.Floor.Seated.Count == 0) { Assert.Less(guard++, 100); run.Tick(5); }
             Assert.AreEqual(run.ComfortBase, run.ComfortNow, 1e-9, "a clean counter reads the base");
@@ -237,7 +243,7 @@ namespace LastCall.Tests
         [Test]
         public void TheCloseBlock_WashesTheHandForFree_BeforeTheNightIsRead()
         {
-            var run = NewRun("close");
+            var run = NewRun("close", ARoomWorthTwo());
             int guard = 0;
             while (run.Phase == TycoonPhase.DayOpen)
             {

@@ -162,11 +162,34 @@ namespace LastCall.UI
 
             BuildWeekStrip(top);
 
-            // ── the till is not up here any more (2026-08-14, the author: "para ise
-            // kasada olsun") ───────────────────────────────────────────────────
-            // The money reads off the REGISTER in the room, where the drawer is, and every
-            // rise and fall floats off it. A copy of the same number in the fascia was the
-            // thing that made the till in the room decorative.
+            // ── the till, back on the beam (2026-09-06, the author: "Saat/Takvim/para/
+            // Madalyon/kalp/yıldız/ayarlar butonu. Bunların hepsi uygun bir layouta göre
+            // tekrar koyulsun") ─────────────────────────────────────────────────
+            // It left the fascia for the register (2026-08-14, "para ise kasada olsun") and
+            // the register left the room (2026-08-26); the figure has had no fixed place
+            // since. A well like the clock's, between the hour and the week: the coin the
+            // shop already draws for money, the figure in the display's own cyan, red when
+            // the bar is under water. RunTheTill moves it the way it moved the register.
+            var tillWell = NewRect("Till", top);
+            Place(tillWell, new Vector2(0, 0.5f), new Vector2(150, 40), new Vector2(166, 0));
+            var tillImg = tillWell.gameObject.AddComponent<Image>();
+            tillImg.sprite = ChromeArt.Well();
+            tillImg.type = Image.Type.Sliced;
+            tillImg.raycastTarget = true;
+            var coin = NewRect("Coin", tillWell);
+            Place(coin, new Vector2(0, 0.5f), new Vector2(32, 32), new Vector2(8, 0));   // the 16px coin at 2x
+            coin.pivot = new Vector2(0, 0.5f);
+            var coinImg = coin.gameObject.AddComponent<Image>();
+            coinImg.sprite = ItemArt.Load("sh_b_coin");
+            coinImg.preserveAspect = true; coinImg.raycastTarget = false;
+            coinImg.enabled = coinImg.sprite != null;
+            _beamTill = NewText("Figure", tillWell, _display, 16, TextAnchor.MiddleRight, UITheme.Cyan[4]);
+            Place(_beamTill.rectTransform, new Vector2(1, 0.5f), new Vector2(110, 20), new Vector2(-12, 0));
+            _beamTill.rectTransform.pivot = new Vector2(1, 0.5f);
+            _beamTill.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _beamTill.raycastTarget = false;
+            _beamTill.text = "$0";
+            HoverTip(tillWell, coinImg.sprite, "THE TILL", "WHAT THE BAR HAS TONIGHT");
 
             // ── the standing, right: the stars and who they brought in ─────────
             // NO PLATE UNDER THEM (2026-08-14, the author: "yıldızlar hala üst barda kutu
@@ -180,7 +203,7 @@ namespace LastCall.UI
             // block is just the five-star run now, right-aligned into the same 40-unit gap
             // off the key the old block kept.
             const float RightEdge = -16f;                     // the grid's outer margin
-            const float BlockRight = RightEdge - 40f;
+            const float BlockRight = RightEdge - 56f;              // clear of the 42-unit key
             float starsW = _ratingStars.Length * StarGap;
 
             var standing = NewRect("Standing", top);
@@ -245,6 +268,19 @@ namespace LastCall.UI
             house.pivot = new Vector2(1, 0.5f);
             _serviceFill = IconStrip(house, "Service", ItemArt.Heart(false, 16f), ItemArt.Heart(true, 16f), RowY - 9f);
             _comfortFill = IconStrip(house, "Comfort", ItemArt.Medal(false, 16f), ItemArt.Medal(true, 16f), RowY + 9f);
+            // SAY WHAT THEY ARE (2026-09-06, the author: "madalyon, kalp ne olduğu anlaşılsın
+            // oyuncu tarafından ... üstüne gelindiğinde açıklayıcı kısa iconların kullanıldığı
+            // bir açıklama yapılsın"). One word beside each strip — the least text that
+            // names a reading — and under the pointer, for all three, the mark it is about
+            // with one line saying what it measures.
+            StripCaption(house, "SERVICE", RowY - 9f);
+            StripCaption(house, "COMFORT", RowY + 9f);
+            HoverTip(house.Find("Service") as RectTransform, ItemArt.Heart(true, 16f),
+                "SERVICE", "WHAT TONIGHT'S DRINKS ARE WORTH");
+            HoverTip(house.Find("Comfort") as RectTransform, ItemArt.Medal(true, 16f),
+                "COMFORT", "WHAT THE ROOM IS WORTH: WALLS, LIGHT, FURNITURE");
+            HoverTip(starsRow, ItemArt.Star(true, 16f),
+                "STANDING", "THE BAR'S NAME. A NIGHT FILES THE LOWER OF THE TWO");
 
             // Centred over the block it belongs to, not right-aligned to one edge of it.
             _crowdText = NewText("Crowd", standing, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[3]);
@@ -260,12 +296,24 @@ namespace LastCall.UI
             // at 30 the mark comes out 20 wide, which is 1.25x of a 16-pixel drawing — the
             // cog arrived with its teeth at two different widths. Pixel art scales at whole
             // multiples or it does not scale (see the house rule about the 8px faces).
-            var cogKey = NewButton(top, "SETTINGS", new Vector2(1, 0.5f), new Vector2(26, 26),
+            // THE SETTINGS KEY, REDRAWN (2026-09-06, the author: "ayarlar butonu tekrar
+            // tasarlansın"). The 26-unit slab was the smallest thing on the board and its
+            // 16px cog read as a smudge. A proper key now: 42 on the 54 beam, the cog at
+            // exactly 2x (the key less its 5-unit inlay a side is 32 — whole multiples or
+            // nothing), lit amber, and it says what it is when the pointer arrives.
+            var cogKey = NewButton(top, "SETTINGS", new Vector2(1, 0.5f), new Vector2(42, 42),
                 new Vector2(RightEdge, 0), UITheme.Night[2], ToggleSettings, ChromeArt.Mark("cog"));
             Hairline(cogKey, new Vector2(0, 1), new Vector2(1, 1), UITheme.Night[3]);
             Hairline(cogKey, new Vector2(0, 0), new Vector2(1, 0), new Color(0f, 0f, 0f, 0.55f));
             HairlineV(cogKey, 0f, UITheme.Night[3]);
             HairlineV(cogKey, 1f, new Color(0f, 0f, 0f, 0.55f));
+            var cogMark = cogKey.Find("Face/Mark");
+            if (cogMark != null)
+            {
+                var mi = cogMark.GetComponent<Image>();
+                if (mi != null) mi.color = UITheme.Amber[4];
+            }
+            HoverTip(cogKey, ChromeArt.Mark("cog"), "SETTINGS", "SOUND, MOTION, THE BOOK, A NEW RUN");
             BuildSettings(root);
             BuildOrderTip(root);
 
@@ -1469,6 +1517,33 @@ namespace LastCall.UI
         /// <summary>Five of one icon at 16 px, the sockets always there and the lit ones
         /// under a mask whose width is the reading — the top bar's star row, at the small
         /// size, for the house's two symbols (GDD 27 §4.4).</summary>
+        /// <summary>A hover caption with an icon and a line, on anything: the rect is given
+        /// an invisible plate if it has no graphic to catch the pointer with.</summary>
+        private void HoverTip(RectTransform over, Sprite icon, string title, string line)
+        {
+            if (over == null) return;
+            if (over.GetComponent<Graphic>() == null)
+            {
+                var plate = over.gameObject.AddComponent<Image>();
+                plate.color = new Color(0f, 0f, 0f, 0.004f);
+                plate.raycastTarget = true;
+            }
+            var relay = over.GetComponent<HoverRelay>() ?? over.gameObject.AddComponent<HoverRelay>();
+            relay.Entered = () => ShowPropTip(over, title, icon, line);
+            relay.Exited = () => HidePropTip(over);
+        }
+
+        /// <summary>One word to the left of a reading's strip.</summary>
+        private void StripCaption(RectTransform block, string word, float y)
+        {
+            var t = NewText("Cap_" + word, block, _body, 8, TextAnchor.MiddleRight, UITheme.Cream[3]);
+            Place(t.rectTransform, new Vector2(0, 0.5f), new Vector2(70, 12), new Vector2(-8f, y));
+            t.rectTransform.pivot = new Vector2(1, 0.5f);
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.raycastTarget = false;
+            t.text = word;
+        }
+
         private RectTransform IconStrip(RectTransform parent, string name, Sprite socket, Sprite lit, float y)
         {
             var row = NewRect(name, parent);
