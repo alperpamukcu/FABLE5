@@ -241,6 +241,54 @@ namespace LastCall.PlayTests
         }
 
         /// <summary>
+        /// THE TIN HAS TWO MEANINGS AND THE HAND DECIDES WHICH (2026-09-06, the author:
+        /// "shaker da lavaboya dökülüp çöpe atılabilir"). A press that stays put is the door
+        /// back to the bench; a press that travels lifts the tin off its coaster, and letting
+        /// go over the basin tips the build away and starts the tap.
+        ///
+        /// Worth a floor test because the two readings share one press: get the threshold
+        /// wrong in either direction and the tin either cannot be picked up at all or opens
+        /// the bench every time somebody tries to carry it — and neither shows in a compile.
+        /// It carries the thing the way a player does and asks Core what happened.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator The_tin_can_be_carried_to_the_sink()
+        {
+            yield return OpenTheBar();
+            var run = _boot.Tycoon;
+
+            // A build waiting in the tin — the state the counter draws the tin for. Poured
+            // through Core because the POUR is somebody else's test; this one is the carry.
+            run.PourMeasure(run.Shelf.Bottles[0].Id, 0.45);
+            yield return new WaitForSecondsRealtime(0.4f);
+
+            var tin = Find("ShakerProp");
+            Assert.That(tin, Is.Not.Null, "the counter has no tin to carry");
+            Assert.That(tin.gameObject.activeInHierarchy, Is.True,
+                "a drink is waiting in the shaker and the tin is not standing on the counter");
+            var drain = Find("PropDoor_counter_sink");
+            Assert.That(drain, Is.Not.Null, "the room has no drain to carry it to");
+
+            var from = ScreenPointOf(tin);
+            var to = ScreenPointOf(drain);
+            Press(_mouse.leftButton, from);
+            yield return WaitFrames(2);
+            // Carried, not teleported: the lift only happens once the pointer has travelled,
+            // so a single jump would prove nothing about the threshold.
+            for (int i = 1; i <= 6; i++)
+            {
+                Set(_mouse.position, Vector2.Lerp(from, to, i / 6f));
+                yield return WaitFrames(2);
+            }
+            Release(_mouse.leftButton);
+            yield return new WaitForSecondsRealtime(0.3f);
+
+            Assert.That(run.Glass.IsEmpty, Is.True,
+                "the tin was carried to the basin and came back with the drink still in it");
+            Assert.That(run.SinkBusy, Is.True, "the tap did not run after it");
+        }
+
+        /// <summary>
         /// ONE KEY IN THE MARKET'S FOOT, AND IT DOES BOTH ERRANDS (2026-09-04, the author:
         /// "2 butonu 1 buton yapıyoruz"). The market used to carry PLACE ORDER in the
         /// basket's head band and OPEN TOMORROW in the foot; they are the same key now, and

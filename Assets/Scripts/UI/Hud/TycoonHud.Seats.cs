@@ -1690,6 +1690,12 @@ namespace LastCall.UI
             bool show = run != null && run.Phase == TycoonPhase.DayOpen
                 && (_flow == null || !_flow.IsOpen)
                 && run.DrinkWaitingInShaker;
+            // ...AND IT IS NOT ON THE MAT WHILE IT IS IN THE HAND. The carry hides the prop
+            // and draws a copy under the cursor, so without this the next frame would find
+            // the drink still in the shaker, decide the tin belongs on the counter and set
+            // it back down there — twice on screen, and the second one clinking as it lands.
+            bool have = show;
+            show &= !_tinCarrying;
             if (show)
             {
                 string tier = run.LadderLevel("shaker") >= 2 ? "_t2" : "";
@@ -1715,10 +1721,13 @@ namespace LastCall.UI
                 if (show) Sfx.Play("glass_down", 0.45f);   // it is set down on the mat
                 else _shakerPropHovered = false;
             }
-            if (!show) { _tinPressed = false; if (_tinCarrying) EndTinCarry(false); return; }
-            float want = _shakerPropHovered ? 1f : 0f;
-            _shakerPropLabelGroup.alpha = Motion.Reduced ? want : Mathf.MoveTowards(
-                _shakerPropLabelGroup.alpha, want, Time.unscaledDeltaTime / BookLabelFade);
+            if (!have) { _tinPressed = false; if (_tinCarrying) EndTinCarry(false); return; }
+            if (show)
+            {
+                float want = _shakerPropHovered ? 1f : 0f;
+                _shakerPropLabelGroup.alpha = Motion.Reduced ? want : Mathf.MoveTowards(
+                    _shakerPropLabelGroup.alpha, want, Time.unscaledDeltaTime / BookLabelFade);
+            }
             StepTinCarry(run);
         }
 
@@ -1773,7 +1782,6 @@ namespace LastCall.UI
             _tinCarry.SetAsLastSibling();
             _shakerProp.gameObject.SetActive(false);
             _shakerPropLabel.gameObject.SetActive(false);
-            _shakerPropShown = false;
             _shakerPropHovered = false;
             Sfx.Play("tin_tip", 0.5f);
         }
