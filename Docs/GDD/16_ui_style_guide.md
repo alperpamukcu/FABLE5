@@ -40,18 +40,33 @@ nesnenin üstüne mouse geldiyse, o nesne yükselir biraz boyutu büyük ve arka
 çıkar aynı zamanda çok hafif sağa ve sola doğru hareket eder."*
 
 `HoverGlow` is that sentence: **Rise** (a few units in the prop's own space), **Grow**
-(1.05–1.07), **Sway** (±1.5 units at ~2 Hz) and **Halo** — a soft warm bloom behind the
-prop (`ChromeArt.Halo`, made on the first hover so a prop nobody points at never pays for
-one). The old brightness (×1.22, the beer font's own number) stays under all of it.
+(1.05–1.07), **Sway** — a ROCK of ±2° at ~1.8 Hz, not a drift along x, which the author
+corrected the same day (*"sağ sola hareket etmesinden kastım sağ sola sallanması"*) — and
+**Halo**, a soft warm bloom behind the prop (`ChromeArt.Halo`, made on the first hover so a
+prop nobody points at never pays for one, and never made at all on the way out). The old
+brightness (×1.22, the beer font's own number) stays under all of it.
 
 - The movement is **undone and re-applied every frame** in `LateUpdate`, on top of
   wherever the prop's owner put it — the rail re-slots its dishes, the book and the
   coaster ride the counter, the drawer animates the cellar. Nothing fights an owner.
+- **The thing under the pointer comes to the front, and its light one step under it**
+  (*"mouse önüne gelen hiyerarşide en üste çıkmalı onun bir altında ışıklandırma olmalı"*):
+  sibling order on a canvas, sorting order in the room, both put back on the way out. The
+  order is left alone while a panel is being disabled — Unity refuses a sibling move made
+  during a parent's activation, and a closing bench disables a whole tree of these at once.
+- **The halo is the size of the DRAWING, not of the rect** (*"tam görselin sınırlarında
+  aydınlatılması lazım"*). Most of these props are a square rect with a narrow drawing
+  letterboxed inside it, so a bloom cut to the rect lit a circle of empty counter around
+  them. `HoverGlow.DrawnSize` measures the sprite's own opaque box and scales it the way
+  `preserveAspect` scales the sheet.
 - **A world prop gets a world halo**, three sorting orders under its own drawing: its hit
   plate is on the canvas, and a bloom hung there would sit in front of the bottle.
-- **The cellar's bottles light but do not move**: a bottle there is four renderers
-  standing in one place (front, back, drink, mask), each placed by the stage, so moving
-  one takes the sandwich apart. That movement is the stage's to give.
+- **The cellar's bottles do all of it too** (*"bunların aynısı mahzendeki alkoller için de
+  olmalı"*). A bottle there is four transforms standing in one place — front plate, back
+  plate, the drink and the mask that cuts it — so all four are handed to the glow as
+  `Movers`, and every one is turned and grown ABOUT THE BODY'S centre rather than about
+  its own. That is the difference between a bottle that rocks and a bottle whose drink
+  swings out through its glass.
 - **A drinker is not a prop.** People brighten and nothing else — a person who rises and
   grows under the pointer reads as a puppet.
 

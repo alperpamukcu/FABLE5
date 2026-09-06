@@ -692,11 +692,22 @@ namespace LastCall.UI
                 {
                     var glow = plate.gameObject.AddComponent<HoverGlow>();
                     glow.Sprites = new[] { _cellarStock[index] };
-                    // A bottle in the cellar is FOUR renderers standing in one place —
-                    // front, back, drink and mask, each placed by PlaceCellarSlot — so it
-                    // lights and takes its halo, and the rise and the sway the counter's
-                    // props have would need the stage to move the whole sandwich together.
-                    glow.Rise = 0f; glow.Sway = 0f; glow.Grow = 1f;
+                    // THE WHOLE SANDWICH MOVES AS ONE (2026-09-06, the author: "bunların
+                    // aynısı mahzendeki alkoller için de olmalı"). A bottle down here is
+                    // four objects standing in one place — the front plate, the back, the
+                    // drink inside it and the mask that cuts the drink to the glass — each
+                    // placed by PlaceCellarSlot at the same spot. Handing all four to the
+                    // glow is what lets it rise, rock and grow without coming apart, and
+                    // the sorting lift brings them in front of the shelf they stand on.
+                    var movers = new System.Collections.Generic.List<Transform> { _cellarStock[index].transform };
+                    if (index < _cellarBack.Count) movers.Add(_cellarBack[index].transform);
+                    if (index < _cellarDrink.Count) movers.Add(_cellarDrink[index].transform);
+                    if (index < _cellarMask.Count) movers.Add(_cellarMask[index].transform);
+                    glow.Movers = movers.ToArray();
+                    glow.Riser = _cellarStock[index].transform;
+                    // The room's own units: one is two of the HUD's, so these are half the
+                    // counter's numbers and read the same on the screen.
+                    glow.Rise = 2f; glow.Sway = 2.2f; glow.Grow = 1.06f; glow.Halo = 1.15f;
                 }
                 _cellarDoors.Add(plate);
             }

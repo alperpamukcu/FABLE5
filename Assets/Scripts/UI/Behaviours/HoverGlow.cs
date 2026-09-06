@@ -81,17 +81,29 @@ namespace LastCall.UI
         /// <summary>How much bigger while hovered. 1 leaves the size alone.</summary>
         public float Grow = 1.06f;
 
-        /// <summary>How far it drifts side to side, in its own units, and how fast. Very
-        /// slight on purpose: this is a breath, not a wobble.</summary>
-        public float Sway = 1.5f;
-        public float SwaySpeed = 2.2f;
+        /// <summary>How far it ROCKS side to side, in degrees, and how fast (2026-09-06,
+        /// the author: "sağ sola hareket etmesinden kastım sağ sola sallanması"). A drift
+        /// along x reads as sliding; a bar prop under a hand tips. Very slight either way.</summary>
+        public float Sway = 2.2f;
+        public float SwaySpeed = 1.8f;
 
-        /// <summary>The soft light behind the prop, as a share of the prop's own size. 0
-        /// draws none — for a prop that already sits in front of something bright.</summary>
-        public float Halo = 1.7f;
+        /// <summary>The soft light behind the prop, as a share of the DRAWING's own box — not
+        /// of the rect it lives in, which for most of these props is a square with the drawing
+        /// letterboxed inside it (2026-09-06, the author: "tam görselin sınırlarında
+        /// aydınlatılması lazım"). 0 draws none.</summary>
+        public float Halo = 1.15f;
 
         /// <summary>The colour of that light. Warm by default: it is a bar.</summary>
-        public Color HaloTint = new Color(1f, 0.86f, 0.62f, 0.55f);
+        public Color HaloTint = new Color(1f, 0.86f, 0.62f, 0.7f);
+
+        /// <summary>Everything that moves with the prop when it is more than one object —
+        /// the cellar's bottle is a front plate, a back plate, a drink and a mask standing in
+        /// one place. Left null, the prop moves alone.</summary>
+        public Transform[] Movers;
+
+        /// <summary>Sorting orders to lift while hovered, so a world prop comes to the front
+        /// of the room the way a canvas prop comes to the front of its parent.</summary>
+        public int OrderLift = 20;
 
         private bool _over;
         private float _g;                 // 0 cold, 1 fully lit
@@ -100,11 +112,14 @@ namespace LastCall.UI
 
         // What this component added to the prop last frame, so it can be taken off again
         // before the next one is worked out. Position in the riser's own local space.
-        private Vector3 _addedOffset;
+        private Vector3[] _added;         // what this glow has added to each mover, per mover
         private float _addedScale = 1f;
         private float _phase;
 
         private Graphic _halo;            // the canvas light, made on the first hover
+        private bool _fronted;            // brought to the front by the pointer
+        private bool _stowing;            // being disabled: leave the draw order alone
+        private int _restIndex = -1;      // where it stood before that
         private SpriteRenderer _haloSprite;   // ...or the world one
 
         /// <summary>When the room last answered the cursor. Static on purpose: the brake
@@ -139,10 +154,35 @@ namespace LastCall.UI
         {
             _over = false;
             _g = 0f;
+            _stowing = true;
             Restore();
+            _stowing = false;
+        }
+
+        /// <summary>Puts back the draw order a hover borrowed, once the object is properly
+        /// alive again — see the note in <see cref="Front"/>.</summary>
+        private void OnEnable()
+        {
+            if (_restIndex < 0) return;
+            var body = Body as RectTransform;
+            if (body != null && body.parent != null)
+                body.SetSiblingIndex(Mathf.Min(_restIndex, body.parent.childCount - 1));
+            _restIndex = -1;
+            _fronted = false;
         }
 
         private Transform Body => Riser != null ? Riser : transform;
+
+        /// <summary>Everything this glow moves: the body, and the other objects the same
+        /// prop is drawn out of.</summary>
+        private void ForEachMover(System.Action<Transform> act)
+        {
+            var body = Body;
+            if (body != null) act(body);
+            if (Movers == null) return;
+            foreach (var t in Movers)
+                if (t != null && t != body) act(t);
+        }
 
         private void Capture()
         {
@@ -198,6 +238,7 @@ namespace LastCall.UI
         {
             if (!_held) return;
             Apply(0f);
+            Front(false);
             _held = false;
         }
 
@@ -235,29 +276,95 @@ namespace LastCall.UI
         /// </summary>
         private void Move(float g)
         {
+            float rise = Rise * g;
+            float angle = 0f;
+            if (Sway > 0f && g > 0f)
+            {
+                _phase += Time.unscaledDeltaTime * SwaySpeed;
+                angle = Mathf.Sin(_phase * Mathf.PI * 2f) * Sway * g;
+            }
+            float want = Grow > 1f ? Mathf.Lerp(1f, Grow, g) : 1f;
+            float undo = _addedScale > 0.0001f ? 1f / _addedScale : 1f;
+            _addedScale = want;
+
+            // ONE PROP, HOWEVER MANY OBJECTS IT IS DRAWN OUT OF. A bottle in the cellar is a
+            // front plate, a back plate, a column of drink and the mask that cuts it —
+            // four transforms standing in one place with four different pivots. So each is
+            // turned and grown ABOUT THE BODY'S centre rather than about its own, which is
+            // the difference between a bottle that rocks and a bottle whose drink swings
+            // out through its glass. What was added is remembered PER MOVER and taken off
+            // again next frame, so whoever owns these positions stays their owner.
             var body = Body;
-            if (body == null) return;
-            bool moves = Rise > 0f || Sway > 0f;
-            if (moves)
+            int n = 0;
+            ForEachMover(t => n++);
+            if (_added == null || _added.Length != n) _added = new Vector3[n];
+            var rot = Quaternion.Euler(0f, 0f, angle);
+            Vector3 pivot = body != null ? body.localPosition - _added[0] : Vector3.zero;
+            int k = 0;
+            ForEachMover(t =>
             {
-                var basePos = body.localPosition - _addedOffset;
-                if (g > 0f)
+                var rest = t.localPosition - _added[k];
+                var moved = pivot + rot * ((rest - pivot) * want) + new Vector3(0f, rise, 0f);
+                t.localPosition = moved;
+                _added[k] = moved - rest;
+                // ROCKED, not slid (2026-09-06, the author: "sag sola hareket etmesinden
+                // kastim sag sola sallanmasi"). A drift along x reads as sliding; a thing
+                // picked up off a bar tips. Written as an absolute angle, because nothing
+                // else rotates these props while the pointer is on them.
+                if (Sway > 0f) t.localRotation = rot;
+                if (Grow > 1f)
                 {
-                    _phase += Time.unscaledDeltaTime * SwaySpeed;
-                    _addedOffset = new Vector3(Mathf.Sin(_phase * Mathf.PI * 2f) * Sway * g,
-                                               Rise * g, 0f);
+                    var s = t.localScale;
+                    t.localScale = new Vector3(s.x * undo * want, s.y * undo * want, s.z);
                 }
-                else _addedOffset = Vector3.zero;
-                body.localPosition = basePos + _addedOffset;
-            }
-            if (Grow > 1f)
+                k++;
+            });
+            Front(g > 0.001f);
+        }
+
+        /// <summary>
+        /// THE THING UNDER THE POINTER COMES TO THE FRONT (2026-09-06, the author: "mouse
+        /// önüne gelen hiyerarşide en üste çıkmalı onun bir altında ışıklandırma olmalı").
+        /// On a canvas that is the sibling order; in the room it is the sorting order. Both
+        /// are put back exactly as they were when the pointer leaves — a prop that stayed on
+        /// top would quietly re-stack the whole bar.
+        /// </summary>
+        private void Front(bool on)
+        {
+            if (on == _fronted) return;
+            _fronted = on;
+            var body = Body as RectTransform;
+            if (body != null)
             {
-                float want = Mathf.Lerp(1f, Grow, g);
-                var s = body.localScale;
-                float undo = _addedScale > 0.0001f ? 1f / _addedScale : 1f;
-                body.localScale = new Vector3(s.x * undo * want, s.y * undo * want, s.z);
-                _addedScale = want;
+                // NOT WHILE THE PANEL IS BEING PUT AWAY. Unity refuses a sibling move made
+                // during a parent's activation, and a bench panel closing disables a whole
+                // tree of these at once — which is exactly when the pointer's prop is being
+                // let go of (2026-09-06: "Cannot change the sibling position of GameObject
+                // 'ShakerCap' while activating or deactivating the parent"). The order is
+                // put back on the way in instead; nothing looks at it while it is hidden.
+                if (_stowing) return;
+                if (on)
+                {
+                    _restIndex = body.GetSiblingIndex();
+                    body.SetAsLastSibling();
+                    // ...and the light immediately under it, so it lights the prop from
+                    // behind and still passes in front of everything else on the bar.
+                    if (_halo != null) _halo.rectTransform.SetSiblingIndex(body.GetSiblingIndex());
+                }
+                else
+                {
+                    if (_restIndex >= 0) body.SetSiblingIndex(Mathf.Min(_restIndex, body.parent.childCount - 1));
+                    _restIndex = -1;
+                }
+                return;
             }
+            if (Sprites == null) return;
+            for (int i = 0; i < Sprites.Length; i++)
+            {
+                if (Sprites[i] == null) continue;
+                Sprites[i].sortingOrder += on ? OrderLift : -OrderLift;
+            }
+            if (_haloSprite != null) _haloSprite.sortingOrder += on ? OrderLift : -OrderLift;
         }
 
         /// <summary>
@@ -269,7 +376,13 @@ namespace LastCall.UI
         private void Shine(float g)
         {
             if (Halo <= 0f) return;
-            if (_halo == null && _haloSprite == null) MakeHalo();
+            // A light nobody has asked for is never built — and never built ON THE WAY OUT
+            // either, which is what a fading-to-nothing prop and a closing panel both are.
+            if (_halo == null && _haloSprite == null)
+            {
+                if (g <= 0.001f || _stowing) return;
+                MakeHalo();
+            }
             if (_halo != null)
             {
                 var c = HaloTint;
@@ -278,9 +391,23 @@ namespace LastCall.UI
                 var body = Body as RectTransform;
                 if (body != null)
                 {
+                    // THE SIZE OF THE DRAWING, NOT OF THE RECT (2026-09-06). Most of these
+                    // props are a square rect with a narrow drawing letterboxed inside it,
+                    // so a halo cut to the rect lit a circle of empty counter around them.
+                    // The drawn box is measured off the sprite's own opaque pixels and then
+                    // scaled the way preserveAspect scales it.
                     rt.position = body.position;
-                    rt.sizeDelta = body.rect.size * Halo;
+                    rt.sizeDelta = DrawnSize(body) * Halo;
                     rt.localScale = body.localScale;
+                    rt.localRotation = body.localRotation;
+                    // ...and it keeps station DIRECTLY UNDER the prop while the pointer is
+                    // on it. Ordering it once inside Front() is not enough: the light is
+                    // made on the first hover, which is after Front() has already run.
+                    if (_fronted && !_stowing)
+                    {
+                        rt.SetAsLastSibling();
+                        body.SetAsLastSibling();
+                    }
                 }
             }
             if (_haloSprite != null)
@@ -288,6 +415,24 @@ namespace LastCall.UI
                 var c = HaloTint;
                 _haloSprite.color = new Color(c.r, c.g, c.b, c.a * g);
             }
+        }
+
+        /// <summary>How big the prop's DRAWING is inside its rect, in the rect's own units:
+        /// the sprite's opaque box, scaled the way preserveAspect scales the sheet.</summary>
+        private Vector2 DrawnSize(RectTransform rect)
+        {
+            var img = Graphics != null && Graphics.Length > 0 ? Graphics[0] as Image : null;
+            var sp = img != null ? img.sprite : null;
+            var box = rect.rect.size;
+            if (sp == null || sp.rect.width <= 0.0001f || sp.rect.height <= 0.0001f) return box;
+            var ob = ItemArt.OpaqueBounds(sp);
+            if (ob.width <= 0.0001f || ob.height <= 0.0001f) return box;
+            float scale = img.preserveAspect
+                ? Mathf.Min(box.x / sp.rect.width, box.y / sp.rect.height)
+                : 1f;
+            if (!img.preserveAspect)
+                return new Vector2(box.x * (ob.width / sp.rect.width), box.y * (ob.height / sp.rect.height));
+            return new Vector2(ob.width * scale, ob.height * scale);
         }
 
         private void MakeHalo()
