@@ -117,6 +117,10 @@ namespace LastCall.UI
             btn.onClick.AddListener(ToggleRecipeBook);
             _bookGlow = prop.gameObject.AddComponent<HoverGlow>();
             _bookGlow.Graphics = new UnityEngine.UI.Graphic[] { img };
+            // The counter's answer in full (2026-09-06): it rises off the bar, grows a
+            // little, sways, and the light comes up behind it. The book is placed every
+            // frame by PlaceBookProp, which the glow composes with rather than fights.
+            _bookGlow.Rise = 5f; _bookGlow.Sway = 1.6f; _bookGlow.Grow = 1.06f;
             _bookImg = img;
             UiAuditExempt.Mark(prop, "the recipe book is a prop standing on the counter, "
                 + "drawn at the counter's own grain from its own closed art");

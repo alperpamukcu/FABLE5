@@ -692,6 +692,11 @@ namespace LastCall.UI
                 {
                     var glow = plate.gameObject.AddComponent<HoverGlow>();
                     glow.Sprites = new[] { _cellarStock[index] };
+                    // A bottle in the cellar is FOUR renderers standing in one place —
+                    // front, back, drink and mask, each placed by PlaceCellarSlot — so it
+                    // lights and takes its halo, and the rise and the sway the counter's
+                    // props have would need the stage to move the whole sandwich together.
+                    glow.Rise = 0f; glow.Sway = 0f; glow.Grow = 1f;
                 }
                 _cellarDoors.Add(plate);
             }
@@ -2801,6 +2806,9 @@ namespace LastCall.UI
             // snapping and reading its rest colour at the moment the pointer arrives.
             var glow = plate.gameObject.AddComponent<HoverGlow>();
             glow.Sprites = new[] { body };
+            // The font is one drawing standing on the counter, so it takes the whole
+            // answer — in the world's own units, where one is two of the HUD's.
+            glow.Rise = 2f; glow.Sway = 0.8f; glow.Grow = 1.05f; glow.Halo = 1.6f;
 
             // ...and it SAYS what it does, before it is pressed (2026-08-26). The glow was
             // already the affordance; the word is what turns "this can be clicked" into

@@ -847,6 +847,35 @@ namespace LastCall.UI
         /// page is a table cell), one hairline rule around it, and two shaded rows along the
         /// bottom so the card sits ON the page instead of being a hole in it.
         /// </summary>
+        /// <summary>
+        /// THE LIGHT BEHIND A PROP THE POINTER IS ON (2026-09-06, the author: "arkasindan
+        /// isik cikar"). A soft round bloom, drawn once and tinted by whoever hangs it: a
+        /// radial falloff squared at the edge so it has no rim of its own, and no hard pixel
+        /// anywhere — this is the one thing in the room allowed to be soft, because it is
+        /// light rather than an object.
+        ///
+        /// 64x64 and stretched by the prop that wears it. A bloom has no detail to lose, so
+        /// a bigger sheet would be pixels nobody sees.
+        /// </summary>
+        public static Sprite Halo()
+        {
+            const string Key = "fx:halo";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int S = 64;
+            var px = new Color32[S * S];
+            float c = (S - 1) * 0.5f;
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float dx = (x - c) / c, dy = (y - c) / c;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    float a = Mathf.Clamp01(1f - d);
+                    a *= a;                       // falls off fast: a core, not a disc
+                    px[y * S + x] = new Color32(255, 255, 255, (byte)(a * 255));
+                }
+            return Cache[Key] = Make(px, S, S, Vector4.zero);
+        }
+
         public static Sprite Card()
         {
             const string Key = "plate:card";

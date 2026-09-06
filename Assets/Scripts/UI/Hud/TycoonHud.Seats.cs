@@ -710,6 +710,7 @@ namespace LastCall.UI
                 if (img.sprite == null) img.color = UITheme.Cyan[3];
                 var glow = rt.gameObject.AddComponent<HoverGlow>();
                 glow.Graphics = new Graphic[] { img };
+                glow.Rise = 4f; glow.Sway = 1.4f; glow.Grow = 1.07f;
                 var carryArt = carry != null ? ItemArt.Load(carry) : null;
                 var prop = new PrepProp
                 {
@@ -872,6 +873,7 @@ namespace LastCall.UI
             _clothImg.preserveAspect = true;
             var glow = _clothRt.gameObject.AddComponent<HoverGlow>();
             glow.Graphics = new Graphic[] { _clothImg };
+            glow.Rise = 4f; glow.Sway = 1.4f; glow.Grow = 1.07f;
             var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
             down.callback.AddListener(_ => GrabCloth());
             _clothRt.gameObject.AddComponent<EventTrigger>().triggers.Add(down);
@@ -1594,6 +1596,7 @@ namespace LastCall.UI
             });
             var glow = _shakerProp.gameObject.AddComponent<HoverGlow>();
             glow.Graphics = new UnityEngine.UI.Graphic[] { _shakerPropImg };
+            glow.Rise = 5f; glow.Sway = 1.6f; glow.Grow = 1.06f;
             var relay = _shakerProp.gameObject.AddComponent<HoverRelay>();
             relay.Entered = () => _shakerPropHovered = true;
             relay.Exited = () => _shakerPropHovered = false;

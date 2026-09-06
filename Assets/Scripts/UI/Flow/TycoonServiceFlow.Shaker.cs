@@ -1594,6 +1594,13 @@ namespace LastCall.UI
                 _lastShakeMouse = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
             });
             _shakerVessel.gameObject.AddComponent<EventTrigger>().triggers.Add(shakeGrab);
+            // THE BENCH ANSWERS THE POINTER (2026-09-06, the author asked for the same
+            // language here as in the room). The tin is the biggest thing on this bench
+            // and it is held rather than picked up, so it takes the light and a breath
+            // of sway — no rise, because a tin that lifts off the bench is a spill.
+            var tinGlow = _shakerVessel.gameObject.AddComponent<HoverGlow>();
+            tinGlow.Graphics = new Graphic[] { shakerImg };
+            tinGlow.Rise = 0f; tinGlow.Sway = 1.2f; tinGlow.Grow = 1.03f; tinGlow.Halo = 1.5f;
 
             // The metaball fluid draws over the vessel (pool); the solids float on top of it;
             // the bottle is created after, so it sits in front of the liquid.
@@ -1635,6 +1642,9 @@ namespace LastCall.UI
                 Sfx.Play("cap_on", 0.35f);
             });
             _shakerTop.gameObject.AddComponent<EventTrigger>().triggers.Add(capGrab);
+            var capGlow = _shakerTop.gameObject.AddComponent<HoverGlow>();
+            capGlow.Graphics = new Graphic[] { topImg };
+            capGlow.Rise = 4f; capGlow.Sway = 1.4f; capGlow.Grow = 1.06f;
             _shakerTop.gameObject.SetActive(topImg.sprite != null);
 
             // The metal shaker is opaque, so the fluid draws OVER it (2026-07-24): you see the
@@ -1696,6 +1706,10 @@ namespace LastCall.UI
             Sfx.Play("bottle_set", 0.45f);   // lifted off the wood
             });
             _pourBottle.gameObject.AddComponent<EventTrigger>().triggers.Add(grab);
+            var bottleGlow = _pourBottle.gameObject.AddComponent<HoverGlow>();
+            bottleGlow.Graphics = new Graphic[] { _pourBottleBody };
+            bottleGlow.Riser = _pourVessel;      // the drawing, not the grab plate
+            bottleGlow.Rise = 4f; bottleGlow.Sway = 1.4f; bottleGlow.Grow = 1.05f;
             _benchProps.Add(_pourBottle.gameObject.AddComponent<CanvasGroup>());
 
             // 13 → 16: pinned to the pixel faces' 8px grid (CLAUDE.md), like every other

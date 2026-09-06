@@ -351,6 +351,10 @@ namespace LastCall.UI
                     // bottles take (2026-08-25).
                     var seatGlow = seat.Root.gameObject.AddComponent<HoverGlow>();
                     seatGlow.Sprites = new[] { seat.Body };
+                    // A DRINKER IS NOT A PROP (2026-09-06). The counter's things rise,
+                    // grow and sway under the pointer; a person doing that reads as a
+                    // puppet. They brighten, as they always have, and nothing else.
+                    seatGlow.Rise = 0f; seatGlow.Sway = 0f; seatGlow.Grow = 1f; seatGlow.Halo = 0f;
                 }
 
                 // The order tag, floating above the head.
