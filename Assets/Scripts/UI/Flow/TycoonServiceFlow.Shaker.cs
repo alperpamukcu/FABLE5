@@ -690,9 +690,18 @@ namespace LastCall.UI
             // it must not grow to fill the space the cap left (VesselArt).
             // A v4 bottle is gauged against ITSELF: its open master is the whole canvas, there
             // is no separate closed sheet to measure the cap against.
+            // A SEALED CONTAINER IS A v4 MASTER TOO (2026-09-06, the author: "limonata ve diğer
+            // meyve suları görseldeki gibi gözüküyor hem boyutu yanlış hem görsel yok sadece
+            // aydınlatması var"). Cartons and cans get ONE sprite by design (brief.SEALED: no
+            // cavity, so no back/mask/front sandwich) — and the bench read "no sandwich" as
+            // "pre-v4", fell through to the CELLAR thumbnail and stretched a 32x64 picture over
+            // 180x384. What decides the scale is the CANVAS the drawing came on, not whether it
+            // arrived in three plates: a 96x192 master stands at exactly 2x either way.
+            bool master = bottleSprite != null && Mathf.Approximately(bottleSprite.rect.height, 192f);
             _pourMouth = VesselArt.StandOn(_pourVessel, new Vector2(0.5f, 0f), bottleSprite,
-                BottleH, Vector2.zero, plates != null ? bottleSprite : ItemArt.Bottle(_focusBottle),
-                fixedScale: plates != null ? BottleH / 192f : 0f);   // exactly 2x for a v4 master
+                BottleH, Vector2.zero,
+                plates != null || master ? bottleSprite : ItemArt.Bottle(_focusBottle),
+                fixedScale: plates != null || master ? BottleH / 192f : 0f);
             PushPourFill(run);
         }
 

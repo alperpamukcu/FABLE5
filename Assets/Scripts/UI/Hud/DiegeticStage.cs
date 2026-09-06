@@ -1903,6 +1903,21 @@ namespace LastCall.UI
         /// </summary>
         public void CallTheDrain(bool on) => _drainGlow?.Beckon(on);
 
+        /// <summary>
+        /// Whether the drain answers the pointer at all (2026-09-06). A running tap takes
+        /// nothing — no glass, no tin, no click — so it stops lighting up under the hand as
+        /// well: an affordance that is offered and then refused is worse than none.
+        /// </summary>
+        public void SetDrainAnswers(bool on)
+        {
+            if (_drainGlow != null && _drainGlow.enabled != on) _drainGlow.enabled = on;
+            if (_drainDoor != null)
+            {
+                var hit = _drainDoor.GetComponent<UnityEngine.UI.Image>();
+                if (hit != null && hit.raycastTarget != on) hit.raycastTarget = on;
+            }
+        }
+
         /// <summary>Is this screen point on the sink? Asked by the carry, once, on release.</summary>
         public bool PointerOverDrain(Vector2 screenPoint) =>
             _drainDoor != null && _drainDoor.gameObject.activeInHierarchy

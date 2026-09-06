@@ -409,6 +409,11 @@ namespace LastCall.UI
         private void Shine(float g)
         {
             if (Halo <= 0f) return;
+            // NO DRAWING, NO LIGHT (2026-09-06). The glow is cut FROM the prop's own art, so a
+            // prop that has none has nothing to light: the ellipse fallback sized itself to the
+            // hit RECT and a 180x384 plate became a pair of beams across the bench, which is
+            // what the author photographed when a juice carton found no bottle sprite.
+            if (LitSprite() == null) { HideHalo(); return; }
             // A light nobody has asked for is never built — and never built ON THE WAY OUT
             // either, which is what a fading-to-nothing prop and a closing panel both are.
             if (_halo == null && _haloSprite == null)
@@ -452,6 +457,14 @@ namespace LastCall.UI
                 var c = HaloTint;
                 _haloSprite.color = new Color(c.r, c.g, c.b, c.a * g);
             }
+        }
+
+        /// <summary>Takes the light off the screen without destroying it: a prop can be given
+        /// a drawing later (the bench dresses its bottle every pick).</summary>
+        private void HideHalo()
+        {
+            if (_halo != null) _halo.color = new Color(1f, 1f, 1f, 0f);
+            if (_haloSprite != null) _haloSprite.color = new Color(1f, 1f, 1f, 0f);
         }
 
         /// <summary>The sprite whose shape the light is cut from: the prop's own drawing,

@@ -2429,6 +2429,61 @@ namespace LastCall.UI
         /// edge strips carry one half-round bump each, TILED, so a cloud of any width is the
         /// same bump repeated and never a stretched blob.
         /// </summary>
+        /// <summary>
+        /// THE COMIC BALLOON (2026-09-06, the author: "konuşma baloncuğunu beğenmedim çok ince
+        /// kontrast var, daha çok karikatür, çizgiroman baloncuğu gibi olsunlar, dörtgensel
+        /// biçimde"). The lobed cloud was too soft and its one-pixel rim read as a hairline at
+        /// this size. This is the comic-book shape instead: a rectangle, a THREE-pixel ink rim,
+        /// a hard white ground, and one pale line inside the rim so the edge has weight. Sliced
+        /// at 6, so any balloon keeps that rim exactly three pixels thick.
+        /// </summary>
+        public static Sprite SpeechBox(BubbleTone tone = BubbleTone.Drink)
+        {
+            string key = "speech:box:" + tone;
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            const int S = 15, B = 6;
+            var ink = EdgeOf(tone);
+            var paper = new Color32(0xFF, 0xFF, 0xFF, 255);
+            var shade = new Color32(0xC9, 0xBC, 0xA8, 255);      // Cream[3], the inner line
+            var px = new Color32[S * S];
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    int edge = Mathf.Min(Mathf.Min(x, S - 1 - x), Mathf.Min(y, S - 1 - y));
+                    // The corners are clipped by one pixel, which is all a pixel balloon needs
+                    // to stop reading as a spreadsheet cell.
+                    bool corner = (x == 0 || x == S - 1) && (y == 0 || y == S - 1);
+                    px[y * S + x] = corner ? new Color32(0, 0, 0, 0)
+                        : edge < 3 ? ink : edge == 3 ? shade : paper;
+                }
+            return Cache[key] = Make(px, S, S, new Vector4(B, B, B, B));
+        }
+
+        /// <summary>The balloon's tail: a solid ink triangle with a white core, pointing down
+        /// at whoever is talking. Drawn at the size it is used and never scaled.</summary>
+        public static Sprite SpeechTail(BubbleTone tone = BubbleTone.Drink)
+        {
+            string key = "speech:tail:" + tone;
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            const int W = 13, H = 12;
+            var ink = EdgeOf(tone);
+            var paper = new Color32(0xFF, 0xFF, 0xFF, 255);
+            var px = new Color32[W * H];
+            for (int y = 0; y < H; y++)
+            {
+                // A leaning triangle: wide at the balloon, one pixel at the point.
+                float t = y / (float)(H - 1);
+                int left = Mathf.RoundToInt(Mathf.Lerp(0f, 4f, t));
+                int right = Mathf.RoundToInt(Mathf.Lerp(W - 1, 5f, t));
+                for (int x = left; x <= right; x++)
+                {
+                    bool rim = x <= left + 2 || x >= right - 2 || y >= H - 3;
+                    px[(H - 1 - y) * W + x] = rim ? ink : paper;
+                }
+            }
+            return Cache[key] = Make(px, W, H, Vector4.zero);
+        }
+
         public static Sprite CloudBubble(BubbleTone tone = BubbleTone.Drink)
         {
             string key = "cloud:plate:" + tone;

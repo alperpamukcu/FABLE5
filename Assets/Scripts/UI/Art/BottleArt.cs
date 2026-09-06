@@ -70,8 +70,21 @@ namespace LastCall.UI
                 img.raycastTarget = false;
                 return img;
             }
-            var back = Plate("Back", vessel, true);
-            var stencil = Plate("Clip", vessel, true);
+            // THE SANDWICH GETS ITS OWN ROOT (2026-09-06). It used to hang its plates
+            // straight on the vessel and switch THE VESSEL off when a card had no plates —
+            // which also switched off the flat body image beside them, so every card that is
+            // one sprite by design (a carton, a can: brief.SEALED) came to the bench invisible.
+            // The plates live under a rect of their own now; the vessel stays up and the two
+            // ways of drawing a bottle can no longer turn each other off.
+            var rootGo = new GameObject("Sandwich", typeof(RectTransform));
+            var root = (RectTransform)rootGo.transform;
+            root.SetParent(vessel, false);
+            root.anchorMin = Vector2.zero; root.anchorMax = Vector2.one;
+            root.offsetMin = Vector2.zero; root.offsetMax = Vector2.zero;
+            root.localScale = Vector3.one;
+
+            var back = Plate("Back", root, true);
+            var stencil = Plate("Clip", root, true);
             stencil.gameObject.AddComponent<Mask>().showMaskGraphic = false;
             // The level rect: centred, world-aligned by counter-rotation, big enough that its
             // drink child covers the stencil at any angle (the diagonal, with room).
@@ -83,8 +96,8 @@ namespace LastCall.UI
             level.anchoredPosition = Vector2.zero;
             var drink = Plate("Drink", level, false);
             var surface = Plate("Surface", level, false);
-            var front = Plate("Front", vessel, true);
-            return new BottleArt(vessel, back, stencil, level, drink, surface, front);
+            var front = Plate("Front", root, true);
+            return new BottleArt(root, back, stencil, level, drink, surface, front);
         }
 
         public void Show(ItemArt.BottlePlates plates)

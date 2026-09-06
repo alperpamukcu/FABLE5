@@ -436,22 +436,28 @@ namespace LastCall.UI
                 // A CLOUD, so speech never reads as a readout (2026-09-06, GDD 16 §0c).
                 // Tiled rather than sliced: the lobes on the edge runs are meant to REPEAT
                 // along a wide balloon, and a sliced edge would stretch one bump into a bar.
-                seat.SayBg.sprite = ChromeArt.CloudBubble(ChromeArt.BubbleTone.Drink);
-                seat.SayBg.type = Image.Type.Tiled;
+                seat.SayBg.sprite = ChromeArt.SpeechBox(ChromeArt.BubbleTone.Drink);
+                seat.SayBg.type = Image.Type.Sliced;
                 seat.SayBg.raycastTarget = false;
 
                 var sayTail = NewRect("Tail", seat.Say);
-                sayTail.anchorMin = sayTail.anchorMax = new Vector2(0.35f, 0);
+                sayTail.anchorMin = sayTail.anchorMax = new Vector2(0.32f, 0);
                 sayTail.pivot = new Vector2(0.5f, 1);
-                sayTail.sizeDelta = new Vector2(11f, 11f);
-                sayTail.anchoredPosition = new Vector2(0, 2f);
+                sayTail.sizeDelta = new Vector2(13f, 12f);
+                sayTail.anchoredPosition = new Vector2(0, 3f);
                 seat.SayTail = sayTail.gameObject.AddComponent<Image>();
-                seat.SayTail.sprite = ChromeArt.CloudTail(ChromeArt.BubbleTone.Drink);
+                seat.SayTail.sprite = ChromeArt.SpeechTail(ChromeArt.BubbleTone.Drink);
                 seat.SayTail.raycastTarget = false;
 
-                // The ticket's own face and size, because it is the same mouth talking.
-                seat.SayText = NewText("Line", seat.Say, _display, 8, TextAnchor.UpperCenter,
-                    UITheme.Night[0]);
+                // THE BOLD FACE, AT ITS OWN SIZE (2026-09-06, the author: "kullanılan font
+                // ince ve okunaklı değil ... okunaklılığı ile ön plana çıkan ... bizim
+                // türümüze ve pixel yapımıza uygun fontu bul ve kullan"). The balloon was set
+                // in the display face at EIGHT — half that face's design size, which is why it
+                // read as a hairline. This is Silkscreen BOLD at 16: the shop's own face, one
+                // of the two pixel faces the game ships, double-struck so it holds up against
+                // a white ground, and narrow enough that three sentences still fit over a head.
+                seat.SayText = NewText("Line", seat.Say, _shop != null ? _shop : _display, 16,
+                    TextAnchor.UpperCenter, UITheme.Night[0]);
                 Stretch(seat.SayText.rectTransform, Vector2.zero, Vector2.one,
                     new Vector2(TagPad, 0), new Vector2(-TagPad, -TagPad));
                 seat.SayText.horizontalOverflow = HorizontalWrapMode.Wrap;

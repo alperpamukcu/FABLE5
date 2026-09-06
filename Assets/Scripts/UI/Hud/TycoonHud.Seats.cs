@@ -227,7 +227,11 @@ namespace LastCall.UI
         /// ticket's cap because a balloon is up for four seconds and a ticket is up all
         /// night: a line that overhangs a neighbour's head briefly is readable, one that
         /// parks there is a layout fault. Still inside the gap between two stools.</summary>
-        private const float SayMaxW = SeatGap - 4f;
+        // WIDER SINCE THE TYPE GREW (2026-09-06): the balloon is set at 16 now, and a
+        // sentence that wrapped to two rows at 8 wants four at 16 inside a stool's gap.
+        // A balloon is up for a few seconds and it is the thing being read, so it is
+        // allowed to overhang a neighbour's head by half a stool while it is.
+        private const float SayMaxW = SeatGap * 1.5f;
 
         /// <summary>
         /// Puts one line in a drinker's balloon and starts its clock. An empty line says
@@ -1396,7 +1400,14 @@ namespace LastCall.UI
             if (stage != null) stage.SetTapRunning(busy);
             // AND THE BASIN CALLS WHILE A HAND IS FULL (2026-09-06): a carried glass or a
             // carried tin both end at the same place, and the room says so by lighting it.
-            if (stage != null) stage.CallTheDrain(_glassCarrying || _tinCarrying || _emptyHovered > 0);
+            // NOT WHILE IT IS RUNNING, though (the author: "lavabo animasyona girildiğinde
+            // kullanılamaz olacağından parlayıp ön plana çıkmasın"): a basin that cannot take
+            // anything must not offer to, so it goes quiet under the pointer as well.
+            if (stage != null)
+            {
+                stage.CallTheDrain(!busy && (_glassCarrying || _tinCarrying || _emptyHovered > 0));
+                stage.SetDrainAnswers(!busy);
+            }
             // The clock over the basin, while it is busy.
             if (_sinkClock == null && busy) BuildSinkClock();
             if (_sinkClock != null)
