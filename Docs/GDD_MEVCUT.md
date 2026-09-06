@@ -1243,6 +1243,39 @@ Yazarın üçüncü listesi, tek commit (`<C>`).
   ekrandaysa onu yanıtlıyor: OpenUntil'in ikinci basışı "siparişi kapat?" kartını açıyor
   ve kartın perdesi altındaki her şeyi üçte bir karartıyordu (140k piksel fark).
 
+### 9.32 · Kenar ışığı, çelik tin, bardak altlıkları, ovulan kir, orantılı bardaklar (2026-09-06)
+
+Yazarın dördüncü listesi, tek commit (`<C>`).
+
+- **Işık artık sadece KENAR:** çizimin opak olduğu yere hiçbir şey yazılmıyor, yalnız
+  siluetin dışına sönümlü bir hale çıkıyor. Şeffaf propların (bardak) içi ışıkla dolmuyor.
+- **Işık pivotta değil ÇİZİMİN merkezinde:** bench propları ayağından asılı (şişe 0.22,
+  kaşık sapından), pivot merkezli hale 384 birimlik şişenin yüz birim altında kalıyordu.
+- **Işık komşuların önüne geçmiyor:** prop öne çıkıyor, ışığı yerinde kalıyor.
+- **Eksik parlamalar tamamlandı:** kaşık, servis bench'indeki tin, tezgâhtaki hazır bardak
+  ve toplanacak boşlar. Boş bardağın üstüne gelince LAVABO da yanıyor. Dolum bench'indeki
+  tin kapak takılana kadar yanmıyor (o hâlde ele gelmiyor, şişenin hedefi).
+- **Tin çelik:** %97'nin altında içi hiç çizilmiyor; ağzına kadar doluysa ağzında bir bant
+  görünüyor. Seviye bench'in kendi göstergesinden okunuyor.
+- **Tek paspas:** çerez paspası dikeyde iki kez tekrarlanıyordu (rect 2×, döşeme 1×);
+  `pixelsPerUnitMultiplier` yarıya inince tek sıra kaldı, yükseklik aynı.
+- **Bardak altlığı:** sipariş alındıktan sonra müşterinin önüne kare altlık iniyor
+  (`coaster_a..d`, PixelLab 32×32); hangisi ve ne kadar yamuk durduğu tabure + ziyaret
+  hash'inden. Tıklanamaz, içki hakkında hiçbir şey söylemez.
+- **Kir:** her müşteri bardağını bırakıyor + 0-3 iz (kendi RNG akışı; %25/%40/%25/%10).
+  İzler ayrı birer mess, yani ayrı ayrı konfor eksiltiyor ve ayrı ayrı siliniyor.
+  200 koşu: yalnız silme sayısı 44.850 → 46.337; hayatta kalma ve kasa aynı.
+- **Silme bezin kendi ayak iziyle:** 52×32'lik dikdörtgen, işaretin kendi pikselleri
+  üzerinde; değdiği piksel tamamen gidiyor. 96×36'lık işaretin ortasından tek geçiş
+  yarısını alıyor. İşaret artık blok değil TANE (96×36, 1 birim = 1 piksel); tuz/şeker
+  gerdanlığı da öyle (`GlassDecor.Speckles` üç kat çözünürlük).
+- **Bardak boyları orantılı:** kurulu takım her hat için AYRI KIRPILMIŞ sayfa
+  (highball 32×63, rocks 46×56), sabit kutuya sığdırınca hepsi aynı boy çiziliyordu.
+  `GlassArt.BoxFor` yüksekliği ORANTI TABLOSUNDAN alıyor (`Shapes`): rocks artık
+  highball'ın %63'ü (52'ye karşı 32), gerçek camda olduğu gibi.
+- **Tıklamak bardağı toplamıyor:** boşa basılıp SÜRÜKLENMESİ gerekiyor (tin'in kuralı).
+- **Testler:** EditMode 488/488 (dört test yeni kurala göre yazıldı), PlayMode 11/11.
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

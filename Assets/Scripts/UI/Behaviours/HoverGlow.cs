@@ -362,9 +362,11 @@ namespace LastCall.UI
                 {
                     _restIndex = body.GetSiblingIndex();
                     body.SetAsLastSibling();
-                    // ...and the light immediately under it, so it lights the prop from
-                    // behind and still passes in front of everything else on the bar.
-                    if (_halo != null) _halo.rectTransform.SetSiblingIndex(body.GetSiblingIndex());
+                    // THE LIGHT STAYS DOWN THERE (2026-09-06, the author: "parlama efekti
+                    // ana sahnede garnishlerin önünde kalıyor"). The prop comes to the
+                    // front; its light does not follow it up, or a hovered dish throws its
+                    // rim over the two dishes either side of it. Light comes from behind a
+                    // thing, and things in front of it are allowed to stand in the way.
                 }
                 else
                 {
@@ -379,7 +381,7 @@ namespace LastCall.UI
                 if (Sprites[i] == null) continue;
                 Sprites[i].sortingOrder += on ? OrderLift : -OrderLift;
             }
-            if (_haloSprite != null) _haloSprite.sortingOrder += on ? OrderLift : -OrderLift;
+            // ...and the world light stays where it is, for the reason above.
         }
 
         /// <summary>
@@ -414,18 +416,19 @@ namespace LastCall.UI
                     // is the drawing's canvas plus the reach on every side — so it lines up
                     // by construction. All this has to do is draw that canvas at the scale
                     // the prop draws its own, about the same centre.
-                    rt.position = body.position;
+                    // THE RECT'S CENTRE, NOT ITS PIVOT (2026-09-06, the author: "pour
+                    // sahnelerinde parlamalar aşağı doğru kaymış"). The bench's props are
+                    // hung by their feet — the bottle by 0.22, the spoon by its grip — and
+                    // a light centred on the pivot of a 384-tall bottle sits a hundred
+                    // units below the bottle.
+                    rt.position = body.TransformPoint(body.rect.center);
                     rt.sizeDelta = HaloBox(body);
                     rt.localScale = body.localScale;
                     rt.localRotation = body.localRotation;
                     // ...and it keeps station DIRECTLY UNDER the prop while the pointer is
                     // on it. Ordering it once inside Front() is not enough: the light is
                     // made on the first hover, which is after Front() has already run.
-                    if (_fronted && !_stowing)
-                    {
-                        rt.SetAsLastSibling();
-                        body.SetAsLastSibling();
-                    }
+                    if (_fronted && !_stowing) body.SetAsLastSibling();
                 }
             }
             if (_haloSprite != null)

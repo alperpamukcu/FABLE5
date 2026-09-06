@@ -122,6 +122,7 @@ namespace LastCall.UI
         // shaker; liquid streams from the mouth only while the mouth is tilted over the
         // shaker's opening. Purely procedural placeholder art — P8 re-skins it.
         private RectTransform _pourSurface;   // the interaction area inside the shaker panel
+        private HoverGlow _tinGlow;           // the tin's own answer, off until the lid is on
         private RectTransform _shakerVessel;  // the target, opening at its top
         private RectTransform _shakerTop;     // the cap: drag it onto the tin to close it
         // Capping the tin (2026-07-24): the shaker is open while you build the drink, so the

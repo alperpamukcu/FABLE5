@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The counter's fourth list (2026-09-06):** the light is a rim around a prop rather than a
+  lamp behind it and it sits on the drawing rather than the pivot (GDD 16 §0b); the tin is
+  opaque steel (GDD 21); a coaster goes down when somebody orders, every drinker leaves their
+  glass and 0–3 marks, the cloth wipes with its own footprint and the marks are drawn as grit
+  (GDD 27 §4.1–4.2); and every glass on the bar is drawn at the height the proportion table
+  gives it, so a tumbler is no longer as tall as a highball. GDD_MEVCUT §9.32.
+
 - **The light takes the thing's shape, and the mark has to be rubbed out (2026-09-06):**
   `ChromeArt.Glow` grows a prop's light out of its own silhouette instead of stamping one
   ellipse behind everything (GDD 16 §0b); the sink lights and comes forward while a hand is

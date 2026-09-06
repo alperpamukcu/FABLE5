@@ -268,10 +268,13 @@ namespace LastCall.Tests
             run.ServeTo(visit);
             run.Tick(1.5);   // the savour ends; they get up and leave the glass
 
-            Assert.AreEqual(1, run.Floor.Messes.Count, "the empty glass stands on the counter");
-            var mess = run.Floor.Messes[0];
-            Assert.IsTrue(mess.HasGlass);
-            Assert.IsTrue(mess.Smudged, "and the counter under it wants the cloth");
+            // ONE GLASS, AND WHATEVER MARKS THIS DRINKER MADE (2026-09-06): the two are
+            // separate messes now, so the glass is found rather than assumed to be first.
+            CounterMess mess = null;
+            foreach (var m in run.Floor.Messes) if (m.HasGlass) { mess = m; break; }
+            Assert.IsNotNull(mess, "the empty glass stands on the counter");
+            Assert.AreEqual(1, run.Floor.House.GlassesOnCounter, "and only the one");
+            Assert.IsFalse(mess.Smudged, "the mark is its own mess now, not a rider on the glass");
             Assert.AreEqual(1, run.Floor.House.GlassesOnCounter, "which holds the stool");
 
             run.Tick(30);
@@ -280,9 +283,14 @@ namespace LastCall.Tests
             run.CollectGlass(mess);
             Assert.AreEqual(0, run.Floor.House.GlassesOnCounter, "collected — the stool is free now");
             Assert.AreEqual(1, run.GlassesInHand);
-            Assert.IsTrue(mess.Smudged, "the mark stays until it is wiped");
-            run.Wipe(mess);
-            Assert.AreEqual(0, run.Floor.Messes.Count, "wiped — the spot is clean");
+            // ...and whatever marks they made stay behind for the cloth. How many is the
+            // night's own roll (0-3), so the test wipes what is there rather than one.
+            foreach (var m in new List<CounterMess>(run.Floor.Messes))
+            {
+                Assert.IsTrue(m.Smudged, "nothing but marks is left once the glass is up");
+                run.Wipe(m);
+            }
+            Assert.AreEqual(0, run.Floor.Messes.Count, "wiped — the counter is clean");
         }
 
         [Test]
@@ -1169,10 +1177,12 @@ namespace LastCall.Tests
             run.ServeTo(visit);
             run.Tick(1.5);   // savour 0: they finish and get up
 
-            Assert.AreEqual(1, run.Floor.Messes.Count,
+            Assert.AreEqual(1, run.Floor.House.GlassesOnCounter,
                 "whoever drank leaves a glass, matched recipe or not");
-            Assert.IsTrue(run.Floor.Messes[0].HasGlass);
-            Assert.IsNull(run.Floor.Messes[0].GlasswareId, "a run with no glassware knows no line, and leaves one anyway");
+            CounterMess left = null;
+            foreach (var m in run.Floor.Messes) if (m.HasGlass) { left = m; break; }
+            Assert.IsNotNull(left);
+            Assert.IsNull(left.GlasswareId, "a run with no glassware knows no line, and leaves one anyway");
         }
     }
 }

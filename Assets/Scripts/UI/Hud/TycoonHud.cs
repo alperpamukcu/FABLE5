@@ -499,6 +499,19 @@ namespace LastCall.UI
 
         private RectTransform _hudRoot;            // the canvas rect — the screen's right edge for entrances
 
+        /// <summary>One mark on the counter: the mess it answers to, the prop it is drawn
+        /// as, and the pixels the cloth takes out of it.</summary>
+        private sealed class Mark
+        {
+            public CounterMess Mess;
+            public RectTransform Prop;
+            public Texture2D Tex;
+            public Color32[] Px;
+            public int Ink;
+            public int Seed;
+            public float Dx, Dy;          // where it landed, in counter units off the stool
+        }
+
         private sealed class SeatView
         {
             public RectTransform Root;       // the customer + tag, positioned at the counter (click target)
@@ -517,11 +530,12 @@ namespace LastCall.UI
             public float SeatX;              // this stool's resting x
             public CounterMess Dirty;        // the mess left on this stool: the glass, then the mark (GDD 27 §4)
             public RectTransform DirtyProp;  // its clickable prop on the counter
-            public RectTransform SmudgeProp; // the mark under it, until the cloth (GDD 27 §4)
-            public Texture2D SmudgeTex;      // ITS OWN copy of the mark, the one the cloth ruins
-            public Color32[] SmudgePx;       // ...and those pixels, so a rub is arithmetic
-            public int SmudgeInk;            // how much ink it started with, to know when it is gone
-            public bool SmudgeDirtyTex;      // pixels changed this frame: upload once, in one place
+            /// <summary>What one drinker left on the counter besides the glass: between none
+            /// and three of these (GDD 27 §4.1, 2026-09-06). Each owns its own copy of the
+            /// mark's pixels, because the art is shared and the cloth ruins what it wipes.</summary>
+            public readonly List<Mark> Marks = new List<Mark>();
+            public RectTransform Coaster;    // the mat that goes down when they order
+            public int CoasterFor = -1;      // which visit it was laid for
             public float WalkT;              // 0..1 walk-in progress
             public float WalkPace;           // 1 at the door, ArrivalPace at the stool
             public bool SawRight, SawLeft;   // was a neighbour there last frame
@@ -719,6 +733,7 @@ namespace LastCall.UI
         // share because the two are exactly exclusive: the glass appears when the serving
         // glass has something in it, the tin when it does not and the shaker does
         // (Core's own DrinkWaitingInShaker). Clicking it is the way back to the bench.
+        private HoverGlow _drinkGlassGlow;   // the served glass's own answer to the pointer
         private RectTransform _shakerProp, _shakerPropLabel;
         private Image _shakerPropImg;
         private CanvasGroup _shakerPropLabelGroup;

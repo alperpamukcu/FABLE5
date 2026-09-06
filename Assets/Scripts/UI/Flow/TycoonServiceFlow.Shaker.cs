@@ -907,6 +907,9 @@ namespace LastCall.UI
         /// <summary>Where each bench prop's base sits when it is standing: the tin's rect is
         /// centre-pivoted, the bottle's is gripped low at 0.22 of its height.</summary>
         private float TinFootY => _shakerHome.y - TinH * 0.5f + 14f * (TinH / 358f);
+
+        /// <summary>How full the tin has to be before any of it shows at the mouth.</summary>
+        private const float BrimFill = 0.97f;
         private float BottleFootY => _bottleRest.y - BottleH * 0.22f + 6f;
 
         /// <summary>Keeps one contact shadow under its prop: it holds that prop's own foot
@@ -983,9 +986,18 @@ namespace LastCall.UI
             // a tin the rules call 100% draws to 100% of its cavity.
             float fill = (float)run.Glass.FillFraction;
             float rimY = bottomY + innerH;
-            float topY = bottomY + innerH * fill + bob;
+            // THE TIN IS NOT A GLASS (2026-09-06, the author: "pour sahnesinde shaker
+            // içerisinde koyduğumuz sıvı gözükmesin sadece tamamı dolduktan sonra ucundan
+            // gözükebilir, artık shakerimiz şeffaf değil"). Steel is opaque and this one was
+            // being drawn as a cutaway — the level showing through the metal — which was a
+            // 2026-07-24 decision the author has now overturned. What is left is the one
+            // thing you would really see: a tin filled to the brim shows the drink at its
+            // mouth. Everything below the brim is simply not visible, and the readout above
+            // the bench is where the level is read instead.
+            if (fill < BrimFill) { _shakerFluid.ClearPool(); return; }
+            float band = Mathf.Min(innerH * 0.10f, 22f);   // the last of it, at the rim
             // The particle fluid collides with the tin's rotated interior, so it sloshes with it.
-            _shakerFluid.SetPool(minX, maxX, bottomY, rimY, fill, rad);
+            _shakerFluid.SetPool(minX, maxX, rimY - band + bob, rimY + bob, 1f, rad);
             // The cap's placement belongs to UpdateCap now — it rests on the bench until
             // you drop it on the tin, so it must not be glued to the vessel here.
         }
@@ -999,6 +1011,8 @@ namespace LastCall.UI
         private void UpdateCap(TycoonRun run)
         {
             if (_shakerTop == null) return;
+            // The tin answers the hand only once the lid is on it (see BuildShakerPanel).
+            if (_tinGlow != null && _tinGlow.enabled != _capped) _tinGlow.enabled = _capped;
             float dt = Mathf.Max(Time.deltaTime, 1e-4f);
             var mouse = Mouse.current;
 
@@ -1621,9 +1635,16 @@ namespace LastCall.UI
             // language here as in the room). The tin is the biggest thing on this bench
             // and it is held rather than picked up, so it takes the light and a breath
             // of sway — no rise, because a tin that lifts off the bench is a spill.
-            var tinGlow = _shakerVessel.gameObject.AddComponent<HoverGlow>();
+            var tinGlow = _tinGlow = _shakerVessel.gameObject.AddComponent<HoverGlow>();
             tinGlow.Graphics = new Graphic[] { shakerImg };
             tinGlow.Rise = 0f; tinGlow.Sway = 1.2f; tinGlow.Grow = 1.03f; tinGlow.Halo = 1.3f;
+            // NOT UNTIL THERE IS SOMETHING TO DO WITH IT (2026-09-06, the author: "shakera
+            // koyma sahnesinde shaker kapatılmadan önceki shakerin gövdesi ile mousela
+            // etkileşime giremiyoruz ondan dolayı onun mouse ile üstüne gelince parlamasına
+            // gerek yok, çalkalama aşamasında var"). An open tin is a target for the bottle,
+            // not for the hand; a light on it promises a grab that is refused. It comes on
+            // with the lid, which is when the tin becomes the thing you shake.
+            tinGlow.enabled = false;
 
             // The metaball fluid draws over the vessel (pool); the solids float on top of it;
             // the bottle is created after, so it sits in front of the liquid.
@@ -1873,6 +1894,12 @@ namespace LastCall.UI
                 Stretch(sImg, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 var si = sImg.gameObject.AddComponent<Image>();
                 si.sprite = spoonArt; si.preserveAspect = true; si.raycastTarget = false;
+                // ...AND IT ANSWERS THE POINTER (2026-09-06, the author: "kaşık parlamıyor").
+                // The glow rides the SLOT, which is what the stir moves, but it lights and
+                // measures the drawing, because the slot is a transparent hit rectangle.
+                var spoonGlow = _spoonRt.gameObject.AddComponent<HoverGlow>();
+                spoonGlow.Graphics = new Graphic[] { si };
+                spoonGlow.Rise = 4f; spoonGlow.Sway = 1.6f; spoonGlow.Grow = 1.05f;
             }
             else
             {

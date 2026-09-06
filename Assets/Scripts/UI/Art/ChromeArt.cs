@@ -2092,74 +2092,82 @@ namespace LastCall.UI
             return Cache[key] = Make(SmudgePixels(seed, out int sw, out int sh), sw, sh, Vector4.zero);
         }
 
-        /// <summary>The mark's own pixels, so a mess can own a copy it is allowed to ruin.</summary>
+        /// <summary>
+        /// The mark's own pixels, so a mess can own a copy it is allowed to ruin.
+        ///
+        /// DRAWN AS GRIT, NOT AS SHAPES (2026-09-06, the author: "masadaki kir için küçük
+        /// partiküller üretilebilir, bu şekilde pixeller kalitesiz duruyor"). The first cut
+        /// drew the ring and the smear as solid runs of pixels at the counter's 2x grain, and
+        /// two-by-two blocks of cream on a dark slate read as damage to the picture rather
+        /// than as a spill. This canvas is the same mark at ONE unit per pixel — four times
+        /// the pixels for the same size on the counter — and everything on it is scattered:
+        /// the ring is a dotted arc, the wash inside it is speckle, the smear is a thinning
+        /// trail of specks, the splashes are two or three grains each. Up close it is grit;
+        /// from a chair it is a spill.
+        /// </summary>
         public static Color32[] SmudgePixels(int seed, out int w, out int h)
         {
             w = SmudgeW; h = SmudgeH;
-            var px = new Color32[w * h];
-            // A WET RING CATCHES THE LIGHT. The first draft was the counter's own dark at
-            // half alpha, and on the slate it was invisible — photographed in play
-            // (2026-09-05). What a glass leaves on a dark bar is a pale ring of water with
-            // the room's neon in it, so the ring is cream and the wash inside it cyan, both
-            // translucent, both a step brighter than the slab.
-            // ...AND IT HAS TO BE SEEN TO BE WIPED (2026-09-06). At 96 and 34 the mark was a
-            // rumour on a dark counter — photographed in play, most of it simply was not
-            // there — and a mess you cannot see is a mess you cannot be asked to clean.
-            // Same two colours, opaque enough to read against the slate.
-            var ring = new Color32(0xF2, 0xE8, 0xD5, 150);
-            var wash = new Color32(0x7D, 0xF0, 0xE3, 72);
-            var drip = new Color32(0xF2, 0xE8, 0xD5, 120);
+            // Locals, because the grain helper below is a local function and an out parameter
+            // cannot be closed over.
+            int W2 = SmudgeW, H2 = SmudgeH;
+            var px = new Color32[W2 * H2];
+            // A WET RING CATCHES THE LIGHT: cream for the water's edge, cyan for the wash
+            // inside it, both a step brighter than the slab (measured in play 2026-09-05 —
+            // the counter's own dark was invisible on it).
+            var ring = new Color32(0xF2, 0xE8, 0xD5, 190);
+            var wash = new Color32(0x7D, 0xF0, 0xE3, 105);
+            var drip = new Color32(0xF2, 0xE8, 0xD5, 150);
 
-            // The ring the base printed, a little left of centre and a little squashed.
-            float cx = w * 0.42f + Hash(3, 1, seed) * 3f, cy = h * 0.5f;
-            float rx = w * 0.30f, ry = h * 0.40f;
-            for (int y = 0; y < h; y++)
-                for (int x = 0; x < w; x++)
+            void Grain(int x, int y, Color32 c, float chance, int s2)
+            {
+                if (x < 0 || x >= W2 || y < 0 || y >= H2) return;
+                if (Hash(x, y, s2 + seed) > chance) return;
+                px[(H2 - 1 - y) * W2 + x] = c;
+            }
+
+            // The ring the base printed: a dotted arc, thicker where the glass sat heaviest.
+            float cx = W2 * 0.42f + Hash(3, 1, seed) * 6f, cy = H2 * 0.5f;
+            float rx = W2 * 0.30f, ry = H2 * 0.40f;
+            for (int y = 0; y < H2; y++)
+                for (int x = 0; x < W2; x++)
                 {
                     float dx = (x - cx) / rx, dy = (y - cy) / ry;
                     float d = Mathf.Sqrt(dx * dx + dy * dy);
-                    float edge = 0.96f + (Hash(x, y, 11 + seed) - 0.5f) * 0.16f;
-                    if (d <= edge && d > edge - 0.30f)
-                        px[(h - 1 - y) * w + x] = Hash(x, y, 5 + seed) > 0.14f ? ring : wash;
-                    else if (d <= edge - 0.30f && Hash(x, y, 7 + seed) > 0.52f)
-                        px[(h - 1 - y) * w + x] = wash;
+                    float edge = 0.98f + (Hash(x, y, 11 + seed) - 0.5f) * 0.10f;
+                    if (d <= edge && d > edge - 0.18f) Grain(x, y, ring, 0.72f, 5);
+                    else if (d < edge - 0.18f) Grain(x, y, wash, 0.20f, 7);
                 }
 
-            // THE SMEAR: somebody put the glass down and slid it. One tapering tail off the
-            // ring, on whichever side this seed says, which is the part of the mark a
-            // straight-down dab of the cloth always misses.
+            // THE SMEAR: somebody put the glass down and slid it. A trail of grains off the
+            // ring, thinning as it goes — the part of a mark a straight-down dab always
+            // misses, and the reason the cloth has to travel.
             float dir = Hash(2, 2, seed) > 0.5f ? 1f : -1f;
-            float tail = w * 0.34f;
+            float tail = W2 * 0.34f;
             for (float t = 0f; t < tail; t += 0.5f)
             {
                 float k = t / tail;
-                float sx2 = cx + dir * (rx * 0.7f + t);
-                float half = Mathf.Max(0.6f, ry * 0.85f * (1f - k) + Hash((int)t, 3, seed) * 0.8f);
+                float sx2 = cx + dir * (rx * 0.75f + t);
+                float half = Mathf.Max(1f, ry * 0.8f * (1f - k * 0.7f));
                 for (int y = Mathf.RoundToInt(cy - half); y <= Mathf.RoundToInt(cy + half); y++)
-                {
-                    int x = Mathf.RoundToInt(sx2);
-                    if (x < 0 || x >= w || y < 0 || y >= h) continue;
-                    if (Hash(x, y, 13 + seed) < 0.30f + k * 0.4f) continue;
-                    var c = Hash(x, y, 17 + seed) > 0.6f ? ring : wash;
-                    px[(h - 1 - y) * w + x] = new Color32(c.r, c.g, c.b, (byte)(c.a * (1f - k * 0.6f)));
-                }
+                    Grain(Mathf.RoundToInt(sx2), y, Hash((int)t, y, 17 + seed) > 0.55f ? ring : wash,
+                          0.42f * (1f - k * 0.6f), 13);
             }
 
-            // ...AND THE SPLASHES. Three little satellites, well clear of the ring, each one
-            // its own small errand for the cloth.
+            // ...AND THE SPLASHES: three little scatters well clear of the ring, each one its
+            // own errand for the cloth.
             for (int i = 0; i < 3; i++)
             {
-                float ax = Mathf.Lerp(2f, w - 3f, Hash(i * 5 + 1, 9, seed));
-                float ay = Mathf.Lerp(1f, h - 2f, Hash(i * 5 + 2, 4, seed));
-                float ar = 0.9f + Hash(i * 5 + 3, 6, seed) * 1.4f;
+                float ax = Mathf.Lerp(3f, W2 - 4f, Hash(i * 5 + 1, 9, seed));
+                float ay = Mathf.Lerp(2f, H2 - 3f, Hash(i * 5 + 2, 4, seed));
+                float ar = 1.6f + Hash(i * 5 + 3, 6, seed) * 2.4f;
                 for (int y = Mathf.FloorToInt(ay - ar); y <= Mathf.CeilToInt(ay + ar); y++)
                     for (int x = Mathf.FloorToInt(ax - ar); x <= Mathf.CeilToInt(ax + ar); x++)
                     {
-                        if (x < 0 || x >= w || y < 0 || y >= h) continue;
                         float dx = x - ax, dy = y - ay;
                         if (dx * dx + dy * dy > ar * ar) continue;
-                        if (px[(h - 1 - y) * w + x].a > 0) continue;   // never over the ring
-                        px[(h - 1 - y) * w + x] = drip;
+                        if (x >= 0 && x < W2 && y >= 0 && y < H2 && px[(H2 - 1 - y) * W2 + x].a > 0) continue;
+                        Grain(x, y, drip, 0.45f, 23 + i);
                     }
             }
             return px;
@@ -2167,7 +2175,7 @@ namespace LastCall.UI
 
         /// <summary>The mark's size in its own pixels. Read by the counter, which has to map
         /// a cloth's position on the screen back onto these.</summary>
-        public const int SmudgeW = 48, SmudgeH = 18;
+        public const int SmudgeW = 96, SmudgeH = 36;   // one unit a pixel: grit, not blocks
 
 
         /// <summary>THE CLOTH: a bar rag folded once, cream with one stripe, set on the
@@ -2325,7 +2333,11 @@ namespace LastCall.UI
             var px = new Color32[gw * gh];
             for (int i = 0; i < px.Length; i++)
             {
-                float a = d[i] >= Far ? 0f : Mathf.Clamp01(1f - d[i] / spread);
+                // NOTHING BEHIND THE DRAWING (2026-09-06, the author: "parlarken görselin
+                // arkası parlamasın sadece etrafı parlasın"). The light is a rim around the
+                // thing, not a lamp under it — which matters most for the props you can see
+                // THROUGH: a glass with a lit disc behind it is a glass full of light.
+                float a = d[i] >= Far || d[i] <= 0f ? 0f : Mathf.Clamp01(1f - d[i] / spread);
                 a *= a;                       // the same fast falloff the ellipse had
                 px[i] = new Color32(255, 255, 255, (byte)(a * 255f));
             }

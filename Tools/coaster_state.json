@@ -1,0 +1,18 @@
+{
+ "coaster_a": {
+  "job_id": "b1fd9b4b-2847-43f5-9179-fd12a8e1cbb2",
+  "png": "AssetPipeline\\staging\\coasters\\coaster_a.png"
+ },
+ "coaster_b": {
+  "job_id": "b4615ab7-bdda-4701-8427-8604d2678a60",
+  "png": "AssetPipeline\\staging\\coasters\\coaster_b.png"
+ },
+ "coaster_c": {
+  "job_id": "b38d0b45-2173-4fda-9853-eb8a8de0cbd1",
+  "png": "AssetPipeline\\staging\\coasters\\coaster_c.png"
+ },
+ "coaster_d": {
+  "job_id": "d4da7dad-1601-4c3a-9821-28b84edd32c5",
+  "png": "AssetPipeline\\staging\\coasters\\coaster_d.png"
+ }
+}

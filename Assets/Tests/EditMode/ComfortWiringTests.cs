@@ -160,15 +160,26 @@ namespace LastCall.Tests
             Assert.AreEqual(run.ComfortBase, run.ComfortNow, 1e-9, "a clean counter reads the base");
 
             ServeEveryone(run);
-            run.Tick(1.0);                      // they got up: a glass and a mark, inside the grace
+            run.Tick(1.0);                      // they got up: the glass and their marks, in grace
             Assert.AreEqual(run.ComfortBase, run.ComfortNow, 1e-9, "the grace: nothing counts yet");
             run.Tick(Housekeeping.DirtGrace);   // …and past it
-            Assert.Less(run.ComfortNow, run.ComfortBase, "one dirty spot on four stools");
-            Assert.AreEqual(run.ComfortBase - VenueComfort.DirtPenalty / run.Seats, run.ComfortNow, 1e-9);
+            // HOWEVER MANY MARKS THIS DRINKER MADE (2026-09-06): none, one or three, rolled on
+            // the counter's own stream. The reading is the base less one penalty a spot, and
+            // the test reads the spots rather than assuming there is exactly one.
+            // EVERY MESS COSTS, the glass as much as the marks (GDD 27 §4.1): a glass left
+            // standing is a dirty counter until somebody carries it away.
+            int spots = 0;
+            foreach (var m in run.Floor.Messes) if (!m.IsClean) spots++;
+            Assert.Greater(spots, 0, "this seed's drinker left something behind");
+            Assert.Less(run.ComfortNow, run.ComfortBase, "a dirty counter reads lower");
+            Assert.AreEqual(run.ComfortBase - VenueComfort.DirtPenalty * spots / run.Seats,
+                run.ComfortNow, 1e-9);
 
-            var mess = run.Floor.Messes[0];
-            run.CollectGlass(mess);
-            run.Wipe(mess);
+            CounterMess glass = null;
+            foreach (var m in run.Floor.Messes) if (m.HasGlass) { glass = m; break; }
+            Assert.IsNotNull(glass);
+            run.CollectGlass(glass);
+            foreach (var m in new List<CounterMess>(run.Floor.Messes)) if (m.Smudged) run.Wipe(m);
             Assert.AreEqual(run.ComfortBase, run.ComfortNow, 1e-9, "wiped: the room is whole again");
             Assert.AreEqual(1, run.GlassesInHand);
             double seconds = run.WashGlasses();
@@ -234,11 +245,13 @@ namespace LastCall.Tests
                 run.Tick(5);
                 if (run.Phase != TycoonPhase.DayOpen) break;   // the tick that closed the door
                 // collect and wipe, but never wash: the hand fills up
-                var messes = run.Floor.Messes;
-                for (int i = messes.Count - 1; i >= 0; i--)
+                // A SNAPSHOT, because clearing drops messes from the list as it goes: a
+                // glass with no mark under it is CLEAN the moment it is collected, and the
+                // floor lets it go (2026-09-06 — the glass and the mark are separate messes).
+                foreach (var m in new List<CounterMess>(run.Floor.Messes))
                 {
-                    if (messes[i].HasGlass) run.CollectGlass(messes[i]);
-                    if (messes[i].Smudged) run.Wipe(messes[i]);
+                    if (m.HasGlass) run.CollectGlass(m);
+                    if (m.Smudged) run.Wipe(m);
                 }
                 ServeEveryone(run);
             }

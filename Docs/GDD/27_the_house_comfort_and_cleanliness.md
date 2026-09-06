@@ -243,16 +243,43 @@ The tin joins the finished glass at the drain (*"shaker da lavaboya dökülüp �
 it is CARRIED there from the counter, like the glass, and the room's bin is the ÇÖP key on the
 bench, which has always emptied both vessels.
 
+**THE GLASS ALWAYS, THE MARKS BY THE DICE (2026-09-06, the author: "her müşteri 0-3 arasında
+kir yaratmalı, kimisi hiç yaratmaz kimisi çok yaratır, her müşterinin içtiği içecekten sonra
+bardağı masada kalır").** A served drinker used to leave exactly one mess carrying both the
+glass and its ring. They are separate now: the empty always (`LeaveMess(glassId, smudge:
+false)`), and between none and three marks beside it (`LeaveMark()`), rolled on the counter's
+own RNG stream — 25% none, 40% one, 25% two, 10% three. Every one of them is its own dirty
+spot, so a messy customer really does cost more comfort than a tidy one, and the sink's queue
+and the cloth both have more to do. The 200-run sim moves only in wipes (44,850 → 46,337);
+every survival and till figure is byte-identical, because the floor bot cleans on sight — the
+cost lands on a player who lets it pile up.
+
+**A MAT GOES DOWN WITH THE ORDER (2026-09-06: "artık yeni müşteri geldiğinde siparişi
+alındıktan sonra önünde kare bardak altlığı belirecek, bardak altlığı çok dikkat çekici
+olmamalı").** Once somebody has ordered, a square coaster appears in front of them and stays
+until their empty is carried away. Four of them ship (`coaster_a..d`, PixelLab, 32×32 at the
+counter's grain) and each stool picks one — and a tilt of up to six degrees — off a hash of
+the stool and how many people have sat at it tonight, so the counter looks worked-in rather
+than laid out. It is not clickable and carries nothing about the drink.
+
 **THE MARK IS RUBBED OUT, NOT TAPPED AWAY (2026-09-06, the author: "masadaki kir
 geliştirilmeli. Bezle silinirken kir tek seferde silinmemeli, piksele göre boyama
 mantığında her yeri silmeli").** The cloth used to erase a whole mark the instant it
 touched any part of it, which made a mess a click with extra steps. The mark is 48×18 art
 pixels now — the ring the base printed, the wash inside it, a smear dragged off one side
 and three splashes around it — and every mess owns a COPY of those pixels, because the art
-is shared and cached. The cloth takes ink out of the texels it actually passes over (a soft
-disc, hardest under the middle), and Core's `Wipe` — with Core's own refusals — is called
-only once next to nothing is left. Measured in play: six dabs in one place take 5% of it,
-one straight pass across the middle takes 83%, and the corners want going back for.
+is shared and cached. The cloth erases what the CLOTH COVERS — its own 52×32 rectangle, walked in the
+mark's own pixels, every pixel it covers taken out completely (2026-09-06: "silerken peçetenin
+boyutunda bir silme işlemi uygulayacak ... bez pixelle temas edince pixel silinecek, boyama
+oyunu gibi tamamını silmek gerekecek"). The first cut rubbed a soft disc under the POINTER,
+which was neither where the rag is drawn nor the size of it. Core's `Wipe` — with Core's own
+refusals — is called only once next to nothing is left. Measured in play: one straight pass
+along the middle of a 96×36 mark takes half of it, and the edges and corners want going back
+for. The mark itself is drawn as GRIT rather than as shapes — 96×36 at one unit a pixel, a
+dotted ring, a speckled wash, a thinning smear and three splashes — because at the counter's
+2× grain a solid ring read as damage to the picture ("masadaki kir için küçük partiküller
+üretilebilir bu şekilde pixeller kalitesiz duruyor"). The rim crust on a glass took the same
+treatment (`GlassDecor.Speckles`, three times the pixels, grains instead of blocks).
 
 **THE BASIN CALLS THE HAND (same day: "bardak tutulduğunda lavaboya oyuncuyu
 yönlendirmeli ... bardak sürüklenirken lavabo ön plana çıkmalı").** While a glass or the

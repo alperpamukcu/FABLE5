@@ -206,6 +206,37 @@ namespace LastCall.UI
         private static readonly Dictionary<string, Piece> Cache = new Dictionary<string, Piece>();
 
         /// <summary>The drawn glass for a glassware definition, built once and kept.</summary>
+        /// <summary>
+        /// How tall this line stands against the tallest one, 0-1 (2026-09-06, the author:
+        /// "ekranda bardakların boyları orantılı olmalı, ince uzun vodka tonik bardağı ile
+        /// kısa geniş viski bardağı aynı uzunlukta olmamalı").
+        ///
+        /// The installed set is one trimmed sheet per glass — a highball 32x63, a rocks
+        /// 46x56 — so fitting each sheet into a fixed box drew every line at the same height,
+        /// and taking the scale off the sheets instead only made a tumbler 0.89 of a highball
+        /// when a real one is 0.6. The PROPORTION TABLE is where this game already says how
+        /// tall a vessel is (`Shapes`, whose own comment says proportion is presentation);
+        /// this reads it, so the drawings keep the sizes the game means rather than the sizes
+        /// the generator happened to draw. The glass rack has scaled its whole set together
+        /// since 2026-08-25; this is that idea, said in the one place that knows.
+        /// </summary>
+        public static float HeightFactor(GlasswareDefinition glass)
+        {
+            var shape = glass != null && Shapes.TryGetValue(glass.Id, out var s) ? s : DefaultShape;
+            return Span(shape) / Span(Shapes["martini"]);
+        }
+
+        /// <summary>How tall this line is DRAWN, given the height the tallest line gets.</summary>
+        public static Vector2 BoxFor(GlasswareDefinition glass, Sprite sheet, float tallest)
+        {
+            float h = tallest * HeightFactor(glass);
+            if (sheet == null || sheet.rect.height < 1f) return new Vector2(h * 0.72f, h);
+            return new Vector2(sheet.rect.width * h / sheet.rect.height, h);
+        }
+
+        private static float Span(Shape s) =>
+            (s.Rim + Wall) - (s.Stem ? 0 : s.Floor - Base);
+
         public static Piece For(GlasswareDefinition glass) => For(glass, 1);
 
         /// <summary>The same glass at an upgrade tier (1–6, Core's ladder: tier 1 is the

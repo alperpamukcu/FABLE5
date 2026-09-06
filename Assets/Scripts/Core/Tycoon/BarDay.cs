@@ -67,11 +67,12 @@ namespace LastCall.Core
 
         private readonly TycoonConfig _config;
         private readonly SeededRng _arrivals;
+        private readonly SeededRng _mess;
         private readonly double _stars;
         private double _untilNextArrival;
 
         public BarDay(int day, int seats, TycoonConfig config, SeededRng arrivalStream,
-            double stars = BarRating.NeutralStars)
+            double stars = BarRating.NeutralStars, SeededRng messStream = null)
         {
             if (day < 1) throw new ArgumentOutOfRangeException(nameof(day));
             if (seats < 1) throw new ArgumentOutOfRangeException(nameof(seats));
@@ -79,9 +80,26 @@ namespace LastCall.Core
             Seats = seats;
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _arrivals = arrivalStream ?? throw new ArgumentNullException(nameof(arrivalStream));
+            // Its own stream, so adding it moves nothing that was already rolled; a floor
+            // built without one leaves the single mark the counter left before today.
+            _mess = messStream;
             _stars = stars;
             NightSeconds = config.NightSeconds;
             _untilNextArrival = NextGap();
+        }
+
+        /// <summary>
+        /// How much mess this drinker made: none a quarter of the time, one most of the time,
+        /// and now and then two or three. Weighted rather than uniform because the counter
+        /// should usually look worked-in and only sometimes look neglected — an even roll
+        /// makes every fourth customer a disaster, which reads as noise rather than as people.
+        /// </summary>
+        private int MarksLeftBy(CustomerVisit visit)
+        {
+            if (!_config.CounterSmudges) return 0;
+            if (_mess == null) return 1;               // an older floor: what it always left
+            double r = _mess.NextDouble();
+            return r < 0.25 ? 0 : r < 0.65 ? 1 : r < 0.90 ? 2 : 3;
         }
 
         /// <summary>The shift is over when the door has shut AND the last stool is empty:
@@ -201,8 +219,14 @@ namespace LastCall.Core
                 // the unmatched glass used to vanish, a bussing discount for the worst
                 // pour — and it is the VESSEL that was actually handed over.
                 if (visit.DrinkServed && !visit.OnTheHouse)
-                    House.LeaveMess(visit.ServedGlassId ?? visit.Served?.GlassId,
-                        smudge: _config.CounterSmudges);
+                {
+                    // THE GLASS ALWAYS, THE MARKS BY THE DICE (2026-09-06). Some drinkers
+                    // are tidy and some are not: a served customer leaves their empty and
+                    // between none and three marks around it, rolled on the counter's own
+                    // stream so the same seed still plays the same night.
+                    House.LeaveMess(visit.ServedGlassId ?? visit.Served?.GlassId, smudge: false);
+                    for (int m = 0; m < MarksLeftBy(visit); m++) House.LeaveMark();
+                }
                 return true;
             });
 

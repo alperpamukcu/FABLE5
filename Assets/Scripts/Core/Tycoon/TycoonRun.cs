@@ -285,7 +285,8 @@ namespace LastCall.Core
             Seats = _config.StartingSeats;
             Glass = new GlassContents(_config.GlassCapacity);
             ServingGlass = NewServingGlass(DefaultGlassware);
-            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"));
+            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"),
+                messStream: _rng.GetStream("mess"));
             // The story is opt-in exactly like the regulars: a run built without an arc has
             // no last customer and behaves in every way like a run from before there was one.
             Story = story != null ? new StoryProgress(story) : null;
@@ -715,7 +716,8 @@ namespace LastCall.Core
                 }
             RollMarket();
             Day = late ? 30 : 12;
-            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average);
+            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average,
+                _rng.GetStream("mess"));
             LastCustomer = null;       // a jumped night starts its last call from scratch
             LastCallBeat = null;
             Trial = null;
@@ -774,7 +776,8 @@ namespace LastCall.Core
             _lastCallSpent = _lastCallAnswered = LastCallWithheld = false;
             BuyBackTheBowls();
             ResetVessels();
-            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average);
+            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average,
+                _rng.GetStream("mess"));
             return Day - from;
         }
 
@@ -2444,7 +2447,8 @@ namespace LastCall.Core
             SettleTheJob();
             BuyBackTheBowls();
             ResetVessels();
-            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average);
+            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average,
+                _rng.GetStream("mess"));
             Phase = TycoonPhase.DayOpen;
             TeachAtOpen();
             return result;

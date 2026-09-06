@@ -20,6 +20,15 @@
 You are not playing cards. You are **pouring a drink for a specific person**, and how much of
 each bottle goes in is the whole decision.
 
+## The tin is steel, not glass (2026-09-06)
+
+The author: *"pour sahnesinde shaker içerisinde koyduğumuz sıvı gözükmesin sadece tamamı
+dolduktan sonra ucundan gözükebilir artık shakerimiz şeffaf değil"*. The bench drew the tin
+as a cutaway — the pooled drink showing through the metal, a 2026-07-24 decision — and that
+is now overturned: below `BrimFill` (0.97) nothing is drawn inside the tin at all, and at the
+brim a band of it shows at the mouth, sloshing with the tin. The level is read off the bench's
+own readout and the gauge beside it, which is where a bartender reads it too.
+
 ## The tin is drawn twice its sheet (2026-09-06)
 
 The author: *"Shaker ve bardak sahnelerinde bardak boyutuyla shaker boyutu orantılı değil bunları orantıla. Küçük olmasınlar."* The tin stood in a 200×358 rect and the serving glass in 190×260, which drew a 300-unit shaker beside a 244-unit highball — 1.23 of it, where a 23cm shaker stands about 1.5 times a 15cm glass. Both benches now draw the tin at `TinW`×`TinH` = 232×416, which is EXACTLY twice its 116×208 sheet: the capped tin lands at 348 against the highball's 244 (1.43), the ratio is fixed by growing the tin rather than shrinking the glass, and the whole multiple puts every art pixel on the same four screen pixels instead of some on two and some on three.

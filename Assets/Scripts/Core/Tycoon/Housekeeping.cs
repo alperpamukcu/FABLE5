@@ -173,6 +173,21 @@ namespace LastCall.Core
             return mess;
         }
 
+        /// <summary>
+        /// A MARK ON ITS OWN (2026-09-06, the author: "her müşteri 0-3 arasında kir yaratmalı,
+        /// kimisi hiç yaratmaz kimisi çok yaratır, her müşterinin içtiği içecekten sonra
+        /// bardağı masada kalır"). The glass and the mark used to be one object, so a drinker
+        /// left exactly one of each; they are separate now — the glass always, the marks by
+        /// the night's own dice — and a mark with no glass on it can be wiped straight away.
+        /// </summary>
+        public CounterMess LeaveMark()
+        {
+            var mess = new CounterMess(null, glass: false, smudge: true);
+            _messes.Add(mess);
+            MessesLeft++;
+            return mess;
+        }
+
         /// <summary>The glass leaves the counter for the hand; the stool is free this instant.</summary>
         public void CollectGlass(CounterMess mess)
         {

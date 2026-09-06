@@ -303,9 +303,16 @@ namespace LastCall.UI
         private static Sprite SugarBand() => _sugarBand != null ? _sugarBand
             : _sugarBand = Speckles(new Color32(0xF0, 0xE2, 0xC4, 0xFF));
 
+        /// <summary>
+        /// The crust along a rim, as GRAINS (2026-09-06, the author: "aynı şekilde tuz ve
+        /// şeker gerdanlığı için çok küçük partiküller üretilebilir"). It was 48x6 stretched
+        /// across a 190-unit glass, so every grain of salt landed as a four-unit block and the
+        /// rim read as a dotted line drawn on the glass. Three times the pixels, a sparser
+        /// scatter and a soft edge: from a chair it is a crust, up close it is crystals.
+        /// </summary>
         private static Sprite Speckles(Color32 tone)
         {
-            const int W = 48, H = 6;
+            const int W = 144, H = 18;
             var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
             { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
             var px = new Color32[W * H];
@@ -317,9 +324,16 @@ namespace LastCall.UI
                 for (int y = 0; y < H; y++)
                 {
                     hash = (hash ^ (uint)(x * 31 + y * 7)) * 16777619;
-                    // Denser along the middle rows, so the crust reads as clinging to the rim.
-                    int chance = y == 0 || y == H - 1 ? 6 : 3;
-                    if ((hash >> 8) % (uint)chance == 0) px[y * W + x] = tone;
+                    // Thickest through the middle of the band and thinning to nothing at
+                    // both edges, so the crust clings to the rim instead of ending on a line.
+                    float t = Mathf.Abs(y - (H - 1) * 0.5f) / ((H - 1) * 0.5f);
+                    int chance = 3 + Mathf.RoundToInt(t * t * 22f);
+                    if ((hash >> 8) % (uint)chance == 0)
+                    {
+                        // A grain is one pixel; now and then two of them clump.
+                        px[y * W + x] = tone;
+                        if ((hash >> 20) % 5 == 0 && x + 1 < W) px[y * W + x + 1] = tone;
+                    }
                 }
             }
             tex.SetPixels32(px);

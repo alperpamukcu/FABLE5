@@ -54,6 +54,11 @@ brightness (×1.22, the beer font's own number) stays under all of it.
   sibling order on a canvas, sorting order in the room, both put back on the way out. The
   order is left alone while a panel is being disabled — Unity refuses a sibling move made
   during a parent's activation, and a closing bench disables a whole tree of these at once.
+- **The light is a RIM, and nothing shines behind the drawing** (2026-09-06, the author:
+  "parlarken görselin arkası parlamasın sadece etrafı parlasın"). `ChromeArt.Glow` writes
+  nothing where the source is opaque, so what lights up is a halo around the silhouette. It
+  matters most for the props you can see through: a glass with a lit disc behind it is a
+  glass full of light.
 - **The light is the PROP'S OWN SHAPE** (2026-09-06, the author: *"parlama alanı nesnenin
   şekline göre gerçek nesnenin şeklinden daha büyük olmalı, şu an standart bir elips ve bu
   her nesneye uymuyor"*). One ellipse behind everything is a bubble with a thing in it, and
@@ -76,6 +81,17 @@ brightness (×1.22, the beer font's own number) stays under all of it.
   swings out through its glass.
 - **A drinker is not a prop.** People brighten and nothing else — a person who rises and
   grows under the pointer reads as a puppet.
+- **The light sits on the drawing's centre, not on the rect's pivot.** The bench's props are
+  hung by their feet (the bottle at 0.22, the spoon by its grip), and a halo centred on the
+  pivot of a 384-tall bottle sits a hundred units below it — which is what "pour sahnelerinde
+  parlamalar aşağı doğru kaymış" was.
+- **A lit prop does not carry its light over its neighbours.** The prop comes to the front;
+  the light stays where it was, so a hovered dish does not throw its rim across the two
+  dishes either side of it ("parlama efekti ana sahnede garnishlerin önünde kalıyor").
+- **Everything that can be picked up answers**, and only while it can be: the spoon, the tin
+  on both benches, the finished drink and the empties all light now, and the tin on the
+  filling bench does NOT until its lid is on, because until then it is a target for the
+  bottle rather than something the hand can take.
 - **What moves is the PROP, not its hit plate.** The beer font and the sink are drawn in the
   room and clicked through an invisible canvas plate; with no `Riser` named, the glow was
   raising, growing and rocking the plate while the brass and the basin stood still — the

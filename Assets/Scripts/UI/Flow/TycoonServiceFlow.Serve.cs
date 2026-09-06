@@ -287,7 +287,12 @@ namespace LastCall.UI
             // Height is fixed and width follows the drawing, so a coupe is wide and a highball
             // narrow at the same place on the counter instead of all five being stretched into
             // one box.
-            _serveGlass.sizeDelta = new Vector2(ServeGlassHeight * piece.Aspect, ServeGlassHeight);
+            // ONE SCALE FOR THE SET (2026-09-06): the installed sheets are trimmed per
+            // line, so a fixed height drew the rocks tumbler as tall as the highball. The
+            // bench takes its units-per-pixel from the tallest glass the bar owns, and every
+            // vessel keeps the proportion it was drawn with. The fluid follows: the profile,
+            // floor and rim are fractions of this rect.
+            _serveGlass.sizeDelta = GlassArt.BoxFor(glassware, piece.Sprite, ServeGlassHeight);
             if (_serveGlassBackRt != null)
             {
                 _serveGlassBackRt.sizeDelta = _serveGlass.sizeDelta;
@@ -534,6 +539,12 @@ namespace LastCall.UI
             _serveShaker.sizeDelta = new Vector2(TinW, ServeVesselH);
             _serveShaker.anchoredPosition = _serveShakerRest;
             _serveShakerBody = _serveShaker.gameObject.AddComponent<Image>();
+            // IT IS THE VERB ON THIS BENCH (2026-09-06, the author: "bardağa koyma
+            // sahnesinde shaker parlamıyor") — you grab it and tip it, so it answers the
+            // pointer like everything else you can pick up.
+            var serveGlow = _serveShaker.gameObject.AddComponent<HoverGlow>();
+            serveGlow.Graphics = new Graphic[] { _serveShakerBody };
+            serveGlow.Rise = 4f; serveGlow.Sway = 1.4f; serveGlow.Grow = 1.04f; serveGlow.Halo = 1.3f;
             var serveTin = ItemArt.Load("tin_open") ?? ItemArt.Shaker;
             if (serveTin != null)
             {

@@ -36,7 +36,7 @@ never once affords. Every survival figure is a floor.
 | Pints in the good head band | 5725 (100.0%) |
 | Average head poured | 18% |
 | Snack serves (of serves) | 23312 (33.4%) · $63924 |
-| Glasses collected / wipes / washes | 44850 / 44850 / 44850 |
+| Glasses collected / wipes / washes | 44850 / 46337 / 44850 |
 | Service (avg night) / comfort (avg night) | 2.98 / 3.11 |
 | Avg cleanliness | 100% |
 | Nights comfort-bound (room under service) | 2398 (40.0%) |
