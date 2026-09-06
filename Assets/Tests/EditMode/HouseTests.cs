@@ -298,8 +298,11 @@ namespace LastCall.Tests
             house.CollectGlass(a);
             house.CollectGlass(b);
             double seconds = house.WashGlasses();
-            Assert.AreEqual(Housekeeping.WashSecondsFor(2), seconds, Eps);
-            Assert.AreEqual(2.5, seconds, Eps);
+            // ONE WAIT, WHATEVER IS IN IT (2026-09-06): the tap runs five seconds for a glass
+            // or for a stack, because the wait belongs to the basin. A bar that has fitted the
+            // brass one passes its own number in through Housekeeping.SinkSeconds.
+            Assert.AreEqual(Housekeeping.WashSeconds, seconds, Eps);
+            Assert.AreEqual(5.0, seconds, Eps);
             Assert.IsTrue(house.SinkBusy);
             Assert.AreEqual(0, house.GlassesInHand, "the hand is empty from the moment the tap runs");
             Assert.AreEqual(2, house.GlassesWashing);
@@ -308,9 +311,9 @@ namespace LastCall.Tests
             house.CollectGlass(c);
             Assert.Throws<InvalidOperationException>(() => house.WashGlasses(), "the sink is running");
 
-            house.Tick(2.0);
+            house.Tick(4.5);
             Assert.IsTrue(house.SinkBusy);
-            house.Tick(0.5);
+            house.Tick(0.6);
             Assert.IsFalse(house.SinkBusy);
             Assert.AreEqual(2, house.GlassesWashed);
             Assert.AreEqual(0, house.GlassesWashing);

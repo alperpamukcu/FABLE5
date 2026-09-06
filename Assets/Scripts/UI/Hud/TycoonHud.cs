@@ -534,8 +534,6 @@ namespace LastCall.UI
             /// and three of these (GDD 27 §4.1, 2026-09-06). Each owns its own copy of the
             /// mark's pixels, because the art is shared and the cloth ruins what it wipes.</summary>
             public readonly List<Mark> Marks = new List<Mark>();
-            public RectTransform Coaster;    // the mat that goes down when they order
-            public int CoasterFor = -1;      // which visit it was laid for
             public float WalkT;              // 0..1 walk-in progress
             public float WalkPace;           // 1 at the door, ArrivalPace at the stool
             public bool SawRight, SawLeft;   // was a neighbour there last frame
@@ -719,7 +717,17 @@ namespace LastCall.UI
         /// </summary>
         private Vector2 GlassHome =>
             new Vector2(GlassHomeX,
-                CounterFootY + CoasterLift + CarriedGlassHeight * 0.5f + CounterLift);
+                CounterFootY + CoasterLift + GlassHalfHeight + CounterLift);
+
+        /// <summary>
+        /// Half the glass that is actually standing there (2026-09-06, the author: "ana
+        /// sahnede servis edilecek bardak havada gözüküyor onu bardak altlığına tam oturt").
+        /// Every line is drawn at its own height now (GlassArt.BoxFor), so a home worked out
+        /// from the tallest one hangs a tumbler in the air by the difference.
+        /// </summary>
+        private float GlassHalfHeight =>
+            _drinkGlass != null && _drinkGlass.sizeDelta.y > 1f
+                ? _drinkGlass.sizeDelta.y * 0.5f : CarriedGlassHeight * 0.5f;
 
         private bool _glassShown;
 

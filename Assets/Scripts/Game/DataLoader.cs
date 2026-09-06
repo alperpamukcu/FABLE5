@@ -333,7 +333,8 @@ namespace LastCall.Game
                         f.stars, f.flavor, f.sprite,
                         f.lightR, f.lightG, f.lightB, f.lightIntensity, f.lightRadius,
                         f.startsInTheRoom, f.tapLevel, f.level, f.drain, f.drainsFree,
-                        f.screen, f.comfort, f.cellW, f.cellH, f.water, f.swatch, f.group));
+                        f.screen, f.comfort, f.cellW, f.cellH, f.water, f.swatch, f.group,
+                        f.washSeconds));
                 }
                 catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
                 {
@@ -730,6 +731,10 @@ namespace LastCall.Game
             /// <summary>...and this one costs nothing to pour a drink away in. Only a
             /// drain may say it; the definition refuses the pairing otherwise.</summary>
             public bool drainsFree;
+
+            /// <summary>How long this basin's tap runs, in seconds. Absent is 0, which means
+            /// the house's own five (2026-09-06).</summary>
+            public double washSeconds;
 
             /// <summary>This piece's sprite is a SHEET OF FRAMES the room plays, not one
             /// picture (2026-09-04, the wall television). Absent is false, so every

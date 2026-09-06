@@ -2364,6 +2364,58 @@ namespace LastCall.UI
             return Mathf.Clamp(Mathf.RoundToInt(auto * Mathf.Max(0.2f, reach)), 2, 48);
         }
 
+        /// <summary>
+        /// AN OLD CLOCK, for the one wait in this game that is worth watching (2026-09-06,
+        /// the author: "eski tip bir saat ile 5 saniye bekleme süresine girer"). A brass rim,
+        /// a cream face, four ticks and a stub at the top where the winder would be — 24
+        /// pixels across, drawn at the counter's grain, so it reads as an object on the bar
+        /// rather than as a progress bar in a menu. The hand is <see cref="ClockHand"/>.
+        /// </summary>
+        public static Sprite ClockFace()
+        {
+            const string Key = "fx:clockface";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int S = 24;
+            var px = new Color32[S * S];
+            var rim = new Color32(0xB0, 0x81, 0x3E, 255);      // Amber[3]
+            var rimDark = new Color32(0x5E, 0x42, 0x20, 255);  // Amber[1]
+            var face = new Color32(0xF2, 0xE8, 0xD5, 255);     // Cream[4]
+            var tick = new Color32(0x45, 0x3E, 0x38, 255);     // Cream[0]
+            float c = (S - 1) * 0.5f;
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float dx = x - c, dy = y - c;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (d > 11.2f) continue;
+                    px[y * S + x] = d > 9.6f ? rim : d > 8.6f ? rimDark : face;
+                }
+            // Four ticks, at the quarters.
+            void Tick(int x, int y) { if (x >= 0 && x < S && y >= 0 && y < S) px[y * S + x] = tick; }
+            Tick((int)c, 3); Tick((int)c, S - 4); Tick(3, (int)c); Tick(S - 4, (int)c);
+            // The winder.
+            for (int y = 0; y < 2; y++)
+                for (int x = (int)c - 1; x <= (int)c + 1; x++) Tick(x, S - 2 - y);
+            return Cache[Key] = Make(px, S, S, Vector4.zero);
+        }
+
+        /// <summary>The clock's hand: one pixel wide, drawn pointing UP from the middle of a
+        /// square, so the caller turns it by however much of the wait is gone.</summary>
+        public static Sprite ClockHand()
+        {
+            const string Key = "fx:clockhand";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int S = 24;
+            var px = new Color32[S * S];
+            var ink = new Color32(0x2B, 0x12, 0x20, 255);
+            int c = (S - 1) / 2;
+            for (int y = c; y < c + 8; y++) px[y * S + c] = ink;
+            px[(c + 8) * S + c] = ink;
+            px[c * S + c - 1] = ink;
+            px[c * S + c + 1] = ink;
+            return Cache[Key] = Make(px, S, S, Vector4.zero);
+        }
+
         private static Sprite Make(Color32[] px, int w, int h, Vector4 border)
         {
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)

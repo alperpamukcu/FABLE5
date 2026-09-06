@@ -127,6 +127,7 @@ namespace LastCall.UI
         // What this component added to the prop last frame, so it can be taken off again
         // before the next one is worked out. Position in the riser's own local space.
         private Vector3[] _added;         // what this glow has added to each mover, per mover
+        private Quaternion[] _addedRot;   // ...and the turn, so an owner's own tilt survives
         private float _addedScale = 1f;
         private float _phase;
 
@@ -313,6 +314,11 @@ namespace LastCall.UI
             int n = 0;
             ForEachMover(t => n++);
             if (_added == null || _added.Length != n) _added = new Vector3[n];
+            if (_addedRot == null || _addedRot.Length != n)
+            {
+                _addedRot = new Quaternion[n];
+                for (int q = 0; q < n; q++) _addedRot[q] = Quaternion.identity;
+            }
             var rot = Quaternion.Euler(0f, 0f, angle);
             Vector3 pivot = body != null ? body.localPosition - _added[0] : Vector3.zero;
             int k = 0;
@@ -324,9 +330,19 @@ namespace LastCall.UI
                 _added[k] = moved - rest;
                 // ROCKED, not slid (2026-09-06, the author: "sag sola hareket etmesinden
                 // kastim sag sola sallanmasi"). A drift along x reads as sliding; a thing
-                // picked up off a bar tips. Written as an absolute angle, because nothing
-                // else rotates these props while the pointer is on them.
-                if (Sway > 0f) t.localRotation = rot;
+                // picked up off a bar tips.
+                //
+                // ADDED to whatever else is turning it, not written over the top — the tin
+                // being tipped over a glass IS rotated by somebody else, and an absolute
+                // angle here held it upright through the whole pour (the author: "shakerdan
+                // bardağa koyma sahnesinde shaker devrilmiyor koyarken"). Same law as the
+                // rise: take off what this glow added last frame, then add this frame's.
+                if (Sway > 0f)
+                {
+                    var owner = t.localRotation * Quaternion.Inverse(_addedRot[k]);
+                    t.localRotation = owner * rot;
+                    _addedRot[k] = rot;
+                }
                 if (Grow > 1f)
                 {
                     var s = t.localScale;
@@ -521,8 +537,30 @@ namespace LastCall.UI
             return new Vector2((sp.rect.width + grown) * k, (sp.rect.height + grown) * k);
         }
 
+        /// <summary>
+        /// Has something above this prop stopped taking the pointer? A CanvasGroup that drops
+        /// `blocksRaycasts` — the flow's own root while a stage slides, the counter's prop
+        /// doors while the cellar is open — sends NO exit event, so a prop the pointer was on
+        /// when the shutter came down stays lit for as long as the room is open (2026-09-06,
+        /// the author: "musluk seçiliymiş gibi takılı kalabiliyor sürekli ön planda kalıp
+        /// sanki mouse üstünde kalmış gibi duruyor"). Asked only while lit, and only up the
+        /// parents this prop actually has.
+        /// </summary>
+        private bool Shuttered()
+        {
+            var t = transform;
+            while (t != null)
+            {
+                var group = t.GetComponent<CanvasGroup>();
+                if (group != null && (!group.blocksRaycasts || group.alpha <= 0.01f)) return true;
+                t = t.parent;
+            }
+            return false;
+        }
+
         private void LateUpdate()
         {
+            if (_over && Shuttered()) _over = false;
             float want = _over || _beckoned ? 1f : 0f;
             if (Mathf.Approximately(_g, want) && want <= 0f)
             {

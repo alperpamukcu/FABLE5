@@ -83,7 +83,19 @@ namespace LastCall.Core
         public const double DirtGrace = 10.0;
 
         /// <summary>A wash takes this long, plus a little per glass in it.</summary>
-        public const double WashBaseSeconds = 1.5, WashPerGlassSeconds = 0.5;
+        /// <summary>
+        /// HOW LONG THE TAP RUNS, whatever went into it (2026-09-06, the author: "lavaboya
+        /// her bir içecek döküldüğünde bardak götürüldüğünde ... 5 saniye bekleme süresine
+        /// girer ... golden sink ise bekleme süresini 2.5 saniyeye düşürür"). It used to be
+        /// 1.5 plus half a second a glass, which made a wash something you barely noticed;
+        /// five seconds is long enough to be a decision. A bar that has fitted the brass
+        /// basin passes its own number in (fixtures.json, `washSeconds`).
+        /// </summary>
+        public const double WashSeconds = 5.0;
+
+        /// <summary>What this bar's basin takes — the house's five unless a fitted drain
+        /// says otherwise. Set by the run when the room is dressed.</summary>
+        public double SinkSeconds { get; set; } = WashSeconds;
 
         private readonly List<CounterMess> _messes = new List<CounterMess>();
 
@@ -215,7 +227,7 @@ namespace LastCall.Core
             if (SinkBusy) throw new InvalidOperationException("The sink is running — wait for it.");
             GlassesWashing = GlassesInHand;
             GlassesInHand = 0;
-            WashLeft = WashSecondsFor(GlassesWashing);
+            WashLeft = SinkSeconds;
             return WashLeft;
         }
 
@@ -229,13 +241,13 @@ namespace LastCall.Core
         public double RunTheTap()
         {
             if (SinkBusy) throw new InvalidOperationException("The sink is running — wait for it.");
-            WashLeft = WashSecondsFor(0);
+            WashLeft = SinkSeconds;
             return WashLeft;
         }
 
-        /// <summary>How long the tap runs for a stack of this size.</summary>
-        public static double WashSecondsFor(int glasses) =>
-            WashBaseSeconds + WashPerGlassSeconds * Math.Max(0, glasses);
+        /// <summary>How long the tap runs. The stack's size does not change it: the wait
+        /// is the basin's, and a bar with two glasses to wash is not punished twice.</summary>
+        public static double WashSecondsFor(int glasses) => WashSeconds;
 
         /// <summary>
         /// The floor's clock: every mess ages, every mess past its grace costs a seat-second

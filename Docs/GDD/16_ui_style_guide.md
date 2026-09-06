@@ -81,6 +81,14 @@ brightness (×1.22, the beer font's own number) stays under all of it.
   swings out through its glass.
 - **A drinker is not a prop.** People brighten and nothing else — a person who rises and
   grows under the pointer reads as a puppet.
+- **The rock is ADDED to whatever else turns the prop.** An absolute angle here held the
+  tin upright through a whole pour, because the tin being tipped over a glass is rotated by
+  the bench (2026-09-06: "shakerdan bardağa koyma sahnesinde shaker devrilmiyor koyarken").
+  Same law as the rise: take off what the glow added last frame, then add this frame's.
+- **A glow lets go when its panel stops taking the pointer.** A CanvasGroup that drops
+  `blocksRaycasts` — the flow's root while a stage slides, the prop doors while the cellar is
+  open — sends no exit event, so a prop the pointer was on when the shutter came down stayed
+  lit for as long as the room was open ("musluk seçiliymiş gibi takılı kalabiliyor").
 - **The light sits on the drawing's centre, not on the rect's pivot.** The bench's props are
   hung by their feet (the bottle at 0.22, the spoon by its grip), and a halo centred on the
   pivot of a 384-tall bottle sits a hundred units below it — which is what "pour sahnelerinde

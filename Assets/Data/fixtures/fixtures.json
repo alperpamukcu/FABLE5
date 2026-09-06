@@ -501,7 +501,8 @@
       "level": 2,
       "drain": true,
       "drainsFree": true,
-      "group": "counter"
+      "group": "counter",
+      "washSeconds": 2.5
     },
     {
       "id": "floor_rug",

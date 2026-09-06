@@ -253,6 +253,18 @@ namespace LastCall.UI
             GoTo(Stage.Shaker);
         }
 
+        /// <summary>
+        /// The door onto the GLASS bench, for the drink standing on the counter (2026-09-06,
+        /// the author: "bardak varsa bardak sahnesine shaker varsa shaker sahnesine gitmeli").
+        /// The same room lift the tin's door takes: the bench slides in over a raised bar.
+        /// </summary>
+        public void OpenServe()
+        {
+            if (Run == null || Run.Phase != TycoonPhase.DayOpen) return;
+            GetComponent<TycoonHud>()?.Room?.SetDrawerOpen(true);
+            GoTo(Stage.Serve);
+        }
+
         public void CloseFlow() => GoTo(Stage.Closed);
 
         /// <summary>Every stage change kills the held-action sound: a loop belongs to the

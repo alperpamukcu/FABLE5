@@ -329,8 +329,8 @@ namespace LastCall.EditorTools
             sb.AppendLine($"- every glass step counts at **{P(VenueComfort.GlassComfortShare)}** of its star cap,");
             sb.AppendLine($"  every stool past the first {config.StartingSeats} adds **+{F(VenueComfort.StoolComfort)}**");
             sb.AppendLine($"- a counter left dirty past **{F(Housekeeping.DirtGrace)} s** costs **−{F(VenueComfort.DirtPenalty)}**");
-            sb.AppendLine($"  of comfort until it is wiped; a wash takes {F(Housekeeping.WashBaseSeconds)} s plus");
-            sb.AppendLine($"  {F(Housekeeping.WashPerGlassSeconds)} s a glass");
+            sb.AppendLine($"  of comfort until it is wiped; the tap runs {F(Housekeeping.WashSeconds)} s");
+            sb.AppendLine("  whatever went into it, and the brass basin halves that");
             sb.AppendLine($"- comfort is clamped to **{F(VenueComfort.MaxComfort)}**");
             sb.AppendLine();
             sb.AppendLine("The ladders, rung by rung — a rung's comfort is ABSOLUTE (fitting over the last");

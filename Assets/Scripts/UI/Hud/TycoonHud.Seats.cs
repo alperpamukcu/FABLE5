@@ -405,25 +405,6 @@ namespace LastCall.UI
                     Destroy(v.DirtyProp.gameObject);
                     v.DirtyProp = null;
                 }
-                // THE MAT GOES DOWN WITH THE ORDER (2026-09-06, the author: "artık yeni
-                // müşteri geldiğinde siparişi alındıktan sonra önünde kare bardak altlığı
-                // belirecek, bardak altlığı çok dikkat çekici olmamalı"). It is the counter
-                // saying this seat is working: nothing about the drink, nothing to click, and
-                // it stays under whatever they leave behind until the empty is carried off.
-                bool laid = (v.Visit != null && v.Visit.HasOrdered
-                             && (v.Visit.State == VisitState.Waiting || v.Visit.State == VisitState.Drinking))
-                            || (v.Dirty != null && v.Dirty.HasGlass);
-                if (laid && v.Coaster == null) BuildCoaster(v);
-                else if (!laid && v.Coaster != null)
-                {
-                    Destroy(v.Coaster.gameObject);
-                    v.Coaster = null;
-                }
-                if (v.Coaster != null)
-                    v.Coaster.anchoredPosition = new Vector2(
-                        ClearOfTheBoard(v.SeatX, v.Coaster.rect.width),
-                        CounterLineY - 36f + CounterLift - CoasterDrop);
-
                 // THE MARKS AROUND IT (GDD 27 §4.1, 2026-09-06): none, one or three of
                 // them, each its own mess and each wiped on its own. They outlast the glass
                 // — collecting the empty leaves them behind for the cloth.
@@ -949,7 +930,10 @@ namespace LastCall.UI
         // this counter that costs money, and the room already asks for the walk before it
         // will take a finished drink. A press that never travels is still the door back
         // to the bench, so the tin keeps both meanings and the hand decides which.
+        private Vector2 _glassPressAt;    // where the press on the finished drink landed
+        private bool _glassTravelled;     // ...and whether the hand has moved since
         private SeatView _emptyPressed;   // an empty under a finger that has not travelled yet
+        private SeatView _carriedEmpty;   // ...and the one in the air, not yet Core's business
         private Vector2 _emptyPressAt;
         private int _emptyHovered;        // how many empties the pointer is on (0 or 1, counted safely)
         private RectTransform _tinCarry;
@@ -1004,44 +988,6 @@ namespace LastCall.UI
         /// the counter calls it clean. Not zero: chasing the last few translucent pixels of a
         /// splash with a cloth is not a game, it is an eye test.</summary>
         private const float SmudgeGone = 0.07f;
-
-        /// <summary>How big a coaster is drawn: its 32px sheet at the counter's own grain.</summary>
-        private const float CoasterBox = 32f * StageToHud;
-
-        /// <summary>How far under the glass's foot the mat sits, so the glass stands ON it.</summary>
-        private const float CoasterDrop = 4f;
-
-        /// <summary>How many mats the bar owns; the room picks between them.</summary>
-        private static readonly string[] CoasterArt = { "coaster_a", "coaster_b", "coaster_c", "coaster_d" };
-
-        /// <summary>
-        /// The mat in front of a drinker who has ordered. WHICH mat and HOW STRAIGHT it lies
-        /// are hashed off the stool and how many people have sat at it tonight (the author:
-        /// "kimi yamuk durucak, kimi dik, duruş pozisyonları rastgele olacak") — so it is
-        /// different from seat to seat and from visit to visit, and never jitters inside one
-        /// visit, which a per-frame roll would do.
-        /// </summary>
-        private void BuildCoaster(SeatView v)
-        {
-            v.CoasterFor++;
-            int h = Mathf.Abs(v.Index * 73 + v.CoasterFor * 31 + 17);
-            var art = ItemArt.Load(CoasterArt[h % CoasterArt.Length]);
-            var rt = NewRect("Coaster", _hudRoot);
-            rt.anchorMin = rt.anchorMax = new Vector2(0, 0);
-            rt.pivot = new Vector2(0.5f, 0f);
-            rt.sizeDelta = new Vector2(CoasterBox, CoasterBox);
-            var img = rt.gameObject.AddComponent<Image>();
-            img.sprite = art;
-            img.preserveAspect = true;
-            img.raycastTarget = false;
-            // Quiet on purpose: a mat that announces itself is a mat the player looks at
-            // instead of at the person sitting behind it.
-            img.color = new Color(1f, 1f, 1f, 0.92f);
-            img.enabled = art != null;
-            rt.localRotation = Quaternion.Euler(0f, 0f, (h % 13) - 6f);
-            rt.SetAsFirstSibling();
-            v.Coaster = rt;
-        }
 
         /// <summary>
         /// A stool's mark — and its OWN copy of one (2026-09-06, the author: "bezle silinirken
@@ -1254,8 +1200,13 @@ namespace LastCall.UI
             var view = _emptyPressed;
             _emptyPressed = null;
             if (view.Dirty == null || !view.Dirty.HasGlass) return;
-            try { run.CollectGlass(view.Dirty); }
-            catch (System.InvalidOperationException e) { Toast(e.Message); return; }
+            // NOTHING HAS HAPPENED TO CORE YET (2026-09-06, the author: "sahnede müşterilerin
+            // bıraktığı bardaklar tıklanarak hala yok olabiliyor, sadece lavaboya sürüklenerek
+            // yok olmaları lazım"). The lift is a PICTURE until it is let go: an empty that
+            // came off the counter and went nowhere used to stay in the hand, which is a
+            // glass that vanished from the bar without ever reaching the basin. Core is told
+            // at the drop, and only if the drop was over the sink.
+            _carriedEmpty = view;
             Sfx.Play("glass_pickup", 0.8f);
             var art = view.DirtyProp != null ? view.DirtyProp.GetComponent<Image>() : null;
             BeginGlassCarry(art != null ? art.sprite : null);
@@ -1296,8 +1247,26 @@ namespace LastCall.UI
         {
             _glassCarrying = false;
             if (_glassCarry != null) _glassCarry.gameObject.SetActive(false);
-            if (intoTheSink) OnSinkClicked();
-            else Toast("IN HAND — THE STOOL IS HELD UNTIL IT IS WASHED", UITheme.Cream[3]);
+            var view = _carriedEmpty;
+            _carriedEmpty = null;
+            var run = Run;
+            if (!intoTheSink || view == null || view.Dirty == null || !view.Dirty.HasGlass
+                || run == null || run.Phase != TycoonPhase.DayOpen)
+            {
+                // Back on the counter it goes, exactly as it was. The prop is drawn from the
+                // mess every frame, so there is nothing to put back by hand.
+                if (view != null) Toast("PUT BACK — CARRY IT TO THE SINK", UITheme.Cream[3]);
+                return;
+            }
+            if (run.SinkBusy) { Toast("THE TAP IS RUNNING"); return; }
+            try
+            {
+                run.CollectGlass(view.Dirty);
+                run.WashGlasses();
+            }
+            catch (System.InvalidOperationException e) { Toast(e.Message.ToUpperInvariant()); return; }
+            Sfx.Play("drain", 0.5f);
+            Toast("WASHING UP", UITheme.Cyan[4]);
         }
 
         /// <summary>The sink's click: wash what the hand holds. The one free verb on the
@@ -1315,6 +1284,31 @@ namespace LastCall.UI
             Toast("WASHING UP", UITheme.Cyan[4]);
         }
 
+        /// <summary>The clock that stands over the basin while its tap runs.</summary>
+        private RectTransform _sinkClock, _sinkClockHand;
+
+        /// <summary>
+        /// The wait, as an object rather than a number (2026-09-06, the author: "eski tip bir
+        /// saat ile 5 saniye bekleme süresine girer"). Built on the first wash and then simply
+        /// shown and hidden; the hand sweeps once through the whole wait, so how much is left
+        /// is read the way it is read off a clock.
+        /// </summary>
+        private void BuildSinkClock()
+        {
+            _sinkClock = NewRect("SinkClock", _hudRoot);
+            _sinkClock.anchorMin = _sinkClock.anchorMax = _sinkClock.pivot = new Vector2(0.5f, 0.5f);
+            _sinkClock.sizeDelta = new Vector2(24f * StageToHud, 24f * StageToHud);
+            var face = _sinkClock.gameObject.AddComponent<Image>();
+            face.sprite = ChromeArt.ClockFace();
+            face.raycastTarget = false;
+            _sinkClockHand = NewRect("Hand", _sinkClock);
+            Stretch(_sinkClockHand, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var hand = _sinkClockHand.gameObject.AddComponent<Image>();
+            hand.sprite = ChromeArt.ClockHand();
+            hand.raycastTarget = false;
+            _sinkClock.gameObject.SetActive(false);
+        }
+
         /// <summary>Each frame: the tap runs while Core says so, and the strip over the sink
         /// says what the hand holds.</summary>
         private void StepSink(TycoonRun run)
@@ -1324,6 +1318,19 @@ namespace LastCall.UI
             // AND THE BASIN CALLS WHILE A HAND IS FULL (2026-09-06): a carried glass or a
             // carried tin both end at the same place, and the room says so by lighting it.
             if (stage != null) stage.CallTheDrain(_glassCarrying || _tinCarrying || _emptyHovered > 0);
+            // The clock over the basin, while it is busy.
+            if (_sinkClock == null && busy) BuildSinkClock();
+            if (_sinkClock != null)
+            {
+                if (_sinkClock.gameObject.activeSelf != busy) _sinkClock.gameObject.SetActive(busy);
+                if (busy)
+                {
+                    _sinkClock.anchoredPosition = new Vector2(280f, 137f + 70f + 30f + CounterLift);
+                    float whole = (float)Mathf.Max(0.01f, (float)run.SinkSeconds);
+                    float gone = Mathf.Clamp01(1f - (float)run.WashLeft / whole);
+                    _sinkClockHand.localRotation = Quaternion.Euler(0f, 0f, -360f * gone);
+                }
+            }
             if (_handStrip == null) return;
             // WHAT THE GLASSES ARE COSTING, not just where they are (2026-09-06): a glass
             // out of service holds the stool it came off until the sink hands it back, so
@@ -1738,6 +1745,13 @@ namespace LastCall.UI
                 if (!_glassShown || _glassServing || _glassReturning || !run.DrinkReady) return;
                 _glassGrabbed = true;
                 _glassVel = Vector2.zero;
+                // WHERE THE PRESS STARTED, so a press that never travels can be told from a
+                // carry (2026-09-06, the author: "bardak altlığının üstünde gözüken bardak
+                // veya shaker'a sol tık yaptığımızda, bardak varsa bardak sahnesine shaker
+                // varsa shaker sahnesine gitmeli").
+                var m = Mouse.current;
+                _glassPressAt = m != null ? m.position.ReadValue() : Vector2.zero;
+                _glassTravelled = false;
                 Sfx.Play("click", 0.5f);
             });
             _drinkGlass.gameObject.AddComponent<EventTrigger>().triggers.Add(grab);
@@ -1747,6 +1761,13 @@ namespace LastCall.UI
             // it rides is a transparent rectangle and would have lit as a rectangle.
             _drinkGlassGlow = _drinkGlass.gameObject.AddComponent<HoverGlow>();
             _drinkGlassGlow.Rise = 4f; _drinkGlassGlow.Sway = 1.4f; _drinkGlassGlow.Grow = 1.05f;
+            // ...AND IT SAYS WHAT THE TWO PRESSES DO (2026-09-06, the author: "sağ tık sol tık
+            // etkileşiminin farkını göstermek için bardağın üstüne geldiğimizde bilgi kutusu
+            // çıkmalı"). One line, both verbs, in the room's own tip plate.
+            var glassRelay = _drinkGlass.gameObject.AddComponent<HoverRelay>();
+            var glassRt = _drinkGlass;
+            glassRelay.Entered = () => ShowPropTip(glassRt, "CLICK TO EDIT · DRAG TO SERVE");
+            glassRelay.Exited = () => HidePropTip(glassRt);
 
             // The layer architecture (the author, 2026-08-02): BACK face and base first,
             // the liquid over it, the FRONT face — interior fully clear — on top.
@@ -2145,6 +2166,17 @@ namespace LastCall.UI
                 if (mouse == null || !mouse.leftButton.isPressed)
                 {
                     _glassGrabbed = false;
+                    // A PRESS THAT NEVER TRAVELLED IS A DOOR (2026-09-06): the drink standing
+                    // on the coaster is the one you are building, and clicking it goes back to
+                    // the bench it was poured at. Carrying it is still how it is served.
+                    if (!_glassTravelled && _flow != null && !_flow.IsOpen)
+                    {
+                        _glassServeFrom = GlassHome;
+                        _glassServeTo = GlassHome;
+                        _drinkGlass.anchoredPosition = GlassHome;
+                        _flow.OpenServe();
+                        return;
+                    }
                     // THE SINK IS A PLACE YOU CARRY IT TO (2026-08-26, the author: "bardağı
                     // çöpe atmak için ana sahnede bardağı lavaboya sürüklemek gerekir").
                     // It answered a click for one round, which made throwing a drink away
@@ -2183,6 +2215,9 @@ namespace LastCall.UI
                     return;
                 }
 
+                if (!_glassTravelled && mouse != null
+                    && (mouse.position.ReadValue() - _glassPressAt).magnitude > TinDragSlop)
+                    _glassTravelled = true;
                 if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                         (RectTransform)_drinkGlass.parent, mouse.position.ReadValue(), null,
                         out Vector2 want))

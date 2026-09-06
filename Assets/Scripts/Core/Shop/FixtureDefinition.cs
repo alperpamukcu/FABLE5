@@ -103,6 +103,15 @@ namespace LastCall.Core
         public bool DrainsFree { get; }
 
         /// <summary>
+        /// How long this basin's tap runs, in seconds (2026-09-06, the author: "lavaboya her
+        /// bir içecek döküldüğünde bardak götürüldüğünde 5 saniye bekleme süresine girer ...
+        /// golden sink ise bekleme süresini 2.5 saniyeye düşürür"). 0 means the house
+        /// default (Housekeeping.WashSeconds), which is what every basin but the brass one
+        /// says. Only a drain may set it — the guard below refuses the pairing otherwise.
+        /// </summary>
+        public double WashSeconds { get; }
+
+        /// <summary>
         /// This piece is a SCREEN: its sprite is a sheet of frames rather than one
         /// picture, and the room plays them (2026-09-04, the author: a television on the
         /// wall running adverts, each one ending with the set switching itself off and
@@ -172,7 +181,7 @@ namespace LastCall.Core
             bool startsInTheRoom = false, int tapLevel = 0, int level = 0,
             bool isDrain = false, bool drainsFree = false, bool isScreen = false,
             double comfort = 0, int cellW = 0, int cellH = 0, string water = null,
-            string swatch = null, string group = null)
+            string swatch = null, string group = null, double washSeconds = 0)
         {
             if (cellW < 0 || cellH < 0) throw new ArgumentOutOfRangeException(nameof(cellW), "A cell is not negative.");
             if ((cellW > 0) != (cellH > 0)) throw new ArgumentException("A cell has both a width and a height.", nameof(cellH));
@@ -204,6 +213,9 @@ namespace LastCall.Core
             if (isDrain && tapLevel > 0)
                 throw new ArgumentException($"Fixture '{id}' cannot be a font and a drain.",
                                             nameof(isDrain));
+            if (washSeconds > 0 && !isDrain)
+                throw new ArgumentException($"Fixture '{id}' names a wash time but is not a drain.",
+                    nameof(washSeconds));
             Id = id;
             Name = name;
             Slot = slot;
@@ -219,6 +231,7 @@ namespace LastCall.Core
             Level = tapLevel > 0 ? tapLevel : level;
             IsDrain = isDrain;
             DrainsFree = drainsFree;
+            WashSeconds = washSeconds > 0 ? washSeconds : 0;
             IsScreen = isScreen;
             Comfort = comfort;
             CellW = cellW;

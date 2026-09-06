@@ -88,6 +88,21 @@ namespace LastCall.Core
         /// <summary>Empty glasses collected and not yet washed.</summary>
         public int GlassesInHand => Floor.House.GlassesInHand;
 
+        /// <summary>
+        /// The basin the bar has fitted, in seconds — read off the FIXTURE, like the drain's
+        /// waiver beside it (2026-09-06). Pushed into the counter whenever the room changes,
+        /// so Core never has to ask the shop mid-night.
+        /// </summary>
+        public double SinkSeconds
+        {
+            get
+            {
+                foreach (var f in _fixtureCatalogue)
+                    if (f.WashSeconds > 0 && _fixtures.Contains(f.Id)) return f.WashSeconds;
+                return Housekeeping.WashSeconds;
+            }
+        }
+
         /// <summary>The tap is running; a second wash waits for it.</summary>
         public bool SinkBusy => Floor.House.SinkBusy;
 

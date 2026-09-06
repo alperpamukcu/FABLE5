@@ -287,6 +287,7 @@ namespace LastCall.Core
             ServingGlass = NewServingGlass(DefaultGlassware);
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"),
                 messStream: _rng.GetStream("mess"));
+            Floor.House.SinkSeconds = SinkSeconds;
             // The story is opt-in exactly like the regulars: a run built without an arc has
             // no last customer and behaves in every way like a run from before there was one.
             Story = story != null ? new StoryProgress(story) : null;
@@ -718,6 +719,7 @@ namespace LastCall.Core
             Day = late ? 30 : 12;
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average,
                 _rng.GetStream("mess"));
+            Floor.House.SinkSeconds = SinkSeconds;
             LastCustomer = null;       // a jumped night starts its last call from scratch
             LastCallBeat = null;
             Trial = null;
@@ -778,6 +780,7 @@ namespace LastCall.Core
             ResetVessels();
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average,
                 _rng.GetStream("mess"));
+            Floor.House.SinkSeconds = SinkSeconds;
             return Day - from;
         }
 
@@ -2286,7 +2289,12 @@ namespace LastCall.Core
         public void DevFit(string fixtureId)
         {
             foreach (var f in _fixtureCatalogue)
-                if (f.Id == fixtureId) { _fixtures.Add(f.Id); return; }
+                if (f.Id == fixtureId)
+                {
+                    _fixtures.Add(f.Id);
+                    if (Floor != null) Floor.House.SinkSeconds = SinkSeconds;
+                    return;
+                }
             throw new ArgumentException($"No fixture '{fixtureId}' in the catalogue.", nameof(fixtureId));
         }
 
@@ -2322,6 +2330,9 @@ namespace LastCall.Core
                       $"rung {LadderLevel(def.Slot)}. It climbs one rung at a time.");
             Spend(def.Price);
             _fixtures.Add(fixtureId);
+            // A fitted basin changes how long the tap runs, and the counter is told at once
+            // rather than at the next day's open — the night it is bought is a night it works.
+            if (Floor != null) Floor.House.SinkSeconds = SinkSeconds;
             _todayPurchases.Add(new DayPurchase(
                 DayPurchase.Kind.Fixture, fixtureId, def.Name, def.Price));
             return def.Price;
@@ -2449,6 +2460,7 @@ namespace LastCall.Core
             ResetVessels();
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average,
                 _rng.GetStream("mess"));
+            Floor.House.SinkSeconds = SinkSeconds;
             Phase = TycoonPhase.DayOpen;
             TeachAtOpen();
             return result;

@@ -1276,6 +1276,32 @@ Yazarın dördüncü listesi, tek commit (`<C>`).
 - **Tıklamak bardağı toplamıyor:** boşa basılıp SÜRÜKLENMESİ gerekiyor (tin'in kuralı).
 - **Testler:** EditMode 488/488 (dört test yeni kurala göre yazıldı), PlayMode 11/11.
 
+### 9.33 · Beşinci listenin ilk yarısı (2026-09-06)
+
+Commit `<C>`.
+
+- **Yeni bardak altlıkları kaldırıldı** (yazarın isteği): dört PixelLab altlığı ve onları
+  koyan kod gitti; üretici `Tools/coaster_gen.py` duruyor, istenirse yeni take alınır.
+- **Servis bardağı altlığına oturdu:** her hat kendi boyunda çizildiğinden (BoxFor) sabit
+  `CarriedGlassHeight/2` ile hesaplanan ev, kısa bardağı havada bırakıyordu; ev artık
+  bardağın KENDİ yarı boyunu kullanıyor.
+- **Boş bardak sadece lavaboya gider:** basış bir RESİM kaldırıyor, Core ancak bırakma
+  lavabonun üstündeyse haberdar oluyor (topla + yıka tek harekette). Başka yere bırakınca
+  hiçbir şey olmamış oluyor.
+- **Lavabo beş saniye:** yığın ne olursa olsun tek süre (`Housekeeping.WashSeconds`),
+  pirinç lavabo `washSeconds: 2.5` ile yarıya indiriyor (yalnız drain diyebilir).
+  Musluk akarken leğenin üstünde eski tip bir saat duruyor, akrebi tüm süreyi süpürüyor.
+- **Sallanma sahibinin dönüşüne EKLENİYOR:** mutlak açı, bardağa dökülürken tin'i dik
+  tutuyordu; artık bench'in eğimi korunuyor.
+- **Panel perdeyi indirince ışık bırakıyor:** `blocksRaycasts` düşen bir CanvasGroup çıkış
+  olayı göndermiyor, bu yüzden musluk "seçili" kalıyordu.
+- **Tezgâhtaki içki tıklanınca kendi bench'ini açıyor** (`OpenServe`), sürüklenince servis;
+  üstüne gelince "CLICK TO EDIT · DRAG TO SERVE" ipucu çıkıyor.
+- **Ölçüm:** meşrubatın bench'e ulaştığı doğrulandı (`OpenBottle(soda_klara)` → prop aktif,
+  `v4_soda_klara_front`, dökülebilir); mahzende beş kapının beşi de açık. Yazarın raporu
+  bu haliyle tekrar edilemedi — bkz. oturum notu.
+- **Testler:** EditMode 488/488, PlayMode 11/11.
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

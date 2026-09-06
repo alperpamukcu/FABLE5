@@ -243,6 +243,19 @@ The tin joins the finished glass at the drain (*"shaker da lavaboya dökülüp �
 it is CARRIED there from the counter, like the glass, and the room's bin is the ÇÖP key on the
 bench, which has always emptied both vessels.
 
+**FIVE SECONDS AT THE BASIN, AND ONLY THE BASIN TAKES A GLASS (2026-09-06, the author:
+"lavaboya her bir içecek döküldüğünde bardak götürüldüğünde eski tip bir saat ile 5 saniye
+bekleme süresine girer ... golden sink ise bekleme süresini 2.5 saniyeye düşürür ... sahnede
+müşterilerin bıraktığı bardaklar tıklanarak hala yok olabiliyor sadece lavaboya sürüklenerek
+yok olmaları lazım").** The wait is the BASIN'S, not the stack's: `Housekeeping.WashSeconds`
+is a flat five, and a bar that has fitted the brass sink passes its own 2.5 in from
+fixtures.json (`washSeconds`, which only a drain may name). An old clock stands over the sink
+while it runs and its hand sweeps the whole wait, so the wait is an object on the counter
+rather than a number. And the empty is Core's business only at the DROP: pressing one lifts a
+picture, and unless that picture is let go over the basin nothing happened — no collecting, no
+glass in the hand, no stool quietly freed. Dropping it on the sink collects and washes in one
+gesture.
+
 **THE GLASS ALWAYS, THE MARKS BY THE DICE (2026-09-06, the author: "her müşteri 0-3 arasında
 kir yaratmalı, kimisi hiç yaratmaz kimisi çok yaratır, her müşterinin içtiği içecekten sonra
 bardağı masada kalır").** A served drinker used to leave exactly one mess carrying both the
