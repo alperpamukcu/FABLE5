@@ -1146,6 +1146,43 @@ shaker upgrade olacak."* (`5a8bdd1d`)
   yeni merdiveni kendiliğinden kapsıyor. Tezgâhın piksel baseline'ı yeni tinle yeniden kutsandı (resme
   bakılarak).
 
+### 9.29 · Tezgâhın eksikleri, odanın imleç cevabı, lavabonun kuyruğu (2026-09-06)
+
+Yazarın altı maddesi, üç commit (`8168efb6`, `8db73970`, `fb09cf3c`).
+
+- **İki kâse geri geldi:** garnitür rayı altı tabak istiyor, dördü çizilmişti; `counter_ice`
+  ve `counter_lemon` hiç yoktu, o yüzden ray 2026-08-26'dan beri iki turkuaz yer tutucu kutu
+  çiziyordu. Yazarın kendi minileri (`bench_mini_ice/lemon`, 09-05 süpürmesinde gitmişti —
+  kimse yüklemiyordu) rayın istediği adlarla döndü.
+- **İki paspas yazarın:** `bira_paspasi` (54×13) musluk altındaki damlalığın yerine (eskisi
+  119 genişti, tezgâhın yarısını kaplıyordu), `cerez_paspasi` → `prep_mat`, garnitür
+  tabaklarının altına. Paspas RAYDAN ölçülüyor: kavanoz stokta yoksa sıra kapanıyor,
+  alınınca açılıyor, paspas o kareyi ölçüp ortalanıyor. İkisi de 6 px uçlarla dokuz-dilim ve
+  TILED çiziliyor — uzayan ray dokuyu sündürmüyor, tekrarlıyor (tezgâhın kendi yasası).
+- **Tezgâhtaki tin mahzen açılınca kaybolmuyor** (çekmece bütün tezgâhı kaldırıyor, üstündeki
+  her şey onunla çıkıyor) ve **tezgâha tezgâhtan girilince oda kayıyor** (`OpenShaker` artık
+  çekmeceyi açıyor — eskiden tezgâha yalnız mahzenden gelinirdi, oda hep zaten kalkıktı).
+- **Tezgâha elsiz girilebiliyor:** `RefreshShaker` şişe yokken erken dönüyordu, bench yarım
+  giyinik kalıyor ve şişe propu kuruluşundaki yer tutucu rengiyle (turkuaz kutu) duruyordu.
+  Prop iniyor, kart "THE TIN" diyor.
+- **Şişe dökülebileceği yere gidiyor:** kapalı tin üzerine seçilen şişe tezgâha (bardağa)
+  gönderiliyordu — o bench'in dolabı 2026-08-22'de kaldırıldığından şişe duracak yeri
+  olmayan bir odaya varıyordu: görünmez, dökülemez, sessizce düşüyordu. Artık tin'e gidiyor,
+  kapak kapalıysa bench "TAKE THE LID OFF TO ADD IT" diyor. **Bu, yazarın kendi kapak
+  kuralını şişeler için geçersiz kılıyor; tek satırla geri alınır.**
+- **İmleç cevabı büyüdü (GDD 16):** yükselme + büyüme + salınım + arkadan hale; her kare
+  geri alınıp yeniden uygulanıyor, sahibiyle kavga etmiyor. Mahzenin şişeleri yalnız yanıyor
+  (dört ayrı renderer), müşteriler yalnız parlıyor (insan prop değil).
+- **Lavabo kuyruğu bir koltuk kuyruğu oldu:** kirli bardak tabureyi TOPLANANA kadar değil,
+  YIKANANA kadar tutuyor (`Housekeeping.GlassesOut` → `BarDay.FreeStools`). Barın bardağı
+  sınırlı; tezgâhı dolduran bar müşteri kaçırıyor. Şerit "N STOOLS HELD" yazıyor.
+  **Su yazarın:** iki lavabo için 14'er kare, tek tabakaya diziliyor
+  (`Tools/sink_water_ship.py`; `fx_sink_water` çelik, `fx_sink_gold_water` pirinç) — kare
+  leğenin kendisini de taşıdığı için duran lavabonun üstünü örtüyor, dikiş yok.
+  200 koşu: kasa medyanı $80 → $77, fırtına %15.4 → %15.5 (bot anında yıkıyor).
+- **Testler:** `HouseTests` +2 (bardak nerede olursa olsun sayılır; ikinci bardak akan
+  lavaboyu bekler), EditMode 486/486.
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

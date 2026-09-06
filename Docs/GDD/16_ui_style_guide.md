@@ -33,6 +33,28 @@ is a tint or an alpha of a token, and it must say why on the line above it.
 
 **Grid:** `UITheme.Grid` is 4. Rects sit on whole units; sizes and positions are integers.
 
+## 0b. The room answers the pointer (2026-09-06)
+
+The author: *"Ana sahnede, mahzen sahnesinde, kokteyl yapma sahnesinde seçilebilir bir
+nesnenin üstüne mouse geldiyse, o nesne yükselir biraz boyutu büyük ve arkasından ışık
+çıkar aynı zamanda çok hafif sağa ve sola doğru hareket eder."*
+
+`HoverGlow` is that sentence: **Rise** (a few units in the prop's own space), **Grow**
+(1.05–1.07), **Sway** (±1.5 units at ~2 Hz) and **Halo** — a soft warm bloom behind the
+prop (`ChromeArt.Halo`, made on the first hover so a prop nobody points at never pays for
+one). The old brightness (×1.22, the beer font's own number) stays under all of it.
+
+- The movement is **undone and re-applied every frame** in `LateUpdate`, on top of
+  wherever the prop's owner put it — the rail re-slots its dishes, the book and the
+  coaster ride the counter, the drawer animates the cellar. Nothing fights an owner.
+- **A world prop gets a world halo**, three sorting orders under its own drawing: its hit
+  plate is on the canvas, and a bloom hung there would sit in front of the bottle.
+- **The cellar's bottles light but do not move**: a bottle there is four renderers
+  standing in one place (front, back, drink, mask), each placed by the stage, so moving
+  one takes the sandwich apart. That movement is the stage's to give.
+- **A drinker is not a prop.** People brighten and nothing else — a person who rises and
+  grows under the pointer reads as a puppet.
+
 ## 1. The vocabulary
 
 The chrome is made of NAMED OBJECTS, not of rectangles. A new surface picks from this list; if

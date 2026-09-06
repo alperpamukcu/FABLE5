@@ -222,6 +222,17 @@ wipe on the stool wipes all of them, and Core caps `DirtySpots` at `Seats` and `
 1.0 so a stool can never cost more than a stool. (A glass *supply* — running out of clean glasses
 — is fenced out, §9.)
 
+**THE GLASS HOLDS ITS STOOL UNTIL IT IS WASHED (2026-09-06, the author: "bardaklar
+temizlenmeden yeni müşteri o masaya oturamayacağından oyuncu potansiyel müşteri
+kaybedecek").** It used to hold it only until it was COLLECTED, which made the sink a
+thing you visited for comfort and nothing else. A glass now counts against the floor
+wherever it is on the errand — on the counter, in the hand, under the tap
+(`Housekeeping.GlassesOut`, read by `BarDay.FreeStools`) — and the bar has only so many
+glasses, so a counter left to fill turns people away. The sink's queue (one wash at a
+time, `WashSecondsFor`) was already there; this is what gives it a price. The floor bot
+cleans the instant a mess lands, so the 200-run report barely moves (till median $80 →
+$77, storm-offs 15.4% → 15.5%); the cost lands on a player who lets it pile up.
+
 ### 4.3 Exposure and the two readings
 
 Every tick, for every mess: if it is still dirty and has stood for longer than `DirtGrace`

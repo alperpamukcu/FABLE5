@@ -2,6 +2,15 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The counter's own list (2026-09-06):** the ice and lemon dishes come back (they were never
+  drawn, so the rail drew placeholders), the author's two mats land under the font and under
+  the garnishes (measured from the rail, so a new jar moves it), the tin stays when the cellar
+  opens and the room lifts whichever door the bench is opened by, the bench can be walked into
+  empty-handed, and a bottle picked over a closed tin goes to the tin rather than to a bench
+  that cannot pour it. The pointer's answer grows — rise, grow, sway, halo (GDD 16). And a
+  dirty glass holds its stool until the SINK hands it back, with the author's own water on
+  both basins (GDD 27 §4.2). GDD_MEVCUT §9.29.
+
 - **The author's shaker, and a door back to it (2026-09-06):** two tins, steel and gold, landed
   on the sheet both benches share (`Tools/shaker_ship.py` — the lid's seat measured, the pouring
   lid derived from the tipless drawing). A drink left in the tin now stands on the drink's own
