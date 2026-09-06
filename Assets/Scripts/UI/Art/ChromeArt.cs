@@ -2709,6 +2709,50 @@ namespace LastCall.UI
             return Cache[Key] = Make(px, S, S, Vector4.zero);
         }
 
+        /// <summary>A punch: a 6-pixel disc with a one-pixel ring, white for the caller to
+        /// tint (v4 licence, 2026-09-06 — a visit is a hole punched in the card).</summary>
+        public static Sprite Punch()
+        {
+            const string Key = "lic:punch";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int S = 6;
+            var px = new Color32[S * S];
+            float c = (S - 1) * 0.5f;
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float d = Mathf.Sqrt((x - c) * (x - c) + (y - c) * (y - c));
+                    if (d <= 2.9f) px[y * S + x] = d > 1.9f ? new Color32(255, 255, 255, 255) : new Color32(255, 255, 255, 170);
+                }
+            return Cache[Key] = Make(px, S, S, Vector4.zero);
+        }
+
+        /// <summary>NO SHAKE (2026-09-06): a tin in a ring with a bar through it, 16x16, white
+        /// for the caller to tint — the cellar card's mark on anything carbonated.</summary>
+        public static Sprite NoShake()
+        {
+            const string Key = "mark:noshake";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int S = 16;
+            var px = new Color32[S * S];
+            var ink = new Color32(255, 255, 255, 255);
+            var dim = new Color32(255, 255, 255, 150);
+            float c = (S - 1) * 0.5f;
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float dx = x - c, dy = y - c;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    bool ring = d <= 7.6f && d > 6.2f;
+                    bool bar = Mathf.Abs((x - c) - (y - c)) < 1.2f && d < 7.2f;   // the diagonal
+                    // the tin: a body five wide, a shoulder, a cap
+                    bool body = x >= 5 && x <= 10 && y >= 3 && y <= 10;
+                    bool cap = x >= 6 && x <= 9 && y >= 11 && y <= 12;
+                    px[y * S + x] = ring || bar ? ink : body || cap ? dim : new Color32(0, 0, 0, 0);
+                }
+            return Cache[Key] = Make(px, S, S, Vector4.zero);
+        }
+
         private static Sprite Make(Color32[] px, int w, int h, Vector4 border)
         {
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)

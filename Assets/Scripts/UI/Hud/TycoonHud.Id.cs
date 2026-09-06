@@ -148,6 +148,13 @@ namespace LastCall.UI
             // mean how many times HE came in, which is what the departure log books.
             var rec = LogFor(ownLook);      // the record is the PERSON's, whoever's card it is
             _idVisitCount.text = (rec.Visits + 1).ToString();     // this one counts as they sit
+            // ...and as punches (v4): one a visit, five holes, "+N" past that.
+            int visits = rec.Visits + 1;
+            if (_idPunches != null)
+                for (int i = 0; i < _idPunches.Length; i++)
+                    if (_idPunches[i] != null)
+                        _idPunches[i].color = i < visits ? UITheme.Magenta[3] : new Color(0.62f, 0.58f, 0.50f, 0.55f);
+            if (_idVisitMore != null) _idVisitMore.text = visits > 5 ? "+" + (visits - 5) : "";
             _idRel.text = rec.Visits == 0
                 ? "FIRST TIME"
                 : reg.Relationship.ToString().ToUpperInvariant();
@@ -478,7 +485,7 @@ namespace LastCall.UI
         // arcade caps were sent back; this is the ONE key every other press in the game is
         // (GDD 16 §2, KeyPlate) in the door's red, the word on its face at the body face's
         // 16 — a key you already know how to press, in the colour that says what it does.
-        private const float KickW = 88f, KickH = 36f;
+        private const float KickW = 84f, KickH = 30f;   // v4: inside the 42-unit band
         private RectTransform _idKick;
 
         /// <summary>
@@ -629,9 +636,9 @@ namespace LastCall.UI
                 img.raycastTarget = false;
             }
 
-            // The portrait well and the two data cells: one column, one width, even gaps.
+            // The portrait well and the stamp strip under it: one column, one width.
             Well(LicPortrait.x, -LicPortrait.y, LicPortrait.width, LicPortrait.height, true);
-            foreach (float top in LicCells) Well(LicCellX, top, LicCellW, LicCellH, false);
+            Well(LicPad, LicStampY, LicRailW, LicStampH, false);
 
             // The field grid's rules, and the one the licence number sits on.
             void Rule(float x, float y, float w, float alpha)
@@ -644,7 +651,6 @@ namespace LastCall.UI
                 img.raycastTarget = false;
             }
             foreach (float line in LicLines) Rule(LicGridX, line, LicGridW, 0.55f);
-            Rule(LicCellX, LicNumRule, LicCellW, 0.35f);
         }
 
         private void BuildIdCard(RectTransform root)
@@ -697,15 +703,22 @@ namespace LastCall.UI
             var authority = NewText("Authority", card, _display, 16, TextAnchor.MiddleLeft,
                 UITheme.Cream[4]);
             Place(authority.rectTransform, new Vector2(0, 1), new Vector2(240, 18),
-                new Vector2(LicPad + 4f, bandMid + 19f));
+                new Vector2(LicPad + 4f, bandMid + 20f));
             authority.horizontalOverflow = HorizontalWrapMode.Overflow;
             authority.text = "NEW ARDEN";
             var docType = NewText("DocType", card, _body, 8, TextAnchor.MiddleLeft,
                 new Color(0.62f, 0.72f, 0.88f, 1f));
-            Place(docType.rectTransform, new Vector2(0, 1), new Vector2(240, 12),
-                new Vector2(LicPad + 4f, bandMid - 7f));
+            Place(docType.rectTransform, new Vector2(0, 1), new Vector2(130, 12),
+                new Vector2(LicPad + 4f, bandMid - 6f));
             docType.horizontalOverflow = HorizontalWrapMode.Overflow;
-            docType.text = "PATRON LICENCE  ·  CLASS B";
+            docType.text = "PATRON LICENCE  ·";
+            // The document number, on the band's second line (v4): the one header field
+            // that differs on every card, beside the class.
+            _idNumber = NewText("Num", card, _body, 8, TextAnchor.MiddleLeft,
+                new Color(0.62f, 0.72f, 0.88f, 1f));
+            Place(_idNumber.rectTransform, new Vector2(0, 1), new Vector2(160, 12),
+                new Vector2(LicPad + 4f + 128f, bandMid - 6f));
+            _idNumber.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             // The flag rides the header, where a licence puts its emblem. It is the one
             // thing up here that changes from card to card besides the number below.
@@ -718,7 +731,9 @@ namespace LastCall.UI
             // CENTRED IN THE BAND (v3.1, the author: "ülke bayrakları tam üstteki farklı
             // renk şeritin yükseklik bakımından orta konumuna getirilsin"): the band is 22
             // art pixels tall and so is the seal, so it fills the band's height exactly.
-            const float Roundel = 22f * LicScale, FlagW = 16f * 6f, FlagH = 11f * 6f;
+            // v4: the band is 14 art pixels, the seal 14, the flag at FOUR times (64x44) so it
+            // covers the 42-unit disc top to bottom.
+            const float Roundel = 14f * LicScale, FlagW = 16f * 4f, FlagH = 11f * 4f;
             var sealAt = new Vector2(-(LicPad + Roundel * 0.5f), bandMid);
             var seal = NewRect("Seal", card);
             Place(seal, new Vector2(1, 1), new Vector2(Roundel, Roundel), sealAt);
@@ -781,33 +796,57 @@ namespace LastCall.UI
             // and a face that would not fit is cropped by the frame, never stretched to it.
             _idPhoto.preserveAspect = true;
 
-            // ── the rail's two data cells, under the photograph ────────────────────
-            // A licence keeps its counts in boxes beside the picture, and these are facts
-            // about the person rather than about the drink: how often they have walked in,
-            // and what they have made of the place. The boxes themselves are printed on the
-            // stock; what goes in them is lettered here.
-            _idVisitCount = LicCell(card, LicCells[0], "VISITS", out _idRelLabel);
-            _idRel = NewText("Standing", card, _body, 8, TextAnchor.UpperCenter, UITheme.Night[3]);
-            Place(_idRel.rectTransform, new Vector2(0, 1), new Vector2(LicCellW, 12),
-                new Vector2(LicCellX, -LicCells[0] - LicCellH + 16f));
-            _idRel.horizontalOverflow = HorizontalWrapMode.Overflow;
+            // ── the stamp strip, under the photograph (v4, 2026-09-06) ───────────
+            // THE COUNTS AS STAMPS (the author: "verdiği yıldız ziyaret miktarı farklı bir
+            // sunum ile gösterilmeli"). Two boxed figures under the photo read as a form;
+            // this is a strip of punches and stars, the way a loyalty card is punched: the
+            // first row is how often they have walked in — one punch a visit, five holes,
+            // a "+N" past that — with the bond's three hearts at its end; the second row is
+            // what they make of the place, five small stars filled to their average, with
+            // the figure beside them. Two captions, one word each.
+            float stripTop = -LicStampY;
+            _idRelLabel = NewText("C_VISITS", card, _body, 8, TextAnchor.UpperLeft, UITheme.ClubBlue[2]);
+            Place(_idRelLabel.rectTransform, new Vector2(0, 1), new Vector2(70, 12),
+                new Vector2(LicPad + 4f, stripTop - 3f));
+            _idRelLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _idRelLabel.text = "VISITS";
+            _idRatesLabel = NewText("C_RATES", card, _body, 8, TextAnchor.UpperRight, UITheme.ClubBlue[2]);
+            Place(_idRatesLabel.rectTransform, new Vector2(0, 1), new Vector2(70, 12),
+                new Vector2(LicPad + LicRailW - 74f, stripTop - 3f));
+            _idRatesLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _idRatesLabel.text = "RATES US";
 
-            // HOW WELL THEY KNOW YOU, IN HEARTS (2026-09-04, the author: "bundan sonra
-            // oyunda kalp ve yıldız iconu olarak her yerde bunları kullanacaksın"). The rank
-            // is already a count — Stranger 0, Familiar 1, Regular 2, Confidant 3
-            // (Relationships.ForSatisfiedVisits) — so it is a row of three, drawn the way
-            // the star rows are: the sockets always there, the earned ones lit. The word
-            // above it stays; the hearts are what you read across the bar, the word is what
-            // it is called.
-            const float BondPx = 10f, BondGap = 2f;
-            float bondRun = 3f * BondPx + 2f * BondGap;
+            const float PunchPx = 12f, PunchGap = 2f;
+            _idPunches = new Image[5];
+            for (int i = 0; i < 5; i++)
+            {
+                var p = NewRect("Punch" + i, card);
+                Place(p, new Vector2(0, 1), new Vector2(PunchPx, PunchPx), new Vector2(
+                    LicPad + 4f + i * (PunchPx + PunchGap), stripTop - 18f));
+                _idPunches[i] = p.gameObject.AddComponent<Image>();
+                _idPunches[i].sprite = ChromeArt.Punch();
+                _idPunches[i].preserveAspect = true; _idPunches[i].raycastTarget = false;
+            }
+            _idVisitMore = NewText("More", card, _body, 8, TextAnchor.MiddleLeft, UITheme.Night[3]);
+            Place(_idVisitMore.rectTransform, new Vector2(0, 1), new Vector2(30, 12), new Vector2(
+                LicPad + 4f + 5f * (PunchPx + PunchGap) + 2f, stripTop - 18f));
+            _idVisitMore.horizontalOverflow = HorizontalWrapMode.Overflow;
+            // The count itself is kept off the card (the punches are the count); it feeds
+            // nothing now but is still written, so the old readers stay honest.
+            _idVisitCount = NewText("V_VISITS", card, _body, 8, TextAnchor.MiddleLeft, UITheme.Night[3]);
+            _idVisitCount.enabled = false;
+            _idRel = NewText("Standing", card, _body, 8, TextAnchor.MiddleLeft, UITheme.Night[3]);
+            _idRel.enabled = false;
+
+            // HOW WELL THEY KNOW YOU, IN HEARTS (2026-09-04): the bond's three, at the end of
+            // the visits row, lit as far as the rank.
+            const float BondPx = 16f, BondGap = 1f;
             _idBond = new Image[3];
             for (int i = 0; i < 3; i++)
             {
                 var b = NewRect("Bond" + i, card);
                 Place(b, new Vector2(0, 1), new Vector2(BondPx, BondPx), new Vector2(
-                    LicCellX + (LicCellW - bondRun) * 0.5f + i * (BondPx + BondGap),
-                    -LicCells[0] - LicCellH + 27f));
+                    LicPad + LicRailW - 4f - (3 - i) * (BondPx + BondGap) + BondGap, stripTop - 16f));
                 var bs = b.gameObject.AddComponent<Image>();
                 bs.sprite = ItemArt.Heart(false, BondPx);
                 bs.preserveAspect = true; bs.raycastTarget = false;
@@ -818,31 +857,19 @@ namespace LastCall.UI
                 _idBond[i].preserveAspect = true; _idBond[i].raycastTarget = false;
             }
 
-            // Caption, then the stars, then the number under them — so the drop clears the
-            // star row rather than landing in the middle of it.
-            _idRates = LicCell(card, LicCells[1], "RATES THIS BAR", out _idRatesLabel,
-                valueDrop: 50f, valueSize: 16);
-            // FIVE STARS, ALWAYS DRAWN. Somebody who has not rated the bar yet still gets
-            // the row — greyed, with a question mark where the number goes — because a
-            // blank box says "no such field" while five empty stars say "not yet".
+            // FIVE STARS, ALWAYS DRAWN, filled to the average — and the figure beside them.
             _idStars = new Image[5];
             _idStarFills = new Image[5];
-            const float StarBox = 24f, StarGap = 2f;
-            float starRun = 5f * StarBox + 4f * StarGap;
+            const float StarBox = 16f, StarGap = 1f;
             for (int i = 0; i < 5; i++)
             {
                 var s = NewRect("Star" + i, card);
                 Place(s, new Vector2(0, 1), new Vector2(StarBox, StarBox), new Vector2(
-                    LicCellX + (LicCellW - starRun) * 0.5f + i * (StarBox + StarGap),
-                    -LicCells[1] - 24f));
+                    LicPad + 4f + i * (StarBox + StarGap), stripTop - 38f));
                 _idStars[i] = s.gameObject.AddComponent<Image>();
                 _idStars[i].sprite = ItemArt.Star(false, StarBox);
                 _idStars[i].preserveAspect = true;
                 _idStars[i].raycastTarget = false;
-
-                // The lit half, over the grey whole: a star fills from its left edge, so a
-                // 2.5 leaves the third star half amber instead of rounding a customer's
-                // opinion up to a verdict they did not give (see ShowId).
                 var f = NewRect("Lit", s);
                 Stretch(f, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 _idStarFills[i] = f.gameObject.AddComponent<Image>();
@@ -855,13 +882,10 @@ namespace LastCall.UI
                 _idStarFills[i].color = Color.white;
                 _idStarFills[i].enabled = false;
             }
-
-            // The licence number, on the rule that closes the rail.
-            _idNumber = NewText("Num", card, _body, 8, TextAnchor.LowerCenter, UITheme.Night[3]);
-            Place(_idNumber.rectTransform, new Vector2(0, 1), new Vector2(LicCellW, 12),
-                new Vector2(LicCellX, -LicNumRule + 3f));
-            _idNumber.rectTransform.pivot = new Vector2(0, 0);
-            _idNumber.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _idRates = NewText("V_RATES", card, _display, 8, TextAnchor.MiddleRight, UITheme.Night[1]);
+            Place(_idRates.rectTransform, new Vector2(0, 1), new Vector2(40, 12), new Vector2(
+                LicPad + LicRailW - 44f, stripTop - 40f));
+            _idRates.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             // ── the numbered field grid ───────────────────────────────────────────
             // The numbers are what make a form read as a licence rather than as a label

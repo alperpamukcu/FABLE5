@@ -33,15 +33,20 @@ STAGING = os.path.join(HERE, 'AssetPipeline', 'staging', 'glass3d')
 
 GLASS_ALPHA = 118          # 0..255: how much of the drink the frosted wall lets through
 
-# id: (mouth_row, floor_row, wall_px) — the cavity runs from the mouth's lower lip (the
-# first row the drink may reach) to the floor's top edge, inset `wall_px` from the
-# silhouette on each row. None = not landed / not measured yet.
+# id: (mouth_centre, mouth_half, floor_centre, floor_half, wall_px) — rows from the top, in
+# the sprite's own pixels. THE CAVITY IS NOT A BOX (2026-09-06, the author: "yeni bardak
+# görsellerinin içerisinde kutu şeklinde boşluk var bu gerçekçi hissiyatı azaltıyor"): the
+# glass is seen a little from above, so the mouth and the floor are ELLIPSES. The cavity's top
+# edge is the mouth's FAR arc (highest in the middle, down to the mouth's centre row at the
+# walls) and its bottom edge the floor's NEAR arc (lowest in the middle), inset `wall_px`
+# from the silhouette on every row in between. A drink poured to any level then shows the
+# curve of the glass it sits in instead of a flat-topped rectangle.
 CAVITY = {
-    'rocks':    (15, 47, 5),
-    'pint':     (19, 72, 5),
-    'highball': (21, 78, 4),
-    'martini':  (18, 40, 4),
-    'coupe':    (19, 39, 4),
+    'rocks':    (13.5, 3.5, 49.5, 2.5, 5),
+    'pint':     (14.5, 4.5, 74.0, 4.0, 5),
+    'highball': (16.0, 6.0, 78.0, 4.0, 4),
+    'martini':  (14.0, 6.0, 41.0, 1.0, 4),
+    'coupe':    (15.5, 5.5, 39.0, 1.5, 4),
 }
 
 
@@ -61,12 +66,17 @@ def ship(key, preview_cells):
         print('  %-9s skipped (not landed or not measured)' % key)
         return None
     im = Image.open(src).convert('RGBA')
-    mouth, floor, wall = CAVITY[key]
+    mouth_c, mouth_b, floor_c, floor_b, wall = CAVITY[key]
     rows = silhouette(im)
     fill = Image.new('RGBA', im.size, (0, 0, 0, 0))
     fp = fill.load()
     gp = im.load()
     widest = 0
+    mouth = int(round(mouth_c - mouth_b))          # the far arc's crown: the cavity's top row
+    floor = int(round(floor_c + floor_b)) + 1      # the near arc's foot: one past the last row
+    # the mouth's half-width at its centre row, for the arcs' x extent
+    mr = rows.get(int(round(mouth_c))) or rows.get(mouth)
+    fr = rows.get(int(round(floor_c))) or rows.get(floor - 1)
     for y in range(mouth, floor):
         if y not in rows:
             continue
@@ -74,11 +84,26 @@ def ship(key, preview_cells):
         x0 += wall; x1 -= wall
         if x1 < x0:
             continue
-        widest = max(widest, x1 - x0 + 1)
         for x in range(x0, x1 + 1):
+            # inside the mouth's far arc? (an ellipse centred on mouth_c, the cavity is BELOW it
+            # in the middle and reaches mouth_c at the walls)
+            if mr is not None:
+                a = max(1.0, (mr[1] - mr[0]) * 0.5 - wall + 0.5)
+                u = (x - (mr[0] + mr[1]) * 0.5) / a
+                top = mouth_c - mouth_b * (1.0 - u * u) ** 0.5 if abs(u) <= 1.0 else mouth_c
+                if y < top:
+                    continue
+            # above the floor's near arc? (lowest in the middle)
+            if fr is not None:
+                a = max(1.0, (fr[1] - fr[0]) * 0.5 - wall + 0.5)
+                u = (x - (fr[0] + fr[1]) * 0.5) / a
+                bottom = floor_c + floor_b * (1.0 - u * u) ** 0.5 if abs(u) <= 1.0 else floor_c
+                if y > bottom:
+                    continue
             fp[x, y] = (255, 255, 255, 255)
-            r, g, b, a = gp[x, y]
-            gp[x, y] = (r, g, b, min(a, GLASS_ALPHA))
+            r, g, b, al = gp[x, y]
+            gp[x, y] = (r, g, b, min(al, GLASS_ALPHA))
+        widest = max(widest, x1 - x0 + 1)
     if '--dry' not in sys.argv:
         os.makedirs(ITEMS, exist_ok=True)
         im.save(os.path.join(ITEMS, 'glass3d_%s.png' % key))

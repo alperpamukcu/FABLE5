@@ -1879,8 +1879,18 @@ namespace LastCall.UI
             // as jars go unstocked and opens out as they are bought, so the mat is measured
             // from what is actually STANDING there this frame — not from the six slots the
             // rail could hold — and re-centred on that span.
-            // (The mat under them is a fixture of the room since 2026-09-06 — see the rail's
-            // builder — so nothing here measures or moves it.)
+            // THE MAT GROWS WITH THE RAIL (2026-09-06, the author: "çerez matı mevcut
+            // garnishlerin tamamını ortalamış bir şekilde kapsamıyor ... yeni garnish
+            // geldiğinde de ona göre boyutu sağ ve sola doğru uzamalı"). The fixture in the
+            // room is told the standing dishes' span, in the HUD's own units, whenever the
+            // count changes — the dishes sit at PrepRailX0 + i*PrepRailGap, so the mat is
+            // centred on that run and reaches half a box past the first and last of them.
+            if (stage != null && slot != _prepMatSlots)
+            {
+                _prepMatSlots = slot;
+                float span = Mathf.Max(0, slot - 1) * PrepRailGap;
+                stage.SetPrepMatSpan(PrepRailX0 + span * 0.5f, span + PrepDishBox);
+            }
             StepSinkFade();
             SeparateSays();
             StepPrepCarry(run);

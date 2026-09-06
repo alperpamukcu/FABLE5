@@ -344,14 +344,14 @@ namespace LastCall.UI
             // glasses off PixelLab, the cavity cut by hand-read rows and the wall left translucent, so
             // the drink shows THROUGH the glass. Fractions are the ship script's own print-out; the
             // densities are the old set's until SurfaceY is re-read in play.
-            ["pint"] = new Gen3D(0.250f, 0.802f, 0.661f, 1.02f),       // 56x96, cavity rows 19..72, wall 5
-            ["highball"] = new Gen3D(0.188f, 0.781f, 0.591f, 1.02f),   // 44x96, cavity rows 21..78, wall 4
+            ["pint"] = new Gen3D(0.177f, 0.896f, 0.661f, 1.02f),       // 56x96, cavity rows 19..72, wall 5
+            ["highball"] = new Gen3D(0.135f, 0.896f, 0.591f, 1.02f),   // 44x96, cavity rows 21..78, wall 4
             // A full glass reads 0.87 of the cavity at 0.95 AND at 1.09 (2026-09-06): the surface
             // stops at the pool ceiling (PoolCeilingArtPx under the rim) by design, so the density
             // is not what that number is about, and the old bench stands.
-            ["rocks"] = new Gen3D(0.347f, 0.792f, 0.562f, 0.95f),      // 64x72, cavity rows 15..47, wall 5
-            ["martini"] = new Gen3D(0.545f, 0.795f, 0.514f, 0.78f),    // 72x88, cavity rows 18..40, wall 4
-            ["coupe"] = new Gen3D(0.557f, 0.784f, 0.588f, 0.78f),      // 68x88, cavity rows 19..39, wall 4
+            ["rocks"] = new Gen3D(0.264f, 0.861f, 0.562f, 0.95f),      // 64x72, cavity rows 15..47, wall 5
+            ["martini"] = new Gen3D(0.511f, 0.909f, 0.611f, 0.78f),    // 72x88, cavity rows 18..40, wall 4
+            ["coupe"] = new Gen3D(0.534f, 0.886f, 0.588f, 0.78f),      // 68x88, cavity rows 19..39, wall 4
         };
 
         private static Piece FromGenerated(GlasswareDefinition glass, Sprite sprite, int tier)

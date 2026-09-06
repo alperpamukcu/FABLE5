@@ -452,6 +452,36 @@ namespace LastCall.UI
         }
 
         /// <summary>What is left in each cellar bottle, in the cellar's own order.</summary>
+        /// <summary>
+        /// THE BOTTLE'S CARD (2026-09-06, the author: "backbarda alkollerin isimleri gözükmüyor,
+        /// gözükürse de isimleri üst üste binebilir ... alkollerin üstüne gelindiğinde ... bir
+        /// kart içerisinde olmalı, kartta alkolün adı, hangi kokteyllerde kullanılabileceği
+        /// (oyuncunun sahip olduğu tarifler içerisinde), çalkalanmaması gereken bir içecekse
+        /// çalkalamama iconu"). Thirteen names under thirteen bottles print over each other,
+        /// so the name comes up WITH the bottle: the hover caption on its card, over the
+        /// bottle, with the house drinks that call for it and a NO-SHAKE mark on anything
+        /// that fizzes (GDD 21 §12: a carbonated pour is never put through the tin).
+        /// </summary>
+        private void OnCellarHover(int index, RectTransform plate)
+        {
+            if (index < 0 || index >= _cellarCards.Count) { HidePropTip(plate); return; }
+            var card = _cellarCards[index];
+            var run = Run;
+            var uses = new List<string>();
+            int more = 0;
+            if (run != null)
+                foreach (var r in run.MenuDrinksUsingStyle(card.Info?.Style))
+                {
+                    if (uses.Count >= 3) { more++; continue; }
+                    uses.Add(r.Name.ToUpperInvariant());
+                }
+            string line = uses.Count == 0 ? "IN NO HOUSE DRINK YET"
+                : "IN " + string.Join(" · ", uses) + (more > 0 ? " +" + more : "");
+            bool fizzy = card.Type == IngredientType.Bubbly;
+            if (fizzy) line = "NEVER SHAKEN · " + line;
+            ShowPropTip(plate, card.Name.ToUpperInvariant(), fizzy ? ChromeArt.NoShake() : null, line);
+        }
+
         private List<float> CellarFills(TycoonRun run)
         {
             var fills = new List<float>(_cellarCards.Count);

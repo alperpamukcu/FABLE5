@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The eighth list (2026-09-06):** the cellar's bottle comes up with its card and its drink rocks
+  with it; the standing gauges' captions stand outside the tin's mask (and the tin may be the
+  author's PNG); a locked ingredient's tag is one small line; the snack mat grows with the rail;
+  the glasses' cavity follows the mouth and the floor and the glass stands bigger; the licence is
+  v4 — two to one, with a stamp strip for the visits and the stars (GDD 16, 21, 27, 28).
+  GDD_MEVCUT §9.37.
+
 - **The seventh list (2026-09-06):** the spoon keeps its grip and the brimful tin keeps its drink
   under the lip (GDD 21); a customer's glass goes to the sink by the GLASS and sinks into it; the
   snack mat is a fixture of the room; the comfort medallion is gold and the beam's readings say

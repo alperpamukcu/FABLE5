@@ -448,6 +448,10 @@ namespace LastCall.UI
         private void FillGauge(RectTransform bar, GlassContents glass, TycoonRun run, bool labelsLeft)
         {
             foreach (Transform child in bar) Destroy(child.gameObject);
+            // The labels' host: the rig's own "Labels" rect, outside the cavity's mask.
+            var host = bar.parent != null && bar.parent.parent != null
+                ? bar.parent.parent.Find("Labels") as RectTransform : null;
+            if (host != null) foreach (Transform child in host) Destroy(child.gameObject);
             float h = bar.rect.height, y = 0f;
             foreach (var id in glass.Ingredients)
             {
@@ -470,7 +474,7 @@ namespace LastCall.UI
                     mimg.color = Color.Lerp(tone, UITheme.Cream[4], 0.55f);
                     mimg.raycastTarget = false;
                 }
-                GaugeLabel(seg, segH, labelsLeft, UITheme.TextPrimary,
+                GaugeLabel(host ?? seg, host != null ? y : 0f, segH, labelsLeft, UITheme.TextPrimary,
                     $"{share:P0} {(card?.Name ?? id).ToUpperInvariant().Split(' ')[0]}");
                 y += segH;
             }
@@ -481,7 +485,7 @@ namespace LastCall.UI
             // already drawn dark behind this, and painting over it hid the measures. The
             // band survives only as something for its caption to hang off.
             var room = GaugeBand(bar, "S_empty", free * h, y, new Color(1f, 1f, 1f, 0.02f));
-            GaugeLabel(room, free * h, labelsLeft, UITheme.TextSecondary, $"{free:P0} EMPTY");
+            GaugeLabel(host ?? room, host != null ? y : 0f, free * h, labelsLeft, UITheme.TextSecondary, $"{free:P0} EMPTY");
         }
 
         private RectTransform GaugeBand(RectTransform bar, string name, float height, float y, Color fill)
@@ -499,31 +503,34 @@ namespace LastCall.UI
 
         /// <summary>A band's caption, out in the air beside it, with a hairline back to it.
         /// Bands too thin to hold a line of type get no caption — a 2% splash is a colour.</summary>
-        private void GaugeLabel(RectTransform seg, float segH, bool onLeft, Color ink, string text)
+        /// <param name="host">where the label is written: the gauge's Labels rect (then
+        /// <paramref name="y"/> is the band's foot in it) or the band itself (then y is 0).</param>
+        private void GaugeLabel(RectTransform host, float y, float segH, bool onLeft, Color ink, string text)
         {
             if (segH < 11f) return;
             float side = onLeft ? 0f : 1f;
+            float mid = y + segH * 0.5f;
             // Clear of the VESSEL, not of the old column: the gauge went from 44 units
             // wide to 96 when it became a shaker, and a tick measured from the band's
             // edge now starts inside the tin's shoulder. The captions stand off by the
             // shaker's own half-width instead.
 
-            var tick = NewRect("Tick", seg);
-            tick.anchorMin = tick.anchorMax = new Vector2(side, 0.5f);
+            var tick = NewRect("Tick", host);
+            tick.anchorMin = tick.anchorMax = new Vector2(side, 0f);
             tick.pivot = new Vector2(onLeft ? 1f : 0f, 0.5f);
             tick.sizeDelta = new Vector2(8, 1);
-            tick.anchoredPosition = new Vector2(onLeft ? -GaugeLabelGap : GaugeLabelGap, 0f);
+            tick.anchoredPosition = new Vector2(onLeft ? -GaugeLabelGap : GaugeLabelGap, mid);
             var timg = tick.gameObject.AddComponent<Image>();
             timg.color = new Color(ink.r, ink.g, ink.b, 0.45f);
             timg.raycastTarget = false;
 
-            var label = NewText("L", seg, _body, 8,
+            var label = NewText("L", host, _body, 8,
                 onLeft ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft, ink);
             var rt = label.rectTransform;
-            rt.anchorMin = rt.anchorMax = new Vector2(side, 0.5f);
+            rt.anchorMin = rt.anchorMax = new Vector2(side, 0f);
             rt.pivot = new Vector2(onLeft ? 1f : 0f, 0.5f);
             rt.sizeDelta = new Vector2(170, 12);
-            rt.anchoredPosition = new Vector2(onLeft ? -(GaugeLabelGap + 10f) : GaugeLabelGap + 10f, 0f);
+            rt.anchoredPosition = new Vector2(onLeft ? -(GaugeLabelGap + 10f) : GaugeLabelGap + 10f, mid);
             label.horizontalOverflow = HorizontalWrapMode.Overflow;
             label.text = text;
         }
@@ -563,7 +570,8 @@ namespace LastCall.UI
             var maskRt = NewRect("Cavity", rig);
             Stretch(maskRt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var mimg = maskRt.gameObject.AddComponent<Image>();
-            mimg.sprite = ChromeArt.ShakerSolid((int)size.x, (int)size.y);
+            mimg.sprite = ItemArt.Load("gauge_tin_solid") ?? ChromeArt.ShakerSolid((int)size.x, (int)size.y);
+            mimg.preserveAspect = true;
             mimg.raycastTarget = false;
             var mask = maskRt.gameObject.AddComponent<Mask>();
             mask.showMaskGraphic = false;
@@ -572,11 +580,23 @@ namespace LastCall.UI
             var cavity = ChromeArt.ShakerGaugeCavity;    // top / bottom, as fractions from the top
             Stretch(bore, new Vector2(0, 1f - cavity.y), new Vector2(1, 1f - cavity.x),
                     Vector2.zero, Vector2.zero);
+            // THE LABELS LIVE OUTSIDE THE MASK (2026-09-06, the author: "doluluğun oranını
+            // gösteren shakerda hangi alkolden % kaç koyulduğu gözükmüyor"). FillGauge wrote
+            // "40% VODKA" beside every band — as a child of the band, inside the cavity's
+            // Mask, which cut off everything past the tin's silhouette. This rect has the
+            // bore's anchors and sits on the rig, so what is written at a band's height
+            // stands beside the tin where it can be read.
+            var labels = NewRect("Labels", rig);
+            Stretch(labels, new Vector2(0, 1f - cavity.y), new Vector2(1, 1f - cavity.x),
+                    Vector2.zero, Vector2.zero);
 
             var shell = NewRect("Outline", rig);
             Stretch(shell, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var simg = shell.gameObject.AddComponent<Image>();
-            simg.sprite = ChromeArt.ShakerOutline((int)size.x, (int)size.y);
+            // The author may draw the tin (2026-09-06): Items/gauge_tin.png (48x106, shown at
+            // 2x) replaces the drawn outline, gauge_tin_solid.png its silhouette for the mask.
+            simg.sprite = ItemArt.Load("gauge_tin") ?? ChromeArt.ShakerOutline((int)size.x, (int)size.y);
+            simg.preserveAspect = true;
             simg.raycastTarget = false;
 
             // The one word that says which vessel this is. Under the outline's foot, in

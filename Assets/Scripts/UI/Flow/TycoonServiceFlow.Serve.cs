@@ -37,7 +37,9 @@ namespace LastCall.UI
 
         /// <summary>How tall the serving glass is drawn; the width follows the drawing, so the
         /// five vessels differ by silhouette rather than all being stretched into one box.</summary>
-        private const float ServeGlassHeight = 260f;
+        // 340, from 260 (2026-09-06, the author: "bardakların boyutu küçük kalmış ekranda daha
+        // da büyümeli"): the glass is the thing this stage is about.
+        private const float ServeGlassHeight = 340f;
         private Image _serveGlassImage;
         private LastCall.Core.GlasswareDefinition _serveGlassware;
         private int _serveGlassTier = 1;

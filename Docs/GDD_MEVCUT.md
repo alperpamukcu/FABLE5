@@ -1398,3 +1398,22 @@ Yazarın yedinci listesi. Kodda, fotoğraflandı, ölçüldü.
 - **3D bardak seti (PixelLab, `Tools/glass3d_gen.py` → `glass3d_ship.py`):** beş boş, kalın duvarlı, buzlu cam; oyuk
   (`_fill`) elle ölçülen üç sayıyla kesilir ve duvar yarı saydam bırakılır (GLASS_ALPHA 118) — bkz. GDD 21 ve bu turun
   kapanış notu.
+
+### 9.37 · Sekizinci liste: mahzen kartı ve sallanan sıvı, etiketli gösterge, kitap satırı, uzayan mat, elips oyuk ve büyük bardak, 2:1 kimlik (2026-09-06)
+
+- **Mahzen:** şişenin üstüne gelince kart (isim, hangi ev içkilerinde — `MenuDrinksUsingStyle` — ve gazlıysa `NoShake` işareti)
+  `ShowPropTip` ile şişenin üstünde; sıvı ve maske artık şişeyle birlikte sallanıyor (`RefreshCellarMovers`: kapılar plakalardan
+  ÖNCE kurulduğu için takipçi listesi yalnız şişeydi).
+- **Göstergeler:** "40% VODKA" etiketleri tinin maskesinin dışına (`Labels` rect) taşındı; `Items/gauge_tin.png` (48×106, 2×) ve
+  `gauge_tin_solid.png` konursa çizili tin yerine kullanılır. Konumlar: shaker sahnesi (462, −74), bardak sahnesi (522, −74),
+  1280×720 panelde merkez çapa, 96×212.
+- **Kitap:** kilitli malzeme etiketi 8 px tek satır.
+- **Mat:** `SetPrepMatSpan(centreHud, widthHud)` — HUD ayakta duran kap sayısı değişince odaya söyler; fikstür `Tiled` çizilir,
+  yeniden ortalanır (ölçüldü: 4 kap → 143×13 stage px, merkez 220.5).
+- **Bardak:** oyuk ağzın uzak yayı ile tabanın yakın yayı arasında (elips), duvar içeri; bardak sahnesi 340, tezgâh 116.
+- **Kimlik v4:** 200×100 (2:1). Band: otorite / "PATRON LICENCE · NA …", KICK ev anahtarı 84×30, mühür Ø14 (bayrak 4×).
+  Ray: fotoğraf 48 + damga şeridi (ziyaret zımbaları + bağ kalpleri; 16 px yıldız + ortalama). Izgara 134 genişlik, 19 px adım.
+- **Ölçülemeyen:** "hazır bardağa tıklanınca arkaplan kalkmıyor" — bardağın kendi PointerDown'u ile denendi, çekmece 0→1
+  kalkıyor; yazardan hangi durumda olduğunu istedik.
+- Arka plan görselleri: `Assets/Art/Backgrounds/counter.png` 638×250 (pivot orta, PPU 1, sol 217 / sağ 218 px kenar, orta 203 px
+  yatay tekrar; yüzey çizgisi alttan 96, dinlenme çizgisi 120) ve `counter_shutter.png` 592×186 (kepenk).

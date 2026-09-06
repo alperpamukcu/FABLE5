@@ -527,3 +527,13 @@ pool's top edge sat at the cavity's rim row, and a metaball surface stands a few
 the band it is given, so a brimful tin drew its drink above the steel. `PushShakerPool` drops the
 band by `BrimInset` (7 surface px): the drink shows inside the mouth's ellipse and never over the
 lip. The spoon, like everything else carried, is held where it was taken (`_spoonGrabOffset`).
+
+### The cavity follows the mouth and the floor (2026-09-06)
+
+The author: *"yeni bardak görsellerinin içerisinde kutu şeklinde boşluk var bu gerçekçi hissiyatı
+azaltıyor, bardakların boyutu küçük kalmış ekranda daha da büyümeli."* The generated glasses are seen
+a little from above, so the mouth and the floor are ellipses; the cavity cut by `Tools/glass3d_ship.py`
+is now bounded by the mouth's FAR arc above and the floor's NEAR arc below (five numbers a glass:
+mouth centre and half-height, floor centre and half-height, wall), so a drink at any level shows the
+curve of the glass it sits in instead of a flat-topped rectangle. The glass stands at 340 on the glass
+stage (from 260) and 116 on the counter (from 92).

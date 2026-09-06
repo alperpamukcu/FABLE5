@@ -229,6 +229,23 @@ takes (`PlaceProduct` no longer floors the scale under 3x — a 60-row drawing s
 "+1.25 COMFORT"); the restock crate is drawn (Tools/restock_icon.py); THE WALLS (the plaster
 ladder) and ON THE WALL (the picture, the screen) are two shelves.
 
+**The cellar's bottle comes up with its card (2026-09-06, the author: "backbarda alkollerin
+isimleri gözükmüyor, gözükürse de üst üste binebilir ... bir kart içerisinde olmalı"):** thirteen
+names under thirteen bottles print over each other, so the name comes up WITH the bottle — the
+hover caption on its card over the bottle (`ShowPropTip` with an icon and a line): the name, the
+house drinks that call for it ("IN GIN SOUR · GIN & TONIC +1", `MenuDrinksUsingStyle`), and a
+NO-SHAKE mark (`ChromeArt.NoShake`) on anything carbonated. The bottle's drink rocks with it: the
+glow's followers are wired after the plates exist (`RefreshCellarMovers`), which they were not.
+
+**A gauge's captions stand outside its mask (2026-09-06):** the standing gauges' "40% VODKA" lines
+were children of the bands inside the tin's Mask and were cut off at its silhouette; they live on
+the rig's own `Labels` rect now. The tin itself may be drawn by the author: `Items/gauge_tin.png`
+(48×106, shown at 2×) replaces the drawn outline and `gauge_tin_solid.png` its silhouette.
+
+**A locked ingredient's tag is one small line (2026-09-06):** "LOCKED · NOT IN THE WELL" at the
+body face's 8 under the name, inside the 46 units its row owns — at 16 it wrapped to three rows
+and ran over the next ingredient and the gate notice.
+
 **The settings are a WINDOW, not a list (2026-09-06):** a scrim, a titled plate in the centre
 (`ChromeArt.Card`, a band with the cog and the neon under it), the settings as rows — the name
 at the left, the control at the right, a note under a name that needs one — grouped AUDIO /

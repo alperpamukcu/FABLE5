@@ -619,7 +619,7 @@ namespace LastCall.UI
         /// (2026-08-26, the author: "boyutu kucultulmeli"): at 116 it was the tallest thing
         /// on the bar and read as a prop in the foreground rather than a glass waiting on a
         /// coaster.</summary>
-        private const float CarriedGlassHeight = 92f;
+        private const float CarriedGlassHeight = 116f;   // 92 until 2026-09-06: the glass stands bigger on the counter too
 
         /// <summary>Where the finished drink stands: stage 430, in the gap between the
         /// garnish rail's far end (380) and the drip mat (480). The coaster is drawn at
@@ -794,6 +794,8 @@ namespace LastCall.UI
         private Text _idRelLabel, _idIntentLabel;
 
         private Text _idCitizen, _idNumber, _idVisitCount;
+        private Image[] _idPunches;         // the visits, as punches in the stamp strip (v4)
+        private Text _idVisitMore;          // "+N" past the fifth punch
 
         private Image[] _idStars;       // the grey five, always drawn
         private Image[] _idBond;        // how well they know you, in hearts
@@ -1319,6 +1321,7 @@ namespace LastCall.UI
         private RectTransform _jobStripRow;   // icon + line, so they fade as one
         private CanvasGroup _jobStripGroup;
         private Image _jobPlate;             // the notice's plate, cut to its line (2026-09-06)
+        private int _prepMatSlots = -1;      // the rail's standing dishes the room's mat was last told
         private Image _jobIcon;
 
 
@@ -1353,6 +1356,7 @@ namespace LastCall.UI
             if (stage != null) stage.SetTapHandler(OnTapClicked);
             if (stage != null) stage.SetSinkHandler(OnSinkClicked);
             if (stage != null) stage.SetCellarHandler(OnCellarPick);
+            if (stage != null) stage.SetCellarHoverHandler(OnCellarHover);
         }
 
         private void OnDestroy()
@@ -2317,24 +2321,27 @@ namespace LastCall.UI
         // alanları hesaba katarak daha dar bir kimlik oluştur"): the grid is sized to what
         // is printed in it — a twenty-letter drink at the display face's 16 is 320 units,
         // the widest thing on the card, and the grid is 348 — instead of to the paper.
-        // CLOSED UP (v3.1, 2026-09-06, the author: "metinler arasındaki boşluklar azaltılsın
-        // yukarıdan ve aşağıdan sıkıştırılsın"): the header two art pixels shorter, the
-        // field rows three shorter, the rail's two cells two shorter — 144 tall from 148.
-        private const float LicW = 196f * LicScale, LicH = 144f * LicScale;
+        // A CARD'S OWN PROPORTION (v4, 2026-09-06, the author: "kimlik normal oranında olmalı
+        // örneğin 2:1 ise o ölçülerde olmalı. Metinler ve görseller iyi hesaplanmalı, verdiği
+        // yıldız ziyaret miktarı farklı bir sunum ile gösterilmeli"). 200x100 art pixels at
+        // 3x — two to one, a licence's shape — with the photo and a stamp strip in a 48-wide
+        // rail, the four fields in a 134-wide grid at a 19-pixel pitch, and the band carrying
+        // the authority, the number, the kick and the seal.
+        private const float LicW = 200f * LicScale, LicH = 100f * LicScale;
 
         /// <summary>The margin from the paper's edge to anything printed on it.</summary>
-        private const float LicPad = 8f * LicScale;
+        private const float LicPad = 6f * LicScale;
 
         /// <summary>The left rail's column: the photograph and the two data cells.</summary>
-        private const float LicRailW = 56f * LicScale;
+        private const float LicRailW = 48f * LicScale;
 
         /// <summary>The right column: the numbered field grid.</summary>
-        private const float LicGridX = LicPad + LicRailW + 8f * LicScale;
+        private const float LicGridX = LicPad + LicRailW + 6f * LicScale;
         private const float LicGridW = LicW - LicGridX - LicPad;
 
         /// <summary>Row pitch in the field grid — four rows, each a caption over a value on
         /// a rule.</summary>
-        private const float LicRowH = 24f * LicScale;
+        private const float LicRowH = 19f * LicScale;
 
         //
         // A DRIVING-LICENCE STRUCTURE (2026-08-10, the author: "sürücü belgelerine benzer
@@ -2354,10 +2361,14 @@ namespace LastCall.UI
         // of the paper and dropped the endorsement cells clean off the bottom of it —
         // which every rect measurement passed, because they were all still inside the
         // CARD RECT. Only a screenshot could show it, and did.
-        private static readonly Rect LicPortrait = new Rect(LicPad, -(30f * LicScale),
+        private static readonly Rect LicPortrait = new Rect(LicPad, -(18f * LicScale),
             LicRailW, LicRailW);
 
-        private const float LicHeaderH = 22f * LicScale;
+        /// <summary>The stamp strip under the photograph (v4): visits as punches, the rating
+        /// as stars — top edge and height, from the paper's top.</summary>
+        private const float LicStampY = 70f * LicScale, LicStampH = 24f * LicScale;
+
+        private const float LicHeaderH = 14f * LicScale;
 
         private const float LicHeaderY = -(2f * LicScale);
 
@@ -2369,10 +2380,10 @@ namespace LastCall.UI
         /// header, then a row apiece. Drawn AND written to from here.</summary>
         private static readonly float[] LicLines =
         {
-            28f * LicScale + LicRowH,
-            28f * LicScale + LicRowH * 2f,
-            28f * LicScale + LicRowH * 3f,
-            28f * LicScale + LicRowH * 4f,
+            18f * LicScale + LicRowH,
+            18f * LicScale + LicRowH * 2f,
+            18f * LicScale + LicRowH * 3f,
+            18f * LicScale + LicRowH * 4f,
         };
 
         // The rail's two data cells and the rule the licence number is printed on, at the

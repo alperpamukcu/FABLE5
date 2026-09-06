@@ -281,6 +281,7 @@ namespace LastCall.UI
         private CanvasGroup _cellarDoorGroup;
         private readonly List<RectTransform> _cellarDoors = new List<RectTransform>();
         private System.Action<int> _onCellarPick;
+        private System.Action<int, RectTransform> _onCellarHover;   // (-1, plate) on leaving
         private RectTransform _shutterDoor;
         private RectTransform _cellarOpenSign;
         private CanvasGroup _cellarOpenGroup;
@@ -313,6 +314,34 @@ namespace LastCall.UI
         /// <summary>Who to tell when a bottle in the cellar is picked, by its index in the
         /// list <see cref="SetCellar"/> was given.</summary>
         public void SetCellarHandler(System.Action<int> onPick) => _onCellarPick = onPick;
+
+        /// <summary>The pointer arrived on (index, plate) or left it (-1, plate): the HUD
+        /// raises the bottle's card (2026-09-06).</summary>
+        public void SetCellarHoverHandler(System.Action<int, RectTransform> onHover) => _onCellarHover = onHover;
+
+        // ── the snack mat's span (2026-09-06) ─────────────────────────────────────
+        // THE MAT GROWS WITH THE RAIL (the author: "çerez matı mevcut garnishlerin tamamını
+        // ortalamış bir şekilde kapsamıyor. Yeni garnish geldiğinde de ona göre boyutu sağ
+        // ve sola doğru uzamalı"). The mat is a fixture of the room, but the dishes are the
+        // HUD's, so the HUD tells the room where the rail stands — in its own units — and
+        // the mat is tiled to that span and re-centred on it. The fixture's slot keeps only
+        // the height it stands at.
+        private float _prepMatCentreX = float.NaN, _prepMatWidth = 0f;
+
+        /// <summary>The rail's centre and width in HUD units (the 1280-wide canvas, centred).</summary>
+        public void SetPrepMatSpan(float centreHudX, float widthHud)
+        {
+            _prepMatCentreX = Reference.x * 0.5f + centreHudX * 0.5f;
+            _prepMatWidth = Mathf.Max(8f, widthHud * 0.5f);
+            foreach (var placed in _placedFixtures)
+            {
+                if (placed.Def == null || placed.Def.Id != "prep_mat" || placed.Body == null) continue;
+                var sr = placed.Body.GetComponent<SpriteRenderer>();
+                if (sr != null && sr.sprite != null)
+                    sr.size = new Vector2(_prepMatWidth, sr.sprite.rect.height / sr.sprite.pixelsPerUnit);
+            }
+            PlaceFixtures();
+        }
         private float _drawerT;                     // 0 shut, 1 open
         private float _drawerTarget;
 
@@ -492,7 +521,27 @@ namespace LastCall.UI
                 _cellarCavity[i] = ItemArt.OpaqueBounds(p.Mask);
                 PlaceCellarSlot(_cellarStock[i], i);
             }
+            RefreshCellarMovers();
             SetCellarFills(fills);
+        }
+
+        /// <summary>The glow's followers, wired AFTER the plates exist (2026-09-06, the author:
+        /// "şişelerin üstüne gelindiğinde sağa sola sallanması gerekiyken içerisindeki doluluğu
+        /// gösteren sıvılar sabit kalıyor"). The doors are built before the back, mask and drink
+        /// renderers, so a door built then followed only the bottle — and the drink stood still
+        /// in the air while the bottle rocked. Rewired every time the plates are set.</summary>
+        private void RefreshCellarMovers()
+        {
+            for (int i = 0; i < _cellarDoors.Count && i < _cellarStock.Count; i++)
+            {
+                var glow = _cellarDoors[i].GetComponent<HoverGlow>();
+                if (glow == null) continue;
+                var movers = new List<Transform> { _cellarStock[i].transform };
+                if (i < _cellarBack.Count) movers.Add(_cellarBack[i].transform);
+                if (i < _cellarDrink.Count) movers.Add(_cellarDrink[i].transform);
+                if (i < _cellarMask.Count) movers.Add(_cellarMask[i].transform);
+                glow.Movers = movers.ToArray();
+            }
         }
 
         /// <summary>The drink levels only — cheap enough to call whenever stock moves.</summary>
@@ -709,6 +758,9 @@ namespace LastCall.UI
                     // counter's numbers and read the same on the screen.
                     glow.Rise = 2f; glow.Sway = 2.2f; glow.Grow = 1.06f; glow.Halo = 1.1f;
                 }
+                var relay = plate.gameObject.AddComponent<HoverRelay>();
+                relay.Entered = () => _onCellarHover?.Invoke(index, plate);
+                relay.Exited = () => _onCellarHover?.Invoke(-1, plate);
                 _cellarDoors.Add(plate);
             }
             for (int i = 0; i < _cellarDoors.Count; i++)
@@ -2670,6 +2722,15 @@ namespace LastCall.UI
                     var sr = WorldSprite("Fx_" + def.Id + suffix, sprite,
                                          order: onCounter ? (flat ? 34 : 35)
                                               : hangs ? 15 : flat ? 16 : 20);
+                    if (def.Id == "prep_mat")
+                    {
+                        // Tiled along the rail (see SetPrepMatSpan): the art repeats its ribs
+                        // rather than stretching them, the counter's own law.
+                        sr.drawMode = SpriteDrawMode.Tiled;
+                        sr.tileMode = SpriteTileMode.Continuous;
+                        float h = sprite.rect.height / sprite.pixelsPerUnit;
+                        sr.size = new Vector2(_prepMatWidth > 0f ? _prepMatWidth : sprite.rect.width / sprite.pixelsPerUnit, h);
+                    }
                     // A SCREEN's sprite is a sheet, and the loader handed the whole sheet
                     // in as one picture. Cut it and start the set playing; if the cut fails
                     // the fixture simply stays the still it already is.
@@ -2886,9 +2947,12 @@ namespace LastCall.UI
                 // the whole set back to its shut height, and the sink came down into the
                 // shelves. It has never fired in a normal night (the market shuts the
                 // cellar), and it is one term.
+                // The snack mat stands where the HUD's rail is, not at its slot's x.
+                float atX = placed.Def.Id == "prep_mat" && !float.IsNaN(_prepMatCentreX)
+                    ? _prepMatCentreX : slot.X + placed.OffsetX;
                 var basePos = (_backgroundSr != null
-                    ? StageArtPointToWorld(new Vector2(slot.X + placed.OffsetX, slot.Y))
-                    : StageToWorld(slot.X + placed.OffsetX, slot.Y))
+                    ? StageArtPointToWorld(new Vector2(atX, slot.Y))
+                    : StageToWorld(atX, slot.Y))
                     + (_world != null ? _world.position : Vector3.zero);
                 float k = _backgroundSr != null ? _backgroundScale : 1f;
                 placed.Body.localScale = new Vector3(k, k, 1f);

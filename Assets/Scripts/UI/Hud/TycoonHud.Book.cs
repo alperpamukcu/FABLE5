@@ -1252,10 +1252,17 @@ namespace LastCall.UI
                 // where it can never collide with the gauge.
                 if (ingredient && !stocked)
                 {
-                    var lockT = NewText("X", line, _body, 16, TextAnchor.UpperLeft, goneInk);
+                    // ONE SMALL LINE (2026-09-06, the author: "düzen kaymış yazılar görseller
+                    // üst üste biniyor"). At the body face's 16 the tag was 290 units in a
+                    // 200 box, so it wrapped to three rows and ran down over the next
+                    // ingredient and the gate notice under it. At 8 it is one row, under
+                    // the name, inside the 46 the row owns.
+                    var lockT = NewText("X", line, _body, 8, TextAnchor.UpperLeft, goneInk);
                     Place(lockT.rectTransform, new Vector2(0, 1), new Vector2(200f, 12f), Vector2.zero);
                     lockT.rectTransform.pivot = new Vector2(0, 1);
-                    lockT.rectTransform.anchoredPosition = new Vector2(textX, -20f);
+                    lockT.rectTransform.anchoredPosition = new Vector2(textX, -22f);
+                    lockT.horizontalOverflow = HorizontalWrapMode.Overflow;
+                    lockT.verticalOverflow = VerticalWrapMode.Truncate;
                     lockT.raycastTarget = false;
                     lockT.text = "LOCKED · NOT IN THE WELL";
                 }

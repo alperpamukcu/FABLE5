@@ -47,6 +47,14 @@ a page of facts. It is drawn now:
 - **Everything printed on it** — the band, the portrait well, the two data cells, the
   four rules — is `LicenceFurniture`, laid out from the same constants that place the
   type. Nothing can drift, because there is only one set of numbers.
+- **v4 (2026-09-06, the author: "kimlik normal oranında olmalı örneğin 2:1 ... verdiği yıldız
+  ziyaret miktarı farklı bir sunum ile gösterilmeli"): 200×100 art pixels at 3× (600×300), two to
+  one.** The band (14 art px) carries the authority over the class and the number, the KICK house
+  key (84×30) and the seal (Ø14, the flag at 4×); the rail is 48 wide — the photo, then a STAMP
+  STRIP (`LicStampY/H`): a row of five punches, one a visit ("+N" past five, `ChromeArt.Punch`) with
+  the bond's three hearts at its end, and a row of five 16-px stars filled to the average with the
+  figure beside them; the grid is 134 wide at a 19-pixel pitch (four rows, the chips inside the
+  last). The two boxed cells are gone.
 - **196×148 art pixels at 3×** (588×444) — **v3, 2026-09-06** (the author: *"daha dar bir
   kimlik ... kick butonunu düzelt ... bayrak görselleri daha büyük olmalı ve dairesel çerçeve
   içerisinde"*): the grid is sized to what is printed in it — a twenty-letter drink at the
