@@ -468,7 +468,9 @@ namespace LastCall.UI
 
         /// <summary>The key's size on the card: wide enough for the word on the bench's
         /// key, and inside the header band's 42 units.</summary>
-        private const float KickW = 128f, KickH = 34f;
+        // Sized to its word at the band's own height (2026-09-06): 128x34 was a key from
+        // a bigger card and it crowded the flag beside it.
+        private const float KickW = 96f, KickH = 30f;
         private RectTransform _idKick;
 
         /// <summary>
@@ -593,6 +595,50 @@ namespace LastCall.UI
             return val;
         }
 
+        /// <summary>
+        /// Everything PRINTED on the licence: the header band, the portrait well, the two data
+        /// cells and the four rules of the field grid. Drawn from the same constants the text
+        /// is placed with, so the two cannot drift apart (2026-09-06).
+        /// </summary>
+        private void LicenceFurniture(RectTransform card)
+        {
+            var band = NewRect("Band", card);
+            Place(band, new Vector2(0, 1), new Vector2(LicW - LicPad * 0.5f, LicHeaderH),
+                new Vector2(LicPad * 0.25f, LicHeaderY));
+            band.pivot = new Vector2(0, 1);
+            var bandImg = band.gameObject.AddComponent<Image>();
+            bandImg.color = UITheme.Night[1];
+            bandImg.raycastTarget = false;
+
+            void Well(float x, float y, float w, float h, bool sunk)
+            {
+                var rt = NewRect("Well", card);
+                Place(rt, new Vector2(0, 1), new Vector2(w, h), new Vector2(x, -y));
+                rt.pivot = new Vector2(0, 1);
+                var img = rt.gameObject.AddComponent<Image>();
+                img.color = sunk ? new Color(0.84f, 0.79f, 0.70f, 1f)
+                                 : new Color(0.30f, 0.16f, 0.05f, 0.10f);
+                img.raycastTarget = false;
+            }
+
+            // The portrait well and the two data cells: one column, one width, even gaps.
+            Well(LicPortrait.x, -LicPortrait.y, LicPortrait.width, LicPortrait.height, true);
+            foreach (float top in LicCells) Well(LicCellX, top, LicCellW, LicCellH, false);
+
+            // The field grid's rules, and the one the licence number sits on.
+            void Rule(float x, float y, float w, float alpha)
+            {
+                var rt = NewRect("Rule", card);
+                Place(rt, new Vector2(0, 1), new Vector2(w, 1f), new Vector2(x, -y));
+                rt.pivot = new Vector2(0, 1);
+                var img = rt.gameObject.AddComponent<Image>();
+                img.color = new Color(0.30f, 0.16f, 0.05f, alpha);
+                img.raycastTarget = false;
+            }
+            foreach (float line in LicLines) Rule(LicGridX, line, LicGridW, 0.55f);
+            Rule(LicCellX, LicNumRule, LicCellW, 0.35f);
+        }
+
         private void BuildIdCard(RectTransform root)
         {
             // ITS OWN LAYER, ABOVE THE BAR. The till was lifted to a canvas at 6 so it
@@ -616,10 +662,21 @@ namespace LastCall.UI
             var card = NewRect("Card", _idRoot);
             Place(card, new Vector2(0.5f, 0.5f), new Vector2(LicW, LicH), new Vector2(0, 10));
             var shell = card.gameObject.AddComponent<Image>();
-            shell.sprite = ItemArt.Load("licence_shell3");
-            if (shell.sprite == null) shell.sprite = ItemArt.Load("licence_shell2");
-            if (shell.sprite == null) shell.color = UITheme.Cream[4];   // no art: a plain card
+            // THE PAPER IS DRAWN (2026-09-06). The generated shell carried its band, wells and
+            // rules baked in, so every field was placed by hand to land on furniture the code
+            // could not see. The stock is a 9-slice now and everything printed on it is laid
+            // out below, off the same numbers that place the type.
+            shell.sprite = ChromeArt.LicencePaper();
+            // TILED, NOT SLICED: the stock carries a security stipple, and a sliced centre
+            // STRETCHES its three middle pixels into a wall of beige blocks (photographed).
+            // Tiled repeats them, and the multiplier puts one art pixel on the card's own
+            // three units so the stipple is the grain the rest of the game is drawn at.
+            shell.type = Image.Type.Tiled;
+            shell.pixelsPerUnitMultiplier = 1f / LicScale;
+            shell.color = Color.white;
             card.gameObject.AddComponent<Button>().transition = Selectable.Transition.None; // swallow clicks
+
+            LicenceFurniture(card);
 
             // THE BAND IS THE HEADER OF A LICENCE: the issuing authority on the left, the
             // document number on the right. It carried the NAME for a week, which read well
@@ -643,8 +700,8 @@ namespace LastCall.UI
             // The flag rides the header, where a licence puts its emblem. It is the one
             // thing up here that changes from card to card besides the number below.
             var idFlag = NewRect("Flag", card);
-            Place(idFlag, new Vector2(1, 1), new Vector2(24, 16),
-                new Vector2(-59, bandMid + 8f));
+            Place(idFlag, new Vector2(1, 1), new Vector2(30, 20),
+                new Vector2(-(LicPad + 15f), bandMid + 10f));
             _idFlag = idFlag.gameObject.AddComponent<Image>();
             _idFlag.preserveAspect = true;
             _idFlag.raycastTarget = false;
@@ -656,8 +713,10 @@ namespace LastCall.UI
             // (ChromeArt.KeyCap): a cap that drops into its socket on press, the word riding
             // it. Hidden, not merely disabled, for the guest of the house.
             var kick = NewRect("Kick", card);
+            // In the band, right of the type and left of the flag, with the same margin the
+            // grid keeps (2026-09-06): the key is furniture on this card, not a floating button.
             Place(kick, new Vector2(1, 1), new Vector2(KickW, KickH),
-                new Vector2(-59 - 24 - 14, bandMid + KickH * 0.5f));
+                new Vector2(-(LicPad + 32f * LicScale / 3f + 10f), bandMid + KickH * 0.5f));
             var kickImg = kick.gameObject.AddComponent<Image>();
             kickImg.sprite = ChromeArt.KeyCap(UITheme.ViceRed, false, "kick");
             kickImg.type = Image.Type.Sliced;

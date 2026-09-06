@@ -2591,6 +2591,40 @@ namespace LastCall.UI
             return Cache[key] = Make(px, w, h, Vector4.zero);
         }
 
+        /// <summary>
+        /// THE LICENCE'S PAPER (2026-09-06, the author: "kimlik tasarımını geliştiriyoruz ...
+        /// daha kompakt daha bilgilerin hizalı ve uygun bir tasarımla birleştirilmiş ...
+        /// butonların yazı sütunlarının görsel bloklarının profesyonelce yerleştirildiği").
+        ///
+        /// The old card was a GENERATED picture with the band, the wells and the rules baked
+        /// into it, and every text field placed by hand to land on printed furniture it could
+        /// not see. Anything that had to line up was a guess maintained in two places. This is
+        /// the stock only — cream, a hairline rim, a security stipple — 9-sliced so any size
+        /// keeps its edge, and everything that has to align with type is drawn by the code
+        /// that places the type (GDD 16: chrome is procedural).
+        /// </summary>
+        public static Sprite LicencePaper()
+        {
+            const string Key = "lic:paper";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int S = 17, B = 7;
+            var px = new Color32[S * S];
+            var stock = new Color32(0xF2, 0xE8, 0xD5, 255);      // Cream[4]
+            var tint = new Color32(0xEB, 0xE1, 0xCC, 255);       // the guilloche: half a step, not one
+            var rim = new Color32(0x45, 0x3E, 0x38, 255);        // Cream[0]
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    int edge = Mathf.Min(Mathf.Min(x, S - 1 - x), Mathf.Min(y, S - 1 - y));
+                    bool corner = (x < 2 && y < 2) || (x < 2 && y > S - 3)
+                               || (x > S - 3 && y < 2) || (x > S - 3 && y > S - 3);
+                    px[y * S + x] = corner ? new Color32(0, 0, 0, 0)
+                        : edge == 0 ? rim
+                        : ((x + y) % 6 == 0 ? tint : stock);     // the stipple, on the diagonal
+                }
+            return Cache[Key] = Make(px, S, S, new Vector4(B, B, B, B));
+        }
+
         private static Sprite Make(Color32[] px, int w, int h, Vector4 border)
         {
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)

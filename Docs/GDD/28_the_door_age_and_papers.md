@@ -30,6 +30,29 @@ at the bar should not be served, and the card is how you know.**
   price of a well drink, for every face shown it.
 - Showing the wrong person the door is a walk-out — a review of zero, a regular who remembers.
 
+## The licence, on one grid (2026-09-06)
+
+The author: *"kimlik tasarımını geliştiriyoruz. Yeni kimlik tasarımı yapmamız gerekiyor
+daha kompakt daha bilgilerin hizalı ve uygun bir tasarımla birleştirilmiş hali
+butonların yazı sütunlarının görsel bloklarının profesyonelce yerleştirildiği."*
+
+The card was a GENERATED picture with its header band, portrait well, data cells and
+rules baked into the sprite, and every field placed by hand to land on furniture the
+code could not see — two sources of truth for every alignment, and 768×480 of card for
+a page of facts. It is drawn now:
+
+- **The stock** is `ChromeArt.LicencePaper()` — cream, a hairline rim, clipped corners
+  and a security stipple, TILED (a sliced centre stretches three pixels of stipple into
+  a wall of blocks, which is what the first cut photographed as).
+- **Everything printed on it** — the band, the portrait well, the two data cells, the
+  four rules — is `LicenceFurniture`, laid out from the same constants that place the
+  type. Nothing can drift, because there is only one set of numbers.
+- **224×148 art pixels at 3×** (672×444): a fifth smaller than the old card, with the
+  left rail one column wide (photo, VISITS, RATES THIS BAR at one width and one gap)
+  and the numbered fields in four rows of one pitch.
+- **The band carries the actions**: the jurisdiction and class on the left, the KICK
+  key and the flag squared up on the right at the grid's own margin.
+
 ## 2. The law
 
 - **Drinking age is 20** (`IdPapers.DrinkingAge`). Nineteen is a minor; twenty is served. (The

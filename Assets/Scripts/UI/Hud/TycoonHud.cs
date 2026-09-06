@@ -2299,7 +2299,32 @@ namespace LastCall.UI
         // the generator has never hit one.
         private const float LicScale = 3f;
 
-        private const float LicW = 256f * LicScale, LicH = 160f * LicScale;
+        // ONE GRID, AND THE FURNITURE IS DRAWN ON IT (2026-09-06, the author: "kimlik
+        // tasarımını geliştiriyoruz ... daha kompakt daha bilgilerin hizalı ve uygun bir
+        // tasarımla birleştirilmiş ... butonların yazı sütunlarının görsel bloklarının
+        // profesyonelce yerleştirildiği"). The card used to be a generated picture with its
+        // band, wells and rules baked in, and every field placed by hand to land on printed
+        // furniture it could not see — two sources of truth for every alignment, and 768x480
+        // of card for a page of facts. These numbers are the ONLY ones now: the paper is a
+        // drawn 9-slice, and the band, the wells, the boxes and the rules are laid out by the
+        // same code that places the type.
+        //
+        // 224x148 art pixels at 3x — a whole multiple, and a fifth smaller than the old card.
+        private const float LicW = 224f * LicScale, LicH = 148f * LicScale;
+
+        /// <summary>The margin from the paper's edge to anything printed on it.</summary>
+        private const float LicPad = 8f * LicScale;
+
+        /// <summary>The left rail's column: the photograph and the two data cells.</summary>
+        private const float LicRailW = 56f * LicScale;
+
+        /// <summary>The right column: the numbered field grid.</summary>
+        private const float LicGridX = LicPad + LicRailW + 8f * LicScale;
+        private const float LicGridW = LicW - LicGridX - LicPad;
+
+        /// <summary>Row pitch in the field grid — four rows, each a caption over a value on
+        /// a rule.</summary>
+        private const float LicRowH = 27f * LicScale;
 
         //
         // A DRIVING-LICENCE STRUCTURE (2026-08-10, the author: "sürücü belgelerine benzer
@@ -2319,29 +2344,37 @@ namespace LastCall.UI
         // of the paper and dropped the endorsement cells clean off the bottom of it —
         // which every rect measurement passed, because they were all still inside the
         // CARD RECT. Only a screenshot could show it, and did.
-        private static readonly Rect LicPortrait = new Rect(19f * LicScale, -32f * LicScale,
-            48f * LicScale, 48f * LicScale);
+        private static readonly Rect LicPortrait = new Rect(LicPad, -(32f * LicScale),
+            LicRailW, LicRailW);
 
-        private const float LicHeaderH = 14f * LicScale;
+        private const float LicHeaderH = 24f * LicScale;
 
-        private const float LicHeaderY = -13f * LicScale;
+        private const float LicHeaderY = -(2f * LicScale);
 
-        private const float LicFieldsX = 74f * LicScale;
+        private const float LicFieldsX = LicGridX;
 
-        private const float LicFieldsW = 161f * LicScale;
+        private const float LicFieldsW = LicGridW;
 
-        private static readonly float[] LicLines =   // the art's four printed rules
-            { 46f * LicScale, 71f * LicScale, 99f * LicScale, 124f * LicScale };
+        /// <summary>The four rules of the field grid, measured from the paper's top: the
+        /// header, then a row apiece. Drawn AND written to from here.</summary>
+        private static readonly float[] LicLines =
+        {
+            32f * LicScale + LicRowH,
+            32f * LicScale + LicRowH * 2f,
+            32f * LicScale + LicRowH * 3f,
+            32f * LicScale + LicRowH * 4f,
+        };
 
         // The rail's two data cells and the rule the licence number is printed on, at the
         // art's own coordinates — the boxes are drawn on the stock, not by the UI.
-        private const float LicCellX = 18f * LicScale, LicCellW = 50f * LicScale;
+        private const float LicCellX = LicPad, LicCellW = LicRailW;
 
-        private const float LicCellH = 24f * LicScale;
+        private const float LicCellH = 26f * LicScale;
 
-        private static readonly float[] LicCells = { 85f * LicScale, 112f * LicScale };
+        /// <summary>The two data cells under the photograph, top edges, from the paper's top.</summary>
+        private static readonly float[] LicCells = { 92f * LicScale, 120f * LicScale };
 
-        private const float LicNumRule = 141f * LicScale;
+        private const float LicNumRule = 146f * LicScale;
 
         // ── the week, as an instrument (2026-08-19, the author: "Haftalık takvim
         // göstergesi daha profesyonelce olmalı") ────────────────────────────────
