@@ -52,6 +52,12 @@ namespace LastCall.EditorTools
             // drawing's own construction line: sh_ipad2 is 274x175 (exactly the 1096x700
             // it renders at) with a 28px ring, so a sliced Image draws the bezel at 1:1.
             if (file == "sh_ipad2") ti.spriteBorder = new Vector4(28, 28, 28, 28);
+            // THE MATS REPEAT, THEY DO NOT STRETCH (2026-09-06). Both of the author's mats
+            // are a ribbed body between two drawn ends; a rail that grows must repeat the
+            // ribs, so the ends are the border and the middle is the tile. Six pixels is
+            // the drawn end on both plates, measured off them.
+            if (file == "prep_mat" || file == "fx_beer_mat")
+                ti.spriteBorder = new Vector4(6, 0, 6, 0);
             // THE COUNTER IS NINE-SLICED SO IT CAN BE WIDENED BY REPEATING, NEVER BY
             // STRETCHING (2026-08-19, the author: "sağa ve sola doğru genişlet ... kenarlara
             // uzattıkça sündüren değil görüntüyü üreten metodla"). The stage draws it with

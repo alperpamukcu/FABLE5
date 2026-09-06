@@ -173,6 +173,15 @@ namespace LastCall.UI
         public void OpenShaker()
         {
             if (Run == null || Run.Phase != TycoonPhase.DayOpen) return;
+            // AND THE ROOM MOVES, whichever door you came through (2026-09-06, the author:
+            // "mahzen kapaliyken shaker sahnesine gecildiginde arkaplan kaymiyor"). Until
+            // the tin stood on the counter the bench could only be reached FROM the cellar,
+            // so the room was always already lifted when it opened; coming straight off the
+            // counter left the bar sitting where it was and the bench slid up over a room
+            // that had not moved. The drawer is what lifts it, and it stays open behind the
+            // bench exactly as it does on the old road — BACK TO THE BAR keeps it open,
+            // SERVE IT shuts it.
+            GetComponent<TycoonHud>()?.Room?.SetDrawerOpen(true);
             GoTo(Stage.Shaker);
         }
 
@@ -531,9 +540,19 @@ namespace LastCall.UI
             // method the recipe asks for, in which case it turns you around and says so.
             // The lid comes off again on the bench, which is the way back from a cap
             // closed too early.
+            // A BOTTLE GOES WHERE IT CAN BE POURED (2026-09-06, the author: "mesrubatlar
+            // icki dokme sahnesinde gozukmuyorlar ve bundan dolayi shakera koyulmuyorlar").
+            //
+            // The lid rule above sent a bottle picked over a CLOSED tin to the counter —
+            // written when that bench had a cabinet of mixers to pour from. It has not had
+            // one since (a shelf on a bench has been built and cut twice, CLAUDE.md), so
+            // the bottle arrived in a room with nowhere to stand: invisible, unpourable,
+            // and silently dropped. A bottle is carried to the TIN — that is the one place
+            // a drink is built — and when the lid is on, the bench says so, because the
+            // lid comes off there and nowhere else.
             if (!Capped) { GoTo(Stage.Shaker); return; }
             if (BenchUnfinished(Run)) { DemandBench(BenchOwed(Run).ToUpperInvariant()); return; }
-            GoTo(Stage.Serve);
+            DemandBench("TAKE THE LID OFF TO ADD IT");
         }
 
 

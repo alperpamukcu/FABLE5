@@ -671,6 +671,31 @@ namespace LastCall.UI
                 ("sugar_rim", "counter_sugar", Preparations.SugarRim,
                  null, "TURN IT IN THE SUGAR", "carry_sugar", 30f),
             };
+            // THE MAT UNDER THE GARNISHES (2026-09-06, the author: "cerez_paspasi.png'yi
+            // garnishlerin altina hizala ve yeni garnish eklendiginde onlarin da altina
+            // gelecek sekilde ortalansin"). Built BEFORE the dishes so they stand on it,
+            // and sized off the rail's own arithmetic rather than by hand: the dishes sit
+            // at PrepRailX0 + i*PrepRailGap, so the mat is centred on that span and reaches
+            // half a box past the first and last of them. Add a seventh dish and the mat
+            // grows and re-centres on its own.
+            {
+                float span = (rail.Length - 1) * PrepRailGap;
+                var mat = NewRect("PrepMat", _prepRail);
+                var matArt = ItemArt.Load("prep_mat");
+                float matH = matArt != null ? matArt.rect.height * StageToHud : 26f;
+                Place(mat, new Vector2(0.5f, 0.5f),
+                    new Vector2(span + PrepDishBox, matH),
+                    new Vector2(PrepRailX0 + span * 0.5f, CounterFootY + matH * 0.5f - MatSink));
+                var matImg = mat.gameObject.AddComponent<Image>();
+                matImg.sprite = matArt;
+                // Nine-sliced, so a wider rail REPEATS the mat's ribs instead of smearing
+                // them — the counter's own law (2026-08-19). The borders are set on import.
+                matImg.type = Image.Type.Tiled;
+                matImg.raycastTarget = false;
+                matImg.enabled = matArt != null;
+                _prepMat = mat;
+            }
+
             for (int i = 0; i < rail.Length; i++)
             {
                 var (id, art, prep, style, word, carry, carryH) = rail[i];
@@ -1330,6 +1355,23 @@ namespace LastCall.UI
                 prop.Img.color = new Color(baseCol.r, baseCol.g, baseCol.b, a);
                 prop.Img.raycastTarget = reachable;
             }
+            // THE MAT IS AS LONG AS THE RAIL IS (2026-09-06, the author: "yeni garnish
+            // eklendiginde onlarin da altina gelecek sekilde ortalansin"). The row closes up
+            // as jars go unstocked and opens out as they are bought, so the mat is measured
+            // from what is actually STANDING there this frame — not from the six slots the
+            // rail could hold — and re-centred on that span.
+            if (_prepMat != null)
+            {
+                bool anyDish = slot > 0;
+                if (_prepMat.gameObject.activeSelf != anyDish) _prepMat.gameObject.SetActive(anyDish);
+                if (anyDish)
+                {
+                    float span = (slot - 1) * PrepRailGap;
+                    _prepMat.sizeDelta = new Vector2(span + PrepDishBox, _prepMat.sizeDelta.y);
+                    _prepMat.anchoredPosition =
+                        new Vector2(PrepRailX0 + span * 0.5f, _prepMat.anchoredPosition.y);
+                }
+            }
             StepPrepCarry(run);
             StepGrains();
             StepCloth(run);
@@ -1546,7 +1588,7 @@ namespace LastCall.UI
             {
                 var run = Run;
                 if (run == null || run.Phase != TycoonPhase.DayOpen) return;
-                if (_flow == null || _flow.IsOpen || CellarOpen) return;
+                if (_flow == null || _flow.IsOpen) return;
                 Sfx.Play("tin_tip", 0.6f);
                 _flow.OpenShaker();
             });
@@ -1594,9 +1636,14 @@ namespace LastCall.UI
         {
             if (_shakerProp == null) return;
             var run = Run;
+            // IT DOES NOT GO AWAY WHEN THE CELLAR OPENS (2026-09-06, the author: "ana
+            // sahnedeki shaker mahzen acilinca yok oluyor"). The drawer lifts the whole
+            // counter and everything standing on it rides up together — the book, the
+            // dishes, the coaster — so the tin standing on that coaster rides too. It was
+            // hidden out of caution and the caution was wrong: a drink in progress does
+            // not stop existing because you turned round to the shelves.
             bool show = run != null && run.Phase == TycoonPhase.DayOpen
                 && (_flow == null || !_flow.IsOpen)
-                && !CellarOpen
                 && run.DrinkWaitingInShaker;
             if (show)
             {

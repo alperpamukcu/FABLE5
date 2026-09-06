@@ -653,6 +653,17 @@ namespace LastCall.UI
         /// <summary>The drink's place on the bar, drawn whether or not there is a drink.</summary>
         private RectTransform _coasterRt;
 
+        /// <summary>The mat the garnish dishes stand on (2026-09-06). Sized and centred off
+        /// the rail's own span, so it follows the dishes rather than being placed beside
+        /// them.</summary>
+        private RectTransform _prepMat;
+
+        /// <summary>How far the mat lies BELOW the counter's foot line. A mat does not
+        /// stand, it lies: the dishes' lowest pixels are on the line and the mat's own
+        /// body sits just under them, the same three-of-the-room's-pixels the coaster
+        /// was moved by.</summary>
+        private const float MatSink = 3f * StageToHud;
+
         // CLICK-TO-SERVE (2026-08-11, the author's loop rework — experimental, replacing
         // the drag): the ready glass stands at its home; clicking a customer whose order
         // was TAKEN sends it sliding down the counter to them, and the serve happens on

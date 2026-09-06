@@ -701,8 +701,21 @@ namespace LastCall.UI
         private void RefreshShaker()
         {
             var run = Run;
-            if (run == null || _focusBottle == null) return;
-            PushFocusBottleArt(run);
+            if (run == null) return;
+            // THE BENCH CAN BE WALKED INTO EMPTY-HANDED (2026-09-06). It used to be
+            // reachable only by carrying a bottle here, so this returned early without a
+            // focus and the bench was left half-dressed — the bottle prop still wearing the
+            // placeholder tint it is built with, which drew as a flat teal box beside the
+            // tin. The tin standing on the counter is a door now, and a player who walks
+            // back in to shake what is already in the tin carries nothing: the bottle prop
+            // stands DOWN, and everything else about the bench is set up as it always was.
+            bool inHand = _focusBottle != null;
+            if (_pourBottle != null && _pourBottle.gameObject.activeSelf != inHand)
+                _pourBottle.gameObject.SetActive(inHand);
+            if (_bottleShadow != null && _bottleShadow.gameObject.activeSelf != inHand)
+                _bottleShadow.gameObject.SetActive(inHand);
+            if (inHand) PushFocusBottleArt(run);
+            else if (_shakerTitle != null) _shakerTitle.text = "THE TIN";
             SayShaker(ShakerLine(run));
             _pourBottle.anchoredPosition = _bottleRest;
             _pourBottle.localRotation = Quaternion.identity;
