@@ -20,9 +20,33 @@ namespace LastCall.Core
     /// two are not rivals, because a guest who talks and a guest who leaves a job on the bar
     /// are different beats.
     /// </summary>
+    /// <summary>
+    /// WHAT A WEEK CAN ASK FOR (2026-09-06, the author: "görevler örneğin: 3 adet perfect serv
+    /// yap, 2 gün boyunca hiç hata yapma, 5 adet vodka soda servis et ve benzeri çeşitte
+    /// görevler"). Three kinds, because three is what the loop can actually measure: what went
+    /// out, how well it went out, and whether the night went out clean.
+    /// </summary>
+    public enum JobKind
+    {
+        /// <summary>N of one drink, exactly as ordered.</summary>
+        Serve,
+        /// <summary>N drinks poured inside every perfect window, whatever they were.</summary>
+        Perfect,
+        /// <summary>N nights with nobody walking out and nothing wrong served.</summary>
+        Clean,
+    }
+
     public sealed class WeeklyJob
     {
-        /// <summary>The drink they want to see going out.</summary>
+        /// <summary>What kind of week this is (2026-09-06).</summary>
+        public JobKind Kind { get; }
+
+        /// <summary>What finishing it pays. Ece settles up out of her own pocket, which is
+        /// why it lands as income on the night rather than as a discount on anything.</summary>
+        public int Reward { get; }
+
+        /// <summary>The drink they want to see going out. Empty for the kinds that do not
+        /// name one.</summary>
         public string RecipeId { get; }
 
         /// <summary>Its name, kept so the strip on the HUD needs no catalogue to draw.</summary>
@@ -48,13 +72,17 @@ namespace LastCall.Core
         /// <summary>What is still owed, never below zero.</summary>
         public int Left => Math.Max(0, Target - Served);
 
-        public WeeklyJob(string recipeId, string recipeName, int target, int week, string who = null)
+        public WeeklyJob(string recipeId, string recipeName, int target, int week,
+            string who = null, JobKind kind = JobKind.Serve, int reward = 0)
         {
-            if (string.IsNullOrWhiteSpace(recipeId))
+            if (kind == JobKind.Serve && string.IsNullOrWhiteSpace(recipeId))
                 throw new ArgumentException("A job has to name a drink.", nameof(recipeId));
             if (target < 1) throw new ArgumentOutOfRangeException(nameof(target));
             if (week < 1) throw new ArgumentOutOfRangeException(nameof(week));
-            RecipeId = recipeId;
+            if (reward < 0) throw new ArgumentOutOfRangeException(nameof(reward));
+            Kind = kind;
+            Reward = reward;
+            RecipeId = recipeId ?? string.Empty;
             RecipeName = string.IsNullOrWhiteSpace(recipeName) ? recipeId : recipeName;
             Target = target;
             Week = week;
@@ -66,11 +94,47 @@ namespace LastCall.Core
 
         /// <summary>Counts one serve towards this job, if it is the drink and there is room
         /// left. Returns true when this serve is the one that finished it.</summary>
-        public bool Count(string recipeId)
+        public bool Count(string recipeId) => CountServe(recipeId, false);
+
+        /// <summary>
+        /// One drink going out. A SERVE job wants this drink; a PERFECT job wants any drink
+        /// poured inside every window — which is the same thing the menu unlocks its exact
+        /// numbers for, so the job is asking the player to do the thing the game is already
+        /// teaching. Returns true on the serve that finishes it.
+        /// </summary>
+        public bool CountServe(string recipeId, bool perfect)
         {
-            if (IsDone || recipeId != RecipeId) return false;
+            if (IsDone) return false;
+            if (Kind == JobKind.Serve && recipeId != RecipeId) return false;
+            if (Kind == JobKind.Perfect && !perfect) return false;
+            if (Kind == JobKind.Clean) return false;
             Served++;
             return IsDone;
+        }
+
+        /// <summary>One night filed. A CLEAN job counts the ones where nobody walked out and
+        /// nothing wrong went over the bar. Returns true on the night that finishes it.</summary>
+        public bool CountNight(bool clean)
+        {
+            if (IsDone || Kind != JobKind.Clean || !clean) return false;
+            Served++;
+            return IsDone;
+        }
+
+        /// <summary>What is still owed, in words, for the one line on the HUD: an instruction
+        /// rather than a scoreboard ("2 MORE PERFECT POURS", not "1/3 PERFECT").</summary>
+        public string Owed()
+        {
+            int left = Left;
+            switch (Kind)
+            {
+                case JobKind.Perfect:
+                    return left + " MORE PERFECT " + (left == 1 ? "POUR" : "POURS");
+                case JobKind.Clean:
+                    return left + " MORE CLEAN " + (left == 1 ? "NIGHT" : "NIGHTS");
+                default:
+                    return left + " MORE " + RecipeName.ToUpperInvariant();
+            }
         }
 
         /// <summary>Whether this job is the one live in <paramref name="day"/>'s week.</summary>
@@ -98,6 +162,39 @@ namespace LastCall.Core
             Math.Min(MaxTarget, MinTarget + Math.Max(0, week - 1) / 2);
 
         /// <summary>
+        /// WHICH KIND OF WEEK THIS IS. The first is always a count of one drink — the easiest
+        /// thing to understand on the night you first meet the idea — and after that the three
+        /// take turns, so a bar sees every kind without ever being handed two of the same in a
+        /// row (2026-09-06: "ilk hafta kolay, ilerleyen haftalarda daha da zorlaşan ... ama
+        /// imkansız olmayan").
+        /// </summary>
+        public static JobKind KindFor(int week) =>
+            week <= 1 ? JobKind.Serve
+            : week % 3 == 2 ? JobKind.Perfect
+            : week % 3 == 0 ? JobKind.Clean
+            : JobKind.Serve;
+
+        /// <summary>How many of that kind. Perfect pours and clean nights are worth more each
+        /// than one more Negroni, so they are asked for in ones and twos.</summary>
+        public static int TargetFor(JobKind kind, int week)
+        {
+            switch (kind)
+            {
+                case JobKind.Perfect: return Math.Min(4, 1 + Math.Max(0, week - 1) / 3);
+                case JobKind.Clean: return Math.Min(3, 1 + Math.Max(0, week - 1) / 4);
+                default: return TargetFor(week);
+            }
+        }
+
+        /// <summary>What Ece pays for it. It climbs with the week because the jobs do, and it
+        /// is worth a couple of drinks rather than a night — a bonus, not an income.</summary>
+        public static int RewardFor(JobKind kind, int week)
+        {
+            int basePay = 12 + 4 * Math.Min(6, Math.Max(0, week - 1));
+            return kind == JobKind.Serve ? basePay : basePay + 8;
+        }
+
+        /// <summary>
         /// The job for <paramref name="week"/>, or null when there is nothing sensible to
         /// ask for.
         ///
@@ -121,9 +218,19 @@ namespace LastCall.Core
                 if (pourable != null && !pourable(r)) continue;
                 pool.Add(r);
             }
+            var kind = KindFor(week);
+            int target = TargetFor(kind, week);
+            int reward = RewardFor(kind, week);
+            // The kinds that do not name a drink can be handed over whatever is on the menu —
+            // but they are still rolled through the same door, so a bar with nothing pourable
+            // is asked for nothing at all rather than for the impossible.
+            if (kind != JobKind.Serve && pool.Count > 0)
+                return new WeeklyJob(string.Empty,
+                    kind == JobKind.Perfect ? "PERFECT POURS" : "CLEAN NIGHTS",
+                    target, week, who, kind, reward);
             if (pool.Count == 0) return null;
             var pick = pool[rng == null ? 0 : rng.GetStream("job").NextInt(0, pool.Count)];
-            return new WeeklyJob(pick.Id, pick.Name, TargetFor(week), week, who);
+            return new WeeklyJob(pick.Id, pick.Name, target, week, who, kind, reward);
         }
     }
 }

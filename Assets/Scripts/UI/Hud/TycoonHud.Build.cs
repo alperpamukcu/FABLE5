@@ -303,6 +303,18 @@ namespace LastCall.UI
             // …and it must never EAT one. A notice that sits above everything is a notice
             // that can swallow the click under it; it says a thing and takes nothing.
             _toast.raycastTarget = false;
+            // THE PICTURE BESIDE THE WORDS (2026-09-06). A child of the notice itself, so it
+            // rides the same canvas order and goes up and down with it; the line gives up
+            // ToastIconRoom on its left when there is one to show.
+            var toastIcon = NewRect("Icon", _toast.rectTransform);
+            toastIcon.anchorMin = toastIcon.anchorMax = new Vector2(0f, 0.5f);
+            toastIcon.pivot = new Vector2(0f, 0.5f);
+            toastIcon.sizeDelta = new Vector2(16f, 16f);
+            toastIcon.anchoredPosition = new Vector2(0f, 0f);
+            _toastIcon = toastIcon.gameObject.AddComponent<Image>();
+            _toastIcon.preserveAspect = true;
+            _toastIcon.raycastTarget = false;
+            _toastIcon.enabled = false;
             _toast.gameObject.SetActive(false);
 
             // Six stools along the counter: each customer is a bust sitting at the bar with a

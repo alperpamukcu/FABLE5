@@ -1316,8 +1316,13 @@ namespace LastCall.UI
 
         /// <summary>The week's job, one line beside the LOG key (2026-09-04).</summary>
         private Text _jobStrip;
+        private RectTransform _jobStripRow;   // icon + line, so they fade as one
+        private CanvasGroup _jobStripGroup;
+        private Image _jobIcon;
+
 
         private Text _toast;
+        private Image _toastIcon;   // the coin, the star, the bottle a notice is about
 
         private float _toastUntil;
 

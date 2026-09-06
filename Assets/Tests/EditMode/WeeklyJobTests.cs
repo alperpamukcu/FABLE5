@@ -65,7 +65,12 @@ namespace LastCall.Tests
             Assert.That(BarCalendar.WeekOf(run.Day), Is.EqualTo(2), "the calendar did not turn over");
             Assert.That(run.Job, Is.Not.Null, "the second week opened with no job on the bar");
             Assert.That(run.Job.Week, Is.EqualTo(2), "the job was set for the wrong week");
-            Assert.That(run.Job.Target, Is.InRange(WeeklyJobs.MinTarget, WeeklyJobs.MaxTarget));
+            // THREE KINDS SINCE 2026-09-06, and each has its own scale: a count of one drink
+            // runs 3–7, a run of perfect pours or clean nights is asked for in ones and twos.
+            Assert.That(run.Job.Target,
+                Is.InRange(1, WeeklyJobs.TargetFor(run.Job.Kind, run.Job.Week)));
+            Assert.That(run.Job.Target, Is.EqualTo(WeeklyJobs.TargetFor(run.Job.Kind, 2)));
+            Assert.That(run.Job.Reward, Is.GreaterThan(0), "a job nobody pays for is a chore");
         }
 
         /// <summary>
@@ -101,6 +106,14 @@ namespace LastCall.Tests
                     CloseANight(run);
                 if (run.Job == null) continue;
 
+                // Only a SERVE week names a drink; perfect pours and clean nights are about
+                // how the bar works rather than about what is on the menu.
+                if (run.Job.Kind != JobKind.Serve)
+                {
+                    Assert.That(run.Job.RecipeId, Is.Empty,
+                        "seed " + seed + ": a " + run.Job.Kind + " week named a drink");
+                    continue;
+                }
                 var recipe = run.MenuRecipes.FirstOrDefault(r => r.Id == run.Job.RecipeId);
                 Assert.That(recipe, Is.Not.Null,
                     "seed " + seed + " asked for '" + run.Job.RecipeId + "', which is not on the menu");

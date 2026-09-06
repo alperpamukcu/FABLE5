@@ -132,6 +132,24 @@ brightness (×1.22, the beer font's own number) stays under all of it.
   under the pointer — same rise, same light, same coming to the front, so the room never
   teaches a second visual language for "here".
 
+## 0d. Notices carry the thing they are about (2026-09-06)
+
+The author: *"aktif görev LOG butonun olduğu yerde bildirim şeklinde kalıyor olması lazım, çok
+uzun üstüne bir nesne veya asset geldiğinde şeffaflaşmalı (yok olmamalı sadece biraz
+şeffaflaşmalı) mouse ile üstüne gelindiğinde netleşmeli"* and *"bildirimlerde alkollerin
+nesnelerin paranın yıldızın ve benzeri nesnelerin kullanım durumunda iconlarından faydalan"*.
+
+- **The week's job lives beside the LOG key**, one row, icon then line: the drink itself for a
+  count of one drink, a star for perfect pours, the cloth for clean nights. It counts DOWN —
+  "2 MORE PERFECT POURS" is an instruction, "1/3" is a scoreboard.
+- **It fades rather than leaves.** 0.85 at rest, 0.35 while the room has something else to say
+  in that corner (the cellar up, a bench open), and 1.0 the moment the pointer is on it. A
+  notice that disappears is a notice the player has to remember was there.
+- **A notice may carry a picture**: `Toast(message, tint, seconds, icon)` puts a 16px mark
+  before the line and gives up 22 units of the line's own room for it. The coin for money, the
+  star for a rating, a bottle for stock — the picture lands while the eye is still on the
+  counter.
+
 ## 1. The vocabulary
 
 The chrome is made of NAMED OBJECTS, not of rectangles. A new surface picks from this list; if

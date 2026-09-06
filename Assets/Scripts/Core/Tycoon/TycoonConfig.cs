@@ -29,14 +29,14 @@ namespace LastCall.Core
         /// clamp GDD 27 was written to remove. The cloth is on the counter now, so the scene
         /// pays for everything it shows, exactly as the sim and the tests do.</summary>
         public static readonly TycoonConfig ForTheScene =
-            new TycoonConfig(savorSeconds: 13.2, counterSmudges: true);
+            new TycoonConfig(savorSeconds: 13.2, counterSmudges: true, lastCall: false);
 
         // orderDecisionSeconds 4.0 → 5.0 (2026-08-19, the author: "düşünme süresi biraz daha
         // uzun sürsün"): the "..." beat over the head is the thing the player waits ON now,
         // and at 4s the short rolls were over before the dots read as thinking.
         public TycoonConfig(int startingMoney = 20,
             double orderDecisionSeconds = 5.0, double savorSeconds = 6.0,
-            bool counterSmudges = true)
+            bool counterSmudges = true, bool weeklyJobs = true, bool lastCall = true)
         {
             if (orderDecisionSeconds < 0) throw new ArgumentOutOfRangeException(nameof(orderDecisionSeconds));
             if (savorSeconds < 0) throw new ArgumentOutOfRangeException(nameof(savorSeconds));
@@ -44,7 +44,26 @@ namespace LastCall.Core
             OrderDecisionSeconds = orderDecisionSeconds;
             SavorSeconds = savorSeconds;
             CounterSmudges = counterSmudges;
+            WeeklyJobs = weeklyJobs;
+            LastCall = lastCall;
         }
+
+        /// <summary>
+        /// WHETHER THE WRITTEN LAST CALL PLAYS (2026-09-06, the author: "gün sonu müşterisi
+        /// olan eceyi kaldıralım, eceyi sadece haftalık görevler veren bir müşteri haline
+        /// getireceğiz"). Ece has one job in the loop now and it is the WEEK'S job; the
+        /// scripted guest who arrives after closing is switched off rather than deleted (GDD
+        /// 26 is still in the tree, and its suites still play it with this on).
+        /// </summary>
+        public bool LastCall { get; }
+
+        /// <summary>
+        /// WHETHER ECE LEAVES A JOB ON THE BAR (2026-09-06). On for the game and for the sim,
+        /// because a week's job is money the bar really earns; off for the economy suites,
+        /// which were written to measure what SELLING DRINKS pays and would otherwise be
+        /// measuring a bonus as well.
+        /// </summary>
+        public bool WeeklyJobs { get; }
 
         /// <summary>
         /// Whether a served leaver marks the counter as well as leaving their glass (GDD 27

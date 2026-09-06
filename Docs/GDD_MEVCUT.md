@@ -1302,6 +1302,26 @@ Commit `<C>`.
   bu haliyle tekrar edilemedi — bkz. oturum notu.
 - **Testler:** EditMode 488/488, PlayMode 11/11.
 
+### 9.34 · Üç yudum, üç görev türü, ödeyen hafta (2026-09-06)
+
+Commit `<C>`.
+
+- **Ece artık gün sonu müşterisi değil:** yazılı son çağrı sahnenin konfigüründe kapalı
+  (`TycoonConfig.LastCall = false`, `ForTheScene`); beat silinmedi, kendi süiti hâlâ
+  oynatıyor ve dev tezgâhı `DevForceLastCall` ile çağırıyor.
+- **Haftalık görev üç türlü:** `Serve` (bir içkiden N adet), `Perfect` (N kusursuz pour),
+  `Clean` (N gece hatasız). İlk hafta hep Serve; sonra sırayla. Hedefler haftayla
+  büyüyor (3→7 / 1→4 / 1→3), hiçbiri imkansız değil.
+- **Görev ödüyor:** $12'den $36'ya, zor türlerde +$8. Gecenin BONUS satırına yazılıyor,
+  oda parayla birlikte "ECE PAYS UP · +$X" diyor (ikon: madeni para), log satırı kalıyor.
+  200 koşu: iflas 2 → 0, kasa medyanı $77 → $85, günlük gelir $133.8 → $137.6.
+  Ayar tek yerde: `WeeklyJobs.RewardFor`.
+- **Görev şeridi LOG'un yanında:** ikon + satır, üstüne bir şey gelince %35'e soluyor
+  (yok olmuyor), mouse gelince tam netleşiyor.
+- **Bildirimler ikon taşıyabiliyor:** `Toast(mesaj, renk, süre, ikon)`.
+- **Ekonomi süitleri görevsiz koşuyor** (`weeklyJobs: false`), çünkü onlar barın SATIŞTAN
+  kazandığını ölçüyor; sim ve oyun açık koşuyor.
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

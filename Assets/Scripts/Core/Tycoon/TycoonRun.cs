@@ -1007,6 +1007,13 @@ namespace LastCall.Core
         /// moment. The one visit the arc is watching.</summary>
         public CustomerVisit LastCustomer { get; private set; }
 
+        /// <summary>
+        /// Plays the written last call on a run whose config has it switched off (2026-09-06).
+        /// For the dev bench's jump and the beat's own light-rig test — the beat is intact,
+        /// the SCENE simply does not schedule it any more.
+        /// </summary>
+        public bool DevForceLastCall { get; set; }
+
         /// <summary>The beat being played tonight. Set when they sit down and kept until the
         /// night is closed, so the last word can still be said after they have gone.</summary>
         public StoryBeat LastCallBeat { get; private set; }
@@ -1029,6 +1036,46 @@ namespace LastCall.Core
         /// <summary>The last job that was finished, kept past its week so the night's slip
         /// can say it landed. Null until one is.</summary>
         public WeeklyJob JobDone { get; private set; }
+
+        /// <summary>
+        /// The job that was finished THIS INSTANT, for the room to say so — read once and
+        /// cleared, like every other one-shot signal on this run (2026-09-06).
+        /// </summary>
+        public WeeklyJob JobJustDone { get; private set; }
+
+        /// <summary>Takes the "it just landed" signal, if there is one.</summary>
+        public WeeklyJob TakeJobJustDone()
+        {
+            var got = JobJustDone;
+            JobJustDone = null;
+            return got;
+        }
+
+        /// <summary>Something went wrong tonight: a wrong drink over the bar, or somebody who
+        /// walked out. Read at the close by a CLEAN job (2026-09-06).</summary>
+        public bool NightHadAMistake { get; private set; }
+
+        /// <summary>
+        /// One serve, counted towards the week and paid for if it finishes it. Ece settles up
+        /// on the spot — the money is hers, not the till's, so it arrives as income on the
+        /// night the job lands rather than as a discount on anything.
+        /// </summary>
+        private void CountJobServe(string recipeId, bool perfect)
+        {
+            if (Job == null || !Job.RunsOn(Day)) return;
+            if (!Job.CountServe(recipeId, perfect)) return;
+            PayForTheJob();
+        }
+
+        private void PayForTheJob()
+        {
+            if (Job == null || Job.Reward <= 0) return;
+            Money += Job.Reward;
+            // It rides in the night's BONUS line, beside the state's thanks — money that came
+            // from doing something rather than from selling something (GDD 28 §7's own box).
+            DayBonus += Job.Reward;
+            JobJustDone = Job;
+        }
 
         /// <summary>Who signs the week's jobs. Presentation only — nothing is graded by
         /// whom, and the default is the host who works the shift.</summary>
@@ -1088,6 +1135,11 @@ namespace LastCall.Core
                 LastCustomer = null;
             }
 
+            // SWITCHED OFF FOR THE SCENE (2026-09-06): Ece's place in the loop is the
+            // week's job now, not a guest after closing. The beat is intact and its own
+            // suites still play it — this is a config, not a deletion, and the dev bench and
+            // the light-rig test reach it through DevForceLastCall.
+            if (!_config.LastCall && !DevForceLastCall) return seated;
             if (_lastCallSpent || LastCustomer != null) return seated;
             if (!Floor.IsClosingTime || Floor.Seated.Count > 0) return seated;
             if (!Story.IsDueOn(Day)) return seated;
@@ -1927,8 +1979,7 @@ namespace LastCall.Core
             // Negronis is not filled by a Negroni nobody ordered, nor by five near misses.
             // The story's guest never reaches here (they return above), which is right —
             // nothing they drink touches the books either.
-            if (Job != null && matchKind == OrderMatch.Exact && Job.RunsOn(Day))
-                Job.Count(visit.OrderTruth.Wanted.Id);
+            if (matchKind == OrderMatch.Wrong) NightHadAMistake = true;
             // The verdict is priced off the DRINK — the recipe matched, the garnishes asked
             // for, the fill (the 2026-07-22 pivot, made total 2026-08-02: the emotion layer
             // is gone; what a customer gives you back is their reaction to the cocktail).
@@ -1936,6 +1987,15 @@ namespace LastCall.Core
             // against the recipe's perfect — accuracy is money now.
             var verdict = ServiceJudge.Judge(visit, matchKind, delivered, CrowdToday, Ambience,
                 served: match, lookup: IngredientOf);
+
+            // THE WEEK'S JOB IS COUNTED ON THE DRINK THAT WAS ASKED FOR AND GOT MADE
+            // (2026-09-04, kinds 2026-09-06). Exact only, and against the ORDERED recipe: a
+            // job for five Negronis is not filled by a Negroni nobody ordered, nor by five
+            // near misses — and a PERFECT week counts this serve only if the judge says every
+            // band landed. The story's guest never reaches here, which is right: nothing they
+            // drink touches the books either.
+            if (matchKind == OrderMatch.Exact)
+                CountJobServe(visit.OrderTruth.Wanted.Id, verdict.PerfectMake);
 
             // The night remembers its best EXACT serve (2026-08-02): the menu cap reads it.
             if (matchKind == OrderMatch.Exact && match?.Recipe != null
@@ -2420,6 +2480,13 @@ namespace LastCall.Core
                 // this list (GDD 28 §4).
                 if (visit.State == VisitState.StormedOff || visit.State == VisitState.Kicked) walked++;
                 else served++;
+            // A CLEAN NIGHT: nobody walked out, nothing wrong went over the bar (2026-09-06).
+            // Counted here because this is the moment the night becomes a fact, and paid on
+            // the spot like every other job — the money lands on the night that earned it.
+            if (Job != null && Job.RunsOn(Day) && Job.Kind == JobKind.Clean
+                && Job.CountNight(walked == 0 && !NightHadAMistake))
+                PayForTheJob();
+
             var result = Ledger.CloseDay(Day, DayIncome, DayExpenses, standing,
                 tillAfter: Money,
                 detail: new DayDetail
@@ -2448,6 +2515,7 @@ namespace LastCall.Core
             CrowdToday = Ledger.TomorrowsCrowd;
             DaySales = DayTips = DayRent = DayStock = DayUpgrades = 0;
             DayFines = DayBonus = RightKicks = WrongKicks = MinorsServed = MinorsMet = 0;
+            NightHadAMistake = false;  // tomorrow starts clean, whatever tonight was
             UpgradesToday = 0;         // tonight's fitting is spent; tomorrow gets its own
             _bestRankServedTonight = 0;
             _todayPurchases.Clear();   // yesterday's buys are kept; refunds are same-day only
@@ -2477,6 +2545,7 @@ namespace LastCall.Core
         /// </summary>
         private void SettleTheJob()
         {
+            if (!_config.WeeklyJobs) return;
             int week = BarCalendar.WeekOf(Day);
             if (Job != null && Job.Week == week) return;      // still this week's
 

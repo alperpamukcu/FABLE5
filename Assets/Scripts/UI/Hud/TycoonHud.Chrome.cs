@@ -75,12 +75,35 @@ namespace LastCall.UI
         /// A null tint restores the refusal ink, so no caller has to put it back.</summary>
         public void Toast(string message, Color? tint, float seconds = 1.6f)
         {
+            Toast(message, tint, seconds, null);
+        }
+
+        /// <summary>
+        /// ...AND WITH THE THING IT IS ABOUT BESIDE IT (2026-09-06, the author: "bildirimlerde
+        /// alkollerin nesnelerin paranın yıldızın ve benzeri nesnelerin kullanım durumunda
+        /// iconlarından faydalan"). A notice that carries the coin, the star or the bottle it
+        /// concerns is read before it is read: the picture lands while the eye is still on the
+        /// counter. Null draws no icon and the line sits where it always has.
+        /// </summary>
+        public void Toast(string message, Color? tint, float seconds, Sprite icon)
+        {
             if (_toast == null) return;
             _toast.text = message;
             _toast.color = tint ?? _toastInk;
             _toastUntil = Time.unscaledTime + seconds;
             _toast.gameObject.SetActive(true);
+            if (_toastIcon == null) return;
+            _toastIcon.sprite = icon;
+            _toastIcon.enabled = icon != null;
+            _toastIcon.color = tint ?? Color.white;
+            // The line shifts right to make room for it, and comes back when there is none.
+            var rt = _toast.rectTransform;
+            var off = rt.offsetMin;
+            rt.offsetMin = new Vector2(icon != null ? ToastIconRoom : 0f, off.y);
         }
+
+        /// <summary>How much room the notice gives up when it carries a picture.</summary>
+        private const float ToastIconRoom = 22f;
 
         /// <summary>
         /// The first perfect pour of a recipe, told three ways (2026-08-25, the author:
@@ -703,6 +726,19 @@ namespace LastCall.UI
                 _comfortFill.sizeDelta = new Vector2((float)(run.ComfortNow / BarRating.MaxStars) * HouseStripW, 0);
 
             RefreshJobStrip(run);
+            StepJobStrip();
+
+            // ECE SETTLES UP THE MOMENT IT LANDS (2026-09-06). The run raises the flag on the
+            // serve — or on the night, for a clean week — and the room says so once, with the
+            // coin beside it and the money already in the till.
+            var done = run.TakeJobJustDone();
+            if (done != null)
+            {
+                Toast($"{done.Who} PAYS UP · +${done.Reward}", UITheme.Lime[3], 3.2f,
+                      ChromeArt.Mark("cash"));
+                Sfx.Play("cash", 0.9f);
+                LogService($"<color=#6FCC4B>{done.Who}'S JOB</color> done · +${done.Reward}");
+            }
         }
 
         /// <summary>
@@ -717,11 +753,62 @@ namespace LastCall.UI
         {
             if (_jobStrip == null) return;
             var job = run.Job;
-            if (job == null || !job.RunsOn(run.Day)) { _jobStrip.text = ""; return; }
-            string drink = job.RecipeName.ToUpperInvariant();
+            bool show = job != null && job.RunsOn(run.Day);
+            if (_jobIcon != null && _jobIcon.gameObject.activeSelf != show)
+                _jobIcon.gameObject.SetActive(show);
+            if (!show) { _jobStrip.text = ""; return; }
+            // THE ICON SAYS WHAT KIND OF WEEK IT IS (2026-09-06, the author: "bildirimlerde
+            // alkollerin nesnelerin paranın yıldızın ... ikonlarından faydalan"): the drink
+            // itself for a count of one drink, a star for perfect pours, the cloth for a run
+            // of clean nights. Read before the words are.
+            if (_jobIcon != null)
+            {
+                Sprite art = null;
+                switch (job.Kind)
+                {
+                    case JobKind.Perfect:
+                        art = ItemArt.Star(true, 16);
+                        break;
+                    case JobKind.Clean:
+                        art = ItemArt.Load("bar_cloth") ?? ItemArt.Load("cloth");
+                        break;
+                    default:
+                        foreach (var r in run.AllRecipes)
+                            if (r.Id == job.RecipeId) { art = DrinkIcon.For(r, _bootstrap.Glassware); break; }
+                        break;
+                }
+                _jobIcon.sprite = art;
+                _jobIcon.enabled = art != null;
+                _jobIcon.color = job.IsDone ? UITheme.Lime[3] : Color.white;
+            }
             _jobStrip.text = job.IsDone
-                ? $"<color=#6FCC4B>{job.Who} · {drink} DONE</color>"
-                : $"<color=#E84DA6>{job.Who}</color> · {job.Left} MORE {drink}";
+                ? $"<color=#6FCC4B>{job.Who} · DONE · +${job.Reward}</color>"
+                : $"<color=#E84DA6>{job.Who}</color> · {job.Owed()}";
+        }
+
+        /// <summary>
+        /// THE STRIP GETS OUT OF THE WAY WITHOUT LEAVING (2026-09-06, the author: "çok uzun
+        /// üstüne bir nesne veya asset geldiğinde şeffaflaşmalı (yok olmamalı sadece biraz
+        /// şeffaflaşmalı) mouse ile üstüne gelindiğinde netleşmeli"). It sits over the room,
+        /// so anything the room raises into that corner — a drinker walking in, the cellar
+        /// coming up — would be read through it. It fades to a third rather than going, so
+        /// the job is never a thing the player has to remember was there, and the pointer
+        /// brings it back whole.
+        /// </summary>
+        private void StepJobStrip()
+        {
+            if (_jobStrip == null || _jobStripGroup == null) return;
+            var mouse = UnityEngine.InputSystem.Mouse.current;
+            bool under = false;
+            if (mouse != null && _jobStrip.gameObject.activeInHierarchy)
+                under = RectTransformUtility.RectangleContainsScreenPoint(
+                    _jobStripRow, mouse.position.ReadValue(), null);
+            // Busy behind it: the counter is up (the cellar is open) or a bench is over the
+            // room. Both are the moments the corner has something else to say.
+            bool busy = CellarOpen || (_flow != null && _flow.IsOpen);
+            float want = under ? 1f : busy ? 0.35f : 0.85f;
+            _jobStripGroup.alpha = Motion.Reduced ? want
+                : Mathf.MoveTowards(_jobStripGroup.alpha, want, Time.unscaledDeltaTime * 3.5f);
         }
 
         private void BuildServiceLog(RectTransform root)
@@ -739,10 +826,25 @@ namespace LastCall.UI
             //
             // It draws NOTHING at all before the first hand-over, so week one is exactly
             // the screen it was.
-            _jobStrip = NewText("WeekJob", root, _display, 8, TextAnchor.MiddleLeft,
+            // One row, so the icon and the line fade together and can be asked whether the
+            // pointer is on THEM rather than on the text's own overflowing rect.
+            _jobStripRow = NewRect("WeekJobRow", root);
+            Place(_jobStripRow, new Vector2(0, 1), new Vector2(320, 20), new Vector2(60, -66));
+            _jobStripRow.pivot = new Vector2(0, 0.5f);
+            _jobStripGroup = _jobStripRow.gameObject.AddComponent<CanvasGroup>();
+            _jobStripGroup.blocksRaycasts = false;
+            var iconRt = NewRect("Icon", _jobStripRow);
+            Place(iconRt, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(8, 0));
+            _jobIcon = iconRt.gameObject.AddComponent<Image>();
+            _jobIcon.preserveAspect = true;
+            _jobIcon.raycastTarget = false;
+            iconRt.gameObject.SetActive(false);
+
+            _jobStrip = NewText("WeekJob", _jobStripRow, _display, 8, TextAnchor.MiddleLeft,
                 UITheme.Cream[3]);
-            Place(_jobStrip.rectTransform, new Vector2(0, 1), new Vector2(300, 20),
-                new Vector2(60, -66));
+            Place(_jobStrip.rectTransform, new Vector2(0, 0.5f), new Vector2(292, 20),
+                new Vector2(28, 0));
+            _jobStrip.rectTransform.pivot = new Vector2(0, 0.5f);
             _jobStrip.horizontalOverflow = HorizontalWrapMode.Overflow;
             _jobStrip.verticalOverflow = VerticalWrapMode.Truncate;
             _jobStrip.supportRichText = true;
@@ -1110,6 +1212,7 @@ namespace LastCall.UI
             if (Run == null || Run.Phase != TycoonPhase.DayOpen) { Toast("NOT MID-DAY"); return; }
             if (Run.Story == null) { Toast("THIS RUN HAS NO STORY"); return; }
             if (Run.LastCustomer != null) { Toast("THEY ARE ALREADY AT THE BAR"); return; }
+            Run.DevForceLastCall = true;   // the scene does not schedule it any more (2026-09-06)
             _flow?.CloseFlow();
             CloseId();
 

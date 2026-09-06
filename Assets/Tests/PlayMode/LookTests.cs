@@ -136,6 +136,10 @@ namespace LastCall.PlayTests
             // market has not opened yet on night one. The HUD re-dresses the room on the
             // next frame it sees the owned count move.
             run.DevFit("wall_lamps_one");
+            // THE SCENE NO LONGER SCHEDULES THE BEAT (2026-09-06: Ece gives the week's job
+            // instead), so the test asks for it explicitly. What is being measured — the rig
+            // that takes the room down and picks the guest out — is unchanged.
+            run.DevForceLastCall = true;
             yield return new WaitForSecondsRealtime(0.5f);
             float deadline = Time.realtimeSinceStartup + 30f;
             while (run.LastCustomer == null && run.Phase == TycoonPhase.DayOpen

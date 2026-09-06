@@ -39,7 +39,10 @@ namespace LastCall.Tests
         // the savour off. The pacing itself is covered by TycoonCoreTests.
         private static TycoonRun NewRun(string seed = "day-one", int startingMoney = 20) =>
             new TycoonRun(NewShelf(), Book, new RunRng(seed),
-                config: new TycoonConfig(startingMoney, orderDecisionSeconds: 0, savorSeconds: 0));
+                // NO WEEKLY JOB (2026-09-06): these runs measure what the BAR earns, and a
+                // job's bonus is Ece's money. WeeklyJobTests plays with them switched on.
+                config: new TycoonConfig(startingMoney, orderDecisionSeconds: 0, savorSeconds: 0,
+                    weeklyJobs: false));
 
         /// <summary>Tips the whole shaker into the serving glass, dead on the rim. Nothing is
         /// served straight out of the shaker any more (2026-07-28), so every test that hands a

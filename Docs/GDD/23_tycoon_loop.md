@@ -22,6 +22,40 @@
 | ScoringEngine (Flavor × Mult), score-based patrons/tools/packs/vouchers | **Retire** on the demolition schedule (PLAN_tycoon_pivot §Demolition). Flavor survives as a price input. |
 | VIPs | **Parked.** Return later as special guests with wallet rules, not rule cards. |
 
+## Ece's week (2026-09-06)
+
+The author: *"gün sonu müşterisi olan eceyi kaldıralım, eceyi sadece haftalık görevler
+veren bir müşteri haline getireceğiz. Görevler örneğin: 3 adet perfect serv yap, 2 gün
+boyunca hiç hata yapma, 5 adet vodka soda servis et ... zorlukları ise ilk hafta kolay
+ilerleyen haftalarda daha da zorlaşan yapılabilir imkansız olmayan görevler ... görevleri
+yapma sonucunda da ikramiye para verilebilir."*
+
+Ece has ONE job in the loop now and it is the week's. The scripted guest who used to
+arrive after closing is switched off in the scene's config (`TycoonConfig.LastCall`,
+false for `ForTheScene`) rather than deleted: GDD 26 is still in the tree, its own
+suites still play it, and the dev bench still summons it (`DevForceLastCall`).
+
+**Three kinds of week** (`JobKind`), because three is what the loop can measure:
+
+| Kind | Asks for | Target by week | Counted at |
+|---|---|---|---|
+| `Serve` | N of one drink, exactly as ordered | 3 → 7 | the serve |
+| `Perfect` | N pours inside every window | 1 → 4 | the serve |
+| `Clean` | N nights with nobody walking out and nothing wrong served | 1 → 3 | the close |
+
+Week one is always a `Serve` — the easiest thing to understand the night you first meet
+the idea — and after that the three take turns, so a bar never gets two of the same in a
+row. A `Serve` week only ever names a drink the bar can pour tonight (the rule that was
+already there); the other two name none, which is why `RecipeId` is now allowed to be
+empty and the suites check for it.
+
+**It pays** (`WeeklyJobs.RewardFor`): $12 at week one climbing to $36, plus $8 for the
+two harder kinds — a bonus, not an income. It lands in the night's BONUS line beside the
+state's thanks, the room says so with the coin beside it, and the log keeps the line.
+Measured over 200 runs: bankruptcies 2 → 0, the median till $77 → $85, average income
+$133.8 → $137.6 a night. That is the floor getting safer by about four dollars a night;
+`RewardFor` is the one place to turn it down.
+
 ## 1. The bar floor
 
 - The bar has **`Seats` stools** (start **4**, upgrade to **6**). Each seat holds one
