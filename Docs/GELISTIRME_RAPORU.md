@@ -261,6 +261,7 @@ index'le (paylaşılan index'e dokunmadan) dilimlenerek:
 | `fb09cf3c` | **lavabo kuyruğu** — bardak yıkanana kadar tabureyi tutar; yazarın iki su animasyonu (§9.29) | yazar + bu oturum |
 | `a4deabd9` | **imleç cevabı düzeltmesi** — çizimin sınırında hale, öne çıkma, sallanma, mahzenin şişeleri (§9.30) | bu oturum |
 | `b51dc655` | **tin'in lavabosu, tek beden tin, yavaş geçiş** — taşınan tin, 232×416, 0.42s fren (§9.30) | yazar + bu oturum |
+| `6dc61d6c` | **ışığın şekli, çağıran lavabo, ovulan kir** — silüetten büyüyen parlama, Beckon, piksel piksel silinen işaret (§9.31) | yazar + bu oturum |
 
 **Süpürme, ölçerek.** `Assets/Resources` altındaki her PNG oyunun kendi yükleme zincirine karşı
 ada, türetilmiş öneke VE sahne GUID'ine göre sınandı (`art_reach.py`): 41 kartın 39'unda tam v4
