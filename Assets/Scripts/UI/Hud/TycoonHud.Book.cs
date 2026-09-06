@@ -1099,48 +1099,71 @@ namespace LastCall.UI
             way.text = PrepWord(r) + " · " + glassWord + " GLASS";
             y += 24f;
 
+            // THE DRINK ITSELF, BIGGER (2026-09-06, the author: "yapılan kokteylin görseli
+            // biraz daha büyültülsün"), with what it sells for beside it — the one number a
+            // page about a drink is really about ("ücreti daha ön plana çıkarılsın").
             var icon = NewRect("I", print);
             icon.anchorMin = icon.anchorMax = new Vector2(0.5f, 1f);
             icon.pivot = new Vector2(0.5f, 1f);
-            icon.sizeDelta = new Vector2(48f, 48f);
-            icon.anchoredPosition = new Vector2(0, -y);
+            icon.sizeDelta = new Vector2(76f, 76f);
+            icon.anchoredPosition = new Vector2(-46f, -y);
             var img = icon.gameObject.AddComponent<Image>();
             img.sprite = DrinkIcon.For(r, _bootstrap.Glassware);
             img.preserveAspect = true;
             img.raycastTarget = false;
             img.enabled = img.sprite != null;
             if (page.Locked) img.color = new Color(1, 1, 1, 0.4f);
-            y += 56f;
+
+            // The list price, not tonight's crowd-adjusted one: a menu prints what the
+            // drink is worth, and the night's premium is the night's business.
+            int price = DrinkOrder.MenuPrice(r);
+            var priceT = NewText("Price", print, _display, 24, TextAnchor.MiddleLeft, figure);
+            priceT.rectTransform.anchorMin = priceT.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            priceT.rectTransform.pivot = new Vector2(0, 1f);
+            priceT.rectTransform.sizeDelta = new Vector2(120f, 30f);
+            priceT.rectTransform.anchoredPosition = new Vector2(6f, -(y + 16f));
+            priceT.raycastTarget = false;
+            priceT.text = "$" + price;
+            var priceCap = NewText("PriceCap", print, _body, 8, TextAnchor.MiddleLeft, quiet);
+            priceCap.rectTransform.anchorMin = priceCap.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            priceCap.rectTransform.pivot = new Vector2(0, 1f);
+            priceCap.rectTransform.sizeDelta = new Vector2(120f, 12f);
+            priceCap.rectTransform.anchoredPosition = new Vector2(8f, -(y + 46f));
+            priceCap.raycastTarget = false;
+            priceCap.text = "ON THE TAB";
+            y += 84f;
 
             // ── the gauge's own legend (the author: the bar must SAY what it means
             // and which %-band each colour owns) ─────────────────────────────────
-            var cap = NewText("Cap", print, _body, 8, TextAnchor.MiddleCenter, quiet);
+            // READ AT THE BOOK'S OWN SIZE (2026-09-06, the author: "menüde daha okunaklı bir
+            // font kullanılsın"). The captions on this page were at 8 — the size the game
+            // keeps for tags over a head — while everything around them was at 16.
+            var cap = NewText("Cap", print, _body, 16, TextAnchor.MiddleCenter, quiet);
             cap.rectTransform.anchorMin = cap.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             cap.rectTransform.pivot = new Vector2(0.5f, 1f);
-            cap.rectTransform.sizeDelta = new Vector2(BkColW, 12f);
+            cap.rectTransform.sizeDelta = new Vector2(BkColW, 18f);
             cap.rectTransform.anchoredPosition = new Vector2(0, -y);
-            cap.text = "THE POUR · EACH BOTTLE'S SHARE OF THE GLASS";
-            y += 14f;
-            float chipW = (BkColW - (RatioBox.Count - 1) * 4f) / RatioBox.Count;
-            for (int i = 0; i < RatioBox.Count; i++)
-            {
-                float x = -BkColW * 0.5f + i * (chipW + 4f);
-                var chip = NewRect("Lg" + i, print);
-                chip.anchorMin = chip.anchorMax = new Vector2(0.5f, 1f);
-                chip.pivot = new Vector2(0, 1);
-                chip.sizeDelta = new Vector2(chipW, 10f);
-                chip.anchoredPosition = new Vector2(x, -y);
-                var ci = chip.gameObject.AddComponent<Image>();
-                ci.color = BandBoxColors[i];
-                ci.raycastTarget = false;
-                var lb = NewText("T", print, _body, 8, TextAnchor.UpperCenter, quiet);
-                lb.rectTransform.anchorMin = lb.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-                lb.rectTransform.pivot = new Vector2(0, 1);
-                lb.rectTransform.sizeDelta = new Vector2(chipW, 12f);
-                lb.rectTransform.anchoredPosition = new Vector2(x, -(y + 12f));
-                lb.text = (int)(RatioBox.Lower(i) * 100) + "-" + (int)(RatioBox.Upper(i) * 100);
-            }
-            y += 30f;
+            cap.text = "THE POUR · ONE DOT IS A FIFTH";
+            y += 22f;
+            // The legend is the SAME five dots the rows use, so nothing has to be learned
+            // twice: all five lit, with the share each one stands for written under it.
+            var legend = NewRect("Legend", print);
+            var legendArt = ChromeArt.RatioDots(RatioBox.Count - 1, BandBoxColors, RatioBox.Count);
+            float legendW = legendArt.rect.width * 2f, legendH = legendArt.rect.height * 2f;
+            legend.anchorMin = legend.anchorMax = new Vector2(0.5f, 1f);
+            legend.pivot = new Vector2(0.5f, 1f);
+            legend.sizeDelta = new Vector2(legendW, legendH);
+            legend.anchoredPosition = new Vector2(0, -y);
+            var legendImg = legend.gameObject.AddComponent<Image>();
+            legendImg.sprite = legendArt;
+            legendImg.raycastTarget = false;
+            var scale = NewText("Scale", print, _body, 16, TextAnchor.MiddleCenter, quiet);
+            scale.rectTransform.anchorMin = scale.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            scale.rectTransform.pivot = new Vector2(0.5f, 1f);
+            scale.rectTransform.sizeDelta = new Vector2(BkColW, 18f);
+            scale.rectTransform.anchoredPosition = new Vector2(0, -(y + legendH + 2f));
+            scale.text = "20%   40%   60%   80%  100%";
+            y += legendH + 24f;
 
             // ── the pours, one full-width row each ───────────────────────────────
             var specRows = RecipeSpecRows(r, poursOnly: true, locked: page.Locked);
@@ -1167,9 +1190,9 @@ namespace LastCall.UI
                 var line = NewRect("S" + i, print);
                 line.anchorMin = line.anchorMax = new Vector2(0.5f, 1f);
                 line.pivot = new Vector2(0.5f, 1f);
-                line.sizeDelta = new Vector2(BkColW, 34f);
+                line.sizeDelta = new Vector2(BkColW, 46f);
                 line.anchoredPosition = new Vector2(0, -y);
-                y += 36f;
+                y += 48f;
 
                 if (ingredient)
                 {
@@ -1197,8 +1220,10 @@ namespace LastCall.UI
                         var fallback = ItemArt.StyleBottle(run.CatalogueBottles, spec.Style);
                         if (fallback != null) pour.Add(fallback);
                     }
-                    const float box = 28f;
-                    float step = pour.Count > 1 ? Mathf.Min(box, 44f / pour.Count) : box;
+                    // BIGGER BOTTLES ON THE PAGE (2026-09-06: "tarifteki alkol görsellerini
+                    // ve kapladıkları alanı sayfada büyütelim") — the row grew with them.
+                    const float box = 40f;
+                    float step = pour.Count > 1 ? Mathf.Min(box, 56f / pour.Count) : box;
                     for (int b = 0; b < pour.Count; b++)
                     {
                         var bi = NewRect("B" + b, line);
@@ -1227,7 +1252,7 @@ namespace LastCall.UI
                 // where it can never collide with the gauge.
                 if (ingredient && !stocked)
                 {
-                    var lockT = NewText("X", line, _body, 8, TextAnchor.UpperLeft, goneInk);
+                    var lockT = NewText("X", line, _body, 16, TextAnchor.UpperLeft, goneInk);
                     Place(lockT.rectTransform, new Vector2(0, 1), new Vector2(200f, 12f), Vector2.zero);
                     lockT.rectTransform.pivot = new Vector2(0, 1);
                     lockT.rectTransform.anchoredPosition = new Vector2(textX, -20f);
@@ -1257,46 +1282,19 @@ namespace LastCall.UI
                 }
                 else if (spec.Box >= 0)
                 {
-                    var gauge = NewRect("Gauge", line);
-                    Place(gauge, new Vector2(1, 0.5f), new Vector2(BkGaugeW, BkGaugeH),
-                        new Vector2(-4f - BkGaugeW, 0));
-                    gauge.pivot = new Vector2(0, 0.5f);
-
-                    var tube = gauge.gameObject.AddComponent<Image>();
-                    tube.sprite = ChromeArt.GaugeTube((int)BkGaugeW, (int)BkGaugeH);
-                    tube.raycastTarget = false;
-                    tube.color = new Color(0.80f, 0.74f, 0.62f, stocked ? 1f : 0.6f);
-
-                    if (!page.Locked)
-                    {
-                        var fill = NewRect("Level", gauge);
-                        Place(fill, new Vector2(0, 0.5f), new Vector2(BkGaugeW - 2f, BkGaugeH - 3f),
-                            new Vector2(1f, -0.5f));
-                        var lvl = fill.gameObject.AddComponent<Image>();
-                        lvl.sprite = ChromeArt.GaugeLadder(BandBoxColors);
-                        lvl.type = Image.Type.Filled;
-                        lvl.fillMethod = Image.FillMethod.Horizontal;
-                        lvl.fillOrigin = (int)Image.OriginHorizontal.Left;
-                        lvl.fillAmount = (float)RatioBox.Upper(spec.Box);
-                        lvl.raycastTarget = false;
-                        lvl.color = stocked || !ingredient ? Color.white : new Color(1f, 1f, 1f, 0.5f);
-                    }
-
-                    var glass = NewRect("Glass", gauge);
-                    Stretch(glass, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                    var gimg = glass.gameObject.AddComponent<Image>();
-                    gimg.sprite = ChromeArt.GaugeGlass((int)BkGaugeW, (int)BkGaugeH, RatioBox.Count);
-                    gimg.raycastTarget = false;
-
-                    if (spec.Best >= 0 && !page.Locked)
-                    {
-                        var mark = NewRect("Best", gauge);
-                        Place(mark, new Vector2(0, 0.5f), new Vector2(1f, BkGaugeH + 5f),
-                            new Vector2(1f + Mathf.Clamp01((float)spec.Best) * (BkGaugeW - 3f), 0));
-                        var mimg = mark.gameObject.AddComponent<Image>();
-                        mimg.raycastTarget = false;
-                        mimg.color = new Color(0.20f, 0.13f, 0.07f, 0.85f);
-                    }
+                    // FIVE DOTS, NOT A LEVEL (2026-09-06). The sight glass asked the reader to
+                    // measure a bar; the dots are counted. Filled up to the box this band
+                    // wants, each in that box's own colour, the rest left open.
+                    var dotsArt = ChromeArt.RatioDots(page.Locked ? -1 : spec.Box,
+                                                      BandBoxColors, RatioBox.Count);
+                    float dw = dotsArt.rect.width * 2f, dh = dotsArt.rect.height * 2f;
+                    var dots = NewRect("Dots", line);
+                    Place(dots, new Vector2(1, 0.5f), new Vector2(dw, dh), new Vector2(-6f - dw, 0));
+                    dots.pivot = new Vector2(0, 0.5f);
+                    var dimg = dots.gameObject.AddComponent<Image>();
+                    dimg.sprite = dotsArt;
+                    dimg.raycastTarget = false;
+                    dimg.color = stocked || !ingredient ? Color.white : new Color(1f, 1f, 1f, 0.5f);
                 }
             }
 
@@ -1314,7 +1312,7 @@ namespace LastCall.UI
             var bestMake = page.Locked || !r.HasAuthoredRatios ? null : run.BestMakeFor(r.Id);
             if (!perfected && bestMake != null)
             {
-                var best = NewText("YB", print, _body, 8, TextAnchor.MiddleCenter, quiet);
+                var best = NewText("YB", print, _body, 16, TextAnchor.MiddleCenter, quiet);
                 best.rectTransform.anchorMin = best.rectTransform.anchorMax = new Vector2(0.5f, 1f);
                 best.rectTransform.pivot = new Vector2(0.5f, 1f);
                 best.rectTransform.sizeDelta = new Vector2(BkColW, 12f);

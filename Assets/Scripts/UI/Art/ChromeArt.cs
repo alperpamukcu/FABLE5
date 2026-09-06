@@ -2494,6 +2494,48 @@ namespace LastCall.UI
             return Cache[key] = Make(px, W, H, Vector4.zero);
         }
 
+        /// <summary>
+        /// THE POUR, AS FIVE DOTS (2026-09-06, the author: "tariflerde kullanılan doluluk
+        /// göstergesinin barını görseldeki tarzda değiştirmek istiyorum. 5 noktadan oluşuyor
+        /// her nokta %20lik kısmı ifade ediyor. Her noktanın yine rengi de olacak").
+        ///
+        /// One dot a fifth of the glass, strung on a line: filled up to and including the box
+        /// this band wants, each in that box's own colour, the rest left open. A bar with a
+        /// sliding level asked the reader to measure it; five dots are counted at a glance,
+        /// which is what a recipe page is for.
+        /// </summary>
+        public static Sprite RatioDots(int lit, Color[] colours, int count = 5)
+        {
+            string key = "dots:" + lit + ":" + count;
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            const int R = 4, Gap = 6;                    // dot radius, and the run between them
+            int step = R * 2 + Gap;
+            int w = count * (R * 2) + (count - 1) * Gap, h = R * 2 + 1;
+            var px = new Color32[w * h];
+            var openFill = new Color32(0xC9, 0xBC, 0xA8, 255);   // Cream[3]: an empty measure
+            var rim = new Color32(0x45, 0x3E, 0x38, 255);        // Cream[0]
+            float cy = (h - 1) * 0.5f;
+
+            // The string first, so the dots sit on it.
+            for (int x = R; x < w - R; x++) px[(int)cy * w + x] = rim;
+
+            for (int i = 0; i < count; i++)
+            {
+                float cx = R + i * step;
+                var fill = i <= lit && colours != null && colours.Length > i
+                    ? (Color32)colours[i] : openFill;
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                    {
+                        float dx = x - cx, dy = y - cy;
+                        float d = Mathf.Sqrt(dx * dx + dy * dy);
+                        if (d > R + 0.4f) continue;
+                        px[y * w + x] = d > R - 0.8f ? rim : fill;
+                    }
+            }
+            return Cache[key] = Make(px, w, h, Vector4.zero);
+        }
+
         private static Sprite Make(Color32[] px, int w, int h, Vector4 border)
         {
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)

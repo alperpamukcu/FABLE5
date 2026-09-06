@@ -150,6 +150,24 @@ nesnelerin paranın yıldızın ve benzeri nesnelerin kullanım durumunda iconla
   star for a rating, a bottle for stock — the picture lands while the eye is still on the
   counter.
 
+## 0e. Five dots are the pour (2026-09-06)
+
+The author: *"tariflerde kullanılan doluluk göstergesinin barını görseldeki tarzda değiştirmek
+istiyorum. 5 noktadan oluşuyor her nokta %20lik kısmı ifade ediyor. Her noktanın yine rengi de
+olacak."*
+
+The recipe page's sight glass is five dots on a string (`ChromeArt.RatioDots`): one dot a fifth
+of the glass, filled up to and including the box a band wants, each in that box's own colour
+(`BandBoxColors`, the same five the whole game grades with), the rest left open. A sliding
+level asked the reader to MEASURE it; dots are counted. The legend at the top of the page is
+the same five dots with the share under each, so nothing is learned twice.
+
+The page is laid out around the drink now: the glass at 76 with the price beside it at display
+24 (*"ücreti daha ön plana çıkarılsın"*), bottles at 40 in the rows (*"tarifteki alkol
+görsellerini ... büyütelim"*), and every caption at the book's own 16 rather than the 8 the
+game keeps for tags over a head (*"menüde daha okunaklı bir font"*). The book itself is the
+same size it always was.
+
 ## 1. The vocabulary
 
 The chrome is made of NAMED OBJECTS, not of rectangles. A new surface picks from this list; if
