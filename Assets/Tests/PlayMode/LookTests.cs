@@ -422,6 +422,15 @@ namespace LastCall.PlayTests
             // moment later — which is how the market failed its own baseline by 190,000
             // pixels that were all the right pixels. Two identical captures in a row is the
             // only honest definition of "settled", and it costs a few frames.
+            // AND PARK THE POINTER FIRST (2026-09-06). The room answers the cursor by
+            // rising, growing and SWAYING (HoverGlow), so a prop left under the mouse after
+            // the last click never stops moving and the two-identical-frames rule below can
+            // never be met. A picture is taken with the hand off the subject — the same
+            // reason this suite pins the window size.
+            Set(_mouse.position, new Vector2(4f, 4f));
+            yield return null;
+            yield return null;
+
             Color32[] now = null, previous = null;
             RectInt roi = default;
             float deadline = Time.realtimeSinceStartup + 8f;
