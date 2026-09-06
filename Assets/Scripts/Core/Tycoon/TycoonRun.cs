@@ -1821,6 +1821,24 @@ namespace LastCall.Core
         }
 
         /// <summary>
+        /// The same decision, taken AT THE BASIN: the drink goes down the drain and the tap
+        /// runs after it. The goods are written off at the bin's rate — one accounting, so
+        /// neither route is the cheap way out — and what the sink adds is TIME: the basin is
+        /// busy afterwards, and a busy basin is glasses that cannot be washed and stools that
+        /// cannot be laid (GDD 27 §4.2). Refuses while the tap is already running, which is
+        /// why the room asks before it lets go of the glass. Returns what it cost.
+        /// </summary>
+        public int PourAwayAtSink()
+        {
+            EnsurePhase(TycoonPhase.DayOpen);
+            if (Floor.House.SinkBusy)
+                throw new InvalidOperationException("The sink is running — wait for it.");
+            int fee = WriteOffVessels();
+            Floor.House.RunTheTap();
+            return fee;
+        }
+
+        /// <summary>
         /// Whether the bar's drain writes anything off (2026-08-26, the author: the upgraded
         /// sink takes the loss out of a poured-away drink; the one the bar opens with does
         /// not). ASKED OF THE FIXTURE, not of a rung number: the waiver is a flag on the

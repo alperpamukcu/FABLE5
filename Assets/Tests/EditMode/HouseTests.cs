@@ -147,6 +147,32 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void TheTapRuns_ForARinseWithNothingOnTheDrainer()
+        {
+            // The author, 2026-09-06: "lavabo her kullanildiginda bekleme suresi baslamali".
+            // A tin tipped down the drain occupies the basin exactly as a stack of glasses
+            // does — the wait belongs to the sink, not to the crockery — so the glasses
+            // queued behind it wait, and the stools they came off wait with them.
+            var house = Counter();
+            double runs = house.RunTheTap();
+            Assert.AreEqual(Housekeeping.WashSecondsFor(0), runs, Eps, "the base wash, with no stack");
+            Assert.IsTrue(house.SinkBusy);
+            Assert.AreEqual(0, house.GlassesOut, "a rinse holds no stool: nothing was collected");
+
+            var mess = house.LeaveMess("rocks");
+            house.CollectGlass(mess);
+            Assert.Throws<InvalidOperationException>(() => house.WashGlasses(),
+                "the glass in the hand waits for the rinse to finish");
+            Assert.Throws<InvalidOperationException>(() => house.RunTheTap(),
+                "and so does a second rinse");
+
+            house.Tick(runs);
+            Assert.IsFalse(house.SinkBusy);
+            Assert.AreEqual(1, house.GlassesInHand, "the rinse washed nothing but itself");
+            Assert.Greater(house.WashGlasses(), 0.0, "and now the glass can go in");
+        }
+
+        [Test]
         public void ALeaver_LeavesAGlassAndAMark_AndTheGlassHoldsTheStool()
         {
             var house = Counter();

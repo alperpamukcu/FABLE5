@@ -204,6 +204,20 @@ namespace LastCall.Core
             return WashLeft;
         }
 
+        /// <summary>
+        /// THE TAP RUNS FOR EVERY USE OF THE SINK (2026-09-06, the author: "lavabo her
+        /// kullanildiginda bekleme suresi baslamali"). A drink tipped down the drain and a
+        /// tin rinsed out both occupy the basin exactly as a stack of glasses does — the
+        /// wait is the sink's, not the crockery's — so this starts the same clock with
+        /// nothing on the drainer. Returns how long the water runs.
+        /// </summary>
+        public double RunTheTap()
+        {
+            if (SinkBusy) throw new InvalidOperationException("The sink is running — wait for it.");
+            WashLeft = WashSecondsFor(0);
+            return WashLeft;
+        }
+
         /// <summary>How long the tap runs for a stack of this size.</summary>
         public static double WashSecondsFor(int glasses) =>
             WashBaseSeconds + WashPerGlassSeconds * Math.Max(0, glasses);

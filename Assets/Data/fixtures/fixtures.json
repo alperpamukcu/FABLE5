@@ -55,7 +55,7 @@
     {
       "id": "taps",
       "x": 540,
-      "y": 76.5,
+      "y": 71.5,
       "onCounter": true
     },
     {
@@ -73,7 +73,7 @@
     },
     {
       "id": "sink",
-      "x": 140,
+      "x": 110,
       "y": 68.5,
       "onCounter": true
     },
@@ -86,7 +86,7 @@
     {
       "id": "beer_mat",
       "x": 540,
-      "y": 74,
+      "y": 70,
       "onCounter": true,
       "flat": true
     },

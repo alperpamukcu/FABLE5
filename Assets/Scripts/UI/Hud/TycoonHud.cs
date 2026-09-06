@@ -2044,7 +2044,12 @@ namespace LastCall.UI
         // edge is 99, the book is 28 wide, and six units of air between them puts its middle
         // at stage 79. It is also further from every stool than it has ever been, which the
         // suite's stool click is grateful for (see BuildBookProp's raycast note).
-        private const float BookPropX = -482f;   // stage x 79, on the sink's left shoulder
+        // -482 -> -542, and three of the room's pixels lower (2026-09-06, the author: "menü,
+        // sinkler, garnishler tezgahta 30 birim sola kaysın, menü 3 birim aşağı insin").
+        // Thirty of the ROOM's pixels, which is sixty of these — the counter is drawn at
+        // 640x360 in a 1280x720 field and the author places props by the room's grain.
+        private const float BookPropX = -542f;   // stage x 49, the counter's left end
+        private const float BookPropDrop = 3f * StageToHud;
 
         private Text _bookBadgeText;
 

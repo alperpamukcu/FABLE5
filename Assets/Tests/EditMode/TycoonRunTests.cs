@@ -70,6 +70,25 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void PouringAwayAtTheSink_CostsTheBinsFee_AndStartsTheTap()
+        {
+            // The two routes out of a bad build cost the same goods (2026-09-06): the bin is
+            // instant, the basin is not, and what the basin adds is the queue behind it.
+            var run = NewRun();
+            run.PourMeasure("gin", 0.4);
+            double before = run.Glass.TotalVolume;
+            Assert.Greater(before, 0.0);
+
+            int fee = run.PourAwayAtSink();
+            Assert.AreEqual((int)Math.Ceiling(before * TycoonRun.BinFeePerVolume), fee,
+                "the drain writes off what the bin would have");
+            Assert.IsTrue(run.Glass.IsEmpty, "and the tin comes back empty");
+            Assert.IsTrue(run.SinkBusy, "the tap runs after it");
+            Assert.Throws<InvalidOperationException>(() => run.PourAwayAtSink(),
+                "a second one waits for the basin");
+        }
+
+        [Test]
         public void AFullDay_PlaysHeadless_AndPaysTheBills()
         {
             var run = NewRun();

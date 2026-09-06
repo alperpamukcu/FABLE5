@@ -187,8 +187,14 @@ namespace LastCall.UI
         private void DressBookProp()
         {
             if (stage == null) return;
-            if (_bookGlow != null) _bookGlow.Retint(stage.RoomWashLight);
-            else if (_bookImg != null) _bookImg.color = stage.RoomWashLight;
+            // THE MENU STANDS OUT OF THE EVENING (2026-09-06, the author: "menü
+            // ışıklandırmalardan etkilenmesin o kadar, daha ön planda dursun"). It was tinted
+            // by the room from 2026-08-25, so that it belonged to the bar rather than sitting
+            // on top of it; the author has decided the other way — the one prop that opens a
+            // whole screen keeps its own daylight and reads as the nearest thing on the bar.
+            // The hover glow still works, off a rest colour that no longer moves.
+            if (_bookGlow != null) _bookGlow.Retint(Color.white);
+            else if (_bookImg != null) _bookImg.color = Color.white;
 
             if (_bookLabelGroup != null)
             {
@@ -216,7 +222,7 @@ namespace LastCall.UI
             // constant, so a re-drawn book lands where this rule says and not where today's
             // 110 units happen to put it.
             var foot = new Vector2(BookPropX,
-                CounterLineY - 36f - _bookProp.sizeDelta.y * 0.5f + lift);
+                CounterLineY - 36f - _bookProp.sizeDelta.y * 0.5f + lift - BookPropDrop);
             _bookProp.anchoredPosition = foot;
             if (_bookShadow != null) _bookShadow.anchoredPosition = foot + new Vector2(0f, 2f);
             // The label rides above the book's own head, so it follows the counter's lift

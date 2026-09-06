@@ -52,6 +52,60 @@ namespace LastCall.UI
         private float _slideDir;            // +1: forward (in from the right), -1: back
         private bool _slideFade;            // Closed→Menu opens with a fade, not a push
         private const float SlideDur = 0.16f;
+
+        /// <summary>
+        /// THE ONE SLOW MOVE (2026-09-06, the author: "shaker->bardak sahne gecis
+        /// animasyonunda gecis daha yavas olmali ... bu animasyonda hizli olmasin"). Every
+        /// other stage change is a cut with a push behind it; this one is the drink being
+        /// carried from the tin to the glass, and it is the only move in the game where
+        /// the player is meant to watch the thing travel.
+        /// </summary>
+        /// <remarks>A FIELD, not a const, so a probe in play can stretch it and watch what
+        /// the slide actually does frame by frame — which is how the chrome pinning below
+        /// was measured rather than believed (2026-09-06).</remarks>
+        private static float BenchSlideDur = 0.42f;
+
+        /// <summary>How much of the slide runs at full speed before the brake bites.</summary>
+        private const float BrakePoint = 0.86f;
+
+        /// <summary>What the props do when it stops: how far they carry on, how fast they
+        /// rock it off and how quickly that dies (2026-09-06, "tam durdugu sirada ani fren
+        /// etkisi yasasin"). The bench travels at one speed and then simply STOPS, and
+        /// everything standing on it keeps going for a moment — which is the whole read.</summary>
+        private const float LurchUnits = 22f, LurchHz = 4.2f;
+        private static float LurchLife = 0.42f;   // a field for the same reason as BenchSlideDur
+
+        private bool _benchSlide;           // this transit is bench-to-bench: slow, braked
+        private RectTransform _lurchRt;     // the surface that is still catching up
+        private float _lurchT, _lurchDir;
+
+        /// <summary>
+        /// The chrome both benches wear in the same place: the slab, the way back and the
+        /// bin. It is REGISTERED rather than reparented — each panel keeps building its
+        /// own, and during a bench-to-bench slide every copy is pushed the other way by
+        /// exactly what the panel is doing, so what the player sees is one set of controls
+        /// standing still while the work slides past behind it (2026-09-06, the author:
+        /// "UI ve butonlar degismiyorsa sabit kalmali").
+        /// </summary>
+        private readonly List<(RectTransform Panel, RectTransform Child, Vector2 Home)> _fixedChrome
+            = new List<(RectTransform, RectTransform, Vector2)>();
+
+        private void RegisterFixed(RectTransform panel, RectTransform child)
+        {
+            if (panel == null || child == null) return;
+            _fixedChrome.Add((panel, child, child.anchoredPosition));
+        }
+
+        /// <summary>Constant speed, then a short hard stop: the curve of a thing that was
+        /// being pushed and is not any more. OutCubic decelerates from the first frame,
+        /// which is the opposite of what braking looks like.</summary>
+        private static float Brake(float k)
+        {
+            if (k <= BrakePoint) return k / BrakePoint * (1f - (1f - BrakePoint) * 0.5f);
+            float t = (k - BrakePoint) / (1f - BrakePoint);
+            float head = 1f - (1f - BrakePoint) * 0.5f;
+            return head + (1f - head) * Tweening.OutCubic(t);
+        }
         private const float SlideDist = 1280f;
         private bool InTransit => _slideOutRt != null || _slideInRt != null;
         private CanvasGroup _rootGroup;     // raycasts off while the field is moving
@@ -99,7 +153,20 @@ namespace LastCall.UI
         // the thing you are about to shake" without telling the player it changed size.
         private const float CapGrowth = 1.0f;
         private const float CapArtOffset = 0.245f;   // the lid art sits this far above its rect centre
-        private const float TinW = 168f;
+        /// <summary>
+        /// THE TIN'S ONE SIZE, ON BOTH BENCHES (2026-09-06, the author: "shaker ve bardak
+        /// sahnelerinde bardak boyutuyla shaker boyutu orantili degil bunlari orantila.
+        /// Kucuk olmasinlar"). The tin was 200x358 and the glass 190x260, which drew a
+        /// 300-unit shaker beside a 244-unit highball — 1.23 of it, where a real 23cm
+        /// shaker stands 1.5 times a 15cm glass. The ratio is fixed by GROWING the tin
+        /// rather than shrinking the glass, which is the other half of what was asked.
+        /// The size itself is the sheet at a WHOLE multiple — 2x of 116x208 — because a
+        /// pixel drawing at 1.72 puts some of its pixels on two screen pixels and some on
+        /// three; the capped tin lands at 348 against a highball's 244, which is 1.43 of
+        /// it against a real bar's 1.53. Every other number on these benches is a fraction
+        /// of this rect (the cavity, the cap's seat, the cap's own plate), so they follow.
+        /// </summary>
+        private const float TinW = 232f, TinH = 416f;   // EXACTLY 2x the 116x208 sheet
         private const float CavityFloor = 0.0913f, CavityRim = 0.6106f;
         private const float GridGap = 6f;
         private Vector2 _listHome;
@@ -196,6 +263,7 @@ namespace LastCall.UI
             // The slide steps FIRST and unconditionally — the curtain's own law: a visual
             // that gates input must never be starved by an early return.
             StepStageSlide();
+            StepBenchLurch();
 
             var run = Run;
             if (run == null) return;
@@ -325,7 +393,9 @@ namespace LastCall.UI
                 // move left in the game: the bench hands the capped tin ON to the glass.
                 // Everything else — including arriving from the room — is the way back.
                 bool forward = previous == Stage.Shaker && stage == Stage.Serve;
-                PlayStageSlide(PanelOf(previous), PanelOf(stage), forward ? 1f : -1f);
+                bool bench = (previous == Stage.Shaker || previous == Stage.Serve)
+                          && (stage == Stage.Shaker || stage == Stage.Serve);
+                PlayStageSlide(PanelOf(previous), PanelOf(stage), forward ? 1f : -1f, bench);
             }
             else if (fade)
                 PlayStageFade(PanelOf(stage));
@@ -341,7 +411,8 @@ namespace LastCall.UI
             return grp;
         }
 
-        private void PlayStageSlide(RectTransform outRt, RectTransform inRt, float dir)
+        private void PlayStageSlide(RectTransform outRt, RectTransform inRt, float dir,
+                                   bool bench = false)
         {
             _slideOutRt = outRt;
             _slideInRt = inRt;
@@ -349,8 +420,9 @@ namespace LastCall.UI
             _slideInGroup.alpha = 1f;
             _slideDir = dir;
             _slideFade = false;
+            _benchSlide = bench;
             _transT = 0f;
-            _transDur = SlideDur;
+            _transDur = bench ? BenchSlideDur : SlideDur;
             inRt.anchoredPosition = new Vector2(dir * SlideDist, 0f);
             if (_rootGroup != null) _rootGroup.blocksRaycasts = false;
         }
@@ -386,15 +458,55 @@ namespace LastCall.UI
                 _slideInRt.anchoredPosition = Vector2.zero;
                 if (_slideInGroup != null) _slideInGroup.alpha = 1f;
             }
+            // Whatever was held still goes back to where its panel thinks it is.
+            foreach (var (panel, child, rest) in _fixedChrome)
+                if (child != null) child.anchoredPosition = rest;
+            // AND THE WORK CATCHES UP. The bench has stopped dead; the tin, the glass and
+            // the shadows standing on it carry on for a beat and rock back.
+            if (_benchSlide && _slideInRt != null)
+            {
+                _lurchRt = SurfaceOf(_stage);
+                _lurchDir = _slideDir;
+                _lurchT = 0f;
+            }
+            _benchSlide = false;
             _slideOutRt = null;
             _slideInRt = null;
             _slideInGroup = null;
             if (_rootGroup != null) _rootGroup.blocksRaycasts = true;
         }
 
+        /// <summary>The coordinate space each bench does its work in — what lurches.</summary>
+        private RectTransform SurfaceOf(Stage stage) =>
+            stage == Stage.Shaker ? _pourSurface : stage == Stage.Serve ? _serveSurface : null;
+
+        /// <summary>
+        /// The brake, after the fact: a damped rock along the direction of travel, started
+        /// the frame the slide stops. It moves the whole work surface, so the glass, the
+        /// tin, their shadows and the drink in them all lurch together — one bench with
+        /// things standing on it, rather than a handful of props each doing its own trick.
+        /// </summary>
+        private void StepBenchLurch()
+        {
+            if (_lurchRt == null) return;
+            if (Motion.Reduced) { _lurchRt.anchoredPosition = Vector2.zero; _lurchRt = null; return; }
+            _lurchT += Time.unscaledDeltaTime;
+            float k = _lurchT / LurchLife;
+            if (k >= 1f)
+            {
+                _lurchRt.anchoredPosition = Vector2.zero;
+                _lurchRt = null;
+                return;
+            }
+            float amp = LurchUnits * (1f - k) * (1f - k);
+            float x = -_lurchDir * amp * Mathf.Cos(_lurchT * LurchHz * Mathf.PI * 2f);
+            _lurchRt.anchoredPosition = new Vector2(x, 0f);
+        }
+
         private void StepStageSlide()
         {
             if (!InTransit) return;
+            StepFixedChrome();
             _transT += Time.unscaledDeltaTime;
             float k = _transDur <= 0f ? 1f : Mathf.Clamp01(_transT / _transDur);
             if (k >= 1f) { SettleStageSlide(); return; }
@@ -403,11 +515,26 @@ namespace LastCall.UI
                 if (_slideInGroup != null) _slideInGroup.alpha = k * k * (3f - 2f * k);
                 return;
             }
-            float e = Tweening.OutCubic(k);
+            float e = _benchSlide ? Brake(k) : Tweening.OutCubic(k);
             if (_slideOutRt != null)
                 _slideOutRt.anchoredPosition = new Vector2(-_slideDir * SlideDist * e, 0f);
             if (_slideInRt != null)
                 _slideInRt.anchoredPosition = new Vector2(_slideDir * SlideDist * (1f - e), 0f);
+            StepFixedChrome();
+        }
+
+        /// <summary>Holds the shared controls where they were while their panel slides out
+        /// from under them. Only on a bench-to-bench move: everywhere else the whole screen
+        /// IS the change, and pinning the keys would read as them being left behind.</summary>
+        private void StepFixedChrome()
+        {
+            if (!_benchSlide) return;
+            foreach (var (panel, child, rest) in _fixedChrome)
+            {
+                if (panel == null || child == null) continue;
+                if (panel != _slideInRt && panel != _slideOutRt) continue;
+                child.anchoredPosition = rest - new Vector2(panel.anchoredPosition.x, 0f);
+            }
         }
 
         /// <summary>
@@ -493,6 +620,7 @@ namespace LastCall.UI
             string caption = "◀  BACK TO THE BAR")
         {
             var rt = NewRect("EdgeBack", panel);
+            RegisterFixed(panel, rt);    // ...and so is the way out
             // Inside the author's 1149-wide working margin, and CLEAR OF THE SPOON: the
             // bar spoon's slot hangs off the band's bottom-left at x 108..172, and a key
             // starting at 66 stood under its bowl (2026-08-26, seen in play).
@@ -674,6 +802,7 @@ namespace LastCall.UI
         private void AddBinButton(RectTransform parent)
         {
             var rt = NewRect("Bin", parent);
+            RegisterFixed(parent, rt);   // the bin is the same key in the same place on both benches
             // On the ledge, clear of the key strip (2026-08-26): the way forward is a key
             // on that strip, and a bin sharing its row is one slip away from the press
             // nobody wants to make by accident. Wide enough now to carry its own name.

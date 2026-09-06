@@ -14,6 +14,16 @@ the counter; clicking it opens the **drink menu UI** — the player's current bo
 readable list (name, style colour, price, remaining volume). This declutters the stage for
 the seats and makes the shelf feel like *stock*, not UI.
 
+## The one slow move (2026-09-06)
+
+The author: *"Shaker->Bardak sahne geçiş animasyonunda geçiş daha yavaş olmalı, UI ve butonlar değişmiyorsa sabit kalmalı. Yeni gelen shaker ve bardak kayma animasyonunun momentumu ile hareket etsin yani tam durduğu sırada ani fren etkisi yaşasın."*
+
+Every other stage change is a cut with a push behind it (`SlideDur` 0.16s, `OutCubic`). The tin-to-glass move is the drink being CARRIED, and it is the one move the player is meant to watch, so it runs at `BenchSlideDur` 0.42s with three things the quick slide does not have:
+
+- **The shared controls stand still.** The slab, the way back and the bin are the same chrome in the same place on both benches, so each panel's copy is pushed the opposite way by exactly what its panel is doing (`RegisterFixed` / `StepFixedChrome`). What the player sees is one set of controls holding position while the work slides past behind it.
+- **The curve brakes rather than eases.** `Brake(k)` runs at one speed for 86% of the travel and stops over the last 14%; `OutCubic` decelerates from the first frame, which is the opposite of what being pushed and then let go looks like.
+- **The work catches up.** The frame the slide stops, the arriving bench's work surface — glass, tin, shadows and the drink in them, one rect — takes a damped rock along the direction of travel (`StepBenchLurch`, 22 units at 4.2 Hz, dead in 0.42s). `Motion.Reduced` skips it, as it skips the slide.
+
 ## 2. Building a drink: the shaker flow
 
 **The hands-on rule (2026-07-22, explicit request): the player performs the motions with

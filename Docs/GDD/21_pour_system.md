@@ -20,6 +20,14 @@
 You are not playing cards. You are **pouring a drink for a specific person**, and how much of
 each bottle goes in is the whole decision.
 
+## The tin is drawn twice its sheet (2026-09-06)
+
+The author: *"Shaker ve bardak sahnelerinde bardak boyutuyla shaker boyutu orantılı değil bunları orantıla. Küçük olmasınlar."* The tin stood in a 200×358 rect and the serving glass in 190×260, which drew a 300-unit shaker beside a 244-unit highball — 1.23 of it, where a 23cm shaker stands about 1.5 times a 15cm glass. Both benches now draw the tin at `TinW`×`TinH` = 232×416, which is EXACTLY twice its 116×208 sheet: the capped tin lands at 348 against the highball's 244 (1.43), the ratio is fixed by growing the tin rather than shrinking the glass, and the whole multiple puts every art pixel on the same four screen pixels instead of some on two and some on three.
+
+- **The cavity, the cap and the cap's seat are fractions of that rect** (`CavityFloor`/`CavityRim`/`CapArtOffset`), so they followed it up untouched.
+- **The aim is at the RIM now, not at the top of the box.** The pour asked whether the bottle's mouth was over `anchoredPosition + height/2` — the top of the RECT, which for a 358-tall tin was 62 units above the drawn rim and for a 416-tall one is 137. `TinMouth()` measures the rim off the sprite's own opaque box instead, and the mouth's width with it. The PlayMode pour test caught this: it carries the bottle across the whole bench and nothing poured.
+- **The hand bottle is still 2× its own master** (`BottleH` 384), so it now reads a little shorter than the tin beside it. Real glass says the opposite — a 30cm bottle over an 18cm tin — and the fix is one number (576, the next whole multiple), left for the author to call.
+
 ## 2. Why this replaces the deck
 
 The deckbuilder draw asked "what did I get?". The pour asks "what does this person need, and

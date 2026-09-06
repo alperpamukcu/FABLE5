@@ -786,8 +786,8 @@ namespace LastCall.UI
                 // ayarla"). VesselArt reads it off the drawing instead.
                 Vector2 mouth = local + VesselArt.Swing(_pourMouth, tilt);
 
-                var opening = _shakerVessel.anchoredPosition + new Vector2(0, _shakerVessel.rect.height * 0.5f);
-                bool over = Mathf.Abs(mouth.x - opening.x) < 78f && mouth.y > opening.y - 30f;
+                var (opening, mouthHalf) = TinMouth();
+                bool over = Mathf.Abs(mouth.x - opening.x) < mouthHalf && mouth.y > opening.y - 30f;
                 // A full tin takes nothing more, so the stream stops with it: liquid pouring into
                 // a glass that cannot accept it read as an overflow the rules do not have
                 // (GDD 21 §3, 2026-07-28). The bottle stays in hand — only the pour ends.
@@ -906,7 +906,7 @@ namespace LastCall.UI
 
         /// <summary>Where each bench prop's base sits when it is standing: the tin's rect is
         /// centre-pivoted, the bottle's is gripped low at 0.22 of its height.</summary>
-        private float TinFootY => _shakerHome.y - 358f * 0.5f + 14f;
+        private float TinFootY => _shakerHome.y - TinH * 0.5f + 14f * (TinH / 358f);
         private float BottleFootY => _bottleRest.y - BottleH * 0.22f + 6f;
 
         /// <summary>Keeps one contact shadow under its prop: it holds that prop's own foot
@@ -925,6 +925,28 @@ namespace LastCall.UI
             var img = shadow.GetComponent<Image>();
             if (img != null && img.sprite != null)
                 img.color = new Color(0f, 0f, 0f, 0.55f * k * Mathf.Clamp01(alpha));
+        }
+
+        /// <summary>
+        /// WHERE THE TIN IS ACTUALLY OPEN, measured off the drawing rather than taken as the
+        /// top of the rect it is drawn in (2026-09-06). The two used to be near enough the
+        /// same thing; growing the tin to the glass's proportion pulled them 118 units apart,
+        /// and the aim went with the box — you had to hold the bottle a hand above the rim
+        /// before anything poured, which is how the pour smoke test found it. Returns the rim
+        /// in the surface's own coordinates, and how far either side of it counts as "in".
+        /// </summary>
+        private (Vector2 Centre, float Half) TinMouth()
+        {
+            var rt = _shakerVessel;
+            float top = rt.anchoredPosition.y + rt.rect.height * 0.5f;
+            var sp = _shakerBodyImg != null ? _shakerBodyImg.sprite : null;
+            if (sp == null || sp.rect.height < 1f)
+                return (new Vector2(rt.anchoredPosition.x, top), 78f);
+            var ob = ItemArt.OpaqueBounds(sp);
+            float k = rt.rect.height / sp.rect.height;              // the drawing fills the rect
+            float drop = (sp.rect.height - (ob.y + ob.height)) * k; // empty canvas over the rim
+            // The mouth's own width plus a little slack: threading a rim is not the game.
+            return (new Vector2(rt.anchoredPosition.x, top - drop), ob.width * k * 0.5f + 8f);
         }
 
         /// <summary>Places the shaker's pooled liquid from the glass interior and its live fill,
@@ -1433,6 +1455,7 @@ namespace LastCall.UI
             // first CHILD is as far back as a child can go.
             var top = NewRect("CounterTop", panel);
             _benchCounters.Add(top);
+            RegisterFixed(panel, top);   // the slab is the same slab on both benches
             Stretch(top, Vector2.zero, new Vector2(1f, fromY), Vector2.zero, Vector2.zero);
             top.SetAsFirstSibling();
             var timg = top.gameObject.AddComponent<Image>();
@@ -1557,14 +1580,14 @@ namespace LastCall.UI
             // tin 66, cap 71, bottle 86, napkin 54 — and the numbers below leave at least
             // BenchClear between every pair of drawn edges, inside the 1149-wide working
             // area. Change one and re-check the others; the gaps are the contract.
-            _shakerHome = new Vector2(-120, BenchFootY + 179f);
+            _shakerHome = new Vector2(-120, BenchFootY + TinH * 0.5f);
             _bottleRest = new Vector2(150, -70);   // the bottle's own rest, needed by its foot line
             // The two contact shadows, built BEFORE the props so they draw under them.
             // Each is placed on its own prop's foot line every frame (PushPropShadow).
-            _tinShadow = AddContactShadow(_pourSurface, 158f, new Vector2(_shakerHome.x, TinFootY));
+            _tinShadow = AddContactShadow(_pourSurface, 158f * (TinW / 200f), new Vector2(_shakerHome.x, TinFootY));
             _bottleShadow = AddContactShadow(_pourSurface, 128f, new Vector2(_bottleRest.x, BottleFootY));
             _shakerVessel = NewRect("Shaker", _pourSurface);
-            Place(_shakerVessel, new Vector2(0.5f, 0.5f), new Vector2(200, 358), _shakerHome);
+            Place(_shakerVessel, new Vector2(0.5f, 0.5f), new Vector2(TinW, TinH), _shakerHome);
             var shakerImg = _shakerVessel.gameObject.AddComponent<Image>();
             // The real steel shaker (2026-07-23). It sits in front of the fluid so the metal
             // reads solid — the falling stream shows above the mouth then vanishes into the tin.
@@ -1623,7 +1646,7 @@ namespace LastCall.UI
             // mostly empty air — the lid art rides CapArtOffset above its centre — so the
             // rest is derived from where the DOME should sit, not from the rect.
             // Left of the tin with 73 units of air, and clear of the napkin by 65.
-            _capRest = new Vector2(-330, -165f - CapArtOffset * 358f);
+            _capRest = new Vector2(-330, -165f - CapArtOffset * TinH);
             _shakerTop = NewRect("ShakerCap", _pourSurface);
             _shakerTop.anchorMin = _shakerTop.anchorMax = _shakerTop.pivot = new Vector2(0.5f, 0.5f);
             _shakerTop.sizeDelta = _shakerOpenSize;

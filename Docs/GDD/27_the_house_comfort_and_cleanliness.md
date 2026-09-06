@@ -233,6 +233,16 @@ time, `WashSecondsFor`) was already there; this is what gives it a price. The fl
 cleans the instant a mess lands, so the 200-run report barely moves (till median $80 →
 $77, storm-offs 15.4% → 15.5%); the cost lands on a player who lets it pile up.
 
+**EVERY USE OF THE SINK STARTS THE WAIT (2026-09-06, the author: "lavabo her kullanıldığında
+bekleme süresi başlamalı").** `Housekeeping.RunTheTap()` is the wash without the crockery:
+it starts the same clock with nothing on the drainer, and `TycoonRun.PourAwayAtSink()` is the
+verb behind it — the goods written off at the bin's own rate (one accounting, so neither route
+out of a bad build is the cheap one) and the basin busy afterwards. What the drain costs over
+the bin is TIME: a busy basin is glasses that cannot be washed and stools that cannot be laid.
+The tin joins the finished glass at the drain (*"shaker da lavaboya dökülüp çöpe atılabilir"*):
+it is CARRIED there from the counter, like the glass, and the room's bin is the ÇÖP key on the
+bench, which has always emptied both vessels.
+
 ### 4.3 Exposure and the two readings
 
 Every tick, for every mess: if it is still dirty and has stood for longer than `DirtGrace`

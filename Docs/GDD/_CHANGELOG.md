@@ -2,6 +2,14 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The pointer's answer, corrected, and the tin's own size (2026-09-06):** the halo is cut to
+  the drawing rather than to the rect, the hovered prop comes to the front with its light one
+  step under it, "side to side" is a rock and not a drift, and the cellar's four-part bottles
+  do all of it about one centre (GDD 16 §0b). The tin can be carried to the basin, and every
+  use of the sink starts its wait (GDD 27 §4.2). Both benches draw the tin at twice its sheet
+  so it stands 1.43 of a highball (GDD 21), and the one move that carries a drink — tin to
+  glass — runs slow, brakes, and lets the work lurch after it (GDD 24). GDD_MEVCUT §9.30.
+
 - **The counter's own list (2026-09-06):** the ice and lemon dishes come back (they were never
   drawn, so the rail drew placeholders), the author's two mats land under the font and under
   the garnishes (measured from the rail, so a new jar moves it), the tin stays when the cellar

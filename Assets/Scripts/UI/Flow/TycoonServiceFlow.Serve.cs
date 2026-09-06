@@ -68,7 +68,7 @@ namespace LastCall.UI
         /// the tin looking like a thimble beside a 260-tall glass.</summary>
         /// <summary>The tin bench's own 358 since the two benches agreed on one tin
         /// (2026-08-26); the pour maths reads the mouth off this, so it moves with it.</summary>
-        private const float ServeVesselH = 358f;
+        private const float ServeVesselH = TinH;
 
         private RectTransform _serveShaker;     // the grabbable shaker
         private Image _serveShakerBody;
@@ -531,7 +531,7 @@ namespace LastCall.UI
             _serveShakerRest = new Vector2(190, BenchFootY + 0.22f * ServeVesselH);
             _serveShaker = NewRect("Shaker", _serveSurface);
             _serveShaker.pivot = new Vector2(0.5f, 0.22f);
-            _serveShaker.sizeDelta = new Vector2(200, ServeVesselH);
+            _serveShaker.sizeDelta = new Vector2(TinW, ServeVesselH);
             _serveShaker.anchoredPosition = _serveShakerRest;
             _serveShakerBody = _serveShaker.gameObject.AddComponent<Image>();
             var serveTin = ItemArt.Load("tin_open") ?? ItemArt.Shaker;

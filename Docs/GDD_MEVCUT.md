@@ -1183,6 +1183,38 @@ Yazarın altı maddesi, üç commit (`8168efb6`, `8db73970`, `fb09cf3c`).
 - **Testler:** `HouseTests` +2 (bardak nerede olursa olsun sayılır; ikinci bardak akan
   lavaboyu bekler), EditMode 486/486.
 
+### 9.30 · İmleç cevabının düzeltmeleri, tin'in lavabosu, tek beden tin, yavaş geçiş (2026-09-06)
+
+Yazarın ikinci listesi, iki commit (`<H>`, `<B>`).
+
+- **Konumlar:** çerez paspasının yüksekliği aynı; bira paspası 4, bira fıçısı 5 birim aşağı;
+  peçete tezgâhın sağ ucuna; menü, lavabo ve garnitürler 30 birim sola; menü 3 birim aşağı,
+  odanın ışığından muaf (beyaza sabit) ve daha önde. Birimler ODANIN kendi pikselleri
+  (1 oda px = 2 HUD birimi).
+- **İmleç cevabı düzeltildi (GDD 16 §0b):** hale artık RECT'in değil ÇİZİMİN sınırlarında
+  (`DrawnSize`, spritein opak kutusu); imlecin altındaki nesne hiyerarşide en üste çıkıyor,
+  ışığı bir altında (canvas'ta kardeş sırası, odada sorting order, çıkışta ikisi de geri);
+  "sağ sol" bir KAYMA değil ±2°'lik SALLANMA. Panel kapanırken sıra hiç ellenmiyor —
+  Unity ebeveyn (de)aktive olurken kardeş taşımayı reddediyor (PlayMode bunu yakaladı).
+- **Mahzenin şişeleri de yükseliyor, büyüyor, sallanıyor:** şişe dört transform (ön, arka,
+  içki, maske) — dördü birden `Movers` olarak veriliyor ve her biri KENDİ pivotu değil
+  GÖVDENİN merkezi etrafında dönüp büyüyor, yoksa içki camın dışına savruluyor.
+- **Tin lavaboya taşınıyor:** tezgâhtaki tin basılıp sürüklenince elde kalkıyor (10 px
+  eşiği; eşiği geçmeyen basış hâlâ bench'in kapısı), lavaboya bırakılınca içindekiler
+  gidiyor ve musluk akıyor. Çöp zaten bench'in ÇÖP tuşu.
+- **Lavabo her kullanımda meşgul:** `RunTheTap()` + `PourAwayAtSink()`; bardağı da dökmek
+  artık musluğu başlatıyor. Para cezası çöple aynı (tek muhasebe), fark ZAMAN.
+- **Tek beden tin (GDD 21):** iki bench de 232×416 — 116×208 sayfanın TAM 2 katı. Kapalı
+  tin 348, highball 244 → 1.43 (gerçekte ~1.53). Nişan artık kutunun tepesine değil
+  KENARA (`TinMouth`, sprite'ın opak kutusundan) — 137 birimlik fark PlayMode dökme
+  testini kırmıştı. El şişesi hâlâ 2× (384) ve tin'in yanında bir tık kısa duruyor;
+  bir sonraki tam kat 576, yazarın kararı.
+- **Tek yavaş geçiş (GDD 24):** shaker→bardak 0.42s; ortak krom (tezgâh, geri, çöp) yerinde
+  duruyor, eğri sabit hızla gidip son %14'te FRENLİYOR, duruşta çalışma yüzeyi (bardak,
+  tin, gölgeler, içki) 22 birimlik sönümlü bir sarsıntı alıyor.
+- **Testler:** EditMode 488/488 (+2: musluk boş çalışıyor, dökme çöpün ücretini alıp
+  musluğu başlatıyor), PlayMode 10/10, bench temel görüntüsü yeniden kutsandı.
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

@@ -569,7 +569,9 @@ namespace LastCall.UI
         // stage 195..380 — clear of the basin's right edge (181) and well short of the drip
         // mat (480). The finished drink moved right with it (see GlassHome), so the counter
         // reads left to right the way the night runs: sink, the makings, the drink, the tap.
-        private const float PrepRailX0 = -250f, PrepRailGap = 74f;
+        // -250 -> -310: thirty of the room's own pixels left (2026-09-06, the author), which
+        // is sixty of the HUD's. The mat under them is measured off this, so it follows.
+        private const float PrepRailX0 = -310f, PrepRailGap = 74f;
 
         /// <summary>How big a square each dish is drawn inside. The drawings are all
         /// different shapes, so preserveAspect fits each one in here and leaves the rest of
@@ -851,7 +853,11 @@ namespace LastCall.UI
         // is in the hand (the sink's click; the tap runs for Core's WashSecondsFor). Every
         // one of them is a Core verb the bot already calls; this only draws them.
 
-        private const float ClothX = 60f;     // the counter's left end, clear of the book at 158
+        // THE CLOTH MOVED TO THE OTHER END (2026-09-06, the author: "peçeteyi tezgahın sağına
+        // çek"). It sat at the counter's left end, which is where the menu now stands; the
+        // right end is clear past the beer font, and a cloth kept at the far end of the bar
+        // from the glassware is where a bar actually keeps one.
+        private const float ClothX = 1200f;   // the counter's right end, past the font
         private RectTransform _clothRt;
         private Image _clothImg;
         private bool _clothHeld;
@@ -859,6 +865,18 @@ namespace LastCall.UI
         private RectTransform _glassCarry;
         private Image _glassCarryImg;
         private bool _glassCarrying;
+        // THE TIN GOES TO THE BASIN TOO (2026-09-06, the author: "shaker da lavaboya
+        // dokulup cope atilabilir"). Carried, not clicked: the sink is the one verb on
+        // this counter that costs money, and the room already asks for the walk before it
+        // will take a finished drink. A press that never travels is still the door back
+        // to the bench, so the tin keeps both meanings and the hand decides which.
+        private RectTransform _tinCarry;
+        private Image _tinCarryImg;
+        private bool _tinCarrying, _tinPressed;
+        private Vector2 _tinPressAt;
+        /// <summary>How far the pointer has to travel before a press on the tin stops
+        /// being the door back to the bench and becomes a carry, in screen pixels.</summary>
+        private const float TinDragSlop = 10f;
         private Text _handStrip;
 
         private void BuildCloth()
@@ -1560,7 +1578,12 @@ namespace LastCall.UI
             if (run == null || run.Phase != TycoonPhase.DayOpen) return;
             if (_flow != null && _flow.IsOpen) return;
             if (!_glassShown || _glassServing || _glassReturning || !run.DrinkReady) return;
-            int fee = run.DiscardGlass();
+            // EVERY USE OF THE SINK STARTS THE WAIT (2026-09-06). Tipping a drink away
+            // busies the basin exactly as a stack of glasses does, so whatever is queued
+            // behind it waits — and the stools those glasses came off wait with them.
+            int fee;
+            try { fee = run.PourAwayAtSink(); }
+            catch (InvalidOperationException) { Toast("THE TAP IS RUNNING"); return; }
             Sfx.Play("drain", 0.9f);
             Toast(fee > 0 ? $"POURED AWAY · -${fee}" : "POURED AWAY");
             if (fee > 0)
@@ -1605,6 +1628,20 @@ namespace LastCall.UI
             var relay = _shakerProp.gameObject.AddComponent<HoverRelay>();
             relay.Entered = () => _shakerPropHovered = true;
             relay.Exited = () => _shakerPropHovered = false;
+
+            // A press is watched rather than acted on: travel past the slop and the tin comes
+            // off the mat into the hand (StepTinCarry), and the button's own click never
+            // fires because the prop is gone from under the pointer by the time it is let go.
+            var press = _shakerProp.gameObject.AddComponent<EventTrigger>();
+            var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            down.callback.AddListener(_ =>
+            {
+                var m = Mouse.current;
+                if (m == null) return;
+                _tinPressed = true;
+                _tinPressAt = m.position.ReadValue();
+            });
+            press.triggers.Add(down);
 
             // The hint, in the room's one hint language (the book's plate, the roller's own
             // fade): a prop that opens a whole screen says so before it is clicked.
@@ -1678,10 +1715,82 @@ namespace LastCall.UI
                 if (show) Sfx.Play("glass_down", 0.45f);   // it is set down on the mat
                 else _shakerPropHovered = false;
             }
-            if (!show) return;
+            if (!show) { _tinPressed = false; if (_tinCarrying) EndTinCarry(false); return; }
             float want = _shakerPropHovered ? 1f : 0f;
             _shakerPropLabelGroup.alpha = Motion.Reduced ? want : Mathf.MoveTowards(
                 _shakerPropLabelGroup.alpha, want, Time.unscaledDeltaTime / BookLabelFade);
+            StepTinCarry(run);
+        }
+
+        /// <summary>
+        /// THE TIN, CARRIED (2026-09-06). A press that travels lifts it off the coaster; while
+        /// it is up the tin itself is hidden and a copy follows the cursor, which is both how
+        /// the room already carries a dirty glass and what keeps the prop's own click from
+        /// firing on the way down. Let go over the basin and the build goes down the drain
+        /// with the tap running after it; let go anywhere else and it is simply back on its
+        /// mat, because that is where the prop is drawn from every frame anyway.
+        /// </summary>
+        private void StepTinCarry(TycoonRun run)
+        {
+            var mouse = Mouse.current;
+            if (mouse == null || run == null || run.Phase != TycoonPhase.DayOpen
+                || (_flow != null && _flow.IsOpen))
+            {
+                _tinPressed = false;
+                if (_tinCarrying) EndTinCarry(false);
+                return;
+            }
+            if (_tinPressed && !mouse.leftButton.isPressed) _tinPressed = false;
+            if (_tinPressed && !_tinCarrying
+                && (mouse.position.ReadValue() - _tinPressAt).magnitude > TinDragSlop)
+                BeginTinCarry();
+            if (!_tinCarrying) return;
+
+            var screen = mouse.position.ReadValue();
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot, screen, null, out Vector2 at))
+                _tinCarry.anchoredPosition = at;
+            if (mouse.leftButton.isPressed) return;
+            EndTinCarry(stage != null && stage.PointerOverDrain(screen));
+        }
+
+        private void BeginTinCarry()
+        {
+            if (_tinCarry == null)
+            {
+                _tinCarry = NewRect("TinInHand", _hudRoot);
+                _tinCarry.anchorMin = _tinCarry.anchorMax = new Vector2(0.5f, 0.5f);
+                _tinCarry.pivot = new Vector2(0.5f, 0.35f);
+                _tinCarry.sizeDelta = new Vector2(ShakerPropBox, ShakerPropBox);
+                _tinCarryImg = _tinCarry.gameObject.AddComponent<Image>();
+                _tinCarryImg.preserveAspect = true;
+                _tinCarryImg.raycastTarget = false;
+            }
+            _tinCarryImg.sprite = _shakerPropImg.sprite;
+            _tinCarryImg.color = new Color(1f, 1f, 1f, 0.95f);
+            _tinCarrying = true;
+            _tinPressed = false;
+            _tinCarry.gameObject.SetActive(true);
+            _tinCarry.SetAsLastSibling();
+            _shakerProp.gameObject.SetActive(false);
+            _shakerPropLabel.gameObject.SetActive(false);
+            _shakerPropShown = false;
+            _shakerPropHovered = false;
+            Sfx.Play("tin_tip", 0.5f);
+        }
+
+        private void EndTinCarry(bool intoTheSink)
+        {
+            _tinCarrying = false;
+            if (_tinCarry != null) _tinCarry.gameObject.SetActive(false);
+            if (!intoTheSink) return;
+            var run = Run;
+            if (run == null || run.Phase != TycoonPhase.DayOpen) return;
+            int fee;
+            try { fee = run.PourAwayAtSink(); }
+            catch (InvalidOperationException) { Toast("THE TAP IS RUNNING"); return; }
+            Sfx.Play("drain", 0.9f);
+            Toast(fee > 0 ? "TIPPED OUT · -$" + fee : "TIPPED OUT");
+            if (fee > 0) LogService("<color=#F27D8A>TIPPED OUT</color> a half-built drink · -$" + fee);
         }
 
         private void UpdateDrinkGlass()
