@@ -263,6 +263,10 @@ index'le (paylaşılan index'e dokunmadan) dilimlenerek:
 | `b51dc655` | **tin'in lavabosu, tek beden tin, yavaş geçiş** — taşınan tin, 232×416, 0.42s fren (§9.30) | yazar + bu oturum |
 | `6dc61d6c` | **ışığın şekli, çağıran lavabo, ovulan kir** — silüetten büyüyen parlama, Beckon, piksel piksel silinen işaret (§9.31) | yazar + bu oturum |
 | `1283ad2a` | **kenar ışığı, çelik tin, bardak altlıkları, ovulan kir, orantılı bardaklar** (§9.32) | yazar + bu oturum |
+| `0eb68ba0` | bardak altlığına oturdu, altlıklar kaldırıldı, lavabo 5 sn + saat (§9.33) | yazar + bu oturum |
+| `a397bef8` | **üç yudum, bulut baloncuk** — sıralı cümleler, daktilo, bulut şekli (GDD 24) | bu oturum |
+| `d05b6d75` | **Ece = haftalık görev** — üç tür, ödül, LOG şeridi, ikonlu bildirim (§9.34) | yazar + bu oturum |
+| `3016fc2f` | **tarif sayfası** — beş nokta, büyük görsel, öne çıkan ücret, 16px (GDD 16 §0e) | yazar + bu oturum |
 
 **Süpürme, ölçerek.** `Assets/Resources` altındaki her PNG oyunun kendi yükleme zincirine karşı
 ada, türetilmiş öneke VE sahne GUID'ine göre sınandı (`art_reach.py`): 41 kartın 39'unda tam v4
