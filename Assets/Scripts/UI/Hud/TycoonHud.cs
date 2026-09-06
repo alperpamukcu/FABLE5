@@ -518,6 +518,10 @@ namespace LastCall.UI
             public CounterMess Dirty;        // the mess left on this stool: the glass, then the mark (GDD 27 §4)
             public RectTransform DirtyProp;  // its clickable prop on the counter
             public RectTransform SmudgeProp; // the mark under it, until the cloth (GDD 27 §4)
+            public Texture2D SmudgeTex;      // ITS OWN copy of the mark, the one the cloth ruins
+            public Color32[] SmudgePx;       // ...and those pixels, so a rub is arithmetic
+            public int SmudgeInk;            // how much ink it started with, to know when it is gone
+            public bool SmudgeDirtyTex;      // pixels changed this frame: upload once, in one place
             public float WalkT;              // 0..1 walk-in progress
             public float WalkPace;           // 1 at the door, ArrivalPace at the stool
             public bool SawRight, SawLeft;   // was a neighbour there last frame

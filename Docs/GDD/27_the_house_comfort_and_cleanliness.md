@@ -243,6 +243,23 @@ The tin joins the finished glass at the drain (*"shaker da lavaboya dökülüp �
 it is CARRIED there from the counter, like the glass, and the room's bin is the ÇÖP key on the
 bench, which has always emptied both vessels.
 
+**THE MARK IS RUBBED OUT, NOT TAPPED AWAY (2026-09-06, the author: "masadaki kir
+geliştirilmeli. Bezle silinirken kir tek seferde silinmemeli, piksele göre boyama
+mantığında her yeri silmeli").** The cloth used to erase a whole mark the instant it
+touched any part of it, which made a mess a click with extra steps. The mark is 48×18 art
+pixels now — the ring the base printed, the wash inside it, a smear dragged off one side
+and three splashes around it — and every mess owns a COPY of those pixels, because the art
+is shared and cached. The cloth takes ink out of the texels it actually passes over (a soft
+disc, hardest under the middle), and Core's `Wipe` — with Core's own refusals — is called
+only once next to nothing is left. Measured in play: six dabs in one place take 5% of it,
+one straight pass across the middle takes 83%, and the corners want going back for.
+
+**THE BASIN CALLS THE HAND (same day: "bardak tutulduğunda lavaboya oyuncuyu
+yönlendirmeli ... bardak sürüklenirken lavabo ön plana çıkmalı").** While a glass or the
+tin is being carried, `DiegeticStage.CallTheDrain` lights the sink and brings it forward
+with the room's own hover language (GDD 16 §0b). Nothing else on the counter answers, so
+the one lit thing is the answer to "where does this go?".
+
 ### 4.3 Exposure and the two readings
 
 Every tick, for every mess: if it is still dirty and has stood for longer than `DirtGrace`

@@ -1623,7 +1623,7 @@ namespace LastCall.UI
             // of sway — no rise, because a tin that lifts off the bench is a spill.
             var tinGlow = _shakerVessel.gameObject.AddComponent<HoverGlow>();
             tinGlow.Graphics = new Graphic[] { shakerImg };
-            tinGlow.Rise = 0f; tinGlow.Sway = 1.2f; tinGlow.Grow = 1.03f; tinGlow.Halo = 1.5f;
+            tinGlow.Rise = 0f; tinGlow.Sway = 1.2f; tinGlow.Grow = 1.03f; tinGlow.Halo = 1.3f;
 
             // The metaball fluid draws over the vessel (pool); the solids float on top of it;
             // the bottle is created after, so it sits in front of the liquid.

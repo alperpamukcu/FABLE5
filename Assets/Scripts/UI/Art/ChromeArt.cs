@@ -2071,33 +2071,104 @@ namespace LastCall.UI
         /// little broken so no two stools carry the same one. Translucent, because it is a
         /// stain on the bar and not a thing standing on it.
         /// </summary>
+        /// <summary>
+        /// THE MARK, AS SOMETHING TO WORK AT (2026-09-06, the author: "masadaki kir
+        /// geliştirilmeli ... bezle silinirken kir tek seferde silinmemeli, piksele göre
+        /// boyama mantığında her yeri silmeli"). The old mark was 28x9 — a ring the size of
+        /// a fingernail, which is nothing to sweep a cloth across; you cannot rub out what
+        /// you cannot miss. This is the same wet ring at 48x18 with the rest of what a
+        /// finished drink leaves: the ring the base printed, the wash inside it, a smear
+        /// dragged off one side, and two or three splashes around it. Every one of those is
+        /// somewhere the cloth has to actually go.
+        ///
+        /// The pixels are the point rather than the picture: <see cref="Sprite"/>s made here
+        /// are shared and cached, so the counter takes a COPY of this one per mess and rubs
+        /// holes in the copy (TycoonHud.BuildSmudge).
+        /// </summary>
         public static Sprite Smudge(int seed)
         {
             string key = "smudge:" + seed;
             if (Cache.TryGetValue(key, out var got) && got != null) return got;
-            const int W = 28, H = 9;
-            var px = new Color32[W * H];
+            return Cache[key] = Make(SmudgePixels(seed, out int sw, out int sh), sw, sh, Vector4.zero);
+        }
+
+        /// <summary>The mark's own pixels, so a mess can own a copy it is allowed to ruin.</summary>
+        public static Color32[] SmudgePixels(int seed, out int w, out int h)
+        {
+            w = SmudgeW; h = SmudgeH;
+            var px = new Color32[w * h];
             // A WET RING CATCHES THE LIGHT. The first draft was the counter's own dark at
             // half alpha, and on the slate it was invisible — photographed in play
             // (2026-09-05). What a glass leaves on a dark bar is a pale ring of water with
             // the room's neon in it, so the ring is cream and the wash inside it cyan, both
             // translucent, both a step brighter than the slab.
-            var ring = new Color32(0xF2, 0xE8, 0xD5, 96);
-            var wash = new Color32(0x7D, 0xF0, 0xE3, 34);
-            float cx = (W - 1) / 2f, cy = (H - 1) / 2f;
-            for (int y = 0; y < H; y++)
-                for (int x = 0; x < W; x++)
+            // ...AND IT HAS TO BE SEEN TO BE WIPED (2026-09-06). At 96 and 34 the mark was a
+            // rumour on a dark counter — photographed in play, most of it simply was not
+            // there — and a mess you cannot see is a mess you cannot be asked to clean.
+            // Same two colours, opaque enough to read against the slate.
+            var ring = new Color32(0xF2, 0xE8, 0xD5, 150);
+            var wash = new Color32(0x7D, 0xF0, 0xE3, 72);
+            var drip = new Color32(0xF2, 0xE8, 0xD5, 120);
+
+            // The ring the base printed, a little left of centre and a little squashed.
+            float cx = w * 0.42f + Hash(3, 1, seed) * 3f, cy = h * 0.5f;
+            float rx = w * 0.30f, ry = h * 0.40f;
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
                 {
-                    float dx = (x - cx) / cx, dy = (y - cy) / cy;
+                    float dx = (x - cx) / rx, dy = (y - cy) / ry;
                     float d = Mathf.Sqrt(dx * dx + dy * dy);
-                    float edge = 0.94f + (Hash(x, y, 11 + seed) - 0.5f) * 0.14f;
-                    Color32 c = new Color32(0, 0, 0, 0);
-                    if (d <= edge && d > edge - 0.26f) c = Hash(x, y, 5 + seed) > 0.14f ? ring : wash;
-                    else if (d <= edge - 0.26f && Hash(x, y, 7 + seed) > 0.55f) c = wash;
-                    px[(H - 1 - y) * W + x] = c;
+                    float edge = 0.96f + (Hash(x, y, 11 + seed) - 0.5f) * 0.16f;
+                    if (d <= edge && d > edge - 0.30f)
+                        px[(h - 1 - y) * w + x] = Hash(x, y, 5 + seed) > 0.14f ? ring : wash;
+                    else if (d <= edge - 0.30f && Hash(x, y, 7 + seed) > 0.52f)
+                        px[(h - 1 - y) * w + x] = wash;
                 }
-            return Cache[key] = Make(px, W, H, Vector4.zero);
+
+            // THE SMEAR: somebody put the glass down and slid it. One tapering tail off the
+            // ring, on whichever side this seed says, which is the part of the mark a
+            // straight-down dab of the cloth always misses.
+            float dir = Hash(2, 2, seed) > 0.5f ? 1f : -1f;
+            float tail = w * 0.34f;
+            for (float t = 0f; t < tail; t += 0.5f)
+            {
+                float k = t / tail;
+                float sx2 = cx + dir * (rx * 0.7f + t);
+                float half = Mathf.Max(0.6f, ry * 0.85f * (1f - k) + Hash((int)t, 3, seed) * 0.8f);
+                for (int y = Mathf.RoundToInt(cy - half); y <= Mathf.RoundToInt(cy + half); y++)
+                {
+                    int x = Mathf.RoundToInt(sx2);
+                    if (x < 0 || x >= w || y < 0 || y >= h) continue;
+                    if (Hash(x, y, 13 + seed) < 0.30f + k * 0.4f) continue;
+                    var c = Hash(x, y, 17 + seed) > 0.6f ? ring : wash;
+                    px[(h - 1 - y) * w + x] = new Color32(c.r, c.g, c.b, (byte)(c.a * (1f - k * 0.6f)));
+                }
+            }
+
+            // ...AND THE SPLASHES. Three little satellites, well clear of the ring, each one
+            // its own small errand for the cloth.
+            for (int i = 0; i < 3; i++)
+            {
+                float ax = Mathf.Lerp(2f, w - 3f, Hash(i * 5 + 1, 9, seed));
+                float ay = Mathf.Lerp(1f, h - 2f, Hash(i * 5 + 2, 4, seed));
+                float ar = 0.9f + Hash(i * 5 + 3, 6, seed) * 1.4f;
+                for (int y = Mathf.FloorToInt(ay - ar); y <= Mathf.CeilToInt(ay + ar); y++)
+                    for (int x = Mathf.FloorToInt(ax - ar); x <= Mathf.CeilToInt(ax + ar); x++)
+                    {
+                        if (x < 0 || x >= w || y < 0 || y >= h) continue;
+                        float dx = x - ax, dy = y - ay;
+                        if (dx * dx + dy * dy > ar * ar) continue;
+                        if (px[(h - 1 - y) * w + x].a > 0) continue;   // never over the ring
+                        px[(h - 1 - y) * w + x] = drip;
+                    }
+            }
+            return px;
         }
+
+        /// <summary>The mark's size in its own pixels. Read by the counter, which has to map
+        /// a cloth's position on the screen back onto these.</summary>
+        public const int SmudgeW = 48, SmudgeH = 18;
+
 
         /// <summary>THE CLOTH: a bar rag folded once, cream with one stripe, set on the
         /// counter's end. Drawn at the counter's grain (26x16 art px for a 52x32 rect).</summary>
@@ -2179,6 +2250,107 @@ namespace LastCall.UI
         }
 
         private static float Smooth(float t) => t * t * (3f - 2f * t);
+
+        /// <summary>
+        /// THE LIGHT IS THE THING'S OWN SHAPE (2026-09-06, the author: "parlama alanı nesnenin
+        /// şekline göre gerçek nesnenin şeklinden daha büyük olmalı, şu an standart bir elips
+        /// ve bu her nesneye uymuyor"). <see cref="Halo"/> is one ellipse for everything, and
+        /// an ellipse behind a bar spoon, a napkin or a tall bottle is a bubble with a thing
+        /// in it.
+        ///
+        /// So the glow is GROWN from the sprite: every texel is given its distance to the
+        /// nearest opaque pixel of the drawing (a two-pass chamfer transform, which is exact
+        /// enough at these sizes and costs one pass each way), and the alpha falls off over
+        /// <paramref name="spread"/> texels of that distance. The result is the silhouette,
+        /// swollen and soft — a lemon dish glows like a dish and a bottle like a bottle.
+        ///
+        /// The canvas grows by the spread on every side, so a glow drawn CENTRED on the prop
+        /// at the prop's own scale lines up with it by construction: no measuring of opaque
+        /// boxes at the call site, and a drawing that sits high in its sheet takes its light
+        /// with it. Cached per sprite and spread; the source must be readable, and a sprite
+        /// that is not falls back to the old ellipse rather than throwing.
+        /// </summary>
+        public static Sprite Glow(Sprite src, int spread = 0)
+        {
+            if (src == null) return Halo();
+            int w = (int)src.rect.width, h = (int)src.rect.height;
+            if (w < 1 || h < 1) return Halo();
+            // The reach, if nobody asked for one: a sixth of the drawing's short side, which
+            // is enough to read as light around a 9px dish and not a fog around a 208px tin.
+            if (spread <= 0) spread = Mathf.Clamp(Mathf.RoundToInt(Mathf.Min(w, h) * 0.17f), 3, 16);
+            string key = "glow:" + src.GetInstanceID() + ":" + spread;
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+
+            Color32[] sp;
+            var tex = src.texture;
+            if (tex == null) return Halo();
+            try { sp = tex.GetPixels32(); }
+            catch (UnityException) { return Halo(); }   // unreadable: the ellipse will do
+            int tw = tex.width;
+            int sx = (int)src.rect.x, sy = (int)src.rect.y;
+
+            int gw = w + spread * 2, gh = h + spread * 2;
+            const float Far = 1e6f;
+            var d = new float[gw * gh];
+            for (int i = 0; i < d.Length; i++) d[i] = Far;
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                    if (sp[(sy + y) * tw + sx + x].a > 24)
+                        d[(y + spread) * gw + (x + spread)] = 0f;
+
+            // Chamfer 1 / 1.41: forward over the rows, then backward.
+            for (int y = 0; y < gh; y++)
+                for (int x = 0; x < gw; x++)
+                {
+                    int i = y * gw + x;
+                    float v = d[i];
+                    if (x > 0) v = Mathf.Min(v, d[i - 1] + 1f);
+                    if (y > 0) v = Mathf.Min(v, d[i - gw] + 1f);
+                    if (x > 0 && y > 0) v = Mathf.Min(v, d[i - gw - 1] + 1.41f);
+                    if (x < gw - 1 && y > 0) v = Mathf.Min(v, d[i - gw + 1] + 1.41f);
+                    d[i] = v;
+                }
+            for (int y = gh - 1; y >= 0; y--)
+                for (int x = gw - 1; x >= 0; x--)
+                {
+                    int i = y * gw + x;
+                    float v = d[i];
+                    if (x < gw - 1) v = Mathf.Min(v, d[i + 1] + 1f);
+                    if (y < gh - 1) v = Mathf.Min(v, d[i + gw] + 1f);
+                    if (x < gw - 1 && y < gh - 1) v = Mathf.Min(v, d[i + gw + 1] + 1.41f);
+                    if (x > 0 && y < gh - 1) v = Mathf.Min(v, d[i + gw - 1] + 1.41f);
+                    d[i] = v;
+                }
+
+            var px = new Color32[gw * gh];
+            for (int i = 0; i < px.Length; i++)
+            {
+                float a = d[i] >= Far ? 0f : Mathf.Clamp01(1f - d[i] / spread);
+                a *= a;                       // the same fast falloff the ellipse had
+                px[i] = new Color32(255, 255, 255, (byte)(a * 255f));
+            }
+            // The pivot is carried across so the glow hangs on the same point of the drawing
+            // the prop is hung by — a bottle pivoted at its foot keeps its foot.
+            var pivot = new Vector2((src.pivot.x + spread) / gw, (src.pivot.y + spread) / gh);
+            var gtex = new Texture2D(gw, gh, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            gtex.SetPixels32(px);
+            gtex.Apply();
+            var made = Sprite.Create(gtex, new Rect(0, 0, gw, gh), pivot,
+                                     Mathf.Max(1f, src.pixelsPerUnit), 0, SpriteMeshType.FullRect);
+            made.name = "glow_" + (src.name ?? "?");
+            return Cache[key] = made;
+        }
+
+        /// <summary>How far <see cref="Glow"/> reaches for this sprite, in the sprite's own
+        /// texels — the callers need it to size the plate the glow is drawn on.</summary>
+        public static int GlowSpread(Sprite src, float reach = 1f)
+        {
+            if (src == null) return 0;
+            int w = (int)src.rect.width, h = (int)src.rect.height;
+            int auto = Mathf.Clamp(Mathf.RoundToInt(Mathf.Min(w, h) * 0.17f), 3, 16);
+            return Mathf.Clamp(Mathf.RoundToInt(auto * Mathf.Max(0.2f, reach)), 2, 48);
+        }
 
         private static Sprite Make(Color32[] px, int w, int h, Vector4 border)
         {

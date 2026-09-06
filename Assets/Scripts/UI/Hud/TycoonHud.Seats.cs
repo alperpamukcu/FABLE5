@@ -391,6 +391,10 @@ namespace LastCall.UI
                 if (mark && v.SmudgeProp == null) v.SmudgeProp = BuildSmudge(v);
                 else if (!mark && v.SmudgeProp != null)
                 {
+                    var img0 = v.SmudgeProp.GetComponent<Image>();
+                    if (img0 != null && img0.sprite != null) Destroy(img0.sprite);
+                    if (v.SmudgeTex != null) Destroy(v.SmudgeTex);
+                    v.SmudgeTex = null; v.SmudgePx = null; v.SmudgeInk = 0;
                     Destroy(v.SmudgeProp.gameObject);
                     v.SmudgeProp = null;
                 }
@@ -407,13 +411,31 @@ namespace LastCall.UI
                 // the counter they stayed exactly where the drinker had left them — on the
                 // screen rather than on the wood. The book beside them takes the same lift off
                 // the same dial (PlaceBookProp); this is that, for the glasses.
+                // NOT UNDER THE MENU BOARD (2026-09-06). The board stands at the counter's
+                // left end and the leftmost stool stands under it — measured in play, the
+                // board covers 67..129 of the counter and stool 0's leavings want 101..170 —
+                // so an empty glass and its mark were half hidden behind a picture frame,
+                // which is no way to ask somebody to clear them. Everything a drinker leaves
+                // is pushed clear of the board and no further; every other stool is untouched.
                 if (v.DirtyProp != null)
                     v.DirtyProp.anchoredPosition =
-                        new Vector2(v.SeatX, CounterLineY - 36f + CounterLift);
+                        new Vector2(ClearOfTheBoard(v.SeatX, v.DirtyProp.rect.width),
+                                    CounterLineY - 36f + CounterLift);
                 if (v.SmudgeProp != null)
                     v.SmudgeProp.anchoredPosition =
-                        new Vector2(v.SeatX + 4f, CounterLineY - 40f + CounterLift);
+                        new Vector2(ClearOfTheBoard(v.SeatX + 4f, v.SmudgeProp.rect.width),
+                                    CounterLineY - 40f + CounterLift);
             }
+        }
+
+        /// <summary>The nearest place to <paramref name="x"/> where something this wide can
+        /// stand without disappearing behind the menu board. Bottom-left units, like the
+        /// stools' own.</summary>
+        private float ClearOfTheBoard(float x, float width)
+        {
+            float boardHalf = _bookProp != null ? _bookProp.rect.width * 0.5f : 31f;
+            float edge = _hudRoot.rect.width * 0.5f + BookPropX + boardHalf;
+            return Mathf.Max(x, edge + width * 0.5f + 4f);
         }
 
         private void BuildSnackRow(RectTransform root)
@@ -861,6 +883,7 @@ namespace LastCall.UI
         private RectTransform _clothRt;
         private Image _clothImg;
         private bool _clothHeld;
+        private float _rubT;              // the wipe sound's own gap, so a rub is not a rattle
         private SeatView _clothRefused;
         private RectTransform _glassCarry;
         private Image _glassCarryImg;
@@ -909,16 +932,38 @@ namespace LastCall.UI
             _handStrip.text = "";
         }
 
-        /// <summary>A stool's mark: the counter's own dark, a little off centre, behind the
-        /// glass that made it.</summary>
+        /// <summary>How big the mark is drawn: the art's own pixels at the counter's grain,
+        /// two units to one.</summary>
+        private const float SmudgeScale = 2f;
+
+        /// <summary>What is left of a mark, as a share of the ink it started with, below which
+        /// the counter calls it clean. Not zero: chasing the last few translucent pixels of a
+        /// splash with a cloth is not a game, it is an eye test.</summary>
+        private const float SmudgeGone = 0.07f;
+
+        /// <summary>
+        /// A stool's mark — and its OWN copy of one (2026-09-06, the author: "bezle silinirken
+        /// kir tek seferde silinmemeli, piksele göre boyama mantığında her yeri silmeli"). The
+        /// art is shared and cached, so a mess that rubbed holes in it would rub them in every
+        /// other mess on the counter; this takes the pixels, makes a texture nobody else owns,
+        /// and hands the cloth that.
+        /// </summary>
         private RectTransform BuildSmudge(SeatView v)
         {
             var rt = NewRect("Smudge", _hudRoot);
             rt.anchorMin = rt.anchorMax = new Vector2(0, 0);
             rt.pivot = new Vector2(0.5f, 0f);
-            rt.sizeDelta = new Vector2(56, 18);
+            rt.sizeDelta = new Vector2(ChromeArt.SmudgeW * SmudgeScale, ChromeArt.SmudgeH * SmudgeScale);
             var img = rt.gameObject.AddComponent<Image>();
-            img.sprite = ChromeArt.Smudge(v.Index);
+            v.SmudgePx = ChromeArt.SmudgePixels(v.Index, out int sw, out int sh);
+            v.SmudgeInk = 0;
+            foreach (var c in v.SmudgePx) v.SmudgeInk += c.a;
+            v.SmudgeTex = new Texture2D(sw, sh, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, hideFlags = HideFlags.DontSave };
+            v.SmudgeTex.SetPixels32(v.SmudgePx);
+            v.SmudgeTex.Apply();
+            img.sprite = Sprite.Create(v.SmudgeTex, new Rect(0, 0, sw, sh), new Vector2(0.5f, 0.5f), 100f);
+            img.sprite.hideFlags = HideFlags.DontSave;
             img.preserveAspect = true;
             rt.SetAsFirstSibling();
             var relay = rt.gameObject.AddComponent<HoverRelay>();
@@ -953,6 +998,7 @@ namespace LastCall.UI
 
         private void StepCloth(TycoonRun run)
         {
+            if (_rubT > 0f) _rubT -= Time.unscaledDeltaTime;
             if (_clothRt == null) return;
             bool on = run != null && run.Phase == TycoonPhase.DayOpen && (_flow == null || !_flow.IsOpen);
             if (_clothRt.gameObject.activeSelf != on) _clothRt.gameObject.SetActive(on);
@@ -969,12 +1015,37 @@ namespace LastCall.UI
             var screen = mouse.position.ReadValue();
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot, screen, null, out Vector2 at))
                 _clothRt.anchoredPosition = at + new Vector2(0f, -12f);
-            // WIPING IS PASSING OVER (GDD 27 §4.2): the cloth over a mark wipes it. Under a
-            // glass Core refuses, and the refusal is said once per mark per grab.
+            // WIPING IS RUBBING (GDD 27 §4.2, corrected 2026-09-06). The cloth used to erase
+            // a whole mark the instant it touched any part of it, so a mess was a click with
+            // extra steps. It takes the ink out of the pixels it actually passes over now, and
+            // the mark is only wiped — Core's own verb, with Core's own refusals — once there
+            // is next to nothing left of it. Under a glass Core refuses, and the refusal is
+            // said once per mark per grab.
+            // WHERE THE CLOTH IS, not where the pointer is: the rag is drawn twelve units
+            // below the hand (above), and a wipe that came off the pointer cleaned a strip
+            // the player could see the cloth missing.
+            var rag = screen + Vector2.down * (12f * _hudRoot.lossyScale.y);
             foreach (var v in _seats)
             {
                 if (v.SmudgeProp == null || v.Dirty == null || !v.Dirty.Smudged) continue;
-                if (!RectTransformUtility.RectangleContainsScreenPoint(v.SmudgeProp, screen, null)) continue;
+                if (v.SmudgeTex == null || v.SmudgePx == null) continue;
+                if (!RectTransformUtility.RectangleContainsScreenPoint(v.SmudgeProp, rag, null)) continue;
+                // THE GLASS IS STILL ON IT: nothing is rubbed, and Core is asked anyway so the
+                // refusal comes from the rules rather than from a copy of them here.
+                if (v.Dirty.HasGlass)
+                {
+                    try { run.Wipe(v.Dirty); }
+                    catch (System.InvalidOperationException e)
+                    {
+                        if (_clothRefused != v) { _clothRefused = v; Toast(e.Message.ToUpperInvariant()); }
+                    }
+                    continue;
+                }
+                Rub(v, rag);
+                // ASKED AFTER EVERY TOUCH, not only after one that took something off: the
+                // last few percent can end up somewhere the cloth has already been, and a
+                // mark that can never be finished is worse than one that finishes early.
+                if (InkLeft(v) > SmudgeGone) continue;
                 try
                 {
                     run.Wipe(v.Dirty);
@@ -986,6 +1057,68 @@ namespace LastCall.UI
                     if (_clothRefused != v) { _clothRefused = v; Toast(e.Message.ToUpperInvariant()); }
                 }
             }
+        }
+
+        /// <summary>How far the cloth reaches into the mark, in the mark's own pixels. Small
+        /// against a 48-wide mark on purpose: the whole point is that one touch is not the
+        /// whole job.</summary>
+        private const float RubRadius = 7f;
+
+        /// <summary>How much of a pixel's ink one frame under the middle of the cloth takes.</summary>
+        private const float RubBite = 0.42f;
+
+        /// <summary>
+        /// The cloth, where it actually is, in the mark's own pixels: a soft disc of ink taken
+        /// out per frame of contact, hardest under the middle and fading to nothing at the
+        /// edge. Returns whether anything came off — a cloth held still over a spot it has
+        /// already cleared changes nothing and must not keep asking Core to wipe.
+        /// </summary>
+        private bool Rub(SeatView v, Vector2 screen)
+        {
+            var rt = v.SmudgeProp;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(rt, screen, null, out Vector2 local))
+                return false;
+            // Rect-local (pivot centre for x, foot for y) into texel coordinates.
+            float px = (local.x / rt.rect.width + 0.5f) * ChromeArt.SmudgeW;
+            float py = (local.y / rt.rect.height) * ChromeArt.SmudgeH;
+            bool changed = false;
+            int x0 = Mathf.FloorToInt(px - RubRadius), x1 = Mathf.CeilToInt(px + RubRadius);
+            int y0 = Mathf.FloorToInt(py - RubRadius), y1 = Mathf.CeilToInt(py + RubRadius);
+            for (int y = Mathf.Max(0, y0); y <= Mathf.Min(ChromeArt.SmudgeH - 1, y1); y++)
+                for (int x = Mathf.Max(0, x0); x <= Mathf.Min(ChromeArt.SmudgeW - 1, x1); x++)
+                {
+                    float dx = x + 0.5f - px, dy = y + 0.5f - py;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (d > RubRadius) continue;
+                    int i = (ChromeArt.SmudgeH - 1 - y) * ChromeArt.SmudgeW + x;
+                    var c = v.SmudgePx[i];
+                    if (c.a == 0) continue;
+                    float take = RubBite * (1f - d / RubRadius);
+                    int left = Mathf.Max(0, c.a - Mathf.CeilToInt(c.a * take) - 1);
+                    if (left == c.a) continue;
+                    v.SmudgePx[i] = new Color32(c.r, c.g, c.b, (byte)left);
+                    changed = true;
+                }
+            if (!changed) return false;
+            v.SmudgeTex.SetPixels32(v.SmudgePx);
+            v.SmudgeTex.Apply();
+            if (_rubT <= 0f)
+            {
+                _rubT = 0.16f;                       // the cloth on wet slate, not a machine gun
+                // There is no cloth in the bank; the rim's dry turn is the nearest thing
+                // to a rag on stone, and quiet enough to repeat.
+                Sfx.Play("rim_turn", 0.22f);
+            }
+            return true;
+        }
+
+        /// <summary>What is left of a mark, as a share of what it started with.</summary>
+        private float InkLeft(SeatView v)
+        {
+            if (v.SmudgeInk <= 0) return 0f;
+            int ink = 0;
+            foreach (var c in v.SmudgePx) ink += c.a;
+            return ink / (float)v.SmudgeInk;
         }
 
         /// <summary>A droplet off the cloth — the grain's own rig, in water's colour.</summary>
@@ -1062,6 +1195,9 @@ namespace LastCall.UI
         {
             bool busy = run != null && run.Phase == TycoonPhase.DayOpen && run.SinkBusy;
             if (stage != null) stage.SetTapRunning(busy);
+            // AND THE BASIN CALLS WHILE A HAND IS FULL (2026-09-06): a carried glass or a
+            // carried tin both end at the same place, and the room says so by lighting it.
+            if (stage != null) stage.CallTheDrain(_glassCarrying || _tinCarrying);
             if (_handStrip == null) return;
             // WHAT THE GLASSES ARE COSTING, not just where they are (2026-09-06): a glass
             // out of service holds the stool it came off until the sink hands it back, so

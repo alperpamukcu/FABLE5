@@ -54,11 +54,18 @@ brightness (×1.22, the beer font's own number) stays under all of it.
   sibling order on a canvas, sorting order in the room, both put back on the way out. The
   order is left alone while a panel is being disabled — Unity refuses a sibling move made
   during a parent's activation, and a closing bench disables a whole tree of these at once.
-- **The halo is the size of the DRAWING, not of the rect** (*"tam görselin sınırlarında
-  aydınlatılması lazım"*). Most of these props are a square rect with a narrow drawing
-  letterboxed inside it, so a bloom cut to the rect lit a circle of empty counter around
-  them. `HoverGlow.DrawnSize` measures the sprite's own opaque box and scales it the way
-  `preserveAspect` scales the sheet.
+- **The light is the PROP'S OWN SHAPE** (2026-09-06, the author: *"parlama alanı nesnenin
+  şekline göre gerçek nesnenin şeklinden daha büyük olmalı, şu an standart bir elips ve bu
+  her nesneye uymuyor"*). One ellipse behind everything is a bubble with a thing in it, and
+  sizing that ellipse to the drawing — the first answer — only made it a tighter bubble.
+  `ChromeArt.Glow` grows the light OUT OF the sprite instead: every texel takes its distance
+  to the nearest opaque pixel (a two-pass chamfer transform), and the alpha falls off over
+  the reach. A lemon dish glows like a dish, a bar spoon like a spoon, a bottle like a
+  bottle. The glow's canvas is the drawing's canvas plus the reach on every side, so drawing
+  it centred at the prop's own scale lines it up by construction — no measuring at the call
+  site, and a drawing that sits high in its sheet takes its light with it. Cached per sprite
+  and re-cut when the prop's drawing changes; `Halo` is now the REACH as a multiple of the
+  automatic one (about a sixth of the drawing's short side), and 0 still draws none.
 - **A world prop gets a world halo**, three sorting orders under its own drawing: its hit
   plate is on the canvas, and a bloom hung there would sit in front of the bottle.
 - **The cellar's bottles do all of it too** (*"bunların aynısı mahzendeki alkoller için de
@@ -69,6 +76,16 @@ brightness (×1.22, the beer font's own number) stays under all of it.
   swings out through its glass.
 - **A drinker is not a prop.** People brighten and nothing else — a person who rises and
   grows under the pointer reads as a puppet.
+- **What moves is the PROP, not its hit plate.** The beer font and the sink are drawn in the
+  room and clicked through an invisible canvas plate; with no `Riser` named, the glow was
+  raising, growing and rocking the plate while the brass and the basin stood still — the
+  rise had never once been seen, and a plate that drifts two units off its prop is a drop
+  target that moves out from under the hand (the tin's carry test found it by failing to
+  reach a basin it was standing on, 2026-09-06).
+- **The room can call a prop without a pointer** (`HoverGlow.Beckon`): while a hand is
+  carrying something that belongs in the sink, the sink lights and lifts exactly as it would
+  under the pointer — same rise, same light, same coming to the front, so the room never
+  teaches a second visual language for "here".
 
 ## 1. The vocabulary
 

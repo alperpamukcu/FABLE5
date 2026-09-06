@@ -270,7 +270,9 @@ namespace LastCall.PlayTests
             Assert.That(drain, Is.Not.Null, "the room has no drain to carry it to");
 
             var from = ScreenPointOf(tin);
-            var to = ScreenPointOf(drain);
+            // INTO THE BASIN, not onto its bottom edge: the drain's plate is hung by its
+            // foot, so its own position is the line where the sink meets the counter.
+            var to = ScreenPointOf(drain) + Vector2.up * (drain.rect.height * 0.4f * drain.lossyScale.y);
             Press(_mouse.leftButton, from);
             yield return WaitFrames(2);
             // Carried, not teleported: the lift only happens once the pointer has travelled,
@@ -284,7 +286,8 @@ namespace LastCall.PlayTests
             yield return new WaitForSecondsRealtime(0.3f);
 
             Assert.That(run.Glass.IsEmpty, Is.True,
-                "the tin was carried to the basin and came back with the drink still in it");
+                "the tin was carried to the basin and came back with the drink still in it"
+                + " · under the drop: " + WhatIsUnder(to));
             Assert.That(run.SinkBusy, Is.True, "the tap did not run after it");
         }
 

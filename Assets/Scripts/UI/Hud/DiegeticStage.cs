@@ -707,7 +707,7 @@ namespace LastCall.UI
                     glow.Riser = _cellarStock[index].transform;
                     // The room's own units: one is two of the HUD's, so these are half the
                     // counter's numbers and read the same on the screen.
-                    glow.Rise = 2f; glow.Sway = 2.2f; glow.Grow = 1.06f; glow.Halo = 1.15f;
+                    glow.Rise = 2f; glow.Sway = 2.2f; glow.Grow = 1.06f; glow.Halo = 1.1f;
                 }
                 _cellarDoors.Add(plate);
             }
@@ -1890,6 +1890,19 @@ namespace LastCall.UI
         /// room owns a drain, which a run without fixtures never does.</summary>
         private RectTransform _drainDoor;
 
+        /// <summary>The drain's own glow, kept so the room can call it forward.</summary>
+        private HoverGlow _drainGlow;
+
+        /// <summary>
+        /// THE BASIN CALLS THE HAND (2026-09-06, the author: "bardak tutulduğunda lavaboya
+        /// oyuncuyu yönlendirmeli ... bardak sürüklenirken lavabo ön plana çıkmalı"). While
+        /// something is being carried that belongs in the sink, the sink lights and lifts
+        /// exactly as it would under the pointer — same rise, same light, same coming to the
+        /// front — so the room is telling the player where to let go rather than teaching
+        /// them a second visual language for it.
+        /// </summary>
+        public void CallTheDrain(bool on) => _drainGlow?.Beckon(on);
+
         /// <summary>Is this screen point on the sink? Asked by the carry, once, on release.</summary>
         public bool PointerOverDrain(Vector2 screenPoint) =>
             _drainDoor != null && _drainDoor.gameObject.activeInHierarchy
@@ -2817,9 +2830,17 @@ namespace LastCall.UI
             // snapping and reading its rest colour at the moment the pointer arrives.
             var glow = plate.gameObject.AddComponent<HoverGlow>();
             glow.Sprites = new[] { body };
+            // WHAT MOVES IS THE PROP, NOT THE PLATE (2026-09-06). The glow lives on the hit
+            // plate, so with no riser named it was raising, growing and rocking the invisible
+            // rectangle while the font and the basin stood perfectly still — the rise has
+            // never once been seen, and a plate that drifts two units off its prop is a drop
+            // target that moves out from under the hand (the tin's carry test caught it by
+            // failing to reach a basin it was standing on). The prop is the affordance.
+            glow.Riser = body.transform;
             // The font is one drawing standing on the counter, so it takes the whole
             // answer — in the world's own units, where one is two of the HUD's.
-            glow.Rise = 2f; glow.Sway = 0.8f; glow.Grow = 1.05f; glow.Halo = 1.6f;
+            glow.Rise = 2f; glow.Sway = 0.8f; glow.Grow = 1.05f; glow.Halo = 1.4f;
+            if (def.IsDrain) _drainGlow = glow;   // ...and the drain can be called (below)
 
             // ...and it SAYS what it does, before it is pressed (2026-08-26). The glow was
             // already the affordance; the word is what turns "this can be clicked" into

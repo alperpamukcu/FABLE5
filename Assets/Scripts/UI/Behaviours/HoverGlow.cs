@@ -87,11 +87,16 @@ namespace LastCall.UI
         public float Sway = 2.2f;
         public float SwaySpeed = 1.8f;
 
-        /// <summary>The soft light behind the prop, as a share of the DRAWING's own box — not
-        /// of the rect it lives in, which for most of these props is a square with the drawing
-        /// letterboxed inside it (2026-09-06, the author: "tam görselin sınırlarında
-        /// aydınlatılması lazım"). 0 draws none.</summary>
-        public float Halo = 1.15f;
+        /// <summary>
+        /// How far the light reaches past the prop, as a multiple of the automatic reach
+        /// (`ChromeArt.GlowSpread`, about a sixth of the drawing's short side). 0 draws none.
+        ///
+        /// The light itself is the PROP'S OWN SHAPE, swollen and soft, not a stock ellipse
+        /// (2026-09-06, the author: "parlama alanı nesnenin şekline göre gerçek nesnenin
+        /// şeklinden daha büyük olmalı ... şu an standart bir elips ve bu her nesneye
+        /// uymuyor"). A dish glows like a dish and a spoon like a spoon.
+        /// </summary>
+        public float Halo = 1f;
 
         /// <summary>The colour of that light. Warm by default: it is a bar.</summary>
         public Color HaloTint = new Color(1f, 0.86f, 0.62f, 0.7f);
@@ -105,7 +110,16 @@ namespace LastCall.UI
         /// of the room the way a canvas prop comes to the front of its parent.</summary>
         public int OrderLift = 20;
 
-        private bool _over;
+        /// <summary>
+        /// Lit without a pointer (2026-09-06, the author: "bardak tutulduğunda lavaboya
+        /// oyuncuyu yönlendirmeli ... bardak sürüklenirken lavabo ön plana çıkmalı"). The
+        /// room calls a prop forward while the hand is carrying something that belongs to
+        /// it; everything else — the rise, the light, the coming to the front — is what
+        /// the pointer would have got, so the two never disagree about what "lit" means.
+        /// </summary>
+        public void Beckon(bool on) => _beckoned = on;
+
+        private bool _over, _beckoned;
         private float _g;                 // 0 cold, 1 fully lit
         private Color[] _restGraphics, _restSprites;
         private bool _held;               // rest colours are in hand
@@ -117,6 +131,7 @@ namespace LastCall.UI
         private float _phase;
 
         private Graphic _halo;            // the canvas light, made on the first hover
+        private Sprite _haloFor;          // the drawing it was cut from
         private bool _fronted;            // brought to the front by the pointer
         private bool _stowing;            // being disabled: leave the draw order alone
         private int _restIndex = -1;      // where it stood before that
@@ -383,6 +398,10 @@ namespace LastCall.UI
                 if (g <= 0.001f || _stowing) return;
                 MakeHalo();
             }
+            // The drawing can change under a lit prop — the tin's tier, a bottle's plates —
+            // and the light is cut from that drawing, so it is re-cut when it does.
+            var now = LitSprite();
+            if (now != _haloFor && !_stowing) DressHalo(now);
             if (_halo != null)
             {
                 var c = HaloTint;
@@ -391,13 +410,12 @@ namespace LastCall.UI
                 var body = Body as RectTransform;
                 if (body != null)
                 {
-                    // THE SIZE OF THE DRAWING, NOT OF THE RECT (2026-09-06). Most of these
-                    // props are a square rect with a narrow drawing letterboxed inside it,
-                    // so a halo cut to the rect lit a circle of empty counter around them.
-                    // The drawn box is measured off the sprite's own opaque pixels and then
-                    // scaled the way preserveAspect scales it.
+                    // THE GLOW IS THE DRAWING'S OWN SHAPE, and it is built on a canvas that
+                    // is the drawing's canvas plus the reach on every side — so it lines up
+                    // by construction. All this has to do is draw that canvas at the scale
+                    // the prop draws its own, about the same centre.
                     rt.position = body.position;
-                    rt.sizeDelta = DrawnSize(body) * Halo;
+                    rt.sizeDelta = HaloBox(body);
                     rt.localScale = body.localScale;
                     rt.localRotation = body.localRotation;
                     // ...and it keeps station DIRECTLY UNDER the prop while the pointer is
@@ -417,88 +435,92 @@ namespace LastCall.UI
             }
         }
 
-        /// <summary>How big the prop's DRAWING is inside its rect, in the rect's own units:
-        /// the sprite's opaque box, scaled the way preserveAspect scales the sheet.</summary>
-        private Vector2 DrawnSize(RectTransform rect)
+        /// <summary>The sprite whose shape the light is cut from: the prop's own drawing,
+        /// canvas or world.</summary>
+        private Sprite LitSprite()
         {
+            var lit = Sprites != null && Sprites.Length > 0 ? Sprites[0] : null;
+            if (lit != null && lit.sprite != null) return lit.sprite;
             var img = Graphics != null && Graphics.Length > 0 ? Graphics[0] as Image : null;
-            var sp = img != null ? img.sprite : null;
-            var box = rect.rect.size;
-            if (sp == null || sp.rect.width <= 0.0001f || sp.rect.height <= 0.0001f) return box;
-            var ob = ItemArt.OpaqueBounds(sp);
-            if (ob.width <= 0.0001f || ob.height <= 0.0001f) return box;
-            float scale = img.preserveAspect
-                ? Mathf.Min(box.x / sp.rect.width, box.y / sp.rect.height)
-                : 1f;
-            if (!img.preserveAspect)
-                return new Vector2(box.x * (ob.width / sp.rect.width), box.y * (ob.height / sp.rect.height));
-            return new Vector2(ob.width * scale, ob.height * scale);
+            if (img != null && img.sprite != null) return img.sprite;
+            var sr = Body != null ? Body.GetComponent<SpriteRenderer>() : null;
+            return sr != null ? sr.sprite : null;
         }
 
+        /// <summary>
+        /// The light behind it. Made on the first hover and then simply faded — a prop that
+        /// is never pointed at never pays for one. On a canvas it is a SIBLING drawn just
+        /// before the prop (a child would be in front of it); in the world it is a child
+        /// renderer three sorting orders behind, because its hit plate is on the canvas and
+        /// a bloom hung there would sit in FRONT of the bottle it is meant to be behind.
+        /// </summary>
         private void MakeHalo()
         {
             var body = Body;
             if (body == null) return;
-            // A PROP THAT LIVES IN THE ROOM GETS A LIGHT IN THE ROOM. Its hit plate is on the
-            // canvas, which draws over everything in the world — a bloom hung there would sit
-            // in FRONT of the bottle it is meant to be behind. So a prop with world sprites
-            // gets a world halo, three sorting orders under its own drawing, which puts it
-            // behind the whole v4 sandwich rather than between its layers.
             var lit = Sprites != null && Sprites.Length > 0 ? Sprites[0] : null;
+            if (lit == null && !(body is RectTransform)) lit = body.GetComponent<SpriteRenderer>();
             if (lit != null)
             {
-                var wgo0 = new GameObject("Halo");
-                wgo0.transform.SetParent(lit.transform, false);
-                var wsr0 = wgo0.AddComponent<SpriteRenderer>();
-                wsr0.sprite = ChromeArt.Halo();
-                wsr0.sortingLayerID = lit.sortingLayerID;
-                wsr0.sortingOrder = lit.sortingOrder - 3;
-                wsr0.color = new Color(HaloTint.r, HaloTint.g, HaloTint.b, 0f);
-                var size0 = lit.sprite != null ? lit.sprite.bounds.size : Vector3.one;
-                var halo0 = wsr0.sprite != null ? wsr0.sprite.bounds.size : Vector3.one;
-                if (halo0.x > 0.0001f && halo0.y > 0.0001f)
-                    wgo0.transform.localScale = new Vector3(size0.x * Halo / halo0.x,
-                                                            size0.y * Halo / halo0.y, 1f);
-                _haloSprite = wsr0;
+                var wgo = new GameObject("Halo");
+                wgo.transform.SetParent(lit.transform, false);
+                var wsr = wgo.AddComponent<SpriteRenderer>();
+                wsr.sortingLayerID = lit.sortingLayerID;
+                wsr.sortingOrder = lit.sortingOrder - 3;
+                wsr.color = new Color(HaloTint.r, HaloTint.g, HaloTint.b, 0f);
+                _haloSprite = wsr;
+                DressHalo(LitSprite());
                 return;
             }
             var asRect = body as RectTransform;
-            if (asRect != null)
+            if (asRect == null) return;
+            var go = new GameObject("Halo", typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(asRect.parent, false);
+            rt.SetSiblingIndex(asRect.GetSiblingIndex());   // just BEHIND the prop
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            var img = go.AddComponent<Image>();
+            img.raycastTarget = false;
+            img.color = new Color(HaloTint.r, HaloTint.g, HaloTint.b, 0f);
+            _halo = img;
+            DressHalo(LitSprite());
+        }
+
+        /// <summary>Cuts the light to this drawing. The world glow needs nothing else: it is
+        /// built at the source's own pixels-per-unit and pivot, so a child at scale one sits
+        /// exactly where the drawing is, however the stage has scaled it.</summary>
+        private void DressHalo(Sprite src)
+        {
+            _haloFor = src;
+            var art = src != null ? ChromeArt.Glow(src, ChromeArt.GlowSpread(src, Halo)) : ChromeArt.Halo();
+            if (_halo is Image im) im.sprite = art;
+            if (_haloSprite != null)
             {
-                var go = new GameObject("Halo", typeof(RectTransform));
-                var rt = (RectTransform)go.transform;
-                rt.SetParent(asRect.parent, false);
-                rt.SetSiblingIndex(asRect.GetSiblingIndex());   // just BEHIND the prop
-                rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
-                var img = go.AddComponent<Image>();
-                img.sprite = ChromeArt.Halo();
-                img.raycastTarget = false;
-                img.color = new Color(HaloTint.r, HaloTint.g, HaloTint.b, 0f);
-                _halo = img;
-                return;
+                _haloSprite.sprite = art;
+                _haloSprite.transform.localScale = Vector3.one;
+                _haloSprite.transform.localPosition = Vector3.zero;
             }
-            var sr = body.GetComponent<SpriteRenderer>();
-            if (sr == null && Sprites != null && Sprites.Length > 0) sr = Sprites[0];
-            if (sr == null) return;
-            var wgo = new GameObject("Halo");
-            wgo.transform.SetParent(sr.transform, false);
-            var wsr = wgo.AddComponent<SpriteRenderer>();
-            wsr.sprite = ChromeArt.Halo();
-            wsr.sortingLayerID = sr.sortingLayerID;
-            wsr.sortingOrder = sr.sortingOrder - 1;
-            wsr.color = new Color(HaloTint.r, HaloTint.g, HaloTint.b, 0f);
-            // Sized off the prop's own drawing, in the world's own units.
-            var size = sr.sprite != null ? sr.sprite.bounds.size : Vector3.one;
-            var haloSize = wsr.sprite != null ? wsr.sprite.bounds.size : Vector3.one;
-            if (haloSize.x > 0.0001f && haloSize.y > 0.0001f)
-                wgo.transform.localScale = new Vector3(size.x * Halo / haloSize.x,
-                                                       size.y * Halo / haloSize.y, 1f);
-            _haloSprite = wsr;
+        }
+
+        /// <summary>The plate the canvas glow is drawn on: the drawing's canvas plus the
+        /// reach on every side, at whatever scale the prop draws its own canvas.</summary>
+        private Vector2 HaloBox(RectTransform rect)
+        {
+            var img = Graphics != null && Graphics.Length > 0 ? Graphics[0] as Image : null;
+            var sp = _haloFor;
+            var box = rect.rect.size;
+            if (sp == null || sp.rect.width < 1f || sp.rect.height < 1f) return box;
+            float grown = 2f * ChromeArt.GlowSpread(sp, Halo);
+            if (img != null && !img.preserveAspect)
+                return new Vector2(box.x * (1f + grown / sp.rect.width),
+                                   box.y * (1f + grown / sp.rect.height));
+            float k = Mathf.Min(box.x / sp.rect.width, box.y / sp.rect.height);
+            return new Vector2((sp.rect.width + grown) * k, (sp.rect.height + grown) * k);
         }
 
         private void LateUpdate()
         {
-            float want = _over ? 1f : 0f;
+            float want = _over || _beckoned ? 1f : 0f;
             if (Mathf.Approximately(_g, want) && want <= 0f)
             {
                 // Settled cold: hand the prop back to whatever else paints it, so a bottle

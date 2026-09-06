@@ -270,6 +270,19 @@ namespace LastCall.PlayTests
                 + " · clicked " + clickedAt + " in " + Screen.width + "x" + Screen.height
                 + " · under: " + WhatIsUnder(clickedAt)
                 + " · key active " + (next != null && next.gameObject.activeInHierarchy));
+            // AND NOT WITH A QUESTION OVER IT (2026-09-06). OpenUntil presses until the
+            // basket answers, and the press that opens the market is not always the press
+            // the basket is seen after — a second one lands on OPEN TOMORROW and puts the
+            // "close the order?" card up, whose scrim dims everything under it by a third.
+            // The picture then differs from the blessed one in 140k pixels and says nothing
+            // about the basket. If the question is up, it is answered the safe way first.
+            var ask = Find("ClosingAsk");
+            if (ask != null && ask.gameObject.activeInHierarchy)
+            {
+                var back = ask.Find("Card/Back") as RectTransform;
+                Assert.That(back, Is.Not.Null, "the closing question has no way back");
+                yield return ClickOn(back);
+            }
             yield return new WaitForSecondsRealtime(0.4f);   // it slides in from the right
 
             // THE FOOT, NOT THE WHOLE MARKET. The aisle above it scrolls, and its scroll

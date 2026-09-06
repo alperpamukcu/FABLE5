@@ -1215,6 +1215,34 @@ Yazarın ikinci listesi, iki commit (`<H>`, `<B>`).
 - **Testler:** EditMode 488/488 (+2: musluk boş çalışıyor, dökme çöpün ücretini alıp
   musluğu başlatıyor), PlayMode 10/10, bench temel görüntüsü yeniden kutsandı.
 
+### 9.31 · Işığın şekli, çağıran lavabo, ovulan kir (2026-09-06)
+
+Yazarın üçüncü listesi, tek commit (`<C>`).
+
+- **Parlama artık nesnenin şekli:** tek elips her nesneye uymuyordu; `ChromeArt.Glow`
+  ışığı spritein KENDİ alfasından büyütüyor (iki geçişli chamfer mesafe dönüşümü, sonra
+  mesafeye göre sönüm). Tuval, çizimin tuvali + her yandan erişim kadar, bu yüzden propun
+  kendi ölçeğinde ortalanınca kendiliğinden hizalanıyor. Sprite başına önbellek; prop
+  çizimini değiştirince ışık yeniden kesiliyor. `Halo` artık BOYUT değil ERİŞİM çarpanı.
+- **Hareket eden prop, çarpma plakası değil:** musluk ve lavabo odada çizilip canvas
+  plakasından tıklanıyor; `Riser` verilmediği için glow görünmez plakayı kaldırıyordu —
+  yükselme hiç görülmemiş, üstelik plaka propundan 2 birim kayınca bırakma hedefi elin
+  altından kaçıyordu (tin taşıma testi bunu düşerek yakaladı).
+- **Lavabo eli çağırıyor:** `HoverGlow.Beckon` + `DiegeticStage.CallTheDrain`; bardak ya
+  da tin taşınırken lavabo imlecin altındaymış gibi yanıyor ve öne çıkıyor.
+- **Kir ovularak çıkıyor:** işaret 28×9 → 48×18 (halka, iç yıkama, sürtme kuyruğu, üç
+  sıçrama); her leke sanatın bir KOPYASINA sahip ve bez geçtiği teksellerden mürekkep
+  alıyor. Core'un `Wipe`'ı ancak %7'nin altına inince çağrılıyor. Ölçüm: aynı noktada
+  altı ovuş %5, ortadan tek düz geçiş %83; köşeler için geri dönmek gerekiyor.
+  Alfalar 96/34 → 150/72: eski işaret koyu tezgâhta neredeyse görünmüyordu.
+- **Menü tahtasının altına bir şey konmuyor:** en soldaki tabure tahtanın altında kalıyor
+  (tahta 67..129, taburenin bıraktıkları 101..170), bardak ve işaret tahtanın sağına
+  itiliyor. **Yerleşimin kendisi yazarın kararı — tahtayı 30 birim sola alan hamle bu
+  çakışmayı büyüttü; bir satırla geri alınır.**
+- **Testler:** EditMode 488/488, PlayMode 11/11. Sepet resmi testi artık kapanış sorusu
+  ekrandaysa onu yanıtlıyor: OpenUntil'in ikinci basışı "siparişi kapat?" kartını açıyor
+  ve kartın perdesi altındaki her şeyi üçte bir karartıyordu (140k piksel fark).
+
 ## 10 · Teknik omurga
 
 - **6 asmdef:** Core (saf C#, motor erişimi imkânsız) ← Game ← UI ← Editor; Tests → Core+Game; PlayTests (2026-08-12) sanal fareyle gerçek sahneyi oynar — UI'ın içine değil, ekrana ve Core durumuna bakar.

@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The light takes the thing's shape, and the mark has to be rubbed out (2026-09-06):**
+  `ChromeArt.Glow` grows a prop's light out of its own silhouette instead of stamping one
+  ellipse behind everything (GDD 16 §0b); the sink lights and comes forward while a hand is
+  carrying a glass or the tin; and the counter's mark is four times the size, owns its own
+  pixels and comes off where the cloth actually goes (GDD 27 §4.2). GDD_MEVCUT §9.31.
+
 - **The pointer's answer, corrected, and the tin's own size (2026-09-06):** the halo is cut to
   the drawing rather than to the rect, the hovered prop comes to the front with its light one
   step under it, "side to side" is a rock and not a drift, and the cellar's four-part bottles
