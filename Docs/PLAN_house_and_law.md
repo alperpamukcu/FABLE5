@@ -6,6 +6,11 @@ is the order it gets built in, what each phase may touch, and how each one is pr
 every other phase in this project: Core decides, the UI renders, content is data, nothing ships on
 "it compiles", and money moves only after the 200-run sim has been read.
 
+> **2026-09-06, after the plan:** `FreeBase` went from 2.0 to **0** — the room opens worth nothing
+> and the walls carry it (GDD 27 §3, GDD_MEVCUT §9.35). Every "2.0" this log pins for a fresh bar
+> is history; the tests named below play their measured nights in a room worth two by owning a
+> +2.0 lamp from the start (`ARoomWorthTwo()`).
+
 Status legend: ☐ todo · ◐ in progress · ☑ done. Each phase is a commit. **H1 and H2 are silent
 (pure classes with their own tests, nothing reads them). H1b and H2b are NOT silent — each wires a
 filed number or money into Core — so each ships in ONE PUSH with the screen that answers it (H1b
