@@ -100,6 +100,52 @@ namespace LastCall.Tests
 
         private static Housekeeping Counter() => new Housekeeping();
 
+        // ── the glass holds its stool until the sink hands it back ───────────────
+
+        [Test]
+        public void AGlassOutOfService_CountsWhereverItIs()
+        {
+            // The author, 2026-09-06: "bardaklar temizlenmeden yeni müşteri o masaya
+            // oturamayacağından oyuncu potansiyel müşteri kaybedecek". On the counter, in the
+            // hand, under the tap — the same glass on the same errand, and the stool it came
+            // off is not free until it comes back clean.
+            var house = Counter();
+            Assert.AreEqual(0, house.GlassesOut, "a clean counter holds nothing");
+
+            var mess = house.LeaveMess("rocks");
+            Assert.AreEqual(1, house.GlassesOut, "left on the counter");
+
+            house.CollectGlass(mess);
+            Assert.AreEqual(0, house.GlassesOnCounter, "off the counter...");
+            Assert.AreEqual(1, house.GlassesOut, "...but in the hand, and still holding it");
+
+            double runs = house.WashGlasses();
+            Assert.Greater(runs, 0);
+            Assert.AreEqual(1, house.GlassesOut, "under the tap, and still holding it");
+
+            house.Tick(runs);
+            Assert.AreEqual(0, house.GlassesOut, "washed: the stool is free");
+        }
+
+        [Test]
+        public void TheFloorLosesAStoolForEveryGlassOutOfService()
+        {
+            // The rule as the floor reads it, which is what turns the sink into a queue: two
+            // glasses in the cycle are two stools the night cannot lay.
+            var house = Counter();
+            var a = house.LeaveMess("rocks");
+            var b = house.LeaveMess("highball");
+            house.CollectGlass(a);
+            Assert.AreEqual(2, house.GlassesOut, "one in the hand, one still standing");
+            house.WashGlasses();
+            house.CollectGlass(b);
+            Assert.AreEqual(2, house.GlassesOut, "one under the tap, one in the hand");
+            Assert.Throws<InvalidOperationException>(() => house.WashGlasses(),
+                "the sink is running — the second glass waits for it");
+            house.Tick(Housekeeping.WashSecondsFor(1));
+            Assert.AreEqual(1, house.GlassesOut, "the first is back; the second still waits");
+        }
+
         [Test]
         public void ALeaver_LeavesAGlassAndAMark_AndTheGlassHoldsTheStool()
         {

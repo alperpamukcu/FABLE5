@@ -1020,7 +1020,7 @@ namespace LastCall.UI
             _glassCarrying = false;
             if (_glassCarry != null) _glassCarry.gameObject.SetActive(false);
             if (intoTheSink) OnSinkClicked();
-            else Toast("IN HAND — CLICK THE SINK TO WASH", UITheme.Cream[3]);
+            else Toast("IN HAND — THE STOOL IS HELD UNTIL IT IS WASHED", UITheme.Cream[3]);
         }
 
         /// <summary>The sink's click: wash what the hand holds. The one free verb on the
@@ -1045,9 +1045,14 @@ namespace LastCall.UI
             bool busy = run != null && run.Phase == TycoonPhase.DayOpen && run.SinkBusy;
             if (stage != null) stage.SetTapRunning(busy);
             if (_handStrip == null) return;
+            // WHAT THE GLASSES ARE COSTING, not just where they are (2026-09-06): a glass
+            // out of service holds the stool it came off until the sink hands it back, so
+            // the strip counts stools rather than crockery.
+            int held = run != null ? run.GlassesInHand + run.GlassesWashing : 0;
+            string seats = held == 1 ? " · 1 STOOL HELD" : held > 1 ? " · " + held + " STOOLS HELD" : "";
             string line = run == null || run.Phase != TycoonPhase.DayOpen ? ""
-                : busy ? "WASHING · " + Mathf.CeilToInt((float)run.WashLeft) + "s"
-                : run.GlassesInHand > 0 ? run.GlassesInHand + " IN HAND · CLICK THE SINK" : "";
+                : busy ? "WASHING · " + Mathf.CeilToInt((float)run.WashLeft) + "s" + seats
+                : run.GlassesInHand > 0 ? run.GlassesInHand + " IN HAND · CLICK THE SINK" + seats : "";
             if (_handStrip.text != line) _handStrip.text = line;
             // Over the sink's own slot (stage 140, 68.5 — the basin is 35 art px tall).
             _handStrip.rectTransform.anchoredPosition = new Vector2(280f, 137f + 70f + 6f + CounterLift);

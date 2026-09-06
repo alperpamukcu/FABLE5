@@ -91,6 +91,10 @@ namespace LastCall.Core
         /// <summary>The tap is running; a second wash waits for it.</summary>
         public bool SinkBusy => Floor.House.SinkBusy;
 
+        /// <summary>Glasses under the tap this second — the room prints them beside what
+        /// is in the hand, because both are stools the bar cannot lay (GDD 27 §4.2).</summary>
+        public int GlassesWashing => Floor.House.GlassesWashing;
+
         /// <summary>Seconds the sink still has to run (zero when idle).</summary>
         public double WashLeft => Floor.House.WashLeft;
 

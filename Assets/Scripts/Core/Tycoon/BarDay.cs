@@ -163,7 +163,15 @@ namespace LastCall.Core
 
         /// <summary>Stools with nobody on them and no glass standing at them: what the door
         /// can seat this instant.</summary>
-        public int FreeStools => Math.Max(0, Seats - _seated.Count - House.GlassesOnCounter);
+        /// <summary>
+        /// Stools that can take somebody right now: the ones nobody is sitting on and no
+        /// dirty glass is holding. A glass holds its stool from the moment it is left until
+        /// the moment the sink hands it back — on the counter, in the hand, under the tap
+        /// (GDD 27 §4.2, 2026-09-06). Collecting it used to free the stool on the spot,
+        /// which made the wash a thing you did for comfort and nothing else; now the wash
+        /// is the bottleneck, and a bar that lets the glasses pile up turns people away.
+        /// </summary>
+        public int FreeStools => Math.Max(0, Seats - _seated.Count - House.GlassesOut);
 
         /// <summary>
         /// Advances the floor: patience ticks, the settled and the stormed-off leave, and

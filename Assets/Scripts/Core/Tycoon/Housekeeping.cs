@@ -123,6 +123,16 @@ namespace LastCall.Core
             }
         }
 
+        /// <summary>
+        /// EVERY GLASS THAT IS NOT BACK ON THE SHELF (2026-09-06, the author: "bardaklar
+        /// temizlenmeden yeni müşteri o masaya oturamayacağından oyuncu potansiyel müşteri
+        /// kaybedecek"). One standing on the counter, one in the hand, one in the sink —
+        /// all three are the same glass at different points of the same errand, and the bar
+        /// has only so many. Until it comes back clean the stool it came off cannot be laid
+        /// again, which is what turns the sink's wait from a comfort tax into a queue.
+        /// </summary>
+        public int GlassesOut => GlassesOnCounter + GlassesInHand + GlassesWashing;
+
         /// <summary>Messes past their grace: what the live comfort reading counts.</summary>
         public int DirtySpots
         {
